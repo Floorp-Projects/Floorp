@@ -94,7 +94,7 @@
                 //
                 // TA: 15.
                 on_event(target0, 'pointermove', function(event) {
-                    checkDirection(test_touchaction, isFirstScroll, moveCount, countToPass, moveDelta);
+                    checkDirection(test_touchaction, isFirstScroll, moveCount, countToPass, moveDelta, event);
 
                     moveCount++;
                     if(moveCount >= countToPass) {

@@ -110,6 +110,6 @@
     if (log) {
         log.parentNode.insertBefore(documentingPrefixUsage, log);
     } else {
-        body.appendChild(documentingPrefixUsage);
+        document.body.appendChild(documentingPrefixUsage);
     }
 })();

@@ -146,7 +146,7 @@ function rPointerCapture(e) {
 
 // declare the follwoing variables to use this function: previousPointerX, previousPointerY, currentPointerX, currentPointerY;
 // init previousPointerX, previousPointerY before calling of the function; in "pointerdown" event handler for example
-function checkDirection(testToStep, isVertical, currentMoveCount, moveCountToPass, delta) {
+function checkDirection(testToStep, isVertical, currentMoveCount, moveCountToPass, delta, event) {
     if(!isVertical) {
         if(currentMoveCount > moveCountToPass / 2) { // avoid immediate triggering while vertical scroll is still performed
                 testToStep.step( function() {
