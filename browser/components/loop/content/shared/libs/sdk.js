@@ -1,20 +1,20 @@
 /**
- * @license  OpenTok JavaScript Library v2.2.7.2
+ * @license  OpenTok JavaScript Library v2.2.9.1
  * http://www.tokbox.com/
  *
  * Copyright (c) 2014 TokBox, Inc.
  * Released under the MIT license
  * http://opensource.org/licenses/MIT
  *
- * Date: August 05 08:56:17 2014
+ * Date: September 08 10:17:05 2014
  */
 
 (function(window) {
   if (!window.OT) window.OT = {};
 
   OT.properties = {
-    version: 'v2.2.7.2',         // The current version (eg. v2.0.4) (This is replaced by gradle)
-    build: '9425efe',    // The current build hash (This is replaced by gradle)
+    version: 'v2.2.9.1',         // The current version (eg. v2.0.4) (This is replaced by gradle)
+    build: '72b534e',    // The current build hash (This is replaced by gradle)
 
     // Whether or not to turn on debug logging by default
     debug: 'false',
@@ -24,7 +24,7 @@
     // The URL of the CDN
     cdnURL: 'http://static.opentok.com',
     // The URL to use for logging
-    loggingURL: 'https://hlg.tokbox.com/prod',
+    loggingURL: 'http://hlg.tokbox.com/prod',
     // The anvil API URL
     apiURL: 'http://anvil.opentok.com',
 
@@ -37,25 +37,27 @@
     supportSSL: 'true',
     // The CDN to use if we're using SSL
     cdnURLSSL: 'https://static.opentok.com',
+    // The URL to use for logging
+    loggingURLSSL: 'https://hlg.tokbox.com/prod',
     // The anvil API URL to use if we're using SSL
     apiURLSSL: 'https://anvil.opentok.com',
 
     minimumVersion: {
-      firefox: parseFloat('26'),
-      chrome: parseFloat('32')
+      firefox: parseFloat('29'),
+      chrome: parseFloat('34')
     }
   };
 
 })(window);
 /**
- * @license  Common JS Helpers on OpenTok 0.2.0 5c6f145 vib-2.2-node-fixes
+ * @license  Common JS Helpers on OpenTok 0.2.0 3fa583f master
  * http://www.tokbox.com/
  *
  * Copyright (c) 2014 TokBox, Inc.
  * Released under the MIT license
  * http://opensource.org/licenses/MIT
  *
- * Date: July 28 08:28:31 2014
+ * Date: August 08 12:31:42 2014
  *
  */
 
@@ -68,10 +70,6 @@
 // @example Getting a DOM element by it's id
 //  var element = OTHelpers('domId');
 //
-// @example Testing for web socket support
-//  if (OT.supportsWebSockets()) {
-//      // do some stuff with websockets
-//  }
 //
 
 /*jshint browser:true, smarttabs:true*/
@@ -296,10 +294,6 @@
 // Handy do nothing function
   OTHelpers.noop = function() {};
 
-// Returns true if the client supports WebSockets, false otherwise.
-  OTHelpers.supportsWebSockets = function() {
-    return 'WebSocket' in window;
-  };
 
 // Returns the number of millisceonds since the the UNIX epoch, this is functionally
 // equivalent to executing new Date().getTime().
@@ -765,7 +759,7 @@
   var _rng = whatwgRNG || mathRNG;
 
   // Buffer class to use
-  var BufferClass = typeof(Buffer) == 'function' ? Buffer : Array;
+  var BufferClass = typeof(Buffer) === 'function' ? Buffer : Array;
 
   // Maps for number <-> hex string conversion
   var _byteToHex = [];
@@ -814,8 +808,8 @@
     // Deprecated - 'format' argument, as supported in v1.2
     var i = buf && offset || 0;
 
-    if (typeof(options) == 'string') {
-      buf = options == 'binary' ? new BufferClass(16) : null;
+    if (typeof(options) === 'string') {
+      buf = options === 'binary' ? new BufferClass(16) : null;
       options = null;
     }
     options = options || {};
@@ -856,7 +850,7 @@
 
 (function(window, OTHelpers, undefined) {
 
-OTHelpers.useLogHelpers = function(on){
+  OTHelpers.useLogHelpers = function(on){
 
     // Log levels for OTLog.setLogLevel
     on.DEBUG    = 5;
@@ -871,9 +865,9 @@ OTHelpers.useLogHelpers = function(on){
         _canApplyConsole = true;
 
     try {
-        Function.prototype.bind.call(window.console.log, window.console);
+      Function.prototype.bind.call(window.console.log, window.console);
     } catch (err) {
-        _canApplyConsole = false;
+      _canApplyConsole = false;
     }
 
     // Some objects can't be logged in the console, mostly these are certain
@@ -882,9 +876,9 @@ OTHelpers.useLogHelpers = function(on){
     var makeLogArgumentsSafe = function(args) { return args; };
 
     if (OTHelpers.browser() === 'IE') {
-        makeLogArgumentsSafe = function(args) {
-            return [toDebugString(Array.prototype.slice.apply(args))];
-        };
+      makeLogArgumentsSafe = function(args) {
+        return [toDebugString(Array.prototype.slice.apply(args))];
+      };
     }
 
     // Generates a logging method for a particular method and log level.
@@ -896,41 +890,41 @@ OTHelpers.useLogHelpers = function(on){
     // * attempt to deal with weird IE hosted logging methods as best we can.
     //
     function generateLoggingMethod(method, level, fallback) {
-        return function() {
-            if (on.shouldLog(level)) {
-                var cons = window.console,
-                    args = makeLogArgumentsSafe(arguments);
+      return function() {
+        if (on.shouldLog(level)) {
+          var cons = window.console,
+              args = makeLogArgumentsSafe(arguments);
 
-                // In IE, window.console may not exist if the developer tools aren't open
-                // This also means that cons and cons[method] can appear at any moment
-                // hence why we retest this every time.
-                if (cons && cons[method]) {
-                    // the desired console method isn't a real object, which means
-                    // that we can't use apply on it. We force it to be a real object
-                    // using Function.bind, assuming that's available.
-                    if (cons[method].apply || _canApplyConsole) {
-                        if (!cons[method].apply) {
-                            cons[method] = Function.prototype.bind.call(cons[method], cons);
-                        }
+          // In IE, window.console may not exist if the developer tools aren't open
+          // This also means that cons and cons[method] can appear at any moment
+          // hence why we retest this every time.
+          if (cons && cons[method]) {
+            // the desired console method isn't a real object, which means
+            // that we can't use apply on it. We force it to be a real object
+            // using Function.bind, assuming that's available.
+            if (cons[method].apply || _canApplyConsole) {
+              if (!cons[method].apply) {
+                cons[method] = Function.prototype.bind.call(cons[method], cons);
+              }
 
-                        cons[method].apply(cons, args);
-                    }
-                    else {
-                        // This isn't the same result as the above, but it's better
-                        // than nothing.
-                        cons[method](args);
-                    }
-                }
-                else if (fallback) {
-                    fallback.apply(on, args);
-
-                    // Skip appendToLogs, we delegate entirely to the fallback
-                    return;
-                }
-
-                appendToLogs(method, makeLogArgumentsSafe(arguments));
+              cons[method].apply(cons, args);
             }
-        };
+            else {
+              // This isn't the same result as the above, but it's better
+              // than nothing.
+              cons[method](args);
+            }
+          }
+          else if (fallback) {
+            fallback.apply(on, args);
+
+            // Skip appendToLogs, we delegate entirely to the fallback
+            return;
+          }
+
+          appendToLogs(method, makeLogArgumentsSafe(arguments));
+        }
+      };
     }
 
     on.log = generateLoggingMethod('log', on.LOG);
@@ -943,92 +937,92 @@ OTHelpers.useLogHelpers = function(on){
 
 
     on.setLogLevel = function(level) {
-        _logLevel = typeof(level) === 'number' ? level : 0;
-        on.debug("TB.setLogLevel(" + _logLevel + ")");
-        return _logLevel;
+      _logLevel = typeof(level) === 'number' ? level : 0;
+      on.debug('TB.setLogLevel(' + _logLevel + ')');
+      return _logLevel;
     };
 
     on.getLogs = function() {
-        return _logs;
+      return _logs;
     };
 
     // Determine if the level is visible given the current logLevel.
     on.shouldLog = function(level) {
-        return _logLevel >= level;
+      return _logLevel >= level;
     };
 
     // Format the current time nicely for logging. Returns the current
     // local time.
     function formatDateStamp() {
-        var now = new Date();
-        return now.toLocaleTimeString() + now.getMilliseconds();
+      var now = new Date();
+      return now.toLocaleTimeString() + now.getMilliseconds();
     }
 
     function toJson(object) {
-        try {
-            return JSON.stringify(object);
-        } catch(e) {
-            return object.toString();
-        }
+      try {
+        return JSON.stringify(object);
+      } catch(e) {
+        return object.toString();
+      }
     }
 
     function toDebugString(object) {
-        var components = [];
+      var components = [];
 
-        if (typeof(object) === 'undefined') {
-            // noop
+      if (typeof(object) === 'undefined') {
+        // noop
+      }
+      else if (object === null) {
+        components.push('NULL');
+      }
+      else if (OTHelpers.isArray(object)) {
+        for (var i=0; i<object.length; ++i) {
+          components.push(toJson(object[i]));
         }
-        else if (object === null) {
-            components.push('NULL');
-        }
-        else if (OTHelpers.isArray(object)) {
-            for (var i=0; i<object.length; ++i) {
-                components.push(toJson(object[i]));
-            }
-        }
-        else if (OTHelpers.isObject(object)) {
-            for (var key in object) {
-                var stringValue;
+      }
+      else if (OTHelpers.isObject(object)) {
+        for (var key in object) {
+          var stringValue;
 
-                if (!OTHelpers.isFunction(object[key])) {
-                    stringValue = toJson(object[key]);
-                }
-                else if (object.hasOwnProperty(key)) {
-                    stringValue = 'function ' + key + '()';
-                }
+          if (!OTHelpers.isFunction(object[key])) {
+            stringValue = toJson(object[key]);
+          }
+          else if (object.hasOwnProperty(key)) {
+            stringValue = 'function ' + key + '()';
+          }
 
-                components.push(key + ': ' + stringValue);
-            }
+          components.push(key + ': ' + stringValue);
         }
-        else if (OTHelpers.isFunction(object)) {
-            try {
-                components.push(object.toString());
-            } catch(e) {
-                components.push('function()');
-            }
+      }
+      else if (OTHelpers.isFunction(object)) {
+        try {
+          components.push(object.toString());
+        } catch(e) {
+          components.push('function()');
         }
-        else  {
-            components.push(object.toString());
-        }
+      }
+      else  {
+        components.push(object.toString());
+      }
 
-        return components.join(", ");
+      return components.join(', ');
     }
 
     // Append +args+ to logs, along with the current log level and the a date stamp.
     function appendToLogs(level, args) {
-        if (!args) return;
+      if (!args) return;
 
-        var message = toDebugString(args);
-        if (message.length <= 2) return;
+      var message = toDebugString(args);
+      if (message.length <= 2) return;
 
-        _logs.push(
-            [level, formatDateStamp(), message]
-        );
+      _logs.push(
+        [level, formatDateStamp(), message]
+      );
     }
-};
+  };
 
-OTHelpers.useLogHelpers(OTHelpers);
-OTHelpers.setLogLevel(OTHelpers.ERROR);
+  OTHelpers.useLogHelpers(OTHelpers);
+  OTHelpers.setLogLevel(OTHelpers.ERROR);
 
 })(window, window.OTHelpers);
 
@@ -1039,35 +1033,35 @@ OTHelpers.setLogLevel(OTHelpers.ERROR);
 // DOM helpers
 (function(window, OTHelpers, undefined) {
 
-    // Helper function for adding event listeners to dom elements.
-    // WARNING: This doesn't preserve event types, your handler could
-    // be getting all kinds of different parameters depending on the browser.
-    // You also may have different scopes depending on the browser and bubbling
-    // and cancelable are not supported.
-    OTHelpers.on = function(element, eventName,  handler) {
-        if (element.addEventListener) {
-            element.addEventListener(eventName, handler, false);
-        } else if (element.attachEvent) {
-            element.attachEvent("on" + eventName, handler);
-        } else {
-            var oldHandler = element["on"+eventName];
-            element["on"+eventName] = function() {
-              handler.apply(this, arguments);
-              if (oldHandler) oldHandler.apply(this, arguments);
-            };
-        }
-        return element;
-    };
+  // Helper function for adding event listeners to dom elements.
+  // WARNING: This doesn't preserve event types, your handler could
+  // be getting all kinds of different parameters depending on the browser.
+  // You also may have different scopes depending on the browser and bubbling
+  // and cancelable are not supported.
+  OTHelpers.on = function(element, eventName,  handler) {
+    if (element.addEventListener) {
+      element.addEventListener(eventName, handler, false);
+    } else if (element.attachEvent) {
+      element.attachEvent('on' + eventName, handler);
+    } else {
+      var oldHandler = element['on'+eventName];
+      element['on'+eventName] = function() {
+        handler.apply(this, arguments);
+        if (oldHandler) oldHandler.apply(this, arguments);
+      };
+    }
+    return element;
+  };
 
-    // Helper function for removing event listeners from dom elements.
-    OTHelpers.off = function(element, eventName, handler) {
-        if (element.removeEventListener) {
-            element.removeEventListener (eventName, handler,false);
-        }
-        else if (element.detachEvent) {
-            element.detachEvent("on" + eventName, handler);
-        }
-    };
+  // Helper function for removing event listeners from dom elements.
+  OTHelpers.off = function(element, eventName, handler) {
+    if (element.removeEventListener) {
+      element.removeEventListener (eventName, handler,false);
+    }
+    else if (element.detachEvent) {
+      element.detachEvent('on' + eventName, handler);
+    }
+  };
 
 })(window, window.OTHelpers);
 
@@ -1078,9 +1072,9 @@ OTHelpers.setLogLevel(OTHelpers.ERROR);
 
 (function(window, OTHelpers, undefined) {
 
-  var _domReady = typeof document === 'undefined' ||
-                  document.readyState === 'complete' ||
-                 (document.readyState === 'interactive' && document.body),
+  var _domReady = typeof(document) === 'undefined' ||
+                    document.readyState === 'complete' ||
+                   (document.readyState === 'interactive' && document.body),
 
       _loadCallbacks = [],
       _unloadCallbacks = [],
@@ -1140,7 +1134,7 @@ OTHelpers.setLogLevel(OTHelpers.ERROR);
 
   if (_domReady) {
     onDomReady();
-  } else if(typeof document !== 'undefined') {
+  } else if(typeof(document) !== 'undefined') {
     if (document.addEventListener) {
       document.addEventListener('DOMContentLoaded', onDomReady, false);
     } else if (document.attachEvent) {
@@ -1153,6 +1147,22 @@ OTHelpers.setLogLevel(OTHelpers.ERROR);
 
 })(window, window.OTHelpers);
 
+/*jshint browser:true, smarttabs:true*/
+
+// tb_require('../helpers.js')
+
+(function(window, OTHelpers, undefined) {
+
+  OTHelpers.castToBoolean = function(value, defaultValue) {
+    if (value === undefined) return defaultValue;
+    return value === 'true' || value === true;
+  };
+
+  OTHelpers.roundFloat = function(value, places) {
+    return Number(value.toFixed(places));
+  };
+
+})(window, window.OTHelpers);
 /*jshint browser:true, smarttabs:true*/
 
 // tb_require('../helpers.js')
@@ -1186,6 +1196,25 @@ OTHelpers.setLogLevel(OTHelpers.ERROR);
     memoriseCapabilityTest(_name, callback);
   };
 
+
+  // Wrap up a capability test in a function that memorises the
+  // result.
+  var memoriseCapabilityTest = function (name, callback) {
+    capabilities[name] = function() {
+      var result = callback();
+      capabilities[name] = function() {
+        return result;
+      };
+
+      return result;
+    };
+  };
+
+  var testCapability = function (name) {
+    return capabilities[name]();
+  };
+
+
   // Returns true if all of the capability names passed in
   // exist and are met.
   //
@@ -1202,7 +1231,7 @@ OTHelpers.setLogLevel(OTHelpers.ERROR);
         OTHelpers.error('hasCapabilities was called with an unknown capability: ' + name);
         return false;
       }
-      else if (capabilities[name]() === false) {
+      else if (testCapability(name) === false) {
         return false;
       }
     }
@@ -1210,37 +1239,22 @@ OTHelpers.setLogLevel(OTHelpers.ERROR);
     return true;
   };
 
-
-  // Wrap up a capability test in a function that memorises the
-  // result.
-  var memoriseCapabilityTest = function memoriseCapabilityTest(name, callback) {
-    capabilities[name] = function() {
-      var result = callback();
-      capabilities[name] = function() {
-        return result;
-      };
-
-      return result;
-    };
-  };
-
 })(window, window.OTHelpers);
+
 /*jshint browser:true, smarttabs:true*/
 
 // tb_require('../helpers.js')
+// tb_require('./capabilities.js')
 
 (function(window, OTHelpers, undefined) {
 
-OTHelpers.castToBoolean = function(value, defaultValue) {
-    if (value === undefined) return defaultValue;
-    return value === 'true' || value === true;
-};
-
-OTHelpers.roundFloat = function(value, places) {
-    return Number(value.toFixed(places));
-};
+  // Indicates if the client supports WebSockets.
+  OTHelpers.registerCapability('websockets', function() {
+    return 'WebSocket' in window;
+  });
 
 })(window, window.OTHelpers);
+
 /*jshint browser:true, smarttabs:true*/
 
 // tb_require('../helpers.js')
@@ -1264,9 +1278,9 @@ OTHelpers.roundFloat = function(value, places) {
       var postMessageIsAsynchronous = true;
       var oldOnMessage = window.onmessage;
       window.onmessage = function() {
-          postMessageIsAsynchronous = false;
+        postMessageIsAsynchronous = false;
       };
-      window.postMessage("", "*");
+      window.postMessage('', '*');
       window.onmessage = oldOnMessage;
       return postMessageIsAsynchronous;
     }
@@ -1958,7 +1972,7 @@ OTHelpers.roundFloat = function(value, places) {
     };
 
   };
-  
+
 })(window, window.OTHelpers);
 
 /*jshint browser:true, smarttabs:true*/
@@ -1969,29 +1983,32 @@ OTHelpers.roundFloat = function(value, places) {
 // DOM helpers
 (function(window, OTHelpers, undefined) {
 
-OTHelpers.isElementNode = function(node) {
-    return node && typeof node === 'object' && node.nodeType == 1;
-};
+  OTHelpers.isElementNode = function(node) {
+    return node && typeof node === 'object' && node.nodeType === 1;
+  };
 
-// Returns true if the client supports element.classList
-OTHelpers.supportsClassList = function() {
-    var hasSupport = typeof(document !== "undefined") && ("classList" in document.createElement("a"));
+  // Returns true if the client supports element.classList
+  OTHelpers.supportsClassList = function() {
+    var hasSupport = (typeof document !== 'undefined') &&
+            ('classList' in document.createElement('a'));
+
     OTHelpers.supportsClassList = function() { return hasSupport; };
 
     return hasSupport;
-};
+  };
 
-OTHelpers.removeElement = function(element) {
+  OTHelpers.removeElement = function(element) {
     if (element && element.parentNode) {
-        element.parentNode.removeChild(element);
+      element.parentNode.removeChild(element);
     }
-};
+  };
 
-OTHelpers.removeElementById = function(elementId) {
+  OTHelpers.removeElementById = function(elementId) {
+    /*jshint newcap:false */
     this.removeElement(OTHelpers(elementId));
-};
+  };
 
-OTHelpers.removeElementsByType = function(parentElem, type) {
+  OTHelpers.removeElementsByType = function(parentElem, type) {
     if (!parentElem) return;
 
     var elements = parentElem.getElementsByTagName(type);
@@ -2002,227 +2019,238 @@ OTHelpers.removeElementsByType = function(parentElem, type) {
     // element" as the collection length and the elements indices will be modified
     // with each iteration.
     while (elements.length) {
-        parentElem.removeChild(elements[0]);
+      parentElem.removeChild(elements[0]);
     }
-};
+  };
 
-OTHelpers.emptyElement = function(element) {
+  OTHelpers.emptyElement = function(element) {
     while (element.firstChild) {
-        element.removeChild(element.firstChild);
+      element.removeChild(element.firstChild);
     }
     return element;
-};
+  };
 
-OTHelpers.createElement = function(nodeName, attributes, children, doc) {
+  OTHelpers.createElement = function(nodeName, attributes, children, doc) {
     var element = (doc || document).createElement(nodeName);
 
     if (attributes) {
-        for (var name in attributes) {
-            if (typeof(attributes[name]) === 'object') {
-                if (!element[name]) element[name] = {};
+      for (var name in attributes) {
+        if (typeof(attributes[name]) === 'object') {
+          if (!element[name]) element[name] = {};
 
-                var subAttrs = attributes[name];
-                for (var n in subAttrs) {
-                    element[name][n] = subAttrs[n];
-                }
-            }
-            else if (name === 'className') {
-                element.className = attributes[name];
-            }
-            else {
-                element.setAttribute(name, attributes[name]);
-            }
+          var subAttrs = attributes[name];
+          for (var n in subAttrs) {
+            element[name][n] = subAttrs[n];
+          }
         }
+        else if (name === 'className') {
+          element.className = attributes[name];
+        }
+        else {
+          element.setAttribute(name, attributes[name]);
+        }
+      }
     }
 
     var setChildren = function(child) {
-        if(typeof child === 'string') {
-            element.innerHTML = element.innerHTML + child;
-        } else {
-            element.appendChild(child);
-        }
+      if(typeof child === 'string') {
+        element.innerHTML = element.innerHTML + child;
+      } else {
+        element.appendChild(child);
+      }
     };
 
     if(OTHelpers.isArray(children)) {
-        OTHelpers.forEach(children, setChildren);
+      OTHelpers.forEach(children, setChildren);
     } else if(children) {
-        setChildren(children);
+      setChildren(children);
     }
 
     return element;
-};
+  };
 
-OTHelpers.createButton = function(innerHTML, attributes, events) {
+  OTHelpers.createButton = function(innerHTML, attributes, events) {
     var button = OTHelpers.createElement('button', attributes, innerHTML);
 
     if (events) {
-        for (var name in events) {
-            if (events.hasOwnProperty(name)) {
-                OTHelpers.on(button, name, events[name]);
-            }
+      for (var name in events) {
+        if (events.hasOwnProperty(name)) {
+          OTHelpers.on(button, name, events[name]);
         }
+      }
 
-        button._boundEvents = events;
+      button._boundEvents = events;
     }
 
     return button;
-};
+  };
 
 
-// Detects when an element is not part of the document flow because it or one of it's ancesters has display:none.
-OTHelpers.isDisplayNone = function(element) {
-    if ( (element.offsetWidth === 0 || element.offsetHeight === 0) && OTHelpers.css(element, 'display') === 'none') return true;
-    if (element.parentNode && element.parentNode.style) return OTHelpers.isDisplayNone(element.parentNode);
+  // Detects when an element is not part of the document flow because
+  // it or one of it's ancesters has display:none.
+  OTHelpers.isDisplayNone = function(element) {
+    if ( (element.offsetWidth === 0 || element.offsetHeight === 0) &&
+                OTHelpers.css(element, 'display') === 'none') return true;
+
+    if (element.parentNode && element.parentNode.style) {
+      return OTHelpers.isDisplayNone(element.parentNode);
+    }
+
     return false;
-};
+  };
 
-OTHelpers.findElementWithDisplayNone = function(element) {
-    if ( (element.offsetWidth === 0 || element.offsetHeight === 0) && OTHelpers.css(element, 'display') === 'none') return element;
-    if (element.parentNode && element.parentNode.style) return OTHelpers.findElementWithDisplayNone(element.parentNode);
+  OTHelpers.findElementWithDisplayNone = function(element) {
+    if ( (element.offsetWidth === 0 || element.offsetHeight === 0) &&
+              OTHelpers.css(element, 'display') === 'none') return element;
+
+    if (element.parentNode && element.parentNode.style) {
+      return OTHelpers.findElementWithDisplayNone(element.parentNode);
+    }
+
     return null;
-};
+  };
 
-function objectHasProperties(obj) {
+  function objectHasProperties(obj) {
     for (var key in obj) {
-        if (obj.hasOwnProperty(key)) return true;
+      if (obj.hasOwnProperty(key)) return true;
     }
     return false;
-}
+  }
 
 
-// Allows an +onChange+ callback to be triggered when specific style properties
-// of +element+ are notified. The callback accepts a single parameter, which is
-// a hash where the keys are the style property that changed and the values are
-// an array containing the old and new values ([oldValue, newValue]).
-//
-// Width and Height changes while the element is display: none will not be
-// fired until such time as the element becomes visible again.
-//
-// This function returns the MutationObserver itself. Once you no longer wish
-// to observe the element you should call disconnect on the observer.
-//
-// Observing changes:
-//  // observe changings to the width and height of object
-//  dimensionsObserver = OTHelpers.observeStyleChanges(object, ['width', 'height'], function(changeSet) {
-//      OT.debug("The new width and height are " + changeSet.width[1] + ',' + changeSet.height[1]);
-//  });
-//
-// Cleaning up
-//  // stop observing changes
-//  dimensionsObserver.disconnect();
-//  dimensionsObserver = null;
-//
-OTHelpers.observeStyleChanges = function(element, stylesToObserve, onChange) {
+  // Allows an +onChange+ callback to be triggered when specific style properties
+  // of +element+ are notified. The callback accepts a single parameter, which is
+  // a hash where the keys are the style property that changed and the values are
+  // an array containing the old and new values ([oldValue, newValue]).
+  //
+  // Width and Height changes while the element is display: none will not be
+  // fired until such time as the element becomes visible again.
+  //
+  // This function returns the MutationObserver itself. Once you no longer wish
+  // to observe the element you should call disconnect on the observer.
+  //
+  // Observing changes:
+  //  // observe changings to the width and height of object
+  //  dimensionsObserver = OTHelpers.observeStyleChanges(object,
+  //                                                    ['width', 'height'], function(changeSet) {
+  //      OT.debug("The new width and height are " +
+  //                      changeSet.width[1] + ',' + changeSet.height[1]);
+  //  });
+  //
+  // Cleaning up
+  //  // stop observing changes
+  //  dimensionsObserver.disconnect();
+  //  dimensionsObserver = null;
+  //
+  OTHelpers.observeStyleChanges = function(element, stylesToObserve, onChange) {
     var oldStyles = {};
 
     var getStyle = function getStyle(style) {
-            switch (style) {
-            case 'width':
-                return OTHelpers.width(element);
+      switch (style) {
+      case 'width':
+        return OTHelpers.width(element);
 
-            case 'height':
-                return OTHelpers.height(element);
+      case 'height':
+        return OTHelpers.height(element);
 
-            default:
-                return OTHelpers.css(element);
-            }
-        };
+      default:
+        return OTHelpers.css(element);
+      }
+    };
 
     // get the inital values
     OTHelpers.forEach(stylesToObserve, function(style) {
-        oldStyles[style] = getStyle(style);
+      oldStyles[style] = getStyle(style);
     });
 
     var observer = new MutationObserver(function(mutations) {
-        var changeSet = {};
+      var changeSet = {};
 
-        OTHelpers.forEach(mutations, function(mutation) {
-            if (mutation.attributeName !== 'style') return;
+      OTHelpers.forEach(mutations, function(mutation) {
+        if (mutation.attributeName !== 'style') return;
 
-            var isHidden = OTHelpers.isDisplayNone(element);
+        var isHidden = OTHelpers.isDisplayNone(element);
 
-            OTHelpers.forEach(stylesToObserve, function(style) {
-                if(isHidden && (style == 'width' || style == 'height')) return;
+        OTHelpers.forEach(stylesToObserve, function(style) {
+          if(isHidden && (style === 'width' || style === 'height')) return;
 
-                var newValue = getStyle(style);
+          var newValue = getStyle(style);
 
-                if (newValue !== oldStyles[style]) {
-                    // OT.debug("CHANGED " + style + ": " + oldStyles[style] + " -> " + newValue);
-
-                    changeSet[style] = [oldStyles[style], newValue];
-                    oldStyles[style] = newValue;
-                }
-            });
+          if (newValue !== oldStyles[style]) {
+            changeSet[style] = [oldStyles[style], newValue];
+            oldStyles[style] = newValue;
+          }
         });
+      });
 
-        if (objectHasProperties(changeSet)) {
-            // Do this after so as to help avoid infinite loops of mutations.
-            OTHelpers.callAsync(function() {
-                onChange.call(null, changeSet);
-            });
-        }
+      if (objectHasProperties(changeSet)) {
+        // Do this after so as to help avoid infinite loops of mutations.
+        OTHelpers.callAsync(function() {
+          onChange.call(null, changeSet);
+        });
+      }
     });
 
     observer.observe(element, {
-        attributes:true,
-        attributeFilter: ['style'],
-        childList:false,
-        characterData:false,
-        subtree:false
+      attributes:true,
+      attributeFilter: ['style'],
+      childList:false,
+      characterData:false,
+      subtree:false
     });
 
     return observer;
-};
+  };
 
 
-// trigger the +onChange+ callback whenever
-// 1. +element+ is removed
-// 2. or an immediate child of +element+ is removed.
-//
-// This function returns the MutationObserver itself. Once you no longer wish
-// to observe the element you should call disconnect on the observer.
-//
-// Observing changes:
-//  // observe changings to the width and height of object
-//  nodeObserver = OTHelpers.observeNodeOrChildNodeRemoval(object, function(removedNodes) {
-//      OT.debug("Some child nodes were removed");
-//      OTHelpers.forEach(removedNodes, function(node) {
-//          OT.debug(node);
-//      });
-//  });
-//
-// Cleaning up
-//  // stop observing changes
-//  nodeObserver.disconnect();
-//  nodeObserver = null;
-//
-OTHelpers.observeNodeOrChildNodeRemoval = function(element, onChange) {
+  // trigger the +onChange+ callback whenever
+  // 1. +element+ is removed
+  // 2. or an immediate child of +element+ is removed.
+  //
+  // This function returns the MutationObserver itself. Once you no longer wish
+  // to observe the element you should call disconnect on the observer.
+  //
+  // Observing changes:
+  //  // observe changings to the width and height of object
+  //  nodeObserver = OTHelpers.observeNodeOrChildNodeRemoval(object, function(removedNodes) {
+  //      OT.debug("Some child nodes were removed");
+  //      OTHelpers.forEach(removedNodes, function(node) {
+  //          OT.debug(node);
+  //      });
+  //  });
+  //
+  // Cleaning up
+  //  // stop observing changes
+  //  nodeObserver.disconnect();
+  //  nodeObserver = null;
+  //
+  OTHelpers.observeNodeOrChildNodeRemoval = function(element, onChange) {
     var observer = new MutationObserver(function(mutations) {
-        var removedNodes = [];
+      var removedNodes = [];
 
-        OTHelpers.forEach(mutations, function(mutation) {
-            if (mutation.removedNodes.length) {
-                removedNodes = removedNodes.concat(Array.prototype.slice.call(mutation.removedNodes));
-            }
-        });
-
-        if (removedNodes.length) {
-            // Do this after so as to help avoid infinite loops of mutations.
-            OTHelpers.callAsync(function() {
-                onChange(removedNodes);
-            });
+      OTHelpers.forEach(mutations, function(mutation) {
+        if (mutation.removedNodes.length) {
+          removedNodes = removedNodes.concat(Array.prototype.slice.call(mutation.removedNodes));
         }
+      });
+
+      if (removedNodes.length) {
+        // Do this after so as to help avoid infinite loops of mutations.
+        OTHelpers.callAsync(function() {
+          onChange(removedNodes);
+        });
+      }
     });
 
     observer.observe(element, {
-        attributes:false,
-        childList:true,
-        characterData:false,
-        subtree:true
+      attributes:false,
+      childList:true,
+      characterData:false,
+      subtree:true
     });
 
     return observer;
-};
+  };
 
 })(window, window.OTHelpers);
 
@@ -2274,10 +2302,29 @@ OTHelpers.observeNodeOrChildNodeRemoval = function(element, onChange) {
     domElement.scrolling = 'no';
     domElement.setAttribute('scrolling', 'no');
 
+    // This is necessary for IE, as it will not inherit it's doctype from
+    // the parent frame.
+    var frameContent = '<!DOCTYPE html><html><head>' +
+                      '<meta http-equiv="x-ua-compatible" content="IE=Edge">' +
+                      '<meta http-equiv="Content-type" content="text/html; charset=utf-8">' +
+                      '<title></title></head><body></body></html>';
+
     var wrappedCallback = function() {
       var doc = domElement.contentDocument || domElement.contentWindow.document;
-      doc.body.style.backgroundColor = 'transparent';
-      doc.body.style.border = 'none';
+
+      if (OTHelpers.browserVersion().iframeNeedsLoad) {
+        doc.body.style.backgroundColor = 'transparent';
+        doc.body.style.border = 'none';
+
+        if (OTHelpers.browser() !== 'IE') {
+          // Skip this for IE as we use the bookmarklet workaround
+          // for THAT browser.
+          doc.open();
+          doc.write(frameContent);
+          doc.close();
+        }
+      }
+
       callback(
         domElement.contentWindow,
         doc
@@ -2285,8 +2332,18 @@ OTHelpers.observeNodeOrChildNodeRemoval = function(element, onChange) {
     };
 
     document.body.appendChild(domElement);
-    
+
     if(OTHelpers.browserVersion().iframeNeedsLoad) {
+      if (OTHelpers.browser() === 'IE') {
+        // This works around some issues with IE and document.write.
+        // Basically this works by slightly abusing the bookmarklet/scriptlet
+        // functionality that all browsers support.
+        domElement.contentWindow.contents = frameContent;
+        /*jshint scripturl:true*/
+        domElement.src = 'javascript:window["contents"]';
+        /*jshint scripturl:false*/
+      }
+
       OTHelpers.on(domElement, 'load', wrappedCallback);
     } else {
       setTimeout(wrappedCallback);
@@ -2302,11 +2359,11 @@ OTHelpers.observeNodeOrChildNodeRemoval = function(element, onChange) {
     this.element = domElement;
 
   };
-  
+
 })(window, window.OTHelpers);
 
 /*
- * getComputedStyle from 
+ * getComputedStyle from
  * https://github.com/jonathantneal/Polyfills-for-IE8/blob/master/getComputedStyle.js
 
 // tb_require('../helpers.js')
@@ -2418,141 +2475,141 @@ OTHelpers.observeNodeOrChildNodeRemoval = function(element, onChange) {
 
 (function(window, OTHelpers, undefined) {
 
-OTHelpers.addClass = function(element, value) {
+  OTHelpers.addClass = function(element, value) {
     // Only bother targeting Element nodes, ignore Text Nodes, CDATA, etc
     if (element.nodeType !== 1) {
-        return;
+      return;
     }
 
     var classNames = OTHelpers.trim(value).split(/\s+/),
         i, l;
 
     if (OTHelpers.supportsClassList()) {
-        for (i=0, l=classNames.length; i<l; ++i) {
-            element.classList.add(classNames[i]);
-        }
+      for (i=0, l=classNames.length; i<l; ++i) {
+        element.classList.add(classNames[i]);
+      }
 
-        return;
+      return;
     }
 
     // Here's our fallback to browsers that don't support element.classList
 
     if (!element.className && classNames.length === 1) {
-        element.className = value;
+      element.className = value;
     }
     else {
-        var setClass = " " + element.className + " ";
+      var setClass = ' ' + element.className + ' ';
 
-        for (i=0, l=classNames.length; i<l; ++i) {
-            if ( !~setClass.indexOf( " " + classNames[i] + " ")) {
-                setClass += classNames[i] + " ";
-            }
+      for (i=0, l=classNames.length; i<l; ++i) {
+        if ( !~setClass.indexOf( ' ' + classNames[i] + ' ')) {
+          setClass += classNames[i] + ' ';
         }
+      }
 
-        element.className = OTHelpers.trim(setClass);
+      element.className = OTHelpers.trim(setClass);
     }
 
     return this;
-};
+  };
 
-OTHelpers.removeClass = function(element, value) {
+  OTHelpers.removeClass = function(element, value) {
     if (!value) return;
 
     // Only bother targeting Element nodes, ignore Text Nodes, CDATA, etc
     if (element.nodeType !== 1) {
-        return;
+      return;
     }
 
     var newClasses = OTHelpers.trim(value).split(/\s+/),
         i, l;
 
     if (OTHelpers.supportsClassList()) {
-        for (i=0, l=newClasses.length; i<l; ++i) {
-            element.classList.remove(newClasses[i]);
-        }
+      for (i=0, l=newClasses.length; i<l; ++i) {
+        element.classList.remove(newClasses[i]);
+      }
 
-        return;
+      return;
     }
 
-    var className = (" " + element.className + " ").replace(/[\s+]/, ' ');
+    var className = (' ' + element.className + ' ').replace(/[\s+]/, ' ');
 
     for (i=0,l=newClasses.length; i<l; ++i) {
-        className = className.replace(' ' + newClasses[i] + ' ', ' ');
+      className = className.replace(' ' + newClasses[i] + ' ', ' ');
     }
 
     element.className = OTHelpers.trim(className);
 
     return this;
-};
+  };
 
 
-/**
- * Methods to calculate element widths and heights.
- */
+  /**
+   * Methods to calculate element widths and heights.
+   */
 
-var _width = function(element) {
+  var _width = function(element) {
         if (element.offsetWidth > 0) {
-            return element.offsetWidth + 'px';
+          return element.offsetWidth + 'px';
         }
 
         return OTHelpers.css(element, 'width');
-    },
+      },
 
-    _height = function(element) {
+      _height = function(element) {
         if (element.offsetHeight > 0) {
-            return element.offsetHeight + 'px';
+          return element.offsetHeight + 'px';
         }
 
         return OTHelpers.css(element, 'height');
-    };
+      };
 
-OTHelpers.width = function(element, newWidth) {
+  OTHelpers.width = function(element, newWidth) {
     if (newWidth) {
-        OTHelpers.css(element, 'width', newWidth);
-        return this;
+      OTHelpers.css(element, 'width', newWidth);
+      return this;
     }
     else {
-        if (OTHelpers.isDisplayNone(element)) {
-            // We can't get the width, probably since the element is hidden.
-            return OTHelpers.makeVisibleAndYield(element, function() {
-                return _width(element);
-            });
-        }
-        else {
-            return _width(element);
-        }
+      if (OTHelpers.isDisplayNone(element)) {
+        // We can't get the width, probably since the element is hidden.
+        return OTHelpers.makeVisibleAndYield(element, function() {
+          return _width(element);
+        });
+      }
+      else {
+        return _width(element);
+      }
     }
-};
+  };
 
-OTHelpers.height = function(element, newHeight) {
+  OTHelpers.height = function(element, newHeight) {
     if (newHeight) {
-        OTHelpers.css(element, 'height', newHeight);
-        return this;
+      OTHelpers.css(element, 'height', newHeight);
+      return this;
     }
     else {
-        if (OTHelpers.isDisplayNone(element)) {
-            // We can't get the height, probably since the element is hidden.
-            return OTHelpers.makeVisibleAndYield(element, function() {
-                return _height(element);
-            });
-        }
-        else {
-            return _height(element);
-        }
+      if (OTHelpers.isDisplayNone(element)) {
+        // We can't get the height, probably since the element is hidden.
+        return OTHelpers.makeVisibleAndYield(element, function() {
+          return _height(element);
+        });
+      }
+      else {
+        return _height(element);
+      }
     }
-};
+  };
 
-// Centers +element+ within the window. You can pass through the width and height
-// if you know it, if you don't they will be calculated for you.
-OTHelpers.centerElement = function(element, width, height) {
+  // Centers +element+ within the window. You can pass through the width and height
+  // if you know it, if you don't they will be calculated for you.
+  OTHelpers.centerElement = function(element, width, height) {
     if (!width) width = parseInt(OTHelpers.width(element), 10);
     if (!height) height = parseInt(OTHelpers.height(element), 10);
 
-    var marginLeft = -0.5 * width + "px";
-    var marginTop = -0.5 * height + "px";
-    OTHelpers.css(element, "margin", marginTop + " 0 0 " + marginLeft);
-    OTHelpers.addClass(element, "OT_centered");
-};
+    var marginLeft = -0.5 * width + 'px';
+    var marginTop = -0.5 * height + 'px';
+    OTHelpers.css(element, 'margin', marginTop + ' 0 0 ' + marginLeft);
+    OTHelpers.addClass(element, 'OT_centered');
+  };
 
 })(window, window.OTHelpers);
 
@@ -2570,27 +2627,27 @@ OTHelpers.centerElement = function(element, width, height) {
       defaultDisplays = {};
 
   var defaultDisplayValueForElement = function(element) {
-      if (defaultDisplays[element.ownerDocument] &&
-        defaultDisplays[element.ownerDocument][element.nodeName]) {
-        return defaultDisplays[element.ownerDocument][element.nodeName];
-      }
+    if (defaultDisplays[element.ownerDocument] &&
+      defaultDisplays[element.ownerDocument][element.nodeName]) {
+      return defaultDisplays[element.ownerDocument][element.nodeName];
+    }
 
-      if (!defaultDisplays[element.ownerDocument]) defaultDisplays[element.ownerDocument] = {};
-    
-      // We need to know what display value to use for this node. The easiest way
-      // is to actually create a node and read it out.
-      var testNode = element.ownerDocument.createElement(element.nodeName),
-          defaultDisplay;
+    if (!defaultDisplays[element.ownerDocument]) defaultDisplays[element.ownerDocument] = {};
 
-      element.ownerDocument.body.appendChild(testNode);
-      defaultDisplay = defaultDisplays[element.ownerDocument][element.nodeName] =
-        OTHelpers.css(testNode, 'display');
+    // We need to know what display value to use for this node. The easiest way
+    // is to actually create a node and read it out.
+    var testNode = element.ownerDocument.createElement(element.nodeName),
+        defaultDisplay;
 
-      OTHelpers.removeElement(testNode);
-      testNode = null;
+    element.ownerDocument.body.appendChild(testNode);
+    defaultDisplay = defaultDisplays[element.ownerDocument][element.nodeName] =
+      OTHelpers.css(testNode, 'display');
 
-      return defaultDisplay;
-    };
+    OTHelpers.removeElement(testNode);
+    testNode = null;
+
+    return defaultDisplay;
+  };
 
   var isHidden = function(element) {
     var computedStyle = OTHelpers.getComputedStyle(element);
@@ -2630,7 +2687,9 @@ OTHelpers.centerElement = function(element, width, height) {
       var style = element.style;
 
       for (var cssName in nameOrHash) {
-        style[cssName] = nameOrHash[cssName];
+        if (nameOrHash.hasOwnProperty(cssName)) {
+          style[cssName] = nameOrHash[cssName];
+        }
       }
 
       return this;
@@ -2687,7 +2746,7 @@ OTHelpers.centerElement = function(element, width, height) {
     return ret;
   };
 
-// Make +element+ visible while executing +callback+.
+  // Make +element+ visible while executing +callback+.
   OTHelpers.makeVisibleAndYield = function(element, callback) {
     // find whether it's the element or an ancester that's display none and
     // then apply to whichever it is
@@ -2710,16 +2769,29 @@ OTHelpers.centerElement = function(element, width, height) {
 
 (function(window, OTHelpers, undefined) {
 
-  OTHelpers.requestAnimationFrame =
-    OTHelpers.bind(
-        window.requestAnimationFrame ||
-        window.mozRequestAnimationFrame ||
-        window.webkitRequestAnimationFrame ||
-        window.msRequestAnimationFrame ||
-        setTimeout, window);
+  var requestAnimationFrame = window.requestAnimationFrame ||
+                              window.mozRequestAnimationFrame ||
+                              window.webkitRequestAnimationFrame ||
+                              window.msRequestAnimationFrame;
 
+  if (requestAnimationFrame) {
+    requestAnimationFrame = OTHelpers.bind(requestAnimationFrame, window);
+  }
+  else {
+    var lastTime = 0;
+    var startTime = OTHelpers.now();
+
+    requestAnimationFrame = function(callback){
+      var currTime = OTHelpers.now();
+      var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+      var id = window.setTimeout(function() { callback(currTime - startTime); }, timeToCall);
+      lastTime = currTime + timeToCall;
+      return id;
+    };
+  }
+
+  OTHelpers.requestAnimationFrame = requestAnimationFrame;
 })(window, window.OTHelpers);
-
 // AJAX helpers
 
 /*jshint browser:true, smarttabs:true*/
@@ -2947,7 +3019,8 @@ OTHelpers.centerElement = function(element, width, height) {
     return retVal;
   };
 
-  OT.setLogLevel(OT.properties.debug ? OT.DEBUG : OT.ERROR);
+  var debugTrue = OT.properties.debug === 'true' || OT.properties.debug === true;
+  OT.setLogLevel(debugTrue ? OT.DEBUG : OT.ERROR);
 
   OT.$.userAgent = function() {
     var userAgent = navigator.userAgent;
@@ -3071,10 +3144,9 @@ OTHelpers.centerElement = function(element, width, height) {
   var checkBoxElement = function (classes, nameAndId, onChange) {
     var checkbox = templateElement.call(this, '', null, 'input').on('change', onChange);
 
-    if (OT.$.browser() === 'ie' && OT.$.browserVersion() <= 8) {
+    if (OT.$.browser() === 'IE' && OT.$.browserVersion().version <= 8) {
       // Fix for IE8 not triggering the change event
       checkbox.on('click', function() {
-        console.log('CLICK');
         checkbox.blur();
         checkbox.focus();
       });
@@ -3103,11 +3175,12 @@ OTHelpers.centerElement = function(element, width, height) {
   OT.Dialogs.AllowDeny.Chrome.initialPrompt = function() {
     var modal = new OT.$.Modal(function(window, document) {
 
-      var el = templateElement.bind(document),
+      var el = OT.$.bind(templateElement, document),
           close, root;
 
       close = el('OT_closeButton', '&times;')
         .on('click', function() {
+          modal.trigger('closeButtonClicked');
           modal.close();
         });
 
@@ -3132,12 +3205,13 @@ OTHelpers.centerElement = function(element, width, height) {
   OT.Dialogs.AllowDeny.Chrome.previouslyDenied = function(website) {
     var modal = new OT.$.Modal(function(window, document) {
 
-      var el = templateElement.bind(document),
+      var el = OT.$.bind(templateElement, document),
           close,
           root;
 
       close = el('OT_closeButton', '&times;')
         .on('click', function() {
+          modal.trigger('closeButtonClicked');
           modal.close();
         });
 
@@ -3180,7 +3254,7 @@ OTHelpers.centerElement = function(element, width, height) {
   OT.Dialogs.AllowDeny.Chrome.deniedNow = function() {
     var modal = new OT.$.Modal(function(window, document) {
 
-      var el = templateElement.bind(document),
+      var el = OT.$.bind(templateElement, document),
           root;
 
       root = el('OT_root OT_dialog-blackout',
@@ -3207,12 +3281,13 @@ OTHelpers.centerElement = function(element, width, height) {
   OT.Dialogs.AllowDeny.Firefox.maybeDenied = function() {
     var modal = new OT.$.Modal(function(window, document) {
 
-      var el = templateElement.bind(document),
+      var el = OT.$.bind(templateElement, document),
           close,
           root;
 
       close = el('OT_closeButton', '&times;')
         .on('click', function() {
+          modal.trigger('closeButtonClicked');
           modal.close();
         });
 
@@ -3254,8 +3329,8 @@ OTHelpers.centerElement = function(element, width, height) {
   OT.Dialogs.AllowDeny.Firefox.denied = function() {
     var modal = new OT.$.Modal(function(window, document) {
 
-      var el = templateElement.bind(document),
-          btn = templateElement.bind(document, 'OT_dialog-button OT_dialog-button-large'),
+      var el = OT.$.bind(templateElement, document),
+          btn = OT.$.bind(templateElement, document, 'OT_dialog-button OT_dialog-button-large'),
           root,
           refreshButton;
 
@@ -3291,10 +3366,26 @@ OTHelpers.centerElement = function(element, width, height) {
     var modal = new OT.$.Modal(function(window, document) {
 
       var el = OT.$.bind(templateElement, document),
-          btn = OT.$.bind(templateElement, document,
-                    'OT_dialog-button OT_dialog-button-large OT_dialog-button-disabled'),
-          downloadButton = btn('Download OpenTok'),
-          refreshButton = btn('Refresh page'),
+          btn = function(children, size) {
+            var classes = 'OT_dialog-button ' +
+                          (size ? 'OT_dialog-button-' + size : 'OT_dialog-button-large'),
+                b = el(classes, children);
+
+            b.enable = function() {
+              OT.$.removeClass(this, 'OT_dialog-button-disabled');
+              return this;
+            };
+
+            b.disable = function() {
+              OT.$.addClass(this, 'OT_dialog-button-disabled');
+              return this;
+            };
+
+            return b;
+          },
+          downloadButton = btn('Download plugin'),
+          cancelButton = btn('cancel', 'small'),
+          refreshButton = btn('Refresh browser'),
           acceptEULA,
           checkbox,
           close,
@@ -3302,6 +3393,13 @@ OTHelpers.centerElement = function(element, width, height) {
 
       function onDownload() {
         modal.trigger('download');
+        setTimeout(function() {
+          root.querySelector('.OT_dialog-messages-main').innerHTML =
+                                              'Plugin installation successful';
+          var sections = root.querySelectorAll('.OT_dialog-single-button-wide');
+          OT.$.addClass(sections[0], 'OT_dialog-hidden');
+          OT.$.removeClass(sections[1], 'OT_dialog-hidden');
+        }, 3000);
       }
 
       function onRefresh() {
@@ -3318,29 +3416,37 @@ OTHelpers.centerElement = function(element, width, height) {
       }
 
       function enableButtons() {
-        OT.$.removeClass(downloadButton, 'OT_dialog-button-disabled');
+        downloadButton.enable();
         downloadButton.on('click', onDownload);
 
-        OT.$.removeClass(refreshButton, 'OT_dialog-button-disabled');
+        refreshButton.enable();
         refreshButton.on('click', onRefresh);
       }
 
       function disableButtons() {
-        OT.$.addClass(downloadButton, 'OT_dialog-button-disabled');
+        downloadButton.disable();
         downloadButton.off('click', onDownload);
 
-        OT.$.addClass(refreshButton, 'OT_dialog-button-disabled');
+        refreshButton.disable();
         refreshButton.off('click', onRefresh);
       }
 
+      downloadButton.disable();
+      refreshButton.disable();
+
+      cancelButton.on('click', function() {
+        modal.trigger('cancelButtonClicked');
+        modal.close();
+      });
 
       close = el('OT_closeButton', '&times;')
         .on('click', function() {
+          modal.trigger('closeButtonClicked');
           modal.close();
         });
 
       acceptEULA = linkElement.call(document,
-                                    'End-user license agreement',
+                                    'end-user license agreement',
                                     'http://tokbox.com/support/ie-eula');
 
       checkbox = checkBoxElement.call(document, null, 'acceptEULA', onToggleEULA);
@@ -3348,30 +3454,28 @@ OTHelpers.centerElement = function(element, width, height) {
       root = el('OT_root OT_dialog OT_dialog-plugin-prompt', [
         close,
         el('OT_dialog-messages', [
-          el('OT_dialog-messages-main', 'This app requires real-time communication'),
-          el('OT_dialog-messages-minor', 'These 2 simple steps will ' +
-            'enable real-time communications in Internet Explorer:')
+          el('OT_dialog-messages-main', 'This app requires real-time communication')
         ]),
-        el('OT_dialog-button-pair', [
-          el('OT_dialog-button-with-title', [
+        el('OT_dialog-single-button-wide', [
+          el('OT_dialog-single-button-with-title', [
             el('OT_dialog-button-title', [
-              el('', 'Step 1', 'strong'),
               checkbox,
               (function() {
-                var x = el('', 'Accept', 'label');
+                var x = el('', 'accept', 'label');
                 x.setAttribute('for', checkbox.id);
                 x.style.margin = '0 5px';
                 return x;
               })(),
               acceptEULA
             ]),
-            downloadButton
-          ]),
-          el('OT_dialog-button-pair-seperator', ''),
-          el('OT_dialog-button-with-title', [
+            downloadButton,
+            cancelButton
+          ])
+        ]),
+        el('OT_dialog-single-button-wide OT_dialog-hidden', [
+          el('OT_dialog-single-button-with-title', [
             el('OT_dialog-button-title', [
-              el('', 'Step 2', 'strong'),
-              'Reload this page after installation'
+              'You can now enjoy webRTC enabled video via Internet Explorer.'
             ]),
             refreshButton
           ])
@@ -3389,7 +3493,7 @@ OTHelpers.centerElement = function(element, width, height) {
   OT.Dialogs.Plugin.promptToReinstall = function() {
     var modal = new OT.$.Modal(function(window, document) {
 
-      var el = templateElement.bind(document),
+      var el = OT.$.bind(templateElement, document),
           close,
           okayButton,
           root;
@@ -3402,6 +3506,7 @@ OTHelpers.centerElement = function(element, width, height) {
       });
 
       OT.$.on(close, 'click', function() {
+        modal.trigger('closeButtonClicked');
         modal.close();
       });
 
@@ -3432,7 +3537,7 @@ OTHelpers.centerElement = function(element, width, height) {
 
     var modal = new OT.$.Modal(function(window, document) {
 
-      var el = templateElement.bind(document),
+      var el = OT.$.bind(templateElement, document),
           root;
 
       progressText = el('OT_dialog-plugin-upgrade-percentage', '0%', 'strong');
@@ -3480,7 +3585,7 @@ OTHelpers.centerElement = function(element, width, height) {
 
   OT.Dialogs.Plugin.updateComplete = function(error) {
     var modal = new OT.$.Modal(function(window, document) {
-      var el = templateElement.bind(document),
+      var el = OT.$.bind(templateElement, document),
           reloadButton,
           root;
 
@@ -3555,6 +3660,12 @@ OTHelpers.centerElement = function(element, width, height) {
       } else {
         props.assetURL = props.cdnURL + '/webrtc/' + props.version;
       }
+    }
+
+    var isIE89 = OT.$.browser() === 'IE' && OT.$.browserVersion().version <= 9;
+    if (!(isIE89 && window.location.protocol.indexOf('https') < 0)) {
+      props.apiURL = props.apiURLSSL;
+      props.loggingURL = props.loggingURLSSL;
     }
 
     if (!props.configURL) props.configURL = props.assetURL + '/js/dynamic_config.min.js';
@@ -3700,14 +3811,14 @@ OTHelpers.centerElement = function(element, width, height) {
 
 })(window);
 /**
- * @license  TB Plugin 0.4.0.7 9425efe HEAD
+ * @license  TB Plugin 0.4.0.8 72b534e HEAD
  * http://www.tokbox.com/
  *
  * Copyright (c) 2014 TokBox, Inc.
  * Released under the MIT license
  * http://opensource.org/licenses/MIT
  *
- * Date: August 05 08:56:57 2014
+ * Date: September 08 10:17:49 2014
  *
  */
 
@@ -3942,44 +4053,64 @@ var PluginObject = function PluginObject (plugin) {
     return _plugin.valid;
   };
 
-  if (_plugin.attachEvent) {
-    this.on = function (name, callback) {
-      _plugin.attachEvent('on'+name, callback);
-      return this;
-    };
-  } else {
-    this.on = function (name, callback) {
-      _plugin.addEventListener(name, callback, false);
-      return this;
-    };
-  }
+  // Event Handling Mechanisms
 
-  // Firebreath mistakenly adds detachEvent in IE11, so
-  // we'll look on window instead
-  if (window.detachEvent) {
-    this.off = function (name, callback) {
-      _plugin.detachEvent('on'+name, callback);
-      return this;
-    };
-  }
-  else {
-    this.off = function (name, callback) {
-      _plugin.removeEventListener(name, callback);
-      return this;
-    };
-  }
+  var eventHandlers = {};
 
-  this.once = function (name, callback) {
-    var fn = OT.$.bind(function () {
-      this.off(name, fn);
-      return callback.apply(null, arguments);
-    }, this);
+  var onCustomEvent = OT.$.bind(curryCallAsync(function onCustomEvent() {
+    var args = Array.prototype.slice.call(arguments),
+        name = args.shift();
 
-    this.on(name, fn);
+    if (!eventHandlers.hasOwnProperty(name) && eventHandlers[name].length) {
+      return;
+    }
+
+    OT.$.forEach(eventHandlers[name], function(handler) {
+      handler[0].apply(handler[1], args);
+    });
+  }), this);
+
+
+  this.on = function (name, callback, context) {
+    if (!eventHandlers.hasOwnProperty(name)) {
+      eventHandlers[name] = [];
+    }
+
+    eventHandlers[name].push([callback, context]);
     return this;
   };
 
+  this.off = function (name, callback, context) {
+    if (!eventHandlers.hasOwnProperty(name) ||
+        eventHandlers[name].length === 0) {
+      return;
+    }
+
+    OT.$.filter(eventHandlers[name], function(listener) {
+      return listener[0] === callback &&
+              listener[1] === context;
+    });
+
+    return this;
+  };
+
+  this.once = function (name, callback, context) {
+    var fn = function () {
+      this.off(name, fn, this);
+      return callback.apply(context, arguments);
+    };
+
+    this.on(name, fn, this);
+    return this;
+  };
+
+
   this.onReady = function(readyCallback) {
+    if (_plugin.on) {
+      // If the plugin supports custom events we'll use them
+      _plugin.on(-1, {customEvent: curryCallAsync(onCustomEvent, this)});
+    }
+
     // Only the main plugin has an initialise method
     if (_plugin.initialise) {
       this.on('ready', OT.$.bind(curryCallAsync(readyCallback), this));
@@ -4002,7 +4133,19 @@ var PluginObject = function PluginObject (plugin) {
   this.setStream = function(stream, completion) {
     if (completion) {
       if (stream.hasVideo()) {
-        this.once('renderingStarted', completion);
+        // FIX ME renderingStarted currently doesn't first
+        // this.once('renderingStarted', completion);
+        var verifyStream = function() {
+          if (_plugin.videoWidth > 0) {
+            // This fires a little too soon.
+            setTimeout(completion, 200);
+          }
+          else {
+            setTimeout(verifyStream, 500);
+          }
+        };
+
+        setTimeout(verifyStream, 500);
       }
       else {
         // TODO Investigate whether there is a good way to detect
@@ -4135,6 +4278,76 @@ var createPeerController = function createPeerController (completion) {
   });
 
   return o;
+};
+
+// tb_require('./header.js')
+// tb_require('./shims.js')
+// tb_require('./plugin_object.js')
+
+/* jshint globalstrict: true, strict: false, undef: true, unused: true,
+          trailing: true, browser: true, smarttabs:true */
+/* global OT:true, debug:true */
+/* exported VideoContainer */
+
+var VideoContainer = function VideoContainer (plugin, stream) {
+  this.domElement = plugin._;
+  this.parentElement = plugin._.parentNode;
+
+  plugin.addRef(this);
+
+  this.appendTo = function (parentDomElement) {
+    if (parentDomElement && plugin._.parentNode !== parentDomElement) {
+      debug('VideoContainer appendTo', parentDomElement);
+      parentDomElement.appendChild(plugin._);
+      this.parentElement = parentDomElement;
+    }
+  };
+
+  this.show = function (completion) {
+    debug('VideoContainer show');
+    plugin._.removeAttribute('width');
+    plugin._.removeAttribute('height');
+    plugin.setStream(stream, completion);
+    OT.$.show(plugin._);
+  };
+
+  this.setWidth = function (width) {
+    debug('VideoContainer setWidth to ' + width);
+    plugin._.setAttribute('width', width);
+  };
+
+  this.setHeight = function (height) {
+    debug('VideoContainer setHeight to ' + height);
+    plugin._.setAttribute('height', height);
+  };
+
+  this.setVolume = function (value) {
+    // TODO
+    debug('VideoContainer setVolume not implemented: called with ' + value);
+  };
+
+  this.getVolume = function () {
+    // TODO
+    debug('VideoContainer getVolume not implemented');
+    return 0.5;
+  };
+
+  this.getImgData = function () {
+    return plugin._.getImgData('image/png');
+  };
+
+  this.getVideoWidth = function () {
+    return plugin._.videoWidth;
+  };
+
+  this.getVideoHeight = function () {
+    return plugin._.videoHeight;
+  };
+
+  this.destroy = function () {
+    plugin._.setStream(null);
+    plugin.removeRef(this);
+  };
 };
 
 // tb_require('./header.js')
@@ -4362,76 +4575,6 @@ var AutoUpdater;
   };
 
 })();
-
-// tb_require('./header.js')
-// tb_require('./shims.js')
-// tb_require('./plugin_object.js')
-
-/* jshint globalstrict: true, strict: false, undef: true, unused: true,
-          trailing: true, browser: true, smarttabs:true */
-/* global OT:true, debug:true */
-/* exported VideoContainer */
-
-var VideoContainer = function VideoContainer (plugin, stream) {
-  this.domElement = plugin._;
-  this.parentElement = plugin._.parentNode;
-
-  plugin.addRef(this);
-
-  this.appendTo = function (parentDomElement) {
-    if (parentDomElement && plugin._.parentNode !== parentDomElement) {
-      debug('VideoContainer appendTo', parentDomElement);
-      parentDomElement.appendChild(plugin._);
-      this.parentElement = parentDomElement;
-    }
-  };
-
-  this.show = function (completion) {
-    debug('VideoContainer show');
-    plugin._.removeAttribute('width');
-    plugin._.removeAttribute('height');
-    plugin.setStream(stream, completion);
-    OT.$.show(plugin._);
-  };
-
-  this.setWidth = function (width) {
-    debug('VideoContainer setWidth to ' + width);
-    plugin._.setAttribute('width', width);
-  };
-
-  this.setHeight = function (height) {
-    debug('VideoContainer setHeight to ' + height);
-    plugin._.setAttribute('height', height);
-  };
-
-  this.setVolume = function (value) {
-    // TODO
-    debug('VideoContainer setVolume not implemented: called with ' + value);
-  };
-
-  this.getVolume = function () {
-    // TODO
-    debug('VideoContainer getVolume not implemented');
-    return 0.5;
-  };
-
-  this.getImgData = function () {
-    return plugin._.getImgData('image/png');
-  };
-
-  this.getVideoWidth = function () {
-    return plugin._.videoWidth;
-  };
-
-  this.getVideoHeight = function () {
-    return plugin._.videoHeight;
-  };
-
-  this.destroy = function () {
-    plugin._.setStream(null);
-    plugin.removeRef(this);
-  };
-};
 
 // tb_require('./header.js')
 // tb_require('./shims.js')
@@ -4677,108 +4820,6 @@ var RTCStatsReport = function (reports) {
   };
 };
 
-
-/*
-Output from FF:
-
-RTCStatsReport {
-6XBq
-  Object { id="6XBq", timestamp=1393144895233.075, type="localcandidate", more...}
-
-A+xj
-  Object { id="A+xj", timestamp=1393144895233.075, type="localcandidate", more...}
-
-M1Yw
-  Object { id="M1Yw", timestamp=1393144895233.075, type="remotecandidate", more...}
-
-OMYS
-  Object { id="OMYS", timestamp=1393144895233.075, type="localcandidate", more...}
-
-UeDG
-  Object { id="UeDG", timestamp=1393144895233.075, type="remotecandidate", more...}
-
-dfHm
-  Object { id="dfHm", timestamp=1393144895233.075, type="localcandidate", more...}
-
-hCfu
-  Object { id="hCfu", timestamp=1393144895233.075, type="localcandidate", more...}
-
-i15H
-  Object { id="i15H", timestamp=1393144895233.075, type="localcandidate", more...}
-
-inbound_rtp_audio_1
-  Object { id="inbound_rtp_audio_1", timestamp=1393144895233.075, type="inboundrtp", more...}
-
-inbound_rtp_video_2
-  Object { id="inbound_rtp_video_2", timestamp=1393144895233.075, type="inboundrtp", more...}
-
-sHQ2
-  Object { id="sHQ2", timestamp=1393144895233.075, type="localcandidate", more...}
-
-xYfs
-  Object { id="xYfs", timestamp=1393144895233.075, type="localcandidate", more...}
-
-forEach
-  forEach()
-
-get
-  get()
-
-has
-  has()
-}
-
-
-
-
-inbound_rtp_audio_1
-  bytesReceived
-    670142
-
-  id
-    "inbound_rtp_audio_1"
-
-  isRemote
-    false
-
-  jitter
-    0
-
-  packetsReceived
-    7366
-
-  ssrc
-    "1709642421"
-
-  timestamp
-    1393144895233.075
-
-  type
-    "inboundrtp"
-
-
-sHQ2
-  candidateType
-    "serverreflexive"
-
-  componentId
-    "1393144747157231 (id=26...=T1==cGF: stream1/audio"
-
-  id
-    "sHQ2"
-
-  ipAddress
-    "216.38.134.120"
-
-  portNumber
-    58592
-
-  timestamp
-    1393144895233.075
-
-  type
-    "localcandidate"
-  */
 // tb_require('./header.js')
 // tb_require('./shims.js')
 // tb_require('./plugin_object.js')
@@ -5016,9 +5057,9 @@ var PeerConnection = function PeerConnection (iceServers, options, plugin) {
   /// Private Data
 
 var pluginInfo = {
-    mimeType: 'application/x-opentokie,version=0.4.0.7',
-    activeXName: 'TokBox.OpenTokIE.0.4.0.7',
-    version: '0.4.0.7'
+    mimeType: 'application/x-opentokie,version=0.4.0.8',
+    activeXName: 'TokBox.OpenTokIE.0.4.0.8',
+    version: '0.4.0.8'
   },
   _document = scope.document,
   readyCallbacks = [];
@@ -5412,7 +5453,8 @@ waitForDomReady();
         loadingContainer,
         width,
         height,
-        loading = true;
+        loading = true,
+        audioOnly = false;
 
     if (properties) {
       width = properties.width;
@@ -5528,7 +5570,20 @@ waitForDomReady();
       }
     };
 
+    this.setBackgroundImageURI = function(bgImgURI) {
+      if (bgImgURI.substr(0, 5) !== 'http:' && bgImgURI.substr(0, 6) !== 'https:') {
+        if (bgImgURI.substr(0, 22) !== 'data:image/png;base64,') {
+          bgImgURI = 'data:image/png;base64,' + bgImgURI;
+        }
+      }
+      OT.$.css(posterContainer, 'backgroundImage', 'url(' + bgImgURI + ')');
+      OT.$.css(posterContainer, 'backgroundSize', 'contain');
+      OT.$.css(posterContainer, 'opacity', '1.0');
+    };
 
+    if (properties && properties.style && properties.style.backgroundImageURI) {
+      this.setBackgroundImageURI(properties.style.backgroundImageURI);
+    }
 
     this.bindVideo = function(webRTCStream, options, completion) {
       // remove the old video element if it exists
@@ -5622,6 +5677,18 @@ waitForDomReady();
         }
       },
 
+      audioOnly: {
+        get: function() { return audioOnly; },
+        set: function(a) {
+          audioOnly = a;
+
+          if (audioOnly) {
+            OT.$.addClass(container, 'OT_audio-only');
+          } else {
+            OT.$.removeClass(container, 'OT_audio-only');
+          }
+        }
+      },
 
       domId: {
         get: function() { return container.getAttribute('id'); }
@@ -5645,28 +5712,6 @@ waitForDomReady();
 })(window);
 // Web OT Helpers
 !(function(window) {
-
-  /* global mozRTCPeerConnection */
-
-  var nativeGetUserMedia,
-      vendorToW3CErrors,
-      gumNamesToMessages,
-      mapVendorErrorName,
-      parseErrorEvent,
-      areInvalidConstraints;
-
-  // Handy cross-browser getUserMedia shim. Inspired by some code from Adam Barth
-  nativeGetUserMedia = (function() {
-    if (navigator.getUserMedia) {
-      return OT.$.bind(navigator.getUserMedia, navigator);
-    } else if (navigator.mozGetUserMedia) {
-      return OT.$.bind(navigator.mozGetUserMedia, navigator);
-    } else if (navigator.webkitGetUserMedia) {
-      return OT.$.bind(navigator.webkitGetUserMedia, navigator);
-    } else if (TBPlugin.isInstalled()) {
-      return OT.$.bind(TBPlugin.getUserMedia, TBPlugin);
-    }
-  })();
 
   var NativeRTCPeerConnection = (window.webkitRTCPeerConnection ||
                                  window.mozRTCPeerConnection);
@@ -5742,6 +5787,178 @@ waitForDomReady();
     }
   }
 
+
+  OT.$.createPeerConnection = function (config, options, publishersWebRtcStream, completion) {
+    if (TBPlugin.isInstalled()) {
+      TBPlugin.initPeerConnection(config, options,
+                                  publishersWebRtcStream, completion);
+    }
+    else {
+      var pc;
+
+      try {
+        pc = new NativeRTCPeerConnection(config, options);
+      } catch(e) {
+        completion(e.message);
+        return;
+      }
+
+      completion(null, pc);
+    }
+  };
+
+  // Returns a String representing the supported WebRTC crypto scheme. The possible
+  // values are SDES_SRTP, DTLS_SRTP, and NONE;
+  //
+  // Broadly:
+  // * Firefox only supports DTLS
+  // * Older versions of Chrome (<= 24) only support SDES
+  // * Newer versions of Chrome (>= 25) support DTLS and SDES
+  //
+  OT.$.supportedCryptoScheme = function() {
+    if (!OT.$.hasCapabilities('webrtc')) return 'NONE';
+
+    var chromeVersion = window.navigator.userAgent.toLowerCase().match(/chrome\/([0-9\.]+)/i);
+    return chromeVersion && parseFloat(chromeVersion[1], 10) < 25 ? 'SDES_SRTP' : 'DTLS_SRTP';
+  };
+
+})(window);
+// Web OT Helpers
+!(function(window) {
+
+  /* jshint globalstrict: true, strict: false, undef: true, unused: true,
+            trailing: true, browser: true, smarttabs:true */
+  /* global TBPlugin, OT */
+
+  ///
+  // Capabilities
+  //
+  // Support functions to query browser/client Media capabilities.
+  //
+
+
+  // Indicates whether this client supports the getUserMedia
+  // API.
+  //
+  OT.$.registerCapability('getUserMedia', function() {
+    return !!(navigator.webkitGetUserMedia || navigator.mozGetUserMedia || TBPlugin.isInstalled());
+  });
+
+
+  // TODO Remove all PeerConnection stuff, that belongs to the messaging layer not the Media layer.
+  // Indicates whether this client supports the PeerConnection
+  // API.
+  //
+  // Chrome Issues:
+  // * The explicit prototype.addStream check is because webkitRTCPeerConnection was
+  // partially implemented, but not functional, in Chrome 22.
+  //
+  // Firefox Issues:
+  // * No real support before Firefox 19
+  // * Firefox 19 has issues with generating Offers.
+  // * Firefox 20 doesn't interoperate with Chrome.
+  //
+  OT.$.registerCapability('PeerConnection', function() {
+    var browser = OT.$.browserVersion();
+
+    if (navigator.webkitGetUserMedia) {
+      return typeof(window.webkitRTCPeerConnection) === 'function' &&
+                      !!window.webkitRTCPeerConnection.prototype.addStream;
+
+    } else if (navigator.mozGetUserMedia) {
+      if (typeof(window.mozRTCPeerConnection) === 'function' && browser.version > 20.0) {
+        try {
+          new window.mozRTCPeerConnection();
+          return true;
+        } catch (err) {
+          return false;
+        }
+      }
+    } else {
+      return TBPlugin.isInstalled();
+    }
+  });
+
+
+  // Indicates whether this client supports WebRTC
+  //
+  // This is defined as: getUserMedia + PeerConnection + exceeds min browser version
+  //
+  OT.$.registerCapability('webrtc', function() {
+    var browser = OT.$.browserVersion(),
+        minimumVersions = OT.properties.minimumVersion || {},
+        minimumVersion = minimumVersions[browser.browser.toLowerCase()];
+
+    if(minimumVersion && minimumVersion > browser.version) {
+      OT.debug('Support for', browser.browser, 'is disabled because we require',
+        minimumVersion, 'but this is', browser.version);
+      return false;
+    }
+
+
+    return OT.$.hasCapabilities('getUserMedia', 'PeerConnection');
+  });
+
+
+  // TODO Remove all transport stuff, that belongs to the messaging layer not the Media layer.
+  // Indicates if the browser supports bundle
+  //
+  // Broadly:
+  // * Firefox doesn't support bundle
+  // * Chrome support bundle
+  // * OT Plugin supports bundle
+  //
+  OT.$.registerCapability('bundle', function() {
+    return OT.$.hasCapabilities('webrtc') &&
+              (OT.$.browser() === 'Chrome' || TBPlugin.isInstalled());
+  });
+
+
+  // Indicates if the browser supports rtcp mux
+  //
+  // Broadly:
+  // * Older versions of Firefox (<= 25) don't support rtcp mux
+  // * Older versions of Firefox (>= 26) support rtcp mux (not tested yet)
+  // * Chrome support rtcp mux
+  // * OT Plugin supports rtcp mux
+  //
+  OT.$.registerCapability('RTCPMux', function() {
+    return OT.$.hasCapabilities('webrtc') &&
+                (OT.$.browser() === 'Chrome' || TBPlugin.isInstalled());
+  });
+
+
+
+  // Indicates whether this browser supports the getMediaDevices (getSources) API.
+  //
+  OT.$.registerCapability('getMediaDevices', function() {
+    return OT.$.isFunction(window.MediaStreamTrack) &&
+              OT.$.isFunction(window.MediaStreamTrack.getSources);
+  });
+
+})(window);
+// Web OT Helpers
+!(function() {
+
+  var nativeGetUserMedia,
+      vendorToW3CErrors,
+      gumNamesToMessages,
+      mapVendorErrorName,
+      parseErrorEvent,
+      areInvalidConstraints;
+
+  // Handy cross-browser getUserMedia shim. Inspired by some code from Adam Barth
+  nativeGetUserMedia = (function() {
+    if (navigator.getUserMedia) {
+      return OT.$.bind(navigator.getUserMedia, navigator);
+    } else if (navigator.mozGetUserMedia) {
+      return OT.$.bind(navigator.mozGetUserMedia, navigator);
+    } else if (navigator.webkitGetUserMedia) {
+      return OT.$.bind(navigator.webkitGetUserMedia, navigator);
+    } else if (TBPlugin.isInstalled()) {
+      return OT.$.bind(TBPlugin.getUserMedia, TBPlugin);
+    }
+  })();
 
   // Mozilla error strings and the equivalent W3C names. NOT_SUPPORTED_ERROR does not
   // exist in the spec right now, so we'll include Mozilla's error description.
@@ -5826,113 +6043,6 @@ waitForDomReady();
     return true;
   };
 
-  // Returns true if the client supports Web RTC, false otherwise.
-  //
-  // Chrome Issues:
-  // * The explicit prototype.addStream check is because webkitRTCPeerConnection was
-  // partially implemented, but not functional, in Chrome 22.
-  //
-  // Firefox Issues:
-  // * No real support before Firefox 19
-  // * Firefox 19 has issues with generating Offers.
-  // * Firefox 20 doesn't interoperate with Chrome.
-  //
-  OT.$.supportsWebRTC = function() {
-    var _supportsWebRTC = false;
-
-    var browser = OT.$.browserVersion(),
-        minimumVersions = OT.properties.minimumVersion || {},
-        minimumVersion = minimumVersions[browser.browser.toLowerCase()];
-
-    if(minimumVersion && minimumVersion > browser.version) {
-      OT.debug('Support for', browser.browser, 'is disabled because we require',
-        minimumVersion, 'but this is', browser.version);
-      _supportsWebRTC = false;
-
-    } else if (navigator.webkitGetUserMedia) {
-      _supportsWebRTC = typeof(webkitRTCPeerConnection) === 'function' &&
-        !!webkitRTCPeerConnection.prototype.addStream;
-
-    } else if (navigator.mozGetUserMedia) {
-      if (typeof(mozRTCPeerConnection) === 'function' && browser.version > 20.0) {
-        try {
-          new mozRTCPeerConnection();
-          _supportsWebRTC = true;
-        } catch (err) {
-          _supportsWebRTC = false;
-        }
-      }
-    } else if (TBPlugin.isInstalled()) {
-      _supportsWebRTC = true;
-    }
-
-    OT.$.supportsWebRTC = function() {
-      return _supportsWebRTC;
-    };
-
-    return _supportsWebRTC;
-  };
-
-  // Returns a String representing the supported WebRTC crypto scheme. The possible
-  // values are SDES_SRTP, DTLS_SRTP, and NONE;
-  //
-  // Broadly:
-  // * Firefox only supports DTLS
-  // * Older versions of Chrome (<= 24) only support SDES
-  // * Newer versions of Chrome (>= 25) support DTLS and SDES
-  //
-  OT.$.supportedCryptoScheme = function() {
-    if (!OT.$.supportsWebRTC()) return 'NONE';
-
-    var chromeVersion = window.navigator.userAgent.toLowerCase().match(/chrome\/([0-9\.]+)/i);
-    return chromeVersion && parseFloat(chromeVersion[1], 10) < 25 ? 'SDES_SRTP' : 'DTLS_SRTP';
-  };
-
-  // Returns true if the browser supports bundle
-  //
-  // Broadly:
-  // * Firefox doesn't support bundle
-  // * Chrome support bundle
-  // * OT Plugin supports bundle
-  //
-  OT.$.supportsBundle = function() {
-    return OT.$.supportsWebRTC() && (OT.$.browser() === 'Chrome' || TBPlugin.isInstalled());
-  };
-
-  // Returns true if the browser supports rtcp mux
-  //
-  // Broadly:
-  // * Older versions of Firefox (<= 25) don't support rtcp mux
-  // * Older versions of Firefox (>= 26) support rtcp mux (not tested yet)
-  // * Chrome support rtcp mux
-  // * OT Plugin supports rtcp mux
-  //
-  OT.$.supportsRtcpMux = function() {
-    return OT.$.supportsWebRTC() && (OT.$.browser() === 'Chrome' || TBPlugin.isInstalled());
-  };
-
-  OT.$.shouldAskForDevices = function(callback) {
-    var memoiseReply = function(audio, video) {
-      OT.$.shouldAskForDevices = function(callback) {
-        setTimeout(OT.$.bind(callback, null, { video: video, audio: audio }));
-      };
-      OT.$.shouldAskForDevices(callback);
-    };
-    var MST = window.MediaStreamTrack;
-    if(MST != null && OT.$.isFunction(MST.getSources)) {
-      window.MediaStreamTrack.getSources(function(sources) {
-        var hasAudio = sources.some(function(src) {
-          return src.kind === 'audio';
-        });
-        var hasVideo = sources.some(function(src) {
-          return src.kind === 'video';
-        });
-        memoiseReply(hasAudio, hasVideo);
-      });
-    } else {
-      memoiseReply(true, true);
-    }
-  };
 
   // A wrapper for the builtin navigator.getUserMedia. In addition to the usual
   // getUserMedia behaviour, this helper method also accepts a accessDialogOpened
@@ -5964,36 +6074,6 @@ waitForDomReady();
   //      Called when access is denied to the camera/mic. This will be either because
   //      the user has clicked deny or because a particular origin is permanently denied.
   //
-
-  var chromeToW3CDeviceKinds = {
-    audio: 'audioInput',
-    video: 'videoInput'
-  };
-
-  /*global MediaStreamTrack*/
-  OT.$.canGetMediaDevices = function() {
-    return typeof MediaStreamTrack === 'function' && OT.$.isFunction(MediaStreamTrack.getSources);
-  };
-
-  OT.$.getMediaDevices = function(callback) {
-    if(OT.$.canGetMediaDevices()) {
-      MediaStreamTrack.getSources(function(sources) {
-        var filteredSources = OT.$.filter(sources, function(source) {
-          return chromeToW3CDeviceKinds[source.kind] != null;
-        });
-        callback(void 0, OT.$.map(filteredSources, function(source) {
-          return {
-            deviceId: source.id,
-            label: source.label,
-            kind: chromeToW3CDeviceKinds[source.kind]
-          };
-        }));
-      });
-    } else {
-      callback(new Error('This browser does not support getMediaDevices APIs'));
-    }
-  };
-
   OT.$.getUserMedia = function(constraints, success, failure, accessDialogOpened,
     accessDialogClosed, accessDenied, customGetUserMedia) {
 
@@ -6081,25 +6161,71 @@ waitForDomReady();
     }
   };
 
-  OT.$.createPeerConnection = function (config, options, publishersWebRtcStream, completion) {
-    if (TBPlugin.isInstalled()) {
-      TBPlugin.initPeerConnection(config, options,
-                                  publishersWebRtcStream, completion);
-    }
-    else {
-      var pc;
+})();
+// Web OT Helpers
+!(function(window) {
 
-      try {
-        pc = new NativeRTCPeerConnection(config, options);
-      } catch(e) {
-        completion(e.message);
-        return;
-      }
+  /* jshint globalstrict: true, strict: false, undef: true, unused: true,
+            trailing: true, browser: true, smarttabs:true */
+  /* global OT */
 
-      completion(null, pc);
+  ///
+  // Device Helpers
+  //
+  // Support functions to enumerating and guerying device info
+  //
+
+  var chromeToW3CDeviceKinds = {
+    audio: 'audioInput',
+    video: 'videoInput'
+  };
+
+
+  OT.$.shouldAskForDevices = function(callback) {
+    var MST = window.MediaStreamTrack;
+
+    if(MST != null && OT.$.isFunction(MST.getSources)) {
+      window.MediaStreamTrack.getSources(function(sources) {
+        var hasAudio = sources.some(function(src) {
+          return src.kind === 'audio';
+        });
+
+        var hasVideo = sources.some(function(src) {
+          return src.kind === 'video';
+        });
+
+        callback.call(null, { video: hasVideo, audio: hasAudio });
+      });
+
+    } else {
+      // This environment can't enumerate devices anyway, so we'll memorise this result.
+      OT.$.shouldAskForDevices = function(callback) {
+        setTimeout(OT.$.bind(callback, null, { video: true, audio: true }));
+      };
+
+      OT.$.shouldAskForDevices(callback);
     }
   };
 
+
+  OT.$.getMediaDevices = function(callback) {
+    if(OT.$.hasCapabilities('getMediaDevices')) {
+      window.MediaStreamTrack.getSources(function(sources) {
+        var filteredSources = OT.$.filter(sources, function(source) {
+          return chromeToW3CDeviceKinds[source.kind] != null;
+        });
+        callback(void 0, OT.$.map(filteredSources, function(source) {
+          return {
+            deviceId: source.id,
+            label: source.label,
+            kind: chromeToW3CDeviceKinds[source.kind]
+          };
+        }));
+      });
+    } else {
+      callback(new Error('This browser does not support getMediaDevices APIs'));
+    }
+  };
 
 })(window);
 (function(window) {
@@ -6385,8 +6511,7 @@ waitForDomReady();
     var _onVideoError = OT.$.bind(function(event) {
           var reason = 'There was an unexpected problem with the Video Stream: ' +
                         videoElementErrorCodeToStr(event.target.error.code);
-
-          errorHandler.call(null, null, reason, this, 'VideoElement');
+          errorHandler(reason, this, 'VideoElement');
         }, this),
 
         // The video element pauses itself when it's reparented, this is
@@ -6470,14 +6595,7 @@ waitForDomReady();
     // Unbind the currently bound stream from the video element.
     this.unbindStream = function() {
       if (_domElement) {
-        if (!navigator.mozGetUserMedia) {
-          // The browser would have released this on unload anyway, but
-          // we're being a good citizen.
-          window.URL.revokeObjectURL(_domElement.src);
-        }
-        else {
-          _domElement.mozSrcObject = null;
-        }
+        unbindNativeStream(_domElement);
       }
 
       return this;
@@ -6720,6 +6838,7 @@ waitForDomReady();
 
       onError = function onError (event) {
         cleanup();
+        unbindNativeStream(videoElement);
         completion('There was an unexpected problem with the Video Stream: ' +
           videoElementErrorCodeToStr(event.target.error.code));
       };
@@ -6728,6 +6847,7 @@ waitForDomReady();
         // The stream ended before we fully bound it. Maybe the other end called
         // stop on it or something else went wrong.
         cleanup();
+        unbindNativeStream(videoElement);
         completion('Stream ended while trying to bind it to a video element.');
       };
 
@@ -6737,13 +6857,16 @@ waitForDomReady();
           cleanup();
           completion('The video stream failed to connect. Please notify the site ' +
             'owner if this continues to happen.');
+        } else if (webRtcStream.ended === true) {
+          // The ended event should have fired by here, but support for it isn't
+          // always so awesome.
+          onStoppedLoading();
         } else {
-          // This should never happen
+
           OT.warn('Never got the loadedmetadata event but currentTime > 0');
           onLoad(null);
         }
       }, this), 30000);
-
 
       videoElement.addEventListener('loadedmetadata', onLoad, false);
       videoElement.addEventListener('error', onError, false);
@@ -6763,6 +6886,113 @@ waitForDomReady();
 
     videoElement.play();
   }
+
+
+  function unbindNativeStream(videoElement) {
+    if (videoElement.srcObject !== void 0) {
+      videoElement.srcObject = null;
+    } else if (videoElement.mozSrcObject !== void 0) {
+      videoElement.mozSrcObject = null;
+    } else {
+      window.URL.revokeObjectURL(videoElement.src);
+    }
+  }
+
+
+})(window);
+// tb_require('../helpers/helpers.js')
+
+!(function() {
+  /* jshint globalstrict: true, strict: false, undef: true, unused: true,
+            trailing: true, browser: true, smarttabs:true */
+  /* global OT */
+
+  var currentGuidStorage,
+      currentGuid;
+
+  var isInvalidStorage = function isInvalidStorage (storageInterface) {
+    return !(OT.$.isFunction(storageInterface.get) && OT.$.isFunction(storageInterface.set));
+  };
+
+  var getClientGuid = function getClientGuid (completion) {
+    if (currentGuid) {
+      completion(null, currentGuid);
+      return;
+    }
+
+    // It's the first time that getClientGuid has been called
+    // in this page lifetime. Attempt to load any existing Guid
+    // from the storage
+    currentGuidStorage.get(completion);
+  };
+
+  OT.overrideGuidStorage = function (storageInterface) {
+    if (isInvalidStorage(storageInterface)) {
+      throw new Error('The storageInterface argument does not seem to be valid, ' +
+                                        'it must implement get and set methods');
+    }
+
+    if (currentGuidStorage === storageInterface) {
+      return;
+    }
+
+    currentGuidStorage = storageInterface;
+
+    // If a client Guid has already been assigned to this client then
+    // let the new storage know about it so that it's in sync.
+    if (currentGuid) {
+      currentGuidStorage.set(currentGuid, function(error) {
+        if (error) {
+          OT.error('Failed to send initial Guid value (' + currentGuid +
+                                ') to the newly assigned Guid Storage. The error was: ' + error);
+          // @todo error
+        }
+      });
+    }
+  };
+
+  if (!OT._) OT._ = {};
+  OT._.getClientGuid = function (completion) {
+    getClientGuid(function(error, guid) {
+      if (error) {
+        completion(error);
+        return;
+      }
+
+      if (!guid) {
+        // Nothing came back, this client is entirely new.
+        // generate a new Guid and persist it
+        guid = OT.$.uuid();
+        currentGuidStorage.set(guid, function(error) {
+          if (error) {
+            completion(error);
+            return;
+          }
+
+          currentGuid = guid;
+        });
+      }
+      else if (!currentGuid) {
+        currentGuid = guid;
+      }
+
+      completion(null, currentGuid);
+    });
+  };
+
+
+  // Implement our default storage mechanism, which sets/gets a cookie
+  // called 'opentok_client_id'
+  OT.overrideGuidStorage({
+    get: function(completion) {
+      completion(null, OT.$.getCookie('opentok_client_id'));
+    },
+
+    set: function(guid, completion) {
+      OT.$.setCookie('opentok_client_id', guid);
+      completion(null);
+    }
+  });
 
 })(window);
 !(function(window) {
@@ -6948,35 +7178,42 @@ waitForDomReady();
 
       if (!options) options = {};
 
-      // Set a bunch of defaults
-      var data = OT.$.extend({
-        'variation' : '',
-        'guid' : this.getClientGuid(),
-        'widget_id' : '',
-        'session_id': '',
-        'connection_id': '',
-        'stream_id' : '',
-        'partner_id' : partnerId,
-        'source' : window.location.href,
-        'section' : '',
-        'build' : ''
-      }, options),
-
-      onComplete = function(){
-        //  OT.log('logged: ' + '{action: ' + data['action'] + ', variation: ' + data['variation']
-        //  + ', payload_type: ' + data['payload_type'] + ', payload: ' + data['payload'] + '}');
-      };
-
-      // We camel-case our names, but the ClientEvents backend wants them
-      // underscored...
-      for (var key in camelCasedKeys) {
-        if (camelCasedKeys.hasOwnProperty(key) && data[key]) {
-          data[camelCasedKeys[key]] = data[key];
-          delete data[key];
+      OT._.getClientGuid(function(error, guid) {
+        if (error) {
+          // @todo
+          return;
         }
-      }
 
-      post(data, onComplete, false);
+        // Set a bunch of defaults
+        var data = OT.$.extend({
+          'variation' : '',
+          'guid' : guid,
+          'widget_id' : '',
+          'session_id': '',
+          'connection_id': '',
+          'stream_id' : '',
+          'partner_id' : partnerId,
+          'source' : window.location.href,
+          'section' : '',
+          'build' : ''
+        }, options),
+
+        onComplete = function(){
+          //  OT.log('logged: ' + '{action: ' + data['action'] + ', variation: ' + data['variation']
+          //  + ', payload_type: ' + data['payload_type'] + ', payload: ' + data['payload'] + '}');
+        };
+
+        // We camel-case our names, but the ClientEvents backend wants them
+        // underscored...
+        for (var key in camelCasedKeys) {
+          if (camelCasedKeys.hasOwnProperty(key) && data[key]) {
+            data[camelCasedKeys[key]] = data[key];
+            delete data[key];
+          }
+        }
+
+        post(data, onComplete, false);
+      });
     };
 
     // Log a client QOS to the analytics backend.
@@ -6986,34 +7223,43 @@ waitForDomReady();
 
       if (!options) options = {};
 
-      // Set a bunch of defaults
-      var data = OT.$.extend({
-        'guid' : this.getClientGuid(),
-        'widget_id' : '',
-        'session_id': '',
-        'connection_id': '',
-        'stream_id' : '',
-        'partner_id' : partnerId,
-        'source' : window.location.href,
-        'build' : '',
-        'duration' : 0 //in milliseconds
-      }, options),
-
-      onComplete = function(){
-        // OT.log('logged: ' + '{action: ' + data['action'] + ', variation: ' + data['variation']
-        //  + ', payload_type: ' + data['payload_type'] + ', payload: ' + data['payload'] + '}');
-      };
-
-      // We camel-case our names, but the ClientEvents backend wants them
-      // underscored...
-      for (var key in camelCasedKeys) {
-        if (camelCasedKeys.hasOwnProperty(key) && data[key]) {
-          data[camelCasedKeys[key]] = data[key];
-          delete data[key];
+      OT._.getClientGuid(function(error, guid) {
+        if (error) {
+          // @todo
+          return;
         }
-      }
 
-      post(data, onComplete, true);
+        // Set a bunch of defaults
+        var data = OT.$.extend({
+          'guid' : guid,
+          'widget_id' : '',
+          'session_id': '',
+          'connection_id': '',
+          'stream_id' : '',
+          'partner_id' : partnerId,
+          'source' : window.location.href,
+          'build' : '',
+          'duration' : 0 //in milliseconds
+        }, options),
+
+        onComplete = function(){
+          // OT.log('logged: ' + '{action: ' + data['action'] + ', variation: ' + data['variation']
+          //  + ', payload_type: ' + data['payload_type'] + ', payload: ' + data['payload'] + '}');
+        };
+
+        // We camel-case our names, but the ClientEvents backend wants them
+        // underscored...
+        for (var key in camelCasedKeys) {
+          if (camelCasedKeys.hasOwnProperty(key)) {
+            if(data[key]) {
+              data[camelCasedKeys[key]] = data[key];
+            }
+            delete data[key];
+          }
+        }
+
+        post(data, onComplete, true);
+      });
     };
 
     // Converts +payload+ to two pipe seperated strings. Doesn't currently handle
@@ -7036,24 +7282,28 @@ waitForDomReady();
         escapedPayload.join('|')
       ];
     };
-
-    // Uses HTML5 local storage to save a client ID.
-    this.getClientGuid = function() {
-      var guid = OT.$.getCookie('opentok_client_id');
-      if (!guid) {
-        guid = OT.$.uuid();
-        OT.$.setCookie('opentok_client_id', guid);
-      }
-      // once we have a guid, memoise this function so if cookies & local storage are disabled
-      // we still hand back the same guid each call within this page at least. OPENTOK-14015
-      this.getClientGuid = function() {
-        return guid;
-      };
-      return guid;
-    };
   };
 
 })(window);
+!(function() {
+
+  OT.$.registerCapability('audioOutputLevelStat', function() {
+    return OT.$.browserVersion().browser === 'Chrome';
+  });
+
+  OT.$.registerCapability('webAudioCapableRemoteStream', function() {
+    return OT.$.browserVersion().browser === 'Firefox';
+  });
+
+  OT.$.registerCapability('getStatsWithSingleParameter', function() {
+    return OT.$.browserVersion().browser === 'Chrome';
+  });
+
+  OT.$.registerCapability('webAudio', function() {
+    return 'AudioContext' in window;
+  });
+
+})();
 !(function(window) {
 
   // This is not obvious, so to prevent end-user frustration we'll let them know
@@ -7070,6 +7320,8 @@ waitForDomReady();
   if (!window.URL && window.webkitURL) {
     window.URL = window.webkitURL;
   }
+
+  var _analytics = new OT.Analytics();
 
   var // Global parameters used by upgradeSystemRequirements
       _intervalId,
@@ -7260,7 +7512,12 @@ waitForDomReady();
 *   appearance of user interface controls of the Publisher. The <code>style</code> object includes
 *   the following properties:
 *     <ul>
-*       <li><code>backgroundImageURI</code> (String) &mdash; A URI for an image to display as
+*       <li><code>audioLevelDisplayMode</code> (String) &mdash; How to display the audio level
+*       indicator. Possible values are: <code>"auto"</code> (the indicator is displayed when the
+*       video is disabled), <code>"off"</code> (the indicator is not displayed), and
+*       <code>"on"</code> (the indicator is always displayed).</li>
+*
+*       <li><p><code>backgroundImageURI</code> (String) &mdash; A URI for an image to display as
 *       the background image when a video is not displayed. (A video may not be displayed if
 *       you call <code>publishVideo(false)</code> on the Publisher object). You can pass an http
 *       or https URI to a PNG, JPEG, or non-animated GIF file location. You can also use the
@@ -7270,7 +7527,14 @@ waitForDomReady();
 *       you could set the property to <code>"data:VBORw0KGgoAA..."</code>, where the portion of the
 *       string after <code>"data:"</code> is the result of a call to
 *       <code>Publisher.getImgData()</code>. If the URL or the image data is invalid, the property
-*       is ignored (the attempt to set the image fails silently).</li>
+*       is ignored (the attempt to set the image fails silently).
+*       <p>
+*       Note that in Internet Explorer 8 (using the OpenTok Plugin for Internet Explorer),
+*       you cannot set the <code>backgroundImageURI</code> style to a string larger than 32&nbsp;kB.
+*       This is due to an IE 8 limitation on the size of URI strings. Due to this limitation,
+*       you cannot set the <code>backgroundImageURI</code> style to a string obtained with the
+*       <code>getImgData()</code> method.
+*       </p></li>
 *
 *       <li><code>buttonDisplayMode</code> (String) &mdash; How to display the microphone controls
 *       Possible values are: <code>"auto"</code> (controls are displayed when the stream is first
@@ -7439,7 +7703,8 @@ waitForDomReady();
     OT.debug('OT.checkSystemRequirements()');
 
     // Try native support first, then TBPlugin...
-    var systemRequirementsMet = (OT.$.supportsWebSockets() && OT.$.supportsWebRTC());
+    var systemRequirementsMet = OT.$.hasCapabilities('websockets', 'webrtc') ||
+                                      TBPlugin.isInstalled();
 
     systemRequirementsMet = systemRequirementsMet ?
                                       this.HAS_REQUIREMENTS : this.NOT_HAS_REQUIREMENTS;
@@ -7448,6 +7713,16 @@ waitForDomReady();
       OT.debug('OT.checkSystemRequirements()');
       return systemRequirementsMet;
     };
+
+    if(systemRequirementsMet === this.NOT_HAS_REQUIREMENTS) {
+      _analytics.logEvent({
+        action: 'checkSystemRequirements',
+        variation: 'notHasRequirements',
+        'payload_type': 'userAgent',
+        'partner_id': OT.APIKEY,
+        payload: OT.$.userAgent()
+      });
+    }
 
     return systemRequirementsMet;
   };
@@ -7468,6 +7743,20 @@ waitForDomReady();
   OT.upgradeSystemRequirements = function(){
     // trigger after the OT environment has loaded
     OT.onLoad( function() {
+
+      if(TBPlugin.isSupported()) {
+        OT.Dialogs.Plugin.promptToInstall().on({
+          download: function() {
+            window.location = TBPlugin.pathToInstaller();
+          },
+          refresh: function() {
+            location.reload();
+          },
+          closed: function() {}
+        });
+        return;
+      }
+
       var id = '_upgradeFlash';
 
          // Load the iframe over the whole page.
@@ -7497,7 +7786,8 @@ waitForDomReady();
         d.setAttribute('scrolling', 'no');
 
         var browser = OT.$.browserVersion(),
-            isSupportedButOld = OT.properties.minimumVersion[browser.browser.toLowerCase()];
+            minimumBrowserVersion = OT.properties.minimumVersion[browser.browser.toLowerCase()],
+            isSupportedButOld =  minimumBrowserVersion > browser.version;
         d.src = OT.properties.assetURL + '/html/upgrade.html#' +
                           encodeURIComponent(isSupportedButOld ? 'true' : 'false') + ',' +
                           encodeURIComponent(JSON.stringify(OT.properties.minimumVersion)) + '|' +
@@ -8070,7 +8360,10 @@ waitForDomReady();
 
     // Environment Loader
     ENV_LOADED: 'envLoaded',
-    ENV_UNLOADED: 'envUnloaded'
+    ENV_UNLOADED: 'envUnloaded',
+
+    // Audio activity Events
+    AUDIO_LEVEL_UPDATED: 'audioLevelUpdated'
   };
 
   OT.ExceptionCodes = {
@@ -8293,11 +8586,9 @@ waitForDomReady();
 
 
 /**
- * Connection event is an event that can have type "connectionCreated" or "connectionDestroyed".
- * These events are dispatched by the Session object when another client connects to or
- * disconnects from a {@link Session}. For the local client, the Session object dispatches a
- * "sessionConnected" or "sessionDisconnected" event, defined by the SessionConnectEvent and
- * SessionDisconnectEvent classes.
+ * Dispatched by the Session object when a client connects to or disconnects from a {@link Session}.
+ * For the local client, the Session object dispatches a "sessionConnected" or "sessionDisconnected"
+ * event, defined by the {@link SessionConnectEvent} and {@link SessionDisconnectEvent} classes.
  *
  * <h5><a href="example"></a>Example</h5>
  *
@@ -8313,16 +8604,12 @@ waitForDomReady();
  * var connectionCount = 0;
  *
  * var session = OT.initSession(apiKey, sessionID);
- * session.on("sessionConnected", function(event) {
- *    connectionCount = 1; // This represent's your client's connection to the session
- *    displayConnectionCount();
- * });
  * session.on("connectionCreated", function(event) {
- *    connectionCount += 1;
+ *    connectionCount++;
  *    displayConnectionCount();
  * });
  * session.on("connectionDestroyed", function(event) {
- *    connectionCount -= 1;
+ *    connectionCount--;
  *    displayConnectionCount();
  * });
  * session.connect(token);
@@ -8448,13 +8735,12 @@ waitForDomReady();
  * </pre>
  *
  * @class StreamEvent
- * @property {Stream} stream A Stream object corresponding to the stream that was added (in the
- * case of a <code>streamCreated</code> event) or deleted (in the case of a
- * <code>streamDestroyed</code> event).
  *
- * @property {Array} streams Deprecated. Use the <code>stream</code> property. A
- * <code>streamCreated</code> or <code>streamDestroyed</code> event is dispatched for
- * each stream added or destroyed.
+ * @property {Boolean} cancelable   Whether the event has a default behavior that is cancelable
+ *  (<code>true</code>) or not (<code>false</code>). You can cancel the default behavior by calling
+ *  the <code>preventDefault()</code> method of the StreamEvent object in the event listener
+ *  function. The <code>streamDestroyed</code>
+ *  event is cancelable. (See <a href="#preventDefault">preventDefault()</a>.)
  *
  * @property {String} reason For a <code>streamDestroyed</code> event,
  *  a description of why the session disconnected. This property can have one of the following
@@ -8483,12 +8769,14 @@ waitForDomReady();
  *
  * <p>For a <code>streamCreated</code> event, this string is undefined.</p>
  *
+ * @property {Stream} stream A Stream object corresponding to the stream that was added (in the
+ * case of a <code>streamCreated</code> event) or deleted (in the case of a
+ * <code>streamDestroyed</code> event).
  *
- * @property {Boolean} cancelable   Whether the event has a default behavior that is cancelable
- *  (<code>true</code>) or not (<code>false</code>). You can cancel the default behavior by calling
- *  the <code>preventDefault()</code> method of the StreamEvent object in the event listener
- *  function. The <code>streamDestroyed</code>
- *  event is cancelable. (See <a href="#preventDefault">preventDefault()</a>.)
+ * @property {Array} streams Deprecated. Use the <code>stream</code> property. A
+ * <code>streamCreated</code> or <code>streamDestroyed</code> event is dispatched for
+ * each stream added or destroyed.
+ *
  * @augments Event
  */
 
@@ -8553,8 +8841,8 @@ waitForDomReady();
  * @property {Array} connections Deprecated in version 2.2 (and set to an empty array). In
  * version 2.2, listen for the <code>connectionCreated</code> event dispatched by the Session
  * object. In version 2.2, the Session object dispatches a <code>connectionCreated</code> event
- * for each connection other than that of your client. This includes connections
- * present when you first connect to the session.
+ * for each connection (including your own). This includes connections present when you first
+ * connect to the session.
  *
  * @property {Array} streams Deprecated in version 2.2 (and set to an empty array). In version
  * 2.2, listen for the <code>streamCreated</code> event dispatched by the Session object. In
@@ -8697,9 +8985,9 @@ waitForDomReady();
  * @class StreamPropertyChangedEvent
  * @property {String} changedProperty The property of the stream that changed. This value
  * is either <code>"hasAudio"</code>, <code>"hasVideo"</code>, or <code>"videoDimensions"</code>.
- * @property {Stream} stream The Stream object for which a property has changed.
  * @property {Object} newValue The new value of the property (after the change).
  * @property {Object} oldValue The old value of the property (before the change).
+ * @property {Stream} stream The Stream object for which a property has changed.
  *
  * @see <a href="Publisher.html#publishAudio">Publisher.publishAudio()</a></p>
  * @see <a href="Publisher.html#publishVideo">Publisher.publishVideo()</a></p>
@@ -8764,7 +9052,6 @@ waitForDomReady();
     this.from = from;
   };
 
-
   OT.StreamUpdatedEvent = function (stream, key, oldValue, newValue) {
     OT.Event.call(this, 'updated', false);
     this.target = stream;
@@ -8777,6 +9064,86 @@ waitForDomReady();
     OT.Event.call(this, type, false);
     this.target = target;
     this.reason = reason;
+  };
+
+/**
+ * Defines the event object for the <code>videoDisabled</code> and <code>videoEnabled</code> events
+ * dispatched by the Subscriber.
+ *
+ * @class VideoEnabledChangedEvent
+ *
+ * @property {Boolean} cancelable Whether the event has a default behavior that is cancelable
+ * (<code>true</code>) or not (<code>false</code>). You can cancel the default behavior by
+ * calling the <code>preventDefault()</code> method of the event object in the callback
+ * function. (See <a href="#preventDefault">preventDefault()</a>.)
+ *
+ * @property {String} reason The reason the video was disabled or enabled. This can be set to one of
+ * the following values:
+ *
+ * <ul>
+ *
+ *   <li><code>"publishVideo"</code> &mdash; The publisher started or stopped publishing video,
+ *   by calling <code>publishVideo(true)</code> or <code>publishVideo(false)</code>.</li>
+ *
+ *   <li><code>"quality"</code> &mdash; The OpenTok Media Router starts or stops sending video
+ *   to the subscriber based on stream quality changes. This feature of the OpenTok Media
+ *   Router has a subscriber drop the video stream when connectivity degrades. (The subscriber
+ *   continues to receive the audio stream, if there is one.)
+ *   <p>
+ *   If connectivity improves to support video again, the Subscriber object dispatches
+ *   a <code>videoEnabled</code> event, and the Subscriber resumes receiving video.
+ *   <p>
+ *   By default, the Subscriber displays a video disabled indicator when a
+ *   <code>videoDisabled</code> event with this reason is dispatched and removes the indicator
+ *   when the <code>videoDisabled</code> event with this reason is dispatched. You can control
+ *   the display of this icon by calling the <code>setStyle()</code> method of the Subscriber,
+ *   setting the <code>videoDisabledDisplayMode</code> property(or you can set the style when
+ *   calling the <code>Session.subscribe()</code> method, setting the <code>style</code> property
+ *   of the <code>properties</code> parameter).
+ *   <p>
+ *   This feature is only available in sessions that use the OpenTok Media Router (sessions with
+ *   the <a href="http://tokbox.com/opentok/tutorials/create-session/#media-mode">media mode</a>
+ *   set to routed), not in sessions with the media mode set to relayed.
+ *   </li>
+ *
+ *   <li><code>"subscribeToVideo"</code> &mdash; The subscriber started or stopped subscribing to
+ *   video, by calling <code>subscribeToVideo(true)</code> or <code>subscribeToVideo(false)</code>.
+ *   </li>
+ *
+ * </ul>
+ *
+ * @property {Object} target The object that dispatched the event.
+ *
+ * @property {String} type  The type of event: <code>"videoDisabled"</code> or
+ * <code>"videoEnabled"</code>.
+ *
+ * @see <a href="Subscriber.html#event:videoDisabled">Subscriber videoDisabled event</a></p>
+ * @see <a href="Subscriber.html#event:videoEnabled">Subscriber videoEnabled event</a></p>
+ * @augments Event
+ */
+  OT.VideoEnabledChangedEvent = function(type, properties) {
+    OT.Event.call(this, type, false);
+    this.reason = properties.reason;
+  };
+
+  OT.VideoDisableWarningEvent = function(type/*, properties*/) {
+    OT.Event.call(this, type, false);
+  };
+
+/**
+ * Dispatched periodically by a Subscriber or Publisher object to indicate the audio
+ * level. This event is dispatched up to 60 times per second, depending on the browser.
+ *
+ * @property {String} audioLevel The audio level, from 0 to 1.0. Adjust this value logarithmically
+ * for use in adjusting a user interface element, such as a volume meter. Use a moving average
+ * to smooth the data.
+ *
+ * @class AudioLevelUpdatedEvent
+ * @augments Event
+ */
+  OT.AudioLevelUpdatedEvent = function(audioLevel) {
+    OT.Event.call(this, OT.Event.names.AUDIO_LEVEL_UPDATED, false);
+    this.audioLevel = audioLevel;
   };
 
 })(window);
@@ -11421,7 +11788,7 @@ waitForDomReady();
           return (OT.$.now() - lastMessageTimestamp) >= WEB_SOCKET_CONNECTIVITY_TIMEOUT;
         },
 
-        sendKeepAlive = OT.$.bind(function sendKeepAlive () {
+        sendKeepAlive = OT.$.bind(function() {
           if (!this.is('connected')) return;
 
           if ( hasLostConnectivity() ) {
@@ -11429,7 +11796,7 @@ waitForDomReady();
           }
           else  {
             webSocket.send(OT.Rumor.Message.Ping());
-            keepAliveTimer = setTimeout(sendKeepAlive.bind(this), WEB_SOCKET_KEEP_ALIVE_INTERVAL);
+            keepAliveTimer = setTimeout(sendKeepAlive, WEB_SOCKET_KEEP_ALIVE_INTERVAL);
           }
         }, this),
 
@@ -11463,7 +11830,7 @@ waitForDomReady();
 
           if (onOpen) onOpen(id);
 
-          setTimeout(function() {
+          keepAliveTimer = setTimeout(function() {
             lastMessageTimestamp = OT.$.now();
             sendKeepAlive();
           }, WEB_SOCKET_KEEP_ALIVE_INTERVAL);
@@ -11747,7 +12114,6 @@ waitForDomReady();
         webSocket.onClose(function(error) {
           state = 'closed'; /* CLOSED */
           events.onClose({ code: error });
-          webSocket.finalize();
         });
         webSocket.onError(function(error) {
           state = 'closed'; /* CLOSED */
@@ -12175,7 +12541,7 @@ waitForDomReady();
 
     return message;
   };
-  
+
   OT.Raptor.parseIceServers = function (message) {
     try {
       return JSON.parse(message.data).content.iceServers;
@@ -12326,8 +12692,8 @@ waitForDomReady();
       id: subscriberId,
       connection: connectionId,
       keyManagementMethod: OT.$.supportedCryptoScheme(),
-      bundleSupport: OT.$.supportsBundle(),
-      rtcpMuxSupport: OT.$.supportsRtcpMux()
+      bundleSupport: OT.$.hasCapabilities('bundle'),
+      rtcpMuxSupport: OT.$.hasCapabilities('RTCPMux')
     };
     if (channelsToSubscribeTo) content.channel = channelsToSubscribeTo;
 
@@ -12860,7 +13226,7 @@ waitForDomReady();
 
   OT.Raptor.Dispatcher = function () {
 
-    if(typeof EventEmitter !== 'undefined') {
+    if(OT.isNodeModule) {
       EventEmitter.call(this);
     } else {
       OT.$.eventing(this, true);
@@ -12870,7 +13236,7 @@ waitForDomReady();
     this.callbacks = {};
   };
 
-  if(typeof EventEmitter !== 'undefined') {
+  if(OT.isNodeModule) {
     util.inherits(OT.Raptor.Dispatcher, EventEmitter);
   }
 
@@ -12920,7 +13286,7 @@ waitForDomReady();
 
     var message = OT.Raptor.unboxFromRumorMessage(rumorMessage);
     OT.debug('OT.Raptor.dispatch ' + message.signature);
-    OT.debug(message);
+    OT.debug(rumorMessage.data);
 
     switch(message.resource) {
       case 'session':
@@ -13172,6 +13538,15 @@ waitForDomReady();
     return archive;
   }
 
+  var sessionRead;
+  var sessionReadQueue = [];
+
+  function sessionReadQueuePush(type, args) {
+    var triggerArgs = ['signal'];
+    triggerArgs.push.apply(triggerArgs, args);
+    sessionReadQueue.push(triggerArgs);
+  }
+
   window.OT.SessionDispatcher = function(session) {
 
     var dispatcher = new OT.Raptor.Dispatcher();
@@ -13220,6 +13595,13 @@ waitForDomReady();
       session._.subscriberMap = {};
 
       dispatcher.triggerCallback(transactionId, null, state);
+
+      sessionRead = true;
+      for (var i = 0; i < sessionReadQueue.length; ++i) {
+        dispatcher.trigger.apply(dispatcher, sessionReadQueue[i]);
+      }
+      sessionReadQueue = [];
+
     });
 
     dispatcher.on('connection#created', function(connection) {
@@ -13432,8 +13814,14 @@ waitForDomReady();
     });
 
     dispatcher.on('signal', function(fromAddress, signalType, data) {
-      session._.dispatchSignal(session.connections.get(fromAddress),
-                               signalType, data);
+      if (sessionRead) {
+        var fromConnection = session.connections.get(fromAddress);
+        session._.dispatchSignal(fromConnection, signalType, data);
+      } else {
+        if (!sessionRead) {
+          sessionReadQueuePush('signal', arguments);
+        }
+      }
     });
 
     dispatcher.on('archive#created', function(archive) {
@@ -13887,30 +14275,6 @@ waitForDomReady();
     _exceptionHandler(options.target, errorMsg, code, context);
   };
 
-
-// @todo redo this when we have time to tidy up
-//
-// Public callback for exceptions from Flash.
-//
-// Called from Flash like:
-//  OT.exceptionHandler('publisher_1234,1234',
-//  "Descriptive Error Message", "Error Title", 2000, contextObj)
-//
-  OT.exceptionHandler = function(componentId, msg, errorTitle, errorCode, context) {
-    var target;
-
-    if (componentId) {
-      target = OT.components[componentId];
-
-      if (!target) {
-        OT.warn('Could not find the component with component ID ' + componentId);
-      }
-    }
-
-    _exceptionHandler(target, msg, errorCode, context);
-  };
-
-
   // This is a placeholder until error handling can be rewritten
   OT.dispatchError = function (code, message, completionHandler, session) {
     OT.error(code, message);
@@ -13952,10 +14316,11 @@ waitForDomReady();
    * client has successfully called the <code>connect()</code> method of the {@link Session}
    * object.)
    * <p>
-   * The Session object dispatches a <code>connectionCreated</code> event when each client (other
-   * than your own) connects to a session (and for clients that are present in the session when you
-   * connect). The <code>connectionCreated</code> event object has a <code>connection</code>
-   * property, which is a Connection object corresponding to the client the event pertains to.
+   * The Session object dispatches a <code>connectionCreated</code> event when each client
+   * (including your own) connects to a session (and for clients that are present in the
+   * session when you connect). The <code>connectionCreated</code> event object has a
+   * <code>connection</code> property, which is a Connection object corresponding to the client
+   * the event pertains to.
    * <p>
    * The Stream object has a <code>connection</code> property that is a Connection object.
    * It represents the connection of the client that is publishing the stream.
@@ -14057,6 +14422,10 @@ waitForDomReady();
             this.active = OT.$.castToBoolean(attributes[key]);
             break;
 
+          case 'disableWarning':
+            this.disableWarning = OT.$.castToBoolean(attributes[key]);
+            break;
+
           case 'frameRate':
             this.frameRate = parseFloat(attributes[key], 10);
             break;
@@ -14144,6 +14513,11 @@ waitForDomReady();
  * {@link Session} object dispatches a <code>streamPropertyChanged</code> event (see
  * {@link StreamPropertyChangedEvent}.)
  *
+ * @property {String} name The name of the stream. Publishers can specify a name when publishing
+ * a stream (using the <code>publish()</code> method of the publisher's Session object).
+ *
+ * @property {String} streamId The unique ID of the stream.
+ *
  * @property {Object} videoDimensions This object has two properties: <code>width</code> and
  * <code>height</code>. Both are numbers. The <code>width</code> property is the width of the
  * encoded stream; the <code>height</code> property is the height of the encoded stream. (These
@@ -14152,11 +14526,6 @@ waitForDomReady();
  * published from an iOS device resizes, based on a change in the device orientation. When this
  * occurs, the {@link Session} object dispatches a <code>streamPropertyChanged</code> event (see
  * {@link StreamPropertyChangedEvent}.)
- *
- * @property {String} name The name of the stream. Publishers can specify a name when publishing
- * a stream (using the <code>publish()</code> method of the publisher's Session object).
- *
- * @property {String} streamId The unique ID of the stream.
  */
 
 
@@ -14180,6 +14549,14 @@ waitForDomReady();
         case 'active':
           _key = channel.type === 'audio' ? 'hasAudio' : 'hasVideo';
           this[_key] = newValue;
+          break;
+
+        case 'disableWarning':
+          _key = channel.type === 'audio' ? 'audioDisableWarning': 'videoDisableWarning';
+          this[_key] = newValue;
+          if (!this[channel.type === 'audio' ? 'hasAudio' : 'hasVideo']) {
+            return; // Do NOT event in this case.
+          }
           break;
 
         case 'orientation':
@@ -14393,6 +14770,170 @@ waitForDomReady();
   };
 
 })(window);
+!(function() {
+
+
+  /*
+   * A <code>RTCPeerConnection.getStats</code> based audio level sampler.
+   *
+   * It uses the the <code>getStats</code> method to get the <code>audioOutputLevel</code>.
+   * This implementation expects the single parameter version of the <code>getStats</code> method.
+   *
+   * Currently the <code>audioOutputLevel</code> stats is only supported in Chrome.
+   *
+   * @param {OT.SubscriberPeerConnection} peerConnection the peer connection to use to get the stats
+   * @constructor
+   */
+  OT.GetStatsAudioLevelSampler = function(peerConnection) {
+
+    if (!OT.$.hasCapabilities('audioOutputLevelStat', 'getStatsWithSingleParameter')) {
+      throw new Error('The current platform does not provide the required capabilities');
+    }
+
+    var _peerConnection = peerConnection,
+        _statsProperty = 'audioOutputLevel';
+
+    /*
+     * Acquires the audio level.
+     *
+     * @param {function(?number)} done a callback to be called with the acquired value in the
+     * [0, 1] range when available or <code>null</code> if no value could be acquired
+     */
+    this.sample = function(done) {
+      _peerConnection.getStatsWithSingleParameter(function(statsReport) {
+        var results = statsReport.result();
+
+        for (var i = 0; i < results.length; i++) {
+          var result = results[i];
+          if (result.local) {
+            var audioOutputLevel = parseFloat(result.local.stat(_statsProperty));
+            if (!isNaN(audioOutputLevel)) {
+              // the mex value delivered by getStats for audio levels is 2^15
+              done(audioOutputLevel / 32768);
+              return;
+            }
+          }
+        }
+
+        done(null);
+      });
+    };
+  };
+
+
+  /*
+   * An <code>AudioContext</code> based audio level sampler. It returns the maximum value in the
+   * last 1024 samples.
+   *
+   * It is worth noting that the remote <code>MediaStream</code> audio analysis is currently only
+   * available in FF.
+   *
+   * This implementation gracefully handles the case where the <code>MediaStream</code> has not
+   * been set yet by returning a <code>null</code> value until the stream is set. It is up to the
+   * call site to decide what to do with this value (most likely ignore it and retry later).
+   *
+   * @constructor
+   * @param {AudioContext} audioContext an audio context instance to get an analyser node
+   */
+  OT.AnalyserAudioLevelSampler = function(audioContext) {
+
+    var _sampler = this,
+        _analyser = null,
+        _timeDomainData = null;
+
+    var _getAnalyser = function(stream) {
+      var sourceNode = audioContext.createMediaStreamSource(stream);
+      var analyser = audioContext.createAnalyser();
+      sourceNode.connect(analyser);
+      return analyser;
+    };
+
+    this.webOTStream = null;
+
+    this.sample = function(done) {
+
+      if (!_analyser && _sampler.webOTStream) {
+        _analyser = _getAnalyser(_sampler.webOTStream);
+        _timeDomainData = new Uint8Array(_analyser.frequencyBinCount);
+      }
+
+      if (_analyser) {
+        _analyser.getByteTimeDomainData(_timeDomainData);
+
+        // varies from 0 to 255
+        var max = 0;
+        for (var idx = 0; idx < _timeDomainData.length; idx++) {
+          max = Math.max(max, Math.abs(_timeDomainData[idx] - 128));
+        }
+
+        // normalize the collected level to match the range delivered by
+        // the getStats' audioOutputLevel
+        done(max / 128);
+      } else {
+        done(null);
+      }
+    };
+  };
+
+  /*
+   * Transforms a raw audio level to produce a "smoother" animation when using displaying the
+   * audio level. This transformer is state-full because it needs to keep the previous average
+   * value of the signal for filtering.
+   *
+   * It applies a low pass filter to get rid of level jumps and apply a log scale.
+   *
+   * @constructor
+   */
+  OT.AudioLevelTransformer = function() {
+
+    var _averageAudioLevel = null;
+
+    /*
+     *
+     * @param {number} audioLevel a level in the [0,1] range
+     * @returns {number} a level in the [0,1] range transformed
+     */
+    this.transform = function(audioLevel) {
+      if (_averageAudioLevel === null || audioLevel >= _averageAudioLevel) {
+        _averageAudioLevel = audioLevel;
+      } else {
+        // a simple low pass filter with a smoothing of 70
+        _averageAudioLevel = audioLevel * 0.3 + _averageAudioLevel * 0.7;
+      }
+
+      // 1.5 scaling to map -30-0 dBm range to [0,1]
+      var logScaled = (Math.log(_averageAudioLevel) / Math.LN10) / 1.5 + 1;
+
+      return Math.min(Math.max(logScaled, 0), 1);
+    };
+  };
+
+})(window);
+!(function() {
+
+  /*
+   * Executes the provided callback thanks to <code>window.setInterval</code>.
+   *
+   * @param {function()} callback
+   * @param {number} frequency how many times per second we want to execute the callback
+   * @constructor
+   */
+  OT.IntervalRunner = function(callback, frequency) {
+    var _callback = callback,
+      _frequency = frequency,
+      _intervalId = null;
+
+    this.start = function() {
+      _intervalId = window.setInterval(_callback, 1000 / _frequency);
+    };
+
+    this.stop = function() {
+      window.clearInterval(_intervalId);
+      _intervalId = null;
+    };
+  };
+
+})(window);
 !(function(window) {
 
   // Normalise these
@@ -14502,6 +15043,35 @@ waitForDomReady();
     return sdpLines.join('\r\n');
   };
 
+  var removeVideoCodec = function removeVideoCodec (sdp, codec) {
+    var matcher =  new RegExp('a=rtpmap:(\\d+) ' + codec + '\\/\\d+', 'i'),
+        payloadTypes = [],
+        videoMediaLineIndex,
+        sdpLines,
+        match;
+
+    sdpLines = OT.$.filter(sdp.split('\r\n'), function(line, index) {
+      if (line.indexOf('m=video') !== -1) videoMediaLineIndex = index;
+
+      match = line.match(matcher);
+      if (match !== null) {
+        payloadTypes.push(match[1]);
+
+        // remove this line as it contains the codec
+        return false;
+      }
+
+      return true;
+    });
+
+    if (payloadTypes.length && videoMediaLineIndex) {
+      sdpLines[videoMediaLineIndex] = sdpLines[videoMediaLineIndex].replace(
+        new RegExp(payloadTypes.join('|'), 'ig') , '').replace(/\s+/g, ' ');
+    }
+
+    return sdpLines.join('\r\n');
+  };
+
   // Attempt to completely process +offer+. This will:
   // * set the offer as the remote description
   // * create an answer and
@@ -14526,6 +15096,8 @@ waitForDomReady();
 
     setLocalDescription = function(answer) {
       answer.sdp = removeComfortNoise(answer.sdp);
+      answer.sdp = removeVideoCodec(answer.sdp, 'ulpfec');
+      answer.sdp = removeVideoCodec(answer.sdp, 'red');
 
       peerConnection.setLocalDescription(
         answer,
@@ -14610,6 +15182,8 @@ waitForDomReady();
 
     setLocalDescription = function(offer) {
       offer.sdp = removeComfortNoise(offer.sdp);
+      offer.sdp = removeVideoCodec(offer.sdp, 'ulpfec');
+      offer.sdp = removeVideoCodec(offer.sdp, 'red');
 
       peerConnection.setLocalDescription(
         offer,
@@ -15027,6 +15601,14 @@ waitForDomReady();
 
     this.remoteStreams = function() {
       return _peerConnection ? getRemoteStreams() : [];
+    };
+
+    this.getStatsWithSingleParameter = function(callback) {
+      if (OT.$.hasCapabilities('getStatsWithSingleParameter')) {
+        createPeerConnection(function() {
+          _peerConnection.getStats(callback);
+        });
+      }
     };
 
     var qos = new OT.PeerConnection.QOS(qosCallback);
@@ -15606,7 +16188,7 @@ waitForDomReady();
 
     // Note: All Peer errors are fatal right now.
     _onPeerError = function(errorReason, prefix) {
-      this.trigger('error', null, errorReason, this, prefix);
+      this.trigger('error', errorReason, this, prefix);
     };
 
     _relayMessageToPeer = OT.$.bind(function(type, payload) {
@@ -15758,10 +16340,16 @@ waitForDomReady();
         session._.subscriberCreate(stream, subscriber, channelsToSubscribeTo,
           OT.$.bind(function(err, message) {
             if (err) {
-              this.trigger('error', null, err.message, this, 'Subscribe');
+              this.trigger('error', err.message, this, 'Subscribe');
             }
             _peerConnection.setIceServers(OT.Raptor.parseIceServers(message));
           }, this));
+      }
+    };
+
+    this.getStatsWithSingleParameter = function(callback) {
+      if(_peerConnection) {
+        _peerConnection.getStatsWithSingleParameter(callback);
       }
     };
   };
@@ -15905,17 +16493,17 @@ waitForDomReady();
 
       if (_options.onCreate) _options.onCreate(this.domElement);
 
-      // if the mode isn't auto, then we can directly set it
-      if (_options.mode !== 'auto') {
-        widget.setDisplayMode(_options.mode);
-      } else {
-        // we set it to on at first, and then apply the desired mode
-        // this will let the proper widgets nicely fade away
-        widget.setDisplayMode('on');
+      widget.setDisplayMode(_options.mode);
+
+      if (_options.mode === 'auto') {
+        // if the mode is auto we hold the "on mode" for 2 seconds
+        // this will let the proper widgets nicely fade away and help discoverability
+        OT.$.addClass(widget.domElement, 'OT_mode-on-hold');
         setTimeout(function() {
-          widget.setDisplayMode(_options.mode);
+          OT.$.removeClass(widget.domElement, 'OT_mode-on-hold');
         }, 2000);
       }
+
 
       // add the widget to the parent
       parent.appendChild(this.domElement);
@@ -16236,6 +16824,109 @@ waitForDomReady();
   };
 
 })(window);
+!(function() {
+
+  OT.Chrome.AudioLevelMeter = function(options) {
+
+    var widget = this,
+        _meterBarElement,
+        _voiceOnlyIconElement,
+        _meterValueElement,
+        _value,
+        _maxValue = options.maxValue || 1,
+        _minValue = options.minValue || 0;
+
+    // Mixin common widget behaviour
+    OT.Chrome.Behaviour.Widget(this, {
+      mode: options ? options.mode : 'auto',
+      nodeName: 'div',
+      htmlAttributes: {
+        className: 'OT_audio-level-meter'
+      },
+      onCreate: function() {
+        _meterBarElement = OT.$.createElement('div', {
+          className: 'OT_audio-level-meter__bar'
+        }, '');
+        _meterValueElement = OT.$.createElement('div', {
+          className: 'OT_audio-level-meter__value'
+        }, '');
+        _voiceOnlyIconElement = OT.$.createElement('div', {
+          className: 'OT_audio-level-meter__audio-only-img'
+        }, '');
+
+        widget.domElement.appendChild(_meterBarElement);
+        widget.domElement.appendChild(_voiceOnlyIconElement);
+        widget.domElement.appendChild(_meterValueElement);
+      }
+    });
+
+    function updateView() {
+      var percentSize = _value * 100 / (_maxValue - _minValue);
+      _meterValueElement.style.width = _meterValueElement.style.height = 2 * percentSize + '%';
+      _meterValueElement.style.top = _meterValueElement.style.right = -percentSize + '%';
+    }
+
+    widget.setValue = function(value) {
+      _value = value;
+      updateView();
+    };
+  };
+
+})(window);
+!(function() {
+  OT.Chrome.VideoDisabledIndicator = function(options) {
+    var _mode,
+        _videoDisabled = false,
+        _warning = false,
+        updateClasses;
+
+    _mode = options.mode || 'auto';
+    updateClasses = function(domElement) {
+      if (_videoDisabled) {
+        OT.$.addClass(domElement, 'OT_video-disabled');
+      } else {
+        OT.$.removeClass(domElement, 'OT_video-disabled');
+      }
+      if(_warning) {
+        OT.$.addClass(domElement, 'OT_video-disabled-warning');
+      } else {
+        OT.$.removeClass(domElement, 'OT_video-disabled-warning');
+      }
+      if ((_videoDisabled || _warning) && (_mode === 'auto' || _mode === 'on')) {
+        OT.$.addClass(domElement, 'OT_active');
+      } else {
+        OT.$.removeClass(domElement, 'OT_active');
+      }
+    };
+
+    this.disableVideo = function(value) {
+      _videoDisabled = value;
+      if(value === true) {
+        _warning = false;
+      }
+      updateClasses(this.domElement);
+    };
+
+    this.setWarning = function(value) {
+      _warning = value;
+      updateClasses(this.domElement);
+    };
+
+    // Mixin common widget behaviour
+    OT.Chrome.Behaviour.Widget(this, {
+      mode: _mode,
+      nodeName: 'div',
+      htmlAttributes: {
+        className: 'OT_video-disabled-indicator'
+      }
+    });
+
+    this.setDisplayMode = function(mode) {
+      _mode = mode;
+      updateClasses(this.domElement);
+    };
+  };
+})(window);
 (function() {
 /* Stylable Notes
  * RTC doesn't need to wait until anything is loaded
@@ -16317,7 +17008,12 @@ waitForDomReady();
    * properties:
    *
    *     <ul>
-   *       <li><code>backgroundImageURI</code> (String) &mdash; A URI for an image to display as
+   *       <li><code>audioLevelDisplayMode</code> (String) &mdash; How to display the audio level
+   *       indicator. Possible values are: <code>"auto"</code> (the indicator is displayed when the
+   *       video is disabled), <code>"off"</code> (the indicator is not displayed), and
+   *       <code>"on"</code> (the indicator is always displayed).</li>
+   *
+   *       <li><p><code>backgroundImageURI</code> (String) &mdash; A URI for an image to display as
    *       the background image when a video is not displayed. (A video may not be displayed if
    *       you call <code>publishVideo(false)</code> on the Publisher object). You can pass an http
    *       or https URI to a PNG, JPEG, or non-animated GIF file location. You can also use the
@@ -16327,7 +17023,14 @@ waitForDomReady();
    *       you could set the property to <code>"data:VBORw0KGgoAA..."</code>, where the portion of
    *       the string after <code>"data:"</code> is the result of a call to
    *       <code>Publisher.getImgData()</code>. If the URL or the image data is invalid, the
-   *       property is ignored (the attempt to set the image fails silently).</li>
+   *       property is ignored (the attempt to set the image fails silently).
+   *       <p>
+   *       Note that in Internet Explorer 8 (using the OpenTok Plugin for Internet Explorer),
+   *       you cannot set the <code>backgroundImageURI</code> style to a string larger than
+   *       32&nbsp;kB. This is due to an IE 8 limitation on the size of URI strings. Due to this
+   *       limitation, you cannot set the <code>backgroundImageURI</code> style to a string obtained
+   *       with the <code>getImgData()</code> method.
+   *       </p></li>
    *
    *       <li><code>buttonDisplayMode</code> (String) &mdash; How to display the microphone
    *       controls. Possible values are: <code>"auto"</code> (controls are displayed when the
@@ -16382,7 +17085,12 @@ waitForDomReady();
    * properties:
    *
    *     <ul>
-   *       <li><code>backgroundImageURI</code> (String) &mdash; A URI for an image to display as
+   *       <li><code>audioLevelDisplayMode</code> (String) &mdash; How to display the audio level
+   *       indicator. Possible values are: <code>"auto"</code> (the indicator is displayed when the
+   *       video is disabled), <code>"off"</code> (the indicator is not displayed), and
+   *       <code>"on"</code> (the indicator is always displayed).</li>
+   *
+   *       <li><p><code>backgroundImageURI</code> (String) &mdash; A URI for an image to display as
    *       the background image when a video is not displayed. (A video may not be displayed if
    *       you call <code>subscribeToVideo(false)</code> on the Publisher object). You can pass an
    *       http or https URI to a PNG, JPEG, or non-animated GIF file location. You can also use the
@@ -16392,7 +17100,14 @@ waitForDomReady();
    *       you could set the property to <code>"data:VBORw0KGgoAA..."</code>, where the portion of
    *       the string after <code>"data:"</code> is the result of a call to
    *       <code>Publisher.getImgData()</code>. If the URL or the image data is invalid, the
-   *       property is ignored (the attempt to set the image fails silently).</li>
+   *       property is ignored (the attempt to set the image fails silently).
+   *       <p>
+   *       Note that in Internet Explorer 8 (using the OpenTok Plugin for Internet Explorer),
+   *       you cannot set the <code>backgroundImageURI</code> style to a string larger than
+   *       32&nbsp;kB. This is due to an IE 8 limitation on the size of URI strings. Due to this
+   *       limitation, you cannot set the <code>backgroundImageURI</code> style to a string obtained
+   *       with the <code>getImgData()</code> method.
+   *       </p></li>
    *
    *       <li><code>buttonDisplayMode</code> (String) &mdash; How to display the speaker
    *       controls. Possible values are: <code>"auto"</code> (controls are displayed when the
@@ -16403,6 +17118,14 @@ waitForDomReady();
    *       Possible values are: <code>"auto"</code> (the name is displayed when the stream is first
    *       displayed and when the user mouses over the display), <code>"off"</code> (the name is not
    *       displayed), and <code>"on"</code> (the name is always displayed).</li>
+   *
+   *       <li><code>videoDisabledDisplayMode</code> (String) &#151; Whether to display the video
+   *       disabled indicator and video disabled warning icons for a Subscriber. These icons
+   *       indicate that the video has been disabled (or is in risk of being disabled for
+   *       the warning icon) due to poor stream quality. Possible values are: <code>"auto"</code>
+   *       (the icons are automatically when the displayed video is disabled or in risk of being
+   *       disabled due to poor stream quality), <code>"off"</code> (do not display the icons), and
+   *       <code>"on"</code> (display the icons).</li>
    *   </ul>
    * </p>
    *
@@ -16467,11 +17190,13 @@ waitForDomReady();
       buttonDisplayMode: ['auto', 'mini', 'mini-auto', 'off', 'on'],
       nameDisplayMode: ['auto', 'off', 'on'],
       bugDisplayMode: ['auto', 'off', 'on'],
+      audioLevelDisplayMode: ['auto', 'off', 'on'],
       showSettingsButton: [true, false],
       showMicButton: [true, false],
       backgroundImageURI: null,
       showControlBar: [true, false],
-      showArchiveStatus: [true, false]
+      showArchiveStatus: [true, false],
+      videoDisabledDisplayMode: ['auto', 'off', 'on']
     };
 
 
@@ -16547,7 +17272,7 @@ waitForDomReady();
     };
 
     this.set = function(key, value) {
-      OT.debug('Publisher.setStyle: ' + key.toString());
+      OT.debug('setStyle: ' + key.toString());
 
       var newValue = castValue(value),
           oldValue;
@@ -16960,12 +17685,15 @@ waitForDomReady();
         _publishStartTime,
         _microphone,
         _chrome,
+        _audioLevelMeter,
         _analytics = new OT.Analytics(),
         _validResolutions,
         _validFrameRates = [ 1, 7, 15, 30 ],
         _prevStats,
         _state,
-        _iceServers;
+        _iceServers,
+        _audioLevelCapable = OT.$.hasCapabilities('webAudio'),
+        _audioLevelSampler;
 
     _validResolutions = {
       '320x240': {width: 320, height: 240},
@@ -16979,12 +17707,39 @@ waitForDomReady();
 
     OT.$.eventing(this);
 
+    if(_audioLevelCapable) {
+      _audioLevelSampler = new OT.AnalyserAudioLevelSampler(new window.AudioContext());
+
+      var publisher = this;
+      var audioLevelRunner = new OT.IntervalRunner(function() {
+        _audioLevelSampler.sample(function(audioInputLevel) {
+          OT.$.requestAnimationFrame(function() {
+            publisher.dispatchEvent(
+              new OT.AudioLevelUpdatedEvent(audioInputLevel));
+          });
+        });
+      }, 60);
+
+      this.on({
+        'audioLevelUpdated:added': function(count) {
+          if (count === 1) {
+            audioLevelRunner.start();
+          }
+        },
+        'audioLevelUpdated:removed': function(count) {
+          if (count === 0) {
+            audioLevelRunner.stop();
+          }
+        }
+      });
+    }
+
     OT.StylableComponent(this, {
-      showMicButton: true,
       showArchiveStatus: true,
       nameDisplayMode: 'auto',
       buttonDisplayMode: 'auto',
       bugDisplayMode: 'auto',
+      audioLevelDisplayMode: 'auto',
       backgroundImageURI: null
     });
 
@@ -17006,6 +17761,9 @@ waitForDomReady();
         },
 
         recordQOS = OT.$.bind(function(connection, parsedStats) {
+          if(!_state.isPublishing()) {
+            return;
+          }
           var QoSBlob = {
             'widget_type': 'Publisher',
             'stream_type': 'WebRTC',
@@ -17105,6 +17863,10 @@ waitForDomReady();
             onLoaded.call(this);
           }, this));
 
+          if(_audioLevelSampler) {
+            _audioLevelSampler.webOTStream = webOTStream;
+          }
+
         },
 
         onStreamAvailableError = function(error) {
@@ -17189,13 +17951,25 @@ waitForDomReady();
               if(!event.isDefaultPrevented()) {
                 if(browser.browser === 'Chrome') {
                   accessDialogChromeTimeout = setTimeout(function() {
+                    accessDialogChromeTimeout = null;
+                    logAnalyticsEvent('allowDenyHelpers', 'show', 'version', 'Chrome');
                     accessDialogPrompt = OT.Dialogs.AllowDeny.Chrome.initialPrompt();
+                    accessDialogPrompt.on('closeButtonClicked', function() {
+                      logAnalyticsEvent('allowDenyHelpers', 'dismissed', 'version', 'Chrome');
+                    });
                   }, 5000);
                 } else if(browser.browser === 'Firefox') {
                   accessDialogFirefoxTimeout = setTimeout(function() {
+                    accessDialogFirefoxTimeout = null;
+                    logAnalyticsEvent('allowDenyHelpers', 'show', 'version', 'Firefox');
                     accessDialogPrompt = OT.Dialogs.AllowDeny.Firefox.maybeDenied();
+                    accessDialogPrompt.on('closeButtonClicked', function() {
+                      logAnalyticsEvent('allowDenyHelpers', 'dismissed', 'version', 'Firefox');
+                    });
                   }, 7000);
                 }
+              } else {
+                logAnalyticsEvent('allowDenyHelpers', 'developerPrevented', '', '');
               }
             }
           );
@@ -17206,16 +17980,20 @@ waitForDomReady();
 
           if(accessDialogChromeTimeout) {
             clearTimeout(accessDialogChromeTimeout);
+            logAnalyticsEvent('allowDenyHelpers', 'notShown', 'version', 'Chrome');
             accessDialogChromeTimeout = null;
           }
 
           if(accessDialogFirefoxTimeout) {
             clearTimeout(accessDialogFirefoxTimeout);
+            logAnalyticsEvent('allowDenyHelpers', 'notShown', 'version', 'Firefox');
             accessDialogFirefoxTimeout = null;
           }
 
           if(accessDialogPrompt) {
             accessDialogPrompt.close();
+            var browser = OT.$.browserVersion();
+            logAnalyticsEvent('allowDenyHelpers', 'closed', 'version', browser.browser);
             accessDialogPrompt = null;
           }
 
@@ -17365,7 +18143,7 @@ waitForDomReady();
           switch(key) {
             case 'nameDisplayMode':
               _chrome.name.setDisplayMode(value);
-              _chrome.backingBar.nameMode = value;
+              _chrome.backingBar.setNameMode(value);
               break;
 
             case 'showArchiveStatus':
@@ -17374,29 +18152,35 @@ waitForDomReady();
               break;
 
             case 'buttonDisplayMode':
-            case 'showMicButton':
-              // _chrome.muteButton.setDisplayMode(
-              //     chromeButtonMode.call(this, this.getStyle('showMicButton'))
-              // );
+              _chrome.muteButton.setDisplayMode(value);
+              _chrome.backingBar.setMuteMode(value);
+              break;
+
+            case 'audioLevelDisplayMode':
+              _chrome.audioLevel.setDisplayMode(value);
+              break;
+
             case 'bugDisplayMode':
-              // _chrome.name.bugMode = value;
+              // bugDisplayMode can't be updated but is used by some partners
+
+            case 'backgroundImageURI':
+              _container.setBackgroundImageURI(value);
           }
         },
 
         _createChrome = function() {
+
           if(this.getStyle('bugDisplayMode') === 'off') {
             logAnalyticsEvent('bugDisplayMode', 'createChrome', 'mode', 'off');
           }
           if(!this.getStyle('showArchiveStatus')) {
             logAnalyticsEvent('showArchiveStatus', 'createChrome', 'mode', 'off');
           }
-          _chrome = new OT.Chrome({
-            parent: _container.domElement
-          }).set({
 
+          var widgets = {
             backingBar: new OT.Chrome.BackingBar({
-              nameMode: this.getStyle('nameDisplayMode'),
-              muteMode: chromeButtonMode.call(this, this.getStyle('showMicButton'))
+              nameMode: !_publishProperties.name ? 'off' : this.getStyle('nameDisplayMode'),
+              muteMode: chromeButtonMode.call(this, this.getStyle('buttonDisplayMode'))
             }),
 
             name: new OT.Chrome.NamePanel({
@@ -17407,7 +18191,7 @@ waitForDomReady();
 
             muteButton: new OT.Chrome.MuteButton({
               muted: _publishProperties.publishAudio === false,
-              mode: chromeButtonMode.call(this, this.getStyle('showMicButton'))
+              mode: chromeButtonMode.call(this, this.getStyle('buttonDisplayMode'))
             }),
 
             opentokButton: new OT.Chrome.OpenTokButton({
@@ -17418,8 +18202,24 @@ waitForDomReady();
               show: this.getStyle('showArchiveStatus'),
               archiving: false
             })
+          };
 
-          }).on({
+          if(_audioLevelCapable) {
+            _audioLevelMeter = new OT.Chrome.AudioLevelMeter({
+              mode: this.getStyle('audioLevelDisplayMode')
+            });
+
+            var audioLevelTransformer = new OT.AudioLevelTransformer();
+            this.on('audioLevelUpdated', function(evt) {
+              _audioLevelMeter.setValue(audioLevelTransformer.transform(evt.audioLevel));
+            });
+
+            widgets.audioLevel = _audioLevelMeter;
+          }
+
+          _chrome = new OT.Chrome({
+            parent: _container.domElement
+          }).set(widgets).on({
             muted: OT.$.bind(this.publishAudio, this, false),
             unmuted: OT.$.bind(this.publishAudio, this, true)
           });
@@ -17555,7 +18355,7 @@ waitForDomReady();
                 ]);
             }
           }
-      
+
           if (_publishProperties.frameRate !== void 0 &&
             OT.$.arrayIndexOf(_validFrameRates, _publishProperties.frameRate) === -1) {
             OT.warn('Invalid frameRate passed to the publisher got: ' +
@@ -17691,6 +18491,7 @@ waitForDomReady();
       }
 
       if(_container) {
+        _container.audioOnly(!value);
         _container.showPoster(!value);
       }
 
@@ -18030,6 +18831,40 @@ waitForDomReady();
 	* @memberof Publisher
 	*/
 
+    /**
+    * Dispatched periodically to indicate the publisher's audio level. The event is dispatched
+    * up to 60 times per second, depending on the browser. The <code>audioLevel</code> property
+    * of the event is audio level, from 0 to 1.0. See {@link AudioLevelUpdatedEvent} for more
+    * information.
+    * <p>
+    * The following example adjusts the value of a meter element that shows volume of the
+    * publisher. Note that the audio level is adjusted logarithmically and a moving average
+    * is applied:
+    * <p>
+    * <pre>
+    * var movingAvg = null;
+    * publisher.on('audioLevelUpdated', function(event) {
+    *   if (movingAvg === null || movingAvg <= event.audioLevel) {
+    *     movingAvg = event.audioLevel;
+    *   } else {
+    *     movingAvg = 0.7 * movingAvg + 0.3 * event.audioLevel;
+    *   }
+    *
+    *   // 1.5 scaling to map the -30 - 0 dBm range to [0,1]
+    *   var logLevel = (Math.log(movingAvg) / Math.LN10) / 1.5 + 1;
+    *   logLevel = Math.min(Math.max(logLevel, 0), 1);
+    *   document.getElementById('publisherMeter').value = logLevel;
+    * });
+    * </pre>
+    * <p>This example shows the algorithm used by the default audio level indicator displayed
+    * in an audio-only Publisher.
+    *
+    * @name audioLevelUpdated
+    * @event
+    * @memberof Publisher
+    * @see AudioLevelUpdatedEvent
+    */
+
 	/**
 	 * The publisher has started streaming to the session.
 	 * @name streamCreated
@@ -18086,6 +18921,7 @@ waitForDomReady();
         _container,
         _streamContainer,
         _chrome,
+        _audioLevelMeter,
         _stream,
         _fromConnectionId,
         _peerConnection,
@@ -18094,11 +18930,15 @@ waitForDomReady();
         _startConnectingTime,
         _properties = OT.$.clone(options),
         _analytics = new OT.Analytics(),
-        _audioVolume = 50,
+        _audioVolume = 100,
         _state,
-        _subscribeAudioFalseWorkaround, // OPENTOK-6844
         _prevStats,
-        _lastSubscribeToVideoReason;
+        _lastSubscribeToVideoReason,
+        _audioLevelCapable =  OT.$.hasCapabilities('audioOutputLevelStat') ||
+                              OT.$.hasCapabilities('webAudioCapableRemoteStream'),
+        _audioLevelSampler,
+        _audioLevelRunner,
+        _frameRateRestricted = false;
 
     this.id = _domId;
     this.widgetId = _widgetId;
@@ -18117,14 +18957,32 @@ waitForDomReady();
       return;
     }
 
-    OT.$.eventing(this);
+    OT.$.eventing(this, false);
+
+    if(_audioLevelCapable) {
+      this.on({
+        'audioLevelUpdated:added': function(count) {
+          if (count === 1 && _audioLevelRunner) {
+            _audioLevelRunner.start();
+          }
+        },
+        'audioLevelUpdated:removed': function(count) {
+          if (count === 0 && _audioLevelRunner) {
+            _audioLevelRunner.stop();
+          }
+        }
+      });
+    }
 
     OT.StylableComponent(this, {
       nameDisplayMode: 'auto',
       buttonDisplayMode: 'auto',
+      audioLevelDisplayMode: 'auto',
+      videoDisabledIndicatorDisplayMode: 'auto',
       backgroundImageURI: null,
       showArchiveStatus: true,
-      showMicButton: true
+      showMicButton: true,
+      bugDisplayMode: 'auto'
     });
 
     var logAnalyticsEvent = function(action, variation, payloadType, payload) {
@@ -18188,14 +19046,12 @@ waitForDomReady();
             _peerConnection && _peerConnection.hasRelayCandidates()
           ].join('|'));
 
-          if(_subscribeAudioFalseWorkaround) {
-            _subscribeAudioFalseWorkaround = null;
-            this.subscribeToVideo(false);
-          }
-
           _container.loading(false);
 
           _createChrome.call(this);
+          if(_frameRateRestricted) {
+            _stream.setRestrictFrameRate(true);
+          }
 
           this.trigger('subscribeComplete', null, this);
           this.trigger('loaded', this);
@@ -18221,7 +19077,7 @@ waitForDomReady();
           this.disconnect();
         },
 
-        onPeerConnectionFailure = function(code, reason, peerConnection, prefix) {
+        onPeerConnectionFailure = OT.$.bind(function(reason, peerConnection, prefix) {
           if (_state.isAttemptingToSubscribe()) {
             // We weren't subscribing yet so this was a failure in setting
             // up the PeerConnection or receiving the initial stream.
@@ -18251,7 +19107,7 @@ waitForDomReady();
             }
           );
           _showError.call(this, reason);
-        },
+        }, this),
 
         onRemoteStreamAdded = function(webOTStream) {
           OT.debug('OT.Subscriber.onRemoteStreamAdded');
@@ -18261,12 +19117,11 @@ waitForDomReady();
           // Disable the audio/video, if needed
           this.subscribeToAudio(_properties.subscribeToAudio);
 
-          var preserver = _subscribeAudioFalseWorkaround;
-          this.subscribeToVideo(_properties.subscribeToVideo);
-          _subscribeAudioFalseWorkaround = preserver;
+          _lastSubscribeToVideoReason = 'loading';
+          this.subscribeToVideo(_properties.subscribeToVideo, 'loading');
 
           var videoContainerOptions = {
-            error: OT.$.bind(onPeerConnectionFailure, this),
+            error: onPeerConnectionFailure,
             audioVolume: _audioVolume
           };
 
@@ -18288,8 +19143,7 @@ waitForDomReady();
                                               videoContainerOptions,
                                               OT.$.bind(function(err) {
             if (err) {
-              onPeerConnectionFailure.call(this, null, err.message || err, _peerConnection,
-                'VideoElement');
+              onPeerConnectionFailure(err.message || err, _peerConnection, 'VideoElement');
               return;
             }
 
@@ -18306,6 +19160,10 @@ waitForDomReady();
 
             onLoaded.call(this, null);
           }, this));
+
+          if (OT.$.hasCapabilities('webAudioCapableRemoteStream') && _audioLevelSampler) {
+            _audioLevelSampler.webOTStream = webOTStream;
+          }
 
           logAnalyticsEvent('createPeerConnection', 'StreamAdded', '', '');
           this.trigger('streamAdded', this);
@@ -18338,10 +19196,23 @@ waitForDomReady();
               });
               break;
 
+            case 'videoDisableWarning':
+              _chrome.videoDisabledIndicator.setWarning(event.newValue);
+              this.dispatchEvent(new OT.VideoDisableWarningEvent(
+                event.newValue ? 'videoDisableWarning' : 'videoDisableWarningLifted'
+              ));
+              break;
+
             case 'hasVideo':
               if(_container) {
-                _container.showPoster(!(_stream.hasVideo && _properties.subscribeToVideo));
+                var audioOnly = !(_stream.hasVideo && _properties.subscribeToVideo);
+                _container.audioOnly(audioOnly);
+                _container.showPoster(audioOnly);
               }
+              this.dispatchEvent(new OT.VideoEnabledChangedEvent(
+                _stream.hasVideo ? 'videoEnabled' : 'videoDisabled', {
+                reason: 'publishVideo'
+              }));
               break;
 
             case 'hasAudio':
@@ -18372,6 +19243,11 @@ waitForDomReady();
           switch(key) {
             case 'nameDisplayMode':
               _chrome.name.setDisplayMode(value);
+              _chrome.backingBar.setNameMode(value);
+              break;
+
+            case 'videoDisabledDisplayMode':
+              _chrome.videoDisabledIndicator.setDisplayMode(value);
               break;
 
             case 'showArchiveStatus':
@@ -18379,23 +19255,31 @@ waitForDomReady();
               break;
 
             case 'buttonDisplayMode':
-              // _chrome.muteButton.setDisplayMode(value);
+              _chrome.muteButton.setDisplayMode(value);
+              _chrome.backingBar.setMuteMode(value);
+              break;
+
+            case 'audioLevelDisplayMode':
+              _chrome.audioLevel.setDisplayMode(value);
+              break;
 
             case 'bugDisplayMode':
-              // _chrome.name.bugMode = value;
+              // bugDisplayMode can't be updated but is used by some partners
+
+            case 'backgroundImageURI':
+              _container.setBackgroundImageURI(value);
           }
         },
 
         _createChrome = function() {
+          
           if(this.getStyle('bugDisplayMode') === 'off') {
             logAnalyticsEvent('bugDisplayMode', 'createChrome', 'mode', 'off');
           }
-          _chrome = new OT.Chrome({
-            parent: _container.domElement
-          }).set({
 
+          var widgets = {
             backingBar: new OT.Chrome.BackingBar({
-              nameMode: this.getStyle('nameDisplayMode'),
+              nameMode: !_properties.name ? 'off' : this.getStyle('nameDisplayMode'),
               muteMode: chromeButtonMode.call(this, this.getStyle('showMuteButton'))
             }),
 
@@ -18418,8 +19302,28 @@ waitForDomReady();
               show: this.getStyle('showArchiveStatus'),
               archiving: false
             })
+          };
 
-          }).on({
+          if(_audioLevelCapable) {
+            _audioLevelMeter = new OT.Chrome.AudioLevelMeter({
+              mode: this.getStyle('audioLevelDisplayMode')
+            });
+
+            var audioLevelTransformer = new OT.AudioLevelTransformer();
+            this.on('audioLevelUpdated', function(evt) {
+              _audioLevelMeter.setValue(audioLevelTransformer.transform(evt.audioLevel));
+            });
+
+            widgets.audioLevel = _audioLevelMeter;
+          }
+
+          widgets.videoDisabledIndicator = new OT.Chrome.VideoDisabledIndicator({
+            mode: this.getStyle('videoDisabledDisplayMode')
+          });
+
+          _chrome = new OT.Chrome({
+            parent: _container.domElement
+          }).set(widgets).on({
             muted: function() {
               muteAudio.call(this, true);
             },
@@ -18490,11 +19394,6 @@ waitForDomReady();
       this.id = _domId = _container.domId();
       this.element = _container.domElement;
 
-      if(!_properties.subscribeToVideo && OT.$.browser() === 'Chrome') {
-        _subscribeAudioFalseWorkaround = true;
-        _properties.subscribeToVideo = true;
-      }
-
       _startConnectingTime = OT.$.now();
 
       if (_stream.connection.id !== _session.connection.id) {
@@ -18515,6 +19414,28 @@ waitForDomReady();
 
         // initialize the peer connection AFTER we've added the event listeners
         _peerConnection.init();
+
+        if (OT.$.hasCapabilities('audioOutputLevelStat')) {
+          _audioLevelSampler = new OT.GetStatsAudioLevelSampler(_peerConnection, 'out');
+        } else if (OT.$.hasCapabilities('webAudioCapableRemoteStream')) {
+          _audioLevelSampler = new OT.AnalyserAudioLevelSampler(new window.AudioContext());
+        }
+
+        if(_audioLevelSampler) {
+          var subscriber = this;
+          // sample with interval to minimise disturbance on animation loop but dispatch the
+          // event with RAF since the main purpose is animation of a meter
+          _audioLevelRunner = new OT.IntervalRunner(function() {
+            _audioLevelSampler.sample(function(audioOutputLevel) {
+              if (audioOutputLevel !== null) {
+                OT.$.requestAnimationFrame(function() {
+                  subscriber.dispatchEvent(
+                    new OT.AudioLevelUpdatedEvent(audioOutputLevel));
+                });
+              }
+            });
+          }, 60);
+        }
       } else {
         logAnalyticsEvent('createPeerConnection', 'Attempt', '', '');
 
@@ -18545,6 +19466,10 @@ waitForDomReady();
       }
 
       _state.set('Destroyed');
+
+      if(_audioLevelRunner) {
+        _audioLevelRunner.stop();
+      }
 
       this.disconnect();
 
@@ -18624,13 +19549,16 @@ waitForDomReady();
       } else {
         if (_lastSubscribeToVideoReason === 'auto') {
           OT.info('Video has been re-enabled');
+          _chrome.videoDisabledIndicator.disableVideo(false);
         } else {
           OT.info('Video was not re-enabled because it was manually disabled');
           return;
         }
       }
       this.subscribeToVideo(active, 'auto');
-      this.dispatchEvent(new OT.Event(active ? 'videoEnabled' : 'videoDisabled'));
+      if(!active) {
+        _chrome.videoDisabledIndicator.disableVideo(true);
+      }
       logAnalyticsEvent('updateQuality', 'video', active ? 'videoEnabled' : 'videoDisabled', true);
     };
 
@@ -18785,6 +19713,12 @@ waitForDomReady();
       _properties.mute = _properties.mute;
     };
 
+    var reasonMap = {
+      auto: 'quality',
+      publishVideo: 'publishVideo',
+      subscribeToVideo: 'subscribeToVideo'
+    };
+
 
     /**
     * Toggles video on and off. Starts subscribing to video (if it is available and
@@ -18813,22 +19747,22 @@ waitForDomReady();
     * @memberOf Subscriber
     */
     this.subscribeToVideo = function(pValue, reason) {
-      if(_subscribeAudioFalseWorkaround && pValue === true) {
-        // Turn off the workaround if they enable the video
-        _subscribeAudioFalseWorkaround = false;
-        return;
-      }
-
       var value = OT.$.castToBoolean(pValue, true);
 
       if(_container) {
-        _container.showPoster(!(value && _stream.hasVideo));
+        var audioOnly = !(value && _stream.hasVideo);
+        _container.audioOnly(audioOnly);
+        _container.showPoster(audioOnly);
         if(value && _container.video()) {
           _container.loading(value);
           _container.video().whenTimeIncrements(function(){
             _container.loading(false);
           }, this);
         }
+      }
+
+      if (_chrome && _chrome.videoDisabledIndicator) {
+        _chrome.videoDisabledIndicator.disableVideo(false);
       }
 
       if (_peerConnection) {
@@ -18842,6 +19776,15 @@ waitForDomReady();
 
       _properties.subscribeToVideo = value;
       _lastSubscribeToVideoReason = reason;
+
+      if (reason !== 'loading') {
+        this.dispatchEvent(new OT.VideoEnabledChangedEvent(
+          value ? 'videoEnabled' : 'videoDisabled',
+          {
+            reason: reasonMap[reason] || 'subscribeToVideo'
+          }
+        ));
+      }
 
       return this;
     };
@@ -18910,6 +19853,7 @@ waitForDomReady();
       if (typeof val !== 'boolean') {
         OT.error('OT.Subscriber.restrictFrameRate: expected a boolean value got a ' + typeof val);
       } else {
+        _frameRateRestricted = val;
         _stream.setRestrictFrameRate(val);
       }
       return this;
@@ -18927,22 +19871,127 @@ waitForDomReady();
 
     _state = new OT.SubscribingState(stateChangeFailed);
 
+   /**
+   * Dispatched periodically to indicate the subscriber's audio level. The event is dispatched
+   * up to 60 times per second, depending on the browser. The <code>audioLevel</code> property
+   * of the event is audio level, from 0 to 1.0. See {@link AudioLevelUpdatedEvent} for more
+   * information.
+   * <p>
+   * The following example adjusts the value of a meter element that shows volume of the
+   * subscriber. Note that the audio level is adjusted logarithmically and a moving average
+   * is applied:
+   * <pre>
+   * var movingAvg = null;
+   * subscriber.on('audioLevelUpdated', function(event) {
+   *   if (movingAvg === null || movingAvg <= event.audioLevel) {
+   *     movingAvg = event.audioLevel;
+   *   } else {
+   *     movingAvg = 0.7 * movingAvg + 0.3 * event.audioLevel;
+   *   }
+   *
+   *   // 1.5 scaling to map the -30 - 0 dBm range to [0,1]
+   *   var logLevel = (Math.log(movingAvg) / Math.LN10) / 1.5 + 1;
+   *   logLevel = Math.min(Math.max(logLevel, 0), 1);
+   *   document.getElementById('subscriberMeter').value = logLevel;
+   * });
+   * </pre>
+   * <p>This example shows the algorithm used by the default audio level indicator displayed
+   * in an audio-only Subscriber.
+   *
+   * @name audioLevelUpdated
+   * @event
+   * @memberof Subscriber
+   * @see AudioLevelUpdatedEvent
+   */
+
 	/**
-	* Dispatched when the OpenTok Media Router stops sending video to the subscriber.
-	* This feature of the OpenTok Media Router has a subscriber drop the video stream
-	* when connectivity degrades. The subscriber continues to receive the audio stream,
-	* if there is one.
+	* Dispatched when the video for the subscriber is disabled.
 	* <p>
-	* If connectivity improves to support video again, the Subscriber object dispatches
-	* a videoEnabled event, and the Subscriber resumes receiving video.
+	* The <code>reason</code> property defines the reason the video was disabled. This can be set to
+	* one of the following values:
+	* <p>
+	*
+	* <ul>
+	*
+	*   <li><code>"publishVideo"</code> &mdash; The publisher stopped publishing video by calling
+	*   <code>publishVideo(false)</code>.</li>
+	*
+	*   <li><code>"quality"</code> &mdash; The OpenTok Media Router stopped sending video
+	*   to the subscriber based on stream quality changes. This feature of the OpenTok Media
+	*   Router has a subscriber drop the video stream when connectivity degrades. (The subscriber
+	*   continues to receive the audio stream, if there is one.)
+	*   <p>
+	*   Before sending this event, when the Subscriber's stream quality deteriorates to a level
+	*   that is low enough that the video stream is at risk of being disabled, the Subscriber
+	*   dispatches a <code>videoDisableWarning</code> event.
+	*   <p>
+	*   If connectivity improves to support video again, the Subscriber object dispatches
+	*   a <code>videoEnabled</code> event, and the Subscriber resumes receiving video.
+	*   <p>
+	*   By default, the Subscriber displays a video disabled indicator when a
+	*   <code>videoDisabled</code> event with this reason is dispatched and removes the indicator
+	*   when the <code>videoDisabled</code> event with this reason is dispatched. You can control
+	*   the display of this icon by calling the <code>setStyle()</code> method of the Subscriber,
+	*   setting the <code>videoDisabledDisplayMode</code> property(or you can set the style when
+	*   calling the <code>Session.subscribe()</code> method, setting the <code>style</code> property
+	*   of the <code>properties</code> parameter).
+	*   <p>
+	*   This feature is only available in sessions that use the OpenTok Media Router (sessions with
+	*   the <a href="http://tokbox.com/opentok/tutorials/create-session/#media-mode">media mode</a>
+	*   set to routed), not in sessions with the media mode set to relayed.
+	*   </li>
+	*
+	*   <li><code>"subscribeToVideo"</code> &mdash; The subscriber started or stopped subscribing to
+	*   video, by calling <code>subscribeToVideo(false)</code>.
+	*   </li>
+	*
+	* </ul>
+	*
+	* @see VideoEnabledChangedEvent
+	* @see event:videoDisableWarning
+	* @see event:videoEnabled
+	* @name videoDisabled
+	* @event
+	* @memberof Subscriber
+	*/
+
+	/**
+	* Dispatched when the OpenTok Media Router determines that the stream quality has degraded
+	* and the video will be disabled if the quality degrades more. If the quality degrades further,
+	* the Subscriber disables the video and dispatches a <code>videoDisabled</code> event.
+	* <p>
+	* By default, the Subscriber displays a video disabled warning indicator when this event
+	* is dispatched (and the video is disabled). You can control the display of this icon by
+	* calling the <code>setStyle()</code> method and setting the
+	* <code>videoDisabledDisplayMode</code> property (or you can set the style when calling
+	* the <code>Session.subscribe()</code> method and setting the <code>style</code> property
+	* of the <code>properties</code> parameter).
 	* <p>
 	* This feature is only available in sessions that use the OpenTok Media Router (sessions with
 	* the <a href="http://tokbox.com/opentok/tutorials/create-session/#media-mode">media mode</a>
 	* set to routed), not in sessions with the media mode set to relayed.
 	*
 	* @see Event
-	* @see event:videoEnabled
-	* @name videoDisabled
+	* @see event:videoDisabled
+	* @see event:videoDisableWarningLifted
+	* @name videoDisableWarning
+	* @event
+	* @memberof Subscriber
+	*/
+
+	/**
+	* Dispatched when the OpenTok Media Router determines that the stream quality has improved
+	* to the point at which the video being disabled is not an immediate risk. This event is
+	* dispatched after the Subscriber object dispatches a <code>videoDisableWarning</code> event.
+	* <p>
+	* This feature is only available in sessions that use the OpenTok Media Router (sessions with
+	* the <a href="http://tokbox.com/opentok/tutorials/create-session/#media-mode">media mode</a>
+	* set to routed), not in sessions with the media mode set to relayed.
+	*
+	* @see Event
+	* @see event:videoDisabled
+	* @see event:videoDisableWarning
+	* @name videoDisableWarningLifted
 	* @event
 	* @memberof Subscriber
 	*/
@@ -18951,19 +20000,36 @@ waitForDomReady();
 	* Dispatched when the OpenTok Media Router resumes sending video to the subscriber
 	* after video was previously disabled.
 	* <p>
-	* The OpenTok Media Router has a subscriber drop the video stream when connectivity
-	* degrades (and the Subscriber dispatches a videoDisabled event). When the connectivity
-	* improves to support video the Subscriber dispatches the videoEnabled event and
-	* video resumes.
+	* The <code>reason</code> property defines the reason the video was enabled. This can be set to
+	* one of the following values:
+	* <p>
+	*
+	* <ul>
+	*
+	*   <li><code>"publishVideo"</code> &mdash; The publisher started publishing video by calling
+	*   <code>publishVideo(true)</code>.</li>
+	*
+	*   <li><code>"quality"</code> &mdash; The OpenTok Media Router resumed sending video
+	*   to the subscriber based on stream quality changes. This feature of the OpenTok Media
+	*   Router has a subscriber drop the video stream when connectivity degrades and then resume
+	*   the video stream if the stream quality improves.
+	*   <p>
+	*   This feature is only available in sessions that use the OpenTok Media Router (sessions with
+	*   the <a href="http://tokbox.com/opentok/tutorials/create-session/#media-mode">media mode</a>
+	*   set to routed), not in sessions with the media mode set to relayed.
+	*   </li>
+	*
+	*   <li><code>"subscribeToVideo"</code> &mdash; The subscriber started or stopped subscribing to
+	*   video, by calling <code>subscribeToVideo(false)</code>.
+	*   </li>
+	*
+	* </ul>
+	*
 	* <p>
 	* To prevent video from resuming, in the <code>videoEnabled</code> event listener,
 	* call <code>subscribeToVideo(false)</code> on the Subscriber object.
-	* <p>
-	* This feature is only available in sessions that use the OpenTok Media Router (sessions with
-	* the <a href="http://tokbox.com/opentok/tutorials/create-session/#media-mode">media mode</a>
-	* set to routed, not in sessions with the media mode set to relayed.
 	*
-	* @see Event
+	* @see VideoEnabledChangedEvent
 	* @see event:videoDisabled
 	* @name videoEnabled
 	* @event
@@ -19004,17 +20070,17 @@ waitForDomReady();
     this.messagingURL = sessionJSON.messaging_url;
     this.symphonyAddress = sessionJSON.symphony_address;
 
-    this.p2pEnabled = sessionJSON.properties &&
+    this.p2pEnabled = !!(sessionJSON.properties &&
       sessionJSON.properties.p2p &&
       sessionJSON.properties.p2p.preference &&
-      sessionJSON.properties.p2p.preference.value === 'enabled';
+      sessionJSON.properties.p2p.preference.value === 'enabled');
   };
 
   // Retrieves Session Info for +session+. The SessionInfo object will be passed
   // to the +onSuccess+ callback. The +onFailure+ callback will be passed an error
   // object and the DOMEvent that relates to the error.
   OT.SessionInfo.get = function(session, onSuccess, onFailure) {
-    var sessionInfoURL = OT.properties.apiURLSSL + '/session/' + session.id + '?extended=true',
+    var sessionInfoURL = OT.properties.apiURL + '/session/' + session.id + '?extended=true',
 
         browser = OT.$.browserVersion(),
 
@@ -19049,7 +20115,7 @@ waitForDomReady();
       };
     }
 
-    session.logEvent('getSessionInfo', 'Attempt', 'api_url', OT.properties.apiURLSSL);
+    session.logEvent('getSessionInfo', 'Attempt', 'api_url', OT.properties.apiURL);
 
     OT.$.getJSON(sessionInfoURL, options, function(error, sessionInfo) {
       if(error) {
@@ -19101,7 +20167,7 @@ waitForDomReady();
   };
 
   onGetResponseCallback = function(session, onSuccess, rawSessionInfo) {
-    session.logEvent('getSessionInfo', 'Success', 'api_url', OT.properties.apiURLSSL);
+    session.logEvent('getSessionInfo', 'Success', 'api_url', OT.properties.apiURL);
 
     onSuccess( new OT.SessionInfo(rawSessionInfo) );
   };
@@ -19143,14 +20209,13 @@ waitForDomReady();
 	 * @property {Number} subscribe Specifies whether you can subscribe to streams
    * in the session (1) or not (0). Currently, this capability is available for all users on all
    * platforms.
-   * @property {Number} supportsWebRTC Whether the client supports WebRTC (1) or not (0).
 	 */
 	OT.Capabilities = function(permissions) {
 	    this.publish = OT.$.arrayIndexOf(permissions, 'publish') !== -1 ? 1 : 0;
 	    this.subscribe = OT.$.arrayIndexOf(permissions, 'subscribe') !== -1 ? 1 : 0;
 	    this.forceUnpublish = OT.$.arrayIndexOf(permissions, 'forceunpublish') !== -1 ? 1 : 0;
 	    this.forceDisconnect = OT.$.arrayIndexOf(permissions, 'forcedisconnect') !== -1 ? 1 : 0;
-	    this.supportsWebRTC = OT.$.supportsWebRTC() ? 1 : 0;
+	    this.supportsWebRTC = OT.$.hasCapabilities('webrtc') ? 1 : 0;
 
       this.permittedTo = function(action) {
         return this.hasOwnProperty(action) && this[action] === 1;
@@ -19328,6 +20393,10 @@ waitForDomReady();
       var stream = event.target,
           propertyName = event.changedProperty,
           newValue = event.newValue;
+
+      if (propertyName === 'videoDisableWarning' || propertyName === 'audioDisableWarning') {
+        return; // These are not public properties, skip top level event for them.
+      }
 
       if (propertyName === 'orientation') {
         propertyName = 'videoDimensions';
@@ -19567,30 +20636,16 @@ waitForDomReady();
     };
 
  /**
- * Connects to an OpenTok session. Pass your API key as the <code>apiKey</code> parameter.
- * You get an API key when you <a href="https://dashboard.tokbox.com/users/sign_in">sign up</a>
- * for an OpenTok account. Pass a token string as the <code>token</code> parameter. You generate
- * a token using the
- * <a href="/opentok/api/tools/documentation/api/server_side_libraries.html">OpenTok server-side
- * libraries</a> or the <a href="https://dashboard.tokbox.com/projects">Dashboard</a> page. For
- * more information, see <a href="/opentok/tutorials/create-token/">Connection token creation</a>.
+ * Connects to an OpenTok session.
  * <p>
- * Upon a successful connection, the Session object dispatches a <code>sessionConnected</code>
- * event. Call the <code>on()</code> method to set up an event handler to process this event before
- * calling other methods of the Session object.
- *  </p>
+ *  Upon a successful connection, the completion handler (the second parameter of the method) is
+ *  invoked without an error object passed in. (If there is an error connecting, the completion
+ *  handler is invoked with an error object.) Make sure that you have successfully connected to the
+ *  session before calling other methods of the Session object.
+ * </p>
  *  <p>
- *    The Session object dispatches a <code>connectionCreated</code> event when other clients
- *    create connections to the session.
- *  </p>
- *  <p>
- *    The OT object dispatches an <code>exception</code> event if the session ID,
- *    API key, or token string are invalid. See <a href="ExceptionEvent.html">ExceptionEvent</a>
- *    and <a href="OT.html#on">OT.on()</a>.
- *  </p>
- *  <p>
- *    The application throws an error if the system requirements are not met
- *    (see <a href="OT.html#checkSystemRequirements">OT.checkSystemRequirements()</a>).
+ *    The Session object dispatches a <code>connectionCreated</code> event when any client
+ *    (including your own) connects to to the session.
  *  </p>
  *
  *  <h5>
@@ -19643,8 +20698,10 @@ waitForDomReady();
   *
   * @param {Function} completionHandler (Optional) A function to be called when the call to the
   * <code>connect()</code> method succeeds or fails. This function takes one parameter &mdash;
-  * <code>error</code>. On success, the <code>completionHandler</code> function is not passed any
-  * arguments. On error, the function is passed an <code>error</code> object parameter. The
+  * <code>error</code> (see the <a href="Error.html">Error</a> object).
+  * On success, the <code>completionHandler</code> function is not passed any
+  * arguments. On error, the function is passed an <code>error</code> object parameter
+  * (see the <a href="Error.html">Error</a> object). The
   * <code>error</code> object has two properties: <code>code</code> (an integer) and
   * <code>message</code> (a string), which identify the cause of the failure. The following
   * code adds a <code>completionHandler</code> when calling the <code>connect()</code> method:
@@ -19918,7 +20975,8 @@ waitForDomReady();
   * @param {Function} completionHandler (Optional) A function to be called when the call to the
   * <code>publish()</code> method succeeds or fails. This function takes one parameter &mdash;
   * <code>error</code>. On success, the <code>completionHandler</code> function is not passed any
-  * arguments. On error, the function is passed an <code>error</code> object parameter. The
+  * arguments. On error, the function is passed an <code>error</code> object parameter
+  * (see the <a href="Error.html">Error</a> object). The
   * <code>error</code> object has two properties: <code>code</code> (an integer) and
   * <code>message</code> (a string), which identify the cause of the failure. Calling
   * <code>publish()</code> fails if the role assigned to your token is not "publisher" or
@@ -20205,7 +21263,12 @@ waitForDomReady();
   *   appearance of user interface controls of the Subscriber. The <code>style</code> object
   *   includes the following properties:
   *     <ul>
-  *       <li><code>backgroundImageURI</code> (String) &mdash; A URI for an image to display as
+  *       <li><code>audioLevelDisplayMode</code> (String) &mdash; How to display the audio level
+  *       indicator. Possible values are: <code>"auto"</code> (the indicator is displayed when the
+  *       video is disabled), <code>"off"</code> (the indicator is not displayed), and
+  *       <code>"on"</code> (the indicator is always displayed).</li>
+  *
+  *       <li><p><code>backgroundImageURI</code> (String) &mdash; A URI for an image to display as
   *       the background image when a video is not displayed. (A video may not be displayed if
   *       you call <code>subscribeToVideo(false)</code> on the Subscriber object). You can pass an
   *       http or https URI to a PNG, JPEG, or non-animated GIF file location. You can also use the
@@ -20215,7 +21278,14 @@ waitForDomReady();
   *       you could set the property to <code>"data:VBORw0KGgoAA..."</code>, where the portion of
   *       the string after <code>"data:"</code> is the result of a call to
   *       <code>Subscriber.getImgData()</code>. If the URL or the image data is invalid, the
-  *       property is ignored (the attempt to set the image fails silently).</li>
+  *       property is ignored (the attempt to set the image fails silently).
+  *       <p>
+  *       Note that in Internet Explorer 8 (using the OpenTok Plugin for Internet Explorer),
+  *       you cannot set the <code>backgroundImageURI</code> style to a string larger than
+  *       32&nbsp;kB. This is due to an IE 8 limitation on the size of URI strings. Due to this
+  *       limitation, you cannot set the <code>backgroundImageURI</code> style to a string obtained
+  *       with the <code>getImgData()</code> method.
+  *       </p></li>
   *
   *       <li><code>buttonDisplayMode</code> (String) &mdash; How to display the speaker controls
   *       Possible values are: <code>"auto"</code> (controls are displayed when the stream is first
@@ -20226,6 +21296,15 @@ waitForDomReady();
   *       Possible values are: <code>"auto"</code> (the name is displayed when the stream is first
   *       displayed and when the user mouses over the display), <code>"off"</code> (the name is not
   *       displayed), and <code>"on"</code> (the name is always displayed).</li>
+  *
+  *       <li><code>videoDisabledDisplayMode</code> (String) &#151; Whether to display the video
+  *       disabled indicator and video disabled warning icons for a Subscriber. These icons
+  *       indicate that the video has been disabled (or is in risk of being disabled for
+  *       the warning icon) due to poor stream quality. This style only applies to the Subscriber
+  *       object. Possible values are: <code>"auto"</code> (the icons are automatically when the
+  *       displayed video is disabled or in risk of being disabled due to poor stream quality),
+  *       <code>"off"</code> (do not display the icons), and <code>"on"</code> (display the
+  *       icons). The default setting is <code>"auto"</code></li>
   *   </ul>
   *   </li>
   *
@@ -20537,13 +21616,13 @@ waitForDomReady();
 
 
  /**
-  * Sends a signal to each client or specified clients in the session. Specify a
-  * <code>connections</code> property of the <code>signal</code> parameter to limit the
-  * recipients of the signal; otherwise the signal is sent to each client connected to
+  * Sends a signal to each client or a specified client in the session. Specify a
+  * <code>to</code> property of the <code>signal</code> parameter to limit the signal to
+  * be sent to a specific client; otherwise the signal is sent to each client connected to
   * the session.
   * <p>
-  * The following example sends a signal of type "foo" with a specified data payload to all
-  * clients connected to the session:
+  * The following example sends a signal of type "foo" with a specified data payload ("hello")
+  * to all clients connected to the session:
   * <pre>
   * session.signal({
   *     type: "foo",
@@ -20551,7 +21630,7 @@ waitForDomReady();
   *   },
   *   function(error) {
   *     if (error) {
-  *       console.log("signal error: " + error.reason);
+  *       console.log("signal error: " + error.message);
   *     } else {
   *       console.log("signal sent");
   *     }
@@ -20559,22 +21638,22 @@ waitForDomReady();
   * );
   * </pre>
   * <p>
-  * Calling this method without limiting the set of recipient clients will result in
-  * multiple signals sent (one to each client in the session). For information on charges
-  * for signaling, see the <a href="http://tokbox.com/pricing">OpenTok
-  * pricing</a> page.
+  * Calling this method without specifying a recipient client (by setting the <code>to</code>
+  * property of the <code>signal</code> parameter) results in multiple signals sent (one to each
+  * client in the session). For information on charges for signaling, see the
+  * <a href="http://tokbox.com/pricing">OpenTok pricing</a> page.
   * <p>
-  * The following example sends a signal of type "foo" with a specified data payload to two
-  * specific clients connected to the session:
+  * The following example sends a signal of type "foo" with a data payload ("hello") to a
+  * specific client connected to the session:
   * <pre>
   * session.signal({
   *     type: "foo",
-  *     to: [connection1, connection2]; // connection1 and 2 are Connection objects
+  *     to: recipientConnection; // a Connection object
   *     data: "hello"
   *   },
   *   function(error) {
   *     if (error) {
-  *       console.log("signal error: " + error.reason);
+  *       console.log("signal error: " + error.message);
   *     } else {
   *       console.log("signal sent");
   *     }
@@ -20590,12 +21669,12 @@ waitForDomReady();
   *
   * @param {Object} signal An object that contains the following properties defining the signal:
   * <ul>
-  *   <li><code>to</code> &mdash; (Array) An array of <a href="Connection.html">Connection</a>
-  *      objects, corresponding to clients that the message is to be sent to. If you do not
-  *      specify this property, the signal is sent to all clients connected to the session.</li>
   *   <li><code>data</code> &mdash; (String) The data to send. The limit to the length of data
   *     string is 8kB. Do not set the data string to <code>null</code> or
   *     <code>undefined</code>.</li>
+  *   <li><code>to</code> &mdash; (Connection) A <a href="Connection.html">Connection</a>
+  *      object corresponding to the client that the message is to be sent to. If you do not
+  *      specify this property, the signal is sent to all clients connected to the session.</li>
   *   <li><code>type</code> &mdash; (String) The type of the signal. You can use the type to
   *     filter signals when setting an event handler for the <code>signal:type</code> event
   *     (where you replace <code>type</code> with the type string). The maximum length of the
@@ -20619,10 +21698,11 @@ waitForDomReady();
   *     <table style="width:100%">
   *         <tr>
   *           <td>400</td> <td>One of the signal properties &mdash; data, type, or to &mdash;
-  *                         is invalid. Or the data cannot be parsed as JSON.</td>
+  *                         is invalid.</td>
   *         </tr>
   *         <tr>
-  *           <td>404</td> <td>The to connection does not exist.</td>
+  *           <td>404</td> <td>The client specified by the to property is not connected to
+  *                        the session.</td>
   *         </tr>
   *         <tr>
   *           <td>413</td> <td>The type string exceeds the maximum length (128 bytes),
@@ -20633,16 +21713,12 @@ waitForDomReady();
   *         </tr>
   *      </table>
   *   </li>
-  *   <li><code>reason</code> &mdash; (String) A description of the error.</li>
-  *   <li><code>signal</code> &mdash; (Object) An object with properties corresponding to the
-  *     values passed into the <code>signal()</code> method &mdash; <code>data</code>,
-  *     <code>to</code>, and <code>type</code>.
-  *   </li>
+  *   <li><code>message</code> &mdash; (String) A description of the error.</li>
   * </ul>
   *
   * <p>Note that the <code>completionHandler</code> success result (<code>error == null</code>)
   * indicates that the options passed into the <code>Session.signal()</code> method are valid
-  * and the signal was sent. It does <i>not</i> indicate that the signal was sucessfully
+  * and the signal was sent. It does <i>not</i> indicate that the signal was successfully
   * received by any of the intended recipients.
   *
   * @method #signal
@@ -20909,7 +21985,7 @@ waitForDomReady();
    */
 
   /**
-   * A new client, other than your own, has connected to the session.
+   * A new client (including your own) has connected to the session.
    * @name connectionCreated
    * @event
    * @memberof Session
@@ -20997,6 +22073,12 @@ waitForDomReady();
 	 * <a href="Publisher.html#publishVideo">Publisher.publishVideo()</a>); or the
 	 * <code>videoDimensions</code> property of the Stream
 	 * object has changed (see <a href="Stream.html#"videoDimensions>Stream.videoDimensions</a>).
+	 * <p>
+	 * Note that a subscriber's video can be disabled or enabled for reasons other than the
+	 * publisher disabling or enabling it. A Subscriber object dispatches <code>videoDisabled</code>
+	 * and <code>videoEnabled</code> events in all conditions that cause the subscriber's stream
+	 * to be disabled or enabled.
+	 *
 	 * @name streamPropertyChanged
 	 * @event
 	 * @memberof Session
@@ -21006,6 +22088,8 @@ waitForDomReady();
 	 * @see <a href="Stream.html#"hasAudio>Stream.hasAudio</a>
 	 * @see <a href="Stream.html#"hasVideo>Stream.hasVideo</a>
 	 * @see <a href="Stream.html#"videoDimensions>Stream.videoDimensions</a>
+	 * @see <a href="Subscriber.html#event:videoDisabled">Subscriber videoDisabled event</a>
+	 * @see <a href="Subscriber.html#event:videoEnabled">Subscriber videoEnabled event</a>
 	 */
 
 	/**
@@ -21078,7 +22162,7 @@ waitForDomReady();
 
 })(window);
 (function() {
-  
+
   var txt = function(text) {
     return document.createTextNode(text);
   };
@@ -21094,7 +22178,7 @@ waitForDomReady();
         publisher,
         devicesById;
 
-    this.change = function() {
+    this.change = OT.$.bind(function() {
       destroyExistingPublisher();
 
       var settings;
@@ -21134,7 +22218,7 @@ waitForDomReady();
       });
 
       publisher = pub;
-    }.bind(this);
+    }, this);
 
     this.cleanup = destroyExistingPublisher = function() {
       if(publisher) {
@@ -21154,17 +22238,17 @@ waitForDomReady();
       return el({ value: device.deviceId }, txt(device.label), 'option');
     };
 
-    this.setDeviceList = function (devices) {
+    this.setDeviceList = OT.$.bind(function (devices) {
       opts.selectTag.innerHTML = '';
       devicesById = {};
       if(devices.length > 0) {
-        devices.map(addDevice).map(opts.selectTag.appendChild.bind(opts.selectTag));
+        devices.map(addDevice).map(OT.$.bind(opts.selectTag.appendChild, opts.selectTag));
         opts.selectTag.removeAttribute('disabled');
       } else {
         disableSelector(opts.selectTag, 'No devices');
       }
       this.change();
-    }.bind(this);
+    }, this);
 
     this.setLoading = function() {
       disableSelector(opts.selectTag, 'Loading...');
@@ -21190,7 +22274,7 @@ waitForDomReady();
       return camera && camera.pickedDevice;
     };
 
-    this.destroy = function() {
+    this.destroy = OT.$.bind(function() {
       if(this.is('destroyed')) {
         return;
       }
@@ -21204,14 +22288,14 @@ waitForDomReady();
         targetElement.parentNode.removeChild(targetElement);
       }
       setState('destroyed');
-    }.bind(this);
+    }, this);
 
     if(targetElement == null) {
       callback(new Error('You must provide a targetElement'));
       return;
     }
 
-    if(!OT.$.canGetMediaDevices()) {
+    if(!OT.$.hasCapabilities('getMediaDevices')) {
       callback(new Error('This browser does not support getMediaDevices APIs'));
       return;
     }
@@ -21264,7 +22348,7 @@ waitForDomReady();
     camera.setLoading();
     microphone.setLoading();
 
-    OT.getDevices(function(error, devices) {
+    OT.getDevices(OT.$.bind(function(error, devices) {
       if (error) {
         callback(error);
         return;
@@ -21286,7 +22370,7 @@ waitForDomReady();
 
       setState('chooseDevices');
 
-    }.bind(this));
+    }, this));
 
     setupDOM = function() {
       var insertMode = options.insertMode;
