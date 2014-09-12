@@ -207,10 +207,6 @@ AtomizeChars(ExclusiveContext *cx, const CharT *chars, size_t length,
 extern JSAtom *
 AtomizeString(ExclusiveContext *cx, JSString *str, js::InternBehavior ib = js::DoNotInternAtom);
 
-extern JSAtom *
-AtomizeSubstring(ExclusiveContext *cx, JSString *str, size_t start, size_t length,
-                 InternBehavior ib = DoNotInternAtom);
-
 template <AllowGC allowGC>
 extern JSAtom *
 ToAtom(ExclusiveContext *cx, typename MaybeRooted<Value, allowGC>::HandleType v);

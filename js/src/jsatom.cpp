@@ -403,22 +403,6 @@ js::AtomizeString(ExclusiveContext *cx, JSString *str,
 }
 
 JSAtom *
-js::AtomizeSubstring(ExclusiveContext *cx, JSString *str, size_t start, size_t length,
-                     InternBehavior ib /* = DoNotInternAtom */)
-{
-    JS_ASSERT(start + length <= str->length());
-
-    JSLinearString *linear = str->ensureLinear(cx);
-    if (!linear)
-        return nullptr;
-
-    JS::AutoCheckCannotGC nogc;
-    return linear->hasLatin1Chars()
-           ? AtomizeAndCopyChars(cx, linear->latin1Chars(nogc) + start, length, ib)
-           : AtomizeAndCopyChars(cx, linear->twoByteChars(nogc) + start, length, ib);
-}
-
-JSAtom *
 js::Atomize(ExclusiveContext *cx, const char *bytes, size_t length, InternBehavior ib)
 {
     CHECK_REQUEST(cx);
