@@ -397,6 +397,7 @@ gbjar.sources += [
     'tabs/TabsLayoutItemView.java',
     'tabs/TabsListLayout.java',
     'tabs/TabsPanel.java',
+    'tabs/TabStrip.java',
     'tabs/TabStripAdapter.java',
     'tabs/TabStripItemView.java',
     'tabs/TabStripView.java',
