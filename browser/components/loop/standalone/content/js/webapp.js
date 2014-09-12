@@ -120,6 +120,16 @@ loop.webapp = (function($, _, OT, mozL10n) {
     }
   });
 
+  var ConversationBranding = React.createClass({displayName: 'ConversationBranding',
+    render: function() {
+      return (
+        React.DOM.h1({className: "standalone-header-title"}, 
+          React.DOM.strong(null, mozL10n.get("brandShortname")), " ", mozL10n.get("clientShortname")
+        )
+      );
+    }
+  });
+
   var ConversationHeader = React.createClass({displayName: 'ConversationHeader',
     render: function() {
       var cx = React.addons.classSet;
@@ -138,10 +148,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
 
       return (
         /* jshint ignore:start */
-        React.DOM.header({className: "standalone-header container-box"}, 
-          React.DOM.h1({className: "standalone-header-title"}, 
-            React.DOM.strong(null, mozL10n.get("brandShortname")), " ", mozL10n.get("clientShortname")
-          ), 
+        React.DOM.header({className: "standalone-header header-box container-box"}, 
+          ConversationBranding(null), 
           React.DOM.div({className: "loop-logo", title: "Firefox WebRTC! logo"}), 
           React.DOM.h3({className: "call-url"}, 
             conversationUrl
@@ -161,6 +169,68 @@ loop.webapp = (function($, _, OT, mozL10n) {
         React.DOM.div({className: "standalone-footer container-box"}, 
           React.DOM.div({title: "Mozilla Logo", className: "footer-logo"})
         )
+      );
+    }
+  });
+
+  var PendingConversationView = React.createClass({displayName: 'PendingConversationView',
+    getInitialState: function() {
+      return {
+        callState: this.props.callState || "connecting"
+      }
+    },
+
+    propTypes: {
+      websocket: React.PropTypes.instanceOf(loop.CallConnectionWebSocket)
+                      .isRequired
+    },
+
+    componentDidMount: function() {
+      this.props.websocket.listenTo(this.props.websocket, "progress:alerting",
+                                    this._handleRingingProgress);
+    },
+
+    _handleRingingProgress: function() {
+      this.setState({callState: "ringing"});
+    },
+
+    _cancelOutgoingCall: function() {
+      this.props.websocket.cancel();
+    },
+
+    render: function() {
+      var callState = mozL10n.get("call_progress_" + this.state.callState + "_description");
+      return (
+        /* jshint ignore:start */
+        React.DOM.div({className: "container"}, 
+          React.DOM.div({className: "container-box"}, 
+            React.DOM.header({className: "pending-header header-box"}, 
+              ConversationBranding(null)
+            ), 
+
+            React.DOM.div({id: "cameraPreview"}), 
+
+            React.DOM.div({id: "messages"}), 
+
+            React.DOM.p({className: "standalone-btn-label"}, 
+              callState
+            ), 
+
+            React.DOM.div({className: "btn-pending-cancel-group btn-group"}, 
+              React.DOM.div({className: "flex-padding-1"}), 
+              React.DOM.button({className: "btn btn-large btn-cancel", 
+                      onClick: this._cancelOutgoingCall}, 
+                React.DOM.span({className: "standalone-call-btn-text"}, 
+                  mozL10n.get("initiate_call_cancel_button")
+                )
+              ), 
+              React.DOM.div({className: "flex-padding-1"})
+            )
+          ), 
+
+          ConversationFooter(null)
+        )
+        /* jshint ignore:end */
       );
     }
   });
@@ -286,7 +356,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
             ConversationHeader({
               urlCreationDateString: this.state.urlCreationDateString}), 
 
-            React.DOM.p({className: "standalone-call-btn-label"}, 
+            React.DOM.p({className: "standalone-btn-label"}, 
               mozL10n.get("initiate_call_button_label2")
             ), 
 
@@ -352,6 +422,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
       "unsupportedDevice":   "unsupportedDevice",
       "unsupportedBrowser":  "unsupportedBrowser",
       "call/expired":        "expired",
+      "call/pending/:token": "pendingConversation",
       "call/ongoing/:token": "loadConversation",
       "call/:token":         "initiate"
     },
@@ -364,8 +435,6 @@ loop.webapp = (function($, _, OT, mozL10n) {
 
       // Load default view
       this.loadReactComponent(HomeView(null));
-
-      this.listenTo(this._conversation, "timeout", this._onTimeout);
     },
 
     _onSessionExpired: function() {
@@ -417,7 +486,9 @@ loop.webapp = (function($, _, OT, mozL10n) {
         this._notifications.errorL10n("missing_conversation_info");
         this.navigate("home", {trigger: true});
       } else {
-        this._setupWebSocketAndCallView(loopToken);
+        this.navigate("call/pending/" + loopToken, {
+          trigger: true
+        });
       }
     },
 
@@ -427,16 +498,13 @@ loop.webapp = (function($, _, OT, mozL10n) {
      *
      * @param {string} loopToken The session token to use.
      */
-    _setupWebSocketAndCallView: function(loopToken) {
+    _setupWebSocketAndCallView: function() {
       this._websocket = new loop.CallConnectionWebSocket({
         url: this._conversation.get("progressURL"),
         websocketToken: this._conversation.get("websocketToken"),
         callId: this._conversation.get("callId"),
       });
       this._websocket.promiseConnect().then(function() {
-        this.navigate("call/ongoing/" + loopToken, {
-          trigger: true
-        });
       }.bind(this), function() {
         // XXX Not the ideal response, but bug 1047410 will be replacing
         // this by better "call failed" UI.
@@ -464,30 +532,48 @@ loop.webapp = (function($, _, OT, mozL10n) {
      * it if appropraite.
      */
     _handleWebSocketProgress: function(progressData) {
-      if (progressData.state === "terminated") {
-        // XXX Before adding more states here, the basic protocol messages to the
-        // server need implementing on both the standalone and desktop side.
-        // These are covered by bug 1045643, but also check the dependencies on
-        // bug 1034041.
-        //
-        // Failure to do this will break desktop - standalone call setup. We're
-        // ok to handle reject, as that is a specific message from the destkop via
-        // the server.
-        switch (progressData.reason) {
-          case "reject":
-            this._handleCallRejected();
+      switch(progressData.state) {
+        case "connecting": {
+          this._handleCallConnecting();
+          break;
+        }
+        case "terminated": {
+          // At the moment, we show the same text regardless
+          // of the terminated reason.
+          this._handleCallTerminated(progressData.reason);
+          break;
         }
       }
     },
 
     /**
-     * Handles call rejection.
-     * XXX This should really display the call failed view - bug 1046959
-     * will implement this.
+     * Handles a call moving to the connecting stage.
      */
-    _handleCallRejected: function() {
+    _handleCallConnecting: function() {
+      var loopToken = this._conversation.get("loopToken");
+      if (!loopToken) {
+        this._notifications.errorL10n("missing_conversation_info");
+        return;
+      }
+
+      this.navigate("call/ongoing/" + loopToken, {
+        trigger: true
+      });
+    },
+
+    /**
+     * Handles call rejection.
+     *
+     * @param {String} reason The reason the call was terminated.
+     */
+    _handleCallTerminated: function(reason) {
       this.endCall();
-      this._notifications.errorL10n("call_timeout_notification_text");
+      // For reasons other than cancel, display some notification text.
+      if (reason !== "cancel") {
+        // XXX This should really display the call failed view - bug 1046959
+        // will implement this.
+        this._notifications.errorL10n("call_timeout_notification_text");
+      }
     },
 
     /**
@@ -499,10 +585,6 @@ loop.webapp = (function($, _, OT, mozL10n) {
         route = "call/" + this._conversation.get("loopToken");
       }
       this.navigate(route, {trigger: true});
-    },
-
-    _onTimeout: function() {
-      this._notifications.errorL10n("call_timeout_notification_text");
     },
 
     /**
@@ -547,6 +629,17 @@ loop.webapp = (function($, _, OT, mozL10n) {
       this._conversation.once("change:publishedStream", this._checkConnected, this);
       this._conversation.once("change:subscribedStream", this._checkConnected, this);
       this.loadReactComponent(startView);
+    },
+
+    pendingConversation: function(loopToken) {
+      if (!this._conversation.isSessionReady()) {
+        // User has loaded this url directly, actually setup the call.
+        return this.navigate("call/" + loopToken, {trigger: true});
+      }
+      this._setupWebSocketAndCallView();
+      this.loadReactComponent(PendingConversationView({
+        websocket: this._websocket
+      }));
     },
 
     /**
@@ -596,8 +689,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
       notifications: new sharedModels.NotificationCollection(),
       client: client,
       conversation: new sharedModels.ConversationModel({}, {
-        sdk: OT,
-        pendingCallTimeout: loop.config.pendingCallTimeout
+        sdk: OT
       })
     });
 
@@ -616,6 +708,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
   return {
     baseServerUrl: baseServerUrl,
     CallUrlExpiredView: CallUrlExpiredView,
+    PendingConversationView: PendingConversationView,
     StartConversationView: StartConversationView,
     HomeView: HomeView,
     UnsupportedBrowserView: UnsupportedBrowserView,

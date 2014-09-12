@@ -135,6 +135,7 @@ p {
   background-color: #f0ad4e;
 }
 
+.btn-cancel,
 .btn-error,
 .btn-hangup,
 .btn-error + .btn-chevron {
@@ -142,6 +143,7 @@ p {
   border: 1px solid #d74345;
 }
 
+  .btn-cancel:hover,
   .btn-error:hover,
   .btn-hangup:hover,
   .btn-error + .btn-chevron:hover {
@@ -149,6 +151,7 @@ p {
     border: 1px solid #c53436;
   }
 
+  .btn-cancel:active,
   .btn-error:active,
   .btn-hangup:active,
   .btn-error + .btn-chevron:active {

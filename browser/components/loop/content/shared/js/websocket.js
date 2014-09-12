@@ -149,6 +149,18 @@ loop.CallConnectionWebSocket = (function() {
     },
 
     /**
+     * Notifies the server that the outgoing call is cancelled by the
+     * user.
+     */
+    cancel: function() {
+      this._send({
+        messageType: "action",
+        event: "terminate",
+        reason: "cancel"
+      });
+    },
+
+    /**
      * Sends data on the websocket.
      *
      * @param {Object} data The data to send.
@@ -206,6 +218,7 @@ loop.CallConnectionWebSocket = (function() {
           this._completeConnection();
           break;
         case "progress":
+          this.trigger("progress:" + msg.state);
           this.trigger("progress", msg);
           break;
       }
