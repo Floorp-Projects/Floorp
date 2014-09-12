@@ -208,7 +208,7 @@ js_SuppressDeletedElements(JSContext *cx, js::HandleObject obj, uint32_t begin, 
  * picked up by IteratorNext(). The value is cached in the current context.
  */
 extern bool
-js_IteratorMore(JSContext *cx, js::HandleObject iterobj, js::MutableHandleValue rval);
+js_IteratorMore(JSContext *cx, js::HandleObject iterobj, bool *res);
 
 extern bool
 js_IteratorNext(JSContext *cx, js::HandleObject iterobj, js::MutableHandleValue rval);
