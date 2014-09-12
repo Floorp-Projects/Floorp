@@ -561,7 +561,16 @@ let MozLoopServiceInternal = {
    * @return {Promise} resolved with the body of the hawk request for OAuth parameters.
    */
   promiseFxAOAuthParameters: function() {
-    return this.hawkRequest(LOOP_SESSION_TYPE.FXA, "/fxa-oauth/params", "POST").then(response => {
+    const SESSION_TYPE = LOOP_SESSION_TYPE.FXA;
+    return this.hawkRequest(SESSION_TYPE, "/fxa-oauth/params", "POST").then(response => {
+      if (!this.storeSessionToken(SESSION_TYPE, response.headers)) {
+        throw new Error("Invalid FxA hawk token returned");
+      }
+      let prefType = Services.prefs.getPrefType(this.getSessionTokenPrefName(SESSION_TYPE));
+      if (prefType == Services.prefs.PREF_INVALID) {
+        throw new Error("No FxA hawk token returned and we don't have one saved");
+      }
+
       return JSON.parse(response.body);
     });
   },

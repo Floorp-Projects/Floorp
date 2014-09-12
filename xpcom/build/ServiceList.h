@@ -29,6 +29,8 @@ MOZ_SERVICE(PermissionManager, nsIPermissionManager,
             "@mozilla.org/permissionmanager;1");
 MOZ_SERVICE(ServiceWorkerManager, nsIServiceWorkerManager,
             "@mozilla.org/serviceworkers/manager;1");
+MOZ_SERVICE(AsyncShutdown, nsIAsyncShutdownService,
+            "@mozilla.org/async-shutdown-service;1")
 
 #ifdef MOZ_USE_NAMESPACE
 namespace mozilla {

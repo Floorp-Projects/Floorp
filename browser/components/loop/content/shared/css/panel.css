@@ -137,8 +137,12 @@
 
 /* Specific cases */
 
-.panel #messages .alert {
-  margin-bottom: 0;
+.panel .messages {
+  margin: 0;
+}
+
+.panel .messages .alert {
+  margin: 0;
 }
 
 /* Dropdown menu (shared styles) */

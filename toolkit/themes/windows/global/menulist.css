@@ -73,7 +73,7 @@ menulist:hover:active > .menulist-dropmarker {
 
 /* ..... focused state ..... */
 
-menulist:focus:not([open="true"]):not(.menulist-compact) > .menulist-label-box {
+menulist:focus:not([open="true"]) > .menulist-label-box {
   background-color: Highlight;
   color: HighlightText;
 }
@@ -104,44 +104,4 @@ html|*.menulist-editable-input {
   padding: 0px !important;
   background: inherit;
   font: inherit;
-}
-
-/* ::::: compact menulists ::::: */
-
-.menulist-compact {
-  -moz-appearance: none;
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  margin: 0;
-  -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
-  background-color: ThreeDFace;
-  color: ButtonText;
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
-}
-
-.menulist-compact > .menulist-label-box > .menulist-label {
-  margin: 0 3px !important;
-  text-align: end;
-}  
-
-.menulist-compact > .menulist-label-box > .menulist-icon {
-  -moz-margin-start: 2px;
-}
-
-.menulist-compact[open="true"] {
-  -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDHighlight;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDHighlight;
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
-}
-
-.menulist-compact[disabled="true"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
-}
-
-.menulist-compact:-moz-focusring:not([open="true"]) > .menulist-label-box {
-  border: 1px dotted;
 }

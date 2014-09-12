@@ -1,0 +1,9 @@
+# This file has default permissions for the permission manager.
+# The file-format is strict:
+# * matchtype \t type \t permission \t host
+# * Only "host" is supported for matchtype
+# * type is a string that identifies the type of permission (e.g. "cookie")
+# * permission is an integer between 1 and 15
+# See nsPermissionManager.cpp for more...
+
+# (This file is intentionally blank for the moment...)

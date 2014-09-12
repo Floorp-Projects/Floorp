@@ -11,7 +11,7 @@
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
 #include "nsCOMPtr.h"
-#include "nsIFile.h"
+#include "nsIInputStream.h"
 #include "nsTHashtable.h"
 #include "nsTArray.h"
 #include "nsString.h"
@@ -175,7 +175,8 @@ public:
     eOperationNone,
     eOperationAdding,
     eOperationRemoving,
-    eOperationChanging
+    eOperationChanging,
+    eOperationReplacingDefault
   };
 
   enum DBOperationType {
@@ -187,6 +188,11 @@ public:
     eDontNotify,
     eNotify
   };
+
+  // A special value for a permission ID that indicates the ID was loaded as
+  // a default value.  These will never be written to the database, but may
+  // be overridden with an explicit permission (including UNKNOWN_ACTION)
+  static const int64_t cIDPermissionIsDefault = -1;
 
   nsresult AddInternal(nsIPrincipal* aPrincipal,
                        const nsAFlatCString &aType,
@@ -226,6 +232,8 @@ private:
   nsresult InitDB(bool aRemoveFile);
   nsresult CreateTable();
   nsresult Import();
+  nsresult ImportDefaults();
+  nsresult _DoImport(nsIInputStream *inputStream, mozIStorageConnection *aConn);
   nsresult Read();
   void     NotifyObserversWithPermission(const nsACString &aHost,
                                          uint32_t          aAppId,

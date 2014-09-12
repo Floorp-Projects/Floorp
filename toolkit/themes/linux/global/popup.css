@@ -93,8 +93,7 @@ tooltip[titletip="true"] {
 
 /* rules for popups associated with menulists */
 
-menulist > menupopup,
-.menulist-menupopup {
+menulist > menupopup {
   padding: 0px;
   min-width: 0px;
 }

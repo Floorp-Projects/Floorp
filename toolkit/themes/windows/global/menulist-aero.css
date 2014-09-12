@@ -5,7 +5,7 @@
 % include all of the Luna styles
 %include menulist.css
 
-menulist:-moz-focusring:not([open="true"]):not(.menulist-compact) > .menulist-label-box {
+menulist:-moz-focusring:not([open="true"]) > .menulist-label-box {
   border: 1px dotted ThreeDDarkShadow;
 }
 
