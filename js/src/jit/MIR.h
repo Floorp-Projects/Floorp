@@ -831,6 +831,13 @@ class MInstruction
         resumePoint_(nullptr)
     { }
 
+    // Convenient function used for replacing a load by the value of the store
+    // if the types are match, and boxing the value if they do not match.
+    //
+    // Note: There is no need for such function in AsmJS functions as they do
+    // not use any MIRType_Value.
+    MDefinition *foldsToStoredValue(TempAllocator &alloc, MDefinition *loaded);
+
     void setResumePoint(MResumePoint *resumePoint);
 
     // Used to transfer the resume point to the rewritten instruction.
