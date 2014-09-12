@@ -26,6 +26,17 @@ nsSVGEnumMapping SVGFEBlendElement::sModeMap[] = {
   {&nsGkAtoms::screen, SVG_FEBLEND_MODE_SCREEN},
   {&nsGkAtoms::darken, SVG_FEBLEND_MODE_DARKEN},
   {&nsGkAtoms::lighten, SVG_FEBLEND_MODE_LIGHTEN},
+  {&nsGkAtoms::overlay, SVG_FEBLEND_MODE_OVERLAY},
+  {&nsGkAtoms::colorDodge, SVG_FEBLEND_MODE_COLOR_DODGE},
+  {&nsGkAtoms::colorBurn, SVG_FEBLEND_MODE_COLOR_BURN},
+  {&nsGkAtoms::hardLight, SVG_FEBLEND_MODE_HARD_LIGHT},
+  {&nsGkAtoms::softLight, SVG_FEBLEND_MODE_SOFT_LIGHT},
+  {&nsGkAtoms::difference, SVG_FEBLEND_MODE_DIFFERENCE},
+  {&nsGkAtoms::exclusion, SVG_FEBLEND_MODE_EXCLUSION},
+  {&nsGkAtoms::hue, SVG_FEBLEND_MODE_HUE},
+  {&nsGkAtoms::saturation, SVG_FEBLEND_MODE_SATURATION},
+  {&nsGkAtoms::color, SVG_FEBLEND_MODE_COLOR},
+  {&nsGkAtoms::luminosity, SVG_FEBLEND_MODE_LUMINOSITY},
   {nullptr, 0}
 };
 
