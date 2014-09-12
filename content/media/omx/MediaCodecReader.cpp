@@ -657,10 +657,6 @@ MediaCodecReader::ReadMetadata(MediaInfo* aInfo,
     return NS_ERROR_FAILURE;
   }
 
-#ifdef MOZ_AUDIO_OFFLOAD
-  CheckAudioOffload();
-#endif
-
   if (!TriggerIncrementalParser()) {
     return NS_ERROR_FAILURE;
   }
@@ -711,6 +707,10 @@ MediaCodecReader::ReadMetadata(MediaInfo* aInfo,
 
   *aInfo = mInfo;
   *aTags = nullptr;
+
+#ifdef MOZ_AUDIO_OFFLOAD
+  CheckAudioOffload();
+#endif
 
   return NS_OK;
 }
