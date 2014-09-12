@@ -28,8 +28,22 @@ ThreadWrapper* ThreadWrapper::CreateThread(ThreadRunFunction func,
 #endif
 }
 
+ThreadWrapper* ThreadWrapper::CreateUIThread(ThreadRunFunction func,
+                                             ThreadObj obj, ThreadPriority prio,
+                                             const char* thread_name) {
+#if defined(_WIN32)
+  return new ThreadWindowsUI(func, obj, prio, thread_name);
+#else
+  return ThreadPosix::Create(func, obj, prio, thread_name);
+#endif
+}
+
 bool ThreadWrapper::SetAffinity(const int* processor_numbers,
                                 const unsigned int amount_of_processors) {
+  return false;
+}
+
+bool ThreadWrapper::RequestCallbackTimer(unsigned int milliseconds) {
   return false;
 }
 
