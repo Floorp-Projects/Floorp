@@ -21,7 +21,8 @@ nsContextMenu.prototype = {
       return;
 
     this.hasPageMenu = false;
-    if (!aIsShift) {
+    // FIXME (bug 1047751) - The page menu is disabled in e10s.
+    if (!aIsShift && !this.isRemote) {
       this.hasPageMenu = PageMenu.maybeBuildAndAttachMenu(this.target,
                                                           aXulMenu);
     }
