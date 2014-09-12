@@ -3227,7 +3227,7 @@
     "description": "PLACES: Time to search the history library (ms)"
   },
   "PLACES_AUTOCOMPLETE_URLINLINE_DOMAIN_QUERY_TIME_MS": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "exponential",
     "low": 50,
     "high": 2000,
@@ -3527,7 +3527,7 @@
     "description": "Firefox: Time taken by the identity popup to open in milliseconds"
   },
   "FX_BOOKMARKS_TOOLBAR_INIT_MS": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "exponential",
     "low": 50,
     "high": "5000",

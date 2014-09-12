@@ -142,9 +142,7 @@ menuitem[_moz-menuactive="true"] {
 
 /* ::::: menu/menuitems in menulist popups ::::: */
 
-.menulist-menupopup > menuitem,
 menulist > menupopup > menuitem,
-.menulist-menupopup > menu,
 menulist > menupopup > menu {
   -moz-appearance: none;
   border: 1px solid transparent;
@@ -154,17 +152,13 @@ menulist > menupopup > menu {
   color: -moz-FieldText;
 }
 
-.menulist-menupopup > menuitem > .menu-iconic-left,
 menulist > menupopup > menuitem > .menu-iconic-left,
-.menulist-menupopup > menu > .menu-iconic-left,
 menulist > menupopup > menu > .menu-iconic-left {
   display: none;
   padding-top: 0px;
 }
 
-.menulist-menupopup > menuitem > label,
 menulist > menupopup > menuitem > label,
-.menulist-menupopup > menu > label,
 menulist > menupopup > menu > label {
   padding-top: 0px;
   padding-bottom: 0px;
@@ -226,8 +220,7 @@ menuseparator {
   border-bottom: 1px solid gray;
 }
 
-menulist > menupopup > menuseparator,
-.menulist-menupopup > menuseparator {
+menulist > menupopup > menuseparator {
   padding: 6px 0 5px 0;
   border-top: 1px solid black;
 }

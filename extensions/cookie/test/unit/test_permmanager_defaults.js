@@ -1,0 +1,177 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+// The origin we use in most of the tests.
+const TEST_ORIGIN = "example.org";
+const TEST_PERMISSION = "test-permission";
+
+function run_test() {
+  run_next_test();
+}
+
+add_task(function* do_test() {
+  // setup a profile.
+  do_get_profile();
+
+  // create a file in the temp directory with the defaults.
+  let file = do_get_tempdir();
+  file.append("test_default_permissions");
+
+  // write our test data to it.
+  let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
+                createInstance(Ci.nsIFileOutputStream);
+  ostream.init(file, -1, 0666, 0);
+  let conv = Cc["@mozilla.org/intl/converter-output-stream;1"].
+             createInstance(Ci.nsIConverterOutputStream);
+  conv.init(ostream, "UTF-8", 0, 0);
+
+  conv.writeString("# this is a comment\n");
+  conv.writeString("\n"); // a blank line!
+  conv.writeString("host\t" + TEST_PERMISSION + "\t1\t" + TEST_ORIGIN + "\n");
+  ostream.close();
+
+  // Set the preference used by the permission manager so the file is read.
+  Services.prefs.setCharPref("permissions.manager.defaultsUrl", "file://" + file.path);
+
+  // initialize the permission manager service - it will read that default.
+  let pm = Cc["@mozilla.org/permissionmanager;1"].
+           getService(Ci.nsIPermissionManager);
+
+  // test the default permission was applied.
+  let permURI = NetUtil.newURI("http://" + TEST_ORIGIN);
+  let principal = Services.scriptSecurityManager.getNoAppCodebasePrincipal(permURI);
+
+  do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION,
+              pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
+
+  // the permission should exist in the enumerator.
+  do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION, findCapabilityViaEnum());
+  // but should not have been written to the DB
+  yield checkCapabilityViaDB(null);
+
+  // remove all should not throw and the default should remain
+  pm.removeAll();
+
+  do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION,
+              pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
+
+  // Asking for this permission to be removed should result in that permission
+  // having UNKNOWN_ACTION
+  pm.removeFromPrincipal(principal, TEST_PERMISSION);
+  do_check_eq(Ci.nsIPermissionManager.UNKNOWN_ACTION,
+              pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
+  // and we should have this UNKNOWN_ACTION reflected in the DB
+  yield checkCapabilityViaDB(Ci.nsIPermissionManager.UNKNOWN_ACTION);
+  // but the permission should *not* appear in the enumerator.
+  do_check_eq(null, findCapabilityViaEnum());
+
+  // and a subsequent RemoveAll should restore the default
+  pm.removeAll();
+
+  do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION,
+              pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
+  // and allow it to again be seen in the enumerator.
+  do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION, findCapabilityViaEnum());
+
+  // now explicitly add a permission - this too should override the default.
+  pm.addFromPrincipal(principal, TEST_PERMISSION, Ci.nsIPermissionManager.DENY_ACTION);
+
+  // it should be reflected in a permission check, in the enumerator and the DB
+  do_check_eq(Ci.nsIPermissionManager.DENY_ACTION,
+              pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
+  do_check_eq(Ci.nsIPermissionManager.DENY_ACTION, findCapabilityViaEnum());
+  yield checkCapabilityViaDB(Ci.nsIPermissionManager.DENY_ACTION);
+
+  // explicitly add a different permission - in this case we are no longer
+  // replacing the default, but instead replacing the replacement!
+  pm.addFromPrincipal(principal, TEST_PERMISSION, Ci.nsIPermissionManager.PROMPT_ACTION);
+
+  // it should be reflected in a permission check, in the enumerator and the DB
+  do_check_eq(Ci.nsIPermissionManager.PROMPT_ACTION,
+              pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
+  do_check_eq(Ci.nsIPermissionManager.PROMPT_ACTION, findCapabilityViaEnum());
+  yield checkCapabilityViaDB(Ci.nsIPermissionManager.PROMPT_ACTION);
+
+  // remove the temp file we created.
+  file.remove(false);
+});
+
+// use an enumerator to find the requested permission.  Returns the permission
+// value (ie, the "capability" in nsIPermission parlance) or null if it can't
+// be found.
+function findCapabilityViaEnum(host = TEST_ORIGIN, type = TEST_PERMISSION) {
+  let result = undefined;
+  let e = Services.perms.enumerator;
+  while (e.hasMoreElements()) {
+    let perm = e.getNext().QueryInterface(Ci.nsIPermission);
+    if (perm.host == host &&
+        perm.type == type) {
+      if (result !== undefined) {
+        // we've already found one previously - that's bad!
+        do_throw("enumerator found multiple entries");
+      }
+      result = perm.capability;
+    }
+  }
+  return result || null;
+}
+
+// A function to check the DB has the specified capability.  As the permission
+// manager uses async DB operations without a completion callback, the
+// distinct possibility exists that our checking of the DB will happen before
+// the permission manager update has completed - so we just retry a few times.
+// Returns a promise.
+function checkCapabilityViaDB(expected, host = TEST_ORIGIN, type = TEST_PERMISSION) {
+  let deferred = Promise.defer();
+  let count = 0;
+  let max = 20;
+  let do_check = () => {
+    let got = findCapabilityViaDB(host, type);
+    if (got == expected) {
+      // the do_check_eq() below will succeed - which is what we want.
+      do_check_eq(got, expected, "The database has the expected value");
+      deferred.resolve();
+      return;
+    }
+    // value isn't correct - see if we've retried enough
+    if (count++ == max) {
+      // the do_check_eq() below will fail - which is what we want.
+      do_check_eq(got, expected, "The database wasn't updated with the expected value");
+      deferred.resolve();
+      return;
+    }
+    // we can retry...
+    do_timeout(100, do_check);
+  }
+  do_check();
+  return deferred.promise;
+}
+
+// use the DB to find the requested permission.   Returns the permission
+// value (ie, the "capability" in nsIPermission parlance) or null if it can't
+// be found.
+function findCapabilityViaDB(host = TEST_ORIGIN, type = TEST_PERMISSION) {
+  let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
+  file.append("permissions.sqlite");
+
+  let storage = Cc["@mozilla.org/storage/service;1"]
+                  .getService(Ci.mozIStorageService);
+
+  let connection = storage.openDatabase(file);
+
+  let query = connection.createStatement(
+      "SELECT permission FROM moz_hosts WHERE host = :host AND type = :type");
+  query.bindByName("host", host);
+  query.bindByName("type", type);
+
+  if (!query.executeStep()) {
+    // no row
+    return null;
+  }
+  let result = query.getInt32(0);
+  if (query.executeStep()) {
+    // this is bad - we never expect more than 1 row here.
+    do_throw("More than 1 row found!")
+  }
+  return result;
+}

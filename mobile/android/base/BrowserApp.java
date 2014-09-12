@@ -736,6 +736,25 @@ public class BrowserApp extends GeckoApp
         lbm.unregisterReceiver(mOnboardingReceiver);
     }
 
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        // If Home Page is visible, the layerView surface has to be visible
+        // to avoid a surface issue in Gingerbread phones.
+        // We need to do this on the next iteration.
+        // See bugs: 1058027 and 1003123
+        if (mInitialized && hasFocus &&
+            Versions.preHC && isHomePagerVisible() &&
+            mLayerView.getVisibility() != View.VISIBLE){
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mLayerView.showSurface();
+                }
+            });
+        }
+    }
+
     private void setBrowserToolbarListeners() {
         mBrowserToolbar.setOnActivateListener(new BrowserToolbar.OnActivateListener() {
             public void onActivate() {
