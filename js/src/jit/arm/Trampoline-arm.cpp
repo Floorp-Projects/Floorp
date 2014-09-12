@@ -406,7 +406,7 @@ JitRuntime::generateInvalidator(JSContext *cx)
     Linker linker(masm);
     AutoFlushICache afc("Invalidator");
     JitCode *code = linker.newCode<NoGC>(cx, OTHER_CODE);
-    JitSpew(JitSpew_Invalidate, "   invalidation thunk created at %p", (void *) code->raw());
+    JitSpew(JitSpew_IonInvalidate, "   invalidation thunk created at %p", (void *) code->raw());
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "Invalidator");

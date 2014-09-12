@@ -75,7 +75,7 @@ FilterContainsLocation(HandleScript function)
 void
 jit::EnableIonDebugLogging()
 {
-    EnableChannel(JitSpew_Logs);
+    EnableChannel(JitSpew_IonLogs);
     ionspewer.init();
 }
 
@@ -271,15 +271,15 @@ jit::CheckLogging()
         /*NOTREACHED*/
     }
     if (ContainsFlag(env, "aborts"))
-        EnableChannel(JitSpew_Abort);
+        EnableChannel(JitSpew_IonAbort);
     if (ContainsFlag(env, "escape"))
         EnableChannel(JitSpew_Escape);
     if (ContainsFlag(env, "alias"))
         EnableChannel(JitSpew_Alias);
     if (ContainsFlag(env, "scripts"))
-        EnableChannel(JitSpew_Scripts);
+        EnableChannel(JitSpew_IonScripts);
     if (ContainsFlag(env, "mir"))
-        EnableChannel(JitSpew_MIR);
+        EnableChannel(JitSpew_IonMIR);
     if (ContainsFlag(env, "gvn"))
         EnableChannel(JitSpew_GVN);
     if (ContainsFlag(env, "range"))
@@ -293,15 +293,15 @@ jit::CheckLogging()
     if (ContainsFlag(env, "inline"))
         EnableChannel(JitSpew_Inlining);
     if (ContainsFlag(env, "snapshots"))
-        EnableChannel(JitSpew_Snapshots);
+        EnableChannel(JitSpew_IonSnapshots);
     if (ContainsFlag(env, "codegen"))
         EnableChannel(JitSpew_Codegen);
     if (ContainsFlag(env, "bailouts"))
-        EnableChannel(JitSpew_Bailouts);
+        EnableChannel(JitSpew_IonBailouts);
     if (ContainsFlag(env, "osi"))
-        EnableChannel(JitSpew_Invalidate);
+        EnableChannel(JitSpew_IonInvalidate);
     if (ContainsFlag(env, "caches"))
-        EnableChannel(JitSpew_InlineCaches);
+        EnableChannel(JitSpew_IonIC);
     if (ContainsFlag(env, "safepoints"))
         EnableChannel(JitSpew_Safepoints);
     if (ContainsFlag(env, "pools"))

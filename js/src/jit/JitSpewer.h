@@ -20,14 +20,6 @@ namespace jit {
 
 // New channels may be added below.
 #define JITSPEW_CHANNEL_LIST(_)             \
-    /* Used to abort SSA construction */    \
-    _(Abort)                                \
-    /* Information about compiled scripts */\
-    _(Scripts)                              \
-    /* Info about failing to log script */  \
-    _(Logs)                                 \
-    /* Information during MIR building */   \
-    _(MIR)                                  \
     /* Information during escape analysis */\
     _(Escape)                               \
     /* Information during alias analysis */ \
@@ -46,14 +38,6 @@ namespace jit {
     _(Inlining)                             \
     /* Information during codegen */        \
     _(Codegen)                              \
-    /* Information during bailouts */       \
-    _(Bailouts)                             \
-    /* Information during OSI */            \
-    _(Invalidate)                           \
-    /* Debug info about snapshots */        \
-    _(Snapshots)                            \
-    /* Generated inline cache stubs */      \
-    _(InlineCaches)                         \
     /* Debug info about safepoints */       \
     _(Safepoints)                           \
     /* Debug info about Pools*/             \
@@ -80,8 +64,26 @@ namespace jit {
     /* Bailouts. */                         \
     _(BaselineBailouts)                     \
     /* Debug Mode On Stack Recompile . */   \
-    _(BaselineDebugModeOSR)
-
+    _(BaselineDebugModeOSR)                 \
+                                            \
+    /* ION COMPILER SPEW */                 \
+                                            \
+    /* Used to abort SSA construction */    \
+    _(IonAbort)                             \
+    /* Information about compiled scripts */\
+    _(IonScripts)                           \
+    /* Info about failing to log script */  \
+    _(IonLogs)                              \
+    /* Information during MIR building */   \
+    _(IonMIR)                               \
+    /* Information during bailouts */       \
+    _(IonBailouts)                          \
+    /* Information during OSI */            \
+    _(IonInvalidate)                        \
+    /* Debug info about snapshots */        \
+    _(IonSnapshots)                         \
+    /* Generated inline cache stubs */      \
+    _(IonIC)
 
 enum JitSpewChannel {
 #define JITSPEW_CHANNEL(name) JitSpew_##name,
