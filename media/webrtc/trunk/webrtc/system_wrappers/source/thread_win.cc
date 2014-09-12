@@ -20,6 +20,13 @@
 
 namespace webrtc {
 
+// For use in ThreadWindowsUI callbacks
+static UINT static_reg_windows_msg = RegisterWindowMessageW(L"WebrtcWindowsUIThreadEvent");
+// timer id used in delayed callbacks
+static const UINT_PTR kTimerId = 1;
+static const wchar_t kThisProperty[] = L"ThreadWindowsUIPtr"; 
+static const wchar_t kThreadWindow[] = L"WebrtcWindowsUIThread";
+
 ThreadWindows::ThreadWindows(ThreadRunFunction func, ThreadObj obj,
                              ThreadPriority prio, const char* thread_name)
     : ThreadWrapper(),
@@ -150,11 +157,7 @@ bool ThreadWindows::Stop() {
   }
 }
 
-void ThreadWindows::Run() {
-  alive_ = true;
-  dead_ = false;
-  event_->Set();
-
+void ThreadWindows::SetThreadNameHelper() {
   // All tracing must be after event_->Set to avoid deadlock in Trace.
   if (set_thread_name_) {
     WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, id_,
@@ -164,6 +167,24 @@ void ThreadWindows::Run() {
     WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, id_,
                  "Thread without name started");
   }
+}
+
+void ThreadWindows::ThreadStoppedHelper() {
+  if (set_thread_name_) {
+    WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, id_,
+                 "Thread with name:%s stopped", name_);
+  } else {
+    WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, id_,
+                 "Thread without name stopped");
+  }
+}
+
+void ThreadWindows::Run() {
+  alive_ = true;
+  dead_ = false;
+  event_->Set();
+
+  SetThreadNameHelper();
 
   do {
     if (run_function_) {
@@ -175,13 +196,7 @@ void ThreadWindows::Run() {
     }
   } while (alive_);
 
-  if (set_thread_name_) {
-    WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, id_,
-                 "Thread with name:%s stopped", name_);
-  } else {
-    WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, id_,
-                 "Thread without name stopped");
-  }
+  ThreadStoppedHelper();
 
   critsect_stop_->Enter();
 
@@ -194,5 +209,153 @@ void ThreadWindows::Run() {
 
   critsect_stop_->Leave();
 };
+
+bool ThreadWindowsUI::Start(unsigned int& thread_id) {
+  return InternalInit() ? ThreadWindows::Start(thread_id) : false;
+}
+
+bool ThreadWindowsUI::Stop() {
+  critsect_stop_->Enter();
+
+  // Prevents the handle from being closed in ThreadWindows::Run()
+  do_not_close_handle_ = true;
+  alive_ = false;
+
+  // Shut down the dispatch loop and let the background thread exit.
+  if (timerid_) {
+    KillTimer(hwnd_, timerid_);
+    timerid_ = 0;
+  }
+
+  RemovePropW(hwnd_, kThisProperty);
+  PostMessage(hwnd_, WM_CLOSE, 0, 0);
+
+  bool signaled = false;
+  if (thread_ && !dead_) {
+    critsect_stop_->Leave();
+
+    // Wait up to 2 seconds for the thread to complete.
+    if (WAIT_OBJECT_0 == WaitForSingleObject(thread_, 2000)) {
+      signaled = true;
+    }
+    critsect_stop_->Enter();
+  }
+  if (thread_) {
+    CloseHandle(thread_);
+    thread_ = NULL;
+  }
+  critsect_stop_->Leave();
+
+  if (dead_ || signaled) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool ThreadWindowsUI::InternalInit() {
+  // Create an event window for use in generating callbacks to capture
+  // objects.
+  if (hwnd_ == nullptr) {
+    WNDCLASSW wc;
+    HMODULE hModule = GetModuleHandle(nullptr);
+    if (!GetClassInfoW(hModule, kThreadWindow, &wc)) {
+      ZeroMemory(&wc, sizeof(WNDCLASSW));
+      wc.hInstance = hModule;
+      wc.lpfnWndProc = EventWindowProc;
+      wc.lpszClassName = kThreadWindow;
+      RegisterClassW(&wc);
+    }
+    hwnd_ = CreateWindowW(kThreadWindow, L"",
+                          0, 0, 0, 0, 0,
+                          nullptr, nullptr, hModule, nullptr);
+    assert(hwnd_);
+    SetPropW(hwnd_, kThisProperty, this);
+  }
+  return !!hwnd_;
+}
+
+void ThreadWindowsUI::RequestCallback() {
+  assert(hwnd_);
+  assert(static_reg_windows_msg);
+  PostMessage(hwnd_, static_reg_windows_msg, 0, 0);
+}
+
+bool ThreadWindowsUI::RequestCallbackTimer(unsigned int milliseconds) {
+  assert(hwnd_);
+  if (timerid_) {
+    KillTimer(hwnd_, timerid_);
+  }
+  timerid_ = SetTimer(hwnd_, kTimerId, milliseconds, nullptr);
+  return !!timerid_;
+}
+
+void ThreadWindowsUI::Run() {
+  assert(hwnd_);
+
+  alive_ = true;
+  dead_ = false;
+
+  event_->Set();
+  SetThreadNameHelper();
+
+  do {
+    if (!run_function_) {
+      alive_ = false;
+      break;
+    }
+
+    // blocks
+    MSG msg;
+    if (GetMessage(&msg, NULL, 0, 0)) {
+      if (msg.message == WM_CLOSE) {
+        alive_ = false;
+        break;
+      }
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+    }
+  } while (alive_);
+
+  ThreadStoppedHelper();
+  DestroyWindow(hwnd_);
+
+  critsect_stop_->Enter();
+
+  if (thread_ && !do_not_close_handle_) {
+    HANDLE thread = thread_;
+    thread_ = NULL;
+    CloseHandle(thread);
+  }
+  dead_ = true;
+
+  critsect_stop_->Leave();
+};
+
+void
+ThreadWindowsUI::NativeEventCallback() {
+  if (!run_function_) {
+    alive_ = false;
+    return;
+  }
+  alive_ = run_function_(obj_);
+}
+
+/* static */
+LRESULT CALLBACK
+ThreadWindowsUI::EventWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+  ThreadWindowsUI *twui = static_cast<ThreadWindowsUI*>(GetPropW(hwnd, kThisProperty));
+  if (!twui) {
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+  }
+
+  if ((uMsg == static_reg_windows_msg && uMsg != WM_NULL) ||
+      (uMsg == WM_TIMER && wParam == kTimerId)) {
+    twui->NativeEventCallback();
+    return 0;
+  }
+
+  return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
 
 }  // namespace webrtc
