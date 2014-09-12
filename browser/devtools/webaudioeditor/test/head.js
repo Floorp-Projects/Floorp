@@ -118,6 +118,11 @@ function reload(aTarget, aWaitForTargetEvent = "navigate") {
   return once(aTarget, aWaitForTargetEvent);
 }
 
+function navigate(aTarget, aUrl, aWaitForTargetEvent = "navigate") {
+  executeSoon(() => aTarget.activeTab.navigateTo(aUrl));
+  return once(aTarget, aWaitForTargetEvent);
+}
+
 function test () {
   Task.spawn(spawnTest).then(finish, handleError);
 }
