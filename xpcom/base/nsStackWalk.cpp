@@ -43,10 +43,6 @@ static CriticalAddress gCriticalAddress;
    ((defined(__GNUC__) && (defined(__i386) || defined(PPC))) || \
     defined(HAVE__UNWIND_BACKTRACE)))
 
-#define NSSTACKWALK_SUPPORTS_SOLARIS \
-  (defined(__sun) && \
-   (defined(__sparc) || defined(sparc) || defined(__i386) || defined(i386)))
-
 #if NSSTACKWALK_SUPPORTS_MACOSX
 #include <pthread.h>
 #include <CoreServices/CoreServices.h>
@@ -863,9 +859,8 @@ NS_FormatCodeAddressDetails(void* aPC, const nsCodeAddressDetails* aDetails,
   return NS_OK;
 }
 
-// WIN32 x86 stack walking code
-// i386 or PPC Linux stackwalking code or Solaris
-#elif HAVE_DLADDR && (HAVE__UNWIND_BACKTRACE || NSSTACKWALK_SUPPORTS_LINUX || NSSTACKWALK_SUPPORTS_SOLARIS || NSSTACKWALK_SUPPORTS_MACOSX)
+// i386 or PPC Linux stackwalking code
+#elif HAVE_DLADDR && (HAVE__UNWIND_BACKTRACE || NSSTACKWALK_SUPPORTS_LINUX || NSSTACKWALK_SUPPORTS_MACOSX)
 
 #include <stdlib.h>
 #include <string.h>
@@ -903,260 +898,6 @@ void DemangleSymbol(const char* aSymbol,
   }
 #endif // MOZ_DEMANGLE_SYMBOLS
 }
-
-
-#if NSSTACKWALK_SUPPORTS_SOLARIS
-
-/*
- * Stack walking code for Solaris courtesy of Bart Smaalder's "memtrak".
- */
-
-#include <synch.h>
-#include <ucontext.h>
-#include <sys/frame.h>
-#include <sys/regset.h>
-#include <sys/stack.h>
-
-static int    load_address ( void * pc, void * arg );
-static struct bucket * newbucket ( void * pc );
-static struct frame * cs_getmyframeptr ( void );
-static void   cs_walk_stack ( void * (*read_func)(char * address),
-                              struct frame * fp,
-                              int (*operate_func)(void *, void *, void *),
-                              void * usrarg );
-static void   cs_operate ( void (*operate_func)(void *, void *, void *),
-                           void * usrarg );
-
-#ifndef STACK_BIAS
-#define STACK_BIAS 0
-#endif /*STACK_BIAS*/
-
-#define LOGSIZE 4096
-
-/* type of demangling function */
-typedef int demf_t(const char *, char *, size_t);
-
-static demf_t *demf;
-
-static int initialized = 0;
-
-#if defined(sparc) || defined(__sparc)
-#define FRAME_PTR_REGISTER REG_SP
-#endif
-
-#if defined(i386) || defined(__i386)
-#define FRAME_PTR_REGISTER EBP
-#endif
-
-struct bucket {
-  void * pc;
-  int index;
-  struct bucket * next;
-};
-
-struct my_user_args {
-  NS_WalkStackCallback callback;
-  uint32_t skipFrames;
-  uint32_t maxFrames;
-  uint32_t numFrames;
-  void *closure;
-};
-
-
-static void myinit();
-
-#pragma init (myinit)
-
-static void
-myinit()
-{
-
-  if (!initialized) {
-#ifndef __GNUC__
-    void *handle;
-    const char *libdem = "libdemangle.so.1";
-
-    /* load libdemangle if we can and need to (only try this once) */
-    if ((handle = dlopen(libdem, RTLD_LAZY)) != nullptr) {
-      demf = (demf_t *)dlsym(handle,
-                             "cplus_demangle"); /*lint !e611 */
-      /*
-       * lint override above is to prevent lint from
-       * complaining about "suspicious cast".
-       */
-    }
-#endif /*__GNUC__*/
-  }
-  initialized = 1;
-}
-
-
-static int
-load_address(void * pc, void * arg)
-{
-  static struct bucket table[2048];
-  static mutex_t lock;
-  struct bucket * ptr;
-  struct my_user_args * args = (struct my_user_args *) arg;
-
-  unsigned int val = NS_PTR_TO_INT32(pc);
-
-  ptr = table + ((val >> 2)&2047);
-
-  mutex_lock(&lock);
-  while (ptr->next) {
-    if (ptr->next->pc == pc)
-      break;
-    ptr = ptr->next;
-  }
-
-  int stop = 0;
-  if (ptr->next) {
-    mutex_unlock(&lock);
-  } else {
-    (args->callback)(pc, args->closure);
-    args->numFrames++;
-    if (args->maxFrames != 0 && args->numFrames == args->maxFrames)
-      stop = 1;   // causes us to stop getting frames
-
-    ptr->next = newbucket(pc);
-    mutex_unlock(&lock);
-  }
-  return stop;
-}
-
-
-static struct bucket *
-newbucket(void * pc)
-{
-  struct bucket * ptr = (struct bucket *)malloc(sizeof(*ptr));
-  static int index; /* protected by lock in caller */
-
-  ptr->index = index++;
-  ptr->next = nullptr;
-  ptr->pc = pc;
-  return (ptr);
-}
-
-
-static struct frame *
-csgetframeptr()
-{
-  ucontext_t u;
-  struct frame *fp;
-
-  (void) getcontext(&u);
-
-  fp = (struct frame *)
-    ((char *)u.uc_mcontext.gregs[FRAME_PTR_REGISTER] +
-     STACK_BIAS);
-
-  /* make sure to return parents frame pointer.... */
-
-  return ((struct frame *)((ulong_t)fp->fr_savfp + STACK_BIAS));
-}
-
-
-static void
-cswalkstack(struct frame *fp, int (*operate_func)(void *, void *, void *),
-            void *usrarg)
-{
-
-  while (fp != 0 && fp->fr_savpc != 0) {
-
-    if (operate_func((void *)fp->fr_savpc, nullptr, usrarg) != 0)
-      break;
-    /*
-     * watch out - libthread stacks look funny at the top
-     * so they may not have their STACK_BIAS set
-     */
-
-    fp = (struct frame *)((ulong_t)fp->fr_savfp +
-                          (fp->fr_savfp?(ulong_t)STACK_BIAS:0));
-  }
-}
-
-
-static void
-cs_operate(int (*operate_func)(void *, void *, void *), void * usrarg)
-{
-  cswalkstack(csgetframeptr(), operate_func, usrarg);
-}
-
-EXPORT_XPCOM_API(nsresult)
-NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
-             uint32_t aMaxFrames, void* aClosure, uintptr_t aThread,
-             void* aPlatformData)
-{
-  MOZ_ASSERT(!aThread);
-  MOZ_ASSERT(!aPlatformData);
-  struct my_user_args args;
-
-  StackWalkInitCriticalAddress();
-
-  if (!initialized) {
-    myinit();
-  }
-
-  args.callback = aCallback;
-  args.skipFrames = aSkipFrames; /* XXX Not handled! */
-  args.maxFrames = aMaxFrames;
-  args.numFrames = 0;
-  args.closure = aClosure;
-  cs_operate(load_address, &args);
-  return args.numFrames == 0 ? NS_ERROR_FAILURE : NS_OK;
-}
-
-EXPORT_XPCOM_API(nsresult)
-NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails)
-{
-  aDetails->library[0] = '\0';
-  aDetails->loffset = 0;
-  aDetails->filename[0] = '\0';
-  aDetails->lineno = 0;
-  aDetails->function[0] = '\0';
-  aDetails->foffset = 0;
-
-  char dembuff[4096];
-  Dl_info info;
-
-  if (dladdr(aPC, & info)) {
-    if (info.dli_fname) {
-      PL_strncpyz(aDetails->library, info.dli_fname,
-                  sizeof(aDetails->library));
-      aDetails->loffset = (char*)aPC - (char*)info.dli_fbase;
-    }
-    if (info.dli_sname) {
-      aDetails->foffset = (char*)aPC - (char*)info.dli_saddr;
-#ifdef __GNUC__
-      DemangleSymbol(info.dli_sname, dembuff, sizeof(dembuff));
-#else
-      if (!demf || demf(info.dli_sname, dembuff, sizeof(dembuff))) {
-        dembuff[0] = 0;
-      }
-#endif /*__GNUC__*/
-      PL_strncpyz(aDetails->function,
-                  (dembuff[0] != '\0') ? dembuff : info.dli_sname,
-                  sizeof(aDetails->function));
-    }
-  }
-
-  return NS_OK;
-}
-
-EXPORT_XPCOM_API(nsresult)
-NS_FormatCodeAddressDetails(void* aPC, const nsCodeAddressDetails* aDetails,
-                            char* aBuffer, uint32_t aBufferSize)
-{
-  snprintf(aBuffer, aBufferSize, "%p %s:%s+0x%lx\n",
-           aPC,
-           aDetails->library[0] ? aDetails->library : "??",
-           aDetails->function[0] ? aDetails->function : "??",
-           aDetails->foffset);
-  return NS_OK;
-}
-
-#else // not __sun-specific
 
 #if __GLIBC__ > 2 || __GLIBC_MINOR > 1
 #define HAVE___LIBC_STACK_END 1
@@ -1378,8 +1119,6 @@ NS_FormatCodeAddressDetails(void* aPC, const nsCodeAddressDetails* aDetails,
   }
   return NS_OK;
 }
-
-#endif
 
 #else // unsupported platform.
 
