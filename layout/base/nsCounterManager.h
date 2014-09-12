@@ -26,7 +26,7 @@ struct nsCounterNode : public nsGenConNode {
         INCREMENT, // a "counter number" pair in 'counter-increment'
         USE        // counter() or counters() in 'content'
     };
-    
+
     Type mType;
 
     // Counter value after this node
@@ -100,7 +100,7 @@ struct nsCounterUseNode : public nsCounterNode {
     {
         NS_ASSERTION(aContentIndex <= INT32_MAX, "out of range");
     }
-    
+
     virtual bool InitTextFrame(nsGenConList* aList,
             nsIFrame* aPseudoFrame, nsIFrame* aTextFrame) MOZ_OVERRIDE;
 
@@ -203,7 +203,7 @@ public:
 
     // Correctly set |aNode->mScopeStart| and |aNode->mScopePrev|
     void SetScope(nsCounterNode *aNode);
-  
+
     // Recalculate |mScopeStart|, |mScopePrev|, and |mValueAfter| for
     // all nodes and update text in text content nodes.
     void RecalcAll();

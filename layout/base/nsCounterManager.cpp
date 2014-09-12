@@ -39,7 +39,7 @@ nsCounterUseNode::InitTextFrame(nsGenConList* aList,
       return true;
     }
   }
-  
+
   return false;
 }
 
