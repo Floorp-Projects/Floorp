@@ -40,6 +40,16 @@ public:
                         const GraphicsFilter& aFilter,
                         gfxFloat aOpacity = 1.0,
                         const gfxMatrix& aTransform = gfxMatrix()) = 0;
+    virtual bool DrawWithSamplingRect(gfxContext* aContext,
+                                      const gfxRect& aFillRect,
+                                      const gfxRect& aSamplingRect,
+                                      bool aRepeat,
+                                      const GraphicsFilter& aFilter,
+                                      gfxFloat aOpacity = 1.0)
+    {
+        return false;
+    }
+
     virtual gfxIntSize Size() { return mSize; }
 
 protected:
@@ -65,8 +75,22 @@ public:
                         const GraphicsFilter& aFilter,
                         gfxFloat aOpacity = 1.0,
                         const gfxMatrix& aTransform = gfxMatrix());
+    virtual bool DrawWithSamplingRect(gfxContext* aContext,
+                                      const gfxRect& aFillRect,
+                                      const gfxRect& aSamplingRect,
+                                      bool aRepeat,
+                                      const GraphicsFilter& aFilter,
+                                      gfxFloat aOpacity = 1.0);
     
 protected:
+    void DrawInternal(gfxContext* aContext,
+                      const gfxRect& aFillRect,
+                      const mozilla::gfx::IntRect& aSamplingRect,
+                      bool aRepeat,
+                      const GraphicsFilter& aFilter,
+                      gfxFloat aOpacity,
+                      const gfxMatrix& aTransform = gfxMatrix());
+
     mozilla::RefPtr<mozilla::gfx::SourceSurface> mSourceSurface;
     const gfxMatrix mTransform;
 };
