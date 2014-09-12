@@ -93,6 +93,7 @@ class LIRGeneratorMIPS : public LIRGeneratorShared
     bool visitForkJoinGetSlice(MForkJoinGetSlice *ins);
     bool visitSimdTernaryBitwise(MSimdTernaryBitwise *ins);
     bool visitSimdSplatX4(MSimdSplatX4 *ins);
+    bool visitSimdValueX4(MSimdValueX4 *ins);
 };
 
 typedef LIRGeneratorMIPS LIRGeneratorSpecific;

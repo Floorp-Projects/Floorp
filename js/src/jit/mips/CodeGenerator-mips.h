@@ -268,7 +268,6 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
 
   public:
     // Unimplemented SIMD instructions
-    bool visitSimdValueX4(LSimdValueX4 *lir) { MOZ_CRASH("NYI"); }
     bool visitSimdSplatX4(LSimdSplatX4 *lir) { MOZ_CRASH("NYI"); }
     bool visitInt32x4(LInt32x4 *ins) { MOZ_CRASH("NYI"); }
     bool visitFloat32x4(LFloat32x4 *ins) { MOZ_CRASH("NYI"); }
