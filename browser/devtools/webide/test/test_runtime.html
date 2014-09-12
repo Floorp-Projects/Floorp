@@ -95,16 +95,27 @@
           ok(!isPlayActive(), "play button is disabled 4");
           ok(!isStopActive(), "stop button is disabled 4");
 
-          deferred = promise.defer();
-          win.AppManager.connection.once(
-              win.Connection.Events.CONNECTED,
-              () => deferred.resolve());
-
           win.document.querySelectorAll(".runtime-panel-item-custom")[1].click();
 
-          yield deferred.promise;
+          yield waitForUpdate(win, "list-tabs-response");
 
           is(Object.keys(DebuggerServer._connections).length, 1, "Locally connected");
+
+          ok(win.AppManager.isMainProcessDebuggable(), "Main process available");
+
+          // Select main process
+          yield win.Cmds.showProjectPanel();
+          SimpleTest.executeSoon(() => {
+            win.document.querySelectorAll("#project-panel-runtimeapps .panel-item")[0].click();
+          });
+
+          yield waitForUpdate(win, "project");
+
+          // Toolbox opens automatically for main process / runtime apps
+          ok(win.UI.toolboxPromise, "Toolbox promise exists");
+          yield win.UI.toolboxPromise;
+
+          ok(win.UI.toolboxIframe, "Toolbox iframe exists");
 
           yield win.Cmds.disconnectRuntime();
 
