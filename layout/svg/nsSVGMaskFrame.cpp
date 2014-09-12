@@ -166,11 +166,12 @@ NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGMaskFrame)
 
-already_AddRefed<gfxPattern>
+TemporaryRef<SourceSurface>
 nsSVGMaskFrame::GetMaskForMaskedFrame(gfxContext* aContext,
                                       nsIFrame* aMaskedFrame,
                                       const gfxMatrix &aMatrix,
-                                      float aOpacity)
+                                      float aOpacity,
+                                      Matrix* aMaskTransform)
 {
   // If the flag is set when we get here, it means this mask frame
   // has already been used painting the current mask, and the document
@@ -273,9 +274,9 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(gfxContext* aContext,
   if (!maskSurfaceMatrix.Invert()) {
     return nullptr;
   }
-  nsRefPtr<gfxPattern> retval =
-    new gfxPattern(maskSurface, ToMatrix(maskSurfaceMatrix));
-  return retval.forget();
+
+  *aMaskTransform = ToMatrix(maskSurfaceMatrix);
+  return maskSurface;
 }
 
 nsresult

@@ -926,37 +926,15 @@ gfxContext::GetPattern()
 
 // masking
 void
-gfxContext::Mask(gfxPattern *pattern)
+gfxContext::Mask(SourceSurface* aSurface, const Matrix& aTransform)
 {
-  if (pattern->Extend() == gfxPattern::EXTEND_NONE) {
-    // In this situation the mask will be fully transparent (i.e. nothing
-    // will be drawn) outside of the bounds of the surface. We can support
-    // that by clipping out drawing to that area.
-    Point offset;
-    if (pattern->IsAzure()) {
-      // This is an Azure pattern. i.e. this was the result of a PopGroup and
-      // then the extend mode was changed to EXTEND_NONE.
-      // XXX - We may need some additional magic here in theory to support
-      // device offsets in these patterns, but no problems have been observed
-      // yet because of this. And it would complicate things a little further.
-      offset = Point(0.f, 0.f);
-    }
+  Matrix old = mTransform;
+  Matrix mat = aTransform * mTransform;
 
-    if (pattern->IsAzure()) {
-      RefPtr<SourceSurface> mask = pattern->GetAzureSurface();
-      Matrix mat = ToMatrix(pattern->GetInverseMatrix());
-      Matrix old = mTransform;
-      // add in the inverse of the pattern transform so that when we
-      // MaskSurface we are transformed to the place matching the pattern transform
-      mat = mat * mTransform;
-
-      ChangeTransform(mat);
-      mDT->MaskSurface(GeneralPattern(this), mask, offset, DrawOptions(1.0f, CurrentState().op, CurrentState().aaMode));
-      ChangeTransform(old);
-      return;
-    }
-  }
-  mDT->Mask(GeneralPattern(this), *pattern->GetPattern(mDT), DrawOptions(1.0f, CurrentState().op, CurrentState().aaMode));
+  ChangeTransform(mat);
+  mDT->MaskSurface(GeneralPattern(this), aSurface, Point(),
+                   DrawOptions(1.0f, CurrentState().op, CurrentState().aaMode));
+  ChangeTransform(old);
 }
 
 void
@@ -1118,6 +1096,24 @@ gfxContext::PopGroup()
   nsRefPtr<gfxPattern> pat = new gfxPattern(src, mat);
 
   return pat.forget();
+}
+
+TemporaryRef<SourceSurface>
+gfxContext::PopGroupToSurface(Matrix* aTransform)
+{
+  RefPtr<SourceSurface> src = mDT->Snapshot();
+  Point deviceOffset = CurrentState().deviceOffset;
+
+  Restore();
+
+  Matrix mat = mTransform;
+  mat.Invert();
+
+  Matrix deviceOffsetTranslation;
+  deviceOffsetTranslation.PreTranslate(deviceOffset.x, deviceOffset.y);
+
+  *aTransform = deviceOffsetTranslation * mat;
+  return src;
 }
 
 void
