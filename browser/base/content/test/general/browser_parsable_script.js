@@ -60,18 +60,58 @@ function parsePromise(uri) {
 }
 
 add_task(function* checkAllTheJS() {
-  let appDir = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
-  // This asynchronously produces a list of URLs (sadly, mostly sync on our
-  // test infrastructure because it runs against jarfiles there, and
-  // our zipreader APIs are all sync)
-  let uris = yield generateURIsFromDirTree(appDir, [".js", ".jsm"]);
+  // In debug builds, even on a fast machine, collecting the file list may take
+  // more than 30 seconds, and parsing all files may take four more minutes.
+  // For this reason, this test must be explictly requested in debug builds by
+  // using the "--setpref parse=<filter>" argument to mach.  You can specify:
+  //  - A case-sensitive substring of the file name to test (slow).
+  //  - A single absolute URI printed out by a previous run (fast).
+  //  - An empty string to run the test on all files (slowest).
+  let parseRequested = Services.prefs.prefHasUserValue("parse");
+  let parseValue = parseRequested && Services.prefs.getCharPref("parse");
+  if (SpecialPowers.isDebugBuild) {
+    if (!parseRequested) {
+      ok(true, "Test disabled on debug build. To run, execute: ./mach" +
+               " mochitest-browser --setpref parse=<case_sensitive_filter>" +
+               " browser/base/content/test/general/browser_parsable_script.js");
+      return;
+    }
+    // Request a 10 minutes timeout (30 seconds * 20) for debug builds.
+    requestLongerTimeout(20);
+  }
+
+  let uris;
+  // If an absolute URI is specified on the command line, use it immediately.
+  if (parseValue && parseValue.contains(":")) {
+    uris = [NetUtil.newURI(parseValue)];
+  } else {
+    let appDir = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
+    // This asynchronously produces a list of URLs (sadly, mostly sync on our
+    // test infrastructure because it runs against jarfiles there, and
+    // our zipreader APIs are all sync)
+    let startTimeMs = Date.now();
+    info("Collecting URIs");
+    uris = yield generateURIsFromDirTree(appDir, [".js", ".jsm"]);
+    info("Collected URIs in " + (Date.now() - startTimeMs) + "ms");
+
+    // Apply the filter specified on the command line, if any.
+    if (parseValue) {
+      uris = uris.filter(uri => {
+        if (uri.spec.contains(parseValue)) {
+          return true;
+        }
+        info("Not checking filtered out " + uri.spec);
+        return false;
+      });
+    }
+  }
 
   // We create an array of promises so we can parallelize all our parsing
   // and file loading activity:
   let allPromises = [];
   for (let uri of uris) {
     if (uriIsWhiteListed(uri)) {
-      info("Not checking " + uri.spec);
+      info("Not checking whitelisted " + uri.spec);
       continue;
     }
     allPromises.push(parsePromise(uri.spec));
