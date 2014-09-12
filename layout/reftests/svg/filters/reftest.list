@@ -48,6 +48,7 @@ fuzzy(1,6400) == feGaussianBlur-1.svg feGaussianBlur-1-ref.svg
 skip-if(d2d) pref(layers.acceleration.disabled,true) == feGaussianBlur-cap-large-directional-radius-on-software.html feGaussianBlur-cap-large-directional-radius-on-software-ref.html
 
 == feImage-1.svg feImage-1-ref.svg
+== feImage-scale-to-primitive-subregion.html feImage-scale-to-primitive-subregion-ref.html
 
 == feMerge-1.svg feMerge-1-ref.svg
 == feMerge-2.svg feMerge-2-ref.svg
