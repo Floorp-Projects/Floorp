@@ -3036,18 +3036,18 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
                                        nsRect* aClipRect,
                                        nsTArray<FrameMetrics>* aOutput) const
 {
-  nsRect viewport = mScrollPort +
-    mOuter->GetOffsetToCrossDoc(aContainerReferenceFrame);
-  if (!(mIsRoot && mOuter->PresContext()->PresShell()->GetIsViewportOverridden())) {
-    *aClipRect = viewport;
-  }
-
   if (!mShouldBuildScrollableLayer || BuildScrollContainerLayers()) {
     return;
   }
 
   MOZ_ASSERT(mScrolledFrame->GetContent());
 
+  nsRect viewport = mScrollPort +
+    mOuter->GetOffsetToCrossDoc(aContainerReferenceFrame);
+
+  if (!(mIsRoot && mOuter->PresContext()->PresShell()->GetIsViewportOverridden())) {
+    *aClipRect = viewport;
+  }
   *aOutput->AppendElement() =
       nsDisplayScrollLayer::ComputeFrameMetrics(mScrolledFrame, mOuter,
         aContainerReferenceFrame, aLayer, mScrollParentID,
