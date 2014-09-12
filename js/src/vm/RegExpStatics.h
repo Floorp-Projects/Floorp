@@ -126,14 +126,6 @@ class RegExpStatics
     RegExpFlag getFlags() const { return flags; }
     bool multiline() const { return flags & MultilineFlag; }
 
-    /* Returns whether results for a non-empty match are present. */
-    bool matched() const {
-        /* Safe: only used by String methods, which do not set lazy mode. */
-        JS_ASSERT(!pendingLazyEvaluation);
-        JS_ASSERT(matches.pairCount() > 0);
-        return matches[0].limit - matches[0].start > 0;
-    }
-
     void mark(JSTracer *trc) {
         /*
          * Changes to this function must also be reflected in
