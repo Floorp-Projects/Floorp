@@ -88,6 +88,14 @@ describe("loop.webapp", function() {
       sandbox.stub(router, "navigate");
     });
 
+    describe("#initialize", function() {
+      it("should require a conversation option", function() {
+        expect(function() {
+          new loop.webapp.WebappRouter();
+        }).to.Throw(Error, /missing required conversation/);
+      });
+    });
+
     describe("#startCall", function() {
       beforeEach(function() {
         sandbox.stub(router, "_setupWebSocketAndCallView");
@@ -109,14 +117,15 @@ describe("loop.webapp", function() {
                                        "missing_conversation_info");
       });
 
-      it("should setup the websocket if session token is available", function() {
-        conversation.set("loopToken", "fake");
+      it("should navigate to the pending view if session token is available",
+        function() {
+          conversation.set("loopToken", "fake");
 
-        router.startCall();
+          router.startCall();
 
-        sinon.assert.calledOnce(router._setupWebSocketAndCallView);
-        sinon.assert.calledWithExactly(router._setupWebSocketAndCallView, "fake");
-      });
+          sinon.assert.calledOnce(router.navigate);
+          sinon.assert.calledWithMatch(router.navigate, "call/pending/fake");
+        });
     });
 
     describe("#_setupWebSocketAndCallView", function() {
@@ -126,7 +135,7 @@ describe("loop.webapp", function() {
           sessionToken:   "sessionToken",
           apiKey:         "apiKey",
           callId:         "Hello",
-          progressURL:    "http://progress.example.com",
+          progressURL:    "http://invalid/url",
           websocketToken: 123
         });
       });
@@ -154,20 +163,10 @@ describe("loop.webapp", function() {
             sinon.assert.calledOnce(loop.CallConnectionWebSocket);
             sinon.assert.calledWithExactly(loop.CallConnectionWebSocket, {
               callId: "Hello",
-              url: "http://progress.example.com",
+              url: "http://invalid/url",
               // The websocket token is converted to a hex string.
               websocketToken: "7b"
             });
-            done();
-          });
-        });
-
-        it("should navigate to call/ongoing/:token", function(done) {
-          router._setupWebSocketAndCallView("fake");
-
-          promise.then(function () {
-            sinon.assert.calledOnce(router.navigate);
-            sinon.assert.calledWithMatch(router.navigate, "call/ongoing/fake");
             done();
           });
         });
@@ -226,6 +225,7 @@ describe("loop.webapp", function() {
           describe("state: terminate, reason: reject", function() {
             beforeEach(function() {
               sandbox.stub(router, "endCall");
+              sandbox.stub(notifications, "errorL10n");
             });
 
             it("should end the call", function() {
@@ -237,17 +237,39 @@ describe("loop.webapp", function() {
               sinon.assert.calledOnce(router.endCall);
             });
 
-            it("should display an error message", function() {
-              sandbox.stub(notifications, "errorL10n");
+            it("should display an error message if the reason is not 'cancel'",
+              function() {
+                router._websocket.trigger("progress", {
+                  state: "terminated",
+                  reason: "reject"
+                });
 
-              router._websocket.trigger("progress", {
-                state: "terminated",
-                reason: "reject"
+                sinon.assert.calledOnce(notifications.errorL10n);
+                sinon.assert.calledWithExactly(notifications.errorL10n,
+                  "call_timeout_notification_text");
               });
 
-              sinon.assert.calledOnce(router._notifications.errorL10n);
-              sinon.assert.calledWithExactly(router._notifications.errorL10n,
-                "call_timeout_notification_text");
+            it("should not display an error message if the reason is 'cancel'",
+              function() {
+                router._websocket.trigger("progress", {
+                  state: "terminated",
+                  reason: "cancel"
+                });
+
+                sinon.assert.notCalled(notifications.errorL10n);
+              });
+          });
+
+          describe("state: connecting", function() {
+            it("should navigate to the ongoing view", function() {
+              conversation.set({"loopToken": "fakeToken"});
+
+              router._websocket.trigger("progress", {
+                state: "connecting"
+              });
+
+              sinon.assert.calledOnce(router.navigate);
+              sinon.assert.calledWithMatch(router.navigate, "call/ongoing/fake");
             });
           });
         });
@@ -331,6 +353,38 @@ describe("loop.webapp", function() {
           router.initiate("fakeToken");
 
           sinon.assert.calledOnce(conversation.endSession);
+        });
+      });
+
+      describe("#pendingConversation", function() {
+        beforeEach(function() {
+          sandbox.stub(router, "_setupWebSocketAndCallView");
+          conversation.setOutgoingSessionData({
+            sessionId:      "sessionId",
+            sessionToken:   "sessionToken",
+            apiKey:         "apiKey",
+            callId:         "Hello",
+            progressURL:    "http://progress.example.com",
+            websocketToken: 123
+          });
+        });
+
+        it("should setup the websocket", function() {
+          router.pendingConversation();
+
+          sinon.assert.calledOnce(router._setupWebSocketAndCallView);
+          sinon.assert.calledWithExactly(router._setupWebSocketAndCallView);
+        });
+
+        it("should load the PendingConversationView", function() {
+          router.pendingConversation();
+
+          sinon.assert.calledOnce(router.loadReactComponent);
+          sinon.assert.calledWith(router.loadReactComponent,
+            sinon.match(function(value) {
+              return React.addons.TestUtils.isDescriptorOfType(
+                value, loop.webapp.PendingConversationView);
+            }));
         });
       });
 
@@ -548,15 +602,46 @@ describe("loop.webapp", function() {
     });
   });
 
-  describe("StartConversationView", function() {
-    describe("#initialize", function() {
-      it("should require a conversation option", function() {
-        expect(function() {
-          new loop.webapp.WebappRouter();
-        }).to.Throw(Error, /missing required conversation/);
+  describe("PendingConversationView", function() {
+    var view, websocket;
+
+    beforeEach(function() {
+      websocket = new loop.CallConnectionWebSocket({
+        url: "wss://fake/",
+        callId: "callId",
+        websocketToken: "7b"
+      });
+
+      sinon.stub(websocket, "cancel");
+
+      view = React.addons.TestUtils.renderIntoDocument(
+        loop.webapp.PendingConversationView({
+          websocket: websocket
+        })
+      );
+    });
+
+    describe("#_cancelOutgoingCall", function() {
+      it("should inform the websocket to cancel the setup", function() {
+        var button = view.getDOMNode().querySelector(".btn-cancel");
+        React.addons.TestUtils.Simulate.click(button);
+
+        sinon.assert.calledOnce(websocket.cancel);
       });
     });
 
+    describe("Events", function() {
+      describe("progress:alerting", function() {
+        it("should update the callstate to ringing", function () {
+          websocket.trigger("progress:alerting");
+
+          expect(view.state.callState).to.be.equal("ringing");
+        });
+      });
+    });
+  });
+
+  describe("StartConversationView", function() {
     describe("#initiate", function() {
       var conversation, setupOutgoingCall, view, fakeSubmitEvent,
           requestCallUrlInfo;
