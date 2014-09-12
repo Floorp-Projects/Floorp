@@ -1707,7 +1707,7 @@ DoNewArray(JSContext *cx, ICNewArray_Fallback *stub, uint32_t length,
 {
     FallbackICSpew(cx, stub, "NewArray");
 
-    JSObject *obj = NewInitArray(cx, length, type);
+    JSObject *obj = NewDenseArray(cx, length, type, NewArray_FullyAllocating);
     if (!obj)
         return false;
 
