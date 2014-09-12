@@ -140,7 +140,8 @@ IonBuilder::IonBuilder(JSContext *analysisContext, CompileCompartment *comp,
     failedShapeGuard_(info->script()->failedShapeGuard()),
     nonStringIteration_(false),
     lazyArguments_(nullptr),
-    inlineCallInfo_(nullptr)
+    inlineCallInfo_(nullptr),
+    maybeFallbackFunctionGetter_(nullptr)
 {
     script_ = info->script();
     pc = info->startPC();
@@ -751,6 +752,9 @@ IonBuilder::build()
     if (!traverseBytecode())
         return false;
 
+    // Discard unreferenced & pre-allocated resume points.
+    replaceMaybeFallbackFunctionGetter(nullptr);
+
     if (!maybeAddOsrTypeBarriers())
         return false;
 
@@ -907,6 +911,9 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
 
     if (!traverseBytecode())
         return false;
+
+    // Discard unreferenced & pre-allocated resume points.
+    replaceMaybeFallbackFunctionGetter(nullptr);
 
     return true;
 }
@@ -2092,6 +2099,9 @@ IonBuilder::restartLoop(CFGState state)
     }
 
     MBasicBlock *header = state.loop.entry;
+
+    // Discard unreferenced & pre-allocated resume points.
+    replaceMaybeFallbackFunctionGetter(nullptr);
 
     // Remove all blocks in the loop body other than the header, which has phis
     // of the appropriate type and incoming edges to preserve.
@@ -4575,6 +4585,7 @@ IonBuilder::inlineCallsite(ObjectVector &targets, ObjectVector &originals,
     // If so, the cache may be movable to a fallback path, with a dispatch
     // instruction guarding on the incoming TypeObject.
     WrapMGetPropertyCache propCache(getInlineableGetPropertyCache(callInfo));
+    keepFallbackFunctionGetter(propCache.get());
 
     // Inline single targets -- unless they derive from a cache, in which case
     // avoiding the cache and guarding is still faster.
@@ -8756,6 +8767,14 @@ IonBuilder::testCommonGetterSetter(types::TemporaryTypeSet *types, PropertyName 
     return addShapeGuard(wrapper, lastProperty, Bailout_ShapeGuard);
 }
 
+void
+IonBuilder::replaceMaybeFallbackFunctionGetter(MGetPropertyCache *cache)
+{
+    // Discard the last prior resume point of the previous MGetPropertyCache.
+    WrapMGetPropertyCache rai(maybeFallbackFunctionGetter_);
+    maybeFallbackFunctionGetter_ = cache;
+}
+
 bool
 IonBuilder::annotateGetPropertyCache(MDefinition *obj, MGetPropertyCache *getPropCache,
                                      types::TemporaryTypeSet *objTypes,
@@ -8837,6 +8856,7 @@ IonBuilder::annotateGetPropertyCache(MDefinition *obj, MGetPropertyCache *getPro
         if (!resumePoint)
             return false;
         inlinePropTable->setPriorResumePoint(resumePoint);
+        replaceMaybeFallbackFunctionGetter(getPropCache);
         current->pop();
     }
     return true;
