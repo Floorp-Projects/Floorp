@@ -318,8 +318,21 @@ MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate* aDelegate)
     MOZ_CRASH("Failed to set timer target!");
   }
 
-  base::ScopedNSAutoreleasePool autoReleasePool;
+  // Chromium event notifications to be processed will be received by this
+  // event loop as a DoWorkRunnables via ScheduleWork. Chromium events that
+  // were received before our mThread is valid, however, will not generate
+  // runnable wrappers. We must process any of these before we enter this
+  // loop, or we will forever have unprocessed chromium messages in our queue.
+  //
+  // Note we would like to request a flush of the chromium event queue
+  // using a runnable on the xpcom side, but some thread implementations
+  // (dom workers) get cranky if we call ScheduleWork here (ScheduleWork
+  // calls dispatch on mThread) before the thread processes an event. As
+  // such, clear the queue manually.
+  while (aDelegate->DoWork()) {
+  }
 
+  base::ScopedNSAutoreleasePool autoReleasePool;
   for (;;) {
     autoReleasePool.Recycle();
 
@@ -359,3 +372,92 @@ MessagePumpForNonMainThreads::Run(base::MessagePump::Delegate* aDelegate)
 
   keep_running_ = true;
 }
+
+#if defined(XP_WIN)
+
+NS_IMPL_QUERY_INTERFACE(MessagePumpForNonMainUIThreads, nsIThreadObserver)
+
+#define CHECK_QUIT_STATE { if (state_->should_quit) { break; } }
+
+void MessagePumpForNonMainUIThreads::DoRunLoop()
+{
+  // If this is a chromium thread and no nsThread is associated
+  // with it, this call will create a new nsThread.
+  mThread = NS_GetCurrentThread();
+  MOZ_ASSERT(mThread);
+
+  // Set the main thread observer so we can wake up when
+  // xpcom events need to get processed.
+  nsCOMPtr<nsIThreadInternal> ti(do_QueryInterface(mThread));
+  MOZ_ASSERT(ti);
+  ti->SetObserver(this);
+
+  base::ScopedNSAutoreleasePool autoReleasePool;
+  for (;;) {
+    autoReleasePool.Recycle();
+
+    bool didWork = NS_ProcessNextEvent(mThread, false);
+
+    didWork |= ProcessNextWindowsMessage();
+    CHECK_QUIT_STATE
+
+    didWork |= state_->delegate->DoWork();
+    CHECK_QUIT_STATE
+
+    didWork |= state_->delegate->DoDelayedWork(&delayed_work_time_);
+    if (didWork && delayed_work_time_.is_null()) {
+      KillTimer(message_hwnd_, reinterpret_cast<UINT_PTR>(this));
+    }
+    CHECK_QUIT_STATE
+
+    if (didWork) {
+      continue;
+    }
+
+    didWork = state_->delegate->DoIdleWork();
+    CHECK_QUIT_STATE
+
+    SetInWait();
+    bool hasWork = NS_HasPendingEvents(mThread);
+    if (didWork || hasWork) {
+      ClearInWait();
+      continue;
+    }
+    WaitForWork(); // Calls MsgWaitForMultipleObjectsEx(QS_ALLINPUT)
+    ClearInWait();
+  }
+
+  ClearInWait();
+
+  ti->SetObserver(nullptr);
+}
+
+NS_IMETHODIMP
+MessagePumpForNonMainUIThreads::OnDispatchedEvent(nsIThreadInternal *thread)
+{
+  // If our thread is sleeping in DoRunLoop's call to WaitForWork() and an
+  // event posts to the nsIThread event queue - break our thread out of
+  // chromium's WaitForWork.
+  if (GetInWait()) {
+    ScheduleWork();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MessagePumpForNonMainUIThreads::OnProcessNextEvent(nsIThreadInternal *thread,
+                                                   bool mayWait,
+                                                   uint32_t recursionDepth)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MessagePumpForNonMainUIThreads::AfterProcessNextEvent(nsIThreadInternal *thread,
+                                                      uint32_t recursionDepth,
+                                                      bool eventWasProcessed)
+{
+  return NS_OK;
+}
+
+#endif // XP_WIN

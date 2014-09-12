@@ -24,7 +24,7 @@ namespace webrtc {
 static UINT static_reg_windows_msg = RegisterWindowMessageW(L"WebrtcWindowsUIThreadEvent");
 // timer id used in delayed callbacks
 static const UINT_PTR kTimerId = 1;
-static const wchar_t kThisProperty[] = L"ThreadWindowsUIPtr"; 
+static const wchar_t kThisProperty[] = L"ThreadWindowsUIPtr";
 static const wchar_t kThreadWindow[] = L"WebrtcWindowsUIThread";
 
 ThreadWindows::ThreadWindows(ThreadRunFunction func, ThreadObj obj,
@@ -256,9 +256,9 @@ bool ThreadWindowsUI::Stop() {
 bool ThreadWindowsUI::InternalInit() {
   // Create an event window for use in generating callbacks to capture
   // objects.
-  if (hwnd_ == nullptr) {
+  if (hwnd_ == NULL) {
     WNDCLASSW wc;
-    HMODULE hModule = GetModuleHandle(nullptr);
+    HMODULE hModule = GetModuleHandle(NULL);
     if (!GetClassInfoW(hModule, kThreadWindow, &wc)) {
       ZeroMemory(&wc, sizeof(WNDCLASSW));
       wc.hInstance = hModule;
@@ -268,7 +268,7 @@ bool ThreadWindowsUI::InternalInit() {
     }
     hwnd_ = CreateWindowW(kThreadWindow, L"",
                           0, 0, 0, 0, 0,
-                          nullptr, nullptr, hModule, nullptr);
+                          NULL, NULL, hModule, NULL);
     assert(hwnd_);
     SetPropW(hwnd_, kThisProperty, this);
   }
@@ -286,7 +286,7 @@ bool ThreadWindowsUI::RequestCallbackTimer(unsigned int milliseconds) {
   if (timerid_) {
     KillTimer(hwnd_, timerid_);
   }
-  timerid_ = SetTimer(hwnd_, kTimerId, milliseconds, nullptr);
+  timerid_ = SetTimer(hwnd_, kTimerId, milliseconds, NULL);
   return !!timerid_;
 }
 
