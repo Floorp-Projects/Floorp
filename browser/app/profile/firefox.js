@@ -1479,10 +1479,6 @@ pref("devtools.browserconsole.filter.secwarn", true);
 // Text size in the Web Console. Use 0 for the system default size.
 pref("devtools.webconsole.fontSize", 0);
 
-// Number of usages of the web console or scratchpad.
-// If this is less than 5, then pasting code into the web console or scratchpad is disabled
-pref("devtools.selfxss.count", 0);
-
 // Persistent logging: |true| if you want the Web Console to keep all of the
 // logged messages after reloading the page, |false| if you want the output to
 // be cleared each time page navigation happens.
