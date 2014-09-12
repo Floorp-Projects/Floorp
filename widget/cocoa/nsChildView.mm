@@ -2636,12 +2636,16 @@ nsChildView::UpdateVibrancy(const nsTArray<ThemeGeometry>& aThemeGeometries)
     GatherThemeGeometryRegion(aThemeGeometries, NS_THEME_MAC_VIBRANCY_LIGHT);
   nsIntRegion vibrantDarkRegion =
     GatherThemeGeometryRegion(aThemeGeometries, NS_THEME_MAC_VIBRANCY_DARK);
+  nsIntRegion tooltipRegion =
+    GatherThemeGeometryRegion(aThemeGeometries, NS_THEME_TOOLTIP);
 
-  // Make light win over dark in disputed areas.
   vibrantDarkRegion.SubOut(vibrantLightRegion);
+  vibrantDarkRegion.SubOut(tooltipRegion);
+  vibrantLightRegion.SubOut(tooltipRegion);
 
   auto& vm = EnsureVibrancyManager();
   vm.UpdateVibrantRegion(VibrancyType::LIGHT, vibrantLightRegion);
+  vm.UpdateVibrantRegion(VibrancyType::TOOLTIP, tooltipRegion);
   vm.UpdateVibrantRegion(VibrancyType::DARK, vibrantDarkRegion);
 }
 
@@ -2653,13 +2657,27 @@ nsChildView::ClearVibrantAreas()
   }
 }
 
+static VibrancyType
+WidgetTypeToVibrancyType(uint8_t aWidgetType)
+{
+  switch (aWidgetType) {
+    case NS_THEME_MAC_VIBRANCY_LIGHT:
+      return VibrancyType::LIGHT;
+    case NS_THEME_MAC_VIBRANCY_DARK:
+      return VibrancyType::DARK;
+    case NS_THEME_TOOLTIP:
+      return VibrancyType::TOOLTIP;
+    default:
+      MOZ_CRASH();
+  }
+}
+
 NSColor*
 nsChildView::VibrancyFillColorForWidgetType(uint8_t aWidgetType)
 {
   if (VibrancyManager::SystemSupportsVibrancy()) {
     return EnsureVibrancyManager().VibrancyFillColorForType(
-      aWidgetType == NS_THEME_MAC_VIBRANCY_LIGHT
-        ? VibrancyType::LIGHT : VibrancyType::DARK);
+      WidgetTypeToVibrancyType(aWidgetType));
   }
   return [NSColor whiteColor];
 }
@@ -2669,8 +2687,7 @@ nsChildView::VibrancyFontSmoothingBackgroundColorForWidgetType(uint8_t aWidgetTy
 {
   if (VibrancyManager::SystemSupportsVibrancy()) {
     return EnsureVibrancyManager().VibrancyFontSmoothingBackgroundColorForType(
-      aWidgetType == NS_THEME_MAC_VIBRANCY_LIGHT
-        ? VibrancyType::LIGHT : VibrancyType::DARK);
+      WidgetTypeToVibrancyType(aWidgetType));
   }
   return [NSColor clearColor];
 }

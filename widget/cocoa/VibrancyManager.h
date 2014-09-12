@@ -24,7 +24,8 @@ namespace mozilla {
 
 MOZ_BEGIN_ENUM_CLASS(VibrancyType)
   LIGHT,
-  DARK
+  DARK,
+  TOOLTIP
 MOZ_END_ENUM_CLASS(VibrancyType)
 
 /**
