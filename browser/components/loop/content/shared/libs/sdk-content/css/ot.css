@@ -223,11 +223,13 @@
 }
 
 .OT_closeButton {
-  top: 15px;
-  right: 15px;
-  position: absolute;
-  font-size: 18px;
+  color: #999999;
   cursor: pointer;
+  font-size: 32px;
+  line-height: 30px;
+  position: absolute;
+  right: 15px;
+  top: 0;
 }
 
 .OT_dialog-messages {
@@ -266,6 +268,10 @@
   color: #ffffff;
 }
 
+.OT_dialog-hidden {
+  display: none;
+}
+
 .OT_dialog-single-button {
   position: absolute;
   bottom: 41px;
@@ -274,6 +280,22 @@
   height: 47px;
   width: 193px;
 }
+
+
+.OT_dialog-single-button-wide {
+    bottom: 35px;
+    height: 140px;
+    left: 5px;
+    position: absolute;
+    right: 0;
+}
+  .OT_dialog-single-button-with-title {
+      margin: 0 auto;
+      padding-left: 30px;
+      padding-right: 30px;
+      width: 270px;
+  }
+
 
 .OT_dialog-button-pair {
   position: absolute;
@@ -301,11 +323,20 @@
   font-weight: 300;
   text-align: center;
   margin-bottom: 15px;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 150%;
-  color: #A4A4A4;
+  color: #999999;
 }
 
+.OT_dialog-button-title label {
+  color: #999999;
+}
+
+.OT_dialog-button-title a,
+.OT_dialog-button-title a:link,
+.OT_dialog-button-title a:active {
+  color: #02A1DE;
+}
 
 .OT_dialog-button-title strong {
   color: #ffffff;
@@ -318,21 +349,34 @@
   display: block;
   line-height: 50px;
   height: 47px;
-  background-color: #29A4DA;
+  background-color: #1CA3DC;
   text-align: center;
   font-size: 16pt;
   cursor: pointer;
 }
 
 .OT_dialog-button.OT_dialog-button-disabled {
-  background-color: #444444;
-  color: #999999;
   cursor: not-allowed;
+
+  /* IE 8 */
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+
+  opacity: 0.5;
 }
 
 .OT_dialog-button.OT_dialog-button-large {
   line-height: 60px;
   height: 58px;
+}
+
+.OT_dialog-button.OT_dialog-button-small {
+  background-color: #444444;
+  color: #999999;
+  font-size: 12pt;
+  height: 40px;
+  line-height: 40px;
+  margin: 20px auto 0 auto;
+  width: 86px;
 }
 
 .OT_dialog-progress-bar {
@@ -516,6 +560,11 @@
 .OT_publisher .OT_bar,
 .OT_subscriber .OT_bar {
     background: rgba(0, 0, 0, 0.4);
+}
+
+.OT_publisher .OT_edge-bar-item,
+.OT_subscriber .OT_edge-bar-item {
+    z-index: 1; /* required to get audio level meter underneath */
 }
 
 /* The publisher/subscriber name panel/archiving status bar */
@@ -900,6 +949,8 @@
 
 .OT_publisher .OT_edge-bar-item.OT_mode-on,
 .OT_subscriber .OT_edge-bar-item.OT_mode-on,
+.OT_publisher .OT_edge-bar-item.OT_mode-auto.OT_mode-on-hold,
+.OT_subscriber .OT_edge-bar-item.OT_mode-auto.OT_mode-on-hold,
 .OT_publisher:hover .OT_edge-bar-item.OT_mode-auto,
 .OT_subscriber:hover .OT_edge-bar-item.OT_mode-auto,
 .OT_publisher:hover .OT_edge-bar-item.OT_mode-mini-auto,
@@ -932,8 +983,10 @@
 }
 
 .OT_publisher .OT_opentok.OT_mode-on,
+.OT_publisher .OT_opentok.OT_mode-auto.OT_mode-on-hold,
 .OT_publisher:hover .OT_opentok.OT_mode-auto,
 .OT_subscriber .OT_opentok.OT_mode-on,
+.OT_subscriber .OT_opentok.OT_mode-auto.OT_mode-on-hold,
 .OT_subscriber:hover .OT_opentok.OT_mode-auto {
     top: 8px;
 }
@@ -981,15 +1034,98 @@
 .OT_video-poster {
     width: 100%;
     height: 100%;
-    background-position: 50% 50%;
+    display: none;
+
+    opacity: .25;
+    background-size: auto 76%;
     background-repeat: no-repeat;
+    background-position: center bottom;
+    background-image: url(../images/rtc/audioonly-silhouette.svg);
+}
+
+.OT_audio-level-meter {
+    position: absolute;
+    width:  25%;
+    max-width: 224px;
+    min-width: 21px;
+    top: 0;
+    right: 0;
+    overflow: hidden;
+}
+
+.OT_audio-level-meter:before {
+    /* makes the height of the container equals its width */
+    content: '';
+    display: block;
+    padding-top: 100%;
+}
+
+.OT_audio-level-meter__bar {
+    position: absolute;
+    width: 192%; /* meter value can overflow of 8% */
+    height: 192%;
+    top: -96% /* half of the size */;
+    right: -96%;
+    border-radius: 50%;
+
+    background-color: rgba(0, 0, 0, .8);
+}
+
+.OT_audio-level-meter__audio-only-img {
+    position: absolute;
+    top: 22%;
+    right: 15%;
+    width: 40%;
+
+    opacity: .7;
+
+    background: url(../images/rtc/audioonly-headset.svg) no-repeat center;
+}
+
+.OT_audio-level-meter__audio-only-img:before {
+    /* makes the height of the container equals its width */
+    content: '';
+    display: block;
+    padding-top: 100%;
+}
+
+.OT_audio-level-meter__value {
+    position: absolute;
+    border-radius: 50%;
+    background-image: radial-gradient(circle, rgba(151,206,0,1) 0%, rgba(151,206,0,0) 100%);
+}
+
+.OT_audio-level-meter {
     display: none;
 }
 
-.OT_publisher .OT_video-poster {
-    background-image: url(../images/rtc/audioonly-publisher.png);
+.OT_audio-level-meter.OT_mode-on,
+.OT_audio-only .OT_audio-level-meter.OT_mode-auto {
+    display: block;
 }
 
-.OT_subscriber .OT_video-poster  {
-    background-image: url(../images/rtc/audioonly-subscriber.png);
+.OT_video-disabled-indicator {
+    opacity: 1;
+    border: none;
+    display: none;
+    position: absolute;
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-position:bottom right;
+    top: 0;
+    left: 0;
+    bottom: 3px;
+    right: 3px;
+}
+
+.OT_video-disabled {
+    background-image: url(../images/rtc/video-disabled.png);
+}
+
+.OT_video-disabled-warning {
+    background-image: url(../images/rtc/video-disabled-warning.png);
+}
+
+.OT_video-disabled-indicator.OT_active {
+    display: block;
 }
