@@ -1598,6 +1598,99 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   }
 }
 
+@media (-moz-mac-yosemite-theme) {
+  /* Base and hover styles */
+  #forward-button:not(:-moz-lwtheme),
+  #back-button:not(:-moz-lwtheme),
+  #forward-button:hover:not(:-moz-lwtheme),
+  #back-button:hover:not(:-moz-lwtheme) {
+    background-image: none;
+    background-color: #fbfbfb;
+    background-clip: border-box;
+    border: 1px solid #aeaeae;
+    box-shadow: none;
+  }
+
+  #back-button:not(:-moz-lwtheme) {
+    /* On non-lwtheme OS X, we use a 32-px image in a 33px container with negative margin bottom.
+     * Except that on Yosemite, we want to use a border instead of an image - like for lwthemes.
+     * So we need to readjust the height, padding and margin-bottom of the back button
+     * similarly to how we do this for lwthemes (but keep a specific enough selector to
+     * override the other :not(:-moz-lwtheme) selector above): */
+    height: 32px;
+    padding: 4px 5px 4px 3px;
+    margin-bottom: 0;
+  }
+
+  /* White inset shadow on top of the back button */
+  #back-button:not(:-moz-lwtheme),
+  #back-button:hover:not(:-moz-lwtheme) {
+    box-shadow: inset 0 1px 0.5px 0 #fff;
+  }
+
+  /* Bottom shadow and right border for the forward button to match the location bar */
+  #forward-button:hover:not(:-moz-lwtheme),
+  #forward-button:not(:-moz-lwtheme) {
+    box-shadow: 0 1px 0 0 rgba(0,0,0,0.2);
+    border: 0 none;
+    border-right: 1px solid rgba(0,0,0,0.3);
+  }
+
+  /* Active styling: transparent white over toolbar colors */
+  #forward-button:hover:active:not(:-moz-lwtheme),
+  #back-button:hover:active:not(:-moz-lwtheme) {
+    background-image: linear-gradient(to bottom, rgba(255,255,255, 0.3), rgba(255,255,255, 0.4));
+    background-color: transparent;
+    box-shadow: none;
+  }
+
+  /* Add white detail on top of forward button only when active */
+  #forward-button:hover:active:not(:-moz-lwtheme) {
+    box-shadow: inset 0 1px 0 #f1f1f1, 0 1px 0 0 rgba(0,0,0,0.2);
+  }
+
+  /* Inactive window styling (hover styling is identical;
+   * we need to make this explicit because it is different on lion, see above. */
+  #forward-button:-moz-window-inactive:not(:-moz-lwtheme),
+  #back-button:-moz-window-inactive:not(:-moz-lwtheme),
+  #forward-button:hover:-moz-window-inactive:not(:-moz-lwtheme),
+  #back-button:hover:-moz-window-inactive:not(:-moz-lwtheme) {
+    background-image: none;
+    background-color: #f0f0f0;
+    background-clip: border-box;
+    border: 1px solid rgba(0,0,0,0.1);
+    box-shadow: none;
+  }
+
+  /* Lightweight theme styles */
+  #forward-button:-moz-lwtheme,
+  #forward-button:hover:-moz-lwtheme {
+    border: 0 none;
+    border-right: 1px solid rgba(0,0,0,0.3);
+    box-shadow: 0 1px 0 0 rgba(0,0,0,0.2);
+  }
+
+  #forward-button:-moz-lwtheme,
+  #forward-button:hover:-moz-lwtheme,
+  #back-button:-moz-lwtheme,
+  #back-button:hover:-moz-lwtheme {
+    background-color: rgba(255,255,255,0.5);
+    background-image: none;
+    background-clip: border-box;
+  }
+
+  #forward-button:hover:active:-moz-lwtheme,
+  #back-button:hover:active:-moz-lwtheme {
+    background-image: linear-gradient(to bottom, rgba(255,255,255, 0.7), rgba(255,255,255, 0.8));
+    background-color: transparent;
+    box-shadow: none;
+  }
+
+  #forward-button:hover:active:-moz-lwtheme {
+    box-shadow: 0 1px 0 0 rgba(0,0,0,0.2);
+  }
+}
+
 @conditionalForwardWithUrlbar@:not([switchingtabs]) > #forward-button {
   transition: margin-left @forwardTransitionLength@ ease-out;
 }
@@ -1799,13 +1892,13 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   #urlbar {
     border-color: #fff;
     border-radius: 3px;
-    box-shadow: 0 1px 0 0 #aeaeae, 1px 2px 0 0 #d8d8d8;
+    box-shadow: 0 1px 0 0 rgba(0,0,0,0.2);
     background-image: none;
   }
   .searchbar-textbox:-moz-window-inactive,
   #urlbar:-moz-window-inactive {
     box-shadow: none;
-    border-color: #dbdbdb;
+    border-color: rgba(0,0,0,0.1);
   }
 }
 

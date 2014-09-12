@@ -724,7 +724,7 @@ nsTableCellFrame::GetCellBaseline() const
   nscoord result;
   if (nsLayoutUtils::GetFirstLineBaseline(GetWritingMode(), inner, &result))
     return result + borderPadding;
-  return inner->GetContentRect().YMost() - inner->GetPosition().y +
+  return inner->GetContentRectRelativeToSelf().YMost() +
          borderPadding;
 }
 

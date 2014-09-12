@@ -40,9 +40,15 @@ public:
     virtual void codecCanceled() = 0;
   };
 
+  enum Capability {
+    kEmptyCapability        = 0x00000000,
+    kCanExposeGraphicBuffer = 0x00000001,
+  };
+
   enum {
     kKeyBufferIndex = 'bfin',
   };
+
   // Check whether MediaCodec has been allocated.
   bool allocated() const;
 
@@ -112,6 +118,14 @@ public:
   // an input/output buffer has become available, a format change is
   // pending, an error is pending.
   void requestActivityNotification(const sp<AMessage> &aNotify);
+
+  status_t getOutputGraphicBufferFromIndex(size_t aIndex,
+                                           sp<GraphicBuffer> *aGraphicBuffer);
+
+  status_t getCapability(uint32_t *aCapability);
+
+  // Utility functions
+
   // If aData is null, will notify decoder input EOS
   status_t Input(const uint8_t* aData, uint32_t aDataSize,
                  int64_t aTimestampUsecs, uint64_t flags);
@@ -120,6 +134,7 @@ public:
   bool IsWaitingResources();
   bool IsDormantNeeded();
   void ReleaseMediaResources();
+
 protected:
   virtual ~MediaCodecProxy();
 
@@ -165,6 +180,7 @@ private:
   // MediaCodec instance
   mutable RWLock mCodecLock;
   sp<MediaCodec> mCodec;
+
   //MediaCodec buffers to hold input/output data.
   Vector<sp<ABuffer> > mInputBuffers;
   Vector<sp<ABuffer> > mOutputBuffers;

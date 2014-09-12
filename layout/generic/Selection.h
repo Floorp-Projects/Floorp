@@ -215,7 +215,7 @@ public:
   friend struct AutoApplyUserSelectStyle;
   struct MOZ_STACK_CLASS AutoApplyUserSelectStyle
   {
-    AutoApplyUserSelectStyle(Selection* aSelection
+    explicit AutoApplyUserSelectStyle(Selection* aSelection
                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mSavedValue(aSelection->mApplyUserSelectStyle)
     {
