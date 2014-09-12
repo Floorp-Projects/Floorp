@@ -44,7 +44,8 @@ static inline D2D1_SIZE_U D2DIntSize(const IntSize &aSize)
   return D2D1::SizeU(aSize.width, aSize.height);
 }
 
-static inline D2D1_RECT_F D2DRect(const Rect &aRect)
+template <typename T>
+static inline D2D1_RECT_F D2DRect(const T &aRect)
 {
   return D2D1::RectF(aRect.x, aRect.y, aRect.XMost(), aRect.YMost());
 }
