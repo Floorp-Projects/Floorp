@@ -176,7 +176,7 @@ IonBuilder::abort(const char *message, ...)
     va_start(ap, message);
     abortFmt(message, ap);
     va_end(ap);
-    JitSpew(JitSpew_Abort, "aborted @ %s:%d", script()->filename(), PCToLineNumber(script(), pc));
+    JitSpew(JitSpew_IonAbort, "aborted @ %s:%d", script()->filename(), PCToLineNumber(script(), pc));
 #endif
     return false;
 }
@@ -186,7 +186,7 @@ IonBuilder::spew(const char *message)
 {
     // Don't call PCToLineNumber in release builds.
 #ifdef DEBUG
-    JitSpew(JitSpew_MIR, "%s @ %s:%d", message, script()->filename(), PCToLineNumber(script(), pc));
+    JitSpew(JitSpew_IonMIR, "%s @ %s:%d", message, script()->filename(), PCToLineNumber(script(), pc));
 #endif
 }
 
@@ -652,15 +652,15 @@ IonBuilder::build()
 
 #ifdef DEBUG
     if (info().executionModeIsAnalysis()) {
-        JitSpew(JitSpew_Scripts, "Analyzing script %s:%d (%p) %s",
+        JitSpew(JitSpew_IonScripts, "Analyzing script %s:%d (%p) %s",
                 script()->filename(), script()->lineno(), (void *)script(),
                 ExecutionModeString(info().executionMode()));
     } else if (info().executionMode() == SequentialExecution && script()->hasIonScript()) {
-        JitSpew(JitSpew_Scripts, "Recompiling script %s:%d (%p) (warmup-counter=%d, level=%s)",
+        JitSpew(JitSpew_IonScripts, "Recompiling script %s:%d (%p) (warmup-counter=%d, level=%s)",
                 script()->filename(), script()->lineno(), (void *)script(),
                 (int)script()->getWarmUpCount(), OptimizationLevelString(optimizationInfo().level()));
     } else {
-        JitSpew(JitSpew_Scripts, "Compiling script %s:%d (%p) (warmup-counter=%d, level=%s)",
+        JitSpew(JitSpew_IonScripts, "Compiling script %s:%d (%p) (warmup-counter=%d, level=%s)",
                 script()->filename(), script()->lineno(), (void *)script(),
                 (int)script()->getWarmUpCount(), OptimizationLevelString(optimizationInfo().level()));
     }
@@ -811,7 +811,7 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
 
     inlineCallInfo_ = &callInfo;
 
-    JitSpew(JitSpew_Scripts, "Inlining script %s:%d (%p)",
+    JitSpew(JitSpew_IonScripts, "Inlining script %s:%d (%p)",
             script()->filename(), script()->lineno(), (void *)script());
 
     callerBuilder_ = callerBuilder;
@@ -1034,7 +1034,7 @@ IonBuilder::initScopeChain(MDefinition *callee)
 bool
 IonBuilder::initArgumentsObject()
 {
-    JitSpew(JitSpew_MIR, "%s:%d - Emitting code to initialize arguments object! block=%p",
+    JitSpew(JitSpew_IonMIR, "%s:%d - Emitting code to initialize arguments object! block=%p",
                               script()->filename(), script()->lineno(), current);
     JS_ASSERT(info().needsArgsObj());
     MCreateArgumentsObject *argsObj = MCreateArgumentsObject::New(alloc(), current->scopeChain());
@@ -4208,7 +4208,7 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
                              loopDepth_);
     if (!inlineBuilder.buildInline(this, outerResumePoint, callInfo)) {
         if (analysisContext && analysisContext->isExceptionPending()) {
-            JitSpew(JitSpew_Abort, "Inline builder raised exception.");
+            JitSpew(JitSpew_IonAbort, "Inline builder raised exception.");
             abortReason_ = AbortReason_Error;
             return false;
         }

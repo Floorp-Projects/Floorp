@@ -115,11 +115,11 @@ MResumePoint::writeRecoverData(CompactBufferWriter &writer) const
     uint32_t formalArgs = CountArgSlots(script, fun);
     uint32_t nallocs = formalArgs + script->nfixed() + exprStack;
 
-    JitSpew(JitSpew_Snapshots, "Starting frame; implicit %u, formals %u, fixed %u, exprs %u",
+    JitSpew(JitSpew_IonSnapshots, "Starting frame; implicit %u, formals %u, fixed %u, exprs %u",
             implicit, formalArgs - implicit, script->nfixed(), exprStack);
 
     uint32_t pcoff = script->pcToOffset(pc());
-    JitSpew(JitSpew_Snapshots, "Writing pc offset %u, nslots %u", pcoff, nallocs);
+    JitSpew(JitSpew_IonSnapshots, "Writing pc offset %u, nslots %u", pcoff, nallocs);
     writer.writeUnsigned(pcoff);
     writer.writeUnsigned(nallocs);
     return true;
@@ -129,7 +129,7 @@ RResumePoint::RResumePoint(CompactBufferReader &reader)
 {
     pcOffset_ = reader.readUnsigned();
     numOperands_ = reader.readUnsigned();
-    JitSpew(JitSpew_Snapshots, "Read RResumePoint (pc offset %u, nslots %u)",
+    JitSpew(JitSpew_IonSnapshots, "Read RResumePoint (pc offset %u, nslots %u)",
             pcOffset_, numOperands_);
 }
 

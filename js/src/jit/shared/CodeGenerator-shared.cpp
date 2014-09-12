@@ -395,7 +395,7 @@ CodeGeneratorShared::encode(LRecoverInfo *recover)
         return true;
 
     uint32_t numInstructions = recover->numInstructions();
-    JitSpew(JitSpew_Snapshots, "Encoding LRecoverInfo %p (frameCount %u, instructions %u)",
+    JitSpew(JitSpew_IonSnapshots, "Encoding LRecoverInfo %p (frameCount %u, instructions %u)",
             (void *)recover, recover->mir()->frameCount(), numInstructions);
 
     MResumePoint::Mode mode = recover->mir()->mode();
@@ -427,7 +427,7 @@ CodeGeneratorShared::encode(LSnapshot *snapshot)
     RecoverOffset recoverOffset = recoverInfo->recoverOffset();
     MOZ_ASSERT(recoverOffset != INVALID_RECOVER_OFFSET);
 
-    JitSpew(JitSpew_Snapshots, "Encoding LSnapshot %p (LRecover %p)",
+    JitSpew(JitSpew_IonSnapshots, "Encoding LSnapshot %p (LRecover %p)",
             (void *)snapshot, (void*) recoverInfo);
 
     SnapshotOffset offset = snapshots_.startSnapshot(recoverOffset, snapshot->bailoutKind());
@@ -493,7 +493,7 @@ CodeGeneratorShared::assignBailoutId(LSnapshot *snapshot)
 
     unsigned bailoutId = bailouts_.length();
     snapshot->setBailoutId(bailoutId);
-    JitSpew(JitSpew_Snapshots, "Assigned snapshot bailout id %u", bailoutId);
+    JitSpew(JitSpew_IonSnapshots, "Assigned snapshot bailout id %u", bailoutId);
     return bailouts_.append(snapshot->snapshotOffset());
 }
 
