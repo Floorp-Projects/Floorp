@@ -11,6 +11,8 @@ using struct mozilla::layers::GrallocBufferRef from "gfxipc/ShadowLayerUtils.h";
 using struct mozilla::layers::SurfaceDescriptorX11 from "gfxipc/ShadowLayerUtils.h";
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
+using mozilla::gl::SharedTextureHandle from "GLContextTypes.h";
+using mozilla::gl::SharedTextureShareType from "GLContextTypes.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 using gfxImageFormat from "gfxTypes.h";
@@ -56,14 +58,11 @@ struct SurfaceDescriptorMacIOSurface {
   bool hasAlpha;
 };
 
-struct SurfaceTextureDescriptor {
-  uintptr_t surfTex;
+struct SharedTextureDescriptor {
+  SharedTextureShareType shareType;
+  SharedTextureHandle handle;
   IntSize size;
-};
-
-struct EGLImageDescriptor {
-  uintptr_t image; // `EGLImage` is a `void*`.
-  IntSize size;
+  bool inverted;
 };
 
 struct NewSurfaceDescriptorGralloc {
@@ -104,8 +103,7 @@ union SurfaceDescriptor {
   SurfaceDescriptorDIB;
   SurfaceDescriptorD3D10;
   SurfaceDescriptorX11;
-  SurfaceTextureDescriptor;
-  EGLImageDescriptor;
+  SharedTextureDescriptor;
   SurfaceStreamDescriptor;
   SurfaceDescriptorMacIOSurface;
   NewSurfaceDescriptorGralloc;

@@ -64,7 +64,7 @@ public:
   MacIOSurfaceTextureHostOGL(TextureFlags aFlags,
                              const SurfaceDescriptorMacIOSurface& aDescriptor);
 
-  // MacIOSurfaceTextureSourceOGL doesn't own any GL texture
+  // SharedTextureHostOGL doesn't own any GL texture
   virtual void DeallocateDeviceData() MOZ_OVERRIDE {}
 
   virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
