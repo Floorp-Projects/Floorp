@@ -2389,6 +2389,8 @@ GetUserMediaCallbackMediaStreamListener::AudioConfig(bool aEchoOn,
       NewRunnableMethod(mAudioSource.get(), &MediaEngineSource::Config,
                         aEchoOn, aEcho, aAgcOn, aAGC, aNoiseOn,
                         aNoise, aPlayoutDelay));
+#else
+    unused << mMediaThread;
 #endif
   }
 }
