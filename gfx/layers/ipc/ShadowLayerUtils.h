@@ -56,29 +56,6 @@ struct ParamTraits<mozilla::layers::SurfaceDescriptorX11> {
 };
 #endif  // !defined(MOZ_HAVE_XSURFACEDESCRIPTORX11)
 
-template<>
-struct ParamTraits<mozilla::gl::SharedTextureShareType>
-{
-  typedef mozilla::gl::SharedTextureShareType paramType;
-
-  static void Write(Message* msg, const paramType& param)
-  {
-    static_assert(sizeof(paramType) <= sizeof(int32_t),
-                  "TextureShareType assumes to be int32_t");
-    WriteParam(msg, int32_t(param));
-  }
-
-  static bool Read(const Message* msg, void** iter, paramType* result)
-  {
-    int32_t type;
-    if (!ReadParam(msg, iter, &type))
-      return false;
-
-    *result = paramType(type);
-    return true;
-  }
-};
-
 #if !defined(MOZ_HAVE_SURFACEDESCRIPTORGRALLOC)
 template <>
 struct ParamTraits<mozilla::layers::MagicGrallocBufferHandle> {
