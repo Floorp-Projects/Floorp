@@ -98,6 +98,12 @@ public:
   // initialization.
   void QueueInitializationEvent();
 
+#if defined(DEBUG)
+  // Dump the contents of each SourceBuffer to a series of files under aPath.
+  // aPath must exist.  Debug only, invoke from your favourite debugger.
+  void Dump(const char* aPath);
+#endif
+
 private:
   ~MediaSource();
 

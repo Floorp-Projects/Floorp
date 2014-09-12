@@ -5,14 +5,13 @@
 
 #include "nsISupports.idl"
 
-// NB: This isn't actually a principal at all. The naming is just historical.
-interface nsICertificatePrincipal;
+interface nsIX509Cert;
 
 /**
  * An interface for verifying that a given string of data was signed by the
  * private key matching the given public key.
  */
-[scriptable, uuid(577f097f-15e4-4043-bc0e-6d2fadcacae2)]
+[scriptable, uuid(94066a00-37c9-11e4-916c-0800200c9a66)]
 interface nsIDataSignatureVerifier : nsISupports
 {
   /**
@@ -32,10 +31,10 @@ interface nsIDataSignatureVerifier : nsISupports
   const long VERIFY_ERROR_UNKNOWN_ISSUER = 1;
   const long VERIFY_ERROR_OTHER = 2;
 
-  nsICertificatePrincipal verifySignature(in string aSignature,
-                                          in unsigned long aSignatureLen,
-                                          in string plaintext,
-                                          in unsigned long plaintextLen,
-                                          out long errorCode);
+  nsIX509Cert verifySignature(in string aSignature,
+                              in unsigned long aSignatureLen,
+                              in string plaintext,
+                              in unsigned long plaintextLen,
+                              out long errorCode);
 
 };

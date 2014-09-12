@@ -146,15 +146,9 @@ class XPCShellRunner(MozbuildObject):
                           (manifest and len(manifest.test_paths())==1) or
                           verbose)
 
-        # We need to attach the '.exe' extension on Windows for the debugger to
-        # work properly.
-        xpcsExecutable = 'xpcshell'
-        if os.name == 'nt':
-          xpcsExecutable += '.exe'
-
         args = {
             'manifest': manifest,
-            'xpcshell': os.path.join(self.bindir, xpcsExecutable),
+            'xpcshell': self.get_binary_path('xpcshell'),
             'mozInfo': os.path.join(self.topobjdir, 'mozinfo.json'),
             'symbolsPath': os.path.join(self.distdir, 'crashreporter-symbols'),
             'interactive': interactive,
