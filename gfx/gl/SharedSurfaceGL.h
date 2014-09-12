@@ -48,7 +48,6 @@ protected:
     const GLuint mTex;
     GLuint mFB;
     RefPtr<gfx::DataSourceSurface> mData;
-    bool mIsDataCurrent;
 
     SharedSurface_Basic(GLContext* gl,
                         const gfx::IntSize& size,
