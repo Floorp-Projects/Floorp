@@ -21,6 +21,7 @@
   var UnsupportedBrowserView = loop.webapp.UnsupportedBrowserView;
   var UnsupportedDeviceView = loop.webapp.UnsupportedDeviceView;
   var CallUrlExpiredView    = loop.webapp.CallUrlExpiredView;
+  var PendingConversationView = loop.webapp.PendingConversationView;
   var StartConversationView = loop.webapp.StartConversationView;
 
   // 3. Shared components
@@ -191,6 +192,19 @@
                                      audio: {enabled: false}, 
                                      hangup: noop, 
                                      publishStream: noop})
+              )
+            )
+          ), 
+
+          Section({name: "PendingConversationView"}, 
+            Example({summary: "Pending conversation view (connecting)", dashed: "true"}, 
+              React.DOM.div({className: "standalone"}, 
+                PendingConversationView(null)
+              )
+            ), 
+            Example({summary: "Pending conversation view (ringing)", dashed: "true"}, 
+              React.DOM.div({className: "standalone"}, 
+                PendingConversationView({callState: "ringing"})
               )
             )
           ), 
