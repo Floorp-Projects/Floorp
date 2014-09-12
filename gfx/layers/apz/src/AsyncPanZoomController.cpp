@@ -1309,7 +1309,10 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
     mX.SetVelocity(0);
     mY.SetVelocity(0);
     // Clear our state so that we don't stay in the PANNING state
-    // if DispatchFling() gives the fling to somone else.
+    // if DispatchFling() gives the fling to somone else. However,
+    // don't send the state change notification until we've determined
+    // what our final state is to avoid notification churn.
+    StateChangeNotificationBlocker blocker(this);
     SetState(NOTHING);
     APZC_LOG("%p starting a fling animation\n", this);
     // Make a local copy of the tree manager pointer and check that it's not
@@ -2467,6 +2470,11 @@ void AsyncPanZoomController::GetOverscrollTransform(Matrix4x4* aTransform) const
 bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)
 {
   AssertOnCompositorThread();
+
+  // Don't send any state-change notifications until the end of the function,
+  // because we may go through some intermediate states while we finish
+  // animations and start new ones.
+  StateChangeNotificationBlocker blocker(this);
 
   // The eventual return value of this function. The compositor needs to know
   // whether or not to advance by a frame as soon as it can. For example, if a
