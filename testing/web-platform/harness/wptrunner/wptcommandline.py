@@ -101,7 +101,7 @@ def create_parser(product_choices=None):
                         help="Halt the test runner when an unexpected result is encountered")
 
     parser.add_argument("--symbols-path", action="store", type=url_or_path,
-                        help="Path to symbols file used to analyse crash minidumps.")
+                        help="Path or url to symbols file used to analyse crash minidumps.")
     parser.add_argument("--stackwalk-binary", action="store", type=abs_path,
                         help="Path to stackwalker program used to analyse minidumps.")
 
@@ -198,7 +198,7 @@ def create_parser_update():
     parser.add_argument("--no-check-clean", action="store_true", default=False,
                         help="Don't check the working directory is clean before updating")
     parser.add_argument("--patch", action="store_true",
-                        help="Create an mq patch or git branch+commit containing the changes.")
+                        help="Create an mq patch or git commit containing the changes.")
     parser.add_argument("--sync", dest="sync", action="store_true", default=False,
                         help="Sync the tests with the latest from upstream")
     parser.add_argument("--ignore-existing", action="store_true", help="When updating test results only consider results from the logfiles provided, not existing expectations.")
