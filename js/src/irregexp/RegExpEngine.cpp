@@ -1492,7 +1492,8 @@ class FrequencyCollator
 class irregexp::RegExpCompiler
 {
   public:
-    RegExpCompiler(JSContext *cx, LifoAlloc *alloc, int capture_count, bool ignore_case, bool is_ascii);
+    RegExpCompiler(JSContext *cx, LifoAlloc *alloc, int capture_count,
+                   bool ignore_case, bool is_ascii, bool match_only);
 
     int AllocateRegister() {
         if (next_register_ >= RegExpMacroAssembler::kMaxRegister) {
@@ -1548,6 +1549,7 @@ class irregexp::RegExpCompiler
     RegExpMacroAssembler* macro_assembler_;
     bool ignore_case_;
     bool ascii_;
+    bool match_only_;
     bool reg_exp_too_big_;
     int current_expansion_factor_;
     FrequencyCollator frequency_collator_;
@@ -1569,11 +1571,13 @@ class RecursionCheck
 
 // Attempts to compile the regexp using an Irregexp code generator.  Returns
 // a fixed array or a null handle depending on whether it succeeded.
-RegExpCompiler::RegExpCompiler(JSContext *cx, LifoAlloc *alloc, int capture_count, bool ignore_case, bool ascii)
+RegExpCompiler::RegExpCompiler(JSContext *cx, LifoAlloc *alloc, int capture_count,
+                               bool ignore_case, bool ascii, bool match_only)
   : next_register_(2 * (capture_count + 1)),
     recursion_depth_(0),
     ignore_case_(ignore_case),
     ascii_(ascii),
+    match_only_(match_only),
     reg_exp_too_big_(false),
     current_expansion_factor_(1),
     frequency_collator_(),
@@ -1603,7 +1607,7 @@ RegExpCompiler::Assemble(JSContext *cx,
     while (!work_list_.empty())
         work_list_.popCopy()->Emit(this, &new_trace);
 
-    RegExpCode code = macro_assembler_->GenerateCode(cx);
+    RegExpCode code = macro_assembler_->GenerateCode(cx, match_only_);
     if (code.empty())
         return RegExpCode();
 
@@ -1646,7 +1650,7 @@ IsNativeRegExpEnabled(JSContext *cx)
 RegExpCode
 irregexp::CompilePattern(JSContext *cx, RegExpShared *shared, RegExpCompileData *data,
                          HandleLinearString sample, bool is_global, bool ignore_case,
-                         bool is_ascii)
+                         bool is_ascii, bool match_only)
 {
     if ((data->capture_count + 1) * 2 - 1 > RegExpMacroAssembler::kMaxRegister) {
         JS_ReportError(cx, "regexp too big");
@@ -1654,7 +1658,7 @@ irregexp::CompilePattern(JSContext *cx, RegExpShared *shared, RegExpCompileData 
     }
 
     LifoAlloc &alloc = cx->tempLifoAlloc();
-    RegExpCompiler compiler(cx, &alloc, data->capture_count, ignore_case, is_ascii);
+    RegExpCompiler compiler(cx, &alloc, data->capture_count, ignore_case, is_ascii, match_only);
 
     // Sample some characters from the middle of the string.
     if (sample->hasLatin1Chars()) {

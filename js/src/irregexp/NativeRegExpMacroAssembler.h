@@ -89,7 +89,7 @@ class MOZ_STACK_CLASS NativeRegExpMacroAssembler : public RegExpMacroAssembler
                                JSRuntime *rt, Mode mode, int registers_to_save);
 
     // Inherited virtual methods.
-    RegExpCode GenerateCode(JSContext *cx);
+    RegExpCode GenerateCode(JSContext *cx, bool match_only);
     int stack_limit_slack();
     bool CanReadUnaligned();
     void AdvanceCurrentPosition(int by);

@@ -113,7 +113,7 @@ NativeRegExpMacroAssembler::NativeRegExpMacroAssembler(LifoAlloc *alloc, RegExpS
 //
 // void execute(InputOutputData*);
 RegExpCode
-NativeRegExpMacroAssembler::GenerateCode(JSContext *cx)
+NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
 {
     if (!cx->compartment()->ensureJitCompartmentExists(cx))
         return RegExpCode();
@@ -181,7 +181,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx)
     masm.loadPtr(inputOutputAddress, temp0);
 
     // Copy output registers to FrameData.
-    {
+    if (!match_only) {
         Register matchPairsRegister = input_end_pointer;
         masm.loadPtr(Address(temp0, offsetof(InputOutputData, matches)), matchPairsRegister);
         masm.loadPtr(Address(matchPairsRegister, MatchPairs::offsetOfPairs()), temp1);
@@ -276,7 +276,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx)
         // Save captures when successful.
         masm.bind(&success_label_);
 
-        {
+        if (!match_only) {
             Register outputRegisters = temp1;
             Register inputByteLength = backtrack_stack_pointer;
 
