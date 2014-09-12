@@ -105,7 +105,7 @@
                 // Scrollable-Parent, Child: `auto`, Grand-Child: `none`
                 // TA: 15.5
                 on_event(target0, 'pointermove', function(event) {
-                    checkDirection(test_touchaction, isFirstScroll, moveCount, countToPass, moveDelta);
+                    checkDirection(test_touchaction, isFirstScroll, moveCount, countToPass, moveDelta, event);
 
                     moveCount++;
                     if(moveCount >= countToPass) {

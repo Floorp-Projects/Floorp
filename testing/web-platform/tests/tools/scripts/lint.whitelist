@@ -31,3 +31,6 @@ PARSE-FAILED:dom/nodes/Document-createElement-namespace-tests/minimal_html.xhtml
 PARSE-FAILED:ext-xhtml-pubid/the-xhtml-syntax/parsing-xhtml-documents/xhtml-pubid-1.xhtml
 PARSE-FAILED:ext-xhtml-pubid/the-xhtml-syntax/parsing-xhtml-documents/xhtml-pubid-2.xhtml
 PARSE-FAILED:ext-xhtml-pubid/the-xhtml-syntax/parsing-xhtml-documents/xhtml-pubid-3.xhtml
+W3C-TEST.ORG:README.md
+W3C-TEST.ORG:*/README.md
+W3C-TEST.ORG:tools/*

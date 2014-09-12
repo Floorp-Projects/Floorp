@@ -30,7 +30,6 @@ test(function () {
 }, "The RadioNodeList.value must be the first checked radio button's value");
 
 test(function () {
-  // Spec bug, "" vs "on": https://www.w3.org/Bugs/Public/show_bug.cgi?id=26353
   document.getElementById("r1").checked = true;
   assert_equals(rdoList.value, "on", "The value attribute should be on.");
 
@@ -58,5 +57,22 @@ test(function () {
   assert_true(document.getElementById("r2").checked,
               "The second radio input element should be checked.");
 }, "Check the RadioNodeList.value on setting");
+
+//setting to on, specific case
+test(function () {
+  rdoList.value = "on";
+  assert_equals(rdoList.value, document.getElementById("r2").value,
+                "The value attribute should be the second radio input element's value.");
+  assert_true(document.getElementById("r2").checked,
+              "The second radio input element should be checked.");
+
+  document.getElementById("r1").removeAttribute("value");
+  rdoList.value = "on";
+  assert_equals(rdoList.value, document.getElementById("r1").value,
+                "The value attribute should be the first radio input element's value.");
+  assert_true(document.getElementById("r1").checked,
+              "The first radio input element should be checked.");
+}, "Check the RadioNodeList.value on setting to 'on'");
+
 
 </script>

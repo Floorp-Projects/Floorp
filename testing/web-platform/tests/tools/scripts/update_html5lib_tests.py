@@ -63,6 +63,8 @@ def make_tests(script_dir, out_dir, input_file_name, test_data):
     ids_seen = {}
     print input_file_name
     for test in test_data:
+        if "script-off" in test:
+            continue
         is_innerHTML = "document-fragment" in test
         data = test["data"]
         container = test["document-fragment"] if is_innerHTML else None

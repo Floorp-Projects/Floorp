@@ -21,7 +21,6 @@ var nukedInterfaces = [
   "Entity",
   "EntityReference",
   "EventException", // DOM Events
-  "NamedNodeMap",
   "NameList",
   "Notation",
   "TypeInfo",
@@ -39,8 +38,6 @@ function isNukedFromDocument(name) {
 }
 var documentNuked = [
   "createCDATASection",
-  "createAttribute",
-  "createAttributeNS",
   "createEntityReference",
   "inputEncoding",
   "xmlEncoding",
@@ -69,10 +66,6 @@ function isNukedFromElement(name) {
   }, "Historical DOM features must be removed: " + name)
 }
 var elementNuked = [
-  "getAttributeNode",
-  "getAttributeNodeNS",
-  "setAttributeNode",
-  "removeAttributeNode",
   "schemaTypeInfo",
   "setIdAttribute",
   "setIdAttributeNS",

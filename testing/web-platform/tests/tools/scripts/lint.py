@@ -86,12 +86,14 @@ def whitelist_errors(path, errors):
 trailing_whitespace_regexp = re.compile("[ \t\f\v]$")
 tabs_regexp = re.compile("^\t")
 cr_regexp = re.compile("\r$")
-def check_whitespace(path, f):
+w3ctestorg_regexp = re.compile("w3c\-test\.org")
+def check_regexp_line(path, f):
     errors = []
     for i, line in enumerate(f):
         for regexp, error in [(trailing_whitespace_regexp, "TRAILING WHITESPACE"),
                               (tabs_regexp, "INDENT TABS"),
-                              (cr_regexp, "CR AT EOL")]:
+                              (cr_regexp, "CR AT EOL"),
+                              (w3ctestorg_regexp, "W3C-TEST.ORG")]:
             if regexp.search(line):
                 errors.append((error, "%s line %i" % (path, i+1), i+1))
 
@@ -214,7 +216,7 @@ def main():
     return sum(error_count.itervalues())
 
 path_lints = [check_path_length]
-file_lints = [check_whitespace, check_parsed]
+file_lints = [check_regexp_line, check_parsed]
 
 if __name__ == "__main__":
     error_count = main()

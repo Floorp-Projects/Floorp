@@ -37,70 +37,98 @@
     </pre>
 
     <pre id="idl" style="display: none">
-      interface FileList {
-        getter File? item(unsigned long index);
-        readonly attribute unsigned long length;
-      };
+[Constructor,
+ Constructor(sequence<(ArrayBuffer or ArrayBufferView or Blob or DOMString)> blobParts, optional BlobPropertyBag options), Exposed=Window,Worker]
+interface Blob {
 
-      [Constructor,
-       Constructor(sequence<(ArrayBuffer or ArrayBufferView or Blob or DOMString)> blobParts, optional BlobPropertyBag options)]
-      interface Blob {
-        readonly attribute unsigned long long size;
-        readonly attribute DOMString type;
+  readonly attribute unsigned long long size;
+  readonly attribute DOMString type;
+  readonly attribute boolean isClosed;
 
-        //slice Blob into byte-ranged chunks
+  //slice Blob into byte-ranged chunks
 
-        Blob slice(optional long long start,
-                   optional long long end,
-                   optional DOMString contentType);
-        void close();
-      };
+  Blob slice([Clamp] optional long long start,
+             [Clamp] optional long long end,
+             optional DOMString contentType);
+  void close();
 
-      dictionary BlobPropertyBag {
-        DOMString type = "";
-      };
+};
 
-      [Constructor(Blob fileBits, DOMString fileName)]
-      interface File : Blob {
-        readonly attribute DOMString name;
-        readonly attribute Date lastModifiedDate;
-      };
+dictionary BlobPropertyBag {
+  DOMString type = "";
+};
 
-      [Constructor]
-      interface FileReader: EventTarget {
-        // async read methods
-        void readAsArrayBuffer(Blob blob);
-        void readAsText(Blob blob, optional DOMString label);
-        void readAsDataURL(Blob blob);
+[Constructor(sequence<(Blob or DOMString or ArrayBufferView or ArrayBuffer)> fileBits,
+[EnsureUTF16] DOMString fileName, optional FilePropertyBag options), Exposed=Window,Worker]
+interface File : Blob {
 
-        void abort();
+  readonly attribute DOMString name;
+  readonly attribute long long lastModified;
 
-        // states
-        const unsigned short EMPTY = 0;
-        const unsigned short LOADING = 1;
-        const unsigned short DONE = 2;
+};
 
-        readonly attribute unsigned short readyState;
+dictionary FilePropertyBag {
 
-        // File or Blob data
-        readonly attribute (DOMString or ArrayBuffer)? result;
+  DOMString type = "";
+  long long lastModified;
 
-        readonly attribute DOMError? error;
+};
 
-        // event handler attributes
-        attribute EventHandler onloadstart;
-        attribute EventHandler onprogress;
-        attribute EventHandler onload;
-        attribute EventHandler onabort;
-        attribute EventHandler onerror;
-        attribute EventHandler onloadend;
-      };
+[Exposed=Window,Worker] interface FileList {
+  getter File? item(unsigned long index);
+  readonly attribute unsigned long length;
+};
 
-      partial interface URL {
-        static DOMString? createObjectURL(Blob blob);
-        static DOMString? createFor(Blob blob); // static DOMString? createFor()Blob blob);
-        static void revokeObjectURL(DOMString url);
-      };
+[Constructor, Exposed=Window,Worker]
+interface FileReader: EventTarget {
+
+  // async read methods
+  void readAsArrayBuffer(Blob blob);
+  void readAsText(Blob blob, optional DOMString label);
+  void readAsDataURL(Blob blob);
+
+  void abort();
+
+  // states
+  const unsigned short EMPTY = 0;
+  const unsigned short LOADING = 1;
+  const unsigned short DONE = 2;
+
+  readonly attribute unsigned short readyState;
+
+  // File or Blob data
+  readonly attribute (DOMString or ArrayBuffer)? result;
+
+  readonly attribute DOMError? error;
+
+  // event handler attributes
+  attribute EventHandler onloadstart;
+  attribute EventHandler onprogress;
+  attribute EventHandler onload;
+  attribute EventHandler onabort;
+  attribute EventHandler onerror;
+  attribute EventHandler onloadend;
+
+};
+
+[Constructor, Exposed=Worker]
+interface FileReaderSync {
+
+  // Synchronously return strings
+
+  ArrayBuffer readAsArrayBuffer(Blob blob);
+  DOMString readAsText(Blob blob, optional DOMString label);
+  DOMString readAsDataURL(Blob blob);
+};
+
+partial interface URL {
+
+  static DOMString createObjectURL(Blob blob);
+  static DOMString createFor(Blob blob);
+  static void revokeObjectURL(DOMString url);
+
+};
+
     </pre>
 
     <script>
@@ -113,6 +141,7 @@
 
         idl_array.add_objects({
           Blob: ['new Blob(["TEST"])'],
+          File: ['new File(["myFileBits"], "myFileName")'],
           FileReader: ['new FileReader()']
         });
       });

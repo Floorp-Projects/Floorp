@@ -15,7 +15,7 @@ window.onload = function() {
 		return;
 	}
 	if( !location.hostname.match(/[^\.]\.[^\.]+\.[^\.]/) ) {
-		document.getElementsByTagName('p')[0].innerHTML = 'This test should be loaded from a subdomain that allows document.domain to be set to a parent domain (try using a server name that contains at least two or three dots, for example www.w3c-test.org).';
+		document.getElementsByTagName('p')[0].innerHTML = 'This test should be loaded from a subdomain that allows document.domain to be set to a parent domain (try using a server name that contains at least two or three dots, for example www.example.org).';
 		return;
 	}
 	var realhost = location.hostname, newdomain = location.hostname.replace(/^[^.]+\./,'');
