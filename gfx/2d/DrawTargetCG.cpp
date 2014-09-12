@@ -28,7 +28,8 @@ CG_EXTERN void CGContextSetCTM(CGContextRef, CGAffineTransform);
 namespace mozilla {
 namespace gfx {
 
-static CGRect RectToCGRect(Rect r)
+template <typename T>
+static CGRect RectToCGRect(const T& r)
 {
   return CGRectMake(r.x, r.y, r.width, r.height);
 }
@@ -753,6 +754,13 @@ CreateCGPattern(const Pattern &aPattern, CGAffineTransform aUserSpace)
   const SurfacePattern& pat = static_cast<const SurfacePattern&>(aPattern);
   // XXX: is .get correct here?
   CGImageRef image = GetRetainedImageFromSourceSurface(pat.mSurface.get());
+  Matrix patTransform = pat.mMatrix;
+  if (!pat.mSamplingRect.IsEmpty()) {
+    CGImageRef temp = CGImageCreateWithImageInRect(image, RectToCGRect(pat.mSamplingRect));
+    CGImageRelease(image);
+    image = temp;
+    patTransform.PreTranslate(pat.mSamplingRect.x, pat.mSamplingRect.y);
+  }
   CGFloat xStep, yStep;
   switch (pat.mExtendMode) {
     case ExtendMode::CLAMP:
@@ -786,7 +794,7 @@ CreateCGPattern(const Pattern &aPattern, CGAffineTransform aUserSpace)
   CGAffineTransform transform =
       CGAffineTransformConcat(CGAffineTransformConcat(CGAffineTransformMakeScale(1,
                                                                                  -1),
-                                                      GfxMatrixToCGAffineTransform(pat.mMatrix)),
+                                                      GfxMatrixToCGAffineTransform(patTransform)),
                               aUserSpace);
   transform = CGAffineTransformTranslate(transform, 0, -static_cast<float>(CGImageGetHeight(image)));
   return CGPatternCreate(image, bounds, transform, xStep, yStep, kCGPatternTilingConstantSpacing,
@@ -918,8 +926,15 @@ DrawTargetCG::FillRect(const Rect &aRect,
     // matches what cairo does.
     const SurfacePattern& pat = static_cast<const SurfacePattern&>(aPattern);
     CGImageRef image = GetRetainedImageFromSourceSurface(pat.mSurface.get());
+    Matrix transform = pat.mMatrix;
+    if (!pat.mSamplingRect.IsEmpty()) {
+      CGImageRef temp = CGImageCreateWithImageInRect(image, RectToCGRect(pat.mSamplingRect));
+      CGImageRelease(image);
+      image = temp;
+      transform.PreTranslate(pat.mSamplingRect.x, pat.mSamplingRect.y);
+    }
     CGContextClipToRect(cg, RectToCGRect(aRect));
-    CGContextConcatCTM(cg, GfxMatrixToCGAffineTransform(pat.mMatrix));
+    CGContextConcatCTM(cg, GfxMatrixToCGAffineTransform(transform));
     CGContextTranslateCTM(cg, 0, CGImageGetHeight(image));
     CGContextScaleCTM(cg, 1, -1);
 
@@ -1530,6 +1545,7 @@ DrawTargetCG::Mask(const Pattern &aSource,
     } else if (aMask.GetType() == PatternType::SURFACE) {
       const SurfacePattern& pat = static_cast<const SurfacePattern&>(aMask);
       CGImageRef mask = GetRetainedImageFromSourceSurface(pat.mSurface.get());
+      MOZ_ASSERT(pat.mSamplingRect.IsEmpty(), "Sampling rect not supported with masks!");
       Rect rect(0,0, CGImageGetWidth(mask), CGImageGetHeight(mask));
       // XXX: probably we need to do some flipping of the image or something
       CGContextClipToMask(mCg, RectToCGRect(rect), mask);
