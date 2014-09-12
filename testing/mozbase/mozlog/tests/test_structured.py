@@ -56,6 +56,84 @@ class BaseStructuredTest(unittest.TestCase):
         self.assertEquals(set(all_expected.keys()) | specials, set(actual.keys()))
 
 
+class TestStatusHandler(BaseStructuredTest):
+    def setUp(self):
+        super(TestStatusHandler, self).setUp()
+        self.handler = handlers.StatusHandler()
+        self.logger.add_handler(self.handler)
+
+    def assertStatus(self, expected):
+        """Assert every key present in expected matches the current
+        status."""
+        actual = self.handler.evaluate()
+        for k, v in expected.iteritems():
+            self.assertEquals(expected[k], actual[k])
+
+    def test_ok_run(self):
+        self.logger.suite_start([])
+        self.logger.test_start("test1")
+        self.logger.test_status("test1", "sub1", status='PASS')
+        self.logger.info("Info between sub1 and sub2")
+        self.logger.test_status("test1", "sub2", status='PASS')
+        self.logger.test_end("test1", status='OK')
+        self.logger.suite_end()
+        self.assertStatus({
+            "status": "OK",
+            "test_count": 1,
+            "level_counts": { "INFO": 1 },
+        })
+
+    def test_failure_run(self):
+        self.logger.suite_start([])
+        self.logger.test_start("test1")
+        self.logger.test_status("test1", "sub1", status='PASS')
+        self.logger.test_status("test1", "sub2", status='TIMEOUT')
+        self.logger.test_end("test1", status='OK')
+        self.logger.suite_end()
+        self.assertStatus({
+            "status": "FAIL",
+            "test_count": 1,
+            "unexpected": 1,
+            "level_counts": {},
+        })
+
+    def test_error_run(self):
+        self.logger.suite_start([])
+        self.logger.test_start("test1")
+        self.logger.error("ERRR!")
+        self.logger.test_end("test1", status='PASS')
+        self.logger.test_start("test2")
+        self.logger.test_end("test2", status='PASS')
+        self.logger.suite_end()
+        self.assertStatus({
+            "status": "ERROR",
+            "test_count": 2,
+            "level_counts": {'ERROR': 1},
+        })
+
+    def test_error_trumps_failure(self):
+        self.logger.suite_start([])
+        self.logger.test_start("test1")
+        self.logger.critical("ERRR!")
+        self.logger.test_status("test1", "sub1", status='FAIL')
+        self.logger.test_end("test1", status='OK')
+        self.logger.suite_end()
+        self.assertStatus({
+            "status": "ERROR",
+            "test_count": 1,
+            "level_counts": {'CRITICAL': 1},
+        })
+
+    def test_notrun_is_error(self):
+        self.logger.suite_start([])
+        self.logger.suite_end()
+        self.assertStatus({
+            "status": "ERROR",
+            "test_count": 0,
+            "level_counts": {},
+        })
+
+
 class TestStructuredLog(BaseStructuredTest):
     def test_suite_start(self):
         self.logger.suite_start(["test"])
