@@ -82,6 +82,10 @@ public:
   // TODO: Refactor to a cleaner interface between TrackBuffer and MediaSourceReader.
   const nsTArray<nsRefPtr<SourceBufferDecoder>>& Decoders();
 
+#if defined(DEBUG)
+  void Dump(const char* aPath);
+#endif
+
 private:
   ~TrackBuffer();
 

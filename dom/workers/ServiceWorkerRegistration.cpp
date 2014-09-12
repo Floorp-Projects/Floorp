@@ -108,7 +108,7 @@ class UnregisterCallback MOZ_FINAL : public nsIServiceWorkerUnregisterCallback
 public:
   NS_DECL_ISUPPORTS
 
-  UnregisterCallback(Promise* aPromise)
+  explicit UnregisterCallback(Promise* aPromise)
     : mPromise(aPromise)
   {
     MOZ_ASSERT(mPromise);

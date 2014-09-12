@@ -29,7 +29,7 @@
 #include "nsIObserver.h"
 #include "mozilla/Attributes.h"
 
-class nsICertificatePrincipal;
+class nsIX509Cert;
 class nsIInputStream;
 class nsJARManifestItem;
 class nsZipReaderCache;
@@ -106,7 +106,7 @@ class nsJAR MOZ_FINAL : public nsIZipReader
     nsRefPtr<nsZipArchive>   mZip;            // The underlying zip archive
     ManifestDataHashtable    mManifestData;   // Stores metadata for each entry
     bool                     mParsedManifest; // True if manifest has been parsed
-    nsCOMPtr<nsICertificatePrincipal> mPrincipal; // The entity which signed this file
+    nsCOMPtr<nsIX509Cert>    mSigningCert;    // The entity which signed this file
     int16_t                  mGlobalStatus;   // Global signature verification status
     PRIntervalTime           mReleaseTime;    // used by nsZipReaderCache for flushing entries
     nsZipReaderCache*        mCache;          // if cached, this points to the cache it's contained in

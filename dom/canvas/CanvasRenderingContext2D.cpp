@@ -897,10 +897,13 @@ CanvasRenderingContext2D::CheckSizeForSkiaGL(IntSize size) {
   // Cache the number of pixels on the primary screen
   static int32_t gScreenPixels = -1;
   if (gScreenPixels < 0) {
-    // Default to historical mobile screen size of 980x480.  In addition,
-    // allow skia use up to this size even if the screen is smaller.  A lot
-    // content expects this size to work well.
-    gScreenPixels = 980 * 480;
+    // Default to historical mobile screen size of 980x480, like FishIEtank.
+    // In addition, allow skia use up to this size even if the screen is smaller.
+    // A lot content expects this size to work well.
+    // See Bug 999841
+    if (gfxPlatform::GetPlatform()->HasEnoughTotalSystemMemoryForSkiaGL()) {
+      gScreenPixels = 980 * 480;
+    }
 
     nsCOMPtr<nsIScreenManager> screenManager =
       do_GetService("@mozilla.org/gfx/screenmanager;1");
@@ -916,22 +919,8 @@ CanvasRenderingContext2D::CheckSizeForSkiaGL(IntSize size) {
     }
   }
 
-  // On high DPI devices the screen pixels may be scaled up.  Make
-  // sure to apply that scaling here as well if we are hooked up
-  // to a widget.
-  static double gDefaultScale = 0.0;
-  if (gDefaultScale < 1.0) {
-    nsIPresShell* ps = GetPresShell();
-    if (ps) {
-      nsIFrame* frame = ps->GetRootFrame();
-      if (frame) {
-        nsIWidget* widget = frame->GetNearestWidget();
-        if (widget) {
-          gDefaultScale = widget->GetDefaultScale().scale;
-        }
-      }
-    }
-  }
+  // Just always use a scale of 1.0. It can be changed if a lot of contents need it.
+  static double gDefaultScale = 1.0;
 
   double scale = gDefaultScale > 0 ? gDefaultScale : 1.0;
   int32_t threshold = ceil(scale * scale * gScreenPixels);

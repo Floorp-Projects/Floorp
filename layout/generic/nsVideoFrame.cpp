@@ -174,7 +174,7 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
                          nsDisplayItem* aItem,
                          const ContainerLayerParameters& aContainerParameters)
 {
-  nsRect area = GetContentRect() - GetPosition() + aItem->ToReferenceFrame();
+  nsRect area = GetContentRectRelativeToSelf() + aItem->ToReferenceFrame();
   HTMLVideoElement* element = static_cast<HTMLVideoElement*>(GetContent());
   nsIntSize videoSize;
   if (NS_FAILED(element->GetVideoSize(&videoSize)) || area.IsEmpty()) {
@@ -393,7 +393,7 @@ public:
   {
     *aSnap = true;
     nsIFrame* f = Frame();
-    return f->GetContentRect() - f->GetPosition() + ToReferenceFrame();
+    return f->GetContentRectRelativeToSelf() + ToReferenceFrame();
   }
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,

@@ -106,6 +106,12 @@ bool
 js::DecompressString(const unsigned char *inp, size_t inplen, unsigned char *out, size_t outlen)
 {
     JS_ASSERT(inplen <= UINT32_MAX);
+
+    // Mark the memory we pass to zlib as initialized for MSan.
+#ifdef MOZ_MSAN
+    __msan_unpoison(out, outlen);
+#endif
+
     z_stream zs;
     zs.zalloc = zlib_alloc;
     zs.zfree = zlib_free;

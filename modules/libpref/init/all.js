@@ -107,6 +107,9 @@ pref("offline-apps.quota.warn",        51200);
 // cache compression turned off for now - see bug #715198
 pref("browser.cache.compression_level", 0);
 
+// Whether or not MozAbortablePromise is enabled.
+pref("dom.abortablepromise.enabled", false);
+
 // Whether or not testing features are enabled.
 pref("dom.quotaManager.testing", false);
 

@@ -325,26 +325,33 @@ Promise::WrapObject(JSContext* aCx)
 already_AddRefed<Promise>
 Promise::Create(nsIGlobalObject* aGlobal, ErrorResult& aRv)
 {
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(aGlobal)) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+  nsRefPtr<Promise> p = new Promise(aGlobal);
+  p->CreateWrapper(aRv);
+  if (aRv.Failed()) {
     return nullptr;
+  }
+  return p.forget();
+}
+
+void
+Promise::CreateWrapper(ErrorResult& aRv)
+{
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(mGlobal)) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
   }
   JSContext* cx = jsapi.cx();
 
-  nsRefPtr<Promise> p = new Promise(aGlobal);
-
   JS::Rooted<JS::Value> ignored(cx);
-  if (!WrapNewBindingObject(cx, p, &ignored)) {
+  if (!WrapNewBindingObject(cx, this, &ignored)) {
     JS_ClearPendingException(cx);
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return nullptr;
+    return;
   }
 
   // Need the .get() bit here to get template deduction working right
-  dom::PreserveWrapper(p.get());
-
-  return p.forget();
+  dom::PreserveWrapper(this);
 }
 
 void
@@ -483,8 +490,6 @@ Promise::CreateThenableFunction(JSContext* aCx, Promise* aPromise, uint32_t aTas
 Promise::Constructor(const GlobalObject& aGlobal,
                      PromiseInit& aInit, ErrorResult& aRv)
 {
-  JSContext* cx = aGlobal.Context();
-
   nsCOMPtr<nsIGlobalObject> global;
   global = do_QueryInterface(aGlobal.GetAsSupports());
   if (!global) {
@@ -497,20 +502,34 @@ Promise::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  JS::Rooted<JSObject*> resolveFunc(cx,
-                                    CreateFunction(cx, aGlobal.Get(), promise,
-                                                   PromiseCallback::Resolve));
-  if (!resolveFunc) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+  promise->CallInitFunction(aGlobal, aInit, aRv);
+  if (aRv.Failed()) {
     return nullptr;
   }
 
+  return promise.forget();
+}
+
+void
+Promise::CallInitFunction(const GlobalObject& aGlobal,
+                          PromiseInit& aInit, ErrorResult& aRv)
+{
+  JSContext* cx = aGlobal.Context();
+
+  JS::Rooted<JSObject*> resolveFunc(cx,
+                                    CreateFunction(cx, aGlobal.Get(), this,
+                                                   PromiseCallback::Resolve));
+  if (!resolveFunc) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
   JS::Rooted<JSObject*> rejectFunc(cx,
-                                   CreateFunction(cx, aGlobal.Get(), promise,
+                                   CreateFunction(cx, aGlobal.Get(), this,
                                                   PromiseCallback::Reject));
   if (!rejectFunc) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
+    return;
   }
 
   aInit.Call(resolveFunc, rejectFunc, aRv, CallbackObject::eRethrowExceptions);
@@ -524,13 +543,11 @@ Promise::Constructor(const GlobalObject& aGlobal,
     // function Promise(arg) { try { arg(a, b); } catch (e) { this.reject(e); }}
     if (!JS_WrapValue(cx, &value)) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
+      return;
     }
 
-    promise->MaybeRejectInternal(cx, value);
+    MaybeRejectInternal(cx, value);
   }
-
-  return promise.forget();
 }
 
 /* static */ already_AddRefed<Promise>

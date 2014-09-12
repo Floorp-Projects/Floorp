@@ -507,6 +507,20 @@ MediaSource::InitializationEvent()
   }
 }
 
+#if defined(DEBUG)
+void
+MediaSource::Dump(const char* aPath)
+{
+  char buf[255];
+  PR_snprintf(buf, sizeof(buf), "%s/mediasource-%p", aPath, this);
+  PR_MkDir(buf, 0700);
+
+  if (mSourceBuffers) {
+    mSourceBuffers->Dump(buf);
+  }
+}
+#endif
+
 nsPIDOMWindow*
 MediaSource::GetParentObject() const
 {
