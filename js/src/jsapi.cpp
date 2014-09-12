@@ -6225,9 +6225,11 @@ JS_SetGlobalJitCompilerOption(JSRuntime *rt, JSJitCompilerOption opt, uint32_t v
       case JSJITCOMPILER_BASELINE_ENABLE:
         if (value == 1) {
             JS::RuntimeOptionsRef(rt).setBaseline(true);
+            ReleaseAllJITCode(rt->defaultFreeOp());
             JitSpew(js::jit::JitSpew_BaselineScripts, "Enable baseline");
         } else if (value == 0) {
             JS::RuntimeOptionsRef(rt).setBaseline(false);
+            ReleaseAllJITCode(rt->defaultFreeOp());
             JitSpew(js::jit::JitSpew_BaselineScripts, "Disable baseline");
         }
         break;
