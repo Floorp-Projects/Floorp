@@ -226,7 +226,7 @@ public:
     bool AddCounterResetsAndIncrements(nsIFrame *aFrame);
 
     // Gets the appropriate counter list, creating it if necessary.
-    // Returns null only on out-of-memory.
+    // Guaranteed to return non-null. (Uses an infallible hashtable API.)
     nsCounterList* CounterListFor(const nsSubstring& aCounterName);
 
     // Clean up data in any dirty counter lists.
