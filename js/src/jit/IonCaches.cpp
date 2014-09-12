@@ -416,11 +416,11 @@ IonCache::linkAndAttachStub(JSContext *cx, MacroAssembler &masm, StubAttacher &a
     }
 
     if (pc_) {
-        JitSpew(JitSpew_InlineCaches, "Cache %p(%s:%d/%d) generated %s %s stub at %p",
+        JitSpew(JitSpew_IonIC, "Cache %p(%s:%d/%d) generated %s %s stub at %p",
                 this, script_->filename(), script_->lineno(), script_->pcToOffset(pc_),
                 attachKind, CacheName(kind()), code->raw());
     } else {
-        JitSpew(JitSpew_InlineCaches, "Cache %p generated %s %s stub at %p",
+        JitSpew(JitSpew_IonIC, "Cache %p generated %s %s stub at %p",
                 this, attachKind, CacheName(kind()), code->raw());
     }
 
@@ -1743,7 +1743,7 @@ GetPropertyIC::update(JSContext *cx, size_t cacheIndex,
         // 2) There's no need to dynamically monitor the return type. This would
         //    be complicated since (due to GVN) there can be multiple pc's
         //    associated with a single idempotent cache.
-        JitSpew(JitSpew_InlineCaches, "Invalidating from idempotent cache %s:%d",
+        JitSpew(JitSpew_IonIC, "Invalidating from idempotent cache %s:%d",
                 outerScript->filename(), outerScript->lineno());
 
         outerScript->setInvalidatedIdempotentCache();
@@ -3032,7 +3032,7 @@ GetElementIC::attachGetProp(JSContext *cx, HandleScript outerScript, IonScript *
                       output().hasValue());
 
     if (!cacheable) {
-        JitSpew(JitSpew_InlineCaches, "GETELEM uncacheable property");
+        JitSpew(JitSpew_IonIC, "GETELEM uncacheable property");
         return true;
     }
 
@@ -3512,7 +3512,7 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
     if (!attachedStub) {
         cache.incFailedUpdates();
         if (cache.shouldDisable()) {
-            JitSpew(JitSpew_InlineCaches, "Disable inline cache");
+            JitSpew(JitSpew_IonIC, "Disable inline cache");
             cache.disable();
         }
     } else {
@@ -4178,7 +4178,7 @@ IsCacheableNonGlobalScopeChain(JSObject *scopeChain, JSObject *holder)
 {
     while (true) {
         if (!IsCacheableNonGlobalScope(scopeChain)) {
-            JitSpew(JitSpew_InlineCaches, "Non-cacheable object on scope chain");
+            JitSpew(JitSpew_IonIC, "Non-cacheable object on scope chain");
             return false;
         }
 
@@ -4187,7 +4187,7 @@ IsCacheableNonGlobalScopeChain(JSObject *scopeChain, JSObject *holder)
 
         scopeChain = &scopeChain->as<ScopeObject>().enclosingScope();
         if (!scopeChain) {
-            JitSpew(JitSpew_InlineCaches, "Scope chain indirect hit");
+            JitSpew(JitSpew_IonIC, "Scope chain indirect hit");
             return false;
         }
     }
@@ -4221,7 +4221,7 @@ BindNameIC::update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain)
             if (!cache.attachNonGlobal(cx, outerScript, ion, scopeChain, holder))
                 return nullptr;
         } else {
-            JitSpew(JitSpew_InlineCaches, "BINDNAME uncacheable scope chain");
+            JitSpew(JitSpew_IonIC, "BINDNAME uncacheable scope chain");
         }
     }
 

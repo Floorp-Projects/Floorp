@@ -6216,10 +6216,10 @@ JS_SetGlobalJitCompilerOption(JSRuntime *rt, JSJitCompilerOption opt, uint32_t v
       case JSJITCOMPILER_ION_ENABLE:
         if (value == 1) {
             JS::RuntimeOptionsRef(rt).setIon(true);
-            JitSpew(js::jit::JitSpew_Scripts, "Enable ion");
+            JitSpew(js::jit::JitSpew_IonScripts, "Enable ion");
         } else if (value == 0) {
             JS::RuntimeOptionsRef(rt).setIon(false);
-            JitSpew(js::jit::JitSpew_Scripts, "Disable ion");
+            JitSpew(js::jit::JitSpew_IonScripts, "Disable ion");
         }
         break;
       case JSJITCOMPILER_BASELINE_ENABLE:
@@ -6234,19 +6234,19 @@ JS_SetGlobalJitCompilerOption(JSRuntime *rt, JSJitCompilerOption opt, uint32_t v
       case JSJITCOMPILER_OFFTHREAD_COMPILATION_ENABLE:
         if (value == 1) {
             rt->setOffthreadIonCompilationEnabled(true);
-            JitSpew(js::jit::JitSpew_Scripts, "Enable offthread compilation");
+            JitSpew(js::jit::JitSpew_IonScripts, "Enable offthread compilation");
         } else if (value == 0) {
             rt->setOffthreadIonCompilationEnabled(false);
-            JitSpew(js::jit::JitSpew_Scripts, "Disable offthread compilation");
+            JitSpew(js::jit::JitSpew_IonScripts, "Disable offthread compilation");
         }
         break;
       case JSJITCOMPILER_SIGNALS_ENABLE:
         if (value == 1) {
             rt->setCanUseSignalHandlers(true);
-            JitSpew(js::jit::JitSpew_Scripts, "Enable signals");
+            JitSpew(js::jit::JitSpew_IonScripts, "Enable signals");
         } else if (value == 0) {
             rt->setCanUseSignalHandlers(false);
-            JitSpew(js::jit::JitSpew_Scripts, "Disable signals");
+            JitSpew(js::jit::JitSpew_IonScripts, "Disable signals");
         }
         break;
       default:
