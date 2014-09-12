@@ -5,13 +5,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
+    'AbortablePromise.h',
     'Promise.h',
     'PromiseDebugging.h',
+    'PromiseNativeAbortCallback.h',
     'PromiseNativeHandler.h',
     'PromiseWorkerProxy.h',
 ]
 
 UNIFIED_SOURCES += [
+    'AbortablePromise.cpp',
     'Promise.cpp',
     'PromiseCallback.cpp',
     'PromiseDebugging.cpp'

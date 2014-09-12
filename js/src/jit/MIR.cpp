@@ -3667,7 +3667,8 @@ PropertyReadNeedsTypeBarrier(types::CompilerConstraintList *constraints,
 }
 
 BarrierKind
-jit::PropertyReadNeedsTypeBarrier(types::CompilerConstraintList *constraints,
+jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
+                                  types::CompilerConstraintList *constraints,
                                   types::TypeObjectKey *object, PropertyName *name,
                                   types::TemporaryTypeSet *observed, bool updateObserved)
 {
@@ -3687,6 +3688,8 @@ jit::PropertyReadNeedsTypeBarrier(types::CompilerConstraintList *constraints,
                 break;
 
             types::TypeObjectKey *typeObj = types::TypeObjectKey::get(obj);
+            if (propertycx)
+                typeObj->ensureTrackedProperty(propertycx, NameToId(name));
 
             if (!typeObj->unknownProperties()) {
                 types::HeapTypeSetKey property = typeObj->property(NameToId(name));
@@ -3712,7 +3715,8 @@ jit::PropertyReadNeedsTypeBarrier(types::CompilerConstraintList *constraints,
 }
 
 BarrierKind
-jit::PropertyReadNeedsTypeBarrier(types::CompilerConstraintList *constraints,
+jit::PropertyReadNeedsTypeBarrier(JSContext *propertycx,
+                                  types::CompilerConstraintList *constraints,
                                   MDefinition *obj, PropertyName *name,
                                   types::TemporaryTypeSet *observed)
 {
@@ -3729,7 +3733,7 @@ jit::PropertyReadNeedsTypeBarrier(types::CompilerConstraintList *constraints,
     for (size_t i = 0; i < types->getObjectCount(); i++) {
         types::TypeObjectKey *object = types->getObject(i);
         if (object) {
-            BarrierKind kind = PropertyReadNeedsTypeBarrier(constraints, object, name,
+            BarrierKind kind = PropertyReadNeedsTypeBarrier(propertycx, constraints, object, name,
                                                             observed, updateObserved);
             if (kind == BarrierKind::TypeSet)
                 return BarrierKind::TypeSet;

@@ -622,21 +622,30 @@ WinUtils::GetMessage(LPMSG aMsg, HWND aWnd, UINT aFirstMessage,
 void
 WinUtils::WaitForMessage()
 {
-  DWORD result = ::MsgWaitForMultipleObjectsEx(0, NULL, INFINITE, QS_ALLINPUT,
-                                               MWMO_INPUTAVAILABLE);
-  NS_WARN_IF_FALSE(result != WAIT_FAILED, "Wait failed");
+  while (true) {
+    DWORD result = ::MsgWaitForMultipleObjectsEx(0, NULL, INFINITE,
+                                                 MOZ_QS_ALLEVENT,
+                                                 MWMO_INPUTAVAILABLE);
+    NS_WARN_IF_FALSE(result != WAIT_FAILED, "Wait failed");
 
-  // This idiom is taken from the Chromium ipc code, see
-  // ipc/chromium/src/base/message+puimp_win.cpp:270.
-  // The intent is to avoid a busy wait when MsgWaitForMultipleObjectsEx
-  // returns quickly but PeekMessage would not return a message.
-  if (result == WAIT_OBJECT_0) {
+    // Sent messages (via SendMessage and friends) are processed differently
+    // than queued messages (via PostMessage); the destination window procedure
+    // of the sent message is called during (Get|Peek)Message. Since PeekMessage
+    // does not tell us whether it processed any sent messages, we need to query
+    // this ahead of time.
+    bool haveSentMessagesPending =
+      (HIWORD(::GetQueueStatus(QS_SENDMESSAGE)) & QS_SENDMESSAGE) != 0;
+
     MSG msg = {0};
-    DWORD queue_status = ::GetQueueStatus(QS_MOUSE);
-    if (HIWORD(queue_status) & QS_MOUSE &&
-        !PeekMessage(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_NOREMOVE)) {
-      ::WaitMessage();
+    if (haveSentMessagesPending ||
+        ::PeekMessageW(&msg, nullptr, 0, 0, PM_NOREMOVE)) {
+      break;
     }
+    // The message is intended for another thread that has been synchronized
+    // with our input queue; yield to give other threads an opportunity to
+    // process the message. This should prevent busy waiting if resumed due
+    // to another thread's message.
+    ::SwitchToThread();
   }
 }
 

@@ -148,7 +148,7 @@ protected:
 
 struct nsSVGFrameReferenceFromProperty
 {
-  nsSVGFrameReferenceFromProperty(nsIFrame* aFrame)
+  explicit nsSVGFrameReferenceFromProperty(nsIFrame* aFrame)
     : mFrame(aFrame)
     , mFramePresShell(aFrame->PresContext()->PresShell())
   {}
