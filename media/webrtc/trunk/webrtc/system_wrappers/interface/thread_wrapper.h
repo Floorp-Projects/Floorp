@@ -57,6 +57,11 @@ class ThreadWrapper {
                                      ThreadPriority prio = kNormalPriority,
                                      const char* thread_name = 0);
 
+  static ThreadWrapper* CreateUIThread(ThreadRunFunction func,
+                                       ThreadObj obj,
+                                       ThreadPriority prio = kNormalPriority,
+                                       const char* thread_name = 0);
+
   // Get the current thread's kernel thread ID.
   static uint32_t GetThreadId();
 
@@ -85,6 +90,10 @@ class ThreadWrapper {
   // Multiple tries to Stop are allowed (e.g. to wait longer than 2 seconds).
   // It's ok to call Stop() even if the spawned thread has been reclaimed.
   virtual bool Stop() = 0;
+
+  // Request a timed callback for ThreadRunFunction. Currently only
+  // implemented for a specific type of thread on Windows.
+  virtual bool RequestCallbackTimer(unsigned int milliseconds);
 };
 
 }  // namespace webrtc

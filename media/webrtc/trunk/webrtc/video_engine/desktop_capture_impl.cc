@@ -475,7 +475,11 @@ DesktopCaptureImpl::DesktopCaptureImpl(const int32_t id)
                          Clock::GetRealTimeClock()->CurrentNtpInMilliseconds() -
                          TickTime::MillisecondTimestamp()),
   time_event_(*EventWrapper::Create()),
+#if defined(_WIN32)
+  capturer_thread_(*ThreadWrapper::CreateUIThread(Run, this, kHighPriority, "ScreenCaptureThread")) {
+#else
   capturer_thread_(*ThreadWrapper::CreateThread(Run, this, kHighPriority, "ScreenCaptureThread")) {
+#endif
   _requestedCapability.width = kDefaultWidth;
   _requestedCapability.height = kDefaultHeight;
   _requestedCapability.maxFPS = 30;
@@ -758,6 +762,12 @@ int32_t DesktopCaptureImpl::StartCapture(const VideoCaptureCapability& capabilit
   desktop_capturer_cursor_composer_->Start(this);
   unsigned int t_id =0;
   capturer_thread_.Start(t_id);
+
+#if defined(_WIN32)
+  uint32_t maxFPSNeeded = 1000/_requestedCapability.maxFPS;
+  capturer_thread_.RequestCallbackTimer(maxFPSNeeded);
+#endif
+
   return 0;
 }
 
@@ -797,8 +807,13 @@ void DesktopCaptureImpl::process() {
   DesktopRect desktop_rect;
   DesktopRegion desktop_region;
 
+#if !defined(_WIN32)
   TickTime startProcessTime = TickTime::Now();
+#endif
+
   desktop_capturer_cursor_composer_->Capture(DesktopRegion());
+
+#if !defined(_WIN32)
   const uint32_t processTime =
       (uint32_t)(TickTime::Now() - startProcessTime).Milliseconds();
   // Use at most x% CPU or limit framerate
@@ -806,6 +821,7 @@ void DesktopCaptureImpl::process() {
   const float sleepTimeFactor = (100.0f / kMaxDesktopCaptureCpuUsage) - 1.0f;
   const uint32_t sleepTime = sleepTimeFactor * processTime;
   time_event_.Wait(std::max<uint32_t>(maxFPSNeeded, sleepTime));
+#endif
 }
 
 void DesktopCaptureImpl::OnCursorShapeChanged(MouseCursorShape* cursor_shape) {
