@@ -48,7 +48,7 @@ public class OverlayActionService extends Service {
     private static final String LOGTAG = "GeckoOverlayService";
 
     // Map used for selecting the appropriate helper object when handling a share.
-    private final Map<ShareMethod.Type, ShareMethod> shareTypes = new EnumMap<>(ShareMethod.Type.class);
+    final Map<ShareMethod.Type, ShareMethod> shareTypes = new EnumMap<>(ShareMethod.Type.class);
 
     // Map relating Strings representing share types to the corresponding ShareMethods.
     // Share methods are initialised (and shown in the UI) in the order they are given here.
@@ -88,12 +88,17 @@ public class OverlayActionService extends Service {
     /**
      * Reinitialise all ShareMethods, causing them to broadcast any UI update events necessary.
      */
-    private void initShareMethods(Context context) {
-        shareTypes.clear();
+    private void initShareMethods(final Context context) {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                shareTypes.clear();
 
-        shareTypes.put(ShareMethod.Type.ADD_BOOKMARK, new AddBookmark(context));
-        shareTypes.put(ShareMethod.Type.ADD_TO_READING_LIST, new AddToReadingList(context));
-        shareTypes.put(ShareMethod.Type.SEND_TAB, new SendTab(context));
+                shareTypes.put(ShareMethod.Type.ADD_BOOKMARK, new AddBookmark(context));
+                shareTypes.put(ShareMethod.Type.ADD_TO_READING_LIST, new AddToReadingList(context));
+                shareTypes.put(ShareMethod.Type.SEND_TAB, new SendTab(context));
+            }
+        });
     }
 
     public void handleShare(final Intent intent) {
