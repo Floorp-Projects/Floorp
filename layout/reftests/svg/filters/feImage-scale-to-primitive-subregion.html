@@ -1,0 +1,44 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<title>feImage Rendering Should Scale To Its Primitive Subregion</title>
+<!--
+  Test for https://bugzilla.mozilla.org/show_bug.cgi?id=1065606
+
+  This test verifies that an feImage renders as large as its primitive subregion
+  before being clipped by its filter region.
+
+  In this case, the primitive subregion is 600x600. The filter region is equal
+  to the bounding box of the filtered element (100% x 30px).
+
+  Thus, the 1x1 green pixel feImage rendering should scale up to the 600x600
+  primitive subregion and then be clipped by the 100% x 30px filter region.
+  Assuming the browser window is more than 600px wide, the final rendering
+  should be a 600x30 green rectangle.
+-->
+<head>
+  <style>
+    .filtered {
+      filter: url(#f);
+      height: 30px;
+      background: red;
+    }
+  </style>
+</head>
+<body>
+  <p>You should see a long horizontal green rectangle.</p>
+  <div class="filtered"></div>
+  <svg>
+    <defs>
+      <filter id="f" x="0" y="0" width="1" height="1">
+        <!-- Data URI represents a 1x1 green pixel. -->
+        <feImage width="600" height="600"
+                 xlink:href="data:image/gif;base64,R0lGODlhAQABAIAAAAD/AAAAACwAAAAAAQABAAACAkQBADs="/>
+      </filter>
+    </defs>
+  </svg>
+</body>
+</html>
