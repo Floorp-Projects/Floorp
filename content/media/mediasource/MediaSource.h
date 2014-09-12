@@ -105,10 +105,6 @@ public:
 #endif
 
 private:
-  // MediaSourceDecoder uses DurationChange to set the duration
-  // without hitting the checks in SetDuration.
-  friend class mozilla::MediaSourceDecoder;
-
   ~MediaSource();
 
   explicit MediaSource(nsPIDOMWindow* aWindow);

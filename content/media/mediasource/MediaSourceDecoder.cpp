@@ -76,7 +76,6 @@ MediaSourceDecoder::GetSeekable(dom::TimeRanges* aSeekable)
   if (!mMediaSource) {
     return NS_ERROR_FAILURE;
   }
-
   double duration = mMediaSource->Duration();
   if (IsNaN(duration)) {
     // Return empty range.
@@ -170,7 +169,7 @@ MediaSourceDecoder::SetMediaSourceDuration(double aDuration)
     return;
   }
   ErrorResult dummy;
-  mMediaSource->DurationChange(aDuration, dummy);
+  mMediaSource->SetDuration(aDuration, dummy);
 }
 
 void
