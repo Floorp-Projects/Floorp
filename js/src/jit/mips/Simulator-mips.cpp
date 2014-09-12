@@ -774,21 +774,25 @@ MipsDebugger::printAllRegs()
 void
 MipsDebugger::printAllRegsIncludingFPU()
 {
-#define FPU_REG_INFO(n) FloatRegisters::GetName(n), FloatRegisters::GetName(n+1), \
-        getFPURegisterValueInt(n+1), \
-        getFPURegisterValueInt(n), \
-                        getFPURegisterValueDouble(n)
-
     printAllRegs();
 
     printf("\n\n");
     // f0, f1, f2, ... f31.
-    for (uint32_t i = 0; i < FloatRegisters::Total; i += 2) {
-        printf("%3s,%3s: 0x%08x%08x %16.4e\n", FPU_REG_INFO(i));
+    for (uint32_t i = 0; i < FloatRegisters::TotalSingle; i++) {
+        if (i & 0x1) {
+            printf("%3s: 0x%08x\tflt: %-8.4g\n",
+                   FloatRegisters::GetName(i),
+                   getFPURegisterValueInt(i),
+                   getFPURegisterValueFloat(i));
+        } else {
+            printf("%3s: 0x%08x\tflt: %-8.4g\tdbl: %-16.4g\n",
+                   FloatRegisters::GetName(i),
+                   getFPURegisterValueInt(i),
+                   getFPURegisterValueFloat(i),
+                   getFPURegisterValueDouble(i));
+        }
     }
 
-#undef REG_INFO
-#undef FPU_REG_INFO
 }
 
 static char *
@@ -928,12 +932,23 @@ MipsDebugger::debug()
                         printAllRegsIncludingFPU();
                     } else {
                         Register reg = Register::FromName(arg1);
-                        FloatRegister fReg(FloatRegister::FromName(arg1));
+                        FloatRegisters::Code fCode = FloatRegister::FromName(arg1);
                         if (reg != InvalidReg) {
                             value = getRegisterValue(reg.code());
                             printf("%s: 0x%08x %d \n", arg1, value, value);
-                        } else if (fReg.code() != FloatRegisters::Invalid) {
-                            MOZ_CRASH("NYI");
+                        } else if (fCode != FloatRegisters::Invalid) {
+                            if (fCode & 0x1) {
+                                printf("%3s: 0x%08x\tflt: %-8.4g\n",
+                                       FloatRegisters::GetName(fCode),
+                                       getFPURegisterValueInt(fCode),
+                                       getFPURegisterValueFloat(fCode));
+                            } else {
+                                printf("%3s: 0x%08x\tflt: %-8.4g\tdbl: %-16.4g\n",
+                                       FloatRegisters::GetName(fCode),
+                                       getFPURegisterValueInt(fCode),
+                                       getFPURegisterValueFloat(fCode),
+                                       getFPURegisterValueDouble(fCode));
+                            }
                         } else {
                             printf("%s unrecognized\n", arg1);
                         }
