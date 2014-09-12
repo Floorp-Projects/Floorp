@@ -173,7 +173,7 @@ public:
 protected:
   virtual ~nsImageFrame();
 
-  void EnsureIntrinsicSizeAndRatio(nsPresContext* aPresContext);
+  void EnsureIntrinsicSizeAndRatio();
 
   virtual mozilla::LogicalSize
   ComputeSize(nsRenderingContext *aRenderingContext,
