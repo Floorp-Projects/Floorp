@@ -68,6 +68,12 @@ loop.shared.models = (function(l10n) {
         throw new Error("missing required sdk");
       }
       this.sdk = options.sdk;
+
+      // Set loop.debug.sdk to true in the browser, or standalone:
+      // localStorage.setItem("debug.sdk", true);
+      if (loop.shared.utils.getBoolPreference("debug.sdk")) {
+        this.sdk.setLogLevel(this.sdk.DEBUG);
+      }
     },
 
     /**

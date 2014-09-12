@@ -29,7 +29,25 @@ loop.shared.utils = (function() {
     return platform;
   }
 
+  /**
+   * Used for getting a boolean preference. It will either use the browser preferences
+   * (if navigator.mozLoop is defined) or try to get them from localStorage.
+   *
+   * @param {String} prefName The name of the preference. Note that mozLoop adds
+   *                          'loop.' to the start of the string.
+   *
+   * @return The value of the preference, or false if not available.
+   */
+  function getBoolPreference(prefName) {
+    if (navigator.mozLoop) {
+      return !!navigator.mozLoop.getLoopBoolPref(prefName);
+    }
+
+    return !!localStorage.getItem(prefName);
+  }
+
   return {
-    getTargetPlatform: getTargetPlatform
+    getTargetPlatform: getTargetPlatform,
+    getBoolPreference: getBoolPreference
   };
 })();
