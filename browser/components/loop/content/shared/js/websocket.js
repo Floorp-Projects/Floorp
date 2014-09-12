@@ -36,11 +36,10 @@ loop.CallConnectionWebSocket = (function() {
       throw new Error("No websocketToken in options");
     }
 
-    // Save the debug pref now, to avoid getting it each time.
-    if (navigator.mozLoop) {
-      this._debugWebSocket =
-        navigator.mozLoop.getLoopBoolPref("debug.websocket");
-    }
+    // Set loop.debug.sdk to true in the browser, or standalone:
+    // localStorage.setItem("debug.websocket", true);
+    this._debugWebSocket =
+      loop.shared.utils.getBoolPreference("debug.websocket");
 
     _.extend(this, Backbone.Events);
   };
