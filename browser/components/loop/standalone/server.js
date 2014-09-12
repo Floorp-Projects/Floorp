@@ -15,8 +15,7 @@ app.get('/content/config.js', function (req, res) {
   res.send(
     "var loop = loop || {};" +
     "loop.config = loop.config || {};" +
-    "loop.config.serverUrl = 'http://localhost:" + loopServerPort + "';" +
-    "loop.config.pendingCallTimeout = 20000;"
+    "loop.config.serverUrl = 'http://localhost:" + loopServerPort + "';"
   );
 
 });
