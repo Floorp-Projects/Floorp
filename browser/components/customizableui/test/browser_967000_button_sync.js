@@ -30,11 +30,16 @@ function openAboutAccountsFromMenuPanel(entryPoint) {
   ok(syncButton, "The Sync button was added to the Panel Menu");
 
   let deferred = Promise.defer();
-  let handler = () => {
-    gBrowser.selectedTab.removeEventListener("load", handler, true);
+  let handler = (e) => {
+    if (e.originalTarget != gBrowser.selectedTab.linkedBrowser.contentDocument ||
+        e.target.location.href == "about:blank") {
+      info("Skipping spurious 'load' event for " + e.target.location.href);
+      return;
+    }
+    gBrowser.selectedTab.linkedBrowser.removeEventListener("load", handler, true);
     deferred.resolve();
   }
-  gBrowser.selectedTab.addEventListener("load", handler, true);
+  gBrowser.selectedTab.linkedBrowser.addEventListener("load", handler, true);
 
   syncButton.click();
   yield deferred.promise;
