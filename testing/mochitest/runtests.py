@@ -1716,12 +1716,6 @@ class Mochitest(MochitestUtilsMixin):
     self.leak_report_file = os.path.join(options.profilePath, "runtests_leaks.log")
 
     self.browserEnv = self.buildBrowserEnv(options, debuggerInfo is not None)
-
-    # If there are any Mulet-specific tests doing remote network access,
-    # we will not be aware since we are explicitely allowing this, as for B2G
-    if mozinfo.info.get('buildapp') == 'mulet' and 'MOZ_DISABLE_NONLOCAL_CONNECTIONS' in self.browserEnv:
-      del self.browserEnv['MOZ_DISABLE_NONLOCAL_CONNECTIONS']
-
     if self.browserEnv is None:
       return 1
 
