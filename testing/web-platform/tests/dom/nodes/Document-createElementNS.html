@@ -23,6 +23,12 @@ test(function() {
     "f<oo"
   ],
   invalidNSQNameCombinations = [
+    [undefined, ":foo"],
+    [undefined, "foo:"],
+    [undefined, "foo:foo"],
+    [null, ":foo"],
+    [null, "foo:"],
+    [null, "foo:foo"],
     ["", ":foo"],
     ["", "foo:"],
     ["", "foo:foo"],
@@ -54,9 +60,9 @@ test(function() {
   assert_equals(element.localName, "span");
   assert_equals(element.tagName, "SPAN");
   assert_true(element instanceof Node, "Should be a Node");
-  assert_true(element instanceof Element, "Should be a Element");
-  assert_true(element instanceof HTMLElement, "Should be a HTMLElement");
-  assert_true(element instanceof HTMLSpanElement, "Should be a HTMLSpanElement");
+  assert_true(element instanceof Element, "Should be an Element");
+  assert_true(element instanceof HTMLElement, "Should be an HTMLElement");
+  assert_true(element instanceof HTMLSpanElement, "Should be an HTMLSpanElement");
 }, "Lower-case HTML element without a prefix");
 
 test(function() {
@@ -67,9 +73,9 @@ test(function() {
   assert_equals(element.localName, "span");
   assert_equals(element.tagName, "HTML:SPAN");
   assert_true(element instanceof Node, "Should be a Node");
-  assert_true(element instanceof Element, "Should be a Element");
-  assert_true(element instanceof HTMLElement, "Should be a HTMLElement");
-  assert_true(element instanceof HTMLSpanElement, "Should be a HTMLSpanElement");
+  assert_true(element instanceof Element, "Should be an Element");
+  assert_true(element instanceof HTMLElement, "Should be an HTMLElement");
+  assert_true(element instanceof HTMLSpanElement, "Should be an HTMLSpanElement");
 }, "Lower-case HTML element with a prefix");
 
 test(function() {
@@ -79,9 +85,9 @@ test(function() {
   assert_equals(element.localName, "span");
   assert_equals(element.tagName, "span");
   assert_true(element instanceof Node, "Should be a Node");
-  assert_true(element instanceof Element, "Should be a Element");
-  assert_false(element instanceof HTMLElement, "Should not be a HTMLElement");
-  assert_false(element instanceof HTMLSpanElement, "Should not be a HTMLSpanElement");
+  assert_true(element instanceof Element, "Should be an Element");
+  assert_false(element instanceof HTMLElement, "Should not be an HTMLElement");
+  assert_false(element instanceof HTMLSpanElement, "Should not be an HTMLSpanElement");
 }, "Lower-case non-HTML element without a prefix");
 
 test(function() {
@@ -91,9 +97,9 @@ test(function() {
   assert_equals(element.localName, "span");
   assert_equals(element.tagName, "html:span");
   assert_true(element instanceof Node, "Should be a Node");
-  assert_true(element instanceof Element, "Should be a Element");
-  assert_false(element instanceof HTMLElement, "Should not be a HTMLElement");
-  assert_false(element instanceof HTMLSpanElement, "Should not be a HTMLSpanElement");
+  assert_true(element instanceof Element, "Should be an Element");
+  assert_false(element instanceof HTMLElement, "Should not be an HTMLElement");
+  assert_false(element instanceof HTMLSpanElement, "Should not be an HTMLSpanElement");
 }, "Lower-case non-HTML element with a prefix");
 
 test(function() {
@@ -104,10 +110,10 @@ test(function() {
   assert_equals(element.localName, "SPAN");
   assert_equals(element.tagName, "SPAN");
   assert_true(element instanceof Node, "Should be a Node");
-  assert_true(element instanceof Element, "Should be a Element");
-  assert_true(element instanceof HTMLElement, "Should be a HTMLElement");
-  assert_true(element instanceof HTMLUnknownElement, "Should be a HTMLUnknownElement");
-  assert_false(element instanceof HTMLSpanElement, "Should not be a HTMLSpanElement");
+  assert_true(element instanceof Element, "Should be an Element");
+  assert_true(element instanceof HTMLElement, "Should be an HTMLElement");
+  assert_true(element instanceof HTMLUnknownElement, "Should be an HTMLUnknownElement");
+  assert_false(element instanceof HTMLSpanElement, "Should not be an HTMLSpanElement");
 }, "Upper-case HTML element without a prefix");
 
 test(function() {
@@ -118,9 +124,9 @@ test(function() {
   assert_equals(element.localName, "SPAN");
   assert_equals(element.tagName, "HTML:SPAN");
   assert_true(element instanceof Node, "Should be a Node");
-  assert_true(element instanceof Element, "Should be a Element");
-  assert_true(element instanceof HTMLElement, "Should be a HTMLElement");
-  assert_false(element instanceof HTMLSpanElement, "Should not be a HTMLSpanElement");
+  assert_true(element instanceof Element, "Should be an Element");
+  assert_true(element instanceof HTMLElement, "Should be an HTMLElement");
+  assert_false(element instanceof HTMLSpanElement, "Should not be an HTMLSpanElement");
 }, "Upper-case HTML element with a prefix");
 
 test(function() {
@@ -130,9 +136,9 @@ test(function() {
   assert_equals(element.localName, "SPAN");
   assert_equals(element.tagName, "SPAN");
   assert_true(element instanceof Node, "Should be a Node");
-  assert_true(element instanceof Element, "Should be a Element");
-  assert_false(element instanceof HTMLElement, "Should not be a HTMLElement");
-  assert_false(element instanceof HTMLSpanElement, "Should not be a HTMLSpanElement");
+  assert_true(element instanceof Element, "Should be an Element");
+  assert_false(element instanceof HTMLElement, "Should not be an HTMLElement");
+  assert_false(element instanceof HTMLSpanElement, "Should not be an HTMLSpanElement");
 }, "Upper-case non-HTML element without a prefix");
 
 test(function() {
@@ -142,8 +148,44 @@ test(function() {
   assert_equals(element.localName, "SPAN");
   assert_equals(element.tagName, "html:SPAN");
   assert_true(element instanceof Node, "Should be a Node");
-  assert_true(element instanceof Element, "Should be a Element");
-  assert_false(element instanceof HTMLElement, "Should not be a HTMLElement");
-  assert_false(element instanceof HTMLSpanElement, "Should not be a HTMLSpanElement");
+  assert_true(element instanceof Element, "Should be an Element");
+  assert_false(element instanceof HTMLElement, "Should not be an HTMLElement");
+  assert_false(element instanceof HTMLSpanElement, "Should not be an HTMLSpanElement");
 }, "Upper-case non-HTML element with a prefix");
+
+test(function() {
+  var element = document.createElementNS(null, "span");
+  assert_equals(element.namespaceURI, null);
+  assert_equals(element.prefix, null);
+  assert_equals(element.localName, "span");
+  assert_equals(element.tagName, "span");
+  assert_true(element instanceof Node, "Should be a Node");
+  assert_true(element instanceof Element, "Should be an Element");
+  assert_false(element instanceof HTMLElement, "Should not be an HTMLElement");
+  assert_false(element instanceof HTMLSpanElement, "Should not be an HTMLSpanElement");
+}, "null namespace");
+
+test(function() {
+  var element = document.createElementNS(undefined, "span");
+  assert_equals(element.namespaceURI, null);
+  assert_equals(element.prefix, null);
+  assert_equals(element.localName, "span");
+  assert_equals(element.tagName, "span");
+  assert_true(element instanceof Node, "Should be a Node");
+  assert_true(element instanceof Element, "Should be an Element");
+  assert_false(element instanceof HTMLElement, "Should not be an HTMLElement");
+  assert_false(element instanceof HTMLSpanElement, "Should not be an HTMLSpanElement");
+}, "undefined namespace");
+
+test(function() {
+  var element = document.createElementNS("", "span");
+  assert_equals(element.namespaceURI, null);
+  assert_equals(element.prefix, null);
+  assert_equals(element.localName, "span");
+  assert_equals(element.tagName, "span");
+  assert_true(element instanceof Node, "Should be a Node");
+  assert_true(element instanceof Element, "Should be an Element");
+  assert_false(element instanceof HTMLElement, "Should not be an HTMLElement");
+  assert_false(element instanceof HTMLSpanElement, "Should not be an HTMLSpanElement");
+}, "empty string namespace");
 </script>

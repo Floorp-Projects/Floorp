@@ -22,31 +22,37 @@
             add_completion_callback(showPointerTypes);
 
             var eventTested = false;
-            var isPointercancelReceived = false;
+            var pointercancel_event = null;
             var detected_pointertypes = {};
 
             function run() {
                 var target0 = document.getElementById("target0");
 
                 on_event(target0, "pointercancel", function (event) {
-                    isPointercancelReceived = true;
+                    pointercancel_event = event;
                 });
 
                 // After firing the pointercancel event the pointerout event must be dispatched.
-                // TA: 7.6
+                // TA: 4.3
                 on_event(target0, "pointerout", function (event) {
-                    detected_pointertypes[event.pointerType] = true;
-                    if(isPointercancelReceived) {
-                        if (eventTested == false) {
-                            eventTested = true;
-                            test_pointerout.done();
+                    if(event.pointerType == 'touch') {
+                        detected_pointertypes[event.pointerType] = true;
+                        if(pointercancel_event != null) {
+                            if (eventTested == false) {
+                                test_pointerout.step(function() {
+                                    assert_equals(event.pointerType, pointercancel_event.pointerType, "pointerType is same for pointercancel and pointerout");
+                                    assert_equals(event.isPrimary, pointercancel_event.isPrimary, "isPrimary is same for pointercancel and pointerout");
+                                });
+                                eventTested = true;
+                                test_pointerout.done();
+                            }
                         }
-                    }
-                    else {
-                        test_pointerout.step(function() {
-                            assert_true(false,
-                            "pointercancel received before pointerout");
-                        }, "pointercancel received before pointerout");
+                        else {
+                            test_pointerout.step(function() {
+                                assert_true(false,
+                                "pointercancel received before pointerout");
+                            }, "pointercancel received before pointerout");
+                        }
                     }
                 });
             }
@@ -55,7 +61,6 @@
         <h1>Pointer Events pointerout tests</h1>
         <div id="complete-notice">
             <p>The following pointer types were detected: <span id="pointertype-log"></span>.</p>
-            <p>Refresh the page to run the tests again with a different pointer type.</p>
         </div>
         <div id="log"></div>
     </body>

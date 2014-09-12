@@ -8,29 +8,26 @@
 <body>
 <div id=log></div>
 <script>
-    
-    var TargetPort = null;
-    var description = "The postMessage() method - Create an event that uses the MessageEvent interface, "
-                    + "with the name message, which does not bubble and is not cancelable.";
-    
-    var t = async_test("Test Description: " + description);
-    
+async_test("Properties of the 'message' event").step(function() {
     var channel = new MessageChannel();
-    
-    TargetPort = channel.port2;
-    TargetPort.start();
-    TargetPort.addEventListener("message", t.step_func(TestMessageEvent), true);
-    
-    channel.port1.postMessage("ping");
 
-    function TestMessageEvent(evt)
-    {
-        ExpectedResult = ["[object MessageEvent]", "message", false, false];
-        ActualResult = [evt.toString(), evt.type, evt.bubbles, evt.cancelable];
-        
-        assert_array_equals(ActualResult, ExpectedResult);
-        t.done();
-    }
+    var targetPort = channel.port2;
+    targetPort.start();
+
+    targetPort.addEventListener("message", this.step_func_done(function (evt) {
+        assert_class_string(evt, "MessageEvent");
+        assert_equals(evt.type, "message");
+        assert_false(evt.bubbles, "bubbles should be false");
+        assert_false(evt.cancelable, "cancelable should be false");
+        assert_equals(evt.data, "ping", "data");
+        assert_equals(evt.origin, "", "origin");
+        assert_equals(evt.lastEventId, "", "lastEventId");
+        assert_equals(evt.source, null, "source");
+        assert_array_equals(evt.ports, [], "ports");
+    }), true);
+
+    channel.port1.postMessage("ping");
+});
 </script>
 </body>
 </html>
