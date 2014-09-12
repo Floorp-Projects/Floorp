@@ -92,6 +92,7 @@ AppleCMLinker::Unlink()
     LOG("Unlinking CoreMedia framework.");
     dlclose(sLink);
     sLink = nullptr;
+    sLinkStatus = LinkStatus_INIT;
   }
 }
 

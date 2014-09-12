@@ -101,6 +101,7 @@ AppleVDALinker::Unlink()
     skPropHeight = nullptr;
     skPropSourceFormat = nullptr;
     skPropAVCCData = nullptr;
+    sLinkStatus = LinkStatus_INIT;
   }
 }
 

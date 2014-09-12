@@ -16,8 +16,11 @@
 
 namespace mozilla {
 
+bool AppleDecoderModule::sInitialized = false;
 bool AppleDecoderModule::sIsVTAvailable = false;
+bool AppleDecoderModule::sIsVTHWAvailable = false;
 bool AppleDecoderModule::sIsVDAAvailable = false;
+bool AppleDecoderModule::sForceVDA = false;
 
 AppleDecoderModule::AppleDecoderModule()
 {
@@ -33,7 +36,9 @@ AppleDecoderModule::Init()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
 
-  if (!Preferences::GetBool("media.apple.mp4.enabled", false)) {
+  sForceVDA = Preferences::GetBool("media.apple.forcevda", false);
+
+  if (sInitialized) {
     return;
   }
 
@@ -45,18 +50,72 @@ AppleDecoderModule::Init()
   // dlopen VideoToolbox.framework if it's available.
   // We must link both CM and VideoToolbox framework to allow for proper
   // paired Link/Unlink calls
-  sIsVTAvailable = AppleVTLinker::Link() && haveCoreMedia;
+  bool haveVideoToolbox = AppleVTLinker::Link();
+  sIsVTAvailable = haveCoreMedia && haveVideoToolbox;
+
+  sIsVTHWAvailable = AppleVTLinker::skPropHWAccel != nullptr;
+
+  if (sIsVDAAvailable) {
+    AppleVDALinker::Unlink();
+  }
+  if (sIsVTAvailable) {
+    AppleVTLinker::Unlink();
+    AppleCMLinker::Unlink();
+  }
+  sInitialized = true;
 }
+
+class InitTask : public nsRunnable {
+public:
+  NS_IMETHOD Run() MOZ_OVERRIDE {
+    MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
+    AppleDecoderModule::Init();
+    return NS_OK;
+  }
+};
+
+/* static */
+nsresult
+AppleDecoderModule::CanDecode()
+{
+  if (!sInitialized) {
+    if (NS_IsMainThread()) {
+      Init();
+    } else {
+      nsRefPtr<nsIRunnable> task(new InitTask());
+      NS_DispatchToMainThread(task, NS_DISPATCH_SYNC);
+    }
+  }
+
+  return (sIsVDAAvailable || sIsVTAvailable) ? NS_OK : NS_ERROR_NO_INTERFACE;
+}
+
+class LinkTask : public nsRunnable {
+public:
+  NS_IMETHOD Run() MOZ_OVERRIDE {
+    MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
+    MOZ_ASSERT(AppleDecoderModule::sInitialized);
+    if (AppleDecoderModule::sIsVDAAvailable) {
+      AppleVDALinker::Link();
+    }
+    if (AppleDecoderModule::sIsVTAvailable) {
+      AppleVTLinker::Link();
+      AppleCMLinker::Link();
+    }
+    return NS_OK;
+  }
+};
 
 nsresult
 AppleDecoderModule::Startup()
 {
-  // We don't have any per-instance initialization to do.
-  // Check whether ::Init() above succeeded to know if
-  // we're functional.
   if (!sIsVDAAvailable && !sIsVTAvailable) {
     return NS_ERROR_FAILURE;
   }
+
+  nsRefPtr<nsIRunnable> task(new LinkTask());
+  NS_DispatchToMainThread(task, NS_DISPATCH_SYNC);
+
   return NS_OK;
 }
 
@@ -64,9 +123,14 @@ class UnlinkTask : public nsRunnable {
 public:
   NS_IMETHOD Run() MOZ_OVERRIDE {
     MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
-    AppleVDALinker::Unlink();
-    AppleVTLinker::Unlink();
-    AppleCMLinker::Unlink();
+    MOZ_ASSERT(AppleDecoderModule::sInitialized);
+    if (AppleDecoderModule::sIsVDAAvailable) {
+      AppleVDALinker::Unlink();
+    }
+    if (AppleDecoderModule::sIsVTAvailable) {
+      AppleVTLinker::Unlink();
+      AppleCMLinker::Unlink();
+    }
     return NS_OK;
   }
 };
@@ -88,7 +152,7 @@ AppleDecoderModule::CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aCo
 {
   nsRefPtr<MediaDataDecoder> decoder;
 
-  if (sIsVDAAvailable) {
+  if (sIsVDAAvailable && (!sIsVTHWAvailable || sForceVDA)) {
     decoder =
       AppleVDADecoder::CreateVDADecoder(aConfig,
                                         aVideoTaskQueue,
