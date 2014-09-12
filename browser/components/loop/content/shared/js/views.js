@@ -12,6 +12,8 @@ loop.shared.views = (function(_, OT, l10n) {
   "use strict";
 
   var sharedModels = loop.shared.models;
+  var sharedMixins = loop.shared.mixins;
+
   var WINDOW_AUTOCLOSE_TIMEOUT_IN_SECONDS = 5;
 
   /**
@@ -575,8 +577,7 @@ loop.shared.views = (function(_, OT, l10n) {
   /**
    * Notification view.
    */
-  var NotificationView = React.createClass({
-    displayName: 'NotificationView',
+  var NotificationView = React.createClass({displayName: 'NotificationView',
     mixins: [Backbone.Events],
 
     propTypes: {
@@ -599,10 +600,15 @@ loop.shared.views = (function(_, OT, l10n) {
    * Notification list view.
    */
   var NotificationListView = React.createClass({displayName: 'NotificationListView',
-    mixins: [Backbone.Events],
+    mixins: [Backbone.Events, sharedMixins.DocumentVisibilityMixin],
 
     propTypes: {
-      notifications: React.PropTypes.object.isRequired
+      notifications: React.PropTypes.object.isRequired,
+      clearOnDocumentHidden: React.PropTypes.bool
+    },
+
+    getDefaultProps: function() {
+      return {clearOnDocumentHidden: false};
     },
 
     componentDidMount: function() {
@@ -615,9 +621,25 @@ loop.shared.views = (function(_, OT, l10n) {
       this.stopListening(this.props.notifications);
     },
 
+    /**
+     * Provided by DocumentVisibilityMixin. Clears notifications stack when the
+     * current document is hidden if the clearOnDocumentHidden prop is set to
+     * true and the collection isn't empty.
+     */
+    onDocumentHidden: function() {
+      if (this.props.clearOnDocumentHidden &&
+          this.props.notifications.length > 0) {
+        // Note: The `silent` option prevents the `reset` event to be triggered
+        // here, preventing the UI to "jump" a little because of the event
+        // callback being processed in another tick (I think).
+        this.props.notifications.reset([], {silent: true});
+        this.forceUpdate();
+      }
+    },
+
     render: function() {
       return (
-        React.DOM.div({id: "messages"}, 
+        React.DOM.div({className: "messages"}, 
           this.props.notifications.map(function(notification, key) {
             return NotificationView({key: key, notification: notification});
           })

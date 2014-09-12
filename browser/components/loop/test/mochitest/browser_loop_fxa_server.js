@@ -66,6 +66,7 @@ add_task(function* token_request() {
     state: "my_state",
   };
   yield promiseOAuthParamsSetup(BASE_URL, params);
+
   let request = yield promiseToken("my_code", params.state);
   ise(request.status, 200, "Check token response status");
   ise(request.response.access_token, "my_code_access_token", "Check access_token");
@@ -111,6 +112,7 @@ function promiseToken(code, state) {
   let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
               createInstance(Ci.nsIXMLHttpRequest);
   xhr.open("POST", BASE_URL + "/fxa-oauth/token", true);
+  xhr.setRequestHeader("Authorization", "Hawk ...");
   xhr.responseType = "json";
   xhr.addEventListener("load", () => {
     info("/fxa-oauth/token response:\n" + JSON.stringify(xhr.response, null, 4));

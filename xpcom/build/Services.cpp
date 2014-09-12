@@ -24,6 +24,7 @@
 #include "inIDOMUtils.h"
 #include "nsIPermissionManager.h"
 #include "nsIServiceWorkerManager.h"
+#include "nsIAsyncShutdown.h"
 
 using namespace mozilla;
 using namespace mozilla::services;

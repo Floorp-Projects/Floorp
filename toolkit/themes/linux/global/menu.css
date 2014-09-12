@@ -67,9 +67,7 @@ menuitem.spell-suggestion {
 
 /* ::::: menu/menuitems in menulist popups ::::: */
 
-.menulist-menupopup > menuitem,
 menulist > menupopup > menuitem,
-.menulist-menupopup > menu,
 menulist > menupopup > menu {
   padding: 1px 5px;
   max-width: none;
@@ -150,9 +148,7 @@ menulist > menupopup > menu {
 }
 
 
-.menulist-menupopup > menuitem > .menu-iconic-left,
 menulist > menupopup > menuitem > .menu-iconic-left,
-.menulist-menupopup > menu > .menu-iconic-left,
 menulist > menupopup > menu > .menu-iconic-left {
   display: none;
 }
@@ -182,8 +178,7 @@ menuseparator {
   border-bottom: 1px solid ThreeDHighlight;
 }
 
-menulist > menupopup > menuseparator,
-.menulist-menupopup > menuseparator {
+menulist > menupopup > menuseparator {
   border-top: 1px solid #000000;
   border-bottom: none;
 }

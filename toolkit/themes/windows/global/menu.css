@@ -173,9 +173,7 @@ menuitem[_moz-menuactive="true"],
 
 /* ::::: menu/menuitems in menulist popups ::::: */
 
-.menulist-menupopup > menuitem,
 menulist > menupopup > menuitem,
-.menulist-menupopup > menu,
 menulist > menupopup > menu {
   -moz-appearance: none !important;
   border: 1px solid transparent;
@@ -186,25 +184,19 @@ menulist > menupopup > menu {
   color: -moz-FieldText;
 }
 
-.menulist-menupopup > menuitem[_moz-menuactive="true"],
 menulist > menupopup > menuitem[_moz-menuactive="true"],
-.menulist-menupopup > menu[_moz-menuactive="true"],
 menulist > menupopup > menu[_moz-menuactive="true"] {
   background-color: highlight;
   color: highlighttext;
 }
 
-.menulist-menupopup > menuitem > .menu-iconic-left,
 menulist > menupopup > menuitem > .menu-iconic-left,
-.menulist-menupopup > menu > .menu-iconic-left,
 menulist > menupopup > menu > .menu-iconic-left {
   display: none;
   padding-top: 0px;
 }
 
-.menulist-menupopup > menuitem > label,
 menulist > menupopup > menuitem > label,
-.menulist-menupopup > menu > label,
 menulist > menupopup > menu > label {
   padding-top: 0px;
   padding-bottom: 0px;
@@ -264,8 +256,7 @@ menuseparator {
   border-bottom: 1px solid ThreeDHighlight;
 }
 
-menulist > menupopup > menuseparator,
-.menulist-menupopup > menuseparator {
+menulist > menupopup > menuseparator {
   padding: 6px 0 5px 0;
   border-top: 1px solid #000000;
   border-bottom: none;

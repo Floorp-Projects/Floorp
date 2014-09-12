@@ -10,13 +10,8 @@
 
 /* ::::: XBL bindings ::::: */
 
-menulist > menupopup,
-.menulist-menupopup {
+menulist > menupopup {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#popup-scrollbars");
-}
-
-.menulist-compact {
-  -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-compact");
 }
 
 /* ::::: draggable elements ::::: */

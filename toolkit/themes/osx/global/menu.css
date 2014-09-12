@@ -164,9 +164,7 @@ menuitem[_moz-menuactive="true"] {
 
 /* ::::: menu/menuitems in menulist popups ::::: */
 
-.menulist-menupopup > menuitem,
 menulist > menupopup > menuitem,
-.menulist-menupopup > menu,
 menulist > menupopup > menu {
   max-width: none;
   font: inherit;

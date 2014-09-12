@@ -1,0 +1,4 @@
+browser.jar:
+
+# The file that holds the default permissions (which is loaded by nsPermissionManager) for the browser.
+    default_permissions (default_permissions)

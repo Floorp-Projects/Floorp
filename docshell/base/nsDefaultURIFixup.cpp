@@ -951,57 +951,128 @@ void nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
     // in practice.  So if we cast all locations to uint32_t, then a <
     // b guarantees that either b is kNotFound and a is found, or both
     // are found and a found before b.
-    uint32_t dotLoc   = uint32_t(aURIString.FindChar('.'));
-    nsAutoCString tmpURIString(aURIString);
-    uint32_t lastDotLoc = uint32_t(tmpURIString.RFindChar('.'));
-    uint32_t colonLoc = uint32_t(aURIString.FindChar(':'));
-    uint32_t spaceLoc = uint32_t(aURIString.FindChar(' '));
-    if (spaceLoc == 0) {
-        // Treat this as not found
-        spaceLoc = uint32_t(kNotFound);
+
+    uint32_t firstDotLoc = uint32_t(kNotFound);
+    uint32_t firstColonLoc = uint32_t(kNotFound);
+    uint32_t firstQuoteLoc = uint32_t(kNotFound);
+    uint32_t firstSpaceLoc = uint32_t(kNotFound);
+    uint32_t firstQMarkLoc = uint32_t(kNotFound);
+    uint32_t lastLSBracketLoc = uint32_t(kNotFound);
+    uint32_t pos = 0;
+    uint32_t foundDots = 0;
+    uint32_t foundColons = 0;
+    uint32_t foundDigits = 0;
+    uint32_t foundRSBrackets = 0;
+    bool looksLikeIpv6 = true;
+    bool hasAsciiAlpha = false;
+
+    nsACString::const_iterator iterBegin;
+    nsACString::const_iterator iterEnd;
+    aURIString.BeginReading(iterBegin);
+    aURIString.EndReading(iterEnd);
+    nsACString::const_iterator iter = iterBegin;
+
+    while (iter != iterEnd) {
+        if (pos >= 1 && foundRSBrackets == 0) {
+            if (!(lastLSBracketLoc == 0 &&
+                  (*iter == ':' ||
+                   *iter == '.' ||
+                   *iter == ']' ||
+                   (*iter >= 'a' && *iter <= 'f') ||
+                   (*iter >= 'A' && *iter <= 'F') ||
+                   nsCRT::IsAsciiDigit(*iter)))) {
+                looksLikeIpv6 = false;
+            }
+        }
+        if (*iter == '.') {
+            ++foundDots;
+            if (firstDotLoc == uint32_t(kNotFound)) {
+                firstDotLoc = pos;
+            }
+        } else if (*iter == ':') {
+            ++foundColons;
+            if (firstColonLoc == uint32_t(kNotFound)) {
+                firstColonLoc = pos;
+            }
+        } else if (*iter == ' ' && firstSpaceLoc == uint32_t(kNotFound)) {
+            firstSpaceLoc = pos;
+        } else if (*iter == '?' && firstQMarkLoc == uint32_t(kNotFound)) {
+            firstQMarkLoc = pos;
+        } else if ((*iter == '\'' || *iter == '"') && firstQuoteLoc == uint32_t(kNotFound)) {
+            firstQuoteLoc = pos;
+        } else if (*iter == '[') {
+            lastLSBracketLoc = pos;
+        } else if (*iter == ']') {
+            foundRSBrackets++;
+        } else if (nsCRT::IsAsciiAlpha(*iter)) {
+            hasAsciiAlpha = true;
+        } else if (nsCRT::IsAsciiDigit(*iter)) {
+            ++foundDigits;
+        }
+
+        pos++;
+        iter++;
     }
-    uint32_t qMarkLoc = uint32_t(aURIString.FindChar('?'));
-    uint32_t quoteLoc = std::min(uint32_t(aURIString.FindChar('"')),
-                               uint32_t(aURIString.FindChar('\'')));
+
+    if (lastLSBracketLoc > 0 || foundRSBrackets != 1) {
+        looksLikeIpv6 = false;
+    }
 
     nsresult rv;
+    nsAutoCString asciiHost;
+    nsAutoCString host;
+
+    bool isValidAsciiHost = aFixupInfo->mFixedURI &&
+        NS_SUCCEEDED(aFixupInfo->mFixedURI->GetAsciiHost(asciiHost)) &&
+        !asciiHost.IsEmpty();
+
+    bool isValidHost = aFixupInfo->mFixedURI &&
+        NS_SUCCEEDED(aFixupInfo->mFixedURI->GetHost(host)) &&
+        !host.IsEmpty();
+
+    // If there are 3 dots and only numbers between them, then don't do a
+    // keyword lookup (ipv4)
+    if (foundDots == 3 && (foundDots + foundDigits == pos)) {
+        return;
+    }
+
+    // If there are only colons and only hexadecimal characters ([a-z][0-9])
+    // enclosed in [], then don't do a keyword lookup
+    if (looksLikeIpv6) {
+        return;
+    }
+
     // We do keyword lookups if a space or quote preceded the dot, colon
-    // or question mark (or if the latter were not found):
-    if (((spaceLoc < dotLoc || quoteLoc < dotLoc) &&
-         (spaceLoc < colonLoc || quoteLoc < colonLoc) &&
-         (spaceLoc < qMarkLoc || quoteLoc < qMarkLoc)) ||
-        qMarkLoc == 0)
-    {
+    // or question mark (or if the latter were not found)
+    // or when the host is the same as asciiHost and there are no
+    // characters from [a-z][A-Z]
+    if (((firstSpaceLoc < firstDotLoc || firstQuoteLoc < firstDotLoc) &&
+         (firstSpaceLoc < firstColonLoc || firstQuoteLoc < firstColonLoc) &&
+         (firstSpaceLoc < firstQMarkLoc || firstQuoteLoc < firstQMarkLoc)) || firstQMarkLoc == 0 ||
+        (isValidAsciiHost && isValidHost && !hasAsciiAlpha &&
+         host.EqualsIgnoreCase(asciiHost.get()))) {
+
         rv = KeywordToURI(aFixupInfo->mOriginalInput, aPostData,
                           getter_AddRefs(aFixupInfo->mPreferredURI));
-        if (NS_SUCCEEDED(rv) && aFixupInfo->mPreferredURI)
-        {
+        if (NS_SUCCEEDED(rv) && aFixupInfo->mPreferredURI) {
             aFixupInfo->mFixupUsedKeyword = true;
         }
     }
     // ... or if there is no question mark or colon, and there is either no
     // dot, or exactly 1 and it is the first or last character of the input:
-    else if ((dotLoc == uint32_t(kNotFound) ||
-              (dotLoc == lastDotLoc && (dotLoc == 0 || dotLoc == aURIString.Length() - 1))) &&
-             colonLoc == uint32_t(kNotFound) && qMarkLoc == uint32_t(kNotFound))
-    {
+    else if ((firstDotLoc == uint32_t(kNotFound) ||
+              (foundDots == 1 && (firstDotLoc == 0 || firstDotLoc == aURIString.Length() - 1))) &&
+              firstColonLoc == uint32_t(kNotFound) && firstQMarkLoc == uint32_t(kNotFound)) {
 
-        nsAutoCString asciiHost;
-        if (aFixupInfo->mFixedURI &&
-            NS_SUCCEEDED(aFixupInfo->mFixedURI->GetAsciiHost(asciiHost)) &&
-            !asciiHost.IsEmpty()) {
-
-            if (IsDomainWhitelisted(asciiHost, dotLoc)) {
-                return;
-            }
+        if (isValidAsciiHost && IsDomainWhitelisted(asciiHost, firstDotLoc)) {
+            return;
         }
 
         // If we get here, we don't have a valid URI, or we did but the
         // host is not whitelisted, so we do a keyword search *anyway*:
         rv = KeywordToURI(aFixupInfo->mOriginalInput, aPostData,
                           getter_AddRefs(aFixupInfo->mPreferredURI));
-        if (NS_SUCCEEDED(rv) && aFixupInfo->mPreferredURI)
-        {
+        if (NS_SUCCEEDED(rv) && aFixupInfo->mPreferredURI) {
             aFixupInfo->mFixupUsedKeyword = true;
         }
     }

@@ -93,37 +93,3 @@ html|*.menulist-editable-input {
   background: inherit;
   font: inherit;
 }
-
-/* ::::: compact menulists ::::: */
-
-.menulist-compact {
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  margin: 0;
-  background-color: #aaaaaa;
-  color: black;
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
-}
-
-.menulist-compact > .menulist-label-box > .menulist-label {
-  margin: 0 3px !important;
-  text-align: end;
-}  
-
-.menulist-compact > .menulist-label-box > .menulist-icon {
-  -moz-margin-start: 2px;
-}
-
-.menulist-compact[open="true"] {
-  border-color: #777777;
-}
-
-.menulist-compact[disabled="true"] {
-  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
-}
-
-.menulist-compact:focus > .menulist-label-box {
-  border: 1px dotted;
-  background-color: transparent;
-  color: inherit;
-}
