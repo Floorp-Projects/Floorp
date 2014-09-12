@@ -3067,7 +3067,8 @@ InlineAddTypeProperty(ExclusiveContext *cx, TypeObject *obj, jsid id, Type type)
     if (obj->newScript() && obj->newScript()->initializedType()) {
         if (type.isObjectUnchecked() && types->unknownObject())
             type = Type::AnyObjectType();
-        obj->newScript()->initializedType()->addPropertyType(cx, id, type);
+        if (!obj->newScript()->initializedType()->unknownProperties())
+            obj->newScript()->initializedType()->addPropertyType(cx, id, type);
     }
 }
 
