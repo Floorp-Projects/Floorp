@@ -78,8 +78,6 @@ class MediaSource;
 class TextTrackList;
 class AudioTrackList;
 class VideoTrackList;
-class OwningMediaStreamOrMediaSource;
-class MediaStreamOrMediaSource;
 
 class HTMLMediaElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLMediaElement,
@@ -526,9 +524,9 @@ public:
     mIsCasting = aShow;
   }
 
-  void GetMozSrcObject(Nullable<OwningMediaStreamOrMediaSource>& aValue) const;
+  already_AddRefed<DOMMediaStream> GetMozSrcObject() const;
 
-  void SetMozSrcObject(const Nullable<MediaStreamOrMediaSource>& aValue);
+  void SetMozSrcObject(DOMMediaStream& aValue);
 
   bool MozPreservesPitch() const
   {
@@ -679,12 +677,6 @@ protected:
    * Initialize the media element for playback of aStream
    */
   void SetupSrcMediaStreamPlayback(DOMMediaStream* aStream);
-
-  /**
-   * Initialize the media element for playback of aSource
-   */
-  nsresult SetupSrcMediaSourcePlayback(nsRefPtr<MediaSource>& aSource);
-
   /**
    * Stop playback on mSrcStream.
    */
@@ -981,10 +973,6 @@ protected:
 
   // Holds a reference to the MediaStreamListener attached to mSrcStream.
   nsRefPtr<StreamListener> mSrcStreamListener;
-
-  // Holds a reference to the MediaSource that has been
-  // set in the srcObject attribute.
-  nsRefPtr<MediaSource> mSrcAttrMediaSource;
 
   // Holds a reference to the MediaSource supplying data for playback.
   nsRefPtr<MediaSource> mMediaSource;
