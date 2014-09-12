@@ -4530,7 +4530,7 @@ mozilla::BrowserTabsRemoteAutostart()
 
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_AUTOSTART, gBrowserTabsRemoteAutostart);
     if (Preferences::GetBool("browser.enabledE10SFromPrompt", false)) {
-      mozilla::Telemetry::Accumulate(mozilla::Telemetry:E10S_STILL_ACCEPTED_FROM_PROMPT,
+      mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_STILL_ACCEPTED_FROM_PROMPT,
                                      gBrowserTabsRemoteAutostart);
     }
     if (prefEnabled) {
