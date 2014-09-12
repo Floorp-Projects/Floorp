@@ -166,6 +166,7 @@ void AppCapturerWin::Start(Callback* callback) {
   callback_ = callback;
 }
 void AppCapturerWin::Capture(const DesktopRegion& region) {
+  assert(IsGUIThread(false));
   CaptureBySample(region);
 }
 
@@ -194,6 +195,7 @@ BOOL CALLBACK AppCapturerWin::EnumWindowsProc(HWND handle, LPARAM lParam) {
 }
 
 void AppCapturerWin::CaptureByWebRTC(const DesktopRegion& region) {
+  assert(IsGUIThread(false));
   // List Windows of selected application
   EnumWindowsCtx lParamEnumWindows;
   lParamEnumWindows.process_id = processId_;
@@ -298,6 +300,7 @@ void AppCapturerWin::CaptureByWebRTC(const DesktopRegion& region) {
 
 // Application Capturer by sample and region
 void AppCapturerWin::CaptureBySample(const DesktopRegion& region){
+  assert(IsGUIThread(false));
   // capture entire screen
   screen_capturer_proxy_.Capture(region);
 
@@ -357,6 +360,7 @@ void AppCapturerWin::CaptureBySample(const DesktopRegion& region){
 }
 
 void AppCapturerWin::UpdateRegions() {
+  assert(IsGUIThread(false));
   // List Windows of selected application
   EnumWindowsCtx lParamEnumWindows;
   lParamEnumWindows.process_id = processId_;
