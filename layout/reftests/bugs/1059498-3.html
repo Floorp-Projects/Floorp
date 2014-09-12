@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Test for bug 1059498 - Paint parts of the filter that are caused by parts of the source that are invisible</title>
+
+<style>
+
+body {
+  margin: 0;
+}
+
+#filtered {
+  margin-top: -150px;
+  margin-left: -10px;
+  width: 100px;
+  height: 100px;
+  background-color: white;
+  filter: url(#filter);
+  transform: translateY(40px);
+}
+
+#transformed {
+  transform: translateX(10px);
+  width: 200px;
+}
+
+</style>
+
+<div id="transformed">
+  <div id="filtered"></div>
+</div>
+
+<svg height="0">
+  <defs>
+    <filter id="filter" filterUnits="objectBoundingBox"
+            x="0%" y="0%" width="100%" height="200%"
+            color-interpolation-filters="sRGB">
+      <feDropShadow stdDeviation="0" dx="0" dy="40" flood-color="lime"/>
+    </filter>
+  </defs>
+</svg>
