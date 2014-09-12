@@ -871,17 +871,24 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
       return nullptr;
     }
 
+    D2D1_RECT_F samplingBounds;
+    if (!pat->mSamplingRect.IsEmpty()) {
+      samplingBounds = D2DRect(pat->mSamplingRect);
+    } else {
+      samplingBounds = D2D1::RectF(0, 0,
+                                   Float(pat->mSurface->GetSize().width),
+                                   Float(pat->mSurface->GetSize().height));
+    }
 
     Matrix mat = pat->mMatrix;
     
     RefPtr<ID2D1ImageBrush> imageBrush;
     RefPtr<ID2D1Image> image = GetImageForSurface(pat->mSurface, mat, pat->mExtendMode);
     mDC->CreateImageBrush(image,
-                          D2D1::ImageBrushProperties(D2D1::RectF(0, 0,
-                                                                  Float(pat->mSurface->GetSize().width),
-                                                                  Float(pat->mSurface->GetSize().height)),
-                                  D2DExtend(pat->mExtendMode), D2DExtend(pat->mExtendMode),
-                                  D2DInterpolationMode(pat->mFilter)),
+                          D2D1::ImageBrushProperties(samplingBounds,
+                                                     D2DExtend(pat->mExtendMode),
+                                                     D2DExtend(pat->mExtendMode),
+                                                     D2DInterpolationMode(pat->mFilter)),
                           D2D1::BrushProperties(aAlpha, D2DMatrix(mat)),
                           byRef(imageBrush));
     return imageBrush.forget();
