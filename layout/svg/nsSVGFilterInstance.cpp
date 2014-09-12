@@ -256,10 +256,7 @@ nsSVGFilterInstance::ComputeFilterPrimitiveSubregion(nsSVGFE* aFilterElement,
   // Following the spec, any pixel partially in the region is included
   // in the region.
   region.RoundOut();
-  IntRect regionInt = RoundedToInt(region);
-
-  // Clip the primitive subregion to this filter's filter region.
-  return regionInt.Intersect(ToIntRect(mFilterSpaceBounds));
+  return RoundedToInt(region);
 }
 
 void
@@ -413,8 +410,8 @@ nsSVGFilterInstance::BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrim
       filter->GetPrimitiveDescription(this, primitiveSubregion, sourcesAreTainted, aInputImages);
 
     descr.SetIsTainted(filter->OutputIsTainted(sourcesAreTainted, principal));
-    descr.SetPrimitiveSubregion(primitiveSubregion);
     descr.SetFilterSpaceBounds(ToIntRect(mFilterSpaceBounds));
+    descr.SetPrimitiveSubregion(primitiveSubregion.Intersect(descr.FilterSpaceBounds()));
 
     for (uint32_t i = 0; i < sourceIndices.Length(); i++) {
       int32_t inputIndex = sourceIndices[i];
