@@ -58,9 +58,15 @@ MOZ_BEGIN_ENUM_CLASS(ImageFormat)
   REMOTE_IMAGE_BITMAP,
 
   /**
-   * A OpenGL texture that can be shared across threads or processes
+   * An Android SurfaceTexture ID that can be shared across threads and
+   * processes.
    */
-  SHARED_TEXTURE,
+  SURFACE_TEXTURE,
+
+  /**
+   * An EGL Image that can be shared across threads.
+   */
+  EGLIMAGE,
 
   /**
    * An DXGI shared surface handle that can be shared with a remote process.

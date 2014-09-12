@@ -20,6 +20,7 @@ EXPORTS += [
     'CopyableCanvasLayer.h',
     'D3D9SurfaceImage.h',
     'FrameMetrics.h',
+    'GLImages.h',
     'GrallocImages.h',
     'ImageContainer.h',
     'ImageLayers.h',
@@ -38,7 +39,6 @@ EXPORTS += [
     'opengl/TexturePoolOGL.h',
     'protobuf/LayerScopePacket.pb.h',
     'ReadbackLayer.h',
-    'SharedTextureImage.h',
     'TiledLayerBuffer.h',
 ]
 
