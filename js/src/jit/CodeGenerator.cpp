@@ -3507,9 +3507,9 @@ class OutOfLineNewArray : public OutOfLineCodeBase<CodeGenerator>
     }
 };
 
-typedef JSObject *(*NewInitArrayFn)(JSContext *, uint32_t, types::TypeObject *);
-static const VMFunction NewInitArrayInfo =
-    FunctionInfo<NewInitArrayFn>(NewInitArray);
+typedef ArrayObject *(*NewDenseArrayFn)(ExclusiveContext *, uint32_t, HandleTypeObject,
+                                        AllocatingBehaviour);
+static const VMFunction NewDenseArrayInfo = FunctionInfo<NewDenseArrayFn>(NewDenseArray);
 
 bool
 CodeGenerator::visitNewArrayCallVM(LNewArray *lir)
@@ -3525,10 +3525,11 @@ CodeGenerator::visitNewArrayCallVM(LNewArray *lir)
     types::TypeObject *type =
         templateObject->hasSingletonType() ? nullptr : templateObject->type();
 
+    pushArg(Imm32(lir->mir()->allocatingBehaviour()));
     pushArg(ImmGCPtr(type));
     pushArg(Imm32(lir->mir()->count()));
 
-    if (!callVM(NewInitArrayInfo, lir))
+    if (!callVM(NewDenseArrayInfo, lir))
         return false;
 
     if (ReturnReg != objReg)

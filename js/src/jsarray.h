@@ -79,7 +79,7 @@ enum AllocatingBehaviour {
  * Create a dense array with a set length, but only allocates space for the
  * contents if the length is not excessive.
  */
-extern ArrayObject * JS_FASTCALL
+extern ArrayObject *
 NewDenseArray(ExclusiveContext *cx, uint32_t length, HandleTypeObject type,
               AllocatingBehaviour allocating);
 
