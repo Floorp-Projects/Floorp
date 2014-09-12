@@ -51,6 +51,7 @@ browser.jar:
   content/browser/loop/shared/js/feedbackApiClient.js (content/shared/js/feedbackApiClient.js)
   content/browser/loop/shared/js/models.js            (content/shared/js/models.js)
   content/browser/loop/shared/js/router.js            (content/shared/js/router.js)
+  content/browser/loop/shared/js/mixins.js            (content/shared/js/mixins.js)
   content/browser/loop/shared/js/views.js             (content/shared/js/views.js)
   content/browser/loop/shared/js/utils.js             (content/shared/js/utils.js)
   content/browser/loop/shared/js/websocket.js         (content/shared/js/websocket.js)

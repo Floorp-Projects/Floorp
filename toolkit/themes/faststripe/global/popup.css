@@ -54,8 +54,7 @@ tooltip[titletip="true"] {
 
 /* rules for popups associated with menulists */
 
-menulist > menupopup,
-.menulist-menupopup {
+menulist > menupopup {
   padding: 1px;
   min-width: 0px;
   background-color: -moz-Field;

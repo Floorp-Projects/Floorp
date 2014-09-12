@@ -21,13 +21,8 @@ radio {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#radio-with-spacing");
 }
 
-menulist > menupopup,
-.menulist-menupopup {
+menulist > menupopup {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#popup-scrollbars");
-}
-
-.menulist-compact {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#menulist-compact");
 }
 
 progressmeter[mode="undetermined"] {
