@@ -4132,7 +4132,7 @@ function nsBrowserAccess() { }
 nsBrowserAccess.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIBrowserDOMWindow, Ci.nsISupports]),
 
-  _openURIInNewTab: function(aURI, aOpener, aIsExternal) {
+  _openURIInNewTab: function(aURI, aOpener, aIsExternal, aEnsureNonRemote=false) {
     let win, needToFocusWin;
 
     // try the current window.  if we're in a popup, fall back on the most recent browser window
@@ -4164,6 +4164,15 @@ nsBrowserAccess.prototype = {
                                       inBackground: loadInBackground});
     let browser = win.gBrowser.getBrowserForTab(tab);
 
+    // It's possible that we've been asked to open a new non-remote
+    // browser in a window that defaults to having remote browsers -
+    // this can happen if we're opening the new tab due to a window.open
+    // or _blank anchor in a non-remote browser. If so, we have to force
+    // the newly opened browser to also not be remote.
+    if (win.gMultiProcessBrowser && aEnsureNonRemote) {
+      win.gBrowser.updateBrowserRemoteness(browser, false);
+    }
+
     if (needToFocusWin || (!loadInBackground && aIsExternal))
       win.focus();
 
@@ -4171,6 +4180,14 @@ nsBrowserAccess.prototype = {
   },
 
   openURI: function (aURI, aOpener, aWhere, aContext) {
+    // This function should only ever be called if we're opening a URI
+    // from a non-remote browser window (via nsContentTreeOwner).
+    if (aOpener && Cu.isCrossProcessWrapper(aOpener)) {
+      Cu.reportError("nsBrowserAccess.openURI was passed a CPOW for aOpener. " +
+                     "openURI should only ever be called from non-remote browsers.");
+      throw Cr.NS_ERROR_FAILURE;
+    }
+
     var newWindow = null;
     var isExternal = (aContext == Ci.nsIBrowserDOMWindow.OPEN_EXTERNAL);
 
@@ -4196,7 +4213,7 @@ nsBrowserAccess.prototype = {
         newWindow = openDialog(getBrowserURL(), "_blank", "all,dialog=no", url, null, null, null);
         break;
       case Ci.nsIBrowserDOMWindow.OPEN_NEWTAB :
-        let browser = this._openURIInNewTab(aURI, aOpener, isExternal);
+        let browser = this._openURIInNewTab(aURI, aOpener, isExternal, true);
         if (browser)
           newWindow = browser.contentWindow;
         break;
