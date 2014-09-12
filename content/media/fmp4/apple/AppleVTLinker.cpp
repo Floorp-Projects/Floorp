@@ -89,6 +89,7 @@ AppleVTLinker::Unlink()
     dlclose(sLink);
     sLink = nullptr;
     skPropHWAccel = nullptr;
+    sLinkStatus = LinkStatus_INIT;
   }
 }
 
