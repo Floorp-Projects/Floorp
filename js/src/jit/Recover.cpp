@@ -874,6 +874,10 @@ RStringSplit::recover(JSContext *cx, SnapshotIterator &iter) const
 
     RootedValue result(cx);
 
+    // Use AutoEnterAnalysis to avoid invoking the object metadata callback,
+    // which could try to walk the stack while bailing out.
+    types::AutoEnterAnalysis enter(cx);
+
     JSObject *res = str_split_string(cx, typeObj, str, sep);
     if (!res)
         return false;
