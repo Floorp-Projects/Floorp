@@ -191,8 +191,7 @@ public:
   // For ANPNativeWindow
   void* AcquireContentWindow();
 
-  EGLImage AsEGLImage();
-  nsSurfaceTexture* AsSurfaceTexture();
+  mozilla::gl::SharedTextureHandle CreateSharedHandle();
 
   // For ANPVideo
   class VideoInfo {
