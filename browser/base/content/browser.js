@@ -1097,6 +1097,8 @@ var gBrowserInit = {
       TabCrashReporter.init();
 #endif
 
+    Services.telemetry.getHistogramById("E10S_WINDOW").add(gMultiProcessBrowser);
+
     if (mustLoadSidebar) {
       let sidebar = document.getElementById("sidebar");
       let sidebarBox = document.getElementById("sidebar-box");

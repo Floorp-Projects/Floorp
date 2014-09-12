@@ -4524,9 +4524,19 @@ bool
 mozilla::BrowserTabsRemoteAutostart()
 {
   if (!gBrowserTabsRemoteAutostartInitialized) {
-    gBrowserTabsRemoteAutostart = !gSafeMode &&
-                                  Preferences::GetBool("browser.tabs.remote.autostart", false);
+    bool prefEnabled = Preferences::GetBool("browser.tabs.remote.autostart", false);
+    gBrowserTabsRemoteAutostart = !gSafeMode && prefEnabled;
     gBrowserTabsRemoteAutostartInitialized = true;
+
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_AUTOSTART, gBrowserTabsRemoteAutostart);
+    if (Preferences::GetBool("browser.enabledE10SFromPrompt", false)) {
+      mozilla::Telemetry::Accumulate(mozilla::Telemetry:E10S_STILL_ACCEPTED_FROM_PROMPT,
+                                     gBrowserTabsRemoteAutostart);
+    }
+    if (prefEnabled) {
+      mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_BLOCKED_FROM_RUNNING,
+                                     !gBrowserTabsRemoteAutostart);
+    }
   }
 
   return gBrowserTabsRemoteAutostart;
