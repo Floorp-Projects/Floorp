@@ -92,8 +92,7 @@ wptupdate takes several useful options:
   mercurial tree).
 
 ``--patch``
-  Create a branch containing a git commit, or a mq patch with the
-  changes made by wptupdate.
+  Create a a git commit, or a mq patch, with the changes made by wptupdate.
 
 ``--ignore-existing``
   Overwrite all the expectation data for any tests that have a result
