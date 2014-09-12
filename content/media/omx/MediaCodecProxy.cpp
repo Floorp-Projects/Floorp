@@ -18,6 +18,62 @@
 #define TIMEOUT_DEQUEUE_INPUTBUFFER_MS 1000000ll
 namespace android {
 
+// General Template: MediaCodec::getOutputGraphicBufferFromIndex(...)
+template <typename T, bool InterfaceSupported>
+struct OutputGraphicBufferStub
+{
+  static status_t GetOutputGraphicBuffer(T *aMediaCodec,
+                                         size_t aIndex,
+                                         sp<GraphicBuffer> *aGraphicBuffer)
+  {
+    return ERROR_UNSUPPORTED;
+  }
+};
+
+// Class Template Specialization: MediaCodec::getOutputGraphicBufferFromIndex(...)
+template <typename T>
+struct OutputGraphicBufferStub<T, true>
+{
+  static status_t GetOutputGraphicBuffer(T *aMediaCodec,
+                                         size_t aIndex,
+                                         sp<GraphicBuffer> *aGraphicBuffer)
+  {
+    if (aMediaCodec == nullptr || aGraphicBuffer == nullptr) {
+      return BAD_VALUE;
+    }
+    *aGraphicBuffer = aMediaCodec->getOutputGraphicBufferFromIndex(aIndex);
+    return OK;
+  }
+};
+
+// Wrapper class to handle interface-difference of MediaCodec.
+struct MediaCodecInterfaceWrapper
+{
+  typedef int8_t Supported;
+  typedef int16_t Unsupported;
+
+  template <typename T>
+  static auto TestOutputGraphicBuffer(T *aMediaCodec) -> decltype(aMediaCodec->getOutputGraphicBufferFromIndex(0), Supported());
+
+  template <typename T>
+  static auto TestOutputGraphicBuffer(...) -> Unsupported;
+
+  // SFINAE: Substitution Failure Is Not An Error
+  static const bool OutputGraphicBufferSupported = sizeof(TestOutputGraphicBuffer<MediaCodec>(nullptr)) == sizeof(Supported);
+
+  // Class Template Specialization
+  static OutputGraphicBufferStub<MediaCodec, OutputGraphicBufferSupported> sOutputGraphicBufferStub;
+
+  // Wrapper Function
+  static status_t GetOutputGraphicBuffer(MediaCodec *aMediaCodec,
+                                         size_t aIndex,
+                                         sp<GraphicBuffer> *aGraphicBuffer)
+  {
+    return sOutputGraphicBufferStub.GetOutputGraphicBuffer(aMediaCodec, aIndex, aGraphicBuffer);
+  }
+
+};
+
 sp<MediaCodecProxy>
 MediaCodecProxy::CreateByType(sp<ALooper> aLooper,
                               const char *aMime,
@@ -361,6 +417,37 @@ MediaCodecProxy::requestActivityNotification(const sp<AMessage> &aNotify)
     return;
   }
   mCodec->requestActivityNotification(aNotify);
+}
+
+status_t
+MediaCodecProxy::getOutputGraphicBufferFromIndex(size_t aIndex,
+                                                 sp<GraphicBuffer> *aGraphicBuffer)
+{
+  // Read Lock for mCodec
+  RWLock::AutoRLock arl(mCodecLock);
+
+  if (mCodec == nullptr) {
+    return NO_INIT;
+  }
+  return MediaCodecInterfaceWrapper::GetOutputGraphicBuffer(mCodec.get(), aIndex, aGraphicBuffer);
+}
+
+status_t
+MediaCodecProxy::getCapability(uint32_t *aCapability)
+{
+  if (aCapability == nullptr) {
+    return BAD_VALUE;
+  }
+
+  uint32_t capability = kEmptyCapability;
+
+  if (MediaCodecInterfaceWrapper::OutputGraphicBufferSupported) {
+    capability |= kCanExposeGraphicBuffer;
+  }
+
+  *aCapability = capability;
+
+  return OK;
 }
 
 // Called on a Binder thread

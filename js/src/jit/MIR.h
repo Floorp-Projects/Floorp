@@ -11772,10 +11772,12 @@ bool ElementAccessMightBeCopyOnWrite(types::CompilerConstraintList *constraints,
 bool ElementAccessHasExtraIndexedProperty(types::CompilerConstraintList *constraints,
                                           MDefinition *obj);
 MIRType DenseNativeElementType(types::CompilerConstraintList *constraints, MDefinition *obj);
-BarrierKind PropertyReadNeedsTypeBarrier(types::CompilerConstraintList *constraints,
+BarrierKind PropertyReadNeedsTypeBarrier(JSContext *propertycx,
+                                         types::CompilerConstraintList *constraints,
                                          types::TypeObjectKey *object, PropertyName *name,
                                          types::TemporaryTypeSet *observed, bool updateObserved);
-BarrierKind PropertyReadNeedsTypeBarrier(types::CompilerConstraintList *constraints,
+BarrierKind PropertyReadNeedsTypeBarrier(JSContext *propertycx,
+                                         types::CompilerConstraintList *constraints,
                                          MDefinition *obj, PropertyName *name,
                                          types::TemporaryTypeSet *observed);
 BarrierKind PropertyReadOnPrototypeNeedsTypeBarrier(types::CompilerConstraintList *constraints,

@@ -1,0 +1,115 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Promise.resolve(anything) Test</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript"><!--
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["dom.abortablepromise.enabled", true]]},
+                          runTest);
+var gTests = [testPending, testResolved, testRejected];
+
+function runTest() {
+   if (gTests.length == 0) {
+     SimpleTest.finish();
+     return;
+   }
+   new Promise(gTests.shift()).then(runTest, SimpleTest.finish);
+}
+
+// Aborting pending promise should first reject the promise and then call the
+// abortable callback.
+// The test succeeds once both the rejection handler and the abort handler have
+// been called.
+function testPending(succeed, fail) {
+  var rejected = false;
+  var aborted = false;
+
+  var p = new MozAbortablePromise(function(resolve, reject) {
+    // Wait for a while so that the promise can be aborted before resolved.
+    SimpleTest.executeSoon(function() {
+      resolve(0);
+    });
+  }, function abortable() {
+    aborted = true;
+    ok(true, "Promise aborted.");
+    if (rejected) {
+      succeed();
+    }
+  });
+
+  p.then(function() {
+    ok(false, "Failed to abort pending promise.");
+    fail();
+  }, function(what) {
+    rejected = true;
+    var isAbortException = (what && what.name) == "NS_ERROR_ABORT";
+    ok(isAbortException, "Should have NS_ERROR_ABORT exception");
+    if (!isAbortException) {
+      fail();
+    }
+    if (aborted) {
+      succeed();
+    }
+  });
+
+  // Abort the promise on creation.
+  p.abort();
+}
+
+// Do nothing when aborting resolved promise.
+function testResolved(succeed, fail) {
+  var p = new MozAbortablePromise(function(resolve, reject) {
+    resolve();
+  }, function abortable() {
+    ok(false, "Should not abort a resolved promise.");
+    fail();
+  });
+  p.then(function() {
+    ok(true, "Promise resolved.");
+    // Wait for a while to ensure abort handle won't be called.
+    setTimeout(succeed, 1000);
+  }, function(what) {
+    ok(false, "Failed to resolve promise: " + what);
+    fail();
+  });
+  p.abort();
+}
+
+// Do nothing when aborting rejected promise.
+function testRejected(succeed, fail) {
+  var p = new MozAbortablePromise(function(resolve, reject) {
+    reject(0);
+  }, function abortable() {
+    ok(false, "Should not abort a rejected promise.");
+    fail();
+  });
+
+  p.then(function() {
+    ok(false, "Failed to reject promise.");
+    fail();
+  }, function(what) {
+    is(what, 0, "promise rejected: " + what);
+    // Wait for a while to ensure abort handle won't be called.
+    setTimeout(succeed, 1000);
+  });
+  p.abort();
+}
+// -->
+</script>
+</pre>
+</body>
+</html>
+
