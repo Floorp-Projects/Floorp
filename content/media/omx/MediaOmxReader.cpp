@@ -147,10 +147,6 @@ nsresult MediaOmxReader::ReadMetadata(MediaInfo* aInfo,
     return NS_ERROR_FAILURE;
   }
 
-#ifdef MOZ_AUDIO_OFFLOAD
-  CheckAudioOffload();
-#endif
-
   if (IsWaitingMediaResources()) {
     return NS_OK;
   }
@@ -199,6 +195,10 @@ nsresult MediaOmxReader::ReadMetadata(MediaInfo* aInfo,
   }
 
  *aInfo = mInfo;
+
+#ifdef MOZ_AUDIO_OFFLOAD
+  CheckAudioOffload();
+#endif
 
   return NS_OK;
 }
