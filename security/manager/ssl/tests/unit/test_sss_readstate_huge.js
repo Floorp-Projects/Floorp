@@ -44,7 +44,7 @@ function run_test() {
   for (let i = 0; i < 10000; i++) {
     // The 0s will all get squashed down into one 0 when they are read.
     // This is just to make the file size large (>2MB).
-    writeLine("example" + i + ".example.com\t0000000000000000000000000000000000000000000000000\t00000000000000000000000000000000000000\t" + (now + 100000) + ",1,0000000000000000000000000000000000000000000000000000000000000000000000000\n", outputStream);
+    writeLine("example" + i + ".example.com:HSTS\t0000000000000000000000000000000000000000000000000\t00000000000000000000000000000000000000\t" + (now + 100000) + ",1,0000000000000000000000000000000000000000000000000000000000000000000000000\n", outputStream);
   }
   outputStream.close();
   Services.obs.addObserver(checkStateRead, "data-storage-ready", false);
