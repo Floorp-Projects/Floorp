@@ -297,17 +297,6 @@ StringsEqual(JSContext *cx, HandleString lhs, HandleString rhs, bool *res)
 template bool StringsEqual<true>(JSContext *cx, HandleString lhs, HandleString rhs, bool *res);
 template bool StringsEqual<false>(JSContext *cx, HandleString lhs, HandleString rhs, bool *res);
 
-bool
-IteratorMore(JSContext *cx, HandleObject obj, bool *res)
-{
-    RootedValue tmp(cx);
-    if (!js_IteratorMore(cx, obj, &tmp))
-        return false;
-
-    *res = tmp.toBoolean();
-    return true;
-}
-
 JSObject*
 NewInitArray(JSContext *cx, uint32_t count, types::TypeObject *typeArg)
 {

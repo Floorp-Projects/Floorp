@@ -6400,7 +6400,7 @@ CodeGenerator::visitIteratorNext(LIteratorNext *lir)
 }
 
 typedef bool (*IteratorMoreFn)(JSContext *, HandleObject, bool *);
-static const VMFunction IteratorMoreInfo = FunctionInfo<IteratorMoreFn>(jit::IteratorMore);
+static const VMFunction IteratorMoreInfo = FunctionInfo<IteratorMoreFn>(js_IteratorMore);
 
 bool
 CodeGenerator::visitIteratorMore(LIteratorMore *lir)

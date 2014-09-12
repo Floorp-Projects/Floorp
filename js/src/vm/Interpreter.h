@@ -440,9 +440,6 @@ ImplicitThisOperation(JSContext *cx, HandleObject scopeObj, HandlePropertyName n
                       MutableHandleValue res);
 
 bool
-IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, MutableHandleValue rval);
-
-bool
 IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval);
 
 bool

@@ -9830,7 +9830,7 @@ ICIteratorNew_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 
 static bool
 DoIteratorMoreFallback(JSContext *cx, BaselineFrame *frame, ICIteratorMore_Fallback *stub_,
-                       HandleValue iterValue, MutableHandleValue res)
+                       HandleObject iterObj, MutableHandleValue res)
 {
     // This fallback stub may trigger debug mode toggling.
     DebugModeOSRVolatileStub<ICIteratorMore_Fallback *> stub(frame, stub_);
@@ -9838,7 +9838,7 @@ DoIteratorMoreFallback(JSContext *cx, BaselineFrame *frame, ICIteratorMore_Fallb
     FallbackICSpew(cx, stub, "IteratorMore");
 
     bool cond;
-    if (!IteratorMore(cx, &iterValue.toObject(), &cond, res))
+    if (!js_IteratorMore(cx, iterObj, &cond))
         return false;
     res.setBoolean(cond);
 
@@ -9846,7 +9846,7 @@ DoIteratorMoreFallback(JSContext *cx, BaselineFrame *frame, ICIteratorMore_Fallb
     if (stub.invalid())
         return true;
 
-    if (iterValue.toObject().is<PropertyIteratorObject>() &&
+    if (iterObj->is<PropertyIteratorObject>() &&
         !stub->hasStub(ICStub::IteratorMore_Native))
     {
         ICIteratorMore_Native::Compiler compiler(cx);
@@ -9860,7 +9860,7 @@ DoIteratorMoreFallback(JSContext *cx, BaselineFrame *frame, ICIteratorMore_Fallb
 }
 
 typedef bool (*DoIteratorMoreFallbackFn)(JSContext *, BaselineFrame *, ICIteratorMore_Fallback *,
-                                         HandleValue, MutableHandleValue);
+                                         HandleObject, MutableHandleValue);
 static const VMFunction DoIteratorMoreFallbackInfo =
     FunctionInfo<DoIteratorMoreFallbackFn>(DoIteratorMoreFallback);
 
@@ -9869,7 +9869,8 @@ ICIteratorMore_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 {
     EmitRestoreTailCallReg(masm);
 
-    masm.pushValue(R0);
+    masm.unboxObject(R0, R0.scratchReg());
+    masm.push(R0.scratchReg());
     masm.push(BaselineStubReg);
     masm.pushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
