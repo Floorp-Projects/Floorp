@@ -16,13 +16,26 @@ var MockServices = (function () {
 
   var activeAppNotifications = Object.create(null);
 
+  window.addEventListener('mock-notification-close-event', function(e) {
+    for (var alertName in activeAlertNotifications) {
+      var notif = activeAlertNotifications[alertName];
+      if (notif.title === e.detail.title) {
+        notif.listener.observe(null, "alertfinished", null);
+        delete activeAlertNotifications[alertName];
+        delete activeAppNotifications[alertName];
+        return;
+      }
+    }
+  });
+
   var mockAlertsService = {
     showAlertNotification: function(imageUrl, title, text, textClickable,
                                     cookie, alertListener, name) {
       var listener = SpecialPowers.wrap(alertListener);
       activeAlertNotifications[name] = {
         listener: listener,
-        cookie: cookie
+        cookie: cookie,
+        title: title
       };
 
       // fake async alert show event
@@ -105,6 +118,7 @@ var MockServices = (function () {
     },
 
     activeAlertNotifications: activeAlertNotifications,
+
     activeAppNotifications: activeAppNotifications,
   };
 })();

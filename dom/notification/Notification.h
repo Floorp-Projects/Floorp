@@ -77,6 +77,16 @@ public:
     aRetval = mIconUrl;
   }
 
+  void SetStoredState(bool val)
+  {
+    mIsStored = val;
+  }
+
+  bool IsStored()
+  {
+    return mIsStored;
+  }
+
   nsIStructuredCloneContainer* GetDataCloneContainer();
 
   static void RequestPermission(const GlobalObject& aGlobal,
@@ -166,6 +176,12 @@ protected:
   nsString mAlertName;
 
   bool mIsClosed;
+
+  // We need to make a distinction between the notification being closed i.e.
+  // removed from any pending or active lists, and the notification being
+  // removed from the database. NotificationDB might fail when trying to remove
+  // the notification.
+  bool mIsStored;
 
   static uint32_t sCount;
 
