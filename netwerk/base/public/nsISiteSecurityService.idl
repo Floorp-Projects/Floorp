@@ -8,11 +8,25 @@ interface nsIURI;
 interface nsIObserver;
 interface nsIHttpChannel;
 
-[scriptable, uuid(e7da4bd1-7c38-4d73-843d-c1d6af9b3c85)]
+%{C++
+template<class T> class nsTArray;
+class nsCString;
+namespace mozilla
+{
+  namespace pkix
+  {
+    class Time;
+  }
+}
+%}
+[ref] native nsCStringTArrayRef(nsTArray<nsCString>);
+[ref] native mozillaPkixTime(mozilla::pkix::Time);
+
+[scriptable, uuid(35816ea0-3ab5-11e4-8613-180373d97f23)]
 interface nsISiteSecurityService : nsISupports
 {
     const uint32_t HEADER_HSTS = 0;
-    const uint32_t HEADER_HKPK = 1;
+    const uint32_t HEADER_HPKP = 1;
     const uint32_t HEADER_OMS = 2;
 
     /**
@@ -94,6 +108,40 @@ interface nsISiteSecurityService : nsISupports
      * Removes all security state by resetting to factory-original settings.
      */
     void clearAll();
+
+    /**
+     * Returns an array of sha256-hashed key pins for the given domain, if any.
+     * If these pins also apply to subdomains of the given domain,
+     * aIncludeSubdomains will be true. Pins returned are only for non-built-in
+     * pin entries.
+     *
+     * @param aHostname the hosname (punycode) to be queried about
+     * @param the time at which the pins should be valid. This is in
+              mozilla::pkix::Time which uses internally seconds since 0 AD.
+     * @param aPinArray the set of sha256-hashed key pins for the given domain
+     * @param aIncludeSubdomains true if the pins apply to subdomains of the
+     *        given domain
+     */
+    [noscript] boolean getKeyPinsForHostname(in string aHostname,
+                                             in mozillaPkixTime evalTime,
+                                             out nsCStringTArrayRef aPinArray,
+                                             out boolean aIncludeSubdomains);
+
+    /**
+     * Set public-key pins for a host. The resulting pins will be permanent
+     * and visible from private and non-private contexts. These pins replace
+     * any already set by this mechanism or those built-in to Gecko.
+     *
+     * @param aHost the hostname (punycode) that pins will apply to
+     * @param aIncludeSubdomains whether these pins also apply to subdomains
+     * @param aMaxAge lifetime (in seconds) of this pin set
+     * @param aPinCount number of keys being pinnned
+     * @param aSha256Pins array of hashed key fingerprints (SHA-256, base64)
+     */
+     boolean setKeyPins(in string aHost, in boolean aIncludeSubdomains,
+                        in unsigned long aMaxAge, in unsigned long aPinCount,
+                        [array, size_is(aPinCount)] in string aSha256Pins);
+
 };
 
 %{C++
