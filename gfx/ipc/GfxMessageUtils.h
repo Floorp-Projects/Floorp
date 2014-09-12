@@ -1117,7 +1117,7 @@ typedef mozilla::layers::GeckoContentController::APZStateChange APZStateChange;
 
 template <>
 struct ParamTraits<APZStateChange>
-  : public ContiguousTypedEnumSerializer<
+  : public ContiguousEnumSerializer<
              APZStateChange,
              APZStateChange::TransformBegin,
              APZStateChange::APZStateChangeSentinel>
