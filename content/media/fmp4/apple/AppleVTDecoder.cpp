@@ -224,16 +224,25 @@ AppleVTDecoder::SubmitFrame(mp4_demuxer::MP4Sample* aSample)
                                          ,aSample->size
                                          ,false
                                          ,block.receive());
-  NS_ASSERTION(rv == noErr, "Couldn't create CMBlockBuffer");
+  if (rv != noErr) {
+    NS_ERROR("Couldn't create CMBlockBuffer");
+    return NS_ERROR_FAILURE;
+  }
   CMSampleTimingInfo timestamp = TimingInfoFromSample(aSample);
   rv = CMSampleBufferCreate(kCFAllocatorDefault, block, true, 0, 0, mFormat, 1, 1, &timestamp, 0, NULL, sample.receive());
-  NS_ASSERTION(rv == noErr, "Couldn't create CMSampleBuffer");
+  if (rv != noErr) {
+    NS_ERROR("Couldn't create CMSampleBuffer");
+    return NS_ERROR_FAILURE;
+  }
   rv = VTDecompressionSessionDecodeFrame(mSession,
                                          sample,
                                          0,
                                          CreateAppleFrameRef(aSample),
                                          &flags);
-  NS_ASSERTION(rv == noErr, "Couldn't pass frame to decoder");
+  if (rv != noErr) {
+    NS_ERROR("Couldn't pass frame to decoder");
+    return NS_ERROR_FAILURE;
+  }
 
   // Ask for more data.
   if (mTaskQueue->IsEmpty()) {
