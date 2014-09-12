@@ -56,9 +56,10 @@ using namespace mozilla::dom;
 #include "GLContextProvider.h"
 #include "GLContext.h"
 #include "TexturePoolOGL.h"
-#include "GLSharedHandleHelpers.h"
 #include "SurfaceTypes.h"
+#include "EGLUtils.h"
 
+using namespace mozilla;
 using namespace mozilla::gl;
 
 typedef nsNPAPIPluginInstance::VideoInfo VideoInfo;
@@ -127,7 +128,7 @@ public:
     mLock.Unlock();
   }
 
-  SharedTextureHandle CreateSharedHandle()
+  EGLImage CreateEGLImage()
   {
     MutexAutoLock lock(mLock);
 
@@ -137,18 +138,15 @@ public:
     if (mTextureInfo.mWidth == 0 || mTextureInfo.mHeight == 0)
       return 0;
 
-    SharedTextureHandle handle =
-      gl::CreateSharedHandle(sPluginContext,
-                             gl::SharedTextureShareType::SameProcess,
-                             (void*)mTextureInfo.mTexture,
-                             gl::SharedTextureBufferType::TextureID);
+    GLuint& tex = mTextureInfo.mTexture;
+    EGLImage image = gl::CreateEGLImage(sPluginContext, tex);
 
     // We want forget about this now, so delete the texture. Assigning it to zero
     // ensures that we create a new one in Lock()
-    sPluginContext->fDeleteTextures(1, &mTextureInfo.mTexture);
-    mTextureInfo.mTexture = 0;
+    sPluginContext->fDeleteTextures(1, &tex);
+    tex = 0;
 
-    return handle;
+    return image;
   }
 
 private:
@@ -985,17 +983,22 @@ void* nsNPAPIPluginInstance::AcquireContentWindow()
   return mContentSurface->GetNativeWindow();
 }
 
-SharedTextureHandle nsNPAPIPluginInstance::CreateSharedHandle()
+EGLImage
+nsNPAPIPluginInstance::AsEGLImage()
 {
-  if (mContentTexture) {
-    return mContentTexture->CreateSharedHandle();
-  } else if (mContentSurface) {
-    EnsureGLContext();
-    return gl::CreateSharedHandle(sPluginContext,
-                                  gl::SharedTextureShareType::SameProcess,
-                                  mContentSurface,
-                                  gl::SharedTextureBufferType::SurfaceTexture);
-  } else return 0;
+  if (!mContentTexture)
+    return 0;
+
+  return mContentTexture->CreateEGLImage();
+}
+
+nsSurfaceTexture*
+nsNPAPIPluginInstance::AsSurfaceTexture()
+{
+  if (!mContentSurface)
+    return nullptr;
+
+  return mContentSurface;
 }
 
 void* nsNPAPIPluginInstance::AcquireVideoWindow()
