@@ -55,12 +55,12 @@ class ThreadWrapper {
   static ThreadWrapper* CreateThread(ThreadRunFunction func,
                                      ThreadObj obj,
                                      ThreadPriority prio = kNormalPriority,
-                                     const char* thread_name = 0);
+                                     const char* thread_name = NULL);
 
   static ThreadWrapper* CreateUIThread(ThreadRunFunction func,
                                        ThreadObj obj,
                                        ThreadPriority prio = kNormalPriority,
-                                       const char* thread_name = 0);
+                                       const char* thread_name = NULL);
 
   // Get the current thread's kernel thread ID.
   static uint32_t GetThreadId();
