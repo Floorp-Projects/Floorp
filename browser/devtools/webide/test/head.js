@@ -101,6 +101,18 @@ function nextTick() {
   return deferred.promise;
 }
 
+function waitForUpdate(win, update) {
+  let deferred = promise.defer();
+  win.AppManager.on("app-manager-update", function onUpdate(e, what) {
+    if (what !== update) {
+      return;
+    }
+    win.AppManager.off("app-manager-update", onUpdate);
+    deferred.resolve();
+  });
+  return deferred.promise;
+}
+
 function documentIsLoaded(doc) {
   let deferred = promise.defer();
   if (doc.readyState == "complete") {
