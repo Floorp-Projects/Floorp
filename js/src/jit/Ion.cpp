@@ -2034,7 +2034,8 @@ IonCompile(JSContext *cx, JSScript *script,
     const OptimizationInfo *optimizationInfo = js_IonOptimizations.get(optimizationLevel);
     const JitCompileOptions options(cx);
 
-    IonBuilder *builder = alloc->new_<IonBuilder>(CompileCompartment::get(cx->compartment()),
+    IonBuilder *builder = alloc->new_<IonBuilder>((JSContext *) nullptr,
+                                                  CompileCompartment::get(cx->compartment()),
                                                   options, temp, graph, constraints,
                                                   inspector, info, optimizationInfo,
                                                   baselineFrameInspector);

@@ -16,6 +16,7 @@ PREPROCESSED_WEBIDL_FILES = [
 ]
 
 WEBIDL_FILES = [
+    'AbortablePromise.webidl',
     'AbstractWorker.webidl',
     'ActivityRequestHandler.webidl',
     'AlarmsManager.webidl',
