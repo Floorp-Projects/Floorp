@@ -266,8 +266,8 @@ CreateX4Class(JSContext *cx,
 
     x4->initReservedSlot(JS_DESCR_SLOT_KIND, Int32Value(type::X4));
     x4->initReservedSlot(JS_DESCR_SLOT_STRING_REPR, StringValue(stringRepr));
-    x4->initReservedSlot(JS_DESCR_SLOT_ALIGNMENT, Int32Value(X4TypeDescr::size(type)));
-    x4->initReservedSlot(JS_DESCR_SLOT_SIZE, Int32Value(X4TypeDescr::alignment(type)));
+    x4->initReservedSlot(JS_DESCR_SLOT_ALIGNMENT, Int32Value(X4TypeDescr::alignment(type)));
+    x4->initReservedSlot(JS_DESCR_SLOT_SIZE, Int32Value(X4TypeDescr::size(type)));
     x4->initReservedSlot(JS_DESCR_SLOT_OPAQUE, BooleanValue(false));
     x4->initReservedSlot(JS_DESCR_SLOT_TYPE, Int32Value(T::type));
 
