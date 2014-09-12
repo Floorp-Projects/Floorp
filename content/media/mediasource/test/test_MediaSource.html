@@ -12,12 +12,6 @@
 
 SimpleTest.waitForExplicitFinish();
 
-addLoadEvent(function () {
-  ok(!window.MediaSource && !window.SourceBuffer && !window.SourceBufferList,
-     "MediaSource should be hidden behind a pref");
-  SimpleTest.doesThrow(() => new MediaSource, "MediaSource should be hidden behind a pref");
-});
-
 runWithMSE(function () {
   SimpleTest.doesThrow(() => new SourceBuffer, "new SourceBuffer should fail");
   SimpleTest.doesThrow(() => new SourceBufferList, "new SourceBufferList direct should fail");
