@@ -9,6 +9,7 @@
 #include "mozilla/Atomics.h"
 
 #include "jslock.h"
+#include "jsmath.h"
 #include "jsnum.h" // for FIX_FPU
 
 #include "js/Utility.h"
@@ -310,8 +311,6 @@ ThreadPool::workStealing() const
 
     return true;
 }
-
-extern uint64_t random_next(uint64_t *, int);
 
 bool
 ThreadPool::lazyStartWorkers(JSContext *cx)
