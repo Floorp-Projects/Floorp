@@ -153,6 +153,7 @@ ScreenCapturerWin::~ScreenCapturerWin() {
 }
 
 void ScreenCapturerWin::Capture(const DesktopRegion& region) {
+  assert(IsGUIThread(false));
   TickTime capture_start_time = TickTime::Now();
 
   queue_.MoveToNextFrame();
@@ -227,6 +228,7 @@ void ScreenCapturerWin::SetMouseShapeObserver(
 }
 
 bool ScreenCapturerWin::GetScreenList(ScreenList* screens) {
+  assert(IsGUIThread(false));
   assert(screens->size() == 0);
   BOOL enum_result = TRUE;
   for (int device_index = 0; ; ++device_index) {
@@ -248,6 +250,7 @@ bool ScreenCapturerWin::GetScreenList(ScreenList* screens) {
 }
 
 bool ScreenCapturerWin::SelectScreen(ScreenId id) {
+  assert(IsGUIThread(false));
   if (id == kFullDesktopScreenId) {
     current_screen_id_ = id;
     return true;
@@ -279,6 +282,7 @@ void ScreenCapturerWin::Start(Callback* callback) {
 }
 
 void ScreenCapturerWin::PrepareCaptureResources() {
+  assert(IsGUIThread(false));
   // Switch to the desktop receiving user input if different from the current
   // one.
   scoped_ptr<Desktop> input_desktop(Desktop::GetInputDesktop());
@@ -346,6 +350,7 @@ void ScreenCapturerWin::PrepareCaptureResources() {
 }
 
 bool ScreenCapturerWin::CaptureImage() {
+  assert(IsGUIThread(false));
   DesktopRect screen_rect = GetScreenRect();
   if (screen_rect.is_empty())
     return false;
@@ -399,6 +404,7 @@ bool ScreenCapturerWin::CaptureImage() {
 }
 
 void ScreenCapturerWin::CaptureCursor() {
+  assert(IsGUIThread(false));
   CURSORINFO cursor_info;
   cursor_info.cbSize = sizeof(CURSORINFO);
   if (!GetCursorInfo(&cursor_info)) {
@@ -442,6 +448,7 @@ void ScreenCapturerWin::CaptureCursor() {
 }
 
 DesktopRect ScreenCapturerWin::GetScreenRect() {
+  assert(IsGUIThread(false));
   DesktopRect rect = desktop_dc_rect_;
   if (current_screen_id_ == kFullDesktopScreenId)
     return rect;
