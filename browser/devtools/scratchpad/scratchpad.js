@@ -34,8 +34,8 @@ const SCRATCHPAD_L10N = "chrome://browser/locale/devtools/scratchpad.properties"
 const DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
 const PREF_RECENT_FILES_MAX = "devtools.scratchpad.recentFilesMax";
 const SHOW_TRAILING_SPACE = "devtools.scratchpad.showTrailingSpace";
-const ENABLE_CODE_FOLDING = "devtools.scratchpad.enableCodeFolding";
 const ENABLE_AUTOCOMPLETION = "devtools.scratchpad.enableAutocompletion";
+const TAB_SIZE = "devtools.editor.tabsize";
 
 const VARIABLES_VIEW_URL = "chrome://browser/content/devtools/widgets/VariablesView.xul";
 
@@ -655,7 +655,7 @@ var Scratchpad = {
    */
   prettyPrint: function SP_prettyPrint() {
     const uglyText = this.getText();
-    const tabsize = Services.prefs.getIntPref("devtools.editor.tabsize");
+    const tabsize = Services.prefs.getIntPref(TAB_SIZE);
     const id = Math.random();
     const deferred = promise.defer();
 
@@ -1604,7 +1604,6 @@ var Scratchpad = {
       lineNumbers: true,
       contextMenu: "scratchpad-text-popup",
       showTrailingSpace: Services.prefs.getBoolPref(SHOW_TRAILING_SPACE),
-      enableCodeFolding: Services.prefs.getBoolPref(ENABLE_CODE_FOLDING),
       autocomplete: Services.prefs.getBoolPref(ENABLE_AUTOCOMPLETION),
     };
 
