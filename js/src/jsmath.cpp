@@ -759,13 +759,12 @@ random_generateSeed()
 static const uint64_t RNG_MULTIPLIER = 0x5DEECE66DLL;
 static const uint64_t RNG_ADDEND = 0xBLL;
 static const uint64_t RNG_MASK = (1LL << 48) - 1;
-static const double RNG_DSCALE = double(1LL << 53);
 
 /*
  * Math.random() support, lifted from java.util.Random.java.
  */
-static void
-random_initState(uint64_t *rngState)
+void
+js::random_initState(uint64_t *rngState)
 {
     /* Our PRNG only uses 48 bits, so squeeze our entropy into those bits. */
     uint64_t seed = random_generateSeed();
@@ -774,7 +773,7 @@ random_initState(uint64_t *rngState)
 }
 
 uint64_t
-random_next(uint64_t *rngState, int bits)
+js::random_next(uint64_t *rngState, int bits)
 {
     MOZ_ASSERT((*rngState & 0xffff000000000000ULL) == 0, "Bad rngState");
     MOZ_ASSERT(bits > 0 && bits <= 48, "bits is out of range");
@@ -790,25 +789,18 @@ random_next(uint64_t *rngState, int bits)
     return nextstate >> (48 - bits);
 }
 
-static inline double
-random_nextDouble(JSContext *cx)
-{
-    uint64_t *rng = &cx->compartment()->rngState;
-    return double((random_next(rng, 26) << 27) + random_next(rng, 27)) / RNG_DSCALE;
-}
-
 double
 js::math_random_no_outparam(JSContext *cx)
 {
     /* Calculate random without memory traffic, for use in the JITs. */
-    return random_nextDouble(cx);
+    return random_nextDouble(&cx->compartment()->rngState);
 }
 
 bool
 js::math_random(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    double z = random_nextDouble(cx);
+    double z = random_nextDouble(&cx->compartment()->rngState);
     args.rval().setDouble(z);
     return true;
 }
