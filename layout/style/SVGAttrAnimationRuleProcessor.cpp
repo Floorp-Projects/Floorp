@@ -76,17 +76,26 @@ SVGAttrAnimationRuleProcessor::MediumFeaturesChanged(nsPresContext* aPresContext
 /* virtual */ void
 SVGAttrAnimationRuleProcessor::RulesMatching(PseudoElementRuleProcessorData* aData)
 {
+  // If SMIL Animation of SVG attributes can ever target
+  // pseudo-elements, we need to adjust either
+  // nsStyleSet::RuleNodeWithReplacement or the test in
+  // ElementRestyler::RestyleSelf (added in bug 977991 patch 4) to
+  // handle such styles.
 }
 
 /* virtual */ void
 SVGAttrAnimationRuleProcessor::RulesMatching(AnonBoxRuleProcessorData* aData)
 {
+  // If SMIL Animation of SVG attributes can ever target anonymous boxes,
+  // see comment in RulesMatching(PseudoElementRuleProcessorData*).
 }
 
 #ifdef MOZ_XUL
 /* virtual */ void
 SVGAttrAnimationRuleProcessor::RulesMatching(XULTreeRuleProcessorData* aData)
 {
+  // If SMIL Animation of SVG attributes can ever target XUL tree pseudos,
+  // see comment in RulesMatching(PseudoElementRuleProcessorData*).
 }
 #endif
 
