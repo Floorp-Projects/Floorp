@@ -21,9 +21,12 @@ body,
 .standalone-header {
   border-radius: 4px;
   background: #fff;
-  padding: 1rem 5rem;
   border: 1px solid #E7E7E7;
   box-shadow: 0px 2px 0px rgba(0, 0, 0, 0.03);
+}
+
+.header-box {
+  padding: 1rem 5rem;
   margin-top: 2rem;
 }
 
@@ -103,7 +106,7 @@ body,
 }
 
 .standalone-header-title,
-.standalone-call-btn-label {
+.standalone-btn-label {
   font-weight: lighter;
 }
 
@@ -112,7 +115,7 @@ body,
   line-height: 2.2rem;
 }
 
-.standalone-call-btn-label {
+.standalone-btn-label {
   font-size: 1.2rem;
 }
 
@@ -177,6 +180,10 @@ body,
   .standalone-call-btn-video-icon {
     background-image: url("../shared/img/video-inverse-14x14@2x.png");
   }
+}
+
+.btn-pending-cancel-group > .btn-cancel {
+  flex: 2 1 auto;
 }
 
 .btn-large {

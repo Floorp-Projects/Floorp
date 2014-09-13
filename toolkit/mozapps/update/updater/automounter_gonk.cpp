@@ -11,6 +11,8 @@
 #include <sys/mount.h>
 #include <sys/reboot.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
 
 #include "automounter_gonk.h"
@@ -202,6 +204,27 @@ GonkAutoMounter::ProcessMount(const char *mount)
   return true;
 }
 
+/*
+ * Mark the given block device as read-write or read-only, using the BLKROSET
+ * ioctl.
+ */
+static void SetBlockReadWriteStatus(const char *blockdev, bool setReadOnly) {
+  int fd;
+  int roMode = setReadOnly ? 1 : 0;
+
+  fd = open(blockdev, O_RDONLY);
+  if (fd < 0) {
+    return;
+  }
+
+  if (ioctl(fd, BLKROSET, &roMode) == -1) {
+    LOGE("Error setting read-only mode on %s to %s: %s", blockdev,
+         setReadOnly ? "true": "false", strerror(errno));
+  }
+  close(fd);
+}
+
+
 bool
 GonkAutoMounter::MountSystem(unsigned long flags)
 {
@@ -209,6 +232,10 @@ GonkAutoMounter::MountSystem(unsigned long flags)
     LOGE("No device was found for %s", kGonkSystemPath);
     return false;
   }
+
+  // Without setting the block device ro mode to false, we get a permission
+  // denied error while trying to remount it in read-write.
+  SetBlockReadWriteStatus(mDevice, (flags & MS_RDONLY));
 
   const char *readOnly = flags & MS_RDONLY ? "read-only" : "read-write";
   int result = mount(mDevice, kGonkSystemPath, "none", flags, nullptr);

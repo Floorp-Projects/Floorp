@@ -27,8 +27,9 @@ function middle(element) {
   return [x, y];
 }
 
-// We must register a target and make a "mock" service for the target
-var testTarget = {
+// We must register a device and make a "mock" service for the device
+var testDevice = {
+  id: "test:dummy",
   target: "test:service",
   factory: function(service) { /* dummy */  },
   types: ["video/mp4", "video/webm"],
@@ -41,11 +42,11 @@ add_test(function setup_browser() {
 
   do_register_cleanup(function cleanup() {
     BrowserApp.closeTab(BrowserApp.getTabForBrowser(browser));
-    SimpleServiceDiscovery.unregisterTarget(testTarget);
+    SimpleServiceDiscovery.unregisterDevice(testDevice);
   });
 
-  // We need to register a target or processService will ignore us
-  SimpleServiceDiscovery.registerTarget(testTarget);
+  // We need to register a device or processService will ignore us
+  SimpleServiceDiscovery.registerDevice(testDevice);
 
   // Create a pretend service
   let service = {

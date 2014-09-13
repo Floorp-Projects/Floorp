@@ -82,11 +82,10 @@
                 android:background="@color/background_light"/>
 
             <!-- "Add to reading list" -->
-            <TextView
+            <org.mozilla.gecko.overlays.ui.OverlayDialogButton
                 style="@style/ShareOverlayButton.Text"
                 android:id="@+id/overlay_share_reading_list_btn"
-                android:text="@string/overlay_share_reading_list_btn_label"
-                android:drawableLeft="@drawable/overlay_readinglist_icon"/>
+                android:enabled="false"/>
 
             <!-- Evil separator -->
             <View
@@ -95,11 +94,10 @@
                 android:background="@color/background_light"/>
 
             <!-- "Add bookmark" -->
-            <TextView
+            <org.mozilla.gecko.overlays.ui.OverlayDialogButton
                 style="@style/ShareOverlayButton.Text"
                 android:id="@+id/overlay_share_bookmark_btn"
-                android:text="@string/overlay_share_bookmark_btn_label"
-                android:drawableLeft="@drawable/overlay_bookmark_icon"/>
+                android:enabled="false"/>
 
         </LinearLayout>
     </LinearLayout>
