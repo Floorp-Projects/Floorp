@@ -3541,6 +3541,21 @@ nsXPCComponents_Utils::GetObjectPrincipal(HandleValue val, JSContext *cx,
 }
 
 NS_IMETHODIMP
+nsXPCComponents_Utils::GetCompartmentLocation(HandleValue val,
+                                              JSContext *cx,
+                                              nsACString &result)
+{
+    if (!val.isObject())
+        return NS_ERROR_INVALID_ARG;
+    RootedObject obj(cx, &val.toObject());
+    obj = js::CheckedUnwrap(obj);
+    MOZ_ASSERT(obj);
+
+    result = xpc::CompartmentPrivate::Get(obj)->GetLocation();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXPCComponents_Utils::SetAddonInterposition(const nsACString &addonIdStr,
                                              nsIAddonInterposition *interposition,
                                              JSContext *cx)
