@@ -78,7 +78,7 @@ nsHTMLCSSStyleSheet::ElementRulesMatching(nsPresContext* aPresContext,
       // don't want SMIL animation to trigger new CSS transitions. Instead,
       // request an Animation restyle, so we still get noticed.
       aPresContext->PresShell()->RestyleForAnimation(aElement,
-                                                     eRestyle_Self);
+        eRestyle_StyleAttribute | eRestyle_ChangeAnimationPhase);
     } else {
       // Animation restyle (or non-restyle traversal of rules)
       // Now we can walk SMIL overrride style, without triggering transitions.
@@ -143,7 +143,7 @@ nsHTMLCSSStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aDat
   // Perhaps should check that it's XUL, SVG, (or HTML) namespace, but
   // it doesn't really matter.
   if (aData->mAttrHasChanged && aData->mAttribute == nsGkAtoms::style) {
-    return eRestyle_Self;
+    return eRestyle_StyleAttribute | eRestyle_ChangeAnimationPhase;
   }
 
   return nsRestyleHint(0);
