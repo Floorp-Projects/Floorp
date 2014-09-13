@@ -33,6 +33,7 @@
 #include "GeckoProfiler.h"
 #include "nsHTMLCSSStyleSheet.h"
 #include "nsHTMLStyleSheet.h"
+#include "SVGAttrAnimationRuleProcessor.h"
 #include "nsCSSRules.h"
 #include "nsPrintfCString.h"
 #include "nsIFrame.h"
@@ -187,8 +188,14 @@ nsStyleSet::Init(nsPresContext *aPresContext)
 
   mRuleTree = nsRuleNode::CreateRootNode(aPresContext);
 
+  // Make an explicit GatherRuleProcessors call for the levels that
+  // don't have style sheets.  The other levels will have their calls
+  // triggered by DirtyRuleProcessors.  (We should probably convert the
+  // ePresHintSheet and eStyleAttrSheet levels to work like this as
+  // well, and not implement nsIStyleSheet.)
   GatherRuleProcessors(eAnimationSheet);
   GatherRuleProcessors(eTransitionSheet);
+  GatherRuleProcessors(eSVGAttrAnimationSheet);
 }
 
 nsresult
@@ -360,20 +367,26 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
     // handle the types for which have a rule processor that does not
     // implement the style sheet interface.
     case eAnimationSheet:
-      MOZ_ASSERT(mSheets[aType].Count() == 0);
+      MOZ_ASSERT(mSheets[aType].IsEmpty());
       mRuleProcessors[aType] = PresContext()->AnimationManager();
       return NS_OK;
     case eTransitionSheet:
-      MOZ_ASSERT(mSheets[aType].Count() == 0);
+      MOZ_ASSERT(mSheets[aType].IsEmpty());
       mRuleProcessors[aType] = PresContext()->TransitionManager();
       return NS_OK;
     case eStyleAttrSheet:
-      MOZ_ASSERT(mSheets[aType].Count() == 0);
+      MOZ_ASSERT(mSheets[aType].IsEmpty());
       mRuleProcessors[aType] = PresContext()->Document()->GetInlineStyleSheet();
       return NS_OK;
     case ePresHintSheet:
-      MOZ_ASSERT(mSheets[aType].Count() == 0);
-      mRuleProcessors[aType] = PresContext()->Document()->GetAttributeStyleSheet();
+      MOZ_ASSERT(mSheets[aType].IsEmpty());
+      mRuleProcessors[aType] =
+        PresContext()->Document()->GetAttributeStyleSheet();
+      return NS_OK;
+    case eSVGAttrAnimationSheet:
+      MOZ_ASSERT(mSheets[aType].IsEmpty());
+      mRuleProcessors[aType] =
+        PresContext()->Document()->GetSVGAttrAnimationRuleProcessor();
       return NS_OK;
     default:
       // keep going
@@ -960,6 +973,7 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   //  - UA normal rules                    = Agent        normal
   //  - User normal rules                  = User         normal
   //  - Presentation hints                 = PresHint     normal
+  //  - SVG Animation (highest pres hint)  = SVGAttrAnimation normal
   //  - Author normal rules                = Document     normal
   //  - Override normal rules              = Override     normal
   //  - animation rules                    = Animation    normal
@@ -991,8 +1005,12 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   aRuleWalker->SetLevel(ePresHintSheet, false, false);
   if (mRuleProcessors[ePresHintSheet])
     (*aCollectorFunc)(mRuleProcessors[ePresHintSheet], aData);
-  nsRuleNode* lastPresHintRN = aRuleWalker->CurrentNode();
-  
+
+  aRuleWalker->SetLevel(eSVGAttrAnimationSheet, false, false);
+  if (mRuleProcessors[eSVGAttrAnimationSheet])
+    (*aCollectorFunc)(mRuleProcessors[eSVGAttrAnimationSheet], aData);
+  nsRuleNode* lastSVGAttrAnimationRN = aRuleWalker->CurrentNode();
+
   aRuleWalker->SetLevel(eDocSheet, false, true);
   bool cutOffInheritance = false;
   if (mBindingManager && aElement) {
@@ -1065,11 +1083,11 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
 
   if (haveImportantDocRules) {
     aRuleWalker->SetLevel(eDocSheet, true, false);
-    AddImportantRules(lastDocRN, lastPresHintRN, aRuleWalker);  // doc
+    AddImportantRules(lastDocRN, lastSVGAttrAnimationRN, aRuleWalker);  // doc
   }
 #ifdef DEBUG
   else {
-    AssertNoImportantRules(lastDocRN, lastPresHintRN);
+    AssertNoImportantRules(lastDocRN, lastSVGAttrAnimationRN);
   }
 #endif
 
@@ -1094,7 +1112,7 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
 #endif
 
 #ifdef DEBUG
-  AssertNoCSSRules(lastPresHintRN, lastUserRN);
+  AssertNoCSSRules(lastSVGAttrAnimationRN, lastUserRN);
 #endif
 
   if (haveImportantUserRules) {
@@ -1148,6 +1166,9 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
 
   if (mRuleProcessors[ePresHintSheet])
     (*aFunc)(mRuleProcessors[ePresHintSheet], aData);
+
+  if (mRuleProcessors[eSVGAttrAnimationSheet])
+    (*aFunc)(mRuleProcessors[eSVGAttrAnimationSheet], aData);
 
   bool cutOffInheritance = false;
   if (mBindingManager) {
@@ -1314,6 +1335,7 @@ static const CascadeLevel gCascadeLevels[] = {
   { nsStyleSet::eAgentSheet,      false, nsRestyleHint(0) },
   { nsStyleSet::eUserSheet,       false, nsRestyleHint(0) },
   { nsStyleSet::ePresHintSheet,   false, nsRestyleHint(0) },
+  { nsStyleSet::eSVGAttrAnimationSheet, false, nsRestyleHint(0) },
   { nsStyleSet::eDocSheet,        false, nsRestyleHint(0) },
   { nsStyleSet::eScopedDocSheet,  false, nsRestyleHint(0) },
   { nsStyleSet::eStyleAttrSheet,  false, nsRestyleHint(0) },
