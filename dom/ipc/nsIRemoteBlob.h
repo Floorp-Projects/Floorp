@@ -12,15 +12,30 @@
 #endif
 
 #define NS_IREMOTEBLOB_IID \
-  {0x74ce3cdd, 0xbfc9, 0x4edb, {0x98, 0x26, 0x50, 0xcf, 0x00, 0x26, 0x58, 0x70}}
+  {0x0b8b0091, 0xb315, 0x48a2, {0x90, 0xf1, 0x60, 0x0e, 0x78, 0x35, 0xf7, 0x2d}}
+
+namespace mozilla {
+namespace dom {
+
+class BlobChild;
+class BlobParent;
+
+} // namespace dom
+} // namespace mozilla
 
 class NS_NO_VTABLE nsIRemoteBlob : public nsISupports
 {
-public: 
+public:
+  typedef mozilla::dom::BlobChild BlobChild;
+  typedef mozilla::dom::BlobParent BlobParent;
+
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IREMOTEBLOB_IID)
 
-  // This will either return a PBlobChild or PBlobParent.
-  virtual void* GetPBlob() = 0;
+  virtual BlobChild*
+  GetBlobChild() = 0;
+
+  virtual BlobParent*
+  GetBlobParent() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIRemoteBlob, NS_IREMOTEBLOB_IID)

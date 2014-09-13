@@ -78,7 +78,7 @@ public:
                           uint32_t aArgc,
                           JS::Value* aArgv);
 
-  virtual already_AddRefed<nsIDOMBlob>
+  virtual already_AddRefed<DOMFileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
               const nsAString& aContentType) MOZ_OVERRIDE;
 
