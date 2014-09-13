@@ -431,10 +431,10 @@ SavedStacks::sweep(JSRuntime *rt)
 {
     if (frames.initialized()) {
         for (SavedFrame::Set::Enum e(frames); !e.empty(); e.popFront()) {
-            JSObject *obj = static_cast<JSObject *>(e.front());
+            JSObject *obj = e.front().unbarrieredGet();
             JSObject *temp = obj;
 
-            if (IsObjectAboutToBeFinalized(&obj)) {
+            if (IsObjectAboutToBeFinalizedFromAnyThread(&obj)) {
                 e.removeFront();
             } else {
                 SavedFrame *frame = &obj->as<SavedFrame>();
@@ -459,7 +459,9 @@ SavedStacks::sweep(JSRuntime *rt)
 
     sweepPCLocationMap();
 
-    if (savedFrameProto && IsObjectAboutToBeFinalized(savedFrameProto.unsafeGet())) {
+    if (savedFrameProto.unbarrieredGet() &&
+        IsObjectAboutToBeFinalizedFromAnyThread(savedFrameProto.unsafeGet()))
+    {
         savedFrameProto.set(nullptr);
     }
 }
@@ -650,7 +652,7 @@ SavedStacks::sweepPCLocationMap()
     for (PCLocationMap::Enum e(pcLocationMap); !e.empty(); e.popFront()) {
         PCKey key = e.front().key();
         JSScript *script = key.script.get();
-        if (IsScriptAboutToBeFinalized(&script)) {
+        if (IsScriptAboutToBeFinalizedFromAnyThread(&script)) {
             e.removeFront();
         } else if (script != key.script.get()) {
             key.script = script;

@@ -1251,9 +1251,9 @@ void
 ScopeIterVal::sweep()
 {
     /* We need to update possibly moved pointers on sweep. */
-    MOZ_ALWAYS_FALSE(IsObjectAboutToBeFinalized(cur_.unsafeGet()));
+    MOZ_ALWAYS_FALSE(IsObjectAboutToBeFinalizedFromAnyThread(cur_.unsafeGet()));
     if (staticScope_)
-        MOZ_ALWAYS_FALSE(IsObjectAboutToBeFinalized(staticScope_.unsafeGet()));
+        MOZ_ALWAYS_FALSE(IsObjectAboutToBeFinalizedFromAnyThread(staticScope_.unsafeGet()));
 }
 
 // Live ScopeIter values may be added to DebugScopes::liveScopes, as
@@ -1952,7 +1952,7 @@ DebugScopes::sweep(JSRuntime *rt)
      */
     for (MissingScopeMap::Enum e(missingScopes); !e.empty(); e.popFront()) {
         DebugScopeObject **debugScope = e.front().value().unsafeGet();
-        if (IsObjectAboutToBeFinalized(debugScope)) {
+        if (IsObjectAboutToBeFinalizedFromAnyThread(debugScope)) {
             /*
              * Note that onPopCall and onPopBlock rely on missingScopes to find
              * scope objects that we synthesized for the debugger's sake, and
@@ -1997,7 +1997,7 @@ DebugScopes::sweep(JSRuntime *rt)
          * Scopes can be finalized when a debugger-synthesized ScopeObject is
          * no longer reachable via its DebugScopeObject.
          */
-        if (IsObjectAboutToBeFinalized(&scope))
+        if (IsObjectAboutToBeFinalizedFromAnyThread(&scope))
             e.removeFront();
         else if (scope != e.front().key())
             e.rekeyFront(scope);
