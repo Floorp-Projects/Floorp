@@ -25,6 +25,7 @@ function discovery_observer(subject, topic, data) {
 };
 
 var testDevice = {
+  id: "test:dummy",
   target: "test:service",
   factory: function(service) { /* dummy */  },
   types: ["video/mp4"],
