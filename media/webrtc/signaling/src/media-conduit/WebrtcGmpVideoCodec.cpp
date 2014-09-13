@@ -101,8 +101,7 @@ WebrtcFrameTypeToGmpFrameType(webrtc::VideoFrameType aIn,
       *aOut = kGMPSkipFrame;
       break;
     default:
-      MOZ_CRASH();
-      return WEBRTC_VIDEO_CODEC_ERROR;
+      MOZ_CRASH("Unexpected VideoFrameType");
   }
 
   return WEBRTC_VIDEO_CODEC_OK;
@@ -130,13 +129,11 @@ GmpFrameTypeToWebrtcFrameType(GMPVideoFrameType aIn,
       *aOut = webrtc::kSkipFrame;
       break;
     default:
-      MOZ_CRASH();
-      return WEBRTC_VIDEO_CODEC_ERROR;
+      MOZ_CRASH("Unexpected GMPVideoFrameType");
   }
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
-
 
 int32_t
 WebrtcGmpVideoEncoder::InitEncode(const webrtc::VideoCodec* aCodecSettings,
@@ -233,7 +230,6 @@ WebrtcGmpVideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
   return ret;
 }
 
-
 int32_t
 WebrtcGmpVideoEncoder::Encode_g(const webrtc::I420VideoFrame* aInputImage,
                                 const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
@@ -245,9 +241,10 @@ WebrtcGmpVideoEncoder::Encode_g(const webrtc::I420VideoFrame* aInputImage,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  if (aInputImage->width() != mCodecParams.mWidth ||
-      aInputImage->height() != mCodecParams.mHeight) {
-    LOGD(("GMP Encode: resolution change from %ux%u to %ux%u",
+  MOZ_ASSERT(aInputImage->width() >= 0 && aInputImage->height() >= 0);
+  if (static_cast<uint32_t>(aInputImage->width()) != mCodecParams.mWidth ||
+      static_cast<uint32_t>(aInputImage->height()) != mCodecParams.mHeight) {
+    LOGD(("GMP Encode: resolution change from %ux%u to %dx%d",
           mCodecParams.mWidth, mCodecParams.mHeight, aInputImage->width(), aInputImage->height()));
 
     mGMP->Close();
@@ -328,8 +325,6 @@ WebrtcGmpVideoEncoder::Encode_g(const webrtc::I420VideoFrame* aInputImage,
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
-
-
 
 int32_t
 WebrtcGmpVideoEncoder::RegisterEncodeCompleteCallback(webrtc::EncodedImageCallback* aCallback)
