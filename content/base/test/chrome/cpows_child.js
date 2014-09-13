@@ -1,6 +1,7 @@
 dump('loaded child cpow test\n');
 
 content.document.title = "Hello, Kitty";
+const Cu = Components.utils;
 
 var done_count = 0;
 var is_remote;
@@ -10,6 +11,7 @@ var is_remote;
     parent_test();
     dom_test();
     xray_test();
+    compartment_test();
     sync_test();
     async_test();
     rpc_test();
@@ -105,6 +107,35 @@ function xray_test()
   element.wrappedJSObject.foo = "hello";
 
   sendSyncMessage("cpows:xray_test", {}, {element: element});
+}
+
+// Parent->Child references should go X->parent.privilegedJunkScope->child.privilegedJunkScope->Y
+// Child->Parent references should go X->child.privilegedJunkScope->parent.unprivilegedJunkScope->Y
+function compartment_test()
+{
+  // This test primarily checks various compartment invariants for CPOWs, and
+  // doesn't make sense to run in-process.
+  if (!is_remote) {
+    return;
+  }
+
+  let sb = Cu.Sandbox('http://www.example.com', { wantGlobalProperties: ['XMLHttpRequest'] });
+  sb.eval('function getUnprivilegedObject() { var xhr = new XMLHttpRequest(); xhr.expando = 42; return xhr; }');
+  function testParentObject(obj) {
+    let results = [];
+    function is(a, b, msg) { results.push({ result: a === b ? "PASS" : "FAIL", message: msg }) };
+    function ok(x, msg) { results.push({ result: x ? "PASS" : "FAIL", message: msg }) };
+
+    let cpowLocation = Cu.getCompartmentLocation(obj);
+    ok(/Privileged Junk/.test(cpowLocation),
+       "child->parent CPOWs should live in the privileged junk scope: " + cpowLocation);
+    is(obj(), 42, "child->parent CPOW is invokable");
+    is(obj.expando, undefined, "child->parent CPOW cannot access properties");
+
+    return results;
+  }
+  sendSyncMessage("cpows:compartment_test", {}, { getUnprivilegedObject: sb.getUnprivilegedObject,
+                                                  testParentObject: testParentObject });
 }
 
 function sync_test()

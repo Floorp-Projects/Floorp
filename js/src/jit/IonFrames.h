@@ -520,7 +520,7 @@ class IonExitFrameLayout : public IonCommonFrameLayout
         return footer()->jitCode() == T::Token();
     }
     template <typename T> inline T *as() {
-        MOZ_ASSERT(is<T>());
+        MOZ_ASSERT(this->is<T>());
         return reinterpret_cast<T *>(footer());
     }
 };

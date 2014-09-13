@@ -22,8 +22,11 @@ onload = t.step_func(function() {
     i++;
     assert_equals(e.data[0], i);
     assert_equals(e.data[1], location.protocol + '//' + location.host);
+    if (i == 2) {
+      t.done();
+    }
   });
-  setTimeout(t.step_func(function() { assert_equals(i, 2); t.done(); }), 50);
+  setTimeout(t.step_func(function() {assert_unreached("Only got " + i + " events before timeout, expected 2")}), 1000);
 });
 </script>
 

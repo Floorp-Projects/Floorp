@@ -140,7 +140,8 @@ IonBuilder::IonBuilder(JSContext *analysisContext, CompileCompartment *comp,
     failedShapeGuard_(info->script()->failedShapeGuard()),
     nonStringIteration_(false),
     lazyArguments_(nullptr),
-    inlineCallInfo_(nullptr)
+    inlineCallInfo_(nullptr),
+    maybeFallbackFunctionGetter_(nullptr)
 {
     script_ = info->script();
     pc = info->startPC();
@@ -176,7 +177,7 @@ IonBuilder::abort(const char *message, ...)
     va_start(ap, message);
     abortFmt(message, ap);
     va_end(ap);
-    JitSpew(JitSpew_Abort, "aborted @ %s:%d", script()->filename(), PCToLineNumber(script(), pc));
+    JitSpew(JitSpew_IonAbort, "aborted @ %s:%d", script()->filename(), PCToLineNumber(script(), pc));
 #endif
     return false;
 }
@@ -186,7 +187,7 @@ IonBuilder::spew(const char *message)
 {
     // Don't call PCToLineNumber in release builds.
 #ifdef DEBUG
-    JitSpew(JitSpew_MIR, "%s @ %s:%d", message, script()->filename(), PCToLineNumber(script(), pc));
+    JitSpew(JitSpew_IonMIR, "%s @ %s:%d", message, script()->filename(), PCToLineNumber(script(), pc));
 #endif
 }
 
@@ -652,15 +653,15 @@ IonBuilder::build()
 
 #ifdef DEBUG
     if (info().executionModeIsAnalysis()) {
-        JitSpew(JitSpew_Scripts, "Analyzing script %s:%d (%p) %s",
+        JitSpew(JitSpew_IonScripts, "Analyzing script %s:%d (%p) %s",
                 script()->filename(), script()->lineno(), (void *)script(),
                 ExecutionModeString(info().executionMode()));
     } else if (info().executionMode() == SequentialExecution && script()->hasIonScript()) {
-        JitSpew(JitSpew_Scripts, "Recompiling script %s:%d (%p) (warmup-counter=%d, level=%s)",
+        JitSpew(JitSpew_IonScripts, "Recompiling script %s:%d (%p) (warmup-counter=%d, level=%s)",
                 script()->filename(), script()->lineno(), (void *)script(),
                 (int)script()->getWarmUpCount(), OptimizationLevelString(optimizationInfo().level()));
     } else {
-        JitSpew(JitSpew_Scripts, "Compiling script %s:%d (%p) (warmup-counter=%d, level=%s)",
+        JitSpew(JitSpew_IonScripts, "Compiling script %s:%d (%p) (warmup-counter=%d, level=%s)",
                 script()->filename(), script()->lineno(), (void *)script(),
                 (int)script()->getWarmUpCount(), OptimizationLevelString(optimizationInfo().level()));
     }
@@ -751,6 +752,9 @@ IonBuilder::build()
     if (!traverseBytecode())
         return false;
 
+    // Discard unreferenced & pre-allocated resume points.
+    replaceMaybeFallbackFunctionGetter(nullptr);
+
     if (!maybeAddOsrTypeBarriers())
         return false;
 
@@ -811,7 +815,7 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
 
     inlineCallInfo_ = &callInfo;
 
-    JitSpew(JitSpew_Scripts, "Inlining script %s:%d (%p)",
+    JitSpew(JitSpew_IonScripts, "Inlining script %s:%d (%p)",
             script()->filename(), script()->lineno(), (void *)script());
 
     callerBuilder_ = callerBuilder;
@@ -907,6 +911,9 @@ IonBuilder::buildInline(IonBuilder *callerBuilder, MResumePoint *callerResumePoi
 
     if (!traverseBytecode())
         return false;
+
+    // Discard unreferenced & pre-allocated resume points.
+    replaceMaybeFallbackFunctionGetter(nullptr);
 
     return true;
 }
@@ -1034,7 +1041,7 @@ IonBuilder::initScopeChain(MDefinition *callee)
 bool
 IonBuilder::initArgumentsObject()
 {
-    JitSpew(JitSpew_MIR, "%s:%d - Emitting code to initialize arguments object! block=%p",
+    JitSpew(JitSpew_IonMIR, "%s:%d - Emitting code to initialize arguments object! block=%p",
                               script()->filename(), script()->lineno(), current);
     JS_ASSERT(info().needsArgsObj());
     MCreateArgumentsObject *argsObj = MCreateArgumentsObject::New(alloc(), current->scopeChain());
@@ -2093,6 +2100,9 @@ IonBuilder::restartLoop(CFGState state)
 
     MBasicBlock *header = state.loop.entry;
 
+    // Discard unreferenced & pre-allocated resume points.
+    replaceMaybeFallbackFunctionGetter(nullptr);
+
     // Remove all blocks in the loop body other than the header, which has phis
     // of the appropriate type and incoming edges to preserve.
     graph().removeBlocksAfter(header);
@@ -3131,55 +3141,61 @@ IonBuilder::replaceTypeSet(MDefinition *subject, types::TemporaryTypeSet *type, 
 bool
 IonBuilder::detectAndOrStructure(MPhi *ins, bool *branchIsAnd)
 {
-    // TODO bug 1034184: enable this again
-    return false;
+    // Look for a triangle pattern:
+    //
+    //       initialBlock
+    //         /     |
+    // branchBlock   |
+    //         \     |
+    //        testBlock
+    //
+    // Where ins is a phi from testBlock which combines two values
+    // pushed onto the stack by initialBlock and branchBlock.
 
-    if (current->numPredecessors() != 1)
+    if (ins->numOperands() != 2)
         return false;
 
-    MTest *initialTest;
+    MBasicBlock *testBlock = ins->block();
+    MOZ_ASSERT(testBlock->numPredecessors() == 2);
+
     MBasicBlock *initialBlock;
     MBasicBlock *branchBlock;
-    MBasicBlock *testBlock = ins->block();
-
-    // If *branchIsAnd is true, then the phi is an AND. Else it is an OR.
-    *branchIsAnd = true;
-    // We need to first detect the triangular structure.
-    if (testBlock->numPredecessors() != 2)
-        return false;
-
-    if (testBlock->getPredecessor(0)->lastIns()->isTest())
+    if (testBlock->getPredecessor(0)->lastIns()->isTest()) {
         initialBlock = testBlock->getPredecessor(0);
-    else if (testBlock->getPredecessor(1)->lastIns()->isTest())
+        branchBlock = testBlock->getPredecessor(1);
+    } else if (testBlock->getPredecessor(1)->lastIns()->isTest()) {
         initialBlock = testBlock->getPredecessor(1);
-    else
-        return false;
-
-    initialTest = initialBlock->lastIns()->toTest();
-
-    if (initialTest->ifTrue() == testBlock) {
-        branchBlock = initialTest->ifFalse();
-        *branchIsAnd = false;
+        branchBlock = testBlock->getPredecessor(0);
     } else {
-        branchBlock = initialTest->ifTrue();
+        return false;
     }
 
-    if (branchBlock->numSuccessors() != 1 || branchBlock->getSuccessor(0) != testBlock)
+    if (branchBlock->numSuccessors() != 1)
         return false;
 
-    if (branchBlock->numPredecessors() != 1)
+    if (branchBlock->numPredecessors() != 1 || branchBlock->getPredecessor(0) != initialBlock)
         return false;
 
-    MPhi *phi = ins->toPhi();
+    if (initialBlock->numSuccessors() != 2)
+        return false;
 
-    MDefinition *branchResult = phi->getOperand(testBlock->indexForPredecessor(branchBlock));
-    MDefinition *initialResult = phi->getOperand(testBlock->indexForPredecessor(initialBlock));
+    MDefinition *branchResult = ins->getOperand(testBlock->indexForPredecessor(branchBlock));
+    MDefinition *initialResult = ins->getOperand(testBlock->indexForPredecessor(initialBlock));
 
     if (branchBlock->stackDepth() != initialBlock->stackDepth())
         return false;
     if (branchBlock->stackDepth() != testBlock->stackDepth() + 1)
         return false;
     if (branchResult != branchBlock->peek(-1) || initialResult != initialBlock->peek(-1))
+        return false;
+
+    MTest *initialTest = initialBlock->lastIns()->toTest();
+    bool branchIsTrue = branchBlock == initialTest->ifTrue();
+    if (initialTest->input() == ins->getOperand(0))
+        *branchIsAnd = branchIsTrue != (testBlock->getPredecessor(0) == branchBlock);
+    else if (initialTest->input() == ins->getOperand(1))
+        *branchIsAnd = branchIsTrue != (testBlock->getPredecessor(1) == branchBlock);
+    else
         return false;
 
     return true;
@@ -4208,7 +4224,7 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
                              loopDepth_);
     if (!inlineBuilder.buildInline(this, outerResumePoint, callInfo)) {
         if (analysisContext && analysisContext->isExceptionPending()) {
-            JitSpew(JitSpew_Abort, "Inline builder raised exception.");
+            JitSpew(JitSpew_IonAbort, "Inline builder raised exception.");
             abortReason_ = AbortReason_Error;
             return false;
         }
@@ -4569,6 +4585,7 @@ IonBuilder::inlineCallsite(ObjectVector &targets, ObjectVector &originals,
     // If so, the cache may be movable to a fallback path, with a dispatch
     // instruction guarding on the incoming TypeObject.
     WrapMGetPropertyCache propCache(getInlineableGetPropertyCache(callInfo));
+    keepFallbackFunctionGetter(propCache.get());
 
     // Inline single targets -- unless they derive from a cache, in which case
     // avoiding the cache and guarding is still faster.
@@ -8750,6 +8767,14 @@ IonBuilder::testCommonGetterSetter(types::TemporaryTypeSet *types, PropertyName 
     return addShapeGuard(wrapper, lastProperty, Bailout_ShapeGuard);
 }
 
+void
+IonBuilder::replaceMaybeFallbackFunctionGetter(MGetPropertyCache *cache)
+{
+    // Discard the last prior resume point of the previous MGetPropertyCache.
+    WrapMGetPropertyCache rai(maybeFallbackFunctionGetter_);
+    maybeFallbackFunctionGetter_ = cache;
+}
+
 bool
 IonBuilder::annotateGetPropertyCache(MDefinition *obj, MGetPropertyCache *getPropCache,
                                      types::TemporaryTypeSet *objTypes,
@@ -8831,6 +8856,7 @@ IonBuilder::annotateGetPropertyCache(MDefinition *obj, MGetPropertyCache *getPro
         if (!resumePoint)
             return false;
         inlinePropTable->setPriorResumePoint(resumePoint);
+        replaceMaybeFallbackFunctionGetter(getPropCache);
         current->pop();
     }
     return true;
