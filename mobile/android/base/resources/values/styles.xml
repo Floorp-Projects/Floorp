@@ -408,10 +408,6 @@
         <item name="android:clipToPadding">false</item>
     </style>
 
-    <style name="UrlBar.ImageButton.TabCount.NewTablet">
-        <item name="android:background">@drawable/new_tablet_tabs_count</item>
-    </style>
-
     <!-- URL bar -->
     <style name="UrlBar">
         <item name="android:layout_width">match_parent</item>
