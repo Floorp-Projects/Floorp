@@ -100,11 +100,6 @@ interface nsIXULRuntime : nsISupports
   readonly attribute boolean browserTabsRemoteAutostart;
 
   /**
-   * If true, the accessibility service is running.
-   */
-  readonly attribute boolean accessibilityEnabled;
-
-  /**
    * Signal the apprunner to invalidate caches on the next restart.
    * This will cause components to be autoregistered and all
    * fastload data to be re-created.

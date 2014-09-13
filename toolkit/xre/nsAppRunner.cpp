@@ -99,10 +99,6 @@
 #endif
 #endif
 
-#ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
-#endif
-
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "nsDirectoryServiceDefs.h"
@@ -829,17 +825,6 @@ NS_IMETHODIMP
 nsXULAppInfo::GetBrowserTabsRemoteAutostart(bool* aResult)
 {
   *aResult = BrowserTabsRemoteAutostart();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULAppInfo::GetAccessibilityEnabled(bool* aResult)
-{
-#ifdef ACCESSIBILITY
-  *aResult = GetAccService() != nullptr;
-#else
-  *aResult = false;
-#endif
   return NS_OK;
 }
 
@@ -4540,8 +4525,7 @@ mozilla::BrowserTabsRemoteAutostart()
 {
   if (!gBrowserTabsRemoteAutostartInitialized) {
     bool prefEnabled = Preferences::GetBool("browser.tabs.remote.autostart", false);
-    bool disabledForA11y = Preferences::GetBool("browser.tabs.remote.autostart.disabled-because-using-a11y", false);
-    gBrowserTabsRemoteAutostart = !gSafeMode && !disabledForA11y && prefEnabled;
+    gBrowserTabsRemoteAutostart = !gSafeMode && prefEnabled;
     gBrowserTabsRemoteAutostartInitialized = true;
 
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_AUTOSTART, gBrowserTabsRemoteAutostart);
