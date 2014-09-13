@@ -10,6 +10,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
 // Define service devices. We should consider moving these to their respective
 // JSM files, but we left them here to allow for better lazy JSM loading.
 var rokuDevice = {
+  id: "roku:ecp",
   target: "roku:ecp",
   factory: function(aService) {
     Cu.import("resource://gre/modules/RokuApp.jsm");
@@ -20,6 +21,7 @@ var rokuDevice = {
 };
 
 var fireflyDevice = {
+  id: "firefly:dial",
   target: "urn:dial-multiscreen-org:service:dial:1",
   filters: {
     server: null,
@@ -34,6 +36,7 @@ var fireflyDevice = {
 };
 
 var mediaPlayerDevice = {
+  id: "media:router",
   target: "media:router",
   factory: function(aService) {
     Cu.import("resource://gre/modules/MediaPlayerApp.jsm");

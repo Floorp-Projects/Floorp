@@ -29,6 +29,7 @@ function middle(element) {
 
 // We must register a target and make a "mock" service for the target
 var testTarget = {
+  id: "test:dummy",
   target: "test:service",
   factory: function(service) { /* dummy */  },
   types: ["video/mp4", "video/webm"],
