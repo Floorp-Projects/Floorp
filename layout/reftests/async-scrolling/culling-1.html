@@ -1,0 +1,20 @@
+<html reftest-async-scroll>
+  <head>
+    <title>Culling Test</title>
+    <meta name="viewport" content="width=device-width">
+  </head>
+  <body style="background:red">
+    <div style="height:390px; width:300px; overflow-y:hidden; background:red"
+         reftest-displayport-x="0" reftest-displayport-y="0"
+         reftest-displayport-w="300" reftest-displayport-h="400"
+         reftest-async-scroll-x="0" reftest-async-scroll-y="10">
+      <div style="margin:15px; width:200px; height:40px; background:blue"></div>
+      <div style="margin:15px; width:200px; height:40px; background:blue"></div>
+      <div style="margin:15px; width:200px; height:40px; background:blue"></div>
+      <div style="margin-top:15px; width:300px; height:40px; background:blue"></div>
+      <div style="margin:15px; width:200px; height:40px; background:blue"></div>
+      <div style="margin:15px; width:200px; height:40px; background:blue"></div>
+      <div style="margin:15px; width:200px; height:40px; background:blue"></div>
+    </div>
+  </body>
+</html>

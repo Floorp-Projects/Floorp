@@ -1116,27 +1116,6 @@ JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
 JS_STATIC_ASSERT(JSOP_IFNE_LENGTH == JSOP_IFEQ_LENGTH);
 JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
 
-/*
- * Inline fast paths for iteration. js_IteratorMore and js_IteratorNext handle
- * all cases, but we inline the most frequently taken paths here.
- */
-bool
-js::IteratorMore(JSContext *cx, JSObject *iterobj, bool *cond, MutableHandleValue rval)
-{
-    if (iterobj->is<PropertyIteratorObject>()) {
-        NativeIterator *ni = iterobj->as<PropertyIteratorObject>().getNativeIterator();
-        if (ni->isKeyIter()) {
-            *cond = (ni->props_cursor < ni->props_end);
-            return true;
-        }
-    }
-    Rooted<JSObject*> iobj(cx, iterobj);
-    if (!js_IteratorMore(cx, iobj, rval))
-        return false;
-    *cond = rval.isTrue();
-    return true;
-}
-
 bool
 js::IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
 {
@@ -1927,9 +1906,10 @@ CASE(JSOP_MOREITER)
     JS_ASSERT(REGS.stackDepth() >= 1);
     JS_ASSERT(REGS.sp[-1].isObject());
     PUSH_NULL();
+    RootedObject &obj = rootObject0;
+    obj = &REGS.sp[-2].toObject();
     bool cond;
-    MutableHandleValue res = REGS.stackHandleAt(-1);
-    if (!IteratorMore(cx, &REGS.sp[-2].toObject(), &cond, res))
+    if (!js_IteratorMore(cx, obj, &cond))
         goto error;
     REGS.sp[-1].setBoolean(cond);
 }

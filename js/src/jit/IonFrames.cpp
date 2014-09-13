@@ -628,7 +628,7 @@ HandleException(ResumeFromException *rfe)
 
     rfe->kind = ResumeFromException::RESUME_ENTRY_FRAME;
 
-    JitSpew(JitSpew_Invalidate, "handling exception");
+    JitSpew(JitSpew_IonInvalidate, "handling exception");
 
     // Clear any Ion return override that's been set.
     // This may happen if a callVM function causes an invalidation (setting the
@@ -1361,7 +1361,7 @@ void UpdateJitActivationsForMinorGC<gc::ForkJoinNursery>(PerThreadData *ptd, JST
 void
 GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
 {
-    JitSpew(JitSpew_Snapshots, "Recover PC & Script from the last frame.");
+    JitSpew(JitSpew_IonSnapshots, "Recover PC & Script from the last frame.");
 
     JSRuntime *rt = cx->runtime();
 

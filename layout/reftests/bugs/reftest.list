@@ -860,7 +860,7 @@ skip-if(B2G) == 402807-1.html 402807-1-ref.html
 == 403129-3.html 403129-3-ref.html
 == 403129-4.html 403129-4-ref.html
 random == 403134-1.html 403134-1-ref.html # bug 405377
-skip-if(B2G) fails-if(Android) == 403181-1.xml 403181-1-ref.xml
+skip-if(B2G) == 403181-1.xml 403181-1-ref.xml
 == 403249-1a.html 403249-1-ref.html
 == 403249-1b.html 403249-1-ref.html
 == 403249-2a.html 403249-2-ref.html

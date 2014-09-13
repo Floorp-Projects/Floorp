@@ -694,22 +694,22 @@ class MDefinition : public MNode
         return op() == MIRType::classOpcode;
     }
     template<typename MIRType> MIRType *to() {
-        JS_ASSERT(is<MIRType>());
+        JS_ASSERT(this->is<MIRType>());
         return static_cast<MIRType *>(this);
     }
     template<typename MIRType> const MIRType *to() const {
-        JS_ASSERT(is<MIRType>());
+        JS_ASSERT(this->is<MIRType>());
         return static_cast<const MIRType *>(this);
     }
-#   define OPCODE_CASTS(opcode)                                             \
-    bool is##opcode() const {                                               \
-        return is<M##opcode>();                                             \
-    }                                                                       \
-    M##opcode *to##opcode() {                                               \
-        return to<M##opcode>();                                             \
-    }                                                                       \
-    const M##opcode *to##opcode() const {                                   \
-        return to<M##opcode>();                                             \
+#   define OPCODE_CASTS(opcode)           \
+    bool is##opcode() const {             \
+        return this->is<M##opcode>();     \
+    }                                     \
+    M##opcode *to##opcode() {             \
+        return this->to<M##opcode>();     \
+    }                                     \
+    const M##opcode *to##opcode() const { \
+        return this->to<M##opcode>();     \
     }
     MIR_OPCODE_LIST(OPCODE_CASTS)
 #   undef OPCODE_CASTS
@@ -830,6 +830,13 @@ class MInstruction
       : MDefinition(other),
         resumePoint_(nullptr)
     { }
+
+    // Convenient function used for replacing a load by the value of the store
+    // if the types are match, and boxing the value if they do not match.
+    //
+    // Note: There is no need for such function in AsmJS functions as they do
+    // not use any MIRType_Value.
+    MDefinition *foldsToStoredValue(TempAllocator &alloc, MDefinition *loaded);
 
     void setResumePoint(MResumePoint *resumePoint);
 

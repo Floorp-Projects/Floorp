@@ -23,21 +23,14 @@
   test(function() {
      assert_regexp_match(lastMod, pattern,
        "Format should match the pattern \"NN/NN/NNNN NN:NN:NN\".");
-     assert_equals(lastMod.substring(0,2), month, "MM part should match month.");
-     assert_equals(lastMod.substring(3,5), day, "DD part should match day.");
-     assert_equals(lastMod.substring(6,10), year, "YYYY part should match year.");
-     assert_equals(lastMod.substring(11,13), hours, "hh part should match hours.");
-     assert_equals(lastMod.substring(14,16), minutes, "mm part should match minutes.");
-     assert_approx_equals(parseInt(lastMod.substring(17,19), 10),
-       parseInt(seconds), 1, "ss part should match seconds.");
+     assert_approx_equals(Date.parse(document.lastModified), currentDate, 10);
   }, "Date returned by lastModified is in the form \"MM/DD/YYYY hh:mm:ss\".");
   var t = async_test('Date returned by lastModified is current.');
   var old = Date.parse(document.lastModified);
   setTimeout(function() {
     t.step(function() {
-      assert_equals((new Date(Date.parse(document.lastModified))).toString(),
-        (new Date(old + 1000)).toString());
+      assert_approx_equals(Date.parse(document.lastModified), old + 2000, 300);
       t.done();
     });
-  }, 1000);
+  }, 2000);
 </script>

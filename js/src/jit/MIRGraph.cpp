@@ -74,7 +74,7 @@ MIRGenerator::usesSimd()
 bool
 MIRGenerator::abortFmt(const char *message, va_list ap)
 {
-    JitSpewVA(JitSpew_Abort, message, ap);
+    JitSpewVA(JitSpew_IonAbort, message, ap);
     error_ = true;
     return false;
 }
