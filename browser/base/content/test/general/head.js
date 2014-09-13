@@ -665,3 +665,7 @@ function assertWebRTCIndicatorStatus(expected) {
     }
   }
 }
+
+function waitForNewTab(aTabBrowser) {
+  return promiseWaitForEvent(aTabBrowser.tabContainer, "TabOpen");
+}

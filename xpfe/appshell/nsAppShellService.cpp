@@ -630,7 +630,7 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
   }
 
   if (parentContext) {
-    isUsingRemoteTabs = parentContext->UseRemoteTabs();
+    isUsingRemoteTabs = parentContext->UseRemoteTabs() && aOpeningTab;
   }
 
   nsCOMPtr<nsIDOMWindow> newDomWin =
