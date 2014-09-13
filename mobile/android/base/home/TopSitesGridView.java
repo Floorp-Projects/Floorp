@@ -12,7 +12,6 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.ThumbnailHelper;
 import org.mozilla.gecko.db.BrowserContract.TopSites;
-import org.mozilla.gecko.db.TopSitesCursorWrapper;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 import org.mozilla.gecko.util.StringUtils;
 
@@ -20,7 +19,6 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.graphics.Rect;
-import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View;
@@ -277,6 +275,7 @@ public class TopSitesGridView extends GridView {
 
         public TopSitesGridContextMenuInfo(View targetView, int position, long id) {
             super(targetView, position, id);
+            this.itemType = RemoveItemType.HISTORY;
         }
     }
 }
