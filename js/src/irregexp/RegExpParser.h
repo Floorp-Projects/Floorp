@@ -42,7 +42,8 @@ namespace frontend {
 namespace irregexp {
 
 bool
-ParsePattern(frontend::TokenStream &ts, LifoAlloc &alloc, JSAtom *str, bool multiline,
+ParsePattern(frontend::TokenStream &ts, LifoAlloc &alloc, JSAtom *str,
+             bool multiline, bool match_only,
              RegExpCompileData *data);
 
 bool

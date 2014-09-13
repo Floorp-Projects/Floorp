@@ -7,9 +7,10 @@
 XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
                                   "resource://gre/modules/PageActions.jsm");
 
-// Define service targets. We should consider moving these to their respective
+// Define service devices. We should consider moving these to their respective
 // JSM files, but we left them here to allow for better lazy JSM loading.
-var rokuTarget = {
+var rokuDevice = {
+  id: "roku:ecp",
   target: "roku:ecp",
   factory: function(aService) {
     Cu.import("resource://gre/modules/RokuApp.jsm");
@@ -19,7 +20,8 @@ var rokuTarget = {
   extensions: ["mp4"]
 };
 
-var fireflyTarget = {
+var fireflyDevice = {
+  id: "firefly:dial",
   target: "urn:dial-multiscreen-org:service:dial:1",
   filters: {
     server: null,
@@ -33,7 +35,8 @@ var fireflyTarget = {
   extensions: ["mp4", "webm"]
 };
 
-var mediaPlayerTarget = {
+var mediaPlayerDevice = {
+  id: "media:router",
   target: "media:router",
   factory: function(aService) {
     Cu.import("resource://gre/modules/MediaPlayerApp.jsm");
@@ -54,9 +57,9 @@ var CastingApps = {
     }
 
     // Register targets
-    SimpleServiceDiscovery.registerTarget(rokuTarget);
-    SimpleServiceDiscovery.registerTarget(fireflyTarget);
-    SimpleServiceDiscovery.registerTarget(mediaPlayerTarget);
+    SimpleServiceDiscovery.registerDevice(rokuDevice);
+    SimpleServiceDiscovery.registerDevice(fireflyDevice);
+    SimpleServiceDiscovery.registerDevice(mediaPlayerDevice);
 
     // Search for devices continuously every 120 seconds
     SimpleServiceDiscovery.search(120 * 1000);

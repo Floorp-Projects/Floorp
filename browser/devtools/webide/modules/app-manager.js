@@ -333,9 +333,6 @@ exports.AppManager = AppManager = {
       this.tabStore.selectedTab = null;
 
       if (this.selectedProject) {
-        if (this.selectedProject.type == "runtimeApp") {
-          this.runRuntimeApp();
-        }
         if (this.selectedProject.type == "packaged" ||
             this.selectedProject.type == "hosted") {
           this.validateProject(this.selectedProject);

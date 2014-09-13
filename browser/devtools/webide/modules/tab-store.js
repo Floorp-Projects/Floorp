@@ -58,6 +58,8 @@ TabStore.prototype = {
   _resetStore: function() {
     this.response = null;
     this.tabs = [];
+    this._selectedTab = null;
+    this._selectedTabTargetPromise = null;
   },
 
   _onStatusChanged: function() {
@@ -115,6 +117,7 @@ TabStore.prototype = {
   // which is the selected project.  This should be done as part of the
   // project-agnostic work.
   _selectedTab: null,
+  _selectedTabTargetPromise: null,
   get selectedTab() {
     return this._selectedTab;
   },
@@ -134,13 +137,18 @@ TabStore.prototype = {
       return tab.actor === this._selectedTab.actor;
     });
     if (!alive) {
+      this._selectedTab = null;
+      this._selectedTabTargetPromise = null;
       this.emit("closed");
     }
   },
 
   getTargetForTab: function() {
+    if (this._selectedTabTargetPromise) {
+      return this._selectedTabTargetPromise;
+    }
     let store = this;
-    return Task.spawn(function*() {
+    this._selectedTabTargetPromise = Task.spawn(function*() {
       // If you connect to a tab, then detach from it, the root actor may have
       // de-listed the actors that belong to the tab.  This breaks the toolbox
       // if you try to connect to the same tab again.  To work around this
@@ -152,6 +160,7 @@ TabStore.prototype = {
         chrome: false
       });
     });
+    return this._selectedTabTargetPromise;
   },
 
 };

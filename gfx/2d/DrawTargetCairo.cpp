@@ -144,13 +144,13 @@ ReleaseData(void* aData)
 
 cairo_surface_t*
 CopyToImageSurface(unsigned char *aData,
-                   const IntSize &aSize,
+                   const IntRect &aRect,
                    int32_t aStride,
                    SurfaceFormat aFormat)
 {
   cairo_surface_t* surf = cairo_image_surface_create(GfxFormatToCairoFormat(aFormat),
-                                                     aSize.width,
-                                                     aSize.height);
+                                                     aRect.width,
+                                                     aRect.height);
   // In certain scenarios, requesting larger than 8k image fails.  Bug 803568
   // covers the details of how to run into it, but the full detailed
   // investigation hasn't been done to determine the underlying cause.  We
@@ -163,13 +163,90 @@ CopyToImageSurface(unsigned char *aData,
   int surfStride = cairo_image_surface_get_stride(surf);
   int32_t pixelWidth = BytesPerPixel(aFormat);
 
-  for (int32_t y = 0; y < aSize.height; ++y) {
+  unsigned char* source = aData +
+                          aRect.y * aStride +
+                          aRect.x * pixelWidth;
+
+  for (int32_t y = 0; y < aRect.height; ++y) {
     memcpy(surfData + y * surfStride,
-           aData + y * aStride,
-           aSize.width * pixelWidth);
+           source + y * aStride,
+           aRect.width * pixelWidth);
   }
   cairo_surface_mark_dirty(surf);
   return surf;
+}
+
+/**
+ * If aSurface can be represented as a surface of type
+ * CAIRO_SURFACE_TYPE_IMAGE then returns that surface. Does
+ * not add a reference.
+ */
+cairo_surface_t* GetAsImageSurface(cairo_surface_t* aSurface)
+{
+  if (cairo_surface_get_type(aSurface) == CAIRO_SURFACE_TYPE_IMAGE) {
+    return aSurface;
+#ifdef CAIRO_HAS_WIN32_SURFACE
+  } else if (cairo_surface_get_type(aSurface) == CAIRO_SURFACE_TYPE_WIN32) {
+    return cairo_win32_surface_get_image(aSurface);
+#endif
+  }
+
+  return nullptr;
+}
+
+cairo_surface_t* CreateSubImageForData(unsigned char* aData,
+                                       const IntRect& aRect,
+                                       int aStride,
+                                       SurfaceFormat aFormat)
+{
+  unsigned char *data = aData +
+                        aRect.y * aStride +
+                        aRect.x * BytesPerPixel(aFormat);
+
+  cairo_surface_t *image =
+    cairo_image_surface_create_for_data(data,
+                                        GfxFormatToCairoFormat(aFormat),
+                                        aRect.width,
+                                        aRect.height,
+                                        aStride);
+  cairo_surface_set_device_offset(image, -aRect.x, -aRect.y);
+  return image;
+}
+
+/**
+ * Returns a referenced cairo_surface_t representing the
+ * sub-image specified by aSubImage.
+ */
+cairo_surface_t* ExtractSubImage(cairo_surface_t* aSurface,
+                                 const IntRect& aSubImage,
+                                 SurfaceFormat aFormat)
+{
+  // No need to worry about retaining a reference to the original
+  // surface since the only caller of this function guarantees
+  // that aSurface will stay alive as long as the result
+
+  cairo_surface_t* image = GetAsImageSurface(aSurface);
+  if (image) {
+    image = CreateSubImageForData(cairo_image_surface_get_data(image),
+                                  aSubImage,
+                                  cairo_image_surface_get_stride(image),
+                                  aFormat);
+    return image;
+  }
+
+  cairo_surface_t* similar =
+    cairo_surface_create_similar(aSurface,
+                                 cairo_surface_get_content(aSurface),
+                                 aSubImage.width, aSubImage.height);
+
+  cairo_t* ctx = cairo_create(similar);
+  cairo_set_operator(ctx, CAIRO_OPERATOR_SOURCE);
+  cairo_set_source_surface(ctx, aSurface, -aSubImage.x, -aSubImage.y);
+  cairo_paint(ctx);
+  cairo_destroy(ctx);
+
+  cairo_surface_set_device_offset(similar, -aSubImage.x, -aSubImage.y);
+  return similar;
 }
 
 /**
@@ -180,18 +257,35 @@ CopyToImageSurface(unsigned char *aData,
  * result when it is done with it.
  */
 cairo_surface_t*
-GetCairoSurfaceForSourceSurface(SourceSurface *aSurface, bool aExistingOnly = false)
+GetCairoSurfaceForSourceSurface(SourceSurface *aSurface,
+                                bool aExistingOnly = false,
+                                const IntRect& aSubImage = IntRect())
 {
+  IntRect subimage = IntRect(IntPoint(), aSurface->GetSize());
+  if (!aSubImage.IsEmpty()) {
+    MOZ_ASSERT(!aExistingOnly);
+    MOZ_ASSERT(subimage.Contains(aSubImage));
+    subimage = aSubImage;
+  }
+
   if (aSurface->GetType() == SurfaceType::CAIRO) {
     cairo_surface_t* surf = static_cast<SourceSurfaceCairo*>(aSurface)->GetSurface();
-    cairo_surface_reference(surf);
+    if (aSubImage.IsEmpty()) {
+      cairo_surface_reference(surf);
+    } else {
+      surf = ExtractSubImage(surf, subimage, aSurface->GetFormat());
+    }
     return surf;
   }
 
   if (aSurface->GetType() == SurfaceType::CAIRO_IMAGE) {
     cairo_surface_t* surf =
       static_cast<const DataSourceSurfaceCairo*>(aSurface)->GetSurface();
-    cairo_surface_reference(surf);
+    if (aSubImage.IsEmpty()) {
+      cairo_surface_reference(surf);
+    } else {
+      surf = ExtractSubImage(surf, subimage, aSurface->GetFormat());
+    }
     return surf;
   }
 
@@ -210,11 +304,8 @@ GetCairoSurfaceForSourceSurface(SourceSurface *aSurface, bool aExistingOnly = fa
   }
 
   cairo_surface_t* surf =
-    cairo_image_surface_create_for_data(map.mData,
-                                        GfxFormatToCairoFormat(data->GetFormat()),
-                                        data->GetSize().width,
-                                        data->GetSize().height,
-                                        map.mStride);
+    CreateSubImageForData(map.mData, subimage,
+                          map.mStride, data->GetFormat());
 
   // In certain scenarios, requesting larger than 8k image fails.  Bug 803568
   // covers the details of how to run into it, but the full detailed
@@ -228,7 +319,7 @@ GetCairoSurfaceForSourceSurface(SourceSurface *aSurface, bool aExistingOnly = fa
       // data.
       cairo_surface_t* result =
         CopyToImageSurface(map.mData,
-                           data->GetSize(),
+                           subimage,
                            map.mStride,
                            data->GetFormat());
       data->Unmap();
@@ -320,7 +411,9 @@ GfxPatternToCairoPattern(const Pattern& aPattern, Float aAlpha)
     case PatternType::SURFACE:
     {
       const SurfacePattern& pattern = static_cast<const SurfacePattern&>(aPattern);
-      cairo_surface_t* surf = GetCairoSurfaceForSourceSurface(pattern.mSurface);
+      cairo_surface_t* surf = GetCairoSurfaceForSourceSurface(pattern.mSurface,
+                                                              false,
+                                                              pattern.mSamplingRect);
       if (!surf)
         return nullptr;
 
@@ -1149,7 +1242,8 @@ DrawTargetCairo::CreateSourceSurfaceFromData(unsigned char *aData,
                                              int32_t aStride,
                                              SurfaceFormat aFormat) const
 {
-  cairo_surface_t* surf = CopyToImageSurface(aData, aSize, aStride, aFormat);
+  cairo_surface_t* surf = CopyToImageSurface(aData, IntRect(IntPoint(), aSize),
+                                             aStride, aFormat);
 
   RefPtr<SourceSurfaceCairo> source_surf = new SourceSurfaceCairo(surf, aSize, aFormat);
   cairo_surface_destroy(surf);

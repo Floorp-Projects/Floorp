@@ -946,6 +946,39 @@ class IonBuilder
 
     // If this is an inline builder, the call info for the builder.
     const CallInfo *inlineCallInfo_;
+
+    // When compiling a call with multiple targets, we are first creating a
+    // MGetPropertyCache.  This MGetPropertyCache is following the bytecode, and
+    // is used to recover the JSFunction.  In some cases, the Type of the object
+    // which own the property is enough for dispatching to the right function.
+    // In such cases we do not have read the property, except when the type
+    // object is unknown.
+    //
+    // As an optimization, we can dispatch a call based on the type object,
+    // without doing the MGetPropertyCache.  This is what is achieved by
+    // |IonBuilder::inlineCalls|.  As we might not know all the functions, we
+    // are adding a fallback path, where this MGetPropertyCache would be moved
+    // into.
+    //
+    // In order to build the fallback path, we have to capture a resume point
+    // ahead, for the potential fallback path.  This resume point is captured
+    // while building MGetPropertyCache.  It is capturing the state of Baseline
+    // before the execution of the MGetPropertyCache, such as we can safely do
+    // it in the fallback path.
+    //
+    // This field is used to discard the resume point if it is not used for
+    // building a fallback path.
+
+    // Discard the prior resume point while setting a new MGetPropertyCache.
+    void replaceMaybeFallbackFunctionGetter(MGetPropertyCache *cache);
+
+    // Discard the MGetPropertyCache if it is handled by WrapMGetPropertyCache.
+    void keepFallbackFunctionGetter(MGetPropertyCache *cache) {
+        if (cache == maybeFallbackFunctionGetter_)
+            maybeFallbackFunctionGetter_ = nullptr;
+    }
+
+    MGetPropertyCache *maybeFallbackFunctionGetter_;
 };
 
 class CallInfo
