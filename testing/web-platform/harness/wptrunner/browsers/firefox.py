@@ -4,12 +4,10 @@
 
 import os
 
-import mozcrash
 from mozprocess import ProcessHandler
 from mozprofile import FirefoxProfile, Preferences
 from mozprofile.permissions import ServerLocations
 from mozrunner import FirefoxRunner
-import mozcrash
 from mozcrash import mozcrash
 
 from .base import get_free_port, Browser, ExecutorBrowser, require_arg, cmd_arg

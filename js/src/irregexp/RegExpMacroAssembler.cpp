@@ -85,7 +85,7 @@ InterpretedRegExpMacroAssembler::~InterpretedRegExpMacroAssembler()
 }
 
 RegExpCode
-InterpretedRegExpMacroAssembler::GenerateCode(JSContext *cx)
+InterpretedRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
 {
     Bind(&backtrack_);
     Emit(BC_POP_BT, 0);

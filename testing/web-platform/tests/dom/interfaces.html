@@ -20,7 +20,7 @@ exception DOMException {
   const unsigned short NO_MODIFICATION_ALLOWED_ERR = 7;
   const unsigned short NOT_FOUND_ERR = 8;
   const unsigned short NOT_SUPPORTED_ERR = 9;
-  const unsigned short INUSE_ATTRIBUTE_ERR = 10; // historical
+  const unsigned short INUSE_ATTRIBUTE_ERR = 10;
   const unsigned short INVALID_STATE_ERR = 11;
   const unsigned short SYNTAX_ERR = 12;
   const unsigned short INVALID_MODIFICATION_ERR = 13;
@@ -67,7 +67,7 @@ interface Event {
   readonly attribute boolean defaultPrevented;
 
   [Unforgeable] readonly attribute boolean isTrusted;
-  readonly attribute /* DOMTimeStamp */ unsigned long long timeStamp;
+  readonly attribute DOMTimeStamp timeStamp;
 
   void initEvent(DOMString type, boolean bubbles, boolean cancelable);
 };
@@ -276,6 +276,9 @@ interface Document : Node {
   Node importNode(Node node, optional boolean deep = false);
   Node adoptNode(Node node);
 
+  Attr createAttribute(DOMString localName);
+  Attr createAttributeNS(DOMString namespace, DOMString name);
+
   [NewObject] Event createEvent(DOMString interface);
 
   [NewObject] Range createRange();
@@ -315,7 +318,8 @@ interface Element : Node {
            attribute DOMString className;
   [SameObject] readonly attribute DOMTokenList classList;
 
-  [SameObject] readonly attribute Attr[] attributes;
+  boolean hasAttributes();
+  [SameObject] readonly attribute NamedNodeMap attributes;
   DOMString? getAttribute(DOMString name);
   DOMString? getAttributeNS(DOMString? namespace, DOMString localName);
   void setAttribute(DOMString name, DOMString value);
@@ -325,6 +329,12 @@ interface Element : Node {
   boolean hasAttribute(DOMString name);
   boolean hasAttributeNS(DOMString? namespace, DOMString localName);
 
+  Attr? getAttributeNode(DOMString name);
+  Attr? getAttributeNodeNS(DOMString namespace, DOMString localName);
+  Attr? setAttributeNode(Attr attr);
+  Attr? setAttributeNodeNS(Attr attr);
+  Attr removeAttributeNode(Attr attr);
+
   Element? closest(DOMString selectors);
   boolean matches(DOMString selectors);
 
@@ -333,13 +343,26 @@ interface Element : Node {
   HTMLCollection getElementsByClassName(DOMString classNames);
 };
 
-interface Attr {
-  readonly attribute DOMString localName;
-           attribute DOMString value;
+interface NamedNodeMap {
+  readonly attribute unsigned long length;
+  getter Attr? item(unsigned long index);
+  getter Attr? getNamedItem(DOMString name);
+  Attr? getNamedItemNS(DOMString? namespace, DOMString localName);
+  Attr? setNamedItem(Attr attr);
+  Attr? setNamedItemNS(Attr attr);
+  Attr removeNamedItem(DOMString name);
+  Attr removeNamedItemNS(DOMString? namespace, DOMString localName);
+};
 
-  readonly attribute DOMString name;
+interface Attr {
   readonly attribute DOMString? namespaceURI;
   readonly attribute DOMString? prefix;
+  readonly attribute DOMString localName;
+  readonly attribute DOMString name;
+           attribute DOMString value;
+           attribute DOMString textContent; // alias of .value
+
+  readonly attribute Element? ownerElement;
 
   readonly attribute boolean specified; // useless; always returns true
 };

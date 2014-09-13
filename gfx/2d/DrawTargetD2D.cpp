@@ -2366,11 +2366,29 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
     RefPtr<ID2D1Bitmap> bitmap;
 
     Matrix mat = pat->mMatrix;
+
+    RefPtr<SourceSurface> source = pat->mSurface;
+
+    if (!pat->mSamplingRect.IsEmpty()) {
+      IntRect samplingRect = pat->mSamplingRect;
+
+      RefPtr<DrawTargetD2D> dt = new DrawTargetD2D();
+      if (!dt->Init(samplingRect.Size(),
+                    source->GetFormat())) {
+        MOZ_ASSERT("Invalid sampling rect size!");
+        return nullptr;
+      }
+
+      dt->CopySurface(source, samplingRect, IntPoint());
+      source = dt->Snapshot();
+
+      mat.PreTranslate(samplingRect.x, samplingRect.y);
+    }
     
-    switch (pat->mSurface->GetType()) {
+    switch (source->GetType()) {
     case SurfaceType::D2D1_BITMAP:
       {
-        SourceSurfaceD2D *surf = static_cast<SourceSurfaceD2D*>(pat->mSurface.get());
+        SourceSurfaceD2D *surf = static_cast<SourceSurfaceD2D*>(source.get());
 
         bitmap = surf->mBitmap;
 
@@ -2382,14 +2400,14 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
     case SurfaceType::D2D1_DRAWTARGET:
       {
         SourceSurfaceD2DTarget *surf =
-          static_cast<SourceSurfaceD2DTarget*>(pat->mSurface.get());
+          static_cast<SourceSurfaceD2DTarget*>(source.get());
         bitmap = surf->GetBitmap(mRT);
         AddDependencyOnSource(surf);
       }
       break;
     default:
       {
-        RefPtr<DataSourceSurface> dataSurf = pat->mSurface->GetDataSurface();
+        RefPtr<DataSourceSurface> dataSurf = source->GetDataSurface();
         if (!dataSurf) {
           gfxWarning() << "Invalid surface type.";
           return nullptr;

@@ -864,10 +864,11 @@ iterator_next_impl(JSContext *cx, CallArgs args)
 
     RootedObject thisObj(cx, &args.thisv().toObject());
 
-    if (!js_IteratorMore(cx, thisObj, args.rval()))
+    bool more;
+    if (!js_IteratorMore(cx, thisObj, &more))
         return false;
 
-    if (!args.rval().toBoolean()) {
+    if (!more) {
         js_ThrowStopIteration(cx);
         return false;
     }
@@ -1253,7 +1254,7 @@ js_SuppressDeletedElements(JSContext *cx, HandleObject obj, uint32_t begin, uint
 }
 
 bool
-js_IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
+js_IteratorMore(JSContext *cx, HandleObject iterobj, bool *res)
 {
     /* Fast path for native iterators */
     NativeIterator *ni = nullptr;
@@ -1262,14 +1263,14 @@ js_IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
         ni = iterobj->as<PropertyIteratorObject>().getNativeIterator();
         bool more = ni->props_cursor < ni->props_end;
         if (ni->isKeyIter() || !more) {
-            rval.setBoolean(more);
+            *res = more;
             return true;
         }
     }
 
     /* We might still have a pending value. */
     if (!cx->iterValue.isMagic(JS_NO_ITER_VALUE)) {
-        rval.setBoolean(true);
+        *res = true;
         return true;
     }
 
@@ -1277,6 +1278,7 @@ js_IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
     JS_CHECK_RECURSION(cx, return false);
 
     /* Fetch and cache the next value from the iterator. */
+    RootedValue val(cx);
     if (ni) {
         JS_ASSERT(!ni->isKeyIter());
         RootedId id(cx);
@@ -1285,15 +1287,15 @@ js_IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
             return false;
         ni->incCursor();
         RootedObject obj(cx, ni->obj);
-        if (!JSObject::getGeneric(cx, obj, obj, id, rval))
+        if (!JSObject::getGeneric(cx, obj, obj, id, &val))
             return false;
-        if ((ni->flags & JSITER_KEYVALUE) && !NewKeyValuePair(cx, id, rval, rval))
+        if ((ni->flags & JSITER_KEYVALUE) && !NewKeyValuePair(cx, id, val, &val))
             return false;
     } else {
         /* Call the iterator object's .next method. */
-        if (!JSObject::getProperty(cx, iterobj, iterobj, cx->names().next, rval))
+        if (!JSObject::getProperty(cx, iterobj, iterobj, cx->names().next, &val))
             return false;
-        if (!Invoke(cx, ObjectValue(*iterobj), rval, 0, nullptr, rval)) {
+        if (!Invoke(cx, ObjectValue(*iterobj), val, 0, nullptr, &val)) {
             /* Check for StopIteration. */
             if (!cx->isExceptionPending())
                 return false;
@@ -1305,15 +1307,15 @@ js_IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
 
             cx->clearPendingException();
             cx->iterValue.setMagic(JS_NO_ITER_VALUE);
-            rval.setBoolean(false);
+            *res = false;
             return true;
         }
     }
 
     /* Cache the value returned by iterobj.next() so js_IteratorNext() can find it. */
-    JS_ASSERT(!rval.isMagic(JS_NO_ITER_VALUE));
-    cx->iterValue = rval;
-    rval.setBoolean(true);
+    JS_ASSERT(!val.isMagic(JS_NO_ITER_VALUE));
+    cx->iterValue = val;
+    *res = true;
     return true;
 }
 
