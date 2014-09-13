@@ -16,7 +16,14 @@
 #include "nsDataHashtable.h"
 #include "nsIStyleRuleProcessor.h"
 
+class nsRuleWalker;
 struct MiscContainer;
+
+namespace mozilla {
+namespace dom {
+class Element;
+}
+}
 
 class nsHTMLCSSStyleSheet MOZ_FINAL : public nsIStyleRuleProcessor
 {
@@ -42,6 +49,12 @@ public:
     const MOZ_MUST_OVERRIDE MOZ_OVERRIDE;
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const MOZ_MUST_OVERRIDE MOZ_OVERRIDE;
+
+  // Variant of RulesMatching method above that is specific to this
+  // rule processor.
+  void ElementRulesMatching(nsPresContext* aPresContext,
+                            mozilla::dom::Element* aElement,
+                            nsRuleWalker* aRuleWalker);
 
   void CacheStyleAttr(const nsAString& aSerialized, MiscContainer* aValue);
   void EvictStyleAttr(const nsAString& aSerialized, MiscContainer* aValue);
