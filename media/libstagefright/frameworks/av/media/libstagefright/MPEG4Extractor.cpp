@@ -2485,6 +2485,13 @@ MPEG4Source::~MPEG4Source() {
     free(mCurrentSampleInfoOffsets);
 }
 
+static bool ValidInputSize(int32_t size) {
+  // Reject compressed samples larger than an uncompressed UHD
+  // frame. This is a reasonable cut-off for a lossy codec,
+  // combined with the current Firefox limit to 5k video.
+  return (size > 0 && size < 4 * (1920 * 1080) * 3 / 2);
+}
+
 status_t MPEG4Source::start(MetaData *params) {
     Mutex::Autolock autoLock(mLock);
 
@@ -2500,6 +2507,10 @@ status_t MPEG4Source::start(MetaData *params) {
 
     int32_t max_size;
     CHECK(mFormat->findInt32(kKeyMaxInputSize, &max_size));
+    if (!ValidInputSize(max_size)) {
+      ALOGE("Invalid max input size %d", max_size);
+      return ERROR_MALFORMED;
+    }
 
     mSrcBuffer = new uint8_t[max_size];
 
@@ -3251,6 +3262,10 @@ status_t MPEG4Source::read(
 
         int32_t max_size;
         CHECK(mFormat->findInt32(kKeyMaxInputSize, &max_size));
+        if (!ValidInputSize(max_size)) {
+          ALOGE("Invalid max input size %d", max_size);
+          return ERROR_MALFORMED;
+        }
         mBuffer = new MediaBuffer(max_size);
         assert(mBuffer);
     }
@@ -3533,6 +3548,10 @@ status_t MPEG4Source::fragmentedRead(
 
         int32_t max_size;
         CHECK(mFormat->findInt32(kKeyMaxInputSize, &max_size));
+        if (!ValidInputSize(max_size)) {
+          ALOGE("Invalid max input size %d", max_size);
+          return ERROR_MALFORMED;
+        }
         mBuffer = new MediaBuffer(max_size);
         assert(mBuffer);
     }
