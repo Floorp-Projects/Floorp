@@ -313,6 +313,15 @@ enum nsRestyleHint {
   // superset of the work.)
   eRestyle_SVGAttrAnimations = (1<<5),
 
+  // Replace the style data coming from inline style without updating
+  // any other style data.  If a new style context results, update style
+  // contexts on the descendants.  (Irrelevant if eRestyle_Self or
+  // eRestyle_Subtree is also set, since those imply a superset of the
+  // work.)  Supported only for element style contexts and not for
+  // pseudo-elements or anonymous boxes, on which it converts to
+  // eRestyle_Self.
+  eRestyle_StyleAttribute = (1<<6),
+
   // Continue the restyling process to the current frame's children even
   // if this frame's restyling resulted in no style changes.
   eRestyle_Force = (1<<8),
