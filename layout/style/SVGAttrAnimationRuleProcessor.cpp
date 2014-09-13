@@ -30,10 +30,16 @@ NS_IMPL_ISUPPORTS(SVGAttrAnimationRuleProcessor, nsIStyleRuleProcessor)
 /* virtual */ void
 SVGAttrAnimationRuleProcessor::RulesMatching(ElementRuleProcessorData* aData)
 {
-  Element* element = aData->mElement;
-  if (element->IsSVG()) {
-    static_cast<nsSVGElement*>(element)->
-      WalkAnimatedContentStyleRules(aData->mRuleWalker);
+  ElementRulesMatching(aData->mElement, aData->mRuleWalker);
+}
+
+void
+SVGAttrAnimationRuleProcessor::ElementRulesMatching(Element* aElement,
+                                                    nsRuleWalker* aRuleWalker)
+{
+  if (aElement->IsSVG()) {
+    static_cast<nsSVGElement*>(aElement)->
+      WalkAnimatedContentStyleRules(aRuleWalker);
   }
 }
 

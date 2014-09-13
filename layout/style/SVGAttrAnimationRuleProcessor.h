@@ -15,8 +15,13 @@
 #include "nsIStyleRuleProcessor.h"
 
 class nsIDocument;
+class nsRuleWalker;
 
 namespace mozilla {
+
+namespace dom {
+class Element;
+}
 
 class SVGAttrAnimationRuleProcessor MOZ_FINAL : public nsIStyleRuleProcessor
 {
@@ -48,6 +53,10 @@ public:
     const MOZ_MUST_OVERRIDE MOZ_OVERRIDE;
 
   size_t DOMSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
+  // A shortcut for nsStyleSet to call RulesMatching with less setup.
+  void ElementRulesMatching(mozilla::dom::Element* aElement,
+                            nsRuleWalker* aRuleWalker);
 
 private:
   SVGAttrAnimationRuleProcessor(const SVGAttrAnimationRuleProcessor& aCopy) MOZ_DELETE;
