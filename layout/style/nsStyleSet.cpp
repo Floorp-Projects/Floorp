@@ -1361,12 +1361,28 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
                                         eRestyle_CSSAnimations |
                                         eRestyle_SVGAttrAnimations |
                                         eRestyle_StyleAttribute |
+                                        eRestyle_ChangeAnimationPhase |
                                         eRestyle_Force |
                                         eRestyle_ForceDescendants)),
                     // FIXME: Once bug 979133 lands we'll have a better
                     // way to print these.
                     nsPrintfCString("unexpected replacement bits 0x%lX",
                                     uint32_t(aReplacements)).get());
+
+  bool skipAnimationRules = false;
+
+  // If we're changing animation phase, we have to reconsider what rules
+  // are in these four levels.
+  if (aReplacements & eRestyle_ChangeAnimationPhase) {
+    aReplacements |= eRestyle_CSSTransitions |
+                     eRestyle_CSSAnimations |
+                     eRestyle_SVGAttrAnimations |
+                     eRestyle_StyleAttribute;
+
+    nsPresContext* presContext = PresContext();
+    skipAnimationRules = presContext->IsProcessingRestyles() &&
+                         !presContext->IsProcessingAnimationStyleChange();
+  }
 
   // FIXME (perf): This should probably not rebuild the whole path, but
   // only the path from the last change in the rule tree, like
@@ -1409,17 +1425,22 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
           // FIXME: This should probably be more similar to what
           // FileRules does; this feels like too much poking into the
           // internals of nsAnimationManager.
+          nsPresContext* presContext = PresContext();
           nsAnimationManager* animationManager =
-            PresContext()->AnimationManager();
+            presContext->AnimationManager();
           AnimationPlayerCollection* collection =
             animationManager->GetAnimationPlayers(aElement, aPseudoType, false);
 
           if (collection) {
-            animationManager->UpdateStyleAndEvents(
-              collection, PresContext()->RefreshDriver()->MostRecentRefresh(),
-              EnsureStyleRule_IsNotThrottled);
-            if (collection->mStyleRule) {
-              ruleWalker.ForwardOnPossiblyCSSRule(collection->mStyleRule);
+            if (skipAnimationRules) {
+              collection->PostRestyleForAnimation(presContext);
+            } else {
+              animationManager->UpdateStyleAndEvents(
+                collection, PresContext()->RefreshDriver()->MostRecentRefresh(),
+                EnsureStyleRule_IsNotThrottled);
+              if (collection->mStyleRule) {
+                ruleWalker.ForwardOnPossiblyCSSRule(collection->mStyleRule);
+              }
             }
           }
           break;
@@ -1434,16 +1455,23 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
               aElement, aPseudoType, false);
 
           if (collection) {
-            collection->EnsureStyleRuleFor(
-              presContext->RefreshDriver()->MostRecentRefresh(),
-              EnsureStyleRule_IsNotThrottled);
-            if (collection->mStyleRule) {
-              ruleWalker.ForwardOnPossiblyCSSRule(collection->mStyleRule);
+            if (skipAnimationRules) {
+              collection->PostRestyleForAnimation(presContext);
+            } else {
+              collection->EnsureStyleRuleFor(
+                presContext->RefreshDriver()->MostRecentRefresh(),
+                EnsureStyleRule_IsNotThrottled);
+              if (collection->mStyleRule) {
+                ruleWalker.ForwardOnPossiblyCSSRule(collection->mStyleRule);
+              }
             }
           }
           break;
         }
         case eRestyle_SVGAttrAnimations: {
+          MOZ_ASSERT(aReplacements & eRestyle_ChangeAnimationPhase,
+                     "don't know how to do this level without phase change");
+
           SVGAttrAnimationRuleProcessor* ruleProcessor =
             static_cast<SVGAttrAnimationRuleProcessor*>(
               mRuleProcessors[eSVGAttrAnimationSheet].get());
@@ -1454,6 +1482,9 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
           break;
         }
         case eRestyle_StyleAttribute: {
+          MOZ_ASSERT(aReplacements & eRestyle_ChangeAnimationPhase,
+                     "don't know how to do this level without phase change");
+
           if (!level->mIsImportant) {
             // First time through, we handle the non-!important rule.
             MOZ_ASSERT(aPseudoType ==
