@@ -19,6 +19,7 @@
 #include "prmjtime.h"
 
 #include "gc/Memory.h"
+#include "vm/HelperThreads.h"
 #include "vm/Runtime.h"
 
 using namespace js;
@@ -834,6 +835,16 @@ Statistics::endPhase(Phase phase)
     int64_t t = PRMJ_Now() - phaseStartTimes[phase];
     slices.back().phaseTimes[phase] += t;
     phaseTimes[phase] += t;
+    phaseStartTimes[phase] = 0;
+}
+
+void
+Statistics::endParallelPhase(Phase phase, const GCParallelTask *task)
+{
+    phaseNestingDepth--;
+
+    slices.back().phaseTimes[phase] += task->duration();
+    phaseTimes[phase] += task->duration();
     phaseStartTimes[phase] = 0;
 }
 

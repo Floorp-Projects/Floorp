@@ -254,6 +254,7 @@ struct JSCompartment
     js::types::TypeObjectWithNewScriptSet newTypeObjects;
     js::types::TypeObjectWithNewScriptSet lazyTypeObjects;
     void sweepNewTypeObjectTable(js::types::TypeObjectWithNewScriptSet &table);
+
 #ifdef JSGC_HASH_TABLE_CHECKS
     void checkTypeObjectTablesAfterMovingGC();
     void checkTypeObjectTableAfterMovingGC(js::types::TypeObjectWithNewScriptSet &table);
