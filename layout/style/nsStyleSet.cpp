@@ -1335,7 +1335,7 @@ static const CascadeLevel gCascadeLevels[] = {
   { nsStyleSet::eAgentSheet,      false, nsRestyleHint(0) },
   { nsStyleSet::eUserSheet,       false, nsRestyleHint(0) },
   { nsStyleSet::ePresHintSheet,   false, nsRestyleHint(0) },
-  { nsStyleSet::eSVGAttrAnimationSheet, false, nsRestyleHint(0) },
+  { nsStyleSet::eSVGAttrAnimationSheet, false, eRestyle_SVGAttrAnimations },
   { nsStyleSet::eDocSheet,        false, nsRestyleHint(0) },
   { nsStyleSet::eScopedDocSheet,  false, nsRestyleHint(0) },
   { nsStyleSet::eStyleAttrSheet,  false, nsRestyleHint(0) },
@@ -1358,6 +1358,7 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
 {
   NS_ABORT_IF_FALSE(!(aReplacements & ~(eRestyle_CSSTransitions |
                                         eRestyle_CSSAnimations |
+                                        eRestyle_SVGAttrAnimations |
                                         eRestyle_Force |
                                         eRestyle_ForceDescendants)),
                     // FIXME: Once bug 979133 lands we'll have a better
@@ -1428,6 +1429,16 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
             if (collection->mStyleRule) {
               ruleWalker.ForwardOnPossiblyCSSRule(collection->mStyleRule);
             }
+          }
+          break;
+        }
+        case eRestyle_SVGAttrAnimations: {
+          SVGAttrAnimationRuleProcessor* ruleProcessor =
+            static_cast<SVGAttrAnimationRuleProcessor*>(
+              mRuleProcessors[eSVGAttrAnimationSheet].get());
+          if (ruleProcessor &&
+              aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+            ruleProcessor->ElementRulesMatching(aElement, &ruleWalker);
           }
           break;
         }
