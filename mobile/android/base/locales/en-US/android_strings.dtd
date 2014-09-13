@@ -100,6 +100,8 @@
      "to bookmark", not the noun "a bookmark". -->
 <!ENTITY overlay_share_bookmark_btn_label "Bookmark">
 <!ENTITY overlay_share_reading_list_btn_label "Add to Reading List">
+<!ENTITY overlay_share_bookmark_btn_label_already "Already bookmarked">
+<!ENTITY overlay_share_reading_list_btn_label_already "Already in Reading List">
 <!ENTITY overlay_share_send_other "Send to other devices">
 
 <!-- Localization note (overlay_share_send_tab_btn_label) : Used on the

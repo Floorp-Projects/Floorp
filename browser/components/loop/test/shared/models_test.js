@@ -53,13 +53,6 @@ describe("loop.shared.models", function() {
           new sharedModels.ConversationModel({}, {});
         }).to.Throw(Error, /missing required sdk/);
       });
-
-      it("should accept a pendingCallTimeout option", function() {
-        expect(new sharedModels.ConversationModel({}, {
-          sdk: {},
-          pendingCallTimeout: 1000
-        }).pendingCallTimeout).eql(1000);
-      });
     });
 
     describe("constructed", function() {
@@ -68,8 +61,7 @@ describe("loop.shared.models", function() {
 
       beforeEach(function() {
         conversation = new sharedModels.ConversationModel({}, {
-          sdk: fakeSDK,
-          pendingCallTimeout: 1000
+          sdk: fakeSDK
         });
         conversation.set("loopToken", "fakeToken");
         fakeBaseServerUrl = "http://fakeBaseServerUrl";
@@ -121,25 +113,6 @@ describe("loop.shared.models", function() {
 
           conversation.outgoing();
         });
-
-        it("should end the session on outgoing call timeout", function() {
-          conversation.outgoing();
-
-          sandbox.clock.tick(1001);
-
-          sinon.assert.calledOnce(conversation.endSession);
-        });
-
-        it("should trigger a `timeout` event on outgoing call timeout",
-          function(done) {
-            conversation.once("timeout", function() {
-              done();
-            });
-
-            conversation.outgoing();
-
-            sandbox.clock.tick(1001);
-          });
       });
 
       describe("#setSessionData", function() {
@@ -168,11 +141,8 @@ describe("loop.shared.models", function() {
         var model;
 
         beforeEach(function() {
-          sandbox.stub(sharedModels.ConversationModel.prototype,
-                       "_clearPendingCallTimer");
           model = new sharedModels.ConversationModel(fakeSessionData, {
-            sdk: fakeSDK,
-            pendingCallTimeout: 1000
+            sdk: fakeSDK
           });
           model.startSession();
         });
@@ -281,18 +251,6 @@ describe("loop.shared.models", function() {
               expect(model.get("ongoing")).eql(false);
             });
 
-          it("should clear a pending timer on session:ended", function() {
-            model.trigger("session:ended");
-
-            sinon.assert.calledOnce(model._clearPendingCallTimer);
-          });
-
-          it("should clear a pending timer on session:error", function() {
-            model.trigger("session:error");
-
-            sinon.assert.calledOnce(model._clearPendingCallTimer);
-          });
-
           describe("connectionDestroyed event received", function() {
             var fakeEvent = {reason: "ko", connection: {connectionId: 42}};
 
@@ -341,8 +299,7 @@ describe("loop.shared.models", function() {
 
         beforeEach(function() {
           model = new sharedModels.ConversationModel(fakeSessionData, {
-            sdk: fakeSDK,
-            pendingCallTimeout: 1000
+            sdk: fakeSDK
           });
           model.startSession();
         });
@@ -381,8 +338,7 @@ describe("loop.shared.models", function() {
 
         beforeEach(function() {
           model = new sharedModels.ConversationModel(fakeSessionData, {
-            sdk: fakeSDK,
-            pendingCallTimeout: 1000
+            sdk: fakeSDK
           });
           model.startSession();
         });

@@ -49,7 +49,7 @@ var SimpleServiceDiscovery = {
   get EVENT_SERVICE_FOUND() { return EVENT_SERVICE_FOUND; },
   get EVENT_SERVICE_LOST() { return EVENT_SERVICE_LOST; },
 
-  _targets: new Map(),
+  _devices: new Map(),
   _services: new Map(),
   _searchSocket: null,
   _searchInterval: 0,
@@ -67,7 +67,7 @@ var SimpleServiceDiscovery = {
 
   // nsIUDPSocketListener implementation
   onPacketReceived: function(aSocket, aMessage) {
-    // Listen for responses from specific targets. There could be more than one
+    // Listen for responses from specific devices. There could be more than one
     // available.
     let response = aMessage.data.split("\n");
     let service = {};
@@ -82,7 +82,7 @@ var SimpleServiceDiscovery = {
       }
     }.bind(this));
 
-    if (service.location && this._targets.has(service.target)) {
+    if (service.location && service.target) {
       service.location = this._forceTrailingSlash(service.location);
 
       // We add the server as an additional way to filter services
@@ -141,9 +141,9 @@ var SimpleServiceDiscovery = {
     // next time we search.
     this._searchTimestamp = Date.now();
 
-    // Look for any fixed IP targets. Some routers might be configured to block
+    // Look for any fixed IP devices. Some routers might be configured to block
     // UDP broadcasts, so this is a way to skip discovery.
-    this._searchFixedTargets();
+    this._searchFixedDevices();
 
     // Perform a UDP broadcast to search for SSDP devices
     let socket = Cc["@mozilla.org/network/udp-socket;1"].createInstance(Ci.nsIUDPSocket);
@@ -161,8 +161,8 @@ var SimpleServiceDiscovery = {
     this._searchTimeout.initWithCallback(this._searchShutdown.bind(this), SSDP_DISCOVER_TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
 
     let data = SSDP_DISCOVER_PACKET;
-    for (let [key, target] of this._targets) {
-      let msgData = data.replace("%SEARCH_TARGET%", target.target);
+    for (let [key, device] of this._devices) {
+      let msgData = data.replace("%SEARCH_TARGET%", device.target);
       try {
         let msgRaw = converter.convertToByteArray(msgData);
         socket.send(SSDP_ADDRESS, SSDP_PORT, msgRaw, msgRaw.length);
@@ -196,28 +196,28 @@ var SimpleServiceDiscovery = {
     });
   },
 
-  _searchFixedTargets: function _searchFixedTargets() {
-    let fixedTargets = null;
+  _searchFixedDevices: function _searchFixedDevices() {
+    let fixedDevices = null;
     try {
-      fixedTargets = Services.prefs.getCharPref("browser.casting.fixedTargets");
+      fixedDevices = Services.prefs.getCharPref("browser.casting.fixedDevices");
     } catch (e) {}
 
-    if (!fixedTargets) {
+    if (!fixedDevices) {
       return;
     }
 
-    fixedTargets = JSON.parse(fixedTargets);
-    for (let fixedTarget of fixedTargets) {
+    fixedDevices = JSON.parse(fixedDevices);
+    for (let fixedDevice of fixedDevices) {
       // Verify we have the right data
-      if (!"location" in fixedTarget || !"target" in fixedTarget) {
+      if (!"location" in fixedDevice || !"target" in fixedDevice) {
         continue;
       }
 
-      fixedTarget.location = this._forceTrailingSlash(fixedTarget.location);
+      fixedDevice.location = this._forceTrailingSlash(fixedDevice.location);
 
       let service = {
-        location: fixedTarget.location,
-        target: fixedTarget.target
+        location: fixedDevice.location,
+        target: fixedDevice.target
       };
 
       // We don't assume the fixed target is ready. We still need to ping it.
@@ -264,39 +264,43 @@ var SimpleServiceDiscovery = {
     });
   },
 
-  registerTarget: function registerTarget(aTarget) {
-    // We must have "target" and "factory" defined
-    if (!("target" in aTarget) || !("factory" in aTarget)) {
+  registerDevice: function registerDevice(aDevice) {
+    // We must have "id", "target" and "factory" defined
+    if (!("id" in aDevice) || !("target" in aDevice) || !("factory" in aDevice)) {
       // Fatal for registration
-      throw "Registration requires a target and a location";
+      throw "Registration requires an id, a target and a location";
     }
 
-    // Only add if we don't already know about this target
-    if (!this._targets.has(aTarget.target)) {
-      this._targets.set(aTarget.target, aTarget);
+    // Only add if we don't already know about this device
+    if (!this._devices.has(aDevice.id)) {
+      this._devices.set(aDevice.id, aDevice);
+    } else {
+      log("device was already registered: " + aDevice.id);
     }
   },
 
-  unregisterTarget: function unregisterTarget(aTarget) {
-    // We must have "target" and "factory" defined
-    if (!("target" in aTarget) || !("factory" in aTarget)) {
+  unregisterDevice: function unregisterDevice(aDevice) {
+    // We must have "id", "target" and "factory" defined
+    if (!("id" in aDevice) || !("target" in aDevice) || !("factory" in aDevice)) {
       return;
     }
 
-    // Only remove if we know about this target
-    if (this._targets.has(aTarget.target)) {
-      this._targets.delete(aTarget.target);
+    // Only remove if we know about this device
+    if (this._devices.has(aDevice.id)) {
+      this._devices.delete(aDevice.id);
+    } else {
+      log("device was not registered: " + aDevice.id);
     }
   },
 
   findAppForService: function findAppForService(aService) {
-    if (!aService || !aService.target) {
+    if (!aService || !aService.deviceID) {
       return null;
     }
 
-    // Find the registration for the target
-    if (this._targets.has(aService.target)) {
-      return this._targets.get(aService.target).factory(aService);
+    // Find the registration for the device
+    if (this._devices.has(aService.deviceID)) {
+      return this._devices.get(aService.deviceID).factory(aService);
     }
     return null;
   },
@@ -312,7 +316,7 @@ var SimpleServiceDiscovery = {
   get services() {
     let array = [];
     for (let [key, service] of this._services) {
-      let target = this._targets.get(service.target);
+      let target = this._devices.get(service.deviceID);
       service.extensions = target.extensions;
       service.types = target.types;
       array.push(service);
@@ -320,27 +324,39 @@ var SimpleServiceDiscovery = {
     return array;
   },
 
-  // Returns false if the service does not match the target's filters
+  // Returns false if the service does not match the device's filters
   _filterService: function _filterService(aService) {
-    let target = this._targets.get(aService.target);
-    if (!target) {
-      return false;
-    }
+    // Loop over all the devices, looking for one that matches the service
+    for (let [key, device] of this._devices) {
+      // First level of match is on the target itself
+      if (device.target != aService.target) {
+        continue;
+      }
 
-    // If we have no filter, everything passes
-    if (!("filters" in target)) {
-      return true;
-    }
+      // If we have no filter, everything passes
+      if (!("filters" in device)) {
+        aService.deviceID = device.id;
+        return true;
+      }
 
-    // If any filter fails, the service fails
-    let filters = target.filters;
-    for (let filter in filters) {
-      if (filter in aService && aService[filter] != filters[filter]) {
-        return false;
+      // If all the filters pass, we have a match
+      let failed = false;
+      let filters = device.filters;
+      for (let filter in filters) {
+        if (filter in aService && aService[filter] != filters[filter]) {
+          failed = true;
+        }
+      }
+
+      // We found a match, so link the service to the device
+      if (!failed) {
+        aService.deviceID = device.id;
+        return true;
       }
     }
 
-    return true;
+    // We didn't find any matches
+    return false;
   },
 
   _processService: function _processService(aService) {
@@ -369,7 +385,7 @@ var SimpleServiceDiscovery = {
   },
 
   _addService: function(service) {
-    // Filter out services that do not match the target filter
+    // Filter out services that do not match the device filter
     if (!this._filterService(service)) {
       return;
     }
