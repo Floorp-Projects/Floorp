@@ -714,6 +714,101 @@ GlobalHelperThreadState::canStartGCHelperTask()
     return !gcHelperWorklist().empty();
 }
 
+bool
+GlobalHelperThreadState::canStartGCParallelTask()
+{
+    return !gcParallelWorklist().empty();
+}
+
+bool
+js::GCParallelTask::startWithLockHeld()
+{
+    MOZ_ASSERT(HelperThreadState().isLocked());
+
+    // Tasks cannot be started twice.
+    MOZ_ASSERT(state == NotStarted);
+
+    // If we do the shutdown GC before running anything, we may never
+    // have initialized the helper threads. Just use the serial path
+    // since we cannot safely intialize them at this point.
+    if (!HelperThreadState().threads)
+        return false;
+
+    if (!HelperThreadState().gcParallelWorklist().append(this))
+        return false;
+    state = Dispatched;
+
+    HelperThreadState().notifyOne(GlobalHelperThreadState::PRODUCER);
+
+    return true;
+}
+
+bool
+js::GCParallelTask::start()
+{
+    AutoLockHelperThreadState helperLock;
+    return startWithLockHeld();
+}
+
+void
+js::GCParallelTask::joinWithLockHeld()
+{
+    MOZ_ASSERT(HelperThreadState().isLocked());
+
+    if (state == NotStarted)
+        return;
+
+    while (state != Finished)
+        HelperThreadState().wait(GlobalHelperThreadState::CONSUMER);
+    state = NotStarted;
+}
+
+void
+js::GCParallelTask::join()
+{
+    AutoLockHelperThreadState helperLock;
+    joinWithLockHeld();
+}
+
+void
+js::GCParallelTask::runFromMainThread(JSRuntime *rt)
+{
+    MOZ_ASSERT(state == NotStarted);
+    MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(rt));
+    uint64_t timeStart = PRMJ_Now();
+    run();
+    duration_ = PRMJ_Now() - timeStart;
+}
+
+void
+js::GCParallelTask::runFromHelperThread()
+{
+    MOZ_ASSERT(HelperThreadState().isLocked());
+
+    {
+        AutoUnlockHelperThreadState parallelSection;
+        uint64_t timeStart = PRMJ_Now();
+        run();
+        duration_ = PRMJ_Now() - timeStart;
+    }
+
+    state = Finished;
+    HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER);
+}
+
+void
+HelperThread::handleGCParallelWorkload()
+{
+    MOZ_ASSERT(HelperThreadState().isLocked());
+    MOZ_ASSERT(HelperThreadState().canStartGCParallelTask());
+    MOZ_ASSERT(idle());
+
+    MOZ_ASSERT(!gcParallelTask);
+    gcParallelTask = HelperThreadState().gcParallelWorklist().popCopy();
+    gcParallelTask->runFromHelperThread();
+    gcParallelTask = nullptr;
+}
+
 static void
 LeaveParseTaskZone(JSRuntime *rt, ParseTask *task)
 {
@@ -1237,7 +1332,8 @@ HelperThread::threadLoop()
                 (ionCompile = HelperThreadState().pendingIonCompileHasSufficientPriority()) ||
                 HelperThreadState().canStartParseTask() ||
                 HelperThreadState().canStartCompressionTask() ||
-                HelperThreadState().canStartGCHelperTask())
+                HelperThreadState().canStartGCHelperTask() ||
+                HelperThreadState().canStartGCParallelTask())
             {
                 break;
             }
@@ -1255,6 +1351,8 @@ HelperThread::threadLoop()
             handleCompressionWorkload();
         else if (HelperThreadState().canStartGCHelperTask())
             handleGCHelperWorkload();
+        else if (HelperThreadState().canStartGCParallelTask())
+            handleGCParallelWorkload();
         else
             MOZ_CRASH("No task to perform");
     }

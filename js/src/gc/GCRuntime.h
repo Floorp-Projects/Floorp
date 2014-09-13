@@ -698,6 +698,12 @@ class GCRuntime
     bool                  abortSweepAfterCurrentGroup;
 
     /*
+     * Concurrent sweep infrastructure.
+     */
+    void startTask(GCParallelTask &task, gcstats::Phase phase);
+    void joinTask(GCParallelTask &task, gcstats::Phase phase);
+
+    /*
      * List head of arenas allocated during the sweep phase.
      */
     js::gc::ArenaHeader   *arenasAllocatedDuringSweep;

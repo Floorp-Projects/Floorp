@@ -254,7 +254,7 @@ JSRuntime::sweepAtoms()
     for (AtomSet::Enum e(*atoms_); !e.empty(); e.popFront()) {
         AtomStateEntry entry = e.front();
         JSAtom *atom = entry.asPtr();
-        bool isDying = IsStringAboutToBeFinalized(&atom);
+        bool isDying = IsStringAboutToBeFinalizedFromAnyThread(&atom);
 
         /* Pinned or interned key cannot be finalized. */
         MOZ_ASSERT_IF(hasContexts() && entry.isTagged(), !isDying);
