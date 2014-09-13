@@ -14,6 +14,7 @@
     var test_node = null;
     var reentered = false;
     var savedMM = null;
+    const Cu = Components.utils;
 
     function info(message) {
       return opener.wrappedJSObject.info(message);
@@ -25,6 +26,10 @@
 
     function is(v1, v2, message) {
       return opener.wrappedJSObject.is(v1, v2, message);
+    }
+
+    function todo_is(v1, v2, message) {
+      return opener.wrappedJSObject.todo_is(v1, v2, message);
     }
 
     // Make sure that an error in this file actually causes the test to fail.
@@ -190,6 +195,34 @@
       is(element.foo, undefined, "DOM element does not expose content properties");
     }
 
+    let systemGlobal = this;
+    function recvCompartmentTest(message) {
+      let getUnprivilegedObject = message.objects.getUnprivilegedObject;
+      let testParentObject = message.objects.testParentObject;
+
+      // Make sure that parent->child CPOWs live in the parent's privileged junk scope.
+      let unprivilegedObject = getUnprivilegedObject();
+      is(Cu.getGlobalForObject(getUnprivilegedObject),
+         Cu.getGlobalForObject(unprivilegedObject),
+         "all parent->child CPOWs should live in the same scope");
+      let cpowLocation = Cu.getCompartmentLocation(getUnprivilegedObject);
+      ok(/Privileged Junk/.test(cpowLocation),
+         "parent->child CPOWs should live in the privileged junk scope: " + cpowLocation);
+
+      // Make sure that parent->child CPOWs point through a privileged scope in the child
+      // (the privileged junk scope, but we don't have a good way to test for that
+      // specifically).
+      is(unprivilegedObject.expando, undefined, "parent->child references should get Xrays");
+      todo_is(unprivilegedObject.wrappedJSObject.expando, 42, "parent->child references should get waivable Xrays - see bug 1065811");
+
+      // Send an object to the child to let it verify invariants in the other direction.
+      function passMe() { return 42; };
+      passMe.expando = 42;
+      let results = testParentObject(passMe);
+      ok(results.length > 0, "Need results");
+      results.forEach((x) => is(x.result, "PASS", x.message));
+    }
+
     let savedWilldieObj;
     let wontDie = {f:2, __exposedProps__: {"f": "r"}};
     function recvLifetimeTest1(message) {
@@ -241,6 +274,7 @@
       mm.addMessageListener("cpows:dom_test", recvDomTest);
       mm.addMessageListener("cpows:dom_test_after_gc", recvDomTestAfterGC);
       mm.addMessageListener("cpows:xray_test", recvXrayTest);
+      mm.addMessageListener("cpows:compartment_test", recvCompartmentTest);
       mm.addMessageListener("cpows:lifetime_test_1", recvLifetimeTest1);
       mm.addMessageListener("cpows:lifetime_test_2", recvLifetimeTest2);
       mm.loadFrameScript("chrome://mochitests/content/chrome/content/base/test/chrome/cpows_child.js", true);
