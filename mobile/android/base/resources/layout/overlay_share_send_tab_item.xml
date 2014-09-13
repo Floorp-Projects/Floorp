@@ -1,3 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/ShareOverlayButton.Text"/>
+    style="@style/ShareOverlayButton.Text"
+    android:background="@drawable/overlay_share_button_background"
+    android:clickable="true"/>

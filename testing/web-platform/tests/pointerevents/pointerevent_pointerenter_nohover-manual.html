@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
     <head>
-        <title>Pointer Event: Dispatch pointerenter. (touch)</title>
+        <title>Pointer Event: Dispatch pointerenter. (nohover)</title>
         <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"/>
         <link rel="author" title="Microsoft" href="http://www.microsoft.com/"/>
         <meta name="assert" content="When a pointing device that does not support hover is moved into the hit test boundaries of an element
@@ -22,33 +22,40 @@ or one of its descendants as a result of a pointerdown event, the pointerenter e
 
             var test_pointerEnter;
             var f_pointerenter_rcvd = false;
+            var pointerenter_event;
 
             function run() {
                 var target0 = document.getElementById("target0");
 
                 on_event(target0, "pointerdown", function (event) {
-                    check_PointerEvent(event);
-                    test_pointerEvent.step(function () {
-                        assert_equals(event.type, "pointerdown", "pointer event received" + event.type);
-                        assert_true(f_pointerenter_rcvd, "pointerenter event should have been received before pointerdown");
-                    });
-                    test_pointerEvent.done(); // complete test
+                    if(event.pointerType == 'touch') {
+                        check_PointerEvent(event);
+                        test_pointerEvent.step(function () {
+                            assert_equals(event.type, "pointerdown", "pointer event received" + event.type);
+                            assert_true(f_pointerenter_rcvd, "pointerenter event should have been received before pointerdown");
+                            assert_equals(event.pointerType, pointerenter_event.pointerType, "pointerType is same for pointerenter and pointerdown");
+                            assert_equals(event.isPrimary, pointerenter_event.isPrimary, "isPrimary is same for pointerenter and pointerdown");
+                        });
+                        test_pointerEvent.done(); // complete test
+                    }
                 });
 
                 on_event(target0, "pointerenter", function (event) {
-                    check_PointerEvent(event);
-                    test_pointerEvent.step(function () {
-                        assert_not_equals(event.pointerType, "mouse", "Test should be run using a pen or touch as input");
-                        assert_equals(event.type, "pointerenter", "pointer event received" + event.type);
-                    });
-                    f_pointerenter_rcvd = true;
-                    detected_pointertypes[event.pointerType] = true;
+                    if(event.pointerType == 'touch') {
+                        pointerenter_event = event;
+                        check_PointerEvent(event);
+                        test_pointerEvent.step(function () {
+                            assert_equals(event.type, "pointerenter", "pointer event received" + event.type);
+                        });
+                        f_pointerenter_rcvd = true;
+                        detected_pointertypes[event.pointerType] = true;
+                    }
                 });
             }
         </script>
     </head>
     <body onload="run()">
-        <h1>Pointer Event: Dispatch pointerenter (touch)</h1>
+        <h1>Pointer Event: Dispatch pointerenter (nohover)</h1>
         <h4>
             Test Description:
             When a pointing device that does not support hover is moved into the hit test boundaries of an element or one of its
@@ -56,7 +63,7 @@ or one of its descendants as a result of a pointerdown event, the pointerenter e
         </h4>
         <br />
         <div id="target0">
-            Use touch to tap here.
+            Tap here.
         </div>
         <div id="complete-notice">
             <p>Test complete: Scroll to Summary to view Pass/Fail Results.</p>

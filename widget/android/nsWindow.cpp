@@ -1172,22 +1172,6 @@ nsWindow::DispatchGestureEvent(uint32_t msg, uint32_t direction, double delta,
 }
 
 
-void
-nsWindow::DispatchMotionEvent(WidgetInputEvent &event, AndroidGeckoEvent *ae,
-                              const nsIntPoint &refPoint)
-{
-    nsIntPoint offset = WidgetToScreenOffset();
-
-    event.modifiers = ae->DOMModifiers();
-    event.time = ae->Time();
-
-    // XXX possibly bound the range of event.refPoint here.
-    //     some code may get confused.
-    event.refPoint = LayoutDeviceIntPoint::FromUntyped(refPoint - offset);
-
-    DispatchEvent(&event);
-}
-
 static unsigned int ConvertAndroidKeyCodeToDOMKeyCode(int androidKeyCode)
 {
     // Special-case alphanumeric keycodes because they are most common.

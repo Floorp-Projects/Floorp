@@ -42,15 +42,16 @@ def update_manifest(git_root, metadata_root):
 
 
 def update_expected(test_root, metadata_root, log_file_names, rev_old=None, rev_new="HEAD",
-                    ignore_existing=False):
+                    ignore_existing=False, sync_root=None):
     """Update the metadata files for web-platform-tests based on
     the results obtained in a previous run"""
 
     manifest = load_test_manifest(test_root, metadata_root)
 
-    if rev_old is not None:
-        rev_old = git("rev-parse", rev_old, repo=test_root).strip()
-    rev_new = git("rev-parse", rev_new, repo=test_root).strip()
+    if sync_root is not None:
+        if rev_old is not None:
+            rev_old = git("rev-parse", rev_old, repo=test_root).strip()
+        rev_new = git("rev-parse", rev_new, repo=test_root).strip()
 
     if rev_old is not None:
         change_data = load_change_data(rev_old, rev_new, repo=test_root)

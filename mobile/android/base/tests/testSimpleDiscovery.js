@@ -24,7 +24,8 @@ function discovery_observer(subject, topic, data) {
   run_next_test();
 };
 
-var testTarget = {
+var testDevice = {
+  id: "test:dummy",
   target: "test:service",
   factory: function(service) { /* dummy */  },
   types: ["video/mp4"],
@@ -33,14 +34,14 @@ var testTarget = {
 
 add_test(function test_default() {
   do_register_cleanup(function cleanup() {
-    SimpleServiceDiscovery.unregisterTarget(testTarget);
+    SimpleServiceDiscovery.unregisterDevice(testDevice);
     Services.obs.removeObserver(discovery_observer, "ssdp-service-found");
   });
 
   Services.obs.addObserver(discovery_observer, "ssdp-service-found", false);
 
-  // We need to register a target or processService will ignore us
-  SimpleServiceDiscovery.registerTarget(testTarget);
+  // We need to register a device or processService will ignore us
+  SimpleServiceDiscovery.registerDevice(testDevice);
 
   // Create a pretend service
   let service = {

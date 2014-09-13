@@ -201,7 +201,7 @@ LRecoverInfo::New(MIRGenerator *gen, MResumePoint *mir)
     if (!recoverInfo || !recoverInfo->init(mir))
         return nullptr;
 
-    JitSpew(JitSpew_Snapshots, "Generating LIR recover info %p from MIR (%p)",
+    JitSpew(JitSpew_IonSnapshots, "Generating LIR recover info %p from MIR (%p)",
             (void *)recoverInfo, (void *)mir);
 
     return recoverInfo;
@@ -293,7 +293,7 @@ LSnapshot::New(MIRGenerator *gen, LRecoverInfo *recover, BailoutKind kind)
     if (!snapshot || !snapshot->init(gen))
         return nullptr;
 
-    JitSpew(JitSpew_Snapshots, "Generating LIR snapshot %p from recover (%p)",
+    JitSpew(JitSpew_IonSnapshots, "Generating LIR snapshot %p from recover (%p)",
             (void *)snapshot, (void *)recover);
 
     return snapshot;
@@ -475,8 +475,8 @@ LInstruction::assignSnapshot(LSnapshot *snapshot)
     snapshot_ = snapshot;
 
 #ifdef DEBUG
-    if (JitSpewEnabled(JitSpew_Snapshots)) {
-        JitSpewHeader(JitSpew_Snapshots);
+    if (JitSpewEnabled(JitSpew_IonSnapshots)) {
+        JitSpewHeader(JitSpew_IonSnapshots);
         fprintf(JitSpewFile, "Assigning snapshot %p to instruction %p (",
                 (void *)snapshot, (void *)this);
         printName(JitSpewFile);

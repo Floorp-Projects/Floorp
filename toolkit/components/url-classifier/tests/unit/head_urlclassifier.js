@@ -11,6 +11,10 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
+// We also need a valid nsIXulAppInfo
+Cu.import("resource://testing-common/AppInfo.jsm");
+updateAppInfo();
+
 Cu.import("resource://testing-common/httpd.js");
 
 do_get_profile();
@@ -33,6 +37,9 @@ prefBranch.setBoolPref("browser.safebrowsing.enabled", true);
 
 // Enable all completions for tests
 prefBranch.setCharPref("urlclassifier.disallow_completions", "");
+
+// Hash completion timeout
+prefBranch.setIntPref("urlclassifier.gethash.timeout_ms", 5000);
 
 function delFile(name) {
   try {

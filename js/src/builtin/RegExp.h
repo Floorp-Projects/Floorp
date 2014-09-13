@@ -25,7 +25,7 @@ enum RegExpStaticsUpdate { UpdateRegExpStatics, DontUpdateRegExpStatics };
 
 RegExpRunStatus
 ExecuteRegExp(JSContext *cx, HandleObject regexp, HandleString string,
-              MatchPairs &matches, RegExpStaticsUpdate staticsUpdate);
+              MatchPairs *matches, RegExpStaticsUpdate staticsUpdate);
 
 /*
  * Legacy behavior of ExecuteRegExp(), which is baked into the JSAPI.

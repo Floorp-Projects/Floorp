@@ -6594,5 +6594,25 @@
     "kind": "enumerated",
     "n_values": 3,
     "description": "Doorhanger shown = 0, Disable = 1, Enable = 2"
+  },
+  "E10S_AUTOSTART": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a session is set to autostart e10s windows"
+  },
+  "E10S_WINDOW": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a browser window is set as an e10s window"
+  },
+  "E10S_STILL_ACCEPTED_FROM_PROMPT": {
+    "expires_in_version": "40",
+    "kind": "boolean",
+    "description": "Whether a user who accepted e10s from the prompt is still using e10s"
+  },
+  "E10S_BLOCKED_FROM_RUNNING": {
+    "expires_in_version": "40",
+    "kind": "boolean",
+    "description": "Whether the e10s pref was set but it was blocked from running due to blacklisted conditions"
   }
 }

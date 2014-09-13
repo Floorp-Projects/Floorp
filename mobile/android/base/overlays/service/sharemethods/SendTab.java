@@ -22,6 +22,7 @@ import org.mozilla.gecko.fxa.activities.FxAccountStatusActivity;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.overlays.OverlayConstants;
+import org.mozilla.gecko.overlays.service.ShareData;
 import org.mozilla.gecko.sync.CommandProcessor;
 import org.mozilla.gecko.sync.CommandRunner;
 import org.mozilla.gecko.sync.GlobalSession;
@@ -66,15 +67,15 @@ public class SendTab extends ShareMethod {
     private TabSender tabSender;
 
     @Override
-    public Result handle(String title, String url, Parcelable extra) {
-        if (extra == null) {
+    public Result handle(ShareData shareData) {
+        if (shareData.extra == null) {
             Log.e(LOGTAG, "No target devices specified!");
 
             // Retrying with an identical lack of devices ain't gonna fix it...
             return Result.PERMANENT_FAILURE;
         }
 
-        String[] targetGUIDs = ((Bundle) extra).getStringArray(SEND_TAB_TARGET_DEVICES);
+        String[] targetGUIDs = ((Bundle) shareData.extra).getStringArray(SEND_TAB_TARGET_DEVICES);
 
         // Ensure all target GUIDs are devices we actually know about.
         if (!validGUIDs.containsAll(Arrays.asList(targetGUIDs))) {
@@ -108,7 +109,7 @@ public class SendTab extends ShareMethod {
         // Remember that ShareMethod.handle is always run on the background thread, so the database
         // access here is of no concern.
         for (int i = 0; i < targetGUIDs.length; i++) {
-            processor.sendURIToClientForDisplay(url, targetGUIDs[i], title, accountGUID, context);
+            processor.sendURIToClientForDisplay(shareData.url, targetGUIDs[i], shareData.title, accountGUID, context);
         }
 
         // Request an immediate sync to push these new commands to the network ASAP.
