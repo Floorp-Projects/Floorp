@@ -11,8 +11,11 @@
  */
 
 #include "SVGAttrAnimationRuleProcessor.h"
+#include "nsRuleProcessorData.h"
+#include "nsSVGElement.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 SVGAttrAnimationRuleProcessor::SVGAttrAnimationRuleProcessor()
 {
@@ -27,6 +30,11 @@ NS_IMPL_ISUPPORTS(SVGAttrAnimationRuleProcessor, nsIStyleRuleProcessor)
 /* virtual */ void
 SVGAttrAnimationRuleProcessor::RulesMatching(ElementRuleProcessorData* aData)
 {
+  Element* element = aData->mElement;
+  if (element->IsSVG()) {
+    static_cast<nsSVGElement*>(element)->
+      WalkAnimatedContentStyleRules(aData->mRuleWalker);
+  }
 }
 
 /* virtual */ nsRestyleHint

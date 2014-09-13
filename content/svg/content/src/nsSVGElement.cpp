@@ -905,6 +905,12 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
     aRuleWalker->Forward(mContentStyleRule);
   }
 
+  return NS_OK;
+}
+
+void
+nsSVGElement::WalkAnimatedContentStyleRules(nsRuleWalker* aRuleWalker)
+{
   // Update & walk the animated content style rule, to include style from
   // animated mapped attributes.  But first, get nsPresContext to check
   // whether this is a "no-animation restyle". (This should match the check
@@ -933,8 +939,6 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
       aRuleWalker->Forward(animContentStyleRule);
     }
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP_(bool)
