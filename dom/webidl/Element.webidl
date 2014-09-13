@@ -53,6 +53,9 @@ interface Element : Node {
   boolean hasAttributeNS(DOMString? namespace, DOMString localName);
 
   [Throws, Pure]
+  Element? closest(DOMString selector);
+
+  [Throws, Pure]
   boolean matches(DOMString selector);
 
   [Pure]
