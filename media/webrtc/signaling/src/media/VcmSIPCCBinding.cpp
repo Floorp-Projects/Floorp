@@ -2079,6 +2079,7 @@ int vcmTxStartICE(cc_mcapid_t mcap_id,
     err = vcmTxCreateVideoConduit(level, payload, pc, attrs, conduit);
     is_video = true;
   } else {
+    mediaType = "unrecognized";
     CSFLogError(logTag, "%s: mcap_id unrecognized", __FUNCTION__);
   }
   if (err) {
@@ -2852,4 +2853,3 @@ short vcmGetVideoPreferredCodec(int32_t *preferred_codec) {
                          "media.navigator.video.preferred_codec",
                          preferred_codec);
 }
-
