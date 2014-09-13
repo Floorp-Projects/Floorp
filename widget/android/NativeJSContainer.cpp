@@ -5,6 +5,7 @@
 
 #include "NativeJSContainer.h"
 #include "AndroidBridge.h"
+#include "js/StructuredClone.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "prthread.h"

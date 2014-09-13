@@ -8,13 +8,13 @@
 #define mozilla_dom_indexeddb_idbmutablefile_h__
 
 #include "js/TypeDecls.h"
-#include "MainThreadUtils.h"
-#include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/FileModeBinding.h"
-#include "mozilla/dom/indexedDB/FileInfo.h"
-#include "mozilla/dom/MutableFile.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/FileModeBinding.h"
+#include "mozilla/dom/MutableFile.h"
+#include "mozilla/dom/quota/PersistenceType.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 
@@ -28,23 +28,39 @@ class ErrorResult;
 namespace dom {
 
 class DOMRequest;
+class MetadataParameters;
 
 namespace indexedDB {
 
+class FileInfo;
 class IDBDatabase;
 class IDBFileHandle;
 
-class IDBMutableFile MOZ_FINAL : public DOMEventTargetHelper,
-                                 public MutableFileBase
+class IDBMutableFile MOZ_FINAL
+  : public DOMEventTargetHelper
+  , public MutableFileBase
 {
+  typedef mozilla::dom::MetadataParameters MetadataParameters;
+  typedef mozilla::dom::quota::PersistenceType PersistenceType;
+
+  nsString mName;
+  nsString mType;
+
+  nsRefPtr<IDBDatabase> mDatabase;
+  nsRefPtr<FileInfo> mFileInfo;
+
+  const nsCString mGroup;
+  const nsCString mOrigin;
+  const PersistenceType mPersistenceType;
+
+  Atomic<bool> mInvalidated;
+
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBMutableFile, DOMEventTargetHelper)
-
   static already_AddRefed<IDBMutableFile>
-  Create(const nsAString& aName, const nsAString& aType,
-         IDBDatabase* aDatabase, already_AddRefed<FileInfo> aFileInfo);
+  Create(IDBDatabase* aDatabase,
+         const nsAString& aName,
+         const nsAString& aType,
+         already_AddRefed<FileInfo> aFileInfo);
 
   const nsAString&
   Name() const
@@ -59,16 +75,23 @@ public:
   }
 
   int64_t
-  GetFileId() const
-  {
-    return mFileInfo->Id();
-  }
+  GetFileId() const;
 
   FileInfo*
   GetFileInfo() const
   {
     return mFileInfo;
   }
+
+  already_AddRefed<nsIDOMFile>
+  CreateFileObject(IDBFileHandle* aFileHandle,
+                   MetadataParameters* aMetadataParams);
+
+  void
+  Invalidate();
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBMutableFile, DOMEventTargetHelper)
 
   virtual bool
   IsInvalid() MOZ_OVERRIDE;
@@ -84,9 +107,6 @@ public:
 
   virtual void
   UnsetThreadLocals() MOZ_OVERRIDE;
-
-  already_AddRefed<nsIDOMFile>
-  CreateFileObject(IDBFileHandle* aFileHandle, uint32_t aFileSize);
 
   // nsWrapperCache
   virtual JSObject*
@@ -112,12 +132,7 @@ public:
   }
 
   IDBDatabase*
-  Database()
-  {
-    MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
-
-    return mDatabase;
-  }
+  Database() const;
 
   already_AddRefed<IDBFileHandle>
   Open(FileMode aMode, ErrorResult& aError);
@@ -129,14 +144,17 @@ public:
   IMPL_EVENT_HANDLER(error)
 
 private:
-  explicit IDBMutableFile(IDBDatabase* aOwner);
+  IDBMutableFile(IDBDatabase* aDatabase,
+                 const nsAString& aName,
+                 const nsAString& aType,
+                 already_AddRefed<FileInfo> aFileInfo,
+                 const nsACString& aGroup,
+                 const nsACString& aOrigin,
+                 const nsACString& aStorageId,
+                 PersistenceType aPersistenceType,
+                 already_AddRefed<nsIFile> aFile);
+
   ~IDBMutableFile();
-
-  nsString mName;
-  nsString mType;
-
-  nsRefPtr<IDBDatabase> mDatabase;
-  nsRefPtr<FileInfo> mFileInfo;
 };
 
 } // namespace indexedDB

@@ -396,16 +396,15 @@ ArchiveZipFileImpl::Traverse(nsCycleCollectionTraversalCallback &cb)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mArchiveReader);
 }
 
-already_AddRefed<nsIDOMBlob>
+already_AddRefed<mozilla::dom::DOMFileImpl>
 ArchiveZipFileImpl::CreateSlice(uint64_t aStart,
                                 uint64_t aLength,
                                 const nsAString& aContentType)
 {
-  nsCOMPtr<nsIDOMBlob> t =
-    new DOMFile(new ArchiveZipFileImpl(mFilename, mContentType,
-                                       aStart, mLength, mCentral,
-                                       mArchiveReader));
-  return t.forget();
+  nsRefPtr<DOMFileImpl> impl =
+    new ArchiveZipFileImpl(mFilename, mContentType, aStart, mLength, mCentral,
+                           mArchiveReader);
+  return impl.forget();
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(ArchiveZipFileImpl, DOMFileImpl)

@@ -2,18 +2,48 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PBackgroundIDBFactory;
 include protocol PBackgroundTest;
+include protocol PBlob;
+include protocol PFileDescriptorSet;
+
+include DOMTypes;
+
+using struct mozilla::void_t
+  from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+union OptionalWindowId
+{
+  uint64_t;
+  void_t;
+};
+
+} // namespace indexedDB
+} // namespace dom
+
 namespace ipc {
 
-protocol PBackground
+sync protocol PBackground
 {
+  manages PBackgroundIDBFactory;
   manages PBackgroundTest;
+  manages PBlob;
+  manages PFileDescriptorSet;
 
 parent:
   // Only called at startup during mochitests to check the basic infrastructure.
   PBackgroundTest(nsCString testArg);
+
+  PBackgroundIDBFactory(OptionalWindowId optionalWindowId);
+
+both:
+  PBlob(BlobConstructorParams params);
+
+  PFileDescriptorSet(FileDescriptor fd);
 };
 
 } // namespace ipc
