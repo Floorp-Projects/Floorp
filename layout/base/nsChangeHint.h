@@ -322,6 +322,16 @@ enum nsRestyleHint {
   // eRestyle_Self.
   eRestyle_StyleAttribute = (1<<6),
 
+  // Additional restyle hint to be used along with CSSTransitions,
+  // CSSAnimations, SVGAttrAnimations, or StyleAttribute.  This
+  // indicates that along with the replacement given, appropriate
+  // switching between the style with animation and style without
+  // animation should be performed by adding or removing rules that
+  // should be present only in the style with animation.
+  // This is implied by eRestyle_Self or eRestyle_Subtree.
+  // FIXME: Remove this as part of bug 960465.
+  eRestyle_ChangeAnimationPhase = (1 << 7),
+
   // Continue the restyling process to the current frame's children even
   // if this frame's restyling resulted in no style changes.
   eRestyle_Force = (1<<8),
