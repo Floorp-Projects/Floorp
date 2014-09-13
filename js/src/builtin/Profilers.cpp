@@ -329,6 +329,23 @@ DumpProfile(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+static bool
+GetMaxGCPauseSinceClear(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setNumber(uint32_t(cx->runtime()->gc.stats.getMaxGCPauseSinceClear()));
+    return true;
+}
+
+static bool
+ClearMaxGCPauseAccumulator(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setNumber(uint32_t(cx->runtime()->gc.stats.clearMaxGCPauseAccumulator()));
+    return true;
+}
+
+
 #if defined(MOZ_SHARK) || defined(MOZ_INSTRUMENTS)
 
 static bool
@@ -382,6 +399,8 @@ static const JSFunctionSpec profiling_functions[] = {
     JS_FN("pauseProfilers",  PauseProfilers,      1,0),
     JS_FN("resumeProfilers", ResumeProfilers,     1,0),
     JS_FN("dumpProfile",     DumpProfile,         2,0),
+    JS_FN("getMaxGCPauseSinceClear",    GetMaxGCPauseSinceClear,    0, 0),
+    JS_FN("clearMaxGCPauseAccumulator", ClearMaxGCPauseAccumulator, 0, 0),
 #if defined(MOZ_SHARK) || defined(MOZ_INSTRUMENTS)
     /* Keep users of the old shark API happy. */
     JS_FN("connectShark",    IgnoreAndReturnTrue, 0,0),

@@ -695,6 +695,9 @@ ErrorReport::init(JSContext *cx, HandleValue exn)
     else
         str = ToString<CanGC>(cx, exn);
 
+    if (!str)
+        cx->clearPendingException();
+
     // If js_ErrorFromException didn't get us a JSErrorReport, then the object
     // was not an ErrorObject, security-wrapped or otherwise. However, it might
     // still quack like one. Give duck-typing a chance.  We start by looking for

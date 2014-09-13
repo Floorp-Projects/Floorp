@@ -50,6 +50,7 @@
 
   <!-- Colour used for share overlay button labels -->
   <color name="text_color_overlaybtn">#666666</color>
+  <color name="text_color_overlaybtn_disabled">#AFB1B3</color>
 
   <color name="overlay_share_header_background">#FFFFFFFF</color>
 

@@ -14,6 +14,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 
 import android.content.Context;
@@ -97,6 +98,7 @@ public class ReadingListPanel extends HomeFragment {
                 info.url = cursor.getString(cursor.getColumnIndexOrThrow(ReadingListItems.URL));
                 info.title = cursor.getString(cursor.getColumnIndexOrThrow(ReadingListItems.TITLE));
                 info.readingListItemId = cursor.getInt(cursor.getColumnIndexOrThrow(ReadingListItems._ID));
+                info.itemType = RemoveItemType.READING_LIST;
                 return info;
             }
         });
