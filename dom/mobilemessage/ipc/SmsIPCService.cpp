@@ -13,6 +13,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/Preferences.h"
 #include "nsString.h"
+#include "mozilla/dom/ipc/BlobChild.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::dom::mobilemessage;

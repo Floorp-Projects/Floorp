@@ -401,6 +401,10 @@ LazyIdleThread::Dispatch(nsIRunnable* aEvent,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
+  if (NS_WARN_IF(mShutdown)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   // If our thread is shutting down then we can't actually dispatch right now.
   // Queue this runnable for later.
   if (UseRunnableQueue()) {
