@@ -25,7 +25,7 @@ bool BrowserTabsRemoteAutostart();
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(e652d3b8-c77c-4601-a84d-b0716d2b32c0)]
+[scriptable, uuid(77550b90-3b67-11e4-916c-0800200c9a66)]
 interface nsIXULRuntime : nsISupports
 {
   /**
@@ -98,6 +98,11 @@ interface nsIXULRuntime : nsISupports
    * from the main browser UI.
    */
   readonly attribute boolean browserTabsRemoteAutostart;
+
+  /**
+   * If true, the accessibility service is running.
+   */
+  readonly attribute boolean accessibilityEnabled;
 
   /**
    * Signal the apprunner to invalidate caches on the next restart.
