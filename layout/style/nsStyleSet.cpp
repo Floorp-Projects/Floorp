@@ -1328,26 +1328,27 @@ struct RuleNodeInfo {
 struct CascadeLevel {
   uint8_t mLevel;
   bool mIsImportant;
+  bool mCheckForImportantRules;
   nsRestyleHint mLevelReplacementHint;
 };
 
 static const CascadeLevel gCascadeLevels[] = {
-  { nsStyleSet::eAgentSheet,      false, nsRestyleHint(0) },
-  { nsStyleSet::eUserSheet,       false, nsRestyleHint(0) },
-  { nsStyleSet::ePresHintSheet,   false, nsRestyleHint(0) },
-  { nsStyleSet::eSVGAttrAnimationSheet, false, eRestyle_SVGAttrAnimations },
-  { nsStyleSet::eDocSheet,        false, nsRestyleHint(0) },
-  { nsStyleSet::eScopedDocSheet,  false, nsRestyleHint(0) },
-  { nsStyleSet::eStyleAttrSheet,  false, nsRestyleHint(0) },
-  { nsStyleSet::eOverrideSheet,   false, nsRestyleHint(0) },
-  { nsStyleSet::eAnimationSheet,  false, eRestyle_CSSAnimations },
-  { nsStyleSet::eScopedDocSheet,  true,  nsRestyleHint(0) },
-  { nsStyleSet::eDocSheet,        true,  nsRestyleHint(0) },
-  { nsStyleSet::eStyleAttrSheet,  true,  nsRestyleHint(0) },
-  { nsStyleSet::eOverrideSheet,   true,  nsRestyleHint(0) },
-  { nsStyleSet::eUserSheet,       true,  nsRestyleHint(0) },
-  { nsStyleSet::eAgentSheet,      true,  nsRestyleHint(0) },
-  { nsStyleSet::eTransitionSheet, false, eRestyle_CSSTransitions },
+  { nsStyleSet::eAgentSheet,            false, false, nsRestyleHint(0) },
+  { nsStyleSet::eUserSheet,             false, false, nsRestyleHint(0) },
+  { nsStyleSet::ePresHintSheet,         false, false, nsRestyleHint(0) },
+  { nsStyleSet::eSVGAttrAnimationSheet, false, false, eRestyle_SVGAttrAnimations },
+  { nsStyleSet::eDocSheet,              false, false, nsRestyleHint(0) },
+  { nsStyleSet::eScopedDocSheet,        false, false, nsRestyleHint(0) },
+  { nsStyleSet::eStyleAttrSheet,        false, false, nsRestyleHint(0) },
+  { nsStyleSet::eOverrideSheet,         false, false, nsRestyleHint(0) },
+  { nsStyleSet::eAnimationSheet,        false, false, eRestyle_CSSAnimations },
+  { nsStyleSet::eScopedDocSheet,        true,  false, nsRestyleHint(0) },
+  { nsStyleSet::eDocSheet,              true,  false, nsRestyleHint(0) },
+  { nsStyleSet::eStyleAttrSheet,        true,  false, nsRestyleHint(0) },
+  { nsStyleSet::eOverrideSheet,         true,  false, nsRestyleHint(0) },
+  { nsStyleSet::eUserSheet,             true,  false, nsRestyleHint(0) },
+  { nsStyleSet::eAgentSheet,            true,  false, nsRestyleHint(0) },
+  { nsStyleSet::eTransitionSheet,       false, false, eRestyle_CSSTransitions },
 };
 
 nsRuleNode*
@@ -1389,9 +1390,12 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
   for (const CascadeLevel *level = gCascadeLevels,
                        *levelEnd = ArrayEnd(gCascadeLevels);
        level != levelEnd; ++level) {
-    ruleWalker.SetLevel(level->mLevel, level->mIsImportant, false);
 
     bool doReplace = level->mLevelReplacementHint & aReplacements;
+
+    ruleWalker.SetLevel(level->mLevel, level->mIsImportant,
+                        level->mCheckForImportantRules && doReplace);
+
     if (doReplace) {
       switch (level->mLevelReplacementHint) {
         case eRestyle_CSSAnimations: {
