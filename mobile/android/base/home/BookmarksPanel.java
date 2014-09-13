@@ -13,12 +13,13 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.BookmarksListAdapter.FolderInfo;
 import org.mozilla.gecko.home.BookmarksListAdapter.OnRefreshFolderListener;
 import org.mozilla.gecko.home.BookmarksListAdapter.RefreshType;
+import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.res.Resources;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
@@ -78,6 +79,7 @@ public class BookmarksPanel extends HomeFragment {
                 info.url = cursor.getString(cursor.getColumnIndexOrThrow(Bookmarks.URL));
                 info.title = cursor.getString(cursor.getColumnIndexOrThrow(Bookmarks.TITLE));
                 info.bookmarkId = cursor.getInt(cursor.getColumnIndexOrThrow(Bookmarks._ID));
+                info.itemType = RemoveItemType.BOOKMARKS;
                 return info;
             }
         });

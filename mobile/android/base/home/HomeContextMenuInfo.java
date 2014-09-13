@@ -24,6 +24,12 @@ public class HomeContextMenuInfo extends AdapterContextMenuInfo {
     public int historyId = -1;
     public int bookmarkId = -1;
     public int readingListItemId = -1;
+    public RemoveItemType itemType = null;
+
+    // Item type to be handled with "Remove" selection.
+    public static enum RemoveItemType {
+        BOOKMARKS, HISTORY, READING_LIST
+    }
 
     public HomeContextMenuInfo(View targetView, int position, long id) {
         super(targetView, position, id);
