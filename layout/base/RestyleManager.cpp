@@ -2747,6 +2747,15 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
       nsChangeHint_Hints_NotHandledForDescendants;
   }
 
+  // We don't support using eRestyle_StyleAttribute when pseudo-elements
+  // are involved.  This is mostly irrelevant since style attribute
+  // changes on pseudo-elements are very rare, though it does mean we
+  // don't get the optimization for table elements.
+  if (pseudoType != nsCSSPseudoElements::ePseudo_NotPseudoElement &&
+      (aRestyleHint & eRestyle_StyleAttribute)) {
+    aRestyleHint = (aRestyleHint & ~eRestyle_StyleAttribute) | eRestyle_Self;
+  }
+
   // do primary context
   nsRefPtr<nsStyleContext> newContext;
   nsIFrame *prevContinuation =
