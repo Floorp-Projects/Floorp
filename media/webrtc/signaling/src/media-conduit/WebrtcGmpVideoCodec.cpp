@@ -475,7 +475,7 @@ WebrtcGmpVideoEncoder::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
           buffer += 4;
           break;
         default:
-          break; // already handled above
+          MOZ_CRASH("GMP_BufferType already handled in switch above");
       }
       if (buffer+size > end) {
         // XXX see above - should we kill the plugin for returning extra bytes?  Probably
