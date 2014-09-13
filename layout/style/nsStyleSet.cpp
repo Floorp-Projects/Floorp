@@ -1339,12 +1339,12 @@ static const CascadeLevel gCascadeLevels[] = {
   { nsStyleSet::eSVGAttrAnimationSheet, false, false, eRestyle_SVGAttrAnimations },
   { nsStyleSet::eDocSheet,              false, false, nsRestyleHint(0) },
   { nsStyleSet::eScopedDocSheet,        false, false, nsRestyleHint(0) },
-  { nsStyleSet::eStyleAttrSheet,        false, false, nsRestyleHint(0) },
+  { nsStyleSet::eStyleAttrSheet,        false, true,  eRestyle_StyleAttribute },
   { nsStyleSet::eOverrideSheet,         false, false, nsRestyleHint(0) },
   { nsStyleSet::eAnimationSheet,        false, false, eRestyle_CSSAnimations },
   { nsStyleSet::eScopedDocSheet,        true,  false, nsRestyleHint(0) },
   { nsStyleSet::eDocSheet,              true,  false, nsRestyleHint(0) },
-  { nsStyleSet::eStyleAttrSheet,        true,  false, nsRestyleHint(0) },
+  { nsStyleSet::eStyleAttrSheet,        true,  false, eRestyle_StyleAttribute },
   { nsStyleSet::eOverrideSheet,         true,  false, nsRestyleHint(0) },
   { nsStyleSet::eUserSheet,             true,  false, nsRestyleHint(0) },
   { nsStyleSet::eAgentSheet,            true,  false, nsRestyleHint(0) },
@@ -1360,6 +1360,7 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
   NS_ABORT_IF_FALSE(!(aReplacements & ~(eRestyle_CSSTransitions |
                                         eRestyle_CSSAnimations |
                                         eRestyle_SVGAttrAnimations |
+                                        eRestyle_StyleAttribute |
                                         eRestyle_Force |
                                         eRestyle_ForceDescendants)),
                     // FIXME: Once bug 979133 lands we'll have a better
@@ -1386,6 +1387,12 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
 
   nsRuleWalker ruleWalker(mRuleTree, mAuthorStyleDisabled);
   auto rulesIndex = rules.Length();
+
+  // We need to transfer this information between the non-!important and
+  // !important phases for the style attribute level.
+  nsRuleNode* lastScopedRN = nullptr;
+  nsRuleNode* lastStyleAttrRN = nullptr;
+  bool haveImportantStyleAttrRules = false;
 
   for (const CascadeLevel *level = gCascadeLevels,
                        *levelEnd = ArrayEnd(gCascadeLevels);
@@ -1446,7 +1453,37 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
           }
           break;
         }
+        case eRestyle_StyleAttribute: {
+          if (!level->mIsImportant) {
+            // First time through, we handle the non-!important rule.
+            MOZ_ASSERT(aPseudoType ==
+                         nsCSSPseudoElements::ePseudo_NotPseudoElement,
+                       "this code doesn't know how to replace "
+                       "pseudo-element rules");
+            nsHTMLCSSStyleSheet* ruleProcessor =
+              static_cast<nsHTMLCSSStyleSheet*>(
+                mRuleProcessors[eStyleAttrSheet].get());
+            if (ruleProcessor &&
+                // check condition we asserted above (belt & braces security)
+                aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+              lastScopedRN = ruleWalker.CurrentNode();
+              ruleProcessor->ElementRulesMatching(PresContext(),
+                                                  aElement,
+                                                  &ruleWalker);
+              lastStyleAttrRN = ruleWalker.CurrentNode();
+              haveImportantStyleAttrRules =
+                !ruleWalker.GetCheckForImportantRules();
+            }
+          } else {
+            // Second time through, we handle the !important rule(s).
+            if (haveImportantStyleAttrRules) {
+              AddImportantRules(lastStyleAttrRN, lastScopedRN, &ruleWalker);
+            }
+          }
+          break;
+        }
         default:
+          MOZ_ASSERT(false, "unexpected result from gCascadeLevels lookup");
           break;
       }
     }
