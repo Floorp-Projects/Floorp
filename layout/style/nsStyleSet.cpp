@@ -1335,8 +1335,10 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
                                     nsRestyleHint aReplacements)
 {
   NS_ABORT_IF_FALSE(!(aReplacements & ~(eRestyle_CSSTransitions |
-                                        eRestyle_CSSAnimations)),
-                    // FIXME: Once bug 931668 lands we'll have a better
+                                        eRestyle_CSSAnimations |
+                                        eRestyle_Force |
+                                        eRestyle_ForceDescendants)),
+                    // FIXME: Once bug 979133 lands we'll have a better
                     // way to print these.
                     nsPrintfCString("unexpected replacement bits 0x%lX",
                                     uint32_t(aReplacements)).get());
