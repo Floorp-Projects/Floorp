@@ -2253,6 +2253,15 @@ let E10SUINotification = {
   CURRENT_NOTICE_COUNT: 0,
 
   checkStatus: function() {
+    let skipE10sChecks = false;
+    try {
+      skipE10sChecks = Services.prefs.getBoolPref("browser.tabs.remote.autostart.disabled-because-using-a11y");
+    } catch(e) {}
+
+    if (skipE10sChecks) {
+      return;
+    }
+
     if (Services.appinfo.browserTabsRemoteAutostart) {
       let notice = 0;
       try {
@@ -2263,13 +2272,22 @@ let E10SUINotification = {
       if (!activationNoticeShown) {
         this._showE10sActivatedNotice();
       }
+
+      // e10s doesn't work with accessibility, so we prompt to disable
+      // e10s if a11y is enabled, now or in the future.
+      Services.obs.addObserver(this, "a11y-init-or-shutdown", true);
+      if (Services.appinfo.accessibilityEnabled) {
+        this._showE10sAccessibilityWarning();
+      }
     } else {
       let e10sPromptShownCount = 0;
       try {
         e10sPromptShownCount = Services.prefs.getIntPref("browser.displayedE10SPrompt");
       } catch(e) {}
 
-      if (!Services.appinfo.inSafeMode && e10sPromptShownCount < 5) {
+      if (!Services.appinfo.inSafeMode &&
+          !Services.appinfo.accessibilityEnabled &&
+          e10sPromptShownCount < 5) {
         Services.tm.mainThread.dispatch(() => {
           try {
             this._showE10SPrompt();
@@ -2279,6 +2297,14 @@ let E10SUINotification = {
           }
         }, Ci.nsIThread.DISPATCH_NORMAL);
       }
+    }
+  },
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
+
+  observe: function(subject, topic, data) {
+    if (topic == "a11y-init-or-shutdown" && data == "1") {
+      this._showE10sAccessibilityWarning();
     }
   },
 
@@ -2343,6 +2369,56 @@ let E10SUINotification = {
     };
 
     win.PopupNotifications.show(browser, "enable_e10s", promptMessage, null, mainAction, secondaryActions, options);
+  },
+
+  _warnedAboutAccessibility: false,
+
+  _showE10sAccessibilityWarning: function() {
+    Services.prefs.setBoolPref("browser.tabs.remote.autostart.disabled-because-using-a11y", true);
+
+    if (this._warnedAboutAccessibility) {
+      return;
+    }
+    this._warnedAboutAccessibility = true;
+
+    let win = RecentWindow.getMostRecentBrowserWindow();
+    if (!win) {
+      // Just restart immediately.
+      Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
+      return;
+    }
+
+    let browser = win.gBrowser.selectedBrowser;
+
+    let promptMessage = "Multiprocess Nightly (e10s) does not yet support accessibility features. Multiprocessing will be disabled if you restart Firefox. Would you like to restart?";
+    let mainAction = {
+      label: "Disable and Restart",
+      accessKey: "R",
+      callback: function () {
+        // Restart the app
+        let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
+        Services.obs.notifyObservers(cancelQuit, "quit-application-requested", "restart");
+        if (cancelQuit.data)
+          return; // somebody canceled our quit request
+        Services.startup.quit(Services.startup.eAttemptQuit | Services.startup.eRestart);
+      }
+    };
+    let secondaryActions = [
+      {
+        label: "Don't Disable",
+        accessKey: "D",
+        callback: function () {
+          Services.prefs.setBoolPref("browser.tabs.remote.autostart.disabled-because-using-a11y", false);
+        }
+      }
+    ];
+    let options = {
+      popupIconURL: "chrome://browser/skin/e10s-64@2x.png",
+      learnMoreURL: "https://wiki.mozilla.org/Electrolysis",
+      persistWhileVisible: true
+    };
+
+    win.PopupNotifications.show(browser, "a11y_enabled_with_e10s", promptMessage, null, mainAction, secondaryActions, options);
   },
 };
 #endif
