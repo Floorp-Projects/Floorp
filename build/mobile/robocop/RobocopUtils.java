@@ -4,8 +4,7 @@
 
 package org.mozilla.gecko;
 
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import android.app.Activity;
 
@@ -15,27 +14,45 @@ public final class RobocopUtils {
     private RobocopUtils() {}
 
     public static void runOnUiThreadSync(Activity activity, final Runnable runnable) {
-        final SynchronousQueue syncQueue = new SynchronousQueue();
+        final AtomicBoolean sentinel = new AtomicBoolean(false);
+
+        // On the UI thread, run the Runnable, then set sentinel to true and wake this thread.
         activity.runOnUiThread(
             new Runnable() {
+                @Override
                 public void run() {
                     runnable.run();
-                    try {
-                        syncQueue.put(new Object());
-                    } catch (InterruptedException e) {
-                        FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, e);
+
+                    synchronized (sentinel) {
+                        sentinel.set(true);
+                        sentinel.notifyAll();
                     }
                 }
-            });
-        try {
-            // Wait for the UiThread code to finish running
-            if (syncQueue.poll(MAX_WAIT_MS, TimeUnit.MILLISECONDS) == null) {
-                FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR,
-                                       "time-out waiting for UI thread");
-                FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
             }
-        } catch (InterruptedException e) {
-            FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, e);
+        );
+
+
+        // Suspend this thread, until the other thread completes its work or until a timeout is
+        // reached.
+        long startTimestamp = System.currentTimeMillis();
+
+        synchronized (sentinel) {
+            while (!sentinel.get()) {
+                try {
+                    sentinel.wait(MAX_WAIT_MS);
+                } catch (InterruptedException e) {
+                    FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR, e);
+                }
+
+                // Abort if we woke up due to timeout (instead of spuriously).
+                if (System.currentTimeMillis() - startTimestamp >= MAX_WAIT_MS) {
+                    FennecNativeDriver.log(FennecNativeDriver.LogLevel.ERROR,
+                                                  "time-out waiting for UI thread");
+                    FennecNativeDriver.logAllStackTraces(FennecNativeDriver.LogLevel.ERROR);
+
+                    return;
+                }
+            }
         }
     }
 }
