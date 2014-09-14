@@ -171,6 +171,14 @@ private:
   }
   void AddDependencyOnSource(SourceSurfaceD2D1* aSource);
 
+  // This returns the clipped geometry, in addition it returns aClipBounds which
+  // represents the intersection of all pixel-aligned rectangular clips that
+  // are currently set. The returned clipped geometry must be clipped by these
+  // bounds to correctly reflect the total clip. This is in device space.
+  TemporaryRef<ID2D1Geometry> GetClippedGeometry(IntRect *aClipBounds);
+
+  bool GetDeviceSpaceClipRect(D2D1_RECT_F& aClipRect, bool& aIsPixelAligned);
+
   void PopAllClips();
   void PushClipsToDC(ID2D1DeviceContext *aDC);
   void PopClipsFromDC(ID2D1DeviceContext *aDC);
@@ -183,6 +191,7 @@ private:
 
   RefPtr<ID3D11Device> mDevice;
   RefPtr<ID3D11Texture2D> mTexture;
+  RefPtr<ID2D1Geometry> mCurrentClippedGeometry;
   // This is only valid if mCurrentClippedGeometry is non-null. And will
   // only be the intersection of all pixel-aligned retangular clips. This is in
   // device space.
