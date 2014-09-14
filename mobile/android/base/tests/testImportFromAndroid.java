@@ -163,13 +163,12 @@ public class testImportFromAndroid extends AboutHomeTest {
         // Return bookmarks or history depending on what the user asks for
         ArrayList<String> urls = new ArrayList<String>();
         ContentResolver resolver = getActivity().getContentResolver();
-        Browser mBrowser = new Browser();
         Cursor cursor = null;
         try {
             if (data.equals("history")) {
-                cursor = mBrowser.getAllVisitedUrls(resolver);
+                cursor = Browser.getAllVisitedUrls(resolver);
             } else if (data.equals("bookmarks")) {
-                cursor = mBrowser.getAllBookmarks(resolver);
+                cursor = Browser.getAllBookmarks(resolver);
             }
             if (cursor != null) {
                 cursor.moveToFirst();
