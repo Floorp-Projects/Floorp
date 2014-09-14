@@ -42,6 +42,14 @@ struct RemoteInputStreamParams
   PBlob remoteBlob;
 };
 
+// XXX This may only be used for same-process inter-thread communication! The
+//     value should be reinterpret_cast'd to nsIInputStream. It carries a
+//     reference.
+struct SameProcessInputStreamParams
+{
+  intptr_t addRefedInputStream;
+};
+
 union InputStreamParams
 {
   StringInputStreamParams;
@@ -51,6 +59,7 @@ union InputStreamParams
   MIMEInputStreamParams;
   MultiplexInputStreamParams;
   RemoteInputStreamParams;
+  SameProcessInputStreamParams;
 };
 
 union OptionalInputStreamParams

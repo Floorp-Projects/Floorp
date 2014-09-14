@@ -6,7 +6,13 @@
 
 #include "nsILocalFile.idl"
 
-[scriptable, builtinclass, uuid(c7b3fd13-30f2-46e5-a0d9-7a79a9b73c5b)]
+%{C++
+struct PRFileDesc;
+%}
+
+[ptr] native PRFileDescStar(PRFileDesc);
+
+[scriptable, builtinclass, uuid(ef454286-2848-4383-9101-660f190dd0a5)]
 interface nsILocalFileWin : nsILocalFile
 {
    /**
@@ -94,5 +100,12 @@ interface nsILocalFileWin : nsILocalFile
                       [optional] in wstring description,
                       [optional] in nsIFile iconFile,
                       [optional] in long iconIndex);
+
+    /**
+     * Identical to nsIFile::openNSPRFileDesc except it also uses the
+     * FILE_SHARE_DELETE flag.
+    */
+    [noscript] PRFileDescStar openNSPRFileDescShareDelete(in long flags,
+                                                          in long mode);
 };
 

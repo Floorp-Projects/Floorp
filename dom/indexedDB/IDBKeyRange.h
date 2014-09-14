@@ -7,144 +7,137 @@
 #ifndef mozilla_dom_indexeddb_idbkeyrange_h__
 #define mozilla_dom_indexeddb_idbkeyrange_h__
 
-#include "mozilla/dom/indexedDB/IndexedDatabase.h"
+#include "js/RootingAPI.h"
+#include "js/Value.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/dom/indexedDB/Key.h"
-
-#include "nsISupports.h"
-
-#include "mozilla/ErrorResult.h"
+#include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsISupports.h"
+#include "nsString.h"
 
 class mozIStorageStatement;
+struct PRThread;
 
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
+
 class GlobalObject;
-} // namespace dom
-} // namespace mozilla
 
-BEGIN_INDEXEDDB_NAMESPACE
+namespace indexedDB {
 
-namespace ipc {
-class KeyRange;
-} // namespace ipc
+class SerializedKeyRange;
 
-class IDBKeyRange MOZ_FINAL : public nsISupports
+class IDBKeyRange MOZ_FINAL
+  : public nsISupports
 {
+  nsCOMPtr<nsISupports> mGlobal;
+  Key mLower;
+  Key mUpper;
+  JS::Heap<JS::Value> mCachedLowerVal;
+  JS::Heap<JS::Value> mCachedUpperVal;
+
+  const bool mLowerOpen : 1;
+  const bool mUpperOpen : 1;
+  const bool mIsOnly : 1;
+  bool mHaveCachedLowerVal : 1;
+  bool mHaveCachedUpperVal : 1;
+  bool mRooted : 1;
+
+#ifdef DEBUG
+  PRThread* mOwningThread;
+#endif
+
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBKeyRange)
 
-  static nsresult FromJSVal(JSContext* aCx,
-                            JS::Handle<JS::Value> aVal,
-                            IDBKeyRange** aKeyRange);
+  static nsresult
+  FromJSVal(JSContext* aCx,
+            JS::Handle<JS::Value> aVal,
+            IDBKeyRange** aKeyRange);
 
-  template <class T>
   static already_AddRefed<IDBKeyRange>
-  FromSerializedKeyRange(const T& aKeyRange);
+  FromSerialized(const SerializedKeyRange& aKeyRange);
 
-  const Key& Lower() const
+  static already_AddRefed<IDBKeyRange>
+  Only(const GlobalObject& aGlobal,
+       JS::Handle<JS::Value> aValue,
+       ErrorResult& aRv);
+
+  static already_AddRefed<IDBKeyRange>
+  LowerBound(const GlobalObject& aGlobal,
+             JS::Handle<JS::Value> aValue,
+             bool aOpen,
+             ErrorResult& aRv);
+
+  static already_AddRefed<IDBKeyRange>
+  UpperBound(const GlobalObject& aGlobal,
+             JS::Handle<JS::Value> aValue,
+             bool aOpen,
+             ErrorResult& aRv);
+
+  static already_AddRefed<IDBKeyRange>
+  Bound(const GlobalObject& aGlobal,
+        JS::Handle<JS::Value> aLower,
+        JS::Handle<JS::Value> aUpper,
+        bool aLowerOpen,
+        bool aUpperOpen,
+        ErrorResult& aRv);
+
+  void
+  AssertIsOnOwningThread() const
+#ifdef DEBUG
+  ;
+#else
+  { }
+#endif
+
+  void
+  ToSerialized(SerializedKeyRange& aKeyRange) const;
+
+  const Key&
+  Lower() const
   {
     return mLower;
   }
 
-  Key& Lower()
+  Key&
+  Lower()
   {
     return mLower;
   }
 
-  const Key& Upper() const
+  const Key&
+  Upper() const
   {
     return mIsOnly ? mLower : mUpper;
   }
 
-  Key& Upper()
+  Key&
+  Upper()
   {
     return mIsOnly ? mLower : mUpper;
   }
 
-  // TODO: Remove these in favour of LowerOpen() / UpperOpen(), bug 900578.
-  bool IsLowerOpen() const
-  {
-    return mLowerOpen;
-  }
-
-  bool IsUpperOpen() const
-  {
-    return mUpperOpen;
-  }
-
-  bool IsOnly() const
+  bool
+  IsOnly() const
   {
     return mIsOnly;
   }
 
-  void GetBindingClause(const nsACString& aKeyColumnName,
-                        nsACString& _retval) const
-  {
-    NS_NAMED_LITERAL_CSTRING(andStr, " AND ");
-    NS_NAMED_LITERAL_CSTRING(spacecolon, " :");
-    NS_NAMED_LITERAL_CSTRING(lowerKey, "lower_key");
+  void
+  GetBindingClause(const nsACString& aKeyColumnName,
+                   nsACString& _retval) const;
 
-    if (IsOnly()) {
-      // Both keys are set and they're equal.
-      _retval = andStr + aKeyColumnName + NS_LITERAL_CSTRING(" =") +
-                spacecolon + lowerKey;
-    }
-    else {
-      nsAutoCString clause;
+  nsresult
+  BindToStatement(mozIStorageStatement* aStatement) const;
 
-      if (!Lower().IsUnset()) {
-        // Lower key is set.
-        clause.Append(andStr + aKeyColumnName);
-        clause.AppendLiteral(" >");
-        if (!IsLowerOpen()) {
-          clause.Append('=');
-        }
-        clause.Append(spacecolon + lowerKey);
-      }
-
-      if (!Upper().IsUnset()) {
-        // Upper key is set.
-        clause.Append(andStr + aKeyColumnName);
-        clause.AppendLiteral(" <");
-        if (!IsUpperOpen()) {
-          clause.Append('=');
-        }
-        clause.Append(spacecolon + NS_LITERAL_CSTRING("upper_key"));
-      }
-
-      _retval = clause;
-    }
-  }
-
-  nsresult BindToStatement(mozIStorageStatement* aStatement) const
-  {
-    NS_NAMED_LITERAL_CSTRING(lowerKey, "lower_key");
-
-    if (IsOnly()) {
-      return Lower().BindToStatement(aStatement, lowerKey);
-    }
-
-    nsresult rv;
-
-    if (!Lower().IsUnset()) {
-      rv = Lower().BindToStatement(aStatement, lowerKey);
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-    }
-
-    if (!Upper().IsUnset()) {
-      rv = Upper().BindToStatement(aStatement, NS_LITERAL_CSTRING("upper_key"));
-      NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
-    }
-
-    return NS_OK;
-  }
-
-  template <class T>
-  void ToSerializedKeyRange(T& aKeyRange);
-
-  void DropJSObjects();
+  void
+  DropJSObjects();
 
   // WebIDL
   JSObject*
@@ -176,48 +169,17 @@ public:
     return mUpperOpen;
   }
 
-  static already_AddRefed<IDBKeyRange>
-  Only(const GlobalObject& aGlobal,
-       JS::Handle<JS::Value> aValue, ErrorResult& aRv);
-
-  static already_AddRefed<IDBKeyRange>
-  LowerBound(const GlobalObject& aGlobal,
-             JS::Handle<JS::Value> aValue, bool aOpen, ErrorResult& aRv);
-
-  static already_AddRefed<IDBKeyRange>
-  UpperBound(const GlobalObject& aGlobal,
-             JS::Handle<JS::Value> aValue, bool aOpen, ErrorResult& aRv);
-
-  static already_AddRefed<IDBKeyRange>
-  Bound(const GlobalObject& aGlobal,
-        JS::Handle<JS::Value> aLower, JS::Handle<JS::Value> aUpper,
-        bool aLowerOpen, bool aUpperOpen, ErrorResult& aRv);
-
 private:
   IDBKeyRange(nsISupports* aGlobal,
               bool aLowerOpen,
               bool aUpperOpen,
-              bool aIsOnly)
-  : mGlobal(aGlobal), mCachedLowerVal(JSVAL_VOID), mCachedUpperVal(JSVAL_VOID),
-    mLowerOpen(aLowerOpen), mUpperOpen(aUpperOpen), mIsOnly(aIsOnly),
-    mHaveCachedLowerVal(false), mHaveCachedUpperVal(false), mRooted(false)
-  { }
+              bool aIsOnly);
 
   ~IDBKeyRange();
-
-  nsCOMPtr<nsISupports> mGlobal;
-  Key mLower;
-  Key mUpper;
-  JS::Heap<JS::Value> mCachedLowerVal;
-  JS::Heap<JS::Value> mCachedUpperVal;
-  const bool mLowerOpen;
-  const bool mUpperOpen;
-  const bool mIsOnly;
-  bool mHaveCachedLowerVal;
-  bool mHaveCachedUpperVal;
-  bool mRooted;
 };
 
-END_INDEXEDDB_NAMESPACE
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla
 
 #endif // mozilla_dom_indexeddb_idbkeyrange_h__

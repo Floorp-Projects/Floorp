@@ -133,6 +133,15 @@ function test_component(contractid) {
   doTestWorkaround("testACString", "Just a regular C string.");
   doTest("testJsval", {aprop: 12, bprop: "str"}, 4.22);
 
+  // Test out dipper parameters, since they're special and we can't really test
+  // inouts.
+  let outAString = {};
+  o.testOutAString(outAString);
+  do_check_eq(outAString.value, "out");
+  try { o.testOutAString(undefined); } catch (e) {} // Don't crash
+  try { o.testOutAString(null); } catch (e) {} // Don't crash
+  try { o.testOutAString("string"); } catch (e) {} // Don't crash
+
   // Helpers to instantiate various test XPCOM objects.
   var numAsMade = 0;
   function makeA() {

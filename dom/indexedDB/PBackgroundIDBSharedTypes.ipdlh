@@ -1,0 +1,259 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBlob;
+include protocol PBackgroundIDBDatabaseFile;
+
+include "mozilla/dom/indexedDB/SerializationHelpers.h";
+
+using struct mozilla::void_t
+  from "ipc/IPCMessageUtils.h";
+
+using mozilla::dom::indexedDB::IDBCursor::Direction
+  from "mozilla/dom/indexedDB/IDBCursor.h";
+
+using class mozilla::dom::indexedDB::Key
+  from "mozilla/dom/indexedDB/Key.h";
+
+using class mozilla::dom::indexedDB::KeyPath
+  from "mozilla/dom/indexedDB/KeyPath.h";
+
+using mozilla::dom::quota::PersistenceType
+  from "mozilla/dom/quota/PersistenceType.h";
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+struct SerializedKeyRange
+{
+  Key lower;
+  Key upper;
+  bool lowerOpen;
+  bool upperOpen;
+  bool isOnly;
+};
+
+struct SerializedStructuredCloneReadInfo
+{
+  uint8_t[] data;
+  PBlob[] blobs;
+
+  // This will only be valid for parent process actors.
+  intptr_t[] fileInfos;
+};
+
+struct SerializedStructuredCloneWriteInfo
+{
+  uint8_t[] data;
+  uint64_t offsetToKeyProp;
+};
+
+struct IndexUpdateInfo
+{
+  int64_t indexId;
+  Key value;
+};
+
+union OptionalKeyRange
+{
+  SerializedKeyRange;
+  void_t;
+};
+
+struct DatabaseMetadata
+{
+  nsString name;
+  uint64_t version;
+  PersistenceType persistenceType;
+  bool persistenceTypeIsExplicit;
+};
+
+struct ObjectStoreMetadata
+{
+  int64_t id;
+  nsString name;
+  KeyPath keyPath;
+  bool autoIncrement;
+};
+
+struct IndexMetadata
+{
+  int64_t id;
+  nsString name;
+  KeyPath keyPath;
+  bool unique;
+  bool multiEntry;
+};
+
+struct DatabaseSpec
+{
+  DatabaseMetadata metadata;
+  ObjectStoreSpec[] objectStores;
+};
+
+struct ObjectStoreSpec
+{
+  ObjectStoreMetadata metadata;
+  IndexMetadata[] indexes;
+};
+
+struct ObjectStoreOpenCursorParams
+{
+  int64_t objectStoreId;
+  OptionalKeyRange optionalKeyRange;
+  Direction direction;
+};
+
+struct ObjectStoreOpenKeyCursorParams
+{
+  int64_t objectStoreId;
+  OptionalKeyRange optionalKeyRange;
+  Direction direction;
+};
+
+struct IndexOpenCursorParams
+{
+  int64_t objectStoreId;
+  int64_t indexId;
+  OptionalKeyRange optionalKeyRange;
+  Direction direction;
+};
+
+struct IndexOpenKeyCursorParams
+{
+  int64_t objectStoreId;
+  int64_t indexId;
+  OptionalKeyRange optionalKeyRange;
+  Direction direction;
+};
+
+union OpenCursorParams
+{
+  ObjectStoreOpenCursorParams;
+  ObjectStoreOpenKeyCursorParams;
+  IndexOpenCursorParams;
+  IndexOpenKeyCursorParams;
+};
+
+// XXX Remove this once MutableFile has been ported to PBackground.
+union DatabaseFileOrMutableFileId
+{
+  PBackgroundIDBDatabaseFile;
+  int64_t;
+};
+
+struct ObjectStoreAddPutParams
+{
+  int64_t objectStoreId;
+  SerializedStructuredCloneWriteInfo cloneInfo;
+  Key key;
+  IndexUpdateInfo[] indexUpdateInfos;
+  DatabaseFileOrMutableFileId[] files;
+};
+
+struct ObjectStoreAddParams
+{
+  ObjectStoreAddPutParams commonParams;
+};
+
+struct ObjectStorePutParams
+{
+  ObjectStoreAddPutParams commonParams;
+};
+
+struct ObjectStoreGetParams
+{
+  int64_t objectStoreId;
+  SerializedKeyRange keyRange;
+};
+
+struct ObjectStoreGetAllParams
+{
+  int64_t objectStoreId;
+  OptionalKeyRange optionalKeyRange;
+  uint32_t limit;
+};
+
+struct ObjectStoreGetAllKeysParams
+{
+  int64_t objectStoreId;
+  OptionalKeyRange optionalKeyRange;
+  uint32_t limit;
+};
+
+struct ObjectStoreDeleteParams
+{
+  int64_t objectStoreId;
+  SerializedKeyRange keyRange;
+};
+
+struct ObjectStoreClearParams
+{
+  int64_t objectStoreId;
+};
+
+struct ObjectStoreCountParams
+{
+  int64_t objectStoreId;
+  OptionalKeyRange optionalKeyRange;
+};
+
+struct IndexGetParams
+{
+  int64_t objectStoreId;
+  int64_t indexId;
+  SerializedKeyRange keyRange;
+};
+
+struct IndexGetKeyParams
+{
+  int64_t objectStoreId;
+  int64_t indexId;
+  SerializedKeyRange keyRange;
+};
+
+struct IndexGetAllParams
+{
+  int64_t objectStoreId;
+  int64_t indexId;
+  OptionalKeyRange optionalKeyRange;
+  uint32_t limit;
+};
+
+struct IndexGetAllKeysParams
+{
+  int64_t objectStoreId;
+  int64_t indexId;
+  OptionalKeyRange optionalKeyRange;
+  uint32_t limit;
+};
+
+struct IndexCountParams
+{
+  int64_t objectStoreId;
+  int64_t indexId;
+  OptionalKeyRange optionalKeyRange;
+};
+
+union RequestParams
+{
+  ObjectStoreAddParams;
+  ObjectStorePutParams;
+  ObjectStoreGetParams;
+  ObjectStoreGetAllParams;
+  ObjectStoreGetAllKeysParams;
+  ObjectStoreDeleteParams;
+  ObjectStoreClearParams;
+  ObjectStoreCountParams;
+  IndexGetParams;
+  IndexGetKeyParams;
+  IndexGetAllParams;
+  IndexGetAllKeysParams;
+  IndexCountParams;
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

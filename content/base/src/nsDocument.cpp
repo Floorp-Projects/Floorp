@@ -153,7 +153,6 @@
 #include "mozAutoDocUpdate.h"
 #include "nsGlobalWindow.h"
 #include "mozilla/dom/EncodingUtils.h"
-#include "mozilla/dom/quota/QuotaManager.h"
 #include "nsDOMNavigationTiming.h"
 
 #include "nsSMILAnimationController.h"
@@ -168,6 +167,7 @@
 #include "nsCSPService.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsHTMLCSSStyleSheet.h"
+#include "SVGAttrAnimationRuleProcessor.h"
 #include "mozilla/dom/DOMImplementation.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/Comment.h"
@@ -2447,6 +2447,11 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
 
   if (!mStyleAttrStyleSheet) {
     mStyleAttrStyleSheet = new nsHTMLCSSStyleSheet();
+  }
+
+  if (!mSVGAttrAnimationRuleProcessor) {
+    mSVGAttrAnimationRuleProcessor =
+      new mozilla::SVGAttrAnimationRuleProcessor();
   }
 
   // Now set up our style sets
@@ -8511,13 +8516,6 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
     }
   }
 
-  // Check if we have running offline storage transactions
-  quota::QuotaManager* quotaManager =
-    win ? quota::QuotaManager::Get() : nullptr;
-  if (quotaManager && quotaManager->HasOpenTransactions(win)) {
-   return false;
-  }
-
 #ifdef MOZ_MEDIA_NAVIGATOR
   // Check if we have active GetUserMedia use
   if (MediaManager::Exists() && win &&
@@ -12167,6 +12165,12 @@ nsDocument::DocAddSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
   aWindowSizes->mDOMOtherSize +=
     mAttrStyleSheet ?
     mAttrStyleSheet->DOMSizeOfIncludingThis(aWindowSizes->mMallocSizeOf) :
+    0;
+
+  aWindowSizes->mDOMOtherSize +=
+    mSVGAttrAnimationRuleProcessor ?
+    mSVGAttrAnimationRuleProcessor->DOMSizeOfIncludingThis(
+                                      aWindowSizes->mMallocSizeOf) :
     0;
 
   aWindowSizes->mDOMOtherSize +=

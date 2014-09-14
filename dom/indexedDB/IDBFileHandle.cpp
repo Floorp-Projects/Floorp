@@ -16,15 +16,15 @@
 #include "nsServiceManagerUtils.h"
 #include "nsWidgetsCID.h"
 
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
 namespace {
 
 NS_DEFINE_CID(kAppShellCID2, NS_APPSHELL_CID);
 
 } // anonymous namespace
-
-namespace mozilla {
-namespace dom {
-namespace indexedDB {
 
 IDBFileHandle::IDBFileHandle(FileMode aMode,
                              RequestMode aRequestMode,
@@ -158,10 +158,10 @@ IDBFileHandle::OnCompleteOrAbort(bool aAborted)
 {
   nsCOMPtr<nsIDOMEvent> event;
   if (aAborted) {
-    event = CreateGenericEvent(this, NS_LITERAL_STRING(ABORT_EVT_STR),
+    event = CreateGenericEvent(this, nsDependentString(kAbortEventType),
                                eDoesBubble, eNotCancelable);
   } else {
-    event = CreateGenericEvent(this, NS_LITERAL_STRING(COMPLETE_EVT_STR),
+    event = CreateGenericEvent(this, nsDependentString(kCompleteEventType),
                                eDoesNotBubble, eNotCancelable);
   }
   if (NS_WARN_IF(!event)) {

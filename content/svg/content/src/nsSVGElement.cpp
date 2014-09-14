@@ -905,6 +905,12 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
     aRuleWalker->Forward(mContentStyleRule);
   }
 
+  return NS_OK;
+}
+
+void
+nsSVGElement::WalkAnimatedContentStyleRules(nsRuleWalker* aRuleWalker)
+{
   // Update & walk the animated content style rule, to include style from
   // animated mapped attributes.  But first, get nsPresContext to check
   // whether this is a "no-animation restyle". (This should match the check
@@ -919,7 +925,8 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
     // want that to happen from SMIL-animated value of mapped attrs, so
     // ignore animated value for now, and request an animation restyle to
     // get our animated value noticed.
-    shell->RestyleForAnimation(this, eRestyle_Self);
+    shell->RestyleForAnimation(this,
+      eRestyle_SVGAttrAnimations | eRestyle_ChangeAnimationPhase);
   } else {
     // Ok, this is an animation restyle -- go ahead and update/walk the
     // animated content style rule.
@@ -933,8 +940,6 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
       aRuleWalker->Forward(animContentStyleRule);
     }
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP_(bool)

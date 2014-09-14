@@ -11,8 +11,13 @@
 #include "nsCOMPtr.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsIIPCSerializableInputStream.h"
 
 namespace mozilla {
+namespace ipc {
+class InputStreamParams;
+} // namespace ipc
+
 namespace dom {
 
 class FileHelper;
@@ -46,11 +51,15 @@ protected:
 };
 
 class FileInputStreamWrapper : public FileStreamWrapper,
-                               public nsIInputStream
+                               public nsIInputStream,
+                               public nsIIPCSerializableInputStream
 {
+  typedef mozilla::ipc::InputStreamParams InputStreamParams;
+
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIINPUTSTREAM
+  NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
 
   FileInputStreamWrapper(nsISupports* aFileStream,
                          FileHelper* aFileHelper,
