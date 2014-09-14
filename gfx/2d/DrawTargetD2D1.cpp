@@ -100,14 +100,14 @@ DrawTargetD2D1::DrawSurface(SourceSurface *aSurface,
                             const DrawSurfaceOptions &aSurfOptions,
                             const DrawOptions &aOptions)
 {
+  PrepareForDrawing(aOptions.mCompositionOp, ColorPattern(Color()));
+
   RefPtr<ID2D1Image> image = GetImageForSurface(aSurface, ExtendMode::CLAMP);
 
   if (!image) {
     gfxWarning() << *this << ": Unable to get D2D image for surface.";
     return;
   }
-
-  PrepareForDrawing(aOptions.mCompositionOp, ColorPattern(Color()));
 
   D2D1_RECT_F samplingBounds;
 
@@ -214,11 +214,11 @@ DrawTargetD2D1::MaskSurface(const Pattern &aSource,
                             Point aOffset,
                             const DrawOptions &aOptions)
 {
+  PrepareForDrawing(aOptions.mCompositionOp, aSource);
+
   RefPtr<ID2D1Bitmap> bitmap;
 
   RefPtr<ID2D1Image> image = GetImageForSurface(aMask, ExtendMode::CLAMP);
-
-  PrepareForDrawing(aOptions.mCompositionOp, aSource);
 
   // FillOpacityMask only works if the antialias mode is MODE_ALIASED
   mDC->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
