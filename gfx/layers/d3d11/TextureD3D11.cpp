@@ -336,12 +336,18 @@ TextureClientD3D11::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlag
 {
   mSize = aSize;
   HRESULT hr;
+
+  if (mFormat == SurfaceFormat::A8) {
+    // Currently TextureClientD3D11 does not support A8 surfaces. Fallback.
+    return false;
+  }
+
 #ifdef USE_D2D1_1
   ID3D11Device* d3d11device = gfxWindowsPlatform::GetPlatform()->GetD3D11ContentDevice();
 
   if (gfxPrefs::Direct2DUse1_1() && d3d11device) {
 
-    CD3D11_TEXTURE2D_DESC newDesc(DXGI_FORMAT_B8G8R8A8_UNORM,
+    CD3D11_TEXTURE2D_DESC newDesc(mFormat == SurfaceFormat::A8 ? DXGI_FORMAT_A8_UNORM : DXGI_FORMAT_B8G8R8A8_UNORM,
                                   aSize.width, aSize.height, 1, 1,
                                   D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
 
