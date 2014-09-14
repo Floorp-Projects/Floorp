@@ -1193,6 +1193,7 @@ public:
   static void SetDirect3D11Device(ID3D11Device *aDevice);
   static ID3D11Device *GetDirect3D11Device();
   static ID2D1Device *GetD2D1Device();
+  static bool SupportsD2D1();
 #endif
 
   static TemporaryRef<GlyphRenderingOptions>
