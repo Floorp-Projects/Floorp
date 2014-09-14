@@ -117,7 +117,7 @@ struct RTPVideoHeader {
   uint16_t width;  // size
   uint16_t height;
 
-  bool isFirstPacket;    // first packet in frame
+  bool isFirstPacket;    // first packet in frame (or NAL for H.264)
   uint8_t simulcastIdx;  // Index if the simulcast encoder creating
                          // this frame, 0 if not using simulcast.
   RtpVideoCodecTypes codec;
