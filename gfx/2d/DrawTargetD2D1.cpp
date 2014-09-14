@@ -203,9 +203,46 @@ DrawTargetD2D1::ClearRect(const Rect &aRect)
 {
   MarkChanged();
 
-  mDC->PushAxisAlignedClip(D2DRect(aRect), D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+  PopAllClips();
+
+  PushClipRect(aRect);
+
+  if (mTransformDirty ||
+      !mTransform.IsIdentity()) {
+    mDC->SetTransform(D2D1::IdentityMatrix());
+    mTransformDirty = true;
+  }
+
+  D2D1_RECT_F clipRect;
+  bool isPixelAligned;
+  if (mTransform.IsRectilinear() &&
+      GetDeviceSpaceClipRect(clipRect, isPixelAligned)) {
+    mDC->PushAxisAlignedClip(clipRect, isPixelAligned ? D2D1_ANTIALIAS_MODE_ALIASED : D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+    mDC->Clear();
+    mDC->PopAxisAlignedClip();
+
+    PopClip();
+    return;
+  }
+
+  mDC->SetTarget(mTempBitmap);
   mDC->Clear();
+
+  IntRect addClipRect;
+  RefPtr<ID2D1Geometry> geom = GetClippedGeometry(&addClipRect);
+
+  RefPtr<ID2D1SolidColorBrush> brush;
+  mDC->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), byRef(brush));
+  mDC->PushAxisAlignedClip(D2D1::RectF(addClipRect.x, addClipRect.y, addClipRect.XMost(), addClipRect.YMost()), D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+  mDC->FillGeometry(geom, brush);
   mDC->PopAxisAlignedClip();
+
+  mDC->SetTarget(mBitmap);
+  mDC->DrawImage(mTempBitmap, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2D1_COMPOSITE_MODE_DESTINATION_OUT);
+
+  PopClip();
+
+  return;
 }
 
 void
@@ -466,6 +503,8 @@ DrawTargetD2D1::PushClip(const Path *aPath)
     return;
   }
 
+  mCurrentClippedGeometry = nullptr;
+
   RefPtr<PathD2D> pathD2D = static_cast<PathD2D*>(const_cast<Path*>(aPath));
 
   PushedClip clip;
@@ -504,6 +543,8 @@ DrawTargetD2D1::PushClipRect(const Rect &aRect)
     return PushClip(path);
   }
 
+  mCurrentClippedGeometry = nullptr;
+
   PushedClip clip;
   Rect rect = mTransform.TransformBounds(aRect);
   IntRect intRect;
@@ -525,6 +566,8 @@ DrawTargetD2D1::PushClipRect(const Rect &aRect)
 void
 DrawTargetD2D1::PopClip()
 {
+  mCurrentClippedGeometry = nullptr;
+
   if (mClipsArePushed) {
     if (mPushedClips.back().mPath) {
       mDC->PopLayer();
@@ -827,6 +870,128 @@ DrawTargetD2D1::AddDependencyOnSource(SourceSurfaceD2D1* aSource)
     aSource->mDrawTarget->mDependentTargets.insert(this);
     mDependingOnTargets.insert(aSource->mDrawTarget);
   }
+}
+
+static D2D1_RECT_F
+IntersectRect(const D2D1_RECT_F& aRect1, const D2D1_RECT_F& aRect2)
+{
+  D2D1_RECT_F result;
+  result.left = max(aRect1.left, aRect2.left);
+  result.top = max(aRect1.top, aRect2.top);
+  result.right = min(aRect1.right, aRect2.right);
+  result.bottom = min(aRect1.bottom, aRect2.bottom);
+
+  result.right = max(result.right, result.left);
+  result.bottom = max(result.bottom, result.top);
+
+  return result;
+}
+
+bool
+DrawTargetD2D1::GetDeviceSpaceClipRect(D2D1_RECT_F& aClipRect, bool& aIsPixelAligned)
+{
+  if (!mPushedClips.size()) {
+    return false;
+  }
+
+  aClipRect = D2D1::RectF(0, 0, mSize.width, mSize.height);
+  for (auto iter = mPushedClips.begin();iter != mPushedClips.end(); iter++) {
+    if (iter->mPath) {
+      return false;
+    }
+    aClipRect = IntersectRect(aClipRect, iter->mBounds);
+    if (!iter->mIsPixelAligned) {
+      aIsPixelAligned = false;
+    }
+  }
+  return true;
+}
+
+TemporaryRef<ID2D1Geometry>
+DrawTargetD2D1::GetClippedGeometry(IntRect *aClipBounds)
+{
+  if (mCurrentClippedGeometry) {
+    *aClipBounds = mCurrentClipBounds;
+    return mCurrentClippedGeometry;
+  }
+
+  mCurrentClipBounds = IntRect(IntPoint(0, 0), mSize);
+
+  // if pathGeom is null then pathRect represents the path.
+  RefPtr<ID2D1Geometry> pathGeom;
+  D2D1_RECT_F pathRect;
+  bool pathRectIsAxisAligned = false;
+  auto iter = mPushedClips.begin();
+
+  if (iter->mPath) {
+    pathGeom = GetTransformedGeometry(iter->mPath->GetGeometry(), iter->mTransform);
+  } else {
+    pathRect = iter->mBounds;
+    pathRectIsAxisAligned = iter->mIsPixelAligned;
+  }
+
+  iter++;
+  for (;iter != mPushedClips.end(); iter++) {
+    // Do nothing but add it to the current clip bounds.
+    if (!iter->mPath && iter->mIsPixelAligned) {
+      mCurrentClipBounds.IntersectRect(mCurrentClipBounds,
+        IntRect(int32_t(iter->mBounds.left), int32_t(iter->mBounds.top),
+                int32_t(iter->mBounds.right - iter->mBounds.left),
+                int32_t(iter->mBounds.bottom - iter->mBounds.top)));
+      continue;
+    }
+
+    if (!pathGeom) {
+      if (pathRectIsAxisAligned) {
+        mCurrentClipBounds.IntersectRect(mCurrentClipBounds,
+          IntRect(int32_t(pathRect.left), int32_t(pathRect.top),
+                  int32_t(pathRect.right - pathRect.left),
+                  int32_t(pathRect.bottom - pathRect.top)));
+      }
+      if (iter->mPath) {
+        // See if pathRect needs to go into the path geometry.
+        if (!pathRectIsAxisAligned) {
+          pathGeom = ConvertRectToGeometry(pathRect);
+        } else {
+          pathGeom = GetTransformedGeometry(iter->mPath->GetGeometry(), iter->mTransform);
+        }
+      } else {
+        pathRect = IntersectRect(pathRect, iter->mBounds);
+        pathRectIsAxisAligned = false;
+        continue;
+      }
+    }
+
+    RefPtr<ID2D1PathGeometry> newGeom;
+    factory()->CreatePathGeometry(byRef(newGeom));
+
+    RefPtr<ID2D1GeometrySink> currentSink;
+    newGeom->Open(byRef(currentSink));
+
+    if (iter->mPath) {
+      pathGeom->CombineWithGeometry(iter->mPath->GetGeometry(), D2D1_COMBINE_MODE_INTERSECT,
+                                    iter->mTransform, currentSink);
+    } else {
+      RefPtr<ID2D1Geometry> rectGeom = ConvertRectToGeometry(iter->mBounds);
+      pathGeom->CombineWithGeometry(rectGeom, D2D1_COMBINE_MODE_INTERSECT,
+                                    D2D1::IdentityMatrix(), currentSink);
+    }
+
+    currentSink->Close();
+
+    pathGeom = newGeom.forget();
+  }
+
+  // For now we need mCurrentClippedGeometry to always be non-nullptr. This
+  // method might seem a little strange but it is just fine, if pathGeom is
+  // nullptr pathRect will always still contain 1 clip unaccounted for
+  // regardless of mCurrentClipBounds.
+  if (!pathGeom) {
+    pathGeom = ConvertRectToGeometry(pathRect);
+  }
+  mCurrentClippedGeometry = pathGeom.forget();
+  *aClipBounds = mCurrentClipBounds;
+  return mCurrentClippedGeometry;
 }
 
 void
