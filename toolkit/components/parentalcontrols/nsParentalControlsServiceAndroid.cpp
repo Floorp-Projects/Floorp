@@ -32,9 +32,10 @@ nsParentalControlsService::GetParentalControlsEnabled(bool *aResult)
 NS_IMETHODIMP
 nsParentalControlsService::GetBlockFileDownloadsEnabled(bool *aResult)
 {
+  // NOTE: isAllowed returns the opposite intention, so we need to flip it
   bool res;
   IsAllowed(nsIParentalControlsService::DOWNLOAD, NULL, &res);
-  *aResult = res;
+  *aResult = !res;
 
   return NS_OK;
 }
