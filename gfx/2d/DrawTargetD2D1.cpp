@@ -748,11 +748,18 @@ bool
 DrawTargetD2D1::Init(const IntSize &aSize, SurfaceFormat aFormat)
 {
   HRESULT hr;
-  
+
   hr = Factory::GetD2D1Device()->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_ENABLE_MULTITHREADED_OPTIMIZATIONS, byRef(mDC));
 
   if (FAILED(hr)) {
     gfxWarning() << *this << ": Error " << hr << " failed to initialize new DeviceContext.";
+    return false;
+  }
+
+  if (mDC->GetMaximumBitmapSize() < UINT32(aSize.width) ||
+      mDC->GetMaximumBitmapSize() < UINT32(aSize.height)) {
+    // This is 'ok'
+    gfxDebug() << *this << ": Attempt to use unsupported surface size for D2D 1.1.";
     return false;
   }
 
