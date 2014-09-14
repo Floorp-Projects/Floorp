@@ -18,6 +18,15 @@
       SimpleTest.finish();
     }
   }
+
+  function clearNode(n) {
+    n.remove();
+    n.src = "";
+    while (n.firstChild) {
+      n.removeChild(n.firstChild);
+    }
+  }
+
   SimpleTest.waitForExplicitFinish();
 
   reflectString({
@@ -32,11 +41,11 @@
     SimpleTest.finish();
   } else {
     var v = document.createElement('video');
-    v.preload = "auto";
+    v.preload = "metadata";
     v.innerHTML = "<source src=\"" + media.name + "?fail\" media=\"not all\">" +
                   "<source src=\""+ media.name + "?pass\" media=\"all\">";
     var v2 = document.createElement("video");
-    v2.preload = "auto";
+    v2.preload = "metadata";
     v2.innerHTML = "<source src=\""+ media.name +"?pass\">" +
                    "<source src=\""+ media.name + "?fail\" media=\"all\">";
     document.body.appendChild(v);
@@ -45,11 +54,13 @@
     v.addEventListener("loadedmetadata", function(e) {
         ok(/pass/.test(e.target.currentSrc),
           "The source has been chosen according to the media attribute.");
+        clearNode(e.target);
         notifyFinished();
         });
     v2.addEventListener("loadedmetadata", function(e) {
         ok(/pass/.test(e.target.currentSrc),
           "If no media attribute is specified, it defaults to \'all\'.")
+        clearNode(e.target);
         notifyFinished();
     });
   }
