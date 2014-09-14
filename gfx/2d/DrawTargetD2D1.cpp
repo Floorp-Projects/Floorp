@@ -39,7 +39,30 @@ DrawTargetD2D1::~DrawTargetD2D1()
 {
   PopAllClips();
 
+  if (mSnapshot) {
+    // We may hold the only reference. MarkIndependent will clear mSnapshot;
+    // keep the snapshot object alive so it doesn't get destroyed while
+    // MarkIndependent is running.
+    RefPtr<SourceSurfaceD2D1> deathGrip = mSnapshot;
+    // mSnapshot can be treated as independent of this DrawTarget since we know
+    // this DrawTarget won't change again.
+    deathGrip->MarkIndependent();
+    // mSnapshot will be cleared now.
+  }
+
   mDC->EndDraw();
+
+  // Targets depending on us can break that dependency, since we're obviously not going to
+  // be modified in the future.
+  for (auto iter = mDependentTargets.begin();
+       iter != mDependentTargets.end(); iter++) {
+    (*iter)->mDependingOnTargets.erase(this);
+  }
+  // Our dependencies on other targets no longer matter.
+  for (TargetSet::iterator iter = mDependingOnTargets.begin();
+       iter != mDependingOnTargets.end(); iter++) {
+    (*iter)->mDependentTargets.erase(this);
+  }
 }
 
 TemporaryRef<SourceSurface>
@@ -61,6 +84,13 @@ void
 DrawTargetD2D1::Flush()
 {
   mDC->Flush();
+
+  // We no longer depend on any target.
+  for (TargetSet::iterator iter = mDependingOnTargets.begin();
+       iter != mDependingOnTargets.end(); iter++) {
+    (*iter)->mDependentTargets.erase(this);
+  }
+  mDependingOnTargets.clear();
 }
 
 void
