@@ -81,4 +81,7 @@ interface nsIXPCTestParams : nsISupports {
                                              [array, size_is(bLength), iid_is(bIID)] inout nsQIResult b,
                                              out unsigned long rvLength, out nsIIDPtr rvIID,
                                              [retval, array, size_is(rvLength), iid_is(rvIID)] out nsQIResult rv);
+
+  // Test for out dipper parameters
+  void                 testOutAString(out AString o);
 };
