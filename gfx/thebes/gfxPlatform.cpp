@@ -993,6 +993,8 @@ gfxPlatform::BackendTypeForName(const nsCString& aName)
     return BackendType::SKIA;
   if (aName.EqualsLiteral("direct2d"))
     return BackendType::DIRECT2D;
+  if (aName.EqualsLiteral("direct2d1.1"))
+    return BackendType::DIRECT2D1_1;
   if (aName.EqualsLiteral("cg"))
     return BackendType::COREGRAPHICS;
   return BackendType::NONE;
