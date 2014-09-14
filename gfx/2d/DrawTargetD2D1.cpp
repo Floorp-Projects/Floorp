@@ -153,7 +153,11 @@ DrawTargetD2D1::DrawFilter(FilterNode *aNode,
 
   PrepareForDrawing(aOptions.mCompositionOp, ColorPattern(Color()));
 
+  mDC->SetAntialiasMode(D2DAAMode(aOptions.mAntialiasMode));
+
   mDC->DrawImage(static_cast<FilterNodeD2D1*>(aNode)->OutputEffect(), D2DPoint(aDestPoint), D2DRect(aSourceRect));
+
+  FinalizeDrawing(aOptions.mCompositionOp, ColorPattern(Color()));
 }
 
 void
