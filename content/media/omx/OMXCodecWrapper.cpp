@@ -417,6 +417,10 @@ OMXVideoEncoder::Encode(const Image* aImage, int aWidth, int aHeight,
   // Dequeue an input buffer.
   uint32_t index;
   result = mCodec->dequeueInputBuffer(&index, INPUT_BUFFER_TIMEOUT_US);
+  if (result == -EAGAIN) {
+    // Drop the frame when out of input buffer.
+    return NS_OK;
+  }
   NS_ENSURE_TRUE(result == OK, NS_ERROR_FAILURE);
 
   const sp<ABuffer>& inBuf = mInputBufs.itemAt(index);
