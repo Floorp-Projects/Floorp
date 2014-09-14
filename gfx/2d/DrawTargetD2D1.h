@@ -183,6 +183,7 @@ private:
   void PushClipsToDC(ID2D1DeviceContext *aDC);
   void PopClipsFromDC(ID2D1DeviceContext *aDC);
 
+  TemporaryRef<ID2D1Brush> CreateTransparentBlackBrush();
   TemporaryRef<ID2D1Brush> CreateBrushForPattern(const Pattern &aPattern, Float aAlpha = 1.0f);
 
   void PushD2DLayer(ID2D1DeviceContext *aDC, ID2D1Geometry *aGeometry, const D2D1_MATRIX_3X2_F &aTransform);
