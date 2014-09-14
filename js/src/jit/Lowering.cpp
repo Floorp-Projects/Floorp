@@ -3930,6 +3930,17 @@ LIRGenerator::visitBlock(MBasicBlock *block)
     if (!visitInstruction(block->lastIns()))
         return false;
 
+    if (lastResumePoint_) {
+        for (size_t s = 0; s < block->numSuccessors(); s++) {
+            MBasicBlock *succ = block->getSuccessor(s);
+            if (!succ->entryResumePoint()) {
+                MOZ_ASSERT(succ->isSplitEdge());
+                MOZ_ASSERT(succ->phisBegin() == succ->phisEnd());
+                succ->setEntryResumePoint(lastResumePoint_);
+            }
+        }
+    }
+
     return true;
 }
 
