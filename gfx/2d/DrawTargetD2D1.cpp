@@ -180,22 +180,11 @@ DrawTargetD2D1::DrawSurfaceWithShadow(SourceSurface *aSurface,
   D2D1_VECTOR_4F color = { aColor.r, aColor.g, aColor.b, aColor.a };
   shadowEffect->SetValue(D2D1_SHADOW_PROP_COLOR, color);
 
-  // Step 2, move the shadow effect into place.
-  RefPtr<ID2D1Effect> affineTransformEffect;
-  mDC->CreateEffect(CLSID_D2D12DAffineTransform, byRef(affineTransformEffect));
-  affineTransformEffect->SetInputEffect(0, shadowEffect);
-  D2D1_MATRIX_3X2_F matrix = D2D1::Matrix3x2F::Translation(aOffset.x, aOffset.y);
-  affineTransformEffect->SetValue(D2D1_2DAFFINETRANSFORM_PROP_TRANSFORM_MATRIX, matrix);
+  D2D1_POINT_2F shadowPoint = D2DPoint(aDest + aOffset);
+  mDC->DrawImage(shadowEffect, &shadowPoint, nullptr, D2D1_INTERPOLATION_MODE_LINEAR, D2DCompositionMode(aOperator));
 
-  // Step 3, create an effect that combines shadow and bitmap in one image.
-  RefPtr<ID2D1Effect> compositeEffect;
-  mDC->CreateEffect(CLSID_D2D1Composite, byRef(compositeEffect));
-  compositeEffect->SetInputEffect(0, affineTransformEffect);
-  compositeEffect->SetInput(1, image);
-  compositeEffect->SetValue(D2D1_COMPOSITE_PROP_MODE, D2DCompositionMode(aOperator));
-
-  D2D1_POINT_2F surfPoint = D2DPoint(aDest);
-  mDC->DrawImage(compositeEffect, &surfPoint, nullptr, D2D1_INTERPOLATION_MODE_LINEAR, D2DCompositionMode(aOperator));
+  D2D1_POINT_2F imgPoint = D2DPoint(aDest);
+  mDC->DrawImage(image, &imgPoint, nullptr, D2D1_INTERPOLATION_MODE_LINEAR, D2DCompositionMode(aOperator));
 }
 
 void
