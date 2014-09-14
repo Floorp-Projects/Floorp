@@ -128,7 +128,11 @@ DrawTargetD2D1::DrawSurface(SourceSurface *aSurface,
   transform.PreTranslate(aDest.x - aSource.x * xScale, aDest.y - aSource.y * yScale);
   transform.PreScale(xScale, yScale);
 
-  mDC->CreateImageBrush(image, D2D1::ImageBrushProperties(samplingBounds),
+  mDC->CreateImageBrush(image,
+                        D2D1::ImageBrushProperties(samplingBounds,
+                                                   D2D1_EXTEND_MODE_CLAMP,
+                                                   D2D1_EXTEND_MODE_CLAMP,
+                                                   D2DInterpolationMode(aSurfOptions.mFilter)),
                         D2D1::BrushProperties(aOptions.mAlpha, D2DMatrix(transform)),
                         byRef(brush));
   mDC->FillRectangle(D2DRect(aDest), brush);
