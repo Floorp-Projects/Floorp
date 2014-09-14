@@ -284,6 +284,8 @@ DrawTargetD2D1::CopySurface(SourceSurface *aSurface,
 {
   MarkChanged();
 
+  PopAllClips();
+
   mDC->SetTransform(D2D1::IdentityMatrix());
   mTransformDirty = true;
 
@@ -292,6 +294,26 @@ DrawTargetD2D1::CopySurface(SourceSurface *aSurface,
 
   if (!mat.IsIdentity()) {
     gfxDebug() << *this << ": At this point complex partial uploads are not supported for CopySurface.";
+    return;
+  }
+
+  if (mFormat == SurfaceFormat::A8) {
+    RefPtr<ID2D1Bitmap> bitmap;
+    image->QueryInterface((ID2D1Bitmap**)byRef(bitmap));
+
+    mDC->PushAxisAlignedClip(D2D1::RectF(aDestination.x, aDestination.y,
+                                         aDestination.x + aSourceRect.width,
+                                         aDestination.y + aSourceRect.height),
+                             D2D1_ANTIALIAS_MODE_ALIASED);
+    mDC->Clear();
+    mDC->PopAxisAlignedClip();
+
+    RefPtr<ID2D1SolidColorBrush> brush;
+    mDC->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White),
+                               D2D1::BrushProperties(), byRef(brush));
+    mDC->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
+    mDC->FillOpacityMask(bitmap, brush, D2D1_OPACITY_MASK_CONTENT_GRAPHICS);
+    mDC->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
     return;
   }
 
@@ -691,10 +713,10 @@ DrawTargetD2D1::Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat)
   props.pixelFormat = D2DPixelFormat(aFormat);
   props.colorContext = nullptr;
   props.bitmapOptions = D2D1_BITMAP_OPTIONS_TARGET;
-  mDC->CreateBitmapFromDxgiSurface(dxgiSurface, props, (ID2D1Bitmap1**)byRef(mBitmap));
+  hr = mDC->CreateBitmapFromDxgiSurface(dxgiSurface, props, (ID2D1Bitmap1**)byRef(mBitmap));
 
   if (FAILED(hr)) {
-    gfxWarning() << *this << ": Error " << hr << " failed to create new CommandList.";
+    gfxWarning() << *this << ": Error " << hr << " failed to create new bitmap.";
     return false;
   }
 
