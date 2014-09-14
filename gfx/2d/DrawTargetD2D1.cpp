@@ -794,13 +794,13 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
 
   mDC->SetTarget(mBitmap);
 
+  mDC->SetTransform(D2D1::IdentityMatrix());
+  mTransformDirty = true;
+
   if (patternSupported) {
     mDC->DrawImage(image, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2DCompositionMode(aOp));
     return;
   }
-
-  mDC->SetTransform(D2D1::IdentityMatrix());
-  mTransformDirty = true;
 
   RefPtr<ID2D1Effect> radialGradientEffect;
 
