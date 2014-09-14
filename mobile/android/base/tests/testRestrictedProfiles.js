@@ -17,6 +17,7 @@ add_task(function test_isUserRestricted() {
   // In an admin profile, like the tests: enabled = false
   // In a restricted profile: enabled = true
   do_check_false(pc.parentalControlsEnabled);
+  do_check_false(pc.blockFileDownloadsEnabled);
 
   do_check_true(pc.isAllowed(Ci.nsIParentalControlsService.DOWNLOAD));
   do_check_true(pc.isAllowed(Ci.nsIParentalControlsService.INSTALL_EXTENSION));
@@ -37,12 +38,12 @@ add_task(function test_getUserRestrictions() {
   var jenv = null;
   try {
     jenv = JNI.GetForThread();
-    var geckoAppShell = JNI.LoadClass(jenv, "org.mozilla.gecko.RestrictedProfile", {
+    var profile = JNI.LoadClass(jenv, "org.mozilla.gecko.RestrictedProfile", {
       static_methods: [
         { name: "getUserRestrictions", sig: "()Ljava/lang/String;" },
       ],
     });
-    restrictions = JNI.ReadString(jenv, geckoAppShell.getUserRestrictions());
+    restrictions = JNI.ReadString(jenv, profile.getUserRestrictions());
   } finally {
     if (jenv) {
       JNI.UnloadClasses(jenv);
