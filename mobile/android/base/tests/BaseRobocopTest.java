@@ -96,7 +96,7 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
         }
         String configFile = FennecNativeDriver.getFile(mRootPath + "/robotium.config");
         mConfig = FennecNativeDriver.convertTextToTable(configFile);
-        mLogFile = (String) mConfig.get("logfile");
+        mLogFile = mConfig.get("logfile");
 
         // Initialize the asserter.
         if (getTestType() == Type.TALOS) {
@@ -105,6 +105,6 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
             mAsserter = new FennecMochitestAssert();
         }
         mAsserter.setLogFile(mLogFile);
-        mAsserter.setTestName(this.getClass().getName());
+        mAsserter.setTestName(getClass().getName());
     }
 }

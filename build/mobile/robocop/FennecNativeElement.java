@@ -13,25 +13,28 @@ import android.widget.TextView;
 
 public class FennecNativeElement implements Element {
     private final Activity mActivity;
-    private Integer mId;
+    private final Integer mId;
 
     public FennecNativeElement(Integer id, Activity activity) {
         mId = id;
         mActivity = activity;
     }
 
+    @Override
     public Integer getId() {
         return mId;
     }
 
     private boolean mClickSuccess;
 
+    @Override
     public boolean click() {
         mClickSuccess = false;
         RobocopUtils.runOnUiThreadSync(mActivity,
             new Runnable() {
+                @Override
                 public void run() {
-                    View view = (View)mActivity.findViewById(mId);
+                    View view = mActivity.findViewById(mId);
                     if (view != null) {
                         if (view.performClick()) {
                             mClickSuccess = true;
@@ -50,10 +53,12 @@ public class FennecNativeElement implements Element {
 
     private Object mText;
 
+    @Override
     public String getText() {
         mText = null;
         RobocopUtils.runOnUiThreadSync(mActivity,
             new Runnable() {
+                @Override
                 public void run() {
                     View v = mActivity.findViewById(mId);
                     if (v instanceof EditText) {
@@ -92,12 +97,14 @@ public class FennecNativeElement implements Element {
 
     private boolean mDisplayed;
 
+    @Override
     public boolean isDisplayed() {
         mDisplayed = false;
         RobocopUtils.runOnUiThreadSync(mActivity,
             new Runnable() {
+                @Override
                 public void run() {
-                    View view = (View)mActivity.findViewById(mId);
+                    View view = mActivity.findViewById(mId);
                     if (view != null) {
                         mDisplayed = true;
                     }
