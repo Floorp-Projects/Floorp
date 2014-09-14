@@ -775,6 +775,8 @@ DrawTargetD2D1::Init(const IntSize &aSize, SurfaceFormat aFormat)
 
   mDC->BeginDraw();
 
+  mDC->Clear();
+
   mFormat = aFormat;
   mSize = aSize;
 
