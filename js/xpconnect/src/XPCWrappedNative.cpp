@@ -1845,8 +1845,8 @@ CallMethodHelper::GetOutParamSource(uint8_t paramIndex, MutableHandleValue srcp)
 {
     const nsXPTParamInfo& paramInfo = mMethodInfo->GetParam(paramIndex);
 
-    if ((paramInfo.IsOut() || paramInfo.IsDipper()) &&
-        !paramInfo.IsRetval()) {
+    MOZ_ASSERT(!paramInfo.IsDipper(), "Dipper params are handled separately");
+    if (paramInfo.IsOut() && !paramInfo.IsRetval()) {
         MOZ_ASSERT(paramIndex < mArgc || paramInfo.IsOptional(),
                    "Expected either enough arguments or an optional argument");
         jsval arg = paramIndex < mArgc ? mArgv[paramIndex] : JSVAL_NULL;
@@ -2099,8 +2099,17 @@ CallMethodHelper::ConvertIndependentParam(uint8_t i)
     if (paramInfo.IsStringClass()) {
         if (!AllocateStringClass(dp, paramInfo))
             return false;
-        if (paramInfo.IsDipper())
+        if (paramInfo.IsDipper()) {
+            // We've allocated our string class explicitly, so we don't need
+            // to do any conversions on the incoming argument. However, we still
+            // need to verify that it's an object, so that we don't get surprised
+            // later on when trying to assign the result to .value.
+            if (i < mArgc && !mArgv[i].isObject()) {
+                ThrowBadParam(NS_ERROR_XPC_NEED_OUT_OBJECT, i, mCallContext);
+                return false;
+            }
             return true;
+        }
     }
 
     // Specify the correct storage/calling semantics.

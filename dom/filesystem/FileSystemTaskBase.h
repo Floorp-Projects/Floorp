@@ -10,13 +10,13 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/PFileSystemRequestChild.h"
-#include "mozilla/dom/ipc/Blob.h"
 
 class nsIDOMFile;
 
 namespace mozilla {
 namespace dom {
 
+class BlobParent;
 class FileSystemBase;
 class FileSystemParams;
 class Promise;

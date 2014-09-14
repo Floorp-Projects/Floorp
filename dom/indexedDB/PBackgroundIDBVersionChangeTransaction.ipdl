@@ -1,0 +1,49 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackgroundIDBCursor;
+include protocol PBackgroundIDBDatabase;
+include protocol PBackgroundIDBRequest;
+include protocol PBlob;
+
+include PBackgroundIDBSharedTypes;
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+protocol PBackgroundIDBVersionChangeTransaction
+{
+  manager PBackgroundIDBDatabase;
+
+  manages PBackgroundIDBCursor;
+  manages PBackgroundIDBRequest;
+
+parent:
+  DeleteMe();
+
+  Commit();
+  Abort(nsresult resultCode);
+
+  CreateObjectStore(ObjectStoreMetadata metadata);
+  DeleteObjectStore(int64_t objectStoreId);
+
+  CreateIndex(int64_t objectStoreId,
+              IndexMetadata metadata);
+  DeleteIndex(int64_t objectStoreId,
+              int64_t indexId);
+
+  PBackgroundIDBCursor(OpenCursorParams params);
+
+  PBackgroundIDBRequest(RequestParams params);
+
+child:
+  __delete__();
+
+  Complete(nsresult result);
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

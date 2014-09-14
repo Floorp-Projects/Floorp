@@ -33,6 +33,7 @@
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsWeakReference.h"
 
 class nsDOMMultipartFile;
 class nsIFile;
@@ -64,6 +65,7 @@ class DOMFile MOZ_FINAL : public nsIDOMFile
                         , public nsIXHRSendable
                         , public nsIMutable
                         , public nsIJSNativeInitializer
+                        , public nsSupportsWeakReference
 {
 public:
   NS_DECL_NSIDOMBLOB
@@ -190,9 +192,9 @@ public:
   virtual nsresult GetMozLastModifiedDate(uint64_t* aDate) = 0;
 
   nsresult Slice(int64_t aStart, int64_t aEnd, const nsAString& aContentType,
-                 uint8_t aArgc, nsIDOMBlob **aBlob);
+                 uint8_t aArgc, DOMFileImpl** aBlobImpl);
 
-  virtual already_AddRefed<nsIDOMBlob>
+  virtual already_AddRefed<DOMFileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
               const nsAString& aContentType) = 0;
 
@@ -321,7 +323,7 @@ public:
 
   virtual nsresult GetMozLastModifiedDate(uint64_t* aDate) MOZ_OVERRIDE;
 
-  virtual already_AddRefed<nsIDOMBlob>
+  virtual already_AddRefed<DOMFileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
               const nsAString& aContentType) MOZ_OVERRIDE;
 
@@ -464,7 +466,7 @@ public:
 
   virtual nsresult GetInternalStream(nsIInputStream** aStream) MOZ_OVERRIDE;
 
-  virtual already_AddRefed<nsIDOMBlob>
+  virtual already_AddRefed<DOMFileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
               const nsAString& aContentType) MOZ_OVERRIDE;
 
@@ -551,7 +553,7 @@ public:
 
   virtual nsresult GetInternalStream(nsIInputStream** aStream) MOZ_OVERRIDE;
 
-  virtual already_AddRefed<nsIDOMBlob>
+  virtual already_AddRefed<DOMFileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
               const nsAString& aContentType) MOZ_OVERRIDE;
 
@@ -573,7 +575,7 @@ private:
   nsString mContentType;
 };
 
-class DOMFileImplFile MOZ_FINAL : public DOMFileImplBase
+class DOMFileImplFile : public DOMFileImplBase
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -690,6 +692,9 @@ public:
 
   void SetPath(const nsAString& aFullPath);
 
+protected:
+  virtual ~DOMFileImplFile() {}
+
 private:
   // Create slice
   DOMFileImplFile(const DOMFileImplFile* aOther, uint64_t aStart,
@@ -719,9 +724,7 @@ private:
     }
   }
 
-  ~DOMFileImplFile() {}
-
-  virtual already_AddRefed<nsIDOMBlob>
+  virtual already_AddRefed<DOMFileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
               const nsAString& aContentType) MOZ_OVERRIDE;
 

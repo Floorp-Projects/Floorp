@@ -113,7 +113,7 @@ sip_platform_udp_channel_listen (cpr_ip_mode_e ip_mode, cpr_socket_t *s,
 {
     static const char fname[] = "sip_platform_udp_channel_listen";
     cpr_sockaddr_storage sock_addr;
-    uint16_t       addr_len;
+    uint16_t       addr_len = 0;
 
     /*
      * If socket passed is is not INVALID_SOCKET close it first
@@ -180,7 +180,7 @@ sip_platform_udp_channel_create (cpr_ip_mode_e ip_mode, cpr_socket_t *s,
 {
     static const char *fname = "sip_platform_udp_channel_create";
     cpr_sockaddr_storage sock_addr;
-    uint16_t       addr_len;
+    uint16_t       addr_len = 0;
     cpr_sockaddr_storage local_sock_addr;
     cpr_ip_addr_t local_signaladdr;
 

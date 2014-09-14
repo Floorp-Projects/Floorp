@@ -11,7 +11,9 @@
 #include "nsContentUtils.h"
 #include "nsPrintfCString.h"
 
-BEGIN_INDEXEDDB_NAMESPACE
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
 
 void
 ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr)
@@ -29,4 +31,6 @@ ReportInternalError(const char* aFile, uint32_t aLine, const char* aStr)
     "indexedDB");
 }
 
-END_INDEXEDDB_NAMESPACE
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

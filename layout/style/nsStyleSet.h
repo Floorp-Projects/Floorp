@@ -275,6 +275,7 @@ class nsStyleSet
     eAgentSheet, // CSS
     eUserSheet, // CSS
     ePresHintSheet,
+    eSVGAttrAnimationSheet,
     eDocSheet, // CSS
     eScopedDocSheet,
     eStyleAttrSheet,
@@ -472,7 +473,7 @@ class nsStyleSet
   unsigned mAuthorStyleDisabled: 1;
   unsigned mInReconstruct : 1;
   unsigned mInitFontFeatureValuesLookup : 1;
-  unsigned mDirty : 9;  // one dirty bit is used per sheet type
+  unsigned mDirty : 10;  // one dirty bit is used per sheet type
 
   uint32_t mUnusedRuleNodeCount; // used to batch rule node GC
   nsTArray<nsStyleContext*> mRoots; // style contexts with no parent
