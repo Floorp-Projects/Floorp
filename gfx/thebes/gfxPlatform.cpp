@@ -1465,8 +1465,18 @@ gfxPlatform::InitBackendPrefs(uint32_t aCanvasBitmask, BackendType aCanvasDefaul
     if (mPreferredCanvasBackend == BackendType::NONE) {
         mPreferredCanvasBackend = aCanvasDefault;
     }
-    mFallbackCanvasBackend =
-        GetCanvasBackendPref(aCanvasBitmask & ~BackendTypeBit(mPreferredCanvasBackend));
+
+    if (mPreferredCanvasBackend == BackendType::DIRECT2D1_1) {
+      // Falling back to D2D 1.0 won't help us here. When D2D 1.1 DT creation
+      // fails it means the surface was too big or there's something wrong with
+      // the device. D2D 1.0 will encounter a similar situation.
+      mFallbackCanvasBackend =
+          GetCanvasBackendPref(aCanvasBitmask &
+                               ~(BackendTypeBit(mPreferredCanvasBackend) | BackendTypeBit(BackendType::DIRECT2D)));
+    } else {
+      mFallbackCanvasBackend =
+          GetCanvasBackendPref(aCanvasBitmask & ~BackendTypeBit(mPreferredCanvasBackend));
+    }
 
     mContentBackendBitmask = aContentBitmask;
     mContentBackend = GetContentBackendPref(mContentBackendBitmask);
