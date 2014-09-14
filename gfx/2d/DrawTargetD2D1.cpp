@@ -863,7 +863,35 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
   mTransformDirty = true;
 
   if (patternSupported) {
-    mDC->DrawImage(image, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2DCompositionMode(aOp));
+    if (D2DSupportsCompositeMode(aOp)) {
+      mDC->DrawImage(image, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2DCompositionMode(aOp));
+      return;
+    }
+
+    if (!mBlendEffect) {
+      mDC->CreateEffect(CLSID_D2D1Blend, byRef(mBlendEffect));
+
+      if (!mBlendEffect) {
+        gfxWarning() << "Failed to create blend effect!";
+        return;
+      }
+    }
+
+    RefPtr<ID2D1Bitmap> tmpBitmap;
+    mDC->CreateBitmap(D2DIntSize(mSize), D2D1::BitmapProperties(D2DPixelFormat(mFormat)), byRef(tmpBitmap));
+
+    // This flush is important since the copy method will not know about the context drawing to the surface.
+    mDC->Flush();
+
+    // We need to use a copy here because affects don't accept a surface on
+    // both their in- and outputs.
+    tmpBitmap->CopyFromBitmap(nullptr, mBitmap, nullptr);
+
+    mBlendEffect->SetInput(0, tmpBitmap);
+    mBlendEffect->SetInput(1, mTempBitmap);
+    mBlendEffect->SetValue(D2D1_BLEND_PROP_MODE, D2DBlendMode(aOp));
+
+    mDC->DrawImage(mBlendEffect, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2D1_COMPOSITE_MODE_BOUNDED_SOURCE_COPY);
     return;
   }
 
