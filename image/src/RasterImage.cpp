@@ -223,8 +223,7 @@ public:
       // that's what the scaler outputs.
       nsRefPtr<imgFrame> tentativeDstFrame = new imgFrame();
       nsresult rv =
-        tentativeDstFrame->Init(0, 0, dstSize.width, dstSize.height,
-                                SurfaceFormat::B8G8R8A8);
+        tentativeDstFrame->InitForDecoder(dstSize, SurfaceFormat::B8G8R8A8);
       if (NS_FAILED(rv)) {
         return false;
       }
@@ -1174,7 +1173,8 @@ RasterImage::InternalAddFrame(uint32_t framenum,
 
   nsRefPtr<imgFrame> frame(new imgFrame());
 
-  nsresult rv = frame->Init(aX, aY, aWidth, aHeight, aFormat, aPaletteDepth);
+  nsIntRect frameRect(aX, aY, aWidth, aHeight);
+  nsresult rv = frame->InitForDecoder(frameRect, aFormat, aPaletteDepth);
   if (!(mSize.width > 0 && mSize.height > 0))
     NS_WARNING("Shouldn't call InternalAddFrame with zero size");
   if (!NS_SUCCEEDED(rv))
@@ -1358,7 +1358,8 @@ RasterImage::EnsureFrame(uint32_t aFrameNum, int32_t aX, int32_t aY,
 
   mFrameBlender.RemoveFrame(aFrameNum);
   nsRefPtr<imgFrame> newFrame(new imgFrame());
-  nsresult rv = newFrame->Init(aX, aY, aWidth, aHeight, aFormat, aPaletteDepth);
+  nsIntRect frameRect(aX, aY, aWidth, aHeight);
+  nsresult rv = newFrame->InitForDecoder(frameRect, aFormat, aPaletteDepth);
   NS_ENSURE_SUCCESS(rv, rv);
   return InternalAddFrameHelper(aFrameNum, newFrame, imageData, imageLength,
                                 paletteData, paletteLength, aRetFrame);
