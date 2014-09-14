@@ -330,6 +330,8 @@ DrawTargetD2D1::FillRect(const Rect &aRect,
 {
   PrepareForDrawing(aOptions.mCompositionOp, aPattern);
 
+  mDC->SetAntialiasMode(D2DAAMode(aOptions.mAntialiasMode));
+
   RefPtr<ID2D1Brush> brush = CreateBrushForPattern(aPattern, aOptions.mAlpha);
   mDC->FillRectangle(D2DRect(aRect), brush);
 
@@ -343,6 +345,8 @@ DrawTargetD2D1::StrokeRect(const Rect &aRect,
                            const DrawOptions &aOptions)
 {
   PrepareForDrawing(aOptions.mCompositionOp, aPattern);
+
+  mDC->SetAntialiasMode(D2DAAMode(aOptions.mAntialiasMode));
 
   RefPtr<ID2D1Brush> brush = CreateBrushForPattern(aPattern, aOptions.mAlpha);
   RefPtr<ID2D1StrokeStyle> strokeStyle = CreateStrokeStyleForOptions(aStrokeOptions);
@@ -360,6 +364,8 @@ DrawTargetD2D1::StrokeLine(const Point &aStart,
                            const DrawOptions &aOptions)
 {
   PrepareForDrawing(aOptions.mCompositionOp, aPattern);
+
+  mDC->SetAntialiasMode(D2DAAMode(aOptions.mAntialiasMode));
 
   RefPtr<ID2D1Brush> brush = CreateBrushForPattern(aPattern, aOptions.mAlpha);
   RefPtr<ID2D1StrokeStyle> strokeStyle = CreateStrokeStyleForOptions(aStrokeOptions);
@@ -383,6 +389,8 @@ DrawTargetD2D1::Stroke(const Path *aPath,
 
   PrepareForDrawing(aOptions.mCompositionOp, aPattern);
 
+  mDC->SetAntialiasMode(D2DAAMode(aOptions.mAntialiasMode));
+
   RefPtr<ID2D1Brush> brush = CreateBrushForPattern(aPattern, aOptions.mAlpha);
   RefPtr<ID2D1StrokeStyle> strokeStyle = CreateStrokeStyleForOptions(aStrokeOptions);
 
@@ -403,6 +411,8 @@ DrawTargetD2D1::Fill(const Path *aPath,
   const PathD2D *d2dPath = static_cast<const PathD2D*>(aPath);
 
   PrepareForDrawing(aOptions.mCompositionOp, aPattern);
+
+  mDC->SetAntialiasMode(D2DAAMode(aOptions.mAntialiasMode));
 
   RefPtr<ID2D1Brush> brush = CreateBrushForPattern(aPattern, aOptions.mAlpha);
 
