@@ -102,13 +102,6 @@ DrawTargetD2D1::DrawSurface(SourceSurface *aSurface,
 {
   PrepareForDrawing(aOptions.mCompositionOp, ColorPattern(Color()));
 
-  RefPtr<ID2D1Image> image = GetImageForSurface(aSurface, ExtendMode::CLAMP);
-
-  if (!image) {
-    gfxWarning() << *this << ": Unable to get D2D image for surface.";
-    return;
-  }
-
   D2D1_RECT_F samplingBounds;
 
   if (aSurfOptions.mSamplingBounds == SamplingBounds::BOUNDED) {
@@ -127,6 +120,13 @@ DrawTargetD2D1::DrawSurface(SourceSurface *aSurface,
   Matrix transform;
   transform.PreTranslate(aDest.x - aSource.x * xScale, aDest.y - aSource.y * yScale);
   transform.PreScale(xScale, yScale);
+
+  RefPtr<ID2D1Image> image = GetImageForSurface(aSurface, transform, ExtendMode::CLAMP);
+
+  if (!image) {
+    gfxWarning() << *this << ": Unable to get D2D image for surface.";
+    return;
+  }
 
   mDC->CreateImageBrush(image,
                         D2D1::ImageBrushProperties(samplingBounds,
