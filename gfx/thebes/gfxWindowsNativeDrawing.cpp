@@ -12,6 +12,10 @@
 #include "gfxAlphaRecovery.h"
 #include "gfxPattern.h"
 #include "mozilla/gfx/2D.h"
+#include "gfx2DGlue.h"
+
+using namespace mozilla;
+using namespace mozilla::gfx;
 
 enum {
     RENDER_STATE_INIT,
@@ -265,10 +269,11 @@ gfxWindowsNativeDrawing::PaintToContext()
             NS_ERROR("Alpha recovery failure");
             return;
         }
-        nsRefPtr<gfxImageSurface> alphaSurface =
-            new gfxImageSurface(black->Data(), black->GetSize(),
-                                black->Stride(),
-                                gfxImageFormat::ARGB32);
+        RefPtr<SourceSurface> source =
+            Factory::CreateWrappingDataSourceSurface(black->Data(),
+                                                     black->Stride(),
+                                                     ToIntSize(black->GetSize()),
+                                                     SurfaceFormat::B8G8R8A8);
 
         mContext->Save();
         mContext->SetMatrix(
@@ -276,7 +281,7 @@ gfxWindowsNativeDrawing::PaintToContext()
         mContext->NewPath();
         mContext->Rectangle(gfxRect(gfxPoint(0.0, 0.0), mNativeRect.Size()));
 
-        nsRefPtr<gfxPattern> pat = new gfxPattern(alphaSurface);
+        nsRefPtr<gfxPattern> pat = new gfxPattern(source, Matrix());
 
         gfxMatrix m;
         m.Scale(mScale.width, mScale.height);
