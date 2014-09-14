@@ -18,6 +18,7 @@ import android.app.Activity;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.Log;
 
+@SuppressWarnings("unchecked")
 public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<Activity> {
     public enum Type {
         MOCHITEST,
@@ -60,7 +61,6 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
      * specify a different activity class to the one-argument constructor. To do
      * as little as possible, specify <code>Activity.class</code>.
      */
-    @SuppressWarnings("unchecked")
     public BaseRobocopTest() {
         this((Class<Activity>) BROWSER_INTENT_CLASS);
     }

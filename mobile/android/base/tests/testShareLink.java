@@ -156,8 +156,8 @@ public class testShareLink extends AboutHomeTest {
     }
 
     // Create a SEND intent and get the possible activities offered
-    public ArrayList getShareOptions() {
-        ArrayList<String> shareOptions = new ArrayList();
+    public ArrayList<String> getShareOptions() {
+        ArrayList<String> shareOptions = new ArrayList<>();
         Activity currentActivity = getActivity();
         final Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.putExtra(Intent.EXTRA_TEXT, url);
@@ -209,14 +209,14 @@ public class testShareLink extends AboutHomeTest {
     }
 
     public ArrayList<String> getSharePopupOption() {
-        ArrayList<String> displayedOptions = new ArrayList();
+        ArrayList<String> displayedOptions = new ArrayList<>();
         AbsListView shareMenu = getDisplayedShareList();
         getGroupTextViews(shareMenu, displayedOptions);
         return displayedOptions;
     }
 
     public ArrayList<String> getShareSubMenuOption() {
-        ArrayList<String> displayedOptions = new ArrayList();
+        ArrayList<String> displayedOptions = new ArrayList<>();
         AbsListView shareMenu = getDisplayedShareList();
         getGroupTextViews(shareMenu, displayedOptions);
         return displayedOptions;
