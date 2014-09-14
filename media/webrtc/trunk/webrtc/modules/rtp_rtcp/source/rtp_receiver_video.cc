@@ -235,36 +235,72 @@ int32_t RTPReceiverVideo::ReceiveH264Codec(WebRtcRTPHeader* rtp_header,
   size_t offset = RtpFormatH264::kNalHeaderOffset;
   uint8_t nal_type = payload_data[offset] & RtpFormatH264::kTypeMask;
   rtp_header->type.Video.codecHeader.H264.nalu_header = nal_type;
+  // For H.264, isFirstPacket means first in NAL unit, not first in the
+  // timestamp, which elsewhere is referred to as a 'frame' or 'session'
+  rtp_header->type.Video.isFirstPacket = true;
   // get original NAL type if FU-A or STAP-A
   switch (nal_type) {
     case RtpFormatH264::kFuA:
       offset = RtpFormatH264::kFuAHeaderOffset;
-      if (offset >= payload_data_length) return -1; // malformed
+      if (offset >= payload_data_length) {
+        return -1; // malformed
+      }
       nal_type = payload_data[offset] & RtpFormatH264::kTypeMask;
+      if (!(payload_data[offset] & RtpFormatH264::kFragStartBit)) {
+        rtp_header->type.Video.isFirstPacket = false;
+      }
       break;
     case RtpFormatH264::kStapA:
       offset = RtpFormatH264::kStapAHeaderOffset +
                RtpFormatH264::kAggUnitLengthSize;
-      if (offset >= payload_data_length) return -1; // malformed
+      if (offset >= payload_data_length) {
+        return -1; // malformed
+      }
       nal_type = payload_data[offset] & RtpFormatH264::kTypeMask;
       break;
     default:
       break;
   }
   // key frames start with SPS, PPS, IDR, or Recovery Point SEI
+  // Recovery Point SEI's are used in AIR and GDR refreshes, which don't
+  // send large iframes, and instead use forms of incremental/continuous refresh.
   rtp_header->frameType = kVideoFrameDelta;
   switch (nal_type) {
     case RtpFormatH264::kSei: // check if it is a Recovery Point SEI (aka GDR)
-      if (offset+1 >= payload_data_length) return -1; // malformed
-      if (payload_data[offset+1] != RtpFormatH264::kSeiRecPt) break;
+      if (offset+1 >= payload_data_length) {
+        return -1; // malformed
+      }
+      if (payload_data[offset+1] != RtpFormatH264::kSeiRecPt) {
+        break; // some other form of SEI - not a keyframe
+      }
       // else fall through since GDR is like IDR
     case RtpFormatH264::kSps:
     case RtpFormatH264::kPps:
     case RtpFormatH264::kIdr:
       rtp_header->frameType = kVideoFrameKey;
       break;
+    default:
+      break;
   }
+#if 0
+  // XXX This check (which is complex to implement) would verify if a NAL
+  // codes the first MB in the frame ("access unit").  See 7.4.1.2.4 in the
+  // 2003 draft H.264 spec for an algorithm for this, which requires
+  // considerable parsing of the stream.  Even simpler variants are
+  // complex. Since mis-identification of complete KeyFrames doesn't have
+  // to be 100% correct for "fast-forward" in error recovery, we can let it
+  // consider *any* NAL that's not a non-start FU-A packet to be a possible
+  // first-in-frame/session/"access unit" with minimal impact.  In some
+  // cases of leading loss, it might try to fast-forward to a "session"
+  // that's missing an SPS/PPS or missing the first NAL of a Mode 0 frame.
+  // This should be ok, even though the decode *might* fail.
 
+  // Check if this NAL codes for pixels *and* is the first NAL of a frame
+  // Would fail for FMO/ASO, which aren't allowed in baseline
+  if (nal_type == RtpFormatH264::kIdr || nal_type == RtpFormatH264::kIpb) {
+    // TODO; see 7.4.1.2.4  Detection of the first VCL NAL unit of a primary coded picture
+  }
+#endif
   // receive payloads as-is, depacketize later when moving to frame buffer
   if (data_callback_->OnReceivedPayloadData(
       payload_data, payload_data_length, rtp_header) != 0) {
