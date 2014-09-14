@@ -669,6 +669,11 @@ DrawTargetD2D1::CreatePathBuilder(FillRule aFillRule) const
 TemporaryRef<GradientStops>
 DrawTargetD2D1::CreateGradientStops(GradientStop *rawStops, uint32_t aNumStops, ExtendMode aExtendMode) const
 {
+  if (aNumStops == 0) {
+    gfxWarning() << *this << ": Failed to create GradientStopCollection with no stops.";
+    return nullptr;
+  }
+
   D2D1_GRADIENT_STOP *stops = new D2D1_GRADIENT_STOP[aNumStops];
 
   for (uint32_t i = 0; i < aNumStops; i++) {
@@ -1108,6 +1113,14 @@ DrawTargetD2D1::PopClipsFromDC(ID2D1DeviceContext *aDC)
 }
 
 TemporaryRef<ID2D1Brush>
+DrawTargetD2D1::CreateTransparentBlackBrush()
+{
+  RefPtr<ID2D1SolidColorBrush> brush;
+  mDC->CreateSolidColorBrush(D2D1::ColorF(0, 0), byRef(brush));
+  return brush;
+}
+
+TemporaryRef<ID2D1Brush>
 DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 {
   if (!IsPatternSupportedByD2D(aPattern)) {
@@ -1134,7 +1147,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 
     if (!stops) {
       gfxDebug() << "No stops specified for gradient pattern.";
-      return nullptr;
+      return CreateTransparentBlackBrush();
     }
 
     if (pat->mBegin == pat->mEnd) {
@@ -1164,7 +1177,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 
     if (!stops) {
       gfxDebug() << "No stops specified for gradient pattern.";
-      return nullptr;
+      return CreateTransparentBlackBrush();
     }
 
     // This will not be a complex radial gradient brush.
@@ -1184,7 +1197,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 
     if (!pat->mSurface) {
       gfxDebug() << "No source surface specified for surface pattern";
-      return nullptr;
+      return CreateTransparentBlackBrush();
     }
 
     D2D1_RECT_F samplingBounds;
@@ -1211,7 +1224,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
   }
 
   gfxWarning() << "Invalid pattern type detected.";
-  return nullptr;
+  return CreateTransparentBlackBrush();
 }
 
 TemporaryRef<ID2D1Image>
