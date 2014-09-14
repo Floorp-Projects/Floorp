@@ -78,7 +78,6 @@ abstract class BaseTest extends BaseRobocopTest {
     protected String mProfile;
     public Device mDevice;
     protected DatabaseHelper mDatabaseHelper;
-    protected StringHelper mStringHelper;
     protected int mScreenMidWidth;
     protected int mScreenMidHeight;
     private final HashSet<Integer> mKnownTabIDs = new HashSet<Integer>();
@@ -122,7 +121,6 @@ abstract class BaseTest extends BaseRobocopTest {
         mActions = new FennecNativeActions(mActivity, mSolo, getInstrumentation(), mAsserter);
         mDevice = new Device();
         mDatabaseHelper = new DatabaseHelper(mActivity, mAsserter);
-        mStringHelper = new StringHelper();
     }
 
     protected void initializeProfile() {
