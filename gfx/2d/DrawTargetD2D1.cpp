@@ -125,7 +125,7 @@ DrawTargetD2D1::DrawSurface(SourceSurface *aSurface,
   // Here we scale the source pattern up to the size and position where we want
   // it to be.
   Matrix transform;
-  transform.PreTranslate(aDest.x, aDest.y);
+  transform.PreTranslate(aDest.x - aSource.x * xScale, aDest.y - aSource.y * yScale);
   transform.PreScale(xScale, yScale);
 
   mDC->CreateImageBrush(image, D2D1::ImageBrushProperties(samplingBounds),
