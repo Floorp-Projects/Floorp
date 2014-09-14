@@ -43,8 +43,6 @@ SplitCriticalEdgesForBlock(MIRGraph &graph, MBasicBlock *block)
         graph.insertBlockAfter(block, split);
         split->end(MGoto::New(graph.alloc(), target));
 
-        // The entry resume point will not be used for anything, and may have
-        // the wrong stack depth, so remove it.
         if (MResumePoint *rp = split->entryResumePoint()) {
             rp->discardUses();
             split->clearEntryResumePoint();
