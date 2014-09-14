@@ -125,6 +125,7 @@ public:
   virtual void *GetNativeSurface(NativeSurfaceType aType) { return nullptr; }
 
   bool Init(const IntSize &aSize, SurfaceFormat aFormat);
+  bool Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat);
   uint32_t GetByteSize() const;
 
   TemporaryRef<ID2D1Image> GetImageForSurface(SourceSurface *aSurface, Matrix &aSourceTransform,
