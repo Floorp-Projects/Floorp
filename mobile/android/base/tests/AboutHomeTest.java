@@ -195,7 +195,7 @@ abstract class AboutHomeTest extends PixelTest {
         boolean correctTab = waitForCondition(new Condition() {
             @Override
             public boolean isSatisfied() {
-                ViewPager pager = (ViewPager)mSolo.getView(ViewPager.class, 0);
+                ViewPager pager = mSolo.getView(ViewPager.class, 0);
                 return (pager.getCurrentItem() == tabIndex);
             }
         }, MAX_WAIT_MS);
@@ -237,7 +237,7 @@ abstract class AboutHomeTest extends PixelTest {
      */
     protected void openAboutHomeTab(AboutHomeTabs tab) {
         focusUrlBar();
-        ViewPager pager = (ViewPager)mSolo.getView(ViewPager.class, 0);
+        ViewPager pager = mSolo.getView(ViewPager.class, 0);
         final int currentTabIndex = pager.getCurrentItem();
         int tabOffset;
 

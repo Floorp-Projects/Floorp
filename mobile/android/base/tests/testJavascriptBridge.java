@@ -34,25 +34,25 @@ public class testJavascriptBridge extends UITest {
         GeckoHelper.blockForReady();
         NavigationHelper.enterAndLoadUrl(StringHelper.ROBOCOP_JS_HARNESS_URL +
                                          "?path=" + TEST_JS);
-        js.syncCall("check_js_int_arg", (int) 1);
+        js.syncCall("check_js_int_arg", 1);
     }
 
     public void checkJavaIntArg(final int int2) {
         // Async call from JS
         fAssertEquals("Integer argument matches", 2, int2);
-        js.syncCall("check_js_double_arg", (double) 3.0);
+        js.syncCall("check_js_double_arg", 3.0D);
     }
 
     public void checkJavaDoubleArg(final double double4) {
         // Async call from JS
         fAssertEquals("Double argument matches", 4.0, double4);
-        js.syncCall("check_js_boolean_arg", (boolean) false);
+        js.syncCall("check_js_boolean_arg", false);
     }
 
     public void checkJavaBooleanArg(final boolean booltrue) {
         // Async call from JS
         fAssertEquals("Boolean argument matches", true, booltrue);
-        js.syncCall("check_js_string_arg", (String) "foo");
+        js.syncCall("check_js_string_arg", "foo");
     }
 
     public void checkJavaStringArg(final String stringbar) throws JSONException {
