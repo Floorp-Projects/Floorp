@@ -594,6 +594,52 @@ DrawTargetD2D1::CreateFilter(FilterType aType)
 }
 
 bool
+DrawTargetD2D1::Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat)
+{
+  HRESULT hr;
+
+  hr = Factory::GetD2D1Device()->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_ENABLE_MULTITHREADED_OPTIMIZATIONS, byRef(mDC));
+
+  if (FAILED(hr)) {
+    gfxWarning() << *this << ": Error " << hr << " failed to initialize new DeviceContext.";
+    return false;
+  }
+
+  RefPtr<IDXGISurface> dxgiSurface;
+  aTexture->QueryInterface(__uuidof(IDXGISurface),
+                           (void**)((IDXGISurface**)byRef(dxgiSurface)));
+  if (!dxgiSurface) {
+    return false;
+  }
+
+  D2D1_BITMAP_PROPERTIES1 props;
+  props.dpiX = 96;
+  props.dpiY = 96;
+  props.pixelFormat = D2DPixelFormat(aFormat);
+  props.colorContext = nullptr;
+  props.bitmapOptions = D2D1_BITMAP_OPTIONS_TARGET;
+  mDC->CreateBitmapFromDxgiSurface(dxgiSurface, props, (ID2D1Bitmap1**)byRef(mBitmap));
+
+  if (FAILED(hr)) {
+    gfxWarning() << *this << ": Error " << hr << " failed to create new CommandList.";
+    return false;
+  }
+
+  mFormat = aFormat;
+  D3D11_TEXTURE2D_DESC desc;
+  aTexture->GetDesc(&desc);
+  mSize.width = desc.Width;
+  mSize.height = desc.Height;
+
+  mDC->CreateBitmap(D2DIntSize(mSize), nullptr, 0, props, (ID2D1Bitmap1**)byRef(mTempBitmap));
+
+  mDC->SetTarget(mBitmap);
+
+  mDC->BeginDraw();
+  return true;
+}
+
+bool
 DrawTargetD2D1::Init(const IntSize &aSize, SurfaceFormat aFormat)
 {
   HRESULT hr;
