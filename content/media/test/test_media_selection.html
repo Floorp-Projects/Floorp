@@ -26,7 +26,7 @@ function maketest(attach_media, name, type, check_metadata) {
           ok(e.networkState >= HTMLMediaElement.NETWORK_IDLE,
               'test ' + token + ' networkState = ' + e.networkState + ' expected >= ' + HTMLMediaElement.NETWORK_IDLE);
           check_metadata(e);
-          e.parentNode.removeChild(e);
+          removeNodeAndSource(e);
           manager.finished(token);
         }, false);
     } else {
@@ -35,7 +35,8 @@ function maketest(attach_media, name, type, check_metadata) {
         errorRun = true;
         is(e.readyState, HTMLMediaElement.HAVE_NOTHING,
            'test ' + token + ' readyState should be HAVE_NOTHING when load fails.');
-        e.parentNode.removeChild(e);
+        e.removeEventListener('error', arguments.callee, true);
+        removeNodeAndSource(e);
         manager.finished(token);
       }, true);
     }

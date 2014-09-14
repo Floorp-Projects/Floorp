@@ -65,9 +65,8 @@ function testBuffered(e) {
   }
   is(caught, true, v._name + ": Should throw INDEX_SIZE_ERR on over end bounds range");
 
-	manager.finished(v._token);
-  v.src = "";
-  v.parentNode.removeChild(v);  
+  removeNodeAndSource(v);
+  manager.finished(v._token);
 }
 
 function fetch(url, fetched_callback) {
