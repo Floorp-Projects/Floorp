@@ -580,6 +580,12 @@ Factory::GetD2D1Device()
 {
   return mD2D1Device;
 }
+
+bool
+Factory::SupportsD2D1()
+{
+  return !!D2DFactory1();
+}
 #endif
 
 TemporaryRef<GlyphRenderingOptions>
