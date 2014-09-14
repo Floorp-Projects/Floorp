@@ -7,8 +7,6 @@
 #ifndef mozilla_dom_indexeddb_indexeddatabasemanager_h__
 #define mozilla_dom_indexeddb_indexeddatabasemanager_h__
 
-#include "mozilla/dom/indexedDB/IndexedDatabase.h"
-
 #include "nsIObserver.h"
 
 #include "js/TypeDecls.h"
@@ -21,16 +19,20 @@
 class nsPIDOMWindow;
 
 namespace mozilla {
-class EventChainPostVisitor;
-namespace dom {
-class TabContext;
-namespace quota {
-class OriginOrPatternString;
-}
-}
-}
 
-BEGIN_INDEXEDDB_NAMESPACE
+class EventChainPostVisitor;
+
+namespace dom {
+
+class TabContext;
+
+namespace quota {
+
+class OriginOrPatternString;
+
+} // namespace quota
+
+namespace indexedDB {
 
 class FileManager;
 class FileManagerInfo;
@@ -74,6 +76,9 @@ public:
     return !!sLowDiskSpaceMode;
   }
 #endif
+
+  static bool
+  InTestingMode();
 
   already_AddRefed<FileManager>
   GetFileManager(PersistenceType aPersistenceType,
@@ -160,6 +165,8 @@ private:
   static mozilla::Atomic<bool> sLowDiskSpaceMode;
 };
 
-END_INDEXEDDB_NAMESPACE
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla
 
-#endif /* mozilla_dom_indexeddb_indexeddatabasemanager_h__ */
+#endif // mozilla_dom_indexeddb_indexeddatabasemanager_h__

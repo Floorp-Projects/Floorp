@@ -13,6 +13,7 @@
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PContent.h"
+#include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/unused.h"
 #include "nsDOMFile.h"
 

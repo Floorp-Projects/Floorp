@@ -26,6 +26,8 @@
 #include "mozilla/unused.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
+#include "mozilla/dom/ipc/BlobChild.h"
+#include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/ipc/UnixSocket.h"
 #include "nsContentUtils.h"
 #include "nsIObserverService.h"

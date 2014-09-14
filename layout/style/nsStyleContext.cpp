@@ -274,8 +274,6 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
                                    nsRuleNode* aRulesIfVisited,
                                    bool aRelevantLinkVisited)
 {
-  NS_ABORT_IF_FALSE(aRulesIfVisited || !aRelevantLinkVisited,
-    "aRelevantLinkVisited should only be set when we have a separate style");
   uint32_t threshold = 10; // The # of siblings we're willing to examine
                            // before just giving this whole thing up.
 

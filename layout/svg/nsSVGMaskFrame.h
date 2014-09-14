@@ -7,6 +7,8 @@
 #define __NS_SVGMASKFRAME_H__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/RefPtr.h"
 #include "gfxPattern.h"
 #include "gfxMatrix.h"
 #include "nsSVGContainerFrame.h"
@@ -21,6 +23,10 @@ class nsSVGMaskFrame MOZ_FINAL : public nsSVGMaskFrameBase
 {
   friend nsIFrame*
   NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+
+  typedef mozilla::gfx::Matrix Matrix;
+  typedef mozilla::gfx::SourceSurface SourceSurface;
+
 protected:
   explicit nsSVGMaskFrame(nsStyleContext* aContext)
     : nsSVGMaskFrameBase(aContext)
@@ -33,10 +39,12 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // nsSVGMaskFrame method:
-  already_AddRefed<gfxPattern> GetMaskForMaskedFrame(gfxContext* aContext,
-                                                     nsIFrame* aMaskedFrame,
-                                                     const gfxMatrix &aMatrix,
-                                                     float aOpacity);
+  mozilla::TemporaryRef<SourceSurface>
+  GetMaskForMaskedFrame(gfxContext* aContext,
+                        nsIFrame* aMaskedFrame,
+                        const gfxMatrix &aMatrix,
+                        float aOpacity,
+                        Matrix* aMaskTransform);
 
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
                                     nsIAtom*        aAttribute,

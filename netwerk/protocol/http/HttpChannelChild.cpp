@@ -13,7 +13,7 @@
 #include "mozilla/unused.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/TabChild.h"
-#include "mozilla/dom/FileDescriptorSetChild.h"
+#include "mozilla/ipc/FileDescriptorSetChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/HttpChannelChild.h"
 

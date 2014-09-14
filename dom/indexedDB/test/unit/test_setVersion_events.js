@@ -15,12 +15,12 @@ function testSteps()
   // Sanity checks
   ok(request instanceof IDBRequest, "Request should be an IDBRequest");
   ok(request instanceof IDBOpenDBRequest, "Request should be an IDBOpenDBRequest");
-  //ok(request instanceof EventTarget, "Request should be an EventTarget");
+  ok(request instanceof EventTarget, "Request should be an EventTarget");
   is(request.source, null, "Request should have no source");
   try {
     request.result;
     ok(false, "Getter should have thrown!");
-  } catch (e if e.result == 0x80660006 /* NS_ERROR_DOM_INDEXEDDB_NOTALLOWED_ERR */) {
+  } catch (e if e.result == 0x8053000b /* NS_ERROR_DOM_INVALID_STATE_ERR */) {
     ok(true, "Getter threw the right exception");
   }
 

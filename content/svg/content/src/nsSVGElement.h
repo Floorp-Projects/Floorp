@@ -113,6 +113,7 @@ public:
   virtual bool IsNodeOfType(uint32_t aFlags) const MOZ_OVERRIDE;
 
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) MOZ_OVERRIDE;
+  void WalkAnimatedContentStyleRules(nsRuleWalker* aRuleWalker);
 
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
 

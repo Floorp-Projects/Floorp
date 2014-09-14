@@ -55,7 +55,7 @@ DOMMultipartFileImpl::GetInternalStream(nsIInputStream** aStream)
   return CallQueryInterface(stream, aStream);
 }
 
-already_AddRefed<nsIDOMBlob>
+already_AddRefed<DOMFileImpl>
 DOMMultipartFileImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
                                   const nsAString& aContentType)
 {
@@ -77,18 +77,17 @@ DOMMultipartFileImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
     if (skipStart < l) {
       uint64_t upperBound = std::min<uint64_t>(l - skipStart, length);
 
-      nsCOMPtr<nsIDOMBlob> firstBlob;
-      rv = blobImpl->Slice(skipStart, skipStart + upperBound,
-                           aContentType, 3,
-                           getter_AddRefs(firstBlob));
+      nsRefPtr<DOMFileImpl> firstImpl;
+      rv = blobImpl->Slice(skipStart, skipStart + upperBound, aContentType, 3,
+                           getter_AddRefs(firstImpl));
       NS_ENSURE_SUCCESS(rv, nullptr);
 
       // Avoid wrapping a single blob inside an DOMMultipartFileImpl
       if (length == upperBound) {
-        return firstBlob.forget();
+        return firstImpl.forget();
       }
 
-      blobImpls.AppendElement(static_cast<DOMFile*>(firstBlob.get())->Impl());
+      blobImpls.AppendElement(firstImpl);
       length -= upperBound;
       i++;
       break;
@@ -105,12 +104,12 @@ DOMMultipartFileImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
     NS_ENSURE_SUCCESS(rv, nullptr);
 
     if (length < l) {
-      nsCOMPtr<nsIDOMBlob> lastBlob;
+      nsRefPtr<DOMFileImpl> lastBlob;
       rv = blobImpl->Slice(0, length, aContentType, 3,
                            getter_AddRefs(lastBlob));
       NS_ENSURE_SUCCESS(rv, nullptr);
 
-      blobImpls.AppendElement(static_cast<DOMFile*>(lastBlob.get())->Impl());
+      blobImpls.AppendElement(lastBlob);
     } else {
       blobImpls.AppendElement(blobImpl);
     }
@@ -118,9 +117,9 @@ DOMMultipartFileImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
   }
 
   // we can create our blob now
-  nsCOMPtr<nsIDOMBlob> blob =
-    new DOMFile(new DOMMultipartFileImpl(blobImpls, aContentType));
-  return blob.forget();
+  nsRefPtr<DOMFileImpl> impl =
+    new DOMMultipartFileImpl(blobImpls, aContentType);
+  return impl.forget();
 }
 
 /* static */ nsresult
