@@ -312,6 +312,10 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
     UpdateRenderMode();
 
+    if (gfxPrefs::Direct2DUse1_1()) {
+      InitD3D11Devices();
+    }
+
     RegisterStrongMemoryReporter(new GPUAdapterReporter());
 }
 
@@ -438,7 +442,12 @@ gfxWindowsPlatform::UpdateRenderMode()
     if (mRenderMode == RENDER_DIRECT2D) {
       canvasMask |= BackendTypeBit(BackendType::DIRECT2D);
       contentMask |= BackendTypeBit(BackendType::DIRECT2D);
-      defaultBackend = BackendType::DIRECT2D;
+      if (gfxPrefs::Direct2DUse1_1() && Factory::SupportsD2D1()) {
+        contentMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
+        defaultBackend = BackendType::DIRECT2D1_1;
+      } else {
+        defaultBackend = BackendType::DIRECT2D;
+      }
     } else {
       canvasMask |= BackendTypeBit(BackendType::SKIA);
     }
