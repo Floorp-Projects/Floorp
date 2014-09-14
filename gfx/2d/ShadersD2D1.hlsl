@@ -16,6 +16,13 @@ cbuffer constants : register(b0)
     float A : packoffset(c1.z);
     float radius1 : packoffset(c1.w);
     float sq_radius1 : packoffset(c2.x);
+
+    // The next two values are used for a hack to compensate for an apparent
+    // bug in D2D where the GradientSampler SamplerState doesn't get the
+    // correct addressing modes.
+    float repeat_correct : packoffset(c2.y);
+    float allow_odd : packoffset(c2.z);
+
     float3x2 transform : packoffset(c3.x);
 }
 
@@ -52,7 +59,13 @@ float4 SampleRadialGradientPS(
 
   float upper_t = lerp(t.y, t.x, isValid.x);
 
-  float4 output = GradientTexture.Sample(GradientSampler, float2(upper_t, 0.5));
+  // Addressing mode bug work-around.. first let's see if we should consider odd repetitions separately.
+  float oddeven = abs(fmod(floor(upper_t), 2)) * allow_odd;
+
+  // Now let's calculate even or odd addressing in a branchless manner.
+  float upper_t_repeated = ((upper_t - floor(upper_t)) * (1.0f - oddeven)) + ((ceil(upper_t) - upper_t) * oddeven);
+
+  float4 output = GradientTexture.Sample(GradientSampler, float2(upper_t * (1.0f - repeat_correct) + upper_t_repeated * repeat_correct, 0.5));
   // Premultiply
   output.rgb *= output.a;
   // Multiply the output color by the input mask for the operation.
@@ -84,7 +97,13 @@ float4 SampleRadialGradientA0PS(
 
   float t = 0.5 * C / B;
 
-  float4 output = GradientTexture.Sample(GradientSampler, float2(t, 0.5));
+  // Addressing mode bug work-around.. first let's see if we should consider odd repetitions separately.
+  float oddeven = abs(fmod(floor(t), 2)) * allow_odd;
+
+  // Now let's calculate even or odd addressing in a branchless manner.
+  float t_repeated = ((t - floor(t)) * (1.0f - oddeven)) + ((ceil(t) - t) * oddeven);
+
+  float4 output = GradientTexture.Sample(GradientSampler, float2(t * (1.0f - repeat_correct) + t_repeated * repeat_correct, 0.5));
   // Premultiply
   output.rgb *= output.a;
   // Multiply the output color by the input mask for the operation.
@@ -95,3 +114,4 @@ float4 SampleRadialGradientA0PS(
   // -radius1 >= t * diff.z
   return output * abs(step(t * diff.z, -radius1) - 1.0f);
 };
+
