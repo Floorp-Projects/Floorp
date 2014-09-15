@@ -6726,9 +6726,27 @@ bool
 ClusterIterator::IsPunctuation()
 {
   NS_ASSERTION(mCharIndex >= 0, "No cluster selected");
-  nsIUGenCategory::nsUGenCategory c =
-    mozilla::unicode::GetGenCategory(mFrag->CharAt(mCharIndex));
-  return c == nsIUGenCategory::kPunctuation || c == nsIUGenCategory::kSymbol;
+  // Return true for all Punctuation categories (Unicode general category P?),
+  // and also for Symbol categories (S?) except for Modifier Symbol, which is
+  // kept together with any adjacent letter/number. (Bug 1066756)
+  uint8_t cat = unicode::GetGeneralCategory(mFrag->CharAt(mCharIndex));
+  switch (cat) {
+    case HB_UNICODE_GENERAL_CATEGORY_CONNECT_PUNCTUATION: /* Pc */
+    case HB_UNICODE_GENERAL_CATEGORY_DASH_PUNCTUATION:    /* Pd */
+    case HB_UNICODE_GENERAL_CATEGORY_CLOSE_PUNCTUATION:   /* Pe */
+    case HB_UNICODE_GENERAL_CATEGORY_FINAL_PUNCTUATION:   /* Pf */
+    case HB_UNICODE_GENERAL_CATEGORY_INITIAL_PUNCTUATION: /* Pi */
+    case HB_UNICODE_GENERAL_CATEGORY_OTHER_PUNCTUATION:   /* Po */
+    case HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION:    /* Ps */
+    case HB_UNICODE_GENERAL_CATEGORY_CURRENCY_SYMBOL:     /* Sc */
+    // Deliberately omitted:
+    // case HB_UNICODE_GENERAL_CATEGORY_MODIFIER_SYMBOL:     /* Sk */
+    case HB_UNICODE_GENERAL_CATEGORY_MATH_SYMBOL:         /* Sm */
+    case HB_UNICODE_GENERAL_CATEGORY_OTHER_SYMBOL:        /* So */
+      return true;
+    default:
+      return false;
+  }
 }
 
 int32_t
