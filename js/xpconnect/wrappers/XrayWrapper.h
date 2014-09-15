@@ -80,9 +80,6 @@ public:
 
     virtual void preserveWrapper(JSObject *target) = 0;
 
-    static bool set(JSContext *cx, JS::HandleObject wrapper, JS::HandleObject receiver, JS::HandleId id,
-                    bool strict, JS::MutableHandleValue vp);
-
     JSObject* getExpandoObject(JSContext *cx, JS::HandleObject target,
                                JS::HandleObject consumer);
     JSObject* ensureExpandoObject(JSContext *cx, JS::HandleObject wrapper,
@@ -180,8 +177,6 @@ public:
     bool defineProperty(JSContext *cx, JS::HandleObject wrapper, JS::HandleId id,
                         JS::MutableHandle<JSPropertyDescriptor> desc,
                         JS::Handle<JSPropertyDescriptor> existingDesc, bool *defined);
-    static bool set(JSContext *cx, JS::HandleObject wrapper, JS::HandleObject receiver, JS::HandleId id,
-                    bool strict, JS::MutableHandleValue vp);
     virtual bool enumerateNames(JSContext *cx, JS::HandleObject wrapper, unsigned flags,
                                 JS::AutoIdVector &props);
     static bool call(JSContext *cx, JS::HandleObject wrapper,
