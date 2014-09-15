@@ -1101,12 +1101,12 @@ js::InitRuntimeNumberState(JSRuntime *rt)
      * Our NaN must be one particular canonical value, because we rely on NaN
      * encoding for our value representation.  See Value.h.
      */
-    number_constants[NC_NaN].dval = GenericNaN();
+    number_constants[NC_NaN].val = GenericNaN();
 
-    number_constants[NC_POSITIVE_INFINITY].dval = mozilla::PositiveInfinity<double>();
-    number_constants[NC_NEGATIVE_INFINITY].dval = mozilla::NegativeInfinity<double>();
+    number_constants[NC_POSITIVE_INFINITY].val = mozilla::PositiveInfinity<double>();
+    number_constants[NC_NEGATIVE_INFINITY].val = mozilla::NegativeInfinity<double>();
 
-    number_constants[NC_MIN_VALUE].dval = MinNumberValue<double>();
+    number_constants[NC_MIN_VALUE].val = MinNumberValue<double>();
 
     // XXX If EXPOSE_INTL_API becomes true all the time at some point,
     //     js::InitRuntimeNumberState is no longer fallible, and we should

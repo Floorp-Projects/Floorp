@@ -2303,12 +2303,16 @@ extern JS_PUBLIC_API(bool)
 JS_ConvertStub(JSContext *cx, JS::HandleObject obj, JSType type,
                JS::MutableHandleValue vp);
 
-struct JSConstDoubleSpec {
-    double          dval;
+template<typename T>
+struct JSConstScalarSpec {
+    T val;
     const char      *name;
     uint8_t         flags;
     uint8_t         spare[3];
 };
+
+typedef JSConstScalarSpec<double> JSConstDoubleSpec;
+typedef JSConstScalarSpec<int32_t> JSConstIntegerSpec;
 
 struct JSJitInfo;
 
@@ -2765,6 +2769,9 @@ JS_DefineObject(JSContext *cx, JS::HandleObject obj, const char *name,
 
 extern JS_PUBLIC_API(bool)
 JS_DefineConstDoubles(JSContext *cx, JS::HandleObject obj, const JSConstDoubleSpec *cds);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineConstIntegers(JSContext *cx, JS::HandleObject obj, const JSConstIntegerSpec *cis);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineProperties(JSContext *cx, JS::HandleObject obj, const JSPropertySpec *ps);
