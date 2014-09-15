@@ -176,11 +176,17 @@ class FrameInfo
 
     bool init(TempAllocator &alloc);
 
-    uint32_t nlocals() const {
+    size_t nlocals() const {
         return script->nfixed();
     }
-    uint32_t nargs() const {
+    size_t nargs() const {
         return script->functionNonDelazifying()->nargs();
+    }
+    size_t nvars() const {
+        return script->nfixedvars();
+    }
+    size_t nlexicals() const {
+        return script->fixedLexicalEnd() - script->fixedLexicalBegin();
     }
 
   private:

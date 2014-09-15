@@ -91,13 +91,9 @@ BaselineFrame::trace(JSTracer *trc, JitFrameIterator &frameIterator)
         // Mark operand stack.
         MarkLocals(this, trc, nfixed, numValueSlots());
 
-        // Clear non-magic dead locals. Magic values such as
-        // JS_UNINITIALIZED_LET need to be left as is for correctness.
-        while (nfixed > nlivefixed) {
-            --nfixed;
-            if (!unaliasedLocal(nfixed, DONT_CHECK_ALIASING).isMagic())
-                unaliasedLocal(nfixed, DONT_CHECK_ALIASING).setUndefined();
-        }
+        // Clear dead block-scoped locals.
+        while (nfixed > nlivefixed)
+            unaliasedLocal(--nfixed, DONT_CHECK_ALIASING).setMagic(JS_UNINITIALIZED_LEXICAL);
 
         // Mark live locals.
         MarkLocals(this, trc, 0, nlivefixed);
