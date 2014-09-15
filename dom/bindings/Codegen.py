@@ -648,6 +648,7 @@ class CGPrototypeJSClass(CGThing):
         if UseHolderForUnforgeable(self.descriptor):
             slotCount += " + 1 /* slot for the JSObject holding the unforgeable properties */"
         (protoGetter, _) = InterfacePrototypeObjectProtoGetter(self.descriptor)
+        type = "eGlobalInterfacePrototype" if self.descriptor.isGlobal() else "eInterfacePrototype"
         return fill(
             """
             static const DOMIfaceAndProtoJSClass PrototypeClass = {
@@ -670,7 +671,7 @@ class CGPrototypeJSClass(CGThing):
                 JS_NULL_CLASS_EXT,
                 JS_NULL_OBJECT_OPS
               },
-              eInterfacePrototype,
+              ${type},
               ${hooks},
               "[object ${name}Prototype]",
               ${prototypeID},
@@ -680,6 +681,7 @@ class CGPrototypeJSClass(CGThing):
             """,
             name=self.descriptor.interface.identifier.name,
             slotCount=slotCount,
+            type=type,
             hooks=NativePropertyHooks(self.descriptor),
             prototypeID=prototypeID,
             depth=depth,

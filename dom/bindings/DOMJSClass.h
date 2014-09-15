@@ -156,16 +156,33 @@ struct NativePropertyHooks
   // constructors::id::_ID_Count.
   constructors::ID mConstructorID;
 
-  // The NativePropertyHooks instance for the parent interface.
+  // The NativePropertyHooks instance for the parent interface (for
+  // ShimInterfaceInfo).
   const NativePropertyHooks* mProtoHooks;
 };
 
 enum DOMObjectType {
   eInstance,
+  eGlobalInstance,
   eInterface,
   eInterfacePrototype,
+  eGlobalInterfacePrototype,
   eNamedPropertiesObject
 };
+
+inline
+bool
+IsInstance(DOMObjectType type)
+{
+  return type == eInstance || type == eGlobalInstance;
+}
+
+inline
+bool
+IsInterfacePrototype(DOMObjectType type)
+{
+  return type == eInterfacePrototype || type == eGlobalInterfacePrototype;
+}
 
 typedef JSObject* (*ParentGetter)(JSContext* aCx, JS::Handle<JSObject*> aObj);
 
@@ -229,7 +246,8 @@ struct DOMIfaceAndProtoJSClass
   // initialization for aggregate/POD types.
   const js::Class mBase;
 
-  // Either eInterface, eInterfacePrototype or eNamedPropertiesObject
+  // Either eInterface, eInterfacePrototype, eGlobalInterfacePrototype or
+  // eNamedPropertiesObject.
   DOMObjectType mType;
 
   const NativePropertyHooks* mNativeHooks;

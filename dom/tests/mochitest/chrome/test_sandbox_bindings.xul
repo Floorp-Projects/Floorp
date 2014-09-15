@@ -74,24 +74,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       } finally {
         isnot(xhr.prototype, "notok", "'XMLHttpRequest.prototype' should be readonly");
       }
-      try {
-        var xhr = Components.utils.evalInSandbox("XMLHttpRequest", sandbox);
-        delete xhr.prototype;
-      } catch (e) {
-        ok(true, "'XMLHttpRequest.prototype' should be permanent");
-      }
+      var constructorWritable = false;
       try {
         var xhr = Components.utils.evalInSandbox("XMLHttpRequest.prototype", sandbox);
         xhr.constructor = "ok";
         is(xhr.constructor, "ok", "'XMLHttpRequest.prototype.constructor' should be writeable");
       } catch (e) {
         ok(false, "'XMLHttpRequest.prototype.constructor' should be writeable");
-      }
-      try {
-        var xhr = Components.utils.evalInSandbox("XMLHttpRequest.prototype", sandbox);
-        delete xhr.constructor;
-      } catch (e) {
-        is(xhr.constructor, undefined, "'XMLHttpRequest.prototype.constructor' should be permanent");
       }
       try {
         var xhr = Components.utils.evalInSandbox("XMLHttpRequest", sandbox);
@@ -115,6 +104,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
         ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox (1)");
       }
       try {
+        var xhr = Components.utils.evalInSandbox("XMLHttpRequest.toString = function () { return 'Failed'; }; XMLHttpRequest;", sandbox);
+        is(xhr.toString(), XMLHttpRequest + "", "XMLHttpRequest.toString in the sandbox should not override the native toString behaviour");
+      } catch (e) {
+        ok(false, "'XMLHttpRequest' shouldn't throw in a sandbox");
+      }
+      try {
         var xhr = Components.utils.evalInSandbox("XMLHttpRequest.prototype.toString = function () { return 'Failed'; }; new XMLHttpRequest();", sandbox);
         is(xhr.toString(), new XMLHttpRequest() + "", "XMLHttpRequest.prototype.toString in the sandbox should not override the native toString behaviour");
       } catch (e) {
@@ -136,6 +131,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
            "'dispatchEvent' is not an own property on XMLHttpRequest.prototype; it's on EventTarget.prototype")
       } catch (e) {
         ok(false, "XMLHttpRequest.prototype manipulation via an Xray shouldn't throw" + e);
+      }
+      try {
+        Components.utils.evalInSandbox("XMLHttpRequest.prototype.a = 'expando a'", sandbox);
+        Components.utils.evalInSandbox("XMLHttpRequest.prototype.b = 'expando b'", sandbox);
+        Components.utils.evalInSandbox("XMLHttpRequest.prototype", sandbox).b = 'xrayexpando';
+        var xhr = Components.utils.evalInSandbox("new XMLHttpRequest()", sandbox);
+        is(xhr.a, undefined, "'XMLHttpRequest()' in a sandbox should not have expandos from inside the sandbox");
+        is(xhr.b, "xrayexpando", "'new XMLHttpRequest()' in a sandbox should have Xray expandos");
+      } catch (e) {
+        ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox");
       }
       try {
         Components.utils.evalInSandbox("document.defaultView.XMLHttpRequest = function() {};", sandbox);
