@@ -22,14 +22,21 @@ namespace {
 // This mutex protects the variables below.
 StaticMutex sMutex;
 cubeb* sCubebContext;
-
-// Prefered samplerate, in Hz (characteristic of the
-// hardware/mixer/platform/API used).
-uint32_t sPreferredSampleRate;
-
 double sVolumeScale;
 uint32_t sCubebLatency;
 bool sCubebLatencyPrefSet;
+
+// Prefered samplerate, in Hz (characteristic of the hardware, mixer, platform,
+// and API used).
+//
+// sMutex protects *initialization* of this, which must be performed from each
+// thread before fetching, after which it is safe to fetch without holding the
+// mutex because it is only written once per process execution (by the first
+// initialization to complete).  Since the init must have been called on a
+// given thread before fetching the value, it's guaranteed (via the mutex) that
+// sufficient memory barriers have occurred to ensure the correct value is
+// visible on the querying thread/CPU.
+uint32_t sPreferredSampleRate;
 
 } // anonymous namespace
 
@@ -89,6 +96,7 @@ void InitPreferredSampleRate()
   if (sPreferredSampleRate == 0 &&
       cubeb_get_preferred_sample_rate(GetCubebContextUnlocked(),
                                       &sPreferredSampleRate) != CUBEB_OK) {
+    // Query failed, use a sensible default.
     sPreferredSampleRate = 44100;
   }
 }
@@ -139,20 +147,20 @@ void ShutdownLibrary()
   }
 }
 
-int MaxNumberOfChannels()
+uint32_t MaxNumberOfChannels()
 {
   cubeb* cubebContext = GetCubebContext();
   uint32_t maxNumberOfChannels;
   if (cubebContext &&
       cubeb_get_max_channel_count(cubebContext,
                                   &maxNumberOfChannels) == CUBEB_OK) {
-    return static_cast<int>(maxNumberOfChannels);
+    return maxNumberOfChannels;
   }
 
   return 0;
 }
 
-int PreferredSampleRate()
+uint32_t PreferredSampleRate()
 {
   MOZ_ASSERT(sPreferredSampleRate,
              "sPreferredSampleRate has not been initialized!");
