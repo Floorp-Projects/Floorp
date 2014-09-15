@@ -426,6 +426,29 @@ class Type
     bool operator==(Type rhs) const { return which_ == rhs.which_; }
     bool operator!=(Type rhs) const { return which_ != rhs.which_; }
 
+    inline bool operator<=(Type rhs) const {
+        switch (rhs.which_) {
+          case Type::Signed:      return isSigned();
+          case Type::Unsigned:    return isUnsigned();
+          case Type::Double:      return isDouble();
+          case Type::Float:       return isFloat();
+          case Type::Int32x4:     return isInt32x4();
+          case Type::Float32x4:   return isFloat32x4();
+          case Type::MaybeDouble: return isMaybeDouble();
+          case Type::MaybeFloat:  return isMaybeFloat();
+          case Type::Floatish:    return isFloatish();
+          case Type::Int:         return isInt();
+          case Type::Intish:      return isIntish();
+          case Type::Fixnum:      return isFixnum();
+          case Type::Void:        return isVoid();
+        }
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected this type");
+    }
+
+    bool isFixnum() const {
+        return which_ == Fixnum;
+    }
+
     bool isSigned() const {
         return which_ == Signed || which_ == Fixnum;
     }
