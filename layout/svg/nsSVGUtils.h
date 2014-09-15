@@ -58,6 +58,7 @@ class SVGAnimatedPreserveAspectRatio;
 class SVGPreserveAspectRatio;
 namespace dom {
 class Element;
+class UserSpaceMetrics;
 } // namespace dom
 namespace gfx {
 class SourceSurface;
@@ -274,12 +275,8 @@ public:
      Input: length - length to be converted
   */
   static float UserSpace(nsSVGElement *aSVGElement, const nsSVGLength2 *aLength);
-
-  /* Computes the input length in terms of user space coordinates.
-     Input: aFrame - object to be used for determining user space
-            length - length to be converted
-  */
   static float UserSpace(nsIFrame *aFrame, const nsSVGLength2 *aLength);
+  static float UserSpace(const mozilla::dom::UserSpaceMetrics& aMetrics, const nsSVGLength2 *aLength);
 
   /* Find the outermost SVG frame of the passed frame */
   static nsSVGOuterSVGFrame *
@@ -454,7 +451,12 @@ public:
    */
   static gfxRect
   GetRelativeRect(uint16_t aUnits, const nsSVGLength2 *aXYWH,
-                  const gfxRect &aBBox, nsIFrame *aFrame);
+                  const gfxRect& aBBox, nsIFrame *aFrame);
+
+  static gfxRect
+  GetRelativeRect(uint16_t aUnits, const nsSVGLength2 *aXYWH,
+                  const gfxRect& aBBox,
+                  const mozilla::dom::UserSpaceMetrics& aMetrics);
 
   /**
    * Find the first frame, starting with aStartFrame and going up its
