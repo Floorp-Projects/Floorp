@@ -352,18 +352,19 @@ enum MIRType
     MIRType_String,
     MIRType_Symbol,
     MIRType_Object,
-    MIRType_MagicOptimizedArguments, // JS_OPTIMIZED_ARGUMENTS magic value.
-    MIRType_MagicOptimizedOut,       // JS_OPTIMIZED_OUT magic value.
-    MIRType_MagicHole,               // JS_ELEMENTS_HOLE magic value.
-    MIRType_MagicIsConstructing,     // JS_IS_CONSTRUCTING magic value.
+    MIRType_MagicOptimizedArguments,   // JS_OPTIMIZED_ARGUMENTS magic value.
+    MIRType_MagicOptimizedOut,         // JS_OPTIMIZED_OUT magic value.
+    MIRType_MagicHole,                 // JS_ELEMENTS_HOLE magic value.
+    MIRType_MagicIsConstructing,       // JS_IS_CONSTRUCTING magic value.
+    MIRType_MagicUninitializedLexical, // JS_UNINITIALIZED_LEXICAL magic value.
     MIRType_Value,
-    MIRType_None,                    // Invalid, used as a placeholder.
-    MIRType_Slots,                   // A slots vector
-    MIRType_Elements,                // An elements vector
-    MIRType_Pointer,                 // An opaque pointer that receives no special treatment
-    MIRType_Shape,                   // A Shape pointer.
-    MIRType_TypeObject,              // A TypeObject pointer.
-    MIRType_ForkJoinContext,         // js::ForkJoinContext*
+    MIRType_None,                      // Invalid, used as a placeholder.
+    MIRType_Slots,                     // A slots vector
+    MIRType_Elements,                  // An elements vector
+    MIRType_Pointer,                   // An opaque pointer that receives no special treatment
+    MIRType_Shape,                     // A Shape pointer.
+    MIRType_TypeObject,                // A TypeObject pointer.
+    MIRType_ForkJoinContext,           // js::ForkJoinContext*
     MIRType_Last = MIRType_ForkJoinContext,
     MIRType_Float32x4 = MIRType_Float32 | (2 << VECTOR_SCALE_SHIFT),
     MIRType_Int32x4   = MIRType_Int32   | (2 << VECTOR_SCALE_SHIFT),
@@ -435,6 +436,7 @@ ValueTypeFromMIRType(MIRType type)
     case MIRType_MagicOptimizedOut:
     case MIRType_MagicHole:
     case MIRType_MagicIsConstructing:
+    case MIRType_MagicUninitializedLexical:
       return JSVAL_TYPE_MAGIC;
     default:
       JS_ASSERT(type == MIRType_Object);
@@ -478,6 +480,8 @@ StringFromMIRType(MIRType type)
       return "MagicHole";
     case MIRType_MagicIsConstructing:
       return "MagicIsConstructing";
+    case MIRType_MagicUninitializedLexical:
+      return "MagicUninitializedLexical";
     case MIRType_Value:
       return "Value";
     case MIRType_None:

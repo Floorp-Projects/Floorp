@@ -1236,11 +1236,11 @@ MarkTypeObjectFromIon(JSRuntime *rt, types::TypeObject **typep)
 }
 
 bool
-ThrowUninitializedLet(JSContext *cx)
+ThrowUninitializedLexical(JSContext *cx)
 {
     ScriptFrameIter iter(cx);
     RootedScript script(cx, iter.script());
-    ReportUninitializedLet(cx, script, iter.pc());
+    ReportUninitializedLexical(cx, script, iter.pc());
     return false;
 }
 

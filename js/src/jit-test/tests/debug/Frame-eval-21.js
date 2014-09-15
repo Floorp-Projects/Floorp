@@ -1,8 +1,5 @@
 // Eval-in-frame with different type on baseline frame with let-scoping
 
-// FIXMEshu disabled until TDZ checks are implemented in the JITs.
-quit(0);
-
 load(libdir + "jitopts.js");
 
 if (!jitTogglesMatch(Opts_BaselineEager))
