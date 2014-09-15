@@ -119,18 +119,17 @@ AddonInterpositionService.prototype = {
 
     let desc = { configurable: false, enumerable: true };
 
-    if ("methods" in interp && interp.methods.hasOwnProperty(prop)) {
+    if ("methods" in interp && prop in interp.methods) {
       desc.writable = false;
       desc.value = function(...args) {
         return interp.methods[prop](addon, target, ...args);
       }
 
       return desc;
-    } else if ("getters" in interp &&
-               interp.getters.hasOwnProperty(prop)) {
+    } else if ("getters" in interp && prop in interp.getters) {
       desc.get = function() { return interp.getters[prop](addon, target); };
 
-      if ("setters" in interp && interp.setters.hasOwnProperty(prop)) {
+      if ("setters" in interp && prop in interp.setters) {
         desc.set = function(v) { return interp.setters[prop](addon, target, v); };
       }
 
