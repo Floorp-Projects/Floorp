@@ -468,6 +468,9 @@ class GCRuntime
     void startVerifyPostBarriers();
     bool endVerifyPostBarriers();
     void finishVerifier();
+    bool isVerifyPreBarriersEnabled() const { return !!verifyPreData; }
+#else
+    bool isVerifyPreBarriersEnabled() const { return false; }
 #endif
 
   private:

@@ -614,6 +614,8 @@ TypeSet::print()
         fprintf(stderr, " float");
     if (flags & TYPE_FLAG_STRING)
         fprintf(stderr, " string");
+    if (flags & TYPE_FLAG_SYMBOL)
+        fprintf(stderr, " symbol");
     if (flags & TYPE_FLAG_LAZYARGS)
         fprintf(stderr, " lazyargs");
 
@@ -1498,7 +1500,7 @@ HeapTypeSetKey::needsBarrier(CompilerConstraintList *constraints)
         return false;
     bool result = types->unknownObject()
                || types->getObjectCount() > 0
-               || types->hasAnyFlag(TYPE_FLAG_STRING);
+               || types->hasAnyFlag(TYPE_FLAG_STRING | TYPE_FLAG_SYMBOL);
     if (!result)
         freeze(constraints);
     return result;
