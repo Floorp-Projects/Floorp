@@ -7,15 +7,12 @@
  * Test that OS.File can be loaded using the CommonJS loader.
  */
 
-// We also need a valid nsIXulAppInfo
-Cu.import("resource://testing-common/AppInfo.jsm");
-updateAppInfo();
-
 let { Loader } = Components.utils.import('resource://gre/modules/commonjs/toolkit/loader.js', {});
 
 function run_test() {
   run_next_test();
 }
+
 
 add_task(function*() {
   let dataDir = Services.io.newFileURI(do_get_file("test_loader/", true)).spec + "/";
@@ -37,3 +34,4 @@ add_task(function*() {
 
   do_print("Require has worked");
 });
+
