@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include "nsStyleConsts.h"
+#include "mozilla/dom/WindowBinding.h"
 
 namespace mozilla {
 
@@ -33,9 +34,14 @@ struct ScrollbarStyles
     return aStyles.mHorizontal != mHorizontal || aStyles.mVertical != mVertical ||
            aStyles.mScrollBehavior != mScrollBehavior;
   }
-  bool IsHiddenInBothDirections() {
+  bool IsHiddenInBothDirections() const {
     return mHorizontal == NS_STYLE_OVERFLOW_HIDDEN &&
            mVertical == NS_STYLE_OVERFLOW_HIDDEN;
+  }
+  bool IsSmoothScroll(dom::ScrollBehavior aBehavior) const {
+    return aBehavior == dom::ScrollBehavior::Smooth ||
+             (aBehavior == dom::ScrollBehavior::Auto &&
+               mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_SMOOTH);
   }
 };
 
