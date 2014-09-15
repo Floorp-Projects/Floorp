@@ -63,43 +63,37 @@ function runAfterPluginBindingAttached(func) {
 // Tests for the notification bar for hidden plugins.
 
 function test1() {
-  let notification = PopupNotifications.getNotification("click-to-play-plugins");
-  ok(notification, "Test 1: There should be a plugin notification");
-
-  let notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-
-  waitForCondition(() => notificationBox.getNotificationWithValue("plugin-hidden") !== null,
-    () => {
+  info("Test 1 - expecting a notification bar for hidden plugins.");
+  waitForNotificationPopup("click-to-play-plugins", gTestBrowser, () => {
+    waitForNotificationBar("plugin-hidden", gTestBrowser, () => {
       // Don't use setTestPluginEnabledState here because we already saved the
       // prior value
       getTestPlugin().enabledState = Ci.nsIPluginTag.STATE_ENABLED;
       prepareTest(test2, gTestRoot + "plugin_small.html");
-    },
-    "Test 1, expected to have a plugin notification bar");
+    });
+  });
 }
 
 function test2() {
-  let notification = PopupNotifications.getNotification("click-to-play-plugins");
-  ok(notification, "Test 2: There should be a plugin notification");
+  info("Test 2 - expecting no plugin notification bar on visible plugins.");
+  waitForNotificationPopup("click-to-play-plugins", gTestBrowser, () => {
+    let notificationBox = gBrowser.getNotificationBox(gTestBrowser);
 
-  let notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-
-  waitForCondition(() => notificationBox.getNotificationWithValue("plugin-hidden") === null,
-    () => {
-      getTestPlugin().enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
-      prepareTest(test3, gTestRoot + "plugin_overlayed.html");
-    },
-    "Test 2, expected to not have a plugin notification bar");
+    waitForCondition(() => notificationBox.getNotificationWithValue("plugin-hidden") === null,
+      () => {
+        getTestPlugin().enabledState = Ci.nsIPluginTag.STATE_CLICKTOPLAY;
+        prepareTest(test3, gTestRoot + "plugin_overlayed.html");
+      },
+      "expected to not have a plugin notification bar"
+    );
+  });
 }
 
 function test3() {
-  let notification = PopupNotifications.getNotification("click-to-play-plugins");
-  ok(notification, "Test 3: There should be a plugin notification");
-
-  let notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-  waitForCondition(() => notificationBox.getNotificationWithValue("plugin-hidden") !== null,
-    test3b,
-    "Test 3, expected the plugin infobar to be triggered when plugin was overlayed");
+  info("Test 3 - expecting a plugin notification bar when plugins are overlaid");
+  waitForNotificationPopup("click-to-play-plugins", gTestBrowser, () => {
+    waitForNotificationBar("plugin-hidden", gTestBrowser, test3b);
+  });
 }
 
 function test3b()
@@ -118,13 +112,10 @@ function test3b()
 }
 
 function test4() {
-  let notification = PopupNotifications.getNotification("click-to-play-plugins");
-  ok(notification, "Test 4: There should be a plugin notification");
-
-  let notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-  waitForCondition(() => notificationBox.getNotificationWithValue("plugin-hidden") !== null,
-    test4b,
-    "Test 4, expected the plugin infobar to be triggered when plugin was overlayed");
+  info("Test 4 - expecting a plugin notification bar when plugins are overlaid offscreen")
+  waitForNotificationPopup("click-to-play-plugins", gTestBrowser, () => {
+    waitForNotificationBar("plugin-hidden", gTestBrowser, test4b);
+  });
 }
 
 function test4b() {
@@ -141,9 +132,6 @@ function test4b() {
   prepareTest(runAfterPluginBindingAttached(test5), gHttpTestRoot + "plugin_small.html");
 }
 
-// Test that the notification bar is getting dismissed when directly activating plugins
-// via the doorhanger.
-
 function test5() {
   let notificationBox = gBrowser.getNotificationBox(gTestBrowser);
   waitForCondition(() => notificationBox.getNotificationWithValue("plugin-hidden") !== null,
@@ -151,23 +139,27 @@ function test5() {
     "Test 5, expected a notification bar for hidden plugins");
 }
 
+// Test that the notification bar is getting dismissed when directly activating plugins
+// via the doorhanger.
+
 function test6() {
-  let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(notification, "Test 6, Should have a click-to-play notification");
-  let plugin = gTestBrowser.contentDocument.getElementById("test");
-  ok(plugin, "Test 6, Found plugin in page");
-  let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
-     "Test 6, Plugin should be click-to-play");
+  info("Test 6 - expecting the doorhanger to be dismissed when directly activating plugins.");
+  waitForNotificationPopup("click-to-play-plugins", gTestBrowser, (notification) => {
+    let plugin = gTestBrowser.contentDocument.getElementById("test");
+    ok(plugin, "Test 6, Found plugin in page");
+    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
+    is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
+       "Test 6, Plugin should be click-to-play");
 
-  // simulate "always allow"
-  notification.reshow();
-  PopupNotifications.panel.firstChild._primaryButton.click();
+    // simulate "always allow"
+    notification.reshow();
+    PopupNotifications.panel.firstChild._primaryButton.click();
 
-  let notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-  waitForCondition(() => notificationBox.getNotificationWithValue("plugin-hidden") === null,
-    test7,
-    "Test 6, expected the notification bar for hidden plugins to get dismissed");
+    let notificationBox = gBrowser.getNotificationBox(gTestBrowser);
+    waitForCondition(() => notificationBox.getNotificationWithValue("plugin-hidden") === null,
+      test7,
+      "Test 6, expected the notification bar for hidden plugins to get dismissed");
+  });
 }
 
 function test7() {
