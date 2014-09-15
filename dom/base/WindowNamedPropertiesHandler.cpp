@@ -207,9 +207,40 @@ WindowNamedPropertiesHandler::delete_(JSContext* aCx,
   return true;
 }
 
+static bool
+ResolveWindowNamedProperty(JSContext* aCx, JS::Handle<JSObject*> aWrapper,
+                           JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId,
+                           JS::MutableHandle<JSPropertyDescriptor> aDesc)
+{
+  {
+    JSAutoCompartment ac(aCx, aObj);
+    if (!js::GetProxyHandler(aObj)->getOwnPropertyDescriptor(aCx, aObj, aId,
+                                                             aDesc)) {
+      return false;
+    }
+  }
+
+  if (aDesc.object()) {
+    aDesc.object().set(aWrapper);
+
+    return JS_WrapPropertyDescriptor(aCx, aDesc);
+  }
+
+  return true;
+}
+
+static bool
+EnumerateWindowNamedProperties(JSContext* aCx, JS::Handle<JSObject*> aWrapper,
+                               JS::Handle<JSObject*> aObj,
+                               JS::AutoIdVector& aProps)
+{
+  JSAutoCompartment ac(aCx, aObj);
+  return js::GetProxyHandler(aObj)->getOwnPropertyNames(aCx, aObj, aProps);
+}
+
 const NativePropertyHooks sWindowNamedPropertiesNativePropertyHooks[] = { {
-  nullptr,
-  nullptr,
+  ResolveWindowNamedProperty,
+  EnumerateWindowNamedProperties,
   { nullptr, nullptr },
   prototypes::id::_ID_Count,
   constructors::id::_ID_Count,
