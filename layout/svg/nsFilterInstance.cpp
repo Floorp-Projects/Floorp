@@ -27,6 +27,23 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
+FilterDescription
+nsFilterInstance::GetFilterDescription(nsIContent* aFilteredElement,
+                                       const nsTArray<nsStyleFilter>& aFilterChain,
+                                       const UserSpaceMetrics& aMetrics,
+                                       const gfxRect& aBBox,
+                                       nsTArray<mozilla::RefPtr<SourceSurface>>& aOutAdditionalImages)
+{
+  gfxMatrix unused; // aPaintTransform arg not used since we're not painting
+  nsFilterInstance instance(nullptr, aFilteredElement, aMetrics,
+                            aFilterChain, nullptr, unused,
+                            nullptr, nullptr, nullptr, &aBBox);
+  if (!instance.IsInitialized()) {
+    return FilterDescription();
+  }
+  return instance.ExtractDescriptionAndAdditionalImages(aOutAdditionalImages);
+}
+
 static UniquePtr<UserSpaceMetrics>
 UserSpaceMetricsForFrame(nsIFrame* aFrame)
 {
