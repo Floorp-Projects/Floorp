@@ -906,8 +906,7 @@ nsHTMLScrollFrame::AccessibleType()
   // Create an accessible regardless of focusable state because the state can be
   // changed during frame life cycle without any notifications to accessibility.
   if (mContent->IsRootOfNativeAnonymousSubtree() ||
-      GetScrollbarStyles() ==
-        ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN) ) {
+      GetScrollbarStyles().IsHiddenInBothDirections()) {
     return a11y::eNoType;
   }
 
@@ -3074,15 +3073,17 @@ ScrollFrameHelper::GetScrollbarStylesFromFrame() const
   nsPresContext* presContext = mOuter->PresContext();
   if (!presContext->IsDynamic() &&
       !(mIsRoot && presContext->HasPaginatedScrolling())) {
-    return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN);
+    return ScrollbarStyles(NS_STYLE_OVERFLOW_HIDDEN, NS_STYLE_OVERFLOW_HIDDEN,
+                           NS_STYLE_SCROLL_BEHAVIOR_AUTO);
   }
 
   if (!mIsRoot) {
     const nsStyleDisplay* disp = mOuter->StyleDisplay();
-    return ScrollbarStyles(disp->mOverflowX, disp->mOverflowY);
+    return ScrollbarStyles(disp->mOverflowX, disp->mOverflowY,
+                           disp->mScrollBehavior);
   }
 
-  ScrollbarStyles result = presContext->GetViewportOverflowOverride();
+  ScrollbarStyles result = presContext->GetViewportScrollbarStylesOverride();
   nsCOMPtr<nsISupports> container = presContext->GetContainerWeak();
   nsCOMPtr<nsIScrollable> scrollable = do_QueryInterface(container);
   if (scrollable) {
