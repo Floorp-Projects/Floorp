@@ -2120,6 +2120,9 @@ pref("layout.css.outline-style-auto.enabled", false);
 // Is CSSOM-View scroll-behavior and its MSD smooth scrolling enabled?
 pref("layout.css.scroll-behavior.enabled", false);
 
+// Is the CSSOM-View scroll-behavior CSS property enabled?
+pref("layout.css.scroll-behavior.property-enabled", false);
+
 // Tuning of the smooth scroll motion used by CSSOM-View scroll-behavior.
 // Spring-constant controls the strength of the simulated MSD
 // (Mass-Spring-Damper)
