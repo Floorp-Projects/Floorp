@@ -11,6 +11,7 @@
 #include "gfxWindowsPlatform.h"
 #include "gfxD2DSurface.h"
 #include "gfx2DGlue.h"
+#include "gfxPrefs.h"
 #include "ReadbackManagerD3D11.h"
 
 namespace mozilla {
@@ -172,8 +173,12 @@ TextureClientD3D11::TextureClientD3D11(gfx::SurfaceFormat aFormat, TextureFlags 
 
 TextureClientD3D11::~TextureClientD3D11()
 {
-  if (mTexture && mActor) {
-    KeepUntilFullDeallocation(new TKeepAlive<ID3D10Texture2D>(mTexture));
+  if (mActor) {
+    if (mTexture) {
+      KeepUntilFullDeallocation(new TKeepAlive<ID3D10Texture2D>(mTexture10));
+    } else if (mTexture10) {
+      KeepUntilFullDeallocation(new TKeepAlive<ID3D11Texture2D>(mTexture));
+    }
   }
 #ifdef DEBUG
   // An Azure DrawTarget needs to be locked when it gets nullptr'ed as this is
@@ -181,11 +186,19 @@ TextureClientD3D11::~TextureClientD3D11()
   // shouldn't -really- need the lock but the debug layer chokes on this.
   if (mDrawTarget) {
     MOZ_ASSERT(!mIsLocked);
-    MOZ_ASSERT(mTexture);
+    MOZ_ASSERT(mTexture || mTexture10);
     MOZ_ASSERT(mDrawTarget->refCount() == 1);
-    LockD3DTexture(mTexture.get());
+    if (mTexture) {
+      LockD3DTexture(mTexture.get());
+    } else {
+      LockD3DTexture(mTexture10.get());
+    }
     mDrawTarget = nullptr;
-    UnlockD3DTexture(mTexture.get());
+    if (mTexture) {
+      UnlockD3DTexture(mTexture.get());
+    } else {
+      UnlockD3DTexture(mTexture10.get());
+    }
   }
 #endif
 }
@@ -206,12 +219,18 @@ TextureClientD3D11::CreateSimilar(TextureFlags aFlags,
 bool
 TextureClientD3D11::Lock(OpenMode aMode)
 {
-  if (!mTexture) {
+  if (!IsAllocated()) {
     return false;
   }
   MOZ_ASSERT(!mIsLocked, "The Texture is already locked!");
 
-  mIsLocked = LockD3DTexture(mTexture.get());
+  if (mTexture) {
+    MOZ_ASSERT(!mTexture10);
+    mIsLocked = LockD3DTexture(mTexture.get());
+  } else {
+    MOZ_ASSERT(!mTexture);
+    mIsLocked = LockD3DTexture(mTexture10.get());
+  }
   if (!mIsLocked) {
     return false;
   }
@@ -254,11 +273,11 @@ TextureClientD3D11::Unlock()
     mDrawTarget->Flush();
   }
 
-  if (mReadbackSink) {
+  if (mReadbackSink && mTexture10) {
     ID3D10Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
 
     D3D10_TEXTURE2D_DESC desc;
-    mTexture->GetDesc(&desc);
+    mTexture10->GetDesc(&desc);
     desc.BindFlags = 0;
     desc.Usage = D3D10_USAGE_STAGING;
     desc.CPUAccessFlags = D3D10_CPU_ACCESS_READ;
@@ -268,7 +287,7 @@ TextureClientD3D11::Unlock()
     HRESULT hr = device->CreateTexture2D(&desc, nullptr, byRef(tex));
 
     if (SUCCEEDED(hr)) {
-      device->CopyResource(tex, mTexture);
+      device->CopyResource(tex, mTexture10);
 
       gfxWindowsPlatform::GetPlatform()->GetReadbackManager()->PostTask(tex, mReadbackSink);
     } else {
@@ -278,7 +297,11 @@ TextureClientD3D11::Unlock()
 
   // The DrawTarget is created only once, and is only usable between calls
   // to Lock and Unlock.
-  UnlockD3DTexture(mTexture.get());
+  if (mTexture) {
+    UnlockD3DTexture(mTexture.get());
+  } else {
+    UnlockD3DTexture(mTexture10.get());
+  }
   mIsLocked = false;
 }
 
@@ -287,7 +310,7 @@ TextureClientD3D11::BorrowDrawTarget()
 {
   MOZ_ASSERT(mIsLocked, "Calling TextureClient::BorrowDrawTarget without locking :(");
 
-  if (!mTexture) {
+  if (!mTexture && !mTexture10) {
     return nullptr;
   }
 
@@ -296,7 +319,15 @@ TextureClientD3D11::BorrowDrawTarget()
   }
 
   // This may return a null DrawTarget
-  mDrawTarget = Factory::CreateDrawTargetForD3D10Texture(mTexture, mFormat);
+#if USE_D2D1_1
+  if (mTexture) {
+    mDrawTarget = Factory::CreateDrawTargetForD3D11Texture(mTexture, mFormat);
+  } else
+#endif
+  {
+    MOZ_ASSERT(mTexture10);
+    mDrawTarget = Factory::CreateDrawTargetForD3D10Texture(mTexture10, mFormat);
+  }
   return mDrawTarget;
 }
 
@@ -304,15 +335,38 @@ bool
 TextureClientD3D11::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlags aFlags)
 {
   mSize = aSize;
-  ID3D10Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
+  HRESULT hr;
 
-  CD3D10_TEXTURE2D_DESC newDesc(DXGI_FORMAT_B8G8R8A8_UNORM,
-                                aSize.width, aSize.height, 1, 1,
-                                D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE);
+  if (mFormat == SurfaceFormat::A8) {
+    // Currently TextureClientD3D11 does not support A8 surfaces. Fallback.
+    return false;
+  }
 
-  newDesc.MiscFlags = D3D10_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+#ifdef USE_D2D1_1
+  ID3D11Device* d3d11device = gfxWindowsPlatform::GetPlatform()->GetD3D11ContentDevice();
 
-  HRESULT hr = device->CreateTexture2D(&newDesc, nullptr, byRef(mTexture));
+  if (gfxPrefs::Direct2DUse1_1() && d3d11device) {
+
+    CD3D11_TEXTURE2D_DESC newDesc(mFormat == SurfaceFormat::A8 ? DXGI_FORMAT_A8_UNORM : DXGI_FORMAT_B8G8R8A8_UNORM,
+                                  aSize.width, aSize.height, 1, 1,
+                                  D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE);
+
+    newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+
+    hr = d3d11device->CreateTexture2D(&newDesc, nullptr, byRef(mTexture));
+  } else
+#endif
+  {
+    ID3D10Device* device = gfxWindowsPlatform::GetPlatform()->GetD3D10Device();
+
+    CD3D10_TEXTURE2D_DESC newDesc(DXGI_FORMAT_B8G8R8A8_UNORM,
+      aSize.width, aSize.height, 1, 1,
+      D3D10_BIND_RENDER_TARGET | D3D10_BIND_SHADER_RESOURCE);
+
+    newDesc.MiscFlags = D3D10_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+
+    hr = device->CreateTexture2D(&newDesc, nullptr, byRef(mTexture10));
+  }
 
   if (FAILED(hr)) {
     LOGD3D11("Error creating texture for client!");
@@ -332,9 +386,13 @@ TextureClientD3D11::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
   if (!IsAllocated()) {
     return false;
   }
-
   RefPtr<IDXGIResource> resource;
-  mTexture->QueryInterface((IDXGIResource**)byRef(resource));
+  if (mTexture) {
+    mTexture->QueryInterface((IDXGIResource**)byRef(resource));
+  } else {
+    mTexture10->QueryInterface((IDXGIResource**)byRef(resource));
+  }
+
   HANDLE sharedHandle;
   HRESULT hr = resource->GetSharedHandle(&sharedHandle);
 

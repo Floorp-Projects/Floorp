@@ -312,6 +312,10 @@ gfxWindowsPlatform::gfxWindowsPlatform()
 
     UpdateRenderMode();
 
+    if (gfxPrefs::Direct2DUse1_1()) {
+      InitD3D11Devices();
+    }
+
     RegisterStrongMemoryReporter(new GPUAdapterReporter());
 }
 
@@ -438,7 +442,12 @@ gfxWindowsPlatform::UpdateRenderMode()
     if (mRenderMode == RENDER_DIRECT2D) {
       canvasMask |= BackendTypeBit(BackendType::DIRECT2D);
       contentMask |= BackendTypeBit(BackendType::DIRECT2D);
-      defaultBackend = BackendType::DIRECT2D;
+      if (gfxPrefs::Direct2DUse1_1() && Factory::SupportsD2D1()) {
+        contentMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
+        defaultBackend = BackendType::DIRECT2D1_1;
+      } else {
+        defaultBackend = BackendType::DIRECT2D;
+      }
     } else {
       canvasMask |= BackendTypeBit(BackendType::SKIA);
     }
@@ -1366,41 +1375,21 @@ gfxWindowsPlatform::GetD3D11Device()
     return mD3D11Device;
   }
 
-  mD3D11DeviceInitialized = true;
-
-  nsModuleHandle d3d11Module(LoadLibrarySystem32(L"d3d11.dll"));
-  decltype(D3D11CreateDevice)* d3d11CreateDevice = (decltype(D3D11CreateDevice)*)
-    GetProcAddress(d3d11Module, "D3D11CreateDevice");
-
-  if (!d3d11CreateDevice) {
-    return nullptr;
-  }
-
-  nsTArray<D3D_FEATURE_LEVEL> featureLevels;
-  if (IsWin8OrLater()) {
-    featureLevels.AppendElement(D3D_FEATURE_LEVEL_11_1);
-  }
-  featureLevels.AppendElement(D3D_FEATURE_LEVEL_11_0);
-  featureLevels.AppendElement(D3D_FEATURE_LEVEL_10_1);
-  featureLevels.AppendElement(D3D_FEATURE_LEVEL_10_0);
-  featureLevels.AppendElement(D3D_FEATURE_LEVEL_9_3);
-
-  RefPtr<IDXGIAdapter1> adapter = GetDXGIAdapter();
-
-  if (!adapter) {
-    return nullptr;
-  }
-
-  HRESULT hr = d3d11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
-                                 D3D11_CREATE_DEVICE_BGRA_SUPPORT,
-                                 featureLevels.Elements(), featureLevels.Length(),
-                                 D3D11_SDK_VERSION, byRef(mD3D11Device), nullptr, nullptr);
-
-  // We leak these everywhere and we need them our entire runtime anyway, let's
-  // leak it here as well.
-  d3d11Module.disown();
+  InitD3D11Devices();
 
   return mD3D11Device;
+}
+
+ID3D11Device*
+gfxWindowsPlatform::GetD3D11ContentDevice()
+{
+  if (mD3D11DeviceInitialized) {
+    return mD3D11ContentDevice;
+  }
+
+  InitD3D11Devices();
+
+  return mD3D11ContentDevice;
 }
 
 ReadbackManagerD3D11*
@@ -1486,4 +1475,64 @@ gfxWindowsPlatform::GetDXGIAdapter()
   dxgiModule.disown();
 
   return mAdapter;
+}
+
+void
+gfxWindowsPlatform::InitD3D11Devices()
+{
+  mD3D11DeviceInitialized = true;
+
+  nsModuleHandle d3d11Module(LoadLibrarySystem32(L"d3d11.dll"));
+  decltype(D3D11CreateDevice)* d3d11CreateDevice = (decltype(D3D11CreateDevice)*)
+    GetProcAddress(d3d11Module, "D3D11CreateDevice");
+
+  if (!d3d11CreateDevice) {
+    return;
+  }
+
+  nsTArray<D3D_FEATURE_LEVEL> featureLevels;
+  if (IsWin8OrLater()) {
+    featureLevels.AppendElement(D3D_FEATURE_LEVEL_11_1);
+  }
+  featureLevels.AppendElement(D3D_FEATURE_LEVEL_11_0);
+  featureLevels.AppendElement(D3D_FEATURE_LEVEL_10_1);
+  featureLevels.AppendElement(D3D_FEATURE_LEVEL_10_0);
+  featureLevels.AppendElement(D3D_FEATURE_LEVEL_9_3);
+
+  RefPtr<IDXGIAdapter1> adapter = GetDXGIAdapter();
+
+  if (!adapter) {
+    return;
+  }
+
+  HRESULT hr;
+
+  hr = d3d11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
+                         D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+                         featureLevels.Elements(), featureLevels.Length(),
+                         D3D11_SDK_VERSION, byRef(mD3D11Device), nullptr, nullptr);
+
+  if (FAILED(hr)) {
+    return;
+  }
+
+#ifdef USE_D2D1_1
+  if (Factory::SupportsD2D1()) {
+    hr = d3d11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
+                           D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+                           featureLevels.Elements(), featureLevels.Length(),
+                           D3D11_SDK_VERSION, byRef(mD3D11ContentDevice), nullptr, nullptr);
+
+    if (FAILED(hr)) {
+      mD3D11Device = nullptr;
+      return;
+    }
+
+    Factory::SetDirect3D11Device(mD3D11ContentDevice);
+  }
+#endif
+
+  // We leak these everywhere and we need them our entire runtime anyway, let's
+  // leak it here as well.
+  d3d11Module.disown();
 }

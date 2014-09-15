@@ -41,19 +41,19 @@ table {
 /******************************
  * TEST RESULT COLORS
  ******************************/
-span.passed, .passed .col-result {
+span.pass, .pass .col-result {
 	color: green;
 }
-span.expected.failure, .expected.failure .col-result {
+span.expected_fail, .expected_fail .col-result {
 	color: orange;
 }
-span.skipped, .skipped .col-result {
+span.skip, .skip .col-result {
 	color: orange;
 }
-span.unexpected.pass, .unexpected.pass .col-result {
+span.unexpected_pass, .unexpected_pass .col-result {
 	color: red;
 }
-span.failed, .failure .col-result {
+span.fail, .fail .col-result {
 	color: red;
 }
 span.error,.error .col-result  {

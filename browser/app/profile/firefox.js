@@ -1407,7 +1407,6 @@ pref("devtools.tilt.outro_transition", true);
 // - enableAutocompletion: Whether to enable JavaScript autocompletion.
 pref("devtools.scratchpad.recentFilesMax", 10);
 pref("devtools.scratchpad.showTrailingSpace", false);
-pref("devtools.scratchpad.enableCodeFolding", true);
 pref("devtools.scratchpad.enableAutocompletion", true);
 
 // Enable the Storage Inspector
@@ -1513,6 +1512,7 @@ pref("devtools.editor.expandtab", true);
 pref("devtools.editor.keymap", "default");
 pref("devtools.editor.autoclosebrackets", true);
 pref("devtools.editor.detectindentation", true);
+pref("devtools.editor.enableCodeFolding", true);
 pref("devtools.editor.autocomplete", true);
 
 // Enable the Font Inspector
@@ -1636,11 +1636,6 @@ pref("dom.debug.propagate_gesture_events_through_content", false);
 
 // The request URL of the GeoLocation backend.
 pref("geo.wifi.uri", "https://www.googleapis.com/geolocation/v1/geolocate?key=%GOOGLE_API_KEY%");
-#ifdef RELEASE_BUILD
-pref("geo.wifi.logging.enabled", false);
-#else
-pref("geo.wifi.logging.enabled", true);
-#endif
 
 // Necko IPC security checks only needed for app isolation for cookies/cache/etc:
 // currently irrelevant for desktop e10s

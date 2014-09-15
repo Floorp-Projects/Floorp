@@ -125,6 +125,7 @@ public:
   virtual void *GetNativeSurface(NativeSurfaceType aType) { return nullptr; }
 
   bool Init(const IntSize &aSize, SurfaceFormat aFormat);
+  bool Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat);
   uint32_t GetByteSize() const;
 
   TemporaryRef<ID2D1Image> GetImageForSurface(SourceSurface *aSurface, Matrix &aSourceTransform,
@@ -170,10 +171,19 @@ private:
   }
   void AddDependencyOnSource(SourceSurfaceD2D1* aSource);
 
+  // This returns the clipped geometry, in addition it returns aClipBounds which
+  // represents the intersection of all pixel-aligned rectangular clips that
+  // are currently set. The returned clipped geometry must be clipped by these
+  // bounds to correctly reflect the total clip. This is in device space.
+  TemporaryRef<ID2D1Geometry> GetClippedGeometry(IntRect *aClipBounds);
+
+  bool GetDeviceSpaceClipRect(D2D1_RECT_F& aClipRect, bool& aIsPixelAligned);
+
   void PopAllClips();
   void PushClipsToDC(ID2D1DeviceContext *aDC);
   void PopClipsFromDC(ID2D1DeviceContext *aDC);
 
+  TemporaryRef<ID2D1Brush> CreateTransparentBlackBrush();
   TemporaryRef<ID2D1Brush> CreateBrushForPattern(const Pattern &aPattern, Float aAlpha = 1.0f);
 
   void PushD2DLayer(ID2D1DeviceContext *aDC, ID2D1Geometry *aGeometry, const D2D1_MATRIX_3X2_F &aTransform);
@@ -182,6 +192,7 @@ private:
 
   RefPtr<ID3D11Device> mDevice;
   RefPtr<ID3D11Texture2D> mTexture;
+  RefPtr<ID2D1Geometry> mCurrentClippedGeometry;
   // This is only valid if mCurrentClippedGeometry is non-null. And will
   // only be the intersection of all pixel-aligned retangular clips. This is in
   // device space.
@@ -189,6 +200,7 @@ private:
   mutable RefPtr<ID2D1DeviceContext> mDC;
   RefPtr<ID2D1Bitmap1> mBitmap;
   RefPtr<ID2D1Bitmap1> mTempBitmap;
+  RefPtr<ID2D1Effect> mBlendEffect;
 
   // We store this to prevent excessive SetTextRenderingParams calls.
   RefPtr<IDWriteRenderingParams> mTextRenderingParams;

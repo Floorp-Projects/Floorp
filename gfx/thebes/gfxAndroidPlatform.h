@@ -83,6 +83,10 @@ public:
 
     virtual int GetScreenDepth() const;
 
+    virtual bool CanRenderContentToDataSurface() const MOZ_OVERRIDE {
+      return true;
+    }
+
     virtual bool UseAcceleratedSkiaCanvas() MOZ_OVERRIDE;
 
 #ifdef MOZ_WIDGET_GONK
