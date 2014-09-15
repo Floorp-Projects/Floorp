@@ -6,6 +6,7 @@
 
 #include "nsNSSIOLayer.h"
 
+#include "pkix/ScopedPtr.h"
 #include "pkix/pkixtypes.h"
 #include "nsNSSComponent.h"
 #include "mozilla/Casting.h"
