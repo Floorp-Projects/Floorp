@@ -200,8 +200,11 @@ public class BrowserDB {
         return sDb.getFaviconForUrl(cr, faviconURL);
     }
 
-    public static String getFaviconUrlForHistoryUrl(ContentResolver cr, String url) {
-        return sDb.getFaviconUrlForHistoryUrl(cr, url);
+    /**
+     * Try to find a usable favicon URL in the history or bookmarks table.
+     */
+    public static String getFaviconURLFromPageURL(ContentResolver cr, String url) {
+        return sDb.getFaviconURLFromPageURL(cr, url);
     }
 
     public static void updateFaviconForUrl(ContentResolver cr, String pageUri, byte[] encodedFavicon, String faviconUri) {
