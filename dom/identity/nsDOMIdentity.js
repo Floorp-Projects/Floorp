@@ -707,14 +707,14 @@ nsDOMIdentityInternal.prototype = {
 
   // nsIObserver
   observe: function nsDOMIdentityInternal_observe(aSubject, aTopic, aData) {
-    let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
-    if (wId != this._innerWindowID) {
+    let window = aSubject.QueryInterface(Ci.nsIDOMWindow);
+    if (window != this._window) {
       return;
     }
 
     this._identity.uninit();
 
-    Services.obs.removeObserver(this, "inner-window-destroyed");
+    Services.obs.removeObserver(this, "dom-window-destroyed");
     this._identity._initializeState();
     this._identity = null;
 
@@ -752,7 +752,7 @@ nsDOMIdentityInternal.prototype = {
     // XXX Bug 869182 - use a combination of child process id and
     // innerwindow id to construct the unique id.
     this._id = uuidgen.generateUUID().toString();
-    this._innerWindowID = util.currentInnerWindowID;
+    this._window = aWindow;
 
     // nsDOMIdentity needs to know our _id, so this goes after
     // its creation.
@@ -780,7 +780,7 @@ nsDOMIdentityInternal.prototype = {
     }, this);
 
     // Setup observers so we can remove message listeners.
-    Services.obs.addObserver(this, "inner-window-destroyed", false);
+    Services.obs.addObserver(this, "dom-window-destroyed", false);
 
     return this._identity;
   },
