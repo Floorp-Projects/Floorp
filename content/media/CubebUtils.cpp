@@ -7,7 +7,9 @@
 #include <stdint.h>
 #include <algorithm>
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticMutex.h"
 #include "CubebUtils.h"
+#include "nsAutoRef.h"
 #include "prdtoa.h"
 
 #define PREF_VOLUME_SCALE "media.volume_scale"
@@ -15,18 +17,29 @@
 
 namespace mozilla {
 
+namespace {
+
+// This mutex protects the variables below.
+StaticMutex sMutex;
+cubeb* sCubebContext;
+
+// Prefered samplerate, in Hz (characteristic of the
+// hardware/mixer/platform/API used).
+uint32_t sPreferredSampleRate;
+
+double sVolumeScale;
+uint32_t sCubebLatency;
+bool sCubebLatencyPrefSet;
+
+} // anonymous namespace
+
 extern PRLogModuleInfo* gAudioStreamLog;
 
 static const uint32_t CUBEB_NORMAL_LATENCY_MS = 100;
 
-StaticMutex CubebUtils::sMutex;
-cubeb* CubebUtils::sCubebContext;
-uint32_t CubebUtils::sPreferredSampleRate;
-double CubebUtils::sVolumeScale;
-uint32_t CubebUtils::sCubebLatency;
-bool CubebUtils::sCubebLatencyPrefSet;
+namespace CubebUtils {
 
-/*static*/ void CubebUtils::PrefChanged(const char* aPref, void* aClosure)
+void PrefChanged(const char* aPref, void* aClosure)
 {
   if (strcmp(aPref, PREF_VOLUME_SCALE) == 0) {
     nsAdoptingString value = Preferences::GetString(aPref);
@@ -48,7 +61,7 @@ bool CubebUtils::sCubebLatencyPrefSet;
   }
 }
 
-/*static*/ bool CubebUtils::GetFirstStream()
+bool GetFirstStream()
 {
   static bool sFirstStream = true;
 
@@ -58,19 +71,19 @@ bool CubebUtils::sCubebLatencyPrefSet;
   return result;
 }
 
-/*static*/ double CubebUtils::GetVolumeScale()
+double GetVolumeScale()
 {
   StaticMutexAutoLock lock(sMutex);
   return sVolumeScale;
 }
 
-/*static*/ cubeb* CubebUtils::GetCubebContext()
+cubeb* GetCubebContext()
 {
   StaticMutexAutoLock lock(sMutex);
   return GetCubebContextUnlocked();
 }
 
-/*static*/ void CubebUtils::InitPreferredSampleRate()
+void InitPreferredSampleRate()
 {
   StaticMutexAutoLock lock(sMutex);
   if (sPreferredSampleRate == 0 &&
@@ -80,7 +93,7 @@ bool CubebUtils::sCubebLatencyPrefSet;
   }
 }
 
-/*static*/ cubeb* CubebUtils::GetCubebContextUnlocked()
+cubeb* GetCubebContextUnlocked()
 {
   sMutex.AssertCurrentThreadOwns();
   if (sCubebContext ||
@@ -91,19 +104,19 @@ bool CubebUtils::sCubebLatencyPrefSet;
   return nullptr;
 }
 
-/*static*/ uint32_t CubebUtils::GetCubebLatency()
+uint32_t GetCubebLatency()
 {
   StaticMutexAutoLock lock(sMutex);
   return sCubebLatency;
 }
 
-/*static*/ bool CubebUtils::CubebLatencyPrefSet()
+bool CubebLatencyPrefSet()
 {
   StaticMutexAutoLock lock(sMutex);
   return sCubebLatencyPrefSet;
 }
 
-/*static*/ void CubebUtils::InitLibrary()
+void InitLibrary()
 {
 #ifdef PR_LOGGING
   gAudioStreamLog = PR_NewLogModule("AudioStream");
@@ -114,7 +127,7 @@ bool CubebUtils::sCubebLatencyPrefSet;
   Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LATENCY);
 }
 
-/*static*/ void CubebUtils::ShutdownLibrary()
+void ShutdownLibrary()
 {
   Preferences::UnregisterCallback(PrefChanged, PREF_VOLUME_SCALE);
   Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LATENCY);
@@ -126,9 +139,9 @@ bool CubebUtils::sCubebLatencyPrefSet;
   }
 }
 
-/*static*/ int CubebUtils::MaxNumberOfChannels()
+int MaxNumberOfChannels()
 {
-  cubeb* cubebContext = CubebUtils::GetCubebContext();
+  cubeb* cubebContext = GetCubebContext();
   uint32_t maxNumberOfChannels;
   if (cubebContext &&
       cubeb_get_max_channel_count(cubebContext,
@@ -139,7 +152,7 @@ bool CubebUtils::sCubebLatencyPrefSet;
   return 0;
 }
 
-/*static*/ int CubebUtils::PreferredSampleRate()
+int PreferredSampleRate()
 {
   MOZ_ASSERT(sPreferredSampleRate,
              "sPreferredSampleRate has not been initialized!");
@@ -147,7 +160,7 @@ bool CubebUtils::sCubebLatencyPrefSet;
 }
 
 #if defined(__ANDROID__) && defined(MOZ_B2G)
-/*static*/ cubeb_stream_type CubebUtils::ConvertChannelToCubebType(dom::AudioChannel aChannel)
+cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannel aChannel)
 {
   switch(aChannel) {
     case dom::AudioChannel::Normal:
@@ -171,4 +184,5 @@ bool CubebUtils::sCubebLatencyPrefSet;
 }
 #endif
 
-}
+} // namespace CubebUtils
+} // namespace mozilla
