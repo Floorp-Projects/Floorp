@@ -7,7 +7,6 @@
 if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     CppUnitTests([
         'buffered_stun_socket_unittest',
-        'ice_unittest',
         'nrappkit_unittest',
         'rlogringbuffer_unittest',
         'runnable_utils_unittest',
@@ -17,6 +16,12 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         'transport_unittests',
         'turn_unittest',
     ])
+
+    # Bug 1037618 - Cross-tree (network related?) failures on OSX
+    if CONFIG['OS_TARGET'] != 'Darwin':
+        CppUnitTests([
+            'ice_unittest',
+        ])
 
     if CONFIG['MOZ_SCTP']:
         CppUnitTests([
