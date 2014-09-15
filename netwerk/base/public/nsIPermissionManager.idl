@@ -37,7 +37,7 @@ interface nsIDOMWindow;
 interface nsIPermission;
 interface nsISimpleEnumerator;
 
-[scriptable, uuid(c9fec678-f194-43c9-96b0-7bd9dbdd6bb0)]
+[scriptable, uuid(620d9b61-8997-4d13-aa64-ec03341dd75b)]
 interface nsIPermissionManager : nsISupports
 {
   /**
@@ -131,6 +131,11 @@ interface nsIPermissionManager : nsISupports
    * Clear permission information for all websites.
    */
   void removeAll();
+
+  /**
+   * Clear all permission information added since the specified time.
+   */
+  void removeAllSince(in int64_t since);
 
   /**
    * Test whether a website has permission to perform the given action.
