@@ -22,14 +22,15 @@ void InitLibrary();
 void ShutdownLibrary();
 
 // Returns the maximum number of channels supported by the audio hardware.
-int MaxNumberOfChannels();
+uint32_t MaxNumberOfChannels();
 
 // Queries the samplerate the hardware/mixer runs at, and stores it.
 // Can be called on any thread. When this returns, it is safe to call
-// PreferredSampleRate without locking.
+// PreferredSampleRate.
 void InitPreferredSampleRate();
-// Get the aformentionned sample rate. Does not lock.
-int PreferredSampleRate();
+
+// Get the aforementioned sample rate. Thread safe.
+uint32_t PreferredSampleRate();
 
 void PrefChanged(const char* aPref, void* aClosure);
 double GetVolumeScale();
