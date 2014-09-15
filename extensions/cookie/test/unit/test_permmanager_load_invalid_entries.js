@@ -113,13 +113,25 @@ function run_test() {
     );
   }
 
+  let earliestNow = Number(Date.now());
   // Initialize the permission manager service
   var pm = Cc["@mozilla.org/permissionmanager;1"]
              .getService(Ci.nsIPermissionManager);
+  let latestNow = Number(Date.now());
 
-  // The schema should still be 3. We want this test to be updated for each
-  // schema update.
-  do_check_eq(connection.schemaVersion, 3);
+  // The schema should be upgraded to 4, and a 'modificationTime' column should
+  // exist with all records having a value of 0.
+  do_check_eq(connection.schemaVersion, 4);
+
+  let select = connection.createStatement("SELECT modificationTime FROM moz_hosts")
+  let numMigrated = 0;
+  while (select.executeStep()) {
+    let thisModTime = select.getInt64(0);
+    do_check_true(thisModTime == 0, "new modifiedTime field is correct");
+    numMigrated += 1;
+  }
+  // check we found at least 1 record that was migrated.
+  do_check_true(numMigrated > 0, "we found at least 1 record that was migrated");
 
   // This permission should always be there.
   let principal = Cc["@mozilla.org/scriptsecuritymanager;1"]
