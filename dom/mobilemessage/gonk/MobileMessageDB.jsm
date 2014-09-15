@@ -1111,7 +1111,7 @@ MobileMessageDB.prototype = {
                 return;
               }
 
-              let threadRecord = {
+              threadRecord = {
                 participantIds: participantIds,
                 participantAddresses: threadParticipants,
                 lastMessageId: messageRecord.id,

@@ -1310,8 +1310,8 @@ var gPluginHandler = {
         buttons.push(submitButton);
 #endif
 
-      let notification = notificationBox.appendNotification(messageString, "plugin-crashed",
-                                                            iconURL, priority, buttons);
+      notification = notificationBox.appendNotification(messageString, "plugin-crashed",
+                                                        iconURL, priority, buttons);
 
       // Add the "learn more" link.
       let XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";

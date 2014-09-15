@@ -165,7 +165,7 @@ UserAPI10Client.prototype = {
       return;
     }
 
-    let error = new Error("Sync node retrieval failed.");
+    error = new Error("Sync node retrieval failed.");
     switch (response.status) {
       case 400:
         error.denied = true;
@@ -214,7 +214,7 @@ UserAPI10Client.prototype = {
       return;
     }
 
-    let error = new Error("Could not create user.");
+    error = new Error("Could not create user.");
     error.body = response.body;
 
     cb(error, null);
