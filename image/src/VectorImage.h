@@ -86,7 +86,7 @@ protected:
   virtual nsresult StopAnimation();
   virtual bool     ShouldAnimate();
 
-  void CreateDrawableAndShow(const SVGDrawingParameters& aParams);
+  void CreateSurfaceAndShow(const SVGDrawingParameters& aParams);
   void Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams);
 
 private:

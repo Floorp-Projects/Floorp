@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1055533
+-->
+<head>
+  <title>Test for Bug 1055533</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body id="body">
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1055533">Mozilla Bug 1055533</a>
+  <div id="test8" class="div3">
+    <div id="test7" class="div2">
+      <div id="test6" class="div1">
+        <form id="test10" class="form2"></form>
+        <form id="test5" class="form1" name="form-a">
+          <input id="test1" class="input1" required>
+          <fieldset class="fieldset2" id="test2">
+            <select id="test3" class="select1" required>
+              <option default id="test4" value="">Test4</option>
+              <option selected id="test11">Test11</option>
+              <option id="test12">Test12</option>
+              <option id="test13">Test13</option>
+            </select>
+            <input id="test9" type="text" required>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+  </div>
+<script class="testbody" type="text/javascript">
+  test("select"                     , "test12", "test3");
+  test("fieldset"                   , "test13", "test2");
+  test("div"                        , "test13", "test6");
+  test("body"                       , "test3" , "body");
+
+  test("[default]"                  , "test4" , "test4");
+  test("[selected]"                 , "test4" , "");
+  test("[selected]"                 , "test11", "test11");
+  test('[name="form-a"]'            , "test12", "test5");
+  test('form[name="form-a"]'        , "test13", "test5");
+  test("input[required]"            , "test9" , "test9");
+  test("select[required]"           , "test9" , "");
+
+  test("div:not(.div1)"             , "test13", "test7");
+  test("div.div3"                   , "test6" , "test8");
+  test("div#test7"                  , "test1" , "test7");
+
+  test(".div3 > .div2"              , "test12", "test7");
+  test(".div3 > .div1"              , "test12", "");
+  test("form > input[required]"     , "test9" , "");
+  test("fieldset > select[required]", "test12", "test3");
+
+  test("input + fieldset"           , "test6" , "");
+  test("form + form"                , "test3" , "test5");
+  test("form + form"                , "test5" , "test5");
+
+  test(":empty"                     , "test10", "test10");
+  test(":last-child"                , "test11", "test2");
+  test(":first-child"               , "test12", "test3");
+  test(":invalid"                   , "test11", "test2");
+
+  test(":scope"                     , "test4",  "test4");
+  test("select > :scope"            , "test4",  "test4");
+  test("div > :scope"               , "test4",  "");
+  try {
+    test(":has(> :scope)"             , "test4",  "test3");
+  } catch(e) {
+    todo(false, ":has(> :scope) [:has is not implemented yet]");
+  }
+function test(aSelector, aElementId, aTargetId) {
+  var el = document.getElementById(aElementId).closest(aSelector);
+  if (el === null) {
+    is("", aTargetId, aSelector);
+  } else {
+    is(el.id, aTargetId, aSelector);
+  }
+}
+</script>
+</body>
+</html>

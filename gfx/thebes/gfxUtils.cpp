@@ -709,6 +709,12 @@ static void
 ClipToRegionInternal(DrawTarget* aTarget, const nsIntRegion& aRegion,
                      bool aSnap)
 {
+  if (!aRegion.IsComplex()) {
+    nsIntRect rect = aRegion.GetBounds();
+    aTarget->PushClipRect(Rect(rect.x, rect.y, rect.width, rect.height));
+    return;
+  }
+
   RefPtr<Path> path = PathFromRegionInternal(aTarget, aRegion, aSnap);
   aTarget->PushClip(path);
 }
