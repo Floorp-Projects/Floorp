@@ -114,6 +114,8 @@ GetValueFromString(const nsAString& aString,
   return IsValidUnitType(*aUnitType);
 }
 
+static float GetMMPerPixel() { return MM_PER_INCH_FLOAT / 96; }
+
 static float
 FixAxisLength(float aLength)
 {
@@ -124,22 +126,73 @@ FixAxisLength(float aLength)
   return aLength;
 }
 
-float
-nsSVGLength2::GetAxisLength(SVGSVGElement *aCtx) const
+SVGElementMetrics::SVGElementMetrics(nsSVGElement* aSVGElement,
+                                     SVGSVGElement* aCtx)
+  : mSVGElement(aSVGElement)
+  , mCtx(aCtx)
 {
-  if (!aCtx)
-    return 1;
-
-  return FixAxisLength(aCtx->GetLength(mCtxType));
 }
 
 float
-nsSVGLength2::GetAxisLength(nsIFrame *aNonSVGFrame) const
+SVGElementMetrics::GetEmLength() const
 {
-  gfx::Size size =
-    nsSVGIntegrationUtils::GetSVGCoordContextForNonSVGFrame(aNonSVGFrame);
+  return SVGContentUtils::GetFontSize(mSVGElement);
+}
+
+float
+SVGElementMetrics::GetExLength() const
+{
+  return SVGContentUtils::GetFontXHeight(mSVGElement);
+}
+
+float
+SVGElementMetrics::GetAxisLength(uint8_t aCtxType) const
+{
+  if (!EnsureCtx()) {
+    return 1;
+  }
+
+  return FixAxisLength(mCtx->GetLength(aCtxType));
+}
+
+bool
+SVGElementMetrics::EnsureCtx() const
+{
+  if (!mCtx && mSVGElement) {
+    mCtx = mSVGElement->GetCtx();
+  }
+  return mCtx != nullptr;
+}
+
+NonSVGFrameUserSpaceMetrics::NonSVGFrameUserSpaceMetrics(nsIFrame* aFrame)
+  : mFrame(aFrame)
+{
+}
+
+float
+NonSVGFrameUserSpaceMetrics::GetEmLength() const
+{
+  return SVGContentUtils::GetFontSize(mFrame);
+}
+
+float
+NonSVGFrameUserSpaceMetrics::GetExLength() const
+{
+  return SVGContentUtils::GetFontXHeight(mFrame);
+}
+
+gfx::Size
+NonSVGFrameUserSpaceMetrics::GetSize() const
+{
+  return nsSVGIntegrationUtils::GetSVGCoordContextForNonSVGFrame(mFrame);
+}
+
+float
+UserSpaceMetricsWithSize::GetAxisLength(uint8_t aCtxType) const
+{
+  gfx::Size size = GetSize();
   float length;
-  switch (mCtxType) {
+  switch (aCtxType) {
   case SVGContentUtils::X:
     length = size.width;
     break;
@@ -161,55 +214,28 @@ float
 nsSVGLength2::GetUnitScaleFactor(nsSVGElement *aSVGElement,
                                  uint8_t aUnitType) const
 {
-  switch (aUnitType) {
-  case nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER:
-  case nsIDOMSVGLength::SVG_LENGTHTYPE_PX:
-    return 1;
-  case nsIDOMSVGLength::SVG_LENGTHTYPE_EMS:
-    return 1 / GetEmLength(aSVGElement);
-  case nsIDOMSVGLength::SVG_LENGTHTYPE_EXS:
-    return 1 / GetExLength(aSVGElement);
-  }
-
-  return GetUnitScaleFactor(aSVGElement->GetCtx(), aUnitType);
+  return GetUnitScaleFactor(SVGElementMetrics(aSVGElement), aUnitType);
 }
 
 float
 nsSVGLength2::GetUnitScaleFactor(SVGSVGElement *aCtx, uint8_t aUnitType) const
 {
-  switch (aUnitType) {
-  case nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER:
-  case nsIDOMSVGLength::SVG_LENGTHTYPE_PX:
-    return 1;
-  case nsIDOMSVGLength::SVG_LENGTHTYPE_MM:
-    return GetMMPerPixel();
-  case nsIDOMSVGLength::SVG_LENGTHTYPE_CM:
-    return GetMMPerPixel() / 10.0f;
-  case nsIDOMSVGLength::SVG_LENGTHTYPE_IN:
-    return GetMMPerPixel() / MM_PER_INCH_FLOAT;
-  case nsIDOMSVGLength::SVG_LENGTHTYPE_PT:
-    return GetMMPerPixel() * POINTS_PER_INCH_FLOAT / MM_PER_INCH_FLOAT;
-  case nsIDOMSVGLength::SVG_LENGTHTYPE_PC:
-    return GetMMPerPixel() * POINTS_PER_INCH_FLOAT / MM_PER_INCH_FLOAT / 12.0f;
-  case nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE:
-    return 100.0f / GetAxisLength(aCtx);
-  case nsIDOMSVGLength::SVG_LENGTHTYPE_EMS:
-    return 1 / GetEmLength(aCtx);
-  case nsIDOMSVGLength::SVG_LENGTHTYPE_EXS:
-    return 1 / GetExLength(aCtx);
-  default:
-    NS_NOTREACHED("Unknown unit type");
-    return 0;
-  }
+  return GetUnitScaleFactor(SVGElementMetrics(aCtx, aCtx), aUnitType);
 }
 
 float
 nsSVGLength2::GetUnitScaleFactor(nsIFrame *aFrame, uint8_t aUnitType) const
 {
   nsIContent* content = aFrame->GetContent();
-  if (content->IsSVG())
-    return GetUnitScaleFactor(static_cast<nsSVGElement*>(content), aUnitType);
+  if (content->IsSVG()) {
+    return GetUnitScaleFactor(SVGElementMetrics(static_cast<nsSVGElement*>(content)), aUnitType);
+  }
+  return GetUnitScaleFactor(NonSVGFrameUserSpaceMetrics(aFrame), aUnitType);
+}
 
+float
+nsSVGLength2::GetUnitScaleFactor(const UserSpaceMetrics& aMetrics, uint8_t aUnitType) const
+{
   switch (aUnitType) {
   case nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER:
   case nsIDOMSVGLength::SVG_LENGTHTYPE_PX:
@@ -225,11 +251,11 @@ nsSVGLength2::GetUnitScaleFactor(nsIFrame *aFrame, uint8_t aUnitType) const
   case nsIDOMSVGLength::SVG_LENGTHTYPE_PC:
     return GetMMPerPixel() * POINTS_PER_INCH_FLOAT / MM_PER_INCH_FLOAT / 12.0f;
   case nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE:
-    return 100.0f / GetAxisLength(aFrame);
+    return 100.0f / aMetrics.GetAxisLength(mCtxType);
   case nsIDOMSVGLength::SVG_LENGTHTYPE_EMS:
-    return 1 / GetEmLength(aFrame);
+    return 1 / aMetrics.GetEmLength();
   case nsIDOMSVGLength::SVG_LENGTHTYPE_EXS:
-    return 1 / GetExLength(aFrame);
+    return 1 / aMetrics.GetExLength();
   default:
     NS_NOTREACHED("Unknown unit type");
     return 0;

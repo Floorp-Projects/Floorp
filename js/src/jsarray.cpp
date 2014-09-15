@@ -346,7 +346,7 @@ DeleteArrayElement(JSContext *cx, HandleObject obj, double index, bool *succeede
                     obj->markDenseElementsNotPacked(cx);
                     obj->setDenseElement(idx, MagicValue(JS_ELEMENTS_HOLE));
                 }
-                if (!js_SuppressDeletedElement(cx, obj, idx))
+                if (!SuppressDeletedElement(cx, obj, idx))
                     return false;
             }
         }
@@ -1377,12 +1377,14 @@ array_reverse(JSContext *cx, unsigned argc, Value *vp)
             orighi = obj->getDenseElement(hi);
             obj->setDenseElement(lo, orighi);
             if (orighi.isMagic(JS_ELEMENTS_HOLE) &&
-                !js_SuppressDeletedProperty(cx, obj, INT_TO_JSID(lo))) {
+                !SuppressDeletedProperty(cx, obj, INT_TO_JSID(lo)))
+            {
                 return false;
             }
             obj->setDenseElement(hi, origlo);
             if (origlo.isMagic(JS_ELEMENTS_HOLE) &&
-                !js_SuppressDeletedProperty(cx, obj, INT_TO_JSID(hi))) {
+                !SuppressDeletedProperty(cx, obj, INT_TO_JSID(hi)))
+            {
                 return false;
             }
         }
@@ -2211,7 +2213,7 @@ js::array_shift(JSContext *cx, unsigned argc, Value *vp)
         if (!SetLengthProperty(cx, obj, newlen))
             return false;
 
-        return js_SuppressDeletedProperty(cx, obj, INT_TO_JSID(newlen));
+        return SuppressDeletedProperty(cx, obj, INT_TO_JSID(newlen));
     }
 
     /* Steps 5, 10. */

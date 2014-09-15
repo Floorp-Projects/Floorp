@@ -395,6 +395,14 @@ js::GetGlobalForObjectCrossCompartment(JSObject *obj)
     return &obj->global();
 }
 
+JS_FRIEND_API(JSObject *)
+js::GetPrototypeNoProxy(JSObject *obj)
+{
+    JS_ASSERT(!obj->is<js::ProxyObject>());
+    JS_ASSERT(!obj->getTaggedProto().isLazy());
+    return obj->getTaggedProto().toObjectOrNull();
+}
+
 JS_FRIEND_API(void)
 js::SetPendingExceptionCrossContext(JSContext *cx, JS::HandleValue v)
 {
