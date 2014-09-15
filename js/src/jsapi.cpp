@@ -3218,8 +3218,20 @@ JS_DefineObject(JSContext *cx, HandleObject obj, const char *name, const JSClass
     return nobj;
 }
 
-JS_PUBLIC_API(bool)
-JS_DefineConstDoubles(JSContext *cx, HandleObject obj, const JSConstDoubleSpec *cds)
+static inline Value
+ValueFromScalar(double x)
+{
+    return DoubleValue(x);
+}
+static inline Value
+ValueFromScalar(int32_t x)
+{
+    return Int32Value(x);
+}
+
+template<typename T>
+static bool
+DefineConstScalar(JSContext *cx, HandleObject obj, const JSConstScalarSpec<T> *cds)
 {
     bool ok;
     unsigned attrs;
@@ -3229,7 +3241,7 @@ JS_DefineConstDoubles(JSContext *cx, HandleObject obj, const JSConstDoubleSpec *
     JSPropertyOpWrapper noget = GetterWrapper(nullptr);
     JSStrictPropertyOpWrapper noset = SetterWrapper(nullptr);
     for (ok = true; cds->name; cds++) {
-        RootedValue value(cx, DoubleValue(cds->dval));
+        RootedValue value(cx, ValueFromScalar(cds->val));
         attrs = cds->flags;
         if (!attrs)
             attrs = JSPROP_READONLY | JSPROP_PERMANENT;
@@ -3238,6 +3250,17 @@ JS_DefineConstDoubles(JSContext *cx, HandleObject obj, const JSConstDoubleSpec *
             break;
     }
     return ok;
+}
+
+JS_PUBLIC_API(bool)
+JS_DefineConstDoubles(JSContext *cx, HandleObject obj, const JSConstDoubleSpec *cds)
+{
+    return DefineConstScalar(cx, obj, cds);
+}
+JS_PUBLIC_API(bool)
+JS_DefineConstIntegers(JSContext *cx, HandleObject obj, const JSConstIntegerSpec *cis)
+{
+    return DefineConstScalar(cx, obj, cis);
 }
 
 JS_PUBLIC_API(bool)
