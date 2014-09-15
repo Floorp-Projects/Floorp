@@ -286,7 +286,13 @@ nsFilterInstance::BuildPrimitivesForFilter(const nsStyleFilter& aFilter)
   }
 
   // Build primitives for a CSS filter.
-  nsCSSFilterInstance cssFilterInstance(aFilter, mTargetFrame,
+
+  // If we don't have a frame, use opaque black for shadows with unspecified
+  // shadow colors.
+  nscolor shadowFallbackColor =
+    mTargetFrame ? mTargetFrame->StyleColor()->mColor : NS_RGB(0,0,0);
+
+  nsCSSFilterInstance cssFilterInstance(aFilter, shadowFallbackColor,
                                         mTargetBBoxInFilterSpace,
                                         mFrameSpaceInCSSPxToFilterSpaceTransform);
   return cssFilterInstance.BuildPrimitives(mPrimitiveDescriptions);
