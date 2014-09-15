@@ -591,9 +591,11 @@ public:
    * document so that the anchor with the specified name is displayed at
    * the top of the window.  If |aAnchorName| is empty, then this informs
    * the pres shell that there is no current target, and |aScroll| must
-   * be false.
+   * be false.  If |aAdditionalScrollFlags| is nsIPresShell::SCROLL_SMOOTH_AUTO
+   * and |aScroll| is true, the scrolling may be performed with an animation.
    */
-  virtual nsresult GoToAnchor(const nsAString& aAnchorName, bool aScroll) = 0;
+  virtual nsresult GoToAnchor(const nsAString& aAnchorName, bool aScroll,
+                              uint32_t aAdditionalScrollFlags = 0) = 0;
 
   /**
    * Tells the presshell to scroll again to the last anchor scrolled to by

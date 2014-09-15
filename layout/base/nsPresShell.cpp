@@ -3081,7 +3081,8 @@ PresShell::CreateReferenceRenderingContext()
 }
 
 nsresult
-PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll)
+PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
+                      uint32_t aAdditionalScrollFlags)
 {
   if (!mDocument) {
     return NS_ERROR_FAILURE;
@@ -3188,7 +3189,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll)
       rv = ScrollContentIntoView(content,
                                  ScrollAxis(SCROLL_TOP, SCROLL_ALWAYS),
                                  ScrollAxis(),
-                                 ANCHOR_SCROLL_FLAGS);
+                                 ANCHOR_SCROLL_FLAGS | aAdditionalScrollFlags);
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsIScrollableFrame* rootScroll = GetRootScrollFrameAsScrollable();
