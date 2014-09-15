@@ -154,14 +154,26 @@ class DOMXrayTraits : public XrayTraits
 {
 public:
     enum {
-        HasPrototype = 0
+        HasPrototype = 1
     };
 
     static const XrayType Type = XrayForDOMObject;
 
     virtual bool resolveNativeProperty(JSContext *cx, JS::HandleObject wrapper,
                                        JS::HandleObject holder, JS::HandleId id,
-                                       JS::MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
+                                       JS::MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE
+    {
+        // Xrays for DOM binding objects have a prototype chain that consists of
+        // Xrays for the prototypes of the DOM binding object (ignoring changes
+        // in the prototype chain made by script, plugins or XBL). All properties for
+        // these Xrays are really own properties, either of the instance object or
+        // of the prototypes.
+        // FIXME https://bugzilla.mozilla.org/show_bug.cgi?id=1072482
+        //       This should really be:
+        // MOZ_CRASH("resolveNativeProperty hook should never be called with HasPrototype = 1");
+        //       but we can't do that yet because XrayUtils::HasNativeProperty calls this.
+        return true;
+    }
     virtual bool resolveOwnProperty(JSContext *cx, const js::Wrapper &jsWrapper, JS::HandleObject wrapper,
                                     JS::HandleObject holder, JS::HandleId id,
                                     JS::MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
@@ -176,6 +188,10 @@ public:
                      const JS::CallArgs &args, const js::Wrapper& baseInstance);
     static bool construct(JSContext *cx, JS::HandleObject wrapper,
                           const JS::CallArgs &args, const js::Wrapper& baseInstance);
+
+    static bool getPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
+                               JS::HandleObject target,
+                               JS::MutableHandleObject protop);
 
     virtual void preserveWrapper(JSObject *target) MOZ_OVERRIDE;
 

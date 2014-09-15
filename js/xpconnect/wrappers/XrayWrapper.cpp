@@ -8,11 +8,10 @@
 #include "AccessCheck.h"
 #include "WrapperFactory.h"
 
-#include "nsIContent.h"
 #include "nsIControllers.h"
+#include "nsDependentString.h"
 #include "nsIScriptError.h"
 #include "mozilla/dom/Element.h"
-#include "nsContentUtils.h"
 
 #include "XPCWrapper.h"
 #include "xpcprivate.h"
@@ -1053,9 +1052,6 @@ IsWindow(JSContext *cx, JSObject *wrapper)
     return !!AsWindow(cx, wrapper);
 }
 
-static nsQueryInterface
-do_QueryInterfaceNative(JSContext* cx, HandleObject wrapper);
-
 void
 XPCWrappedNativeXrayTraits::preserveWrapper(JSObject *target)
 {
@@ -1510,33 +1506,6 @@ DOMXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper, Handl
 }
 
 bool
-DOMXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wrapper,
-                                     HandleObject holder, HandleId id,
-                                     MutableHandle<JSPropertyDescriptor> desc)
-{
-    bool unused;
-    RootedObject obj(cx, getTargetObject(wrapper));
-    if (!XrayResolveNativeProperty(cx, wrapper, obj, id, desc, unused))
-        return false;
-
-    if (!desc.object() &&
-        id == nsXPConnect::GetRuntimeInstance()->GetStringID(XPCJSRuntime::IDX_TO_STRING))
-    {
-
-        JSFunction *toString = JS_NewFunction(cx, XrayToString, 0, 0, wrapper, "toString");
-        if (!toString)
-            return false;
-
-        FillPropertyDescriptor(desc, wrapper, 0,
-                               ObjectValue(*JS_GetFunctionObject(toString)));
-    }
-
-    MOZ_ASSERT(!desc.object() || desc.object() == wrapper, "What did we resolve this on?");
-
-    return true;
-}
-
-bool
 DOMXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
                               MutableHandle<JSPropertyDescriptor> desc,
                               Handle<JSPropertyDescriptor> existingDesc, bool *defined)
@@ -1636,6 +1605,14 @@ DOMXrayTraits::construct(JSContext *cx, HandleObject wrapper,
     return true;
 }
 
+bool
+DOMXrayTraits::getPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
+                              JS::HandleObject target,
+                              JS::MutableHandleObject protop)
+{
+    return mozilla::dom::XrayGetNativeProto(cx, target, protop);
+}
+
 void
 DOMXrayTraits::preserveWrapper(JSObject *target)
 {
@@ -1729,19 +1706,7 @@ XrayToString(JSContext *cx, unsigned argc, Value *vp)
     }
 
     RootedObject obj(cx, XrayTraits::getTargetObject(wrapper));
-    XrayType type = GetXrayType(obj);
-    if (type == XrayForDOMObject) {
-        {
-            JSAutoCompartment ac(cx, obj);
-            JSString *str = JS_BasicObjectToString(cx, obj);
-            if (!str)
-                return false;
-            args.rval().setString(str);
-        }
-        return JS_WrapValue(cx, args.rval());
-    }
-
-    if (type != XrayForWrappedNative) {
+    if (GetXrayType(obj) != XrayForWrappedNative) {
         JS_ReportError(cx, "XrayToString called on an incompatible object");
         return false;
     }
@@ -1866,29 +1831,6 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
                                    /* readOnly = */ true);
             return JS_WrapPropertyDescriptor(cx, desc);
         }
-    }
-
-    // If we're a special scope for in-content XBL, our script expects to see
-    // the bound XBL methods and attributes when accessing content. However,
-    // these members are implemented in content via custom-spliced prototypes,
-    // and thus aren't visible through Xray wrappers unless we handle them
-    // explicitly. So we check if we're running in such a scope, and if so,
-    // whether the wrappee is a bound element. If it is, we do a lookup via
-    // specialized XBL machinery.
-    //
-    // While we have to do some sketchy walking through content land, we should
-    // be protected by read-only/non-configurable properties, and any functions
-    // we end up with should _always_ be living in an XBL scope (usually ours,
-    // but could be another if the node has been adopted).
-    //
-    // Make sure to assert this.
-    nsCOMPtr<nsIContent> content;
-    if (!desc.object() && ObjectScope(wrapper)->IsContentXBLScope() &&
-        (content = do_QueryInterfaceNative(cx, wrapper)))
-    {
-        if (!nsContentUtils::LookupBindingMember(cx, content, id, desc))
-            return false;
-        DEBUG_CheckXBLLookup(cx, desc.address());
     }
 
     // If we still have nothing, we're done.
@@ -2119,6 +2061,7 @@ XrayWrapper<Base, Traits>::set(JSContext *cx, HandleObject wrapper,
                                HandleObject receiver, HandleId id,
                                bool strict, MutableHandleValue vp) const
 {
+    MOZ_ASSERT(!Traits::HasPrototype);
     // Delegate to Traits.
     // NB: None of the functions we call are prepared for the receiver not
     // being the wrapper, so ignore the receiver here.
@@ -2289,26 +2232,5 @@ template class PermissiveXrayOpaque;
 template<>
 const SCSecurityXrayXPCWN SCSecurityXrayXPCWN::singleton(0);
 template class SCSecurityXrayXPCWN;
-
-static nsQueryInterface
-do_QueryInterfaceNative(JSContext* cx, HandleObject wrapper)
-{
-    nsISupports* nativeSupports = nullptr;
-    if (IsWrapper(wrapper) && WrapperFactory::IsXrayWrapper(wrapper)) {
-        RootedObject target(cx, XrayTraits::getTargetObject(wrapper));
-        XrayType type = GetXrayType(target);
-        if (type == XrayForDOMObject) {
-            nativeSupports = UnwrapDOMObjectToISupports(target);
-        } else if (type == XrayForWrappedNative) {
-            XPCWrappedNative *wn = XPCWrappedNative::Get(target);
-            nativeSupports = wn->Native();
-        }
-    } else {
-        nsIXPConnect *xpc = nsXPConnect::XPConnect();
-        nativeSupports = xpc->GetNativeOfWrapper(cx, wrapper);
-    }
-
-    return nsQueryInterface(nativeSupports);
-}
 
 }
