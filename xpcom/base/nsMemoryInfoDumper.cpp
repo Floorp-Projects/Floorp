@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/JSONWriter.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/nsMemoryInfoDumper.h"
 #include "nsDumpUtils.h"
 
@@ -418,100 +420,6 @@ nsMemoryInfoDumper::DumpGCAndCCLogsToSink(bool aDumpAllTraces,
   return NS_OK;
 }
 
-namespace mozilla {
-
-#define DUMP(o, s) \
-  do { \
-    nsresult rv = (o)->Write(s); \
-    if (NS_WARN_IF(NS_FAILED(rv))) \
-      return rv; \
-  } while (0)
-
-class DumpReportCallback MOZ_FINAL : public nsIHandleReportCallback
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  explicit DumpReportCallback(nsGZFileWriter* aWriter)
-    : mIsFirst(true)
-    , mWriter(aWriter)
-  {
-  }
-
-  NS_IMETHOD Callback(const nsACString& aProcess, const nsACString& aPath,
-                      int32_t aKind, int32_t aUnits, int64_t aAmount,
-                      const nsACString& aDescription,
-                      nsISupports* aData)
-  {
-    if (mIsFirst) {
-      DUMP(mWriter, "[");
-      mIsFirst = false;
-    } else {
-      DUMP(mWriter, ",");
-    }
-
-    nsAutoCString process;
-    if (aProcess.IsEmpty()) {
-      // If the process is empty, the report originated with the process doing
-      // the dumping.  In that case, generate the process identifier, which is of
-      // the form "$PROCESS_NAME (pid $PID)", or just "(pid $PID)" if we don't
-      // have a process name.  If we're the main process, we let $PROCESS_NAME be
-      // "Main Process".
-      if (XRE_GetProcessType() == GeckoProcessType_Default) {
-        // We're the main process.
-        process.AssignLiteral("Main Process");
-      } else if (ContentChild* cc = ContentChild::GetSingleton()) {
-        // Try to get the process name from ContentChild.
-        cc->GetProcessName(process);
-      }
-      ContentChild::AppendProcessId(process);
-
-    } else {
-      // Otherwise, the report originated with another process and already has a
-      // process name.  Just use that.
-      process = aProcess;
-    }
-
-    DUMP(mWriter, "\n    {\"process\": \"");
-    DUMP(mWriter, process);
-
-    DUMP(mWriter, "\", \"path\": \"");
-    nsCString path(aPath);
-    path.ReplaceSubstring("\\", "\\\\");    /* <backslash> --> \\ */
-    path.ReplaceSubstring("\"", "\\\"");    // " --> \"
-    DUMP(mWriter, path);
-
-    DUMP(mWriter, "\", \"kind\": ");
-    DUMP(mWriter, nsPrintfCString("%d", aKind));
-
-    DUMP(mWriter, ", \"units\": ");
-    DUMP(mWriter, nsPrintfCString("%d", aUnits));
-
-    DUMP(mWriter, ", \"amount\": ");
-    DUMP(mWriter, nsPrintfCString("%lld", aAmount));
-
-    nsCString description(aDescription);
-    description.ReplaceSubstring("\\", "\\\\");    /* <backslash> --> \\ */
-    description.ReplaceSubstring("\"", "\\\"");    // " --> \"
-    description.ReplaceSubstring("\n", "\\n");     // <newline> --> \n
-    DUMP(mWriter, ", \"description\": \"");
-    DUMP(mWriter, description);
-    DUMP(mWriter, "\"}");
-
-    return NS_OK;
-  }
-
-private:
-  ~DumpReportCallback() {}
-
-  bool mIsFirst;
-  nsRefPtr<nsGZFileWriter> mWriter;
-};
-
-NS_IMPL_ISUPPORTS(DumpReportCallback, nsIHandleReportCallback)
-
-} // namespace mozilla
-
 static void
 MakeFilename(const char* aPrefix, const nsAString& aIdentifier,
              int aPid, const char* aSuffix, nsACString& aResult)
@@ -544,66 +452,101 @@ DMDWrite(void* aState, const char* aFmt, va_list ap)
 }
 #endif
 
-static nsresult
-DumpHeader(nsIGZFileWriter* aWriter)
+// This class wraps GZFileWriter so it can be used with JSONWriter, overcoming
+// the following two problems:
+// - It provides a JSONWriterFunc::Write() that calls nsGZFileWriter::Write().
+// - It can be stored as a UniquePtr, whereas nsGZFileWriter is refcounted.
+class GZWriterWrapper : public JSONWriteFunc
 {
-  // Increment this number if the format changes.
-  //
-  // This is the first write to the file, and it causes |aWriter| to allocate
-  // over 200 KiB of memory.
-  //
-  DUMP(aWriter, "{\n  \"version\": 1,\n");
+public:
+  explicit GZWriterWrapper(nsGZFileWriter* aGZWriter)
+    : mGZWriter(aGZWriter)
+  {}
 
-  DUMP(aWriter, "  \"hasMozMallocUsableSize\": ");
-
-  nsCOMPtr<nsIMemoryReporterManager> mgr =
-    do_GetService("@mozilla.org/memory-reporter-manager;1");
-  if (NS_WARN_IF(!mgr)) {
-    return NS_ERROR_UNEXPECTED;
+  void Write(const char* aStr)
+  {
+    (void)mGZWriter->Write(aStr);
   }
 
-  DUMP(aWriter, mgr->GetHasMozMallocUsableSize() ? "true" : "false");
-  DUMP(aWriter, ",\n");
-  DUMP(aWriter, "  \"reports\": ");
+  nsresult Finish() { return mGZWriter->Finish(); }
 
-  return NS_OK;
-}
+private:
+  nsRefPtr<nsGZFileWriter> mGZWriter;
+};
 
-static nsresult
-DumpFooter(nsIGZFileWriter* aWriter)
-{
-  DUMP(aWriter, "\n  ]\n}\n");
-
-  return NS_OK;
-}
-
-// This dumps the JSON footer and closes the file, and then calls the given
-// nsIFinishDumpingCallback.
-class FinishReportingCallback MOZ_FINAL : public nsIFinishReportingCallback
+// We need two callbacks: one that handles reports, and one that is called at
+// the end of reporting. Both the callbacks need access to the same JSONWriter,
+// so we implement both of them in this one class.
+class HandleReportAndFinishReportingCallbacks MOZ_FINAL
+  : public nsIHandleReportCallback, public nsIFinishReportingCallback
 {
 public:
   NS_DECL_ISUPPORTS
 
-  FinishReportingCallback(nsGZFileWriter* aReportsWriter,
-                          nsIFinishDumpingCallback* aFinishDumping,
-                          nsISupports* aFinishDumpingData)
-    : mReportsWriter(aReportsWriter)
+  HandleReportAndFinishReportingCallbacks(UniquePtr<JSONWriter> aWriter,
+                                          nsIFinishDumpingCallback* aFinishDumping,
+                                          nsISupports* aFinishDumpingData)
+    : mWriter(Move(aWriter))
     , mFinishDumping(aFinishDumping)
     , mFinishDumpingData(aFinishDumpingData)
   {
   }
 
+  // This is the callback for nsIHandleReportCallback.
+  NS_IMETHOD Callback(const nsACString& aProcess, const nsACString& aPath,
+                      int32_t aKind, int32_t aUnits, int64_t aAmount,
+                      const nsACString& aDescription,
+                      nsISupports* aData)
+  {
+    nsAutoCString process;
+    if (aProcess.IsEmpty()) {
+      // If the process is empty, the report originated with the process doing
+      // the dumping.  In that case, generate the process identifier, which is
+      // of the form "$PROCESS_NAME (pid $PID)", or just "(pid $PID)" if we
+      // don't have a process name.  If we're the main process, we let
+      // $PROCESS_NAME be "Main Process".
+      if (XRE_GetProcessType() == GeckoProcessType_Default) {
+        // We're the main process.
+        process.AssignLiteral("Main Process");
+      } else if (ContentChild* cc = ContentChild::GetSingleton()) {
+        // Try to get the process name from ContentChild.
+        cc->GetProcessName(process);
+      }
+      ContentChild::AppendProcessId(process);
+
+    } else {
+      // Otherwise, the report originated with another process and already has a
+      // process name.  Just use that.
+      process = aProcess;
+    }
+
+    mWriter->StartObjectElement();
+    {
+      mWriter->StringProperty("process", process.get());
+      mWriter->StringProperty("path", PromiseFlatCString(aPath).get());
+      mWriter->IntProperty("kind", aKind);
+      mWriter->IntProperty("units", aUnits);
+      mWriter->IntProperty("amount", aAmount);
+      mWriter->StringProperty("description",
+                              PromiseFlatCString(aDescription).get());
+    }
+    mWriter->EndObject();
+
+    return NS_OK;
+  }
+
+  // This is the callback for nsIFinishReportingCallback.
   NS_IMETHOD Callback(nsISupports* aData)
   {
-    nsresult rv = DumpFooter(mReportsWriter);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mWriter->EndArray();  // end of "reports" array
+    mWriter->End();
 
-    // The call to Finish() deallocates the memory allocated by the first DUMP()
+    // The call to Finish() deallocates the memory allocated by the first Write
     // call. Because that memory was live while the memory reporters ran and
-    // thus measured by them -- by "heap-allocated" if nothing else -- we want
-    // DMD to see it as well.  So we deliberately don't call Finish() until
+    // was measured by them -- by "heap-allocated" if nothing else -- we want
+    // DMD to see it as well. So we deliberately don't call Finish() until
     // after DMD finishes.
-    rv = mReportsWriter->Finish();
+    nsresult rv = static_cast<GZWriterWrapper*>(mWriter->WriteFunc())->Finish();
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!mFinishDumping) {
@@ -614,14 +557,15 @@ public:
   }
 
 private:
-  ~FinishReportingCallback() {}
+  ~HandleReportAndFinishReportingCallbacks() {}
 
-  nsRefPtr<nsGZFileWriter> mReportsWriter;
+  UniquePtr<JSONWriter> mWriter;
   nsCOMPtr<nsIFinishDumpingCallback> mFinishDumping;
   nsCOMPtr<nsISupports> mFinishDumpingData;
 };
 
-NS_IMPL_ISUPPORTS(FinishReportingCallback, nsIFinishReportingCallback)
+NS_IMPL_ISUPPORTS(HandleReportAndFinishReportingCallbacks,
+                  nsIHandleReportCallback, nsIFinishReportingCallback)
 
 class TempDirFinishCallback MOZ_FINAL : public nsIFinishDumpingCallback
 {
@@ -713,28 +657,35 @@ DumpMemoryInfoToFile(
   bool aMinimizeMemoryUsage,
   nsAString& aDMDIdentifier)
 {
-  nsRefPtr<nsGZFileWriter> reportsWriter = new nsGZFileWriter();
-  nsresult rv = reportsWriter->Init(aReportsFile);
+  nsRefPtr<nsGZFileWriter> gzWriter = new nsGZFileWriter();
+  nsresult rv = gzWriter->Init(aReportsFile);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+  auto jsonWriter =
+    MakeUnique<JSONWriter>(MakeUnique<GZWriterWrapper>(gzWriter));
 
-  // Dump the memory reports to the file.
-  rv = DumpHeader(reportsWriter);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Process reporters.
   nsCOMPtr<nsIMemoryReporterManager> mgr =
     do_GetService("@mozilla.org/memory-reporter-manager;1");
-  nsRefPtr<DumpReportCallback> dumpReport =
-    new DumpReportCallback(reportsWriter);
-  nsRefPtr<FinishReportingCallback> finishReporting =
-    new FinishReportingCallback(reportsWriter, aFinishDumping,
-                                aFinishDumpingData);
-  rv = mgr->GetReportsExtended(dumpReport, nullptr,
-                               finishReporting, nullptr,
+
+  // This is the first write to the file, and it causes |aWriter| to allocate
+  // over 200 KiB of memory.
+  jsonWriter->Start();
+  {
+    // Increment this number if the format changes.
+    jsonWriter->IntProperty("version", 1);
+    jsonWriter->BoolProperty("hasMozMallocUsableSize",
+                             mgr->GetHasMozMallocUsableSize());
+    jsonWriter->StartArrayProperty("reports");
+  }
+
+  nsRefPtr<HandleReportAndFinishReportingCallbacks>
+    handleReportAndFinishReporting =
+      new HandleReportAndFinishReportingCallbacks(Move(jsonWriter),
+                                                  aFinishDumping,
+                                                  aFinishDumpingData);
+  rv = mgr->GetReportsExtended(handleReportAndFinishReporting, nullptr,
+                               handleReportAndFinishReporting, nullptr,
                                aAnonymize,
                                aMinimizeMemoryUsage,
                                aDMDIdentifier);
@@ -801,12 +752,12 @@ nsMemoryInfoDumper::DumpMemoryInfoToTempDir(const nsAString& aIdentifier,
   // looking for memory report dumps to grab a file before we're finished
   // writing to it.
 
-  nsCString reportsFinalFilename;
   // The "unified" indicates that we merge the memory reports from all
   // processes and write out one file, rather than a separate file for
   // each process as was the case before bug 946407.  This is so that
   // the get_about_memory.py script in the B2G repository can
   // determine when it's done waiting for files to appear.
+  nsCString reportsFinalFilename;
   MakeFilename("unified-memory-report", identifier, getpid(), "json.gz",
                reportsFinalFilename);
 
@@ -892,4 +843,3 @@ nsMemoryInfoDumper::DumpDMDToFile(FILE* aFile)
 }
 #endif  // MOZ_DMD
 
-#undef DUMP
