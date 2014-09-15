@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 #include <algorithm>
+#include "mozilla/Atomics.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticMutex.h"
 #include "CubebUtils.h"
@@ -19,14 +20,13 @@ namespace mozilla {
 
 namespace {
 
+// Prefered samplerate, in Hz (characteristic of the
+// hardware/mixer/platform/API used).
+Atomic<uint32_t> sPreferredSampleRate;
+
 // This mutex protects the variables below.
 StaticMutex sMutex;
 cubeb* sCubebContext;
-
-// Prefered samplerate, in Hz (characteristic of the
-// hardware/mixer/platform/API used).
-uint32_t sPreferredSampleRate;
-
 double sVolumeScale;
 uint32_t sCubebLatency;
 bool sCubebLatencyPrefSet;
@@ -85,10 +85,17 @@ cubeb* GetCubebContext()
 
 void InitPreferredSampleRate()
 {
+  // The mutex is used here to prohibit concurrent initialization calls, but
+  // sPreferredSampleRate itself is safe to access without the mutex because
+  // it is using atomic storage.
   StaticMutexAutoLock lock(sMutex);
+  uint32_t preferredSampleRate = 0;
   if (sPreferredSampleRate == 0 &&
       cubeb_get_preferred_sample_rate(GetCubebContextUnlocked(),
-                                      &sPreferredSampleRate) != CUBEB_OK) {
+                                      &preferredSampleRate) == CUBEB_OK) {
+    sPreferredSampleRate = preferredSampleRate;
+  } else {
+    // Query failed, use a sensible default.
     sPreferredSampleRate = 44100;
   }
 }
@@ -139,20 +146,20 @@ void ShutdownLibrary()
   }
 }
 
-int MaxNumberOfChannels()
+uint32_t MaxNumberOfChannels()
 {
   cubeb* cubebContext = GetCubebContext();
   uint32_t maxNumberOfChannels;
   if (cubebContext &&
       cubeb_get_max_channel_count(cubebContext,
                                   &maxNumberOfChannels) == CUBEB_OK) {
-    return static_cast<int>(maxNumberOfChannels);
+    return maxNumberOfChannels;
   }
 
   return 0;
 }
 
-int PreferredSampleRate()
+uint32_t PreferredSampleRate()
 {
   MOZ_ASSERT(sPreferredSampleRate,
              "sPreferredSampleRate has not been initialized!");
