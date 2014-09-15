@@ -109,6 +109,7 @@ MSG_DEF(JSMSG_BAD_PROTOTYPE,           1, JSEXN_TYPEERR, "'prototype' property o
 MSG_DEF(JSMSG_IN_NOT_OBJECT,           1, JSEXN_TYPEERR, "invalid 'in' operand {0}")
 MSG_DEF(JSMSG_TOO_MANY_CON_SPREADARGS, 0, JSEXN_RANGEERR, "too many constructor arguments")
 MSG_DEF(JSMSG_TOO_MANY_FUN_SPREADARGS, 0, JSEXN_RANGEERR, "too many function arguments")
+MSG_DEF(JSMSG_UNINITIALIZED_LEXICAL,   1, JSEXN_REFERENCEERR, "can't access let declaration `{0}' before initialization")
 
 // Date
 MSG_DEF(JSMSG_INVALID_DATE,            0, JSEXN_RANGEERR, "invalid date")

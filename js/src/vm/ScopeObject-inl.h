@@ -53,6 +53,15 @@ CallObject::setAliasedVarFromArguments(JSContext *cx, const Value &argsValue, js
         types::AddTypePropertyId(cx, this, id, v);
 }
 
+inline void
+CallObject::setAliasedLexicalsToThrowOnTouch(JSScript *script)
+{
+    uint32_t aliasedLexicalBegin = script->bindings.aliasedBodyLevelLexicalBegin();
+    uint32_t aliasedLexicalEnd = numFixedSlots();
+    for (uint32_t slot = aliasedLexicalBegin; slot < aliasedLexicalEnd; slot++)
+        initFixedSlot(slot, MagicValue(JS_UNINITIALIZED_LEXICAL));
+}
+
 template <AllowGC allowGC>
 inline bool
 StaticScopeIter<allowGC>::done() const

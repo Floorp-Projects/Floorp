@@ -30,8 +30,6 @@ var cases = [
     // bindings in functions
     "function f() { var x = VAL; @@ } f();",
     "function f() { let x = VAL; @@ } f();",
-    "function f([x]) { let x = VAL; @@ } f(['fail']);",
-    "function f(x) { { let x = VAL; @@ } } f('fail');",
     "function f() { function x() {} x = VAL; @@ } f();",
 
     // dynamic bindings

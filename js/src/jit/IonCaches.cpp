@@ -4207,7 +4207,8 @@ BindNameIC::update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain)
     if (scopeChain->is<GlobalObject>()) {
         holder = scopeChain;
     } else {
-        if (!LookupNameUnqualified(cx, name, scopeChain, &holder))
+        RootedShape shape(cx);
+        if (!LookupNameUnqualified(cx, name, scopeChain, &holder, &shape))
             return nullptr;
     }
 

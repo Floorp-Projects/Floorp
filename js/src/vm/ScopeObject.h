@@ -233,6 +233,8 @@ class CallObject : public ScopeObject
     static CallObject *
     create(JSContext *cx, HandleScript script, HandleObject enclosing, HandleFunction callee);
 
+    inline void setAliasedLexicalsToThrowOnTouch(JSScript *script);
+
   public:
     static const Class class_;
 

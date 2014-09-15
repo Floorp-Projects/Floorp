@@ -1260,14 +1260,54 @@
      */ \
     macro(JSOP_SETALIASEDVAR, 137,"setaliasedvar",NULL,      5,  1,  1,  JOF_SCOPECOORD|JOF_NAME|JOF_SET|JOF_DETECTING) \
     \
-    macro(JSOP_UNUSED138,  138, "unused138",   NULL,         1,  0,  0,  JOF_BYTE) \
-    macro(JSOP_UNUSED139,  139, "unused139",   NULL,         1,  0,  0,  JOF_BYTE) \
-    macro(JSOP_UNUSED140,  140, "unused140",   NULL,         1,  0,  0,  JOF_BYTE) \
-    macro(JSOP_UNUSED141,  141, "unused141",   NULL,         1,  0,  0,  JOF_BYTE) \
-    macro(JSOP_UNUSED142,  142, "unused142",   NULL,         1,  0,  0,  JOF_BYTE) \
-    \
     /*
-     * Pushes the value of the intrinsic onto the stack.
+     * Checks if the value of the local variable is the
+     * JS_UNINITIALIZED_LEXICAL magic, throwing an error if so.
+     *   Category: Variables and Scopes
+     *   Type: Local Variables
+     *   Operands: uint32_t localno
+     *   Stack: =>
+     */ \
+    macro(JSOP_CHECKLEXICAL,  138, "checklexical", NULL,     4,  0,  0, JOF_LOCAL|JOF_NAME) \
+    /*
+     * Initializes an uninitialized local lexical binding with the top of stack
+     * value.
+     *   Category: Variables and Scopes
+     *   Type: Local Variables
+     *   Operands: uint32_t localno
+     *   Stack: v => v
+     */ \
+    macro(JSOP_INITLEXICAL,   139, "initlexical",  NULL,      4,  1,  1, JOF_LOCAL|JOF_NAME|JOF_SET|JOF_DETECTING) \
+    /*
+     * Checks if the value of the aliased variable is the
+     * JS_UNINITIALIZED_LEXICAL magic, throwing an error if so.
+     *   Category: Variables and Scopes
+     *   Type: Aliased Variables
+     *   Operands: uint8_t hops, uint24_t slot
+     *   Stack: =>
+     */ \
+    macro(JSOP_CHECKALIASEDLEXICAL, 140, "checkaliasedlexical", NULL, 5,  0,  0, JOF_SCOPECOORD|JOF_NAME) \
+    /*
+     * Initializes an uninitialized aliased lexical binding with the top of
+     * stack value.
+     *   Category: Variables and Scopes
+     *   Type: Aliased Variables
+     *   Operands: uint8_t hops, uint24_t slot
+     *   Stack: v => v
+     */ \
+    macro(JSOP_INITALIASEDLEXICAL,  141, "initaliasedlexical",  NULL, 5,  1,  1, JOF_SCOPECOORD|JOF_NAME|JOF_SET|JOF_DETECTING) \
+    /*
+     * Pushes a JS_UNINITIALIZED_LEXICAL value onto the stack, representing an
+     * uninitialized lexical binding.
+     *
+     * This opcode is used with the JSOP_INITLET opcode.
+     *   Category: Literals
+     *   Type: Constants
+     *   Operands:
+     *   Stack: => uninitialized
+     */ \
+    macro(JSOP_UNINITIALIZED, 142, "uninitialized", NULL, 1,  0,  1, JOF_BYTE) \
+    /* Pushes the value of the intrinsic onto the stack.
      *
      * Intrinsic names are emitted instead of JSOP_*NAME ops when the
      * 'CompileOptions' flag 'selfHostingMode' is set.
