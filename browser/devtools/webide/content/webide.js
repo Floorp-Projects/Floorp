@@ -496,7 +496,7 @@ let UI = {
 
     Task.spawn(function() {
       if (project.type == "runtimeApp") {
-        yield UI.busyUntil(AppManager.runRuntimeApp(), "running app");
+        yield UI.busyUntil(AppManager.launchRuntimeApp(), "running app");
       }
       yield UI.createToolbox();
     });
@@ -1014,7 +1014,7 @@ let Cmds = {
       case "hosted":
         return UI.busyUntil(AppManager.installAndRunProject(), "installing and running app");
       case "runtimeApp":
-        return UI.busyUntil(AppManager.runRuntimeApp(), "running app");
+        return UI.busyUntil(AppManager.launchOrReloadRuntimeApp(), "launching / reloading app");
       case "tab":
         return UI.busyUntil(AppManager.reloadTab(), "reloading tab");
     }

@@ -241,8 +241,12 @@ class Permissions(object):
         rows = cursor.execute("PRAGMA table_info(moz_hosts)")
         count = len(rows.fetchall())
 
+        # if the db contains 9 columns, we're using user_version 4
+        if count == 9:
+            statement = "INSERT INTO moz_hosts values(NULL, ?, ?, ?, 0, 0, 0, 0, 0)"
+            cursor.execute("PRAGMA user_version=4;")
         # if the db contains 8 columns, we're using user_version 3
-        if count == 8:
+        elif count == 8:
             statement = "INSERT INTO moz_hosts values(NULL, ?, ?, ?, 0, 0, 0, 0)"
             cursor.execute("PRAGMA user_version=3;")
         else:

@@ -326,7 +326,9 @@ exports.AppManager = AppManager = {
 
   _selectedProject: null,
   set selectedProject(value) {
-    if (value != this.selectedProject) {
+    // A regular comparison still sees a difference when equal in some cases
+    if (JSON.stringify(this._selectedProject) !==
+        JSON.stringify(value)) {
       this._selectedProject = value;
 
       // Clear out tab store's selected state, if any
@@ -439,9 +441,19 @@ exports.AppManager = AppManager = {
     return deferred.promise;
   },
 
-  runRuntimeApp: function() {
+  launchRuntimeApp: function() {
     if (this.selectedProject && this.selectedProject.type != "runtimeApp") {
-      return promise.reject("attempting to run a non-runtime app");
+      return promise.reject("attempting to launch a non-runtime app");
+    }
+    let client = this.connection.client;
+    let actor = this._listTabsResponse.webappsActor;
+    let manifest = this.getProjectManifestURL(this.selectedProject);
+    return AppActorFront.launchApp(client, actor, manifest);
+  },
+
+  launchOrReloadRuntimeApp: function() {
+    if (this.selectedProject && this.selectedProject.type != "runtimeApp") {
+      return promise.reject("attempting to launch / reload a non-runtime app");
     }
     let client = this.connection.client;
     let actor = this._listTabsResponse.webappsActor;
