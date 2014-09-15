@@ -59,7 +59,7 @@ let NotificationTracker = {
 
     let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
                .getService(Ci.nsIMessageBroadcaster);
-    ppmm.broadcastAsyncMessage("Addons:AddNotification", path);
+    ppmm.broadcastAsyncMessage("Addons:ChangeNotification", {path: path, count: count});
   },
 
   remove: function(path) {
@@ -71,7 +71,7 @@ let NotificationTracker = {
 
     let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
                .getService(Ci.nsIMessageBroadcaster);
-    ppmm.broadcastAsyncMessage("Addons:RemoveNotification", path);
+    ppmm.broadcastAsyncMessage("Addons:ChangeNotification", {path: path, count: tracked._count});
   },
 
   receiveMessage: function(msg) {
