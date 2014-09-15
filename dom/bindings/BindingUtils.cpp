@@ -343,53 +343,40 @@ DefineUnforgeableAttributes(JSContext* cx, JS::Handle<JSObject*> obj,
 // passed a non-Function object we also need to provide our own toString method
 // for interface objects.
 
-enum {
-  TOSTRING_CLASS_RESERVED_SLOT = 0,
-  TOSTRING_NAME_RESERVED_SLOT = 1
-};
-
 static bool
 InterfaceObjectToString(JSContext* cx, unsigned argc, JS::Value *vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  JS::Rooted<JSObject*> callee(cx, &args.callee());
-
   if (!args.thisv().isObject()) {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                          JSMSG_CANT_CONVERT_TO, "null", "object");
     return false;
   }
 
-  JS::Value v = js::GetFunctionNativeReserved(callee,
-                                              TOSTRING_CLASS_RESERVED_SLOT);
-  const JSClass* clasp = static_cast<const JSClass*>(v.toPrivate());
-
-  v = js::GetFunctionNativeReserved(callee, TOSTRING_NAME_RESERVED_SLOT);
-  JSString* jsname = v.toString();
-
-  nsAutoJSString name;
-  if (!name.init(cx, jsname)) {
+  JS::Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
+  JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrap(thisObj, /* stopAtOuter = */ false));
+  if (!obj) {
+    JS_ReportError(cx, "Permission denied to access object");
     return false;
   }
 
-  if (js::GetObjectJSClass(&args.thisv().toObject()) != clasp) {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
-                         JSMSG_INCOMPATIBLE_PROTO,
-                         NS_ConvertUTF16toUTF8(name).get(), "toString",
-                         "object");
+  const js::Class* clasp = js::GetObjectClass(obj);
+  if (!IsDOMIfaceAndProtoClass(clasp)) {
+    JS_ReportError(cx, "toString called on incompatible object");
     return false;
   }
 
-  nsString str;
-  str.AppendLiteral("function ");
-  str.Append(name);
-  str.AppendLiteral("() {");
-  str.Append('\n');
-  str.AppendLiteral("    [native code]");
-  str.Append('\n');
-  str.Append('}');
+  const DOMIfaceAndProtoJSClass* ifaceAndProtoJSClass =
+    DOMIfaceAndProtoJSClass::FromJSClass(clasp);
+  JS::Rooted<JSString*> str(cx,
+                            JS_NewStringCopyZ(cx,
+                                              ifaceAndProtoJSClass->mToString));
+  if (!str) {
+    return false;
+  }
 
-  return xpc::NonVoidStringToJsval(cx, str, args.rval());
+  args.rval().setString(str);
+  return true;
 }
 
 bool
@@ -465,24 +452,11 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
     // Have to shadow Function.prototype.toString, since that throws
     // on things that are not js::FunctionClass.
     JS::Rooted<JSFunction*> toString(cx,
-      js::DefineFunctionWithReserved(cx, constructor,
-                                     "toString",
-                                     InterfaceObjectToString,
-                                     0, 0));
+      JS_DefineFunction(cx, constructor, "toString", InterfaceObjectToString,
+                        0, 0));
     if (!toString) {
       return nullptr;
     }
-
-    JSString *str = ::JS_InternString(cx, name);
-    if (!str) {
-      return nullptr;
-    }
-    JSObject* toStringObj = JS_GetFunctionObject(toString);
-    js::SetFunctionNativeReserved(toStringObj, TOSTRING_CLASS_RESERVED_SLOT,
-                                  PRIVATE_TO_JSVAL(const_cast<JSClass *>(constructorClass)));
-
-    js::SetFunctionNativeReserved(toStringObj, TOSTRING_NAME_RESERVED_SLOT,
-                                  STRING_TO_JSVAL(str));
 
     if (!JS_DefineProperty(cx, constructor, "length", ctorNargs,
                            JSPROP_READONLY | JSPROP_PERMANENT)) {
@@ -1283,12 +1257,30 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                           JS::MutableHandle<JSPropertyDescriptor> desc,
                           bool& cacheOnHolder)
 {
-  if (type == eInterface && IdEquals(id, "prototype")) {
-    return nativePropertyHooks->mPrototypeID == prototypes::id::_ID_Count ||
-           ResolvePrototypeOrConstructor(cx, wrapper, obj,
-                                         nativePropertyHooks->mPrototypeID,
-                                         JSPROP_PERMANENT | JSPROP_READONLY,
-                                         desc, cacheOnHolder);
+  if (type == eInterface) {
+    if (IdEquals(id, "prototype")) {
+      return nativePropertyHooks->mPrototypeID == prototypes::id::_ID_Count ||
+             ResolvePrototypeOrConstructor(cx, wrapper, obj,
+                                           nativePropertyHooks->mPrototypeID,
+                                           JSPROP_PERMANENT | JSPROP_READONLY,
+                                           desc, cacheOnHolder);
+    }
+
+    if (IdEquals(id, "toString") && !JS_ObjectIsFunction(cx, obj)) {
+      MOZ_ASSERT(IsDOMIfaceAndProtoClass(js::GetObjectClass(obj)));
+
+      JS::Rooted<JSFunction*> toString(cx, JS_NewFunction(cx, InterfaceObjectToString, 0, 0, wrapper, "toString"));
+      if (!toString) {
+        return false;
+      }
+
+      cacheOnHolder = true;
+
+      FillPropertyDescriptor(desc, wrapper, 0,
+                             JS::ObjectValue(*JS_GetFunctionObject(toString)));
+
+      return JS_WrapPropertyDescriptor(cx, desc);
+    }
   }
 
   if (type == eInterfacePrototype && IdEquals(id, "constructor")) {

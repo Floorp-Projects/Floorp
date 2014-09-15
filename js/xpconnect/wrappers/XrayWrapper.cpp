@@ -1066,6 +1066,9 @@ XPCWrappedNativeXrayTraits::preserveWrapper(JSObject *target)
         ci->PreserveWrapper(wn->Native());
 }
 
+static bool
+XrayToString(JSContext *cx, unsigned argc, JS::Value *vp);
+
 bool
 XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wrapper,
                                                   HandleObject holder, HandleId id,
@@ -1139,8 +1142,21 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wr
         return true;
     }
 
-    if (!(iface = ccx.GetInterface()) || !(member = ccx.GetMember()))
-        return true;
+    if (!(iface = ccx.GetInterface()) || !(member = ccx.GetMember())) {
+        if (id != nsXPConnect::GetRuntimeInstance()->GetStringID(XPCJSRuntime::IDX_TO_STRING))
+            return true;
+
+        JSFunction *toString = JS_NewFunction(cx, XrayToString, 0, 0, holder, "toString");
+        if (!toString)
+            return false;
+
+        FillPropertyDescriptor(desc, wrapper, 0,
+                               ObjectValue(*JS_GetFunctionObject(toString)));
+
+        return JS_DefinePropertyById(cx, holder, id, desc.value(), desc.attributes(),
+                                     desc.getter(), desc.setter()) &&
+               JS_GetPropertyDescriptorById(cx, holder, id, desc);
+    }
 
     desc.object().set(holder);
     desc.setAttributes(JSPROP_ENUMERATE);
@@ -1448,6 +1464,18 @@ DOMXrayTraits::resolveNativeProperty(JSContext *cx, HandleObject wrapper,
     if (!XrayResolveNativeProperty(cx, wrapper, obj, id, desc, unused))
         return false;
 
+    if (!desc.object() &&
+        id == nsXPConnect::GetRuntimeInstance()->GetStringID(XPCJSRuntime::IDX_TO_STRING))
+    {
+
+        JSFunction *toString = JS_NewFunction(cx, XrayToString, 0, 0, wrapper, "toString");
+        if (!toString)
+            return false;
+
+        FillPropertyDescriptor(desc, wrapper, 0,
+                               ObjectValue(*JS_GetFunctionObject(toString)));
+    }
+
     MOZ_ASSERT(!desc.object() || desc.object() == wrapper, "What did we resolve this on?");
 
     return true;
@@ -1702,8 +1730,16 @@ XrayToString(JSContext *cx, unsigned argc, Value *vp)
 
     RootedObject obj(cx, XrayTraits::getTargetObject(wrapper));
     XrayType type = GetXrayType(obj);
-    if (type == XrayForDOMObject)
-        return NativeToString(cx, wrapper, obj, args.rval());
+    if (type == XrayForDOMObject) {
+        {
+            JSAutoCompartment ac(cx, obj);
+            JSString *str = JS_BasicObjectToString(cx, obj);
+            if (!str)
+                return false;
+            args.rval().setString(str);
+        }
+        return JS_WrapValue(cx, args.rval());
+    }
 
     if (type != XrayForWrappedNative) {
         JS_ReportError(cx, "XrayToString called on an incompatible object");
@@ -1867,21 +1903,6 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
                                    /* readOnly = */ true);
             return JS_WrapPropertyDescriptor(cx, desc);
         }
-    }
-
-    if (!desc.object() &&
-        id == nsXPConnect::GetRuntimeInstance()->GetStringID(XPCJSRuntime::IDX_TO_STRING))
-    {
-
-        JSFunction *toString = JS_NewFunction(cx, XrayToString, 0, 0, wrapper, "toString");
-        if (!toString)
-            return false;
-
-        desc.object().set(wrapper);
-        desc.setAttributes(0);
-        desc.setGetter(nullptr);
-        desc.setSetter(nullptr);
-        desc.value().setObject(*JS_GetFunctionObject(toString));
     }
 
     // If we're a special scope for in-content XBL, our script expects to see
