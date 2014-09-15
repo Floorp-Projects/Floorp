@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="1800">
+<!-- This is a test where we set the async-scroll position so that it
+     extends outside the displayport, but also have some fixed-position
+     elements in the mix. In particular, the purple element is below
+     (in z-order) the main scrolling content and should not be made visible
+     while checkerboarding; the checkerboarding code should cover it up
+     with the appropriate background color. -->
+<body style="background-color: green; height: 5000px; overflow:hidden">
+  <div style="position:fixed; left: 0px; top: 0px; width: 100px; height: 500px; background-color: purple; z-index: -1"></div>
+  <div style="position:absolute; left: 0px; top: 500px; background-color: yellow; width: 100px; height: 4500px"></div>
+  <div style="position:fixed; left: 10px; top: 10px; width: 10px; height: 10px; background-color: blue"></div>
+</body>
