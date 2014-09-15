@@ -14,6 +14,7 @@ browser.jar:
   content/browser/loop/js/client.js                 (content/js/client.js)
   content/browser/loop/js/desktopRouter.js          (content/js/desktopRouter.js)
   content/browser/loop/js/conversation.js           (content/js/conversation.js)
+  content/browser/loop/js/otconfig.js               (content/js/otconfig.js)
   content/browser/loop/js/panel.js                  (content/js/panel.js)
 
   # Shared styles
