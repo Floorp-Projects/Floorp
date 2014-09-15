@@ -438,7 +438,7 @@ ComputeColorMatrix(uint32_t aColorMatrixType, const nsTArray<float>& aValues,
 
       aOutMatrix[5] = lumR - lumR * c + hueRotateR * s;
       aOutMatrix[6] = lumG + oneMinusLumG * c + hueRotateG * s;
-      aOutMatrix[7] = lumB - oneMinusLumB * c - hueRotateB * s;
+      aOutMatrix[7] = lumB - lumB * c - hueRotateB * s;
 
       aOutMatrix[10] = lumR - lumR * c - oneMinusLumR * s;
       aOutMatrix[11] = lumG - lumG * c + lumG * s;
