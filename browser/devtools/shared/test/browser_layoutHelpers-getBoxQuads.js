@@ -171,7 +171,7 @@ function takesScrollingIntoAccount(doc, helper) {
   scrolledNode.scrollTop = 0;
   subScrolledNode.scrollTop = 0;
 
-  let quad = helper.getAdjustedQuads(innerNode, "content");
+  quad = helper.getAdjustedQuads(innerNode, "content");
   is(quad.p1.x, 0, "p1.x of the scrolled node is correct after scrolling up");
   is(quad.p1.y, 0, "p1.y of the scrolled node is correct after scrolling up");
 }

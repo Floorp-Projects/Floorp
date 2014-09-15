@@ -42,7 +42,7 @@ function spawnTest() {
   // test Un-Black-Box Source
   yield cmd("dbg unblackbox " + BLACKBOXME_URL);
 
-  let bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXME_URL);
+  bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXME_URL);
   ok(!bbButton.checked,
      "Should be able to stop black boxing a specific source.");
 
@@ -50,7 +50,7 @@ function spawnTest() {
   yield cmd("dbg blackbox --glob *blackboxing_t*.js", 2,
             [/blackboxing_three\.js/g, /blackboxing_two\.js/g]);
 
-  let bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXME_URL);
+  bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXME_URL);
   ok(!bbButton.checked,
      "blackboxme should not be black boxed because it doesn't match the glob.");
   bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXONE_URL);
@@ -67,7 +67,7 @@ function spawnTest() {
   // test Un-Black-Box Glob
   yield cmd("dbg unblackbox --glob *blackboxing_t*.js", 2);
 
-  let bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXTWO_URL);
+  bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXTWO_URL);
   ok(!bbButton.checked,
      "blackbox_two should be un-black boxed because it matches the glob.");
   bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXTHREE_URL);
@@ -78,7 +78,7 @@ function spawnTest() {
   yield cmd("dbg blackbox --invert --glob *blackboxing_t*.js", 3,
             [/blackboxing_three\.js/g, /blackboxing_two\.js/g]);
 
-  let bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXME_URL);
+  bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXME_URL);
   ok(bbButton.checked,
     "blackboxme should be black boxed because it doesn't match the glob.");
   bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXONE_URL);
@@ -98,7 +98,7 @@ function spawnTest() {
   // test Un-Black-Box Invert
   yield cmd("dbg unblackbox --invert --glob *blackboxing_t*.js", 3);
 
-  let bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXME_URL);
+  bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXME_URL);
   ok(!bbButton.checked,
     "blackboxme should be un-black boxed because it does not match the glob.");
   bbButton = yield selectSourceAndGetBlackBoxButton(panel, BLACKBOXONE_URL);

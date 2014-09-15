@@ -349,7 +349,7 @@ add_task(function test_bookmarks() {
   do_check_eq("bar", k);
 
   // test getKeywordForURI
-  let k = bs.getKeywordForURI(uri("http://keywordtest.com/"));
+  k = bs.getKeywordForURI(uri("http://keywordtest.com/"));
   do_check_eq("bar", k);
 
   // test getURIForKeyword
@@ -358,8 +358,8 @@ add_task(function test_bookmarks() {
 
   // test removeFolderChildren
   // 1) add/remove each child type (bookmark, separator, folder)
-  let tmpFolder = bs.createFolder(testRoot, "removeFolderChildren",
-                                  bs.DEFAULT_INDEX);
+  tmpFolder = bs.createFolder(testRoot, "removeFolderChildren",
+                              bs.DEFAULT_INDEX);
   bs.insertBookmark(tmpFolder, uri("http://foo9.com/"), bs.DEFAULT_INDEX, "");
   bs.createFolder(tmpFolder, "subfolder", bs.DEFAULT_INDEX);
   bs.insertSeparator(tmpFolder, bs.DEFAULT_INDEX);
@@ -451,9 +451,9 @@ add_task(function test_bookmarks() {
   // test change bookmark uri
   let newId10 = bs.insertBookmark(testRoot, uri("http://foo10.com/"),
                                   bs.DEFAULT_INDEX, "");
-  let dateAdded = bs.getItemDateAdded(newId10);
+  dateAdded = bs.getItemDateAdded(newId10);
   // after just inserting, modified should not be set
-  let lastModified = bs.getItemLastModified(newId10);
+  lastModified = bs.getItemLastModified(newId10);
   do_check_eq(lastModified, dateAdded);
 
   // Workaround possible VM timers issues moving lastModified and dateAdded
@@ -464,7 +464,7 @@ add_task(function test_bookmarks() {
   bs.changeBookmarkURI(newId10, uri("http://foo11.com/"));
 
   // check that lastModified is set after we change the bookmark uri
-  let lastModified2 = bs.getItemLastModified(newId10);
+  lastModified2 = bs.getItemLastModified(newId10);
   LOG("test changeBookmarkURI");
   LOG("dateAdded = " + dateAdded);
   LOG("lastModified = " + lastModified);
@@ -597,8 +597,8 @@ add_task(function test_bookmarks() {
   // check setItemLastModified() and setItemDateAdded()
   let newId14 = bs.insertBookmark(testRoot, uri("http://bar.tld/"),
                                   bs.DEFAULT_INDEX, "");
-  let dateAdded = bs.getItemDateAdded(newId14);
-  let lastModified = bs.getItemLastModified(newId14);
+  dateAdded = bs.getItemDateAdded(newId14);
+  lastModified = bs.getItemLastModified(newId14);
   do_check_eq(lastModified, dateAdded);
   bs.setItemLastModified(newId14, 1234);
   let fakeLastModified = bs.getItemLastModified(newId14);

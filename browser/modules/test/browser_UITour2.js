@@ -78,7 +78,7 @@ let tests = [
 
     gContentAPI.removePinnedTab();
     isnot(gBrowser.tabs[0], tab, "First tab should not be the pinned tab");
-    let tabInfo = UITour.pinnedTabs.get(window);
+    tabInfo = UITour.pinnedTabs.get(window);
     is(tabInfo, null, "Should not have any data about the removed pinned tab after removePinnedTab()");
 
     gContentAPI.addPinnedTab();

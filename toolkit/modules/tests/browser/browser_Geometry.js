@@ -30,9 +30,9 @@ let tests = {
   testIsEmpty: function() {
     let r = new Rect(0, 0, 0, 10);
     ok(r.isEmpty(), "rect with nonpositive width is empty");
-    let r = new Rect(0, 0, 10, 0);
+    r = new Rect(0, 0, 10, 0);
     ok(r.isEmpty(), "rect with nonpositive height is empty");
-    let r = new Rect(0, 0, 10, 10);
+    r = new Rect(0, 0, 10, 10);
     ok(!r.isEmpty(), "rect with positive dimensions is not empty");
   },
 
@@ -42,18 +42,18 @@ let tests = {
     r1.restrictTo(r2);
     ok(r1.equals(new Rect(50, 50, 60, 60)), "intersection is non-empty");
 
-    let r1 = new Rect(10, 10, 100, 100);
-    let r2 = new Rect(120, 120, 100, 100);
+    r1 = new Rect(10, 10, 100, 100);
+    r2 = new Rect(120, 120, 100, 100);
     r1.restrictTo(r2);
     ok(r1.isEmpty(), "intersection is empty");
 
-    let r1 = new Rect(10, 10, 100, 100);
-    let r2 = new Rect(0, 0, 0, 0);
+    r1 = new Rect(10, 10, 100, 100);
+    r2 = new Rect(0, 0, 0, 0);
     r1.restrictTo(r2);
     ok(r1.isEmpty(), "intersection of rect and empty is empty");
 
-    let r1 = new Rect(0, 0, 0, 0);
-    let r2 = new Rect(0, 0, 0, 0);
+    r1 = new Rect(0, 0, 0, 0);
+    r2 = new Rect(0, 0, 0, 0);
     r1.restrictTo(r2);
     ok(r1.isEmpty(), "intersection of empty and empty is empty");
   },
@@ -64,18 +64,18 @@ let tests = {
     r1.expandToContain(r2);
     ok(r1.equals(new Rect(10, 10, 140, 140)), "correct expandToContain on intersecting rectangles");
 
-    let r1 = new Rect(10, 10, 100, 100);
-    let r2 = new Rect(120, 120, 100, 100);
+    r1 = new Rect(10, 10, 100, 100);
+    r2 = new Rect(120, 120, 100, 100);
     r1.expandToContain(r2);
     ok(r1.equals(new Rect(10, 10, 210, 210)), "correct expandToContain on non-intersecting rectangles");
 
-    let r1 = new Rect(10, 10, 100, 100);
-    let r2 = new Rect(0, 0, 0, 0);
+    r1 = new Rect(10, 10, 100, 100);
+    r2 = new Rect(0, 0, 0, 0);
     r1.expandToContain(r2);
     ok(r1.equals(new Rect(10, 10, 100, 100)), "expandToContain of rect and empty is rect");
 
-    let r1 = new Rect(10, 10, 0, 0);
-    let r2 = new Rect(0, 0, 0, 0);
+    r1 = new Rect(10, 10, 0, 0);
+    r2 = new Rect(0, 0, 0, 0);
     r1.expandToContain(r2);
     ok(r1.isEmpty(), "expandToContain of empty and empty is empty");
   },
@@ -91,16 +91,16 @@ let tests = {
     let r2 = new Rect(500, 500, 100, 100);
     ok(equals(r1.subtract(r2), [r1]), "subtract area outside of region yields same region");
 
-    let r1 = new Rect(0, 0, 100, 100);
-    let r2 = new Rect(-10, -10, 50, 120);
+    r1 = new Rect(0, 0, 100, 100);
+    r2 = new Rect(-10, -10, 50, 120);
     ok(equals(r1.subtract(r2), [new Rect(40, 0, 60, 100)]), "subtracting vertical bar from edge leaves one rect");
 
-    let r1 = new Rect(0, 0, 100, 100);
-    let r2 = new Rect(-10, -10, 120, 50);
+    r1 = new Rect(0, 0, 100, 100);
+    r2 = new Rect(-10, -10, 120, 50);
     ok(equals(r1.subtract(r2), [new Rect(0, 40, 100, 60)]), "subtracting horizontal bar from edge leaves one rect");
 
-    let r1 = new Rect(0, 0, 100, 100);
-    let r2 = new Rect(40, 40, 20, 20);
+    r1 = new Rect(0, 0, 100, 100);
+    r2 = new Rect(40, 40, 20, 20);
     ok(equals(r1.subtract(r2), [
       new Rect(0, 0, 40, 100),
       new Rect(40, 0, 20, 40),

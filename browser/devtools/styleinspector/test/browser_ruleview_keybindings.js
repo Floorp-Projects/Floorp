@@ -27,17 +27,17 @@ let test = asyncTest(function*() {
   editor.input.value = "color";
 
   info("Typing ENTER to focus the next field: property value");
-  let onFocus = once(brace.parentNode, "focus", true);
+  onFocus = once(brace.parentNode, "focus", true);
   EventUtils.sendKey("return");
   yield onFocus;
   ok(true, "The value field was focused");
 
   info("Entering a property value");
-  let editor = getCurrentInplaceEditor(view);
+  editor = getCurrentInplaceEditor(view);
   editor.input.value = "green";
 
   info("Typing ENTER again should focus a new property name");
-  let onFocus = once(brace.parentNode, "focus", true);
+  onFocus = once(brace.parentNode, "focus", true);
   EventUtils.sendKey("return");
   yield onFocus;
   ok(true, "The new property name field was focused");

@@ -164,8 +164,8 @@ function testSteps()
   let store = db.createObjectStore("indexStore");
   let indexes = {};
   for (let i = 0; i < keyPaths.length; i++) {
-    let test = " for index test " + JSON.stringify(info);
     let info = keyPaths[i];
+    let test = " for index test " + JSON.stringify(info);
     let indexName = JSON.stringify(info.keyPath);
     if (!indexes[indexName]) {
       try {

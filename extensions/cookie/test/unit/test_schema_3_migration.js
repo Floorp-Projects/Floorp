@@ -116,8 +116,8 @@ function do_run_test() {
 
   // Test the expected set of cookies.
   do_check_eq(Services.cookiemgr.countCookiesFromHost("cat.com"), 20);
-  let enumerator = Services.cookiemgr.getCookiesFromHost("cat.com");
-  let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
+  enumerator = Services.cookiemgr.getCookiesFromHost("cat.com");
+  cookie = enumerator.getNext().QueryInterface(Ci.nsICookie2);
   do_check_eq(cookie.creationTime, 0);
 
   finish_test();

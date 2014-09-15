@@ -44,7 +44,7 @@ function ifTestingSupported() {
     "The visible item's caller has the expected value.");
 
   let secondRecordingFinished = once(window, EVENTS.SNAPSHOT_RECORDING_FINISHED);
-  let callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
+  callListPopulated = once(window, EVENTS.CALL_LIST_POPULATED);
 
   SnapshotsListView._onRecordButtonClick();
   yield secondRecordingFinished;

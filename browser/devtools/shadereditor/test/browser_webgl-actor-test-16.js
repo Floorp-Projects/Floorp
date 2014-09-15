@@ -32,7 +32,7 @@ function ifWebGLSupported() {
 
   navigate(target, MULTIPLE_CONTEXTS_URL);
   let [secondProgram, thirdProgram] = yield getPrograms(front, 2);
-  let programs = yield front.getPrograms();
+  programs = yield front.getPrograms();
   is(programs.length, 2,
     "The second and third programs should be returned by a call to getPrograms().");
   is(programs[0], secondProgram,
@@ -40,7 +40,7 @@ function ifWebGLSupported() {
   is(programs[1], thirdProgram,
     "The third programs was correctly retrieved from the cache.");
 
-  let allPrograms = yield front._getAllPrograms();
+  allPrograms = yield front._getAllPrograms();
   is(allPrograms.length, 3,
     "Should be three programs in cache.");
 
@@ -53,11 +53,11 @@ function ifWebGLSupported() {
   reload(target);
 
   yield promise.all([programsLinked, globalDestroyed, globalCreated]);
-  let allPrograms = yield front._getAllPrograms();
+  allPrograms = yield front._getAllPrograms();
   is(allPrograms.length, 3,
     "Should be 3 programs total in cache.");
 
-  let programs = yield front.getPrograms();
+  programs = yield front.getPrograms();
   is(programs.length, 1,
     "There should be 1 cached program actor now.");
 
@@ -68,18 +68,18 @@ function ifWebGLSupported() {
 
   yield navigateInHistory(target, "forward");
 
-  let globalDestroyed = once(front, "global-created");
-  let globalCreated = once(front, "global-destroyed");
-  let programsLinked = getPrograms(front, 2);
+  globalDestroyed = once(front, "global-created");
+  globalCreated = once(front, "global-destroyed");
+  programsLinked = getPrograms(front, 2);
 
   reload(target);
 
   yield promise.all([programsLinked, globalDestroyed, globalCreated]);
-  let allPrograms = yield front._getAllPrograms();
+  allPrograms = yield front._getAllPrograms();
   is(allPrograms.length, 3,
     "Should be 3 programs total in cache.");
 
-  let programs = yield front.getPrograms();
+  programs = yield front.getPrograms();
   is(programs.length, 2,
     "There should be 2 cached program actors now.");
 

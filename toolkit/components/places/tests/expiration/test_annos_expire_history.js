@@ -77,11 +77,11 @@ add_task(function test_annos_expire_history() {
   // Expire all visits for the first 5 pages and the bookmarks.
   yield promiseForceExpirationStep(10);
 
-  let pages = as.getPagesWithAnnotation("page_expire1");
+  pages = as.getPagesWithAnnotation("page_expire1");
   do_check_eq(pages.length, 0);
   pages = as.getPagesWithAnnotation("page_expire2");
   do_check_eq(pages.length, 0);
-  let items = as.getItemsWithAnnotation("item_persist1");
+  items = as.getItemsWithAnnotation("item_persist1");
   do_check_eq(items.length, 0);
   items = as.getItemsWithAnnotation("item_persist2");
   do_check_eq(items.length, 0);

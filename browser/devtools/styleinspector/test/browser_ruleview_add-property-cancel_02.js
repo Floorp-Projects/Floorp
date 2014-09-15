@@ -45,7 +45,7 @@ let test = asyncTest(function*() {
 
   info("Pressing return to commit and focus the new value field");
   let onValueFocus = once(elementRuleEditor.element, "focus", true);
-  let onModifications = elementRuleEditor.rule._applyingModifications;
+  onModifications = elementRuleEditor.rule._applyingModifications;
   EventUtils.synthesizeKey("VK_RETURN", {}, view.doc.defaultView);
   yield onValueFocus;
   yield onModifications;
@@ -62,7 +62,7 @@ let test = asyncTest(function*() {
   editor.input.value = "red";
 
   info("Escaping out of the field");
-  let onModifications = elementRuleEditor.rule._applyingModifications;
+  onModifications = elementRuleEditor.rule._applyingModifications;
   EventUtils.synthesizeKey("VK_ESCAPE", {}, view.doc.defaultView);
   yield onModifications;
 
@@ -70,7 +70,7 @@ let test = asyncTest(function*() {
   let focusedElement = inplaceEditor(elementRuleEditor.rule.textProps[0].editor.valueSpan).input;
   is(focusedElement, focusedElement.ownerDocument.activeElement, "Correct element has focus");
 
-  let onModifications = elementRuleEditor.rule._applyingModifications;
+  onModifications = elementRuleEditor.rule._applyingModifications;
   EventUtils.synthesizeKey("VK_ESCAPE", {}, view.doc.defaultView);
   yield onModifications;
 

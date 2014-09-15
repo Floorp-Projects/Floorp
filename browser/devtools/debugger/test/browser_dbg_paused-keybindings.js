@@ -7,7 +7,7 @@
 function test() {
   Task.spawn(function* () {
     const TAB_URL = EXAMPLE_URL + "doc_inline-script.html";
-    let panel, debuggee, gDebugger, searchBox;
+    let gDebugger, searchBox;
 
     let [, debuggee, panel] = yield initDebugger(TAB_URL);
     gDebugger = panel.panelWin;

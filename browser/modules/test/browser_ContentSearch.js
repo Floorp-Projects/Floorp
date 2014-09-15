@@ -59,7 +59,7 @@ add_task(function* SetCurrentEngine() {
   });
 
   Services.search.currentEngine = oldCurrentEngine;
-  let msg = yield waitForTestMsg("CurrentEngine");
+  msg = yield waitForTestMsg("CurrentEngine");
   checkMsg(msg, {
     type: "CurrentEngine",
     data: yield currentEngineObj(oldCurrentEngine),

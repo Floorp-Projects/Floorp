@@ -50,7 +50,7 @@ let test = asyncTest(function*() {
   ok(secondStyleSelectors.childNodes.length > 0, "Matched selectors expanded");
 
   info("Tab back up and test the same thing, with space");
-  let onExpanded = inspector.once("computed-view-property-expanded");
+  onExpanded = inspector.once("computed-view-property-expanded");
   EventUtils.synthesizeKey("VK_TAB", {shiftKey: true});
   EventUtils.synthesizeKey("VK_SPACE", {});
   yield onExpanded;

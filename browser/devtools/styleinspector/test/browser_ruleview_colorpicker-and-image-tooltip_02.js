@@ -49,13 +49,13 @@ function* testColorChangeIsntRevertedWhenOtherTooltipIsShown(ruleView) {
   info("Open the image preview tooltip");
   let value = getRuleViewProperty(ruleView, "body", "background").valueSpan;
   let url = value.querySelector(".theme-link");
-  let onShown = ruleView.tooltips.previewTooltip.once("shown");
+  onShown = ruleView.tooltips.previewTooltip.once("shown");
   let anchor = yield isHoverTooltipTarget(ruleView.tooltips.previewTooltip, url);
   ruleView.tooltips.previewTooltip.show(anchor);
   yield onShown;
 
   info("Image tooltip is shown, verify that the swatch is still correct");
-  let swatch = value.querySelector(".ruleview-colorswatch");
+  swatch = value.querySelector(".ruleview-colorswatch");
   is(swatch.style.backgroundColor, "rgb(0, 0, 0)", "The swatch's color is correct");
   is(swatch.nextSibling.textContent, "#000", "The color name is correct");
 }

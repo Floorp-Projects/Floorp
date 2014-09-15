@@ -251,7 +251,7 @@ add_task(function testDropInternalText() {
   // were merged so that if testDropInternalText failed it wouldn't cause testDropLink
   // to fail unexplainably.
   yield prepareTest();
-  let promisePreventPopup = promiseEvent(searchBar, "popupshowing", true);
+  promisePreventPopup = promiseEvent(searchBar, "popupshowing", true);
   ChromeUtils.synthesizeDrop(searchBar.searchButton, searchBar.searchButton, [[ {type: "text/uri-list", data: "http://www.mozilla.org" } ]], "copy", window);
   yield promisePreventPopup;
   is(searchBar.value, "More Text", "drop text/uri-list on searchbar shouldn't change anything");

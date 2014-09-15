@@ -114,7 +114,7 @@ function testReceiving_GSM_Language_and_Body() {
   let promise = Promise.resolve();
 
   let testDcs = [];
-  dcs = 0;
+  let dcs = 0;
   while (dcs <= 0xFF) {
     try {
       let dcsInfo = { dcs: dcs };
@@ -123,7 +123,7 @@ function testReceiving_GSM_Language_and_Body() {
       testDcs.push(dcsInfo);
     } catch (e) {
       // Unsupported coding group, skip.
-      let dcs = (dcs & PDU_DCS_CODING_GROUP_BITS) + 0x10;
+      dcs = (dcs & PDU_DCS_CODING_GROUP_BITS) + 0x10;
     }
     dcs++;
   }
