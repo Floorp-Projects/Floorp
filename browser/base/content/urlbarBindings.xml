@@ -1976,7 +1976,7 @@
             return;
           }
 
-          let host = gPluginHandler._getHostFromPrincipal(this.notification.browser.contentWindow.document.nodePrincipal);
+          let host = this.notification.options.host;
           this._setupDescription("pluginActivateMultiple.message", null, host);
 
           var showBox = document.getAnonymousElementByAttribute(this, "anonid", "plugin-notification-showbox");
