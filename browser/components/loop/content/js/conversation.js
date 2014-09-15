@@ -431,3 +431,5 @@ loop.conversation = (function(OT, mozL10n) {
     init: init
   };
 })(window.OT, document.mozL10n);
+
+document.addEventListener('DOMContentLoaded', loop.conversation.init);
