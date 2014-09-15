@@ -10,7 +10,6 @@
 #define vm_CommonPropertyNames_h
 
 #include "jsprototypes.h"
-#include "builtin/SIMDShuffleMaskConstants.h"
 
 #define FOR_EACH_COMMON_PROPERTYNAME(macro) \
     macro(anonymous, anonymous, "anonymous") \
@@ -232,6 +231,5 @@
     macro(Symbol_toPrimitive, Symbol_toPrimitive, "Symbol.toPrimitive") \
     macro(Symbol_toStringTag, Symbol_toStringTag, "Symbol.toStringTag") \
     macro(Symbol_unscopables, Symbol_unscopables, "Symbol.unscopables") \
-    FOR_EACH_SIMD_SHUFFLE_MASK(COMMON_PROPERTY_NAMES_MACRO, macro)
 
 #endif /* vm_CommonPropertyNames_h */

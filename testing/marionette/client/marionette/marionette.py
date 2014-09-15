@@ -888,6 +888,22 @@ class Marionette(object):
         self.window = self._send_message("getWindowHandle", "value")
         return self.window
 
+    def get_window_position(self):
+        """Get the current window's position
+           Return a dictionary with the keys x and y
+           :returns: a dictionary with x and y
+        """
+        return self._send_message("getWindowPosition", "value")
+
+    def set_window_position(self, x, y):
+        """
+           Set the position of the current window
+            :param x: x coordinate for the top left of the window
+            :param y: y coordinate for the top left of the window
+        """
+        response = self._send_message("setWindowPosition", "ok", x=x, y=y)
+        return response
+
     @property
     def title(self):
         '''

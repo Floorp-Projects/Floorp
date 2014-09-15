@@ -1588,11 +1588,22 @@ void
 GCRuntime::removeFinalizeCallback(JSFinalizeCallback callback)
 {
     for (Callback<JSFinalizeCallback> *p = finalizeCallbacks.begin();
-         p < finalizeCallbacks.end(); p++) {
+         p < finalizeCallbacks.end(); p++)
+    {
         if (p->op == callback) {
             finalizeCallbacks.erase(p);
             break;
         }
+    }
+}
+
+void
+GCRuntime::callFinalizeCallbacks(FreeOp *fop, JSFinalizeStatus status) const
+{
+    for (const Callback<JSFinalizeCallback> *p = finalizeCallbacks.begin();
+         p < finalizeCallbacks.end(); p++)
+    {
+        p->op(fop, status, !isFull, p->data);
     }
 }
 
@@ -1612,6 +1623,16 @@ GCRuntime::removeMovingGCCallback(JSMovingGCCallback callback)
             movingCallbacks.erase(p);
             break;
         }
+    }
+}
+
+void
+GCRuntime::callMovingGCCallbacks() const
+{
+    for (const Callback<JSMovingGCCallback> *p = movingCallbacks.begin();
+         p < movingCallbacks.end(); p++)
+    {
+        p->op(rt, p->data);
     }
 }
 
@@ -2438,11 +2459,7 @@ GCRuntime::updatePointersToRelocatedCells()
     MovingTracer::Sweep(&trc);
 
     // Call callbacks to get the rest of the system to fixup other untraced pointers.
-    for (Callback<JSMovingGCCallback> *p = rt->gc.movingCallbacks.begin();
-         p < rt->gc.movingCallbacks.end(); p++)
-    {
-        p->op(rt, p->data);
-    }
+    callMovingGCCallbacks();
 }
 
 void
@@ -4623,11 +4640,7 @@ GCRuntime::beginSweepingZoneGroup()
 
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_FINALIZE_START);
-        for (Callback<JSFinalizeCallback> *p = rt->gc.finalizeCallbacks.begin();
-             p < rt->gc.finalizeCallbacks.end(); p++)
-        {
-            p->op(&fop, JSFINALIZE_GROUP_START, !isFull /* unused */, p->data);
-        }
+        callFinalizeCallbacks(&fop, JSFINALIZE_GROUP_START);
     }
 
     if (sweepingAtoms) {
@@ -4724,11 +4737,7 @@ GCRuntime::beginSweepingZoneGroup()
 
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_FINALIZE_END);
-        for (Callback<JSFinalizeCallback> *p = rt->gc.finalizeCallbacks.begin();
-             p < rt->gc.finalizeCallbacks.end(); p++)
-        {
-            p->op(&fop, JSFINALIZE_GROUP_END, !isFull /* unused */, p->data);
-        }
+        callFinalizeCallbacks(&fop, JSFINALIZE_GROUP_END);
     }
 }
 
@@ -4962,12 +4971,7 @@ GCRuntime::endSweepPhase(bool lastGC)
 
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_FINALIZE_END);
-
-        for (Callback<JSFinalizeCallback> *p = rt->gc.finalizeCallbacks.begin();
-             p < rt->gc.finalizeCallbacks.end(); p++)
-        {
-            p->op(&fop, JSFINALIZE_COLLECTION_END, !isFull, p->data);
-        }
+        callFinalizeCallbacks(&fop, JSFINALIZE_COLLECTION_END);
 
         /* If we finished a full GC, then the gray bits are correct. */
         if (isFull)

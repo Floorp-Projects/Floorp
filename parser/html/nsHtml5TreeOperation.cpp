@@ -75,9 +75,7 @@ class MOZ_STACK_CLASS nsHtml5OtherDocUpdate {
 };
 
 nsHtml5TreeOperation::nsHtml5TreeOperation()
-#ifdef DEBUG
  : mOpCode(eTreeOpUninitialized)
-#endif
 {
   MOZ_COUNT_CTOR(nsHtml5TreeOperation);
 }
@@ -960,7 +958,7 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       return rv;
     }
     default: {
-      NS_NOTREACHED("Bogus tree op");
+      MOZ_CRASH("Bogus tree op");
     }
   }
   return NS_OK; // keep compiler happy
