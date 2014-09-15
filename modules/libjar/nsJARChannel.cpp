@@ -319,7 +319,7 @@ nsJARChannel::CreateJarInput(nsIZipReaderCache *jarCache, nsJARInputThunk **resu
 }
 
 nsresult
-nsJARChannel::LookupFile()
+nsJARChannel::LookupFile(bool aAllowAsync)
 {
     LOG(("nsJARChannel::LookupFile [this=%x %s]\n", this, mSpec.get()));
 
@@ -385,6 +385,11 @@ nsJARChannel::LookupFile()
                     }
                     #endif
                 }
+            }
+
+            if (!aAllowAsync) {
+                mJarFile = nullptr;
+                return NS_OK;
             }
 
             mOpeningRemote = true;
@@ -798,7 +803,7 @@ nsJARChannel::Open(nsIInputStream **stream)
     mJarFile = nullptr;
     mIsUnsafe = true;
 
-    nsresult rv = LookupFile();
+    nsresult rv = LookupFile(false);
     if (NS_FAILED(rv))
         return rv;
 
@@ -835,7 +840,7 @@ nsJARChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
     // Initialize mProgressSink
     NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, mProgressSink);
 
-    nsresult rv = LookupFile();
+    nsresult rv = LookupFile(true);
     if (NS_FAILED(rv))
         return rv;
 
@@ -910,7 +915,7 @@ nsJARChannel::GetJarFile(nsIFile **aFile)
 NS_IMETHODIMP
 nsJARChannel::GetZipEntry(nsIZipEntry **aZipEntry)
 {
-    nsresult rv = LookupFile();
+    nsresult rv = LookupFile(false);
     if (NS_FAILED(rv))
         return rv;
 
