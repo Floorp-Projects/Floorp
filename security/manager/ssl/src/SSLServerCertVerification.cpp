@@ -97,7 +97,6 @@
 #include <cstring>
 
 #include "pkix/pkixtypes.h"
-#include "pkix/pkixnss.h"
 #include "CertVerifier.h"
 #include "CryptoTask.h"
 #include "ExtendedValidation.h"
@@ -299,10 +298,9 @@ MapCertErrorToProbeValue(PRErrorCode errorCode)
     case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:  return  8;
     case SSL_ERROR_BAD_CERT_DOMAIN:                    return  9;
     case SEC_ERROR_EXPIRED_CERTIFICATE:                return 10;
-    case mozilla::pkix::MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY: return 11;
   }
   NS_WARNING("Unknown certificate error code. Does MapCertErrorToProbeValue "
-             "handle everything in DetermineCertOverrideErrors?");
+             "handle everything in PRErrorCodeToOverrideType?");
   return 0;
 }
 
@@ -327,7 +325,6 @@ DetermineCertOverrideErrors(CERTCertificate* cert, const char* hostName,
   switch (defaultErrorCodeToReport) {
     case SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED:
     case SEC_ERROR_UNKNOWN_ISSUER:
-    case mozilla::pkix::MOZILLA_PKIX_ERROR_CA_CERT_USED_AS_END_ENTITY:
     {
       collectedErrors = nsICertOverrideService::ERROR_UNTRUSTED;
       errorCodeTrust = defaultErrorCodeToReport;
