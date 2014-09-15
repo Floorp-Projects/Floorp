@@ -11,21 +11,14 @@
     <link rel="stylesheet" type="text/css" href="loop/shared/css/common.css">
     <link rel="stylesheet" type="text/css" href="loop/shared/css/conversation.css">
  </head>
-  <body class="fx-embedded" onload="loop.conversation.init();">
+  <body class="fx-embedded">
 
     <div id="messages"></div>
 
     <div id="main"></div>
 
     <script type="text/javascript" src="loop/libs/l10n.js"></script>
-    <script>
-      window.OTProperties = {
-        cdnURL: 'loop/',
-      };
-      window.OTProperties.assetURL = window.OTProperties.cdnURL + 'sdk-content/';
-      window.OTProperties.configURL = window.OTProperties.assetURL + 'js/dynamic_config.min.js';
-      window.OTProperties.cssURL = window.OTProperties.assetURL + 'css/ot.css';
-    </script>
+    <script type="text/javascript" src="loop/js/otconfig.js"></script>
     <script type="text/javascript" src="loop/libs/sdk.js"></script>
     <script type="text/javascript" src="loop/shared/libs/react-0.11.1.js"></script>
     <script type="text/javascript" src="loop/shared/libs/jquery-2.1.0.js"></script>
