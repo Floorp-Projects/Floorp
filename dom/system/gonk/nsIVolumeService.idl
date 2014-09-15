@@ -8,14 +8,12 @@
 
 interface nsIArray;
 
-[scriptable, uuid(cab99ab4-542e-4387-bd40-db6ef30e4f5f)]
+[scriptable, uuid(c31b182c-61a3-449c-bba8-fd45044499c2)]
 interface nsIVolumeService : nsISupports
 {
     nsIVolume getVolumeByName(in DOMString volName);
     nsIVolume getVolumeByPath(in DOMString path);
     nsIVolume createOrGetVolumeByPath(in DOMString path);
-
-    void BroadcastVolume(in DOMString volName);
 
     nsIVolumeMountLock createMountLock(in DOMString volName);
 
