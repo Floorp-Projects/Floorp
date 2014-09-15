@@ -3724,7 +3724,7 @@ JS_NewPropertyIterator(JSContext *cx, HandleObject obj)
 }
 
 JS_PUBLIC_API(bool)
-JS_NextProperty(JSContext *cx, HandleObject iterobj, jsid *idp)
+JS_NextProperty(JSContext *cx, HandleObject iterobj, MutableHandleId idp)
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
@@ -3740,10 +3740,10 @@ JS_NextProperty(JSContext *cx, HandleObject iterobj, jsid *idp)
 
         if (!shape->previous()) {
             JS_ASSERT(shape->isEmptyShape());
-            *idp = JSID_VOID;
+            idp.set(JSID_VOID);
         } else {
             iterobj->setPrivateGCThing(const_cast<Shape *>(shape->previous().get()));
-            *idp = shape->propid();
+            idp.set(shape->propid());
         }
     } else {
         /* Non-native case: use the ida enumerated when iterobj was created. */
@@ -3751,9 +3751,9 @@ JS_NextProperty(JSContext *cx, HandleObject iterobj, jsid *idp)
         JS_ASSERT(i <= ida->length);
         STATIC_ASSUME(i <= ida->length);
         if (i == 0) {
-            *idp = JSID_VOID;
+            idp.set(JSID_VOID);
         } else {
-            *idp = ida->vector[--i];
+            idp.set(ida->vector[--i]);
             iterobj->setSlot(JSSLOT_ITER_INDEX, Int32Value(i));
         }
     }
