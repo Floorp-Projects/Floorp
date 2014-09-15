@@ -1786,10 +1786,18 @@ ScrollFrameHelper::AsyncScroll::InitTimingFunction(nsSMILKeySpline& aTimingFunct
   aTimingFunction.Init(dt, dxy, 1 - kStopDecelerationWeighting, 1);
 }
 
-static bool
-IsSmoothScrollingEnabled()
+bool
+ScrollFrameHelper::IsSmoothScrollingEnabled()
 {
-  return Preferences::GetBool(SMOOTH_SCROLL_PREF_NAME, false);
+  if (!Preferences::GetBool(SMOOTH_SCROLL_PREF_NAME, false)) {
+    return false;
+  }
+  if (gfxPrefs::ScrollBehaviorEnabled()) {
+    ScrollbarStyles styles = GetScrollbarStylesFromFrame();
+    return styles.mScrollBehavior != NS_STYLE_SCROLL_BEHAVIOR_INSTANT;
+  } else {
+    return true;
+  }
 }
 
 class ScrollFrameActivityTracker MOZ_FINAL : public nsExpirationTracker<ScrollFrameHelper,4> {
