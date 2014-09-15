@@ -3,7 +3,14 @@
 
 // The origin we use in most of the tests.
 const TEST_ORIGIN = "example.org";
+const TEST_ORIGIN_2 = "example.com";
 const TEST_PERMISSION = "test-permission";
+
+function promiseTimeout(delay) {
+  let deferred = Promise.defer();
+  do_timeout(delay, deferred.resolve);
+  return deferred.promise;
+}
 
 function run_test() {
   run_next_test();
@@ -28,6 +35,7 @@ add_task(function* do_test() {
   conv.writeString("# this is a comment\n");
   conv.writeString("\n"); // a blank line!
   conv.writeString("host\t" + TEST_PERMISSION + "\t1\t" + TEST_ORIGIN + "\n");
+  conv.writeString("host\t" + TEST_PERMISSION + "\t1\t" + TEST_ORIGIN_2 + "\n");
   ostream.close();
 
   // Set the preference used by the permission manager so the file is read.
@@ -91,6 +99,47 @@ add_task(function* do_test() {
               pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
   do_check_eq(Ci.nsIPermissionManager.PROMPT_ACTION, findCapabilityViaEnum());
   yield checkCapabilityViaDB(Ci.nsIPermissionManager.PROMPT_ACTION);
+
+  // --------------------------------------------------------------
+  // check default permissions and removeAllSince work as expected.
+  pm.removeAll(); // ensure only defaults are there.
+
+  let permURI2 = NetUtil.newURI("http://" + TEST_ORIGIN_2);
+  let principal2 = Services.scriptSecurityManager.getNoAppCodebasePrincipal(permURI2);
+
+  // default for both principals is allow.
+  do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION,
+              pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
+  do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION,
+              pm.testPermissionFromPrincipal(principal2, TEST_PERMISSION));
+
+  // Add a default override for TEST_ORIGIN_2 - this one should *not* be
+  // restored in removeAllSince()
+  pm.addFromPrincipal(principal2, TEST_PERMISSION, Ci.nsIPermissionManager.DENY_ACTION);
+  do_check_eq(Ci.nsIPermissionManager.DENY_ACTION,
+              pm.testPermissionFromPrincipal(principal2, TEST_PERMISSION));
+  yield promiseTimeout(20);
+
+  let since = Number(Date.now());
+  yield promiseTimeout(20);
+
+  // explicitly add a permission which overrides the default for the first
+  // principal - this one *should* be removed by removeAllSince.
+  pm.addFromPrincipal(principal, TEST_PERMISSION, Ci.nsIPermissionManager.DENY_ACTION);
+  do_check_eq(Ci.nsIPermissionManager.DENY_ACTION,
+              pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
+
+  // do a removeAllSince.
+  pm.removeAllSince(since);
+
+  // the default for the first principal should re-appear as we modified it
+  // later then |since|
+  do_check_eq(Ci.nsIPermissionManager.ALLOW_ACTION,
+              pm.testPermissionFromPrincipal(principal, TEST_PERMISSION));
+
+  // but the permission for principal2 should remain as we added that before |since|.
+  do_check_eq(Ci.nsIPermissionManager.DENY_ACTION,
+              pm.testPermissionFromPrincipal(principal2, TEST_PERMISSION));
 
   // remove the temp file we created.
   file.remove(false);
