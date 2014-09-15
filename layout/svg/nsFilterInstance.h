@@ -94,6 +94,7 @@ public:
 
   /**
    * @param aTargetFrame The frame of the filtered element under consideration.
+   * @param aFilterChain The list of filters to apply.
    * @param aPaintCallback [optional] The callback that Render() should use to
    *   paint. Only required if you will call Render().
    * @param aPaintTransform The transform to apply to convert to
@@ -110,6 +111,7 @@ public:
    *   element.
    */
   nsFilterInstance(nsIFrame *aTargetFrame,
+                   const nsTArray<nsStyleFilter>& aFilterChain,
                    nsSVGFilterPaintCallback *aPaintCallback,
                    const gfxMatrix& aPaintTransform,
                    const nsRegion *aPostFilterDirtyRegion = nullptr,
@@ -205,7 +207,7 @@ private:
    * filter primitives and their connections. This populates
    * mPrimitiveDescriptions and mInputImages.
    */
-  nsresult BuildPrimitives();
+  nsresult BuildPrimitives(const nsTArray<nsStyleFilter>& aFilterChain);
 
   /**
    * Add to the list of FilterPrimitiveDescriptions for a particular SVG

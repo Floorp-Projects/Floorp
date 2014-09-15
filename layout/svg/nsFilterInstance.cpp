@@ -31,7 +31,8 @@ nsFilterInstance::PaintFilteredFrame(nsIFrame *aFilteredFrame,
                                      nsSVGFilterPaintCallback *aPaintCallback,
                                      const nsRegion *aDirtyArea)
 {
-  nsFilterInstance instance(aFilteredFrame, aPaintCallback, aTransform,
+  auto& filterChain = aFilteredFrame->StyleSVGReset()->mFilters;
+  nsFilterInstance instance(aFilteredFrame, filterChain, aPaintCallback, aTransform,
                             aDirtyArea, nullptr, nullptr, nullptr);
   if (!instance.IsInitialized()) {
     return NS_OK;
@@ -48,7 +49,8 @@ nsFilterInstance::GetPostFilterDirtyArea(nsIFrame *aFilteredFrame,
   }
 
   gfxMatrix unused; // aPaintTransform arg not used since we're not painting
-  nsFilterInstance instance(aFilteredFrame, nullptr, unused, nullptr,
+  auto& filterChain = aFilteredFrame->StyleSVGReset()->mFilters;
+  nsFilterInstance instance(aFilteredFrame, filterChain, nullptr, unused, nullptr,
                             &aPreFilterDirtyRegion);
   if (!instance.IsInitialized()) {
     return nsRegion();
@@ -65,7 +67,8 @@ nsFilterInstance::GetPreFilterNeededArea(nsIFrame *aFilteredFrame,
                                          const nsRegion& aPostFilterDirtyRegion)
 {
   gfxMatrix unused; // aPaintTransform arg not used since we're not painting
-  nsFilterInstance instance(aFilteredFrame, nullptr, unused,
+  auto& filterChain = aFilteredFrame->StyleSVGReset()->mFilters;
+  nsFilterInstance instance(aFilteredFrame, filterChain, nullptr, unused,
                             &aPostFilterDirtyRegion);
   if (!instance.IsInitialized()) {
     return nsRect();
@@ -93,7 +96,8 @@ nsFilterInstance::GetPostFilterBounds(nsIFrame *aFilteredFrame,
   }
 
   gfxMatrix unused; // aPaintTransform arg not used since we're not painting
-  nsFilterInstance instance(aFilteredFrame, nullptr, unused, nullptr,
+  auto& filterChain = aFilteredFrame->StyleSVGReset()->mFilters;
+  nsFilterInstance instance(aFilteredFrame, filterChain, nullptr, unused, nullptr,
                             preFilterRegionPtr, aPreFilterBounds,
                             aOverrideBBox);
   if (!instance.IsInitialized()) {
@@ -104,6 +108,7 @@ nsFilterInstance::GetPostFilterBounds(nsIFrame *aFilteredFrame,
 }
 
 nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
+                                   const nsTArray<nsStyleFilter>& aFilterChain,
                                    nsSVGFilterPaintCallback *aPaintCallback,
                                    const gfxMatrix& aPaintTransform,
                                    const nsRegion *aPostFilterDirtyRegion,
@@ -151,7 +156,7 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
   mFrameSpaceInCSSPxToFilterSpaceTransform.Invert();
 
   // Build the filter graph.
-  rv = BuildPrimitives();
+  rv = BuildPrimitives(aFilterChain);
   if (NS_FAILED(rv)) {
     return;
   }
@@ -215,14 +220,13 @@ nsFilterInstance::FilterSpaceToUserSpace(const gfxRect& aFilterSpaceRect) const
 }
 
 nsresult
-nsFilterInstance::BuildPrimitives()
+nsFilterInstance::BuildPrimitives(const nsTArray<nsStyleFilter>& aFilterChain)
 {
   NS_ASSERTION(!mPrimitiveDescriptions.Length(),
                "expected to start building primitives from scratch");
 
-  const nsTArray<nsStyleFilter>& filters = mTargetFrame->StyleSVGReset()->mFilters;
-  for (uint32_t i = 0; i < filters.Length(); i++) {
-    nsresult rv = BuildPrimitivesForFilter(filters[i]);
+  for (uint32_t i = 0; i < aFilterChain.Length(); i++) {
+    nsresult rv = BuildPrimitivesForFilter(aFilterChain[i]);
     if (NS_FAILED(rv)) {
       return rv;
     }
