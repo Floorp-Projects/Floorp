@@ -1714,12 +1714,16 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
                                                 getter_AddRefs(principal));
     NS_ENSURE_SUCCESS(rv, true);
 
+    // child processes don't care about modification time.
+    int64_t modificationTime = 0;
+
     permissionManager->AddInternal(principal,
                                    nsCString(permission.type),
                                    permission.capability,
                                    0,
                                    permission.expireType,
                                    permission.expireTime,
+                                   modificationTime,
                                    nsPermissionManager::eNotify,
                                    nsPermissionManager::eNoDBOperation);
 #endif

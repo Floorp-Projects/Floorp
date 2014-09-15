@@ -673,13 +673,24 @@ FilterNodeFromPrimitiveDescription(const FilterPrimitiveDescription& aDescriptio
         filter->SetInput(IN_COMPOSITE_IN_START + 1, aSources[0]);
       } else {
         filter = aDT->CreateFilter(FilterType::BLEND);
-        static const uint8_t blendModes[SVG_FEBLEND_MODE_LIGHTEN + 1] = {
+        static const uint8_t blendModes[SVG_FEBLEND_MODE_LUMINOSITY + 1] = {
           0,
           0,
           BLEND_MODE_MULTIPLY,
           BLEND_MODE_SCREEN,
           BLEND_MODE_DARKEN,
-          BLEND_MODE_LIGHTEN
+          BLEND_MODE_LIGHTEN,
+          BLEND_MODE_OVERLAY,
+          BLEND_MODE_COLOR_DODGE,
+          BLEND_MODE_COLOR_BURN,
+          BLEND_MODE_HARD_LIGHT,
+          BLEND_MODE_SOFT_LIGHT,
+          BLEND_MODE_DIFFERENCE,
+          BLEND_MODE_EXCLUSION,
+          BLEND_MODE_HUE,
+          BLEND_MODE_SATURATION,
+          BLEND_MODE_COLOR,
+          BLEND_MODE_LUMINOSITY
         };
         filter->SetAttribute(ATT_BLEND_BLENDMODE, (uint32_t)blendModes[mode]);
         filter->SetInput(IN_BLEND_IN, aSources[0]);

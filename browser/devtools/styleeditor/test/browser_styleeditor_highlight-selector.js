@@ -35,14 +35,14 @@ let test = asyncTest(function*() {
   let onHighlighted = editor.once("node-highlighted");
 
   info("Simulate a mousemove event on the div selector");
-  editor._onMouseMove({clientX: 40, clientY: 10});
+  editor._onMouseMove({clientX: 56, clientY: 10});
   yield onHighlighted;
 
   ok(editor.highlighter.isShown, "The highlighter is now shown");
   is(editor.highlighter.options.selector, "div", "The selector is correct");
 
   info("Simulate a mousemove event elsewhere in the editor");
-  editor._onMouseMove({clientX: 0, clientY: 0});
+  editor._onMouseMove({clientX: 16, clientY: 0});
 
   ok(!editor.highlighter.isShown, "The highlighter is now hidden");
 });

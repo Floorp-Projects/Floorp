@@ -53,7 +53,7 @@ FilterProcessing::ApplyBlending(DataSourceSurface* aInput1, DataSourceSurface* a
     return ApplyBlending_SSE2(aInput1, aInput2, aBlendMode);
 #endif
   }
-  return ApplyBlending_Scalar(aInput1, aInput2, aBlendMode);
+  return nullptr;
 }
 
 void

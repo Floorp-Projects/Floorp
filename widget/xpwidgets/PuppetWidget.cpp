@@ -527,21 +527,29 @@ PuppetWidget::NotifyIMEOfUpdateComposition()
   NS_ENSURE_TRUE(textComposition, NS_ERROR_FAILURE);
 
   nsEventStatus status;
-  uint32_t offset = textComposition->OffsetOfTargetClause();
-  WidgetQueryContentEvent textRect(true, NS_QUERY_TEXT_RECT, this);
-  InitEvent(textRect, nullptr);
-  textRect.InitForQueryTextRect(offset, 1);
-  DispatchEvent(&textRect, status);
-  NS_ENSURE_TRUE(textRect.mSucceeded, NS_ERROR_FAILURE);
+  nsTArray<nsIntRect> textRectArray(textComposition->String().Length());
+  uint32_t startOffset = textComposition->NativeOffsetOfStartComposition();
+  uint32_t endOffset = textComposition->String().Length() + startOffset;
+  for (uint32_t i = startOffset; i < endOffset; i++) {
+    WidgetQueryContentEvent textRect(true, NS_QUERY_TEXT_RECT, this);
+    InitEvent(textRect, nullptr);
+    textRect.InitForQueryTextRect(i, 1);
+    DispatchEvent(&textRect, status);
+    NS_ENSURE_TRUE(textRect.mSucceeded, NS_ERROR_FAILURE);
 
+    textRectArray.AppendElement(textRect.mReply.mRect);
+  }
+
+  uint32_t targetCauseOffset = textComposition->OffsetOfTargetClause();
   WidgetQueryContentEvent caretRect(true, NS_QUERY_CARET_RECT, this);
   InitEvent(caretRect, nullptr);
-  caretRect.InitForQueryCaretRect(offset);
+  caretRect.InitForQueryCaretRect(targetCauseOffset);
   DispatchEvent(&caretRect, status);
   NS_ENSURE_TRUE(caretRect.mSucceeded, NS_ERROR_FAILURE);
 
-  mTabChild->SendNotifyIMESelectedCompositionRect(offset,
-                                                  textRect.mReply.mRect,
+  mTabChild->SendNotifyIMESelectedCompositionRect(startOffset,
+                                                  textRectArray,
+                                                  targetCauseOffset,
                                                   caretRect.mReply.mRect);
   return NS_OK;
 }
