@@ -994,6 +994,46 @@ FilterNodeBlendSoftware::SetAttribute(uint32_t aIndex, uint32_t aBlendMode)
   Invalidate();
 }
 
+static CompositionOp ToBlendOp(BlendMode aOp)
+{
+  switch (aOp) {
+  case BLEND_MODE_MULTIPLY:
+    return CompositionOp::OP_MULTIPLY;
+  case BLEND_MODE_SCREEN:
+    return CompositionOp::OP_SCREEN;
+  case BLEND_MODE_OVERLAY:
+    return CompositionOp::OP_OVERLAY;
+  case BLEND_MODE_DARKEN:
+    return CompositionOp::OP_DARKEN;
+  case BLEND_MODE_LIGHTEN:
+    return CompositionOp::OP_LIGHTEN;
+  case BLEND_MODE_COLOR_DODGE:
+    return CompositionOp::OP_COLOR_DODGE;
+  case BLEND_MODE_COLOR_BURN:
+    return CompositionOp::OP_COLOR_BURN;
+  case BLEND_MODE_HARD_LIGHT:
+    return CompositionOp::OP_HARD_LIGHT;
+  case BLEND_MODE_SOFT_LIGHT:
+    return CompositionOp::OP_SOFT_LIGHT;
+  case BLEND_MODE_DIFFERENCE:
+    return CompositionOp::OP_DIFFERENCE;
+  case BLEND_MODE_EXCLUSION:
+    return CompositionOp::OP_EXCLUSION;
+  case BLEND_MODE_HUE:
+    return CompositionOp::OP_HUE;
+  case BLEND_MODE_SATURATION:
+    return CompositionOp::OP_SATURATION;
+  case BLEND_MODE_COLOR:
+    return CompositionOp::OP_COLOR;
+  case BLEND_MODE_LUMINOSITY:
+    return CompositionOp::OP_LUMINOSITY;
+  default:
+    return CompositionOp::OP_OVER;
+  }
+
+  return CompositionOp::OP_OVER;
+}
+
 TemporaryRef<DataSourceSurface>
 FilterNodeBlendSoftware::Render(const IntRect& aRect)
 {
@@ -1010,14 +1050,38 @@ FilterNodeBlendSoftware::Render(const IntRect& aRect)
     return nullptr;
   }
 
-  // Second case: both are non-transparent.
-  if (input1 && input2) {
-    // Apply normal filtering.
-    return FilterProcessing::ApplyBlending(input1, input2, mBlendMode);
+  // Second case: one of them is transparent. Return the non-transparent one.
+  if (!input1 || !input2) {
+    return input1 ? input1.forget() : input2.forget();
   }
 
-  // Third case: one of them is transparent. Return the non-transparent one.
-  return input1 ? input1.forget() : input2.forget();
+  // Third case: both are non-transparent.
+  // Apply normal filtering.
+  RefPtr<DataSourceSurface> target = FilterProcessing::ApplyBlending(input1, input2, mBlendMode);
+  if (target != nullptr) {
+    return target.forget();
+  }
+
+  IntSize size = input1->GetSize();
+  target =
+    Factory::CreateDataSourceSurface(size, SurfaceFormat::B8G8R8A8);
+  if (MOZ2D_WARN_IF(!target)) {
+    return nullptr;
+  }
+
+  CopyRect(input1, target, IntRect(IntPoint(), size), IntPoint());
+
+  RefPtr<DrawTarget> dt =
+	    Factory::CreateDrawTargetForData(BackendType::CAIRO,
+	                                     target->GetData(),
+	                                     target->GetSize(),
+	                                     target->Stride(),
+	                                     target->GetFormat());
+
+  Rect r(0, 0, size.width, size.height);
+  dt->DrawSurface(input2, r, r, DrawSurfaceOptions(), DrawOptions(1.0f, ToBlendOp(mBlendMode)));
+  dt->Flush();
+  return target.forget();
 }
 
 void

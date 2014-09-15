@@ -95,6 +95,7 @@ OmxVideoTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
     segment.AppendFrom(&mRawSegment);
   }
 
+  nsresult rv;
   // Start queuing raw frames to the input buffers of OMXCodecWrapper.
   VideoSegment::ChunkIterator iter(segment);
   while (!iter.IsEnded()) {
@@ -105,7 +106,8 @@ OmxVideoTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
       uint64_t totalDurationUs = mTotalFrameDuration * USECS_PER_S / mTrackRate;
       layers::Image* img = (chunk.IsNull() || chunk.mFrame.GetForceBlack()) ?
                            nullptr : chunk.mFrame.GetImage();
-      mEncoder->Encode(img, mFrameWidth, mFrameHeight, totalDurationUs);
+      rv = mEncoder->Encode(img, mFrameWidth, mFrameHeight, totalDurationUs);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
 
     mLastFrame.TakeFrom(&chunk.mFrame);
@@ -119,22 +121,21 @@ OmxVideoTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData)
     uint64_t totalDurationUs = mTotalFrameDuration * USECS_PER_S / mTrackRate;
     layers::Image* img = (!mLastFrame.GetImage() || mLastFrame.GetForceBlack())
                          ? nullptr : mLastFrame.GetImage();
-    nsresult result = mEncoder->Encode(img, mFrameWidth, mFrameHeight,
-                                       totalDurationUs,
-                                       OMXCodecWrapper::BUFFER_EOS);
+    rv = mEncoder->Encode(img, mFrameWidth, mFrameHeight, totalDurationUs,
+                          OMXCodecWrapper::BUFFER_EOS);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // Keep sending EOS signal until OMXVideoEncoder gets it.
-    if (result == NS_OK) {
-      mEosSetInEncoder = true;
-    }
+    mEosSetInEncoder = true;
   }
 
   // Dequeue an encoded frame from the output buffers of OMXCodecWrapper.
-  nsresult rv;
   nsTArray<uint8_t> buffer;
   int outFlags = 0;
   int64_t outTimeStampUs = 0;
-  mEncoder->GetNextEncodedFrame(&buffer, &outTimeStampUs, &outFlags,
-                                GET_ENCODED_VIDEO_FRAME_TIMEOUT);
+  rv = mEncoder->GetNextEncodedFrame(&buffer, &outTimeStampUs, &outFlags,
+                                     GET_ENCODED_VIDEO_FRAME_TIMEOUT);
+  NS_ENSURE_SUCCESS(rv, rv);
   if (!buffer.IsEmpty()) {
     nsRefPtr<EncodedFrame> videoData = new EncodedFrame();
     if (outFlags & OMXCodecWrapper::BUFFER_CODEC_CONFIG) {

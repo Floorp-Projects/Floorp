@@ -34,7 +34,7 @@ public:
 
   // TextureClient
 
-  virtual bool IsAllocated() const MOZ_OVERRIDE { return !!mTexture; }
+  virtual bool IsAllocated() const MOZ_OVERRIDE { return mTexture || mTexture10; }
 
   virtual bool Lock(OpenMode aOpenMode) MOZ_OVERRIDE;
 
@@ -65,7 +65,8 @@ public:
 
 protected:
   gfx::IntSize mSize;
-  RefPtr<ID3D10Texture2D> mTexture;
+  RefPtr<ID3D10Texture2D> mTexture10;
+  RefPtr<ID3D11Texture2D> mTexture;
   RefPtr<gfx::DrawTarget> mDrawTarget;
   gfx::SurfaceFormat mFormat;
   bool mIsLocked;

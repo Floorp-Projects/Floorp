@@ -119,10 +119,27 @@
       promise.then(function (notifications) {
         is(notifications.length, 3, "should return 3 notifications");
         done();
+        n1.close();
+        n2.close();
+        n3.close();
       });
     },
 
-    deleteAllNotifications
+    deleteAllNotifications,
+
+    function (done) {
+      info("Testing 'alertfinished' removes the notification from DB");
+      var n = new Notification("test-title" + Math.random());
+      n.onclose = function() {
+        Notification.get().then(function(notifications) {
+            is(notifications.length, 0, "should return 0 notifications");
+            done();
+        });
+      }
+      window.setTimeout(function() {
+          NotificationTest.fireCloseEvent(n.title);
+      }, 100);
+    }
   ];
 
   MockServices.register();

@@ -4,7 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * SurfaceCache is a service for caching temporary surfaces in imagelib.
+ * SurfaceCache is a service for caching temporary surfaces and decoded image
+ * data in imagelib.
  */
 
 #ifndef MOZILLA_IMAGELIB_SURFACECACHE_H_
@@ -15,19 +16,15 @@
 #include "gfxPoint.h"               // for gfxSize
 #include "nsCOMPtr.h"               // for already_AddRefed
 #include "mozilla/gfx/Point.h"      // for mozilla::gfx::IntSize
+#include "mozilla/gfx/2D.h"         // for SourceSurface
 #include "SVGImageContext.h"        // for SVGImageContext
 
-class gfxDrawable;
-
 namespace mozilla {
-
-namespace gfx {
-class DrawTarget;
-} // namespace gfx
-
 namespace image {
 
+class DrawableFrameRef;
 class Image;
+class imgFrame;
 
 /*
  * ImageKey contains the information we need to look up all cached surfaces for
@@ -90,6 +87,11 @@ private:
  * surfaces. Surfaces expire from the cache automatically if they go too long
  * without being accessed.
  *
+ * SurfaceCache does not hold surfaces directly; instead, it holds imgFrame
+ * objects, which hold surfaces but also layer on additional features specific
+ * to imagelib's needs like animation, padding support, and transparent support
+ * for volatile buffers.
+ *
  * SurfaceCache is not thread-safe; it should only be accessed from the main
  * thread.
  */
@@ -108,27 +110,33 @@ struct SurfaceCache
   static void Shutdown();
 
   /*
-   * Look up a surface in the cache.
+   * Look up the imgFrame containing a surface in the cache and returns a
+   * drawable reference to that imgFrame.
+   *
+   * If the imgFrame was found in the cache, but had stored its surface in a
+   * volatile buffer which was discarded by the OS, then it is automatically
+   * removed from the cache and an empty DrawableFrameRef is returned.
    *
    * @param aImageKey    Key data identifying which image the surface belongs to.
    * @param aSurfaceKey  Key data which uniquely identifies the requested surface.
    *
-   * @return the requested surface, or nullptr if not found.
+   * @return a DrawableFrameRef to the imgFrame wrapping the requested surface,
+   *         or an empty DrawableFrameRef if not found.
    */
-  static already_AddRefed<gfxDrawable> Lookup(const ImageKey    aImageKey,
-                                              const SurfaceKey& aSurfaceKey);
+  static DrawableFrameRef Lookup(const ImageKey    aImageKey,
+                                 const SurfaceKey& aSurfaceKey);
 
   /*
    * Insert a surface into the cache. It is an error to call this function
    * without first calling Lookup to verify that the surface is not already in
    * the cache.
    *
-   * @param aTarget      The new surface (in the form of a DrawTarget) to insert
-   *                     into the cache.
+   * @param aTarget      The new surface (wrapped in an imgFrame) to insert into
+   *                     the cache.
    * @param aImageKey    Key data identifying which image the surface belongs to.
    * @param aSurfaceKey  Key data which uniquely identifies the requested surface.
    */
-  static void Insert(gfx::SourceSurface*  aSurface,
+  static void Insert(imgFrame*         aSurface,
                      const ImageKey    aImageKey,
                      const SurfaceKey& aSurfaceKey);
 

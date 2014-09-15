@@ -21,7 +21,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "notificationStorage",
                                    "@mozilla.org/notificationStorage;1",
                                    "nsINotificationStorage");
 
-
 XPCOMUtils.defineLazyGetter(this, "cpmm", function() {
   return Cc["@mozilla.org/childprocessmessagemanager;1"]
            .getService(Ci.nsIMessageSender);
@@ -162,13 +161,13 @@ AlertsService.prototype = {
           );
         }
       }
+      if (topic === kTopicAlertFinished && listener.dbId) {
+        notificationStorage.delete(listener.manifestURL, listener.dbId);
+      }
     }
 
     // we're done with this notification
     if (topic === kTopicAlertFinished) {
-      if (listener.dbId) {
-        notificationStorage.delete(listener.manifestURL, listener.dbId);
-      }
       delete this._listeners[data.uid];
     }
   },

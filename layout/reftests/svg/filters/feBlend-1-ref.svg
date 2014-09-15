@@ -1,9 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg">
 
-<rect x="10" y="10" width="80" height="80" fill="#00ff00"/>
-<rect x="110" y="10" width="80" height="80" fill="#000000"/>
-<rect x="210" y="10" width="80" height="80" fill="#ffff00"/>
-<rect x="310" y="10" width="80" height="80" fill="#000000"/>
-<rect x="410" y="10" width="80" height="80" fill="#ffff00"/>
-
+<rect x="0" y="0" width="50" height="50" fill="#ACCC10"/>
+<rect x="50" y="0" width="50" height="50" fill="#B4B43F"/>
+<rect x="100" y="0" width="50" height="50" fill="#DFDF3F"/>
+<rect x="150" y="0" width="50" height="50" fill="#B4B43F"/>
+<rect x="200" y="0" width="50" height="50" fill="#DFDF3F"/>
+<rect x="250" y="0" width="50" height="50" fill="#DFB43F"/>
+<rect x="300" y="0" width="50" height="50" fill="#DFB43F"/>
+<rect x="350" y="0" width="50" height="50" fill="#DFB43F"/>
+<rect x="0" y="50" width="50" height="50" fill="#E0B440"/>
+<rect x="50" y="50" width="50" height="50" fill="#DFB43F"/>
+<rect x="100" y="50" width="50" height="50" fill="#DFDF3F"/>
+<rect x="150" y="50" width="50" height="50" fill="#DFDF3F"/>
+<rect x="200" y="50" width="50" height="50" fill="#B4CC3F"/>
+<rect x="250" y="50" width="50" height="50" fill="#DFB43F"/>
+<rect x="300" y="50" width="50" height="50" fill="#B4CC3F"/>
+<rect x="350" y="50" width="50" height="50" fill="#DFC88D"/>
 </svg>
