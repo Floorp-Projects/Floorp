@@ -492,14 +492,11 @@ GetDataSurfaceInRect(SourceSurface *aSurface,
   IntRect intersectInDestSpace = intersect - aDestRect.TopLeft();
   SurfaceFormat format = aSurface ? aSurface->GetFormat() : SurfaceFormat(SurfaceFormat::B8G8R8A8);
 
+  bool clear = aEdgeMode == EDGE_MODE_NONE && !aSurfaceRect.Contains(aDestRect);
   RefPtr<DataSourceSurface> target =
-    Factory::CreateDataSourceSurface(aDestRect.Size(), format);
+    Factory::CreateDataSourceSurface(aDestRect.Size(), format, clear);
   if (MOZ2D_WARN_IF(!target)) {
     return nullptr;
-  }
-
-  if (aEdgeMode == EDGE_MODE_NONE && !aSurfaceRect.Contains(aDestRect)) {
-    ClearDataSourceSurface(target);
   }
 
   if (!aSurface) {
@@ -2371,11 +2368,10 @@ FilterNodeConvolveMatrixSoftware::DoRender(const IntRect& aRect,
   DebugOnlyAutoColorSamplingAccessControl accessControl(input);
 
   RefPtr<DataSourceSurface> target =
-    Factory::CreateDataSourceSurface(aRect.Size(), SurfaceFormat::B8G8R8A8);
+    Factory::CreateDataSourceSurface(aRect.Size(), SurfaceFormat::B8G8R8A8, true);
   if (MOZ2D_WARN_IF(!target)) {
     return nullptr;
   }
-  ClearDataSourceSurface(target);
 
   IntPoint offset = aRect.TopLeft() - srcRect.TopLeft();
 
@@ -2776,15 +2772,13 @@ FilterNodeCompositeSoftware::Render(const IntRect& aRect)
   RefPtr<DataSourceSurface> start =
     GetInputDataSourceSurface(IN_COMPOSITE_IN_START, aRect, NEED_COLOR_CHANNELS);
   RefPtr<DataSourceSurface> dest =
-    Factory::CreateDataSourceSurface(aRect.Size(), SurfaceFormat::B8G8R8A8);
+    Factory::CreateDataSourceSurface(aRect.Size(), SurfaceFormat::B8G8R8A8, !start);
   if (MOZ2D_WARN_IF(!dest)) {
     return nullptr;
   }
 
   if (start) {
     CopyRect(start, dest, aRect - aRect.TopLeft(), IntPoint());
-  } else {
-    ClearDataSourceSurface(dest);
   }
 
   for (size_t inputIndex = 1; inputIndex < NumberOfSetInputs(); inputIndex++) {
