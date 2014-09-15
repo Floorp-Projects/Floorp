@@ -4744,6 +4744,8 @@ CheckMathBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSMathBuiltinF
 
 typedef Vector<MDefinition*, 4, SystemAllocPolicy> DefinitionVector;
 
+namespace {
+
 template<class CheckArgOp>
 static bool
 CheckSimdCallArgs(FunctionCompiler &f, ParseNode *call, unsigned expectedArity,
@@ -4770,8 +4772,6 @@ CheckSimdCallArgs(FunctionCompiler &f, ParseNode *call, unsigned expectedArity,
 
     return true;
 }
-
-namespace {
 
 class CheckSimdScalarArgs
 {
