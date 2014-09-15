@@ -866,6 +866,25 @@ js::EnterWithOperation(JSContext *cx, AbstractFramePtr frame, HandleValue val,
     return true;
 }
 
+static void
+PopScope(JSContext *cx, ScopeIter &si)
+{
+    switch (si.type()) {
+      case ScopeIter::Block:
+        if (cx->compartment()->debugMode())
+            DebugScopes::onPopBlock(cx, si);
+        if (si.staticBlock().needsClone())
+            si.frame().popBlock(cx);
+        break;
+      case ScopeIter::With:
+        si.frame().popWith(cx);
+        break;
+      case ScopeIter::Call:
+      case ScopeIter::StrictEvalScope:
+        break;
+    }
+}
+
 // Unwind scope chain and iterator to match the static scope corresponding to
 // the given bytecode position.
 void
@@ -876,28 +895,42 @@ js::UnwindScope(JSContext *cx, ScopeIter &si, jsbytecode *pc)
 
     Rooted<NestedScopeObject *> staticScope(cx, si.frame().script()->getStaticScope(pc));
 
-    for (; si.staticScope() != staticScope; ++si) {
-        switch (si.type()) {
-          case ScopeIter::Block:
-            if (cx->compartment()->debugMode())
-                DebugScopes::onPopBlock(cx, si);
-            if (si.staticBlock().needsClone())
-                si.frame().popBlock(cx);
-            break;
-          case ScopeIter::With:
-            si.frame().popWith(cx);
-            break;
-          case ScopeIter::Call:
-          case ScopeIter::StrictEvalScope:
-            break;
-        }
-    }
+    for (; si.staticScope() != staticScope; ++si)
+        PopScope(cx, si);
+}
+
+// Unwind all scopes. This is needed because block scopes may cover the
+// first bytecode at a script's main(). e.g.,
+//
+//     function f() { { let i = 0; } }
+//
+// will have no pc location distinguishing the first block scope from the
+// outermost function scope.
+void
+js::UnwindAllScopes(JSContext *cx, ScopeIter &si)
+{
+    for (; !si.done(); ++si)
+        PopScope(cx, si);
+}
+
+// Compute the pc needed to unwind the scope to the beginning of a try
+// block. We cannot unwind to *after* the JSOP_TRY, because that might be the
+// first opcode of an inner scope, with the same problem as above. e.g.,
+//
+// try { { let x; } }
+//
+// will have no pc location distinguishing the try block scope from the inner
+// let block scope.
+jsbytecode *
+js::UnwindScopeToTryPc(JSScript *script, JSTryNote *tn)
+{
+    return script->main() + tn->start - js_CodeSpec[JSOP_TRY].length;
 }
 
 static void
 ForcedReturn(JSContext *cx, ScopeIter &si, InterpreterRegs &regs)
 {
-    UnwindScope(cx, si, regs.fp()->script()->main());
+    UnwindAllScopes(cx, si);
     regs.setToEndOfScript();
 }
 
@@ -1022,24 +1055,8 @@ HandleError(JSContext *cx, InterpreterRegs &regs)
         for (TryNoteIter tni(cx, regs); !tni.done(); ++tni) {
             JSTryNote *tn = *tni;
 
-            // Unwind the scope to the beginning of the JSOP_TRY. We cannot
-            // unwind to *after* the JSOP_TRY, because that might be the first
-            // opcode of an inner scope. Consider the following:
-            //
-            // try {
-            //   { let x; }
-            // }
-            //
-            // This would generate
-            //
-            // 0000: try
-            // 0001: undefined
-            // 0002: initlet 0
-            //
-            // If we unwound to 0001, we would be unwinding to the inner
-            // scope, and not the scope of the try { }.
-            UnwindScope(cx, si, (regs.fp()->script()->main() + tn->start -
-                                 js_CodeSpec[JSOP_TRY].length));
+            // Unwind the scope to the beginning of the JSOP_TRY.
+            UnwindScope(cx, si, UnwindScopeToTryPc(regs.fp()->script(), tn));
 
             /*
              * Set pc to the first bytecode after the the try note to point
