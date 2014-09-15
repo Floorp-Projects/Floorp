@@ -274,7 +274,8 @@ NS_IMETHODIMP imgTools::EncodeCroppedImage(imgIContainer *aContainer,
 
   RefPtr<DataSourceSurface> dataSurface =
     Factory::CreateDataSourceSurface(IntSize(aWidth, aHeight),
-                                     SurfaceFormat::B8G8R8A8);
+                                     SurfaceFormat::B8G8R8A8,
+                                     /* aZero = */ true);
   if (NS_WARN_IF(!dataSurface)) {
     return NS_ERROR_FAILURE;
   }
