@@ -83,17 +83,6 @@ SelectionCarets::~SelectionCarets()
   mPresShell = nullptr;
 }
 
-static bool
-IsOnRect(const nsRect& aRect,
-         const nsPoint& aPoint,
-         int32_t aInflateSize)
-{
-  // Check if the click was in the bounding box of the selection caret
-  nsRect rect = aRect;
-  rect.Inflate(aInflateSize);
-  return rect.Contains(aPoint);
-}
-
 nsEventStatus
 SelectionCarets::HandleEvent(WidgetEvent* aEvent)
 {
@@ -146,14 +135,13 @@ SelectionCarets::HandleEvent(WidgetEvent* aEvent)
 
     mActiveTouchId = nowTouchId;
     mDownPoint = ptInCanvas;
-    int32_t inflateSize = SelectionCaretsInflateSize();
-    if (mVisible && IsOnRect(GetStartFrameRect(), ptInCanvas, inflateSize)) {
+    if (IsOnStartFrame(ptInCanvas)) {
       mDragMode = START_FRAME;
       mCaretCenterToDownPointOffsetY = GetCaretYCenterPosition() - ptInCanvas.y;
       SetSelectionDirection(false);
       SetSelectionDragState(true);
       return nsEventStatus_eConsumeNoDefault;
-    } else if (mVisible && IsOnRect(GetEndFrameRect(), ptInCanvas, inflateSize)) {
+    } else if (IsOnEndFrame(ptInCanvas)) {
       mDragMode = END_FRAME;
       mCaretCenterToDownPointOffsetY = GetCaretYCenterPosition() - ptInCanvas.y;
       SetSelectionDirection(true);
@@ -786,6 +774,22 @@ void
 SelectionCarets::SetEndFramePos(const nsPoint& aPosition)
 {
   SetFramePos(mPresShell->GetSelectionCaretsEndElement(), aPosition);
+}
+
+bool
+SelectionCarets::IsOnStartFrame(const nsPoint& aPosition)
+{
+  return mVisible &&
+    nsLayoutUtils::ContainsPoint(GetStartFrameRect(), aPosition,
+                                 SelectionCaretsInflateSize());
+}
+
+bool
+SelectionCarets::IsOnEndFrame(const nsPoint& aPosition)
+{
+  return mVisible &&
+    nsLayoutUtils::ContainsPoint(GetEndFrameRect(), aPosition,
+                                 SelectionCaretsInflateSize());
 }
 
 nsRect
