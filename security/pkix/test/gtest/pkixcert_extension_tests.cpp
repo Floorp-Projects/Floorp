@@ -24,8 +24,6 @@
 
 #include "nssgtest.h"
 #include "pkix/pkix.h"
-#include "pkix/pkixnss.h"
-#include "pkixtestutil.h"
 #include "secerr.h"
 
 using namespace mozilla::pkix;
@@ -75,47 +73,50 @@ CreateCert(PLArenaPool* arena, const char* subjectStr,
 class TrustEverythingTrustDomain : public TrustDomain
 {
 private:
-  virtual Result GetCertTrust(EndEntityOrCA, const CertPolicyId&,
-                              const SECItem& candidateCert,
-                              /*out*/ TrustLevel* trustLevel)
+  SECStatus GetCertTrust(EndEntityOrCA,
+                         const CertPolicyId&,
+                         const SECItem& candidateCert,
+                         /*out*/ TrustLevel* trustLevel)
   {
     *trustLevel = TrustLevel::TrustAnchor;
-    return Success;
+    return SECSuccess;
   }
 
-  virtual Result FindIssuer(const SECItem& /*encodedIssuerName*/,
-                            IssuerChecker& /*checker*/, PRTime /*time*/)
+  SECStatus FindIssuer(const SECItem& /*encodedIssuerName*/,
+                       IssuerChecker& /*checker*/, PRTime /*time*/)
   {
     ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
+    return SECFailure;
   }
 
-  virtual Result CheckRevocation(EndEntityOrCA, const CertID&, PRTime,
-                                 /*optional*/ const SECItem*,
-                                 /*optional*/ const SECItem*)
+  SECStatus CheckRevocation(EndEntityOrCA, const CertID&, PRTime,
+                            /*optional*/ const SECItem*,
+                            /*optional*/ const SECItem*)
   {
-    return Success;
+    return SECSuccess;
   }
 
-  virtual Result IsChainValid(const DERArray&)
+  virtual SECStatus IsChainValid(const DERArray&)
   {
-    return Success;
+    return SECSuccess;
   }
 
-  virtual Result VerifySignedData(const SignedDataWithSignature& signedData,
-                                  const SECItem& subjectPublicKeyInfo)
+  SECStatus VerifySignedData(const SignedDataWithSignature& signedData,
+                             const SECItem& subjectPublicKeyInfo)
   {
     return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
                                              nullptr);
   }
 
-  virtual Result DigestBuf(const SECItem&, /*out*/ uint8_t*, size_t)
+  SECStatus DigestBuf(const SECItem&, /*out*/ uint8_t *, size_t)
   {
     ADD_FAILURE();
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
+    return SECFailure;
   }
 
-  virtual Result CheckPublicKey(const SECItem& subjectPublicKeyInfo)
+  SECStatus CheckPublicKey(const SECItem& subjectPublicKeyInfo)
   {
     return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
   }
@@ -160,13 +161,13 @@ TEST_F(pkixcert_extension, UnknownCriticalExtension)
   const SECItem* cert(CreateCert(arena.get(), certCN,
                                  &unknownCriticalExtension, key));
   ASSERT_TRUE(cert);
-  ASSERT_EQ(Result::ERROR_UNKNOWN_CRITICAL_EXTENSION,
-            BuildCertChain(trustDomain, *cert, now,
-                           EndEntityOrCA::MustBeEndEntity,
-                           KeyUsage::noParticularKeyUsageRequired,
-                           KeyPurposeId::anyExtendedKeyUsage,
-                           CertPolicyId::anyPolicy,
-                           nullptr/*stapledOCSPResponse*/));
+  ASSERT_SECFailure(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION,
+                    BuildCertChain(trustDomain, *cert, now,
+                                   EndEntityOrCA::MustBeEndEntity,
+                                   KeyUsage::noParticularKeyUsageRequired,
+                                   KeyPurposeId::anyExtendedKeyUsage,
+                                   CertPolicyId::anyPolicy,
+                                   nullptr/*stapledOCSPResponse*/));
 }
 
 // Tests that a non-critical extension not in the id-ce or id-pe arcs (which is
@@ -192,13 +193,12 @@ TEST_F(pkixcert_extension, UnknownNonCriticalExtension)
   const SECItem* cert(CreateCert(arena.get(), certCN,
                                  &unknownNonCriticalExtension, key));
   ASSERT_TRUE(cert);
-  ASSERT_EQ(Success,
-            BuildCertChain(trustDomain, *cert, now,
-                           EndEntityOrCA::MustBeEndEntity,
-                           KeyUsage::noParticularKeyUsageRequired,
-                           KeyPurposeId::anyExtendedKeyUsage,
-                           CertPolicyId::anyPolicy,
-                           nullptr/*stapledOCSPResponse*/));
+  ASSERT_SECSuccess(BuildCertChain(trustDomain, *cert, now,
+                                   EndEntityOrCA::MustBeEndEntity,
+                                   KeyUsage::noParticularKeyUsageRequired,
+                                   KeyPurposeId::anyExtendedKeyUsage,
+                                   CertPolicyId::anyPolicy,
+                                   nullptr/*stapledOCSPResponse*/));
 }
 
 // Tests that an incorrect OID for id-pe-authorityInformationAccess
@@ -225,13 +225,13 @@ TEST_F(pkixcert_extension, WrongOIDCriticalExtension)
   const SECItem* cert(CreateCert(arena.get(), certCN,
                                  &wrongOIDCriticalExtension, key));
   ASSERT_TRUE(cert);
-  ASSERT_EQ(Result::ERROR_UNKNOWN_CRITICAL_EXTENSION,
-            BuildCertChain(trustDomain, *cert, now,
-                           EndEntityOrCA::MustBeEndEntity,
-                           KeyUsage::noParticularKeyUsageRequired,
-                           KeyPurposeId::anyExtendedKeyUsage,
-                           CertPolicyId::anyPolicy,
-                           nullptr/*stapledOCSPResponse*/));
+  ASSERT_SECFailure(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION,
+                    BuildCertChain(trustDomain, *cert, now,
+                                   EndEntityOrCA::MustBeEndEntity,
+                                   KeyUsage::noParticularKeyUsageRequired,
+                                   KeyPurposeId::anyExtendedKeyUsage,
+                                   CertPolicyId::anyPolicy,
+                                   nullptr/*stapledOCSPResponse*/));
 }
 
 // Tests that a id-pe-authorityInformationAccess critical extension
@@ -260,13 +260,12 @@ TEST_F(pkixcert_extension, CriticalAIAExtension)
   const SECItem* cert(CreateCert(arena.get(), certCN, &criticalAIAExtension,
                                  key));
   ASSERT_TRUE(cert);
-  ASSERT_EQ(Success,
-            BuildCertChain(trustDomain, *cert, now,
-                           EndEntityOrCA::MustBeEndEntity,
-                           KeyUsage::noParticularKeyUsageRequired,
-                           KeyPurposeId::anyExtendedKeyUsage,
-                           CertPolicyId::anyPolicy,
-                           nullptr/*stapledOCSPResponse*/));
+  ASSERT_SECSuccess(BuildCertChain(trustDomain, *cert, now,
+                                   EndEntityOrCA::MustBeEndEntity,
+                                   KeyUsage::noParticularKeyUsageRequired,
+                                   KeyPurposeId::anyExtendedKeyUsage,
+                                   CertPolicyId::anyPolicy,
+                                   nullptr/*stapledOCSPResponse*/));
 }
 
 // We know about some id-ce extensions (OID arc 2.5.29), but not all of them.
@@ -292,13 +291,13 @@ TEST_F(pkixcert_extension, UnknownCriticalCEExtension)
   const SECItem* cert(CreateCert(arena.get(), certCN,
                                  &unknownCriticalCEExtension, key));
   ASSERT_TRUE(cert);
-  ASSERT_EQ(Result::ERROR_UNKNOWN_CRITICAL_EXTENSION,
-            BuildCertChain(trustDomain, *cert, now,
-                           EndEntityOrCA::MustBeEndEntity,
-                           KeyUsage::noParticularKeyUsageRequired,
-                           KeyPurposeId::anyExtendedKeyUsage,
-                           CertPolicyId::anyPolicy,
-                           nullptr/*stapledOCSPResponse*/));
+  ASSERT_SECFailure(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION,
+                    BuildCertChain(trustDomain, *cert, now,
+                                   EndEntityOrCA::MustBeEndEntity,
+                                   KeyUsage::noParticularKeyUsageRequired,
+                                   KeyPurposeId::anyExtendedKeyUsage,
+                                   CertPolicyId::anyPolicy,
+                                   nullptr/*stapledOCSPResponse*/));
 }
 
 // Tests that a certificate with a known critical id-ce extension (in this case,
@@ -324,13 +323,12 @@ TEST_F(pkixcert_extension, KnownCriticalCEExtension)
   const SECItem* cert(CreateCert(arena.get(), certCN, &criticalCEExtension,
                                  key));
   ASSERT_TRUE(cert);
-  ASSERT_EQ(Success,
-            BuildCertChain(trustDomain, *cert, now,
-                           EndEntityOrCA::MustBeEndEntity,
-                           KeyUsage::noParticularKeyUsageRequired,
-                           KeyPurposeId::anyExtendedKeyUsage,
-                           CertPolicyId::anyPolicy,
-                           nullptr/*stapledOCSPResponse*/));
+  ASSERT_SECSuccess(BuildCertChain(trustDomain, *cert,
+                                   now, EndEntityOrCA::MustBeEndEntity,
+                                   KeyUsage::noParticularKeyUsageRequired,
+                                   KeyPurposeId::anyExtendedKeyUsage,
+                                   CertPolicyId::anyPolicy,
+                                   nullptr/*stapledOCSPResponse*/));
 }
 
 // Two subjectAltNames must result in an error.
@@ -356,11 +354,11 @@ TEST_F(pkixcert_extension, DuplicateSubjectAltName)
   // cert is owned by the arena
   const SECItem* cert(CreateCert(arena.get(), certCN, extensions, key));
   ASSERT_TRUE(cert);
-  ASSERT_EQ(Result::ERROR_EXTENSION_VALUE_INVALID,
-            BuildCertChain(trustDomain, *cert, now,
-                           EndEntityOrCA::MustBeEndEntity,
-                           KeyUsage::noParticularKeyUsageRequired,
-                           KeyPurposeId::anyExtendedKeyUsage,
-                           CertPolicyId::anyPolicy,
-                           nullptr/*stapledOCSPResponse*/));
+  ASSERT_SECFailure(SEC_ERROR_EXTENSION_VALUE_INVALID,
+                    BuildCertChain(trustDomain, *cert,
+                                   now, EndEntityOrCA::MustBeEndEntity,
+                                   KeyUsage::noParticularKeyUsageRequired,
+                                   KeyPurposeId::anyExtendedKeyUsage,
+                                   CertPolicyId::anyPolicy,
+                                   nullptr/*stapledOCSPResponse*/));
 }

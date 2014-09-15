@@ -22,8 +22,7 @@
  * limitations under the License.
  */
 
-#include "gtest/gtest.h"
-#include "pkix/pkixtypes.h"
+#include "pkixgtest.h"
 #include "pkixtestutil.h"
 
 using namespace mozilla::pkix;
@@ -61,7 +60,14 @@ static const PRTime NOW(YMDHMS(2016, 12, 31, 12, 23, 56));
 
 static const PRTime FUTURE_TIME(YMDHMS(2025, 12, 31, 12, 23, 56));
 
-class pkixcheck_CheckValidity : public ::testing::Test { };
+class pkixcheck_CheckValidity : public ::testing::Test
+{
+public:
+  virtual void SetUp()
+  {
+    PR_SetError(0, 0);
+  }
+};
 
 TEST_F(pkixcheck_CheckValidity, BothEmptyNull)
 {
@@ -74,7 +80,8 @@ TEST_F(pkixcheck_CheckValidity, BothEmptyNull)
     const_cast<uint8_t*>(DER),
     sizeof(DER)
   };
-  ASSERT_EQ(Result::ERROR_EXPIRED_CERTIFICATE, CheckValidity(validity, NOW));
+  ASSERT_RecoverableError(SEC_ERROR_EXPIRED_CERTIFICATE,
+                          CheckValidity(validity, NOW));
 }
 
 TEST_F(pkixcheck_CheckValidity, NotBeforeEmptyNull)
@@ -88,7 +95,8 @@ TEST_F(pkixcheck_CheckValidity, NotBeforeEmptyNull)
     const_cast<uint8_t*>(DER),
     sizeof(DER)
   };
-  ASSERT_EQ(Result::ERROR_EXPIRED_CERTIFICATE, CheckValidity(validity, NOW));
+  ASSERT_RecoverableError(SEC_ERROR_EXPIRED_CERTIFICATE,
+                          CheckValidity(validity, NOW));
 }
 
 TEST_F(pkixcheck_CheckValidity, NotAfterEmptyNull)
@@ -102,7 +110,8 @@ TEST_F(pkixcheck_CheckValidity, NotAfterEmptyNull)
     const_cast<uint8_t*>(DER),
     sizeof(DER)
   };
-  ASSERT_EQ(Result::ERROR_EXPIRED_CERTIFICATE, CheckValidity(validity, NOW));
+  ASSERT_RecoverableError(SEC_ERROR_EXPIRED_CERTIFICATE,
+                          CheckValidity(validity, NOW));
 }
 
 static const uint8_t OLDER_UTCTIME_NEWER_UTCTIME_DATA[] = {
@@ -117,7 +126,7 @@ static const SECItem OLDER_UTCTIME_NEWER_UTCTIME = {
 
 TEST_F(pkixcheck_CheckValidity, Valid_UTCTIME_UTCTIME)
 {
-  ASSERT_EQ(Success, CheckValidity(OLDER_UTCTIME_NEWER_UTCTIME, NOW));
+  ASSERT_Success(CheckValidity(OLDER_UTCTIME_NEWER_UTCTIME, NOW));
 }
 
 TEST_F(pkixcheck_CheckValidity, Valid_GENERALIZEDTIME_GENERALIZEDTIME)
@@ -131,7 +140,7 @@ TEST_F(pkixcheck_CheckValidity, Valid_GENERALIZEDTIME_GENERALIZEDTIME)
     const_cast<uint8_t*>(DER),
     sizeof(DER)
   };
-  ASSERT_EQ(Success, CheckValidity(validity, NOW));
+  ASSERT_Success(CheckValidity(validity, NOW));
 }
 
 TEST_F(pkixcheck_CheckValidity, Valid_GENERALIZEDTIME_UTCTIME)
@@ -145,7 +154,7 @@ TEST_F(pkixcheck_CheckValidity, Valid_GENERALIZEDTIME_UTCTIME)
     const_cast<uint8_t*>(DER),
     sizeof(DER)
   };
-  ASSERT_EQ(Success, CheckValidity(validity, NOW));
+  ASSERT_Success(CheckValidity(validity, NOW));
 }
 
 TEST_F(pkixcheck_CheckValidity, Valid_UTCTIME_GENERALIZEDTIME)
@@ -159,19 +168,21 @@ TEST_F(pkixcheck_CheckValidity, Valid_UTCTIME_GENERALIZEDTIME)
     const_cast<uint8_t*>(DER),
     sizeof(DER)
   };
-  ASSERT_EQ(Success, CheckValidity(validity, NOW));
+  ASSERT_Success(CheckValidity(validity, NOW));
 }
 
 TEST_F(pkixcheck_CheckValidity, InvalidBeforeNotBefore)
 {
-  ASSERT_EQ(Result::ERROR_EXPIRED_CERTIFICATE,
-            CheckValidity(OLDER_UTCTIME_NEWER_UTCTIME, PAST_TIME));
+  ASSERT_RecoverableError(SEC_ERROR_EXPIRED_CERTIFICATE,
+                          CheckValidity(OLDER_UTCTIME_NEWER_UTCTIME,
+                                        PAST_TIME));
 }
 
 TEST_F(pkixcheck_CheckValidity, InvalidAfterNotAfter)
 {
-  ASSERT_EQ(Result::ERROR_EXPIRED_CERTIFICATE,
-            CheckValidity(OLDER_UTCTIME_NEWER_UTCTIME, FUTURE_TIME));
+  ASSERT_RecoverableError(SEC_ERROR_EXPIRED_CERTIFICATE,
+                          CheckValidity(OLDER_UTCTIME_NEWER_UTCTIME,
+                                        FUTURE_TIME));
 }
 
 TEST_F(pkixcheck_CheckValidity, InvalidNotAfterBeforeNotBefore)
@@ -185,5 +196,6 @@ TEST_F(pkixcheck_CheckValidity, InvalidNotAfterBeforeNotBefore)
     const_cast<uint8_t*>(DER),
     sizeof(DER)
   };
-  ASSERT_EQ(Result::ERROR_EXPIRED_CERTIFICATE, CheckValidity(validity, NOW));
+  ASSERT_RecoverableError(SEC_ERROR_EXPIRED_CERTIFICATE,
+                          CheckValidity(validity, NOW));
 }

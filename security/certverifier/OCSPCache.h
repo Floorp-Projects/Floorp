@@ -28,7 +28,6 @@
 #include "hasht.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Vector.h"
-#include "pkix/Result.h"
 #include "prerror.h"
 #include "prtime.h"
 #include "seccomon.h"
@@ -59,8 +58,7 @@ public:
   // If it is in the cache, returns by reference the error code of the cached
   // status and the time through which the status is considered trustworthy.
   bool Get(const mozilla::pkix::CertID& aCertID,
-           /*out*/ mozilla::pkix::Result& aResult,
-           /*out*/ PRTime& aValidThrough);
+           /* out */ PRErrorCode& aErrorCode, /* out */ PRTime& aValidThrough);
 
   // Caches the status of the given certificate (issued by the given issuer).
   // The status is considered trustworthy through the given time.
@@ -71,9 +69,8 @@ public:
   // A status with a more recent thisUpdate will not be replaced with a
   // status with a less recent thisUpdate unless the less recent status
   // indicates the certificate is revoked.
-  mozilla::pkix::Result Put(const mozilla::pkix::CertID& aCertID,
-                            mozilla::pkix::Result aResult, PRTime aThisUpdate,
-                            PRTime aValidThrough);
+  SECStatus Put(const mozilla::pkix::CertID& aCertID, PRErrorCode aErrorCode,
+                PRTime aThisUpdate, PRTime aValidThrough);
 
   // Removes everything from the cache.
   void Clear();
@@ -82,11 +79,10 @@ private:
   class Entry
   {
   public:
-    mozilla::pkix::Result Init(const mozilla::pkix::CertID& aCertID,
-                               mozilla::pkix::Result aResult,
-                               PRTime aThisUpdate, PRTime aValidThrough);
+    SECStatus Init(const mozilla::pkix::CertID& aCertID, PRErrorCode aErrorCode,
+                   PRTime aThisUpdate, PRTime aValidThrough);
 
-    mozilla::pkix::Result mResult;
+    PRErrorCode mErrorCode;
     PRTime mThisUpdate;
     PRTime mValidThrough;
     // The SHA-384 hash of the concatenation of the DER encodings of the
