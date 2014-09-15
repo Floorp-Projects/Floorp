@@ -333,13 +333,8 @@ DrawTargetD2D::GetImageForSurface(SourceSurface *aSurface)
 {
   RefPtr<ID2D1Image> image;
 
-  if (aSurface->GetType() == SurfaceType::D2D1_1_IMAGE) {
-    image = static_cast<SourceSurfaceD2D1*>(aSurface)->GetImage();
-    static_cast<SourceSurfaceD2D1*>(aSurface)->EnsureIndependent();
-  } else {
-    Rect r(Point(), Size(aSurface->GetSize()));
-    image = GetBitmapForSurface(aSurface, r);
-  }
+  Rect r(Point(), Size(aSurface->GetSize()));
+  image = GetBitmapForSurface(aSurface, r);
 
   return image;
 }
@@ -2692,6 +2687,7 @@ DrawTargetD2D::factory()
 #else
   options.debugLevel = D2D1_DEBUG_LEVEL_NONE;
 #endif
+  //options.debugLevel = D2D1_DEBUG_LEVEL_INFORMATION;
 
   HRESULT hr = createD2DFactory(D2D1_FACTORY_TYPE_MULTI_THREADED,
                                 __uuidof(ID2D1Factory),

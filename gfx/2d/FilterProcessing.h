@@ -67,7 +67,6 @@ public:
 protected:
   static void ExtractAlpha_Scalar(const IntSize& size, uint8_t* sourceData, int32_t sourceStride, uint8_t* alphaData, int32_t alphaStride);
   static TemporaryRef<DataSourceSurface> ConvertToB8G8R8A8_Scalar(SourceSurface* aSurface);
-  static TemporaryRef<DataSourceSurface> ApplyBlending_Scalar(DataSourceSurface* aInput1, DataSourceSurface* aInput2, BlendMode aBlendMode);
   static void ApplyMorphologyHorizontal_Scalar(uint8_t* aSourceData, int32_t aSourceStride,
                                                uint8_t* aDestData, int32_t aDestStride,
                                                const IntRect& aDestRect, int32_t aRadius,

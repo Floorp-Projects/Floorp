@@ -548,6 +548,7 @@ Factory::SetDirect3D10Device(ID3D10Device1 *aDevice)
 
 ID3D10Device1*
 Factory::GetDirect3D10Device()
+
 {
 #ifdef DEBUG
   UINT mode = mD3D10Device->GetExceptionMode();
@@ -557,6 +558,28 @@ Factory::GetDirect3D10Device()
 }
 
 #ifdef USE_D2D1_1
+TemporaryRef<DrawTarget>
+Factory::CreateDrawTargetForD3D11Texture(ID3D11Texture2D *aTexture, SurfaceFormat aFormat)
+{
+  RefPtr<DrawTargetD2D1> newTarget;
+
+  newTarget = new DrawTargetD2D1();
+  if (newTarget->Init(aTexture, aFormat)) {
+    RefPtr<DrawTarget> retVal = newTarget;
+
+    if (mRecorder) {
+      retVal = new DrawTargetRecording(mRecorder, retVal, true);
+    }
+
+    return retVal;
+  }
+
+  gfxWarning() << "Failed to create draw target for D3D10 texture.";
+
+  // Failed
+  return nullptr;
+}
+
 void
 Factory::SetDirect3D11Device(ID3D11Device *aDevice)
 {
@@ -579,6 +602,12 @@ ID2D1Device*
 Factory::GetD2D1Device()
 {
   return mD2D1Device;
+}
+
+bool
+Factory::SupportsD2D1()
+{
+  return !!D2DFactory1();
 }
 #endif
 

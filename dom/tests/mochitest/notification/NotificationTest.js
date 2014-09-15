@@ -96,6 +96,14 @@ var NotificationTest = (function () {
       // TODO: how??
     },
 
+    fireCloseEvent: function (title) {
+      window.dispatchEvent(new CustomEvent("mock-notification-close-event", {
+        detail: {
+          title: title
+        }
+      }));
+    },
+
     info: info,
 
     customDataMatches: function(dataObj) {
