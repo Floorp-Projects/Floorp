@@ -304,9 +304,14 @@ public class Favicons {
      *         or a somewhat educated guess.
      */
     public static String getFaviconURLForPageURL(Context context, String pageURL) {
+        // Query the URL cache.
+        String targetURL = getFaviconURLForPageURLFromCache(pageURL);
+        if (targetURL != null) {
+            return targetURL;
+        }
+
         // Attempt to determine the Favicon URL from the Tabs datastructure. Can dodge having to use
         // the database sometimes by doing this.
-        String targetURL;
         Tab theTab = Tabs.getInstance().getFirstTabForUrl(pageURL);
         if (theTab != null) {
             targetURL = theTab.getFaviconURL();
@@ -319,6 +324,7 @@ public class Favicons {
         final ContentResolver resolver = context.getContentResolver();
         targetURL = BrowserDB.getFaviconURLFromPageURL(resolver, pageURL);
         if (targetURL != null) {
+            putFaviconURLForPageURLInCache(pageURL, targetURL);
             return targetURL;
         }
 
