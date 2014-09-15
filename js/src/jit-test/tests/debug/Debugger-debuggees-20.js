@@ -9,14 +9,17 @@ var g3 = newGlobal();           // Created after the Debugger; debuggee.
 var g4 = newGlobal();           // Created after the Debugger; not debuggee.
 
 var g1w = dbg.addDebuggee(g1);
+var g3w = dbg.addDebuggee(g3);
 assertEq(dbg.addAllGlobalsAsDebuggees(), undefined);
 
 // Get Debugger.Objects viewing the globals from their own compartments;
 // this is the sort that findAllGlobals and addDebuggee return.
-var g1w = g1w.makeDebuggeeValue(g1).unwrap();
+assertEq(g1w, g3w.makeDebuggeeValue(g1).unwrap());
+assertEq(g3w, g1w.makeDebuggeeValue(g3).unwrap());
+
 var g2w = g1w.makeDebuggeeValue(g2).unwrap();
-var g3w = g1w.makeDebuggeeValue(g3).unwrap();
 var g4w = g1w.makeDebuggeeValue(g4).unwrap();
+
 var thisw = g1w.makeDebuggeeValue(this).unwrap();
 
 // Check that they're all there.
