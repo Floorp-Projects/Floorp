@@ -52,7 +52,7 @@ function run_test() {
   // didn't throw and otherwise it would report no tests run.
   do_check_true(true);
 
-  let registrar = Components.manager.QueryInterface(AUS_Ci.nsIComponentRegistrar);
+  registrar = Components.manager.QueryInterface(AUS_Ci.nsIComponentRegistrar);
   registrar.unregisterFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af55}"),
                               WindowWatcherFactory);
   registrar.unregisterFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af56}"),

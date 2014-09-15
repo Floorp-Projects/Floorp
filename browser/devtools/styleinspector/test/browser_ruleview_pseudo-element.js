@@ -110,7 +110,7 @@ function* testTopLeft(inspector, view) {
   is(defaultView.getComputedStyle(element).getPropertyValue("padding-top"), "32px",
     "Added property should not apply to element");
 
-  let firstProp = elementRuleView.addProperty("background-color", "rgb(0, 0, 255)", "");
+  firstProp = elementRuleView.addProperty("background-color", "rgb(0, 0, 255)", "");
   yield elementRule._applyingModifications;
 
   is(defaultView.getComputedStyle(element).getPropertyValue("background-color"), "rgb(0, 0, 255)",

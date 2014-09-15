@@ -63,7 +63,7 @@ let test = asyncTest(function*() {
 
   info("Checking that the right NodeFront reference and options are passed");
   yield selectNode("p", inspector);
-  let selectorSpan = getRuleViewSelector(rView, "p").firstElementChild;
+  selectorSpan = getRuleViewSelector(rView, "p").firstElementChild;
   rView.highlighters._onMouseMove({target: selectorSpan});
   is(HighlighterFront.nodeFront.tagName, "P",
     "The right NodeFront is passed to the highlighter (1)");
@@ -71,7 +71,7 @@ let test = asyncTest(function*() {
     "The right selector option is passed to the highlighter (1)");
 
   yield selectNode("body", inspector);
-  let selectorSpan = getRuleViewSelector(rView, "body").firstElementChild;
+  selectorSpan = getRuleViewSelector(rView, "body").firstElementChild;
   rView.highlighters._onMouseMove({target: selectorSpan});
   is(HighlighterFront.nodeFront.tagName, "BODY",
     "The right NodeFront is passed to the highlighter (2)");

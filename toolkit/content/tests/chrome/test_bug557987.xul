@@ -40,8 +40,8 @@ function test() {
   synthesizeMouse(button, centerX, centerY, {}, window);
   
   let menulist = $("menulist");
-  let centerX = menulist.getBoundingClientRect().width / 2;
-  let centerY = menulist.getBoundingClientRect().height / 2;
+  centerX = menulist.getBoundingClientRect().width / 2;
+  centerY = menulist.getBoundingClientRect().height / 2;
   synthesizeMouse(menulist, centerX, centerY, {}, window);
 
   synthesizeMouse(document.getElementsByTagName("body")[0], 0, 0, {}, window);

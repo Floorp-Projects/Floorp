@@ -35,7 +35,7 @@ function testSteps()
 
   db.close();
 
-  let request = indexedDB.deleteDatabase(name);
+  request = indexedDB.deleteDatabase(name);
 
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;

@@ -121,11 +121,11 @@ var tests = [
     },
     run: function() {
       let testSite1 = getSiteItem(TEST_URI_1.host);
-      ok(!testSite2, "test site 1 was not removed from sites list");
+      ok(testSite1, "test site 1 was not removed from sites list");
       let testSite2 = getSiteItem(TEST_URI_2.host);
       ok(!testSite2, "test site 2 was pre-removed from sites list");
       let testSite3 = getSiteItem(TEST_URI_3.host);
-      ok(!testSite2, "test site 3 was not removed from sites list");
+      ok(testSite3, "test site 3 was not removed from sites list");
 
       runNextTest();
     }

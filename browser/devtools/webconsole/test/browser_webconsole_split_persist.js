@@ -30,8 +30,8 @@ function test() {
     yield toolbox.destroy();
 
     info("Opening a tab while there is a true user setting on split console pref");
-    let {tab} = yield loadTab(TEST_URI);
-    let target = TargetFactory.forTab(tab);
+    ({tab} = yield loadTab(TEST_URI));
+    target = TargetFactory.forTab(tab);
     toolbox = yield gDevTools.showToolbox(target, "inspector");
 
     ok(toolbox.splitConsole, "Split console is visible by default.");
@@ -63,8 +63,8 @@ function test() {
 
 
     info("Opening a tab while there is a false user setting on split console pref");
-    let {tab} = yield loadTab(TEST_URI);
-    let target = TargetFactory.forTab(tab);
+    ({tab} = yield loadTab(TEST_URI));
+    target = TargetFactory.forTab(tab);
     toolbox = yield gDevTools.showToolbox(target, "inspector");
 
     ok(!toolbox.splitConsole, "Split console is hidden by default.");

@@ -523,7 +523,7 @@ add_task(function* test_addSubmission() {
   Assert.ok(s.addSubmissionResult("crash1", "sub2", DUMMY_DATE_2,
                                   SUBMISSION_RESULT_OK));
 
-  let submission = s.getSubmission("crash1", "sub2");
+  submission = s.getSubmission("crash1", "sub2");
   Assert.ok(!!submission);
   Assert.equal(submission.result, SUBMISSION_RESULT_OK);
 });

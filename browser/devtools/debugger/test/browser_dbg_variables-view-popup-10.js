@@ -49,7 +49,7 @@ function test() {
       }
     });
 
-    let expressionsEvaluated = waitForDebuggerEvents(panel, events.FETCHED_WATCH_EXPRESSIONS);
+    expressionsEvaluated = waitForDebuggerEvents(panel, events.FETCHED_WATCH_EXPRESSIONS);
     yield openVarPopup(panel, { line: 14, ch: 15 });
     yield expressionsEvaluated;
 

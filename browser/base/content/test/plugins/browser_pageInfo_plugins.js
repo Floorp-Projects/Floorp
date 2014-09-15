@@ -70,7 +70,7 @@ function testPart1a() {
   let objLoadingContent = test.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(!objLoadingContent.activated, "part 1a: Test plugin should not be activated");
   let secondtest = gTestBrowser.contentDocument.getElementById("secondtestA");
-  let objLoadingContent = secondtest.QueryInterface(Ci.nsIObjectLoadingContent);
+  objLoadingContent = secondtest.QueryInterface(Ci.nsIObjectLoadingContent);
   ok(objLoadingContent.activated, "part 1a: Second Test plugin should be activated");
 
   doOnOpenPageInfo(testPart1b);

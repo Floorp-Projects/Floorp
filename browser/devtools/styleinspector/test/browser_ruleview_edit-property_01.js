@@ -65,7 +65,7 @@ function* testEditProperty(view, name, value, browser) {
 
   info("Entering a new value, including ; to commit and blur the value");
   let onBlur = once(input, "blur");
-  let onModifications = idRuleEditor.rule._applyingModifications;
+  onModifications = idRuleEditor.rule._applyingModifications;
   for (let ch of value + ";") {
     EventUtils.sendChar(ch, view.doc.defaultView);
   }

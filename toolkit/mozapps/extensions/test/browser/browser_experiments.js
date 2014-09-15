@@ -582,7 +582,7 @@ add_task(function testDetailView() {
   yield gCategoryUtilities.openType("experiment");
   yield openDetailsView("experiment-3");
 
-  let el = gManagerWindow.document.getElementById("detail-experiment-state");
+  el = gManagerWindow.document.getElementById("detail-experiment-state");
   is_element_visible(el, "Experiment state label should be visible.");
   if (gIsEnUsLocale) {
     Assert.equal(el.value, "Complete");

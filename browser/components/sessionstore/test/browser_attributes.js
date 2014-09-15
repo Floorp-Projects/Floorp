@@ -34,7 +34,7 @@ function runTests() {
   tab.setAttribute("custom", "foobar");
   ss.persistTabAttribute("custom");
 
-  let {attributes} = JSON.parse(ss.getTabState(tab));
+  ({attributes} = JSON.parse(ss.getTabState(tab)));
   is(attributes.custom, "foobar", "'custom' attribute is correct");
 
   // Make sure we're backwards compatible and restore old 'image' attributes.
@@ -55,7 +55,7 @@ function runTests() {
   yield whenTabRestored(tab);
 
   // Ensure no 'image' or 'pending' attributes are stored.
-  let {attributes} = JSON.parse(ss.getTabState(tab));
+  ({attributes} = JSON.parse(ss.getTabState(tab)));
   ok(!("image" in attributes), "'image' attribute not saved");
   ok(!("pending" in attributes), "'pending' attribute not saved");
   is(attributes.custom, "foobaz", "'custom' attribute is correct");

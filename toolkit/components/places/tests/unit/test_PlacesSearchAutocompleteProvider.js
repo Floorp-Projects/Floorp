@@ -61,7 +61,7 @@ add_task(function* test_parseSubmissionURL_basic() {
   do_check_eq(result.engineName, engine.name);
   do_check_eq(result.terms, "terms");
 
-  let result = PlacesSearchAutocompleteProvider.parseSubmissionURL("http://example.org/");
+  result = PlacesSearchAutocompleteProvider.parseSubmissionURL("http://example.org/");
   do_check_eq(result, null);
 });
 

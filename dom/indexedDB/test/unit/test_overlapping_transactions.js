@@ -22,7 +22,7 @@ function testSteps()
   for (let i in objectStores) {
     db.createObjectStore(objectStores[i], { autoIncrement: true });
   }
-  let event = yield undefined;
+  event = yield undefined;
 
   is(db.objectStoreNames.length, objectStores.length,
      "Correct objectStoreNames list");

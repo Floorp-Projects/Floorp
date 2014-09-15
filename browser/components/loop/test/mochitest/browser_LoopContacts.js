@@ -193,7 +193,7 @@ add_task(function* () {
   yield deferred.promise;
 
   info("Get a single contact by id.");
-  let deferred = Promise.defer();
+  deferred = Promise.defer();
   LoopContacts.getByServiceId(2, (err, contact) => {
     Assert.ok(!err, "There shouldn't be an error");
     compareContacts(contact, kContacts[1]);
@@ -202,7 +202,7 @@ add_task(function* () {
   yield deferred.promise;
 
   info("Get a couple of contacts.");
-  let deferred = Promise.defer();
+  deferred = Promise.defer();
   let toRetrieve = [contacts[0], contacts[2], contacts[3]];
   LoopContacts.getMany(toRetrieve.map(contact => contact._guid), (err, result) => {
     Assert.ok(!err, "There shouldn't be an error");

@@ -59,7 +59,7 @@
     let file = event.target.result;
 
     let trans = db.transaction([objectStoreName], READ_WRITE);
-    let objectStore = trans.objectStore(objectStoreName);
+    objectStore = trans.objectStore(objectStoreName);
 
     request = objectStore.add(file, 42);
     request.onsuccess = grabEventAndContinueHandler;

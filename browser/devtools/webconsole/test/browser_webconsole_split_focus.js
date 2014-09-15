@@ -33,7 +33,7 @@ function test() {
     ok(toolbox.splitConsole, "Split console is now visible");
 
     // Use the binding element since jsterm.inputNode is a XUL textarea element.
-    let activeElement = getActiveElement(toolbox.doc);
+    activeElement = getActiveElement(toolbox.doc);
     activeElement = activeElement.ownerDocument.getBindingParent(activeElement);
     let inputNode = toolbox.getPanel("webconsole").hud.jsterm.inputNode;
     is(activeElement, inputNode, "Split console input is focused by default");
@@ -42,7 +42,7 @@ function test() {
 
     info ("Making sure that the search box is refocused after closing the split console");
     // Use the binding element since inspector.searchBox is a XUL element.
-    let activeElement = getActiveElement(inspector.panelDoc);
+    activeElement = getActiveElement(inspector.panelDoc);
     activeElement = activeElement.ownerDocument.getBindingParent(activeElement);
     is (activeElement, inspector.searchBox, "Search box is focused");
 
