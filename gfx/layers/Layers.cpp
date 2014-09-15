@@ -1477,6 +1477,9 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   if (!mTransform.IsIdentity()) {
     AppendToString(aStream, mTransform, " [transform=", "]");
   }
+  if (!mLayerBounds.IsEmpty()) {
+    AppendToString(aStream, mLayerBounds, " [bounds=", "]");
+  }
   if (!mVisibleRegion.IsEmpty()) {
     AppendToString(aStream, mVisibleRegion, " [visible=", "]");
   } else {

@@ -499,6 +499,10 @@ public:
    * in mItemClip).
    */
   void UpdateCommonClipCount(const DisplayItemClip& aCurrentClip);
+  /**
+   * The union of all the bounds of the display items in this layer.
+   */
+  nsIntRegion mBounds;
 
 private:
   /**
@@ -2165,6 +2169,10 @@ ContainerState::PopThebesLayerData()
     SetOuterVisibleRegionForLayer(layer, data->mVisibleRegion);
   }
 
+  nsIntRect layerBounds = data->mBounds.GetBounds();
+  layerBounds.MoveBy(-GetTranslationForThebesLayer(data->mLayer));
+  layer->SetLayerBounds(layerBounds);
+
 #ifdef MOZ_DUMP_PAINTING
   layer->AddExtraDumpInfo(nsCString(data->mLog));
 #endif
@@ -2324,6 +2332,10 @@ ThebesLayerData::Accumulate(ContainerState* aState,
                             const DisplayItemClip& aClip)
 {
   FLB_LOG_THEBES_DECISION(this, "Accumulating dp=%s(%p), f=%p against tld=%p\n", aItem->Name(), aItem, aItem->Frame(), this);
+
+  bool snap;
+  nsRect itemBounds = aItem->GetBounds(aState->mBuilder, &snap);
+  mBounds.OrWith(aState->ScaleToOutsidePixels(itemBounds, snap));
 
   if (aState->mBuilder->NeedToForceTransparentSurfaceForItem(aItem)) {
     mForceTransparentSurface = true;
