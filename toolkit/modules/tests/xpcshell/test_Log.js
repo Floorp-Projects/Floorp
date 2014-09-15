@@ -169,7 +169,7 @@ add_task(function test_StructuredLogCommands() {
     do_check_true(errored);
   }
 
-  let errored = false;
+  errored = false;
   try {
     logger.logStructured("message_action", "invalid params");
   } catch (e) {
@@ -181,8 +181,8 @@ add_task(function test_StructuredLogCommands() {
 
   // Logging with unstructured interface should produce the same messages
   // as the structured interface for these cases.
-  let appender = new MockAppender(new Log.StructuredFormatter());
-  let logger = Log.repository.getLogger("test.StructuredOutput1");
+  appender = new MockAppender(new Log.StructuredFormatter());
+  logger = Log.repository.getLogger("test.StructuredOutput1");
   messageOne._namespace = "test.StructuredOutput1";
   messageTwo._namespace = "test.StructuredOutput1";
   logger.addAppender(appender);
@@ -377,7 +377,7 @@ add_task(function log_message_with_params() {
               'JSON is {"sneaky":"value"}');
 
   // Fall back to .toSource() if JSON.stringify() fails on an object.
-  let ob = function() {};
+  ob = function() {};
   ob.toJSON = function() {throw "oh noes JSON"};
   do_check_eq(formatMessage("Fail is ${sub}", {sub: ob}),
               'Fail is (function () {})');
@@ -430,19 +430,19 @@ add_task(function log_message_with_params() {
   let str = formatMessage("Exception is ${}", err);
   do_check_true(str.contains('Exception is [Exception... "test exception"'));
   do_check_true(str.contains("(NS_ERROR_FAILURE)"));
-  let str = formatMessage("Exception is", err);
+  str = formatMessage("Exception is", err);
   do_check_true(str.contains('Exception is: [Exception... "test exception"'));
-  let str = formatMessage("Exception is ${error}", {error: err});
+  str = formatMessage("Exception is ${error}", {error: err});
   do_check_true(str.contains('Exception is [Exception... "test exception"'));
-  let str = formatMessage("Exception is", {_error: err});
+  str = formatMessage("Exception is", {_error: err});
   do_print(str);
   // Exceptions buried inside objects are formatted badly.
   do_check_true(str.contains('Exception is: {"_error":{}'));
   // If the message text is null, the message contains only the formatted params object.
-  let str = formatMessage(null, err);
+  str = formatMessage(null, err);
   do_check_true(str.startsWith('[Exception... "test exception"'));
   // If the text is null and 'params' is a String object, the message is exactly that string.
-  let str = formatMessage(null, new String("String in place of params"));
+  str = formatMessage(null, new String("String in place of params"));
   do_check_eq(str, "String in place of params");
 
   // We use object.valueOf() internally; make sure a broken valueOf() method

@@ -42,13 +42,13 @@ let test = asyncTest(function*() {
   let onUpdated = inspector.once("inspector-updated");
   EventUtils.synthesizeKey("VK_DOWN", {});
   yield onUpdated;
-  let onUpdated = inspector.once("inspector-updated");
+  onUpdated = inspector.once("inspector-updated");
   EventUtils.synthesizeKey("VK_DOWN", {});
   yield onUpdated;
   yield isHighlighting("#two", "<p#two> is highlighted");
 
   info("Navigate back to <p#one> with the keyboard");
-  let onUpdated = inspector.once("inspector-updated");
+  onUpdated = inspector.once("inspector-updated");
   EventUtils.synthesizeKey("VK_UP", {});
   yield onUpdated;
   yield isHighlighting("#one", "<p#one> is highlighted again");

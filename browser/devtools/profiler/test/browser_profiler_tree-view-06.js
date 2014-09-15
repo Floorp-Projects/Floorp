@@ -29,7 +29,7 @@ let test = Task.async(function*() {
   let receivedZoomEvent = treeRoot.once("zoom");
   EventUtils.sendMouseEvent({ type: "mousedown" }, C.target.querySelector(".call-tree-zoom"));
 
-  let eventItem = yield receivedZoomEvent;
+  eventItem = yield receivedZoomEvent;
   is(eventItem, C, "The 'zoom' event target is correct.");
 
   finish();

@@ -81,7 +81,7 @@ add_task(function test_default() {
   yield deferred.promise;
 
   deferred = Promise.defer();
-  let id = getRequestId(1);
+  id = getRequestId(1);
   shouldPass = false;
   ui.showPaymentFlow(id,
                      {

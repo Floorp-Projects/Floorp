@@ -35,7 +35,7 @@ add_task(function() {
   let spec = {id: kUnregisterAreaTestWidget, type: 'button', removable: true,
               label: "areaType test", tooltiptext: "areaType test"};
   CustomizableUI.createWidget(spec);
-  let toolbarNode = createToolbarWithPlacements(kToolbarName, [kUnregisterAreaTestWidget]);
+  toolbarNode = createToolbarWithPlacements(kToolbarName, [kUnregisterAreaTestWidget]);
   CustomizableUI.unregisterArea(kToolbarName);
   toolbarNode.remove();
   w = CustomizableUI.getWidget(spec.id);

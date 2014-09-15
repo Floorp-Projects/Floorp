@@ -68,7 +68,7 @@ function* testCreateNew(view) {
   info("Entering a value and bluring the field to expect a rule change");
   editor.input.value = "#XYZ";
   let onBlur = once(editor.input, "blur");
-  let onModifications = elementRuleEditor.rule._applyingModifications;
+  onModifications = elementRuleEditor.rule._applyingModifications;
   editor.input.blur();
   yield onBlur;
   yield onModifications;

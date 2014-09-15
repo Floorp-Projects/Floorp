@@ -541,7 +541,6 @@ add_task(function test_clone_no_optional_param_async()
   do_check_true(adb1 instanceof Ci.mozIStorageAsyncConnection);
 
   do_print("Cloning database");
-  do_check_true(Components.isSuccessCode(result));
 
   let adb2 = yield asyncClone(adb1);
   do_print("Testing that the cloned db is a mozIStorageAsyncConnection " +

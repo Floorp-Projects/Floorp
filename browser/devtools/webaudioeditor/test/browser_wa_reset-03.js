@@ -29,11 +29,11 @@ function spawnTest() {
 
   reload(target);
 
-  let [actors] = yield Promise.all([
+  [actors] = yield Promise.all([
     get3(gFront, "create-node"),
     waitForGraphRendered(panelWin, 3, 2)
   ]);
-  let nodeIds = actors.map(actor => actor.actorID);
+  nodeIds = actors.map(actor => actor.actorID);
 
   ok(!WebAudioInspectorView.isVisible(), "InspectorView hidden on start.");
   ise(WebAudioInspectorView.getCurrentAudioNode(), null,

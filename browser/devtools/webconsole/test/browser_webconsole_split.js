@@ -117,7 +117,7 @@ function test()
       // Make sure splitting console does nothing while webconsole is opened
       toolbox.toggleSplitConsole();
 
-      let currentUIState = getCurrentUIState();
+      currentUIState = getCurrentUIState();
 
       ok (!currentUIState.splitterVisibility, "Splitter is hidden when console is opened.");
       is (currentUIState.deckHeight, 0, "Deck has a height == 0 when console is opened.");
@@ -176,7 +176,7 @@ function test()
 
     toolbox.toggleSplitConsole();
 
-    let currentUIState = getCurrentUIState();
+    currentUIState = getCurrentUIState();
 
     ok (currentUIState.splitterVisibility, "Splitter is visible when console is split");
     ok (currentUIState.deckHeight > 0, "Deck has a height > 0 when console is split");
@@ -189,7 +189,7 @@ function test()
 
     toolbox.toggleSplitConsole();
 
-    let currentUIState = getCurrentUIState();
+    currentUIState = getCurrentUIState();
 
     ok (!currentUIState.splitterVisibility, "Splitter is hidden after toggling");
     is (currentUIState.deckHeight, currentUIState.containerHeight, "Deck has a height > 0 after toggling");

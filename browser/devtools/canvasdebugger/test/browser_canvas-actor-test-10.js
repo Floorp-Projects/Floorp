@@ -73,7 +73,7 @@ function ifTestingSupported() {
   is(new Uint8Array(secondScreenshot.pixels.buffer)[3], 255,
     "The second screenshot has the correct alpha component.");
 
-  let gl = debuggee.gl;
+  gl = debuggee.gl;
   is(gl.getParameter(gl.FRAMEBUFFER_BINDING), debuggee.customFramebuffer,
     "The debuggee's gl context framebuffer still wasn't changed.");
   is(gl.getParameter(gl.RENDERBUFFER_BINDING), debuggee.customRenderbuffer,

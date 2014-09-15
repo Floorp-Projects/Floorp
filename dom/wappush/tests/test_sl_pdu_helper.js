@@ -51,7 +51,7 @@ add_test(function test_sl_parse_wbxml() {
                 ]);
   data.offset = 0;
   let result = "<sl href=\"http://www.oreilly.com/\"/>";
-  let msg = SL.PduHelper.parse(data, contentType);
+  msg = SL.PduHelper.parse(data, contentType);
   do_check_eq(msg.content, result);
 
   run_next_test();
@@ -61,7 +61,7 @@ add_test(function test_sl_parse_wbxml() {
  * SL compressed by WBXML, with public ID stored in string table
  */
 add_test(function test_sl_parse_wbxml_public_id_string_table() {
-    let msg = {};
+  let msg = {};
   let contentType = "";
   let data = {};
 
@@ -76,7 +76,7 @@ add_test(function test_sl_parse_wbxml_public_id_string_table() {
                 ]);
   data.offset = 0;
   let result = "<sl href=\"http://www.oreilly.com/\"/>";
-  let msg = SL.PduHelper.parse(data, contentType);
+  msg = SL.PduHelper.parse(data, contentType);
   do_check_eq(msg.content, result);
 
   run_next_test();
@@ -98,7 +98,7 @@ add_test(function test_sl_parse_wbxml_with_string_table() {
                 ]);
   data.offset = 0;
   let result = "<sl href=\"http://www.oreilly.com/\"/>";
-  let msg = SL.PduHelper.parse(data, contentType);
+  msg = SL.PduHelper.parse(data, contentType);
   do_check_eq(msg.content, result);
 
   run_next_test();
