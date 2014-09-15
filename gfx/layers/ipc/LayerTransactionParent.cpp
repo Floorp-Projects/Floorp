@@ -294,6 +294,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       const LayerAttributes& attrs = osla.attrs();
 
       const CommonLayerAttributes& common = attrs.common();
+      layer->SetLayerBounds(common.layerBounds());
       layer->SetVisibleRegion(common.visibleRegion());
       layer->SetEventRegions(common.eventRegions());
       layer->SetContentFlags(common.contentFlags());
