@@ -291,13 +291,17 @@ IsConvertibleToCallbackInterface(JSContext* cx, JS::Handle<JSObject*> obj)
   return IsNotDateOrRegExp(cx, obj);
 }
 
-// The items in the protoAndIfaceCache are indexed by the prototypes::id::ID and
-// constructors::id::ID enums, in that order. The end of the prototype objects
-// should be the start of the interface objects.
+// The items in the protoAndIfaceCache are indexed by the prototypes::id::ID,
+// constructors::id::ID and namedpropertiesobjects::id::ID enums, in that order.
+// The end of the prototype objects should be the start of the interface
+// objects, and the end of the interface objects should be the start of the
+// named properties objects.
 static_assert((size_t)constructors::id::_ID_Start ==
-              (size_t)prototypes::id::_ID_Count,
+              (size_t)prototypes::id::_ID_Count &&
+              (size_t)namedpropertiesobjects::id::_ID_Start ==
+              (size_t)constructors::id::_ID_Count,
               "Overlapping or discontiguous indexes.");
-const size_t kProtoAndIfaceCacheCount = constructors::id::_ID_Count;
+const size_t kProtoAndIfaceCacheCount = namedpropertiesobjects::id::_ID_Count;
 
 class ProtoAndIfaceCache
 {

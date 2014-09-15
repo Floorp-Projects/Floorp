@@ -2581,8 +2581,8 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
     def definition_body(self):
         parentProtoName = self.descriptor.parentPrototypeName
         if self.descriptor.hasNamedPropertiesObject:
-            parentProtoType = "Rooted"
-            getParentProto = "aCx, GetNamedPropertiesObject(aCx, aGlobal)"
+            parentProtoType = "Handle"
+            getParentProto = "GetNamedPropertiesObject(aCx, aGlobal)"
         elif parentProtoName is None:
             parentProtoType = "Rooted"
             if self.descriptor.interface.getExtendedAttribute("ArrayClass"):
@@ -2856,7 +2856,7 @@ class CGGetNamedPropertiesObjectMethod(CGAbstractStaticMethod):
                 Argument('JS::Handle<JSObject*>', 'aGlobal')]
         CGAbstractStaticMethod.__init__(self, descriptor,
                                         'GetNamedPropertiesObject',
-                                        'JSObject*', args)
+                                        'JS::Handle<JSObject*>', args)
 
     def definition_body(self):
         parentProtoName = self.descriptor.parentPrototypeName
@@ -2868,17 +2868,30 @@ class CGGetNamedPropertiesObjectMethod(CGAbstractStaticMethod):
                 """
                 JS::Rooted<JSObject*> parentProto(aCx, ${parent}::GetProtoObject(aCx, aGlobal));
                 if (!parentProto) {
-                  return nullptr;
+                  return js::NullPtr();
                 }
                 """,
                 parent=toBindingNamespace(parentProtoName))
             parentProto = "parentProto"
         return fill(
             """
-            $*{getParentProto}
-            return ${nativeType}::CreateNamedPropertiesObject(aCx, ${parentProto});
+            /* Make sure our global is sane.  Hopefully we can remove this sometime */
+            if (!(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL)) {
+              return JS::NullPtr();
+            }
+
+            /* Check to see whether the named properties object has already been created */
+            ProtoAndIfaceCache& protoAndIfaceCache = *GetProtoAndIfaceCache(aGlobal);
+
+            JS::Heap<JSObject*>& namedPropertiesObject = protoAndIfaceCache.EntrySlotOrCreate(namedpropertiesobjects::id::${ifaceName});
+            if (!namedPropertiesObject) {
+              $*{getParentProto}
+              namedPropertiesObject = ${nativeType}::CreateNamedPropertiesObject(aCx, ${parentProto});
+            }
+            return JS::Handle<JSObject*>::fromMarkedLocation(namedPropertiesObject.address());
             """,
             getParentProto=getParentProto,
+            ifaceName=self.descriptor.name,
             parentProto=parentProto,
             nativeType=self.descriptor.nativeType)
 
@@ -14204,6 +14217,18 @@ class GlobalGenRoots():
 
         # Wrap all of that in our namespaces.
         idEnum = CGNamespace.build(['mozilla', 'dom', 'constructors'],
+                                   CGWrapper(idEnum, pre='\n'))
+        idEnum = CGWrapper(idEnum, post='\n')
+
+        curr.append(idEnum)
+
+        # Named properties object enum.
+        namedPropertiesObjects = [d.name for d in config.getDescriptors(hasNamedPropertiesObject=True)]
+        idEnum = CGNamespacedEnum('id', 'ID', ['_ID_Start'] + namedPropertiesObjects,
+                                  ['constructors::id::_ID_Count', '_ID_Start'])
+
+        # Wrap all of that in our namespaces.
+        idEnum = CGNamespace.build(['mozilla', 'dom', 'namedpropertiesobjects'],
                                    CGWrapper(idEnum, pre='\n'))
         idEnum = CGWrapper(idEnum, post='\n')
 
