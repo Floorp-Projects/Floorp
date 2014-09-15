@@ -95,7 +95,6 @@ SourceSurfaceD2D1::DrawTargetWillChange()
   mImage = mRealizedBitmap;
 
   DrawTargetD2D1::mVRAMUsageSS += mSize.width * mSize.height * BytesPerPixel(mFormat);
-  mDrawTarget = nullptr;
 
   // We now no longer depend on the source surface content remaining the same.
   MarkIndependent();

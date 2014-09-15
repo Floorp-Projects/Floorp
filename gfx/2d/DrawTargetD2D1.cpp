@@ -39,7 +39,30 @@ DrawTargetD2D1::~DrawTargetD2D1()
 {
   PopAllClips();
 
+  if (mSnapshot) {
+    // We may hold the only reference. MarkIndependent will clear mSnapshot;
+    // keep the snapshot object alive so it doesn't get destroyed while
+    // MarkIndependent is running.
+    RefPtr<SourceSurfaceD2D1> deathGrip = mSnapshot;
+    // mSnapshot can be treated as independent of this DrawTarget since we know
+    // this DrawTarget won't change again.
+    deathGrip->MarkIndependent();
+    // mSnapshot will be cleared now.
+  }
+
   mDC->EndDraw();
+
+  // Targets depending on us can break that dependency, since we're obviously not going to
+  // be modified in the future.
+  for (auto iter = mDependentTargets.begin();
+       iter != mDependentTargets.end(); iter++) {
+    (*iter)->mDependingOnTargets.erase(this);
+  }
+  // Our dependencies on other targets no longer matter.
+  for (TargetSet::iterator iter = mDependingOnTargets.begin();
+       iter != mDependingOnTargets.end(); iter++) {
+    (*iter)->mDependentTargets.erase(this);
+  }
 }
 
 TemporaryRef<SourceSurface>
@@ -61,6 +84,13 @@ void
 DrawTargetD2D1::Flush()
 {
   mDC->Flush();
+
+  // We no longer depend on any target.
+  for (TargetSet::iterator iter = mDependingOnTargets.begin();
+       iter != mDependingOnTargets.end(); iter++) {
+    (*iter)->mDependentTargets.erase(this);
+  }
+  mDependingOnTargets.clear();
 }
 
 void
@@ -70,13 +100,6 @@ DrawTargetD2D1::DrawSurface(SourceSurface *aSurface,
                             const DrawSurfaceOptions &aSurfOptions,
                             const DrawOptions &aOptions)
 {
-  RefPtr<ID2D1Image> image = GetImageForSurface(aSurface, ExtendMode::CLAMP);
-
-  if (!image) {
-    gfxWarning() << *this << ": Unable to get D2D image for surface.";
-    return;
-  }
-
   PrepareForDrawing(aOptions.mCompositionOp, ColorPattern(Color()));
 
   D2D1_RECT_F samplingBounds;
@@ -95,10 +118,21 @@ DrawTargetD2D1::DrawSurface(SourceSurface *aSurface,
   // Here we scale the source pattern up to the size and position where we want
   // it to be.
   Matrix transform;
-  transform.PreTranslate(aDest.x, aDest.y);
+  transform.PreTranslate(aDest.x - aSource.x * xScale, aDest.y - aSource.y * yScale);
   transform.PreScale(xScale, yScale);
 
-  mDC->CreateImageBrush(image, D2D1::ImageBrushProperties(samplingBounds),
+  RefPtr<ID2D1Image> image = GetImageForSurface(aSurface, transform, ExtendMode::CLAMP);
+
+  if (!image) {
+    gfxWarning() << *this << ": Unable to get D2D image for surface.";
+    return;
+  }
+
+  mDC->CreateImageBrush(image,
+                        D2D1::ImageBrushProperties(samplingBounds,
+                                                   D2D1_EXTEND_MODE_CLAMP,
+                                                   D2D1_EXTEND_MODE_CLAMP,
+                                                   D2DInterpolationMode(aSurfOptions.mFilter)),
                         D2D1::BrushProperties(aOptions.mAlpha, D2DMatrix(transform)),
                         byRef(brush));
   mDC->FillRectangle(D2DRect(aDest), brush);
@@ -119,7 +153,11 @@ DrawTargetD2D1::DrawFilter(FilterNode *aNode,
 
   PrepareForDrawing(aOptions.mCompositionOp, ColorPattern(Color()));
 
+  mDC->SetAntialiasMode(D2DAAMode(aOptions.mAntialiasMode));
+
   mDC->DrawImage(static_cast<FilterNodeD2D1*>(aNode)->OutputEffect(), D2DPoint(aDestPoint), D2DRect(aSourceRect));
+
+  FinalizeDrawing(aOptions.mCompositionOp, ColorPattern(Color()));
 }
 
 void
@@ -150,22 +188,11 @@ DrawTargetD2D1::DrawSurfaceWithShadow(SourceSurface *aSurface,
   D2D1_VECTOR_4F color = { aColor.r, aColor.g, aColor.b, aColor.a };
   shadowEffect->SetValue(D2D1_SHADOW_PROP_COLOR, color);
 
-  // Step 2, move the shadow effect into place.
-  RefPtr<ID2D1Effect> affineTransformEffect;
-  mDC->CreateEffect(CLSID_D2D12DAffineTransform, byRef(affineTransformEffect));
-  affineTransformEffect->SetInputEffect(0, shadowEffect);
-  D2D1_MATRIX_3X2_F matrix = D2D1::Matrix3x2F::Translation(aOffset.x, aOffset.y);
-  affineTransformEffect->SetValue(D2D1_2DAFFINETRANSFORM_PROP_TRANSFORM_MATRIX, matrix);
+  D2D1_POINT_2F shadowPoint = D2DPoint(aDest + aOffset);
+  mDC->DrawImage(shadowEffect, &shadowPoint, nullptr, D2D1_INTERPOLATION_MODE_LINEAR, D2DCompositionMode(aOperator));
 
-  // Step 3, create an effect that combines shadow and bitmap in one image.
-  RefPtr<ID2D1Effect> compositeEffect;
-  mDC->CreateEffect(CLSID_D2D1Composite, byRef(compositeEffect));
-  compositeEffect->SetInputEffect(0, affineTransformEffect);
-  compositeEffect->SetInput(1, image);
-  compositeEffect->SetValue(D2D1_COMPOSITE_PROP_MODE, D2DCompositionMode(aOperator));
-
-  D2D1_POINT_2F surfPoint = D2DPoint(aDest);
-  mDC->DrawImage(compositeEffect, &surfPoint, nullptr, D2D1_INTERPOLATION_MODE_LINEAR, D2DCompositionMode(aOperator));
+  D2D1_POINT_2F imgPoint = D2DPoint(aDest);
+  mDC->DrawImage(image, &imgPoint, nullptr, D2D1_INTERPOLATION_MODE_LINEAR, D2DCompositionMode(aOperator));
 }
 
 void
@@ -173,9 +200,46 @@ DrawTargetD2D1::ClearRect(const Rect &aRect)
 {
   MarkChanged();
 
-  mDC->PushAxisAlignedClip(D2DRect(aRect), D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+  PopAllClips();
+
+  PushClipRect(aRect);
+
+  if (mTransformDirty ||
+      !mTransform.IsIdentity()) {
+    mDC->SetTransform(D2D1::IdentityMatrix());
+    mTransformDirty = true;
+  }
+
+  D2D1_RECT_F clipRect;
+  bool isPixelAligned;
+  if (mTransform.IsRectilinear() &&
+      GetDeviceSpaceClipRect(clipRect, isPixelAligned)) {
+    mDC->PushAxisAlignedClip(clipRect, isPixelAligned ? D2D1_ANTIALIAS_MODE_ALIASED : D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+    mDC->Clear();
+    mDC->PopAxisAlignedClip();
+
+    PopClip();
+    return;
+  }
+
+  mDC->SetTarget(mTempBitmap);
   mDC->Clear();
+
+  IntRect addClipRect;
+  RefPtr<ID2D1Geometry> geom = GetClippedGeometry(&addClipRect);
+
+  RefPtr<ID2D1SolidColorBrush> brush;
+  mDC->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), byRef(brush));
+  mDC->PushAxisAlignedClip(D2D1::RectF(addClipRect.x, addClipRect.y, addClipRect.XMost(), addClipRect.YMost()), D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+  mDC->FillGeometry(geom, brush);
   mDC->PopAxisAlignedClip();
+
+  mDC->SetTarget(mBitmap);
+  mDC->DrawImage(mTempBitmap, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2D1_COMPOSITE_MODE_DESTINATION_OUT);
+
+  PopClip();
+
+  return;
 }
 
 void
@@ -184,11 +248,11 @@ DrawTargetD2D1::MaskSurface(const Pattern &aSource,
                             Point aOffset,
                             const DrawOptions &aOptions)
 {
+  PrepareForDrawing(aOptions.mCompositionOp, aSource);
+
   RefPtr<ID2D1Bitmap> bitmap;
 
   RefPtr<ID2D1Image> image = GetImageForSurface(aMask, ExtendMode::CLAMP);
-
-  PrepareForDrawing(aOptions.mCompositionOp, aSource);
 
   // FillOpacityMask only works if the antialias mode is MODE_ALIASED
   mDC->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
@@ -217,6 +281,8 @@ DrawTargetD2D1::CopySurface(SourceSurface *aSurface,
 {
   MarkChanged();
 
+  PopAllClips();
+
   mDC->SetTransform(D2D1::IdentityMatrix());
   mTransformDirty = true;
 
@@ -225,6 +291,26 @@ DrawTargetD2D1::CopySurface(SourceSurface *aSurface,
 
   if (!mat.IsIdentity()) {
     gfxDebug() << *this << ": At this point complex partial uploads are not supported for CopySurface.";
+    return;
+  }
+
+  if (mFormat == SurfaceFormat::A8) {
+    RefPtr<ID2D1Bitmap> bitmap;
+    image->QueryInterface((ID2D1Bitmap**)byRef(bitmap));
+
+    mDC->PushAxisAlignedClip(D2D1::RectF(aDestination.x, aDestination.y,
+                                         aDestination.x + aSourceRect.width,
+                                         aDestination.y + aSourceRect.height),
+                             D2D1_ANTIALIAS_MODE_ALIASED);
+    mDC->Clear();
+    mDC->PopAxisAlignedClip();
+
+    RefPtr<ID2D1SolidColorBrush> brush;
+    mDC->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White),
+                               D2D1::BrushProperties(), byRef(brush));
+    mDC->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
+    mDC->FillOpacityMask(bitmap, brush, D2D1_OPACITY_MASK_CONTENT_GRAPHICS);
+    mDC->SetAntialiasMode(D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
     return;
   }
 
@@ -241,6 +327,8 @@ DrawTargetD2D1::FillRect(const Rect &aRect,
 {
   PrepareForDrawing(aOptions.mCompositionOp, aPattern);
 
+  mDC->SetAntialiasMode(D2DAAMode(aOptions.mAntialiasMode));
+
   RefPtr<ID2D1Brush> brush = CreateBrushForPattern(aPattern, aOptions.mAlpha);
   mDC->FillRectangle(D2DRect(aRect), brush);
 
@@ -254,6 +342,8 @@ DrawTargetD2D1::StrokeRect(const Rect &aRect,
                            const DrawOptions &aOptions)
 {
   PrepareForDrawing(aOptions.mCompositionOp, aPattern);
+
+  mDC->SetAntialiasMode(D2DAAMode(aOptions.mAntialiasMode));
 
   RefPtr<ID2D1Brush> brush = CreateBrushForPattern(aPattern, aOptions.mAlpha);
   RefPtr<ID2D1StrokeStyle> strokeStyle = CreateStrokeStyleForOptions(aStrokeOptions);
@@ -271,6 +361,8 @@ DrawTargetD2D1::StrokeLine(const Point &aStart,
                            const DrawOptions &aOptions)
 {
   PrepareForDrawing(aOptions.mCompositionOp, aPattern);
+
+  mDC->SetAntialiasMode(D2DAAMode(aOptions.mAntialiasMode));
 
   RefPtr<ID2D1Brush> brush = CreateBrushForPattern(aPattern, aOptions.mAlpha);
   RefPtr<ID2D1StrokeStyle> strokeStyle = CreateStrokeStyleForOptions(aStrokeOptions);
@@ -294,6 +386,8 @@ DrawTargetD2D1::Stroke(const Path *aPath,
 
   PrepareForDrawing(aOptions.mCompositionOp, aPattern);
 
+  mDC->SetAntialiasMode(D2DAAMode(aOptions.mAntialiasMode));
+
   RefPtr<ID2D1Brush> brush = CreateBrushForPattern(aPattern, aOptions.mAlpha);
   RefPtr<ID2D1StrokeStyle> strokeStyle = CreateStrokeStyleForOptions(aStrokeOptions);
 
@@ -314,6 +408,8 @@ DrawTargetD2D1::Fill(const Path *aPath,
   const PathD2D *d2dPath = static_cast<const PathD2D*>(aPath);
 
   PrepareForDrawing(aOptions.mCompositionOp, aPattern);
+
+  mDC->SetAntialiasMode(D2DAAMode(aOptions.mAntialiasMode));
 
   RefPtr<ID2D1Brush> brush = CreateBrushForPattern(aPattern, aOptions.mAlpha);
 
@@ -436,6 +532,8 @@ DrawTargetD2D1::PushClip(const Path *aPath)
     return;
   }
 
+  mCurrentClippedGeometry = nullptr;
+
   RefPtr<PathD2D> pathD2D = static_cast<PathD2D*>(const_cast<Path*>(aPath));
 
   PushedClip clip;
@@ -474,6 +572,8 @@ DrawTargetD2D1::PushClipRect(const Rect &aRect)
     return PushClip(path);
   }
 
+  mCurrentClippedGeometry = nullptr;
+
   PushedClip clip;
   Rect rect = mTransform.TransformBounds(aRect);
   IntRect intRect;
@@ -495,6 +595,8 @@ DrawTargetD2D1::PushClipRect(const Rect &aRect)
 void
 DrawTargetD2D1::PopClip()
 {
+  mCurrentClippedGeometry = nullptr;
+
   if (mClipsArePushed) {
     if (mPushedClips.back().mPath) {
       mDC->PopLayer();
@@ -564,6 +666,11 @@ DrawTargetD2D1::CreatePathBuilder(FillRule aFillRule) const
 TemporaryRef<GradientStops>
 DrawTargetD2D1::CreateGradientStops(GradientStop *rawStops, uint32_t aNumStops, ExtendMode aExtendMode) const
 {
+  if (aNumStops == 0) {
+    gfxWarning() << *this << ": Failed to create GradientStopCollection with no stops.";
+    return nullptr;
+  }
+
   D2D1_GRADIENT_STOP *stops = new D2D1_GRADIENT_STOP[aNumStops];
 
   for (uint32_t i = 0; i < aNumStops; i++) {
@@ -594,14 +701,70 @@ DrawTargetD2D1::CreateFilter(FilterType aType)
 }
 
 bool
-DrawTargetD2D1::Init(const IntSize &aSize, SurfaceFormat aFormat)
+DrawTargetD2D1::Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat)
 {
   HRESULT hr;
-  
+
   hr = Factory::GetD2D1Device()->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_ENABLE_MULTITHREADED_OPTIMIZATIONS, byRef(mDC));
 
   if (FAILED(hr)) {
     gfxWarning() << *this << ": Error " << hr << " failed to initialize new DeviceContext.";
+    return false;
+  }
+
+  RefPtr<IDXGISurface> dxgiSurface;
+  aTexture->QueryInterface(__uuidof(IDXGISurface),
+                           (void**)((IDXGISurface**)byRef(dxgiSurface)));
+  if (!dxgiSurface) {
+    return false;
+  }
+
+  D2D1_BITMAP_PROPERTIES1 props;
+  props.dpiX = 96;
+  props.dpiY = 96;
+  props.pixelFormat = D2DPixelFormat(aFormat);
+  props.colorContext = nullptr;
+  props.bitmapOptions = D2D1_BITMAP_OPTIONS_TARGET;
+  hr = mDC->CreateBitmapFromDxgiSurface(dxgiSurface, props, (ID2D1Bitmap1**)byRef(mBitmap));
+
+  if (FAILED(hr)) {
+    gfxWarning() << *this << ": Error " << hr << " failed to create new bitmap.";
+    return false;
+  }
+
+  mFormat = aFormat;
+  D3D11_TEXTURE2D_DESC desc;
+  aTexture->GetDesc(&desc);
+  desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+  mSize.width = desc.Width;
+  mSize.height = desc.Height;
+  props.pixelFormat.alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED;
+  props.pixelFormat.format = DXGI_FORMAT_B8G8R8A8_UNORM;
+
+  mDC->CreateBitmap(D2DIntSize(mSize), nullptr, 0, props, (ID2D1Bitmap1**)byRef(mTempBitmap));
+
+  mDC->SetTarget(mBitmap);
+
+  mDC->BeginDraw();
+  return true;
+}
+
+bool
+DrawTargetD2D1::Init(const IntSize &aSize, SurfaceFormat aFormat)
+{
+  HRESULT hr;
+
+  hr = Factory::GetD2D1Device()->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_ENABLE_MULTITHREADED_OPTIMIZATIONS, byRef(mDC));
+
+  if (FAILED(hr)) {
+    gfxWarning() << *this << ": Error " << hr << " failed to initialize new DeviceContext.";
+    return false;
+  }
+
+  if (mDC->GetMaximumBitmapSize() < UINT32(aSize.width) ||
+      mDC->GetMaximumBitmapSize() < UINT32(aSize.height)) {
+    // This is 'ok'
+    gfxDebug() << *this << ": Attempt to use unsupported surface size for D2D 1.1.";
     return false;
   }
 
@@ -618,11 +781,16 @@ DrawTargetD2D1::Init(const IntSize &aSize, SurfaceFormat aFormat)
     return false;
   }
 
+  props.pixelFormat.alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED;
+  props.pixelFormat.format = DXGI_FORMAT_B8G8R8A8_UNORM;
+
   mDC->CreateBitmap(D2DIntSize(aSize), nullptr, 0, props, (ID2D1Bitmap1**)byRef(mTempBitmap));
 
   mDC->SetTarget(mBitmap);
 
   mDC->BeginDraw();
+
+  mDC->Clear();
 
   mFormat = aFormat;
   mSize = aSize;
@@ -718,13 +886,41 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
 
   mDC->SetTarget(mBitmap);
 
-  if (patternSupported) {
-    mDC->DrawImage(image, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2DCompositionMode(aOp));
-    return;
-  }
-
   mDC->SetTransform(D2D1::IdentityMatrix());
   mTransformDirty = true;
+
+  if (patternSupported) {
+    if (D2DSupportsCompositeMode(aOp)) {
+      mDC->DrawImage(image, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2DCompositionMode(aOp));
+      return;
+    }
+
+    if (!mBlendEffect) {
+      mDC->CreateEffect(CLSID_D2D1Blend, byRef(mBlendEffect));
+
+      if (!mBlendEffect) {
+        gfxWarning() << "Failed to create blend effect!";
+        return;
+      }
+    }
+
+    RefPtr<ID2D1Bitmap> tmpBitmap;
+    mDC->CreateBitmap(D2DIntSize(mSize), D2D1::BitmapProperties(D2DPixelFormat(mFormat)), byRef(tmpBitmap));
+
+    // This flush is important since the copy method will not know about the context drawing to the surface.
+    mDC->Flush();
+
+    // We need to use a copy here because affects don't accept a surface on
+    // both their in- and outputs.
+    tmpBitmap->CopyFromBitmap(nullptr, mBitmap, nullptr);
+
+    mBlendEffect->SetInput(0, tmpBitmap);
+    mBlendEffect->SetInput(1, mTempBitmap);
+    mBlendEffect->SetValue(D2D1_BLEND_PROP_MODE, D2DBlendMode(aOp));
+
+    mDC->DrawImage(mBlendEffect, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2D1_COMPOSITE_MODE_BOUNDED_SOURCE_COPY);
+    return;
+  }
 
   RefPtr<ID2D1Effect> radialGradientEffect;
 
@@ -751,6 +947,128 @@ DrawTargetD2D1::AddDependencyOnSource(SourceSurfaceD2D1* aSource)
     aSource->mDrawTarget->mDependentTargets.insert(this);
     mDependingOnTargets.insert(aSource->mDrawTarget);
   }
+}
+
+static D2D1_RECT_F
+IntersectRect(const D2D1_RECT_F& aRect1, const D2D1_RECT_F& aRect2)
+{
+  D2D1_RECT_F result;
+  result.left = max(aRect1.left, aRect2.left);
+  result.top = max(aRect1.top, aRect2.top);
+  result.right = min(aRect1.right, aRect2.right);
+  result.bottom = min(aRect1.bottom, aRect2.bottom);
+
+  result.right = max(result.right, result.left);
+  result.bottom = max(result.bottom, result.top);
+
+  return result;
+}
+
+bool
+DrawTargetD2D1::GetDeviceSpaceClipRect(D2D1_RECT_F& aClipRect, bool& aIsPixelAligned)
+{
+  if (!mPushedClips.size()) {
+    return false;
+  }
+
+  aClipRect = D2D1::RectF(0, 0, mSize.width, mSize.height);
+  for (auto iter = mPushedClips.begin();iter != mPushedClips.end(); iter++) {
+    if (iter->mPath) {
+      return false;
+    }
+    aClipRect = IntersectRect(aClipRect, iter->mBounds);
+    if (!iter->mIsPixelAligned) {
+      aIsPixelAligned = false;
+    }
+  }
+  return true;
+}
+
+TemporaryRef<ID2D1Geometry>
+DrawTargetD2D1::GetClippedGeometry(IntRect *aClipBounds)
+{
+  if (mCurrentClippedGeometry) {
+    *aClipBounds = mCurrentClipBounds;
+    return mCurrentClippedGeometry;
+  }
+
+  mCurrentClipBounds = IntRect(IntPoint(0, 0), mSize);
+
+  // if pathGeom is null then pathRect represents the path.
+  RefPtr<ID2D1Geometry> pathGeom;
+  D2D1_RECT_F pathRect;
+  bool pathRectIsAxisAligned = false;
+  auto iter = mPushedClips.begin();
+
+  if (iter->mPath) {
+    pathGeom = GetTransformedGeometry(iter->mPath->GetGeometry(), iter->mTransform);
+  } else {
+    pathRect = iter->mBounds;
+    pathRectIsAxisAligned = iter->mIsPixelAligned;
+  }
+
+  iter++;
+  for (;iter != mPushedClips.end(); iter++) {
+    // Do nothing but add it to the current clip bounds.
+    if (!iter->mPath && iter->mIsPixelAligned) {
+      mCurrentClipBounds.IntersectRect(mCurrentClipBounds,
+        IntRect(int32_t(iter->mBounds.left), int32_t(iter->mBounds.top),
+                int32_t(iter->mBounds.right - iter->mBounds.left),
+                int32_t(iter->mBounds.bottom - iter->mBounds.top)));
+      continue;
+    }
+
+    if (!pathGeom) {
+      if (pathRectIsAxisAligned) {
+        mCurrentClipBounds.IntersectRect(mCurrentClipBounds,
+          IntRect(int32_t(pathRect.left), int32_t(pathRect.top),
+                  int32_t(pathRect.right - pathRect.left),
+                  int32_t(pathRect.bottom - pathRect.top)));
+      }
+      if (iter->mPath) {
+        // See if pathRect needs to go into the path geometry.
+        if (!pathRectIsAxisAligned) {
+          pathGeom = ConvertRectToGeometry(pathRect);
+        } else {
+          pathGeom = GetTransformedGeometry(iter->mPath->GetGeometry(), iter->mTransform);
+        }
+      } else {
+        pathRect = IntersectRect(pathRect, iter->mBounds);
+        pathRectIsAxisAligned = false;
+        continue;
+      }
+    }
+
+    RefPtr<ID2D1PathGeometry> newGeom;
+    factory()->CreatePathGeometry(byRef(newGeom));
+
+    RefPtr<ID2D1GeometrySink> currentSink;
+    newGeom->Open(byRef(currentSink));
+
+    if (iter->mPath) {
+      pathGeom->CombineWithGeometry(iter->mPath->GetGeometry(), D2D1_COMBINE_MODE_INTERSECT,
+                                    iter->mTransform, currentSink);
+    } else {
+      RefPtr<ID2D1Geometry> rectGeom = ConvertRectToGeometry(iter->mBounds);
+      pathGeom->CombineWithGeometry(rectGeom, D2D1_COMBINE_MODE_INTERSECT,
+                                    D2D1::IdentityMatrix(), currentSink);
+    }
+
+    currentSink->Close();
+
+    pathGeom = newGeom.forget();
+  }
+
+  // For now we need mCurrentClippedGeometry to always be non-nullptr. This
+  // method might seem a little strange but it is just fine, if pathGeom is
+  // nullptr pathRect will always still contain 1 clip unaccounted for
+  // regardless of mCurrentClipBounds.
+  if (!pathGeom) {
+    pathGeom = ConvertRectToGeometry(pathRect);
+  }
+  mCurrentClippedGeometry = pathGeom.forget();
+  *aClipBounds = mCurrentClipBounds;
+  return mCurrentClippedGeometry;
 }
 
 void
@@ -792,6 +1110,14 @@ DrawTargetD2D1::PopClipsFromDC(ID2D1DeviceContext *aDC)
 }
 
 TemporaryRef<ID2D1Brush>
+DrawTargetD2D1::CreateTransparentBlackBrush()
+{
+  RefPtr<ID2D1SolidColorBrush> brush;
+  mDC->CreateSolidColorBrush(D2D1::ColorF(0, 0), byRef(brush));
+  return brush;
+}
+
+TemporaryRef<ID2D1Brush>
 DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 {
   if (!IsPatternSupportedByD2D(aPattern)) {
@@ -818,7 +1144,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 
     if (!stops) {
       gfxDebug() << "No stops specified for gradient pattern.";
-      return nullptr;
+      return CreateTransparentBlackBrush();
     }
 
     if (pat->mBegin == pat->mEnd) {
@@ -848,7 +1174,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 
     if (!stops) {
       gfxDebug() << "No stops specified for gradient pattern.";
-      return nullptr;
+      return CreateTransparentBlackBrush();
     }
 
     // This will not be a complex radial gradient brush.
@@ -868,7 +1194,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
 
     if (!pat->mSurface) {
       gfxDebug() << "No source surface specified for surface pattern";
-      return nullptr;
+      return CreateTransparentBlackBrush();
     }
 
     D2D1_RECT_F samplingBounds;
@@ -895,7 +1221,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
   }
 
   gfxWarning() << "Invalid pattern type detected.";
-  return nullptr;
+  return CreateTransparentBlackBrush();
 }
 
 TemporaryRef<ID2D1Image>

@@ -143,17 +143,20 @@ imgFrame::~imgFrame()
   }
 }
 
-nsresult imgFrame::Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
-                        SurfaceFormat aFormat, uint8_t aPaletteDepth /* = 0 */)
+nsresult
+imgFrame::InitForDecoder(const nsIntRect& aRect,
+                         SurfaceFormat aFormat,
+                         uint8_t aPaletteDepth /* = 0 */)
 {
-  // assert for properties that should be verified by decoders, warn for properties related to bad content
-  if (!AllowedImageSize(aWidth, aHeight)) {
+  // Assert for properties that should be verified by decoders,
+  // warn for properties related to bad content.
+  if (!AllowedImageSize(aRect.width, aRect.height)) {
     NS_WARNING("Should have legal image size");
     return NS_ERROR_FAILURE;
   }
 
-  mOffset.MoveTo(aX, aY);
-  mSize.SizeTo(aWidth, aHeight);
+  mOffset.MoveTo(aRect.x, aRect.y);
+  mSize.SizeTo(aRect.width, aRect.height);
 
   mFormat = aFormat;
   mPaletteDepth = aPaletteDepth;
@@ -172,32 +175,121 @@ nsresult imgFrame::Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
       NS_WARNING("moz_malloc for paletted image data should succeed");
     NS_ENSURE_TRUE(mPalettedImageData, NS_ERROR_OUT_OF_MEMORY);
   } else {
+    MOZ_ASSERT(!mImageSurface, "Called imgFrame::InitForDecoder() twice?");
+
     // Inform the discard tracker that we are going to allocate some memory.
-    if (!DiscardTracker::TryAllocation(4 * mSize.width * mSize.height)) {
-      NS_WARNING("Exceed the hard limit of decode image size");
+    mInformedDiscardTracker =
+      DiscardTracker::TryAllocation(4 * mSize.width * mSize.height);
+    if (!mInformedDiscardTracker) {
+      NS_WARNING("Exceeded the image decode size hard limit");
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    if (!mImageSurface) {
-      mVBuf = AllocateBufferForImage(mSize, mFormat);
-      if (!mVBuf) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      if (mVBuf->OnHeap()) {
-        int32_t stride = VolatileSurfaceStride(mSize, mFormat);
-        VolatileBufferPtr<uint8_t> ptr(mVBuf);
-        memset(ptr, 0, stride * mSize.height);
-      }
-      mImageSurface = CreateLockedSurface(mVBuf, mSize, mFormat);
+    mVBuf = AllocateBufferForImage(mSize, mFormat);
+    if (!mVBuf) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
+    if (mVBuf->OnHeap()) {
+      int32_t stride = VolatileSurfaceStride(mSize, mFormat);
+      VolatileBufferPtr<uint8_t> ptr(mVBuf);
+      memset(ptr, 0, stride * mSize.height);
+    }
+    mImageSurface = CreateLockedSurface(mVBuf, mSize, mFormat);
 
     if (!mImageSurface) {
       NS_WARNING("Failed to create VolatileDataSourceSurface");
-      // Image surface allocation is failed, need to return
-      // the booked buffer size.
-      DiscardTracker::InformDeallocation(4 * mSize.width * mSize.height);
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    mInformedDiscardTracker = true;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
+                           const nsIntSize& aSize,
+                           const SurfaceFormat aFormat,
+                           GraphicsFilter aFilter,
+                           uint32_t aImageFlags)
+{
+  // Assert for properties that should be verified by decoders,
+  // warn for properties related to bad content.
+  if (!AllowedImageSize(aSize.width, aSize.height)) {
+    NS_WARNING("Should have legal image size");
+    return NS_ERROR_FAILURE;
+  }
+
+  mOffset.MoveTo(0, 0);
+  mSize.SizeTo(aSize.width, aSize.height);
+
+  mFormat = aFormat;
+  mPaletteDepth = 0;
+
+  // Inform the discard tracker that we are going to allocate some memory.
+  mInformedDiscardTracker =
+    DiscardTracker::TryAllocation(4 * mSize.width * mSize.height);
+  if (!mInformedDiscardTracker) {
+    NS_WARNING("Exceed the image decode size hard limit");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  RefPtr<DrawTarget> target;
+
+  bool canUseDataSurface =
+    gfxPlatform::GetPlatform()->CanRenderContentToDataSurface();
+
+  if (canUseDataSurface) {
+    // It's safe to use data surfaces for content on this platform, so we can
+    // get away with using volatile buffers.
+    MOZ_ASSERT(!mImageSurface, "Called imgFrame::InitWithDrawable() twice?");
+
+    mVBuf = AllocateBufferForImage(mSize, mFormat);
+    if (!mVBuf) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    int32_t stride = VolatileSurfaceStride(mSize, mFormat);
+    VolatileBufferPtr<uint8_t> ptr(mVBuf);
+    if (!ptr) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    if (mVBuf->OnHeap()) {
+      memset(ptr, 0, stride * mSize.height);
+    }
+    mImageSurface = CreateLockedSurface(mVBuf, mSize, mFormat);
+
+    target = gfxPlatform::GetPlatform()->
+      CreateDrawTargetForData(ptr, mSize, stride, mFormat);
+  } else {
+    // We can't use data surfaces for content, so we'll create an offscreen
+    // surface instead.  This means if someone later calls RawAccessRef(), we
+    // may have to do an expensive readback, but we warned callers about that in
+    // the documentation for this method.
+    MOZ_ASSERT(!mOptSurface, "Called imgFrame::InitWithDrawable() twice?");
+
+    target = gfxPlatform::GetPlatform()->
+        CreateOffscreenContentDrawTarget(mSize, mFormat);
+  }
+
+  if (!target) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // Draw using the drawable the caller provided.
+  nsIntRect imageRect(0, 0, mSize.width, mSize.height);
+  nsRefPtr<gfxContext> ctx = new gfxContext(target);
+  gfxUtils::DrawPixelSnapped(ctx, aDrawable, ThebesIntSize(mSize),
+                             ImageRegion::Create(imageRect),
+                             mFormat, aFilter, aImageFlags);
+
+  if (canUseDataSurface && !mImageSurface) {
+    NS_WARNING("Failed to create VolatileDataSourceSurface");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (!canUseDataSurface) {
+    // We used an offscreen surface, which is an "optimized" surface from
+    // imgFrame's perspective.
+    mOptSurface = target->Snapshot();
   }
 
   return NS_OK;

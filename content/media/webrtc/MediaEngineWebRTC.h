@@ -197,6 +197,7 @@ public:
   void StopImpl();
   void SnapshotImpl();
   void RotateImage(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight);
+  uint32_t ConvertPixexFormatToFOURCC(int aFormat);
   void Notify(const mozilla::hal::ScreenConfiguration& aConfiguration);
 
   nsresult TakePhoto(PhotoCallback* aCallback) MOZ_OVERRIDE;
