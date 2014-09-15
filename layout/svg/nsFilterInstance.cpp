@@ -214,13 +214,16 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
   // Convert the passed in rects from frame space to filter space:
   mPostFilterDirtyRegion = FrameSpaceToFilterSpace(aPostFilterDirtyRegion);
   mPreFilterDirtyRegion = FrameSpaceToFilterSpace(aPreFilterDirtyRegion);
+
+  nsIntRect targetBounds;
   if (aPreFilterVisualOverflowRectOverride) {
-    mTargetBounds =
+    targetBounds =
       FrameSpaceToFilterSpace(aPreFilterVisualOverflowRectOverride);
   } else if (mTargetFrame) {
     nsRect preFilterVOR = mTargetFrame->GetPreEffectsVisualOverflowRect();
-    mTargetBounds = FrameSpaceToFilterSpace(&preFilterVOR);
+    targetBounds = FrameSpaceToFilterSpace(&preFilterVOR);
   }
+  mTargetBounds.UnionRect(mTargetBBoxInFilterSpace, targetBounds);
 
   mInitialized = true;
 }
@@ -332,10 +335,7 @@ nsFilterInstance::ComputeNeededBoxes()
     mFilterDescription, mPostFilterDirtyRegion,
     sourceGraphicNeededRegion, fillPaintNeededRegion, strokePaintNeededRegion);
 
-  nsIntRect sourceBounds;
-  sourceBounds.UnionRect(mTargetBBoxInFilterSpace, mTargetBounds);
-
-  sourceGraphicNeededRegion.And(sourceGraphicNeededRegion, sourceBounds);
+  sourceGraphicNeededRegion.And(sourceGraphicNeededRegion, mTargetBounds);
 
   mSourceGraphic.mNeededBounds = sourceGraphicNeededRegion.GetBounds();
   mFillPaint.mNeededBounds = fillPaintNeededRegion.GetBounds();
@@ -507,11 +507,8 @@ nsFilterInstance::ComputePostFilterDirtyRegion()
 nsRect
 nsFilterInstance::ComputePostFilterExtents()
 {
-  nsIntRect sourceBounds;
-  sourceBounds.UnionRect(mTargetBBoxInFilterSpace, mTargetBounds);
-
   nsIntRegion postFilterExtents =
-    FilterSupport::ComputePostFilterExtents(mFilterDescription, sourceBounds);
+    FilterSupport::ComputePostFilterExtents(mFilterDescription, mTargetBounds);
   return FilterSpaceToFrameSpace(postFilterExtents.GetBounds());
 }
 
