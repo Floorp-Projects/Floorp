@@ -200,7 +200,7 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
   if (aPreFilterVisualOverflowRectOverride) {
     mTargetBounds =
       FrameSpaceToFilterSpace(aPreFilterVisualOverflowRectOverride);
-  } else {
+  } else if (mTargetFrame) {
     nsRect preFilterVOR = mTargetFrame->GetPreEffectsVisualOverflowRect();
     mTargetBounds = FrameSpaceToFilterSpace(&preFilterVOR);
   }
@@ -211,10 +211,13 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
 nsresult
 nsFilterInstance::ComputeUserSpaceToFilterSpaceScale()
 {
-  gfxMatrix canvasTransform = nsSVGUtils::GetCanvasTM(mTargetFrame);
-  if (canvasTransform.IsSingular()) {
-    // Nothing should be rendered.
-    return NS_ERROR_FAILURE;
+  gfxMatrix canvasTransform;
+  if (mTargetFrame) {
+    canvasTransform = nsSVGUtils::GetCanvasTM(mTargetFrame);
+    if (canvasTransform.IsSingular()) {
+      // Nothing should be rendered.
+      return NS_ERROR_FAILURE;
+    }
   }
 
   mUserSpaceToFilterSpaceScale = canvasTransform.ScaleFactors(true);
@@ -326,6 +329,7 @@ nsresult
 nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
                                    DrawTarget* aTargetDT)
 {
+  MOZ_ASSERT(mTargetFrame);
   nsIntRect neededRect = aSource->mNeededBounds;
 
   RefPtr<DrawTarget> offscreenDT =
@@ -383,6 +387,8 @@ nsFilterInstance::BuildSourcePaints(DrawTarget* aTargetDT)
 nsresult
 nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
 {
+  MOZ_ASSERT(mTargetFrame);
+
   nsIntRect neededRect = mSourceGraphic.mNeededBounds;
   if (neededRect.IsEmpty()) {
     return NS_OK;
@@ -434,6 +440,8 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
 nsresult
 nsFilterInstance::Render(gfxContext* aContext)
 {
+  MOZ_ASSERT(mTargetFrame, "Need a frame for rendering");
+
   nsIntRect filterRect = mPostFilterDirtyRegion.GetBounds().Intersect(OutputFilterSpaceBounds());
   gfxMatrix ctm = GetFilterSpaceToDeviceSpaceTransform();
 
@@ -576,5 +584,8 @@ nsFilterInstance::FilterSpaceToFrameSpace(const nsIntRegion& aRegion) const
 gfxMatrix
 nsFilterInstance::GetUserSpaceToFrameSpaceInCSSPxTransform() const
 {
+  if (!mTargetFrame) {
+    return gfxMatrix();
+  }
   return gfxMatrix::Translation(-nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(mTargetFrame));
 }

@@ -100,7 +100,8 @@ public:
                                     const nsRect *aPreFilterBounds = nullptr);
 
   /**
-   * @param aTargetFrame The frame of the filtered element under consideration.
+   * @param aTargetFrame The frame of the filtered element under consideration,
+   *   may be null.
    * @param aTargetContent The filtered element itself.
    * @param aMetrics The metrics to resolve SVG lengths against.
    * @param aFilterChain The list of filters to apply.
@@ -117,7 +118,7 @@ public:
    * @param aOverridePreFilterVisualOverflowRect [optional] Use a different
    *   visual overflow rect for the target element.
    * @param aOverrideBBox [optional] Use a different SVG bbox for the target
-   *   element.
+   *   element. Must be non-null if aTargetFrame is null.
    */
   nsFilterInstance(nsIFrame *aTargetFrame,
                    nsIContent* aTargetContent,
