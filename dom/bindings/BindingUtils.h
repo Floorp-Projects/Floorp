@@ -2317,7 +2317,7 @@ AddStringToIDVector(JSContext* cx, JS::AutoIdVector& vector, const char* name)
 // Implementation of the bits that XrayWrapper needs
 
 /**
- * This resolves indexed or named properties of obj.
+ * This resolves operations, attributes and constants of the interfaces for obj.
  *
  * wrapper is the Xray JS object.
  * obj is the target object of the Xray, a binding's instance object or a
@@ -2329,19 +2329,6 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                        JS::Handle<jsid> id,
                        JS::MutableHandle<JSPropertyDescriptor> desc,
                        bool& cacheOnHolder);
-
-/**
- * This resolves operations, attributes and constants of the interfaces for obj.
- *
- * wrapper is the Xray JS object.
- * obj is the target object of the Xray, a binding's instance object or a
- *     interface or interface prototype object.
- */
-bool
-XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                          JS::Handle<JSObject*> obj,
-                          JS::Handle<jsid> id, JS::MutableHandle<JSPropertyDescriptor> desc,
-                          bool& cacheOnHolder);
 
 /**
  * Define a property on obj through an Xray wrapper.
@@ -2463,23 +2450,6 @@ inline void
 MustInheritFromNonRefcountedDOMObject(NonRefcountedDOMObject*)
 {
 }
-
-/**
- * This creates a JSString containing the value that the toString function for
- * obj should create according to the WebIDL specification, ignoring any
- * modifications by script. The value is prefixed with pre and postfixed with
- * post, unless this is called for an object that has a stringifier. It is
- * specifically for use by Xray code.
- *
- * wrapper is the Xray JS object.
- * obj is the target object of the Xray, a binding's instance object or a
- *     interface or interface prototype object.
- * v contains the JSString for the value if the function returns true.
- */
-bool
-NativeToString(JSContext* cx, JS::Handle<JSObject*> wrapper,
-               JS::Handle<JSObject*> obj,
-               JS::MutableHandle<JS::Value> v);
 
 HAS_MEMBER(JSBindingFinalized)
 
@@ -2995,12 +2965,6 @@ GlobalPropertiesAreOwn()
 void
 AssertReturnTypeMatchesJitinfo(const JSJitInfo* aJitinfo,
                                JS::Handle<JS::Value> aValue);
-
-extern void
-DEBUG_CheckXBLLookup(JSContext *cx, JSPropertyDescriptor *desc);
-#else
-#define DEBUG_CheckXBLLookup(a, b) {}
-
 #endif
 
 // Returns true if aObj's global has any of the permissions named in aPermissions
