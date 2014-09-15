@@ -25,6 +25,12 @@ class gfxASurface;
 class nsIFrame;
 class nsSVGFilterPaintCallback;
 
+namespace mozilla {
+namespace dom {
+class UserSpaceMetrics;
+}
+}
+
 /**
  * This class performs all filter processing.
  *
@@ -48,6 +54,7 @@ class nsFilterInstance
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::FilterPrimitiveDescription FilterPrimitiveDescription;
   typedef mozilla::gfx::FilterDescription FilterDescription;
+  typedef mozilla::dom::UserSpaceMetrics UserSpaceMetrics;
 
 public:
   /**
@@ -94,6 +101,7 @@ public:
 
   /**
    * @param aTargetFrame The frame of the filtered element under consideration.
+   * @param aMetrics The metrics to resolve SVG lengths against.
    * @param aFilterChain The list of filters to apply.
    * @param aPaintCallback [optional] The callback that Render() should use to
    *   paint. Only required if you will call Render().
@@ -111,6 +119,7 @@ public:
    *   element.
    */
   nsFilterInstance(nsIFrame *aTargetFrame,
+                   const UserSpaceMetrics& aMetrics,
                    const nsTArray<nsStyleFilter>& aFilterChain,
                    nsSVGFilterPaintCallback *aPaintCallback,
                    const gfxMatrix& aPaintTransform,
@@ -268,6 +277,11 @@ private:
    * The frame for the element that is currently being filtered.
    */
   nsIFrame* mTargetFrame;
+
+  /**
+   * The user space metrics of the filtered frame.
+   */
+  const UserSpaceMetrics& mMetrics;
 
   nsSVGFilterPaintCallback* mPaintCallback;
 
