@@ -40,6 +40,7 @@
 #include "SharedSSLState.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
+#include "NSSCertDBTrustDomain.h"
 #include "NSSErrorsService.h"
 
 #include "ssl.h"
