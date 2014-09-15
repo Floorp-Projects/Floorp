@@ -2412,6 +2412,15 @@ nsLayoutUtils::GetRectRelativeToFrame(Element* aElement, nsIFrame* aFrame)
 }
 
 bool
+nsLayoutUtils::ContainsPoint(const nsRect& aRect, const nsPoint& aPoint,
+                             nscoord aInflateSize)
+{
+  nsRect rect = aRect;
+  rect.Inflate(aInflateSize);
+  return rect.Contains(aPoint);
+}
+
+bool
 nsLayoutUtils::GetLayerTransformForFrame(nsIFrame* aFrame,
                                          Matrix4x4* aTransform)
 {
