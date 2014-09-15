@@ -2584,6 +2584,7 @@ nsStyleDisplay::nsStyleDisplay()
   mMixBlendMode = NS_STYLE_BLEND_NORMAL;
   mIsolation = NS_STYLE_ISOLATION_AUTO;
   mTouchAction = NS_STYLE_TOUCH_ACTION_AUTO;
+  mScrollBehavior = NS_STYLE_SCROLL_BEHAVIOR_AUTO;
 
   mTransitions.AppendElement();
   NS_ABORT_IF_FALSE(mTransitions.Length() == 1,
@@ -2633,6 +2634,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mWillChangeBitField(aSource.mWillChangeBitField)
   , mWillChange(aSource.mWillChange)
   , mTouchAction(aSource.mTouchAction)
+  , mScrollBehavior(aSource.mScrollBehavior)
   , mBackfaceVisibility(aSource.mBackfaceVisibility)
   , mTransformStyle(aSource.mTransformStyle)
   , mSpecifiedTransform(aSource.mSpecifiedTransform)
@@ -2844,7 +2846,8 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
        mAnimationDirectionCount != aOther.mAnimationDirectionCount ||
        mAnimationFillModeCount != aOther.mAnimationFillModeCount ||
        mAnimationPlayStateCount != aOther.mAnimationPlayStateCount ||
-       mAnimationIterationCountCount != aOther.mAnimationIterationCountCount)) {
+       mAnimationIterationCountCount != aOther.mAnimationIterationCountCount ||
+       mScrollBehavior != aOther.mScrollBehavior)) {
     NS_UpdateHint(hint, nsChangeHint_NeutralChange);
   }
 
