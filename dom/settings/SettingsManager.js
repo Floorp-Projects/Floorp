@@ -57,6 +57,9 @@ function SettingsLock(aSettingsManager) {
                                                             "Settings:Finalize:OK", "Settings:Finalize:KO"]);
   this.sendMessage("Settings:CreateLock", {lockID: this._id, isServiceLock: false});
   Services.tm.currentThread.dispatch(this._closeHelper.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
+
+  // We only want to file closeHelper once per set of receiveMessage calls.
+  this._closeCalled = true;
 }
 
 SettingsLock.prototype = {
@@ -84,8 +87,9 @@ SettingsLock.prototype = {
   _closeHelper: function() {
     if (DEBUG) debug("closing lock " + this._id);
     this._open = false;
+    this._closeCalled = false;
     if (!this._requests || Object.keys(this._requests).length == 0) {
-      if (DEBUG) debug("Requests exhausted, finalizing");
+      if (DEBUG) debug("Requests exhausted, finalizing " + this._id);
       this._settingsManager.unregisterLock(this._id);
       this.sendMessage("Settings:Finalize", {lockID: this._id});
     } else {
@@ -150,7 +154,11 @@ SettingsLock.prototype = {
     // things like marionetteScriptFinished in them. Make sure we file
     // our call to run/finalize BEFORE opening the lock and fulfilling
     // DOMRequests.
-    Services.tm.currentThread.dispatch(this._closeHelper.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
+    if (!this._closeCalled) {
+      // We only want to file closeHelper once per set of receiveMessage calls.
+      Services.tm.currentThread.dispatch(this._closeHelper.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
+      this._closeCalled = true;
+    }
     if (DEBUG) debug("receiveMessage: " + aMessage.name);
     switch (aMessage.name) {
       case "Settings:Get:OK":
