@@ -546,6 +546,9 @@ class GCRuntime
     void checkForCompartmentMismatches();
 #endif
 
+    void callFinalizeCallbacks(FreeOp *fop, JSFinalizeStatus status) const;
+    void callMovingGCCallbacks() const;
+
   public:
     JSRuntime             *rt;
 

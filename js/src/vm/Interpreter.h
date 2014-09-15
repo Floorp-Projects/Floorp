@@ -440,9 +440,6 @@ ImplicitThisOperation(JSContext *cx, HandleObject scopeObj, HandlePropertyName n
                       MutableHandleValue res);
 
 bool
-IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval);
-
-bool
 RunOnceScriptPrologue(JSContext *cx, HandleScript script);
 
 bool
