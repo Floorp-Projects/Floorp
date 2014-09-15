@@ -278,7 +278,7 @@ SimdTypeToName(JSContext *cx, AsmJSSimdType type)
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected SIMD type");
 }
 
-static X4TypeDescr::Type
+static SimdTypeDescr::Type
 AsmJSSimdTypeToTypeDescrType(AsmJSSimdType type)
 {
     switch (type) {
@@ -309,11 +309,11 @@ ValidateSimdType(JSContext *cx, AsmJSModule::Global &global, HandleValue globalV
     if (!v.isObject())
         return LinkFail(cx, "bad SIMD type");
 
-    RootedObject x4desc(cx, &v.toObject());
-    if (!x4desc->is<X4TypeDescr>())
+    RootedObject simdDesc(cx, &v.toObject());
+    if (!simdDesc->is<SimdTypeDescr>())
         return LinkFail(cx, "bad SIMD type");
 
-    if (AsmJSSimdTypeToTypeDescrType(type) != x4desc->as<X4TypeDescr>().type())
+    if (AsmJSSimdTypeToTypeDescrType(type) != simdDesc->as<SimdTypeDescr>().type())
         return LinkFail(cx, "bad SIMD type");
 
     out.set(v);
@@ -669,7 +669,7 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    JSObject *x4obj;
+    JSObject *simdObj;
     switch (func.returnType()) {
       case AsmJSModule::Return_Void:
         callArgs.rval().set(UndefinedValue());
@@ -681,16 +681,16 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
         callArgs.rval().set(NumberValue(*(double*)&coercedArgs[0]));
         break;
       case AsmJSModule::Return_Int32x4:
-        x4obj = CreateSimd<Int32x4>(cx, (int32_t*)&coercedArgs[0]);
-        if (!x4obj)
+        simdObj = CreateSimd<Int32x4>(cx, (int32_t*)&coercedArgs[0]);
+        if (!simdObj)
             return false;
-        callArgs.rval().set(ObjectValue(*x4obj));
+        callArgs.rval().set(ObjectValue(*simdObj));
         break;
       case AsmJSModule::Return_Float32x4:
-        x4obj = CreateSimd<Float32x4>(cx, (float*)&coercedArgs[0]);
-        if (!x4obj)
+        simdObj = CreateSimd<Float32x4>(cx, (float*)&coercedArgs[0]);
+        if (!simdObj)
             return false;
-        callArgs.rval().set(ObjectValue(*x4obj));
+        callArgs.rval().set(ObjectValue(*simdObj));
         break;
     }
 
