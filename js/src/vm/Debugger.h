@@ -498,6 +498,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * If *vp is a magic JS_OPTIMIZED_ARGUMENTS value signifying missing
      * arguments, this produces a plain object of the form { missingArguments:
      * true }.
+     *
+     * If *vp is a magic JS_UNINITIALIZED_LEXICAL value signifying an
+     * unaccessible uninitialized binding, this produces a plain object of the
+     * form { uninitialized: true }.
      */
     bool wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp);
 

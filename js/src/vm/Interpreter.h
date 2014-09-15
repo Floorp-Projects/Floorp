@@ -470,6 +470,15 @@ SetConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName name, H
                                     JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY);
 }
 
+void
+ReportUninitializedLexical(JSContext *cx, HandlePropertyName name);
+
+void
+ReportUninitializedLexical(JSContext *cx, HandleScript script, jsbytecode *pc);
+
+void
+ReportUninitializedLexical(JSContext *cx, HandleScript script, jsbytecode *pc, ScopeCoordinate sc);
+
 }  /* namespace js */
 
 #endif /* vm_Interpreter_h */
