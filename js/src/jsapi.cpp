@@ -3233,23 +3233,17 @@ template<typename T>
 static bool
 DefineConstScalar(JSContext *cx, HandleObject obj, const JSConstScalarSpec<T> *cds)
 {
-    bool ok;
-    unsigned attrs;
-
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     JSPropertyOpWrapper noget = GetterWrapper(nullptr);
     JSStrictPropertyOpWrapper noset = SetterWrapper(nullptr);
-    for (ok = true; cds->name; cds++) {
+    unsigned attrs = JSPROP_READONLY | JSPROP_PERMANENT;
+    for (; cds->name; cds++) {
         RootedValue value(cx, ValueFromScalar(cds->val));
-        attrs = cds->flags;
-        if (!attrs)
-            attrs = JSPROP_READONLY | JSPROP_PERMANENT;
-        ok = DefineProperty(cx, obj, cds->name, value, noget, noset, attrs, 0);
-        if (!ok)
-            break;
+        if (!DefineProperty(cx, obj, cds->name, value, noget, noset, attrs, 0))
+            return false;
     }
-    return ok;
+    return true;
 }
 
 JS_PUBLIC_API(bool)
