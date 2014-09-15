@@ -467,7 +467,7 @@ LayoutHelpers.prototype = {
     }
 
     // Also take scrolled containers into account
-    let el = node;
+    el = node;
     while (el && el.parentNode) {
       if (el.scrollTop) {
         offsetTop -= el.scrollTop;
