@@ -90,7 +90,7 @@ of values.
 nsIUGenCategory::nsUGenCategory sDetailedToGeneralCategory[] = {
   /*
    * The order here corresponds to the HB_UNICODE_GENERAL_CATEGORY_* constants
-   * of the hb_unicode_general_category_t enum in gfx/harfbuzz/src/hb-common.h.
+   * of the hb_unicode_general_category_t enum in gfx/harfbuzz/src/hb-unicode.h.
    */
   /* CONTROL */             nsIUGenCategory::kOther,
   /* FORMAT */              nsIUGenCategory::kOther,

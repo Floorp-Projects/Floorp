@@ -1204,14 +1204,19 @@ date_now(JSContext *cx, unsigned argc, Value *vp)
 }
 
 void
-DateObject::setUTCTime(double t, Value *vp)
+DateObject::setUTCTime(double t)
 {
     for (size_t ind = COMPONENTS_START_SLOT; ind < RESERVED_SLOTS; ind++)
         setReservedSlot(ind, UndefinedValue());
 
     setFixedSlot(UTC_TIME_SLOT, DoubleValue(t));
-    if (vp)
-        vp->setDouble(t);
+}
+
+void
+DateObject::setUTCTime(double t, MutableHandleValue vp)
+{
+    setUTCTime(t);
+    vp.setDouble(t);
 }
 
 void
@@ -1674,7 +1679,7 @@ date_setTime_impl(JSContext *cx, CallArgs args)
 {
     Rooted<DateObject*> dateObj(cx, &args.thisv().toObject().as<DateObject>());
     if (args.length() == 0) {
-        dateObj->setUTCTime(GenericNaN(), args.rval().address());
+        dateObj->setUTCTime(GenericNaN(), args.rval());
         return true;
     }
 
@@ -1682,7 +1687,7 @@ date_setTime_impl(JSContext *cx, CallArgs args)
     if (!ToNumber(cx, args[0], &result))
         return false;
 
-    dateObj->setUTCTime(TimeClip(result), args.rval().address());
+    dateObj->setUTCTime(TimeClip(result), args.rval());
     return true;
 }
 
@@ -1742,7 +1747,7 @@ date_setMilliseconds_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(MakeDate(Day(t), time), &cx->runtime()->dateTimeInfo));
 
     /* Steps 4-5. */
-    dateObj->setUTCTime(u, args.rval().address());
+    dateObj->setUTCTime(u, args.rval());
     return true;
 }
 
@@ -1772,7 +1777,7 @@ date_setUTCMilliseconds_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(MakeDate(Day(t), time));
 
     /* Steps 4-5. */
-    dateObj->setUTCTime(v, args.rval().address());
+    dateObj->setUTCTime(v, args.rval());
     return true;
 }
 
@@ -1809,7 +1814,7 @@ date_setSeconds_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(date, &cx->runtime()->dateTimeInfo));
 
     /* Steps 6-7. */
-    dateObj->setUTCTime(u, args.rval().address());
+    dateObj->setUTCTime(u, args.rval());
     return true;
 }
 
@@ -1846,7 +1851,7 @@ date_setUTCSeconds_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(date);
 
     /* Steps 6-7. */
-    dateObj->setUTCTime(v, args.rval().address());
+    dateObj->setUTCTime(v, args.rval());
     return true;
 }
 
@@ -1888,7 +1893,7 @@ date_setMinutes_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(date, &cx->runtime()->dateTimeInfo));
 
     /* Steps 7-8. */
-    dateObj->setUTCTime(u, args.rval().address());
+    dateObj->setUTCTime(u, args.rval());
     return true;
 }
 
@@ -1930,7 +1935,7 @@ date_setUTCMinutes_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(date);
 
     /* Steps 7-8. */
-    dateObj->setUTCTime(v, args.rval().address());
+    dateObj->setUTCTime(v, args.rval());
     return true;
 }
 
@@ -1977,7 +1982,7 @@ date_setHours_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(date, &cx->runtime()->dateTimeInfo));
 
     /* Steps 7-8. */
-    dateObj->setUTCTime(u, args.rval().address());
+    dateObj->setUTCTime(u, args.rval());
     return true;
 }
 
@@ -2024,7 +2029,7 @@ date_setUTCHours_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(newDate);
 
     /* Steps 8-9. */
-    dateObj->setUTCTime(v, args.rval().address());
+    dateObj->setUTCTime(v, args.rval());
     return true;
 }
 
@@ -2056,7 +2061,7 @@ date_setDate_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(newDate, &cx->runtime()->dateTimeInfo));
 
     /* Steps 5-6. */
-    dateObj->setUTCTime(u, args.rval().address());
+    dateObj->setUTCTime(u, args.rval());
     return true;
 }
 
@@ -2088,7 +2093,7 @@ date_setUTCDate_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(newDate);
 
     /* Steps 5-6. */
-    dateObj->setUTCTime(v, args.rval().address());
+    dateObj->setUTCTime(v, args.rval());
     return true;
 }
 
@@ -2145,7 +2150,7 @@ date_setMonth_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(newDate, &cx->runtime()->dateTimeInfo));
 
     /* Steps 6-7. */
-    dateObj->setUTCTime(u, args.rval().address());
+    dateObj->setUTCTime(u, args.rval());
     return true;
 }
 
@@ -2182,7 +2187,7 @@ date_setUTCMonth_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(newDate);
 
     /* Steps 6-7. */
-    dateObj->setUTCTime(v, args.rval().address());
+    dateObj->setUTCTime(v, args.rval());
     return true;
 }
 
@@ -2240,7 +2245,7 @@ date_setFullYear_impl(JSContext *cx, CallArgs args)
     double u = TimeClip(UTC(newDate, &cx->runtime()->dateTimeInfo));
 
     /* Steps 7-8. */
-    dateObj->setUTCTime(u, args.rval().address());
+    dateObj->setUTCTime(u, args.rval());
     return true;
 }
 
@@ -2282,7 +2287,7 @@ date_setUTCFullYear_impl(JSContext *cx, CallArgs args)
     double v = TimeClip(newDate);
 
     /* Steps 7-8. */
-    dateObj->setUTCTime(v, args.rval().address());
+    dateObj->setUTCTime(v, args.rval());
     return true;
 }
 
@@ -2309,7 +2314,7 @@ date_setYear_impl(JSContext *cx, CallArgs args)
 
     /* Step 3. */
     if (IsNaN(y)) {
-        dateObj->setUTCTime(GenericNaN(), args.rval().address());
+        dateObj->setUTCTime(GenericNaN(), args.rval());
         return true;
     }
 
@@ -2325,7 +2330,7 @@ date_setYear_impl(JSContext *cx, CallArgs args)
     double u = UTC(MakeDate(day, TimeWithinDay(t)), &cx->runtime()->dateTimeInfo);
 
     /* Steps 7-8. */
-    dateObj->setUTCTime(TimeClip(u), args.rval().address());
+    dateObj->setUTCTime(TimeClip(u), args.rval());
     return true;
 }
 

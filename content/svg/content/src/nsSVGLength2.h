@@ -16,6 +16,7 @@
 #include "nsMathUtils.h"
 #include "nsSVGElement.h"
 #include "SVGContentUtils.h"
+#include "mozilla/gfx/Rect.h"
 
 class nsIFrame;
 class nsSMILValue;
@@ -29,10 +30,64 @@ class SVGSVGElement;
 }
 }
 
+namespace mozilla {
+namespace dom {
+
+class UserSpaceMetrics
+{
+public:
+  virtual ~UserSpaceMetrics() {}
+
+  virtual float GetEmLength() const = 0;
+  virtual float GetExLength() const = 0;
+  virtual float GetAxisLength(uint8_t aCtxType) const = 0;
+};
+
+class UserSpaceMetricsWithSize : public UserSpaceMetrics
+{
+public:
+  virtual gfx::Size GetSize() const = 0;
+  virtual float GetAxisLength(uint8_t aCtxType) const MOZ_OVERRIDE;
+};
+
+class SVGElementMetrics : public UserSpaceMetrics
+{
+public:
+  SVGElementMetrics(nsSVGElement* aSVGElement,
+                    mozilla::dom::SVGSVGElement* aCtx = nullptr);
+
+  virtual float GetEmLength() const MOZ_OVERRIDE;
+  virtual float GetExLength() const MOZ_OVERRIDE;
+  virtual float GetAxisLength(uint8_t aCtxType) const MOZ_OVERRIDE;
+
+private:
+  bool EnsureCtx() const;
+
+  nsSVGElement* mSVGElement;
+  mutable mozilla::dom::SVGSVGElement* mCtx;
+};
+
+class NonSVGFrameUserSpaceMetrics : public UserSpaceMetricsWithSize
+{
+public:
+  NonSVGFrameUserSpaceMetrics(nsIFrame* aFrame);
+
+  virtual float GetEmLength() const MOZ_OVERRIDE;
+  virtual float GetExLength() const MOZ_OVERRIDE;
+  virtual gfx::Size GetSize() const MOZ_OVERRIDE;
+
+private:
+  nsIFrame* mFrame;
+};
+
+}
+}
+
 class nsSVGLength2
 {
   friend class mozilla::dom::SVGAnimatedLength;
   friend class mozilla::DOMSVGLength;
+  typedef mozilla::dom::UserSpaceMetrics UserSpaceMetrics;
 public:
   void Init(uint8_t aCtxType = SVGContentUtils::XY,
             uint8_t aAttrEnum = 0xff,
@@ -63,10 +118,15 @@ public:
 
   float GetBaseValue(nsSVGElement* aSVGElement) const
     { return mBaseVal / GetUnitScaleFactor(aSVGElement, mSpecifiedUnitType); }
+
   float GetAnimValue(nsSVGElement* aSVGElement) const
     { return mAnimVal / GetUnitScaleFactor(aSVGElement, mSpecifiedUnitType); }
   float GetAnimValue(nsIFrame* aFrame) const
     { return mAnimVal / GetUnitScaleFactor(aFrame, mSpecifiedUnitType); }
+  float GetAnimValue(mozilla::dom::SVGSVGElement* aCtx) const
+    { return mAnimVal / GetUnitScaleFactor(aCtx, mSpecifiedUnitType); }
+  float GetAnimValue(const UserSpaceMetrics& aMetrics) const
+    { return mAnimVal / GetUnitScaleFactor(aMetrics, mSpecifiedUnitType); }
 
   uint8_t GetCtxType() const { return mCtxType; }
   uint8_t GetSpecifiedUnitType() const { return mSpecifiedUnitType; }
@@ -77,8 +137,6 @@ public:
 
   float GetBaseValue(mozilla::dom::SVGSVGElement* aCtx) const
     { return mBaseVal / GetUnitScaleFactor(aCtx, mSpecifiedUnitType); }
-  float GetAnimValue(mozilla::dom::SVGSVGElement* aCtx) const
-    { return mAnimVal / GetUnitScaleFactor(aCtx, mSpecifiedUnitType); }
 
   bool HasBaseVal() const {
     return mIsBaseSet;
@@ -106,21 +164,9 @@ private:
   uint8_t mCtxType; // X, Y or Unspecified
   bool mIsAnimated:1;
   bool mIsBaseSet:1;
-  
-  static float GetMMPerPixel() { return MM_PER_INCH_FLOAT / 96; }
-  float GetAxisLength(nsIFrame *aNonSVGFrame) const;
-  static float GetEmLength(nsIFrame *aFrame)
-    { return SVGContentUtils::GetFontSize(aFrame); }
-  static float GetExLength(nsIFrame *aFrame)
-    { return SVGContentUtils::GetFontXHeight(aFrame); }
-  float GetUnitScaleFactor(nsIFrame *aFrame, uint8_t aUnitType) const;
 
-  float GetMMPerPixel(mozilla::dom::SVGSVGElement *aCtx) const;
-  float GetAxisLength(mozilla::dom::SVGSVGElement *aCtx) const;
-  static float GetEmLength(nsSVGElement *aSVGElement)
-    { return SVGContentUtils::GetFontSize(aSVGElement); }
-  static float GetExLength(nsSVGElement *aSVGElement)
-    { return SVGContentUtils::GetFontXHeight(aSVGElement); }
+  float GetUnitScaleFactor(nsIFrame *aFrame, uint8_t aUnitType) const;
+  float GetUnitScaleFactor(const UserSpaceMetrics& aMetrics, uint8_t aUnitType) const;
   float GetUnitScaleFactor(nsSVGElement *aSVGElement, uint8_t aUnitType) const;
   float GetUnitScaleFactor(mozilla::dom::SVGSVGElement *aCtx, uint8_t aUnitType) const;
 
