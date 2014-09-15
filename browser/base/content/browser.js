@@ -258,12 +258,6 @@ XPCOMUtils.defineLazyGetter(this, "PageMenu", function() {
 */
 function pageShowEventHandlers(persisted) {
   XULBrowserWindow.asyncUpdateUI();
-
-  // The PluginClickToPlay events are not fired when navigating using the
-  // BF cache. |persisted| is true when the page is loaded from the
-  // BF cache, so this code reshows the notification if necessary.
-  if (persisted)
-    gPluginHandler.reshowClickToPlayNotification();
 }
 
 function UpdateBackForwardCommands(aWebNavigation) {
@@ -682,7 +676,7 @@ function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
   // whether the original input would be vaguely interpretable as a URL,
   // so figure that out first.
   let alternativeURI = deserializeURI(fixupInfo.fixedURI);
-  if (!fixupInfo.fixupUsedKeyword || !alternativeURI) {
+  if (!fixupInfo.fixupUsedKeyword || !alternativeURI || !alternativeURI.host) {
     return;
   }
 
@@ -779,13 +773,6 @@ var gBrowserInit = {
     var mustLoadSidebar = false;
 
     gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver, false);
-
-    // Note that the XBL binding is untrusted
-    gBrowser.addEventListener("PluginBindingAttached", gPluginHandler, true, true);
-    gBrowser.addEventListener("PluginCrashed",         gPluginHandler, true);
-    gBrowser.addEventListener("PluginOutdated",        gPluginHandler, true);
-    gBrowser.addEventListener("PluginInstantiated",    gPluginHandler, true);
-    gBrowser.addEventListener("PluginRemoved",         gPluginHandler, true);
 
     gBrowser.addEventListener("NewPluginInstalled", gPluginHandler.newPluginInstalled, true);
 

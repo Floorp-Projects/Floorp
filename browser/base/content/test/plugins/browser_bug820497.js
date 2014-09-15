@@ -36,12 +36,14 @@ function pluginBindingAttached() {
     ok(testplugin, "should have test plugin");
     var secondtestplugin = doc.getElementById("secondtest");
     ok(!secondtestplugin, "should not yet have second test plugin");
-    var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-    ok(notification, "should have popup notification");
-    // We don't set up the action list until the notification is shown
-    notification.reshow();
-    is(notification.options.pluginData.size, 1, "should be 1 type of plugin in the popup notification");
-    XPCNativeWrapper.unwrap(gTestBrowser.contentWindow).addSecondPlugin();
+    var notification;
+    waitForNotificationPopup("click-to-play-plugins", gTestBrowser, (notification => {
+      ok(notification, "should have popup notification");
+      // We don't set up the action list until the notification is shown
+      notification.reshow();
+      is(notification.options.pluginData.size, 1, "should be 1 type of plugin in the popup notification");
+      XPCNativeWrapper.unwrap(gTestBrowser.contentWindow).addSecondPlugin();
+    }));
   } else if (gNumPluginBindingsAttached == 2) {
     var doc = gTestBrowser.contentDocument;
     var testplugin = doc.getElementById("test");
@@ -51,8 +53,8 @@ function pluginBindingAttached() {
     var notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
     ok(notification, "should have popup notification");
     notification.reshow();
-    is(notification.options.pluginData.size, 2, "should be 2 types of plugin in the popup notification");
-    finish();
+    let condition = () => (notification.options.pluginData.size == 2);
+    waitForCondition(condition, finish, "Waited too long for 2 types of plugins in popup notification");
   } else {
     ok(false, "if we've gotten here, something is quite wrong");
   }

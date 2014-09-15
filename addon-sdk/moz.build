@@ -11,13 +11,10 @@
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
+DIRS += ["source/modules/system"]
+
 EXTRA_JS_MODULES.sdk += [
     'source/app-extension/bootstrap.js',
-]
-
-EXTRA_JS_MODULES.sdk.system += [
-    'source/modules/system/Startup.js',
-    'source/modules/system/XulApp.js',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != "gonk":

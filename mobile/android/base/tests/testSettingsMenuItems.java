@@ -9,6 +9,8 @@ import java.util.Map.Entry;
 
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.NewTabletUI;
+import org.mozilla.gecko.util.HardwareUtils;
 
 /** This patch tests the Sections present in the Settings Menu and the
  *  default values for them
@@ -46,10 +48,12 @@ public class testSettingsMenuItems extends PixelTest {
 
     // Display menu items.
     String[] PATH_DISPLAY = { StringHelper.DISPLAY_SECTION_LABEL };
+    final String[] TITLE_BAR_LABEL_ARR = { StringHelper.TITLE_BAR_LABEL, "Show page title",
+            "Show page title", "Show page address" };
     String[][] OPTIONS_DISPLAY = {
         { StringHelper.TEXT_SIZE_LABEL },
-        { StringHelper.TITLE_BAR_LABEL, "Show page title", "Show page title", "Show page address" },
-	{ StringHelper.SCROLL_TITLE_BAR_LABEL, "Hide the " + BRAND_NAME + " title bar when scrolling down a page" },
+        TITLE_BAR_LABEL_ARR,
+        { StringHelper.SCROLL_TITLE_BAR_LABEL, "Hide the " + BRAND_NAME + " title bar when scrolling down a page" },
         { "Advanced" },
         { StringHelper.CHARACTER_ENCODING_LABEL, "Don't show menu", "Show menu", "Don't show menu" },
         { StringHelper.PLUGINS_LABEL, "Tap to play", "Enabled", "Tap to play", "Disabled" },
@@ -112,20 +116,20 @@ public class testSettingsMenuItems extends PixelTest {
         setupSettingsMap(settingsMenuItems);
 
         // Set special handling for Settings items that are conditionally built.
-        addConditionalSettings(settingsMenuItems);
+        updateConditionalSettings(settingsMenuItems);
 
         selectMenuItem("Settings");
-        waitForText("Settings");
+        mAsserter.ok(mSolo.waitForText("Settings"), "The Settings menu did not load", "");
 
         // Dismiss the Settings screen and verify that the view is returned to about:home page
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
 
         // Waiting for page title to appear to be sure that is fully loaded before opening the menu
-        waitForText("Enter Search");
+        mAsserter.ok(mSolo.waitForText("Search or enter address"), "about:home did not load", "");
         verifyUrl("about:home");
 
         selectMenuItem("Settings");
-        waitForText("Settings");
+        mAsserter.ok(mSolo.waitForText("Settings"), "The Settings menu did not load", "");
 
         checkForSync(mDevice);
 
@@ -135,16 +139,10 @@ public class testSettingsMenuItems extends PixelTest {
     /**
      * Check for Sync in settings.
      *
-     * Sync location is a top level menu item on phones, but is under "Customize" on tablets.
-     *
+     * Sync location is a top level menu item on phones and small tablets,
+     * but is under "Customize" on large tablets.
      */
     public void checkForSync(Device device) {
-        if (device.type.equals("tablet")) {
-            // Select "Customize" from settings.
-            String customizeString = "^Customize$";
-            waitForEnabledText(customizeString);
-            mSolo.clickOnText(customizeString);
-        }
         mAsserter.ok(mSolo.waitForText("Sync"), "Waiting for Sync option", "The Sync option is present");
     }
 
@@ -152,7 +150,7 @@ public class testSettingsMenuItems extends PixelTest {
      * Check for conditions for building certain settings, and add them to be tested
      * if they are present.
      */
-    public void addConditionalSettings(Map<String[], List<String[]>> settingsMap) {
+    public void updateConditionalSettings(Map<String[], List<String[]>> settingsMap) {
         // Preferences dependent on RELEASE_BUILD
         if (!AppConstants.RELEASE_BUILD) {
             // Text reflow - only built if *not* release build
@@ -162,6 +160,11 @@ public class testSettingsMenuItems extends PixelTest {
             // New tablet UI can only be enabled in non-release build
             String[] newTabletUi = { StringHelper.NEW_TABLET_UI };
             settingsMap.get(PATH_DISPLAY).add(newTabletUi);
+
+            // New tablet UI: we don't allow a page title option.
+            if (NewTabletUI.isEnabled(getActivity())) {
+                settingsMap.get(PATH_DISPLAY).remove(TITLE_BAR_LABEL_ARR);
+            }
 
             // Anonymous cell tower/wifi collection - only built if *not* release build
             String[] networkReportingUi = { "Mozilla Location Service", "Receives Wi-Fi and cellular location data when running in the background and shares it with Mozilla to improve our geolocation service" };

@@ -50,15 +50,15 @@ using JS::ToNumber;
 using JS::GenericNaN;
 
 static const JSConstDoubleSpec math_constants[] = {
-    {M_E,       "E",            0, {0,0,0}},
-    {M_LOG2E,   "LOG2E",        0, {0,0,0}},
-    {M_LOG10E,  "LOG10E",       0, {0,0,0}},
-    {M_LN2,     "LN2",          0, {0,0,0}},
-    {M_LN10,    "LN10",         0, {0,0,0}},
-    {M_PI,      "PI",           0, {0,0,0}},
-    {M_SQRT2,   "SQRT2",        0, {0,0,0}},
-    {M_SQRT1_2, "SQRT1_2",      0, {0,0,0}},
-    {0,0,0,{0,0,0}}
+    {"E"      ,  M_E       },
+    {"LOG2E"  ,  M_LOG2E   },
+    {"LOG10E" ,  M_LOG10E  },
+    {"LN2"    ,  M_LN2     },
+    {"LN10"   ,  M_LN10    },
+    {"PI"     ,  M_PI      },
+    {"SQRT2"  ,  M_SQRT2   },
+    {"SQRT1_2",  M_SQRT1_2 },
+    {0,0}
 };
 
 MathCache::MathCache() {
