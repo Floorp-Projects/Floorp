@@ -56,7 +56,6 @@ TabOpenListener.prototype = {
 
 function test() {
   waitForExplicitFinish();
-  SimpleTest.requestCompleteLog();
   requestLongerTimeout(2);
   registerCleanupFunction(function() {
     clearAllPluginPermissions();
@@ -798,10 +797,7 @@ function test24a() {
   // simulate "always allow"
   notification.reshow();
   PopupNotifications.panel.firstChild._primaryButton.click();
-  waitForCondition(() => objLoadingContent.activated, () => {
-    prepareTest(test24b, gHttpTestRoot + "plugin_test.html");
-  }, "Test 24a, plugin should now be activated.");
-
+  prepareTest(test24b, gHttpTestRoot + "plugin_test.html");
 }
 
 // did the "always allow" work as intended?
@@ -809,11 +805,11 @@ function test24b() {
   var plugin = gTestBrowser.contentDocument.getElementById("test");
   ok(plugin, "Test 24b, Found plugin in page");
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  waitForCondition(() => objLoadingContent.activated, () => {
-    setAndUpdateBlocklist(gHttpTestRoot + "blockPluginVulnerableUpdatable.xml", () => {
-      prepareTest(runAfterPluginBindingAttached(test24c), gHttpTestRoot + "plugin_test.html");
-    });
-  }, "Test 24b, plugin should be activated");
+  ok(objLoadingContent.activated, "Test 24b, plugin should be activated");
+  setAndUpdateBlocklist(gHttpTestRoot + "blockPluginVulnerableUpdatable.xml",
+  function() {
+    prepareTest(runAfterPluginBindingAttached(test24c), gHttpTestRoot + "plugin_test.html");
+  });
 }
 
 // the plugin is now blocklisted, so it should not automatically load
@@ -824,13 +820,13 @@ function test24c() {
   ok(plugin, "Test 24c, Found plugin in page");
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
   is(objLoadingContent.pluginFallbackType, Ci.nsIObjectLoadingContent.PLUGIN_VULNERABLE_UPDATABLE, "Test 24c, Plugin should be vulnerable/updatable");
-  waitForCondition(() => !objLoadingContent.activated, () => {
-    // simulate "always allow"
-    notification.reshow();
-    PopupNotifications.panel.firstChild._primaryButton.click();
+  ok(!objLoadingContent.activated, "Test 24c, plugin should not be activated");
 
-    prepareTest(test24d, gHttpTestRoot + "plugin_test.html");
-  }, "Test 24c, plugin should not be activated");
+  // simulate "always allow"
+  notification.reshow();
+  PopupNotifications.panel.firstChild._primaryButton.click();
+
+  prepareTest(test24d, gHttpTestRoot + "plugin_test.html");
 }
 
 // We should still be able to always allow a plugin after we've seen that it's
@@ -839,14 +835,15 @@ function test24d() {
   var plugin = gTestBrowser.contentDocument.getElementById("test");
   ok(plugin, "Test 24d, Found plugin in page");
   var objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  waitForCondition(() => objLoadingContent.activated, () => {
-    // this resets the vulnerable plugin permission
-    setAndUpdateBlocklist(gHttpTestRoot + "blockNoPlugins.xml", () => {
-      clearAllPluginPermissions();
-      resetBlocklist();
-      prepareTest(test25, gTestRoot + "plugin_syncRemoved.html");
-    });
-  }, "Test 24d, plugin should be activated");
+  ok(objLoadingContent.activated, "Test 24d, plugin should be activated");
+
+  // this resets the vulnerable plugin permission
+  setAndUpdateBlocklist(gHttpTestRoot + "blockNoPlugins.xml",
+  function() {
+    clearAllPluginPermissions();
+    resetBlocklist();
+    prepareTest(test25, gTestRoot + "plugin_syncRemoved.html");
+  });
 }
 
 function test25() {
