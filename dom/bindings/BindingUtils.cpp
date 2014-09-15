@@ -971,11 +971,21 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
   const NativePropertyHooks *nativePropertyHooks =
     GetNativePropertyHooks(cx, obj, type, isGlobal);
 
-  if (type != eInstance) {
+  if (type != eInstance || (isGlobal && GlobalPropertiesAreOwn())) {
     // For prototype objects and interface objects, just return their
-    // normal set of properties.
-    return XrayResolveNativeProperty(cx, wrapper, nativePropertyHooks, type,
-                                     obj, id, desc, cacheOnHolder);
+    // normal set of properties. For global objects the WebIDL properties live
+    // on the instance objects, so resolve those here too.
+    if (!XrayResolveNativeProperty(cx, wrapper, nativePropertyHooks, type,
+                                   obj, id, desc, cacheOnHolder)) {
+      return false;
+    }
+
+    // For non-global non-instance Xrays there are no other properties, so
+    // return here for them whether we resolved the property or not.
+    if (!isGlobal || desc.object()) {
+      cacheOnHolder = true;
+      return true;
+    }
   }
 
   // Check for unforgeable properties before doing mResolveOwnProperty weirdness
@@ -1328,13 +1338,19 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
     GetNativePropertyHooks(cx, obj, type, isGlobal);
 
   if (type == eInstance) {
+    // Global objects return their interfaces' properties from
+    // XrayResolveOwnProperty, so skip those.
+    if (isGlobal && GlobalPropertiesAreOwn()) {
+      nativePropertyHooks = nativePropertyHooks->mProtoHooks;
+    }
+
     // Force the type to be eInterfacePrototype, since we need to walk the
     // prototype chain.
     type = eInterfacePrototype;
   }
 
   if (type == eInterfacePrototype) {
-    do {
+    while (nativePropertyHooks) {
       if (!XrayResolveNativeProperty(cx, wrapper, nativePropertyHooks, type,
                                      obj, id, desc, cacheOnHolder)) {
         return false;
@@ -1343,7 +1359,9 @@ XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
       if (desc.object()) {
         return true;
       }
-    } while ((nativePropertyHooks = nativePropertyHooks->mProtoHooks));
+
+      nativePropertyHooks = nativePropertyHooks->mProtoHooks;
+    }
 
     return true;
   }
@@ -1503,7 +1521,9 @@ XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
       return false;
     }
 
-    if (flags & JSITER_OWNONLY) {
+    // This will incorrectly return properties from EventTarget.prototype as own
+    // property names for Window.
+    if (!(isGlobal && GlobalPropertiesAreOwn()) && (flags & JSITER_OWNONLY)) {
       return true;
     }
 
