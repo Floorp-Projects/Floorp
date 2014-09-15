@@ -3,6 +3,7 @@
 // http://creativecommons.org/publicdomain/zero/1.0/
 
 "use strict";
+const { devtools } = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
 let JSPropertyProvider = devtools.require("devtools/toolkit/webconsole/utils").JSPropertyProvider;
 
 Components.utils.import("resource://gre/modules/jsdebugger.jsm");
