@@ -325,6 +325,15 @@ HasInstance(JSContext *cx, HandleObject obj, HandleValue v, bool *bp);
 extern void
 UnwindScope(JSContext *cx, ScopeIter &si, jsbytecode *pc);
 
+// Unwind all scopes.
+extern void
+UnwindAllScopes(JSContext *cx, ScopeIter &si);
+
+// Compute the pc needed to unwind the scope to the beginning of the block
+// pointed to by the try note.
+extern jsbytecode *
+UnwindScopeToTryPc(JSScript *script, JSTryNote *tn);
+
 /*
  * Unwind for an uncatchable exception. This means not running finalizers, etc;
  * just preserving the basic engine stack invariants.
