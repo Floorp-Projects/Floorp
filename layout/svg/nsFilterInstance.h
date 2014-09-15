@@ -58,6 +58,19 @@ class nsFilterInstance
 
 public:
   /**
+   * Create a FilterDescription for the supplied filter. All coordinates in
+   * the description are in filter space.
+   * @param aOutAdditionalImages Will contain additional images needed to
+   *   render the filter (from feImage primitives).
+   * @return A FilterDescription describing the filter.
+   */
+  static FilterDescription GetFilterDescription(nsIContent* aFilteredElement,
+                                                const nsTArray<nsStyleFilter>& aFilterChain,
+                                                const UserSpaceMetrics& aMetrics,
+                                                const gfxRect& aBBox,
+                                                nsTArray<mozilla::RefPtr<SourceSurface>>& aOutAdditionalImages);
+
+  /**
    * Paint the given filtered frame.
    * @param aDirtyArea The area than needs to be painted, in aFilteredFrame's
    *   frame space (i.e. relative to its origin, the top-left corner of its
@@ -143,6 +156,12 @@ public:
    * nsFilterInstance constructor.
    */
   nsresult Render(gfxContext* aContext);
+
+  const FilterDescription& ExtractDescriptionAndAdditionalImages(nsTArray<mozilla::RefPtr<SourceSurface>>& aOutAdditionalImages)
+  {
+    mInputImages.SwapElements(aOutAdditionalImages);
+    return mFilterDescription;
+  }
 
   /**
    * Sets the aPostFilterDirtyRegion outparam to the post-filter area in frame
