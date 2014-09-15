@@ -682,7 +682,7 @@ function gKeywordURIFixup({ target: browser, data: fixupInfo }) {
   // whether the original input would be vaguely interpretable as a URL,
   // so figure that out first.
   let alternativeURI = deserializeURI(fixupInfo.fixedURI);
-  if (!fixupInfo.fixupUsedKeyword || !alternativeURI) {
+  if (!fixupInfo.fixupUsedKeyword || !alternativeURI || !alternativeURI.host) {
     return;
   }
 
