@@ -49,10 +49,10 @@ runWithMSE(function () {
             first = false;
           } else {
             ms.endOfStream();
+            target = targets.shift();
+            v.currentTime = target.currentTime;
           }
         });
-        target = targets.shift();
-        v.currentTime = target.currentTime;
       });
     });
 

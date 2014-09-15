@@ -3,6 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const Cu = Components.utils;
+Cu.import("resource://gre/modules/devtools/Loader.jsm");
 const {parseSingleValue} = devtools.require("devtools/styleinspector/css-parsing-utils");
 
 const TEST_DATA = [

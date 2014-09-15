@@ -472,6 +472,14 @@ WindowOrNull(JSObject *aObj);
 nsGlobalWindow*
 WindowGlobalOrNull(JSObject *aObj);
 
+/**
+ * If |aObj| is in an addon scope and that addon scope is associated with a
+ * live DOM Window, returns the associated nsGlobalWindow. Otherwise, returns
+ * null.
+ */
+nsGlobalWindow*
+AddonWindowOrNull(JSObject *aObj);
+
 // Error reporter used when there is no associated DOM window on to which to
 // report errors and warnings.
 //

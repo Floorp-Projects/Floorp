@@ -19,7 +19,11 @@ function testVal(aExpected) {
   is(result, aExpected);
 }
 
-function test() {
+add_task(function* () {
+  return new Promise(resolve => Services.search.init(resolve));
+});
+
+add_task(function* () {
   const prefname = "browser.urlbar.formatting.enabled";
 
   registerCleanupFunction(function () {
@@ -109,4 +113,4 @@ function test() {
   Services.prefs.setBoolPref(prefname, false);
 
   testVal("https://mozilla.org");
-}
+});

@@ -36,6 +36,7 @@ fuzzy-if(d2d,1,10000) == grayscale-percent.html grayscale-percent-ref.html
 == hue-rotate.html hue-rotate-ref.html
 == hue-rotate-360.html hue-rotate-360-ref.html
 == hue-rotate-grad.html hue-rotate-grad-ref.html
+fuzzy-if(d2d,2,7500) == hue-rotate-multichannel.html hue-rotate-multichannel-ref.html
 == hue-rotate-negative.html hue-rotate-negative-ref.html
 == hue-rotate-over-360.html hue-rotate-over-360-ref.html
 == hue-rotate-rad.html hue-rotate-rad-ref.html
