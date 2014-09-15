@@ -87,11 +87,14 @@ AddonInterpositionService.prototype = {
     }
 
     const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    if ((target instanceof Ci.nsIDOMXULElement) &&
-        target.localName == "browser" &&
-        target.namespaceURI == XUL_NS &&
-        target.getAttribute("remote") == "true") {
-      return "RemoteBrowserElement";
+    if (target instanceof Ci.nsIDOMXULElement) {
+      if (target.localName == "browser" && target.isRemoteBrowser) {
+        return "RemoteBrowserElement";
+      }
+
+      if (target.localName == "tabbrowser") {
+        return "TabBrowserElement";
+      }
     }
 
     if (target instanceof Ci.nsIDOMChromeWindow) {

@@ -627,19 +627,69 @@ RemoteBrowserElementInterposition.getters.docShell = function(addon, target) {
   return remoteChromeGlobal.docShell;
 };
 
+// We use this in place of the real browser.contentWindow if we
+// haven't yet received a CPOW for the child process's window. This
+// happens if the tab has just started loading.
+function makeDummyContentWindow(browser) {
+  let dummyContentWindow = {
+    set location(url) {
+      browser.loadURI(url, null, null);
+    }
+  };
+  return dummyContentWindow;
+}
+
 RemoteBrowserElementInterposition.getters.contentWindow = function(addon, target) {
+  // If we don't have a CPOW yet, just return something we can use for
+  // setting the location. This is useful for tests that create a tab
+  // and immediately set contentWindow.location.
+  if (!target.contentWindowAsCPOW) {
+    return makeDummyContentWindow(target);
+  }
   return target.contentWindowAsCPOW;
 };
 
+let DummyContentDocument = {
+  readyState: "loading"
+};
+
 RemoteBrowserElementInterposition.getters.contentDocument = function(addon, target) {
+  // If we don't have a CPOW yet, just return something we can use to
+  // examine readyState. This is useful for tests that create a new
+  // tab and then immediately start polling readyState.
+  if (!target.contentDocumentAsCPOW) {
+    return DummyContentDocument;
+  }
   return target.contentDocumentAsCPOW;
+};
+
+let TabBrowserElementInterposition = new Interposition("TabBrowserElementInterposition",
+                                                       EventTargetInterposition);
+
+TabBrowserElementInterposition.getters.contentWindow = function(addon, target) {
+  if (!target.selectedBrowser.contentWindowAsCPOW) {
+    return makeDummyContentWindow(target.selectedBrowser);
+  }
+  return target.selectedBrowser.contentWindowAsCPOW;
+};
+
+TabBrowserElementInterposition.getters.contentDocument = function(addon, target) {
+  let browser = target.selectedBrowser;
+  if (!browser.contentDocumentAsCPOW) {
+    return DummyContentDocument;
+  }
+  return browser.contentDocumentAsCPOW;
 };
 
 let ChromeWindowInterposition = new Interposition("ChromeWindowInterposition",
                                                   EventTargetInterposition);
 
 ChromeWindowInterposition.getters.content = function(addon, target) {
-  return target.gBrowser.selectedBrowser.contentWindowAsCPOW;
+  let browser = target.gBrowser.selectedBrowser;
+  if (!browser.contentWindowAsCPOW) {
+    return makeDummyContentWindow(browser);
+  }
+  return browser.contentWindowAsCPOW;
 };
 
 let RemoteAddonsParent = {
@@ -677,6 +727,7 @@ let RemoteAddonsParent = {
     register("ContentDocShellTreeItem", ContentDocShellTreeItemInterposition);
     register("ContentDocument", ContentDocumentInterposition);
     register("RemoteBrowserElement", RemoteBrowserElementInterposition);
+    register("TabBrowserElement", TabBrowserElementInterposition);
     register("ChromeWindow", ChromeWindowInterposition);
 
     return result;
