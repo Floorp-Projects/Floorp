@@ -791,39 +791,17 @@ SelectionCarets::SetEndFramePos(const nsPoint& aPosition)
 nsRect
 SelectionCarets::GetStartFrameRect()
 {
-  nsIFrame* canvasFrame = mPresShell->GetCanvasFrame();
   dom::Element* element = mPresShell->GetSelectionCaretsStartElement();
-  if (!element) {
-    return nsRect();
-  }
-
-  nsIFrame* frame = element->GetPrimaryFrame();
-  if (!frame) {
-    return nsRect();
-  }
-
-  nsRect frameRect = frame->GetRectRelativeToSelf();
-  nsLayoutUtils::TransformRect(frame, canvasFrame, frameRect);
-  return frameRect;
+  nsIFrame* canvasFrame = mPresShell->GetCanvasFrame();
+  return nsLayoutUtils::GetRectRelativeToFrame(element, canvasFrame);
 }
 
 nsRect
 SelectionCarets::GetEndFrameRect()
 {
-  nsIFrame* canvasFrame = mPresShell->GetCanvasFrame();
   dom::Element* element = mPresShell->GetSelectionCaretsEndElement();
-  if (!element) {
-    return nsRect();
-  }
-
-  nsIFrame* frame = element->GetPrimaryFrame();
-  if (!frame) {
-    return nsRect();
-  }
-
-  nsRect frameRect = frame->GetRectRelativeToSelf();
-  nsLayoutUtils::TransformRect(frame, canvasFrame, frameRect);
-  return frameRect;
+  nsIFrame* canvasFrame = mPresShell->GetCanvasFrame();
+  return nsLayoutUtils::GetRectRelativeToFrame(element, canvasFrame);
 }
 
 nsIFrame*
