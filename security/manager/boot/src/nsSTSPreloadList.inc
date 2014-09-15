@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1421379819168000);
+const PRTime gPreloadListExpirationTime = INT64_C(1421702876088000);
 
 class nsSTSPreload
 {
@@ -122,7 +122,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "detectify.com", false },
   { "developer.mydigipass.com", false },
   { "die-besten-weisheiten.de", true },
-  { "dillonkorman.com", true },
   { "dist.torproject.org", false },
   { "dl.google.com", true },
   { "dm.lookout.com", false },
@@ -216,6 +215,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "jelmer.co.uk", true },
   { "jelmer.uk", true },
   { "jfreitag.de", true },
+  { "jitsi.org", false },
   { "jonas-keidel.de", true },
   { "jonaswitmer.ch", true },
   { "julian-kipka.de", true },
@@ -351,7 +351,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "reviews.anime.my", true },
   { "riccy.org", true },
   { "riesenmagnete.de", true },
-  { "rippleunion.com", true },
   { "rme.li", false },
   { "robteix.com", true },
   { "roddis.net", false },
@@ -370,6 +369,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "sdsl-speedtest.de", true },
   { "security-carpet.com", true },
   { "security.google.com", true },
+  { "securityheaders.com", true },
   { "secuvera.de", true },
   { "seifried.org", true },
   { "servethecity-karlsruhe.de", true },

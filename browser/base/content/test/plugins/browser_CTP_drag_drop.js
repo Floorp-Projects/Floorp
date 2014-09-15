@@ -29,11 +29,11 @@ function handleEvent() {
 
 function part1() {
   gBrowser.selectedBrowser.removeEventListener("PluginBindingAttached", handleEvent);
-  ok(PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser), "Should have a click-to-play notification in the initial tab");
-
-  gNextTest = part2;
-  gNewWindow = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
-  gNewWindow.addEventListener("load", handleEvent, true);
+  waitForNotificationPopup("click-to-play-plugins", gBrowser.selectedBrowser, () => {
+    gNextTest = part2;
+    gNewWindow = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
+    gNewWindow.addEventListener("load", handleEvent, true);
+  });
 }
 
 function part2() {
@@ -62,10 +62,10 @@ function part4() {
 
 function part5() {
   gBrowser.selectedBrowser.removeEventListener("PluginBindingAttached", handleEvent);
-  ok(PopupNotifications.getNotification("click-to-play-plugins", gBrowser.selectedBrowser), "Should have a click-to-play notification in the initial tab");
-
-  gNewWindow = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
-  waitForFocus(part6, gNewWindow);
+  waitForNotificationPopup("click-to-play-plugins", gBrowser.selectedBrowser, () => {
+    gNewWindow = gBrowser.replaceTabWithWindow(gBrowser.selectedTab);
+    waitForFocus(part6, gNewWindow);
+  });
 }
 
 function part6() {
@@ -92,8 +92,10 @@ function part8() {
 
   let plugin = gNewWindow.gBrowser.selectedBrowser.contentDocument.getElementById("test");
   let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(objLoadingContent.activated, "plugin should be activated now");
+  waitForCondition(() => objLoadingContent.activated, shutdown, "plugin should be activated now");
+}
 
+function shutdown() {
   gNewWindow.close();
   gNewWindow = null;
   finish();
