@@ -9927,7 +9927,7 @@ DoIteratorNextFallback(JSContext *cx, BaselineFrame *frame, ICIteratorNext_Fallb
     FallbackICSpew(cx, stub, "IteratorNext");
 
     RootedObject iteratorObject(cx, &iterValue.toObject());
-    if (!IteratorNext(cx, iteratorObject, res))
+    if (!js_IteratorNext(cx, iteratorObject, res))
         return false;
 
     // Check if debug mode toggling made the stub invalid.
