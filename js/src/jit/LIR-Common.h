@@ -6478,6 +6478,28 @@ class LRecompileCheck : public LInstructionHelper<0, 0, 1>
     }
 };
 
+class LLexicalCheck : public LInstructionHelper<0, BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(LexicalCheck)
+
+    MLexicalCheck *mir() {
+        return mir_->toLexicalCheck();
+    }
+
+    static const size_t Input = 0;
+};
+
+class LThrowUninitializedLexical : public LCallInstructionHelper<0, 0, 0>
+{
+  public:
+    LIR_HEADER(ThrowUninitializedLexical)
+
+    MLexicalCheck *mir() {
+        return mir_->toLexicalCheck();
+    }
+};
+
 } // namespace jit
 } // namespace js
 
