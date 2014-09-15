@@ -47,12 +47,12 @@ gfxPattern::gfxPattern(gfxFloat cx0, gfxFloat cy0, gfxFloat radius0,
 }
 
 // Azure
-gfxPattern::gfxPattern(SourceSurface *aSurface, const Matrix &aTransform)
-  : mTransform(aTransform)
+gfxPattern::gfxPattern(SourceSurface *aSurface, const Matrix &aPatternToUserSpace)
+  : mPatternToUserSpace(aPatternToUserSpace)
   , mExtend(EXTEND_NONE)
 {
   mGfxPattern = new (mSurfacePattern.addr())
-    SurfacePattern(aSurface, ToExtendMode(mExtend), aTransform,
+    SurfacePattern(aSurface, ToExtendMode(mExtend), Matrix(), // matrix is overridden in GetPattern()
                    mozilla::gfx::Filter::GOOD);
 }
 
@@ -100,13 +100,13 @@ gfxPattern::CacheColorStops(DrawTarget *aDT)
 }
 
 void
-gfxPattern::SetMatrix(const gfxMatrix& matrix)
+gfxPattern::SetMatrix(const gfxMatrix& aPatternToUserSpace)
 {
-  mTransform = ToMatrix(matrix);
+  mPatternToUserSpace = ToMatrix(aPatternToUserSpace);
   // Cairo-pattern matrices specify the conversion from DrawTarget to pattern
   // space. Azure pattern matrices specify the conversion from pattern to
   // DrawTarget space.
-  mTransform.Invert();
+  mPatternToUserSpace.Invert();
 }
 
 gfxMatrix
@@ -114,7 +114,7 @@ gfxPattern::GetMatrix() const
 {
   // invert at the higher precision of gfxMatrix
   // cause we need to convert at some point anyways
-  gfxMatrix mat = ThebesMatrix(mTransform);
+  gfxMatrix mat = ThebesMatrix(mPatternToUserSpace);
   mat.Invert();
   return mat;
 }
@@ -122,12 +122,33 @@ gfxPattern::GetMatrix() const
 gfxMatrix
 gfxPattern::GetInverseMatrix() const
 {
-  return ThebesMatrix(mTransform);
+  return ThebesMatrix(mPatternToUserSpace);
 }
 
 Pattern*
-gfxPattern::GetPattern(DrawTarget *aTarget, Matrix *aPatternTransform)
+gfxPattern::GetPattern(DrawTarget *aTarget,
+                       Matrix *aOriginalUserToDevice)
 {
+  Matrix patternToUser = mPatternToUserSpace;
+
+  if (aOriginalUserToDevice &&
+      *aOriginalUserToDevice != aTarget->GetTransform()) {
+    // mPatternToUserSpace maps from pattern space to the original user space,
+    // but aTarget now has a transform to a different user space.  In order for
+    // the Pattern* that we return to be usable in aTarget's new user space we
+    // need the Pattern's mMatrix to be the transform from pattern space to
+    // aTarget's -new- user space.  That transform is equivalent to the
+    // transform from pattern space to original user space (patternToUser),
+    // multiplied by the transform from original user space to device space,
+    // multiplied by the transform from device space to current user space.
+
+    Matrix deviceToCurrentUser = aTarget->GetTransform();
+    deviceToCurrentUser.Invert();
+
+    patternToUser = patternToUser * *aOriginalUserToDevice * deviceToCurrentUser;
+  }
+  patternToUser.NudgeToIntegers();
+
   if (!mStops &&
       !mStopsList.IsEmpty()) {
     mStops = aTarget->CreateGradientStops(mStopsList.Elements(),
@@ -135,32 +156,22 @@ gfxPattern::GetPattern(DrawTarget *aTarget, Matrix *aPatternTransform)
                                           ToExtendMode(mExtend));
   }
 
-  Matrix* matrix = nullptr;
   switch (mGfxPattern->GetType()) {
   case PatternType::SURFACE:
-    matrix = &mSurfacePattern.addr()->mMatrix;
+    mSurfacePattern.addr()->mMatrix = patternToUser;
     mSurfacePattern.addr()->mExtendMode = ToExtendMode(mExtend);
     break;
   case PatternType::LINEAR_GRADIENT:
-    matrix = &mLinearGradientPattern.addr()->mMatrix;
+    mLinearGradientPattern.addr()->mMatrix = patternToUser;
     mLinearGradientPattern.addr()->mStops = mStops;
     break;
   case PatternType::RADIAL_GRADIENT:
-    matrix = &mRadialGradientPattern.addr()->mMatrix;
+    mRadialGradientPattern.addr()->mMatrix = patternToUser;
     mRadialGradientPattern.addr()->mStops = mStops;
     break;
   default:
     /* Reassure the compiler we are handling all the enum values.  */
     break;
-  }
-
-  if (matrix) {
-    *matrix = mTransform;
-    if (aPatternTransform) {
-      AdjustTransformForPattern(*matrix,
-                                aTarget->GetTransform(),
-                                aPatternTransform);
-    }
   }
 
   return mGfxPattern;
@@ -232,30 +243,4 @@ int
 gfxPattern::CairoStatus()
 {
   return CAIRO_STATUS_SUCCESS;
-}
-
-void
-gfxPattern::AdjustTransformForPattern(Matrix &aPatternTransform,
-                                      const Matrix &aCurrentTransform,
-                                      const Matrix *aOriginalTransform)
-{
-  aPatternTransform.Invert();
-  if (!aOriginalTransform) {
-    // User space is unchanged, so to get from pattern space to user space,
-    // just invert the cairo matrix.
-    aPatternTransform.NudgeToIntegers();
-    return;
-  }
-  // aPatternTransform now maps from pattern space to the user space defined
-  // by *aOriginalTransform.
-
-  Matrix mat = aCurrentTransform;
-  mat.Invert();
-  // mat maps from device space to current user space
-
-  // First, transform from pattern space to original user space. Then transform
-  // from original user space to device space. Then transform from
-  // device space to current user space.
-  aPatternTransform = aPatternTransform * *aOriginalTransform * mat;
-  aPatternTransform.NudgeToIntegers();
 }

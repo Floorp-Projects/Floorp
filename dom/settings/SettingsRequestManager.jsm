@@ -574,14 +574,14 @@ let SettingsRequestManager = {
       if (DEBUG) debug("Lock no longer alive, cannot run tasks");
       return;
     }
-    if (lock.finalizing) {
-      debug("TASK TRYING TO QUEUE AFTER FINALIZE CALLED. THIS IS BAD. Lock: " + aLockID);
-      return;
-    }
     let currentTask = lock.tasks.shift();
     let promises = [];
     while (currentTask) {
       if (DEBUG) debug("Running Operation " + currentTask.operation);
+      if (lock.finalizing) {
+        Cu.reportError("Settings lock trying to run more tasks after finalizing. Ignoring tasks, but this is bad. Lock: " + aLockID);
+        continue;
+      }
       let p;
       switch (currentTask.operation) {
         case "get":

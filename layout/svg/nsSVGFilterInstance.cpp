@@ -24,12 +24,14 @@ using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
 nsSVGFilterInstance::nsSVGFilterInstance(const nsStyleFilter& aFilter,
-                                         nsIFrame *aTargetFrame,
+                                         nsIContent* aTargetContent,
+                                         const UserSpaceMetrics& aMetrics,
                                          const gfxRect& aTargetBBox,
                                          const gfxSize& aUserSpaceToFilterSpaceScale,
                                          const gfxSize& aFilterSpaceToUserSpaceScale) :
   mFilter(aFilter),
-  mTargetFrame(aTargetFrame),
+  mTargetContent(aTargetContent),
+  mMetrics(aMetrics),
   mTargetBBox(aTargetBBox),
   mUserSpaceToFilterSpaceScale(aUserSpaceToFilterSpaceScale),
   mFilterSpaceToUserSpaceScale(aFilterSpaceToUserSpaceScale),
@@ -86,7 +88,7 @@ nsSVGFilterInstance::ComputeBounds()
   uint16_t filterUnits =
     mFilterFrame->GetEnumValue(SVGFilterElement::FILTERUNITS);
   gfxRect userSpaceBounds = nsSVGUtils::GetRelativeRect(filterUnits,
-    XYWH, mTargetBBox, mTargetFrame);
+    XYWH, mTargetBBox, mMetrics);
 
   // Transform the user space bounds to filter space, so we
   // can align them with the pixel boundries of the offscreen surface.
@@ -126,16 +128,14 @@ nsSVGFilterInstance::GetFilterFrame()
 
   // Get the target element to use as a point of reference for looking up the
   // filter element.
-  nsIContent* targetElement = mTargetFrame->GetContent();
-  if (!targetElement) {
-    // There is no element associated with the target frame.
+  if (!mTargetContent) {
     return nullptr;
   }
 
   // Look up the filter element by URL.
   nsReferencedElement filterElement;
   bool watch = false;
-  filterElement.Reset(targetElement, url, watch);
+  filterElement.Reset(mTargetContent, url, watch);
   Element* element = filterElement.get();
   if (!element) {
     // The URL points to no element.
@@ -144,8 +144,9 @@ nsSVGFilterInstance::GetFilterFrame()
 
   // Get the frame of the filter element.
   nsIFrame* frame = element->GetPrimaryFrame();
-  if (frame->GetType() != nsGkAtoms::svgFilterFrame) {
-    // The URL points to an element that's not an SVG filter element.
+  if (!frame || frame->GetType() != nsGkAtoms::svgFilterFrame) {
+    // The URL points to an element that's not an SVG filter element, or to an
+    // element that hasn't had its frame constructed yet.
     return nullptr;
   }
 
@@ -163,7 +164,7 @@ nsSVGFilterInstance::GetPrimitiveNumber(uint8_t aCtxType, float aValue) const
   if (mPrimitiveUnits == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     value = nsSVGUtils::ObjectSpace(mTargetBBox, &val);
   } else {
-    value = nsSVGUtils::UserSpace(mTargetFrame, &val);
+    value = nsSVGUtils::UserSpace(mMetrics, &val);
   }
 
   switch (aCtxType) {
@@ -194,7 +195,7 @@ nsSVGFilterInstance::ConvertLocation(const Point3D& aPoint) const
               nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER);
 
   gfxRect feArea = nsSVGUtils::GetRelativeRect(mPrimitiveUnits,
-    val, mTargetBBox, mTargetFrame);
+    val, mTargetBBox, mMetrics);
   gfxRect r = UserSpaceToFilterSpace(feArea);
   return Point3D(r.x, r.y, GetPrimitiveNumber(SVGContentUtils::XY, aPoint.z));
 }
@@ -240,7 +241,7 @@ nsSVGFilterInstance::ComputeFilterPrimitiveSubregion(nsSVGFE* aFilterElement,
   }
 
   gfxRect feArea = nsSVGUtils::GetRelativeRect(mPrimitiveUnits,
-    &fE->mLengthAttributes[nsSVGFE::ATTR_X], mTargetBBox, mTargetFrame);
+    &fE->mLengthAttributes[nsSVGFE::ATTR_X], mTargetBBox, mMetrics);
   Rect region = ToRect(UserSpaceToFilterSpace(feArea));
 
   if (!fE->mLengthAttributes[nsSVGFE::ATTR_X].IsExplicitlySet())
@@ -387,7 +388,7 @@ nsSVGFilterInstance::BuildPrimitives(nsTArray<FilterPrimitiveDescription>& aPrim
   nsDataHashtable<nsStringHashKey, int32_t> imageTable(8);
 
   // The principal that we check principals of any loaded images against.
-  nsCOMPtr<nsIPrincipal> principal = mTargetFrame->GetContent()->NodePrincipal();
+  nsCOMPtr<nsIPrincipal> principal = mTargetContent->NodePrincipal();
 
   for (uint32_t primitiveElementIndex = 0;
        primitiveElementIndex < primitives.Length();

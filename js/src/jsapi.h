@@ -2303,12 +2303,14 @@ extern JS_PUBLIC_API(bool)
 JS_ConvertStub(JSContext *cx, JS::HandleObject obj, JSType type,
                JS::MutableHandleValue vp);
 
-struct JSConstDoubleSpec {
-    double          dval;
-    const char      *name;
-    uint8_t         flags;
-    uint8_t         spare[3];
+template<typename T>
+struct JSConstScalarSpec {
+    const char *name;
+    T val;
 };
+
+typedef JSConstScalarSpec<double> JSConstDoubleSpec;
+typedef JSConstScalarSpec<int32_t> JSConstIntegerSpec;
 
 struct JSJitInfo;
 
@@ -2765,6 +2767,9 @@ JS_DefineObject(JSContext *cx, JS::HandleObject obj, const char *name,
 
 extern JS_PUBLIC_API(bool)
 JS_DefineConstDoubles(JSContext *cx, JS::HandleObject obj, const JSConstDoubleSpec *cds);
+
+extern JS_PUBLIC_API(bool)
+JS_DefineConstIntegers(JSContext *cx, JS::HandleObject obj, const JSConstIntegerSpec *cis);
 
 extern JS_PUBLIC_API(bool)
 JS_DefineProperties(JSContext *cx, JS::HandleObject obj, const JSPropertySpec *ps);
@@ -3286,7 +3291,7 @@ JS_NewPropertyIterator(JSContext *cx, JS::Handle<JSObject*> obj);
  * left to visit.  Return false on error.
  */
 extern JS_PUBLIC_API(bool)
-JS_NextProperty(JSContext *cx, JS::Handle<JSObject*> iterobj, jsid *idp);
+JS_NextProperty(JSContext *cx, JS::HandleObject iterobj, JS::MutableHandleId idp);
 
 extern JS_PUBLIC_API(jsval)
 JS_GetReservedSlot(JSObject *obj, uint32_t index);
