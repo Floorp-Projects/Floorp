@@ -3291,7 +3291,7 @@ JS_NewPropertyIterator(JSContext *cx, JS::Handle<JSObject*> obj);
  * left to visit.  Return false on error.
  */
 extern JS_PUBLIC_API(bool)
-JS_NextProperty(JSContext *cx, JS::Handle<JSObject*> iterobj, jsid *idp);
+JS_NextProperty(JSContext *cx, JS::HandleObject iterobj, JS::MutableHandleId idp);
 
 extern JS_PUBLIC_API(jsval)
 JS_GetReservedSlot(JSObject *obj, uint32_t index);
