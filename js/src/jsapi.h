@@ -2305,10 +2305,8 @@ JS_ConvertStub(JSContext *cx, JS::HandleObject obj, JSType type,
 
 template<typename T>
 struct JSConstScalarSpec {
+    const char *name;
     T val;
-    const char      *name;
-    uint8_t         flags;
-    uint8_t         spare[3];
 };
 
 typedef JSConstScalarSpec<double> JSConstDoubleSpec;
