@@ -610,6 +610,8 @@ Element::ScrollIntoView(bool aTop, const ScrollOptions &aOptions)
   uint32_t flags = nsIPresShell::SCROLL_OVERFLOW_HIDDEN;
   if (aOptions.mBehavior == ScrollBehavior::Smooth) {
     flags |= nsIPresShell::SCROLL_SMOOTH;
+  } else if (aOptions.mBehavior == ScrollBehavior::Auto) {
+    flags |= nsIPresShell::SCROLL_SMOOTH_AUTO;
   }
 
   presShell->ScrollContentIntoView(this,
