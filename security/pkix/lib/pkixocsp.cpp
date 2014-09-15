@@ -29,6 +29,9 @@
 #include "pkixcheck.h"
 #include "pkixder.h"
 
+// TODO: use typed/qualified typedefs everywhere?
+// TODO: When should we return SEC_ERROR_OCSP_UNAUTHORIZED_RESPONSE?
+
 namespace mozilla { namespace pkix {
 
 static const PRTime ONE_DAY
@@ -127,18 +130,21 @@ CheckOCSPResponseSignerCert(TrustDomain& trustDomain,
   // comparison.
   // TODO: needs test
   if (!SECITEM_ItemsAreEqual(&potentialSigner.GetIssuer(), &issuerSubject)) {
-    return Result::ERROR_OCSP_RESPONDER_CERT_INVALID;
+    return Fail(RecoverableError, SEC_ERROR_OCSP_RESPONDER_CERT_INVALID);
   }
 
   // TODO(bug 926260): check name constraints
-  rv = trustDomain.VerifySignedData(potentialSigner.GetSignedData(),
-                                    issuerSubjectPublicKeyInfo);
+  SECStatus srv = trustDomain.VerifySignedData(potentialSigner.GetSignedData(),
+                                               issuerSubjectPublicKeyInfo);
+  if (srv != SECSuccess) {
+    return MapSECStatus(srv);
+  }
 
   // TODO: check for revocation of the OCSP responder certificate unless no-check
   // or the caller forcing no-check. To properly support the no-check policy, we'd
   // need to enforce policy constraints from the issuerChain.
 
-  return rv;
+  return Success;
 }
 
 MOZILLA_PKIX_ENUM_CLASS ResponderIDType : uint8_t
@@ -204,7 +210,7 @@ MatchResponderID(TrustDomain& trustDomain,
     }
 
     default:
-      return Result::ERROR_OCSP_MALFORMED_RESPONSE;
+      return Fail(RecoverableError, SEC_ERROR_OCSP_MALFORMED_RESPONSE);
   }
 }
 
@@ -213,11 +219,13 @@ VerifyOCSPSignedData(TrustDomain& trustDomain,
                      const SignedDataWithSignature& signedResponseData,
                      const SECItem& spki)
 {
-  Result rv = trustDomain.VerifySignedData(signedResponseData, spki);
-  if (rv == Result::ERROR_BAD_SIGNATURE) {
-    rv = Result::ERROR_OCSP_BAD_SIGNATURE;
+  SECStatus srv = trustDomain.VerifySignedData(signedResponseData, spki);
+  if (srv != SECSuccess) {
+    if (PR_GetError() == SEC_ERROR_BAD_SIGNATURE) {
+      PR_SetError(SEC_ERROR_OCSP_BAD_SIGNATURE, 0);
+    }
   }
-  return rv;
+  return MapSECStatus(srv);
 }
 
 // RFC 6960 section 4.2.2.2: The OCSP responder must either be the issuer of
@@ -254,10 +262,10 @@ VerifySignature(Context& context, ResponderIDType responderIDType,
     rv = MatchResponderID(context.trustDomain, responderIDType, responderID,
                           cert.GetSubject(), cert.GetSubjectPublicKeyInfo(),
                           match);
-    if (rv != Success) {
-      if (IsFatalError(rv)) {
-        return rv;
-      }
+    if (rv == FatalError) {
+      return rv;
+    }
+    if (rv == RecoverableError) {
       continue;
     }
 
@@ -266,10 +274,10 @@ VerifySignature(Context& context, ResponderIDType responderIDType,
                                        context.certID.issuer,
                                        context.certID.issuerSubjectPublicKeyInfo,
                                        context.time);
-      if (rv != Success) {
-        if (IsFatalError(rv)) {
-          return rv;
-        }
+      if (rv == FatalError) {
+        return rv;
+      }
+      if (rv == RecoverableError) {
         continue;
       }
 
@@ -278,19 +286,18 @@ VerifySignature(Context& context, ResponderIDType responderIDType,
     }
   }
 
-  return Result::ERROR_OCSP_INVALID_SIGNING_CERT;
+  return Fail(RecoverableError, SEC_ERROR_OCSP_INVALID_SIGNING_CERT);
 }
 
-static inline Result
-MapBadDERToMalformedOCSPResponse(Result rv)
+static inline void
+SetErrorToMalformedResponseOnBadDERError()
 {
-  if (rv == Result::ERROR_BAD_DER) {
-    return Result::ERROR_OCSP_MALFORMED_RESPONSE;
+  if (PR_GetError() == SEC_ERROR_BAD_DER) {
+    PR_SetError(SEC_ERROR_OCSP_MALFORMED_RESPONSE, 0);
   }
-  return rv;
 }
 
-Result
+SECStatus
 VerifyEncodedOCSPResponse(TrustDomain& trustDomain, const struct CertID& certID,
                           PRTime time, uint16_t maxOCSPLifetimeInDays,
                           const SECItem& encodedResponse,
@@ -302,22 +309,22 @@ VerifyEncodedOCSPResponse(TrustDomain& trustDomain, const struct CertID& certID,
   expired = false;
 
   Input input;
-  Result rv = input.Init(encodedResponse.data, encodedResponse.len);
-  if (rv != Success) {
-    return MapBadDERToMalformedOCSPResponse(rv);
+  if (input.Init(encodedResponse.data, encodedResponse.len) != Success) {
+    SetErrorToMalformedResponseOnBadDERError();
+    return SECFailure;
   }
-
   Context context(trustDomain, certID, time, maxOCSPLifetimeInDays,
                   thisUpdate, validThrough);
 
-  rv = der::Nested(input, der::SEQUENCE, bind(OCSPResponse, _1, ref(context)));
-  if (rv != Success) {
-    return MapBadDERToMalformedOCSPResponse(rv);
+  if (der::Nested(input, der::SEQUENCE,
+                  bind(OCSPResponse, _1, ref(context))) != Success) {
+    SetErrorToMalformedResponseOnBadDERError();
+    return SECFailure;
   }
 
-  rv = der::End(input);
-  if (rv != Success) {
-    return MapBadDERToMalformedOCSPResponse(rv);
+  if (der::End(input) != Success) {
+    SetErrorToMalformedResponseOnBadDERError();
+    return SECFailure;
   }
 
   expired = context.expired;
@@ -325,17 +332,21 @@ VerifyEncodedOCSPResponse(TrustDomain& trustDomain, const struct CertID& certID,
   switch (context.certStatus) {
     case CertStatus::Good:
       if (expired) {
-        return Result::ERROR_OCSP_OLD_RESPONSE;
+        PR_SetError(SEC_ERROR_OCSP_OLD_RESPONSE, 0);
+        return SECFailure;
       }
-      return Success;
+      return SECSuccess;
     case CertStatus::Revoked:
-      return Result::ERROR_REVOKED_CERTIFICATE;
+      PR_SetError(SEC_ERROR_REVOKED_CERTIFICATE, 0);
+      return SECFailure;
     case CertStatus::Unknown:
-      return Result::ERROR_OCSP_UNKNOWN_CERT;
+      PR_SetError(SEC_ERROR_OCSP_UNKNOWN_CERT, 0);
+      return SECFailure;
   }
 
   PR_NOT_REACHED("unknown CertStatus");
-  return Result::ERROR_OCSP_UNKNOWN_CERT;
+  PR_SetError(SEC_ERROR_OCSP_UNKNOWN_CERT, 0);
+  return SECFailure;
 }
 
 // OCSPResponse ::= SEQUENCE {
@@ -362,12 +373,12 @@ OCSPResponse(Input& input, Context& context)
   }
   switch (responseStatus) {
     case 0: break; // successful
-    case 1: return Result::ERROR_OCSP_MALFORMED_REQUEST;
-    case 2: return Result::ERROR_OCSP_SERVER_ERROR;
-    case 3: return Result::ERROR_OCSP_TRY_SERVER_LATER;
-    case 5: return Result::ERROR_OCSP_REQUEST_NEEDS_SIG;
-    case 6: return Result::ERROR_OCSP_UNAUTHORIZED_REQUEST;
-    default: return Result::ERROR_OCSP_UNKNOWN_RESPONSE_STATUS;
+    case 1: return Fail(SEC_ERROR_OCSP_MALFORMED_REQUEST);
+    case 2: return Fail(SEC_ERROR_OCSP_SERVER_ERROR);
+    case 3: return Fail(SEC_ERROR_OCSP_TRY_SERVER_LATER);
+    case 5: return Fail(SEC_ERROR_OCSP_REQUEST_NEEDS_SIG);
+    case 6: return Fail(SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST);
+    default: return Fail(SEC_ERROR_OCSP_UNKNOWN_RESPONSE_STATUS);
   }
 
   return der::Nested(input, der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0,
@@ -405,8 +416,8 @@ BasicResponse(Input& input, Context& context)
   SignedDataWithSignature signedData;
   Result rv = der::SignedData(input, tbsResponseData, signedData);
   if (rv != Success) {
-    if (rv == Result::ERROR_BAD_SIGNATURE) {
-      return Result::ERROR_OCSP_BAD_SIGNATURE;
+    if (PR_GetError() == SEC_ERROR_BAD_SIGNATURE) {
+      return Fail(RecoverableError, SEC_ERROR_OCSP_BAD_SIGNATURE);
     }
     return rv;
   }
@@ -437,7 +448,7 @@ BasicResponse(Input& input, Context& context)
     // sequence of certificates
     while (!input.AtEnd()) {
       if (numCerts == PR_ARRAY_SIZE(certs)) {
-        return Result::ERROR_BAD_DER;
+        return Fail(SEC_ERROR_BAD_DER);
       }
 
       rv = der::ExpectTagAndGetTLV(input, der::SEQUENCE, certs[numCerts]);
@@ -469,7 +480,7 @@ ResponseData(Input& input, Context& context,
   }
   if (version != der::Version::v1) {
     // TODO: more specific error code for bad version?
-    return Result::ERROR_BAD_DER;
+    return Fail(SEC_ERROR_BAD_DER);
   }
 
   // ResponderID ::= CHOICE {
@@ -600,7 +611,7 @@ SingleResponse(Input& input, Context& context)
   }
 
   if (thisUpdate > context.time + SLOP) {
-    return Result::ERROR_OCSP_FUTURE_RESPONSE;
+    return Fail(SEC_ERROR_OCSP_FUTURE_RESPONSE);
   }
 
   PRTime notAfter;
@@ -615,7 +626,7 @@ SingleResponse(Input& input, Context& context)
     }
 
     if (nextUpdate < thisUpdate) {
-      return Result::ERROR_OCSP_MALFORMED_RESPONSE;
+      return Fail(SEC_ERROR_OCSP_MALFORMED_RESPONSE);
     }
     if (nextUpdate - thisUpdate <= maxLifetime) {
       notAfter = nextUpdate;
@@ -629,7 +640,7 @@ SingleResponse(Input& input, Context& context)
   }
 
   if (context.time < SLOP) { // prevent underflow
-    return Result::FATAL_ERROR_INVALID_ARGS;
+    return Fail(SEC_ERROR_INVALID_ARGS);
   }
 
   if (context.time - SLOP > notAfter) {
@@ -666,7 +677,7 @@ CertID(Input& input, const Context& context, /*out*/ bool& match)
   DigestAlgorithm hashAlgorithm;
   Result rv = der::DigestAlgorithmIdentifier(input, hashAlgorithm);
   if (rv != Success) {
-    if (rv == Result::ERROR_INVALID_ALGORITHM) {
+    if (PR_GetError() == SEC_ERROR_INVALID_ALGORITHM) {
       // Skip entries that are hashed with algorithms we don't support.
       input.SkipToEnd();
       return Success;
@@ -709,17 +720,16 @@ CertID(Input& input, const Context& context, /*out*/ bool& match)
   }
 
   if (issuerNameHash.len != TrustDomain::DIGEST_LENGTH) {
-    return Result::ERROR_OCSP_MALFORMED_RESPONSE;
+    return Fail(SEC_ERROR_OCSP_MALFORMED_RESPONSE);
   }
 
   // From http://tools.ietf.org/html/rfc6960#section-4.1.1:
   // "The hash shall be calculated over the DER encoding of the
   // issuer's name field in the certificate being checked."
   uint8_t hashBuf[TrustDomain::DIGEST_LENGTH];
-  rv = context.trustDomain.DigestBuf(context.certID.issuer, hashBuf,
-                                     sizeof(hashBuf));
-  if (rv != Success) {
-    return rv;
+  if (context.trustDomain.DigestBuf(context.certID.issuer, hashBuf,
+                                    sizeof(hashBuf)) != SECSuccess) {
+    return MapSECStatus(SECFailure);
   }
   if (memcmp(hashBuf, issuerNameHash.data, issuerNameHash.len)) {
     // Again, not interested in this response. Consume input, return success.
@@ -746,7 +756,7 @@ MatchKeyHash(TrustDomain& trustDomain, const SECItem& keyHash,
              const SECItem& subjectPublicKeyInfo, /*out*/ bool& match)
 {
   if (keyHash.len != TrustDomain::DIGEST_LENGTH)  {
-    return Result::ERROR_OCSP_MALFORMED_RESPONSE;
+    return Fail(RecoverableError, SEC_ERROR_OCSP_MALFORMED_RESPONSE);
   }
   static uint8_t hashBuf[TrustDomain::DIGEST_LENGTH];
   Result rv = KeyHash(trustDomain, subjectPublicKeyInfo, hashBuf,
@@ -764,7 +774,7 @@ KeyHash(TrustDomain& trustDomain, const SECItem& subjectPublicKeyInfo,
         /*out*/ uint8_t* hashBuf, size_t hashBufSize)
 {
   if (!hashBuf || hashBufSize != TrustDomain::DIGEST_LENGTH) {
-    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+    return Fail(FatalError, SEC_ERROR_LIBRARY_FAILURE);
   }
 
   // RFC 5280 Section 4.1
@@ -774,52 +784,51 @@ KeyHash(TrustDomain& trustDomain, const SECItem& subjectPublicKeyInfo,
   //    subjectPublicKey     BIT STRING  }
 
   Input spki;
-  Result rv;
 
   {
     // The scope of input is limited to reduce the possibility of confusing it
     // with spki in places we need to be using spki below.
     Input input;
-    rv = input.Init(subjectPublicKeyInfo.data, subjectPublicKeyInfo.len);
-    if (rv != Success) {
-      return rv;
+    if (input.Init(subjectPublicKeyInfo.data, subjectPublicKeyInfo.len)
+          != Success) {
+      return MapSECStatus(SECFailure);
     }
 
-    rv = der::ExpectTagAndGetValue(input, der::SEQUENCE, spki);
-    if (rv != Success) {
-      return rv;
+    if (der::ExpectTagAndGetValue(input, der::SEQUENCE, spki) != Success) {
+      return MapSECStatus(SECFailure);
     }
-    rv = der::End(input);
-    if (rv != Success) {
-      return rv;
+    if (der::End(input) != Success) {
+      return MapSECStatus(SECFailure);
     }
   }
 
   // Skip AlgorithmIdentifier
-  rv = der::ExpectTagAndSkipValue(spki, der::SEQUENCE);
-  if (rv != Success) {
-    return rv;
+  if (der::ExpectTagAndSkipValue(spki, der::SEQUENCE) != Success) {
+    return MapSECStatus(SECFailure);
   }
 
   SECItem subjectPublicKey;
-  rv = der::ExpectTagAndGetValue(spki, der::BIT_STRING, subjectPublicKey);
-  if (rv != Success) {
-    return rv;
+  if (der::ExpectTagAndGetValue(spki, der::BIT_STRING, subjectPublicKey)
+        != Success) {
+    return MapSECStatus(SECFailure);
   }
 
-  rv = der::End(spki);
-  if (rv != Success) {
-    return rv;
+  if (der::End(spki) != Success) {
+    return MapSECStatus(SECFailure);
   }
 
   // Assume/require that the number of unused bits in the public key is zero.
   if (subjectPublicKey.len == 0 || subjectPublicKey.data[0] != 0) {
-    return Result::ERROR_BAD_DER;
+    return Fail(RecoverableError, SEC_ERROR_BAD_DER);
   }
   ++subjectPublicKey.data;
   --subjectPublicKey.len;
 
-  return trustDomain.DigestBuf(subjectPublicKey, hashBuf, hashBufSize);
+  if (trustDomain.DigestBuf(subjectPublicKey, hashBuf, hashBufSize)
+        != SECSuccess) {
+    return MapSECStatus(SECFailure);
+  }
+  return Success;
 }
 
 Result
@@ -853,11 +862,15 @@ ExtensionNotUnderstood(Input& /*extnID*/, const SECItem& /*extnValue*/,
 //
 // http://tools.ietf.org/html/rfc5019#section-4
 
-Result
-CreateEncodedOCSPRequest(TrustDomain& trustDomain, const struct CertID& certID,
-                         /*out*/ uint8_t (&out)[OCSP_REQUEST_MAX_LENGTH],
-                         /*out*/ size_t& outLen)
+SECItem*
+CreateEncodedOCSPRequest(TrustDomain& trustDomain, PLArenaPool* arena,
+                         const struct CertID& certID)
 {
+  if (!arena) {
+    PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
+    return nullptr;
+  }
+
   // We do not add any extensions to the request.
 
   // RFC 6960 says "An OCSP client MAY wish to specify the kinds of response
@@ -898,18 +911,20 @@ CreateEncodedOCSPRequest(TrustDomain& trustDomain, const struct CertID& certID,
   // we allow for some amount of non-conformance with that requirement while
   // still ensuring we can encode the length values in the ASN.1 TLV structures
   // in a single byte.
-  static_assert(totalLenWithoutSerialNumberData < OCSP_REQUEST_MAX_LENGTH,
-                "totalLenWithoutSerialNumberData too big");
-  if (certID.serialNumber.len >
-        OCSP_REQUEST_MAX_LENGTH - totalLenWithoutSerialNumberData) {
-    return Result::ERROR_BAD_DER;
+  if (certID.serialNumber.len > 127u - totalLenWithoutSerialNumberData) {
+    PR_SetError(SEC_ERROR_BAD_DATA, 0);
+    return nullptr;
   }
 
-  outLen = totalLenWithoutSerialNumberData + certID.serialNumber.len;
+  uint8_t totalLen = static_cast<uint8_t>(totalLenWithoutSerialNumberData +
+    certID.serialNumber.len);
 
-  uint8_t totalLen = static_cast<uint8_t>(outLen);
+  SECItem* encodedRequest = SECITEM_AllocItem(arena, nullptr, totalLen);
+  if (!encodedRequest) {
+    return nullptr;
+  }
 
-  uint8_t* d = out;
+  uint8_t* d = encodedRequest->data;
   *d++ = 0x30; *d++ = totalLen - 2u;  // OCSPRequest (SEQUENCE)
   *d++ = 0x30; *d++ = totalLen - 4u;  //   tbsRequest (SEQUENCE)
   *d++ = 0x30; *d++ = totalLen - 6u;  //     requestList (SEQUENCE OF)
@@ -924,18 +939,17 @@ CreateEncodedOCSPRequest(TrustDomain& trustDomain, const struct CertID& certID,
   // reqCert.issuerNameHash (OCTET STRING)
   *d++ = 0x04;
   *d++ = hashLen;
-  Result rv = trustDomain.DigestBuf(certID.issuer, d, hashLen);
-  if (rv != Success) {
-    return rv;
+  if (trustDomain.DigestBuf(certID.issuer, d, hashLen) != SECSuccess) {
+    return nullptr;
   }
   d += hashLen;
 
   // reqCert.issuerKeyHash (OCTET STRING)
   *d++ = 0x04;
   *d++ = hashLen;
-  rv = KeyHash(trustDomain, certID.issuerSubjectPublicKeyInfo, d, hashLen);
-  if (rv != Success) {
-    return rv;
+  if (KeyHash(trustDomain, certID.issuerSubjectPublicKeyInfo, d, hashLen)
+        != Success) {
+    return nullptr;
   }
   d += hashLen;
 
@@ -946,9 +960,9 @@ CreateEncodedOCSPRequest(TrustDomain& trustDomain, const struct CertID& certID,
     *d++ = certID.serialNumber.data[i];
   }
 
-  PR_ASSERT(d == out + totalLen);
+  PR_ASSERT(d == encodedRequest->data + totalLen);
 
-  return Success;
+  return encodedRequest;
 }
 
 } } // namespace mozilla::pkix
