@@ -16,6 +16,10 @@ XPCOMUtils.defineLazyGetter(this, "RIL", function () {
   return obj;
 });
 
+XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
+                                   "@mozilla.org/system-message-internal;1",
+                                   "nsISystemMessagesInternal");
+
 const GONK_CELLBROADCAST_SERVICE_CONTRACTID =
   "@mozilla.org/cellbroadcast/gonkservice;1";
 const GONK_CELLBROADCAST_SERVICE_CID =
@@ -100,6 +104,41 @@ CellBroadcastService.prototype = {
                                   aEtwsWarningType,
                                   aEtwsEmergencyUserAlert,
                                   aEtwsPopup) {
+    // Broadcast CBS System message
+    // Align the same layout to MozCellBroadcastMessage
+    let systemMessage = {
+      serviceId: aServiceId,
+      gsmGeographicalScope: aGsmGeographicalScope,
+      messageCode: aMessageCode,
+      messageId: aMessageId,
+      language: aLanguage,
+      body: aBody,
+      messageClass: aMessageClass,
+      timestamp: aTimestamp,
+      cdmaServiceCategory: null,
+      etws: null
+    };
+
+    if (aHasEtwsInfo) {
+      systemMessage.etws = {
+        warningType: aEtwsWarningType,
+        emergencyUserAlert: aEtwsEmergencyUserAlert,
+        popup: aEtwsPopup
+      };
+    }
+
+    if (aCdmaServiceCategory !=
+        Ci.nsICellBroadcastService.CDMA_SERVICE_CATEGORY_INVALID) {
+      systemMessage.cdmaServiceCategory = aCdmaServiceCategory;
+    }
+
+    if (DEBUG) {
+      debug("CBS system message to be broadcasted: " + JSON.stringify(systemMessage));
+    }
+
+    gSystemMessenger.broadcastMessage("cellbroadcast-received", systemMessage);
+
+    // Notify received message to registered listener
     for (let listener of this._listeners) {
       try {
         listener.notifyMessageReceived(aServiceId,
