@@ -86,6 +86,14 @@ public:
   nsresult NotifyIME(widget::IMEMessage aMessage);
 
   /**
+   * the offset of first composition string
+   */
+  uint32_t NativeOffsetOfStartComposition() const
+  {
+    return mCompositionStartOffset;
+  }
+
+  /**
    * the offset of first selected clause or start of of compositon
    */
   uint32_t OffsetOfTargetClause() const { return mCompositionTargetOffset; }
