@@ -5,6 +5,8 @@
 
 let test_generator = do_run_test();
 
+let CMAX = 1000;    // # of cookies to create
+
 function run_test() {
   do_test_pending();
   test_generator.next();
@@ -33,15 +35,15 @@ function do_run_test() {
   do_check_true(do_get_cookie_file(profile).exists());
   let db = new CookieDatabaseConnection(do_get_cookie_file(profile), 4);
 
-  for (let i = 0; i < 3000; ++i) {
+  for (let i = 0; i < CMAX; ++i) {
     let uri = NetUtil.newURI("http://" + i + ".com/");
     Services.cookies.setCookieString(uri, null, "oh=hai; max-age=1000", null);
   }
 
-  do_check_eq(do_count_cookies(), 3000);
+  do_check_eq(do_count_cookies(), CMAX);
 
-  // Wait until all 3000 cookies have been written out to the database.
-  while (do_count_cookies_in_db(db.db) < 3000) {
+  // Wait until all CMAX cookies have been written out to the database.
+  while (do_count_cookies_in_db(db.db) < CMAX) {
     do_execute_soon(function() {
       do_run_generator(test_generator);
     });
@@ -61,17 +63,17 @@ function do_run_test() {
   do_load_profile();
 
   // test a few random cookies
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("2000.com"), 1);
+  do_check_eq(Services.cookiemgr.countCookiesFromHost("999.com"), 1);
   do_check_eq(Services.cookiemgr.countCookiesFromHost("abc.com"), 0);
   do_check_eq(Services.cookiemgr.countCookiesFromHost("100.com"), 1);
-  do_check_eq(Services.cookiemgr.countCookiesFromHost("1400.com"), 1);
+  do_check_eq(Services.cookiemgr.countCookiesFromHost("400.com"), 1);
   do_check_eq(Services.cookiemgr.countCookiesFromHost("xyz.com"), 0);
 
   // force synchronous load of everything
-  do_check_eq(do_count_cookies(), 3000);
+  do_check_eq(do_count_cookies(), CMAX);
 
   // check that everything's precisely correct
-  for (let i = 0; i < 3000; ++i) {
+  for (let i = 0; i < CMAX; ++i) {
     let host = i.toString() + ".com";
     do_check_eq(Services.cookiemgr.countCookiesFromHost(host), 1);
   }
@@ -86,13 +88,13 @@ function do_run_test() {
     let host = i.toString() + ".com";
     Services.cookiemgr.remove(host, "oh", "/", false);
   }
-  for (let i = 2900; i < 3000; ++i) {
+  for (let i = CMAX - 100; i < CMAX; ++i) {
     let host = i.toString() + ".com";
     Services.cookiemgr.remove(host, "oh", "/", false);
   }
 
   // check the count
-  do_check_eq(do_count_cookies(), 2800);
+  do_check_eq(do_count_cookies(), CMAX - 200);
 
   // reload again, to make sure the removals were written correctly
   do_close_profile(test_generator);
@@ -100,7 +102,7 @@ function do_run_test() {
   do_load_profile();
 
   // check the count
-  do_check_eq(do_count_cookies(), 2800);
+  do_check_eq(do_count_cookies(), CMAX - 200);
 
   // reload again, but wait for async read completion
   do_close_profile(test_generator);
@@ -109,8 +111,8 @@ function do_run_test() {
   yield;
 
   // check that everything's precisely correct
-  do_check_eq(do_count_cookies(), 2800);
-  for (let i = 100; i < 2900; ++i) {
+  do_check_eq(do_count_cookies(), CMAX - 200);
+  for (let i = 100; i < CMAX - 100; ++i) {
     let host = i.toString() + ".com";
     do_check_eq(Services.cookiemgr.countCookiesFromHost(host), 1);
   }
