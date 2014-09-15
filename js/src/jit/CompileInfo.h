@@ -189,6 +189,7 @@ class CompileInfo
         nargs_ = fun ? fun->nargs() : 0;
         nbodyfixed_ = script->nbodyfixed();
         nlocals_ = script->nfixed();
+        fixedLexicalBegin_ = script->fixedLexicalBegin();
         nstack_ = script->nslots() - script->nfixed();
         nslots_ = nimplicit_ + nargs_ + nlocals_ + nstack_;
     }
@@ -204,6 +205,7 @@ class CompileInfo
         nlocals_ = nlocals;
         nstack_ = 1;  /* For FunctionCompiler::pushPhiInput/popPhiOutput */
         nslots_ = nlocals_ + nstack_;
+        fixedLexicalBegin_ = nlocals;
     }
 
     JSScript *script() const {
@@ -303,6 +305,10 @@ class CompileInfo
     }
     unsigned ninvoke() const {
         return nslots_ - nstack_;
+    }
+    // The slot number at which fixed lexicals begin.
+    unsigned fixedLexicalBegin() const {
+        return fixedLexicalBegin_;
     }
 
     uint32_t scopeChainSlot() const {
@@ -470,6 +476,7 @@ class CompileInfo
     unsigned nlocals_;
     unsigned nstack_;
     unsigned nslots_;
+    unsigned fixedLexicalBegin_;
     JSScript *script_;
     JSFunction *fun_;
     jsbytecode *osrPc_;
