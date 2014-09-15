@@ -1293,15 +1293,6 @@ XrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper,
 }
 
 bool
-XrayTraits::set(JSContext *cx, HandleObject wrapper, HandleObject receiver, HandleId id,
-                bool strict, MutableHandleValue vp)
-{
-    // Skip our Base if it isn't already BaseProxyHandler.
-    const js::BaseProxyHandler *handler = js::GetProxyHandler(wrapper);
-    return handler->js::BaseProxyHandler::set(cx, wrapper, receiver, id, strict, vp);
-}
-
-bool
 XPCWrappedNativeXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper,
                                                HandleObject wrapper, HandleObject holder,
                                                HandleId id,
@@ -1522,24 +1513,6 @@ DOMXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
 
     JS::Rooted<JSObject*> obj(cx, getTargetObject(wrapper));
     return XrayDefineProperty(cx, wrapper, obj, id, desc, defined);
-}
-
-bool
-DOMXrayTraits::set(JSContext *cx, HandleObject wrapper, HandleObject receiver, HandleId id,
-                   bool strict, MutableHandleValue vp)
-{
-    MOZ_ASSERT(xpc::WrapperFactory::IsXrayWrapper(wrapper));
-    RootedObject obj(cx, getTargetObject(wrapper));
-    if (IsDOMProxy(obj)) {
-        const DOMProxyHandler* handler = GetDOMProxyHandler(obj);
-
-        bool done;
-        if (!handler->setCustom(cx, obj, id, vp, &done))
-            return false;
-        if (done)
-            return true;
-    }
-    return XrayTraits::set(cx, wrapper, receiver, id, strict, vp);
 }
 
 bool
@@ -2062,10 +2035,10 @@ XrayWrapper<Base, Traits>::set(JSContext *cx, HandleObject wrapper,
                                bool strict, MutableHandleValue vp) const
 {
     MOZ_ASSERT(!Traits::HasPrototype);
-    // Delegate to Traits.
+    // Skip our Base if it isn't already BaseProxyHandler.
     // NB: None of the functions we call are prepared for the receiver not
     // being the wrapper, so ignore the receiver here.
-    return Traits::set(cx, wrapper, Traits::HasPrototype ? receiver : wrapper, id, strict, vp);
+    return js::BaseProxyHandler::set(cx, wrapper, wrapper, id, strict, vp);
 }
 
 template <typename Base, typename Traits>
