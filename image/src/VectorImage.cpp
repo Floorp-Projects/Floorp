@@ -849,9 +849,8 @@ VectorImage::Draw(gfxContext* aContext,
 
   DrawableFrameRef frameRef =
     SurfaceCache::Lookup(ImageKey(this),
-                         VectorSurfaceKey(params.size,
-                                          params.svgContext,
-                                          params.animationTime));
+                         SurfaceKey(params.size, aSVGContext,
+                                    animTime, aFlags));
 
   // Draw.
   if (frameRef) {
@@ -912,9 +911,8 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams)
 
   // Attempt to cache the frame.
   SurfaceCache::Insert(frame, ImageKey(this),
-                       VectorSurfaceKey(aParams.size,
-                                        aParams.svgContext,
-                                        aParams.animationTime));
+                       SurfaceKey(aParams.size, aParams.svgContext,
+                                  aParams.animationTime, aParams.flags));
 
   // Draw.
   nsRefPtr<gfxDrawable> drawable =
