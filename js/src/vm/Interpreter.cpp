@@ -1894,7 +1894,7 @@ CASE(JSOP_MOREITER)
     RootedObject &obj = rootObject0;
     obj = &REGS.sp[-2].toObject();
     bool cond;
-    if (!js_IteratorMore(cx, obj, &cond))
+    if (!IteratorMore(cx, obj, &cond))
         goto error;
     REGS.sp[-1].setBoolean(cond);
 }
@@ -1907,7 +1907,7 @@ CASE(JSOP_ITERNEXT)
     MutableHandleValue res = REGS.stackHandleAt(-1);
     RootedObject &obj = rootObject0;
     obj = &REGS.sp[-2].toObject();
-    if (!js_IteratorNext(cx, obj, res))
+    if (!IteratorNext(cx, obj, res))
         goto error;
 }
 END_CASE(JSOP_ITERNEXT)
