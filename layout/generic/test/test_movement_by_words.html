@@ -14,7 +14,7 @@
 <p id="catch">Catch-all
 <pre id="test"><script class="testbody" type="text/javascript;version=1.7">
 
-/** Tests for bugs 384147 and 981281 **/
+/** Tests for bugs 384147, 981281, 1066756 **/
 
 SimpleTest.waitForExplicitFinish();
 
@@ -63,7 +63,8 @@ var ChineseChars = "&#x6F22;&#x5B57;";
 var HiraganaChars = "&#x3072;&#x3089;&#x304C;&#x306A;";
 var KatakanaChars = "&#x30AB;&#x30BF;&#x30AB;&#x30CA;";
 var JapaneseFullStop = "&#x3002;";
-var JapaneseComma = "&#x3001";
+var JapaneseComma = "&#x3001;";
+var ModifierColon = "&#xA789;";
 
 function test() {
   setPrefs(false, true, test1);
@@ -176,6 +177,14 @@ function test1() {
   testLeft(editor.firstChild, 3);
   testLeft(editor.firstChild, 0);
 
+  // test for bug 1066756
+  editor.innerHTML = "hello" + ModifierColon + " wo" + ModifierColon + "rld";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 13);
+  testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 0);
+
   // test basic word movement with eat_space_next_to_word true.
   setPrefs(true, true, test2);
 }
@@ -285,6 +294,13 @@ function test2() {
   testLeft(editor.firstChild, 3);
   testLeft(editor.firstChild, 0);
 
+  editor.innerHTML = "hello" + ModifierColon + " wo" + ModifierColon + "rld";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 7);
+  testRight(editor.firstChild, 13);
+  testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 0);
+
   // Test basic word movement with stop_at_punctuation false (bug 981281).
   setPrefs(false, false, test3);
 }
@@ -378,6 +394,13 @@ function test3() {
   testRight(editor.firstChild, 8);
   testLeft(editor.firstChild, 0);
 
+  editor.innerHTML = "hello" + ModifierColon + " wo" + ModifierColon + "rld";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 6);
+  testRight(editor.firstChild, 13);
+  testLeft(editor.firstChild, 7);
+  testLeft(editor.firstChild, 0);
+
   // And again with eat_space_next_to_word true.
   setPrefs(true, false, test4);
 }
@@ -469,6 +492,13 @@ function test4() {
   editor.innerHTML = ChineseChars + JapaneseComma + ChineseChars + JapaneseFullStop + ChineseChars;
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 8);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "hello" + ModifierColon + " wo" + ModifierColon + "rld";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 7);
+  testRight(editor.firstChild, 13);
+  testLeft(editor.firstChild, 7);
   testLeft(editor.firstChild, 0);
 
   SimpleTest.finish();
