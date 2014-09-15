@@ -40,7 +40,18 @@ http://127.0.0.1:8888           privileged
 
         cursor.execute("PRAGMA user_version=%d;" % version)
 
-        if version == 3:
+        if version == 4:
+            cursor.execute("""CREATE TABLE IF NOT EXISTS moz_hosts (
+               id INTEGER PRIMARY KEY,
+               host TEXT,
+               type TEXT,
+               permission INTEGER,
+               expireType INTEGER,
+               expireTime INTEGER,
+               modificationTime INTEGER,
+               appId INTEGER,
+               isInBrowserElement INTEGER)""")
+        elif version == 3:
             cursor.execute("""CREATE TABLE IF NOT EXISTS moz_hosts (
                id INTEGER PRIMARY KEY,
                host TEXT,
@@ -59,7 +70,7 @@ http://127.0.0.1:8888           privileged
                expireType INTEGER,
                expireTime INTEGER)""")
         else:
-            raise Exception("version must be 2 or 3")
+            raise Exception("version must be 2, 3 or 4")
 
         permDB.commit()
         cursor.close()
@@ -149,7 +160,7 @@ http://127.0.0.1:8888           privileged
 
         self.assertEqual(len(entries), 3)
 
-        columns = 8 if version == 3 else 6
+        columns = 9 if version == 4 else (8 if version == 3 else 6)
         self.assertEqual(len(entries[0]), columns)
         for x in range(4, columns):
             self.assertEqual(entries[0][x], 0)
@@ -160,6 +171,8 @@ http://127.0.0.1:8888           privileged
     def test_existing_permissions_db_v3(self):
         self.verify_user_version(3)
 
+    def test_existing_permissions_db_v4(self):
+        self.verify_user_version(4)
 
 if __name__ == '__main__':
     unittest.main()
