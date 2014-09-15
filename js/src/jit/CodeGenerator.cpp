@@ -6370,7 +6370,7 @@ LoadNativeIterator(MacroAssembler &masm, Register obj, Register dest, Label *fai
 }
 
 typedef bool (*IteratorNextFn)(JSContext *, HandleObject, MutableHandleValue);
-static const VMFunction IteratorNextInfo = FunctionInfo<IteratorNextFn>(js_IteratorNext);
+static const VMFunction IteratorNextInfo = FunctionInfo<IteratorNextFn>(IteratorNext);
 
 bool
 CodeGenerator::visitIteratorNext(LIteratorNext *lir)
@@ -6401,7 +6401,7 @@ CodeGenerator::visitIteratorNext(LIteratorNext *lir)
 }
 
 typedef bool (*IteratorMoreFn)(JSContext *, HandleObject, bool *);
-static const VMFunction IteratorMoreInfo = FunctionInfo<IteratorMoreFn>(js_IteratorMore);
+static const VMFunction IteratorMoreInfo = FunctionInfo<IteratorMoreFn>(IteratorMore);
 
 bool
 CodeGenerator::visitIteratorMore(LIteratorMore *lir)

@@ -93,12 +93,10 @@ gfxSurfaceDrawable::DrawInternal(gfxContext* aContext,
         dt->ClearRect(fillRect);
         dt->FillRect(fillRect, pattern);
     } else {
-        CompositionOp op = CompositionOpForOp(aContext->CurrentOperator());
-        AntialiasMode aaMode =
-            aContext->CurrentAntialiasMode() == gfxContext::MODE_ALIASED ?
-                AntialiasMode::NONE :
-                AntialiasMode::SUBPIXEL;
-        dt->FillRect(fillRect, pattern, DrawOptions(aOpacity, op, aaMode));
+        dt->FillRect(fillRect, pattern,
+                     DrawOptions(aOpacity,
+                                 CompositionOpForOp(aContext->CurrentOperator()),
+                                 aContext->CurrentAntialiasMode()));
     }
 }
 

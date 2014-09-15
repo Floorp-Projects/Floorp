@@ -33,7 +33,12 @@
     }
 
     // Make sure that an error in this file actually causes the test to fail.
+    var gReceivedErrorProbe = false;
     window.onerror = function (msg, url, line) {
+      if (/Test Error Probe/.test(msg)) {
+        gReceivedErrorProbe = true;
+        return;
+      }
       ok(false, "Error while executing: \n" + msg + "\n" + url + ":" + line);
     };
 
@@ -175,6 +180,11 @@
       savedMM.sendAsyncMessage("cpows:from_parent", {}, {obj: obj});
     }
 
+    // Make sure errors in this file actually hit window.onerror.
+    function recvErrorReportingTest(message) {
+      throw "Test Error Probe";
+    }
+
     let savedElement = null;
     function recvDomTest(message) {
       savedElement = message.objects.element;
@@ -271,6 +281,7 @@
       mm.addMessageListener("cpows:done", recvDoneMessage);
       mm.addMessageListener("cpows:fail", recvFailMessage);
       mm.addMessageListener("cpows:parent_test", recvParentTest);
+      mm.addMessageListener("cpows:error_reporting_test", recvErrorReportingTest);
       mm.addMessageListener("cpows:dom_test", recvDomTest);
       mm.addMessageListener("cpows:dom_test_after_gc", recvDomTestAfterGC);
       mm.addMessageListener("cpows:xray_test", recvXrayTest);
@@ -285,6 +296,7 @@
     }
 
     function finish() {
+      ok(gReceivedErrorProbe, "Should have reported error probe");
       opener.setTimeout("done()", 0);
       window.close();
     }

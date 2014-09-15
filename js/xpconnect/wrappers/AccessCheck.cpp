@@ -185,7 +185,7 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext *cx, HandleObject wrapper, H
     // Check for frame IDs. If we're resolving named frames, make sure to only
     // resolve ones that don't shadow native properties. See bug 860494.
     if (IsWindow(name)) {
-        if (JSID_IS_STRING(id) && !XrayUtils::IsXrayResolving(cx, wrapper, id)) {
+        if (JSID_IS_STRING(id)) {
             bool wouldShadow = false;
             if (!XrayUtils::HasNativeProperty(cx, wrapper, id, &wouldShadow) ||
                 wouldShadow)

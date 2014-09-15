@@ -575,6 +575,25 @@ WindowGlobalOrNull(JSObject *aObj)
     return WindowOrNull(glob);
 }
 
+nsGlobalWindow*
+AddonWindowOrNull(JSObject *aObj)
+{
+    if (!IsInAddonScope(aObj))
+        return nullptr;
+
+    JSObject *global = js::GetGlobalForObjectCrossCompartment(aObj);
+    JSObject *proto = js::GetPrototypeNoProxy(global);
+
+    // Addons could theoretically change the prototype of the addon scope, but
+    // we pretty much just want to crash if that happens so that we find out
+    // about it and get them to change their code.
+    MOZ_RELEASE_ASSERT(js::IsCrossCompartmentWrapper(proto));
+    JSObject *mainGlobal = js::UncheckedUnwrap(proto, /* stopAtOuter = */ false);
+    MOZ_RELEASE_ASSERT(JS_IsGlobalObject(mainGlobal));
+
+    return WindowOrNull(mainGlobal);
+}
+
 }
 
 static void

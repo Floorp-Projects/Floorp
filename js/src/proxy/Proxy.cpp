@@ -712,7 +712,7 @@ js::proxy_DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succ
     if (!Proxy::delete_(cx, obj, id, &deleted))
         return false;
     *succeeded = deleted;
-    return js_SuppressDeletedProperty(cx, obj, id);
+    return SuppressDeletedProperty(cx, obj, id);
 }
 
 void

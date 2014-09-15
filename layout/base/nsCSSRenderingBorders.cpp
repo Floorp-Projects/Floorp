@@ -1494,7 +1494,7 @@ nsCSSBorderRenderer::DrawBorders()
 
     gfxFloat dash = mBorderWidths[0];
     mContext->SetDash(&dash, 1, 0.5);
-    mContext->SetAntialiasMode(gfxContext::MODE_ALIASED);
+    mContext->SetAntialiasMode(AntialiasMode::NONE);
     gfxRect rect = mOuterRect;
     rect.Deflate(mBorderWidths[0] / 2.0);
     mContext->NewPath();

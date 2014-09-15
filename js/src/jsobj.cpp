@@ -5749,7 +5749,7 @@ baseops::DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succe
             return false;
 
         obj->setDenseElementHole(cx, JSID_TO_INT(id));
-        return js_SuppressDeletedProperty(cx, obj, id);
+        return SuppressDeletedProperty(cx, obj, id);
     }
 
     if (!shape->configurable()) {
@@ -5763,7 +5763,7 @@ baseops::DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succe
     if (!succeeded)
         return true;
 
-    return obj->removeProperty(cx, id) && js_SuppressDeletedProperty(cx, obj, id);
+    return obj->removeProperty(cx, id) && SuppressDeletedProperty(cx, obj, id);
 }
 
 bool

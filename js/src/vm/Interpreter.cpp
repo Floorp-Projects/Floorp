@@ -1116,21 +1116,6 @@ JS_STATIC_ASSERT(JSOP_SETNAME_LENGTH == JSOP_SETPROP_LENGTH);
 JS_STATIC_ASSERT(JSOP_IFNE_LENGTH == JSOP_IFEQ_LENGTH);
 JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
 
-bool
-js::IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval)
-{
-    if (iterobj->is<PropertyIteratorObject>()) {
-        NativeIterator *ni = iterobj->as<PropertyIteratorObject>().getNativeIterator();
-        if (ni->isKeyIter()) {
-            JS_ASSERT(ni->props_cursor < ni->props_end);
-            rval.setString(*ni->current());
-            ni->incCursor();
-            return true;
-        }
-    }
-    return js_IteratorNext(cx, iterobj, rval);
-}
-
 /*
  * Compute the implicit |this| parameter for a call expression where the callee
  * funval was resolved from an unqualified name reference to a property on obj
@@ -1909,7 +1894,7 @@ CASE(JSOP_MOREITER)
     RootedObject &obj = rootObject0;
     obj = &REGS.sp[-2].toObject();
     bool cond;
-    if (!js_IteratorMore(cx, obj, &cond))
+    if (!IteratorMore(cx, obj, &cond))
         goto error;
     REGS.sp[-1].setBoolean(cond);
 }
