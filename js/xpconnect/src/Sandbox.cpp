@@ -637,22 +637,14 @@ xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx,
     if (!desc.object())
         return true; // No property, nothing to do
 
-    // Now fix up the getter/setter/value as needed to be bound to desc->obj
-    // Don't mess with holder_get and holder_set, though, because those rely on
-    // the "vp is prefilled with the value in the slot" behavior that property
-    // ops can in theory rely on, but our property op forwarder doesn't know how
-    // to make that happen.  Since we really only need to rebind the DOM methods
-    // here, not rebindings holder_get and holder_set is OK.
+    // Now fix up the getter/setter/value as needed to be bound to desc->obj.
     //
-    // Similarly, don't mess with XPC_WN_Helper_GetProperty and
-    // XPC_WN_Helper_SetProperty, for the same reasons: that could confuse our
-    // access to expandos when we're not doing Xrays.
-    if (desc.getter() != xpc::holder_get &&
-        desc.getter() != XPC_WN_Helper_GetProperty &&
+    // Don't mess with XPC_WN_Helper_GetProperty and XPC_WN_Helper_SetProperty,
+    // because that could confuse our access to expandos.
+    if (desc.getter() != XPC_WN_Helper_GetProperty &&
         !BindPropertyOp(cx, desc.getter(), desc.address(), id, JSPROP_GETTER, proxy))
         return false;
-    if (desc.setter() != xpc::holder_set &&
-        desc.setter() != XPC_WN_Helper_SetProperty &&
+    if (desc.setter() != XPC_WN_Helper_SetProperty &&
         !BindPropertyOp(cx, desc.setter(), desc.address(), id, JSPROP_SETTER, proxy))
         return false;
     if (desc.value().isObject()) {
