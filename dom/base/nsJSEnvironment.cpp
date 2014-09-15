@@ -468,7 +468,22 @@ SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     if (outer) {
       globalObject = static_cast<nsGlobalWindow*>(outer->GetCurrentInnerWindow());
     }
-  } else {
+  }
+
+  // We run addons in a separate privileged compartment, but they still expect
+  // to trigger the onerror handler of their associated DOMWindow.
+  //
+  // Note that the way we do this right now is sloppy. Error reporters can
+  // theoretically be triggered at arbitrary times (not just immediately before
+  // an AutoJSAPI comes off the stack), so we don't really have a way of knowing
+  // that the global of the current compartment is the correct global with which
+  // to report the error. But in practice this is probably fine for the time
+  // being, and will get cleaned up soon when we fix bug 981187.
+  if (!globalObject && JS::CurrentGlobalOrNull(cx)) {
+    globalObject = xpc::AddonWindowOrNull(JS::CurrentGlobalOrNull(cx));
+  }
+
+  if (!globalObject) {
     globalObject = xpc::GetNativeForGlobal(xpc::PrivilegedJunkScope());
   }
 
