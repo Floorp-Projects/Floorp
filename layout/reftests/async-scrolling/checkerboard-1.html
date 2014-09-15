@@ -1,0 +1,11 @@
+<!DOCTYPE HTML>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="1800">
+<!-- This is a simple test where we set the async-scroll position so that it
+     extends outside the displayport, and ensure that the checkerboarded area
+     is filled with the expected background color. -->
+<body style="background-color: green; height: 5000px; overflow:hidden">
+  <div style="position:absolute; left: 0px; top: 1800px; width: 100px; height: 400px; background-color: red"></div>
+</body>
