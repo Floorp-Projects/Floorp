@@ -101,6 +101,7 @@ public:
 
   /**
    * @param aTargetFrame The frame of the filtered element under consideration.
+   * @param aTargetContent The filtered element itself.
    * @param aMetrics The metrics to resolve SVG lengths against.
    * @param aFilterChain The list of filters to apply.
    * @param aPaintCallback [optional] The callback that Render() should use to
@@ -119,6 +120,7 @@ public:
    *   element.
    */
   nsFilterInstance(nsIFrame *aTargetFrame,
+                   nsIContent* aTargetContent,
                    const UserSpaceMetrics& aMetrics,
                    const nsTArray<nsStyleFilter>& aFilterChain,
                    nsSVGFilterPaintCallback *aPaintCallback,
@@ -277,6 +279,11 @@ private:
    * The frame for the element that is currently being filtered.
    */
   nsIFrame* mTargetFrame;
+
+  /**
+   * The filtered element.
+   */
+  nsIContent* mTargetContent;
 
   /**
    * The user space metrics of the filtered frame.

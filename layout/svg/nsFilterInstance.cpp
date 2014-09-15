@@ -46,7 +46,8 @@ nsFilterInstance::PaintFilteredFrame(nsIFrame *aFilteredFrame,
 {
   auto& filterChain = aFilteredFrame->StyleSVGReset()->mFilters;
   UniquePtr<UserSpaceMetrics> metrics = UserSpaceMetricsForFrame(aFilteredFrame);
-  nsFilterInstance instance(aFilteredFrame, *metrics, filterChain, aPaintCallback, aTransform,
+  nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(), *metrics,
+                            filterChain, aPaintCallback, aTransform,
                             aDirtyArea, nullptr, nullptr, nullptr);
   if (!instance.IsInitialized()) {
     return NS_OK;
@@ -65,7 +66,8 @@ nsFilterInstance::GetPostFilterDirtyArea(nsIFrame *aFilteredFrame,
   gfxMatrix unused; // aPaintTransform arg not used since we're not painting
   auto& filterChain = aFilteredFrame->StyleSVGReset()->mFilters;
   UniquePtr<UserSpaceMetrics> metrics = UserSpaceMetricsForFrame(aFilteredFrame);
-  nsFilterInstance instance(aFilteredFrame, *metrics, filterChain, nullptr, unused, nullptr,
+  nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(), *metrics,
+                            filterChain, nullptr, unused, nullptr,
                             &aPreFilterDirtyRegion);
   if (!instance.IsInitialized()) {
     return nsRegion();
@@ -84,7 +86,8 @@ nsFilterInstance::GetPreFilterNeededArea(nsIFrame *aFilteredFrame,
   gfxMatrix unused; // aPaintTransform arg not used since we're not painting
   auto& filterChain = aFilteredFrame->StyleSVGReset()->mFilters;
   UniquePtr<UserSpaceMetrics> metrics = UserSpaceMetricsForFrame(aFilteredFrame);
-  nsFilterInstance instance(aFilteredFrame, *metrics, filterChain, nullptr, unused,
+  nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(), *metrics,
+                            filterChain, nullptr, unused,
                             &aPostFilterDirtyRegion);
   if (!instance.IsInitialized()) {
     return nsRect();
@@ -114,7 +117,8 @@ nsFilterInstance::GetPostFilterBounds(nsIFrame *aFilteredFrame,
   gfxMatrix unused; // aPaintTransform arg not used since we're not painting
   auto& filterChain = aFilteredFrame->StyleSVGReset()->mFilters;
   UniquePtr<UserSpaceMetrics> metrics = UserSpaceMetricsForFrame(aFilteredFrame);
-  nsFilterInstance instance(aFilteredFrame, *metrics, filterChain, nullptr, unused, nullptr,
+  nsFilterInstance instance(aFilteredFrame, aFilteredFrame->GetContent(), *metrics,
+                            filterChain, nullptr, unused, nullptr,
                             preFilterRegionPtr, aPreFilterBounds,
                             aOverrideBBox);
   if (!instance.IsInitialized()) {
@@ -125,6 +129,7 @@ nsFilterInstance::GetPostFilterBounds(nsIFrame *aFilteredFrame,
 }
 
 nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
+                                   nsIContent* aTargetContent,
                                    const UserSpaceMetrics& aMetrics,
                                    const nsTArray<nsStyleFilter>& aFilterChain,
                                    nsSVGFilterPaintCallback *aPaintCallback,
@@ -134,14 +139,18 @@ nsFilterInstance::nsFilterInstance(nsIFrame *aTargetFrame,
                                    const nsRect *aPreFilterVisualOverflowRectOverride,
                                    const gfxRect *aOverrideBBox)
   : mTargetFrame(aTargetFrame)
+  , mTargetContent(aTargetContent)
   , mMetrics(aMetrics)
   , mPaintCallback(aPaintCallback)
   , mPaintTransform(aPaintTransform)
   , mInitialized(false)
 {
-
-  mTargetBBox = aOverrideBBox ?
-    *aOverrideBBox : nsSVGUtils::GetBBox(mTargetFrame);
+  if (aOverrideBBox) {
+    mTargetBBox = *aOverrideBBox;
+  } else {
+    MOZ_ASSERT(mTargetFrame, "Need to supply a frame when there's no aOverrideBBox");
+    mTargetBBox = nsSVGUtils::GetBBox(mTargetFrame);
+  }
 
   // Compute user space to filter space transforms.
   nsresult rv = ComputeUserSpaceToFilterSpaceScale();
@@ -265,7 +274,7 @@ nsFilterInstance::BuildPrimitivesForFilter(const nsStyleFilter& aFilter)
 
   if (aFilter.GetType() == NS_STYLE_FILTER_URL) {
     // Build primitives for an SVG filter.
-    nsSVGFilterInstance svgFilterInstance(aFilter, mTargetFrame->GetContent(),
+    nsSVGFilterInstance svgFilterInstance(aFilter, mTargetContent,
                                           mMetrics, mTargetBBox,
                                           mUserSpaceToFilterSpaceScale,
                                           mFilterSpaceToUserSpaceScale);
