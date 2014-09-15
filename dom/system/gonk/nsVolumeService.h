@@ -15,6 +15,11 @@
 #include "nsVolume.h"
 
 namespace mozilla {
+
+namespace dom {
+class VolumeInfo;
+} // dom
+
 namespace system {
 
 class WakeLockCallback;
@@ -40,8 +45,10 @@ public:
   //static nsVolumeService* GetSingleton();
   static void Shutdown();
 
-  void UpdateVolume(nsIVolume* aVolume);
+  void UpdateVolume(nsIVolume* aVolume, bool aNotifyObservers = true);
   void UpdateVolumeIOThread(const Volume* aVolume);
+
+  void GetVolumesForIPC(nsTArray<dom::VolumeInfo>* aResult);
 
 private:
   ~nsVolumeService();
@@ -51,11 +58,13 @@ private:
   already_AddRefed<nsVolume> FindVolumeByMountLockName(const nsAString& aMountLockName);
   already_AddRefed<nsVolume> FindVolumeByName(const nsAString& aName);
   already_AddRefed<nsVolume> CreateOrFindVolumeByName(const nsAString& aName, bool aIsFake = false);
+  void GetVolumesFromParent();
 
   Monitor mArrayMonitor;
   nsVolume::Array mVolumeArray;
 
   static StaticRefPtr<nsVolumeService> sSingleton;
+  bool mGotVolumesFromParent;
 };
 
 } // system
