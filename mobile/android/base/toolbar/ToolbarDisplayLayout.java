@@ -323,7 +323,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
         }
 
         // If the pref to show the URL isn't set, just use the tab's display title.
-        if (!mPrefs.shouldShowUrl() || url == null) {
+        if (!mPrefs.shouldShowUrl(mActivity) || url == null) {
             setTitle(tab.getDisplayTitle());
             return;
         }
