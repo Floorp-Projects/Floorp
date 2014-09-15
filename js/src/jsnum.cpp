@@ -1061,18 +1061,18 @@ enum nc_slot {
  * using union jsdpun.
  */
 static JSConstDoubleSpec number_constants[] = {
-    {0,                         "NaN",               0,{0,0,0}},
-    {0,                         "POSITIVE_INFINITY", 0,{0,0,0}},
-    {0,                         "NEGATIVE_INFINITY", 0,{0,0,0}},
-    {1.7976931348623157E+308,   "MAX_VALUE",         0,{0,0,0}},
-    {0,                         "MIN_VALUE",         0,{0,0,0}},
+    {"NaN",               0                          },
+    {"POSITIVE_INFINITY", 0                          },
+    {"NEGATIVE_INFINITY", 0                          },
+    {"MAX_VALUE",         1.7976931348623157E+308    },
+    {"MIN_VALUE",         0                          },
     /* ES6 (April 2014 draft) 20.1.2.6 */
-    {9007199254740991,          "MAX_SAFE_INTEGER",  0,{0,0,0}},
+    {"MAX_SAFE_INTEGER",  9007199254740991           },
     /* ES6 (April 2014 draft) 20.1.2.10 */
-    {-9007199254740991,         "MIN_SAFE_INTEGER",  0,{0,0,0}},
+    {"MIN_SAFE_INTEGER", -9007199254740991,          },
     /* ES6 (May 2013 draft) 15.7.3.7 */
-    {2.2204460492503130808472633361816e-16, "EPSILON", 0,{0,0,0}},
-    {0,0,0,{0,0,0}}
+    {"EPSILON", 2.2204460492503130808472633361816e-16},
+    {0,0}
 };
 
 /*
@@ -1101,12 +1101,12 @@ js::InitRuntimeNumberState(JSRuntime *rt)
      * Our NaN must be one particular canonical value, because we rely on NaN
      * encoding for our value representation.  See Value.h.
      */
-    number_constants[NC_NaN].dval = GenericNaN();
+    number_constants[NC_NaN].val = GenericNaN();
 
-    number_constants[NC_POSITIVE_INFINITY].dval = mozilla::PositiveInfinity<double>();
-    number_constants[NC_NEGATIVE_INFINITY].dval = mozilla::NegativeInfinity<double>();
+    number_constants[NC_POSITIVE_INFINITY].val = mozilla::PositiveInfinity<double>();
+    number_constants[NC_NEGATIVE_INFINITY].val = mozilla::NegativeInfinity<double>();
 
-    number_constants[NC_MIN_VALUE].dval = MinNumberValue<double>();
+    number_constants[NC_MIN_VALUE].val = MinNumberValue<double>();
 
     // XXX If EXPOSE_INTL_API becomes true all the time at some point,
     //     js::InitRuntimeNumberState is no longer fallible, and we should
