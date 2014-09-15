@@ -2444,6 +2444,17 @@ class FunctionCompiler
         return ins;
     }
 
+    MDefinition *splatSimd(MDefinition *v, MIRType type)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        JS_ASSERT(IsSimdType(type));
+        MSimdSplatX4 *ins = MSimdSplatX4::New(alloc(), type, v);
+        curBlock_->add(ins);
+        return ins;
+    }
+
     MDefinition *minMax(MDefinition *lhs, MDefinition *rhs, MIRType type, bool isMax) {
         if (inDeadCode())
             return nullptr;
@@ -2616,18 +2627,6 @@ class FunctionCompiler
 
         JS_ASSERT(IsSimdType(type));
         T *ins = T::New(alloc(), type, x, y, z, w);
-        curBlock_->add(ins);
-        return ins;
-    }
-
-    template<typename T>
-    MDefinition *simdSplat(MDefinition *v, MIRType type)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        JS_ASSERT(IsSimdType(type));
-        T *ins = T::New(alloc(), type, v);
         curBlock_->add(ins);
         return ins;
     }
@@ -4724,7 +4723,7 @@ CheckUnarySimd(FunctionCompiler &f, ParseNode *call, const ModuleCompiler::Globa
     }
 
     *type = global->simdOperationType();
-    *def = f.simdSplat<MSimdSplatX4>(argDef, type->toMIRType());
+    *def = f.splatSimd(argDef, type->toMIRType());
     return true;
 }
 
@@ -4929,7 +4928,7 @@ CheckSimdCtorCall(FunctionCompiler &f, ParseNode *call, const ModuleCompiler::Gl
     *type = simdType;
 
     if (defs[1] == defs[0] && defs[2] == defs[0] && defs[3] == defs[0])
-        *def = f.simdSplat<MSimdSplatX4>(defs[0], type->toMIRType());
+        *def = f.splatSimd(defs[0], type->toMIRType());
     else
         *def = f.constructSimd<MSimdValueX4>(defs[0], defs[1], defs[2], defs[3], type->toMIRType());
     return true;
