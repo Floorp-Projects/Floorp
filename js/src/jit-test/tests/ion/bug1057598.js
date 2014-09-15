@@ -1,5 +1,5 @@
 setObjectMetadataCallback(function( r, ... d)  {});
-setJitCompilerOption("ion.warmup.trigger", 20);
+setJitCompilerOption("ion.usecount.trigger", 20);
 var uceFault = function (i) {
     if (i > 98)
         uceFault = function (i) { return true; };
