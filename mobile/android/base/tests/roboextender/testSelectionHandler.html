@@ -9,6 +9,7 @@
 const DIV_POINT_TEXT = "Under";
 const INPUT_TEXT = "Text for select all in an <input>";
 const TEXTAREA_TEXT = "Text for select all in a <textarea>";
+const READONLY_INPUT_TEXT = "readOnly text";
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Messaging.jsm");
@@ -24,6 +25,7 @@ function startTests() {
     then(testSelectDivAtPoint).
     then(testSelectInput).
     then(testSelectTextarea).
+    then(testReadonlyInput).
     then(testCloseSelection).
     then(finishTests, function(err) {
       ok(false, "Error in selection test " + err);
@@ -151,6 +153,27 @@ function testSelectTextarea() {
 
     return Promise.all([
       ok(!sh.isSelectionActive(), "Selection should not be active"),
+    ]);
+  });
+}
+
+/* =================================================================================
+ *
+ * Ensure that readonly inputs aren't editable, and not subject to
+ * SelectionHandler actions such as "cut".
+ *
+ */
+function testReadonlyInput() {
+  var sh = getSelectionHandler();
+  var readOnlyNode = document.getElementById("readOnlyTextInput");
+  readOnlyNode.value = READONLY_INPUT_TEXT;
+
+  return Promise.all([
+    ok(!sh.isSelectionActive(), "Selection should not be active at start of testReadonlyInput"),
+
+  ]).then(function() {
+    return Promise.all([
+      ok(!sh.isElementEditableText(readOnlyNode), "Selected element should be readOnly (not editable)"),
     ]);
   });
 }
@@ -286,6 +309,8 @@ function is(one, two, msg) {
     <input id="inputNode" type="text"><br>
 
     <textarea id="textareaNode"></textarea><br>
+
+    <input id="readOnlyTextInput" type="text" readonly><br>
 
   </body>
 </html>
