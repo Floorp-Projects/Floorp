@@ -1691,7 +1691,7 @@ RuntimeService::ShutdownIdleThreads(nsITimer* aTimer, void* /* aClosure */)
     }
   }
 
-  NS_ASSERTION(nextExpiration.IsNull() || !expiredThreads.IsEmpty(),
+  NS_ASSERTION(!nextExpiration.IsNull() || !expiredThreads.IsEmpty(),
                "Should have a new time or there should be some threads to shut "
                "down");
 
