@@ -70,8 +70,11 @@ nsXPCWrappedJS::CanSkip()
 
     // For non-root wrappers, check if the root wrapper will be
     // added to the CC graph.
-    if (!IsRootWrapper())
+    if (!IsRootWrapper()) {
+        // mRoot points to null after unlinking.
+        NS_ENSURE_TRUE(mRoot, false);
         return mRoot->CanSkip();
+    }
 
     // For the root wrapper, check if there is an aggregated
     // native object that will be added to the CC graph.
