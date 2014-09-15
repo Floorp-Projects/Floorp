@@ -145,18 +145,8 @@ TouchCaret::GetTouchFrameRect()
   }
 
   dom::Element* touchCaretElement = presShell->GetTouchCaretElement();
-  if (!touchCaretElement) {
-    return nsRect();
-  }
-
-  // Get touch caret position relative to canvas frame.
-  nsIFrame* touchCaretFrame = touchCaretElement->GetPrimaryFrame();
-  nsRect tcRect = touchCaretFrame->GetRectRelativeToSelf();
   nsIFrame* canvasFrame = GetCanvasFrame();
-
-  nsLayoutUtils::TransformResult rv =
-    nsLayoutUtils::TransformRect(touchCaretFrame, canvasFrame, tcRect);
-  return rv == nsLayoutUtils::TRANSFORM_SUCCEEDED ? tcRect : nsRect();
+  return nsLayoutUtils::GetRectRelativeToFrame(touchCaretElement, canvasFrame);
 }
 
 nsRect
