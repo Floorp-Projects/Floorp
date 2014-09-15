@@ -63,20 +63,32 @@ class MachCommands(MachCommandBase):
         # which produces output in the format Mozilla infrastructure expects.
         return_code = 0
         files = []
-        for test in [mozpack.path.join(self.topsrcdir, t) for t in tests]:
-            if test.endswith('.py') and os.path.isfile(test):
-                files.append(test)
-            elif os.path.isfile(test + '.py'):
-                files.append(test + '.py')
-            elif os.path.isdir(test):
-                files += glob.glob(mozpack.path.join(test, 'test*.py'))
-                files += glob.glob(mozpack.path.join(test, 'unit*.py'))
-            else:
-                self.log(logging.WARN, 'python-test',
-                         {'test': mozpack.path.relpath(test, self.topsrcdir)},
-                         'TEST-UNEXPECTED-FAIL | Invalid test: {test}')
-                if stop:
-                    return 1
+        # We search for files in both the current directory (for people running
+        # from topsrcdir or cd'd into their test directory) and topsrcdir (to
+        # support people running mach from the objdir).  The |break|s in the
+        # loop below ensure that we don't run tests twice if we're running mach
+        # from topsrcdir
+        search_dirs = ['.', self.topsrcdir]
+        last_search_dir = search_dirs[-1]
+        for t in tests:
+            for d in search_dirs:
+                test = mozpack.path.join(d, t)
+                if test.endswith('.py') and os.path.isfile(test):
+                    files.append(test)
+                    break
+                elif os.path.isfile(test + '.py'):
+                    files.append(test + '.py')
+                    break
+                elif os.path.isdir(test):
+                    files += glob.glob(mozpack.path.join(test, 'test*.py'))
+                    files += glob.glob(mozpack.path.join(test, 'unit*.py'))
+                    break
+                elif d == last_search_dir:
+                    self.log(logging.WARN, 'python-test',
+                             {'test': t},
+                             'TEST-UNEXPECTED-FAIL | Invalid test: {test}')
+                    if stop:
+                        return 1
 
         for f in files:
             file_displayed_test = [] # Used as a boolean.
