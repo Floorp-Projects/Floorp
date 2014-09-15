@@ -6143,7 +6143,7 @@ JS_PUBLIC_API(bool)
 JS_ThrowStopIteration(JSContext *cx)
 {
     AssertHeapIsIdle(cx);
-    return js_ThrowStopIteration(cx);
+    return ThrowStopIteration(cx);
 }
 
 JS_PUBLIC_API(bool)
