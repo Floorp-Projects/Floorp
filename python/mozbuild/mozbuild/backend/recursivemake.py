@@ -907,7 +907,8 @@ class RecursiveMakeBackend(CommonBackend):
                 prefix = 'extra_js_%s' % path.replace('/', '_')
                 backend_file.write('%s_FILES := %s\n'
                                    % (prefix, ' '.join(strings)))
-                backend_file.write('%s_DEST = $(FINAL_TARGET)/modules/%s\n' % (prefix, path))
+                backend_file.write('%s_DEST = %s\n' %
+                                   (prefix, mozpath.join('$(FINAL_TARGET)', 'modules', path)))
                 backend_file.write('INSTALL_TARGETS += %s\n\n' % prefix)
             return
 
@@ -919,7 +920,8 @@ class RecursiveMakeBackend(CommonBackend):
                 prefix = 'extra_pp_js_%s' % path.replace('/', '_')
                 backend_file.write('%s := %s\n'
                                    % (prefix, ' '.join(strings)))
-                backend_file.write('%s_PATH = $(FINAL_TARGET)/modules/%s\n' % (prefix, path))
+                backend_file.write('%s_PATH = %s\n' %
+                                   (prefix, mozpath.join('$(FINAL_TARGET)', 'modules', path)))
                 backend_file.write('PP_TARGETS += %s\n\n' % prefix)
             return
 
