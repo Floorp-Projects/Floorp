@@ -228,10 +228,12 @@ private:
    */
   nscoord mCaretCenterToDownPointOffsetY;
 
-  static int32_t TouchCaretMaxDistance()
-  {
-    return sTouchCaretMaxDistance;
-  }
+  /**
+   * Get from pref "touchcaret.inflatesize.threshold". This will inflate the
+   * size of the touch caret frame when checking if user clicks on the caret
+   * or not. In app units.
+   */
+  static int32_t TouchCaretInflateSize() { return sTouchCaretInflateSize; }
 
   static int32_t TouchCaretExpirationTime()
   {
@@ -246,7 +248,7 @@ private:
   nsCOMPtr<nsITimer> mTouchCaretExpirationTimer;
 
   // Preference
-  static int32_t sTouchCaretMaxDistance;
+  static int32_t sTouchCaretInflateSize;
   static int32_t sTouchCaretExpirationTime;
 
   // The auto scroll timer's interval in miliseconds.

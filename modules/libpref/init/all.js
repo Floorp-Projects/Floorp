@@ -4245,10 +4245,9 @@ pref("snav.enabled", false);
 // Turn off touch caret by default.
 pref("touchcaret.enabled", false);
 
-// Maximum distance to the center of touch caret (in app unit square) which
-// will be accepted to drag touch caret (0 means only in the bounding box of touch
-// caret is accepted)
-pref("touchcaret.distance.threshold", 1500);
+// This will inflate the size of the touch caret frame when checking if user
+// clicks on the caret or not. In app units.
+pref("touchcaret.inflatesize.threshold", 40);
 
 // We'll start to increment time when user release the control of touch caret.
 // When time exceed this expiration time, we'll hide touch caret.
