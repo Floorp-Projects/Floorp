@@ -14,10 +14,10 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 var RIL = {};
 Cu.import("resource://gre/modules/ril_consts.js", RIL);
 
-const MOBILECONNECTIONGONKSERVICE_CONTRACTID =
-  "@mozilla.org/mobileconnection/mobileconnectiongonkservice;1";
+const GONK_MOBILECONNECTIONSERVICE_CONTRACTID =
+  "@mozilla.org/mobileconnection/gonkmobileconnectionservice;1";
 
-const MOBILECONNECTIONGONKSERVICE_CID =
+const GONK_MOBILECONNECTIONSERVICE_CID =
   Components.ID("{05e20430-fe65-4984-8df9-a6a504b24a91}");
 const MOBILENETWORKINFO_CID =
   Components.ID("{a6c8416c-09b4-46d1-bf29-6520d677d085}");
@@ -44,7 +44,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gRadioInterfaceLayer",
 
 let DEBUG = RIL.DEBUG_RIL;
 function debug(s) {
-  dump("MobileConnectionGonkService: " + s + "\n");
+  dump("MobileConnectionService: " + s + "\n");
 }
 
 function MobileNetworkInfo() {
@@ -293,7 +293,7 @@ MobileConnectionProvider.prototype = {
    */
   _checkRoamingBetweenOperators: function(aNetworkInfo) {
     // TODO: Bug 864489 - B2G RIL: use ipdl as IPC in MozIccManager
-    // Should get iccInfo from IccGonkProvider.
+    // Should get iccInfo from GonkIccProvider.
     let iccInfo = this._radioInterface.rilContext.iccInfo;
     let operator = aNetworkInfo.network;
     let state = aNetworkInfo.state;
@@ -950,7 +950,7 @@ MobileConnectionProvider.prototype = {
   },
 };
 
-function MobileConnectionGonkService() {
+function MobileConnectionService() {
   this._providers = [];
 
   let numClients = gRadioInterfaceLayer.numRadioInterfaces;
@@ -966,15 +966,15 @@ function MobileConnectionGonkService() {
 
   debug("init complete");
 }
-MobileConnectionGonkService.prototype = {
-  classID: MOBILECONNECTIONGONKSERVICE_CID,
-  classInfo: XPCOMUtils.generateCI({classID: MOBILECONNECTIONGONKSERVICE_CID,
-                                    contractID: MOBILECONNECTIONGONKSERVICE_CONTRACTID,
-                                    classDescription: "MobileConnectionGonkService",
-                                    interfaces: [Ci.nsIMobileConnectionGonkService,
+MobileConnectionService.prototype = {
+  classID: GONK_MOBILECONNECTIONSERVICE_CID,
+  classInfo: XPCOMUtils.generateCI({classID: GONK_MOBILECONNECTIONSERVICE_CID,
+                                    contractID: GONK_MOBILECONNECTIONSERVICE_CONTRACTID,
+                                    classDescription: "MobileConnectionService",
+                                    interfaces: [Ci.nsIGonkMobileConnectionService,
                                                  Ci.nsIMobileConnectionService],
                                     flags: Ci.nsIClassInfo.SINGLETON}),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIMobileConnectionGonkService,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIGonkMobileConnectionService,
                                          Ci.nsIMobileConnectionService,
                                          Ci.nsIObserver]),
 
@@ -1286,7 +1286,7 @@ MobileConnectionGonkService.prototype = {
   },
 
   /**
-   * nsIMobileConnectionGonkService interface.
+   * nsIGonkMobileConnectionService interface.
    */
   notifyVoiceInfoChanged: function(aClientId, aVoiceInfo) {
     if (DEBUG) {
@@ -1560,4 +1560,4 @@ MobileConnectionGonkService.prototype = {
   }
 };
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MobileConnectionGonkService]);
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MobileConnectionService]);

@@ -1,0 +1,2 @@
+component {05e20430-fe65-4984-8df9-a6a504b24a91} MobileConnectionService.js
+contract @mozilla.org/mobileconnection/gonkmobileconnectionservice;1 {05e20430-fe65-4984-8df9-a6a504b24a91}
