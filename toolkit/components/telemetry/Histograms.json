@@ -3337,15 +3337,9 @@
     "description": "Updater: The interval in days between the previous and the current background update check when the check was timer initiated"
   },
   "UPDATER_STATUS_CODES": {
-    "expires_in_version": "35",
-    "kind": "enumerated",
-    "n_values": 50,
-    "description": "Updater: the status of the latest update performed"
-  },
-  "UPDATER_ALL_STATUS_CODES": {
     "expires_in_version": "never",
     "kind": "enumerated",
-    "n_values": 200,
+    "n_values": 50,
     "description": "Updater: the status of the latest update performed"
   },
   "UPDATER_UPDATES_ENABLED": {
