@@ -4773,33 +4773,12 @@ CheckSimdCallArgs(FunctionCompiler &f, ParseNode *call, unsigned expectedArity,
     return true;
 }
 
-class CheckSimdScalarArgs
+class CheckArgIsSubtypeOf
 {
     Type formalType_;
 
   public:
-    explicit CheckSimdScalarArgs(Type t) : formalType_(t.simdToCoercedScalarType()) {}
-
-    bool operator()(FunctionCompiler &f, ParseNode *arg, unsigned argIndex, Type actualType,
-                    MDefinition **argDef) const
-    {
-        if (formalType_ == Type::Floatish)
-            return CheckFloatCoercionArg(f, arg, actualType, *argDef, argDef);
-
-        if (!(actualType <= formalType_)) {
-            return f.failf(arg, "%s is not a subtype of %s", actualType.toChars(),
-                           formalType_.toChars());
-        }
-        return true;
-    }
-};
-
-class CheckSimdVectorArgs
-{
-    Type formalType_;
-
-  public:
-    explicit CheckSimdVectorArgs(Type t) : formalType_(t) {}
+    explicit CheckArgIsSubtypeOf(Type t) : formalType_(t) {}
 
     bool operator()(FunctionCompiler &f, ParseNode *arg, unsigned argIndex, Type actualType,
                     MDefinition **argDef) const
@@ -4845,7 +4824,7 @@ CheckSimdBinary(FunctionCompiler &f, ParseNode *call, Type retType, OpEnum op, M
                 Type *type)
 {
     DefinitionVector argDefs;
-    if (!CheckSimdCallArgs(f, call, 2, CheckSimdVectorArgs(retType), &argDefs))
+    if (!CheckSimdCallArgs(f, call, 2, CheckArgIsSubtypeOf(retType), &argDefs))
         return false;
     *def = f.binarySimd(argDefs[0], argDefs[1], op, retType.toMIRType());
     *type = retType;
@@ -4859,7 +4838,7 @@ CheckSimdBinary<MSimdBinaryComp::Operation>(FunctionCompiler &f, ParseNode *call
                                             Type *type)
 {
     DefinitionVector argDefs;
-    if (!CheckSimdCallArgs(f, call, 2, CheckSimdVectorArgs(retType), &argDefs))
+    if (!CheckSimdCallArgs(f, call, 2, CheckArgIsSubtypeOf(retType), &argDefs))
         return false;
     *def = f.binarySimd(argDefs[0], argDefs[1], op);
     *type = Type::Int32x4;
@@ -4906,7 +4885,8 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
 
       case AsmJSSimdOperation_splat: {
         DefinitionVector defs;
-        if (!CheckSimdCallArgs(f, call, 1, CheckSimdScalarArgs(retType), &defs))
+        Type formalType = retType.simdToCoercedScalarType();
+        if (!CheckSimdCallArgs(f, call, 1, CheckArgIsSubtypeOf(formalType), &defs))
             return false;
         *def = f.splatSimd(defs[0], retType.toMIRType());
         *type = retType;
@@ -4938,11 +4918,11 @@ CheckSimdCtorCall(FunctionCompiler &f, ParseNode *call, const ModuleCompiler::Gl
         return CheckCoercionArg(f, argNode, coercion, def, type);
 
     AsmJSSimdType simdType = global->simdCtorType();
-    unsigned length = SimdTypeToLength(simdType);
     Type retType = simdType;
-
+    unsigned length = SimdTypeToLength(simdType);
+    Type formalType = retType.simdToCoercedScalarType();
     DefinitionVector defs;
-    if (!CheckSimdCallArgs(f, call, length, CheckSimdScalarArgs(retType), &defs))
+    if (!CheckSimdCallArgs(f, call, length, CheckArgIsSubtypeOf(formalType), &defs))
         return false;
 
     // This code will need to be generalized when we handle float64x2
@@ -5098,6 +5078,9 @@ static bool
 CheckCoercedCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def, Type *type)
 {
     JS_CHECK_RECURSION_DONT_REPORT(f.cx(), return f.m().failOverRecursed());
+
+    if (IsNumericLiteral(f.m(), call))
+        return CheckNumericLiteral(f, call, def, type);
 
     ParseNode *callee = CallCallee(call);
 
