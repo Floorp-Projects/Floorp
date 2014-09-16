@@ -403,7 +403,7 @@
       <tabpanels flex="1"/>
     </tabbox>
   </hbox>
-  <toolbar id="statusbar-line-col" class="chromeclass-toolbar"/>
+  <toolbar id="statusbar-line-col" class="devtools-toolbar"/>
 </notificationbox>
 
 </window>

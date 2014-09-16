@@ -2,14 +2,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# Note that this Makefile is not invoked by the Mozilla build
+# system, which is why it can have dependencies on things the
+# build system at-large doesn't yet support.
+
+# XXX In the interest of making the build logic simpler and
+# more maintainable, we should be trying to implement new
+# functionality in Gruntfile.js rather than here.
+# Bug 1066176 tracks moving all functionality currently here
+# to the Gruntfile and getting rid of this Makefile entirely.
+
 LOOP_SERVER_URL := $(shell echo $${LOOP_SERVER_URL-http://localhost:5000})
 NODE_LOCAL_BIN=./node_modules/.bin
 
-install:
+install: npm_install tos
+
+npm_install:
 	@npm install
 
 test:
 	@echo "Not implemented yet."
+
+tos:
+	@$(NODE_LOCAL_BIN)/grunt replace marked
+	@$(NODE_LOCAL_BIN)/grunt sass
 
 lint:
 	@$(NODE_LOCAL_BIN)/jshint *.js content test
