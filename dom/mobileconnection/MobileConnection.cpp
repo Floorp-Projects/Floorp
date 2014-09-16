@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MobileConnection.h"
+#include "mozilla/dom/MobileConnection.h"
 
 #include "MobileConnectionCallback.h"
 #include "mozilla/dom/CFStateChangeEvent.h"
@@ -42,6 +42,7 @@
 
 using mozilla::ErrorResult;
 using namespace mozilla::dom;
+using namespace mozilla::dom::mobileconnection;
 
 class MobileConnection::Listener MOZ_FINAL : public nsIMobileConnectionListener
 {
