@@ -292,6 +292,19 @@ struct DataStoreSetting {
   bool enabled;
 };
 
+// Note: Any changes to this structure should also be changed in
+// FileSystemUpdate below.
+struct VolumeInfo {
+  nsString name;
+  nsString mountPoint;
+  int32_t volState;
+  int32_t mountGeneration;
+  bool isMediaPresent;
+  bool isSharing;
+  bool isFormatting;
+  bool isFake;
+};
+
 intr protocol PContent
 {
     parent opens PCompositor;
@@ -428,6 +441,8 @@ child:
     FilePathUpdate(nsString storageType, nsString storageName, nsString filepath,
                    nsCString reasons);
 
+    // Note: Any changes to this structure should also be changed in
+    // VolumeInfo above.
     FileSystemUpdate(nsString fsName, nsString mountPoint, int32_t fsState,
                      int32_t mountGeneration, bool isMediaPresent,
                      bool isSharing, bool isFormatting, bool isFake);
@@ -620,8 +635,8 @@ parent:
                                nsString aStorageName,
                                nsString aFilepath,
                                nsCString aReason);
-    // get nsIVolumeService to broadcast volume information
-    async BroadcastVolume(nsString volumeName);
+
+    sync GetVolumes() returns (VolumeInfo[] volumes);
 
     // Notify the parent that the child has finished handling a system message.
     async SystemMessageHandled();
