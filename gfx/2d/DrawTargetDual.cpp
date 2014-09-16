@@ -5,6 +5,7 @@
      
 #include "DrawTargetDual.h"
 #include "Tools.h"
+#include "Logging.h"
 
 namespace mozilla {
 namespace gfx {
