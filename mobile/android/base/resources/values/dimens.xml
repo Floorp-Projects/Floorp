@@ -38,6 +38,9 @@
     <!-- Remote Tabs static view top padding. Less in landscape on phones. -->
     <dimen name="home_remote_tabs_top_padding">48dp</dimen>
 
+    <!-- Remote Tabs Hidden devices row height -->
+    <dimen name="home_remote_tabs_hidden_footer_height">48dp</dimen>
+
     <!-- Search Engine Row height -->
     <dimen name="search_row_height">48dp</dimen>
 
