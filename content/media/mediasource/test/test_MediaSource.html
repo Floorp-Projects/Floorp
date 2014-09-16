@@ -41,11 +41,6 @@ runWithMSE(function () {
   v.src = o;
   document.body.appendChild(v);
 
-  var loadedmetadataCount = 0;
-  var updatestartCount = 0;
-  var updateendCount = 0;
-  var updateCount = 0;
-
   ms.addEventListener("sourceopen", function () {
     ok(true, "Receive a sourceopen event");
     is(ms.readyState, "open", "MediaSource must be in open state after sourceopen");
@@ -62,17 +57,11 @@ runWithMSE(function () {
 
     sb.addEventListener("update", function () {
       is(sb.updating, false, "SourceBuffer.updating is expected value in update event");
-      updateCount++;
       ms.endOfStream();
-    });
-
-    sb.addEventListener("updatestart", function () {
-      updatestartCount++;
     });
 
     sb.addEventListener("updateend", function () {
       is(sb.updating, false, "SourceBuffer.updating is expected value in updateend event");
-      updateendCount++;
       v.play();
     });
   });
@@ -82,18 +71,10 @@ runWithMSE(function () {
     is(ms.readyState, "ended", "MediaSource must be in ended state after sourceended");
   });
 
-  v.addEventListener("loadedmetadata", function () {
-    loadedmetadataCount++;
-  });
-
   v.addEventListener("ended", function () {
     // XXX: Duration should be exactly 4.0, see bug 1065207.
     is(v.duration, 4.001, "Video has correct duration");
     is(v.currentTime, 4.001, "Video has played to end");
-    is(updateCount, 1, "update event received");
-    is(updateendCount, 1, "updateend event received");
-    is(updatestartCount, 1, "updatestart event received");
-    is(loadedmetadataCount, 1, "loadedmetadata event received");
     v.parentNode.removeChild(v);
     SimpleTest.finish();
   });
