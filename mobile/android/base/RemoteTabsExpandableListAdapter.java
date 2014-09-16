@@ -108,7 +108,7 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
         final long now = System.currentTimeMillis();
         lastModifiedView.setText(TabsAccessor.getLastSyncedString(context, now, client.lastModified));
 
-        // This view exists only in some of our group views: it's present
+        // These views exists only in some of our group views: they are present
         // for the home panel groups and not for the tabs tray groups.
         // Therefore, we must handle null.
         final ImageView deviceTypeView = (ImageView) view.findViewById(R.id.device_type);
@@ -117,6 +117,17 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
                 deviceTypeView.setBackgroundResource(R.drawable.sync_desktop);
             } else {
                 deviceTypeView.setBackgroundResource(R.drawable.sync_mobile);
+            }
+        }
+
+        final ImageView deviceExpandedView = (ImageView) view.findViewById(R.id.device_expanded);
+        if (deviceExpandedView != null) {
+            // If there are no tabs to display, don't show an indicator at all.
+            if (client.tabs.isEmpty()) {
+                deviceExpandedView.setBackgroundResource(0);
+            } else {
+                final int resourceId = isExpanded ? R.drawable.home_group_expanded : R.drawable.home_group_collapsed;
+                deviceExpandedView.setBackgroundResource(resourceId);
             }
         }
 
