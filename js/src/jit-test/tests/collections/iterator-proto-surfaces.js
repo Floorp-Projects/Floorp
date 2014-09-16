@@ -6,8 +6,8 @@ load(libdir + "iteration.js");
 function test(constructor) {
     var proto = Object.getPrototypeOf(constructor()[std_iterator]());
     var names = Object.getOwnPropertyNames(proto);
-    assertDeepEq(names, ['next']);
-    assertEq(proto.hasOwnProperty(std_iterator), true);
+    names.sort();
+    assertDeepEq(names, [std_iterator, 'next']);
 
     var desc = Object.getOwnPropertyDescriptor(proto, 'next');
     assertEq(desc.configurable, true);

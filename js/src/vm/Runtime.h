@@ -400,10 +400,6 @@ struct JSAtomState
 #define PROPERTYNAME_FIELD(name, code, init, clasp) js::ImmutablePropertyNamePtr name;
     JS_FOR_EACH_PROTOTYPE(PROPERTYNAME_FIELD)
 #undef PROPERTYNAME_FIELD
-
-    js::ImmutablePropertyNamePtr *wellKnownSymbolDescriptions() {
-        return &Symbol_iterator;
-    }
 };
 
 namespace js {
@@ -412,7 +408,7 @@ namespace js {
  * Storage for well-known symbols. It's a separate struct from the Runtime so
  * that it can be shared across multiple runtimes. As in JSAtomState, each
  * field is a smart pointer that's immutable once initialized.
- * `rt->wellKnownSymbols->iterator` is convertible to Handle<Symbol*>.
+ * `rt->wellKnownSymbols.iterator` is convertible to Handle<Symbol*>.
  *
  * Well-known symbols are never GC'd. The description() of each well-known
  * symbol is a permanent atom.
