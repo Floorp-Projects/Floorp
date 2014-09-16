@@ -165,28 +165,34 @@ function ensureUndoState(aExpectedEntries = [], aExpectedUndoPosition = 0) {
 }
 
 function ensureItemsAdded(...items) {
-  do_check_eq(observer.itemsAdded.size, items.length);
+  Assert.equal(observer.itemsAdded.size, items.length);
   for (let item of items) {
-    do_check_true(observer.itemsAdded.has(item.GUID));
+    Assert.ok(observer.itemsAdded.has(item.GUID));
     let info = observer.itemsAdded.get(item.GUID);
-    do_check_eq(info.parentGUID, item.parentGUID);
-    if ("title" in item)
-      do_check_eq(info.title, item.title);
-    if ("index" in item)
-      do_check_eq(info.index, item.index);
-    if ("itemType" in item)
-      do_check_eq(info.itemType, item.itemType);
+    Assert.equal(info.parentGUID, item.parentGUID);
+    for (let propName of ["title", "index", "itemType"]) {
+      if (propName in item)
+        Assert.equal(info[propName], item[propName]);
+    }
+    if ("uri" in item)
+      Assert.ok(info.uri.equals(item.uri));
   }
 }
 
 function ensureItemsRemoved(...items) {
-  do_check_eq(observer.itemsRemoved.size, items.length);
+  Assert.equal(observer.itemsRemoved.size, items.length);
   for (let item of items) {
-    do_check_true(observer.itemsRemoved.has(item.GUID));
-    let info = observer.itemsRemoved.get(item.GUID);
-    do_check_eq(info.parentGUID, item.parentGUID);
-    if ("index" in item)
-      do_check_eq(info.index, item.index);
+    // We accept both guids and full info object here.
+    if (typeof(item) == "string") {
+      Assert.ok(observer.itemsRemoved.has(item));
+    }
+    else {
+      Assert.ok(observer.itemsRemoved.has(item.GUID));
+      let info = observer.itemsRemoved.get(item.GUID);
+      Assert.equal(info.parentGUID, item.parentGUID);
+      if ("index" in item)
+        Assert.equal(info.index, item.index);
+    }
   }
 }
 
@@ -243,6 +249,76 @@ function ensureTagsForURI(aURI, aTags) {
 function* createTestFolderInfo(aTitle = "Test Folder") {
   return { parentGUID: yield PlacesUtils.promiseItemGUID(root)
          , title: "Test Folder" };
+}
+
+function isLivemarkTree(aTree) {
+  return !!aTree.annos &&
+         aTree.annos.some( a => a.name == PlacesUtils.LMANNO_FEEDURI );
+}
+
+function* ensureLivemarkCreatedByAddLivemark(aLivemarkGUID) {
+  // This throws otherwise.
+  yield PlacesUtils.livemarks.getLivemark({ guid: aLivemarkGUID });
+}
+
+// Checks if two bookmark trees (as returned by promiseBookmarksTree) are the
+// same.
+// false value for aCheckParentAndPosition is ignored if aIsRestoredItem is set.
+function* ensureEqualBookmarksTrees(aOriginal,
+                                    aNew,
+                                    aIsRestoredItem = true,
+                                    aCheckParentAndPosition = false) {
+  // Note "id" is not-enumerable, and is therefore skipped by Object.keys (both
+  // ours and the one at deepEqual). This is fine for us because ids are not
+  // restored by Redo.
+  if (aIsRestoredItem) {
+    Assert.deepEqual(aOriginal, aNew);
+    if (isLivemarkTree(aNew))
+      yield ensureLivemarkCreatedByAddLivemark(aNew.guid);
+    return;
+  }
+
+  for (let property of Object.keys(aOriginal)) {
+    if (property == "children") {
+      Assert.equal(aOriginal.children.length, aNew.children.length);
+      for (let i = 0; i < aOriginal.children.length; i++) {
+        yield ensureEqualBookmarksTrees(aOriginal.children[i],
+                                        aNew.children[i],
+                                        false,
+                                        true);
+      }
+    }
+    else if (property == "guid" || property == "dateAdded") {
+      // guid and dateAdded shouldn't be copied if the item was not restored.
+      Assert.notEqual(aOriginal[property], aNew[property]);
+    }
+    else if (property == "lastModified") {
+      // same same, except for the never-changed case
+      if (!aOriginal.lastModified)
+        Assert.ok(!aNew.lastModified);
+      else
+        Assert.notEqual(aOriginal.lastModified, aNew.lastModified)
+    }
+    else if (aCheckParentAndPosition ||
+             (property != "parentGUID" && property != "index")) {
+      Assert.deepEqual(aOriginal[property], aNew[property]);
+    }
+  }
+
+  if (isLivemarkTree(aNew))
+    yield ensureLivemarkCreatedByAddLivemark(aNew.guid);
+}
+
+function* ensureBookmarksTreeRestoredCorrectly(aOriginalBookmarksTree) {
+  let restoredTree =
+    yield PlacesUtils.promiseBookmarksTree(aOriginalBookmarksTree.guid);
+  yield ensureEqualBookmarksTrees(aOriginalBookmarksTree, restoredTree);
+}
+
+function* ensureNonExistent(...aGUIDs) {
+  for (let guid of aGUIDs) {
+    Assert.strictEqual((yield PlacesUtils.promiseBookmarksTree(guid)), null);
+  }
 }
 
 add_task(function* test_invalid_transact_calls() {
@@ -453,8 +529,8 @@ add_task(function* test_move_items_to_folder() {
 
   ensureUndoState([[bkm_b_txn, bkm_a_txn, folder_a_txn]], 0);
 
-  let moveTxn = PT.MoveItem({ GUID:          bkm_a_info.GUID
-                            , newParentGUID: folder_a_info.GUID });
+  let moveTxn = PT.Move({ GUID:          bkm_a_info.GUID
+                        , newParentGUID: folder_a_info.GUID });
   yield PT.transact(moveTxn);
 
   let ensureDo = () => {
@@ -494,9 +570,9 @@ add_task(function* test_move_items_to_folder() {
   ensureUndoState([ [folder_b_txn]
                   , [bkm_b_txn, bkm_a_txn, folder_a_txn] ], 0);
 
-  moveTxn = PT.MoveItem({ GUID:          bkm_a_info.GUID
-                        , newParentGUID: folder_b_info.GUID
-                        , newIndex:      bmsvc.DEFAULT_INDEX });
+  moveTxn = PT.Move({ GUID:          bkm_a_info.GUID
+                    , newParentGUID: folder_b_info.GUID
+                    , newIndex:      bmsvc.DEFAULT_INDEX });
   yield PT.transact(moveTxn);
 
   ensureDo = () => {
@@ -558,14 +634,14 @@ add_task(function* test_remove_folder() {
   yield ensureItemsAdded(folder_level_1_info, folder_level_2_info);
   observer.reset();
 
-  let remove_folder_2_txn = PT.RemoveItem(folder_level_2_info);
+  let remove_folder_2_txn = PT.Remove(folder_level_2_info);
   yield PT.transact(remove_folder_2_txn);
 
   ensureUndoState([ [remove_folder_2_txn]
                   , [folder_level_2_txn, folder_level_1_txn] ]);
   yield ensureItemsRemoved(folder_level_2_info);
 
-  // Undo RemoveItem "Folder Level 2"
+  // Undo Remove "Folder Level 2"
   yield PT.undo();
   ensureUndoState([ [remove_folder_2_txn]
                   , [folder_level_2_txn, folder_level_1_txn] ], 1);
@@ -573,7 +649,7 @@ add_task(function* test_remove_folder() {
   ensureTimestampsUpdated(folder_level_2_info.GUID, true);
   observer.reset();
 
-  // Redo RemoveItem "Folder Level 2"
+  // Redo Remove "Folder Level 2"
   yield PT.redo();
   ensureUndoState([ [remove_folder_2_txn]
                   , [folder_level_2_txn, folder_level_1_txn] ]);
@@ -604,7 +680,7 @@ add_task(function* test_remove_folder() {
   ensureTimestampsUpdated(folder_level_2_info.GUID, true);
   observer.reset();
 
-  // Redo RemoveItem "Folder Level 2"
+  // Redo Remove "Folder Level 2"
   yield PT.redo();
   ensureUndoState([ [remove_folder_2_txn]
                   , [folder_level_2_txn, folder_level_1_txn] ]);
@@ -652,9 +728,9 @@ add_task(function* test_add_and_remove_bookmarks_with_additional_info() {
   ensureTimestampsUpdated(b1_info.GUID, true);
   ensureTags([TAG_1]);
 
-  // Check if the RemoveItem transaction removes and restores tags of children
+  // Check if the Remove transaction removes and restores tags of children
   // correctly.
-  yield PT.transact(PT.RemoveItem(folder_info.GUID));
+  yield PT.transact(PT.Remove(folder_info.GUID));
   ensureTags([]);
 
   observer.reset();
@@ -700,17 +776,17 @@ add_task(function* test_add_and_remove_bookmarks_with_additional_info() {
   yield ensureItemsRemoved(b2_info);
   ensureTags([TAG_1]);
 
-  // Check if RemoveItem correctly restores keywords, tags and annotations.
+  // Check if Remove correctly restores keywords, tags and annotations.
   observer.reset();
   yield PT.redo();
   ensureItemsChanged(...b2_post_creation_changes);
   ensureTags([TAG_1, TAG_2]);
 
-  // Test RemoveItem for multiple items.
+  // Test Remove for multiple items.
   observer.reset();
-  yield PT.transact(PT.RemoveItem(b1_info.GUID));
-  yield PT.transact(PT.RemoveItem(b2_info.GUID));
-  yield PT.transact(PT.RemoveItem(folder_info.GUID));
+  yield PT.transact(PT.Remove(b1_info.GUID));
+  yield PT.transact(PT.Remove(b2_info.GUID));
+  yield PT.transact(PT.Remove(folder_info.GUID));
   yield ensureItemsRemoved(b1_info, b2_info, folder_info);
   ensureTags([]);
 
@@ -777,7 +853,7 @@ add_task(function* test_creating_and_removing_a_separator() {
   ensureItemsAdded(folder_info, separator_info);
 
   observer.reset();
-  let remove_sep_txn = PT.RemoveItem(separator_info);
+  let remove_sep_txn = PT.Remove(separator_info);
   yield PT.transact(remove_sep_txn);
   undoEntries.unshift([remove_sep_txn]);
   ensureUndoState(undoEntries, 0);
@@ -814,6 +890,49 @@ add_task(function* test_creating_and_removing_a_separator() {
   ensureItemsRemoved(folder_info, separator_info);
   yield PT.clearTransactionsHistory();
   ensureUndoState();
+});
+
+add_task(function* test_add_and_remove_livemark() {
+  let createLivemarkTxn = PT.NewLivemark(
+    { feedURI: NetUtil.newURI("http://test.remove.livemark")
+    , parentGUID: yield PlacesUtils.promiseItemGUID(root)
+    , title: "Test Remove Livemark" });
+  let guid = yield PlacesTransactions.transact(createLivemarkTxn);
+  let originalInfo = yield PlacesUtils.promiseBookmarksTree(guid);
+  Assert.ok(originalInfo);
+  yield ensureLivemarkCreatedByAddLivemark(guid);
+
+  let removeTxn = PT.Remove(guid);
+  yield PT.transact(removeTxn);
+  yield ensureNonExistent(guid);
+  function* undo() {
+    ensureUndoState([[removeTxn], [createLivemarkTxn]], 0);
+    yield PT.undo();
+    ensureUndoState([[removeTxn], [createLivemarkTxn]], 1);
+    yield ensureBookmarksTreeRestoredCorrectly(originalInfo);
+    yield PT.undo();
+    ensureUndoState([[removeTxn], [createLivemarkTxn]], 2);
+    yield ensureNonExistent(guid);
+  }
+  function* redo() {
+    ensureUndoState([[removeTxn], [createLivemarkTxn]], 2);
+    yield PT.redo();
+    ensureUndoState([[removeTxn], [createLivemarkTxn]], 1);
+    yield ensureBookmarksTreeRestoredCorrectly(originalInfo);
+    yield PT.redo();
+    ensureUndoState([[removeTxn], [createLivemarkTxn]], 0);
+    yield ensureNonExistent(guid);
+  }
+
+  yield undo();
+  yield redo();
+  yield undo();
+  yield redo();
+
+  // Cleanup
+  yield undo();
+  observer.reset();
+  yield PT.clearTransactionsHistory();
 });
 
 add_task(function* test_edit_title() {
@@ -1157,5 +1276,75 @@ add_task(function* test_livemark_txns() {
   livemark_info.siteURI = NetUtil.newURI("http://feed.site.uri");
   yield* _testDoUndoRedoUndo();
 
+  // Cleanup
+  observer.reset();
   yield PT.clearTransactionsHistory();
+});
+
+add_task(function* test_copy() {
+  let rootGUID = yield PlacesUtils.promiseItemGUID(root);
+
+  function* duplicate_and_test(aOriginalGUID) {
+    yield duplicateGUID = yield PT.transact(
+      PT.Copy({ GUID: aOriginalGUID, newParentGUID: rootGUID }));
+    let originalInfo = yield PlacesUtils.promiseBookmarksTree(aOriginalGUID);
+    let duplicateInfo = yield PlacesUtils.promiseBookmarksTree(duplicateGUID);
+    yield ensureEqualBookmarksTrees(originalInfo, duplicateInfo, false);
+
+    function* redo() {
+      yield PT.redo();
+      yield ensureBookmarksTreeRestoredCorrectly(originalInfo);
+      yield PT.redo();
+      yield ensureBookmarksTreeRestoredCorrectly(duplicateInfo);
+    }
+    function* undo() {
+      yield PT.undo();
+      // also undo the original item addition.
+      yield PT.undo();
+      yield ensureNonExistent(aOriginalGUID, duplicateGUID);
+    }
+
+    yield undo();
+    yield redo();
+    yield undo();
+    yield redo();
+
+    // Cleanup. This also remove the original item.
+    yield PT.undo();
+    observer.reset();
+    yield PT.clearTransactionsHistory();
+  }
+
+  // Test duplicating leafs (bookmark, separator, empty folder)
+  let bmTxn = PT.NewBookmark({ uri: NetUtil.newURI("http://test.item.duplicate")
+                             , parentGUID: rootGUID
+                             , annos: [{ name: "Anno", value: "AnnoValue"}] });
+  let sepTxn = PT.NewSeparator({ parentGUID: rootGUID, index: 1 });
+  let livemarkTxn = PT.NewLivemark(
+    { feedURI: NetUtil.newURI("http://test.feed.uri")
+    , parentGUID: yield PlacesUtils.promiseItemGUID(root)
+    , title: "Test Livemark", index: 1 });
+  let emptyFolderTxn = PT.NewFolder(yield createTestFolderInfo());
+  for (let txn of [livemarkTxn, sepTxn, emptyFolderTxn]) {
+    let guid = yield PT.transact(txn);
+    yield duplicate_and_test(guid);
+  }
+
+  // Test duplicating a folder having some contents.
+  let filledFolderGUID = yield PT.transact(function *() {
+    let folderGUID = yield PT.NewFolder(yield createTestFolderInfo());
+    let nestedFolderGUID = yield PT.NewFolder({ parentGUID: folderGUID
+                                              , title: "Nested Folder" });
+    // Insert a bookmark under the nested folder.
+    yield PT.NewBookmark({ uri: NetUtil.newURI("http://nested.nested.bookmark")
+                         , parentGUID: nestedFolderGUID });
+    // Insert a separator below the nested folder
+    yield PT.NewSeparator({ parentGUID: folderGUID });
+    // And another bookmark.
+    yield PT.NewBookmark({ uri: NetUtil.newURI("http://nested.bookmark")
+                         , parentGUID: folderGUID });
+    return folderGUID;
+  });
+
+  yield duplicate_and_test(filledFolderGUID);
 });
