@@ -31,7 +31,7 @@ function testSteps()
 
   event = yield undefined;
 
-  let objectStore = db.transaction("foo").objectStore("foo");
+  objectStore = db.transaction("foo").objectStore("foo");
   let first = objectStore.index("first");
   let second = objectStore.index("second");
   let third = objectStore.index("third");

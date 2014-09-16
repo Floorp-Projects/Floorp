@@ -34,7 +34,7 @@ let test = asyncTest(function*() {
   is(textAlign, "right", "The rule view shows the new text align.");
   let color = getRuleViewPropertyValue(view, "element", "color");
   is(color, "lightgoldenrodyellow", "The rule view shows the new color.")
-  let fontSize = getRuleViewPropertyValue(view, "element", "font-size");
+  fontSize = getRuleViewPropertyValue(view, "element", "font-size");
   is(fontSize, "3em", "The rule view shows the new font size.");
   let textTransform = getRuleViewPropertyValue(view, "element", "text-transform");
   is(textTransform, "uppercase", "The rule view shows the new text transform.");

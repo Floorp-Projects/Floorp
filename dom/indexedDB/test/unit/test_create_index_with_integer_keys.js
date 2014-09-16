@@ -26,10 +26,10 @@ function testSteps()
   yield undefined;
   db.close();
 
-  let request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 2);
+  request = indexedDB.open(this.window ? window.location.pathname : "Splendid Test", 2);
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
-  let event = yield undefined;
+  event = yield undefined;
 
   let db2 = event.target.result;
   db2.onerror = errorHandler;

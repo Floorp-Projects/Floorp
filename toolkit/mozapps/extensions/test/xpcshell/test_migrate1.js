@@ -119,8 +119,8 @@ function run_test() {
   stagedXPIs.append("addon8@tests.mozilla.org");
   stagedXPIs.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
 
-  let addon7 = do_get_addon("test_migrate8");
-  addon7.copyTo(stagedXPIs, "tmp.xpi");
+  let addon8 = do_get_addon("test_migrate8");
+  addon8.copyTo(stagedXPIs, "tmp.xpi");
   stagedXPIs = stagedXPIs.parent;
 
   let old = do_get_file("data/test_migrate.rdf");

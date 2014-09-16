@@ -12,14 +12,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function () {
-  var ms = new MediaSource();
-
-  var v = document.createElement("video");
-  v.preload = "auto";
-  v.src = URL.createObjectURL(ms);
-  document.body.appendChild(v);
-
+runWithMSE(function (ms, v) {
   ms.addEventListener("sourceopen", function () {
     var sb = ms.addSourceBuffer("video/webm");
 
@@ -66,7 +59,6 @@ runWithMSE(function () {
       if (target) {
         v.currentTime = target.currentTime;
       } else {
-        v.parentNode.removeChild(v);
         SimpleTest.finish();
       }
     });

@@ -34,9 +34,9 @@ function ifTestingSupported() {
   yield once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   ok(true, "The full-sized screenshot was displayed for the item at index 1.");
 
-  let thumbnailImageElementSet = waitForMozSetImageElement(window);
+  thumbnailImageElementSet = waitForMozSetImageElement(window);
   $("#calls-slider").value = 2;
-  let thumbnailPixels = yield thumbnailImageElementSet;
+  thumbnailPixels = yield thumbnailImageElementSet;
 
   ok(sameArray(thumbnailPixels, thumbnails[1].pixels),
     "The screenshot element should have a thumbnail as an immediate background.");
@@ -44,9 +44,9 @@ function ifTestingSupported() {
   yield once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   ok(true, "The full-sized screenshot was displayed for the item at index 2.");
 
-  let thumbnailImageElementSet = waitForMozSetImageElement(window);
+  thumbnailImageElementSet = waitForMozSetImageElement(window);
   $("#calls-slider").value = 7;
-  let thumbnailPixels = yield thumbnailImageElementSet;
+  thumbnailPixels = yield thumbnailImageElementSet;
 
   ok(sameArray(thumbnailPixels, thumbnails[3].pixels),
     "The screenshot element should have a thumbnail as an immediate background.");
@@ -54,9 +54,9 @@ function ifTestingSupported() {
   yield once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   ok(true, "The full-sized screenshot was displayed for the item at index 7.");
 
-  let thumbnailImageElementSet = waitForMozSetImageElement(window);
+  thumbnailImageElementSet = waitForMozSetImageElement(window);
   $("#calls-slider").value = 4;
-  let thumbnailPixels = yield thumbnailImageElementSet;
+  thumbnailPixels = yield thumbnailImageElementSet;
 
   ok(sameArray(thumbnailPixels, thumbnails[2].pixels),
     "The screenshot element should have a thumbnail as an immediate background.");
@@ -64,9 +64,9 @@ function ifTestingSupported() {
   yield once(window, EVENTS.CALL_SCREENSHOT_DISPLAYED);
   ok(true, "The full-sized screenshot was displayed for the item at index 4.");
 
-  let thumbnailImageElementSet = waitForMozSetImageElement(window);
+  thumbnailImageElementSet = waitForMozSetImageElement(window);
   $("#calls-slider").value = 0;
-  let thumbnailPixels = yield thumbnailImageElementSet;
+  thumbnailPixels = yield thumbnailImageElementSet;
 
   ok(sameArray(thumbnailPixels, thumbnails[0].pixels),
     "The screenshot element should have a thumbnail as an immediate background.");

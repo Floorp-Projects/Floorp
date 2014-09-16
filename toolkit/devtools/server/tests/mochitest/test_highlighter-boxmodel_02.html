@@ -239,7 +239,7 @@ window.onload = function() {
     });
 
     let margin = container.querySelector(".box-model-margin");
-    let points = margin.getAttribute("points").split(" ").map(xy => xy.split(","));
+    points = margin.getAttribute("points").split(" ").map(xy => xy.split(","));
 
     is(Math.ceil(guideTop.getAttribute("y1")), points[0][1],
       "Top guide's y1 is correct");

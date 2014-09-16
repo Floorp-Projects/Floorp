@@ -206,7 +206,7 @@ TableWidget.prototype = {
     let checked = !!item.getAttribute("checked");
     let id = item.getAttribute("data-id");
     this.emit(EVENTS.HEADER_CONTEXT_MENU, id, checked);
-    let checked = this.menupopup.querySelectorAll("menuitem[checked]");
+    checked = this.menupopup.querySelectorAll("menuitem[checked]");
     let disabled = this.menupopup.querySelectorAll("menuitem[disabled]");
     if (checked.length == 2) {
       checked[checked.length - 1].setAttribute("disabled", "true");

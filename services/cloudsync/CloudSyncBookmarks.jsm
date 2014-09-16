@@ -560,7 +560,6 @@ let RootFolder = function (rootId, rootName) {
     let processNewFolders = function () {
       let newFolderGuids = Object.keys(newFolders);
       let newFolderRoots = [];
-      let promises = [];
 
       for each (let guid in newFolderGuids) {
         let item = newFolders[guid];

@@ -339,12 +339,12 @@ function testAPI() {
 
   // Calling it again should sort by it in descending manner
   table.sortBy("col2");
-  let cell = table.tbody.children[2].firstChild.lastChild.previousSibling;
+  cell = table.tbody.children[2].firstChild.lastChild.previousSibling;
   checkDescendingOrder(cell);
 
   // Calling it again should sort by it in ascending manner
   table.sortBy("col2");
-  let cell = table.tbody.children[2].firstChild.children[2];
+  cell = table.tbody.children[2].firstChild.children[2];
   checkAscendingOrder(cell);
 
   table.clear();
@@ -352,13 +352,13 @@ function testAPI() {
 
   // testing if sorting works should sort by ascending manner
   table.sortBy("col4");
-  let cell = table.tbody.children[6].firstChild.children[1];
+  cell = table.tbody.children[6].firstChild.children[1];
   is(cell.textContent, "domnode", "DOMNode sorted correctly");
   checkAscendingOrder(cell.nextSibling);
 
   // Calling it again should sort it in descending order
   table.sortBy("col4");
-  let cell = table.tbody.children[6].firstChild.children[9];
+  cell = table.tbody.children[6].firstChild.children[9];
   is(cell.textContent, "domnode", "DOMNode sorted correctly");
   checkDescendingOrder(cell.previousSibling);
 }

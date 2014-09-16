@@ -90,7 +90,7 @@ let test = Task.async(function*() {
   let receivedFocusEvent = treeRoot.once("focus");
   EventUtils.sendMouseEvent({ type: "mousedown" }, fooItem.target);
 
-  let eventItem = yield receivedFocusEvent;
+  eventItem = yield receivedFocusEvent;
   is(eventItem, fooItem,
     "The 'focus' event target is correct.");
   is(document.commandDispatcher.focusedElement, fooItem.target,
@@ -99,7 +99,7 @@ let test = Task.async(function*() {
   let receivedDblClickEvent = treeRoot.once("focus");
   EventUtils.sendMouseEvent({ type: "dblclick" }, barItem.target);
 
-  let eventItem = yield receivedDblClickEvent;
+  eventItem = yield receivedDblClickEvent;
   is(eventItem, barItem,
     "The 'dblclick' event target is correct.");
   is(document.commandDispatcher.focusedElement, barItem.target,

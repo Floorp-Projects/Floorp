@@ -47,6 +47,9 @@ class ContainerParser {
 public:
   virtual ~ContainerParser() {}
 
+  // Return true if aData starts with an initialization segment.
+  // The base implementation exists only for debug logging and is expected
+  // to be called first from the overriding implementation.
   virtual bool IsInitSegmentPresent(const uint8_t* aData, uint32_t aLength)
   {
     MSE_DEBUG("ContainerParser(%p)::IsInitSegmentPresent aLength=%u [%x%x%x%x]",
@@ -58,6 +61,9 @@ public:
     return false;
   }
 
+  // Return true if aData starts with a media segment.
+  // The base implementation exists only for debug logging and is expected
+  // to be called first from the overriding implementation.
   virtual bool IsMediaSegmentPresent(const uint8_t* aData, uint32_t aLength)
   {
     MSE_DEBUG("ContainerParser(%p)::IsMediaSegmentPresent aLength=%u [%x%x%x%x]",
@@ -69,10 +75,22 @@ public:
     return false;
   }
 
+  // Parse aData to extract the start and end frame times from the media
+  // segment.  aData may not start on a parser sync boundary.  Return true
+  // if aStart and aEnd have been updated.
   virtual bool ParseStartAndEndTimestamps(const uint8_t* aData, uint32_t aLength,
-                                          double& aStart, double& aEnd)
+                                          int64_t& aStart, int64_t& aEnd)
   {
     return false;
+  }
+
+  // Compare aLhs and rHs, considering any error that may exist in the
+  // timestamps from the format's base representation.  Return true if aLhs
+  // == aRhs within the error epsilon.
+  virtual bool TimestampsFuzzyEqual(int64_t aLhs, int64_t aRhs)
+  {
+    NS_WARNING("Using default ContainerParser::TimestampFuzzyEquals implementation");
+    return aLhs == aRhs;
   }
 
   virtual const nsTArray<uint8_t>& InitData()
@@ -92,6 +110,8 @@ public:
   WebMContainerParser()
     : mParser(0), mOffset(0)
   {}
+
+  static const unsigned NS_PER_USEC = 1000;
 
   bool IsInitSegmentPresent(const uint8_t* aData, uint32_t aLength)
   {
@@ -133,8 +153,8 @@ public:
     return false;
   }
 
-  virtual bool ParseStartAndEndTimestamps(const uint8_t* aData, uint32_t aLength,
-                                          double& aStart, double& aEnd)
+  bool ParseStartAndEndTimestamps(const uint8_t* aData, uint32_t aLength,
+                                  int64_t& aStart, int64_t& aEnd)
   {
     bool initSegment = IsInitSegmentPresent(aData, aLength);
     if (initSegment) {
@@ -181,18 +201,23 @@ public:
       return false;
     }
 
-    static const double NS_PER_S = 1e9;
-    aStart = mapping[0].mTimecode / NS_PER_S;
-    aEnd = mapping[endIdx].mTimecode / NS_PER_S;
-    aEnd += (mapping[endIdx].mTimecode - mapping[endIdx - 1].mTimecode) / NS_PER_S;
+    uint64_t frameDuration = mapping[endIdx].mTimecode - mapping[endIdx - 1].mTimecode;
+    aStart = mapping[0].mTimecode / NS_PER_USEC;
+    aEnd = (mapping[endIdx].mTimecode + frameDuration) / NS_PER_USEC;
 
-    MSE_DEBUG("WebMContainerParser(%p)::ParseStartAndEndTimestamps: [%f, %f] [fso=%lld, leo=%lld, l=%u endIdx=%u]",
+    MSE_DEBUG("WebMContainerParser(%p)::ParseStartAndEndTimestamps: [%lld, %lld] [fso=%lld, leo=%lld, l=%u endIdx=%u]",
               this, aStart, aEnd, mapping[0].mSyncOffset, mapping[endIdx].mEndOffset, mapping.Length(), endIdx);
 
     mapping.RemoveElementsAt(0, endIdx + 1);
     mOverlappedMapping.AppendElements(mapping);
 
     return true;
+  }
+
+  bool TimestampsFuzzyEqual(int64_t aLhs, int64_t aRhs)
+  {
+    int64_t error = mParser.GetTimecodeScale() / NS_PER_USEC;
+    return llabs(aLhs - aRhs) <= error * 2;
   }
 
 private:
@@ -232,8 +257,8 @@ public:
            aData[7] == 'p';
   }
 
-  virtual bool ParseStartAndEndTimestamps(const uint8_t* aData, uint32_t aLength,
-                                          double& aStart, double& aEnd)
+  bool ParseStartAndEndTimestamps(const uint8_t* aData, uint32_t aLength,
+                                  int64_t& aStart, int64_t& aEnd)
   {
     bool initSegment = IsInitSegmentPresent(aData, aLength);
     if (initSegment) {
@@ -266,9 +291,9 @@ public:
     if (compositionRange.IsNull()) {
       return false;
     }
-    aStart = static_cast<double>(compositionRange.start) / USECS_PER_S;
-    aEnd = static_cast<double>(compositionRange.end) / USECS_PER_S;
-    MSE_DEBUG("MP4ContainerParser(%p)::ParseStartAndEndTimestamps: [%f, %f]",
+    aStart = compositionRange.start;
+    aEnd = compositionRange.end;
+    MSE_DEBUG("MP4ContainerParser(%p)::ParseStartAndEndTimestamps: [%lld, %lld]",
               this, aStart, aEnd);
     return true;
   }
@@ -591,13 +616,13 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
-  double start, end;
+  int64_t start, end;
   if (mParser->ParseStartAndEndTimestamps(aData, aLength, start, end)) {
-    double lastStart, lastEnd;
+    int64_t lastStart, lastEnd;
     mTrackBuffer->LastTimestamp(lastStart, lastEnd);
     if (mParser->IsMediaSegmentPresent(aData, aLength) &&
-        (start < lastEnd || start - lastEnd > 0.1)) {
-      MSE_DEBUG("SourceBuffer(%p)::AppendData: Data last=[%f, %f] overlaps [%f, %f]",
+        !mParser->TimestampsFuzzyEqual(start, lastEnd)) {
+      MSE_DEBUG("SourceBuffer(%p)::AppendData: Data last=[%lld, %lld] overlaps [%lld, %lld]",
                 this, lastStart, lastEnd, start, end);
 
       // This data is earlier in the timeline than data we have already
@@ -616,7 +641,7 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
       mTrackBuffer->SetLastStartTimestamp(start);
     }
     mTrackBuffer->SetLastEndTimestamp(end);
-    MSE_DEBUG("SourceBuffer(%p)::AppendData: Segment last=[%f, %f] [%f, %f]",
+    MSE_DEBUG("SourceBuffer(%p)::AppendData: Segment last=[%lld, %lld] [%lld, %lld]",
               this, lastStart, lastEnd, start, end);
   }
   if (!mTrackBuffer->AppendData(aData, aLength)) {

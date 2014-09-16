@@ -277,14 +277,14 @@ add_task(function test_signIn() {
   do_check_eq(undefined, result.keyFetchToken);
 
   // Login with retrieving optional keys
-  let result = yield client.signIn('you@example.com', 'bigsecret', true);
+  result = yield client.signIn('you@example.com', 'bigsecret', true);
   do_check_eq(FAKE_SESSION_TOKEN, result.sessionToken);
   do_check_eq(result.unwrapBKey,
               "65970516211062112e955d6420bebe020269d6b6a91ebd288319fc8d0cb49624");
   do_check_eq("keyFetchToken", result.keyFetchToken);
 
   // Retry due to wrong email capitalization
-  let result = yield client.signIn('You@example.com', 'bigsecret', true);
+  result = yield client.signIn('You@example.com', 'bigsecret', true);
   do_check_eq(FAKE_SESSION_TOKEN, result.sessionToken);
   do_check_eq(result.unwrapBKey,
               "65970516211062112e955d6420bebe020269d6b6a91ebd288319fc8d0cb49624");

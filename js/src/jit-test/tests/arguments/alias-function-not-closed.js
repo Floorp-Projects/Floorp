@@ -59,7 +59,7 @@ function f3(a, b, c, d) {
   assertEq(d(), 55);
 
   var a, b = ()=>63;
-  let c, d = ()=>65;
+  var c, d = ()=>65;
 
   // after var declarations, before function declarations
   assertEq(a(), 52);

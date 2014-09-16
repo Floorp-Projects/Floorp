@@ -327,7 +327,7 @@ function testSteps() {
 
   is(seenKeys.length, allKeys.length - 9, "Saw the right number of keys");
 
-  let match = true;
+  match = true;
   for (let i = 0, j = 0; i < seenKeys.length; i++) {
     if (seenKeys[i] !== allKeys[i + j]) {
       match = false;
@@ -383,7 +383,7 @@ function testSteps() {
 
   is(seenKeys.length, allKeys.length - 9, "Saw the right number of keys");
 
-  let match = true;
+  match = true;
   for (let i = 0, j = 0; i < seenKeys.length; i++) {
     if (seenKeys[i] !== allKeys[i + j]) {
       match = false;

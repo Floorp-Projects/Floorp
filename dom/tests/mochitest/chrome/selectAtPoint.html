@@ -113,19 +113,19 @@
     checkSelection(document, "SELECT_PARAGRAPH", "ttestselection1 Lorem ipsum dolor sit amet, at duo debet graeci, vivendum vulputate per ut. Ne labore incorrupte vix. Cu copiosae postulant tincidunt ius, in illud appetere contentiones eos. Ei munere officiis assentior pro, nibh decore ius at.");
 
     // Centered on the second character in the sentence div
-    let targetPoint = { xPos: rect.left + (charDims.width + (charDims.width / 2)),
-                        yPos: rect.top + (charDims.height / 2) };
+    targetPoint = { xPos: rect.left + (charDims.width + (charDims.width / 2)),
+                    yPos: rect.top + (charDims.height / 2) };
     setSingle(dwu, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_CHARACTER);
     checkSelection(document, "SELECT_CHARACTER", "te");
     setSingle(dwu, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_CLUSTER);
     checkSelection(document, "SELECT_CLUSTER", "te");
 
     // Separate character blocks in a word 't(te)s(ts)election1'
-    let targetPoint = { xPos: rect.left + (charDims.width + (charDims.width / 2)),
-                        yPos: rect.top + (charDims.height / 2) };
+    targetPoint = { xPos: rect.left + (charDims.width + (charDims.width / 2)),
+                    yPos: rect.top + (charDims.height / 2) };
     setStart(dwu, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_CHARACTER);
-    let targetPoint = { xPos: rect.left + ((charDims.width * 4) + (charDims.width / 2)),
-                        yPos: rect.top + (charDims.height / 2) };
+    targetPoint = { xPos: rect.left + ((charDims.width * 4) + (charDims.width / 2)),
+                    yPos: rect.top + (charDims.height / 2) };
     setEnd(dwu, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_CHARACTER);
     if (isLinux || isMac) {
       // XXX I think this is a bug, the right hand selection is 4.5 characters over with a
@@ -141,12 +141,12 @@
 
     // Second div in the main page
 
-    let div = document.getElementById("div2");
-    let rect = div.getBoundingClientRect();
+    div = document.getElementById("div2");
+    rect = div.getBoundingClientRect();
 
     // Centered on the first line, first character in the paragraph div
-    let targetPoint = { xPos: rect.left + (charDims.width / 2),
-                        yPos: rect.top + (charDims.height / 2) };
+    targetPoint = { xPos: rect.left + (charDims.width / 2),
+                    yPos: rect.top + (charDims.height / 2) };
     setSingle(dwu, targetPoint.xPos + 50, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_PARAGRAPH);
     checkSelection(document, "SELECT_PARAGRAPH", "Lorem ipsum dolor sit amet, at duo debet graeci, vivendum vulputate per ut. Ne labore incorrupte vix. Cu copiosae postulant tincidunt ius, in illud appetere contentiones eos.");
 
@@ -162,10 +162,10 @@
 
     frame.contentWindow.scrollTo(0, 0);
 
-    let rect = frame.getBoundingClientRect();
+    rect = frame.getBoundingClientRect();
 
-    let targetPoint = { xPos: charDims.width / 2,
-                        yPos: charDims.height / 2 };
+    targetPoint = { xPos: charDims.width / 2,
+                    yPos: charDims.height / 2 };
     setSingle(dwuFrame, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_WORDNOSPACE);
     checkSelection(frame.contentWindow.document, "SELECT_WORDNOSPACE", "ttestselection2");
     setSingle(dwuFrame, targetPoint.xPos, targetPoint.yPos, Ci.nsIDOMWindowUtils.SELECT_WORD);

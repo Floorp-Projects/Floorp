@@ -20,8 +20,8 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  var f = function ([x]) { let x; }
-  expect = 'function ([x]) { let x; }';
+  var f = function ([x]) { let y; }
+  expect = 'function ([x]) { let y; }';
   actual = f + '';
 
   compareSource(expect, actual, summary);

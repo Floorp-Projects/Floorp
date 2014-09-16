@@ -21,8 +21,8 @@ let test = asyncTest(function*() {
   ok(isHighlighting(), "The highlighter is shown on a markup container hover");
   is(getHighlitNode(), getNode("body"), "The highlighter highlights the right node");
 
-  let onNodeHighlighted = toolbox.once("node-highlight");
-  let button = bcButtons.childNodes[2];
+  onNodeHighlighted = toolbox.once("node-highlight");
+  button = bcButtons.childNodes[2];
   EventUtils.synthesizeMouseAtCenter(button, {type: "mousemove"}, button.ownerDocument.defaultView);
   yield onNodeHighlighted;
   ok(isHighlighting(), "The highlighter is shown on a markup container hover");

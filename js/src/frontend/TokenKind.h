@@ -51,7 +51,7 @@
  * Note that this list does not contain ERROR and LIMIT.
  */
 #define FOR_EACH_TOKEN_KIND_WITH_RANGE(macro, range) \
-    macro(EOF,         "end of file") \
+    macro(EOF,         "end of script") \
     \
     /* only returned by peekTokenSameLine() */ \
     macro(EOL,          "line terminator") \

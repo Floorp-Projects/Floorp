@@ -144,7 +144,7 @@ add_task(function test_getPreferredDownloadsDirectory()
   // Should return the system downloads directory because the dir preference
   // is not set.
   Services.prefs.setIntPref(folderListPrefName, 2);
-  let downloadDir = yield DownloadIntegration.getPreferredDownloadsDirectory();
+  downloadDir = yield DownloadIntegration.getPreferredDownloadsDirectory();
   do_check_neq(downloadDir, "");
   do_check_eq(downloadDir, systemDir);
 
@@ -171,7 +171,7 @@ add_task(function test_getPreferredDownloadsDirectory()
   // Should return the system downloads directory because the folderList
   // preference is invalid
   Services.prefs.setIntPref(folderListPrefName, 999);
-  let downloadDir = yield DownloadIntegration.getPreferredDownloadsDirectory();
+  downloadDir = yield DownloadIntegration.getPreferredDownloadsDirectory();
   do_check_eq(downloadDir, systemDir);
 
   cleanup();

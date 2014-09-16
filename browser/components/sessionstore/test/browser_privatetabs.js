@@ -92,13 +92,13 @@ add_task(function () {
   is(ss.getClosedTabCount(win), 0, "no tabs to restore");
 
   // Create a new tab in the new window that will load the frame script.
-  let tab = win.gBrowser.addTab("about:mozilla");
-  let browser = tab.linkedBrowser;
+  tab = win.gBrowser.addTab("about:mozilla");
+  browser = tab.linkedBrowser;
   yield promiseBrowserLoaded(browser);
   SyncHandlers.get(browser).flush();
 
   // Check that we consider the tab as private.
-  let state = JSON.parse(ss.getTabState(tab));
+  state = JSON.parse(ss.getTabState(tab));
   ok(state.isPrivate, "tab considered private");
 
   // Check that all private tabs are removed when the non-private

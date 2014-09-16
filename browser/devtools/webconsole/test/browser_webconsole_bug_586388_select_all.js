@@ -80,7 +80,7 @@ function test() {
 
     selectAllItem.doCommand();
 
-    let selectedCount = hud.ui.output.getSelectedMessages().length;
+    selectedCount = hud.ui.output.getSelectedMessages().length;
     is(selectedCount, outputNode.childNodes.length,
        "all console messages are selected after performing a select-all " +
        "operation from the context menu");
