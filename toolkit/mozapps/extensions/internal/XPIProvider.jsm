@@ -58,6 +58,7 @@ const nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
 
 const PREF_DB_SCHEMA                  = "extensions.databaseSchema";
 const PREF_INSTALL_CACHE              = "extensions.installCache";
+const PREF_XPI_STATE                  = "extensions.xpiState";
 const PREF_BOOTSTRAP_ADDONS           = "extensions.bootstrappedAddons";
 const PREF_PENDING_OPERATIONS         = "extensions.pendingOperations";
 const PREF_MATCH_OS_LOCALE            = "intl.locale.matchOS";
@@ -224,6 +225,7 @@ function loadLazyObjects() {
   let scope = {};
   scope.AddonInternal = AddonInternal;
   scope.XPIProvider = XPIProvider;
+  scope.XPIStates = XPIStates;
   Services.scriptloader.loadSubScript("resource://gre/modules/addons/XPIProviderUtils.js",
                                       scope);
 
@@ -659,10 +661,6 @@ function isUsableAddon(aAddon) {
   }
 
   return true;
-}
-
-function isAddonDisabled(aAddon) {
-  return aAddon.appDisabled || aAddon.softDisabled || aAddon.userDisabled;
 }
 
 XPCOMUtils.defineLazyServiceGetter(this, "gRDF", "@mozilla.org/rdf/rdf-service;1",
@@ -1417,48 +1415,6 @@ function getDirectoryEntries(aDir, aSortEntries) {
   }
 }
 
-// Helper function to compare JSON saved version of the directory state
-// with the new state returned by getInstallLocationStates()
-// Structure is: ordered array of {'name':?, 'addons': {addonID: {'descriptor':?, 'mtime':?} ...}}
-function directoryStateDiffers(aState, aCache)
-{
-  // check equality of an object full of addons; fortunately we can destroy the 'aOld' object
-  function addonsMismatch(aNew, aOld) {
-    for (let [id, val] of aNew) {
-      if (!id in aOld)
-        return true;
-      if (val.descriptor != aOld[id].descriptor ||
-          val.mtime != aOld[id].mtime)
-        return true;
-      delete aOld[id];
-    }
-    // make sure aOld doesn't have any extra entries
-    for (let id in aOld)
-      return true;
-    return false;
-  }
-
-  if (!aCache)
-    return true;
-  try {
-    let old = JSON.parse(aCache);
-    if (aState.length != old.length)
-      return true;
-    for (let i = 0; i < aState.length; i++) {
-      // conveniently, any missing fields would require a 'true' return, which is
-      // handled by our catch wrapper
-      if (aState[i].name != old[i].name)
-        return true;
-      if (addonsMismatch(aState[i].addons, old[i].addons))
-        return true;
-    }
-  }
-  catch (e) {
-    return true;
-  }
-  return false;
-}
-
 /**
  * Wraps a function in an exception handler to protect against exceptions inside callbacks
  * @param aFunction function(args...)
@@ -1483,14 +1439,352 @@ function makeSafe(aFunction) {
  * @param aAddon the addon to record
  */
 function recordAddonTelemetry(aAddon) {
-  let loc = aAddon.defaultLocale;
-  if (loc) {
-    if (loc.name)
-      XPIProvider.setTelemetry(aAddon.id, "name", loc.name);
-    if (loc.creator)
-      XPIProvider.setTelemetry(aAddon.id, "creator", loc.creator);
+  let locale = aAddon.defaultLocale;
+  if (locale) {
+    if (locale.name)
+      XPIProvider.setTelemetry(aAddon.id, "name", locale.name);
+    if (locale.creator)
+      XPIProvider.setTelemetry(aAddon.id, "creator", locale.creator);
   }
 }
+
+/**
+ * The on-disk state of an individual XPI, created from an Object
+ * as stored in the 'extensions.xpiState' pref.
+ */
+function XPIState(saved) {
+  for (let [short, long] of XPIState.prototype.fields) {
+    if (short in saved) {
+      this[long] = saved[short];
+    }
+  }
+}
+
+XPIState.prototype = {
+  fields: [['d', 'descriptor'],
+           ['e', 'enabled'],
+           ['v', 'version'],
+           ['st', 'scanTime'],
+           ['mt', 'manifestTime']],
+  /**
+   * Return the last modified time, based on enabled/disabled
+   */
+  get mtime() {
+    if (!this.enabled && ('manifestTime' in this) && this.manifestTime > this.scanTime) {
+      return this.manifestTime;
+    }
+    return this.scanTime;
+  },
+
+  toJSON() {
+    let json = {};
+    for (let [short, long] of XPIState.prototype.fields) {
+      if (long in this) {
+        json[short] = this[long];
+      }
+    }
+    return json;
+  },
+
+  /**
+   * Update the last modified time for an add-on on disk.
+   * @param aFile: nsIFile path of the add-on.
+   * @param aId: The add-on ID.
+   * @return True if the time stamp has changed.
+   */
+  getModTime(aFile, aId) {
+    let changed = false;
+    let scanStarted = Date.now();
+    // For an unknown or enabled add-on, we do a full recursive scan.
+    if (!('scanTime' in this) || this.enabled) {
+      logger.debug('getModTime: Recursive scan of ' + aId);
+      let [modFile, modTime, items] = recursiveLastModifiedTime(aFile);
+      XPIProvider._mostRecentlyModifiedFile[aId] = modFile;
+      XPIProvider.setTelemetry(aId, "scan_items", items);
+      if (modTime != this.scanTime) {
+        this.scanTime = modTime;
+        changed = true;
+      }
+    }
+    // if the add-on is disabled, modified time is the install.rdf time, if any.
+    // If {path}/install.rdf doesn't exist, we assume this is a packed .xpi and use
+    // the time stamp of {path}
+    try {
+      // Get the install.rdf update time, if any.
+      // XXX This will eventually also need to check for package.json or whatever
+      // the new manifest is named.
+      let maniFile = aFile.clone();
+      maniFile.append(FILE_INSTALL_MANIFEST);
+      if (!(aId in XPIProvider._mostRecentlyModifiedFile)) {
+        XPIProvider._mostRecentlyModifiedFile[aId] = maniFile.leafName;
+      }
+      let maniTime = maniFile.lastModifiedTime;
+      if (maniTime != this.manifestTime) {
+        this.manifestTime = maniTime;
+        changed = true;
+      }
+    } catch (e) {
+      // No manifest
+      delete this.manifestTime;
+      try {
+        let dtime = aFile.lastModifiedTime;
+        if (dtime != this.scanTime) {
+          changed = true;
+          this.scanTime = dtime;
+        }
+      } catch (e) {
+        logger.warn("Can't get modified time of ${file}: ${e}", {file: aFile.path, e: e});
+        changed = true;
+        this.scanTime = 0;
+      }
+    }
+    // Record duration of file-modified check
+    XPIProvider.setTelemetry(aId, "scan_MS", Date.now() - scanStarted);
+
+    return changed;
+  },
+
+  /**
+   * Update the XPIState to match an XPIDatabase entry; if 'enabled' is changed to true,
+   * update the last-modified time. This should probably be made async, but for now we
+   * don't want to maintain parallel sync and async versions of the scan.
+   * Caller is responsible for doing XPIStates.save() if necessary.
+   * @param aDBAddon The DBAddonInternal for this add-on.
+   * @param aUpdated The add-on was updated, so we must record new modified time.
+   */
+  syncWithDB(aDBAddon, aUpdated = false) {
+    logger.debug("Updating XPIState for " + JSON.stringify(aDBAddon));
+    // If the add-on changes from disabled to enabled, we should re-check the modified time.
+    // If this is a newly found add-on, it won't have an 'enabled' field but we
+    // did a full recursive scan in that case, so we don't need to do it again.
+    // We don't use aDBAddon.active here because it's not updated until after restart.
+    let mustGetMod = (aDBAddon.visible && !aDBAddon.disabled && !this.enabled);
+    this.enabled = (aDBAddon.visible && !aDBAddon.disabled);
+    this.version = aDBAddon.version;
+    // XXX Eventually also copy bootstrap, etc.
+    if (aUpdated || mustGetMod) {
+      this.getModTime(new nsIFile(this.descriptor), aDBAddon.id);
+      if (this.scanTime != aDBAddon.updateDate) {
+        aDBAddon.updateDate = this.scanTime;
+        XPIDatabase.saveChanges();
+      }
+    }
+  },
+};
+
+// Constructor for an ES6 Map that knows how to convert itself into a
+// regular object for toJSON().
+function SerializableMap() {
+  let m = new Map();
+  m.toJSON = function() {
+    let out = {}
+    for (let [key, val] of m) {
+      out[key] = val;
+    }
+    return out;
+  };
+  return m;
+}
+
+/**
+ * Keeps track of the state of XPI add-ons on the file system.
+ */
+this.XPIStates = {
+  // Map(location name -> Map(add-on ID -> XPIState))
+  db: null,
+
+  get size() {
+    if (!this.db) {
+      return 0;
+    }
+    let count = 0;
+    for (let location of this.db.values()) {
+      count += location.size;
+    }
+    return count;
+  },
+
+  /**
+   * Load extension state data from preferences.
+   */
+  loadExtensionState() {
+    let state = {};
+
+    // Clear out old directory state cache.
+    Preferences.reset(PREF_INSTALL_CACHE);
+
+    let cache = Preferences.get(PREF_XPI_STATE, "{}");
+    try {
+      state = JSON.parse(cache);
+    } catch (e) {
+      logger.warn("Error parsing extensions.xpiState ${state}: ${error}",
+          {state: cache, error: e});
+    }
+    logger.debug("Loaded add-on state from prefs: ${}", state);
+    return state;
+  },
+
+  /**
+   * Walk through all install locations, highest priority first,
+   * comparing the on-disk state of extensions to what is stored in prefs.
+   * @return true if anything has changed.
+   */
+  getInstallState() {
+    let oldState = this.loadExtensionState();
+    let changed = false;
+    this.db = new SerializableMap();
+
+    for (let location of XPIProvider.installLocations) {
+      // The list of add-on like file/directory names in the install location.
+      let addons = location.addonLocations;
+      // The results of scanning this location.
+      let foundAddons = new SerializableMap();
+
+      // What our old state thinks should be in this location.
+      let locState = {};
+      if (location.name in oldState) {
+        locState = oldState[location.name];
+        // We've seen this location.
+        delete oldState[location.name];
+      }
+
+      for (let file of addons) {
+        let id = location.getIDForLocation(file);
+
+        if (!(id in locState)) {
+          logger.debug("New add-on ${id} in ${location}", {id: id, location: location.name});
+          let xpiState = new XPIState({d: file.persistentDescriptor});
+          changed = xpiState.getModTime(file, id) || changed;
+          foundAddons.set(id, xpiState);
+        } else {
+          let xpiState = new XPIState(locState[id]);
+          // We found this add-on in the file system
+          delete locState[id];
+
+          changed = xpiState.getModTime(file, id) || changed;
+
+          if (file.persistentDescriptor != xpiState.descriptor) {
+            xpiState.descriptor = file.persistentDescriptor;
+            changed = true;
+          }
+          if (changed) {
+            logger.debug("Changed add-on ${id} in ${location}", {id: id, location: location.name});
+          }
+          foundAddons.set(id, xpiState);
+        }
+        XPIProvider.setTelemetry(id, "location", location.name);
+      }
+
+      // Anything left behind in oldState was removed from the file system.
+      for (let id in locState) {
+        changed = true;
+        break;
+      }
+      // If we found anything, add this location to our database.
+      if (foundAddons.size != 0) {
+        this.db.set(location.name, foundAddons);
+      }
+    }
+
+    // If there's anything left in oldState, an install location that held add-ons
+    // was removed from the browser configuration.
+    for (let location in oldState) {
+      changed = true;
+      break;
+    }
+
+    logger.debug("getInstallState changed: ${rv}, state: ${state}",
+        {rv: changed, state: this.db});
+    return changed;
+  },
+
+  /**
+   * Get the Map of XPI states for a particular location.
+   * @param aLocation The name of the install location.
+   * @return Map (id -> XPIState) or null if there are no add-ons in the location.
+   */
+  getLocation(aLocation) {
+    return this.db.get(aLocation);
+  },
+
+  /**
+   * Get the XPI state for a specific add-on in a location.
+   * If the state is not in our cache, return null.
+   * @param aLocation The name of the location where the add-on is installed.
+   * @param aId       The add-on ID
+   * @return The XPIState entry for the add-on, or null.
+   */
+  getAddon(aLocation, aId) {
+    let location = this.db.get(aLocation);
+    if (!location) {
+      return null;
+    }
+    return location.get(aId);
+  },
+
+  /**
+   * Find the highest priority location of an add-on by ID and return the
+   * location and the XPIState.
+   * @param aId   The add-on ID
+   * @return [locationName, XPIState] if the add-on is found, [undefined, undefined]
+   *         if the add-on is not found.
+   */
+  findAddon(aId) {
+    // Fortunately the Map iterator returns in order of insertion, which is
+    // also our highest -> lowest priority order.
+    for (let [name, location] of this.db) {
+      if (location.has(aId)) {
+        return [name, location.get(aId)];
+      }
+    }
+    return [undefined, undefined];
+  },
+
+  /**
+   * Add a new XPIState for an add-on and synchronize it with the DBAddonInternal.
+   * @param aAddon DBAddonInternal for the new add-on.
+   */
+  addAddon(aAddon) {
+    let location = this.db.get(aAddon.location);
+    if (!location) {
+      // First add-on in this location.
+      location = new SerializableMap();
+      this.db.set(aAddon.location, location);
+    }
+    logger.debug("XPIStates adding add-on ${id} in ${location}: ${descriptor}", aAddon);
+    let xpiState = new XPIState({d: aAddon.descriptor});
+    location.set(aAddon.id, xpiState);
+    xpiState.syncWithDB(aAddon, true);
+    XPIProvider.setTelemetry(aAddon.id, "location", aAddon.location);
+  },
+
+  /**
+   * Save the current state of installed add-ons.
+   * XXX this *totally* should be a .json file using DeferredSave...
+   */
+  save() {
+    let cache = JSON.stringify(this.db);
+    Services.prefs.setCharPref(PREF_XPI_STATE, cache);
+  },
+
+  /**
+   * Remove the XPIState for an add-on and save the new state.
+   * @param aLocation  The name of the add-on location.
+   * @param aId        The ID of the add-on.
+   */
+  removeAddon(aLocation, aId) {
+    logger.debug("Removing XPIState for " + aLocation + ":" + aId);
+    let location = this.db.get(aLocation);
+    if (!location) {
+      return;
+    }
+    location.delete(aId);
+    if (location.size == 0) {
+      this.db.delete(aLocation);
+    }
+    this.save();
+  },
+};
 
 this.XPIProvider = {
   // An array of known install locations
@@ -1517,8 +1811,6 @@ this.XPIProvider = {
   bootstrapScopes: {},
   // True if the platform could have activated extensions
   extensionsActive: false,
-  // File / directory state of installed add-ons
-  installStates: [],
   // True if all of the add-ons found during startup were installed in the
   // application install location
   allAppGlobal: true,
@@ -1726,19 +2018,22 @@ this.XPIProvider = {
       let enabledScopes = Preferences.get(PREF_EM_ENABLED_SCOPES,
                                           AddonManager.SCOPE_ALL);
 
-      // These must be in order of priority for processFileChanges etc. to work
-      if (enabledScopes & AddonManager.SCOPE_SYSTEM) {
+      // These must be in order of priority, highest to lowest,
+      // for processFileChanges etc. to work
+      // The profile location is always enabled
+      addDirectoryInstallLocation(KEY_APP_PROFILE, KEY_PROFILEDIR,
+                                  [DIR_EXTENSIONS],
+                                  AddonManager.SCOPE_PROFILE, false);
+
+      if (enabledScopes & AddonManager.SCOPE_USER) {
+        addDirectoryInstallLocation(KEY_APP_SYSTEM_USER, "XREUSysExt",
+                                    [Services.appinfo.ID],
+                                    AddonManager.SCOPE_USER, true);
         if (hasRegistry) {
-          addRegistryInstallLocation("winreg-app-global",
-                                     Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                                     AddonManager.SCOPE_SYSTEM);
+          addRegistryInstallLocation("winreg-app-user",
+                                     Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                                     AddonManager.SCOPE_USER);
         }
-        addDirectoryInstallLocation(KEY_APP_SYSTEM_LOCAL, "XRESysLExtPD",
-                                    [Services.appinfo.ID],
-                                    AddonManager.SCOPE_SYSTEM, true);
-        addDirectoryInstallLocation(KEY_APP_SYSTEM_SHARE, "XRESysSExtPD",
-                                    [Services.appinfo.ID],
-                                    AddonManager.SCOPE_SYSTEM, true);
       }
 
       if (enabledScopes & AddonManager.SCOPE_APPLICATION) {
@@ -1747,21 +2042,19 @@ this.XPIProvider = {
                                     AddonManager.SCOPE_APPLICATION, true);
       }
 
-      if (enabledScopes & AddonManager.SCOPE_USER) {
-        if (hasRegistry) {
-          addRegistryInstallLocation("winreg-app-user",
-                                     Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                                     AddonManager.SCOPE_USER);
-        }
-        addDirectoryInstallLocation(KEY_APP_SYSTEM_USER, "XREUSysExt",
+      if (enabledScopes & AddonManager.SCOPE_SYSTEM) {
+        addDirectoryInstallLocation(KEY_APP_SYSTEM_SHARE, "XRESysSExtPD",
                                     [Services.appinfo.ID],
-                                    AddonManager.SCOPE_USER, true);
+                                    AddonManager.SCOPE_SYSTEM, true);
+        addDirectoryInstallLocation(KEY_APP_SYSTEM_LOCAL, "XRESysLExtPD",
+                                    [Services.appinfo.ID],
+                                    AddonManager.SCOPE_SYSTEM, true);
+        if (hasRegistry) {
+          addRegistryInstallLocation("winreg-app-global",
+                                     Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+                                     AddonManager.SCOPE_SYSTEM);
+        }
       }
-
-      // The profile location is always enabled
-      addDirectoryInstallLocation(KEY_APP_PROFILE, KEY_PROFILEDIR,
-                                  [DIR_EXTENSIONS],
-                                  AddonManager.SCOPE_PROFILE, false);
 
       let defaultPrefs = new Preferences({ defaultBranch: true });
       this.defaultSkin = defaultPrefs.get(PREF_GENERAL_SKINS_SELECTEDSKIN,
@@ -2099,72 +2392,6 @@ this.XPIProvider = {
     catch (e) { }
 
     Cu.import("resource://gre/modules/TelemetryPing.jsm", {}).TelemetryPing.setAddOns(data);
-  },
-
-  /**
-   * Gets the add-on states for an install location.
-   * This function may be expensive because of the recursiveLastModifiedTime call.
-   *
-   * @param  location
-   *         The install location to retrieve the add-on states for
-   * @return a dictionary mapping add-on IDs to objects with a descriptor
-   *         property which contains the add-ons dir/file descriptor and an
-   *         mtime property which contains the add-on's last modified time as
-   *         the number of milliseconds since the epoch.
-   */
-  getAddonStates: function XPI_getAddonStates(aLocation) {
-    let addonStates = {};
-    for (let file of aLocation.addonLocations) {
-      let scanStarted = Date.now();
-      let id = aLocation.getIDForLocation(file);
-      let unpacked = 0;
-      let [modFile, modTime, items] = recursiveLastModifiedTime(file);
-      addonStates[id] = {
-        descriptor: file.persistentDescriptor,
-        mtime: modTime
-      };
-      try {
-        // get the install.rdf update time, if any
-        file.append(FILE_INSTALL_MANIFEST);
-        let rdfTime = file.lastModifiedTime;
-        addonStates[id].rdfTime = rdfTime;
-        unpacked = 1;
-      }
-      catch (e) { }
-      this._mostRecentlyModifiedFile[id] = modFile;
-      this.setTelemetry(id, "unpacked", unpacked);
-      this.setTelemetry(id, "location", aLocation.name);
-      this.setTelemetry(id, "scan_MS", Date.now() - scanStarted);
-      this.setTelemetry(id, "scan_items", items);
-    }
-
-    return addonStates;
-  },
-
-  /**
-   * Gets an array of install location states which uniquely describes all
-   * installed add-ons with the add-on's InstallLocation name and last modified
-   * time. This function may be expensive because of the getAddonStates() call.
-   *
-   * @return an array of add-on states for each install location. Each state
-   *         is an object with a name property holding the location's name and
-   *         an addons property holding the add-on states for the location
-   */
-  getInstallLocationStates: function XPI_getInstallLocationStates() {
-    let states = [];
-    this.installLocations.forEach(function(aLocation) {
-      let addons = aLocation.addonLocations;
-      if (addons.length == 0)
-        return;
-
-      let locationState = {
-        name: aLocation.name,
-        addons: this.getAddonStates(aLocation)
-      };
-
-      states.push(locationState);
-    }, this);
-    return states;
   },
 
   /**
@@ -2584,9 +2811,8 @@ this.XPIProvider = {
    * known to be installed when the application last ran and applies any
    * changes found to the database. Also sends "startupcache-invalidate" signal to
    * observerservice if it detects that data may have changed.
+   * Always called after XPIProviderUtils.js and extensions.json have been loaded.
    *
-   * @param  aState
-   *         The array of current install location states
    * @param  aManifests
    *         A dictionary of cached AddonInstalls for add-ons that have been
    *         installed
@@ -2602,7 +2828,7 @@ this.XPIProvider = {
    * @return a boolean indicating if a change requiring flushing the caches was
    *         detected
    */
-  processFileChanges: function XPI_processFileChanges(aState, aManifests,
+  processFileChanges: function XPI_processFileChanges(aManifests,
                                                       aUpdateCompatibility,
                                                       aOldAppVersion,
                                                       aOldPlatformVersion) {
@@ -2653,6 +2879,7 @@ this.XPIProvider = {
       catch (e) {
         logger.warn("updateMetadata: Add-on " + aOldAddon.id + " is invalid", e);
         XPIDatabase.removeAddonMetadata(aOldAddon);
+        XPIStates.removeAddon(aOldAddon.location, aOldAddon.id);
         if (!aInstallLocation.locked)
           aInstallLocation.uninstallAddon(aOldAddon.id);
         else
@@ -2680,7 +2907,7 @@ this.XPIProvider = {
 
         // If this was the active theme and it is now disabled then enable the
         // default theme
-        if (aOldAddon.active && isAddonDisabled(newDBAddon))
+        if (aOldAddon.active && newDBAddon.disabled)
           XPIProvider.enableDefaultTheme();
 
         // If the new add-on is bootstrapped and active then call its install method
@@ -2781,7 +3008,7 @@ this.XPIProvider = {
 
             // If it should be active then mark it as active otherwise unload
             // its scope
-            if (!isAddonDisabled(aOldAddon)) {
+            if (!aOldAddon.disabled) {
               XPIDatabase.updateAddonActive(aOldAddon, true);
             }
             else {
@@ -2797,7 +3024,7 @@ this.XPIProvider = {
 
       // App version changed, we may need to update the appDisabled property.
       if (aUpdateCompatibility) {
-        let wasDisabled = isAddonDisabled(aOldAddon);
+        let wasDisabled = aOldAddon.disabled;
         let wasAppDisabled = aOldAddon.appDisabled;
         let wasUserDisabled = aOldAddon.userDisabled;
         let wasSoftDisabled = aOldAddon.softDisabled;
@@ -2807,7 +3034,7 @@ this.XPIProvider = {
                               aOldPlatformVersion);
         aOldAddon.appDisabled = !isUsableAddon(aOldAddon);
 
-        let isDisabled = isAddonDisabled(aOldAddon);
+        let isDisabled = aOldAddon.disabled;
 
         // If either property has changed update the database.
         if (wasAppDisabled != aOldAddon.appDisabled ||
@@ -2999,8 +3226,11 @@ this.XPIProvider = {
         // If the add-on is a foreign install and is in a scope where add-ons
         // that were dropped in should default to disabled then disable it
         let disablingScopes = Preferences.get(PREF_EM_AUTO_DISABLED_SCOPES, 0);
-        if (aInstallLocation.scope & disablingScopes)
+        if (aInstallLocation.scope & disablingScopes) {
+          logger.warn("Disabling foreign installed add-on " + newAddon.id + " in "
+              + aInstallLocation.name);
           newAddon.userDisabled = true;
+        }
       }
 
       // If we have a list of what add-ons should be marked as active then use
@@ -3014,7 +3244,7 @@ this.XPIProvider = {
 
         // If the add-on wasn't active and it isn't already disabled in some way
         // then it was probably either softDisabled or userDisabled
-        if (!newAddon.active && newAddon.visible && !isAddonDisabled(newAddon)) {
+        if (!newAddon.active && newAddon.visible && !newAddon.disabled) {
           // If the add-on is softblocked then assume it is softDisabled
           if (newAddon.blocklistState == Blocklist.STATE_SOFTBLOCKED)
             newAddon.softDisabled = true;
@@ -3023,7 +3253,7 @@ this.XPIProvider = {
         }
       }
       else {
-        newAddon.active = (newAddon.visible && !isAddonDisabled(newAddon))
+        newAddon.active = (newAddon.visible && !newAddon.disabled);
       }
 
       let newDBAddon = XPIDatabase.addAddonMetadata(newAddon, aAddonState.descriptor);
@@ -3053,6 +3283,9 @@ this.XPIProvider = {
         let installReason = BOOTSTRAP_REASONS.ADDON_INSTALL;
         let extraParams = {};
 
+        // Copy add-on details (enabled, bootstrap, version, etc) to XPIState.
+        aAddonState.syncWithDB(newDBAddon);
+
         // If we're hiding a bootstrapped add-on then call its uninstall method
         if (newDBAddon.id in oldBootstrappedAddons) {
           let oldBootstrap = oldBootstrappedAddons[newDBAddon.id];
@@ -3062,8 +3295,11 @@ this.XPIProvider = {
           // If the old version is the same as the new version, or we're
           // recovering from a corrupt DB, don't call uninstall and install
           // methods.
-          if (sameVersion || !isNewInstall)
+          if (sameVersion || !isNewInstall) {
+            logger.debug("addMetadata: early return, sameVersion " + sameVersion
+                + ", isNewInstall " + isNewInstall);
             return false;
+          }
 
           installReason = Services.vc.compare(oldBootstrap.version, newDBAddon.version) < 0 ?
                           BOOTSTRAP_REASONS.ADDON_UPGRADE :
@@ -3101,25 +3337,33 @@ this.XPIProvider = {
     }
 
     let changed = false;
-    let knownLocations = XPIDatabase.getInstallLocations();
 
-    // The install locations are iterated in reverse order of priority so when
-    // there are multiple add-ons installed with the same ID the one that
-    // should be visible is the first one encountered.
-    for (let aSt of aState.reverse()) {
+    // Get all the add-ons in the existing DB and Map them into Sets by install location
+    let allDBAddons = new Map();
+    for (let a of XPIDatabase.getAddons()) {
+      let locationSet = allDBAddons.get(a.location);
+      if (!locationSet) {
+        locationSet = new Set();
+        allDBAddons.set(a.location, locationSet);
+      }
+      locationSet.add(a);
+    }
 
-      // We can't include the install location directly in the state as it has
-      // to be cached as JSON.
-      let installLocation = this.installLocationsByName[aSt.name];
-      let addonStates = aSt.addons;
+    for (let installLocation of this.installLocations) {
+      // Get all the on-disk XPI states for this location, and keep track of which
+      // ones we see in the database.
+      let states = XPIStates.getLocation(installLocation.name);
+      let seen = new Set();
+      // Iterate through the add-ons installed the last time the application
+      // ran
+      let dbAddons = allDBAddons.get(installLocation.name);
+      if (dbAddons) {
+        // we've processed this location
+        allDBAddons.delete(installLocation.name);
 
-      // Check if the database knows about any add-ons in this install location.
-      if (knownLocations.has(installLocation.name)) {
-        knownLocations.delete(installLocation.name);
-        let addons = XPIDatabase.getAddonsInLocation(installLocation.name);
-        // Iterate through the add-ons installed the last time the application
-        // ran
-        for (let aOldAddon of addons) {
+        logger.debug("processFileChanges reconciling DB for location ${l} state ${s} db ${d}",
+            {l: installLocation.name, s: states, d: [for (a of dbAddons) a.id]});
+        for (let aOldAddon of dbAddons) {
           // If a version of this add-on has been installed in an higher
           // priority install location then count it as changed
           if (AddonManager.getStartupChanges(AddonManager.STARTUP_CHANGE_INSTALLED)
@@ -3129,35 +3373,25 @@ this.XPIProvider = {
           }
 
           // Check if the add-on is still installed
-          if (aOldAddon.id in addonStates) {
-            let addonState = addonStates[aOldAddon.id];
-            delete addonStates[aOldAddon.id];
+          let xpiState = states && states.get(aOldAddon.id);
+          if (xpiState) {
+            // in this block, the add-on is in both XPIStates and the DB
+            seen.add(xpiState);
 
             recordAddonTelemetry(aOldAddon);
 
             // Check if the add-on has been changed outside the XPI provider
-            if (aOldAddon.updateDate != addonState.mtime) {
+            if (aOldAddon.updateDate != xpiState.mtime) {
               // Did time change in the wrong direction?
-              if (addonState.mtime < aOldAddon.updateDate) {
+              if (xpiState.mtime < aOldAddon.updateDate) {
                 this.setTelemetry(aOldAddon.id, "olderFile", {
                   name: this._mostRecentlyModifiedFile[aOldAddon.id],
-                  mtime: addonState.mtime,
+                  mtime: xpiState.mtime,
                   oldtime: aOldAddon.updateDate
                 });
-              }
-              // Is the add-on unpacked?
-              else if (addonState.rdfTime) {
-                // Was the addon manifest "install.rdf" modified, or some other file?
-                if (addonState.rdfTime > aOldAddon.updateDate) {
-                  this.setTelemetry(aOldAddon.id, "modifiedInstallRDF", 1);
-                }
-                else {
+              } else {
                   this.setTelemetry(aOldAddon.id, "modifiedFile",
                                     this._mostRecentlyModifiedFile[aOldAddon.id]);
-                }
-              }
-              else {
-                this.setTelemetry(aOldAddon.id, "modifiedXPI", 1);
               }
             }
 
@@ -3166,56 +3400,61 @@ this.XPIProvider = {
             // add-ons in the application directory when the application version
             // has changed
             if (aOldAddon.id in aManifests[installLocation.name] ||
-                aOldAddon.updateDate != addonState.mtime ||
+                aOldAddon.updateDate != xpiState.mtime ||
                 (aUpdateCompatibility && installLocation.name == KEY_APP_GLOBAL)) {
-              changed = updateMetadata(installLocation, aOldAddon, addonState) ||
+              changed = updateMetadata(installLocation, aOldAddon, xpiState) ||
                         changed;
             }
-            else if (aOldAddon.descriptor != addonState.descriptor) {
-              changed = updateDescriptor(installLocation, aOldAddon, addonState) ||
+            else if (aOldAddon.descriptor != xpiState.descriptor) {
+              changed = updateDescriptor(installLocation, aOldAddon, xpiState) ||
                         changed;
             }
             else {
               changed = updateVisibilityAndCompatibility(installLocation,
-                                                         aOldAddon, addonState) ||
+                                                         aOldAddon, xpiState) ||
                         changed;
             }
             if (aOldAddon.visible && aOldAddon._installLocation.name != KEY_APP_GLOBAL)
               XPIProvider.allAppGlobal = false;
+            // Copy add-on details (enabled, bootstrap, version, etc) to XPIState.
+            xpiState.syncWithDB(aOldAddon);
           }
           else {
+            // The add-on is in the DB, but not in xpiState (and thus not on disk).
             changed = removeMetadata(aOldAddon) || changed;
           }
         }
       }
 
-      // All the remaining add-ons in this install location must be new.
-
-      // Get the migration data for this install location.
+      // Any add-on in our current location that we haven't seen needs to
+      // be added to the database.
+      // Get the migration data for this install location so we can include that as
+      // we add, in case this is a database upgrade or rebuild.
       let locMigrateData = {};
       if (XPIDatabase.migrateData && installLocation.name in XPIDatabase.migrateData)
         locMigrateData = XPIDatabase.migrateData[installLocation.name];
-      for (let id in addonStates) {
-        changed = addMetadata(installLocation, id, addonStates[id],
-                              (locMigrateData[id] || null)) || changed;
+      if (states) {
+        for (let [id, xpiState] of states) {
+          if (!seen.has(xpiState)) {
+            changed = addMetadata(installLocation, id, xpiState,
+                                  (locMigrateData[id] || null)) || changed;
+          }
+        }
       }
     }
 
-    // The remaining locations that had add-ons installed in them no longer
-    // have any add-ons installed in them, or the locations no longer exist.
-    // The metadata for the add-ons that were in them must be removed from the
-    // database.
-    for (let location of knownLocations) {
-      let addons = XPIDatabase.getAddonsInLocation(location);
-      for (let aOldAddon of addons) {
-        changed = removeMetadata(aOldAddon) || changed;
+    // Anything left in allDBAddons is a location where the database contains add-ons,
+    // but the browser is no longer configured to use that location. The metadata for those
+    // add-ons must be removed from the database.
+    for (let [locationName, addons] of allDBAddons) {
+      logger.debug("Removing orphaned DB add-on entries from " + locationName);
+      for (let a of addons) {
+        logger.debug("Remove ${location}:${id}", a);
+        changed = removeMetadata(a) || changed;
       }
     }
 
-    // Cache the new install location states
-    this.installStates = this.getInstallLocationStates();
-    let cache = JSON.stringify(this.installStates);
-    Services.prefs.setCharPref(PREF_INSTALL_CACHE, cache);
+    XPIStates.save();
     this.persistBootstrappedAddons();
 
     // Clear out any cached migration data.
@@ -3264,6 +3503,7 @@ this.XPIProvider = {
 
     // Load the list of bootstrapped add-ons first so processFileChanges can
     // modify it
+    // XXX eventually get rid of bootstrappedAddons
     try {
       this.bootstrappedAddons = JSON.parse(Preferences.get(PREF_BOOTSTRAP_ADDONS,
                                            "{}"));
@@ -3298,32 +3538,22 @@ this.XPIProvider = {
       }
     }
 
-    // Telemetry probe added around getInstallLocationStates() to check perf
+    // Telemetry probe added around getInstallState() to check perf
     let telemetryCaptureTime = Date.now();
-    this.installStates = this.getInstallLocationStates();
+    let installChanged = XPIStates.getInstallState();
     let telemetry = Services.telemetry;
     telemetry.getHistogramById("CHECK_ADDONS_MODIFIED_MS").add(Date.now() - telemetryCaptureTime);
-
-    // If the install directory state has changed then we must update the database
-    let cache = Preferences.get(PREF_INSTALL_CACHE, "[]");
-    // For a little while, gather telemetry on whether the deep comparison
-    // makes a difference
-    let newState = JSON.stringify(this.installStates);
-    if (cache != newState) {
-      logger.debug("Directory state JSON differs: cache " + cache + " state " + newState);
-      if (directoryStateDiffers(this.installStates, cache)) {
-        updateReasons.push("directoryState");
-      }
-      else {
-        AddonManagerPrivate.recordSimpleMeasure("XPIDB_startup_state_badCompare", 1);
-      }
+    if (installChanged) {
+      updateReasons.push("directoryState");
     }
+
+    let haveAnyAddons = (XPIStates.size > 0);
 
     // If the schema appears to have changed then we should update the database
     if (DB_SCHEMA != Preferences.get(PREF_DB_SCHEMA, 0)) {
       // If we don't have any add-ons, just update the pref, since we don't need to
       // write the database
-      if (this.installStates.length == 0) {
+      if (!haveAnyAddons) {
         logger.debug("Empty XPI database, setting schema version preference to " + DB_SCHEMA);
         Services.prefs.setIntPref(PREF_DB_SCHEMA, DB_SCHEMA);
       }
@@ -3336,24 +3566,24 @@ this.XPIProvider = {
     // must update the database however if there are no add-ons then there is
     // no need to update the database.
     let dbFile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
-    if (!dbFile.exists() && this.installStates.length > 0) {
+    if (!dbFile.exists() && haveAnyAddons) {
       updateReasons.push("needNewDatabase");
     }
 
+    // XXX This will go away when we fold bootstrappedAddons into XPIStates.
     if (updateReasons.length == 0) {
-      let bootstrapDescriptors = [this.bootstrappedAddons[b].descriptor
-                                  for (b in this.bootstrappedAddons)];
+      let bootstrapDescriptors = new Set([for (b of Object.keys(this.bootstrappedAddons))
+                                          this.bootstrappedAddons[b].descriptor]);
 
-      this.installStates.forEach(function(aInstallLocationState) {
-        for (let id in aInstallLocationState.addons) {
-          let pos = bootstrapDescriptors.indexOf(aInstallLocationState.addons[id].descriptor);
-          if (pos != -1)
-            bootstrapDescriptors.splice(pos, 1);
+      for (let location of XPIStates.db.values()) {
+        for (let state of location.values()) {
+          bootstrapDescriptors.delete(state.descriptor);
         }
-      });
+      }
 
-      if (bootstrapDescriptors.length > 0) {
-        logger.warn("Bootstrap state is invalid (missing add-ons: " + bootstrapDescriptors.toSource() + ")");
+      if (bootstrapDescriptors.size > 0) {
+        logger.warn("Bootstrap state is invalid (missing add-ons: "
+            + [for (b of bootstrapDescriptors) b] + ")");
         updateReasons.push("missingBootstrapAddon");
       }
     }
@@ -3367,7 +3597,7 @@ this.XPIProvider = {
         AddonManagerPrivate.recordSimpleMeasure("XPIDB_startup_load_reasons", updateReasons);
         XPIDatabase.syncLoadDB(false);
         try {
-          extensionListChanged = this.processFileChanges(this.installStates, manifests,
+          extensionListChanged = this.processFileChanges(manifests,
                                                          aAppChanged,
                                                          aOldAppVersion,
                                                          aOldPlatformVersion);
@@ -3382,7 +3612,7 @@ this.XPIProvider = {
         // compatible otherwise switch back the default
         if (this.currentSkin != this.defaultSkin) {
           let oldSkin = XPIDatabase.getVisibleAddonForInternalName(this.currentSkin);
-          if (!oldSkin || isAddonDisabled(oldSkin))
+          if (!oldSkin || oldSkin.disabled)
             this.enableDefaultTheme();
         }
 
@@ -3419,7 +3649,8 @@ this.XPIProvider = {
     // Check that the add-ons list still exists
     let addonsList = FileUtils.getFile(KEY_PROFILEDIR, [FILE_XPI_ADDONS_LIST],
                                        true);
-    if (addonsList.exists() == (this.installStates.length == 0)) {
+    // the addons list file should exist if and only if we have add-ons installed
+    if (addonsList.exists() != haveAnyAddons) {
       logger.debug("Add-ons list is invalid, rebuilding");
       XPIDatabase.writeAddonsList();
     }
@@ -3977,7 +4208,7 @@ this.XPIProvider = {
 
     // If the add-on is not going to be active after installation then it
     // doesn't require a restart to install.
-    if (isAddonDisabled(aAddon))
+    if (aAddon.disabled)
       return false;
 
     // Themes will require a restart (even if dynamic switching is enabled due
@@ -4173,7 +4404,7 @@ this.XPIProvider = {
       // Load the scope if it hasn't already been loaded
       if (!(aAddon.id in this.bootstrapScopes))
         this.loadBootstrapScope(aAddon.id, aFile, aAddon.version, aAddon.type,
-                                aAddon.multiprocessCompatible);
+                                aAddon.multiprocessCompatible || false);
 
       // Nothing to call for locales
       if (aAddon.type == "locale")
@@ -4260,10 +4491,10 @@ this.XPIProvider = {
         aAddon.softDisabled == aSoftDisabled)
       return;
 
-    let wasDisabled = isAddonDisabled(aAddon);
+    let wasDisabled = aAddon.disabled;
     let isDisabled = aUserDisabled || aSoftDisabled || appDisabled;
 
-    // If appDisabled changes but the result of isAddonDisabled() doesn't,
+    // If appDisabled changes but addon.disabled doesn't,
     // no onDisabling/onEnabling is sent - so send a onPropertyChanged.
     let appDisabledChanged = aAddon.appDisabled != appDisabled;
 
@@ -4331,6 +4562,16 @@ this.XPIProvider = {
       }
     }
 
+    // Sync with XPIStates.
+    let xpiState = XPIStates.getAddon(aAddon.location, aAddon.id);
+    if (xpiState) {
+      xpiState.syncWithDB(aAddon);
+      XPIStates.save();
+    } else {
+      // There should always be an xpiState
+      logger.warn("No XPIState for ${id} in ${location}", aAddon);
+    }
+
     // Notify any other providers that a new theme has been enabled
     if (aAddon.type == "theme" && !isDisabled)
       AddonManagerPrivate.notifyAddonChanged(aAddon.id, aAddon.type, needsRestart);
@@ -4376,6 +4617,13 @@ this.XPIProvider = {
         pendingUninstall: true
       });
       Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS, true);
+      let xpiState = XPIStates.getAddon(aAddon.location, aAddon.id);
+      if (xpiState) {
+        xpiState.enabled = false;
+        XPIStates.save();
+      } else {
+        logger.warn("Can't find XPI state while uninstalling ${id} from ${location}", aAddon);
+      }
     }
 
     // If the add-on is not visible then there is no need to notify listeners.
@@ -4393,7 +4641,7 @@ this.XPIProvider = {
       let wrappedAddon = createWrapper(aAddon);
       AddonManagerPrivate.callAddonListeners("onInstalling", wrappedAddon, false);
 
-      if (!isAddonDisabled(aAddon) && !XPIProvider.enableRequiresRestart(aAddon)) {
+      if (!aAddon.disabled && !XPIProvider.enableRequiresRestart(aAddon)) {
         XPIDatabase.updateAddonActive(aAddon, true);
       }
 
@@ -4416,18 +4664,11 @@ this.XPIProvider = {
       AddonManagerPrivate.callAddonListeners("onInstalled", wrappedAddon);
     }
 
-    function checkInstallLocation(aPos) {
-      if (aPos < 0)
-        return;
-
-      let location = XPIProvider.installLocations[aPos];
-      XPIDatabase.getAddonInLocation(aAddon.id, location.name,
-        function checkInstallLocation_getAddonInLocation(aNewAddon) {
-        if (aNewAddon)
-          revealAddon(aNewAddon);
-        else
-          checkInstallLocation(aPos - 1);
-      })
+    function findAddonAndReveal(aId) {
+      let [locationName, ] = XPIStates.findAddon(aId);
+      if (locationName) {
+        XPIDatabase.getAddonInLocation(aId, locationName, revealAddon);
+      }
     }
 
     if (!requiresRestart) {
@@ -4445,9 +4686,10 @@ this.XPIProvider = {
       }
       aAddon._installLocation.uninstallAddon(aAddon.id);
       XPIDatabase.removeAddonMetadata(aAddon);
+      XPIStates.removeAddon(aAddon.location, aAddon.id);
       AddonManagerPrivate.callAddonListeners("onUninstalled", wrapper);
 
-      checkInstallLocation(this.installLocations.length - 1);
+      findAddonAndReveal(aAddon.id);
     }
 
     // Notify any other providers that a new theme has been enabled
@@ -5535,20 +5777,26 @@ AddonInstall.prototype = {
         // Update the metadata in the database
         this.addon._sourceBundle = file;
         this.addon._installLocation = this.installLocation;
-        let scanStarted = Date.now();
-        let [, mTime, scanItems] = recursiveLastModifiedTime(file);
-        let scanTime = Date.now() - scanStarted;
-        this.addon.updateDate = mTime;
         this.addon.visible = true;
+
         if (isUpgrade) {
           this.addon =  XPIDatabase.updateAddonMetadata(this.existingAddon, this.addon,
                                                         file.persistentDescriptor);
+          let state = XPIStates.getAddon(this.installLocation.name, this.addon.id);
+          if (state) {
+            state.syncWithDB(this.addon, true);
+          } else {
+            logger.warn("Unexpected missing XPI state for add-on ${id}", this.addon);
+          }
         }
         else {
-          this.addon.installDate = this.addon.updateDate;
-          this.addon.active = (this.addon.visible && !isAddonDisabled(this.addon))
+          this.addon.active = (this.addon.visible && !this.addon.disabled);
           this.addon = XPIDatabase.addAddonMetadata(this.addon, file.persistentDescriptor);
+          XPIStates.addAddon(this.addon);
+          this.addon.installDate = this.addon.updateDate;
+          XPIDatabase.saveChanges();
         }
+        XPIStates.save();
 
         let extraParams = {};
         if (this.existingAddon) {
@@ -5581,9 +5829,6 @@ AddonInstall.prototype = {
           }
         }
         XPIProvider.setTelemetry(this.addon.id, "unpacked", installedUnpacked);
-        XPIProvider.setTelemetry(this.addon.id, "location", this.installLocation.name);
-        XPIProvider.setTelemetry(this.addon.id, "scan_MS", scanTime);
-        XPIProvider.setTelemetry(this.addon.id, "scan_items", scanItems);
         recordAddonTelemetry(this.addon);
       }
     }).bind(this)).then(null, (e) => {
@@ -6014,6 +6259,10 @@ AddonInternal.prototype = {
     return this.isCompatibleWith();
   },
 
+  get disabled() {
+    return (this.userDisabled || this.appDisabled || this.softDisabled);
+  },
+
   get isPlatformCompatible() {
     if (this.targetPlatforms.length == 0)
       return true;
@@ -6391,11 +6640,11 @@ function AddonWrapper(aAddon) {
   }, this);
 
   this.__defineGetter__("iconURL", function AddonWrapper_iconURLGetter() {
-    return this.icons[32];
+    return this.icons[32] || undefined;
   }, this);
 
   this.__defineGetter__("icon64URL", function AddonWrapper_icon64URLGetter() {
-    return this.icons[64];
+    return this.icons[64] || undefined;
   }, this);
 
   this.__defineGetter__("icons", function AddonWrapper_iconsGetter() {
@@ -6576,9 +6825,9 @@ function AddonWrapper(aAddon) {
     // enabled and what we say to the ouside world. so we need to cover up that
     // lie here as well.
     if (aAddon.type != "experiment") {
-      if (aAddon.active && isAddonDisabled(aAddon))
+      if (aAddon.active && aAddon.disabled)
         pending |= AddonManager.PENDING_DISABLE;
-      else if (!aAddon.active && !isAddonDisabled(aAddon))
+      else if (!aAddon.active && !aAddon.disabled)
         pending |= AddonManager.PENDING_ENABLE;
     }
 
