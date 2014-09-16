@@ -4949,10 +4949,7 @@ CheckSimdCtorCall(FunctionCompiler &f, ParseNode *call, const ModuleCompiler::Gl
     MOZ_ASSERT(length == 4);
 
     MIRType opType = retType.toMIRType();
-    if (defs[1] == defs[0] && defs[2] == defs[0] && defs[3] == defs[0])
-        *def = f.splatSimd(defs[0], opType);
-    else
-        *def = f.constructSimd<MSimdValueX4>(defs[0], defs[1], defs[2], defs[3], opType);
+    *def = f.constructSimd<MSimdValueX4>(defs[0], defs[1], defs[2], defs[3], opType);
     *type = retType;
     return true;
 }
