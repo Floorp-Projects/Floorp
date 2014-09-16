@@ -38,7 +38,7 @@ public class Tab {
     private long mLastUsed;
     private String mUrl;
     private String mBaseDomain;
-    private String mUserSearch;
+    private String mUserRequested; // The original url requested. May be typed by the user or sent by an extneral app for example.
     private String mTitle;
     private Bitmap mFavicon;
     private String mFaviconUrl;
@@ -97,7 +97,7 @@ public class Tab {
         mId = id;
         mUrl = url;
         mBaseDomain = "";
-        mUserSearch = "";
+        mUserRequested = "";
         mExternal = external;
         mParentId = parentId;
         mTitle = title == null ? "" : title;
@@ -147,9 +147,9 @@ public class Tab {
         return mUrl;
     }
 
-    // mUserSearch should never be null, but it may be an empty string
-    public synchronized String getUserSearch() {
-        return mUserSearch;
+    // mUserRequested should never be null, but it may be an empty string
+    public synchronized String getUserRequested() {
+        return mUserRequested;
     }
 
     // mTitle should never be null, but it may be an empty string
@@ -268,8 +268,8 @@ public class Tab {
         }
     }
 
-    private synchronized void updateUserSearch(String userSearch) {
-        mUserSearch = userSearch;
+    public synchronized void updateUserRequested(String userRequested) {
+        mUserRequested = userRequested;
     }
 
     public void setErrorType(String type) {
@@ -654,7 +654,7 @@ public class Tab {
         }
 
         setContentType(message.getString("contentType"));
-        updateUserSearch(message.getString("userSearch"));
+        updateUserRequested(message.getString("userRequested"));
         mBaseDomain = message.optString("baseDomain");
 
         setHasFeeds(false);
