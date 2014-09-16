@@ -1,0 +1,10 @@
+{
+  "type": "trusted",
+  "name": "Really Rapid Release (trusted)",
+  "description": "Updated even faster than <a href='http://mozilla.org'>Firefox</a>, just to annoy slashdotters.",
+  "launch_path": "/tests/dom/apps/tests/file_app.sjs?apptype=trusted",
+  "icons": {
+    "128": "ICONTOKEN"
+  },
+  "role": "ROLE"
+}
