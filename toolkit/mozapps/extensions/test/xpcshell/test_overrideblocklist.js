@@ -187,8 +187,8 @@ add_test(function test_missing() {
   startupManager(false);
 
   reloadBlocklist();
-  let blocklist = AM_Cc["@mozilla.org/extensions/blocklist;1"].
-                  getService(AM_Ci.nsIBlocklistService);
+  blocklist = AM_Cc["@mozilla.org/extensions/blocklist;1"].
+              getService(AM_Ci.nsIBlocklistService);
   do_check_false(blocklist.isAddonBlocklisted(invalidAddon));
   do_check_false(blocklist.isAddonBlocklisted(ancientAddon));
   do_check_true(blocklist.isAddonBlocklisted(oldAddon));

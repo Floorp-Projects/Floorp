@@ -238,8 +238,8 @@ function runTest() {
   // And give it time to close
   executeSoon(moveAlong);
   yield;
-  let pbWin = yield createWindow({private: true});
-  let pbDownloadLastDir = new DownloadLastDir(pbWin);
+  pbWin = yield createWindow({private: true});
+  pbDownloadLastDir = new DownloadLastDir(pbWin);
 
   is((yield checkDownloadLastDir(pbDownloadLastDir, dir1)).path, dir1.path, "uri1 should return the expected last directory");
 

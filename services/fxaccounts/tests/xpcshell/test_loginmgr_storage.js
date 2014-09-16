@@ -128,7 +128,7 @@ add_task(function test_migrationMPUnlocked() {
   Assert.deepEqual(data, creds, "we got all the data back");
 
   // and verify it was actually migrated - re-read signedInUser back.
-  let data = yield CommonUtils.readJSON(path);
+  data = yield CommonUtils.readJSON(path);
 
   Assert.strictEqual(data.accountData.email, creds.email, "correct email in the clear text");
   Assert.strictEqual(data.accountData.sessionToken, creds.sessionToken, "correct sessionToken in the clear text");
@@ -255,7 +255,7 @@ add_task(function test_consistentWithMPEdgeCases() {
   // Make a new FxA instance (otherwise the values in memory will be used.)
   // Because we haven't overridden _isLoggedIn for this new instance it will
   // treat the MP as unlocked.
-  let fxa = new FxAccounts({});
+  fxa = new FxAccounts({});
 
   let accountData = yield fxa.getSignedInUser();
   Assert.strictEqual(accountData.email, creds2.email);

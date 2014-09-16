@@ -348,19 +348,19 @@ function finishTest()
     return;
   }
 
-  let hud = HUDService.getHudByWindow(content);
-  if (!hud) {
+  let contentHud = HUDService.getHudByWindow(content);
+  if (!contentHud) {
     finish();
     return;
   }
 
-  if (hud.jsterm) {
-    hud.jsterm.clearOutput(true);
+  if (contentHud.jsterm) {
+    contentHud.jsterm.clearOutput(true);
   }
 
-  closeConsole(hud.target.tab, finish);
+  closeConsole(contentHud.target.tab, finish);
 
-  hud = null;
+  contentHud = null;
 }
 
 function tearDown()

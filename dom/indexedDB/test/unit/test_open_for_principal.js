@@ -56,7 +56,7 @@ function testSteps()
   request.onerror = errorHandler;
   request.onupgradeneeded = grabEventAndContinueHandler;
   request.onsuccess = grabEventAndContinueHandler;
-  let event = yield undefined;
+  event = yield undefined;
 
   is(event.type, "upgradeneeded", "Got correct event type");
 

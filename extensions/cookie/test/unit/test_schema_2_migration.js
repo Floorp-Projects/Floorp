@@ -115,7 +115,7 @@ function do_run_test() {
   // Attempt to add a cookie with the same (name, host, path) values as another
   // cookie. This should succeed since we have a REPLACE clause for conflict on
   // the unique index.
-  let cookie = new Cookie("oh", "hai", "baz.com", "/",
+  cookie = new Cookie("oh", "hai", "baz.com", "/",
                           futureExpiry, now, now + 100, false, false, false);
 
   schema2db.insertCookie(cookie);

@@ -12,14 +12,7 @@
 
 SimpleTest.waitForExplicitFinish();
 
-runWithMSE(function () {
-  var ms = new MediaSource();
-
-  var v = document.createElement("video");
-  v.preload = "auto";
-  v.src = URL.createObjectURL(ms);
-  document.body.appendChild(v);
-
+runWithMSE(function (ms, v) {
   ms.addEventListener("sourceopen", function () {
     var sb = ms.addSourceBuffer("video/webm");
 
@@ -51,7 +44,6 @@ runWithMSE(function () {
     v.addEventListener("seeked", function () {
       ok(wasSeeking, "Received expected seeking and seeked events");
       is(v.currentTime, target, "Video currentTime not at target");
-      v.parentNode.removeChild(v);
       SimpleTest.finish();
     });
   });

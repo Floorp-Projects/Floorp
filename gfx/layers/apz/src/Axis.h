@@ -8,7 +8,7 @@
 #define mozilla_layers_Axis_h
 
 #include <sys/types.h>                  // for int32_t
-#include "Units.h"                      // for CSSRect, CSSPoint
+#include "Units.h"
 #include "mozilla/TimeStamp.h"          // for TimeDuration
 #include "nsTArray.h"                   // for nsTArray
 
@@ -36,20 +36,6 @@ class AsyncPanZoomController;
 class Axis {
 public:
   explicit Axis(AsyncPanZoomController* aAsyncPanZoomController);
-
-  enum Overscroll {
-    // Overscroll is not happening at all.
-    OVERSCROLL_NONE = 0,
-    // Overscroll is happening in the negative direction. This means either to
-    // the left or to the top depending on the axis.
-    OVERSCROLL_MINUS,
-    // Overscroll is happening in the positive direction. This means either to
-    // the right or to the bottom depending on the axis.
-    OVERSCROLL_PLUS,
-    // Overscroll is happening both ways. This only means something when the
-    // page is scaled out to a smaller size than the viewport.
-    OVERSCROLL_BOTH
-  };
 
   /**
    * Notify this Axis that a new touch has been received, including a timestamp
@@ -87,20 +73,20 @@ public:
    * displacement, and the function returns true iff internal overscroll amounts
    * were changed.
    */
-  bool AdjustDisplacement(CSSCoord aDisplacement,
-                          /* CSSCoord */ float& aDisplacementOut,
-                          /* CSSCoord */ float& aOverscrollAmountOut);
+  bool AdjustDisplacement(ScreenCoord aDisplacement,
+                          /* ScreenCoord */ float& aDisplacementOut,
+                          /* ScreenCoord */ float& aOverscrollAmountOut);
 
   /**
    * Overscrolls this axis by the requested amount in the requested direction.
    * The axis must be at the end of its scroll range in this direction.
    */
-  void OverscrollBy(CSSCoord aOverscroll);
+  void OverscrollBy(ScreenCoord aOverscroll);
 
   /**
-   * Return the amount of overscroll on this axis, in CSS pixels.
+   * Return the amount of overscroll on this axis, in Screen pixels.
    */
-  CSSCoord GetOverscroll() const;
+  ScreenCoord GetOverscroll() const;
 
   /**
    * Sample the snap-back animation to relieve overscroll.
@@ -178,27 +164,24 @@ public:
   void SetVelocity(float aVelocity);
 
   /**
-   * Gets the overscroll state of the axis given an additional displacement.
-   * That is to say, if the given displacement is applied, this will tell you
-   * whether or not it will overscroll, and in what direction.
-   */
-  Overscroll DisplacementWillOverscroll(CSSCoord aDisplacement);
-
-  /**
    * If a displacement will overscroll the axis, this returns the amount and in
-   * what direction. Similar to GetExcess() but takes a displacement to apply.
+   * what direction.
    */
-  CSSCoord DisplacementWillOverscrollAmount(CSSCoord aDisplacement);
+  ScreenCoord DisplacementWillOverscrollAmount(ScreenCoord aDisplacement) const;
 
   /**
    * If a scale will overscroll the axis, this returns the amount and in what
-   * direction. Similar to GetExcess() but takes a displacement to apply.
+   * direction.
    *
    * |aFocus| is the point at which the scale is focused at. We will offset the
    * scroll offset in such a way that it remains in the same place on the page
    * relative.
+   *
+   * Note: Unlike most other functions in Axis, this functions operates in
+   *       CSS coordinates so there is no confusion as to whether the Screen
+   *       coordinates it operates in are before or after the scale is applied.
    */
-  CSSCoord ScaleWillOverscrollAmount(float aScale, CSSCoord aFocus);
+  CSSCoord ScaleWillOverscrollAmount(float aScale, CSSCoord aFocus) const;
 
   /**
    * Checks if an axis will overscroll in both directions by computing the
@@ -207,20 +190,20 @@ public:
    *
    * This gets called by ScaleWillOverscroll().
    */
-  bool ScaleWillOverscrollBothSides(float aScale);
+  bool ScaleWillOverscrollBothSides(float aScale) const;
 
-  CSSCoord GetOrigin() const;
-  CSSCoord GetCompositionLength() const;
-  CSSCoord GetPageStart() const;
-  CSSCoord GetPageLength() const;
-  CSSCoord GetCompositionEnd() const;
-  CSSCoord GetPageEnd() const;
+  ScreenCoord GetOrigin() const;
+  ScreenCoord GetCompositionLength() const;
+  ScreenCoord GetPageStart() const;
+  ScreenCoord GetPageLength() const;
+  ScreenCoord GetCompositionEnd() const;
+  ScreenCoord GetPageEnd() const;
 
   ScreenCoord GetPos() const { return mPos; }
 
-  virtual CSSCoord GetPointOffset(const CSSPoint& aPoint) const = 0;
-  virtual CSSCoord GetRectLength(const CSSRect& aRect) const = 0;
-  virtual CSSCoord GetRectOffset(const CSSRect& aRect) const = 0;
+  virtual ScreenCoord GetPointOffset(const ScreenPoint& aPoint) const = 0;
+  virtual ScreenCoord GetRectLength(const ScreenRect& aRect) const = 0;
+  virtual ScreenCoord GetRectOffset(const ScreenRect& aRect) const = 0;
 
   virtual ScreenPoint MakePoint(ScreenCoord aCoord) const = 0;
 
@@ -228,16 +211,16 @@ protected:
   ScreenCoord mPos;
   uint32_t mPosTimeMs;
   ScreenCoord mStartPos;
-  float mVelocity;
+  float mVelocity;      // Units: ScreenCoords per millisecond
   bool mAxisLocked;     // Whether movement on this axis is locked.
   AsyncPanZoomController* mAsyncPanZoomController;
-  // The amount by which this axis is in overscroll, in CSS coordinates.
+  // The amount by which this axis is in overscroll, in Screen coordinates.
   // If this amount is nonzero, the relevant component of
   // mAsyncPanZoomController->mFrameMetrics.mScrollOffset must be at its
   // extreme allowed value in the relevant direction (that is, it must be at
   // its maximum value if mOverscroll is positive, and at its minimum value
   // if mOverscroll is negative).
-  CSSCoord mOverscroll;
+  ScreenCoord mOverscroll;
   // A queue of (timestamp, velocity) pairs; these are the historical
   // velocities at the given timestamps. Timestamps are in milliseconds,
   // velocities are in screen pixels per ms. This member can only be
@@ -248,25 +231,25 @@ protected:
 
   // Adjust a requested overscroll amount for resistance, yielding a smaller
   // actual overscroll amount.
-  CSSCoord ApplyResistance(CSSCoord aOverscroll) const;
+  ScreenCoord ApplyResistance(ScreenCoord aOverscroll) const;
 };
 
 class AxisX : public Axis {
 public:
   explicit AxisX(AsyncPanZoomController* mAsyncPanZoomController);
-  virtual CSSCoord GetPointOffset(const CSSPoint& aPoint) const;
-  virtual CSSCoord GetRectLength(const CSSRect& aRect) const;
-  virtual CSSCoord GetRectOffset(const CSSRect& aRect) const;
-  virtual ScreenPoint MakePoint(ScreenCoord aCoord) const;
+  virtual ScreenCoord GetPointOffset(const ScreenPoint& aPoint) const MOZ_OVERRIDE;
+  virtual ScreenCoord GetRectLength(const ScreenRect& aRect) const MOZ_OVERRIDE;
+  virtual ScreenCoord GetRectOffset(const ScreenRect& aRect) const MOZ_OVERRIDE;
+  virtual ScreenPoint MakePoint(ScreenCoord aCoord) const MOZ_OVERRIDE;
 };
 
 class AxisY : public Axis {
 public:
   explicit AxisY(AsyncPanZoomController* mAsyncPanZoomController);
-  virtual CSSCoord GetPointOffset(const CSSPoint& aPoint) const;
-  virtual CSSCoord GetRectLength(const CSSRect& aRect) const;
-  virtual CSSCoord GetRectOffset(const CSSRect& aRect) const;
-  virtual ScreenPoint MakePoint(ScreenCoord aCoord) const;
+  virtual ScreenCoord GetPointOffset(const ScreenPoint& aPoint) const MOZ_OVERRIDE;
+  virtual ScreenCoord GetRectLength(const ScreenRect& aRect) const MOZ_OVERRIDE;
+  virtual ScreenCoord GetRectOffset(const ScreenRect& aRect) const MOZ_OVERRIDE;
+  virtual ScreenPoint MakePoint(ScreenCoord aCoord) const MOZ_OVERRIDE;
 };
 
 }

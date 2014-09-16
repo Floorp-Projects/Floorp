@@ -19,7 +19,7 @@ function test() {
 
   let dragTabItem = function (tabItem) {
     let doc = cw.document.documentElement;
-    let tabItem = groupItem.getChild(0);
+    tabItem = groupItem.getChild(0);
     let container = tabItem.container;
     let aspectRange = getAspectRange();
 

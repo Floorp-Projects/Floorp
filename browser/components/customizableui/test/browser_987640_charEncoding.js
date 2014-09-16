@@ -48,7 +48,7 @@ add_task(function() {
   yield tabLoadPromise;
   yield PanelUI.show();
   charEncodingButton.click();
-  let checkedButtons = characterEncodingView.querySelectorAll("toolbarbutton[checked='true']");
+  checkedButtons = characterEncodingView.querySelectorAll("toolbarbutton[checked='true']");
   is(checkedButtons[0].getAttribute("label"), "Unicode", "The encoding was reset to Unicode");
 });
 

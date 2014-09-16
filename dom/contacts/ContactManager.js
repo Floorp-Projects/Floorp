@@ -261,7 +261,7 @@ ContactManager.prototype = {
     }
 
     // Create an array with a single nsIContentPermissionType element.
-    let type = {
+    type = {
       type: "contacts",
       access: access,
       options: [],

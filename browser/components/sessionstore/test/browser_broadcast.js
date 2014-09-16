@@ -59,8 +59,8 @@ add_task(function flush_on_duplicate() {
     "sessionStorage data has been flushed when duplicating tabs");
 
   yield promiseTabRestored(tab2);
-  gBrowser.removeTab(tab2)
-  let [{state: {storage}}] = JSON.parse(ss.getClosedTabData(window));
+  gBrowser.removeTab(tab2);
+  [{state: {storage}}] = JSON.parse(ss.getClosedTabData(window));
   is(storage["http://example.com"].test, "on-duplicate",
     "sessionStorage data has been flushed when duplicating tabs");
 

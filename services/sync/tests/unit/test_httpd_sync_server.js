@@ -36,7 +36,7 @@ add_test(function test_url_parsing() {
 
   // Check that we can parse a collection URI.
   parts = server.pathRE.exec("/1.1/johnsmith/storage/crypto");
-  let [all, version, username, first, rest] = parts;
+  [all, version, username, first, rest] = parts;
   do_check_eq(all, "/1.1/johnsmith/storage/crypto");
   do_check_eq(version, "1.1");
   do_check_eq(username, "johnsmith");
@@ -49,7 +49,7 @@ add_test(function test_url_parsing() {
 
   // storage alone is a valid request.
   parts = server.pathRE.exec("/1.1/johnsmith/storage");
-  let [all, version, username, first, rest] = parts;
+  [all, version, username, first, rest] = parts;
   do_check_eq(all, "/1.1/johnsmith/storage");
   do_check_eq(version, "1.1");
   do_check_eq(username, "johnsmith");
@@ -57,7 +57,8 @@ add_test(function test_url_parsing() {
   do_check_eq(rest, undefined);
 
   parts = server.storageRE.exec("storage");
-  let [all, storage, collection, id] = parts;
+  let storage, collection, id;
+  [all, storage, collection, id] = parts;
   do_check_eq(all, "storage");
   do_check_eq(collection, undefined);
 

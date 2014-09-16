@@ -338,6 +338,7 @@ class IonBuilder
     void insertRecompileCheck();
 
     void initParameters();
+    void initLocals();
     void rewriteParameter(uint32_t slotIdx, MDefinition *param, int32_t argIndex);
     void rewriteParameters();
     bool initScopeChain(MDefinition *callee = nullptr);
@@ -573,6 +574,8 @@ class IonBuilder
 
 
     MDefinition *getCallee();
+    MDefinition *getAliasedVar(ScopeCoordinate sc);
+    MDefinition *addLexicalCheck(MDefinition *input);
 
     bool jsop_add(MDefinition *left, MDefinition *right);
     bool jsop_bitnot();
@@ -585,6 +588,8 @@ class IonBuilder
     bool jsop_defvar(uint32_t index);
     bool jsop_deffun(uint32_t index);
     bool jsop_notearg();
+    bool jsop_checklexical();
+    bool jsop_checkaliasedlet(ScopeCoordinate sc);
     bool jsop_funcall(uint32_t argc);
     bool jsop_funapply(uint32_t argc);
     bool jsop_funapplyarguments(uint32_t argc);
@@ -598,7 +603,8 @@ class IonBuilder
     bool jsop_dup2();
     bool jsop_loophead(jsbytecode *pc);
     bool jsop_compare(JSOp op);
-    bool getStaticName(JSObject *staticObject, PropertyName *name, bool *psucceeded);
+    bool getStaticName(JSObject *staticObject, PropertyName *name, bool *psucceeded,
+                       MDefinition *lexicalCheck = nullptr);
     bool setStaticName(JSObject *staticObject, PropertyName *name);
     bool jsop_getgname(PropertyName *name);
     bool jsop_getname(PropertyName *name);
@@ -891,6 +897,18 @@ class IonBuilder
     BytecodeSite bytecodeSite(jsbytecode *pc) {
         JS_ASSERT(info().inlineScriptTree()->script()->containsPC(pc));
         return BytecodeSite(info().inlineScriptTree(), pc);
+    }
+
+    MDefinition *lexicalCheck_;
+
+    void setLexicalCheck(MDefinition *lexical) {
+        MOZ_ASSERT(!lexicalCheck_);
+        lexicalCheck_ = lexical;
+    }
+    MDefinition *takeLexicalCheck() {
+        MDefinition *lexical = lexicalCheck_;
+        lexicalCheck_ = nullptr;
+        return lexical;
     }
 
     /* Information used for inline-call builders. */

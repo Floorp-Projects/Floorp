@@ -166,7 +166,7 @@ function checkMissing(client, actorID) {
   let front = client.getActor(actorID);
   ok(!front, "Front shouldn't be accessible from the client for actorID: " + actorID);
 
-  let deferred = promise.defer();
+  deferred = promise.defer();
   client.request({
     to: actorID,
     type: "request",
@@ -183,7 +183,7 @@ function checkAvailable(client, actorID) {
   let front = client.getActor(actorID);
   ok(front, "Front should be accessible from the client for actorID: " + actorID);
 
-  let deferred = promise.defer();
+  deferred = promise.defer();
   client.request({
     to: actorID,
     type: "garbageAvailableTest",

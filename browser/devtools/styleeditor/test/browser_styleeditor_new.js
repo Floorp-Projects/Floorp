@@ -73,7 +73,7 @@ function testInitialState(aEditor) {
 
   ok(aEditor.sourceEditor.hasFocus(), "new editor has focus");
 
-  let summary = aEditor.summary;
+  summary = aEditor.summary;
   let ruleCount = summary.querySelector(".stylesheet-rule-count").textContent;
   is(parseInt(ruleCount), 0,
      "new editor initially shows 0 rules");

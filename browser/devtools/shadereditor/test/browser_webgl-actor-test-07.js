@@ -33,15 +33,15 @@ function ifWebGLSupported() {
   yield ensurePixelIs(front, { x: 128, y: 128 }, { r: 255, g: 0, b: 0, a: 255 }, true);
   yield ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 0, b: 0, a: 255 }, true);
 
-  let vertSource = yield vertexShader.getText();
-  let fragSource = yield fragmentShader.getText();
+  vertSource = yield vertexShader.getText();
+  fragSource = yield fragmentShader.getText();
   ok(vertSource.contains("2.0"),
     "The vertex shader source is correct after changing it.");
   ok(!fragSource.contains("0.5"),
     "The fragment shader source is correct after changing the vertex shader.");
 
   let newFragSource = fragSource.replace("1.0", "0.5");
-  let status = yield fragmentShader.compile(newFragSource);
+  status = yield fragmentShader.compile(newFragSource);
   ok(!status,
     "The new fragment shader source was compiled without errors.");
 
@@ -49,8 +49,8 @@ function ifWebGLSupported() {
   yield ensurePixelIs(front, { x: 128, y: 128 }, { r: 255, g: 0, b: 0, a: 127 }, true);
   yield ensurePixelIs(front, { x: 511, y: 511 }, { r: 0, g: 0, b: 0, a: 255 }, true);
 
-  let vertSource = yield vertexShader.getText();
-  let fragSource = yield fragmentShader.getText();
+  vertSource = yield vertexShader.getText();
+  fragSource = yield fragmentShader.getText();
   ok(vertSource.contains("2.0"),
     "The vertex shader source is correct after changing the fragment shader.");
   ok(fragSource.contains("0.5"),

@@ -98,7 +98,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=840488
   }
 
   function testList(expectEnabled, win, list, idx) {
-    let idx = idx || 0;
+    idx = idx || 0;
     let deferred = Promise.defer();
     let target = list[idx] + path;
     info("Testing scriptability for: " + target + ". expecting " + expectEnabled);

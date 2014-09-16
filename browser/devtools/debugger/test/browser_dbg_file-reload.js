@@ -43,7 +43,7 @@ function test() {
       ok(gEditor.getText().contains("bacon"),
         "The newly shown source contains bacon. Mmm, delicious!");
 
-      let { source } = gSources.selectedItem.attachment;
+      ({ source } = gSources.selectedItem.attachment);
       let [, secondText] = yield gControllerSources.getText(source);
       let secondNumber = parseFloat(secondText.match(/\d\.\d+/)[0]);
 

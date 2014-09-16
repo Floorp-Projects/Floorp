@@ -187,8 +187,9 @@ class CompileInfo
         nimplicit_ = StartArgSlot(script)                   /* scope chain and argument obj */
                    + (fun ? 1 : 0);                         /* this */
         nargs_ = fun ? fun->nargs() : 0;
-        nfixedvars_ = script->nfixedvars();
+        nbodyfixed_ = script->nbodyfixed();
         nlocals_ = script->nfixed();
+        fixedLexicalBegin_ = script->fixedLexicalBegin();
         nstack_ = script->nslots() - script->nfixed();
         nslots_ = nimplicit_ + nargs_ + nlocals_ + nstack_;
     }
@@ -200,10 +201,11 @@ class CompileInfo
     {
         nimplicit_ = 0;
         nargs_ = 0;
-        nfixedvars_ = 0;
+        nbodyfixed_ = 0;
         nlocals_ = nlocals;
         nstack_ = 1;  /* For FunctionCompiler::pushPhiInput/popPhiOutput */
         nslots_ = nlocals_ + nstack_;
+        fixedLexicalBegin_ = nlocals;
     }
 
     JSScript *script() const {
@@ -291,10 +293,10 @@ class CompileInfo
     unsigned nargs() const {
         return nargs_;
     }
-    // Number of slots needed for "fixed vars".  Note that this is only non-zero
-    // for function code.
-    unsigned nfixedvars() const {
-        return nfixedvars_;
+    // Number of slots needed for fixed body-level bindings.  Note that this
+    // is only non-zero for function code.
+    unsigned nbodyfixed() const {
+        return nbodyfixed_;
     }
     // Number of slots needed for all local variables.  This includes "fixed
     // vars" (see above) and also block-scoped locals.
@@ -303,6 +305,10 @@ class CompileInfo
     }
     unsigned ninvoke() const {
         return nslots_ - nstack_;
+    }
+    // The slot number at which fixed lexicals begin.
+    unsigned fixedLexicalBegin() const {
+        return fixedLexicalBegin_;
     }
 
     uint32_t scopeChainSlot() const {
@@ -377,9 +383,9 @@ class CompileInfo
 
         uint32_t local = index - firstLocalSlot();
         if (local < nlocals()) {
-            // First, check if this local is a var.
-            if (local < nfixedvars())
-                return script()->varIsAliased(local);
+            // First, check if this local is body-level.
+            if (local < nbodyfixed())
+                return script()->bodyLevelLocalIsAliased(local);
 
             // Otherwise, it might be part of a block scope.
             for (; staticScope; staticScope = staticScope->enclosingNestedScope()) {
@@ -466,10 +472,11 @@ class CompileInfo
   private:
     unsigned nimplicit_;
     unsigned nargs_;
-    unsigned nfixedvars_;
+    unsigned nbodyfixed_;
     unsigned nlocals_;
     unsigned nstack_;
     unsigned nslots_;
+    unsigned fixedLexicalBegin_;
     JSScript *script_;
     JSFunction *fun_;
     jsbytecode *osrPc_;
