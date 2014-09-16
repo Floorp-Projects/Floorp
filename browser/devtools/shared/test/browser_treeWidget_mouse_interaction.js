@@ -123,7 +123,7 @@ let testMouseInteraction = Task.async(function*() {
   ok(!node2.hasAttribute("expanded"), "New node is not expanded before clicking");
   tree.once("select", pass);
   click(node2);
-  let [name, data, attachment] = yield event.promise;
+  [name, data, attachment] = yield event.promise;
   ok(node2.classList.contains("theme-selected"),
      "New node has selected class after clicking");
   is(data[0], "level1", "Correct tree path is emitted for new node")

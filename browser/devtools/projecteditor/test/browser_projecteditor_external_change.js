@@ -50,7 +50,7 @@ function testChangeUnsavedFileExternally(projecteditor, filePath, newData) {
   projecteditor.projectTree.selectResource(resource);
   yield onceEditorActivated(projecteditor);
 
-  let editor = projecteditor.currentEditor;
+  editor = projecteditor.currentEditor;
   info ("Checking to make sure the editor is now populated correctly");
   is (editor.editor.getText(), "foobar", "Editor has not been updated with new file contents");
 
@@ -76,7 +76,7 @@ function testChangeFileExternally(projecteditor, filePath, newData) {
   projecteditor.projectTree.selectResource(resource);
   yield onceEditorActivated(projecteditor);
 
-  let editor = projecteditor.currentEditor;
+  editor = projecteditor.currentEditor;
   info ("Checking to make sure the editor is now populated correctly");
   is (editor.editor.getText(), newData, "Editor has been updated with correct file contents");
 

@@ -38,11 +38,17 @@
  * The only way to make one is with the function |PromiseFlat[C]String|,
  * which produce a |const| instance.  ``What if I need to keep a promise
  * around for a little while?'' you might ask.  In that case, you can keep a
- * reference, like so
+ * reference, like so:
  *
  *   const nsCString& flat = PromiseFlatString(aCSubstring);
- *     // this reference holds the anonymous temporary alive, but remember,
- *     // it must _still_ have a lifetime shorter than that of |aCSubstring|
+ *     // Temporaries usually die after the full expression containing the
+ *     // expression that created the temporary is evaluated.  But when a
+ *     // temporary is assigned to a local reference, the temporary's lifetime
+ *     // is extended to the reference's lifetime (C++11 [class.temporary]p5).
+ *     //
+ *     // This reference holds the anonymous temporary alive.  But remember: it
+ *     // must _still_ have a lifetime shorter than that of |aCSubstring|, and
+ *     // |aCSubstring| must not be changed while the PromiseFlatString lives.
  *
  *  SomeOSFunction(flat.get());
  *  SomeOtherOSFunction(flat.get());

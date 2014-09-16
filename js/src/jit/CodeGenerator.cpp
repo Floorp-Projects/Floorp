@@ -9207,5 +9207,29 @@ CodeGenerator::visitRecompileCheck(LRecompileCheck *ins)
     return true;
 }
 
+typedef bool (*ThrowUninitializedLexicalFn)(JSContext *);
+static const VMFunction ThrowUninitializedLexicalInfo =
+    FunctionInfo<ThrowUninitializedLexicalFn>(ThrowUninitializedLexical);
+
+bool
+CodeGenerator::visitLexicalCheck(LLexicalCheck *ins)
+{
+    OutOfLineCode *ool = oolCallVM(ThrowUninitializedLexicalInfo, ins, (ArgList()),
+                                   StoreNothing());
+    if (!ool)
+        return false;
+    ValueOperand inputValue = ToValue(ins, LLexicalCheck::Input);
+    masm.branchTestMagicValue(Assembler::Equal, inputValue, JS_UNINITIALIZED_LEXICAL,
+                              ool->entry());
+    masm.bind(ool->rejoin());
+    return true;
+}
+
+bool
+CodeGenerator::visitThrowUninitializedLexical(LThrowUninitializedLexical *ins)
+{
+    return callVM(ThrowUninitializedLexicalInfo, ins);
+}
+
 } // namespace jit
 } // namespace js

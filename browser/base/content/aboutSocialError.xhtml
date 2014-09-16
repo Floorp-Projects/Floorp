@@ -61,7 +61,7 @@
         case "tryAgain":
           let urlMatch = queryString.match(/url=([^&]+)/);
           let encodedURL = urlMatch && urlMatch[1] ? urlMatch[1] : "";
-          let url = decodeURIComponent(encodedURL);
+          url = decodeURIComponent(encodedURL);
 
           config.tryAgainCallback = loadQueryURL;
           config.queryURL = url;

@@ -6,7 +6,7 @@
 function test() {
   Task.spawn(function* () {
     const TAB_URL = EXAMPLE_URL + "doc_closure-optimized-out.html";
-    let panel, debuggee, gDebugger, sources;
+    let gDebugger, sources;
 
     let [, debuggee, panel] = yield initDebugger(TAB_URL);
     gDebugger = panel.panelWin;

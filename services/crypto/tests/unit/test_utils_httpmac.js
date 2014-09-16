@@ -32,7 +32,7 @@ add_test(function test_sha1() {
 
   let ext = "EXTRA DATA; foo,bar=1";
 
-  let result = CryptoUtils.computeHTTPMACSHA1(id, key, method, uri,
+  result = CryptoUtils.computeHTTPMACSHA1(id, key, method, uri,
                                               {ts: ts, nonce: nonce, ext: ext});
   do_check_eq(btoa(result.mac), "bNf4Fnt5k6DnhmyipLPkuZroH68=");
   do_check_eq(result.getHeader(),
@@ -56,13 +56,13 @@ add_test(function test_nonce_length() {
   let result = get_mac(12);
   do_check_eq(12, atob(result.nonce).length);
 
-  let result = get_mac(2);
+  result = get_mac(2);
   do_check_eq(2, atob(result.nonce).length);
 
-  let result = get_mac(0);
+  result = get_mac(0);
   do_check_eq(8, atob(result.nonce).length);
 
-  let result = get_mac(-1);
+  result = get_mac(-1);
   do_check_eq(8, atob(result.nonce).length);
 
   run_next_test();

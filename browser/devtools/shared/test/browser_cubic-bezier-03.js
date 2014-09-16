@@ -55,9 +55,9 @@ function* coordinatesCanBeChangedByProvidingAValue(widget) {
   is(bezier.P2[1], 1, "The new P2 progress coordinate is correct");
 
   info("Setting a custom cubic-bezier css value");
-  let onUpdated = widget.once("updated");
+  onUpdated = widget.once("updated");
   widget.cssCubicBezierValue = "cubic-bezier(.25,-0.5, 1, 1.45)";
-  let bezier = yield onUpdated;
+  bezier = yield onUpdated;
   ok(true, "The updated event was fired as a result of setting cssValue");
 
   is(bezier.P1[0], .25, "The new P1 time coordinate is correct");

@@ -217,6 +217,7 @@ CallObject::create(JSContext *cx, HandleScript script, HandleObject enclosing, H
 
     callobj->as<ScopeObject>().setEnclosingScope(enclosing);
     callobj->initFixedSlot(CALLEE_SLOT, ObjectOrNullValue(callee));
+    callobj->setAliasedLexicalsToThrowOnTouch(script);
 
     if (script->treatAsRunOnce()) {
         Rooted<CallObject*> ncallobj(cx, callobj);
@@ -1157,7 +1158,7 @@ class DebugScopeProxy : public BaseProxyHandler
         *accessResult = ACCESS_GENERIC;
         ScopeIterVal *maybeLiveScope = DebugScopes::hasLiveScope(*scope);
 
-        /* Handle unaliased formals, vars, and consts at function scope. */
+        /* Handle unaliased formals, vars, lets, and consts at function scope. */
         if (scope->is<CallObject>() && !scope->as<CallObject>().isForEval()) {
             CallObject &callobj = scope->as<CallObject>();
             RootedScript script(cx, callobj.callee().nonLazyScript());
@@ -1173,15 +1174,15 @@ class DebugScopeProxy : public BaseProxyHandler
 
             if (bi->kind() == Binding::VARIABLE || bi->kind() == Binding::CONSTANT) {
                 uint32_t i = bi.frameIndex();
-                if (script->varIsAliased(i))
+                if (script->bodyLevelLocalIsAliased(i))
                     return true;
 
                 if (maybeLiveScope) {
                     AbstractFramePtr frame = maybeLiveScope->frame();
                     if (action == GET)
-                        vp.set(frame.unaliasedVar(i));
+                        vp.set(frame.unaliasedLocal(i));
                     else
-                        frame.unaliasedVar(i) = vp;
+                        frame.unaliasedLocal(i) = vp;
                 } else if (JSObject *snapshot = debugScope->maybeSnapshot()) {
                     if (action == GET)
                         vp.set(snapshot->getDenseElement(bindings.numArgs() + i));

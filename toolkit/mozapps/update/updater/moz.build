@@ -41,8 +41,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'shlwapi',
         'crypt32',
         'advapi32',
-        'ole32',
-        'rpcrt4',
     ]
 else:
     USE_LIBS += [

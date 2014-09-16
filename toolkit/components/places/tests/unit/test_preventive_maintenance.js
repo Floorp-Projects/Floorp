@@ -1170,7 +1170,7 @@ tests.push({
     setLastVisitDate(url, now++);
 
     // Add a page without visits.
-    let url = "http://5.moz.org/";
+    url = "http://5.moz.org/";
     addPlace(url);
     // Add a page without visits and set wrong visit_count.
     url = "http://6.moz.org/";

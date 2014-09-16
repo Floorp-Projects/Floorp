@@ -1022,7 +1022,7 @@ private:
    * and the function returns true.
    * Otherwise, nothing happens and the function return false.
    */
-  bool OverscrollBy(const CSSPoint& aOverscroll);
+  bool OverscrollBy(const ScreenPoint& aOverscroll);
 
   /**
    * Build the chain of APZCs along which scroll will be handed off when

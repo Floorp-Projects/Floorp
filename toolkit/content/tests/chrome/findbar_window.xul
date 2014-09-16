@@ -344,7 +344,7 @@
       ok(a == b && b == c, "testFindWithHighlight 1: " + a + ", " + b + ", " + c + ".");
 
       let oldGetInitialSelection = gFindBar._getInitialSelection;
-      let searchStr = "t";
+      searchStr = "t";
       gFindBar._getInitialSelection = () => searchStr;
       findCommand.doCommand();
       gFindBar._getInitialSelection = oldGetInitialSelection;

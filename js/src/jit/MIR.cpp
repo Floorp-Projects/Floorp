@@ -647,6 +647,9 @@ MConstant::printOpcode(FILE *fp) const
       case MIRType_MagicOptimizedOut:
         fprintf(fp, "magic optimized-out");
         break;
+      case MIRType_MagicUninitializedLexical:
+        fprintf(fp, "magic uninitialized-lexical");
+        break;
       default:
         MOZ_CRASH("unexpected type");
     }

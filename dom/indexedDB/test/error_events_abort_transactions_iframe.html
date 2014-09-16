@@ -96,12 +96,12 @@
       is(event.target.error.name, "ConstraintError", "Right error");
       is(originalRequest.transaction, null, "request.transaction should now be null");
 
-      let request = indexedDB.open(window.location.pathname, 1);
+      request = indexedDB.open(window.location.pathname, 1);
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
-      let event = yield undefined;
+      event = yield undefined;
 
-      let db = event.target.result;
+      db = event.target.result;
 
       event.target.transaction.oncomplete = grabEventAndContinueHandler;
       event.target.transaction.onabort = unexpectedSuccessHandler;
@@ -109,7 +109,7 @@
       is(db.version, "1", "Correct version");
       is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
 
-      let objectStore = db.createObjectStore("foo");
+      objectStore = db.createObjectStore("foo");
 
       is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
       ok(db.objectStoreNames.contains("foo"), "Has correct objectStore");
@@ -153,14 +153,14 @@
 
       db.close();
 
-      let request = indexedDB.open(window.location.pathname, 2);
+      request = indexedDB.open(window.location.pathname, 2);
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
-      let event = yield undefined;
+      event = yield undefined;
 
-      let db = event.target.result;
+      db = event.target.result;
 
-      let trans = event.target.transaction;
+      trans = event.target.transaction;
       trans.oncomplete = unexpectedSuccessHandler;
 
       is(db.version, "2", "Correct version");
@@ -169,7 +169,7 @@
       ok(db.objectStoreNames.contains("bar"), "Has correct objectStore");
 
       let createdObjectStore = db.createObjectStore("newlyCreated");
-      let objectStore = trans.objectStore("foo");
+      objectStore = trans.objectStore("foo");
       let deletedObjectStore = trans.objectStore("bar");
       deletedObjectStore.deleteIndex("foo");
       db.deleteObjectStore("bar");

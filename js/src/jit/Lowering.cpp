@@ -3790,6 +3790,23 @@ LIRGenerator::visitSimdBinaryBitwise(MSimdBinaryBitwise *ins)
     return false;
 }
 
+bool
+LIRGenerator::visitLexicalCheck(MLexicalCheck *ins)
+{
+    MDefinition *input = ins->input();
+    MOZ_ASSERT(input->type() == MIRType_Value);
+    LLexicalCheck *lir = new(alloc()) LLexicalCheck();
+    return redefine(ins, input) && useBox(lir, LLexicalCheck::Input, input) &&
+           add(lir, ins) && assignSafepoint(lir, ins);
+}
+
+bool
+LIRGenerator::visitThrowUninitializedLexical(MThrowUninitializedLexical *ins)
+{
+    LThrowUninitializedLexical *lir = new(alloc()) LThrowUninitializedLexical();
+    return add(lir, ins) && assignSafepoint(lir, ins);
+}
+
 static void
 SpewResumePoint(MBasicBlock *block, MInstruction *ins, MResumePoint *resumePoint)
 {

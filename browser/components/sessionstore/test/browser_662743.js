@@ -89,7 +89,7 @@ function testTabRestoreData(aFormData, aExpectedValue, aCallback) {
 
       let restoredFormData = restoredTabState.formdata;
       let selectIdFormData = restoredFormData.id.select_id;
-      let value = restoredFormData.id.select_id.value;
+      value = restoredFormData.id.select_id.value;
 
       // test format
       ok("id" in restoredFormData || "xpath" in restoredFormData,

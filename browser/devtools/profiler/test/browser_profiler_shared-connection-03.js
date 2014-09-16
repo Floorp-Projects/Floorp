@@ -18,7 +18,7 @@ let test = Task.async(function*() {
   ok(nsIProfilerModule.IsActive(),
     "The built-in profiler module should now be active.");
 
-  let result = yield front._request("profiler", "stopProfiler");
+  result = yield front._request("profiler", "stopProfiler");
   is(result.started, false,
     "The request finished successfully and the profiler should've been stopped.");
   ok(!nsIProfilerModule.IsActive(),

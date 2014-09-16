@@ -49,7 +49,7 @@ function runTests() {
   // Test with enhanced = true
   NewTabUtils.allPages.enhanced = true;
   yield addNewTabPageTab();
-  let {type, enhanced, title} = getData(0);
+  ({type, enhanced, title} = getData(0));
   is(type, "organic", "directory link is still organic");
   isnot(enhanced, "", "directory link still has enhanced image");
   is(title, "title");
@@ -59,7 +59,7 @@ function runTests() {
   // Test with a pinned link
   setPinnedLinks("-1");
   yield addNewTabPageTab();
-  let {type, enhanced, title} = getData(0);
+  ({type, enhanced, title} = getData(0));
   is(type, "enhanced", "pinned history link is enhanced");
   isnot(enhanced, "", "pinned history link has enhanced image");
   is(title, "title");
@@ -69,7 +69,7 @@ function runTests() {
   // Test pinned link with enhanced = false
   NewTabUtils.allPages.enhanced = false;
   yield addNewTabPageTab();
-  let {type, enhanced, title} = getData(0);
+  ({type, enhanced, title} = getData(0));
   isnot(type, "enhanced", "history link is not enhanced");
   is(enhanced, "", "history link has no enhanced image");
   is(title, "site#-1");

@@ -43,7 +43,6 @@ addTest(function setup() {
 });
 
 addTest(function inheritedUserStyles() {
-  let node = node;
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#svgcontent rect").then(node => {
     return gStyles.getApplied(node, { inherited: true, filter: "user" });
   }).then(applied => {

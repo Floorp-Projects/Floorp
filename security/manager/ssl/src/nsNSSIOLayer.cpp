@@ -6,6 +6,7 @@
 
 #include "nsNSSIOLayer.h"
 
+#include "pkix/ScopedPtr.h"
 #include "pkix/pkixtypes.h"
 #include "nsNSSComponent.h"
 #include "mozilla/Casting.h"
@@ -24,7 +25,6 @@
 #include "nsPrintfCString.h"
 #include "SSLServerCertVerification.h"
 #include "nsNSSCertHelper.h"
-#include "nsNSSCleaner.h"
 
 #ifndef MOZ_NO_EV_CERTS
 #include "nsIDocShell.h"
@@ -40,6 +40,7 @@
 #include "SharedSSLState.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
+#include "NSSCertDBTrustDomain.h"
 #include "NSSErrorsService.h"
 
 #include "ssl.h"
@@ -65,8 +66,6 @@ using namespace mozilla::psm;
                        //file.
 
 namespace {
-
-NSSCleanupAutoPtrClass(void, PR_FREEIF)
 
 void
 getSiteKey(const nsACString& hostName, uint16_t port,
@@ -2164,16 +2163,15 @@ ClientAuthDataRunnable::RunOnTargetThread()
       NS_ASSERTION(nicknames->numnicknames == NumberOfCerts, "nicknames->numnicknames != NumberOfCerts");
 
       // Get CN and O of the subject and O of the issuer
-      char* ccn = CERT_GetCommonName(&mServerCert->subject);
-      void* v = ccn;
-      voidCleaner ccnCleaner(v);
-      NS_ConvertUTF8toUTF16 cn(ccn);
+      mozilla::pkix::ScopedPtr<char, PORT_Free_string> ccn(
+        CERT_GetCommonName(&mServerCert->subject));
+      NS_ConvertUTF8toUTF16 cn(ccn.get());
 
       int32_t port;
       mSocketInfo->GetPort(&port);
 
       nsString cn_host_port;
-      if (ccn && strcmp(ccn, hostname) == 0) {
+      if (ccn && strcmp(ccn.get(), hostname) == 0) {
         cn_host_port.Append(cn);
         cn_host_port.Append(':');
         cn_host_port.AppendInt(port);

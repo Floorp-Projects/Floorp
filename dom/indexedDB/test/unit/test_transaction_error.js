@@ -43,7 +43,7 @@ function testSteps() {
 
   info("Adding duplicate entry with preventDefault()");
 
-  let request = objectStore.add(data, dataKey);
+  request = objectStore.add(data, dataKey);
   request.onsuccess = unexpectedSuccessHandler;
   request.onerror = grabEventAndContinueHandler;
   event = yield undefined;

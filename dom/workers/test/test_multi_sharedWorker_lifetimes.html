@@ -70,7 +70,7 @@
 
           // Navigate when the bfcache is disabled.
           info("Navigating to about:blank");
-          let frame = document.getElementById("frame");
+          frame = document.getElementById("frame");
           frame.onload = sendToGenerator;
           frame.src = "about:blank";
           frame.contentWindow.document.body.offsetTop;
@@ -86,7 +86,7 @@
           frame = frame.contentWindow;
           frame.postMessage({ command: "retrieve" }, "*");
 
-          let event = yield undefined;
+          event = yield undefined;
           ok(event instanceof MessageEvent, "Got a MessageEvent");
           is(event.source, frame, "Correct window got the event");
           is(event.data.type, "result", "Got a result message");
@@ -108,7 +108,7 @@
           yield undefined;
 
           // Navigate when the bfcache is enabled.
-          let frame = document.getElementById("frame");
+          frame = document.getElementById("frame");
           frame.onload = sendToGenerator;
 
           info("Navigating to about:blank");
@@ -136,7 +136,7 @@
           frame = frame.contentWindow;
           frame.postMessage({ command: "retrieve" }, "*");
 
-          let event = yield undefined;
+          event = yield undefined;
           ok(event instanceof MessageEvent, "Got a MessageEvent");
           is(event.source, frame, "Correct window got the event");
           is(event.data.type, "result", "Got a result message");

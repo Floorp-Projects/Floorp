@@ -38,7 +38,7 @@ function check_size(dbOpener, file, pageSize, expectedCacheSize)
   db = dbOpener(file);
 
   // Check cache size is as expected.
-  let stmt = db.createStatement("PRAGMA cache_size");
+  stmt = db.createStatement("PRAGMA cache_size");
   do_check_true(stmt.executeStep());
   do_check_eq(stmt.row.cache_size, expectedCacheSize);
   stmt.finalize();

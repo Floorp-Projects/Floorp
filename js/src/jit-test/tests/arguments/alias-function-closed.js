@@ -122,7 +122,7 @@ function f5(a, b, c, d) {
   }
 
   var a, b = ()=>63;
-  let c, d = ()=>65;
+  var c, d = ()=>65;
 
   // after var declarations, before function declarations
   assertEq(a(), 52);

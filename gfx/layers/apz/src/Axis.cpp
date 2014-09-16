@@ -72,9 +72,9 @@ void Axis::StartTouch(ScreenCoord aPos, uint32_t aTimestampMs) {
   mAxisLocked = false;
 }
 
-bool Axis::AdjustDisplacement(CSSCoord aDisplacement,
-                              /* CSSCoord */ float& aDisplacementOut,
-                              /* CSSCoord */ float& aOverscrollAmountOut)
+bool Axis::AdjustDisplacement(ScreenCoord aDisplacement,
+                              /* ScreenCoord */ float& aDisplacementOut,
+                              /* ScreenCoord */ float& aOverscrollAmountOut)
 {
   if (mAxisLocked) {
     aOverscrollAmountOut = 0;
@@ -82,10 +82,10 @@ bool Axis::AdjustDisplacement(CSSCoord aDisplacement,
     return false;
   }
 
-  CSSCoord displacement = aDisplacement;
+  ScreenCoord displacement = aDisplacement;
 
   // First consume any overscroll in the opposite direction along this axis.
-  CSSCoord consumedOverscroll = 0;
+  ScreenCoord consumedOverscroll = 0;
   if (mOverscroll > 0 && aDisplacement < 0) {
     consumedOverscroll = std::min(mOverscroll, -aDisplacement);
   } else if (mOverscroll < 0 && aDisplacement > 0) {
@@ -96,18 +96,18 @@ bool Axis::AdjustDisplacement(CSSCoord aDisplacement,
 
   // Split the requested displacement into an allowed displacement that does
   // not overscroll, and an overscroll amount.
-  if (DisplacementWillOverscroll(displacement) != OVERSCROLL_NONE) {
+  aOverscrollAmountOut = DisplacementWillOverscrollAmount(displacement);
+  if (aOverscrollAmountOut != 0.0f) {
     // No need to have a velocity along this axis anymore; it won't take us
     // anywhere, so we're just spinning needlessly.
     mVelocity = 0.0f;
-    aOverscrollAmountOut = DisplacementWillOverscrollAmount(displacement);
     displacement -= aOverscrollAmountOut;
   }
   aDisplacementOut = displacement;
   return fabsf(consumedOverscroll) > EPSILON;
 }
 
-CSSCoord Axis::ApplyResistance(CSSCoord aRequestedOverscroll) const {
+ScreenCoord Axis::ApplyResistance(ScreenCoord aRequestedOverscroll) const {
   // 'resistanceFactor' is a value between 0 and 1, which:
   //   - tends to 1 as the existing overscroll tends to 0
   //   - tends to 0 as the existing overscroll tends to the composition length
@@ -115,10 +115,10 @@ CSSCoord Axis::ApplyResistance(CSSCoord aRequestedOverscroll) const {
   // factor; this should prevent overscrolling by more than the composition
   // length.
   float resistanceFactor = 1 - fabsf(mOverscroll) / GetCompositionLength();
-  return resistanceFactor < 0 ? CSSCoord(0) : aRequestedOverscroll * resistanceFactor;
+  return resistanceFactor < 0 ? ScreenCoord(0) : aRequestedOverscroll * resistanceFactor;
 }
 
-void Axis::OverscrollBy(CSSCoord aOverscroll) {
+void Axis::OverscrollBy(ScreenCoord aOverscroll) {
   MOZ_ASSERT(CanScroll());
   aOverscroll = ApplyResistance(aOverscroll);
   if (aOverscroll > 0) {
@@ -145,7 +145,7 @@ void Axis::OverscrollBy(CSSCoord aOverscroll) {
   mOverscroll += aOverscroll;
 }
 
-CSSCoord Axis::GetOverscroll() const {
+ScreenCoord Axis::GetOverscroll() const {
   return mOverscroll;
 }
 
@@ -170,14 +170,13 @@ bool Axis::SampleSnapBack(const TimeDuration& aDelta) {
   float force = -1 * kSpringStiffness * mOverscroll - kSpringFriction * mVelocity;
   float acceleration = force / kMass;
   mVelocity += acceleration * aDelta.ToMilliseconds();
-  float screenDisplacement = mVelocity * aDelta.ToMilliseconds();
-  float cssDisplacement = screenDisplacement / GetFrameMetrics().GetZoom().scale;
+  float displacement = mVelocity * aDelta.ToMilliseconds();
   if (mOverscroll > 0) {
-    if (cssDisplacement > 0) {
+    if (displacement > 0) {
       NS_WARNING("Overscroll snap-back animation is moving in the wrong direction!");
       return false;
     }
-    mOverscroll = std::max(mOverscroll + cssDisplacement, 0.0f);
+    mOverscroll = std::max(mOverscroll + displacement, 0.0f);
     // Overscroll relieved, do not continue animation.
     if (mOverscroll == 0.f) {
       mVelocity = 0;
@@ -185,11 +184,11 @@ bool Axis::SampleSnapBack(const TimeDuration& aDelta) {
     }
     return true;
   } else if (mOverscroll < 0) {
-    if (cssDisplacement < 0) {
+    if (displacement < 0) {
       NS_WARNING("Overscroll snap-back animation is moving in the wrong direction!");
       return false;
     }
-    mOverscroll = std::min(mOverscroll + cssDisplacement, 0.0f);
+    mOverscroll = std::min(mOverscroll + displacement, 0.0f);
     // Overscroll relieved, do not continue animation.
     if (mOverscroll == 0.f) {
       mVelocity = 0;
@@ -273,37 +272,35 @@ bool Axis::FlingApplyFrictionOrCancel(const TimeDuration& aDelta,
   return true;
 }
 
-Axis::Overscroll Axis::DisplacementWillOverscroll(CSSCoord aDisplacement) {
+ScreenCoord Axis::DisplacementWillOverscrollAmount(ScreenCoord aDisplacement) const {
+  ScreenCoord newOrigin = GetOrigin() + aDisplacement;
+  ScreenCoord newCompositionEnd = GetCompositionEnd() + aDisplacement;
   // If the current pan plus a displacement takes the window to the left of or
   // above the current page rect.
-  bool minus = GetOrigin() + aDisplacement < GetPageStart();
+  bool minus = newOrigin < GetPageStart();
   // If the current pan plus a displacement takes the window to the right of or
   // below the current page rect.
-  bool plus = GetCompositionEnd() + aDisplacement > GetPageEnd();
+  bool plus = newCompositionEnd > GetPageEnd();
   if (minus && plus) {
-    return OVERSCROLL_BOTH;
+    // Don't handle overscrolled in both directions; a displacement can't cause
+    // this, it must have already been zoomed out too far.
+    return 0;
   }
   if (minus) {
-    return OVERSCROLL_MINUS;
+    return newOrigin - GetPageStart();
   }
   if (plus) {
-    return OVERSCROLL_PLUS;
+    return newCompositionEnd - GetPageEnd();
   }
-  return OVERSCROLL_NONE;
+  return 0;
 }
 
-CSSCoord Axis::DisplacementWillOverscrollAmount(CSSCoord aDisplacement) {
-  switch (DisplacementWillOverscroll(aDisplacement)) {
-  case OVERSCROLL_MINUS: return (GetOrigin() + aDisplacement) - GetPageStart();
-  case OVERSCROLL_PLUS: return (GetCompositionEnd() + aDisplacement) - GetPageEnd();
-  // Don't handle overscrolled in both directions; a displacement can't cause
-  // this, it must have already been zoomed out too far.
-  default: return 0;
-  }
-}
-
-CSSCoord Axis::ScaleWillOverscrollAmount(float aScale, CSSCoord aFocus) {
-  CSSCoord originAfterScale = (GetOrigin() + aFocus) - (aFocus / aScale);
+CSSCoord Axis::ScaleWillOverscrollAmount(float aScale, CSSCoord aFocus) const {
+  // Internally, do computations in Screen coordinates *before* the scale is
+  // applied.
+  CSSToScreenScale zoom = GetFrameMetrics().GetZoom();
+  ScreenCoord focus = aFocus * zoom;
+  ScreenCoord originAfterScale = (GetOrigin() + focus) - (focus / aScale);
 
   bool both = ScaleWillOverscrollBothSides(aScale);
   bool minus = GetPageStart() - originAfterScale > COORDINATE_EPSILON;
@@ -315,10 +312,10 @@ CSSCoord Axis::ScaleWillOverscrollAmount(float aScale, CSSCoord aFocus) {
     return 0;
   }
   if (minus) {
-    return originAfterScale - GetPageStart();
+    return (originAfterScale - GetPageStart()) / zoom;
   }
   if (plus) {
-    return originAfterScale + (GetCompositionLength() / aScale) - GetPageEnd();
+    return (originAfterScale + (GetCompositionLength() / aScale) - GetPageEnd()) / zoom;
   }
   return 0;
 }
@@ -331,40 +328,40 @@ void Axis::SetVelocity(float aVelocity) {
   mVelocity = aVelocity;
 }
 
-CSSCoord Axis::GetCompositionEnd() const {
+ScreenCoord Axis::GetCompositionEnd() const {
   return GetOrigin() + GetCompositionLength();
 }
 
-CSSCoord Axis::GetPageEnd() const {
+ScreenCoord Axis::GetPageEnd() const {
   return GetPageStart() + GetPageLength();
 }
 
-CSSCoord Axis::GetOrigin() const {
-  CSSPoint origin = GetFrameMetrics().GetScrollOffset();
+ScreenCoord Axis::GetOrigin() const {
+  ScreenPoint origin = GetFrameMetrics().GetScrollOffset() * GetFrameMetrics().GetZoom();
   return GetPointOffset(origin);
 }
 
-CSSCoord Axis::GetCompositionLength() const {
-  return GetRectLength(GetFrameMetrics().CalculateCompositedRectInCssPixels());
+ScreenCoord Axis::GetCompositionLength() const {
+  return GetRectLength(GetFrameMetrics().mCompositionBounds / GetFrameMetrics().mTransformScale);
 }
 
-CSSCoord Axis::GetPageStart() const {
-  CSSRect pageRect = GetFrameMetrics().GetExpandedScrollableRect();
+ScreenCoord Axis::GetPageStart() const {
+  ScreenRect pageRect = GetFrameMetrics().GetExpandedScrollableRect() * GetFrameMetrics().GetZoom();
   return GetRectOffset(pageRect);
 }
 
-CSSCoord Axis::GetPageLength() const {
-  CSSRect pageRect = GetFrameMetrics().GetExpandedScrollableRect();
+ScreenCoord Axis::GetPageLength() const {
+  ScreenRect pageRect = GetFrameMetrics().GetExpandedScrollableRect() * GetFrameMetrics().GetZoom();
   return GetRectLength(pageRect);
 }
 
-bool Axis::ScaleWillOverscrollBothSides(float aScale) {
+bool Axis::ScaleWillOverscrollBothSides(float aScale) const {
   const FrameMetrics& metrics = GetFrameMetrics();
 
-  CSSToParentLayerScale scale(metrics.GetZoomToParent().scale * aScale);
-  CSSRect cssCompositionBounds = metrics.mCompositionBounds / scale;
+  ScreenToParentLayerScale scale(metrics.mTransformScale.scale * aScale);
+  ScreenRect screenCompositionBounds = metrics.mCompositionBounds / scale;
 
-  return GetRectLength(cssCompositionBounds) - GetRectLength(metrics.GetExpandedScrollableRect()) > COORDINATE_EPSILON;
+  return GetRectLength(screenCompositionBounds) - GetPageLength() > COORDINATE_EPSILON;
 }
 
 const FrameMetrics& Axis::GetFrameMetrics() const {
@@ -378,17 +375,17 @@ AxisX::AxisX(AsyncPanZoomController* aAsyncPanZoomController)
 
 }
 
-CSSCoord AxisX::GetPointOffset(const CSSPoint& aPoint) const
+ScreenCoord AxisX::GetPointOffset(const ScreenPoint& aPoint) const
 {
   return aPoint.x;
 }
 
-CSSCoord AxisX::GetRectLength(const CSSRect& aRect) const
+ScreenCoord AxisX::GetRectLength(const ScreenRect& aRect) const
 {
   return aRect.width;
 }
 
-CSSCoord AxisX::GetRectOffset(const CSSRect& aRect) const
+ScreenCoord AxisX::GetRectOffset(const ScreenRect& aRect) const
 {
   return aRect.x;
 }
@@ -404,17 +401,17 @@ AxisY::AxisY(AsyncPanZoomController* aAsyncPanZoomController)
 
 }
 
-CSSCoord AxisY::GetPointOffset(const CSSPoint& aPoint) const
+ScreenCoord AxisY::GetPointOffset(const ScreenPoint& aPoint) const
 {
   return aPoint.y;
 }
 
-CSSCoord AxisY::GetRectLength(const CSSRect& aRect) const
+ScreenCoord AxisY::GetRectLength(const ScreenRect& aRect) const
 {
   return aRect.height;
 }
 
-CSSCoord AxisY::GetRectOffset(const CSSRect& aRect) const
+ScreenCoord AxisY::GetRectOffset(const ScreenRect& aRect) const
 {
   return aRect.y;
 }

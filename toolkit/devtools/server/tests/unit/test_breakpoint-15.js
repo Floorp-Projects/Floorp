@@ -49,8 +49,8 @@ const testSameBreakpoint = Task.async(function* () {
     column: 6
   };
 
-  let [firstResponse, firstBpClient] = yield setBreakpoint(gThreadClient, columnLocation);
-  let [secondResponse, secondBpClient] = yield setBreakpoint(gThreadClient, columnLocation);
+  [firstResponse, firstBpClient] = yield setBreakpoint(gThreadClient, columnLocation);
+  [secondResponse, secondBpClient] = yield setBreakpoint(gThreadClient, columnLocation);
 
   do_check_eq(secondBpClient.actor, secondBpClient.actor, "Should get the same actor column breakpoints");
 

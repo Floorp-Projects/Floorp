@@ -46,7 +46,7 @@ add_task(function remove_smart_bookmark_and_restore() {
   PlacesUtils.bookmarks.removeItem(smartBookmarkItemIds[0]);
   Services.prefs.setIntPref("browser.places.smartBookmarksVersion", 0);
   gluesvc.ensurePlacesDefaultQueriesInitialized();
-  let smartBookmarkItemIds =
+  smartBookmarkItemIds =
     PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
   do_check_eq(smartBookmarkItemIds.length, smartBookmarksCount);
   do_log_info("check that pref has been bumped up");
