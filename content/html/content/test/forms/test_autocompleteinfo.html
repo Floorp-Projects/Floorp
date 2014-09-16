@@ -65,6 +65,12 @@ var values = [
   ["billing billing billing mobile tel", {}],
 ];
 
+var autocompleteEnabledTypes = ["hidden", "text", "search", "url", "tel",
+                                "email", "password", "date", "time", "number",
+                                "range", "color"];
+var autocompleteDisabledTypes = ["reset", "submit", "image", "button", "radio",
+                                 "checkbox", "file"];
+
 function start() {
   const fieldid = "input";
   var field = document.getElementById(fieldid);
@@ -87,7 +93,23 @@ function start() {
 
   }
 
+  for (var type of autocompleteEnabledTypes) {
+    testAutocomplete(field, type, true);
+  }
+
+  for (var type of autocompleteDisabledTypes) {
+    testAutocomplete(field, type, false);
+  }
   SimpleTest.finish();
+}
+
+function testAutocomplete(aField, aType, aEnabled) {
+  aField.type = aType;
+  if (aEnabled) {
+    ok(aField.getAutocompleteInfo() !== null, "getAutocompleteInfo shouldn't return null");
+  } else {
+    is(aField.getAutocompleteInfo(), null, "getAutocompleteInfo should return null");
+  }
 }
 
 SimpleTest.waitForExplicitFinish();

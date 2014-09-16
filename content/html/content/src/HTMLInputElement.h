@@ -392,7 +392,7 @@ public:
     SetHTMLAttr(nsGkAtoms::autocomplete, aValue, aRv);
   }
 
-  void GetAutocompleteInfo(AutocompleteInfo& aInfo);
+  void GetAutocompleteInfo(Nullable<AutocompleteInfo>& aInfo);
 
   bool Autofocus() const
   {
@@ -960,6 +960,11 @@ protected:
    * Returns if valueAsNumber attribute applies for the current type.
    */
   bool DoesValueAsNumberApply() const { return DoesMinMaxApply(); }
+
+  /**
+   * Returns if autocomplete attribute applies for the current type.
+   */
+  bool DoesAutocompleteApply() const;
 
   /**
    * Returns if the maxlength attribute applies for the current type.

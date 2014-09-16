@@ -1528,6 +1528,10 @@ NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLInputElement, Type, type,
 NS_IMETHODIMP
 HTMLInputElement::GetAutocomplete(nsAString& aValue)
 {
+  if (!DoesAutocompleteApply()) {
+    return NS_OK;
+  }
+
   aValue.Truncate(0);
   const nsAttrValue* attributeVal = GetParsedAttr(nsGkAtoms::autocomplete);
 
@@ -1544,11 +1548,16 @@ HTMLInputElement::SetAutocomplete(const nsAString& aValue)
 }
 
 void
-HTMLInputElement::GetAutocompleteInfo(AutocompleteInfo& aInfo)
+HTMLInputElement::GetAutocompleteInfo(Nullable<AutocompleteInfo>& aInfo)
 {
+  if (!DoesAutocompleteApply()) {
+    aInfo.SetNull();
+    return;
+  }
+
   const nsAttrValue* attributeVal = GetParsedAttr(nsGkAtoms::autocomplete);
   mAutocompleteAttrState =
-    nsContentUtils::SerializeAutocompleteAttribute(attributeVal, aInfo,
+    nsContentUtils::SerializeAutocompleteAttribute(attributeVal, aInfo.SetValue(),
                                                    mAutocompleteAttrState);
 }
 
@@ -6257,6 +6266,43 @@ HTMLInputElement::DoesMinMaxApply() const
       return false;
     default:
       NS_NOTYETIMPLEMENTED("Unexpected input type in DoesRequiredApply()");
+      return false;
+#else // DEBUG
+    default:
+      return false;
+#endif // DEBUG
+  }
+}
+
+bool
+HTMLInputElement::DoesAutocompleteApply() const
+{
+  switch (mType)
+  {
+    case NS_FORM_INPUT_HIDDEN:
+    case NS_FORM_INPUT_TEXT:
+    case NS_FORM_INPUT_SEARCH:
+    case NS_FORM_INPUT_URL:
+    case NS_FORM_INPUT_TEL:
+    case NS_FORM_INPUT_EMAIL:
+    case NS_FORM_INPUT_PASSWORD:
+    case NS_FORM_INPUT_DATE:
+    case NS_FORM_INPUT_TIME:
+    case NS_FORM_INPUT_NUMBER:
+    case NS_FORM_INPUT_RANGE:
+    case NS_FORM_INPUT_COLOR:
+      return true;
+#ifdef DEBUG
+    case NS_FORM_INPUT_RESET:
+    case NS_FORM_INPUT_SUBMIT:
+    case NS_FORM_INPUT_IMAGE:
+    case NS_FORM_INPUT_BUTTON:
+    case NS_FORM_INPUT_RADIO:
+    case NS_FORM_INPUT_CHECKBOX:
+    case NS_FORM_INPUT_FILE:
+      return false;
+    default:
+      NS_NOTYETIMPLEMENTED("Unexpected input type in DoesAutocompleteApply()");
       return false;
 #else // DEBUG
     default:
