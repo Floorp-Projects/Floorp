@@ -73,7 +73,7 @@ public class testReaderMode extends AboutHomeTest {
         contentPageShowExpecter.unregisterListener();
         paintExpecter.blockUntilClear(EVENT_CLEAR_DELAY_MS);
         paintExpecter.unregisterListener();
-        verifyPageTitle("Robocop Text Page");
+        verifyPageTitle(StringHelper.ROBOCOP_TEXT_PAGE_TITLE);
 
         // Open the share menu for the reader toolbar
         height = mDriver.getGeckoTop() + mDriver.getGeckoHeight() - 10;
@@ -104,7 +104,9 @@ public class testReaderMode extends AboutHomeTest {
         contentEventExpecter.unregisterListener();
 
         // Check if the page is present in the Reading List
-        mAsserter.ok(mSolo.waitForText("Robocop Text Page"), "Verify if the page is added to your Reading List", "The page is present in your Reading List");
+        mAsserter.ok(mSolo.waitForText(StringHelper.ROBOCOP_TEXT_PAGE_TITLE),
+                "Verify if the page is added to your Reading List",
+                StringHelper.ROBOCOP_TEXT_PAGE_TITLE);
 
         // Check if the page is added in History tab like a Reading List item
         openAboutHomeTab(AboutHomeTabs.HISTORY);
@@ -114,7 +116,7 @@ public class testReaderMode extends AboutHomeTest {
         mSolo.clickLongOnView(child);
         mAsserter.ok(mSolo.waitForText("Open in Reader"), "Verify if the page is present in history as a Reading List item", "The page is present in history as a Reading List item");
         mActions.sendSpecialKey(Actions.SpecialKey.BACK); // Dismiss the context menu
-        mSolo.waitForText("Robocop Text Page");
+        mSolo.waitForText(StringHelper.ROBOCOP_TEXT_PAGE_TITLE);
 
         // Verify separately the Reading List entries for tablets and phone because for tablets there is an extra child in UI design
         if (devType.equals("phone")) {
@@ -132,7 +134,7 @@ public class testReaderMode extends AboutHomeTest {
         mSolo.clickOnView(child);
         contentEventExpecter.blockForEvent();
         contentEventExpecter.unregisterListener();
-        verifyPageTitle("Robocop Text Page");
+        verifyPageTitle(StringHelper.ROBOCOP_TEXT_PAGE_TITLE);
 
         // Verify that we are in reader mode and remove the page from Reading List
         height = mDriver.getGeckoTop() + mDriver.getGeckoHeight() - 10;
@@ -140,7 +142,7 @@ public class testReaderMode extends AboutHomeTest {
         mAsserter.dumpLog("Long Clicking at width = " + String.valueOf(width) + " and height = " + String.valueOf(height));
         mSolo.clickOnScreen(width,height);
         mAsserter.ok(mSolo.waitForText("Page removed from your Reading List"), "Waiting for the page to removed from your Reading List", "The page is removed from your Reading List");
-        verifyPageTitle("Robocop Text Page");
+        verifyPageTitle(StringHelper.ROBOCOP_TEXT_PAGE_TITLE);
 
         //Check if the Reading List is empty
         openAboutHomeTab(AboutHomeTabs.READING_LIST);
@@ -162,7 +164,7 @@ public class testReaderMode extends AboutHomeTest {
                 @Override
                 public boolean isSatisfied() {
                     View conditionIcon = actionLayoutEntry.getChildAt(1);
-                    if (conditionIcon == null || 
+                    if (conditionIcon == null ||
                         conditionIcon.getVisibility() != View.VISIBLE)
                         return false;
                     return true;

@@ -11,7 +11,7 @@ import org.mozilla.gecko.PaintedSurface;
  */
 public class testFlingCorrectness extends PixelTest {
     public void testFlingCorrectness() {
-        String url = getAbsoluteUrl("/robocop/robocop_boxes.html");
+        String url = getAbsoluteUrl(StringHelper.ROBOCOP_BOXES_URL);
 
         MotionEventHelper meh = new MotionEventHelper(getInstrumentation(), mDriver.getGeckoLeft(), mDriver.getGeckoTop());
 
