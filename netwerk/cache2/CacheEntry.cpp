@@ -759,6 +759,11 @@ void CacheEntry::InvokeAvailableCallback(Callback const & aCallback)
     return;
   }
 
+  if (NS_SUCCEEDED(mFileStatus)) {
+    // Let the last-fetched and fetch-count properties be updated.
+    mFile->OnFetched();
+  }
+
   if (mIsDoomed || aCallback.mNotWanted) {
     LOG(("  doomed or not wanted, notifying OCEA with NS_ERROR_CACHE_KEY_NOT_FOUND"));
     aCallback.mCallback->OnCacheEntryAvailable(
