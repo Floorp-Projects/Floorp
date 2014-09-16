@@ -65,7 +65,8 @@ add_task(function*() {
   let tab = gBrowser.addTab("about:about");
   yield promiseTabLoaded(tab);
 
-  yield check_a11y_label("% about", "about:about moz-action:switchtab,about:about Tab");
+  let actionURL = makeActionURI("switchtab", {url: "about:about"}).spec;
+  yield check_a11y_label("% about", "about:about " + actionURL + " Tab");
 
   yield promisePopupHidden(gURLBar.popup);
   gBrowser.removeTab(tab);

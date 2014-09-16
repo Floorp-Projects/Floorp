@@ -64,7 +64,7 @@ function switchToURL(groupItemOne, groupItemTwo) {
    * switch. The tab should be opened in group two and not in group one.
    */
   // Set the urlbar to include the moz-action.
-  gURLBar.value = "moz-action:switchtab,about:mozilla";
+  gURLBar.value = "moz-action:switchtab," + JSON.stringify({url: "about:mozilla"});
   // Focus the urlbar so we can press enter.
   gURLBar.focus();
   // Press enter.

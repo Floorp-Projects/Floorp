@@ -4539,7 +4539,8 @@ bool
 mozilla::BrowserTabsRemoteAutostart()
 {
   if (!gBrowserTabsRemoteAutostartInitialized) {
-    bool prefEnabled = Preferences::GetBool("browser.tabs.remote.autostart", false);
+    bool prefEnabled = Preferences::GetBool("browser.tabs.remote.autostart", false) ||
+                       Preferences::GetBool("browser.tabs.remote.autostart.1", false);
     bool disabledForA11y = Preferences::GetBool("browser.tabs.remote.autostart.disabled-because-using-a11y", false);
     gBrowserTabsRemoteAutostart = !gSafeMode && !disabledForA11y && prefEnabled;
     gBrowserTabsRemoteAutostartInitialized = true;
