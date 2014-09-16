@@ -2573,7 +2573,8 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
     uint32_t flags = aTextRun->GetFlags();
     flags &= (gfxTextRunFactory::TEXT_IS_RTL |
               gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES |
-              gfxTextRunFactory::TEXT_USE_MATH_SCRIPT);
+              gfxTextRunFactory::TEXT_USE_MATH_SCRIPT |
+              gfxTextRunFactory::TEXT_ORIENT_MASK);
     if (sizeof(T) == sizeof(uint8_t)) {
         flags |= gfxTextRunFactory::TEXT_IS_8BIT;
     }
@@ -2642,8 +2643,13 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
 
         if (boundary) {
             // word was terminated by a space: add that to the textrun
+            uint16_t orientation = flags & gfxTextRunFactory::TEXT_ORIENT_MASK;
+            if (orientation == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_MIXED) {
+                orientation = gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT;
+            }
             if (!aTextRun->SetSpaceGlyphIfSimple(this, aContext,
-                                                 aRunStart + i, ch))
+                                                 aRunStart + i, ch,
+                                                 orientation))
             {
                 static const uint8_t space = ' ';
                 gfxShapedWord *sw =
@@ -2707,24 +2713,7 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
                              uint32_t aRunLength,
                              int32_t aRunScript);
  
-bool
-gfxFont::InitFakeSmallCapsRun(gfxContext     *aContext,
-                              gfxTextRun     *aTextRun,
-                              const uint8_t  *aText,
-                              uint32_t        aOffset,
-                              uint32_t        aLength,
-                              uint8_t         aMatchType,
-                              int32_t         aScript,
-                              bool            aSyntheticLower,
-                              bool            aSyntheticUpper)
-{
-    NS_ConvertASCIItoUTF16 unicodeString(reinterpret_cast<const char*>(aText),
-                                         aLength);
-    return InitFakeSmallCapsRun(aContext, aTextRun, unicodeString.get(),
-                                aOffset, aLength, aMatchType, aScript,
-                                aSyntheticLower, aSyntheticUpper);
-}
-
+template<>
 bool
 gfxFont::InitFakeSmallCapsRun(gfxContext     *aContext,
                               gfxTextRun     *aTextRun,
@@ -2732,6 +2721,7 @@ gfxFont::InitFakeSmallCapsRun(gfxContext     *aContext,
                               uint32_t        aOffset,
                               uint32_t        aLength,
                               uint8_t         aMatchType,
+                              uint16_t        aOrientation,
                               int32_t         aScript,
                               bool            aSyntheticLower,
                               bool            aSyntheticUpper)
@@ -2768,7 +2758,7 @@ gfxFont::InitFakeSmallCapsRun(gfxContext     *aContext,
             if (IsClusterExtender(ch)) {
                 chAction = runAction;
             } else {
-                if (ch != ToUpperCase(ch) || mozilla::unicode::SpecialUpper(ch)) {
+                if (ch != ToUpperCase(ch) || SpecialUpper(ch)) {
                     // ch is lower case
                     chAction = (aSyntheticLower ? kUppercaseReduce : kNoChange);
                 } else if (ch != ToLowerCase(ch)) {
@@ -2801,7 +2791,8 @@ gfxFont::InitFakeSmallCapsRun(gfxContext     *aContext,
             switch (runAction) {
             case kNoChange:
                 // just use the current font and the existing string
-                aTextRun->AddGlyphRun(f, aMatchType, aOffset + runStart, true);
+                aTextRun->AddGlyphRun(f, aMatchType, aOffset + runStart, true,
+                                      aOrientation);
                 if (!f->SplitAndInitTextRun(aContext, aTextRun,
                                             aText + runStart,
                                             aOffset + runStart, runLength,
@@ -2842,7 +2833,7 @@ gfxFont::InitFakeSmallCapsRun(gfxContext     *aContext,
                     tempRun =
                         gfxTextRun::Create(&params, convertedString.Length(),
                                            aTextRun->GetFontGroup(), 0);
-                    tempRun->AddGlyphRun(f, aMatchType, 0, true);
+                    tempRun->AddGlyphRun(f, aMatchType, 0, true, aOrientation);
                     if (!f->SplitAndInitTextRun(aContext, tempRun,
                                                 convertedString.BeginReading(),
                                                 0, convertedString.Length(),
@@ -2861,7 +2852,7 @@ gfxFont::InitFakeSmallCapsRun(gfxContext     *aContext,
                     }
                 } else {
                     aTextRun->AddGlyphRun(f, aMatchType, aOffset + runStart,
-                                          true);
+                                          true, aOrientation);
                     if (!f->SplitAndInitTextRun(aContext, aTextRun,
                                                 convertedString.BeginReading(),
                                                 aOffset + runStart, runLength,
@@ -2882,6 +2873,26 @@ gfxFont::InitFakeSmallCapsRun(gfxContext     *aContext,
     }
 
     return ok;
+}
+
+template<>
+bool
+gfxFont::InitFakeSmallCapsRun(gfxContext     *aContext,
+                              gfxTextRun     *aTextRun,
+                              const uint8_t  *aText,
+                              uint32_t        aOffset,
+                              uint32_t        aLength,
+                              uint8_t         aMatchType,
+                              uint16_t        aOrientation,
+                              int32_t         aScript,
+                              bool            aSyntheticLower,
+                              bool            aSyntheticUpper)
+{
+    NS_ConvertASCIItoUTF16 unicodeString(reinterpret_cast<const char*>(aText),
+                                         aLength);
+    return InitFakeSmallCapsRun(aContext, aTextRun, unicodeString.get(),
+                                aOffset, aLength, aMatchType, aOrientation,
+                                aScript, aSyntheticLower, aSyntheticUpper);
 }
 
 already_AddRefed<gfxFont>
