@@ -4526,9 +4526,9 @@ if (SpecialPowers.getBoolPref("layout.css.vertical-text.enabled")) {
       domProp: "textOrientation",
       inherited: true,
       type: CSS_TYPE_LONGHAND,
-      initial_values: [ "auto" ],
-      other_values: [ "upright", "sideways" ],
-      invalid_values: [ "none", "3em" ]
+      initial_values: [ "mixed" ],
+      other_values: [ "upright", "sideways-right" ],
+      invalid_values: [ "none", "3em", "sideways", "sideways-left" ] /* sideways, sideways-left not yet supported */
     },
     "text-combine-upright": {
       domProp: "textCombineUpright",
