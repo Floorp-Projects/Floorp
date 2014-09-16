@@ -59,4 +59,12 @@ Now()
   return TimeFromElapsedSecondsAD(seconds);
 }
 
+Time
+TimeFromEpochInSeconds(uint64_t secondsSinceEpoch)
+{
+  uint64_t seconds = (DaysBeforeYear(1970) * Time::ONE_DAY_IN_SECONDS) +
+                     secondsSinceEpoch;
+  return TimeFromElapsedSecondsAD(seconds);
+}
+
 } } // namespace mozilla::pkix

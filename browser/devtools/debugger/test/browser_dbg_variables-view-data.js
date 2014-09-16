@@ -303,7 +303,7 @@ function testSecondLevelContents() {
   let objectItem6 = someProp6.get("p6");
   let objectItem7 = someProp6.get("p7");
   let objectItem8 = someProp6.get("p8");
-  let __proto__ = someProp6.get("__proto__");
+  __proto__ = someProp6.get("__proto__");
 
   is(objectItem0.visible, true, "The first object item visible state is correct.");
   is(objectItem1.visible, true, "The second object item visible state is correct.");

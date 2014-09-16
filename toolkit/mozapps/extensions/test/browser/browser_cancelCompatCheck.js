@@ -232,6 +232,8 @@ function* check_addons_uninstalled(aAddonList) {
 // For this test, addon8 became disabled during update and addon9 was previously disabled,
 // so addon8 should update and addon9 should not
 add_task(function cancel_during_repopulate() {
+  let a5, a8, a9, a10;
+
   Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
   Services.prefs.setCharPref(PREF_MIN_PLATFORM_COMPAT, "0");
   Services.prefs.setCharPref(PREF_UPDATEURL, TESTROOT + "missing.rdf");
@@ -250,7 +252,7 @@ add_task(function cancel_during_repopulate() {
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
   Services.prefs.setCharPref(PREF_GETADDONS_BYIDS, TESTROOT + "browser_bug557956.xml");
 
-  let [a5, a8, a9] = yield promise_addons_by_ids([ao5.id, ao8.id, ao9.id]);
+  [a5, a8, a9] = yield promise_addons_by_ids([ao5.id, ao8.id, ao9.id]);
   ok(!a5.isCompatible, "addon5 should not be compatible");
   ok(!a8.isCompatible, "addon8 should not be compatible");
   ok(!a9.isCompatible, "addon9 should not be compatible");
@@ -279,7 +281,7 @@ add_task(function cancel_during_repopulate() {
 
   // addon8 should have updated in the background,
   // addon9 was listed as previously disabled so it should not have updated
-  let [a5, a8, a9, a10] = yield promise_addons_by_ids([ao5.id, ao8.id, ao9.id, ao10.id]);
+  [a5, a8, a9, a10] = yield promise_addons_by_ids([ao5.id, ao8.id, ao9.id, ao10.id]);
   ok(a5.isCompatible, "addon5 should be compatible");
   ok(a8.isCompatible, "addon8 should have been upgraded");
   ok(!a9.isCompatible, "addon9 should not have been upgraded");
@@ -295,6 +297,8 @@ add_task(function cancel_during_repopulate() {
 // For this test, both addon8 and addon9 were disabled by this update, but addon8
 // is set to not auto-update, so only addon9 should update in the background
 add_task(function cancel_during_findUpdates() {
+  let a5, a8, a9;
+
   Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
   Services.prefs.setCharPref(PREF_MIN_PLATFORM_COMPAT, "0");
 
@@ -310,7 +314,7 @@ add_task(function cancel_during_findUpdates() {
   yield promise_install_test_addons(addonList,
                                     TESTROOT + "cancelCompatCheck.sjs");
 
-  let [a8] = yield promise_addons_by_ids([ao8.id]);
+  [a8] = yield promise_addons_by_ids([ao8.id]);
   a8.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
 
   Services.prefs.setBoolPref(PREF_GETADDONS_CACHE_ENABLED, true);
@@ -334,7 +338,7 @@ add_task(function cancel_during_findUpdates() {
 
   // addon8 should have updated in the background,
   // addon9 was listed as previously disabled so it should not have updated
-  let [a5, a8, a9] = yield promise_addons_by_ids([ao5.id, ao8.id, ao9.id]);
+  [a5, a8, a9] = yield promise_addons_by_ids([ao5.id, ao8.id, ao9.id]);
   ok(a5.isCompatible, "addon5 should be compatible");
   ok(!a8.isCompatible, "addon8 should not have been upgraded");
   ok(a9.isCompatible, "addon9 should have been upgraded");
@@ -353,6 +357,8 @@ add_task(function cancel_during_findUpdates() {
 // Same conditions as the previous test - addon8 and addon9 have updates available,
 // addon8 is set to not auto-update so only addon9 should become compatible
 add_task(function cancel_mismatch() {
+  let a3, a5, a7, a8, a9;
+
   Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
   Services.prefs.setCharPref(PREF_MIN_PLATFORM_COMPAT, "0");
 
@@ -367,11 +373,11 @@ add_task(function cancel_mismatch() {
   yield promise_install_test_addons(addonList,
                                     TESTROOT + "cancelCompatCheck.sjs");
 
-  let [a8] = yield promise_addons_by_ids([ao8.id]);
+  [a8] = yield promise_addons_by_ids([ao8.id]);
   a8.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
 
   // Check that the addons start out not compatible.
-  let [a3, a7, a8, a9] = yield promise_addons_by_ids([ao3.id, ao7.id, ao8.id, ao9.id]);
+  [a3, a7, a8, a9] = yield promise_addons_by_ids([ao3.id, ao7.id, ao8.id, ao9.id]);
   ok(!a3.isCompatible, "addon3 should not be compatible");
   ok(!a7.isCompatible, "addon7 should not be compatible");
   ok(!a8.isCompatible, "addon8 should not be compatible");
@@ -392,7 +398,7 @@ add_task(function cancel_mismatch() {
 
   // addon8 should not have updated in the background,
   // addon9 was listed as previously disabled so it should not have updated
-  let [a5, a8, a9] = yield promise_addons_by_ids([ao5.id, ao8.id, ao9.id]);
+  [a5, a8, a9] = yield promise_addons_by_ids([ao5.id, ao8.id, ao9.id]);
   ok(a5.isCompatible, "addon5 should be compatible");
   ok(!a8.isCompatible, "addon8 should not have been upgraded");
   ok(a9.isCompatible, "addon9 should have been upgraded");
@@ -410,6 +416,8 @@ add_task(function cancel_mismatch() {
 // Cancelling during the 'mismatch' screen with only add-ons that have
 // no updates available
 add_task(function cancel_mismatch_no_updates() {
+  let a3, a5, a6
+
   Services.prefs.setBoolPref(PREF_STRICT_COMPAT, true);
   Services.prefs.setCharPref(PREF_MIN_PLATFORM_COMPAT, "0");
 
@@ -421,7 +429,7 @@ add_task(function cancel_mismatch_no_updates() {
                                     TESTROOT + "cancelCompatCheck.sjs");
 
   // Check that the addons start out not compatible.
-  let [a3, a5, a6] = yield promise_addons_by_ids([ao3.id, ao5.id, ao6.id]);
+  [a3, a5, a6] = yield promise_addons_by_ids([ao3.id, ao5.id, ao6.id]);
   ok(!a3.isCompatible, "addon3 should not be compatible");
   ok(!a5.isCompatible, "addon5 should not be compatible");
   ok(!a6.isCompatible, "addon6 should not be compatible");
@@ -437,7 +445,7 @@ add_task(function cancel_mismatch_no_updates() {
 
   yield promise_window_close(compatWindow);
 
-  let [a3, a5, a6] = yield promise_addons_by_ids([ao3.id, ao5.id, ao6.id]);
+  [a3, a5, a6] = yield promise_addons_by_ids([ao3.id, ao5.id, ao6.id]);
   ok(!a3.isCompatible, "addon3 should not be compatible");
   ok(a5.isCompatible, "addon5 should have become compatible");
   ok(a6.isCompatible, "addon6 should have become compatible");

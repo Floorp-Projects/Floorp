@@ -384,7 +384,8 @@ InternalPrompt.prototype = {
   nsIAuthPrompt_loginPrompt: function(aTitle, aPasswordRealm, aSavePassword, aUser, aPass) {
     let checkMsg = null;
     let check = { value: false };
-    let [hostname, realm, aUser] = PromptUtils.getHostnameAndRealm(aPasswordRealm);
+    let hostname, realm;
+    [hostname, realm, aUser] = PromptUtils.getHostnameAndRealm(aPasswordRealm);
 
     let canSave = PromptUtils.canSaveLogin(hostname, aSavePassword);
     if (canSave) {

@@ -28,9 +28,9 @@ function ifWebGLSupported() {
   yield ensurePixelIs(front, { x: 127, y: 127 }, { r: 0, g: 255, b: 255, a: 255 }, true, "#canvas2");
   ok(true, "The first fragment shader was changed.");
 
-  let oldFragSource = yield secondFragmentShader.getText();
-  let newFragSource = oldFragSource.replace("vec4(uColor", "vec4(0.75, 0.75, 0.75");
-  let status = yield secondFragmentShader.compile(newFragSource);
+  oldFragSource = yield secondFragmentShader.getText();
+  newFragSource = oldFragSource.replace("vec4(uColor", "vec4(0.75, 0.75, 0.75");
+  status = yield secondFragmentShader.compile(newFragSource);
   ok(!status,
     "The second new fragment shader source was compiled without errors.");
 

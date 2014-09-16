@@ -54,8 +54,8 @@ function test() {
 
       yield waitFor(aMonitor.panelWin, TAB_UPDATED);
 
-      let tab = document.querySelectorAll("#details-pane tab")[2];
-      let tabpanel = document.querySelectorAll("#details-pane tabpanel")[2];
+      tab = document.querySelectorAll("#details-pane tab")[2];
+      tabpanel = document.querySelectorAll("#details-pane tabpanel")[2];
       let formDataScope = tabpanel.querySelectorAll(".variables-view-scope")[0];
 
       is(tab.getAttribute("selected"), "true",

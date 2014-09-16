@@ -124,7 +124,7 @@ let testKeyboardInteraction = Task.async(function*() {
   event = Promise.defer();
   tree.once("select", pass);
   EventUtils.sendKey("DOWN", content);
-  let [name, data, attachment] = yield event.promise;
+  [name, data, attachment] = yield event.promise;
   is(data.length, 2, "Correct level item was selected after second down keypress");
   is(data[0], "level1", "Correct parent level");
   is(data[1], "level2", "Correct second level");
@@ -133,7 +133,7 @@ let testKeyboardInteraction = Task.async(function*() {
   event = Promise.defer();
   tree.once("select", pass);
   EventUtils.sendKey("DOWN", content);
-  let [name, data, attachment] = yield event.promise;
+  [name, data, attachment] = yield event.promise;
   is(data.length, 3, "Correct level item was selected after third down keypress");
   is(data[0], "level1", "Correct parent level");
   is(data[1], "level2", "Correct second level");
@@ -143,7 +143,7 @@ let testKeyboardInteraction = Task.async(function*() {
   event = Promise.defer();
   tree.once("select", pass);
   EventUtils.sendKey("DOWN", content);
-  let [name, data, attachment] = yield event.promise;
+  [name, data, attachment] = yield event.promise;
   is(data.length, 2, "Correct level item was selected after fourth down keypress");
   is(data[0], "level1", "Correct parent level");
   is(data[1], "level2-1", "Correct second level");
@@ -173,7 +173,7 @@ let testKeyboardInteraction = Task.async(function*() {
   node = tree.root.children.firstChild.nextSibling.firstChild;
   ok(node.hasAttribute("expanded"), "Parent is expanded");
   EventUtils.sendKey("LEFT", content);
-  let [name, data] = yield event.promise;
+  [name, data] = yield event.promise;
   is(data.length, 3, "Correct level item was selected after second left keypress");
   is(data[0], "level1", "Correct parent level");
   is(data[1], "level2", "Correct second level");
@@ -186,7 +186,7 @@ let testKeyboardInteraction = Task.async(function*() {
   event = Promise.defer();
   tree.once("select", pass);
   EventUtils.sendKey("DOWN", content);
-  let [name, data, attachment] = yield event.promise;
+  [name, data, attachment] = yield event.promise;
   is(data.length, 2, "Correct level item was selected after fifth down keypress");
   is(data[0], "level1", "Correct parent level");
   is(data[1], "level2-1", "Correct second level");

@@ -31,7 +31,7 @@ function* selectNodes(inspector, ruleView) {
   is(relativeLink.getAttribute("href"), TEST_IMAGE, "href matches");
 
   yield selectNode(relative2, inspector);
-  let relativeLink = ruleView.doc.querySelector(".ruleview-propertycontainer a");
+  relativeLink = ruleView.doc.querySelector(".ruleview-propertycontainer a");
   ok(relativeLink, "Link exists for relative2 node");
   is(relativeLink.getAttribute("href"), TEST_IMAGE, "href matches");
 

@@ -34,7 +34,7 @@ add_task(function() {
   assertAreaPlacements(kLazyAreaId, [], "Placements should no longer include widget.");
   is(btn.parentNode.id, gNavBar.customizationTarget.id,
      "Button shouldn't actually have moved as it's not removable");
-  let btn = document.getElementById(kButtonId);
+  btn = document.getElementById(kButtonId);
   if (btn) btn.remove();
   CustomizableUI.removeWidgetFromArea(kButtonId);
   CustomizableUI.unregisterArea(kLazyAreaId);

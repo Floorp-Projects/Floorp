@@ -190,10 +190,10 @@ function test() {
     is(content.innerWidth, expectedWidth, "Size correctly updated (width).");
     is(content.innerHeight, expectedHeight, "Size correctly updated (height).");
     is(instance.menulist.selectedIndex, -1, "Custom menuitem cannot be selected");
-    let label = instance.menulist.firstChild.firstChild.getAttribute("label");
-    let value = instance.menulist.value;
-    isnot(label, value, "Label from the menulist item is different than the value of the menulist")
-    let [width, height] = extractSizeFromString(label);
+    label = instance.menulist.firstChild.firstChild.getAttribute("label");
+    value = instance.menulist.value;
+    isnot(label, value, "Label from the menulist item is different than the value of the menulist");
+    [width, height] = extractSizeFromString(label);
     is(width, expectedWidth, "Label updated (width).");
     is(height, expectedHeight, "Label updated (height).");
     [width, height] = extractSizeFromString(value);

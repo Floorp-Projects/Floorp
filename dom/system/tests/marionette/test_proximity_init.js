@@ -24,7 +24,7 @@ function testEventInit() {
 
   // Test UserProximityEvent initialization
   log("Verifying UserProximityEvent constructor.");
-  let event = new UserProximityEvent("userproximity", {near: true});
+  event = new UserProximityEvent("userproximity", {near: true});
   is(event.type, "userproximity", "event type");
   ok(event.near, "Initialization of UserProximityEvent");
   verifyDefaultStatus();

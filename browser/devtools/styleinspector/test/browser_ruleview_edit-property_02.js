@@ -76,7 +76,7 @@ function* testEditProperty(inspector, ruleView) {
   is(newValue, "red", "border-color should have been set.");
 
   info("Entering property name \"color\" followed by a colon to focus the value");
-  let onFocus = once(idRuleEditor.element, "focus", true);
+  onFocus = once(idRuleEditor.element, "focus", true);
   for (let ch of "color:") {
     EventUtils.sendChar(ch, ruleView.doc.defaultView);
   }
@@ -86,7 +86,7 @@ function* testEditProperty(inspector, ruleView) {
   editor = inplaceEditor(ruleView.doc.activeElement);
 
   info("Entering a value following by a semi-colon to commit it");
-  let onBlur = once(editor.input, "blur");
+  onBlur = once(editor.input, "blur");
   for (let ch of "red;") {
     EventUtils.sendChar(ch, ruleView.doc.defaultView);
   }
@@ -119,7 +119,7 @@ function* testDisableProperty(inspector, ruleView) {
   propEditor.enable.click();
   yield idRuleEditor.rule._applyingModifications;
 
-  let newValue = yield executeInContent("Test:GetRulePropertyValue", {
+  newValue = yield executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
     name: "border-color"

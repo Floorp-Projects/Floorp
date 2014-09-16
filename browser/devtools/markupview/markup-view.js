@@ -1282,7 +1282,7 @@ MarkupView.prototype = {
     let bgSize = ~~width + "px " + ~~height + "px";
     this._preview.setAttribute("style", "background-size:" + bgSize);
 
-    let height = ~~(win.innerHeight * ratio) + "px";
+    height = ~~(win.innerHeight * ratio) + "px";
     let top = ~~(win.scrollY * ratio) + "px";
     this._viewbox.setAttribute("style", "height:" + height +
       ";transform: translateY(" + top + ")");

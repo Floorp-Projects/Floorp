@@ -624,7 +624,7 @@ this.AddonRepository = {
       AddonManager.getAllAddons(resolve));
 
     // Filter the hotfix out of our list of add-ons
-    let allAddons = [a for (a of allAddons) if (a.id != AddonManager.hotfixID)];
+    allAddons = [a for (a of allAddons) if (a.id != AddonManager.hotfixID)];
 
     // Completely remove cache if caching is not enabled
     if (!this.cacheEnabled) {
@@ -1327,7 +1327,6 @@ this.AddonRepository = {
     }
 
     // Create an AddonInstall for each result
-    let self = this;
     results.forEach(function(aResult) {
       let addon = aResult.addon;
       let callback = function addonInstallCallback(aInstall) {

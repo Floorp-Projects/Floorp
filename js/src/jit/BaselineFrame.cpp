@@ -57,7 +57,7 @@ BaselineFrame::trace(JSTracer *trc, JitFrameIterator &frameIterator)
     // Mark locals and stack values.
     JSScript *script = this->script();
     size_t nfixed = script->nfixed();
-    size_t nlivefixed = script->nfixedvars();
+    size_t nlivefixed = script->nbodyfixed();
 
     if (nfixed != nlivefixed) {
         jsbytecode *pc;
@@ -75,7 +75,7 @@ BaselineFrame::trace(JSTracer *trc, JitFrameIterator &frameIterator)
     }
 
     JS_ASSERT(nlivefixed <= nfixed);
-    JS_ASSERT(nlivefixed >= script->nfixedvars());
+    JS_ASSERT(nlivefixed >= script->nbodyfixed());
 
     // NB: It is possible that numValueSlots() could be zero, even if nfixed is
     // nonzero.  This is the case if the function has an early stack check.
@@ -91,9 +91,9 @@ BaselineFrame::trace(JSTracer *trc, JitFrameIterator &frameIterator)
         // Mark operand stack.
         MarkLocals(this, trc, nfixed, numValueSlots());
 
-        // Clear dead locals.
+        // Clear dead block-scoped locals.
         while (nfixed > nlivefixed)
-            unaliasedLocal(--nfixed, DONT_CHECK_ALIASING).setUndefined();
+            unaliasedLocal(--nfixed, DONT_CHECK_ALIASING).setMagic(JS_UNINITIALIZED_LEXICAL);
 
         // Mark live locals.
         MarkLocals(this, trc, 0, nlivefixed);

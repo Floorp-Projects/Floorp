@@ -58,7 +58,7 @@ function test() {
       testEventGroup("mouseEvents", false);
       testEventArrays("change,click,keydown,keyup", "change,click,keydown");
 
-      let updated = waitForDebuggerEvents(aPanel, gDebugger.EVENTS.EVENT_BREAKPOINTS_UPDATED);
+      updated = waitForDebuggerEvents(aPanel, gDebugger.EVENTS.EVENT_BREAKPOINTS_UPDATED);
       EventUtils.sendMouseEvent({ type: "click" }, getItemCheckboxNode(0), gDebugger);
       EventUtils.sendMouseEvent({ type: "click" }, getItemCheckboxNode(1), gDebugger);
       EventUtils.sendMouseEvent({ type: "click" }, getItemCheckboxNode(2), gDebugger);

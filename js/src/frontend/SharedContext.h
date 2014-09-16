@@ -427,6 +427,9 @@ struct StmtInfoBase {
         return isNestedScope;
     }
 
+    void setStaticScope() {
+    }
+
     StaticBlockObject& staticBlock() const {
         JS_ASSERT(isNestedScope);
         JS_ASSERT(isBlockScope);
