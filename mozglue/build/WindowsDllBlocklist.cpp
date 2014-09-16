@@ -156,6 +156,9 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   // Crashes with RoboForm2Go written against old SDK, bug 988311
   { "rf-firefox-22.dll", ALL_VERSIONS },
 
+  // Crashes with DesktopTemperature, bug 1046382
+  { "dtwxsvc.dll", 0x53153234, DllBlockInfo::USE_TIMESTAMP },
+
   { nullptr, 0 }
 };
 
