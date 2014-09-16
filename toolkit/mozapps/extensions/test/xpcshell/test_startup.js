@@ -171,7 +171,7 @@ function run_test_1() {
   setExtensionModifiedTime(dest, dest.lastModifiedTime - 5000);
 
   writeInstallRDFForExtension(addon3, profileDir);
-  writeInstallRDFForExtension(addon4, profileDir);
+  writeInstallRDFForExtension(addon4, profileDir, "addon4@tests.mozilla.org");
   writeInstallRDFForExtension(addon5, profileDir);
   writeInstallRDFForExtension(addon6, profileDir);
   writeInstallRDFForExtension(addon7, profileDir);
