@@ -135,4 +135,7 @@ function closeConnection() {
 // bug 1042976 - temporary test disable
 module.exports = {};
 
+// bug 1042976 - temporary test disable
+module.exports = {};
+
 require('sdk/test/runner').runTestsFromModule(module);
