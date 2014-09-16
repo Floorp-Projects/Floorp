@@ -28,7 +28,11 @@ import android.os.Bundle;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
@@ -139,17 +143,18 @@ public class RemoteTabsExpandableListFragment extends HomeFragment {
             @Override
             public HomeContextMenuInfo makeInfoForAdapter(View view, int position, long id, ExpandableListAdapter adapter) {
                 long packedPosition = mList.getExpandableListPosition(position);
-                if (ExpandableListView.getPackedPositionType(packedPosition) != ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
-                    return null;
-                }
                 final int groupPosition = ExpandableListView.getPackedPositionGroup(packedPosition);
-                final int childPosition = ExpandableListView.getPackedPositionChild(packedPosition);
-                final Object child = adapter.getChild(groupPosition, childPosition);
-                if (child instanceof RemoteTab) {
-                    final RemoteTab tab = (RemoteTab) child;
+                final int type = ExpandableListView.getPackedPositionType(packedPosition);
+                if (type == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
+                    final int childPosition = ExpandableListView.getPackedPositionChild(packedPosition);
+                    final RemoteTab tab = (RemoteTab) adapter.getChild(groupPosition, childPosition);
                     final HomeContextMenuInfo info = new HomeContextMenuInfo(view, position, id);
                     info.url = tab.url;
                     info.title = tab.title;
+                    return info;
+                } else if (type == ExpandableListView.PACKED_POSITION_TYPE_GROUP) {
+                    final RemoteClient client = (RemoteClient) adapter.getGroup(groupPosition);
+                    final RemoteTabsClientContextMenuInfo info = new RemoteTabsClientContextMenuInfo(view, position, id, client);
                     return info;
                 } else {
                     return null;
@@ -192,6 +197,56 @@ public class RemoteTabsExpandableListFragment extends HomeFragment {
         // Create callbacks before the initial loader is started
         mCursorLoaderCallbacks = new CursorLoaderCallbacks();
         loadIfVisible();
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenuInfo menuInfo) {
+        if (!(menuInfo instanceof RemoteTabsClientContextMenuInfo)) {
+            // Long pressed item was not a RemoteTabsGroup item. Superclass
+            // can handle this.
+            super.onCreateContextMenu(menu, view, menuInfo);
+            return;
+        }
+
+        // Long pressed item was a remote client; provide the appropriate menu.
+        final MenuInflater inflater = new MenuInflater(view.getContext());
+        inflater.inflate(R.menu.home_remote_tabs_client_contextmenu, menu);
+
+        final RemoteTabsClientContextMenuInfo info = (RemoteTabsClientContextMenuInfo) menuInfo;
+        menu.setHeaderTitle(info.client.name);
+
+        // Hide unused menu items.
+        final boolean isHidden = sState.isClientHidden(info.client.guid);
+        final MenuItem item = menu.findItem(isHidden
+                ? R.id.home_remote_tabs_hide_client
+                : R.id.home_remote_tabs_show_client);
+        item.setVisible(false);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        if (super.onContextItemSelected(item)) {
+            // HomeFragment was able to handle to selected item.
+            return true;
+        }
+
+        final ContextMenuInfo menuInfo = item.getMenuInfo();
+        if (!(menuInfo instanceof RemoteTabsClientContextMenuInfo)) {
+            return false;
+        }
+
+        final RemoteTabsClientContextMenuInfo info = (RemoteTabsClientContextMenuInfo) menuInfo;
+
+        final int itemId = item.getItemId();
+        if (itemId == R.id.home_remote_tabs_hide_client) {
+            sState.setClientHidden(info.client.guid, true);
+            return true;
+        } else if (itemId == R.id.home_remote_tabs_show_client) {
+            sState.setClientHidden(info.client.guid, false);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private void updateUiFromClients(List<RemoteClient> clients) {
@@ -289,6 +344,18 @@ public class RemoteTabsExpandableListFragment extends HomeFragment {
 
         public void onSyncFinished() {
             mRefreshLayout.setRefreshing(false);
+        }
+    }
+
+    /**
+     * Stores information regarding the creation of the context menu for a remote client.
+     */
+    protected static class RemoteTabsClientContextMenuInfo extends HomeContextMenuInfo {
+        protected final RemoteClient client;
+
+        public RemoteTabsClientContextMenuInfo(View targetView, int position, long id, RemoteClient client) {
+            super(targetView, position, id);
+            this.client = client;
         }
     }
 }
