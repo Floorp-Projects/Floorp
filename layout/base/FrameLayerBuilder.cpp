@@ -2349,7 +2349,11 @@ ThebesLayerData::Accumulate(ContainerState* aState,
   bool clipMatches = mItemClip == aClip;
   mItemClip = aClip;
 
-  if (!mIsSolidColorInVisibleRegion && mOpaqueRegion.Contains(aDrawRect) &&
+  nscolor uniformColor;
+  bool isUniform = aItem->IsUniform(aState->mBuilder, &uniformColor);
+
+  if (!mIsSolidColorInVisibleRegion && !isUniform &&
+      mOpaqueRegion.Contains(aDrawRect) &&
       mVisibleRegion.Contains(aVisibleRect)) {
     // A very common case! Most pages have a ThebesLayer with the page
     // background (opaque) visible and most or all of the page content over the
@@ -2362,9 +2366,6 @@ ThebesLayerData::Accumulate(ContainerState* aState,
     NS_ASSERTION(mDrawRegion.Contains(aDrawRect), "Draw region not covered");
     return;
   }
-
-  nscolor uniformColor;
-  bool isUniform = aItem->IsUniform(aState->mBuilder, &uniformColor);
 
   // Some display items have to exist (so they can set forceTransparentSurface
   // below) but don't draw anything. They'll return true for isUniform but
@@ -2384,6 +2385,11 @@ ThebesLayerData::Accumulate(ContainerState* aState,
     if (isUniform) {
       if (mVisibleRegion.IsEmpty()) {
         // This color is all we have
+        mSolidColor = uniformColor;
+        mIsSolidColorInVisibleRegion = true;
+      } else if (NS_GET_A(uniformColor) == 255 &&
+                 aVisibleRect.Contains(mVisibleRegion.GetBounds())) {
+        // This color covers everything else in the layer
         mSolidColor = uniformColor;
         mIsSolidColorInVisibleRegion = true;
       } else if (mIsSolidColorInVisibleRegion &&
