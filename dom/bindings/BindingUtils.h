@@ -2959,25 +2959,21 @@ CallerSubsumes(JS::Handle<JS::Value> aValue)
 
 template<class T>
 inline bool
-WrappedJSToDictionary(nsISupports* aObject, T& aDictionary)
+WrappedJSToDictionary(JSContext* aCx, nsISupports* aObject, T& aDictionary)
 {
   nsCOMPtr<nsIXPConnectWrappedJS> wrappedObj = do_QueryInterface(aObject);
   if (!wrappedObj) {
     return false;
   }
 
-  AutoJSAPI jsapi;
-  jsapi.Init();
-
-  JSContext* cx = jsapi.cx();
-  JS::Rooted<JSObject*> obj(cx, wrappedObj->GetJSObject());
+  JS::Rooted<JSObject*> obj(aCx, wrappedObj->GetJSObject());
   if (!obj) {
     return false;
   }
 
-  JSAutoCompartment ac(cx, obj);
-  JS::Rooted<JS::Value> v(cx, OBJECT_TO_JSVAL(obj));
-  return aDictionary.Init(cx, v);
+  JSAutoCompartment ac(aCx, obj);
+  JS::Rooted<JS::Value> v(aCx, JS::ObjectValue(*obj));
+  return aDictionary.Init(aCx, v);
 }
 
 

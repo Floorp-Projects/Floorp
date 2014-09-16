@@ -960,8 +960,7 @@ XPCOMUtils.defineLazyGetter(this, "gDataConnectionManager", function () {
     observe: function(subject, topic, data) {
       switch (topic) {
         case kMozSettingsChangedObserverTopic:
-          let setting = JSON.parse(data);
-          this.handle(setting.key, setting.value);
+          this.handle(subject.key, subject.value);
           break;
         case NS_XPCOM_SHUTDOWN_OBSERVER_ID:
           this._shutdown();
@@ -3052,8 +3051,7 @@ RadioInterface.prototype = {
   observe: function(subject, topic, data) {
     switch (topic) {
       case kMozSettingsChangedObserverTopic:
-        let setting = JSON.parse(data);
-        this.handleSettingsChange(setting.key, setting.value, setting.isInternalChange);
+        this.handleSettingsChange(subject.key, subject.value, subject.isInternalChange);
         break;
       case kSysClockChangeObserverTopic:
         let offset = parseInt(data, 10);
