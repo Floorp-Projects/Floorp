@@ -3664,7 +3664,7 @@ RasterImage::OptimalImageSizeForDest(const gfxSize& aDest, uint32_t aWhichFrame,
              aDest.height >= 0 || ceil(aDest.height) <= INT32_MAX,
              "Unexpected destination size");
 
-  if (mSize.IsEmpty()) {
+  if (mSize.IsEmpty() || aDest.IsEmpty()) {
     return nsIntSize(0, 0);
   }
 
