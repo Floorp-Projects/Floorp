@@ -19,7 +19,7 @@ public final class testInputUrlBar extends BaseTest {
         blockForGeckoReady();
 
         startEditingMode();
-        assertUrlBarText("about:home");
+        assertUrlBarText(StringHelper.ABOUT_HOME_URL);
 
         // Avoid any auto domain completion by using a prefix that matches
         //  nothing, including about: pages
@@ -85,11 +85,11 @@ public final class testInputUrlBar extends BaseTest {
         // Dismiss editing mode
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
 
-        waitForText("Enter Search or Address");
+        waitForText(StringHelper.TITLE_PLACE_HOLDER);
 
         // URL bar should have forgotten about "uv" text.
         startEditingMode();
-        assertUrlBarText("about:home");
+        assertUrlBarText(StringHelper.ABOUT_HOME_URL);
 
         int width = mDriver.getGeckoWidth() / 2;
         int y = mDriver.getGeckoHeight() / 2;

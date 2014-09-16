@@ -29,8 +29,8 @@ abstract class PixelTest extends BaseTest {
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
 
         mActions.sendSpecialKey(Actions.SpecialKey.MENU);
-        waitForText("Reload");
-        mSolo.clickOnText("Reload");
+        waitForText(StringHelper.RELOAD_LABEL);
+        mSolo.clickOnText(StringHelper.RELOAD_LABEL);
 
         paintExpecter.blockUntilClear(PAINT_CLEAR_DELAY);
         paintExpecter.unregisterListener();

@@ -16,8 +16,8 @@ public class testNewTab extends BaseTest {
     private int tabCountInt = 0;
 
     public void testNewTab() {
-        String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
-        String url2 = getAbsoluteUrl("/robocop/robocop_blank_02.html");
+        String url = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
+        String url2 = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
 
         blockForGeckoReady();
 

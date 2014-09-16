@@ -8,7 +8,7 @@ package org.mozilla.gecko.tests;
  */
 public class testLoad extends PixelTest {
     public void testLoad() {
-        String url = getAbsoluteUrl("/robocop/robocop_boxes.html");
+        String url = getAbsoluteUrl(StringHelper.ROBOCOP_BOXES_URL);
 
         blockForGeckoReady();
 
