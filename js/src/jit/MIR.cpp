@@ -672,33 +672,46 @@ MDefinition*
 MSimdValueX4::foldsTo(TempAllocator &alloc)
 {
     DebugOnly<MIRType> scalarType = SimdTypeToScalarType(type());
+    bool allConstants = true;
+    bool allSame = true;
+
     for (size_t i = 0; i < 4; ++i) {
         MDefinition *op = getOperand(i);
+        MOZ_ASSERT(op->type() == scalarType);
         if (!op->isConstant())
-            return this;
-        JS_ASSERT(op->type() == scalarType);
+            allConstants = false;
+        if (i > 0 && op != getOperand(i - 1))
+            allSame = false;
     }
 
-    SimdConstant cst;
-    switch (type()) {
-      case MIRType_Int32x4: {
-        int32_t a[4];
-        for (size_t i = 0; i < 4; ++i)
-            a[i] = getOperand(i)->toConstant()->value().toInt32();
-        cst = SimdConstant::CreateX4(a);
-        break;
-      }
-      case MIRType_Float32x4: {
-        float a[4];
-        for (size_t i = 0; i < 4; ++i)
-            a[i] = getOperand(i)->toConstant()->value().toNumber();
-        cst = SimdConstant::CreateX4(a);
-        break;
-      }
-      default: MOZ_CRASH("unexpected type in MSimdValueX4::foldsTo");
+    if (!allConstants && !allSame)
+        return this;
+
+    if (allConstants) {
+        SimdConstant cst;
+        switch (type()) {
+          case MIRType_Int32x4: {
+            int32_t a[4];
+            for (size_t i = 0; i < 4; ++i)
+                a[i] = getOperand(i)->toConstant()->value().toInt32();
+            cst = SimdConstant::CreateX4(a);
+            break;
+          }
+          case MIRType_Float32x4: {
+            float a[4];
+            for (size_t i = 0; i < 4; ++i)
+                a[i] = getOperand(i)->toConstant()->value().toNumber();
+            cst = SimdConstant::CreateX4(a);
+            break;
+          }
+          default: MOZ_CRASH("unexpected type in MSimdValueX4::foldsTo");
+        }
+
+        return MSimdConstant::New(alloc, cst, type());
     }
 
-    return MSimdConstant::New(alloc, cst, type());
+    MOZ_ASSERT(allSame);
+    return MSimdSplatX4::New(alloc, type(), getOperand(0));
 }
 
 MDefinition*

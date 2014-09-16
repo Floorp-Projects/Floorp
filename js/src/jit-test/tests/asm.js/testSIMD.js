@@ -209,6 +209,10 @@ CheckF4('', 'var x=f4(8.,7.,6.,5.); x=f4(x.w, x.z, x.y, x.x)', [5, 6, 7, 8]);
 // Optimization for all lanes from the same definition.
 CheckI4('', 'var x=i4(1,2,3,4); var c=6; x=i4(c|0,c|0,c|0,c|0)', [6, 6, 6, 6]);
 CheckF4(FROUND, 'var x=f4(1,2,3,4); var y=f32(7.); x=f4(y,y,y,y)', [7, 7, 7, 7]);
+CheckI4('', 'var x=i4(1,2,3,4); var c=0; c=x.w|0; x=i4(c,c,c,c)', [4, 4, 4, 4]);
+CheckF4(FROUND, 'var x=f4(1,2,3,4); var y=f32(0); y=x.z; x=f4(y,y,y,y)', [3, 3, 3, 3]);
+CheckI4('', 'var x=i4(1,2,3,4); var c=0; var d=0; c=x.w|0; d=x.w|0; x=i4(c,d,d,c)', [4, 4, 4, 4]);
+CheckF4(FROUND, 'var x=f4(1,2,3,4); var y=f32(0); var z=f32(0); y=x.z; z=x.z; x=f4(y,z,y,z)', [3, 3, 3, 3]);
 
 // 1.3.4 Return values
 assertAsmTypeFail('glob', USE_ASM + I32 + "function f() {var x=1; return i4(x)} return f");
