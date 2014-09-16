@@ -1598,7 +1598,7 @@ pref("loop.throttled", false);
 pref("loop.enabled", true);
 pref("loop.throttled", true);
 pref("loop.soft_start_ticket_number", -1);
-pref("loop.soft_start_hostname", "soft-start.loop-dev.stage.mozaws.net");
+pref("loop.soft_start_hostname", "soft-start.loop.services.mozilla.com");
 #endif
 
 pref("loop.server", "https://loop.services.mozilla.com");
