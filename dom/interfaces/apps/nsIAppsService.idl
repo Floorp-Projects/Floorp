@@ -16,7 +16,7 @@ interface nsIURI;
  * This service allows accessing some DOMApplicationRegistry methods from
  * non-javascript code.
  */
-[scriptable, uuid(2e884bbe-7a3d-4b01-ad92-fcd65a449043)]
+[scriptable, uuid(76ced447-6f92-48fb-b4e6-690e4859bc7f)]
 interface nsIAppsService : nsISupports
 {
   mozIApplication getAppByManifestURL(in DOMString manifestURL);
@@ -47,9 +47,14 @@ interface nsIAppsService : nsISupports
   DOMString getManifestURLByLocalId(in unsigned long localId);
 
   /**
-   * Returns the CSP associated to this localId.
+   * Returns the manifest CSP associated to this localId.
    */
-  DOMString getCSPByLocalId(in unsigned long localId);
+  DOMString getManifestCSPByLocalId(in unsigned long localId);
+
+  /**
+   * Returns the default CSP associated to this localId.
+   */
+  DOMString getDefaultCSPByLocalId(in unsigned long localId);
 
   /**
    * Returns the basepath for core apps
