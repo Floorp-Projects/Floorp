@@ -1147,7 +1147,7 @@ add_task(function* test_untag_uri() {
   ensureTagsForURI(bm_info.uri, []);
 });
 
-add_task(function* test_set_item_annotation() {
+add_task(function* test_annotate() {
   let bm_info = { uri: NetUtil.newURI("http://test.item.annotation")
                 , parentGUID: yield PlacesUtils.promiseItemGUID(root) };
   let anno_info = { name: "TestAnno", value: "TestValue" };
@@ -1160,8 +1160,7 @@ add_task(function* test_set_item_annotation() {
   bm_info.GUID = yield PT.transact(PT.NewBookmark(bm_info));
 
   observer.reset();
-  yield PT.transact(PT.SetItemAnnotation({ GUID: bm_info.GUID
-                                         , annotationObject: anno_info }));
+  yield PT.transact(PT.Annotate({ GUID: bm_info.GUID, annotation: anno_info }));
   ensureAnnoState(true);
 
   observer.reset();
@@ -1174,9 +1173,8 @@ add_task(function* test_set_item_annotation() {
 
   // Test removing the annotation by not passing the |value| property.
   observer.reset();
-  yield PT.transact(
-    PT.SetItemAnnotation({ GUID: bm_info.GUID
-                         , annotationObject: { name: anno_info.name }}));
+  yield PT.transact(PT.Annotate({ GUID: bm_info.GUID,
+                                  annotation: { name: anno_info.name }}));
   ensureAnnoState(false);
 
   observer.reset();
@@ -1186,6 +1184,64 @@ add_task(function* test_set_item_annotation() {
   observer.reset();
   yield PT.redo();
   ensureAnnoState(false);
+
+  // Cleanup
+  yield PT.undo();
+  observer.reset();
+});
+
+add_task(function* test_annotate_multiple() {
+  let guid = yield PT.transact(PT.NewFolder(yield createTestFolderInfo()));
+  let itemId = yield PlacesUtils.promiseItemId(guid);
+
+  function AnnoObj(aName, aValue) {
+    this.name = aName;
+    this.value = aValue;
+    this.flags = 0;
+    this.expires = Ci.nsIAnnotationService.EXPIRE_NEVER;
+  }
+
+  function annos(a = null, b = null) [new AnnoObj("A", a), new AnnoObj("B", b)]
+
+  function verifyAnnoValues(a = null, b = null) {
+    let currentAnnos = PlacesUtils.getAnnotationsForItem(itemId);
+    let expectedAnnos = [];
+    if (a !== null)
+      expectedAnnos.push(new AnnoObj("A", a));
+    if (b !== null)
+      expectedAnnos.push(new AnnoObj("B", b));
+
+    Assert.deepEqual(currentAnnos, expectedAnnos);
+  }
+
+  yield PT.transact(PT.Annotate({ GUID: guid, annotations: annos(1, 2) }));
+  verifyAnnoValues(1, 2);
+  yield PT.undo();
+  verifyAnnoValues();
+  yield PT.redo();
+  verifyAnnoValues(1, 2);
+
+  yield PT.transact(PT.Annotate({ GUID: guid
+                                , annotation: { name: "A" } }));
+  verifyAnnoValues(null, 2);
+
+  yield PT.transact(PT.Annotate({ GUID: guid
+                                , annotation: { name: "B", value: 0 } }));
+  verifyAnnoValues(null, 0);
+  yield PT.undo();
+  verifyAnnoValues(null, 2);
+  yield PT.redo();
+  verifyAnnoValues(null, 0);
+  yield PT.undo();
+  verifyAnnoValues(null, 2);
+  yield PT.undo();
+  verifyAnnoValues(1, 2);
+  yield PT.undo();
+  verifyAnnoValues();
+
+  // Cleanup
+  yield PT.undo();
+  observer.reset();
 });
 
 add_task(function* test_sort_folder_by_name() {
