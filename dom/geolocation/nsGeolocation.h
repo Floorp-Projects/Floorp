@@ -70,7 +70,7 @@ public:
 
   nsresult Init();
 
-  void HandleMozsettingChanged(nsISupports* aSubject);
+  void HandleMozsettingChanged(const char16_t* aData);
   void HandleMozsettingValue(const bool aValue);
 
   // Management of the Geolocation objects

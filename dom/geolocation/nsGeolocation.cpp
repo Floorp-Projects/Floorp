@@ -24,7 +24,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
-#include "mozilla/dom/SettingChangeNotificationBinding.h"
 
 class nsIPrincipal;
 
@@ -713,26 +712,36 @@ nsGeolocationService::~nsGeolocationService()
 }
 
 void
-nsGeolocationService::HandleMozsettingChanged(nsISupports* aSubject)
+nsGeolocationService::HandleMozsettingChanged(const char16_t* aData)
 {
     // The string that we're interested in will be a JSON string that looks like:
     //  {"key":"gelocation.enabled","value":true}
 
-    AutoJSAPI jsapi;
-    jsapi.Init();
-    JSContext* cx = jsapi.cx();
-    RootedDictionary<SettingChangeNotification> setting(cx);
-    if (!WrappedJSToDictionary(cx, aSubject, setting)) {
-      return;
-    }
-    if (!setting.mKey.EqualsASCII(GEO_SETINGS_ENABLED)) {
-      return;
-    }
-    if (!setting.mValue.isBoolean()) {
+    AutoSafeJSContext cx;
+
+    nsDependentString dataStr(aData);
+    JS::Rooted<JS::Value> val(cx);
+    if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &val) || !val.isObject()) {
       return;
     }
 
-    HandleMozsettingValue(setting.mValue.toBoolean());
+    JS::Rooted<JSObject*> obj(cx, &val.toObject());
+    JS::Rooted<JS::Value> key(cx);
+    if (!JS_GetProperty(cx, obj, "key", &key) || !key.isString()) {
+      return;
+    }
+
+    bool match;
+    if (!JS_StringEqualsAscii(cx, key.toString(), GEO_SETINGS_ENABLED, &match) || !match) {
+      return;
+    }
+
+    JS::Rooted<JS::Value> value(cx);
+    if (!JS_GetProperty(cx, obj, "value", &value) || !value.isBoolean()) {
+      return;
+    }
+
+    HandleMozsettingValue(value.toBoolean());
 }
 
 void
@@ -777,7 +786,7 @@ nsGeolocationService::Observe(nsISupports* aSubject,
   }
 
   if (!strcmp("mozsettings-changed", aTopic)) {
-    HandleMozsettingChanged(aSubject);
+    HandleMozsettingChanged(aData);
     return NS_OK;
   }
 

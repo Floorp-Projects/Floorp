@@ -377,7 +377,7 @@ protected:
    * Called when "mozsettings-changed" observer topic fires.
    */
   nsresult
-  HandleSettingsChanged(nsISupports* aSubject);
+  HandleSettingsChanged(const nsAString& aData);
 
   /**
    * Called when XPCOM is shutting down.
