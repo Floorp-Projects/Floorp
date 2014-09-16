@@ -428,6 +428,13 @@ this.XPIDatabase = {
       throw new Error("Attempt to use XPI database when it is not initialized");
     }
 
+    if (XPIProvider._closing) {
+      // use an Error here so we get a stack trace.
+      let err = new Error("XPI database modified after shutdown began");
+      logger.warn(err);
+      AddonManagerPrivate.recordSimpleMeasure("XPIDB_late_stack", Log.stackTrace(err));
+    }
+
     if (!this._deferredSave) {
       this._deferredSave = new DeferredSave(this.jsonFile.path,
                                             () => JSON.stringify(this),
