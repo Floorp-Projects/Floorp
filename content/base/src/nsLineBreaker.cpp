@@ -6,7 +6,7 @@
 #include "nsLineBreaker.h"
 #include "nsContentUtils.h"
 #include "nsILineBreaker.h"
-#include "gfxFont.h" // for the gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_* values
+#include "gfxTextRun.h" // for the gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_* values
 #include "nsHyphenationManager.h"
 #include "nsHyphenator.h"
 #include "mozilla/gfx/2D.h"
