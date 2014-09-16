@@ -820,25 +820,32 @@
     <style name="RemoteTabsPanelFrame">
         <item name="android:paddingLeft">32dp</item>
         <item name="android:paddingRight">32dp</item>
-        <item name="android:paddingTop">48dp</item>
+        <item name="android:paddingTop">16dp</item>
         <item name="android:orientation">vertical</item>
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
     </style>
 
     <style name="RemoteTabsPanelItem">
         <item name="android:layout_gravity">center</item>
         <item name="android:gravity">center</item>
         <item name="android:layout_marginBottom">16dp</item>
+        <item name="android:maxWidth">320dp</item>
     </style>
 
     <style name="RemoteTabsPanelItem.TextAppearance">
         <item name="android:textColor">#777777</item>
         <item name="android:textSize">16sp</item>
-        <item name="android:lineSpacingMultiplier">1.35</item>
+        <item name="android:lineSpacingMultiplier">1.25</item>
+        <item name="android:layout_marginLeft">8dp</item>
+        <item name="android:layout_marginRight">8dp</item>
     </style>
 
     <style name="RemoteTabsPanelItem.TextAppearance.Header">
         <item name="android:textColor">#222222</item>
         <item name="android:textSize">20sp</item>
+        <item name="android:layout_marginBottom">8dp</item>
     </style>
 
     <style name="RemoteTabsPanelItem.TextAppearance.Linkified">
