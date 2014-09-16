@@ -25,14 +25,10 @@ public:
 private:
   MobileConnectionIPCService();
 
+  // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
   ~MobileConnectionIPCService();
 
-  /** Send request */
-  nsresult
-  SendRequest(uint32_t aClientId, MobileConnectionRequest aRequest,
-              nsIMobileConnectionCallback* aRequestCallback);
-
-  nsTArray<nsRefPtr<MobileConnectionChild>> mClients;
+  nsTArray<nsRefPtr<MobileConnectionChild>> mItems;
 };
 
 } // namespace mobileconnection
