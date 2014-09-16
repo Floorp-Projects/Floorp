@@ -510,7 +510,7 @@ add_task(function* test_move_items_to_folder() {
                      , newIndex:      0 });
     observer.reset();
   };
-  let ensureUndo = () => {
+  ensureUndo = () => {
     ensureUndoState([ [moveTxn]
                     , [folder_b_txn]
                     , [bkm_b_txn, bkm_a_txn, folder_a_txn] ], 1);

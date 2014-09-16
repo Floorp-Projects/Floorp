@@ -45,7 +45,7 @@ function* pointsCanBeDragged(widget) {
   is(bezier.P1[1], 1, "The new P1 progress coordinate is correct");
 
   info("Listening for the update event");
-  let onUpdated = widget.once("updated");
+  onUpdated = widget.once("updated");
 
   info("Generating a mousedown/move/up on P2");
   widget._onPointMouseDown({target: widget.p2});
@@ -54,7 +54,7 @@ function* pointsCanBeDragged(widget) {
   EventUtils.synthesizeMouse(content.document.documentElement, 200, 300,
     {type: "mouseup"}, content.window);
 
-  let bezier = yield onUpdated;
+  bezier = yield onUpdated;
   is(bezier.P2[0], 1, "The new P2 time coordinate is correct");
   is(bezier.P2[1], 0, "The new P2 progress coordinate is correct");
 }
@@ -76,12 +76,12 @@ function* curveCanBeClicked(widget) {
   is(bezier.P2[1], 0, "P2 progress coordinate remained unchanged");
 
   info("Listening for the update event");
-  let onUpdated = widget.once("updated");
+  onUpdated = widget.once("updated");
 
   info("Click close to P2");
   widget._onCurveClick({pageX: 150, pageY: 250});
 
-  let bezier = yield onUpdated;
+  bezier = yield onUpdated;
   is(bezier.P2[0], 0.75, "The new P2 time coordinate is correct");
   is(bezier.P2[1], 0.25, "The new P2 progress coordinate is correct");
   is(bezier.P1[0], 0.25, "P1 time coordinate remained unchanged");
@@ -99,45 +99,45 @@ function* pointsCanBeMovedWithKeyboard(widget) {
   is(bezier.P1[1], 0.75, "The new P1 progress coordinate is correct");
 
   info("Moving P1 to the left, fast");
-  let onUpdated = widget.once("updated");
+  onUpdated = widget.once("updated");
   widget._onPointKeyDown(getKeyEvent(widget.p1, 37, true));
-  let bezier = yield onUpdated;
+  bezier = yield onUpdated;
   is(bezier.P1[0], 0.085, "The new P1 time coordinate is correct");
   is(bezier.P1[1], 0.75, "The new P1 progress coordinate is correct");
 
   info("Moving P1 to the right, fast");
-  let onUpdated = widget.once("updated");
+  onUpdated = widget.once("updated");
   widget._onPointKeyDown(getKeyEvent(widget.p1, 39, true));
-  let bezier = yield onUpdated;
+  bezier = yield onUpdated;
   is(bezier.P1[0], 0.235, "The new P1 time coordinate is correct");
   is(bezier.P1[1], 0.75, "The new P1 progress coordinate is correct");
 
   info("Moving P1 to the bottom");
-  let onUpdated = widget.once("updated");
+  onUpdated = widget.once("updated");
   widget._onPointKeyDown(getKeyEvent(widget.p1, 40));
-  let bezier = yield onUpdated;
+  bezier = yield onUpdated;
   is(bezier.P1[0], 0.235, "The new P1 time coordinate is correct");
   is(bezier.P1[1], 0.735, "The new P1 progress coordinate is correct");
 
   info("Moving P1 to the bottom, fast");
-  let onUpdated = widget.once("updated");
+  onUpdated = widget.once("updated");
   widget._onPointKeyDown(getKeyEvent(widget.p1, 40, true));
-  let bezier = yield onUpdated;
+  bezier = yield onUpdated;
   is(bezier.P1[0], 0.235, "The new P1 time coordinate is correct");
   is(bezier.P1[1], 0.585, "The new P1 progress coordinate is correct");
 
   info("Moving P1 to the top, fast");
-  let onUpdated = widget.once("updated");
+  onUpdated = widget.once("updated");
   widget._onPointKeyDown(getKeyEvent(widget.p1, 38, true));
-  let bezier = yield onUpdated;
+  bezier = yield onUpdated;
   is(bezier.P1[0], 0.235, "The new P1 time coordinate is correct");
   is(bezier.P1[1], 0.735, "The new P1 progress coordinate is correct");
 
   info("Checking that keyboard events also work with P2");
   info("Moving P2 to the left");
-  let onUpdated = widget.once("updated");
+  onUpdated = widget.once("updated");
   widget._onPointKeyDown(getKeyEvent(widget.p2, 37));
-  let bezier = yield onUpdated;
+  bezier = yield onUpdated;
   is(bezier.P2[0], 0.735, "The new P2 time coordinate is correct");
   is(bezier.P2[1], 0.25, "The new P2 progress coordinate is correct");
 }

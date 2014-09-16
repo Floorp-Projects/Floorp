@@ -7,7 +7,7 @@
 
 function spawnTest () {
   let [target, debuggee, front] = yield initBackend(CONNECT_PARAM_URL);
-  let [_, _, [destNode, carrierNode, modNode, gainNode], _, connectParam] = yield Promise.all([
+  let [, , [destNode, carrierNode, modNode, gainNode], , connectParam] = yield Promise.all([
     front.setup({ reload: true }),
     once(front, "start-context"),
     getN(front, "create-node", 4),

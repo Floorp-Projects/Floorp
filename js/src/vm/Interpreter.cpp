@@ -286,7 +286,7 @@ NameOperation(JSContext *cx, InterpreterFrame *fp, jsbytecode *pc, MutableHandle
     JSObject *scope = nullptr, *pobj = nullptr;
     if (LookupNameNoGC(cx, name, obj, &scope, &pobj, &shape)) {
         if (FetchNameNoGC(pobj, shape, vp))
-            return true;
+            return CheckUninitializedLexical(cx, name, vp);
     }
 
     RootedObject objRoot(cx, obj), scopeRoot(cx), pobjRoot(cx);
@@ -298,9 +298,17 @@ NameOperation(JSContext *cx, InterpreterFrame *fp, jsbytecode *pc, MutableHandle
 
     /* Kludge to allow (typeof foo == "undefined") tests. */
     JSOp op2 = JSOp(pc[JSOP_NAME_LENGTH]);
-    if (op2 == JSOP_TYPEOF)
-        return FetchName<true>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp);
-    return FetchName<false>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp);
+    if (op2 == JSOP_TYPEOF) {
+        if (!FetchName<true>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp))
+            return false;
+    } else {
+        if (!FetchName<false>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp))
+            return false;
+    }
+
+    // NAME operations are the slow paths already, so unconditionally check
+    // for uninitialized lets.
+    return CheckUninitializedLexical(cx, nameRoot, vp);
 }
 
 static inline bool
@@ -858,6 +866,25 @@ js::EnterWithOperation(JSContext *cx, AbstractFramePtr frame, HandleValue val,
     return true;
 }
 
+static void
+PopScope(JSContext *cx, ScopeIter &si)
+{
+    switch (si.type()) {
+      case ScopeIter::Block:
+        if (cx->compartment()->debugMode())
+            DebugScopes::onPopBlock(cx, si);
+        if (si.staticBlock().needsClone())
+            si.frame().popBlock(cx);
+        break;
+      case ScopeIter::With:
+        si.frame().popWith(cx);
+        break;
+      case ScopeIter::Call:
+      case ScopeIter::StrictEvalScope:
+        break;
+    }
+}
+
 // Unwind scope chain and iterator to match the static scope corresponding to
 // the given bytecode position.
 void
@@ -868,28 +895,42 @@ js::UnwindScope(JSContext *cx, ScopeIter &si, jsbytecode *pc)
 
     Rooted<NestedScopeObject *> staticScope(cx, si.frame().script()->getStaticScope(pc));
 
-    for (; si.staticScope() != staticScope; ++si) {
-        switch (si.type()) {
-          case ScopeIter::Block:
-            if (cx->compartment()->debugMode())
-                DebugScopes::onPopBlock(cx, si);
-            if (si.staticBlock().needsClone())
-                si.frame().popBlock(cx);
-            break;
-          case ScopeIter::With:
-            si.frame().popWith(cx);
-            break;
-          case ScopeIter::Call:
-          case ScopeIter::StrictEvalScope:
-            break;
-        }
-    }
+    for (; si.staticScope() != staticScope; ++si)
+        PopScope(cx, si);
+}
+
+// Unwind all scopes. This is needed because block scopes may cover the
+// first bytecode at a script's main(). e.g.,
+//
+//     function f() { { let i = 0; } }
+//
+// will have no pc location distinguishing the first block scope from the
+// outermost function scope.
+void
+js::UnwindAllScopes(JSContext *cx, ScopeIter &si)
+{
+    for (; !si.done(); ++si)
+        PopScope(cx, si);
+}
+
+// Compute the pc needed to unwind the scope to the beginning of a try
+// block. We cannot unwind to *after* the JSOP_TRY, because that might be the
+// first opcode of an inner scope, with the same problem as above. e.g.,
+//
+// try { { let x; } }
+//
+// will have no pc location distinguishing the try block scope from the inner
+// let block scope.
+jsbytecode *
+js::UnwindScopeToTryPc(JSScript *script, JSTryNote *tn)
+{
+    return script->main() + tn->start - js_CodeSpec[JSOP_TRY].length;
 }
 
 static void
 ForcedReturn(JSContext *cx, ScopeIter &si, InterpreterRegs &regs)
 {
-    UnwindScope(cx, si, regs.fp()->script()->main());
+    UnwindAllScopes(cx, si);
     regs.setToEndOfScript();
 }
 
@@ -1014,7 +1055,8 @@ HandleError(JSContext *cx, InterpreterRegs &regs)
         for (TryNoteIter tni(cx, regs); !tni.done(); ++tni) {
             JSTryNote *tn = *tni;
 
-            UnwindScope(cx, si, regs.fp()->script()->main() + tn->start);
+            // Unwind the scope to the beginning of the JSOP_TRY.
+            UnwindScope(cx, si, UnwindScopeToTryPc(regs.fp()->script(), tn));
 
             /*
              * Set pc to the first bytecode after the the try note to point
@@ -1095,6 +1137,7 @@ HandleError(JSContext *cx, InterpreterRegs &regs)
 #define PUSH_OBJECT(obj)         do { REGS.sp++->setObject(obj); assertSameCompartmentDebugOnly(cx, REGS.sp[-1]); } while (0)
 #define PUSH_OBJECT_OR_NULL(obj) do { REGS.sp++->setObjectOrNull(obj); assertSameCompartmentDebugOnly(cx, REGS.sp[-1]); } while (0)
 #define PUSH_HOLE()              REGS.sp++->setMagic(JS_ELEMENTS_HOLE)
+#define PUSH_UNINITIALIZED()     REGS.sp++->setMagic(JS_UNINITIALIZED_LEXICAL)
 #define POP_COPY_TO(v)           (v) = *--REGS.sp
 #define POP_RETURN_VALUE()       REGS.fp()->setReturnValue(*--REGS.sp)
 
@@ -1585,11 +1628,6 @@ CASE(JSOP_UNUSED107)
 CASE(JSOP_UNUSED124)
 CASE(JSOP_UNUSED125)
 CASE(JSOP_UNUSED126)
-CASE(JSOP_UNUSED138)
-CASE(JSOP_UNUSED139)
-CASE(JSOP_UNUSED140)
-CASE(JSOP_UNUSED141)
-CASE(JSOP_UNUSED142)
 CASE(JSOP_UNUSED146)
 CASE(JSOP_UNUSED147)
 CASE(JSOP_UNUSED148)
@@ -1995,10 +2033,19 @@ CASE(JSOP_BINDNAME)
 
     /* Assigning to an undeclared name adds a property to the global object. */
     RootedObject &scope = rootObject1;
-    if (!LookupNameUnqualified(cx, name, scopeChain, &scope))
+    RootedShape &shape = rootShape0;
+    if (!LookupNameUnqualified(cx, name, scopeChain, &scope, &shape))
         goto error;
 
-    PUSH_OBJECT(*scope);
+    // ES6 lets cannot be accessed until initialized. NAME operations, being
+    // the slow paths already, unconditionally check for uninitialized
+    // lets. The error, however, is thrown after evaluating the RHS in
+    // assignments. Thus if the LHS resolves to an uninitialized let, return a
+    // nullptr scope.
+    if (IsUninitializedLexicalSlot(scope, shape))
+        PUSH_NULL();
+    else
+        PUSH_OBJECT(*scope);
 }
 END_CASE(JSOP_BINDNAME)
 
@@ -2384,7 +2431,16 @@ CASE(JSOP_SETGNAME)
 CASE(JSOP_SETNAME)
 {
     RootedObject &scope = rootObject0;
-    scope = &REGS.sp[-2].toObject();
+    scope = REGS.sp[-2].toObjectOrNull();
+
+    // A nullptr scope is pushed if the name is an uninitialized let. See
+    // CASE(JSOP_BINDNAME).
+    if (!scope) {
+        RootedPropertyName &name = rootName0;
+        name = script->getName(REGS.pc);
+        ReportUninitializedLexical(cx, name);
+        goto error;
+    }
 
     HandleValue value = REGS.stackHandleAt(-1);
 
@@ -2622,7 +2678,8 @@ CASE(JSOP_IMPLICITTHIS)
     scopeObj = REGS.fp()->scopeChain();
 
     RootedObject &scope = rootObject1;
-    if (!LookupNameWithGlobalDefault(cx, name, scopeObj, &scope))
+    RootedShape &shape = rootShape0;
+    if (!LookupNameWithGlobalDefault(cx, name, scopeObj, &scope, &shape))
         goto error;
 
     RootedValue &v = rootValue0;
@@ -2833,7 +2890,10 @@ END_CASE(JSOP_REST)
 CASE(JSOP_GETALIASEDVAR)
 {
     ScopeCoordinate sc = ScopeCoordinate(REGS.pc);
-    PUSH_COPY(REGS.fp()->aliasedVarScope(sc).aliasedVar(sc));
+    RootedValue &val = rootValue0;
+    val = REGS.fp()->aliasedVarScope(sc).aliasedVar(sc);
+    MOZ_ASSERT(!IsUninitializedLexical(val));
+    PUSH_COPY(val);
     TypeScript::Monitor(cx, script, REGS.pc, REGS.sp[-1]);
 }
 END_CASE(JSOP_GETALIASEDVAR)
@@ -2842,16 +2902,48 @@ CASE(JSOP_SETALIASEDVAR)
 {
     ScopeCoordinate sc = ScopeCoordinate(REGS.pc);
     ScopeObject &obj = REGS.fp()->aliasedVarScope(sc);
-
-    // Avoid computing the name if no type updates are needed, as this may be
-    // expensive on scopes with large numbers of variables.
-    PropertyName *name = obj.hasSingletonType()
-                         ? ScopeCoordinateName(cx->runtime()->scopeCoordinateNameCache, script, REGS.pc)
-                         : nullptr;
-
-    obj.setAliasedVar(cx, sc, name, REGS.sp[-1]);
+    SetAliasedVarOperation(cx, script, REGS.pc, obj, sc, REGS.sp[-1], CheckLexical);
 }
 END_CASE(JSOP_SETALIASEDVAR)
+
+CASE(JSOP_CHECKLEXICAL)
+{
+    uint32_t i = GET_LOCALNO(REGS.pc);
+    RootedValue &val = rootValue0;
+    val = REGS.fp()->unaliasedLocal(i);
+    if (!CheckUninitializedLexical(cx, script, REGS.pc, val))
+        goto error;
+}
+END_CASE(JSOP_CHECKLEXICAL)
+
+CASE(JSOP_INITLEXICAL)
+{
+    uint32_t i = GET_LOCALNO(REGS.pc);
+    REGS.fp()->unaliasedLocal(i) = REGS.sp[-1];
+}
+END_CASE(JSOP_INITLEXICAL)
+
+CASE(JSOP_CHECKALIASEDLEXICAL)
+{
+    ScopeCoordinate sc = ScopeCoordinate(REGS.pc);
+    RootedValue &val = rootValue0;
+    val = REGS.fp()->aliasedVarScope(sc).aliasedVar(sc);
+    if (!CheckUninitializedLexical(cx, script, REGS.pc, val))
+        goto error;
+}
+END_CASE(JSOP_CHECKALIASEDLEXICAL)
+
+CASE(JSOP_INITALIASEDLEXICAL)
+{
+    ScopeCoordinate sc = ScopeCoordinate(REGS.pc);
+    ScopeObject &obj = REGS.fp()->aliasedVarScope(sc);
+    SetAliasedVarOperation(cx, script, REGS.pc, obj, sc, REGS.sp[-1], DontCheckLexical);
+}
+END_CASE(JSOP_INITALIASEDLEXICAL)
+
+CASE(JSOP_UNINITIALIZED)
+    PUSH_UNINITIALIZED();
+END_CASE(JSOP_UNINITIALIZED)
 
 CASE(JSOP_GETARG)
 {
@@ -2877,6 +2969,7 @@ CASE(JSOP_GETLOCAL)
 {
     uint32_t i = GET_LOCALNO(REGS.pc);
     PUSH_COPY_SKIP_CHECK(REGS.fp()->unaliasedLocal(i));
+    MOZ_ASSERT(!IsUninitializedLexical(REGS.sp[-1]));
 
     /*
      * Skip the same-compartment assertion if the local will be immediately
@@ -2892,6 +2985,7 @@ END_CASE(JSOP_GETLOCAL)
 CASE(JSOP_SETLOCAL)
 {
     uint32_t i = GET_LOCALNO(REGS.pc);
+    MOZ_ASSERT(!IsUninitializedLexical(REGS.fp()->unaliasedLocal(i)));
     REGS.fp()->unaliasedLocal(i) = REGS.sp[-1];
 }
 END_CASE(JSOP_SETLOCAL)
@@ -3490,7 +3584,11 @@ js::GetScopeName(JSContext *cx, HandleObject scopeChain, HandlePropertyName name
         return false;
     }
 
-    return JSObject::getProperty(cx, obj, obj, name, vp);
+    if (!JSObject::getProperty(cx, obj, obj, name, vp))
+        return false;
+
+    // See note in NameOperation.
+    return CheckUninitializedLexical(cx, name, vp);
 }
 
 /*
@@ -3511,7 +3609,11 @@ js::GetScopeNameForTypeOf(JSContext *cx, HandleObject scopeChain, HandleProperty
         return true;
     }
 
-    return JSObject::getProperty(cx, obj, obj, name, vp);
+    if (!JSObject::getProperty(cx, obj, obj, name, vp))
+        return false;
+
+    // See note in NameOperation.
+    return CheckUninitializedLexical(cx, name, vp);
 }
 
 JSObject *
@@ -3808,7 +3910,8 @@ js::ImplicitThisOperation(JSContext *cx, HandleObject scopeObj, HandlePropertyNa
                           MutableHandleValue res)
 {
     RootedObject obj(cx);
-    if (!LookupNameWithGlobalDefault(cx, name, scopeObj, &obj))
+    RootedShape shape(cx);
+    if (!LookupNameWithGlobalDefault(cx, name, scopeObj, &obj, &shape))
         return false;
 
     return ComputeImplicitThis(cx, obj, res);
@@ -3939,4 +4042,66 @@ js::SpreadCallOperation(JSContext *cx, HandleScript script, jsbytecode *pc, Hand
     res.set(args.rval());
     TypeScript::Monitor(cx, script, pc, res);
     return true;
+}
+
+void
+js::ReportUninitializedLexical(JSContext *cx, HandlePropertyName name)
+{
+    JSAutoByteString printable;
+    if (AtomToPrintableString(cx, name, &printable)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNINITIALIZED_LEXICAL,
+                             printable.ptr());
+    }
+}
+
+void
+js::ReportUninitializedLexical(JSContext *cx, HandleScript script, jsbytecode *pc)
+{
+    RootedPropertyName name(cx);
+
+    if (JSOp(*pc) == JSOP_CHECKLEXICAL) {
+        uint32_t slot = GET_LOCALNO(pc);
+
+        // First search for a name among body-level lets.
+        for (BindingIter bi(script); bi; bi++) {
+            if (bi->kind() != Binding::ARGUMENT && bi.frameIndex() == slot) {
+                name = bi->name();
+                break;
+            }
+        }
+
+        // Failing that, it must be a block-local let.
+        if (!name) {
+            // Skip to the right scope.
+            Rooted<NestedScopeObject *> scope(cx, script->getStaticScope(pc));
+            MOZ_ASSERT(scope && scope->is<StaticBlockObject>());
+            Rooted<StaticBlockObject *> block(cx, &scope->as<StaticBlockObject>());
+            while (slot < block->localOffset())
+                block = &block->enclosingNestedScope()->as<StaticBlockObject>();
+
+            // Translate the frame slot to the block slot, then find the name
+            // of the slot.
+            uint32_t blockSlot = block->localIndexToSlot(slot);
+            RootedShape shape(cx, block->lastProperty());
+            Shape::Range<CanGC> r(cx, shape);
+            while (r.front().slot() != blockSlot)
+                r.popFront();
+            jsid id = r.front().propidRaw();
+            MOZ_ASSERT(JSID_IS_ATOM(id));
+            name = JSID_TO_ATOM(id)->asPropertyName();
+        }
+    } else {
+        MOZ_ASSERT(JSOp(*pc) == JSOP_CHECKALIASEDLEXICAL);
+        name = ScopeCoordinateName(cx->runtime()->scopeCoordinateNameCache, script, pc);
+    }
+
+    ReportUninitializedLexical(cx, name);
+}
+
+void
+js::ReportUninitializedLexical(JSContext *cx, HandleScript script, jsbytecode *pc, ScopeCoordinate sc)
+{
+    RootedPropertyName name(cx, ScopeCoordinateName(cx->runtime()->scopeCoordinateNameCache,
+                                                    script, pc));
+    ReportUninitializedLexical(cx, name);
 }

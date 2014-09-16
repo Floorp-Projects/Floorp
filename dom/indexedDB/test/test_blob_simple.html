@@ -132,7 +132,7 @@
 
     info("Retrieve blobs from database via index and verify contents.");
 
-    let index = db.transaction("foo").objectStore("foo").index("foo");
+    index = db.transaction("foo").objectStore("foo").index("foo");
     index.get(INDEX_KEY).onsuccess = grabEventAndContinueHandler;
     event = yield undefined;
 
@@ -248,16 +248,16 @@
 
     info("Stored blob back into database");
 
-    let fileReader = new FileReader();
+    fileReader = new FileReader();
     fileReader.onload = grabEventAndContinueHandler;
     fileReader.readAsText(blobFromDB);
     event = yield undefined;
 
     is(event.target.result, BLOB_DATA.join(""), "Correct text");
 
-    let blobURL = URL.createObjectURL(blobFromDB);
+    blobURL = URL.createObjectURL(blobFromDB);
 
-    let xhr = new XMLHttpRequest();
+    xhr = new XMLHttpRequest();
     xhr.open("GET", blobURL);
     xhr.onload = grabEventAndContinueHandler;
     xhr.send();

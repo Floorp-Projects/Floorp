@@ -252,7 +252,7 @@ function testSteps()
   ok(true, "Test group 5");
 
   keyIndex = 2;
-  let keyRange = IDBKeyRange.bound("Bob", "Ron", true);
+  keyRange = IDBKeyRange.bound("Bob", "Ron", true);
 
   request = objectStore.index("name").openKeyCursor(keyRange);
   request.onerror = errorHandler;
@@ -278,7 +278,7 @@ function testSteps()
   ok(true, "Test group 6");
 
   keyIndex = 1;
-  let keyRange = IDBKeyRange.bound("Bob", "Ron", false, true);
+  keyRange = IDBKeyRange.bound("Bob", "Ron", false, true);
 
   request = objectStore.index("name").openKeyCursor(keyRange);
   request.onerror = errorHandler;

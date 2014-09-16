@@ -36,11 +36,11 @@ function testSteps()
   yield undefined;
 
   let trans3 = db.transaction("foo", "readonly");
-  let request = trans3.objectStore("foo").get(42);
+  request = trans3.objectStore("foo").get(42);
   request.onsuccess = grabEventAndContinueHandler;
   request.onerror = errorHandler;
 
-  let event = yield undefined;
+  event = yield undefined;
   is(event.target.result, "2", "Transactions were ordered properly.");
 
   finishTest();

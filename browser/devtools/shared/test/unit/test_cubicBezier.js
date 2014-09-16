@@ -66,8 +66,8 @@ function coordinatesToStringOutputsAString() {
   let string = c.coordinates.toString();
   do_check_eq(string, "0,1,.5,-2");
 
-  let c = new CubicBezier([1, 1, 1, 1]);
-  let string = c.coordinates.toString();
+  c = new CubicBezier([1, 1, 1, 1]);
+  string = c.coordinates.toString();
   do_check_eq(string, "1,1,1,1");
 }
 

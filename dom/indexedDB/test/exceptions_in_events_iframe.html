@@ -76,13 +76,13 @@
 
       // Test 2: Throwing during a request's success handler should abort the
       // transaction.
-      let request = indexedDB.open(window.location.pathname, 1);
+      request = indexedDB.open(window.location.pathname, 1);
       request.onerror = errorHandler;
       request.onblocked = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
       request.onsuccess = unexpectedSuccessHandler;
       let openrequest = request;
-      let event = yield undefined;
+      event = yield undefined;
 
       request.onupgradeneeded = unexpectedSuccessHandler;
 
@@ -121,17 +121,17 @@
 
       // Test 3: Throwing during a request's error handler should abort the
       // transaction, even if preventDefault is called on the error event.
-      let request = indexedDB.open(window.location.pathname, 1);
+      request = indexedDB.open(window.location.pathname, 1);
       request.onerror = errorHandler;
       request.onblocked = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
       request.onsuccess = unexpectedSuccessHandler;
-      let openrequest = request;
-      let event = yield undefined;
+      openrequest = request;
+      event = yield undefined;
 
       request.onupgradeneeded = unexpectedSuccessHandler;
 
-      let db = event.target.result;
+      db = event.target.result;
       db.onerror = function(event) {
         event.preventDefault();
       };
@@ -142,7 +142,7 @@
       is(db.version, 1, "Correct version");
       is(db.objectStoreNames.length, 0, "Correct objectStoreNames length");
 
-      let objectStore = db.createObjectStore("foo");
+      objectStore = db.createObjectStore("foo");
 
       is(db.objectStoreNames.length, 1, "Correct objectStoreNames length");
       ok(db.objectStoreNames.contains("foo"), "Has correct objectStore");

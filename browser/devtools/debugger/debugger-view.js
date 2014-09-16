@@ -216,7 +216,7 @@ let DebuggerView = {
     extraKeys["Esc"] = false;
 
     function bindKey(func, key, modifiers = {}) {
-      let key = document.getElementById(key).getAttribute("key");
+      key = document.getElementById(key).getAttribute("key");
       let shortcut = Editor.accel(key, modifiers);
       extraKeys[shortcut] = () => DebuggerView.Filtering[func]();
     }

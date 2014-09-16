@@ -52,7 +52,7 @@ add_task(function test_purge() {
 
   // Check that we are left with a single shistory entry.
   SyncHandlers.get(browser).flush();
-  let {entries} = JSON.parse(ss.getTabState(tab));
+  ({entries} = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 1, "there is one shistory entry");
 
   // Cleanup.
@@ -81,7 +81,7 @@ add_task(function test_hashchange() {
 
   // Check that we now have two shistory entries.
   SyncHandlers.get(browser).flush();
-  let {entries} = JSON.parse(ss.getTabState(tab));
+  ({entries} = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 2, "there are two shistory entries");
 
   // Cleanup.
@@ -144,7 +144,7 @@ add_task(function test_subframes() {
 
   // Check shistory.
   SyncHandlers.get(browser).flush();
-  let {entries} = JSON.parse(ss.getTabState(tab));
+  ({entries} = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 2, "there now are two shistory entries");
   is(entries[1].children.length, 1, "the second entry has one child");
 
@@ -158,7 +158,7 @@ add_task(function test_subframes() {
 
   // Check shistory.
   SyncHandlers.get(browser).flush();
-  let {entries} = JSON.parse(ss.getTabState(tab));
+  ({entries} = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 2, "there now are two shistory entries");
   is(entries[1].children.length, 1, "the second entry has one child");
 
@@ -186,7 +186,7 @@ add_task(function test_about_page_navigate() {
 
   // Check that we have changed the history entry.
   SyncHandlers.get(browser).flush();
-  let {entries} = JSON.parse(ss.getTabState(tab));
+  ({entries} = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 1, "there is one shistory entry");
   is(entries[0].url, "about:robots", "url is correct");
 
@@ -215,7 +215,7 @@ add_task(function test_pushstate_replacestate() {
 
   // Check that we have added the history entry.
   SyncHandlers.get(browser).flush();
-  let {entries} = JSON.parse(ss.getTabState(tab));
+  ({entries} = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 2, "there is another shistory entry");
   is(entries[1].url, "http://example.com/test-entry/", "url is correct");
 
@@ -225,7 +225,7 @@ add_task(function test_pushstate_replacestate() {
 
   // Check that we have modified the history entry.
   SyncHandlers.get(browser).flush();
-  let {entries} = JSON.parse(ss.getTabState(tab));
+  ({entries} = JSON.parse(ss.getTabState(tab)));
   is(entries.length, 2, "there is still two shistory entries");
   is(entries[1].url, "http://example.com/test-entry/test-entry2/", "url is correct");
 

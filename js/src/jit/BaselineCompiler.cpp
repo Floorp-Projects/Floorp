@@ -265,6 +265,39 @@ BaselineCompiler::compile()
     return Method_Compiled;
 }
 
+void
+BaselineCompiler::emitInitializeLocals(size_t n, const Value &v)
+{
+    MOZ_ASSERT(frame.nlocals() > 0 && n <= frame.nlocals());
+
+    // Use R0 to minimize code size. If the number of locals to push is <
+    // LOOP_UNROLL_FACTOR, then the initialization pushes are emitted directly
+    // and inline.  Otherwise, they're emitted in a partially unrolled loop.
+    static const size_t LOOP_UNROLL_FACTOR = 4;
+    size_t toPushExtra = n % LOOP_UNROLL_FACTOR;
+
+    masm.moveValue(v, R0);
+
+    // Handle any extra pushes left over by the optional unrolled loop below.
+    for (size_t i = 0; i < toPushExtra; i++)
+        masm.pushValue(R0);
+
+    // Partially unrolled loop of pushes.
+    if (n >= LOOP_UNROLL_FACTOR) {
+        size_t toPush = n - toPushExtra;
+        JS_ASSERT(toPush % LOOP_UNROLL_FACTOR == 0);
+        JS_ASSERT(toPush >= LOOP_UNROLL_FACTOR);
+        masm.move32(Imm32(toPush), R1.scratchReg());
+        // Emit unrolled loop with 4 pushes per iteration.
+        Label pushLoop;
+        masm.bind(&pushLoop);
+        for (size_t i = 0; i < LOOP_UNROLL_FACTOR; i++)
+            masm.pushValue(R0);
+        masm.branchSub32(Assembler::NonZero,
+                         Imm32(LOOP_UNROLL_FACTOR), R1.scratchReg(), &pushLoop);
+    }
+}
+
 bool
 BaselineCompiler::emitPrologue()
 {
@@ -321,35 +354,12 @@ BaselineCompiler::emitPrologue()
                           &earlyStackCheckFailed);
     }
 
-    // Initialize locals to |undefined|. Use R0 to minimize code size.
-    // If the number of locals to push is < LOOP_UNROLL_FACTOR, then the
-    // initialization pushes are emitted directly and inline.  Otherwise,
-    // they're emitted in a partially unrolled loop.
-    if (frame.nlocals() > 0) {
-        size_t LOOP_UNROLL_FACTOR = 4;
-        size_t toPushExtra = frame.nlocals() % LOOP_UNROLL_FACTOR;
-
-        masm.moveValue(UndefinedValue(), R0);
-
-        // Handle any extra pushes left over by the optional unrolled loop below.
-        for (size_t i = 0; i < toPushExtra; i++)
-            masm.pushValue(R0);
-
-        // Partially unrolled loop of pushes.
-        if (frame.nlocals() >= LOOP_UNROLL_FACTOR) {
-            size_t toPush = frame.nlocals() - toPushExtra;
-            JS_ASSERT(toPush % LOOP_UNROLL_FACTOR == 0);
-            JS_ASSERT(toPush >= LOOP_UNROLL_FACTOR);
-            masm.move32(Imm32(toPush), R1.scratchReg());
-            // Emit unrolled loop with 4 pushes per iteration.
-            Label pushLoop;
-            masm.bind(&pushLoop);
-            for (size_t i = 0; i < LOOP_UNROLL_FACTOR; i++)
-                masm.pushValue(R0);
-            masm.branchSub32(Assembler::NonZero,
-                             Imm32(LOOP_UNROLL_FACTOR), R1.scratchReg(), &pushLoop);
-        }
-    }
+    // Initialize local vars to |undefined| and lexicals to a magic value that
+    // throws on touch.
+    if (frame.nvars() > 0)
+        emitInitializeLocals(frame.nvars(), UndefinedValue());
+    if (frame.nlexicals() > 0)
+        emitInitializeLocals(frame.nlexicals(), MagicValue(JS_UNINITIALIZED_LEXICAL));
 
     if (needsEarlyStackCheck())
         masm.bind(&earlyStackCheckFailed);
@@ -2541,6 +2551,60 @@ BaselineCompiler::emit_JSOP_SETARG()
 
     uint32_t arg = GET_ARGNO(pc);
     return emitFormalArgAccess(arg, /* get = */ false);
+}
+
+typedef bool (*ThrowUninitializedLexicalFn)(JSContext *cx);
+static const VMFunction ThrowUninitializedLexicalInfo =
+    FunctionInfo<ThrowUninitializedLexicalFn>(jit::ThrowUninitializedLexical);
+
+bool
+BaselineCompiler::emitUninitializedLexicalCheck(const ValueOperand &val)
+{
+    Label done;
+    masm.branchTestMagicValue(Assembler::NotEqual, val, JS_UNINITIALIZED_LEXICAL, &done);
+
+    prepareVMCall();
+    if (!callVM(ThrowUninitializedLexicalInfo))
+        return false;
+
+    masm.bind(&done);
+    return true;
+}
+
+
+bool
+BaselineCompiler::emit_JSOP_CHECKLEXICAL()
+{
+    frame.syncStack(0);
+    masm.loadValue(frame.addressOfLocal(GET_LOCALNO(pc)), R0);
+    return emitUninitializedLexicalCheck(R0);
+}
+
+bool
+BaselineCompiler::emit_JSOP_INITLEXICAL()
+{
+    return emit_JSOP_SETLOCAL();
+}
+
+bool
+BaselineCompiler::emit_JSOP_CHECKALIASEDLEXICAL()
+{
+    frame.syncStack(0);
+    masm.loadValue(getScopeCoordinateAddress(R0.scratchReg()), R0);
+    return emitUninitializedLexicalCheck(R0);
+}
+
+bool
+BaselineCompiler::emit_JSOP_INITALIASEDLEXICAL()
+{
+    return emit_JSOP_SETALIASEDVAR();
+}
+
+bool
+BaselineCompiler::emit_JSOP_UNINITIALIZED()
+{
+    frame.push(MagicValue(JS_UNINITIALIZED_LEXICAL));
+    return true;
 }
 
 bool

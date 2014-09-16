@@ -664,7 +664,7 @@ class ParseNode
     Definition *resolve();
 
 /* PN_CODE and PN_NAME pn_dflags bits. */
-#define PND_LET                 0x01    /* let (block-scoped) binding */
+#define PND_LET                 0x01    /* let (block-scoped) binding or use of a hoisted let */
 #define PND_CONST               0x02    /* const binding (orthogonal to let) */
 #define PND_ASSIGNED            0x04    /* set if ever LHS of assignment */
 #define PND_PLACEHOLDER         0x08    /* placeholder definition for lexdep */
@@ -746,7 +746,7 @@ class ParseNode
 
     inline bool test(unsigned flag) const;
 
-    bool isLet() const          { return test(PND_LET); }
+    bool isLet() const          { return test(PND_LET) && !isUsed(); }
     bool isConst() const        { return test(PND_CONST); }
     bool isPlaceholder() const  { return test(PND_PLACEHOLDER); }
     bool isDeoptimized() const  { return test(PND_DEOPTIMIZED); }
@@ -754,6 +754,7 @@ class ParseNode
     bool isClosed() const       { return test(PND_CLOSED); }
     bool isBound() const        { return test(PND_BOUND); }
     bool isImplicitArguments() const { return test(PND_IMPLICITARGUMENTS); }
+    bool isHoistedLetUse() const { return test(PND_LET) && isUsed(); }
 
     /* True if pn is a parsenode representing a literal constant. */
     bool isLiteral() const {

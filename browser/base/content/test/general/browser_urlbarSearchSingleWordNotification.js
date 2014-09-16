@@ -102,7 +102,7 @@ function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
     browser.removeTab(tab);
 
     // Now try again with the pref set.
-    let tab = browser.selectedTab = browser.addTab();
+    tab = browser.selectedTab = browser.addTab();
     // In a private window, the notification should appear again.
     yield* runURLBarSearchTest(hostName, isPrivate, isPrivate, win);
     browser.removeTab(tab);

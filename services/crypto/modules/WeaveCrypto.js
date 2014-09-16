@@ -709,7 +709,7 @@ WeaveCrypto.prototype = {
         // Callee picks if SEC_OID_UNKNOWN, but only SHA1 is supported.
         let prfAlg    = this.nss.SEC_OID_HMAC_SHA1;
 
-        let keyLength  = keyLength || 0;    // 0 = Callee will pick.
+        keyLength  = keyLength || 0;    // 0 = Callee will pick.
         let iterations = KEY_DERIVATION_ITERATIONS;
 
         let algid, slot, symKey, keyData;

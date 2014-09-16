@@ -36,7 +36,7 @@ function ifWebGLSupported() {
     "An assignment error is contained in the linkage status.");
 
   fsEditor.replaceText("vec4", { line: 2, ch: 14 }, { line: 2, ch: 18 });
-  let [, error] = yield onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
+  [, error] = yield onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
 
   ok(error,
     "The new fragment shader source was compiled with errors.");
@@ -53,11 +53,11 @@ function ifWebGLSupported() {
   yield ensurePixelIs(gFront, { x: 511, y: 511 }, { r: 0, g: 255, b: 0, a: 255 }, true);
 
   vsEditor.replaceText("vec4", { line: 7, ch: 22 }, { line: 7, ch: 26 });
-  let [, error] = yield onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
+  [, error] = yield onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
   ok(!error, "The new vertex shader source was compiled successfully.");
 
   fsEditor.replaceText("vec3", { line: 2, ch: 14 }, { line: 2, ch: 18 });
-  let [, error] = yield onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
+  [, error] = yield onceSpread(panel.panelWin, EVENTS.SHADER_COMPILED);
   ok(!error, "The new fragment shader source was compiled successfully.");
 
   yield ensurePixelIs(gFront, { x: 0, y: 0 }, { r: 255, g: 0, b: 0, a: 255 }, true);

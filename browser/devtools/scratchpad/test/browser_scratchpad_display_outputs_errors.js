@@ -43,7 +43,7 @@ function runTests()
   {
     method: "display",
     code: syntaxError,
-    result: syntaxError + openComment + "Exception: syntax error\n@" +
+    result: syntaxError + openComment + "Exception: expected expression, got end of script\n@" +
             scratchpad.uniqueName + ":1" + closeComment,
     label: "syntaxError display output",
   },
@@ -63,7 +63,7 @@ function runTests()
   {
     method: "run",
     code: syntaxError,
-    result: syntaxError + openComment + "Exception: syntax error\n@" +
+    result: syntaxError + openComment + "Exception: expected expression, got end of script\n@" +
             scratchpad.uniqueName + ":1" + closeComment,
     label: "syntaxError run output",
   }];

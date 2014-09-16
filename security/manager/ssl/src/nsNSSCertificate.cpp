@@ -14,7 +14,6 @@
 #include "pkix/pkixtypes.h"
 #include "pkix/ScopedPtr.h"
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
-#include "nsNSSCleaner.h"
 #include "nsCOMPtr.h"
 #include "nsIMutableArray.h"
 #include "nsNSSCertValidity.h"
@@ -58,8 +57,6 @@ using namespace mozilla::psm;
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
-
-NSSCleanupAutoPtrClass_WithParam(PLArenaPool, PORT_FreeArena, FalseParam, false)
 
 // This is being stored in an uint32_t that can otherwise
 // only take values from nsIX509Cert's list of cert types.
@@ -1155,14 +1152,6 @@ nsNSSCertificate::ExportAsCMS(uint32_t chainMode,
       return NS_ERROR_INVALID_ARG;
   };
 
-  PLArenaPool* arena = PORT_NewArena(1024);
-  PLArenaPoolCleanerFalseParam arenaCleaner(arena);
-  if (!arena) {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
-           ("nsNSSCertificate::ExportAsCMS - out of memory\n"));
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   ScopedNSSCMSMessage cmsg(NSS_CMSMessage_Create(nullptr));
   if (!cmsg) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
@@ -1229,6 +1218,13 @@ nsNSSCertificate::ExportAsCMS(uint32_t chainMode,
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
            ("nsNSSCertificate::ExportAsCMS - can't attach SignedData\n"));
     return NS_ERROR_FAILURE;
+  }
+
+  ScopedPLArenaPool arena(PORT_NewArena(1024));
+  if (!arena) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("nsNSSCertificate::ExportAsCMS - out of memory\n"));
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   SECItem certP7 = { siBuffer, nullptr, 0 };

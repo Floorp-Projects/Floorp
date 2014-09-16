@@ -45,7 +45,7 @@ add_task(function* testOpenCloseWindow() {
   is(newWindow, closedWindow, "Closed window should match previously opened window");
   CustomizableUI.removeListener(closeListener);
 
-  let windows = [];
+  windows = [];
   for (let win of CustomizableUI.windows)
     windows.push(win);
   is(windows.length, 1, "Should have one customizable window");

@@ -113,7 +113,6 @@ function testSteps()
   is(ex.code, DOMException.INVALID_ACCESS_ERR, "should throw right exception");
 
   // Can't handle autoincrement and array keypath
-  let ex;
   try {
     db.createObjectStore("storefail", { keyPath: ["a"], autoIncrement: true });
   }

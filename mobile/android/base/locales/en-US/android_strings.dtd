@@ -294,6 +294,7 @@ size. -->
 <!ENTITY tabs_private "Private">
 <!ENTITY tabs_synced "Synced">
 <!ENTITY set_image_fail "Unable to set image">
+<!ENTITY set_image_path_fail "Unable to save image">
 <!ENTITY set_image_chooser_title "Set Image As">
 
 <!-- Localization note (find_text, find_prev, find_next, find_close) : These strings are used

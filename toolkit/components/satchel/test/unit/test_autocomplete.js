@@ -231,7 +231,7 @@ add_test(function test13() {
     do_check_eq(results.getValueAt(i), syncValues[i]);
   }
 
-  let results = autocompleteService.autoCompleteSearch("field5", "sync1", null, null);
+  results = autocompleteService.autoCompleteSearch("field5", "sync1", null, null);
   do_check_eq(results.matchCount, 2, "synchronous matchCount");
   do_check_eq(results.getValueAt(0), "sync1");
   do_check_eq(results.getValueAt(1), "sync1a");

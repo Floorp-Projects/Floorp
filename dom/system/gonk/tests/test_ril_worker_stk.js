@@ -940,7 +940,7 @@ add_test(function test_stk_proactive_command_set_up_menu() {
   do_check_eq(tlv.value.typeOfCommand, STK_CMD_SET_UP_MENU);
   do_check_eq(tlv.value.commandQualifier, 0x00);
 
-  let menu = stkFactory.createParam(tlv.value, ctlvs);
+  menu = stkFactory.createParam(tlv.value, ctlvs);
   do_check_eq(menu.title, "Title");
   do_check_eq(menu.items[0].identifier, 1);
   do_check_eq(menu.items[0].text, "item 1");

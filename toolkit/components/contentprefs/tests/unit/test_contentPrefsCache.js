@@ -225,7 +225,7 @@ function testCacheEviction(uri, prefName) {
 }
 
 function selectValue(stmt, columnName, param1, param2) {
-  let stmt = cps.DBConnection.createStatement(stmt);
+  stmt = cps.DBConnection.createStatement(stmt);
   if (param1)
     stmt.params.param1 = param1;
 

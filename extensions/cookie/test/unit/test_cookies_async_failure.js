@@ -352,7 +352,7 @@ function run_test_3(generator)
   // Close the profile.
   do_close_profile(sub_generator);
   yield;
-  let db = Services.storage.openDatabase(do_get_cookie_file(profile));
+  db = Services.storage.openDatabase(do_get_cookie_file(profile));
   do_check_eq(do_count_cookies_in_db(db), 0);
   db.close();
 

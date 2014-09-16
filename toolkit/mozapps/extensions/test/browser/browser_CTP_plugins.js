@@ -75,21 +75,19 @@ function part3(aTestPlugin) {
 }
 
 function part4() {
-  let condition = () => PopupNotifications.getNotification("click-to-play-plugins", gPluginBrowser);
-  waitForCondition(condition, () => {
-    gPluginBrowser.removeEventListener("PluginBindingAttached", part4);
-    gBrowser.removeCurrentTab();
+  ok(PopupNotifications.getNotification("click-to-play-plugins", gPluginBrowser), "part4: should have a click-to-play notification");
+  gPluginBrowser.removeEventListener("PluginBindingAttached", part4);
+  gBrowser.removeCurrentTab();
 
-    let pluginEl = get_addon_element(gManagerWindow, gTestPluginId);
-    let menu = gManagerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "state-menulist");
-    let alwaysActivateItem = gManagerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "always-activate-menuitem");
-    menu.selectedItem = alwaysActivateItem;
-    alwaysActivateItem.doCommand();
-    gBrowser.selectedTab = gBrowser.addTab();
-    gPluginBrowser = gBrowser.selectedBrowser;
-    gPluginBrowser.addEventListener("load", part5, true);
-    gPluginBrowser.contentWindow.location = gHttpTestRoot + "plugin_test.html";
-  }, "part4: should have a click-to-play notification");
+  let pluginEl = get_addon_element(gManagerWindow, gTestPluginId);
+  let menu = gManagerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "state-menulist");
+  let alwaysActivateItem = gManagerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "always-activate-menuitem");
+  menu.selectedItem = alwaysActivateItem;
+  alwaysActivateItem.doCommand();
+  gBrowser.selectedTab = gBrowser.addTab();
+  gPluginBrowser = gBrowser.selectedBrowser;
+  gPluginBrowser.addEventListener("load", part5, true);
+  gPluginBrowser.contentWindow.location = gHttpTestRoot + "plugin_test.html";
 }
 
 function part5() {
@@ -120,22 +118,20 @@ function part6() {
 }
 
 function part7() {
-  let condition = () => PopupNotifications.getNotification("click-to-play-plugins", gPluginBrowser);
-  waitForCondition(condition, () => {
-    let testPlugin = gPluginBrowser.contentDocument.getElementById("test");
-    ok(testPlugin, "part7: should have a plugin element in the page");
-    let objLoadingContent = testPlugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    ok(!objLoadingContent.activated, "part7: plugin should not be activated");
+  ok(PopupNotifications.getNotification("click-to-play-plugins", gPluginBrowser), "part7: disabled plugins still show a notification");
+  let testPlugin = gPluginBrowser.contentDocument.getElementById("test");
+  ok(testPlugin, "part7: should have a plugin element in the page");
+  let objLoadingContent = testPlugin.QueryInterface(Ci.nsIObjectLoadingContent);
+  ok(!objLoadingContent.activated, "part7: plugin should not be activated");
 
-    gPluginBrowser.removeEventListener("PluginBindingAttached", part7);
-    gBrowser.removeCurrentTab();
+  gPluginBrowser.removeEventListener("PluginBindingAttached", part7);
+  gBrowser.removeCurrentTab();
 
-    let pluginEl = get_addon_element(gManagerWindow, gTestPluginId);
-    let details = gManagerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "details-btn");
-    is_element_visible(details, "part7: details link should be visible");
-    EventUtils.synthesizeMouseAtCenter(details, {}, gManagerWindow);
-    wait_for_view_load(gManagerWindow, part8);
-  }, "part7: disabled plugins still show a notification");
+  let pluginEl = get_addon_element(gManagerWindow, gTestPluginId);
+  let details = gManagerWindow.document.getAnonymousElementByAttribute(pluginEl, "anonid", "details-btn");
+  is_element_visible(details, "part7: details link should be visible");
+  EventUtils.synthesizeMouseAtCenter(details, {}, gManagerWindow);
+  wait_for_view_load(gManagerWindow, part8);
 }
 
 function part8() {
@@ -184,21 +180,19 @@ function part10() {
 }
 
 function part11() {
-  let condition = () => PopupNotifications.getNotification("click-to-play-plugins", gPluginBrowser);
-  waitForCondition(condition, () => {
-    gPluginBrowser.removeEventListener("PluginBindingAttached", part11);
-    gBrowser.removeCurrentTab();
+  ok(PopupNotifications.getNotification("click-to-play-plugins", gPluginBrowser), "part11: should have a click-to-play notification");
+  gPluginBrowser.removeEventListener("PluginBindingAttached", part11);
+  gBrowser.removeCurrentTab();
 
-    let pluginTag = getTestPluginTag();
+  let pluginTag = getTestPluginTag();
 
-  // causes appDisabled to be set
-    setAndUpdateBlocklist(gHttpTestRoot + "blockPluginHard.xml",
-      function() {
-        close_manager(gManagerWindow, function() {
-        open_manager("addons://list/plugin", part12);
-      });
+// causes appDisabled to be set
+  setAndUpdateBlocklist(gHttpTestRoot + "blockPluginHard.xml",
+    function() {
+      close_manager(gManagerWindow, function() {
+      open_manager("addons://list/plugin", part12);
     });
-  }, "part11: should have a click-to-play notification");
+  });
 }
 
 function part12(aWindow) {

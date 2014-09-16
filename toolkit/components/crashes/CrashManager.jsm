@@ -473,7 +473,7 @@ this.CrashManager.prototype = Object.freeze({
       let decoder = new TextDecoder();
       data = decoder.decode(data);
 
-      let type, time, payload;
+      let type, time;
       let start = 0;
       for (let i = 0; i < 2; i++) {
         let index = data.indexOf("\n", start);

@@ -45,7 +45,7 @@ let tests = {
     provider.enabled = true;
 
     ok(provider.enabled, "provider is re-enabled");
-    let port = provider.getWorkerPort();
+    port = provider.getWorkerPort();
     ok(port, "should be able to get a port from re-enabled provider");
     port.close();
     ok(provider.workerAPI, "should be able to get a workerAPI from re-enabled provider");

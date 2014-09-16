@@ -30,8 +30,8 @@ let test = asyncTest(function*() {
   yield mutated;
 
   info("Checking that the tagname change was done");
-  let node = content.document.querySelector("#retag-me");
-  let container = yield getContainerForSelector("#retag-me", inspector);
+  node = content.document.querySelector("#retag-me");
+  container = yield getContainerForSelector("#retag-me", inspector);
   is(node.tagName, "P", "We've got #retag-me, it should now be a P");
   ok(container.expanded, "It is still expanded");
   ok(container.selected, "It is still selected");

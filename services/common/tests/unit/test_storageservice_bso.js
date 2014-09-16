@@ -21,12 +21,12 @@ add_test(function test_bso_constructor() {
   do_check_eq(bso.sortindex, 0);
   do_check_eq(bso.ttl, null);
 
-  let bso = new BasicStorageObject("foobar");
+  bso = new BasicStorageObject("foobar");
   do_check_eq(bso.id, "foobar");
   do_check_eq(bso.collection, null);
   do_check_attribute_count(bso.data, 0);
 
-  let bso = new BasicStorageObject("foo", "coll");
+  bso = new BasicStorageObject("foo", "coll");
   do_check_eq(bso.id, "foo");
   do_check_eq(bso.collection, "coll");
   do_check_attribute_count(bso.data, 0);
@@ -66,8 +66,8 @@ add_test(function test_bso_deserialize() {
   do_check_eq(bso.modified, 1223145532);
 
   _("Invalid JSON.");
-  let json = '{id: "foobar}';
-  let bso = new BasicStorageObject();
+  json = '{id: "foobar}';
+  bso = new BasicStorageObject();
   try {
     bso.deserialize(json);
     do_check_true(false);
@@ -76,8 +76,8 @@ add_test(function test_bso_deserialize() {
   }
 
   _("Invalid key in JSON.");
-  let json = '{"id": "foo", "payload": "pay", "BADKEY": "irrelevant"}';
-  let bso = new BasicStorageObject();
+  json = '{"id": "foo", "payload": "pay", "BADKEY": "irrelevant"}';
+  bso = new BasicStorageObject();
   try {
     bso.deserialize(json);
     do_check_true(false);
@@ -87,14 +87,14 @@ add_test(function test_bso_deserialize() {
   }
 
   _("Loading native JS objects works.");
-  let bso = new BasicStorageObject();
+  bso = new BasicStorageObject();
   bso.deserialize({id: "foo", payload: "pay"});
   do_check_neq(bso, null);
   do_check_eq(bso.id, "foo");
   do_check_eq(bso.payload, "pay");
 
   _("Passing invalid type is caught.");
-  let bso = new BasicStorageObject();
+  bso = new BasicStorageObject();
   try {
     bso.deserialize(["foo", "bar"]);
     do_check_true(false);

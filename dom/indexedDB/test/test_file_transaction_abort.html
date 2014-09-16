@@ -32,14 +32,14 @@
       let db = event.target.result;
       db.onerror = errorHandler;
 
-      objectStore = db.createObjectStore(objectStoreName, { });
+      let objectStore = db.createObjectStore(objectStoreName, { });
 
       event = yield undefined;
 
       is(event.type, "success", "Got correct event type");
 
       let trans = db.transaction([objectStoreName], READ_WRITE);
-      let objectStore = trans.objectStore(objectStoreName);
+      objectStore = trans.objectStore(objectStoreName);
 
       request = objectStore.add(fileData.file, fileData.key);
       request.onsuccess = grabEventAndContinueHandler;
