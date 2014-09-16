@@ -105,6 +105,9 @@ this.PermissionsInstaller = {
         break;
       case Ci.nsIPrincipal.APP_STATUS_INSTALLED:
         appStatus = "app";
+        if (aApp.kind == "hosted-trusted") {
+          appStatus = "trusted";
+        }
         break;
       default:
         // Cannot determine app type, abort install by throwing an error.

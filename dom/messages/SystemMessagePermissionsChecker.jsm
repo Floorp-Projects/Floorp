@@ -231,6 +231,9 @@ this.SystemMessagePermissionsChecker = {
       break;
     case Ci.nsIPrincipal.APP_STATUS_INSTALLED:
       appStatus = "app";
+      if (aManifest.type == "trusted") {
+        appStatus = "trusted";
+      }
       break;
     default:
       throw new Error("SystemMessagePermissionsChecker.jsm: " +
