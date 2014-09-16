@@ -23,6 +23,7 @@
 #include "nsIObserverService.h"
 #include "nsISettingsService.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/dom/SettingChangeNotificationBinding.h"
 
 #ifdef MOZ_B2G_RIL
 #include "nsIDOMIccInfo.h"
@@ -205,7 +206,7 @@ BluetoothHfpManager::Observe(nsISupports* aSubject,
                              const char16_t* aData)
 {
   if (!strcmp(aTopic, MOZSETTINGS_CHANGED_ID)) {
-    HandleVolumeChanged(nsDependentString(aData));
+    HandleVolumeChanged(aSubject);
   } else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     HandleShutdown();
   } else {
@@ -555,7 +556,7 @@ BluetoothHfpManager::NotifyDialer(const nsAString& aCommand)
 #endif // MOZ_B2G_RIL
 
 void
-BluetoothHfpManager::HandleVolumeChanged(const nsAString& aData)
+BluetoothHfpManager::HandleVolumeChanged(nsISupports* aSubject)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -563,32 +564,21 @@ BluetoothHfpManager::HandleVolumeChanged(const nsAString& aData)
   //  {"key":"volumeup", "value":10}
   //  {"key":"volumedown", "value":2}
 
-  JSContext* cx = nsContentUtils::GetSafeJSContext();
-  NS_ENSURE_TRUE_VOID(cx);
-
-  JS::Rooted<JS::Value> val(cx);
-  NS_ENSURE_TRUE_VOID(JS_ParseJSON(cx, aData.BeginReading(), aData.Length(), &val));
-  NS_ENSURE_TRUE_VOID(val.isObject());
-
-  JS::Rooted<JSObject*> obj(cx, &val.toObject());
-  JS::Rooted<JS::Value> key(cx);
-  if (!JS_GetProperty(cx, obj, "key", &key) || !key.isString()) {
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  JSContext* cx = jsapi.cx();
+  RootedDictionary<dom::SettingChangeNotification> setting(cx);
+  if (!WrappedJSToDictionary(cx, aSubject, setting)) {
+    return;
+  }
+  if (!setting.mKey.EqualsASCII(AUDIO_VOLUME_BT_SCO_ID)) {
+    return;
+  }
+  if (!setting.mValue.isNumber()) {
     return;
   }
 
-  bool match;
-  if (!JS_StringEqualsAscii(cx, key.toString(), AUDIO_VOLUME_BT_SCO_ID, &match) ||
-      !match) {
-    return;
-  }
-
-  JS::Rooted<JS::Value> value(cx);
-  if (!JS_GetProperty(cx, obj, "value", &value)||
-      !value.isNumber()) {
-    return;
-  }
-
-  mCurrentVgs = value.toNumber();
+  mCurrentVgs = setting.mValue.toNumber();
 
   // Adjust volume by headset and we don't have to send volume back to headset
   if (mReceiveVgsFlag) {

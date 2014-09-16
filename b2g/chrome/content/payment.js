@@ -178,13 +178,12 @@ PaymentSettings.prototype = {
     }
 
     try {
-      let setting = JSON.parse(aData);
-      if (!setting.key ||
-          (setting.key !== kRilDefaultDataServiceId &&
-           setting.key !== kRilDefaultPaymentServiceId)) {
+      if (!aSubject.key ||
+          (aSubject.key !== kRilDefaultDataServiceId &&
+           aSubject.key !== kRilDefaultPaymentServiceId)) {
         return;
       }
-      this.setServiceId(setting.key, setting.value);
+      this.setServiceId(aSubject.key, aSubject.value);
     } catch (e) {
       LOGE(e);
     }
