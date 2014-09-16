@@ -549,6 +549,7 @@ static nsExtraMimeTypeEntry extraMimeEntries [] =
   { AUDIO_OGG, "opus", "Opus Audio" },
 #ifdef MOZ_WIDGET_GONK
   { AUDIO_AMR, "amr", "Adaptive Multi-Rate Audio" },
+  { AUDIO_3GPP, "3gpp,3gp", "3GPP Audio" },
 #endif
   { VIDEO_WEBM, "webm", "Web Media Video" },
   { AUDIO_WEBM, "webm", "Web Media Audio" },
