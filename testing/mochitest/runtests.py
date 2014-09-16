@@ -1130,6 +1130,7 @@ class Mochitest(MochitestUtilsMixin):
       options.extraPrefs.append("testing.browserTestHarness.timeout=%d" % options.timeout)
     options.extraPrefs.append("browser.tabs.remote=%s" % ('true' if options.e10s else 'false'))
     options.extraPrefs.append("browser.tabs.remote.autostart=%s" % ('true' if options.e10s else 'false'))
+    options.extraPrefs.append("browser.tabs.remote.sandbox=%s" % options.contentSandbox)
 
     # get extensions to install
     extensions = self.getExtensionsToInstall(options)
