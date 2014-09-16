@@ -410,18 +410,6 @@ loop.conversation = (function(OT, mozL10n) {
     // else to ensure the L10n environment is setup correctly.
     mozL10n.initialize(navigator.mozLoop);
 
-    // Plug in an alternate client ID mechanism, as localStorage and cookies
-    // don't work in the conversation window
-    OT.overrideGuidStorage({
-      get: function(callback) {
-        callback(null, navigator.mozLoop.getLoopCharPref("ot.guid"));
-      },
-      set: function(guid, callback) {
-        navigator.mozLoop.setLoopCharPref("ot.guid", guid);
-        callback(null);
-      }
-    });
-
     document.title = mozL10n.get("incoming_call_title2");
 
     document.body.classList.add(loop.shared.utils.getTargetPlatform());
