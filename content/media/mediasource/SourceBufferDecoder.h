@@ -85,9 +85,6 @@ public:
   // cached data. Returns -1 if no such value is computable.
   int64_t ConvertToByteOffset(double aTime);
 
-  // Returns true if the data buffered by this decoder contains the given time.
-  bool ContainsTime(double aTime);
-
 private:
   virtual ~SourceBufferDecoder();
 

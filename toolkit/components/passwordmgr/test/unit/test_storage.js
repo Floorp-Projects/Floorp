@@ -44,7 +44,7 @@ add_task(function test_storage_addLogin_nonascii()
   yield reloadAndCheckLogins([loginInfo]);
 
   // Store the string "test" using similarly looking glyphs.
-  let loginInfo = TestData.authLogin({
+  loginInfo = TestData.authLogin({
     httpRealm: String.fromCharCode(355, 277, 349, 357),
   });
   Services.logins.addLogin(loginInfo);

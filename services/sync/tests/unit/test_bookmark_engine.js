@@ -380,7 +380,6 @@ add_test(function test_bookmark_guidMap_fail() {
   let engine = new BookmarksEngine(Service);
   let store = engine._store;
 
-  let store  = engine._store;
   let server = serverForFoo(engine);
   let coll   = server.user("foo").collection("bookmarks");
   new SyncTestingInfrastructure(server.server);

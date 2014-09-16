@@ -243,7 +243,9 @@ namespace jit {
     _(GuardThreadExclusive)                                                 \
     _(InterruptCheckPar)                                                    \
     _(RecompileCheck)                                                       \
-    _(UnknownValue)
+    _(UnknownValue)                                                         \
+    _(LexicalCheck)                                                         \
+    _(ThrowUninitializedLexical)
 
 // Forward declarations of MIR types.
 #define FORWARD_DECLARE(op) class M##op;

@@ -152,7 +152,7 @@ add_test(function test_url_parsing() {
 
   // Check that we can parse a collection URI.
   parts = server.pathRE.exec("/2.0/123/storage/crypto");
-  let [all, version, user, first, rest] = parts;
+  [all, version, user, first, rest] = parts;
   do_check_eq(all, "/2.0/123/storage/crypto");
   do_check_eq(version, "2.0");
   do_check_eq(user, "123");
@@ -165,7 +165,7 @@ add_test(function test_url_parsing() {
 
   // storage alone is a valid request.
   parts = server.pathRE.exec("/2.0/123456/storage");
-  let [all, version, user, first, rest] = parts;
+  [all, version, user, first, rest] = parts;
   do_check_eq(all, "/2.0/123456/storage");
   do_check_eq(version, "2.0");
   do_check_eq(user, "123456");
@@ -173,7 +173,8 @@ add_test(function test_url_parsing() {
   do_check_eq(rest, undefined);
 
   parts = server.storageRE.exec("storage");
-  let [all, storage, collection, id] = parts;
+  let storage, collection, id;
+  [all, storage, collection, id] = parts;
   do_check_eq(all, "storage");
   do_check_eq(collection, undefined);
 
@@ -213,8 +214,8 @@ add_test(function test_info_collections() {
 
   _("Creating an empty collection should result in collection appearing.");
   let coll = server.createCollection("123", "col1");
-  let request = localRequest(server, path, "123", "password");
-  let error = doGetRequest(request);
+  request = localRequest(server, path, "123", "password");
+  error = doGetRequest(request);
   do_check_eq(error, null);
   do_check_eq(request.response.status, 200);
   let info = JSON.parse(request.response.body);
@@ -322,10 +323,10 @@ add_test(function test_bso_if_modified_since_304() {
   do_check_eq(request.response.status, 304);
   do_check_false("content-type" in request.response.headers);
 
-  let request = localRequest(server, "/2.0/123/storage/test/bso",
+  request = localRequest(server, "/2.0/123/storage/test/bso",
                              "123", "password");
   request.setHeader("X-If-Modified-Since", "" + (server.serverTime() - 20000));
-  let error = doGetRequest(request);
+  error = doGetRequest(request);
   do_check_eq(null, error);
   do_check_eq(request.response.status, 200);
   do_check_eq(request.response.headers["content-type"], "application/json");
@@ -359,11 +360,11 @@ add_test(function test_bso_if_unmodified_since() {
   do_check_eq(request.response.status, 412);
 
   _("Ensure we get a 204 if update goes through.");
-  let request = localRequest(server, "/2.0/123/storage/test/bso",
-                             "123", "password");
+  request = localRequest(server, "/2.0/123/storage/test/bso",
+                         "123", "password");
   request.setHeader("Content-Type", "application/json");
   request.setHeader("X-If-Unmodified-Since", time + 1);
-  let error = doPutRequest(request, payload);
+  error = doPutRequest(request, payload);
   do_check_eq(null, error);
   do_check_eq(request.response.status, 204);
   do_check_true(coll.timestamp > time);
@@ -371,11 +372,11 @@ add_test(function test_bso_if_unmodified_since() {
   // Not sure why a client would send X-If-Unmodified-Since if a BSO doesn't
   // exist. But, why not test it?
   _("Ensure we get a 201 if creation goes through.");
-  let request = localRequest(server, "/2.0/123/storage/test/none",
-                             "123", "password");
+  request = localRequest(server, "/2.0/123/storage/test/none",
+                         "123", "password");
   request.setHeader("Content-Type", "application/json");
   request.setHeader("X-If-Unmodified-Since", time);
-  let error = doPutRequest(request, payload);
+  error = doPutRequest(request, payload);
   do_check_eq(null, error);
   do_check_eq(request.response.status, 201);
 
@@ -432,9 +433,9 @@ add_test(function test_bso_delete_exists() {
   do_check_true(coll.timestamp > timestamp);
 
   _("On next request the BSO should not exist.");
-  let request = localRequest(server, "/2.0/123/storage/test/myid",
-                             "123", "password");
-  let error = doGetRequest(request);
+  request = localRequest(server, "/2.0/123/storage/test/myid",
+                         "123", "password");
+  error = doGetRequest(request);
   do_check_eq(error, null);
   do_check_eq(request.response.status, 404);
 
@@ -463,9 +464,9 @@ add_test(function test_bso_delete_unmodified() {
   do_check_neq(coll.bso("myid"), null);
 
   _("Issuing a DELETE with a newer time should work.");
-  let request = localRequest(server, path, "123", "password");
+  request = localRequest(server, path, "123", "password");
   request.setHeader("X-If-Unmodified-Since", modified + 1000);
-  let error = doDeleteRequest(request);
+  error = doDeleteRequest(request);
   do_check_eq(error, null);
   do_check_eq(request.response.status, 204);
   do_check_true(coll.bso("myid").deleted);
@@ -494,7 +495,7 @@ add_test(function test_collection_get_unmodified_since() {
   let request2 = localRequest(server, "/2.0/123/storage/testcoll",
                               "123", "password");
   request2.setHeader("X-If-Unmodified-Since", serverModified - 1);
-  let error = doGetRequest(request2);
+  error = doGetRequest(request2);
   do_check_null(error);
   do_check_eq(request2.response.status, 412);
 
@@ -522,7 +523,7 @@ add_test(function test_bso_get_unmodified_since() {
   let request2 = localRequest(server, "/2.0/123/storage/testcoll/bso0",
                               "123", "password");
   request2.setHeader("X-If-Unmodified-Since", serverModified - 1);
-  let error = doGetRequest(request2);
+  error = doGetRequest(request2);
   do_check_null(error);
   do_check_eq(request2.response.status, 412);
 

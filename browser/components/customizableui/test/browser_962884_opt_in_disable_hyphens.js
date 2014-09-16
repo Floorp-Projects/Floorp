@@ -31,7 +31,7 @@ add_task(function() {
   isnot(characterEncoding.getAttribute("auto-hyphens"), "off",
         "Hyphens should not be disabled if the &shy; character is not present in the label");
   multilineText = document.getAnonymousElementByAttribute(characterEncoding, "class", "toolbarbutton-multiline-text");
-  let multilineTextCS = getComputedStyle(multilineText);
+  multilineTextCS = getComputedStyle(multilineText);
   is(multilineTextCS.MozHyphens, "auto", "-moz-hyphens should be set to auto by default.")
 
   hiddenPanelPromise = promisePanelHidden(window);
@@ -48,8 +48,8 @@ add_task(function() {
   gCustomizeMode.addToPanel(characterEncoding);
   is(characterEncoding.getAttribute("auto-hyphens"), "off",
      "Hyphens should be disabled if the &shy; character is present in the label in customization mode");
-  let multilineText = document.getAnonymousElementByAttribute(characterEncoding, "class", "toolbarbutton-multiline-text");
-  let multilineTextCS = getComputedStyle(multilineText);
+  multilineText = document.getAnonymousElementByAttribute(characterEncoding, "class", "toolbarbutton-multiline-text");
+  multilineTextCS = getComputedStyle(multilineText);
   is(multilineTextCS.MozHyphens, "manual", "-moz-hyphens should be set to manual when the &shy; character is present in customization mode.")
 
   yield endCustomizing();

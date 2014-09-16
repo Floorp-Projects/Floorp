@@ -146,14 +146,14 @@ add_task(function* test_record_translation() {
   yield provider.recordTranslation("es", "en", 4, now);
 
   values = yield m.getValues();
-  let day = values.days.getDay(now);
+  day = values.days.getDay(now);
   Assert.ok(day.has("pageTranslatedCount"));
   Assert.equal(day.get("pageTranslatedCount"), 4);
   Assert.ok(day.has("charactersTranslatedCount"));
   Assert.equal(day.get("charactersTranslatedCount"), 1007);
 
   Assert.ok(day.has("pageTranslatedCountsByLanguage"));
-  let countsByLanguage = JSON.parse(day.get("pageTranslatedCountsByLanguage"));
+  countsByLanguage = JSON.parse(day.get("pageTranslatedCountsByLanguage"));
   Assert.ok("fr" in countsByLanguage);
   Assert.equal(countsByLanguage["fr"]["total"], 3);
   Assert.equal(countsByLanguage["fr"]["es"], 2);

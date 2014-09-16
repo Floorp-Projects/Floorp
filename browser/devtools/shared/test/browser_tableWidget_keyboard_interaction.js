@@ -147,7 +147,7 @@ let testKeyboardInteraction = Task.async(function*() {
   info("Pressing down key to select next row");
   event = table.once(TableWidget.EVENTS.ROW_SELECTED);
   EventUtils.sendKey("DOWN", doc.defaultView);
-  let id = yield event;
+  id = yield event;
   is(id, "id2", "Correct row was selected after pressing down");
   ok(node.classList.contains("theme-selected"), "row has selected class");
   let nodes = doc.querySelectorAll(".theme-selected");
@@ -166,7 +166,7 @@ let testKeyboardInteraction = Task.async(function*() {
   id = yield event;
   is(id, "id3", "Correct row was selected after pressing down");
   ok(node.classList.contains("theme-selected"), "row has selected class");
-  let nodes = doc.querySelectorAll(".theme-selected");
+  nodes = doc.querySelectorAll(".theme-selected");
   for (let i = 0; i < nodes.length; i++) {
     is(nodes[i].getAttribute("data-id"), "id3",
        "Correct cell selected in all columns");
@@ -183,7 +183,7 @@ let testKeyboardInteraction = Task.async(function*() {
   id = yield event;
   is(id, "id2", "Correct row was selected after pressing down");
   ok(node.classList.contains("theme-selected"), "row has selected class");
-  let nodes = doc.querySelectorAll(".theme-selected");
+  nodes = doc.querySelectorAll(".theme-selected");
   for (let i = 0; i < nodes.length; i++) {
     is(nodes[i].getAttribute("data-id"), "id2",
        "Correct cell selected in all columns");
@@ -202,7 +202,7 @@ let testKeyboardInteraction = Task.async(function*() {
   id = yield event;
   is(id, "id1", "Correct row was selected after pressing down");
   ok(node.classList.contains("theme-selected"), "row has selected class");
-  let nodes = doc.querySelectorAll(".theme-selected");
+  nodes = doc.querySelectorAll(".theme-selected");
   for (let i = 0; i < nodes.length; i++) {
     is(nodes[i].getAttribute("data-id"), "id1",
        "Correct cell selected in all columns");
@@ -219,7 +219,7 @@ let testKeyboardInteraction = Task.async(function*() {
   id = yield event;
   is(id, "id9", "Correct row was selected after pressing down");
   ok(node.classList.contains("theme-selected"), "row has selected class");
-  let nodes = doc.querySelectorAll(".theme-selected");
+  nodes = doc.querySelectorAll(".theme-selected");
   for (let i = 0; i < nodes.length; i++) {
     is(nodes[i].getAttribute("data-id"), "id9",
        "Correct cell selected in all columns");

@@ -55,7 +55,7 @@ add_test(function test_si_parse_wbxml_empty() {
                 ]);
   data.offset = 0;
   let result = "<si/>";
-  let msg = SI.PduHelper.parse(data, contentType);
+  msg = SI.PduHelper.parse(data, contentType);
   do_check_eq(msg.content, result);
 
   run_next_test();
@@ -79,7 +79,7 @@ add_test(function test_si_parse_wbxml_empty_public_id_string_table() {
                 ]);
   data.offset = 0;
   let result = "<si/>";
-  let msg = SI.PduHelper.parse(data, contentType);
+  msg = SI.PduHelper.parse(data, contentType);
   do_check_eq(msg.content, result);
 
   run_next_test();
@@ -104,7 +104,7 @@ add_test(function test_si_parse_wbxml_with_href() {
   data.offset = 0;
   let result = "<si><indication href=\"http://www.oreilly.com/\">" +
                "Check this website</indication></si>";
-  let msg = SI.PduHelper.parse(data, contentType);
+  msg = SI.PduHelper.parse(data, contentType);
   do_check_eq(msg.content, result);
 
   run_next_test();
@@ -131,7 +131,7 @@ add_test(function test_si_parse_wbxml_with_href_reserved_char() {
   data.offset = 0;
   let result = "<si><indication href=\"http://www.oreilly.com/foo&amp;bar\">" +
                "Check this website</indication></si>";
-  let msg = SI.PduHelper.parse(data, contentType);
+  msg = SI.PduHelper.parse(data, contentType);
   do_check_eq(msg.content, result);
 
   run_next_test();
@@ -162,7 +162,7 @@ add_test(function test_si_parse_wbxml_with_href_date() {
   let result = "<si><indication href=\"http://www.xyz.com/email/123/abc.wml\"" +
                " created=\"1999-06-25T15:23:15Z\" si-expires=\"1999-06-30T00:00:00Z\">" +
                "You have 4 new emails</indication></si>";
-  let msg = SI.PduHelper.parse(data, contentType);
+  msg = SI.PduHelper.parse(data, contentType);
   do_check_eq(msg.content, result);
 
   run_next_test();
@@ -193,7 +193,7 @@ add_test(function test_si_parse_wbxml_with_attr_string_table() {
   let result = "<si><indication href=\"http://www.xyz.com/email/123/abc.wml\"" +
                " created=\"1999-06-25T15:23:15Z\" si-expires=\"1999-06-30T00:00:00Z\">" +
                "You have 4 new emails</indication></si>";
-  let msg = SI.PduHelper.parse(data, contentType);
+  msg = SI.PduHelper.parse(data, contentType);
   do_check_eq(msg.content, result);
 
   run_next_test();

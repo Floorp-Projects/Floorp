@@ -42,7 +42,7 @@ function testParseCssProperty() {
 
   target.innerHTML = "";
 
-  let frag = parser.parseCssProperty("background-image", "linear-gradient(to right, #F60 10%, rgba(0,0,0,1))", {
+  frag = parser.parseCssProperty("background-image", "linear-gradient(to right, #F60 10%, rgba(0,0,0,1))", {
     colorSwatchClass: "test-colorswatch",
     colorClass: "test-color"
   });

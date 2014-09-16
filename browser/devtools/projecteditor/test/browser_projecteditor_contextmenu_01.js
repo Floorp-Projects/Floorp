@@ -18,8 +18,8 @@ let test = asyncTest(function*() {
   ok (textEditorContextMenuPopup, "The menu has loaded in the projecteditor document");
 
   let projecteditor2 = yield addProjectEditorTabForTempDirectory();
-  let contextMenuPopup = projecteditor2.document.getElementById("context-menu-popup");
-  let textEditorContextMenuPopup = projecteditor2.document.getElementById("texteditor-context-popup");
+  contextMenuPopup = projecteditor2.document.getElementById("context-menu-popup");
+  textEditorContextMenuPopup = projecteditor2.document.getElementById("texteditor-context-popup");
   ok (!contextMenuPopup, "The menu has NOT loaded in the projecteditor document");
   ok (!textEditorContextMenuPopup, "The menu has NOT loaded in the projecteditor document");
   ok (content.document.querySelector("#context-menu-popup"), "The menu has loaded in the specified element");

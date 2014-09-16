@@ -366,6 +366,8 @@
 @BINPATH@/browser/components/BrowserPlaces.manifest
 @BINPATH@/browser/components/devtools-clhandler.manifest
 @BINPATH@/browser/components/devtools-clhandler.js
+@BINPATH@/browser/components/webideCli.js
+@BINPATH@/browser/components/webideComponents.manifest
 @BINPATH@/browser/components/Experiments.manifest
 @BINPATH@/browser/components/ExperimentsService.js
 @BINPATH@/browser/components/translation.manifest

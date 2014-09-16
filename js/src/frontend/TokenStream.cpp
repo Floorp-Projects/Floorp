@@ -1810,6 +1810,24 @@ js_fgets(char *buf, int size, FILE *file)
     return i;
 }
 
+const char *
+frontend::TokenKindToDesc(TokenKind tt)
+{
+    switch (tt) {
+#define EMIT_CASE(name, desc) case TOK_##name: return desc;
+      FOR_EACH_TOKEN_KIND(EMIT_CASE)
+#undef EMIT_CASE
+      case TOK_ERROR:
+        MOZ_ASSERT_UNREACHABLE("TOK_ERROR should not be passed.");
+        break;
+      case TOK_LIMIT:
+        MOZ_ASSERT_UNREACHABLE("TOK_LIMIT should not be passed.");
+        break;
+    }
+
+    return "<bad TokenKind>";
+}
+
 #ifdef DEBUG
 const char *
 TokenKindToString(TokenKind tt)

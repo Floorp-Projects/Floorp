@@ -19,17 +19,17 @@ function spawnTest () {
   let type = yield oscNode.getParam("type");
   ise(type, "sine", "AudioNode:getParam correctly fetches non-AudioParam");
 
-  let type = yield oscNode.getParam("not-a-valid-param");
+  type = yield oscNode.getParam("not-a-valid-param");
   ok(type.type === "undefined",
     "AudioNode:getParam correctly returns a grip value for `undefined` for an invalid param.");
 
   let resSuccess = yield oscNode.setParam("frequency", 220);
-  let freq = yield oscNode.getParam("frequency");
+  freq = yield oscNode.getParam("frequency");
   ise(freq, 220, "AudioNode:setParam correctly sets a `number` AudioParam");
   is(resSuccess, undefined, "AudioNode:setParam returns undefined for correctly set AudioParam");
 
   resSuccess = yield oscNode.setParam("type", "square");
-  let type = yield oscNode.getParam("type");
+  type = yield oscNode.getParam("type");
   ise(type, "square", "AudioNode:setParam correctly sets a `string` non-AudioParam");
   is(resSuccess, undefined, "AudioNode:setParam returns undefined for correctly set AudioParam");
 

@@ -33,7 +33,7 @@ let test = Task.async(function*() {
   // Perform the second recording...
 
   yield front.startRecording();
-  let profilingStartTime = front._profilingStartTime;
+  profilingStartTime = front._profilingStartTime;
   info("Started profiling at: " + profilingStartTime);
 
   busyWait(WAIT_TIME); // allow the profiler module to sample more cpu activity

@@ -74,7 +74,7 @@ add_task(function() {
   yield waitForCondition(() => navbar.hasAttribute("overflowing"));
   ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
 
-  let homeButtonPlacement = CustomizableUI.getPlacementOfWidget("home-button");
+  homeButtonPlacement = CustomizableUI.getPlacementOfWidget("home-button");
   ok(homeButtonPlacement, "Home button should still have a placement");
   is(homeButtonPlacement && homeButtonPlacement.area, "nav-bar", "Home button should be back in the navbar now");
 

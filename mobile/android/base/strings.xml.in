@@ -436,6 +436,7 @@
 
   <!-- Set Image Notifications -->
   <string name="set_image_fail">&set_image_fail;</string>
+  <string name="set_image_path_fail">&set_image_path_fail;</string>
   <string name="set_image_chooser_title">&set_image_chooser_title;</string>
 
   <!-- Contacts API -->

@@ -401,8 +401,8 @@ add_test(function test_processIncoming_reconcile_local_deleted() {
   let wbo = new ServerWBO("DUPE_INCOMING", record, now + 2);
   server.insertWBO(user, "rotary", wbo);
 
-  let record = encryptPayload({id: "DUPE_LOCAL", denomination: "local"});
-  let wbo = new ServerWBO("DUPE_LOCAL", record, now - 1);
+  record = encryptPayload({id: "DUPE_LOCAL", denomination: "local"});
+  wbo = new ServerWBO("DUPE_LOCAL", record, now - 1);
   server.insertWBO(user, "rotary", wbo);
 
   engine._store.create({id: "DUPE_LOCAL", denomination: "local"});
@@ -475,7 +475,7 @@ add_test(function test_processIncoming_reconcile_locally_deleted_dupe_new() {
   do_check_empty(engine._store.items);
   let collection = server.getCollection(user, "rotary");
   do_check_eq(1, collection.count());
-  let wbo = collection.wbo("DUPE_INCOMING");
+  wbo = collection.wbo("DUPE_INCOMING");
   do_check_neq(null, wbo);
   let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
   do_check_true(payload.deleted);
@@ -515,7 +515,7 @@ add_test(function test_processIncoming_reconcile_locally_deleted_dupe_old() {
 
   let collection = server.getCollection(user, "rotary");
   do_check_eq(1, collection.count());
-  let wbo = collection.wbo("DUPE_INCOMING");
+  wbo = collection.wbo("DUPE_INCOMING");
   let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
   do_check_eq("incoming", payload.denomination);
 
@@ -551,7 +551,7 @@ add_test(function test_processIncoming_reconcile_changed_dupe() {
   // have its payload set to what was in the local record.
   let collection = server.getCollection(user, "rotary");
   do_check_eq(1, collection.count());
-  let wbo = collection.wbo("DUPE_INCOMING");
+  wbo = collection.wbo("DUPE_INCOMING");
   do_check_neq(undefined, wbo);
   let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
   do_check_eq("local", payload.denomination);
@@ -589,7 +589,7 @@ add_test(function test_processIncoming_reconcile_changed_dupe_new() {
   // have its payload retained.
   let collection = server.getCollection(user, "rotary");
   do_check_eq(1, collection.count());
-  let wbo = collection.wbo("DUPE_INCOMING");
+  wbo = collection.wbo("DUPE_INCOMING");
   do_check_neq(undefined, wbo);
   let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
   do_check_eq("incoming", payload.denomination);

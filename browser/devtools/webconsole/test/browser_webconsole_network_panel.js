@@ -360,7 +360,7 @@ function testGen() {
     responseImageCached: true
   });
 
-  let imgNode = networkPanel.document.getElementById("responseImageCachedNode");
+  imgNode = networkPanel.document.getElementById("responseImageCachedNode");
   is(imgNode.getAttribute("src"), "data:image/png;base64," + TEST_IMG_BASE64,
      "Displayed image is correct");
 

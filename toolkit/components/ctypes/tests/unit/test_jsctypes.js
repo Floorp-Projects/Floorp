@@ -978,8 +978,8 @@ function run_float_tests(library, t, name, size) {
     eval("let f2 = " + f1.toSource());
     do_check_eq(f1.value, f2.value);
   }
-  let vals = [Infinity, -Infinity, -0, 0, 1, -1, 1/3, -1/3, 1/4, -1/4,
-              1e-14, -1e-14, 0xfffffffffffff000, -0xfffffffffffff000];
+  vals = [Infinity, -Infinity, -0, 0, 1, -1, 1/3, -1/3, 1/4, -1/4,
+          1e-14, -1e-14, 0xfffffffffffff000, -0xfffffffffffff000];
   for (let i = 0; i < vals.length; i++)
     test_roundtrip(t, vals[i]);
   do_check_eq(t(NaN).toSource(), t.toSource() + "(NaN)");
@@ -1703,7 +1703,7 @@ function run_PointerType_tests() {
   let f = new f_t();
   do_check_throws(function() { f.contents; }, Error);
   do_check_throws(function() { f.contents = 0; }, Error);
-  let f = f_t(5);
+  f = f_t(5);
   do_check_throws(function() { f.contents = 0; }, Error);
   do_check_eq(f.toSource(), 'FILE.ptr(ctypes.UInt64("0x5"))');
 
@@ -1731,7 +1731,7 @@ function run_PointerType_tests() {
   do_check_true(n.isNull() === false);
 
   // Test 'increment'/'decrement'.
-  let g_t = ctypes.StructType("g_t", [{ a: ctypes.int32_t }, { b: ctypes.double }]);
+  g_t = ctypes.StructType("g_t", [{ a: ctypes.int32_t }, { b: ctypes.double }]);
   let a_t = ctypes.ArrayType(g_t, 2);
   let a = new a_t();
   a[0] = g_t(1, 2);
@@ -2715,7 +2715,7 @@ function run_variadic_tests(library) {
 
   do_check_eq(result.value, 3 + 5 + 7 + 11);
 
-  let result = ctypes.int32_t.array(3)([1,1,1]),
+  result = ctypes.int32_t.array(3)([1,1,1]),
       v1 = ctypes.int32_t.array(4)([1,2,3,5]),
       v2 = ctypes.int32_t.array(3)([7,11,13]),
       vector_add_va = library.declare("test_vector_add_va_cdecl",

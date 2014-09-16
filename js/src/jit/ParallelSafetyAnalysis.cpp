@@ -342,6 +342,8 @@ class ParallelSafetyVisitor : public MDefinitionVisitor
     UNSAFE_OP(AsmJSCall)
     DROP_OP(RecompileCheck)
     UNSAFE_OP(UnknownValue)
+    UNSAFE_OP(LexicalCheck)
+    UNSAFE_OP(ThrowUninitializedLexical)
 
     // It looks like this could easily be made safe:
     UNSAFE_OP(ConvertElementsToDoubles)

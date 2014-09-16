@@ -27,7 +27,7 @@ add_task(function test_check_urls_before_restoring() {
   ss.setTabState(tab, getState("http://example.com/"));
   yield promiseTabRestored(tab);
 
-  let value = yield getInputValue(browser, {id: "text"});
+  value = yield getInputValue(browser, {id: "text"});
   is(value, "", "value was not restored");
 
   // Cleanup.

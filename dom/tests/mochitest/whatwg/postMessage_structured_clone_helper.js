@@ -30,7 +30,7 @@ function getTestContent()
   recursiveobj.expando = recursiveobj;
   yield recursiveobj;
 
-  let obj = new Object();
+  obj = new Object();
   obj.expando1 = 1;
   obj.foo = new Object();
   obj.foo.bar = 2;
@@ -47,7 +47,7 @@ function getTestContent()
   yield obj;
 
   let diamond = new Object();
-  let obj = new Object();
+  obj = new Object();
   obj.foo = "foo";
   obj.bar = 92;
   obj.backref = diamond;
@@ -56,7 +56,7 @@ function getTestContent()
   yield diamond;
 
   let doubleref = new Object();
-  let obj = new Object();
+  obj = new Object();
   doubleref.ref1 = obj;
   doubleref.ref2 = obj;
   yield doubleref;

@@ -30,7 +30,7 @@ function testFiles(filename) {
     yield openedFile.file.close();
     exists = yield OS.File.exists(openedFile.path);
     do_check_true(exists);
-    let fileInfo = yield OS.File.stat(openedFile.path);
+    fileInfo = yield OS.File.stat(openedFile.path);
     do_check_true(fileInfo.size == 0);
 
     // Ensure that openUnique() generates different file names each time, using the HEX number algorithm
@@ -49,7 +49,7 @@ function testFiles(filename) {
     yield openedFile.file.close();
     exists = yield OS.File.exists(openedFile.path);
     do_check_true(exists);
-    let fileInfo = yield OS.File.stat(openedFile.path);
+    fileInfo = yield OS.File.stat(openedFile.path);
     do_check_true(fileInfo.size == 0);
 
     // Ensure that openUnique() generates different human readable file names each time

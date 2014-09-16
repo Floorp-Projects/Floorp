@@ -49,6 +49,8 @@ MIRType MIRTypeFromValue(const js::Value &vp)
             return MIRType_MagicHole;
           case JS_IS_CONSTRUCTING:
             return MIRType_MagicIsConstructing;
+          case JS_UNINITIALIZED_LEXICAL:
+            return MIRType_MagicUninitializedLexical;
           default:
             MOZ_ASSERT(!"Unexpected magic constant");
         }
@@ -6204,6 +6206,55 @@ class MAsmJSInterruptCheck : public MNullaryInstruction
     }
     const CallSiteDesc &funcDesc() const {
         return funcDesc_;
+    }
+};
+
+// Checks if a value is JS_UNINITIALIZED_LEXICAL, throwing if so.
+class MLexicalCheck
+  : public MUnaryInstruction,
+    public BoxPolicy<0>
+{
+    explicit MLexicalCheck(MDefinition *input)
+      : MUnaryInstruction(input)
+    {
+        setGuard();
+        setResultType(MIRType_Value);
+        setResultTypeSet(input->resultTypeSet());
+    }
+
+  public:
+    INSTRUCTION_HEADER(LexicalCheck)
+
+    static MLexicalCheck *New(TempAllocator &alloc, MDefinition *input) {
+        return new(alloc) MLexicalCheck(input);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+
+    MDefinition *input() const {
+        return getOperand(0);
+    }
+};
+
+// Unconditionally throw an uninitialized let error.
+class MThrowUninitializedLexical : public MNullaryInstruction
+{
+    MThrowUninitializedLexical() {
+        setGuard();
+        setResultType(MIRType_None);
+    }
+
+  public:
+    INSTRUCTION_HEADER(ThrowUninitializedLexical)
+
+    static MThrowUninitializedLexical *New(TempAllocator &alloc) {
+        return new(alloc) MThrowUninitializedLexical();
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
     }
 };
 

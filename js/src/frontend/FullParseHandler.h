@@ -597,6 +597,9 @@ class FullParseHandler
     static Definition::Kind getDefinitionKind(Definition *dn) {
         return dn->kind();
     }
+    static bool isPlaceholderDefinition(Definition *dn) {
+        return dn->isPlaceholder();
+    }
     void linkUseToDef(ParseNode *pn, Definition *dn)
     {
         JS_ASSERT(!pn->isUsed());
@@ -623,6 +626,13 @@ class FullParseHandler
     }
     bool dependencyCovered(ParseNode *pn, unsigned blockid, bool functionScope) {
         return pn->pn_blockid >= blockid;
+    }
+    void markMaybeUninitializedLexicalUseInSwitch(ParseNode *pn, Definition *dn,
+                                                  uint16_t firstDominatingLexicalSlot)
+    {
+        MOZ_ASSERT(pn->isUsed());
+        if (dn->isLet() && dn->pn_cookie.slot() < firstDominatingLexicalSlot)
+            pn->pn_dflags |= PND_LET;
     }
 
     static uintptr_t definitionToBits(Definition *dn) {
@@ -711,11 +721,14 @@ FullParseHandler::finishInitializerAssignment(ParseNode *pn, ParseNode *init, JS
         pn->pn_expr = init;
     }
 
-    pn->setOp((pn->pn_dflags & PND_BOUND)
-              ? JSOP_SETLOCAL
-              : (op == JSOP_DEFCONST)
-              ? JSOP_SETCONST
-              : JSOP_SETNAME);
+    if (op == JSOP_INITLEXICAL)
+        pn->setOp(op);
+    else if (pn->pn_dflags & PND_BOUND)
+        pn->setOp(JSOP_SETLOCAL);
+    else if (op == JSOP_DEFCONST)
+        pn->setOp(JSOP_SETCONST);
+    else
+        pn->setOp(JSOP_SETNAME);
 
     pn->markAsAssigned();
 

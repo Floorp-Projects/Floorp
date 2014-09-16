@@ -85,6 +85,7 @@ function f6() {
 
 try
 {
+/*
   var rv = f1(5);
   if (!isNaN(rv))
     throw "f1(5):\n" +
@@ -96,7 +97,7 @@ try
     throw "f2(5):\n" +
       "  expected:  NaN\n" +
       "  actual:    " + rv;
-/*
+
   rv = f3(8);
   if (rv != 9)
   throw "f3(8):\n" +

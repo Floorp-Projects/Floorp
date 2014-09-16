@@ -1129,7 +1129,7 @@ TreeNode.prototype = {
   maxAbsDescendant: function() {
     if (!this._kids) {
       // No kids? Just return the absolute value of the amount.
-      return max = Math.abs(this._amount);
+      return Math.abs(this._amount);
     }
 
     if ('_maxAbsDescendant' in this) {
