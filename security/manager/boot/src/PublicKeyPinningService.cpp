@@ -296,7 +296,8 @@ PublicKeyPinningService::ChainHasValidPins(const CERTCertList* certList,
   if (!certList) {
     return false;
   }
-  if (time > TimeFromElapsedSecondsAD(kPreloadPKPinsExpirationTime)) {
+  if (time > TimeFromEpochInSeconds(kPreloadPKPinsExpirationTime /
+                                    PR_USEC_PER_SEC)) {
     return true;
   }
   if (!hostname || hostname[0] == 0) {
