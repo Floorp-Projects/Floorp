@@ -61,6 +61,7 @@ public:
                     const nsAString& aTag,
                     const nsAString& aIcon,
                     const nsAString& aData,
+                    const nsAString& aBehavior,
                     JSContext* aCx)
   {
     MOZ_ASSERT(!aID.IsEmpty());
@@ -71,10 +72,12 @@ public:
     options.mBody = aBody;
     options.mTag = aTag;
     options.mIcon = aIcon;
-    nsRefPtr<Notification> notification = Notification::CreateInternal(mWindow,
-                                                                       aID,
-                                                                       aTitle,
-                                                                       options);
+    options.mMozbehavior.Init(aBehavior);
+    nsRefPtr<Notification> notification;
+    notification = Notification::CreateInternal(mWindow,
+                                                aID,
+                                                aTitle,
+                                                options);
     ErrorResult rv;
     notification->InitFromBase64(aCx, aData, rv);
     if (rv.Failed()) {
@@ -395,10 +398,10 @@ NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
 Notification::Notification(const nsAString& aID, const nsAString& aTitle, const nsAString& aBody,
                            NotificationDirection aDir, const nsAString& aLang,
                            const nsAString& aTag, const nsAString& aIconUrl,
-                           nsPIDOMWindow* aWindow)
+                           const NotificationBehavior& aBehavior, nsPIDOMWindow* aWindow)
   : DOMEventTargetHelper(aWindow),
     mID(aID), mTitle(aTitle), mBody(aBody), mDir(aDir), mLang(aLang),
-    mTag(aTag), mIconUrl(aIconUrl), mIsClosed(false), mIsStored(false)
+    mTag(aTag), mIconUrl(aIconUrl), mBehavior(aBehavior), mIsClosed(false), mIsStored(false)
 {
   nsAutoString alertName;
   DebugOnly<nsresult> rv = GetOrigin(GetOwner(), alertName);
@@ -474,6 +477,12 @@ Notification::Constructor(const GlobalObject& aGlobal,
     scContainer->GetDataAsBase64(dataString);
   }
 
+  nsAutoString behavior;
+  if (!aOptions.mMozbehavior.ToJSON(behavior)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
   aRv = notificationStorage->Put(origin,
                                  id,
                                  aTitle,
@@ -483,7 +492,8 @@ Notification::Constructor(const GlobalObject& aGlobal,
                                  aOptions.mTag,
                                  aOptions.mIcon,
                                  alertName,
-                                 dataString);
+                                 dataString,
+                                 behavior);
 
   if (aRv.Failed()) {
     return nullptr;
@@ -524,6 +534,7 @@ Notification::CreateInternal(nsPIDOMWindow* aWindow,
                                                          aOptions.mLang,
                                                          aOptions.mTag,
                                                          aOptions.mIcon,
+                                                         aOptions.mMozbehavior,
                                                          aWindow);
   return notification.forget();
 }
@@ -572,12 +583,13 @@ Notification::ShowInternal()
 
   nsresult rv;
   nsAutoString absoluteUrl;
-  if (mIconUrl.Length() > 0) {
-    // Resolve image URL against document base URI.
-    nsIDocument* doc = GetOwner()->GetExtantDoc();
-    if (doc) {
-      nsCOMPtr<nsIURI> baseUri = doc->GetBaseURI();
-      if (baseUri) {
+  nsAutoString soundUrl;
+  // Resolve image URL against document base URI.
+  nsIDocument* doc = GetOwner()->GetExtantDoc();
+  if (doc) {
+    nsCOMPtr<nsIURI> baseUri = doc->GetBaseURI();
+    if (baseUri) {
+      if (mIconUrl.Length() > 0) {
         nsCOMPtr<nsIURI> srcUri;
         rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(srcUri),
                                                        mIconUrl, doc, baseUri);
@@ -587,7 +599,16 @@ Notification::ShowInternal()
           absoluteUrl = NS_ConvertUTF8toUTF16(src);
         }
       }
-
+      if (mBehavior.mSoundFile.Length() > 0) {
+        nsCOMPtr<nsIURI> srcUri;
+        rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(srcUri),
+            mBehavior.mSoundFile, doc, baseUri);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoCString src;
+          srcUri->GetSpec(src);
+          soundUrl = NS_ConvertUTF8toUTF16(src);
+        }
+      }
     }
   }
 
@@ -623,6 +644,8 @@ Notification::ShowInternal()
         ops.mLang = mLang;
         ops.mTag = mTag;
         ops.mData = dataStr;
+        ops.mMozbehavior = mBehavior;
+        ops.mMozbehavior.mSoundFile = soundUrl;
 
         if (!ToJSValue(cx, ops, &val)) {
           NS_WARNING("Converting dict to object failed!");
