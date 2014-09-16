@@ -1,5 +1,6 @@
 var gBasePath = "tests/dom/apps/tests/";
 var gAppTemplatePath = "tests/dom/apps/tests/file_app.template.html";
+var gScriptTemplatePath = "tests/dom/apps/tests/file_script.template.js";
 var gAppcacheTemplatePath = "tests/dom/apps/tests/file_cached_app.template.appcache";
 var gWidgetTemplatePath = "tests/dom/apps/tests/file_widget_app.template.html";
 var gDefaultIcon = "default_icon";
@@ -13,8 +14,9 @@ function makeResource(templatePath, version, apptype, role) {
 
   // Hack - This is necessary to make the tests pass, but hbambas says it
   // shouldn't be necessary. Comment it out and watch the tests fail.
-  if (templatePath == gAppTemplatePath && apptype == 'cached') {
-    res = res.replace('<html>', '<html manifest="file_app.sjs?apptype=cached&getappcache=true">');
+  if (templatePath == gAppTemplatePath &&
+      (apptype == 'cached' || apptype == 'trusted')) {
+    res = res.replace('<html>', '<html manifest="file_app.sjs?apptype=' + apptype + '&getappcache=true">');
   }
   return res;
 }
@@ -47,7 +49,7 @@ function handleRequest(request, response) {
 
   // Get the app type.
   var apptype = query.apptype;
-  if (apptype != 'hosted' && apptype != 'cached' && apptype != 'widget'  && apptype != 'invalidWidget')
+  if (apptype != 'hosted' && apptype != 'cached' && apptype != 'widget'  && apptype != 'invalidWidget' && apptype != 'trusted')
     throw "Invalid app type: " + apptype;
 
   var role = query.role;
@@ -58,7 +60,7 @@ function handleRequest(request, response) {
   dump("Server Etag: " + etag + "\n");
 
   if (etagMatches(request, etag)) {
-    dump("Etags Match. Sending 304\n");
+    dump("Etags Match. Sending 304 for " + request.queryString + "\n");
     response.setStatusLine(request.httpVersion, "304", "Not Modified");
     return;
   }
@@ -68,6 +70,13 @@ function handleRequest(request, response) {
     dump("Client Etag: " + request.getHeader("If-None-Match") + "\n");
   else
     dump("No Client Etag\n");
+
+  // Check if we ask for the js script used in file_app.template.html
+  if ("script" in query) {
+   dump("Sending script for " + request.queryString + "\n");
+   response.write(makeResource(gScriptTemplatePath, version, apptype, role));
+   return;
+  }
 
   // Check if we're generating a webapp manifest.
   if ('getmanifest' in query) {
@@ -81,7 +90,8 @@ function handleRequest(request, response) {
   //
   // NB: Among other reasons, we use the same sjs file here so that the version
   //     state is shared.
-  if (apptype == 'cached' && 'getappcache' in query) {
+  if ((apptype == 'cached' || apptype == 'trusted') &&
+      'getappcache' in query) {
     response.setHeader("Content-Type", "text/cache-manifest", false);
     response.write(makeResource(gAppcacheTemplatePath, version, apptype, role));
     return;

@@ -64,3 +64,10 @@ interface nsIMobileMessageService : nsISupports
     [array, size_is(threadCount)] in unsigned long long threadIds,
     in uint32_t threadCount);
 };
+
+%{C++
+template<typename T> struct already_AddRefed;
+
+already_AddRefed<nsIMobileMessageService>
+NS_CreateMobileMessageService();
+%}

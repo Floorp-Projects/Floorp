@@ -7,9 +7,11 @@
 #include "BluetoothRilListener.h"
 
 #include "BluetoothHfpManager.h"
+#include "nsIIccProvider.h"
 #include "nsIMobileConnectionInfo.h"
-#include "nsIRadioInterfaceLayer.h"
-#include "nsRadioInterfaceLayer.h"
+#include "nsIMobileConnectionService.h"
+#include "nsITelephonyService.h"
+#include "nsRadioInterfaceLayer.h" // For NS_RILCONTENTHELPER_CONTRACTID.
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 
@@ -179,11 +181,15 @@ MobileConnectionListener::Listen(bool aStart)
     do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(service, false);
 
+  nsCOMPtr<nsIMobileConnection> connection;
+  mcService->GetItemByServiceId(mClientId, getter_AddRefs(connection));
+  NS_ENSURE_TRUE(connection, false);
+
   nsresult rv;
   if (aStart) {
-    rv = service->RegisterListener(mClientId, this);
+    rv = connection->RegisterListener(this);
   } else {
-    rv = service->UnregisterListener(mClientId, this);
+    rv = connection->UnregisterListener(this);
   }
 
   return NS_SUCCEEDED(rv);
@@ -329,17 +335,17 @@ TelephonyListener::Listen(bool aStart)
  */
 BluetoothRilListener::BluetoothRilListener()
 {
+  nsCOMPtr<nsIMobileConnectionService> service =
+    do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE_VOID(service);
+
   // Query number of total clients (sim slots)
-  uint32_t numOfClients;
-  nsCOMPtr<nsIRadioInterfaceLayer> radioInterfaceLayer =
-    do_GetService(NS_RADIOINTERFACELAYER_CONTRACTID);
-  NS_ENSURE_TRUE_VOID(radioInterfaceLayer);
-
-  radioInterfaceLayer->GetNumRadioInterfaces(&numOfClients);
-
-  // Init MobileConnectionListener array and IccInfoListener
-  for (uint32_t i = 0; i < numOfClients; i++) {
-    mMobileConnListeners.AppendElement(new MobileConnectionListener(i));
+  uint32_t numItems = 0;
+  if (NS_SUCCEEDED(service->GetNumItems(&numItems))) {
+    // Init MobileConnectionListener array and IccInfoListener
+    for (uint32_t i = 0; i < numItems; i++) {
+      mMobileConnListeners.AppendElement(new MobileConnectionListener(i));
+    }
   }
 
   mTelephonyListener = new TelephonyListener();
@@ -375,8 +381,15 @@ BluetoothRilListener::SelectClient()
   NS_ENSURE_TRUE_VOID(service);
 
   for (uint32_t i = 0; i < mMobileConnListeners.Length(); i++) {
+    nsCOMPtr<nsIMobileConnection> connection;
+    service->GetItemByServiceId(i, getter_AddRefs(connection));
+    if (!connection) {
+      BT_WARNING("%s: Failed to get mobile connection", __FUNCTION__);
+      continue;
+    }
+
     nsCOMPtr<nsIMobileConnectionInfo> voiceInfo;
-    service->GetVoiceConnectionInfo(i, getter_AddRefs(voiceInfo));
+    connection->GetVoice(getter_AddRefs(voiceInfo));
     if (!voiceInfo) {
       BT_WARNING("%s: Failed to get voice connection info", __FUNCTION__);
       continue;

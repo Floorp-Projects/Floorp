@@ -34,6 +34,13 @@ interface nsIRilMobileMessageDatabaseConcatenationCallback : nsISupports
   void notify(in nsresult aRv, in jsval aCompleteMessage);
 };
 
+%{C++
+#define RIL_MOBILE_MESSAGE_DATABASE_SERVICE_CID \
+  { 0x29785f90, 0x6b5b, 0x11e2, { 0x92, 0x01, 0x3b, 0x28, 0x01, 0x70, 0xb2, 0xec } }
+#define RIL_MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID \
+  "@mozilla.org/mobilemessage/rilmobilemessagedatabaseservice;1"
+%}
+
 [scriptable, uuid(0b437a5c-a2bc-11e3-bd1b-dbb173eb35f8)]
 interface nsIRilMobileMessageDatabaseService : nsIMobileMessageDatabaseService
 {
