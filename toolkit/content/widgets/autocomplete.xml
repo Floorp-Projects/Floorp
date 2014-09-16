@@ -1445,9 +1445,17 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <method name="_adjustAcItem">
         <body>
           <![CDATA[
-          var url = this.getAttribute("url");
-          var title = this.getAttribute("title");
-          var type = this.getAttribute("type");
+          let url = this.getAttribute("url");
+          let title = this.getAttribute("title");
+          let type = this.getAttribute("type");
+
+          let emphasiseTitle = true;
+          let emphasiseUrl = true;
+
+          // Hide the title's extra box by default, until we find out later if
+          // we need extra stuff.
+          this._extraBox.hidden = true;
+          this._titleBox.flex = 1;
 
           this.removeAttribute("actiontype");
 
@@ -1457,34 +1465,36 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           // space when hidden.  Setting the hidden property accomplishes that.
           this._titleOverflowEllipsis.hidden = false;
 
+          let types = new Set(type.split(/\s+/));
+
           // If the type includes an action, set up the item appropriately.
-          var types = type.split(/\s+/);
-          var actionIndex = types.indexOf("action");
-          if (actionIndex >= 0) {
-            let [,action, param] = url.match(/^moz-action:([^,]+),(.*)$/);
-            this.setAttribute("actiontype", action);
-            url = param;
-            let desc = this._stringBundle.GetStringFromName("switchToTab");
-            this._setUpDescription(this._action, desc, true);
+          if (types.has("action")) {
+            let action = this._parseActionUrl(url);
+            this.setAttribute("actiontype", action.type);
+
+            if (action.type == "switchtab") {
+              url = action.params.url;
+              let desc = this._stringBundle.GetStringFromName("switchToTab");
+              this._setUpDescription(this._action, desc, true);
+            }
 
             // Remove the "action" substring so that the correct style, if any,
             // is applied below.
-            types.splice(actionIndex, 1);
-            type = types.join(" ");
+            types.delete("action");
           }
 
           // Check if we have a search engine name
-          let searchEngine = "";
-          let searchIndex = types.indexOf("search");
-          if (searchIndex >= 0) {
+          if (types.has("search")) {
+            emphasiseUrl = false;
+
             const TITLE_SEARCH_ENGINE_SEPARATOR = " \u00B7\u2013\u00B7 ";
 
             [title, searchEngine] = title.split(TITLE_SEARCH_ENGINE_SEPARATOR);
+            url = this._stringBundle.formatStringFromName("searchWithEngine", [searchEngine], 1);
 
             // Remove the "search" substring so that the correct style, if any,
             // is applied below.
-            types.splice(searchIndex, 1);
-            type = types.join(" ");
+            types.delete("search");
           }
 
           // If we have a tag match, show the tags and icon
@@ -1531,10 +1541,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
             // Don't emphasize keyword searches in the title or url
             this.setAttribute("text", "");
-          } else {
-            // Hide the title's extra box if we don't need extra stuff
-            this._extraBox.hidden = true;
-            this._titleBox.flex = 1;
           }
 
           // Give the image the icon style and a special one for the type
@@ -1546,15 +1552,8 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             title = url;
 
           // Emphasize the matching search terms for the description
-          this._setUpDescription(this._title, title);
-          if (!searchEngine) {
-            this._setUpDescription(this._url, url);
-          } else {
-            let desc = this._stringBundle.formatStringFromName("searchWithEngine", [searchEngine], 1);
-
-            // The search engine name, when present, is not emphasized.
-            this._setUpDescription(this._url, desc, true);
-          }
+          this._setUpDescription(this._title, title, !emphasiseTitle);
+          this._setUpDescription(this._url, url, !emphasiseUrl);
 
           // Set up overflow on a timeout because the contents of the box
           // might not have a width yet even though we just changed them
@@ -1562,6 +1561,37 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           setTimeout(this._setUpOverflow, 0, this._urlBox, this._urlOverflowEllipsis);
           ]]>
         </body>
+      </method>
+
+      <method name="_parseActionUrl">
+        <parameter name="aUrl"/>
+        <body><![CDATA[
+          if (!aUrl.startsWith("moz-action:"))
+            return null;
+
+          // URL is in the format moz-action:ACTION,PARAMS
+          // Where PARAMS is a JSON encoded object.
+          aUrl = decodeURI(aUrl);
+          let [, type, params] = aUrl.match(/^moz-action:([^,]+),(.*)$/);
+
+          let action = {
+            type: type,
+          };
+
+          try {
+            action.params = JSON.parse(params);
+          } catch (e) {
+            // If this failed, we assume that params is not a JSON object, and
+            // is instead just a flat string. This will happen when
+            // UnifiedComplete is disabled - in which case, the param is always
+            // a URL.
+            action.params = {
+              url: params,
+            }
+          }
+
+          return action;
+        ]]></body>
       </method>
 
       <method name="_setUpOverflow">
