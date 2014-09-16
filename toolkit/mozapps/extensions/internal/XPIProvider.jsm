@@ -1537,6 +1537,8 @@ this.XPIProvider = {
   _addonFileMap: new Map(),
   // Flag to know if ToolboxProcess.jsm has already been loaded by someone or not
   _toolboxProcessLoaded: false,
+  // Have we started shutting down bootstrap add-ons?
+  _closing: false,
 
   /*
    * Set a value in the telemetry hash for a given ID
@@ -1878,6 +1880,7 @@ this.XPIProvider = {
       // of XPCOM
       Services.obs.addObserver({
         observe: function shutdownObserver(aSubject, aTopic, aData) {
+          XPIProvider._closing = true;
           for (let id in XPIProvider.bootstrappedAddons) {
             let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
             file.persistentDescriptor = XPIProvider.bootstrappedAddons[id].descriptor;
@@ -1929,6 +1932,7 @@ this.XPIProvider = {
     // If there are pending operations then we must update the list of active
     // add-ons
     if (Preferences.get(PREF_PENDING_OPERATIONS, false)) {
+      AddonManagerPrivate.recordSimpleMeasure("XPIDB_pending_ops", 1);
       XPIDatabase.updateActiveAddons();
       Services.prefs.setBoolPref(PREF_PENDING_OPERATIONS,
                                  !XPIDatabase.writeAddonsList());
