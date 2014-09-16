@@ -29,7 +29,6 @@ import org.mozilla.search.AcceptsSearchQuery.SuggestionAnimation;
 import org.mozilla.search.Constants;
 import org.mozilla.search.R;
 import org.mozilla.search.providers.SearchEngine;
-import org.mozilla.search.providers.SearchEngineManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +36,7 @@ import java.util.List;
 /**
  * A fragment to show search suggestions.
  */
-public class SuggestionsFragment extends Fragment implements SearchEngineManager.SearchEngineCallback {
+public class SuggestionsFragment extends Fragment {
 
     private static final String LOG_TAG = "SuggestionsFragment";
 
@@ -53,8 +52,6 @@ public class SuggestionsFragment extends Fragment implements SearchEngineManager
     public static final String GECKO_SEARCH_TERMS_URL_PARAM = "__searchTerms__";
 
     private AcceptsSearchQuery searchListener;
-
-    private SearchEngineManager searchEngineManager;
 
     // Suggest client gets setup outside of the normal fragment lifecycle, therefore
     // clients should ensure that this isn't null before using it.
@@ -82,18 +79,6 @@ public class SuggestionsFragment extends Fragment implements SearchEngineManager
 
         suggestionLoaderCallbacks = new SuggestionLoaderCallbacks();
         autoCompleteAdapter = new AutoCompleteAdapter(activity);
-        searchEngineManager = new SearchEngineManager(activity);
-        searchEngineManager.setChangeCallback(this);
-
-        // Initialize the suggest client. This may happen asynchronously, so any clients should
-        // still perform a null check.
-        searchEngineManager.getEngine(new SearchEngineManager.SearchEngineCallback() {
-            @Override
-            public void execute(SearchEngine engine) {
-                suggestClient = new SuggestClient(getActivity(), engine.getSuggestionTemplate(GECKO_SEARCH_TERMS_URL_PARAM),
-                        SUGGESTION_TIMEOUT, Constants.SUGGESTION_MAX);
-            }
-        });
     }
 
     @Override
@@ -103,8 +88,6 @@ public class SuggestionsFragment extends Fragment implements SearchEngineManager
         searchListener = null;
         suggestionLoaderCallbacks = null;
         autoCompleteAdapter = null;
-        searchEngineManager.destroy();
-        searchEngineManager = null;
         suggestClient = null;
     }
 
@@ -149,8 +132,7 @@ public class SuggestionsFragment extends Fragment implements SearchEngineManager
         }
     }
 
-    @Override
-    public void execute(SearchEngine engine) {
+    public void setEngine(SearchEngine engine) {
         suggestClient = new SuggestClient(getActivity(), engine.getSuggestionTemplate(GECKO_SEARCH_TERMS_URL_PARAM),
                 SUGGESTION_TIMEOUT, Constants.SUGGESTION_MAX);
     }

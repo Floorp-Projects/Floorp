@@ -16,8 +16,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerContent",
   "resource://gre/modules/LoginManagerContent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "InsecurePasswordUtils",
   "resource://gre/modules/InsecurePasswordUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PluginContent",
-  "resource:///modules/PluginContent.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITour",
@@ -494,9 +492,6 @@ let ClickEventHandler = {
 ClickEventHandler.init();
 
 ContentLinkHandler.init(this);
-
-// TODO: Load this lazily so the JSM is run only if a relevant event/message fires.
-let pluginContent = new PluginContent(global);
 
 addEventListener("DOMWebNotificationClicked", function(event) {
   sendAsyncMessage("DOMWebNotificationClicked", {});

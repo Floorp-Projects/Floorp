@@ -132,7 +132,7 @@ function test_multiple_windows() {
 
     let [policy, promise] = sendNotifyRequest("multiple_window_behavior");
     let displayCount = 0;
-    let prefWindowClosed = false;
+    let prefWindowOpened = false;
     let mutationObserversRemoved = false;
 
     function onAlertDisplayed() {
@@ -147,8 +147,8 @@ function test_multiple_windows() {
       // We register two independent observers and we need both to clean up
       // properly. This handles gating for test completion.
       function maybeFinish() {
-        if (!prefWindowClosed) {
-          dump("Not finishing test yet because pref pane isn't closed.\n");
+        if (!prefWindowOpened) {
+          dump("Not finishing test yet because pref pane hasn't yet appeared.\n");
           return;
         }
 
@@ -193,16 +193,14 @@ function test_multiple_windows() {
       is(buttons.length, 1, "There is 1 button in the data reporting notification.");
       let button = buttons[0];
 
-      // Automatically close preferences window when it is opened as part of
-      // button press.
+      // Add an observer to ensure the "advanced" pane opened (but don't bother
+      // closing it - we close the entire window when done.)
       Services.obs.addObserver(function observer(prefWin, topic, data) {
         Services.obs.removeObserver(observer, "advanced-pane-loaded");
 
         ok(true, "Advanced preferences opened on info bar button press.");
         executeSoon(function soon() {
-          dump("Closing preferences.\n");
-          prefWin.close();
-          prefWindowClosed = true;
+          prefWindowOpened = true;
           maybeFinish();
         });
       }, "advanced-pane-loaded", false);

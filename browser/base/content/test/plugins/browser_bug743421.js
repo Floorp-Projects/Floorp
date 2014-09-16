@@ -60,8 +60,10 @@ function test1b() {
   // Click the activate button on doorhanger to make sure it works
   popupNotification.reshow();
   PopupNotifications.panel.firstChild._primaryButton.click();
-  var condition = function() objLoadingContent.activated;
-  waitForCondition(condition, test1c, "Test 1b, Waited too long for plugin activation");
+
+  ok(objLoadingContent.activated, "Test 1b, Doorhanger should activate plugin");
+
+  test1c();
 }
 
 function test1c() {
