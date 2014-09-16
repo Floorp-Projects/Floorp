@@ -8,17 +8,16 @@ MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
 
 EXPORTS.mozilla.dom += [
     'DOMMMIError.h',
-    'ipc/MobileConnectionIPCSerializer.h',
     'MobileCellInfo.h',
     'MobileConnection.h',
     'MobileConnectionArray.h',
-    'MobileConnectionCallback.h',
     'MobileConnectionInfo.h',
     'MobileNetworkInfo.h',
 ]
 
 EXPORTS.mozilla.dom.mobileconnection += [
     'ipc/MobileConnectionChild.h',
+    'ipc/MobileConnectionIPCSerializer.h',
     'ipc/MobileConnectionIPCService.h',
     'ipc/MobileConnectionParent.h',
 ]

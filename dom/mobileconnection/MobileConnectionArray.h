@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_network_MobileConnectionArray_h__
 #define mozilla_dom_network_MobileConnectionArray_h__
 
+#include "mozilla/dom/MobileConnection.h"
 #include "nsWrapperCache.h"
-#include "MobileConnection.h"
 
 namespace mozilla {
 namespace dom {
