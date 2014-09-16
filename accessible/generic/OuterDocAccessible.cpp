@@ -51,11 +51,9 @@ Accessible*
 OuterDocAccessible::ChildAtPoint(int32_t aX, int32_t aY,
                                  EWhichChildAtPoint aWhichChild)
 {
-  int32_t docX = 0, docY = 0, docWidth = 0, docHeight = 0;
-  nsresult rv = GetBounds(&docX, &docY, &docWidth, &docHeight);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  if (aX < docX || aX >= docX + docWidth || aY < docY || aY >= docY + docHeight)
+  nsIntRect docRect = Bounds();
+  if (aX < docRect.x || aX >= docRect.x + docRect.width ||
+      aY < docRect.y || aY >= docRect.y + docRect.height)
     return nullptr;
 
   // Always return the inner doc as direct child accessible unless bounds
@@ -66,39 +64,6 @@ OuterDocAccessible::ChildAtPoint(int32_t aX, int32_t aY,
   if (aWhichChild == eDeepestChild)
     return child->ChildAtPoint(aX, aY, eDeepestChild);
   return child;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIAccessible
-
-uint8_t
-OuterDocAccessible::ActionCount()
-{
-  // Internal frame, which is the doc's parent, should not have a click action.
-  return 0;
-}
-
-NS_IMETHODIMP
-OuterDocAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
-{
-  aName.Truncate();
-
-  return NS_ERROR_INVALID_ARG;
-}
-
-NS_IMETHODIMP
-OuterDocAccessible::GetActionDescription(uint8_t aIndex,
-                                         nsAString& aDescription)
-{
-  aDescription.Truncate();
-
-  return NS_ERROR_INVALID_ARG;
-}
-
-NS_IMETHODIMP
-OuterDocAccessible::DoAction(uint8_t aIndex)
-{
-  return NS_ERROR_INVALID_ARG;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

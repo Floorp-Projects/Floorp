@@ -174,24 +174,21 @@ RadioButtonAccessible::ActionCount()
   return 1;
 }
 
-NS_IMETHODIMP
-RadioButtonAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
+void
+RadioButtonAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 {
-  if (aIndex == eAction_Click) {
-    aName.AssignLiteral("select"); 
-    return NS_OK;
-  }
-  return NS_ERROR_INVALID_ARG;
+  if (aIndex == eAction_Click)
+    aName.AssignLiteral("select");
 }
 
-NS_IMETHODIMP
+bool
 RadioButtonAccessible::DoAction(uint8_t aIndex)
 {
   if (aIndex != eAction_Click)
-    return NS_ERROR_INVALID_ARG;
+    return false;
 
   DoCommand();
-  return NS_OK;
+  return true;
 }
 
 role

@@ -57,8 +57,8 @@ public:
   // Accessible
   virtual int32_t GetLevelInternal();
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() MOZ_OVERRIDE;
-  virtual mozilla::a11y::role NativeRole();
-  virtual uint64_t NativeState();
+  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
+  virtual uint64_t NativeState() MOZ_OVERRIDE;
 
   virtual void InvalidateChildren();
   virtual bool RemoveChild(Accessible* aAccessible);

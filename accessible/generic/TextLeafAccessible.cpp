@@ -30,7 +30,7 @@ role
 TextLeafAccessible::NativeRole()
 {
   nsIFrame* frame = GetFrame();
-  if (frame && frame->IsGeneratedContentFrame()) 
+  if (frame && frame->IsGeneratedContentFrame())
     return roles::STATICTEXT;
 
   return roles::TEXT_LEAF;

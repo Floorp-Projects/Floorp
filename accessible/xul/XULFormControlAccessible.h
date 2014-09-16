@@ -35,16 +35,14 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIAccessible
-  NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName);
-  NS_IMETHOD DoAction(uint8_t index);
-
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
-  virtual uint64_t NativeState();
+  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
+  virtual uint64_t NativeState() MOZ_OVERRIDE;
 
   // ActionAccessible
-  virtual uint8_t ActionCount();
+  virtual uint8_t ActionCount() MOZ_OVERRIDE;
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) MOZ_OVERRIDE;
+  virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
 
   // Widgets
   virtual bool IsWidget() const;
@@ -58,7 +56,7 @@ protected:
   virtual ~XULButtonAccessible();
 
   // XULButtonAccessible
-  bool ContainsMenu();
+  bool ContainsMenu() const;
 };
 
 
@@ -71,16 +69,14 @@ public:
   enum { eAction_Click = 0 };
   XULCheckboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // nsIAccessible
-  NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName);
-  NS_IMETHOD DoAction(uint8_t index);
-
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
-  virtual uint64_t NativeState();
+  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
+  virtual uint64_t NativeState() MOZ_OVERRIDE;
 
   // ActionAccessible
-  virtual uint8_t ActionCount();
+  virtual uint8_t ActionCount() MOZ_OVERRIDE;
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) MOZ_OVERRIDE;
+  virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
 };
 
 /**
@@ -92,19 +88,17 @@ public:
   enum { eAction_Click = 0 };
   XULDropmarkerAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // nsIAccessible
-  NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName);
-  NS_IMETHOD DoAction(uint8_t index);
-
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
-  virtual uint64_t NativeState();
+  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
+  virtual uint64_t NativeState() MOZ_OVERRIDE;
 
   // ActionAccessible
-  virtual uint8_t ActionCount();
+  virtual uint8_t ActionCount() MOZ_OVERRIDE;
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) MOZ_OVERRIDE;
+  virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
 
 private:
-  bool DropmarkerOpen(bool aToggleOpen);
+  bool DropmarkerOpen(bool aToggleOpen) const;
 };
 
 /**
@@ -116,7 +110,7 @@ public:
   XULGroupboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
   virtual Relation RelationByType(RelationType aType) MOZ_OVERRIDE;
 
 protected:
@@ -134,8 +128,8 @@ public:
   XULRadioButtonAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual uint64_t NativeState();
-  virtual uint64_t NativeInteractiveState() const;
+  virtual uint64_t NativeState() MOZ_OVERRIDE;
+  virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE;
 
   // Widgets
   virtual Accessible* ContainerWidget() const;
@@ -150,8 +144,8 @@ public:
   XULRadioGroupAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
-  virtual uint64_t NativeInteractiveState() const;
+  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
+  virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE;
 
   // Widgets
   virtual bool IsWidget() const;
@@ -168,7 +162,7 @@ public:
   XULStatusBarAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
 };
 
 /**
@@ -196,7 +190,7 @@ public:
   XULToolbarAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
 
 protected:
   // Accessible
@@ -213,8 +207,8 @@ public:
                                 DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
-  virtual uint64_t NativeState();
+  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
+  virtual uint64_t NativeState() MOZ_OVERRIDE;
 };
 
 } // namespace a11y
