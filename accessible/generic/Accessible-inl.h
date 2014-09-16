@@ -7,8 +7,9 @@
 #ifndef mozilla_a11y_Accessible_inl_h_
 #define mozilla_a11y_Accessible_inl_h_
 
-#include "Accessible.h"
+#include "DocAccessible.h"
 #include "ARIAMap.h"
+#include "nsCoreUtils.h"
 
 namespace mozilla {
 namespace a11y {
@@ -57,6 +58,13 @@ Accessible::HasNumericValue() const
     return true;
 
   return mRoleMapEntry && mRoleMapEntry->valueRule != eNoValue;
+}
+
+inline void
+Accessible::ScrollTo(uint32_t aHow) const
+{
+  if (mContent)
+    nsCoreUtils::ScrollTo(mDoc->PresShell(), mContent, aHow);
 }
 
 } // namespace a11y

@@ -75,11 +75,8 @@ sdnTextAccessible::get_clippedSubstringBounds(unsigned int aStartIndex,
   NS_ASSERTION(document,
                "There must always be a doc accessible, but there isn't. Crash!");
 
-  nscoord docX = 0, docY = 0, docWidth = 0, docHeight = 0;
-  document->GetBounds(&docX, &docY, &docWidth, &docHeight);
-
+  nsIntRect docRect = document->Bounds();
   nsIntRect unclippedRect(x, y, width, height);
-  nsIntRect docRect(docX, docY, docWidth, docHeight);
 
   nsIntRect clippedRect;
   clippedRect.IntersectRect(unclippedRect, docRect);

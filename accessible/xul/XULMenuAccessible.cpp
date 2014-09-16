@@ -274,26 +274,22 @@ XULMenuitemAccessible::CanHaveAnonChildren()
   return false;
 }
 
-NS_IMETHODIMP
+bool
 XULMenuitemAccessible::DoAction(uint8_t index)
 {
   if (index == eAction_Click) {   // default action
     DoCommand();
-    return NS_OK;
+    return true;
   }
 
-  return NS_ERROR_INVALID_ARG;
+  return false;
 }
 
-/** select us! close combo box if necessary*/
-NS_IMETHODIMP
-XULMenuitemAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
+void
+XULMenuitemAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 {
-  if (aIndex == eAction_Click) {
-    aName.AssignLiteral("click"); 
-    return NS_OK;
-  }
-  return NS_ERROR_INVALID_ARG;
+  if (aIndex == eAction_Click)
+    aName.AssignLiteral("click");
 }
 
 uint8_t
@@ -383,16 +379,16 @@ XULMenuSeparatorAccessible::NativeRole()
   return roles::SEPARATOR;
 }
 
-NS_IMETHODIMP
+bool
 XULMenuSeparatorAccessible::DoAction(uint8_t index)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return false;
 }
 
-NS_IMETHODIMP
-XULMenuSeparatorAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
+void
+XULMenuSeparatorAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aName.Truncate();
 }
 
 uint8_t
