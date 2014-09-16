@@ -279,6 +279,26 @@ protected:
     }
 };
 
+/* WeakMap methods exposed so they can be installed in the self-hosting global. */
+
+extern JSObject *
+InitBareWeakMapCtor(JSContext *cx, js::HandleObject obj);
+
+extern bool
+WeakMap_has(JSContext *cx, unsigned argc, Value *vp);
+
+extern bool
+WeakMap_get(JSContext *cx, unsigned argc, Value *vp);
+
+extern bool
+WeakMap_set(JSContext *cx, unsigned argc, Value *vp);
+
+extern bool
+WeakMap_delete(JSContext *cx, unsigned argc, Value *vp);
+
+extern bool
+WeakMap_clear(JSContext *cx, unsigned argc, Value *vp);
+
 } /* namespace js */
 
 extern JSObject *

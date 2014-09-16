@@ -136,7 +136,8 @@ FinishObjectClassInit(JSContext *cx, JS::HandleObject ctor, JS::HandleObject pro
     self->setOriginalEval(evalobj);
 
     RootedObject intrinsicsHolder(cx);
-    if (cx->runtime()->isSelfHostingGlobal(self)) {
+    bool isSelfHostingGlobal = cx->runtime()->isSelfHostingGlobal(self);
+    if (isSelfHostingGlobal) {
         intrinsicsHolder = self;
     } else {
         intrinsicsHolder = NewObjectWithGivenProto(cx, &JSObject::class_, proto, self,
@@ -158,8 +159,10 @@ FinishObjectClassInit(JSContext *cx, JS::HandleObject ctor, JS::HandleObject pro
      * Define self-hosted functions after setting the intrinsics holder
      * (which is needed to define self-hosted functions)
      */
-    if (!JS_DefineFunctions(cx, ctor, object_static_selfhosted_methods))
-        return false;
+    if (!isSelfHostingGlobal) {
+        if (!JS_DefineFunctions(cx, ctor, object_static_selfhosted_methods))
+            return false;
+    }
 
     /*
      * The global object should have |Object.prototype| as its [[Prototype]].

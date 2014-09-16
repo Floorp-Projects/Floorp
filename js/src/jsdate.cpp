@@ -1195,8 +1195,8 @@ NowAsMillis()
     return (double) (PRMJ_Now() / PRMJ_USEC_PER_MSEC);
 }
 
-static bool
-date_now(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::date_now(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setDouble(NowAsMillis());
@@ -2863,8 +2863,8 @@ date_valueOf_impl(JSContext *cx, CallArgs args)
     return true;
 }
 
-static bool
-date_valueOf(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::date_valueOf(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsDate, date_valueOf_impl>(cx, args);

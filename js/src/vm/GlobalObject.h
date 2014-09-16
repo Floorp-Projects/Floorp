@@ -611,6 +611,7 @@ class GlobalObject : public JSObject
 
     // Implemented in jsiter.cpp.
     static bool initIteratorClasses(JSContext *cx, Handle<GlobalObject*> global);
+    static bool initStopIterationClass(JSContext *cx, Handle<GlobalObject*> global);
 
     // Implemented in builtin/MapObject.cpp.
     static bool initMapIteratorProto(JSContext *cx, Handle<GlobalObject*> global);
@@ -626,6 +627,8 @@ class GlobalObject : public JSObject
     static bool initTypedObjectModule(JSContext *cx, Handle<GlobalObject*> global);
 
     static bool initStandardClasses(JSContext *cx, Handle<GlobalObject*> global);
+    static bool initSelfHostingBuiltins(JSContext *cx, Handle<GlobalObject*> global,
+                                        const JSFunctionSpec *builtins);
 
     typedef js::Vector<js::Debugger *, 0, js::SystemAllocPolicy> DebuggerVector;
 

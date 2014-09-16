@@ -2099,17 +2099,24 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
         global->setPrototype(JSProto_GeneratorFunction, ObjectValue(*genFunctionProto));
     }
 
-    if (global->getPrototype(JSProto_StopIteration).isUndefined()) {
-        proto = global->createBlankPrototype(cx, &StopIterationObject::class_);
-        if (!proto || !JSObject::freeze(cx, proto))
-            return false;
+    return GlobalObject::initStopIterationClass(cx, global);
+}
 
-        // This should use a non-JSProtoKey'd slot, but this is easier for now.
-        if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_StopIteration, proto, proto))
-            return false;
+/* static */ bool
+GlobalObject::initStopIterationClass(JSContext *cx, Handle<GlobalObject *> global)
+{
+    if (!global->getPrototype(JSProto_StopIteration).isUndefined())
+        return true;
 
-        global->setConstructor(JSProto_StopIteration, ObjectValue(*proto));
-    }
+    RootedObject proto(cx, global->createBlankPrototype(cx, &StopIterationObject::class_));
+    if (!proto || !JSObject::freeze(cx, proto))
+        return false;
+
+    // This should use a non-JSProtoKey'd slot, but this is easier for now.
+    if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_StopIteration, proto, proto))
+        return false;
+
+    global->setConstructor(JSProto_StopIteration, ObjectValue(*proto));
 
     return true;
 }
