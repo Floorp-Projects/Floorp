@@ -126,7 +126,6 @@ protected:
   nsresult SetupRecording(int aFd, int aRotation, uint64_t aMaxFileSizeBytes,
                           uint64_t aMaxVideoLengthMs);
   nsresult SetupRecordingFlash(bool aAutoEnableLowLightTorch);
-  nsresult SetupVideoMode(const nsAString& aProfile);
   nsresult SetPreviewSize(const Size& aSize);
   nsresult SetVideoSize(const Size& aSize);
   nsresult PausePreview();
@@ -152,6 +151,7 @@ protected:
   bool                      mFlashSupported;
   bool                      mLuminanceSupported;
   bool                      mAutoFlashModeOverridden;
+  bool                      mSeparateVideoAndPreviewSizesSupported;
   Atomic<uint32_t>          mDeferConfigUpdate;
   GonkCameraParameters      mParams;
 
