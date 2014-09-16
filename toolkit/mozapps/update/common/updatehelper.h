@@ -17,10 +17,6 @@ BOOL DoesFallbackKeyExist();
 BOOL IsLocalFile(LPCWSTR file, BOOL &isLocal);
 DWORD StartServiceCommand(int argc, LPCWSTR* argv);
 BOOL IsUnpromptedElevation(BOOL &isUnpromptedElevation);
-BOOL PathGetSiblingFilePath(LPWSTR destinationBuffer,
-                            LPCWSTR siblingFilePath,
-                            LPCWSTR newFileName);
-BOOL PathAppendSafe(LPWSTR base, LPCWSTR extra);
 
 #define SVC_NAME L"MozillaMaintenance"
 
