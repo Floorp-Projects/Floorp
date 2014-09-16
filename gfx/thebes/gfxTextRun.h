@@ -411,6 +411,7 @@ public:
         nsRefPtr<gfxFont> mFont;   // never null
         uint32_t          mCharacterOffset; // into original UTF16 string
         uint8_t           mMatchType;
+        uint16_t          mOrientation; // gfxTextRunFactory::TEXT_ORIENT_* value
     };
 
     class GlyphRunIterator {
@@ -467,7 +468,8 @@ public:
      * TextRun.
      */
     nsresult AddGlyphRun(gfxFont *aFont, uint8_t aMatchType,
-                         uint32_t aStartCharIndex, bool aForceNewRun);
+                         uint32_t aStartCharIndex, bool aForceNewRun,
+                         uint16_t aOrientation);
     void ResetGlyphRuns() { mGlyphRuns.Clear(); }
     void SortGlyphRuns();
     void SanitizeGlyphRuns();
@@ -480,7 +482,8 @@ public:
     // clean out results from shaping in progress, used for fallback scenarios
     void ClearGlyphsAndCharacters();
 
-    void SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext, uint32_t aCharIndex);
+    void SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext, uint32_t aCharIndex,
+                       uint16_t aOrientation);
 
     // Set the glyph data for the given character index to the font's
     // space glyph, IF this can be done as a "simple" glyph record
@@ -496,7 +499,8 @@ public:
     // if it returns false, the caller needs to fall back to some other
     // means to create the necessary (detailed) glyph data.
     bool SetSpaceGlyphIfSimple(gfxFont *aFont, gfxContext *aContext,
-                               uint32_t aCharIndex, char16_t aSpaceChar);
+                               uint32_t aCharIndex, char16_t aSpaceChar,
+                               uint16_t aOrientation);
 
     // Record the positions of specific characters that layout may need to
     // detect in the textrun, even though it doesn't have an explicit copy
@@ -865,7 +869,7 @@ public:
     template<typename T>
     void ComputeRanges(nsTArray<gfxTextRange>& mRanges,
                        const T *aString, uint32_t aLength,
-                       int32_t aRunScript);
+                       int32_t aRunScript, uint16_t aOrientation);
 
     gfxUserFontSet* GetUserFontSet();
 
