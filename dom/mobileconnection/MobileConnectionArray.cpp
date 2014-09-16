@@ -7,6 +7,7 @@
 #include "mozilla/dom/MobileConnectionArray.h"
 #include "mozilla/dom/MozMobileConnectionArrayBinding.h"
 #include "mozilla/Preferences.h"
+#include "nsServiceManagerUtils.h"
 
 using namespace mozilla::dom;
 
@@ -23,30 +24,14 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MobileConnectionArray)
 NS_INTERFACE_MAP_END
 
 MobileConnectionArray::MobileConnectionArray(nsPIDOMWindow* aWindow)
-  : mInitialized(false)
+  : mLengthInitialized(false)
   , mWindow(aWindow)
 {
-  uint32_t numRil = mozilla::Preferences::GetUint("ril.numRadioInterfaces", 1);
-  MOZ_ASSERT(numRil > 0);
-
-  mMobileConnections.SetLength(numRil);
-
   SetIsDOMBinding();
 }
 
 MobileConnectionArray::~MobileConnectionArray()
 {
-}
-
-void
-MobileConnectionArray::Init()
-{
-  mInitialized = true;
-
-  for (uint32_t id = 0; id < mMobileConnections.Length(); id++) {
-    nsRefPtr<MobileConnection> mobileConnection = new MobileConnection(mWindow, id);
-    mMobileConnections[id] = mobileConnection;
-  }
 }
 
 nsPIDOMWindow*
@@ -70,20 +55,37 @@ MobileConnectionArray::Item(uint32_t aIndex)
 }
 
 uint32_t
-MobileConnectionArray::Length() const
+MobileConnectionArray::Length()
 {
+  if (!mLengthInitialized) {
+    mLengthInitialized = true;
+
+    nsCOMPtr<nsIMobileConnectionService> service =
+      do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
+    NS_ENSURE_TRUE(service, 0);
+
+    uint32_t length = 0;
+    nsresult rv = service->GetNumItems(&length);
+    NS_ENSURE_SUCCESS(rv, 0);
+
+    mMobileConnections.SetLength(length);
+  }
+
   return mMobileConnections.Length();
 }
 
 MobileConnection*
 MobileConnectionArray::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
-  if (!mInitialized) {
-    Init();
+
+  aFound = aIndex < Length();
+  if (!aFound) {
+    return nullptr;
   }
 
-  aFound = false;
-  aFound = aIndex < mMobileConnections.Length();
+  if (!mMobileConnections[aIndex]) {
+    mMobileConnections[aIndex] = new MobileConnection(mWindow, aIndex);
+  }
 
-  return aFound ? mMobileConnections[aIndex] : nullptr;
+  return mMobileConnections[aIndex];
 }
