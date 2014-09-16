@@ -663,6 +663,9 @@ BufferTextureClient::BorrowDrawTarget()
 {
   MOZ_ASSERT(IsValid());
   MOZ_ASSERT(mLocked, "BorrowDrawTarget should be called on locked textures only");
+  if (!mLocked) {
+    return nullptr;
+  }
 
   if (mDrawTarget) {
     return mDrawTarget;
