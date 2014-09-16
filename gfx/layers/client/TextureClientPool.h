@@ -75,7 +75,10 @@ public:
    * Report that a client retrieved via GetTextureClient() has become
    * unusable, so that it will no longer be tracked.
    */
-  void ReportClientLost() { mOutstandingClients--; }
+  void ReportClientLost() {
+    MOZ_ASSERT(mOutstandingClients > mTextureClientsDeferred.size());
+    mOutstandingClients--;
+  }
 
   /**
    * Calling this will cause the pool to attempt to relinquish any unused
@@ -104,6 +107,9 @@ private:
   // size after returning a client.
   uint32_t mShrinkTimeoutMsec;
 
+  /// This is a total number of clients in the wild and in the stack of
+  /// deferred clients (see below).  So, the total number of clients in
+  /// existence is always mOutstandingClients + the size of mTextureClients.
   uint32_t mOutstandingClients;
 
   // On b2g gonk, std::queue might be a better choice.
