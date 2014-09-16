@@ -1563,7 +1563,8 @@ BluetoothServiceBluedroid::BondStateChangedNotification(
   }
 
   switch (aStatus) {
-    case STATUS_SUCCESS: {
+    case STATUS_SUCCESS:
+    {
       bool bonded;
       if (aState == BOND_STATE_NONE) {
         bonded = false;
@@ -1609,11 +1610,19 @@ BluetoothServiceBluedroid::BondStateChangedNotification(
     }
     case STATUS_BUSY:
     case STATUS_AUTH_FAILURE:
-    case STATUS_RMT_DEV_DOWN: {
+    case STATUS_RMT_DEV_DOWN:
+    {
       InfallibleTArray<BluetoothNamedValue> propertiesArray;
       DistributeSignal(BluetoothSignal(NS_LITERAL_STRING("Cancel"),
                                  NS_LITERAL_STRING(KEY_LOCAL_AGENT),
                                  BluetoothValue(propertiesArray)));
+
+      if (!sBondingRunnableArray.IsEmpty()) {
+        DispatchBluetoothReply(sBondingRunnableArray[0],
+                               BluetoothValue(true),
+                               NS_LITERAL_STRING("Authentication failure"));
+        sBondingRunnableArray.RemoveElementAt(0);
+      }
       break;
     }
     default:
