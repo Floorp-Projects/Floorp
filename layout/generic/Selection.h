@@ -170,7 +170,7 @@ public:
 
   void Stringify(nsAString& aResult);
 
-  bool ContainsNode(nsINode* aNode, bool aPartlyContained, mozilla::ErrorResult& aRv);
+  bool ContainsNode(nsINode& aNode, bool aPartlyContained, mozilla::ErrorResult& aRv);
 
   void Modify(const nsAString& aAlter, const nsAString& aDirection,
               const nsAString& aGranularity, mozilla::ErrorResult& aRv);
