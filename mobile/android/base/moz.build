@@ -294,6 +294,7 @@ gbjar.sources += [
     'home/ReadingListRow.java',
     'home/RecentTabsPanel.java',
     'home/RemoteTabsExpandableListFragment.java',
+    'home/RemoteTabsExpandableListState.java',
     'home/RemoteTabsPanel.java',
     'home/RemoteTabsStaticFragment.java',
     'home/SearchEngine.java',
