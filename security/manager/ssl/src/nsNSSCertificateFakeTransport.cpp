@@ -5,7 +5,7 @@
 
 #include "nsNSSCertificateFakeTransport.h"
 
-#include "nsCOMPtr.h"
+#include "nsIClassInfoImpl.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIProgrammingLanguage.h"
@@ -394,4 +394,104 @@ nsNSSCertificateFakeTransport::MarkForPermDeletion()
 {
   NS_NOTREACHED("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMPL_CLASSINFO(nsNSSCertListFakeTransport,
+                  nullptr,
+                  // inferred from nsIX509Cert
+                  nsIClassInfo::THREADSAFE,
+                  NS_X509CERTLIST_CID)
+
+NS_IMPL_ISUPPORTS_CI(nsNSSCertListFakeTransport,
+                     nsIX509CertList,
+                     nsISerializable)
+
+nsNSSCertListFakeTransport::nsNSSCertListFakeTransport()
+{
+}
+
+nsNSSCertListFakeTransport::~nsNSSCertListFakeTransport()
+{
+}
+
+NS_IMETHODIMP
+nsNSSCertListFakeTransport::AddCert(nsIX509Cert* aCert)
+{
+  NS_NOTREACHED("Unimplemented on content process");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNSSCertListFakeTransport::DeleteCert(nsIX509Cert* aCert)
+{
+  NS_NOTREACHED("Unimplemented on content process");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+void*
+nsNSSCertListFakeTransport::GetRawCertList()
+{
+  NS_NOTREACHED("Unimplemented on content process");
+  return nullptr;
+}
+
+NS_IMETHODIMP
+nsNSSCertListFakeTransport::GetEnumerator(nsISimpleEnumerator**)
+{
+  NS_NOTREACHED("Unimplemented on content process");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNSSCertListFakeTransport::Equals(nsIX509CertList*, bool*)
+{
+  NS_NOTREACHED("Unimplemented on content process");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// NB: This serialization must match that of nsNSSCertList.
+NS_IMETHODIMP
+nsNSSCertListFakeTransport::Write(nsIObjectOutputStream* aStream)
+{
+  uint32_t certListLen = mFakeCertList.length();
+  // Write the length of the list
+  nsresult rv = aStream->Write32(certListLen);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  for (size_t i = 0; i < certListLen; i++) {
+    nsCOMPtr<nsIX509Cert> cert = mFakeCertList[i];
+    nsCOMPtr<nsISerializable> serializableCert = do_QueryInterface(cert);
+    rv = aStream->WriteCompoundObject(serializableCert,
+                                      NS_GET_IID(nsIX509Cert), true);
+    if (NS_FAILED(rv)) {
+      break;
+    }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsNSSCertListFakeTransport::Read(nsIObjectInputStream* aStream)
+{
+  uint32_t certListLen;
+  nsresult rv = aStream->Read32(&certListLen);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  for (uint32_t i = 0; i < certListLen; i++) {
+    nsCOMPtr<nsISupports> certSupports;
+    rv = aStream->ReadObject(true, getter_AddRefs(certSupports));
+    if (NS_FAILED(rv)) {
+      break;
+    }
+
+    nsCOMPtr<nsIX509Cert> cert = do_QueryInterface(certSupports);
+    mFakeCertList.append(cert);
+  }
+
+  return rv;
 }
