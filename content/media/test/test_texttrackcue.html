@@ -21,7 +21,7 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
   function() {
     var video = document.createElement("video");
     video.src = "seek.webm";
-    video.preload = "metadata";
+    video.preload = "auto";
 
     var trackElement = document.createElement("track");
     trackElement.src = "basic.vtt";

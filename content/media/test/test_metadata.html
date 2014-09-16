@@ -16,7 +16,7 @@ var manager = new MediaTestManager;
 
 function startTest(test, token) {
   var a = document.createElement('audio');
-  a.preload = "metadata";
+  a.preload = "auto";
   a.token = token;
   manager.started(token);
 
@@ -68,7 +68,6 @@ function startTest(test, token) {
     for (tag in test.tags) {
       is(tags[tag], test.tags[tag], "Tag '"+tag+"' should match");
     }
-    removeNodeAndSource(a);
     manager.finished(token);
   }, false);
 }
