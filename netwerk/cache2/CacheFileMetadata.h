@@ -138,16 +138,18 @@ public:
 
   nsresult SetExpirationTime(uint32_t aExpirationTime);
   nsresult GetExpirationTime(uint32_t *_retval);
-  nsresult SetLastModified(uint32_t aLastModified);
-  nsresult GetLastModified(uint32_t *_retval);
   nsresult SetFrecency(uint32_t aFrecency);
   nsresult GetFrecency(uint32_t *_retval);
+  nsresult GetLastModified(uint32_t *_retval);
   nsresult GetLastFetched(uint32_t *_retval);
   nsresult GetFetchCount(uint32_t *_retval);
+  // Called by upper layers to indicate the entry this metadata belongs
+  // with has been fetched, i.e. delivered to the consumer.
+  nsresult OnFetched();
 
   int64_t  Offset() { return mOffset; }
   uint32_t ElementsSize() { return mElementsSize; }
-  void     MarkDirty() { mIsDirty = true; }
+  void     MarkDirty(bool aUpdateLastModified = true);
   bool     IsDirty() { return mIsDirty; }
   uint32_t MemoryUsage() { return sizeof(CacheFileMetadata) + mHashArraySize + mBufSize; }
 
