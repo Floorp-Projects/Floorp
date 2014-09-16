@@ -6,9 +6,12 @@
 #ifndef nsNSSCertificateFakeTransport_h
 #define nsNSSCertificateFakeTransport_h
 
+#include "mozilla/Vector.h"
+#include "nsCOMPtr.h"
 #include "nsIClassInfo.h"
 #include "nsISerializable.h"
 #include "nsIX509Cert.h"
+#include "nsIX509CertList.h"
 #include "secitem.h"
 
 class nsNSSCertificateFakeTransport : public nsIX509Cert,
@@ -28,6 +31,23 @@ protected:
 
 private:
   SECItem* mCertSerialization;
+};
+
+class nsNSSCertListFakeTransport : public nsIX509CertList,
+                                   public nsISerializable
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIX509CERTLIST
+  NS_DECL_NSISERIALIZABLE
+
+  nsNSSCertListFakeTransport();
+
+protected:
+  virtual ~nsNSSCertListFakeTransport();
+
+private:
+  mozilla::Vector<nsCOMPtr<nsIX509Cert> > mFakeCertList;
 };
 
 #endif // nsNSSCertificateFakeTransport_h
