@@ -62,6 +62,36 @@ NetErrorHelper.prototype = {
   },
 }
 
+handlers.searchbutton = {
+  onPageShown: function(browser) {
+    let search = browser.contentDocument.querySelector("#searchbox");
+    if (!search) {
+      return;
+    }
+
+    let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
+    let tab = browserWin.BrowserApp.getTabForBrowser(browser);
+
+    // If there is no stored userRequested, just hide the searchbox
+    if (!tab.userRequested) {
+      search.style.display = "none";
+    } else {
+      let text = browser.contentDocument.querySelector("#searchtext");
+      text.value = tab.userRequested;
+    }
+  },
+
+  handleClick: function(event) {
+    let engine = Services.search.defaultEngine;
+    let value = event.target.previousElementSibling.value;
+    let uri = engine.getSubmission(value).uri;
+
+    let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
+    // Reset the user search to whatever the new search term was
+    browserWin.BrowserApp.loadURI(uri.spec, undefined, { isSearch: true, userRequested: value });
+  }
+};
+
 handlers.wifi = {
   // This registers itself with the nsIObserverService as a weak ref,
   // so we have to implement GetWeakReference as well.
