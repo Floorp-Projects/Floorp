@@ -275,6 +275,13 @@ var DebuggerServer = {
     }
     gRegisteredModules = {};
 
+    // The thread actor is special. It isn't registered as all the other ones
+    // with a global or tab scope. It is loaded instead by its parent tab actor
+    // on an 'attach' request. But tests still expect to observe its state
+    // being reset when DebuggerServer is reset, so let's explicitly reset
+    // it here.
+    require("devtools/server/actors/script").cleanup();
+
     this.closeAllListeners();
     this.globalActorFactories = {};
     this.tabActorFactories = {};
@@ -428,11 +435,19 @@ var DebuggerServer = {
       this.addTabActors();
       let { ChromeDebuggerActor } = require("devtools/server/actors/script");
       this.addGlobalActor(ChromeDebuggerActor, "chromeDebugger");
-      this.registerModule("devtools/server/actors/preference");
+      this.registerModule("devtools/server/actors/preference", {
+        prefix: "preference",
+        constructor: "PreferenceActor",
+        type: { global: true }
+      });
     }
 
     this.addActors("resource://gre/modules/devtools/server/actors/webapps.js");
-    this.registerModule("devtools/server/actors/device");
+    this.registerModule("devtools/server/actors/device", {
+      prefix: "device",
+      constructor: "DeviceActor",
+      type: { global: true }
+    });
   },
 
   /**
@@ -458,27 +473,102 @@ var DebuggerServer = {
    * Install tab actors.
    */
   addTabActors: function() {
-    this.registerModule("devtools/server/actors/script");
-    this.registerModule("devtools/server/actors/webconsole");
-    this.registerModule("devtools/server/actors/inspector");
-    this.registerModule("devtools/server/actors/call-watcher");
-    this.registerModule("devtools/server/actors/canvas");
-    this.registerModule("devtools/server/actors/webgl");
-    this.registerModule("devtools/server/actors/webaudio");
-    this.registerModule("devtools/server/actors/stylesheets");
-    this.registerModule("devtools/server/actors/styleeditor");
-    this.registerModule("devtools/server/actors/storage");
-    this.registerModule("devtools/server/actors/gcli");
-    this.registerModule("devtools/server/actors/tracer");
-    this.registerModule("devtools/server/actors/memory");
-    this.registerModule("devtools/server/actors/framerate");
-    this.registerModule("devtools/server/actors/eventlooplag");
-    this.registerModule("devtools/server/actors/layout");
-    this.registerModule("devtools/server/actors/csscoverage");
-    this.registerModule("devtools/server/actors/monitor");
-    this.registerModule("devtools/server/actors/timeline");
+    this.registerModule("devtools/server/actors/webconsole", {
+      prefix: "console",
+      constructor: "WebConsoleActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/inspector", {
+      prefix: "inspector",
+      constructor: "InspectorActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/call-watcher", {
+      prefix: "callWatcher",
+      constructor: "CallWatcherActor",
+      type: { tab: true }
+    });
+    this.registerModule("devtools/server/actors/canvas", {
+      prefix: "canvas",
+      constructor: "CanvasActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/webgl", {
+      prefix: "webgl",
+      constructor: "WebGLActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/webaudio", {
+      prefix: "webaudio",
+      constructor: "WebAudioActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/stylesheets", {
+      prefix: "styleSheets",
+      constructor: "StyleSheetsActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/styleeditor", {
+      prefix: "styleEditor",
+      constructor: "StyleEditorActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/storage", {
+      prefix: "storage",
+      constructor: "StorageActor",
+      type: { tab: true }
+    });
+    this.registerModule("devtools/server/actors/gcli", {
+      prefix: "gcli",
+      constructor: "GcliActor",
+      type: { tab: true }
+    });
+    this.registerModule("devtools/server/actors/tracer", {
+      prefix: "trace",
+      constructor: "TracerActor",
+      type: { tab: true }
+    });
+    this.registerModule("devtools/server/actors/memory", {
+      prefix: "memory",
+      constructor: "MemoryActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/framerate", {
+      prefix: "framerate",
+      constructor: "FramerateActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/eventlooplag", {
+      prefix: "eventLoopLag",
+      constructor: "EventLoopLagActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/layout", {
+      prefix: "reflow",
+      constructor: "ReflowActor",
+      type: { tab: true }
+    });
+    this.registerModule("devtools/server/actors/csscoverage", {
+      prefix: "cssUsage",
+      constructor: "CSSUsageActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/monitor", {
+      prefix: "monitor",
+      constructor: "MonitorActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/timeline", {
+      prefix: "timeline",
+      constructor: "TimelineActor",
+      type: { global: true, tab: true }
+    });
     if ("nsIProfiler" in Ci) {
-      this.registerModule("devtools/server/actors/profiler");
+      this.registerModule("devtools/server/actors/profiler", {
+        prefix: "profiler",
+        constructor: "ProfilerActor",
+        type: { global: true, tab: true }
+      });
     }
   },
 
