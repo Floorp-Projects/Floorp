@@ -8,6 +8,7 @@ package org.mozilla.gecko.home;
 import java.util.EnumSet;
 import java.util.List;
 
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.RemoteTabsExpandableListAdapter;
 import org.mozilla.gecko.TabsAccessor;
@@ -51,6 +52,10 @@ public class RemoteTabsExpandableListFragment extends HomeFragment {
     private static final int LOADER_ID_REMOTE_TABS = 0;
 
     private static final String[] STAGES_TO_SYNC_ON_REFRESH = new String[] { "clients", "tabs" };
+
+    // Maintain group collapsed and hidden state.
+    // Only accessed from the UI thread.
+    private static RemoteTabsExpandableListState sState;
 
     // Adapter for the list of remote tabs.
     private RemoteTabsExpandableListAdapter mAdapter;
@@ -117,9 +122,15 @@ public class RemoteTabsExpandableListFragment extends HomeFragment {
         mList.setOnGroupClickListener(new OnGroupClickListener() {
             @Override
             public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
-                // Since we don't indicate the expansion state yet, don't allow
-                // collapsing groups at all.
-                return true;
+                final ExpandableListAdapter adapter = parent.getExpandableListAdapter();
+                final RemoteClient client = (RemoteClient) adapter.getGroup(groupPosition);
+                if (client != null) {
+                    // After we process this click, the group's expanded state will have flipped.
+                    sState.setClientCollapsed(client.guid, mList.isGroupExpanded(groupPosition));
+                }
+
+                // We want the system to handle the click, expanding or collapsing as necessary.
+                return false;
             }
         });
 
@@ -165,6 +176,15 @@ public class RemoteTabsExpandableListFragment extends HomeFragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        // This races when multiple Fragments are created. That's okay: one
+        // will win, and thereafter, all will be okay. If we create and then
+        // drop an instance the shared SharedPreferences backing all the
+        // instances will maintain the state for us. Since everything happens on
+        // the UI thread, this doesn't even need to be volatile.
+        if (sState == null) {
+            sState = new RemoteTabsExpandableListState(GeckoSharedPrefs.forProfile(getActivity()));
+        }
+
         // Intialize adapter
         mAdapter = new RemoteTabsExpandableListAdapter(R.layout.home_remote_tabs_group, R.layout.home_remote_tabs_child, null);
         mList.setAdapter(mAdapter);
@@ -176,8 +196,15 @@ public class RemoteTabsExpandableListFragment extends HomeFragment {
 
     private void updateUiFromClients(List<RemoteClient> clients) {
         if (clients != null && !clients.isEmpty()) {
-            for (int i = 0; i < mList.getExpandableListAdapter().getGroupCount(); i++) {
-                mList.expandGroup(i);
+            // No sense crashing if we've made an error.
+            int groupCount = Math.min(mList.getExpandableListAdapter().getGroupCount(), clients.size());
+            for (int i = 0; i < groupCount; i++) {
+                final RemoteClient client = clients.get(i);
+                if (sState.isClientCollapsed(client.guid)) {
+                    mList.collapseGroup(i);
+                } else {
+                    mList.expandGroup(i);
+                }
             }
             return;
         }
