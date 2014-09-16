@@ -99,7 +99,7 @@ function IsWindowsVistaOrLater() {
   return winver && winver.length == 2 && parseFloat(winver[1]) >= 6.0;
 }
 
-function IsMacOSLionOrLater() {
+function IsMacOSSnowLeopardOrLater() {
   var re = /Mac OS X (\d+)\.(\d+)/;
   var ver = navigator.userAgent.match(re);
   if (!ver || ver.length != 3) {
@@ -107,7 +107,7 @@ function IsMacOSLionOrLater() {
   }
   var major = ver[1] | 0;
   var minor = ver[2] | 0;
-  return major == 10 && minor >= 7;
+  return major == 10 && minor >= 6;
 }
 
 function getPref(name) {
@@ -127,7 +127,7 @@ function IsLinuxGStreamer() {
 function IsMP4ReaderAvailable() {
   var prefs = getPref("media.fragmented-mp4.enabled") &&
               getPref("media.fragmented-mp4.exposed");
-  return prefs && (IsWindowsVistaOrLater() || IsMacOSLionOrLater());
+  return prefs && (IsWindowsVistaOrLater() || IsMacOSSnowLeopardOrLater());
 }
 
 var haveMp4 = (getPref("media.windows-media-foundation.enabled") && IsWindowsVistaOrLater()) ||
