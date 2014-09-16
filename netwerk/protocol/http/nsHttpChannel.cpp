@@ -2570,7 +2570,7 @@ nsHttpChannel::OpenCacheEntry(bool usingSSL)
                             | nsICacheStorage::CHECK_MULTITHREADED;
     }
 
-    if (mApplicationCache) {
+    if (!mPostID && mApplicationCache) {
         rv = cacheStorageService->AppCacheStorage(info, 
             mApplicationCache,
             getter_AddRefs(cacheStorage));
@@ -2581,7 +2581,7 @@ nsHttpChannel::OpenCacheEntry(bool usingSSL)
     }
     else {
         rv = cacheStorageService->DiskCacheStorage(info,
-            mChooseApplicationCache || (mLoadFlags & LOAD_CHECK_OFFLINE_CACHE),
+            !mPostID && (mChooseApplicationCache || (mLoadFlags & LOAD_CHECK_OFFLINE_CACHE)),
             getter_AddRefs(cacheStorage));
     }
     NS_ENSURE_SUCCESS(rv, rv);
