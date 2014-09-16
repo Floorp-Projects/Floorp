@@ -5075,14 +5075,17 @@ ThreadSources.prototype = {
 
       return this._sourceMapsByGeneratedSource[url]
         .then((aSourceMap) => {
-          let { source: aSourceURL, line: aLine, column: aColumn } = aSourceMap.originalPositionFor({
-            line: line,
-            column: column
-          });
+          let {
+            source: aSourceURL,
+            line: aLine,
+            column: aColumn,
+            name: aName
+          } = aSourceMap.originalPositionFor({ line, column });
           return {
             url: aSourceURL,
             line: aLine,
-            column: aColumn
+            column: aColumn,
+            name: aName
           };
         })
         .then(null, error => {
