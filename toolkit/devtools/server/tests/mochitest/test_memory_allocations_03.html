@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1067491 - Test that frames keep the same index while we are recording.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Memory monitoring actor test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="memory-helpers.js" type="application/javascript;version=1.8"></script>
+<script>
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+
+  Task.spawn(function* () {
+    var { memory, client } = yield startServerAndGetSelectedTabMemory();
+    yield memory.attach();
+
+    yield memory.startRecordingAllocations();
+
+    // Allocate twice with the exact same stack (hence setTimeout rather than
+    // allocating directly in the generator), but with getAllocations() calls in
+    // between.
+
+    var allocs = [];
+    function allocator() {
+      allocs.push({});
+    }
+
+    setTimeout(allocator, 1);
+    yield waitForTime(2);
+    var first = yield memory.getAllocations();
+
+    setTimeout(allocator, 1);
+    yield waitForTime(2);
+    var second = yield memory.getAllocations();
+
+    yield memory.stopRecordingAllocations();
+
+    // Assert that each frame in the first response has the same index in the
+    // second response. This isn't commutative, so we don't check that all
+    // of the second response's frames are the same in the first response,
+    // because there might be new allocations that happen after the first query
+    // but before the second.
+
+    function assertSameFrame(a, b) {
+      info("Checking frames at index " + i + ":");
+      info("  First frame = " + JSON.stringify(a, null, 4));
+      info("  Second frame = " + JSON.stringify(b, null, 4));
+
+      is(!!a, !!b);
+      if (!a || !b) {
+        return;
+      }
+
+      is(a.source, b.source);
+      is(a.line, b.line);
+      is(a.column, b.column);
+      is(a.functionDisplayName, b.functionDisplayName);
+      is(a.parent, b.parent);
+    }
+
+    for (var i = 0; i < first.frames.length; i++) {
+      assertSameFrame(first.frames[i], second.frames[i]);
+    }
+
+    yield memory.detach();
+    destroyServerAndFinish(client);
+  });
+};
+</script>
+</pre>
+</body>
+</html>
