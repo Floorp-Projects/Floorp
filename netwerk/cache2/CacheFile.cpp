@@ -924,27 +924,6 @@ CacheFile::GetExpirationTime(uint32_t *_retval)
 }
 
 nsresult
-CacheFile::SetLastModified(uint32_t aLastModified)
-{
-  CacheFileAutoLock lock(this);
-  MOZ_ASSERT(mMetadata);
-  NS_ENSURE_TRUE(mMetadata, NS_ERROR_UNEXPECTED);
-
-  PostWriteTimer();
-  return mMetadata->SetLastModified(aLastModified);
-}
-
-nsresult
-CacheFile::GetLastModified(uint32_t *_retval)
-{
-  CacheFileAutoLock lock(this);
-  MOZ_ASSERT(mMetadata);
-  NS_ENSURE_TRUE(mMetadata, NS_ERROR_UNEXPECTED);
-
-  return mMetadata->GetLastModified(_retval);
-}
-
-nsresult
 CacheFile::SetFrecency(uint32_t aFrecency)
 {
   CacheFileAutoLock lock(this);
@@ -970,6 +949,16 @@ CacheFile::GetFrecency(uint32_t *_retval)
 }
 
 nsresult
+CacheFile::GetLastModified(uint32_t *_retval)
+{
+  CacheFileAutoLock lock(this);
+  MOZ_ASSERT(mMetadata);
+  NS_ENSURE_TRUE(mMetadata, NS_ERROR_UNEXPECTED);
+
+  return mMetadata->GetLastModified(_retval);
+}
+
+nsresult
 CacheFile::GetLastFetched(uint32_t *_retval)
 {
   CacheFileAutoLock lock(this);
@@ -987,6 +976,18 @@ CacheFile::GetFetchCount(uint32_t *_retval)
   NS_ENSURE_TRUE(mMetadata, NS_ERROR_UNEXPECTED);
 
   return mMetadata->GetFetchCount(_retval);
+}
+
+nsresult
+CacheFile::OnFetched()
+{
+  CacheFileAutoLock lock(this);
+  MOZ_ASSERT(mMetadata);
+  NS_ENSURE_TRUE(mMetadata, NS_ERROR_UNEXPECTED);
+
+  PostWriteTimer();
+
+  return mMetadata->OnFetched();
 }
 
 void
