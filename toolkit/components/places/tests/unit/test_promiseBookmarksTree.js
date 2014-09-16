@@ -192,16 +192,12 @@ function* test_promiseBookmarksTreeForEachNode(aNode, aOptions, aExcludedGUIDs) 
   for (let i = 0; i < aNode.childCount; i++) {
     let child = aNode.getChild(i);
     if (child.itemId != PlacesUtils.tagsFolderId)
-      yield test_promiseBookmarksTreeForEachNode(child,
-                                                 { includeItemIds: true },
-                                                 aExcludedGUIDs);
+      yield test_promiseBookmarksTreeForEachNode(child, {}, aExcludedGUIDs);
   }
   return item;
 }
 
-function* test_promiseBookmarksTreeAgainstResult(aItemGUID = "",
-                                                 aOptions = { includeItemIds: true },
-                                                 aExcludedGUIDs) {
+function* test_promiseBookmarksTreeAgainstResult(aItemGUID = "", aOptions, aExcludedGUIDs) {
   let itemId = aItemGUID ?
     yield PlacesUtils.promiseItemId(aItemGUID) : PlacesUtils.placesRootId;
   let node = PlacesUtils.getFolderContents(itemId).root;
@@ -250,8 +246,7 @@ add_task(function* () {
     excludeItemsCallback: aItem =>  {
       guidsPassedToExcludeCallback.add(aItem.guid);
       return aItem.root == "bookmarksMenuFolder";
-    },
-    includeItemIds: true
+    }
   }, [menuGUID]);
   do_check_eq(guidsPassedToExcludeCallback.size, 4);
   do_check_eq(placesRootWithoutTheMenu.children.length, 2);

@@ -1592,16 +1592,13 @@ this.PlacesUtils = {
    *           this option can slow down the process significantly if the
    *           callback does anything that's not relatively trivial.  It is
    *           highly recommended to avoid any synchronous I/O or DB queries.
-   *        - includeItemIds: opt-in to include the deprecated id property.
-   *          Use it if you must. It'll be removed once the switch to guids is
-   *          complete.
    *
    * @return {Promise}
    * @resolves to a JS object that represents either a single item or a
    * bookmarks tree.  Each node in the tree has the following properties set:
    *  - guid (string): the item's guid (same as aItemGUID for the top item).
-   *  - [deprecated] id (number): the item's id. This is only if
-   *    aOptions.includeItemIds is set.
+   *  - [deprecated] id (number): the item's id.  Only use it if you must. It'll
+   *    be removed once the switch to guids is complete.
    *  - type (number):  the item's type.  @see PlacesUtils.TYPE_X_*
    *  - title (string): the item's title. If it has no title, this property
    *    isn't set.
@@ -1647,16 +1644,9 @@ this.PlacesUtils = {
             item[prop] = val;
         }
       };
-      copyProps("guid", "title", "index", "dateAdded", "lastModified");
+      copyProps("id" ,"guid", "title", "index", "dateAdded", "lastModified");
       if (aIncludeParentGUID)
         copyProps("parentGUID");
-
-      let itemId = aRow.getResultByName("id");
-      if (aOptions.includeItemIds)
-        item.id = itemId;
-
-      // Cache it for promiseItemId consumers regardless.
-      GUIDHelper.idsForGUIDs.set(item.guid, itemId);
 
       let type = aRow.getResultByName("type");
       if (type == Ci.nsINavBookmarksService.TYPE_BOOKMARK)
@@ -1665,7 +1655,7 @@ this.PlacesUtils = {
       // Add annotations.
       if (aRow.getResultByName("has_annos")) {
         try {
-          item.annos = PlacesUtils.getAnnotationsForItem(itemId);
+          item.annos = PlacesUtils.getAnnotationsForItem(item.id);
         } catch (e) {
           Cu.reportError("Unexpected error while reading annotations " + e);
         }
@@ -1677,20 +1667,20 @@ this.PlacesUtils = {
           // If this throws due to an invalid url, the item will be skipped.
           item.uri = NetUtil.newURI(aRow.getResultByName("url")).spec;
           // Keywords are cached, so this should be decently fast.
-          let keyword = PlacesUtils.bookmarks.getKeywordForBookmark(itemId);
+          let keyword = PlacesUtils.bookmarks.getKeywordForBookmark(item.id);
           if (keyword)
             item.keyword = keyword;
           break;
         case Ci.nsINavBookmarksService.TYPE_FOLDER:
           item.type = PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER;
           // Mark root folders.
-          if (itemId == PlacesUtils.placesRootId)
+          if (item.id == PlacesUtils.placesRootId)
             item.root = "placesRoot";
-          else if (itemId == PlacesUtils.bookmarksMenuFolderId)
+          else if (item.id == PlacesUtils.bookmarksMenuFolderId)
             item.root = "bookmarksMenuFolder";
-          else if (itemId == PlacesUtils.unfiledBookmarksFolderId)
+          else if (item.id == PlacesUtils.unfiledBookmarksFolderId)
             item.root = "unfiledBookmarksFolder";
-          else if (itemId == PlacesUtils.toolbarFolderId)
+          else if (item.id == PlacesUtils.toolbarFolderId)
             item.root = "toolbarFolder";
           break;
         case Ci.nsINavBookmarksService.TYPE_SEPARATOR:
