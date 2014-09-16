@@ -666,12 +666,13 @@ let SettingsRequestManager = {
   sendSettingsChange: function(aKey, aValue, aIsServiceLock) {
     this.broadcastMessage("Settings:Change:Return:OK",
       { key: aKey, value: aValue });
-    Services.obs.notifyObservers(this, kMozSettingsChangedObserverTopic,
-      JSON.stringify({
-        key: aKey,
-        value: aValue,
-        isInternalChange: aIsServiceLock
-      }));
+    var setting = {
+      key: aKey,
+      value: aValue,
+      isInternalChange: aIsServiceLock
+    };
+    setting.wrappedJSObject = setting;
+    Services.obs.notifyObservers(setting, kMozSettingsChangedObserverTopic, "");
   },
 
   broadcastMessage: function broadcastMessage(aMsgName, aContent) {
