@@ -12,6 +12,9 @@ import java.util.List;
 
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.RemoteClientsDialogFragment;
+import org.mozilla.gecko.RemoteClientsDialogFragment.ChoiceMode;
+import org.mozilla.gecko.RemoteClientsDialogFragment.RemoteClientsListener;
 import org.mozilla.gecko.RemoteTabsExpandableListAdapter;
 import org.mozilla.gecko.TabsAccessor;
 import org.mozilla.gecko.TabsAccessor.RemoteClient;
@@ -51,12 +54,15 @@ import android.widget.TextView;
  * <p>
  * This is intended to be used on phones, and possibly in portrait mode on tablets.
  */
-public class RemoteTabsExpandableListFragment extends HomeFragment {
+public class RemoteTabsExpandableListFragment extends HomeFragment implements RemoteClientsListener {
     // Logging tag name.
     private static final String LOGTAG = "GeckoRemoteTabsExpList";
 
     // Cursor loader ID.
     private static final int LOADER_ID_REMOTE_TABS = 0;
+
+    // Dialog fragment TAG.
+    private static final String DIALOG_TAG_REMOTE_TABS = "dialog_tag_remote_tabs";
 
     private static final String[] STAGES_TO_SYNC_ON_REFRESH = new String[] { "clients", "tabs" };
 
@@ -210,7 +216,12 @@ public class RemoteTabsExpandableListFragment extends HomeFragment {
         view.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Nothing for now.  This will be fleshed out in the next commits.
+                final RemoteClientsDialogFragment dialog = RemoteClientsDialogFragment.newInstance(
+                        getResources().getString(R.string.home_remote_tabs_hidden_devices_title),
+                        getResources().getString(R.string.home_remote_tabs_unhide_selected_devices),
+                        ChoiceMode.MULTIPLE, new ArrayList<RemoteClient>(mHiddenClients));
+                dialog.setTargetFragment(RemoteTabsExpandableListFragment.this, 0);
+                dialog.show(getActivity().getSupportFragmentManager(), DIALOG_TAG_REMOTE_TABS);
             }
         });
 
@@ -345,6 +356,18 @@ public class RemoteTabsExpandableListFragment extends HomeFragment {
 
             mList.setEmptyView(mEmptyView);
         }
+    }
+
+    public void onClients(List<RemoteClient> clients) {
+        // The clients listed were hidden and have been checked by the user. We
+        // interpret that as "show these clients now".
+        for (RemoteClient client : clients) {
+            sState.setClientHidden(client.guid, false);
+            // There's no particular need to do this, but if you want to see it,
+            // let's show it all.
+            sState.setClientCollapsed(client.guid, false);
+        }
+        getLoaderManager().restartLoader(LOADER_ID_REMOTE_TABS, null, mCursorLoaderCallbacks);
     }
 
     @Override
