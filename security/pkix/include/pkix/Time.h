@@ -118,6 +118,9 @@ inline Time TimeFromElapsedSecondsAD(uint64_t elapsedSecondsAD)
 
 Time Now();
 
+// Note the epoch is the unix epoch (ie 00:00:00 UTC, 1 January 1970)
+Time TimeFromEpochInSeconds(uint64_t secondsSinceEpoch);
+
 } } // namespace mozilla::pkix
 
 #endif // mozilla_pkix__Time_h
