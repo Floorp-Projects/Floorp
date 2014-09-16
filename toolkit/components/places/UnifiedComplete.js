@@ -492,6 +492,23 @@ function stripHttpAndTrim(spec) {
   return spec;
 }
 
+/**
+ * Make a moz-action: URL for a given action and set of parameters.
+ *
+ * @param action
+ *        Name of the action
+ * @param params
+ *        Object, whose keys are parameter names and values are the
+ *        corresponding parameter values.
+ * @return String representation of the built moz-action: URL
+ */
+function makeActionURL(action, params) {
+  let url = "moz-action:" + action + "," + JSON.stringify(params);
+  // Make a nsIURI out of this to ensure it's encoded properly.
+  return NetUtil.newURI(url).spec;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Search Class
 //// Manages a single instance of an autocomplete search.
@@ -965,9 +982,12 @@ Search.prototype = {
 
     // If actions are enabled and the page is open, add only the switch-to-tab
     // result.  Otherwise, add the normal result.
-    let [url, action] = this._enableActions && openPageCount > 0 ?
-                        ["moz-action:switchtab," + escapedURL, "switchtab"] :
-                        [escapedURL, null];
+    let url = escapedURL;
+    let action = null;
+    if (this._enableActions && openPageCount > 0) {
+      url = makeActionURL("switchtab", {url: escapedURL});
+      action = "switchtab";
+    }
 
     // Always prefer the bookmark title unless it is empty
     let title = bookmarkTitle || historyTitle;
