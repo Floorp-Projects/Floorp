@@ -18,6 +18,9 @@
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:textColorHighlight="@color/highlight_orange"
+        android:textSelectHandle="@drawable/handle_middle"
+        android:textSelectHandleLeft="@drawable/handle_start"
+        android:textSelectHandleRight="@drawable/handle_end"
         android:hint="@string/search_for_something" />
 
     <ImageButton
