@@ -51,33 +51,28 @@ HTMLCheckboxAccessible::ActionCount()
   return 1;
 }
 
-NS_IMETHODIMP
-HTMLCheckboxAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
+void
+HTMLCheckboxAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 {
   if (aIndex == eAction_Click) {    // 0 is the magic value for default action
-    // cycle, check or uncheck
     uint64_t state = NativeState();
-
     if (state & states::CHECKED)
-      aName.AssignLiteral("uncheck"); 
+      aName.AssignLiteral("uncheck");
     else if (state & states::MIXED)
-      aName.AssignLiteral("cycle"); 
+      aName.AssignLiteral("cycle");
     else
-      aName.AssignLiteral("check"); 
-
-    return NS_OK;
+      aName.AssignLiteral("check");
   }
-  return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP
+bool
 HTMLCheckboxAccessible::DoAction(uint8_t aIndex)
 {
   if (aIndex != 0)
-    return NS_ERROR_INVALID_ARG;
+    return false;
 
   DoCommand();
-  return NS_OK;
+  return true;
 }
 
 uint64_t
@@ -189,24 +184,21 @@ HTMLButtonAccessible::ActionCount()
   return 1;
 }
 
-NS_IMETHODIMP
-HTMLButtonAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
+void
+HTMLButtonAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 {
-  if (aIndex == eAction_Click) {
-    aName.AssignLiteral("press"); 
-    return NS_OK;
-  }
-  return NS_ERROR_INVALID_ARG;
+  if (aIndex == eAction_Click)
+    aName.AssignLiteral("press");
 }
 
-NS_IMETHODIMP
+bool
 HTMLButtonAccessible::DoAction(uint8_t aIndex)
 {
   if (aIndex != eAction_Click)
-    return NS_ERROR_INVALID_ARG;
+    return false;
 
   DoCommand();
-  return NS_OK;
+  return true;
 }
 
 uint64_t
@@ -293,7 +285,7 @@ HTMLTextFieldAccessible::
 }
 
 NS_IMPL_ISUPPORTS_INHERITED(HTMLTextFieldAccessible,
-                            Accessible,                            
+                            Accessible,
                             nsIAccessibleText,
                             nsIAccessibleEditableText)
 
@@ -445,23 +437,21 @@ HTMLTextFieldAccessible::ActionCount()
   return 1;
 }
 
-NS_IMETHODIMP
-HTMLTextFieldAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
+void
+HTMLTextFieldAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 {
-  if (aIndex == eAction_Click) {
+  if (aIndex == eAction_Click)
     aName.AssignLiteral("activate");
-    return NS_OK;
-  }
-  return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP
+bool
 HTMLTextFieldAccessible::DoAction(uint8_t aIndex)
 {
-  if (aIndex == 0)
-    return TakeFocus();
+  if (aIndex != 0)
+    return false;
 
-  return NS_ERROR_INVALID_ARG;
+  TakeFocus();
+  return true;
 }
 
 already_AddRefed<nsIEditor>
@@ -707,7 +697,7 @@ HTMLGroupboxAccessible::NativeRole()
 }
 
 nsIContent*
-HTMLGroupboxAccessible::GetLegend()
+HTMLGroupboxAccessible::GetLegend() const
 {
   for (nsIContent* legendContent = mContent->GetFirstChild(); legendContent;
        legendContent = legendContent->GetNextSibling()) {
