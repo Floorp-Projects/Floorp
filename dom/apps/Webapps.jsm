@@ -4187,9 +4187,14 @@ this.DOMApplicationRegistry = {
     return app;
   }),
 
-  getCSPByLocalId: function(aLocalId) {
-    debug("getCSPByLocalId:" + aLocalId);
-    return AppsUtils.getCSPByLocalId(this.webapps, aLocalId);
+  getManifestCSPByLocalId: function(aLocalId) {
+    debug("getManifestCSPByLocalId:" + aLocalId);
+    return AppsUtils.getManifestCSPByLocalId(this.webapps, aLocalId);
+  },
+
+  getDefaultCSPByLocalId: function(aLocalId) {
+    debug("getDefaultCSPByLocalId:" + aLocalId);
+    return AppsUtils.getDefaultCSPByLocalId(this.webapps, aLocalId);
   },
 
   getAppLocalIdByStoreId: function(aStoreId) {
