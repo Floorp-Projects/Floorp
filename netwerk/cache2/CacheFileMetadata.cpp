@@ -27,6 +27,8 @@ namespace net {
 
 #define kCacheEntryVersion 1
 
+#define NOW_SECONDS() (uint32_t(PR_Now() / PR_USEC_PER_SEC))
+
 NS_IMPL_ISUPPORTS(CacheFileMetadata, CacheFileIOListener)
 
 CacheFileMetadata::CacheFileMetadata(CacheFileHandle *aHandle, const nsACString &aKey)
@@ -82,7 +84,6 @@ CacheFileMetadata::CacheFileMetadata(bool aMemoryOnly, const nsACString &aKey)
   memset(&mMetaHdr, 0, sizeof(CacheFileMetadataHeader));
   mMetaHdr.mVersion = kCacheEntryVersion;
   mMetaHdr.mExpirationTime = nsICacheEntry::NO_EXPIRATION_TIME;
-  mMetaHdr.mFetchCount = 1;
   mKey = aKey;
   mMetaHdr.mKeySize = mKey.Length();
 
@@ -504,7 +505,7 @@ CacheFileMetadata::SetExpirationTime(uint32_t aExpirationTime)
   LOG(("CacheFileMetadata::SetExpirationTime() [this=%p, expirationTime=%d]",
        this, aExpirationTime));
 
-  MarkDirty();
+  MarkDirty(false);
   mMetaHdr.mExpirationTime = aExpirationTime;
   return NS_OK;
 }
@@ -517,30 +518,12 @@ CacheFileMetadata::GetExpirationTime(uint32_t *_retval)
 }
 
 nsresult
-CacheFileMetadata::SetLastModified(uint32_t aLastModified)
-{
-  LOG(("CacheFileMetadata::SetLastModified() [this=%p, lastModified=%d]",
-       this, aLastModified));
-
-  MarkDirty();
-  mMetaHdr.mLastModified = aLastModified;
-  return NS_OK;
-}
-
-nsresult
-CacheFileMetadata::GetLastModified(uint32_t *_retval)
-{
-  *_retval = mMetaHdr.mLastModified;
-  return NS_OK;
-}
-
-nsresult
 CacheFileMetadata::SetFrecency(uint32_t aFrecency)
 {
   LOG(("CacheFileMetadata::SetFrecency() [this=%p, frecency=%f]",
        this, (double)aFrecency));
 
-  MarkDirty();
+  MarkDirty(false);
   mMetaHdr.mFrecency = aFrecency;
   return NS_OK;
 }
@@ -549,6 +532,13 @@ nsresult
 CacheFileMetadata::GetFrecency(uint32_t *_retval)
 {
   *_retval = mMetaHdr.mFrecency;
+  return NS_OK;
+}
+
+nsresult
+CacheFileMetadata::GetLastModified(uint32_t *_retval)
+{
+  *_retval = mMetaHdr.mLastModified;
   return NS_OK;
 }
 
@@ -564,6 +554,25 @@ CacheFileMetadata::GetFetchCount(uint32_t *_retval)
 {
   *_retval = mMetaHdr.mFetchCount;
   return NS_OK;
+}
+
+nsresult
+CacheFileMetadata::OnFetched()
+{
+  MarkDirty(false);
+
+  mMetaHdr.mLastFetched = NOW_SECONDS();
+  ++mMetaHdr.mFetchCount;
+  return NS_OK;
+}
+
+void
+CacheFileMetadata::MarkDirty(bool aUpdateLastModified)
+{
+  mIsDirty = true;
+  if (aUpdateLastModified) {
+    mMetaHdr.mLastModified = NOW_SECONDS();
+  }
 }
 
 nsresult
@@ -721,7 +730,7 @@ CacheFileMetadata::InitEmptyMetadata()
   }
   mOffset = 0;
   mMetaHdr.mVersion = kCacheEntryVersion;
-  mMetaHdr.mFetchCount = 1;
+  mMetaHdr.mFetchCount = 0;
   mMetaHdr.mExpirationTime = nsICacheEntry::NO_EXPIRATION_TIME;
   mMetaHdr.mKeySize = mKey.Length();
 
@@ -832,7 +841,6 @@ CacheFileMetadata::ParseMetadata(uint32_t aMetaOffset, uint32_t aBufOffset,
   }
 
 
-  mMetaHdr.mFetchCount++;
   MarkDirty();
 
   mElementsSize = metaposOffset - elementsOffset;
