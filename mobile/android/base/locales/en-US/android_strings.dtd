@@ -413,6 +413,13 @@ size. -->
 <!ENTITY home_remote_tabs_trouble_verifying "Trouble verifying your account?">
 <!ENTITY home_remote_tabs_need_to_verify "Please verify your Firefox Account to start syncing.">
 
+<!ENTITY home_remote_tabs_one_hidden_device "1 device hidden">
+<!-- Localization note (home_remote_tabs_many_hidden_devices) : The
+     formatD is replaced with the number of hidden devices.  The
+     number of hidden devices is always more than one.  We can't use
+     Android plural forms, sadly. See Bug #753859. -->
+<!ENTITY home_remote_tabs_many_hidden_devices "&formatD; devices hidden">
+
 <!ENTITY private_browsing_title "Private Browsing">
 <!ENTITY private_tabs_panel_empty_desc "Your private tabs will show up here. While we don\'t keep any of your browsing history or cookies, bookmarks and files that you download will still be saved on your device.">
 <!ENTITY private_tabs_panel_learn_more "Want to learn more?">
