@@ -419,6 +419,12 @@ size. -->
      number of hidden devices is always more than one.  We can't use
      Android plural forms, sadly. See Bug #753859. -->
 <!ENTITY home_remote_tabs_many_hidden_devices "&formatD; devices hidden">
+<!-- Localization note (home_remote_tabs_hidden_devices_title) : This is the
+     title of a dialog; we expect more than one device. -->
+<!ENTITY home_remote_tabs_hidden_devices_title "Hidden devices">
+<!-- Localization note (home_remote_tabs_unhide_selected_devices) : This is
+     the text of a button; we expect more than one device. -->
+<!ENTITY home_remote_tabs_unhide_selected_devices "Unhide selected devices">
 
 <!ENTITY private_browsing_title "Private Browsing">
 <!ENTITY private_tabs_panel_empty_desc "Your private tabs will show up here. While we don\'t keep any of your browsing history or cookies, bookmarks and files that you download will still be saved on your device.">
