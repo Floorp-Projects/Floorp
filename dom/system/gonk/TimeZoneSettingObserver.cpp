@@ -22,6 +22,8 @@
 #include "xpcpublic.h"
 #include "nsContentUtils.h"
 #include "nsPrintfCString.h"
+#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/SettingChangeNotificationBinding.h"
 
 #undef LOG
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Time Zone Setting" , ## args)
@@ -31,6 +33,7 @@
 #define MOZSETTINGS_CHANGED "mozsettings-changed"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 namespace {
 
@@ -184,8 +187,8 @@ NS_IMPL_ISUPPORTS(TimeZoneSettingObserver, nsIObserver)
 
 NS_IMETHODIMP
 TimeZoneSettingObserver::Observe(nsISupports *aSubject,
-                     const char *aTopic,
-                     const char16_t *aData)
+                                 const char *aTopic,
+                                 const char16_t *aData)
 {
   if (strcmp(aTopic, MOZSETTINGS_CHANGED) != 0) {
     return NS_OK;
@@ -199,37 +202,19 @@ TimeZoneSettingObserver::Observe(nsISupports *aSubject,
   // {"key":"time.timezone","value":"UTC-05:00"}
 
   AutoSafeJSContext cx;
-
-  // Parse the JSON value.
-  nsDependentString dataStr(aData);
-  JS::Rooted<JS::Value> val(cx);
-  if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &val) ||
-      !val.isObject()) {
+  RootedDictionary<SettingChangeNotification> setting(cx);
+  if (!WrappedJSToDictionary(cx, aSubject, setting)) {
     return NS_OK;
   }
-
-  // Get the key, which should be the JS string "time.timezone".
-  JS::Rooted<JSObject*> obj(cx, &val.toObject());
-  JS::Rooted<JS::Value> key(cx);
-  if (!JS_GetProperty(cx, obj, "key", &key) ||
-      !key.isString()) {
+  if (!setting.mKey.EqualsASCII(TIME_TIMEZONE)) {
     return NS_OK;
   }
-  bool match;
-  if (!JS_StringEqualsAscii(cx, key.toString(), TIME_TIMEZONE, &match) ||
-      !match) {
-    return NS_OK;
-  }
-
-  // Get the value, which should be a JS string like "America/Chicago".
-  JS::Rooted<JS::Value> value(cx);
-  if (!JS_GetProperty(cx, obj, "value", &value) ||
-      !value.isString()) {
+  if (!setting.mValue.isString()) {
     return NS_OK;
   }
 
   // Set the system timezone.
-  return SetTimeZone(value, cx);
+  return SetTimeZone(setting.mValue, cx);
 }
 
 } // anonymous namespace
