@@ -658,9 +658,9 @@ TileClient::DiscardFrontBuffer()
                                                                         mFrontBuffer);
     }
 #endif
-    mManager->GetTexturePool(mFrontBuffer->GetFormat())->ReturnTextureClientDeferred(mFrontBuffer);
+    mManager->ReturnTextureClientDeferred(*mFrontBuffer);
     if (mFrontBufferOnWhite) {
-      mManager->GetTexturePool(mFrontBufferOnWhite->GetFormat())->ReturnTextureClientDeferred(mFrontBufferOnWhite);
+      mManager->ReturnTextureClientDeferred(*mFrontBufferOnWhite);
     }
     mFrontLock->ReadUnlock();
     if (mFrontBuffer->IsLocked()) {
@@ -684,12 +684,14 @@ TileClient::DiscardBackBuffer()
       // Our current back-buffer is still locked by the compositor. This can occur
       // when the client is producing faster than the compositor can consume. In
       // this case we just want to drop it and not return it to the pool.
-     mManager->GetTexturePool(mBackBuffer->GetFormat())->ReportClientLost();
+     mManager->ReportClientLost(*mBackBuffer);
      if (mBackBufferOnWhite) {
-       mManager->GetTexturePool(mBackBufferOnWhite->GetFormat())->ReportClientLost();
+       mManager->ReportClientLost(*mBackBufferOnWhite);
      }
     } else {
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+      // If this assertions stops being true, we need to add
+      // ReturnTextureClientDeferred(*mBackBufferOnWhite) below.
       MOZ_ASSERT(!mBackBufferOnWhite);
       if (mBackBuffer->GetIPDLActor() &&
           mCompositableClient && mCompositableClient->GetIPDLActor()) {
@@ -705,11 +707,11 @@ TileClient::DiscardBackBuffer()
       }
       // TextureClient can be reused after transaction complete,
       // when RemoveTextureFromCompositableTracker is used.
-      mManager->GetTexturePool(mBackBuffer->GetFormat())->ReturnTextureClientDeferred(mBackBuffer);
+      mManager->ReturnTextureClientDeferred(*mBackBuffer);
 #else
-      mManager->GetTexturePool(mBackBuffer->GetFormat())->ReturnTextureClient(mBackBuffer);
+      mManager->ReturnTextureClient(*mBackBuffer);
       if (mBackBufferOnWhite) {
-        mManager->GetTexturePool(mBackBufferOnWhite->GetFormat())->ReturnTextureClient(mBackBufferOnWhite);
+        mManager->ReturnTextureClient(*mBackBufferOnWhite);
       }
 #endif
     }
@@ -735,8 +737,6 @@ TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion,
                           bool aCanRerasterizeValidRegion,
                           RefPtr<TextureClient>* aBackBufferOnWhite)
 {
-  TextureClientPool *pool =
-    mManager->GetTexturePool(gfxPlatform::GetPlatform()->Optimal2DFormatForContent(aContent));
   // Try to re-use the front-buffer if possible
   if (mFrontBuffer &&
       mFrontBuffer->HasInternalBuffer() &&
@@ -761,11 +761,15 @@ TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion,
       // Our current back-buffer is still locked by the compositor. This can occur
       // when the client is producing faster than the compositor can consume. In
       // this case we just want to drop it and not return it to the pool.
-      pool->ReportClientLost();
-      if (mBackBufferOnWhite) {
-        pool->ReportClientLost();
-      }
+      mManager->ReportClientLost(*mBackBuffer);
     }
+    if (mBackBufferOnWhite) {
+      mManager->ReportClientLost(*mBackBufferOnWhite);
+      mBackBufferOnWhite = nullptr;
+    }
+
+    TextureClientPool *pool =
+      mManager->GetTexturePool(gfxPlatform::GetPlatform()->Optimal2DFormatForContent(aContent));
     mBackBuffer.Set(this, pool->GetTextureClient());
     if (!mBackBuffer) {
       return nullptr;
