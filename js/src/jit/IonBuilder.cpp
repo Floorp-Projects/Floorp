@@ -7414,7 +7414,7 @@ IonBuilder::getElemTryTypedStatic(bool *emitted, MDefinition *obj, MDefinition *
     JS_ASSERT(*emitted == false);
 
     Scalar::Type arrayType;
-    if (!ElementAccessIsTypedArray(obj, index, &arrayType))
+    if (!ElementAccessIsAnyTypedArray(obj, index, &arrayType))
         return true;
 
     if (!LIRGenerator::allowStaticTypedArrayAccesses())
@@ -7430,14 +7430,12 @@ IonBuilder::getElemTryTypedStatic(bool *emitted, MDefinition *obj, MDefinition *
     if (!tarrObj)
         return true;
 
-    TypedArrayObject *tarr = &tarrObj->as<TypedArrayObject>();
-
-    types::TypeObjectKey *tarrType = types::TypeObjectKey::get(tarr);
+    types::TypeObjectKey *tarrType = types::TypeObjectKey::get(tarrObj);
     if (tarrType->unknownProperties())
         return true;
 
     // LoadTypedArrayElementStatic currently treats uint32 arrays as int32.
-    Scalar::Type viewType = tarr->type();
+    Scalar::Type viewType = AnyTypedArrayType(tarrObj);
     if (viewType == Scalar::Uint32)
         return true;
 
@@ -7446,12 +7444,14 @@ IonBuilder::getElemTryTypedStatic(bool *emitted, MDefinition *obj, MDefinition *
         return true;
 
     // Emit LoadTypedArrayElementStatic.
-    tarrType->watchStateChangeForTypedArrayData(constraints());
+
+    if (tarrObj->is<TypedArrayObject>())
+        tarrType->watchStateChangeForTypedArrayData(constraints());
 
     obj->setImplicitlyUsedUnchecked();
     index->setImplicitlyUsedUnchecked();
 
-    MLoadTypedArrayElementStatic *load = MLoadTypedArrayElementStatic::New(alloc(), tarr, ptr);
+    MLoadTypedArrayElementStatic *load = MLoadTypedArrayElementStatic::New(alloc(), tarrObj, ptr);
     current->add(load);
     current->push(load);
 
@@ -7480,7 +7480,7 @@ IonBuilder::getElemTryTypedArray(bool *emitted, MDefinition *obj, MDefinition *i
     JS_ASSERT(*emitted == false);
 
     Scalar::Type arrayType;
-    if (!ElementAccessIsTypedArray(obj, index, &arrayType))
+    if (!ElementAccessIsAnyTypedArray(obj, index, &arrayType))
         return true;
 
     // Emit typed getelem variant.
@@ -7804,8 +7804,8 @@ IonBuilder::addTypedArrayLengthAndData(MDefinition *obj,
     MOZ_ASSERT((index != nullptr) == (elements != nullptr));
 
     if (obj->isConstant() && obj->toConstant()->value().isObject()) {
-        TypedArrayObject *tarr = &obj->toConstant()->value().toObject().as<TypedArrayObject>();
-        void *data = tarr->viewData();
+        JSObject *tarr = &obj->toConstant()->value().toObject();
+        void *data = AnyTypedArrayViewData(tarr);
         // Bug 979449 - Optimistically embed the elements and use TI to
         //              invalidate if we move them.
 #ifdef JSGC_GENERATIONAL
@@ -7814,15 +7814,16 @@ IonBuilder::addTypedArrayLengthAndData(MDefinition *obj,
         bool isTenured = true;
 #endif
         if (isTenured && tarr->hasSingletonType()) {
-            // The 'data' pointer can change in rare circumstances
+            // The 'data' pointer of TypedArrayObject can change in rare circumstances
             // (ArrayBufferObject::changeContents).
             types::TypeObjectKey *tarrType = types::TypeObjectKey::get(tarr);
             if (!tarrType->unknownProperties()) {
-                tarrType->watchStateChangeForTypedArrayData(constraints());
+                if (tarr->is<TypedArrayObject>())
+                    tarrType->watchStateChangeForTypedArrayData(constraints());
 
                 obj->setImplicitlyUsedUnchecked();
 
-                int32_t len = AssertedCast<int32_t>(tarr->length());
+                int32_t len = AssertedCast<int32_t>(AnyTypedArrayLength(tarr));
                 *length = MConstant::New(alloc(), Int32Value(len));
                 current->add(*length);
 
@@ -8116,7 +8117,7 @@ IonBuilder::setElemTryTypedStatic(bool *emitted, MDefinition *object,
     JS_ASSERT(*emitted == false);
 
     Scalar::Type arrayType;
-    if (!ElementAccessIsTypedArray(object, index, &arrayType))
+    if (!ElementAccessIsAnyTypedArray(object, index, &arrayType))
         return true;
 
     if (!LIRGenerator::allowStaticTypedArrayAccesses())
@@ -8131,24 +8132,24 @@ IonBuilder::setElemTryTypedStatic(bool *emitted, MDefinition *object,
     if (!tarrObj)
         return true;
 
-    TypedArrayObject *tarr = &tarrObj->as<TypedArrayObject>();
-
 #ifdef JSGC_GENERATIONAL
-    if (tarr->runtimeFromMainThread()->gc.nursery.isInside(tarr->viewData()))
+    if (tarrObj->runtimeFromMainThread()->gc.nursery.isInside(AnyTypedArrayViewData(tarrObj)))
         return true;
 #endif
 
-    types::TypeObjectKey *tarrType = types::TypeObjectKey::get(tarr);
+    types::TypeObjectKey *tarrType = types::TypeObjectKey::get(tarrObj);
     if (tarrType->unknownProperties())
         return true;
 
-    Scalar::Type viewType = tarr->type();
+    Scalar::Type viewType = AnyTypedArrayType(tarrObj);
     MDefinition *ptr = convertShiftToMaskForStaticTypedArray(index, viewType);
     if (!ptr)
         return true;
 
     // Emit StoreTypedArrayElementStatic.
-    tarrType->watchStateChangeForTypedArrayData(constraints());
+
+    if (tarrObj->is<TypedArrayObject>())
+        tarrType->watchStateChangeForTypedArrayData(constraints());
 
     object->setImplicitlyUsedUnchecked();
     index->setImplicitlyUsedUnchecked();
@@ -8160,7 +8161,7 @@ IonBuilder::setElemTryTypedStatic(bool *emitted, MDefinition *object,
         current->add(toWrite->toInstruction());
     }
 
-    MInstruction *store = MStoreTypedArrayElementStatic::New(alloc(), tarr, ptr, toWrite);
+    MInstruction *store = MStoreTypedArrayElementStatic::New(alloc(), tarrObj, ptr, toWrite);
     current->add(store);
     current->push(value);
 
@@ -8178,7 +8179,7 @@ IonBuilder::setElemTryTypedArray(bool *emitted, MDefinition *object,
     JS_ASSERT(*emitted == false);
 
     Scalar::Type arrayType;
-    if (!ElementAccessIsTypedArray(object, index, &arrayType))
+    if (!ElementAccessIsAnyTypedArray(object, index, &arrayType))
         return true;
 
     // Emit typed setelem variant.
@@ -8729,7 +8730,7 @@ IonBuilder::objectsHaveCommonPrototype(types::TemporaryTypeSet *types, PropertyN
             // Look for a getter/setter on the class itself which may need
             // to be called. Ignore the getGeneric hook for typed arrays, it
             // only handles integers and forwards names to the prototype.
-            if (isGetter && clasp->ops.getGeneric && !IsTypedArrayClass(clasp))
+            if (isGetter && clasp->ops.getGeneric && !IsAnyTypedArrayClass(clasp))
                 return false;
             if (!isGetter && clasp->ops.setGeneric)
                 return false;

@@ -17,6 +17,7 @@
 #include "vm/Probes.h"
 #include "vm/ScopeObject.h"
 #include "vm/StringObject.h"
+#include "vm/TypedArrayCommon.h"
 
 #include "jsatominlines.h"
 #include "jscompartmentinlines.h"
@@ -342,6 +343,8 @@ JSObject::getDenseOrTypedArrayElement(uint32_t idx)
 {
     if (is<js::TypedArrayObject>())
         return as<js::TypedArrayObject>().getElement(idx);
+    if (is<js::SharedTypedArrayObject>())
+        return as<js::SharedTypedArrayObject>().getElement(idx);
     return getDenseElement(idx);
 }
 
@@ -1123,8 +1126,8 @@ ObjectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx)
       case ESClass_String: return obj->is<StringObject>();
       case ESClass_Boolean: return obj->is<BooleanObject>();
       case ESClass_RegExp: return obj->is<RegExpObject>();
-      case ESClass_ArrayBuffer:
-        return obj->is<ArrayBufferObject>() || obj->is<SharedArrayBufferObject>();
+      case ESClass_ArrayBuffer: return obj->is<ArrayBufferObject>();
+      case ESClass_SharedArrayBuffer: return obj->is<SharedArrayBufferObject>();
       case ESClass_Date: return obj->is<DateObject>();
       case ESClass_Set: return obj->is<SetObject>();
       case ESClass_Map: return obj->is<MapObject>();

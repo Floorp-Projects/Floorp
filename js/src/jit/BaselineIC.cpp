@@ -24,6 +24,7 @@
 #endif
 #include "jit/VMFunctions.h"
 #include "vm/Opcodes.h"
+#include "vm/TypedArrayCommon.h"
 
 #include "jsboolinlines.h"
 #include "jsscriptinlines.h"
@@ -3858,9 +3859,9 @@ static bool TryAttachNativeGetElemStub(JSContext *cx, HandleScript script, jsbyt
 }
 
 static bool
-TypedArrayRequiresFloatingPoint(TypedArrayObject *tarr)
+TypedArrayRequiresFloatingPoint(HandleObject obj)
 {
-    uint32_t type = tarr->type();
+    uint32_t type = AnyTypedArrayType(obj);
     return type == Scalar::Uint32 ||
            type == Scalar::Float32 ||
            type == Scalar::Float64;
@@ -3931,7 +3932,7 @@ TryAttachGetElemStub(JSContext *cx, JSScript *script, jsbytecode *pc, ICGetElem_
 
     if (obj->isNative()) {
         // Check for NativeObject[int] dense accesses.
-        if (rhs.isInt32() && rhs.toInt32() >= 0 && !obj->is<TypedArrayObject>()) {
+        if (rhs.isInt32() && rhs.toInt32() >= 0 && !IsAnyTypedArray(obj.get())) {
             JitSpew(JitSpew_BaselineIC, "  Generating GetElem(Native[Int32] dense) stub");
             ICGetElem_Dense::Compiler compiler(cx, stub->fallbackMonitorStub()->firstMonitorStub(),
                                                obj->lastProperty(), isCallElem);
@@ -3953,7 +3954,7 @@ TryAttachGetElemStub(JSContext *cx, JSScript *script, jsbytecode *pc, ICGetElem_
     }
 
     // Check for TypedArray[int] => Number accesses.
-    if (obj->is<TypedArrayObject>() && rhs.isNumber() && res.isNumber() &&
+    if (IsAnyTypedArray(obj.get()) && rhs.isNumber() && res.isNumber() &&
         !TypedArrayGetElemStubExists(stub, obj))
     {
         // Don't attach CALLELEM stubs for accesses on typed array expected to yield numbers.
@@ -3962,15 +3963,16 @@ TryAttachGetElemStub(JSContext *cx, JSScript *script, jsbytecode *pc, ICGetElem_
             return true;
 #endif
 
-        TypedArrayObject *tarr = &obj->as<TypedArrayObject>();
         if (!cx->runtime()->jitSupportsFloatingPoint &&
-            (TypedArrayRequiresFloatingPoint(tarr) || rhs.isDouble()))
+            (TypedArrayRequiresFloatingPoint(obj) || rhs.isDouble()))
         {
             return true;
         }
 
         JitSpew(JitSpew_BaselineIC, "  Generating GetElem(TypedArray[Int32]) stub");
-        ICGetElem_TypedArray::Compiler compiler(cx, tarr->lastProperty(), tarr->type());
+        ICGetElem_TypedArray::Compiler compiler(cx,
+                                                AnyTypedArrayShape(obj.get()),
+                                                AnyTypedArrayType(obj.get()));
         ICStub *typedArrayStub = compiler.getStub(compiler.getStubSpace(script));
         if (!typedArrayStub)
             return false;
@@ -4612,11 +4614,11 @@ ICGetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
     Register key = masm.extractInt32(R1, ExtractTemp1);
 
     // Bounds check.
-    masm.unboxInt32(Address(obj, TypedArrayObject::lengthOffset()), scratchReg);
+    masm.unboxInt32(Address(obj, TypedArrayLayout::lengthOffset()), scratchReg);
     masm.branch32(Assembler::BelowOrEqual, scratchReg, key, &failure);
 
     // Load the elements vector.
-    masm.loadPtr(Address(obj, TypedArrayObject::dataOffset()), scratchReg);
+    masm.loadPtr(Address(obj, TypedArrayLayout::dataOffset()), scratchReg);
 
     // Load the value.
     BaseIndex source(scratchReg, key, ScaleFromElemWidth(Scalar::byteSize(type_)));
@@ -4632,7 +4634,7 @@ ICGetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 //
-// GetEelem_Arguments
+// GetElem_Arguments
 //
 bool
 ICGetElem_Arguments::Compiler::generateStubCode(MacroAssembler &masm)
@@ -5026,7 +5028,7 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub_
 
     // Try to generate new stubs.
     if (obj->isNative() &&
-        !obj->is<TypedArrayObject>() &&
+        !IsAnyTypedArray(obj.get()) &&
         index.isInt32() && index.toInt32() >= 0 &&
         !rhs.isMagic(JS_ELEMENTS_HOLE))
     {
@@ -5074,27 +5076,30 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub_
         return true;
     }
 
-    if (obj->is<TypedArrayObject>() && index.isNumber() && rhs.isNumber()) {
-        Rooted<TypedArrayObject*> tarr(cx, &obj->as<TypedArrayObject>());
+    if (IsAnyTypedArray(obj.get()) && index.isNumber() && rhs.isNumber()) {
         if (!cx->runtime()->jitSupportsFloatingPoint &&
-            (TypedArrayRequiresFloatingPoint(tarr) || index.isDouble()))
+            (TypedArrayRequiresFloatingPoint(obj) || index.isDouble()))
         {
             return true;
         }
 
-        uint32_t len = tarr->length();
+        uint32_t len = AnyTypedArrayLength(obj.get());
         double idx = index.toNumber();
         bool expectOutOfBounds = (idx < 0 || idx >= double(len));
 
-        if (!TypedArraySetElemStubExists(stub, tarr, expectOutOfBounds)) {
+        if (!TypedArraySetElemStubExists(stub, obj, expectOutOfBounds)) {
             // Remove any existing TypedArraySetElemStub that doesn't handle out-of-bounds
             if (expectOutOfBounds)
-                RemoveExistingTypedArraySetElemStub(cx, stub, tarr);
+                RemoveExistingTypedArraySetElemStub(cx, stub, obj);
 
             JitSpew(JitSpew_BaselineIC,
                     "  Generating SetElem_TypedArray stub (shape=%p, type=%u, oob=%s)",
-                    tarr->lastProperty(), tarr->type(), expectOutOfBounds ? "yes" : "no");
-            ICSetElem_TypedArray::Compiler compiler(cx, tarr->lastProperty(), tarr->type(),
+                    AnyTypedArrayShape(obj.get()),
+                    AnyTypedArrayType(obj.get()),
+                    expectOutOfBounds ? "yes" : "no");
+            ICSetElem_TypedArray::Compiler compiler(cx,
+                                                    AnyTypedArrayShape(obj.get()),
+                                                    AnyTypedArrayType(obj.get()),
                                                     expectOutOfBounds);
             ICStub *typedArrayStub = compiler.getStub(compiler.getStubSpace(script));
             if (!typedArrayStub)
@@ -5516,12 +5521,12 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Bounds check.
     Label oobWrite;
-    masm.unboxInt32(Address(obj, TypedArrayObject::lengthOffset()), scratchReg);
+    masm.unboxInt32(Address(obj, TypedArrayLayout::lengthOffset()), scratchReg);
     masm.branch32(Assembler::BelowOrEqual, scratchReg, key,
                   expectOutOfBounds_ ? &oobWrite : &failure);
 
     // Load the elements vector.
-    masm.loadPtr(Address(obj, TypedArrayObject::dataOffset()), scratchReg);
+    masm.loadPtr(Address(obj, TypedArrayLayout::dataOffset()), scratchReg);
 
     BaseIndex dest(scratchReg, key, ScaleFromElemWidth(Scalar::byteSize(type_)));
     Address value(BaselineStackReg, ICStackValueOffset);
