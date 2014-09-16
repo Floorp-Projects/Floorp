@@ -4657,9 +4657,9 @@ EmitIterator(ExclusiveContext *cx, BytecodeEmitter *bce)
     // Convert iterable to iterator.
     if (Emit1(cx, bce, JSOP_DUP) < 0)                          // OBJ OBJ
         return false;
-    if (Emit2(cx, bce, JSOP_SYMBOL, jsbytecode(JS::SymbolCode::iterator)) < 0) // OBJ OBJ @@ITERATOR
+    if (!EmitAtomOp(cx, cx->names().std_iterator, JSOP_CALLPROP, bce)) // OBJ @@ITERATOR
         return false;
-    if (!EmitElemOpBase(cx, bce, JSOP_CALLELEM))               // FN OBJ
+    if (Emit1(cx, bce, JSOP_SWAP) < 0)                         // @@ITERATOR OBJ
         return false;
     if (EmitCall(cx, bce, JSOP_CALL, 0) < 0)                   // ITER
         return false;
@@ -5478,9 +5478,9 @@ EmitYieldStar(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *iter)
     // Convert iterable to iterator.
     if (Emit1(cx, bce, JSOP_DUP) < 0)                            // ITERABLE ITERABLE
         return false;
-    if (Emit2(cx, bce, JSOP_SYMBOL, jsbytecode(JS::SymbolCode::iterator)) < 0) // ITERABLE ITERABLE @@ITERATOR
+    if (!EmitAtomOp(cx, cx->names().std_iterator, JSOP_CALLPROP, bce)) // ITERABLE @@ITERATOR
         return false;
-    if (!EmitElemOpBase(cx, bce, JSOP_CALLELEM))                 // FN ITERABLE
+    if (Emit1(cx, bce, JSOP_SWAP) < 0)                           // @@ITERATOR ITERABLE
         return false;
     if (EmitCall(cx, bce, JSOP_CALL, 0, iter) < 0)               // ITER
         return false;

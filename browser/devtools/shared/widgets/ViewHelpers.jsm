@@ -1729,7 +1729,7 @@ this.WidgetMethods = {
 /**
  * A generator-iterator over all the items in this container.
  */
-Item.prototype[Symbol.iterator] =
-WidgetMethods[Symbol.iterator] = function*() {
+Item.prototype["@@iterator"] =
+WidgetMethods["@@iterator"] = function*() {
   yield* this._itemsByElement.values();
 };
