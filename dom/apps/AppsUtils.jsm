@@ -441,6 +441,7 @@ this.AppsUtils = {
 
     switch(type) {
     case "web":
+    case "trusted":
       return Ci.nsIPrincipal.APP_STATUS_INSTALLED;
     case "privileged":
       return Ci.nsIPrincipal.APP_STATUS_PRIVILEGED;

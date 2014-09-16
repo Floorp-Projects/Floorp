@@ -35,124 +35,147 @@ const PROMPT_ACTION = Ci.nsIPermissionManager.PROMPT_ACTION;
 
 this.PermissionsTable =  { geolocation: {
                              app: PROMPT_ACTION,
+                             trusted: PROMPT_ACTION,
                              privileged: PROMPT_ACTION,
                              certified: PROMPT_ACTION
                            },
                            "geolocation-noprompt": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION,
                              substitute: ["geolocation"]
                            },
                            camera: {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION
                            },
                            alarms: {
                              app: ALLOW_ACTION,
+                             trusted: ALLOW_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "tcp-socket": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "udp-socket": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "network-events": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            contacts: {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION,
                              access: ["read", "write", "create"]
                            },
                            "device-storage:apps": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION,
                              access: ["read"]
                            },
                            "device-storage:crashes": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION,
                              access: ["read"]
                            },
                            "device-storage:pictures": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION,
                              access: ["read", "write", "create"]
                            },
                            "device-storage:videos": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION,
                              access: ["read", "write", "create"]
                            },
                            "device-storage:music": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION,
                              access: ["read", "write", "create"]
                            },
                            "device-storage:sdcard": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION,
                              access: ["read", "write", "create"]
                            },
                            sms: {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            telephony: {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            browser: {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            bluetooth: {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            mobileconnection: {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            mobilenetwork: {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            power: {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            push: {
                             app: ALLOW_ACTION,
+                            trusted: ALLOW_ACTION,
                             privileged: ALLOW_ACTION,
                             certified: ALLOW_ACTION
                            },
                            settings: {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION,
                              access: ["read", "write"],
@@ -163,103 +186,123 @@ this.PermissionsTable =  { geolocation: {
                            // handed out by SpecialPowers.
                            "settings-clear": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: DENY_ACTION,
                              additional: ["indexedDB-chrome-settings", "settings-api"]
                            },
                            permissions: {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            phonenumberservice: {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            fmradio: {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            attention: {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "moz-attention": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION,
                              substitute: ["attention"]
                            },
                            "webapps-manage": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "backgroundservice": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "desktop-notification": {
                              app: ALLOW_ACTION,
+                             trusted: ALLOW_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "networkstats-manage": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "resourcestats-manage": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "wifi-manage": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "systemXHR": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "voicemail": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "deprecated-hwvideo": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "idle": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "time": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "embed-apps": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "embed-widgets": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "storage": {
                              app: ALLOW_ACTION,
+                             trusted: ALLOW_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION,
                              substitute: [
@@ -269,124 +312,148 @@ this.PermissionsTable =  { geolocation: {
                            },
                            "background-sensors": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            cellbroadcast: {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "audio-channel-normal": {
                              app: ALLOW_ACTION,
+                             trusted: ALLOW_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "audio-channel-content": {
                              app: ALLOW_ACTION,
+                             trusted: ALLOW_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "audio-channel-notification": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "audio-channel-alarm": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "audio-channel-telephony": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "moz-audio-channel-telephony": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION,
                              substitute: ["audio-channel-telephony"]
                            },
                            "audio-channel-ringer": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "moz-audio-channel-ringer": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION,
                              substitute: ["audio-channel-ringer"]
                            },
                            "audio-channel-publicnotification": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "open-remote-window": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "input": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "input-manage": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "wappush": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "audio-capture": {
                              app: PROMPT_ACTION,
+                             trusted: PROMPT_ACTION,
                              privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "nfc": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION,
                              access: ["read", "write"]
                            },
                            "nfc-manager": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "nfc-hci-events": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "speaker-control": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "downloads": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "video-capture": {
                              app: PROMPT_ACTION,
+                             trusted: PROMPT_ACTION,
                              privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "feature-detection": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "mobileid": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: PROMPT_ACTION,
                              certified: PROMPT_ACTION
                            },
@@ -395,28 +462,33 @@ this.PermissionsTable =  { geolocation: {
                            // of web prompt composed permissions in tests.
                            "test-permission": {
                              app: PROMPT_ACTION,
+                             trusted: PROMPT_ACTION,
                              privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION,
                              access: ["read", "write", "create"]
                            },
                            "firefox-accounts": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "moz-firefox-accounts": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION,
                              substitute: ["firefox-accounts"]
                              },
                            "themeable": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "settings:wallpaper.image": {
                              app: DENY_ACTION,
+                             trusted: DENY_ACTION,
                              privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION,
                              access: ["read", "write"],
