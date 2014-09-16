@@ -3515,21 +3515,21 @@ CheckNewArrayView(ModuleCompiler &m, PropertyName *varName, ParseNode *newExpr)
 
     JSAtomState &names = m.cx()->names();
     Scalar::Type type;
-    if (field == names.Int8Array)
+    if (field == names.Int8Array || field == names.SharedInt8Array)
         type = Scalar::Int8;
-    else if (field == names.Uint8Array)
+    else if (field == names.Uint8Array || field == names.SharedUint8Array)
         type = Scalar::Uint8;
-    else if (field == names.Int16Array)
+    else if (field == names.Int16Array || field == names.SharedInt16Array)
         type = Scalar::Int16;
-    else if (field == names.Uint16Array)
+    else if (field == names.Uint16Array || field == names.SharedUint16Array)
         type = Scalar::Uint16;
-    else if (field == names.Int32Array)
+    else if (field == names.Int32Array || field == names.SharedInt32Array)
         type = Scalar::Int32;
-    else if (field == names.Uint32Array)
+    else if (field == names.Uint32Array || field == names.SharedUint32Array)
         type = Scalar::Uint32;
-    else if (field == names.Float32Array)
+    else if (field == names.Float32Array || field == names.SharedFloat32Array)
         type = Scalar::Float32;
-    else if (field == names.Float64Array)
+    else if (field == names.Float64Array || field == names.SharedFloat64Array)
         type = Scalar::Float64;
     else
         return m.fail(ctorExpr, "could not match typed array name");

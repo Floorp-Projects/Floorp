@@ -3354,19 +3354,19 @@ InlinePropertyTable::buildTypeSetForFunction(JSFunction *func) const
 void *
 MLoadTypedArrayElementStatic::base() const
 {
-    return typedArray_->viewData();
+    return AnyTypedArrayViewData(someTypedArray_);
 }
 
 size_t
 MLoadTypedArrayElementStatic::length() const
 {
-    return typedArray_->byteLength();
+    return AnyTypedArrayByteLength(someTypedArray_);
 }
 
 void *
 MStoreTypedArrayElementStatic::base() const
 {
-    return typedArray_->viewData();
+    return AnyTypedArrayViewData(someTypedArray_);
 }
 
 bool
@@ -3381,7 +3381,7 @@ MGetElementCache::allowDoubleResult() const
 size_t
 MStoreTypedArrayElementStatic::length() const
 {
-    return typedArray_->byteLength();
+    return AnyTypedArrayByteLength(someTypedArray_);
 }
 
 bool
@@ -3567,12 +3567,12 @@ jit::ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id)
 
     // Typed arrays are native classes but do not have dense elements.
     const Class *clasp = types->getKnownClass();
-    return clasp && clasp->isNative() && !IsTypedArrayClass(clasp);
+    return clasp && clasp->isNative() && !IsAnyTypedArrayClass(clasp);
 }
 
 bool
-jit::ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id,
-                               Scalar::Type *arrayType)
+jit::ElementAccessIsAnyTypedArray(MDefinition *obj, MDefinition *id,
+                                  Scalar::Type *arrayType)
 {
     if (obj->mightBeType(MIRType_String))
         return false;
@@ -3585,6 +3585,9 @@ jit::ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id,
         return false;
 
     *arrayType = types->getTypedArrayType();
+    if (*arrayType != Scalar::TypeMax)
+        return true;
+    *arrayType = types->getSharedTypedArrayType();
     return *arrayType != Scalar::TypeMax;
 }
 
@@ -4033,7 +4036,7 @@ jit::PropertyWriteNeedsTypeBarrier(TempAllocator &alloc, types::CompilerConstrai
 
         // TI doesn't track TypedArray objects and should never insert a type
         // barrier for them.
-        if (!name && IsTypedArrayClass(object->clasp()))
+        if (!name && IsAnyTypedArrayClass(object->clasp()))
             continue;
 
         jsid id = name ? NameToId(name) : JSID_VOID;
@@ -4065,7 +4068,7 @@ jit::PropertyWriteNeedsTypeBarrier(TempAllocator &alloc, types::CompilerConstrai
         types::TypeObjectKey *object = types->getObject(i);
         if (!object || object->unknownProperties())
             continue;
-        if (!name && IsTypedArrayClass(object->clasp()))
+        if (!name && IsAnyTypedArrayClass(object->clasp()))
             continue;
 
         jsid id = name ? NameToId(name) : JSID_VOID;
