@@ -1,10 +1,24 @@
 #! /usr/bin/env python
 
 import os
+import re
 from distutils import spawn
 import subprocess
 from threading import Thread
 import argparse
+
+def find_react_version(lib_dir):
+    "Finds the React library version number currently used."
+    for filename in os.listdir(lib_dir):
+        match = re.match(r"react-(.*)-prod\.js", filename)
+        if (match and match.group(1)):
+            return match.group(1)
+    print 'Unable to find the current react version used in content.'
+    print 'Please checked the %s directory.' % lib_dir
+    exit(1)
+
+SHARED_LIBS_DIR=os.path.join(os.path.dirname(__file__), "content", "shared", "libs")
+REACT_VERSION=find_react_version(SHARED_LIBS_DIR)
 
 src_files = []  # files to be compiled
 
@@ -13,6 +27,17 @@ jsx_path = spawn.find_executable('jsx')
 if jsx_path is None:
     print 'You do not have the react-tools installed'
     print 'Please do $ npm install -g react-tools'
+    exit(1)
+
+p = subprocess.Popen([jsx_path, '-V'],
+                     stdout=subprocess.PIPE,
+                     stderr=subprocess.STDOUT)
+for line in iter(p.stdout.readline, b''):
+    info = line.rstrip()
+
+if not info == REACT_VERSION:
+    print 'You have the wrong version of react-tools installed'
+    print 'Please use version %s' % REACT_VERSION
     exit(1)
 
 # parse the CLI arguments
