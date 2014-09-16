@@ -449,7 +449,7 @@ GlobalHelperThreadState::GlobalHelperThreadState()
  : cpuCount(0),
    threadCount(0),
    threads(nullptr),
-   asmJSCompilationInProgress(nullptr),
+   asmJSCompilationInProgress(false),
    helperLock(nullptr),
 #ifdef DEbUG
    lockOwner(nullptr),
