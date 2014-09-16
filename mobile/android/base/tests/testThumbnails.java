@@ -32,7 +32,7 @@ public class testThumbnails extends BaseTest {
         mSolo.sleep(thumbnailDelay);
         inputAndLoadUrl(site2Url);
         mSolo.sleep(thumbnailDelay);
-        inputAndLoadUrl("about:home");
+        inputAndLoadUrl(StringHelper.ABOUT_HOME_URL);
         waitForTest(new ThumbnailTest(site1Title, Color.GREEN), 5000);
         mAsserter.is(getTopSiteThumbnailColor(site1Title), Color.GREEN, "Top site thumbnail updated for HTTP 200");
         waitForTest(new ThumbnailTest(site2Title, Color.GREEN), 5000);
@@ -43,7 +43,7 @@ public class testThumbnails extends BaseTest {
         mSolo.sleep(thumbnailDelay);
         inputAndLoadUrl(site2Url);
         mSolo.sleep(thumbnailDelay);
-        inputAndLoadUrl("about:home");
+        inputAndLoadUrl(StringHelper.ABOUT_HOME_URL);
         waitForTest(new ThumbnailTest(site1Title, Color.RED), 5000);
         mAsserter.is(getTopSiteThumbnailColor(site1Title), Color.RED, "Top site thumbnail updated for HTTP 200");
         waitForTest(new ThumbnailTest(site2Title, Color.GREEN), 5000);
