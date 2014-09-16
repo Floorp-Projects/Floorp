@@ -2167,7 +2167,7 @@ nsTextStore::RestartComposition(ITfCompositionView* aCompositionView,
   // current selection range should be preserved.
   if (newStart >= mComposition.EndOffset() || newEnd <= mComposition.mStart) {
     RecordCompositionEndAction();
-    RecordCompositionStartAction(aCompositionView, aNewRange, true);
+    RecordCompositionStartAction(aCompositionView, newStart, newLength, true);
     return S_OK;
   }
 
@@ -2215,14 +2215,25 @@ nsTextStore::RestartComposition(ITfCompositionView* aCompositionView,
   // Record compositionend action.
   RecordCompositionEndAction();
 
+  // Record compositionstart action only with the new start since this method
+  // hasn't restored composing string yet.
+  RecordCompositionStartAction(aCompositionView, newStart, 0, false);
+
   // Restore the latest text content and selection.
-  lockedContent.ReplaceTextWith(oldComposition.mStart,
-                                commitString.Length(),
-                                oldComposition.mString);
+  lockedContent.ReplaceSelectedTextWith(
+    nsDependentSubstring(oldComposition.mString,
+                         keepComposingStartOffset - oldComposition.mStart,
+                         keepComposingLength));
   currentSelection = oldSelection;
 
-  // Record compositionstart action with the new range
-  RecordCompositionStartAction(aCompositionView, aNewRange, true);
+  PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+         ("TSF: 0x%p   nsTextStore::RestartComposition() succeeded, "
+          "mComposition={ mStart=%d, mCompositionString.Length()=%d }, "
+          "currentSelection={ IsDirty()=%s, StartOffset()=%d, Length()=%d }",
+          this, mComposition.mStart, mComposition.mString.Length(),
+          GetBoolName(currentSelection.IsDirty()),
+          currentSelection.StartOffset(), currentSelection.Length()));
+
   return S_OK;
 }
 
@@ -2275,9 +2286,11 @@ nsTextStore::RecordCompositionUpdateAction()
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::RecordCompositionUpdateAction(), "
-          "mComposition={ mView=0x%p, mString=\"%s\" }",
-          this, mComposition.mView.get(),
-          NS_ConvertUTF16toUTF8(mComposition.mString).get()));
+          "mComposition={ mView=0x%p, mStart=%d, mString=\"%s\" "
+          "(Length()=%d) }",
+          this, mComposition.mView.get(), mComposition.mStart,
+          NS_ConvertUTF16toUTF8(mComposition.mString).get(),
+          mComposition.mString.Length()));
 
   if (!mComposition.IsComposing()) {
     PR_LOG(sTextStoreLog, PR_LOG_ERROR,
@@ -2350,9 +2363,35 @@ nsTextStore::RecordCompositionUpdateAction()
   nsRefPtr<ITfRange> range;
   while (S_OK == enumRanges->Next(1, getter_AddRefs(range), nullptr) && range) {
 
-    LONG start = 0, length = 0;
-    if (FAILED(GetRangeExtent(range, &start, &length)))
+    LONG rangeStart = 0, rangeLength = 0;
+    if (FAILED(GetRangeExtent(range, &rangeStart, &rangeLength))) {
       continue;
+    }
+    // The range may include out of composition string.  We should ignore
+    // outside of the composition string.
+    LONG start = std::min(std::max(rangeStart, mComposition.mStart),
+                          mComposition.EndOffset());
+    LONG end = std::max(std::min(rangeStart + rangeLength,
+                                 mComposition.EndOffset()),
+                        mComposition.mStart);
+    LONG length = end - start;
+    if (length < 0) {
+      PR_LOG(sTextStoreLog, PR_LOG_ERROR,
+             ("TSF: 0x%p   nsTextStore::RecordCompositionUpdateAction() "
+              "ignores invalid range (%d-%d)",
+              this, rangeStart - mComposition.mStart,
+              rangeStart - mComposition.mStart + rangeLength));
+      continue;
+    }
+    if (!length) {
+      PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+             ("TSF: 0x%p   nsTextStore::RecordCompositionUpdateAction() "
+              "ignores a range due to outside of the composition or empty "
+              "(%d-%d)",
+              this, rangeStart - mComposition.mStart,
+              rangeStart - mComposition.mStart + rangeLength));
+      continue;
+    }
 
     TextRange newRange;
     newRange.mStartOffset = uint32_t(start - mComposition.mStart);
@@ -3565,15 +3604,15 @@ nsTextStore::InsertEmbeddedAtSelection(DWORD dwFlags,
 }
 
 HRESULT
-nsTextStore::RecordCompositionStartAction(ITfCompositionView* pComposition,
+nsTextStore::RecordCompositionStartAction(ITfCompositionView* aComposition,
                                           ITfRange* aRange,
                                           bool aPreserveSelection)
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
          ("TSF: 0x%p   nsTextStore::RecordCompositionStartAction("
-          "pComposition=0x%p, aRange=0x%p, aPreserveSelection=%s), "
+          "aComposition=0x%p, aRange=0x%p, aPreserveSelection=%s), "
           "mComposition.mView=0x%p",
-          this, pComposition, aRange, GetBoolName(aPreserveSelection),
+          this, aComposition, aRange, GetBoolName(aPreserveSelection),
           mComposition.mView.get()));
 
   LONG start = 0, length = 0;
@@ -3584,6 +3623,23 @@ nsTextStore::RecordCompositionStartAction(ITfCompositionView* pComposition,
             "due to GetRangeExtent() failure", this));
     return hr;
   }
+
+  return RecordCompositionStartAction(aComposition, start, length,
+                                      aPreserveSelection);
+}
+
+HRESULT
+nsTextStore::RecordCompositionStartAction(ITfCompositionView* aComposition,
+                                          LONG aStart,
+                                          LONG aLength,
+                                          bool aPreserveSelection)
+{
+  PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
+         ("TSF: 0x%p   nsTextStore::RecordCompositionStartAction("
+          "aComposition=0x%p, aStart=%d, aLength=%d, aPreserveSelection=%s), "
+          "mComposition.mView=0x%p",
+          this, aComposition, aStart, aLength, GetBoolName(aPreserveSelection),
+          mComposition.mView.get()));
 
   Content& lockedContent = LockedContent();
   if (!lockedContent.IsInitialized()) {
@@ -3596,8 +3652,8 @@ nsTextStore::RecordCompositionStartAction(ITfCompositionView* pComposition,
   CompleteLastActionIfStillIncomplete();
   PendingAction* action = mPendingActions.AppendElement();
   action->mType = PendingAction::COMPOSITION_START;
-  action->mSelectionStart = start;
-  action->mSelectionLength = length;
+  action->mSelectionStart = aStart;
+  action->mSelectionLength = aLength;
 
   Selection& currentSel = CurrentSelection();
   if (currentSel.IsDirty()) {
@@ -3605,8 +3661,8 @@ nsTextStore::RecordCompositionStartAction(ITfCompositionView* pComposition,
            ("TSF: 0x%p   nsTextStore::RecordCompositionStartAction() FAILED "
             "due to CurrentSelection() failure", this));
     action->mAdjustSelection = true;
-  } else if (currentSel.MinOffset() != start ||
-             currentSel.MaxOffset() != start + length) {
+  } else if (currentSel.MinOffset() != aStart ||
+             currentSel.MaxOffset() != aStart + aLength) {
     // If new composition range is different from current selection range,
     // we need to set selection before dispatching compositionstart event.
     action->mAdjustSelection = true;
@@ -3618,7 +3674,7 @@ nsTextStore::RecordCompositionStartAction(ITfCompositionView* pComposition,
     action->mAdjustSelection = false;
   }
 
-  lockedContent.StartComposition(pComposition, *action, aPreserveSelection);
+  lockedContent.StartComposition(aComposition, *action, aPreserveSelection);
 
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
          ("TSF: 0x%p   nsTextStore::RecordCompositionStartAction() succeeded: "
@@ -3636,7 +3692,7 @@ HRESULT
 nsTextStore::RecordCompositionEndAction()
 {
   PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-         ("TSF: 0x%p nsTextStore::RecordCompositionEndAction(), "
+         ("TSF: 0x%p   nsTextStore::RecordCompositionEndAction(), "
           "mComposition={ mView=0x%p, mString=\"%s\" }",
           this, mComposition.mView.get(),
           NS_ConvertUTF16toUTF8(mComposition.mString).get()));
