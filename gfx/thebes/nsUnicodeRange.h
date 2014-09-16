@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef NS_UNICODERANGE_H
+#define NS_UNICODERANGE_H
+
 #include <stdint.h>
 
 class nsIAtom;
@@ -87,3 +90,5 @@ const uint8_t   kRangeTertiaryTable  = 145; // leave room for 16 subtable
 
 uint32_t FindCharUnicodeRange(uint32_t ch);
 nsIAtom* LangGroupFromUnicodeRange(uint8_t unicodeRange);
+
+#endif
