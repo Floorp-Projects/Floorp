@@ -44,9 +44,8 @@ js::ForOfPIC::Chain::initialize(JSContext *cx)
     // do set disabled_ now, and clear it later when we succeed.
     disabled_ = true;
 
-    // Look up Array.prototype[@@iterator], ensure it's a slotful shape.
-    Shape *iterShape =
-        arrayProto->nativeLookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
+    // Look up '@@iterator' on Array.prototype, ensure it's a slotful shape.
+    Shape *iterShape = arrayProto->nativeLookup(cx, cx->names().std_iterator);
     if (!iterShape || !iterShape->hasSlot() || !iterShape->hasDefaultGetter())
         return true;
 
@@ -145,8 +144,8 @@ js::ForOfPIC::Chain::tryOptimizeArray(JSContext *cx, HandleObject array, bool *o
     if (!isOptimizableArray(array))
         return true;
 
-    // Ensure array doesn't define @@iterator directly.
-    if (array->nativeLookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator)))
+    // Ensure array doesn't define '@@iterator' directly.
+    if (array->nativeLookup(cx, cx->names().std_iterator))
         return true;
 
     // Good to optimize now, create stub to add.
@@ -199,7 +198,7 @@ js::ForOfPIC::Chain::isArrayStateStillSane()
     if (arrayProto_->lastProperty() != arrayProtoShape_)
         return false;
 
-    // Ensure that Array.prototype[@@iterator] contains the
+    // Ensure that Array.prototype['@@iterator'] contains the
     // canonical iterator function.
     if (arrayProto_->getSlot(arrayProtoIteratorSlot_) != canonicalIteratorFunc_)
         return false;

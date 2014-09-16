@@ -1590,7 +1590,7 @@ TypedArrayObject::setElement(TypedArrayObject &obj, uint32_t index, double d)
 
 #define IMPL_TYPED_ARRAY_STATICS(_typedArray)                                      \
 const JSFunctionSpec _typedArray##Object::jsfuncs[] = {                            \
-    JS_SELF_HOSTED_SYM_FN(iterator, "ArrayValues", 0, 0),                          \
+    JS_SELF_HOSTED_FN("@@iterator", "ArrayValues", 0, 0),                          \
     JS_FN("subarray", _typedArray##Object::fun_subarray, 2, JSFUN_GENERIC_NATIVE), \
     JS_FN("set", _typedArray##Object::fun_set, 2, JSFUN_GENERIC_NATIVE),           \
     JS_FN("copyWithin", _typedArray##Object::fun_copyWithin, 2, JSFUN_GENERIC_NATIVE), \

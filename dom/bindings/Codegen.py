@@ -1942,7 +1942,7 @@ class PropertyDefiner:
                                getAvailableInTestFunc(interfaceMember),
                                descriptor.checkPermissionsIndicesForMembers.get(interfaceMember.identifier.name))
 
-    def generatePrefableArray(self, array, name, specFormatter, specTerminator,
+    def generatePrefableArray(self, array, name, specTemplate, specTerminator,
                               specType, getCondition, getDataTuple, doIdArrays):
         """
         This method generates our various arrays.
@@ -1951,8 +1951,7 @@ class PropertyDefiner:
 
         name is the name as passed to generateArray
 
-        specFormatter is a function that takes a single argument, a tuple,
-          and returns a string, a spec array entry
+        specTemplate is a template for each entry of the spec array
 
         specTerminator is a terminator for the spec array (inserted every time
           our controlling pref changes and at the end of the array)
@@ -1963,7 +1962,7 @@ class PropertyDefiner:
           returns the corresponding MemberCondition.
 
         getDataTuple is a callback function that takes an array entry and
-          returns a tuple suitable to be passed to specFormatter.
+          returns a tuple suitable for substitution into specTemplate.
         """
 
         # We want to generate a single list of specs, but with specTerminator
@@ -2006,7 +2005,7 @@ class PropertyDefiner:
                 switchToCondition(self, curCondition)
                 lastCondition = curCondition
             # And the actual spec
-            specs.append(specFormatter(getDataTuple(member)))
+            specs.append(specTemplate % getDataTuple(member))
         specs.append(specTerminator)
         prefableSpecs.append("  { false, nullptr }")
 
@@ -2280,15 +2279,9 @@ class MethodDefiner(PropertyDefiner):
 
             return (m["name"], accessor, jitinfo, m["length"], flags(m), selfHostedName)
 
-        def formatSpec(fields):
-            if fields[0].startswith("@@"):
-                fields = (fields[0][2:],) + fields[1:]
-                return '  JS_SYM_FNSPEC(%s, %s, %s, %s, %s, %s)' % fields
-            return '  JS_FNSPEC("%s", %s, %s, %s, %s, %s)' % fields
-
         return self.generatePrefableArray(
             array, name,
-            formatSpec,
+            '  JS_FNSPEC("%s", %s, %s, %s, %s, %s)',
             '  JS_FS_END',
             'JSFunctionSpec',
             condition, specData, doIdArrays)
@@ -2391,7 +2384,7 @@ class AttrDefiner(PropertyDefiner):
 
         return self.generatePrefableArray(
             array, name,
-            lambda fields: '  { "%s", %s, %s, %s}' % fields,
+            '  { "%s", %s, %s, %s}',
             '  JS_PS_END',
             'JSPropertySpec',
             PropertyDefiner.getControllingCondition, specData, doIdArrays)
@@ -2419,7 +2412,7 @@ class ConstDefiner(PropertyDefiner):
 
         return self.generatePrefableArray(
             array, name,
-            lambda fields: '  { "%s", %s }' % fields,
+            '  { "%s", %s }',
             '  { 0, JS::UndefinedValue() }',
             'ConstantSpec',
             PropertyDefiner.getControllingCondition, specData, doIdArrays)
