@@ -61,6 +61,13 @@ add_task(function* test_mozLoop_softStart() {
   Services.prefs.setCharPref("loop.soft_start_hostname", SOFT_START_HOSTNAME);
   Services.prefs.setIntPref("loop.soft_start_ticket_number", -1);
 
+  registerCleanupFunction(function () {
+    Services.prefs.clearUserPref("loop.throttled");
+    Services.prefs.clearUserPref("loop.soft_start");
+    Services.prefs.clearUserPref("loop.soft_start_hostname");
+    Services.prefs.clearUserPref("loop.soft_start_ticket_number");
+  });
+
   let throttled;
   let ticket;
 
