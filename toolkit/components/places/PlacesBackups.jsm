@@ -508,8 +508,7 @@ this.PlacesBackups = {
       excludeItemsCallback: aItem => {
         return aItem.annos &&
           aItem.annos.find(a => a.name == PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO);
-      },
-      includeItemIds: true
+      }
     });
 
     try {
