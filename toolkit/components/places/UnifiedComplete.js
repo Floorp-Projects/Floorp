@@ -1367,12 +1367,15 @@ UnifiedComplete.prototype = {
 
     let search = this._currentSearch;
     this.getDatabaseHandle().then(conn => search.execute(conn))
+                            .then(null, ex => {
+                              dump(`Query failed: ${ex}\n`);
+                              Cu.reportError(ex);
+                            })
                             .then(() => {
                               if (search == this._currentSearch) {
                                 this.finishSearch(true);
                               }
-                            }, ex => { dump("Query failed: " + ex + "\n");
-                                       Cu.reportError(ex); });
+                            });
   },
 
   stopSearch: function () {
