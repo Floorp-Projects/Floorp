@@ -115,7 +115,7 @@ TaggingService.prototype = {
         // want to change it.
         tag.__defineGetter__("name", function () this._self._tagFolders[this.id]);
       }
-      else if (typeof(val) == "string" && val.length > 0) {
+      else if (typeof(val) == "string" && val.length > 0 && val.length <= Ci.nsITaggingService.MAX_TAG_LENGTH) {
         // This is a tag name.
         tag.name = val;
         // We can't know the id at this point, since a previous tag could
