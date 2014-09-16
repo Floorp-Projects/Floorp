@@ -326,16 +326,20 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
     return;
   }
 
+  if (mResponseHead)
+    SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
+
+  mSelfAddr = selfAddr;
+  mPeerAddr = peerAddr;
+
   if (mDivertingToParent) {
     mListener = nullptr;
     mListenerContext = nullptr;
     if (mLoadGroup) {
       mLoadGroup->RemoveRequest(this, nullptr, mStatus);
     }
+    return;
   }
-
-  if (mResponseHead)
-    SetCookie(mResponseHead->PeekHeader(nsHttp::Set_Cookie));
 
   nsCOMPtr<nsIStreamListener> listener;
   rv = DoApplyContentConversions(mListener, getter_AddRefs(listener),
@@ -345,9 +349,6 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
   } else if (listener) {
     mListener = listener;
   }
-
-  mSelfAddr = selfAddr;
-  mPeerAddr = peerAddr;
 }
 
 class TransportAndDataEvent : public ChannelEvent
