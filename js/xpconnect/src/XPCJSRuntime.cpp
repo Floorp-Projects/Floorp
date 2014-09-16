@@ -587,7 +587,13 @@ AddonWindowOrNull(JSObject *aObj)
     // Addons could theoretically change the prototype of the addon scope, but
     // we pretty much just want to crash if that happens so that we find out
     // about it and get them to change their code.
-    MOZ_RELEASE_ASSERT(js::IsCrossCompartmentWrapper(proto));
+    //
+    // XXXbholley - Except unfortunately, that breaks the world right now. See
+    // bug 1068163.
+    if (!js::IsCrossCompartmentWrapper(proto)) {
+        NS_WARNING("An addon modified its global prototype - it likely won't work right!");
+        return nullptr;
+    }
     JSObject *mainGlobal = js::UncheckedUnwrap(proto, /* stopAtOuter = */ false);
     MOZ_RELEASE_ASSERT(JS_IsGlobalObject(mainGlobal));
 
