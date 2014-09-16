@@ -276,13 +276,13 @@ GMPMutexImpl::Destroy()
 void
 GMPMutexImpl::Acquire()
 {
-  mMonitor.Lock();
+  mMonitor.Enter();
 }
 
 void
 GMPMutexImpl::Release()
 {
-  mMonitor.Unlock();
+  mMonitor.Exit();
 }
 
 } // namespace gmp
