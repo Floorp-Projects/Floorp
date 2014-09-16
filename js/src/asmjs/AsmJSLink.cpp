@@ -37,9 +37,13 @@
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
 #endif
+#include "vm/ArrayBufferObject.h"
+#include "vm/SharedArrayObject.h"
 #include "vm/StringBuffer.h"
 
 #include "jsobjinlines.h"
+
+#include "vm/ArrayBufferObject-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -222,8 +226,11 @@ ValidateArrayView(JSContext *cx, AsmJSModule::Global &global, HandleValue global
     if (!GetDataProperty(cx, globalVal, field, &v))
         return false;
 
-    if (!IsTypedArrayConstructor(v, global.viewType()))
+    if (!IsTypedArrayConstructor(v, global.viewType()) &&
+        !IsSharedTypedArrayConstructor(v, global.viewType()))
+    {
         return LinkFail(cx, "bad typed array constructor");
+    }
 
     return true;
 }
@@ -417,7 +424,7 @@ ValidateConstant(JSContext *cx, AsmJSModule::Global &global, HandleValue globalV
 }
 
 static bool
-LinkModuleToHeap(JSContext *cx, AsmJSModule &module, Handle<ArrayBufferObject*> heap)
+LinkModuleToHeap(JSContext *cx, AsmJSModule &module, Handle<ArrayBufferObjectMaybeShared*> heap)
 {
     uint32_t heapLength = heap->byteLength();
 
@@ -462,8 +469,11 @@ LinkModuleToHeap(JSContext *cx, AsmJSModule &module, Handle<ArrayBufferObject*> 
     if (module.usesSignalHandlersForInterrupt() && !cx->canUseSignalHandlers())
         return LinkFail(cx, "Code generated with signal handlers but signals are deactivated");
 
-    if (!ArrayBufferObject::prepareForAsmJS(cx, heap, module.usesSignalHandlersForOOB()))
-        return LinkFail(cx, "Unable to prepare ArrayBuffer for asm.js use");
+    if (heap->is<ArrayBufferObject>()) {
+        Rooted<ArrayBufferObject *> abheap(cx, &heap->as<ArrayBufferObject>());
+        if (!ArrayBufferObject::prepareForAsmJS(cx, abheap, module.usesSignalHandlersForOOB()))
+            return LinkFail(cx, "Unable to prepare ArrayBuffer for asm.js use");
+    }
 
     module.initHeap(heap, cx);
     return true;
@@ -486,12 +496,12 @@ DynamicallyLinkModule(JSContext *cx, CallArgs args, AsmJSModule &module)
     if (args.length() > 2)
         bufferVal = args[2];
 
-    Rooted<ArrayBufferObject*> heap(cx);
+    Rooted<ArrayBufferObjectMaybeShared *> heap(cx);
     if (module.hasArrayView()) {
-        if (!IsTypedArrayBuffer(bufferVal))
+        if (IsArrayBuffer(bufferVal) || IsSharedArrayBuffer(bufferVal))
+            heap = &AsAnyArrayBuffer(bufferVal);
+        else
             return LinkFail(cx, "bad ArrayBuffer argument");
-
-        heap = &AsTypedArrayBuffer(bufferVal);
         if (!LinkModuleToHeap(cx, module, heap))
             return false;
     }
@@ -639,7 +649,10 @@ CallAsmJS(JSContext *cx, unsigned argc, Value *vp)
     // which is normally immutable except for the neuter operation that occurs
     // when an ArrayBuffer is transfered. Throw an internal error if we're
     // about to run with a neutered heap.
-    if (module.maybeHeapBufferObject() && module.maybeHeapBufferObject()->isNeutered()) {
+    if (module.maybeHeapBufferObject() &&
+        module.maybeHeapBufferObject()->is<ArrayBufferObject>() &&
+        module.maybeHeapBufferObject()->as<ArrayBufferObject>().isNeutered())
+    {
         js_ReportOverRecursed(cx);
         return false;
     }

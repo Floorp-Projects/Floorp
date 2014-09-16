@@ -351,6 +351,7 @@ MSG_DEF(JSMSG_SC_BAD_SERIALIZED_DATA,  1, JSEXN_INTERNALERR, "bad serialized str
 MSG_DEF(JSMSG_SC_DUP_TRANSFERABLE,     0, JSEXN_TYPEERR, "duplicate transferable for structured clone")
 MSG_DEF(JSMSG_SC_NOT_TRANSFERABLE,     0, JSEXN_TYPEERR, "invalid transferable array for structured clone")
 MSG_DEF(JSMSG_SC_UNSUPPORTED_TYPE,     0, JSEXN_TYPEERR, "unsupported type for structured data")
+MSG_DEF(JSMSG_SC_SHMEM_MUST_TRANSFER,  0, JSEXN_TYPEERR, "SharedArrayBuffer must be explicitly transfered during structured cloning")
 
 // Debugger
 MSG_DEF(JSMSG_ASSIGN_FUNCTION_OR_NULL, 1, JSEXN_TYPEERR, "value assigned to {0} must be a function or null")
@@ -421,8 +422,19 @@ MSG_DEF(JSMSG_TYPEDOBJECT_TOO_BIG,     0, JSEXN_ERR, "Type is too large to alloc
 // Typed array
 MSG_DEF(JSMSG_BAD_INDEX,               0, JSEXN_RANGEERR, "invalid or out-of-range index")
 MSG_DEF(JSMSG_TYPED_ARRAY_BAD_ARGS,    0, JSEXN_ERR, "invalid arguments")
+MSG_DEF(JSMSG_TYPED_ARRAY_BAD_OBJECT,  0, JSEXN_TYPEERR, "invalid object argument")
 MSG_DEF(JSMSG_TYPED_ARRAY_BAD_INDEX,   0, JSEXN_ERR, "invalid or out-of-range index")
 MSG_DEF(JSMSG_TYPED_ARRAY_NEGATIVE_ARG,1, JSEXN_ERR, "argument {0} must be >= 0")
+
+// Shared array buffer
+MSG_DEF(JSMSG_SHARED_ARRAY_BAD_OBJECT,  0, JSEXN_TYPEERR, "invalid object argument")
+MSG_DEF(JSMSG_SHARED_ARRAY_BAD_LENGTH,  0, JSEXN_RANGEERR, "length argument out of range")
+
+// Shared typed array
+MSG_DEF(JSMSG_SHARED_TYPED_ARRAY_BAD_OBJECT,  0, JSEXN_TYPEERR, "invalid object argument")
+MSG_DEF(JSMSG_SHARED_TYPED_ARRAY_BAD_ARGS,    0, JSEXN_RANGEERR, "bad combination of offset, length, and element size")
+MSG_DEF(JSMSG_SHARED_TYPED_ARRAY_ARG_RANGE,   1, JSEXN_RANGEERR, "argument {0} out of range")
+MSG_DEF(JSMSG_SHARED_TYPED_ARRAY_BAD_LENGTH,  0, JSEXN_TYPEERR, "length argument must not be an object")
 
 // Parallel array
 MSG_DEF(JSMSG_PAR_ARRAY_BAD_ARG,       0, JSEXN_RANGEERR, "invalid parallel method argument")

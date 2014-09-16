@@ -51,6 +51,7 @@
 #include "vm/ProxyObject.h"
 #include "vm/RegExpStaticsObject.h"
 #include "vm/Shape.h"
+#include "vm/TypedArrayCommon.h"
 
 #include "jsatominlines.h"
 #include "jsboolinlines.h"
@@ -1278,7 +1279,7 @@ JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
     /* preventExtensions must sparsify dense objects, so we can assign to holes without checks. */
     JS_ASSERT_IF(obj->isNative(), obj->getDenseCapacity() == 0);
 
-    if (obj->isNative() && !obj->inDictionaryMode() && !obj->is<TypedArrayObject>()) {
+    if (obj->isNative() && !obj->inDictionaryMode() && !IsAnyTypedArray(obj)) {
         /*
          * Seal/freeze non-dictionary objects by constructing a new shape
          * hierarchy mirroring the original one, which can be shared if many
@@ -1368,14 +1369,14 @@ JSObject::isSealedOrFrozen(JSContext *cx, HandleObject obj, ImmutabilityType it,
         return true;
     }
 
-    if (obj->is<TypedArrayObject>()) {
+    if (IsAnyTypedArray(obj)) {
         if (it == SEAL) {
             // Typed arrays are always sealed.
             *resultp = true;
         } else {
             // Typed arrays cannot be frozen, but an empty typed array is
             // trivially frozen.
-            *resultp = (obj->as<TypedArrayObject>().length() == 0);
+            *resultp = (AnyTypedArrayLength(obj) == 0);
         }
         return true;
     }
@@ -4206,7 +4207,7 @@ DefinePropertyOrElement(typename ExecutionModeTraits<mode>::ExclusiveContextType
         setter == JS_StrictPropertyStub &&
         attrs == JSPROP_ENUMERATE &&
         (!obj->isIndexed() || !obj->nativeContainsPure(id)) &&
-        !obj->is<TypedArrayObject>())
+        !IsAnyTypedArray(obj))
     {
         uint32_t index = JSID_TO_INT(id);
         bool definesPast;
@@ -4257,7 +4258,7 @@ DefinePropertyOrElement(typename ExecutionModeTraits<mode>::ExclusiveContextType
     }
 
     // Don't define new indexed properties on typed arrays.
-    if (obj->is<TypedArrayObject>()) {
+    if (IsAnyTypedArray(obj)) {
         uint64_t index;
         if (IsTypedArrayIndex(id, &index))
             return true;
@@ -4339,7 +4340,7 @@ js::DefineNativeProperty(ExclusiveContext *cx, HandleObject obj, HandleId id, Ha
              * vice versa, finish the job via obj->changeProperty.
              */
             if (IsImplicitDenseOrTypedArrayElement(shape)) {
-                if (obj->is<TypedArrayObject>()) {
+                if (IsAnyTypedArray(obj)) {
                     /* Ignore getter/setter properties added to typed arrays. */
                     return true;
                 }
@@ -4553,10 +4554,10 @@ LookupOwnPropertyInline(ExclusiveContext *cx,
     // Check for a typed array element. Integer lookups always finish here
     // so that integer properties on the prototype are ignored even for out
     // of bounds accesses.
-    if (obj->template is<TypedArrayObject>()) {
+    if (IsAnyTypedArray(obj)) {
         uint64_t index;
         if (IsTypedArrayIndex(id, &index)) {
-            if (index < obj->template as<TypedArrayObject>().length()) {
+            if (index < AnyTypedArrayLength(obj)) {
                 objp.set(obj);
                 MarkDenseOrTypedArrayElementFound<allowGC>(propp);
             } else {
@@ -5162,10 +5163,10 @@ LookupPropertyPureInline(JSObject *obj, jsid id, JSObject **objp, Shape **propp)
             return true;
         }
 
-        if (current->is<TypedArrayObject>()) {
+        if (IsAnyTypedArray(current)) {
             uint64_t index;
             if (IsTypedArrayIndex(id, &index)) {
-                if (index < obj->as<TypedArrayObject>().length()) {
+                if (index < AnyTypedArrayLength(obj)) {
                     *objp = current;
                     MarkDenseOrTypedArrayElementFound<NoGC>(propp);
                 } else {
@@ -5267,8 +5268,8 @@ js::GetPropertyPure(ThreadSafeContext *cx, JSObject *obj, jsid id, Value *vp)
             return true;
         }
 
-        if (obj->is<TypedArrayObject>()) {
-            vp->setNumber(obj->as<TypedArrayObject>().length());
+        if (IsAnyTypedArray(obj)) {
+            vp->setNumber(AnyTypedArrayLength(obj));
             return true;
         }
     }
@@ -5560,7 +5561,7 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
     if (IsImplicitDenseOrTypedArrayElement(shape)) {
         uint32_t index = JSID_TO_INT(id);
 
-        if (obj->is<TypedArrayObject>()) {
+        if (IsAnyTypedArray(obj)) {
             double d;
             if (mode == ParallelExecution) {
                 // Bail if converting the value might invoke user-defined
@@ -5577,9 +5578,13 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
             // Silently do nothing for out-of-bounds sets, for consistency with
             // current behavior.  (ES6 currently says to throw for this in
             // strict mode code, so we may eventually need to change.)
-            TypedArrayObject &tarray = obj->as<TypedArrayObject>();
-            if (index < tarray.length())
-                TypedArrayObject::setElement(tarray, index, d);
+            uint32_t len = AnyTypedArrayLength(obj);
+            if (index < len) {
+                if (obj->is<TypedArrayObject>())
+                    TypedArrayObject::setElement(obj->as<TypedArrayObject>(), index, d);
+                else
+                    SharedTypedArrayObject::setElement(obj->as<SharedTypedArrayObject>(), index, d);
+            }
             return true;
         }
 
@@ -5702,7 +5707,7 @@ baseops::SetAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *a
     if (!shape)
         return true;
     if (nobj->isNative() && IsImplicitDenseOrTypedArrayElement(shape)) {
-        if (nobj->is<TypedArrayObject>()) {
+        if (IsAnyTypedArray(nobj.get())) {
             if (*attrsp == (JSPROP_ENUMERATE | JSPROP_PERMANENT))
                 return true;
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_SET_ARRAY_ATTRS);
@@ -5741,7 +5746,7 @@ baseops::DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succe
     cx->runtime()->gc.poke();
 
     if (IsImplicitDenseOrTypedArrayElement(shape)) {
-        if (obj->is<TypedArrayObject>()) {
+        if (IsAnyTypedArray(obj)) {
             // Don't delete elements from typed arrays.
             *succeeded = false;
             return true;
@@ -5802,7 +5807,7 @@ js::WatchGuts(JSContext *cx, JS::HandleObject origObj, JS::HandleId id, JS::Hand
 bool
 baseops::Watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable)
 {
-    if (!obj->isNative() || obj->is<TypedArrayObject>()) {
+    if (!obj->isNative() || IsAnyTypedArray(obj)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
                              obj->getClass()->name);
         return false;
@@ -6514,8 +6519,10 @@ JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ClassIn
         info->objectsMallocHeapMisc += as<RegExpStaticsObject>().sizeOfData(mallocSizeOf);
     } else if (is<PropertyIteratorObject>()) {
         info->objectsMallocHeapMisc += as<PropertyIteratorObject>().sizeOfMisc(mallocSizeOf);
-    } else if (is<ArrayBufferObject>() || is<SharedArrayBufferObject>()) {
+    } else if (is<ArrayBufferObject>()) {
         ArrayBufferObject::addSizeOfExcludingThis(this, mallocSizeOf, info);
+    } else if (is<SharedArrayBufferObject>()) {
+        SharedArrayBufferObject::addSizeOfExcludingThis(this, mallocSizeOf, info);
     } else if (is<AsmJSModuleObject>()) {
         as<AsmJSModuleObject>().addSizeOfMisc(mallocSizeOf, &info->objectsNonHeapCodeAsmJS,
                                               &info->objectsMallocHeapMisc);
