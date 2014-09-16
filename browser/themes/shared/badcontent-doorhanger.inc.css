@@ -6,6 +6,11 @@
   width: 17em;
 }
 
+.popup-notification-item-message[popupid="bad-content"][mixedblockdisabled]:not(.popup-notification-item-message-critical),
+.popup-notification-item-message[popupid="bad-content"][trackingblockdisabled]:not(.popup-notification-item-message-critical) {
+  color: GrayText;
+}
+
 .popup-notification-item-message-critical[popupid="bad-content"] {
   color: #d74345;
   font-style: italic;
