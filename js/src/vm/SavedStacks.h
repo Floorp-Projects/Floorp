@@ -8,6 +8,7 @@
 #define vm_SavedStacks_h
 
 #include "jscntxt.h"
+#include "jsmath.h"
 #include "js/HashTable.h"
 #include "vm/Stack.h"
 
@@ -100,8 +101,17 @@ struct SavedFrame::HashPolicy
 };
 
 class SavedStacks {
+    friend bool SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata);
+
   public:
-    SavedStacks() : frames(), savedFrameProto(nullptr) { }
+    SavedStacks()
+      : frames(),
+        savedFrameProto(nullptr),
+        allocationSamplingProbability(1.0),
+        allocationSkipCount(0)
+    {
+        random_initState(&rngState);
+    }
 
     bool     init();
     bool     initialized() const { return frames.initialized(); }
@@ -110,12 +120,16 @@ class SavedStacks {
     void     trace(JSTracer *trc);
     uint32_t count();
     void     clear();
+    void     setRNGState(uint64_t state) { rngState = state; }
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
   private:
-    SavedFrame::Set frames;
+    SavedFrame::Set     frames;
     ReadBarrieredObject savedFrameProto;
+    double              allocationSamplingProbability;
+    uint32_t            allocationSkipCount;
+    uint64_t            rngState;
 
     bool       insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFrame frame,
                             unsigned maxFrameCount = 0);
@@ -124,6 +138,7 @@ class SavedStacks {
     // be accessed through this method.
     JSObject   *getOrCreateSavedFramePrototype(JSContext *cx);
     SavedFrame *createFrameFromLookup(JSContext *cx, SavedFrame::HandleLookup lookup);
+    void       chooseSamplingProbability(JSContext* cx);
 
     // Cache for memoizing PCToLineNumber lookups.
 
