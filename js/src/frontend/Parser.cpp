@@ -121,36 +121,7 @@ MarkUsesAsHoistedLexical(ParseNode *pn)
     // Distinguish hoisted uses as a different JSOp for easier compilation.
     while ((pnu = *pnup) != nullptr && pnu->pn_blockid >= start) {
         MOZ_ASSERT(pnu->isUsed());
-
-        // JavaScript is parsed in dominator order. This condition says to
-        // mark uses which either:
-        //
-        // 1) Is at the same dominator level.
-        //
-        //    This covers the case where the right hand side of declarations
-        //    cannot refer to the binding itself. e.g, |let x = x| is a
-        //    ReferenceError. Note that the use of 'x' follows the definition
-        //    node 'let x' in the program text.
-        //
-        // 2) Precedes the definition in the program text.
-        //
-        //    This covers all hoisted uses.
-        //
-        // The uses that are not covered by these two conditions are uses of
-        // the binding as free variables in function definitions on the right
-        // hand side of the binding node. e.g.,
-        //
-        //     let x = function () { x(); }
-        //
-        // does not mark the upvar use of 'x' inside the lambda as needing a
-        // TDZ check.
-        //
-        // N.B. This function expects to be called at the point of defining
-        // the lexical binding, and should not be called afterwards, as it
-        // would erroneously unmark hoisted function definitions and needing
-        // TDZ checks, which is currently handled in leaveFunction.
-        if (pnu->pn_blockid == start || pnu->pn_pos < pn->pn_pos)
-            pnu->pn_dflags |= PND_LET;
+        pnu->pn_dflags |= PND_LET;
         pnup = &pnu->pn_link;
     }
 }
