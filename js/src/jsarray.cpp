@@ -2246,8 +2246,8 @@ js::array_shift(JSContext *cx, unsigned argc, Value *vp)
     return SetLengthProperty(cx, obj, newlen);
 }
 
-static bool
-array_unshift(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::array_unshift(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject obj(cx, ToObject(cx, args.thisv()));
@@ -2702,8 +2702,8 @@ js::array_concat(JSContext *cx, unsigned argc, Value *vp)
     return SetLengthProperty(cx, narr, length);
 }
 
-static bool
-array_slice(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::array_slice(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -2981,7 +2981,7 @@ static const JSFunctionSpec array_methods[] = {
     JS_FN(js_toLocaleString_str,array_toLocaleString,0,0),
 
     /* Perl-ish methods. */
-    JS_FN("join",               js::array_join,     1,JSFUN_GENERIC_NATIVE),
+    JS_FN("join",               array_join,         1,JSFUN_GENERIC_NATIVE),
     JS_FN("reverse",            array_reverse,      0,JSFUN_GENERIC_NATIVE),
     JS_FN("sort",               array_sort,         1,JSFUN_GENERIC_NATIVE),
     JS_FN("push",               array_push,         1,JSFUN_GENERIC_NATIVE),

@@ -3278,15 +3278,6 @@ JS_DefineProperties(JSContext *cx, HandleObject obj, const JSPropertySpec *ps)
             // native one.
             JS_ASSERT(!ps->getter.propertyOp.op && !ps->setter.propertyOp.op);
             JS_ASSERT(ps->flags & JSPROP_GETTER);
-            /*
-             * During creation of the self-hosting global, we ignore all
-             * self-hosted properties, as that means we're currently setting up
-             * the global object that the self-hosted code is then compiled
-             * in. That means that Self-hosted properties can't be used in the
-             * self-hosting global itself, right now.
-             */
-            if (cx->runtime()->isSelfHostingGlobal(cx->global()))
-                continue;
 
             ok = DefineSelfHostedProperty(cx, obj, ps->name,
                                           ps->getter.selfHosted.funname,
@@ -4129,15 +4120,6 @@ JS_DefineFunctions(JSContext *cx, HandleObject obj, const JSFunctionSpec *fs)
         if (fs->selfHostedName) {
             JS_ASSERT(!fs->call.op);
             JS_ASSERT(!fs->call.info);
-            /*
-             * During creation of the self-hosting global, we ignore all
-             * self-hosted functions, as that means we're currently setting up
-             * the global object that the self-hosted code is then compiled
-             * in. Self-hosted functions can access each other via their names,
-             * but not via the builtin classes they get installed into.
-             */
-            if (cx->runtime()->isSelfHostingGlobal(cx->global()))
-                continue;
 
             RootedAtom shName(cx, Atomize(cx, fs->selfHostedName, strlen(fs->selfHostedName)));
             if (!shName)

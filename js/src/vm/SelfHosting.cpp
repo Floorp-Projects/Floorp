@@ -8,9 +8,11 @@
 
 #include "jscntxt.h"
 #include "jscompartment.h"
+#include "jsdate.h"
 #include "jsfriendapi.h"
 #include "jshashutil.h"
 #include "jsobj.h"
+#include "jsweakmap.h"
 #include "jswrapper.h"
 #include "selfhosted.out.h"
 
@@ -803,7 +805,72 @@ js::intrinsic_IsConstructing(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+// The self-hosting global isn't initialized with the normal set of builtins.
+// Instead, individual C++-implemented functions that're required by
+// self-hosted code are defined as global functions. Accessing these
+// functions via a content compartment's builtins would be unsafe, because
+// content script might have changed the builtins' prototypes' members.
+// Installing the whole set of builtins in the self-hosting compartment, OTOH,
+// would be wasteful: it increases memory usage and initialization time for
+// self-hosting compartment.
+//
+// Additionally, a set of C++-implemented helper functions is defined on the
+// self-hosting global.
 static const JSFunctionSpec intrinsic_functions[] = {
+    JS_FN("std_Array_join",                      array_join,                   1,0),
+    JS_FN("std_Array_push",                      array_push,                   1,0),
+    JS_FN("std_Array_pop",                       array_pop,                    0,0),
+    JS_FN("std_Array_shift",                     array_shift,                  0,0),
+    JS_FN("std_Array_unshift",                   array_unshift,                1,0),
+    JS_FN("std_Array_slice",                     array_slice,                  2,0),
+    JS_FN("std_Array_sort",                      array_sort,                   1,0),
+
+    JS_FN("std_Date_now",                        date_now,                     0,0),
+    JS_FN("std_Date_valueOf",                    date_valueOf,                 0,0),
+
+    JS_FN("std_Function_bind",                   fun_bind,                     1,0),
+    JS_FN("std_Function_apply",                  js_fun_apply,                 1,0),
+
+    JS_FN("std_Math_floor",                      math_floor,                   1,0),
+    JS_FN("std_Math_max",                        math_max,                     2,0),
+    JS_FN("std_Math_min",                        math_min,                     2,0),
+    JS_FN("std_Math_abs",                        math_abs,                     1,0),
+    JS_FN("std_Math_imul",                       math_imul,                    2,0),
+    JS_FN("std_Math_log2",                       math_log2,                    1,0),
+
+    JS_FN("std_Map_has",                         MapObject::has,               1,0),
+    JS_FN("std_Map_iterator",                    MapObject::entries,           0,0),
+
+    JS_FN("std_Number_valueOf",                  js_num_valueOf,               0,0),
+
+    JS_FN("std_Object_create",                   obj_create,                   2,0),
+    JS_FN("std_Object_getPrototypeOf",           obj_getPrototypeOf,           1,0),
+    JS_FN("std_Object_getOwnPropertyNames",      obj_getOwnPropertyNames,      1,0),
+    JS_FN("std_Object_getOwnPropertyDescriptor", obj_getOwnPropertyDescriptor, 2,0),
+    JS_FN("std_Object_hasOwnProperty",           obj_hasOwnProperty,           2,0),
+
+    JS_FN("std_Set_has",                         SetObject::has,               1,0),
+    JS_FN("std_Set_iterator",                    SetObject::values,            0,0),
+
+    JS_FN("std_String_fromCharCode",             str_fromCharCode,             1,0),
+    JS_FN("std_String_charCodeAt",               js_str_charCodeAt,            1,0),
+    JS_FN("std_String_indexOf",                  str_indexOf,                  1,0),
+    JS_FN("std_String_lastIndexOf",              str_lastIndexOf,              1,0),
+    JS_FN("std_String_match",                    str_match,                    1,0),
+    JS_FN("std_String_replace",                  str_replace,                  2,0),
+    JS_FN("std_String_split",                    str_split,                    2,0),
+    JS_FN("std_String_startsWith",               str_startsWith,               2,0),
+    JS_FN("std_String_substring",                str_substring,                2,0),
+    JS_FN("std_String_toLowerCase",              str_toLowerCase,              0,0),
+    JS_FN("std_String_toUpperCase",              str_toUpperCase,              0,0),
+
+    JS_FN("std_WeakMap_has",                     WeakMap_has,                  1,0),
+    JS_FN("std_WeakMap_get",                     WeakMap_get,                  2,0),
+    JS_FN("std_WeakMap_set",                     WeakMap_set,                  2,0),
+    JS_FN("std_WeakMap_delete",                  WeakMap_delete,               1,0),
+    JS_FN("std_WeakMap_clear",                   WeakMap_clear,                0,0),
+
+    // Helper funtions after this point.
     JS_FN("ToObject",                intrinsic_ToObject,                1,0),
     JS_FN("IsObject",                intrinsic_IsObject,                1,0),
     JS_FN("ToInteger",               intrinsic_ToInteger,               1,0),
@@ -1013,15 +1080,8 @@ JSRuntime::initSelfHosting(JSContext *cx)
     Rooted<GlobalObject*> shg(cx, &selfHostingGlobal_->as<GlobalObject>());
     selfHostingGlobal_->compartment()->isSelfHosting = true;
     selfHostingGlobal_->compartment()->isSystem = true;
-    /*
-     * During initialization of standard classes for the self-hosting global,
-     * all self-hosted functions are ignored. Thus, we don't create cyclic
-     * dependencies in the order of initialization.
-     */
-    if (!GlobalObject::initStandardClasses(cx, shg))
-        return false;
 
-    if (!JS_DefineFunctions(cx, shg, intrinsic_functions))
+    if (!GlobalObject::initSelfHostingBuiltins(cx, shg, intrinsic_functions))
         return false;
 
     JS_FireOnNewGlobalObject(cx, shg);

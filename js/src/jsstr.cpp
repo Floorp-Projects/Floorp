@@ -627,8 +627,8 @@ DoSubstr(JSContext *cx, JSString *str, size_t begin, size_t len)
     return NewDependentString(cx, str, begin, len);
 }
 
-static bool
-str_substring(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::str_substring(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -755,8 +755,8 @@ ToLowerCaseHelper(JSContext *cx, CallReceiver call)
     return true;
 }
 
-static bool
-str_toLowerCase(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::str_toLowerCase(JSContext *cx, unsigned argc, Value *vp)
 {
     return ToLowerCaseHelper(cx, CallArgsFromVp(argc, vp));
 }
@@ -906,8 +906,8 @@ ToUpperCaseHelper(JSContext *cx, CallReceiver call)
     return true;
 }
 
-static bool
-str_toUpperCase(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::str_toUpperCase(JSContext *cx, unsigned argc, Value *vp)
 {
     return ToUpperCaseHelper(cx, CallArgsFromVp(argc, vp));
 }
@@ -1653,8 +1653,8 @@ str_contains(JSContext *cx, unsigned argc, Value *vp)
 }
 
 /* ES6 20120927 draft 15.5.4.7. */
-static bool
-str_indexOf(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::str_indexOf(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -1726,8 +1726,8 @@ LastIndexOfImpl(const TextChar *text, size_t textLen, const PatChar *pat, size_t
     return -1;
 }
 
-static bool
-str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedString textstr(cx, ThisToStringForStringProto(cx, args));
@@ -1820,8 +1820,8 @@ HasSubstringAt(JSLinearString *text, JSLinearString *pat, size_t start)
 }
 
 /* ES6 20131108 draft 21.1.3.18. */
-static bool
-str_startsWith(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::str_startsWith(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 

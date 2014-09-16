@@ -532,8 +532,8 @@ obj_lookupSetter(JSContext *cx, unsigned argc, Value *vp)
 #endif /* JS_OLD_GETTER_SETTER_METHODS */
 
 /* ES5 15.2.3.2. */
-static bool
-obj_getPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::obj_getPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -703,8 +703,8 @@ obj_unwatch(JSContext *cx, unsigned argc, Value *vp)
 #endif /* JS_HAS_OBJ_WATCHPOINT */
 
 /* ECMA 15.2.4.5. */
-static bool
-obj_hasOwnProperty(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::obj_hasOwnProperty(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -778,8 +778,8 @@ obj_isPrototypeOf(JSContext *cx, unsigned argc, Value *vp)
 }
 
 /* ES5 15.2.3.5: Object.create(O [, Properties]) */
-static bool
-obj_create(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::obj_create(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 0) {
@@ -826,8 +826,8 @@ obj_create(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static bool
-obj_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::obj_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedObject obj(cx);
@@ -951,8 +951,8 @@ GetOwnPropertyKeys(JSContext *cx, const JS::CallArgs &args, unsigned flags)
 
 } // namespace js
 
-static bool
-obj_getOwnPropertyNames(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::obj_getOwnPropertyNames(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return GetOwnPropertyKeys(cx, args, JSITER_OWNONLY | JSITER_HIDDEN);
