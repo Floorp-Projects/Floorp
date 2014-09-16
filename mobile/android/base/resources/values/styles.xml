@@ -820,7 +820,7 @@
     <style name="RemoteTabsPanelFrame">
         <item name="android:paddingLeft">32dp</item>
         <item name="android:paddingRight">32dp</item>
-        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingTop">@dimen/home_remote_tabs_top_padding</item>
         <item name="android:orientation">vertical</item>
         <item name="android:layout_gravity">center_horizontal</item>
         <item name="android:layout_width">wrap_content</item>
