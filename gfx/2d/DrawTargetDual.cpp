@@ -186,6 +186,11 @@ DrawTargetDual::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFor
   RefPtr<DrawTarget> dtA = mA->CreateSimilarDrawTarget(aSize, aFormat);
   RefPtr<DrawTarget> dtB = mB->CreateSimilarDrawTarget(aSize, aFormat);
 
+  if (!dtA || !dtB) {
+    gfxWarning() << "Failure to allocate a similar DrawTargetDual. Size: " << aSize;
+    return nullptr;
+  }
+
   return new DrawTargetDual(dtA, dtB);
 }
 
