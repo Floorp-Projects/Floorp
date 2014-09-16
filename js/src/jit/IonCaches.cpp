@@ -848,7 +848,7 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
                IonCache::StubAttacher &attacher, JSObject *obj,
                JSObject *holder, HandleShape shape,
                RegisterSet liveRegs, Register object,
-               Register scratchReg, TypedOrValueRegister output,
+               TypedOrValueRegister output,
                void *returnAddr)
 {
     JS_ASSERT(output.hasValue());
@@ -863,7 +863,7 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
     // to try so hard to not use the stack.  Scratch regs are just taken from the register
     // set not including the input, current value saved on the stack, and restored when
     // we're done with it.
-    scratchReg               = regSet.takeGeneral();
+    Register scratchReg      = regSet.takeGeneral();
     Register argJSContextReg = regSet.takeGeneral();
     Register argUintNReg     = regSet.takeGeneral();
     Register argVpReg        = regSet.takeGeneral();
@@ -990,6 +990,15 @@ GenerateCallGetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
                    ImmGCPtr(obj->lastProperty()), failures);
 
     Register scratchReg = output.valueReg().scratchReg();
+    bool spillObjReg = scratchReg == object;
+    Label pop1AndFail;
+    Label *maybePopAndFail = failures;
+
+    // Save off the object register if it aliases the scratchReg
+    if (spillObjReg) {
+        masm.push(object);
+        maybePopAndFail = &pop1AndFail;
+    }
 
     // Note: this may clobber the object register if it's used as scratch.
     if (obj != holder)
@@ -1001,17 +1010,24 @@ GenerateCallGetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
     masm.branchPtr(Assembler::NotEqual,
                    Address(holderReg, JSObject::offsetOfShape()),
                    ImmGCPtr(holder->lastProperty()),
-                   failures);
+                   maybePopAndFail);
+
+    if (spillObjReg)
+        masm.pop(object);
 
     // Now we're good to go to invoke the native call.
     if (!EmitGetterCall(cx, masm, attacher, obj, holder, shape, liveRegs, object,
-                        scratchReg, output, returnAddr))
+                        output, returnAddr))
         return false;
 
     // Rejoin jump.
     attacher.jumpRejoin(masm);
 
     // Jump to next stub.
+    if (spillObjReg) {
+        masm.bind(&pop1AndFail);
+        masm.pop(object);
+    }
     masm.bind(failures);
     attacher.jumpNextStub(masm);
 
@@ -1479,7 +1495,7 @@ GetPropertyIC::tryAttachDOMProxyUnshadowed(JSContext *cx, HandleScript outerScri
             JS_ASSERT(canCache == CanAttachCallGetter);
             JS_ASSERT(!idempotent());
             if (!EmitGetterCall(cx, masm, attacher, checkObj, holder, shape, liveRegs_,
-                                object(), scratchReg, output(), returnAddr))
+                                object(), output(), returnAddr))
             {
                 return false;
             }
