@@ -86,6 +86,14 @@ SandboxBroker::SetSecurityLevelForContentProcess(bool inWarnOnlyMode)
   result = mPolicy->SetAlternateDesktop(true);
   ret = ret && (sandbox::SBOX_ALL_OK == result);
 
+  // Add the policy for the client side of a pipe. It is just a file
+  // in the \pipe\ namespace. We restrict it to pipes that start with
+  // "chrome." so the sandboxed process cannot connect to system services.
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
+                            sandbox::TargetPolicy::FILES_ALLOW_ANY,
+                            L"\\??\\pipe\\chrome.*");
+  ret = ret && (sandbox::SBOX_ALL_OK == result);
+
   if (inWarnOnlyMode) {
     mozilla::warnonlysandbox::ApplyWarnOnlyPolicy(*mPolicy);
   }
