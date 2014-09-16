@@ -9,6 +9,9 @@ const { DebuggerServer } = require("devtools/server/main");
 const { DevToolsUtils } = Cu.import("resource://gre/modules/devtools/DevToolsUtils.jsm", {});
 const Debugger = require("Debugger");
 const { getOffsetColumn } = require("devtools/server/actors/common");
+const promise = require("promise");
+
+Cu.import("resource://gre/modules/Task.jsm");
 
 // TODO bug 943125: remove this polyfill and use Debugger.Frame.prototype.depth
 // once it is implemented.
@@ -84,6 +87,7 @@ function TracerActor(aConn, aParent)
   this._bufferSendTimer = null;
   this._buffer = [];
   this._hitCounts = new WeakMap();
+  this._packetScheduler = new JobScheduler();
 
   // Keep track of how many different trace requests have requested what kind of
   // tracing info. This way we can minimize the amount of data we are collecting
@@ -265,89 +269,109 @@ TracerActor.prototype = {
    *        The stack frame that was entered.
    */
   onEnterFrame: function(aFrame) {
-    if (aFrame.script && aFrame.script.url == "self-hosted") {
-      return;
-    }
+    Task.spawn(function*() {
+      if (aFrame.script && aFrame.script.url == "self-hosted") {
+        return;
+      }
 
-    let packet = {
-      type: "enteredFrame",
-      sequence: this._sequence++
-    };
+      // This function might request original (i.e. source-mapped) location,
+      // which is asynchronous. We need to ensure that packets are sent out
+      // in the correct order.
+      let runInOrder = this._packetScheduler.schedule();
 
-    if (this._requestsForTraceType.name) {
-      packet.name = aFrame.callee
-        ? aFrame.callee.displayName || "(anonymous function)"
-        : "(" + aFrame.type + ")";
-    }
+      let packet = {
+        type: "enteredFrame",
+        sequence: this._sequence++
+      };
 
-    if (aFrame.script) {
-      if (this._requestsForTraceType.hitCount) {
-        // Increment hit count.
-        let previousHitCount = this._hitCounts.get(aFrame.script) || 0;
-        this._hitCounts.set(aFrame.script, previousHitCount + 1);
+      let sourceMappedLocation;
+      if (this._requestsForTraceType.name || this._requestsForTraceType.location) {
+        if (aFrame.script) {
+          sourceMappedLocation = yield this._parent.threadActor.sources.getOriginalLocation({
+            url: aFrame.script.url,
+            line: aFrame.script.startLine,
+            // We should return the location of the start of the script, but
+            // Debugger.Script does not provide complete start locations (bug
+            // 901138). Instead, return the current offset (the location of the
+            // first statement in the function).
+            column: getOffsetColumn(aFrame.offset, aFrame.script)
+          });
+        }
+      }
 
-        packet.hitCount = this._hitCounts.get(aFrame.script);
+      if (this._requestsForTraceType.name) {
+        if (sourceMappedLocation && sourceMappedLocation.name) {
+          packet.name = sourceMappedLocation.name;
+        } else {
+          packet.name = aFrame.callee
+            ? aFrame.callee.displayName || "(anonymous function)"
+            : "(" + aFrame.type + ")";
+        }
       }
 
       if (this._requestsForTraceType.location) {
-        // We should return the location of the start of the script, but
-        // Debugger.Script does not provide complete start locations (bug
-        // 901138). Instead, return the current offset (the location of the first
-        // statement in the function).
-        packet.location = {
-          url: aFrame.script.url,
-          line: aFrame.script.startLine,
-          column: getOffsetColumn(aFrame.offset, aFrame.script)
-        };
-      }
-    }
-
-    if (this._parent.threadActor && aFrame.script) {
-      packet.blackBoxed = this._parent.threadActor.sources.isBlackBoxed(aFrame.script.url);
-    } else {
-      packet.blackBoxed = false;
-    }
-
-    if (this._requestsForTraceType.callsite
-        && aFrame.older
-        && aFrame.older.script) {
-      let older = aFrame.older;
-      packet.callsite = {
-        url: older.script.url,
-        line: older.script.getOffsetLine(older.offset),
-        column: getOffsetColumn(older.offset, older.script)
-      };
-    }
-
-    if (this._requestsForTraceType.time) {
-      packet.time = Date.now() - this._startTime;
-    }
-
-    if (this._requestsForTraceType.parameterNames && aFrame.callee) {
-      packet.parameterNames = aFrame.callee.parameterNames;
-    }
-
-    if (this._requestsForTraceType.arguments && aFrame.arguments) {
-      packet.arguments = [];
-      let i = 0;
-      for (let arg of aFrame.arguments) {
-        if (i++ > MAX_ARGUMENTS) {
-          break;
+        if (sourceMappedLocation && sourceMappedLocation.url) {
+          packet.location = sourceMappedLocation;
         }
-        packet.arguments.push(createValueSnapshot(arg, true));
       }
-    }
 
-    if (this._requestsForTraceType.depth) {
-      packet.depth = aFrame.depth;
-    }
+      if (this._requestsForTraceType.hitCount) {
+        if (aFrame.script) {
+          // Increment hit count.
+          let previousHitCount = this._hitCounts.get(aFrame.script) || 0;
+          this._hitCounts.set(aFrame.script, previousHitCount + 1);
 
-    const onExitFrame = this.onExitFrame;
-    aFrame.onPop = function (aCompletion) {
-      onExitFrame(this, aCompletion);
-    };
+          packet.hitCount = this._hitCounts.get(aFrame.script);
+        }
+      }
 
-    this._send(packet);
+      if (this._parent.threadActor && aFrame.script) {
+        packet.blackBoxed = this._parent.threadActor.sources.isBlackBoxed(aFrame.script.url);
+      } else {
+        packet.blackBoxed = false;
+      }
+
+      if (this._requestsForTraceType.callsite) {
+        if (aFrame.older && aFrame.older.script) {
+          let older = aFrame.older;
+          packet.callsite = {
+            url: older.script.url,
+            line: older.script.getOffsetLine(older.offset),
+            column: getOffsetColumn(older.offset, older.script)
+          };
+        }
+      }
+
+      if (this._requestsForTraceType.time) {
+        packet.time = Date.now() - this._startTime;
+      }
+
+      if (this._requestsForTraceType.parameterNames && aFrame.callee) {
+        packet.parameterNames = aFrame.callee.parameterNames;
+      }
+
+      if (this._requestsForTraceType.arguments && aFrame.arguments) {
+        packet.arguments = [];
+        let i = 0;
+        for (let arg of aFrame.arguments) {
+          if (i++ > MAX_ARGUMENTS) {
+            break;
+          }
+          packet.arguments.push(createValueSnapshot(arg, true));
+        }
+      }
+
+      if (this._requestsForTraceType.depth) {
+        packet.depth = aFrame.depth;
+      }
+
+      const onExitFrame = this.onExitFrame;
+      aFrame.onPop = function (aCompletion) {
+        onExitFrame(this, aCompletion);
+      };
+
+      runInOrder(() => this._send(packet));
+    }.bind(this));
   },
 
   /**
@@ -360,6 +384,8 @@ TracerActor.prototype = {
    *        The debugger completion value for the frame.
    */
   onExitFrame: function(aFrame, aCompletion) {
+    let runInOrder = this._packetScheduler.schedule();
+
     let packet = {
       type: "exitedFrame",
       sequence: this._sequence++,
@@ -397,7 +423,7 @@ TracerActor.prototype = {
       }
     }
 
-    this._send(packet);
+    runInOrder(() => this._send(packet));
   }
 };
 
@@ -655,3 +681,34 @@ function propertySnapshot(aName, aObject) {
     value: createValueSnapshot(desc.value)
   };
 }
+
+/**
+ * Scheduler for jobs to be run in the same order as in which they were
+ * scheduled.
+ */
+function JobScheduler()
+{
+  this._lastScheduledJob = promise.resolve();
+}
+
+JobScheduler.prototype = {
+  /**
+   * Schedule a new job.
+   *
+   * @return A function that can be called anytime with a job as a parameter.
+   *         Job won't be run until all previously scheduled jobs were run.
+   */
+  schedule: function() {
+    let deferred = promise.defer();
+    let previousJob = this._lastScheduledJob;
+    this._lastScheduledJob = deferred.promise;
+    return function runInOrder(aJob) {
+      previousJob.then(() => {
+        aJob();
+        deferred.resolve();
+      });
+    };
+  }
+};
+
+exports.JobScheduler = JobScheduler;

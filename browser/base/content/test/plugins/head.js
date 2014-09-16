@@ -108,28 +108,3 @@ function setAndUpdateBlocklist(aURL, aCallback) {
 function resetBlocklist() {
   Services.prefs.setCharPref("extensions.blocklist.url", _originalTestBlocklistURL);
 }
-
-function waitForNotificationPopup(notificationID, browser, callback) {
-  let notification;
-  waitForCondition(
-    () => (notification = PopupNotifications.getNotification(notificationID, browser)),
-    () => {
-      ok(notification, `Successfully got the ${notificationID} notification popup`);
-      callback(notification);
-    },
-    `Waited too long for the ${notificationID} notification popup`
-  );
-}
-
-function waitForNotificationBar(notificationID, browser, callback) {
-  let notification;
-  let notificationBox = gBrowser.getNotificationBox(browser);
-  waitForCondition(
-    () => (notification = notificationBox.getNotificationWithValue(notificationID)),
-    () => {
-      ok(notification, `Successfully got the ${notificationID} notification bar`);
-      callback(notification);
-    },
-    `Waited too long for the ${notificationID} notification bar`
-  );
-}
