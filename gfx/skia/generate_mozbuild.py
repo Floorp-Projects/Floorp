@@ -37,7 +37,7 @@ if not CONFIG['INTEL_ARCHITECTURE'] and CONFIG['CPU_ARCH'] == 'arm' and CONFIG['
             'trunk/src/opts/memset32_neon.S',
         ]
 
-if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['GNU_CC']:
+if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['GNU_CC'] and CONFIG['OS_ARCH'] != 'WINNT':
     if CONFIG['CPU_ARCH'] == 'x86_64':
         SOURCES += [
             'trunk/src/opts/SkBlitRow_opts_SSE4_x64_asm.S',
