@@ -36,6 +36,8 @@ loop.CallConnectionWebSocket = (function() {
       throw new Error("No websocketToken in options");
     }
 
+    this._lastServerState = "init";
+
     // Set loop.debug.sdk to true in the browser, or standalone:
     // localStorage.setItem("debug.websocket", true);
     this._debugWebSocket =
@@ -76,6 +78,16 @@ loop.CallConnectionWebSocket = (function() {
         }.bind(this));
 
       return promise;
+    },
+
+    /**
+     * Closes the websocket. This shouldn't be the normal action as the server
+     * will normally close the socket. Only in bad error cases, or where we need
+     * to close the socket just before closing the window (to avoid an error)
+     * should we call this.
+     */
+    close: function() {
+      this.socket.close();
     },
 
     _clearConnectionFlags: function() {
@@ -210,6 +222,7 @@ loop.CallConnectionWebSocket = (function() {
 
       this._log("WS Receiving", event.data);
 
+      var previousState = this._lastServerState;
       this._lastServerState = msg.state;
 
       switch(msg.messageType) {
@@ -218,7 +231,7 @@ loop.CallConnectionWebSocket = (function() {
           break;
         case "progress":
           this.trigger("progress:" + msg.state);
-          this.trigger("progress", msg);
+          this.trigger("progress", msg, previousState);
           break;
       }
     },
