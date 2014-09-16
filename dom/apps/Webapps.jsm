@@ -155,6 +155,7 @@ this.DOMApplicationRegistry = {
   get kPackaged()       "packaged",
   get kHosted()         "hosted",
   get kHostedAppcache() "hosted-appcache",
+  get kTrustedHosted()  "hosted-trusted",
 
   // Path to the webapps.json file where we store the registry data.
   appsFile: null,
@@ -371,13 +372,7 @@ this.DOMApplicationRegistry = {
         if (app.appStatus >= Ci.nsIPrincipal.APP_STATUS_PRIVILEGED) {
           app.redirects = this.sanitizeRedirects(aResult.redirects);
         }
-        if (app.origin.startsWith("app://")) {
-          app.kind = this.kPackaged;
-        } else {
-          // Hosted apps, can be appcached or not.
-          app.kind = aResult.manifest.appcache_path ? this.kHostedAppcache
-                                                    : this.kHosted;
-        }
+        app.kind = this.appKind(app, aResult.manifest);
       });
 
       // Nothing else to do but notifying we're ready.
@@ -397,6 +392,21 @@ this.DOMApplicationRegistry = {
                          results[0].manifest, app.appStatus);
   }),
 
+  appKind: function(aApp, aManifest) {
+    if (aApp.origin.startsWith("app://")) {
+      return this.kPackaged;
+    } else {
+      // Hosted apps, can be appcached or not.
+      let kind = this.kHosted;
+      if (aManifest.type == "trusted") {
+        kind = this.kTrustedHosted;
+      } else if (aManifest.appcache_path) {
+        kind = this.kHostedAppcache;
+      }
+      return kind;
+    }
+  },
+
   updatePermissionsForApp: function(aId, aIsPreinstalled, aIsSystemUpdate) {
     if (!this.webapps[aId]) {
       return;
@@ -413,7 +423,8 @@ this.DOMApplicationRegistry = {
           manifestURL: this.webapps[aId].manifestURL,
           origin: this.webapps[aId].origin,
           isPreinstalled: aIsPreinstalled,
-          isSystemUpdate: aIsSystemUpdate
+          isSystemUpdate: aIsSystemUpdate,
+          kind: this.webapps[aId].kind
         }, true, function() {
           debug("Error installing permissions for " + aId);
         });
@@ -1016,13 +1027,7 @@ this.DOMApplicationRegistry = {
         if (app.appStatus >= Ci.nsIPrincipal.APP_STATUS_PRIVILEGED) {
           app.redirects = this.sanitizeRedirects(manifest.redirects);
         }
-        if (app.origin.startsWith("app://")) {
-          app.kind = this.kPackaged;
-        } else {
-          // Hosted apps, can be appcached or not.
-          app.kind = aResult.manifest.appcache_path ? this.kHostedAppcache
-                                                    : this.kHosted;
-        }
+        app.kind = this.appKind(app, aResult.manifest);
         this._registerSystemMessages(manifest, app);
         this._registerInterAppConnections(manifest, app);
         appsToRegister.push({ manifest: manifest, app: app });
@@ -1678,7 +1683,8 @@ this.DOMApplicationRegistry = {
       PermissionsInstaller.installPermissions(
         { manifest: newManifest,
           origin: app.origin,
-          manifestURL: app.manifestURL },
+          manifestURL: app.manifestURL,
+          kind: app.kind },
         true);
     }
     this.updateDataStore(this.webapps[id].localId, app.origin,
@@ -1695,9 +1701,13 @@ this.DOMApplicationRegistry = {
   }),
 
   startOfflineCacheDownload: function(aManifest, aApp, aProfileDir, aIsUpdate) {
-    if (aApp.kind !== this.kHostedAppcache) {
+    debug("startOfflineCacheDownload " + aApp.id + " " + aApp.kind);
+    if ((aApp.kind !== this.kHostedAppcache &&
+         aApp.kind !== this.kTrustedHosted) ||
+         !aManifest.appcache_path) {
       return;
     }
+    debug("startOfflineCacheDownload " + aManifest.appcache_path);
 
     // If the manifest has an appcache_path property, use it to populate the
     // appcache.
@@ -1820,7 +1830,8 @@ this.DOMApplicationRegistry = {
 
     if (onlyCheckAppCache) {
       // Bail out for packaged apps & hosted apps without appcache.
-      if (app.kind !== this.kHostedAppcache) {
+      if (aApp.kind !== this.kHostedAppcache &&
+          aApp.kind !== this.kTrustedHosted) {
         sendError("NOT_UPDATABLE");
         return;
       }
@@ -1829,6 +1840,10 @@ this.DOMApplicationRegistry = {
       this._readManifests([{ id: id }]).then((aResult) => {
         debug("Checking only appcache for " + aData.manifestURL);
         let manifest = aResult[0].manifest;
+        if (!manifest.appcache_path) {
+          sendError("NOT_UPDATABLE");
+          return;
+        }
         // Check if the appcache is updatable, and send "downloadavailable" or
         // "downloadapplied".
         let updateObserver = {
@@ -2110,7 +2125,8 @@ this.DOMApplicationRegistry = {
         PermissionsInstaller.installPermissions({
           manifest: aApp.manifest,
           origin: aApp.origin,
-          manifestURL: aData.manifestURL
+          manifestURL: aData.manifestURL,
+          kind: aApp.kind
         }, true);
       }
 
@@ -2127,7 +2143,9 @@ this.DOMApplicationRegistry = {
     this.webapps[aId] = aApp;
     yield this._saveApps();
 
-    if (aApp.kind !== this.kHostedAppcache) {
+    if ((aApp.kind !== this.kHostedAppcache &&
+         aApp.kind !== this.kTrustedHosted) ||
+         !aApp.manifest.appcache_path) {
       this.broadcastMessage("Webapps:UpdateState", {
         app: aApp,
         manifest: aApp.manifest,
@@ -2203,7 +2221,8 @@ this.DOMApplicationRegistry = {
     // manifest doesn't ask for those.
     function checkAppStatus(aManifest) {
       let manifestStatus = aManifest.type || "web";
-      return manifestStatus === "web";
+      return manifestStatus === "web" ||
+             manifestStatus === "trusted";
     }
 
     let checkManifest = (function() {
@@ -2495,7 +2514,12 @@ this.DOMApplicationRegistry = {
     appObject.appStatus =
       aNewApp.appStatus || Ci.nsIPrincipal.APP_STATUS_INSTALLED;
 
-    if (appObject.kind == this.kHostedAppcache) {
+    let usesAppcache = appObject.kind == this.kHostedAppcache;
+    if (appObject.kind == this.kTrustedHosted && aManifest.appcache_path) {
+      usesAppcache = true;
+    }
+
+    if (usesAppcache) {
       appObject.installState = "pending";
       appObject.downloadAvailable = true;
       appObject.downloading = true;
@@ -2507,7 +2531,8 @@ this.DOMApplicationRegistry = {
       appObject.downloading = true;
       appObject.downloadSize = aLocaleManifest.size;
       appObject.readyToApplyDownload = false;
-    } else if (appObject.kind == this.kHosted) {
+    } else if (appObject.kind == this.kHosted ||
+               appObject.kind == this.kTrustedHosted) {
       appObject.installState = "installed";
       appObject.downloadAvailable = false;
       appObject.downloading = false;
@@ -2649,11 +2674,7 @@ this.DOMApplicationRegistry = {
       new ManifestHelper(jsonManifest, app.origin, app.manifestURL);
 
     // Set the application kind.
-    if (aData.isPackage) {
-      app.kind = this.kPackaged;
-    } else {
-      app.kind = manifest.appcache_path ? this.kHostedAppcache : this.kHosted;
-    }
+    app.kind = this.appKind(app, manifest);
 
     let appObject = this._cloneApp(aData, app, manifest, jsonManifest, id, localId);
 
@@ -2667,7 +2688,8 @@ this.DOMApplicationRegistry = {
           {
             origin: appObject.origin,
             manifestURL: appObject.manifestURL,
-            manifest: jsonManifest
+            manifest: jsonManifest,
+            kind: appObject.kind
           },
           isReinstall,
           this.doUninstall.bind(this, aData, aData.mm)
@@ -2685,7 +2707,9 @@ this.DOMApplicationRegistry = {
 
     let dontNeedNetwork = false;
 
-    if (appObject.kind == this.kHostedAppcache) {
+    if ((appObject.kind == this.kHostedAppcache ||
+        appObject.kind == this.kTrustedHosted) &&
+        manifest.appcache_path) {
       this.queuedDownload[app.manifestURL] = {
         manifest: manifest,
         app: appObject,
@@ -2815,7 +2839,8 @@ this.DOMApplicationRegistry = {
       PermissionsInstaller.installPermissions({
         manifest: aManifest,
         origin: aNewApp.origin,
-        manifestURL: aNewApp.manifestURL
+        manifestURL: aNewApp.manifestURL,
+        kind: this.webapps[aId].kind
       }, true);
     }
 
