@@ -343,9 +343,18 @@ Breakpoint::nextInSite()
 /*** Debugger hook dispatch **********************************************************************/
 
 Debugger::Debugger(JSContext *cx, JSObject *dbg)
-  : object(dbg), uncaughtExceptionHook(nullptr), enabled(true), trackingAllocationSites(false),
-    allocationsLogLength(0), maxAllocationsLogLength(DEFAULT_MAX_ALLOCATIONS_LOG_LENGTH),
-    frames(cx->runtime()), scripts(cx), sources(cx), objects(cx), environments(cx)
+  : object(dbg),
+    uncaughtExceptionHook(nullptr),
+    enabled(true),
+    trackingAllocationSites(false),
+    allocationSamplingProbability(1.0),
+    allocationsLogLength(0),
+    maxAllocationsLogLength(DEFAULT_MAX_ALLOCATIONS_LOG_LENGTH),
+    frames(cx->runtime()),
+    scripts(cx),
+    sources(cx),
+    objects(cx),
+    environments(cx)
 {
     assertSameCompartment(cx, dbg);
 
