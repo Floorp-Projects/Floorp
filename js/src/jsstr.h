@@ -300,6 +300,26 @@ str_fromCharCode(JSContext *cx, unsigned argc, Value *vp);
 extern bool
 str_fromCharCode_one_arg(JSContext *cx, HandleValue code, MutableHandleValue rval);
 
+/* String methods exposed so they can be installed in the self-hosting global. */
+
+extern bool
+str_indexOf(JSContext *cx, unsigned argc, Value *vp);
+
+extern bool
+str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp);
+
+extern bool
+str_startsWith(JSContext *cx, unsigned argc, Value *vp);
+
+extern bool
+str_substring(JSContext *cx, unsigned argc, Value *vp);
+
+extern bool
+str_toLowerCase(JSContext *cx, unsigned argc, Value *vp);
+
+extern bool
+str_toUpperCase(JSContext *cx, unsigned argc, Value *vp);
+
 } /* namespace js */
 
 extern bool

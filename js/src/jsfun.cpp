@@ -1582,8 +1582,8 @@ fun_isGenerator(JSContext *cx, unsigned argc, Value *vp)
 }
 
 /* ES5 15.3.4.5. */
-static bool
-fun_bind(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::fun_bind(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 

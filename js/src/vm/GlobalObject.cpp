@@ -284,6 +284,57 @@ GlobalObject::initStandardClasses(JSContext *cx, Handle<GlobalObject*> global)
     return true;
 }
 
+/**
+ * Initializes a builtin constructor and its prototype without defining any
+ * properties or functions on it.
+ *
+ * Used in self-hosting to install the few builtin constructors required by
+ * self-hosted builtins.
+ */
+static bool
+InitBareBuiltinCtor(JSContext *cx, Handle<GlobalObject*> global, JSProtoKey protoKey)
+{
+    MOZ_ASSERT(cx->runtime()->isSelfHostingGlobal(global));
+    const Class *clasp = ProtoKeyToClass(protoKey);
+    RootedObject proto(cx);
+    proto = clasp->spec.createPrototype(cx, protoKey);
+    if (!proto)
+        return false;
+
+    RootedObject ctor(cx, clasp->spec.createConstructor(cx, protoKey));
+    if (!ctor)
+        return false;
+
+    return GlobalObject::initBuiltinConstructor(cx, global, protoKey, ctor, proto);
+}
+
+/**
+ * The self-hosting global only gets a small subset of all standard classes.
+ * Even those are only created as bare constructors without any properties
+ * or functions.
+ */
+/* static */ bool
+GlobalObject::initSelfHostingBuiltins(JSContext *cx, Handle<GlobalObject*> global,
+                                      const JSFunctionSpec *builtins)
+{
+    /* Define a top-level property 'undefined' with the undefined value. */
+    if (!JSObject::defineProperty(cx, global, cx->names().undefined, UndefinedHandleValue,
+                                  JS_PropertyStub, JS_StrictPropertyStub,
+                                  JSPROP_PERMANENT | JSPROP_READONLY))
+    {
+        return false;
+    }
+
+    return InitBareBuiltinCtor(cx, global, JSProto_Array) &&
+           InitBareBuiltinCtor(cx, global, JSProto_TypedArray) &&
+           InitBareBuiltinCtor(cx, global, JSProto_Uint8Array) &&
+           InitBareBuiltinCtor(cx, global, JSProto_Uint32Array) &&
+           InitBareWeakMapCtor(cx, global) &&
+           initStopIterationClass(cx, global) &&
+           InitSelfHostingCollectionIteratorFunctions(cx, global) &&
+           JS_DefineFunctions(cx, global, builtins);
+}
+
 /* static */ bool
 GlobalObject::isRuntimeCodeGenEnabled(JSContext *cx, Handle<GlobalObject*> global)
 {

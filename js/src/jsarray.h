@@ -179,6 +179,12 @@ ArrayShiftMoveElements(JSObject *obj);
 extern bool
 array_shift(JSContext *cx, unsigned argc, js::Value *vp);
 
+extern bool
+array_unshift(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern bool
+array_slice(JSContext *cx, unsigned argc, js::Value *vp);
+
 /*
  * Append the given (non-hole) value to the end of an array.  The array must be
  * a newborn array -- that is, one which has not been exposed to script for

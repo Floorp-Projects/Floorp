@@ -849,6 +849,7 @@ class MapIteratorObject : public JSObject
     static const JSFunctionSpec methods[];
     static MapIteratorObject *create(JSContext *cx, HandleObject mapobj, ValueMap *data,
                                      MapObject::IteratorKind kind);
+    static bool next(JSContext *cx, unsigned argc, Value *vp);
     static void finalize(FreeOp *fop, JSObject *obj);
 
   private:
@@ -856,7 +857,6 @@ class MapIteratorObject : public JSObject
     inline ValueMap::Range *range();
     inline MapObject::IteratorKind kind() const;
     static bool next_impl(JSContext *cx, CallArgs args);
-    static bool next(JSContext *cx, unsigned argc, Value *vp);
 };
 
 } /* anonymous namespace */
@@ -1157,7 +1157,8 @@ WriteBarrierPost(JSRuntime *rt, ValueSet *set, const Value &key)
 }
 
 bool
-MapObject::entries(JSContext *cx, HandleObject obj, JS::AutoValueVector *entries)
+MapObject::getKeysAndValuesInterleaved(JSContext *cx, HandleObject obj,
+                                       JS::AutoValueVector *entries)
 {
     ValueMap *map = obj->as<MapObject>().getData();
     if (!map)
@@ -1497,6 +1498,7 @@ class SetIteratorObject : public JSObject
     static const JSFunctionSpec methods[];
     static SetIteratorObject *create(JSContext *cx, HandleObject setobj, ValueSet *data,
                                      SetObject::IteratorKind kind);
+    static bool next(JSContext *cx, unsigned argc, Value *vp);
     static void finalize(FreeOp *fop, JSObject *obj);
 
   private:
@@ -1504,7 +1506,6 @@ class SetIteratorObject : public JSObject
     inline ValueSet::Range *range();
     inline SetObject::IteratorKind kind() const;
     static bool next_impl(JSContext *cx, CallArgs args);
-    static bool next(JSContext *cx, unsigned argc, Value *vp);
 };
 
 } /* anonymous namespace */
@@ -1965,4 +1966,16 @@ JSObject *
 js_InitSetClass(JSContext *cx, HandleObject obj)
 {
     return SetObject::initClass(cx, obj);
+}
+
+const JSFunctionSpec selfhosting_collection_iterator_methods[] = {
+    JS_FN("std_Map_iterator_next", MapIteratorObject::next, 0, 0),
+    JS_FN("std_Set_iterator_next", SetIteratorObject::next, 0, 0),
+    JS_FS_END
+};
+
+bool
+js::InitSelfHostingCollectionIteratorFunctions(JSContext *cx, HandleObject obj)
+{
+    return JS_DefineFunctions(cx, obj, selfhosting_collection_iterator_methods);
 }
