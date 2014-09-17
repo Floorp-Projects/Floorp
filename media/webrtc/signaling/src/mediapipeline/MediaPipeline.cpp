@@ -1459,7 +1459,7 @@ nsresult MediaPipelineReceiveVideo::Init() {
 
 MediaPipelineReceiveVideo::PipelineListener::PipelineListener(
   SourceMediaStream* source, TrackID track_id)
-  : GenericReceiveListener(source, track_id, USECS_PER_S),
+  : GenericReceiveListener(source, track_id, source->GraphRate()),
     width_(640),
     height_(480),
 #ifdef MOZILLA_INTERNAL_API
@@ -1527,7 +1527,10 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
 
 #ifdef MOZILLA_INTERNAL_API
   nsRefPtr<layers::Image> image = image_;
-  TrackTicks target = source_->TimeToTicksRoundUp(USECS_PER_S, desired_time);
+  // our constructor sets track_rate_ to the graph rate
+  MOZ_ASSERT(track_rate_ == source_->GraphRate());
+  TrackTicks target = source_->TimeToTicksRoundUp(
+      source_->GraphRate(), desired_time);
   TrackTicks delta = target - played_ticks_;
 
   // Don't append if we've already provided a frame that supposedly
