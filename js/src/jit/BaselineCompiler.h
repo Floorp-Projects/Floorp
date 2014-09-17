@@ -170,7 +170,7 @@ namespace jit {
     _(JSOP_TABLESWITCH)        \
     _(JSOP_ITER)               \
     _(JSOP_MOREITER)           \
-    _(JSOP_ITERNEXT)           \
+    _(JSOP_ISNOITER)           \
     _(JSOP_ENDITER)            \
     _(JSOP_CALLEE)             \
     _(JSOP_SETRVAL)            \

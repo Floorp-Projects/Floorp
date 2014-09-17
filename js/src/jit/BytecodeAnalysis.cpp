@@ -53,8 +53,10 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
 
     Vector<CatchFinallyRange, 0, IonAllocPolicy> catchFinallyRanges(alloc);
 
-    for (jsbytecode *pc = script_->code(); pc < end; pc += GetBytecodeLength(pc)) {
+    jsbytecode *nextpc;
+    for (jsbytecode *pc = script_->code(); pc < end; pc = nextpc) {
         JSOp op = JSOp(*pc);
+        nextpc = pc + GetBytecodeLength(pc);
         unsigned offset = script_->pcToOffset(pc);
 
         JitSpew(JitSpew_BaselineOp, "Analyzing op @ %d (end=%d): %s",
@@ -63,7 +65,6 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
         // If this bytecode info has not yet been initialized, it's not reachable.
         if (!infos_[offset].initialized)
             continue;
-
 
         unsigned stackDepth = infos_[offset].stackDepth;
 #ifdef DEBUG
@@ -190,25 +191,20 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
             infos_[targetOffset].jumpTarget = true;
 
             if (jumpBack)
-                pc = script_->offsetToPC(targetOffset);
+                nextpc = script_->offsetToPC(targetOffset);
         }
 
         // Handle any fallthrough from this opcode.
         if (BytecodeFallsThrough(op)) {
-            jsbytecode *nextpc = pc + GetBytecodeLength(pc);
-            JS_ASSERT(nextpc < end);
-            unsigned nextOffset = script_->pcToOffset(nextpc);
+            jsbytecode *fallthrough = pc + GetBytecodeLength(pc);
+            JS_ASSERT(fallthrough < end);
+            unsigned fallthroughOffset = script_->pcToOffset(fallthrough);
 
-            infos_[nextOffset].init(stackDepth);
-
-            if (jump)
-                infos_[nextOffset].jumpFallthrough = true;
+            infos_[fallthroughOffset].init(stackDepth);
 
             // Treat the fallthrough of a branch instruction as a jump target.
             if (jump)
-                infos_[nextOffset].jumpTarget = true;
-            else
-                infos_[nextOffset].fallthrough = true;
+                infos_[fallthroughOffset].jumpTarget = true;
         }
     }
 
