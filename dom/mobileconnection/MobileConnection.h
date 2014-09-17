@@ -163,7 +163,8 @@ private:
   ~MobileConnection();
 
 private:
-  nsCOMPtr<nsIMobileConnection> mMobileConnection;
+  uint32_t mClientId;
+  nsCOMPtr<nsIMobileConnectionService> mService;
   nsRefPtr<Listener> mListener;
   nsRefPtr<MobileConnectionInfo> mVoice;
   nsRefPtr<MobileConnectionInfo> mData;

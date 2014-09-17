@@ -17,18 +17,16 @@ using namespace mozilla::dom;
 using namespace mozilla::dom::mobileconnection;
 
 MobileConnectionParent::MobileConnectionParent(uint32_t aClientId)
-  : mLive(true)
+  : mClientId(aClientId)
+  , mLive(true)
 {
   MOZ_COUNT_CTOR(MobileConnectionParent);
 
-  nsCOMPtr<nsIMobileConnectionService> service =
-    do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
-  NS_ASSERTION(service, "This shouldn't fail!");
+  mService = do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
+  NS_ASSERTION(mService, "This shouldn't fail!");
 
-  nsresult rv = service->GetItemByServiceId(aClientId,
-                                            getter_AddRefs(mMobileConnection));
-  if (NS_SUCCEEDED(rv) && mMobileConnection) {
-    mMobileConnection->RegisterListener(this);
+  if (mService) {
+    mService->RegisterListener(mClientId, this);
   }
 }
 
@@ -36,9 +34,9 @@ void
 MobileConnectionParent::ActorDestroy(ActorDestroyReason why)
 {
   mLive = false;
-  if (mMobileConnection) {
-    mMobileConnection->UnregisterListener(this);
-    mMobileConnection = nullptr;
+  if (mService) {
+    mService->UnregisterListener(mClientId, this);
+    mService = nullptr;
   }
 }
 
@@ -107,8 +105,7 @@ MobileConnectionParent::AllocPMobileConnectionRequestParent(const MobileConnecti
     return nullptr;
   }
 
-  MobileConnectionRequestParent* actor =
-    new MobileConnectionRequestParent(mMobileConnection);
+  MobileConnectionRequestParent* actor = new MobileConnectionRequestParent(mClientId);
   // Add an extra ref for IPDL. Will be released in
   // MobileConnectionParent::DeallocPMobileConnectionRequestParent().
   actor->AddRef();
@@ -133,28 +130,36 @@ MobileConnectionParent::RecvInit(nsMobileConnectionInfo* aVoice,
                                  nsString* aRadioState,
                                  nsTArray<nsString>* aSupportedNetworkTypes)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
-  NS_ENSURE_SUCCESS(mMobileConnection->GetVoice(aVoice), false);
-  NS_ENSURE_SUCCESS(mMobileConnection->GetData(aData), false);
-  NS_ENSURE_SUCCESS(mMobileConnection->GetLastKnownNetwork(*aLastKnownNetwork), false);
-  NS_ENSURE_SUCCESS(mMobileConnection->GetLastKnownHomeNetwork(*aLastKnownHomeNetwork), false);
-  NS_ENSURE_SUCCESS(mMobileConnection->GetIccId(*aIccId), false);
-  NS_ENSURE_SUCCESS(mMobileConnection->GetNetworkSelectionMode(*aNetworkSelectionMode), false);
-  NS_ENSURE_SUCCESS(mMobileConnection->GetRadioState(*aRadioState), false);
+  NS_ENSURE_SUCCESS(mService->GetVoiceConnectionInfo(mClientId, aVoice), false);
+  NS_ENSURE_SUCCESS(mService->GetDataConnectionInfo(mClientId, aData), false);
+  NS_ENSURE_SUCCESS(mService->GetLastKnownNetwork(mClientId, *aLastKnownNetwork), false);
+  NS_ENSURE_SUCCESS(mService->GetLastKnownHomeNetwork(mClientId, *aLastKnownHomeNetwork), false);
+  NS_ENSURE_SUCCESS(mService->GetIccId(mClientId, *aIccId), false);
+  NS_ENSURE_SUCCESS(mService->GetNetworkSelectionMode(mClientId, *aNetworkSelectionMode), false);
+  NS_ENSURE_SUCCESS(mService->GetRadioState(mClientId, *aRadioState), false);
 
-  char16_t** types = nullptr;
-  uint32_t length = 0;
+  nsCOMPtr<nsIVariant> variant;
+  mService->GetSupportedNetworkTypes(mClientId, getter_AddRefs(variant));
 
-  nsresult rv = mMobileConnection->GetSupportedNetworkTypes(&types, &length);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  for (uint32_t i = 0; i < length; ++i) {
-    nsDependentString type(types[i]);
-    aSupportedNetworkTypes->AppendElement(type);
+  uint16_t type;
+  nsIID iid;
+  uint32_t count;
+  void* data;
+  if (NS_FAILED(variant->GetAsArray(&type, &iid, &count, &data))) {
+    return false;
   }
 
-  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(length, types);
+  // We expect the element type is wstring.
+  if (type == nsIDataType::VTYPE_WCHAR_STR) {
+    char16_t** rawArray = reinterpret_cast<char16_t**>(data);
+    for (uint32_t i = 0; i < count; ++i) {
+      nsDependentString networkType(rawArray[i]);
+      aSupportedNetworkTypes->AppendElement(networkType);
+    }
+  }
+  NS_Free(data);
 
   return true;
 }
@@ -170,7 +175,7 @@ MobileConnectionParent::NotifyVoiceChanged()
 
   nsresult rv;
   nsCOMPtr<nsIMobileConnectionInfo> info;
-  rv = mMobileConnection->GetVoice(getter_AddRefs(info));
+  rv = mService->GetVoiceConnectionInfo(mClientId, getter_AddRefs(info));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We release the ref after serializing process is finished in
@@ -185,7 +190,7 @@ MobileConnectionParent::NotifyDataChanged()
 
   nsresult rv;
   nsCOMPtr<nsIMobileConnectionInfo> info;
-  rv = mMobileConnection->GetData(getter_AddRefs(info));
+  rv = mService->GetDataConnectionInfo(mClientId, getter_AddRefs(info));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // We release the ref after serializing process is finished in
@@ -251,7 +256,7 @@ MobileConnectionParent::NotifyIccChanged()
   NS_ENSURE_TRUE(mLive, NS_ERROR_FAILURE);
 
   nsAutoString iccId;
-  mMobileConnection->GetIccId(iccId);
+  mService->GetIccId(mClientId, iccId);
 
   return SendNotifyIccChanged(iccId) ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -263,7 +268,7 @@ MobileConnectionParent::NotifyRadioStateChanged()
 
   nsresult rv;
   nsAutoString radioState;
-  rv = mMobileConnection->GetRadioState(radioState);
+  rv = mService->GetRadioState(mClientId, radioState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return SendNotifyRadioStateChanged(radioState) ? NS_OK : NS_ERROR_FAILURE;
@@ -284,7 +289,7 @@ MobileConnectionParent::NotifyLastKnownNetworkChanged()
 
   nsresult rv;
   nsAutoString network;
-  rv = mMobileConnection->GetLastKnownNetwork(network);
+  rv = mService->GetLastKnownNetwork(mClientId, network);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return SendNotifyLastNetworkChanged(network) ? NS_OK : NS_ERROR_FAILURE;
@@ -297,7 +302,7 @@ MobileConnectionParent::NotifyLastKnownHomeNetworkChanged()
 
   nsresult rv;
   nsAutoString network;
-  rv = mMobileConnection->GetLastKnownHomeNetwork(network);
+  rv = mService->GetLastKnownHomeNetwork(mClientId, network);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return SendNotifyLastHomeNetworkChanged(network) ? NS_OK : NS_ERROR_FAILURE;
@@ -310,7 +315,7 @@ MobileConnectionParent::NotifyNetworkSelectionModeChanged()
 
   nsresult rv;
   nsAutoString mode;
-  rv = mMobileConnection->GetNetworkSelectionMode(mode);
+  rv = mService->GetNetworkSelectionMode(mClientId, mode);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return SendNotifyNetworkSelectionModeChanged(mode) ? NS_OK : NS_ERROR_FAILURE;
@@ -324,104 +329,104 @@ void
 MobileConnectionRequestParent::ActorDestroy(ActorDestroyReason why)
 {
   mLive = false;
-  mMobileConnection = nullptr;
+  mService = nullptr;
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const GetNetworksRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
-  return NS_SUCCEEDED(mMobileConnection->GetNetworks(this));
+  return NS_SUCCEEDED(mService->GetNetworks(mClientId, this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const SelectNetworkRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
   // Use dont_AddRef here because this instances is already AddRef-ed in
   // MobileConnectionIPCSerializer.h
   nsCOMPtr<nsIMobileNetworkInfo> network = dont_AddRef(aRequest.network());
-  return NS_SUCCEEDED(mMobileConnection->SelectNetwork(network, this));
+  return NS_SUCCEEDED(mService->SelectNetwork(mClientId, network, this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const SelectNetworkAutoRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
-  return NS_SUCCEEDED(mMobileConnection->SelectNetworkAutomatically(this));
+  return NS_SUCCEEDED(mService->SelectNetworkAutomatically(mClientId, this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const SetPreferredNetworkTypeRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
-  return NS_SUCCEEDED(mMobileConnection->SetPreferredNetworkType(aRequest.type(), this));
+  return NS_SUCCEEDED(mService->SetPreferredNetworkType(mClientId, aRequest.type(), this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const GetPreferredNetworkTypeRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
-  return NS_SUCCEEDED(mMobileConnection->GetPreferredNetworkType(this));
+  return NS_SUCCEEDED(mService->GetPreferredNetworkType(mClientId, this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const SetRoamingPreferenceRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
-  return NS_SUCCEEDED(mMobileConnection->SetRoamingPreference(aRequest.mode(), this));
+  return NS_SUCCEEDED(mService->SetRoamingPreference(mClientId, aRequest.mode(), this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const GetRoamingPreferenceRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
-  return NS_SUCCEEDED(mMobileConnection->GetRoamingPreference(this));
+  return NS_SUCCEEDED(mService->GetRoamingPreference(mClientId, this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const SetVoicePrivacyModeRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
-  return NS_SUCCEEDED(mMobileConnection->SetVoicePrivacyMode(aRequest.enabled(), this));
+  return NS_SUCCEEDED(mService->SetVoicePrivacyMode(mClientId, aRequest.enabled(), this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const GetVoicePrivacyModeRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
-  return NS_SUCCEEDED(mMobileConnection->GetVoicePrivacyMode(this));
+  return NS_SUCCEEDED(mService->GetVoicePrivacyMode(mClientId, this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const SendMmiRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
-  return NS_SUCCEEDED(mMobileConnection->SendMMI(aRequest.mmi(), this));
+  return NS_SUCCEEDED(mService->SendMMI(mClientId, aRequest.mmi(), this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const CancelMmiRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
-  return NS_SUCCEEDED(mMobileConnection->CancelMMI(this));
+  return NS_SUCCEEDED(mService->CancelMMI(mClientId, this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const SetCallForwardingRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
   AutoSafeJSContext cx;
   JS::Rooted<JS::Value> options(cx);
@@ -430,21 +435,21 @@ MobileConnectionRequestParent::DoRequest(const SetCallForwardingRequest& aReques
     return false;
   }
 
-  return NS_SUCCEEDED(mMobileConnection->SetCallForwarding(options, this));
+  return NS_SUCCEEDED(mService->SetCallForwarding(mClientId, options, this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const GetCallForwardingRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
-  return NS_SUCCEEDED(mMobileConnection->GetCallForwarding(aRequest.reason(), this));
+  return NS_SUCCEEDED(mService->GetCallForwarding(mClientId, aRequest.reason(), this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const SetCallBarringRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
   AutoSafeJSContext cx;
   JS::Rooted<JS::Value> options(cx);
@@ -453,13 +458,13 @@ MobileConnectionRequestParent::DoRequest(const SetCallBarringRequest& aRequest)
     return false;
   }
 
-  return NS_SUCCEEDED(mMobileConnection->SetCallBarring(options, this));
+  return NS_SUCCEEDED(mService->SetCallBarring(mClientId, options, this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const GetCallBarringRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
   AutoSafeJSContext cx;
   JS::Rooted<JS::Value> options(cx);
@@ -468,13 +473,13 @@ MobileConnectionRequestParent::DoRequest(const GetCallBarringRequest& aRequest)
     return false;
   }
 
-  return NS_SUCCEEDED(mMobileConnection->GetCallBarring(options, this));
+  return NS_SUCCEEDED(mService->GetCallBarring(mClientId, options, this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const ChangeCallBarringPasswordRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
   AutoSafeJSContext cx;
   JS::Rooted<JS::Value> options(cx);
@@ -483,55 +488,55 @@ MobileConnectionRequestParent::DoRequest(const ChangeCallBarringPasswordRequest&
     return false;
   }
 
-  return NS_SUCCEEDED(mMobileConnection->ChangeCallBarringPassword(options, this));
+  return NS_SUCCEEDED(mService->ChangeCallBarringPassword(mClientId, options, this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const SetCallWaitingRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
-  return NS_SUCCEEDED(mMobileConnection->SetCallWaiting(aRequest.enabled(), this));
+  return NS_SUCCEEDED(mService->SetCallWaiting(mClientId, aRequest.enabled(), this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const GetCallWaitingRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
-  return NS_SUCCEEDED(mMobileConnection->GetCallWaiting(this));
+  return NS_SUCCEEDED(mService->GetCallWaiting(mClientId, this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const SetCallingLineIdRestrictionRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
-  return NS_SUCCEEDED(mMobileConnection->SetCallingLineIdRestriction(aRequest.mode(), this));
+  return NS_SUCCEEDED(mService->SetCallingLineIdRestriction(mClientId, aRequest.mode(), this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const GetCallingLineIdRestrictionRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
-  return NS_SUCCEEDED(mMobileConnection->GetCallingLineIdRestriction(this));
+  return NS_SUCCEEDED(mService->GetCallingLineIdRestriction(mClientId, this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const ExitEmergencyCbModeRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
-  return NS_SUCCEEDED(mMobileConnection->ExitEmergencyCbMode(this));
+  return NS_SUCCEEDED(mService->ExitEmergencyCbMode(mClientId, this));
 }
 
 bool
 MobileConnectionRequestParent::DoRequest(const SetRadioEnabledRequest& aRequest)
 {
-  NS_ENSURE_TRUE(mMobileConnection, false);
+  NS_ENSURE_TRUE(mService, false);
 
-  return NS_SUCCEEDED(mMobileConnection->SetRadioEnabled(aRequest.enabled(), this));
+  return NS_SUCCEEDED(mService->SetRadioEnabled(mClientId, aRequest.enabled(), this));
 }
 
 nsresult
