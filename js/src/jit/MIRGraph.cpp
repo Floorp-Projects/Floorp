@@ -1450,7 +1450,10 @@ void
 MBasicBlock::dump(FILE *fp)
 {
 #ifdef DEBUG
-    fprintf(fp, "block%u:\n", id());
+    fprintf(fp, "block%u:%s%s%s\n", id(),
+            isLoopHeader() ? " (loop header)" : "",
+            unreachable() ? " (unreachable)" : "",
+            isMarked() ? " (marked)" : "");
     if (MResumePoint *resume = entryResumePoint()) {
         resume->dump();
     }

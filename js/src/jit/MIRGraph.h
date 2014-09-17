@@ -803,13 +803,6 @@ class MDefinitionIterator
         return *iter_;
     }
 
-    void next() {
-        if (atPhi())
-            phiIter_++;
-        else
-            iter_++;
-    }
-
     bool more() const {
         return atPhi() || (*iter_) != block_->lastIns();
     }
@@ -821,10 +814,18 @@ class MDefinitionIterator
         iter_(block->begin())
     { }
 
+    MDefinitionIterator operator ++() {
+        MOZ_ASSERT(more());
+        if (atPhi())
+            ++phiIter_;
+        else
+            ++iter_;
+        return *this;
+    }
+
     MDefinitionIterator operator ++(int) {
         MDefinitionIterator old(*this);
-        if (more())
-            next();
+        operator++ ();
         return old;
     }
 
