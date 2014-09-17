@@ -4334,6 +4334,11 @@ class MTypeOf
         }
         return congruentIfOperandsEqual(ins);
     }
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return true;
+    }
 };
 
 class MToId
