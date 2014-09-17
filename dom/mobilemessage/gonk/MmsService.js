@@ -328,9 +328,8 @@ MmsConnection.prototype = {
    * @return true if voice call is roaming.
    */
   isVoiceRoaming: function() {
-    let connection =
-      gMobileConnectionService.getItemByServiceId(this.serviceId);
-    let isRoaming = connection && connection.voice && connection.voice.roaming;
+    let voice = gMobileConnectionService.getVoiceConnectionInfo(this.serviceId);
+    let isRoaming = voice.roaming;
     if (DEBUG) debug("isVoiceRoaming = " + isRoaming);
     return isRoaming;
   },

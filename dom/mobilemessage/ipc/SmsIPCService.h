@@ -30,14 +30,10 @@ public:
   NS_DECL_NSIMOBILEMESSAGEDATABASESERVICE
   NS_DECL_NSIOBSERVER
 
-  static already_AddRefed<SmsIPCService>
-  GetSingleton();
-
-private:
   SmsIPCService();
 
-  // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
-  ~SmsIPCService();
+private:
+  ~SmsIPCService() {}
 
   uint32_t mMmsDefaultServiceId;
   uint32_t mSmsDefaultServiceId;

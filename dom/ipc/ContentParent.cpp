@@ -44,11 +44,10 @@
 #include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
 #include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/GeolocationBinding.h"
-#include "mozilla/dom/mobileconnection/MobileConnectionParent.h"
-#include "mozilla/dom/mobilemessage/SmsParent.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/telephony/TelephonyParent.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
+#include "SmsParent.h"
 #include "mozilla/hal_sandbox/PHalParent.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -178,6 +177,10 @@ using namespace mozilla::system;
 #include "nsIIPCBackgroundChildCreateCallback.h"
 #endif
 
+#ifdef MOZ_B2G_RIL
+#include "mozilla/dom/mobileconnection/MobileConnectionParent.h"
+using namespace mozilla::dom::mobileconnection;
+#endif
 
 #if defined(MOZ_CONTENT_SANDBOX) && defined(XP_LINUX)
 #include "mozilla/Sandbox.h"
@@ -192,7 +195,6 @@ using namespace mozilla::dom::bluetooth;
 using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::indexedDB;
 using namespace mozilla::dom::power;
-using namespace mozilla::dom::mobileconnection;
 using namespace mozilla::dom::mobilemessage;
 using namespace mozilla::dom::telephony;
 using namespace mozilla::hal;
