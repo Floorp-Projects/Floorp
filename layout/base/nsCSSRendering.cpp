@@ -517,24 +517,30 @@ IsBoxDecorationSlice(const nsStyleBorder& aStyleBorder)
 
 static nsRect
 BoxDecorationRectForBorder(nsIFrame* aFrame, const nsRect& aBorderArea,
+                           Sides aSkipSides,
                            const nsStyleBorder* aStyleBorder = nullptr)
 {
   if (!aStyleBorder) {
     aStyleBorder = aFrame->StyleBorder();
   }
-  return ::IsBoxDecorationSlice(*aStyleBorder)
+  // If aSkipSides.IsEmpty() then there are no continuations, or it's
+  // a ::first-letter that wants all border sides on the first continuation.
+  return ::IsBoxDecorationSlice(*aStyleBorder) && !aSkipSides.IsEmpty()
            ? ::JoinBoxesForSlice(aFrame, aBorderArea, eForBorder)
            : aBorderArea;
 }
 
 static nsRect
 BoxDecorationRectForBackground(nsIFrame* aFrame, const nsRect& aBorderArea,
+                               Sides aSkipSides,
                                const nsStyleBorder* aStyleBorder = nullptr)
 {
   if (!aStyleBorder) {
     aStyleBorder = aFrame->StyleBorder();
   }
-  return ::IsBoxDecorationSlice(*aStyleBorder)
+  // If aSkipSides.IsEmpty() then there are no continuations, or it's
+  // a ::first-letter that wants all border sides on the first continuation.
+  return ::IsBoxDecorationSlice(*aStyleBorder) && !aSkipSides.IsEmpty()
            ? ::JoinBoxesForSlice(aFrame, aBorderArea, eForBackground)
            : aBorderArea;
 }
@@ -658,7 +664,7 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
   // Compute the outermost boundary of the area that might be painted.
   // Same coordinate space as aBorderArea & aBGClipRect.
   nsRect joinedBorderArea =
-    ::BoxDecorationRectForBorder(aForFrame, aBorderArea, &aStyleBorder);
+    ::BoxDecorationRectForBorder(aForFrame, aBorderArea, aSkipSides, &aStyleBorder);
   gfxCornerSizes bgRadii;
   ::GetRadii(aForFrame, aStyleBorder, aBorderArea, joinedBorderArea, &bgRadii);
 
@@ -671,11 +677,7 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
   ctx->Save();
 
   if (::IsBoxDecorationSlice(aStyleBorder)) {
-    if (aSkipSides.IsEmpty()) {
-      // No continuations most likely, or ::first-letter that wants all border-
-      // sides on the first continuation.
-      joinedBorderArea = aBorderArea;
-    } else if (joinedBorderArea.IsEqualEdges(aBorderArea)) {
+    if (joinedBorderArea.IsEqualEdges(aBorderArea)) {
       // No need for a clip, just skip the sides we don't want.
       border.ApplySkipSides(aSkipSides);
     } else {
@@ -1201,7 +1203,8 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
   nsRect frameRect = nativeTheme ?
     aForFrame->GetVisualOverflowRectRelativeToSelf() + aFrameArea.TopLeft() :
     aFrameArea;
-  frameRect = ::BoxDecorationRectForBorder(aForFrame, frameRect);
+  Sides skipSides = aForFrame->GetSkipSides();
+  frameRect = ::BoxDecorationRectForBorder(aForFrame, frameRect, skipSides);
 
   // Get any border radius, since box-shadow must also have rounded corners if
   // the frame does.
@@ -1241,7 +1244,6 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
         std::max(borderRadii[C_BL].height, borderRadii[C_BR].height), 0));
   }
 
-  Sides skipSides = aForFrame->GetSkipSides();
   for (uint32_t i = shadows->Length(); i > 0; --i) {
     nsCSSShadowItem* shadowItem = shadows->ShadowAt(i - 1);
     if (shadowItem->mInset)
@@ -1416,7 +1418,9 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
   NS_ASSERTION(aForFrame->GetType() == nsGkAtoms::fieldSetFrame ||
                aFrameArea.Size() == aForFrame->GetSize(), "unexpected size");
 
-  nsRect frameRect = ::BoxDecorationRectForBorder(aForFrame, aFrameArea);
+  Sides skipSides = aForFrame->GetSkipSides();
+  nsRect frameRect =
+    ::BoxDecorationRectForBorder(aForFrame, aFrameArea, skipSides);
   nsRect paddingRect = frameRect;
   nsMargin border = aForFrame->GetUsedBorder();
   paddingRect.Deflate(border);
@@ -1676,8 +1680,9 @@ nsCSSRendering::GetBackgroundClip(const nsStyleBackground::Layer& aLayer,
 {
   // Compute the outermost boundary of the area that might be painted.
   // Same coordinate space as aBorderArea.
+  Sides skipSides = aForFrame->GetSkipSides();
   nsRect clipBorderArea =
-    ::BoxDecorationRectForBorder(aForFrame, aBorderArea, &aBorder);
+    ::BoxDecorationRectForBorder(aForFrame, aBorderArea, skipSides, &aBorder);
 
   bool haveRoundedCorners = GetRadii(aForFrame, aBorder, aBorderArea,
                                      clipBorderArea, aClipState->mRadii);
@@ -1721,7 +1726,7 @@ nsCSSRendering::GetBackgroundClip(const nsStyleBackground::Layer& aLayer,
       // padding-bottom is ignored on scrollable frames:
       // https://bugzilla.mozilla.org/show_bug.cgi?id=748518
       padding.bottom = 0;
-      padding.ApplySkipSides(aForFrame->GetSkipSides());
+      padding.ApplySkipSides(skipSides);
       aClipState->mAdditionalBGClipArea.Deflate(padding);
     }
 
@@ -1745,7 +1750,7 @@ nsCSSRendering::GetBackgroundClip(const nsStyleBackground::Layer& aLayer,
                    "unexpected background-clip");
       border += aForFrame->GetUsedPadding();
     }
-    border.ApplySkipSides(aForFrame->GetSkipSides());
+    border.ApplySkipSides(skipSides);
     aClipState->mBGClipArea.Deflate(border);
 
     if (haveRoundedCorners) {
@@ -2667,10 +2672,11 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
 
   // Compute the outermost boundary of the area that might be painted.
   // Same coordinate space as aBorderArea & aBGClipRect.
+  Sides skipSides = aForFrame->GetSkipSides();
   nsRect paintBorderArea =
-    ::BoxDecorationRectForBackground(aForFrame, aBorderArea, &aBorder);
+    ::BoxDecorationRectForBackground(aForFrame, aBorderArea, skipSides, &aBorder);
   nsRect clipBorderArea =
-    ::BoxDecorationRectForBorder(aForFrame, aBorderArea, &aBorder);
+    ::BoxDecorationRectForBorder(aForFrame, aBorderArea, skipSides, &aBorder);
 
   // The 'bgClipArea' (used only by the image tiling logic, far below)
   // is the caller-provided aBGClipRect if any, or else the area
@@ -3103,7 +3109,9 @@ nsCSSRendering::GetBackgroundLayerRect(nsPresContext* aPresContext,
                                        const nsStyleBackground::Layer& aLayer,
                                        uint32_t aFlags)
 {
-  nsRect borderArea = ::BoxDecorationRectForBackground(aForFrame, aBorderArea);
+  Sides skipSides = aForFrame->GetSkipSides();
+  nsRect borderArea =
+    ::BoxDecorationRectForBackground(aForFrame, aBorderArea, skipSides);
   nsBackgroundLayerState state =
       PrepareBackgroundLayer(aPresContext, aForFrame, aFlags, borderArea,
                              aClipRect, aLayer);
@@ -3179,8 +3187,8 @@ DrawBorderImage(nsPresContext*       aPresContext,
   nsMargin borderWidths(aStyleBorder.GetComputedBorder());
   nsMargin imageOutset(aStyleBorder.GetImageOutset());
   if (::IsBoxDecorationSlice(aStyleBorder) && !aSkipSides.IsEmpty()) {
-    borderImgArea =
-      ::BoxDecorationRectForBorder(aForFrame, aBorderArea, &aStyleBorder);
+    borderImgArea = ::BoxDecorationRectForBorder(aForFrame, aBorderArea,
+                                                 aSkipSides, &aStyleBorder);
     if (borderImgArea.IsEqualEdges(aBorderArea)) {
       // No need for a clip, just skip the sides we don't want.
       borderWidths.ApplySkipSides(aSkipSides);
