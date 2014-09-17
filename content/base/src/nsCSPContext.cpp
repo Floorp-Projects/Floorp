@@ -526,7 +526,7 @@ getInnerWindowID(nsIRequest* aRequest) {
 
   nsPIDOMWindow* inner = pwindow->IsInnerWindow() ? pwindow.get() : pwindow->GetCurrentInnerWindow();
 
-  return inner->WindowID();
+  return inner ? inner->WindowID() : 0;
 }
 
 NS_IMETHODIMP
