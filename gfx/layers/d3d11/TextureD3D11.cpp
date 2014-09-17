@@ -13,6 +13,7 @@
 #include "gfx2DGlue.h"
 #include "gfxPrefs.h"
 #include "ReadbackManagerD3D11.h"
+#include "mozilla/gfx/Logging.h"
 
 namespace mozilla {
 
@@ -286,6 +287,11 @@ TextureClientD3D11::Unlock()
     RefPtr<ID3D10Texture2D> tex;
     HRESULT hr = device->CreateTexture2D(&desc, nullptr, byRef(tex));
 
+    if (FAILED(hr)) {
+      gfx::gfxCriticalError() << "[D3D11] CreateTexture2D failure " << mSize << " Code: " << hr;
+      return false;
+    }
+
     if (SUCCEEDED(hr)) {
       device->CopyResource(tex, mTexture10);
 
@@ -369,7 +375,7 @@ TextureClientD3D11::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFlag
   }
 
   if (FAILED(hr)) {
-    LOGD3D11("Error creating texture for client!");
+    gfx::gfxCriticalError() << "[D3D11] CreateTexture2D failure " << aSize << " Code: " << hr;
     return false;
   }
 

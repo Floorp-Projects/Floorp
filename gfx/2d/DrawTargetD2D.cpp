@@ -76,7 +76,7 @@ public:
 
     HRESULT hr = mDT->mDevice->CreateTexture2D(&desc, nullptr, byRef(tmpTexture));
     if (FAILED(hr)) {
-      gfxWarning() << "Failure to create temporary texture. Size: " << size << " Code: " << hr;
+      gfxCriticalError() << "[D2D] CreateTexture2D failure " << size << " Code: " << hr;
       // Crash debug builds but try to recover in release builds.
       MOZ_ASSERT(false);
       return;
@@ -93,7 +93,7 @@ public:
                                       &props, byRef(mOldSurfBitmap));
 
     if (FAILED(hr)) {
-      gfxWarning() << "Failed to create shared bitmap for old surface. Code: " << hr;
+      gfxCriticalError() << "[D2D] CreateSharedBitmap failure " << size << " Code: " << hr;
       // Crash debug builds but try to recover in release builds.
       MOZ_ASSERT(false);
       return;
@@ -532,8 +532,7 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
     hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(mipTexture));
 
     if (FAILED(hr)) {
-      gfxWarning() << "Failure to create temporary texture. Size: " <<
-        aSurface->GetSize() << " Code: " << hr;
+      gfxCriticalError() << "[D2D] CreateTexture2D failure " << aSurface->GetSize() << " Code: " << hr;
       return;
     }
 
@@ -560,7 +559,7 @@ DrawTargetD2D::DrawSurfaceWithShadow(SourceSurface *aSurface,
     hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(tmpDSTexture));
 
     if (FAILED(hr)) {
-      gfxWarning() << "Failure to create temporary texture. Size: " << dsSize << " Code: " << hr;
+      gfxCriticalError() << "[D2D] CreateTexture2D failure " << dsSize << " Code: " << hr;
       return;
     }
 
