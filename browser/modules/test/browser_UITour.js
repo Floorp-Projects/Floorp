@@ -265,6 +265,19 @@ let tests = [
 
     gContentAPI.showInfo("urlbar", "urlbar title", "urlbar text");
   },
+  function test_getConfigurationVersion(done) {
+    function callback(result) {
+      let props = ["defaultUpdateChannel", "distributionID", "isOfficialBranding",
+                   "isReleaseBuild", "name", "vendor", "version"];
+      for (let property of props) {
+        ok(typeof(result[property]) !== undefined, "Check " + property + " isn't undefined.");
+        is(result[property], Services.appinfo[property], "Should have the same " + property + " property.");
+      }
+      done();
+    }
+
+    gContentAPI.getConfiguration("appinfo", callback);
+  },
 
   // Make sure this test is last in the file so the appMenu gets left open and done will confirm it got tore down.
   function cleanupMenus(done) {
