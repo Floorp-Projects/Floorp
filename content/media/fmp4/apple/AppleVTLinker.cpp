@@ -103,10 +103,4 @@ AppleVTLinker::GetIOConst(const char* symbol)
   return *address;
 }
 
-/* static */ CFStringRef
-AppleVTLinker::GetPropHWAccel()
-{
-  return skPropHWAccel;
-}
-
 } // namespace mozilla
