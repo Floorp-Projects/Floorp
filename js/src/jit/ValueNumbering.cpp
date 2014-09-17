@@ -280,7 +280,7 @@ bool
 ValueNumberer::discardDef(MDefinition *def,
                          UseRemovedOption useRemovedOption)
 {
-    JitSpew(JitSpew_GVN, "    Discarding %s%u", def->opName(), def->id());
+    JitSpew(JitSpew_GVN, "      Discarding %s%u", def->opName(), def->id());
     MOZ_ASSERT(IsDead(def), "Discarding non-dead definition");
     MOZ_ASSERT(!values_.has(def), "Discarding an instruction still in the set");
 
@@ -323,11 +323,11 @@ ValueNumberer::removePredecessor(MBasicBlock *block, MBasicBlock *pred)
         if (block->loopPredecessor() == pred) {
             // Discarding the entry into the loop makes the loop unreachable.
             isUnreachableLoop = true;
-            JitSpew(JitSpew_GVN, "    Loop with header block%u is no longer reachable",
+            JitSpew(JitSpew_GVN, "      Loop with header block%u is no longer reachable",
                     block->id());
 #ifdef DEBUG
         } else if (block->hasUniqueBackedge() && block->backedge() == pred) {
-            JitSpew(JitSpew_GVN, "    Loop with header block%u is no longer a loop",
+            JitSpew(JitSpew_GVN, "      Loop with header block%u is no longer a loop",
                     block->id());
 #endif
         }
@@ -482,11 +482,11 @@ ValueNumberer::visitDefinition(MDefinition *def)
     // need to update AliasAnalysis.
     const MDefinition *dep = def->dependency();
     if (dep != nullptr && dep->block()->isDead()) {
-        JitSpew(JitSpew_GVN, "    AliasAnalysis invalidated");
+        JitSpew(JitSpew_GVN, "      AliasAnalysis invalidated");
         if (updateAliasAnalysis_ && !dependenciesBroken_) {
             // TODO: Recomputing alias-analysis could theoretically expose more
             // GVN opportunities.
-            JitSpew(JitSpew_GVN, "      Will recompute!");
+            JitSpew(JitSpew_GVN, "        Will recompute!");
             dependenciesBroken_ = true;
         }
         // Clear its dependency for now, to protect foldsTo.
@@ -503,7 +503,7 @@ ValueNumberer::visitDefinition(MDefinition *def)
         if (sim->block() == nullptr)
             def->block()->insertAfter(def->toInstruction(), sim->toInstruction());
 
-        JitSpew(JitSpew_GVN, "    Folded %s%u to %s%u",
+        JitSpew(JitSpew_GVN, "      Folded %s%u to %s%u",
                 def->opName(), def->id(), sim->opName(), sim->id());
         ReplaceAllUsesWith(def, sim);
 
@@ -526,7 +526,7 @@ ValueNumberer::visitDefinition(MDefinition *def)
             return false;
         if (rep->updateForReplacement(def)) {
             JitSpew(JitSpew_GVN,
-                    "    Replacing %s%u with %s%u",
+                    "      Replacing %s%u with %s%u",
                     def->opName(), def->id(), rep->opName(), rep->id());
             ReplaceAllUsesWith(def, rep);
 
@@ -567,7 +567,7 @@ ValueNumberer::visitControlInstruction(MBasicBlock *block, const MBasicBlock *do
     MControlInstruction *newControl = rep->toControlInstruction();
     MOZ_ASSERT(!newControl->block(),
                "Control instruction replacement shouldn't already be in a block");
-    JitSpew(JitSpew_GVN, "    Folded control instruction %s%u to %s%u",
+    JitSpew(JitSpew_GVN, "      Folded control instruction %s%u to %s%u",
             control->opName(), control->id(), newControl->opName(), graph_.getNumInstructionIds());
 
     // If the simplification removes any CFG edges, update the CFG and remove
@@ -603,6 +603,8 @@ ValueNumberer::visitBlock(MBasicBlock *block, const MBasicBlock *dominatorRoot)
 {
     MOZ_ASSERT(!block->unreachable(), "Blocks marked unreachable during GVN");
     MOZ_ASSERT(!block->isDead(), "Block to visit is already dead");
+
+    JitSpew(JitSpew_GVN, "    Visiting block%u", block->id());
 
     // Visit the definitions in the block top-down.
     for (MDefinitionIterator iter(block); iter; ) {
