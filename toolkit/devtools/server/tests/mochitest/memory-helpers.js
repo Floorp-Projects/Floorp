@@ -52,9 +52,3 @@ function destroyServerAndFinish(client) {
     SimpleTest.finish()
   });
 }
-
-function waitForTime(ms) {
-  return new Promise((resolve, reject) => {
-    setTimeout(resolve, ms);
-  });
-}
