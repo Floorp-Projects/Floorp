@@ -348,6 +348,8 @@ class CodeGeneratorShared : public LInstructionVisitor
     bool emitTruncateDouble(FloatRegister src, Register dest, MInstruction *mir);
     bool emitTruncateFloat32(FloatRegister src, Register dest, MInstruction *mir);
 
+    void emitAsmJSCall(LAsmJSCall *ins);
+
     void emitPreBarrier(Register base, const LAllocation *index);
     void emitPreBarrier(Address address);
 
