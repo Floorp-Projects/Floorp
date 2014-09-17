@@ -209,13 +209,6 @@ interface nsIMobileConnectionService : nsISupports
   nsIMobileConnection getItemByServiceId(in unsigned long serviceId);
 };
 
-%{C++
-template<typename T> struct already_AddRefed;
-
-already_AddRefed<nsIMobileConnectionService>
-NS_CreateMobileConnectionService();
-%}
-
 [scriptable, uuid(04db7331-54fe-4cf7-9347-b9481350f4c2)]
 interface nsIMobileConnection : nsISupports
 {

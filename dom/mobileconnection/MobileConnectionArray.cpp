@@ -9,13 +9,6 @@
 #include "mozilla/Preferences.h"
 #include "nsServiceManagerUtils.h"
 
-// Service instantiation
-#include "ipc/MobileConnectionIPCService.h"
-#if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
-#include "nsIGonkMobileConnectionService.h"
-#endif
-#include "nsXULAppAPI.h" // For XRE_GetProcessType()
-
 using namespace mozilla::dom;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MobileConnectionArray,
@@ -95,20 +88,4 @@ MobileConnectionArray::IndexedGetter(uint32_t aIndex, bool& aFound)
   }
 
   return mMobileConnections[aIndex];
-}
-
-already_AddRefed<nsIMobileConnectionService>
-NS_CreateMobileConnectionService()
-{
-  nsCOMPtr<nsIMobileConnectionService> service;
-
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    service = new mozilla::dom::mobileconnection::MobileConnectionIPCService();
-  } else {
-#if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
-    service = do_CreateInstance(GONK_MOBILECONNECTION_SERVICE_CONTRACTID);
-#endif
-  }
-
-  return service.forget();
 }

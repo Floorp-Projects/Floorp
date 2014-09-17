@@ -19,9 +19,12 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMOBILECONNECTIONSERVICE
 
-  MobileConnectionIPCService();
+  static MobileConnectionIPCService*
+  GetSingleton();
 
 private:
+  MobileConnectionIPCService();
+
   // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
   ~MobileConnectionIPCService();
 
