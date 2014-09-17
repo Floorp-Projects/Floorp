@@ -147,7 +147,7 @@ MediaEngineGonkVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 
   mSources.AppendElement(aStream);
 
-  aStream->AddTrack(aID, aStream->GraphRate(), 0, new VideoSegment());
+  aStream->AddTrack(aID, 0, new VideoSegment());
   aStream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
 
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);

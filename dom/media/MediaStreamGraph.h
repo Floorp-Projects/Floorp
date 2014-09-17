@@ -728,8 +728,19 @@ public:
    * AdvanceKnownTracksTime). Takes ownership of aSegment. aSegment should
    * contain data starting after aStart.
    */
-  void AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
-                MediaSegment* aSegment);
+  void AddTrack(TrackID aID, TrackTicks aStart, MediaSegment* aSegment)
+  {
+    AddTrackInternal(aID, GraphRate(), aStart, aSegment);
+  }
+
+  /**
+   * Like AddTrack, but resamples audio from aRate to the graph rate.
+   */
+  void AddAudioTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
+                     AudioSegment* aSegment)
+  {
+    AddTrackInternal(aID, aRate, aStart, aSegment);
+  }
 
   /**
    * Append media data to a track. Ownership of aSegment remains with the caller,
@@ -848,6 +859,9 @@ protected:
   bool NeedsMixing();
 
   void ResampleAudioToGraphSampleRate(TrackData* aTrackData, MediaSegment* aSegment);
+
+  void AddTrackInternal(TrackID aID, TrackRate aRate,
+                        TrackTicks aStart, MediaSegment* aSegment);
 
   TrackData* FindDataForTrack(TrackID aID)
   {

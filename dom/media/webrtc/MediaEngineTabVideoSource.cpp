@@ -183,7 +183,7 @@ MediaEngineTabVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
   else
     runnable = new StartRunnable(this);
   NS_DispatchToMainThread(runnable);
-  aStream->AddTrack(aID, aStream->GraphRate(), 0, new VideoSegment());
+  aStream->AddTrack(aID, 0, new VideoSegment());
   aStream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
 
   return NS_OK;
