@@ -468,6 +468,21 @@ ValueNumberer::loopHasOptimizablePhi(MBasicBlock *backedge) const
 bool
 ValueNumberer::visitDefinition(MDefinition *def)
 {
+    // If this instruction has a dependency() into an unreachable block, we'll
+    // need to update AliasAnalysis.
+    const MDefinition *dep = def->dependency();
+    if (dep != nullptr && dep->block()->isDead()) {
+        JitSpew(JitSpew_GVN, "    AliasAnalysis invalidated");
+        if (updateAliasAnalysis_ && !dependenciesBroken_) {
+            // TODO: Recomputing alias-analysis could theoretically expose more
+            // GVN opportunities.
+            JitSpew(JitSpew_GVN, "      Will recompute!");
+            dependenciesBroken_ = true;
+        }
+        // Clear its dependency for now, to protect foldsTo.
+        def->setDependency(def->toInstruction());
+    }
+
     // Look for a simplified form of |def|.
     MDefinition *sim = simplified(def);
     if (sim != def) {
@@ -520,16 +535,6 @@ ValueNumberer::visitDefinition(MDefinition *def)
                            "discardDef shouldn't have added anything to the worklist");
             }
             def = rep;
-        }
-    }
-
-    // If this instruction has a dependency() into an unreachable block, we'll
-    // need to update AliasAnalysis.
-    if (updateAliasAnalysis_ && !dependenciesBroken_) {
-        const MDefinition *dep = def->dependency();
-        if (dep != nullptr && dep->block()->isDead()) {
-            JitSpew(JitSpew_GVN, "    AliasAnalysis invalidated; will recompute!");
-            dependenciesBroken_ = true;
         }
     }
 
