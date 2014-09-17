@@ -358,20 +358,6 @@ nsresult
 AppleVTDecoder::InitializeSession()
 {
   OSStatus rv;
-  AutoCFRelease<CFMutableDictionaryRef> extensions =
-    CFDictionaryCreateMutable(kCFAllocatorDefault, 0,
-                              &kCFTypeDictionaryKeyCallBacks,
-                              &kCFTypeDictionaryValueCallBacks);
-  AppleUtils::SetCFDict(extensions, "CVImageBufferChromaLocationBottomField", "left");
-  AppleUtils::SetCFDict(extensions, "CVImageBufferChromaLocationTopField", "left");
-  AppleUtils::SetCFDict(extensions, "FullRangeVideo", true);
-
-  AutoCFRelease<CFMutableDictionaryRef> atoms =
-    CFDictionaryCreateMutable(kCFAllocatorDefault, 0,
-                              &kCFTypeDictionaryKeyCallBacks,
-                              &kCFTypeDictionaryValueCallBacks);
-  AutoCFRelease<CFDataRef> avc_data = CFDataCreate(kCFAllocatorDefault,
-      mConfig.extra_data.begin(), mConfig.extra_data.length());
 
 #ifdef LOG_MEDIA_SHA1
   SHA1Sum avc_hash;
@@ -386,8 +372,8 @@ AppleVTDecoder::InitializeSession()
       mConfig.extra_data.length(), avc_digest.get());
 #endif // LOG_MEDIA_SHA1
 
-  CFDictionarySetValue(atoms, CFSTR("avcC"), avc_data);
-  CFDictionarySetValue(extensions, CFSTR("SampleDescriptionExtensionAtoms"), atoms);
+  AutoCFRelease<CFDictionaryRef> extensions = CreateDecoderExtensions();
+
   rv = CMVideoFormatDescriptionCreate(kCFAllocatorDefault,
                                       kCMVideoCodecType_H264,
                                       mConfig.display_width,
@@ -403,7 +389,91 @@ AppleVTDecoder::InitializeSession()
   AutoCFRelease<CFDictionaryRef> spec = CreateDecoderSpecification();
 
   // Contruct output configuration.
+  AutoCFRelease<CFDictionaryRef> outputConfiguration =
+    CreateOutputConfiguration();
 
+  VTDecompressionOutputCallbackRecord cb = { PlatformCallback, this };
+  rv = VTDecompressionSessionCreate(kCFAllocatorDefault,
+                                    mFormat,
+                                    spec, // Video decoder selection.
+                                    outputConfiguration, // Output video format.
+                                    &cb,
+                                    &mSession);
+
+  if (rv != noErr) {
+    NS_ERROR("Couldn't create decompression session!");
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+CFDictionaryRef
+AppleVTDecoder::CreateDecoderExtensions()
+{
+  AutoCFRelease<CFDataRef> avc_data =
+    CFDataCreate(kCFAllocatorDefault,
+                 mConfig.extra_data.begin(),
+                 mConfig.extra_data.length());
+
+  const void* atomsKey[] = { CFSTR("avcC") };
+  const void* atomsValue[] = { avc_data };
+  static_assert(ArrayLength(atomsKey) == ArrayLength(atomsValue),
+                "Non matching keys/values array size");
+
+  AutoCFRelease<CFDictionaryRef> atoms =
+    CFDictionaryCreate(kCFAllocatorDefault,
+                       atomsKey,
+                       atomsValue,
+                       ArrayLength(atomsKey),
+                       &kCFTypeDictionaryKeyCallBacks,
+                       &kCFTypeDictionaryValueCallBacks);
+
+  const void* extensionKeys[] =
+    { kCVImageBufferChromaLocationBottomFieldKey,
+      kCVImageBufferChromaLocationTopFieldKey,
+      AppleCMLinker::skPropFullRangeVideo,
+      AppleCMLinker::skPropExtensionAtoms };
+
+  const void* extensionValues[] =
+    { kCVImageBufferChromaLocation_Left,
+      kCVImageBufferChromaLocation_Left,
+      kCFBooleanTrue,
+      atoms };
+  static_assert(ArrayLength(extensionKeys) == ArrayLength(extensionValues),
+                "Non matching keys/values array size");
+
+  return CFDictionaryCreate(kCFAllocatorDefault,
+                            extensionKeys,
+                            extensionValues,
+                            ArrayLength(extensionKeys),
+                            &kCFTypeDictionaryKeyCallBacks,
+                            &kCFTypeDictionaryValueCallBacks);
+}
+
+CFDictionaryRef
+AppleVTDecoder::CreateDecoderSpecification()
+{
+  if (!AppleVTLinker::skPropHWAccel) {
+    return nullptr;
+  }
+
+  const void* specKeys[] = { AppleVTLinker::skPropHWAccel };
+  const void* specValues[] = { kCFBooleanTrue };
+  static_assert(ArrayLength(specKeys) == ArrayLength(specValues),
+                "Non matching keys/values array size");
+
+  return CFDictionaryCreate(kCFAllocatorDefault,
+                            specKeys,
+                            specValues,
+                            ArrayLength(specKeys),
+                            &kCFTypeDictionaryKeyCallBacks,
+                            &kCFTypeDictionaryValueCallBacks);
+}
+
+CFDictionaryRef
+AppleVTDecoder::CreateOutputConfiguration()
+{
   // Construct IOSurface Properties
   const void* IOSurfaceKeys[] = { MacIOSurfaceLib::kPropIsGlobal };
   const void* IOSurfaceValues[] = { kCFBooleanTrue };
@@ -430,43 +500,13 @@ AppleVTDecoder::InitializeSession()
   const void* outputValues[] = { IOSurfaceProperties,
                                  PixelFormatTypeNumber,
                                  kCFBooleanTrue };
-  AutoCFRelease<CFDictionaryRef> outputConfiguration =
-    CFDictionaryCreate(kCFAllocatorDefault,
-                       outputKeys,
-                       outputValues,
-                       ArrayLength(outputKeys),
-                       &kCFTypeDictionaryKeyCallBacks,
-                       &kCFTypeDictionaryValueCallBacks);
+  static_assert(ArrayLength(outputKeys) == ArrayLength(outputValues),
+                "Non matching keys/values array size");
 
-  VTDecompressionOutputCallbackRecord cb = { PlatformCallback, this };
-  rv = VTDecompressionSessionCreate(kCFAllocatorDefault,
-                                    mFormat,
-                                    spec, // Video decoder selection.
-                                    outputConfiguration, // Output video format.
-                                    &cb,
-                                    &mSession);
-
-  if (rv != noErr) {
-    NS_ERROR("Couldn't create decompression session!");
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
-
-CFDictionaryRef
-AppleVTDecoder::CreateDecoderSpecification()
-{
-  if (!AppleVTLinker::GetPropHWAccel()) {
-    return nullptr;
-  }
-
-  const void* specKeys[] = { AppleVTLinker::GetPropHWAccel() };
-  const void* specValues[] = { kCFBooleanTrue };
   return CFDictionaryCreate(kCFAllocatorDefault,
-                            specKeys,
-                            specValues,
-                            ArrayLength(specKeys),
+                            outputKeys,
+                            outputValues,
+                            ArrayLength(outputKeys),
                             &kCFTypeDictionaryKeyCallBacks,
                             &kCFTypeDictionaryValueCallBacks);
 }

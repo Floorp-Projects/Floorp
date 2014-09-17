@@ -57,6 +57,8 @@ private:
   void ClearReorderedFrames();
 
   CFDictionaryRef CreateDecoderSpecification();
+  CFDictionaryRef CreateDecoderExtensions();
+  CFDictionaryRef CreateOutputConfiguration();
 };
 
 } // namespace mozilla

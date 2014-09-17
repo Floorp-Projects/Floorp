@@ -24,6 +24,8 @@ AppleCMLinker::sLinkStatus = LinkStatus_INIT;
 
 void* AppleCMLinker::sLink = nullptr;
 nsrefcnt AppleCMLinker::sRefCount = 0;
+CFStringRef AppleCMLinker::skPropExtensionAtoms = nullptr;
+CFStringRef AppleCMLinker::skPropFullRangeVideo = nullptr;
 
 #define LINK_FUNC(func) typeof(func) func;
 #include "AppleCMFunctions.h"
@@ -58,6 +60,17 @@ AppleCMLinker::Link()
 #include "AppleCMFunctions.h"
 #undef LINK_FUNC
 
+  // Will only resolve in 10.7 and later.
+  skPropExtensionAtoms =
+    GetIOConst("kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms");
+
+  skPropFullRangeVideo =
+    GetIOConst("kCMFormatDescriptionExtension_FullRangeVideo");
+
+  if (!skPropExtensionAtoms || !skPropFullRangeVideo) {
+    goto fail;
+  }
+
   LOG("Loaded CoreMedia framework.");
   sLinkStatus = LinkStatus_SUCCEEDED;
   return true;
@@ -80,6 +93,17 @@ AppleCMLinker::Unlink()
     dlclose(sLink);
     sLink = nullptr;
   }
+}
+
+/* static */ CFStringRef
+AppleCMLinker::GetIOConst(const char* symbol)
+{
+  CFStringRef* address = (CFStringRef*)dlsym(sLink, symbol);
+  if (!address) {
+    return nullptr;
+  }
+
+  return *address;
 }
 
 } // namespace mozilla
