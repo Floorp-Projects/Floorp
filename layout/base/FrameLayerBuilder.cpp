@@ -3546,8 +3546,13 @@ ContainerState::PostprocessRetainedLayers(nsIntRegion* aOpaqueRegionForContainer
       continue;
     }
 
+    // If mFlattenToSingleLayer is true, there isn't going to be any
+    // async scrolling so we can apply all our opaqueness to the same
+    // entry, the entry for mContainerAnimatedGeometryRoot.
+    const nsIFrame* animatedGeometryRootForOpaqueness =
+        mFlattenToSingleLayer ? mContainerAnimatedGeometryRoot : e->mAnimatedGeometryRoot;
     OpaqueRegionEntry* data = FindOpaqueRegionEntry(opaqueRegions,
-        e->mAnimatedGeometryRoot, e->mFixedPosFrameForLayerData);
+        animatedGeometryRootForOpaqueness, e->mFixedPosFrameForLayerData);
 
     SetupScrollingMetadata(e);
 
@@ -3567,7 +3572,7 @@ ContainerState::PostprocessRetainedLayers(nsIntRegion* aOpaqueRegionForContainer
       e->mLayerContentsVisibleRect.width >= 0 ? &e->mLayerContentsVisibleRect : nullptr);
 
     if (!e->mOpaqueRegion.IsEmpty()) {
-      const nsIFrame* animatedGeometryRootToCover = e->mAnimatedGeometryRoot;
+      const nsIFrame* animatedGeometryRootToCover = animatedGeometryRootForOpaqueness;
       if (e->mOpaqueForAnimatedGeometryRootParent &&
           nsLayoutUtils::GetAnimatedGeometryRootForFrame(e->mAnimatedGeometryRoot->GetParent(),
                                                          mContainerAnimatedGeometryRoot)
