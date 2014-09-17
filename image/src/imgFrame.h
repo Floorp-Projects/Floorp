@@ -87,7 +87,6 @@ public:
 
   nsIntRect GetRect() const;
   IntSize GetSize() const { return mSize; }
-  bool NeedsPadding() const { return mOffset != nsIntPoint(0, 0); }
   int32_t GetStride() const;
   SurfaceFormat GetFormat() const;
   bool GetNeedsBackground() const;
