@@ -326,6 +326,18 @@ MTest::foldsTo(TempAllocator &alloc)
     if (op->isConstant())
         return MGoto::New(alloc, op->toConstant()->valueToBoolean() ? ifTrue() : ifFalse());
 
+    switch (op->type()) {
+      case MIRType_Undefined:
+      case MIRType_Null:
+        return MGoto::New(alloc, ifFalse());
+      case MIRType_Object:
+        if (!operandMightEmulateUndefined())
+            return MGoto::New(alloc, ifTrue());
+        break;
+      default:
+        break;
+    }
+
     return this;
 }
 
@@ -3545,6 +3557,20 @@ MBoundsCheck::foldsTo(TempAllocator &alloc)
        if (idx + uint32_t(minimum()) < len && idx + uint32_t(maximum()) < len)
            return index();
     }
+
+    return this;
+}
+
+MDefinition *
+MTableSwitch::foldsTo(TempAllocator &alloc)
+{
+    MDefinition *op = getOperand(0);
+
+    // If we only have one successor, convert to a plain goto to the only
+    // successor. TableSwitch indices are numeric; other types will always go to
+    // the only successor.
+    if (numSuccessors() == 1 || (op->type() != MIRType_Value && !IsNumberType(op->type())))
+        return MGoto::New(alloc, getDefault());
 
     return this;
 }
