@@ -71,7 +71,6 @@ UNIFIED_SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
-    'ucvlatin/nsARMSCII8ToUnicode.cpp',
     'ucvlatin/nsAsciiToUnicode.cpp',
     'ucvlatin/nsCP1250ToUnicode.cpp',
     'ucvlatin/nsCP1251ToUnicode.cpp',
@@ -118,7 +117,6 @@ UNIFIED_SOURCES += [
     'ucvlatin/nsMacRomanianToUnicode.cpp',
     'ucvlatin/nsMacTurkishToUnicode.cpp',
     'ucvlatin/nsTIS620ToUnicode.cpp',
-    'ucvlatin/nsUnicodeToARMSCII8.cpp',
     'ucvlatin/nsUnicodeToAscii.cpp',
     'ucvlatin/nsUnicodeToCP1250.cpp',
     'ucvlatin/nsUnicodeToCP1251.cpp',
