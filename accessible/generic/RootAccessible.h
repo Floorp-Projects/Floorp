@@ -33,7 +33,7 @@ public:
   virtual mozilla::a11y::ENameValueFlag Name(nsString& aName);
   virtual Relation RelationByType(RelationType aType) MOZ_OVERRIDE;
   virtual mozilla::a11y::role NativeRole();
-  virtual uint64_t NativeState();
+  virtual uint64_t NativeState() MOZ_OVERRIDE;
 
   // RootAccessible
 

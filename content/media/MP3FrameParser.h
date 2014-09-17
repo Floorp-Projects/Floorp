@@ -132,7 +132,11 @@ public:
 
   // Returns true if the parser needs more data for duration estimation.
   bool NeedsData();
-
+  // Assign the total lenght of this mp3 stream
+  void SetLength(int64_t aLength) {
+    MutexAutoLock mon(mLock);
+    mLength = aLength;
+  }
 private:
 
   // Parses aBuffer, starting at offset 0. Returns the number of bytes

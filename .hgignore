@@ -81,3 +81,15 @@ GPATH
 
 # Git clone directory for updating web-platform-tests
 ^testing/web-platform/sync/
+
+# Loop web client build/deploy dependencies
+^browser/components/loop/standalone/bower_components
+
+# Loop legal content build/deploy artifacts
+
+# XXX Once a grunt contrib-clean command has been added (bug 1066491), or
+# once legal has centralized their ToS and PP hosting infrastructure,
+# (expected Q4 2014) the legal doc build stuff for Loop can be removed,
+# including the following three lines
+^browser/components/loop/standalone/content/legal/styles/.*\.css$
+^browser/components/loop/standalone/content/legal/terms/en_US\.html$

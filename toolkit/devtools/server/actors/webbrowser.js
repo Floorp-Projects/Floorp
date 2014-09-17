@@ -43,6 +43,11 @@ function getWindowID(window) {
  * Browser-specific actors.
  */
 
+function getInnerId(window) {
+  return window.QueryInterface(Ci.nsIInterfaceRequestor).
+                getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+};
+
 /**
  * Yield all windows of type |aWindowType|, from the oldest window to the
  * youngest, using nsIWindowMediator::getEnumerator. We're usually

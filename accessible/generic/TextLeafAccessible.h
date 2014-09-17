@@ -21,7 +21,7 @@ public:
   virtual ~TextLeafAccessible();
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole();
+  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
   virtual void AppendTextTo(nsAString& aText, uint32_t aStartOffset = 0,
                             uint32_t aLength = UINT32_MAX);
   virtual ENameValueFlag Name(nsString& aName);

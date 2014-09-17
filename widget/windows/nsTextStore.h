@@ -275,6 +275,10 @@ protected:
   HRESULT  RecordCompositionStartAction(ITfCompositionView* aCompositionView,
                                         ITfRange* aRange,
                                         bool aPreserveSelection);
+  HRESULT  RecordCompositionStartAction(ITfCompositionView* aComposition,
+                                        LONG aStart,
+                                        LONG aLength,
+                                        bool aPreserveSelection);
   HRESULT  RecordCompositionUpdateAction();
   HRESULT  RecordCompositionEndAction();
 

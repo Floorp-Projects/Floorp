@@ -83,8 +83,7 @@ function CheckLockState() {
   certCheckResult.textContent = sUnknown;
 
   if (AppManager.connection &&
-      AppManager.connection.status == Connection.Status.CONNECTED &&
-      AppManager.preferenceFront) {
+      AppManager.connection.status == Connection.Status.CONNECTED) {
 
     // ADB check
     if (AppManager.selectedRuntime instanceof USBRuntime) {

@@ -6,7 +6,7 @@
 #include "nsFontFace.h"
 #include "nsFontFaceLoader.h"
 #include "nsIFrame.h"
-#include "gfxFont.h"
+#include "gfxTextRun.h"
 #include "mozilla/gfx/2D.h"
 
 nsFontFaceList::nsFontFaceList()

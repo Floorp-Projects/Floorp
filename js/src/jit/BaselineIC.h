@@ -18,6 +18,9 @@
 #include "jit/BaselineRegisters.h"
 
 namespace js {
+
+class TypedArrayLayout;
+
 namespace jit {
 
 //
