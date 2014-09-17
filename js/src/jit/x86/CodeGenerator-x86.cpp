@@ -332,6 +332,33 @@ CodeGeneratorX86::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic 
 }
 
 bool
+CodeGeneratorX86::visitAsmJSCall(LAsmJSCall *ins)
+{
+    MAsmJSCall *mir = ins->mir();
+
+    emitAsmJSCall(ins);
+
+    if (IsFloatingPointType(mir->type()) && mir->callee().which() == MAsmJSCall::Callee::Builtin) {
+        if (mir->type() == MIRType_Float32) {
+            masm.reserveStack(sizeof(float));
+            Operand op(esp, 0);
+            masm.fstp32(op);
+            masm.loadFloat32(op, ReturnFloat32Reg);
+            masm.freeStack(sizeof(float));
+        } else {
+            JS_ASSERT(mir->type() == MIRType_Double);
+            masm.reserveStack(sizeof(double));
+            Operand op(esp, 0);
+            masm.fstp(op);
+            masm.loadDouble(op, ReturnDoubleReg);
+            masm.freeStack(sizeof(double));
+        }
+    }
+
+    return true;
+}
+
+bool
 CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
 {
     const MAsmJSLoadHeap *mir = ins->mir();
@@ -545,28 +572,6 @@ CodeGeneratorX86::visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc *ins)
     CodeOffsetLabel label = masm.movlWithPatch(PatchedAbsoluteAddress(), out);
     masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
     return true;
-}
-
-void
-CodeGeneratorX86::postAsmJSCall(LAsmJSCall *lir)
-{
-    MAsmJSCall *mir = lir->mir();
-    if (!IsFloatingPointType(mir->type()) || mir->callee().which() != MAsmJSCall::Callee::Builtin)
-        return;
-
-    if (mir->type() == MIRType_Float32) {
-        masm.reserveStack(sizeof(float));
-        Operand op(esp, 0);
-        masm.fstp32(op);
-        masm.loadFloat32(op, ReturnFloat32Reg);
-        masm.freeStack(sizeof(float));
-    } else {
-        masm.reserveStack(sizeof(double));
-        Operand op(esp, 0);
-        masm.fstp(op);
-        masm.loadDouble(op, ReturnDoubleReg);
-        masm.freeStack(sizeof(double));
-    }
 }
 
 void
