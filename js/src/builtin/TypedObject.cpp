@@ -1508,30 +1508,31 @@ TypedObject::createUnattachedWithClass(JSContext *cx,
     obj->initReservedSlot(JS_BUFVIEW_SLOT_BYTEOFFSET, Int32Value(0));
     obj->initReservedSlot(JS_BUFVIEW_SLOT_LENGTH, Int32Value(length));
     obj->initReservedSlot(JS_BUFVIEW_SLOT_OWNER, NullValue());
-    obj->initReservedSlot(JS_BUFVIEW_SLOT_NEXT_VIEW, PrivateValue(nullptr));
 
     return static_cast<TypedObject*>(&*obj);
 }
 
 void
-TypedObject::attach(ArrayBufferObject &buffer, int32_t offset)
+TypedObject::attach(JSContext *cx, ArrayBufferObject &buffer, int32_t offset)
 {
     JS_ASSERT(offset >= 0);
     JS_ASSERT((size_t) (offset + size()) <= buffer.byteLength());
 
-    buffer.addView(this);
+    if (!buffer.addView(cx, this))
+        CrashAtUnhandlableOOM("TypedObject::attach");
+
     InitArrayBufferViewDataPointer(this, &buffer, offset);
     setReservedSlot(JS_BUFVIEW_SLOT_BYTEOFFSET, Int32Value(offset));
     setReservedSlot(JS_BUFVIEW_SLOT_OWNER, ObjectValue(buffer));
 }
 
 void
-TypedObject::attach(TypedObject &typedObj, int32_t offset)
+TypedObject::attach(JSContext *cx, TypedObject &typedObj, int32_t offset)
 {
     JS_ASSERT(!typedObj.owner().isNeutered());
     JS_ASSERT(typedObj.typedMem() != NULL);
 
-    attach(typedObj.owner(), typedObj.offset() + offset);
+    attach(cx, typedObj.owner(), typedObj.offset() + offset);
 }
 
 // Returns a suitable JS_TYPEDOBJ_SLOT_LENGTH value for an instance of
@@ -1572,7 +1573,7 @@ TypedObject::createDerived(JSContext *cx, HandleSizedTypeDescr type,
     if (!obj)
         return nullptr;
 
-    obj->attach(*typedObj, offset);
+    obj->attach(cx, *typedObj, offset);
     return obj;
 }
 
@@ -1601,7 +1602,7 @@ TypedObject::createZeroed(JSContext *cx,
         if (!buffer)
             return nullptr;
         descr->as<SizedTypeDescr>().initInstances(cx->runtime(), buffer->dataPointer(), 1);
-        obj->attach(*buffer, 0);
+        obj->attach(cx, *buffer, 0);
         return obj;
       }
 
@@ -1624,7 +1625,7 @@ TypedObject::createZeroed(JSContext *cx,
 
         if (length)
             elementTypeRepr->initInstances(cx->runtime(), buffer->dataPointer(), length);
-        obj->attach(*buffer, 0);
+        obj->attach(cx, *buffer, 0);
         return obj;
       }
     }
@@ -1652,10 +1653,10 @@ ReportTypedObjTypeError(JSContext *cx,
 /*static*/ void
 TypedObject::obj_trace(JSTracer *trace, JSObject *object)
 {
-    ArrayBufferViewObject::trace(trace, object);
-
     JS_ASSERT(object->is<TypedObject>());
     TypedObject &typedObj = object->as<TypedObject>();
+
+    gc::MarkSlot(trace, &typedObj.getFixedSlotRef(JS_BUFVIEW_SLOT_OWNER), "typed object owner");
 
     // When this is called for compacting GC, the related objects we touch here
     // may not have had their slots updated yet.
@@ -2405,7 +2406,7 @@ TypedObject::constructSized(JSContext *cx, unsigned int argc, Value *vp)
         if (!obj)
             return false;
 
-        obj->attach(*buffer, offset);
+        obj->attach(cx, *buffer, offset);
         args.rval().setObject(*obj);
         return true;
     }
@@ -2543,7 +2544,7 @@ TypedObject::constructUnsized(JSContext *cx, unsigned int argc, Value *vp)
         if (!obj)
             return false;
 
-        obj->attach(args[0].toObject().as<ArrayBufferObject>(), offset);
+        obj->attach(cx, args[0].toObject().as<ArrayBufferObject>(), offset);
     }
 
     // Data constructor for unsized values
@@ -2686,7 +2687,7 @@ js::NewDerivedTypedObject(JSContext *cx, unsigned argc, Value *vp)
 }
 
 bool
-js::AttachTypedObject(ThreadSafeContext *, unsigned argc, Value *vp)
+js::AttachTypedObject(ThreadSafeContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     JS_ASSERT(args.length() == 3);
@@ -2698,7 +2699,13 @@ js::AttachTypedObject(ThreadSafeContext *, unsigned argc, Value *vp)
     TypedObject &target = args[1].toObject().as<TypedObject>();
     JS_ASSERT(handle.typedMem() == nullptr); // must not be attached already
     size_t offset = args[2].toInt32();
-    handle.attach(target, offset);
+
+    if (cx->isForkJoinContext()) {
+        LockedJSContext ncx(cx->asForkJoinContext());
+        handle.attach(ncx, target, offset);
+    } else {
+        handle.attach(cx->asJSContext(), target, offset);
+    }
     return true;
 }
 

@@ -232,6 +232,7 @@ struct JSCompartment
                                 size_t *tiObjectTypeTables,
                                 size_t *compartmentObject,
                                 size_t *compartmentTables,
+                                size_t *innerViews,
                                 size_t *crossCompartmentWrappers,
                                 size_t *regexpCompartment,
                                 size_t *savedStacksSet);
@@ -274,6 +275,10 @@ struct JSCompartment
      */
     js::ReadBarrieredScriptSourceObject selfHostingScriptSource;
 
+    // Information mapping objects which own their own storage to other objects
+    // sharing that storage.
+    js::InnerViewTable innerViews;
+
     /* During GC, stores the index of this compartment in rt->compartments. */
     unsigned                     gcIndex;
 
@@ -285,9 +290,6 @@ struct JSCompartment
      * slot for the former, or a special slot for the latter.
      */
     JSObject                     *gcIncomingGrayPointers;
-
-    /* During GC, list of live array buffers with >1 view accumulated during tracing. */
-    js::ArrayBufferVector        gcLiveArrayBuffers;
 
     /* Linked list of live weakmaps in this compartment. */
     js::WeakMapBase              *gcWeakMapList;
