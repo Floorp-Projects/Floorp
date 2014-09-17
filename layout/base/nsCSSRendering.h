@@ -893,7 +893,7 @@ public:
                             const gfxRect& aSkipRect);
 
 protected:
-  gfxAlphaBoxBlur blur;
+  gfxAlphaBoxBlur mAlphaBoxBlur;
   nsRefPtr<gfxContext> mContext;
   gfxContext* mDestinationCtx;
 
