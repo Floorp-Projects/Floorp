@@ -8,9 +8,16 @@
 interface nsIURI;
 interface nsIVariant;
 
-[scriptable, uuid(f816b4df-f733-4dbd-964d-8bfc92a475b2)]
+[scriptable, uuid(9759bd0e-78e2-4421-9ed1-c676e1af3513)]
 interface nsITaggingService : nsISupports
 {
+
+  /**
+   * Defines the maximal length of a tag. Related to the bug 407821 
+   * (https://bugzilla.mozilla.org/show_bug.cgi?id=407821) 
+   */
+  const unsigned long MAX_TAG_LENGTH = 100;
+
   /**
    * Tags a URL with the given set of tags. Current tags set for the URL
    * persist. Tags in aTags which are already set for the given URL are
