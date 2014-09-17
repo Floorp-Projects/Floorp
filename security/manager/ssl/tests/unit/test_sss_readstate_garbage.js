@@ -34,14 +34,14 @@ function run_test() {
   do_check_false(stateFile.exists());
   let outputStream = FileUtils.openFileOutputStream(stateFile);
   let now = (new Date()).getTime();
-  writeLine("example1.example.com\t0\t0\t" + (now + 100000) + ",1,0\n", outputStream);
+  writeLine("example1.example.com:HSTS\t0\t0\t" + (now + 100000) + ",1,0\n", outputStream);
   writeLine("I'm a lumberjack and I'm okay; I work all night and I sleep all day!\n", outputStream);
   writeLine("This is a totally bogus entry\t\n", outputStream);
   writeLine("0\t0\t0\t0\t\n", outputStream);
   writeLine("\t\t\t\t\t\t\t\n", outputStream);
-  writeLine("example.com\t\t\t\t\t\t\t\n", outputStream);
-  writeLine("example3.example.com\t0\t\t\t\t\t\t\n", outputStream);
-  writeLine("example2.example.com\t0\t0\t" + (now + 100000) + ",1,0\n", outputStream);
+  writeLine("example.com:HSTS\t\t\t\t\t\t\t\n", outputStream);
+  writeLine("example3.example.com:HSTS\t0\t\t\t\t\t\t\n", outputStream);
+  writeLine("example2.example.com:HSTS\t0\t0\t" + (now + 100000) + ",1,0\n", outputStream);
   outputStream.close();
   Services.obs.addObserver(checkStateRead, "data-storage-ready", false);
   do_test_pending();
