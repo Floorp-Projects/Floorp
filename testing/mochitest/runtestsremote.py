@@ -456,7 +456,7 @@ class MochiRemote(Mochitest):
         if fail_found:
             result = 1
         if not end_found:
-            self.log.error("Automation Error: Missing end of test marker (process crashed?)")
+            self.log.info("PROCESS-CRASH | Automation Error: Missing end of test marker (process crashed?)")
             result = 1
         return result
 
