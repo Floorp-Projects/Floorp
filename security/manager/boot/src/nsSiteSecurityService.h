@@ -10,6 +10,8 @@
 #include "nsIObserver.h"
 #include "nsISiteSecurityService.h"
 #include "nsString.h"
+#include "nsTArray.h"
+#include "pkix/pkixtypes.h"
 #include "prtime.h"
 
 class nsIURI;
@@ -35,19 +37,53 @@ enum SecurityPropertyState {
 };
 
 /**
- * SiteSecurityState: A utility class that encodes/decodes a string describing
+ * SiteHPKPState: A utility class that encodes/decodes a string describing
+ * the public key pins of a site.
+ * HPKP state consists of:
+ *  - Expiry time (PRTime (aka int64_t) in milliseconds)
+ *  - A state flag (SecurityPropertyState, default SecurityPropertyUnset)
+ *  - An include subdomains flag (bool, default false)
+ *  - An array of sha-256 hashed base 64 encoded fingerprints of required keys
+ */
+class SiteHPKPState
+{
+public:
+  SiteHPKPState();
+  SiteHPKPState(nsCString& aStateString);
+  SiteHPKPState(PRTime aExpireTime, SecurityPropertyState aState,
+                bool aIncludeSubdomains, nsTArray<nsCString>& SHA256keys);
+
+  PRTime mExpireTime;
+  SecurityPropertyState mState;
+  bool mIncludeSubdomains;
+  nsTArray<nsCString> mSHA256keys;
+
+  bool IsExpired(mozilla::pkix::Time aTime)
+  {
+    if (aTime > mozilla::pkix::TimeFromEpochInSeconds(mExpireTime /
+                                                      PR_MSEC_PER_SEC)) {
+      return true;
+    }
+    return false;
+  }
+
+  void ToString(nsCString& aString);
+};
+
+/**
+ * SiteHSTSState: A utility class that encodes/decodes a string describing
  * the security state of a site. Currently only handles HSTS.
  * HSTS state consists of:
  *  - Expiry time (PRTime (aka int64_t) in milliseconds)
  *  - A state flag (SecurityPropertyState, default SecurityPropertyUnset)
  *  - An include subdomains flag (bool, default false)
  */
-class SiteSecurityState
+class SiteHSTSState
 {
 public:
-  SiteSecurityState(nsCString& aStateString);
-  SiteSecurityState(PRTime aHSTSExpireTime, SecurityPropertyState aHSTSState,
-                    bool aHSTSIncludeSubdomains);
+  SiteHSTSState(nsCString& aStateString);
+  SiteHSTSState(PRTime aHSTSExpireTime, SecurityPropertyState aHSTSState,
+                bool aHSTSIncludeSubdomains);
 
   PRTime mHSTSExpireTime;
   SecurityPropertyState mHSTSState;
@@ -90,8 +126,8 @@ protected:
 
 private:
   nsresult GetHost(nsIURI *aURI, nsACString &aResult);
-  nsresult SetState(uint32_t aType, nsIURI* aSourceURI, int64_t maxage,
-                    bool includeSubdomains, uint32_t flags);
+  nsresult SetHSTSState(uint32_t aType, nsIURI* aSourceURI, int64_t maxage,
+                        bool includeSubdomains, uint32_t flags);
   nsresult ProcessHeaderMutating(uint32_t aType, nsIURI* aSourceURI,
                                  char* aHeader, uint32_t flags,
                                  uint64_t *aMaxAge, bool *aIncludeSubdomains);
