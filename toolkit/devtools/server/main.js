@@ -12,7 +12,7 @@
  */
 let { Ci, Cc, CC, Cu, Cr } = require("chrome");
 let Services = require("Services");
-let { ActorPool } = require("devtools/server/actors/common");
+let { ActorPool, RegisteredActorFactory, ObservedActorFactory } = require("devtools/server/actors/common");
 let { DebuggerTransport, LocalDebuggerTransport, ChildDebuggerTransport } =
   require("devtools/toolkit/transport/transport");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
@@ -271,10 +271,16 @@ var DebuggerServer = {
     }
 
     for (let id of Object.getOwnPropertyNames(gRegisteredModules)) {
-      let mod = gRegisteredModules[id];
-      mod.module.unregister(mod.api);
+      this.unregisterModule(id);
     }
     gRegisteredModules = {};
+
+    // The thread actor is special. It isn't registered as all the other ones
+    // with a global or tab scope. It is loaded instead by its parent tab actor
+    // on an 'attach' request. But tests still expect to observe its state
+    // being reset when DebuggerServer is reset, so let's explicitly reset
+    // it here.
+    require("devtools/server/actors/script").cleanup();
 
     this.closeAllListeners();
     this.globalActorFactories = {};
@@ -301,18 +307,81 @@ var DebuggerServer = {
   /**
    * Register a CommonJS module with the debugger server.
    * @param id string
-   *    The ID of a CommonJS module.  This module must export
-   *    'register' and 'unregister' functions.
+   *        The ID of a CommonJS module.  This module must export 'register'
+   *        and 'unregister' functions if no `options` argument is given.
+   *        If `options` is set, the actor is going to be registered
+   *        immediately, but loaded only when a client starts sending packets
+   *        to an actor with the same id.
+   *
+   * @param options object (optional)
+   *        This parameter is still optional, but not providing it is
+   *        deprecated and will result in eagerly loading the actor module
+   *        with the memory overhead that entails.
+   *        An object with 3 mandatory attributes:
+   *        - prefix (string):
+   *          The prefix of an actor is used to compute:
+   *          - the `actorID` of each new actor instance (ex: prefix1).
+   *            (See ActorPool.addActor)
+   *          - the actor name in the listTabs request. Sending a listTabs
+   *            request to the root actor returns actor IDs. IDs are in
+   *            dictionaries, with actor names as keys and actor IDs as values.
+   *            The actor name is the prefix to which the "Actor" string is
+   *            appended. So for an actor with the `console` prefix, the actor
+   *            name will be `consoleActor`.
+   *        - constructor (string):
+   *          the name of the exported symbol to be used as the actor
+   *          constructor.
+   *        - type (a dictionnary of booleans with following attribute names):
+   *          - "global"
+   *            registers a global actor instance, if true.
+   *            A global actor has the root actor as its parent.
+   *          - "tab"
+   *            registers a tab actor instance, if true.
+   *            A new actor will be created for each tab and each app.
    */
-  registerModule: function(id) {
+  registerModule: function(id, options) {
     if (id in gRegisteredModules) {
       throw new Error("Tried to register a module twice: " + id + "\n");
     }
 
-    let moduleAPI = ModuleAPI();
-    let mod = require(id);
-    mod.register(moduleAPI);
-    gRegisteredModules[id] = { module: mod, api: moduleAPI };
+    if (options) {
+      // Lazy loaded actors
+      let {prefix, constructor, type} = options;
+      if (typeof(prefix) !== "string") {
+        throw new Error("Lazy actor definition for '" + id + "' requires a string 'prefix' option.");
+      }
+      if (typeof(constructor) !== "string") {
+        throw new Error("Lazy actor definition for '" + id + "' requires a string 'constructor' option.");
+      }
+      if (!("global" in type) && !("tab" in type)) {
+        throw new Error("Lazy actor definition for '" + id + "' requires a dictionnary 'type' option whose attributes can be 'global' or 'tab'.");
+      }
+      let name = prefix + "Actor";
+      let mod = {
+        id: id,
+        prefix: prefix,
+        constructorName: constructor,
+        type: type,
+        globalActor: type.global,
+        tabActor: type.tab
+      };
+      gRegisteredModules[id] = mod;
+      if (mod.tabActor) {
+        this.addTabActor(mod, name);
+      }
+      if (mod.globalActor) {
+        this.addGlobalActor(mod, name);
+      }
+    } else {
+      // Deprecated actors being loaded at startup
+      let moduleAPI = ModuleAPI();
+      let mod = require(id);
+      mod.register(moduleAPI);
+      gRegisteredModules[id] = {
+        module: mod,
+        api: moduleAPI
+      };
+    }
   },
 
   /**
@@ -330,8 +399,21 @@ var DebuggerServer = {
     if (!mod) {
       throw new Error("Tried to unregister a module that was not previously registered.");
     }
-    mod.module.unregister(mod.api);
-    mod.api.destroy();
+
+    // Lazy actors
+    if (mod.tabActor) {
+      this.removeTabActor(mod);
+    }
+    if (mod.globalActor) {
+      this.removeGlobalActor(mod);
+    }
+
+    if (mod.module) {
+      // Deprecated non-lazy module API
+      mod.module.unregister(mod.api);
+      mod.api.destroy();
+    }
+
     delete gRegisteredModules[id];
   },
 
@@ -353,11 +435,19 @@ var DebuggerServer = {
       this.addTabActors();
       let { ChromeDebuggerActor } = require("devtools/server/actors/script");
       this.addGlobalActor(ChromeDebuggerActor, "chromeDebugger");
-      this.registerModule("devtools/server/actors/preference");
+      this.registerModule("devtools/server/actors/preference", {
+        prefix: "preference",
+        constructor: "PreferenceActor",
+        type: { global: true }
+      });
     }
 
     this.addActors("resource://gre/modules/devtools/server/actors/webapps.js");
-    this.registerModule("devtools/server/actors/device");
+    this.registerModule("devtools/server/actors/device", {
+      prefix: "device",
+      constructor: "DeviceActor",
+      type: { global: true }
+    });
   },
 
   /**
@@ -383,27 +473,102 @@ var DebuggerServer = {
    * Install tab actors.
    */
   addTabActors: function() {
-    this.registerModule("devtools/server/actors/script");
-    this.registerModule("devtools/server/actors/webconsole");
-    this.registerModule("devtools/server/actors/inspector");
-    this.registerModule("devtools/server/actors/call-watcher");
-    this.registerModule("devtools/server/actors/canvas");
-    this.registerModule("devtools/server/actors/webgl");
-    this.registerModule("devtools/server/actors/webaudio");
-    this.registerModule("devtools/server/actors/stylesheets");
-    this.registerModule("devtools/server/actors/styleeditor");
-    this.registerModule("devtools/server/actors/storage");
-    this.registerModule("devtools/server/actors/gcli");
-    this.registerModule("devtools/server/actors/tracer");
-    this.registerModule("devtools/server/actors/memory");
-    this.registerModule("devtools/server/actors/framerate");
-    this.registerModule("devtools/server/actors/eventlooplag");
-    this.registerModule("devtools/server/actors/layout");
-    this.registerModule("devtools/server/actors/csscoverage");
-    this.registerModule("devtools/server/actors/monitor");
-    this.registerModule("devtools/server/actors/timeline");
+    this.registerModule("devtools/server/actors/webconsole", {
+      prefix: "console",
+      constructor: "WebConsoleActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/inspector", {
+      prefix: "inspector",
+      constructor: "InspectorActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/call-watcher", {
+      prefix: "callWatcher",
+      constructor: "CallWatcherActor",
+      type: { tab: true }
+    });
+    this.registerModule("devtools/server/actors/canvas", {
+      prefix: "canvas",
+      constructor: "CanvasActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/webgl", {
+      prefix: "webgl",
+      constructor: "WebGLActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/webaudio", {
+      prefix: "webaudio",
+      constructor: "WebAudioActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/stylesheets", {
+      prefix: "styleSheets",
+      constructor: "StyleSheetsActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/styleeditor", {
+      prefix: "styleEditor",
+      constructor: "StyleEditorActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/storage", {
+      prefix: "storage",
+      constructor: "StorageActor",
+      type: { tab: true }
+    });
+    this.registerModule("devtools/server/actors/gcli", {
+      prefix: "gcli",
+      constructor: "GcliActor",
+      type: { tab: true }
+    });
+    this.registerModule("devtools/server/actors/tracer", {
+      prefix: "trace",
+      constructor: "TracerActor",
+      type: { tab: true }
+    });
+    this.registerModule("devtools/server/actors/memory", {
+      prefix: "memory",
+      constructor: "MemoryActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/framerate", {
+      prefix: "framerate",
+      constructor: "FramerateActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/eventlooplag", {
+      prefix: "eventLoopLag",
+      constructor: "EventLoopLagActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/layout", {
+      prefix: "reflow",
+      constructor: "ReflowActor",
+      type: { tab: true }
+    });
+    this.registerModule("devtools/server/actors/csscoverage", {
+      prefix: "cssUsage",
+      constructor: "CSSUsageActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/monitor", {
+      prefix: "monitor",
+      constructor: "MonitorActor",
+      type: { global: true, tab: true }
+    });
+    this.registerModule("devtools/server/actors/timeline", {
+      prefix: "timeline",
+      constructor: "TimelineActor",
+      type: { global: true, tab: true }
+    });
     if ("nsIProfiler" in Ci) {
-      this.registerModule("devtools/server/actors/profiler");
+      this.registerModule("devtools/server/actors/profiler", {
+        prefix: "profiler",
+        constructor: "ProfilerActor",
+        type: { global: true, tab: true }
+      });
     }
   },
 
@@ -725,38 +890,47 @@ var DebuggerServer = {
    * to clash with existing protocol packet properties, like 'title', 'url' or
    * 'actor', since that would break the protocol.
    *
-   * @param aFunction function
+   * @param aActor function, object
+   *      In case of function:
    *        The constructor function for this request type. This expects to be
    *        called as a constructor (i.e. with 'new'), and passed two
    *        arguments: the DebuggerServerConnection, and the BrowserTabActor
    *        with which it will be associated.
+   *        Only used for deprecated eagerly loaded actors.
+   *      In case of object:
+   *        First argument of RegisteredActorFactory constructor.
+   *        See the it's definition for more info.
    *
    * @param aName string [optional]
    *        The name of the new request type. If this is not present, the
    *        actorPrefix property of the constructor prototype is used.
    */
-  addTabActor: function DS_addTabActor(aFunction, aName) {
-    let name = aName ? aName : aFunction.prototype.actorPrefix;
+  addTabActor: function DS_addTabActor(aActor, aName) {
+    let name = aName ? aName : aActor.prototype.actorPrefix;
     if (["title", "url", "actor"].indexOf(name) != -1) {
       throw Error(name + " is not allowed");
     }
     if (DebuggerServer.tabActorFactories.hasOwnProperty(name)) {
       throw Error(name + " already exists");
     }
-    DebuggerServer.tabActorFactories[name] = aFunction;
+    DebuggerServer.tabActorFactories[name] = new RegisteredActorFactory(aActor, name);
   },
 
   /**
    * Unregisters the handler for the specified tab-scoped request type.
    * This may be used for example by add-ons when shutting down or upgrading.
    *
-   * @param aFunction function
+   * @param aActor function, object
+   *      In case of function:
    *        The constructor function for this request type.
+   *      In case of object:
+   *        Same object being given to related addTabActor call.
    */
-  removeTabActor: function DS_removeTabActor(aFunction) {
+  removeTabActor: function DS_removeTabActor(aActor) {
     for (let name in DebuggerServer.tabActorFactories) {
       let handler = DebuggerServer.tabActorFactories[name];
-      if (handler.name == aFunction.name) {
+      if ((handler.name && handler.name == aActor.name) ||
+          (handler.id && handler.id == aActor.id)) {
         delete DebuggerServer.tabActorFactories[name];
       }
     }
@@ -770,38 +944,47 @@ var DebuggerServer = {
    * properties, like 'from', 'tabs' or 'selected', since that would break the
    * protocol.
    *
-   * @param aFunction function
+   * @param aActor function, object
+   *      In case of function:
    *        The constructor function for this request type. This expects to be
    *        called as a constructor (i.e. with 'new'), and passed two
    *        arguments: the DebuggerServerConnection, and the BrowserRootActor
    *        with which it will be associated.
+   *        Only used for deprecated eagerly loaded actors.
+   *      In case of object:
+   *        First argument of RegisteredActorFactory constructor.
+   *        See the it's definition for more info.
    *
    * @param aName string [optional]
    *        The name of the new request type. If this is not present, the
    *        actorPrefix property of the constructor prototype is used.
    */
-  addGlobalActor: function DS_addGlobalActor(aFunction, aName) {
-    let name = aName ? aName : aFunction.prototype.actorPrefix;
+  addGlobalActor: function DS_addGlobalActor(aActor, aName) {
+    let name = aName ? aName : aActor.prototype.actorPrefix;
     if (["from", "tabs", "selected"].indexOf(name) != -1) {
       throw Error(name + " is not allowed");
     }
     if (DebuggerServer.globalActorFactories.hasOwnProperty(name)) {
       throw Error(name + " already exists");
     }
-    DebuggerServer.globalActorFactories[name] = aFunction;
+    DebuggerServer.globalActorFactories[name] = new RegisteredActorFactory(aActor, name);
   },
 
   /**
    * Unregisters the handler for the specified browser-scoped request type.
    * This may be used for example by add-ons when shutting down or upgrading.
    *
-   * @param aFunction function
+   * @param aActor function, object
+   *      In case of function:
    *        The constructor function for this request type.
+   *      In case of object:
+   *        Same object being given to related addGlobalActor call.
    */
-  removeGlobalActor: function DS_removeGlobalActor(aFunction) {
+  removeGlobalActor: function DS_removeGlobalActor(aActor) {
     for (let name in DebuggerServer.globalActorFactories) {
       let handler = DebuggerServer.globalActorFactories[name];
-      if (handler.name == aFunction.name) {
+      if ((handler.name && handler.name == aActor.name) ||
+          (handler.id && handler.id == aActor.id)) {
         delete DebuggerServer.globalActorFactories[name];
       }
     }
@@ -1062,23 +1245,20 @@ DebuggerServerConnection.prototype = {
       return;
     }
 
-    // Dyamically-loaded actors have to be created lazily.
-    if (typeof actor == "function") {
-      let instance;
+    // Dynamically-loaded actors have to be created lazily.
+    if (actor instanceof ObservedActorFactory) {
       try {
-        instance = new actor();
+        actor= actor.createActor();
       } catch (e) {
         this.transport.send(this._unknownError(
           "Error occurred while creating actor '" + actor.name,
           e));
       }
-      instance.parentID = actor.parentID;
-      // We want the newly-constructed actor to completely replace the factory
-      // actor. Reusing the existing actor ID will make sure ActorPool.addActor
-      // does the right thing.
-      instance.actorID = actor.actorID;
-      actor.registeredPool.addActor(instance);
-      actor = instance;
+    } else if (typeof(actor) !== "object") {
+      // ActorPools should now contain only actor instances (i.e. objects)
+      // or ObservedActorFactory instances.
+      throw new Error("Unexpected actor constructor/function in ActorPool " +
+                      "for actorID=" + actorID + ".");
     }
 
     return actor;

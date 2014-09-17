@@ -17,10 +17,10 @@ import org.mozilla.gecko.Actions;
 */
 public class testDoorHanger extends BaseTest {
     public void testDoorHanger() {
-        String GEO_URL = getAbsoluteUrl("/robocop/robocop_geolocation.html");
-        String BLANK_URL = getAbsoluteUrl("/robocop/robocop_blank_01.html");
-        String OFFLINE_STORAGE_URL = getAbsoluteUrl("/robocop/robocop_offline_storage.html");
-        String LOGIN_URL = getAbsoluteUrl("/robocop/robocop_login.html");
+        String GEO_URL = getAbsoluteUrl(StringHelper.ROBOCOP_GEOLOCATION_URL);
+        String BLANK_URL = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
+        String OFFLINE_STORAGE_URL = getAbsoluteUrl(StringHelper.ROBOCOP_OFFLINE_STORAGE_URL);
+        String LOGIN_URL = getAbsoluteUrl(StringHelper.ROBOCOP_LOGIN_URL);
 
         // Strings used in doorhanger messages and buttons
         String GEO_MESSAGE = "Share your location with";

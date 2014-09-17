@@ -1489,6 +1489,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
             const TITLE_SEARCH_ENGINE_SEPARATOR = " \u00B7\u2013\u00B7 ";
 
+            let searchEngine = "";
             [title, searchEngine] = title.split(TITLE_SEARCH_ENGINE_SEPARATOR);
             url = this._stringBundle.formatStringFromName("searchWithEngine", [searchEngine], 1);
 

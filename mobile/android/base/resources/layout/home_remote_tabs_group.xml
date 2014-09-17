@@ -24,6 +24,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginRight="10dip"
+        android:layout_weight="1"
         android:orientation="vertical" >
 
         <org.mozilla.gecko.widget.FadedTextView
@@ -41,5 +42,12 @@
             android:drawablePadding="5dp"
             android:maxLength="1024" />
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/device_expanded"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_marginLeft="10dip"
+        android:layout_marginRight="10dip" />
 
 </LinearLayout>
