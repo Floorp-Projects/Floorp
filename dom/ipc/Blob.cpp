@@ -934,7 +934,7 @@ public:
     CommonInit(aActor);
   }
 
-  RemoteBlob(BlobChild* aActor)
+  explicit RemoteBlob(BlobChild* aActor)
     : DOMFileImplBase(EmptyString(), EmptyString(), UINT64_MAX, UINT64_MAX)
   {
     CommonInit(aActor);

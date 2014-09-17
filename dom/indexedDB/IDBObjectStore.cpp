@@ -73,7 +73,7 @@ struct IDBObjectStore::StructuredCloneWriteInfo
   IDBDatabase* mDatabase;
   uint64_t mOffsetToKeyProp;
 
-  StructuredCloneWriteInfo(IDBDatabase* aDatabase)
+  explicit StructuredCloneWriteInfo(IDBDatabase* aDatabase)
     : mDatabase(aDatabase)
     , mOffsetToKeyProp(0)
   {
