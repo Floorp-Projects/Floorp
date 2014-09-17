@@ -32,6 +32,7 @@
 #include "vm/NumericConversions.h"
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
+#include "vm/TypedArrayCommon.h"
 
 #include "jsatominlines.h"
 
@@ -848,7 +849,7 @@ js::ObjectMayHaveExtraIndexedProperties(JSObject *obj)
             return true;
         if (obj->getDenseInitializedLength() > 0)
             return true;
-        if (obj->is<TypedArrayObject>())
+        if (IsAnyTypedArray(obj))
             return true;
     }
 
@@ -2073,7 +2074,7 @@ js::array_push(JSContext *cx, unsigned argc, Value *vp)
 
     /* Fast path for native objects with dense elements. */
     do {
-        if (!obj->isNative() || obj->is<TypedArrayObject>())
+        if (!obj->isNative() || IsAnyTypedArray(obj.get()))
             break;
 
         if (obj->is<ArrayObject>() && !obj->as<ArrayObject>().lengthIsWritable())

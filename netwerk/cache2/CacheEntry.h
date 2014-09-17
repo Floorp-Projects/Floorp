@@ -137,7 +137,7 @@ private:
   public:
     Callback(CacheEntry* aEntry,
              nsICacheEntryOpenCallback *aCallback,
-             bool aReadOnly, bool aCheckOnAnyThread);
+             bool aReadOnly, bool aCheckOnAnyThread, bool aSecret);
     Callback(Callback const &aThat);
     ~Callback();
 
@@ -155,6 +155,7 @@ private:
     bool mCheckOnAnyThread : 1;
     bool mRecheckAfterWrite : 1;
     bool mNotWanted : 1;
+    bool mSecret : 1;
 
     nsresult OnCheckThread(bool *aOnCheckThread) const;
     nsresult OnAvailThread(bool *aOnAvailThread) const;

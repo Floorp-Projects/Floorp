@@ -7,6 +7,7 @@
 #include "gfxCoreTextShaper.h"
 #include "gfxMacFont.h"
 #include "gfxFontUtils.h"
+#include "gfxTextRun.h"
 #include "mozilla/gfx/2D.h"
 
 #include <algorithm>

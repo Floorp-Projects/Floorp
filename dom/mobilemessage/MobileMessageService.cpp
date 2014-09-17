@@ -14,20 +14,6 @@ namespace mobilemessage {
 
 NS_IMPL_ISUPPORTS(MobileMessageService, nsIMobileMessageService)
 
-/* static */ StaticRefPtr<MobileMessageService> MobileMessageService::sSingleton;
-
-/* static */ already_AddRefed<MobileMessageService>
-MobileMessageService::GetInstance()
-{
-  if (!sSingleton) {
-    sSingleton = new MobileMessageService();
-    ClearOnShutdown(&sSingleton);
-  }
-
-  nsRefPtr<MobileMessageService> service = sSingleton.get();
-  return service.forget();
-}
-
 NS_IMETHODIMP
 MobileMessageService::CreateSmsMessage(int32_t aId,
                                        uint64_t aThreadId,

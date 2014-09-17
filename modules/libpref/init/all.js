@@ -1721,6 +1721,9 @@ pref("security.csp.enable", true);
 pref("security.csp.debug", false);
 pref("security.csp.experimentalEnabled", false);
 
+// Default Content Security Policy to apply to privileged apps.
+pref("security.apps.privileged.CSP.default", "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'");
+
 // Mixed content blocking
 pref("security.mixed_content.block_active_content", false);
 pref("security.mixed_content.block_display_content", false);
@@ -4245,10 +4248,9 @@ pref("snav.enabled", false);
 // Turn off touch caret by default.
 pref("touchcaret.enabled", false);
 
-// Maximum distance to the center of touch caret (in app unit square) which
-// will be accepted to drag touch caret (0 means only in the bounding box of touch
-// caret is accepted)
-pref("touchcaret.distance.threshold", 1500);
+// This will inflate the size of the touch caret frame when checking if user
+// clicks on the caret or not. In app units.
+pref("touchcaret.inflatesize.threshold", 40);
 
 // We'll start to increment time when user release the control of touch caret.
 // When time exceed this expiration time, we'll hide touch caret.

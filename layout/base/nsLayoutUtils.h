@@ -755,6 +755,20 @@ public:
                                        nsRect& aRect);
 
   /**
+   * Get the border-box of aElement's primary frame, transformed it to be
+   * relative to aFrame.
+   */
+  static nsRect GetRectRelativeToFrame(mozilla::dom::Element* aElement,
+                                       nsIFrame* aFrame);
+
+  /**
+   * Returns true if aRect with border inflation of size aInflateSize contains
+   * aPoint.
+   */
+  static bool ContainsPoint(const nsRect& aRect, const nsPoint& aPoint,
+                            nscoord aInflateSize);
+
+  /**
    * Return true if a "layer transform" could be computed for aFrame,
    * and optionally return the computed transform.  The returned
    * transform is what would be set on the layer currently if a layers

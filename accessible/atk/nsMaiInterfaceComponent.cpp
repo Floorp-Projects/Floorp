@@ -39,8 +39,8 @@ grabFocusCB(AtkComponent* aComponent)
   if (!accWrap)
     return FALSE;
 
-  nsresult rv = accWrap->TakeFocus();
-  return (NS_FAILED(rv)) ? FALSE : TRUE;
+  accWrap->TakeFocus();
+  return TRUE;
 }
 }
 
@@ -80,23 +80,21 @@ getExtentsHelper(AccessibleWrap* aAccWrap,
   if (!aAccWrap || aAccWrap->IsDefunct())
     return;
 
-  int32_t x = 0, y = 0, width = 0, height = 0;
-  // Returned in screen coordinates
-  nsresult rv = aAccWrap->GetBounds(&x, &y, &width, &height);
-  if (NS_FAILED(rv))
+  nsIntRect screenRect = aAccWrap->Bounds();
+  if (screenRect.IsEmpty())
     return;
 
   if (aCoordType == ATK_XY_WINDOW) {
     nsIntPoint winCoords =
       nsCoreUtils::GetScreenCoordsForWindow(aAccWrap->GetNode());
-    x -= winCoords.x;
-    y -= winCoords.y;
+    screenRect.x -= winCoords.x;
+    screenRect.y -= winCoords.y;
   }
 
-  *aX = x;
-  *aY = y;
-  *aWidth = width;
-  *aHeight = height;
+  *aX = screenRect.x;
+  *aY = screenRect.y;
+  *aWidth = screenRect.width;
+  *aHeight = screenRect.height;
 }
 
 void

@@ -253,12 +253,36 @@ other kinds of objects.
     If this debugger is [tracking allocation sites][tracking-allocs] and cannot
     track allocation sites for <i>global</i>, this method throws an `Error`.
 
+`addAllGlobalsAsDebuggees()`
+:   This method is like [`addDebuggee`][add], but adds all the global
+    objects from all compartments to this `Debugger` instance's set of
+    debuggees. Note that it skips this debugger's compartment.
+
+    If this debugger is [tracking allocation sites][tracking-allocs] and cannot
+    track allocation sites for some global, this method throws an `Error`.
+    Otherwise this method returns `undefined`.
+
+    This method is only available to debuggers running in privileged
+    code ("chrome", in Firefox). Most functions provided by this `Debugger`
+    API observe activity in only those globals that are reachable by the
+    API's user, thus imposing capability-based restrictions on a
+    `Debugger`'s reach. However, the `addAllGlobalsAsDebuggees` method
+    allows the API user to monitor all global object creation that
+    occurs anywhere within the JavaScript system (the "JSRuntime", in
+    SpiderMonkey terms), thereby escaping the capability-based
+    limits. For this reason, `addAllGlobalsAsDebuggees` is only
+    available to privileged code.
+
 <code>removeDebuggee(<i>global</i>)</code>
 :   Remove the global object designated by <i>global</i> from this
     `Debugger` instance's set of debuggees. Return `undefined`.
 
     This method interprets <i>global</i> using the same rules that
     [`addDebuggee`][add] does.
+
+`removeAllDebuggees()`
+:   Remove all the global objects from this `Debugger` instance's set
+    of debuggees.  Return `undefined`.
 
 <code>hasDebuggee(<i>global</i>)</code>
 :   Return `true` if the global object designated by <i>global</i> is a

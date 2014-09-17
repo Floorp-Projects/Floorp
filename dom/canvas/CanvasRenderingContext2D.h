@@ -14,7 +14,7 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "CanvasUtils.h"
-#include "gfxFont.h"
+#include "gfxTextRun.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/CanvasGradient.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"

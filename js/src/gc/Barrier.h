@@ -162,9 +162,11 @@ class Symbol;
 namespace js {
 
 class ArgumentsObject;
+class ArrayBufferObjectMaybeShared;
 class ArrayBufferObject;
 class ArrayBufferViewObject;
 class SharedArrayBufferObject;
+class SharedTypedArrayObject;
 class BaseShape;
 class DebugScopeObject;
 class GlobalObject;
@@ -205,6 +207,7 @@ namespace gc {
 template <typename T> struct MapTypeToTraceKind {};
 template <> struct MapTypeToTraceKind<ArgumentsObject>  { static const JSGCTraceKind kind = JSTRACE_OBJECT; };
 template <> struct MapTypeToTraceKind<ArrayBufferObject>{ static const JSGCTraceKind kind = JSTRACE_OBJECT; };
+template <> struct MapTypeToTraceKind<ArrayBufferObjectMaybeShared>{ static const JSGCTraceKind kind = JSTRACE_OBJECT; };
 template <> struct MapTypeToTraceKind<ArrayBufferViewObject>{ static const JSGCTraceKind kind = JSTRACE_OBJECT; };
 template <> struct MapTypeToTraceKind<BaseShape>        { static const JSGCTraceKind kind = JSTRACE_BASE_SHAPE; };
 template <> struct MapTypeToTraceKind<DebugScopeObject> { static const JSGCTraceKind kind = JSTRACE_OBJECT; };
@@ -225,6 +228,7 @@ template <> struct MapTypeToTraceKind<SavedFrame>       { static const JSGCTrace
 template <> struct MapTypeToTraceKind<ScopeObject>      { static const JSGCTraceKind kind = JSTRACE_OBJECT; };
 template <> struct MapTypeToTraceKind<Shape>            { static const JSGCTraceKind kind = JSTRACE_SHAPE; };
 template <> struct MapTypeToTraceKind<SharedArrayBufferObject>{ static const JSGCTraceKind kind = JSTRACE_OBJECT; };
+template <> struct MapTypeToTraceKind<SharedTypedArrayObject>{ static const JSGCTraceKind kind = JSTRACE_OBJECT; };
 template <> struct MapTypeToTraceKind<UnownedBaseShape> { static const JSGCTraceKind kind = JSTRACE_BASE_SHAPE; };
 template <> struct MapTypeToTraceKind<jit::JitCode>     { static const JSGCTraceKind kind = JSTRACE_JITCODE; };
 template <> struct MapTypeToTraceKind<types::TypeObject>{ static const JSGCTraceKind kind = JSTRACE_TYPE_OBJECT; };
@@ -893,6 +897,7 @@ typedef RelocatablePtr<JSObject*> RelocatablePtrObject;
 typedef RelocatablePtr<JSScript*> RelocatablePtrScript;
 typedef RelocatablePtr<NestedScopeObject*> RelocatablePtrNestedScopeObject;
 
+typedef HeapPtr<ArrayBufferObjectMaybeShared*> HeapPtrArrayBufferObjectMaybeShared;
 typedef HeapPtr<ArrayBufferObject*> HeapPtrArrayBufferObject;
 typedef HeapPtr<BaseShape*> HeapPtrBaseShape;
 typedef HeapPtr<JSAtom*> HeapPtrAtom;

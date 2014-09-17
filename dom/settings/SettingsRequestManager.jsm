@@ -162,7 +162,8 @@ let SettingsRequestManager = {
   // until they hit the front of the queue.
   settingsLockQueue: [],
   children: [],
-  mmPrincipals: {},
+  mmPrincipals: new Map(),
+
   init: function() {
     if (DEBUG) debug("init");
     this.settingsDB.init();
@@ -673,7 +674,7 @@ let SettingsRequestManager = {
   broadcastMessage: function broadcastMessage(aMsgName, aContent) {
     if (DEBUG) debug("Broadcast");
     this.children.forEach(function(msgMgr) {
-      let principal = this.mmPrincipals[msgMgr];
+      let principal = this.mmPrincipals.get(msgMgr);
       if (!principal) {
         if (DEBUG) debug("Cannot find principal for message manager to check permissions");
       }
@@ -685,20 +686,24 @@ let SettingsRequestManager = {
   },
 
   addObserver: function(aMsgMgr, aPrincipal) {
-    if (DEBUG) debug("Add observer for" + aMsgMgr);
+    if (DEBUG) debug("Add observer for " + aPrincipal.origin);
     if (this.children.indexOf(aMsgMgr) == -1) {
       this.children.push(aMsgMgr);
-      this.mmPrincipals[aMsgMgr] = aPrincipal;
+      this.mmPrincipals.set(aMsgMgr, aPrincipal);
     }
   },
 
   removeObserver: function(aMsgMgr) {
-    if (DEBUG) debug("Remove observer for" + aMsgMgr);
+    if (DEBUG) {
+      let principal = this.mmPrincipals.get(aMsgMgr);
+      debug("Remove observer for " + principal.origin);
+    }
     let index = this.children.indexOf(aMsgMgr);
     if (index != -1) {
       this.children.splice(index, 1);
-      delete this.mmPrincipals[aMsgMgr];
+      this.mmPrincipals.delete(aMsgMgr);
     }
+    if (DEBUG) debug("Principal/MessageManager pairs left: " + this.mmPrincipals.size);
   },
 
   removeLock: function(aLockID) {
@@ -729,7 +734,7 @@ let SettingsRequestManager = {
   },
 
   removeMessageManager: function(aMsgMgr){
-    if (DEBUG) debug("Removing message manager " + aMsgMgr);
+    if (DEBUG) debug("Removing message manager");
     this.removeObserver(aMsgMgr);
     let closedLockIDs = [];
     let lockIDs = Object.keys(this.lockInfo);
