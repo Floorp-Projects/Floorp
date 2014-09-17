@@ -5,8 +5,8 @@
 #ifndef mozilla_dom_mobileconnection_MobileConnectionParent_h
 #define mozilla_dom_mobileconnection_MobileConnectionParent_h
 
-#include "mozilla/dom/mobileconnection/PMobileConnectionParent.h"
-#include "mozilla/dom/mobileconnection/PMobileConnectionRequestParent.h"
+#include "mozilla/dom/PMobileConnectionParent.h"
+#include "mozilla/dom/PMobileConnectionRequestParent.h"
 #include "nsIMobileConnectionInfo.h"
 #include "nsIMobileConnectionService.h"
 #include "nsServiceManagerUtils.h"

@@ -5,15 +5,14 @@
 #ifndef mozilla_dom_mobileconnection_MobileConnectionChild_h
 #define mozilla_dom_mobileconnection_MobileConnectionChild_h
 
+#include "mozilla/dom/MobileConnectionCallback.h"
 #include "mozilla/dom/MobileConnectionInfo.h"
-#include "mozilla/dom/mobileconnection/PMobileConnectionChild.h"
-#include "mozilla/dom/mobileconnection/PMobileConnectionRequestChild.h"
+#include "mozilla/dom/PMobileConnectionChild.h"
+#include "mozilla/dom/PMobileConnectionRequestChild.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsIMobileConnectionService.h"
 #include "nsIVariant.h"
-
-class nsIMobileConnectionCallback;
 
 namespace mozilla {
 namespace dom {
