@@ -2631,7 +2631,7 @@ RasterImage::RequestScale(imgFrame* aFrame, nsIntSize aSize)
 
 void
 RasterImage::DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
-                                          gfxContext *aContext,
+                                          gfxContext* aContext,
                                           const nsIntSize& aSize,
                                           const ImageRegion& aRegion,
                                           GraphicsFilter aFilter,
@@ -2673,10 +2673,19 @@ RasterImage::DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
     region.Scale(1.0 / scale.width, 1.0 / scale.height);
   }
 
-  nsIntMargin padding(finalFrameRect.y,
-                      mSize.width - finalFrameRect.XMost(),
-                      mSize.height - finalFrameRect.YMost(),
-                      finalFrameRect.x);
+  // We can only use padding if we're using the original |aFrameRef|, unscaled.
+  // (If so, we moved it into |frameRef|, so |aFrameRef| is empty.) Because of
+  // this restriction, we don't scale frames that require padding.
+  // XXX(seth): We actually do scale such frames right now though, if a single
+  // frame of a non-animated image requires padding. We'll fix that in bug
+  // 1060200, because dependencies between bugs make it hard to fix here.
+  nsIntMargin padding(0, 0, 0, 0);
+  if (!aFrameRef) {
+    padding = nsIntMargin(finalFrameRect.y,
+                          mSize.width - finalFrameRect.XMost(),
+                          mSize.height - finalFrameRect.YMost(),
+                          finalFrameRect.x);
+  }
 
   frameRef->Draw(aContext, region, padding, aFilter, aFlags);
 }
