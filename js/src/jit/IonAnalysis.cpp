@@ -1741,6 +1741,11 @@ CheckPredecessorImpliesSuccessor(MBasicBlock *A, MBasicBlock *B)
 static bool
 CheckOperandImpliesUse(MNode *n, MDefinition *operand)
 {
+    // TODO: Fix code that leaves discarded things in resume point operands
+    // (bug 1055690).
+    MOZ_ASSERT_IF(!n->isResumePoint(), !operand->isDiscarded());
+    MOZ_ASSERT(operand->block() != nullptr);
+
     for (MUseIterator i = operand->usesBegin(); i != operand->usesEnd(); i++) {
         if (i->consumer() == n)
             return true;
@@ -1751,6 +1756,11 @@ CheckOperandImpliesUse(MNode *n, MDefinition *operand)
 static bool
 CheckUseImpliesOperand(MDefinition *def, MUse *use)
 {
+    MOZ_ASSERT(!use->consumer()->block()->isDead());
+    MOZ_ASSERT_IF(use->consumer()->isDefinition(),
+                  !use->consumer()->toDefinition()->isDiscarded());
+    MOZ_ASSERT(use->consumer()->block() != nullptr);
+
     return use->consumer()->getOperand(use->index()) == def;
 }
 #endif // DEBUG
@@ -1779,6 +1789,9 @@ jit::AssertBasicGraphCoherency(MIRGraph &graph)
         count++;
 
         JS_ASSERT(&block->graph() == &graph);
+        MOZ_ASSERT(!block->isDead());
+        MOZ_ASSERT_IF(block->outerResumePoint() != nullptr,
+                      block->entryResumePoint() != nullptr);
 
         for (size_t i = 0; i < block->numSuccessors(); i++)
             JS_ASSERT(CheckSuccessorImpliesPredecessor(*block, block->getSuccessor(i)));
@@ -1807,9 +1820,18 @@ jit::AssertBasicGraphCoherency(MIRGraph &graph)
         for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
             JS_ASSERT(phi->numOperands() == block->numPredecessors());
             MOZ_ASSERT(!phi->isRecoveredOnBailout());
+            MOZ_ASSERT(phi->type() != MIRType_None);
         }
         for (MDefinitionIterator iter(*block); iter; iter++) {
             JS_ASSERT(iter->block() == *block);
+            MOZ_ASSERT_IF(iter->hasUses(), iter->type() != MIRType_None);
+            MOZ_ASSERT(!iter->isDiscarded());
+            MOZ_ASSERT_IF(iter->isStart(),
+                          *block == graph.entryBlock() || *block == graph.osrBlock());
+            MOZ_ASSERT_IF(iter->isParameter(),
+                          *block == graph.entryBlock() || *block == graph.osrBlock());
+            MOZ_ASSERT_IF(iter->isOsrEntry(), *block == graph.osrBlock());
+            MOZ_ASSERT_IF(iter->isOsrValue(), *block == graph.osrBlock());
 
             // Assert that use chains are valid for this instruction.
             for (uint32_t i = 0, end = iter->numOperands(); i < end; i++)
@@ -1821,12 +1843,23 @@ jit::AssertBasicGraphCoherency(MIRGraph &graph)
                 if (MResumePoint *resume = iter->toInstruction()->resumePoint()) {
                     MOZ_ASSERT(resume->instruction() == *iter);
                     MOZ_ASSERT(resume->block() == *block);
+                    MOZ_ASSERT(resume->block()->entryResumePoint() != nullptr);
                 }
             }
 
             if (iter->isRecoveredOnBailout())
                 MOZ_ASSERT(!iter->hasLiveDefUses());
         }
+
+        MControlInstruction *control = block->lastIns();
+        MOZ_ASSERT(control->block() == *block);
+        MOZ_ASSERT(!control->hasUses());
+        MOZ_ASSERT(control->type() == MIRType_None);
+        MOZ_ASSERT(!control->isDiscarded());
+        MOZ_ASSERT(!control->isRecoveredOnBailout());
+        MOZ_ASSERT(control->resumePoint() == nullptr);
+        for (uint32_t i = 0, end = control->numOperands(); i < end; ++i)
+            MOZ_ASSERT(CheckOperandImpliesUse(control, control->getOperand(i)));
     }
 
     JS_ASSERT(graph.numBlocks() == count);
@@ -1930,7 +1963,10 @@ jit::AssertExtendedGraphCoherency(MIRGraph &graph)
 #ifdef DEBUG
     if (!js_JitOptions.checkGraphConsistency)
         return;
+
     AssertGraphCoherency(graph);
+
+    AssertDominatorTree(graph);
 
     uint32_t idx = 0;
     for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
@@ -1964,9 +2000,45 @@ jit::AssertExtendedGraphCoherency(MIRGraph &graph)
 
         JS_ASSERT(successorWithPhis <= 1);
         JS_ASSERT((successorWithPhis != 0) == (block->successorWithPhis() != nullptr));
-    }
 
-    AssertDominatorTree(graph);
+        // Verify that phi operands dominate the corresponding CFG predecessor
+        // edges.
+        for (MPhiIterator iter(block->phisBegin()), end(block->phisEnd()); iter != end; ++iter) {
+            MPhi *phi = *iter;
+            for (size_t i = 0, e = phi->numOperands(); i < e; ++i) {
+                // We sometimes see a phi with a magic-optimized-arguments
+                // operand defined in the normal entry block, while the phi is
+                // also reachable from the OSR entry (auto-regress/bug779818.js)
+                if (phi->getOperand(i)->type() == MIRType_MagicOptimizedArguments)
+                    continue;
+
+                MOZ_ASSERT(phi->getOperand(i)->block()->dominates(block->getPredecessor(i)),
+                           "Phi input is not dominated by its operand");
+            }
+        }
+
+        // Verify that instructions are dominated by their operands.
+        for (MInstructionIterator iter(block->begin()), end(block->end()); iter != end; ++iter) {
+            MInstruction *ins = *iter;
+            for (size_t i = 0, e = ins->numOperands(); i < e; ++i) {
+                MDefinition *op = ins->getOperand(i);
+                MBasicBlock *opBlock = op->block();
+                MOZ_ASSERT(opBlock->dominates(*block),
+                           "Instruction is not dominated by its operands");
+
+                // If the operand is an instruction in the same block, check
+                // that it comes first.
+                if (opBlock == *block && !op->isPhi()) {
+                    MInstructionIterator opIter = block->begin(op->toInstruction());
+                    do {
+                        ++opIter;
+                        MOZ_ASSERT(opIter != block->end(),
+                                   "Operand in same block as instruction does not precede");
+                    } while (*opIter != ins);
+                }
+            }
+        }
+    }
 #endif
 }
 

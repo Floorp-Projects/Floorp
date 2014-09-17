@@ -1477,6 +1477,10 @@ OptimizeMIR(MIRGenerator *mir)
         ParallelSafetyAnalysis analysis(mir, graph);
         if (!analysis.analyze())
             return false;
+        IonSpewPass("Parallel Safety Analysis");
+        AssertExtendedGraphCoherency(graph);
+        if (mir->shouldCancel("Parallel Safety Analysis"))
+            return false;
     }
 
     // Alias analysis is required for LICM and GVN so that we don't move
