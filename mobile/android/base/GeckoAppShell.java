@@ -121,6 +121,7 @@ public class GeckoAppShell
     // We have static members only.
     private GeckoAppShell() { }
 
+    private static Thread.UncaughtExceptionHandler systemUncaughtHandler;
     private static boolean restartScheduled = false;
     private static GeckoEditableListener editableListener = null;
 
@@ -203,6 +204,8 @@ public class GeckoAppShell
     public static native void dispatchMemoryPressure();
 
     public static void registerGlobalExceptionHandler() {
+        systemUncaughtHandler = Thread.getDefaultUncaughtExceptionHandler();
+
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
             public void uncaughtException(Thread thread, Throwable e) {
@@ -450,8 +453,19 @@ public class GeckoAppShell
                 editor.putBoolean(GeckoApp.PREFS_OOM_EXCEPTION, true);
                 editor.commit();
             }
-        } finally {
+        } catch (final Throwable exc) {
+            // Report the Java crash below, even if we encounter an exception here.
+        }
+
+        try {
             reportJavaCrash(getStackTraceString(e));
+        } finally {
+            // reportJavaCrash should have caused us to hard crash. If we're still here,
+            // it probably means Gecko is not loaded, and we should do something else.
+            // Bring up the app crashed dialog so we don't crash silently.
+            if (systemUncaughtHandler != null) {
+                systemUncaughtHandler.uncaughtException(thread, e);
+            }
         }
     }
 
