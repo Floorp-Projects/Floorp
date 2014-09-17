@@ -272,7 +272,7 @@ TEST(VP8VideoTrackEncoder, FrameEncode)
   }
 
   // track change notification.
-  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, 0, 0, segment);
+  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, 0, segment);
 
   // Pull Encoded Data back from encoder.
   EncodedFrameContainer container;
@@ -290,7 +290,7 @@ TEST(VP8VideoTrackEncoder, EncodeComplete)
 
   // track end notification.
   VideoSegment segment;
-  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, 0, MediaStreamListener::TRACK_EVENT_ENDED, segment);
+  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, MediaStreamListener::TRACK_EVENT_ENDED, segment);
 
   // Pull Encoded Data back from encoder. Since we have sent
   // EOS to encoder, encoder.GetEncodedTrack should return

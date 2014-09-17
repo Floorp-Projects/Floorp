@@ -940,18 +940,16 @@ nsresult MediaPipeline::PipelineTransport::SendRtcpPacket_s(
 // Called if we're attached with AddDirectListener()
 void MediaPipelineTransmit::PipelineListener::
 NotifyRealtimeData(MediaStreamGraph* graph, TrackID tid,
-                   TrackRate rate,
                    TrackTicks offset,
                    uint32_t events,
                    const MediaSegment& media) {
   MOZ_MTLOG(ML_DEBUG, "MediaPipeline::NotifyRealtimeData()");
 
-  NewData(graph, tid, rate, offset, events, media);
+  NewData(graph, tid, offset, events, media);
 }
 
 void MediaPipelineTransmit::PipelineListener::
 NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
-                         TrackRate rate,
                          TrackTicks offset,
                          uint32_t events,
                          const MediaSegment& queued_media) {
@@ -959,7 +957,7 @@ NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
 
   // ignore non-direct data if we're also getting direct data
   if (!direct_connect_) {
-    NewData(graph, tid, rate, offset, events, queued_media);
+    NewData(graph, tid, offset, events, queued_media);
   }
 }
 
@@ -974,7 +972,6 @@ NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
 
 void MediaPipelineTransmit::PipelineListener::
 NewData(MediaStreamGraph* graph, TrackID tid,
-        TrackRate rate,
         TrackTicks offset,
         uint32_t events,
         const MediaSegment& media) {
@@ -1007,6 +1004,12 @@ NewData(MediaStreamGraph* graph, TrackID tid,
 
     AudioSegment::ChunkIterator iter(*audio);
     while(!iter.IsEnded()) {
+      TrackRate rate;
+#ifdef USE_FAKE_MEDIA_STREAMS
+      rate = Fake_MediaStream::GraphRate();
+#else
+      rate = graph->GraphRate();
+#endif
       ProcessAudioChunk(static_cast<AudioSessionConduit*>(conduit_.get()),
                         rate, *iter);
       iter.Next();
@@ -1019,7 +1022,7 @@ NewData(MediaStreamGraph* graph, TrackID tid,
     VideoSegment::ChunkIterator iter(*video);
     while(!iter.IsEnded()) {
       ProcessVideoChunk(static_cast<VideoSessionConduit*>(conduit_.get()),
-                        rate, *iter);
+                        *iter);
       iter.Next();
     }
 #endif
@@ -1128,7 +1131,6 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
 #ifdef MOZILLA_INTERNAL_API
 void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
     VideoSessionConduit* conduit,
-    TrackRate rate,
     VideoChunk& chunk) {
   layers::Image *img = chunk.mFrame.GetImage();
 

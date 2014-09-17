@@ -32,16 +32,13 @@ namespace mozilla {
 
 class Fake_SourceMediaStream;
 
-static const int64_t USECS_PER_S = 1000000;
-
 class Fake_MediaStreamListener
 {
- protected:
+protected:
   virtual ~Fake_MediaStreamListener() {}
 
- public:
+public:
   virtual void NotifyQueuedTrackChanges(mozilla::MediaStreamGraph* aGraph, mozilla::TrackID aID,
-                                        mozilla::TrackRate aTrackRate,
                                         mozilla::TrackTicks aTrackOffset,
                                         uint32_t aTrackEvents,
                                         const mozilla::MediaSegment& aQueuedMedia)  = 0;
@@ -52,12 +49,11 @@ class Fake_MediaStreamListener
 
 class Fake_MediaStreamDirectListener : public Fake_MediaStreamListener
 {
- protected:
+protected:
   virtual ~Fake_MediaStreamDirectListener() {}
 
- public:
+public:
   virtual void NotifyRealtimeData(mozilla::MediaStreamGraph* graph, mozilla::TrackID tid,
-                                  mozilla::TrackRate rate,
                                   mozilla::TrackTicks offset,
                                   uint32_t events,
                                   const mozilla::MediaSegment& media) = 0;
@@ -71,7 +67,7 @@ class Fake_MediaStream {
  public:
   Fake_MediaStream () : mListeners(), mMutex("Fake MediaStream") {}
 
-  uint32_t GraphRate() { return 16000; }
+  static uint32_t GraphRate() { return 16000; }
 
   void AddListener(Fake_MediaStreamListener *aListener) {
     mozilla::MutexAutoLock lock(mMutex);
