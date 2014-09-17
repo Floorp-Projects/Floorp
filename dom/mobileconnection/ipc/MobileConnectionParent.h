@@ -55,8 +55,9 @@ protected:
            nsString* aRadioState, nsTArray<nsString>* aSupportedNetworkTypes) MOZ_OVERRIDE;
 
 private:
-  nsCOMPtr<nsIMobileConnection> mMobileConnection;
+  uint32_t mClientId;
   bool mLive;
+  nsCOMPtr<nsIMobileConnectionService> mService;
 };
 
 /******************************************************************************
@@ -77,11 +78,14 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMOBILECONNECTIONCALLBACK
 
-  explicit MobileConnectionRequestParent(nsIMobileConnection* aMobileConnection)
-    : mMobileConnection(aMobileConnection)
+  explicit MobileConnectionRequestParent(uint32_t aClientId)
+    : mClientId(aClientId)
     , mLive(true)
   {
     MOZ_COUNT_CTOR(MobileConnectionRequestParent);
+
+    mService = do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
+    NS_ASSERTION(mService, "This shouldn't fail!");
   }
 
   bool
@@ -164,8 +168,9 @@ protected:
   SendReply(const MobileConnectionReply& aReply);
 
 private:
-  nsCOMPtr<nsIMobileConnection> mMobileConnection;
+  uint32_t mClientId;
   bool mLive;
+  nsCOMPtr<nsIMobileConnectionService> mService;
 };
 
 } // namespace mobileconnection

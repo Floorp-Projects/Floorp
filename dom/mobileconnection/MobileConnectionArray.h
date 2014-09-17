@@ -34,7 +34,7 @@ public:
   Item(uint32_t aIndex);
 
   uint32_t
-  Length();
+  Length() const;
 
   MobileConnection*
   IndexedGetter(uint32_t aIndex, bool& aFound);
@@ -42,7 +42,10 @@ public:
 private:
   ~MobileConnectionArray();
 
-  bool mLengthInitialized;
+  void
+  Init();
+
+  bool mInitialized;
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsTArray<nsRefPtr<MobileConnection>> mMobileConnections;
