@@ -99,6 +99,16 @@ nsScriptableUnicodeConverter::FinishWithLength(char **_retval, int32_t* aLength)
 NS_IMETHODIMP
 nsScriptableUnicodeConverter::Finish(nsACString& _retval)
 {
+  // The documentation for this method says it should be called after
+  // ConvertFromUnicode(). However, our own tests called it after
+  // convertFromByteArray(), i.e. when *decoding*.
+  // Assuming that there exists extensions that similarly call
+  // this at the wrong time, let's deal. In general, it is a design
+  // error for this class to handle conversions in both directions.
+  if (!mEncoder) {
+    _retval.Truncate();
+    return NS_OK;
+  }
   int32_t len;
   char* str;
   nsresult rv = FinishWithLength(&str, &len);
