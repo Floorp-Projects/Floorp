@@ -718,8 +718,6 @@ private:
 
 #ifdef MOZ_NUWA_PROCESS
     static bool sNuwaReady;
-    struct NuwaReinitializeData;
-    nsAutoPtr<NuwaReinitializeData> mReinitializeData;
 #endif
 };
 
