@@ -35,6 +35,7 @@
 #include "nsIPrompt.h"
 #include "nsIBufEntropyCollector.h"
 #include "nsITokenPasswordDialogs.h"
+#include "nsISiteSecurityService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsNSSShutDown.h"
 #include "SharedSSLState.h"
@@ -1038,6 +1039,15 @@ nsNSSComponent::InitializeNSS()
 #endif
 
   mozilla::pkix::RegisterErrorTable();
+
+  // Initialize the site security service
+  nsCOMPtr<nsISiteSecurityService> sssService =
+    do_GetService(NS_SSSERVICE_CONTRACTID);
+  if (!sssService) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Cannot initialize site security service\n"));
+    return NS_ERROR_FAILURE;
+  }
+
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
   return NS_OK;

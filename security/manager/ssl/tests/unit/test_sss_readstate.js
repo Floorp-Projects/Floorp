@@ -61,13 +61,13 @@ function run_test() {
   do_check_false(stateFile.exists());
   let outputStream = FileUtils.openFileOutputStream(stateFile);
   let now = (new Date()).getTime();
-  writeLine("expired.example.com\t0\t0\t" + (now - 100000) + ",1,0\n", outputStream);
-  writeLine("notexpired.example.com\t0\t0\t" + (now + 100000) + ",1,0\n", outputStream);
+  writeLine("expired.example.com:HSTS\t0\t0\t" + (now - 100000) + ",1,0\n", outputStream);
+  writeLine("notexpired.example.com:HSTS\t0\t0\t" + (now + 100000) + ",1,0\n", outputStream);
   // This overrides an entry on the preload list.
-  writeLine("bugzilla.mozilla.org\t0\t0\t" + (now + 100000) + ",1,0\n", outputStream);
-  writeLine("incsubdomain.example.com\t0\t0\t" + (now + 100000) + ",1,1\n", outputStream);
+  writeLine("bugzilla.mozilla.org:HSTS\t0\t0\t" + (now + 100000) + ",1,0\n", outputStream);
+  writeLine("incsubdomain.example.com:HSTS\t0\t0\t" + (now + 100000) + ",1,1\n", outputStream);
   // This overrides an entry on the preload list.
-  writeLine("login.persona.org\t0\t0\t0,2,0\n", outputStream);
+  writeLine("login.persona.org:HSTS\t0\t0\t0,2,0\n", outputStream);
   outputStream.close();
   Services.obs.addObserver(checkStateRead, "data-storage-ready", false);
   do_test_pending();
