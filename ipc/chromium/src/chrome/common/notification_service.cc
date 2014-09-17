@@ -8,7 +8,7 @@
 #include "base/thread_local.h"
 
 static base::LazyInstance<base::ThreadLocalPointer<NotificationService> >
-    lazy_tls_ptr(base::LINKER_INITIALIZED);
+    lazy_tls_ptr = LAZY_INSTANCE_INITIALIZER;
 
 // static
 NotificationService* NotificationService::current() {
