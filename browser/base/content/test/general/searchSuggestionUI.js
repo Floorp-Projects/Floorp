@@ -37,33 +37,6 @@ let messageHandlers = {
     ack();
   },
 
-  mousemove: function (suggestionIdx) {
-    // Copied from widget/tests/test_panel_mouse_coords.xul and
-    // browser/base/content/test/newtab/head.js
-    let row = gController._table.children[suggestionIdx];
-    let rect = row.getBoundingClientRect();
-    let left = content.mozInnerScreenX + rect.left;
-    let x = left + rect.width / 2;
-    let y = content.mozInnerScreenY + rect.top + rect.height / 2;
-
-    let utils = content.SpecialPowers.getDOMWindowUtils(content);
-    let scale = utils.screenPixelsPerCSSPixel;
-
-    let widgetToolkit = content.SpecialPowers.
-                        Cc["@mozilla.org/xre/app-info;1"].
-                        getService(content.SpecialPowers.Ci.nsIXULRuntime).
-                        widgetToolkit;
-    let nativeMsg = widgetToolkit == "cocoa" ? 5 : // NSMouseMoved
-                    widgetToolkit == "windows" ? 1 : // MOUSEEVENTF_MOVE
-                    3; // GDK_MOTION_NOTIFY
-
-    row.addEventListener("mousemove", function onMove() {
-      row.removeEventListener("mousemove", onMove);
-      ack();
-    });
-    utils.sendNativeMouseEvent(x * scale, y * scale, nativeMsg, 0, null);
-  },
-
   mousedown: function (suggestionIdx) {
     gController.onClick = () => {
       gController.onClick = null;
