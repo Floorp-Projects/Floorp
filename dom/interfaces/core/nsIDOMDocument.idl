@@ -32,7 +32,7 @@ interface nsIDOMLocation;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[uuid(950ca868-e09f-4a7d-9b87-e4ec9aedb3e5)]
+[uuid(2053c184-e123-4ed0-81e5-25d09c75f571)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
