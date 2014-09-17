@@ -107,7 +107,7 @@ class MOZ_STACK_CLASS AutoSetCurrentTransaction MOZ_FINAL
   IDBTransaction** mThreadLocalSlot;
 
 public:
-  AutoSetCurrentTransaction(IDBTransaction* aTransaction)
+  explicit AutoSetCurrentTransaction(IDBTransaction* aTransaction)
     : mTransaction(aTransaction)
     , mPreviousTransaction(nullptr)
     , mThreadLocalSlot(nullptr)
@@ -1933,7 +1933,7 @@ class BackgroundCursorChild::DelayedDeleteRunnable MOZ_FINAL
   nsRefPtr<IDBRequest> mRequest;
 
 public:
-  DelayedDeleteRunnable(BackgroundCursorChild* aActor)
+  explicit DelayedDeleteRunnable(BackgroundCursorChild* aActor)
     : mActor(aActor)
     , mRequest(aActor->mRequest)
   {

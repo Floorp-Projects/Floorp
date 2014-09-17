@@ -75,7 +75,7 @@ public:
 
 private:
   // Only created by IDBFactory.
-  BackgroundFactoryChild(IDBFactory* aFactory);
+  explicit BackgroundFactoryChild(IDBFactory* aFactory);
 
   // Only destroyed by mozilla::ipc::BackgroundChildImpl.
   ~BackgroundFactoryChild();
@@ -143,7 +143,7 @@ public:
   }
 
 protected:
-  BackgroundRequestChildBase(IDBRequest* aRequest);
+  explicit BackgroundRequestChildBase(IDBRequest* aRequest);
 
   virtual
   ~BackgroundRequestChildBase();
@@ -354,7 +354,7 @@ public:
 
 protected:
   BackgroundTransactionBase();
-  BackgroundTransactionBase(IDBTransaction* aTransaction);
+  explicit BackgroundTransactionBase(IDBTransaction* aTransaction);
 
   virtual
   ~BackgroundTransactionBase();
@@ -389,7 +389,7 @@ public:
 
 private:
   // Only created by IDBDatabase.
-  BackgroundTransactionChild(IDBTransaction* aTransaction);
+  explicit BackgroundTransactionChild(IDBTransaction* aTransaction);
 
   // Only destroyed by BackgroundDatabaseChild.
   ~BackgroundTransactionChild();
@@ -438,7 +438,7 @@ public:
 
 private:
   // Only created by BackgroundDatabaseChild.
-  BackgroundVersionChangeTransactionChild(IDBOpenDBRequest* aOpenDBRequest);
+  explicit BackgroundVersionChangeTransactionChild(IDBOpenDBRequest* aOpenDBRequest);
 
   // Only destroyed by BackgroundDatabaseChild.
   ~BackgroundVersionChangeTransactionChild();
@@ -486,7 +486,7 @@ class BackgroundRequestChild MOZ_FINAL
   nsTArray<nsRefPtr<FileInfo>> mFileInfos;
 
 public:
-  BackgroundRequestChild(IDBRequest* aRequest);
+  explicit BackgroundRequestChild(IDBRequest* aRequest);
 
   void
   HoldFileInfosUntilComplete(nsTArray<nsRefPtr<FileInfo>>& aFileInfos);

@@ -68,7 +68,7 @@ struct StructuredCloneReadInfo
 
   // In IndexedDatabaseInlines.h
   inline
-  StructuredCloneReadInfo(SerializedStructuredCloneReadInfo&& aOther);
+  MOZ_IMPLICIT StructuredCloneReadInfo(SerializedStructuredCloneReadInfo&& aOther);
 };
 
 } // namespace indexedDB

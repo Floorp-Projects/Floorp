@@ -38,7 +38,7 @@ protected:
 
   // Constructor used to create AbortablePromise for JavaScript. It should be
   // called by the static AbortablePromise::Constructor.
-  AbortablePromise(nsIGlobalObject* aGlobal);
+  explicit AbortablePromise(nsIGlobalObject* aGlobal);
 
   virtual ~AbortablePromise();
 

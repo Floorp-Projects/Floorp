@@ -78,7 +78,7 @@ class IDBFactory::BackgroundCreateCallback MOZ_FINAL
   nsRefPtr<IDBFactory> mFactory;
 
 public:
-  BackgroundCreateCallback(IDBFactory* aFactory)
+  explicit BackgroundCreateCallback(IDBFactory* aFactory)
   : mFactory(aFactory)
   {
     MOZ_ASSERT(aFactory);

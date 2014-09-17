@@ -254,7 +254,7 @@ struct FullDatabaseMetadata
   int64_t mNextIndexId;
 
 public:
-  FullDatabaseMetadata(const DatabaseMetadata& aCommonMetadata)
+  explicit FullDatabaseMetadata(const DatabaseMetadata& aCommonMetadata)
     : mCommonMetadata(aCommonMetadata)
     , mNextObjectStoreId(0)
     , mNextIndexId(0)
@@ -320,7 +320,7 @@ private:
     MOZ_ASSERT(aId);
   }
 
-  MetadataNameOrIdMatcher(const int64_t& aId)
+  explicit MetadataNameOrIdMatcher(const int64_t& aId)
     : mId(aId)
     , mMetadata(nullptr)
     , mCheckName(false)
@@ -2724,7 +2724,7 @@ public:
   Cleanup();
 
 protected:
-  TransactionDatabaseOperationBase(TransactionBase* aTransaction);
+  explicit TransactionDatabaseOperationBase(TransactionBase* aTransaction);
 
   virtual
   ~TransactionDatabaseOperationBase();
@@ -2790,7 +2790,7 @@ public:
 
 private:
   // Only constructed in Create().
-  Factory(const OptionalWindowId& aOptionalWindowId);
+  explicit Factory(const OptionalWindowId& aOptionalWindowId);
 
   // Reference counted.
   ~Factory();
@@ -3073,7 +3073,7 @@ public:
 
 private:
   // Called when sending to the child.
-  DatabaseFile(FileInfo* aFileInfo)
+  explicit DatabaseFile(FileInfo* aFileInfo)
     : mFileInfo(aFileInfo)
   {
     AssertIsOnBackgroundThread();
@@ -3471,7 +3471,7 @@ class TransactionBase::UpdateRefcountFunction MOZ_FINAL
     int32_t mSavepointDelta;
 
   public:
-    FileInfoEntry(FileInfo* aFileInfo)
+    explicit FileInfoEntry(FileInfo* aFileInfo)
       : mFileInfo(aFileInfo)
       , mDelta(0)
       , mSavepointDelta(0)
@@ -3531,7 +3531,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
-  UpdateRefcountFunction(FileManager* aFileManager)
+  explicit UpdateRefcountFunction(FileManager* aFileManager)
     : mFileManager(aFileManager)
     , mInSavepoint(false)
   { }
@@ -3736,7 +3736,7 @@ class VersionChangeTransaction MOZ_FINAL
 
 private:
   // Only called by OpenDatabaseOp.
-  VersionChangeTransaction(OpenDatabaseOp* aOpenDatabaseOp);
+  explicit VersionChangeTransaction(OpenDatabaseOp* aOpenDatabaseOp);
 
   // Reference counted.
   ~VersionChangeTransaction();
@@ -4017,7 +4017,7 @@ struct FactoryOp::MaybeBlockedDatabaseInfo MOZ_FINAL
   nsRefPtr<Database> mDatabase;
   bool mBlocked;
 
-  MaybeBlockedDatabaseInfo(Database* aDatabase)
+  MOZ_IMPLICIT MaybeBlockedDatabaseInfo(Database* aDatabase)
     : mDatabase(aDatabase)
     , mBlocked(false)
   {
@@ -4145,7 +4145,7 @@ class OpenDatabaseOp::VersionChangeOp MOZ_FINAL
   uint64_t mPreviousVersion;
 
 private:
-  VersionChangeOp(OpenDatabaseOp* aOpenDatabaseOp)
+  explicit VersionChangeOp(OpenDatabaseOp* aOpenDatabaseOp)
     : TransactionDatabaseOperationBase(
                                      aOpenDatabaseOp->mVersionChangeTransaction)
     , mOpenDatabaseOp(aOpenDatabaseOp)
@@ -4226,7 +4226,7 @@ class DeleteDatabaseOp::VersionChangeOp MOZ_FINAL
   nsRefPtr<DeleteDatabaseOp> mDeleteDatabaseOp;
 
 private:
-  VersionChangeOp(DeleteDatabaseOp* aDeleteDatabaseOp)
+  explicit VersionChangeOp(DeleteDatabaseOp* aDeleteDatabaseOp)
     : mDeleteDatabaseOp(aDeleteDatabaseOp)
   {
     MOZ_ASSERT(aDeleteDatabaseOp);
@@ -4258,7 +4258,7 @@ public:
   Cleanup() MOZ_OVERRIDE;
 
 protected:
-  VersionChangeTransactionOp(VersionChangeTransaction* aTransaction)
+  explicit VersionChangeTransactionOp(VersionChangeTransaction* aTransaction)
     : TransactionDatabaseOperationBase(aTransaction)
   { }
 
@@ -4452,7 +4452,7 @@ public:
   Cleanup() MOZ_OVERRIDE;
 
 protected:
-  NormalTransactionOp(TransactionBase* aTransaction)
+  explicit NormalTransactionOp(TransactionBase* aTransaction)
     : TransactionDatabaseOperationBase(aTransaction)
     , mResponseSent(false)
   { }
@@ -4886,7 +4886,7 @@ protected:
   DebugOnly<bool> mResponseSent;
 
 protected:
-  CursorOpBase(Cursor* aCursor)
+  explicit CursorOpBase(Cursor* aCursor)
     : TransactionDatabaseOperationBase(aCursor->mTransaction)
     , mCursor(aCursor)
     , mResponseSent(false)
@@ -5168,7 +5168,7 @@ class QuotaClient::ShutdownTransactionThreadPoolRunnable MOZ_FINAL
 
 public:
 
-  ShutdownTransactionThreadPoolRunnable(QuotaClient* aQuotaClient)
+  explicit ShutdownTransactionThreadPoolRunnable(QuotaClient* aQuotaClient)
     : mQuotaClient(aQuotaClient)
     , mHasRequestedShutDown(false)
   {
@@ -5664,7 +5664,7 @@ FullDatabaseMetadata::Duplicate() const
     FullObjectStoreMetadata& mNew;
 
   public:
-    IndexClosure(FullObjectStoreMetadata& aNew)
+    explicit IndexClosure(FullObjectStoreMetadata& aNew)
       : mNew(aNew)
     { }
 
@@ -5695,7 +5695,7 @@ FullDatabaseMetadata::Duplicate() const
     FullDatabaseMetadata& mNew;
 
   public:
-    ObjectStoreClosure(FullDatabaseMetadata& aNew)
+    explicit ObjectStoreClosure(FullDatabaseMetadata& aNew)
       : mNew(aNew)
     { }
 
@@ -12018,7 +12018,7 @@ OpenDatabaseOp::MetadataToSpec(DatabaseSpec& aSpec)
     }
 
   private:
-    Helper(DatabaseSpec& aSpec)
+    explicit Helper(DatabaseSpec& aSpec)
       : mSpec(aSpec)
       , mCurrentObjectStoreSpec(nullptr)
     { }
@@ -12095,7 +12095,7 @@ OpenDatabaseOp::AssertMetadataConsistency(const FullDatabaseMetadata* aMetadata)
     }
 
   private:
-    Helper(const ObjectStoreTable& aOtherObjectStores)
+    explicit Helper(const ObjectStoreTable& aOtherObjectStores)
       : mOtherObjectStores(aOtherObjectStores)
       , mCurrentOtherIndexTable(nullptr)
     { }
