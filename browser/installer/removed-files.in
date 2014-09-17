@@ -57,6 +57,13 @@
 # Firefox 27
 distribution/extensions/testpilot@labs.mozilla.com.xpi
 
+# Some users are ending up with unpacked chrome instead of omni.ja. This
+# causes updates to break badly, see bug 1063052. Removing the toplevel
+# chrome.manifest causes us to use the updated omni.ja.
+#ifndef MOZ_GTK
+chrome.manifest
+#endif
+
 # Directory removals
 chrome/
 #ifdef XP_UNIX
