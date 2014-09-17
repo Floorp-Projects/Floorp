@@ -132,9 +132,9 @@ class Image;
 
 namespace image {
 
+class ScaleRequest;
 class Decoder;
 class FrameAnimator;
-class ScaleRunner;
 
 class RasterImage MOZ_FINAL : public ImageResource
                             , public nsIProperties
@@ -298,6 +298,23 @@ public:
   // Called from module startup. Sets up RasterImage to be used.
   static void Initialize();
 
+  enum ScaleStatus
+  {
+    SCALE_INVALID,
+    SCALE_PENDING,
+    SCALE_DONE
+  };
+
+  // Call this with a new ScaleRequest to mark this RasterImage's scale result
+  // as waiting for the results of this request. You call to ScalingDone before
+  // request is destroyed!
+  void ScalingStart(ScaleRequest* request);
+
+  // Call this with a finished ScaleRequest to set this RasterImage's scale
+  // result. Give it a ScaleStatus of SCALE_DONE if everything succeeded, and
+  // SCALE_INVALID otherwise.
+  void ScalingDone(ScaleRequest* request, ScaleStatus status);
+
   // Decoder shutdown
   enum eShutdownIntent {
     eShutdownIntent_Done        = 0,
@@ -309,6 +326,9 @@ public:
   // Decode strategy
 
 private:
+  // Initiates an HQ scale for the given frame, if possible.
+  void RequestScale(imgFrame* aFrame, nsIntSize aScale);
+
   already_AddRefed<imgStatusTracker> CurrentStatusTracker()
   {
     mDecodingMonitor.AssertCurrentThreadIn();
@@ -704,27 +724,31 @@ private: // data
   bool     IsDecodeFinished();
   TimeStamp mDrawStartTime;
 
+  inline bool CanQualityScale(const gfx::Size& scale);
+  inline bool CanScale(GraphicsFilter aFilter, gfx::Size aScale, uint32_t aFlags);
+
+  struct ScaleResult
+  {
+    ScaleResult()
+     : status(SCALE_INVALID)
+    {}
+
+    nsIntSize scaledSize;
+    nsRefPtr<imgFrame> frame;
+    ScaleStatus status;
+  };
+
+  ScaleResult mScaleResult;
+
+  // We hold on to a bare pointer to a ScaleRequest while it's outstanding so
+  // we can mark it as stopped if necessary. The ScaleWorker/DrawWorker duo
+  // will inform us when to let go of this pointer.
+  ScaleRequest* mScaleRequest;
+
   // Initializes imgStatusTracker and resets it on RasterImage destruction.
   nsAutoPtr<imgStatusTrackerInit> mStatusTrackerInit;
 
   nsresult ShutdownDecoder(eShutdownIntent aIntent);
-
-
-  //////////////////////////////////////////////////////////////////////////////
-  // Scaling.
-  //////////////////////////////////////////////////////////////////////////////
-
-  // Initiates an HQ scale for the given frame, if possible.
-  void RequestScale(imgFrame* aFrame, uint32_t aFlags, const nsIntSize& aSize);
-
-  // Determines whether we can perform an HQ scale with the given parameters.
-  bool CanScale(GraphicsFilter aFilter, const nsIntSize& aSize, uint32_t aFlags);
-
-  // Called by the HQ scaler when a new scaled frame is ready.
-  void NotifyNewScaledFrame();
-
-  friend class ScaleRunner;
-
 
   // Error handling.
   void DoError();
