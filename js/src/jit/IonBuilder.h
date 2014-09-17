@@ -651,8 +651,8 @@ class IonBuilder
     bool jsop_typeof();
     bool jsop_toid();
     bool jsop_iter(uint8_t flags);
-    bool jsop_iternext();
     bool jsop_itermore();
+    bool jsop_isnoiter();
     bool jsop_iterend();
     bool jsop_in();
     bool jsop_in_dense();
