@@ -71,12 +71,8 @@ WeakMapBase::unmarkCompartment(JSCompartment *c)
 void
 WeakMapBase::markAll(JSCompartment *c, JSTracer *tracer)
 {
-    JS_ASSERT(tracer->eagerlyTraceWeakMaps() != DoNotTraceWeakMaps);
-    for (WeakMapBase *m = c->gcWeakMapList; m; m = m->next) {
-        m->trace(tracer);
-        if (m->memberOf)
-            gc::MarkObject(tracer, &m->memberOf, "memberOf");
-    }
+    for (WeakMapBase *m = c->gcWeakMapList; m; m = m->next)
+        m->markIteratively(tracer);
 }
 
 bool

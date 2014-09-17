@@ -199,7 +199,7 @@ class RegExpShared
     void trace(JSTracer *trc);
 
     bool marked() const { return marked_; }
-    void clearMarked() { marked_ = false; }
+    void clearMarked() { JS_ASSERT(marked_); marked_ = false; }
 
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 };
