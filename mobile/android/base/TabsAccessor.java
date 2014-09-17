@@ -20,6 +20,8 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.Log;
@@ -58,7 +60,7 @@ public final class TabsAccessor {
      * We use the hash of the client's GUID as the ID in
      * {@link RemoteTabsExpandableListAdapter#getGroupId(int)}.
      */
-    public static class RemoteClient {
+    public static class RemoteClient implements Parcelable {
         public final String guid;
         public final String name;
         public final long lastModified;
@@ -72,6 +74,40 @@ public final class TabsAccessor {
             this.deviceType = deviceType;
             this.tabs = new ArrayList<RemoteTab>();
         }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel parcel, int flags) {
+            parcel.writeString(guid);
+            parcel.writeString(name);
+            parcel.writeLong(lastModified);
+            parcel.writeString(deviceType);
+            parcel.writeTypedList(tabs);
+        }
+
+        public static final Creator<RemoteClient> CREATOR = new Creator<RemoteClient>() {
+            @Override
+            public RemoteClient createFromParcel(final Parcel source) {
+                final String guid = source.readString();
+                final String name = source.readString();
+                final long lastModified = source.readLong();
+                final String deviceType = source.readString();
+
+                final RemoteClient client = new RemoteClient(guid, name, lastModified, deviceType);
+                source.readTypedList(client.tabs, RemoteTab.CREATOR);
+
+                return client;
+            }
+
+            @Override
+            public RemoteClient[] newArray(final int size) {
+                return new RemoteClient[size];
+            }
+        };
     }
 
     /**
@@ -81,7 +117,7 @@ public final class TabsAccessor {
      * {@link RemoteTabsExpandableListAdapter#getClientId(int)}, and therefore we
      * must implement equality as well. These are generated functions.
      */
-    public static class RemoteTab {
+    public static class RemoteTab implements Parcelable {
         public final String title;
         public final String url;
 
@@ -89,6 +125,32 @@ public final class TabsAccessor {
             this.title = title;
             this.url = url;
         }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel parcel, int flags) {
+            parcel.writeString(title);
+            parcel.writeString(url);
+        }
+
+        public static final Creator<RemoteTab> CREATOR = new Creator<RemoteTab>() {
+            @Override
+            public RemoteTab createFromParcel(final Parcel source) {
+                final String title = source.readString();
+                final String url = source.readString();
+
+                return new RemoteTab(title, url);
+            }
+
+            @Override
+            public RemoteTab[] newArray(final int size) {
+                return new RemoteTab[size];
+            }
+        };
 
         @Override
         public int hashCode() {

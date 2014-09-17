@@ -6,17 +6,17 @@ public class testPictureLinkContextMenu extends ContentContextMenuTest {
     // Test website strings
     private static String PICTURE_PAGE_URL;
     private static String BLANK_PAGE_URL;
-    private static final String PICTURE_PAGE_TITLE = "Picture Link";
+    private static final String PICTURE_PAGE_TITLE = StringHelper.ROBOCOP_PICTURE_LINK_TITLE;
     private static final String tabs [] = { "Image", "Link" };
     private static final String photoMenuItems [] = { "Copy Image Location", "Share Image", "Set Image As", "Save Image" };
-    private static final String linkMenuItems [] = { "Open Link in New Tab", "Open Link in Private Tab", "Copy Link", "Share Link", "Bookmark Link"};
+    private static final String linkMenuItems [] = StringHelper.CONTEXT_MENU_ITEMS_IN_NORMAL_TAB;
     private static final String imageTitle = "^Image$";
 
     public void testPictureLinkContextMenu() {
         blockForGeckoReady();
 
-        PICTURE_PAGE_URL=getAbsoluteUrl("/robocop/robocop_picture_link.html");
-        BLANK_PAGE_URL=getAbsoluteUrl("/robocop/robocop_blank_02.html");
+        PICTURE_PAGE_URL=getAbsoluteUrl(StringHelper.ROBOCOP_PICTURE_LINK_URL);
+        BLANK_PAGE_URL=getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
         loadAndPaint(PICTURE_PAGE_URL);
         verifyPageTitle(PICTURE_PAGE_TITLE);
 

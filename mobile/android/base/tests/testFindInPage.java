@@ -12,7 +12,7 @@ public class testFindInPage extends PixelTest {
 
     public void testFindInPage() {
         blockForGeckoReady();
-        String url = getAbsoluteUrl("/robocop/robocop_text_page.html");
+        String url = getAbsoluteUrl(StringHelper.ROBOCOP_TEXT_PAGE_URL);
         loadAndPaint(url);
 
         height = mDriver.getGeckoHeight()/8;
@@ -42,7 +42,7 @@ public class testFindInPage extends PixelTest {
     }
 
     public void findText(String text, int nrOfMatches){
-        selectMenuItem("Find in Page");
+        selectMenuItem(StringHelper.FIND_IN_PAGE_LABEL);
         close = mDriver.findElement(getActivity(), R.id.find_close);
         boolean success = waitForTest ( new BooleanTest() {
             public boolean test() {

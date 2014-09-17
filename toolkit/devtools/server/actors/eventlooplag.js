@@ -15,17 +15,7 @@ const protocol = require("devtools/server/protocol");
 const {method, Arg, RetVal} = protocol;
 const events = require("sdk/event/core");
 
-exports.register = function(handle) {
-  handle.addGlobalActor(EventLoopLagActor, "eventLoopLagActor");
-  handle.addTabActor(EventLoopLagActor, "eventLoopLagActor");
-};
-
-exports.unregister = function(handle) {
-  handle.removeGlobalActor(EventLoopLagActor);
-  handle.removeTabActor(EventLoopLagActor);
-};
-
-let EventLoopLagActor = protocol.ActorClass({
+let EventLoopLagActor = exports.EventLoopLagActor = protocol.ActorClass({
 
   typeName: "eventLoopLag",
 

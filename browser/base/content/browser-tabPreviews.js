@@ -47,6 +47,10 @@ var tabPreviews = {
   },
 
   capture: function tabPreviews_capture(aTab, aShouldCache) {
+    // Bug 863512 - Make page thumbnails work in electrolysis
+    if (gMultiProcessBrowser)
+      return new Image();
+
     let browser = aTab.linkedBrowser;
     let uri = browser.currentURI.spec;
 

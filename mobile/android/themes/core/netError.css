@@ -199,3 +199,28 @@ div[collapsed="true"] > .expander + * {
     }
   }
 }
+
+#searchbox {
+  padding: 0;
+  display: flex;
+  margin: var(--moz-vertical-spacing) -1em;
+}
+
+#searchbox > input {
+  flex: 3;
+  padding: 0em 3em 0em 1em;
+  width: 100%;
+  border: none;
+  font-family: sans-serif;
+  background-image: none;
+  background-color: white;
+  border-radius-top-right: none;
+  border-radius-bottom-right: none;
+}
+
+#searchbox > button {
+  flex: 1;
+  margin: 0;
+  width: auto;
+}
+

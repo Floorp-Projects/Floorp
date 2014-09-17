@@ -1476,6 +1476,8 @@ WebConsoleActor.prototype.requestTypes =
   sendHTTPRequest: WebConsoleActor.prototype.onSendHTTPRequest
 };
 
+exports.WebConsoleActor = WebConsoleActor;
+
 
 /**
  * The AddonConsoleActor implements capabilities needed for the add-on web
@@ -1993,14 +1995,4 @@ NetworkEventActor.prototype.requestTypes =
   "getResponseCookies": NetworkEventActor.prototype.onGetResponseCookies,
   "getResponseContent": NetworkEventActor.prototype.onGetResponseContent,
   "getEventTimings": NetworkEventActor.prototype.onGetEventTimings,
-};
-
-exports.register = function(handle) {
-  handle.addGlobalActor(WebConsoleActor, "consoleActor");
-  handle.addTabActor(WebConsoleActor, "consoleActor");
-};
-
-exports.unregister = function(handle) {
-  handle.removeGlobalActor(WebConsoleActor, "consoleActor");
-  handle.removeTabActor(WebConsoleActor, "consoleActor");
 };

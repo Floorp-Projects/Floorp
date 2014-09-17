@@ -826,19 +826,6 @@ const CSSUsageFront = protocol.FrontClass(CSSUsageActor, {
 
 exports.CSSUsageFront = CSSUsageFront;
 
-/**
- * Registration / De-registration
- */
-exports.register = function(handle) {
-  handle.addGlobalActor(CSSUsageActor, "cssUsageActor");
-  handle.addTabActor(CSSUsageActor, "cssUsageActor");
-};
-
-exports.unregister = function(handle) {
-  handle.removeGlobalActor(CSSUsageActor, "cssUsageActor");
-  handle.removeTabActor(CSSUsageActor, "cssUsageActor");
-};
-
 const knownFronts = new WeakMap();
 
 /**
