@@ -1134,6 +1134,13 @@ this.UITour = {
           setup: Services.prefs.prefHasUserValue("services.sync.username"),
         });
         break;
+      case "appinfo":
+        let props = ["defaultUpdateChannel", "distributionID", "isOfficialBranding",
+                     "isReleaseBuild", "name", "vendor", "version"];
+        let appinfo = {};
+        props.forEach(property => appinfo[property] = Services.appinfo[property]);
+        this.sendPageCallback(aContentDocument, aCallbackID, appinfo);
+        break;
       default:
         Cu.reportError("getConfiguration: Unknown configuration requested: " + aConfiguration);
         break;
