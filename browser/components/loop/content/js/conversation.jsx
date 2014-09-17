@@ -284,6 +284,8 @@ loop.conversation = (function(OT, mozL10n) {
         this._handleSessionError();
         return;
       }.bind(this));
+
+      this._websocket.on("progress", this._handleWebSocketProgress, this);
     },
 
     /**
@@ -296,6 +298,40 @@ loop.conversation = (function(OT, mozL10n) {
       if (this._conversation.streamsConnected()) {
         this._websocket.mediaUp();
       }
+    },
+
+    /**
+     * Used to receive websocket progress and to determine how to handle
+     * it if appropraite.
+     * If we add more cases here, then we should refactor this function.
+     *
+     * @param {Object} progressData The progress data from the websocket.
+     * @param {String} previousState The previous state from the websocket.
+     */
+    _handleWebSocketProgress: function(progressData, previousState) {
+      // We only care about the terminated state at the moment.
+      if (progressData.state !== "terminated")
+        return;
+
+      if (progressData.reason === "cancel") {
+        this._abortIncomingCall();
+        return;
+      }
+
+      if (progressData.reason === "timeout" &&
+          (previousState === "init" || previousState === "alerting")) {
+        this._abortIncomingCall();
+      }
+    },
+
+    /**
+     * Silently aborts an incoming call - stops the alerting, and
+     * closes the websocket.
+     */
+    _abortIncomingCall: function() {
+      navigator.mozLoop.stopAlerting();
+      this._websocket.close();
+      window.close();
     },
 
     /**

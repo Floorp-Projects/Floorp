@@ -147,7 +147,7 @@ SourceBufferResource::ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCo
   return rv;
 }
 
-bool
+uint32_t
 SourceBufferResource::EvictData(uint32_t aThreshold)
 {
   SBR_DEBUG("SourceBufferResource(%p)::EvictData(aThreshold=%u)", this, aThreshold);

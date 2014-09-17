@@ -11,8 +11,8 @@
 #include "mozilla/a11y/Role.h"
 #include "mozilla/a11y/States.h"
 
-#include "nsIAccessible.h"
-#include "nsIAccessibleHyperLink.h"
+#include "xpcAccessible.h"
+#include "xpcAccessibleHyperLink.h"
 #include "nsIAccessibleStates.h"
 #include "xpcAccessibleSelectable.h"
 #include "xpcAccessibleValue.h"
@@ -27,6 +27,7 @@ struct nsRoleMapEntry;
 struct nsRect;
 class nsIFrame;
 class nsIAtom;
+struct nsIntRect;
 class nsView;
 
 namespace mozilla {
@@ -122,8 +123,8 @@ typedef nsRefPtrHashtable<nsPtrHashKey<const void>, Accessible>
   { 0xbd, 0x50, 0x42, 0x6b, 0xd1, 0xd6, 0xe1, 0xad }    \
 }
 
-class Accessible : public nsIAccessible,
-                   public nsIAccessibleHyperLink,
+class Accessible : public xpcAccessible,
+                   public xpcAccessibleHyperLink,
                    public xpcAccessibleSelectable,
                    public xpcAccessibleValue
 {
@@ -133,9 +134,10 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(Accessible, nsIAccessible)
 
-  NS_DECL_NSIACCESSIBLE
-  NS_DECL_NSIACCESSIBLEHYPERLINK
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ACCESSIBLE_IMPL_IID)
+
+  // nsIAccessible
+  NS_IMETHOD GetNativeInterface(void** aOutAccessible);
 
   //////////////////////////////////////////////////////////////////////////////
   // Public methods
@@ -521,9 +523,39 @@ public:
   void TestChildCache(Accessible* aCachedChild) const;
 
   /**
+   * Return boundaries in screen coordinates.
+   */
+  virtual nsIntRect Bounds() const;
+
+  /**
    * Return boundaries rect relative the bounding frame.
    */
-  virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
+  virtual nsRect RelativeBounds(nsIFrame** aRelativeFrame) const;
+
+  /**
+   * Selects the accessible within its container if applicable.
+   */
+  virtual void SetSelected(bool aSelect);
+
+  /**
+   * Select the accessible within its container.
+   */
+  void TakeSelection();
+
+  /**
+   * Focus the accessible.
+   */
+  virtual void TakeFocus();
+
+  /**
+   * Scroll the accessible into view.
+   */
+  void ScrollTo(uint32_t aHow) const;
+
+  /**
+   * Scroll the accessible to the given point.
+   */
+  void ScrollToPoint(uint32_t aCoordinateType, int32_t aX, int32_t aY);
 
   //////////////////////////////////////////////////////////////////////////////
   // Downcasting and types
@@ -622,6 +654,26 @@ public:
   virtual uint8_t ActionCount();
 
   /**
+   * Return action name at given index.
+   */
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName);
+
+  /**
+   * Default to localized action name.
+   */
+  void ActionDescriptionAt(uint8_t aIndex, nsAString& aDescription)
+  {
+    nsAutoString name;
+    ActionNameAt(aIndex, name);
+    TranslateString(name, aDescription);
+  }
+
+  /**
+   * Invoke the accessible action.
+   */
+  virtual bool DoAction(uint8_t aIndex);
+
+  /**
    * Return access key, such as Alt+D.
    */
   virtual KeyBinding AccessKey() const;
@@ -633,7 +685,8 @@ public:
   virtual KeyBinding KeyboardShortcut() const;
 
   //////////////////////////////////////////////////////////////////////////////
-  // HyperLinkAccessible
+  // HyperLinkAccessible (any embedded object in text can implement HyperLink,
+  // which helps determine where it is located within containing text).
 
   /**
    * Return true if the accessible is hyper link accessible.
@@ -977,9 +1030,9 @@ protected:
 
   /**
    * Return the action rule based on ARIA enum constants EActionRule
-   * (see ARIAMap.h). Used by ActionCount() and GetActionName().
+   * (see ARIAMap.h). Used by ActionCount() and ActionNameAt().
    */
-  uint32_t GetActionRule();
+  uint32_t GetActionRule() const;
 
   /**
    * Return group info.
@@ -1028,6 +1081,7 @@ protected:
   void StaticAsserts() const;
 
   friend class DocAccessible;
+  friend class xpcAccessible;
 
   nsAutoPtr<mozilla::a11y::EmbeddedObjCollector> mEmbeddedObjCollector;
   int32_t mIndexOfEmbeddedChild;

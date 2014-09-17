@@ -3009,7 +3009,7 @@ const JSFunctionSpec Debugger::methods[] = {
     JS_FN("hasDebuggee", Debugger::hasDebuggee, 1, 0),
     JS_FN("getDebuggees", Debugger::getDebuggees, 0, 0),
     JS_FN("getNewestFrame", Debugger::getNewestFrame, 0, 0),
-    JS_FN("clearAllBreakpoints", Debugger::clearAllBreakpoints, 1, 0),
+    JS_FN("clearAllBreakpoints", Debugger::clearAllBreakpoints, 0, 0),
     JS_FN("findScripts", Debugger::findScripts, 1, 0),
     JS_FN("findAllGlobals", Debugger::findAllGlobals, 0, 0),
     JS_FN("makeGlobalObjectReference", Debugger::makeGlobalObjectReference, 1, 0),

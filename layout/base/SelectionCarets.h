@@ -138,6 +138,16 @@ private:
   void SetEndFramePos(const nsPoint& aPosition);
 
   /**
+   * Check if aPosition is on the start or end frame of the
+   * selection carets.
+   *
+   * @param aPosition should be relative to document's canvas frame
+   * in app units
+   */
+  bool IsOnStartFrame(const nsPoint& aPosition);
+  bool IsOnEndFrame(const nsPoint& aPosition);
+
+  /**
    * Get rect of selection caret's start frame relative
    * to document's canvas frame, in app units.
    */

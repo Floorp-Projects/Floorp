@@ -514,6 +514,8 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aMediaSource);
+  mEvictionThreshold = Preferences::GetUint("media.mediasource.eviction_threshold",
+                                            75 * (1 << 20));
   mParser = ContainerParser::CreateForMIMEType(aType);
   mTrackBuffer = new TrackBuffer(aMediaSource->GetDecoder(), aType);
   MSE_DEBUG("SourceBuffer(%p)::SourceBuffer: Create mParser=%p mTrackBuffer=%p",
@@ -659,8 +661,8 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   // about.
   // TODO: Make the eviction threshold smaller for audio-only streams.
   // TODO: Drive evictions off memory pressure notifications.
-  const uint32_t evict_threshold = 75 * (1 << 20);
-  bool evicted = mTrackBuffer->EvictData(evict_threshold);
+  // TODO: Consider a global eviction threshold  rather than per TrackBuffer.
+  bool evicted = mTrackBuffer->EvictData(mEvictionThreshold);
   if (evicted) {
     MSE_DEBUG("SourceBuffer(%p)::AppendData Evict; current buffered start=%f",
               this, GetBufferedStart());

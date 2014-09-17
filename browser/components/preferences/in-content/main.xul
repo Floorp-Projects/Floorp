@@ -13,6 +13,9 @@
     <preference id="browser.tabs.remote.autostart"
                 name="browser.tabs.remote.autostart"
                 type="bool"/>
+    <preference id="e10sTempPref"
+                name="browser.tabs.remote.autostart.1"
+                type="bool"/>
 #endif
 
     <!-- Startup -->

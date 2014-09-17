@@ -470,14 +470,10 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
 nsresult
 MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
 {
-  bool waiting = IsWaitingMediaResources();
-  MSE_DEBUG("MediaSourceReader(%p)::ReadMetadata waiting=%d tracks=%u/%u audio=%p video=%p",
-            this, waiting, mEssentialTrackBuffers.Length(), mTrackBuffers.Length(),
+  MSE_DEBUG("MediaSourceReader(%p)::ReadMetadata tracks=%u/%u audio=%p video=%p",
+            this, mEssentialTrackBuffers.Length(), mTrackBuffers.Length(),
             mAudioTrack.get(), mVideoTrack.get());
-  // ReadMetadata is called *before* checking IsWaitingMediaResources.
-  if (waiting) {
-    return NS_OK;
-  }
+
   mEssentialTrackBuffers.Clear();
   if (!mAudioTrack && !mVideoTrack) {
     MSE_DEBUG("MediaSourceReader(%p)::ReadMetadata missing track: mAudioTrack=%p mVideoTrack=%p",

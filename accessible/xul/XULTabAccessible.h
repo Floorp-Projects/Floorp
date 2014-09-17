@@ -23,18 +23,16 @@ public:
 
   XULTabAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
-  // nsIAccessible
-  NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName);
-  NS_IMETHOD DoAction(uint8_t index);
-
   // Accessible
-  virtual a11y::role NativeRole();
-  virtual uint64_t NativeState();
-  virtual uint64_t NativeInteractiveState() const;
+  virtual a11y::role NativeRole() MOZ_OVERRIDE;
+  virtual uint64_t NativeState() MOZ_OVERRIDE;
+  virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE;
   virtual Relation RelationByType(RelationType aType) MOZ_OVERRIDE;
 
   // ActionAccessible
-  virtual uint8_t ActionCount();
+  virtual uint8_t ActionCount() MOZ_OVERRIDE;
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) MOZ_OVERRIDE;
+  virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
 };
 
 
@@ -48,10 +46,10 @@ public:
 
   // Accessible
   virtual void Value(nsString& aValue);
-  virtual a11y::role NativeRole();
+  virtual a11y::role NativeRole() MOZ_OVERRIDE;
 
   // ActionAccessible
-  virtual uint8_t ActionCount();
+  virtual uint8_t ActionCount() MOZ_OVERRIDE;
 
 protected:
   // Accessible
@@ -70,7 +68,7 @@ public:
     { mType = eXULTabpanelsType; }
 
   // Accessible
-  virtual a11y::role NativeRole();
+  virtual a11y::role NativeRole() MOZ_OVERRIDE;
 };
 
 
@@ -87,7 +85,7 @@ public:
   XULTabpanelAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual a11y::role NativeRole();
+  virtual a11y::role NativeRole() MOZ_OVERRIDE;
   virtual Relation RelationByType(RelationType aType) MOZ_OVERRIDE;
 };
 

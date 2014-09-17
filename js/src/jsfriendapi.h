@@ -1477,7 +1477,6 @@ extern JS_FRIEND_API(JSObject *)
 JS_NewUint8Array(JSContext *cx, uint32_t nelements);
 extern JS_FRIEND_API(JSObject *)
 JS_NewUint8ClampedArray(JSContext *cx, uint32_t nelements);
-
 extern JS_FRIEND_API(JSObject *)
 JS_NewInt16Array(JSContext *cx, uint32_t nelements);
 extern JS_FRIEND_API(JSObject *)
@@ -1490,6 +1489,25 @@ extern JS_FRIEND_API(JSObject *)
 JS_NewFloat32Array(JSContext *cx, uint32_t nelements);
 extern JS_FRIEND_API(JSObject *)
 JS_NewFloat64Array(JSContext *cx, uint32_t nelements);
+
+extern JS_FRIEND_API(JSObject *)
+JS_NewSharedInt8Array(JSContext *cx, uint32_t nelements);
+extern JS_FRIEND_API(JSObject *)
+JS_NewSharedUint8Array(JSContext *cx, uint32_t nelements);
+extern JS_FRIEND_API(JSObject *)
+JS_NewSharedUint8ClampedArray(JSContext *cx, uint32_t nelements);
+extern JS_FRIEND_API(JSObject *)
+JS_NewSharedInt16Array(JSContext *cx, uint32_t nelements);
+extern JS_FRIEND_API(JSObject *)
+JS_NewSharedUint16Array(JSContext *cx, uint32_t nelements);
+extern JS_FRIEND_API(JSObject *)
+JS_NewSharedInt32Array(JSContext *cx, uint32_t nelements);
+extern JS_FRIEND_API(JSObject *)
+JS_NewSharedUint32Array(JSContext *cx, uint32_t nelements);
+extern JS_FRIEND_API(JSObject *)
+JS_NewSharedFloat32Array(JSContext *cx, uint32_t nelements);
+extern JS_FRIEND_API(JSObject *)
+JS_NewSharedFloat64Array(JSContext *cx, uint32_t nelements);
 
 /*
  * Create a new typed array and copy in values from the given object. The
@@ -1552,6 +1570,37 @@ extern JS_FRIEND_API(JSObject *)
 JS_NewFloat64ArrayWithBuffer(JSContext *cx, JS::HandleObject arrayBuffer,
                              uint32_t byteOffset, int32_t length);
 
+// As for the above, passing length==(uint32_t)-1 signifies "up to the
+// end of the buffer".
+
+extern JS_FRIEND_API(JSObject *)
+JS_NewSharedInt8ArrayWithBuffer(JSContext *cx, JS::HandleObject arrayBuffer,
+                                uint32_t byteOffset, uint32_t length);
+extern JS_FRIEND_API(JSObject *)
+JS_NewSharedUint8ArrayWithBuffer(JSContext *cx, JS::HandleObject arrayBuffer,
+                                 uint32_t byteOffset, uint32_t length);
+extern JS_FRIEND_API(JSObject *)
+JS_NewSharedUint8ClampedArrayWithBuffer(JSContext *cx, JS::HandleObject arrayBuffer,
+                                        uint32_t byteOffset, uint32_t length);
+extern JS_FRIEND_API(JSObject *)
+JS_NewSharedInt16ArrayWithBuffer(JSContext *cx, JS::HandleObject arrayBuffer,
+                                 uint32_t byteOffset, uint32_t length);
+extern JS_FRIEND_API(JSObject *)
+JS_NewSharedUint16ArrayWithBuffer(JSContext *cx, JS::HandleObject arrayBuffer,
+                                  uint32_t byteOffset, uint32_t length);
+extern JS_FRIEND_API(JSObject *)
+JS_NewSharedInt32ArrayWithBuffer(JSContext *cx, JS::HandleObject arrayBuffer,
+                                 uint32_t byteOffset, uint32_t length);
+extern JS_FRIEND_API(JSObject *)
+JS_NewSharedUint32ArrayWithBuffer(JSContext *cx, JS::HandleObject arrayBuffer,
+                                  uint32_t byteOffset, uint32_t length);
+extern JS_FRIEND_API(JSObject *)
+JS_NewSharedFloat32ArrayWithBuffer(JSContext *cx, JS::HandleObject arrayBuffer,
+                                   uint32_t byteOffset, uint32_t length);
+extern JS_FRIEND_API(JSObject *)
+JS_NewSharedFloat64ArrayWithBuffer(JSContext *cx, JS::HandleObject arrayBuffer,
+                                   uint32_t byteOffset, uint32_t length);
+
 /*
  * Create a new ArrayBuffer with the given byte length.
  */
@@ -1566,6 +1615,12 @@ JS_NewArrayBuffer(JSContext *cx, uint32_t nbytes);
  */
 extern JS_FRIEND_API(bool)
 JS_IsTypedArrayObject(JSObject *obj);
+
+/*
+ * Ditto for JS_GetSharedTypedArray* APIs.
+ */
+extern JS_FRIEND_API(bool)
+JS_IsSharedTypedArrayObject(JSObject *obj);
 
 /*
  * Check whether obj supports JS_GetArrayBufferView* APIs. Note that this may
@@ -1600,6 +1655,25 @@ JS_IsFloat32Array(JSObject *obj);
 extern JS_FRIEND_API(bool)
 JS_IsFloat64Array(JSObject *obj);
 
+extern JS_FRIEND_API(bool)
+JS_IsSharedInt8Array(JSObject *obj);
+extern JS_FRIEND_API(bool)
+JS_IsSharedUint8Array(JSObject *obj);
+extern JS_FRIEND_API(bool)
+JS_IsSharedUint8ClampedArray(JSObject *obj);
+extern JS_FRIEND_API(bool)
+JS_IsSharedInt16Array(JSObject *obj);
+extern JS_FRIEND_API(bool)
+JS_IsSharedUint16Array(JSObject *obj);
+extern JS_FRIEND_API(bool)
+JS_IsSharedInt32Array(JSObject *obj);
+extern JS_FRIEND_API(bool)
+JS_IsSharedUint32Array(JSObject *obj);
+extern JS_FRIEND_API(bool)
+JS_IsSharedFloat32Array(JSObject *obj);
+extern JS_FRIEND_API(bool)
+JS_IsSharedFloat64Array(JSObject *obj);
+
 /*
  * Test for specific typed array types (ArrayBufferView subtypes) and return
  * the unwrapped object if so, else nullptr.  Never throws.
@@ -1632,6 +1706,25 @@ UnwrapArrayBuffer(JSObject *obj);
 extern JS_FRIEND_API(JSObject *)
 UnwrapArrayBufferView(JSObject *obj);
 
+extern JS_FRIEND_API(JSObject *)
+UnwrapSharedInt8Array(JSObject *obj);
+extern JS_FRIEND_API(JSObject *)
+UnwrapSharedUint8Array(JSObject *obj);
+extern JS_FRIEND_API(JSObject *)
+UnwrapSharedUint8ClampedArray(JSObject *obj);
+extern JS_FRIEND_API(JSObject *)
+UnwrapSharedInt16Array(JSObject *obj);
+extern JS_FRIEND_API(JSObject *)
+UnwrapSharedUint16Array(JSObject *obj);
+extern JS_FRIEND_API(JSObject *)
+UnwrapSharedInt32Array(JSObject *obj);
+extern JS_FRIEND_API(JSObject *)
+UnwrapSharedUint32Array(JSObject *obj);
+extern JS_FRIEND_API(JSObject *)
+UnwrapSharedFloat32Array(JSObject *obj);
+extern JS_FRIEND_API(JSObject *)
+UnwrapSharedFloat64Array(JSObject *obj);
+
 namespace detail {
 
 extern JS_FRIEND_DATA(const Class* const) Int8ArrayClassPtr;
@@ -1643,6 +1736,16 @@ extern JS_FRIEND_DATA(const Class* const) Int32ArrayClassPtr;
 extern JS_FRIEND_DATA(const Class* const) Uint32ArrayClassPtr;
 extern JS_FRIEND_DATA(const Class* const) Float32ArrayClassPtr;
 extern JS_FRIEND_DATA(const Class* const) Float64ArrayClassPtr;
+
+extern JS_FRIEND_DATA(const Class* const) SharedInt8ArrayClassPtr;
+extern JS_FRIEND_DATA(const Class* const) SharedUint8ArrayClassPtr;
+extern JS_FRIEND_DATA(const Class* const) SharedUint8ClampedArrayClassPtr;
+extern JS_FRIEND_DATA(const Class* const) SharedInt16ArrayClassPtr;
+extern JS_FRIEND_DATA(const Class* const) SharedUint16ArrayClassPtr;
+extern JS_FRIEND_DATA(const Class* const) SharedInt32ArrayClassPtr;
+extern JS_FRIEND_DATA(const Class* const) SharedUint32ArrayClassPtr;
+extern JS_FRIEND_DATA(const Class* const) SharedFloat32ArrayClassPtr;
+extern JS_FRIEND_DATA(const Class* const) SharedFloat64ArrayClassPtr;
 
 const size_t TypedArrayLengthSlot = 1;
 
@@ -1733,6 +1836,9 @@ JS_GetArrayBufferViewType(JSObject *obj);
  */
 extern JS_FRIEND_API(bool)
 JS_IsArrayBufferObject(JSObject *obj);
+
+extern JS_FRIEND_API(bool)
+JS_IsSharedArrayBufferObject(JSObject *obj);
 
 /*
  * Return the available byte length of an array buffer.

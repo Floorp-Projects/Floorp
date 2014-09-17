@@ -44,6 +44,7 @@
 #include "jsobjinlines.h"
 
 #include "frontend/ParseNode-inl.h"
+#include "vm/ArrayBufferObject-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -742,7 +743,7 @@ AsmJSModule::staticallyLink(ExclusiveContext *cx)
 }
 
 void
-AsmJSModule::initHeap(Handle<ArrayBufferObject*> heap, JSContext *cx)
+AsmJSModule::initHeap(Handle<ArrayBufferObjectMaybeShared *> heap, JSContext *cx)
 {
     JS_ASSERT(IsValidAsmJSHeapLength(heap->byteLength()));
     JS_ASSERT(dynamicallyLinked_);
@@ -786,7 +787,8 @@ AsmJSModule::initHeap(Handle<ArrayBufferObject*> heap, JSContext *cx)
 }
 
 void
-AsmJSModule::restoreToInitialState(uint8_t *prevCode, ArrayBufferObject *maybePrevBuffer,
+AsmJSModule::restoreToInitialState(uint8_t *prevCode,
+                                   ArrayBufferObjectMaybeShared *maybePrevBuffer,
                                    ExclusiveContext *cx)
 {
 #ifdef DEBUG

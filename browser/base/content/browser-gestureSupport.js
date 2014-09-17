@@ -189,12 +189,12 @@ let gGestureSupport = {
 
     let isVerticalSwipe = false;
     if (aEvent.direction == aEvent.DIRECTION_UP) {
-      if (content.pageYOffset > 0) {
+      if (gMultiProcessBrowser || content.pageYOffset > 0) {
         return false;
       }
       isVerticalSwipe = true;
     } else if (aEvent.direction == aEvent.DIRECTION_DOWN) {
-      if (content.pageYOffset < content.scrollMaxY) {
+      if (gMultiProcessBrowser || content.pageYOffset < content.scrollMaxY) {
         return false;
       }
       isVerticalSwipe = true;

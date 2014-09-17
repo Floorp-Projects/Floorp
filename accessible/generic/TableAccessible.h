@@ -25,7 +25,7 @@ public:
   /**
    * Return the caption accessible if any for this table.
    */
-  virtual Accessible* Caption() { return nullptr; }
+  virtual Accessible* Caption() const { return nullptr; }
 
   /**
    * Get the summary for this table.
