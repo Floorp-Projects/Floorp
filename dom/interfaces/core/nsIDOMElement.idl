@@ -15,7 +15,7 @@ interface nsIDOMMozNamedAttrMap;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#interface-element
  */
 
-[uuid(22454b63-adce-49aa-b4c5-1b6e8ac4e034)]
+[uuid(6b72525b-b62b-4468-8f84-bb2a0be3f06d)]
 interface nsIDOMElement : nsIDOMNode
 {
   readonly attribute DOMString        tagName;
