@@ -155,7 +155,7 @@ nsSpeechTask::Setup(nsISpeechTaskCallback* aCallback,
   mChannels = aChannels;
 
   AudioSegment* segment = new AudioSegment();
-  mStream->AddTrack(1, aRate, 0, segment);
+  mStream->AddAudioTrack(1, aRate, 0, segment);
   mStream->AddAudioOutput(this);
   mStream->SetAudioOutputVolume(this, mVolume);
 

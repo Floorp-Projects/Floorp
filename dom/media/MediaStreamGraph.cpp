@@ -2280,22 +2280,21 @@ SourceMediaStream::SetPullEnabled(bool aEnabled)
 }
 
 void
-SourceMediaStream::AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
-                            MediaSegment* aSegment)
+SourceMediaStream::AddTrackInternal(TrackID aID, TrackRate aRate, TrackTicks aStart,
+                                    MediaSegment* aSegment)
 {
   MutexAutoLock lock(mMutex);
   TrackData* data = mUpdateTracks.AppendElement();
   data->mID = aID;
   data->mInputRate = aRate;
-  // We resample all audio input tracks to the sample rate of the audio mixer.
-  data->mOutputRate = aSegment->GetType() == MediaSegment::AUDIO ?
-                      GraphImpl()->GraphRate() : aRate;
+  data->mOutputRate =
+      aSegment->GetType() == MediaSegment::AUDIO ? GraphRate() : aRate;
   data->mStart = aStart;
   data->mCommands = TRACK_CREATE;
   data->mData = aSegment;
   data->mHaveEnough = false;
-  if (auto graph = GraphImpl()) {
-    graph->EnsureNextIteration();
+  if (GraphImpl()) {
+    GraphImpl()->EnsureNextIteration();
   }
 }
 
