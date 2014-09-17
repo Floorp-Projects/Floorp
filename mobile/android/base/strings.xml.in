@@ -359,6 +359,10 @@
   <string name="home_remote_tabs_need_to_sign_in">&home_remote_tabs_need_to_sign_in;</string>
   <string name="home_remote_tabs_trouble_verifying">&home_remote_tabs_trouble_verifying;</string>
   <string name="home_remote_tabs_need_to_verify">&home_remote_tabs_need_to_verify;</string>
+  <string name="home_remote_tabs_one_hidden_device">&home_remote_tabs_one_hidden_device;</string>
+  <string name="home_remote_tabs_many_hidden_devices">&home_remote_tabs_many_hidden_devices;</string>
+  <string name="home_remote_tabs_hidden_devices_title">&home_remote_tabs_hidden_devices_title;</string>
+  <string name="home_remote_tabs_unhide_selected_devices">&home_remote_tabs_unhide_selected_devices;</string>
   <string name="private_browsing_title">&private_browsing_title;</string>
   <string name="private_tabs_panel_empty_desc">&private_tabs_panel_empty_desc;</string>
   <string name="private_tabs_panel_learn_more">&private_tabs_panel_learn_more;</string>
@@ -450,6 +454,8 @@
   <string name="guest_session_dialog_cancel">&guest_session_dialog_cancel;</string>
   <string name="new_guest_session_title">&new_guest_session_title;</string>
   <string name="new_guest_session_text">&new_guest_session_text;</string>
+  <string name="guest_browsing_notification_title">&guest_browsing_notification_title;</string>
+  <string name="guest_browsing_notification_text">&guest_browsing_notification_text;</string>
 
   <string name="exit_guest_session_title">&exit_guest_session_title;</string>
   <string name="exit_guest_session_text">&exit_guest_session_text;</string>

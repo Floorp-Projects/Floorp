@@ -376,7 +376,7 @@ DBAddonInternal.prototype = new DBAddonInternalPrototype();
  * Internal interface: find an addon from an already loaded addonDB
  */
 function _findAddon(addonDB, aFilter) {
-  for (let [, addon] of addonDB) {
+  for (let addon of addonDB.values()) {
     if (aFilter(addon)) {
       return addon;
     }
@@ -388,14 +388,7 @@ function _findAddon(addonDB, aFilter) {
  * Internal interface to get a filtered list of addons from a loaded addonDB
  */
 function _filterDB(addonDB, aFilter) {
-  let addonList = [];
-  for (let [, addon] of addonDB) {
-    if (aFilter(addon)) {
-      addonList.push(addon);
-    }
-  }
-
-  return addonList;
+  return [for (addon of addonDB.values()) if (aFilter(addon)) addon];
 }
 
 this.XPIDatabase = {
@@ -426,6 +419,13 @@ this.XPIDatabase = {
   saveChanges: function() {
     if (!this.initialized) {
       throw new Error("Attempt to use XPI database when it is not initialized");
+    }
+
+    if (XPIProvider._closing) {
+      // use an Error here so we get a stack trace.
+      let err = new Error("XPI database modified after shutdown began");
+      logger.warn(err);
+      AddonManagerPrivate.recordSimpleMeasure("XPIDB_late_stack", Log.stackTrace(err));
     }
 
     if (!this._deferredSave) {
@@ -759,7 +759,7 @@ this.XPIDatabase = {
     this.addonDB = new Map();
     this.initialized = true;
 
-    if (XPIProvider.installStates && XPIProvider.installStates.length == 0) {
+    if (XPIStates.size == 0) {
       // No extensions installed, so we're done
       logger.debug("Rebuilding XPI database with no extensions");
       return;
@@ -773,7 +773,7 @@ this.XPIDatabase = {
     if (aRebuildOnError) {
       logger.warn("Rebuilding add-ons database from installed extensions.");
       try {
-        XPIProvider.processFileChanges(XPIProvider.installStates, {}, false);
+        XPIProvider.processFileChanges({}, false);
       }
       catch (e) {
         logger.error("Failed to rebuild XPI database from installed extensions", e);
@@ -1036,26 +1036,6 @@ this.XPIDatabase = {
   },
 
   /**
-   * Return a list of all install locations known about by the database. This
-   * is often a a subset of the total install locations when not all have
-   * installed add-ons, occasionally a superset when an install location no
-   * longer exists. Only called from XPIProvider.processFileChanges, when
-   * the database should already be loaded.
-   *
-   * @return  a Set of names of install locations
-   */
-  getInstallLocations: function XPIDB_getInstallLocations() {
-    let locations = new Set();
-    if (!this.addonDB)
-      return locations;
-
-    for (let [, addon] of this.addonDB) {
-      locations.add(addon.location);
-    }
-    return locations;
-  },
-
-  /**
    * Asynchronously list all addons that match the filter function
    * @param  aFilter
    *         Function that takes an addon instance and returns
@@ -1095,18 +1075,6 @@ this.XPIDatabase = {
           logger.error("getAddon failed", e);
           makeSafe(aCallback)(null);
         });
-  },
-
-  /**
-   * Synchronously reads all the add-ons in a particular install location.
-   * Always called with the addon database already loaded.
-   *
-   * @param  aLocation
-   *         The name of the install location
-   * @return an array of DBAddonInternals
-   */
-  getAddonsInLocation: function XPIDB_getAddonsInLocation(aLocation) {
-    return _filterDB(this.addonDB, aAddon => (aAddon.location == aLocation));
   },
 
   /**
@@ -1208,10 +1176,9 @@ this.XPIDatabase = {
     this.getAddonList(
         aAddon => (aAddon.visible &&
                    (aAddon.pendingUninstall ||
-                    // Logic here is tricky. If we're active but either
-                    // disabled flag is set, we're pending disable; if we're not
-                    // active and neither disabled flag is set, we're pending enable
-                    (aAddon.active == (aAddon.userDisabled || aAddon.appDisabled))) &&
+                    // Logic here is tricky. If we're active but disabled,
+                    // we're pending disable; !active && !disabled, we're pending enable
+                    (aAddon.active == aAddon.disabled)) &&
                    (!aTypes || (aTypes.length == 0) || (aTypes.indexOf(aAddon.type) > -1))),
         aCallback);
   },
@@ -1292,8 +1259,7 @@ this.XPIDatabase = {
     aNewAddon.installDate = aOldAddon.installDate;
     aNewAddon.applyBackgroundUpdates = aOldAddon.applyBackgroundUpdates;
     aNewAddon.foreignInstall = aOldAddon.foreignInstall;
-    aNewAddon.active = (aNewAddon.visible && !aNewAddon.userDisabled &&
-                        !aNewAddon.appDisabled && !aNewAddon.pendingUninstall);
+    aNewAddon.active = (aNewAddon.visible && !aNewAddon.disabled && !aNewAddon.pendingUninstall);
 
     // addAddonMetadata does a saveChanges()
     return this.addAddonMetadata(aNewAddon, aDescriptor);
@@ -1394,9 +1360,7 @@ this.XPIDatabase = {
     }
     logger.debug("Updating add-on states");
     for (let [, addon] of this.addonDB) {
-      let newActive = (addon.visible && !addon.userDisabled &&
-                      !addon.softDisabled && !addon.appDisabled &&
-                      !addon.pendingUninstall);
+      let newActive = (addon.visible && !addon.disabled && !addon.pendingUninstall);
       if (newActive != addon.active) {
         addon.active = newActive;
         this.saveChanges();

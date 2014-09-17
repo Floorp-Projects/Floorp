@@ -32,23 +32,13 @@ transition-property: all !important;\
 
 let LOAD_ERROR = "error-load";
 
-exports.register = function(handle) {
-  handle.addTabActor(StyleEditorActor, "styleEditorActor");
-  handle.addGlobalActor(StyleEditorActor, "styleEditorActor");
-};
-
-exports.unregister = function(handle) {
-  handle.removeTabActor(StyleEditorActor);
-  handle.removeGlobalActor(StyleEditorActor);
-};
-
 types.addActorType("old-stylesheet");
 
 /**
  * Creates a StyleEditorActor. StyleEditorActor provides remote access to the
  * stylesheets of a document.
  */
-let StyleEditorActor = protocol.ActorClass({
+let StyleEditorActor = exports.StyleEditorActor = protocol.ActorClass({
   typeName: "styleeditor",
 
   /**

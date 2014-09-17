@@ -10,7 +10,6 @@ include PMobileConnectionTypes;
 
 namespace mozilla {
 namespace dom {
-namespace mobileconnection {
 
 sync protocol PMobileConnection
 {
@@ -185,6 +184,5 @@ union MobileConnectionRequest
   SetRadioEnabledRequest;
 };
 
-} // namespace mobileconnection
-} // namespace dom
 } // namespace mozilla
+} // namespace dom

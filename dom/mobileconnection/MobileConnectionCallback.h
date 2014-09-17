@@ -2,17 +2,16 @@
 * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_mobileconnection_MobileConnectionCallback_h
-#define mozilla_dom_mobileconnection_MobileConnectionCallback_h
+#ifndef mozilla_dom_MobileConnectionCallback_h
+#define mozilla_dom_MobileConnectionCallback_h
 
 #include "mozilla/dom/DOMRequest.h"
-#include "mozilla/dom/mobileconnection/MobileConnectionIPCSerializer.h"
+#include "mozilla/dom/MobileConnectionIPCSerializer.h"
 #include "nsCOMPtr.h"
 #include "nsIMobileConnectionService.h"
 
 namespace mozilla {
 namespace dom {
-namespace mobileconnection {
 
 /**
  * A callback object for handling asynchronous request/response. This object is
@@ -21,7 +20,7 @@ namespace mobileconnection {
  * The modules hold the reference of MobileConnectionCallback in OOP mode and
  * non-OOP mode are different.
  * - OOP mode: MobileConnectionRequestChild
- * - non-OOP mode: MobileConnectionService
+ * - non-OOP mode: MobileConnectionGonkService
  * The reference should be released after Notify*Success/Error is called.
  */
 class MobileConnectionCallback MOZ_FINAL : public nsIMobileConnectionCallback
@@ -73,8 +72,7 @@ private:
   nsRefPtr<DOMRequest> mRequest;
 };
 
-} // namespace mobileconnection
-} // namespace dom
-} // namespace mozilla
+} // name space dom
+} // name space mozilla
 
-#endif // mozilla_dom_mobileconnection_MobileConnectionCallback_h
+#endif // mozilla_dom_MobileConnectionCallback_h

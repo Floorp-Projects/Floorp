@@ -28,14 +28,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
 
-exports.register = function(handle) {
-  handle.addTabActor(StorageActor, "storageActor");
-};
-
-exports.unregister = function(handle) {
-  handle.removeTabActor(StorageActor);
-};
-
 // Global required for window less Indexed DB instantiation.
 let global = this;
 

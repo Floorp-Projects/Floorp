@@ -2,6 +2,8 @@ package org.mozilla.gecko.tests;
 
 
 public class StringHelper {
+    public static final String OK = "OK";
+
     // Note: DEFAULT_BOOKMARKS_TITLES.length == DEFAULT_BOOKMARKS_URLS.length
     public static final String[] DEFAULT_BOOKMARKS_TITLES = new String[] {
         "Firefox: About your browser",
@@ -18,44 +20,66 @@ public class StringHelper {
     // About pages
     public static final String ABOUT_BLANK_URL = "about:blank";
     public static final String ABOUT_FIREFOX_URL = "about:firefox";
+    public static final String ABOUT_RIGHTS_URL = "about:rights";
+    public static final String ABOUT_BUILDCONFIG_URL = "about:buildconfig";
+    public static final String ABOUT_FEEDBACK_URL = "about:feedback";
+    public static final String ABOUT_HEALTHREPORT_URL = "about:healthreport";
     public static final String ABOUT_DOWNLOADS_URL = "about:downloads";
     public static final String ABOUT_HOME_URL = "about:home";
     public static final String ABOUT_ADDONS_URL = "about:addons";
     public static final String ABOUT_APPS_URL = "about:apps";
+    public static final String ABOUT_ABOUT_URL = "about:about";
+    public static final String ABOUT_SCHEME = "about:";
 
     // About pages' titles
     public static final String ABOUT_HOME_TITLE = "";
 
+    // Context Menu item strings
+    public static final String CONTEXT_MENU_BOOKMARK_LINK = "Bookmark Link";
+    public static final String CONTEXT_MENU_OPEN_LINK_IN_NEW_TAB = "Open Link in New Tab";
+    public static final String CONTEXT_MENU_OPEN_IN_NEW_TAB = "Open in New Tab";
+    public static final String CONTEXT_MENU_OPEN_LINK_IN_PRIVATE_TAB = "Open Link in Private Tab";
+    public static final String CONTEXT_MENU_OPEN_IN_PRIVATE_TAB = "Open in Private Tab";
+    public static final String CONTEXT_MENU_COPY_LINK = "Copy Link";
+    public static final String CONTEXT_MENU_SHARE_LINK = "Share Link";
+    public static final String CONTEXT_MENU_EDIT = "Edit";
+    public static final String CONTEXT_MENU_SHARE = "Share";
+    public static final String CONTEXT_MENU_REMOVE = "Remove";
+    public static final String CONTEXT_MENU_COPY_ADDRESS = "Copy Address";
+    public static final String CONTEXT_MENU_EDIT_SITE_SETTINGS = "Edit Site Settings";
+    public static final String CONTEXT_MENU_ADD_TO_HOME_SCREEN = "Add to Home Screen";
+
     // Context Menu menu items
     public static final String[] CONTEXT_MENU_ITEMS_IN_PRIVATE_TAB = new String[] {
-        "Open Link in Private Tab",
-        "Copy Link",
-        "Share Link",
-        "Bookmark Link"
+        CONTEXT_MENU_OPEN_LINK_IN_PRIVATE_TAB,
+        CONTEXT_MENU_COPY_LINK,
+        CONTEXT_MENU_SHARE_LINK,
+        CONTEXT_MENU_BOOKMARK_LINK
     };
 
     public static final String[] CONTEXT_MENU_ITEMS_IN_NORMAL_TAB = new String[] {
-        "Open Link in New Tab",
-        "Open Link in Private Tab",
-        "Copy Link",
-        "Share Link",
-        "Bookmark Link"
+        CONTEXT_MENU_OPEN_LINK_IN_NEW_TAB,
+        CONTEXT_MENU_OPEN_LINK_IN_PRIVATE_TAB,
+        CONTEXT_MENU_COPY_LINK,
+        CONTEXT_MENU_SHARE_LINK,
+        CONTEXT_MENU_BOOKMARK_LINK
     };
 
     public static final String[] BOOKMARK_CONTEXT_MENU_ITEMS = new String[] {
-        "Open in New Tab",
-        "Open in Private Tab",
-        "Edit",
-        "Remove",
-        "Share",
-        "Add to Home Screen"
+        CONTEXT_MENU_OPEN_IN_NEW_TAB,
+        CONTEXT_MENU_OPEN_IN_PRIVATE_TAB,
+        CONTEXT_MENU_COPY_ADDRESS,
+        CONTEXT_MENU_SHARE,
+        CONTEXT_MENU_EDIT,
+        CONTEXT_MENU_REMOVE,
+        CONTEXT_MENU_ADD_TO_HOME_SCREEN
     };
 
     public static final String[] CONTEXT_MENU_ITEMS_IN_URL_BAR = new String[] {
-        "Share",
-        "Copy Address",
-        "Edit Site Settings",
-        "Add to Home Screen"
+        CONTEXT_MENU_SHARE,
+        CONTEXT_MENU_COPY_ADDRESS,
+        CONTEXT_MENU_EDIT_SITE_SETTINGS,
+        CONTEXT_MENU_ADD_TO_HOME_SCREEN
     };
 
     public static final String TITLE_PLACE_HOLDER = "Search or enter address";
@@ -67,6 +91,8 @@ public class StringHelper {
     public static final String ROBOCOP_BLANK_PAGE_01_URL = "/robocop/robocop_blank_01.html";
     public static final String ROBOCOP_BLANK_PAGE_02_URL = "/robocop/robocop_blank_02.html";
     public static final String ROBOCOP_BLANK_PAGE_03_URL = "/robocop/robocop_blank_03.html";
+    public static final String ROBOCOP_BLANK_PAGE_04_URL = "/robocop/robocop_blank_04.html";
+    public static final String ROBOCOP_BLANK_PAGE_05_URL = "/robocop/robocop_blank_05.html";
     public static final String ROBOCOP_BOXES_URL = "/robocop/robocop_boxes.html";
     public static final String ROBOCOP_GEOLOCATION_URL = "/robocop/robocop_geolocation.html";
     public static final String ROBOCOP_LOGIN_URL = "/robocop/robocop_login.html";
@@ -84,6 +110,8 @@ public class StringHelper {
     public static final String ROBOCOP_BLANK_PAGE_01_TITLE = "Browser Blank Page 01";
     public static final String ROBOCOP_BLANK_PAGE_02_TITLE = "Browser Blank Page 02";
     public static final String ROBOCOP_BLANK_PAGE_03_TITLE = "Browser Blank Page 03";
+    public static final String ROBOCOP_BLANK_PAGE_04_TITLE = "Browser Blank Page 04";
+    public static final String ROBOCOP_BLANK_PAGE_05_TITLE = "Browser Blank Page 05";
     public static final String ROBOCOP_BOXES_TITLE = "Browser Box test";
     public static final String ROBOCOP_GEOLOCATION_TITLE = "Geolocation Test Page";
     public static final String ROBOCOP_LOGIN_TITLE = "Robocop Login";
@@ -111,12 +139,12 @@ public class StringHelper {
     // Display
     public static final String TEXT_SIZE_LABEL = "Text size";
     public static final String TITLE_BAR_LABEL = "Title bar";
-    public static final String SCROLL_TITLE_BAR_LABEL="Full-screen browsing";
-    public static final String NEW_TABLET_UI="Enable new tablet UI";
+    public static final String SCROLL_TITLE_BAR_LABEL = "Full-screen browsing";
+    public static final String NEW_TABLET_UI = "Enable new tablet UI";
     public static final String TEXT_REFLOW_LABEL = "Text reflow";
     public static final String CHARACTER_ENCODING_LABEL = "Character encoding";
     public static final String PLUGINS_LABEL = "Plugins";
- 
+
     // Title bar
     public static final String SHOW_PAGE_TITLE_LABEL = "Show page title";
     public static final String SHOW_PAGE_ADDRESS_LABEL = "Show page address";
@@ -125,15 +153,16 @@ public class StringHelper {
     public static final String TRACKING_LABEL = "Tracking";
     public static final String COOKIES_LABEL = "Cookies";
     public static final String REMEMBER_PASSWORDS_LABEL = "Remember passwords";
-    public static final String MASTER_PASWSWORD_LABEL = "Use master password";
+    public static final String MASTER_PASSWORD_LABEL = "Use master password";
     public static final String CLEAR_PRIVATE_DATA_LABEL = "Clear now";
 
     // Mozilla
-    public static final String ABOUT_LABEL = "About (Fennec|Nightly|Aurora|Firefox Beta|Firefox)";
+    public static final String BRAND_NAME = "(Fennec|Nightly|Aurora|Firefox Beta|Firefox)";
+    public static final String ABOUT_LABEL = "About " + BRAND_NAME;
     public static final String FAQS_LABEL = "FAQs";
     public static final String FEEDBACK_LABEL = "Give feedback";
     public static final String LOCATION_SERVICES_LABEL = "Mozilla location services";
-    public static final String HELTH_REPORT_LABEL = "(Fennec|Nightly|Aurora|Firefox Beta|Firefox) Health Report";
+    public static final String HEALTH_REPORT_LABEL = BRAND_NAME + " Health Report";
     public static final String MY_HEALTH_REPORT_LABEL = "View my Health Report";
 
     // Developer tools
@@ -185,4 +214,7 @@ public class StringHelper {
     public static final String BOOKMARK_REMOVED_LABEL = "Bookmark removed";
     public static final String BOOKMARK_UPDATED_LABEL = "Bookmark updated";
     public static final String BOOKMARK_OPTIONS_LABEL = "Options";
+
+    // Edit Bookmark screen
+    public static final String EDIT_BOOKMARK = "Edit Bookmark";
 }

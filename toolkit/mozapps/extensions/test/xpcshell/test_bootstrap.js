@@ -126,11 +126,7 @@ function getUninstallNewVersion() {
 }
 
 function do_check_bootstrappedPref(aCallback) {
-  let data = "{}";
-  try {
-    // This is ok to fail, as the pref won't exist on a fresh profile.
-    data = Services.prefs.getCharPref("extensions.bootstrappedAddons");
-  } catch (e) {}
+  let data = Services.prefs.getCharPref("extensions.bootstrappedAddons");
   data = JSON.parse(data);
 
   AddonManager.getAddonsByTypes(["extension"], function(aAddons) {
@@ -153,7 +149,7 @@ function do_check_bootstrappedPref(aCallback) {
     }
     do_check_eq(Object.keys(data).length, 0);
 
-    aCallback();
+    do_execute_soon(aCallback);
   });
 }
 
@@ -169,7 +165,7 @@ function run_test() {
 
   do_check_false(gExtensionsINI.exists());
 
-  do_check_bootstrappedPref(run_test_1);
+  run_test_1();
 }
 
 // Tests that installing doesn't require a restart
@@ -853,7 +849,7 @@ function check_test_15() {
     do_check_bootstrappedPref(function() {
       restartManager();
 
-      AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
+      AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", callback_soon(function(b1) {
         do_check_neq(b1, null);
         do_check_eq(b1.version, "2.0");
         do_check_false(b1.appDisabled);
@@ -865,7 +861,7 @@ function check_test_15() {
         b1.uninstall();
 
         run_test_16();
-      });
+      }));
     });
   });
 }
@@ -946,7 +942,7 @@ function run_test_17() {
 // the existing one
 function run_test_18() {
   resetPrefs();
-  waitForPref("bootstraptest.startup_reason", function test_16_after_startup() {
+  waitForPref("bootstraptest.startup_reason", function test_18_after_startup() {
     AddonManager.getAddonByID("bootstrap1@tests.mozilla.org", function(b1) {
       // Should have installed and started
       do_check_eq(getInstalledVersion(), 2);

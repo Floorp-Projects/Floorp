@@ -103,22 +103,21 @@ function run_test() {
   let stagedXPIs = profileDir.clone();
   stagedXPIs.append("staged-xpis");
   stagedXPIs.append("addon6@tests.mozilla.org");
-  stagedXPIs.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  stagedXPIs.create(AM_Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
   let addon6 = do_get_addon("test_migrate6");
   addon6.copyTo(stagedXPIs, "tmp.xpi");
   stagedXPIs = stagedXPIs.parent;
 
   stagedXPIs.append("addon7@tests.mozilla.org");
-  stagedXPIs.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
+  stagedXPIs.create(AM_Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
   let addon7 = do_get_addon("test_migrate7");
   addon7.copyTo(stagedXPIs, "tmp.xpi");
   stagedXPIs = stagedXPIs.parent;
 
   stagedXPIs.append("addon8@tests.mozilla.org");
-  stagedXPIs.create(AM_Ci.nsIFile.DIRECTORY_TYPE, 0755);
-
+  stagedXPIs.create(AM_Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
   let addon8 = do_get_addon("test_migrate8");
   addon8.copyTo(stagedXPIs, "tmp.xpi");
   stagedXPIs = stagedXPIs.parent;

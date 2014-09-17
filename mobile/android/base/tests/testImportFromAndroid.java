@@ -152,7 +152,7 @@ public class testImportFromAndroid extends AboutHomeTest {
             waitForText(StringHelper.IMPORT_FROM_ANDROID_LABEL);
             mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         }
-        waitForText("Privacy"); // Settings is a header for the settings menu page. Waiting for Privacy ensures we are back in the top Settings view
+        waitForText(StringHelper.PRIVACY_SECTION_LABEL); // Settings is a header for the settings menu page. Waiting for Privacy ensures we are back in the top Settings view
         mActions.sendSpecialKey(Actions.SpecialKey.BACK); // Exit Settings
         // Make sure the settings menu has been closed.
         mAsserter.ok(mSolo.waitForText(StringHelper.TITLE_PLACE_HOLDER), "Waiting for search bar", "Search bar found");

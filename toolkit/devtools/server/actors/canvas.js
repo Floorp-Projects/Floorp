@@ -51,16 +51,6 @@ const INTERESTING_CALLS = [
   "useProgram"
 ];
 
-exports.register = function(handle) {
-  handle.addTabActor(CanvasActor, "canvasActor");
-  handle.addGlobalActor(CanvasActor, "canvasActor");
-};
-
-exports.unregister = function(handle) {
-  handle.removeTabActor(CanvasActor);
-  handle.removeGlobalActor(CanvasActor);
-};
-
 /**
  * Type representing an Uint32Array buffer, serialized fast(er).
  *
