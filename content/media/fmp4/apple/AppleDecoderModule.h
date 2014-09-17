@@ -42,7 +42,8 @@ public:
 
   static void Init();
 private:
-  static bool sIsEnabled;
+  static bool sIsVTAvailable;
+  static bool sIsVDAAvailable;
 };
 
 } // namespace mozilla
