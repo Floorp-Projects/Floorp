@@ -1,0 +1,73 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PIndexedDBDatabase;
+include protocol PIndexedDBObjectStore;
+
+include "mozilla/dom/indexedDB/SerializationHelpers.h";
+
+using struct mozilla::dom::indexedDB::ObjectStoreInfoGuts from "mozilla/dom/indexedDB/DatabaseInfo.h";
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+namespace ipc {
+
+struct CreateObjectStoreParams
+{
+  ObjectStoreInfoGuts info;
+};
+
+struct GetObjectStoreParams
+{
+  nsString name;
+};
+
+union ObjectStoreConstructorParams
+{
+  CreateObjectStoreParams;
+  GetObjectStoreParams;
+};
+
+struct CompleteResult
+{ };
+
+struct AbortResult
+{
+  nsresult errorCode;
+};
+
+union CompleteParams
+{
+  CompleteResult;
+  AbortResult;
+};
+
+} // namespace ipc
+
+protocol PIndexedDBTransaction
+{
+  manager PIndexedDBDatabase;
+
+  manages PIndexedDBObjectStore;
+
+parent:
+  __delete__();
+
+  PIndexedDBObjectStore(ObjectStoreConstructorParams params);
+
+  Abort(nsresult abortCode);
+
+  AllRequestsFinished();
+
+  DeleteObjectStore(nsString name);
+
+child:
+  Complete(CompleteParams params);
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

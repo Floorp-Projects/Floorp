@@ -62,7 +62,8 @@
         continue;
       }
 
-      isnot(getFilePath(result), getFilePath(refResult), "Different os files");
+      isnot(SpecialPowers.getMozFullPath(result),
+            SpecialPowers.getMozFullPath(refResult), "Different os files");
     }
 
     for (let i = 1; i < databases.length; i++) {
@@ -85,7 +86,8 @@
       verifyBlob(result, refResult, 2);
       yield undefined;
 
-      isnot(getFilePath(result), getFilePath(refResult), "Different os files");
+      isnot(SpecialPowers.getMozFullPath(result),
+            SpecialPowers.getMozFullPath(refResult), "Different os files");
     }
 
     is(bufferCache.length, 2, "Correct length");

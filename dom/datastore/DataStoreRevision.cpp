@@ -9,9 +9,8 @@
 #include "DataStoreCallbacks.h"
 #include "DataStoreService.h"
 #include "mozilla/dom/DataStoreBinding.h"
-#include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/indexedDB/IDBObjectStore.h"
-#include "mozilla/dom/indexedDB/IDBRequest.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "nsIDOMEvent.h"
 
 namespace mozilla {

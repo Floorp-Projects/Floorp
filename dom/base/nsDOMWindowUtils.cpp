@@ -100,7 +100,6 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::ipc;
 using namespace mozilla::layers;
 using namespace mozilla::widget;
 using namespace mozilla::gfx;
@@ -3005,65 +3004,30 @@ nsDOMWindowUtils::AreDialogsEnabled(bool* aResult)
 
 NS_IMETHODIMP
 nsDOMWindowUtils::GetFileId(JS::Handle<JS::Value> aFile, JSContext* aCx,
-                            int64_t* _retval)
+                            int64_t* aResult)
 {
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
 
-  if (aFile.isPrimitive()) {
-    *_retval = -1;
-    return NS_OK;
-  }
+  if (!aFile.isPrimitive()) {
+    JSObject* obj = aFile.toObjectOrNull();
 
-  JSObject* obj = aFile.toObjectOrNull();
-
-  indexedDB::IDBMutableFile* mutableFile = nullptr;
-  if (NS_SUCCEEDED(UNWRAP_OBJECT(IDBMutableFile, obj, mutableFile))) {
-    *_retval = mutableFile->GetFileId();
-    return NS_OK;
-  }
-
-  nsISupports* nativeObj =
-    nsContentUtils::XPConnect()->GetNativeOfWrapper(aCx, obj);
-
-  nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(nativeObj);
-  if (blob) {
-    *_retval = blob->GetFileId();
-    return NS_OK;
-  }
-
-  *_retval = -1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWindowUtils::GetFilePath(JS::HandleValue aFile, JSContext* aCx,
-                              nsAString& _retval)
-{
-  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
-
-  if (aFile.isPrimitive()) {
-    _retval.Truncate();
-    return NS_OK;
-  }
-
-  JSObject* obj = aFile.toObjectOrNull();
-
-  nsISupports* nativeObj =
-    nsContentUtils::XPConnect()->GetNativeOfWrapper(aCx, obj);
-
-  nsCOMPtr<nsIDOMFile> file = do_QueryInterface(nativeObj);
-  if (file) {
-    nsString filePath;
-    nsresult rv = file->GetMozFullPathInternal(filePath);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+    indexedDB::IDBMutableFile* mutableFile = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(IDBMutableFile, obj, mutableFile))) {
+      *aResult = mutableFile->GetFileId();
+      return NS_OK;
     }
 
-    _retval = filePath;
-    return NS_OK;
+    nsISupports* nativeObj =
+      nsContentUtils::XPConnect()->GetNativeOfWrapper(aCx, obj);
+
+    nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(nativeObj);
+    if (blob) {
+      *aResult = blob->GetFileId();
+      return NS_OK;
+    }
   }
 
-  _retval.Truncate();
+  *aResult = -1;
   return NS_OK;
 }
 

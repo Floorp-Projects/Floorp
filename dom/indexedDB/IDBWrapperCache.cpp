@@ -5,19 +5,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "IDBWrapperCache.h"
-
-#include "mozilla/HoldDropJSObjects.h"
-#include "nsCOMPtr.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsPIDOMWindow.h"
-
-#ifdef DEBUG
 #include "nsCycleCollector.h"
-#endif
 
-namespace mozilla {
-namespace dom {
-namespace indexedDB {
+USING_INDEXEDDB_NAMESPACE
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(IDBWrapperCache)
 
@@ -48,14 +38,6 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(IDBWrapperCache, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(IDBWrapperCache, DOMEventTargetHelper)
 
-IDBWrapperCache::IDBWrapperCache(DOMEventTargetHelper* aOwner)
-  : DOMEventTargetHelper(aOwner), mScriptOwner(nullptr)
-{ }
-
-IDBWrapperCache::IDBWrapperCache(nsPIDOMWindow* aOwner)
-  : DOMEventTargetHelper(aOwner), mScriptOwner(nullptr)
-{ }
-
 IDBWrapperCache::~IDBWrapperCache()
 {
   mScriptOwner = nullptr;
@@ -66,7 +48,7 @@ IDBWrapperCache::~IDBWrapperCache()
 void
 IDBWrapperCache::SetScriptOwner(JSObject* aScriptOwner)
 {
-  MOZ_ASSERT(aScriptOwner);
+  NS_ASSERTION(aScriptOwner, "This should never be null!");
 
   mScriptOwner = aScriptOwner;
   mozilla::HoldJSObjects(this);
@@ -80,7 +62,3 @@ IDBWrapperCache::AssertIsRooted() const
              "Why aren't we rooted?!");
 }
 #endif
-
-} // namespace indexedDB
-} // namespace dom
-} // namespace mozilla

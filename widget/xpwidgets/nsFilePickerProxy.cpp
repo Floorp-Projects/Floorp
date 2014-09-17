@@ -10,7 +10,7 @@
 #include "nsIFile.h"
 #include "nsDOMFile.h"
 #include "mozilla/dom/TabChild.h"
-#include "mozilla/dom/ipc/BlobChild.h"
+#include "mozilla/dom/ipc/Blob.h"
 
 using namespace mozilla::dom;
 
