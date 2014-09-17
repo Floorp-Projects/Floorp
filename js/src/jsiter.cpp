@@ -1774,7 +1774,7 @@ js_NewGenerator(JSContext *cx, const InterpreterRegs &stackRegs)
     static_assert(sizeof(InterpreterFrame) % sizeof(HeapValue) == 0,
                   "The Values stored after InterpreterFrame must be aligned.");
     unsigned nvals = vplen + VALUES_PER_STACK_FRAME + stackfp->script()->nslots();
-    JSGenerator *gen = obj->pod_calloc_with_extra<JSGenerator, HeapValue>(nvals);
+    JSGenerator *gen = obj->zone()->pod_calloc_with_extra<JSGenerator, HeapValue>(nvals);
     if (!gen)
         return nullptr;
 

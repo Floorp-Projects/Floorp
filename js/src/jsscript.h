@@ -731,7 +731,7 @@ XDRScriptConst(XDRState<mode> *xdr, MutableHandleValue vp);
 
 } /* namespace js */
 
-class JSScript : public js::gc::BarrieredCell<JSScript>
+class JSScript : public js::gc::TenuredCell
 {
     template <js::XDRMode mode>
     friend
@@ -1287,7 +1287,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     }
     void setIonScript(JSContext *maybecx, js::jit::IonScript *ionScript) {
         if (hasIonScript())
-            js::jit::IonScript::writeBarrierPre(tenuredZone(), ion);
+            js::jit::IonScript::writeBarrierPre(zone(), ion);
         ion = ionScript;
         MOZ_ASSERT_IF(hasIonScript(), hasBaselineScript());
         updateBaselineOrIonRaw(maybecx);
@@ -1340,7 +1340,7 @@ class JSScript : public js::gc::BarrieredCell<JSScript>
     }
     void setParallelIonScript(js::jit::IonScript *ionScript) {
         if (hasParallelIonScript())
-            js::jit::IonScript::writeBarrierPre(tenuredZone(), parallelIon);
+            js::jit::IonScript::writeBarrierPre(zone(), parallelIon);
         parallelIon = ionScript;
     }
 
@@ -1722,7 +1722,7 @@ class AliasedFormalIter
 
 // Information about a script which may be (or has been) lazily compiled to
 // bytecode from its source.
-class LazyScript : public gc::BarrieredCell<LazyScript>
+class LazyScript : public gc::TenuredCell
 {
   public:
     class FreeVariable

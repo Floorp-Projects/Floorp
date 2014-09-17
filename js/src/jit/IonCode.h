@@ -30,7 +30,7 @@ class CodeOffsetLabel;
 class PatchableBackedge;
 class IonBuilder;
 
-class JitCode : public gc::BarrieredCell<JitCode>
+class JitCode : public gc::TenuredCell
 {
   protected:
     uint8_t *code_;

@@ -281,7 +281,7 @@ GetterSetterWriteBarrierPostRemove(JSRuntime *rt, JSObject **objp)
 #endif
 }
 
-class BaseShape : public gc::BarrieredCell<BaseShape>
+class BaseShape : public gc::TenuredCell
 {
   public:
     friend class Shape;
@@ -630,7 +630,7 @@ typedef HashSet<ReadBarrieredUnownedBaseShape,
                 SystemAllocPolicy> BaseShapeSet;
 
 
-class Shape : public gc::BarrieredCell<Shape>
+class Shape : public gc::TenuredCell
 {
     friend class ::JSObject;
     friend class ::JSFunction;
