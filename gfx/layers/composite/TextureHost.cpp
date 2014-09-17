@@ -205,8 +205,9 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
     case SurfaceDescriptor::TSurfaceDescriptorDIB:
       return CreateBackendIndependentTextureHost(aDesc, aDeallocator, aFlags);
 
-    case SurfaceDescriptor::TSharedTextureDescriptor:
+    case SurfaceDescriptor::TEGLImageDescriptor:
     case SurfaceDescriptor::TNewSurfaceDescriptorGralloc:
+    case SurfaceDescriptor::TSurfaceTextureDescriptor:
       return CreateTextureHostOGL(aDesc, aDeallocator, aFlags);
 
     case SurfaceDescriptor::TSurfaceStreamDescriptor:
