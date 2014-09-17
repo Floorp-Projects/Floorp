@@ -21,7 +21,6 @@
 #include "nsContentTypeParser.h"
 #include "nsDebug.h"
 #include "nsError.h"
-#include "nsIEventTarget.h"
 #include "nsIRunnable.h"
 #include "nsPIDOMWindow.h"
 #include "nsString.h"
