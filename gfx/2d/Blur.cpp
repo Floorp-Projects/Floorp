@@ -335,7 +335,7 @@ AlphaBoxBlur::AlphaBoxBlur(const Rect& aRect,
                            const Rect* aSkipRect)
  : mSpreadRadius(aSpreadRadius),
    mBlurRadius(aBlurRadius),
-   mSurfaceAllocationSize(-1)
+   mSurfaceAllocationSize(0)
 {
   Rect rect(aRect);
   rect.Inflate(Size(aBlurRadius + aSpreadRadius));
@@ -400,7 +400,7 @@ AlphaBoxBlur::AlphaBoxBlur(const Rect& aRect,
     mSpreadRadius(),
     mBlurRadius(CalculateBlurRadius(Point(aSigmaX, aSigmaY))),
     mStride(aStride),
-    mSurfaceAllocationSize(-1)
+    mSurfaceAllocationSize(0)
 {
   IntRect intRect;
   if (aRect.ToIntRect(&intRect)) {
@@ -445,7 +445,7 @@ AlphaBoxBlur::GetDirtyRect()
   return nullptr;
 }
 
-int32_t
+size_t
 AlphaBoxBlur::GetSurfaceAllocationSize() const
 {
   return mSurfaceAllocationSize;
