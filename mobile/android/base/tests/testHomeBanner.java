@@ -41,7 +41,7 @@ public class testHomeBanner extends UITest {
         // Load about:home and make sure the onshown handler is called.
         Actions.EventExpecter eventExpecter = getActions().expectGeckoEvent("TestHomeBanner:MessageShown");
         addBannerMessage();
-        NavigationHelper.enterAndLoadUrl("about:home");
+        NavigationHelper.enterAndLoadUrl(StringHelper.ABOUT_HOME_URL);
         eventExpecter.blockForEvent();
 
         // Verify that the banner is visible with the correct text.
@@ -53,7 +53,7 @@ public class testHomeBanner extends UITest {
         eventExpecter.blockForEvent();
 
         // Verify that the banner isn't visible after navigating away from about:home.
-        NavigationHelper.enterAndLoadUrl("about:firefox");
+        NavigationHelper.enterAndLoadUrl(StringHelper.ABOUT_FIREFOX_URL);
 
         mAboutHome.assertBannerNotVisible();
     }
@@ -68,7 +68,7 @@ public class testHomeBanner extends UITest {
         removeBannerMessage();
 
         // Verify that the banner no longer appears.
-        NavigationHelper.enterAndLoadUrl("about:home");
+        NavigationHelper.enterAndLoadUrl(StringHelper.ABOUT_HOME_URL);
         mAboutHome.assertVisible()
                   .assertBannerNotVisible();
     }
@@ -83,7 +83,7 @@ public class testHomeBanner extends UITest {
         // Add back the banner message to test the dismiss functionality.
         addBannerMessage();
 
-        NavigationHelper.enterAndLoadUrl("about:home");
+        NavigationHelper.enterAndLoadUrl(StringHelper.ABOUT_HOME_URL);
         mAboutHome.assertVisible();
 
         // Test to make sure the ondismiss handler is called when the close button is clicked.
@@ -95,7 +95,7 @@ public class testHomeBanner extends UITest {
     }
 
     private void hideOnToolbarFocusTest() {
-        NavigationHelper.enterAndLoadUrl("about:home");
+        NavigationHelper.enterAndLoadUrl(StringHelper.ABOUT_HOME_URL);
         mAboutHome.assertVisible()
                   .assertBannerVisible();
 

@@ -488,6 +488,7 @@ public class Tabs implements GeckoEventListener {
                 notifyListeners(tab, Tabs.TabEvents.LOAD_ERROR);
             } else if (event.equals("Content:PageShow")) {
                 notifyListeners(tab, TabEvents.PAGE_SHOW);
+                tab.updateUserRequested(message.getString("userRequested"));
             } else if (event.equals("DOMContentLoaded")) {
                 tab.handleContentLoaded();
                 String backgroundColor = message.getString("bgColor");

@@ -1776,6 +1776,52 @@ CodeGeneratorARM::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStati
 }
 
 bool
+CodeGeneratorARM::visitAsmJSCall(LAsmJSCall *ins)
+{
+    MAsmJSCall *mir = ins->mir();
+
+    if (UseHardFpABI() || mir->callee().which() != MAsmJSCall::Callee::Builtin) {
+        emitAsmJSCall(ins);
+        return true;
+    }
+
+    // The soft ABI passes floating point arguments in GPRs. Since basically
+    // nothing is set up to handle this, the values are placed in the
+    // corresponding VFP registers, then transferred to GPRs immediately
+    // before the call. The mapping is sN <-> rN, where double registers
+    // can be treated as their two component single registers.
+
+    for (unsigned i = 0, e = ins->numOperands(); i < e; i++) {
+        LAllocation *a = ins->getOperand(i);
+        if (a->isFloatReg()) {
+            FloatRegister fr = ToFloatRegister(a);
+            if (fr.isDouble()) {
+                uint32_t srcId = fr.singleOverlay().id();
+                masm.ma_vxfer(fr, Register::FromCode(srcId), Register::FromCode(srcId + 1));
+            } else {
+                uint32_t srcId = fr.id();
+                masm.ma_vxfer(fr, Register::FromCode(srcId));
+            }
+        }
+    }
+
+    emitAsmJSCall(ins);
+
+    switch (mir->type()) {
+      case MIRType_Double:
+        masm.ma_vxfer(r0, r1, d0);
+        break;
+      case MIRType_Float32:
+        masm.as_vxfer(r0, InvalidReg, VFPRegister(d0).singleOverlay(), Assembler::CoreToFloat);
+        break;
+      default:
+        break;
+    }
+
+    return true;
+}
+
+bool
 CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
 {
     const MAsmJSLoadHeap *mir = ins->mir();

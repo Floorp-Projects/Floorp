@@ -953,11 +953,13 @@ void nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
     // are found and a found before b.
 
     uint32_t firstDotLoc = uint32_t(kNotFound);
+    uint32_t lastDotLoc = uint32_t(kNotFound);
     uint32_t firstColonLoc = uint32_t(kNotFound);
     uint32_t firstQuoteLoc = uint32_t(kNotFound);
     uint32_t firstSpaceLoc = uint32_t(kNotFound);
     uint32_t firstQMarkLoc = uint32_t(kNotFound);
     uint32_t lastLSBracketLoc = uint32_t(kNotFound);
+    uint32_t lastSlashLoc = uint32_t(kNotFound);
     uint32_t pos = 0;
     uint32_t foundDots = 0;
     uint32_t foundColons = 0;
@@ -986,6 +988,7 @@ void nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
         }
         if (*iter == '.') {
             ++foundDots;
+            lastDotLoc = pos;
             if (firstDotLoc == uint32_t(kNotFound)) {
                 firstDotLoc = pos;
             }
@@ -1004,6 +1007,8 @@ void nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
             lastLSBracketLoc = pos;
         } else if (*iter == ']') {
             foundRSBrackets++;
+        } else if (*iter == '/') {
+            lastSlashLoc = pos;
         } else if (nsCRT::IsAsciiAlpha(*iter)) {
             hasAsciiAlpha = true;
         } else if (nsCRT::IsAsciiDigit(*iter)) {
@@ -1030,9 +1035,25 @@ void nsDefaultURIFixup::KeywordURIFixup(const nsACString & aURIString,
         NS_SUCCEEDED(aFixupInfo->mFixedURI->GetHost(host)) &&
         !host.IsEmpty();
 
-    // If there are 3 dots and only numbers between them, then don't do a
-    // keyword lookup (ipv4)
-    if (foundDots == 3 && (foundDots + foundDigits == pos)) {
+    // If there are 2 dots and only numbers between them, an optional port number
+    // and a trailing slash, then don't do a keyword lookup
+    if (foundDots == 2 && lastSlashLoc == pos - 1 &&
+        ((foundDots + foundDigits == pos - 1) ||
+         (foundColons == 1 && firstColonLoc > lastDotLoc &&
+          foundDots + foundDigits + foundColons == pos - 1))) {
+        return;
+    }
+
+    uint32_t posWithNoTrailingSlash = pos;
+    if (lastSlashLoc == pos - 1) {
+        posWithNoTrailingSlash -= 1;
+    }
+    // If there are 3 dots and only numbers between them, an optional port number
+    // and an optional trailling slash, then don't do a keyword lookup (ipv4)
+    if (foundDots == 3 &&
+        ((foundDots + foundDigits == posWithNoTrailingSlash) ||
+         (foundColons == 1 && firstColonLoc > lastDotLoc &&
+          foundDots + foundDigits + foundColons == posWithNoTrailingSlash))) {
         return;
     }
 

@@ -1433,12 +1433,6 @@ public abstract class GeckoApp
         // parallel with Gecko load.
         checkMigrateProfile();
 
-        Uri data = intent.getData();
-        if (data != null && "http".equals(data.getScheme())) {
-            startupAction = StartupAction.PREFETCH;
-            ThreadUtils.postToBackgroundThread(new PrefetchRunnable(data.toString()));
-        }
-
         Tabs.registerOnTabsChangedListener(this);
 
         initializeChrome();
@@ -1775,43 +1769,6 @@ public abstract class GeckoApp
     public String getDefaultUAString() {
         return HardwareUtils.isTablet() ? AppConstants.USER_AGENT_FENNEC_TABLET :
                                           AppConstants.USER_AGENT_FENNEC_MOBILE;
-    }
-
-    public String getUAStringForHost(String host) {
-        // With our standard UA String, we get a 200 response code and
-        // client-side redirect from t.co. This bot-like UA gives us a
-        // 301 response code
-        if ("t.co".equals(host)) {
-            return AppConstants.USER_AGENT_BOT_LIKE;
-        }
-        return getDefaultUAString();
-    }
-
-    class PrefetchRunnable implements Runnable {
-        private String mPrefetchUrl;
-
-        PrefetchRunnable(String prefetchUrl) {
-            mPrefetchUrl = prefetchUrl;
-        }
-
-        @Override
-        public void run() {
-            HttpURLConnection connection = null;
-            try {
-                URL url = new URL(mPrefetchUrl);
-                // data url should have an http scheme
-                connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestProperty("User-Agent", getUAStringForHost(url.getHost()));
-                connection.setInstanceFollowRedirects(false);
-                connection.setRequestMethod("GET");
-                connection.connect();
-            } catch (Exception e) {
-                Log.e(LOGTAG, "Exception prefetching URL", e);
-            } finally {
-                if (connection != null)
-                    connection.disconnect();
-            }
-        }
     }
 
     private void processAlertCallback(Intent intent) {

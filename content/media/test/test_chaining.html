@@ -13,8 +13,7 @@
 var manager = new MediaTestManager;
 
 function finish_test(element) {
-  if (element.parentNode)
-    element.parentNode.removeChild(element);
+  removeNodeAndSource(element);
   manager.finished(element.token);
 }
 
@@ -78,6 +77,7 @@ function startTest(test, token) {
   element.controls = true;
   element.addEventListener("loadedmetadata", onmetadataloaded);
   element.addEventListener("ended", onended);
+  element.preload = "metadata";
 }
 
 manager.runTests(gChainingTests, startTest);

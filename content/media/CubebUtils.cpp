@@ -6,11 +6,8 @@
 
 #include <stdint.h>
 #include <algorithm>
-#include "mozilla/Atomics.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticMutex.h"
 #include "CubebUtils.h"
-#include "nsAutoRef.h"
 #include "prdtoa.h"
 
 #define PREF_VOLUME_SCALE "media.volume_scale"
@@ -18,28 +15,18 @@
 
 namespace mozilla {
 
-namespace {
-
-// Prefered samplerate, in Hz (characteristic of the
-// hardware/mixer/platform/API used).
-Atomic<uint32_t> sPreferredSampleRate;
-
-// This mutex protects the variables below.
-StaticMutex sMutex;
-cubeb* sCubebContext;
-double sVolumeScale;
-uint32_t sCubebLatency;
-bool sCubebLatencyPrefSet;
-
-} // anonymous namespace
-
 extern PRLogModuleInfo* gAudioStreamLog;
 
 static const uint32_t CUBEB_NORMAL_LATENCY_MS = 100;
 
-namespace CubebUtils {
+StaticMutex CubebUtils::sMutex;
+cubeb* CubebUtils::sCubebContext;
+uint32_t CubebUtils::sPreferredSampleRate;
+double CubebUtils::sVolumeScale;
+uint32_t CubebUtils::sCubebLatency;
+bool CubebUtils::sCubebLatencyPrefSet;
 
-void PrefChanged(const char* aPref, void* aClosure)
+/*static*/ void CubebUtils::PrefChanged(const char* aPref, void* aClosure)
 {
   if (strcmp(aPref, PREF_VOLUME_SCALE) == 0) {
     nsAdoptingString value = Preferences::GetString(aPref);
@@ -61,7 +48,7 @@ void PrefChanged(const char* aPref, void* aClosure)
   }
 }
 
-bool GetFirstStream()
+/*static*/ bool CubebUtils::GetFirstStream()
 {
   static bool sFirstStream = true;
 
@@ -71,36 +58,29 @@ bool GetFirstStream()
   return result;
 }
 
-double GetVolumeScale()
+/*static*/ double CubebUtils::GetVolumeScale()
 {
   StaticMutexAutoLock lock(sMutex);
   return sVolumeScale;
 }
 
-cubeb* GetCubebContext()
+/*static*/ cubeb* CubebUtils::GetCubebContext()
 {
   StaticMutexAutoLock lock(sMutex);
   return GetCubebContextUnlocked();
 }
 
-void InitPreferredSampleRate()
+/*static*/ void CubebUtils::InitPreferredSampleRate()
 {
-  // The mutex is used here to prohibit concurrent initialization calls, but
-  // sPreferredSampleRate itself is safe to access without the mutex because
-  // it is using atomic storage.
   StaticMutexAutoLock lock(sMutex);
-  uint32_t preferredSampleRate = 0;
   if (sPreferredSampleRate == 0 &&
       cubeb_get_preferred_sample_rate(GetCubebContextUnlocked(),
-                                      &preferredSampleRate) == CUBEB_OK) {
-    sPreferredSampleRate = preferredSampleRate;
-  } else {
-    // Query failed, use a sensible default.
+                                      &sPreferredSampleRate) != CUBEB_OK) {
     sPreferredSampleRate = 44100;
   }
 }
 
-cubeb* GetCubebContextUnlocked()
+/*static*/ cubeb* CubebUtils::GetCubebContextUnlocked()
 {
   sMutex.AssertCurrentThreadOwns();
   if (sCubebContext ||
@@ -111,19 +91,19 @@ cubeb* GetCubebContextUnlocked()
   return nullptr;
 }
 
-uint32_t GetCubebLatency()
+/*static*/ uint32_t CubebUtils::GetCubebLatency()
 {
   StaticMutexAutoLock lock(sMutex);
   return sCubebLatency;
 }
 
-bool CubebLatencyPrefSet()
+/*static*/ bool CubebUtils::CubebLatencyPrefSet()
 {
   StaticMutexAutoLock lock(sMutex);
   return sCubebLatencyPrefSet;
 }
 
-void InitLibrary()
+/*static*/ void CubebUtils::InitLibrary()
 {
 #ifdef PR_LOGGING
   gAudioStreamLog = PR_NewLogModule("AudioStream");
@@ -134,7 +114,7 @@ void InitLibrary()
   Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LATENCY);
 }
 
-void ShutdownLibrary()
+/*static*/ void CubebUtils::ShutdownLibrary()
 {
   Preferences::UnregisterCallback(PrefChanged, PREF_VOLUME_SCALE);
   Preferences::UnregisterCallback(PrefChanged, PREF_CUBEB_LATENCY);
@@ -146,20 +126,20 @@ void ShutdownLibrary()
   }
 }
 
-uint32_t MaxNumberOfChannels()
+/*static*/ int CubebUtils::MaxNumberOfChannels()
 {
-  cubeb* cubebContext = GetCubebContext();
+  cubeb* cubebContext = CubebUtils::GetCubebContext();
   uint32_t maxNumberOfChannels;
   if (cubebContext &&
       cubeb_get_max_channel_count(cubebContext,
                                   &maxNumberOfChannels) == CUBEB_OK) {
-    return maxNumberOfChannels;
+    return static_cast<int>(maxNumberOfChannels);
   }
 
   return 0;
 }
 
-uint32_t PreferredSampleRate()
+/*static*/ int CubebUtils::PreferredSampleRate()
 {
   MOZ_ASSERT(sPreferredSampleRate,
              "sPreferredSampleRate has not been initialized!");
@@ -167,7 +147,7 @@ uint32_t PreferredSampleRate()
 }
 
 #if defined(__ANDROID__) && defined(MOZ_B2G)
-cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannel aChannel)
+/*static*/ cubeb_stream_type CubebUtils::ConvertChannelToCubebType(dom::AudioChannel aChannel)
 {
   switch(aChannel) {
     case dom::AudioChannel::Normal:
@@ -191,5 +171,4 @@ cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannel aChannel)
 }
 #endif
 
-} // namespace CubebUtils
-} // namespace mozilla
+}

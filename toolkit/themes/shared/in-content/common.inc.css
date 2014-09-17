@@ -14,15 +14,6 @@ xul|page {
   color: #424e5a;
 }
 
-*|* {
-  -moz-user-select: text;
-}
-
-xul|treecol {
-  /* override the * rule to let the treecol be sortable */
-  -moz-user-select: none;
-}
-
 html|body {
   font-size: 15px;
   font-weight: normal;
