@@ -21,6 +21,7 @@
 #include "FFmpegRuntimeLinker.h"
 #endif
 #ifdef MOZ_APPLEMEDIA
+#include "apple/AppleVDALinker.h"
 #include "apple/AppleCMLinker.h"
 #include "apple/AppleVTLinker.h"
 #endif
@@ -152,16 +153,11 @@ IsAppleAvailable()
     return false;
   }
   // Attempt to load the required frameworks.
+  bool haveVDA = AppleVDALinker::Link();
   bool haveCoreMedia = AppleCMLinker::Link();
-  if (!haveCoreMedia) {
-    return false;
-  }
   bool haveVideoToolbox = AppleVTLinker::Link();
-  if (!haveVideoToolbox) {
-    return false;
-  }
-  // All hurdles cleared!
-  return true;
+
+  return haveVDA || (haveCoreMedia && haveVideoToolbox);
 #endif
 }
 
