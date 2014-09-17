@@ -26,7 +26,6 @@
 #include "YuvStamper.h"
 #endif
 
-#define VIDEO_RATE USECS_PER_S
 #define AUDIO_RATE 16000
 #define AUDIO_FRAME_LENGTH ((AUDIO_RATE * MediaEngine::DEFAULT_AUDIO_TIMER_MS) / 1000)
 namespace mozilla {
@@ -134,7 +133,7 @@ MediaEngineDefaultVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
     return NS_ERROR_FAILURE;
   }
 
-  aStream->AddTrack(aID, VIDEO_RATE, 0, new VideoSegment());
+  aStream->AddTrack(aID, aStream->GraphRate(), 0, new VideoSegment());
   aStream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
 
   // Remember TrackID so we can end it later
@@ -241,7 +240,8 @@ MediaEngineDefaultVideoSource::NotifyPull(MediaStreamGraph* aGraph,
 
   // Note: we're not giving up mImage here
   nsRefPtr<layers::Image> image = mImage;
-  TrackTicks target = aSource->TimeToTicksRoundUp(USECS_PER_S, aDesiredTime);
+  TrackTicks target =
+    aSource->TimeToTicksRoundUp(aSource->GraphRate(), aDesiredTime);
   TrackTicks delta = target - aLastEndTime;
 
   if (delta > 0) {
