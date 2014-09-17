@@ -15,10 +15,10 @@
   <Param name="appid"   value="ffd" />
   <Param name="command" value="{searchTerms}" />
 </Url>
-<Url type="text/html" method="GET" template="https://search.yahoo.com/search" resultdomain="yahoo.com">
+<Url type="text/html" method="GET" template="https://search.yahoo.com/search"
+     resultdomain="yahoo.com" rel="searchform">
   <Param name="p" value="{searchTerms}"/>
   <Param name="ei" value="UTF-8"/>
   <MozParam name="fr" condition="pref" pref="yahoo-fr" />
 </Url>
-<SearchForm>https://search.yahoo.com/</SearchForm>
 </SearchPlugin>
