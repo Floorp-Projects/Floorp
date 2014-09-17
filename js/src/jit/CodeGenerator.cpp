@@ -4357,7 +4357,7 @@ CodeGenerator::visitTypedArrayLength(LTypedArrayLength *lir)
 {
     Register obj = ToRegister(lir->object());
     Register out = ToRegister(lir->output());
-    masm.unboxInt32(Address(obj, TypedArrayObject::lengthOffset()), out);
+    masm.unboxInt32(Address(obj, TypedArrayLayout::lengthOffset()), out);
     return true;
 }
 
@@ -4366,7 +4366,7 @@ CodeGenerator::visitTypedArrayElements(LTypedArrayElements *lir)
 {
     Register obj = ToRegister(lir->object());
     Register out = ToRegister(lir->output());
-    masm.loadPtr(Address(obj, TypedArrayObject::dataOffset()), out);
+    masm.loadPtr(Address(obj, TypedArrayLayout::dataOffset()), out);
     return true;
 }
 
@@ -8200,7 +8200,7 @@ CodeGenerator::visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole *lir)
     // Load the length.
     Register scratch = out.scratchReg();
     Int32Key key = ToInt32Key(lir->index());
-    masm.unboxInt32(Address(object, TypedArrayObject::lengthOffset()), scratch);
+    masm.unboxInt32(Address(object, TypedArrayLayout::lengthOffset()), scratch);
 
     // Load undefined unless length > key.
     Label inbounds, done;
@@ -8210,7 +8210,7 @@ CodeGenerator::visitLoadTypedArrayElementHole(LLoadTypedArrayElementHole *lir)
 
     // Load the elements vector.
     masm.bind(&inbounds);
-    masm.loadPtr(Address(object, TypedArrayObject::dataOffset()), scratch);
+    masm.loadPtr(Address(object, TypedArrayLayout::dataOffset()), scratch);
 
     Scalar::Type arrayType = lir->mir()->arrayType();
     int width = Scalar::byteSize(arrayType);

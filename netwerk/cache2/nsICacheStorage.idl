@@ -52,6 +52,11 @@ interface nsICacheStorage : nsISupports
   const uint32_t CHECK_MULTITHREADED = 1 << 4;
 
   /**
+   * Don't automatically update any 'last used' metadata of the entry.
+   */
+  const uint32_t OPEN_SECRETLY = 1 << 5;
+
+  /**
    * Asynchronously opens a cache entry for the specified URI.
    * Result is fetched asynchronously via the callback.
    *

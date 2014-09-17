@@ -133,7 +133,7 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
   while (iter.NextRun()) {
     gfxTextRun::GlyphRun* run = iter.GetGlyphRun();
     nsresult rv = aDest->AddGlyphRun(run->mFont, run->mMatchType,
-                                     offset, false);
+                                     offset, false, run->mOrientation);
     if (NS_FAILED(rv))
       return;
 

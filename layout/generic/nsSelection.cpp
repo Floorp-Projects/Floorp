@@ -5289,34 +5289,39 @@ Selection::SelectAllChildren(nsINode& aNode, ErrorResult& aRv)
 NS_IMETHODIMP
 Selection::ContainsNode(nsIDOMNode* aNode, bool aAllowPartial, bool* aYes)
 {
-  if (!aYes)
+  if (!aYes) {
     return NS_ERROR_NULL_POINTER;
+  }
   *aYes = false;
 
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+  if (!node) {
+    return NS_ERROR_NULL_POINTER;
+  }
   ErrorResult result;
-  *aYes = ContainsNode(node, aAllowPartial, result);
+  *aYes = ContainsNode(*node, aAllowPartial, result);
   return result.ErrorCode();
 }
 
 bool
-Selection::ContainsNode(nsINode* aNode, bool aAllowPartial, ErrorResult& aRv)
+Selection::ContainsNode(nsINode& aNode, bool aAllowPartial, ErrorResult& aRv)
 {
   nsresult rv;
-  if (mRanges.Length() == 0 || !aNode)
+  if (mRanges.Length() == 0) {
     return false;
+  }
 
   // XXXbz this duplicates the GetNodeLength code in nsRange.cpp
   uint32_t nodeLength;
-  bool isData = aNode->IsNodeOfType(nsINode::eDATA_NODE);
+  bool isData = aNode.IsNodeOfType(nsINode::eDATA_NODE);
   if (isData) {
-    nodeLength = static_cast<nsIContent*>(aNode)->TextLength();
+    nodeLength = static_cast<nsIContent&>(aNode).TextLength();
   } else {
-    nodeLength = aNode->GetChildCount();
+    nodeLength = aNode.GetChildCount();
   }
 
   nsTArray<nsRange*> overlappingRanges;
-  rv = GetRangesForIntervalArray(aNode, 0, aNode, nodeLength,
+  rv = GetRangesForIntervalArray(&aNode, 0, &aNode, nodeLength,
                                  false, &overlappingRanges);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
@@ -5339,7 +5344,7 @@ Selection::ContainsNode(nsINode* aNode, bool aAllowPartial, ErrorResult& aRv)
   // so we have to check all intersecting ranges.
   for (uint32_t i = 0; i < overlappingRanges.Length(); i++) {
     bool nodeStartsBeforeRange, nodeEndsAfterRange;
-    if (NS_SUCCEEDED(nsRange::CompareNodeToRange(aNode, overlappingRanges[i],
+    if (NS_SUCCEEDED(nsRange::CompareNodeToRange(&aNode, overlappingRanges[i],
                                                  &nodeStartsBeforeRange,
                                                  &nodeEndsAfterRange))) {
       if (!nodeStartsBeforeRange && !nodeEndsAfterRange) {

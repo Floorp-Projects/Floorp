@@ -15,6 +15,7 @@
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
 #include "vm/NumericConversions.h"
+#include "vm/TypedArrayCommon.h"
 
 #include "jsopcodeinlines.h"
 
@@ -1489,9 +1490,9 @@ MLoadTypedArrayElementStatic::computeRange(TempAllocator &alloc)
 {
     // We don't currently use MLoadTypedArrayElementStatic for uint32, so we
     // don't have to worry about it returning a value outside our type.
-    JS_ASSERT(typedArray_->type() != Scalar::Uint32);
+    JS_ASSERT(AnyTypedArrayType(someTypedArray_) != Scalar::Uint32);
 
-    setRange(GetTypedArrayRange(alloc, typedArray_->type()));
+    setRange(GetTypedArrayRange(alloc, AnyTypedArrayType(someTypedArray_)));
 }
 
 void

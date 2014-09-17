@@ -1699,6 +1699,42 @@ js::ToUint16Slow(JSContext *cx, const HandleValue v, uint16_t *out)
     return true;
 }
 
+template<typename T>
+bool
+js::ToLengthClamped(T *cx, HandleValue v, uint32_t *out, bool *overflow)
+{
+    if (v.isInt32()) {
+        int32_t i = v.toInt32();
+        *out = i < 0 ? 0 : i;
+        return true;
+    }
+    double d;
+    if (v.isDouble()) {
+        d = v.toDouble();
+    } else {
+        if (!ToNumber(cx, v, &d)) {
+            *overflow = false;
+            return false;
+        }
+    }
+    d = ToInteger(d);
+    if (d <= 0.0) {
+        *out = 0;
+        return true;
+    }
+    if (d >= (double)0xFFFFFFFEU) {
+        *overflow = true;
+        return false;
+    }
+    *out = (uint32_t)d;
+    return true;
+}
+
+template bool
+js::ToLengthClamped<JSContext>(JSContext*, HandleValue, uint32_t*, bool*);
+template bool
+js::ToLengthClamped<ExclusiveContext>(ExclusiveContext*, HandleValue, uint32_t*, bool*);
+
 template <typename CharT>
 bool
 js_strtod(ThreadSafeContext *cx, const CharT *begin, const CharT *end, const CharT **dEnd,

@@ -624,7 +624,7 @@ GLReadTexImageHelper::ReadTexImage(GLuint aTextureId,
         Factory::CreateDataSourceSurfaceWithStride(aSize,
                                                    SurfaceFormat::R8G8B8A8,
                                                    stride);
-    if (NS_WARN_IF(isurf)) {
+    if (NS_WARN_IF(!isurf)) {
         return nullptr;
     }
 

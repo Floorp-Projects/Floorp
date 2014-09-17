@@ -1911,6 +1911,11 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
   MOZ_ASSERT(mState == DECODER_STATE_DECODING_METADATA);
   DECODER_LOG("Decoding Media Headers");
 
+  if (mReader->IsWaitingMediaResources()) {
+    StartWaitForResources();
+    return NS_OK;
+  }
+
   nsresult res;
   MediaInfo info;
   {

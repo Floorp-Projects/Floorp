@@ -14,13 +14,11 @@
 #endif
 #include "jit/Registers.h"
 #include "jit/shared/Assembler-shared.h"
+#include "vm/TypedArrayCommon.h"
 
 namespace js {
 
 class LockedJSContext;
-class TypedArrayObject;
-
-typedef Handle<TypedArrayObject *> HandleTypedArrayObject;
 
 namespace jit {
 
@@ -560,6 +558,7 @@ class GetPropertyIC : public RepatchIonCache
 
     bool monitoredResult_ : 1;
     bool hasTypedArrayLengthStub_ : 1;
+    bool hasSharedTypedArrayLengthStub_ : 1;
     bool hasStrictArgumentsLengthStub_ : 1;
     bool hasNormalArgumentsLengthStub_ : 1;
     bool hasGenericProxyStub_ : 1;
@@ -577,6 +576,7 @@ class GetPropertyIC : public RepatchIonCache
         numLocations_(0),
         monitoredResult_(monitoredResult),
         hasTypedArrayLengthStub_(false),
+        hasSharedTypedArrayLengthStub_(false),
         hasStrictArgumentsLengthStub_(false),
         hasNormalArgumentsLengthStub_(false),
         hasGenericProxyStub_(false)
@@ -599,14 +599,24 @@ class GetPropertyIC : public RepatchIonCache
     bool monitoredResult() const {
         return monitoredResult_;
     }
-    bool hasTypedArrayLengthStub() const {
-        return hasTypedArrayLengthStub_;
+    bool hasAnyTypedArrayLengthStub(HandleObject obj) const {
+        return obj->is<TypedArrayObject>() ? hasTypedArrayLengthStub_ : hasSharedTypedArrayLengthStub_;
     }
     bool hasArgumentsLengthStub(bool strict) const {
         return strict ? hasStrictArgumentsLengthStub_ : hasNormalArgumentsLengthStub_;
     }
     bool hasGenericProxyStub() const {
         return hasGenericProxyStub_;
+    }
+
+    void setHasTypedArrayLengthStub(HandleObject obj) {
+        if (obj->is<TypedArrayObject>()) {
+            JS_ASSERT(!hasTypedArrayLengthStub_);
+            hasTypedArrayLengthStub_ = true;
+        } else {
+            JS_ASSERT(!hasSharedTypedArrayLengthStub_);
+            hasSharedTypedArrayLengthStub_ = true;
+        }
     }
 
     void setLocationInfo(size_t locationsIndex, size_t numLocations) {
@@ -836,7 +846,7 @@ class GetElementIC : public RepatchIonCache
                             HandleObject obj, const Value &idval);
 
     bool attachTypedArrayElement(JSContext *cx, HandleScript outerScript, IonScript *ion,
-                                 HandleTypedArrayObject tarr, const Value &idval);
+                                 HandleObject tarr, const Value &idval);
 
     bool attachArgumentsElement(JSContext *cx, HandleScript outerScript, IonScript *ion,
                                 HandleObject obj);
@@ -934,7 +944,7 @@ class SetElementIC : public RepatchIonCache
                             HandleObject obj, const Value &idval);
 
     bool attachTypedArrayElement(JSContext *cx, HandleScript outerScript, IonScript *ion,
-                                 HandleTypedArrayObject tarr);
+                                 HandleObject tarr);
 
     static bool
     update(JSContext *cx, size_t cacheIndex, HandleObject obj, HandleValue idval,
@@ -1095,13 +1105,15 @@ class GetPropertyParIC : public ParallelIonCache
     PropertyName *name_;
     TypedOrValueRegister output_;
     bool hasTypedArrayLengthStub_ : 1;
+    bool hasSharedTypedArrayLengthStub_ : 1;
 
    public:
     GetPropertyParIC(Register object, PropertyName *name, TypedOrValueRegister output)
       : object_(object),
         name_(name),
         output_(output),
-        hasTypedArrayLengthStub_(false)
+        hasTypedArrayLengthStub_(false),
+        hasSharedTypedArrayLengthStub_(false)
     {
     }
 
@@ -1124,8 +1136,18 @@ class GetPropertyParIC : public ParallelIonCache
     TypedOrValueRegister output() const {
         return output_;
     }
-    bool hasTypedArrayLengthStub() const {
-        return hasTypedArrayLengthStub_;
+    bool hasAnyTypedArrayLengthStub(HandleObject obj) const {
+        return obj->is<TypedArrayObject>() ? hasTypedArrayLengthStub_ : hasSharedTypedArrayLengthStub_;
+    }
+
+    void setHasTypedArrayLengthStub(HandleObject obj) {
+        if (obj->is<TypedArrayObject>()) {
+            JS_ASSERT(!hasTypedArrayLengthStub_);
+            hasTypedArrayLengthStub_ = true;
+        } else {
+            JS_ASSERT(!hasSharedTypedArrayLengthStub_);
+            hasSharedTypedArrayLengthStub_ = true;
+        }
     }
 
     // CanAttachNativeGetProp Helpers
@@ -1198,7 +1220,7 @@ class GetElementParIC : public ParallelIonCache
                         HandlePropertyName name, HandleObject holder, HandleShape shape);
     bool attachDenseElement(LockedJSContext &cx, IonScript *ion, HandleObject obj,
                             const Value &idval);
-    bool attachTypedArrayElement(LockedJSContext &cx, IonScript *ion, HandleTypedArrayObject tarr,
+    bool attachTypedArrayElement(LockedJSContext &cx, IonScript *ion, HandleObject tarr,
                                  const Value &idval);
 
     static bool update(ForkJoinContext *cx, size_t cacheIndex, HandleObject obj, HandleValue idval,
@@ -1326,7 +1348,7 @@ class SetElementParIC : public ParallelIonCache
 
     bool attachDenseElement(LockedJSContext &cx, IonScript *ion, HandleObject obj,
                             const Value &idval);
-    bool attachTypedArrayElement(LockedJSContext &cx, IonScript *ion, HandleTypedArrayObject tarr);
+    bool attachTypedArrayElement(LockedJSContext &cx, IonScript *ion, HandleObject tarr);
 
     static bool update(ForkJoinContext *cx, size_t cacheIndex, HandleObject obj,
                        HandleValue idval, HandleValue value);

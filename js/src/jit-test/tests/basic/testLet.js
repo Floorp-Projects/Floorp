@@ -324,6 +324,7 @@ isReferenceError('let [x] = [x];');
 isReferenceError('let {x} = {x:x};');
 isReferenceError('switch (x) {case 3:let x;break;default:if (x === undefined) {return "ponies";}}');
 isReferenceError('let x = function() {} ? x() : function() {}');
+isReferenceError('(function() { let x = (function() { return x }()); }())');
 
 // redecl with function statements
 isParseError('let a; function a() {}');

@@ -1393,7 +1393,9 @@ CompositorOGL::SetFBAcquireFence(Layer* aLayer)
   // Set FBAcquireFence as tiles' ReleaseFence on TiledLayerComposer.
   TiledLayerComposer* composer = nullptr;
   LayerComposite* shadow = aLayer->AsLayerComposite();
-  if (shadow) {
+  // Only ask for the composer if we have a compositable host. Timing
+  // may make it so that we don't - see bug 1000634.
+  if (shadow && shadow->GetCompositableHost()) {
     composer = shadow->GetTiledLayerComposer();
     if (composer) {
       composer->SetReleaseFence(new android::Fence(GetGonkDisplay()->GetPrevFBAcquireFd()));

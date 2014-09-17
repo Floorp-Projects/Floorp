@@ -665,6 +665,21 @@ ClientLayerManager::GetSimpleTileTexturePool(SurfaceFormat aFormat)
 }
 
 void
+ClientLayerManager::ReturnTextureClientDeferred(TextureClient& aClient) {
+  GetTexturePool(aClient.GetFormat())->ReturnTextureClientDeferred(&aClient);
+}
+
+void
+ClientLayerManager::ReturnTextureClient(TextureClient& aClient) {
+  GetTexturePool(aClient.GetFormat())->ReturnTextureClient(&aClient);
+}
+
+void
+ClientLayerManager::ReportClientLost(TextureClient& aClient) {
+  GetTexturePool(aClient.GetFormat())->ReportClientLost();
+}
+
+void
 ClientLayerManager::ClearCachedResources(Layer* aSubtree)
 {
   MOZ_ASSERT(!HasShadowManager() || !aSubtree);

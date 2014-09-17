@@ -8,7 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
-#include "gfxFont.h"
+#include "gfxTextRun.h"
 #include "nsStyleContext.h"
 
 class nsTransformedTextRun;

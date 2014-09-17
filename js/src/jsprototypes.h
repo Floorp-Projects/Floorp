@@ -35,6 +35,7 @@
 #define CLASP(name)                 (&name##Class)
 #define OCLASP(name)                (&name##Object::class_)
 #define TYPED_ARRAY_CLASP(type)     (&TypedArrayObject::classes[Scalar::type])
+#define SHARED_TYPED_ARRAY_CLASP(type) (&SharedTypedArrayObject::classes[Scalar::type])
 
 #ifdef ENABLE_PARALLEL_JS
 #define IF_PJS(real,imaginary) real
@@ -110,6 +111,15 @@ IF_BDATA(real,imaginary)(TypedObject,           39,     js_InitTypedObjectModule
     imaginary(GeneratorFunction,     40,     js_InitIteratorClasses, dummy) \
 IF_BDATA(real,imaginary)(SIMD,                  41,     js_InitSIMDClass, OCLASP(SIMD)) \
     real(WeakSet,               42,     js_InitWeakSetClass,       OCLASP(WeakSet)) \
+IF_SAB(real,imaginary)(SharedInt8Array,         43,     js_InitViaClassSpec,       SHARED_TYPED_ARRAY_CLASP(Int8)) \
+IF_SAB(real,imaginary)(SharedUint8Array,        44,     js_InitViaClassSpec,       SHARED_TYPED_ARRAY_CLASP(Uint8)) \
+IF_SAB(real,imaginary)(SharedInt16Array,        45,     js_InitViaClassSpec,       SHARED_TYPED_ARRAY_CLASP(Int16)) \
+IF_SAB(real,imaginary)(SharedUint16Array,       46,     js_InitViaClassSpec,       SHARED_TYPED_ARRAY_CLASP(Uint16)) \
+IF_SAB(real,imaginary)(SharedInt32Array,        47,     js_InitViaClassSpec,       SHARED_TYPED_ARRAY_CLASP(Int32)) \
+IF_SAB(real,imaginary)(SharedUint32Array,       48,     js_InitViaClassSpec,       SHARED_TYPED_ARRAY_CLASP(Uint32)) \
+IF_SAB(real,imaginary)(SharedFloat32Array,      49,     js_InitViaClassSpec,       SHARED_TYPED_ARRAY_CLASP(Float32)) \
+IF_SAB(real,imaginary)(SharedFloat64Array,      50,     js_InitViaClassSpec,       SHARED_TYPED_ARRAY_CLASP(Float64)) \
+IF_SAB(real,imaginary)(SharedUint8ClampedArray, 51,     js_InitViaClassSpec,       SHARED_TYPED_ARRAY_CLASP(Uint8Clamped)) \
 
 #define JS_FOR_EACH_PROTOTYPE(macro) JS_FOR_PROTOTYPES(macro,macro)
 
