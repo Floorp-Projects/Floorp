@@ -257,6 +257,11 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // optimizations remove the backedge.
     void clearLoopHeader();
 
+    // Sets a block to a LOOP_HEADER block, with newBackedge as its backedge.
+    // This is needed when optimizations remove the normal entry to a loop
+    // with multiple entries.
+    void setLoopHeader(MBasicBlock *newBackedge);
+
     // Propagates phis placed in a loop header down to this successor block.
     void inheritPhis(MBasicBlock *header);
 
@@ -674,6 +679,7 @@ class MIRGraph
 
     void addBlock(MBasicBlock *block);
     void insertBlockAfter(MBasicBlock *at, MBasicBlock *block);
+    void insertBlockBefore(MBasicBlock *at, MBasicBlock *block);
 
     void renumberBlocksAfter(MBasicBlock *at);
 

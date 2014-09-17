@@ -1578,6 +1578,13 @@ ComputeImmediateDominators(MIRGraph &graph)
             if (block->immediateDominator() == *block)
                 continue;
 
+            // A block with no predecessors is not reachable from any entry, so
+            // it self-dominates.
+            if (MOZ_UNLIKELY(block->numPredecessors() == 0)) {
+                block->setImmediateDominator(*block);
+                continue;
+            }
+
             MBasicBlock *newIdom = block->getPredecessor(0);
 
             // Find the first common dominator.
@@ -3182,7 +3189,9 @@ jit::MarkLoopBlocks(MIRGraph &graph, MBasicBlock *header, bool *canOsr)
 
             // Blocks dominated by the OSR entry are not part of the loop
             // (unless they aren't reachable from the normal entry).
-            if (osrBlock && pred != header && osrBlock->dominates(pred)) {
+            if (osrBlock && pred != header &&
+                osrBlock->dominates(pred) && !osrBlock->dominates(header))
+            {
                 *canOsr = true;
                 continue;
             }

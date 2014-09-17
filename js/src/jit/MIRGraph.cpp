@@ -15,6 +15,7 @@
 
 using namespace js;
 using namespace js::jit;
+using mozilla::Swap;
 
 MIRGenerator::MIRGenerator(CompileCompartment *compartment, const JitCompileOptions &options,
                            TempAllocator *alloc, MIRGraph *graph, CompileInfo *info,
@@ -114,6 +115,14 @@ MIRGraph::insertBlockAfter(MBasicBlock *at, MBasicBlock *block)
 {
     block->setId(blockIdGen_++);
     blocks_.insertAfter(at, block);
+    numBlocks_++;
+}
+
+void
+MIRGraph::insertBlockBefore(MBasicBlock *at, MBasicBlock *block)
+{
+    block->setId(blockIdGen_++);
+    blocks_.insertBefore(at, block);
     numBlocks_++;
 }
 
@@ -823,7 +832,7 @@ MBasicBlock::discardIgnoreOperands(MInstruction *ins)
 {
 #ifdef DEBUG
     for (size_t i = 0, e = ins->numOperands(); i < e; i++)
-        JS_ASSERT(ins->operandDiscarded(i));
+        MOZ_ASSERT(!ins->hasOperand(i));
 #endif
 
     prepareForDiscard(ins, RefType_IgnoreOperands);
@@ -1194,6 +1203,44 @@ MBasicBlock::clearLoopHeader()
 {
     JS_ASSERT(isLoopHeader());
     kind_ = NORMAL;
+}
+
+void
+MBasicBlock::setLoopHeader(MBasicBlock *newBackedge)
+{
+    MOZ_ASSERT(!isLoopHeader());
+    kind_ = LOOP_HEADER;
+
+    size_t numPreds = numPredecessors();
+    MOZ_ASSERT(numPreds != 0);
+
+    size_t lastIndex = numPreds - 1;
+    size_t oldIndex = 0;
+    for (; ; ++oldIndex) {
+        MOZ_ASSERT(oldIndex < numPreds);
+        MBasicBlock *pred = getPredecessor(oldIndex);
+        if (pred == newBackedge)
+            break;
+    }
+
+    // Set the loop backedge to be the last element in predecessors_.
+    Swap(predecessors_[oldIndex], predecessors_[lastIndex]);
+
+    // If we have phis, reorder their operands accordingly.
+    if (!phisEmpty()) {
+        getPredecessor(oldIndex)->setSuccessorWithPhis(this, oldIndex);
+        getPredecessor(lastIndex)->setSuccessorWithPhis(this, lastIndex);
+        for (MPhiIterator iter(phisBegin()), end(phisEnd()); iter != end; ++iter) {
+            MPhi *phi = *iter;
+            MDefinition *last = phi->getOperand(oldIndex);
+            MDefinition *old = phi->getOperand(lastIndex);
+            phi->replaceOperand(oldIndex, old);
+            phi->replaceOperand(lastIndex, last);
+        }
+    }
+
+    MOZ_ASSERT(newBackedge->loopHeaderOfBackedge() == this);
+    MOZ_ASSERT(backedge() == newBackedge);
 }
 
 size_t

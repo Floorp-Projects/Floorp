@@ -12,7 +12,6 @@
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
-#include "jit/UnreachableCodeElimination.h"
 
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
@@ -431,8 +430,9 @@ ParallelSafetyAnalysis::analyze()
     Spew(SpewCompile, "Safe");
     IonSpewPass("ParallelSafetyAnalysis");
 
-    UnreachableCodeElimination uce(mir_, graph_);
-    if (!uce.removeUnmarkedBlocks(marked))
+    // Sweep away any unmarked blocks. Note that this doesn't preserve
+    // AliasAnalysis dependencies, but we're not expected to at this point.
+    if (!RemoveUnmarkedBlocks(mir_, graph_, marked))
         return false;
     IonSpewPass("UCEAfterParallelSafetyAnalysis");
     AssertExtendedGraphCoherency(graph_);
