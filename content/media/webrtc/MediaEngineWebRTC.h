@@ -101,6 +101,7 @@ public:
     , mCallbackMonitor("WebRTCCamera.CallbackMonitor")
     , mRotation(0)
     , mBackCamera(false)
+    , mOrientationChanged(true) // Correct the orientation at first time takePhoto.
     , mCaptureIndex(aIndex)
     , mMediaSource(aMediaSource)
     , mMonitor("WebRTCCamera.Monitor")
@@ -202,6 +203,10 @@ public:
 
   nsresult TakePhoto(PhotoCallback* aCallback) MOZ_OVERRIDE;
 
+  // It sets the correct photo orientation via camera parameter according to
+  // current screen orientation.
+  nsresult UpdatePhotoOrientation();
+
 #endif
 
   // This runnable is for creating a temporary file on the main thread.
@@ -245,6 +250,7 @@ private:
   int mRotation;
   int mCameraAngle; // See dom/base/ScreenOrientation.h
   bool mBackCamera;
+  bool mOrientationChanged; // True when screen rotates.
 #else
   webrtc::VideoEngine* mVideoEngine; // Weak reference, don't free.
   webrtc::ViEBase* mViEBase;

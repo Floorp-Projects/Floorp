@@ -25,11 +25,11 @@
 
 #include "mozilla/WindowsVersion.h"
 
+#include "jsmath.h"
+
 #include "jit/ExecutableAllocator.h"
 
 #include "jswin.h"
-
-extern uint64_t random_next(uint64_t *, int);
 
 using namespace js::jit;
 

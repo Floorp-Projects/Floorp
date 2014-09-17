@@ -264,6 +264,8 @@ function _deepEqual(actual, expected) {
   // 7.2. If the expected value is a Date object, the actual value is
   // equivalent if it is also a Date object that refers to the same time.
   } else if (instanceOf(actual, "Date") && instanceOf(expected, "Date")) {
+    if (isNaN(actual.getTime()) && isNaN(expected.getTime()))
+      return true;
     return actual.getTime() === expected.getTime();
   // 7.3 If the expected value is a RegExp object, the actual value is
   // equivalent if it is also a RegExp object with the same source and

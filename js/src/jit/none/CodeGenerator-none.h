@@ -50,7 +50,6 @@ class CodeGeneratorNone : public CodeGeneratorShared
     ValueOperand ToOutValue(LInstruction *) { MOZ_CRASH(); }
     ValueOperand ToTempValue(LInstruction *, size_t) { MOZ_CRASH(); }
     bool generateInvalidateEpilogue() { MOZ_CRASH(); }
-    void postAsmJSCall(LAsmJSCall *) { MOZ_CRASH(); }
 };
 
 typedef CodeGeneratorNone CodeGeneratorSpecific;

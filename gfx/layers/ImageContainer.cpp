@@ -6,7 +6,7 @@
 
 #include "ImageContainer.h"
 #include <string.h>                     // for memcpy, memset
-#include "SharedTextureImage.h"         // for SharedTextureImage
+#include "GLImages.h"                   // for SurfaceTextureImage
 #include "gfx2DGlue.h"
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxUtils.h"                   // for gfxUtils
@@ -69,8 +69,14 @@ ImageFactory::CreateImage(ImageFormat aFormat,
     img = new CairoImage();
     return img.forget();
   }
-  if (aFormat == ImageFormat::SHARED_TEXTURE) {
-    img = new SharedTextureImage();
+#ifdef MOZ_WIDGET_ANDROID
+  if (aFormat == ImageFormat::SURFACE_TEXTURE) {
+    img = new SurfaceTextureImage();
+    return img.forget();
+  }
+#endif
+  if (aFormat == ImageFormat::EGLIMAGE) {
+    img = new EGLImageImage();
     return img.forget();
   }
 #ifdef XP_MACOSX

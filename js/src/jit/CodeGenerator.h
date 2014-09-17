@@ -301,7 +301,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitIsObject(LIsObject *lir);
     bool visitHaveSameClass(LHaveSameClass *lir);
     bool visitHasClass(LHasClass *lir);
-    bool visitAsmJSCall(LAsmJSCall *lir);
     bool visitAsmJSParameter(LAsmJSParameter *lir);
     bool visitAsmJSReturn(LAsmJSReturn *ret);
     bool visitAsmJSVoidReturn(LAsmJSVoidReturn *ret);
