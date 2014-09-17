@@ -399,7 +399,6 @@ public:
   }
 
   TrackRate AudioSampleRate() const { return mSampleRate; }
-  TrackRate GraphRate() const { return mSampleRate; }
   // Always stereo for now.
   uint32_t AudioChannelCount() { return 2; }
 
@@ -594,12 +593,6 @@ public:
    */
   GraphTime mEndTime;
 
-  /**
-   * Sample rate at which this graph runs. For real time graphs, this is
-   * the rate of the audio mixer. For offline graphs, this is the rate specified
-   * at construction.
-   */
-  TrackRate mSampleRate;
   /**
    * True when we need to do a forced shutdown during application shutdown.
    */

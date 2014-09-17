@@ -16,7 +16,7 @@ class FakeMediaStreamGraph : public MediaStreamGraph
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FakeMediaStreamGraph)
 public:
   FakeMediaStreamGraph()
-    : MediaStreamGraph()
+    : MediaStreamGraph(16000)
   {
   }
 
