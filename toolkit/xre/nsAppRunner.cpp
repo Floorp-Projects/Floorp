@@ -82,6 +82,7 @@
 #include "nsIDocShell.h"
 #include "nsAppShellCID.h"
 #include "mozilla/scache/StartupCache.h"
+#include "nsIGfxInfo.h"
 
 #include "mozilla/unused.h"
 
@@ -149,6 +150,7 @@
 #ifdef XP_MACOSX
 #include "nsILocalFileMac.h"
 #include "nsCommandLineServiceMac.h"
+#include "nsCocoaFeatures.h"
 #endif
 
 // for X remote support
@@ -4543,6 +4545,59 @@ mozilla::BrowserTabsRemoteAutostart()
                        Preferences::GetBool("browser.tabs.remote.autostart.1", false);
     bool disabledForA11y = Preferences::GetBool("browser.tabs.remote.autostart.disabled-because-using-a11y", false);
     gBrowserTabsRemoteAutostart = !gSafeMode && !disabledForA11y && prefEnabled;
+
+#if defined(XP_WIN) || defined(XP_MACOSX)
+  // If for any reason we suspect acceleration will be disabled, disabled
+  // e10s auto start. (bug 1068199) THIS IS A TEMPORARY WORKAROUND.
+  if (gBrowserTabsRemoteAutostart) {
+    // Check prefs
+    bool accelDisabled = Preferences::GetBool("layers.acceleration.disabled", false) &&
+                         !Preferences::GetBool("layers.acceleration.force-enabled", false);
+    // Check env flags
+    if (!accelDisabled) {
+      const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
+      if (acceleratedEnv && (*acceleratedEnv != '0')) {
+        accelDisabled = false;
+      }
+    }
+
+#if defined(XP_MACOSX)
+    accelDisabled = !nsCocoaFeatures::AccelerateByDefault();
+#endif
+
+    // Check for blocked drivers
+    if (!accelDisabled) {
+      nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
+      if (gfxInfo) {
+        int32_t status;
+#if defined(XP_WIN)
+        long flagsToCheck[4] = {
+          nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS,
+          nsIGfxInfo::FEATURE_DIRECT3D_10_LAYERS,
+          nsIGfxInfo::FEATURE_DIRECT3D_10_1_LAYERS,
+          nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS
+        };
+#elif defined(XP_MACOSX)
+        long flagsToCheck[1] = {
+          nsIGfxInfo::FEATURE_OPENGL_LAYERS
+        };
+#endif
+        for (unsigned int idx = 0; idx < ArrayLength(flagsToCheck); idx++) {
+          if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(flagsToCheck[idx], &status))) {
+            if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
+              accelDisabled = true;
+              break;
+            }
+          }
+        }
+      }
+    }
+    if (accelDisabled) {
+      gBrowserTabsRemoteAutostart = false;
+    }
+  }
+#endif
+
     gBrowserTabsRemoteAutostartInitialized = true;
 
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_AUTOSTART, gBrowserTabsRemoteAutostart);
