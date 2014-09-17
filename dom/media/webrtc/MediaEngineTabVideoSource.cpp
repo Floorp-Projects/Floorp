@@ -175,7 +175,7 @@ MediaEngineTabVideoSource::Deallocate()
 }
 
 nsresult
-MediaEngineTabVideoSource::Start(mozilla::SourceMediaStream* aStream, mozilla::TrackID aID)
+MediaEngineTabVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 {
   nsCOMPtr<nsIRunnable> runnable;
   if (!mWindow)
@@ -183,22 +183,25 @@ MediaEngineTabVideoSource::Start(mozilla::SourceMediaStream* aStream, mozilla::T
   else
     runnable = new StartRunnable(this);
   NS_DispatchToMainThread(runnable);
-  aStream->AddTrack(aID, USECS_PER_S, 0, new VideoSegment());
+  aStream->AddTrack(aID, aStream->GraphRate(), 0, new VideoSegment());
   aStream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
 
   return NS_OK;
 }
 
 void
-MediaEngineTabVideoSource::
-NotifyPull(MediaStreamGraph*, SourceMediaStream* aSource, mozilla::TrackID aID, mozilla::StreamTime aDesiredTime, mozilla::TrackTicks& aLastEndTime)
+MediaEngineTabVideoSource::NotifyPull(MediaStreamGraph*,
+                                      SourceMediaStream* aSource,
+                                      TrackID aID, StreamTime aDesiredTime,
+                                      TrackTicks& aLastEndTime)
 {
   VideoSegment segment;
   MonitorAutoLock mon(mMonitor);
 
   // Note: we're not giving up mImage here
   nsRefPtr<layers::CairoImage> image = mImage;
-  TrackTicks target = aSource->TimeToTicksRoundUp(USECS_PER_S, aDesiredTime);
+  TrackTicks target = aSource->TimeToTicksRoundUp(
+      aSource->GraphRate(), aDesiredTime);
   TrackTicks delta = target - aLastEndTime;
   if (delta > 0) {
     // nullptr images are allowed
