@@ -44,7 +44,7 @@ SplitCriticalEdgesForBlock(MIRGraph &graph, MBasicBlock *block)
         split->end(MGoto::New(graph.alloc(), target));
 
         if (MResumePoint *rp = split->entryResumePoint()) {
-            rp->discardUses();
+            rp->releaseUses();
             split->clearEntryResumePoint();
         }
 

@@ -774,7 +774,7 @@ void
 MBasicBlock::discardResumePoint(MResumePoint *rp, ReferencesType refType /* = RefType_Default */)
 {
     if (refType & RefType_DiscardOperands)
-        rp->discardUses();
+        rp->releaseUses();
 #ifdef DEBUG
     MResumePointIterator iter = resumePointsBegin();
     while (*iter != rp) {
@@ -805,7 +805,7 @@ MBasicBlock::prepareForDiscard(MInstruction *ins, ReferencesType refType /* = Re
     const uint32_t InstructionOperands = RefType_DiscardOperands | RefType_DiscardInstruction;
     if ((refType & InstructionOperands) == InstructionOperands) {
         for (size_t i = 0, e = ins->numOperands(); i < e; i++)
-            ins->discardOperand(i);
+            ins->releaseOperand(i);
     }
 
     ins->setDiscarded();
