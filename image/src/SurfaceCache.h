@@ -184,6 +184,18 @@ struct SurfaceCache
   static bool CanHold(const IntSize& aSize);
 
   /*
+   * Removes a surface from the cache, if it's present.
+   *
+   * Use this function to remove individual surfaces that have become invalid.
+   * Prefer Discard() or DiscardAll() when they're applicable, as they have much
+   * better performance than calling this function repeatedly.
+   *
+   * @param aImageKey    Key data identifying which image the surface belongs to.
+   * @param aSurfaceKey  Key data which uniquely identifies the requested surface.
+   */
+  static void RemoveIfPresent(const ImageKey    aImageKey,
+                              const SurfaceKey& aSurfaceKey);
+  /*
    * Evicts any cached surfaces associated with the given image from the cache.
    * This MUST be called, at a minimum, when the image is destroyed. If
    * another image were allocated at the same address it could result in
