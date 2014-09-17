@@ -213,7 +213,7 @@ UnreachableCodeElimination::checkDependencyAndRemoveUsesFromUnmarkedBlocks(MDefi
         MUse *use = *iter++;
         if (!use->consumer()->block()->isMarked()) {
             instr->setUseRemovedUnchecked();
-            use->discardProducer();
+            use->releaseProducer();
         }
     }
 }

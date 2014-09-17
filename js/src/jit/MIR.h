@@ -156,7 +156,7 @@ class MUse : public TempObject, public InlineListNode<MUse>
     // Set this use, which was not previously clear.
     inline void replaceProducer(MDefinition *producer);
     // Clear this use.
-    inline void discardProducer();
+    inline void releaseProducer();
 
     MDefinition *producer() const {
         JS_ASSERT(producer_ != nullptr);
@@ -237,8 +237,8 @@ class MNode : public TempObject
 
     // Resets the operand to an uninitialized state, breaking the link
     // with the previous operand's producer.
-    void discardOperand(size_t index) {
-        getUseFor(index)->discardProducer();
+    void releaseOperand(size_t index) {
+        getUseFor(index)->releaseProducer();
     }
 
 #if DEBUG
@@ -11233,10 +11233,10 @@ class MResumePoint MOZ_FINAL :
         return mode_;
     }
 
-    void discardUses() {
+    void releaseUses() {
         for (size_t i = 0; i < operands_.length(); i++) {
             if (operands_[i].hasProducer())
-                operands_[i].discardProducer();
+                operands_[i].releaseProducer();
         }
     }
 
@@ -11787,7 +11787,7 @@ void MUse::replaceProducer(MDefinition *producer)
     producer_->addUse(this);
 }
 
-void MUse::discardProducer()
+void MUse::releaseProducer()
 {
     MOZ_ASSERT(consumer_, "Clearing MUse without a consumer");
     producer_->removeUse(this);
