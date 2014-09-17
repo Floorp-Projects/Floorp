@@ -2,15 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BackgroundChild.h"
-#include "BackgroundParent.h"
-
-#include "BackgroundChildImpl.h"
-#include "BackgroundParentImpl.h"
 #include "base/process_util.h"
-#include "FileDescriptor.h"
-#include "GeckoProfiler.h"
-#include "InputStreamUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -20,17 +12,16 @@
 #include "mozilla/unused.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/ipc/BlobChild.h"
-#include "mozilla/dom/ipc/BlobParent.h"
-#include "mozilla/dom/ipc/nsIRemoteBlob.h"
 #include "mozilla/ipc/ProtocolTypes.h"
+#include "BackgroundChild.h"
+#include "BackgroundChildImpl.h"
+#include "BackgroundParent.h"
+#include "BackgroundParentImpl.h"
+#include "GeckoProfiler.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsDOMFile.h"
-#include "nsIDOMFile.h"
 #include "nsIEventTarget.h"
 #include "nsIIPCBackgroundChildCreateCallback.h"
-#include "nsIMutable.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsIRunnable.h"
@@ -61,8 +52,10 @@
   while (0)
 
 using namespace mozilla;
-using namespace mozilla::dom;
 using namespace mozilla::ipc;
+
+using mozilla::dom::ContentChild;
+using mozilla::dom::ContentParent;
 
 namespace {
 
@@ -840,74 +833,6 @@ BackgroundParent::GetContentParent(PBackgroundParent* aBackgroundActor)
 }
 
 // static
-PBlobParent*
-BackgroundParent::GetOrCreateActorForBlobImpl(
-                                            PBackgroundParent* aBackgroundActor,
-                                            DOMFileImpl* aBlobImpl,
-                                            bool* aActorWasCreated)
-{
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aBackgroundActor);
-  MOZ_ASSERT(aBlobImpl);
-
-  // If the blob represents a remote blob for this BackgroundParent then we can
-  // simply pass its actor back here.
-  if (nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(aBlobImpl)) {
-    BlobParent* actor = remoteBlob->GetBlobParent();
-    if (actor && actor->GetBackgroundManager() == aBackgroundActor) {
-      if (aActorWasCreated) {
-        *aActorWasCreated = false;
-      }
-      return actor;
-    }
-  }
-
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aBlobImpl->SetMutable(false)));
-
-  ChildBlobConstructorParams params;
-
-  if (aBlobImpl->IsSizeUnknown() || aBlobImpl->IsDateUnknown()) {
-    // We don't want to call GetSize or GetLastModifiedDate yet since that may
-    // stat a file on the this thread. Instead we'll learn the size lazily from
-    // the other side.
-    params = MysteryBlobConstructorParams();
-  } else {
-    nsString contentType;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aBlobImpl->GetType(contentType)));
-
-    uint64_t length;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aBlobImpl->GetSize(&length)));
-
-    if (aBlobImpl->IsFile()) {
-      nsString name;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aBlobImpl->GetName(name)));
-
-      uint64_t modDate;
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-        aBlobImpl->GetMozLastModifiedDate(&modDate)));
-
-      params = FileBlobConstructorParams(name, contentType, length, modDate);
-    } else {
-      params = NormalBlobConstructorParams(contentType, length);
-    }
-  }
-
-  BlobParent* actor = BlobParent::Create(aBackgroundActor, aBlobImpl);
-  if (NS_WARN_IF(!actor) ||
-      NS_WARN_IF(!aBackgroundActor->SendPBlobConstructor(actor, params))) {
-    if (aActorWasCreated) {
-      *aActorWasCreated = false;
-    }
-    return nullptr;
-  }
-
-  if (aActorWasCreated) {
-    *aActorWasCreated = true;
-  }
-  return actor;
-}
-
-// static
 PBackgroundParent*
 BackgroundParent::Alloc(ContentParent* aContent,
                         Transport* aTransport,
@@ -947,96 +872,6 @@ BackgroundChild::GetOrCreateForCurrentThread(
                                  nsIIPCBackgroundChildCreateCallback* aCallback)
 {
   return ChildImpl::GetOrCreateForCurrentThread(aCallback);
-}
-
-// static
-PBlobChild*
-BackgroundChild::GetOrCreateActorForBlob(PBackgroundChild* aBackgroundActor,
-                                         nsIDOMBlob* aBlob,
-                                         bool* aActorWasCreated)
-{
-  MOZ_ASSERT(aBackgroundActor);
-  MOZ_ASSERT(aBlob);
-  MOZ_ASSERT(GetForCurrentThread(),
-             "BackgroundChild not created on this thread yet!");
-  MOZ_ASSERT(aBackgroundActor == GetForCurrentThread(),
-             "BackgroundChild is bound to a different thread!");
-
-  // If the blob represents a remote blob then we can simply pass its actor back
-  // here.
-  const auto* domFile = static_cast<DOMFile*>(aBlob);
-  if (nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(domFile->Impl())) {
-    BlobChild* actor = remoteBlob->GetBlobChild();
-    if (actor && actor->GetBackgroundManager() == aBackgroundActor) {
-      if (aActorWasCreated) {
-        *aActorWasCreated = false;
-      }
-      return actor;
-    }
-  }
-
-  {
-    nsCOMPtr<nsIMutable> mutableBlob = do_QueryInterface(aBlob);
-    MOZ_ASSERT(mutableBlob);
-
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mutableBlob->SetMutable(false)));
-  }
-
-  // XXX This is only safe so long as all blob implementations in our tree
-  //     inherit nsDOMFileBase. If that ever changes then this will need to grow
-  //     a real interface or something.
-  MOZ_ASSERT(!static_cast<DOMFileImplBase*>(domFile->Impl())->IsSizeUnknown());
-  MOZ_ASSERT(!static_cast<DOMFileImplBase*>(domFile->Impl())->IsDateUnknown());
-
-  ParentBlobConstructorParams params;
-
-  nsString contentType;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aBlob->GetType(contentType)));
-
-  uint64_t length;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aBlob->GetSize(&length)));
-
-  nsCOMPtr<nsIInputStream> stream;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    aBlob->GetInternalStream(getter_AddRefs(stream))));
-
-  if (nsCOMPtr<nsIDOMFile> file = do_QueryInterface(aBlob)) {
-    nsString name;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(file->GetName(name)));
-
-    uint64_t modDate;
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(file->GetMozLastModifiedDate(&modDate)));
-
-    params.blobParams() =
-      FileBlobConstructorParams(name, contentType, length, modDate);
-  } else {
-    params.blobParams() = NormalBlobConstructorParams(contentType, length);
-  }
-
-  InputStreamParams inputStreamParams;
-
-  nsTArray<FileDescriptor> fds;
-  SerializeInputStream(stream, inputStreamParams, fds);
-
-  MOZ_ASSERT(inputStreamParams.type() != InputStreamParams::T__None);
-  MOZ_ASSERT(fds.IsEmpty());
-
-  params.optionalInputStreamParams() = inputStreamParams;
-
-  BlobChild* blobActor = BlobChild::Create(aBackgroundActor, aBlob);
-  MOZ_ASSERT(blobActor);
-
-  if (NS_WARN_IF(!aBackgroundActor->SendPBlobConstructor(blobActor, params))) {
-    if (aActorWasCreated) {
-      *aActorWasCreated = false;
-    }
-    return nullptr;
-  }
-
-  if (aActorWasCreated) {
-    *aActorWasCreated = true;
-  }
-  return blobActor;
 }
 
 // static
@@ -1540,8 +1375,6 @@ ParentImpl::RequestMessageLoopRunnable::Run()
   AssertIsInMainProcess();
   MOZ_ASSERT(mTargetThread);
 
-  char stackBaseGuess;
-
   if (NS_IsMainThread()) {
     MOZ_ASSERT(mMessageLoop);
 
@@ -1571,6 +1404,7 @@ ParentImpl::RequestMessageLoopRunnable::Run()
     return NS_OK;
   }
 
+  char stackBaseGuess;
   profiler_register_thread("IPDL Background", &stackBaseGuess);
 
 #ifdef DEBUG

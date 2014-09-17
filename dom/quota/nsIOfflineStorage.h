@@ -10,19 +10,15 @@
 #include "mozilla/dom/quota/PersistenceType.h"
 
 #define NS_OFFLINESTORAGE_IID \
-  {0x91c57bf2, 0x0eda, 0x4db6, {0x9f, 0xf6, 0xcb, 0x38, 0x26, 0x8d, 0xb3, 0x01}}
+  {0x3ae00063, 0x6c13, 0x4afd, \
+  { 0x86, 0x7d, 0x33, 0xc2, 0x12, 0xd8, 0x97, 0x25 } }
 
 class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {
-
-class ContentParent;
-
 namespace quota {
-
 class Client;
-
 }
 }
 }
@@ -30,7 +26,6 @@ class Client;
 class nsIOfflineStorage : public nsISupports
 {
 public:
-  typedef mozilla::dom::ContentParent ContentParent;
   typedef mozilla::dom::quota::Client Client;
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
 
@@ -43,10 +38,7 @@ public:
   GetClient() = 0;
 
   NS_IMETHOD_(bool)
-  IsOwnedByWindow(nsPIDOMWindow* aOwner) = 0;
-
-  NS_IMETHOD_(bool)
-  IsOwnedByProcess(ContentParent* aOwner) = 0;
+  IsOwned(nsPIDOMWindow* aOwner) = 0;
 
   NS_IMETHOD_(PersistenceType)
   Type()
@@ -99,10 +91,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIOfflineStorage, NS_OFFLINESTORAGE_IID)
   GetClient() MOZ_OVERRIDE;                                                    \
                                                                                \
   NS_IMETHOD_(bool)                                                            \
-  IsOwnedByWindow(nsPIDOMWindow* aOwner) MOZ_OVERRIDE;                         \
-                                                                               \
-  NS_IMETHOD_(bool)                                                            \
-  IsOwnedByProcess(ContentParent* aOwner) MOZ_OVERRIDE;                        \
+  IsOwned(nsPIDOMWindow* aOwner) MOZ_OVERRIDE;                                 \
                                                                                \
   NS_IMETHOD_(const nsACString&)                                               \
   Origin() MOZ_OVERRIDE;                                                       \

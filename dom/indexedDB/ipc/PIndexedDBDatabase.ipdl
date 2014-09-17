@@ -1,0 +1,69 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PIndexedDB;
+include protocol PIndexedDBTransaction;
+
+include "mozilla/dom/indexedDB/SerializationHelpers.h";
+
+using struct mozilla::dom::indexedDB::DatabaseInfoGuts from "mozilla/dom/indexedDB/DatabaseInfo.h";
+using struct mozilla::dom::indexedDB::ObjectStoreInfoGuts from "mozilla/dom/indexedDB/DatabaseInfo.h";
+using mozilla::dom::indexedDB::IDBTransaction::Mode from "mozilla/dom/indexedDB/IDBTransaction.h";
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+namespace ipc {
+
+struct NormalTransactionParams
+{
+  nsString[] names;
+  Mode mode;
+};
+
+struct VersionChangeTransactionParams
+{
+  DatabaseInfoGuts dbInfo;
+  ObjectStoreInfoGuts[] osInfo;
+  uint64_t oldVersion;
+};
+
+union TransactionParams
+{
+  NormalTransactionParams;
+  VersionChangeTransactionParams;
+};
+
+} // namespace ipc
+
+protocol PIndexedDBDatabase
+{
+  manager PIndexedDB;
+
+  manages PIndexedDBTransaction;
+
+parent:
+  __delete__();
+
+  Close(bool unlinked);
+
+child:
+  Success(DatabaseInfoGuts dbInfo, ObjectStoreInfoGuts[] osInfo);
+
+  Error(nsresult rv);
+
+  Blocked(uint64_t oldVersion);
+
+  VersionChange(uint64_t oldVersion, uint64_t newVersion);
+
+  Invalidate();
+
+both:
+  PIndexedDBTransaction(TransactionParams params);
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

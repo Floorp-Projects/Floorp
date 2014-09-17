@@ -1,0 +1,37 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBrowser;
+include protocol PContent;
+include protocol PIndexedDBDatabase;
+include protocol PIndexedDBDeleteDatabaseRequest;
+
+include "mozilla/dom/indexedDB/SerializationHelpers.h";
+
+using mozilla::dom::quota::PersistenceType from "mozilla/dom/quota/PersistenceType.h";
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+protocol PIndexedDB
+{
+  manager PBrowser or PContent;
+
+  manages PIndexedDBDatabase;
+  manages PIndexedDBDeleteDatabaseRequest;
+
+parent:
+  __delete__();
+
+  PIndexedDBDatabase(nsString name, uint64_t version,
+                     PersistenceType persistenceType);
+
+  PIndexedDBDeleteDatabaseRequest(nsString name,
+                                  PersistenceType persistenceType);
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

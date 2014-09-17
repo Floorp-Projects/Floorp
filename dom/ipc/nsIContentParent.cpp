@@ -13,7 +13,6 @@
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/StructuredCloneUtils.h"
 #include "mozilla/dom/TabParent.h"
-#include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/dom/ipc/nsIRemoteBlob.h"
 #include "mozilla/unused.h"
 
@@ -147,7 +146,7 @@ nsIContentParent::AllocPBlobParent(const BlobConstructorParams& aParams)
 bool
 nsIContentParent::DeallocPBlobParent(PBlobParent* aActor)
 {
-  BlobParent::Destroy(aActor);
+  delete aActor;
   return true;
 }
 
@@ -162,9 +161,13 @@ nsIContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
   const auto* domFile = static_cast<DOMFile*>(aBlob);
   nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(domFile->Impl());
   if (remoteBlob) {
-    BlobParent* actor = remoteBlob->GetBlobParent();
-    if (actor && actor->GetContentManager() == this) {
-      return actor;
+    if (BlobParent* actor = static_cast<BlobParent*>(
+          static_cast<PBlobParent*>(remoteBlob->GetPBlob()))) {
+      MOZ_ASSERT(actor);
+
+      if (actor->Manager() == this) {
+        return actor;
+      }
     }
   }
 

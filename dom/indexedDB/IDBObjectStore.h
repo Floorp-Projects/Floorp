@@ -7,68 +7,61 @@
 #ifndef mozilla_dom_indexeddb_idbobjectstore_h__
 #define mozilla_dom_indexeddb_idbobjectstore_h__
 
-#include "js/RootingAPI.h"
+#include "mozilla/dom/indexedDB/IndexedDatabase.h"
+
+#include "js/TypeDecls.h"
 #include "mozilla/dom/IDBCursorBinding.h"
 #include "mozilla/dom/IDBIndexBinding.h"
-#include "nsAutoPtr.h"
+#include "mozilla/dom/IDBObjectStoreBinding.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsISupports.h"
-#include "nsString.h"
-#include "nsTArray.h"
-#include "nsWrapperCache.h"
+#include "MainThreadUtils.h"
 
-struct JSClass;
+#include "mozilla/dom/indexedDB/IDBRequest.h"
+#include "mozilla/dom/indexedDB/IDBTransaction.h"
+#include "mozilla/dom/indexedDB/KeyPath.h"
+
+class nsIDOMBlob;
+class nsIScriptContext;
 class nsPIDOMWindow;
 
 namespace mozilla {
-
-class ErrorResult;
-
 namespace dom {
-
-class DOMStringList;
 class nsIContentParent;
-template <typename> class Sequence;
+class PBlobChild;
+class PBlobParent;
+}
+}
 
-namespace indexedDB {
+BEGIN_INDEXEDDB_NAMESPACE
 
+class AsyncConnectionHelper;
 class FileManager;
+class IDBCursor;
 class IDBKeyRange;
 class IDBRequest;
-class IDBTransaction;
-class IndexUpdateInfo;
+class IndexedDBObjectStoreChild;
+class IndexedDBObjectStoreParent;
 class Key;
-class KeyPath;
-class ObjectStoreSpec;
-struct StructuredCloneFile;
-struct StructuredCloneReadInfo;
 
-class IDBObjectStore MOZ_FINAL
-  : public nsISupports
-  , public nsWrapperCache
+struct IndexInfo;
+struct IndexUpdateInfo;
+struct ObjectStoreInfo;
+
+struct MutableFileData;
+struct BlobOrFileData;
+
+class IDBObjectStore MOZ_FINAL : public nsISupports,
+                                 public nsWrapperCache
 {
-  static const JSClass sDummyPropJSClass;
-
-  nsRefPtr<IDBTransaction> mTransaction;
-  JS::Heap<JS::Value> mCachedKeyPath;
-
-  // This normally points to the ObjectStoreSpec owned by the parent IDBDatabase
-  // object. However, if this objectStore is part of a versionchange transaction
-  // and it gets deleted then the spec is copied into mDeletedSpec and mSpec is
-  // set to point at mDeletedSpec.
-  const ObjectStoreSpec* mSpec;
-  nsAutoPtr<ObjectStoreSpec> mDeletedSpec;
-
-  nsTArray<nsRefPtr<IDBIndex>> mIndexes;
-
-  const int64_t mId;
-  bool mRooted;
-
 public:
-  struct StructuredCloneWriteInfo;
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBObjectStore)
 
   static already_AddRefed<IDBObjectStore>
-  Create(IDBTransaction* aTransaction, const ObjectStoreSpec& aSpec);
+  Create(IDBTransaction* aTransaction,
+         ObjectStoreInfo* aInfo,
+         const nsACString& aDatabaseId,
+         bool aCreating);
 
   static nsresult
   AppendIndexUpdateInfo(int64_t aIndexID,
@@ -79,8 +72,26 @@ public:
                         JS::Handle<JS::Value> aObject,
                         nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
 
+  static nsresult
+  UpdateIndexes(IDBTransaction* aTransaction,
+                int64_t aObjectStoreId,
+                const Key& aObjectStoreKey,
+                bool aOverwrite,
+                int64_t aObjectDataId,
+                const nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
+
+  static nsresult
+  GetStructuredCloneReadInfoFromStatement(mozIStorageStatement* aStatement,
+                                          uint32_t aDataIndex,
+                                          uint32_t aFileIdsIndex,
+                                          IDBDatabase* aDatabase,
+                                          StructuredCloneReadInfo& aInfo);
+
   static void
   ClearCloneReadInfo(StructuredCloneReadInfo& aReadInfo);
+
+  static void
+  ClearCloneWriteInfo(StructuredCloneWriteInfo& aWriteInfo);
 
   static bool
   DeserializeValue(JSContext* aCx,
@@ -88,53 +99,187 @@ public:
                    JS::MutableHandle<JS::Value> aValue);
 
   static bool
-  DeserializeIndexValue(JSContext* aCx,
-                        StructuredCloneReadInfo& aCloneReadInfo,
-                        JS::MutableHandle<JS::Value> aValue);
+  SerializeValue(JSContext* aCx,
+                 StructuredCloneWriteInfo& aCloneWriteInfo,
+                 JS::Handle<JS::Value> aValue);
 
-  static const JSClass*
-  DummyPropClass()
+  template <class DeserializationTraits>
+  static JSObject*
+  StructuredCloneReadCallback(JSContext* aCx,
+                              JSStructuredCloneReader* aReader,
+                              uint32_t aTag,
+                              uint32_t aData,
+                              void* aClosure);
+  static bool
+  StructuredCloneWriteCallback(JSContext* aCx,
+                               JSStructuredCloneWriter* aWriter,
+                               JS::Handle<JSObject*> aObj,
+                               void* aClosure);
+
+  static nsresult
+  ConvertFileIdsToArray(const nsAString& aFileIds,
+                        nsTArray<int64_t>& aResult);
+
+  // Called only in the main process.
+  static nsresult
+  ConvertBlobsToActors(nsIContentParent* aContentParent,
+                       FileManager* aFileManager,
+                       const nsTArray<StructuredCloneFile>& aFiles,
+                       InfallibleTArray<PBlobParent*>& aActors);
+
+  // Called only in the child process.
+  static void
+  ConvertActorsToBlobs(const InfallibleTArray<PBlobChild*>& aActors,
+                       nsTArray<StructuredCloneFile>& aFiles);
+
+  const nsString& Name() const
   {
-    return &sDummyPropJSClass;
+    return mName;
   }
 
-  void
-  AssertIsOnOwningThread() const
-#ifdef DEBUG
-  ;
-#else
-  { }
-#endif
-
-  int64_t
-  Id() const
+  bool IsAutoIncrement() const
   {
-    AssertIsOnOwningThread();
+    return mAutoIncrement;
+  }
 
+  bool IsWriteAllowed() const
+  {
+    return mTransaction->IsWriteAllowed();
+  }
+
+  int64_t Id() const
+  {
+    NS_ASSERTION(mId != INT64_MIN, "Don't ask for this yet!");
     return mId;
   }
 
-  const nsString&
-  Name() const;
+  const KeyPath& GetKeyPath() const
+  {
+    return mKeyPath;
+  }
 
-  bool
-  AutoIncrement() const;
+  const bool HasValidKeyPath() const
+  {
+    return mKeyPath.IsValid();
+  }
 
-  const KeyPath&
-  GetKeyPath() const;
+  IDBTransaction* Transaction()
+  {
+    return mTransaction;
+  }
 
-  bool
-  HasValidKeyPath() const;
+  ObjectStoreInfo* Info()
+  {
+    return mInfo;
+  }
 
-  nsPIDOMWindow*
-  GetParentObject() const;
+  void
+  SetActor(IndexedDBObjectStoreChild* aActorChild)
+  {
+    NS_ASSERTION(!aActorChild || !mActorChild, "Shouldn't have more than one!");
+    mActorChild = aActorChild;
+  }
+
+  void
+  SetActor(IndexedDBObjectStoreParent* aActorParent)
+  {
+    NS_ASSERTION(!aActorParent || !mActorParent,
+                 "Shouldn't have more than one!");
+    mActorParent = aActorParent;
+  }
+
+  IndexedDBObjectStoreChild*
+  GetActorChild() const
+  {
+    return mActorChild;
+  }
+
+  IndexedDBObjectStoreParent*
+  GetActorParent() const
+  {
+    return mActorParent;
+  }
+
+  already_AddRefed<IDBIndex>
+  CreateIndexInternal(const IndexInfo& aInfo,
+                      ErrorResult& aRv);
+
+  nsresult AddOrPutInternal(
+                      const SerializedStructuredCloneWriteInfo& aCloneWriteInfo,
+                      const Key& aKey,
+                      const InfallibleTArray<IndexUpdateInfo>& aUpdateInfoArray,
+                      const nsTArray<nsCOMPtr<nsIDOMBlob> >& aBlobs,
+                      bool aOverwrite,
+                      IDBRequest** _retval);
+
+  already_AddRefed<IDBRequest>
+  GetInternal(IDBKeyRange* aKeyRange,
+              ErrorResult& aRv);
+
+  already_AddRefed<IDBRequest>
+  GetAllInternal(IDBKeyRange* aKeyRange,
+                 uint32_t aLimit,
+                 ErrorResult& aRv);
+
+  already_AddRefed<IDBRequest>
+  GetAllKeysInternal(IDBKeyRange* aKeyRange,
+                     uint32_t aLimit,
+                     ErrorResult& aRv);
+
+  already_AddRefed<IDBRequest>
+  DeleteInternal(IDBKeyRange* aKeyRange,
+                 ErrorResult& aRv);
+
+  already_AddRefed<IDBRequest>
+  CountInternal(IDBKeyRange* aKeyRange,
+                ErrorResult& aRv);
+
+  already_AddRefed<IDBRequest>
+  OpenCursorInternal(IDBKeyRange* aKeyRange,
+                     size_t aDirection,
+                     ErrorResult& aRv);
+
+  already_AddRefed<IDBRequest>
+  OpenKeyCursorInternal(IDBKeyRange* aKeyRange,
+                        size_t aDirection,
+                        ErrorResult& aRv);
+
+  nsresult
+  OpenCursorFromChildProcess(
+                            IDBRequest* aRequest,
+                            size_t aDirection,
+                            const Key& aKey,
+                            const SerializedStructuredCloneReadInfo& aCloneInfo,
+                            nsTArray<StructuredCloneFile>& aBlobs,
+                            IDBCursor** _retval);
+
+  nsresult
+  OpenCursorFromChildProcess(IDBRequest* aRequest,
+                             size_t aDirection,
+                             const Key& aKey,
+                             IDBCursor** _retval);
+
+  void
+  SetInfo(ObjectStoreInfo* aInfo);
+
+  static const JSClass sDummyPropJSClass;
+
+  // nsWrapperCache
+  virtual JSObject*
+  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+
+  // WebIDL
+  IDBTransaction*
+  GetParentObject() const
+  {
+    return mTransaction;
+  }
 
   void
   GetName(nsString& aName) const
   {
-    AssertIsOnOwningThread();
-
-    aName = Name();
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    aName.Assign(mName);
   }
 
   void
@@ -142,36 +287,36 @@ public:
              ErrorResult& aRv);
 
   already_AddRefed<DOMStringList>
-  IndexNames();
+  GetIndexNames(ErrorResult& aRv);
 
   IDBTransaction*
   Transaction() const
   {
-    AssertIsOnOwningThread();
-
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     return mTransaction;
   }
 
-  already_AddRefed<IDBRequest>
-  Add(JSContext* aCx,
-      JS::Handle<JS::Value> aValue,
-      JS::Handle<JS::Value> aKey,
-      ErrorResult& aRv)
+  bool
+  AutoIncrement() const
   {
-    AssertIsOnOwningThread();
-
-    return AddOrPut(aCx, aValue, aKey, false, aRv);
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    return mAutoIncrement;
   }
 
   already_AddRefed<IDBRequest>
-  Put(JSContext* aCx,
-      JS::Handle<JS::Value> aValue,
-      JS::Handle<JS::Value> aKey,
-      ErrorResult& aRv)
+  Put(JSContext* aCx, JS::Handle<JS::Value> aValue,
+      JS::Handle<JS::Value> aKey, ErrorResult& aRv)
   {
-    AssertIsOnOwningThread();
-
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
     return AddOrPut(aCx, aValue, aKey, true, aRv);
+  }
+
+  already_AddRefed<IDBRequest>
+  Add(JSContext* aCx, JS::Handle<JS::Value> aValue,
+      JS::Handle<JS::Value> aKey, ErrorResult& aRv)
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    return AddOrPut(aCx, aValue, aKey, false, aRv);
   }
 
   already_AddRefed<IDBRequest>
@@ -183,19 +328,18 @@ public:
   already_AddRefed<IDBRequest>
   Clear(ErrorResult& aRv);
 
-  already_AddRefed<IDBIndex>
-  CreateIndex(JSContext* aCx,
-              const nsAString& aName,
-              const nsAString& aKeyPath,
-              const IDBIndexParameters& aOptionalParameters,
-              ErrorResult& aRv);
+  already_AddRefed<IDBRequest>
+  OpenCursor(JSContext* aCx, JS::Handle<JS::Value> aRange,
+             IDBCursorDirection aDirection, ErrorResult& aRv);
 
   already_AddRefed<IDBIndex>
-  CreateIndex(JSContext* aCx,
-              const nsAString& aName,
+  CreateIndex(JSContext* aCx, const nsAString& aName, const nsAString& aKeyPath,
+              const IDBIndexParameters& aOptionalParameters, ErrorResult& aRv);
+
+  already_AddRefed<IDBIndex>
+  CreateIndex(JSContext* aCx, const nsAString& aName,
               const Sequence<nsString>& aKeyPath,
-              const IDBIndexParameters& aOptionalParameters,
-              ErrorResult& aRv);
+              const IDBIndexParameters& aOptionalParameters, ErrorResult& aRv);
 
   already_AddRefed<IDBIndex>
   Index(const nsAString& aName, ErrorResult &aRv);
@@ -204,116 +348,70 @@ public:
   DeleteIndex(const nsAString& aIndexName, ErrorResult& aRv);
 
   already_AddRefed<IDBRequest>
-  Count(JSContext* aCx,
-        JS::Handle<JS::Value> aKey,
+  Count(JSContext* aCx, JS::Handle<JS::Value> aKey,
         ErrorResult& aRv);
 
   already_AddRefed<IDBRequest>
-  GetAll(JSContext* aCx,
-         JS::Handle<JS::Value> aKey,
-         const Optional<uint32_t>& aLimit,
-         ErrorResult& aRv)
-  {
-    AssertIsOnOwningThread();
-
-    return GetAllInternal(/* aKeysOnly */ false, aCx, aKey, aLimit, aRv);
-  }
+  GetAll(JSContext* aCx, JS::Handle<JS::Value> aKey,
+         const Optional<uint32_t>& aLimit, ErrorResult& aRv);
 
   already_AddRefed<IDBRequest>
-  GetAllKeys(JSContext* aCx,
-             JS::Handle<JS::Value> aKey,
-             const Optional<uint32_t>& aLimit,
-             ErrorResult& aRv)
-  {
-    AssertIsOnOwningThread();
-
-    return GetAllInternal(/* aKeysOnly */ true, aCx, aKey, aLimit, aRv);
-  }
+  GetAllKeys(JSContext* aCx, JS::Handle<JS::Value> aKey,
+             const Optional<uint32_t>& aLimit, ErrorResult& aRv);
 
   already_AddRefed<IDBRequest>
-  OpenCursor(JSContext* aCx,
-             JS::Handle<JS::Value> aRange,
-             IDBCursorDirection aDirection,
-             ErrorResult& aRv)
-  {
-    AssertIsOnOwningThread();
+  OpenKeyCursor(JSContext* aCx, JS::Handle<JS::Value> aRange,
+                IDBCursorDirection aDirection, ErrorResult& aRv);
 
-    return OpenCursorInternal(/* aKeysOnly */ false, aCx, aRange, aDirection,
-                              aRv);
-  }
-
-  already_AddRefed<IDBRequest>
-  OpenKeyCursor(JSContext* aCx,
-                JS::Handle<JS::Value> aRange,
-                IDBCursorDirection aDirection,
-                ErrorResult& aRv)
-  {
-    AssertIsOnOwningThread();
-
-    return OpenCursorInternal(/* aKeysOnly */ true, aCx, aRange, aDirection,
-                              aRv);
-  }
-
-  void
-  RefreshSpec(bool aMayDelete);
-
-  const ObjectStoreSpec&
-  Spec() const;
-
-  void
-  NoteDeletion();
-
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBObjectStore)
-
-  // nsWrapperCache
-  virtual JSObject*
-  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
-
-private:
-  IDBObjectStore(IDBTransaction* aTransaction, const ObjectStoreSpec* aSpec);
-
+protected:
+  IDBObjectStore();
   ~IDBObjectStore();
 
-  nsresult
-  GetAddInfo(JSContext* aCx,
-             JS::Handle<JS::Value> aValue,
-             JS::Handle<JS::Value> aKeyVal,
-             StructuredCloneWriteInfo& aCloneWriteInfo,
-             Key& aKey,
-             nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
+  nsresult GetAddInfo(JSContext* aCx,
+                      JS::Handle<JS::Value> aValue,
+                      JS::Handle<JS::Value> aKeyVal,
+                      StructuredCloneWriteInfo& aCloneWriteInfo,
+                      Key& aKey,
+                      nsTArray<IndexUpdateInfo>& aUpdateInfoArray);
 
   already_AddRefed<IDBRequest>
-  AddOrPut(JSContext* aCx,
-           JS::Handle<JS::Value> aValue,
-           JS::Handle<JS::Value> aKey,
-           bool aOverwrite,
+  AddOrPut(JSContext* aCx, JS::Handle<JS::Value> aValue,
+           JS::Handle<JS::Value> aKey, bool aOverwrite,
            ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest>
-  GetAllInternal(bool aKeysOnly,
-                 JSContext* aCx,
-                 JS::Handle<JS::Value> aKey,
-                 const Optional<uint32_t>& aLimit,
-                 ErrorResult& aRv);
-
   already_AddRefed<IDBIndex>
-  CreateIndexInternal(JSContext* aCx,
-                      const nsAString& aName,
-                      const KeyPath& aKeyPath,
-                      const IDBIndexParameters& aOptionalParameters,
-                      ErrorResult& aRv);
+  CreateIndex(JSContext* aCx, const nsAString& aName, KeyPath& aKeyPath,
+              const IDBIndexParameters& aOptionalParameters, ErrorResult& aRv);
 
-  already_AddRefed<IDBRequest>
-  OpenCursorInternal(bool aKeysOnly,
-                     JSContext* aCx,
-                     JS::Handle<JS::Value> aRange,
-                     IDBCursorDirection aDirection,
-                     ErrorResult& aRv);
+  static void
+  ClearStructuredCloneBuffer(JSAutoStructuredCloneBuffer& aBuffer);
+
+  static bool
+  ReadMutableFile(JSStructuredCloneReader* aReader,
+                  MutableFileData* aRetval);
+
+  static bool
+  ReadBlobOrFile(JSStructuredCloneReader* aReader,
+                 uint32_t aTag,
+                 BlobOrFileData* aRetval);
+private:
+  nsRefPtr<IDBTransaction> mTransaction;
+
+  int64_t mId;
+  nsString mName;
+  KeyPath mKeyPath;
+  JS::Heap<JS::Value> mCachedKeyPath;
+  bool mRooted;
+  bool mAutoIncrement;
+  nsCString mDatabaseId;
+  nsRefPtr<ObjectStoreInfo> mInfo;
+
+  nsTArray<nsRefPtr<IDBIndex> > mCreatedIndexes;
+
+  IndexedDBObjectStoreChild* mActorChild;
+  IndexedDBObjectStoreParent* mActorParent;
 };
 
-} // namespace indexedDB
-} // namespace dom
-} // namespace mozilla
+END_INDEXEDDB_NAMESPACE
 
 #endif // mozilla_dom_indexeddb_idbobjectstore_h__

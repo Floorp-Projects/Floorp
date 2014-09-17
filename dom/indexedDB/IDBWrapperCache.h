@@ -7,51 +7,47 @@
 #ifndef mozilla_dom_indexeddb_idbwrappercache_h__
 #define mozilla_dom_indexeddb_idbwrappercache_h__
 
-#include "js/RootingAPI.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsWrapperCache.h"
+#include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
-class nsPIDOMWindow;
-
-namespace mozilla {
-namespace dom {
-namespace indexedDB {
+BEGIN_INDEXEDDB_NAMESPACE
 
 class IDBWrapperCache : public DOMEventTargetHelper
 {
-  JS::Heap<JSObject*> mScriptOwner;
-
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(IDBWrapperCache,
-                                                         DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
+                                                   IDBWrapperCache,
+                                                   DOMEventTargetHelper)
 
-  JSObject*
-  GetScriptOwner() const
+  JSObject* GetScriptOwner() const
   {
     return mScriptOwner;
   }
+  void SetScriptOwner(JSObject* aScriptOwner);
 
-  void
-  SetScriptOwner(JSObject* aScriptOwner);
-
-  void AssertIsRooted() const
 #ifdef DEBUG
-  ;
+  void AssertIsRooted() const;
 #else
-  { }
+  inline void AssertIsRooted() const
+  {
+  }
 #endif
 
 protected:
-  explicit IDBWrapperCache(DOMEventTargetHelper* aOwner);
-  explicit IDBWrapperCache(nsPIDOMWindow* aOwner);
+  explicit IDBWrapperCache(DOMEventTargetHelper* aOwner)
+    : DOMEventTargetHelper(aOwner), mScriptOwner(nullptr)
+  { }
+  explicit IDBWrapperCache(nsPIDOMWindow* aOwner)
+    : DOMEventTargetHelper(aOwner), mScriptOwner(nullptr)
+  { }
 
   virtual ~IDBWrapperCache();
+
+private:
+  JS::Heap<JSObject*> mScriptOwner;
 };
 
-} // namespace indexedDB
-} // namespace dom
-} // namespace mozilla
+END_INDEXEDDB_NAMESPACE
 
 #endif // mozilla_dom_indexeddb_idbwrappercache_h__

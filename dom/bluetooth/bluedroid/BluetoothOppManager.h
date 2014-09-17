@@ -11,19 +11,13 @@
 #include "BluetoothProfileManagerBase.h"
 #include "BluetoothSocketObserver.h"
 #include "DeviceStorage.h"
+#include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/ipc/UnixSocket.h"
 #include "nsCOMArray.h"
 
-class nsIDOMBlob;
 class nsIOutputStream;
 class nsIInputStream;
 class nsIVolumeMountLock;
-
-namespace mozilla {
-namespace dom {
-class BlobParent;
-}
-}
 
 BEGIN_BLUETOOTH_NAMESPACE
 
