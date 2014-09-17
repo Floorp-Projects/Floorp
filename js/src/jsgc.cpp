@@ -2374,7 +2374,6 @@ MovingTracer::Sweep(JSTracer *jstrc)
     // TODO: Should possibly just call PurgeRuntime() here.
     rt->newObjectCache.purge();
     rt->nativeIterCache.purge();
-    rt->regExpTestCache.purge();
 }
 
 /*
