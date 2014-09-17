@@ -149,6 +149,11 @@
                 <action android:name="org.mozilla.gecko.ACTION_ALERT_CALLBACK" />
             </intent-filter>
 
+            <intent-filter>
+                <action android:name="org.mozilla.gecko.GUEST_SESSION_INPROGRESS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
             <!-- Notification API V2 -->
             <intent-filter>
                 <action android:name="@ANDROID_PACKAGE_NAME@.helperBroadcastAction" />

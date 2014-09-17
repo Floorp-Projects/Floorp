@@ -100,8 +100,8 @@ public class FaviconCache {
     // Dimensions of the largest favicon to store in the cache. Everything is downscaled to this.
     public final int maxCachedWidth;
 
-    // Retry failed favicons after 20 minutes.
-    public static final long FAILURE_RETRY_MILLISECONDS = 1000 * 60 * 20;
+    // Retry failed favicons after four hours.
+    public static final long FAILURE_RETRY_MILLISECONDS = 1000 * 60 * 60 * 4;
 
     // Map relating Favicon URLs with objects representing decoded favicons.
     // Since favicons may be container formats holding multiple icons, the underlying type holds a

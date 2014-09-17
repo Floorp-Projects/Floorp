@@ -1650,7 +1650,7 @@
                   &mixedContentBlocked2.message;
                 </xul:description>
                 <xul:description class="popup-notification-item-message"
-                  xbl:inherits="popupid">
+                  xbl:inherits="popupid,mixedblockdisabled">
                   &mixedContentBlocked2.moreinfo;
                 </xul:description>
                 <xul:label anonid="mixedContent.helplink"
@@ -1672,8 +1672,7 @@
                 </xul:menupopup>
               </xul:button>
             </xul:hbox>
-            <xul:hbox anonid="mixedContentProtectionDisabled" hidden="true"
-                      class="popup-notification-footer" xbl:inherits="popupid">
+            <xul:hbox class="popup-notification-footer" xbl:inherits="popupid,mixedblockdisabled">
               <xul:description class="popup-notification-item-message popup-notification-item-message-critical" xbl:inherits="popupid">
                   &mixedContentBlocked2.disabled.message;
               </xul:description>
@@ -1689,7 +1688,7 @@
                   &trackingContentBlocked.message;
                 </xul:description>
                 <xul:description class="popup-notification-item-message"
-                  xbl:inherits="popupid">
+                  xbl:inherits="popupid,trackingblockdisabled">
                   &trackingContentBlocked.moreinfo;
                 </xul:description>
                 <xul:label anonid="trackingContent.helplink"
@@ -1711,8 +1710,7 @@
                 </xul:menupopup>
               </xul:button>
             </xul:hbox>
-            <xul:hbox anonid="trackingContentProtectionDisabled" hidden="true"
-                      class="popup-notification-footer" xbl:inherits="popupid">
+            <xul:hbox class="popup-notification-footer" xbl:inherits="popupid,trackingblockdisabled">
               <xul:description class="popup-notification-item-message popup-notification-item-message-critical" xbl:inherits="popupid">
                 &trackingContentBlocked.disabled.message;
                 </xul:description>
@@ -1750,10 +1748,6 @@
         document.getAnonymousElementByAttribute(this, "anonid",
           "mixedContentAction.block");
       </field>
-      <field name="_mixedContentProtectionDisabledWarning">
-        document.getAnonymousElementByAttribute(this, "anonid",
-          "mixedContentProtectionDisabled")
-      </field>
       <field name="_mixedContentHelpLink">
         document.getAnonymousElementByAttribute(this, "anonid",
           "mixedContent.helplink")
@@ -1775,10 +1769,6 @@
       <field name="_trackingContentBlock">
         document.getAnonymousElementByAttribute(this, "anonid",
           "trackingContentAction.block");
-      </field>
-      <field name="_trackingContentProtectionDisabledWarning">
-        document.getAnonymousElementByAttribute(this, "anonid",
-          "trackingContentProtectionDisabled")
       </field>
       <field name="_trackingContentHelpLink">
         document.getAnonymousElementByAttribute(this, "anonid",
@@ -1809,9 +1799,9 @@
         }
         if (this.notification.options.state &
             Ci.nsIWebProgressListener.STATE_LOADED_MIXED_ACTIVE_CONTENT) {
+          this.setAttribute("mixedblockdisabled", true);
           _mixedContent.hidden = false;
           _mixedContentBlock.hidden = false;
-          _mixedContentProtectionDisabledWarning.hidden = false;
           _mixedContentHelpLink.href =
             Services.urlFormatter.formatURLPref("app.support.baseURL")
               + "mixed-content";
@@ -1821,7 +1811,7 @@
           _doorhangerTitle.value =
             gNavigatorBundle.getFormattedString(
               "badContentBlocked.blocked.message", [this._brandShortName]);
-          _trackingContent.hidden = false
+          _trackingContent.hidden = false;
           _trackingContentUnblock.hidden = false;
           _trackingContentHelpLink.href =
             Services.urlFormatter.formatURLPref("app.support.baseURL")
@@ -1829,9 +1819,9 @@
         }
         if (this.notification.options.state &
             Ci.nsIWebProgressListener.STATE_LOADED_TRACKING_CONTENT) {
-          _trackingContent.hidden = false
+          this.setAttribute("trackingblockdisabled", true);
+          _trackingContent.hidden = false;
           _trackingContentBlock.hidden = false;
-          _trackingContentProtectionDisabledWarning.hidden = false;
           _trackingContentHelpLink.href =
             Services.urlFormatter.formatURLPref("app.support.baseURL")
               + "tracking-protection";

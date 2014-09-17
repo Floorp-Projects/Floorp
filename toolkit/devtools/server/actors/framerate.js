@@ -12,16 +12,6 @@ const DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
 const {on, once, off, emit} = events;
 const {method, custom, Arg, Option, RetVal} = protocol;
 
-exports.register = function(handle) {
-  handle.addTabActor(FramerateActor, "framerateActor");
-  handle.addGlobalActor(FramerateActor, "framerateActor");
-};
-
-exports.unregister = function(handle) {
-  handle.removeTabActor(FramerateActor);
-  handle.removeGlobalActor(FramerateActor);
-};
-
 /**
  * A very simple utility for monitoring framerate.
  */

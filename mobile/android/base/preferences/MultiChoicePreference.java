@@ -219,7 +219,7 @@ class MultiChoicePreference extends DialogPreference implements DialogInterface.
     protected boolean persist(SharedPreferences.Editor edit) {
         if (isPersistent()) {
             Set<String> vals = getValues();
-            PrefUtils.putStringSet(edit, getKey(), vals);
+            PrefUtils.putStringSet(edit, getKey(), vals).apply();;
             return true;
         }
 

@@ -4,7 +4,7 @@ public class testAwesomebar extends BaseTest {
     public void testAwesomebar() {
         blockForGeckoReady();
 
-        String url = getAbsoluteUrl("/robocop/robocop_blank_01.html");
+        String url = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
         inputAndLoadUrl(url);
 
         mDriver.setupScrollHandling();

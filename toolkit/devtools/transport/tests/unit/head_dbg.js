@@ -189,7 +189,11 @@ function attachTestTabAndResume(aClient, aTitle, aCallback) {
  * Initialize the testing debugger server.
  */
 function initTestDebuggerServer() {
-  DebuggerServer.registerModule("devtools/server/actors/script");
+  DebuggerServer.registerModule("devtools/server/actors/script", {
+    prefix: "script",
+    constructor: "ScriptActor",
+    type: { global: true, tab: true }
+  });
   DebuggerServer.registerModule("xpcshell-test/testactors");
   // Allow incoming connections.
   DebuggerServer.init(function () { return true; });

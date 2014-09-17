@@ -5,21 +5,23 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/RemoteTabsPanelFrame"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
 
-    <TextView
-        style="@style/RemoteTabsPanelItem.TextAppearance.Header"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/home_remote_tabs_unable_to_connect" />
+    <LinearLayout style="@style/RemoteTabsPanelFrame" >
 
-    <TextView
-        style="@style/RemoteTabsPanelItem.TextAppearance"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/fxaccount_status_needs_upgrade" />
+        <TextView
+            style="@style/RemoteTabsPanelItem.TextAppearance.Header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/home_remote_tabs_unable_to_connect" />
 
-</LinearLayout>
+        <TextView
+            style="@style/RemoteTabsPanelItem.TextAppearance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/fxaccount_status_needs_upgrade" />
+    </LinearLayout>
+
+</ScrollView>

@@ -1,15 +1,11 @@
 <?xml version="1.0"?>
-<!-- This Source Code Form is subject to the terms of the Mozilla Public
-   - License, v. 2.0. If a copy of the MPL was not distributed with this
-   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
    <Description about="urn:mozilla:install-manifest">
      <em:id>mozmill@mozilla.com</em:id>
      <em:name>Mozmill</em:name>
-     <em:version>2.0.6</em:version>
+     <em:version>2.0.8</em:version>
      <em:description>UI Automation tool for Mozilla applications</em:description>
      <em:unpack>true</em:unpack>
 
@@ -21,7 +17,7 @@
        <Description>
          <em:id>toolkit@mozilla.org</em:id>
          <em:minVersion>10.0</em:minVersion>
-         <em:maxVersion>31.*</em:maxVersion>
+         <em:maxVersion>38.*</em:maxVersion>
        </Description>
      </em:targetApplication>
    </Description>

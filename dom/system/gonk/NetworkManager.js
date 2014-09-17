@@ -859,9 +859,7 @@ NetworkManager.prototype = {
   dunRetryTimer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
   setupDunConnection: function() {
     this.dunRetryTimer.cancel();
-    let connection =
-      gMobileConnectionService.getItemByServiceId(this._dataDefaultServiceId);
-    let data = connection && connection.data;
+    let data = gMobileConnectionService.getDataConnectionInfo(this._dataDefaultServiceId);
     if (data && data.state === "registered") {
       this.dunRetryTimes = 0;
       ril.setupDataCallByType("dun");

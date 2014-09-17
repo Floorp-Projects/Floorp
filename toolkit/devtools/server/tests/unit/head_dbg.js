@@ -203,7 +203,6 @@ function attachTestTabAndResume(aClient, aTitle, aCallback) {
  */
 function initTestDebuggerServer(aServer = DebuggerServer)
 {
-  aServer.registerModule("devtools/server/actors/script");
   aServer.registerModule("xpcshell-test/testactors");
   // Allow incoming connections.
   aServer.init(function () { return true; });
@@ -211,9 +210,12 @@ function initTestDebuggerServer(aServer = DebuggerServer)
 
 function initTestTracerServer(aServer = DebuggerServer)
 {
-  aServer.registerModule("devtools/server/actors/script");
   aServer.registerModule("xpcshell-test/testactors");
-  aServer.registerModule("devtools/server/actors/tracer");
+  aServer.registerModule("devtools/server/actors/tracer", {
+    prefix: "trace",
+    constructor: "TracerActor",
+    type: { global: true, tab: true }
+  });
   // Allow incoming connections.
   aServer.init(function () { return true; });
 }
