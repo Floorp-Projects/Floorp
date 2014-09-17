@@ -9,7 +9,6 @@
 #include "AsyncEventRunner.h"
 #include "MediaSourceUtils.h"
 #include "TrackBuffer.h"
-#include "VideoUtils.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Preferences.h"
