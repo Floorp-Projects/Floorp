@@ -66,7 +66,7 @@ class ValueNumberer
     DefWorklist deadDefs_;            // Worklist for deleting values
     BlockWorklist unreachableBlocks_; // Worklist for unreachable blocks
     BlockWorklist remainingBlocks_;   // Blocks remaining with fewer preds
-    size_t numBlocksDeleted_;         // Num deleted blocks in current tree
+    size_t numBlocksDiscarded_;       // Num discarded blocks in current tree
     bool rerun_;                      // Should we run another GVN iteration?
     bool blocksRemoved_;              // Have any blocks been removed?
     bool updateAliasAnalysis_;        // Do we care about AliasAnalysis?
@@ -77,13 +77,13 @@ class ValueNumberer
         SetUseRemoved
     };
 
-    bool deleteDefsRecursively(MDefinition *def);
+    bool discardDefsRecursively(MDefinition *def);
     bool releasePhiOperands(MPhi *phi, const MBasicBlock *phiBlock,
                             UseRemovedOption useRemovedOption = SetUseRemoved);
     bool releaseInsOperands(MInstruction *ins,
                             UseRemovedOption useRemovedOption = SetUseRemoved);
-    bool deleteDef(MDefinition *def,
-                   UseRemovedOption useRemovedOption = SetUseRemoved);
+    bool discardDef(MDefinition *def,
+                    UseRemovedOption useRemovedOption = SetUseRemoved);
     bool processDeadDefs();
 
     bool removePredecessor(MBasicBlock *block, MBasicBlock *pred);

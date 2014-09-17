@@ -105,7 +105,7 @@ ValueNumberer::VisibleValues::overwrite(AddPtr p, MDefinition *def)
     set_.rekeyInPlace(p, def);
 }
 
-// The given def will be deleted, so remove it from any sets.
+// The given def will be discarded, so remove it from any sets.
 void
 ValueNumberer::VisibleValues::forget(const MDefinition *def)
 {
@@ -215,16 +215,16 @@ IsDominatorRefined(MBasicBlock *block)
     return false;
 }
 
-// Delete the given instruction and anything in its use-def subtree which is no
+// Discard the given instruction and anything in its use-def subtree which is no
 // longer needed.
 bool
-ValueNumberer::deleteDefsRecursively(MDefinition *def)
+ValueNumberer::discardDefsRecursively(MDefinition *def)
 {
-    return deleteDef(def) && processDeadDefs();
+    return discardDef(def) && processDeadDefs();
 }
 
 // Assuming phi is dead, release its operands. If an operand which is not
-// dominated by the phi becomes dead, push it to the delete worklist.
+// dominated by the phi becomes dead, push it to the discard worklist.
 bool
 ValueNumberer::releasePhiOperands(MPhi *phi, const MBasicBlock *phiBlock,
                                   UseRemovedOption useRemovedOption)
@@ -245,7 +245,7 @@ ValueNumberer::releasePhiOperands(MPhi *phi, const MBasicBlock *phiBlock,
 }
 
 // Assuming ins is dead, release its operands. If an operand becomes dead, push
-// it to the delete worklist.
+// it to the discard worklist.
 bool
 ValueNumberer::releaseInsOperands(MInstruction *ins,
                                   UseRemovedOption useRemovedOption)
@@ -265,12 +265,12 @@ ValueNumberer::releaseInsOperands(MInstruction *ins,
 }
 
 bool
-ValueNumberer::deleteDef(MDefinition *def,
+ValueNumberer::discardDef(MDefinition *def,
                          UseRemovedOption useRemovedOption)
 {
-    JitSpew(JitSpew_GVN, "    Deleting %s%u", def->opName(), def->id());
-    MOZ_ASSERT(IsDead(def), "Deleting non-dead definition");
-    MOZ_ASSERT(!values_.has(def), "Deleting an instruction still in the set");
+    JitSpew(JitSpew_GVN, "    Discarding %s%u", def->opName(), def->id());
+    MOZ_ASSERT(IsDead(def), "Discarding non-dead definition");
+    MOZ_ASSERT(!values_.has(def), "Discarding an instruction still in the set");
 
     if (def->isPhi()) {
         MPhi *phi = def->toPhi();
@@ -288,7 +288,7 @@ ValueNumberer::deleteDef(MDefinition *def,
     return true;
 }
 
-// Recursively delete all the defs on the deadDefs_ worklist.
+// Recursively discard all the defs on the deadDefs_ worklist.
 bool
 ValueNumberer::processDeadDefs()
 {
@@ -296,20 +296,20 @@ ValueNumberer::processDeadDefs()
         MDefinition *def = deadDefs_.popCopy();
 
         values_.forget(def);
-        if (!deleteDef(def))
+        if (!discardDef(def))
             return false;
     }
     return true;
 }
 
-// Delete an edge from the CFG. Return true if the block becomes unreachable.
+// Remove an edge from the CFG. Return true if the block becomes unreachable.
 bool
 ValueNumberer::removePredecessor(MBasicBlock *block, MBasicBlock *pred)
 {
     bool isUnreachableLoop = false;
     if (block->isLoopHeader()) {
         if (block->loopPredecessor() == pred) {
-            // Deleting the entry into the loop makes the loop unreachable.
+            // Discarding the entry into the loop makes the loop unreachable.
             isUnreachableLoop = true;
             JitSpew(JitSpew_GVN, "    Loop with header block%u is no longer reachable", block->id());
 #ifdef DEBUG
@@ -320,14 +320,14 @@ ValueNumberer::removePredecessor(MBasicBlock *block, MBasicBlock *pred)
     }
 
     // TODO: Removing a predecessor removes operands from phis, and these
-    // operands may become dead. We should detect this and delete them.
+    // operands may become dead. We should detect this and discard them.
     // In practice though, when this happens, we often end up re-running GVN
     // for other reasons anyway.
     block->removePredecessor(pred);
     return block->numPredecessors() == 0 || isUnreachableLoop;
 }
 
-// Delete the given block and any block in its dominator subtree.
+// Discard the given block and any block in its dominator subtree.
 bool
 ValueNumberer::removeBlocksRecursively(MBasicBlock *start, const MBasicBlock *dominatorRoot)
 {
@@ -363,25 +363,25 @@ ValueNumberer::removeBlocksRecursively(MBasicBlock *start, const MBasicBlock *do
         }
 
 #ifdef DEBUG
-        JitSpew(JitSpew_GVN, "    Deleting block%u%s%s%s", block->id(),
+        JitSpew(JitSpew_GVN, "    Discarding block%u%s%s%s", block->id(),
                 block->isLoopHeader() ? " (loop header)" : "",
                 block->isSplitEdge() ? " (split edge)" : "",
                 block->immediateDominator() == block ? " (dominator root)" : "");
         for (MDefinitionIterator iter(block); iter; iter++) {
             MDefinition *def = *iter;
-            JitSpew(JitSpew_GVN, "      Deleting %s%u", def->opName(), def->id());
+            JitSpew(JitSpew_GVN, "      Discarding %s%u", def->opName(), def->id());
         }
         MControlInstruction *control = block->lastIns();
-        JitSpew(JitSpew_GVN, "      Deleting %s%u", control->opName(), control->id());
+        JitSpew(JitSpew_GVN, "      Discarding %s%u", control->opName(), control->id());
 #endif
 
-        // Keep track of how many blocks within dominatorRoot's tree have been deleted.
+        // Keep track of how many blocks within dominatorRoot's tree have been discarded.
         if (dominatorRoot->dominates(block))
-            ++numBlocksDeleted_;
+            ++numBlocksDiscarded_;
 
-        // TODO: Removing a block deletes the phis, instructions, and resume
+        // TODO: Removing a block discards the phis, instructions, and resume
         // points in the block, and their operands may become dead. We should
-        // detect this and delete them. In practice though, when this happens,
+        // detect this and discard them. In practice though, when this happens,
         // we often end up re-running GVN for other reasons anyway (bug 1031412).
         graph_.removeBlockIncludingPhis(block);
         blocksRemoved_ = true;
@@ -443,7 +443,7 @@ ValueNumberer::hasLeader(const MPhi *phi, const MBasicBlock *phiBlock) const
 // Test whether there are any phis in the backedge's loop header which are
 // newly optimizable, as a result of optimizations done inside the loop. This
 // is not a sparse approach, but restarting is rare enough in practice.
-// Termination is ensured by deleting the phi triggering the iteration.
+// Termination is ensured by discarding the phi triggering the iteration.
 bool
 ValueNumberer::loopHasOptimizablePhi(MBasicBlock *backedge) const
 {
@@ -480,11 +480,11 @@ ValueNumberer::visitDefinition(MDefinition *def)
 
         // The node's foldsTo said |def| can be replaced by |rep|. If |def| is a
         // guard, then either |rep| is also a guard, or a guard isn't actually
-        // needed, so we can clear |def|'s guard flag and let it be deleted.
+        // needed, so we can clear |def|'s guard flag and let it be discarded.
         def->setNotGuardUnchecked();
 
         if (DeadIfUnused(def)) {
-            if (!deleteDefsRecursively(def))
+            if (!discardDefsRecursively(def))
                 return false;
         }
         def = sim;
@@ -503,17 +503,17 @@ ValueNumberer::visitDefinition(MDefinition *def)
 
             // The node's congruentTo said |def| is congruent to |rep|, and it's
             // dominated by |rep|. If |def| is a guard, it's covered by |rep|,
-            // so we can clear |def|'s guard flag and let it be deleted.
+            // so we can clear |def|'s guard flag and let it be discarded.
             def->setNotGuardUnchecked();
 
             if (DeadIfUnused(def)) {
-                // deleteDef should not add anything to the deadDefs, as the
+                // discardDef should not add anything to the deadDefs, as the
                 // redundant operation should have the same input operands.
-                mozilla::DebugOnly<bool> r = deleteDef(def, DontSetUseRemoved);
-                MOZ_ASSERT(r, "deleteDef shouldn't have tried to add anything to the worklist, "
+                mozilla::DebugOnly<bool> r = discardDef(def, DontSetUseRemoved);
+                MOZ_ASSERT(r, "discardDef shouldn't have tried to add anything to the worklist, "
                               "so it shouldn't have failed");
                 MOZ_ASSERT(deadDefs_.empty(),
-                           "deleteDef shouldn't have added anything to the worklist");
+                           "discardDef shouldn't have added anything to the worklist");
             }
             def = rep;
         }
@@ -589,9 +589,9 @@ ValueNumberer::visitBlock(MBasicBlock *block, const MBasicBlock *dominatorRoot)
     for (MDefinitionIterator iter(block); iter; ) {
         MDefinition *def = *iter++;
 
-        // If the definition is dead, delete it.
+        // If the definition is dead, discard it.
         if (IsDead(def)) {
-            if (!deleteDefsRecursively(def))
+            if (!discardDefsRecursively(def))
                 return false;
             continue;
         }
@@ -612,7 +612,7 @@ ValueNumberer::visitDominatorTree(MBasicBlock *dominatorRoot, size_t *totalNumVi
             dominatorRoot == graph_.entryBlock() ? " (normal entry block)" :
             dominatorRoot == graph_.osrBlock() ? " (OSR entry block)" :
             " (normal entry and OSR entry merge point)");
-    MOZ_ASSERT(numBlocksDeleted_ == 0, "numBlocksDeleted_ wasn't reset");
+    MOZ_ASSERT(numBlocksDiscarded_ == 0, "numBlocksDiscarded_ wasn't reset");
     MOZ_ASSERT(dominatorRoot->immediateDominator() == dominatorRoot,
             "root is not a dominator tree root");
 
@@ -637,15 +637,15 @@ ValueNumberer::visitDominatorTree(MBasicBlock *dominatorRoot, size_t *totalNumVi
             remainingBlocks_.clear();
         }
         ++numVisited;
-        MOZ_ASSERT(numVisited <= dominatorRoot->numDominated() - numBlocksDeleted_,
+        MOZ_ASSERT(numVisited <= dominatorRoot->numDominated() - numBlocksDiscarded_,
                    "Visited blocks too many times");
-        if (numVisited >= dominatorRoot->numDominated() - numBlocksDeleted_)
+        if (numVisited >= dominatorRoot->numDominated() - numBlocksDiscarded_)
             break;
     }
 
     *totalNumVisited += numVisited;
     values_.clear();
-    numBlocksDeleted_ = 0;
+    numBlocksDiscarded_ = 0;
     return true;
 }
 
@@ -679,7 +679,7 @@ ValueNumberer::ValueNumberer(MIRGenerator *mir, MIRGraph &graph)
     deadDefs_(graph.alloc()),
     unreachableBlocks_(graph.alloc()),
     remainingBlocks_(graph.alloc()),
-    numBlocksDeleted_(0),
+    numBlocksDiscarded_(0),
     rerun_(false),
     blocksRemoved_(false),
     updateAliasAnalysis_(false),
@@ -704,8 +704,9 @@ ValueNumberer::run(UpdateAliasAnalysisFlag updateAliasAnalysis)
             uint64_t(graph_.numBlocks()));
 
     // Top level non-sparse iteration loop. If an iteration performs a
-    // significant change, such as deleting a block which changes the dominator
-    // tree and may enable more optimization, this loop takes another iteration.
+    // significant change, such as discarding a block which changes the
+    // dominator tree and may enable more optimization, this loop takes another
+    // iteration.
     int runs = 0;
     for (;;) {
         if (!visitGraph())
@@ -746,7 +747,7 @@ ValueNumberer::run(UpdateAliasAnalysisFlag updateAliasAnalysis)
         // Enforce an arbitrary iteration limit. This is rarely reached, and
         // isn't even strictly necessary, as the algorithm is guaranteed to
         // terminate on its own in a finite amount of time (since every time we
-        // re-run we delete the construct which triggered the re-run), but it
+        // re-run we discard the construct which triggered the re-run), but it
         // does help avoid slow compile times on pathlogical code.
         ++runs;
         if (runs == 6) {
