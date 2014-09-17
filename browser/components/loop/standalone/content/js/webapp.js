@@ -331,8 +331,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
       var privacy_notice_name = mozL10n.get("privacy_notice_link_text");
 
       var tosHTML = mozL10n.get("legal_text_and_links", {
-        "terms_of_use_url": "<a target=_blank href='" +
-          "https://accounts.firefox.com/legal/terms'>" + tos_link_name + "</a>",
+        "terms_of_use_url": "<a target=_blank href='/legal/terms'>" +
+          tos_link_name + "</a>",
         "privacy_notice_url": "<a target=_blank href='" +
           "https://www.mozilla.org/privacy/'>" + privacy_notice_name + "</a>"
       });
