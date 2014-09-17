@@ -160,7 +160,7 @@ Var ControlRightPX
 !define DownloadMinSizeBytes 15728640 ; 15 MB
 
 ; Maximum size expected to download in bytes
-!define DownloadMaxSizeBytes 36700160 ; 35 MB
+!define DownloadMaxSizeBytes 73400320 ; 70 MB
 
 ; Interval before retrying to download. 3 seconds is used along with 10
 ; attempted downloads (the first attempt along with 9 retries) to give a
