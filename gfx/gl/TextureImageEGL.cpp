@@ -89,8 +89,9 @@ TextureImageEGL::~TextureImageEGL()
     // if we don't have a context (either real or shared),
     // then they went away when the contex was deleted, because it
     // was the only one that had access to it.
-    mGLContext->MakeCurrent();
-    mGLContext->fDeleteTextures(1, &mTexture);
+    if (mGLContext->MakeCurrent()) {
+        mGLContext->fDeleteTextures(1, &mTexture);
+    }
     ReleaseTexImage();
     DestroyEGLSurface();
 }

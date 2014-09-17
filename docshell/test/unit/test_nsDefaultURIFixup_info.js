@@ -88,15 +88,92 @@ let testcases = [ {
     fixedURI: "http://127.0.0.1/",
     protocolChange: true,
   }, {
+    input: "1.2.3.4/",
+    fixedURI: "http://1.2.3.4/",
+    protocolChange: true,
+  }, {
+    input: "1.2.3.4/foo",
+    fixedURI: "http://1.2.3.4/foo",
+    protocolChange: true,
+  }, {
+    input: "1.2.3.4:8000",
+    fixedURI: "http://1.2.3.4:8000/",
+    protocolChange: true,
+  }, {
+    input: "1.2.3.4:8000/",
+    fixedURI: "http://1.2.3.4:8000/",
+    protocolChange: true,
+  }, {
+    input: "1.2.3.4:8000/foo",
+    fixedURI: "http://1.2.3.4:8000/foo",
+    protocolChange: true,
+  }, {
     input: "192.168.10.110",
     fixedURI: "http://192.168.10.110/",
     protocolChange: true,
+  }, {
+    input: "1.2.3",
+    fixedURI: "http://1.2.3/",
+    keywordLookup: true,
+    protocolChange: true,
+  }, {
+    input: "1.2.3/",
+    fixedURI: "http://1.2.3/",
+    protocolChange: true,
+  }, {
+    input: "1.2.3/foo",
+    fixedURI: "http://1.2.3/foo",
+    protocolChange: true,
+  }, {
+    input: "1.2.3:8000",
+    fixedURI: "http://1.2.3:8000/",
+    keywordLookup: true,
+    protocolChange: true,
+  }, {
+    input: "1.2.3:8000/",
+    fixedURI: "http://1.2.3:8000/",
+    protocolChange: true,
+  }, {
+    input: "1.2.3:8000/foo",
+    fixedURI: "http://1.2.3:8000/foo",
+    protocolChange: true,
+  }, {
+    input: "http://1.2.3",
+    fixedURI: "http://1.2.3/",
+  }, {
+    input: "http://1.2.3/",
+    fixedURI: "http://1.2.3/",
+  }, {
+    input: "http://1.2.3/foo",
+    fixedURI: "http://1.2.3/foo",
   }, {
     input: "[::1]",
     fixedURI: "http://[::1]/",
     alternateURI: "http://[::1]/",
     protocolChange: true,
     affectedByWhitelist: true
+  }, {
+    input: "[::1]/",
+    fixedURI: "http://[::1]/",
+    alternateURI: "http://[::1]/",
+    protocolChange: true,
+    affectedByWhitelist: true,
+  }, {
+    input: "[::1]:8000",
+    fixedURI: "http://[::1]:8000/",
+    alternateURI: "http://[::1]:8000/",
+    protocolChange: true,
+    affectedByWhitelist: true,
+  }, {
+    input: "[::1]:8000/",
+    fixedURI: "http://[::1]:8000/",
+    alternateURI: "http://[::1]:8000/",
+    protocolChange: true,
+    affectedByWhitelist: true,
+  }, {
+    input: "[[::1]]/",
+    keywordLookup: true,
+    protocolChange: true,
   }, {
     input: "[fe80:cd00:0:cde:1257:0:211e:729c]",
     fixedURI: "http://[fe80:cd00:0:cde:1257:0:211e:729c]/",

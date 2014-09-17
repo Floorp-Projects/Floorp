@@ -4866,15 +4866,18 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
   // for shadows, borders, etc.
   refSize += nsSize(refSize.width / 8, refSize.height / 8);
   nsSize frameSize = aFrame->GetVisualOverflowRectRelativeToSelf().Size();
+  nscoord maxInAppUnits = nscoord_MAX;
   if (frameSize <= refSize) {
-    nscoord max = aFrame->PresContext()->DevPixelsToAppUnits(4096);
+    maxInAppUnits = aFrame->PresContext()->DevPixelsToAppUnits(4096);
     nsRect visual = aFrame->GetVisualOverflowRect();
-    if (visual.width <= max && visual.height <= max) {
+    if (visual.width <= maxInAppUnits && visual.height <= maxInAppUnits) {
       return true;
     }
   }
 
   if (aLogAnimations) {
+    nsRect visual = aFrame->GetVisualOverflowRect();
+
     nsCString message;
     message.AppendLiteral("Performance warning: Async animation disabled because frame size (");
     message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(frameSize.width));
@@ -4884,6 +4887,12 @@ nsDisplayTransform::ShouldPrerenderTransformedContent(nsDisplayListBuilder* aBui
     message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.width));
     message.AppendLiteral(", ");
     message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(refSize.height));
+    message.AppendLiteral(") or the visual rectangle (");
+    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(visual.width));
+    message.AppendLiteral(", ");
+    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(visual.height));
+    message.AppendLiteral(") is larger than the max allowable value (");
+    message.AppendInt(nsPresContext::AppUnitsToIntCSSPixels(maxInAppUnits));
     message.Append(')');
     AnimationPlayerCollection::LogAsyncAnimationFailure(message,
                                                         aFrame->GetContent());

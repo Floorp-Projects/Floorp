@@ -55,6 +55,15 @@ using mozilla::LittleEndian;
 using mozilla::NativeEndian;
 using JS::CanonicalizeNaN;
 
+// When you make updates here, make sure you consider whether you need to bump the
+// value of JS_STRUCTURED_CLONE_VERSION in js/public/StructuredClone.h.  You will
+// likely need to increment the version if anything at all changes in the serialization
+// format.
+//
+// Note that SCTAG_END_OF_KEYS is written into the serialized form and should have
+// a stable ID, it need not be at the end of the list and should not be used for
+// sizing data structures.
+
 enum StructuredDataType MOZ_ENUM_TYPE(uint32_t) {
     /* Structured data types provided by the engine */
     SCTAG_FLOAT_MAX = 0xFFF00000,
@@ -77,8 +86,8 @@ enum StructuredDataType MOZ_ENUM_TYPE(uint32_t) {
     SCTAG_TYPED_ARRAY_OBJECT,
     SCTAG_MAP_OBJECT,
     SCTAG_SET_OBJECT,
-    SCTAG_SHARED_TYPED_ARRAY_OBJECT,
     SCTAG_END_OF_KEYS,
+    SCTAG_SHARED_TYPED_ARRAY_OBJECT,
 
     SCTAG_TYPED_ARRAY_V1_MIN = 0xFFFF0100,
     SCTAG_TYPED_ARRAY_V1_INT8 = SCTAG_TYPED_ARRAY_V1_MIN + Scalar::Int8,
