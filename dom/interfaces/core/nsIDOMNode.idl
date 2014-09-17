@@ -16,7 +16,7 @@ interface nsIVariant;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[uuid(a12cfe4e-cbc1-4813-97da-27c9d3062a34)]
+[uuid(55015e1c-1a3d-4fd9-a1fe-3050e792ca66)]
 interface nsIDOMNode : nsISupports
 {
   const unsigned short      ELEMENT_NODE       = 1;
