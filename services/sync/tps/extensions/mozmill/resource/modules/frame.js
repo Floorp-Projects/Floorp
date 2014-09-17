@@ -33,6 +33,7 @@ var httpd = null;
 var persisted = {};
 
 var assert = new assertions.Assert();
+var expect = new assertions.Expect();
 
 var mozmill = undefined;
 var mozelement = undefined;
@@ -521,7 +522,7 @@ Collector.prototype.loadFile = function (path, collector) {
 
   var systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
   var module = new Components.utils.Sandbox(systemPrincipal);
-  module.assert = new assertions.Assert();
+  module.assert = assert;
   module.Cc = Cc;
   module.Ci = Ci;
   module.Cr = Components.results;
@@ -530,7 +531,7 @@ Collector.prototype.loadFile = function (path, collector) {
   module.driver = moduleLoader.require("driver");
   module.elementslib = mozelement;
   module.errors = errors;
-  module.expect = new assertions.Expect();
+  module.expect = expect;
   module.findElement = mozelement;
   module.log = log;
   module.mozmill = mozmill;
@@ -541,7 +542,9 @@ Collector.prototype.loadFile = function (path, collector) {
       rootPaths: [Services.io.newFileURI(file.parent).spec,
                   "resource://mozmill/modules/"],
       defaultPrincipal: "system",
-      globals : { mozmill: mozmill,
+      globals : { assert: assert,
+                  expect: expect,
+                  mozmill: mozmill,
                   elementslib: mozelement,      // This a quick hack to maintain backwards compatibility with 1.5.x
                   findElement: mozelement,
                   persisted: persisted,

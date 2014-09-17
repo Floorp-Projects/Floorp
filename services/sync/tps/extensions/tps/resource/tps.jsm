@@ -820,7 +820,7 @@ let TPS = {
     Svc.Obs.remove(aEventName, cb);
     Logger.logInfo(aEventName + " observed!");
 
-    let cb = Async.makeSpinningCallback();
+    cb = Async.makeSpinningCallback();
     Utils.nextTick(cb);
     cb.wait();
   },

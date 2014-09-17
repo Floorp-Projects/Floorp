@@ -7,6 +7,7 @@
 
 from __future__ import unicode_literals
 
+import collections
 import copy
 import difflib
 import errno
@@ -464,11 +465,49 @@ class HierarchicalStringList(object):
         self._strings = StrictOrderingOnAppendList()
         self._children = {}
 
-    def get_children(self):
-        return self._children
+    class StringListAdaptor(collections.Sequence):
+        def __init__(self, hsl):
+            self._hsl = hsl
 
-    def get_strings(self):
-        return self._strings
+        def __getitem__(self, index):
+            return self._hsl._strings[index]
+
+        def __len__(self):
+            return len(self._hsl._strings)
+
+        def flags_for(self, value):
+            try:
+                # Solely for the side-effect of throwing AttributeError
+                object.__getattribute__(self._hsl, '__flag_slots__')
+                # We now know we have a HierarchicalStringListWithFlags.
+                # Get the flags, but use |get| so we don't create the
+                # flags if they're not already there.
+                return self._hsl._flags.get(value, None)
+            except AttributeError:
+                return None
+
+    def walk(self):
+        """Walk over all HierarchicalStringLists in the hierarchy.
+
+        This is a generator of (path, sequence).
+
+        The path is '' for the root level and '/'-delimited strings for
+        any descendants.  The sequence is a read-only sequence of the
+        strings contained at that level.  To support accessing the flags
+        for a given string (e.g. when walking over a
+        HierarchicalStringListWithFlagsFactory), the sequence supports a
+        flags_for() method.  Given a string, the flags_for() method returns
+        the flags for the string, if any, or None if there are no flags set.
+        """
+
+        if self._strings:
+            path_to_here = ''
+            yield path_to_here, self.StringListAdaptor(self)
+
+        for k, l in sorted(self._children.items()):
+            for p, v in l.walk():
+                path_to_there = '%s/%s' % (k, p)
+                yield path_to_there.strip('/'), v
 
     def __setattr__(self, name, value):
         if name in self.__slots__:

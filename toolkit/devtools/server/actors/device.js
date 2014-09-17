@@ -22,14 +22,7 @@ const APP_MAP = {
   '{a23983c0-fd0e-11dc-95ff-0800200c9a66}': 'mobile/xul'
 }
 
-exports.register = function(handle) {
-  handle.addGlobalActor(DeviceActor, "deviceActor");
-};
-
-exports.unregister = function(handle) {
-};
-
-let DeviceActor = protocol.ActorClass({
+let DeviceActor = exports.DeviceActor = protocol.ActorClass({
   typeName: "device",
 
   _desc: null,

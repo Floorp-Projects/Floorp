@@ -4,9 +4,10 @@
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TextureHostOGL.h"
+
+#include "EGLUtils.h"
 #include "GLContext.h"                  // for GLContext, etc
 #include "GLLibraryEGL.h"               // for GLLibraryEGL
-#include "GLSharedHandleHelpers.h"
 #include "GLUploadHelpers.h"
 #include "GLReadTexImageHelper.h"
 #include "gfx2DGlue.h"                  // for ContentForFormat, etc
@@ -23,6 +24,7 @@
 #include "mozilla/layers/GrallocTextureHost.h"
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsRegion.h"                   // for nsIntRegion
+#include "nsSurfaceTexture.h"
 #include "GfxTexturesReporter.h"        // for GfxTexturesReporter
 #include "GLBlitTextureImageHelper.h"
 #ifdef XP_MACOSX
@@ -62,15 +64,25 @@ CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
                                                    aDeallocator, aFlags);
       break;
     }
-    case SurfaceDescriptor::TSharedTextureDescriptor: {
-      const SharedTextureDescriptor& desc = aDesc.get_SharedTextureDescriptor();
-      result = new SharedTextureHostOGL(aFlags,
-                                        desc.shareType(),
-                                        desc.handle(),
-                                        desc.size(),
-                                        desc.inverted());
+
+#ifdef MOZ_WIDGET_ANDROID
+    case SurfaceDescriptor::TSurfaceTextureDescriptor: {
+      const SurfaceTextureDescriptor& desc = aDesc.get_SurfaceTextureDescriptor();
+      result = new SurfaceTextureHost(aFlags,
+                                      (nsSurfaceTexture*)desc.surfTex(),
+                                      desc.size());
       break;
     }
+#endif
+
+    case SurfaceDescriptor::TEGLImageDescriptor: {
+      const EGLImageDescriptor& desc = aDesc.get_EGLImageDescriptor();
+      result = new EGLImageTextureHost(aFlags,
+                                       (EGLImage)desc.image(),
+                                       desc.size());
+      break;
+    }
+
 #ifdef XP_MACOSX
     case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface: {
       const SurfaceDescriptorMacIOSurface& desc =
@@ -79,6 +91,7 @@ CreateTextureHostOGL(const SurfaceDescriptor& aDesc,
       break;
     }
 #endif
+
 #ifdef MOZ_WIDGET_GONK
     case SurfaceDescriptor::TNewSurfaceDescriptorGralloc: {
       const NewSurfaceDescriptorGralloc& desc =
@@ -409,80 +422,6 @@ TextureImageTextureSourceOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilt
   SetFilter(mGL, aFilter);
 }
 
-SharedTextureSourceOGL::SharedTextureSourceOGL(CompositorOGL* aCompositor,
-                                               gl::SharedTextureHandle aHandle,
-                                               gfx::SurfaceFormat aFormat,
-                                               GLenum aTarget,
-                                               GLenum aWrapMode,
-                                               SharedTextureShareType aShareType,
-                                               gfx::IntSize aSize)
-  : mSize(aSize)
-  , mCompositor(aCompositor)
-  , mSharedHandle(aHandle)
-  , mFormat(aFormat)
-  , mShareType(aShareType)
-  , mTextureTarget(aTarget)
-  , mWrapMode(aWrapMode)
-{}
-
-void
-SharedTextureSourceOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
-{
-  if (!gl()) {
-    NS_WARNING("Trying to bind a texture without a GLContext");
-    return;
-  }
-  GLuint tex = mCompositor->GetTemporaryTexture(GetTextureTarget(), aTextureUnit);
-
-  gl()->fActiveTexture(aTextureUnit);
-  gl()->fBindTexture(mTextureTarget, tex);
-  if (!AttachSharedHandle(gl(), mShareType, mSharedHandle)) {
-    NS_ERROR("Failed to bind shared texture handle");
-    return;
-  }
-  ApplyFilterToBoundTexture(gl(), aFilter, mTextureTarget);
-}
-
-void
-SharedTextureSourceOGL::DetachSharedHandle()
-{
-  if (!gl()) {
-    return;
-  }
-  gl::DetachSharedHandle(gl(), mShareType, mSharedHandle);
-}
-
-void
-SharedTextureSourceOGL::SetCompositor(Compositor* aCompositor)
-{
-  mCompositor = static_cast<CompositorOGL*>(aCompositor);
-}
-
-bool
-SharedTextureSourceOGL::IsValid() const
-{
-  return !!gl();
-}
-
-gl::GLContext*
-SharedTextureSourceOGL::gl() const
-{
-  return mCompositor ? mCompositor->gl() : nullptr;
-}
-
-gfx::Matrix4x4
-SharedTextureSourceOGL::GetTextureTransform()
-{
-  SharedHandleDetails handleDetails;
-  if (!GetSharedHandleDetails(gl(), mShareType, mSharedHandle, handleDetails)) {
-    NS_WARNING("Could not get shared handle details");
-    return gfx::Matrix4x4();
-  }
-
-  return handleDetails.mTextureTransform;
-}
-
-
 ////////////////////////////////////////////////////////////////////////
 // GLTextureSource
 
@@ -530,72 +469,125 @@ GLTextureSource::gl() const
 }
 
 ////////////////////////////////////////////////////////////////////////
-// SharedTextureHostOGL
+////////////////////////////////////////////////////////////////////////
+// SurfaceTextureHost
 
-SharedTextureHostOGL::SharedTextureHostOGL(TextureFlags aFlags,
-                                           gl::SharedTextureShareType aShareType,
-                                           gl::SharedTextureHandle aSharedHandle,
-                                           gfx::IntSize aSize,
-                                           bool inverted)
-  : TextureHost(aFlags)
+#ifdef MOZ_WIDGET_ANDROID
+
+SurfaceTextureSource::SurfaceTextureSource(CompositorOGL* aCompositor,
+                                           nsSurfaceTexture* aSurfTex,
+                                           gfx::SurfaceFormat aFormat,
+                                           GLenum aTarget,
+                                           GLenum aWrapMode,
+                                           gfx::IntSize aSize)
+  : mCompositor(aCompositor)
+  , mSurfTex(aSurfTex)
+  , mFormat(aFormat)
+  , mTextureTarget(aTarget)
+  , mWrapMode(aWrapMode)
   , mSize(aSize)
-  , mCompositor(nullptr)
-  , mSharedHandle(aSharedHandle)
-  , mShareType(aShareType)
 {
 }
 
-SharedTextureHostOGL::~SharedTextureHostOGL()
+void
+SurfaceTextureSource::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
 {
-  // If need to deallocate textures, call DeallocateSharedData() before
-  // the destructor
+  if (!gl()) {
+    NS_WARNING("Trying to bind a texture without a GLContext");
+    return;
+  }
+  GLuint tex = mCompositor->GetTemporaryTexture(GetTextureTarget(), aTextureUnit);
+
+  gl()->fActiveTexture(aTextureUnit);
+  gl()->fBindTexture(mTextureTarget, tex);
+#ifndef DEBUG
+  // SurfaceTexture spams us if there are any existing GL errors, so
+  // we'll clear them here in order to avoid that.
+  gl()->GetAndClearError();
+#endif
+  mSurfTex->UpdateTexImage();
+
+  ApplyFilterToBoundTexture(gl(), aFilter, mTextureTarget);
+}
+
+void
+SurfaceTextureSource::SetCompositor(Compositor* aCompositor)
+{
+  mCompositor = static_cast<CompositorOGL*>(aCompositor);
+}
+
+bool
+SurfaceTextureSource::IsValid() const
+{
+  return !!gl();
 }
 
 gl::GLContext*
-SharedTextureHostOGL::gl() const
+SurfaceTextureSource::gl() const
+{
+  return mCompositor ? mCompositor->gl() : nullptr;
+}
+
+gfx::Matrix4x4
+SurfaceTextureSource::GetTextureTransform()
+{
+  gfx::Matrix4x4 ret;
+  mSurfTex->GetTransformMatrix(ret);
+
+  return ret;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+SurfaceTextureHost::SurfaceTextureHost(TextureFlags aFlags,
+                                       nsSurfaceTexture* aSurfTex,
+                                       gfx::IntSize aSize)
+  : TextureHost(aFlags)
+  , mSurfTex(aSurfTex)
+  , mSize(aSize)
+  , mCompositor(nullptr)
+{
+}
+
+SurfaceTextureHost::~SurfaceTextureHost()
+{
+}
+
+gl::GLContext*
+SurfaceTextureHost::gl() const
 {
   return mCompositor ? mCompositor->gl() : nullptr;
 }
 
 bool
-SharedTextureHostOGL::Lock()
+SurfaceTextureHost::Lock()
 {
   if (!mCompositor) {
     return false;
   }
 
   if (!mTextureSource) {
-    // XXX on android GetSharedHandleDetails can call into Java which we'd
-    // rather not do from the compositor
-    SharedHandleDetails handleDetails;
-    if (!GetSharedHandleDetails(gl(), mShareType, mSharedHandle, handleDetails)) {
-      NS_WARNING("Could not get shared handle details");
-      return false;
-    }
-
+    gfx::SurfaceFormat format = gfx::SurfaceFormat::R8G8B8A8;
+    GLenum target = LOCAL_GL_TEXTURE_EXTERNAL;
     GLenum wrapMode = LOCAL_GL_CLAMP_TO_EDGE;
-    mTextureSource = new SharedTextureSourceOGL(mCompositor,
-                                                mSharedHandle,
-                                                handleDetails.mTextureFormat,
-                                                handleDetails.mTarget,
-                                                wrapMode,
-                                                mShareType,
-                                                mSize);
+    mTextureSource = new SurfaceTextureSource(mCompositor,
+                                              mSurfTex,
+                                              format,
+                                              target,
+                                              wrapMode,
+                                              mSize);
   }
+
   return true;
 }
 
 void
-SharedTextureHostOGL::Unlock()
+SurfaceTextureHost::Unlock()
 {
-  if (!mTextureSource) {
-    return;
-  }
-  mTextureSource->DetachSharedHandle();
 }
 
 void
-SharedTextureHostOGL::SetCompositor(Compositor* aCompositor)
+SurfaceTextureHost::SetCompositor(Compositor* aCompositor)
 {
   CompositorOGL* glCompositor = static_cast<CompositorOGL*>(aCompositor);
   mCompositor = glCompositor;
@@ -605,7 +597,141 @@ SharedTextureHostOGL::SetCompositor(Compositor* aCompositor)
 }
 
 gfx::SurfaceFormat
-SharedTextureHostOGL::GetFormat() const
+SurfaceTextureHost::GetFormat() const
+{
+  MOZ_ASSERT(mTextureSource);
+  return mTextureSource->GetFormat();
+}
+
+#endif // MOZ_WIDGET_ANDROID
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+// EGLImage
+
+EGLImageTextureSource::EGLImageTextureSource(CompositorOGL* aCompositor,
+                                             EGLImage aImage,
+                                             gfx::SurfaceFormat aFormat,
+                                             GLenum aTarget,
+                                             GLenum aWrapMode,
+                                             gfx::IntSize aSize)
+  : mCompositor(aCompositor)
+  , mImage(aImage)
+  , mFormat(aFormat)
+  , mTextureTarget(aTarget)
+  , mWrapMode(aWrapMode)
+  , mSize(aSize)
+{
+}
+
+void
+EGLImageTextureSource::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
+{
+  if (!gl()) {
+    NS_WARNING("Trying to bind a texture without a GLContext");
+    return;
+  }
+
+  MOZ_ASSERT(DoesEGLContextSupportSharingWithEGLImage(gl()),
+             "EGLImage not supported or disabled in runtime");
+
+  GLuint tex = mCompositor->GetTemporaryTexture(GetTextureTarget(), aTextureUnit);
+
+  gl()->fActiveTexture(aTextureUnit);
+  gl()->fBindTexture(mTextureTarget, tex);
+
+  MOZ_ASSERT(mTextureTarget == LOCAL_GL_TEXTURE_2D);
+  gl()->fEGLImageTargetTexture2D(LOCAL_GL_TEXTURE_2D, mImage);
+
+  ApplyFilterToBoundTexture(gl(), aFilter, mTextureTarget);
+}
+
+void
+EGLImageTextureSource::SetCompositor(Compositor* aCompositor)
+{
+  mCompositor = static_cast<CompositorOGL*>(aCompositor);
+}
+
+bool
+EGLImageTextureSource::IsValid() const
+{
+  return !!gl();
+}
+
+gl::GLContext*
+EGLImageTextureSource::gl() const
+{
+  return mCompositor ? mCompositor->gl() : nullptr;
+}
+
+gfx::Matrix4x4
+EGLImageTextureSource::GetTextureTransform()
+{
+  gfx::Matrix4x4 ret;
+  return ret;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+EGLImageTextureHost::EGLImageTextureHost(TextureFlags aFlags,
+                                         EGLImage aImage,
+                                         gfx::IntSize aSize)
+  : TextureHost(aFlags)
+  , mImage(aImage)
+  , mSize(aSize)
+  , mCompositor(nullptr)
+{
+}
+
+EGLImageTextureHost::~EGLImageTextureHost()
+{
+}
+
+gl::GLContext*
+EGLImageTextureHost::gl() const
+{
+  return mCompositor ? mCompositor->gl() : nullptr;
+}
+
+bool
+EGLImageTextureHost::Lock()
+{
+  if (!mCompositor) {
+    return false;
+  }
+
+  if (!mTextureSource) {
+    gfx::SurfaceFormat format = gfx::SurfaceFormat::R8G8B8A8;
+    GLenum target = LOCAL_GL_TEXTURE_2D;
+    GLenum wrapMode = LOCAL_GL_CLAMP_TO_EDGE;
+    mTextureSource = new EGLImageTextureSource(mCompositor,
+                                               mImage,
+                                               format,
+                                               target,
+                                               wrapMode,
+                                               mSize);
+  }
+
+  return true;
+}
+
+void
+EGLImageTextureHost::Unlock()
+{
+}
+
+void
+EGLImageTextureHost::SetCompositor(Compositor* aCompositor)
+{
+  CompositorOGL* glCompositor = static_cast<CompositorOGL*>(aCompositor);
+  mCompositor = glCompositor;
+  if (mTextureSource) {
+    mTextureSource->SetCompositor(glCompositor);
+  }
+}
+
+gfx::SurfaceFormat
+EGLImageTextureHost::GetFormat() const
 {
   MOZ_ASSERT(mTextureSource);
   return mTextureSource->GetFormat();

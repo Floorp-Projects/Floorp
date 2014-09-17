@@ -73,7 +73,7 @@ var tests = {
   testButtonDisabledOnActivate: function(next) {
     // starting on about:blank page, share should be visible but disabled when
     // adding provider
-    is(gBrowser.contentDocument.location.href, "about:blank");
+    is(gBrowser.selectedTab.linkedBrowser.currentURI.spec, "about:blank");
     SocialService.addProvider(manifest2, function(provider) {
       is(provider.origin, manifest2.origin, "provider is installed");
       let id = SocialMarks._toolbarHelper.idFromOrigin(manifest2.origin);

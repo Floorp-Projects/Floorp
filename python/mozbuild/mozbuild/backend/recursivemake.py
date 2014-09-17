@@ -53,6 +53,7 @@ from ..frontend.data import (
     SharedLibrary,
     SimpleProgram,
     StaticLibrary,
+    TestHarnessFiles,
     TestManifest,
     VariablePassthru,
     XPIDLFile,
@@ -408,6 +409,9 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, Exports):
             self._process_exports(obj, obj.exports, backend_file)
+
+        elif isinstance(obj, TestHarnessFiles):
+            self._process_test_harness_files(obj, backend_file)
 
         elif isinstance(obj, Resources):
             self._process_resources(obj, obj.resources, backend_file)
@@ -823,45 +827,22 @@ class RecursiveMakeBackend(CommonBackend):
         for tier in set(self._may_skip.keys()) - affected_tiers:
             self._may_skip[tier].add(backend_file.relobjdir)
 
-    def _process_hierarchy_elements(self, obj, element, namespace, action):
-        """Walks the ``HierarchicalStringList`` ``element`` and performs
-        ``action`` on each HierarchicalStringList in the hierarchy.
+    def _walk_hierarchy(self, obj, element, namespace=''):
+        """Walks the ``HierarchicalStringList`` ``element`` in the context of
+        the mozbuild object ``obj`` as though by ``element.walk()``, but yield
+        three-tuple containing the following:
 
-        ``action`` is a callback to be invoked with the following arguments:
-        - ``element``     - The HierarchicalStringList along the current namespace
-        - ``namespace``   - The namespace of the element
-        """
-        if namespace:
-            namespace += '/'
-
-        action(element, namespace)
-
-        children = element.get_children()
-        for subdir in sorted(children):
-            self._process_hierarchy_elements(obj, children[subdir],
-                                             namespace + subdir,
-                                             action)
-
-    def _process_hierarchy(self, obj, element, namespace, action):
-        """Walks the ``HierarchicalStringList`` ``element`` and performs
-        ``action`` on each string in the hierarchy.
-
-        ``action`` is a callback to be invoked with the following arguments:
         - ``source`` - The path to the source file named by the current string
         - ``dest``   - The relative path, including the namespace, of the
                        destination file.
+        - ``flags``  - A dictionary of flags associated with the current string,
+                       or None if there is no such dictionary.
         """
-        def process_element(element, namespace):
-            strings = element.get_strings()
+        for path, strings in element.walk():
             for s in strings:
                 source = mozpath.normpath(mozpath.join(obj.srcdir, s))
-                dest = '%s%s' % (namespace, mozpath.basename(s))
-                flags = None
-                if '__getitem__' in dir(element):
-                    flags = element[s]
-                action(source, dest, flags)
-
-        self._process_hierarchy_elements(obj, element, namespace, process_element)
+                dest = mozpath.join(namespace, path, mozpath.basename(s))
+                yield source, dest, strings.flags_for(s)
 
     def _process_defines(self, obj, backend_file):
         """Output the DEFINES rules to the given backend file."""
@@ -878,20 +859,40 @@ class RecursiveMakeBackend(CommonBackend):
         if not obj.dist_install:
             return
 
-        def handle_export(source, dest, flags):
+        for source, dest, _ in self._walk_hierarchy(obj, exports):
             self._install_manifests['dist_include'].add_symlink(source, dest)
 
             if not os.path.exists(source):
                 raise Exception('File listed in EXPORTS does not exist: %s' % source)
 
-        self._process_hierarchy(obj, exports,
-                                namespace="",
-                                action=handle_export)
+    def _process_test_harness_files(self, obj, backend_file):
+        for path, files in obj.srcdir_files.iteritems():
+            for source in files:
+                dest = '%s/%s' % (path, mozpath.basename(source))
+                self._install_manifests['tests'].add_symlink(source, dest)
+
+        for path, patterns in obj.srcdir_pattern_files.iteritems():
+            for p in patterns:
+                self._install_manifests['tests'].add_pattern_symlink(obj.srcdir, p, path)
+
+        for path, files in obj.objdir_files.iteritems():
+            prefix = 'TEST_HARNESS_%s' % path.replace('/', '_')
+            backend_file.write("""
+%(prefix)s_FILES := %(files)s
+%(prefix)s_DEST := %(dest)s
+INSTALL_TARGETS += %(prefix)s
+""" % { 'prefix': prefix,
+        'dest': '$(DEPTH)/_tests/%s' % path,
+        'files': ' '.join(files) })
 
     def _process_resources(self, obj, resources, backend_file):
         dep_path = mozpath.join(self.environment.topobjdir, '_build_manifests', '.deps', 'install')
-        def handle_resource(source, dest, flags):
-            if flags.preprocess:
+
+        # Resources need to go in the 'res' subdirectory of $(DIST)/bin, so we
+        # specify a root namespace of 'res'.
+        for source, dest, flags in self._walk_hierarchy(obj, resources,
+                                                        namespace='res'):
+            if flags and flags.preprocess:
                 if dest.endswith('.in'):
                     dest = dest[:-3]
                 dep_file = mozpath.join(dep_path, mozpath.basename(source) + '.pp')
@@ -901,12 +902,6 @@ class RecursiveMakeBackend(CommonBackend):
 
             if not os.path.exists(source):
                 raise Exception('File listed in RESOURCE_FILES does not exist: %s' % source)
-
-        # Resources need to go in the 'res' subdirectory of $(DIST)/bin, so we
-        # specify a root namespace of 'res'.
-        self._process_hierarchy(obj, resources,
-                                namespace='res',
-                                action=handle_resource)
 
     def _process_installation_target(self, obj, backend_file):
         # A few makefiles need to be able to override the following rules via
@@ -929,29 +924,29 @@ class RecursiveMakeBackend(CommonBackend):
             raise Exception('Unsupported JavaScriptModules instance: %s' % obj.flavor)
 
         if obj.flavor == 'extra':
-            def onelement(element, namespace):
-                if not element.get_strings():
-                    return
+            for path, strings in obj.modules.walk():
+                if not strings:
+                    continue
 
-                prefix = 'extra_js_%s' % namespace.replace('/', '_')
+                prefix = 'extra_js_%s' % path.replace('/', '_')
                 backend_file.write('%s_FILES := %s\n'
-                                   % (prefix, ' '.join(element.get_strings())))
-                backend_file.write('%s_DEST = $(FINAL_TARGET)/%s\n' % (prefix, namespace))
+                                   % (prefix, ' '.join(strings)))
+                backend_file.write('%s_DEST = %s\n' %
+                                   (prefix, mozpath.join('$(FINAL_TARGET)', 'modules', path)))
                 backend_file.write('INSTALL_TARGETS += %s\n\n' % prefix)
-            self._process_hierarchy_elements(obj, obj.modules, 'modules', onelement)
             return
 
         if obj.flavor == 'extra_pp':
-            def onelement(element, namespace):
-                if not element.get_strings():
-                    return
+            for path, strings in obj.modules.walk():
+                if not strings:
+                    continue
 
-                prefix = 'extra_pp_js_%s' % namespace.replace('/', '_')
+                prefix = 'extra_pp_js_%s' % path.replace('/', '_')
                 backend_file.write('%s := %s\n'
-                                   % (prefix, ' '.join(element.get_strings())))
-                backend_file.write('%s_PATH = $(FINAL_TARGET)/%s\n' % (prefix, namespace))
+                                   % (prefix, ' '.join(strings)))
+                backend_file.write('%s_PATH = %s\n' %
+                                   (prefix, mozpath.join('$(FINAL_TARGET)', 'modules', path)))
                 backend_file.write('PP_TARGETS += %s\n\n' % prefix)
-            self._process_hierarchy_elements(obj, obj.modules, 'modules', onelement)
             return
 
         if not self.environment.substs.get('ENABLE_TESTS', False):
@@ -959,10 +954,8 @@ class RecursiveMakeBackend(CommonBackend):
 
         manifest = self._install_manifests['tests']
 
-        def onmodule(source, dest, flags):
+        for source, dest, _ in self._walk_hierarchy(obj, obj.modules):
             manifest.add_symlink(source, mozpath.join('modules', dest))
-
-        self._process_hierarchy(obj, obj.modules, '', onmodule)
 
     def _handle_idl_manager(self, manager):
         build_files = self._install_manifests['xpidl']

@@ -109,17 +109,6 @@ MonitorActor.prototype.requestTypes = {
 
 exports.MonitorActor = MonitorActor;
 
-exports.register = function(handle) {
-  handle.addGlobalActor(MonitorActor, "monitorActor");
-  handle.addTabActor(MonitorActor, "monitorActor");
-};
-
-exports.unregister = function(handle) {
-  handle.removeGlobalActor(MonitorActor, "monitorActor");
-  handle.removeTabActor(MonitorActor, "monitorActor");
-};
-
-
 let USSAgent = {
   _mgr: null,
   _timeout: null,

@@ -20,7 +20,7 @@ SimpleTest.waitForExplicitFinish();
 
 var video = document.createElement("video");
 video.src = "seek.webm";
-video.preload = "auto";
+video.preload = "metadata";
 
 var trackElement = document.createElement("track");
 trackElement.src = "long.vtt";

@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1065766
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1065766</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1065766">Mozilla Bug 1065766</a>
+<div id="content" style="display: none">
+  <video id="myVideo"></video>
+</div>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+/**
+ * Test for Bug 1065766
+ *
+ * This test verifies that <video> has 'object-fit:contain' by default, set via
+ * a UA stylesheet. (This is different from the property's initial value, which
+ * is "fill".)
+ *
+ * Spec reference:
+ * https://html.spec.whatwg.org/multipage/rendering.html#video-object-fit
+ */
+
+function checkStyle(elem, expectedVal, message) {
+  is(window.getComputedStyle(elem, "").objectFit, expectedVal, message);
+}
+
+function main() {
+  const videoElem = document.getElementById("myVideo");
+
+  checkStyle(videoElem, "contain",
+             "<video> should have 'object-fit:contain' by default");
+
+  // Make sure we can override this behavior (i.e. that the UA stylesheet
+  // doesn't use "!important" to make this style mandatory):
+  videoElem.style.objectFit = "cover";
+  checkStyle(videoElem, "cover",
+             "<video> should honor 'object-fit:cover' in inline style");
+}
+
+main();
+</script>
+</pre>
+</body>
+</html>

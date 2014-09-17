@@ -69,6 +69,7 @@ function run_test() {
   // deepEquals joy!
   // 7.2
   assert.deepEqual(new Date(2000, 3, 14), new Date(2000, 3, 14), "deepEqual date");
+  assert.deepEqual(new Date(NaN), new Date(NaN), "deepEqual invalid dates");
 
   assert.throws(makeBlock(assert.deepEqual, new Date(), new Date(2000, 3, 14)),
                 ns.Assert.AssertionError,
