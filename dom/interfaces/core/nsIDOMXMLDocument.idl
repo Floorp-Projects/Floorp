@@ -5,7 +5,7 @@
 
 #include "nsIDOMDocument.idl"
 
-[uuid(a859ef23-33fb-4d63-ad1f-86c8b7131d3a)]
+[uuid(dc767223-838f-4ca2-9f4c-ae685862d1df)]
 interface nsIDOMXMLDocument : nsIDOMDocument
 {
   // DOM Level 3 Load & Save, DocumentLS
