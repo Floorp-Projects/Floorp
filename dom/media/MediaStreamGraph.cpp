@@ -197,7 +197,7 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
         MediaStreamListener* l = aStream->mListeners[j];
         TrackTicks offset = (data->mCommands & SourceMediaStream::TRACK_CREATE)
             ? data->mStart : aStream->mBuffer.FindTrack(data->mID)->GetSegment()->GetDuration();
-        l->NotifyQueuedTrackChanges(this, data->mID, mSampleRate,
+        l->NotifyQueuedTrackChanges(this, data->mID,
                                     offset, data->mCommands, *data->mData);
       }
       if (data->mCommands & SourceMediaStream::TRACK_CREATE) {
@@ -1939,8 +1939,7 @@ MediaStream::EnsureTrack(TrackID aTrackId, TrackRate aSampleRate)
     nsAutoPtr<MediaSegment> segment(new AudioSegment());
     for (uint32_t j = 0; j < mListeners.Length(); ++j) {
       MediaStreamListener* l = mListeners[j];
-      l->NotifyQueuedTrackChanges(Graph(), aTrackId,
-                                  GraphImpl()->GraphRate(), 0,
+      l->NotifyQueuedTrackChanges(Graph(), aTrackId, 0,
                                   MediaStreamListener::TRACK_EVENT_CREATED,
                                   *segment);
     }
@@ -2373,7 +2372,6 @@ SourceMediaStream::NotifyDirectConsumers(TrackData *aTrack,
     MediaStreamDirectListener* l = mDirectListeners[j];
     TrackTicks offset = 0; // FIX! need a separate TrackTicks.... or the end of the internal buffer
     l->NotifyRealtimeData(static_cast<MediaStreamGraph*>(GraphImpl()), aTrack->mID,
-                          GraphRate(),
                           offset, aTrack->mCommands, *aSegment);
   }
 }

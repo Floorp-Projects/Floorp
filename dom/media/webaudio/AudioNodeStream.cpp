@@ -552,8 +552,7 @@ AudioNodeStream::AdvanceOutputSegment()
     AudioSegment tmpSegment;
     tmpSegment.AppendAndConsumeChunk(&copyChunk);
     l->NotifyQueuedTrackChanges(Graph(), AUDIO_TRACK,
-                                mSampleRate, segment->GetDuration(), 0,
-                                tmpSegment);
+                                segment->GetDuration(), 0, tmpSegment);
   }
 }
 
@@ -579,7 +578,6 @@ AudioNodeStream::FinishOutput()
     MediaStreamListener* l = mListeners[j];
     AudioSegment emptySegment;
     l->NotifyQueuedTrackChanges(Graph(), AUDIO_TRACK,
-                                mSampleRate,
                                 track->GetSegment()->GetDuration(),
                                 MediaStreamListener::TRACK_EVENT_ENDED, emptySegment);
   }
