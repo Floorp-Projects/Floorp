@@ -25,14 +25,64 @@ namespace js {
  * the subclasses.
  */
 
+/*
+ * TypedArrayObject and SharedTypedArrayObject are unrelated types in
+ * both C++ and JS, and that is deliberate to avoid one substituting
+ * for the other.  However, they share a fixed representation and have
+ * some variable attributes, all of which are encapsulated in the
+ * TypedArrayLayout class.  The sharing avoids a lot of pointless
+ * duplication in the JITs: one code path can be used, with occasional
+ * decision points based on the attributes.
+ */
+
+class TypedArrayLayout
+{
+    const bool isShared_;
+    const bool isNeuterable_;
+    const Class *firstClass_;
+    const Class *maxClass_;
+
+  public:
+    TypedArrayLayout(bool isShared, bool isNeuterable, const Class *firstClass, const Class *maxClass);
+
+    // Slot containing length of the view in number of typed elements.
+    static const size_t LENGTH_SLOT = JS_BUFVIEW_SLOT_LENGTH;
+
+    // The type value.
+    static const size_t TYPE_SLOT = JS_TYPEDARR_SLOT_TYPE;
+
+    // Underlying (Shared)ArrayBufferObject.
+    static const size_t BUFFER_SLOT = JS_BUFVIEW_SLOT_OWNER;
+
+    // Offset of view within underlying (Shared)ArrayBufferObject.
+    static const size_t BYTEOFFSET_SLOT = JS_BUFVIEW_SLOT_BYTEOFFSET;
+
+    static const size_t RESERVED_SLOTS = JS_TYPEDARR_SLOTS;
+
+    // The raw pointer to the buffer memory, the "private" value.
+    //
+    // This offset is exposed for performance reasons - so that it
+    // need not be looked up on accesses.
+    static const size_t DATA_SLOT = JS_TYPEDARR_SLOT_DATA;
+
+    static int lengthOffset();
+    static int dataOffset();
+
+    bool isSharedMemory() const { return isShared_; }
+    bool isNeuterable() const { return isNeuterable_; }
+    const Class *addressOfFirstClass() const { return firstClass_; }
+    const Class *addressOfMaxClass() const { return maxClass_; }
+};
+
 class TypedArrayObject : public ArrayBufferViewObject
 {
   protected:
     // Typed array properties stored in slots, beyond those shared by all
     // ArrayBufferViews.
-    static const size_t TYPE_SLOT      = JS_TYPEDARR_SLOT_TYPE;
-    static const size_t RESERVED_SLOTS = JS_TYPEDARR_SLOTS;
-    static const size_t DATA_SLOT      = JS_TYPEDARR_SLOT_DATA;
+    static const size_t TYPE_SLOT      = TypedArrayLayout::TYPE_SLOT;
+    static const size_t DATA_SLOT      = TypedArrayLayout::DATA_SLOT;
+
+    static const size_t RESERVED_SLOTS = TypedArrayLayout::RESERVED_SLOTS;
 
     static_assert(js::detail::TypedArrayLengthSlot == LENGTH_SLOT,
                   "bad inlined constant in jsfriendapi.h");
@@ -79,7 +129,6 @@ class TypedArrayObject : public ArrayBufferViewObject
     static bool
     ensureHasBuffer(JSContext *cx, Handle<TypedArrayObject *> tarray);
 
-    ArrayBufferObject *sharedBuffer() const;
     bool hasBuffer() const {
         return bufferValue(const_cast<TypedArrayObject*>(this)).isObject();
     }
@@ -87,9 +136,7 @@ class TypedArrayObject : public ArrayBufferViewObject
         JSObject *obj = bufferValue(const_cast<TypedArrayObject*>(this)).toObjectOrNull();
         if (!obj)
             return nullptr;
-        if (obj->is<ArrayBufferObject>())
-            return &obj->as<ArrayBufferObject>();
-        return sharedBuffer();
+        return &obj->as<ArrayBufferObject>();
     }
     uint32_t byteOffset() const {
         return byteOffsetValue(const_cast<TypedArrayObject*>(this)).toInt32();
@@ -121,10 +168,15 @@ class TypedArrayObject : public ArrayBufferViewObject
      */
     static const uint32_t SINGLETON_TYPE_BYTE_LENGTH = 1024 * 1024 * 10;
 
-    static int lengthOffset();
-    static int dataOffset();
-
     static bool isOriginalLengthGetter(Scalar::Type type, Native native);
+
+  private:
+    static TypedArrayLayout layout_;
+
+  public:
+    static const TypedArrayLayout &layout() {
+        return layout_;
+    }
 
     static void ObjectMoved(JSObject *obj, const JSObject *old);
 };
@@ -145,12 +197,6 @@ IsTypedArrayProtoClass(const Class *clasp)
 
 bool
 IsTypedArrayConstructor(HandleValue v, uint32_t type);
-
-bool
-IsTypedArrayBuffer(HandleValue v);
-
-ArrayBufferObject &
-AsTypedArrayBuffer(HandleValue v);
 
 // Return value is whether the string is some integer. If the string is an
 // integer which is not representable as a uint64_t, the return value is true

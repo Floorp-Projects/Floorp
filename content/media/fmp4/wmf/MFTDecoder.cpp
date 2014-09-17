@@ -111,7 +111,7 @@ MFTDecoder::SetDecoderOutputType()
 }
 
 HRESULT
-MFTDecoder::SendMFTMessage(MFT_MESSAGE_TYPE aMsg, UINT32 aData)
+MFTDecoder::SendMFTMessage(MFT_MESSAGE_TYPE aMsg, ULONG_PTR aData)
 {
   NS_ENSURE_TRUE(mDecoder != nullptr, E_POINTER);
   HRESULT hr = mDecoder->ProcessMessage(aMsg, aData);
