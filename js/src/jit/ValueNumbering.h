@@ -48,7 +48,7 @@ class ValueNumberer
 
         Ptr findLeader(const MDefinition *def) const;
         AddPtr findLeaderForAdd(MDefinition *def);
-        bool insert(AddPtr p, MDefinition *def);
+        bool add(AddPtr p, MDefinition *def);
         void overwrite(AddPtr p, MDefinition *def);
         void forget(const MDefinition *def);
         void clear();
