@@ -216,13 +216,6 @@ SearchSuggestionUIController.prototype = {
     this._hideSuggestions();
   },
 
-  _onMousemove: function (event) {
-    // It's important to listen for mousemove, not mouseover or mouseenter.  The
-    // latter two are triggered when the user is typing and the mouse happens to
-    // be over the suggestions popup.
-    this.selectedIndex = this._indexOfTableRowOrDescendent(event.target);
-  },
-
   _onMousedown: function (event) {
     let idx = this._indexOfTableRowOrDescendent(event.target);
     let suggestion = this.suggestionAtIndex(idx);
@@ -298,7 +291,6 @@ SearchSuggestionUIController.prototype = {
     row.classList.add("searchSuggestionRow");
     row.classList.add(type);
     row.setAttribute("role", "presentation");
-    row.addEventListener("mousemove", this);
     row.addEventListener("mousedown", this);
 
     let entry = document.createElementNS(HTML_NS, "td");
