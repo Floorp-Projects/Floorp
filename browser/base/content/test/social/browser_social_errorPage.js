@@ -36,7 +36,10 @@ function goOnline(callback) {
 function openPanel(url, panelCallback, loadCallback) {
   // open a flyout
   SocialFlyout.open(url, 0, panelCallback);
-  SocialFlyout.panel.firstChild.addEventListener("load", function panelLoad() {
+  SocialFlyout.panel.firstChild.addEventListener("load", function panelLoad(evt) {
+    if (evt.target != SocialFlyout.panel.firstChild.contentDocument) {
+      return;
+    }
     SocialFlyout.panel.firstChild.removeEventListener("load", panelLoad, true);
     loadCallback();
   }, true);
@@ -145,8 +148,10 @@ var tests = {
                 todo_is(panelCallbackCount, 0, "Bug 833207 - should be no callback when error page loads.");
                 ok(panel.firstChild.contentDocument.location.href.indexOf("about:socialerror?")==0, "is on social error page");
                 gc();
-                SocialFlyout.unload();
-                next();
+                executeSoon(function() {
+                  SocialFlyout.unload();
+                  next();
+                });
               });
             }
           );
