@@ -519,18 +519,14 @@ getInnerWindowID(nsIRequest* aRequest) {
     return 0;
   }
 
-  uint64_t id = 0;
-  nsCOMPtr<nsIDOMWindowUtils> du = do_GetInterface(window);
-  if (!du) {
+  nsCOMPtr<nsPIDOMWindow> pwindow = do_QueryInterface(window);
+  if (!pwindow) {
     return 0;
   }
 
-  rv = du->GetCurrentInnerWindowID(&id);
-  if (NS_FAILED(rv)) {
-    return 0;
-  }
+  nsPIDOMWindow* inner = pwindow->IsInnerWindow() ? pwindow.get() : pwindow->GetCurrentInnerWindow();
 
-  return id;
+  return inner->WindowID();
 }
 
 NS_IMETHODIMP
