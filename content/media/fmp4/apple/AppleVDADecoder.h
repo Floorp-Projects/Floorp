@@ -52,6 +52,7 @@ public:
                        nsAutoPtr<AppleFrameRef> aFrameRef);
 
  protected:
+  AppleFrameRef* CreateAppleFrameRef(const mp4_demuxer::MP4Sample* aSample);
   void DrainReorderedFrames();
   void ClearReorderedFrames();
   CFDictionaryRef CreateOutputConfiguration();
