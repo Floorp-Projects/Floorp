@@ -245,36 +245,6 @@ DebuggerMemory::setMaxAllocationsLogLength(JSContext *cx, unsigned argc, Value *
     return true;
 }
 
-/* static */ bool
-DebuggerMemory::getAllocationSamplingProbability(JSContext *cx, unsigned argc, Value *vp)
-{
-    THIS_DEBUGGER_MEMORY(cx, argc, vp, "(get allocationSamplingProbability)", args, memory);
-    args.rval().setDouble(memory->getDebugger()->allocationSamplingProbability);
-    return true;
-}
-
-/* static */ bool
-DebuggerMemory::setAllocationSamplingProbability(JSContext *cx, unsigned argc, Value *vp)
-{
-    THIS_DEBUGGER_MEMORY(cx, argc, vp, "(set allocationSamplingProbability)", args, memory);
-    if (!args.requireAtLeast(cx, "(set allocationSamplingProbability)", 1))
-        return false;
-
-    double probability;
-    if (!ToNumber(cx, args[0], &probability))
-        return false;
-
-    if (probability < 0.0 || probability > 1.0) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
-                             "(set allocationSamplingProbability)'s parameter",
-                             "not a number between 0 and 1");
-        return false;
-    }
-
-    memory->getDebugger()->allocationSamplingProbability = probability;
-    args.rval().setUndefined();
-    return true;
-}
 
 
 /* Debugger.Memory.prototype.takeCensus */
@@ -775,7 +745,6 @@ DebuggerMemory::takeCensus(JSContext *cx, unsigned argc, Value *vp)
 /* static */ const JSPropertySpec DebuggerMemory::properties[] = {
     JS_PSGS("trackingAllocationSites", getTrackingAllocationSites, setTrackingAllocationSites, 0),
     JS_PSGS("maxAllocationsLogLength", getMaxAllocationsLogLength, setMaxAllocationsLogLength, 0),
-    JS_PSGS("allocationSamplingProbability", getAllocationSamplingProbability, setAllocationSamplingProbability, 0),
     JS_PS_END
 };
 

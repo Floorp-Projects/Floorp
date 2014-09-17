@@ -857,25 +857,6 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-// Stolen from jsmath.cpp
-static const uint64_t RNG_MULTIPLIER = 0x5DEECE66DLL;
-static const uint64_t RNG_MASK = (1LL << 48) - 1;
-
-static bool
-SetSavedStacksRNGState(JSContext *cx, unsigned argc, jsval *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.requireAtLeast(cx, "setSavedStacksRNGState", 1))
-        return false;
-
-    int32_t seed;
-    if (!ToInt32(cx, args[0], &seed))
-        return false;
-
-    cx->compartment()->savedStacks().setRNGState((seed ^ RNG_MULTIPLIER) & RNG_MASK);
-    return true;
-}
-
 static bool
 GetSavedFrameCount(JSContext *cx, unsigned argc, jsval *vp)
 {
@@ -2047,10 +2028,6 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  to count only things of that kind. If kind is the string 'specific',\n"
 "  then you can provide an extra argument with some specific traceable\n"
 "  thing to count.\n"),
-
-    JS_FN_HELP("setSavedStacksRNGState", SetSavedStacksRNGState, 1, 0,
-"setSavedStacksRNGState(seed)",
-"  Set this compartment's SavedStacks' RNG state.\n"),
 
     JS_FN_HELP("getSavedFrameCount", GetSavedFrameCount, 0, 0,
 "getSavedFrameCount()",
