@@ -403,11 +403,18 @@ AppleVTDecoder::InitializeSession()
   AutoCFRelease<CFDictionaryRef> spec = CreateDecoderSpecification();
 
   // Contruct output configuration.
+
+  // Construct IOSurface Properties
+  const void* IOSurfaceKeys[] = { MacIOSurfaceLib::kPropIsGlobal };
+  const void* IOSurfaceValues[] = { kCFBooleanTrue };
+  static_assert(ArrayLength(IOSurfaceKeys) == ArrayLength(IOSurfaceValues),
+                "Non matching keys/values array size");
+
   AutoCFRelease<CFDictionaryRef> IOSurfaceProperties =
     CFDictionaryCreate(NULL,
-                       NULL,
-                       NULL,
-                       0,
+                       IOSurfaceKeys,
+                       IOSurfaceValues,
+                       ArrayLength(IOSurfaceKeys),
                        &kCFTypeDictionaryKeyCallBacks,
                        &kCFTypeDictionaryValueCallBacks);
 
