@@ -43,8 +43,8 @@ using base::TimeTicks;
 
 // A lazily created thread local storage for quick access to a thread's message
 // loop, if one exists.  This should be safe and free of static constructors.
-static base::LazyInstance<base::ThreadLocalPointer<MessageLoop> > lazy_tls_ptr(
-    base::LINKER_INITIALIZED);
+static base::LazyInstance<base::ThreadLocalPointer<MessageLoop> > lazy_tls_ptr =
+    LAZY_INSTANCE_INITIALIZER;
 
 //------------------------------------------------------------------------------
 
