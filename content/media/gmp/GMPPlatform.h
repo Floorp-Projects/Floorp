@@ -9,6 +9,7 @@
 #include "mozilla/Mutex.h"
 #include "gmp-platform.h"
 #include "base/thread.h"
+#include "mozilla/ReentrantMonitor.h"
 
 namespace mozilla {
 namespace gmp {
@@ -46,7 +47,7 @@ public:
   virtual void Destroy() MOZ_OVERRIDE;
 
 private:
-  Mutex mMutex;
+  ReentrantMonitor mMonitor;
 };
 
 } // namespace gmp

@@ -65,24 +65,21 @@ XULButtonAccessible::ActionCount()
   return 1;
 }
 
-NS_IMETHODIMP
-XULButtonAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
+void
+XULButtonAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 {
-  if (aIndex == eAction_Click) {
-    aName.AssignLiteral("press"); 
-    return NS_OK;
-  }
-  return NS_ERROR_INVALID_ARG;
+  if (aIndex == eAction_Click)
+    aName.AssignLiteral("press");
 }
 
-NS_IMETHODIMP
+bool
 XULButtonAccessible::DoAction(uint8_t aIndex)
 {
   if (aIndex != 0)
-    return NS_ERROR_INVALID_ARG;
+    return false;
 
   DoCommand();
-  return NS_OK;
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -196,7 +193,7 @@ XULButtonAccessible::IsAcceptableChild(Accessible* aPossibleChild) const
 // XULButtonAccessible protected
 
 bool
-XULButtonAccessible::ContainsMenu()
+XULButtonAccessible::ContainsMenu() const
 {
   static nsIContent::AttrValuesArray strings[] =
     {&nsGkAtoms::menu, &nsGkAtoms::menuButton, nullptr};
@@ -223,7 +220,7 @@ XULDropmarkerAccessible::ActionCount()
 }
 
 bool
-XULDropmarkerAccessible::DropmarkerOpen(bool aToggleOpen)
+XULDropmarkerAccessible::DropmarkerOpen(bool aToggleOpen) const
 {
   bool isOpen = false;
 
@@ -248,34 +245,26 @@ XULDropmarkerAccessible::DropmarkerOpen(bool aToggleOpen)
   return isOpen;
 }
 
-/**
-  * Return the name of our only action
-  */
-NS_IMETHODIMP
-XULDropmarkerAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
+void
+XULDropmarkerAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 {
+  aName.Truncate();
   if (aIndex == eAction_Click) {
     if (DropmarkerOpen(false))
       aName.AssignLiteral("close");
     else
       aName.AssignLiteral("open");
-    return NS_OK;
   }
-
-  return NS_ERROR_INVALID_ARG;
 }
 
-/**
-  * Tell the Dropmarker to do its action
-  */
-NS_IMETHODIMP
+bool
 XULDropmarkerAccessible::DoAction(uint8_t index)
 {
   if (index == eAction_Click) {
     DropmarkerOpen(true); // Reverse the open attribute
-    return NS_OK;
+    return true;
   }
-  return NS_ERROR_INVALID_ARG;
+  return false;
 }
 
 role
@@ -312,36 +301,25 @@ XULCheckboxAccessible::ActionCount()
   return 1;
 }
 
-/**
-  * Return the name of our only action
-  */
-NS_IMETHODIMP
-XULCheckboxAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
+void
+XULCheckboxAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 {
   if (aIndex == eAction_Click) {
-    // check or uncheck
-
     if (NativeState() & states::CHECKED)
       aName.AssignLiteral("uncheck");
     else
       aName.AssignLiteral("check");
-
-    return NS_OK;
   }
-  return NS_ERROR_INVALID_ARG;
 }
 
-/**
-  * Tell the checkbox to do its only action -- check( or uncheck) itself
-  */
-NS_IMETHODIMP
+bool
 XULCheckboxAccessible::DoAction(uint8_t aIndex)
 {
   if (aIndex != eAction_Click)
-    return NS_ERROR_INVALID_ARG;
+    return false;
 
   DoCommand();
-  return NS_OK;
+  return true;
 }
 
 uint64_t

@@ -127,14 +127,17 @@ this.MobileIdentityManager = {
         continue;
       }
 
-      let voice = mobileConnectionService.getVoiceConnectionInfo(i);
-      let data = mobileConnectionService.getDataConnectionInfo(i);
+      let connection = mobileConnectionService.getItemByServiceId(i);
+      let voice = connection && connection.voice;
+      let data = connection && connection.data;
       let operator = null;
-      if (voice.network &&
+      if (voice &&
+          voice.network &&
           voice.network.shortName &&
           voice.network.shortName.length) {
         operator = voice.network.shortName;
-      } else if (data.network &&
+      } else if (data &&
+                 data.network &&
                  data.network.shortName &&
                  data.network.shortName.length) {
         operator = data.network.shortName;
@@ -148,7 +151,7 @@ this.MobileIdentityManager = {
         msisdn: info.msisdn || info.mdn || null,
         operator: operator,
         serviceId: i,
-        roaming: voice.roaming
+        roaming: voice && voice.roaming
       });
     }
 

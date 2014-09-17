@@ -374,13 +374,12 @@ GetClosestInterestingAccessible(id anObject)
   if (!mGeckoAccessible)
     return nil;
 
-  int32_t x = 0, y = 0, width = 0, height = 0;
-  mGeckoAccessible->GetBounds(&x, &y, &width, &height);
+  nsIntRect rect = mGeckoAccessible->Bounds();
 
   NSScreen* mainView = [[NSScreen screens] objectAtIndex:0];
   CGFloat scaleFactor = nsCocoaUtils::GetBackingScaleFactor(mainView);
-  NSPoint p = NSMakePoint(static_cast<CGFloat>(x) / scaleFactor,
-                         [mainView frame].size.height - static_cast<CGFloat>(y + height) / scaleFactor);
+  NSPoint p = NSMakePoint(static_cast<CGFloat>(rect.x) / scaleFactor,
+                         [mainView frame].size.height - static_cast<CGFloat>(rect.y + rect.height) / scaleFactor);
 
   return [NSValue valueWithPoint:p];
 
@@ -610,9 +609,9 @@ GetClosestInterestingAccessible(id anObject)
 {
   if (!mGeckoAccessible)
     return NO;
-  
-  nsresult rv = mGeckoAccessible->TakeFocus();
-  return NS_SUCCEEDED(rv);
+
+  mGeckoAccessible->TakeFocus();
+  return YES;
 }
 
 - (BOOL)isEnabled

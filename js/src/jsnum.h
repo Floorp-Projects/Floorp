@@ -250,6 +250,15 @@ ToInteger(JSContext *cx, HandleValue v, double *dp)
     return true;
 }
 
+/* ES6 7.1.15 ToLength, but clamped to the [0,2^32-2] range.  If the
+ * return value is false then *overflow will be true iff the value was
+ * not clampable to uint32_t range.
+ *
+ * For JSContext and ExclusiveContext.
+ */
+template<typename T>
+bool ToLengthClamped(T *cx, HandleValue v, uint32_t *out, bool *overflow);
+
 inline bool
 SafeAdd(int32_t one, int32_t two, int32_t *res)
 {

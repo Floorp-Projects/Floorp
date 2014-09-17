@@ -532,8 +532,8 @@ Valueify(const JSClass *c)
  */
 enum ESClassValue {
     ESClass_Object, ESClass_Array, ESClass_Number, ESClass_String,
-    ESClass_Boolean, ESClass_RegExp, ESClass_ArrayBuffer, ESClass_Date,
-    ESClass_Set, ESClass_Map
+    ESClass_Boolean, ESClass_RegExp, ESClass_ArrayBuffer, ESClass_SharedArrayBuffer,
+    ESClass_Date, ESClass_Set, ESClass_Map
 };
 
 /*

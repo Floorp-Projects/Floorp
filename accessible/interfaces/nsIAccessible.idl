@@ -22,7 +22,7 @@ interface nsIAccessibleRelation;
  * Mozilla creates the implementations of nsIAccessible on demand.
  * See http://www.mozilla.org/projects/ui/accessibility for more information.
  */
-[scriptable, uuid(ee62158b-bb83-424b-a88d-d7d7f9cf460d)]
+[scriptable, uuid(66b110b0-c25a-4784-8623-f6ba40c7cfee)]
 interface nsIAccessible : nsISupports
 {
   /**
@@ -96,7 +96,7 @@ interface nsIAccessible : nsISupports
    * compute the name. Any string value, including the empty string, should be
    * considered author-intentional, and respected.
    */
-  attribute AString name;
+  readonly attribute AString name;
 
   /**
    * Accessible value -- a number or a secondary text equivalent for this node
@@ -198,6 +198,7 @@ interface nsIAccessible : nsISupports
   /**
    * Nth accessible child using zero-based index or last child if index less than zero
    */
+  [binaryname(ScriptableGetChildAt)]
   nsIAccessible getChildAt(in long aChildIndex);
 
   /**
@@ -220,6 +221,7 @@ interface nsIAccessible : nsISupports
   /**
    * Add or remove this accessible to the current selection
    */
+  [binaryname(ScriptableSetSelected)]
   void setSelected(in boolean isSelected);
 
   /**
@@ -231,6 +233,7 @@ interface nsIAccessible : nsISupports
   /**
    * Select this accessible node only
    */
+  [binaryname(ScriptableTakeSelection)]
   void takeSelection();
 
   /**
@@ -241,6 +244,7 @@ interface nsIAccessible : nsISupports
    * will still set focus on that node, although normally that will not be visually 
    * indicated in most style sheets.
    */
+  [binaryname(ScriptableTakeFocus)]
   void takeFocus();
 
   /**
@@ -262,7 +266,8 @@ interface nsIAccessible : nsISupports
    * Perform the accessible action at the given zero-based index
    * Action number 0 is the default action
    */
-  void doAction(in uint8_t index);   
+  [binaryname(ScriptableDoAction)]
+  void doAction(in uint8_t index);
 
   /**
    * Makes an object visible on screen.
@@ -271,6 +276,7 @@ interface nsIAccessible : nsISupports
    *                     the screen (see nsIAccessibleScrollType for
    *                     available constants).
    */
+  [binaryname(ScriptableScrollTo)]
   void scrollTo(in unsigned long aScrollType);
 
   /**
@@ -282,6 +288,7 @@ interface nsIAccessible : nsISupports
    * @param x [in] - defines the x coordinate
    * @param y [in] - defines the y coordinate
   */
+  [binaryname(ScriptableScrollToPoint)]
   void scrollToPoint(in unsigned long coordinateType, in long x, in long y);
 
   /**

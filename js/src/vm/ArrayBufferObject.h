@@ -22,7 +22,8 @@ class ArrayBufferViewObject;
 // is as follows.
 //
 // - JSObject
-//   - ArrayBufferObject
+//   - ArrayBufferObjectMaybeShared
+//     - ArrayBufferObject
 //     - SharedArrayBufferObject
 //   - ArrayBufferViewObject
 //     - DataViewObject
@@ -32,11 +33,49 @@ class ArrayBufferViewObject;
 //         - Uint8ArrayObject
 //         - ...
 //     - TypedObject (declared in builtin/TypedObject.h)
+//   - SharedTypedArrayObject (declared in vm/SharedTypedArrayObject.h)
+//     - SharedTypedArrayObjectTemplate
+//       - SharedInt8ArrayObject
+//       - SharedUint8ArrayObject
+//       - ...
 //
 // Note that |TypedArrayObjectTemplate| is just an implementation
 // detail that makes implementing its various subclasses easier.
+// Note that |TypedArrayObjectTemplate| and |SharedTypedArrayObjectTemplate| are
+// just implementation details that make implementing their various subclasses easier.
+//
+// ArrayBufferObject and SharedArrayBufferObject are unrelated data types:
+// the racy memory of the latter cannot substitute for the non-racy memory of
+// the former; the non-racy memory of the former cannot be used with the atomics;
+// the former can be neutered and the latter not; and they have different
+// method suites.  Hence they have been separated completely.
+//
+// Most APIs will only accept ArrayBufferObject.  ArrayBufferObjectMaybeShared exists
+// as a join point to allow APIs that can take or use either, notably AsmJS.
+//
+// As ArrayBufferObject and SharedArrayBufferObject are separated, so are the
+// TypedArray hierarchies below the two.  However, the TypedArrays have the
+// same layout (see TypedArrayObject.h), so there is little code duplication.
 
 typedef Vector<ArrayBufferObject *, 0, SystemAllocPolicy> ArrayBufferVector;
+
+class ArrayBufferObjectMaybeShared;
+
+uint32_t AnyArrayBufferByteLength(const ArrayBufferObjectMaybeShared *buf);
+uint8_t *AnyArrayBufferDataPointer(const ArrayBufferObjectMaybeShared *buf);
+ArrayBufferObjectMaybeShared &AsAnyArrayBuffer(HandleValue val);
+
+class ArrayBufferObjectMaybeShared : public JSObject
+{
+  public:
+    uint32_t byteLength() {
+        return AnyArrayBufferByteLength(this);
+    }
+
+    uint8_t *dataPointer() {
+        return AnyArrayBufferDataPointer(this);
+    }
+};
 
 /*
  * ArrayBufferObject
@@ -46,8 +85,11 @@ typedef Vector<ArrayBufferObject *, 0, SystemAllocPolicy> ArrayBufferVector;
  * access. It can be created explicitly and passed to an ArrayBufferViewObject
  * subclass, or can be created implicitly by constructing a TypedArrayObject
  * with a size.
+ *
+ * ArrayBufferObject (or really the underlying memory) /is not racy/: the
+ * memory is private to a single worker.
  */
-class ArrayBufferObject : public JSObject
+class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 {
     static bool byteLengthGetterImpl(JSContext *cx, CallArgs args);
     static bool fun_slice_impl(JSContext *cx, CallArgs args);
@@ -67,9 +109,8 @@ class ArrayBufferObject : public JSObject
     enum BufferKind {
         PLAIN_BUFFER        =   0, // malloced or inline data
         ASMJS_BUFFER        = 0x1,
-        SHARED_BUFFER       = 0x2,
-        MAPPED_BUFFER       = 0x4,
-        KIND_MASK           = ASMJS_BUFFER | SHARED_BUFFER | MAPPED_BUFFER
+        MAPPED_BUFFER       = 0x2,
+        KIND_MASK           = ASMJS_BUFFER | MAPPED_BUFFER
     };
 
   protected:
@@ -223,7 +264,6 @@ class ArrayBufferObject : public JSObject
 
     BufferKind bufferKind() const { return BufferKind(flags() & BUFFER_KIND_MASK); }
     bool isAsmJSArrayBuffer() const { return flags() & ASMJS_BUFFER; }
-    bool isSharedArrayBuffer() const { return flags() & SHARED_BUFFER; }
     bool isMappedArrayBuffer() const { return flags() & MAPPED_BUFFER; }
     bool isNeutered() const { return flags() & NEUTERED_BUFFER; }
 
@@ -269,7 +309,6 @@ class ArrayBufferObject : public JSObject
     }
 
     void setIsAsmJSArrayBuffer() { setFlags(flags() | ASMJS_BUFFER); }
-    void setIsSharedArrayBuffer() { setFlags(flags() | SHARED_BUFFER); }
     void setIsMappedArrayBuffer() { setFlags(flags() | MAPPED_BUFFER); }
     void setIsNeutered() { setFlags(flags() | NEUTERED_BUFFER); }
 
@@ -343,8 +382,8 @@ InitArrayBufferViewDataPointer(ArrayBufferViewObject *obj, ArrayBufferObject *bu
 {
     /*
      * N.B. The base of the array's data is stored in the object's
-     * private data rather than a slot to avoid alignment restrictions
-     * on private Values.
+     * private data rather than a slot to avoid the restriction that
+     * private Values that are pointers must have the low bits clear.
      */
     MOZ_ASSERT(buffer->dataPointer() != nullptr);
     obj->initPrivate(buffer->dataPointer() + byteOffset);
@@ -353,8 +392,7 @@ InitArrayBufferViewDataPointer(ArrayBufferViewObject *obj, ArrayBufferObject *bu
 }
 
 /*
- * Tests for either ArrayBufferObject or SharedArrayBufferObject.
- * For specific class testing, use e.g., obj->is<ArrayBufferObject>().
+ * Tests for ArrayBufferObject, like obj->is<ArrayBufferObject>().
  */
 bool IsArrayBuffer(HandleValue v);
 bool IsArrayBuffer(HandleObject obj);

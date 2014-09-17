@@ -9,6 +9,7 @@ include PMobileConnectionTypes;
 
 namespace mozilla {
 namespace dom {
+namespace mobileconnection {
 
 protocol PMobileConnectionRequest
 {
@@ -99,5 +100,6 @@ union MobileConnectionReply
   MobileConnectionReplyErrorMmi;
 };
 
+} // namespace mobileconnection
 } // namespace dom
 } // namespace mozilla

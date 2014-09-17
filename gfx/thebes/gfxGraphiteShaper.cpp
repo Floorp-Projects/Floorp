@@ -7,6 +7,7 @@
 #include "nsString.h"
 #include "gfxContext.h"
 #include "gfxFontConstants.h"
+#include "gfxTextRun.h"
 
 #include "graphite2/Font.h"
 #include "graphite2/Segment.h"

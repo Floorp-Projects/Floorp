@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_MobileConnectionInfo_h
 #define mozilla_dom_MobileConnectionInfo_h
 
-#include "MobileCellInfo.h"
-#include "MobileNetworkInfo.h"
+#include "mozilla/dom/MobileCellInfo.h"
+#include "mozilla/dom/MobileNetworkInfo.h"
 #include "mozilla/dom/MozMobileConnectionInfoBinding.h"
 #include "nsIMobileConnectionInfo.h"
 #include "nsPIDOMWindow.h"
