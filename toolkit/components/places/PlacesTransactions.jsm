@@ -591,6 +591,7 @@ DefineTransaction.defineInputProps =
 function (aNames, aValidationFunction,
           aDefaultValue, aTransformFunction = null) {
   for (let name of aNames) {
+    // Workaround bug 449811.
     let propName = name;
     this.inputProps.set(propName, {
       validateValue: function (aValue) {
@@ -1261,52 +1262,98 @@ PT.Remove.prototype = {
 /**
  * Transaction for tagging a URI.
  *
- * Required Input Properties: uri, tags.
+ * Required Input Properties: uris, tags.
  */
-PT.TagURI = DefineTransaction(["uri", "tags"]);
-PT.TagURI.prototype = {
-  execute: function* (aURI, aTags) {
-    if (PlacesUtils.getMostRecentBookmarkForURI(aURI) == -1) {
-      // Tagging is only allowed for bookmarked URIs.
-      let unfileGUID =
-        yield PlacesUtils.promiseItemGUID(PlacesUtils.unfiledBookmarksFolderId);
-      let createTxn = TransactionsHistory.getRawTransaction(
-        PT.NewBookmark({ uri: aURI, tags: aTags, parentGUID: unfileGUID }));
-      yield createTxn.execute();
-      this.undo = createTxn.undo.bind(createTxn);
-      this.redo = createTxn.redo.bind(createTxn);
+PT.Tag = DefineTransaction(["uris", "tags"]);
+PT.Tag.prototype = {
+  execute: function* (aURIs, aTags) {
+    let onUndo = [], onRedo = [];
+    for (let uri of aURIs) {
+      // Workaround bug 449811.
+      let currentURI = uri;
+
+      let promiseIsBookmarked = function* () {
+        let deferred = Promise.defer();
+        PlacesUtils.asyncGetBookmarkIds(
+          currentURI, ids => { deferred.resolve(ids.length > 0); });
+        return deferred.promise;
+      };
+
+      if (yield promiseIsBookmarked(currentURI)) {
+        // Tagging is only allowed for bookmarked URIs (but see 424160).
+        let unfileGUID =
+          yield PlacesUtils.promiseItemGUID(PlacesUtils.unfiledBookmarksFolderId);
+        let createTxn = TransactionsHistory.getRawTransaction(
+          PT.NewBookmark({ uri: currentURI
+                         , tags: aTags, parentGUID: unfileGUID }));
+        yield createTxn.execute();
+        onUndo.unshift(createTxn.undo.bind(createTxn));
+        onRedo.push(createTxn.redo.bind(createTxn));
+      }
+      else {
+        let currentTags = PlacesUtils.tagging.getTagsForURI(currentURI);
+        let newTags = [t for (t of aTags) if (currentTags.indexOf(t) == -1)];
+        PlacesUtils.tagging.tagURI(currentURI, newTags);
+        onUndo.unshift(() => {
+          PlacesUtils.tagging.untagURI(currentURI, newTags);
+        });
+        onRedo.push(() => {
+          PlacesUtils.tagging.tagURI(currentURI, newTags);
+        });
+      }
     }
-    else {
-      let currentTags = PlacesUtils.tagging.getTagsForURI(aURI);
-      let newTags = [t for (t of aTags) if (currentTags.indexOf(t) == -1)];
-      PlacesUtils.tagging.tagURI(aURI, newTags);
-      this.undo = () => { PlacesUtils.tagging.untagURI(aURI, newTags); };
-      this.redo = () => { PlacesUtils.tagging.tagURI(aURI, newTags); };
-    }
+    this.undo = function* () {
+      for (let f of onUndo) {
+        yield f();
+      }
+    };
+    this.redo = function* () {
+      for (let f of onRedo) {
+        yield f();
+      }
+    };
   }
 };
 
 /**
  * Transaction for removing tags from a URI.
  *
- * Required Input Properties: uri.
+ * Required Input Properties: uris.
  * Optional Input Properties: tags.
  *
  * If |tags| is not set, all tags set for |uri| are removed.
  */
-PT.UntagURI = DefineTransaction(["uri"], ["tags"]);
-PT.UntagURI.prototype = {
-  execute: function* (aURI, aTags) {
-    let tagsSet = PlacesUtils.tagging.getTagsForURI(aURI);
-
-    if (aTags.length > 0)
-      aTags = [t for (t of aTags) if (tagsSet.indexOf(t) != -1)];
-    else
-      aTags = tagsSet;
-
-    PlacesUtils.tagging.untagURI(aURI, aTags);
-    this.undo = () => { PlacesUtils.tagging.tagURI(aURI, aTags); };
-    this.redo = () => { PlacesUtils.tagging.untagURI(aURI, aTags); };
+PT.Untag = DefineTransaction(["uris"], ["tags"]);
+PT.Untag.prototype = {
+  execute: function* (aURIs, aTags) {
+    let onUndo = [], onRedo = [];
+    for (let uri of aURIs) {
+      // Workaround bug 449811.
+      let currentURI = uri;
+      let tagsToRemove;
+      let tagsSet = PlacesUtils.tagging.getTagsForURI(currentURI);
+      if (aTags.length > 0)
+        tagsToRemove = [t for (t of aTags) if (tagsSet.indexOf(t) != -1)];
+      else
+        tagsToRemove = tagsSet;
+      PlacesUtils.tagging.untagURI(currentURI, tagsToRemove);
+      onUndo.unshift(() => {
+        PlacesUtils.tagging.tagURI(currentURI, tagsToRemove);
+      });
+      onRedo.push(() => {
+        PlacesUtils.tagging.untagURI(currentURI, tagsToRemove);
+      });
+    }
+    this.undo = function* () {
+      for (let f of onUndo) {
+        yield f();
+      }
+    };
+    this.redo = function* () {
+      for (let f of onRedo) {
+        yield f();
+      }
+    };
   }
 };
 
