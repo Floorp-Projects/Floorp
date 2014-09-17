@@ -52,15 +52,18 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
     }
 
     mBlur = MakeUnique<AlphaBoxBlur>(rect, spreadRadius, blurRadius, dirtyRect.get(), skipRect.get());
-    int32_t blurDataSize = mBlur->GetSurfaceAllocationSize();
-    if (blurDataSize <= 0)
+    size_t blurDataSize = mBlur->GetSurfaceAllocationSize();
+    if (blurDataSize == 0)
         return nullptr;
 
     IntSize size = mBlur->GetSize();
 
     // Make an alpha-only surface to draw on. We will play with the data after
     // everything is drawn to create a blur effect.
-    mData = new unsigned char[blurDataSize];
+    mData = new (std::nothrow) unsigned char[blurDataSize];
+    if (!mData) {
+        return nullptr;
+    }
     memset(mData, 0, blurDataSize);
 
     mozilla::RefPtr<DrawTarget> dt =

@@ -22,7 +22,7 @@ using mozilla::DefaultXDisplay;
 #include "nsSize.h"
 #include "nsDisplayList.h"
 #include "ImageLayers.h"
-#include "SharedTextureImage.h"
+#include "GLImages.h"
 #include "nsObjectFrame.h"
 #include "nsIPluginDocument.h"
 #include "nsIStringStream.h"
@@ -49,7 +49,7 @@ using mozilla::DefaultXDisplay;
 #include "ImageContainer.h"
 #include "nsIDOMHTMLCollection.h"
 #include "GLContext.h"
-#include "GLSharedHandleHelpers.h"
+#include "EGLUtils.h"
 #include "nsIContentInlines.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
@@ -148,6 +148,62 @@ nsPluginInstanceOwner::NotifyPaintWaiter(nsDisplayListBuilder* aBuilder)
   }
 }
 
+#if MOZ_WIDGET_ANDROID
+static void
+AttachToContainerAsEGLImage(ImageContainer* container,
+                            nsNPAPIPluginInstance* instance,
+                            const LayoutDeviceRect& rect,
+                            nsRefPtr<Image>* out_image)
+{
+  MOZ_ASSERT(out_image);
+  MOZ_ASSERT(!*out_image);
+
+  EGLImage image = instance->AsEGLImage();
+  if (!image) {
+    return;
+  }
+
+  nsRefPtr<Image> img = container->CreateImage(ImageFormat::EGLIMAGE);
+
+  EGLImageImage::Data data;
+  data.mImage = image;
+  data.mSize = gfx::IntSize(rect.width, rect.height);
+  data.mInverted = instance->Inverted();
+
+  EGLImageImage* typedImg = static_cast<EGLImageImage*>(img.get());
+  typedImg->SetData(data);
+
+  *out_image = img;
+}
+
+static void
+AttachToContainerAsSurfaceTexture(ImageContainer* container,
+                                  nsNPAPIPluginInstance* instance,
+                                  const LayoutDeviceRect& rect,
+                                  nsRefPtr<Image>* out_image)
+{
+  MOZ_ASSERT(out_image);
+  MOZ_ASSERT(!*out_image);
+
+  nsSurfaceTexture* surfTex = instance->AsSurfaceTexture();
+  if (!surfTex) {
+    return;
+  }
+
+  nsRefPtr<Image> img = container->CreateImage(ImageFormat::SURFACE_TEXTURE);
+
+  SurfaceTextureImage::Data data;
+  data.mSurfTex = surfTex;
+  data.mSize = gfx::IntSize(rect.width, rect.height);
+  data.mInverted = instance->Inverted();
+
+  SurfaceTextureImage* typedImg = static_cast<SurfaceTextureImage*>(img.get());
+  typedImg->SetData(data);
+
+  *out_image = img;
+}
+#endif
+
 already_AddRefed<ImageContainer>
 nsPluginInstanceOwner::GetImageContainer()
 {
@@ -172,23 +228,19 @@ nsPluginInstanceOwner::GetImageContainer()
 
   container = LayerManager::CreateImageContainer();
 
-  nsRefPtr<Image> img = container->CreateImage(ImageFormat::SHARED_TEXTURE);
-
-  SharedTextureImage::Data data;
-  data.mSize = gfx::IntSize(r.width, r.height);
-  data.mHandle = mInstance->CreateSharedHandle();
-  data.mShareType = mozilla::gl::SharedTextureShareType::SameProcess;
-  data.mInverted = mInstance->Inverted();
-
-  SharedTextureImage* pluginImage = static_cast<SharedTextureImage*>(img.get());
-  pluginImage->SetData(data);
+  // Try to get it as an EGLImage first.
+  nsRefPtr<Image> img;
+  AttachToContainerAsEGLImage(container, mInstance, r, &img);
+  if (!img) {
+    AttachToContainerAsSurfaceTexture(container, mInstance, r, &img);
+  }
+  MOZ_ASSERT(img);
 
   container->SetCurrentImageInTransaction(img);
-
-  return container.forget();
+#else
+  mInstance->GetImageContainer(getter_AddRefs(container));
 #endif
 
-  mInstance->GetImageContainer(getter_AddRefs(container));
   return container.forget();
 }
 
@@ -1113,7 +1165,8 @@ void nsPluginInstanceOwner::RemovePluginView()
     sFullScreenInstance = nullptr;
 }
 
-void nsPluginInstanceOwner::GetVideos(nsTArray<nsNPAPIPluginInstance::VideoInfo*>& aVideos)
+void
+nsPluginInstanceOwner::GetVideos(nsTArray<nsNPAPIPluginInstance::VideoInfo*>& aVideos)
 {
   if (!mInstance)
     return;
@@ -1121,27 +1174,25 @@ void nsPluginInstanceOwner::GetVideos(nsTArray<nsNPAPIPluginInstance::VideoInfo*
   mInstance->GetVideos(aVideos);
 }
 
-already_AddRefed<ImageContainer> nsPluginInstanceOwner::GetImageContainerForVideo(nsNPAPIPluginInstance::VideoInfo* aVideoInfo)
+already_AddRefed<ImageContainer>
+nsPluginInstanceOwner::GetImageContainerForVideo(nsNPAPIPluginInstance::VideoInfo* aVideoInfo)
 {
   nsRefPtr<ImageContainer> container = LayerManager::CreateImageContainer();
 
-  nsRefPtr<Image> img = container->CreateImage(ImageFormat::SHARED_TEXTURE);
+  nsRefPtr<Image> img = container->CreateImage(ImageFormat::SURFACE_TEXTURE);
 
-  SharedTextureImage::Data data;
+  SurfaceTextureImage::Data data;
 
-  data.mShareType = gl::SharedTextureShareType::SameProcess;
-  data.mHandle = gl::CreateSharedHandle(mInstance->GLContext(),
-                                        data.mShareType,
-                                        aVideoInfo->mSurfaceTexture,
-                                        gl::SharedTextureBufferType::SurfaceTexture);
+  data.mSurfTex = aVideoInfo->mSurfaceTexture;
 
   // The logic below for Honeycomb is just a guess, but seems to work. We don't have a separate
   // inverted flag for video.
   data.mInverted = AndroidBridge::Bridge()->IsHoneycomb() ? true : mInstance->Inverted();
   data.mSize = gfx::IntSize(aVideoInfo->mDimensions.width, aVideoInfo->mDimensions.height);
 
-  SharedTextureImage* pluginImage = static_cast<SharedTextureImage*>(img.get());
-  pluginImage->SetData(data);
+  SurfaceTextureImage* typedImg = static_cast<SurfaceTextureImage*>(img.get());
+  typedImg->SetData(data);
+
   container->SetCurrentImageInTransaction(img);
 
   return container.forget();
