@@ -238,12 +238,9 @@ class MNode : public TempObject
     void releaseOperand(size_t index) {
         getUseFor(index)->releaseProducer();
     }
-
-#if DEBUG
-    bool operandDiscarded(size_t index) const {
-        return !getUseFor(index)->hasProducer();
+    bool hasOperand(size_t index) const {
+        return getUseFor(index)->hasProducer();
     }
-#endif
 
     inline MDefinition *toDefinition();
     inline MResumePoint *toResumePoint();

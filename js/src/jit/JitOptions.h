@@ -40,7 +40,6 @@ struct JitOptions
     bool disableEdgeCaseAnalysis;
     bool disableRangeAnalysis;
     bool disableLoopUnrolling;
-    bool disableUce;
     bool disableEaa;
     bool eagerCompilation;
     bool forceDefaultIonWarmUpThreshold;
