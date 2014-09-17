@@ -1940,7 +1940,7 @@ MediaStream::EnsureTrack(TrackID aTrackId, TrackRate aSampleRate)
     for (uint32_t j = 0; j < mListeners.Length(); ++j) {
       MediaStreamListener* l = mListeners[j];
       l->NotifyQueuedTrackChanges(Graph(), aTrackId,
-                                  GraphImpl()->AudioSampleRate(), 0,
+                                  GraphImpl()->GraphRate(), 0,
                                   MediaStreamListener::TRACK_EVENT_CREATED,
                                   *segment);
     }
@@ -2289,7 +2289,7 @@ SourceMediaStream::AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
   data->mInputRate = aRate;
   // We resample all audio input tracks to the sample rate of the audio mixer.
   data->mOutputRate = aSegment->GetType() == MediaSegment::AUDIO ?
-                      GraphImpl()->AudioSampleRate() : aRate;
+                      GraphImpl()->GraphRate() : aRate;
   data->mStart = aStart;
   data->mCommands = TRACK_CREATE;
   data->mData = aSegment;
@@ -2303,7 +2303,7 @@ void
 SourceMediaStream::ResampleAudioToGraphSampleRate(TrackData* aTrackData, MediaSegment* aSegment)
 {
   if (aSegment->GetType() != MediaSegment::AUDIO ||
-      aTrackData->mInputRate == GraphImpl()->AudioSampleRate()) {
+      aTrackData->mInputRate == GraphImpl()->GraphRate()) {
     return;
   }
   AudioSegment* segment = static_cast<AudioSegment*>(aSegment);
@@ -2316,7 +2316,7 @@ SourceMediaStream::ResampleAudioToGraphSampleRate(TrackData* aTrackData, MediaSe
     } else {
       SpeexResamplerState* state = speex_resampler_init(channels,
                                                         aTrackData->mInputRate,
-                                                        GraphImpl()->AudioSampleRate(),
+                                                        GraphImpl()->GraphRate(),
                                                         SPEEX_RESAMPLER_QUALITY_DEFAULT,
                                                         nullptr);
       if (!state) {
@@ -2328,7 +2328,7 @@ SourceMediaStream::ResampleAudioToGraphSampleRate(TrackData* aTrackData, MediaSe
 #endif
     }
   }
-  segment->ResampleChunks(aTrackData->mResampler, aTrackData->mInputRate, GraphImpl()->AudioSampleRate());
+  segment->ResampleChunks(aTrackData->mResampler, aTrackData->mInputRate, GraphImpl()->GraphRate());
 }
 
 bool
