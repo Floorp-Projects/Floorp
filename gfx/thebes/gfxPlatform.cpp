@@ -61,6 +61,7 @@
 #include "nsILocaleService.h"
 #include "nsIObserverService.h"
 #include "MainThreadUtils.h"
+#include "nsExceptionHandler.h"
 
 #include "nsWeakReference.h"
 
@@ -71,6 +72,7 @@
 #include "nsCRT.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
+#include "mozilla/gfx/Logging.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "TexturePoolOGL.h"
@@ -141,6 +143,18 @@ class SRGBOverrideObserver MOZ_FINAL : public nsIObserver,
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
+};
+
+class CrashStatsLogForwarder: public mozilla::gfx::LogForwarder
+{
+public:
+    virtual void Log(const std::string& aString) MOZ_OVERRIDE {
+        if (!NS_IsMainThread()) {
+            return;
+        }
+        nsCString reportString(aString.c_str());
+        CrashReporter::AppendAppNotesToCrashReport(reportString);
+    }
 };
 
 NS_IMPL_ISUPPORTS(SRGBOverrideObserver, nsIObserver, nsISupportsWeakReference)
@@ -331,6 +345,8 @@ gfxPlatform::Init()
     }
     gEverInitialized = true;
 
+    mozilla::gfx::Factory::SetLogForwarder(new CrashStatsLogForwarder);
+
     // Initialize the preferences by creating the singleton.
     gfxPrefs::GetSingleton();
 
@@ -490,6 +506,9 @@ gfxPlatform::Shutdown()
     // WebGL on Optimus.
     mozilla::gl::GLContextProviderEGL::Shutdown();
 #endif
+
+    delete mozilla::gfx::Factory::GetLogForwarder();
+    mozilla::gfx::Factory::SetLogForwarder(nullptr);
 
     delete gGfxPlatformPrefsLock;
 
