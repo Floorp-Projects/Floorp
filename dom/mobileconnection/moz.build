@@ -18,6 +18,7 @@ EXPORTS.mozilla.dom += [
 EXPORTS.mozilla.dom.mobileconnection += [
     'ipc/MobileConnectionChild.h',
     'ipc/MobileConnectionIPCSerializer.h',
+    'ipc/MobileConnectionIPCService.h',
     'ipc/MobileConnectionParent.h',
 ]
 

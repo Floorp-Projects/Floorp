@@ -14,6 +14,21 @@ using namespace mozilla::dom::mobileconnection;
 
 NS_IMPL_ISUPPORTS(MobileConnectionIPCService, nsIMobileConnectionService)
 
+StaticRefPtr<MobileConnectionIPCService> sService;
+
+/* static */MobileConnectionIPCService*
+MobileConnectionIPCService::GetSingleton()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (sService) {
+    return sService;
+  }
+
+  sService = new MobileConnectionIPCService();
+  return sService;
+}
+
 MobileConnectionIPCService::MobileConnectionIPCService()
 {
   int32_t numRil = Preferences::GetInt("ril.numRadioInterfaces", 1);
