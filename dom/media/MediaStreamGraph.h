@@ -1194,9 +1194,15 @@ public:
     *mPendingUpdateRunnables.AppendElement() = aRunnable;
   }
 
+  /**
+   * Returns graph sample rate in Hz.
+   */
+  TrackRate GraphRate() const { return mSampleRate; }
+
 protected:
-  MediaStreamGraph()
+  MediaStreamGraph(TrackRate aSampleRate)
     : mNextGraphUpdateIndex(1)
+    , mSampleRate(aSampleRate)
   {
     MOZ_COUNT_CTOR(MediaStreamGraph);
   }
@@ -1212,6 +1218,13 @@ protected:
   // The number of updates we have sent to the media graph thread + 1.
   // We start this at 1 just to ensure that 0 is usable as a special value.
   int64_t mNextGraphUpdateIndex;
+
+  /**
+   * Sample rate at which this graph runs. For real time graphs, this is
+   * the rate of the audio mixer. For offline graphs, this is the rate specified
+   * at construction.
+   */
+  TrackRate mSampleRate;
 };
 
 }

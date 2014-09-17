@@ -2717,14 +2717,14 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime,
                                            TrackRate aSampleRate,
                                            DOMMediaStream::TrackTypeHints aHint= DOMMediaStream::HINT_CONTENTS_UNKNOWN,
                                            dom::AudioChannel aChannel)
-  : mProcessingGraphUpdateIndex(0)
+  : MediaStreamGraph(aSampleRate)
+  , mProcessingGraphUpdateIndex(0)
   , mPortCount(0)
   , mNeedAnotherIteration(false)
   , mGraphDriverAsleep(false)
   , mMonitor("MediaStreamGraphImpl")
   , mLifecycleState(LIFECYCLE_THREAD_NOT_STARTED)
   , mEndTime(GRAPH_TIME_MAX)
-  , mSampleRate(aSampleRate)
   , mForceShutDown(false)
   , mPostedRunInStableStateEvent(false)
   , mFlushSourcesNow(false)
