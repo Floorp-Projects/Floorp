@@ -673,6 +673,10 @@ public class TopSitesPanel extends HomeFragment {
         }
 
         public static ThumbnailInfo fromMetadata(final Map<String, Object> data) {
+            if (data == null) {
+                return null;
+            }
+
             final String imageUrl = (String) data.get(TILE_IMAGE_URL_COLUMN);
             if (imageUrl == null) {
                 return null;
@@ -719,22 +723,16 @@ public class TopSitesPanel extends HomeFragment {
             final Map<String, Map<String, Object>> metadata = URLMetadata.getForUrls(cr, mUrls, COLUMNS);
 
             // Keep a list of urls that don't have tiles images. We'll use thumbnails for them instead.
-            final List<String> thumbnailUrls;
-            if (metadata != null) {
-                thumbnailUrls = new ArrayList<String>();
-
-                for (String url : metadata.keySet()) {
-                    ThumbnailInfo info = ThumbnailInfo.fromMetadata(metadata.get(url));
-                    if (info == null) {
-                        // If we didn't find metadata, we'll look for a thumbnail for this url.
-                        thumbnailUrls.add(url);
-                        continue;
-                    }
-
-                    thumbnails.put(url, info);
+            final List<String> thumbnailUrls = new ArrayList<String>();
+            for (String url : mUrls) {
+                ThumbnailInfo info = ThumbnailInfo.fromMetadata(metadata.get(url));
+                if (info == null) {
+                    // If we didn't find metadata, we'll look for a thumbnail for this url.
+                    thumbnailUrls.add(url);
+                    continue;
                 }
-            } else {
-                thumbnailUrls = new ArrayList<String>(mUrls);
+
+                thumbnails.put(url, info);
             }
 
             if (thumbnailUrls.size() == 0) {
