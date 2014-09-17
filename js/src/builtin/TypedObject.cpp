@@ -2890,38 +2890,6 @@ JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::ClampToUint8JitInfo, ClampToUint8JitIn
                                       js::ClampToUint8);
 
 bool
-js::Memcpy(ThreadSafeContext *, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    JS_ASSERT(args.length() == 5);
-    JS_ASSERT(args[0].isObject() && args[0].toObject().is<TypedObject>());
-    JS_ASSERT(args[1].isInt32());
-    JS_ASSERT(args[2].isObject() && args[2].toObject().is<TypedObject>());
-    JS_ASSERT(args[3].isInt32());
-    JS_ASSERT(args[4].isInt32());
-
-    TypedObject &targetTypedObj = args[0].toObject().as<TypedObject>();
-    int32_t targetOffset = args[1].toInt32();
-    TypedObject &sourceTypedObj = args[2].toObject().as<TypedObject>();
-    int32_t sourceOffset = args[3].toInt32();
-    int32_t size = args[4].toInt32();
-
-    JS_ASSERT(targetOffset >= 0);
-    JS_ASSERT(sourceOffset >= 0);
-    JS_ASSERT(size >= 0);
-    JS_ASSERT(size + targetOffset <= targetTypedObj.size());
-    JS_ASSERT(size + sourceOffset <= sourceTypedObj.size());
-
-    uint8_t *target = targetTypedObj.typedMem(targetOffset);
-    uint8_t *source = sourceTypedObj.typedMem(sourceOffset);
-    memcpy(target, source, size);
-    args.rval().setUndefined();
-    return true;
-}
-
-JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(js::MemcpyJitInfo, MemcpyJitInfo, js::Memcpy);
-
-bool
 js::GetTypedObjectModule(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
