@@ -2141,6 +2141,7 @@ public:
     nsresult RescueOrphans();
 
     void FlatJSObjectFinalized();
+    void FlatJSObjectMoved(JSObject *obj, const JSObject *old);
 
     void SystemIsBeingShutDown();
 

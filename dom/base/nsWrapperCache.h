@@ -8,6 +8,7 @@
 
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Assertions.h"
+#include "js/Class.h"
 #include "js/Id.h"          // must come before js/RootingAPI.h
 #include "js/Value.h"       // must come before js/RootingAPI.h
 #include "js/RootingAPI.h"
@@ -43,6 +44,14 @@ class XPCWrappedNativeScope;
  *    - a DOM binding object (regular JS object or proxy)
  *
  * The finalizer for the wrapper clears the cache.
+ *
+ * A compacting GC can move the wrapper object. Pointers to moved objects are
+ * usually found and updated by tracing the heap, however non-preserved wrappers
+ * are weak references and are not traced, so another approach is
+ * necessary. Instead a class hook (objectMovedOp) is provided that is called
+ * when an object is moved and is responsible for ensuring pointers are
+ * updated. It does this by calling UpdateWrapper() on the wrapper
+ * cache. SetWrapper() asserts that the hook is implemented for any wrapper set.
  *
  * A number of the methods are implemented in nsWrapperCacheInlines.h because we
  * have to include some JS headers that don't play nicely with the rest of the
@@ -89,6 +98,8 @@ public:
   {
     MOZ_ASSERT(!PreservingWrapper(), "Clearing a preserved wrapper!");
     MOZ_ASSERT(aWrapper, "Use ClearWrapper!");
+    MOZ_ASSERT(js::HasObjectMovedOp(aWrapper),
+               "Object has not provided the hook to update the wrapper if it is moved");
 
     SetWrapperJSObject(aWrapper);
   }
@@ -102,6 +113,18 @@ public:
     MOZ_ASSERT(!PreservingWrapper(), "Clearing a preserved wrapper!");
 
     SetWrapperJSObject(nullptr);
+  }
+
+  /**
+   * Update the wrapper if the object it contains is moved.
+   *
+   * This method must be called from the objectMovedOp class extension hook for
+   * any wrapper cached object.
+   */
+  void UpdateWrapper(JSObject* aNewObject, const JSObject* aOldObject)
+  {
+    MOZ_ASSERT(mWrapper == aOldObject);
+    mWrapper = aNewObject;
   }
 
   bool PreservingWrapper()
@@ -162,7 +185,7 @@ public:
     }
   }
 
-  /* 
+  /*
    * The following methods for getting and manipulating flags allow the unused
    * bits of mFlags to be used by derived classes.
    */
