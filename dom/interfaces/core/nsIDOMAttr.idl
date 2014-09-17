@@ -14,7 +14,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[builtinclass, uuid(d900b239-a98a-4c40-9308-456255177a11)]
+[builtinclass, uuid(93bf61ba-9ffa-42b7-9594-2de803c9627c)]
 interface nsIDOMAttr : nsIDOMNode
 {
   readonly attribute DOMString            name;

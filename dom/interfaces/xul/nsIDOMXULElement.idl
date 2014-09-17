@@ -12,7 +12,7 @@ interface nsIControllers;
 interface nsIBoxObject;
 
 
-[uuid(dc1cc763-da46-487c-9608-34033ac121c7)]
+[uuid(1bd9303d-0854-4ed3-9fda-added29a570e)]
 interface nsIDOMXULElement : nsIDOMElement
 {
   // Layout properties

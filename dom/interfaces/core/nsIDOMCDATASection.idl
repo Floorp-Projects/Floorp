@@ -15,7 +15,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[uuid(66c0b3ed-9093-4fb6-9a0e-f50a74ec4be2)]
+[uuid(864c4e6a-3933-4f8a-8dd8-3883be60ea10)]
 interface nsIDOMCDATASection : nsIDOMText
 {
 };
