@@ -619,6 +619,10 @@ DrawTargetD2D1::CreateSourceSurfaceFromData(unsigned char *aData,
                                  D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_NONE, D2DPixelFormat(aFormat)),
                                  byRef(bitmap));
 
+  if (FAILED(hr)) {
+    gfxCriticalError() << "[D2D1.1] CreateBitmap failure " << aSize << " Code: " << hr;
+  }
+
   if (!bitmap) {
     return nullptr;
   }
@@ -704,7 +708,7 @@ bool
 DrawTargetD2D1::Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat)
 {
   HRESULT hr;
-
+`
   hr = Factory::GetD2D1Device()->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_ENABLE_MULTITHREADED_OPTIMIZATIONS, byRef(mDC));
 
   if (FAILED(hr)) {
@@ -728,7 +732,7 @@ DrawTargetD2D1::Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat)
   hr = mDC->CreateBitmapFromDxgiSurface(dxgiSurface, props, (ID2D1Bitmap1**)byRef(mBitmap));
 
   if (FAILED(hr)) {
-    gfxWarning() << *this << ": Error " << hr << " failed to create new bitmap.";
+    gfxCriticalError() << "[D2D1.1] CreateBitmapFromDxgiSurface failure Code: " << hr;
     return false;
   }
 
@@ -741,7 +745,12 @@ DrawTargetD2D1::Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat)
   props.pixelFormat.alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED;
   props.pixelFormat.format = DXGI_FORMAT_B8G8R8A8_UNORM;
 
-  mDC->CreateBitmap(D2DIntSize(mSize), nullptr, 0, props, (ID2D1Bitmap1**)byRef(mTempBitmap));
+  hr = mDC->CreateBitmap(D2DIntSize(mSize), nullptr, 0, props, (ID2D1Bitmap1**)byRef(mTempBitmap));
+
+  if (FAILED(hr)) {
+    gfxCriticalError() << "[D2D1.1] CreateBitmap failure " << mSize << " Code: " << hr;
+    return false;
+  }
 
   mDC->SetTarget(mBitmap);
 
@@ -1272,6 +1281,10 @@ DrawTargetD2D1::OptimizeSourceSurface(SourceSurface* aSurface) const
   HRESULT hr = mDC->CreateBitmap(D2DIntSize(data->GetSize()), map.mData, map.mStride,
                                  D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_NONE, D2DPixelFormat(data->GetFormat())),
                                  byRef(bitmap));
+
+  if (FAILED(hr)) {
+    gfxCriticalError() << "[D2D1.1] CreateBitmap failure " << data->GetSize() << " Code: " << hr;
+  }
 
   data->Unmap();
 
