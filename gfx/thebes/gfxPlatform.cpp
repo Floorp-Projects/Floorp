@@ -154,11 +154,11 @@ public:
         if (!NS_IsMainThread()) {
             return;
         }
-        nsCString reportString(aString.c_str());
 #ifdef MOZ_CRASHREPORTER
+        nsCString reportString(aString.c_str());
         CrashReporter::AppendAppNotesToCrashReport(reportString);
 #else
-        printf("GFX ERROR: %s", reportString);
+        printf("GFX ERROR: %s", aString.c_str());
 #endif
     }
 };
