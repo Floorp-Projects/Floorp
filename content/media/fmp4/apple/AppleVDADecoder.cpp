@@ -129,6 +129,15 @@ public:
   int64_t byte_offset;
   bool is_sync_point;
 
+  explicit AppleFrameRef(const mp4_demuxer::MP4Sample& aSample)
+  : decode_timestamp(aSample.decode_timestamp)
+  , composition_timestamp(aSample.composition_timestamp)
+  , duration(aSample.duration)
+  , byte_offset(aSample.byte_offset)
+  , is_sync_point(aSample.is_sync_point)
+  {
+  }
+
   AppleFrameRef(Microseconds aDts,
                 Microseconds aPts,
                 Microseconds aDuration,
@@ -209,6 +218,13 @@ PlatformCallback(void* decompressionOutputRefCon,
   // Forward the data back to an object method which can access
   // the correct MP4Reader callback.
   decoder->OutputFrame(image, frameRef);
+}
+
+AppleFrameRef*
+AppleVDADecoder::CreateAppleFrameRef(const mp4_demuxer::MP4Sample* aSample)
+{
+  MOZ_ASSERT(aSample);
+  return new AppleFrameRef(*aSample);
 }
 
 void
