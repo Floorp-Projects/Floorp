@@ -14,7 +14,7 @@
         <Param name="form" value="OSDJAS"/>
         <Param name="language" value="{moz:locale}"/>
     </Url>
-    <Url type="text/html" method="GET" template="http://www.bing.com/search">
+    <Url type="text/html" method="GET" template="http://www.bing.com/search" rel="searchform">
         <Param name="q" value="{searchTerms}"/>
         <Param name="pc" value="MOZI"/>
         <MozParam name="form" condition="purpose" purpose="contextmenu" value="MOZCON"/>
@@ -23,5 +23,4 @@
         <MozParam name="form" condition="purpose" purpose="keyword" value="MOZLBR"/>
         <MozParam name="form" condition="purpose" purpose="newtab" value="MOZTSB"/>
     </Url>
-    <SearchForm>http://www.bing.com/search</SearchForm>
 </SearchPlugin>
