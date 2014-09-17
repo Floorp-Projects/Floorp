@@ -836,9 +836,6 @@ protected:
     TrackID mID;
     // Sample rate of the input data.
     TrackRate mInputRate;
-    // Sample rate of the output data, always equal to the sample rate of the
-    // graph.
-    TrackRate mOutputRate;
     // Resampler if the rate of the input track does not match the
     // MediaStreamGraph's.
     nsAutoRef<SpeexResamplerState> mResampler;
