@@ -8,42 +8,65 @@
 #define CubebUtils_h_
 
 #include "cubeb/cubeb.h"
+#include "nsAutoRef.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/dom/AudioChannelBinding.h"
 
+template <>
+class nsAutoRefTraits<cubeb_stream> : public nsPointerRefTraits<cubeb_stream>
+{
+public:
+  static void Release(cubeb_stream* aStream) { cubeb_stream_destroy(aStream); }
+};
+
 namespace mozilla {
-namespace CubebUtils {
 
-// Initialize Audio Library. Some Audio backends require initializing the
-// library before using it.
-void InitLibrary();
+class CubebUtils {
+public:
+  // Initialize Audio Library. Some Audio backends require initializing the
+  // library before using it.
+  static void InitLibrary();
 
-// Shutdown Audio Library. Some Audio backends require shutting down the
-// library after using it.
-void ShutdownLibrary();
+  // Shutdown Audio Library. Some Audio backends require shutting down the
+  // library after using it.
+  static void ShutdownLibrary();
 
-// Returns the maximum number of channels supported by the audio hardware.
-uint32_t MaxNumberOfChannels();
+  // Returns the maximum number of channels supported by the audio hardware.
+  static int MaxNumberOfChannels();
 
-// Queries the samplerate the hardware/mixer runs at, and stores it.
-// Can be called on any thread. When this returns, it is safe to call
-// PreferredSampleRate.
-void InitPreferredSampleRate();
+  // Queries the samplerate the hardware/mixer runs at, and stores it.
+  // Can be called on any thread. When this returns, it is safe to call
+  // PreferredSampleRate without locking.
+  static void InitPreferredSampleRate();
+  // Get the aformentionned sample rate. Does not lock.
+  static int PreferredSampleRate();
 
-// Get the aforementioned sample rate. Thread safe.
-uint32_t PreferredSampleRate();
-
-void PrefChanged(const char* aPref, void* aClosure);
-double GetVolumeScale();
-bool GetFirstStream();
-cubeb* GetCubebContext();
-cubeb* GetCubebContextUnlocked();
-uint32_t GetCubebLatency();
-bool CubebLatencyPrefSet();
+  static void PrefChanged(const char* aPref, void* aClosure);
+  static double GetVolumeScale();
+  static bool GetFirstStream();
+  static cubeb* GetCubebContext();
+  static cubeb* GetCubebContextUnlocked();
+  static uint32_t GetCubebLatency();
+  static bool CubebLatencyPrefSet();
 #if defined(__ANDROID__) && defined(MOZ_B2G)
-cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannel aChannel);
+  static cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannel aChannel);
 #endif
 
-} // namespace CubebUtils
-} // namespace mozilla
+private:
+  // This mutex protects the static members below.
+  static StaticMutex sMutex;
+  static cubeb* sCubebContext;
+
+  // Prefered samplerate, in Hz (characteristic of the
+  // hardware/mixer/platform/API used).
+  static uint32_t sPreferredSampleRate;
+
+  static double sVolumeScale;
+  static uint32_t sCubebLatency;
+  static bool sCubebLatencyPrefSet;
+};
+}
+
+
 
 #endif // CubebUtils_h_
