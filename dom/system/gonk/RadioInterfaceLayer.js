@@ -584,12 +584,14 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
       return false;
     },
 
-    _isValidStateForSetRadioEnabled: function(radioState) {
+    _isValidStateForSetRadioEnabled: function(clientId) {
+      let radioState = gMobileConnectionService.getRadioState(clientId);
       return radioState == RIL.GECKO_RADIOSTATE_ENABLED ||
              radioState == RIL.GECKO_RADIOSTATE_DISABLED;
     },
 
-    _isDummyForSetRadioEnabled: function(radioState, data) {
+    _isDummyForSetRadioEnabled: function(clientId, data) {
+      let radioState = gMobileConnectionService.getRadioState(clientId);
       return (radioState == RIL.GECKO_RADIOSTATE_ENABLED && data.enabled) ||
              (radioState == RIL.GECKO_RADIOSTATE_DISABLED && !data.enabled);
     },
@@ -597,18 +599,16 @@ XPCOMUtils.defineLazyGetter(this, "gRadioEnabledController", function() {
     _handleMessage: function(message) {
       if (DEBUG) debug("RadioControl: handleMessage: " + JSON.stringify(message));
       let clientId = message.clientId || 0;
-      let connection =
-        gMobileConnectionService.getItemByServiceId(clientId);
-      let radioState = connection && connection.radioState;
+      let radioInterface = _ril.getRadioInterface(clientId);
 
-      if (!this._isValidStateForSetRadioEnabled(radioState)) {
+      if (!this._isValidStateForSetRadioEnabled(clientId)) {
         message.data.errorMsg = "InvalidStateError";
         message.callback(message.data);
         this._processNextMessage();
         return;
       }
 
-      if (this._isDummyForSetRadioEnabled(radioState, message.data)) {
+      if (this._isDummyForSetRadioEnabled(clientId, message.data)) {
         message.callback(message.data);
         this._processNextMessage();
         return;
@@ -1402,12 +1402,9 @@ DataConnectionHandler.prototype = {
       return;
     }
 
-    let connection =
-      gMobileConnectionService.getItemByServiceId(this.clientId);
-
     // This check avoids data call connection if the radio is not ready
     // yet after toggling off airplane mode.
-    let radioState = connection && connection.radioState;
+    let radioState = gMobileConnectionService.getRadioState(this.clientId);
     if (radioState != RIL.GECKO_RADIOSTATE_ENABLED) {
       if (DEBUG) {
         this.debug("RIL is not ready for data connection: radio's not ready");
@@ -1427,12 +1424,10 @@ DataConnectionHandler.prototype = {
       return;
     }
 
-    let dataInfo = connection && connection.data;
+    let dataInfo = gMobileConnectionService.getDataConnectionInfo(this.clientId);
     let isRegistered =
-      dataInfo &&
       dataInfo.state == RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED;
     let haveDataConnection =
-      dataInfo &&
       dataInfo.type != RIL.GECKO_MOBILE_CONNECTION_STATE_UNKNOWN;
     if (!isRegistered || !haveDataConnection) {
       if (DEBUG) {
@@ -1492,7 +1487,9 @@ DataConnectionHandler.prototype = {
       return;
     }
 
-    if (gRadioEnabledController.isDeactivatingDataCalls()) {
+    if (gRadioEnabledController.isDeactivatingDataCalls() ||
+        radioState == RIL.GECKO_RADIOSTATE_ENABLING ||
+        radioState == RIL.GECKO_RADIOSTATE_DISABLING) {
       // We're changing the radio power currently, ignore any changes.
       return;
     }
@@ -3705,18 +3702,15 @@ RadioInterface.prototype = {
         Services.obs.notifyObservers(domMessage, kSmsSendingObserverTopic, null);
       }
 
-      let connection =
-        gMobileConnectionService.getItemByServiceId(this.clientId);
       // If the radio is disabled or the SIM card is not ready, just directly
       // return with the corresponding error code.
       let errorCode;
-      let radioState = connection && connection.radioState;
+      let radioState = gMobileConnectionService.getRadioState(this.clientId);
       if (!PhoneNumberUtils.isPlainPhoneNumber(options.number)) {
         if (DEBUG) this.debug("Error! Address is invalid when sending SMS: " +
                               options.number);
         errorCode = Ci.nsIMobileMessageCallback.INVALID_ADDRESS_ERROR;
-      } else if (radioState == null ||
-                 radioState == RIL.GECKO_RADIOSTATE_DISABLED) {
+      } else if (radioState == RIL.GECKO_RADIOSTATE_DISABLED) {
         if (DEBUG) this.debug("Error! Radio is disabled when sending SMS.");
         errorCode = Ci.nsIMobileMessageCallback.RADIO_DISABLED_ERROR;
       } else if (this.rilContext.cardState != "ready") {
@@ -4220,11 +4214,9 @@ DataCall.prototype = {
                  this.apnProfile.apn);
     }
 
-    let connection =
-      gMobileConnectionService.getItemByServiceId(this.clientId);
-    let dataInfo = connection && connection.data;
-    if (dataInfo == null ||
-        dataInfo.state != RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED ||
+    let radioInterface = this.gRIL.getRadioInterface(this.clientId);
+    let dataInfo = gMobileConnectionService.getDataConnectionInfo(this.clientId);
+    if (dataInfo.state != RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED ||
         dataInfo.type == RIL.GECKO_MOBILE_CONNECTION_STATE_UNKNOWN) {
       return;
     }
@@ -4253,8 +4245,6 @@ DataCall.prototype = {
         pdpType = RIL.GECKO_DATACALL_PDP_TYPE_DEFAULT;
       }
     }
-
-    let radioInterface = this.gRIL.getRadioInterface(this.clientId);
     radioInterface.sendWorkerMessage("setupDataCall", {
       radioTech: radioTechnology,
       apn: this.apnProfile.apn,
