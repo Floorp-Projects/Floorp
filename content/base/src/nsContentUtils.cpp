@@ -2591,6 +2591,7 @@ nsIPrincipal*
 nsContentUtils::SubjectPrincipal()
 {
   MOZ_ASSERT(IsInitialized());
+  MOZ_ASSERT(NS_IsMainThread());
   JSContext* cx = GetCurrentJSContext();
   if (!cx) {
     return GetSystemPrincipal();
