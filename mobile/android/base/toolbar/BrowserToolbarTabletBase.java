@@ -10,15 +10,11 @@ import java.util.Arrays;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.animation.PropertyAnimator;
-import org.mozilla.gecko.animation.ViewHelper;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
-import android.view.animation.Interpolator;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -38,8 +34,6 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
 
     protected final BackButton backButton;
     protected final ForwardButton forwardButton;
-
-    private final Interpolator buttonsInterpolator = new AccelerateInterpolator();
 
     protected abstract void animateForwardButton(ForwardButtonAnimation animation);
 
@@ -129,23 +123,6 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
         super.setPrivateMode(isPrivate);
         backButton.setPrivateMode(isPrivate);
         forwardButton.setPrivateMode(isPrivate);
-    }
-
-    @Override
-    public void triggerTabsPanelTransition(final PropertyAnimator animator, final boolean areTabsShown) {
-        if (areTabsShown) {
-            ViewHelper.setAlpha(tabsCounter, 0.0f);
-            return;
-        }
-
-        final PropertyAnimator buttonsAnimator =
-                new PropertyAnimator(animator.getDuration(), buttonsInterpolator);
-
-        buttonsAnimator.attach(tabsCounter,
-                               PropertyAnimator.Property.ALPHA,
-                               1.0f);
-
-        buttonsAnimator.start();
     }
 
     protected boolean canDoBack(final Tab tab) {
