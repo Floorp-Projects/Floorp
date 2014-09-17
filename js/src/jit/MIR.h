@@ -7227,7 +7227,6 @@ class MNot
     bool operandMightEmulateUndefined_;
     bool operandIsNeverNaN_;
 
-  public:
     explicit MNot(MDefinition *input)
       : MUnaryInstruction(input),
         operandMightEmulateUndefined_(true),
@@ -7237,6 +7236,7 @@ class MNot
         setMovable();
     }
 
+  public:
     static MNot *New(TempAllocator &alloc, MDefinition *elements) {
         return new(alloc) MNot(elements);
     }
