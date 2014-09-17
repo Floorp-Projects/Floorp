@@ -31,6 +31,7 @@
 #include "nsIServiceManager.h"
 #include "nsITextControlElement.h"
 #include "nsTextFragment.h"
+#include "mozilla/BinarySearch.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/Selection.h"
@@ -1851,25 +1852,17 @@ int32_t
 HyperTextAccessible::GetChildIndexAtOffset(uint32_t aOffset) const
 {
   uint32_t lastOffset = 0;
-  uint32_t offsetCount = mOffsets.Length();
+  const uint32_t offsetCount = mOffsets.Length();
+
   if (offsetCount > 0) {
     lastOffset = mOffsets[offsetCount - 1];
     if (aOffset < lastOffset) {
-      uint32_t low = 0, high = offsetCount;
-      while (high > low) {
-        uint32_t mid = (high + low) >> 1;
-        if (mOffsets[mid] == aOffset)
-          return mid < offsetCount - 1 ? mid + 1 : mid;
-
-        if (mOffsets[mid] < aOffset)
-          low = mid + 1;
-        else
-          high = mid;
+      size_t index;
+      if (BinarySearch(mOffsets, 0, offsetCount, aOffset, &index)) {
+        return (index < (offsetCount - 1)) ? index + 1 : index;
       }
-      if (high == offsetCount)
-        return -1;
 
-      return low;
+      return (index == offsetCount) ? -1 : index;
     }
   }
 

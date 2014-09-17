@@ -56,6 +56,7 @@
 #include "nsMemory.h"
 #include "nsUnicodeNormalizer.h"
 #include "nsString.h"
+#include "mozilla/BinarySearch.h"
 
 NS_IMPL_ISUPPORTS(nsUnicodeNormalizer, nsIUnicodeNormalizer)
 
@@ -236,11 +237,23 @@ mdn__unicode_iscompositecandidate(uint32_t c)
 		return (1);
 }
 
+namespace {
+
+struct SequenceAdaptor
+{
+	const composition* const mSequence;
+	SequenceAdaptor(const composition* aSequence) : mSequence(aSequence) {}
+	uint32_t operator[](size_t aIdx) const {
+		return mSequence[aIdx].c2;
+	}
+};
+
+} // namespace
+
 static nsresult
 mdn__unicode_compose(uint32_t c1, uint32_t c2, uint32_t *compp)
 {
 	int32_t n;
-	int32_t lo, hi;
 	const struct composition *cseq;
 
 	//assert(compp != nullptr);
@@ -279,20 +292,12 @@ mdn__unicode_compose(uint32_t c1, uint32_t c2, uint32_t *compp)
 	 * The composite sequences are sorted by the 2nd character 'c2'.
 	 * So we can use binary search.
 	 */
-	lo = 0;
-	hi = n - 1;
-	while (lo <= hi) {
-		int32_t mid = (lo + hi) / 2;
-
-		if (cseq[mid].c2 < c2) {
-			lo = mid + 1;
-		} else if (cseq[mid].c2 > c2) {
-			hi = mid - 1;
-		} else {
-			*compp = cseq[mid].comp;
-			return (NS_OK);
-		}
+	size_t idx;
+	if (mozilla::BinarySearch(SequenceAdaptor(cseq), 0, n, c2, &idx)) {
+		*compp = cseq[idx].comp;
+		return (NS_OK);
 	}
+
 	return (NS_SUCCESS_UNORM_NOTFOUND);
 }
 

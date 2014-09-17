@@ -12,6 +12,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/BinarySearch.h"
 
 #include "nsCOMPtr.h"
 #include "nsBlockFrame.h"
@@ -120,39 +121,33 @@ struct TabWidthStore {
   nsTArray<TabWidth> mWidths;
 };
 
+namespace {
+
+struct TabwidthAdaptor
+{
+  const nsTArray<TabWidth>& mWidths;
+  TabwidthAdaptor(const nsTArray<TabWidth>& aWidths)
+    : mWidths(aWidths) {}
+  uint32_t operator[](size_t aIdx) const {
+    return mWidths[aIdx].mOffset;
+  }
+};
+
+} // namespace
+
 void
 TabWidthStore::ApplySpacing(gfxTextRun::PropertyProvider::Spacing *aSpacing,
                             uint32_t aOffset, uint32_t aLength)
 {
-  uint32_t i = 0, len = mWidths.Length();
+  size_t i = 0;
+  const size_t len = mWidths.Length();
 
   // If aOffset is non-zero, do a binary search to find where to start
   // processing the tab widths, in case the list is really long. (See bug
   // 953247.)
   // We need to start from the first entry where mOffset >= aOffset.
   if (aOffset > 0) {
-    uint32_t lo = 0, hi = len;
-    while (lo < hi) {
-      i = (lo + hi) / 2;
-      const TabWidth& tw = mWidths[i];
-      if (tw.mOffset < aOffset) {
-        // mWidths[i] precedes the target range; new search range
-        // will be [i+1, hi)
-        lo = ++i;
-        continue;
-      }
-      if (tw.mOffset > aOffset) {
-        // mWidths[i] is within (or beyond) the target range;
-        // new search range is [lo, i). If it turns out that
-        // mWidths[i] was the first entry within the range,
-        // we'll never move hi any further, and end up exiting
-        // when i == lo == this value of hi.
-        hi = i;
-        continue;
-      }
-      // Found an exact match for aOffset, so end search now
-      break;
-    }
+    mozilla::BinarySearch(TabwidthAdaptor(mWidths), 0, len, aOffset, &i);
   }
 
   uint32_t limit = aOffset + aLength;
