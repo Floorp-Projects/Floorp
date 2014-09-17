@@ -107,7 +107,8 @@ TypedArrayObject::ensureHasBuffer(JSContext *cx, Handle<TypedArrayObject *> tarr
     if (!buffer)
         return false;
 
-    buffer->addView(tarray);
+    if (!buffer->addView(cx, tarray))
+        return false;
 
     memcpy(buffer->dataPointer(), tarray->viewData(), tarray->byteLength());
     InitArrayBufferViewDataPointer(tarray, buffer, 0);
@@ -322,7 +323,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
         obj->setSlot(LENGTH_SLOT, Int32Value(len));
         obj->setSlot(BYTEOFFSET_SLOT, Int32Value(byteOffset));
-        obj->setSlot(NEXT_VIEW_SLOT, PrivateValue(nullptr));
 
 #ifdef DEBUG
         if (buffer) {
@@ -338,8 +338,10 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         JS_ASSERT(obj->numFixedSlots() == DATA_SLOT);
 #endif
 
-        if (buffer)
-            buffer->addView(obj);
+        if (buffer) {
+            if (!buffer->addView(cx, obj))
+                return nullptr;
+        }
 
         return obj;
     }
@@ -902,14 +904,14 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
     dvobj.setFixedSlot(BYTEOFFSET_SLOT, Int32Value(byteOffset));
     dvobj.setFixedSlot(LENGTH_SLOT, Int32Value(byteLength));
     dvobj.setFixedSlot(BUFFER_SLOT, ObjectValue(*arrayBuffer));
-    dvobj.setFixedSlot(NEXT_VIEW_SLOT, PrivateValue(nullptr));
     InitArrayBufferViewDataPointer(&dvobj, arrayBuffer, byteOffset);
     JS_ASSERT(byteOffset + byteLength <= arrayBuffer->byteLength());
 
     // Verify that the private slot is at the expected place
     JS_ASSERT(dvobj.numFixedSlots() == DATA_SLOT);
 
-    arrayBuffer->addView(&dvobj);
+    if (!arrayBuffer->addView(cx, &dvobj))
+        return nullptr;
 
     return &dvobj;
 }
@@ -1747,7 +1749,7 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     nullptr,                 /* call        */                                 \
     nullptr,                 /* hasInstance */                                 \
     nullptr,                 /* construct   */                                 \
-    ArrayBufferViewObject::trace, /* trace  */                                 \
+    nullptr,                 /* trace  */                                      \
     TYPED_ARRAY_CLASS_SPEC(_typedArray),                                       \
     {                                                                          \
         nullptr,             /* outerObject */                                 \
@@ -1929,7 +1931,7 @@ const Class DataViewObject::class_ = {
     nullptr,                 /* call        */
     nullptr,                 /* hasInstance */
     nullptr,                 /* construct   */
-    ArrayBufferViewObject::trace, /* trace  */
+    nullptr,                 /* trace       */
 };
 
 const JSFunctionSpec DataViewObject::jsfuncs[] = {

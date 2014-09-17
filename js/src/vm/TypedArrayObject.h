@@ -411,11 +411,4 @@ JSObject::is<js::TypedArrayObject>() const
     return js::IsTypedArrayClass(getClass());
 }
 
-template <>
-inline bool
-JSObject::is<js::ArrayBufferViewObject>() const
-{
-    return is<js::DataViewObject>() || is<js::TypedArrayObject>();
-}
-
 #endif /* vm_TypedArrayObject_h */

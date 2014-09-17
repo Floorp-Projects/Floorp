@@ -3685,7 +3685,6 @@ GCRuntime::beginMarkPhase(JS::gcreason::Reason reason)
     }
 
     for (CompartmentsIter c(rt, WithAtoms); !c.done(); c.next()) {
-        JS_ASSERT(c->gcLiveArrayBuffers.empty());
         c->marked = false;
         c->scheduledForDestruction = false;
         c->maybeAlive = false;
@@ -3979,21 +3978,17 @@ js::gc::MarkingValidator::nonIncrementalMark()
     }
 
     /*
-     * Temporarily clear the weakmaps' mark flags and the lists of live array
-     * buffers for the compartments we are collecting.
+     * Temporarily clear the weakmaps' mark flags for the compartments we are
+     * collecting.
      */
 
     WeakMapSet markedWeakMaps;
     if (!markedWeakMaps.init())
         return;
 
-    ArrayBufferVector arrayBuffers;
     for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
-        if (!WeakMapBase::saveCompartmentMarkedWeakMaps(c, markedWeakMaps) ||
-            !ArrayBufferObject::saveArrayBufferList(c, arrayBuffers))
-        {
+        if (!WeakMapBase::saveCompartmentMarkedWeakMaps(c, markedWeakMaps))
             return;
-        }
     }
 
     /*
@@ -4002,10 +3997,8 @@ js::gc::MarkingValidator::nonIncrementalMark()
      */
     initialized = true;
 
-    for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
+    for (GCCompartmentsIter c(runtime); !c.done(); c.next())
         WeakMapBase::unmarkCompartment(c);
-        ArrayBufferObject::resetArrayBufferList(c);
-    }
 
     /* Re-do all the marking, but non-incrementally. */
     js::gc::State state = gc->incrementalState;
@@ -4063,12 +4056,9 @@ js::gc::MarkingValidator::nonIncrementalMark()
         Swap(*entry, *bitmap);
     }
 
-    for (GCCompartmentsIter c(runtime); !c.done(); c.next()) {
+    for (GCCompartmentsIter c(runtime); !c.done(); c.next())
         WeakMapBase::unmarkCompartment(c);
-        ArrayBufferObject::resetArrayBufferList(c);
-    }
     WeakMapBase::restoreCompartmentMarkedWeakMaps(markedWeakMaps);
-    ArrayBufferObject::restoreArrayBufferLists(arrayBuffers);
 
     gc->incrementalState = state;
 }
@@ -4336,10 +4326,8 @@ GCRuntime::getNextZoneGroup()
         rt->setNeedsIncrementalBarrier(false);
         AssertNeedsBarrierFlagsConsistent(rt);
 
-        for (GCCompartmentGroupIter comp(rt); !comp.done(); comp.next()) {
-            ArrayBufferObject::resetArrayBufferList(comp);
+        for (GCCompartmentGroupIter comp(rt); !comp.done(); comp.next())
             ResetGrayList(comp);
-        }
 
         abortSweepAfterCurrentGroup = false;
         currentZoneGroup = nullptr;
@@ -4661,10 +4649,6 @@ GCRuntime::beginSweepingZoneGroup()
             rt->symbolRegistry().sweep();
         }
     }
-
-    /* Prune out dead views from ArrayBuffer's view lists. */
-    for (GCCompartmentGroupIter c(rt); !c.done(); c.next())
-        ArrayBufferObject::sweep(c);
 
     /* Collect watch points associated with unreachable objects. */
     WatchpointMap::sweepAll(rt);
@@ -5019,7 +5003,6 @@ GCRuntime::endSweepPhase(bool lastGC)
 
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
         JS_ASSERT(!c->gcIncomingGrayPointers);
-        JS_ASSERT(c->gcLiveArrayBuffers.empty());
 
         for (JSCompartment::WrapperEnum e(c); !e.empty(); e.popFront()) {
             if (e.front().key().kind != CrossCompartmentKey::StringWrapper)
@@ -5165,10 +5148,8 @@ GCRuntime::resetIncrementalGC(const char *reason)
         marker.reset();
         marker.stop();
 
-        for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
-            ArrayBufferObject::resetArrayBufferList(c);
+        for (GCCompartmentsIter c(rt); !c.done(); c.next())
             ResetGrayList(c);
-        }
 
         for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
             JS_ASSERT(zone->isGCMarking());
@@ -5208,9 +5189,6 @@ GCRuntime::resetIncrementalGC(const char *reason)
     stats.reset(reason);
 
 #ifdef DEBUG
-    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
-        JS_ASSERT(c->gcLiveArrayBuffers.empty());
-
     for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
         JS_ASSERT(!zone->needsIncrementalBarrier());
         for (unsigned i = 0; i < FINALIZE_LIMIT; ++i)

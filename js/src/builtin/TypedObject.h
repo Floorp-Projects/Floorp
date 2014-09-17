@@ -670,10 +670,10 @@ class TypedObject : public ArrayBufferViewObject
     static bool constructUnsized(JSContext *cx, unsigned argc, Value *vp);
 
     // Use this method when `buffer` is the owner of the memory.
-    void attach(ArrayBufferObject &buffer, int32_t offset);
+    void attach(JSContext *cx, ArrayBufferObject &buffer, int32_t offset);
 
     // Otherwise, use this to attach to memory referenced by another typedObj.
-    void attach(TypedObject &typedObj, int32_t offset);
+    void attach(JSContext *cx, TypedObject &typedObj, int32_t offset);
 
     // Invoked when array buffer is transferred elsewhere
     void neuter(void *newData);
