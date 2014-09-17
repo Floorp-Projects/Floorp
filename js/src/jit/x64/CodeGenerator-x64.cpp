@@ -241,6 +241,13 @@ CodeGeneratorX64::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStati
 }
 
 bool
+CodeGeneratorX64::visitAsmJSCall(LAsmJSCall *ins)
+{
+    emitAsmJSCall(ins);
+    return true;
+}
+
+bool
 CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap *ins)
 {
     MAsmJSLoadHeap *mir = ins->mir();
