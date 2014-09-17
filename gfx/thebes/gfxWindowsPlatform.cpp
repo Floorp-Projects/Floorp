@@ -443,12 +443,16 @@ gfxWindowsPlatform::UpdateRenderMode()
     if (mRenderMode == RENDER_DIRECT2D) {
       canvasMask |= BackendTypeBit(BackendType::DIRECT2D);
       contentMask |= BackendTypeBit(BackendType::DIRECT2D);
+#ifdef USE_D2D1_1
       if (gfxPrefs::Direct2DUse1_1() && Factory::SupportsD2D1()) {
         contentMask |= BackendTypeBit(BackendType::DIRECT2D1_1);
         defaultBackend = BackendType::DIRECT2D1_1;
       } else {
+#endif
         defaultBackend = BackendType::DIRECT2D;
+#ifdef USE_D2D1_1
       }
+#endif
     } else {
       canvasMask |= BackendTypeBit(BackendType::SKIA);
     }
@@ -1537,3 +1541,4 @@ gfxWindowsPlatform::InitD3D11Devices()
   // leak it here as well.
   d3d11Module.disown();
 }
+
