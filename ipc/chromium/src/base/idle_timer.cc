@@ -89,7 +89,7 @@ class IdleState {
 };
 
 bool OSIdleTimeSource(int32_t* milliseconds_interval_since_last_event) {
-  static LazyInstance<IdleState> state_instance(base::LINKER_INITIALIZED);
+  static LazyInstance<IdleState> state_instance = LAZY_INSTANCE_INITIALIZER;
   IdleState* state = state_instance.Pointer();
   int32_t idle_time = state->IdleTime();
   if (0 < idle_time) {
