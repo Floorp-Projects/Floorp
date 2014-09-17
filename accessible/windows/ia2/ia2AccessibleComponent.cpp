@@ -58,31 +58,22 @@ ia2AccessibleComponent::get_locationInParent(long* aX, long* aY)
   if (state & states::INVISIBLE)
     return S_OK;
 
-  int32_t x = 0, y = 0, width = 0, height = 0;
-  nsresult rv = acc->GetBounds(&x, &y, &width, &height);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
-  Accessible* parentAcc = acc->Parent();
+  nsIntRect rect = acc->Bounds();
 
   // The coordinates of the returned position are relative to this object's
   // parent or relative to the screen on which this object is rendered if it
   // has no parent.
-  if (!parentAcc) {
-    *aX = x;
-    *aY = y;
+  if (!acc->Parent()) {
+    *aX = rect.x;
+    *aY = rect.y;
     return S_OK;
   }
 
   // The coordinates of the bounding box are given relative to the parent's
   // coordinate system.
-  int32_t parentx = 0, parenty = 0;
-  rv = acc->GetBounds(&parentx, &parenty, &width, &height);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
-  *aX = x - parentx;
-  *aY = y - parenty;
+  nsIntRect parentRect = acc->Parent()->Bounds();
+  *aX = rect.x - parentRect.x;
+  *aY = rect.y - parentRect.y;
   return S_OK;
 
   A11Y_TRYBLOCK_END

@@ -10,6 +10,7 @@
 #include <algorithm>
 #include "gfxDWriteFontList.h"
 #include "gfxContext.h"
+#include "gfxTextRun.h"
 #include <dwrite.h>
 
 #include "harfbuzz/hb.h"

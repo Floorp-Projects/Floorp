@@ -23,7 +23,6 @@ EXPORTS += [
     'nsUCSupport.h',
     'uconvutil.h',
     'ucvcn/nsUCvCnCID.h',
-    'ucvibm/nsUCvIBMCID.h',
     'ucvja/nsUCVJA2CID.h',
     'ucvja/nsUCVJACID.h',
     'ucvko/nsUCvKOCID.h',
@@ -56,21 +55,6 @@ UNIFIED_SOURCES += [
     'ucvcn/nsUnicodeToGB2312V2.cpp',
     'ucvcn/nsUnicodeToGBK.cpp',
     'ucvcn/nsUnicodeToHZ.cpp',
-]
-
-UNIFIED_SOURCES += [
-    'ucvibm/nsCP850ToUnicode.cpp',
-    'ucvibm/nsCP852ToUnicode.cpp',
-    'ucvibm/nsCP855ToUnicode.cpp',
-    'ucvibm/nsCP857ToUnicode.cpp',
-    'ucvibm/nsCP862ToUnicode.cpp',
-    'ucvibm/nsCP864ToUnicode.cpp',
-    'ucvibm/nsUnicodeToCP850.cpp',
-    'ucvibm/nsUnicodeToCP852.cpp',
-    'ucvibm/nsUnicodeToCP855.cpp',
-    'ucvibm/nsUnicodeToCP857.cpp',
-    'ucvibm/nsUnicodeToCP862.cpp',
-    'ucvibm/nsUnicodeToCP864.cpp',
 ]
 
 UNIFIED_SOURCES += [
@@ -213,7 +197,6 @@ MSVC_ENABLE_PGO = True
 
 LOCAL_INCLUDES += [
     'ucvcn',
-    'ucvibm',
     'ucvja',
     'ucvko',
     'ucvlatin',

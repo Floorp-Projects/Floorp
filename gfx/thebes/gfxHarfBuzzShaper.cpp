@@ -8,6 +8,7 @@
 #include "gfxFontConstants.h"
 #include "gfxHarfBuzzShaper.h"
 #include "gfxFontUtils.h"
+#include "gfxTextRun.h"
 #include "nsUnicodeProperties.h"
 #include "nsUnicodeScriptCodes.h"
 #include "nsUnicodeNormalizer.h"
@@ -1009,7 +1010,7 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
     hb_buffer_set_direction(buffer, isRightToLeft ? HB_DIRECTION_RTL :
                                                     HB_DIRECTION_LTR);
     hb_script_t scriptTag;
-    if (aShapedText->Flags() & gfxTextRunFactory::TEXT_USE_MATH_SCRIPT) {
+    if (aShapedText->GetFlags() & gfxTextRunFactory::TEXT_USE_MATH_SCRIPT) {
         scriptTag = sMathScript;
     } else {
         scriptTag = GetHBScriptUsedForShaping(aScript);

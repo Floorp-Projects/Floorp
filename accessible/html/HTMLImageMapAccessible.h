@@ -25,7 +25,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
-  virtual a11y::role NativeRole();
+  virtual a11y::role NativeRole() MOZ_OVERRIDE;
 
   // HyperLinkAccessible
   virtual uint32_t AnchorCount();
@@ -62,7 +62,7 @@ public:
   virtual void Description(nsString& aDescription);
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
                                    EWhichChildAtPoint aWhichChild);
-  virtual void GetBoundsRect(nsRect& aBounds, nsIFrame** aBoundingFrame);
+  virtual nsRect RelativeBounds(nsIFrame** aBoundingFrame) const MOZ_OVERRIDE;
 
   // HyperLinkAccessible
   virtual uint32_t StartOffset();

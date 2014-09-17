@@ -139,6 +139,8 @@ private:
 
   const nsCString mType;
 
+  uint32_t mEvictionThreshold;
+
   nsAutoPtr<ContainerParser> mParser;
 
   nsRefPtr<TrackBuffer> mTrackBuffer;

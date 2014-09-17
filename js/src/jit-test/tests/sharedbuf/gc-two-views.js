@@ -2,10 +2,10 @@
 
 function f() {
     var x = new SharedArrayBuffer(0x1000);
-    var y = new Int32Array(x);
-    var z = new Int8Array(x);
+    var y = new SharedInt32Array(x);
+    var z = new SharedInt8Array(x);
     gc();
 }
 
-if (typeof SharedArrayBuffer !== "undefined")
+if (this.SharedArrayBuffer && this.SharedInt32Array && this.SharedInt8Array)
     f();

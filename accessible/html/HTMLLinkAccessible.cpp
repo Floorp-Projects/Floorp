@@ -92,23 +92,22 @@ HTMLLinkAccessible::ActionCount()
   return IsLinked() ? 1 : HyperTextAccessible::ActionCount();
 }
 
-NS_IMETHODIMP
-HTMLLinkAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
+void
+HTMLLinkAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
 {
   aName.Truncate();
 
-  if (!IsLinked())
-    return HyperTextAccessible::GetActionName(aIndex, aName);
+  if (!IsLinked()) {
+    HyperTextAccessible::ActionNameAt(aIndex, aName);
+    return;
+  }
 
   // Action 0 (default action): Jump to link
-  if (aIndex != eAction_Jump)
-    return NS_ERROR_INVALID_ARG;
-
-  aName.AssignLiteral("jump");
-  return NS_OK;
+  if (aIndex == eAction_Jump)
+    aName.AssignLiteral("jump");
 }
 
-NS_IMETHODIMP
+bool
 HTMLLinkAccessible::DoAction(uint8_t aIndex)
 {
   if (!IsLinked())
@@ -116,13 +115,10 @@ HTMLLinkAccessible::DoAction(uint8_t aIndex)
 
   // Action 0 (default action): Jump to link
   if (aIndex != eAction_Jump)
-    return NS_ERROR_INVALID_ARG;
-
-  if (IsDefunct())
-    return NS_ERROR_FAILURE;
+    return false;
 
   DoCommand();
-  return NS_OK;
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -145,11 +141,8 @@ HTMLLinkAccessible::AnchorURIAt(uint32_t aAnchorIndex)
 // Protected members
 
 bool
-HTMLLinkAccessible::IsLinked()
+HTMLLinkAccessible::IsLinked() const
 {
-  if (IsDefunct())
-    return false;
-
   EventStates state = mContent->AsElement()->State();
   return state.HasAtLeastOneOfStates(NS_EVENT_STATE_VISITED |
                                      NS_EVENT_STATE_UNVISITED);

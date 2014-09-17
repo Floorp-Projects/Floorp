@@ -2,9 +2,9 @@
 
 function f() {
     var x = new SharedArrayBuffer(0x1000);
-    var y = new Int32Array(x);
+    var y = new SharedInt32Array(x);
     gc();
 }
 
-if (typeof SharedArrayBuffer !== "undefined")
+if (this.SharedArrayBuffer && this.SharedInt32Array)
     f();

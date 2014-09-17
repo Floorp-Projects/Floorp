@@ -77,11 +77,10 @@
 #include "vm/Runtime.h"
 #include "vm/SavedStacks.h"
 #include "vm/Shape.h"
-#include "vm/SharedArrayObject.h"
 #include "vm/StopIterationObject.h"
 #include "vm/StringBuffer.h"
 #include "vm/Symbol.h"
-#include "vm/TypedArrayObject.h"
+#include "vm/TypedArrayCommon.h"
 #include "vm/WeakMapObject.h"
 #include "vm/WrapperObject.h"
 #include "vm/Xdr.h"
@@ -2740,7 +2739,7 @@ JS_AlreadyHasOwnPropertyById(JSContext *cx, HandleObject obj, HandleId id, bool 
             return true;
         }
 
-        if (obj->is<TypedArrayObject>() && index < obj->as<TypedArrayObject>().length()) {
+        if (IsAnyTypedArray(obj) && index < AnyTypedArrayLength(obj)) {
             *foundp = true;
             return true;
         }

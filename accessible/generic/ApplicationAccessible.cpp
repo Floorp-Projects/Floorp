@@ -39,30 +39,6 @@ NS_IMPL_ISUPPORTS_INHERITED(ApplicationAccessible, Accessible,
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible
 
-NS_IMETHODIMP
-ApplicationAccessible::GetParent(nsIAccessible** aAccessible)
-{
-  NS_ENSURE_ARG_POINTER(aAccessible);
-  *aAccessible = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ApplicationAccessible::GetNextSibling(nsIAccessible** aNextSibling)
-{
-  NS_ENSURE_ARG_POINTER(aNextSibling);
-  *aNextSibling = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ApplicationAccessible::GetPreviousSibling(nsIAccessible** aPreviousSibling)
-{
-  NS_ENSURE_ARG_POINTER(aPreviousSibling);
-  *aPreviousSibling = nullptr;
-  return NS_OK;
-}
-
 ENameValueFlag
 ApplicationAccessible::Name(nsString& aName)
 {
@@ -146,64 +122,10 @@ ApplicationAccessible::RelationByType(RelationType aRelationType)
   return Relation();
 }
 
-NS_IMETHODIMP
-ApplicationAccessible::GetBounds(int32_t* aX, int32_t* aY,
-                                 int32_t* aWidth, int32_t* aHeight)
+nsIntRect
+ApplicationAccessible::Bounds() const
 {
-  NS_ENSURE_ARG_POINTER(aX);
-  *aX = 0;
-  NS_ENSURE_ARG_POINTER(aY);
-  *aY = 0;
-  NS_ENSURE_ARG_POINTER(aWidth);
-  *aWidth = 0;
-  NS_ENSURE_ARG_POINTER(aHeight);
-  *aHeight = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ApplicationAccessible::SetSelected(bool aIsSelected)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ApplicationAccessible::TakeSelection()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ApplicationAccessible::TakeFocus()
-{
-  return NS_OK;
-}
-
-uint8_t
-ApplicationAccessible::ActionCount()
-{
-  return 0;
-}
-
-NS_IMETHODIMP
-ApplicationAccessible::GetActionName(uint8_t aIndex, nsAString& aName)
-{
-  aName.Truncate();
-  return NS_ERROR_INVALID_ARG;
-}
-
-NS_IMETHODIMP
-ApplicationAccessible::GetActionDescription(uint8_t aIndex,
-                                            nsAString& aDescription)
-{
-  aDescription.Truncate();
-  return NS_ERROR_INVALID_ARG;
-}
-
-NS_IMETHODIMP
-ApplicationAccessible::DoAction(uint8_t aIndex)
-{
-  return NS_OK;
+  return nsIntRect();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -355,35 +277,3 @@ ApplicationAccessible::GetSiblingAtOffset(int32_t aOffset,
 
   return nullptr;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIAccessible
-
-NS_IMETHODIMP
-ApplicationAccessible::GetRootDocument(nsIAccessibleDocument** aRootDocument)
-{
-  NS_ENSURE_ARG_POINTER(aRootDocument);
-  *aRootDocument = nullptr;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ApplicationAccessible::ScrollTo(uint32_t aScrollType)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ApplicationAccessible::ScrollToPoint(uint32_t aCoordinateType,
-                                     int32_t aX, int32_t aY)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ApplicationAccessible::GetLanguage(nsAString& aLanguage)
-{
-  aLanguage.Truncate();
-  return NS_OK;
-}
-

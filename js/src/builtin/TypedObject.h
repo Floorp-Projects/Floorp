@@ -131,7 +131,7 @@ namespace type {
 enum Kind {
     Scalar = JS_TYPEREPR_SCALAR_KIND,
     Reference = JS_TYPEREPR_REFERENCE_KIND,
-    X4 = JS_TYPEREPR_X4_KIND,
+    Simd = JS_TYPEREPR_SIMD_KIND,
     Struct = JS_TYPEREPR_STRUCT_KIND,
     SizedArray = JS_TYPEREPR_SIZED_ARRAY_KIND,
     UnsizedArray = JS_TYPEREPR_UNSIZED_ARRAY_KIND,
@@ -149,7 +149,7 @@ static inline bool isSized(type::Kind kind) {
 class SizedTypeDescr;
 class SimpleTypeDescr;
 class ComplexTypeDescr;
-class X4TypeDescr;
+class SimdTypeDescr;
 class StructTypeDescr;
 class SizedTypedProto;
 
@@ -346,31 +346,31 @@ class ComplexTypeDescr : public SizedTypeDescr
 /*
  * Type descriptors `float32x4` and `int32x4`
  */
-class X4TypeDescr : public ComplexTypeDescr
+class SimdTypeDescr : public ComplexTypeDescr
 {
   public:
     enum Type {
-        TYPE_INT32 = JS_X4TYPEREPR_INT32,
-        TYPE_FLOAT32 = JS_X4TYPEREPR_FLOAT32,
+        TYPE_INT32 = JS_SIMDTYPEREPR_INT32,
+        TYPE_FLOAT32 = JS_SIMDTYPEREPR_FLOAT32,
     };
 
-    static const type::Kind Kind = type::X4;
+    static const type::Kind Kind = type::Simd;
     static const bool Opaque = false;
     static const Class class_;
     static int32_t size(Type t);
     static int32_t alignment(Type t);
 
-    X4TypeDescr::Type type() const {
-        return (X4TypeDescr::Type) getReservedSlot(JS_DESCR_SLOT_TYPE).toInt32();
+    SimdTypeDescr::Type type() const {
+        return (SimdTypeDescr::Type) getReservedSlot(JS_DESCR_SLOT_TYPE).toInt32();
     }
 
     static bool call(JSContext *cx, unsigned argc, Value *vp);
     static bool is(const Value &v);
 };
 
-#define JS_FOR_EACH_X4_TYPE_REPR(macro_)                             \
-    macro_(X4TypeDescr::TYPE_INT32, int32_t, int32)                  \
-    macro_(X4TypeDescr::TYPE_FLOAT32, float, float32)
+#define JS_FOR_EACH_SIMD_TYPE_REPR(macro_)                             \
+    macro_(SimdTypeDescr::TYPE_INT32, int32_t, int32)                  \
+    macro_(SimdTypeDescr::TYPE_FLOAT32, float, float32)
 
 bool IsTypedObjectClass(const Class *clasp); // Defined below
 bool IsTypedObjectArray(JSObject& obj);
@@ -713,7 +713,7 @@ class TypedObject : public ArrayBufferViewObject
     int32_t size() const {
         switch (typeDescr().kind()) {
           case type::Scalar:
-          case type::X4:
+          case type::Simd:
           case type::Reference:
           case type::Struct:
           case type::SizedArray:
@@ -997,7 +997,7 @@ IsComplexTypeDescrClass(const Class* clasp)
 {
     return clasp == &StructTypeDescr::class_ ||
            clasp == &SizedArrayTypeDescr::class_ ||
-           clasp == &X4TypeDescr::class_;
+           clasp == &SimdTypeDescr::class_;
 }
 
 inline bool

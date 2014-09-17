@@ -2,9 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import argparse
 import ConfigParser
 from StringIO import StringIO
-from optparse import OptionParser
 import os
 import re
 import sys
@@ -13,8 +13,9 @@ import xml.dom.minidom
 import zipfile
 
 import mozdevice
-import mozlog
 import mozfile
+import mozlog
+from mozlog import structured
 
 import errors
 
@@ -22,10 +23,13 @@ import errors
 INI_DATA_MAPPING = (('application', 'App'), ('platform', 'Build'))
 
 
-class Version(mozlog.LoggingMixin):
+class Version(object):
 
     def __init__(self):
         self._info = {}
+        self._logger = structured.get_default_logger(component='mozversion')
+        if not self._logger:
+            self._logger = mozlog.getLogger('mozversion')
 
     def get_gecko_info(self, path):
         for type, section in INI_DATA_MAPPING:
@@ -33,7 +37,7 @@ class Version(mozlog.LoggingMixin):
             if os.path.exists(config_file):
                 self._parse_ini_file(open(config_file), type, section)
             else:
-                self.warn('Unable to find %s' % config_file)
+                self._logger.warning('Unable to find %s' % config_file)
 
     def _parse_ini_file(self, fp, type, section):
         config = ConfigParser.RawConfigParser()
@@ -66,7 +70,7 @@ class LocalFennecVersion(Version):
                 self._parse_ini_file(archive.open(filename), type,
                                      section)
             else:
-                self.warn('Unable to find %s' % filename)
+                self._logger.warning('Unable to find %s' % filename)
 
 
 class LocalVersion(Version):
@@ -128,8 +132,8 @@ class B2GVersion(Version):
                 with open(gaia_commit, 'w') as f:
                     f.write(zip_file.read('resources/gaia_commit.txt'))
             except zipfile.BadZipfile:
-                self.info('Unable to unzip application.zip, falling back to '
-                          'system unzip')
+                self._logger.info('Unable to unzip application.zip, falling '
+                                  'back to system unzip')
                 from subprocess import call
                 call(['unzip', '-j', app_zip.name, 'resources/gaia_commit.txt',
                       '-d', tempdir])
@@ -140,8 +144,9 @@ class B2GVersion(Version):
                     '^\w{40}$', changeset) and changeset or None
                 self._info['gaia_date'] = date
         except KeyError:
-                self.warn('Unable to find resources/gaia_commit.txt in '
-                          'application.zip')
+                self._logger.warning(
+                    'Unable to find resources/gaia_commit.txt in '
+                    'application.zip')
         finally:
             mozfile.remove(tempdir)
 
@@ -168,7 +173,7 @@ class LocalB2GVersion(B2GVersion):
             with open(zip_path, 'rb') as zip_file:
                 self.get_gaia_info(zip_file)
         else:
-            self.warn('Error pulling gaia file')
+            self._logger.warning('Error pulling gaia file')
 
 
 class RemoteB2GVersion(B2GVersion):
@@ -181,18 +186,19 @@ class RemoteB2GVersion(B2GVersion):
             dm = mozdevice.DeviceManagerADB(deviceSerial=device_serial)
         elif dm_type == 'sut':
             if not host:
-                raise errors.RemoteAppNotFoundError('A host for SUT must be supplied.')
+                raise errors.RemoteAppNotFoundError(
+                    'A host for SUT must be supplied.')
             dm = mozdevice.DeviceManagerSUT(host=host)
         else:
-            raise errors.RemoteAppNotFoundError('Unknown device manager type: %s' %
-                                                dm_type)
+            raise errors.RemoteAppNotFoundError(
+                'Unknown device manager type: %s' % dm_type)
 
         if not sources:
             path = 'system/sources.xml'
             if dm.fileExists(path):
                 sources = StringIO(dm.pullFile(path))
             else:
-                self.info('Unable to find %s' % path)
+                self._logger.info('Unable to find %s' % path)
 
         tempdir = tempfile.mkdtemp()
         for ini in ('application', 'platform'):
@@ -210,7 +216,7 @@ class RemoteB2GVersion(B2GVersion):
                     self.get_gaia_info(f)
                 break
         else:
-            self.warn('Error pulling gaia file')
+            self._logger.warning('Error pulling gaia file')
 
         build_props = dm.pullFile('/system/build.prop')
         desired_props = {
@@ -255,38 +261,46 @@ def get_version(binary=None, sources=None, dm_type=None, host=None,
                 version = LocalB2GVersion(binary, sources=sources)
     except errors.LocalAppNotFoundError:
         try:
-            version = RemoteB2GVersion(sources=sources, dm_type=dm_type,
-                                       host=host, device_serial=device_serial)
+            version = RemoteB2GVersion(sources=sources,
+                                       dm_type=dm_type,
+                                       host=host,
+                                       device_serial=device_serial)
         except errors.RemoteAppNotFoundError:
             raise errors.AppNotFoundError('No application found')
+
+    for (key, value) in sorted(version._info.items()):
+        if value:
+            version._logger.info('%s: %s' % (key, value))
 
     return version._info
 
 
 def cli(args=sys.argv[1:]):
-    parser = OptionParser()
-    parser.add_option('--binary',
-                      dest='binary',
-                      help='path to application binary or apk')
-    parser.add_option('--sources',
-                      dest='sources',
-                      help='path to sources.xml (Firefox OS only)')
-    parser.add_option('--device',
-                      help='serial identifier of device to target (Firefox OS '
-                           'only)')
-    (options, args) = parser.parse_args(args)
+    parser = argparse.ArgumentParser(
+        description='Display version information for Mozilla applications')
+    parser.add_argument(
+        '--binary',
+        help='path to application binary or apk')
+    parser.add_argument(
+        '--sources',
+        help='path to sources.xml (Firefox OS only)')
+    parser.add_argument(
+        '--device',
+        help='serial identifier of device to target (Firefox OS only)')
+    structured.commandline.add_logging_group(parser)
 
+    args = parser.parse_args()
     dm_type = os.environ.get('DM_TRANS', 'adb')
     host = os.environ.get('TEST_DEVICE')
 
-    version = get_version(binary=options.binary,
-                          sources=options.sources,
-                          dm_type=dm_type,
-                          host=host,
-                          device_serial=options.device)
-    for (key, value) in sorted(version.items()):
-        if value:
-            print '%s: %s' % (key, value)
+    structured.commandline.setup_logging(
+        'mozversion', args, {'mach': sys.stdout})
+
+    get_version(binary=args.binary,
+                sources=args.sources,
+                dm_type=dm_type,
+                host=host,
+                device_serial=args.device)
 
 if __name__ == '__main__':
     cli()

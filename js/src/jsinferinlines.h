@@ -18,6 +18,7 @@
 #include "vm/BooleanObject.h"
 #include "vm/NumberObject.h"
 #include "vm/SharedArrayObject.h"
+#include "vm/SharedTypedArrayObject.h"
 #include "vm/StringObject.h"
 #include "vm/TypedArrayObject.h"
 
@@ -315,6 +316,17 @@ GetClassForProtoKey(JSProtoKey key)
       case JSProto_Float64Array:
       case JSProto_Uint8ClampedArray:
         return &TypedArrayObject::classes[key - JSProto_Int8Array];
+
+      case JSProto_SharedInt8Array:
+      case JSProto_SharedUint8Array:
+      case JSProto_SharedInt16Array:
+      case JSProto_SharedUint16Array:
+      case JSProto_SharedInt32Array:
+      case JSProto_SharedUint32Array:
+      case JSProto_SharedFloat32Array:
+      case JSProto_SharedFloat64Array:
+      case JSProto_SharedUint8ClampedArray:
+        return &SharedTypedArrayObject::classes[key - JSProto_SharedInt8Array];
 
       case JSProto_ArrayBuffer:
         return &ArrayBufferObject::class_;
