@@ -121,7 +121,7 @@ test_init_destroy_multiple_streams(void)
   int i;
   int r;
   cubeb * ctx;
-  cubeb_stream * stream[16];
+  cubeb_stream * stream[8];
   cubeb_stream_params params;
 
   BEGIN_TEST
@@ -133,14 +133,14 @@ test_init_destroy_multiple_streams(void)
   params.rate = STREAM_RATE;
   params.channels = STREAM_CHANNELS;
 
-  for (i = 0; i < 16; ++i) {
+  for (i = 0; i < 8; ++i) {
     r = cubeb_stream_init(ctx, &stream[i], "test", params, STREAM_LATENCY,
                           test_data_callback, test_state_callback, &dummy);
     assert(r == 0);
     assert(stream[i]);
   }
 
-  for (i = 0; i < 16; ++i) {
+  for (i = 0; i < 8; ++i) {
     cubeb_stream_destroy(stream[i]);
   }
 
@@ -155,7 +155,7 @@ test_init_start_stop_destroy_multiple_streams(int early, int delay_ms)
   int i;
   int r;
   cubeb * ctx;
-  cubeb_stream * stream[16];
+  cubeb_stream * stream[8];
   cubeb_stream_params params;
 
   BEGIN_TEST
@@ -167,7 +167,7 @@ test_init_start_stop_destroy_multiple_streams(int early, int delay_ms)
   params.rate = STREAM_RATE;
   params.channels = STREAM_CHANNELS;
 
-  for (i = 0; i < 16; ++i) {
+  for (i = 0; i < 8; ++i) {
     r = cubeb_stream_init(ctx, &stream[i], "test", params, STREAM_LATENCY,
                           test_data_callback, test_state_callback, &dummy);
     assert(r == 0);
@@ -180,7 +180,7 @@ test_init_start_stop_destroy_multiple_streams(int early, int delay_ms)
 
 
   if (!early) {
-    for (i = 0; i < 16; ++i) {
+    for (i = 0; i < 8; ++i) {
       r = cubeb_stream_start(stream[i]);
       assert(r == 0);
     }
@@ -191,13 +191,13 @@ test_init_start_stop_destroy_multiple_streams(int early, int delay_ms)
   }
 
   if (!early) {
-    for (i = 0; i < 16; ++i) {
+    for (i = 0; i < 8; ++i) {
       r = cubeb_stream_stop(stream[i]);
       assert(r == 0);
     }
   }
 
-  for (i = 0; i < 16; ++i) {
+  for (i = 0; i < 8; ++i) {
     if (early) {
       r = cubeb_stream_stop(stream[i]);
       assert(r == 0);
@@ -215,8 +215,8 @@ test_init_destroy_multiple_contexts_and_streams(void)
 {
   int i, j;
   int r;
-  cubeb * ctx[4];
-  cubeb_stream * stream[16];
+  cubeb * ctx[2];
+  cubeb_stream * stream[8];
   cubeb_stream_params params;
 
   BEGIN_TEST
@@ -225,7 +225,7 @@ test_init_destroy_multiple_contexts_and_streams(void)
   params.rate = STREAM_RATE;
   params.channels = STREAM_CHANNELS;
 
-  for (i = 0; i < 4; ++i) {
+  for (i = 0; i < 2; ++i) {
     r = cubeb_init(&ctx[i], "test_sanity");
     assert(r == 0 && ctx[i]);
 
@@ -237,7 +237,7 @@ test_init_destroy_multiple_contexts_and_streams(void)
     }
   }
 
-  for (i = 0; i < 4; ++i) {
+  for (i = 0; i < 2; ++i) {
     for (j = 0; j < 4; ++j) {
       cubeb_stream_destroy(stream[i * 4 + j]);
     }
