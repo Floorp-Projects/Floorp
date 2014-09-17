@@ -122,11 +122,11 @@ class VersionChangeTransaction;
 
 // If JS_STRUCTURED_CLONE_VERSION changes then we need to update our major
 // schema version.
-static_assert(JS_STRUCTURED_CLONE_VERSION == 4,
+static_assert(JS_STRUCTURED_CLONE_VERSION == 5,
               "Need to update the major schema version.");
 
 // Major schema version. Bump for almost everything.
-const uint32_t kMajorSchemaVersion = 16;
+const uint32_t kMajorSchemaVersion = 17;
 
 // Minor schema version. Should almost always be 0 (maybe bump on release
 // branches if we have to).
@@ -2136,6 +2136,19 @@ UpgradeSchemaFrom15_0To16_0(mozIStorageConnection* aConnection)
 }
 
 nsresult
+UpgradeSchemaFrom16_0To17_0(mozIStorageConnection* aConnection)
+{
+  // The only change between 16 and 17 was a different structured
+  // clone format, but it's backwards-compatible.
+  nsresult rv = aConnection->SetSchemaVersion(MakeSchemaVersion(17, 0));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
 GetDatabaseFileURL(nsIFile* aDatabaseFile,
                    PersistenceType aPersistenceType,
                    const nsACString& aGroup,
@@ -2369,7 +2382,7 @@ CreateDatabaseConnection(nsIFile* aDBFile,
       }
     } else  {
       // This logic needs to change next time we change the schema!
-      static_assert(kSQLiteSchemaVersion == int32_t((16 << 4) + 0),
+      static_assert(kSQLiteSchemaVersion == int32_t((17 << 4) + 0),
                     "Upgrade function needed due to schema version increase.");
 
       while (schemaVersion != kSQLiteSchemaVersion) {
@@ -2398,6 +2411,8 @@ CreateDatabaseConnection(nsIFile* aDBFile,
           rv = UpgradeSchemaFrom14_0To15_0(connection);
         } else if (schemaVersion == MakeSchemaVersion(15, 0)) {
           rv = UpgradeSchemaFrom15_0To16_0(connection);
+        } else if (schemaVersion == MakeSchemaVersion(16, 0)) {
+          rv = UpgradeSchemaFrom16_0To17_0(connection);
         } else {
           IDB_WARNING("Unable to open IndexedDB database, no upgrade path is "
                       "available!");

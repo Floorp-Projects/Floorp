@@ -648,6 +648,8 @@ class BuildReaderError(Exception):
             return
 
         if inner.args[0] == 'global_ns':
+            import difflib
+
             verb = None
             if inner.args[1] == 'get_unknown':
                 verb = 'read'
@@ -673,6 +675,11 @@ class BuildReaderError(Exception):
             s.write('\n')
             s.write('    %s\n' % inner.args[2])
             s.write('\n')
+            close_matches = difflib.get_close_matches(inner.args[2],
+                                                      VARIABLES.keys(), 2)
+            if close_matches:
+                s.write('Maybe you meant %s?\n' % ' or '.join(close_matches))
+                s.write('\n')
 
             if inner.args[2] in DEPRECATION_HINTS:
                 s.write('%s\n' %
