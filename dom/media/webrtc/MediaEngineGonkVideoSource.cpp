@@ -53,7 +53,8 @@ MediaEngineGonkVideoSource::NotifyPull(MediaStreamGraph* aGraph,
 
   // Note: we're not giving up mImage here
   nsRefPtr<layers::Image> image = mImage;
-  TrackTicks target = aSource->TimeToTicksRoundUp(USECS_PER_S, aDesiredTime);
+  TrackTicks target = aSource->TimeToTicksRoundUp(
+      aSource->GraphRate(), aDesiredTime);
   TrackTicks delta = target - aLastEndTime;
   LOGFRAME(("NotifyPull, desired = %ld, target = %ld, delta = %ld %s", (int64_t) aDesiredTime,
             (int64_t) target, (int64_t) delta, image ? "" : "<null>"));
@@ -146,7 +147,7 @@ MediaEngineGonkVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 
   mSources.AppendElement(aStream);
 
-  aStream->AddTrack(aID, USECS_PER_S, 0, new VideoSegment());
+  aStream->AddTrack(aID, aStream->GraphRate(), 0, new VideoSegment());
   aStream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
 
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);

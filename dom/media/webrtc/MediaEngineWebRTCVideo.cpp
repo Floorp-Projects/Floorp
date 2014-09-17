@@ -134,7 +134,8 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   // So mState could be kReleased here.  We really don't care about the state,
   // though.
 
-  TrackTicks target = aSource->TimeToTicksRoundUp(USECS_PER_S, aDesiredTime);
+  TrackTicks target = aSource->TimeToTicksRoundUp(
+      aSource->GraphRate(), aDesiredTime);
   TrackTicks delta = target - aLastEndTime;
   LOGFRAME(("NotifyPull, desired = %ld, target = %ld, delta = %ld %s", (int64_t) aDesiredTime,
             (int64_t) target, (int64_t) delta, mImage ? "" : "<null>"));
@@ -398,7 +399,7 @@ MediaEngineWebRTCVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
 
   mSources.AppendElement(aStream);
 
-  aStream->AddTrack(aID, USECS_PER_S, 0, new VideoSegment());
+  aStream->AddTrack(aID, aStream->GraphRate(), 0, new VideoSegment());
   aStream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
 
   if (mState == kStarted) {
