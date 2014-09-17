@@ -33,20 +33,10 @@ const Heritage = require("sdk/core/heritage");
 const {setTimeout, clearTimeout} = require("sdk/timers");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 
-exports.register = function(handle) {
-  handle.addGlobalActor(ReflowActor, "reflowActor");
-  handle.addTabActor(ReflowActor, "reflowActor");
-};
-
-exports.unregister = function(handle) {
-  handle.removeGlobalActor(ReflowActor);
-  handle.removeTabActor(ReflowActor);
-};
-
 /**
  * The reflow actor tracks reflows and emits events about them.
  */
-let ReflowActor = protocol.ActorClass({
+let ReflowActor = exports.ReflowActor = protocol.ActorClass({
   typeName: "reflow",
 
   events: {

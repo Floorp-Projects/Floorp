@@ -18,16 +18,6 @@ const PROGRAM_DEFAULT_TRAITS = 0;
 const PROGRAM_BLACKBOX_TRAIT = 1;
 const PROGRAM_HIGHLIGHT_TRAIT = 2;
 
-exports.register = function(handle) {
-  handle.addTabActor(WebGLActor, "webglActor");
-  handle.addGlobalActor(WebGLActor, "webglActor");
-}
-
-exports.unregister = function(handle) {
-  handle.removeTabActor(WebGLActor);
-  handle.removeGlobalActor(WebGLActor);
-}
-
 /**
  * A WebGL Shader contributing to building a WebGL Program.
  * You can either retrieve, or compile the source of a shader, which will

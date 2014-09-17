@@ -7,6 +7,113 @@
 "use strict";
 
 /**
+ * Creates "registered" actors factory meant for creating another kind of
+ * factories, ObservedActorFactory, during the call to listTabs.
+ * These factories live in DebuggerServer.{tab|global}ActorFactories.
+ *
+ * These actors only exposes:
+ * - `name` string attribute used to match actors by constructor name
+ *   in DebuggerServer.remove{Global,Tab}Actor.
+ * - `createObservedActorFactory` function to create "observed" actors factory
+ *
+ * @param options object, function
+ *        Either an object or a function.
+ *        If given an object:
+ *
+ *        If given a function (deprecated):
+ *          Constructor function of an actor.
+ *          The constructor function for this actor type.
+ *          This expects to be called as a constructor (i.e. with 'new'),
+ *          and passed two arguments: the DebuggerServerConnection, and
+ *          the BrowserTabActor with which it will be associated.
+ *          Only used for deprecated eagerly loaded actors.
+ *
+ */
+function RegisteredActorFactory(options, prefix) {
+  // By default the actor name will also be used for the actorID prefix.
+  this._prefix = prefix;
+  if (typeof(options) != "function") {
+    // Lazy actor definition, where options contains all the information
+    // required to load the actor lazily.
+    this._getConstructor = function () {
+      // Load the module
+      let mod;
+      try {
+        mod = require(options.id);
+      } catch(e) {
+        throw new Error("Unable to load actor module '" + options.id + "'.\n" +
+                        e.message + "\n" + e.stack + "\n");
+      }
+      // Fetch the actor constructor
+      let c = mod[options.constructorName];
+      if (!c) {
+        throw new Error("Unable to find actor constructor named '" +
+                        options.constructorName + "'. (Is it exported?)");
+      }
+      return c;
+    };
+  } else {
+    // Old actor case, where options is a function that is the actor constructor.
+    this._getConstructor = () => options;
+    // Exposes `name` attribute in order to allow removeXXXActor to match
+    // the actor by its actor contructor name.
+    this.name = options.name;
+    // For old actors, we allow the use of a different prefix for actorID
+    // than for listTabs actor names, by fetching a prefix on the actor prototype.
+    // (Used by ChromeDebuggerActor)
+    if (options.prototype.actorPrefix) {
+      this._prefix = options.prototype.actorPrefix;
+    }
+  }
+}
+RegisteredActorFactory.prototype.createObservedActorFactory = function (conn, parentActor) {
+  return new ObservedActorFactory(this._getConstructor, this._prefix, conn, parentActor);
+}
+exports.RegisteredActorFactory = RegisteredActorFactory;
+
+/**
+ * Creates "observed" actors factory meant for creating real actor instances.
+ * These factories lives in actor pools and fake various actor attributes.
+ * They will be replaced in actor pools by final actor instances during
+ * the first request for the same actorID from DebuggerServer._getOrCreateActor.
+ *
+ * ObservedActorFactory fakes the following actors attributes:
+ *   actorPrefix (string) Used by ActorPool.addActor to compute the actor id
+ *   actorID (string) Set by ActorPool.addActor just after being instanciated
+ *   registeredPool (object) Set by ActorPool.addActor just after being
+ *                           instanciated
+ * And exposes the following method:
+ *   createActor (function) Instantiate an actor that is going to replace
+ *                          this factory in the actor pool.
+ */
+function ObservedActorFactory(getConstructor, prefix, conn, parentActor) {
+  this._getConstructor = getConstructor;
+  this._conn = conn;
+  this._parentActor = parentActor;
+
+  this.actorPrefix = prefix;
+
+  this.actorID = null;
+  this.registeredPool = null;
+}
+ObservedActorFactory.prototype.createActor = function () {
+  // Fetch the actor constructor
+  let c = this._getConstructor();
+  // Instantiate a new actor instance
+  let instance = new c(this._conn, this._parentActor);
+  instance.conn = this._conn;
+  instance.parentID = this._parentActor.actorID;
+  // We want the newly-constructed actor to completely replace the factory
+  // actor. Reusing the existing actor ID will make sure ActorPool.addActor
+  // does the right thing.
+  instance.actorID = this.actorID;
+  this.registeredPool.addActor(instance);
+  return instance;
+}
+exports.ObservedActorFactory = ObservedActorFactory;
+
+
+/**
  * Methods shared between RootActor and BrowserTabActor.
  */
 
@@ -48,9 +155,11 @@ exports.createExtraActors = function createExtraActors(aFactories, aPool) {
   for (let name in aFactories) {
     let actor = this._extraActors[name];
     if (!actor) {
-      actor = aFactories[name].bind(null, this.conn, this);
-      actor.prototype = aFactories[name].prototype;
-      actor.parentID = this.actorID;
+      // Register another factory, but this time specific to this connection.
+      // It creates a fake actor that looks like an regular actor in the pool,
+      // but without actually instantiating the actor.
+      // It will only be instanciated on the first request made to the actor.
+      actor = aFactories[name].createObservedActorFactory(this.conn, this);
       this._extraActors[name] = actor;
     }
     aPool.addActor(actor);
@@ -105,7 +214,7 @@ ActorPool.prototype = {
     aActor.conn = this.conn;
     if (!aActor.actorID) {
       let prefix = aActor.actorPrefix;
-      if (typeof aActor == "function") {
+      if (!prefix && typeof aActor == "function") {
         // typeName is a convention used with protocol.js-based actors
         prefix = aActor.prototype.actorPrefix || aActor.prototype.typeName;
       }

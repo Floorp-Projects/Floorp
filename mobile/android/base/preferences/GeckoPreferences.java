@@ -661,9 +661,9 @@ OnSharedPreferenceChangeListener
                     preferences.removePreference(pref);
                     i--;
                     continue;
-                } else if (AppConstants.RELEASE_BUILD &&
+                } else if ((AppConstants.RELEASE_BUILD || !HardwareUtils.isTablet()) &&
                            PREFS_NEW_TABLET_UI.equals(key)) {
-                    // Remove toggle for new tablet UI on release builds.
+                    // Remove toggle for new tablet UI on release builds and phones.
                     preferences.removePreference(pref);
                     i--;
                     continue;

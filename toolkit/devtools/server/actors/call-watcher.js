@@ -12,14 +12,6 @@ const {ContentObserver} = require("devtools/content-observer");
 const {on, once, off, emit} = events;
 const {method, Arg, Option, RetVal} = protocol;
 
-exports.register = function(handle) {
-  handle.addTabActor(CallWatcherActor, "callWatcherActor");
-};
-
-exports.unregister = function(handle) {
-  handle.removeTabActor(CallWatcherActor);
-};
-
 /**
  * Type describing a single function call in a stack trace.
  */

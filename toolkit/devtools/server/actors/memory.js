@@ -156,13 +156,3 @@ exports.MemoryFront = protocol.FrontClass(MemoryActor, {
     this.manage(this);
   }
 });
-
-exports.register = function(handle) {
-  handle.addGlobalActor(MemoryActor, "memoryActor");
-  handle.addTabActor(MemoryActor, "memoryActor");
-};
-
-exports.unregister = function(handle) {
-  handle.removeGlobalActor(MemoryActor, "memoryActor");
-  handle.removeTabActor(MemoryActor, "memoryActor");
-};

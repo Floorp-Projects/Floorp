@@ -35,16 +35,6 @@ transition-property: all !important;\
 
 let LOAD_ERROR = "error-load";
 
-exports.register = function(handle) {
-  handle.addTabActor(StyleSheetsActor, "styleSheetsActor");
-  handle.addGlobalActor(StyleSheetsActor, "styleSheetsActor");
-};
-
-exports.unregister = function(handle) {
-  handle.removeTabActor(StyleSheetsActor);
-  handle.removeGlobalActor(StyleSheetsActor);
-};
-
 types.addActorType("stylesheet");
 types.addActorType("originalsource");
 
@@ -52,7 +42,7 @@ types.addActorType("originalsource");
  * Creates a StyleSheetsActor. StyleSheetsActor provides remote access to the
  * stylesheets of a document.
  */
-let StyleSheetsActor = protocol.ActorClass({
+let StyleSheetsActor = exports.StyleSheetsActor = protocol.ActorClass({
   typeName: "stylesheets",
 
   /**

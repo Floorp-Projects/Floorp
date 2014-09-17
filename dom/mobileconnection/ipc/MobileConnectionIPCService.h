@@ -6,7 +6,7 @@
 #define mozilla_dom_mobileconnection_MobileConnectionIPCService_h
 
 #include "nsCOMPtr.h"
-#include "mozilla/dom/mobileconnection/MobileConnectionChild.h"
+#include "MobileConnectionChild.h"
 #include "nsIMobileConnectionService.h"
 
 namespace mozilla {
@@ -19,17 +19,24 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMOBILECONNECTIONSERVICE
 
-  MobileConnectionIPCService();
+  static MobileConnectionIPCService*
+  GetSingleton();
 
 private:
-  // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
+  MobileConnectionIPCService();
+
   ~MobileConnectionIPCService();
 
-  nsTArray<nsRefPtr<MobileConnectionChild>> mItems;
+  /** Send request */
+  nsresult
+  SendRequest(uint32_t aClientId, MobileConnectionRequest aRequest,
+              nsIMobileConnectionCallback* aRequestCallback);
+
+  nsTArray<nsRefPtr<MobileConnectionChild>> mClients;
 };
 
-} // namespace mobileconnection
-} // namespace dom
-} // namespace mozilla
+} // name space mobileconnection
+} // name space dom
+} // name space mozilla
 
 #endif // mozilla_dom_mobileconnection_MobileConnectionIPCService_h

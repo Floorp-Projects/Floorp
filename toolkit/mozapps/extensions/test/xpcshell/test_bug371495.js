@@ -18,18 +18,18 @@ function run_test()
   // Install test add-on
   startupManager();
   installAllFiles([do_get_addon(ADDON)], function() {
-    AddonManager.getAddonByID(ID, function(addon) {
+    AddonManager.getAddonByID(ID, callback_soon(function(addon) {
       do_check_neq(addon, null);
       do_check_eq(addon.name, "Test theme");
       restartManager();
 
-      AddonManager.getAddonByID(ID, function(addon) {
+      AddonManager.getAddonByID(ID, callback_soon(function(addon) {
         do_check_neq(addon, null);
         do_check_eq(addon.optionsURL, null);
         do_check_eq(addon.aboutURL, null);
 
         do_execute_soon(do_test_finished);
-      });
-    });
+      }));
+    }));
   });
 }

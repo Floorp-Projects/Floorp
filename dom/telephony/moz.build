@@ -22,6 +22,7 @@ EXPORTS.mozilla.dom.telephony += [
     'ipc/TelephonyChild.h',
     'ipc/TelephonyParent.h',
     'TelephonyCommon.h',
+    'TelephonyFactory.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -33,6 +34,7 @@ UNIFIED_SOURCES += [
     'TelephonyCall.cpp',
     'TelephonyCallGroup.cpp',
     'TelephonyCallId.cpp',
+    'TelephonyFactory.cpp',
 ]
 
 IPDL_SOURCES += [
