@@ -9,6 +9,7 @@
 #endif
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/BinarySearch.h"
 
 #include "gfxFontUtils.h"
 #include "gfxColor.h"
@@ -18,6 +19,7 @@
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/BinarySearch.h"
 
 #include "nsCOMPtr.h"
 #include "nsIUUIDGenerator.h"
@@ -704,49 +706,47 @@ gfxFontUtils::MapCharToGlyphFormat12(const uint8_t *aBuf, uint32_t aCh)
     return 0;
 }
 
+namespace {
+
+struct Format14CmapWrapper
+{
+    const Format14Cmap& mCmap14;
+    Format14CmapWrapper(const Format14Cmap& cmap14) : mCmap14(cmap14) {}
+    uint32_t operator[](size_t index) const {
+        return mCmap14.varSelectorRecords[index].varSelector;
+    }
+};
+
+struct NonDefUVSTableWrapper
+{
+    const NonDefUVSTable& mTable;
+    NonDefUVSTableWrapper(const NonDefUVSTable& table) : mTable(table) {}
+    uint32_t operator[](size_t index) const {
+        return mTable.uvsMappings[index].unicodeValue;
+    }
+};
+
+} // namespace
+
 uint16_t
 gfxFontUtils::MapUVSToGlyphFormat14(const uint8_t *aBuf, uint32_t aCh, uint32_t aVS)
 {
+    using mozilla::BinarySearch;
     const Format14Cmap *cmap14 = reinterpret_cast<const Format14Cmap*>(aBuf);
 
-    // binary search in varSelectorRecords
-    uint32_t min = 0;
-    uint32_t max = cmap14->numVarSelectorRecords;
-    uint32_t nonDefUVSOffset = 0;
-    while (min < max) {
-        uint32_t index = (min + max) >> 1;
-        uint32_t varSelector = cmap14->varSelectorRecords[index].varSelector;
-        if (aVS == varSelector) {
-            nonDefUVSOffset = cmap14->varSelectorRecords[index].nonDefaultUVSOffset;
-            break;
-        }
-        if (aVS < varSelector) {
-            max = index;
-        } else {
-            min = index + 1;
-        }
-    }
-    if (!nonDefUVSOffset) {
+    size_t index;
+    if (!BinarySearch(Format14CmapWrapper(*cmap14),
+                      0, cmap14->numVarSelectorRecords, aVS, &index)) {
         return 0;
     }
 
+    const uint32_t nonDefUVSOffset = cmap14->varSelectorRecords[index].nonDefaultUVSOffset;
     const NonDefUVSTable *table = reinterpret_cast<const NonDefUVSTable*>
                                       (aBuf + nonDefUVSOffset);
 
-    // binary search in uvsMappings
-    min = 0;
-    max = table->numUVSMappings;
-    while (min < max) {
-        uint32_t index = (min + max) >> 1;
-        uint32_t unicodeValue = table->uvsMappings[index].unicodeValue;
-        if (aCh == unicodeValue) {
-            return table->uvsMappings[index].glyphID;
-        }
-        if (aCh < unicodeValue) {
-            max = index;
-        } else {
-            min = index + 1;
-        }
+    if (BinarySearch(NonDefUVSTableWrapper(*table), 0, table->numUVSMappings,
+                     aCh, &index)) {
+        return table->uvsMappings[index].glyphID;
     }
 
     return 0;
@@ -1334,6 +1334,23 @@ const char* gfxFontUtils::gMSFontNameCharsets[] =
     /*[10] ENCODING_ID_MICROSOFT_UNICODEFULL */ ""
 };
 
+struct MacCharsetMappingComparator
+{
+    typedef gfxFontUtils::MacFontNameCharsetMapping MacFontNameCharsetMapping;
+    const MacFontNameCharsetMapping& mSearchValue;
+    MacCharsetMappingComparator(const MacFontNameCharsetMapping& aSearchValue)
+      : mSearchValue(aSearchValue) {}
+    int operator()(const MacFontNameCharsetMapping& aEntry) const {
+        if (mSearchValue < aEntry) {
+            return -1;
+        }
+        if (aEntry < mSearchValue) {
+            return 1;
+        }
+        return 0;
+    }
+};
+
 // Return the name of the charset we should use to decode a font name
 // given the name table attributes.
 // Special return values:
@@ -1349,27 +1366,15 @@ gfxFontUtils::GetCharsetForFontName(uint16_t aPlatform, uint16_t aScript, uint16
 
     case PLATFORM_ID_MAC:
         {
-            uint32_t lo = 0, hi = ArrayLength(gMacFontNameCharsets);
             MacFontNameCharsetMapping searchValue = { aScript, aLanguage, nullptr };
             for (uint32_t i = 0; i < 2; ++i) {
-                // binary search; if not found, set language to ANY and try again
-                while (lo < hi) {
-                    uint32_t mid = (lo + hi) / 2;
-                    const MacFontNameCharsetMapping& entry = gMacFontNameCharsets[mid];
-                    if (entry < searchValue) {
-                        lo = mid + 1;
-                        continue;
-                    }
-                    if (searchValue < entry) {
-                        hi = mid;
-                        continue;
-                    }
-                    // found a match
-                    return entry.mCharsetName;
+                size_t idx;
+                if (BinarySearchIf(gMacFontNameCharsets, 0, ArrayLength(gMacFontNameCharsets),
+                                            MacCharsetMappingComparator(searchValue), &idx)) {
+                    return gMacFontNameCharsets[idx].mCharsetName;
                 }
 
-                // no match, so reset high bound for search and re-try
-                hi = ArrayLength(gMacFontNameCharsets);
+                // no match, so try again finding one in any language
                 searchValue.mLanguage = ANY;
             }
         }

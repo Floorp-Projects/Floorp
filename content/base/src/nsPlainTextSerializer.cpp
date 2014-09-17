@@ -21,6 +21,7 @@
 #include "nsCRT.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/BinarySearch.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1861,13 +1862,36 @@ int32_t HeaderLevel(nsIAtom* aTag)
  * in ISO 10646.
  */
 
+namespace {
+
+struct interval
+{
+  uint16_t first;
+  uint16_t last;
+};
+
+struct CombiningComparator
+{
+  const char16_t mUcs;
+  CombiningComparator(char16_t ucs) : mUcs(ucs) {}
+  int operator()(const interval& combining) const {
+    if (mUcs > combining.last)
+      return 1;
+    if (mUcs < combining.first)
+      return -1;
+
+    MOZ_ASSERT(combining.first <= mUcs);
+    MOZ_ASSERT(mUcs <= combining.last);
+    return 0;
+  }
+};
+
+} // namespace
+
 int32_t GetUnicharWidth(char16_t ucs)
 {
   /* sorted list of non-overlapping intervals of non-spacing characters */
-  static const struct interval {
-    uint16_t first;
-    uint16_t last;
-  } combining[] = {
+  static const interval combining[] = {
     { 0x0300, 0x034E }, { 0x0360, 0x0362 }, { 0x0483, 0x0486 },
     { 0x0488, 0x0489 }, { 0x0591, 0x05A1 }, { 0x05A3, 0x05B9 },
     { 0x05BB, 0x05BD }, { 0x05BF, 0x05BF }, { 0x05C1, 0x05C2 },
@@ -1900,9 +1924,6 @@ int32_t GetUnicharWidth(char16_t ucs)
     { 0x20D0, 0x20E3 }, { 0x302A, 0x302F }, { 0x3099, 0x309A },
     { 0xFB1E, 0xFB1E }, { 0xFE20, 0xFE23 }
   };
-  int32_t min = 0;
-  int32_t max = sizeof(combining) / sizeof(struct interval) - 1;
-  int32_t mid;
 
   /* test for 8-bit control characters */
   if (ucs == 0)
@@ -1915,14 +1936,10 @@ int32_t GetUnicharWidth(char16_t ucs)
     return 1;
 
   /* binary search in table of non-spacing characters */
-  while (max >= min) {
-    mid = (min + max) / 2;
-    if (combining[mid].last < ucs)
-      min = mid + 1;
-    else if (combining[mid].first > ucs)
-      max = mid - 1;
-    else if (combining[mid].first <= ucs && combining[mid].last >= ucs)
-      return 0;
+  size_t idx;
+  if (BinarySearchIf(combining, 0, ArrayLength(combining),
+                     CombiningComparator(ucs), &idx)) {
+    return 0;
   }
 
   /* if we arrive here, ucs is not a combining or C0/C1 control character */

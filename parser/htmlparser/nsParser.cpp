@@ -42,6 +42,7 @@
 #include "nsIHTMLContentSink.h"
 
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/BinarySearch.h"
 
 using namespace mozilla;
 using mozilla::dom::EncodingUtils;
@@ -637,6 +638,20 @@ VerifyPublicIDs()
 }
 #endif
 
+namespace {
+
+struct PublicIdComparator
+{
+  const nsAutoCString& mPublicId;
+  PublicIdComparator(const nsAutoCString& aPublicId)
+    : mPublicId(aPublicId) {}
+  int operator()(const PubIDInfo& aInfo) const {
+    return nsCRT::strcmp(mPublicId.get(), aInfo.name);
+  }
+};
+
+} // namespace
+
 static void
 DetermineHTMLParseMode(const nsString& aBuffer,
                        nsDTDMode& aParseMode,
@@ -677,29 +692,15 @@ DetermineHTMLParseMode(const nsString& aBuffer,
       // sensitivity.
       ToLowerCase(publicID);
 
-      // Binary search to see if we can find the correct public ID
-      // These must be signed since maximum can go below zero and we'll
-      // crash if it's unsigned.
-      int32_t minimum = 0;
-      int32_t maximum = ELEMENTS_OF(kPublicIDs) - 1;
-      int32_t index;
-      for (;;) {
-        index = (minimum + maximum) / 2;
-        int32_t comparison =
-            nsCRT::strcmp(publicID.get(), kPublicIDs[index].name);
-        if (comparison == 0)
-          break;
-        if (comparison < 0)
-          maximum = index - 1;
-        else
-          minimum = index + 1;
-
-        if (maximum < minimum) {
-          // The DOCTYPE is not in our list, so it must be full_standards.
-          aParseMode = eDTDMode_full_standards;
-          aDocType = eHTML_Strict;
-          return;
-        }
+      // Binary search to see if we can find the correct public ID.
+      size_t index;
+      bool found = BinarySearchIf(kPublicIDs, 0, ArrayLength(kPublicIDs),
+                                  PublicIdComparator(publicID), &index);
+      if (!found) {
+        // The DOCTYPE is not in our list, so it must be full_standards.
+        aParseMode = eDTDMode_full_standards;
+        aDocType = eHTML_Strict;
+        return;
       }
 
       switch ((resultFlags & PARSE_DTD_HAVE_SYSTEM_ID)
