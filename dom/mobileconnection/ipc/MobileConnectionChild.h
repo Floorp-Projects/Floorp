@@ -5,15 +5,14 @@
 #ifndef mozilla_dom_mobileconnection_MobileConnectionChild_h
 #define mozilla_dom_mobileconnection_MobileConnectionChild_h
 
+#include "mozilla/dom/MobileConnectionCallback.h"
 #include "mozilla/dom/MobileConnectionInfo.h"
-#include "mozilla/dom/mobileconnection/PMobileConnectionChild.h"
-#include "mozilla/dom/mobileconnection/PMobileConnectionRequestChild.h"
+#include "mozilla/dom/PMobileConnectionChild.h"
+#include "mozilla/dom/PMobileConnectionRequestChild.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsIMobileConnectionService.h"
 #include "nsIVariant.h"
-
-class nsIMobileConnectionCallback;
 
 namespace mozilla {
 namespace dom {
@@ -25,14 +24,16 @@ namespace mobileconnection {
  * shutdown. For multi-sim device, more than one instance will
  * be created and each instance represents a sim slot.
  */
-class MobileConnectionChild MOZ_FINAL : public PMobileConnectionChild
-                                      , public nsIMobileConnection
+class MobileConnectionChild : public PMobileConnectionChild
 {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIMOBILECONNECTION
+  NS_INLINE_DECL_REFCOUNTING(MobileConnectionChild)
 
-  MobileConnectionChild(uint32_t aServiceId);
+public:
+  MobileConnectionChild()
+    : mLive(true)
+  {
+    MOZ_COUNT_CTOR(MobileConnectionChild);
+  }
 
   void
   Init();
@@ -40,19 +41,47 @@ public:
   void
   Shutdown();
 
-private:
-  MobileConnectionChild() MOZ_DELETE;
+  void
+  RegisterListener(nsIMobileConnectionListener* aListener);
 
-  // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
+  void
+  UnregisterListener(nsIMobileConnectionListener* aListener);
+
+  MobileConnectionInfo*
+  GetVoiceInfo();
+
+  MobileConnectionInfo*
+  GetDataInfo();
+
+  void
+  GetIccId(nsAString& aIccId);
+
+  void
+  GetRadioState(nsAString& aRadioState);
+
+  nsIVariant*
+  GetSupportedNetworkTypes();
+
+  void
+  GetLastNetwork(nsAString& aNetwork);
+
+  void
+  GetLastHomeNetwork(nsAString& aNetwork);
+
+  void
+  GetNetworkSelectionMode(nsAString& aMode);
+
+  bool
+  SendRequest(MobileConnectionRequest aRequest,
+              nsIMobileConnectionCallback* aRequestCallback);
+
+protected:
+  virtual
   ~MobileConnectionChild()
   {
     MOZ_COUNT_DTOR(MobileConnectionChild);
+    Shutdown();
   }
-
-protected:
-  bool
-  SendRequest(const MobileConnectionRequest& aRequest,
-              nsIMobileConnectionCallback* aCallback);
 
   virtual void
   ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
@@ -107,9 +136,9 @@ protected:
   RecvNotifyNetworkSelectionModeChanged(const nsString& aMode) MOZ_OVERRIDE;
 
 private:
-  uint32_t mServiceId;
   bool mLive;
   nsCOMArray<nsIMobileConnectionListener> mListeners;
+  nsCOMPtr<nsIWritableVariant> mSupportedNetworkTypes;
   nsRefPtr<MobileConnectionInfo> mVoice;
   nsRefPtr<MobileConnectionInfo> mData;
   nsString mIccId;
@@ -117,7 +146,6 @@ private:
   nsString mLastNetwork;
   nsString mLastHomeNetwork;
   nsString mNetworkSelectionMode;
-  nsTArray<nsString> mSupportedNetworkTypes;
 };
 
 /******************************************************************************

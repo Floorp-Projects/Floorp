@@ -716,6 +716,14 @@ audio:not([controls]) > xul|videocontrols {
   -moz-binding: none;
 }
 
+/* XXXdholbert This '@supports' wrapper should be removed once we remove the
+ * pref "layout.css.object-fit-and-position.enabled". */
+@supports (object-fit: contain) {
+  video {
+    object-fit: contain;
+  }
+}
+
 audio:not([controls]) {
   display: none;
 }

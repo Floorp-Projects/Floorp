@@ -54,8 +54,7 @@ this.PhoneNumberUtils = {
     let clientId = 0;
 
     // Get network mcc
-    let connection = mobileConnection.getItemByServiceId(clientId);
-    let voice = connection && connection.voice;
+    let voice = mobileConnection.getVoiceConnectionInfo(clientId);
     if (voice && voice.network && voice.network.mcc) {
       mcc = voice.network.mcc;
     }

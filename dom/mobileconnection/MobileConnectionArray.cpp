@@ -4,17 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/MobileConnectionArray.h"
+#include "MobileConnectionArray.h"
 #include "mozilla/dom/MozMobileConnectionArrayBinding.h"
 #include "mozilla/Preferences.h"
-#include "nsServiceManagerUtils.h"
-
-// Service instantiation
-#include "ipc/MobileConnectionIPCService.h"
-#if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
-#include "nsIGonkMobileConnectionService.h"
-#endif
-#include "nsXULAppAPI.h" // For XRE_GetProcessType()
 
 using namespace mozilla::dom;
 
@@ -31,14 +23,30 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MobileConnectionArray)
 NS_INTERFACE_MAP_END
 
 MobileConnectionArray::MobileConnectionArray(nsPIDOMWindow* aWindow)
-  : mLengthInitialized(false)
+  : mInitialized(false)
   , mWindow(aWindow)
 {
+  uint32_t numRil = mozilla::Preferences::GetUint("ril.numRadioInterfaces", 1);
+  MOZ_ASSERT(numRil > 0);
+
+  mMobileConnections.SetLength(numRil);
+
   SetIsDOMBinding();
 }
 
 MobileConnectionArray::~MobileConnectionArray()
 {
+}
+
+void
+MobileConnectionArray::Init()
+{
+  mInitialized = true;
+
+  for (uint32_t id = 0; id < mMobileConnections.Length(); id++) {
+    nsRefPtr<MobileConnection> mobileConnection = new MobileConnection(mWindow, id);
+    mMobileConnections[id] = mobileConnection;
+  }
 }
 
 nsPIDOMWindow*
@@ -62,53 +70,20 @@ MobileConnectionArray::Item(uint32_t aIndex)
 }
 
 uint32_t
-MobileConnectionArray::Length()
+MobileConnectionArray::Length() const
 {
-  if (!mLengthInitialized) {
-    mLengthInitialized = true;
-
-    nsCOMPtr<nsIMobileConnectionService> service =
-      do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
-    NS_ENSURE_TRUE(service, 0);
-
-    uint32_t length = 0;
-    nsresult rv = service->GetNumItems(&length);
-    NS_ENSURE_SUCCESS(rv, 0);
-
-    mMobileConnections.SetLength(length);
-  }
-
   return mMobileConnections.Length();
 }
 
 MobileConnection*
 MobileConnectionArray::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
-
-  aFound = aIndex < Length();
-  if (!aFound) {
-    return nullptr;
+  if (!mInitialized) {
+    Init();
   }
 
-  if (!mMobileConnections[aIndex]) {
-    mMobileConnections[aIndex] = new MobileConnection(mWindow, aIndex);
-  }
+  aFound = false;
+  aFound = aIndex < mMobileConnections.Length();
 
-  return mMobileConnections[aIndex];
-}
-
-already_AddRefed<nsIMobileConnectionService>
-NS_CreateMobileConnectionService()
-{
-  nsCOMPtr<nsIMobileConnectionService> service;
-
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    service = new mozilla::dom::mobileconnection::MobileConnectionIPCService();
-  } else {
-#if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
-    service = do_CreateInstance(GONK_MOBILECONNECTION_SERVICE_CONTRACTID);
-#endif
-  }
-
-  return service.forget();
+  return aFound ? mMobileConnections[aIndex] : nullptr;
 }

@@ -22,7 +22,7 @@
 #define kCFCoreFoundationVersionNumber10_7 635.00
 #endif
 
-#define CUBEB_STREAM_MAX 16
+#define CUBEB_STREAM_MAX 8
 #define NBUFS 4
 
 static struct cubeb_ops const audiounit_ops;

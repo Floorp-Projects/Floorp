@@ -78,7 +78,7 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
     video.appendChild(trackTwo);
 
     video.src = "seek.webm";
-    video.preload = "auto";
+    video.preload = "metadata";
 
     document.getElementById("content").appendChild(video);
 
