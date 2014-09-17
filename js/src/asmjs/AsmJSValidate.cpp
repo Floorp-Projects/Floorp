@@ -4524,7 +4524,7 @@ CheckFuncPtrCall(FunctionCompiler &f, ParseNode *callNode, RetType retType, MDef
 
     uint32_t mask;
     if (!IsLiteralInt(f.m(), maskNode, &mask) || mask == UINT32_MAX || !IsPowerOfTwo(mask + 1))
-        return f.fail(maskNode, "function-pointer table index mask value must be a power of two");
+        return f.fail(maskNode, "function-pointer table index mask value must be a power of two minus 1");
 
     MDefinition *indexDef;
     Type indexType;
@@ -5958,16 +5958,14 @@ CheckIfConditional(FunctionCompiler &f, ParseNode *conditional, ParseNode *thenS
     return true;
 }
 
-/*
- * Recursive function that checks for a complex condition (formed with ternary
- * conditionals) and creates the associated short-circuiting control flow graph.
- *
- * After a call to CheckCondition, the followings are true:
- * - if *thenBlock and *elseOrJoinBlock were non-null on entry, their value is
- *   not changed by this function.
- * - *thenBlock and *elseOrJoinBlock are non-null on exit.
- * - the current block on exit is the *thenBlock.
- */
+// Recursive function that checks for a complex condition (formed with ternary
+// conditionals) and creates the associated short-circuiting control flow graph.
+//
+// After a call to CheckCondition, the followings are true:
+// - if *thenBlock and *elseOrJoinBlock were non-null on entry, their value is
+//   not changed by this function.
+// - *thenBlock and *elseOrJoinBlock are non-null on exit.
+// - the current block on exit is the *thenBlock.
 static bool
 CheckIfCondition(FunctionCompiler &f, ParseNode *cond, ParseNode *thenStmt,
                  ParseNode *elseOrJoinStmt, MBasicBlock **thenBlock, MBasicBlock **elseOrJoinBlock)
@@ -5978,7 +5976,6 @@ CheckIfCondition(FunctionCompiler &f, ParseNode *cond, ParseNode *thenStmt,
         return CheckIfConditional(f, cond, thenStmt, elseOrJoinStmt, thenBlock, elseOrJoinBlock);
 
     // We've reached a leaf, i.e. an atomic condition
-    JS_ASSERT(!cond->isKind(PNK_CONDITIONAL));
     if (!CheckLeafCondition(f, cond, thenStmt, elseOrJoinStmt, thenBlock, elseOrJoinBlock))
         return false;
 
@@ -6594,7 +6591,7 @@ GetUnusedTask(ParallelGroupState &group, uint32_t i, AsmJSParallelTask **outTask
 }
 
 static bool
-CheckFunctionsParallelImpl(ModuleCompiler &m, ParallelGroupState &group)
+CheckFunctionsParallel(ModuleCompiler &m, ParallelGroupState &group)
 {
 #ifdef DEBUG
     {
@@ -6651,11 +6648,11 @@ CheckFunctionsParallelImpl(ModuleCompiler &m, ParallelGroupState &group)
 static void
 CancelOutstandingJobs(ModuleCompiler &m, ParallelGroupState &group)
 {
-    // This is failure-handling code, so it's not allowed to fail.
-    // The problem is that all memory for compilation is stored in LifoAllocs
-    // maintained in the scope of CheckFunctionsParallel() -- so in order
-    // for that function to safely return, and thereby remove the LifoAllocs,
-    // none of that memory can be in use or reachable by helpers.
+    // This is failure-handling code, so it's not allowed to fail. The problem
+    // is that all memory for compilation is stored in LifoAllocs maintained in
+    // the scope of CheckFunctions() -- so in order for that function to safely
+    // return, and thereby remove the LifoAllocs, none of that memory can be in
+    // use or reachable by helpers.
 
     JS_ASSERT(group.outstandingJobs >= 0);
     if (!group.outstandingJobs)
@@ -6692,7 +6689,7 @@ CancelOutstandingJobs(ModuleCompiler &m, ParallelGroupState &group)
 static const size_t LIFO_ALLOC_PARALLEL_CHUNK_SIZE = 1 << 12;
 
 static bool
-CheckFunctionsParallel(ModuleCompiler &m)
+CheckFunctions(ModuleCompiler &m)
 {
     // If parallel compilation isn't enabled (not enough cores, disabled by
     // pref, etc) or another thread is currently compiling asm.js in parallel,
@@ -6719,7 +6716,7 @@ CheckFunctionsParallel(ModuleCompiler &m)
 
     // With compilation memory in-scope, dispatch helper threads.
     ParallelGroupState group(tasks);
-    if (!CheckFunctionsParallelImpl(m, group)) {
+    if (!CheckFunctionsParallel(m, group)) {
         CancelOutstandingJobs(m, group);
 
         // If failure was triggered by a helper thread, report error.
@@ -7910,7 +7907,7 @@ CheckModule(ExclusiveContext *cx, AsmJSParser &parser, ParseNode *stmtList,
 
     m.startFunctionBodies();
 
-    if (!CheckFunctionsParallel(m))
+    if (!CheckFunctions(m))
         return false;
 
     m.finishFunctionBodies();
