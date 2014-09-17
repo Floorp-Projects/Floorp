@@ -289,8 +289,9 @@ public:
     return 0;
   }
 
-  bool IsNull() {
-    for (ChunkIterator ci(*this); !ci.IsEnded(); ci.Next()) {
+  bool IsNull() const {
+    for (ChunkIterator ci(*const_cast<AudioSegment*>(this)); !ci.IsEnded();
+         ci.Next()) {
       if (!ci->IsNull()) {
         return false;
       }
