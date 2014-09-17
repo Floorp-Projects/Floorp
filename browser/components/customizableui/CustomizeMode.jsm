@@ -1234,19 +1234,27 @@ CustomizeMode.prototype = {
   },
 
   onLWThemesMenuShowing: function(aEvent) {
-    AddonManager.getAddonsByTypes(["theme"], function(aThemes) {
-      function buildToolbarButton(doc, aTheme) {
-        function previewTheme(aEvent) {
-          LightweightThemeManager.previewTheme(aEvent.target.theme);
-        }
-        function resetPreview() {
-          LightweightThemeManager.resetPreview();
-        }
+    const DEFAULT_THEME_ID = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
+    const RECENT_LWT_COUNT = 5;
+
+    function previewTheme(aEvent) {
+      LightweightThemeManager.previewTheme(aEvent.target.theme);
+    }
+
+    function resetPreview() {
+      LightweightThemeManager.resetPreview();
+    }
+
+    AddonManager.getAddonByID(DEFAULT_THEME_ID, function(aDefaultTheme) {
+      let doc = this.window.document;
+
+      function buildToolbarButton(aTheme) {
         let tbb = doc.createElement("toolbarbutton");
         tbb.theme = aTheme;
         tbb.setAttribute("label", aTheme.name);
         tbb.setAttribute("image", aTheme.iconURL);
-        tbb.setAttribute("tooltiptext", aTheme.description);
+        if (aTheme.description)
+          tbb.setAttribute("tooltiptext", aTheme.description);
         tbb.setAttribute("tabindex", "0");
         tbb.classList.add("customization-lwtheme-menu-theme");
         tbb.setAttribute("aria-checked", aTheme.isActive);
@@ -1262,24 +1270,27 @@ CustomizeMode.prototype = {
         return tbb;
       }
 
-      const DEFAULT_THEME_ID = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
-      // Order the themes so the Default theme is always at the beginning.
-      aThemes.sort((a,b) => {a.id != DEFAULT_THEME_ID});
-      let doc = this.window.document;
+      let themes = [aDefaultTheme];
+      let lwts = LightweightThemeManager.usedThemes;
+      if (lwts.length > RECENT_LWT_COUNT)
+        lwts.length = RECENT_LWT_COUNT;
+      let currentLwt = LightweightThemeManager.currentTheme;
+      for (let lwt of lwts) {
+        lwt.isActive = !!currentLwt && (lwt.id == currentLwt.id);
+        themes.push(lwt);
+      }
+
       let footer = doc.getElementById("customization-lwtheme-menu-footer");
       let panel = footer.parentNode;
       let themesInMyThemesSection = 0;
       let recommendedLabel = doc.getElementById("customization-lwtheme-menu-recommended");
-      for (let theme of aThemes) {
-        // Only allow the Default full theme to be shown in this list.
-        if ("skinnable" in theme &&
-            theme.id != DEFAULT_THEME_ID) {
-          continue;
-        }
-
-        let tbb = buildToolbarButton(doc, theme);
+      for (let theme of themes) {
+        let tbb = buildToolbarButton(theme);
         tbb.addEventListener("command", function() {
-          this.theme.userDisabled = false;
+          if ("userDisabled" in this.theme)
+            this.theme.userDisabled = false;
+          else
+            LightweightThemeManager.currentTheme = this.theme;
           this.parentNode.hidePopup();
         });
         panel.insertBefore(tbb, recommendedLabel);
@@ -1294,7 +1305,7 @@ CustomizeMode.prototype = {
       for (let theme of recommendedThemes) {
         theme.name = sb.GetStringFromName("lightweightThemes." + theme.id + ".name");
         theme.description = sb.GetStringFromName("lightweightThemes." + theme.id + ".description");
-        let tbb = buildToolbarButton(doc, theme);
+        let tbb = buildToolbarButton(theme);
         tbb.addEventListener("command", function() {
           LightweightThemeManager.setLocalTheme(this.theme);
           recommendedThemes = recommendedThemes.filter((aTheme) => { return aTheme.id != this.theme.id; });
