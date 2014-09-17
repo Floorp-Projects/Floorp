@@ -381,9 +381,9 @@ BaselineInspector::hasSeenAccessedGetter(jsbytecode *pc)
 }
 
 bool
-BaselineInspector::hasSeenNonStringIterNext(jsbytecode *pc)
+BaselineInspector::hasSeenNonStringIterMore(jsbytecode *pc)
 {
-    JS_ASSERT(JSOp(*pc) == JSOP_ITERNEXT);
+    JS_ASSERT(JSOp(*pc) == JSOP_MOREITER);
 
     if (!hasBaselineScript())
         return false;
@@ -391,7 +391,7 @@ BaselineInspector::hasSeenNonStringIterNext(jsbytecode *pc)
     const ICEntry &entry = icEntryFromPC(pc);
     ICStub *stub = entry.fallbackStub();
 
-    return stub->toIteratorNext_Fallback()->hasNonStringResult();
+    return stub->toIteratorMore_Fallback()->hasNonStringResult();
 }
 
 bool

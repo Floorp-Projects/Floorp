@@ -10213,31 +10213,6 @@ class MIteratorStart
     }
 };
 
-class MIteratorNext
-  : public MUnaryInstruction,
-    public SingleObjectPolicy
-{
-    explicit MIteratorNext(MDefinition *iter)
-      : MUnaryInstruction(iter)
-    {
-        setResultType(MIRType_Value);
-    }
-
-  public:
-    INSTRUCTION_HEADER(IteratorNext)
-
-    static MIteratorNext *New(TempAllocator &alloc, MDefinition *iter) {
-        return new(alloc) MIteratorNext(iter);
-    }
-
-    TypePolicy *typePolicy() {
-        return this;
-    }
-    MDefinition *iterator() const {
-        return getOperand(0);
-    }
-};
-
 class MIteratorMore
   : public MUnaryInstruction,
     public SingleObjectPolicy
@@ -10245,7 +10220,7 @@ class MIteratorMore
     explicit MIteratorMore(MDefinition *iter)
       : MUnaryInstruction(iter)
     {
-        setResultType(MIRType_Boolean);
+        setResultType(MIRType_Value);
     }
 
   public:
@@ -10260,6 +10235,28 @@ class MIteratorMore
     }
     MDefinition *iterator() const {
         return getOperand(0);
+    }
+};
+
+class MIsNoIter
+  : public MUnaryInstruction
+{
+    MIsNoIter(MDefinition *def)
+      : MUnaryInstruction(def)
+    {
+        setResultType(MIRType_Boolean);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(IsNoIter)
+
+    static MIsNoIter *New(TempAllocator &alloc, MDefinition *def) {
+        return new(alloc) MIsNoIter(def);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
     }
 };
 

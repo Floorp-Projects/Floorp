@@ -615,30 +615,25 @@
      */ \
     macro(JSOP_ITER,      75, "iter",       NULL,         2,  1,  1,  JOF_UINT8) \
     /*
-     * Stores the next iterated value into 'cx->iterValue' and pushes 'true'
-     * onto the stack if another value is available, and 'false' otherwise.
-     * It is followed immediately by JSOP_IFNE.
+     * Pushes the next iterated value onto the stack. If no value is available,
+     * MagicValue(JS_NO_ITER_VALUE) is pushed.
      *
-     * This opcode increments iterator cursor if current iteration has
-     * JSITER_FOREACH flag.
-     *   Category: Statements
-     *   Type: For-In Statement
-     *   Operands:
-     *   Stack: iter => iter, cond
-     */ \
-    macro(JSOP_MOREITER,  76, "moreiter",   NULL,         1,  1,  2,  JOF_BYTE) \
-    /*
-     * Pushes the value produced by the preceding JSOP_MOREITER operation
-     * ('cx->iterValue') onto the stack
-     *
-     * This opcode increments iterator cursor if current iteration does not have
-     * JSITER_FOREACH flag.
      *   Category: Statements
      *   Type: For-In Statement
      *   Operands:
      *   Stack: iter => iter, val
      */ \
-    macro(JSOP_ITERNEXT,  77, "iternext",   "<next>",     1,  0,  1,  JOF_BYTE) \
+    macro(JSOP_MOREITER,  76, "moreiter",   NULL,         1,  1,  2,  JOF_BYTE) \
+    /*
+     * Pushes a boolean indicating whether the value on top of the stack is
+     * MagicValue(JS_NO_ITER_VALUE).
+     *
+     *   Category: Statements
+     *   Type: For-In Statement
+     *   Operands:
+     *   Stack: val => val, res
+     */ \
+    macro(JSOP_ISNOITER,  77, "isnoiter",   NULL,         1,  1,  2,  JOF_BYTE) \
     /*
      * Exits a for-in loop by popping the iterator object from the stack and
      * closing it.
