@@ -331,7 +331,7 @@ public final class GeckoProfile {
             // If this dir doesn't exist getDir will create it for us
             final File lockFile = new File(getDir(), LOCK_FILE_NAME);
             final boolean result = lockFile.createNewFile();
-            if (result) {
+            if (lockFile.exists()) {
                 mLocked = LockState.LOCKED;
             } else {
                 mLocked = LockState.UNLOCKED;
