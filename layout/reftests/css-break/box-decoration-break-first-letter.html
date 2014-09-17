@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>::first-letter with border-radius</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1067088">
+<style>
+html,body { color:black; background-color:white; font-size:24px; }
+div { line-height:36px; }
+.b::first-letter { background: blue; }
+.c::first-letter { box-decoration-break:clone; }
+.r100p::first-letter { border-radius: 100%; }
+.r10p::first-letter { border-radius: 10%; }
+.s1::first-letter { border:1px solid black; }
+.i::first-letter { background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAIAAACRXR%2FmAAAAAXNSR0IArs4c6QAAADpJREFUWMPtzgENAAAIA6Br%2F85aQzdIQGVyUCdaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpaWlpan1oLQKsBY3S7VU8AAAAASUVORK5CYII%3D); }
+.shadowi::first-letter { box-shadow: inset 15px 9px 7px 0px #00F; }
+.shadowo::first-letter { box-shadow: 0px 0px 7px 0px #00F;}
+.shadowio::first-letter { box-shadow: inset 15px 9px 7px 0px #00F, 0px 0px 7px 0px #00F;}
+.bi::first-letter {
+  border: 5px solid red;
+  border-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAIAAAD%2FgAIDAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAoUlEQVR42u3bwQ0AIAgEwcOmtXttgScmsxWQCTyp3EysJo61IliwYMGCBUuwYMGCBQuWYMGCBQsWLMGCBQsWLFiCBQsWLFiwBAsWLFiwYAkWLFiwYMESLFiwYMGCpXaVka%2BsO8dmOUNYggULFixYsAQLFixYsGAJFixYsGDBEixYsGDBgiVYsGDBggVLsGDBggULlmDBggULFizBggUL1t89N%2FYEtBGStpoAAAAASUVORK5CYII%3D) 10 10 repeat;
+  background: pink;
+  border-image-outset: 7px 3px 5px 9px;
+}
+</style>
+</head>
+<body>
+<table cellpadding="10"><tr><td>
+  <div class="b r100p">First-letter</div>
+  <div class="b r10p">First-letter</div>
+  <div class="b s1 r100p">First-letter</div>
+  <div class="b s1 r10p">First-letter</div>
+  <div class="shadowo r100p">First-letter</div>
+  <div class="shadowo s1 r10p">First-letter</div>
+  <div class="shadowi s1 r100p">First-letter</div>
+  <div class="shadowi r10p">First-letter</div>
+  <div class="shadowio r100p">First-letter</div>
+  <div class="shadowio s1 r10p">First-letter</div>
+  <div class="s1 r100p">First-letter</div>
+  <div class="s1 r10p">First-letter</div>
+  <div class="i r100p">First-letter</div>
+  <div class="i r10p">First-letter</div>
+  <div class="i s1 r100p">First-letter</div>
+  <div class="i s1 r10p">First-letter</div>
+  <div class="bi">First-letter</div>
+</td>
+<td>
+  <!-- box-decoration-break:clone should render the same for ::first-letter -->
+  <div class="c b r100p">First-letter</div>
+  <div class="c b r10p">First-letter</div>
+  <div class="c b s1 r100p">First-letter</div>
+  <div class="c b s1 r10p">First-letter</div>
+  <div class="c shadowo r100p">First-letter</div>
+  <div class="c shadowo s1 r10p">First-letter</div>
+  <div class="c shadowi s1 r100p">First-letter</div>
+  <div class="c shadowi r10p">First-letter</div>
+  <div class="c shadowio r100p">First-letter</div>
+  <div class="c shadowio s1 r10p">First-letter</div>
+  <div class="c s1 r100p">First-letter</div>
+  <div class="c s1 r10p">First-letter</div>
+  <div class="c i r100p">First-letter</div>
+  <div class="c i r10p">First-letter</div>
+  <div class="c i s1 r100p">First-letter</div>
+  <div class="c i s1 r10p">First-letter</div>
+  <div class="c bi">First-letter</div>
+</td>
+</tr></table>
+</body>
+</html>
