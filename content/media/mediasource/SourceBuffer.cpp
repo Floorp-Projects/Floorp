@@ -246,13 +246,6 @@ public:
       return false;
     }
 
-    if (Preferences::GetBool("media.mediasource.allow_init_moov", false)) {
-      if (aData[4] == 'm' && aData[5] == 'o' && aData[6] == 'o' &&
-          aData[7] == 'v') {
-        return true;
-      }
-    }
-
     return aData[4] == 'f' && aData[5] == 't' && aData[6] == 'y' &&
            aData[7] == 'p';
   }

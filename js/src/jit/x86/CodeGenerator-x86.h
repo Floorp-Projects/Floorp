@@ -58,6 +58,7 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
     bool visitTruncateFToInt32(LTruncateFToInt32 *ins);
     bool visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic *ins);
     bool visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic *ins);
+    bool visitAsmJSCall(LAsmJSCall *ins);
     bool visitAsmJSLoadHeap(LAsmJSLoadHeap *ins);
     bool visitAsmJSStoreHeap(LAsmJSStoreHeap *ins);
     bool visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins);
@@ -67,8 +68,6 @@ class CodeGeneratorX86 : public CodeGeneratorX86Shared
 
     bool visitOutOfLineTruncate(OutOfLineTruncate *ool);
     bool visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool);
-
-    void postAsmJSCall(LAsmJSCall *lir);
 };
 
 typedef CodeGeneratorX86 CodeGeneratorSpecific;
