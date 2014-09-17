@@ -197,7 +197,7 @@ SharedArrayBufferObject::class_constructor(JSContext *cx, unsigned argc, Value *
 
     uint32_t length;
     bool overflow;
-    if (!ToLengthClamped(cx, args[0], &length, &overflow)) {
+    if (!ToLengthClamped(cx, args.get(0), &length, &overflow)) {
         if (overflow)
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SHARED_ARRAY_BAD_LENGTH);
         return false;
