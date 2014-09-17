@@ -261,7 +261,9 @@ public:
     virtual bool UseAcceleratedSkiaCanvas();
     virtual void InitializeSkiaCacheLimits();
 
-    virtual bool UseTiling() { return gfxPrefs::LayersTilesEnabled(); }
+    /// This should be used instead of directly accessing the preference,
+    /// as different platforms may override the behaviour.
+    virtual bool UseTiling() { return gfxPrefs::LayersTilesEnabledDoNotUseDirectly(); }
 
     void GetAzureBackendInfo(mozilla::widget::InfoObject &aObj) {
       aObj.DefineProperty("AzureCanvasBackend", GetBackendName(mPreferredCanvasBackend));
