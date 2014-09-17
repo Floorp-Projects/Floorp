@@ -197,16 +197,16 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
         MediaStreamListener* l = aStream->mListeners[j];
         TrackTicks offset = (data->mCommands & SourceMediaStream::TRACK_CREATE)
             ? data->mStart : aStream->mBuffer.FindTrack(data->mID)->GetSegment()->GetDuration();
-        l->NotifyQueuedTrackChanges(this, data->mID, data->mOutputRate,
+        l->NotifyQueuedTrackChanges(this, data->mID, mSampleRate,
                                     offset, data->mCommands, *data->mData);
       }
       if (data->mCommands & SourceMediaStream::TRACK_CREATE) {
         MediaSegment* segment = data->mData.forget();
-        STREAM_LOG(PR_LOG_DEBUG, ("SourceMediaStream %p creating track %d, rate %d, start %lld, initial end %lld",
-                                  aStream, data->mID, data->mOutputRate, int64_t(data->mStart),
+        STREAM_LOG(PR_LOG_DEBUG, ("SourceMediaStream %p creating track %d, start %lld, initial end %lld",
+                                  aStream, data->mID, int64_t(data->mStart),
                                   int64_t(segment->GetDuration())));
 
-        aStream->mBuffer.AddTrack(data->mID, data->mOutputRate, data->mStart, segment);
+        aStream->mBuffer.AddTrack(data->mID, mSampleRate, data->mStart, segment);
         // The track has taken ownership of data->mData, so let's replace
         // data->mData with an empty clone.
         data->mData = segment->CreateEmptyClone();
@@ -2287,8 +2287,6 @@ SourceMediaStream::AddTrackInternal(TrackID aID, TrackRate aRate, TrackTicks aSt
   TrackData* data = mUpdateTracks.AppendElement();
   data->mID = aID;
   data->mInputRate = aRate;
-  data->mOutputRate =
-      aSegment->GetType() == MediaSegment::AUDIO ? GraphRate() : aRate;
   data->mStart = aStart;
   data->mCommands = TRACK_CREATE;
   data->mData = aSegment;
@@ -2374,7 +2372,8 @@ SourceMediaStream::NotifyDirectConsumers(TrackData *aTrack,
   for (uint32_t j = 0; j < mDirectListeners.Length(); ++j) {
     MediaStreamDirectListener* l = mDirectListeners[j];
     TrackTicks offset = 0; // FIX! need a separate TrackTicks.... or the end of the internal buffer
-    l->NotifyRealtimeData(static_cast<MediaStreamGraph*>(GraphImpl()), aTrack->mID, aTrack->mOutputRate,
+    l->NotifyRealtimeData(static_cast<MediaStreamGraph*>(GraphImpl()), aTrack->mID,
+                          GraphRate(),
                           offset, aTrack->mCommands, *aSegment);
   }
 }
