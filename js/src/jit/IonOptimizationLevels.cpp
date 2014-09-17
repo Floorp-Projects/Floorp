@@ -30,7 +30,6 @@ OptimizationInfo::initNormalOptimizationInfo()
     inlineNative_ = true;
     gvn_ = true;
     licm_ = true;
-    uce_ = true;
     rangeAnalysis_ = true;
     loopUnrolling_ = true;
     autoTruncate_ = true;

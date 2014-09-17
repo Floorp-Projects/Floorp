@@ -323,6 +323,9 @@ MTest::foldsTo(TempAllocator &alloc)
         return MTest::New(alloc, op->toNot()->input(), ifFalse(), ifTrue());
     }
 
+    if (op->isConstant())
+        return MGoto::New(alloc, op->toConstant()->valueToBoolean() ? ifTrue() : ifFalse());
+
     return this;
 }
 
@@ -1164,7 +1167,8 @@ MPhi::removeAllOperands()
 MDefinition *
 MPhi::operandIfRedundant()
 {
-    JS_ASSERT(inputs_.length() != 0);
+    if (inputs_.length() == 0)
+        return nullptr;
 
     // If this phi is redundant (e.g., phi(a,a) or b=phi(a,this)),
     // returns the operand that it will always be equal to (a, in
@@ -3027,10 +3031,14 @@ MBeta::printOpcode(FILE *fp) const
 {
     MDefinition::printOpcode(fp);
 
-    Sprinter sp(GetIonContext()->cx);
-    sp.init();
-    comparison_->print(sp);
-    fprintf(fp, " %s", sp.string());
+    if (IonContext *context = MaybeGetIonContext()) {
+        Sprinter sp(context->cx);
+        sp.init();
+        comparison_->print(sp);
+        fprintf(fp, " %s", sp.string());
+    } else {
+        fprintf(fp, " ???");
+    }
 }
 
 bool

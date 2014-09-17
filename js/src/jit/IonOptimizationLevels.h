@@ -67,9 +67,6 @@ class OptimizationInfo
     // Toggles whether loop invariant code motion is performed.
     bool licm_;
 
-    // Toggles whether Unreachable Code Elimination is performed.
-    bool uce_;
-
     // Toggles whether Range Analysis is used.
     bool rangeAnalysis_;
 
@@ -137,10 +134,6 @@ class OptimizationInfo
 
     bool licmEnabled() const {
         return licm_ && !js_JitOptions.disableLicm;
-    }
-
-    bool uceEnabled() const {
-        return uce_ && !js_JitOptions.disableUce;
     }
 
     bool rangeAnalysisEnabled() const {
