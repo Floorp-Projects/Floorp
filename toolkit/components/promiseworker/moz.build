@@ -11,3 +11,5 @@ DIRS += [
 EXTRA_JS_MODULES += [
     'PromiseWorker.jsm',
 ]
+
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
