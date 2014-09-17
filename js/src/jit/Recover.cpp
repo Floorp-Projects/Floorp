@@ -964,6 +964,27 @@ RRegExpReplace::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
+MTypeOf::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_TypeOf));
+    return true;
+}
+
+RTypeOf::RTypeOf(CompactBufferReader &reader)
+{ }
+
+bool
+RTypeOf::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue v(cx, iter.read());
+
+    RootedValue result(cx, StringValue(TypeOfOperation(v, cx->runtime())));
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MNewObject::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
