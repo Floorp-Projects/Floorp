@@ -8,6 +8,72 @@ const SERVER_URL = "http://example.com/browser/toolkit/crashreporter/test/browse
 const gTestRoot = getRootDirectory(gTestPath);
 var gTestBrowser = null;
 
+/**
+ * Frame script that will be injected into the test browser
+ * to cause the crash, and then manipulate the crashed plugin
+ * UI. Specifically, after the crash, we ensure that the
+ * crashed plugin UI is using the right style rules and that
+ * the submit URL opt-in defaults to checked. Then, we fill in
+ * a comment with the crash report, uncheck the submit URL
+ * opt-in, and send the crash reports.
+ */
+function frameScript() {
+  function fail(reason) {
+    sendAsyncMessage("test:crash-plugin:fail", {
+      reason: `Failure from frameScript: ${reason}`,
+    });
+  }
+
+  addMessageListener("test:crash-plugin", () => {
+    let doc = content.document;
+
+    addEventListener("PluginCrashed", (event) => {
+      let plugin = doc.getElementById("test");
+      if (!plugin) {
+        fail("Could not find plugin element");
+        return;
+      }
+
+      let getUI = (anonid) => {
+        return doc.getAnonymousElementByAttribute(plugin, "anonid", anonid);
+      };
+
+      let style = content.getComputedStyle(getUI("pleaseSubmit"));
+      if (style.display != "block") {
+        fail("Submission UI visibility is not correct. Expected block, "
+             + " got " + style.display);
+        return;
+      }
+
+      getUI("submitComment").value = "a test comment";
+      if (!getUI("submitURLOptIn").checked) {
+        fail("URL opt-in should default to true.");
+        return;
+      }
+
+      getUI("submitURLOptIn").click();
+      getUI("submitButton").click();
+    });
+
+    let plugin = doc.getElementById("test");
+    try {
+      plugin.crash()
+    } catch(e) {
+    }
+  });
+
+  addMessageListener("test:plugin-submit-status", () => {
+    let doc = content.document;
+    let plugin = doc.getElementById("test");
+    let submitStatusEl =
+      doc.getAnonymousElementByAttribute(plugin, "anonid", "submitStatus");
+    let submitStatus = submitStatusEl.getAttribute("status");
+    sendAsyncMessage("test:plugin-submit-status:result", {
+      submitStatus: submitStatus,
+    });
+  });
+}
+
 // Test that plugin crash submissions still work properly after
 // click-to-play activation.
 
@@ -31,14 +97,18 @@ function test() {
 
   let tab = gBrowser.loadOneTab("about:blank", { inBackground: false });
   gTestBrowser = gBrowser.getBrowserForTab(tab);
-  gTestBrowser.addEventListener("PluginCrashed", onCrash, false);
+  let mm = gTestBrowser.messageManager;
+  mm.loadFrameScript("data:,(" + frameScript.toString() + ")();", false);
+  mm.addMessageListener("test:crash-plugin:fail", (message) => {
+    ok(false, message.data.reason);
+  });
+
   gTestBrowser.addEventListener("load", onPageLoad, true);
   Services.obs.addObserver(onSubmitStatus, "crash-report-status", false);
 
   registerCleanupFunction(function cleanUp() {
     env.set("MOZ_CRASHREPORTER_NO_REPORT", noReport);
     env.set("MOZ_CRASHREPORTER_URL", serverURL);
-    gTestBrowser.removeEventListener("PluginCrashed", onCrash, false);
     gTestBrowser.removeEventListener("load", onPageLoad, true);
     Services.obs.removeObserver(onSubmitStatus, "crash-report-status");
     gBrowser.removeCurrentTab();
@@ -70,31 +140,8 @@ function afterBindingAttached() {
 }
 
 function pluginActivated() {
-  let plugin = gTestBrowser.contentDocument.getElementById("test");
-  try {
-    plugin.crash();
-  } catch (e) {
-    // The plugin crashed in the above call, an exception is expected.
-  }
-}
-
-function onCrash() {
-  try {
-    let plugin = gBrowser.contentDocument.getElementById("test");
-    let elt = gPluginHandler.getPluginUI.bind(gPluginHandler, plugin);
-    let style =
-      gBrowser.contentWindow.getComputedStyle(elt("pleaseSubmit"));
-    is(style.display, "block", "Submission UI visibility should be correct");
-
-    elt("submitComment").value = "a test comment";
-    is(elt("submitURLOptIn").checked, true, "URL opt-in should default to true");
-    EventUtils.synthesizeMouseAtCenter(elt("submitURLOptIn"), {}, gTestBrowser.contentWindow);
-    EventUtils.synthesizeMouseAtCenter(elt("submitButton"), {}, gTestBrowser.contentWindow);
-    // And now wait for the submission status notification.
-  }
-  catch (err) {
-    failWithException(err);
-  }
+  let mm = gTestBrowser.messageManager;
+  mm.sendAsyncMessage("test:crash-plugin");
 }
 
 function onSubmitStatus(subj, topic, data) {
@@ -128,19 +175,23 @@ function onSubmitStatus(subj, topic, data) {
     ok(val === undefined,
        "URL should be absent from extra data when opt-in not checked");
 
-    // Execute this later in case the event to change submitStatus has not
-    // have been dispatched yet.
-    executeSoon(function () {
-      let plugin = gBrowser.contentDocument.getElementById("test");
-      let elt = gPluginHandler.getPluginUI.bind(gPluginHandler, plugin);
-      is(elt("submitStatus").getAttribute("status"), data,
-         "submitStatus data should match");
+    let submitStatus = null;
+    let mm = gTestBrowser.messageManager;
+    mm.addMessageListener("test:plugin-submit-status:result", (message) => {
+      submitStatus = message.data.submitStatus;
     });
+
+    mm.sendAsyncMessage("test:plugin-submit-status");
+
+    let condition = () => submitStatus;
+    waitForCondition(condition, () => {
+      is(submitStatus, data, "submitStatus data should match");
+      finish();
+    }, "Waiting for submitStatus to be reported from frame script");
   }
   catch (err) {
     failWithException(err);
   }
-  finish();
 }
 
 function getPropertyBagValue(bag, key) {
