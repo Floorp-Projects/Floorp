@@ -158,7 +158,7 @@ public:
 #ifdef MOZ_CRASHREPORTER
         CrashReporter::AppendAppNotesToCrashReport(reportString);
 #else
-        PR_LogPrint(reportString);
+        printf("GFX ERROR: %s", reportString);
 #endif
     }
 };
