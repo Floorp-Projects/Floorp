@@ -34,5 +34,6 @@ interface IDBTransaction : EventTarget {
 
 // This seems to be custom
 partial interface IDBTransaction {
+    [Throws]
     readonly    attribute DOMStringList objectStoreNames;
 };

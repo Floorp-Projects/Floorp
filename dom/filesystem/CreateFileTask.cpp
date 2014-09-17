@@ -13,8 +13,6 @@
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemUtils.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/ipc/BlobChild.h"
-#include "mozilla/dom/ipc/BlobParent.h"
 #include "nsDOMFile.h"
 #include "nsIFile.h"
 #include "nsNetUtil.h"

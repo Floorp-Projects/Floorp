@@ -7,11 +7,9 @@
 #include "nsIContentChild.h"
 
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/StructuredCloneUtils.h"
 #include "mozilla/dom/TabChild.h"
-#include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/ipc/nsIRemoteBlob.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 
@@ -93,7 +91,7 @@ nsIContentChild::AllocPBlobChild(const BlobConstructorParams& aParams)
 bool
 nsIContentChild::DeallocPBlobChild(PBlobChild* aActor)
 {
-  BlobChild::Destroy(aActor);
+  delete aActor;
   return true;
 }
 
@@ -108,10 +106,11 @@ nsIContentChild::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
   const auto* domFile = static_cast<DOMFile*>(aBlob);
   nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(domFile->Impl());
   if (remoteBlob) {
-    BlobChild* actor = remoteBlob->GetBlobChild();
+    BlobChild* actor =
+      static_cast<BlobChild*>(
+        static_cast<PBlobChild*>(remoteBlob->GetPBlob()));
     MOZ_ASSERT(actor);
-
-    if (actor->GetContentManager() == this) {
+    if (actor->Manager() == this) {
       return actor;
     }
   }

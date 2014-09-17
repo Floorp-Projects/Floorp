@@ -11,55 +11,48 @@
 #error Must include IndexedDatabase.h first
 #endif
 
-#include "FileInfo.h"
-#include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
-#include "nsIDOMFile.h"
-#include "nsIInputStream.h"
-
-namespace mozilla {
-namespace dom {
-namespace indexedDB {
+BEGIN_INDEXEDDB_NAMESPACE
 
 inline
-StructuredCloneFile::StructuredCloneFile()
+StructuredCloneWriteInfo::StructuredCloneWriteInfo()
+: mTransaction(nullptr),
+  mOffsetToKeyProp(0)
 {
-  MOZ_COUNT_CTOR(StructuredCloneFile);
 }
 
 inline
-StructuredCloneFile::~StructuredCloneFile()
+StructuredCloneWriteInfo::StructuredCloneWriteInfo(
+                                    StructuredCloneWriteInfo&& aCloneWriteInfo)
+: mCloneBuffer(Move(aCloneWriteInfo.mCloneBuffer))
+, mTransaction(aCloneWriteInfo.mTransaction)
+, mOffsetToKeyProp(aCloneWriteInfo.mOffsetToKeyProp)
 {
-  MOZ_COUNT_DTOR(StructuredCloneFile);
+  mFiles.SwapElements(aCloneWriteInfo.mFiles);
+  aCloneWriteInfo.mTransaction = nullptr;
+  aCloneWriteInfo.mOffsetToKeyProp = 0;
 }
 
 inline
 bool
-StructuredCloneFile::operator==(const StructuredCloneFile& aOther) const
+StructuredCloneWriteInfo::SetFromSerialized(
+                               const SerializedStructuredCloneWriteInfo& aOther)
 {
-  return this->mFile == aOther.mFile &&
-         this->mFileInfo == aOther.mFileInfo;
+  if (!aOther.dataLength) {
+    mCloneBuffer.clear();
+  }
+  else if (!mCloneBuffer.copy(aOther.data, aOther.dataLength)) {
+    return false;
+  }
+
+  mFiles.Clear();
+  mOffsetToKeyProp = aOther.offsetToKeyProp;
+  return true;
 }
 
 inline
 StructuredCloneReadInfo::StructuredCloneReadInfo()
-  : mDatabase(nullptr)
+: mDatabase(nullptr)
 {
-  MOZ_COUNT_CTOR(StructuredCloneReadInfo);
-}
-
-inline
-StructuredCloneReadInfo::StructuredCloneReadInfo(
-                             SerializedStructuredCloneReadInfo&& aCloneReadInfo)
-  : mData(Move(aCloneReadInfo.data()))
-  , mDatabase(nullptr)
-{
-  MOZ_COUNT_CTOR(StructuredCloneReadInfo);
-}
-
-inline
-StructuredCloneReadInfo::~StructuredCloneReadInfo()
-{
-  MOZ_COUNT_DTOR(StructuredCloneReadInfo);
 }
 
 inline StructuredCloneReadInfo&
@@ -67,7 +60,6 @@ StructuredCloneReadInfo::operator=(StructuredCloneReadInfo&& aCloneReadInfo)
 {
   MOZ_ASSERT(&aCloneReadInfo != this);
 
-  mData = Move(aCloneReadInfo.mData);
   mCloneBuffer = Move(aCloneReadInfo.mCloneBuffer);
   mFiles.Clear();
   mFiles.SwapElements(aCloneReadInfo.mFiles);
@@ -76,8 +68,45 @@ StructuredCloneReadInfo::operator=(StructuredCloneReadInfo&& aCloneReadInfo)
   return *this;
 }
 
-} // namespace indexedDB
-} // namespace dom
-} // namespace mozilla
+inline
+bool
+StructuredCloneReadInfo::SetFromSerialized(
+                                const SerializedStructuredCloneReadInfo& aOther)
+{
+  if (aOther.dataLength &&
+      !mCloneBuffer.copy(aOther.data, aOther.dataLength)) {
+    return false;
+  }
 
-#endif // IndexedDatabaseInlines_h
+  mFiles.Clear();
+  return true;
+}
+
+inline
+void
+AppendConditionClause(const nsACString& aColumnName,
+                      const nsACString& aArgName,
+                      bool aLessThan,
+                      bool aEquals,
+                      nsACString& aResult)
+{
+  aResult += NS_LITERAL_CSTRING(" AND ") + aColumnName +
+             NS_LITERAL_CSTRING(" ");
+
+  if (aLessThan) {
+    aResult.Append('<');
+  }
+  else {
+    aResult.Append('>');
+  }
+
+  if (aEquals) {
+    aResult.Append('=');
+  }
+
+  aResult += NS_LITERAL_CSTRING(" :") + aArgName;
+}
+
+END_INDEXEDDB_NAMESPACE
+
+#endif

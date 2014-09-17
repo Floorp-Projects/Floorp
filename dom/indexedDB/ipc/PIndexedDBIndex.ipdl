@@ -1,0 +1,64 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBlob;
+include protocol PIndexedDBCursor;
+include protocol PIndexedDBObjectStore;
+include protocol PIndexedDBRequest;
+
+include IndexedDBParams;
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+namespace ipc {
+
+struct GetKeyParams
+{
+  KeyRange keyRange;
+};
+
+union IndexRequestParams
+{
+  GetParams;
+  GetKeyParams;
+  GetAllParams;
+  GetAllKeysParams;
+  CountParams;
+  OpenCursorParams;
+  OpenKeyCursorParams;
+};
+
+struct IndexCursorConstructorParams
+{
+  PIndexedDBRequest request;
+  Direction direction;
+  Key key;
+  Key objectKey;
+  OptionalStructuredCloneReadInfo optionalCloneInfo;
+  PBlob[] blobs;
+};
+
+} // namespace ipc
+
+protocol PIndexedDBIndex
+{
+  manager PIndexedDBObjectStore;
+
+  manages PIndexedDBCursor;
+  manages PIndexedDBRequest;
+
+parent:
+  __delete__();
+
+  PIndexedDBRequest(IndexRequestParams params);
+
+child:
+  PIndexedDBCursor(IndexCursorConstructorParams params);
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

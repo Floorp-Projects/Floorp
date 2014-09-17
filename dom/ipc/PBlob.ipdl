@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PBackground;
 include protocol PBlobStream;
 include protocol PContent;
 include protocol PContentBridge;
@@ -18,9 +17,9 @@ union ResolveMysteryParams
   FileBlobConstructorParams;
 };
 
-sync protocol PBlob
+protocol PBlob
 {
-  manager PBackground or PContent or PContentBridge;
+  manager PContent or PContentBridge;
   manages PBlobStream;
 
 both:
@@ -28,16 +27,7 @@ both:
 
   PBlobStream();
 
-parent:
   ResolveMystery(ResolveMysteryParams params);
-
-  // Use only for testing!
-  sync GetFileId()
-    returns (int64_t fileId);
-
-  // Use only for testing!
-  sync GetFilePath()
-    returns (nsString filePath);
 };
 
 } // namespace dom
