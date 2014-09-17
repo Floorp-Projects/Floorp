@@ -20,7 +20,7 @@ namespace dom {
  * The modules hold the reference of MobileConnectionCallback in OOP mode and
  * non-OOP mode are different.
  * - OOP mode: MobileConnectionRequestChild
- * - non-OOP mode: MobileConnectionService
+ * - non-OOP mode: MobileConnectionGonkService
  * The reference should be released after Notify*Success/Error is called.
  */
 class MobileConnectionCallback MOZ_FINAL : public nsIMobileConnectionCallback

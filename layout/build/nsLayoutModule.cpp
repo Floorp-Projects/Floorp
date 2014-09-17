@@ -130,7 +130,7 @@ using mozilla::system::nsVolumeService;
 #include "mozilla/dom/mobileconnection/MobileConnectionIPCService.h"
 using mozilla::dom::mobileconnection::MobileConnectionIPCService;
 #ifdef MOZ_WIDGET_GONK
-#include "nsIGonkMobileConnectionService.h"
+#include "nsIMobileConnectionGonkService.h"
 #endif
 #endif
 
@@ -950,7 +950,7 @@ nsIMobileConnectionServiceConstructor(nsISupports *aOuter, REFNSIID aIID,
     service = MobileConnectionIPCService::GetSingleton();
   } else {
 #ifdef MOZ_WIDGET_GONK
-    service = do_CreateInstance(GONK_MOBILECONNECTION_SERVICE_CONTRACTID);
+    service = do_CreateInstance(NS_MOBILECONNECTION_GONK_SERVICE_CONTRACTID);
 #endif
   }
 
