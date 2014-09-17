@@ -556,8 +556,8 @@ bool WebMReader::DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset)
 #ifdef DEBUG
     CheckedInt64 usecs = FramesToUsecs(tstamp_frames.value() - decoded_frames.value(), rate);
     LOG(PR_LOG_DEBUG, ("WebMReader detected gap of %lld, %lld frames, in audio stream\n",
-      usecs.isValid() ? usecs.value() : -1,
-      tstamp_frames.value() - decoded_frames.value()));
+                       usecs.isValid() ? usecs.value() : -1,
+                       tstamp_frames.value() - decoded_frames.value()));
 #endif
     mPacketCount++;
     mAudioStartUsec = tstamp_usecs;
@@ -671,8 +671,7 @@ bool WebMReader::DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset)
         int32_t keepFrames = frames - skipFrames;
         int samples = keepFrames * channels;
         nsAutoArrayPtr<AudioDataValue> trimBuffer(new AudioDataValue[samples]);
-        for (int i = 0; i < samples; i++)
-          trimBuffer[i] = buffer[skipFrames*channels + i];
+        PodCopy(trimBuffer.get(), buffer.get() + skipFrames*channels, samples);
         startTime = startTime + FramesToUsecs(skipFrames, rate);
         frames = keepFrames;
         buffer = trimBuffer;
@@ -684,24 +683,23 @@ bool WebMReader::DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset)
       int64_t discardPadding = 0;
       r = nestegg_packet_discard_padding(aPacket, &discardPadding);
       if (discardPadding > 0) {
-        CheckedInt64 discardFrames = UsecsToFrames(discardPadding * NS_PER_USEC, rate);
+        CheckedInt64 discardFrames = UsecsToFrames(discardPadding / NS_PER_USEC, rate);
         if (!discardFrames.isValid()) {
           NS_WARNING("Int overflow in DiscardPadding");
           return false;
         }
-        int32_t keepFrames = frames - discardFrames.value();
-        if (keepFrames > 0) {
-          int samples = keepFrames * channels;
-          nsAutoArrayPtr<AudioDataValue> trimBuffer(new AudioDataValue[samples]);
-          for (int i = 0; i < samples; i++)
-            trimBuffer[i] = buffer[i];
-          frames = keepFrames;
-          buffer = trimBuffer;
-        } else {
+        if (discardFrames.value() >= frames) {
           LOG(PR_LOG_DEBUG, ("Opus decoder discarding whole packet"
-                             " ( %d frames) as padding", frames));
+                             " (%d frames) as padding (%lld discarded)",
+                             frames, discardFrames.value()));
           return true;
         }
+        int32_t keepFrames = frames - discardFrames.value();
+        int32_t samples = keepFrames * channels;
+        nsAutoArrayPtr<AudioDataValue> trimBuffer(new AudioDataValue[samples]);
+        PodCopy(trimBuffer.get(), buffer.get(), samples);
+        frames = keepFrames;
+        buffer = trimBuffer;
       }
 
       // Apply the header gain if one was specified.
