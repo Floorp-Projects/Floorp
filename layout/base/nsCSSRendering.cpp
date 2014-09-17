@@ -5014,11 +5014,11 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aSpreadRadius,
   dirtyRect = transform.TransformBounds(dirtyRect);
   if (aSkipRect) {
     gfxRect skipRect = transform.TransformBounds(*aSkipRect);
-    mContext = blur.Init(rect, spreadRadius,
-                         blurRadius, &dirtyRect, &skipRect);
+    mContext = mAlphaBoxBlur.Init(rect, spreadRadius,
+                                  blurRadius, &dirtyRect, &skipRect);
   } else {
-    mContext = blur.Init(rect, spreadRadius,
-                         blurRadius, &dirtyRect, nullptr);
+    mContext = mAlphaBoxBlur.Init(rect, spreadRadius,
+                                  blurRadius, &dirtyRect, nullptr);
   }
 
   if (mContext) {
@@ -5041,7 +5041,7 @@ nsContextBoxBlur::DoPaint()
     mDestinationCtx->SetMatrix(gfxMatrix());
   }
 
-  blur.Paint(mDestinationCtx);
+  mAlphaBoxBlur.Paint(mDestinationCtx);
 }
 
 gfxContext*
