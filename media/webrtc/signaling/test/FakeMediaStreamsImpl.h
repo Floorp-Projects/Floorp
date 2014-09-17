@@ -114,7 +114,6 @@ void Fake_AudioStreamSource::Periodic() {
        it != mListeners.end(); ++it) {
     (*it)->NotifyQueuedTrackChanges(nullptr, // Graph
                                     0, // TrackID
-                                    GRAPH_RATE, // Rate (hz)
                                     0, // Offset TODO(ekr@rtfm.com) fix
                                     0, // ???
                                     segment);

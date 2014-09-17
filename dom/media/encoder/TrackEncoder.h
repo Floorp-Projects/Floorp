@@ -39,7 +39,6 @@ public:
    * change from MediaStreamGraph. Called on the MediaStreamGraph thread.
    */
   virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                        TrackRate aTrackRate,
                                         TrackTicks aTrackOffset,
                                         uint32_t aTrackEvents,
                                         const MediaSegment& aQueuedMedia) = 0;
@@ -146,11 +145,10 @@ public:
     , mSamplingRate(0)
   {}
 
-  void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                TrackRate aTrackRate,
-                                TrackTicks aTrackOffset,
-                                uint32_t aTrackEvents,
-                                const MediaSegment& aQueuedMedia) MOZ_OVERRIDE;
+  virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
+                                        TrackTicks aTrackOffset,
+                                        uint32_t aTrackEvents,
+                                        const MediaSegment& aQueuedMedia) MOZ_OVERRIDE;
 
   /**
    * Interleaves the track data and stores the result into aOutput. Might need
@@ -237,14 +235,13 @@ public:
   {}
 
   /**
-   * Notified by the same callbcak of MediaEncoder when it has received a track
+   * Notified by the same callback of MediaEncoder when it has received a track
    * change from MediaStreamGraph. Called on the MediaStreamGraph thread.
    */
-  void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                TrackRate aTrackRate,
-                                TrackTicks aTrackOffset,
-                                uint32_t aTrackEvents,
-                                const MediaSegment& aQueuedMedia) MOZ_OVERRIDE;
+  virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
+                                        TrackTicks aTrackOffset,
+                                        uint32_t aTrackEvents,
+                                        const MediaSegment& aQueuedMedia) MOZ_OVERRIDE;
   /**
   * Measure size of mRawSegment
   */
