@@ -204,6 +204,16 @@ IsDominatorRefined(MBasicBlock *block)
     MBasicBlock *old = block->immediateDominator();
     MBasicBlock *now = ComputeNewDominator(block, old);
 
+    // If this block is just a goto and it doesn't dominate its destination,
+    // removing its predecessors won't refine the dominators of anything
+    // interesting.
+    MControlInstruction *control = block->lastIns();
+    if (*block->begin() == control && block->phisEmpty() && control->isGoto() &&
+        !block->dominates(control->toGoto()->target()))
+    {
+        return false;
+    }
+
     // We've computed block's new dominator. Test whether there are any
     // newly-dominating definitions which look interesting.
     MOZ_ASSERT(old->dominates(now), "Refined dominator not dominated by old dominator");
