@@ -1141,7 +1141,7 @@ MPhi::removeOperand(size_t index)
         inputs_[i].replaceProducer(inputs_[i + 1].producer());
 
     // truncate the inputs_ list:
-    inputs_[length - 1].discardProducer();
+    inputs_[length - 1].releaseProducer();
     inputs_.shrinkBy(1);
 }
 
@@ -1149,7 +1149,7 @@ void
 MPhi::removeAllOperands()
 {
     for (size_t i = 0; i < inputs_.length(); i++)
-        inputs_[i].discardProducer();
+        inputs_[i].releaseProducer();
     inputs_.clear();
 }
 
