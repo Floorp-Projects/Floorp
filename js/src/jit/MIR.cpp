@@ -315,8 +315,13 @@ MTest::foldsTo(TempAllocator &alloc)
 {
     MDefinition *op = getOperand(0);
 
-    if (op->isNot())
+    if (op->isNot()) {
+        // If the operand of the Not is itself a Not, they cancel out.
+        MDefinition *opop = op->getOperand(0);
+        if (opop->isNot())
+            return MTest::New(alloc, opop->toNot()->input(), ifTrue(), ifFalse());
         return MTest::New(alloc, op->toNot()->input(), ifFalse(), ifTrue());
+    }
 
     return this;
 }
@@ -2986,6 +2991,16 @@ MNot::foldsTo(TempAllocator &alloc)
 
         // ToBoolean can't cause side effects, so this is safe.
         return MConstant::New(alloc, BooleanValue(!result));
+    }
+
+    // If the operand of the Not is itself a Not, they cancel out. But we can't
+    // always convert Not(Not(x)) to x because that may loose the conversion to
+    // boolean. We can simplify Not(Not(Not(x))) to Not(x) though.
+    MDefinition *op = getOperand(0);
+    if (op->isNot()) {
+        MDefinition *opop = op->getOperand(0);
+        if (opop->isNot())
+            return opop;
     }
 
     // NOT of an undefined or null value is always true
