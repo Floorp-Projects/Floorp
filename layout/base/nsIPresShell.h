@@ -495,9 +495,13 @@ public:
   /**
    * Tell the pres shell that a frame needs to be marked dirty and needs
    * Reflow.  It's OK if this is an ancestor of the frame needing reflow as
-   * long as the ancestor chain between them doesn't cross a reflow root.  The
-   * bit to add should be either NS_FRAME_IS_DIRTY or
-   * NS_FRAME_HAS_DIRTY_CHILDREN (but not both!).
+   * long as the ancestor chain between them doesn't cross a reflow root.
+   *
+   * The bit to add should be NS_FRAME_IS_DIRTY, NS_FRAME_HAS_DIRTY_CHILDREN
+   * or nsFrameState(0); passing 0 means that dirty bits won't be set on the
+   * frame or its ancestors/descendants, but that intrinsic widths will still
+   * be marked dirty.  Passing aIntrinsicDirty = eResize and aBitToAdd = 0
+   * would result in no work being done, so don't do that.
    */
   enum IntrinsicDirty {
     // XXXldb eResize should be renamed
@@ -506,8 +510,8 @@ public:
     eStyleChange // Do eTreeChange, plus all of aFrame's descendants
   };
   virtual void FrameNeedsReflow(nsIFrame *aFrame,
-                                            IntrinsicDirty aIntrinsicDirty,
-                                            nsFrameState aBitToAdd) = 0;
+                                IntrinsicDirty aIntrinsicDirty,
+                                nsFrameState aBitToAdd) = 0;
 
   /**
    * Calls FrameNeedsReflow on all fixed position children of the root frame.
