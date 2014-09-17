@@ -329,14 +329,6 @@ private:
   nsRefPtr<Fake_MediaStreamTrack> mAudioTrack;
 };
 
-class Fake_MediaStreamGraph
-{
-public:
-  virtual ~Fake_MediaStreamGraph() {}
-};
-
-
-
 class Fake_MediaStreamBase : public Fake_MediaStream {
  public:
   Fake_MediaStreamBase() : mPeriodic(new Fake_MediaPeriodic(this)) {}
