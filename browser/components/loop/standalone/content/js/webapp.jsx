@@ -436,11 +436,6 @@ loop.webapp = (function($, _, OT, mozL10n) {
     },
 
     componentDidMount: function() {
-      // XXX Temporary alias these until part 2.
-      this._conversation = this.props.conversation;
-      this._client = this.props.client;
-      this._notifications = this.props.notifications;
-
       this.props.conversation.on("call:outgoing", this.startCall, this);
       this.props.conversation.on("call:outgoing:setup", this.setupOutgoingCall, this);
       this.props.conversation.on("change:publishedStream", this._checkConnected, this);
@@ -478,8 +473,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
           return (
             <sharedViews.ConversationView
               sdk={this.props.sdk}
-              model={this._conversation}
-              video={{enabled: this._conversation.hasVideoStream("outgoing")}}
+              model={this.props.conversation}
+              video={{enabled: this.props.conversation.hasVideoStream("outgoing")}}
             />
           );
         }
@@ -500,7 +495,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
      */
     _notifyError: function(error) {
       console.log(error);
-      this._notifications.errorL10n("connection_error_see_console_notification");
+      this.props.notifications.errorL10n("connection_error_see_console_notification");
       this.setState({callStatus: "end"});
     },
 
@@ -511,7 +506,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
      * - {String} connectionId: OT session id
      */
     _onPeerHungup: function() {
-      this._notifications.warnL10n("peer_ended_conversation2");
+      this.props.notifications.warnL10n("peer_ended_conversation2");
       this.setState({callStatus: "end"});
     },
 
@@ -519,7 +514,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
      * Network disconnected. Notifies the user and ends the call.
      */
     _onNetworkDisconnected: function() {
-      this._notifications.warnL10n("network_disconnected");
+      this.props.notifications.warnL10n("network_disconnected");
       this.setState({callStatus: "end"});
     },
 
@@ -528,15 +523,15 @@ loop.webapp = (function($, _, OT, mozL10n) {
      * server.
      */
     setupOutgoingCall: function() {
-      var loopToken = this._conversation.get("loopToken");
+      var loopToken = this.props.conversation.get("loopToken");
       if (!loopToken) {
-        this._notifications.errorL10n("missing_conversation_info");
+        this.props.notifications.errorL10n("missing_conversation_info");
         this.setState({callStatus: "failure"});
       } else {
-        var callType = this._conversation.get("selectedCallType");
+        var callType = this.props.conversation.get("selectedCallType");
 
-        this._client.requestCallInfo(this._conversation.get("loopToken"),
-                                     callType, function(err, sessionData) {
+        this.props.client.requestCallInfo(this.props.conversation.get("loopToken"),
+                                          callType, function(err, sessionData) {
           if (err) {
             switch (err.errno) {
               // loop-server sends 404 + INVALID_TOKEN (errno 105) whenever a token is
@@ -546,13 +541,13 @@ loop.webapp = (function($, _, OT, mozL10n) {
                 this.setState({callStatus: "expired"});
                 break;
               default:
-                this._notifications.errorL10n("missing_conversation_info");
+                this.props.notifications.errorL10n("missing_conversation_info");
                 this.setState({callStatus: "failure"});
                 break;
             }
             return;
           }
-          this._conversation.outgoing(sessionData);
+          this.props.conversation.outgoing(sessionData);
         }.bind(this));
       }
     },
@@ -561,9 +556,9 @@ loop.webapp = (function($, _, OT, mozL10n) {
      * Actually starts the call.
      */
     startCall: function() {
-      var loopToken = this._conversation.get("loopToken");
+      var loopToken = this.props.conversation.get("loopToken");
       if (!loopToken) {
-        this._notifications.errorL10n("missing_conversation_info");
+        this.props.notifications.errorL10n("missing_conversation_info");
         this.setState({callStatus: "failure"});
         return;
       }
@@ -580,15 +575,15 @@ loop.webapp = (function($, _, OT, mozL10n) {
      */
     _setupWebSocket: function() {
       this._websocket = new loop.CallConnectionWebSocket({
-        url: this._conversation.get("progressURL"),
-        websocketToken: this._conversation.get("websocketToken"),
-        callId: this._conversation.get("callId"),
+        url: this.props.conversation.get("progressURL"),
+        websocketToken: this.props.conversation.get("websocketToken"),
+        callId: this.props.conversation.get("callId"),
       });
       this._websocket.promiseConnect().then(function() {
       }.bind(this), function() {
         // XXX Not the ideal response, but bug 1047410 will be replacing
         // this by better "call failed" UI.
-        this._notifications.errorL10n("cannot_start_call_session_not_ready");
+        this.props.notifications.errorL10n("cannot_start_call_session_not_ready");
         return;
       }.bind(this));
 
@@ -602,7 +597,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
     _checkConnected: function() {
       // Check we've had both local and remote streams connected before
       // sending the media up message.
-      if (this._conversation.streamsConnected()) {
+      if (this.props.conversation.streamsConnected()) {
         this._websocket.mediaUp();
       }
     },
@@ -638,7 +633,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
       if (reason !== "cancel") {
         // XXX This should really display the call failed view - bug 1046959
         // will implement this.
-        this._notifications.errorL10n("call_timeout_notification_text");
+        this.props.notifications.errorL10n("call_timeout_notification_text");
       }
     },
 
