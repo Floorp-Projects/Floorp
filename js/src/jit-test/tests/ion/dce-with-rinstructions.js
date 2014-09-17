@@ -911,6 +911,20 @@ function rregexp_m_literal_replace(i) {
     return i;
 }
 
+var uceFault_typeof = eval(uneval(uceFault).replace('uceFault', 'uceFault_typeof'))
+function rtypeof(i) {
+    var inputs = [ {}, [], 1, true, Symbol(), undefined, function(){}, null ];
+    var types = [ "object", "object", "number", "boolean", "symbol", "undefined", "function", "object"];
+    var x = typeof (inputs[i % inputs.length]);
+    var y = types[i % types.length];
+
+    if (uceFault_typeof(i) || uceFault_typeof(i)) {
+        assertEq(x, y);
+    }
+
+    return i;
+}
+
 for (i = 0; i < 100; i++) {
     rbitnot_number(i);
     rbitnot_object(i);
@@ -999,6 +1013,7 @@ for (i = 0; i < 100; i++) {
     rregexp_i_literal_replace(i);
     rregexp_m_replace(i);
     rregexp_m_literal_replace(i);
+    rtypeof(i);
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well
