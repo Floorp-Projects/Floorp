@@ -575,7 +575,7 @@
       comment: /^\s*#|^\s*$/,
       entity: /^([^=\s]+)\s*=\s*(.+)$/,
       multiline: /[^\\]\\$/,
-      macro: /\{\[\s*(\w+)\(([^\)]*)\)\s*\]\}/i,
+      index: /\{\[\s*(\w+)(?:\(([^\)]*)\))?\s*\]\}/i,
       unicode: /\\u([0-9a-fA-F]{1,4})/g,
       entries: /[\r\n]+/,
       controlChars: /\\([\\\n\r\t\b\f\{\}\"\'])/g
@@ -635,7 +635,7 @@
       if (!(prop in obj)) {
         obj[prop] = {'_': {}};
       } else if (typeof(obj[prop]) === 'string') {
-        obj[prop] = {'_index': parseMacro(obj[prop]), '_': {}};
+        obj[prop] = {'_index': parseIndex(obj[prop]), '_': {}};
       }
       obj[prop]._[key] = value;
     }
@@ -687,16 +687,21 @@
       return unescapeUnicode(str);
     }
 
-    function parseMacro(str) {
-      var match = str.match(parsePatterns.macro);
+    function parseIndex(str) {
+      var match = str.match(parsePatterns.index);
       if (!match) {
-        throw new L10nError('Malformed macro');
+        throw new L10nError('Malformed index');
       }
-      return [match[1], match[2]];
+      var parts = Array.prototype.slice.call(match, 1);
+      return parts.filter(function(part) {
+        return !!part;
+      });
     }
   }
 
 
+
+  var KNOWN_MACROS = ['plural'];
 
   var MAX_PLACEABLE_LENGTH = 2500;
   var MAX_PLACEABLES = 100;
@@ -739,7 +744,7 @@
     // if resolve fails, we want the exception to bubble up and stop the whole
     // resolving process;  however, we still need to clean up the dirty flag
     try {
-      val = resolve(ctxdata, this.env, this.value, this.index);
+      val = resolveValue(ctxdata, this.env, this.value, this.index);
     } finally {
       this.dirty = false;
     }
@@ -772,7 +777,11 @@
     return entity;
   };
 
-  function subPlaceable(ctxdata, env, match, id) {
+  function resolveIdentifier(ctxdata, env, id) {
+    if (KNOWN_MACROS.indexOf(id) > -1) {
+      return env['__' + id];
+    }
+
     if (ctxdata && ctxdata.hasOwnProperty(id) &&
         (typeof ctxdata[id] === 'string' ||
          (typeof ctxdata[id] === 'number' && !isNaN(ctxdata[id])))) {
@@ -785,17 +794,29 @@
       if (!(env[id] instanceof Entity)) {
         env[id] = new Entity(id, env[id], env);
       }
-      var value = env[id].resolve(ctxdata);
-      if (typeof value === 'string') {
-        // prevent Billion Laughs attacks
-        if (value.length >= MAX_PLACEABLE_LENGTH) {
-          throw new L10nError('Too many characters in placeable (' +
-                              value.length + ', max allowed is ' +
-                              MAX_PLACEABLE_LENGTH + ')');
-        }
-        return value;
-      }
+      return env[id].resolve(ctxdata);
     }
+
+    return undefined;
+  }
+
+  function subPlaceable(ctxdata, env, match, id) {
+    var value = resolveIdentifier(ctxdata, env, id);
+
+    if (typeof value === 'number') {
+      return value;
+    }
+
+    if (typeof value === 'string') {
+      // prevent Billion Laughs attacks
+      if (value.length >= MAX_PLACEABLE_LENGTH) {
+        throw new L10nError('Too many characters in placeable (' +
+                            value.length + ', max allowed is ' +
+                            MAX_PLACEABLE_LENGTH + ')');
+      }
+      return value;
+    }
+
     return match;
   }
 
@@ -813,7 +834,43 @@
     return value;
   }
 
-  function resolve(ctxdata, env, expr, index) {
+  function resolveSelector(ctxdata, env, expr, index) {
+      var selector = resolveIdentifier(ctxdata, env, index[0]);
+      if (selector === undefined) {
+        throw new L10nError('Unknown selector: ' + index[0]);
+      }
+
+      if (typeof selector !== 'function') {
+        // selector is a simple reference to an entity or ctxdata
+        return selector;
+      }
+
+      var argLength = index.length - 1;
+      if (selector.length !== argLength) {
+        throw new L10nError('Macro ' + index[0] + ' expects ' +
+                            selector.length + ' argument(s), yet ' + argLength +
+                            ' given');
+      }
+
+      var argValue = resolveIdentifier(ctxdata, env, index[1]);
+
+      if (selector === env.__plural) {
+        // special cases for zero, one, two if they are defined on the hash
+        if (argValue === 0 && 'zero' in expr) {
+          return 'zero';
+        }
+        if (argValue === 1 && 'one' in expr) {
+          return 'one';
+        }
+        if (argValue === 2 && 'two' in expr) {
+          return 'two';
+        }
+      }
+
+      return selector(argValue);
+  }
+
+  function resolveValue(ctxdata, env, expr, index) {
     if (typeof expr === 'string') {
       return interpolate(ctxdata, env, expr);
     }
@@ -825,30 +882,17 @@
     }
 
     // otherwise, it's a dict
-
-    if (index && ctxdata && ctxdata.hasOwnProperty(index[1])) {
-      var argValue = ctxdata[index[1]];
-
-      // special cases for zero, one, two if they are defined on the hash
-      if (argValue === 0 && 'zero' in expr) {
-        return resolve(ctxdata, env, expr.zero);
-      }
-      if (argValue === 1 && 'one' in expr) {
-        return resolve(ctxdata, env, expr.one);
-      }
-      if (argValue === 2 && 'two' in expr) {
-        return resolve(ctxdata, env, expr.two);
-      }
-
-      var selector = env.__plural(argValue);
+    if (index) {
+      // try to use the index in order to select the right dict member
+      var selector = resolveSelector(ctxdata, env, expr, index);
       if (expr.hasOwnProperty(selector)) {
-        return resolve(ctxdata, env, expr[selector]);
+        return resolveValue(ctxdata, env, expr[selector]);
       }
     }
 
     // if there was no index or no selector was found, try 'other'
     if ('other' in expr) {
-      return resolve(ctxdata, env, expr.other);
+      return resolveValue(ctxdata, env, expr.other);
     }
 
     return undefined;
@@ -1071,7 +1115,7 @@
 
     var idToFetch = this.isPseudo ? ctx.defaultLocale : this.id;
     for (var i = 0; i < ctx.resLinks.length; i++) {
-      var path = ctx.resLinks[i].replace('{{locale}}', idToFetch);
+      var path = ctx.resLinks[i].replace('{locale}', idToFetch);
       var type = path.substr(path.lastIndexOf('.') + 1);
 
       switch (type) {
@@ -1120,7 +1164,9 @@
     this.isLoading = false;
 
     this.defaultLocale = 'en-US';
+    this.availableLocales = [];
     this.supportedLocales = [];
+
     this.resLinks = [];
     this.locales = {};
 
@@ -1218,6 +1264,19 @@
       this._emitter.emit('ready');
     }
 
+    this.registerLocales = function (defLocale, available) {
+      /* jshint boss:true */
+      this.availableLocales = [this.defaultLocale = defLocale];
+
+      if (available) {
+        for (var i = 0, loc; loc = available[i]; i++) {
+          if (this.availableLocales.indexOf(loc) === -1) {
+            this.availableLocales.push(loc);
+          }
+        }
+      }
+    };
+
     this.requestLocales = function requestLocales() {
       if (this.isLoading && !this.isReady) {
         throw new L10nError('Context not ready');
@@ -1225,8 +1284,15 @@
 
       this.isLoading = true;
       var requested = Array.prototype.slice.call(arguments);
+      if (requested.length === 0) {
+        throw new L10nError('No locales requested');
+      }
 
-      var supported = negotiate(requested.concat(this.defaultLocale),
+      var reqPseudo = requested.filter(function(loc) {
+        return loc in PSEUDO_STRATEGIES;
+      });
+
+      var supported = negotiate(this.availableLocales.concat(reqPseudo),
                                 requested,
                                 this.defaultLocale);
       freeze.call(this, supported);
@@ -1280,11 +1346,12 @@
 
 
 
-  var DEBUG = true;
+  var DEBUG = false;
   var isPretranslated = false;
   var rtlList = ['ar', 'he', 'fa', 'ps', 'qps-plocm', 'ur'];
   var nodeObserver = null;
   var pendingElements = null;
+  var manifest = {};
 
   var moConfig = {
     attributes: true,
@@ -1343,7 +1410,8 @@
         rePlaceables: rePlaceables,
         getTranslatableChildren:  getTranslatableChildren,
         translateDocument: translateDocument,
-        loadINI: loadINI,
+        onManifestInjected: onManifestInjected,
+        onMetaInjected: onMetaInjected,
         fireLocalizedEvent: fireLocalizedEvent,
         PropertiesParser: PropertiesParser,
         compile: compile,
@@ -1355,8 +1423,8 @@
   navigator.mozL10n.ctx.ready(onReady.bind(navigator.mozL10n));
 
   if (DEBUG) {
-    navigator.mozL10n.ctx.addEventListener('error', console);
-    navigator.mozL10n.ctx.addEventListener('warning', console);
+    navigator.mozL10n.ctx.addEventListener('error', console.error);
+    navigator.mozL10n.ctx.addEventListener('warning', console.warn);
   }
 
   function getDirection(lang) {
@@ -1444,57 +1512,130 @@
   }
 
   function initResources() {
-    var nodes =
-      document.head.querySelectorAll('link[type="application/l10n"],' +
-                                     'script[type="application/l10n"]');
-    var iniLinks = [];
+    /* jshint boss:true */
+    var manifestFound = false;
 
-    for (var i = 0; i < nodes.length; i++) {
-      var node = nodes[i];
-      var nodeName = node.nodeName.toLowerCase();
-
-      switch (nodeName) {
-        case 'link':
-          var url = node.getAttribute('href');
-          var type = url.substr(url.lastIndexOf('.') + 1);
-          if (type === 'ini') {
-            iniLinks.push(url);
-          }
-          this.ctx.resLinks.push(url);
+    var nodes = document.head
+                        .querySelectorAll('link[rel="localization"],' +
+                                          'link[rel="manifest"],' +
+                                          'meta[name="locales"],' +
+                                          'meta[name="default_locale"],' +
+                                          'script[type="application/l10n"]');
+    for (var i = 0, node; node = nodes[i]; i++) {
+      var type = node.getAttribute('rel') || node.nodeName.toLowerCase();
+      switch (type) {
+        case 'manifest':
+          manifestFound = true;
+          onManifestInjected.call(this, node.getAttribute('href'), initLocale);
+          break;
+        case 'localization':
+          this.ctx.resLinks.push(node.getAttribute('href'));
+          break;
+        case 'meta':
+          onMetaInjected.call(this, node);
           break;
         case 'script':
-          var lang = node.getAttribute('lang');
-          var locale = this.ctx.getLocale(lang);
-          locale.addAST(JSON.parse(node.textContent));
+          onScriptInjected.call(this, node);
           break;
       }
     }
 
-    var iniLoads = iniLinks.length;
-    if (iniLoads === 0) {
-      initLocale.call(this);
-      return;
+    // if after scanning the head any locales have been registered in the ctx
+    // it's safe to initLocale without waiting for manifest.webapp
+    if (this.ctx.availableLocales.length) {
+      return initLocale.call(this);
     }
 
-    function onIniLoaded(err) {
-      if (err) {
-        this.ctx._emitter.emit('error', err);
-      }
-      if (--iniLoads === 0) {
-        initLocale.call(this);
-      }
-    }
-
-    for (i = 0; i < iniLinks.length; i++) {
-      loadINI.call(this, iniLinks[i], onIniLoaded.bind(this));
+    // if no locales were registered so far and no manifest.webapp link was
+    // found we still call initLocale with just the default language available
+    if (!manifestFound) {
+      this.ctx.registerLocales(this.ctx.defaultLocale);
+      return initLocale.call(this);
     }
   }
 
+  function onMetaInjected(node) {
+    if (this.ctx.availableLocales.length) {
+      return;
+    }
+
+    switch (node.getAttribute('name')) {
+      case 'locales':
+        manifest.locales = node.getAttribute('content').split(',').map(
+          Function.prototype.call, String.prototype.trim);
+        break;
+      case 'default_locale':
+        manifest.defaultLocale = node.getAttribute('content');
+        break;
+    }
+
+    if (Object.keys(manifest).length === 2) {
+      this.ctx.registerLocales(manifest.defaultLocale, manifest.locales);
+      manifest = {};
+    }
+  }
+
+  function onScriptInjected(node) {
+    var lang = node.getAttribute('lang');
+    var locale = this.ctx.getLocale(lang);
+    locale.addAST(JSON.parse(node.textContent));
+  }
+
+  function onManifestInjected(url, callback) {
+    if (this.ctx.availableLocales.length) {
+      return;
+    }
+
+    io.loadJSON(url, function parseManifest(err, json) {
+      if (this.ctx.availableLocales.length) {
+        return;
+      }
+
+      if (err) {
+        this.ctx._emitter.emit('error', err);
+        this.ctx.registerLocales(this.ctx.defaultLocale);
+        if (callback) {
+          callback.call(this);
+        }
+        return;
+      }
+
+      // default_locale and locales might have been already provided by meta
+      // elements which take precedence;  check if we already have them
+      if (!('defaultLocale' in manifest)) {
+        if (json.default_locale) {
+          manifest.defaultLocale = json.default_locale;
+        } else {
+          manifest.defaultLocale = this.ctx.defaultLocale;
+          this.ctx._emitter.emit(
+            'warning', new L10nError('default_locale missing from manifest'));
+        }
+      }
+      if (!('locales' in manifest)) {
+        if (json.locales) {
+          manifest.locales = Object.keys(json.locales);
+        } else {
+          this.ctx._emitter.emit(
+            'warning', new L10nError('locales missing from manifest'));
+        }
+      }
+
+      this.ctx.registerLocales(manifest.defaultLocale, manifest.locales);
+      manifest = {};
+
+      if (callback) {
+        callback.call(this);
+      }
+    }.bind(this));
+  }
+
   function initLocale() {
-    this.ctx.requestLocales(navigator.language);
+    this.ctx.requestLocales.apply(
+      this.ctx, navigator.languages || [navigator.language]);
     window.addEventListener('languagechange', function l10n_langchange() {
-      navigator.mozL10n.language.code = navigator.language;
-    });
+      this.ctx.requestLocales.apply(
+        this.ctx, navigator.languages || [navigator.language]);
+    }.bind(this));
   }
 
   function localizeMutations(mutations) {
@@ -1561,83 +1702,6 @@
       }
     });
     window.dispatchEvent(event);
-  }
-
-  /* jshint -W104 */
-
-  function loadINI(url, callback) {
-    var ctx = this.ctx;
-    io.load(url, function(err, source) {
-      var pos = ctx.resLinks.indexOf(url);
-
-      if (err) {
-        // remove the ini link from resLinks
-        ctx.resLinks.splice(pos, 1);
-        return callback(err);
-      }
-
-      if (!source) {
-        ctx.resLinks.splice(pos, 1);
-        return callback(new Error('Empty file: ' + url));
-      }
-
-      var patterns = parseINI(source, url).resources.map(function(x) {
-        return x.replace('en-US', '{{locale}}');
-      });
-      ctx.resLinks.splice.apply(ctx.resLinks, [pos, 1].concat(patterns));
-      callback();
-    });
-  }
-
-  function relativePath(baseUrl, url) {
-    if (url[0] === '/') {
-      return url;
-    }
-
-    var dirs = baseUrl.split('/')
-      .slice(0, -1)
-      .concat(url.split('/'))
-      .filter(function(path) {
-        return path !== '.';
-      });
-
-    return dirs.join('/');
-  }
-
-  var iniPatterns = {
-    'section': /^\s*\[(.*)\]\s*$/,
-    'import': /^\s*@import\s+url\((.*)\)\s*$/i,
-    'entry': /[\r\n]+/
-  };
-
-  function parseINI(source, iniPath) {
-    var entries = source.split(iniPatterns.entry);
-    var locales = ['en-US'];
-    var genericSection = true;
-    var uris = [];
-    var match;
-
-    for (var i = 0; i < entries.length; i++) {
-      var line = entries[i];
-      // we only care about en-US resources
-      if (genericSection && iniPatterns['import'].test(line)) {
-        match = iniPatterns['import'].exec(line);
-        var uri = relativePath(iniPath, match[1]);
-        uris.push(uri);
-        continue;
-      }
-
-      // but we need the list of all locales in the ini, too
-      if (iniPatterns.section.test(line)) {
-        genericSection = false;
-        match = iniPatterns.section.exec(line);
-        locales.push(match[1]);
-      }
-    }
-    return {
-      locales: locales,
-      resources: uris
-    };
   }
 
   /* jshint -W104 */
