@@ -117,7 +117,7 @@ class DatabaseFile MOZ_FINAL
   IDBDatabase* mDatabase;
 
 public:
-  DatabaseFile(IDBDatabase* aDatabase)
+  explicit DatabaseFile(IDBDatabase* aDatabase)
     : mDatabase(aDatabase)
   {
     MOZ_ASSERT(aDatabase);

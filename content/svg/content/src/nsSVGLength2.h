@@ -53,8 +53,8 @@ public:
 class SVGElementMetrics : public UserSpaceMetrics
 {
 public:
-  SVGElementMetrics(nsSVGElement* aSVGElement,
-                    mozilla::dom::SVGSVGElement* aCtx = nullptr);
+  explicit SVGElementMetrics(nsSVGElement* aSVGElement,
+                             mozilla::dom::SVGSVGElement* aCtx = nullptr);
 
   virtual float GetEmLength() const MOZ_OVERRIDE;
   virtual float GetExLength() const MOZ_OVERRIDE;
@@ -70,7 +70,7 @@ private:
 class NonSVGFrameUserSpaceMetrics : public UserSpaceMetricsWithSize
 {
 public:
-  NonSVGFrameUserSpaceMetrics(nsIFrame* aFrame);
+  explicit NonSVGFrameUserSpaceMetrics(nsIFrame* aFrame);
 
   virtual float GetEmLength() const MOZ_OVERRIDE;
   virtual float GetExLength() const MOZ_OVERRIDE;
