@@ -7,6 +7,8 @@
 #include "AppleATDecoder.h"
 #include "AppleCMLinker.h"
 #include "AppleDecoderModule.h"
+#include "AppleVDADecoder.h"
+#include "AppleVDALinker.h"
 #include "AppleVTDecoder.h"
 #include "AppleVTLinker.h"
 #include "mozilla/Preferences.h"
@@ -14,7 +16,8 @@
 
 namespace mozilla {
 
-bool AppleDecoderModule::sIsEnabled = false;
+bool AppleDecoderModule::sIsVTAvailable = false;
+bool AppleDecoderModule::sIsVDAAvailable = false;
 
 AppleDecoderModule::AppleDecoderModule()
 {
@@ -29,19 +32,20 @@ void
 AppleDecoderModule::Init()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
-  sIsEnabled = Preferences::GetBool("media.apple.mp4.enabled", false);
-  if (!sIsEnabled) {
+
+  if (!Preferences::GetBool("media.apple.mp4.enabled", false)) {
     return;
   }
+
+  // dlopen VideoDecodeAcceleration.framework if it's available.
+  sIsVDAAvailable = AppleVDALinker::Link();
 
   // dlopen CoreMedia.framework if it's available.
-  sIsEnabled = AppleCMLinker::Link();
-  if (!sIsEnabled) {
-    return;
-  }
-
+  bool haveCoreMedia = AppleCMLinker::Link();
   // dlopen VideoToolbox.framework if it's available.
-  sIsEnabled = AppleVTLinker::Link();
+  // We must link both CM and VideoToolbox framework to allow for proper
+  // paired Link/Unlink calls
+  sIsVTAvailable = AppleVTLinker::Link() && haveCoreMedia;
 }
 
 nsresult
@@ -50,7 +54,7 @@ AppleDecoderModule::Startup()
   // We don't have any per-instance initialization to do.
   // Check whether ::Init() above succeeded to know if
   // we're functional.
-  if (!sIsEnabled) {
+  if (!sIsVDAAvailable && !sIsVTAvailable) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -60,6 +64,7 @@ class UnlinkTask : public nsRunnable {
 public:
   NS_IMETHOD Run() MOZ_OVERRIDE {
     MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
+    AppleVDALinker::Unlink();
     AppleVTLinker::Unlink();
     AppleCMLinker::Unlink();
     return NS_OK;
@@ -81,8 +86,24 @@ AppleDecoderModule::CreateH264Decoder(const mp4_demuxer::VideoDecoderConfig& aCo
                                       MediaTaskQueue* aVideoTaskQueue,
                                       MediaDataDecoderCallback* aCallback)
 {
-  nsRefPtr<MediaDataDecoder> decoder =
-    new AppleVTDecoder(aConfig, aVideoTaskQueue, aCallback, aImageContainer);
+  nsRefPtr<MediaDataDecoder> decoder;
+
+  if (sIsVDAAvailable) {
+    decoder =
+      AppleVDADecoder::CreateVDADecoder(aConfig,
+                                        aVideoTaskQueue,
+                                        aCallback,
+                                        aImageContainer);
+    if (decoder) {
+      return decoder.forget();
+    }
+  }
+  // We fallback here if VDA isn't available, or is available but isn't
+  // supported by the current platform.
+  if (sIsVTAvailable) {
+    decoder =
+      new AppleVTDecoder(aConfig, aVideoTaskQueue, aCallback, aImageContainer);
+  }
   return decoder.forget();
 }
 
