@@ -55,55 +55,42 @@ describe("loop.panel", function() {
     sandbox.restore();
   });
 
-  describe("loop.panel.PanelRouter", function() {
-    describe("#constructor", function() {
-      it("should require a notifications collection", function() {
-        expect(function() {
-          new loop.panel.PanelRouter();
-        }).to.Throw(Error, /missing required notifications/);
-      });
-
-      it("should require a document", function() {
-        expect(function() {
-          new loop.panel.PanelRouter({notifications: notifications});
-        }).to.Throw(Error, /missing required document/);
-      });
+  describe("#init", function() {
+    beforeEach(function() {
+      sandbox.stub(React, "renderComponent");
+      sandbox.stub(document.mozL10n, "initialize");
+      sandbox.stub(document.mozL10n, "get").returns("Fake title");
     });
 
-    describe("constructed", function() {
-      var router;
+    it("should initalize L10n", function() {
+      loop.panel.init();
 
-      beforeEach(function() {
-        router = createTestRouter({
-          hidden: true,
-          addEventListener: sandbox.spy()
-        });
+      sinon.assert.calledOnce(document.mozL10n.initialize);
+      sinon.assert.calledWithExactly(document.mozL10n.initialize,
+        navigator.mozLoop);
+    });
 
-        sandbox.stub(router, "loadReactComponent");
-      });
+    it("should render the panel view", function() {
+      loop.panel.init();
 
-      describe("#home", function() {
-        beforeEach(function() {
-          sandbox.stub(notifications, "reset");
-        });
+      sinon.assert.calledOnce(React.renderComponent);
+      sinon.assert.calledWith(React.renderComponent,
+        sinon.match(function(value) {
+          return TestUtils.isDescriptorOfType(value,
+            loop.panel.PanelView);
+      }));
+    });
 
-        it("should clear all pending notifications", function() {
-          router.home();
+    it("should dispatch an loopPanelInitialized", function(done) {
+      function listener() {
+        done();
+      }
 
-          sinon.assert.calledOnce(notifications.reset);
-        });
+      window.addEventListener("loopPanelInitialized", listener);
 
-        it("should load the home view", function() {
-          router.home();
+      loop.panel.init();
 
-          sinon.assert.calledOnce(router.loadReactComponent);
-          sinon.assert.calledWithExactly(router.loadReactComponent,
-            sinon.match(function(value) {
-              return React.addons.TestUtils.isDescriptorOfType(
-                value, loop.panel.PanelView);
-            }));
-        });
-      });
+      window.removeEventListener("loopPanelInitialized", listener);
     });
   });
 
