@@ -30,6 +30,14 @@ namespace js {
  *           |<------ sizeof ------>|<- length ->|
  *
  *   | waste | SharedArrayRawBuffer | data array | waste |
+ *
+ * Observe that if we want to map the data array on a specific address, such
+ * as absolute zero (bug 1056027), then the SharedArrayRawBuffer cannot be
+ * prefixed to the data array, it has to be a separate object, also in
+ * shared memory.  (That would get rid of ~4KB of waste, as well.)  Very little
+ * else would have to change throughout the engine, the SARB would point to
+ * the data array using a constant pointer, instead of computing its
+ * address.
  */
 class SharedArrayRawBuffer
 {
@@ -62,44 +70,83 @@ class SharedArrayRawBuffer
 /*
  * SharedArrayBufferObject
  *
- * When transferred to a WebWorker, the buffer is not neutered on the parent side,
- * and both child and parent reference the same buffer.
+ * When transferred to a WebWorker, the buffer is not neutered on the
+ * parent side, and both child and parent reference the same buffer.
+ *
+ * The underlying memory is memory-mapped and reference counted
+ * (across workers and/or processes).  The SharedArrayBuffer object
+ * has a finalizer that decrements the refcount, the last one to leave
+ * (globally) unmaps the memory.  The sender ups the refcount before
+ * transmitting the memory to another worker.
+ *
+ * SharedArrayBufferObject (or really the underlying memory) /is
+ * racy/: more than one worker can access the memory at the same time.
+ *
+ * A SharedTypedArrayObject (a view) references a SharedArrayBuffer
+ * and keeps it alive.  The SharedArrayBuffer does /not/ reference its
+ * views, nor do the views reference each other in any way.
  */
-class SharedArrayBufferObject : public ArrayBufferObject
+class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared
 {
     static bool byteLengthGetterImpl(JSContext *cx, CallArgs args);
 
   public:
+    // RAWBUF_SLOT holds a pointer (as "private" data) to the
+    // SharedArrayRawBuffer object, which is manually managed storage.
+    static const uint8_t RAWBUF_SLOT = 0;
+
+    static const uint8_t RESERVED_SLOTS = 1;
+
     static const Class class_;
     static const Class protoClass;
+    static const JSFunctionSpec jsfuncs[];
+    static const JSFunctionSpec jsstaticfuncs[];
 
-    // Slot used for storing a pointer to the SharedArrayRawBuffer.
-    static const uint8_t RAWBUF_SLOT = ArrayBufferObject::RESERVED_SLOTS;
+    static bool byteLengthGetter(JSContext *cx, unsigned argc, Value *vp);
 
-    static const uint8_t RESERVED_SLOTS = ArrayBufferObject::RESERVED_SLOTS + 1;
+    static bool fun_isView(JSContext *cx, unsigned argc, Value *vp);
 
     static bool class_constructor(JSContext *cx, unsigned argc, Value *vp);
 
     // Create a SharedArrayBufferObject with a new SharedArrayRawBuffer.
-    static JSObject *New(JSContext *cx, uint32_t length);
+    static SharedArrayBufferObject *New(JSContext *cx, uint32_t length);
 
     // Create a SharedArrayBufferObject using an existing SharedArrayRawBuffer.
-    static JSObject *New(JSContext *cx, SharedArrayRawBuffer *buffer);
-
-    static bool byteLengthGetter(JSContext *cx, unsigned argc, Value *vp);
+    static SharedArrayBufferObject *New(JSContext *cx, SharedArrayRawBuffer *buffer);
 
     static void Finalize(FreeOp *fop, JSObject *obj);
 
-    void acceptRawBuffer(SharedArrayRawBuffer *buffer);
-    void dropRawBuffer();
+    static void addSizeOfExcludingThis(JSObject *obj, mozilla::MallocSizeOf mallocSizeOf,
+                                       JS::ClassInfo *info);
 
     SharedArrayRawBuffer *rawBufferObject() const;
-    uint8_t *dataPointer() const;
-    uint32_t byteLength() const;
+
+    // Invariant: This method does not cause GC and can be called
+    // without anchoring the object it is called on.
+    void *globalID() const {
+        // The buffer address is good enough as an ID provided the memory is not shared
+        // between processes or, if it is, it is mapped to the same address in every
+        // process.  (At the moment, shared memory cannot be shared between processes.)
+        return dataPointer();
+    }
+
+    uint32_t byteLength() const {
+        return rawBufferObject()->byteLength();
+    }
+
+    uint8_t *dataPointer() const {
+        return rawBufferObject()->dataPointer();
+    }
+
+private:
+    void acceptRawBuffer(SharedArrayRawBuffer *buffer);
+    void dropRawBuffer();
 };
 
-bool
-IsSharedArrayBuffer(HandleValue v);
+bool IsSharedArrayBuffer(HandleValue v);
+bool IsSharedArrayBuffer(HandleObject o);
+
+SharedArrayBufferObject &AsSharedArrayBuffer(HandleObject o);
 
 } // namespace js
 

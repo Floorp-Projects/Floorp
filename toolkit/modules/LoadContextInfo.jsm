@@ -9,6 +9,7 @@ const Cc = Components.classes;
 const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 this.LoadContextInfo = {};
 
@@ -55,8 +56,14 @@ LoadContextInfo.custom = function(_private, _anonymous, _appId, _inBrowser) {
 
 // Copies info from provided nsILoadContext
 LoadContextInfo.fromLoadContext = function(_loadContext, _anonymous) {
-  return new _LoadContextInfo(_loadContext.isPrivate,
+  return new _LoadContextInfo(_loadContext.usePrivateBrowsing,
                               _anonymous,
                               _loadContext.appId,
                               _loadContext.isInBrowserElement);
+}
+
+// Copies info from provided window object
+LoadContextInfo.fromWindow = function(_window, _anonymous) {
+  var loadContext = PrivateBrowsingUtils.privacyContextFromWindow(_window);
+  return this.fromLoadContext(loadContext, _anonymous);
 }

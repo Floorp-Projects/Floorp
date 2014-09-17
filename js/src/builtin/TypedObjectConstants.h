@@ -57,7 +57,7 @@
 #define JS_TYPEREPR_REFERENCE_KIND      2
 #define JS_TYPEREPR_STRUCT_KIND         3
 #define JS_TYPEREPR_SIZED_ARRAY_KIND    4
-#define JS_TYPEREPR_X4_KIND             5
+#define JS_TYPEREPR_SIMD_KIND           5
 
 // These constants are for use exclusively in JS code. In C++ code,
 // prefer Scalar::Int8 etc, which allows you to write a switch which will
@@ -81,11 +81,11 @@
 #define JS_REFERENCETYPEREPR_STRING     2
 
 // These constants are for use exclusively in JS code.  In C++ code,
-// prefer X4TypeRepresentation::TYPE_INT32 etc, since that allows
+// prefer SimdTypeRepresentation::TYPE_INT32 etc, since that allows
 // you to write a switch which will receive a warning if you omit a
 // case.
-#define JS_X4TYPEREPR_INT32         0
-#define JS_X4TYPEREPR_FLOAT32       1
+#define JS_SIMDTYPEREPR_INT32         0
+#define JS_SIMDTYPEREPR_FLOAT32       1
 
 ///////////////////////////////////////////////////////////////////////////
 // Slots for typed objects

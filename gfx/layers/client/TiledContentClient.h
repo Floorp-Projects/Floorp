@@ -226,6 +226,8 @@ struct TileClient
   * If getting the back buffer required copying pixels from the front buffer
   * then the copied region is stored in aAddPaintedRegion so the host side
   * knows to upload it.
+  *
+  * If nullptr is returned, aTextureClientOnWhite is undefined.
   */
   TextureClient* GetBackBuffer(const nsIntRegion& aDirtyRegion,
                                gfxContentType aContent, SurfaceMode aMode,

@@ -27,23 +27,15 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIAccessible
-  NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName);
-  NS_IMETHOD GetActionDescription(uint8_t aIndex, nsAString& aDescription);
-  NS_IMETHOD DoAction(uint8_t aIndex);
-
   // Accessible
   virtual void Shutdown();
-  virtual mozilla::a11y::role NativeRole();
+  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
                                    EWhichChildAtPoint aWhichChild);
 
   virtual void InvalidateChildren();
   virtual bool InsertChildAt(uint32_t aIdx, Accessible* aChild) MOZ_OVERRIDE;
   virtual bool RemoveChild(Accessible* aAccessible);
-
-  // ActionAccessible
-  virtual uint8_t ActionCount();
 
 protected:
   virtual ~OuterDocAccessible();

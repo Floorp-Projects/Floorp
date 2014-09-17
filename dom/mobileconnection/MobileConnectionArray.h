@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_network_MobileConnectionArray_h__
 #define mozilla_dom_network_MobileConnectionArray_h__
 
+#include "mozilla/dom/MobileConnection.h"
 #include "nsWrapperCache.h"
-#include "MobileConnection.h"
 
 namespace mozilla {
 namespace dom {
@@ -34,7 +34,7 @@ public:
   Item(uint32_t aIndex);
 
   uint32_t
-  Length() const;
+  Length();
 
   MobileConnection*
   IndexedGetter(uint32_t aIndex, bool& aFound);
@@ -42,10 +42,7 @@ public:
 private:
   ~MobileConnectionArray();
 
-  void
-  Init();
-
-  bool mInitialized;
+  bool mLengthInitialized;
 
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsTArray<nsRefPtr<MobileConnection>> mMobileConnections;

@@ -124,20 +124,36 @@ bool
 TrackBuffer::EvictData(uint32_t aThreshold)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  // XXX Call EvictData on mDecoders?
-  return mCurrentDecoder->GetResource()->EvictData(aThreshold);
+
+  int64_t totalSize = 0;
+  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
+    totalSize += mDecoders[i]->GetResource()->GetSize();
+  }
+
+  int64_t toEvict = totalSize - aThreshold;
+  if (toEvict <= 0) {
+    return false;
+  }
+
+  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
+    MSE_DEBUG("TrackBuffer(%p)::EvictData decoder=%u threshold=%u toEvict=%lld",
+              this, i, aThreshold, toEvict);
+    toEvict -= mDecoders[i]->GetResource()->EvictData(toEvict);
+  }
+  return toEvict < (totalSize - aThreshold);
 }
 
 void
 TrackBuffer::EvictBefore(double aTime)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  // XXX Call EvictBefore on mDecoders?
-  int64_t endOffset = mCurrentDecoder->ConvertToByteOffset(aTime);
-  if (endOffset > 0) {
-    mCurrentDecoder->GetResource()->EvictBefore(endOffset);
+  for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
+    int64_t endOffset = mDecoders[i]->ConvertToByteOffset(aTime);
+    if (endOffset > 0) {
+      MSE_DEBUG("TrackBuffer(%p)::EvictBefore decoder=%u offset=%lld", this, i, endOffset);
+      mDecoders[i]->GetResource()->EvictBefore(endOffset);
+    }
   }
-  MSE_DEBUG("TrackBuffer(%p)::EvictBefore offset=%lld", this, endOffset);
 }
 
 double

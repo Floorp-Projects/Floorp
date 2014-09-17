@@ -3883,32 +3883,32 @@
     "description": "Whether the decoder for T.61 has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_IBM850": {
-    "expires_in_version": "40",
+    "expires_in_version": "38",
     "kind": "flag",
     "description": "Whether the decoder for IBM850 has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_IBM852": {
-    "expires_in_version": "40",
+    "expires_in_version": "38",
     "kind": "flag",
     "description": "Whether the decoder for IBM852 has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_IBM855": {
-    "expires_in_version": "40",
+    "expires_in_version": "38",
     "kind": "flag",
     "description": "Whether the decoder for IBM855 has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_IBM857": {
-    "expires_in_version": "default",
+    "expires_in_version": "38",
     "kind": "flag",
     "description": "Whether the decoder for IBM857 has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_IBM862": {
-    "expires_in_version": "40",
+    "expires_in_version": "38",
     "kind": "flag",
     "description": "Whether the decoder for IBM862 has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_IBM866": {
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether the decoder for IBM866 has been instantiated in this session."
   },

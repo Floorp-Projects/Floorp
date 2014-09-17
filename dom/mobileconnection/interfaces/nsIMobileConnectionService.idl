@@ -4,6 +4,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIMobileConnection;
 interface nsIMobileConnectionInfo;
 interface nsIMobileNetworkInfo;
 interface nsIVariant;
@@ -200,12 +201,23 @@ interface nsIMobileConnectionCallback : nsISupports
   "@mozilla.org/mobileconnection/mobileconnectionservice;1"
 %}
 
-/**
- * XPCOM component (in the content process) that provides the mobile
- * network information.
- */
-[scriptable, uuid(b50ad32d-f70e-4729-a947-e8cfdb6ba81f)]
+[scriptable, uuid(eaba3c4a-0dd5-4919-b1a2-7812e49dbbcb)]
 interface nsIMobileConnectionService : nsISupports
+{
+  readonly attribute unsigned long numItems;
+
+  nsIMobileConnection getItemByServiceId(in unsigned long serviceId);
+};
+
+%{C++
+template<typename T> struct already_AddRefed;
+
+already_AddRefed<nsIMobileConnectionService>
+NS_CreateMobileConnectionService();
+%}
+
+[scriptable, uuid(04db7331-54fe-4cf7-9347-b9481350f4c2)]
+interface nsIMobileConnection : nsISupports
 {
   const long ICC_SERVICE_CLASS_VOICE      = (1 << 0);
   const long ICC_SERVICE_CLASS_DATA       = (1 << 1);
@@ -258,95 +270,66 @@ interface nsIMobileConnectionService : nsISupports
   const long CLIR_INVOCATION  = 1;
   const long CLIR_SUPPRESSION = 2;
 
-  /**
-   * Called when a content process registers receiving unsolicited messages from
-   * RadioInterfaceLayer in the chrome process. Only a content process that has
-   * the 'mobileconnection' permission is allowed to register.
-   */
-  void registerListener(in unsigned long clientId,
-                        in nsIMobileConnectionListener listener);
-  void unregisterListener(in unsigned long clientId,
-                          in nsIMobileConnectionListener listener);
+  readonly attribute unsigned long serviceId;
 
   /**
-   * These two fields require the 'mobilenetwork' permission.
+   * Called when any one who is interested in receiving unsolicited messages
+   * from this nsIMobileConnection instance.
    */
-  DOMString getLastKnownNetwork(in unsigned long clientId);
-  DOMString getLastKnownHomeNetwork(in unsigned long clientId);
+  void registerListener(in nsIMobileConnectionListener listener);
+  void unregisterListener(in nsIMobileConnectionListener listener);
 
   /**
-   * All fields below require the 'mobileconnection' permission.
+   * String of format '<mcc>-<mnc>'. When changed, listener method
+   * 'notifyLastKnownNetworkChanged' is called.
    */
+  readonly attribute DOMString lastKnownNetwork;
 
   /**
-   * Get the connection information about the voice.
-   *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
-   *
-   * @return a nsIMobileConnectionInfo
+   * String of format '<mcc>-<mnc>[-<spn>]'. When changed, listener method
+   * 'notifyLastKnownHomeNetworkChanged' is called.
    */
-  nsIMobileConnectionInfo getVoiceConnectionInfo(in unsigned long clientId);
+  readonly attribute DOMString lastKnownHomeNetwork;
 
   /**
-   * Get the connection information about the data.
-   *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
-   *
-   * @return a nsIMobileConnectionInfo
+   * Connection information about the voice.
    */
-  nsIMobileConnectionInfo getDataConnectionInfo(in unsigned long clientId);
+  readonly attribute nsIMobileConnectionInfo voice;
 
   /**
-   * Get the integrated circuit card identifier of the SIM.
-   *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
-   *
-   * @return a DOMString indicates the iccId
+   * Connection information about the data.
    */
-  DOMString getIccId(in unsigned long clientId);
+  readonly attribute nsIMobileConnectionInfo data;
 
   /**
-   * Get the selection mode of the voice and data networks.
-   *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
-   *
-   * @return a DOMString
-   *         Possible values: 'automatic', 'manual', null (unknown).
+   * The integrated circuit card identifier of the SIM.
    */
-  DOMString getNetworkSelectionMode(in unsigned long clientId);
+  readonly attribute DOMString iccId;
 
   /**
-   * Get the current radio state.
-   *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
-   *
-   * @return a DOMString
-   *         Possible values: 'enabling', 'enabled', 'disabling', 'disabled',
-   *         null (unknown).
+   * The selection mode of the voice and data networks. Possible values are
+   * 'automatic', 'manual', null (unknown).
    */
-  DOMString getRadioState(in unsigned long clientId);
+  readonly attribute DOMString networkSelectionMode;
 
   /**
-   * Get the network types that are supported by this radio.
-   *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
+   * Current radio state. Possible values are 'enabling', 'enabled',
+   * 'disabling', 'disabled', null (unknown).
+   */
+  readonly attribute DOMString radioState;
+
+  /**
+   * The network types supported by this radio.
    *
    * @return an array of DOMString
    *         Possible values: 'gsm', 'wcdma', 'cdma', 'evdo', 'lte'.
    */
-  nsIVariant getSupportedNetworkTypes(in unsigned long clientId);
+  void getSupportedNetworkTypes([array, size_is(length)] out wstring types,
+                                [retval] out unsigned long length);
 
   /**
    * Search for available networks.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param requestCallback
    *        Called when request is finished.
    *
@@ -357,15 +340,12 @@ interface nsIMobileConnectionService : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'IllegalSIMorME', or
    * 'GenericFailure'.
    */
-  void getNetworks(in unsigned long clientId,
-                   in nsIMobileConnectionCallback requestCallback);
+  void getNetworks(in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Manually selects the passed in network, overriding the radio's current
    * selection.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param network
    *        The manually selecting network.
    * @param requestCallback
@@ -377,15 +357,12 @@ interface nsIMobileConnectionService : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'IllegalSIMorME', or
    * 'GenericFailure'.
    */
-  void selectNetwork(in unsigned long clientId,
-                     in nsIMobileNetworkInfo network,
+  void selectNetwork(in nsIMobileNetworkInfo network,
                      in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Tell the radio to automatically select a network.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param requestCallback
    *        Called when request is finished.
    *
@@ -395,14 +372,11 @@ interface nsIMobileConnectionService : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'IllegalSIMorME', or
    * 'GenericFailure'.
    */
-  void selectNetworkAutomatically(in unsigned long clientId,
-                                  in nsIMobileConnectionCallback requestCallback);
+  void selectNetworkAutomatically(in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Set preferred network type.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param type
    *        DOMString indicates the desired preferred network type.
    *        Possible values: 'wcdma/gsm', 'gsm', 'wcdma', 'wcdma/gsm-auto',
@@ -418,15 +392,12 @@ interface nsIMobileConnectionService : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'InvalidParameter',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  void setPreferredNetworkType(in unsigned long clientId,
-                               in DOMString type,
+  void setPreferredNetworkType(in DOMString type,
                                in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Query current preferred network type.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param requestCallback
    *        Called when request is finished.
    *
@@ -440,14 +411,11 @@ interface nsIMobileConnectionService : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'IllegalSIMorME', or
    * 'GenericFailure'.
    */
-  void getPreferredNetworkType(in unsigned long clientId,
-                               in nsIMobileConnectionCallback requestCallback);
+  void getPreferredNetworkType(in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Set roaming preference.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param mode
    *        DOMString indicates the desired roaming preference.
    *        Possible values: 'home', 'affiliated', or 'any'.
@@ -460,15 +428,12 @@ interface nsIMobileConnectionService : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', InvalidParameter',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  void setRoamingPreference(in unsigned long clientId,
-                            in DOMString mode,
+  void setRoamingPreference(in DOMString mode,
                             in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Query current roaming preference.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param requestCallback
    *        Called when request is finished.
    *
@@ -480,14 +445,11 @@ interface nsIMobileConnectionService : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'IllegalSIMorME', or
    * 'GenericFailure'.
    */
-  void getRoamingPreference(in unsigned long clientId,
-                            in nsIMobileConnectionCallback requestCallback);
+  void getRoamingPreference(in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Set voice privacy preference.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param enabled
    *        Boolean indicates the preferred voice privacy mode used in voice
    *        scrambling in CDMA networks. 'True' means the enhanced voice security
@@ -501,15 +463,12 @@ interface nsIMobileConnectionService : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'IllegalSIMorME', or
    * 'GenericFailure'.
    */
-  void setVoicePrivacyMode(in unsigned long clientId,
-                           in bool enabled,
+  void setVoicePrivacyMode(in bool enabled,
                            in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Query current voice privacy mode.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param requestCallback
    *        Called when request is finished.
    *
@@ -520,14 +479,11 @@ interface nsIMobileConnectionService : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'IllegalSIMorME', or
    * 'GenericFailure'.
    */
-  void getVoicePrivacyMode(in unsigned long clientId,
-                           in nsIMobileConnectionCallback requestCallback);
+  void getVoicePrivacyMode(in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Send a MMI message.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param mmi
    *        DOMString containing an MMI string that can be associated to a
    *        USSD request or other RIL functionality.
@@ -539,15 +495,12 @@ interface nsIMobileConnectionService : nsISupports
    *
    * Otherwise, the notifyError() will be called.
    */
-  void sendMMI(in unsigned long clientId,
-               in DOMString mmi,
+  void sendMMI(in DOMString mmi,
                in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Cancel the current MMI request if one exists.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param requestCallback
    *        Called when request is finished.
    *
@@ -556,14 +509,11 @@ interface nsIMobileConnectionService : nsISupports
    *
    * Otherwise, the notifyError() will be called.
    */
-  void cancelMMI(in unsigned long clientId,
-                 in nsIMobileConnectionCallback requestCallback);
+  void cancelMMI(in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Queries current call forwarding options.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param reason
    *        Indicates the reason the call is being forwarded. It shall be one of
    *        the nsIMobileConnectionService.CALL_FORWARD_REASON_* values.
@@ -578,15 +528,12 @@ interface nsIMobileConnectionService : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'InvalidParameter',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  void getCallForwarding(in unsigned long clientId,
-                         in unsigned short reason,
+  void getCallForwarding(in unsigned short reason,
                          in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Configures call forwarding options.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param options
    *        An object containing the call forward rule to set.
    * @see MozCallForwardingOptions for the detail of options.
@@ -599,15 +546,12 @@ interface nsIMobileConnectionService : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'InvalidParameter',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  void setCallForwarding(in unsigned long clientId,
-                         in jsval options,
+  void setCallForwarding(in jsval options,
                          in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Queries current call barring status.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param options
    *        An object containing the call barring rule to query. No need to
    *        specify 'enabled' property.
@@ -623,15 +567,12 @@ interface nsIMobileConnectionService : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'InvalidParameter',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  void getCallBarring(in unsigned long clientId,
-                      in jsval options,
+  void getCallBarring(in jsval options,
                       in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Configures call barring option.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param options
    *        An object containing the call barring rule to set.
    * @see MozCallBarringOptions for the detail of options.
@@ -644,15 +585,12 @@ interface nsIMobileConnectionService : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'InvalidParameter',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  void setCallBarring(in unsigned long clientId,
-                      in jsval options,
+  void setCallBarring(in jsval options,
                       in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Change call barring facility password.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param options
    *        An object containing information about pin and newPin, and,
    *        this object must have both "pin" and "newPin" attributes
@@ -667,15 +605,12 @@ interface nsIMobileConnectionService : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'InvalidParameter',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  void changeCallBarringPassword(in unsigned long clientId,
-                                 in jsval options,
+  void changeCallBarringPassword(in jsval options,
                                  in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Configures call waiting options.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param enabled
    *        Boolean indicates the desired call waiting status.
    * @param requestCallback
@@ -687,15 +622,12 @@ interface nsIMobileConnectionService : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'IllegalSIMorME', or
    * 'GenericFailure'.
    */
-  void setCallWaiting(in unsigned long clientId,
-                      in bool enabled,
+  void setCallWaiting(in bool enabled,
                       in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Queries current call waiting options.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param requestCallback
    *        Called when request is finished.
    *
@@ -706,15 +638,12 @@ interface nsIMobileConnectionService : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'IllegalSIMorME', or
    * 'GenericFailure'.
    */
-  void getCallWaiting(in unsigned long clientId,
-                      in nsIMobileConnectionCallback requestCallback);
+  void getCallWaiting(in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Enables or disables the presentation of the calling line identity (CLI) to
    * the called party when originating a call.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param clirMode
    *        One of the nsIMobileConnectionService.CLIR_* values.
    * @param requestCallback
@@ -726,15 +655,12 @@ interface nsIMobileConnectionService : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'InvalidParameter',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  void setCallingLineIdRestriction(in unsigned long clientId,
-                                   in unsigned short clirMode,
+  void setCallingLineIdRestriction(in unsigned short clirMode,
                                    in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Queries current CLIR status.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param requestCallback
    *        Called when request is finished.
    *
@@ -746,14 +672,11 @@ interface nsIMobileConnectionService : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'IllegalSIMorME', or
    * 'GenericFailure'.
    */
-  void getCallingLineIdRestriction(in unsigned long clientId,
-                                   in nsIMobileConnectionCallback requestCallback);
+  void getCallingLineIdRestriction(in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Exit emergency callback mode.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param requestCallback
    *        Called when request is finished.
    *
@@ -763,14 +686,11 @@ interface nsIMobileConnectionService : nsISupports
    * 'RadioNotAvailable', 'RequestNotSupported', 'IllegalSIMorME', or
    * 'GenericFailure'.
    */
-  void exitEmergencyCbMode(in unsigned long clientId,
-                           in nsIMobileConnectionCallback requestCallback);
+  void exitEmergencyCbMode(in nsIMobileConnectionCallback requestCallback);
 
   /**
    * Set radio enabled/disabled.
    *
-   * @param clientId
-   *        Indicate the RIL client, 0 ~ (number of client - 1).
    * @param enabled
    *        Boolean indicates the desired radio power. True to enable the radio.
    * @param requestCallback
@@ -786,7 +706,6 @@ interface nsIMobileConnectionService : nsISupports
    * 'disabling'. Calling the function in above conditions will receive
    * 'InvalidStateError' error.
    */
-  void setRadioEnabled(in unsigned long clientId,
-                       in bool enabled,
+  void setRadioEnabled(in bool enabled,
                        in nsIMobileConnectionCallback requestCallback);
 };

@@ -69,6 +69,7 @@ nsGonkCameraControl::nsGonkCameraControl(uint32_t aCameraId)
   , mFlashSupported(false)
   , mLuminanceSupported(false)
   , mAutoFlashModeOverridden(false)
+  , mSeparateVideoAndPreviewSizesSupported(false)
   , mDeferConfigUpdate(0)
   , mMediaProfiles(nullptr)
   , mRecorder(nullptr)
@@ -167,7 +168,6 @@ nsGonkCameraControl::Initialize()
 
   mParams.Get(CAMERA_PARAM_PICTURE_SIZE, mLastPictureSize);
   mParams.Get(CAMERA_PARAM_PREVIEWSIZE, mCurrentConfiguration.mPreviewSize);
-  mParams.Get(CAMERA_PARAM_VIDEOSIZE, mLastRecorderSize);
 
   nsString luminance; // check for support
   mParams.Get(CAMERA_PARAM_LUMINANCE, luminance);
@@ -191,8 +191,6 @@ nsGonkCameraControl::Initialize()
     mLastThumbnailSize.width, mLastThumbnailSize.height);
   DOM_CAMERA_LOGI(" - default preview size:          %u x %u\n",
     mCurrentConfiguration.mPreviewSize.width, mCurrentConfiguration.mPreviewSize.height);
-  DOM_CAMERA_LOGI(" - default video recorder size:   %u x %u\n",
-    mLastRecorderSize.width, mLastRecorderSize.height);
   DOM_CAMERA_LOGI(" - luminance reporting:           %ssupported\n",
     mLuminanceSupported ? "" : "NOT ");
   if (mFlashSupported) {
@@ -200,6 +198,18 @@ nsGonkCameraControl::Initialize()
       NS_ConvertUTF16toUTF8(flashMode).get());
   } else {
     DOM_CAMERA_LOGI(" - flash:                         NOT supported\n");
+  }
+
+  nsAutoTArray<Size, 16> sizes;
+  mParams.Get(CAMERA_PARAM_SUPPORTED_VIDEOSIZES, sizes);
+  if (sizes.Length() > 0) {
+    mSeparateVideoAndPreviewSizesSupported = true;
+    DOM_CAMERA_LOGI(" - support for separate preview and video sizes\n");
+    mParams.Get(CAMERA_PARAM_VIDEOSIZE, mLastRecorderSize);
+    DOM_CAMERA_LOGI(" - default video recorder size:   %u x %u\n",
+      mLastRecorderSize.width, mLastRecorderSize.height);
+  } else {
+    mLastRecorderSize = mCurrentConfiguration.mPreviewSize;
   }
 
   return NS_OK;
@@ -251,9 +261,6 @@ nsGonkCameraControl::SetConfigurationInternal(const Configuration& aConfig)
 
   mCurrentConfiguration.mMode = aConfig.mMode;
   mCurrentConfiguration.mRecorderProfile = aConfig.mRecorderProfile;
-  if (aConfig.mMode == kVideoMode) {
-    mCurrentConfiguration.mPreviewSize = mLastRecorderSize;
-  }
 
   OnConfigurationChange();
   return NS_OK;
@@ -314,22 +321,6 @@ nsGonkCameraControl::SetPictureConfiguration(const Configuration& aConfig)
     mPreviewFps);
 
   return NS_OK;
-}
-
-nsresult
-nsGonkCameraControl::SetVideoConfiguration(const Configuration& aConfig)
-{
-  DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
-
-  nsresult rv = SetupVideoMode(aConfig.mRecorderProfile);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  DOM_CAMERA_LOGI("video mode preview: profile '%s', got %ux%u (%u fps)\n",
-    NS_ConvertUTF16toUTF8(aConfig.mRecorderProfile).get(),
-    mLastRecorderSize.width, mLastRecorderSize.height,
-    mPreviewFps);
-
-  return rv;
 }
 
 // Parameter management.
@@ -400,12 +391,8 @@ nsGonkCameraControl::SetAndPush(uint32_t aKey, const T& aValue)
 nsresult
 nsGonkCameraControl::Get(uint32_t aKey, nsTArray<Size>& aSizes)
 {
-  if (aKey == CAMERA_PARAM_SUPPORTED_VIDEOSIZES) {
-    nsresult rv = mParams.Get(aKey, aSizes);
-    if (aSizes.Length() != 0) {
-      return rv;
-    }
-    DOM_CAMERA_LOGI("Camera doesn't support video independent of the preview\n");
+  if (aKey == CAMERA_PARAM_SUPPORTED_VIDEOSIZES &&
+      !mSeparateVideoAndPreviewSizesSupported) {
     aKey = CAMERA_PARAM_SUPPORTED_PREVIEWSIZES;
   }
 
@@ -1272,11 +1259,15 @@ nsGonkCameraControl::SetPreviewSize(const Size& aSize)
     return rv;
   }
 
-  // Some camera drivers will ignore our preview size if it's larger
-  // than the currently set video recording size, so we need to set
-  // the video size here as well, just in case.
-  if (best.width > mLastRecorderSize.width || best.height > mLastRecorderSize.height) {
-    SetVideoSize(best);
+  if (mSeparateVideoAndPreviewSizesSupported) {
+    // Some camera drivers will ignore our preview size if it's larger
+    // than the currently set video recording size, so we need to set
+    // the video size here as well, just in case.
+    if (best.width > mLastRecorderSize.width || best.height > mLastRecorderSize.height) {
+      SetVideoSize(best);
+    }
+  } else {
+    mLastRecorderSize = best;
   }
   mCurrentConfiguration.mPreviewSize = best;
   return Set(CAMERA_PARAM_PREVIEWSIZE, best);
@@ -1287,6 +1278,11 @@ nsGonkCameraControl::SetVideoSize(const Size& aSize)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mCameraThread);
 
+  if (!mSeparateVideoAndPreviewSizesSupported) {
+    DOM_CAMERA_LOGE("Camera does not support setting separate video size\n");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  
   nsTArray<Size> videoSizes;
   nsresult rv = Get(CAMERA_PARAM_SUPPORTED_VIDEOSIZES, videoSizes);
   if (NS_FAILED(rv)) {
@@ -1368,15 +1364,14 @@ nsGonkCameraControl::GetSupportedSize(const Size& aSize,
 }
 
 nsresult
-nsGonkCameraControl::SetupVideoMode(const nsAString& aProfile)
+nsGonkCameraControl::SetVideoConfiguration(const Configuration& aConfig)
 {
   DOM_CAMERA_LOGT("%s:%d\n", __func__, __LINE__);
 
   // read preferences for camcorder
   mMediaProfiles = MediaProfiles::getInstance();
 
-  nsAutoCString profile = NS_ConvertUTF16toUTF8(aProfile);
-  // XXXkhuey are we leaking?
+  nsAutoCString profile = NS_ConvertUTF16toUTF8(aConfig.mRecorderProfile);
   mRecorderProfile = GetGonkRecorderProfileManager().take()->Get(profile.get());
   if (!mRecorderProfile) {
     DOM_CAMERA_LOGE("Recorder profile '%s' is not supported\n", profile.get());
@@ -1401,21 +1396,33 @@ nsGonkCameraControl::SetupVideoMode(const nsAString& aProfile)
 
   {
     ICameraControlParameterSetAutoEnter set(this);
+    nsresult rv;
 
-    // The camera interface allows for hardware to provide two video
-    //  streams, a low resolution preview and a potentially high resolution
-    //  stream for encoding. For now we don't use this and set preview and video
-    //  size to the same thing.
-    nsresult rv = SetVideoSize(size);
-    if (NS_FAILED(rv)) {
-      DOM_CAMERA_LOGE("Failed to set video mode video size (0x%x)\n", rv);
-      return rv;
-    }
+    if (mSeparateVideoAndPreviewSizesSupported) {
+      // The camera supports two video streams: a low(er) resolution preview
+      // stream and and a potentially high(er) resolution stream for encoding. 
+      rv = SetVideoSize(size);
+      if (NS_FAILED(rv)) {
+        DOM_CAMERA_LOGE("Failed to set video mode video size (0x%x)\n", rv);
+        return rv;
+      }
 
-    rv = SetPreviewSize(size);
-    if (NS_FAILED(rv)) {
-      DOM_CAMERA_LOGE("Failed to set video mode preview size (0x%x)\n", rv);
-      return rv;
+      // The video size must be set first, before the preview size, because
+      // some platforms have a dependency between the two.
+      rv = SetPreviewSize(aConfig.mPreviewSize);
+      if (NS_FAILED(rv)) {
+        DOM_CAMERA_LOGE("Failed to set video mode preview size (0x%x)\n", rv);
+        return rv;
+      }
+    } else {
+      // The camera only supports a single video stream: in this case, we set
+      // the preview size to be the desired video recording size, and ignore
+      // the specified preview size.
+      rv = SetPreviewSize(size);
+      if (NS_FAILED(rv)) {
+        DOM_CAMERA_LOGE("Failed to set video mode preview size (0x%x)\n", rv);
+        return rv;
+      }
     }
 
     rv = Set(CAMERA_PARAM_PREVIEWFRAMERATE, fps);

@@ -4,25 +4,30 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['interfaces']
-
 MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
 
 EXPORTS.mozilla.dom += [
     'DOMMMIError.h',
-    'ipc/MobileConnectionIPCSerializer.h',
     'MobileCellInfo.h',
     'MobileConnection.h',
     'MobileConnectionArray.h',
-    'MobileConnectionCallback.h',
     'MobileConnectionInfo.h',
     'MobileNetworkInfo.h',
 ]
 
 EXPORTS.mozilla.dom.mobileconnection += [
     'ipc/MobileConnectionChild.h',
-    'ipc/MobileConnectionIPCService.h',
+    'ipc/MobileConnectionIPCSerializer.h',
     'ipc/MobileConnectionParent.h',
+]
+
+XPIDL_SOURCES += [
+    'interfaces/nsICellInfo.idl',
+    'interfaces/nsIMobileCellInfo.idl',
+    'interfaces/nsIMobileConnectionInfo.idl',
+    'interfaces/nsIMobileConnectionService.idl',
+    'interfaces/nsIMobileNetworkInfo.idl',
+    'interfaces/nsINeighboringCellInfo.idl',
 ]
 
 SOURCES += [
@@ -45,9 +50,12 @@ IPDL_SOURCES += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
+    XPIDL_SOURCES += [
+        'gonk/nsIGonkMobileConnectionService.idl',
+    ]
     EXTRA_COMPONENTS += [
-        'gonk/MobileConnectionGonkService.js',
-        'gonk/MobileConnectionGonkService.manifest',
+        'gonk/MobileConnectionService.js',
+        'gonk/MobileConnectionService.manifest',
     ]
 
 FAIL_ON_WARNINGS = True
@@ -55,3 +63,5 @@ FAIL_ON_WARNINGS = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+XPIDL_MODULE = 'dom_mobileconnection'

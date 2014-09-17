@@ -523,10 +523,14 @@ GonkGPSGeolocationProvider::SetReferenceLocation()
       return;
     }
 
-    nsCOMPtr<nsIMobileConnectionInfo> voice;
+    nsCOMPtr<nsIMobileConnection> connection;
     // TODO: Bug 878748 - B2G GPS: acquire correct RadioInterface instance in
     // MultiSIM configuration
-    service->GetVoiceConnectionInfo(0 /* Client Id */, getter_AddRefs(voice));
+    service->GetItemByServiceId(0 /* Client Id */, getter_AddRefs(connection));
+    NS_ENSURE_TRUE_VOID(connection);
+
+    nsCOMPtr<nsIMobileConnectionInfo> voice;
+    connection->GetVoice(getter_AddRefs(voice));
     if (voice) {
       nsCOMPtr<nsIMobileCellInfo> cell;
       voice->GetCell(getter_AddRefs(cell));
@@ -947,16 +951,28 @@ GonkGPSGeolocationProvider::Observe(nsISupports* aSubject,
       bool roaming = false;
       int gpsNetworkType = ConvertToGpsNetworkType(type);
       if (gpsNetworkType >= 0) {
-        nsCOMPtr<nsIMobileConnectionService> service =
-          do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
-        if (rilface && service) {
-          nsCOMPtr<nsIMobileConnectionInfo> voice;
-          // TODO: Bug 878748 - B2G GPS: acquire correct RadioInterface instance in
-          // MultiSIM configuration
-          service->GetVoiceConnectionInfo(0 /* Client Id */, getter_AddRefs(voice));
-          if (voice) {
-            voice->GetRoaming(&roaming);
-          }
+        if (rilface) {
+          do {
+            nsCOMPtr<nsIMobileConnectionService> service =
+              do_GetService(NS_MOBILE_CONNECTION_SERVICE_CONTRACTID);
+            if (!service) {
+              break;
+            }
+
+            nsCOMPtr<nsIMobileConnection> connection;
+            // TODO: Bug 878748 - B2G GPS: acquire correct RadioInterface instance in
+            // MultiSIM configuration
+            service->GetItemByServiceId(0 /* Client Id */, getter_AddRefs(connection));
+            if (!connection) {
+              break;
+            }
+
+            nsCOMPtr<nsIMobileConnectionInfo> voice;
+            connection->GetVoice(getter_AddRefs(voice));
+            if (voice) {
+              voice->GetRoaming(&roaming);
+            }
+          } while (0);
         }
         mAGpsRilInterface->update_network_state(
           connected,
