@@ -339,6 +339,20 @@ public:
     return ref;
   }
 
+  void RemoveIfPresent(const ImageKey    aImageKey,
+                       const SurfaceKey& aSurfaceKey)
+  {
+    nsRefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
+    if (!cache)
+      return;  // No cached surfaces for this image.
+
+    nsRefPtr<CachedSurface> surface = cache->Lookup(aSurfaceKey);
+    if (!surface)
+      return;  // Lookup in the per-image cache missed.
+
+    Remove(surface);
+  }
+
   bool CanHold(const Cost aCost) const
   {
     return aCost <= mMaxCost;
@@ -535,6 +549,16 @@ SurfaceCache::CanHold(const IntSize& aSize)
 
   Cost cost = ComputeCost(aSize);
   return sInstance->CanHold(cost);
+}
+
+/* static */ void
+SurfaceCache::RemoveIfPresent(const ImageKey    aImageKey,
+                              const SurfaceKey& aSurfaceKey)
+{
+  MOZ_ASSERT(sInstance, "Should be initialized");
+  MOZ_ASSERT(NS_IsMainThread());
+
+  return sInstance->RemoveIfPresent(aImageKey, aSurfaceKey);
 }
 
 /* static */ void
