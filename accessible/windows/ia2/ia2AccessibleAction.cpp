@@ -65,8 +65,7 @@ ia2AccessibleAction::doAction(long aActionIndex)
     return CO_E_OBJNOTCONNECTED;
 
   uint8_t index = static_cast<uint8_t>(aActionIndex);
-  nsresult rv = acc->DoAction(index);
-  return GetHRESULT(rv);
+  return acc->DoAction(index) ? S_OK : E_INVALIDARG;
 
   A11Y_TRYBLOCK_END
 }
@@ -167,12 +166,9 @@ ia2AccessibleAction::get_name(long aActionIndex, BSTR *aName)
 
   nsAutoString name;
   uint8_t index = static_cast<uint8_t>(aActionIndex);
-  nsresult rv = acc->GetActionName(index, name);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
+  acc->ActionNameAt(index, name);
   if (name.IsEmpty())
-    return S_FALSE;
+    return E_INVALIDARG;
 
   *aName = ::SysAllocStringLen(name.get(), name.Length());
   return *aName ? S_OK : E_OUTOFMEMORY;

@@ -7,6 +7,7 @@
 #include "DecoderTraits.h"
 #include "MediaDecoder.h"
 #include "nsCharSeparatedTokenizer.h"
+#include "nsMimeTypes.h"
 #include "mozilla/Preferences.h"
 
 #ifdef MOZ_ANDROID_OMX
@@ -219,6 +220,7 @@ static const char* const gOmxTypes[] = {
   "audio/mpeg",
   "audio/mp4",
   "audio/amr",
+  "audio/3gpp",
   "video/mp4",
   "video/3gpp",
   "video/3gpp2",
@@ -542,7 +544,7 @@ InstantiateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
   if (IsOmxSupportedType(aType)) {
     // AMR audio is enabled for MMS, but we are discouraging Web and App
     // developers from using AMR, thus we only allow AMR to be played on WebApps.
-    if (aType.EqualsASCII("audio/amr")) {
+    if (aType.EqualsLiteral(AUDIO_AMR) || aType.EqualsLiteral(AUDIO_3GPP)) {
       dom::HTMLMediaElement* element = aOwner->GetMediaElement();
       if (!element) {
         return nullptr;
@@ -715,7 +717,8 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
 #ifdef MOZ_OMX_DECODER
     // We support amr inside WebApps on firefoxOS but not in general web content.
     // Ensure we dont create a VideoDocument when accessing amr URLs directly.
-    (IsOmxSupportedType(aType) && !aType.EqualsASCII("audio/amr")) ||
+    (IsOmxSupportedType(aType) &&
+     (!aType.EqualsLiteral(AUDIO_AMR) && !aType.EqualsLiteral(AUDIO_3GPP))) ||
 #endif
 #ifdef MOZ_WEBM
     IsWebMType(aType) ||

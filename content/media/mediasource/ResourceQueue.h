@@ -103,20 +103,19 @@ public:
   }
 
   // Evict data in queue if the total queue size is greater than
-  // aThreshold past the offset. Returns true if some data was
-  // actually evicted.
-  bool Evict(uint64_t aOffset, uint32_t aThreshold) {
-    bool evicted = false;
+  // aThreshold past the offset. Returns amount evicted.
+  uint32_t Evict(uint64_t aOffset, uint32_t aThreshold) {
+    uint32_t evicted = 0;
     while (GetLength() - mOffset > aThreshold) {
       ResourceItem* item = ResourceAt(0);
       if (item->mData.Length() + mOffset > aOffset) {
         break;
       }
       mOffset += item->mData.Length();
+      evicted += item->mData.Length();
       SBR_DEBUGV("ResourceQueue(%p)::Evict(%llu, %u) removed chunk length=%u",
                  this, aOffset, aThreshold, item->mData.Length());
       delete PopFront();
-      evicted = true;
     }
     return evicted;
   }

@@ -24,6 +24,7 @@
 #include "vm/ForkJoin.h"
 #include "vm/Interpreter.h"
 #include "vm/String.h"
+#include "vm/TypedArrayCommon.h"
 
 #include "jsfuninlines.h"
 #include "jsscriptinlines.h"
@@ -469,9 +470,9 @@ js::intrinsic_UnsafePutElements(JSContext *cx, unsigned argc, Value *vp)
         RootedObject arrobj(cx, &args[arri].toObject());
         uint32_t idx = args[idxi].toInt32();
 
-        if (arrobj->is<TypedArrayObject>() || arrobj->is<TypedObject>()) {
-            JS_ASSERT(!arrobj->is<TypedArrayObject>() || idx < arrobj->as<TypedArrayObject>().length());
-            JS_ASSERT(!arrobj->is<TypedObject>() || idx < uint32_t(arrobj->as<TypedObject>().length()));
+        if (IsAnyTypedArray(arrobj.get()) || arrobj->is<TypedObject>()) {
+            JS_ASSERT_IF(IsAnyTypedArray(arrobj.get()), idx < AnyTypedArrayLength(arrobj.get()));
+            JS_ASSERT_IF(arrobj->is<TypedObject>(), idx < uint32_t(arrobj->as<TypedObject>().length()));
             RootedValue tmp(cx, args[elemi]);
             // XXX: Always non-strict.
             if (!JSObject::setElement(cx, arrobj, arrobj, idx, &tmp, false))

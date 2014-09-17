@@ -15,7 +15,7 @@
 
 #include "vm/Interpreter.h"
 #include "vm/ScopeObject.h"
-#include "vm/TypedArrayObject.h"
+#include "vm/TypedArrayCommon.h"
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
@@ -212,7 +212,7 @@ GetShapeAttributes(JSObject *obj, Shape *shape)
     JS_ASSERT(obj->isNative());
 
     if (IsImplicitDenseOrTypedArrayElement(shape)) {
-        if (obj->is<TypedArrayObject>())
+        if (IsAnyTypedArray(obj))
             return JSPROP_ENUMERATE | JSPROP_PERMANENT;
         return JSPROP_ENUMERATE;
     }

@@ -430,8 +430,8 @@ struct nsStyleBackground {
     // frame size; see DependsOnDependsOnPositioningAreaSizeSize.
     enum DimensionType {
       // If one of mWidth and mHeight is eContain or eCover, then both are.
-      // Also, these two values must equal the corresponding values in
-      // kBackgroundSizeKTable.
+      // NOTE: eContain and eCover *must* be equal to NS_STYLE_BG_SIZE_CONTAIN
+      // and NS_STYLE_BG_SIZE_COVER (in kBackgroundSizeKTable).
       eContain, eCover,
 
       eAuto,
@@ -593,9 +593,8 @@ struct nsStyleMargin {
   void RecalcData();
   nsChangeHint CalcDifference(const nsStyleMargin& aOther) const;
   static nsChangeHint MaxDifference() {
-    return NS_SubtractHint(NS_STYLE_HINT_REFLOW,
-                           NS_CombineHint(nsChangeHint_ClearDescendantIntrinsics,
-                                          nsChangeHint_NeedDirtyReflow));
+    return NS_CombineHint(nsChangeHint_NeedReflow,
+                          nsChangeHint_ClearAncestorIntrinsics);
   }
   static nsChangeHint MaxDifferenceNeverInherited() {
     // CalcDifference can return both nsChangeHint_ClearAncestorIntrinsics and

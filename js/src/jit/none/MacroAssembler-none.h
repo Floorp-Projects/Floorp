@@ -213,6 +213,7 @@ class MacroAssemblerNone : public Assembler
     template <typename T, typename S> void pushValue(T, S) { MOZ_CRASH(); }
     void popValue(ValueOperand) { MOZ_CRASH(); }
     void tagValue(JSValueType, Register, ValueOperand) { MOZ_CRASH(); }
+    void retn(Imm32 n) { MOZ_CRASH(); }
     template <typename T> void push(T) { MOZ_CRASH(); }
     template <typename T> void Push(T) { MOZ_CRASH(); }
     template <typename T> void pop(T) { MOZ_CRASH(); }

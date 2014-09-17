@@ -39,8 +39,8 @@ public:
   virtual ~HTMLSelectListAccessible() {}
 
   // Accessible
-  virtual a11y::role NativeRole();
-  virtual uint64_t NativeState();
+  virtual a11y::role NativeRole() MOZ_OVERRIDE;
+  virtual uint64_t NativeState() MOZ_OVERRIDE;
 
   // SelectAccessible
   virtual bool SelectAll();
@@ -70,21 +70,19 @@ public:
   HTMLSelectOptionAccessible(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~HTMLSelectOptionAccessible() {}
 
-  // nsIAccessible
-  NS_IMETHOD DoAction(uint8_t index);
-  NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName);
-  NS_IMETHOD SetSelected(bool aSelect);
-
   // Accessible
-  virtual a11y::role NativeRole();
-  virtual uint64_t NativeState();
-  virtual uint64_t NativeInteractiveState() const;
+  virtual a11y::role NativeRole() MOZ_OVERRIDE;
+  virtual uint64_t NativeState() MOZ_OVERRIDE;
+  virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE;
 
   virtual int32_t GetLevelInternal();
-  virtual void GetBoundsRect(nsRect& aTotalBounds, nsIFrame** aBoundingFrame);
+  virtual nsRect RelativeBounds(nsIFrame** aBoundingFrame) const MOZ_OVERRIDE;
+  virtual void SetSelected(bool aSelect) MOZ_OVERRIDE;
 
   // ActionAccessible
-  virtual uint8_t ActionCount();
+  virtual uint8_t ActionCount() MOZ_OVERRIDE;
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) MOZ_OVERRIDE;
+  virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
 
   // Widgets
   virtual Accessible* ContainerWidget() const;
@@ -142,16 +140,14 @@ public:
     { mType = eHTMLOptGroupType; }
   virtual ~HTMLSelectOptGroupAccessible() {}
 
-  // nsIAccessible
-  NS_IMETHOD DoAction(uint8_t index);
-  NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName);
-
   // Accessible
-  virtual a11y::role NativeRole();
-  virtual uint64_t NativeInteractiveState() const;
+  virtual a11y::role NativeRole() MOZ_OVERRIDE;
+  virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE;
 
   // ActionAccessible
-  virtual uint8_t ActionCount();
+  virtual uint8_t ActionCount() MOZ_OVERRIDE;
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) MOZ_OVERRIDE;
+  virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
 };
 
 /** ------------------------------------------------------ */
@@ -171,20 +167,18 @@ public:
   HTMLComboboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
   virtual ~HTMLComboboxAccessible() {}
 
-  // nsIAccessible
-  NS_IMETHOD DoAction(uint8_t index);
-  NS_IMETHOD GetActionName(uint8_t aIndex, nsAString& aName);
-
   // Accessible
   virtual void Shutdown();
   virtual void Description(nsString& aDescription);
   virtual void Value(nsString& aValue);
-  virtual a11y::role NativeRole();
-  virtual uint64_t NativeState();
+  virtual a11y::role NativeRole() MOZ_OVERRIDE;
+  virtual uint64_t NativeState() MOZ_OVERRIDE;
   virtual void InvalidateChildren();
 
   // ActionAccessible
-  virtual uint8_t ActionCount();
+  virtual uint8_t ActionCount() MOZ_OVERRIDE;
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) MOZ_OVERRIDE;
+  virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
 
   // Widgets
   virtual bool IsWidget() const;
@@ -221,9 +215,9 @@ public:
 
   // Accessible
   virtual nsIFrame* GetFrame() const;
-  virtual a11y::role NativeRole();
-  virtual uint64_t NativeState();
-  virtual void GetBoundsRect(nsRect& aBounds, nsIFrame** aBoundingFrame);
+  virtual a11y::role NativeRole() MOZ_OVERRIDE;
+  virtual uint64_t NativeState() MOZ_OVERRIDE;
+  virtual nsRect RelativeBounds(nsIFrame** aBoundingFrame) const MOZ_OVERRIDE;
 
   // Widgets
   virtual bool IsActiveWidget() const;

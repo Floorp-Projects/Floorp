@@ -18,6 +18,7 @@ EXPORTS += [
     'gfxFailure.h',
     'gfxFont.h',
     'gfxFontConstants.h',
+    'gfxFontEntry.h',
     'gfxFontFamilyList.h',
     'gfxFontFeatures.h',
     'gfxFontInfoLoader.h',
@@ -43,6 +44,7 @@ EXPORTS += [
     'gfxSkipChars.h',
     'gfxSVGGlyphs.h',
     'gfxTeeSurface.h',
+    'gfxTextRun.h',
     'gfxTypes.h',
     'gfxUserFontSet.h',
     'gfxUtils.h',
@@ -205,6 +207,8 @@ SOURCES += [
     # Uses FORCE_PR_LOG
     'gfxFont.cpp',
     # Uses FORCE_PR_LOG
+    'gfxFontEntry.cpp',
+    # Uses FORCE_PR_LOG
     'gfxFontUtils.cpp',
     # Includes mac system header conflicting with point/size, and also uses FORCE_PR_LOG
     'gfxPlatform.cpp',
@@ -226,6 +230,7 @@ UNIFIED_SOURCES += [
     'gfxFontInfoLoader.cpp',
     'gfxFontMissingGlyphs.cpp',
     'gfxFontTest.cpp',
+    'gfxGlyphExtents.cpp',
     'gfxGradientCache.cpp',
     'gfxGraphiteShaper.cpp',
     'gfxHarfBuzzShaper.cpp',
@@ -240,6 +245,7 @@ UNIFIED_SOURCES += [
     'gfxSkipChars.cpp',
     'gfxSVGGlyphs.cpp',
     'gfxTeeSurface.cpp',
+    'gfxTextRun.cpp',
     'gfxUtils.cpp',
     'nsSurfaceTexture.cpp',
     'nsUnicodeRange.cpp',
