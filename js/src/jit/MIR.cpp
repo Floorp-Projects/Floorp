@@ -353,7 +353,10 @@ MDefinition::printOpcode(FILE *fp) const
     PrintOpcodeName(fp, op());
     for (size_t j = 0, e = numOperands(); j < e; j++) {
         fprintf(fp, " ");
-        getOperand(j)->printName(fp);
+        if (getUseFor(j)->hasProducer())
+            getOperand(j)->printName(fp);
+        else
+            fprintf(fp, "(null)");
     }
 }
 

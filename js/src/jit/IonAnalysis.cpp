@@ -1871,7 +1871,8 @@ static void
 AssertReversePostorder(MIRGraph &graph)
 {
     // Check that every block is visited after all its predecessors (except backedges).
-    for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
+    for (ReversePostorderIterator iter(graph.rpoBegin()); iter != graph.rpoEnd(); ++iter) {
+        MBasicBlock *block = *iter;
         JS_ASSERT(!block->isMarked());
 
         for (size_t i = 0; i < block->numPredecessors(); i++) {
@@ -3154,8 +3155,8 @@ jit::MarkLoopBlocks(MIRGraph &graph, MBasicBlock *header, bool *canOsr)
     MBasicBlock *osrBlock = graph.osrBlock();
     *canOsr = false;
 
-    // The blocks are in RPO; start at the loop backedge, which is marks the
-    // bottom of the loop, and walk up until we get to the header. Loops may be
+    // The blocks are in RPO; start at the loop backedge, which marks the bottom
+    // of the loop, and walk up until we get to the header. Loops may be
     // discontiguous, so we trace predecessors to determine which blocks are
     // actually part of the loop. The backedge is always part of the loop, and
     // so are its predecessors, transitively, up to the loop header or an OSR
