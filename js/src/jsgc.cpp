@@ -414,6 +414,14 @@ static const int BackgroundPhaseLength[] = {
     sizeof(BackgroundPhaseShapes) / sizeof(AllocKind)
 };
 
+template<>
+JSObject *
+ArenaCellIterImpl::get<JSObject>() const
+{
+    JS_ASSERT(!done());
+    return reinterpret_cast<JSObject *>(getCell());
+}
+
 #ifdef DEBUG
 void
 ArenaHeader::checkSynchronizedWithFreeList() const
@@ -488,7 +496,7 @@ Arena::finalize(FreeOp *fop, AllocKind thingKind, size_t thingSize)
 
     for (ArenaCellIterUnderFinalize i(&aheader); !i.done(); i.next()) {
         T *t = i.get<T>();
-        if (t->isMarked()) {
+        if (t->asTenured()->isMarked()) {
             uintptr_t thing = reinterpret_cast<uintptr_t>(t);
             if (thing != firstThingOrSuccessorOfLastMarkedThing) {
                 // We just finished passing over one or more free things,
@@ -1871,7 +1879,7 @@ GCMarker::delayMarkingArena(ArenaHeader *aheader)
 void
 GCMarker::delayMarkingChildren(const void *thing)
 {
-    const Cell *cell = reinterpret_cast<const Cell *>(thing);
+    const TenuredCell *cell = TenuredCell::fromPointer(thing);
     cell->arenaHeader()->markOverflow = 1;
     delayMarkingArena(cell->arenaHeader());
 }
@@ -2081,11 +2089,11 @@ AutoDisableCompactingGC::~AutoDisableCompactingGC()
 }
 
 static void
-ForwardCell(Cell *dest, Cell *src)
+ForwardCell(TenuredCell *dest, TenuredCell *src)
 {
     // Mark a cell has having been relocated and astore forwarding pointer to
     // the new cell.
-    MOZ_ASSERT(src->tenuredZone() == dest->tenuredZone());
+    MOZ_ASSERT(src->zone() == dest->zone());
 
     // Putting the values this way round is a terrible hack to make
     // ObjectImpl::zone() work on forwarded objects.
@@ -2102,7 +2110,7 @@ ArenaContainsGlobal(ArenaHeader *arena)
         return false;
 
     for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
-        JSObject *obj = static_cast<JSObject *>(i.getCell());
+        JSObject *obj = i.get<JSObject>();
         if (obj->is<GlobalObject>())
             return true;
     }
@@ -2182,21 +2190,22 @@ PtrIsInRange(const void *ptr, const void *start, size_t length)
 #endif
 
 static bool
-RelocateCell(Zone *zone, Cell *src, AllocKind thingKind, size_t thingSize)
+RelocateCell(Zone *zone, TenuredCell *src, AllocKind thingKind, size_t thingSize)
 {
     // Allocate a new cell.
-    void *dst = zone->allocator.arenas.allocateFromFreeList(thingKind, thingSize);
-    if (!dst)
-        dst = js::gc::ArenaLists::refillFreeListInGC(zone, thingKind);
-    if (!dst)
+    void *dstAlloc = zone->allocator.arenas.allocateFromFreeList(thingKind, thingSize);
+    if (!dstAlloc)
+        dstAlloc = js::gc::ArenaLists::refillFreeListInGC(zone, thingKind);
+    if (!dstAlloc)
         return false;
+    TenuredCell *dst = TenuredCell::fromPointer(dstAlloc);
 
     // Copy source cell contents to destination.
     memcpy(dst, src, thingSize);
 
     if (thingKind <= FINALIZE_OBJECT_LAST) {
-        JSObject *srcObj = static_cast<JSObject *>(src);
-        JSObject *dstObj = static_cast<JSObject *>(dst);
+        JSObject *srcObj = static_cast<JSObject *>(static_cast<Cell *>(src));
+        JSObject *dstObj = static_cast<JSObject *>(static_cast<Cell *>(dst));
 
         // Fixup the pointer to inline object elements if necessary.
         if (srcObj->hasFixedElements())
@@ -2211,10 +2220,10 @@ RelocateCell(Zone *zone, Cell *src, AllocKind thingKind, size_t thingSize)
     }
 
     // Copy the mark bits.
-    static_cast<Cell *>(dst)->copyMarkBitsFrom(src);
+    dst->copyMarkBitsFrom(src);
 
     // Mark source cell as forwarded and leave a pointer to the destination.
-    ForwardCell(static_cast<Cell *>(dst), src);
+    ForwardCell(dst, src);
 
     return true;
 }
@@ -2327,8 +2336,8 @@ GCRuntime::relocateArenas()
 void
 MovingTracer::Visit(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 {
-    Cell *thing = static_cast<Cell *>(*thingp);
-    Zone *zone = thing->tenuredZoneFromAnyThread();
+    TenuredCell *thing = TenuredCell::fromPointer(*thingp);
+    Zone *zone = thing->zoneFromAnyThread();
     if (!zone->isGCCompacting()) {
         JS_ASSERT(!IsForwarded(thing));
         return;
@@ -2374,7 +2383,6 @@ MovingTracer::Sweep(JSTracer *jstrc)
     // TODO: Should possibly just call PurgeRuntime() here.
     rt->newObjectCache.purge();
     rt->nativeIterCache.purge();
-    rt->regExpTestCache.purge();
 }
 
 /*
@@ -2470,9 +2478,9 @@ GCRuntime::releaseRelocatedArenas(ArenaHeader *relocatedList)
 #ifdef DEBUG
     for (ArenaHeader *arena = relocatedList; arena; arena = arena->next) {
         for (ArenaCellIterUnderFinalize i(arena); !i.done(); i.next()) {
-            Cell *src = i.getCell();
+            TenuredCell *src = i.getCell();
             JS_ASSERT(IsForwarded(src));
-            Cell *dest = Forwarded(src);
+            TenuredCell *dest = Forwarded(src);
             JS_ASSERT(src->isMarked(BLACK) == dest->isMarked(BLACK));
             JS_ASSERT(src->isMarked(GRAY) == dest->isMarked(GRAY));
         }
@@ -3611,14 +3619,14 @@ static void
 CheckCompartmentCallback(JSTracer *trcArg, void **thingp, JSGCTraceKind kind)
 {
     CompartmentCheckTracer *trc = static_cast<CompartmentCheckTracer *>(trcArg);
-    Cell *thing = (Cell *)*thingp;
+    TenuredCell *thing = TenuredCell::fromPointer(*thingp);
 
     JSCompartment *comp = CompartmentOfCell(thing, kind);
     if (comp && trc->compartment) {
         CheckCompartment(trc, comp, thing, kind);
     } else {
-        JS_ASSERT(thing->tenuredZone() == trc->zone ||
-                  trc->runtime()->isAtomsZone(thing->tenuredZone()));
+        JS_ASSERT(thing->zone() == trc->zone ||
+                  trc->runtime()->isAtomsZone(thing->zone()));
     }
 }
 
@@ -4201,7 +4209,7 @@ JSCompartment::findOutgoingEdges(ComponentFinder<JS::Zone> &finder)
     for (js::WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
         CrossCompartmentKey::Kind kind = e.front().key().kind;
         JS_ASSERT(kind != CrossCompartmentKey::StringWrapper);
-        Cell *other = e.front().key().wrapped;
+        TenuredCell *other = e.front().key().wrapped->asTenured();
         if (kind == CrossCompartmentKey::ObjectWrapper) {
             /*
              * Add edge to wrapped object compartment if wrapped object is not
@@ -4209,7 +4217,7 @@ JSCompartment::findOutgoingEdges(ComponentFinder<JS::Zone> &finder)
              * after wrapped compartment.
              */
             if (!other->isMarked(BLACK) || other->isMarked(GRAY)) {
-                JS::Zone *w = other->tenuredZone();
+                JS::Zone *w = other->zone();
                 if (w->isGCMarking())
                     finder.addEdgeTo(w);
             }
@@ -4223,7 +4231,7 @@ JSCompartment::findOutgoingEdges(ComponentFinder<JS::Zone> &finder)
              * with call to Debugger::findCompartmentEdges below) that debugger
              * and debuggee objects are always swept in the same group.
              */
-            JS::Zone *w = other->tenuredZone();
+            JS::Zone *w = other->zone();
             if (w->isGCMarking())
                 finder.addEdgeTo(w);
         }
@@ -4466,11 +4474,11 @@ MarkIncomingCrossCompartmentPointers(JSRuntime *rt, const uint32_t color)
             JS_ASSERT(dst->compartment() == c);
 
             if (color == GRAY) {
-                if (IsObjectMarked(&src) && src->isMarked(GRAY))
+                if (IsObjectMarked(&src) && src->asTenured()->isMarked(GRAY))
                     MarkGCThingUnbarriered(&rt->gc.marker, (void**)&dst,
                                            "cross-compartment gray pointer");
             } else {
-                if (IsObjectMarked(&src) && !src->isMarked(GRAY))
+                if (IsObjectMarked(&src) && !src->asTenured()->isMarked(GRAY))
                     MarkGCThingUnbarriered(&rt->gc.marker, (void**)&dst,
                                            "cross-compartment black pointer");
             }
@@ -6303,8 +6311,8 @@ AutoDisableProxyCheck::~AutoDisableProxyCheck()
 JS_FRIEND_API(void)
 JS::AssertGCThingMustBeTenured(JSObject *obj)
 {
-    JS_ASSERT((!IsNurseryAllocable(obj->tenuredGetAllocKind()) || obj->getClass()->finalize) &&
-              obj->isTenured());
+    JS_ASSERT(obj->isTenured() &&
+              (!IsNurseryAllocable(obj->asTenured()->getAllocKind()) || obj->getClass()->finalize));
 }
 
 JS_FRIEND_API(void)
@@ -6314,7 +6322,7 @@ js::gc::AssertGCThingHasType(js::gc::Cell *cell, JSGCTraceKind kind)
     if (IsInsideNursery(cell))
         JS_ASSERT(kind == JSTRACE_OBJECT);
     else
-        JS_ASSERT(MapAllocToTraceKind(cell->tenuredGetAllocKind()) == kind);
+        JS_ASSERT(MapAllocToTraceKind(cell->asTenured()->getAllocKind()) == kind);
 }
 
 JS_FRIEND_API(size_t)

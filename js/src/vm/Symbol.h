@@ -21,7 +21,7 @@
 
 namespace JS {
 
-class Symbol : public js::gc::BarrieredCell<Symbol>
+class Symbol : public js::gc::TenuredCell
 {
   private:
     SymbolCode code_;

@@ -3107,7 +3107,7 @@ MNewArray::shouldUseVM() const
     JS_ASSERT(count() < JSObject::NELEMENTS_LIMIT);
 
     size_t arraySlots =
-        gc::GetGCKindSlots(templateObject()->tenuredGetAllocKind()) - ObjectElements::VALUES_PER_HEADER;
+        gc::GetGCKindSlots(templateObject()->asTenured()->getAllocKind()) - ObjectElements::VALUES_PER_HEADER;
 
     // Allocate space using the VMCall when mir hints it needs to get allocated
     // immediately, but only when data doesn't fit the available array slots.

@@ -136,7 +136,7 @@ static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
  * at least X (e.g., ensureLinear will change a JSRope to be a JSFlatString).
  */
 
-class JSString : public js::gc::BarrieredCell<JSString>
+class JSString : public js::gc::TenuredCell
 {
   protected:
     static const size_t NUM_INLINE_CHARS_LATIN1 = 2 * sizeof(void *) / sizeof(char);
@@ -478,8 +478,6 @@ class JSString : public js::gc::BarrieredCell<JSString>
         return offsetof(JSString, d.s.u2.nonInlineCharsTwoByte);
     }
 
-    js::gc::AllocKind getAllocKind() const { return tenuredGetAllocKind(); }
-
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_STRING; }
 
 #ifdef DEBUG
@@ -497,7 +495,7 @@ class JSString : public js::gc::BarrieredCell<JSString>
         if (thing->isPermanentAtom())
             return;
 
-        js::gc::BarrieredCell<JSString>::readBarrier(thing);
+        TenuredCell::readBarrier(thing);
 #endif
     }
 
@@ -506,7 +504,7 @@ class JSString : public js::gc::BarrieredCell<JSString>
         if (isNullLike(thing) || thing->isPermanentAtom())
             return;
 
-        js::gc::BarrieredCell<JSString>::writeBarrierPre(thing);
+        TenuredCell::writeBarrierPre(thing);
 #endif
     }
 

@@ -533,7 +533,7 @@ GCMarker::markDelayedChildren(ArenaHeader *aheader)
         aheader->markOverflow = 0;
 
         for (ArenaCellIterUnderGC i(aheader); !i.done(); i.next()) {
-            Cell *t = i.getCell();
+            TenuredCell *t = i.getCell();
             if (always || t->isMarked()) {
                 t->markIfUnmarked();
                 JS_TraceChildren(this, t, MapAllocToTraceKind(aheader->getAllocKind()));
@@ -587,7 +587,7 @@ GCMarker::checkZone(void *p)
 {
     JS_ASSERT(started);
     DebugOnly<Cell *> cell = static_cast<Cell *>(p);
-    JS_ASSERT_IF(cell->isTenured(), cell->tenuredZone()->isCollecting());
+    JS_ASSERT_IF(cell->isTenured(), cell->asTenured()->zone()->isCollecting());
 }
 #endif
 
@@ -656,7 +656,7 @@ GCMarker::appendGrayRoot(void *thing, JSGCTraceKind kind)
     root.debugPrintIndex = debugPrintIndex();
 #endif
 
-    Zone *zone = static_cast<Cell *>(thing)->tenuredZone();
+    Zone *zone = TenuredCell::fromPointer(thing)->zone();
     if (zone->isCollecting()) {
         // See the comment on SetMaybeAliveFlag to see why we only do this for
         // objects and scripts. We rely on gray root buffering for this to work,

@@ -1045,7 +1045,7 @@ JSRuntime::initSelfHosting(JSContext *cx)
 
         const unsigned char *compressed = compressedSources;
         uint32_t compressedLen = GetCompressedSize();
-        ScopedJSFreePtr<char> src(selfHostingGlobal_->pod_malloc<char>(srcLen));
+        ScopedJSFreePtr<char> src(selfHostingGlobal_->zone()->pod_malloc<char>(srcLen));
         if (!src || !DecompressString(compressed, compressedLen,
                                       reinterpret_cast<unsigned char *>(src.get()), srcLen))
         {
@@ -1226,7 +1226,7 @@ CloneObject(JSContext *cx, HandleObject selfHostedObject)
     } else {
         JS_ASSERT(selfHostedObject->isNative());
         clone = NewObjectWithGivenProto(cx, selfHostedObject->getClass(), TaggedProto(nullptr), cx->global(),
-                                        selfHostedObject->tenuredGetAllocKind(),
+                                        selfHostedObject->asTenured()->getAllocKind(),
                                         SingletonObject);
     }
     if (!clone)

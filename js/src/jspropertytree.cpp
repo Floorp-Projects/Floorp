@@ -286,7 +286,7 @@ Shape::fixupDictionaryShapeAfterMovingGC()
     }
 
     JS_ASSERT(!IsInsideNursery(reinterpret_cast<Cell *>(listp)));
-    AllocKind kind = reinterpret_cast<Cell *>(listp)->tenuredGetAllocKind();
+    AllocKind kind = TenuredCell::fromPointer(listp)->getAllocKind();
     JS_ASSERT(kind == FINALIZE_SHAPE || kind <= FINALIZE_OBJECT_LAST);
     if (kind == FINALIZE_SHAPE) {
         // listp points to the parent field of the next shape.

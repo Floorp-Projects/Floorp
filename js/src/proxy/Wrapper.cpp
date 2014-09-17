@@ -166,5 +166,5 @@ bool Wrapper::finalizeInBackground(Value priv) const
      */
     if (IsInsideNursery(&priv.toObject()))
         return true;
-    return IsBackgroundFinalized(priv.toObject().tenuredGetAllocKind());
+    return IsBackgroundFinalized(priv.toObject().asTenured()->getAllocKind());
 }

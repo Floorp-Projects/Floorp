@@ -2049,7 +2049,7 @@ js::DeepCloneObjectLiteral(JSContext *cx, HandleObject obj, NewObjectKind newKin
     } else {
         // Object literals are tenured by default as holded by the JSScript.
         JS_ASSERT(obj->isTenured());
-        AllocKind kind = obj->tenuredGetAllocKind();
+        AllocKind kind = obj->asTenured()->getAllocKind();
         Rooted<TypeObject*> typeObj(cx, obj->getType(cx));
         if (!typeObj)
             return nullptr;
@@ -2157,7 +2157,7 @@ js::XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleObject obj)
             if (mode == XDR_ENCODE) {
                 JS_ASSERT(obj->getClass() == &JSObject::class_);
                 JS_ASSERT(obj->isTenured());
-                kind = obj->tenuredGetAllocKind();
+                kind = obj->asTenured()->getAllocKind();
             }
 
             if (!xdr->codeEnum32(&kind))
@@ -2355,7 +2355,7 @@ js::CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj)
 {
     if (srcObj->getClass() == &JSObject::class_) {
         AllocKind kind = GetBackgroundAllocKind(GuessObjectGCKind(srcObj->numFixedSlots()));
-        JS_ASSERT_IF(srcObj->isTenured(), kind == srcObj->tenuredGetAllocKind());
+        JS_ASSERT_IF(srcObj->isTenured(), kind == srcObj->asTenured()->getAllocKind());
 
         JSObject *proto = cx->global()->getOrCreateObjectPrototype(cx);
         if (!proto)
@@ -2384,7 +2384,8 @@ js::CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj)
         // can be freely copied between compartments.
         value = srcObj->getDenseElement(i);
         JS_ASSERT_IF(value.isMarkable(),
-                     cx->runtime()->isAtomsZone(value.toGCThing()->tenuredZone()));
+                     value.toGCThing()->isTenured() &&
+                     cx->runtime()->isAtomsZone(value.toGCThing()->asTenured()->zone()));
 
         id = INT_TO_JSID(i);
         if (!JSObject::defineGeneric(cx, res, id, value, nullptr, nullptr, JSPROP_ENUMERATE))
@@ -2470,7 +2471,7 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
             return false;
     } else {
         reserved.newbshape = EmptyShape::getInitialShape(cx, aClass, aProto, a->getParent(), a->getMetadata(),
-                                                         b->tenuredGetAllocKind());
+                                                         b->asTenured()->getAllocKind());
         if (!reserved.newbshape)
             return false;
     }
@@ -2479,7 +2480,7 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
             return false;
     } else {
         reserved.newashape = EmptyShape::getInitialShape(cx, bClass, bProto, b->getParent(), b->getMetadata(),
-                                                         a->tenuredGetAllocKind());
+                                                         a->asTenured()->getAllocKind());
         if (!reserved.newashape)
             return false;
     }
@@ -2522,13 +2523,13 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
     unsigned bdynamic = dynamicSlotsCount(reserved.newbfixed, a->slotSpan(), a->getClass());
 
     if (adynamic) {
-        reserved.newaslots = a->pod_malloc<HeapSlot>(adynamic);
+        reserved.newaslots = a->zone()->pod_malloc<HeapSlot>(adynamic);
         if (!reserved.newaslots)
             return false;
         Debug_SetSlotRangeToCrashOnTouch(reserved.newaslots, adynamic);
     }
     if (bdynamic) {
-        reserved.newbslots = b->pod_malloc<HeapSlot>(bdynamic);
+        reserved.newbslots = b->zone()->pod_malloc<HeapSlot>(bdynamic);
         if (!reserved.newbslots)
             return false;
         Debug_SetSlotRangeToCrashOnTouch(reserved.newbslots, bdynamic);
@@ -2679,8 +2680,8 @@ bool
 JSObject::swap(JSContext *cx, HandleObject a, HandleObject b)
 {
     // Ensure swap doesn't cause a finalizer to not be run.
-    JS_ASSERT(IsBackgroundFinalized(a->tenuredGetAllocKind()) ==
-              IsBackgroundFinalized(b->tenuredGetAllocKind()));
+    JS_ASSERT(IsBackgroundFinalized(a->asTenured()->getAllocKind()) ==
+              IsBackgroundFinalized(b->asTenured()->getAllocKind()));
     JS_ASSERT(a->compartment() == b->compartment());
 
     unsigned r = NotifyGCPreSwap(a, b);
@@ -3026,7 +3027,7 @@ AllocateSlots(ThreadSafeContext *cx, JSObject *obj, uint32_t nslots)
     if (cx->isForkJoinContext())
         return cx->asForkJoinContext()->nursery().allocateSlots(obj, nslots);
 #endif
-    return obj->pod_malloc<HeapSlot>(nslots);
+    return obj->zone()->pod_malloc<HeapSlot>(nslots);
 }
 
 // This will not run the garbage collector.  If a nursery cannot accomodate the slot array
@@ -3049,7 +3050,7 @@ ReallocateSlots(ThreadSafeContext *cx, JSObject *obj, HeapSlot *oldSlots,
                                                                   oldCount, newCount);
     }
 #endif
-    return obj->pod_realloc<HeapSlot>(oldSlots, oldCount, newCount);
+    return obj->zone()->pod_realloc<HeapSlot>(oldSlots, oldCount, newCount);
 }
 
 /* static */ bool
@@ -3335,7 +3336,7 @@ AllocateElements(ThreadSafeContext *cx, JSObject *obj, uint32_t nelems)
         return cx->asForkJoinContext()->nursery().allocateElements(obj, nelems);
 #endif
 
-    return reinterpret_cast<js::ObjectElements *>(obj->pod_malloc<HeapSlot>(nelems));
+    return reinterpret_cast<js::ObjectElements *>(obj->zone()->pod_malloc<HeapSlot>(nelems));
 }
 
 // This will not run the garbage collector.  If a nursery cannot accomodate the element array
@@ -3358,8 +3359,8 @@ ReallocateElements(ThreadSafeContext *cx, JSObject *obj, ObjectElements *oldHead
 #endif
 
     return reinterpret_cast<js::ObjectElements *>(
-            obj->pod_realloc<HeapSlot>(reinterpret_cast<HeapSlot *>(oldHeader),
-                                       oldCount, newCount));
+            obj->zone()->pod_realloc<HeapSlot>(reinterpret_cast<HeapSlot *>(oldHeader),
+                                               oldCount, newCount));
 }
 
 // Round up |reqAllocated| to a good size. Up to 1 Mebi (i.e. 1,048,576) the

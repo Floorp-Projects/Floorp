@@ -349,11 +349,8 @@ IsObjectValueInCompartment(js::Value v, JSCompartment *comp);
  * will change so that some members are private, and only certain methods that
  * act upon them will be protected.
  */
-class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
+class ObjectImpl : public gc::Cell
 {
-    friend Zone *js::gc::BarrieredCell<ObjectImpl>::zone() const;
-    friend Zone *js::gc::BarrieredCell<ObjectImpl>::zoneFromAnyThread() const;
-
   protected:
     /*
      * Shape of the object, encodes the layout of the object's properties and
@@ -826,7 +823,8 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
 
     /* Memory usage functions. */
     size_t tenuredSizeOfThis() const {
-        return js::gc::Arena::thingSize(tenuredGetAllocKind());
+        MOZ_ASSERT(isTenured());
+        return js::gc::Arena::thingSize(asTenured()->getAllocKind());
     }
 
     /* Elements accessors. */
@@ -942,7 +940,26 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
     }
 
     /* GC Accessors */
+    static const size_t MaxTagBits = 3;
     void setInitialSlots(HeapSlot *newSlots) { slots = newSlots; }
+    static bool isNullLike(const ObjectImpl *obj) { return uintptr_t(obj) < (1 << MaxTagBits); }
+    MOZ_ALWAYS_INLINE JS::Zone *zone() const {
+        return shape_->zone();
+    }
+    MOZ_ALWAYS_INLINE JS::shadow::Zone *shadowZone() const {
+        return JS::shadow::Zone::asShadowZone(zone());
+    }
+    MOZ_ALWAYS_INLINE JS::Zone *zoneFromAnyThread() const {
+        return shape_->zoneFromAnyThread();
+    }
+    MOZ_ALWAYS_INLINE JS::shadow::Zone *shadowZoneFromAnyThread() const {
+        return JS::shadow::Zone::asShadowZone(zoneFromAnyThread());
+    }
+    static MOZ_ALWAYS_INLINE void readBarrier(ObjectImpl *obj);
+    static MOZ_ALWAYS_INLINE void writeBarrierPre(ObjectImpl *obj);
+    static MOZ_ALWAYS_INLINE void writeBarrierPost(ObjectImpl *obj, void *cellp);
+    static MOZ_ALWAYS_INLINE void writeBarrierPostRelocate(ObjectImpl *obj, void *cellp);
+    static MOZ_ALWAYS_INLINE void writeBarrierPostRemove(ObjectImpl *obj, void *cellp);
 
     /* JIT Accessors */
     static size_t offsetOfShape() { return offsetof(ObjectImpl, shape_); }
@@ -963,37 +980,22 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
     static size_t offsetOfSlots() { return offsetof(ObjectImpl, slots); }
 };
 
-namespace gc {
-
-template <>
-MOZ_ALWAYS_INLINE Zone *
-BarrieredCell<ObjectImpl>::zone() const
+/* static */ MOZ_ALWAYS_INLINE void
+ObjectImpl::readBarrier(ObjectImpl *obj)
 {
-    const ObjectImpl* obj = static_cast<const ObjectImpl*>(this);
-    JS::Zone *zone = obj->shape_->zone();
-    JS_ASSERT(CurrentThreadCanAccessZone(zone));
-    return zone;
+    if (!isNullLike(obj) && obj->isTenured())
+        obj->asTenured()->readBarrier(obj->asTenured());
 }
 
-template <>
-MOZ_ALWAYS_INLINE Zone *
-BarrieredCell<ObjectImpl>::zoneFromAnyThread() const
+/* static */ MOZ_ALWAYS_INLINE void
+ObjectImpl::writeBarrierPre(ObjectImpl *obj)
 {
-    const ObjectImpl* obj = static_cast<const ObjectImpl*>(this);
-    return obj->shape_->zoneFromAnyThread();
+    if (!isNullLike(obj) && obj->isTenured())
+        obj->asTenured()->writeBarrierPre(obj->asTenured());
 }
 
-// TypeScript::global uses 0x1 as a special value.
-template<>
-/* static */ inline bool
-BarrieredCell<ObjectImpl>::isNullLike(ObjectImpl *obj)
-{
-    return IsNullTaggedPointer(obj);
-}
-
-template<>
-/* static */ inline void
-BarrieredCell<ObjectImpl>::writeBarrierPost(ObjectImpl *obj, void *cellp)
+/* static */ MOZ_ALWAYS_INLINE void
+ObjectImpl::writeBarrierPost(ObjectImpl *obj, void *cellp)
 {
     JS_ASSERT(cellp);
 #ifdef JSGC_GENERATIONAL
@@ -1002,13 +1004,12 @@ BarrieredCell<ObjectImpl>::writeBarrierPost(ObjectImpl *obj, void *cellp)
     JS_ASSERT(obj == *static_cast<ObjectImpl **>(cellp));
     gc::StoreBuffer *storeBuffer = obj->storeBuffer();
     if (storeBuffer)
-        storeBuffer->putCellFromAnyThread(static_cast<Cell **>(cellp));
+        storeBuffer->putCellFromAnyThread(static_cast<gc::Cell **>(cellp));
 #endif
 }
 
-template<>
-/* static */ inline void
-BarrieredCell<ObjectImpl>::writeBarrierPostRelocate(ObjectImpl *obj, void *cellp)
+/* static */ MOZ_ALWAYS_INLINE void
+ObjectImpl::writeBarrierPostRelocate(ObjectImpl *obj, void *cellp)
 {
     JS_ASSERT(cellp);
     JS_ASSERT(obj);
@@ -1016,24 +1017,21 @@ BarrieredCell<ObjectImpl>::writeBarrierPostRelocate(ObjectImpl *obj, void *cellp
 #ifdef JSGC_GENERATIONAL
     gc::StoreBuffer *storeBuffer = obj->storeBuffer();
     if (storeBuffer)
-        storeBuffer->putRelocatableCellFromAnyThread(static_cast<Cell **>(cellp));
+        storeBuffer->putRelocatableCellFromAnyThread(static_cast<gc::Cell **>(cellp));
 #endif
 }
 
-template<>
-/* static */ inline void
-BarrieredCell<ObjectImpl>::writeBarrierPostRemove(ObjectImpl *obj, void *cellp)
+/* static */ MOZ_ALWAYS_INLINE void
+ObjectImpl::writeBarrierPostRemove(ObjectImpl *obj, void *cellp)
 {
     JS_ASSERT(cellp);
     JS_ASSERT(obj);
     JS_ASSERT(obj == *static_cast<ObjectImpl **>(cellp));
 #ifdef JSGC_GENERATIONAL
     obj->shadowRuntimeFromAnyThread()->gcStoreBufferPtr()->removeRelocatableCellFromAnyThread(
-        static_cast<Cell **>(cellp));
+        static_cast<gc::Cell **>(cellp));
 #endif
 }
-
-} // namespace gc
 
 inline void
 ObjectImpl::privateWriteBarrierPre(void **oldval)
