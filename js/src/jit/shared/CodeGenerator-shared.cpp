@@ -1162,6 +1162,43 @@ CodeGeneratorShared::omitOverRecursedCheck() const
 }
 
 void
+CodeGeneratorShared::emitAsmJSCall(LAsmJSCall *ins)
+{
+    MAsmJSCall *mir = ins->mir();
+
+    if (mir->spIncrement())
+        masm.freeStack(mir->spIncrement());
+
+    JS_ASSERT((sizeof(AsmJSFrame) + masm.framePushed()) % AsmJSStackAlignment == 0);
+
+#ifdef DEBUG
+    static_assert(AsmJSStackAlignment >= ABIStackAlignment &&
+                  AsmJSStackAlignment % ABIStackAlignment == 0,
+                  "The asm.js stack alignment should subsume the ABI-required alignment");
+    Label ok;
+    masm.branchTestPtr(Assembler::Zero, StackPointer, Imm32(AsmJSStackAlignment - 1), &ok);
+    masm.breakpoint();
+    masm.bind(&ok);
+#endif
+
+    MAsmJSCall::Callee callee = mir->callee();
+    switch (callee.which()) {
+      case MAsmJSCall::Callee::Internal:
+        masm.call(mir->desc(), callee.internal());
+        break;
+      case MAsmJSCall::Callee::Dynamic:
+        masm.call(mir->desc(), ToRegister(ins->getOperand(mir->dynamicCalleeOperandIndex())));
+        break;
+      case MAsmJSCall::Callee::Builtin:
+        masm.call(AsmJSImmPtr(callee.builtin()));
+        break;
+    }
+
+    if (mir->spIncrement())
+        masm.reserveStack(mir->spIncrement());
+}
+
+void
 CodeGeneratorShared::emitPreBarrier(Register base, const LAllocation *index)
 {
     if (index->isConstant()) {

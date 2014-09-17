@@ -11,4 +11,4 @@ content/VERSION.txt
 # including the following three lines:
 content/legal/styles/*.css
 content/legal/terms/*.html
-content/legal/terms/!index.html
+!content/legal/terms/index.html

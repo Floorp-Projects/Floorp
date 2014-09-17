@@ -149,7 +149,9 @@
                      tabscrolling="true"
                      showcommentcolumn="true"
                      observes="paneElementsBroadcaster"
-                     placeholder="&editBookmarkOverlay.tagsEmptyDesc.label;"/>
+                     placeholder="&editBookmarkOverlay.tagsEmptyDesc.label;"
+                     maxlength="1000"
+                     />
             <button id="editBMPanel_tagsSelectorExpander"
                     class="expander-down"
                     tooltiptext="&editBookmarkOverlay.tagsExpanderDown.tooltip;"

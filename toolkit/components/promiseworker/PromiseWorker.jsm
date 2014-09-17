@@ -242,9 +242,10 @@ this.BasePromiseWorker.prototype = {
    * Post a message to a worker.
    *
    * @param {string} fun The name of the function to call.
-   * @param {Array} args The arguments to pass to `fun`. By convention,
-   * the last argument may be an object `options` with some of the following
-   * fields:
+   * @param {Array} args The arguments to pass to `fun`. If any
+   * of the arguments is a Promise, it is resolved before posting the
+   * message. By convention, the last argument may be an object `options`
+   * with some of the following fields:
    * - {number|null} outExecutionDuration A parameter to be filled with the
    *   duration of the off main thread execution for this call.
    * @param {*=} closure An object holding references that should not be
@@ -254,6 +255,11 @@ this.BasePromiseWorker.prototype = {
    */
   post: function(fun, args, closure) {
     return Task.spawn(function* postMessage() {
+      // Normalize in case any of the arguments is a promise
+      if (args) {
+        args = yield Promise.resolve(Promise.all(args));
+      }
+
       let id = ++this._id;
       let message = {fun: fun, args: args, id: id};
       this.log("Posting message", message);
