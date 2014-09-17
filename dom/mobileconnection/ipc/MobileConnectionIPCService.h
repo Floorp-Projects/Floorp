@@ -6,7 +6,7 @@
 #define mozilla_dom_mobileconnection_MobileConnectionIPCService_h
 
 #include "nsCOMPtr.h"
-#include "mozilla/dom/mobileconnection/MobileConnectionChild.h"
+#include "MobileConnectionChild.h"
 #include "nsIMobileConnectionService.h"
 
 namespace mozilla {
@@ -35,8 +35,8 @@ private:
   nsTArray<nsRefPtr<MobileConnectionChild>> mClients;
 };
 
-} // namespace mobileconnection
-} // namespace dom
-} // namespace mozilla
+} // name space mobileconnection
+} // name space dom
+} // name space mozilla
 
 #endif // mozilla_dom_mobileconnection_MobileConnectionIPCService_h
