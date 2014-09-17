@@ -140,7 +140,7 @@ describe("loop.panel", function() {
   });
 
   describe("loop.panel.PanelView", function() {
-    var fakeClient, callUrlData, view;
+    var fakeClient, callUrlData, view, callTab, contactsTab;
 
     beforeEach(function() {
       callUrlData = {
@@ -158,6 +158,27 @@ describe("loop.panel", function() {
         notifications: notifications,
         client: fakeClient
       }));
+
+      [callTab, contactsTab] =
+        TestUtils.scryRenderedDOMComponentsWithClass(view, "tab");
+    });
+
+    describe('TabView', function() {
+      it("should select contacts tab when clicking tab button", function() {
+        TestUtils.Simulate.click(
+          view.getDOMNode().querySelector('li[data-tab-name="contacts"]'));
+
+        expect(contactsTab.getDOMNode().classList.contains("selected"))
+          .to.be.true;
+      });
+
+      it("should select call tab when clicking tab button", function() {
+        TestUtils.Simulate.click(
+          view.getDOMNode().querySelector('li[data-tab-name="call"]'));
+
+        expect(callTab.getDOMNode().classList.contains("selected"))
+          .to.be.true;
+      });
     });
 
     describe("AuthLink", function() {
