@@ -289,7 +289,7 @@ TextureClientD3D11::Unlock()
 
     if (FAILED(hr)) {
       gfx::gfxCriticalError() << "[D3D11] CreateTexture2D failure " << mSize << " Code: " << hr;
-      return false;
+      return;
     }
 
     if (SUCCEEDED(hr)) {

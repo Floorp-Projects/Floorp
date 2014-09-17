@@ -61,7 +61,9 @@
 #include "nsILocaleService.h"
 #include "nsIObserverService.h"
 #include "MainThreadUtils.h"
+#ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
+#endif
 
 #include "nsWeakReference.h"
 
@@ -153,7 +155,11 @@ public:
             return;
         }
         nsCString reportString(aString.c_str());
+#ifdef MOZ_CRASHREPORTER
         CrashReporter::AppendAppNotesToCrashReport(reportString);
+#else
+        PR_LogPrint(reportString);
+#endif
     }
 };
 
