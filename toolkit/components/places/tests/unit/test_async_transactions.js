@@ -1078,77 +1078,153 @@ add_task(function* test_edit_keyword() {
   ensureUndoState();
 });
 
-add_task(function* test_tag_uri_unbookmarked_uri() {
-  let info = { uri: NetUtil.newURI("http://un.book.marked"), tags: ["MyTag"] };
+add_task(function* doTest() {
+  let bm_info_a = { uri: NetUtil.newURI("http://bookmarked.uri")
+                  , parentGUID: yield PlacesUtils.promiseItemGUID(root) };
+  let bm_info_b = { uri: NetUtil.newURI("http://bookmarked2.uri")
+                  , parentGUID: yield PlacesUtils.promiseItemGUID(root) };
+  let unbookmarked_uri = NetUtil.newURI("http://un.bookmarked.uri");
 
-  function ensureDo() {
-    // A new bookmark should be created.
-    // (getMostRecentBookmarkForURI ignores tags)
-    do_check_neq(PlacesUtils.getMostRecentBookmarkForURI(info.uri), -1);
-    ensureTagsForURI(info.uri, info.tags);
+  function* promiseIsBookmarked(aURI) {
+    let deferred = Promise.defer();
+    PlacesUtils.asyncGetBookmarkIds(aURI, ids => {
+                                            deferred.resolve(ids.length > 0);
+                                          });
+    return deferred.promise;
   }
-  function ensureUndo() {
-    do_check_eq(PlacesUtils.getMostRecentBookmarkForURI(info.uri), -1);
-    ensureTagsForURI(info.uri, []);
+
+  yield PT.transact(function* () {
+    bm_info_a.GUID = yield PT.NewBookmark(bm_info_a);
+    bm_info_b.GUID = yield PT.NewBookmark(bm_info_b);
+  });
+
+  function* doTest(aInfo) {
+    let uris = "uri" in aInfo ? [aInfo.uri] : aInfo.uris;
+    let tags = "tag" in aInfo ? [aInfo.tag] : aInfo.tags;
+
+    let tagWillAlsoBookmark = new Set();
+    for (let uri of uris) {
+      if (!(yield promiseIsBookmarked(uri))) {
+        tagWillAlsoBookmark.add(uri);
+      }
+    }
+
+    function* ensureTagsSet() {
+      for (let uri of uris) {
+        ensureTagsForURI(uri, tags);
+        Assert.ok(yield promiseIsBookmarked(uri));
+      }
+    }
+    function* ensureTagsUnset() {
+      for (let uri of uris) {
+        ensureTagsForURI(uri, []);
+        if (tagWillAlsoBookmark.has(uri))
+          Assert.ok(!(yield promiseIsBookmarked(uri)));
+        else
+          Assert.ok(yield promiseIsBookmarked(uri));
+      }
+    }
+
+    yield PT.transact(PT.Tag(aInfo));
+    yield ensureTagsSet();
+    yield PT.undo();
+    yield ensureTagsUnset();
+    yield PT.redo();
+    yield ensureTagsSet();
+    yield PT.undo();
+    yield ensureTagsUnset();
   }
 
-  yield PT.transact(PT.TagURI(info));
-  ensureDo();
-  yield PT.undo();
-  ensureUndo();
-  yield PT.redo();
-  ensureDo();
-  yield PT.undo();
-  ensureUndo();
-});
-
-add_task(function* test_tag_uri_bookmarked_uri() {
-  let bm_info = { uri: NetUtil.newURI("http://bookmarked.uri")
-                , parentGUID: yield PlacesUtils.promiseItemGUID(root) };
-  bm_info.GUID = yield PT.transact(PT.NewBookmark(bm_info));
-
-  let tagging_info = { uri: bm_info.uri, tags: ["MyTag"] };
-  yield PT.transact(PT.TagURI(tagging_info));
-  ensureTagsForURI(tagging_info.uri, tagging_info.tags);
-
-  yield PT.undo();
-  ensureTagsForURI(tagging_info.uri, []);
-  yield PT.redo();
-  ensureTagsForURI(tagging_info.uri, tagging_info.tags);
+  yield doTest({ uri: bm_info_a.uri, tags: ["MyTag"] });
+  yield doTest({ uris: [bm_info_a.uri], tag: "MyTag" });
+  yield doTest({ uris: [bm_info_a.uri, bm_info_b.uri], tags: ["A, B"] });
+  yield doTest({ uris: [bm_info_a.uri, unbookmarked_uri], tag: "C" });
 
   // Cleanup
-  yield PT.undo();
-  ensureTagsForURI(tagging_info.uri, []);
   observer.reset();
   yield PT.undo();
-  ensureItemsRemoved(bm_info);
+  ensureItemsRemoved(bm_info_a, bm_info_b);
 
   yield PT.clearTransactionsHistory();
   ensureUndoState();
 });
 
 add_task(function* test_untag_uri() {
-  let bm_info = { uri: NetUtil.newURI("http://test.untag.uri")
-                , parentGUID: yield PlacesUtils.promiseItemGUID(root)
-                , tags: ["T"]};
-  bm_info.GUID = yield PT.transact(PT.NewBookmark(bm_info));
+  let bm_info_a = { uri: NetUtil.newURI("http://bookmarked.uri")
+                  , parentGUID: yield PlacesUtils.promiseItemGUID(root)
+                  , tags: ["A", "B"] };
+  let bm_info_b = { uri: NetUtil.newURI("http://bookmarked2.uri")
+                  , parentGUID: yield PlacesUtils.promiseItemGUID(root)
+                  , tag: "B" };
 
-  yield PT.transact(PT.UntagURI(bm_info));
-  ensureTagsForURI(bm_info.uri, []);
-  yield PT.undo();
-  ensureTagsForURI(bm_info.uri, bm_info.tags);
-  yield PT.redo();
-  ensureTagsForURI(bm_info.uri, []);
-  yield PT.undo();
-  ensureTagsForURI(bm_info.uri, bm_info.tags);
+  yield PT.transact(function* () {
+    bm_info_a.GUID = yield PT.NewBookmark(bm_info_a);
+    ensureTagsForURI(bm_info_a.uri, bm_info_a.tags);
+    bm_info_b.GUID = yield PT.NewBookmark(bm_info_b);
+    ensureTagsForURI(bm_info_b.uri, [bm_info_b.tag]);
+  });
 
-  // Also test just passing the uri (should remove all tags)
-  yield PT.transact(PT.UntagURI(bm_info.uri));
-  ensureTagsForURI(bm_info.uri, []);
+  function* doTest(aInfo) {
+    let uris, tagsToRemove;
+    if (aInfo instanceof Ci.nsIURI) {
+      uris = [aInfo];
+      tagsRemoved = [];
+    }
+    else if (Array.isArray(aInfo)) {
+      uris = aInfo;
+      tagsRemoved = [];
+    }
+    else {
+      uris = "uri" in aInfo ? [aInfo.uri] : aInfo.uris;
+      tagsRemoved = "tag" in aInfo ? [aInfo.tag] : aInfo.tags;
+    }
+
+    let preRemovalTags = new Map();
+    for (let uri of uris) {
+      preRemovalTags.set(uri, tagssvc.getTagsForURI(uri));
+    }
+
+    function ensureTagsSet() {
+      for (let uri of uris) {
+        ensureTagsForURI(uri, preRemovalTags.get(uri));
+      }
+    }
+    function ensureTagsUnset() {
+      for (let uri of uris) {
+        let expectedTags = tagsRemoved.length == 0 ?
+           [] : [for (tag of preRemovalTags.get(uri))
+                 if (tagsRemoved.indexOf(tag) == -1) tag];
+        ensureTagsForURI(uri, expectedTags);
+      }
+    }
+
+    yield PT.transact(PT.Untag(aInfo));
+    yield ensureTagsUnset();
+    yield PT.undo();
+    yield ensureTagsSet();
+    yield PT.redo();
+    yield ensureTagsUnset();
+    yield PT.undo();
+    yield ensureTagsSet();
+  }
+
+  yield doTest(bm_info_a);
+  yield doTest(bm_info_b);
+  yield doTest(bm_info_a.uri);
+  yield doTest(bm_info_b.uri);
+  yield doTest([bm_info_a.uri, bm_info_b.uri]);
+  yield doTest({ uris: [bm_info_a.uri, bm_info_b.uri], tags: ["A", "B"] });
+  yield doTest({ uris: [bm_info_a.uri, bm_info_b.uri], tag: "B" });
+  yield doTest({ uris: [bm_info_a.uri, bm_info_b.uri], tag: "C" });
+  yield doTest({ uris: [bm_info_a.uri, bm_info_b.uri], tags: ["C"] });
+
+  // Cleanup
+  observer.reset();
   yield PT.undo();
-  ensureTagsForURI(bm_info.uri, bm_info.tags);
-  yield PT.redo();
-  ensureTagsForURI(bm_info.uri, []);
+  ensureItemsRemoved(bm_info_a, bm_info_b);
+
+  yield PT.clearTransactionsHistory();
+  ensureUndoState();
 });
 
 add_task(function* test_annotate() {
