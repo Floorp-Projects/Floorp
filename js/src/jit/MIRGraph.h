@@ -298,6 +298,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     // Mark this block as having been removed from the graph.
     void markAsDead() {
+        MOZ_ASSERT(kind_ != DEAD);
         kind_ = DEAD;
     }
 
@@ -542,6 +543,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         return successorWithPhis_;
     }
     uint32_t positionInPhiSuccessor() const {
+        MOZ_ASSERT(successorWithPhis());
         return positionInPhiSuccessor_;
     }
     void setSuccessorWithPhis(MBasicBlock *successor, uint32_t id) {

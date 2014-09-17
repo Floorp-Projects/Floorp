@@ -977,6 +977,7 @@ MBasicBlock::discardPhiAt(MPhiIterator &at)
     JS_ASSERT(!phis_.empty());
 
     at->removeAllOperands();
+    at->setDiscarded();
 
     MPhiIterator result = phis_.removeAt(at);
 

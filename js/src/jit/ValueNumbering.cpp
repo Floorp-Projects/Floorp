@@ -55,7 +55,9 @@ ValueNumberer::VisibleValues::ValueHasher::match(Key k, Lookup l)
     if (k->dependency() != l->dependency())
         return false;
 
-    return k->congruentTo(l); // Ask the values themselves what they think.
+    bool congruent = k->congruentTo(l); // Ask the values themselves what they think.
+    MOZ_ASSERT(congruent == l->congruentTo(k), "congruentTo relation is not symmetric");
+    return congruent;
 }
 
 void
