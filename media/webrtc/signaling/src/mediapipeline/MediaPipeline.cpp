@@ -1259,6 +1259,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
         MOZ_ASSERT(PR_FALSE);
     }
     conduit->SendVideoFrame(yuv, buffer_size, size.width, size.height, mozilla::kVideoI420, 0);
+    free(yuv);
   } else {
     MOZ_MTLOG(ML_ERROR, "Unsupported video format");
     MOZ_ASSERT(PR_FALSE);
