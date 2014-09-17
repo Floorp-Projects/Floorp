@@ -438,8 +438,6 @@
 #if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
 @BINPATH@/components/MmsService.js
 @BINPATH@/components/MmsService.manifest
-@BINPATH@/components/MobileConnectionService.js
-@BINPATH@/components/MobileConnectionService.manifest
 @BINPATH@/components/MobileMessageDatabaseService.js
 @BINPATH@/components/MobileMessageDatabaseService.manifest
 @BINPATH@/components/RadioInterfaceLayer.js
@@ -447,6 +445,8 @@
 @BINPATH@/components/RILContentHelper.js
 @BINPATH@/components/TelephonyService.js
 @BINPATH@/components/TelephonyService.manifest
+@BINPATH@/components/MobileConnectionGonkService.js
+@BINPATH@/components/MobileConnectionGonkService.manifest
 #endif // MOZ_WIDGET_GONK && MOZ_B2G_RIL
 
 #ifndef MOZ_WIDGET_GONK
