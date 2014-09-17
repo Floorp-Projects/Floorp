@@ -317,7 +317,7 @@ MediaEngineWebRTCAudioSource::Start(SourceMediaStream* aStream, TrackID aID)
   }
 
   AudioSegment* segment = new AudioSegment();
-  aStream->AddTrack(aID, SAMPLE_FREQUENCY, 0, segment);
+  aStream->AddAudioTrack(aID, SAMPLE_FREQUENCY, 0, segment);
   aStream->AdvanceKnownTracksTime(STREAM_TIME_MAX);
   // XXX Make this based on the pref.
   aStream->RegisterForAudioMixing();
