@@ -1885,6 +1885,8 @@ class MTableSwitch MOZ_FINAL
     TypePolicy *typePolicy() {
         return this;
     }
+
+    MDefinition *foldsTo(TempAllocator &alloc);
 };
 
 template <size_t Arity, size_t Successors>
