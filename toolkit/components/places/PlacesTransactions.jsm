@@ -752,8 +752,109 @@ function* ExecuteCreateItem(aTransaction, aParentGUID, aCreateItemFunction,
     // lastModified.
     PlacesUtils.bookmarks.setItemDateAdded(itemId, dateAdded);
     PlacesUtils.bookmarks.setItemLastModified(itemId, lastModified);
+    PlacesUtils.bookmarks.setItemLastModified(parentId, dateAdded);
   };
   return guid;
+}
+
+/**
+ * Creates items (all types) from a bookmarks tree representation, as defined
+ * in PlacesUtils.promiseBookmarksTree.
+ *
+ * @param aBookmarksTree
+ *        the bookmarks tree object.  You may pass either a bookmarks tree
+ *        returned by promiseBookmarksTree, or a manually defined one.
+ * @param [optional] aRestoring (default: false)
+ *        Whether or not the items are restored.  Only in restore mode, are
+ *        the guid, dateAdded and lastModified properties honored.
+ * @note the id, root and charset properties of items in aBookmarksTree are
+ *       always ignored.  The index property is ignored for all items but the
+ *       root one.
+ * @return {Promise}
+ */
+function* createItemsFromBookmarksTree(aBookmarksTree, aRestoring = false) {
+  function extractLivemarkDetails(aAnnos) {
+    let feedURI = null, siteURI = null;
+    aAnnos = aAnnos.filter(
+      aAnno => {
+        switch (aAnno.name) {
+        case PlacesUtils.LMANNO_FEEDURI:
+          feedURI = NetUtil.newURI(aAnno.value);
+          return false;
+        case PlacesUtils.LMANNO_SITEURI:
+          siteURI = NetUtil.newURI(aAnno.value);
+          return false;
+        default:
+          return true;
+        }
+      } );
+    return [feedURI, siteURI];
+  }
+
+  function* createItem(aItem,
+                       aParentGUID,
+                       aIndex = PlacesUtils.bookmarks.DEFAULT_INDEX) {
+    let itemId;
+    let guid = aRestoring ? aItem.guid : undefined;
+    let parentId = yield PlacesUtils.promiseItemId(aParentGUID);
+    let annos = aItem.annos ? [...aItem.annos] : [];
+    switch (aItem.type) {
+      case PlacesUtils.TYPE_X_MOZ_PLACE: {
+        let uri = NetUtil.newURI(aItem.uri);
+        itemId = PlacesUtils.bookmarks.insertBookmark(
+          parentId, uri, aIndex, aItem.title, guid);
+        if ("keyword" in aItem)
+          PlacesUtils.bookmarks.setKeywordForBookmark(itemId, aItem.keyword);
+        if ("tags" in aItem) {
+          PlacesUtils.tagging.tagURI(uri, aItem.tags.split(","));
+        }
+        break;
+      }
+      case PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER: {
+        // Either a folder or a livemark
+        let [feedURI, siteURI] = extractLivemarkDetails(annos);
+        if (!feedURI) {
+          itemId = PlacesUtils.bookmarks.createFolder(
+              parentId, aItem.title, aIndex, guid);
+          if (guid === undefined)
+            guid = yield PlacesUtils.promiseItemGUID(itemId);
+          if ("children" in aItem) {
+            for (let child of aItem.children) {
+              yield createItem(child, guid);
+            }
+          }
+        }
+        else {
+          let livemark =
+            yield PlacesUtils.livemarks.addLivemark({ title: aItem.title
+                                                    , feedURI: feedURI
+                                                    , siteURI: siteURI
+                                                    , parentId: parentId
+                                                    , index: aIndex
+                                                    , guid: guid});
+          itemId = livemark.id;
+        }
+        break;
+      }
+      case PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR: {
+        itemId = PlacesUtils.bookmarks.insertSeparator(parentId, aIndex, guid);
+        break;
+      }
+    }
+    if (annos.length > 0)
+      PlacesUtils.setAnnotationsForItem(itemId, annos);
+
+    if (aRestoring) {
+      if ("dateAdded" in aItem)
+        PlacesUtils.bookmarks.setItemDateAdded(itemId, aItem.dateAdded);
+      if ("lastModified" in aItem)
+        PlacesUtils.bookmarks.setItemLastModified(itemId, aItem.lastModified);
+    }
+    return itemId;
+  }
+  return yield createItem(aBookmarksTree,
+                          aBookmarksTree.parentGUID,
+                          aBookmarksTree.index);
 }
 
 /*****************************************************************************
@@ -862,32 +963,40 @@ PT.NewLivemark = DefineTransaction(["feedURI", "title", "parentGUID"],
                                    ["siteURI", "index", "annotations"]);
 PT.NewLivemark.prototype = Object.seal({
   execute: function* (aFeedURI, aTitle, aParentGUID, aSiteURI, aIndex, aAnnos) {
-    let createItem = function* (aGUID = "") {
-      let parentId = yield PlacesUtils.promiseItemId(aParentGUID);
-      let livemarkInfo = {
-        title: aTitle
-      , feedURI: aFeedURI
-      , parentId: parentId
-      , index: aIndex
-      , siteURI: aSiteURI };
-      if (aGUID)
-        livemarkInfo.guid = aGUID;
-
+    let livemarkInfo = { title: aTitle
+                       , feedURI: aFeedURI
+                       , siteURI: aSiteURI
+                       , index: aIndex };
+    let createItem = function* () {
+      livemarkInfo.parentId = yield PlacesUtils.promiseItemId(aParentGUID);
       let livemark = yield PlacesUtils.livemarks.addLivemark(livemarkInfo);
       if (aAnnos)
         PlacesUtils.setAnnotationsForItem(livemark.id, aAnnos);
 
+      if ("dateAdded" in livemarkInfo) {
+        PlacesUtils.bookmarks.setItemDateAdded(livemark.id,
+                                               livemarkInfo.dateAdded);
+        PlacesUtils.bookmarks.setItemLastModified(livemark.id,
+                                                  livemarkInfo.lastModified);
+      }
       return livemark;
     };
 
-    let guid = (yield createItem()).guid;
+    let livemark = yield createItem();
     this.undo = function* () {
-      yield PlacesUtils.livemarks.removeLivemark({ guid: guid });
+      livemarkInfo.guid = livemark.guid;
+      if (!("dateAdded" in livemarkInfo)) {
+        livemarkInfo.dateAdded =
+          PlacesUtils.bookmarks.getItemDateAdded(livemark.id);
+        livemarkInfo.lastModified =
+          PlacesUtils.bookmarks.getItemLastModified(livemark.id);
+      }
+      yield PlacesUtils.livemarks.removeLivemark(livemark);
     };
     this.redo = function* () {
-      yield createItem(guid);
+      livemark = yield createItem();
     };
-    return guid;
+    return livemark.guid;
   }
 });
 
@@ -897,8 +1006,8 @@ PT.NewLivemark.prototype = Object.seal({
  * Required Input Properties: GUID, newParentGUID.
  * Optional Input Properties  newIndex.
  */
-PT.MoveItem = DefineTransaction(["GUID", "newParentGUID"], ["newIndex"]);
-PT.MoveItem.prototype = Object.seal({
+PT.Move = DefineTransaction(["GUID", "newParentGUID"], ["newIndex"]);
+PT.Move.prototype = Object.seal({
   execute: function* (aGUID, aNewParentGUID, aNewIndex) {
     let itemId = yield PlacesUtils.promiseItemId(aGUID),
         oldParentId = PlacesUtils.bookmarks.getFolderIdForItem(itemId),
@@ -1095,127 +1204,21 @@ PT.SortByName.prototype = {
  *
  * Required Input Properties: GUID.
  */
-PT.RemoveItem = DefineTransaction(["GUID"]);
-PT.RemoveItem.prototype = {
+PT.Remove = DefineTransaction(["GUID"]);
+PT.Remove.prototype = {
   execute: function* (aGUID) {
     const bms = PlacesUtils.bookmarks;
 
-    let itemsToRestoreOnUndo = [];
-    function* saveItemRestoreData(aItem, aNode = null) {
-      if (!aItem || !aItem.GUID)
-        throw new Error("invalid item object");
-
-      let itemId = aNode ?
-                   aNode.itemId : yield PlacesUtils.promiseItemId(aItem.GUID);
-      if (itemId == -1)
-        throw new Error("Unexpected non-bookmarks node");
-
-      aItem.itemType = function() {
-        if (aNode) {
-          switch (aNode.type) {
-            case aNode.RESULT_TYPE_SEPARATOR:
-              return bms.TYPE_SEPARATOR;
-            case aNode.RESULT_TYPE_URI:   // regular bookmarks
-            case aNode.RESULT_TYPE_FOLDER_SHORTCUT:  // place:folder= bookmarks
-            case aNode.RESULT_TYPE_QUERY: // smart bookmarks
-              return bms.TYPE_BOOKMARK;
-            case aNode.RESULT_TYPE_FOLDER:
-              return bms.TYPE_FOLDER;
-            default:
-              throw new Error("Unexpected node type");
-          }
-        }
-        return bms.getItemType(itemId);
-      }();
-
-      let node = aNode;
-      if (!node && aItem.itemType == bms.TYPE_FOLDER)
-        node = PlacesUtils.getFolderContents(itemId).root;
-
-      // dateAdded, lastModified and annotations apply to all types.
-      aItem.dateAdded = node ? node.dateAdded : bms.getItemDateAdded(itemId);
-      aItem.lastModified = node ?
-                           node.lastModified : bms.getItemLastModified(itemId);
-      aItem.annotations = PlacesUtils.getAnnotationsForItem(itemId);
-
-      // For the first-level item, we don't have the parent.
-      if (!aItem.parentGUID) {
-        let parentId     = PlacesUtils.bookmarks.getFolderIdForItem(itemId);
-        aItem.parentGUID = yield PlacesUtils.promiseItemGUID(parentId);
-        // For the first-level item, we also need the index.
-        // Note: node.bookmarkIndex doesn't work for root nodes.
-        aItem.index      = bms.getItemIndex(itemId);
-      }
-
-      // Separators don't have titles.
-      if (aItem.itemType != bms.TYPE_SEPARATOR) {
-        aItem.title = node ? node.title : bms.getItemTitle(itemId);
-
-        if (aItem.itemType == bms.TYPE_BOOKMARK) {
-          aItem.uri =
-            node ? NetUtil.newURI(node.uri) : bms.getBookmarkURI(itemId);
-          aItem.keyword = PlacesUtils.bookmarks.getKeywordForBookmark(itemId);
-
-          // This may be the last bookmark (excluding the tag-items themselves)
-          // for the URI, so we need to preserve the tags.
-          let tags = PlacesUtils.tagging.getTagsForURI(aItem.uri);;
-          if (tags.length > 0)
-            aItem.tags = tags;
-        }
-        else { // folder
-          // We always have the node for folders
-          aItem.readOnly = node.childrenReadOnly;
-          for (let i = 0; i < node.childCount; i++) {
-            let childNode = node.getChild(i);
-            let childItem =
-              { GUID: yield PlacesUtils.promiseItemGUID(childNode.itemId)
-              , parentGUID: aItem.GUID };
-            itemsToRestoreOnUndo.push(childItem);
-            yield saveItemRestoreData(childItem, childNode);
-          }
-          node.containerOpen = false;
-        }
-      }
+    let itemInfo = null;
+    try {
+      itemInfo = yield PlacesUtils.promiseBookmarksTree(aGUID);
     }
-
-    let item = { GUID: aGUID, parentGUID: null };
-    itemsToRestoreOnUndo.push(item);
-    yield saveItemRestoreData(item);
-
-    let itemId = yield PlacesUtils.promiseItemId(aGUID);
-    PlacesUtils.bookmarks.removeItem(itemId);
-    this.undo = function() {
-      for (let item of itemsToRestoreOnUndo) {
-        let parentId = yield PlacesUtils.promiseItemId(item.parentGUID);
-        let index = "index" in item ?
-                    item.index : PlacesUtils.bookmarks.DEFAULT_INDEX;
-        let itemId;
-        if (item.itemType == bms.TYPE_SEPARATOR) {
-          itemId = bms.insertSeparator(parentId, index, item.GUID);
-        }
-        else if (item.itemType == bms.TYPE_BOOKMARK) {
-          itemId = bms.insertBookmark(parentId, item.uri, index, item.title,
-                                       item.GUID);
-        }
-        else { // folder
-          itemId = bms.createFolder(parentId, item.title, index, item.GUID);
-        }
-
-        if (item.itemType == bms.TYPE_BOOKMARK) {
-          if (item.keyword)
-            bms.setKeywordForBookmark(itemId, item.keyword);
-          if ("tags" in item)
-            PlacesUtils.tagging.tagURI(item.uri, item.tags);
-        }
-        else if (item.readOnly === true) {
-          bms.setFolderReadonly(itemId, true);
-        }
-
-        PlacesUtils.setAnnotationsForItem(itemId, item.annotations);
-        PlacesUtils.bookmarks.setItemDateAdded(itemId, item.dateAdded);
-        PlacesUtils.bookmarks.setItemLastModified(itemId, item.lastModified);
-      }
-    };
+    catch(ex) {
+      throw new Error("Failed to get info for the specified item (guid: " +
+                      aGUID + "). Ex: " + ex);
+    }
+    PlacesUtils.bookmarks.removeItem(yield PlacesUtils.promiseItemId(aGUID));
+    this.undo = createItemsFromBookmarksTree.bind(null, itemInfo, true);
   }
 };
 
@@ -1268,5 +1271,43 @@ PT.UntagURI.prototype = {
     PlacesUtils.tagging.untagURI(aURI, aTags);
     this.undo = () => { PlacesUtils.tagging.tagURI(aURI, aTags); };
     this.redo = () => { PlacesUtils.tagging.untagURI(aURI, aTags); };
+  }
+};
+
+/**
+ * Transaction for copying an item.
+ *
+ * Required Input Properties: guid, newParentGUID
+ * Optional Input Properties: newIndex.
+ */
+PT.Copy = DefineTransaction(["GUID", "newParentGUID"],
+                            ["newIndex"]);
+PT.Copy.prototype = {
+  execute: function* (aGUID, aNewParentGUID, aNewIndex) {
+    let creationInfo = null;
+    try {
+      creationInfo = yield PlacesUtils.promiseBookmarksTree(aGUID);
+    }
+    catch(ex) {
+      throw new Error("Failed to get info for the specified item (guid: " +
+                      aGUID + "). Ex: " + ex);
+    }
+    creationInfo.parentGUID = aNewParentGUID;
+    creationInfo.index = aNewIndex;
+
+    let newItemId = yield createItemsFromBookmarksTree(creationInfo, false);
+    let newItemInfo = null;
+    this.undo = function* () {
+      if (!newItemInfo) {
+        let newItemGUID = yield PlacesUtils.promiseItemGUID(newItemId);
+        newItemInfo = yield PlacesUtils.promiseBookmarksTree(newItemGUID);
+      }
+      PlacesUtils.bookmarks.removeItem(newItemId);
+    };
+    this.redo = function* () {
+      newItemId = yield createItemsFromBookmarksTree(newItemInfo, true);
+    }
+
+    return yield PlacesUtils.promiseItemGUID(newItemId);
   }
 };
