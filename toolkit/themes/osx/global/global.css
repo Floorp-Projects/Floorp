@@ -16,16 +16,22 @@ menulist > menupopup {
 
 /* ::::: draggable elements ::::: */
 
-toolbar:not([nowindowdrag="true"]) {
-  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar-drag");
-}
-
-statusbar:not([nowindowdrag="true"]) {
-  -moz-binding: url("chrome://global/content/bindings/general.xml#statusbar-drag");
-}
-
+titlebar,
+toolbar:not([nowindowdrag="true"]):not([customizing="true"]),
+statusbar:not([nowindowdrag="true"]),
 windowdragbox {
-  -moz-binding: url("chrome://global/content/bindings/general.xml#windowdragbox");
+  -moz-window-dragging: drag;
+}
+
+/* The list below is non-comprehensive and will probably need some tweaking. */
+toolbarbutton,
+button,
+textbox,
+searchbar,
+tab,
+radio,
+splitter {
+  -moz-window-dragging: no-drag;
 }
 
 /* ::::: root elements ::::: */

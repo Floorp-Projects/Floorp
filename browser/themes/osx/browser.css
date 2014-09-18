@@ -45,6 +45,10 @@
 
 /** Begin titlebar **/
 
+#titlebar {
+  -moz-window-dragging: drag;
+}
+
 #titlebar-buttonbox > .titlebar-button {
   display: none;
 }
