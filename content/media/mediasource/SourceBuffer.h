@@ -135,6 +135,10 @@ private:
   // Shared implementation of AppendBuffer overloads.
   void AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aRv);
 
+  // Implements the "Prepare Append Algorithm".  Returns true if the append
+  // may continue, or false (with aRv set) on error.
+  bool PrepareAppend(ErrorResult& aRv);
+
   nsRefPtr<MediaSource> mMediaSource;
 
   const nsCString mType;

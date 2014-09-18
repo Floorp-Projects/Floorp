@@ -16,8 +16,14 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 this.PrivateBrowsingUtils = {
+  // Rather than passing content windows to this function, please use
+  // isBrowserPrivate since it works with e10s.
   isWindowPrivate: function pbu_isWindowPrivate(aWindow) {
     return this.privacyContextFromWindow(aWindow).usePrivateBrowsing;
+  },
+
+  isBrowserPrivate: function(aBrowser) {
+    return this.isWindowPrivate(aBrowser.ownerDocument.defaultView);
   },
 
   privacyContextFromWindow: function pbu_privacyContextFromWindow(aWindow) {

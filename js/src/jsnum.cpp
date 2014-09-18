@@ -10,6 +10,7 @@
 
 #include "jsnum.h"
 
+#include "mozilla/double-conversion.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/RangedPtr.h"
@@ -20,7 +21,6 @@
 #include <math.h>
 #include <string.h>
 
-#include "double-conversion.h"
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsdtoa.h"

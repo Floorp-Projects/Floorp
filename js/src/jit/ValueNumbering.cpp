@@ -345,11 +345,11 @@ ValueNumberer::releaseOperands(MDefinition *def)
 bool
 ValueNumberer::discardDef(MDefinition *def)
 {
+#ifdef DEBUG
     JitSpew(JitSpew_GVN, "      Discarding %s %s%u",
             def->block()->isMarked() ? "unreachable" : "dead",
             def->opName(), def->id());
 
-#ifdef DEBUG
     MOZ_ASSERT(def != nextDef_, "Invalidating the MDefinition iterator");
     if (def->block()->isMarked()) {
         MOZ_ASSERT(!def->hasUses(), "Discarding def that still has uses");
@@ -700,7 +700,7 @@ ValueNumberer::visitDefinition(MDefinition *def)
 {
     // If this instruction has a dependency() into an unreachable block, we'll
     // need to update AliasAnalysis.
-    const MDefinition *dep = def->dependency();
+    MDefinition *dep = def->dependency();
     if (dep != nullptr && (dep->isDiscarded() || dep->block()->isDead())) {
         JitSpew(JitSpew_GVN, "      AliasAnalysis invalidated");
         if (updateAliasAnalysis_ && !dependenciesBroken_) {
@@ -709,8 +709,11 @@ ValueNumberer::visitDefinition(MDefinition *def)
             JitSpew(JitSpew_GVN, "        Will recompute!");
             dependenciesBroken_ = true;
         }
-        // Clear its dependency for now, to protect foldsTo.
+        // Temporarily clear its dependency, to protect foldsTo, which may
+        // wish to use the dependency to do store-to-load forwarding.
         def->setDependency(def->toInstruction());
+    } else {
+        dep = nullptr;
     }
 
     // Look for a simplified form of |def|.
@@ -723,8 +726,10 @@ ValueNumberer::visitDefinition(MDefinition *def)
         if (sim->block() == nullptr)
             def->block()->insertAfter(def->toInstruction(), sim->toInstruction());
 
+#ifdef DEBUG
         JitSpew(JitSpew_GVN, "      Folded %s%u to %s%u",
                 def->opName(), def->id(), sim->opName(), sim->id());
+#endif
         ReplaceAllUsesWith(def, sim);
 
         // The node's foldsTo said |def| can be replaced by |rep|. If |def| is a
@@ -739,15 +744,23 @@ ValueNumberer::visitDefinition(MDefinition *def)
         def = sim;
     }
 
+    // Now that foldsTo is done, re-enable the original dependency. Even though
+    // it may be pointing into a discarded block, it's still valid for the
+    // purposes of detecting congruent loads.
+    if (dep != nullptr)
+        def->setDependency(dep);
+
     // Look for a dominating def which makes |def| redundant.
     MDefinition *rep = leader(def);
     if (rep != def) {
         if (rep == nullptr)
             return false;
         if (rep->updateForReplacement(def)) {
+#ifdef DEBUG
             JitSpew(JitSpew_GVN,
                     "      Replacing %s%u with %s%u",
                     def->opName(), def->id(), rep->opName(), rep->id());
+#endif
             ReplaceAllUsesWith(def, rep);
 
             // The node's congruentTo said |def| is congruent to |rep|, and it's
@@ -787,8 +800,10 @@ ValueNumberer::visitControlInstruction(MBasicBlock *block, const MBasicBlock *do
     MControlInstruction *newControl = rep->toControlInstruction();
     MOZ_ASSERT(!newControl->block(),
                "Control instruction replacement shouldn't already be in a block");
+#ifdef DEBUG
     JitSpew(JitSpew_GVN, "      Folded control instruction %s%u to %s%u",
             control->opName(), control->id(), newControl->opName(), graph_.getNumInstructionIds());
+#endif
 
     // If the simplification removes any CFG edges, update the CFG and remove
     // any blocks that become dead.

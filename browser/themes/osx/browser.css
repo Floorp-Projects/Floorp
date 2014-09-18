@@ -45,6 +45,10 @@
 
 /** Begin titlebar **/
 
+#titlebar {
+  -moz-window-dragging: drag;
+}
+
 #titlebar-buttonbox > .titlebar-button {
   display: none;
 }
@@ -4037,6 +4041,17 @@ menulist.translate-infobar-element > .menulist-dropmarker {
 @media (min-resolution: 2dppx) {
   .popup-notification-icon[popupid="bad-content"] {
     list-style-image: url(chrome://browser/skin/bad-content-blocked-64@2x.png);
+  }
+}
+
+.popup-notification-icon[popupid="bad-content"][mixedblockdisabled],
+.popup-notification-icon[popupid="bad-content"][trackingblockdisabled] {
+  list-style-image: url(chrome://browser/skin/bad-content-unblocked-64.png);
+}
+@media (min-resolution: 2dppx) {
+  .popup-notification-icon[popupid="bad-content"][mixedblockdisabled],
+  .popup-notification-icon[popupid="bad-content"][trackingblockdisabled] {
+    list-style-image: url(chrome://browser/skin/bad-content-unblocked-64@2x.png);
   }
 }
 

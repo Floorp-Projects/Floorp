@@ -234,18 +234,17 @@ Accessible::Description(nsString& aDescription)
           }
         }
       }
-
-      if (!aDescription.IsEmpty()) {
-        nsAutoString name;
-        ENameValueFlag nameFlag = Name(name);
-
-        // Don't use tooltip for a description if it was used for a name.
-        if (nameFlag == eNameFromTooltip)
-          aDescription.Truncate();
-      }
     }
   }
-  aDescription.CompressWhitespace();
+
+  if (!aDescription.IsEmpty()) {
+    aDescription.CompressWhitespace();
+    nsAutoString name;
+    ENameValueFlag nameFlag = Name(name);
+    // Don't expose a description if it is the same as the name.
+    if (aDescription.Equals(name))
+      aDescription.Truncate();
+  }
 }
 
 KeyBinding

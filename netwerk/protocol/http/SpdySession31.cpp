@@ -2398,7 +2398,7 @@ SpdySession31::CloseTransaction(nsAHttpTransaction *aTransaction,
           this, aTransaction, aResult));
     return;
   }
-  LOG3(("SpdySession31::CloseTranscation probably a cancel. "
+  LOG3(("SpdySession31::CloseTransaction probably a cancel. "
         "this=%p, trans=%p, result=%x, streamID=0x%X stream=%p",
         this, aTransaction, aResult, stream->StreamID(), stream));
   CleanupStream(stream, aResult, RST_CANCEL);
