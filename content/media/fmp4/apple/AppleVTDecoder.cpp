@@ -331,23 +331,21 @@ AppleVTDecoder::CreateDecoderExtensions()
   const void* extensionKeys[] =
     { kCVImageBufferChromaLocationBottomFieldKey,
       kCVImageBufferChromaLocationTopFieldKey,
-      AppleCMLinker::skPropExtensionAtoms,
-      AppleCMLinker::skPropFullRangeVideo /* Not defined in 10.6 */ };
+      AppleCMLinker::skPropFullRangeVideo,
+      AppleCMLinker::skPropExtensionAtoms };
 
   const void* extensionValues[] =
     { kCVImageBufferChromaLocation_Left,
       kCVImageBufferChromaLocation_Left,
-      atoms,
-      kCFBooleanTrue };
+      kCFBooleanTrue,
+      atoms };
   static_assert(ArrayLength(extensionKeys) == ArrayLength(extensionValues),
                 "Non matching keys/values array size");
 
   return CFDictionaryCreate(kCFAllocatorDefault,
                             extensionKeys,
                             extensionValues,
-                            AppleCMLinker::skPropFullRangeVideo ?
-                              ArrayLength(extensionKeys) :
-                              ArrayLength(extensionKeys) - 1,
+                            ArrayLength(extensionKeys),
                             &kCFTypeDictionaryKeyCallBacks,
                             &kCFTypeDictionaryValueCallBacks);
 }
