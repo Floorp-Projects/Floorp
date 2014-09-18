@@ -447,7 +447,7 @@
                 readonly="true"/>
 
       <property name="contentPrincipal"
-                onget="return this.contentDocumentAsCPOW.nodePrincipal;"
+                onget="return this.contentDocument.nodePrincipal;"
                 readonly="true"/>
 
       <property name="showWindowResizer"
