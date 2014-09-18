@@ -11,12 +11,19 @@
 #include "mozilla/Scoped.h"
 
 #include "jscntxt.h"
+#include "jsinfer.h"
+#include "jsobj.h"
+#include "jsscript.h"
 
+#include "jit/IonCode.h"
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
 #include "vm/ScopeObject.h"
+#include "vm/Shape.h"
+#include "vm/String.h"
+#include "vm/Symbol.h"
 
 #include "jsobjinlines.h"
 
@@ -26,6 +33,7 @@ using JS::ubi::Edge;
 using JS::ubi::EdgeRange;
 using JS::ubi::Node;
 using JS::ubi::TracerConcrete;
+using JS::ubi::TracerConcreteWithCompartment;
 
 // All operations on null ubi::Nodes crash.
 const char16_t *Concrete<void>::typeName() const          { MOZ_CRASH("null ubi::Node"); }
@@ -210,6 +218,13 @@ class SimpleEdgeRange : public EdgeRange {
 
 
 template<typename Referent>
+JS::Zone *
+TracerConcrete<Referent>::zone() const
+{
+    return get().zone();
+}
+
+template<typename Referent>
 EdgeRange *
 TracerConcrete<Referent>::edges(JSContext *cx, bool wantNames) const {
     js::ScopedJSDeletePtr<SimpleEdgeRange> r(js_new<SimpleEdgeRange>(cx));
@@ -220,6 +235,13 @@ TracerConcrete<Referent>::edges(JSContext *cx, bool wantNames) const {
         return nullptr;
 
     return r.forget();
+}
+
+template<typename Referent>
+JSCompartment *
+TracerConcreteWithCompartment<Referent>::compartment() const
+{
+    return TracerBase::get().compartment();
 }
 
 template<> const char16_t TracerConcrete<JSObject>::concreteTypeName[] =
@@ -240,3 +262,20 @@ template<> const char16_t TracerConcrete<js::BaseShape>::concreteTypeName[] =
     MOZ_UTF16("js::BaseShape");
 template<> const char16_t TracerConcrete<js::types::TypeObject>::concreteTypeName[] =
     MOZ_UTF16("js::types::TypeObject");
+
+
+// Instantiate all the TracerConcrete and templates here, where
+// we have the member functions' definitions in scope.
+namespace JS {
+namespace ubi {
+template class TracerConcreteWithCompartment<JSObject>;
+template class TracerConcrete<JSString>;
+template class TracerConcrete<JS::Symbol>;
+template class TracerConcreteWithCompartment<JSScript>;
+template class TracerConcrete<js::LazyScript>;
+template class TracerConcrete<js::jit::JitCode>;
+template class TracerConcreteWithCompartment<js::Shape>;
+template class TracerConcreteWithCompartment<js::BaseShape>;
+template class TracerConcrete<js::types::TypeObject>;
+}
+}
