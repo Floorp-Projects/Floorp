@@ -543,6 +543,8 @@ private:
           aName.AppendLiteral("/extensions");
         } else if (dirname.Find("/fontconfig") != -1) {
           aName.AppendLiteral("/fontconfig");
+        } else {
+          aName.AppendLiteral("/misc");
         }
         aTag = aName;
         aName.Append('/');
