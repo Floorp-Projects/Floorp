@@ -257,7 +257,7 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
       TrackTicks inputTrackEndPoint = TRACK_TICKS_MAX;
 
       if (aInputTrack->IsEnded() &&
-          aInputTrack->GetEndTimeRoundDown() <= inputEnd) {
+          aInputTrack->GetEnd() <= inputEnd) {
         inputTrackEndPoint = aInputTrack->GetEnd();
         *aOutputTrackFinished = true;
       }
