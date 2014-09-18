@@ -22,11 +22,12 @@
 #include "base/logging.h"
 #include "base/platform_thread.h"
 #include "base/process_util.h"
-#include "base/scoped_ptr.h"
 #include "base/sys_info.h"
 #include "base/time.h"
 #include "base/waitable_event.h"
 #include "base/dir_reader_posix.h"
+
+#include "mozilla/UniquePtr.h"
 
 const int kMicrosecondsPerSecond = 1000000;
 
@@ -101,7 +102,7 @@ class ScopedDIRClose {
     }
   }
 };
-typedef scoped_ptr_malloc<DIR, ScopedDIRClose> ScopedDIR;
+typedef mozilla::UniquePtr<DIR, ScopedDIRClose> ScopedDIR;
 
 
 void CloseSuperfluousFds(const base::InjectiveMultimap& saved_mapping) {
