@@ -45,6 +45,7 @@ using mozilla::dom::HTMLMeterElement;
 // private Quartz routines needed here
 extern "C" {
   CG_EXTERN void CGContextSetCTM(CGContextRef, CGAffineTransform);
+  CG_EXTERN void CGContextSetBaseCTM(CGContextRef, CGAffineTransform);
   typedef CFTypeRef CUIRendererRef;
   void CUIDraw(CUIRendererRef r, CGRect rect, CGContextRef ctx, CFDictionaryRef options, CFDictionaryRef* result);
 }
@@ -654,6 +655,9 @@ static void DrawCellWithScaling(NSCell *cell,
 
     CGContextScaleCTM(ctx, backingScaleFactor, backingScaleFactor);
 
+    // Set the context's "base transform" to in order to get correctly-sized focus rings.
+    CGContextSetBaseCTM(ctx, CGAffineTransformMakeScale(backingScaleFactor, backingScaleFactor));
+
     // This is the second flip transform, applied to ctx.
     CGContextScaleCTM(ctx, 1.0f, -1.0f);
     CGContextTranslateCTM(ctx, 0.0f, -(2.0 * tmpRect.origin.y + tmpRect.size.height));
@@ -1220,6 +1224,9 @@ RenderTransformedHIThemeControl(CGContextRef aCGContext, const HIRect& aRect,
 
     CGContextScaleCTM(bitmapctx, backingScaleFactor, backingScaleFactor);
     CGContextTranslateCTM(bitmapctx, MAX_FOCUS_RING_WIDTH, MAX_FOCUS_RING_WIDTH);
+
+    // Set the context's "base transform" to in order to get correctly-sized focus rings.
+    CGContextSetBaseCTM(bitmapctx, CGAffineTransformMakeScale(backingScaleFactor, backingScaleFactor));
 
     // HITheme always wants to draw into a flipped context, or things
     // get confused.
@@ -2266,6 +2273,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
     // Unfortunately, this means that callers that want to render
     // directly to the CGContext need to be aware of this quirk.
     return NS_OK;
+  }
+
+  if (hidpi) {
+    // Set the context's "base transform" to in order to get correctly-sized focus rings.
+    CGContextSetBaseCTM(cgContext, CGAffineTransformMakeScale(2, 2));
   }
 
 #if 0
