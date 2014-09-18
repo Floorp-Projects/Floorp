@@ -1284,7 +1284,6 @@ MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
 #endif
 
     activation->markRematerializedFrames(trc);
-    activation->markIonRecovery(trc);
 
     for (JitFrameIterator frames(activations); !frames.done(); ++frames) {
         switch (frames.type()) {
@@ -1436,80 +1435,6 @@ OsiIndex::returnPointDisplacement() const
     // would be wrong.
     return callPointDisplacement_ + Assembler::PatchWrite_NearCallSize();
 }
-
-RInstructionResults::RInstructionResults()
-  : results_(nullptr),
-    len_(0),
-    fp_(nullptr)
-{
-}
-
-RInstructionResults::RInstructionResults(RInstructionResults&& src)
-  : results_(mozilla::Move(src.results_)),
-    len_(src.len_),
-    fp_(src.fp_)
-{
-    src.len_ = 0;
-}
-
-RInstructionResults&
-RInstructionResults::operator=(RInstructionResults&& rhs)
-{
-    MOZ_ASSERT(&rhs != this, "self-moves are prohibited");
-    this->~RInstructionResults();
-    new(this) RInstructionResults(mozilla::Move(rhs));
-    return *this;
-}
-
-RInstructionResults::~RInstructionResults()
-{
-    // results_ is freed by the UniquePtr.
-}
-
-bool
-RInstructionResults::init(JSContext *cx, uint32_t numResults, IonJSFrameLayout *fp)
-{
-    results_ = cx->make_pod_array<HeapValue>(numResults);
-    if (!results_)
-        return false;
-
-    len_ = numResults;
-
-    Value guard = MagicValue(JS_ION_BAILOUT);
-    for (size_t i = 0; i < numResults; i++)
-        results_.get()[i].init(guard);
-
-    fp_ = fp;
-    return true;
-}
-
-bool
-RInstructionResults::isInitialized() const
-{
-    MOZ_ASSERT_IF(results_, fp_);
-    return results_;
-}
-
-IonJSFrameLayout *
-RInstructionResults::frame() const
-{
-    MOZ_ASSERT(isInitialized());
-    return fp_;
-}
-
-HeapValue&
-RInstructionResults::operator [](size_t index)
-{
-    MOZ_ASSERT(index < len_);
-    return results_.get()[index];
-}
-
-void
-RInstructionResults::trace(JSTracer *trc)
-{
-    gc::MarkValueRange(trc, len_, results_.get(), "ion-recover-results");
-}
-
 
 SnapshotIterator::SnapshotIterator(IonScript *ionScript, SnapshotOffset snapshotOffset,
                                    IonJSFrameLayout *fp, const MachineState &machine)
@@ -1774,50 +1699,7 @@ SnapshotIterator::skipInstruction()
 }
 
 bool
-SnapshotIterator::initInstructionResults(MaybeReadFallback &fallback)
-{
-    MOZ_ASSERT(fallback.canRecoverResults());
-    JSContext *cx = fallback.maybeCx;
-
-    // If there is only one resume point in the list of instructions, then there
-    // is no instruction to recover, and thus no need to register any results.
-    if (recover_.numInstructions() == 1)
-        return true;
-
-    IonJSFrameLayout *fp = fallback.frame->jsFrame();
-    RInstructionResults *results = fallback.activation->maybeIonFrameRecovery(fp);
-    if (!results) {
-        // We do not have the result yet, which means that an observable stack
-        // slot is requested.  As we do not want to bailout every time for the
-        // same reason, we need to recompile without optimizing away the
-        // observable stack slots.  The script would later be recompiled to have
-        // support for Argument objects.
-        if (!ionScript_->invalidate(cx, /* resetUses = */ false, "Observe recovered instruction."))
-            return false;
-
-        // Start a new snapshot at the beginning of the JitFrameIterator.  This
-        // SnapshotIterator is used for evaluating the content of all recover
-        // instructions.  The result is then saved on the JitActivation.
-        SnapshotIterator s(*fallback.frame);
-        RInstructionResults tmp;
-        if (!s.initInstructionResults(cx, &tmp))
-            return false;
-
-        // Register the list of result on the activation.
-        if (!fallback.activation->registerIonFrameRecovery(fallback.frame->jsFrame(),
-                                                           mozilla::Move(tmp)))
-            return false;
-
-        results = fallback.activation->maybeIonFrameRecovery(fp);
-    }
-
-    MOZ_ASSERT(results->isInitialized());
-    instructionResults_ = results;
-    return true;
-}
-
-bool
-SnapshotIterator::initInstructionResults(JSContext *cx, RInstructionResults *results)
+SnapshotIterator::initIntructionResults(AutoValueVector &results)
 {
     MOZ_ASSERT(recover_.numInstructionsRead() == 1);
 
@@ -1828,26 +1710,13 @@ SnapshotIterator::initInstructionResults(JSContext *cx, RInstructionResults *res
 
     MOZ_ASSERT(recover_.numInstructions() > 1);
     size_t numResults = recover_.numInstructions() - 1;
-    instructionResults_ = results;
-    if (!instructionResults_->isInitialized()) {
-        if (!instructionResults_->init(cx, numResults, fp_))
-            return false;
+    if (!results.reserve(numResults))
+        return false;
 
-        // Fill with the results of recover instructions.
-        SnapshotIterator s(*this);
-        while (s.moreInstructions()) {
-            // Skip resume point and only interpret recover instructions.
-            if (s.instruction()->isResumePoint()) {
-                s.skipInstruction();
-                continue;
-            }
+    for (size_t i = 0; i < numResults; i++)
+        results.infallibleAppend(MagicValue(JS_ION_BAILOUT));
 
-            if (!s.instruction()->recover(cx, s))
-                return false;
-            s.nextInstruction();
-        }
-    }
-
+    instructionResults_ = &results;
     return true;
 }
 
@@ -1856,7 +1725,7 @@ SnapshotIterator::storeInstructionResult(Value v)
 {
     uint32_t currIns = recover_.numInstructionsRead() - 1;
     MOZ_ASSERT((*instructionResults_)[currIns].isMagic(JS_ION_BAILOUT));
-    (*instructionResults_)[currIns] = v;
+    (*instructionResults_)[currIns].set(v);
 }
 
 Value
@@ -2255,7 +2124,6 @@ InlineFrameIterator::dump() const
     }
 
     SnapshotIterator si = snapshotIterator();
-    MaybeReadFallback fallback(UndefinedValue());
     fprintf(stderr, "  slots: %u\n", si.numAllocations() - 1);
     for (unsigned i = 0; i < si.numAllocations() - 1; i++) {
         if (isFunction) {
@@ -2268,7 +2136,7 @@ InlineFrameIterator::dump() const
             else {
                 if (i - 2 == callee()->nargs() && numActualArgs() > callee()->nargs()) {
                     DumpOp d(callee()->nargs());
-                    unaliasedForEachActual(GetJSContextFromJitCode(), d, ReadFrame_Overflown, fallback);
+                    unaliasedForEachActual(GetJSContextFromJitCode(), d, ReadFrame_Overflown);
                 }
 
                 fprintf(stderr, "  slot %d: ", int(i - 2 - callee()->nargs()));
@@ -2276,7 +2144,7 @@ InlineFrameIterator::dump() const
         } else
             fprintf(stderr, "  slot %u: ", i);
 #ifdef DEBUG
-        js_DumpValue(si.maybeRead(fallback));
+        js_DumpValue(si.maybeRead());
 #else
         fprintf(stderr, "?\n");
 #endif

@@ -38,10 +38,9 @@ RematerializedFrame::RematerializedFrame(ThreadSafeContext *cx, uint8_t *top,
     script_(iter.script())
 {
     CopyValueToRematerializedFrame op(slots_);
-    MaybeReadFallback fallback(MagicValue(JS_OPTIMIZED_OUT));
     iter.readFrameArgsAndLocals(cx, op, op, &scopeChain_, &returnValue_,
                                 &argsObj_, &thisValue_, ReadFrame_Actuals,
-                                fallback);
+                                MagicValue(JS_OPTIMIZED_OUT), /* silentFailure = */ true);
 }
 
 /* static */ RematerializedFrame *

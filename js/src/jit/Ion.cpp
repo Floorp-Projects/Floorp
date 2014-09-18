@@ -2901,17 +2901,6 @@ jit::Invalidate(JSContext *cx, const Vector<types::RecompileInfo> &invalid, bool
 }
 
 bool
-jit::IonScript::invalidate(JSContext *cx, bool resetUses, const char *reason)
-{
-    JitSpew(JitSpew_IonInvalidate, " Invalidate IonScript %p: %s", this, reason);
-    Vector<types::RecompileInfo> list(cx);
-    if (!list.append(recompileInfo()))
-        return false;
-    Invalidate(cx, list, resetUses, true);
-    return true;
-}
-
-bool
 jit::Invalidate(JSContext *cx, JSScript *script, ExecutionMode mode, bool resetUses,
                 bool cancelOffThread)
 {
