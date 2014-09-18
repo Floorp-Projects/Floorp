@@ -298,7 +298,7 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
         if (map->mEndOfLastInputIntervalInInputStream != inputStart ||
             map->mEndOfLastInputIntervalInOutputStream != outputStart) {
           // Start of a new series of intervals where neither stream is blocked.
-          map->mEndOfConsumedInputTicks = TimeToTicksRoundDown(rate, inputStart) - 1;
+          map->mEndOfConsumedInputTicks = inputStart - 1;
         }
         TrackTicks inputStartTicks = map->mEndOfConsumedInputTicks;
         TrackTicks inputEndTicks = inputStartTicks + ticks;

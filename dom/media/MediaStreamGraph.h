@@ -501,10 +501,6 @@ public:
   {
     return RateConvertTicksRoundUp(aRate, mBuffer.GraphRate(), aTime);
   }
-  TrackTicks TimeToTicksRoundDown(TrackRate aRate, StreamTime aTime)
-  {
-    return RateConvertTicksRoundDown(aRate, mBuffer.GraphRate(), aTime);
-  }
   StreamTime TicksToTimeRoundDown(TrackRate aRate, TrackTicks aTicks)
   {
     return RateConvertTicksRoundDown(mBuffer.GraphRate(), aRate, aTicks);
