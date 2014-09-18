@@ -1311,7 +1311,7 @@ GetBuiltinPrototypePure(GlobalObject *global, JSProtoKey protoKey);
 
 extern bool
 SetClassAndProto(JSContext *cx, HandleObject obj,
-                 const Class *clasp, Handle<TaggedProto> proto, bool *succeeded);
+                 const Class *clasp, Handle<TaggedProto> proto, bool crashOnFailure);
 
 /*
  * Property-lookup-based access to interface and prototype objects for classes.
