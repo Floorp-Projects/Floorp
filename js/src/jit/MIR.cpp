@@ -3289,6 +3289,15 @@ MLoadSlot::foldsTo(TempAllocator &alloc)
 }
 
 MDefinition *
+MFunctionEnvironment::foldsTo(TempAllocator &alloc)
+{
+    if (!input()->isLambda())
+        return this;
+
+    return input()->toLambda()->scopeChain();
+}
+
+MDefinition *
 MLoadElement::foldsTo(TempAllocator &alloc)
 {
     if (!dependency() || !dependency()->isStoreElement())
