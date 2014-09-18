@@ -25,6 +25,10 @@ exports.setAppFramesMock = function (mock) {
 }
 
 DevToolsUtils.defineLazyGetter(this, "AppFrames", () => {
+  // Offer a way for unit test to provide a mock
+  if (AppFramesMock) {
+    return AppFramesMock;
+  }
   try {
     return Cu.import("resource://gre/modules/AppFrames.jsm", {}).AppFrames;
   } catch(e) {}

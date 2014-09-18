@@ -4,6 +4,8 @@
 
 "use strict";
 
+try {
+
 let chromeGlobal = this;
 
 // Encapsulate in its own scope to allows loading this frame script
@@ -64,3 +66,7 @@ let chromeGlobal = this;
   });
   addMessageListener("debug:disconnect", onDisconnect);
 })();
+
+} catch(e) {
+  dump("Exception in app child process: " + e + "\n");
+}
