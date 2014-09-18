@@ -65,6 +65,7 @@ public:
 
 private:
   VDADecoder mDecoder;
+  bool mIs106;
 
   // Method to pass a frame to VideoToolbox for decoding.
   nsresult SubmitFrame(mp4_demuxer::MP4Sample* aSample);
