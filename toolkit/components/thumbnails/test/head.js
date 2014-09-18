@@ -230,7 +230,7 @@ function addVisits(aPlaceInfo, aCallback) {
   // Create mozIVisitInfo for each entry.
   let now = Date.now();
   for (let i = 0; i < places.length; i++) {
-    if (typeof(places[i] == "string")) {
+    if (typeof(places[i]) == "string") {
       places[i] = { uri: Services.io.newURI(places[i], "", null) };
     }
     if (!places[i].title) {
