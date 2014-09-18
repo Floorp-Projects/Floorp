@@ -170,6 +170,9 @@ class ProcessLink
     Transport* mTransport;
     MessageLoop* mIOLoop;       // thread where IO happens
     Transport::Listener* mExistingListener; // channel's previous listener
+#ifdef MOZ_NUWA_PROCESS
+    bool mIsToNuwaProcess;
+#endif
 };
 
 class ThreadLink : public MessageLink
