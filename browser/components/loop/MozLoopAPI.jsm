@@ -426,6 +426,14 @@ function injectLoopAPI(targetWindow) {
       }
     },
 
+    logOutFromFxA: {
+      enumerable: true,
+      writable: true,
+      value: function() {
+        return MozLoopService.logOutFromFxA();
+      }
+    },
+
     /**
      * Copies passed string onto the system clipboard.
      *
