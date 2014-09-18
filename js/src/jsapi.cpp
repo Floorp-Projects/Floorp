@@ -3244,13 +3244,21 @@ JS_DefineConstIntegers(JSContext *cx, HandleObject obj, const JSConstIntegerSpec
     return DefineConstScalar(cx, obj, cis);
 }
 
+static JS::SymbolCode
+PropertySpecNameToSymbolCode(const char *name)
+{
+    MOZ_ASSERT(JS::PropertySpecNameIsSymbol(name));
+    uintptr_t u = reinterpret_cast<uintptr_t>(name);
+    return JS::SymbolCode(u - 1);
+}
+
 static bool
 PropertySpecNameToId(JSContext *cx, const char *name, MutableHandleId id,
                      js::InternBehavior ib = js::DoNotInternAtom)
 {
     if (JS::PropertySpecNameIsSymbol(name)) {
-        uintptr_t u = reinterpret_cast<uintptr_t>(name);
-        id.set(SYMBOL_TO_JSID(cx->wellKnownSymbols().get(u - 1)));
+        JS::SymbolCode which = PropertySpecNameToSymbolCode(name);
+        id.set(SYMBOL_TO_JSID(cx->wellKnownSymbols().get(which)));
     } else {
         JSAtom *atom = Atomize(cx, name, strlen(name), ib);
         if (!atom)
@@ -5514,6 +5522,33 @@ JS_PUBLIC_API(JS::Symbol *)
 JS::GetWellKnownSymbol(JSContext *cx, JS::SymbolCode which)
 {
     return cx->runtime()->wellKnownSymbols->get(uint32_t(which));
+}
+
+static bool
+PropertySpecNameIsDigits(const char *s) {
+    if (JS::PropertySpecNameIsSymbol(s))
+        return false;
+    if (!*s)
+        return false;
+    for (; *s; s++) {
+        if (*s < '0' || *s > '9')
+            return false;
+    }
+    return true;
+}
+
+JS_PUBLIC_API(bool)
+JS::PropertySpecNameEqualsId(const char *name, HandleId id)
+{
+    if (JS::PropertySpecNameIsSymbol(name)) {
+        if (!JSID_IS_SYMBOL(id))
+            return false;
+        Symbol *sym = JSID_TO_SYMBOL(id);
+        return sym->isWellKnownSymbol() && sym->code() == PropertySpecNameToSymbolCode(name);
+    }
+
+    MOZ_ASSERT(!PropertySpecNameIsDigits(name));
+    return JSID_IS_ATOM(id) && JS_FlatStringEqualsAscii(JSID_TO_ATOM(id), name);
 }
 
 JS_PUBLIC_API(bool)
