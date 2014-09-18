@@ -264,15 +264,10 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
       if (interval.mStart >= interval.mEnd) {
         break;
       }
+      TrackTicks ticks = interval.mEnd - interval.mStart;
       next = interval.mEnd;
 
-      // Ticks >= startTicks and < endTicks are in the interval
-      StreamTime outputEnd = GraphTimeToStreamTime(interval.mEnd);
-      TrackTicks startTicks = outputTrack->GetEnd();
-      StreamTime outputStart = GraphTimeToStreamTime(interval.mStart);
-      MOZ_ASSERT(startTicks == outputStart, "Samples missing");
-      TrackTicks ticks = outputEnd - startTicks;
-      StreamTime inputStart = source->GraphTimeToStreamTime(interval.mStart);
+      StreamTime outputStart = outputTrack->GetEnd();
 
       if (interval.mInputIsBlocked) {
         // Maybe the input track ended?
@@ -280,89 +275,18 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
         STREAM_LOG(PR_LOG_DEBUG+1, ("TrackUnionStream %p appending %lld ticks of null data to track %d",
                    this, (long long)ticks, outputTrack->GetID()));
       } else {
-        // Figuring out which samples to use from the input stream is tricky
-        // because its start time and our start time may differ by a fraction
-        // of a tick. Assuming the input track hasn't ended, we have to ensure
-        // that 'ticks' samples are gathered, even though a tick boundary may
-        // occur between outputStart and outputEnd but not between inputStart
-        // and inputEnd.
-        // These are the properties we need to ensure:
-        // 1) Exactly 'ticks' ticks of output are produced, i.e.
-        // inputEndTicks - inputStartTicks = ticks.
-        // 2) inputEndTicks <= aInputTrack->GetSegment()->GetDuration().
-        // 3) In any sequence of intervals where neither stream is blocked,
-        // the content of the input track we use is a contiguous sequence of
-        // ticks with no gaps or overlaps.
-        if (map->mEndOfLastInputIntervalInInputStream != inputStart ||
-            map->mEndOfLastInputIntervalInOutputStream != outputStart) {
-          // Start of a new series of intervals where neither stream is blocked.
-          map->mEndOfConsumedInputTicks = inputStart - 1;
-        }
-        TrackTicks inputStartTicks = map->mEndOfConsumedInputTicks;
-        TrackTicks inputEndTicks = inputStartTicks + ticks;
-        map->mEndOfConsumedInputTicks = inputEndTicks;
-        map->mEndOfLastInputIntervalInInputStream = inputEnd;
-        map->mEndOfLastInputIntervalInOutputStream = outputEnd;
-
-        if (GraphImpl()->mFlushSourcesNow) {
-          TrackTicks flushto = inputEndTicks;
-          STREAM_LOG(PR_LOG_DEBUG, ("TrackUnionStream %p flushing after %lld of %lld ticks of input data from track %d for track %d",
-              this, flushto, aInputTrack->GetSegment()->GetDuration(), aInputTrack->GetID(), outputTrack->GetID()));
-          aInputTrack->FlushAfter(flushto);
-          MOZ_ASSERT(inputTrackEndPoint >= aInputTrack->GetEnd());
-        }
-        // Now we prove that the above properties hold:
-        // Property #1: trivial by construction.
-        // Property #3: trivial by construction. Between every two
-        // intervals where both streams are not blocked, the above if condition
-        // is false and mEndOfConsumedInputTicks advances exactly to match
-        // the ticks that were consumed.
-        // Property #2:
-        // Let originalOutputStart be the value of outputStart and originalInputStart
-        // be the value of inputStart when the body of the "if" block was last
-        // executed.
-        // Let allTicks be the sum of the values of 'ticks' computed since then.
-        // The interval [originalInputStart/rate, inputEnd/rate) is the
-        // same length as the interval [originalOutputStart/rate, outputEnd/rate),
-        // so the latter interval can have at most one more integer in it. Thus
-        // TimeToTicksRoundUp(rate, outputEnd) - TimeToTicksRoundUp(rate, originalOutputStart)
-        //   <= TimeToTicksRoundDown(rate, inputEnd) - TimeToTicksRoundDown(rate, originalInputStart) + 1
-        // Then
-        // inputEndTicks = TimeToTicksRoundDown(rate, originalInputStart) - 1 + allTicks
-        //   = TimeToTicksRoundDown(rate, originalInputStart) - 1 + TimeToTicksRoundUp(rate, outputEnd) - TimeToTicksRoundUp(rate, originalOutputStart)
-        //   <= TimeToTicksRoundDown(rate, originalInputStart) - 1 + TimeToTicksRoundDown(rate, inputEnd) - TimeToTicksRoundDown(rate, originalInputStart) + 1
-        //   = TimeToTicksRoundDown(rate, inputEnd)
-        //   <= inputEnd/rate
-        // (now using the fact that inputEnd <= track->GetEndTimeRoundDown() for a non-ended track)
-        //   <= TicksToTimeRoundDown(rate, aInputTrack->GetSegment()->GetDuration())/rate
-        //   <= rate*aInputTrack->GetSegment()->GetDuration()/rate
-        //   = aInputTrack->GetSegment()->GetDuration()
-        // as required.
-
-        if (inputStartTicks < 0) {
-          // Data before the start of the track is just null.
-          // We have to add a small amount of delay to ensure that there is
-          // always a sample available if we see an interval that contains a
-          // tick boundary on the output stream's timeline but does not contain
-          // a tick boundary on the input stream's timeline. 1 tick delay is
-          // necessary and sufficient.
-          segment->AppendNullData(-inputStartTicks);
-          inputStartTicks = 0;
-        }
-        if (inputEndTicks > inputStartTicks) {
-          segment->AppendSlice(*aInputTrack->GetSegment(),
-                               std::min(inputTrackEndPoint, inputStartTicks),
-                               std::min(inputTrackEndPoint, inputEndTicks));
-        }
-        STREAM_LOG(PR_LOG_DEBUG+1, ("TrackUnionStream %p appending %lld ticks of input data to track %d",
-                   this, (long long)(std::min(inputTrackEndPoint, inputEndTicks) - std::min(inputTrackEndPoint, inputStartTicks)),
-                   outputTrack->GetID()));
+        MOZ_ASSERT(outputTrack->GetEnd() == GraphTimeToStreamTime(interval.mStart),
+                   "Samples missing");
+        StreamTime inputStart = source->GraphTimeToStreamTime(interval.mStart);
+        segment->AppendSlice(*aInputTrack->GetSegment(),
+                             std::min(inputTrackEndPoint, inputStart),
+                             std::min(inputTrackEndPoint, inputEnd));
       }
       ApplyTrackDisabling(outputTrack->GetID(), segment);
       for (uint32_t j = 0; j < mListeners.Length(); ++j) {
         MediaStreamListener* l = mListeners[j];
         l->NotifyQueuedTrackChanges(Graph(), outputTrack->GetID(),
-                                    startTicks, 0, *segment);
+                                    outputStart, 0, *segment);
       }
       outputTrack->GetSegment()->AppendFrom(segment);
     }
