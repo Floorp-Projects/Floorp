@@ -997,12 +997,7 @@ MediaEngineWebRTCVideoSource::RotateImage(layers::Image* aImage, uint32_t aWidth
 
   uint8_t* srcPtr = static_cast<uint8_t*>(pMem);
   // Create a video frame and append it to the track.
-#ifdef MOZ_WIDGET_GONK
-  ImageFormat format = ImageFormat::GRALLOC_PLANAR_YCBCR;
-#else
-  ImageFormat format = ImageFormat::PLANAR_YCBCR;
-#endif
-  nsRefPtr<layers::Image> image = mImageContainer->CreateImage(format);
+  nsRefPtr<layers::Image> image = mImageContainer->CreateImage(ImageFormat::PLANAR_YCBCR);
   layers::PlanarYCbCrImage* videoImage = static_cast<layers::PlanarYCbCrImage*>(image.get());
 
   uint32_t dstWidth;
