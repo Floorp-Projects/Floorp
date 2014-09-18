@@ -20,7 +20,7 @@ WebGLVertexArray::WrapObject(JSContext *cx) {
 }
 
 WebGLVertexArray::WebGLVertexArray(WebGLContext* context)
-    : WebGLBindableName()
+    : WebGLBindableName<GLenum>()
     , WebGLContextBoundObject(context)
 {
     SetIsDOMBinding();

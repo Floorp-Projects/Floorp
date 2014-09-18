@@ -21,7 +21,7 @@ class WebGLVertexArrayFake;
 
 class WebGLVertexArray
     : public nsWrapperCache
-    , public WebGLBindableName
+    , public WebGLBindableName<GLenum>
     , public WebGLRefCountedObject<WebGLVertexArray>
     , public LinkedListElement<WebGLVertexArray>
     , public WebGLContextBoundObject
