@@ -1506,7 +1506,9 @@ class MSimdBinaryArith : public MBinaryInstruction
         Add,
         Sub,
         Mul,
-        Div
+        Div,
+        Min,
+        Max
     };
 
     static const char* OperationName(Operation op) {
@@ -1515,6 +1517,8 @@ class MSimdBinaryArith : public MBinaryInstruction
           case Sub: return "Sub";
           case Mul: return "Mul";
           case Div: return "Div";
+          case Min: return "Min";
+          case Max: return "Max";
         }
         MOZ_CRASH("unexpected operation");
     }
@@ -1531,7 +1535,7 @@ class MSimdBinaryArith : public MBinaryInstruction
         JS_ASSERT(left->type() == type);
         setResultType(type);
         setMovable();
-        if (op == Add || op == Mul)
+        if (op == Add || op == Mul || op == Min || op == Max)
             setCommutative();
     }
 

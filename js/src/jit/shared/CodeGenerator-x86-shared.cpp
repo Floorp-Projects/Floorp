@@ -2331,6 +2331,14 @@ CodeGeneratorX86Shared::visitSimdBinaryArithIx4(LSimdBinaryArithIx4 *ins)
       case MSimdBinaryArith::Div:
         // x86 doesn't have SIMD i32 div.
         break;
+      case MSimdBinaryArith::Max:
+        // we can do max with a single instruction only if we have SSE4.1
+        // using the PMAXSD instruction.
+        break;
+      case MSimdBinaryArith::Min:
+        // we can do max with a single instruction only if we have SSE4.1
+        // using the PMINSD instruction.
+        break;
     }
     MOZ_CRASH("unexpected SIMD op");
 }
@@ -2355,6 +2363,19 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *ins)
         return true;
       case MSimdBinaryArith::Div:
         masm.packedDivFloat32(rhs, lhs);
+        return true;
+      case MSimdBinaryArith::Max:
+        // TODO: standardization of float32x4.min/max needs to define the
+        // semantics for particular values: if both input operands are -0 or 0,
+        // or one operand is NaN, the return value will be the "second operand"
+        // in the instruction.
+        // See also bug 1068028, which is about fixing semantics once the
+        // specification is stable.
+        masm.maxps(rhs, lhs);
+        return true;
+      case MSimdBinaryArith::Min:
+        // See comment above.
+        masm.minps(rhs, lhs);
         return true;
     }
     MOZ_CRASH("unexpected SIMD op");
