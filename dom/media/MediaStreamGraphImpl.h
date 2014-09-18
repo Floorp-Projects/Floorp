@@ -414,11 +414,6 @@ public:
     return RateConvertTicksRoundDown(GraphRate(), 1000, aMS);
   }
 
-  TrackTicks TimeToTicksRoundDown(TrackRate aRate, StreamTime aTime)
-  {
-    return RateConvertTicksRoundDown(aRate, GraphRate(), aTime);
-  }
-
   /**
    * Signal to the graph that the thread has paused indefinitly,
    * or resumed.

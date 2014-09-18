@@ -962,7 +962,7 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
   // the rounding between {Graph,Stream}Time and track ticks is not dependant
   // on the absolute value of the {Graph,Stream}Time, and so that number of
   // ticks to play is the same for each cycle.
-  TrackTicks ticksNeeded = TimeToTicksRoundDown(mSampleRate, aTo) - TimeToTicksRoundDown(mSampleRate, aFrom);
+  TrackTicks ticksNeeded = aTo - aFrom;
 
   if (aStream->mAudioOutputStreams.IsEmpty()) {
     return 0;
@@ -1011,7 +1011,7 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
       if (end >= aTo) {
         toWrite = ticksNeeded;
       } else {
-        toWrite = TimeToTicksRoundDown(mSampleRate, end - t);
+        toWrite = end - t;
       }
       ticksNeeded -= toWrite;
 
