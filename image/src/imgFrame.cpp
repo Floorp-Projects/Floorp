@@ -348,7 +348,7 @@ imgFrame::SurfaceForDrawing(bool               aDoPadding,
     } else {
       SurfacePattern pattern(aSurface,
                              ExtendMode::REPEAT,
-                             ToMatrix(aContext->CurrentMatrix()));
+                             Matrix::Translation(mDecoded.x, mDecoded.y));
       target->FillRect(ToRect(aRegion.Intersect(available).Rect()), pattern);
     }
 
