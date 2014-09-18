@@ -202,7 +202,6 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
         if (!obj)
             return nullptr;
 
-        obj->setSlot(TYPE_SLOT, Int32Value(ArrayTypeID()));
         obj->setSlot(BUFFER_SLOT, ObjectOrNullValue(buffer));
 
 	InitSharedArrayBufferViewDataPointer(obj, buffer, byteOffset);
