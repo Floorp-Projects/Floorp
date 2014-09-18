@@ -650,6 +650,7 @@ public:
   static const KTableValue kVolumeKTable[];
   static const KTableValue kWhitespaceKTable[];
   static const KTableValue kWidthKTable[]; // also min-width, max-width
+  static const KTableValue kWindowDraggingKTable[];
   static const KTableValue kWindowShadowKTable[];
   static const KTableValue kWordBreakKTable[];
   static const KTableValue kWordWrapKTable[];

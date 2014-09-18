@@ -105,6 +105,10 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_USER_MODIFY_READ_WRITE  1
 #define NS_STYLE_USER_MODIFY_WRITE_ONLY  2
 
+// -moz-window-dragging
+#define NS_STYLE_WINDOW_DRAGGING_DRAG    0
+#define NS_STYLE_WINDOW_DRAGGING_NO_DRAG 1
+
 // box-align
 #define NS_STYLE_BOX_ALIGN_STRETCH     0
 #define NS_STYLE_BOX_ALIGN_START       1
