@@ -110,15 +110,14 @@ OnSharedPreferenceChangeListener
     private static final String PREFS_MENU_CHAR_ENCODING = "browser.menu.showCharacterEncoding";
     private static final String PREFS_MP_ENABLED = "privacy.masterpassword.enabled";
     private static final String PREFS_UPDATER_AUTODOWNLOAD = "app.update.autodownload";
-    private static final String PREFS_GEO_REPORTING = NON_PREF_PREFIX + "app.geo.reportdata";
+    private static final String PREFS_GEO_REPORTING = "app.geo.reportdata";
     private static final String PREFS_GEO_LEARN_MORE = NON_PREF_PREFIX + "geo.learn_more";
     private static final String PREFS_HEALTHREPORT_LINK = NON_PREF_PREFIX + "healthreport.link";
     private static final String PREFS_DEVTOOLS_REMOTE_ENABLED = "devtools.debugger.remote-enabled";
     private static final String PREFS_DISPLAY_REFLOW_ON_ZOOM = "browser.zoom.reflowOnZoom";
     private static final String PREFS_DISPLAY_TITLEBAR_MODE = "browser.chrome.titlebarMode";
     private static final String PREFS_SYNC = NON_PREF_PREFIX + "sync";
-
-    private static final String ACTION_STUMBLER_UPLOAD_PREF = AppConstants.ANDROID_PACKAGE_NAME + ".STUMBLER_PREF";
+    private static final String PREFS_STUMBLER_ENABLED = AppConstants.ANDROID_PACKAGE_NAME + ".STUMBLER_PREF";
 
     // This isn't a Gecko pref, even if it looks like one.
     private static final String PREFS_BROWSER_LOCALE = "locale";
@@ -684,9 +683,10 @@ OnSharedPreferenceChangeListener
                     preferences.removePreference(pref);
                     i--;
                     continue;
-                } else if (!AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED &&
-                           (PREFS_GEO_REPORTING.equals(key) ||
-                            PREFS_GEO_LEARN_MORE.equals(key))) {
+                } else if (AppConstants.RELEASE_BUILD &&
+                            (PREFS_GEO_REPORTING.equals(key) ||
+                             PREFS_GEO_LEARN_MORE.equals(key))) {
+                    // We don't build wifi/cell tower collection in release builds, so hide the UI.
                     preferences.removePreference(pref);
                     i--;
                     continue;
@@ -869,10 +869,10 @@ OnSharedPreferenceChangeListener
 
     /**
      * Broadcast the provided value as the value of the
-     * <code>PREFS_GEO_REPORTING</code> pref.
+     * <code>PREFS_STUMBLER_ENABLED</code> pref.
      */
     public static void broadcastStumblerPref(final Context context, final boolean value) {
-       Intent intent = new Intent(ACTION_STUMBLER_UPLOAD_PREF)
+       Intent intent = new Intent(PREFS_STUMBLER_ENABLED)
                 .putExtra("pref", PREFS_GEO_REPORTING)
                 .putExtra("branch", GeckoSharedPrefs.APP_PREFS_NAME)
                 .putExtra("enabled", value)
@@ -888,7 +888,7 @@ OnSharedPreferenceChangeListener
 
     /**
      * Broadcast the current value of the
-     * <code>PREFS_GEO_REPORTING</code> pref.
+     * <code>PREFS_STUMBLER_ENABLED</code> pref.
      */
     public static void broadcastStumblerPref(final Context context) {
         final boolean value = getBooleanPref(context, PREFS_GEO_REPORTING, false);
@@ -1046,11 +1046,6 @@ OnSharedPreferenceChangeListener
             return onLocaleSelected(BrowserLocaleManager.getLanguageTag(lastLocale), (String) newValue);
         }
 
-        if (PREFS_GEO_REPORTING.equals(prefName)) {
-            broadcastStumblerPref(this, ((Boolean) newValue).booleanValue());
-            return true;
-        }
-
         if (PREFS_MENU_CHAR_ENCODING.equals(prefName)) {
             setCharEncodingState(((String) newValue).equals("true"));
         } else if (PREFS_UPDATER_AUTODOWNLOAD.equals(prefName)) {
@@ -1061,12 +1056,16 @@ OnSharedPreferenceChangeListener
             // background uploader service, which will start or stop the
             // repeated background upload attempts.
             broadcastHealthReportUploadPref(this, ((Boolean) newValue).booleanValue());
+        } else if (PREFS_GEO_REPORTING.equals(prefName)) {
+            broadcastStumblerPref(this, ((Boolean) newValue).booleanValue());
+            // Translate boolean value to int for geo reporting pref.
+            newValue = ((Boolean) newValue) ? 1 : 0;
         } else if (handlers.containsKey(prefName)) {
             PrefHandler handler = handlers.get(prefName);
             handler.onChange(this, preference, newValue);
         }
 
-        // Send Gecko-side pref changes to Gecko.
+        // Send Gecko-side pref changes to Gecko
         if (isGeckoPref(prefName)) {
             PrefsHelper.setPref(prefName, newValue);
         }
@@ -1322,7 +1321,22 @@ OnSharedPreferenceChangeListener
             @Override
             public void prefValue(String prefName, final int value) {
                 final Preference pref = getField(prefName);
-                Log.w(LOGTAG, "Unhandled int value for pref [" + pref + "]");
+                final CheckBoxPrefSetter prefSetter;
+                if (PREFS_GEO_REPORTING.equals(prefName)) {
+                    if (Versions.preICS) {
+                        prefSetter = new CheckBoxPrefSetter();
+                    } else {
+                        prefSetter = new TwoStatePrefSetter();
+                    }
+                    ThreadUtils.postToUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            prefSetter.setBooleanPref(pref, value == 1);
+                        }
+                    });
+                } else {
+                    Log.w(LOGTAG, "Unhandled int value for pref [" + pref + "]");
+                }
             }
 
             @Override
