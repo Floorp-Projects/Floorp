@@ -96,7 +96,7 @@ StreamBuffer::ForgetUpTo(StreamTime aTime)
       --i;
       continue;
     }
-    TrackTicks forgetTo = std::min(track->GetEnd() - 1, aTime);
+    StreamTime forgetTo = std::min(track->GetEnd() - 1, aTime);
     track->ForgetUpTo(forgetTo);
   }
 }

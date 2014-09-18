@@ -229,7 +229,7 @@ MediaEngineDefaultVideoSource::NotifyPull(MediaStreamGraph* aGraph,
                                           SourceMediaStream *aSource,
                                           TrackID aID,
                                           StreamTime aDesiredTime,
-                                          TrackTicks &aLastEndTime)
+                                          StreamTime &aLastEndTime)
 {
   // AddTrack takes ownership of segment
   VideoSegment segment;
@@ -240,7 +240,7 @@ MediaEngineDefaultVideoSource::NotifyPull(MediaStreamGraph* aGraph,
 
   // Note: we're not giving up mImage here
   nsRefPtr<layers::Image> image = mImage;
-  TrackTicks delta = aDesiredTime - aLastEndTime;
+  StreamTime delta = aDesiredTime - aLastEndTime;
 
   if (delta > 0) {
     // nullptr images are allowed

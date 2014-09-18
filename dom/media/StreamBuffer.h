@@ -12,12 +12,6 @@
 namespace mozilla {
 
 /**
- * Media time relative to the start of a StreamBuffer.
- */
-typedef MediaTime StreamTime;
-const StreamTime STREAM_TIME_MAX = MEDIA_TIME_MAX;
-
-/**
  * Unique ID for track within a StreamBuffer. Tracks from different
  * StreamBuffers may have the same ID; this matters when appending StreamBuffers,
  * since tracks with the same ID are matched. Only IDs greater than 0 are allowed.
@@ -44,21 +38,6 @@ inline TrackTicks RateConvertTicksRoundUp(TrackRate aOutRate,
   return (aTicks * aOutRate + aInRate - 1) / aInRate;
 }
 
-inline TrackTicks SecondsToTicksRoundDown(TrackRate aRate, double aSeconds)
-{
-  NS_ASSERTION(0 < aRate && aRate <= TRACK_RATE_MAX, "Bad rate");
-  NS_ASSERTION(0 <= aSeconds && aSeconds <= TRACK_TICKS_MAX/TRACK_RATE_MAX,
-               "Bad seconds");
-  return aSeconds * aRate;
-}
-
-inline double TrackTicksToSeconds(TrackRate aRate, TrackTicks aTicks)
-{
-  NS_ASSERTION(0 < aRate && aRate <= TRACK_RATE_MAX, "Bad rate");
-  NS_ASSERTION(0 <= aTicks && aTicks <= TRACK_TICKS_MAX, "Bad ticks");
-  return static_cast<double>(aTicks)/aRate;
-}
-
 /**
  * This object contains the decoded data for a stream's tracks.
  * A StreamBuffer can be appended to. Logically a StreamBuffer only gets longer,
@@ -81,11 +60,11 @@ public:
    * the same track across StreamBuffers. A StreamBuffer should never have
    * two tracks with the same ID (even if they don't overlap in time).
    * TODO Tracks can also be enabled and disabled over time.
-   * TODO Add TimeVarying<TrackTicks,bool> mEnabled.
+   * TODO Add TimeVarying<StreamTime,bool> mEnabled.
    * Takes ownership of aSegment.
    */
   class Track {
-    Track(TrackID aID, TrackTicks aStart, MediaSegment* aSegment, TrackRate aGraphRate)
+    Track(TrackID aID, StreamTime aStart, MediaSegment* aSegment, TrackRate aGraphRate)
       : mStart(aStart),
         mSegment(aSegment),
         mGraphRate(aGraphRate),
@@ -112,8 +91,8 @@ public:
     MediaSegment* GetSegment() const { return mSegment; }
     TrackID GetID() const { return mID; }
     bool IsEnded() const { return mEnded; }
-    TrackTicks GetStart() const { return mStart; }
-    TrackTicks GetEnd() const { return mSegment->GetDuration(); }
+    StreamTime GetStart() const { return mStart; }
+    StreamTime GetEnd() const { return mSegment->GetDuration(); }
     MediaSegment::Type GetType() const { return mSegment->GetType(); }
 
     void SetEnded() { mEnded = true; }
@@ -131,11 +110,11 @@ public:
     {
       return mSegment.forget();
     }
-    void ForgetUpTo(TrackTicks aTime)
+    void ForgetUpTo(StreamTime aTime)
     {
       mSegment->ForgetUpTo(aTime);
     }
-    void FlushAfter(TrackTicks aNewEnd)
+    void FlushAfter(StreamTime aNewEnd)
     {
       // Forget everything after a given endpoint
       // a specified amount
@@ -155,7 +134,7 @@ public:
     friend class StreamBuffer;
 
     // Start offset is in ticks at rate mRate
-    TrackTicks mStart;
+    StreamTime mStart;
     // The segment data starts at the start of the owning StreamBuffer, i.e.,
     // there's mStart silence/no video at the beginning.
     nsAutoPtr<MediaSegment> mSegment;
@@ -223,7 +202,7 @@ public:
    * holding a Track reference.
    * aSegment must have aStart worth of null data.
    */
-  Track& AddTrack(TrackID aID, TrackTicks aStart, MediaSegment* aSegment)
+  Track& AddTrack(TrackID aID, StreamTime aStart, MediaSegment* aSegment)
   {
     NS_ASSERTION(!FindTrack(aID), "Track with this ID already exists");
 

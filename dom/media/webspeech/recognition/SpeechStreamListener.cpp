@@ -31,7 +31,7 @@ SpeechStreamListener::~SpeechStreamListener()
 void
 SpeechStreamListener::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
                                                TrackID aID,
-                                               TrackTicks aTrackOffset,
+                                               StreamTime aTrackOffset,
                                                uint32_t aTrackEvents,
                                                const MediaSegment& aQueuedMedia)
 {

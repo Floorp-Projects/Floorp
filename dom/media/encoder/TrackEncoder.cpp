@@ -53,7 +53,7 @@ TrackEncoder::TrackEncoder()
 void
 AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
                                             TrackID aID,
-                                            TrackTicks aTrackOffset,
+                                            StreamTime aTrackOffset,
                                             uint32_t aTrackEvents,
                                             const MediaSegment& aQueuedMedia)
 {
@@ -181,7 +181,7 @@ AudioTrackEncoder::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) cons
 void
 VideoTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
                                             TrackID aID,
-                                            TrackTicks aTrackOffset,
+                                            StreamTime aTrackOffset,
                                             uint32_t aTrackEvents,
                                             const MediaSegment& aQueuedMedia)
 {

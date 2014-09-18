@@ -39,7 +39,7 @@ protected:
 
 public:
   virtual void NotifyQueuedTrackChanges(mozilla::MediaStreamGraph* aGraph, mozilla::TrackID aID,
-                                        mozilla::TrackTicks aTrackOffset,
+                                        mozilla::StreamTime aTrackOffset,
                                         uint32_t aTrackEvents,
                                         const mozilla::MediaSegment& aQueuedMedia)  = 0;
   virtual void NotifyPull(mozilla::MediaStreamGraph* aGraph, mozilla::StreamTime aDesiredTime) = 0;
@@ -54,7 +54,7 @@ protected:
 
 public:
   virtual void NotifyRealtimeData(mozilla::MediaStreamGraph* graph, mozilla::TrackID tid,
-                                  mozilla::TrackTicks offset,
+                                  mozilla::StreamTime offset,
                                   uint32_t events,
                                   const mozilla::MediaSegment& media) = 0;
 };
@@ -128,11 +128,11 @@ class Fake_SourceMediaStream : public Fake_MediaStream {
                              mStop(false),
                              mPeriodic(new Fake_MediaPeriodic(this)) {}
 
-  void AddTrack(mozilla::TrackID aID, mozilla::TrackTicks aStart,
+  void AddTrack(mozilla::TrackID aID, mozilla::StreamTime aStart,
                 mozilla::MediaSegment* aSegment) {
     delete aSegment;
   }
-  void AddAudioTrack(mozilla::TrackID aID, mozilla::TrackRate aRate, mozilla::TrackTicks aStart,
+  void AddAudioTrack(mozilla::TrackID aID, mozilla::TrackRate aRate, mozilla::StreamTime aStart,
                      mozilla::AudioSegment* aSegment) {
     delete aSegment;
   }

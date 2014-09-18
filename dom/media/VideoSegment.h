@@ -59,19 +59,19 @@ protected:
 struct VideoChunk {
   VideoChunk();
   ~VideoChunk();
-  void SliceTo(TrackTicks aStart, TrackTicks aEnd)
+  void SliceTo(StreamTime aStart, StreamTime aEnd)
   {
     NS_ASSERTION(aStart >= 0 && aStart < aEnd && aEnd <= mDuration,
                  "Slice out of bounds");
     mDuration = aEnd - aStart;
   }
-  TrackTicks GetDuration() const { return mDuration; }
+  StreamTime GetDuration() const { return mDuration; }
   bool CanCombineWithFollowing(const VideoChunk& aOther) const
   {
     return aOther.mFrame == mFrame;
   }
   bool IsNull() const { return !mFrame.GetImage(); }
-  void SetNull(TrackTicks aDuration)
+  void SetNull(StreamTime aDuration)
   {
     mDuration = aDuration;
     mFrame.SetNull();
@@ -86,7 +86,7 @@ struct VideoChunk {
     return 0;
   }
 
-  TrackTicks mDuration;
+  StreamTime mDuration;
   VideoFrame mFrame;
   mozilla::TimeStamp mTimeStamp;
 };
@@ -100,10 +100,10 @@ public:
   ~VideoSegment();
 
   void AppendFrame(already_AddRefed<Image>&& aImage,
-                   TrackTicks aDuration,
+                   StreamTime aDuration,
                    const IntSize& aIntrinsicSize,
                    bool aForceBlack = false);
-  const VideoFrame* GetFrameAt(TrackTicks aOffset, TrackTicks* aStart = nullptr)
+  const VideoFrame* GetFrameAt(StreamTime aOffset, StreamTime* aStart = nullptr)
   {
     VideoChunk* c = FindChunkContaining(aOffset, aStart);
     if (!c) {
@@ -111,7 +111,7 @@ public:
     }
     return &c->mFrame;
   }
-  const VideoFrame* GetLastFrame(TrackTicks* aStart = nullptr)
+  const VideoFrame* GetLastFrame(StreamTime* aStart = nullptr)
   {
     VideoChunk* c = GetLastChunk();
     if (!c) {

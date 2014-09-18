@@ -111,7 +111,7 @@ public:
                                                     aInput.mChannelData.Length());
     }
 
-    TrackTicks pos = aStream->GetCurrentPosition();
+    StreamTime pos = aStream->GetCurrentPosition();
     mCompressor->setParameterValue(DynamicsCompressor::ParamThreshold,
                                    mThreshold.GetValueAtTime(pos));
     mCompressor->setParameterValue(DynamicsCompressor::ParamKnee,

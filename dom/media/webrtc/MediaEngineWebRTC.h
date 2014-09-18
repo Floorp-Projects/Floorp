@@ -98,7 +98,7 @@ public:
                           SourceMediaStream* aSource,
                           TrackID aId,
                           StreamTime aDesiredTime,
-                          TrackTicks& aLastEndTime);
+                          StreamTime &aLastEndTime);
 
   virtual const MediaSourceType GetMediaSource() {
     return mMediaSource;
@@ -181,7 +181,7 @@ public:
                           SourceMediaStream* aSource,
                           TrackID aId,
                           StreamTime aDesiredTime,
-                          TrackTicks& aLastEndTime);
+                          StreamTime &aLastEndTime);
 
   virtual bool IsFake() {
     return false;

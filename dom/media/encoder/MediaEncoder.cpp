@@ -46,7 +46,7 @@ namespace mozilla {
 void
 MediaEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
                                        TrackID aID,
-                                       TrackTicks aTrackOffset,
+                                       StreamTime aTrackOffset,
                                        uint32_t aTrackEvents,
                                        const MediaSegment& aQueuedMedia)
 {

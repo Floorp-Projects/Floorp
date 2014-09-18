@@ -191,7 +191,7 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
     // Round up the track start time so the track, if anything, starts a
     // little later than the true time. This means we'll have enough
     // samples in our input stream to go just beyond the destination time.
-    TrackTicks outputStart = GraphTimeToStreamTime(aFrom);
+    StreamTime outputStart = GraphTimeToStreamTime(aFrom);
 
     nsAutoPtr<MediaSegment> segment;
     segment = aTrack->GetSegment()->CreateEmptyClone();
@@ -226,7 +226,7 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
       return;
     for (uint32_t j = 0; j < mListeners.Length(); ++j) {
       MediaStreamListener* l = mListeners[j];
-      TrackTicks offset = outputTrack->GetSegment()->GetDuration();
+      StreamTime offset = outputTrack->GetSegment()->GetDuration();
       nsAutoPtr<MediaSegment> segment;
       segment = outputTrack->GetSegment()->CreateEmptyClone();
       l->NotifyQueuedTrackChanges(Graph(), outputTrack->GetID(), offset,
@@ -253,7 +253,7 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
       MediaInputPort::InputInterval interval = map->mInputPort->GetNextInputInterval(t);
       interval.mEnd = std::min(interval.mEnd, aTo);
       StreamTime inputEnd = source->GraphTimeToStreamTime(interval.mEnd);
-      TrackTicks inputTrackEndPoint = TRACK_TICKS_MAX;
+      StreamTime inputTrackEndPoint = STREAM_TIME_MAX;
 
       if (aInputTrack->IsEnded() &&
           aInputTrack->GetEnd() <= inputEnd) {
@@ -264,7 +264,7 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
       if (interval.mStart >= interval.mEnd) {
         break;
       }
-      TrackTicks ticks = interval.mEnd - interval.mStart;
+      StreamTime ticks = interval.mEnd - interval.mStart;
       next = interval.mEnd;
 
       StreamTime outputStart = outputTrack->GetEnd();
