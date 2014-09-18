@@ -148,8 +148,7 @@ this.Tabs = function () {
 
   let update = function (event) {
     if (event.originalTarget.linkedBrowser) {
-      let win = event.originalTarget.linkedBrowser.contentWindow;
-      if (PrivateBrowsingUtils.isWindowPrivate(win) &&
+      if (PrivateBrowsingUtils.isBrowserPrivate(event.originalTarget.linkedBrowser) &&
           !PrivateBrowsingUtils.permanentPrivateBrowsing) {
         return;
       }
