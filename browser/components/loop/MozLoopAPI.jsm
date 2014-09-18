@@ -474,7 +474,21 @@ function injectLoopAPI(targetWindow) {
                         "body=" + encodeURIComponent(body);
         extProtocolSvc.loadURI(CommonUtils.makeURI(mailtoURL));
       }
-    }
+    },
+
+    /**
+     * Adds a value to a telemetry histogram.
+     *
+     * @param  {string}  histogramId Name of the telemetry histogram to update.
+     * @param  {integer} value       Value to add to the histogram.
+     */
+    telemetryAdd: {
+      enumerable: true,
+      writable: true,
+      value: function(histogramId, value) {
+        Services.telemetry.getHistogramById(histogramId).add(value);
+      }
+    },
   };
 
   function onStatusChanged(aSubject, aTopic, aData) {
