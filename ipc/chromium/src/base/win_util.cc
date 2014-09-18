@@ -9,6 +9,8 @@
 
 #include "base/logging.h"
 #include "base/registry.h"
+#include "base/scoped_handle.h"
+#include "base/scoped_ptr.h"
 #include "base/singleton.h"
 #include "base/string_util.h"
 #include "base/tracked.h"

@@ -14,6 +14,8 @@
 
 #include "base/histogram.h"
 #include "base/logging.h"
+#include "base/scoped_handle_win.h"
+#include "base/scoped_ptr.h"
 #include "base/win_util.h"
 
 #include <algorithm>

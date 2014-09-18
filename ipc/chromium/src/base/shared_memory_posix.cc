@@ -14,7 +14,6 @@
 #include "base/logging.h"
 #include "base/platform_thread.h"
 #include "base/string_util.h"
-#include "mozilla/UniquePtr.h"
 
 namespace base {
 
@@ -143,7 +142,7 @@ class ScopedFILEClose {
   }
 };
 
-typedef mozilla::UniquePtr<FILE, ScopedFILEClose> ScopedFILE;
+typedef scoped_ptr_malloc<FILE, ScopedFILEClose> ScopedFILE;
 
 }
 

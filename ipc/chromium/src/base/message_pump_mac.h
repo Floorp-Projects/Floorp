@@ -32,8 +32,6 @@
 
 #include "base/message_pump.h"
 
-#include "base/basictypes.h"
-
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/IOKitLib.h>
 

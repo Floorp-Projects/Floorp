@@ -5,9 +5,7 @@
 #ifndef BASE_REVOCABLE_STORE_H_
 #define BASE_REVOCABLE_STORE_H_
 
-#include "base/basictypes.h"
-#include "nsISupportsImpl.h"
-#include "nsAutoPtr.h"
+#include "base/ref_counted.h"
 
 // |RevocableStore| is a container of items that can be removed from the store.
 class RevocableStore {
@@ -17,16 +15,13 @@ class RevocableStore {
   // store wishes to revoke its items, it sets |store_| to null.  Items are
   // permitted to release their reference to the |StoreRef| when they no longer
   // require the store.
-  class StoreRef MOZ_FINAL {
+  class StoreRef : public base::RefCounted<StoreRef> {
    public:
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(StoreRef)
     explicit StoreRef(RevocableStore* store) : store_(store) { }
 
     void set_store(RevocableStore* store) { store_ = store; }
     RevocableStore* store() const { return store_; }
 
-   protected:
-    ~StoreRef() {}
    private:
     RevocableStore* store_;
 
@@ -46,7 +41,7 @@ class RevocableStore {
   private:
     // We hold a reference to the store through this ref pointer.  We release
     // this reference on destruction.
-    nsRefPtr<StoreRef> store_reference_;
+    scoped_refptr<StoreRef> store_reference_;
 
     DISALLOW_EVIL_CONSTRUCTORS(Revocable);
   };
@@ -68,7 +63,7 @@ class RevocableStore {
   void Add(Revocable* item);
 
   // This is the reference the unrevoked items in the store hold.
-  nsRefPtr<StoreRef> owning_reference_;
+  scoped_refptr<StoreRef> owning_reference_;
 
   // The number of unrevoked items in the store.
   int count_;

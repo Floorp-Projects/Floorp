@@ -319,7 +319,7 @@ void MessageLoop::PostTask_Helper(
   // directly, as it could starve handling of foreign threads.  Put every task
   // into this queue.
 
-  nsRefPtr<base::MessagePump> pump;
+  scoped_refptr<base::MessagePump> pump;
   {
     AutoLock locked(incoming_queue_lock_);
     incoming_queue_.push(pending_task);
