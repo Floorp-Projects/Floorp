@@ -11,12 +11,7 @@
 
 extern "C" {
 #include <gtk/gtk.h>
-#if (MOZ_WIDGET_GTK == 2)
-#include <gtk/gtkprinter.h>
-#include <gtk/gtkprintjob.h>
-#else
 #include <gtk/gtkunixprint.h>
-#endif
 }
 
 #define NS_PRINTSETTINGSGTK_IID \
