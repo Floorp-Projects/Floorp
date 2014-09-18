@@ -3619,9 +3619,6 @@ StyleAnimationValue::operator=(const StyleAnimationValue& aOther)
                         "value lists other than shadows and filters may not be null");
       if (aOther.mValue.mCSSValueList) {
         mValue.mCSSValueList = aOther.mValue.mCSSValueList->Clone();
-        if (!mValue.mCSSValueList) {
-          mUnit = eUnit_Null;
-        }
       } else {
         mValue.mCSSValueList = nullptr;
       }
@@ -3634,9 +3631,6 @@ StyleAnimationValue::operator=(const StyleAnimationValue& aOther)
       NS_ABORT_IF_FALSE(aOther.mValue.mCSSValuePairList,
                         "value pair lists may not be null");
       mValue.mCSSValuePairList = aOther.mValue.mCSSValuePairList->Clone();
-      if (!mValue.mCSSValuePairList) {
-        mUnit = eUnit_Null;
-      }
       break;
     case eUnit_UnparsedString:
       NS_ABORT_IF_FALSE(aOther.mValue.mString, "expecting non-null string");
