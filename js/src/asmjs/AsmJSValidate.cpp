@@ -4959,77 +4959,78 @@ CheckUncoercedCall(FunctionCompiler &f, ParseNode *expr, MDefinition **def, Type
 }
 
 static bool
+CoerceResult(FunctionCompiler &f, ParseNode *expr, RetType expected, MDefinition *result,
+             Type resultType, MDefinition **def, Type *type)
+{
+    switch (expected.which()) {
+      case RetType::Void: {
+        *def = nullptr;
+        *type = Type::Void;
+        return true;
+      }
+
+      case RetType::Signed: {
+        if (!resultType.isIntish())
+            return f.failf(expr, "%s is not a subtype of intish", resultType.toChars());
+        *def = result;
+        *type = Type::Signed;
+        return true;
+      }
+
+      case RetType::Double: {
+        *type = Type::Double;
+        if (resultType.isMaybeDouble()) {
+            *def = result;
+            return true;
+        }
+        if (resultType.isMaybeFloat() || resultType.isSigned()) {
+            *def = f.unary<MToDouble>(result);
+            return true;
+        }
+        if (resultType.isUnsigned()) {
+            *def = f.unary<MAsmJSUnsignedToDouble>(result);
+            return true;
+        }
+        return f.failf(expr, "%s is not a subtype of double?, float?, signed or unsigned",
+                       resultType.toChars());
+      }
+
+      case RetType::Float: {
+        if (!CheckFloatCoercionArg(f, expr, resultType, result, def))
+            return false;
+        *type = Type::Float;
+        return true;
+      }
+
+      case RetType::Int32x4: {
+        if (!resultType.isInt32x4())
+            return f.failf(expr, "%s is not a subtype of int32x4", resultType.toChars());
+        *def = result;
+        *type = Type::Int32x4;
+        return true;
+      }
+
+      case RetType::Float32x4: {
+        if (!resultType.isFloat32x4())
+            return f.failf(expr, "%s is not a subtype of float32x4", resultType.toChars());
+        *def = result;
+        *type = Type::Float32x4;
+        return true;
+      }
+    }
+
+    return true;
+}
+
+static bool
 CheckCoercedMathBuiltinCall(FunctionCompiler &f, ParseNode *callNode, AsmJSMathBuiltinFunction func,
                             RetType retType, MDefinition **def, Type *type)
 {
-    MDefinition *operand;
-    MathRetType actualRetType;
-    if (!CheckMathBuiltinCall(f, callNode, func, &operand, &actualRetType))
+    MDefinition *result;
+    MathRetType resultType;
+    if (!CheckMathBuiltinCall(f, callNode, func, &result, &resultType))
         return false;
-
-    switch (retType.which()) {
-      case RetType::Int32x4:
-      case RetType::Float32x4:
-        return f.failf(callNode, "%s is not a vector type", actualRetType.toType().toChars());
-
-      case RetType::Double:
-        switch (actualRetType.which()) {
-          case MathRetType::Double:
-            *def = operand;
-            break;
-          case MathRetType::Float:
-          case MathRetType::Signed:
-            *def = f.unary<MToDouble>(operand);
-            break;
-          case MathRetType::Unsigned:
-            *def = f.unary<MAsmJSUnsignedToDouble>(operand);
-            break;
-          case MathRetType::Floatish:
-            return f.fail(callNode, "math call returns floatish, used as double");
-        }
-        *type = Type::Double;
-        break;
-
-      case RetType::Float:
-        switch (actualRetType.which()) {
-          case MathRetType::Double:
-          case MathRetType::Signed:
-            *def = f.unary<MToFloat32>(operand);
-            break;
-          case MathRetType::Float:
-          case MathRetType::Floatish:
-            *def = operand;
-            break;
-          case MathRetType::Unsigned:
-            *def = f.unary<MAsmJSUnsignedToFloat32>(operand);
-            break;
-        }
-        *type = Type::Float;
-        break;
-
-      case RetType::Signed:
-        switch (actualRetType.which()) {
-          case MathRetType::Unsigned:
-          case MathRetType::Signed:
-            *def = operand;
-            break;
-          case MathRetType::Float:
-          case MathRetType::Floatish:
-          case MathRetType::Double:
-            return f.failf(callNode, "math call returns %s, used as signed", type->toChars());
-        }
-        *type = Type::Signed;
-        break;
-
-      case RetType::Void:
-        // definition and return types should be ignored by the caller
-        *def = nullptr;
-        break;
-    }
-
-    JS_ASSERT_IF(retType == RetType::Void || f.inDeadCode(), !*def);
-    JS_ASSERT_IF(retType != RetType::Void && !f.inDeadCode(), !!*def);
-    return true;
+    return CoerceResult(f, callNode, retType, result, resultType.toType(), def, type);
 }
 
 static bool
@@ -5046,81 +5047,7 @@ CheckCoercedSimdCall(FunctionCompiler &f, ParseNode *call, const ModuleCompiler:
     }
 
     JS_ASSERT(type->isSimd());
-    switch (retType.which()) {
-      case RetType::Signed:
-      case RetType::Double:
-      case RetType::Float:
-        return f.failf(call, "SIMD call returns %s, used as scalar", type->toChars());
-
-      case RetType::Int32x4:
-        if (!type->isInt32x4())
-            return f.failf(call, "SIMD call returns %s, used as int32x4", type->toChars());
-        break;
-
-      case RetType::Float32x4:
-        if (!type->isFloat32x4())
-            return f.failf(call, "SIMD call returns %s, used as float32x4", type->toChars());
-        break;
-
-      case RetType::Void:
-        *def = nullptr;
-        break;
-    }
-
-    JS_ASSERT_IF(retType == RetType::Void || f.inDeadCode(), !*def);
-    JS_ASSERT_IF(retType != RetType::Void && !f.inDeadCode(), !!*def);
-    return true;
-}
-
-static bool
-CheckCoercedNumericLiteral(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinition **def,
-                           Type *type)
-{
-    if (retType == RetType::Void) {
-        *def = nullptr;
-        return true;
-    }
-
-    AsmJSNumLit literal = ExtractNumericLiteral(f.m(), call);
-    switch (literal.which()) {
-      case AsmJSNumLit::Fixnum:
-      case AsmJSNumLit::NegativeInt:
-      case AsmJSNumLit::BigUnsigned:
-      case AsmJSNumLit::Double:
-      case AsmJSNumLit::OutOfRangeInt:
-        MOZ_CRASH("unexpected numeric literal calls");
-
-      case AsmJSNumLit::Float:
-        switch (retType.which()) {
-          case RetType::Int32x4:
-          case RetType::Float32x4:
-            return f.fail(call, "float literal is not a vector type");
-          case RetType::Double:
-            literal = AsmJSNumLit::Create(AsmJSNumLit::Double, DoubleValue(literal.toFloat()));
-            break;
-          case RetType::Float:
-            break;
-          case RetType::Signed:
-            return f.fail(call, "float literal used as signed");
-          case RetType::Void:
-            MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("case handled before");
-        }
-        break;
-
-      case AsmJSNumLit::Int32x4:
-        if (retType != RetType::Int32x4)
-            return f.failf(call, "int32x4 literal used as %s", retType.toType().toChars());
-        break;
-
-      case AsmJSNumLit::Float32x4:
-        if (retType != RetType::Float32x4)
-            return f.failf(call, "float32x4 literal used as %s", retType.toType().toChars());
-        break;
-    }
-
-    *def = f.constant(literal);
-    *type = Type::Of(literal);
-    return true;
+    return CoerceResult(f, call, retType, *def, *type, def, type);
 }
 
 static bool
@@ -5128,8 +5055,11 @@ CheckCoercedCall(FunctionCompiler &f, ParseNode *call, RetType retType, MDefinit
 {
     JS_CHECK_RECURSION_DONT_REPORT(f.cx(), return f.m().failOverRecursed());
 
-    if (IsNumericLiteral(f.m(), call))
-        return CheckCoercedNumericLiteral(f, call, retType, def, type);
+    if (IsNumericLiteral(f.m(), call)) {
+        AsmJSNumLit literal = ExtractNumericLiteral(f.m(), call);
+        MDefinition *result = f.constant(literal);
+        return CoerceResult(f, call, retType, result, Type::Of(literal), def, type);
+    }
 
     ParseNode *callee = CallCallee(call);
 
@@ -5178,17 +5108,7 @@ CheckPos(FunctionCompiler &f, ParseNode *pos, MDefinition **def, Type *type)
     if (!CheckExpr(f, operand, &operandDef, &operandType))
         return false;
 
-    if (operandType.isMaybeFloat() || operandType.isSigned())
-        *def = f.unary<MToDouble>(operandDef);
-    else if (operandType.isUnsigned())
-        *def = f.unary<MAsmJSUnsignedToDouble>(operandDef);
-    else if (operandType.isMaybeDouble())
-        *def = operandDef;
-    else
-        return f.failf(operand, "%s is not a subtype of signed, unsigned, float or double?", operandType.toChars());
-
-    *type = Type::Double;
-    return true;
+    return CoerceResult(f, operand, RetType::Double, operandDef, operandType, def, type);
 }
 
 static bool
