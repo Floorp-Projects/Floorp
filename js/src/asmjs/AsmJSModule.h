@@ -80,6 +80,8 @@ enum AsmJSSimdOperation
     AsmJSSimdOperation_sub,
     AsmJSSimdOperation_mul,
     AsmJSSimdOperation_div,
+    AsmJSSimdOperation_max,
+    AsmJSSimdOperation_min,
     AsmJSSimdOperation_lessThan,
     AsmJSSimdOperation_lessThanOrEqual,
     AsmJSSimdOperation_equal,

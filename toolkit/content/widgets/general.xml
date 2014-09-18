@@ -135,24 +135,6 @@
       </xul:statusbarpanel>
     </content>
   </binding>
-  
-  <binding id="statusbar-drag"
-           extends="chrome://global/content/bindings/general.xml#statusbar">
-    <implementation>
-      <field name="_dragBindingAlive">true</field>
-      <constructor>
-        if (!this._draggableStarted) {
-          this._draggableStarted = true;
-          try {
-            let tmp = {};
-            Components.utils.import("resource://gre/modules/WindowDraggingUtils.jsm", tmp);
-            let draghandle = new tmp.WindowDraggingElement(this);
-            draghandle.mouseDownCheck = function () this._dragBindingAlive;
-          } catch (e) {}
-        }
-      </constructor>
-    </implementation>
-  </binding>
 
   <binding id="statusbarpanel-iconic" display="xul:button" role="xul:button"
            extends="chrome://global/content/bindings/general.xml#statusbarpanel">

@@ -274,6 +274,7 @@ COMPUTED_STYLE_PROP(user_focus,                    UserFocus)
 COMPUTED_STYLE_PROP(user_input,                    UserInput)
 COMPUTED_STYLE_PROP(user_modify,                   UserModify)
 COMPUTED_STYLE_PROP(user_select,                   UserSelect)
+COMPUTED_STYLE_PROP(_moz_window_dragging,          WindowDragging)
 COMPUTED_STYLE_PROP(_moz_window_shadow,            WindowShadow)
 
 /* ***************************** *\

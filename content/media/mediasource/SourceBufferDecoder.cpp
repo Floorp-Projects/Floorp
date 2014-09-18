@@ -8,7 +8,6 @@
 #include "prlog.h"
 #include "AbstractMediaDecoder.h"
 #include "MediaDecoderReader.h"
-#include "mozilla/dom/TimeRanges.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* GetMediaSourceLog();

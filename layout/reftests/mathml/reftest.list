@@ -318,3 +318,4 @@ random-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == mfrac-D-2.ht
 == mfrac-D-3.html mfrac-D-3-ref.html
 == mfrac-D-4.html mfrac-D-4-ref.html
 == mfrac-E-1.html mfrac-E-1-ref.html
+test-pref(dom.webcomponents.enabled,true) == shadow-dom-1.html shadow-dom-1-ref.html
