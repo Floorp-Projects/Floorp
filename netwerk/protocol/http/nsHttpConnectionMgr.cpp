@@ -3217,7 +3217,7 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
     index = mEnt->mPendingQ.IndexOf(mTransaction);
     if (index != -1) {
         MOZ_ASSERT(!mSpeculative,
-                   "Speculative Half Open found mTranscation");
+                   "Speculative Half Open found mTransaction");
         nsRefPtr<nsHttpTransaction> temp = dont_AddRef(mEnt->mPendingQ[index]);
         mEnt->mPendingQ.RemoveElementAt(index);
         gHttpHandler->ConnMgr()->AddActiveConn(conn, mEnt);

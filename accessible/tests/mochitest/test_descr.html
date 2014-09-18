@@ -25,6 +25,14 @@
       // attribute.
       testDescr("img3", "description");
 
+      // No description from aria-describedby since it is the same as the
+      // @alt attribute which is used as the name
+      testDescr("img4", "");
+
+      // No description from @title attribute since it is the same as the
+      // @alt attribute which is used as the name
+      testDescr("img5", "");
+
       // Description from content of h2.
       testDescr("p", "heading");
 
@@ -36,6 +44,10 @@
 
       // From title (summary is used as a name)
       testDescr("table3", "title");
+
+      // No description from <desc> element since it is the same as the
+      // <title> element.
+      testDescr("svg", "");
 
       SimpleTest.finish();
     }
@@ -58,6 +70,12 @@
      title="summary attribute content mapped to accessible name in MSAA">
     Mozilla Bug 666212
   </a>
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi/id=1031188"
+     title="Ensure that accDescription never duplicates AccessibleName">
+    Mozilla Bug 1031188
+  </a>
+
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -67,6 +85,8 @@
   <img id="img1" aria-describedby="description" />
   <img id="img2" title="title" />
   <img id="img3" alt="name" title="description" />
+  <img id="img4" alt="aria description" aria-describedby="description">
+  <img id="img5" alt="image" title="image">
 
   <h2 id="heading">heading</h2>
   <p id="p" aria-describedby="heading" role="button">click me</p>
@@ -83,5 +103,19 @@
   <table id="table3" summary="summary" title="title">
     <tr><td>cell</td></tr>
   </table>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+       viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice"
+       id="svg"
+       style="width:100px; height:100px;">
+    <title>SVG Image</title>
+    <desc>SVG Image</desc>
+    <linearGradient id="gradient">
+      <stop class="begin" offset="0%"/>
+      <stop class="end" offset="100%"/>
+    </linearGradient>
+    <rect x="0" y="0" width="100" height="100" style="fill:url(#gradient)" />
+    <circle cx="50" cy="50" r="30" style="fill:url(#gradient)" />
+  </svg>
 </body>
 </html>

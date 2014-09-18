@@ -19,6 +19,7 @@ public:
   static bool OnMavericksOrLater();
   static bool OnYosemiteOrLater();
   static bool SupportCoreAnimationPlugins();
+  static bool AccelerateByDefault();
 
 private:
   static void InitializeVersionNumbers();

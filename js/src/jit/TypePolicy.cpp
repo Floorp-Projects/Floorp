@@ -64,7 +64,8 @@ BoxInputsPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 bool
 ArithPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 {
-    if (specialization_ == MIRType_None)
+    MIRType specialization = ins->typePolicySpecialization();
+    if (specialization == MIRType_None)
         return BoxInputsPolicy::adjustInputs(alloc, ins);
 
     JS_ASSERT(ins->type() == MIRType_Double || ins->type() == MIRType_Int32 || ins->type() == MIRType_Float32);
@@ -318,11 +319,12 @@ TestPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 bool
 BitwisePolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 {
-    if (specialization_ == MIRType_None)
+    MIRType specialization = ins->typePolicySpecialization();
+    if (specialization == MIRType_None)
         return BoxInputsPolicy::adjustInputs(alloc, ins);
 
-    JS_ASSERT(ins->type() == specialization_);
-    JS_ASSERT(specialization_ == MIRType_Int32 || specialization_ == MIRType_Double);
+    MOZ_ASSERT(ins->type() == specialization);
+    MOZ_ASSERT(specialization == MIRType_Int32 || specialization == MIRType_Double);
 
     // This policy works for both unary and binary bitwise operations.
     for (size_t i = 0, e = ins->numOperands(); i < e; i++) {
@@ -344,14 +346,15 @@ BitwisePolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 bool
 PowPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 {
-    JS_ASSERT(specialization_ == MIRType_Int32 || specialization_ == MIRType_Double);
+    MIRType specialization = ins->typePolicySpecialization();
+    JS_ASSERT(specialization == MIRType_Int32 || specialization == MIRType_Double);
 
     // Input must be a double.
     if (!DoublePolicy<0>::staticAdjustInputs(alloc, ins))
         return false;
 
     // Power may be an int32 or a double. Integers receive a faster path.
-    if (specialization_ == MIRType_Double)
+    if (specialization == MIRType_Double)
         return DoublePolicy<1>::staticAdjustInputs(alloc, ins);
     return IntPolicy<1>::staticAdjustInputs(alloc, ins);
 }
@@ -468,6 +471,18 @@ Float32Policy<Op>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def)
 template bool Float32Policy<0>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
 template bool Float32Policy<1>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
 template bool Float32Policy<2>::staticAdjustInputs(TempAllocator &alloc, MInstruction *def);
+
+template <unsigned Op>
+bool
+FloatingPointPolicy<Op>::adjustInputs(TempAllocator &alloc, MInstruction *def)
+{
+    MIRType policyType = def->typePolicySpecialization();
+    if (policyType == MIRType_Double)
+        return DoublePolicy<Op>::staticAdjustInputs(alloc, def);
+    return Float32Policy<Op>::staticAdjustInputs(alloc, def);
+}
+
+template bool FloatingPointPolicy<0>::adjustInputs(TempAllocator &alloc, MInstruction *def);
 
 template <unsigned Op>
 bool
@@ -856,3 +871,133 @@ FilterTypeSetPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 
     return true;
 }
+
+// Lists of all TypePolicy specializations which are used by MIR Instructions.
+#define TYPE_POLICY_LIST(_)                     \
+    _(ArithPolicy)                              \
+    _(BitwisePolicy)                            \
+    _(BoxInputsPolicy)                          \
+    _(CallPolicy)                               \
+    _(CallSetElementPolicy)                     \
+    _(ClampPolicy)                              \
+    _(ComparePolicy)                            \
+    _(FilterTypeSetPolicy)                      \
+    _(InstanceOfPolicy)                         \
+    _(PowPolicy)                                \
+    _(StoreTypedArrayElementStaticPolicy)       \
+    _(StoreTypedArrayHolePolicy)                \
+    _(StoreTypedArrayPolicy)                    \
+    _(TestPolicy)                               \
+    _(ToDoublePolicy)                           \
+    _(ToInt32Policy)                            \
+    _(ToStringPolicy)                           \
+    _(TypeBarrierPolicy)
+
+#define TEMPLATE_TYPE_POLICY_LIST(_)                                    \
+    _(BoxExceptPolicy<0, MIRType_String>)                               \
+    _(BoxPolicy<0>)                                                     \
+    _(ConvertToInt32Policy<0>)                                          \
+    _(ConvertToStringPolicy<0>)                                         \
+    _(DoublePolicy<0>)                                                  \
+    _(FloatingPointPolicy<0>)                                           \
+    _(IntPolicy<0>)                                                     \
+    _(IntPolicy<1>)                                                     \
+    _(Mix3Policy<ObjectPolicy<0>, BoxExceptPolicy<1, MIRType_String>, BoxPolicy<2> >) \
+    _(Mix3Policy<ObjectPolicy<0>, BoxPolicy<1>, BoxPolicy<2> >)         \
+    _(Mix3Policy<ObjectPolicy<0>, BoxPolicy<1>, ObjectPolicy<2> >)      \
+    _(Mix3Policy<ObjectPolicy<0>, IntPolicy<1>, BoxPolicy<2> >)         \
+    _(Mix3Policy<ObjectPolicy<0>, IntPolicy<1>, IntPolicy<2> >)         \
+    _(Mix3Policy<ObjectPolicy<0>, ObjectPolicy<1>, IntPolicy<2> >)      \
+    _(Mix3Policy<StringPolicy<0>, ObjectPolicy<1>, StringPolicy<2> >)   \
+    _(Mix3Policy<StringPolicy<0>, StringPolicy<1>, StringPolicy<2> >)   \
+    _(MixPolicy<BoxPolicy<0>, ObjectPolicy<1> >)                        \
+    _(MixPolicy<ConvertToStringPolicy<0>, ConvertToStringPolicy<1> >)   \
+    _(MixPolicy<ConvertToStringPolicy<0>, ObjectPolicy<1> >)            \
+    _(MixPolicy<DoublePolicy<0>, DoublePolicy<1> >)                     \
+    _(MixPolicy<ObjectPolicy<0>, BoxPolicy<1> >)                        \
+    _(MixPolicy<ObjectPolicy<0>, ConvertToStringPolicy<1> >)            \
+    _(MixPolicy<ObjectPolicy<0>, IntPolicy<1> >)                        \
+    _(MixPolicy<ObjectPolicy<0>, NoFloatPolicy<1> >)                    \
+    _(MixPolicy<ObjectPolicy<0>, NoFloatPolicy<2> >)                    \
+    _(MixPolicy<ObjectPolicy<0>, NoFloatPolicy<3> >)                    \
+    _(MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >)                     \
+    _(MixPolicy<ObjectPolicy<0>, StringPolicy<1> >)                     \
+    _(MixPolicy<ObjectPolicy<1>, ConvertToStringPolicy<0> >)            \
+    _(MixPolicy<StringPolicy<0>, IntPolicy<1> >)                        \
+    _(MixPolicy<StringPolicy<0>, StringPolicy<1> >)                     \
+    _(NoFloatPolicy<0>)                                                 \
+    _(ObjectPolicy<0>)                                                  \
+    _(ObjectPolicy<1>)                                                  \
+    _(ObjectPolicy<3>)                                                  \
+    _(StringPolicy<0>)
+
+
+namespace js {
+namespace jit {
+
+// Define for all used TypePolicy specialization, the definition for
+// |TypePolicy::Data::thisTypePolicy|.  This function returns one constant
+// instance of the TypePolicy which is shared among all MIR Instructions of the
+// same type.
+//
+// This Macro use __VA_ARGS__ to account for commas of template parameters.
+#define DEFINE_TYPE_POLICY_SINGLETON_INSTANCES_(...)    \
+    TypePolicy *                                        \
+    __VA_ARGS__::Data::thisTypePolicy()                 \
+    {                                                   \
+        static __VA_ARGS__ singletonType;               \
+        return &singletonType;                          \
+    }
+
+    TYPE_POLICY_LIST(DEFINE_TYPE_POLICY_SINGLETON_INSTANCES_)
+    TEMPLATE_TYPE_POLICY_LIST(template<> DEFINE_TYPE_POLICY_SINGLETON_INSTANCES_)
+#undef DEFINE_TYPE_POLICY_SINGLETON_INSTANCES_
+
+}
+}
+
+namespace {
+
+// Default function visited by the C++ lookup rules, if the MIR Instruction does
+// not inherit from a TypePolicy::Data type.
+static TypePolicy *
+thisTypePolicy() {
+    return nullptr;
+}
+
+static MIRType
+thisTypeSpecialization() {
+    MOZ_CRASH("TypeSpecialization lacks definition of thisTypeSpecialization.");
+}
+
+}
+
+TypePolicy *
+MGetElementCache::thisTypePolicy()
+{
+    if (type() == MIRType_Value)
+        return PolicyV.thisTypePolicy();
+    return PolicyT.thisTypePolicy();
+}
+
+// For each MIR Instruction, this macro define the |typePolicy| method which is
+// using the |thisTypePolicy| function.  We use the C++ lookup rules to select
+// the right |thisTypePolicy| member.  The |thisTypePolicy| function can either
+// be a member of the MIR Instruction, such as done for MGetElementCache, or a
+// member inherited from the TypePolicy::Data structure, or at last the global
+// with the same name if the instruction has no TypePolicy.
+#define DEFINE_MIR_TYPEPOLICY_MEMBERS_(op)      \
+    TypePolicy *                                \
+    js::jit::M##op::typePolicy()                \
+    {                                           \
+        return thisTypePolicy();                \
+    }                                           \
+                                                \
+    MIRType                                     \
+    js::jit::M##op::typePolicySpecialization()  \
+    {                                           \
+        return thisTypeSpecialization();        \
+    }
+
+    MIR_OPCODE_LIST(DEFINE_MIR_TYPEPOLICY_MEMBERS_)
+#undef DEFINE_MIR_TYPEPOLICY_MEMBERS_

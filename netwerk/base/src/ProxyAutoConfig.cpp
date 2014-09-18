@@ -485,7 +485,11 @@ bool PACProxyAlert(JSContext *cx, unsigned int argc, JS::Value *vp)
 
 static const JSFunctionSpec PACGlobalFunctions[] = {
   JS_FS("dnsResolve", PACDnsResolve, 1, 0),
+
+  // a global "var pacUseMultihomedDNS = true;" will change behavior
+  // of myIpAddress to actively use DNS
   JS_FS("myIpAddress", PACMyIpAddress, 0, 0),
+
   JS_FS("alert", PACProxyAlert, 1, 0),
   JS_FS_END
 };
@@ -834,14 +838,31 @@ ProxyAutoConfig::MyIPAddress(const JS::CallArgs &aArgs)
   nsAutoCString remoteDottedDecimal;
   nsAutoCString localDottedDecimal;
   JSContext *cx = mJSRuntime->Context();
+  JS::RootedValue v(cx);
+  JS::Rooted<JSObject*> global(cx, mJSRuntime->Global());
+
+  bool useMultihomedDNS =
+    JS_GetProperty(cx,  global, "pacUseMultihomedDNS", &v) &&
+    !v.isUndefined() && ToBoolean(v);
 
   // first, lookup the local address of a socket connected
   // to the host of uri being resolved by the pac file. This is
   // v6 safe.. but is the last step like that
   bool rvalAssigned = false;
-  if (!MyIPAddressTryHost(mRunningHost, kTimeout, aArgs, &rvalAssigned) ||
-      rvalAssigned) {
-    return rvalAssigned;
+  if (useMultihomedDNS) {
+    if (!MyIPAddressTryHost(mRunningHost, kTimeout, aArgs, &rvalAssigned) ||
+        rvalAssigned) {
+      return rvalAssigned;
+    }
+  } else {
+    // we can still do the fancy multi homing thing if the host is a literal
+    PRNetAddr tempAddr;
+    memset(&tempAddr, 0, sizeof(PRNetAddr));
+    if ((PR_StringToNetAddr(mRunningHost.get(), &tempAddr) == PR_SUCCESS) &&
+        (!MyIPAddressTryHost(mRunningHost, kTimeout, aArgs, &rvalAssigned) ||
+         rvalAssigned)) {
+      return rvalAssigned;
+    }
   }
 
   // next, look for a route to a public internet address that doesn't need DNS.
@@ -854,11 +875,14 @@ ProxyAutoConfig::MyIPAddress(const JS::CallArgs &aArgs)
     return rvalAssigned;
   }
   
-  // next, use the old algorithm based on the local hostname
+  // finally, use the old algorithm based on the local hostname
   nsAutoCString hostName;
   nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
+  // without multihomedDNS use such a short timeout that we are basically
+  // just looking at the cache for raw dotted decimals
+  uint32_t timeout = useMultihomedDNS ? kTimeout : 1;
   if (dns && NS_SUCCEEDED(dns->GetMyHostName(hostName)) &&
-      PACResolveToString(hostName, localDottedDecimal, kTimeout)) {
+      PACResolveToString(hostName, localDottedDecimal, timeout)) {
     JSString *dottedDecimalString =
       JS_NewStringCopyZ(cx, localDottedDecimal.get());
     if (!dottedDecimalString) {

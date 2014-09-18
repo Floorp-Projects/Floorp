@@ -1518,6 +1518,11 @@ class nsIWidget : public nsISupports {
      */
     virtual void UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion) {}
 
+    /**
+     * Informs the widget about the region of the window that is draggable.
+     */
+    virtual void UpdateWindowDraggingRegion(const nsIntRegion& aRegion) {}
+
     /** 
      * Internal methods
      */

@@ -101,9 +101,8 @@
 #define JS_DATAVIEW_SLOTS                3 // Number of slots for data views
 
 // Specific to typed arrays:
-#define JS_TYPEDARR_SLOT_TYPE            3 // A ScalarTypeDescr::Type constant
-#define JS_TYPEDARR_SLOT_DATA            7 // see (**) below
-#define JS_TYPEDARR_SLOTS                4 // Number of slots for typed arrays
+#define JS_TYPEDARR_SLOT_DATA            3 // see (**) below
+#define JS_TYPEDARR_SLOTS                3 // Number of slots for typed arrays
 
 // Specific to typed objects:
 #define JS_TYPEDOBJ_SLOT_DATA            3
