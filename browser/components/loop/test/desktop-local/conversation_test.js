@@ -20,9 +20,6 @@ describe("loop.conversation", function() {
 
     navigator.mozLoop = {
       doNotDisturb: true,
-      get serverUrl() {
-        return "http://example.com";
-      },
       getStrings: function() {
         return JSON.stringify({textContent: "fakeText"});
       },
