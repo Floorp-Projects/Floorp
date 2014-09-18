@@ -63,7 +63,7 @@ public:
                           SourceMediaStream* aSource,
                           TrackID aId,
                           StreamTime aDesiredTime,
-                          TrackTicks& aLastEndTime) MOZ_OVERRIDE;
+                          StreamTime &aLastEndTime) MOZ_OVERRIDE;
   virtual bool SatisfiesConstraintSets(
       const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets)
   {

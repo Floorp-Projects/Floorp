@@ -19,7 +19,7 @@ TEST(VideoSegment, TestAppendFrameForceBlack)
 
   VideoSegment segment;
   segment.AppendFrame(testImage.forget(),
-                      mozilla::TrackTicks(90000),
+                      mozilla::StreamTime(90000),
                       mozilla::gfx::IntSize(640, 480),
                       true);
 
@@ -37,7 +37,7 @@ TEST(VideoSegment, TestAppendFrameNotForceBlack)
 
   VideoSegment segment;
   segment.AppendFrame(testImage.forget(),
-                      mozilla::TrackTicks(90000),
+                      mozilla::StreamTime(90000),
                       mozilla::gfx::IntSize(640, 480));
 
   VideoSegment::ChunkIterator iter(segment);

@@ -143,7 +143,7 @@ AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
 
       StreamTime outputStart = GraphTimeToStreamTime(interval.mStart);
       StreamTime outputEnd = GraphTimeToStreamTime(interval.mEnd);
-      TrackTicks ticks = outputEnd - outputStart;
+      StreamTime ticks = outputEnd - outputStart;
 
       if (interval.mInputIsBlocked) {
         segment.AppendNullData(ticks);
