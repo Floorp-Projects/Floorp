@@ -73,4 +73,19 @@ addMessageListener("Test:GetStyleSheetsInfoForNode", function(msg) {
   sendAsyncMessage("Test:GetStyleSheetsInfoForNode", sheets);
 });
 
+/**
+ * Get the property value from the computed style for an element.
+ * @param {Object} data Expects a data object with the following properties
+ * - {String} selector: The selector used to obtain the element.
+ * - {String} pseudo: pseudo id to query, or null.
+ * - {String} name: name of the property
+ * @return {String} The value, if found, null otherwise
+ */
+addMessageListener("Test:GetComputedStylePropertyValue", function(msg) {
+  let {selector, pseudo, name} = msg.data;
+  let element = content.document.querySelector(selector);
+  let value = content.document.defaultView.getComputedStyle(element, pseudo).getPropertyValue(name);
+  sendAsyncMessage("Test:GetComputedStylePropertyValue", value);
+});
+
 let dumpn = msg => dump(msg + "\n");

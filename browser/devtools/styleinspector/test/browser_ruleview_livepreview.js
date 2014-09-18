@@ -28,18 +28,18 @@ let test = asyncTest(function*() {
   let style = '#testid {display:block;}';
   let styleNode = addStyle(content.document, style);
   content.document.body.innerHTML = '<div id="testid">Styled Node</div><span>inline element</span>';
-  let testElement = getNode("#testid");
 
   let {toolbox, inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
 
   for (let data of TEST_DATA) {
-    yield testLivePreviewData(data, view, testElement);
+    yield testLivePreviewData(data, view, "#testid");
   }
 });
 
 
-function* testLivePreviewData(data, ruleView, testElement) {
+function* testLivePreviewData(data, ruleView, selector) {
+  let testElement = getNode(selector);
   let idRuleEditor = getRuleViewRuleEditor(ruleView, 1);
   let propEditor = idRuleEditor.rule.textProps[0].editor;
 
@@ -57,10 +57,13 @@ function* testLivePreviewData(data, ruleView, testElement) {
     EventUtils.synthesizeKey("VK_RETURN", {});
   }
 
+  // This wait is an orange waiting to happen, but it might take a few event
+  // loop spins in either the client or parent process before we see the
+  // updated value.
   yield wait(1);
 
   // While the editor is still focused in, the display should have changed already
-  is(content.getComputedStyle(testElement).display,
+  is((yield getComputedStyleProperty(selector, null, "display")),
     data.expected,
     "Element should be previewed as " + data.expected);
 }

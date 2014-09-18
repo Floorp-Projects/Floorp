@@ -1,11 +1,8 @@
-const Cu = Components.utils;
-Cu.import("resource://gre/modules/Services.jsm");
-let tempScope = {};
-Cu.import("resource://gre/modules/devtools/dbg-client.jsm", tempScope);
-Cu.import("resource://gre/modules/devtools/dbg-server.jsm", tempScope);
-Cu.import("resource://gre/modules/Promise.jsm", tempScope);
-let {DebuggerServer, DebuggerClient, Promise} = tempScope;
-tempScope = null;
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
 
 const {StorageFront} = require("devtools/server/actors/storage");
 let gFront, gWindow;
@@ -60,7 +57,7 @@ function finishTests(client) {
       forceCollections();
       DebuggerServer.destroy();
       forceCollections();
-      gFront = gWindow = DebuggerClient = DebuggerServer = null;
+      gFront = gWindow = null;
       finish();
     });
   }
@@ -306,23 +303,13 @@ function testRemoveIframe() {
 
 function test() {
   addTab(MAIN_DOMAIN + "storage-dynamic-windows.html").then(function(doc) {
-    try {
-      // Sometimes debugger server does not get destroyed correctly by previous
-      // tests.
-      DebuggerServer.destroy();
-    } catch (ex) { }
-    DebuggerServer.init(function () { return true; });
-    DebuggerServer.addBrowserActors();
+    initDebuggerServer();
 
     let createConnection = () => {
       let client = new DebuggerClient(DebuggerServer.connectPipe());
-      client.connect(function onConnect() {
-        client.listTabs(function onListTabs(aResponse) {
-          let form = aResponse.tabs[aResponse.selected];
-          gFront = StorageFront(client, form);
-
-          gFront.listStores().then(data => testStores(data, client));
-        });
+      connectDebuggerClient(client).then(form => {
+        gFront = StorageFront(client, form);
+        gFront.listStores().then(data => testStores(data, client));
       });
     };
 
