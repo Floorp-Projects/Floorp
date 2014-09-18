@@ -44,6 +44,11 @@ protected:
   android::sp<android::OmxDecoder> mOmxDecoder;
   android::sp<android::MediaExtractor> mExtractor;
   MP3FrameParser mMP3FrameParser;
+
+  // A cache value updated by UpdateIsWaitingMediaResources(), makes the
+  // "waiting resources state" is synchronous to StateMachine.
+  bool mIsWaitingResources;
+
   // Called by ReadMetadata() during MediaDecoderStateMachine::DecodeMetadata()
   // on decode thread. It create and initialize the OMX decoder including
   // setting up custom extractor. The extractor provide the essential
@@ -53,6 +58,11 @@ protected:
   // Called inside DecodeVideoFrame, DecodeAudioData, ReadMetadata and Seek
   // to activate the decoder automatically.
   virtual void EnsureActive();
+
+  // Check the underlying HW resources are available and store the result in
+  // mIsWaitingResources. The result might be changed by binder thread,
+  // Can only called by ReadMetadata.
+  void UpdateIsWaitingMediaResources();
 
 public:
   MediaOmxReader(AbstractMediaDecoder* aDecoder);
@@ -76,7 +86,8 @@ public:
     return mHasVideo;
   }
 
-  virtual bool IsWaitingMediaResources();
+  // Return mIsWaitingResources.
+  virtual bool IsWaitingMediaResources() MOZ_OVERRIDE;
 
   virtual bool IsDormantNeeded();
   virtual void ReleaseMediaResources();
