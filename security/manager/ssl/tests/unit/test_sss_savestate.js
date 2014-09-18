@@ -5,9 +5,12 @@
 // The purpose of this test is to see that the site security service properly
 // writes its state file.
 
-const EXPECTED_ENTRIES = 5;
-const EXPECTED_COLUMNS = 3;
+const EXPECTED_ENTRIES = 6;
+const EXPECTED_HSTS_COLUMNS = 3;
+const EXPECTED_HPKP_COLUMNS = 4;
 let gProfileDir = null;
+
+const NON_ISSUED_KEY_HASH = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 
 // For reference, the format of the state file is a list of:
 // <domain name> <expiration time in milliseconds>,<sts status>,<includeSubdomains>
@@ -30,7 +33,11 @@ function checkStateWritten(aSubject, aTopic, aData) {
     let score = parts[1];
     let lastAccessed = parts[2];
     let entry = parts[3].split(',');
-    do_check_eq(entry.length, EXPECTED_COLUMNS);
+    let expectedColumns = EXPECTED_HSTS_COLUMNS;
+    if (host.indexOf("HPKP") != -1) {
+      expectedColumns = EXPECTED_HPKP_COLUMNS;
+    }
+    do_check_eq(entry.length, expectedColumns);
     sites[host] = entry;
   }
 
@@ -42,36 +49,43 @@ function checkStateWritten(aSubject, aTopic, aData) {
   // sites[url][1] corresponds to SecurityPropertySet (if 1) and
   //                              SecurityPropertyUnset (if 0)
   // sites[url][2] corresponds to includeSubdomains
-  if (sites["bugzilla.mozilla.org"][1] != 1) {
+  if (sites["bugzilla.mozilla.org:HSTS"][1] != 1) {
     return;
   }
-  if (sites["bugzilla.mozilla.org"][2] != 0) {
+  if (sites["bugzilla.mozilla.org:HSTS"][2] != 0) {
     return;
   }
-  if (sites["a.example.com"][1] != 1) {
+  if (sites["a.example.com:HSTS"][1] != 1) {
     return;
   }
-  if (sites["a.example.com"][2] != 1) {
+  if (sites["a.example.com:HSTS"][2] != 1) {
     return;
   }
-  if (sites["b.example.com"][1] != 1) {
+  if (sites["b.example.com:HSTS"][1] != 1) {
     return;
   }
-  if (sites["b.example.com"][2] != 0) {
+  if (sites["b.example.com:HSTS"][2] != 0) {
     return;
   }
-  if (sites["c.c.example.com"][1] != 1) {
+  if (sites["c.c.example.com:HSTS"][1] != 1) {
     return;
   }
-  if (sites["c.c.example.com"][2] != 1) {
+  if (sites["c.c.example.com:HSTS"][2] != 1) {
     return;
   }
-  if (sites["d.example.com"][1] != 1) {
+  if (sites["d.example.com:HSTS"][1] != 1) {
     return;
   }
-  if (sites["d.example.com"][2] != 0) {
+  if (sites["d.example.com:HSTS"][2] != 0) {
     return;
   }
+  if (sites["dynamic-pin.example.com:HPKP"][1] != 1) {
+    return;
+  }
+  if (sites["dynamic-pin.example.com:HPKP"][2] != 1) {
+    return;
+  }
+  do_check_eq(sites["dynamic-pin.example.com:HPKP"][3], NON_ISSUED_KEY_HASH);
 
   do_test_finished();
 }
@@ -81,6 +95,9 @@ function run_test() {
   gProfileDir = do_get_profile();
   let SSService = Cc["@mozilla.org/ssservice;1"]
                     .getService(Ci.nsISiteSecurityService);
+  // Put an HPKP entry
+  SSService.setKeyPins("dynamic-pin.example.com", true, 1000, 1,
+                       [NON_ISSUED_KEY_HASH]);
 
   let uris = [ Services.io.newURI("http://bugzilla.mozilla.org", null, null),
                Services.io.newURI("http://a.example.com", null, null),
@@ -97,7 +114,6 @@ function run_test() {
     SSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS,
                             uris[uriIndex], maxAge + includeSubdomains, 0);
   }
-
 
   do_test_pending();
   Services.obs.addObserver(checkStateWritten, "data-storage-written", false);

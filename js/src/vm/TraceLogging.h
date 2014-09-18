@@ -140,7 +140,6 @@ namespace jit {
     _(ParallelSafetyAnalysis)                         \
     _(AliasAnalysis)                                  \
     _(GVN)                                            \
-    _(UCE)                                            \
     _(LICM)                                           \
     _(RangeAnalysis)                                  \
     _(LoopUnrolling)                                  \

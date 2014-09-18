@@ -10,6 +10,7 @@
 #include "mozilla/dom/PContentParent.h"
 #include "mozilla/dom/nsIContentParent.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/HalTypes.h"
@@ -39,7 +40,6 @@ class PRemoteSpellcheckEngineParent;
 
 namespace ipc {
 class OptionalURIParams;
-class PFileDescriptorSetParent;
 class URIParams;
 class TestShellParent;
 } // namespace ipc
@@ -62,6 +62,7 @@ class PStorageParent;
 class ClonedMessageData;
 class MemoryReport;
 class TabContext;
+class PFileDescriptorSetParent;
 class ContentBridgeParent;
 
 class ContentParent MOZ_FINAL : public PContentParent
@@ -72,7 +73,6 @@ class ContentParent MOZ_FINAL : public PContentParent
 {
     typedef mozilla::ipc::GeckoChildProcessHost GeckoChildProcessHost;
     typedef mozilla::ipc::OptionalURIParams OptionalURIParams;
-    typedef mozilla::ipc::PFileDescriptorSetParent PFileDescriptorSetParent;
     typedef mozilla::ipc::TestShellParent TestShellParent;
     typedef mozilla::ipc::URIParams URIParams;
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
@@ -225,6 +225,10 @@ public:
     void FriendlyName(nsAString& aName, bool aAnonymize = false);
 
     virtual void OnChannelError() MOZ_OVERRIDE;
+
+    virtual PIndexedDBParent* AllocPIndexedDBParent() MOZ_OVERRIDE;
+    virtual bool
+    RecvPIndexedDBConstructor(PIndexedDBParent* aActor) MOZ_OVERRIDE;
 
     virtual PCrashReporterParent*
     AllocPCrashReporterParent(const NativeThreadId& tid,
@@ -428,9 +432,8 @@ private:
     virtual bool
     DeallocPFileSystemRequestParent(PFileSystemRequestParent*) MOZ_OVERRIDE;
 
-    virtual PBlobParent* AllocPBlobParent(const BlobConstructorParams& aParams)
-                                          MOZ_OVERRIDE;
-    virtual bool DeallocPBlobParent(PBlobParent* aActor) MOZ_OVERRIDE;
+    virtual PBlobParent* AllocPBlobParent(const BlobConstructorParams& aParams) MOZ_OVERRIDE;
+    virtual bool DeallocPBlobParent(PBlobParent*) MOZ_OVERRIDE;
 
     virtual bool DeallocPCrashReporterParent(PCrashReporterParent* crashreporter) MOZ_OVERRIDE;
 
@@ -441,6 +444,8 @@ private:
                                  const uint32_t& flags, bool* isSecureURI);
 
     virtual bool DeallocPHalParent(PHalParent*) MOZ_OVERRIDE;
+
+    virtual bool DeallocPIndexedDBParent(PIndexedDBParent* aActor) MOZ_OVERRIDE;
 
     virtual PMemoryReportRequestParent*
     AllocPMemoryReportRequestParent(const uint32_t& aGeneration,
@@ -647,16 +652,6 @@ private:
 
     virtual bool
     DeallocPFileDescriptorSetParent(PFileDescriptorSetParent*) MOZ_OVERRIDE;
-
-    virtual bool
-    RecvGetFileReferences(const PersistenceType& aPersistenceType,
-                          const nsCString& aOrigin,
-                          const nsString& aDatabaseName,
-                          const int64_t& aFileId,
-                          int32_t* aRefCnt,
-                          int32_t* aDBRefCnt,
-                          int32_t* aSliceRefCnt,
-                          bool* aResult) MOZ_OVERRIDE;
 
     // If you add strong pointers to cycle collected objects here, be sure to
     // release these objects in ShutDownProcess.  See the comment there for more

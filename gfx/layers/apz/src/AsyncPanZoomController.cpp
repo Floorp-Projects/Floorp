@@ -410,7 +410,7 @@ GetFrameTime() {
 
 class MOZ_STACK_CLASS StateChangeNotificationBlocker {
 public:
-  StateChangeNotificationBlocker(AsyncPanZoomController* aApzc)
+  explicit StateChangeNotificationBlocker(AsyncPanZoomController* aApzc)
     : mApzc(aApzc)
   {
     ReentrantMonitorAutoEnter lock(mApzc->mMonitor);

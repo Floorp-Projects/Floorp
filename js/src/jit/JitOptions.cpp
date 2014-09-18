@@ -57,9 +57,6 @@ JitOptions::JitOptions()
     // Toggles whether Loop Unrolling is globally disabled.
     disableLoopUnrolling = true;
 
-    // Toggles whether Unreachable Code Elimination is globally disabled.
-    disableUce = false;
-
     // Toggles whether Effective Address Analysis is globally disabled.
     disableEaa = false;
 

@@ -3092,16 +3092,21 @@ BaselineCompiler::emit_JSOP_MOREITER()
 }
 
 bool
-BaselineCompiler::emit_JSOP_ITERNEXT()
+BaselineCompiler::emit_JSOP_ISNOITER()
 {
     frame.syncStack(0);
-    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
 
-    ICIteratorNext_Fallback::Compiler compiler(cx);
-    if (!emitOpIC(compiler.getStub(&stubSpace_)))
-        return false;
+    Label isMagic, done;
+    masm.branchTestMagic(Assembler::Equal, frame.addressOfStackValue(frame.peek(-1)),
+                         &isMagic);
+    masm.moveValue(BooleanValue(false), R0);
+    masm.jump(&done);
 
-    frame.push(R0);
+    masm.bind(&isMagic);
+    masm.moveValue(BooleanValue(true), R0);
+
+    masm.bind(&done);
+    frame.push(R0, JSVAL_TYPE_BOOLEAN);
     return true;
 }
 

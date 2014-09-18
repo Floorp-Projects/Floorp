@@ -268,7 +268,7 @@ js::ZoneOfValue(const JS::Value &value)
     JS_ASSERT(value.isMarkable());
     if (value.isObject())
         return value.toObject().zone();
-    return static_cast<js::gc::Cell *>(value.toGCThing())->tenuredZone();
+    return js::gc::TenuredCell::fromPointer(value.toGCThing())->zone();
 }
 
 bool

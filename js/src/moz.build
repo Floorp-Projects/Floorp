@@ -197,7 +197,6 @@ UNIFIED_SOURCES += [
     'jit/StupidAllocator.cpp',
     'jit/TypedObjectPrediction.cpp',
     'jit/TypePolicy.cpp',
-    'jit/UnreachableCodeElimination.cpp',
     'jit/ValueNumbering.cpp',
     'jit/VMFunctions.cpp',
     'jsalloc.cpp',

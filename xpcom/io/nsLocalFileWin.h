@@ -110,11 +110,6 @@ private:
   nsresult HasFileAttribute(DWORD aFileAttrib, bool* aResult);
   nsresult AppendInternal(const nsAFlatString& aNode,
                           bool aMultipleComponents);
-
-  nsresult OpenNSPRFileDescMaybeShareDelete(int32_t aFlags,
-                                            int32_t aMode,
-                                            bool aShareDelete,
-                                            PRFileDesc** aResult);
 };
 
 #endif

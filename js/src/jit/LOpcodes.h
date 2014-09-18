@@ -259,8 +259,8 @@
     _(SetPropertyPolymorphicT)      \
     _(CallIteratorStart)            \
     _(IteratorStart)                \
-    _(IteratorNext)                 \
     _(IteratorMore)                 \
+    _(IsNoIterAndBranch)            \
     _(IteratorEnd)                  \
     _(ArrayLength)                  \
     _(SetArrayLength)               \

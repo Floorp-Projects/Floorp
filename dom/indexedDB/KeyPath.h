@@ -7,28 +7,16 @@
 #ifndef mozilla_dom_indexeddb_keypath_h__
 #define mozilla_dom_indexeddb_keypath_h__
 
+#include "mozilla/dom/indexedDB/IndexedDatabase.h"
+
 #include "mozilla/dom/BindingDeclarations.h"
 
-namespace mozilla {
-namespace dom {
-namespace indexedDB {
+BEGIN_INDEXEDDB_NAMESPACE
 
-class IndexMetadata;
 class Key;
-class ObjectStoreMetadata;
 
 class KeyPath
 {
-  // This private constructor is only to be used by IPDL-generated classes.
-  friend class IndexMetadata;
-  friend class ObjectStoreMetadata;
-
-  KeyPath()
-  : mType(NONEXISTENT)
-  {
-    MOZ_COUNT_CTOR(KeyPath);
-  }
-
 public:
   enum KeyPathType {
     NONEXISTENT,
@@ -117,8 +105,6 @@ public:
   nsTArray<nsString> mStrings;
 };
 
-} // namespace indexedDB
-} // namespace dom
-} // namespace mozilla
+END_INDEXEDDB_NAMESPACE
 
-#endif // mozilla_dom_indexeddb_keypath_h__
+#endif /* mozilla_dom_indexeddb_keypath_h__ */

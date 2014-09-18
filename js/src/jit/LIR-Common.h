@@ -5571,27 +5571,7 @@ class LIteratorStart : public LInstructionHelper<1, 1, 3>
     }
 };
 
-class LIteratorNext : public LInstructionHelper<BOX_PIECES, 1, 1>
-{
-  public:
-    LIR_HEADER(IteratorNext)
-
-    LIteratorNext(const LAllocation &iterator, const LDefinition &temp) {
-        setOperand(0, iterator);
-        setTemp(0, temp);
-    }
-    const LAllocation *object() {
-        return getOperand(0);
-    }
-    const LDefinition *temp() {
-        return getTemp(0);
-    }
-    MIteratorNext *mir() const {
-        return mir_->toIteratorNext();
-    }
-};
-
-class LIteratorMore : public LInstructionHelper<1, 1, 1>
+class LIteratorMore : public LInstructionHelper<BOX_PIECES, 1, 1>
 {
   public:
     LIR_HEADER(IteratorMore)
@@ -5608,6 +5588,26 @@ class LIteratorMore : public LInstructionHelper<1, 1, 1>
     }
     MIteratorMore *mir() const {
         return mir_->toIteratorMore();
+    }
+};
+
+class LIsNoIterAndBranch : public LControlInstructionHelper<2, BOX_PIECES, 0>
+{
+  public:
+    LIR_HEADER(IsNoIterAndBranch)
+
+    LIsNoIterAndBranch(MBasicBlock *ifTrue, MBasicBlock *ifFalse) {
+        setSuccessor(0, ifTrue);
+        setSuccessor(1, ifFalse);
+    }
+
+    static const size_t Input = 0;
+
+    MBasicBlock *ifTrue() const {
+        return getSuccessor(0);
+    }
+    MBasicBlock *ifFalse() const {
+        return getSuccessor(1);
     }
 };
 

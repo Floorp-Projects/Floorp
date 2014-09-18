@@ -257,6 +257,11 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // optimizations remove the backedge.
     void clearLoopHeader();
 
+    // Sets a block to a LOOP_HEADER block, with newBackedge as its backedge.
+    // This is needed when optimizations remove the normal entry to a loop
+    // with multiple entries.
+    void setLoopHeader(MBasicBlock *newBackedge);
+
     // Propagates phis placed in a loop header down to this successor block.
     void inheritPhis(MBasicBlock *header);
 
@@ -298,6 +303,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     // Mark this block as having been removed from the graph.
     void markAsDead() {
+        MOZ_ASSERT(kind_ != DEAD);
         kind_ = DEAD;
     }
 
@@ -542,6 +548,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         return successorWithPhis_;
     }
     uint32_t positionInPhiSuccessor() const {
+        MOZ_ASSERT(successorWithPhis());
         return positionInPhiSuccessor_;
     }
     void setSuccessorWithPhis(MBasicBlock *successor, uint32_t id) {
@@ -672,6 +679,7 @@ class MIRGraph
 
     void addBlock(MBasicBlock *block);
     void insertBlockAfter(MBasicBlock *at, MBasicBlock *block);
+    void insertBlockBefore(MBasicBlock *at, MBasicBlock *block);
 
     void renumberBlocksAfter(MBasicBlock *at);
 
@@ -801,13 +809,6 @@ class MDefinitionIterator
         return *iter_;
     }
 
-    void next() {
-        if (atPhi())
-            phiIter_++;
-        else
-            iter_++;
-    }
-
     bool more() const {
         return atPhi() || (*iter_) != block_->lastIns();
     }
@@ -819,10 +820,18 @@ class MDefinitionIterator
         iter_(block->begin())
     { }
 
+    MDefinitionIterator operator ++() {
+        MOZ_ASSERT(more());
+        if (atPhi())
+            ++phiIter_;
+        else
+            ++iter_;
+        return *this;
+    }
+
     MDefinitionIterator operator ++(int) {
         MDefinitionIterator old(*this);
-        if (more())
-            next();
+        operator++ ();
         return old;
     }
 

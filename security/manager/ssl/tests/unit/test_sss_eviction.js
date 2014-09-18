@@ -29,7 +29,7 @@ function do_state_written(aSubject, aTopic, aData) {
 
   let foundLegitSite = false;
   for (let line of lines) {
-    if (line.startsWith("frequentlyused.example.com")) {
+    if (line.startsWith("frequentlyused.example.com:HSTS")) {
       foundLegitSite = true;
       break;
     }
@@ -64,7 +64,7 @@ function run_test() {
   do_check_false(stateFile.exists());
   let outputStream = FileUtils.openFileOutputStream(stateFile);
   let now = (new Date()).getTime();
-  let line = "frequentlyused.example.com\t4\t0\t" + (now + 100000) + ",1,0\n";
+  let line = "frequentlyused.example.com:HSTS\t4\t0\t" + (now + 100000) + ",1,0\n";
   outputStream.write(line, line.length);
   outputStream.close();
   Services.obs.addObserver(do_state_read, "data-storage-ready", false);

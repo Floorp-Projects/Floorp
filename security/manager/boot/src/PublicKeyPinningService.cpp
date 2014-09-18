@@ -9,7 +9,11 @@
 #include "cert.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Telemetry.h"
+#include "nsISiteSecurityService.h"
+#include "nsServiceManagerUtils.h"
+#include "nsSiteSecurityService.h"
 #include "nsString.h"
+#include "nsTArray.h"
 #include "nssb64.h"
 #include "pkix/pkixtypes.h"
 #include "prlog.h"
@@ -53,13 +57,14 @@ GetBase64HashSPKI(const CERTCertificate* cert, SECOidTag hashType,
 
 /*
  * Returns true if a given cert matches any hashType fingerprints from the
- * given pinset, false otherwise.
+ * given pinset or the dynamicFingeprints array, false otherwise.
  */
 static bool
 EvalCertWithHashType(const CERTCertificate* cert, SECOidTag hashType,
-                     const StaticFingerprints* fingerprints)
+                     const StaticFingerprints* fingerprints,
+                     const nsTArray<nsCString>* dynamicFingerprints)
 {
-  if (!fingerprints) {
+  if (!fingerprints && !dynamicFingerprints) {
     PR_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
            ("pkpin: No hashes found for hash type: %d\n", hashType));
     return false;
@@ -73,11 +78,22 @@ EvalCertWithHashType(const CERTCertificate* cert, SECOidTag hashType,
     return false;
   }
 
-  for (size_t i = 0; i < fingerprints->size; i++) {
-    if (base64Out.Equals(fingerprints->data[i])) {
-      PR_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
-             ("pkpin: found pin base_64 ='%s'\n", base64Out.get()));
-      return true;
+  if (fingerprints) {
+    for (size_t i = 0; i < fingerprints->size; i++) {
+      if (base64Out.Equals(fingerprints->data[i])) {
+        PR_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
+               ("pkpin: found pin base_64 ='%s'\n", base64Out.get()));
+       return true;
+      }
+    }
+  }
+  if (dynamicFingerprints) {
+    for (size_t i = 0; i < dynamicFingerprints->Length(); i++) {
+      if (base64Out.Equals((*dynamicFingerprints)[i])) {
+        PR_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
+               ("pkpin: found pin base_64 ='%s'\n", base64Out.get()));
+        return true;
+      }
     }
   }
   return false;
@@ -85,21 +101,24 @@ EvalCertWithHashType(const CERTCertificate* cert, SECOidTag hashType,
 
 /*
  * Returns true if a given chain matches any hashType fingerprints from the
- * given pinset, false otherwise.
+ * given pinset or the dynamicFingerprints array, false otherwise.
  */
 static bool
 EvalChainWithHashType(const CERTCertList* certList, SECOidTag hashType,
-                      const StaticPinset* pinset)
+                      const StaticPinset* pinset,
+                      const nsTArray<nsCString>* dynamicFingerprints)
 {
   CERTCertificate* currentCert;
 
   const StaticFingerprints* fingerprints = nullptr;
-  if (hashType == SEC_OID_SHA256) {
-    fingerprints = pinset->sha256;
-  } else if (hashType == SEC_OID_SHA1) {
-    fingerprints = pinset->sha1;
+  if (pinset) {
+    if (hashType == SEC_OID_SHA256) {
+      fingerprints = pinset->sha256;
+    } else if (hashType == SEC_OID_SHA1) {
+      fingerprints = pinset->sha1;
+    }
   }
-  if (!fingerprints) {
+  if (!fingerprints && !dynamicFingerprints) {
     return false;
   }
 
@@ -113,7 +132,8 @@ EvalChainWithHashType(const CERTCertList* certList, SECOidTag hashType,
     PR_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
            ("pkpin: certArray common_name: '%s'\n",
             CERT_GetCommonName(&(currentCert->issuer))));
-    if (EvalCertWithHashType(currentCert, hashType, fingerprints)) {
+    if (EvalCertWithHashType(currentCert, hashType, fingerprints,
+                             dynamicFingerprints)) {
       return true;
     }
   }
@@ -129,10 +149,10 @@ static bool
 EvalChainWithPinset(const CERTCertList* certList,
                     const StaticPinset* pinset) {
   // SHA256 is more trustworthy, try that first.
-  if (EvalChainWithHashType(certList, SEC_OID_SHA256, pinset)) {
+  if (EvalChainWithHashType(certList, SEC_OID_SHA256, pinset, nullptr)) {
     return true;
   }
-  return EvalChainWithHashType(certList, SEC_OID_SHA1, pinset);
+  return EvalChainWithHashType(certList, SEC_OID_SHA1, pinset, nullptr);
 }
 
 /**
@@ -152,7 +172,7 @@ TransportSecurityPreloadCompare(const void *key, const void *entry) {
  */
 static bool
 CheckPinsForHostname(const CERTCertList *certList, const char *hostname,
-                     bool enforceTestMode)
+                     bool enforceTestMode, mozilla::pkix::Time time)
 {
   if (!certList) {
     return false;
@@ -161,6 +181,12 @@ CheckPinsForHostname(const CERTCertList *certList, const char *hostname,
     return false;
   }
 
+  nsCOMPtr<nsISiteSecurityService> sssService =
+    do_GetService(NS_SSSERVICE_CONTRACTID);
+  if (!sssService) {
+    return false;
+  }
+  SiteHPKPState dynamicEntry;
   TransportSecurityPreload *foundEntry = nullptr;
   char *evalHost = const_cast<char*>(hostname);
   char *evalPart;
@@ -168,6 +194,23 @@ CheckPinsForHostname(const CERTCertList *certList, const char *hostname,
   while (!foundEntry && (evalPart = strchr(evalHost, '.'))) {
     PR_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
            ("pkpin: Querying pinsets for host: '%s'\n", evalHost));
+    // Attempt dynamic pins first
+    nsresult rv;
+    bool found;
+    bool includeSubdomains;
+    nsTArray<nsCString> pinArray;
+    rv = sssService->GetKeyPinsForHostname(evalHost, time, pinArray,
+                                           &includeSubdomains, &found);
+    if (NS_FAILED(rv)) {
+      return false;
+    }
+    if (found && (evalHost == hostname || includeSubdomains)) {
+      PR_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
+             ("pkpin: Found dyn match for host: '%s'\n", evalHost));
+      return EvalChainWithHashType(certList, SEC_OID_SHA256, nullptr,
+                                   &pinArray);
+    }
+
     foundEntry = (TransportSecurityPreload *)bsearch(evalHost,
       kPublicKeyPinningPreloadList,
       sizeof(kPublicKeyPinningPreloadList) / sizeof(TransportSecurityPreload),
@@ -191,6 +234,10 @@ CheckPinsForHostname(const CERTCertList *certList, const char *hostname,
   }
 
   if (foundEntry && foundEntry->pinset) {
+    if (time > TimeFromEpochInSeconds(kPreloadPKPinsExpirationTime /
+                                      PR_USEC_PER_SEC)) {
+      return true;
+    }
     bool result = EvalChainWithPinset(certList, foundEntry->pinset);
     bool retval = result;
     Telemetry::ID histogram = foundEntry->mIsMoz
@@ -231,7 +278,8 @@ CheckPinsForHostname(const CERTCertList *certList, const char *hostname,
  * evaluating at the first OK pin).
  */
 static bool
-CheckChainAgainstAllNames(const CERTCertList* certList, bool enforceTestMode)
+CheckChainAgainstAllNames(const CERTCertList* certList, bool enforceTestMode,
+                          mozilla::pkix::Time time)
 {
   PR_LOG(gPublicKeyPinningLog, PR_LOG_DEBUG,
          ("pkpin: top of checkChainAgainstAllNames"));
@@ -276,7 +324,7 @@ CheckChainAgainstAllNames(const CERTCertList* certList, bool enforceTestMode)
         // cannot call CheckPinsForHostname on empty or null hostname
         break;
       }
-      if (CheckPinsForHostname(certList, hostName, enforceTestMode)) {
+      if (CheckPinsForHostname(certList, hostName, enforceTestMode, time)) {
         hasValidPins = true;
         break;
       }
@@ -296,12 +344,8 @@ PublicKeyPinningService::ChainHasValidPins(const CERTCertList* certList,
   if (!certList) {
     return false;
   }
-  if (time > TimeFromEpochInSeconds(kPreloadPKPinsExpirationTime /
-                                    PR_USEC_PER_SEC)) {
-    return true;
-  }
   if (!hostname || hostname[0] == 0) {
-    return CheckChainAgainstAllNames(certList, enforceTestMode);
+    return CheckChainAgainstAllNames(certList, enforceTestMode, time);
   }
-  return CheckPinsForHostname(certList, hostname, enforceTestMode);
+  return CheckPinsForHostname(certList, hostname, enforceTestMode, time);
 }

@@ -604,6 +604,8 @@ NonLocalExitScope::prepareForNonLocalJump(StmtInfoBCE *toStmt)
             break;
 
           case STMT_FOR_IN_LOOP:
+            /* The iterator and the current value are on the stack. */
+            npops += 1;
             FLUSH_POPS();
             if (!PopIterator(cx, bce))
                 return false;
@@ -718,10 +720,8 @@ PushLoopStatement(BytecodeEmitter *bce, LoopStmtInfo *stmt, StmtType type, ptrdi
     int loopSlots;
     if (type == STMT_SPREAD)
         loopSlots = 3;
-    else if (type == STMT_FOR_OF_LOOP)
+    else if (type == STMT_FOR_IN_LOOP || type == STMT_FOR_OF_LOOP)
         loopSlots = 2;
-    else if (type == STMT_FOR_IN_LOOP)
-        loopSlots = 1;
     else
         loopSlots = 0;
 
@@ -4883,6 +4883,11 @@ EmitForIn(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
     if (Emit2(cx, bce, JSOP_ITER, (uint8_t) pn->pn_iflags) < 0)
         return false;
 
+    // For-in loops have both the iterator and the value on the stack. Push
+    // undefined to balance the stack.
+    if (Emit1(cx, bce, JSOP_UNDEFINED) < 0)
+        return false;
+
     // Enter the block before the loop body, after evaluating the obj.
     // Initialize let bindings with undefined when entering, as the name
     // assigned to is a plain assignment.
@@ -4917,16 +4922,9 @@ EmitForIn(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
     int loopDepth = bce->stackDepth;
 #endif
 
-    /*
-     * Emit code to get the next enumeration value and assign it to the
-     * left hand side.
-     */
-    if (Emit1(cx, bce, JSOP_ITERNEXT) < 0)
-        return false;
+    // Emit code to assign the enumeration value to the left hand side, but
+    // also leave it on the stack.
     if (!EmitAssignment(cx, bce, forHead->pn_kid2, JSOP_NOP, nullptr))
-        return false;
-
-    if (Emit1(cx, bce, JSOP_POP) < 0)
         return false;
 
     /* The stack should be balanced around the assignment opcode sequence. */
@@ -4948,9 +4946,13 @@ EmitForIn(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
     SetJumpOffsetAt(bce, jmp);
     if (!EmitLoopEntry(cx, bce, nullptr))
         return false;
+    if (Emit1(cx, bce, JSOP_POP) < 0)
+        return false;
     if (Emit1(cx, bce, JSOP_MOREITER) < 0)
         return false;
-    ptrdiff_t beq = EmitJump(cx, bce, JSOP_IFNE, top - bce->offset());
+    if (Emit1(cx, bce, JSOP_ISNOITER) < 0)
+        return false;
+    ptrdiff_t beq = EmitJump(cx, bce, JSOP_IFEQ, top - bce->offset());
     if (beq < 0)
         return false;
 
@@ -4960,6 +4962,10 @@ EmitForIn(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, ptrdiff_t t
 
     // Fix up breaks and continues.
     if (!PopStatementBCE(cx, bce))
+        return false;
+
+    // Pop the enumeration value.
+    if (Emit1(cx, bce, JSOP_POP) < 0)
         return false;
 
     if (!bce->tryNoteList.append(JSTRY_ITER, bce->stackDepth, top, bce->offset()))
