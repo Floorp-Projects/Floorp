@@ -170,14 +170,12 @@ public class testSettingsMenuItems extends PixelTest {
                 settingsMap.get(PATH_DISPLAY).remove(TITLE_BAR_LABEL_ARR);
             }
 
-            String[] learnMoreUi = { "Learn more" };
-            settingsMap.get(PATH_MOZILLA).add(learnMoreUi);
-        }
-
-        // Anonymous cell tower/wifi collection.
-        if (AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED) {
+            // Anonymous cell tower/wifi collection - only built if *not* release build
             String[] networkReportingUi = { "Mozilla Location Service", "Receives Wi-Fi and cellular location data when running in the background and shares it with Mozilla to improve our geolocation service" };
             settingsMap.get(PATH_MOZILLA).add(networkReportingUi);
+
+            String[] learnMoreUi = { "Learn more" };
+            settingsMap.get(PATH_MOZILLA).add(learnMoreUi);
         }
 
         // Automatic updates
