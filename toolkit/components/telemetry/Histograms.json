@@ -6589,6 +6589,11 @@
     "n_values": 3,
     "description": "Doorhanger shown = 0, Disable = 1, Enable = 2"
   },
+  "LOOP_CLIENT_CALL_URL_REQUESTS_SUCCESS": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Stores 1 if generating a call URL succeeded, and 0 if it failed."
+  },
   "E10S_AUTOSTART": {
     "expires_in_version": "never",
     "kind": "boolean",

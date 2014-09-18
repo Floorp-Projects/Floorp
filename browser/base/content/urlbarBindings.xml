@@ -1628,7 +1628,7 @@
   <binding id="bad-content-notification" extends="chrome://global/content/bindings/notification.xml#popup-notification">
     <content>
       <xul:hbox align="start">
-        <xul:image class="popup-notification-icon" xbl:inherits="popupid"/>
+        <xul:image class="popup-notification-icon" xbl:inherits="popupid,mixedblockdisabled,trackingblockdisabled"/>
         <xul:vbox>
           <!-- header -->
           <xul:vbox>
