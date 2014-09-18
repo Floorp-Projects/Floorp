@@ -1194,12 +1194,6 @@ MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
   }
 }
 
-/**
- * Returns smallest value of t such that
- * TimeToTicksRoundUp(aSampleRate, t) is a multiple of WEBAUDIO_BLOCK_SIZE
- * and floor(TimeToTicksRoundUp(aSampleRate, t)/WEBAUDIO_BLOCK_SIZE) >
- * floor(TimeToTicksRoundUp(aSampleRate, aTime)/WEBAUDIO_BLOCK_SIZE).
- */
 GraphTime
 MediaStreamGraphImpl::RoundUpToNextAudioBlock(GraphTime aTime)
 {

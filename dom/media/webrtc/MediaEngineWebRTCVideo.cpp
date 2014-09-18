@@ -134,11 +134,9 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   // So mState could be kReleased here.  We really don't care about the state,
   // though.
 
-  TrackTicks target = aSource->TimeToTicksRoundUp(
-      aSource->GraphRate(), aDesiredTime);
-  TrackTicks delta = target - aLastEndTime;
-  LOGFRAME(("NotifyPull, desired = %ld, target = %ld, delta = %ld %s", (int64_t) aDesiredTime,
-            (int64_t) target, (int64_t) delta, mImage ? "" : "<null>"));
+  TrackTicks delta = aDesiredTime - aLastEndTime;
+  LOGFRAME(("NotifyPull, desired = %ld, delta = %ld %s", (int64_t) aDesiredTime,
+            (int64_t) delta, mImage.get() ? "" : "<null>"));
 
   // Bug 846188 We may want to limit incoming frames to the requested frame rate
   // mFps - if you want 30FPS, and the camera gives you 60FPS, this could
@@ -153,7 +151,7 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   if (delta > 0) {
     // nullptr images are allowed
     if (AppendToTrack(aSource, mImage, aID, delta)) {
-      aLastEndTime = target;
+      aLastEndTime = aDesiredTime;
     }
   }
 }
