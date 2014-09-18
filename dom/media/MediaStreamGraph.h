@@ -491,7 +491,7 @@ public:
   }
   int64_t StreamTimeToMicroseconds(StreamTime aTime)
   {
-    return TimeToTicksRoundDown(1000000, aTime);
+    return (aTime*1000000)/mBuffer.GraphRate();
   }
   StreamTime MicrosecondsToStreamTimeRoundDown(int64_t aMicroseconds) {
     return (aMicroseconds*mBuffer.GraphRate())/1000000;
