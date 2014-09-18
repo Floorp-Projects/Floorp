@@ -20,7 +20,7 @@ class WebGLElementArrayCache;
 
 class WebGLBuffer MOZ_FINAL
     : public nsWrapperCache
-    , public WebGLBindableName
+    , public WebGLBindableName<GLenum>
     , public WebGLRefCountedObject<WebGLBuffer>
     , public LinkedListElement<WebGLBuffer>
     , public WebGLContextBoundObject

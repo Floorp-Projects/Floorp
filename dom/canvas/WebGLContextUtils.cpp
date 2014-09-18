@@ -56,10 +56,10 @@ FormatHasAlpha(GLenum webGLFormat)
            webGLFormat == LOCAL_GL_SRGB_ALPHA;
 }
 
-GLenum
-TexImageTargetToTexTarget(GLenum texImageTarget)
+TexTarget
+TexImageTargetToTexTarget(TexImageTarget texImageTarget)
 {
-    switch (texImageTarget) {
+    switch (texImageTarget.get()) {
     case LOCAL_GL_TEXTURE_2D:
         return LOCAL_GL_TEXTURE_2D;
     case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
@@ -70,6 +70,8 @@ TexImageTargetToTexTarget(GLenum texImageTarget)
     case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
         return LOCAL_GL_TEXTURE_CUBE_MAP;
     default:
+        MOZ_ASSERT(false, "Bad texture conversion");
+        // Should be caught by the constructor for TexTarget
         return LOCAL_GL_NONE;
     }
 }
