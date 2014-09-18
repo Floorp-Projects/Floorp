@@ -1284,6 +1284,7 @@ MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
 #endif
 
     activation->markRematerializedFrames(trc);
+    activation->markIonRecovery(trc);
 
     for (JitFrameIterator frames(activations); !frames.done(); ++frames) {
         switch (frames.type()) {
@@ -1501,6 +1502,12 @@ RInstructionResults::operator [](size_t index)
 {
     MOZ_ASSERT(index < len_);
     return results_.get()[index];
+}
+
+void
+RInstructionResults::trace(JSTracer *trc)
+{
+    gc::MarkValueRange(trc, len_, results_.get(), "ion-recover-results");
 }
 
 
