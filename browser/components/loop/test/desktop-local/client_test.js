@@ -34,7 +34,8 @@ describe("loop.Client", function() {
         .returns(fakeToken),
       ensureRegistered: sinon.stub().callsArgWith(0, null),
       noteCallUrlExpiry: sinon.spy(),
-      hawkRequest: sinon.stub()
+      hawkRequest: sinon.stub(),
+      telemetryAdd: sinon.spy(),
     };
     // Alias for clearer tests.
     hawkRequestStub = mozLoop.hawkRequest;
@@ -156,6 +157,30 @@ describe("loop.Client", function() {
           sinon.assert.notCalled(mozLoop.noteCallUrlExpiry);
         });
 
+      it("should call mozLoop.telemetryAdd when the request succeeds",
+        function(done) {
+          var callUrlData = {
+            "callUrl": "fakeCallUrl",
+            "expiresAt": 60
+          };
+
+          // Sets up the hawkRequest stub to trigger the callback with no error
+          // and the url.
+          hawkRequestStub.callsArgWith(3, null,
+            JSON.stringify(callUrlData));
+
+          client.requestCallUrl("foo", function(err) {
+            expect(err).to.be.null;
+
+            sinon.assert.calledOnce(mozLoop.telemetryAdd);
+            sinon.assert.calledWith(mozLoop.telemetryAdd,
+                                    "LOOP_CLIENT_CALL_URL_REQUESTS_SUCCESS",
+                                    true);
+
+            done();
+          });
+        });
+
       it("should send an error when the request fails", function() {
         // Sets up the hawkRequest stub to trigger the callback with
         // an error
@@ -181,6 +206,24 @@ describe("loop.Client", function() {
           return /Invalid data received/.test(err.message);
         }));
       });
+
+      it("should call mozLoop.telemetryAdd when the request fails",
+        function(done) {
+          // Sets up the hawkRequest stub to trigger the callback with
+          // an error
+          hawkRequestStub.callsArgWith(3, fakeErrorRes);
+
+          client.requestCallUrl("foo", function(err) {
+            expect(err).not.to.be.null;
+
+            sinon.assert.calledOnce(mozLoop.telemetryAdd);
+            sinon.assert.calledWith(mozLoop.telemetryAdd,
+                                    "LOOP_CLIENT_CALL_URL_REQUESTS_SUCCESS",
+                                    false);
+
+            done();
+          });
+        });
     });
   });
 });
