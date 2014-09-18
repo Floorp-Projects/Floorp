@@ -652,7 +652,7 @@ Notification::ShowInternal()
           return;
         }
 
-        appNotifier->ShowAppNotification(mIconUrl, mTitle, mBody,
+        appNotifier->ShowAppNotification(absoluteUrl, mTitle, mBody,
                                          observer, val);
         return;
       }
