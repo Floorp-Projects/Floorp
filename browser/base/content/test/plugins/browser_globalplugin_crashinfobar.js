@@ -59,11 +59,11 @@ function onCrash(event) {
     is (propVal, val, "Correct property in detail propBag: " + name + ".");
   }
 
-  let notificationBox = gBrowser.getNotificationBox(gTestBrowser);
-  let notification = notificationBox.getNotificationWithValue("plugin-crashed");
-
-  ok(notification, "Infobar was shown.");
-  is(notification.priority, notificationBox.PRIORITY_WARNING_MEDIUM, "Correct priority.");
-  is(notification.getAttribute("label"), "The GlobalTestPlugin plugin has crashed.", "Correct message.");
-  finish();
+  waitForNotificationBar("plugin-crashed", gTestBrowser, (notification) => {
+    let notificationBox = gBrowser.getNotificationBox(gTestBrowser);
+    ok(notification, "Infobar was shown.");
+    is(notification.priority, notificationBox.PRIORITY_WARNING_MEDIUM, "Correct priority.");
+    is(notification.getAttribute("label"), "The GlobalTestPlugin plugin has crashed.", "Correct message.");
+    finish();
+  });
 }

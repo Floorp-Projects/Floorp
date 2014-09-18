@@ -74,13 +74,15 @@ function test1() {
   let plugin = doc.getElementById("test");
   ok(plugin, "Test 1, Found plugin in page");
 
-  let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
-  ok(overlay.classList.contains("visible"), "Test 1, Plugin overlay should exist, not be hidden");
-  let closeIcon = doc.getAnonymousElementByAttribute(plugin, "anonid", "closeIcon")
+  waitForNotificationPopup("click-to-play-plugins", gTestBrowser, () => {
+    let overlay = doc.getAnonymousElementByAttribute(plugin, "anonid", "main");
+    ok(overlay.classList.contains("visible"), "Test 1, Plugin overlay should exist, not be hidden");
+    let closeIcon = doc.getAnonymousElementByAttribute(plugin, "anonid", "closeIcon");
 
-  EventUtils.synthesizeMouseAtCenter(closeIcon, {}, frame.contentWindow);
-  let condition = () => !overlay.classList.contains("visible");
-  waitForCondition(condition, test2, "Test 1, Waited too long for the overlay to become invisible.");
+    EventUtils.synthesizeMouseAtCenter(closeIcon, {}, frame.contentWindow);
+    let condition = () => !overlay.classList.contains("visible");
+    waitForCondition(condition, test2, "Test 1, Waited too long for the overlay to become invisible.");
+  });
 }
 
 function test2() {
