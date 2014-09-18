@@ -192,7 +192,7 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
     // Round up the track start time so the track, if anything, starts a
     // little later than the true time. This means we'll have enough
     // samples in our input stream to go just beyond the destination time.
-    TrackTicks outputStart = TimeToTicksRoundUp(rate, GraphTimeToStreamTime(aFrom));
+    TrackTicks outputStart = GraphTimeToStreamTime(aFrom);
 
     nsAutoPtr<MediaSegment> segment;
     segment = aTrack->GetSegment()->CreateEmptyClone();
@@ -219,6 +219,7 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
     map->mSegment = aTrack->GetSegment()->CreateEmptyClone();
     return mTrackMap.Length() - 1;
   }
+
   void TrackUnionStream::EndTrack(uint32_t aIndex)
   {
     StreamBuffer::Track* outputTrack = mBuffer.FindTrack(mTrackMap[aIndex].mOutputTrackID);
@@ -244,7 +245,6 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
     StreamBuffer::Track* outputTrack = mBuffer.FindTrack(map->mOutputTrackID);
     MOZ_ASSERT(outputTrack && !outputTrack->IsEnded(), "Can't copy to ended track");
 
-    TrackRate rate = outputTrack->GetRate();
     MediaSegment* segment = map->mSegment;
     MediaStream* source = map->mInputPort->GetSource();
 
@@ -271,9 +271,8 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
       StreamTime outputEnd = GraphTimeToStreamTime(interval.mEnd);
       TrackTicks startTicks = outputTrack->GetEnd();
       StreamTime outputStart = GraphTimeToStreamTime(interval.mStart);
-      MOZ_ASSERT(startTicks == TimeToTicksRoundUp(rate, outputStart), "Samples missing");
-      TrackTicks endTicks = TimeToTicksRoundUp(rate, outputEnd);
-      TrackTicks ticks = endTicks - startTicks;
+      MOZ_ASSERT(startTicks == outputStart, "Samples missing");
+      TrackTicks ticks = outputEnd - startTicks;
       StreamTime inputStart = source->GraphTimeToStreamTime(interval.mStart);
 
       if (interval.mInputIsBlocked) {
