@@ -60,6 +60,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.DownloadManager;
 import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -1796,7 +1797,7 @@ public class GeckoAppShell
     }
 
     @WrapElementForJNI
-    public static void scanMedia(String aFile, String aMimeType) {
+    public static void scanMedia(final String aFile, String aMimeType) {
         // If the platform didn't give us a mimetype, try to guess one from the filename
         if (TextUtils.isEmpty(aMimeType)) {
             int extPosition = aFile.lastIndexOf(".");
@@ -1805,8 +1806,20 @@ public class GeckoAppShell
             }
         }
 
-        Context context = getContext();
-        GeckoMediaScannerClient.startScan(context, aFile, aMimeType);
+        final File f = new File(aFile);
+        if (AppConstants.Versions.feature12Plus) {
+            final DownloadManager dm = (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE);
+            dm.addCompletedDownload(f.getName(),
+                                    f.getName(),
+                                    !TextUtils.isEmpty(aMimeType),
+                                    aMimeType,
+                                    f.getAbsolutePath(),
+                                    f.length(),
+                                    false);
+        } else {
+            Context context = getContext();
+            GeckoMediaScannerClient.startScan(context, aFile, aMimeType);
+        }
     }
 
     @WrapElementForJNI(stubName = "GetIconForExtensionWrapper")
