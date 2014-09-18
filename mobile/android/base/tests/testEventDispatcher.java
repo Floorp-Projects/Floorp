@@ -84,9 +84,9 @@ public class testEventDispatcher extends UITest
             } else if (GECKO_RESPONSE_EVENT.equals(event)) {
                 final String response = message.getString("response");
                 if ("success".equals(response)) {
-                    EventDispatcher.getInstance().sendResponse(message, response);
+                    EventDispatcher.sendResponse(message, response);
                 } else if ("error".equals(response)) {
-                    EventDispatcher.getInstance().sendError(message, response);
+                    EventDispatcher.sendError(message, response);
                 } else {
                     fFail("Response type should be valid: " + response);
                 }

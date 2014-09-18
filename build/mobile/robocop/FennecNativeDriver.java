@@ -33,11 +33,11 @@ import com.jayway.android.robotium.solo.Solo;
 public class FennecNativeDriver implements Driver {
     private static final int FRAME_TIME_THRESHOLD = 25;     // allow 25ms per frame (40fps)
 
-    private Activity mActivity;
-    private Solo mSolo;
-    private String mRootPath;
+    private final Activity mActivity;
+    private final Solo mSolo;
+    private final String mRootPath;
 
-    private static String mLogFile = null;
+    private static String mLogFile;
     private static LogLevel mLogLevel = LogLevel.INFO;
 
     public enum LogLevel {
@@ -46,7 +46,7 @@ public class FennecNativeDriver implements Driver {
         WARN(3),
         ERROR(4);
 
-        private int mValue;
+        private final int mValue;
         LogLevel(int value) {
             mValue = value;
         }
@@ -86,6 +86,7 @@ public class FennecNativeDriver implements Driver {
         }
     }
 
+    @Override
     public int getGeckoTop() {
         if (!mGeckoInfo) {
             getGeckoInfo();
@@ -93,6 +94,7 @@ public class FennecNativeDriver implements Driver {
         return mGeckoTop;
     }
 
+    @Override
     public int getGeckoLeft() {
         if (!mGeckoInfo) {
             getGeckoInfo();
@@ -100,6 +102,7 @@ public class FennecNativeDriver implements Driver {
         return mGeckoLeft;
     }
 
+    @Override
     public int getGeckoHeight() {
         if (!mGeckoInfo) {
             getGeckoInfo();
@@ -107,6 +110,7 @@ public class FennecNativeDriver implements Driver {
         return mGeckoHeight;
     }
 
+    @Override
     public int getGeckoWidth() {
         if (!mGeckoInfo) {
             getGeckoInfo();
@@ -118,14 +122,17 @@ public class FennecNativeDriver implements Driver {
      *
      *  @return An Element representing the view, or null if the view is not found.
      */
+    @Override
     public Element findElement(Activity activity, int id) {
         return new FennecNativeElement(id, activity);
     }
 
+    @Override
     public void startFrameRecording() {
         PanningPerfAPI.startFrameTimeRecording();
     }
 
+    @Override
     public int stopFrameRecording() {
         final List<Long> frames = PanningPerfAPI.stopFrameTimeRecording();
         int badness = 0;
@@ -144,10 +151,12 @@ public class FennecNativeDriver implements Driver {
         return badness;
     }
 
+    @Override
     public void startCheckerboardRecording() {
         PanningPerfAPI.startCheckerboardRecording();
     }
 
+    @Override
     public float stopCheckerboardRecording() {
         final List<Float> checkerboard = PanningPerfAPI.stopCheckerboardRecording();
         float total = 0;
@@ -169,6 +178,7 @@ public class FennecNativeDriver implements Driver {
         return layerView;
     }
 
+    @Override
     public PaintedSurface getPaintedSurface() {
         final LayerView view = getSurfaceView();
         if (view == null) {
@@ -223,16 +233,20 @@ public class FennecNativeDriver implements Driver {
     public int mScrollHeight=0;
     public int mPageHeight=10;
 
+    @Override
     public int getScrollHeight() {
         return mScrollHeight;
     }
+    @Override
     public int getPageHeight() {
         return mPageHeight;
     }
+    @Override
     public int getHeight() {
         return mHeight;
     }
 
+    @Override
     public void setupScrollHandling() {
         EventDispatcher.getInstance().registerGeckoThreadListener(new GeckoEventListener() {
             @Override
