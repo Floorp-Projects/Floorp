@@ -121,6 +121,7 @@ extern "C" {
 
   typedef CFTypeRef CGSRegionObj;
   CGError CGSNewRegionWithRect(const CGRect *rect, CGSRegionObj *outRegion);
+  CGError CGSNewRegionWithRectList(const CGRect *rects, int rectCount, CGSRegionObj *outRegion);
 }
 
 // defined in nsMenuBarX.mm
@@ -203,6 +204,7 @@ static uint32_t gNumberOfWidgetsNeedingEventThread = 0;
 - (APZCTreeManager*)apzctm;
 
 - (BOOL)inactiveWindowAcceptsMouseEvent:(NSEvent*)aEvent;
+- (void)updateWindowDraggableState;
 
 @end
 
@@ -219,6 +221,10 @@ static uint32_t gNumberOfWidgetsNeedingEventThread = 0;
 
 @interface NSView(NSThemeFrameCornerRadius)
 - (float)roundedCornerRadius;
+@end
+
+@interface NSView(DraggableRegion)
+- (CGSRegionObj)_regionForOpaqueDescendants:(NSRect)aRect forMove:(BOOL)aForMove;
 @end
 
 // Starting with 10.7 the bottom corners of all windows are rounded.
@@ -2387,15 +2393,15 @@ nsChildView::UpdateTitlebarCGContext()
 
   CGContextSaveGState(ctx);
 
-  std::vector<CGRect> rects;
+  nsTArray<CGRect> rects;
   nsIntRegionRectIterator iter(dirtyTitlebarRegion);
   for (;;) {
     const nsIntRect* r = iter.Next();
     if (!r)
       break;
-    rects.push_back(CGRectMake(r->x, r->y, r->width, r->height));
+    rects.AppendElement(CGRectMake(r->x, r->y, r->width, r->height));
   }
-  CGContextClipToRects(ctx, rects.data(), rects.size());
+  CGContextClipToRects(ctx, rects.Elements(), rects.Length());
 
   CGContextClearRect(ctx, CGRectMake(0, 0, texSize.width, texSize.height));
 
@@ -2746,6 +2752,15 @@ nsChildView::DoRemoteComposition(const nsIntRect& aRenderRect)
   mGLPresenter->EndFrame();
 
   [(ChildView*)mView postRender:mGLPresenter->GetNSOpenGLContext()];
+}
+
+void
+nsChildView::UpdateWindowDraggingRegion(const nsIntRegion& aRegion)
+{
+  if (mDraggableRegion != aRegion) {
+    mDraggableRegion = aRegion;
+    [(ChildView*)mView updateWindowDraggableState];
+  }
 }
 
 #ifdef ACCESSIBILITY
@@ -3602,7 +3617,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (BOOL)mouseDownCanMoveWindow
 {
-  return [[self window] isMovableByWindowBackground];
+  // Return YES so that _regionForOpaqueDescendants gets called, where the
+  // actual draggable region will be assembled.
+  return YES;
 }
 
 -(void)updateGLContext
@@ -4885,24 +4902,60 @@ NSEvent* gLastDragMouseDownEvent = nil;
   mGeckoChild->DispatchEvent(&event, status);
 }
 
-- (void)updateWindowDraggableStateOnMouseMove:(NSEvent*)theEvent
+- (void)updateWindowDraggableState
 {
-  if (!theEvent || !mGeckoChild) {
-    return;
+  // Trigger update to the window server.
+  [[self window] setMovableByWindowBackground:NO];
+  [[self window] setMovableByWindowBackground:YES];
+}
+
+// aRect is in view coordinates relative to this NSView.
+- (CGRect)convertToFlippedWindowCoordinates:(NSRect)aRect
+{
+  // First, convert the rect to regular window coordinates...
+  NSRect inWindowCoords = [self convertRect:aRect toView:nil];
+  // ... and then flip it again because window coordinates have their origin
+  // in the bottom left corner, and we need it to be in the top left corner.
+  inWindowCoords.origin.y = [[self window] frame].size.height - NSMaxY(inWindowCoords);
+  return NSRectToCGRect(inWindowCoords);
+}
+
+static CGSRegionObj
+NewCGSRegionFromRegion(const nsIntRegion& aRegion,
+                       CGRect (^aRectConverter)(const nsIntRect&))
+{
+  nsTArray<CGRect> rects;
+  nsIntRegionRectIterator iter(aRegion);
+  for (;;) {
+    const nsIntRect* r = iter.Next();
+    if (!r)
+      break;
+    rects.AppendElement(aRectConverter(*r));
   }
 
-  nsCocoaWindow* windowWidget = mGeckoChild->GetXULWindowWidget();
-  if (!windowWidget) {
-    return;
+  CGSRegionObj region;
+  CGSNewRegionWithRectList(rects.Elements(), rects.Length(), &region);
+  return region;
+}
+
+// This function is called with forMove:YES to calculate the draggable region
+// of the window which will be submitted to the window server. Window dragging
+// is handled on the window server without calling back into our process, so it
+// also works while our app is unresponsive.
+- (CGSRegionObj)_regionForOpaqueDescendants:(NSRect)aRect forMove:(BOOL)aForMove
+{
+  if (!aForMove || !mGeckoChild) {
+    return [super _regionForOpaqueDescendants:aRect forMove:aForMove];
   }
 
-  // We assume later on that sending a hit test event won't cause widget destruction.
-  WidgetMouseEvent hitTestEvent(true, NS_MOUSE_MOZHITTEST, mGeckoChild,
-                                WidgetMouseEvent::eReal);
-  [self convertCocoaMouseEvent:theEvent toGeckoEvent:&hitTestEvent];
-  bool result = mGeckoChild->DispatchWindowEvent(hitTestEvent);
+  nsIntRect boundingRect = mGeckoChild->CocoaPointsToDevPixels(aRect);
 
-  [windowWidget->GetCocoaWindow() setMovableByWindowBackground:result];
+  nsIntRegion opaqueRegion;
+  opaqueRegion.Sub(boundingRect, mGeckoChild->GetDraggableRegion());
+
+  return NewCGSRegionFromRegion(opaqueRegion, ^(const nsIntRect& r) {
+    return [self convertToFlippedWindowCoordinates:mGeckoChild->DevPixelsToCocoaPoints(r)];
+  });
 }
 
 - (void)handleMouseMoved:(NSEvent*)theEvent

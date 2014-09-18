@@ -1,23 +1,28 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-let tempScope = {};
-Cu.import("resource://gre/modules/devtools/Loader.jsm", tempScope);
-Cu.import("resource://gre/modules/devtools/Console.jsm", tempScope);
-const require = tempScope.devtools.require;
-const console = tempScope.console;
-tempScope = null;
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/Services.jsm");
+const {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
+const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+const {devtools: {require}} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const {DebuggerClient} = Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
+const {DebuggerServer} = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
+
 const PATH = "browser/toolkit/devtools/server/tests/browser/";
 const MAIN_DOMAIN = "http://test1.example.org/" + PATH;
 const ALT_DOMAIN = "http://sectest1.example.org/" + PATH;
 const ALT_DOMAIN_SECURED = "https://sectest1.example.org:443/" + PATH;
-const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 
-// All test are asynchronous
+// All tests are asynchronous.
 waitForExplicitFinish();
 
 /**
- * Define an async test based on a generator function
+ * Define an async test based on a generator function.
  */
 function asyncTest(generator) {
   return () => Task.spawn(generator).then(null, ok.bind(null, false)).then(finish);
@@ -46,6 +51,43 @@ let addTab = Task.async(function* (url) {
 
   return tab.linkedBrowser.contentWindow.document;
 });
+
+function initDebuggerServer() {
+  try {
+    // Sometimes debugger server does not get destroyed correctly by previous
+    // tests.
+    DebuggerServer.destroy();
+  } catch (ex) { }
+  DebuggerServer.init(() => true);
+  DebuggerServer.addBrowserActors();
+}
+
+/**
+ * Connect a debugger client.
+ * @param {DebuggerClient}
+ * @return {Promise} Resolves to the selected tabActor form when the client is
+ * connected.
+ */
+function connectDebuggerClient(client) {
+  let def = promise.defer();
+  client.connect(() => {
+    client.listTabs(tabs => {
+      def.resolve(tabs.tabs[tabs.selected]);
+    });
+  });
+  return def.promise;
+}
+
+/**
+ * Close a debugger client's connection.
+ * @param {DebuggerClient}
+ * @return {Promise} Resolves when the connection is closed.
+ */
+function closeDebuggerClient(client) {
+  let def = promise.defer();
+  client.close(def.resolve);
+  return def.promise;
+}
 
 /**
  * Wait for eventName on target.

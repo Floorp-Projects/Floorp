@@ -62,7 +62,8 @@ interface nsIMemoryInfoDumper : nsISupports
    * Sample output:
    *
    * {
-   *   "hasMozMallocUsableSize":true,
+   *   "version": 1
+   *   "hasMozMallocUsableSize": true,
    *   "reports": [
    *     {"process":"Main Process (pid 12345)", "path":"explicit/foo/bar",
    *      "kind":1, "units":0, "amount":2000000, "description":"Foo bar."},
@@ -77,6 +78,11 @@ interface nsIMemoryInfoDumper : nsISupports
    *
    * {
    *   "properties": {
+   *     "version": {
+   *       "type": "integer",
+   *       "description": "Version number of this schema.",
+   *       "required": true
+   *     },
    *     "hasMozMallocUsableSize": {
    *       "type": "boolean",
    *       "description": "nsIMemoryReporterManager::hasMozMallocUsableSize",

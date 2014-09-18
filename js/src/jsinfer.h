@@ -21,6 +21,7 @@
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "jit/IonTypes.h"
+#include "js/UbiNode.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
 
@@ -1727,5 +1728,13 @@ MOZ_NORETURN void TypeFailure(JSContext *cx, const char *fmt, ...);
 
 } /* namespace types */
 } /* namespace js */
+
+// JS::ubi::Nodes can point to js::LazyScripts; they're js::gc::Cell instances
+// with no associated compartment.
+namespace JS {
+namespace ubi {
+template<> struct Concrete<js::types::TypeObject> : TracerConcrete<js::types::TypeObject> { };
+}
+}
 
 #endif /* jsinfer_h */

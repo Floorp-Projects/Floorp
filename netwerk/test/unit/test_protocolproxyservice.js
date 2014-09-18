@@ -612,6 +612,7 @@ function run_myipaddress_test()
   // should be created.
 
   var pac = 'data:text/plain,' +
+            'var pacUseMultihomedDNS = true;\n' +
             'function FindProxyForURL(url, host) {' +
             ' return "PROXY " + myIpAddress() + ":1234";' +
             '}';
@@ -648,6 +649,7 @@ function run_myipaddress_test_2()
   // FindProxyForURL(). bug 829646.
 
   var pac = 'data:text/plain,' +
+            'var pacUseMultihomedDNS = true;\n' +
             'var myaddr = myIpAddress(); ' +
             'function FindProxyForURL(url, host) {' +
             ' return "PROXY " + myaddr + ":5678";' +

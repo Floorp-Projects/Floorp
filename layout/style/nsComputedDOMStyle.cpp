@@ -3299,6 +3299,16 @@ nsComputedDOMStyle::DoGetWhiteSpace()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetWindowDragging()
+{
+  nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(StyleUserInterface()->mWindowDragging,
+                                   nsCSSProps::kWindowDraggingKTable));
+  return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetWindowShadow()
 {
   nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;

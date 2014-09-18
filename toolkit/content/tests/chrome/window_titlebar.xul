@@ -49,11 +49,6 @@
   </panel>
 
   <button id="button" label="OK"/>
-  <statusbar id="statusbar">
-    <statusbarpanel>
-      <label id="statuslabel" value="Status"/>
-    </statusbarpanel>
-  </statusbar>
 
 <script>
 <![CDATA[
@@ -104,20 +99,6 @@ function test_titlebar()
 {
   var titlebar = document.getElementById("titlebar");
   var label = document.getElementById("label");
-
-  // On Mac, the window can also be moved with the statusbar, but this works
-  // via the MozMouseHittest event, not via mouse events.
-  if (navigator.platform.indexOf("Mac") >= 0) {
-    var preventDefaulted;
-
-    var statuslabel = document.getElementById("statuslabel");
-    preventDefaulted = synthesizeMouse(statuslabel, 2, 2, { type: "MozMouseHittest" });
-    SimpleTest.ok(preventDefaulted, "MozMouseHittest should have been defaultPrevented over statusbar");
-
-    var button = document.getElementById("button");
-    preventDefaulted = synthesizeMouse(button, 2, 2, { type: "MozMouseHittest" });
-    SimpleTest.ok(!preventDefaulted, "MozMouseHittest should NOT have been defaultPrevented over button");
-  }
 
   origoldx = window.screenX;
   origoldy = window.screenY;

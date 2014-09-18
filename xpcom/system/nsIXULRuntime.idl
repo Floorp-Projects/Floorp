@@ -25,7 +25,7 @@ bool BrowserTabsRemoteAutostart();
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(77550b90-3b67-11e4-916c-0800200c9a66)]
+[scriptable, uuid(789073a0-3f4a-11e4-916c-0800200c9a66)]
 interface nsIXULRuntime : nsISupports
 {
   /**
@@ -103,6 +103,13 @@ interface nsIXULRuntime : nsISupports
    * If true, the accessibility service is running.
    */
   readonly attribute boolean accessibilityEnabled;
+
+  /**
+   * This returns a very rough approximation of whether IME is likely
+   * to be used for the browser session. DO NOT USE! This is temporary
+   * and will be removed.
+   */
+  readonly attribute boolean keyboardMayHaveIME;
 
   /**
    * Signal the apprunner to invalidate caches on the next restart.

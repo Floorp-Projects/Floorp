@@ -361,17 +361,11 @@ loop.panel = (function(_, mozL10n) {
       }
     },
 
-    _generateMailTo: function() {
-      return encodeURI([
-        "mailto:?subject=" + __("share_email_subject3") + "&",
-        "body=" + __("share_email_body3", {callUrl: this.state.callUrl})
-      ].join(""));
-    },
-
     handleEmailButtonClick: function(event) {
       this.handleLinkExfiltration(event);
-      // Note: side effect
-      document.location = event.target.dataset.mailto;
+
+      navigator.mozLoop.composeEmail(__("share_email_subject3"),
+        __("share_email_body3", { callUrl: this.state.callUrl }));
     },
 
     handleCopyButtonClick: function(event) {
@@ -409,8 +403,7 @@ loop.panel = (function(_, mozL10n) {
                    className={inputCSSClass} />
             <p className="btn-group url-actions">
               <button className="btn btn-email" disabled={!this.state.callUrl}
-                onClick={this.handleEmailButtonClick}
-                data-mailto={this._generateMailTo()}>
+                onClick={this.handleEmailButtonClick}>
                 {__("share_button")}
               </button>
               <button className="btn btn-copy" disabled={!this.state.callUrl}
@@ -530,15 +523,12 @@ loop.panel = (function(_, mozL10n) {
     // else to ensure the L10n environment is setup correctly.
     mozL10n.initialize(navigator.mozLoop);
 
-    var client = new loop.Client({
-      baseServerUrl: navigator.mozLoop.serverUrl
-    });
+    var client = new loop.Client();
     var notifications = new sharedModels.NotificationCollection()
 
     React.renderComponent(<PanelView
       client={client}
-      notifications={notifications}
-    />, document.querySelector("#main"));
+      notifications={notifications} />, document.querySelector("#main"));
 
     document.body.classList.add(loop.shared.utils.getTargetPlatform());
     document.body.setAttribute("dir", mozL10n.getDirection());
