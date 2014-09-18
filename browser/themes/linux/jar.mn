@@ -46,6 +46,7 @@ browser.jar:
   skin/classic/browser/bad-content-blocked-16.png
   skin/classic/browser/bad-content-blocked-64.png
   skin/classic/browser/bad-content-unblocked-16.png
+  skin/classic/browser/bad-content-unblocked-64.png
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
   skin/classic/browser/notification-16.png
