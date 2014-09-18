@@ -17,7 +17,6 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
-    'ContainerParser.cpp',
     'MediaSource.cpp',
     'MediaSourceDecoder.cpp',
     'MediaSourceReader.cpp',
