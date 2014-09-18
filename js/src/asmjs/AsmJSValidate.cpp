@@ -1421,7 +1421,9 @@ class MOZ_STACK_CLASS ModuleCompiler
             !addStandardLibrarySimdOpName("or", AsmJSSimdOperation_or) ||
             !addStandardLibrarySimdOpName("xor", AsmJSSimdOperation_xor) ||
             !addStandardLibrarySimdOpName("select", AsmJSSimdOperation_select) ||
-            !addStandardLibrarySimdOpName("splat", AsmJSSimdOperation_splat))
+            !addStandardLibrarySimdOpName("splat", AsmJSSimdOperation_splat) ||
+            !addStandardLibrarySimdOpName("max", AsmJSSimdOperation_max) ||
+            !addStandardLibrarySimdOpName("min", AsmJSSimdOperation_min))
         {
             return false;
         }
@@ -3568,6 +3570,8 @@ IsSimdValidOperationType(AsmJSSimdType type, AsmJSSimdOperation op)
         return true;
       case AsmJSSimdOperation_mul:
       case AsmJSSimdOperation_div:
+      case AsmJSSimdOperation_max:
+      case AsmJSSimdOperation_min:
       case AsmJSSimdOperation_lessThanOrEqual:
       case AsmJSSimdOperation_notEqual:
       case AsmJSSimdOperation_greaterThanOrEqual:
@@ -4860,6 +4864,10 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
         return CheckSimdBinary(f, call, retType, MSimdBinaryArith::Mul, def, type);
       case AsmJSSimdOperation_div:
         return CheckSimdBinary(f, call, retType, MSimdBinaryArith::Div, def, type);
+      case AsmJSSimdOperation_max:
+        return CheckSimdBinary(f, call, retType, MSimdBinaryArith::Max, def, type);
+      case AsmJSSimdOperation_min:
+        return CheckSimdBinary(f, call, retType, MSimdBinaryArith::Min, def, type);
 
       case AsmJSSimdOperation_lessThan:
         return CheckSimdBinary(f, call, retType, MSimdBinaryComp::lessThan, def, type);
