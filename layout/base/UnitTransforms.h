@@ -83,6 +83,13 @@ static gfx::RectTyped<TargetUnits> TransformTo(const gfx::Matrix4x4& aTransform,
 {
   return ViewAs<TargetUnits>(aTransform.TransformBounds(aRect.ToUnknownRect()));
 }
+template <typename TargetUnits, typename SourceUnits>
+static gfx::IntRectTyped<TargetUnits> TransformTo(const gfx::Matrix4x4& aTransform,
+                                                  const gfx::IntRectTyped<SourceUnits>& aRect)
+{
+  gfx::Rect rect(aRect.ToUnknownRect());
+  return RoundedToInt(ViewAs<TargetUnits>(aTransform.TransformBounds(rect)));
+}
 
 
 }
