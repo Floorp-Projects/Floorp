@@ -624,8 +624,7 @@ AudioNodeStream::DestinationTimeFromTicks(AudioNodeStream* aDestination,
                                           TrackTicks aPosition)
 {
   MOZ_ASSERT(SampleRate() == aDestination->SampleRate());
-  StreamTime sourceTime = TicksToTimeRoundDown(SampleRate(), aPosition);
-  GraphTime graphTime = StreamTimeToGraphTime(sourceTime);
+  GraphTime graphTime = StreamTimeToGraphTime(aPosition);
   StreamTime destinationTime = aDestination->GraphTimeToStreamTimeOptimistic(graphTime);
   return StreamTimeToSeconds(destinationTime);
 }
