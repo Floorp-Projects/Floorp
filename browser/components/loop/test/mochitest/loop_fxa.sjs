@@ -11,34 +11,28 @@ const REQUIRED_PARAMS = ["client_id", "content_uri", "oauth_uri", "profile_uri",
 const HAWK_TOKEN_LENGTH = 64;
 
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
-Components.utils.importGlobalProperties(["URL"]);
 
 /**
  * Entry point for HTTP requests.
  */
 function handleRequest(request, response) {
-  // Convert the query string to a path with a placeholder base of example.com
-  let url = new URL(request.queryString.replace(/%3F.*/,""), "http://www.example.com");
-  dump("loop_fxa.sjs request for: " + url.pathname + "\n");
-  switch (url.pathname) {
+  // Look at the query string but ignore past the encoded ? when deciding on the handler.
+  dump("loop_fxa.sjs request for: " + request.queryString + "\n");
+  switch (request.queryString.replace(/%3F.*/,"")) {
     case "/setup_params": // Test-only
       setup_params(request, response);
       return;
     case "/fxa-oauth/params":
       params(request, response);
       return;
-    case "/" + encodeURIComponent("/oauth/authorization"):
+    case encodeURIComponent("/oauth/authorization"):
       oauth_authorization(request, response);
       return;
     case "/fxa-oauth/token":
       token(request, response);
       return;
     case "/registration":
-      if (request.method == "DELETE") {
-        delete_registration(request, response);
-      } else {
-        registration(request, response);
-      }
+      registration(request, response);
       return;
     case "/get_registration": // Test-only
       get_registration(request, response);
@@ -205,31 +199,6 @@ function registration(request, response) {
     return;
   }
   setSharedState("/registration", body);
-}
-
-/**
- * DELETE /registration
- *
- * Hawk Authorization headers are required.
- */
-function delete_registration(request, response) {
-  if (!request.hasHeader("Authorization") ||
-      !request.getHeader("Authorization").startsWith("Hawk")) {
-    response.setStatusLine(request.httpVersion, 401, "Missing Hawk");
-    response.write("401 Missing Hawk Authorization header");
-    return;
-  }
-
-  // Do some query string munging due to the SJS file using a base with a trailing "?"
-  // making the path become a query parameter. This is because we aren't actually
-  // registering endpoints at the root of the hostname e.g. /registration.
-  let url = new URL(request.queryString.replace(/%3F.*/,""), "http://www.example.com");
-  let registration = JSON.parse(getSharedState("/registration"));
-  if (registration.simplePushURL == url.searchParams.get("simplePushURL")) {
-    setSharedState("/registration", "");
-  } else {
-    response.setStatusLine(request.httpVersion, 400, "Bad Request");
-  }
 }
 
 /**
