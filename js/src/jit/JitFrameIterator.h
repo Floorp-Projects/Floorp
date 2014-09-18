@@ -292,6 +292,8 @@ class RInstructionResults
     IonJSFrameLayout *frame() const;
 
     HeapValue& operator[](size_t index);
+
+    void trace(JSTracer *trc);
 };
 
 class RResumePoint;
