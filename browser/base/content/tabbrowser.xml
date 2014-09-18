@@ -762,10 +762,6 @@
                      aLocation.spec != "about:blank"))
                   this.mBrowser.userTypedValue = null;
 
-                // Clear out the missing plugins list since it's related to the
-                // previous location.
-                this.mBrowser.missingPlugins = null;
-
                 if (this.mTabBrowser.isFindBarInitialized(this.mTab)) {
                   let findBar = this.mTabBrowser.getFindBar(this.mTab);
 
