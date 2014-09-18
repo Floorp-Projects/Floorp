@@ -4,11 +4,6 @@
 
 toolkit.jar:
 % content mozapps %content/mozapps/
-  content/mozapps/plugins/pluginInstallerWizard.xul             (content/pluginInstallerWizard.xul)
-  content/mozapps/plugins/pluginInstallerWizard.js              (content/pluginInstallerWizard.js)
-  content/mozapps/plugins/pluginInstallerWizard.css             (content/pluginInstallerWizard.css)
-  content/mozapps/plugins/pluginInstallerDatasource.js          (content/pluginInstallerDatasource.js)
-  content/mozapps/plugins/pluginInstallerService.js             (content/pluginInstallerService.js)
   content/mozapps/plugins/pluginProblem.xml                     (content/pluginProblem.xml)
   content/mozapps/plugins/pluginProblemContent.css              (content/pluginProblemContent.css)
   content/mozapps/plugins/pluginProblemBinding.css              (content/pluginProblemBinding.css)
