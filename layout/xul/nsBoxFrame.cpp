@@ -1328,6 +1328,8 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       aBuilder->AddWindowOpaqueRegion(
           nsRect(aBuilder->ToReferenceFrame(this), GetSize()));
     }
+
+    aBuilder->AdjustWindowDraggingRegion(this);
   }
 
   nsDisplayListCollection tempLists;
