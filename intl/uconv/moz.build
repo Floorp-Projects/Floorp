@@ -61,7 +61,6 @@ UNIFIED_SOURCES += [
     'ucvja/nsJapaneseToUnicode.cpp',
     'ucvja/nsUnicodeToEUCJP.cpp',
     'ucvja/nsUnicodeToISO2022JP.cpp',
-    'ucvja/nsUnicodeToJISx0201.cpp',
     'ucvja/nsUnicodeToSJIS.cpp',
 ]
 
@@ -92,15 +91,11 @@ UNIFIED_SOURCES += [
     'ucvlatin/nsISO88593ToUnicode.cpp',
     'ucvlatin/nsISO88594ToUnicode.cpp',
     'ucvlatin/nsISO88595ToUnicode.cpp',
-    'ucvlatin/nsISO88596EToUnicode.cpp',
-    'ucvlatin/nsISO88596IToUnicode.cpp',
     'ucvlatin/nsISO88596ToUnicode.cpp',
     'ucvlatin/nsISO88597ToUnicode.cpp',
-    'ucvlatin/nsISO88598EToUnicode.cpp',
     'ucvlatin/nsISO88598IToUnicode.cpp',
     'ucvlatin/nsISO88598ToUnicode.cpp',
     'ucvlatin/nsISO88599ToUnicode.cpp',
-    'ucvlatin/nsISOIR111ToUnicode.cpp',
     'ucvlatin/nsKOI8RToUnicode.cpp',
     'ucvlatin/nsKOI8UToUnicode.cpp',
     'ucvlatin/nsMacArabicToUnicode.cpp',
@@ -139,14 +134,10 @@ UNIFIED_SOURCES += [
     'ucvlatin/nsUnicodeToISO88594.cpp',
     'ucvlatin/nsUnicodeToISO88595.cpp',
     'ucvlatin/nsUnicodeToISO88596.cpp',
-    'ucvlatin/nsUnicodeToISO88596E.cpp',
-    'ucvlatin/nsUnicodeToISO88596I.cpp',
     'ucvlatin/nsUnicodeToISO88597.cpp',
     'ucvlatin/nsUnicodeToISO88598.cpp',
-    'ucvlatin/nsUnicodeToISO88598E.cpp',
     'ucvlatin/nsUnicodeToISO88598I.cpp',
     'ucvlatin/nsUnicodeToISO88599.cpp',
-    'ucvlatin/nsUnicodeToISOIR111.cpp',
     'ucvlatin/nsUnicodeToKOI8R.cpp',
     'ucvlatin/nsUnicodeToKOI8U.cpp',
     'ucvlatin/nsUnicodeToMacCyrillic.cpp',
@@ -162,7 +153,6 @@ UNIFIED_SOURCES += [
     'ucvtw/nsBIG5ToUnicode.cpp',
     'ucvtw/nsUnicodeToBIG5.cpp',
     'ucvtw/nsUnicodeToBIG5HKSCS.cpp',
-    'ucvtw/nsUnicodeToHKSCS.cpp',
 ]
 
 UNIFIED_SOURCES += [

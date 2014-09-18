@@ -365,6 +365,8 @@ ValidateSimdOperation(JSContext *cx, AsmJSModule::Global &global, HandleValue gl
           case AsmJSSimdOperation_notEqual:
           case AsmJSSimdOperation_mul:
           case AsmJSSimdOperation_div:
+          case AsmJSSimdOperation_max:
+          case AsmJSSimdOperation_min:
             MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("shouldn't have been validated in the first "
                                                     "place");
         }
@@ -375,6 +377,8 @@ ValidateSimdOperation(JSContext *cx, AsmJSModule::Global &global, HandleValue gl
           case AsmJSSimdOperation_sub: native = simd_float32x4_sub; break;
           case AsmJSSimdOperation_mul: native = simd_float32x4_mul; break;
           case AsmJSSimdOperation_div: native = simd_float32x4_div; break;
+          case AsmJSSimdOperation_max: native = simd_float32x4_max; break;
+          case AsmJSSimdOperation_min: native = simd_float32x4_min; break;
           case AsmJSSimdOperation_lessThan: native = simd_float32x4_lessThan ; break;
           case AsmJSSimdOperation_lessThanOrEqual: native = simd_float32x4_lessThanOrEqual; break;
           case AsmJSSimdOperation_equal: native = simd_float32x4_equal; break;

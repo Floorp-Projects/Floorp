@@ -6,6 +6,7 @@ from mozbuild.makeutil import (
     Makefile,
     read_dep_makefile,
     Rule,
+    write_dep_makefile,
 )
 from mozunit import main
 import os
@@ -152,6 +153,13 @@ class TestMakefile(unittest.TestCase):
         self.assertEqual(list(result[0].dependencies()), ['bar'])
         self.assertEqual(list(result[1].targets()), ['baz', 'qux'])
         self.assertEqual(list(result[1].dependencies()), ['hoge', 'piyo', 'fuga'])
+
+    def test_write_dep_makefile(self):
+        out = StringIO()
+        write_dep_makefile(out, 'target', ['b', 'c', 'a'])
+        self.assertEqual(out.getvalue(),
+                         'target: b c a\n' +
+                         'a b c:\n')
 
 if __name__ == '__main__':
     main()
