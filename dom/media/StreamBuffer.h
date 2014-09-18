@@ -64,10 +64,9 @@ public:
    * Takes ownership of aSegment.
    */
   class Track {
-    Track(TrackID aID, StreamTime aStart, MediaSegment* aSegment, TrackRate aGraphRate)
+    Track(TrackID aID, StreamTime aStart, MediaSegment* aSegment)
       : mStart(aStart),
         mSegment(aSegment),
-        mGraphRate(aGraphRate),
         mID(aID),
         mEnded(false)
     {
@@ -138,7 +137,6 @@ public:
     // The segment data starts at the start of the owning StreamBuffer, i.e.,
     // there's mStart silence/no video at the beginning.
     nsAutoPtr<MediaSegment> mSegment;
-    TrackRate mGraphRate; // graph rate in StreamTime per second
     // Unique ID
     TrackID mID;
     // True when the track ends with the data in mSegment
@@ -206,7 +204,7 @@ public:
   {
     NS_ASSERTION(!FindTrack(aID), "Track with this ID already exists");
 
-    Track* track = new Track(aID, aStart, aSegment, GraphRate());
+    Track* track = new Track(aID, aStart, aSegment);
     mTracks.InsertElementSorted(track, CompareTracksByID());
 
     if (mTracksKnownTime == STREAM_TIME_MAX) {
