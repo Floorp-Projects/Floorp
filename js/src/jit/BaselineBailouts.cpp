@@ -1343,11 +1343,10 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
         return BAILOUT_RETURN_FATAL_ERROR;
     JitSpew(JitSpew_BaselineBailouts, "  Incoming frame ptr = %p", builder.startFrame());
 
-    RInstructionResults instructionResults;
-    activation->maybeTakeIonFrameRecovery(iter.jsFrame(), &instructionResults);
+    AutoValueVector instructionResults(cx);
     SnapshotIterator snapIter(iter);
 
-    if (!snapIter.initInstructionResults(cx, &instructionResults))
+    if (!snapIter.initIntructionResults(instructionResults))
         return BAILOUT_RETURN_FATAL_ERROR;
 
 #ifdef TRACK_SNAPSHOTS
@@ -1381,8 +1380,12 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
     jsbytecode *topCallerPC = nullptr;
 
     while (true) {
-        // Skip recover instructions as they are already recovered by |initInstructionResults|.
-        snapIter.settleOnFrame();
+        if (!snapIter.instruction()->isResumePoint()) {
+            if (!snapIter.instruction()->recover(cx, snapIter))
+                return BAILOUT_RETURN_FATAL_ERROR;
+            snapIter.nextInstruction();
+            continue;
+        }
 
         if (frameNo > 0) {
             TraceLogStartEvent(logger, TraceLogCreateTextId(logger, scr));

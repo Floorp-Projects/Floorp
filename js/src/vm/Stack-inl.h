@@ -349,8 +349,7 @@ FrameIter::unaliasedForEachActual(JSContext *cx, Op op)
         return;
       case JIT:
         if (data_.jitFrames_.isIonJS()) {
-            jit::MaybeReadFallback recover(cx, activation()->asJit(), &data_.jitFrames_);
-            ionInlineFrames_.unaliasedForEachActual(cx, op, jit::ReadFrame_Actuals, recover);
+            ionInlineFrames_.unaliasedForEachActual(cx, op, jit::ReadFrame_Actuals);
         } else {
             JS_ASSERT(data_.jitFrames_.isBaselineJS());
             data_.jitFrames_.unaliasedForEachActual(op, jit::ReadFrame_Actuals);

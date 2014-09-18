@@ -10748,7 +10748,6 @@ class MResumePoint MOZ_FINAL :
 
     bool isObservableOperand(MUse *u) const;
     bool isObservableOperand(size_t index) const;
-    bool isRecoverableOperand(MUse *u) const;
 
     MDefinition *getOperand(size_t index) const {
         return operands_[index].producer();

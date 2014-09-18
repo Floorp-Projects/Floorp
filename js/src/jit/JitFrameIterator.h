@@ -266,62 +266,7 @@ class JitFrameIterator
 #endif
 };
 
-class RInstructionResults
-{
-    // Vector of results of recover instructions.
-    mozilla::UniquePtr<HeapValue[], JS::FreePolicy> results_;
-
-    // Length of the |results_| vector.
-    uint32_t len_;
-
-    // The frame pointer is used as a key to check if the current frame already
-    // bailed out.
-    IonJSFrameLayout *fp_;
-
-  public:
-    RInstructionResults();
-    RInstructionResults(RInstructionResults&& src);
-
-    RInstructionResults& operator=(RInstructionResults&& rhs);
-
-    ~RInstructionResults();
-
-    bool init(JSContext *cx, uint32_t numResults, IonJSFrameLayout *fp);
-    bool isInitialized() const;
-
-    IonJSFrameLayout *frame() const;
-
-    HeapValue& operator[](size_t index);
-
-    void trace(JSTracer *trc);
-};
-
-struct MaybeReadFallback
-{
-    JSContext *maybeCx;
-    JitActivation *activation;
-    JitFrameIterator *frame;
-    const Value unreadablePlaceholder;
-
-    MaybeReadFallback(const Value &placeholder = UndefinedValue())
-      : maybeCx(nullptr),
-        activation(nullptr),
-        frame(nullptr),
-        unreadablePlaceholder(placeholder)
-    {
-    }
-
-    MaybeReadFallback(JSContext *cx, JitActivation *activation, JitFrameIterator *frame)
-      : maybeCx(cx),
-        activation(activation),
-        frame(frame),
-        unreadablePlaceholder(UndefinedValue())
-    {
-    }
-
-    bool canRecoverResults() { return maybeCx; }
-};
-
+class IonJSFrameLayout;
 
 class RResumePoint;
 
@@ -334,7 +279,7 @@ class SnapshotIterator
     IonJSFrameLayout *fp_;
     MachineState machine_;
     IonScript *ionScript_;
-    RInstructionResults *instructionResults_;
+    AutoValueVector *instructionResults_;
 
   private:
     // Read a spilled register from the machine state.
@@ -426,8 +371,7 @@ class SnapshotIterator
     // recover instructions. This vector should be registered before the
     // beginning of the iteration. This function is in charge of allocating
     // enough space for all instructions results, and return false iff it fails.
-    bool initInstructionResults(MaybeReadFallback &fallback);
-    bool initInstructionResults(JSContext *cx, RInstructionResults *results);
+    bool initIntructionResults(AutoValueVector &results);
 
     void storeInstructionResult(Value v);
 
@@ -455,23 +399,13 @@ class SnapshotIterator
     Value read() {
         return allocationValue(readAllocation());
     }
-
-    Value maybeRead(MaybeReadFallback &fallback) {
+    Value maybeRead(const Value &placeholder = UndefinedValue(), bool silentFailure = false) {
         RValueAllocation a = readAllocation();
         if (allocationReadable(a))
             return allocationValue(a);
-
-        if (fallback.canRecoverResults()) {
-            if (!initInstructionResults(fallback))
-                return fallback.unreadablePlaceholder;
-
-            if (allocationReadable(a))
-                return allocationValue(a);
-
-            MOZ_ASSERT_UNREACHABLE("All allocations should be readable.");
-        }
-
-        return fallback.unreadablePlaceholder;
+        if (!silentFailure)
+            warnUnreadableAllocation();
+        return placeholder;
     }
 
     void readCommonFrameSlots(Value *scopeChain, Value *rval) {
@@ -489,7 +423,8 @@ class SnapshotIterator
     template <class Op>
     void readFunctionFrameArgs(Op &op, ArgumentsObject **argsObj, Value *thisv,
                                unsigned start, unsigned end, JSScript *script,
-                               MaybeReadFallback &fallback)
+                               const Value &unreadablePlaceholder = UndefinedValue(),
+                               bool silentFailure = false)
     {
         // Assumes that the common frame arguments have already been read.
         if (script->argumentsHasVarBinding()) {
@@ -517,7 +452,7 @@ class SnapshotIterator
             // We are not always able to read values from the snapshots, some values
             // such as non-gc things may still be live in registers and cause an
             // error while reading the machine state.
-            Value v = maybeRead(fallback);
+            Value v = maybeRead(unreadablePlaceholder, silentFailure);
             op(v);
         }
     }
@@ -528,8 +463,7 @@ class SnapshotIterator
             skip();
         }
 
-        MaybeReadFallback fallback(UndefinedValue());
-        Value s = maybeRead(fallback);
+        Value s = maybeRead(/* placeholder = */ UndefinedValue(), true);
 
         while (moreAllocations())
             skip();
@@ -606,7 +540,8 @@ class InlineFrameIterator
                                 JSObject **scopeChain, Value *rval,
                                 ArgumentsObject **argsObj, Value *thisv,
                                 ReadFrameArgsBehavior behavior,
-                                MaybeReadFallback &fallback) const
+                                const Value &unreadablePlaceholder = UndefinedValue(),
+                                bool silentFailure = false) const
     {
         SnapshotIterator s(si_);
 
@@ -625,8 +560,10 @@ class InlineFrameIterator
             // Get the non overflown arguments, which are taken from the inlined
             // frame, because it will have the updated value when JSOP_SETARG is
             // done.
-            if (behavior != ReadFrame_Overflown)
-                s.readFunctionFrameArgs(argOp, argsObj, thisv, 0, nformal, script(), fallback);
+            if (behavior != ReadFrame_Overflown) {
+                s.readFunctionFrameArgs(argOp, argsObj, thisv, 0, nformal, script(),
+                                        unreadablePlaceholder, silentFailure);
+            }
 
             if (behavior != ReadFrame_Formals) {
                 if (more()) {
@@ -655,7 +592,7 @@ class InlineFrameIterator
                     parent_s.readCommonFrameSlots(nullptr, nullptr);
                     parent_s.readFunctionFrameArgs(argOp, nullptr, nullptr,
                                                    nformal, nactual, it.script(),
-                                                   fallback);
+                                                   unreadablePlaceholder, silentFailure);
                 } else {
                     // There is no parent frame to this inlined frame, we can read
                     // from the frame's Value vector directly.
@@ -674,17 +611,16 @@ class InlineFrameIterator
             // recovering slots.
             //
             // FIXME bug 1029963.
-            localOp(s.maybeRead(fallback));
+            localOp(s.maybeRead(unreadablePlaceholder, silentFailure));
         }
     }
 
     template <class Op>
     void unaliasedForEachActual(ThreadSafeContext *cx, Op op,
-                                ReadFrameArgsBehavior behavior,
-                                MaybeReadFallback &fallback) const
+                                ReadFrameArgsBehavior behavior) const
     {
         Nop nop;
-        readFrameArgsAndLocals(cx, op, nop, nullptr, nullptr, nullptr, nullptr, behavior, fallback);
+        readFrameArgsAndLocals(cx, op, nop, nullptr, nullptr, nullptr, nullptr, behavior);
     }
 
     JSScript *script() const {
