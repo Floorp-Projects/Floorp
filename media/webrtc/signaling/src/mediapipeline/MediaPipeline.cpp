@@ -1543,9 +1543,7 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
   nsRefPtr<layers::Image> image = image_;
   // our constructor sets track_rate_ to the graph rate
   MOZ_ASSERT(track_rate_ == source_->GraphRate());
-  TrackTicks target = source_->TimeToTicksRoundUp(
-      source_->GraphRate(), desired_time);
-  TrackTicks delta = target - played_ticks_;
+  TrackTicks delta = desired_time - played_ticks_;
 
   // Don't append if we've already provided a frame that supposedly
   // goes past the current aDesiredTime Doing so means a negative
@@ -1555,7 +1553,7 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
     segment.AppendFrame(image.forget(), delta, IntSize(width_, height_));
     // Handle track not actually added yet or removed/finished
     if (source_->AppendToTrack(track_id_, &segment)) {
-      played_ticks_ = target;
+      played_ticks_ = desired_time;
     } else {
       MOZ_MTLOG(ML_ERROR, "AppendToTrack failed");
       return;

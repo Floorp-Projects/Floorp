@@ -285,10 +285,8 @@ public:
                            GraphTime aTime, GraphTime aEndBlockingDecisions,
                            GraphTime* aEnd);
   /**
-   * Returns smallest value of t such that
-   * TimeToTicksRoundUp(aSampleRate, t) is a multiple of WEBAUDIO_BLOCK_SIZE
-   * and floor(TimeToTicksRoundUp(aSampleRate, t)/WEBAUDIO_BLOCK_SIZE) >
-   * floor(TimeToTicksRoundUp(aSampleRate, aTime)/WEBAUDIO_BLOCK_SIZE).
+   * Returns smallest value of t such that t is a multiple of
+   * WEBAUDIO_BLOCK_SIZE and t > aTime.
    */
   GraphTime RoundUpToNextAudioBlock(GraphTime aTime);
   /**

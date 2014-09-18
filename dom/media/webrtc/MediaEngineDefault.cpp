@@ -240,9 +240,7 @@ MediaEngineDefaultVideoSource::NotifyPull(MediaStreamGraph* aGraph,
 
   // Note: we're not giving up mImage here
   nsRefPtr<layers::Image> image = mImage;
-  TrackTicks target =
-    aSource->TimeToTicksRoundUp(aSource->GraphRate(), aDesiredTime);
-  TrackTicks delta = target - aLastEndTime;
+  TrackTicks delta = aDesiredTime - aLastEndTime;
 
   if (delta > 0) {
     // nullptr images are allowed
@@ -251,7 +249,7 @@ MediaEngineDefaultVideoSource::NotifyPull(MediaStreamGraph* aGraph,
     // This can fail if either a) we haven't added the track yet, or b)
     // we've removed or finished the track.
     if (aSource->AppendToTrack(aID, &segment)) {
-      aLastEndTime = target;
+      aLastEndTime = aDesiredTime;
     }
   }
 }
