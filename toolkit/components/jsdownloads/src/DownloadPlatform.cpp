@@ -72,7 +72,7 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIFile* aTarget,
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GTK)
   nsAutoString path;
   if (aTarget && NS_SUCCEEDED(aTarget->GetPath(path))) {
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_ANDROID)
     // On Windows and Gtk, add the download to the system's "recent documents"
     // list, with a pref to disable.
     {
@@ -89,6 +89,8 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIFile* aTarget,
           gtk_recent_manager_add_item(manager, uri);
           g_free(uri);
         }
+#elif MOZ_WIDGET_ANDROID
+        mozilla::widget::android::GeckoAppShell::ScanMedia(path, NS_ConvertUTF8toUTF16(aContentType));
 #endif
       }
 #ifdef MOZ_ENABLE_GIO
@@ -117,11 +119,6 @@ nsresult DownloadPlatform::DownloadDone(nsIURI* aSource, nsIFile* aTarget,
     ::CFNotificationCenterPostNotification(center, CFSTR("com.apple.DownloadFileFinished"),
                                            observedObject, nullptr, TRUE);
     ::CFRelease(observedObject);
-#endif
-#ifdef MOZ_WIDGET_ANDROID
-    if (!aContentType.IsEmpty()) {
-      mozilla::widget::android::GeckoAppShell::ScanMedia(path, NS_ConvertUTF8toUTF16(aContentType));
-    }
 #endif
   }
 
