@@ -445,7 +445,7 @@ void
 AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
 {
   if (!mFinished) {
-    EnsureTrack(AUDIO_TRACK, mSampleRate);
+    EnsureTrack(AUDIO_TRACK);
   }
   // No more tracks will be coming
   mBuffer.AdvanceKnownTracksTime(STREAM_TIME_MAX);
@@ -537,7 +537,7 @@ AudioNodeStream::ProduceOutputBeforeInput(GraphTime aFrom)
 void
 AudioNodeStream::AdvanceOutputSegment()
 {
-  StreamBuffer::Track* track = EnsureTrack(AUDIO_TRACK, mSampleRate);
+  StreamBuffer::Track* track = EnsureTrack(AUDIO_TRACK);
   AudioSegment* segment = track->Get<AudioSegment>();
 
   if (mKind == MediaStreamGraph::EXTERNAL_STREAM) {
@@ -560,7 +560,7 @@ TrackTicks
 AudioNodeStream::GetCurrentPosition()
 {
   NS_ASSERTION(!mFinished, "Don't create another track after finishing");
-  return EnsureTrack(AUDIO_TRACK, mSampleRate)->Get<AudioSegment>()->GetDuration();
+  return EnsureTrack(AUDIO_TRACK)->Get<AudioSegment>()->GetDuration();
 }
 
 void
@@ -570,7 +570,7 @@ AudioNodeStream::FinishOutput()
     return;
   }
 
-  StreamBuffer::Track* track = EnsureTrack(AUDIO_TRACK, mSampleRate);
+  StreamBuffer::Track* track = EnsureTrack(AUDIO_TRACK);
   track->SetEnded();
   FinishOnGraphThread();
 

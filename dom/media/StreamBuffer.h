@@ -85,10 +85,9 @@ public:
    * Takes ownership of aSegment.
    */
   class Track {
-    Track(TrackID aID, TrackRate aRate, TrackTicks aStart, MediaSegment* aSegment, TrackRate aGraphRate)
+    Track(TrackID aID, TrackTicks aStart, MediaSegment* aSegment, TrackRate aGraphRate)
       : mStart(aStart),
         mSegment(aSegment),
-        mRate(aRate),
         mGraphRate(aGraphRate),
         mID(aID),
         mEnded(false)
@@ -96,7 +95,6 @@ public:
       MOZ_COUNT_CTOR(Track);
 
       NS_ASSERTION(aID > TRACK_NONE, "Bad track ID");
-      NS_ASSERTION(0 < aRate && aRate <= TRACK_RATE_MAX, "Invalid rate");
       NS_ASSERTION(0 <= aStart && aStart <= aSegment->GetDuration(), "Bad start position");
     }
   public:
@@ -112,7 +110,6 @@ public:
       return nullptr;
     }
     MediaSegment* GetSegment() const { return mSegment; }
-    TrackRate GetRate() const { return mRate; }
     TrackID GetID() const { return mID; }
     bool IsEnded() const { return mEnded; }
     TrackTicks GetStart() const { return mStart; }
@@ -126,7 +123,6 @@ public:
       NS_ASSERTION(aTrack->mID == mID, "IDs must match");
       NS_ASSERTION(aTrack->mStart == 0, "Source track must start at zero");
       NS_ASSERTION(aTrack->mSegment->GetType() == GetType(), "Track types must match");
-      NS_ASSERTION(aTrack->mRate == mRate, "Track rates must match");
 
       mSegment->AppendFrom(aTrack->mSegment);
       mEnded = aTrack->mEnded;
@@ -163,7 +159,6 @@ public:
     // The segment data starts at the start of the owning StreamBuffer, i.e.,
     // there's mStart silence/no video at the beginning.
     nsAutoPtr<MediaSegment> mSegment;
-    TrackRate mRate; // track rate in ticks per second
     TrackRate mGraphRate; // graph rate in StreamTime per second
     // Unique ID
     TrackID mID;
@@ -228,11 +223,11 @@ public:
    * holding a Track reference.
    * aSegment must have aStart worth of null data.
    */
-  Track& AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart, MediaSegment* aSegment)
+  Track& AddTrack(TrackID aID, TrackTicks aStart, MediaSegment* aSegment)
   {
     NS_ASSERTION(!FindTrack(aID), "Track with this ID already exists");
 
-    Track* track = new Track(aID, aRate, aStart, aSegment, GraphRate());
+    Track* track = new Track(aID, aStart, aSegment, GraphRate());
     mTracks.InsertElementSorted(track, CompareTracksByID());
 
     if (mTracksKnownTime == STREAM_TIME_MAX) {
