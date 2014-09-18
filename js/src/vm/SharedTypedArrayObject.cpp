@@ -526,63 +526,54 @@ class SharedTypedArrayObjectTemplate : public SharedTypedArrayObject
 class SharedInt8ArrayObject : public SharedTypedArrayObjectTemplate<int8_t> {
   public:
     enum { ACTUAL_TYPE = Scalar::Int8 };
-    static const JSProtoKey key = JSProto_SharedInt8Array;
     static const JSFunctionSpec jsfuncs[];
     static const JSPropertySpec jsprops[];
 };
 class SharedUint8ArrayObject : public SharedTypedArrayObjectTemplate<uint8_t> {
   public:
     enum { ACTUAL_TYPE = Scalar::Uint8 };
-    static const JSProtoKey key = JSProto_SharedUint8Array;
     static const JSFunctionSpec jsfuncs[];
     static const JSPropertySpec jsprops[];
 };
 class SharedInt16ArrayObject : public SharedTypedArrayObjectTemplate<int16_t> {
   public:
     enum { ACTUAL_TYPE = Scalar::Int16 };
-    static const JSProtoKey key = JSProto_SharedInt16Array;
     static const JSFunctionSpec jsfuncs[];
     static const JSPropertySpec jsprops[];
 };
 class SharedUint16ArrayObject : public SharedTypedArrayObjectTemplate<uint16_t> {
   public:
     enum { ACTUAL_TYPE = Scalar::Uint16 };
-    static const JSProtoKey key = JSProto_SharedUint16Array;
     static const JSFunctionSpec jsfuncs[];
     static const JSPropertySpec jsprops[];
 };
 class SharedInt32ArrayObject : public SharedTypedArrayObjectTemplate<int32_t> {
   public:
     enum { ACTUAL_TYPE = Scalar::Int32 };
-    static const JSProtoKey key = JSProto_SharedInt32Array;
     static const JSFunctionSpec jsfuncs[];
     static const JSPropertySpec jsprops[];
 };
 class SharedUint32ArrayObject : public SharedTypedArrayObjectTemplate<uint32_t> {
   public:
     enum { ACTUAL_TYPE = Scalar::Uint32 };
-    static const JSProtoKey key = JSProto_SharedUint32Array;
     static const JSFunctionSpec jsfuncs[];
     static const JSPropertySpec jsprops[];
 };
 class SharedFloat32ArrayObject : public SharedTypedArrayObjectTemplate<float> {
   public:
     enum { ACTUAL_TYPE = Scalar::Float32 };
-    static const JSProtoKey key = JSProto_SharedFloat32Array;
     static const JSFunctionSpec jsfuncs[];
     static const JSPropertySpec jsprops[];
 };
 class SharedFloat64ArrayObject : public SharedTypedArrayObjectTemplate<double> {
   public:
     enum { ACTUAL_TYPE = Scalar::Float64 };
-    static const JSProtoKey key = JSProto_SharedFloat64Array;
     static const JSFunctionSpec jsfuncs[];
     static const JSPropertySpec jsprops[];
 };
 class SharedUint8ClampedArrayObject : public SharedTypedArrayObjectTemplate<uint8_clamped> {
   public:
     enum { ACTUAL_TYPE = Scalar::Uint8Clamped };
-    static const JSProtoKey key = JSProto_SharedUint8ClampedArray;
     static const JSFunctionSpec jsfuncs[];
     static const JSPropertySpec jsprops[];
 };
