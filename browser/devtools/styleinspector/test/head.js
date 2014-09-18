@@ -386,6 +386,20 @@ function executeInContent(name, data={}, objects={}, expectResponse=true) {
 }
 
 /**
+ * Send an async message to the frame script and get back the requested
+ * computed style property.
+ * @param {String} selector: The selector used to obtain the element.
+ * @param {String} pseudo: pseudo id to query, or null.
+ * @param {String} name: name of the property.
+ */
+function* getComputedStyleProperty(selector, pseudo, propName) {
+ return yield executeInContent("Test:GetComputedStylePropertyValue",
+                               {selector: selector,
+                                pseudo: pseudo,
+                                name: propName});
+}
+
+/**
  * Given an inplace editable element, click to switch it to edit mode, wait for
  * focus
  * @return a promise that resolves to the inplace-editor element when ready
