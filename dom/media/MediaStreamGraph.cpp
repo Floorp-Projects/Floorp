@@ -206,7 +206,7 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
                                   aStream, data->mID, int64_t(data->mStart),
                                   int64_t(segment->GetDuration())));
 
-        aStream->mBuffer.AddTrack(data->mID, mSampleRate, data->mStart, segment);
+        aStream->mBuffer.AddTrack(data->mID, data->mStart, segment);
         // The track has taken ownership of data->mData, so let's replace
         // data->mData with an empty clone.
         data->mData = segment->CreateEmptyClone();
@@ -978,7 +978,6 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
     StreamBuffer::Track* track = aStream->mBuffer.FindTrack(audioOutput.mTrackID);
     AudioSegment* audio = track->Get<AudioSegment>();
     AudioSegment output;
-    MOZ_ASSERT(track->GetRate() == mSampleRate);
 
     // offset and audioOutput.mLastTickWritten can differ by at most one sample,
     // because of the rounding issue. We track that to ensure we don't skip a
@@ -1924,7 +1923,7 @@ MediaStream::GetProcessingGraphUpdateIndex()
 }
 
 StreamBuffer::Track*
-MediaStream::EnsureTrack(TrackID aTrackId, TrackRate aSampleRate)
+MediaStream::EnsureTrack(TrackID aTrackId)
 {
   StreamBuffer::Track* track = mBuffer.FindTrack(aTrackId);
   if (!track) {
@@ -1935,7 +1934,7 @@ MediaStream::EnsureTrack(TrackID aTrackId, TrackRate aSampleRate)
                                   MediaStreamListener::TRACK_EVENT_CREATED,
                                   *segment);
     }
-    track = &mBuffer.AddTrack(aTrackId, aSampleRate, 0, segment.forget());
+    track = &mBuffer.AddTrack(aTrackId, 0, segment.forget());
   }
   return track;
 }

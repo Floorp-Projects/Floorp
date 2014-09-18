@@ -188,7 +188,6 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
       id = ++maxTrackID;
     }
 
-    TrackRate rate = aTrack->GetRate();
     // Round up the track start time so the track, if anything, starts a
     // little later than the true time. This means we'll have enough
     // samples in our input stream to go just beyond the destination time.
@@ -204,7 +203,7 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
     }
     segment->AppendNullData(outputStart);
     StreamBuffer::Track* track =
-      &mBuffer.AddTrack(id, rate, outputStart, segment.forget());
+      &mBuffer.AddTrack(id, outputStart, segment.forget());
     STREAM_LOG(PR_LOG_DEBUG, ("TrackUnionStream %p adding track %d for input stream %p track %d, start ticks %lld",
                               this, id, aPort->GetSource(), aTrack->GetID(),
                               (long long)outputStart));

@@ -532,7 +532,7 @@ public:
 
   bool HasCurrentData() { return mHasCurrentData; }
 
-  StreamBuffer::Track* EnsureTrack(TrackID aTrack, TrackRate aSampleRate);
+  StreamBuffer::Track* EnsureTrack(TrackID aTrack);
 
   void ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment, MediaSegment* aRawSegment = nullptr);
 
