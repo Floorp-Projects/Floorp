@@ -1,17 +1,13 @@
+/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
 
-let Cu = Components.utils;
-let Cc = Components.classes;
-let Ci = Components.interfaces;
+"use strict";
 
 const URL1 = MAIN_DOMAIN + "navigate-first.html";
 const URL2 = MAIN_DOMAIN + "navigate-second.html";
 
-let { DebuggerClient } = Cu.import("resource://gre/modules/devtools/dbg-client.jsm", {});
-let { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm", {});
-
-let devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
-let events = devtools.require("sdk/event/core");
-
+let events = require("sdk/event/core");
 let client;
 
 // State machine to check events order
@@ -97,24 +93,18 @@ function onLoad() {
 
 function getServerTabActor(callback) {
   // Ensure having a minimal server
-  if (!DebuggerServer.initialized) {
-    DebuggerServer.init(function () { return true; });
-    DebuggerServer.addBrowserActors();
-  }
+  initDebuggerServer();
 
   // Connect to this tab
   let transport = DebuggerServer.connectPipe();
   client = new DebuggerClient(transport);
-  client.connect(function onConnect() {
-    client.listTabs(function onListTabs(aResponse) {
-      // Fetch the BrowserTabActor for this tab
-      let actorID = aResponse.tabs[aResponse.selected].actor;
-      client.attachTab(actorID, function(aResponse, aTabClient) {
-        // !Hack! Retrieve a server side object, the BrowserTabActor instance
-        let conn = transport._serverConnection;
-        let tabActor = conn.getActor(actorID);
-        callback(tabActor);
-      });
+  connectDebuggerClient(client).then(form => {
+    let actorID = form.actor;
+    client.attachTab(actorID, function(aResponse, aTabClient) {
+      // !Hack! Retrieve a server side object, the BrowserTabActor instance
+      let conn = transport._serverConnection;
+      let tabActor = conn.getActor(actorID);
+      callback(tabActor);
     });
   });
 
