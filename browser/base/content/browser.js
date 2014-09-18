@@ -774,8 +774,6 @@ var gBrowserInit = {
 
     gBrowser.addEventListener("DOMUpdatePageReport", gPopupBlockerObserver, false);
 
-    gBrowser.addEventListener("NewPluginInstalled", gPluginHandler.newPluginInstalled, true);
-
     Services.obs.addObserver(gPluginHandler.pluginCrashed, "plugin-crashed", false);
 
     window.addEventListener("AppCommand", HandleAppCommandEvent, true);

@@ -4,8 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 var gPluginHandler = {
-  PREF_NOTIFY_MISSING_FLASH: "plugins.notifyMissingFlash",
-  PREF_HIDE_MISSING_PLUGINS_NOTIFICATION: "plugins.hideMissingPluginsNotification",
   PREF_SESSION_PERSIST_MINUTES: "plugin.sessionPermissionNow.intervalInMinutes",
   PREF_PERSISTENT_DAYS: "plugin.persistentPermissionAlways.intervalInDays",
   MESSAGES: [
@@ -93,94 +91,6 @@ var gPluginHandler = {
   },
 #endif
 
-  supportedPlugins: {
-    "mimetypes": {
-      "application/x-shockwave-flash": "flash",
-      "application/futuresplash": "flash",
-      "application/x-java-.*": "java",
-      "application/x-director": "shockwave",
-      "application/(sdp|x-(mpeg|rtsp|sdp))": "quicktime",
-      "audio/(3gpp(2)?|AMR|aiff|basic|mid(i)?|mp4|mpeg|vnd\.qcelp|wav|x-(aiff|m4(a|b|p)|midi|mpeg|wav))": "quicktime",
-      "image/(pict|png|tiff|x-(macpaint|pict|png|quicktime|sgi|targa|tiff))": "quicktime",
-      "video/(3gpp(2)?|flc|mp4|mpeg|quicktime|sd-video|x-mpeg)": "quicktime",
-      "application/x-unknown": "test",
-    },
-
-    "plugins": {
-      "flash": {
-        "displayName": "Flash",
-        "installWINNT": true,
-        "installDarwin": true,
-        "installLinux": true,
-      },
-      "java": {
-        "displayName": "Java",
-        "installWINNT": true,
-        "installDarwin": true,
-        "installLinux": true,
-      },
-      "shockwave": {
-        "displayName": "Shockwave",
-        "installWINNT": true,
-        "installDarwin": true,
-      },
-      "quicktime": {
-        "displayName": "QuickTime",
-        "installWINNT": true,
-      },
-      "test": {
-        "displayName": "Test plugin",
-        "installWINNT": true,
-        "installLinux": true,
-        "installDarwin": true,
-      }
-    }
-  },
-
-  nameForSupportedPlugin: function (aMimeType) {
-    for (let type in this.supportedPlugins.mimetypes) {
-      let re = new RegExp(type);
-      if (re.test(aMimeType)) {
-        return this.supportedPlugins.mimetypes[type];
-      }
-    }
-    return null;
-  },
-
-  canInstallThisMimeType: function (aMimeType) {
-    let os = Services.appinfo.OS;
-    let pluginName = this.nameForSupportedPlugin(aMimeType);
-    if (pluginName && "install" + os in this.supportedPlugins.plugins[pluginName]) {
-      return true;
-    }
-    return false;
-  },
-
-  newPluginInstalled : function(event) {
-    // browser elements are anonymous so we can't just use target.
-    var browser = event.originalTarget;
-    // clear the plugin list, now that at least one plugin has been installed
-    browser.missingPlugins = null;
-
-    var notificationBox = gBrowser.getNotificationBox(browser);
-    var notification = notificationBox.getNotificationWithValue("missing-plugins");
-    if (notification)
-      notificationBox.removeNotification(notification);
-
-    // reload the browser to make the new plugin show.
-    browser.reload();
-  },
-
-  // Callback for user clicking on a missing (unsupported) plugin.
-  installSinglePlugin: function (pluginInfo) {
-    var missingPlugins = new Map();
-    missingPlugins.set(pluginInfo.mimetype, pluginInfo);
-
-    openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-               "PFSWindow", "chrome,centerscreen,resizable=yes",
-               {plugins: missingPlugins, browser: gBrowser.selectedBrowser});
-  },
-
   // Callback for user clicking on a disabled plugin
   managePlugins: function () {
     BrowserOpenAddonsMgr("addons://list/plugin");
@@ -210,66 +120,6 @@ var gPluginHandler = {
   // Callback for user clicking the help icon
   openHelpPage: function () {
     openHelpLink("plugin-crashed", false);
-  },
-
-  showInstallNotification: function (browser, pluginInfo) {
-    let hideMissingPluginsNotification =
-      Services.prefs.getBoolPref(this.PREF_HIDE_MISSING_PLUGINS_NOTIFICATION);
-    if (hideMissingPluginsNotification) {
-      return false;
-    }
-
-    if (!browser.missingPlugins)
-      browser.missingPlugins = new Map();
-
-    browser.missingPlugins.set(pluginInfo.mimetype, pluginInfo);
-
-    // only show notification for small subset of plugins
-    let mimetype = pluginInfo.mimetype.split(";")[0];
-    if (!this.canInstallThisMimeType(mimetype))
-      return false;
-
-    let pluginIdentifier = this.nameForSupportedPlugin(mimetype);
-    if (!pluginIdentifier)
-      return false;
-
-    let displayName = this.supportedPlugins.plugins[pluginIdentifier].displayName;
-
-    // don't show several notifications
-    let notification = PopupNotifications.getNotification("plugins-not-found", browser);
-    if (notification)
-      return true;
-
-    let messageString = gNavigatorBundle.getString("installPlugin.message");
-    let mainAction = {
-      label: gNavigatorBundle.getFormattedString("installPlugin.button.label",
-                                                 [displayName]),
-      accessKey: gNavigatorBundle.getString("installPlugin.button.accesskey"),
-      callback: function () {
-        openDialog("chrome://mozapps/content/plugins/pluginInstallerWizard.xul",
-                   "PFSWindow", "chrome,centerscreen,resizable=yes",
-                   {plugins: browser.missingPlugins, browser: browser});
-      }
-    };
-    let secondaryActions = null;
-    let options = { dismissed: true };
-
-    let showForFlash = Services.prefs.getBoolPref(this.PREF_NOTIFY_MISSING_FLASH);
-    if (pluginIdentifier == "flash" && showForFlash) {
-      let prefNotifyMissingFlash = this.PREF_NOTIFY_MISSING_FLASH;
-      secondaryActions = [{
-        label: gNavigatorBundle.getString("installPlugin.ignoreButton.label"),
-        accessKey: gNavigatorBundle.getString("installPlugin.ignoreButton.accesskey"),
-        callback: function () {
-          Services.prefs.setBoolPref(prefNotifyMissingFlash, false);
-        }
-      }];
-      options.dismissed = false;
-    }
-    PopupNotifications.show(browser, "plugins-not-found",
-                            messageString, "plugin-install-notification-icon",
-                            mainAction, secondaryActions, options);
-    return true;
   },
 
   _clickToPlayNotificationEventCallback: function PH_ctpEventCallback(event) {

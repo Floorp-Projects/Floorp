@@ -1,27 +1,6 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<!ENTITY pluginWizard.title                                  "Plugin Finder Service">
-<!ENTITY pluginWizard.firstPage.title                        "Welcome to the &pluginWizard.title;">
-
-<!ENTITY pluginWizard.checkingForPlugins.description.label   "&brandShortName; is now checking for available plugins…">
-
-<!ENTITY pluginWizard.availablePluginsPage.title             "Available Plugin Downloads">
-<!ENTITY pluginWizard.availablePluginsPage.description.label "The following plugins are available:">
-<!ENTITY pluginWizard.availablePluginsPage.continueMsg.label "Press Next to install these plugins.">
-<!ENTITY pluginWizard.availablePluginsPage.installerUI       "Some plugins may require additional information from you during installation.">
-
-<!ENTITY pluginWizard.licensePage.title                      "Plugin Licenses">
-<!ENTITY pluginWizard.licensePage.accept.label               "I agree.">
-<!ENTITY pluginWizard.licensePage.deny.label                 "I do not agree (plugin will not be installed).">
-
-<!ENTITY pluginWizard.installPluginsPage.title               "Installing Plugins">
-<!ENTITY pluginWizard.installPluginsPage.description.label   "&brandShortName; is installing plugins…">
-
-<!ENTITY pluginWizard.finalPage.description.label            "&brandShortName; finished installing the missing plugins:">
-
-<!ENTITY pluginWizard.finalPage.moreInfo.label               "Find out more about Plugins or manually find missing plugins.">
-<!ENTITY pluginWizard.finalPage.restart.label                "&brandShortName; needs to be restarted for the plugin(s) to work.">
 
 <!-- LOCALIZATION NOTE (unsupportedPlatform.pre): Mobile only. Flash (the only plugin available on mobile)
      is not supported on some devices. Include a trailing space as needed. -->
@@ -40,7 +19,6 @@
 <!ENTITY disabledPlugin                                      "This plugin is disabled.">
 <!ENTITY blockedPlugin.label                                 "This plugin has been blocked for your protection.">
 <!ENTITY hidePluginBtn.label                                 "Hide plugin">
-<!ENTITY installPlugin                                       "Install plugin…">
 <!ENTITY managePlugins                                       "Manage plugins…">
 
 <!-- LOCALIZATION NOTE (reloadPlugin.pre): include a trailing space as needed -->
