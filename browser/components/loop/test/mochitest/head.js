@@ -119,17 +119,6 @@ function setInternalLoopGlobal(aName, aValue) {
   global[aName] = aValue;
 }
 
-function checkLoggedOutState() {
-  let global = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
-  ise(global.gFxAOAuthClientPromise, null, "gFxAOAuthClientPromise should be cleared");
-  ise(global.gFxAOAuthProfile, null, "gFxAOAuthProfile should be cleared");
-  ise(global.gFxAOAuthClient, null, "gFxAOAuthClient should be cleared");
-  ise(global.gFxAOAuthTokenData, null, "gFxAOAuthTokenData should be cleared");
-  const fxASessionPref = MozLoopServiceInternal.getSessionTokenPrefName(LOOP_SESSION_TYPE.FXA);
-  ise(Services.prefs.getPrefType(fxASessionPref), Services.prefs.PREF_INVALID,
-      "FxA hawk session should be cleared anyways");
-}
-
 function promiseDeletedOAuthParams(baseURL) {
   let deferred = Promise.defer();
   let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
