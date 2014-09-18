@@ -12,7 +12,7 @@
   Notes
   -----
 
-  1. We do some monkey business in the document observer methods to`
+  1. We do some monkey business in the document observer methods to
      keep the element map in sync for HTML elements. Why don't we just
      do it for _all_ elements? Well, in the case of XUL elements,
      which may be lazily created during frame construction, the
@@ -23,7 +23,6 @@
 
 #include "mozilla/ArrayUtils.h"
 
-// Note the ALPHABETICAL ORDERING
 #include "XULDocument.h"
 
 #include "nsError.h"
@@ -122,9 +121,6 @@ const nsForwardReference::Phase nsForwardReference::kPasses[] = {
     nsForwardReference::eHookup,
     nsForwardReference::eDone
 };
-
-const uint32_t kMaxAttrNameLength = 512;
-const uint32_t kMaxAttributeLength = 4096;
 
 //----------------------------------------------------------------------
 //
