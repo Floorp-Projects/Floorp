@@ -135,20 +135,6 @@
 // keys, etc.
 
 
-// Forward declarations of SpiderMonkey's ubi::Node reference types.
-namespace js {
-class LazyScript;
-class Shape;
-class BaseShape;
-namespace jit {
-class JitCode;
-}
-namespace types {
-struct TypeObject;
-}
-}
-
-
 namespace JS {
 namespace ubi {
 
@@ -434,7 +420,7 @@ template<typename Referent>
 class TracerConcrete : public Base {
     const char16_t *typeName() const MOZ_OVERRIDE { return concreteTypeName; }
     EdgeRange *edges(JSContext *, bool wantNames) const MOZ_OVERRIDE;
-    JS::Zone *zone() const MOZ_OVERRIDE { return get().zone(); }
+    JS::Zone *zone() const MOZ_OVERRIDE;
 
   protected:
     explicit TracerConcrete(Referent *ptr) : Base(ptr) { }
@@ -449,9 +435,7 @@ class TracerConcrete : public Base {
 template<typename Referent>
 class TracerConcreteWithCompartment : public TracerConcrete<Referent> {
     typedef TracerConcrete<Referent> TracerBase;
-    JSCompartment *compartment() const MOZ_OVERRIDE {
-        return TracerBase::get().compartment();
-    }
+    JSCompartment *compartment() const MOZ_OVERRIDE;
 
     explicit TracerConcreteWithCompartment(Referent *ptr) : TracerBase(ptr) { }
 
@@ -461,15 +445,11 @@ class TracerConcreteWithCompartment : public TracerConcrete<Referent> {
     }
 };
 
+// Define specializations for some commonly-used public JSAPI types.
 template<> struct Concrete<JSObject> : TracerConcreteWithCompartment<JSObject> { };
 template<> struct Concrete<JSString> : TracerConcrete<JSString> { };
 template<> struct Concrete<JS::Symbol> : TracerConcrete<JS::Symbol> { };
 template<> struct Concrete<JSScript> : TracerConcreteWithCompartment<JSScript> { };
-template<> struct Concrete<js::LazyScript> : TracerConcrete<js::LazyScript> { };
-template<> struct Concrete<js::jit::JitCode> : TracerConcrete<js::jit::JitCode> { };
-template<> struct Concrete<js::Shape> : TracerConcreteWithCompartment<js::Shape> { };
-template<> struct Concrete<js::BaseShape> : TracerConcreteWithCompartment<js::BaseShape> { };
-template<> struct Concrete<js::types::TypeObject> : TracerConcrete<js::types::TypeObject> { };
 
 // The ubi::Node null pointer. Any attempt to operate on a null ubi::Node asserts.
 template<>
