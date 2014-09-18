@@ -157,8 +157,8 @@ PlatformCallback(void* decompressionOutputRefCon,
 
   AppleVTDecoder* decoder =
     static_cast<AppleVTDecoder*>(decompressionOutputRefCon);
-  nsAutoPtr<AppleFrameRef> frameRef =
-    nsAutoPtr<AppleFrameRef>(static_cast<AppleFrameRef*>(sourceFrameRefCon));
+  nsAutoPtr<AppleVTDecoder::AppleFrameRef> frameRef(
+    static_cast<AppleVTDecoder::AppleFrameRef*>(sourceFrameRefCon));
 
   // Validate our arguments.
   if (status != noErr || !image) {
