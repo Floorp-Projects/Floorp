@@ -106,11 +106,9 @@ UpdateFilePreviewWidget(GtkFileChooser *file_chooser,
     return;
   }
 
-#if GTK_CHECK_VERSION(2,12,0)
   GdkPixbuf *preview_pixbuf_temp = preview_pixbuf;
   preview_pixbuf = gdk_pixbuf_apply_embedded_orientation(preview_pixbuf_temp);
   g_object_unref(preview_pixbuf_temp);
-#endif
 
   // This is the easiest way to do center alignment without worrying about containers
   // Minimum 3px padding each side (hence the 6) just to make things nice
