@@ -2765,7 +2765,7 @@ nsDownload::SetState(DownloadState aState)
           file &&
           NS_SUCCEEDED(file->GetPath(path))) {
 
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_ANDROID)
         // On Windows and Gtk, add the download to the system's "recent documents"
         // list, with a pref to disable.
         {
@@ -2785,6 +2785,15 @@ nsDownload::SetState(DownloadState aState)
               gtk_recent_manager_add_item(manager, uri);
               g_free(uri);
             }
+#elif defined(MOZ_WIDGET_ANDROID)
+            nsCOMPtr<nsIMIMEInfo> mimeInfo;
+            nsAutoCString contentType;
+            GetMIMEInfo(getter_AddRefs(mimeInfo));
+
+            if (mimeInfo)
+              mimeInfo->GetMIMEType(contentType);
+
+            mozilla::widget::android::GeckoAppShell::ScanMedia(path, NS_ConvertUTF8toUTF16(contentType));
 #endif
           }
 #ifdef MOZ_ENABLE_GIO
@@ -2813,16 +2822,6 @@ nsDownload::SetState(DownloadState aState)
         ::CFNotificationCenterPostNotification(center, CFSTR("com.apple.DownloadFileFinished"),
                                                observedObject, nullptr, TRUE);
         ::CFRelease(observedObject);
-#endif
-#ifdef MOZ_WIDGET_ANDROID
-        nsCOMPtr<nsIMIMEInfo> mimeInfo;
-        nsAutoCString contentType;
-        GetMIMEInfo(getter_AddRefs(mimeInfo));
-
-        if (mimeInfo)
-          mimeInfo->GetMIMEType(contentType);
-
-        mozilla::widget::android::GeckoAppShell::ScanMedia(path, NS_ConvertUTF8toUTF16(contentType));
 #endif
       }
 
