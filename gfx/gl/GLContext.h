@@ -80,6 +80,7 @@ namespace gl {
 MOZ_BEGIN_ENUM_CLASS(GLFeature)
     bind_buffer_offset,
     blend_minmax,
+    clear_buffers,
     depth_texture,
     draw_buffers,
     draw_instanced,
@@ -944,6 +945,30 @@ public:
         BeforeGLDrawCall();
         raw_fClear(mask);
         AfterGLDrawCall();
+    }
+
+    void fClearBufferfi(GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil) {
+        BEFORE_GL_CALL;
+        mSymbols.fClearBufferfi(buffer, drawbuffer, depth, stencil);
+        AFTER_GL_CALL;
+    }
+
+    void fClearBufferfv(GLenum buffer, GLint drawbuffer, const GLfloat* value) {
+        BEFORE_GL_CALL;
+        mSymbols.fClearBufferfv(buffer, drawbuffer, value);
+        AFTER_GL_CALL;
+    }
+
+    void fClearBufferiv(GLenum buffer, GLint drawbuffer, const GLint* value) {
+        BEFORE_GL_CALL;
+        mSymbols.fClearBufferiv(buffer, drawbuffer, value);
+        AFTER_GL_CALL;
+    }
+
+    void fClearBufferuiv(GLenum buffer, GLint drawbuffer, const GLuint* value) {
+        BEFORE_GL_CALL;
+        mSymbols.fClearBufferuiv(buffer, drawbuffer, value);
+        AFTER_GL_CALL;
     }
 
     void fClearColor(GLclampf r, GLclampf g, GLclampf b, GLclampf a) {
