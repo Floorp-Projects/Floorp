@@ -789,19 +789,16 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop,
             MOZ_ASSERT(!self->mGCIsRunning, "bad state");
             self->mGCIsRunning = true;
 
-            nsTArray<nsXPCWrappedJS*>* dyingWrappedJSArray =
-                &self->mWrappedJSToReleaseArray;
-
             // Add any wrappers whose JSObjects are to be finalized to
             // this array. Note that we do not want to be changing the
             // refcount of these wrappers.
             // We add them to the array now and Release the array members
             // later to avoid the posibility of doing any JS GCThing
             // allocations during the gc cycle.
-            self->mWrappedJSMap->FindDyingJSObjects(dyingWrappedJSArray);
+            self->mWrappedJSMap->UpdateWeakPointersAfterGC(self);
 
             // Find dying scopes.
-            XPCWrappedNativeScope::StartFinalizationPhaseOfGC(fop, self);
+            XPCWrappedNativeScope::UpdateWeakPointersAfterGC(self);
 
             self->mDoingFinalization = true;
             break;
@@ -816,7 +813,7 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop,
             DoDeferredRelease(self->mWrappedJSToReleaseArray);
 
             // Sweep scopes needing cleanup
-            XPCWrappedNativeScope::FinishedFinalizationPhaseOfGC();
+            XPCWrappedNativeScope::KillDyingScopes();
 
             MOZ_ASSERT(self->mGCIsRunning, "bad state");
             self->mGCIsRunning = false;
@@ -969,6 +966,19 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp *fop,
             break;
         }
     }
+}
+
+/* static */ void
+XPCJSRuntime::MovingGCCallback(JSRuntime *rt, void *data)
+{
+    // Called to fixup any weak GC thing pointers that may have been moved.
+
+    XPCJSRuntime *self = static_cast<XPCJSRuntime *>(data);
+
+    self->mWrappedJSMap->UpdateWeakPointersAfterGC(self);
+    MOZ_ASSERT(self->WrappedJSToReleaseArray().IsEmpty());
+
+    XPCWrappedNativeScope::UpdateWeakPointersAfterGC(self);
 }
 
 static void WatchdogMain(void *arg);
@@ -1537,6 +1547,7 @@ XPCJSRuntime::~XPCJSRuntime()
     // callback if we aren't careful. Null out the relevant callbacks.
     js::SetActivityCallback(Runtime(), nullptr, nullptr);
     JS_RemoveFinalizeCallback(Runtime(), FinalizeCallback);
+    JS_RemoveMovingGCCallback(Runtime(), MovingGCCallback);
 
     // Clear any pending exception.  It might be an XPCWrappedJS, and if we try
     // to destroy it later we will crash.
@@ -3235,6 +3246,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     JS_SetCompartmentNameCallback(runtime, CompartmentNameCallback);
     mPrevGCSliceCallback = JS::SetGCSliceCallback(runtime, GCSliceCallback);
     JS_AddFinalizeCallback(runtime, FinalizeCallback, nullptr);
+    JS_AddMovingGCCallback(runtime, MovingGCCallback, this);
     JS_SetWrapObjectCallbacks(runtime, &WrapObjectCallbacks);
     js::SetPreserveWrapperCallback(runtime, PreserveWrapper);
 #ifdef MOZ_CRASHREPORTER

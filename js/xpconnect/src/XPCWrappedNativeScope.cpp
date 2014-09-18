@@ -487,10 +487,11 @@ XPCWrappedNativeScope::SuspectAllWrappers(XPCJSRuntime* rt,
 
 // static
 void
-XPCWrappedNativeScope::StartFinalizationPhaseOfGC(JSFreeOp *fop, XPCJSRuntime* rt)
+XPCWrappedNativeScope::UpdateWeakPointersAfterGC(XPCJSRuntime* rt)
 {
-    // We are in JSGC_MARK_END and JSGC_FINALIZE_END must always follow it
-    // calling FinishedFinalizationPhaseOfGC and clearing gDyingScopes in
+    // If this is called from the finalization callback in JSGC_MARK_END then
+    // JSGC_FINALIZE_END must always follow it calling
+    // FinishedFinalizationPhaseOfGC and clearing gDyingScopes in
     // KillDyingScopes.
     MOZ_ASSERT(!gDyingScopes, "JSGC_MARK_END without JSGC_FINALIZE_END");
 
@@ -504,8 +505,11 @@ XPCWrappedNativeScope::StartFinalizationPhaseOfGC(JSFreeOp *fop, XPCJSRuntime* r
 
         XPCWrappedNativeScope* next = cur->mNext;
 
+        // Check for finalization of the global object.  Note that global
+        // objects are never moved, so we don't need to handle updating the
+        // object pointer here.
         if (cur->mGlobalJSObject && cur->mGlobalJSObject.isAboutToBeFinalized()) {
-            cur->mGlobalJSObject.finalize(fop->runtime());
+            cur->mGlobalJSObject.finalize(rt->Runtime());
             // Move this scope from the live list to the dying list.
             if (prev)
                 prev->mNext = next;
@@ -515,17 +519,11 @@ XPCWrappedNativeScope::StartFinalizationPhaseOfGC(JSFreeOp *fop, XPCJSRuntime* r
             gDyingScopes = cur;
             cur = nullptr;
         }
+
         if (cur)
             prev = cur;
         cur = next;
     }
-}
-
-// static
-void
-XPCWrappedNativeScope::FinishedFinalizationPhaseOfGC()
-{
-    KillDyingScopes();
 }
 
 static PLDHashOperator
