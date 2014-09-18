@@ -487,7 +487,8 @@ OnSharedPreferenceChangeListener
         // The intent extras will be null if this is the top-level settings
         // activity. In that case, we want to end the SETTINGS telmetry session.
         // For HC+ versions of Android this is handled in GeckoPreferenceFragment.
-        if (Versions.preHC && getIntent().getExtras() == null) {
+        final boolean versionsPreHC = Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB;
+        if (versionsPreHC && getIntent().getExtras() == null) {
             Telemetry.stopUISession(TelemetryContract.Session.SETTINGS);
         }
     }
