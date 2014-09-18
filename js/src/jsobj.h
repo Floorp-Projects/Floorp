@@ -1166,13 +1166,13 @@ class JSObject : public js::ObjectImpl
 
     template <class T>
     T &as() {
-        JS_ASSERT(is<T>());
+        JS_ASSERT(this->is<T>());
         return *static_cast<T *>(this);
     }
 
     template <class T>
     const T &as() const {
-        JS_ASSERT(is<T>());
+        JS_ASSERT(this->is<T>());
         return *static_cast<const T *>(this);
     }
 
