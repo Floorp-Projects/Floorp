@@ -2369,7 +2369,7 @@ DrawTargetD2D::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
       RefPtr<DrawTargetD2D> dt = new DrawTargetD2D();
       if (!dt->Init(samplingRect.Size(),
                     source->GetFormat())) {
-        MOZ_ASSERT(false, "Invalid sampling rect size!");
+        MOZ_ASSERT("Invalid sampling rect size!");
         return nullptr;
       }
 
