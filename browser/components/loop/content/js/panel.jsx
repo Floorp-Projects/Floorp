@@ -221,7 +221,6 @@ loop.panel = (function(_, mozL10n) {
 
     handleClickAuthEntry: function() {
       if (this._isSignedIn()) {
-        // XXX to be implemented - bug 979845
         navigator.mozLoop.logOutFromFxA();
       } else {
         navigator.mozLoop.logInToFxA();
