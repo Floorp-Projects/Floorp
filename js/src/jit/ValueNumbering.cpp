@@ -345,11 +345,11 @@ ValueNumberer::releaseOperands(MDefinition *def)
 bool
 ValueNumberer::discardDef(MDefinition *def)
 {
+#ifdef DEBUG
     JitSpew(JitSpew_GVN, "      Discarding %s %s%u",
             def->block()->isMarked() ? "unreachable" : "dead",
             def->opName(), def->id());
 
-#ifdef DEBUG
     MOZ_ASSERT(def != nextDef_, "Invalidating the MDefinition iterator");
     if (def->block()->isMarked()) {
         MOZ_ASSERT(!def->hasUses(), "Discarding def that still has uses");
@@ -723,8 +723,10 @@ ValueNumberer::visitDefinition(MDefinition *def)
         if (sim->block() == nullptr)
             def->block()->insertAfter(def->toInstruction(), sim->toInstruction());
 
+#ifdef DEBUG
         JitSpew(JitSpew_GVN, "      Folded %s%u to %s%u",
                 def->opName(), def->id(), sim->opName(), sim->id());
+#endif
         ReplaceAllUsesWith(def, sim);
 
         // The node's foldsTo said |def| can be replaced by |rep|. If |def| is a
@@ -745,9 +747,11 @@ ValueNumberer::visitDefinition(MDefinition *def)
         if (rep == nullptr)
             return false;
         if (rep->updateForReplacement(def)) {
+#ifdef DEBUG
             JitSpew(JitSpew_GVN,
                     "      Replacing %s%u with %s%u",
                     def->opName(), def->id(), rep->opName(), rep->id());
+#endif
             ReplaceAllUsesWith(def, rep);
 
             // The node's congruentTo said |def| is congruent to |rep|, and it's
@@ -787,8 +791,10 @@ ValueNumberer::visitControlInstruction(MBasicBlock *block, const MBasicBlock *do
     MControlInstruction *newControl = rep->toControlInstruction();
     MOZ_ASSERT(!newControl->block(),
                "Control instruction replacement shouldn't already be in a block");
+#ifdef DEBUG
     JitSpew(JitSpew_GVN, "      Folded control instruction %s%u to %s%u",
             control->opName(), control->id(), newControl->opName(), graph_.getNumInstructionIds());
+#endif
 
     // If the simplification removes any CFG edges, update the CFG and remove
     // any blocks that become dead.
