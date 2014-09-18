@@ -3978,7 +3978,7 @@
     "description": "Whether the decoder for MACGURMUKHI has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_ISOIR111": {
-    "expires_in_version": "40",
+    "expires_in_version": "38",
     "kind": "flag",
     "description": "Whether the decoder for ISOIR111 has been instantiated in this session."
   },
@@ -6588,6 +6588,11 @@
     "kind": "enumerated",
     "n_values": 3,
     "description": "Doorhanger shown = 0, Disable = 1, Enable = 2"
+  },
+  "LOOP_CLIENT_CALL_URL_REQUESTS_SUCCESS": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Stores 1 if generating a call URL succeeded, and 0 if it failed."
   },
   "E10S_AUTOSTART": {
     "expires_in_version": "never",

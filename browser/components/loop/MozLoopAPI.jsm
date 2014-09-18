@@ -6,6 +6,7 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
+Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/loop/MozLoopService.jsm");
@@ -23,6 +24,9 @@ XPCOMUtils.defineLazyGetter(this, "appInfo", function() {
 XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
                                          "@mozilla.org/widget/clipboardhelper;1",
                                          "nsIClipboardHelper");
+XPCOMUtils.defineLazyServiceGetter(this, "extProtocolSvc",
+                                         "@mozilla.org/uriloader/external-protocol-service;1",
+                                         "nsIExternalProtocolService");
 this.EXPORTED_SYMBOLS = ["injectLoopAPI"];
 
 /**
@@ -453,6 +457,36 @@ function injectLoopAPI(targetWindow) {
           }, targetWindow);
         }
         return appVersionInfo;
+      }
+    },
+
+    /**
+     * Composes an email via the external protocol service.
+     *
+     * @param {String} subject Subject of the email to send
+     * @param {String} body    Body message of the email to send
+     */
+    composeEmail: {
+      enumerable: true,
+      writable: true,
+      value: function(subject, body) {
+        let mailtoURL = "mailto:?subject=" + encodeURIComponent(subject) + "&" +
+                        "body=" + encodeURIComponent(body);
+        extProtocolSvc.loadURI(CommonUtils.makeURI(mailtoURL));
+      }
+    },
+
+    /**
+     * Adds a value to a telemetry histogram.
+     *
+     * @param  {string}  histogramId Name of the telemetry histogram to update.
+     * @param  {integer} value       Value to add to the histogram.
+     */
+    telemetryAdd: {
+      enumerable: true,
+      writable: true,
+      value: function(histogramId, value) {
+        Services.telemetry.getHistogramById(histogramId).add(value);
       }
     },
   };
