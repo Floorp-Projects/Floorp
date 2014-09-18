@@ -135,6 +135,12 @@
                 onget="return null"
                 readonly="true"/>
 
+      <field name="_contentPrincipal">null</field>
+
+      <property name="contentPrincipal"
+                onget="return this._contentPrincipal"
+                readonly="true"/>
+
       <property name="contentDocumentAsCPOW"
                 onget="return this.contentWindowAsCPOW ? this.contentWindowAsCPOW.document : null"
                 readonly="true"/>
