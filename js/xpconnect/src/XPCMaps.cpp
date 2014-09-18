@@ -85,18 +85,44 @@ HashNativeKey(PLDHashTable *table, const void *key)
 // implement JSObject2WrappedJSMap...
 
 void
-JSObject2WrappedJSMap::FindDyingJSObjects(nsTArray<nsXPCWrappedJS*>* dying)
+JSObject2WrappedJSMap::UpdateWeakPointersAfterGC(XPCJSRuntime *runtime)
 {
-    for (Map::Range r = mTable.all(); !r.empty(); r.popFront()) {
-        nsXPCWrappedJS* wrapper = r.front().value();
+    // Check all wrappers and update their JSObject pointer if it has been
+    // moved, or queue the wrapper for destruction if it is about to be
+    // finalized.
+
+    nsTArray<nsXPCWrappedJS*> &dying = runtime->WrappedJSToReleaseArray();
+    MOZ_ASSERT(dying.IsEmpty());
+
+    for (Map::Enum e(mTable); !e.empty(); e.popFront()) {
+        nsXPCWrappedJS* wrapper = e.front().value();
         MOZ_ASSERT(wrapper, "found a null JS wrapper!");
 
-        // walk the wrapper chain and find any whose JSObject is to be finalized
+        // Walk the wrapper chain and update all JSObjects.
         while (wrapper) {
+#ifdef DEBUG
+            if (!wrapper->IsSubjectToFinalization()) {
+                JSObject *obj = wrapper->GetJSObjectPreserveColor();
+                JSObject *prior = obj;
+                MOZ_ASSERT(!JS_IsAboutToBeFinalizedUnbarriered(&obj));
+                // If a wrapper is not subject to finalization then it roots its
+                // JS object.  If so, then any necessary pointer update will
+                // have already happened when it was marked.
+                MOZ_ASSERT(obj == prior);
+            }
+#endif
             if (wrapper->IsSubjectToFinalization() && wrapper->IsObjectAboutToBeFinalized())
-                dying->AppendElement(wrapper);
+                dying.AppendElement(wrapper);
             wrapper = wrapper->GetNextWrapper();
         }
+
+        // Remove or update the JSObject key in the table if necessary.
+        JSObject *obj = e.front().key();
+        JSObject *prior = obj;
+        if (JS_IsAboutToBeFinalizedUnbarriered(&obj))
+            e.removeFront();
+        else if (obj != prior)
+            e.rekeyFront(obj);
     }
 }
 

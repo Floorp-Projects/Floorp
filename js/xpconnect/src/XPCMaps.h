@@ -68,7 +68,7 @@ public:
             r.front().value()->DebugDump(depth);
     }
 
-    void FindDyingJSObjects(nsTArray<nsXPCWrappedJS*>* dying);
+    void UpdateWeakPointersAfterGC(XPCJSRuntime *runtime);
 
     void ShutdownMarker();
 

@@ -492,6 +492,14 @@ void XPCWrappedNativeTearOff::SetJSObject(JSObject*  JSObj)
 }
 
 inline
+void XPCWrappedNativeTearOff::JSObjectMoved(JSObject *obj, const JSObject *old)
+{
+    MOZ_ASSERT(!IsMarked());
+    MOZ_ASSERT(mJSObject == old);
+    mJSObject = obj;
+}
+
+inline
 XPCWrappedNativeTearOff::~XPCWrappedNativeTearOff()
 {
     MOZ_ASSERT(!(GetInterface() || GetNative() || GetJSObjectPreserveColor()),
