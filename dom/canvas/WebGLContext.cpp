@@ -1746,7 +1746,7 @@ WebGLContext::DidRefresh()
     }
 }
 
-bool WebGLContext::TexImageFromVideoElement(GLenum texImageTarget, GLint level,
+bool WebGLContext::TexImageFromVideoElement(const TexImageTarget texImageTarget, GLint level,
                               GLenum internalformat, GLenum format, GLenum type,
                               mozilla::dom::Element& elt)
 {
@@ -1793,9 +1793,9 @@ bool WebGLContext::TexImageFromVideoElement(GLenum texImageTarget, GLint level,
                            info.Height() == srcImage->GetSize().height;
     if (!dimensionsMatch) {
         // we need to allocation
-        gl->fTexImage2D(texImageTarget, level, internalformat, srcImage->GetSize().width, srcImage->GetSize().height, 0, format, type, nullptr);
+        gl->fTexImage2D(texImageTarget.get(), level, internalformat, srcImage->GetSize().width, srcImage->GetSize().height, 0, format, type, nullptr);
     }
-    bool ok = gl->BlitHelper()->BlitImageToTexture(srcImage.get(), srcImage->GetSize(), tex->GLName(), texImageTarget, mPixelStoreFlipY);
+    bool ok = gl->BlitHelper()->BlitImageToTexture(srcImage.get(), srcImage->GetSize(), tex->GLName(), texImageTarget.get(), mPixelStoreFlipY);
     if (ok) {
         tex->SetImageInfo(texImageTarget, level, srcImage->GetSize().width, srcImage->GetSize().height, format, type, WebGLImageDataStatus::InitializedImageData);
         tex->Bind(TexImageTargetToTexTarget(texImageTarget));

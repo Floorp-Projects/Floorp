@@ -53,7 +53,6 @@ UNIFIED_SOURCES += [
     'WebGL2ContextUniforms.cpp',
     'WebGL2ContextVAOs.cpp',
     'WebGLActiveInfo.cpp',
-    'WebGLBindableName.cpp',
     'WebGLBuffer.cpp',
     'WebGLContext.cpp',
     'WebGLContextAsyncQueries.cpp',
