@@ -38,7 +38,7 @@ private:
   static CFStringRef GetIOConst(const char* symbol);
 };
 
-#define LINK_FUNC(func) extern typeof(func)* func;
+#define LINK_FUNC(func) extern typeof(CM ## func)* CM ## func;
 #include "AppleCMFunctions.h"
 #undef LINK_FUNC
 
