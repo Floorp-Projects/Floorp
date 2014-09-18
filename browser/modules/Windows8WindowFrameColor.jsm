@@ -22,6 +22,10 @@ const Windows8WindowFrameColor = {
     const dwmKey = "Software\\Microsoft\\Windows\\DWM";
     let customizationColor = Registry.readRegKey(HKCU, dwmKey,
                                                  "ColorizationColor");
+    if (!customizationColor) {
+      // Seems to be the default color (hardcoded because of bug 1065998)
+      return [158, 158, 158];
+    }
     // The color returned from the Registry is in decimal form.
     let customizationColorHex = customizationColor.toString(16);
     // Zero-pad the number just to make sure that it is 8 digits.
@@ -29,7 +33,7 @@ const Windows8WindowFrameColor = {
     let customizationColorArray = customizationColorHex.match(/../g);
     let [unused, fgR, fgG, fgB] = customizationColorArray.map(function(val) parseInt(val, 16));
     let colorizationColorBalance = Registry.readRegKey(HKCU, dwmKey,
-                                                       "ColorizationColorBalance");
+                                                       "ColorizationColorBalance") || 78;
      // Window frame base color when Color Intensity is at 0, see bug 1004576.
     let frameBaseColor = 217;
     let alpha = colorizationColorBalance / 100;
