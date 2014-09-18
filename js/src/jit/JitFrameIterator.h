@@ -266,6 +266,34 @@ class JitFrameIterator
 #endif
 };
 
+class RInstructionResults
+{
+    // Vector of results of recover instructions.
+    mozilla::UniquePtr<HeapValue[], JS::FreePolicy> results_;
+
+    // Length of the |results_| vector.
+    uint32_t len_;
+
+    // The frame pointer is used as a key to check if the current frame already
+    // bailed out.
+    IonJSFrameLayout *fp_;
+
+  public:
+    RInstructionResults();
+    RInstructionResults(RInstructionResults&& src);
+
+    RInstructionResults& operator=(RInstructionResults&& rhs);
+
+    ~RInstructionResults();
+
+    bool init(JSContext *cx, uint32_t numResults, IonJSFrameLayout *fp);
+    bool isInitialized() const;
+
+    IonJSFrameLayout *frame() const;
+
+    HeapValue& operator[](size_t index);
+};
+
 class RResumePoint;
 
 // Reads frame information in snapshot-encoding order (that is, outermost frame
@@ -277,7 +305,7 @@ class SnapshotIterator
     IonJSFrameLayout *fp_;
     MachineState machine_;
     IonScript *ionScript_;
-    AutoValueVector *instructionResults_;
+    RInstructionResults *instructionResults_;
 
   private:
     // Read a spilled register from the machine state.
@@ -369,7 +397,7 @@ class SnapshotIterator
     // recover instructions. This vector should be registered before the
     // beginning of the iteration. This function is in charge of allocating
     // enough space for all instructions results, and return false iff it fails.
-    bool initIntructionResults(AutoValueVector &results);
+    bool initInstructionResults(JSContext *cx, RInstructionResults *results);
 
     void storeInstructionResult(Value v);
 

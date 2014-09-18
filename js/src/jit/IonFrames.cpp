@@ -1436,6 +1436,74 @@ OsiIndex::returnPointDisplacement() const
     return callPointDisplacement_ + Assembler::PatchWrite_NearCallSize();
 }
 
+RInstructionResults::RInstructionResults()
+  : results_(nullptr),
+    len_(0),
+    fp_(nullptr)
+{
+}
+
+RInstructionResults::RInstructionResults(RInstructionResults&& src)
+  : results_(mozilla::Move(src.results_)),
+    len_(src.len_),
+    fp_(src.fp_)
+{
+    src.len_ = 0;
+}
+
+RInstructionResults&
+RInstructionResults::operator=(RInstructionResults&& rhs)
+{
+    MOZ_ASSERT(&rhs != this, "self-moves are prohibited");
+    this->~RInstructionResults();
+    new(this) RInstructionResults(mozilla::Move(rhs));
+    return *this;
+}
+
+RInstructionResults::~RInstructionResults()
+{
+    // results_ is freed by the UniquePtr.
+}
+
+bool
+RInstructionResults::init(JSContext *cx, uint32_t numResults, IonJSFrameLayout *fp)
+{
+    results_ = cx->make_pod_array<HeapValue>(numResults);
+    if (!results_)
+        return false;
+
+    len_ = numResults;
+
+    Value guard = MagicValue(JS_ION_BAILOUT);
+    for (size_t i = 0; i < numResults; i++)
+        results_.get()[i].init(guard);
+
+    fp_ = fp;
+    return true;
+}
+
+bool
+RInstructionResults::isInitialized() const
+{
+    MOZ_ASSERT_IF(results_, fp_);
+    return results_;
+}
+
+IonJSFrameLayout *
+RInstructionResults::frame() const
+{
+    MOZ_ASSERT(isInitialized());
+    return fp_;
+}
+
+HeapValue&
+RInstructionResults::operator [](size_t index)
+{
+    MOZ_ASSERT(index < len_);
+    return results_.get()[index];
+}
+
+
 SnapshotIterator::SnapshotIterator(IonScript *ionScript, SnapshotOffset snapshotOffset,
                                    IonJSFrameLayout *fp, const MachineState &machine)
   : snapshot_(ionScript->snapshots(),
@@ -1699,7 +1767,7 @@ SnapshotIterator::skipInstruction()
 }
 
 bool
-SnapshotIterator::initIntructionResults(AutoValueVector &results)
+SnapshotIterator::initInstructionResults(JSContext *cx, RInstructionResults *results)
 {
     MOZ_ASSERT(recover_.numInstructionsRead() == 1);
 
@@ -1710,13 +1778,9 @@ SnapshotIterator::initIntructionResults(AutoValueVector &results)
 
     MOZ_ASSERT(recover_.numInstructions() > 1);
     size_t numResults = recover_.numInstructions() - 1;
-    if (!results.reserve(numResults))
+    instructionResults_ = results;
+    if (!instructionResults_->isInitialized() && !instructionResults_->init(cx, numResults, fp_))
         return false;
-
-    for (size_t i = 0; i < numResults; i++)
-        results.infallibleAppend(MagicValue(JS_ION_BAILOUT));
-
-    instructionResults_ = &results;
     return true;
 }
 
@@ -1725,7 +1789,7 @@ SnapshotIterator::storeInstructionResult(Value v)
 {
     uint32_t currIns = recover_.numInstructionsRead() - 1;
     MOZ_ASSERT((*instructionResults_)[currIns].isMagic(JS_ION_BAILOUT));
-    (*instructionResults_)[currIns].set(v);
+    (*instructionResults_)[currIns] = v;
 }
 
 Value
