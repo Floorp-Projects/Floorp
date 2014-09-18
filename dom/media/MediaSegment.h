@@ -34,8 +34,7 @@ const int64_t TRACK_TICKS_MAX = INT64_MAX >> TRACK_RATE_MAX_BITS;
 
 /**
  * We represent media times in 64-bit audio frame counts or ticks.
- * All audio tracks in a MediaStreamGraph have the same sample rate and all
- * streams in the graph measure time using ticks at the same audio rate.
+ * All tracks in a MediaStreamGraph have the same rate.
  */
 typedef int64_t MediaTime;
 const int64_t MEDIA_TIME_MAX = TRACK_TICKS_MAX;

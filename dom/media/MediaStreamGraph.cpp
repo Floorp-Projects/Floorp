@@ -262,7 +262,7 @@ MediaStreamGraphImpl::UpdateBufferSufficiencyState(SourceMediaStream* aStream)
       // Note that track->IsEnded() must be false, otherwise we would have
       // removed the track from mUpdateTracks already.
       NS_ASSERTION(!track->IsEnded(), "What is this track doing here?");
-      data->mHaveEnough = track->GetEndTimeRoundDown() >= desiredEnd;
+      data->mHaveEnough = track->GetEnd() >= desiredEnd;
       if (!data->mHaveEnough) {
         runnables.MoveElementsFrom(data->mDispatchWhenNotEnough);
       }
@@ -984,7 +984,7 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
     // because of the rounding issue. We track that to ensure we don't skip a
     // sample. One sample may be played twice, but this should not happen
     // again during an unblocked sequence of track samples.
-    TrackTicks offset = track->TimeToTicksRoundDown(GraphTimeToStreamTime(aStream, aFrom));
+    TrackTicks offset = GraphTimeToStreamTime(aStream, aFrom);
     if (audioOutput.mLastTickWritten &&
         audioOutput.mLastTickWritten != offset) {
       // If there is a global underrun of the MSG, this property won't hold, and
@@ -1096,17 +1096,15 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
 
   TrackTicks start;
   const VideoFrame* frame = nullptr;
-  StreamBuffer::Track* track;
   for (StreamBuffer::TrackIter tracks(aStream->GetStreamBuffer(), MediaSegment::VIDEO);
        !tracks.IsEnded(); tracks.Next()) {
     VideoSegment* segment = tracks->Get<VideoSegment>();
     TrackTicks thisStart;
     const VideoFrame* thisFrame =
-      segment->GetFrameAt(tracks->TimeToTicksRoundDown(frameBufferTime), &thisStart);
+        segment->GetFrameAt(frameBufferTime, &thisStart);
     if (thisFrame && thisFrame->GetImage()) {
       start = thisStart;
       frame = thisFrame;
-      track = tracks.get();
     }
   }
   if (!frame || *frame == aStream->mLastPlayedVideoFrame)
@@ -1116,7 +1114,7 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
                               aStream, frame->GetImage(), frame->GetIntrinsicSize().width,
                               frame->GetIntrinsicSize().height));
   GraphTime startTime = StreamTimeToGraphTime(aStream,
-      track->TicksToTimeRoundDown(start), INCLUDE_TRAILING_BLOCKED_INTERVAL);
+      start, INCLUDE_TRAILING_BLOCKED_INTERVAL);
   TimeStamp targetTime = CurrentDriver()->GetCurrentTimeStamp() +
       TimeDuration::FromMilliseconds(double(startTime - IterationEnd()));
   for (uint32_t i = 0; i < aStream->mVideoOutputs.Length(); ++i) {
@@ -2522,8 +2520,7 @@ SourceMediaStream::GetBufferedTicks(TrackID aID)
     MediaSegment* segment = track->GetSegment();
     if (segment) {
       return segment->GetDuration() -
-        track->TimeToTicksRoundDown(
-          GraphTimeToStreamTime(GraphImpl()->CurrentDriver()->StateComputedTime()));
+          GraphTimeToStreamTime(GraphImpl()->CurrentDriver()->StateComputedTime());
     }
   }
   return 0;
@@ -3028,8 +3025,7 @@ MediaStreamGraph::StartNonRealtimeProcessing(TrackRate aRate, uint32_t aTicksToP
   if (graph->mNonRealtimeProcessing)
     return;
 
-  graph->mEndTime = graph->IterationEnd() +
-    RateConvertTicksRoundUp(graph->GraphRate(), aRate, aTicksToProcess);
+  graph->mEndTime = graph->IterationEnd() + aTicksToProcess;
   graph->mNonRealtimeProcessing = true;
   graph->EnsureRunInStableState();
 }

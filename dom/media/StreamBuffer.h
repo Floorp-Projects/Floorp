@@ -51,6 +51,7 @@ inline TrackTicks SecondsToTicksRoundDown(TrackRate aRate, double aSeconds)
                "Bad seconds");
   return aSeconds * aRate;
 }
+
 inline double TrackTicksToSeconds(TrackRate aRate, TrackTicks aTicks)
 {
   NS_ASSERTION(0 < aRate && aRate <= TRACK_RATE_MAX, "Bad rate");
@@ -116,22 +117,6 @@ public:
     bool IsEnded() const { return mEnded; }
     TrackTicks GetStart() const { return mStart; }
     TrackTicks GetEnd() const { return mSegment->GetDuration(); }
-    StreamTime GetEndTimeRoundDown() const
-    {
-      return TicksToTimeRoundDown(mSegment->GetDuration());
-    }
-    StreamTime GetStartTimeRoundDown() const
-    {
-      return TicksToTimeRoundDown(mStart);
-    }
-    TrackTicks TimeToTicksRoundDown(StreamTime aTime) const
-    {
-      return RateConvertTicksRoundDown(mRate, mGraphRate, aTime);
-    }
-    StreamTime TicksToTimeRoundDown(TrackTicks aTicks) const
-    {
-      return RateConvertTicksRoundDown(mGraphRate, mRate, aTicks);
-    }
     MediaSegment::Type GetType() const { return mSegment->GetType(); }
 
     void SetEnded() { mEnded = true; }
@@ -255,8 +240,7 @@ public:
       // http://mxr.mozilla.org/mozilla-central/source/media/webrtc/signaling/src/mediapipeline/MediaPipeline.cpp?rev=96b197deb91e&mark=1292-1297#1292
       NS_WARNING("Adding track to StreamBuffer that should have no more tracks");
     } else {
-      NS_ASSERTION(track->TimeToTicksRoundDown(mTracksKnownTime) <= aStart,
-                   "Start time too early");
+      NS_ASSERTION(mTracksKnownTime <= aStart, "Start time too early");
     }
     return *track;
   }
