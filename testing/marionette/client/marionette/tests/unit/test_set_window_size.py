@@ -22,7 +22,7 @@ class TestSetWindowSize(MarionetteTestCase):
         self.marionette.set_window_size(self.start_size['width'], self.start_size['height'])
         super(MarionetteTestCase, self).tearDown()
 
-    def test_set_window_size(self):
+    def test_that_we_can_get_and_set_window_size(self):
         # event handler
         self.marionette.execute_script("""
         window.wrappedJSObject.rcvd_event = false;
@@ -42,6 +42,11 @@ class TestSetWindowSize(MarionetteTestCase):
         self.assertEqual(size['height'], height,
                          "Window height is %s but should be %s" % (size['height'], height))
 
+    def test_that_we_throw_an_error_when_trying_to_set_maximum_size(self):
+        # valid size
+        width = self.max_width - 100
+        height = self.max_height - 100
+        self.marionette.set_window_size(width, height)
         # invalid size (cannot maximize)
         with self.assertRaisesRegexp(MarionetteException, "Invalid requested size"):
             self.marionette.set_window_size(self.max_width, self.max_height)
