@@ -131,6 +131,9 @@ let gLocalRuntime = {
   getName: function() {
     return Strings.GetStringFromName("local_runtime");
   },
+  getID: function () {
+    return "local";
+  }
 }
 
 let gRemoteRuntime = {
