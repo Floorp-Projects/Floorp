@@ -308,9 +308,11 @@ private:
         OP2_SUBSD_VsdWsd    = 0x5C,
         OP2_SUBPS_VpsWps    = 0x5C,
         OP2_MINSD_VsdWsd    = 0x5D,
+        OP2_MINPS_VpsWps    = 0x5D,
         OP2_DIVSD_VsdWsd    = 0x5E,
         OP2_DIVPS_VpsWps    = 0x5E,
         OP2_MAXSD_VsdWsd    = 0x5F,
+        OP2_MAXPS_VpsWps    = 0x5F,
         OP2_SQRTSD_VsdWsd   = 0x51,
         OP2_SQRTSS_VssWss   = 0x51,
         OP2_ANDPD_VpdWpd    = 0x54,
@@ -790,6 +792,44 @@ public:
         spew("divps      %p, %s",
              address, nameFPReg(dst));
         m_formatter.twoByteOp(OP2_DIVPS_VpsWps, (RegisterID)dst, address);
+    }
+
+    void maxps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("maxps      %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MAXPS_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+    void maxps_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("maxps      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MAXPS_VpsWps, (RegisterID)dst, base, offset);
+    }
+    void maxps_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("maxps      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MAXPS_VpsWps, (RegisterID)dst, address);
+    }
+
+    void minps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("minps      %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MINPS_VpsWps, (RegisterID)dst, (RegisterID)src);
+    }
+    void minps_mr(int offset, RegisterID base, XMMRegisterID dst)
+    {
+        spew("minps      %s0x%x(%s), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(base), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MINPS_VpsWps, (RegisterID)dst, base, offset);
+    }
+    void minps_mr(const void* address, XMMRegisterID dst)
+    {
+        spew("minps      %p, %s",
+             address, nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_MINPS_VpsWps, (RegisterID)dst, address);
     }
 
     void andl_rr(RegisterID src, RegisterID dst)
