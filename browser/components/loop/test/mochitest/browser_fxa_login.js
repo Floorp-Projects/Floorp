@@ -219,27 +219,20 @@ add_task(function* basicAuthorizationAndRegistration() {
 
   info("registering");
   mockPushHandler.pushUrl = "https://localhost/pushUrl/guest";
-  // Notification observed due to the error being cleared upon successful registration.
-  let statusChangedPromise = promiseObserverNotified("loop-status-changed");
   yield MozLoopService.register(mockPushHandler);
-  yield statusChangedPromise;
 
   // Normally the same pushUrl would be registered but we change it in the test
   // to be able to check for success on the second registration.
   mockPushHandler.pushUrl = "https://localhost/pushUrl/fxa";
 
-  statusChangedPromise = promiseObserverNotified("loop-status-changed");
   yield loadLoopPanel({loopURL: BASE_URL, stayOnline: true});
-  yield statusChangedPromise;
   let loopDoc = document.getElementById("loop").contentDocument;
   let visibleEmail = loopDoc.getElementsByClassName("user-identity")[0];
   is(visibleEmail.textContent, "Guest", "Guest should be displayed on the panel when not logged in");
   is(MozLoopService.userProfile, null, "profile should be null before log-in");
-  let loopButton = document.getElementById("loop-call-button");
-  is(loopButton.getAttribute("state"), "", "state of loop button should be empty when not logged in");
 
   let tokenData = yield MozLoopService.logInToFxA();
-  yield promiseObserverNotified("loop-status-changed", "login");
+  yield promiseObserverNotified("loop-status-changed");
   ise(tokenData.access_token, "code1_access_token", "Check access_token");
   ise(tokenData.scope, "profile", "Check scope");
   ise(tokenData.token_type, "bearer", "Check token_type");
@@ -247,18 +240,9 @@ add_task(function* basicAuthorizationAndRegistration() {
   is(MozLoopService.userProfile.email, "test@example.com", "email should exist in the profile data");
   is(MozLoopService.userProfile.uid, "1234abcd", "uid should exist in the profile data");
   is(visibleEmail.textContent, "test@example.com", "the email should be correct on the panel");
-  is(loopButton.getAttribute("state"), "active", "state of loop button should be active when logged in");
 
   let registrationResponse = yield promiseOAuthGetRegistration(BASE_URL);
   ise(registrationResponse.response.simplePushURL, "https://localhost/pushUrl/fxa", "Check registered push URL");
-
-  let loopPanel = document.getElementById("loop-notification-panel");
-  loopPanel.hidePopup();
-  statusChangedPromise = promiseObserverNotified("loop-status-changed");
-  yield loadLoopPanel({loopURL: BASE_URL, stayOnline: true});
-  yield statusChangedPromise;
-  is(loopButton.getAttribute("state"), "", "state of loop button should return to empty after panel is opened");
-  loopPanel.hidePopup();
 });
 
 add_task(function* loginWithParams401() {
