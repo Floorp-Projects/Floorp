@@ -700,7 +700,7 @@ ValueNumberer::visitDefinition(MDefinition *def)
 {
     // If this instruction has a dependency() into an unreachable block, we'll
     // need to update AliasAnalysis.
-    const MDefinition *dep = def->dependency();
+    MDefinition *dep = def->dependency();
     if (dep != nullptr && (dep->isDiscarded() || dep->block()->isDead())) {
         JitSpew(JitSpew_GVN, "      AliasAnalysis invalidated");
         if (updateAliasAnalysis_ && !dependenciesBroken_) {
@@ -709,8 +709,11 @@ ValueNumberer::visitDefinition(MDefinition *def)
             JitSpew(JitSpew_GVN, "        Will recompute!");
             dependenciesBroken_ = true;
         }
-        // Clear its dependency for now, to protect foldsTo.
+        // Temporarily clear its dependency, to protect foldsTo, which may
+        // wish to use the dependency to do store-to-load forwarding.
         def->setDependency(def->toInstruction());
+    } else {
+        dep = nullptr;
     }
 
     // Look for a simplified form of |def|.
@@ -740,6 +743,12 @@ ValueNumberer::visitDefinition(MDefinition *def)
         }
         def = sim;
     }
+
+    // Now that foldsTo is done, re-enable the original dependency. Even though
+    // it may be pointing into a discarded block, it's still valid for the
+    // purposes of detecting congruent loads.
+    if (dep != nullptr)
+        def->setDependency(dep);
 
     // Look for a dominating def which makes |def| redundant.
     MDefinition *rep = leader(def);
