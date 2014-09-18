@@ -2596,7 +2596,7 @@ ContentParent::Observe(nsISupports* aSubject,
             // The pre-%n part of the string should be all ASCII, so the byte
             // offset in identOffset should be correct as a char offset.
             MOZ_ASSERT(cmsg[identOffset - 1] == '=');
-            FileDescriptor dmdFileDesc;
+            MaybeFileDesc dmdFileDesc = void_t();
 #ifdef MOZ_DMD
             nsAutoString dmdIdent(Substring(msg, identOffset));
             if (!dmdIdent.IsEmpty()) {
@@ -2984,7 +2984,7 @@ PMemoryReportRequestParent*
 ContentParent::AllocPMemoryReportRequestParent(const uint32_t& aGeneration,
                                                const bool &aAnonymize,
                                                const bool &aMinimizeMemoryUsage,
-                                               const FileDescriptor &aDMDFile)
+                                               const MaybeFileDesc &aDMDFile)
 {
     MemoryReportRequestParent* parent = new MemoryReportRequestParent();
     return parent;
