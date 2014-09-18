@@ -27,7 +27,9 @@ LoopContainsPossibleCall(MIRGraph &graph, MBasicBlock *header, MBasicBlock *back
         for (auto insIter(block->begin()), insEnd(block->end()); insIter != insEnd; ++insIter) {
             MInstruction *ins = *insIter;
             if (ins->possiblyCalls()) {
+#ifdef DEBUG
                 JitSpew(JitSpew_LICM, "    Possile call found at %s%u", ins->opName(), ins->id());
+#endif
                 return true;
             }
         }
@@ -152,8 +154,10 @@ MoveDeferredOperands(MInstruction *ins, MInstruction *hoistPoint, bool hasCalls)
         // because we require RequiresHoistedUse to be set at each level.
         MoveDeferredOperands(opIns, hoistPoint, hasCalls);
 
+#ifdef DEBUG
         JitSpew(JitSpew_LICM, "    Hoisting %s%u (now that a user will be hoisted)",
                 opIns->opName(), opIns->id());
+#endif
 
         opIns->block()->moveBefore(hoistPoint, opIns);
     }
@@ -180,15 +184,19 @@ VisitLoopBlock(MBasicBlock *block, MBasicBlock *header, MInstruction *hoistPoint
         // its uses. We want those instructions as close as possible to their
         // use, to minimize register pressure.
         if (RequiresHoistedUse(ins, hasCalls)) {
+#ifdef DEBUG
             JitSpew(JitSpew_LICM, "    %s%u will be hoisted only if its users are",
                     ins->opName(), ins->id());
+#endif
             continue;
         }
 
         // Hoist operands which were too cheap to hoist on their own.
         MoveDeferredOperands(ins, hoistPoint, hasCalls);
 
+#ifdef DEBUG
         JitSpew(JitSpew_LICM, "    Hoisting %s%u", ins->opName(), ins->id());
+#endif
 
         // Move the instruction to the hoistPoint.
         block->moveBefore(hoistPoint, ins);
@@ -200,8 +208,10 @@ VisitLoop(MIRGraph &graph, MBasicBlock *header)
 {
     MInstruction *hoistPoint = header->loopPredecessor()->lastIns();
 
+#ifdef DEBUG
     JitSpew(JitSpew_LICM, "  Visiting loop with header block%u, hoisting to %s%u",
             header->id(), hoistPoint->opName(), hoistPoint->id());
+#endif
 
     MBasicBlock *backedge = header->backedge();
 

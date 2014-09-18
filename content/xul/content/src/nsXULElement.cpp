@@ -839,9 +839,10 @@ nsXULElement::BindToTree(nsIDocument* aDocument,
                                             aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aDocument &&
-      !aDocument->LoadsFullXULStyleSheetUpFront() &&
-      !aDocument->IsUnstyledDocument()) {
+  nsIDocument* doc = GetComposedDoc();
+  if (doc &&
+      !doc->LoadsFullXULStyleSheetUpFront() &&
+      !doc->IsUnstyledDocument()) {
 
     // To save CPU cycles and memory, non-XUL documents only load the user
     // agent style sheet rules for a minimal set of XUL elements such as
@@ -854,7 +855,7 @@ nsXULElement::BindToTree(nsIDocument* aDocument,
     // can be moved from the document that creates them to another document.
 
     if (!XULElementsRulesInMinimalXULSheet(Tag())) {
-      aDocument->EnsureOnDemandBuiltInUASheet(nsLayoutStylesheetCache::XULSheet());
+      doc->EnsureOnDemandBuiltInUASheet(nsLayoutStylesheetCache::XULSheet());
       // To keep memory usage down it is important that we try and avoid
       // pulling xul.css into non-XUL documents. That should be very rare, and
       // for HTML we currently should only pull it in if the document contains

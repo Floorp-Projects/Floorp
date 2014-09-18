@@ -3095,15 +3095,20 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 #endif
 
   // Update the widget's opaque region information. This sets
-  // glass boundaries on Windows. Also set up plugin clip regions and bounds.
+  // glass boundaries on Windows. Also set up the window dragging region
+  // and plugin clip regions and bounds.
   if ((aFlags & PAINT_WIDGET_LAYERS) &&
       !willFlushRetainedLayers &&
       !(aFlags & PAINT_DOCUMENT_RELATIVE)) {
     nsIWidget *widget = aFrame->GetNearestWidget();
     if (widget) {
-      nsRegion excludedRegion = builder.GetWindowOpaqueRegion();
-      nsIntRegion windowRegion(excludedRegion.ToNearestPixels(presContext->AppUnitsPerDevPixel()));
-      widget->UpdateOpaqueRegion(windowRegion);
+      nsRegion opaqueRegion = builder.GetWindowOpaqueRegion();
+      widget->UpdateOpaqueRegion(
+        opaqueRegion.ToNearestPixels(presContext->AppUnitsPerDevPixel()));
+
+      nsRegion draggingRegion = builder.GetWindowDraggingRegion();
+      widget->UpdateWindowDraggingRegion(
+        draggingRegion.ToNearestPixels(presContext->AppUnitsPerDevPixel()));
     }
   }
 

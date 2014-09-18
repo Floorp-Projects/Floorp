@@ -147,3 +147,12 @@ nsCocoaFeatures::OnYosemiteOrLater()
 {
     return (OSXVersion() >= MAC_OS_X_VERSION_10_10_HEX);
 }
+
+/* static */ bool
+nsCocoaFeatures::AccelerateByDefault()
+{
+    return !(OSXVersionMajor() == 10 &&
+             OSXVersionMinor() == 6 &&
+             OSXVersionBugFix() <= 2);
+}
+

@@ -172,3 +172,13 @@ def read_dep_makefile(fh):
 
     if rule:
         raise Exception('Makefile finishes with a backslash. Expected more input.')
+
+def write_dep_makefile(fh, target, deps):
+    '''
+    Write a Makefile containing only target's dependencies to the file handle
+    specified.
+    '''
+    mk = Makefile()
+    rule = mk.create_rule(targets=[target])
+    rule.add_dependencies(deps)
+    mk.dump(fh, removal_guard=True)

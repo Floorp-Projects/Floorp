@@ -3978,7 +3978,7 @@
     "description": "Whether the decoder for MACGURMUKHI has been instantiated in this session."
   },
   "DECODER_INSTANTIATED_ISOIR111": {
-    "expires_in_version": "40",
+    "expires_in_version": "38",
     "kind": "flag",
     "description": "Whether the decoder for ISOIR111 has been instantiated in this session."
   },
