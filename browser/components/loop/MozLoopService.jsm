@@ -703,6 +703,11 @@ this.MozLoopService = {
    * push and loop servers.
    */
   initialize: function() {
+
+    // Do this here, rather than immediately after definition, so that we can
+    // stub out API functions for unit testing
+    Object.freeze(this);
+
     // Don't do anything if loop is not enabled.
     if (!Services.prefs.getBoolPref("loop.enabled") ||
         Services.prefs.getBoolPref("loop.throttled")) {
@@ -1052,4 +1057,3 @@ this.MozLoopService = {
     return MozLoopServiceInternal.hawkRequest(sessionType, path, method, payloadObj);
   },
 };
-Object.freeze(this.MozLoopService);

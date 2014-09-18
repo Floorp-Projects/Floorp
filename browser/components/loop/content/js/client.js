@@ -108,29 +108,37 @@ loop.Client = (function($) {
      * @param  {Function} cb Callback(err, callUrlData)
      */
     _requestCallUrlInternal: function(nickname, cb) {
-      this.mozLoop.hawkRequest("/call-url/", "POST", {callerId: nickname},
-                               function (error, responseText) {
-        if (error) {
-          this._telemetryAdd("LOOP_CLIENT_CALL_URL_REQUESTS_SUCCESS", false);
-          this._failureHandler(cb, error);
-          return;
-        }
+      var sessionType;
+      if (this.mozLoop.userProfile) {
+        sessionType = this.mozLoop.LOOP_SESSION_TYPE.FXA;
+      } else {
+        sessionType = this.mozLoop.LOOP_SESSION_TYPE.GUEST;
+      }
+      
+      this.mozLoop.hawkRequest(sessionType, "/call-url/", "POST",
+                               {callerId: nickname},
+        function (error, responseText) {
+          if (error) {
+            this._telemetryAdd("LOOP_CLIENT_CALL_URL_REQUESTS_SUCCESS", false);
+            this._failureHandler(cb, error);
+            return;
+          }
 
-        try {
-          var urlData = JSON.parse(responseText);
+          try {
+            var urlData = JSON.parse(responseText);
 
-          // This throws if the data is invalid, in which case only the failure
-          // telementry will be recorded.
-          var returnData = this._validate(urlData, expectedCallUrlProperties);
+            // This throws if the data is invalid, in which case only the failure
+            // telemetry will be recorded.
+            var returnData = this._validate(urlData, expectedCallUrlProperties);
 
-          this._telemetryAdd("LOOP_CLIENT_CALL_URL_REQUESTS_SUCCESS", true);
-          cb(null, returnData);
-        } catch (err) {
-          this._telemetryAdd("LOOP_CLIENT_CALL_URL_REQUESTS_SUCCESS", false);
-          console.log("Error requesting call info", err);
-          cb(err);
-        }
-      }.bind(this));
+            this._telemetryAdd("LOOP_CLIENT_CALL_URL_REQUESTS_SUCCESS", true);
+            cb(null, returnData);
+          } catch (err) {
+            this._telemetryAdd("LOOP_CLIENT_CALL_URL_REQUESTS_SUCCESS", false);
+            console.log("Error requesting call info", err);
+            cb(err);
+          }
+        }.bind(this));
     },
 
     /**
@@ -154,8 +162,7 @@ loop.Client = (function($) {
     },
 
     _deleteCallUrlInternal: function(token, cb) {
-      this.mozLoop.hawkRequest("/call-url/" + token, "DELETE", null,
-                               function (error, responseText) {
+      function deleteRequestCallback(error, responseText) {
         if (error) {
           this._failureHandler(cb, error);
           return;
@@ -167,12 +174,19 @@ loop.Client = (function($) {
           console.log("Error deleting call info", err);
           cb(err);
         }
-      }.bind(this));
+      }
+
+      // XXX hard-coding of GUEST to be removed by 1065155
+      this.mozLoop.hawkRequest(this.mozLoop.LOOP_SESSION_TYPE.GUEST,
+                               "/call-url/" + token, "DELETE", null,
+                               deleteRequestCallback.bind(this));
     },
 
     /**
      * Requests a call URL from the Loop server. It will note the
-     * expiry time for the url with the mozLoop api.
+     * expiry time for the url with the mozLoop api.  It will select the
+     * appropriate hawk session to use based on whether or not the user
+     * is currently logged into a Firefox account profile.
      *
      * Callback parameters:
      * - err null on successful registration, non-null otherwise.
