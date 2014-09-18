@@ -250,8 +250,7 @@ add_task(function* basicAuthorizationAndRegistration() {
   is(loopButton.getAttribute("state"), "active", "state of loop button should be active when logged in");
 
   let registrationResponse = yield promiseOAuthGetRegistration(BASE_URL);
-  ise(registrationResponse.response.simplePushURL, "https://localhost/pushUrl/fxa",
-      "Check registered push URL");
+  ise(registrationResponse.response.simplePushURL, "https://localhost/pushUrl/fxa", "Check registered push URL");
 
   let loopPanel = document.getElementById("loop-notification-panel");
   loopPanel.hidePopup();
@@ -260,15 +259,6 @@ add_task(function* basicAuthorizationAndRegistration() {
   yield statusChangedPromise;
   is(loopButton.getAttribute("state"), "", "state of loop button should return to empty after panel is opened");
   loopPanel.hidePopup();
-
-  info("logout");
-  yield MozLoopService.logOutFromFxA();
-  checkLoggedOutState();
-  registrationResponse = yield promiseOAuthGetRegistration(BASE_URL);
-  ise(registrationResponse.response, null,
-      "Check registration was deleted on the server");
-  is(visibleEmail.textContent, "Guest", "Guest should be displayed on the panel again after logout");
-  is(MozLoopService.userProfile, null, "userProfile should be null after logout");
 });
 
 add_task(function* loginWithParams401() {
@@ -292,52 +282,6 @@ add_task(function* loginWithParams401() {
     ise(error.code, 401, "Check error code");
     ise(gFxAOAuthTokenData, null, "Check there is no saved token data");
   });
-});
-
-add_task(function* logoutWithIncorrectPushURL() {
-  resetFxA();
-  let pushURL = "http://www.example.com/";
-  mockPushHandler.pushUrl = pushURL;
-
-  // Create a fake FxA hawk session token
-  const fxASessionPref = MozLoopServiceInternal.getSessionTokenPrefName(LOOP_SESSION_TYPE.FXA);
-  Services.prefs.setCharPref(fxASessionPref, "X".repeat(HAWK_TOKEN_LENGTH));
-
-  yield MozLoopServiceInternal.registerWithLoopServer(LOOP_SESSION_TYPE.FXA, pushURL);
-  let registrationResponse = yield promiseOAuthGetRegistration(BASE_URL);
-  ise(registrationResponse.response.simplePushURL, pushURL, "Check registered push URL");
-  mockPushHandler.pushUrl = "http://www.example.com/invalid";
-  let caught = false;
-  yield MozLoopService.logOutFromFxA().catch((error) => {
-    caught = true;
-  });
-  ok(caught, "Should have caught an error logging out with a mismatched push URL");
-  checkLoggedOutState();
-  registrationResponse = yield promiseOAuthGetRegistration(BASE_URL);
-  ise(registrationResponse.response.simplePushURL, pushURL, "Check registered push URL wasn't deleted");
-});
-
-add_task(function* logoutWithNoPushURL() {
-  resetFxA();
-  let pushURL = "http://www.example.com/";
-  mockPushHandler.pushUrl = pushURL;
-
-  // Create a fake FxA hawk session token
-  const fxASessionPref = MozLoopServiceInternal.getSessionTokenPrefName(LOOP_SESSION_TYPE.FXA);
-  Services.prefs.setCharPref(fxASessionPref, "X".repeat(HAWK_TOKEN_LENGTH));
-
-  yield MozLoopServiceInternal.registerWithLoopServer(LOOP_SESSION_TYPE.FXA, pushURL);
-  let registrationResponse = yield promiseOAuthGetRegistration(BASE_URL);
-  ise(registrationResponse.response.simplePushURL, pushURL, "Check registered push URL");
-  mockPushHandler.pushUrl = null;
-  let caught = false;
-  yield MozLoopService.logOutFromFxA().catch((error) => {
-    caught = true;
-  });
-  ok(caught, "Should have caught an error logging out without a push URL");
-  checkLoggedOutState();
-  registrationResponse = yield promiseOAuthGetRegistration(BASE_URL);
-  ise(registrationResponse.response.simplePushURL, pushURL, "Check registered push URL wasn't deleted");
 });
 
 add_task(function* loginWithRegistration401() {
