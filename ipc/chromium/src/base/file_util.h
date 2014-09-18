@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "base/basictypes.h"
+#include "base/scoped_ptr.h"
 #include "base/file_path.h"
 
 namespace file_util {

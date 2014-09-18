@@ -9,17 +9,17 @@
 
 #include "base/basictypes.h"
 #include "base/file_descriptor_posix.h"
-#include "nsISupportsImpl.h"
+#include "base/ref_counted.h"
 
 // -----------------------------------------------------------------------------
 // A FileDescriptorSet is an ordered set of POSIX file descriptors. These are
 // associated with IPC messages so that descriptors can be transmitted over a
 // UNIX domain socket.
 // -----------------------------------------------------------------------------
-class FileDescriptorSet {
+class FileDescriptorSet : public base::RefCountedThreadSafe<FileDescriptorSet> {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileDescriptorSet)
   FileDescriptorSet();
+  ~FileDescriptorSet();
 
   // Mac and Linux both limit the number of file descriptors per message to
   // slightly more than 250.
@@ -84,8 +84,6 @@ class FileDescriptorSet {
   // ---------------------------------------------------------------------------
 
  private:
-  ~FileDescriptorSet();
-
   // A vector of descriptors and close flags. If this message is sent, then
   // these descriptors are sent as control data. After sending, any descriptors
   // with a true flag are closed. If this message has been received, then these

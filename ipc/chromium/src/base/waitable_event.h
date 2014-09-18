@@ -16,8 +16,7 @@
 #include <utility>
 #include "base/condition_variable.h"
 #include "base/lock.h"
-#include "nsISupportsImpl.h"
-#include "nsAutoPtr.h"
+#include "base/ref_counted.h"
 #endif
 
 #include "base/message_loop.h"
@@ -141,9 +140,9 @@ class WaitableEvent {
   // so we have a kernel of the WaitableEvent, which is reference counted.
   // WaitableEventWatchers may then take a reference and thus match the Windows
   // behaviour.
-  struct WaitableEventKernel MOZ_FINAL {
+  struct WaitableEventKernel :
+      public RefCountedThreadSafe<WaitableEventKernel> {
    public:
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WaitableEventKernel)
     WaitableEventKernel(bool manual_reset, bool initially_signaled)
         : manual_reset_(manual_reset),
           signaled_(initially_signaled) {
@@ -155,11 +154,9 @@ class WaitableEvent {
     const bool manual_reset_;
     bool signaled_;
     std::list<Waiter*> waiters_;
-   protected:
-    ~WaitableEventKernel() {}
   };
 
-  nsRefPtr<WaitableEventKernel> kernel_;
+  scoped_refptr<WaitableEventKernel> kernel_;
 
   bool SignalAll();
   bool SignalOne();

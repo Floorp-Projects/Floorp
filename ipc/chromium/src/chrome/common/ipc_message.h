@@ -19,7 +19,7 @@
 #endif
 
 #if defined(OS_POSIX)
-#include "nsAutoPtr.h"
+#include "base/ref_counted.h"
 #endif
 
 namespace base {
@@ -362,7 +362,7 @@ class Message : public Pickle {
 
 #if defined(OS_POSIX)
   // The set of file descriptors associated with this message.
-  nsRefPtr<FileDescriptorSet> file_descriptor_set_;
+  scoped_refptr<FileDescriptorSet> file_descriptor_set_;
 
   // Ensure that a FileDescriptorSet is allocated
   void EnsureFileDescriptorSet();

@@ -9,12 +9,11 @@
 #include <deque>
 #include "base/basictypes.h"
 #include "base/lock.h"
+#include "base/ref_counted.h"
 #include "base/scoped_handle.h"
 #include "base/waitable_event.h"
 #include "base/waitable_event_watcher.h"
 #include "chrome/common/ipc_channel_proxy.h"
-
-#include "nsAutoPtr.h"
 
 namespace IPC {
 
@@ -124,7 +123,7 @@ class SyncChannel : public ChannelProxy,
     PendingSyncMessageQueue deserializers_;
     Lock deserializers_lock_;
 
-    nsRefPtr<ReceivedSyncMsgQueue> received_sync_msgs_;
+    scoped_refptr<ReceivedSyncMsgQueue> received_sync_msgs_;
 
     base::WaitableEvent* shutdown_event_;
     base::WaitableEventWatcher shutdown_watcher_;
