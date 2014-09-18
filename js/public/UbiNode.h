@@ -192,7 +192,7 @@ class Base {
 
     // Return the size of this node, in bytes. Include any structures that this
     // node owns exclusively that are not exposed as their own ubi::Nodes.
-    virtual size_t size() const = 0;
+    virtual size_t size() const { return 0; }
 
     // Return an EdgeRange that initially contains all the referent's outgoing
     // edges. The EdgeRange should be freed with 'js_delete'. (You could use
@@ -205,13 +205,13 @@ class Base {
 
     // Return the Zone to which this node's referent belongs, or nullptr if the
     // referent is not of a type allocated in SpiderMonkey Zones.
-    virtual JS::Zone *zone() const = 0;
+    virtual JS::Zone *zone() const { return nullptr; }
 
     // Return the compartment for this node. Some ubi::Node referents are not
     // associated with JSCompartments, such as JSStrings (which are associated
     // with Zones). When the referent is not associated with a compartment,
     // nullptr is returned.
-    virtual JSCompartment *compartment() const = 0;
+    virtual JSCompartment *compartment() const { return nullptr; }
 
   private:
     Base(const Base &rhs) MOZ_DELETE;
@@ -433,10 +433,8 @@ class EdgeRange {
 template<typename Referent>
 class TracerConcrete : public Base {
     const char16_t *typeName() const MOZ_OVERRIDE { return concreteTypeName; }
-    size_t size() const MOZ_OVERRIDE { return 0; } // not implemented yet; bug 1011300
     EdgeRange *edges(JSContext *, bool wantNames) const MOZ_OVERRIDE;
     JS::Zone *zone() const MOZ_OVERRIDE { return get().zone(); }
-    JSCompartment *compartment() const MOZ_OVERRIDE { return nullptr; }
 
   protected:
     explicit TracerConcrete(Referent *ptr) : Base(ptr) { }
