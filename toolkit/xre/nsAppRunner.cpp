@@ -644,9 +644,7 @@ NS_IMETHODIMP
 nsXULAppInfo::GetVendor(nsACString& aResult)
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    ContentChild* cc = ContentChild::GetSingleton();
-    aResult = cc->GetAppInfo().vendor;
-    return NS_OK;
+    return NS_ERROR_NOT_AVAILABLE;
   }
   aResult.Assign(gAppData->vendor);
 
@@ -670,9 +668,7 @@ NS_IMETHODIMP
 nsXULAppInfo::GetID(nsACString& aResult)
 {
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    ContentChild* cc = ContentChild::GetSingleton();
-    aResult = cc->GetAppInfo().ID;
-    return NS_OK;
+    return NS_ERROR_NOT_AVAILABLE;
   }
   aResult.Assign(gAppData->ID);
 
