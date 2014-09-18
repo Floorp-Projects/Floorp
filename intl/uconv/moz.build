@@ -61,7 +61,6 @@ UNIFIED_SOURCES += [
     'ucvja/nsJapaneseToUnicode.cpp',
     'ucvja/nsUnicodeToEUCJP.cpp',
     'ucvja/nsUnicodeToISO2022JP.cpp',
-    'ucvja/nsUnicodeToJISx0201.cpp',
     'ucvja/nsUnicodeToSJIS.cpp',
 ]
 
@@ -162,7 +161,6 @@ UNIFIED_SOURCES += [
     'ucvtw/nsBIG5ToUnicode.cpp',
     'ucvtw/nsUnicodeToBIG5.cpp',
     'ucvtw/nsUnicodeToBIG5HKSCS.cpp',
-    'ucvtw/nsUnicodeToHKSCS.cpp',
 ]
 
 UNIFIED_SOURCES += [

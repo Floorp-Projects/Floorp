@@ -282,29 +282,24 @@ sub print_table {
 
 
 my %cp932 = read_sjis_map('CP932.TXT', 0, 1);
-my %ibm = read_sjis_map('IBM943.TXT', 0, 1);
 my $jis0212 = read_0212_map('JIS0212.TXT', 0, 1);
 
 %printed = ();
 write_fromu_map('jis0201-uf-unify', 'jis',
   $cp932{jis0201},
-  $ibm{jis0201}
 );
 write_fromu_map('jis0208-uf-unify', 'jis',
   $cp932{jis0208},
-  $ibm{jis0208}
 );
 
 %printed = ();
 write_fromu_map('jis0208ext-uf-unify', 'jis',
   $cp932{jis0208undef},
-  $ibm{jis0208undef}
 );
 
 %printed = ();
 write_fromu_map('sjis-uf-unify', 'sjis',
   @cp932{'jis0201', 'jis0208', 'jis0208undef', 'sjis1undef', 'sjis2undef'},
-  @ibm{'jis0201', 'jis0208', 'jis0208undef', 'sjis1undef', 'sjis2undef'}
 );
 
 open MAP, ">japanese.map" or die $!;
@@ -325,7 +320,6 @@ print MAP <<EOM;
 EOM
 
 print_table_index('CP932', @cp932{'jis0208', 'jis0208undef', 'sjis2undef'});
-print_table_index('IBM943', @ibm{'jis0208', 'jis0208undef', 'sjis2undef'});
 print_0212_table_index('JIS0212', $jis0212);
 print_table();
 
