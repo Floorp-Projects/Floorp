@@ -27,6 +27,7 @@
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsISupports.h"
+#include "nsIContent.h"
 #include "nsQueryFrame.h"
 #include "nsCoord.h"
 #include "nsColor.h"
@@ -43,7 +44,6 @@
 #include "nsMargin.h"
 #include "nsFrameState.h"
 
-class nsIContent;
 class nsDocShell;
 class nsIDocument;
 class nsIFrame;
@@ -1213,10 +1213,32 @@ public:
   static nsRefPtrHashtable<nsUint32HashKey, mozilla::dom::Touch>* gCaptureTouchList;
   static bool gPreventMouseEvents;
 
+  struct PointerCaptureInfo
+  {
+    nsCOMPtr<nsIContent> mPendingContent;
+    nsCOMPtr<nsIContent> mOverrideContent;
+    bool                 mReleaseContent;
+    
+    PointerCaptureInfo(nsIContent* aPendingContent) :
+      mPendingContent(aPendingContent), mReleaseContent(false)
+    {
+      MOZ_COUNT_CTOR(PointerCaptureInfo);
+    }
+    ~PointerCaptureInfo()
+    {
+      MOZ_COUNT_DTOR(PointerCaptureInfo);
+    }
+
+    bool Empty()
+    {
+      return !(mPendingContent || mOverrideContent);
+    }
+  };
+
   // Keeps a map between pointerId and element that currently capturing pointer
   // with such pointerId. If pointerId is absent in this map then nobody is
-  // capturing it.
-  static nsRefPtrHashtable<nsUint32HashKey, nsIContent>* gPointerCaptureList;
+  // capturing it. Additionally keep information about pending capturing content.
+  static nsClassHashtable<nsUint32HashKey, PointerCaptureInfo>* gPointerCaptureList;
 
   struct PointerInfo
   {
@@ -1229,11 +1251,12 @@ public:
   static nsClassHashtable<nsUint32HashKey, PointerInfo>* gActivePointersIds;
 
   static void DispatchGotOrLostPointerCaptureEvent(bool aIsGotCapture,
-                                                    uint32_t aPointerId,
-                                                    nsIContent* aCaptureTarget);
+                                                   uint32_t aPointerId,
+                                                   nsIContent* aCaptureTarget);
   static void SetPointerCapturingContent(uint32_t aPointerId, nsIContent* aContent);
   static void ReleasePointerCapturingContent(uint32_t aPointerId, nsIContent* aContent);
   static nsIContent* GetPointerCapturingContent(uint32_t aPointerId);
+  static void CheckPointerCaptureState(uint32_t aPointerId);
 
   // GetPointerInfo returns true if pointer with aPointerId is situated in device, false otherwise.
   // aActiveState is additional information, which shows state of pointer like button state for mouse.

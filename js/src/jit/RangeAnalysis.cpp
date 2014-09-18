@@ -2062,6 +2062,12 @@ RangeAnalysis::addRangeAssertions()
                 continue;
             }
 
+            // MIsNoIter is fused with the MTest that follows it and emitted as
+            // LIsNoIterAndBranch. Skip it to avoid complicating MIsNoIter
+            // lowering.
+            if (ins->isIsNoIter())
+                continue;
+
             Range r(ins);
 
             // Don't insert assertions if there's nothing interesting to assert.

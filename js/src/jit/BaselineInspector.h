@@ -107,7 +107,7 @@ class BaselineInspector
     bool hasSeenNegativeIndexGetElement(jsbytecode *pc);
     bool hasSeenAccessedGetter(jsbytecode *pc);
     bool hasSeenDoubleResult(jsbytecode *pc);
-    bool hasSeenNonStringIterNext(jsbytecode *pc);
+    bool hasSeenNonStringIterMore(jsbytecode *pc);
 
     JSObject *getTemplateObject(jsbytecode *pc);
     JSObject *getTemplateObjectForNative(jsbytecode *pc, Native native);

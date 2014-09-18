@@ -40,7 +40,6 @@
 #include "jit/RangeAnalysis.h"
 #include "jit/ScalarReplacement.h"
 #include "jit/StupidAllocator.h"
-#include "jit/UnreachableCodeElimination.h"
 #include "jit/ValueNumbering.h"
 #include "vm/ForkJoin.h"
 #include "vm/HelperThreads.h"
@@ -1472,12 +1471,24 @@ OptimizeMIR(MIRGenerator *mir)
             return false;
     }
 
+    // Parallel Safety Analysis. Note that this may delete blocks containing
+    // instructions pointed to by the dependency() field of instructions which
+    // are not deleted, leaving them dangling. This is ok, since we'll rerun
+    // AliasAnalysis, which recomputes them, before they're needed.
     if (graph.entryBlock()->info().executionMode() == ParallelExecution) {
         AutoTraceLog log(logger, TraceLogger::ParallelSafetyAnalysis);
         ParallelSafetyAnalysis analysis(mir, graph);
         if (!analysis.analyze())
             return false;
+        IonSpewPass("Parallel Safety Analysis");
+        AssertExtendedGraphCoherency(graph);
+        if (mir->shouldCancel("Parallel Safety Analysis"))
+            return false;
     }
+
+    ValueNumberer gvn(mir, graph);
+    if (!gvn.init())
+        return false;
 
     // Alias analysis is required for LICM and GVN so that we don't move
     // loads across stores.
@@ -1508,25 +1519,12 @@ OptimizeMIR(MIRGenerator *mir)
 
     if (mir->optimizationInfo().gvnEnabled()) {
         AutoTraceLog log(logger, TraceLogger::GVN);
-        ValueNumberer gvn(mir, graph);
         if (!gvn.run(ValueNumberer::UpdateAliasAnalysis))
             return false;
         IonSpewPass("GVN");
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("GVN"))
-            return false;
-    }
-
-    if (mir->optimizationInfo().uceEnabled()) {
-        AutoTraceLog log(logger, TraceLogger::UCE);
-        UnreachableCodeElimination uce(mir, graph);
-        if (!uce.analyze())
-            return false;
-        IonSpewPass("UCE");
-        AssertExtendedGraphCoherency(graph);
-
-        if (mir->shouldCancel("UCE"))
             return false;
     }
 
@@ -1574,7 +1572,7 @@ OptimizeMIR(MIRGenerator *mir)
         if (mir->shouldCancel("RA De-Beta"))
             return false;
 
-        if (mir->optimizationInfo().uceEnabled()) {
+        if (mir->optimizationInfo().gvnEnabled()) {
             bool shouldRunUCE = false;
             if (!r.prepareForUCE(&shouldRunUCE))
                 return false;
@@ -1585,9 +1583,7 @@ OptimizeMIR(MIRGenerator *mir)
                 return false;
 
             if (shouldRunUCE) {
-                UnreachableCodeElimination uce(mir, graph);
-                uce.disableAliasAnalysis();
-                if (!uce.analyze())
+                if (!gvn.run(ValueNumberer::DontUpdateAliasAnalysis))
                     return false;
                 IonSpewPass("UCE After RA");
                 AssertExtendedGraphCoherency(graph);

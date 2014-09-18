@@ -455,9 +455,6 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
     JS_ASSERT(args.length() <= ARGS_LENGTH_MAX);
     JS_ASSERT(!cx->compartment()->activeAnalysis);
 
-    /* We should never enter a new script while cx->iterValue is live. */
-    JS_ASSERT(cx->iterValue.isMagic(JS_NO_ITER_VALUE));
-
     /* Perform GC if necessary on exit from the function. */
     AutoGCIfNeeded gcIfNeeded(cx);
 
@@ -1931,24 +1928,17 @@ CASE(JSOP_MOREITER)
     PUSH_NULL();
     RootedObject &obj = rootObject0;
     obj = &REGS.sp[-2].toObject();
-    bool cond;
-    if (!IteratorMore(cx, obj, &cond))
+    if (!IteratorMore(cx, obj, REGS.stackHandleAt(-1)))
         goto error;
-    REGS.sp[-1].setBoolean(cond);
 }
 END_CASE(JSOP_MOREITER)
 
-CASE(JSOP_ITERNEXT)
+CASE(JSOP_ISNOITER)
 {
-    JS_ASSERT(REGS.sp[-1].isObject());
-    PUSH_NULL();
-    MutableHandleValue res = REGS.stackHandleAt(-1);
-    RootedObject &obj = rootObject0;
-    obj = &REGS.sp[-2].toObject();
-    if (!IteratorNext(cx, obj, res))
-        goto error;
+    bool b = REGS.sp[-1].isMagic(JS_NO_ITER_VALUE);
+    PUSH_BOOLEAN(b);
 }
-END_CASE(JSOP_ITERNEXT)
+END_CASE(JSOP_ISNOITER)
 
 CASE(JSOP_ENDITER)
 {

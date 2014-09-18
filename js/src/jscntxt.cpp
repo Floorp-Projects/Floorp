@@ -1109,7 +1109,6 @@ JSContext::JSContext(JSRuntime *rt)
     data(nullptr),
     data2(nullptr),
     outstandingRequests(0),
-    iterValue(MagicValue(JS_NO_ITER_VALUE)),
     jitIsBroken(false),
 #ifdef MOZ_TRACE_JSCALLS
     functionCallback(nullptr),
@@ -1304,8 +1303,6 @@ JSContext::mark(JSTracer *trc)
         MarkValueRoot(trc, &unwrappedException_, "unwrapped exception");
 
     TraceCycleDetectionSet(trc, cycleDetectorSet);
-
-    MarkValueRoot(trc, &iterValue, "iterValue");
 }
 
 void *

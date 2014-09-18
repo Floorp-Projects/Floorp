@@ -1380,6 +1380,8 @@ DrawTargetCairo::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFo
     return target.forget();
   }
 
+  gfxCriticalError() << "Failed to create similar cairo surface! Size: " << aSize << " Status: " << cairo_surface_status(similar);
+
   return nullptr;
 }
 

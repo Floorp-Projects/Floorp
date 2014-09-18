@@ -17,7 +17,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
-#include "mozilla/dom/ipc/BlobParent.h"
+#include "mozilla/dom/ipc/Blob.h"
 
 using mozilla::unused;
 using namespace mozilla::dom;

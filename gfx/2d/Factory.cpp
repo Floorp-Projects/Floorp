@@ -778,5 +778,24 @@ Factory::SetGlobalEventRecorder(DrawEventRecorder *aRecorder)
   mRecorder = aRecorder;
 }
 
+LogForwarder* Factory::mLogForwarder = nullptr;
+
+// static
+void
+Factory::SetLogForwarder(LogForwarder* aLogFwd) {
+  mLogForwarder = aLogFwd;
+}
+
+// static
+void
+CriticalLogger::OutputMessage(const std::string &aString, int aLevel)
+{
+  if (Factory::GetLogForwarder()) {
+    Factory::GetLogForwarder()->Log(aString);
+  }
+
+  BasicLogger::OutputMessage(aString, aLevel);
+}
+
 }
 }

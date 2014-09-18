@@ -682,11 +682,16 @@ public:
       aError.Throw(NS_ERROR_DOM_INVALID_POINTER_ERR);
       return;
     }
-
-    // Ignoring ReleasePointerCapture call on incorrect element (on element
-    // that didn't have capture before).
-    if (nsIPresShell::GetPointerCapturingContent(aPointerId) == this) {
-      nsIPresShell::ReleasePointerCapturingContent(aPointerId, this);
+    nsIPresShell::PointerCaptureInfo* pointerCaptureInfo = nullptr;
+    if (nsIPresShell::gPointerCaptureList->Get(aPointerId, &pointerCaptureInfo) && pointerCaptureInfo) {
+      // Call ReleasePointerCapture only on correct element
+      // (on element that have status pointer capture override
+      // or on element that have status pending pointer capture)
+      if (pointerCaptureInfo->mOverrideContent == this) {
+        nsIPresShell::ReleasePointerCapturingContent(aPointerId, this);
+      } else if (pointerCaptureInfo->mPendingContent == this) {
+        nsIPresShell::ReleasePointerCapturingContent(aPointerId, this);
+      }
     }
   }
   void SetCapture(bool aRetargetToElement)

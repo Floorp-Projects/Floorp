@@ -10,15 +10,15 @@ function testSteps()
   const name = this.window ? window.location.pathname : "Splendid Test";
 
   const urls = [
-    { url: "http://www.alpha.com",        flags: [true, true, true, true] },
+    { url: "http://www.alpha.com",        flags: [true, true, false, false] },
     { url: "http://www.beta.com",         flags: [true, false, false, false] },
     { url: "http://www.gamma.com",        flags: [true, true, false, false] },
     { url: "http://www.delta.com",        flags: [true, true, false, false] },
     { url: "http://www.epsilon.com",      flags: [true, true, false, false] },
     { url: "http://www2.alpha.com",       flags: [true, true, false, false] },
     { url: "http://www2.beta.com",        flags: [true, true, false, false] },
-    { url: "http://www2.gamma.com",       flags: [true, true, false, false] },
-    { url: "http://www2.delta.com",       flags: [true, true, true, false] },
+    { url: "http://www2.gamma.com",       flags: [true, true, true, false] },
+    { url: "http://www2.delta.com",       flags: [true, true, true, true] },
     { url: "http://www2.epsilon.com",     flags: [true, true, true, true] },
     { url: "http://joe.blog.alpha.com",   flags: [true, true, true, true] },
     { url: "http://joe.blog.beta.com",    flags: [true, true, true, true] },
@@ -78,14 +78,13 @@ function testSteps()
     let handledIndex = 0;
 
     function usageHandler(usage, fileUsage) {
-      let data = urls[handledIndex++];
-      if (data.flags[stageIndex - 1]) {
-        ok(usage > 0, "Non-zero usage for '" + data.url + "'");
+      if (urls[handledIndex].flags[stageIndex - 1]) {
+        ok(usage > 0, "Correct usage");
       }
       else {
-        ok(usage == 0, "Zero usage for '" + data.url + "'");
+        ok(usage == 0, "Correct usage");
       }
-      if (handledIndex == urls.length) {
+      if (++handledIndex == urls.length) {
         continueToNextStep();
       }
     }
@@ -113,12 +112,9 @@ function testSteps()
   setLimit(lastIndex * dbSize / 1024);
   quotaManager.clear();
 
-  info("Stage 1");
-
+  // Stage 1
   for (let i = 0; i < lastIndex; i++) {
     let data = urls[i];
-
-    info("Opening database for " + data.url);
 
     request = indexedDB.openForPrincipal(getPrincipal(data.url), name,
                                          { storage: "temporary" });
@@ -148,8 +144,7 @@ function testSteps()
   checkUsage(1);
   yield undefined;
 
-  info("Stage 2");
-
+  // Stage 2
   for (let i = 1; i < urls.length; i++) {
     databases[i] = null;
 
@@ -187,8 +182,7 @@ function testSteps()
   checkUsage(2);
   yield undefined;
 
-  info("Stage 3");
-
+  // Stage 3
   setLimit(14 * dbSize / 1024);
   quotaManager.reset();
 
@@ -205,8 +199,7 @@ function testSteps()
   checkUsage(3);
   yield undefined;
 
-  info("Stage 4");
-
+  // Stage 4
   let trans = db.transaction(["foo"], "readwrite");
 
   let blob = Blob(["bar"]);
@@ -221,8 +214,7 @@ function testSteps()
   checkUsage(4);
   yield undefined;
 
-  info("Cleanup");
-
+  // Cleanup
   setLimit();
   quotaManager.reset();
 

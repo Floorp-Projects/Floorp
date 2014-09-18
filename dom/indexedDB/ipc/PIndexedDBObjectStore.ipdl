@@ -1,0 +1,113 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBlob;
+include protocol PIndexedDBCursor;
+include protocol PIndexedDBIndex;
+include protocol PIndexedDBRequest;
+include protocol PIndexedDBTransaction;
+
+include IndexedDBParams;
+
+using struct mozilla::dom::indexedDB::IndexInfo from "mozilla/dom/indexedDB/DatabaseInfo.h";
+using struct mozilla::dom::indexedDB::IndexUpdateInfo from "mozilla/dom/indexedDB/DatabaseInfo.h";
+using struct mozilla::dom::indexedDB::SerializedStructuredCloneWriteInfo from "mozilla/dom/indexedDB/IndexedDatabase.h";
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+namespace ipc {
+
+struct AddPutParams
+{
+  SerializedStructuredCloneWriteInfo cloneInfo;
+  Key key;
+  IndexUpdateInfo[] indexUpdateInfos;
+  PBlob[] blobs;
+};
+
+struct AddParams
+{
+  AddPutParams commonParams;
+};
+
+struct PutParams
+{
+  AddPutParams commonParams;
+};
+
+struct DeleteParams
+{
+  KeyRange keyRange;
+};
+
+struct ClearParams
+{
+};
+
+union ObjectStoreRequestParams
+{
+  GetParams;
+  GetAllParams;
+  GetAllKeysParams;
+  AddParams;
+  PutParams;
+  DeleteParams;
+  ClearParams;
+  CountParams;
+  OpenCursorParams;
+  OpenKeyCursorParams;
+};
+
+struct CreateIndexParams
+{
+  IndexInfo info;
+};
+
+struct GetIndexParams
+{
+  nsString name;
+};
+
+union IndexConstructorParams
+{
+  CreateIndexParams;
+  GetIndexParams;
+};
+
+struct ObjectStoreCursorConstructorParams
+{
+  PIndexedDBRequest request;
+  Direction direction;
+  Key key;
+  OptionalStructuredCloneReadInfo optionalCloneInfo;
+  PBlob[] blobs;
+};
+
+} // namespace ipc
+
+protocol PIndexedDBObjectStore
+{
+  manager PIndexedDBTransaction;
+
+  manages PIndexedDBCursor;
+  manages PIndexedDBIndex;
+  manages PIndexedDBRequest;
+
+parent:
+  __delete__();
+
+  PIndexedDBIndex(IndexConstructorParams params);
+  PIndexedDBRequest(ObjectStoreRequestParams params);
+
+  DeleteIndex(nsString name);
+
+child:
+  PIndexedDBCursor(ObjectStoreCursorConstructorParams params);
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

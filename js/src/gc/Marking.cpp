@@ -227,7 +227,7 @@ CheckMarkedThing(JSTracer *trc, T **thingp)
      * ArenaHeader may not be synced with the real one in ArenaLists.
      */
     JS_ASSERT_IF(IsThingPoisoned(thing) && rt->isHeapBusy(),
-                 !InFreeList(thing->arenaHeader(), thing));
+                 !InFreeList(thing->asTenured()->arenaHeader(), thing));
 #endif
 }
 
@@ -447,14 +447,14 @@ IsMarked(T **thingp)
         }
     }
 #endif  // JSGC_GENERATIONAL
-    Zone *zone = (*thingp)->tenuredZone();
+    Zone *zone = (*thingp)->asTenured()->zone();
     if (!zone->isCollecting() || zone->isGCFinished())
         return true;
 #ifdef JSGC_COMPACTING
     if (zone->isGCCompacting() && IsForwarded(*thingp))
         *thingp = Forwarded(*thingp);
 #endif
-    return (*thingp)->isMarked();
+    return (*thingp)->asTenured()->isMarked();
 }
 
 template <typename T>
@@ -492,7 +492,7 @@ IsAboutToBeFinalized(T **thingp)
     }
 #endif  // JSGC_GENERATIONAL
 
-    Zone *zone = thing->tenuredZone();
+    Zone *zone = thing->asTenured()->zone();
     if (zone->isGCSweeping()) {
         /*
          * We should return false for things that have been allocated during
@@ -501,9 +501,10 @@ IsAboutToBeFinalized(T **thingp)
          * compartment group and during minor gc. Rather than do the extra check,
          * we just assert that it's not necessary.
          */
-        JS_ASSERT_IF(!rt->isHeapMinorCollecting(), !thing->arenaHeader()->allocatedDuringIncremental);
+        JS_ASSERT_IF(!rt->isHeapMinorCollecting(),
+                     !thing->asTenured()->arenaHeader()->allocatedDuringIncremental);
 
-        return !thing->isMarked();
+        return !thing->asTenured()->isMarked();
     }
 #ifdef JSGC_COMPACTING
     else if (zone->isGCCompacting() && IsForwarded(thing)) {
@@ -542,7 +543,7 @@ UpdateIfRelocated(JSRuntime *rt, T **thingp)
 #endif  // JSGC_GENERATIONAL
 
 #ifdef JSGC_COMPACTING
-    Zone *zone = (*thingp)->tenuredZone();
+    Zone *zone = (*thingp)->zone();
     if (zone->isGCCompacting() && IsForwarded(*thingp))
         *thingp = Forwarded(*thingp);
 #endif
@@ -661,7 +662,8 @@ gc::MarkKind(JSTracer *trc, void **thingp, JSGCTraceKind kind)
     JS_ASSERT(thingp);
     JS_ASSERT(*thingp);
     DebugOnly<Cell *> cell = static_cast<Cell *>(*thingp);
-    JS_ASSERT_IF(cell->isTenured(), kind == MapAllocToTraceKind(cell->tenuredGetAllocKind()));
+    JS_ASSERT_IF(cell->isTenured(),
+                 kind == MapAllocToTraceKind(cell->asTenured()->getAllocKind()));
     switch (kind) {
       case JSTRACE_OBJECT:
         MarkInternal(trc, reinterpret_cast<JSObject **>(thingp));
@@ -943,8 +945,9 @@ ShouldMarkCrossCompartment(JSTracer *trc, JSObject *src, Cell *cell)
         JS_ASSERT(color == BLACK);
         return false;
     }
+    TenuredCell *tenured = cell->asTenured();
 
-    JS::Zone *zone = cell->tenuredZone();
+    JS::Zone *zone = tenured->zone();
     if (color == BLACK) {
         /*
          * Having black->gray edges violates our promise to the cycle
@@ -953,7 +956,7 @@ ShouldMarkCrossCompartment(JSTracer *trc, JSObject *src, Cell *cell)
          * source and destination of the cross-compartment edge should be gray,
          * but the source was marked black by the conservative scanner.
          */
-        if (cell->isMarked(GRAY)) {
+        if (tenured->isMarked(GRAY)) {
             JS_ASSERT(!zone->isCollecting());
             trc->runtime()->gc.setFoundBlackGrayEdges();
         }
@@ -965,7 +968,7 @@ ShouldMarkCrossCompartment(JSTracer *trc, JSObject *src, Cell *cell)
              * but it will be later, so record the cell so it can be marked gray
              * at the appropriate time.
              */
-            if (!cell->isMarked())
+            if (!tenured->isMarked())
                 DelayCrossCompartmentGrayMarking(src);
             return false;
         }
@@ -1035,7 +1038,7 @@ PushMarkStack(GCMarker *gcmarker, ObjectImpl *thing)
     JS_COMPARTMENT_ASSERT(gcmarker->runtime(), thing);
     JS_ASSERT(!IsInsideNursery(thing));
 
-    if (thing->markIfUnmarked(gcmarker->getMarkColor()))
+    if (thing->asTenured()->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushObject(thing);
 }
 
@@ -1053,7 +1056,7 @@ MaybePushMarkStackBetweenSlices(GCMarker *gcmarker, JSObject *thing)
     JS_COMPARTMENT_ASSERT(rt, thing);
     JS_ASSERT_IF(rt->isHeapBusy(), !IsInsideNursery(thing));
 
-    if (!IsInsideNursery(thing) && thing->markIfUnmarked(gcmarker->getMarkColor()))
+    if (!IsInsideNursery(thing) && thing->asTenured()->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushObject(thing);
 }
 
@@ -1063,7 +1066,7 @@ PushMarkStack(GCMarker *gcmarker, JSFunction *thing)
     JS_COMPARTMENT_ASSERT(gcmarker->runtime(), thing);
     JS_ASSERT(!IsInsideNursery(thing));
 
-    if (thing->markIfUnmarked(gcmarker->getMarkColor()))
+    if (thing->asTenured()->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushObject(thing);
 }
 
@@ -1703,7 +1706,7 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
             JSObject *obj2 = &v.toObject();
             JS_COMPARTMENT_ASSERT(runtime(), obj2);
             JS_ASSERT(obj->compartment() == obj2->compartment());
-            if (obj2->markIfUnmarked(getMarkColor())) {
+            if (obj2->asTenured()->markIfUnmarked(getMarkColor())) {
                 pushValueArray(obj, vp, end);
                 obj = obj2;
                 goto scan_obj;
@@ -1884,12 +1887,6 @@ AssertNonGrayGCThing(JSTracer *trc, void **thingp, JSGCTraceKind kind)
 #endif
 
 static void
-UnmarkGrayGCThing(void *thing)
-{
-    static_cast<js::gc::Cell *>(thing)->unmark(js::gc::GRAY);
-}
-
-static void
 UnmarkGrayChildren(JSTracer *trc, void **thingp, JSGCTraceKind kind);
 
 struct UnmarkGrayTracer : public JSTracer
@@ -1977,7 +1974,7 @@ UnmarkGrayChildren(JSTracer *trc, void **thingp, JSGCTraceKind kind)
         return;
 
     UnmarkGrayTracer *tracer = static_cast<UnmarkGrayTracer *>(trc);
-    UnmarkGrayGCThing(thing);
+    TenuredCell::fromPointer(thing)->unmark(js::gc::GRAY);
     tracer->unmarkedAny = true;
 
     /*
@@ -2026,7 +2023,7 @@ JS::UnmarkGrayGCThingRecursively(void *thing, JSGCTraceKind kind)
         if (!JS::GCThingIsMarkedGray(thing))
             return false;
 
-        UnmarkGrayGCThing(thing);
+        TenuredCell::fromPointer(thing)->unmark(js::gc::GRAY);
         unmarkedArg = true;
     }
 

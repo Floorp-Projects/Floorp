@@ -43,6 +43,14 @@ struct MinimalFunc
         return block;
     }
 
+    MBasicBlock *createOsrEntryBlock()
+    {
+        MBasicBlock *block = MBasicBlock::NewAsmJS(graph, info, nullptr, MBasicBlock::NORMAL);
+        graph.addBlock(block);
+        graph.setOsrBlock(block);
+        return block;
+    }
+
     MBasicBlock *createBlock(MBasicBlock *pred)
     {
         MBasicBlock *block = MBasicBlock::NewAsmJS(graph, info, pred, MBasicBlock::NORMAL);
@@ -64,7 +72,11 @@ struct MinimalFunc
             return false;
         if (!BuildDominatorTree(graph))
             return false;
+        if (!BuildPhiReverseMapping(graph))
+            return false;
         ValueNumberer gvn(&mir, graph);
+        if (!gvn.init())
+            return false;
         if (!gvn.run(ValueNumberer::DontUpdateAliasAnalysis))
             return false;
         return true;

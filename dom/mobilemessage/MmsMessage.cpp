@@ -16,8 +16,6 @@
 #include "mozilla/dom/mobilemessage/SmsTypes.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ToJSValue.h"
-#include "mozilla/dom/ipc/BlobChild.h"
-#include "mozilla/dom/ipc/BlobParent.h"
 #include "nsDOMFile.h"
 
 using namespace mozilla::dom::mobilemessage;

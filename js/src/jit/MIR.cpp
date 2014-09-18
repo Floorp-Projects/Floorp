@@ -315,8 +315,28 @@ MTest::foldsTo(TempAllocator &alloc)
 {
     MDefinition *op = getOperand(0);
 
-    if (op->isNot())
+    if (op->isNot()) {
+        // If the operand of the Not is itself a Not, they cancel out.
+        MDefinition *opop = op->getOperand(0);
+        if (opop->isNot())
+            return MTest::New(alloc, opop->toNot()->input(), ifTrue(), ifFalse());
         return MTest::New(alloc, op->toNot()->input(), ifFalse(), ifTrue());
+    }
+
+    if (op->isConstant())
+        return MGoto::New(alloc, op->toConstant()->valueToBoolean() ? ifTrue() : ifFalse());
+
+    switch (op->type()) {
+      case MIRType_Undefined:
+      case MIRType_Null:
+        return MGoto::New(alloc, ifFalse());
+      case MIRType_Object:
+        if (!operandMightEmulateUndefined())
+            return MGoto::New(alloc, ifTrue());
+        break;
+      default:
+        break;
+    }
 
     return this;
 }
@@ -353,7 +373,10 @@ MDefinition::printOpcode(FILE *fp) const
     PrintOpcodeName(fp, op());
     for (size_t j = 0, e = numOperands(); j < e; j++) {
         fprintf(fp, " ");
-        getOperand(j)->printName(fp);
+        if (getUseFor(j)->hasProducer())
+            getOperand(j)->printName(fp);
+        else
+            fprintf(fp, "(null)");
     }
 }
 
@@ -1141,7 +1164,7 @@ MPhi::removeOperand(size_t index)
         inputs_[i].replaceProducer(inputs_[i + 1].producer());
 
     // truncate the inputs_ list:
-    inputs_[length - 1].discardProducer();
+    inputs_[length - 1].releaseProducer();
     inputs_.shrinkBy(1);
 }
 
@@ -1149,14 +1172,15 @@ void
 MPhi::removeAllOperands()
 {
     for (size_t i = 0; i < inputs_.length(); i++)
-        inputs_[i].discardProducer();
+        inputs_[i].releaseProducer();
     inputs_.clear();
 }
 
 MDefinition *
 MPhi::operandIfRedundant()
 {
-    JS_ASSERT(inputs_.length() != 0);
+    if (inputs_.length() == 0)
+        return nullptr;
 
     // If this phi is redundant (e.g., phi(a,a) or b=phi(a,this)),
     // returns the operand that it will always be equal to (a, in
@@ -2985,6 +3009,16 @@ MNot::foldsTo(TempAllocator &alloc)
         return MConstant::New(alloc, BooleanValue(!result));
     }
 
+    // If the operand of the Not is itself a Not, they cancel out. But we can't
+    // always convert Not(Not(x)) to x because that may loose the conversion to
+    // boolean. We can simplify Not(Not(Not(x))) to Not(x) though.
+    MDefinition *op = getOperand(0);
+    if (op->isNot()) {
+        MDefinition *opop = op->getOperand(0);
+        if (opop->isNot())
+            return opop;
+    }
+
     // NOT of an undefined or null value is always true
     if (input()->type() == MIRType_Undefined || input()->type() == MIRType_Null)
         return MConstant::New(alloc, BooleanValue(true));
@@ -3009,10 +3043,14 @@ MBeta::printOpcode(FILE *fp) const
 {
     MDefinition::printOpcode(fp);
 
-    Sprinter sp(GetIonContext()->cx);
-    sp.init();
-    comparison_->print(sp);
-    fprintf(fp, " %s", sp.string());
+    if (IonContext *context = MaybeGetIonContext()) {
+        Sprinter sp(context->cx);
+        sp.init();
+        comparison_->print(sp);
+        fprintf(fp, " %s", sp.string());
+    } else {
+        fprintf(fp, " ???");
+    }
 }
 
 bool
@@ -3069,7 +3107,7 @@ MNewArray::shouldUseVM() const
     JS_ASSERT(count() < JSObject::NELEMENTS_LIMIT);
 
     size_t arraySlots =
-        gc::GetGCKindSlots(templateObject()->tenuredGetAllocKind()) - ObjectElements::VALUES_PER_HEADER;
+        gc::GetGCKindSlots(templateObject()->asTenured()->getAllocKind()) - ObjectElements::VALUES_PER_HEADER;
 
     // Allocate space using the VMCall when mir hints it needs to get allocated
     // immediately, but only when data doesn't fit the available array slots.
@@ -3519,6 +3557,20 @@ MBoundsCheck::foldsTo(TempAllocator &alloc)
        if (idx + uint32_t(minimum()) < len && idx + uint32_t(maximum()) < len)
            return index();
     }
+
+    return this;
+}
+
+MDefinition *
+MTableSwitch::foldsTo(TempAllocator &alloc)
+{
+    MDefinition *op = getOperand(0);
+
+    // If we only have one successor, convert to a plain goto to the only
+    // successor. TableSwitch indices are numeric; other types will always go to
+    // the only successor.
+    if (numSuccessors() == 1 || (op->type() != MIRType_Value && !IsNumberType(op->type())))
+        return MGoto::New(alloc, getDefault());
 
     return this;
 }

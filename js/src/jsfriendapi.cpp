@@ -644,7 +644,7 @@ js::VisitGrayWrapperTargets(Zone *zone, GCThingCallback callback, void *closure)
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
         for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
             gc::Cell *thing = e.front().key().wrapped;
-            if (!IsInsideNursery(thing) && thing->isMarked(gc::GRAY))
+            if (thing->isTenured() && thing->asTenured()->isMarked(gc::GRAY))
                 callback(closure, thing);
         }
     }
@@ -723,7 +723,7 @@ struct DumpHeapTracer : public JSTracer
 static char
 MarkDescriptor(void *thing)
 {
-    gc::Cell *cell = static_cast<gc::Cell*>(thing);
+    gc::TenuredCell *cell = gc::TenuredCell::fromPointer(thing);
     if (cell->isMarked(gc::BLACK))
         return cell->isMarked(gc::GRAY) ? 'G' : 'B';
     else
@@ -968,7 +968,7 @@ JS::IncrementalReferenceBarrier(void *ptr, JSGCTraceKind kind)
 #ifdef DEBUG
     Zone *zone = kind == JSTRACE_OBJECT
                  ? static_cast<JSObject *>(cell)->zone()
-                 : cell->tenuredZone();
+                 : cell->asTenured()->zone();
     JS_ASSERT(!zone->runtimeFromMainThread()->isHeapMajorCollecting());
 #endif
 

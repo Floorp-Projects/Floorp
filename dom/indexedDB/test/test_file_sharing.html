@@ -61,7 +61,8 @@
         continue;
       }
 
-      is(getFilePath(result), getFilePath(refResult), "The same os file");
+      is(SpecialPowers.getMozFullPath(result),
+         SpecialPowers.getMozFullPath(refResult), "The same os file");
     }
 
     for (let i = 1; i < objectStoreInfo.length; i++) {
@@ -84,7 +85,8 @@
       verifyBlob(result, refResult, 1);
       yield undefined;
 
-      is(getFilePath(result), getFilePath(refResult), "The same os file");
+      is(SpecialPowers.getMozFullPath(result),
+         SpecialPowers.getMozFullPath(refResult), "The same os file");
     }
 
     is(bufferCache.length, 2, "Correct length");

@@ -192,8 +192,8 @@ namespace jit {
     _(DeleteElement)                                                        \
     _(SetPropertyCache)                                                     \
     _(IteratorStart)                                                        \
-    _(IteratorNext)                                                         \
     _(IteratorMore)                                                         \
+    _(IsNoIter)                                                             \
     _(IteratorEnd)                                                          \
     _(StringLength)                                                         \
     _(ArgumentsLength)                                                      \
