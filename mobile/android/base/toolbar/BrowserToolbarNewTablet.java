@@ -138,4 +138,9 @@ class BrowserToolbarNewTablet extends BrowserToolbarTabletBase {
 
         urlDisplayLayout.prepareForwardAnimation(anim, animation, width);
     }
+
+    @Override
+    public void triggerTabsPanelTransition(final PropertyAnimator animator, final boolean areTabsShown) {
+        // Do nothing.
+    }
 }

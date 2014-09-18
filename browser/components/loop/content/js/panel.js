@@ -453,7 +453,7 @@ loop.panel = (function(_, mozL10n) {
   var UserIdentity = React.createClass({displayName: 'UserIdentity',
     render: function() {
       return (
-        React.DOM.p({className: "user-identity"},
+        React.DOM.p({className: "user-identity"}, 
           this.props.displayName
         )
       );
@@ -510,46 +510,15 @@ loop.panel = (function(_, mozL10n) {
             )
           ), 
           React.DOM.div({className: "footer"}, 
-            React.DOM.div({className: "user-details"},
-              UserIdentity({displayName: displayName}),
+            React.DOM.div({className: "user-details"}, 
+              UserIdentity({displayName: displayName}), 
               AvailabilityDropdown(null)
-            ),
+            ), 
             AuthLink(null), 
             SettingsDropdown(null)
           )
         )
       );
-    }
-  });
-
-  var PanelRouter = loop.desktopRouter.DesktopRouter.extend({
-    /**
-     * DOM document object.
-     * @type {HTMLDocument}
-     */
-    document: undefined,
-
-    routes: {
-      "": "home"
-    },
-
-    initialize: function(options) {
-      options = options || {};
-      if (!options.document) {
-        throw new Error("missing required document");
-      }
-    },
-
-    /**
-     * Default entry point.
-     */
-    home: function() {
-      this._notifications.reset();
-      var client = new loop.Client({
-        baseServerUrl: navigator.mozLoop.serverUrl
-      });
-      this.loadReactComponent(
-          PanelView({client: client, notifications: this._notifications}));
     }
   });
 
@@ -561,11 +530,15 @@ loop.panel = (function(_, mozL10n) {
     // else to ensure the L10n environment is setup correctly.
     mozL10n.initialize(navigator.mozLoop);
 
-    router = new PanelRouter({
-      document: document,
-      notifications: new sharedModels.NotificationCollection()
+    var client = new loop.Client({
+      baseServerUrl: navigator.mozLoop.serverUrl
     });
-    Backbone.history.start();
+    var notifications = new sharedModels.NotificationCollection()
+
+    React.renderComponent(PanelView({
+      client: client, 
+      notifications: notifications}
+    ), document.querySelector("#main"));
 
     document.body.classList.add(loop.shared.utils.getTargetPlatform());
     document.body.setAttribute("dir", mozL10n.getDirection());
@@ -582,7 +555,6 @@ loop.panel = (function(_, mozL10n) {
     AvailabilityDropdown: AvailabilityDropdown,
     CallUrlResult: CallUrlResult,
     PanelView: PanelView,
-    PanelRouter: PanelRouter,
     SettingsDropdown: SettingsDropdown,
     ToSView: ToSView
   };

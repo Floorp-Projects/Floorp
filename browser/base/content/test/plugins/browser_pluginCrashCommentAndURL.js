@@ -6,8 +6,79 @@ Cu.import("resource://gre/modules/CrashSubmit.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm");
 
 const CRASH_URL = "http://example.com/browser/browser/base/content/test/plugins/plugin_crashCommentAndURL.html";
-
 const SERVER_URL = "http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs";
+
+/**
+ * Frame script that will be injected into the test browser
+ * to cause plugin crashes, and then manipulate the crashed plugin
+ * UI. The specific actions and checks that occur in the frame
+ * script for the crashed plugin UI are set in the
+ * test:crash-plugin message object sent from the parent. The actions
+ * and checks that the parent can specify are:
+ *
+ * pleaseSubmitStyle: the display style that the pleaseSubmit anonymous element
+ *                    should have - example "block", "none".
+ * submitComment:     the comment that should be put into the crash report
+ * urlOptIn:          true if the submitURLOptIn element should be checked.
+ * sendCrashMessage:  if true, the frame script will send a
+ *                    test:crash-plugin:crashed message when the plugin has
+ *                    crashed. This is used for the last test case, and
+ *                    causes the frame script to skip any of the crashed
+ *                    plugin UI manipulation, since the last test shows
+ *                    no crashed plugin UI.
+ */
+function frameScript() {
+  function fail(reason) {
+    sendAsyncMessage("test:crash-plugin:fail", {
+      reason: `Failure from frameScript: ${reason}`,
+    });
+  }
+
+  addMessageListener("test:crash-plugin", (message) => {
+    addEventListener("PluginCrashed", function onPluginCrashed(event) {
+      removeEventListener("PluginCrashed", onPluginCrashed);
+
+      let doc = content.document;
+      let plugin = doc.getElementById("plugin");
+      if (!plugin) {
+        fail("Could not find plugin element");
+        return;
+      }
+
+      let getUI = (anonid) => {
+        return doc.getAnonymousElementByAttribute(plugin, "anonid", anonid);
+      };
+
+      let style = content.getComputedStyle(getUI("pleaseSubmit"));
+      if (style.display != message.data.pleaseSubmitStyle) {
+        fail("Submission UI visibility is not correct. Expected " +
+             `${message.data.pleaseSubmitStyle} and got ${style.display}`);
+        return;
+      }
+
+      if (message.data.sendCrashMessage) {
+        let propBag = event.detail.QueryInterface(Ci.nsIPropertyBag2);
+        let crashID = propBag.getPropertyAsAString("pluginDumpID");
+        sendAsyncMessage("test:crash-plugin:crashed", {
+          crashID: crashID,
+        });
+        return;
+      }
+
+      if (message.data.submitComment) {
+        getUI("submitComment").value = message.data.submitComment;
+      }
+      getUI("submitURLOptIn").checked = message.data.urlOptIn;
+      getUI("submitButton").click();
+    });
+
+    let plugin = content.document.getElementById("test");
+    try {
+      plugin.crash()
+    } catch(e) {
+    }
+  });
+}
 
 function test() {
   // Crashing the plugin takes up a lot of time, so extend the test timeout.
@@ -29,14 +100,18 @@ function test() {
 
   let tab = gBrowser.loadOneTab("about:blank", { inBackground: false });
   let browser = gBrowser.getBrowserForTab(tab);
-  browser.addEventListener("PluginCrashed", onCrash, false);
+  let mm = browser.messageManager;
+  mm.loadFrameScript("data:,(" + frameScript.toString() + ")();", true);
+
+  mm.addMessageListener("test:crash-plugin:fail", (message) => {
+    ok(false, message.data.reason);
+  });
+
   Services.obs.addObserver(onSubmitStatus, "crash-report-status", false);
 
   registerCleanupFunction(function cleanUp() {
     env.set("MOZ_CRASHREPORTER_NO_REPORT", noReport);
     env.set("MOZ_CRASHREPORTER_URL", serverURL);
-    gBrowser.selectedBrowser.removeEventListener("PluginCrashed", onCrash,
-                                                 false);
     Services.obs.removeObserver(onSubmitStatus, "crash-report-status");
     gBrowser.removeCurrentTab();
   });
@@ -76,6 +151,24 @@ function doNextRun() {
         memo[arg] = currentRun[arg];
       return memo;
     }, {});
+    let mm = gBrowser.selectedBrowser.messageManager;
+
+    if (!currentRun.shouldSubmittionUIBeVisible) {
+      mm.addMessageListener("test:crash-plugin:crash", function onCrash(message) {
+        mm.removeMessageListener("test:crash-plugin:crash", onCrash);
+
+        ok(!!message.data.crashID, "pluginDumpID should be set");
+        CrashSubmit.delete(message.data.crashID);
+        doNextRun();
+      });
+    }
+
+    mm.sendAsyncMessage("test:crash-plugin", {
+      pleaseSubmitStyle: currentRun.shouldSubmissionUIBeVisible ? "block" : "none",
+      submitComment: currentRun.comment,
+      urlOptIn: currentRun.urlOptIn,
+      sendOnCrashMessage: !currentRun.shouldSubmissionUIBeVisible,
+    });
     gBrowser.loadURI(CRASH_URL + "?" +
                      encodeURIComponent(JSON.stringify(args)));
     // And now wait for the crash.
@@ -83,37 +176,6 @@ function doNextRun() {
   catch (err) {
     failWithException(err);
     finish();
-  }
-}
-
-function onCrash(event) {
-  try {
-    let plugin = gBrowser.contentDocument.getElementById("plugin");
-    let elt = gPluginHandler.getPluginUI.bind(gPluginHandler, plugin);
-    let style =
-      gBrowser.contentWindow.getComputedStyle(elt("pleaseSubmit"));
-    is(style.display,
-       currentRun.shouldSubmissionUIBeVisible ? "block" : "none",
-       "Submission UI visibility should be correct");
-    if (!currentRun.shouldSubmissionUIBeVisible) {
-      // Done with this run. We don't submit the crash, so we will have to
-      // remove the dump manually.
-      let propBag = event.detail.QueryInterface(Ci.nsIPropertyBag2);
-      let crashID = propBag.getPropertyAsAString("pluginDumpID");
-      ok(!!crashID, "pluginDumpID should be set");
-      CrashSubmit.delete(crashID);
-
-      doNextRun();
-      return;
-    }
-    elt("submitComment").value = currentRun.comment;
-    elt("submitURLOptIn").checked = currentRun.urlOptIn;
-    elt("submitButton").click();
-    // And now wait for the submission status notification.
-  }
-  catch (err) {
-    failWithException(err);
-    doNextRun();
   }
 }
 

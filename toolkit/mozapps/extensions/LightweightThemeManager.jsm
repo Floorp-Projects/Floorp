@@ -398,8 +398,6 @@ this.LightweightThemeManager = {
 function AddonWrapper(aTheme) {
   this.__defineGetter__("id", function AddonWrapper_idGetter() aTheme.id + ID_SUFFIX);
   this.__defineGetter__("type", function AddonWrapper_typeGetter() ADDON_TYPE);
-  this.__defineGetter__("headerURL", function AddonWrapper_headerURLGetter() aTheme.headerURL);
-  this.__defineGetter__("footerURL", function AddonWrapper_footerURLGetter() aTheme.footerURL);
   this.__defineGetter__("isActive", function AddonWrapper_isActiveGetter() {
     let current = LightweightThemeManager.currentTheme;
     if (current)
