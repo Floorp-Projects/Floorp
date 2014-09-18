@@ -25,10 +25,39 @@ namespace layers {
   class ImageContainer;
 }
 
-class AppleFrameRef;
-
 class AppleVDADecoder : public MediaDataDecoder {
 public:
+  class AppleFrameRef {
+  public:
+    Microseconds decode_timestamp;
+    Microseconds composition_timestamp;
+    Microseconds duration;
+    int64_t byte_offset;
+    bool is_sync_point;
+
+    explicit AppleFrameRef(const mp4_demuxer::MP4Sample& aSample)
+    : decode_timestamp(aSample.decode_timestamp)
+    , composition_timestamp(aSample.composition_timestamp)
+    , duration(aSample.duration)
+    , byte_offset(aSample.byte_offset)
+    , is_sync_point(aSample.is_sync_point)
+    {
+    }
+
+    AppleFrameRef(Microseconds aDts,
+                  Microseconds aPts,
+                  Microseconds aDuration,
+                  int64_t aByte_offset,
+                  bool aIs_sync_point)
+    : decode_timestamp(aDts)
+    , composition_timestamp(aPts)
+    , duration(aDuration)
+    , byte_offset(aByte_offset)
+    , is_sync_point(aIs_sync_point)
+    {
+    }
+  };
+
   // Return a new created AppleVDADecoder or nullptr if media or hardware is
   // not supported by current configuration.
   static already_AddRefed<AppleVDADecoder> CreateVDADecoder(
