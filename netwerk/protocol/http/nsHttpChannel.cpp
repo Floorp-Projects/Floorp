@@ -5064,7 +5064,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         //
         nsRefPtr<nsAHttpConnection> conn;
         if (authRetry && (mCaps & NS_HTTP_STICKY_CONNECTION)) {
-            conn = mTransaction->Connection();
+            conn = mTransaction->GetConnectionReference();
             // This is so far a workaround to fix leak when reusing unpersistent
             // connection for authentication retry. See bug 459620 comment 4
             // for details.
@@ -5074,7 +5074,7 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
 
         nsRefPtr<nsAHttpConnection> stickyConn;
         if (mCaps & NS_HTTP_STICKY_CONNECTION)
-            stickyConn = mTransaction->Connection();
+            stickyConn = mTransaction->GetConnectionReference();
 
         // at this point, we're done with the transaction
         mTransactionTimings = mTransaction->Timings();
