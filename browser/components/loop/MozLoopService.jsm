@@ -160,8 +160,8 @@ let MozLoopServiceInternal = {
     this.notifyStatusChanged();
   },
 
-  notifyStatusChanged: function(aReason = null) {
-    Services.obs.notifyObservers(null, "loop-status-changed", aReason);
+  notifyStatusChanged: function() {
+    Services.obs.notifyObservers(null, "loop-status-changed", null);
   },
 
   /**
@@ -1024,7 +1024,7 @@ this.MozLoopService = {
       });
       client.fetchProfile().then(result => {
         gFxAOAuthProfile = result;
-        MozLoopServiceInternal.notifyStatusChanged("login");
+        MozLoopServiceInternal.notifyStatusChanged();
       }, error => {
         console.error("Failed to retrieve profile", error);
         gFxAOAuthProfile = null;
