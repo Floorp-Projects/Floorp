@@ -1106,10 +1106,9 @@ void imgLoader::GlobalInit()
   int32_t cachesize;
   rv = Preferences::GetInt("image.cache.size", &cachesize);
   if (NS_SUCCEEDED(rv))
-    sCacheMaxSize = cachesize;
+    sCacheMaxSize = cachesize > 0 ? cachesize : 0;
   else
     sCacheMaxSize = 5 * 1024 * 1024;
-  sCacheMaxSize = sCacheMaxSize > 0 ? sCacheMaxSize : 0;
 
   sMemReporter = new imgMemoryReporter();
   RegisterStrongMemoryReporter(sMemReporter);
