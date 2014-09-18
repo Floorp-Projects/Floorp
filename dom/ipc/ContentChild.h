@@ -70,6 +70,8 @@ public:
         nsCString buildID;
         nsCString name;
         nsCString UAName;
+        nsCString ID;
+        nsCString vendor;
     };
 
     bool Init(MessageLoop* aIOLoop,
@@ -297,7 +299,8 @@ public:
     virtual bool RecvCycleCollect() MOZ_OVERRIDE;
 
     virtual bool RecvAppInfo(const nsCString& version, const nsCString& buildID,
-                             const nsCString& name, const nsCString& UAName) MOZ_OVERRIDE;
+                             const nsCString& name, const nsCString& UAName,
+                             const nsCString& ID, const nsCString& vendor) MOZ_OVERRIDE;
 
     virtual bool RecvLastPrivateDocShellDestroyed() MOZ_OVERRIDE;
 
