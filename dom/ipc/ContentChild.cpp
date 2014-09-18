@@ -1830,12 +1830,15 @@ PreloadSlowThings()
 
 bool
 ContentChild::RecvAppInfo(const nsCString& version, const nsCString& buildID,
-                          const nsCString& name, const nsCString& UAName)
+                          const nsCString& name, const nsCString& UAName,
+                          const nsCString& ID, const nsCString& vendor)
 {
     mAppInfo.version.Assign(version);
     mAppInfo.buildID.Assign(buildID);
     mAppInfo.name.Assign(name);
     mAppInfo.UAName.Assign(UAName);
+    mAppInfo.ID.Assign(ID);
+    mAppInfo.vendor.Assign(vendor);
 
     if (!Preferences::GetBool("dom.ipc.processPrelaunch.enabled", false)) {
         return true;
