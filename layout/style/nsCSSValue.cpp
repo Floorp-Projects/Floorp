@@ -1666,6 +1666,8 @@ nsCSSValueList::Clone() const
     dest = dest->mNext;
     src = src->mNext;
   }
+
+  MOZ_ASSERT(result, "shouldn't return null; supposed to be infallible");
   return result;
 }
 
@@ -2001,6 +2003,8 @@ nsCSSValuePairList::Clone() const
     dest = dest->mNext;
     src = src->mNext;
   }
+
+  MOZ_ASSERT(result, "shouldn't return null; supposed to be infallible");
   return result;
 }
 
