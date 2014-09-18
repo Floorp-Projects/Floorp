@@ -147,7 +147,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMFile)
   NS_INTERFACE_MAP_ENTRY(nsIXHRSendable)
   NS_INTERFACE_MAP_ENTRY(nsIMutable)
   NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(File, IsFile())
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(Blob, !(IsFile()))
 NS_INTERFACE_MAP_END
@@ -299,10 +298,7 @@ already_AddRefed<nsIDOMBlob>
 DOMFile::CreateSlice(uint64_t aStart, uint64_t aLength,
                      const nsAString& aContentType)
 {
-  nsRefPtr<DOMFileImpl> impl =
-    mImpl->CreateSlice(aStart, aLength, aContentType);
-  nsRefPtr<DOMFile> slice = new DOMFile(impl);
-  return slice.forget();
+  return mImpl->CreateSlice(aStart, aLength, aContentType);
 }
 
 NS_IMETHODIMP
@@ -404,17 +400,7 @@ DOMFile::Slice(int64_t aStart, int64_t aEnd,
                nsIDOMBlob **aBlob)
 {
   MOZ_ASSERT(mImpl);
-  nsRefPtr<DOMFileImpl> impl;
-  nsresult rv = mImpl->Slice(aStart, aEnd, aContentType, aArgc,
-                             getter_AddRefs(impl));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsRefPtr<DOMFile> blob = new DOMFile(impl);
-  blob.forget(aBlob);
-
-  return NS_OK;
+  return mImpl->Slice(aStart, aEnd, aContentType, aArgc, aBlob);
 }
 
 NS_IMETHODIMP
@@ -474,9 +460,9 @@ DOMFile::IsMemoryFile()
 nsresult
 DOMFileImpl::Slice(int64_t aStart, int64_t aEnd,
                    const nsAString& aContentType, uint8_t aArgc,
-                   DOMFileImpl** aBlobImpl)
+                   nsIDOMBlob **aBlob)
 {
-  *aBlobImpl = nullptr;
+  *aBlob = nullptr;
 
   // Truncate aStart and aEnd so that we stay within this file.
   uint64_t thisLength;
@@ -489,15 +475,12 @@ DOMFileImpl::Slice(int64_t aStart, int64_t aEnd,
 
   ParseSize((int64_t)thisLength, aStart, aEnd);
 
-  nsRefPtr<DOMFileImpl> impl =
+  // Create the new file
+  nsCOMPtr<nsIDOMBlob> blob =
     CreateSlice((uint64_t)aStart, (uint64_t)(aEnd - aStart), aContentType);
 
-  if (!impl) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  impl.forget(aBlobImpl);
-  return NS_OK;
+  blob.forget(aBlob);
+  return *aBlob ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -592,7 +575,7 @@ DOMFileImplBase::GetMozLastModifiedDate(uint64_t* aLastModifiedDate)
   return NS_OK;
 }
 
-already_AddRefed<DOMFileImpl>
+already_AddRefed<nsIDOMBlob>
 DOMFileImplBase::CreateSlice(uint64_t aStart, uint64_t aLength,
                              const nsAString& aContentType)
 {
@@ -741,13 +724,13 @@ DOMFileImplBase::SetMutable(bool aMutable)
 ////////////////////////////////////////////////////////////////////////////
 // DOMFileImplFile implementation
 
-already_AddRefed<DOMFileImpl>
+already_AddRefed<nsIDOMBlob>
 DOMFileImplFile::CreateSlice(uint64_t aStart, uint64_t aLength,
                              const nsAString& aContentType)
 {
-  nsRefPtr<DOMFileImpl> impl =
-    new DOMFileImplFile(this, aStart, aLength, aContentType);
-  return impl.forget();
+  nsCOMPtr<nsIDOMBlob> blob =
+    new DOMFile(new DOMFileImplFile(this, aStart, aLength, aContentType));
+  return blob.forget();
 }
 
 nsresult
@@ -849,8 +832,7 @@ DOMFileImplFile::GetMozLastModifiedDate(uint64_t* aLastModifiedDate)
 const uint32_t sFileStreamFlags =
   nsIFileInputStream::CLOSE_ON_EOF |
   nsIFileInputStream::REOPEN_ON_REWIND |
-  nsIFileInputStream::DEFER_OPEN |
-  nsIFileInputStream::SHARE_DELETE;
+  nsIFileInputStream::DEFER_OPEN;
 
 nsresult
 DOMFileImplFile::GetInternalStream(nsIInputStream** aStream)
@@ -875,13 +857,13 @@ DOMFileImplFile::SetPath(const nsAString& aPath)
 
 NS_IMPL_ISUPPORTS_INHERITED0(DOMFileImplMemory, DOMFileImpl)
 
-already_AddRefed<DOMFileImpl>
+already_AddRefed<nsIDOMBlob>
 DOMFileImplMemory::CreateSlice(uint64_t aStart, uint64_t aLength,
                                const nsAString& aContentType)
 {
-  nsRefPtr<DOMFileImpl> impl =
-    new DOMFileImplMemory(this, aStart, aLength, aContentType);
-  return impl.forget();
+  nsCOMPtr<nsIDOMBlob> blob =
+    new DOMFile(new DOMFileImplMemory(this, aStart, aLength, aContentType));
+  return blob.forget();
 }
 
 nsresult
@@ -1000,17 +982,17 @@ DOMFileImplMemory::DataOwner::EnsureMemoryReporterRegistered()
 
 NS_IMPL_ISUPPORTS_INHERITED0(DOMFileImplTemporaryFileBlob, DOMFileImpl)
 
-already_AddRefed<DOMFileImpl>
+already_AddRefed<nsIDOMBlob>
 DOMFileImplTemporaryFileBlob::CreateSlice(uint64_t aStart, uint64_t aLength,
                                           const nsAString& aContentType)
 {
   if (aStart + aLength > mLength)
     return nullptr;
 
-  nsRefPtr<DOMFileImpl> impl =
-    new DOMFileImplTemporaryFileBlob(this, aStart + mStartPos, aLength,
-                                     aContentType);
-  return impl.forget();
+  nsCOMPtr<nsIDOMBlob> blob =
+    new DOMFile(new DOMFileImplTemporaryFileBlob(this, aStart + mStartPos,
+                                                 aLength, aContentType));
+  return blob.forget();
 }
 
 nsresult

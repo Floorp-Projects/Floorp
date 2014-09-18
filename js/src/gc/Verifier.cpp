@@ -264,7 +264,7 @@ oom:
 }
 
 static bool
-IsMarkedOrAllocated(Cell *cell)
+IsMarkedOrAllocated(TenuredCell *cell)
 {
     return cell->isMarked() || cell->arenaHeader()->allocatedDuringIncremental;
 }
@@ -300,7 +300,7 @@ CheckEdge(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 static void
 AssertMarkedOrAllocated(const EdgeValue &edge)
 {
-    if (!edge.thing || IsMarkedOrAllocated(static_cast<Cell *>(edge.thing)))
+    if (!edge.thing || IsMarkedOrAllocated(TenuredCell::fromPointer(edge.thing)))
         return;
 
     // Permanent atoms and well-known symbols aren't marked during graph traversal.

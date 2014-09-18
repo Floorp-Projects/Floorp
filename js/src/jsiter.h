@@ -201,15 +201,11 @@ extern bool
 SuppressDeletedElements(JSContext *cx, HandleObject obj, uint32_t begin, uint32_t end);
 
 /*
- * IteratorMore() indicates whether another value is available. It might
- * internally call iterobj.next() and then cache the value until its
- * picked up by IteratorNext(). The value is cached in the current context.
+ * IteratorMore() returns the next iteration value. If no value is available,
+ * MagicValue(JS_NO_ITER_VALUE) is returned.
  */
 extern bool
-IteratorMore(JSContext *cx, HandleObject iterobj, bool *res);
-
-extern bool
-IteratorNext(JSContext *cx, HandleObject iterobj, MutableHandleValue rval);
+IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval);
 
 extern bool
 ThrowStopIteration(JSContext *cx);

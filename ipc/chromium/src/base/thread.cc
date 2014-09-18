@@ -58,8 +58,8 @@ namespace {
 // because its Stop method was called.  This allows us to catch cases where
 // MessageLoop::Quit() is called directly, which is unexpected when using a
 // Thread to setup and run a MessageLoop.
-base::LazyInstance<base::ThreadLocalBoolean> lazy_tls_bool(
-    base::LINKER_INITIALIZED);
+base::LazyInstance<base::ThreadLocalBoolean> lazy_tls_bool =
+    LAZY_INSTANCE_INITIALIZER;
 
 }  // namespace
 

@@ -62,7 +62,7 @@ MIRType MIRTypeFromValue(const js::Value &vp)
     _(InWorklist)                                                               \
     _(EmittedAtUses)                                                            \
     _(Commutative)                                                              \
-    _(Movable)       /* Allow LICM and GVN to move this instruction */          \
+    _(Movable)       /* Allow passes like LICM to move this instruction */      \
     _(Lowered)       /* (Debug only) has a virtual register */                  \
     _(Guard)         /* Not removable if uses == 0 */                           \
                                                                                 \
@@ -156,7 +156,7 @@ class MUse : public TempObject, public InlineListNode<MUse>
     // Set this use, which was not previously clear.
     inline void replaceProducer(MDefinition *producer);
     // Clear this use.
-    inline void discardProducer();
+    inline void releaseProducer();
 
     MDefinition *producer() const {
         JS_ASSERT(producer_ != nullptr);
@@ -189,8 +189,6 @@ typedef InlineList<MUse>::iterator MUseIterator;
 // nodes holding such a reference (its use chain).
 class MNode : public TempObject
 {
-    friend class MDefinition;
-
   protected:
     MBasicBlock *block_;    // Containing basic block.
 
@@ -237,15 +235,12 @@ class MNode : public TempObject
 
     // Resets the operand to an uninitialized state, breaking the link
     // with the previous operand's producer.
-    void discardOperand(size_t index) {
-        getUseFor(index)->discardProducer();
+    void releaseOperand(size_t index) {
+        getUseFor(index)->releaseProducer();
     }
-
-#if DEBUG
-    bool operandDiscarded(size_t index) const {
-        return !getUseFor(index)->hasProducer();
+    bool hasOperand(size_t index) const {
+        return getUseFor(index)->hasProducer();
     }
-#endif
 
     inline MDefinition *toDefinition();
     inline MResumePoint *toResumePoint();
@@ -1890,6 +1885,8 @@ class MTableSwitch MOZ_FINAL
     TypePolicy *typePolicy() {
         return this;
     }
+
+    MDefinition *foldsTo(TempAllocator &alloc);
 };
 
 template <size_t Arity, size_t Successors>
@@ -7229,7 +7226,6 @@ class MNot
     bool operandMightEmulateUndefined_;
     bool operandIsNeverNaN_;
 
-  public:
     explicit MNot(MDefinition *input)
       : MUnaryInstruction(input),
         operandMightEmulateUndefined_(true),
@@ -7239,6 +7235,7 @@ class MNot
         setMovable();
     }
 
+  public:
     static MNot *New(TempAllocator &alloc, MDefinition *elements) {
         return new(alloc) MNot(elements);
     }
@@ -10216,31 +10213,6 @@ class MIteratorStart
     }
 };
 
-class MIteratorNext
-  : public MUnaryInstruction,
-    public SingleObjectPolicy
-{
-    explicit MIteratorNext(MDefinition *iter)
-      : MUnaryInstruction(iter)
-    {
-        setResultType(MIRType_Value);
-    }
-
-  public:
-    INSTRUCTION_HEADER(IteratorNext)
-
-    static MIteratorNext *New(TempAllocator &alloc, MDefinition *iter) {
-        return new(alloc) MIteratorNext(iter);
-    }
-
-    TypePolicy *typePolicy() {
-        return this;
-    }
-    MDefinition *iterator() const {
-        return getOperand(0);
-    }
-};
-
 class MIteratorMore
   : public MUnaryInstruction,
     public SingleObjectPolicy
@@ -10248,7 +10220,7 @@ class MIteratorMore
     explicit MIteratorMore(MDefinition *iter)
       : MUnaryInstruction(iter)
     {
-        setResultType(MIRType_Boolean);
+        setResultType(MIRType_Value);
     }
 
   public:
@@ -10263,6 +10235,28 @@ class MIteratorMore
     }
     MDefinition *iterator() const {
         return getOperand(0);
+    }
+};
+
+class MIsNoIter
+  : public MUnaryInstruction
+{
+    MIsNoIter(MDefinition *def)
+      : MUnaryInstruction(def)
+    {
+        setResultType(MIRType_Boolean);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(IsNoIter)
+
+    static MIsNoIter *New(TempAllocator &alloc, MDefinition *def) {
+        return new(alloc) MIsNoIter(def);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
     }
 };
 
@@ -11233,10 +11227,10 @@ class MResumePoint MOZ_FINAL :
         return mode_;
     }
 
-    void discardUses() {
+    void releaseUses() {
         for (size_t i = 0; i < operands_.length(); i++) {
             if (operands_[i].hasProducer())
-                operands_[i].discardProducer();
+                operands_[i].releaseProducer();
         }
     }
 
@@ -11787,7 +11781,7 @@ void MUse::replaceProducer(MDefinition *producer)
     producer_->addUse(this);
 }
 
-void MUse::discardProducer()
+void MUse::releaseProducer()
 {
     MOZ_ASSERT(consumer_, "Clearing MUse without a consumer");
     producer_->removeUse(this);

@@ -21,8 +21,6 @@ struct BytecodeInfo
     uint16_t stackDepth;
     bool initialized : 1;
     bool jumpTarget : 1;
-    bool jumpFallthrough : 1;
-    bool fallthrough : 1;
 
     // If true, this is a JSOP_LOOPENTRY op inside a catch or finally block.
     bool loopEntryInCatchOrFinally : 1;

@@ -19,6 +19,7 @@ class MIRGraph;
 class MPhi;
 class MInstruction;
 class MIRGenerator;
+class MResumePoint;
 
 class ValueNumberer
 {
@@ -48,7 +49,7 @@ class ValueNumberer
 
         Ptr findLeader(const MDefinition *def) const;
         AddPtr findLeaderForAdd(MDefinition *def);
-        bool insert(AddPtr p, MDefinition *def);
+        bool add(AddPtr p, MDefinition *def);
         void overwrite(AddPtr p, MDefinition *def);
         void forget(const MDefinition *def);
         void clear();
@@ -64,9 +65,9 @@ class ValueNumberer
     MIRGraph &graph_;
     VisibleValues values_;            // Numbered values
     DefWorklist deadDefs_;            // Worklist for deleting values
-    BlockWorklist unreachableBlocks_; // Worklist for unreachable blocks
     BlockWorklist remainingBlocks_;   // Blocks remaining with fewer preds
-    size_t numBlocksDeleted_;         // Num deleted blocks in current tree
+    MDefinition *nextDef_;            // The next definition; don't discard
+    size_t totalNumVisited_;          // The number of blocks visited
     bool rerun_;                      // Should we run another GVN iteration?
     bool blocksRemoved_;              // Have any blocks been removed?
     bool updateAliasAnalysis_;        // Do we care about AliasAnalysis?
@@ -77,35 +78,37 @@ class ValueNumberer
         SetUseRemoved
     };
 
-    bool deleteDefsRecursively(MDefinition *def);
-    bool discardPhiOperands(MPhi *phi, const MBasicBlock *phiBlock,
-                            UseRemovedOption useRemovedOption = SetUseRemoved);
-    bool discardInsOperands(MInstruction *ins,
-                            UseRemovedOption useRemovedOption = SetUseRemoved);
-    bool deleteDef(MDefinition *def,
-                   UseRemovedOption useRemovedOption = SetUseRemoved);
+    bool handleUseReleased(MDefinition *def, UseRemovedOption useRemovedOption);
+    bool discardDefsRecursively(MDefinition *def);
+    bool releaseResumePointOperands(MResumePoint *resume);
+    bool releaseAndRemovePhiOperands(MPhi *phi);
+    bool releaseOperands(MDefinition *def);
+    bool discardDef(MDefinition *def);
     bool processDeadDefs();
 
-    bool removePredecessor(MBasicBlock *block, MBasicBlock *pred);
-    bool removeBlocksRecursively(MBasicBlock *block, const MBasicBlock *root);
+    bool fixupOSROnlyLoop(MBasicBlock *block, MBasicBlock *backedge);
+    bool removePredecessorAndDoDCE(MBasicBlock *block, MBasicBlock *pred);
+    bool removePredecessorAndCleanUp(MBasicBlock *block, MBasicBlock *pred);
 
     MDefinition *simplified(MDefinition *def) const;
     MDefinition *leader(MDefinition *def);
     bool hasLeader(const MPhi *phi, const MBasicBlock *phiBlock) const;
-    bool loopHasOptimizablePhi(MBasicBlock *backedge) const;
+    bool loopHasOptimizablePhi(MBasicBlock *header) const;
 
     bool visitDefinition(MDefinition *def);
     bool visitControlInstruction(MBasicBlock *block, const MBasicBlock *root);
+    bool visitUnreachableBlock(MBasicBlock *block);
     bool visitBlock(MBasicBlock *block, const MBasicBlock *root);
-    bool visitDominatorTree(MBasicBlock *root, size_t *totalNumVisited);
+    bool visitDominatorTree(MBasicBlock *root);
     bool visitGraph();
 
   public:
     ValueNumberer(MIRGenerator *mir, MIRGraph &graph);
+    bool init();
 
     enum UpdateAliasAnalysisFlag {
         DontUpdateAliasAnalysis,
-        UpdateAliasAnalysis,
+        UpdateAliasAnalysis
     };
 
     // Optimize the graph, performing expression simplification and

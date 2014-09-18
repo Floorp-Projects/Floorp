@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_nsIContentParent_h
 #define mozilla_dom_nsIContentParent_h
 
+#include "mozilla/dom/ipc/Blob.h"
+
 #include "nsFrameMessageManager.h"
 #include "nsISupports.h"
 
@@ -15,7 +17,6 @@
     { 0x81, 0xda, 0xb7, 0x34, 0x13, 0x7e, 0xac, 0xf3 } }
 
 class nsFrameMessageManager;
-class nsIDOMBlob;
 
 namespace IPC {
 class Principal;
@@ -30,13 +31,8 @@ class CpowEntry;
 } // namespace jsipc
 
 namespace dom {
-
-class BlobConstructorParams;
-class BlobParent;
-class ContentParent;
 class IPCTabContext;
-class PBlobParent;
-class PBrowserParent;
+class ContentParent;
 
 class nsIContentParent : public nsISupports
                        , public mozilla::dom::ipc::MessageManagerCallback
@@ -45,7 +41,6 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTPARENT_IID)
 
   nsIContentParent();
-
   BlobParent* GetOrCreateActorForBlob(nsIDOMBlob* aBlob);
 
   virtual uint64_t ChildID() = 0;
@@ -53,8 +48,8 @@ public:
   virtual bool IsForBrowser() = 0;
 
   virtual PBlobParent* SendPBlobConstructor(
-    PBlobParent* aActor,
-    const BlobConstructorParams& aParams) NS_WARN_UNUSED_RESULT = 0;
+    PBlobParent* actor,
+    const BlobConstructorParams& params) NS_WARN_UNUSED_RESULT = 0;
 
   virtual PBrowserParent* SendPBrowserConstructor(
     PBrowserParent* actor,
@@ -84,8 +79,7 @@ protected: // IPDL methods
   virtual bool DeallocPBrowserParent(PBrowserParent* frame);
 
   virtual PBlobParent* AllocPBlobParent(const BlobConstructorParams& aParams);
-
-  virtual bool DeallocPBlobParent(PBlobParent* aActor);
+  virtual bool DeallocPBlobParent(PBlobParent*);
 
   virtual bool RecvSyncMessage(const nsString& aMsg,
                                const ClonedMessageData& aData,

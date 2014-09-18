@@ -835,7 +835,6 @@ TraceLogging::lazyInit()
         enabledTextIds[TraceLogger::ParallelSafetyAnalysis] = true;
         enabledTextIds[TraceLogger::AliasAnalysis] = true;
         enabledTextIds[TraceLogger::GVN] = true;
-        enabledTextIds[TraceLogger::UCE] = true;
         enabledTextIds[TraceLogger::LICM] = true;
         enabledTextIds[TraceLogger::RangeAnalysis] = true;
         enabledTextIds[TraceLogger::LoopUnrolling] = true;

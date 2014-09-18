@@ -2229,6 +2229,10 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
         cStats.compartmentTables,
         "Compartment-wide tables storing shape and type object information.");
 
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("inner-views"),
+        cStats.innerViewsTable,
+        "The table for array buffer inner views.");
+
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("cross-compartment-wrapper-table"),
         cStats.crossCompartmentWrappersTable,
         "The cross-compartment wrapper table.");

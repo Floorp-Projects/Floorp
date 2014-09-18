@@ -10,7 +10,6 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/ipc/BlobChild.h"
 
 #include "BluetoothChild.h"
 #include "MainThreadUtils.h"

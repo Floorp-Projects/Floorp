@@ -1,0 +1,76 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "mozilla/dom/indexedDB/SerializationHelpers.h";
+
+using class mozilla::dom::indexedDB::Key from "mozilla/dom/indexedDB/Key.h";
+using mozilla::dom::indexedDB::IDBCursor::Direction from "mozilla/dom/indexedDB/IDBCursor.h";
+using struct mozilla::dom::indexedDB::SerializedStructuredCloneReadInfo from "mozilla/dom/indexedDB/IndexedDatabase.h";
+
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+namespace ipc {
+
+struct KeyRange
+{
+  Key lower;
+  Key upper;
+  bool lowerOpen;
+  bool upperOpen;
+  bool isOnly;
+};
+
+union OptionalKeyRange
+{
+  KeyRange;
+  void_t;
+};
+
+struct GetParams
+{
+  KeyRange keyRange;
+};
+
+struct GetAllParams
+{
+  OptionalKeyRange optionalKeyRange;
+  uint32_t limit;
+};
+
+struct GetAllKeysParams
+{
+  OptionalKeyRange optionalKeyRange;
+  uint32_t limit;
+};
+
+struct CountParams
+{
+  OptionalKeyRange optionalKeyRange;
+};
+
+struct OpenCursorParams
+{
+  OptionalKeyRange optionalKeyRange;
+  Direction direction;
+};
+
+struct OpenKeyCursorParams
+{
+  OptionalKeyRange optionalKeyRange;
+  Direction direction;
+};
+
+union OptionalStructuredCloneReadInfo
+{
+  SerializedStructuredCloneReadInfo;
+  void_t;
+};
+
+} // namespace ipc
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

@@ -490,9 +490,6 @@ struct JSContext : public js::ExclusiveContext,
                                                without the corresponding
                                                JS_EndRequest. */
 
-    /* Location to stash the iteration value between JSOP_MOREITER and JSOP_ITERNEXT. */
-    js::Value           iterValue;
-
     bool jitIsBroken;
 
     void updateJITEnabled();

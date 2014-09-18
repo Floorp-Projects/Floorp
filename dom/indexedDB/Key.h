@@ -7,26 +7,21 @@
 #ifndef mozilla_dom_indexeddb_key_h__
 #define mozilla_dom_indexeddb_key_h__
 
-#include "js/RootingAPI.h"
-#include "nsString.h"
+#include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
-class mozIStorageStatement;
+#include "mozIStorageStatement.h"
+
+#include "js/Value.h"
 
 namespace IPC {
-
-template <typename> struct ParamTraits;
-
+template <typename T> struct ParamTraits;
 } // namespace IPC
 
-namespace mozilla {
-namespace dom {
-namespace indexedDB {
+BEGIN_INDEXEDDB_NAMESPACE
 
 class Key
 {
   friend struct IPC::ParamTraits<Key>;
-
-  nsCString mBuffer;
 
 public:
   Key()
@@ -34,64 +29,62 @@ public:
     Unset();
   }
 
-  Key&
-  operator=(const nsAString& aString)
+  Key& operator=(const nsAString& aString)
   {
     SetFromString(aString);
     return *this;
   }
 
-  Key&
-  operator=(int64_t aInt)
+  Key& operator=(int64_t aInt)
   {
     SetFromInteger(aInt);
     return *this;
   }
 
-  bool
-  operator==(const Key& aOther) const
+  bool operator==(const Key& aOther) const
   {
-    Assert(!mBuffer.IsVoid() && !aOther.mBuffer.IsVoid());
+    NS_ASSERTION(!mBuffer.IsVoid() && !aOther.mBuffer.IsVoid(),
+                 "Don't compare unset keys!");
 
     return mBuffer.Equals(aOther.mBuffer);
   }
 
-  bool
-  operator!=(const Key& aOther) const
+  bool operator!=(const Key& aOther) const
   {
-    Assert(!mBuffer.IsVoid() && !aOther.mBuffer.IsVoid());
+    NS_ASSERTION(!mBuffer.IsVoid() && !aOther.mBuffer.IsVoid(),
+                 "Don't compare unset keys!");
 
     return !mBuffer.Equals(aOther.mBuffer);
   }
 
-  bool
-  operator<(const Key& aOther) const
+  bool operator<(const Key& aOther) const
   {
-    Assert(!mBuffer.IsVoid() && !aOther.mBuffer.IsVoid());
+    NS_ASSERTION(!mBuffer.IsVoid() && !aOther.mBuffer.IsVoid(),
+                 "Don't compare unset keys!");
 
     return Compare(mBuffer, aOther.mBuffer) < 0;
   }
 
-  bool
-  operator>(const Key& aOther) const
+  bool operator>(const Key& aOther) const
   {
-    Assert(!mBuffer.IsVoid() && !aOther.mBuffer.IsVoid());
+    NS_ASSERTION(!mBuffer.IsVoid() && !aOther.mBuffer.IsVoid(),
+                 "Don't compare unset keys!");
 
     return Compare(mBuffer, aOther.mBuffer) > 0;
   }
 
-  bool
-  operator<=(const Key& aOther) const
+  bool operator<=(const Key& aOther) const
   {
-    Assert(!mBuffer.IsVoid() && !aOther.mBuffer.IsVoid());
+    NS_ASSERTION(!mBuffer.IsVoid() && !aOther.mBuffer.IsVoid(),
+                 "Don't compare unset keys!");
 
     return Compare(mBuffer, aOther.mBuffer) <= 0;
   }
 
-  bool
-  operator>=(const Key& aOther) const
+  bool operator>=(const Key& aOther) const
   {
-    Assert(!mBuffer.IsVoid() && !aOther.mBuffer.IsVoid());
+    NS_ASSERTION(!mBuffer.IsVoid() && !aOther.mBuffer.IsVoid(),
+                 "Don't compare unset keys!");
 
     return Compare(mBuffer, aOther.mBuffer) >= 0;
   }
@@ -102,114 +95,169 @@ public:
     mBuffer.SetIsVoid(true);
   }
 
-  bool
-  IsUnset() const
+  bool IsUnset() const
   {
     return mBuffer.IsVoid();
   }
 
-  bool
-  IsFloat() const
+  bool IsFloat() const
   {
     return !IsUnset() && mBuffer.First() == eFloat;
   }
 
-  bool
-  IsDate() const
+  bool IsDate() const
   {
     return !IsUnset() && mBuffer.First() == eDate;
   }
 
-  bool
-  IsString() const
+  bool IsString() const
   {
     return !IsUnset() && mBuffer.First() == eString;
   }
 
-  bool
-  IsArray() const
+  bool IsArray() const
   {
     return !IsUnset() && mBuffer.First() >= eArray;
   }
 
-  double
-  ToFloat() const
+  double ToFloat() const
   {
-    Assert(IsFloat());
+    NS_ASSERTION(IsFloat(), "Why'd you call this?");
     const unsigned char* pos = BufferStart();
     double res = DecodeNumber(pos, BufferEnd());
-    Assert(pos >= BufferEnd());
+    NS_ASSERTION(pos >= BufferEnd(), "Should consume whole buffer");
     return res;
   }
 
-  double
-  ToDateMsec() const
+  double ToDateMsec() const
   {
-    Assert(IsDate());
+    NS_ASSERTION(IsDate(), "Why'd you call this?");
     const unsigned char* pos = BufferStart();
     double res = DecodeNumber(pos, BufferEnd());
-    Assert(pos >= BufferEnd());
+    NS_ASSERTION(pos >= BufferEnd(), "Should consume whole buffer");
     return res;
   }
 
-  void
-  ToString(nsString& aString) const
+  void ToString(nsString& aString) const
   {
-    Assert(IsString());
+    NS_ASSERTION(IsString(), "Why'd you call this?");
     const unsigned char* pos = BufferStart();
     DecodeString(pos, BufferEnd(), aString);
-    Assert(pos >= BufferEnd());
+    NS_ASSERTION(pos >= BufferEnd(), "Should consume whole buffer");
   }
 
-  void
-  SetFromString(const nsAString& aString)
+  void SetFromString(const nsAString& aString)
   {
     mBuffer.Truncate();
     EncodeString(aString, 0);
     TrimBuffer();
   }
 
-  void
-  SetFromInteger(int64_t aInt)
+  void SetFromInteger(int64_t aInt)
   {
     mBuffer.Truncate();
     EncodeNumber(double(aInt), eFloat);
     TrimBuffer();
   }
 
-  nsresult
-  SetFromJSVal(JSContext* aCx, JS::Handle<JS::Value> aVal);
+  nsresult SetFromJSVal(JSContext* aCx,
+                        JS::Handle<JS::Value> aVal)
+  {
+    mBuffer.Truncate();
 
-  nsresult
-  ToJSVal(JSContext* aCx, JS::MutableHandle<JS::Value> aVal) const;
+    if (aVal.isNull() || aVal.isUndefined()) {
+      Unset();
+      return NS_OK;
+    }
 
-  nsresult
-  ToJSVal(JSContext* aCx, JS::Heap<JS::Value>& aVal) const;
+    nsresult rv = EncodeJSVal(aCx, aVal, 0);
+    if (NS_FAILED(rv)) {
+      Unset();
+      return rv;
+    }
+    TrimBuffer();
 
-  nsresult
-  AppendItem(JSContext* aCx, bool aFirstOfArray, JS::Handle<JS::Value> aVal);
+    return NS_OK;
+  }
 
-  void
-  FinishArray()
+  nsresult ToJSVal(JSContext* aCx,
+                   JS::MutableHandle<JS::Value> aVal) const
+  {
+    if (IsUnset()) {
+      aVal.setUndefined();
+      return NS_OK;
+    }
+
+    const unsigned char* pos = BufferStart();
+    nsresult rv = DecodeJSVal(pos, BufferEnd(), aCx, 0, aVal);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    NS_ASSERTION(pos >= BufferEnd(),
+                 "Didn't consume whole buffer");
+
+    return NS_OK;
+  }
+
+  nsresult ToJSVal(JSContext* aCx,
+                   JS::Heap<JS::Value>& aVal) const
+  {
+    JS::Rooted<JS::Value> value(aCx);
+    nsresult rv = ToJSVal(aCx, &value);
+    if (NS_SUCCEEDED(rv)) {
+      aVal = value;
+    }
+    return rv;
+  }
+
+  nsresult AppendItem(JSContext* aCx,
+                      bool aFirstOfArray,
+                      JS::Handle<JS::Value> aVal)
+  {
+    nsresult rv = EncodeJSVal(aCx, aVal, aFirstOfArray ? eMaxType : 0);
+    if (NS_FAILED(rv)) {
+      Unset();
+      return rv;
+    }
+
+    return NS_OK;
+  }
+
+  void FinishArray()
   {
     TrimBuffer();
   }
 
-  const nsCString&
-  GetBuffer() const
+  const nsCString& GetBuffer() const
   {
     return mBuffer;
   }
 
-  nsresult
-  BindToStatement(mozIStorageStatement* aStatement,
-                  const nsACString& aParamName) const;
+  nsresult BindToStatement(mozIStorageStatement* aStatement,
+                           const nsACString& aParamName) const
+  {
+    nsresult rv = aStatement->BindBlobByName(aParamName,
+      reinterpret_cast<const uint8_t*>(mBuffer.get()), mBuffer.Length());
 
-  nsresult
-  SetFromStatement(mozIStorageStatement* aStatement, uint32_t aIndex);
+    return NS_SUCCEEDED(rv) ? NS_OK : NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
 
-  static int16_t
-  CompareKeys(Key& aFirst, Key& aSecond)
+  nsresult SetFromStatement(mozIStorageStatement* aStatement,
+                            uint32_t aIndex)
+  {
+    uint8_t* data;
+    uint32_t dataLength = 0;
+
+    nsresult rv = aStatement->GetBlob(aIndex, &dataLength, &data);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
+
+    mBuffer.Adopt(
+      reinterpret_cast<char*>(const_cast<uint8_t*>(data)), dataLength);
+
+    return NS_OK;
+  }
+
+  static
+  int16_t CompareKeys(Key& aFirst, Key& aSecond)
   {
     int32_t result = Compare(aFirst.mBuffer, aSecond.mBuffer);
 
@@ -225,14 +273,12 @@ public:
   }
 
 private:
-  const unsigned char*
-  BufferStart() const
+  const unsigned char* BufferStart() const
   {
     return reinterpret_cast<const unsigned char*>(mBuffer.BeginReading());
   }
 
-  const unsigned char*
-  BufferEnd() const
+  const unsigned char* BufferEnd() const
   {
     return reinterpret_cast<const unsigned char*>(mBuffer.EndReading());
   }
@@ -248,8 +294,7 @@ private:
 
   // Encoding helper. Trims trailing zeros off of mBuffer as a post-processing
   // step.
-  void
-  TrimBuffer()
+  void TrimBuffer()
   {
     const char* end = mBuffer.EndReading() - 1;
     while (!*end) {
@@ -260,57 +305,41 @@ private:
   }
 
   // Encoding functions. These append the encoded value to the end of mBuffer
-  nsresult
-  EncodeJSVal(JSContext* aCx, JS::Handle<JS::Value> aVal, uint8_t aTypeOffset);
-
-  void
-  EncodeString(const nsAString& aString, uint8_t aTypeOffset);
-
-  void
-  EncodeNumber(double aFloat, uint8_t aType);
+  inline nsresult EncodeJSVal(JSContext* aCx, JS::Handle<JS::Value> aVal,
+                              uint8_t aTypeOffset)
+  {
+    return EncodeJSValInternal(aCx, aVal, aTypeOffset, 0);
+  }
+  void EncodeString(const nsAString& aString, uint8_t aTypeOffset);
+  void EncodeNumber(double aFloat, uint8_t aType);
 
   // Decoding functions. aPos points into mBuffer and is adjusted to point
   // past the consumed value.
-  static nsresult
-  DecodeJSVal(const unsigned char*& aPos,
-              const unsigned char* aEnd,
-              JSContext* aCx,
-              uint8_t aTypeOffset,
-              JS::MutableHandle<JS::Value> aVal);
+  static inline nsresult DecodeJSVal(const unsigned char*& aPos,
+                                     const unsigned char* aEnd, JSContext* aCx,
+                                     uint8_t aTypeOffset, JS::MutableHandle<JS::Value> aVal)
+  {
+    return DecodeJSValInternal(aPos, aEnd, aCx, aTypeOffset, aVal, 0);
+  }
 
-  static void
-  DecodeString(const unsigned char*& aPos,
-               const unsigned char* aEnd,
-               nsString& aString);
+  static void DecodeString(const unsigned char*& aPos,
+                           const unsigned char* aEnd,
+                           nsString& aString);
+  static double DecodeNumber(const unsigned char*& aPos,
+                             const unsigned char* aEnd);
 
-  static double
-  DecodeNumber(const unsigned char*& aPos, const unsigned char* aEnd);
+  nsCString mBuffer;
 
-  nsresult
-  EncodeJSValInternal(JSContext* aCx,
-                      JS::Handle<JS::Value> aVal,
-                      uint8_t aTypeOffset,
-                      uint16_t aRecursionDepth);
+private:
+  nsresult EncodeJSValInternal(JSContext* aCx, JS::Handle<JS::Value> aVal,
+                               uint8_t aTypeOffset, uint16_t aRecursionDepth);
 
-  static nsresult
-  DecodeJSValInternal(const unsigned char*& aPos,
-                      const unsigned char* aEnd,
-                      JSContext* aCx,
-                      uint8_t aTypeOffset,
-                      JS::MutableHandle<JS::Value> aVal,
-                      uint16_t aRecursionDepth);
-
-  void
-  Assert(bool aCondition) const
-#ifdef DEBUG
-  ;
-#else
-  { }
-#endif
+  static nsresult DecodeJSValInternal(const unsigned char*& aPos,
+                                      const unsigned char* aEnd,
+                                      JSContext* aCx, uint8_t aTypeOffset,
+                                      JS::MutableHandle<JS::Value> aVal, uint16_t aRecursionDepth);
 };
 
-} // namespace indexedDB
-} // namespace dom
-} // namespace mozilla
+END_INDEXEDDB_NAMESPACE
 
-#endif // mozilla_dom_indexeddb_key_h__
+#endif /* mozilla_dom_indexeddb_key_h__ */

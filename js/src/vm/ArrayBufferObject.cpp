@@ -119,7 +119,7 @@ const Class ArrayBufferObject::class_ = {
     nullptr,        /* call        */
     nullptr,        /* hasInstance */
     nullptr,        /* construct   */
-    ArrayBufferObject::obj_trace,
+    nullptr,        /* trace       */
     JS_NULL_CLASS_SPEC,
     {
         nullptr,    /* outerObject */
@@ -276,27 +276,6 @@ AllocateArrayBufferContents(JSContext *cx, uint32_t nbytes)
     return ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN_BUFFER>(p);
 }
 
-ArrayBufferViewObject *
-ArrayBufferObject::viewList() const
-{
-    return reinterpret_cast<ArrayBufferViewObject *>(getSlot(VIEW_LIST_SLOT).toPrivate());
-}
-
-void
-ArrayBufferObject::setViewListNoBarrier(ArrayBufferViewObject *viewsHead)
-{
-    setSlot(VIEW_LIST_SLOT, PrivateValue(viewsHead));
-}
-
-void
-ArrayBufferObject::setViewList(ArrayBufferViewObject *viewsHead)
-{
-    if (ArrayBufferViewObject *oldHead = viewList())
-        ArrayBufferViewObject::writeBarrierPre(oldHead);
-    setViewListNoBarrier(viewsHead);
-    PostBarrierTypedArrayObject(this);
-}
-
 bool
 ArrayBufferObject::canNeuter(JSContext *cx)
 {
@@ -308,6 +287,16 @@ ArrayBufferObject::canNeuter(JSContext *cx)
     return true;
 }
 
+void
+ArrayBufferObject::neuterView(JSContext *cx, ArrayBufferViewObject *view,
+                              BufferContents newContents)
+{
+    view->neuter(newContents.data());
+
+    // Notify compiled jit code that the base pointer has moved.
+    MarkObjectStateChange(cx, view);
+}
+
 /* static */ void
 ArrayBufferObject::neuter(JSContext *cx, Handle<ArrayBufferObject*> buffer,
                           BufferContents newContents)
@@ -317,36 +306,20 @@ ArrayBufferObject::neuter(JSContext *cx, Handle<ArrayBufferObject*> buffer,
     // Neuter all views on the buffer, clear out the list of views and the
     // buffer's data.
 
-    for (ArrayBufferViewObject *view = buffer->viewList(); view; view = view->nextView()) {
-        view->neuter(newContents.data());
-
-        // Notify compiled jit code that the base pointer has moved.
-        MarkObjectStateChange(cx, view);
+    if (InnerViewTable::ViewVector *views = cx->compartment()->innerViews.maybeViewsUnbarriered(buffer)) {
+        for (size_t i = 0; i < views->length(); i++)
+            buffer->neuterView(cx, (*views)[i], newContents);
+        cx->compartment()->innerViews.removeViews(buffer);
     }
+    if (buffer->firstView())
+        buffer->neuterView(cx, buffer->firstView(), newContents);
+    buffer->setFirstView(nullptr);
 
     if (newContents.data() != buffer->dataPointer())
         buffer->setNewOwnedData(cx->runtime()->defaultFreeOp(), newContents);
 
     buffer->setByteLength(0);
-    buffer->setViewList(nullptr);
     buffer->setIsNeutered();
-
-    // If this is happening during an incremental GC, remove the buffer from
-    // the list of live buffers with multiple views if necessary.
-    if (buffer->inLiveList()) {
-        ArrayBufferVector &gcLiveArrayBuffers = cx->compartment()->gcLiveArrayBuffers;
-        DebugOnly<bool> found = false;
-        for (size_t i = 0; i < gcLiveArrayBuffers.length(); i++) {
-            if (buffer == gcLiveArrayBuffers[i]) {
-                found = true;
-                gcLiveArrayBuffers[i] = gcLiveArrayBuffers.back();
-                gcLiveArrayBuffers.popBack();
-                break;
-            }
-        }
-        JS_ASSERT(found);
-        buffer->setInLiveList(false);
-    }
 }
 
 void
@@ -363,6 +336,25 @@ ArrayBufferObject::setNewOwnedData(FreeOp* fop, BufferContents newContents)
 }
 
 void
+ArrayBufferObject::changeViewContents(JSContext *cx, ArrayBufferViewObject *view,
+                                      uint8_t *oldDataPointer, BufferContents newContents)
+{
+    // Watch out for NULL data pointers in views. This means that the view
+    // is not fully initialized (in which case it'll be initialized later
+    // with the correct pointer).
+    uint8_t *viewDataPointer = view->dataPointer();
+    if (viewDataPointer) {
+        JS_ASSERT(newContents);
+        ptrdiff_t offset = viewDataPointer - oldDataPointer;
+        viewDataPointer = static_cast<uint8_t *>(newContents.data()) + offset;
+        view->setPrivate(viewDataPointer);
+    }
+
+    // Notify compiled jit code that the base pointer has moved.
+    MarkObjectStateChange(cx, view);
+}
+
+void
 ArrayBufferObject::changeContents(JSContext *cx, BufferContents newContents)
 {
     // Change buffer contents.
@@ -370,22 +362,12 @@ ArrayBufferObject::changeContents(JSContext *cx, BufferContents newContents)
     setNewOwnedData(cx->runtime()->defaultFreeOp(), newContents);
 
     // Update all views.
-    ArrayBufferViewObject *viewListHead = viewList();
-    for (ArrayBufferViewObject *view = viewListHead; view; view = view->nextView()) {
-        // Watch out for NULL data pointers in views. This means that the view
-        // is not fully initialized (in which case it'll be initialized later
-        // with the correct pointer).
-        uint8_t *viewDataPointer = view->dataPointer();
-        if (viewDataPointer) {
-            JS_ASSERT(newContents);
-            ptrdiff_t offset = viewDataPointer - oldDataPointer;
-            viewDataPointer = static_cast<uint8_t *>(newContents.data()) + offset;
-            view->setPrivate(viewDataPointer);
-        }
-
-        // Notify compiled jit code that the base pointer has moved.
-        MarkObjectStateChange(cx, view);
+    if (InnerViewTable::ViewVector *views = cx->compartment()->innerViews.maybeViewsUnbarriered(this)) {
+        for (size_t i = 0; i < views->length(); i++)
+            changeViewContents(cx, (*views)[i], oldDataPointer, newContents);
     }
+    if (firstView())
+        changeViewContents(cx, firstView(), oldDataPointer, newContents);
 }
 
 /* static */ bool
@@ -535,26 +517,6 @@ ArrayBufferObject::releaseMappedArray()
         return;
 
     DeallocateMappedContent(dataPointer(), byteLength());
-}
-
-void
-ArrayBufferObject::addView(ArrayBufferViewObject *view)
-{
-    // Note that pre-barriers are not needed here because either the list was
-    // previously empty, in which case no pointer is being overwritten, or the
-    // list was nonempty and will be made weak during this call (and weak
-    // pointers cannot violate the snapshot-at-the-beginning invariant.)
-
-    ArrayBufferViewObject *viewsHead = viewList();
-    if (viewsHead == nullptr) {
-        // This ArrayBufferObject will have a single view at this point, so it
-        // is a strong pointer (it will be marked during tracing.)
-        JS_ASSERT(view->nextView() == nullptr);
-    } else {
-        view->setNextView(viewsHead);
-    }
-
-    setViewList(view);
 }
 
 uint8_t *
@@ -804,115 +766,6 @@ ArrayBufferObject::finalize(FreeOp *fop, JSObject *obj)
 }
 
 /* static */ void
-ArrayBufferObject::obj_trace(JSTracer *trc, JSObject *obj)
-{
-    JSRuntime *rt = trc->runtime();
-    if (!IS_GC_MARKING_TRACER(trc) && !rt->isHeapMinorCollecting() && !rt->isHeapCompacting()
-#ifdef JSGC_FJGENERATIONAL
-        && !rt->isFJMinorCollecting()
-#endif
-        )
-    {
-        return;
-    }
-
-    // ArrayBufferObjects need to maintain a list of possibly-weak pointers to
-    // their views. The straightforward way to update the weak pointers would
-    // be in the views' finalizers, but giving views finalizers means they
-    // cannot be swept in the background. This results in a very high
-    // performance cost.  Instead, ArrayBufferObjects with a single view hold a
-    // strong pointer to the view. This can entrain garbage when the single
-    // view becomes otherwise unreachable while the buffer is still live, but
-    // this is expected to be rare. ArrayBufferObjects with 0-1 views are
-    // expected to be by far the most common cases. ArrayBufferObjects with
-    // multiple views are collected into a linked list during collection, and
-    // then swept to prune out their dead views.
-
-    ArrayBufferObject &buffer = AsArrayBuffer(obj);
-    ArrayBufferViewObject *viewsHead = buffer.viewList();
-    if (!viewsHead)
-        return;
-
-    ArrayBufferViewObject *tmp = viewsHead;
-    buffer.setViewList(UpdateObjectIfRelocated(rt, &tmp));
-
-    if (tmp->nextView() == nullptr) {
-        // Single view: mark it, but only if we're actually doing a GC pass
-        // right now. Otherwise, the tracing pass for barrier verification will
-        // fail if we add another view and the pointer becomes weak.
-        MarkObjectUnbarriered(trc, &viewsHead, "arraybuffer.singleview");
-        buffer.setViewListNoBarrier(viewsHead);
-    } else if (!rt->isHeapCompacting()) {
-        // Multiple views: do not mark, but append buffer to list.
-        ArrayBufferVector &gcLiveArrayBuffers = buffer.compartment()->gcLiveArrayBuffers;
-
-        // obj_trace may be called multiple times before sweep(), so avoid
-        // adding this buffer to the list multiple times.
-        if (buffer.inLiveList()) {
-#ifdef DEBUG
-            bool found = false;
-            for (size_t i = 0; i < gcLiveArrayBuffers.length(); i++)
-                found |= gcLiveArrayBuffers[i] == &buffer;
-            JS_ASSERT(found);
-#endif
-        } else if (gcLiveArrayBuffers.append(&buffer)) {
-            buffer.setInLiveList(true);
-        } else {
-            CrashAtUnhandlableOOM("OOM while updating live array buffers");
-        }
-    } else {
-        // If we're fixing up pointers after compacting then trace everything.
-        ArrayBufferViewObject *prev = nullptr;
-        ArrayBufferViewObject *view = viewsHead;
-        while (view) {
-            JS_ASSERT(buffer.compartment() == MaybeForwarded(view)->compartment());
-            MarkObjectUnbarriered(trc, &view, "arraybuffer.singleview");
-            if (prev)
-                prev->setNextView(view);
-            else
-                buffer.setViewListNoBarrier(view);
-            view = view->nextView();
-        }
-    }
-}
-
-/* static */ void
-ArrayBufferObject::sweep(JSCompartment *compartment)
-{
-    JSRuntime *rt = compartment->runtimeFromMainThread();
-    ArrayBufferVector &gcLiveArrayBuffers = compartment->gcLiveArrayBuffers;
-
-    for (size_t i = 0; i < gcLiveArrayBuffers.length(); i++) {
-        ArrayBufferObject *buffer = gcLiveArrayBuffers[i];
-
-        JS_ASSERT(buffer->inLiveList());
-        buffer->setInLiveList(false);
-
-        ArrayBufferViewObject *viewsHead = buffer->viewList();
-        JS_ASSERT(viewsHead);
-        buffer->setViewList(UpdateObjectIfRelocated(rt, &viewsHead));
-
-        // Rebuild the list of views of the ArrayBufferObject, discarding dead
-        // views.  If there is only one view, it will have already been marked.
-        ArrayBufferViewObject *prevLiveView = nullptr;
-        ArrayBufferViewObject *view = viewsHead;
-        while (view) {
-            JS_ASSERT(buffer->compartment() == view->compartment());
-            ArrayBufferViewObject *nextView = view->nextView();
-            if (!IsObjectAboutToBeFinalized(&view)) {
-                view->setNextView(prevLiveView);
-                prevLiveView = view;
-            }
-            view = UpdateObjectIfRelocated(rt, &nextView);
-        }
-
-        buffer->setViewList(prevLiveView);
-    }
-
-    gcLiveArrayBuffers.clear();
-}
-
-/* static */ void
 ArrayBufferObject::objectMoved(JSObject *obj, const JSObject *old)
 {
     ArrayBufferObject &dst = obj->as<ArrayBufferObject>();
@@ -924,74 +777,188 @@ ArrayBufferObject::objectMoved(JSObject *obj, const JSObject *old)
         dst.setSlot(DATA_SLOT, PrivateValue(dst.fixedData(reservedSlots)));
 }
 
-void
-ArrayBufferObject::resetArrayBufferList(JSCompartment *comp)
+ArrayBufferViewObject *
+ArrayBufferObject::firstView()
 {
-    ArrayBufferVector &gcLiveArrayBuffers = comp->gcLiveArrayBuffers;
-
-    for (size_t i = 0; i < gcLiveArrayBuffers.length(); i++) {
-        ArrayBufferObject *buffer = gcLiveArrayBuffers[i];
-
-        JS_ASSERT(buffer->inLiveList());
-        buffer->setInLiveList(false);
-    }
-
-    gcLiveArrayBuffers.clear();
+    return getSlot(FIRST_VIEW_SLOT).isObject()
+           ? &getSlot(FIRST_VIEW_SLOT).toObject().as<ArrayBufferViewObject>()
+           : nullptr;
 }
 
-/* static */ bool
-ArrayBufferObject::saveArrayBufferList(JSCompartment *comp, ArrayBufferVector &vector)
+void
+ArrayBufferObject::setFirstView(ArrayBufferViewObject *view)
 {
-    const ArrayBufferVector &gcLiveArrayBuffers = comp->gcLiveArrayBuffers;
+    setSlot(FIRST_VIEW_SLOT, ObjectOrNullValue(view));
+}
 
-    for (size_t i = 0; i < gcLiveArrayBuffers.length(); i++) {
-        if (!vector.append(gcLiveArrayBuffers[i]))
-            return false;
+bool
+ArrayBufferObject::addView(JSContext *cx, ArrayBufferViewObject *view)
+{
+    if (!firstView()) {
+        setFirstView(view);
+        return true;
     }
+    return cx->compartment()->innerViews.addView(cx, this, view);
+}
+
+/*
+ * InnerViewTable
+ */
+
+static size_t VIEW_LIST_MAX_LENGTH = 500;
+
+bool
+InnerViewTable::addView(JSContext *cx, ArrayBufferObject *obj, ArrayBufferViewObject *view)
+{
+    // ArrayBufferObject entries are only added when there are multiple views.
+    JS_ASSERT(obj->firstView());
+
+    if (!map.initialized() && !map.init())
+        return false;
+
+    Map::AddPtr p = map.lookupForAdd(obj);
+
+    JS_ASSERT(!gc::IsInsideNursery(obj));
+    bool addToNursery = nurseryKeysValid && gc::IsInsideNursery(view);
+
+    if (p) {
+        ViewVector &views = p->value();
+        JS_ASSERT(!views.empty());
+
+        if (addToNursery) {
+            // Only add the entry to |nurseryKeys| if it isn't already there.
+            if (views.length() >= VIEW_LIST_MAX_LENGTH) {
+                // To avoid quadratic blowup, skip the loop below if we end up
+                // adding enormous numbers of views for the same object.
+                nurseryKeysValid = false;
+            } else {
+                for (size_t i = 0; i < views.length(); i++) {
+                    if (gc::IsInsideNursery(views[i]))
+                        addToNursery = false;
+                }
+            }
+        }
+
+        if (!views.append(view))
+            return false;
+    } else {
+        if (!map.add(p, obj, ViewVector()))
+            return false;
+        JS_ALWAYS_TRUE(p->value().append(view));
+    }
+
+    if (addToNursery && !nurseryKeys.append(obj))
+        nurseryKeysValid = false;
 
     return true;
 }
 
-/* static */ void
-ArrayBufferObject::restoreArrayBufferLists(ArrayBufferVector &vector)
+InnerViewTable::ViewVector *
+InnerViewTable::maybeViewsUnbarriered(ArrayBufferObject *obj)
 {
-    for (size_t i = 0; i < vector.length(); i++) {
-        ArrayBufferObject *buffer = vector[i];
+    if (!map.initialized())
+        return nullptr;
 
-        JS_ASSERT(!buffer->inLiveList());
-        buffer->setInLiveList(true);
+    Map::Ptr p = map.lookup(obj);
+    if (p)
+        return &p->value();
+    return nullptr;
+}
 
-        buffer->compartment()->gcLiveArrayBuffers.infallibleAppend(buffer);
+void
+InnerViewTable::removeViews(ArrayBufferObject *obj)
+{
+    Map::Ptr p = map.lookup(obj);
+    JS_ASSERT(p);
+
+    map.remove(p);
+}
+
+bool
+InnerViewTable::sweepEntry(JSObject **pkey, ViewVector &views)
+{
+    if (IsObjectAboutToBeFinalized(pkey))
+        return true;
+
+    JS_ASSERT(!views.empty());
+    for (size_t i = 0; i < views.length(); i++) {
+        if (IsObjectAboutToBeFinalized(&views[i])) {
+            views[i--] = views.back();
+            views.popBack();
+        }
     }
+
+    return views.empty();
+}
+
+void
+InnerViewTable::sweep(JSRuntime *rt)
+{
+    JS_ASSERT(nurseryKeys.empty());
+
+    if (!map.initialized())
+        return;
+
+    for (Map::Enum e(map); !e.empty(); e.popFront()) {
+        JSObject *key = e.front().key();
+        if (sweepEntry(&key, e.front().value()))
+            e.removeFront();
+        else if (key != e.front().key())
+            e.rekeyFront(key);
+    }
+}
+
+void
+InnerViewTable::sweepAfterMinorGC(JSRuntime *rt)
+{
+    JS_ASSERT(!nurseryKeys.empty());
+
+    if (nurseryKeysValid) {
+        for (size_t i = 0; i < nurseryKeys.length(); i++) {
+            JSObject *key = nurseryKeys[i];
+            Map::Ptr p = map.lookup(key);
+            if (!p)
+                continue;
+
+            if (sweepEntry(&key, p->value()))
+                map.remove(nurseryKeys[i]);
+            else
+                map.rekeyIfMoved(nurseryKeys[i], key);
+        }
+        nurseryKeys.clear();
+    } else {
+        // Do the required sweeping by looking at every map entry.
+        nurseryKeys.clear();
+        sweep(rt);
+
+        nurseryKeysValid = true;
+    }
+}
+
+size_t
+InnerViewTable::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
+{
+    if (!map.initialized())
+        return 0;
+
+    size_t vectorSize = 0;
+    for (Map::Enum e(map); !e.empty(); e.popFront())
+        vectorSize += e.front().value().sizeOfExcludingThis(mallocSizeOf);
+
+    return vectorSize
+         + map.sizeOfExcludingThis(mallocSizeOf)
+         + nurseryKeys.sizeOfExcludingThis(mallocSizeOf);
 }
 
 /*
  * ArrayBufferViewObject
  */
 
-/*
- * This method is used to trace TypedArrayObjects and DataViewObjects. We need
- * a custom tracer because some of an ArrayBufferViewObject's reserved slots
- * are weak references, and some need to be updated specially during moving
- * GCs.
- */
-/* static */ void
-ArrayBufferViewObject::trace(JSTracer *trc, JSObject *obj)
+template <>
+bool
+JSObject::is<js::ArrayBufferViewObject>() const
 {
-    HeapSlot &bufSlot = obj->getReservedSlotRef(BUFFER_SLOT);
-    MarkSlot(trc, &bufSlot, "typedarray.buffer");
-
-    // Update obj's data pointer if the array buffer moved. Note that during
-    // initialization, bufSlot may still contain |undefined|.
-    if (bufSlot.isObject()) {
-        ArrayBufferObject &buf = AsArrayBuffer(MaybeForwarded(&bufSlot.toObject()));
-        int32_t offset = obj->getReservedSlot(BYTEOFFSET_SLOT).toInt32();
-        MOZ_ASSERT(buf.dataPointer() != nullptr);
-        obj->initPrivate(buf.dataPointer() + offset);
-    }
-
-    /* Update NEXT_VIEW_SLOT, if the view moved. */
-    IsSlotMarked(&obj->getReservedSlotRef(NEXT_VIEW_SLOT));
+    return is<DataViewObject>() || is<TypedArrayObject>() || is<TypedObject>();
 }
 
 void

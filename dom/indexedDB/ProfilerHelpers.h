@@ -36,9 +36,7 @@
 #include "IDBTransaction.h"
 #include "Key.h"
 
-namespace mozilla {
-namespace dom {
-namespace indexedDB {
+BEGIN_INDEXEDDB_NAMESPACE
 
 class ProfilerString : public nsAutoCString
 {
@@ -161,9 +159,7 @@ public:
   }
 };
 
-} // namespace indexedDB
-} // namespace dom
-} // namespace mozilla
+END_INDEXEDDB_NAMESPACE
 
 #define IDB_PROFILER_MARK(_detailedFmt, _conciseFmt, ...)                      \
   do {                                                                         \

@@ -7,207 +7,245 @@
 #ifndef mozilla_dom_indexeddb_idbindex_h__
 #define mozilla_dom_indexeddb_idbindex_h__
 
-#include "js/RootingAPI.h"
+#include "mozilla/dom/indexedDB/IndexedDatabase.h"
+
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/IDBCursorBinding.h"
-#include "nsAutoPtr.h"
+#include "mozilla/ErrorResult.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsISupports.h"
-#include "nsTArrayForwardDeclare.h"
 #include "nsWrapperCache.h"
 
+#include "mozilla/dom/indexedDB/IDBObjectStore.h"
+#include "mozilla/dom/indexedDB/IDBRequest.h"
+#include "mozilla/dom/indexedDB/KeyPath.h"
+
+class nsIScriptContext;
 class nsPIDOMWindow;
 
-namespace mozilla {
+BEGIN_INDEXEDDB_NAMESPACE
 
-class ErrorResult;
-
-namespace dom {
-
-template <typename> class Sequence;
-
-namespace indexedDB {
-
+class AsyncConnectionHelper;
+class IDBCursor;
+class IDBKeyRange;
 class IDBObjectStore;
 class IDBRequest;
-class IndexMetadata;
+class IndexedDBIndexChild;
+class IndexedDBIndexParent;
 class Key;
-class KeyPath;
 
-class IDBIndex MOZ_FINAL
-  : public nsISupports
-  , public nsWrapperCache
+struct IndexInfo;
+
+class IDBIndex MOZ_FINAL : public nsISupports,
+                           public nsWrapperCache
 {
-  nsRefPtr<IDBObjectStore> mObjectStore;
-
-  JS::Heap<JS::Value> mCachedKeyPath;
-
-  // This normally points to the IndexMetadata owned by the parent IDBDatabase
-  // object. However, if this index is part of a versionchange transaction and
-  // it gets deleted then the metadata is copied into mDeletedMetadata and
-  // mMetadata is set to point at mDeletedMetadata.
-  const IndexMetadata* mMetadata;
-  nsAutoPtr<IndexMetadata> mDeletedMetadata;
-
-  const int64_t mId;
-  bool mRooted;
-
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(IDBIndex)
 
   static already_AddRefed<IDBIndex>
-  Create(IDBObjectStore* aObjectStore, const IndexMetadata& aMetadata);
+  Create(IDBObjectStore* aObjectStore,
+         const IndexInfo* aIndexInfo,
+         bool aCreating);
 
-  int64_t
-  Id() const
+  IDBObjectStore* ObjectStore()
   {
-    AssertIsOnOwningThread();
-
-    return mId;
-  }
-
-  const nsString&
-  Name() const;
-
-  bool
-  Unique() const;
-
-  bool
-  MultiEntry() const;
-
-  const KeyPath&
-  GetKeyPath() const;
-
-  IDBObjectStore*
-  ObjectStore() const
-  {
-    AssertIsOnOwningThread();
     return mObjectStore;
   }
 
-  nsPIDOMWindow*
-  GetParentObject() const;
-
-  void
-  GetName(nsString& aName) const
+  const int64_t Id() const
   {
-    aName = Name();
+    return mId;
+  }
+
+  const nsString& Name() const
+  {
+    return mName;
+  }
+
+  bool IsUnique() const
+  {
+    return mUnique;
+  }
+
+  bool IsMultiEntry() const
+  {
+    return mMultiEntry;
+  }
+
+  const KeyPath& GetKeyPath() const
+  {
+    return mKeyPath;
   }
 
   void
-  GetKeyPath(JSContext* aCx,
-             JS::MutableHandle<JS::Value> aResult,
-             ErrorResult& aRv);
-
-  already_AddRefed<IDBRequest>
-  OpenCursor(JSContext* aCx,
-             JS::Handle<JS::Value> aRange,
-             IDBCursorDirection aDirection,
-             ErrorResult& aRv)
+  SetActor(IndexedDBIndexChild* aActorChild)
   {
-    AssertIsOnOwningThread();
-
-    return OpenCursorInternal(/* aKeysOnly */ false, aCx, aRange, aDirection,
-                              aRv);
-  }
-
-  already_AddRefed<IDBRequest>
-  OpenKeyCursor(JSContext* aCx,
-                JS::Handle<JS::Value> aRange,
-                IDBCursorDirection aDirection,
-                ErrorResult& aRv)
-  {
-    AssertIsOnOwningThread();
-
-    return OpenCursorInternal(/* aKeysOnly */ true, aCx, aRange, aDirection,
-                              aRv);
-  }
-
-  already_AddRefed<IDBRequest>
-  Get(JSContext* aCx, JS::Handle<JS::Value> aKey, ErrorResult& aRv)
-  {
-    AssertIsOnOwningThread();
-
-    return GetInternal(/* aKeyOnly */ false, aCx, aKey, aRv);
-  }
-
-  already_AddRefed<IDBRequest>
-  GetKey(JSContext* aCx, JS::Handle<JS::Value> aKey, ErrorResult& aRv)
-  {
-    AssertIsOnOwningThread();
-
-    return GetInternal(/* aKeyOnly */ true, aCx, aKey, aRv);
-  }
-
-  already_AddRefed<IDBRequest>
-  Count(JSContext* aCx, JS::Handle<JS::Value> aKey,
-         ErrorResult& aRv);
-
-  already_AddRefed<IDBRequest>
-  GetAll(JSContext* aCx, JS::Handle<JS::Value> aKey,
-         const Optional<uint32_t>& aLimit, ErrorResult& aRv)
-  {
-    AssertIsOnOwningThread();
-
-    return GetAllInternal(/* aKeysOnly */ false, aCx, aKey, aLimit, aRv);
-  }
-
-  already_AddRefed<IDBRequest>
-  GetAllKeys(JSContext* aCx, JS::Handle<JS::Value> aKey,
-             const Optional<uint32_t>& aLimit, ErrorResult& aRv)
-  {
-    AssertIsOnOwningThread();
-
-    return GetAllInternal(/* aKeysOnly */ true, aCx, aKey, aLimit, aRv);
+    NS_ASSERTION(!aActorChild || !mActorChild, "Shouldn't have more than one!");
+    mActorChild = aActorChild;
   }
 
   void
-  RefreshMetadata(bool aMayDelete);
+  SetActor(IndexedDBIndexParent* aActorParent)
+  {
+    NS_ASSERTION(!aActorParent || !mActorParent,
+                 "Shouldn't have more than one!");
+    mActorParent = aActorParent;
+  }
 
-  void
-  NoteDeletion();
+  IndexedDBIndexChild*
+  GetActorChild() const
+  {
+    return mActorChild;
+  }
 
-  void
-  AssertIsOnOwningThread() const
-#ifdef DEBUG
-  ;
-#else
-  { }
-#endif
+  IndexedDBIndexParent*
+  GetActorParent() const
+  {
+    return mActorParent;
+  }
+
+  already_AddRefed<IDBRequest>
+  GetInternal(IDBKeyRange* aKeyRange,
+              ErrorResult& aRv);
+
+  already_AddRefed<IDBRequest>
+  GetKeyInternal(IDBKeyRange* aKeyRange,
+                 ErrorResult& aRv);
+
+  already_AddRefed<IDBRequest>
+  GetAllInternal(IDBKeyRange* aKeyRange,
+                 uint32_t aLimit,
+                 ErrorResult& aRv);
+
+  already_AddRefed<IDBRequest>
+  GetAllKeysInternal(IDBKeyRange* aKeyRange,
+                     uint32_t aLimit,
+                     ErrorResult& aRv);
+
+  already_AddRefed<IDBRequest>
+  CountInternal(IDBKeyRange* aKeyRange,
+                ErrorResult& aRv);
+
+  nsresult OpenCursorFromChildProcess(
+                            IDBRequest* aRequest,
+                            size_t aDirection,
+                            const Key& aKey,
+                            const Key& aObjectKey,
+                            IDBCursor** _retval);
+
+  already_AddRefed<IDBRequest>
+  OpenKeyCursorInternal(IDBKeyRange* aKeyRange,
+                        size_t aDirection,
+                        ErrorResult& aRv);
+
+  nsresult OpenCursorInternal(IDBKeyRange* aKeyRange,
+                              size_t aDirection,
+                              IDBRequest** _retval);
+
+  nsresult OpenCursorFromChildProcess(
+                            IDBRequest* aRequest,
+                            size_t aDirection,
+                            const Key& aKey,
+                            const Key& aObjectKey,
+                            const SerializedStructuredCloneReadInfo& aCloneInfo,
+                            nsTArray<StructuredCloneFile>& aBlobs,
+                            IDBCursor** _retval);
 
   // nsWrapperCache
   virtual JSObject*
   WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
-private:
-  IDBIndex(IDBObjectStore* aObjectStore, const IndexMetadata* aMetadata);
+  // WebIDL
+  IDBObjectStore*
+  GetParentObject() const
+  {
+    return mObjectStore;
+  }
 
+  void
+  GetName(nsString& aName) const
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    aName.Assign(mName);
+  }
+
+  IDBObjectStore*
+  ObjectStore() const
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    return mObjectStore;
+  }
+
+  void
+  GetKeyPath(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+             ErrorResult& aRv);
+
+  bool
+  MultiEntry() const
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    return mMultiEntry;
+  }
+
+  bool
+  Unique() const
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    return mUnique;
+  }
+
+  already_AddRefed<IDBRequest>
+  OpenCursor(JSContext* aCx, JS::Handle<JS::Value> aRange,
+             IDBCursorDirection aDirection, ErrorResult& aRv);
+
+  already_AddRefed<IDBRequest>
+  OpenKeyCursor(JSContext* aCx, JS::Handle<JS::Value> aRange,
+                IDBCursorDirection aDirection, ErrorResult& aRv);
+
+  already_AddRefed<IDBRequest>
+  Get(JSContext* aCx, JS::Handle<JS::Value> aKey, ErrorResult& aRv);
+
+  already_AddRefed<IDBRequest>
+  GetKey(JSContext* aCx, JS::Handle<JS::Value> aKey, ErrorResult& aRv);
+
+  already_AddRefed<IDBRequest>
+  Count(JSContext* aCx, JS::Handle<JS::Value> aKey,
+         ErrorResult& aRv);
+
+  void
+  GetStoreName(nsString& aStoreName) const
+  {
+    NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    mObjectStore->GetName(aStoreName);
+  }
+
+  already_AddRefed<IDBRequest>
+  GetAll(JSContext* aCx, JS::Handle<JS::Value> aKey,
+         const Optional<uint32_t>& aLimit, ErrorResult& aRv);
+
+  already_AddRefed<IDBRequest>
+  GetAllKeys(JSContext* aCx, JS::Handle<JS::Value> aKey,
+             const Optional<uint32_t>& aLimit, ErrorResult& aRv);
+
+private:
+  IDBIndex();
   ~IDBIndex();
 
-  already_AddRefed<IDBRequest>
-  GetInternal(bool aKeyOnly,
-              JSContext* aCx,
-              JS::Handle<JS::Value> aKey,
-              ErrorResult& aRv);
+  nsRefPtr<IDBObjectStore> mObjectStore;
 
-  already_AddRefed<IDBRequest>
-  GetAllInternal(bool aKeysOnly,
-                 JSContext* aCx,
-                 JS::Handle<JS::Value> aKey,
-                 const Optional<uint32_t>& aLimit,
-                 ErrorResult& aRv);
+  int64_t mId;
+  nsString mName;
+  KeyPath mKeyPath;
+  JS::Heap<JS::Value> mCachedKeyPath;
 
-  already_AddRefed<IDBRequest>
-  OpenCursorInternal(bool aKeysOnly,
-                     JSContext* aCx,
-                     JS::Handle<JS::Value> aRange,
-                     IDBCursorDirection aDirection,
-                     ErrorResult& aRv);
+  IndexedDBIndexChild* mActorChild;
+  IndexedDBIndexParent* mActorParent;
+
+  bool mUnique;
+  bool mMultiEntry;
+  bool mRooted;
 };
 
-} // namespace indexedDB
-} // namespace dom
-} // namespace mozilla
+END_INDEXEDDB_NAMESPACE
 
 #endif // mozilla_dom_indexeddb_idbindex_h__

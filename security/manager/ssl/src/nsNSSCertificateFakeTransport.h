@@ -3,18 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _NS_NSSCERTIFICATECHILD_H_
-#define _NS_NSSCERTIFICATECHILD_H_
+#ifndef nsNSSCertificateFakeTransport_h
+#define nsNSSCertificateFakeTransport_h
 
-#include "nsIX509Cert.h"
-#include "nsISerializable.h"
+#include "mozilla/Vector.h"
+#include "nsCOMPtr.h"
 #include "nsIClassInfo.h"
+#include "nsISerializable.h"
+#include "nsIX509Cert.h"
+#include "nsIX509CertList.h"
 #include "secitem.h"
 
-/* Certificate */
 class nsNSSCertificateFakeTransport : public nsIX509Cert,
-                              public nsISerializable,
-                              public nsIClassInfo
+                                      public nsISerializable,
+                                      public nsIClassInfo
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -28,7 +30,24 @@ protected:
   virtual ~nsNSSCertificateFakeTransport();
 
 private:
-  SECItem *mCertSerialization;
+  SECItem* mCertSerialization;
 };
 
-#endif /* _NS_NSSCERTIFICATECHILD_H_ */
+class nsNSSCertListFakeTransport : public nsIX509CertList,
+                                   public nsISerializable
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIX509CERTLIST
+  NS_DECL_NSISERIALIZABLE
+
+  nsNSSCertListFakeTransport();
+
+protected:
+  virtual ~nsNSSCertListFakeTransport();
+
+private:
+  mozilla::Vector<nsCOMPtr<nsIX509Cert> > mFakeCertList;
+};
+
+#endif // nsNSSCertificateFakeTransport_h

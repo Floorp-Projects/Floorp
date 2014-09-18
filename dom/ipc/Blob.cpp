@@ -2,10 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BlobChild.h"
-#include "BlobParent.h"
+#include "Blob.h"
 
-#include "BackgroundParent.h"
 #include "ContentChild.h"
 #include "ContentParent.h"
 #include "FileDescriptorSetChild.h"
@@ -18,11 +16,8 @@
 #include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/dom/PBlobStreamChild.h"
 #include "mozilla/dom/PBlobStreamParent.h"
-#include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
+#include "mozilla/dom/PFileDescriptorSetParent.h"
 #include "mozilla/ipc/InputStreamUtils.h"
-#include "mozilla/ipc/PBackgroundChild.h"
-#include "mozilla/ipc/PBackgroundParent.h"
-#include "mozilla/ipc/PFileDescriptorSetParent.h"
 #include "nsCOMPtr.h"
 #include "nsDOMFile.h"
 #include "nsIDOMFile.h"
@@ -32,20 +27,8 @@
 #include "nsIRemoteBlob.h"
 #include "nsISeekableStream.h"
 #include "nsNetCID.h"
+#include "nsProxyRelease.h"
 #include "nsThreadUtils.h"
-#include "nsXULAppAPI.h"
-
-#ifdef DEBUG
-#include "BackgroundChild.h" // BackgroundChild::GetForCurrentThread().
-#endif
-
-#define DISABLE_ASSERTS_FOR_FUZZING 0
-
-#if DISABLE_ASSERTS_FOR_FUZZING
-#define ASSERT_UNLESS_FUZZING(...) do { } while (0)
-#else
-#define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false, __VA_ARGS__)
-#endif
 
 #define PRIVATE_REMOTE_INPUT_STREAM_IID \
   {0x30c7699f, 0x51d2, 0x48c8, {0xad, 0x56, 0xc0, 0x16, 0xd7, 0x6f, 0x71, 0x27}}
@@ -62,136 +45,19 @@ enum ActorType
   ParentActor
 };
 
-template <class ManagerType>
-struct ConcreteManagerTypeTraits;
-
-template <>
-struct ConcreteManagerTypeTraits<nsIContentChild>
-{
-  typedef ContentChild Type;
-};
-
-template <>
-struct ConcreteManagerTypeTraits<PBackgroundChild>
-{
-  typedef PBackgroundChild Type;
-};
-
-template <>
-struct ConcreteManagerTypeTraits<nsIContentParent>
-{
-  typedef ContentParent Type;
-};
-
-template <>
-struct ConcreteManagerTypeTraits<PBackgroundParent>
-{
-  typedef PBackgroundParent Type;
-};
-
-template <class ManagerType>
-void AssertCorrectThreadForManager(ManagerType* aManager);
-
-template <>
-void AssertCorrectThreadForManager<nsIContentChild>(nsIContentChild* aManager)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-}
-
-template <>
-void AssertCorrectThreadForManager<nsIContentParent>(nsIContentParent* aManager)
-{
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
-  MOZ_ASSERT(NS_IsMainThread());
-}
-
-template <>
-void AssertCorrectThreadForManager<PBackgroundChild>(PBackgroundChild* aManager)
-{
-#ifdef DEBUG
-  if (aManager) {
-    PBackgroundChild* backgroundChild = BackgroundChild::GetForCurrentThread();
-    MOZ_ASSERT(backgroundChild);
-    MOZ_ASSERT(backgroundChild == aManager);
-  }
-#endif
-}
-
-template <>
-void AssertCorrectThreadForManager<PBackgroundParent>(
-                                                    PBackgroundParent* aManager)
-{
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
-  AssertIsOnBackgroundThread();
-}
-
-bool
-EventTargetIsOnCurrentThread(nsIEventTarget* aEventTarget)
-{
-  if (!aEventTarget) {
-    return NS_IsMainThread();
-  }
-
-  bool current;
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aEventTarget->IsOnCurrentThread(&current)));
-
-  return current;
-}
-
-// Ensure that a nsCOMPtr/nsRefPtr is released on the target thread.
+// Ensure that a nsCOMPtr/nsRefPtr is released on the main thread.
 template <template <class> class SmartPtr, class T>
 void
-ReleaseOnTarget(SmartPtr<T>& aDoomed, nsIEventTarget* aTarget)
+ProxyReleaseToMainThread(SmartPtr<T>& aDoomed)
 {
-  MOZ_ASSERT(aDoomed);
-  MOZ_ASSERT(!EventTargetIsOnCurrentThread(aTarget));
+  MOZ_ASSERT(!NS_IsMainThread());
 
-  T* doomedRaw;
-  aDoomed.forget(&doomedRaw);
+  nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+  NS_ENSURE_TRUE_VOID(mainThread);
 
-  auto* doomedSupports = static_cast<nsISupports*>(doomedRaw);
-
-  nsCOMPtr<nsIRunnable> releaseRunnable =
-    NS_NewNonOwningRunnableMethod(doomedSupports, &nsISupports::Release);
-  MOZ_ASSERT(releaseRunnable);
-
-  if (aTarget) {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(aTarget->Dispatch(releaseRunnable,
-                                                   NS_DISPATCH_NORMAL)));
-  } else {
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(releaseRunnable)));
+  if (NS_FAILED(NS_ProxyRelease(mainThread, aDoomed, true))) {
+    NS_WARNING("Failed to proxy release to main thread!");
   }
-}
-
-template <class ManagerType>
-PFileDescriptorSetParent*
-ConstructFileDescriptorSet(ManagerType* aManager,
-                           const nsTArray<FileDescriptor>& aFDs)
-{
-  typedef typename ConcreteManagerTypeTraits<ManagerType>::Type
-          ConcreteManagerType;
-
-  MOZ_ASSERT(aManager);
-
-  if (aFDs.IsEmpty()) {
-    return nullptr;
-  }
-
-  auto* concreteManager = static_cast<ConcreteManagerType*>(aManager);
-
-  PFileDescriptorSetParent* fdSet =
-    concreteManager->SendPFileDescriptorSetConstructor(aFDs[0]);
-  if (!fdSet) {
-    return nullptr;
-  }
-
-  for (uint32_t index = 1; index < aFDs.Length(); index++) {
-    if (!fdSet->SendAddFileDescriptor(aFDs[index])) {
-      return nullptr;
-    }
-  }
-
-  return fdSet;
 }
 
 class NS_NO_VTABLE IPrivateRemoteInputStream : public nsISupports
@@ -215,7 +81,6 @@ class BlobInputStreamTether : public nsIMultiplexInputStream,
 {
   nsCOMPtr<nsIInputStream> mStream;
   nsRefPtr<DOMFileImplBase> mSourceBlob;
-  nsCOMPtr<nsIEventTarget> mEventTarget;
 
   nsIMultiplexInputStream* mWeakMultiplexStream;
   nsISeekableStream* mWeakSeekableStream;
@@ -230,19 +95,11 @@ public:
 
   BlobInputStreamTether(nsIInputStream* aStream,
                         mozilla::dom::DOMFileImplBase* aSourceBlob)
-    : mStream(aStream)
-    , mSourceBlob(aSourceBlob)
-    , mWeakMultiplexStream(nullptr)
-    , mWeakSeekableStream(nullptr)
-    , mWeakSerializableStream(nullptr)
+  : mStream(aStream), mSourceBlob(aSourceBlob), mWeakMultiplexStream(nullptr),
+    mWeakSeekableStream(nullptr), mWeakSerializableStream(nullptr)
   {
     MOZ_ASSERT(aStream);
     MOZ_ASSERT(aSourceBlob);
-
-    if (!NS_IsMainThread()) {
-      mEventTarget = do_GetCurrentThread();
-      MOZ_ASSERT(mEventTarget);
-    }
 
     nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
       do_QueryInterface(aStream);
@@ -271,9 +128,9 @@ protected:
     MOZ_ASSERT(mStream);
     MOZ_ASSERT(mSourceBlob);
 
-    if (!EventTargetIsOnCurrentThread(mEventTarget)) {
+    if (!NS_IsMainThread()) {
       mStream = nullptr;
-      ReleaseOnTarget(mSourceBlob, mEventTarget);
+      ProxyReleaseToMainThread(mSourceBlob);
     }
   }
 };
@@ -296,10 +153,9 @@ class RemoteInputStream : public nsIInputStream,
                           public nsIIPCSerializableInputStream,
                           public IPrivateRemoteInputStream
 {
-  Monitor mMonitor;
+  mozilla::Monitor mMonitor;
   nsCOMPtr<nsIInputStream> mStream;
-  nsRefPtr<DOMFileImplBase> mSourceBlob;
-  nsCOMPtr<nsIEventTarget> mEventTarget;
+  nsRefPtr<mozilla::dom::DOMFileImplBase> mSourceBlob;
   nsISeekableStream* mWeakSeekableStream;
   ActorType mOrigin;
 
@@ -308,30 +164,11 @@ public:
 
   RemoteInputStream(mozilla::dom::DOMFileImplBase* aSourceBlob,
                     ActorType aOrigin)
-    : mMonitor("RemoteInputStream.mMonitor")
-    , mSourceBlob(aSourceBlob)
-    , mWeakSeekableStream(nullptr)
-    , mOrigin(aOrigin)
+  : mMonitor("RemoteInputStream.mMonitor"), mSourceBlob(aSourceBlob),
+    mWeakSeekableStream(nullptr), mOrigin(aOrigin)
   {
-    MOZ_ASSERT(IsOnOwningThread());
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aSourceBlob);
-
-    if (!NS_IsMainThread()) {
-      mEventTarget = do_GetCurrentThread();
-      MOZ_ASSERT(mEventTarget);
-    }
-  }
-
-  bool
-  IsOnOwningThread() const
-  {
-    return EventTargetIsOnCurrentThread(mEventTarget);
-  }
-
-  void
-  AssertIsOnOwningThread() const
-  {
-    MOZ_ASSERT(IsOnOwningThread());
   }
 
   void
@@ -342,18 +179,12 @@ public:
     MOZ_ASSERT(remote);
 
     if (mOrigin == ParentActor) {
-      MOZ_ASSERT(remote->GetBlobParent());
-
       aParams = RemoteInputStreamParams(
-        remote->GetBlobParent() /* sourceParent */,
-        nullptr /* sourceChild */);
+        static_cast<PBlobParent*>(remote->GetPBlob()), nullptr);
     } else {
       MOZ_ASSERT(mOrigin == ChildActor);
-      MOZ_ASSERT(remote->GetBlobChild());
-
       aParams = RemoteInputStreamParams(
-        nullptr /* sourceParent */,
-        remote->GetBlobChild() /* sourceChild */);
+        nullptr, static_cast<PBlobChild*>(remote->GetPBlob()));
     }
   }
 
@@ -369,7 +200,7 @@ public:
   void
   SetStream(nsIInputStream* aStream)
   {
-    AssertIsOnOwningThread();
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aStream);
 
     nsCOMPtr<nsIInputStream> stream = aStream;
@@ -378,7 +209,7 @@ public:
     MOZ_ASSERT_IF(seekableStream, SameCOMIdentity(aStream, seekableStream));
 
     {
-      MonitorAutoLock lock(mMonitor);
+      mozilla::MonitorAutoLock lock(mMonitor);
 
       MOZ_ASSERT(!mStream);
       MOZ_ASSERT(!mWeakSeekableStream);
@@ -409,7 +240,7 @@ public:
   Available(uint64_t* aAvailable) MOZ_OVERRIDE
   {
     // See large comment in FileInputStreamWrapper::Available.
-    if (IsOnOwningThread()) {
+    if (NS_IsMainThread()) {
       return NS_BASE_STREAM_CLOSED;
     }
 
@@ -474,12 +305,12 @@ public:
   }
 
   NS_IMETHOD
-  Tell(int64_t* aResult) MOZ_OVERRIDE
+  Tell(int64_t* aResult)
   {
     // We can cheat here and assume that we're going to start at 0 if we don't
     // yet have our stream. Though, really, this should abort since most input
     // streams could block here.
-    if (IsOnOwningThread() && !mStream) {
+    if (NS_IsMainThread() && !mStream) {
       *aResult = 0;
       return NS_OK;
     }
@@ -499,7 +330,7 @@ public:
   }
 
   NS_IMETHOD
-  SetEOF() MOZ_OVERRIDE
+  SetEOF()
   {
     nsresult rv = BlockAndWaitForStream();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -518,7 +349,7 @@ public:
   virtual nsIInputStream*
   BlockAndGetInternalStream()
   {
-    AssertIsOnOwningThread();
+    MOZ_ASSERT(!NS_IsMainThread());
 
     nsresult rv = BlockAndWaitForStream();
     NS_ENSURE_SUCCESS(rv, nullptr);
@@ -529,25 +360,20 @@ public:
 private:
   virtual ~RemoteInputStream()
   {
-    if (!IsOnOwningThread()) {
+    if (!NS_IsMainThread()) {
       mStream = nullptr;
       mWeakSeekableStream = nullptr;
-
-      if (mSourceBlob) {
-        ReleaseOnTarget(mSourceBlob, mEventTarget);
-      }
+      ProxyReleaseToMainThread(mSourceBlob);
     }
   }
 
   void
   ReallyBlockAndWaitForStream()
   {
-    MOZ_ASSERT(!IsOnOwningThread());
-
-    DebugOnly<bool> waited;
+    mozilla::DebugOnly<bool> waited;
 
     {
-      MonitorAutoLock lock(mMonitor);
+      mozilla::MonitorAutoLock lock(mMonitor);
 
       waited = !mStream;
 
@@ -571,8 +397,8 @@ private:
   nsresult
   BlockAndWaitForStream()
   {
-    if (IsOnOwningThread()) {
-      NS_WARNING("Blocking the owning thread is not supported!");
+    if (NS_IsMainThread()) {
+      NS_WARNING("Blocking the main thread is not supported!");
       return NS_ERROR_FAILURE;
     }
 
@@ -584,12 +410,13 @@ private:
   bool
   IsSeekableStream()
   {
-    if (IsOnOwningThread()) {
+    if (NS_IsMainThread()) {
       if (!mStream) {
         NS_WARNING("Don't know if this stream is seekable yet!");
         return true;
       }
-    } else {
+    }
+    else {
       ReallyBlockAndWaitForStream();
     }
 
@@ -617,12 +444,14 @@ public:
   explicit InputStreamChild(RemoteInputStream* aRemoteStream)
   : mRemoteStream(aRemoteStream)
   {
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aRemoteStream);
-    aRemoteStream->AssertIsOnOwningThread();
   }
 
   InputStreamChild()
-  { }
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
 
 private:
   // This method is only called by the IPDL message machinery.
@@ -640,12 +469,14 @@ public:
   explicit InputStreamParent(RemoteInputStream* aRemoteStream)
   : mRemoteStream(aRemoteStream)
   {
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aRemoteStream);
-    aRemoteStream->AssertIsOnOwningThread();
   }
 
   InputStreamParent()
-  { }
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+  }
 
 protected:
   virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
@@ -657,11 +488,17 @@ private:
                  const OptionalFileDescriptorSet& aFDs) MOZ_OVERRIDE;
 };
 
+DOMFile*
+ToConcreteBlob(nsIDOMBlob* aBlob)
+{
+  return static_cast<DOMFile*>(aBlob);
+}
+
 } // anonymous namespace
 
 // Each instance of this class will be dispatched to the network stream thread
 // pool to run the first time where it will open the file input stream. It will
-// then dispatch itself back to the owning thread to send the child process its
+// then dispatch itself back to the main thread to send the child process its
 // response (assuming that the child has not crashed). The runnable will then
 // dispatch itself to the thread pool again in order to close the file input
 // stream.
@@ -676,8 +513,7 @@ class BlobParent::OpenStreamRunnable MOZ_FINAL
 
   nsCOMPtr<nsIInputStream> mStream;
   nsCOMPtr<nsIIPCSerializableInputStream> mSerializable;
-  nsCOMPtr<nsIEventTarget> mActorTarget;
-  nsCOMPtr<nsIThread> mIOTarget;
+  nsCOMPtr<nsIEventTarget> mTarget;
 
   bool mRevoked;
   bool mClosing;
@@ -687,66 +523,50 @@ public:
                      PBlobStreamParent* aStreamActor,
                      nsIInputStream* aStream,
                      nsIIPCSerializableInputStream* aSerializable,
-                     nsIThread* aIOTarget)
-    : mBlobActor(aBlobActor)
-    , mStreamActor(aStreamActor)
-    , mStream(aStream)
-    , mSerializable(aSerializable)
-    , mIOTarget(aIOTarget)
-    , mRevoked(false)
-    , mClosing(false)
+                     nsIEventTarget* aTarget)
+  : mBlobActor(aBlobActor), mStreamActor(aStreamActor), mStream(aStream),
+    mSerializable(aSerializable), mTarget(aTarget), mRevoked(false),
+    mClosing(false)
   {
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aBlobActor);
-    aBlobActor->AssertIsOnOwningThread();
     MOZ_ASSERT(aStreamActor);
     MOZ_ASSERT(aStream);
     // aSerializable may be null.
-    MOZ_ASSERT(aIOTarget);
+    MOZ_ASSERT(aTarget);
+  }
 
-    if (!NS_IsMainThread()) {
-      AssertIsOnBackgroundThread();
-
-      mActorTarget = do_GetCurrentThread();
-      MOZ_ASSERT(mActorTarget);
+  NS_IMETHOD
+  Run()
+  {
+    if (NS_IsMainThread()) {
+      return SendResponse();
     }
 
-    AssertIsOnOwningThread();
+    if (!mClosing) {
+      return OpenStream();
+    }
+
+    return CloseStream();
   }
 
   nsresult
   Dispatch()
   {
-    AssertIsOnOwningThread();
-    MOZ_ASSERT(mIOTarget);
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mTarget);
 
-    nsresult rv = mIOTarget->Dispatch(this, NS_DISPATCH_NORMAL);
+    nsresult rv = mTarget->Dispatch(this, NS_DISPATCH_NORMAL);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }
 
-  NS_DECL_ISUPPORTS_INHERITED
-
 private:
-  ~OpenStreamRunnable()
-  { }
-
-  bool
-  IsOnOwningThread() const
-  {
-    return EventTargetIsOnCurrentThread(mActorTarget);
-  }
-
-  void
-  AssertIsOnOwningThread() const
-  {
-    MOZ_ASSERT(IsOnOwningThread());
-  }
-
   void
   Revoke()
   {
-    AssertIsOnOwningThread();
+    MOZ_ASSERT(NS_IsMainThread());
 #ifdef DEBUG
     mBlobActor = nullptr;
     mStreamActor = nullptr;
@@ -757,7 +577,7 @@ private:
   nsresult
   OpenStream()
   {
-    MOZ_ASSERT(!IsOnOwningThread());
+    MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(mStream);
 
     if (!mSerializable) {
@@ -785,12 +605,8 @@ private:
       NS_WARNING("Available failed on this stream!");
     }
 
-    if (mActorTarget) {
-      nsresult rv = mActorTarget->Dispatch(this, NS_DISPATCH_NORMAL);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(this)));
-    }
+    nsresult rv = NS_DispatchToMainThread(this);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }
@@ -798,23 +614,15 @@ private:
   nsresult
   CloseStream()
   {
-    MOZ_ASSERT(!IsOnOwningThread());
+    MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(mStream);
 
     // Going to always release here.
     nsCOMPtr<nsIInputStream> stream;
     mStream.swap(stream);
 
-    nsCOMPtr<nsIThread> ioTarget;
-    mIOTarget.swap(ioTarget);
-
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(stream->Close()), "Failed to close stream!");
-
-    nsCOMPtr<nsIRunnable> shutdownRunnable =
-      NS_NewRunnableMethod(ioTarget, &nsIThread::Shutdown);
-    MOZ_ASSERT(shutdownRunnable);
-
-    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(shutdownRunnable)));
+    nsresult rv = stream->Close();
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }
@@ -822,10 +630,11 @@ private:
   nsresult
   SendResponse()
   {
-    AssertIsOnOwningThread();
+    MOZ_ASSERT(NS_IsMainThread());
+
     MOZ_ASSERT(mStream);
     MOZ_ASSERT(mSerializable);
-    MOZ_ASSERT(mIOTarget);
+    MOZ_ASSERT(mTarget);
     MOZ_ASSERT(!mClosing);
 
     nsCOMPtr<nsIIPCSerializableInputStream> serializable;
@@ -837,7 +646,6 @@ private:
     }
     else {
       MOZ_ASSERT(mBlobActor);
-      MOZ_ASSERT(mBlobActor->HasManager());
       MOZ_ASSERT(mStreamActor);
 
       InputStreamParams params;
@@ -846,19 +654,25 @@ private:
 
       MOZ_ASSERT(params.type() != InputStreamParams::T__None);
 
-      PFileDescriptorSetParent* fdSet;
-      if (nsIContentParent* contentManager = mBlobActor->GetContentManager()) {
-        fdSet = ConstructFileDescriptorSet(contentManager, fds);
-      } else {
-        fdSet = ConstructFileDescriptorSet(mBlobActor->GetBackgroundManager(),
-                                           fds);
+      PFileDescriptorSetParent* fdSet = nullptr;
+
+      if (!fds.IsEmpty()) {
+        auto* manager = static_cast<ContentParent*>(mBlobActor->Manager());
+        MOZ_ASSERT(manager);
+
+        fdSet = manager->SendPFileDescriptorSetConstructor(fds[0]);
+        if (fdSet) {
+          for (uint32_t index = 1; index < fds.Length(); index++) {
+            unused << fdSet->SendAddFileDescriptor(fds[index]);
+          }
+        }
       }
 
       OptionalFileDescriptorSet optionalFDs;
       if (fdSet) {
         optionalFDs = fdSet;
       } else {
-        optionalFDs = void_t();
+        optionalFDs = mozilla::void_t();
       }
 
       unused <<
@@ -872,37 +686,17 @@ private:
 #endif
     }
 
-    // If our luck is *really* bad then it is possible for the CloseStream() and
-    // nsIThread::Shutdown() functions to run before the Dispatch() call here
-    // finishes... Keep the thread alive until this method returns.
-    nsCOMPtr<nsIThread> kungFuDeathGrip = mIOTarget;
-
     mClosing = true;
 
-    nsresult rv = mIOTarget->Dispatch(this, NS_DISPATCH_NORMAL);
+    nsCOMPtr<nsIEventTarget> target;
+    mTarget.swap(target);
+
+    nsresult rv = target->Dispatch(this, NS_DISPATCH_NORMAL);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
   }
-
-  NS_IMETHOD
-  Run() MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(mIOTarget);
-
-    if (IsOnOwningThread()) {
-      return SendResponse();
-    }
-
-    if (!mClosing) {
-      return OpenStream();
-    }
-
-    return CloseStream();
-  }
 };
-
-NS_IMPL_ISUPPORTS_INHERITED0(BlobParent::OpenStreamRunnable, nsRunnable)
 
 /*******************************************************************************
  * BlobChild::RemoteBlob Declaration
@@ -915,106 +709,61 @@ class BlobChild::RemoteBlob MOZ_FINAL : public DOMFileImplBase
   class SliceHelper;
 
   BlobChild* mActor;
-  nsCOMPtr<nsIEventTarget> mActorTarget;
 
 public:
-  RemoteBlob(BlobChild* aActor,
-             const nsAString& aName,
+  RemoteBlob(const nsAString& aName,
              const nsAString& aContentType,
              uint64_t aLength,
              uint64_t aModDate)
     : DOMFileImplBase(aName, aContentType, aLength, aModDate)
+    , mActor(nullptr)
   {
-    CommonInit(aActor);
+    mImmutable = true;
   }
 
-  RemoteBlob(BlobChild* aActor, const nsAString& aContentType, uint64_t aLength)
+  RemoteBlob(const nsAString& aContentType, uint64_t aLength)
     : DOMFileImplBase(aContentType, aLength)
+    , mActor(nullptr)
   {
-    CommonInit(aActor);
+    mImmutable = true;
   }
 
-  RemoteBlob(BlobChild* aActor)
+  RemoteBlob()
     : DOMFileImplBase(EmptyString(), EmptyString(), UINT64_MAX, UINT64_MAX)
+    , mActor(nullptr)
   {
-    CommonInit(aActor);
+    mImmutable = true;
   }
 
   void
-  NoteDyingActor()
+  SetActor(BlobChild* aActor)
   {
-    MOZ_ASSERT(mActor);
-    mActor->AssertIsOnOwningThread();
-
-    mActor = nullptr;
+    MOZ_ASSERT(!aActor || !mActor);
+    mActor = aActor;
   }
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual nsresult
-  GetMozFullPathInternal(nsAString &aFilePath) MOZ_OVERRIDE;
-
-  virtual already_AddRefed<DOMFileImpl>
+  virtual already_AddRefed<nsIDOMBlob>
   CreateSlice(uint64_t aStart, uint64_t aLength, const nsAString& aContentType)
               MOZ_OVERRIDE;
 
   virtual nsresult
   GetInternalStream(nsIInputStream** aStream) MOZ_OVERRIDE;
 
-  virtual int64_t
-  GetFileId() MOZ_OVERRIDE;
-
   virtual nsresult
   GetLastModifiedDate(JSContext* cx,
                       JS::MutableHandle<JS::Value> aLastModifiedDate)
                       MOZ_OVERRIDE;
 
-  virtual BlobChild*
-  GetBlobChild() MOZ_OVERRIDE;
-
-  virtual BlobParent*
-  GetBlobParent() MOZ_OVERRIDE;
+  virtual void*
+  GetPBlob() MOZ_OVERRIDE;
 
 private:
   ~RemoteBlob()
   {
-    MOZ_ASSERT_IF(mActorTarget,
-                  EventTargetIsOnCurrentThread(mActorTarget));
-  }
-
-  void
-  CommonInit(BlobChild* aActor)
-  {
-    MOZ_ASSERT(aActor);
-    aActor->AssertIsOnOwningThread();
-
-    mActor = aActor;
-    mActorTarget = aActor->EventTarget();
-
-    mImmutable = true;
-  }
-
-  void
-  Destroy()
-  {
-    if (EventTargetIsOnCurrentThread(mActorTarget)) {
-      if (mActor) {
-        mActor->AssertIsOnOwningThread();
-        mActor->NoteDyingRemoteBlob();
-      }
-
-      delete this;
-      return;
-    }
-
-    nsCOMPtr<nsIRunnable> destroyRunnable =
-      NS_NewNonOwningRunnableMethod(this, &RemoteBlob::Destroy);
-
-    if (mActorTarget) {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mActorTarget->Dispatch(destroyRunnable,
-                                                          NS_DISPATCH_NORMAL)));
-    } else {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(destroyRunnable)));
+    if (mActor) {
+      mActor->NoteDyingRemoteBlob();
     }
   }
 };
@@ -1022,7 +771,7 @@ private:
 class BlobChild::RemoteBlob::StreamHelper MOZ_FINAL
   : public nsRunnable
 {
-  Monitor mMonitor;
+  mozilla::Monitor mMonitor;
   BlobChild* mActor;
   nsRefPtr<mozilla::dom::DOMFileImplBase> mSourceBlob;
   nsRefPtr<RemoteInputStream> mInputStream;
@@ -1049,17 +798,14 @@ public:
     MOZ_ASSERT(!mInputStream);
     MOZ_ASSERT(!mDone);
 
-    if (mActor->IsOnOwningThread()) {
+    if (NS_IsMainThread()) {
       RunInternal(false);
-    } else {
-      nsCOMPtr<nsIEventTarget> target = mActor->EventTarget();
-      if (!target) {
-        target = do_GetMainThread();
-      }
+    }
+    else {
+      nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+      NS_ENSURE_TRUE(mainThread, NS_ERROR_FAILURE);
 
-      MOZ_ASSERT(target);
-
-      nsresult rv = target->Dispatch(this, NS_DISPATCH_NORMAL);
+      nsresult rv = mainThread->Dispatch(this, NS_DISPATCH_NORMAL);
       NS_ENSURE_SUCCESS(rv, rv);
 
       {
@@ -1082,11 +828,9 @@ public:
   }
 
   NS_IMETHOD
-  Run() MOZ_OVERRIDE
+  Run()
   {
-    MOZ_ASSERT(mActor);
-    mActor->AssertIsOnOwningThread();
-
+    MOZ_ASSERT(NS_IsMainThread());
     RunInternal(true);
     return NS_OK;
   }
@@ -1095,8 +839,8 @@ private:
   void
   RunInternal(bool aNotify)
   {
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mActor);
-    mActor->AssertIsOnOwningThread();
     MOZ_ASSERT(!mInputStream);
     MOZ_ASSERT(!mDone);
 
@@ -1124,7 +868,7 @@ private:
 class BlobChild::RemoteBlob::SliceHelper MOZ_FINAL
   : public nsRunnable
 {
-  Monitor mMonitor;
+  mozilla::Monitor mMonitor;
   BlobChild* mActor;
   nsRefPtr<DOMFileImpl> mSlice;
   uint64_t mStart;
@@ -1147,7 +891,8 @@ public:
   DOMFileImpl*
   GetSlice(uint64_t aStart,
            uint64_t aLength,
-           const nsAString& aContentType)
+           const nsAString& aContentType,
+           ErrorResult& aRv)
   {
     // This may be called on any thread.
     MOZ_ASSERT(mActor);
@@ -1158,18 +903,18 @@ public:
     mLength = aLength;
     mContentType = aContentType;
 
-    if (mActor->IsOnOwningThread()) {
+    if (NS_IsMainThread()) {
       RunInternal(false);
-    } else {
-      nsCOMPtr<nsIEventTarget> target = mActor->EventTarget();
-      if (!target) {
-        target = do_GetMainThread();
+    }
+    else {
+      nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+      if (!mainThread) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return nullptr;
       }
 
-      MOZ_ASSERT(target);
-
-      nsresult rv = target->Dispatch(this, NS_DISPATCH_NORMAL);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv = mainThread->Dispatch(this, NS_DISPATCH_NORMAL);
+      if (aRv.Failed()) {
         return nullptr;
       }
 
@@ -1184,7 +929,8 @@ public:
     MOZ_ASSERT(!mActor);
     MOZ_ASSERT(mDone);
 
-    if (NS_WARN_IF(!mSlice)) {
+    if (!mSlice) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
     }
 
@@ -1192,11 +938,9 @@ public:
   }
 
   NS_IMETHOD
-  Run() MOZ_OVERRIDE
+  Run()
   {
-    MOZ_ASSERT(mActor);
-    mActor->AssertIsOnOwningThread();
-
+    MOZ_ASSERT(NS_IsMainThread());
     RunInternal(true);
     return NS_OK;
   }
@@ -1205,34 +949,34 @@ private:
   void
   RunInternal(bool aNotify)
   {
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mActor);
-    mActor->AssertIsOnOwningThread();
     MOZ_ASSERT(!mSlice);
     MOZ_ASSERT(!mDone);
 
-    NS_ENSURE_TRUE_VOID(mActor->HasManager());
+    NS_ENSURE_TRUE_VOID(mActor->Manager());
 
-    NormalBlobConstructorParams params(mContentType /* contentType */,
-                                       mLength /* length */);
+    NormalBlobConstructorParams normalParams;
+    normalParams.contentType() = mContentType;
+    normalParams.length() = mLength;
 
-    ParentBlobConstructorParams otherSideParams(
-      SlicedBlobConstructorParams(nullptr /* sourceParent */,
-                                  mActor /* sourceChild */,
-                                  mStart /* begin */,
-                                  mStart + mLength /* end */,
-                                  mContentType /* contentType */),
-      void_t() /* optionalInputStream */);
+    auto* manager = static_cast<ContentChild*>(mActor->Manager());
+    MOZ_ASSERT(manager);
 
-    BlobChild* newActor;
-    if (nsIContentChild* contentManager = mActor->GetContentManager()) {
-      newActor = SendSliceConstructor(contentManager, params, otherSideParams);
-    } else {
-      newActor = SendSliceConstructor(mActor->GetBackgroundManager(),
-                                      params,
-                                      otherSideParams);
-    }
+    BlobChild* newActor = BlobChild::Create(manager, normalParams);
+    MOZ_ASSERT(newActor);
 
-    if (newActor) {
+    SlicedBlobConstructorParams slicedParams;
+    slicedParams.contentType() = mContentType;
+    slicedParams.begin() = mStart;
+    slicedParams.end() = mStart + mLength;
+    slicedParams.sourceChild() = mActor;
+
+    ParentBlobConstructorParams otherSideParams;
+    otherSideParams.blobParams() = slicedParams;
+    otherSideParams.optionalInputStreamParams() = mozilla::void_t();
+
+    if (mActor->Manager()->SendPBlobConstructor(newActor, otherSideParams)) {
       nsCOMPtr<nsIDOMBlob> blob = newActor->GetBlob();
       mSlice = static_cast<DOMFile*>(blob.get())->Impl();
     }
@@ -1254,30 +998,9 @@ private:
  * BlobChild::RemoteBlob Implementation
  ******************************************************************************/
 
-NS_IMPL_ADDREF(BlobChild::RemoteBlob)
-NS_IMPL_RELEASE_WITH_DESTROY(BlobChild::RemoteBlob, Destroy())
-NS_IMPL_QUERY_INTERFACE_INHERITED(BlobChild::RemoteBlob,
-                                  DOMFileImpl,
-                                  nsIRemoteBlob)
+NS_IMPL_ISUPPORTS_INHERITED(BlobChild::RemoteBlob, DOMFileImpl, nsIRemoteBlob)
 
-nsresult
-BlobChild::
-RemoteBlob::GetMozFullPathInternal(nsAString &aFilePath)
-{
-  if (!mActor) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsString filePath;
-  if (!mActor->SendGetFilePath(&filePath)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  aFilePath = filePath;
-  return NS_OK;
-}
-
-already_AddRefed<DOMFileImpl>
+already_AddRefed<nsIDOMBlob>
 BlobChild::
 RemoteBlob::CreateSlice(uint64_t aStart,
                         uint64_t aLength,
@@ -1289,12 +1012,15 @@ RemoteBlob::CreateSlice(uint64_t aStart,
 
   nsRefPtr<SliceHelper> helper = new SliceHelper(mActor);
 
-  nsRefPtr<DOMFileImpl> impl = helper->GetSlice(aStart, aLength, aContentType);
-  if (NS_WARN_IF(!impl)) {
+  ErrorResult rv;
+  nsRefPtr<DOMFileImpl> slice = helper->GetSlice(aStart, aLength,
+                                                 aContentType, rv);
+  if (rv.Failed()) {
     return nullptr;
   }
 
-  return impl.forget();
+  nsRefPtr<DOMFile> file = new DOMFile(slice);
+  return file.forget();
 }
 
 nsresult
@@ -1307,18 +1033,6 @@ RemoteBlob::GetInternalStream(nsIInputStream** aStream)
 
   nsRefPtr<StreamHelper> helper = new StreamHelper(mActor, this);
   return helper->GetStream(aStream);
-}
-
-int64_t
-BlobChild::
-RemoteBlob::GetFileId()
-{
-  int64_t fileId;
-  if (mActor && mActor->SendGetFileId(&fileId)) {
-    return fileId;
-  }
-
-  return -1;
 }
 
 nsresult
@@ -1338,18 +1052,11 @@ RemoteBlob::GetLastModifiedDate(JSContext* cx,
   return NS_OK;
 }
 
-BlobChild*
+void*
 BlobChild::
-RemoteBlob::GetBlobChild()
+RemoteBlob::GetPBlob()
 {
-  return mActor;
-}
-
-BlobParent*
-BlobChild::
-RemoteBlob::GetBlobParent()
-{
-  return nullptr;
+  return static_cast<PBlobChild*>(mActor);
 }
 
 /*******************************************************************************
@@ -1359,140 +1066,41 @@ RemoteBlob::GetBlobParent()
 BlobChild::BlobChild(nsIContentChild* aManager, nsIDOMBlob* aBlob)
   : mBlob(aBlob)
   , mRemoteBlob(nullptr)
-  , mBackgroundManager(nullptr)
-  , mContentManager(aManager)
+  , mStrongManager(aManager)
   , mOwnsBlob(true)
+  , mBlobIsFile(false)
 {
-  AssertCorrectThreadForManager(aManager);
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aBlob);
 
-  MOZ_COUNT_CTOR(BlobChild);
+  aBlob->AddRef();
 
-  CommonInit(aBlob);
-}
-
-BlobChild::BlobChild(PBackgroundChild* aManager, nsIDOMBlob* aBlob)
-  : mBlob(aBlob)
-  , mRemoteBlob(nullptr)
-  , mBackgroundManager(aManager)
-  , mContentManager(nullptr)
-  , mOwnsBlob(true)
-{
-  AssertCorrectThreadForManager(aManager);
-  MOZ_ASSERT(aManager);
-  MOZ_ASSERT(aBlob);
-
-  MOZ_COUNT_CTOR(BlobChild);
-
-  if (!NS_IsMainThread()) {
-    mEventTarget = do_GetCurrentThread();
-    MOZ_ASSERT(mEventTarget);
-  }
-
-  CommonInit(aBlob);
+  nsCOMPtr<nsIDOMFile> file = do_QueryInterface(aBlob);
+  mBlobIsFile = !!file;
 }
 
 BlobChild::BlobChild(nsIContentChild* aManager,
                      const ChildBlobConstructorParams& aParams)
   : mBlob(nullptr)
   , mRemoteBlob(nullptr)
-  , mBackgroundManager(nullptr)
-  , mContentManager(aManager)
+  , mStrongManager(aManager)
   , mOwnsBlob(false)
+  , mBlobIsFile(false)
 {
-  AssertCorrectThreadForManager(aManager);
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aManager);
-  MOZ_ASSERT(aParams.type() != ChildBlobConstructorParams::T__None);
-
-  MOZ_COUNT_CTOR(BlobChild);
-
-  CommonInit(aParams);
-}
-
-BlobChild::BlobChild(PBackgroundChild* aManager,
-                     const ChildBlobConstructorParams& aParams)
-  : mBlob(nullptr)
-  , mRemoteBlob(nullptr)
-  , mBackgroundManager(aManager)
-  , mContentManager(nullptr)
-  , mOwnsBlob(false)
-{
-  AssertCorrectThreadForManager(aManager);
-  MOZ_ASSERT(aManager);
-  MOZ_ASSERT(aParams.type() != ChildBlobConstructorParams::T__None);
-
-  MOZ_COUNT_CTOR(BlobChild);
-
-  if (!NS_IsMainThread()) {
-    mEventTarget = do_GetCurrentThread();
-    MOZ_ASSERT(mEventTarget);
-  }
-
-  CommonInit(aParams);
-}
-
-BlobChild::~BlobChild()
-{
-  AssertIsOnOwningThread();
-
-  MOZ_COUNT_DTOR(BlobChild);
-}
-
-void
-BlobChild::CommonInit(nsIDOMBlob* aBlob)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aBlob);
-  MOZ_ASSERT(!mRemoteBlob);
-
-  aBlob->AddRef();
-}
-
-void
-BlobChild::CommonInit(const ChildBlobConstructorParams& aParams)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(!mRemoteBlob);
 
   ChildBlobConstructorParams::Type paramsType = aParams.type();
-  MOZ_ASSERT(paramsType != ChildBlobConstructorParams::T__None);
 
-  nsRefPtr<RemoteBlob> remoteBlob;
+  mBlobIsFile =
+    paramsType == ChildBlobConstructorParams::TFileBlobConstructorParams ||
+    paramsType == ChildBlobConstructorParams::TMysteryBlobConstructorParams;
 
-  switch (paramsType) {
-    case ChildBlobConstructorParams::TNormalBlobConstructorParams: {
-      const NormalBlobConstructorParams& params =
-        aParams.get_NormalBlobConstructorParams();
-      remoteBlob = new RemoteBlob(this, params.contentType(), params.length());
-      break;
-    }
-
-    case ChildBlobConstructorParams::TFileBlobConstructorParams: {
-      const FileBlobConstructorParams& params =
-        aParams.get_FileBlobConstructorParams();
-      remoteBlob = new RemoteBlob(this,
-                                  params.name(),
-                                  params.contentType(),
-                                  params.length(),
-                                  params.modDate());
-      break;
-    }
-
-    case ChildBlobConstructorParams::TMysteryBlobConstructorParams: {
-      remoteBlob = new RemoteBlob(this);
-      break;
-    }
-
-    default:
-      MOZ_CRASH("Unknown params!");
-  }
-
+  nsRefPtr<RemoteBlob> remoteBlob = CreateRemoteBlob(aParams);
   MOZ_ASSERT(remoteBlob);
 
-  DebugOnly<bool> isMutable;
-  MOZ_ASSERT(NS_SUCCEEDED(remoteBlob->GetMutable(&isMutable)));
-  MOZ_ASSERT(!isMutable);
+  remoteBlob->SetActor(this);
 
   nsRefPtr<DOMFile> blob = new DOMFile(remoteBlob);
   blob.forget(&mBlob);
@@ -1501,45 +1109,15 @@ BlobChild::CommonInit(const ChildBlobConstructorParams& aParams)
   mOwnsBlob = true;
 }
 
-#ifdef DEBUG
-
-void
-BlobChild::AssertIsOnOwningThread() const
+BlobChild::~BlobChild()
 {
-  MOZ_ASSERT(IsOnOwningThread());
 }
 
-#endif // DEBUG
-
-// static
 BlobChild*
 BlobChild::Create(nsIContentChild* aManager,
                   const ChildBlobConstructorParams& aParams)
 {
-  AssertCorrectThreadForManager(aManager);
-  MOZ_ASSERT(aManager);
-
-  return CreateFromParams(aManager, aParams);
-}
-
-// static
-BlobChild*
-BlobChild::Create(PBackgroundChild* aManager,
-                  const ChildBlobConstructorParams& aParams)
-{
-  AssertCorrectThreadForManager(aManager);
-  MOZ_ASSERT(aManager);
-
-  return CreateFromParams(aManager, aParams);
-}
-
-// static
-template <class ChildManagerType>
-BlobChild*
-BlobChild::CreateFromParams(ChildManagerType* aManager,
-                            const ChildBlobConstructorParams& aParams)
-{
-  AssertCorrectThreadForManager(aManager);
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aManager);
 
   switch (aParams.type()) {
@@ -1576,31 +1154,10 @@ BlobChild::CreateFromParams(ChildManagerType* aManager,
   return nullptr;
 }
 
-// static
-template <class ChildManagerType>
-BlobChild*
-BlobChild::SendSliceConstructor(
-                            ChildManagerType* aManager,
-                            const NormalBlobConstructorParams& aParams,
-                            const ParentBlobConstructorParams& aOtherSideParams)
-{
-  AssertCorrectThreadForManager(aManager);
-  MOZ_ASSERT(aManager);
-
-  BlobChild* newActor = BlobChild::Create(aManager, aParams);
-  MOZ_ASSERT(newActor);
-
-  if (aManager->SendPBlobConstructor(newActor, aOtherSideParams)) {
-    return newActor;
-  }
-
-  return nullptr;
-}
-
 already_AddRefed<nsIDOMBlob>
 BlobChild::GetBlob()
 {
-  AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mBlob);
 
   nsCOMPtr<nsIDOMBlob> blob;
@@ -1621,33 +1178,19 @@ BlobChild::GetBlob()
   return blob.forget();
 }
 
-already_AddRefed<DOMFileImpl>
-BlobChild::GetBlobImpl()
-{
-  AssertIsOnOwningThread();
-
-  nsCOMPtr<nsIDOMBlob> blob = GetBlob();
-  MOZ_ASSERT(blob);
-
-  nsRefPtr<DOMFileImpl> impl = static_cast<DOMFile*>(blob.get())->Impl();
-  MOZ_ASSERT(impl);
-
-  return impl.forget();
-}
-
 bool
 BlobChild::SetMysteryBlobInfo(const nsString& aName,
                               const nsString& aContentType,
                               uint64_t aLength,
                               uint64_t aLastModifiedDate)
 {
-  AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mBlob);
   MOZ_ASSERT(mRemoteBlob);
   MOZ_ASSERT(aLastModifiedDate != UINT64_MAX);
 
-  static_cast<DOMFile*>(mBlob)->SetLazyData(aName, aContentType, aLength,
-                                            aLastModifiedDate);
+  ToConcreteBlob(mBlob)->SetLazyData(aName, aContentType, aLength,
+                                     aLastModifiedDate);
 
   FileBlobConstructorParams params(aName, aContentType, aLength,
                                    aLastModifiedDate);
@@ -1657,18 +1200,66 @@ BlobChild::SetMysteryBlobInfo(const nsString& aName,
 bool
 BlobChild::SetMysteryBlobInfo(const nsString& aContentType, uint64_t aLength)
 {
-  AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mBlob);
   MOZ_ASSERT(mRemoteBlob);
 
   nsString voidString;
   voidString.SetIsVoid(true);
 
-  static_cast<DOMFile*>(mBlob)->SetLazyData(voidString, aContentType, aLength,
-                                            UINT64_MAX);
+  ToConcreteBlob(mBlob)->SetLazyData(voidString, aContentType, aLength,
+                                     UINT64_MAX);
 
   NormalBlobConstructorParams params(aContentType, aLength);
   return SendResolveMystery(params);
+}
+
+nsIContentChild*
+BlobChild::Manager()
+{
+  return mStrongManager;
+}
+
+already_AddRefed<BlobChild::RemoteBlob>
+BlobChild::CreateRemoteBlob(const ChildBlobConstructorParams& aParams)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsRefPtr<RemoteBlob> remoteBlob;
+
+  switch (aParams.type()) {
+    case ChildBlobConstructorParams::TNormalBlobConstructorParams: {
+      const NormalBlobConstructorParams& params =
+        aParams.get_NormalBlobConstructorParams();
+      remoteBlob = new RemoteBlob(params.contentType(), params.length());
+      break;
+    }
+
+    case ChildBlobConstructorParams::TFileBlobConstructorParams: {
+      const FileBlobConstructorParams& params =
+        aParams.get_FileBlobConstructorParams();
+      remoteBlob =
+        new RemoteBlob(params.name(), params.contentType(), params.length(),
+                       params.modDate());
+      break;
+    }
+
+    case ChildBlobConstructorParams::TMysteryBlobConstructorParams: {
+      remoteBlob = new RemoteBlob();
+      break;
+    }
+
+    default:
+      MOZ_CRASH("Unknown params!");
+  }
+
+  MOZ_ASSERT(remoteBlob);
+
+  if (NS_FAILED(remoteBlob->SetMutable(false))) {
+    MOZ_CRASH("Failed to make remote blob immutable!");
+  }
+
+  return remoteBlob.forget();
 }
 
 void
@@ -1680,16 +1271,12 @@ BlobChild::NoteDyingRemoteBlob()
 
   // This may be called on any thread due to the fact that RemoteBlob is
   // designed to be passed between threads. We must start the shutdown process
-  // on the owning thread, so we proxy here if necessary.
-  if (!IsOnOwningThread()) {
+  // on the main thread, so we proxy here if necessary.
+  if (!NS_IsMainThread()) {
     nsCOMPtr<nsIRunnable> runnable =
       NS_NewNonOwningRunnableMethod(this, &BlobChild::NoteDyingRemoteBlob);
-
-    if (mEventTarget) {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mEventTarget->Dispatch(runnable,
-                                                          NS_DISPATCH_NORMAL)));
-    } else {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
+    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
+      MOZ_ASSERT(false, "Should never fail!");
     }
 
     return;
@@ -1703,33 +1290,26 @@ BlobChild::NoteDyingRemoteBlob()
   PBlobChild::Send__delete__(this);
 }
 
-bool
-BlobChild::IsOnOwningThread() const
-{
-  return EventTargetIsOnCurrentThread(mEventTarget);
-}
-
 void
 BlobChild::ActorDestroy(ActorDestroyReason aWhy)
 {
-  AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (mRemoteBlob) {
-    mRemoteBlob->NoteDyingActor();
+    mRemoteBlob->SetActor(nullptr);
   }
 
   if (mBlob && mOwnsBlob) {
     mBlob->Release();
   }
 
-  mBackgroundManager = nullptr;
-  mContentManager = nullptr;
+  mStrongManager = nullptr;
 }
 
 PBlobStreamChild*
 BlobChild::AllocPBlobStreamChild()
 {
-  AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   return new InputStreamChild();
 }
@@ -1737,7 +1317,7 @@ BlobChild::AllocPBlobStreamChild()
 bool
 BlobChild::RecvPBlobStreamConstructor(PBlobStreamChild* aActor)
 {
-  AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(mBlob);
   MOZ_ASSERT(!mRemoteBlob);
@@ -1760,15 +1340,56 @@ BlobChild::RecvPBlobStreamConstructor(PBlobStreamChild* aActor)
   MOZ_ASSERT(params.type() != InputStreamParams::T__None);
   MOZ_ASSERT(fds.IsEmpty());
 
-  return aActor->Send__delete__(aActor, params, void_t());
+  return aActor->Send__delete__(aActor, params, mozilla::void_t());
 }
 
 bool
 BlobChild::DeallocPBlobStreamChild(PBlobStreamChild* aActor)
 {
-  AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   delete static_cast<InputStreamChild*>(aActor);
+  return true;
+}
+
+bool
+BlobChild::RecvResolveMystery(const ResolveMysteryParams& aParams)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mBlob);
+  MOZ_ASSERT(!mRemoteBlob);
+  MOZ_ASSERT(mOwnsBlob);
+
+  if (!mBlobIsFile) {
+    MOZ_ASSERT(false, "Must always be a file!");
+    return false;
+  }
+
+  DOMFile* blob = ToConcreteBlob(mBlob);
+
+  switch (aParams.type()) {
+    case ResolveMysteryParams::TNormalBlobConstructorParams: {
+      const NormalBlobConstructorParams& params =
+        aParams.get_NormalBlobConstructorParams();
+      nsString voidString;
+      voidString.SetIsVoid(true);
+      blob->SetLazyData(voidString, params.contentType(), params.length(),
+                        UINT64_MAX);
+      break;
+    }
+
+    case ResolveMysteryParams::TFileBlobConstructorParams: {
+      const FileBlobConstructorParams& params =
+        aParams.get_FileBlobConstructorParams();
+      blob->SetLazyData(params.name(), params.contentType(), params.length(),
+                        params.modDate());
+      break;
+    }
+
+    default:
+      MOZ_CRASH("Unknown params!");
+  }
+
   return true;
 }
 
@@ -1783,49 +1404,53 @@ class BlobParent::RemoteBlob MOZ_FINAL : public mozilla::dom::DOMFileImplBase
   class SliceHelper;
 
   BlobParent* mActor;
-  nsCOMPtr<nsIEventTarget> mActorTarget;
   InputStreamParams mInputStreamParams;
 
 public:
-  RemoteBlob(BlobParent* aActor,
-             const OptionalInputStreamParams& aOptionalInputStreamParams,
-             const nsAString& aName,
+  RemoteBlob(const nsAString& aName,
              const nsAString& aContentType,
              uint64_t aLength,
              uint64_t aModDate)
     : DOMFileImplBase(aName, aContentType, aLength, aModDate)
+    , mActor(nullptr)
   {
-    CommonInit(aActor, aOptionalInputStreamParams);
+    mImmutable = true;
   }
 
-  RemoteBlob(BlobParent* aActor,
-             const OptionalInputStreamParams& aOptionalInputStreamParams,
-             const nsAString& aContentType,
-             uint64_t aLength)
+  RemoteBlob(const nsAString& aContentType, uint64_t aLength)
     : DOMFileImplBase(aContentType, aLength)
+    , mActor(nullptr)
   {
-    CommonInit(aActor, aOptionalInputStreamParams);
+    mImmutable = true;
   }
 
-  RemoteBlob(BlobParent* aActor,
-             const OptionalInputStreamParams& aOptionalInputStreamParams)
+  RemoteBlob()
     : DOMFileImplBase(EmptyString(), EmptyString(), UINT64_MAX, UINT64_MAX)
+    , mActor(nullptr)
   {
-    CommonInit(aActor, aOptionalInputStreamParams);
+    mImmutable = true;
   }
 
   void
-  NoteDyingActor()
+  SetActor(BlobParent* aActor)
   {
-    MOZ_ASSERT(mActor);
-    mActor->AssertIsOnOwningThread();
+    MOZ_ASSERT(!aActor || !mActor);
+    mActor = aActor;
+  }
 
-    mActor = nullptr;
+  void
+  MaybeSetInputStream(const ParentBlobConstructorParams& aParams)
+  {
+    if (aParams.optionalInputStreamParams().type() ==
+        OptionalInputStreamParams::TInputStreamParams) {
+      mInputStreamParams =
+        aParams.optionalInputStreamParams().get_InputStreamParams();
+    }
   }
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  virtual already_AddRefed<DOMFileImpl>
+  virtual already_AddRefed<nsIDOMBlob>
   CreateSlice(uint64_t aStart, uint64_t aLength, const nsAString& aContentType)
               MOZ_OVERRIDE;
 
@@ -1837,60 +1462,14 @@ public:
                       JS::MutableHandle<JS::Value> aLastModifiedDate)
                       MOZ_OVERRIDE;
 
-  virtual BlobChild*
-  GetBlobChild() MOZ_OVERRIDE;
-
-  virtual BlobParent*
-  GetBlobParent() MOZ_OVERRIDE;
+  void*
+  GetPBlob() MOZ_OVERRIDE;
 
 private:
   ~RemoteBlob()
   {
-    MOZ_ASSERT_IF(mActorTarget,
-                  EventTargetIsOnCurrentThread(mActorTarget));
-  }
-
-  void
-  CommonInit(BlobParent* aActor,
-             const OptionalInputStreamParams& aOptionalInputStreamParams)
-  {
-    MOZ_ASSERT(aActor);
-    aActor->AssertIsOnOwningThread();
-    MOZ_ASSERT(aOptionalInputStreamParams.type() !=
-                 OptionalInputStreamParams::T__None);
-
-    mActor = aActor;
-    mActorTarget = aActor->EventTarget();
-
-    if (aOptionalInputStreamParams.type() ==
-          OptionalInputStreamParams::TInputStreamParams) {
-      mInputStreamParams = aOptionalInputStreamParams.get_InputStreamParams();
-    }
-
-    mImmutable = true;
-  }
-
-  void
-  Destroy()
-  {
-    if (EventTargetIsOnCurrentThread(mActorTarget)) {
-      if (mActor) {
-        mActor->AssertIsOnOwningThread();
-        mActor->NoteDyingRemoteBlob();
-      }
-
-      delete this;
-      return;
-    }
-
-    nsCOMPtr<nsIRunnable> destroyRunnable =
-      NS_NewNonOwningRunnableMethod(this, &RemoteBlob::Destroy);
-
-    if (mActorTarget) {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mActorTarget->Dispatch(destroyRunnable,
-                                                          NS_DISPATCH_NORMAL)));
-    } else {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(destroyRunnable)));
+    if (mActor) {
+      mActor->NoteDyingRemoteBlob();
     }
   }
 };
@@ -1898,7 +1477,7 @@ private:
 class BlobParent::RemoteBlob::StreamHelper MOZ_FINAL
   : public nsRunnable
 {
-  Monitor mMonitor;
+  mozilla::Monitor mMonitor;
   BlobParent* mActor;
   nsRefPtr<mozilla::dom::DOMFileImplBase> mSourceBlob;
   nsRefPtr<RemoteInputStream> mInputStream;
@@ -1925,17 +1504,14 @@ public:
     MOZ_ASSERT(!mInputStream);
     MOZ_ASSERT(!mDone);
 
-    if (mActor->IsOnOwningThread()) {
+    if (NS_IsMainThread()) {
       RunInternal(false);
-    } else {
-      nsCOMPtr<nsIEventTarget> target = mActor->EventTarget();
-      if (!target) {
-        target = do_GetMainThread();
-      }
+    }
+    else {
+      nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+      NS_ENSURE_TRUE(mainThread, NS_ERROR_FAILURE);
 
-      MOZ_ASSERT(target);
-
-      nsresult rv = target->Dispatch(this, NS_DISPATCH_NORMAL);
+      nsresult rv = mainThread->Dispatch(this, NS_DISPATCH_NORMAL);
       NS_ENSURE_SUCCESS(rv, rv);
 
       {
@@ -1958,11 +1534,9 @@ public:
   }
 
   NS_IMETHOD
-  Run() MOZ_OVERRIDE
+  Run()
   {
-    MOZ_ASSERT(mActor);
-    mActor->AssertIsOnOwningThread();
-
+    MOZ_ASSERT(NS_IsMainThread());
     RunInternal(true);
     return NS_OK;
   }
@@ -1971,8 +1545,8 @@ private:
   void
   RunInternal(bool aNotify)
   {
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mActor);
-    mActor->AssertIsOnOwningThread();
     MOZ_ASSERT(!mInputStream);
     MOZ_ASSERT(!mDone);
 
@@ -2000,7 +1574,7 @@ private:
 class BlobParent::RemoteBlob::SliceHelper MOZ_FINAL
   : public nsRunnable
 {
-  Monitor mMonitor;
+  mozilla::Monitor mMonitor;
   BlobParent* mActor;
   nsRefPtr<DOMFileImpl> mSlice;
   uint64_t mStart;
@@ -2023,7 +1597,8 @@ public:
   DOMFileImpl*
   GetSlice(uint64_t aStart,
            uint64_t aLength,
-           const nsAString& aContentType)
+           const nsAString& aContentType,
+           ErrorResult& aRv)
   {
     // This may be called on any thread.
     MOZ_ASSERT(mActor);
@@ -2034,18 +1609,18 @@ public:
     mLength = aLength;
     mContentType = aContentType;
 
-    if (mActor->IsOnOwningThread()) {
+    if (NS_IsMainThread()) {
       RunInternal(false);
-    } else {
-      nsCOMPtr<nsIEventTarget> target = mActor->EventTarget();
-      if (!target) {
-        target = do_GetMainThread();
+    }
+    else {
+      nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+      if (!mainThread) {
+        aRv.Throw(NS_ERROR_FAILURE);
+        return nullptr;
       }
 
-      MOZ_ASSERT(target);
-
-      nsresult rv = target->Dispatch(this, NS_DISPATCH_NORMAL);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv = mainThread->Dispatch(this, NS_DISPATCH_NORMAL);
+      if (aRv.Failed()) {
         return nullptr;
       }
 
@@ -2060,7 +1635,8 @@ public:
     MOZ_ASSERT(!mActor);
     MOZ_ASSERT(mDone);
 
-    if (NS_WARN_IF(!mSlice)) {
+    if (!mSlice) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
     }
 
@@ -2068,11 +1644,9 @@ public:
   }
 
   NS_IMETHOD
-  Run() MOZ_OVERRIDE
+  Run()
   {
-    MOZ_ASSERT(mActor);
-    mActor->AssertIsOnOwningThread();
-
+    MOZ_ASSERT(NS_IsMainThread());
     RunInternal(true);
     return NS_OK;
   }
@@ -2081,35 +1655,36 @@ private:
   void
   RunInternal(bool aNotify)
   {
+    MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mActor);
-    mActor->AssertIsOnOwningThread();
     MOZ_ASSERT(!mSlice);
     MOZ_ASSERT(!mDone);
 
-    NS_ENSURE_TRUE_VOID(mActor->HasManager());
+    NS_ENSURE_TRUE_VOID(mActor->Manager());
 
-    ParentBlobConstructorParams params(
-      NormalBlobConstructorParams(mContentType /* contentType */,
-                                  mLength /* length */),
-      void_t() /* optionalInputStreamParams */);
+    NormalBlobConstructorParams normalParams;
+    normalParams.contentType() = mContentType;
+    normalParams.length() = mLength;
 
-    ChildBlobConstructorParams otherSideParams(
-      SlicedBlobConstructorParams(mActor /* sourceParent*/,
-                                  nullptr /* sourceChild */,
-                                  mStart /* begin */,
-                                  mStart + mLength /* end */,
-                                  mContentType /* contentType */));
+    ParentBlobConstructorParams params;
+    params.blobParams() = normalParams;
+    params.optionalInputStreamParams() = void_t();
 
-    BlobParent* newActor;
-    if (nsIContentParent* contentManager = mActor->GetContentManager()) {
-      newActor = SendSliceConstructor(contentManager, params, otherSideParams);
-    } else {
-      newActor = SendSliceConstructor(mActor->GetBackgroundManager(),
-                                      params,
-                                      otherSideParams);
-    }
+    auto* manager = static_cast<ContentParent*>(mActor->Manager());
+    MOZ_ASSERT(manager);
 
-    if (newActor) {
+    BlobParent* newActor = BlobParent::Create(manager, params);
+    MOZ_ASSERT(newActor);
+
+    SlicedBlobConstructorParams slicedParams;
+    slicedParams.contentType() = mContentType;
+    slicedParams.begin() = mStart;
+    slicedParams.end() = mStart + mLength;
+    slicedParams.sourceParent() = mActor;
+
+    ChildBlobConstructorParams otherSideParams = slicedParams;
+
+    if (mActor->Manager()->SendPBlobConstructor(newActor, otherSideParams)) {
       nsCOMPtr<nsIDOMBlob> blob =newActor->GetBlob();
       mSlice = static_cast<DOMFile*>(blob.get())->Impl();
     }
@@ -2131,13 +1706,9 @@ private:
  * BlobChild::RemoteBlob Implementation
  ******************************************************************************/
 
-NS_IMPL_ADDREF(BlobParent::RemoteBlob)
-NS_IMPL_RELEASE_WITH_DESTROY(BlobParent::RemoteBlob, Destroy())
-NS_IMPL_QUERY_INTERFACE_INHERITED(BlobParent::RemoteBlob,
-                                  DOMFileImpl,
-                                  nsIRemoteBlob)
+NS_IMPL_ISUPPORTS_INHERITED(BlobParent::RemoteBlob, DOMFileImpl, nsIRemoteBlob)
 
-already_AddRefed<DOMFileImpl>
+already_AddRefed<nsIDOMBlob>
 BlobParent::
 RemoteBlob::CreateSlice(uint64_t aStart,
                         uint64_t aLength,
@@ -2149,12 +1720,15 @@ RemoteBlob::CreateSlice(uint64_t aStart,
 
   nsRefPtr<SliceHelper> helper = new SliceHelper(mActor);
 
-  nsRefPtr<DOMFileImpl> impl = helper->GetSlice(aStart, aLength, aContentType);
-  if (NS_WARN_IF(!impl)) {
+  ErrorResult rv;
+  nsRefPtr<DOMFileImpl> slice = helper->GetSlice(aStart, aLength,
+                                                 aContentType, rv);
+  if (rv.Failed()) {
     return nullptr;
   }
 
-  return impl.forget();
+  nsRefPtr<DOMFile> file = new DOMFile(slice);
+  return file.forget();
 }
 
 nsresult
@@ -2201,18 +1775,11 @@ RemoteBlob::GetLastModifiedDate(JSContext* cx,
   return NS_OK;
 }
 
-BlobChild*
+void*
 BlobParent::
-RemoteBlob::GetBlobChild()
+RemoteBlob::GetPBlob()
 {
-  return nullptr;
-}
-
-BlobParent*
-BlobParent::
-RemoteBlob::GetBlobParent()
-{
-  return mActor;
+  return static_cast<PBlobParent*>(mActor);
 }
 
 /*******************************************************************************
@@ -2222,205 +1789,59 @@ RemoteBlob::GetBlobParent()
 BlobParent::BlobParent(nsIContentParent* aManager, nsIDOMBlob* aBlob)
   : mBlob(aBlob)
   , mRemoteBlob(nullptr)
-  , mBackgroundManager(nullptr)
-  , mContentManager(aManager)
+  , mStrongManager(aManager)
   , mOwnsBlob(true)
-  , mOwnsRemoteBlob(false)
+  , mBlobIsFile(false)
 {
-  AssertCorrectThreadForManager(aManager);
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aBlob);
 
-  MOZ_COUNT_CTOR(BlobParent);
+  aBlob->AddRef();
 
-  CommonInit(aBlob);
-}
-
-BlobParent::BlobParent(PBackgroundParent* aManager, nsIDOMBlob* aBlob)
-  : mBlob(aBlob)
-  , mRemoteBlob(nullptr)
-  , mBackgroundManager(aManager)
-  , mContentManager(nullptr)
-  , mEventTarget(do_GetCurrentThread())
-  , mOwnsBlob(true)
-  , mOwnsRemoteBlob(false)
-{
-  AssertCorrectThreadForManager(aManager);
-  MOZ_ASSERT(aManager);
-  MOZ_ASSERT(aBlob);
-  MOZ_ASSERT(mEventTarget);
-
-  MOZ_COUNT_CTOR(BlobParent);
-
-  CommonInit(aBlob);
-}
-
-BlobParent::BlobParent(PBackgroundParent* aManager, DOMFileImpl* aBlobImpl)
-  : mBlob(nullptr)
-  , mRemoteBlob(nullptr)
-  , mBackgroundManager(aManager)
-  , mContentManager(nullptr)
-  , mBlobImpl(aBlobImpl)
-  , mEventTarget(do_GetCurrentThread())
-  , mOwnsBlob(false)
-  , mOwnsRemoteBlob(false)
-{
-  AssertCorrectThreadForManager(aManager);
-  MOZ_ASSERT(aManager);
-  MOZ_ASSERT(aBlobImpl);
-  MOZ_ASSERT(mEventTarget);
-
-  MOZ_COUNT_CTOR(BlobParent);
+  nsCOMPtr<nsIDOMFile> file = do_QueryInterface(aBlob);
+  mBlobIsFile = !!file;
 }
 
 BlobParent::BlobParent(nsIContentParent* aManager,
                        const ParentBlobConstructorParams& aParams)
   : mBlob(nullptr)
   , mRemoteBlob(nullptr)
-  , mBackgroundManager(nullptr)
-  , mContentManager(aManager)
+  , mStrongManager(aManager)
   , mOwnsBlob(false)
-  , mOwnsRemoteBlob(false)
+  , mBlobIsFile(false)
 {
-  AssertCorrectThreadForManager(aManager);
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aManager);
-  MOZ_ASSERT(aParams.blobParams().type() !=
-             ChildBlobConstructorParams::T__None);
 
-  MOZ_COUNT_CTOR(BlobParent);
+  ChildBlobConstructorParams::Type paramsType = aParams.blobParams().type();
 
-  CommonInit(aParams);
-}
+  mBlobIsFile =
+    paramsType == ChildBlobConstructorParams::TFileBlobConstructorParams ||
+    paramsType == ChildBlobConstructorParams::TMysteryBlobConstructorParams;
 
-BlobParent::BlobParent(PBackgroundParent* aManager,
-                       const ParentBlobConstructorParams& aParams)
-  : mBlob(nullptr)
-  , mRemoteBlob(nullptr)
-  , mBackgroundManager(aManager)
-  , mContentManager(nullptr)
-  , mEventTarget(do_GetCurrentThread())
-  , mOwnsBlob(false)
-  , mOwnsRemoteBlob(false)
-{
-  AssertCorrectThreadForManager(aManager);
-  MOZ_ASSERT(aManager);
-  MOZ_ASSERT(aParams.blobParams().type() !=
-             ChildBlobConstructorParams::T__None);
-  MOZ_ASSERT(mEventTarget);
+  nsRefPtr<RemoteBlob> remoteBlob = CreateRemoteBlob(aParams);
+  MOZ_ASSERT(remoteBlob);
 
-  MOZ_COUNT_CTOR(BlobParent);
+  remoteBlob->SetActor(this);
+  remoteBlob->MaybeSetInputStream(aParams);
 
-  CommonInit(aParams);
+  nsRefPtr<DOMFile> blob = new DOMFile(remoteBlob);
+  blob.forget(&mBlob);
+
+  mRemoteBlob = remoteBlob;
+  mOwnsBlob = true;
 }
 
 BlobParent::~BlobParent()
 {
-  AssertIsOnOwningThread();
-
-  MOZ_COUNT_DTOR(BlobParent);
 }
 
-void
-BlobParent::CommonInit(nsIDOMBlob* aBlob)
-{
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aBlob);
-
-  aBlob->AddRef();
-}
-
-void
-BlobParent::CommonInit(const ParentBlobConstructorParams& aParams)
-{
-  AssertIsOnOwningThread();
-
-  const ChildBlobConstructorParams& blobParams = aParams.blobParams();
-
-  ChildBlobConstructorParams::Type paramsType = blobParams.type();
-  MOZ_ASSERT(paramsType != ChildBlobConstructorParams::T__None);
-
-  nsRefPtr<RemoteBlob> remoteBlob;
-
-  switch (paramsType) {
-    case ChildBlobConstructorParams::TNormalBlobConstructorParams: {
-      const NormalBlobConstructorParams& params =
-        blobParams.get_NormalBlobConstructorParams();
-      remoteBlob = new RemoteBlob(this,
-                                  aParams.optionalInputStreamParams(),
-                                  params.contentType(),
-                                  params.length());
-      break;
-    }
-
-    case ChildBlobConstructorParams::TFileBlobConstructorParams: {
-      const FileBlobConstructorParams& params =
-        blobParams.get_FileBlobConstructorParams();
-      remoteBlob = new RemoteBlob(this,
-                                  aParams.optionalInputStreamParams(),
-                                  params.name(),
-                                  params.contentType(),
-                                  params.length(),
-                                  params.modDate());
-      break;
-    }
-
-    case ChildBlobConstructorParams::TMysteryBlobConstructorParams: {
-      remoteBlob = new RemoteBlob(this, aParams.optionalInputStreamParams());
-      break;
-    }
-
-    default:
-      MOZ_CRASH("Unknown params!");
-  }
-
-  MOZ_ASSERT(remoteBlob);
-
-  DebugOnly<bool> isMutable;
-  MOZ_ASSERT(NS_SUCCEEDED(remoteBlob->GetMutable(&isMutable)));
-  MOZ_ASSERT(!isMutable);
-
-  remoteBlob.forget(&mRemoteBlob);
-  mOwnsRemoteBlob = true;
-}
-
-#ifdef DEBUG
-
-void
-BlobParent::AssertIsOnOwningThread() const
-{
-  MOZ_ASSERT(IsOnOwningThread());
-}
-
-#endif // DEBUG
-
-// static
 BlobParent*
 BlobParent::Create(nsIContentParent* aManager,
                    const ParentBlobConstructorParams& aParams)
 {
-  AssertCorrectThreadForManager(aManager);
-  MOZ_ASSERT(aManager);
-
-  return CreateFromParams(aManager, aParams);
-}
-
-// static
-BlobParent*
-BlobParent::Create(PBackgroundParent* aManager,
-                   const ParentBlobConstructorParams& aParams)
-{
-  AssertCorrectThreadForManager(aManager);
-  MOZ_ASSERT(aManager);
-
-  return CreateFromParams(aManager, aParams);
-}
-
-// static
-BlobParent*
-BlobParent::CreateFromParams(nsIContentParent* aManager,
-                             const ParentBlobConstructorParams& aParams)
-{
-  AssertCorrectThreadForManager(aManager);
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aManager);
 
   const ChildBlobConstructorParams& blobParams = aParams.blobParams();
@@ -2430,7 +1851,6 @@ BlobParent::CreateFromParams(nsIContentParent* aManager,
 
   switch (blobParams.type()) {
     case ChildBlobConstructorParams::TMysteryBlobConstructorParams:
-      ASSERT_UNLESS_FUZZING();
       return nullptr;
 
     case ChildBlobConstructorParams::TNormalBlobConstructorParams:
@@ -2446,61 +1866,10 @@ BlobParent::CreateFromParams(nsIContentParent* aManager,
           static_cast<const BlobParent*>(params.sourceParent()));
       MOZ_ASSERT(actor);
 
-      nsRefPtr<DOMFileImpl> source = actor->GetBlobImpl();
+      nsCOMPtr<nsIDOMBlob> source = actor->GetBlob();
       MOZ_ASSERT(source);
 
-      nsRefPtr<DOMFileImpl> slicedImpl;
-      nsresult rv =
-        source->Slice(params.begin(), params.end(), params.contentType(), 3,
-                      getter_AddRefs(slicedImpl));
-      NS_ENSURE_SUCCESS(rv, nullptr);
-
-      nsRefPtr<DOMFile> slice = new DOMFile(slicedImpl);
-
-      return new BlobParent(aManager, slice);
-    }
-
-    default:
-      MOZ_CRASH("Unknown params!");
-  }
-
-  MOZ_CRASH("Should never get here!");
-}
-
-BlobParent*
-BlobParent::CreateFromParams(PBackgroundParent* aManager,
-                             const ParentBlobConstructorParams& aParams)
-{
-  AssertCorrectThreadForManager(aManager);
-  MOZ_ASSERT(aManager);
-
-  const ChildBlobConstructorParams& blobParams = aParams.blobParams();
-
-  MOZ_ASSERT(blobParams.type() !=
-             ChildBlobConstructorParams::TMysteryBlobConstructorParams);
-
-  switch (blobParams.type()) {
-    case ChildBlobConstructorParams::TMysteryBlobConstructorParams:
-      ASSERT_UNLESS_FUZZING();
-      return nullptr;
-
-    case ChildBlobConstructorParams::TNormalBlobConstructorParams:
-    case ChildBlobConstructorParams::TFileBlobConstructorParams:
-      return new BlobParent(aManager, aParams);
-
-    case ChildBlobConstructorParams::TSlicedBlobConstructorParams: {
-      const SlicedBlobConstructorParams& params =
-        blobParams.get_SlicedBlobConstructorParams();
-
-      auto* actor =
-        const_cast<BlobParent*>(
-          static_cast<const BlobParent*>(params.sourceParent()));
-      MOZ_ASSERT(actor);
-
-      nsRefPtr<DOMFileImpl> source = actor->GetBlobImpl();
-      MOZ_ASSERT(source);
-
-      nsRefPtr<DOMFileImpl> slice;
+      nsCOMPtr<nsIDOMBlob> slice;
       nsresult rv =
         source->Slice(params.begin(), params.end(), params.contentType(), 3,
                       getter_AddRefs(slice));
@@ -2513,111 +1882,134 @@ BlobParent::CreateFromParams(PBackgroundParent* aManager,
       MOZ_CRASH("Unknown params!");
   }
 
-  MOZ_CRASH("Should never get here!");
-}
-
-// static
-template <class ParentManagerType>
-BlobParent*
-BlobParent::SendSliceConstructor(
-                             ParentManagerType* aManager,
-                             const ParentBlobConstructorParams& aParams,
-                             const ChildBlobConstructorParams& aOtherSideParams)
-{
-  AssertCorrectThreadForManager(aManager);
-  MOZ_ASSERT(aManager);
-
-  BlobParent* newActor = BlobParent::Create(aManager, aParams);
-  MOZ_ASSERT(newActor);
-
-  if (aManager->SendPBlobConstructor(newActor, aOtherSideParams)) {
-    return newActor;
-  }
-
   return nullptr;
 }
 
 already_AddRefed<nsIDOMBlob>
 BlobParent::GetBlob()
 {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mContentManager,
-             "Use GetBlobImpl() instead for background-managed blobs");
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mBlob);
 
-  nsCOMPtr<nsIDOMBlob> blob = mBlob;
-  if (blob) {
-    return blob.forget();
+  nsCOMPtr<nsIDOMBlob> blob;
+
+  // Remote blobs are held alive until the first call to GetBlob. Thereafter we
+  // only hold a weak reference. Normal blobs are held alive until the actor is
+  // destroyed.
+  if (mRemoteBlob && mOwnsBlob) {
+    blob = dont_AddRef(mBlob);
+    mOwnsBlob = false;
+  }
+  else {
+    blob = mBlob;
   }
 
-  MOZ_ASSERT(mRemoteBlob);
-  MOZ_ASSERT(!mOwnsBlob);
-  MOZ_ASSERT(mOwnsRemoteBlob);
-
-  nsRefPtr<DOMFileImpl> impl = GetBlobImpl();
-  MOZ_ASSERT(impl);
-  MOZ_ASSERT(impl == mRemoteBlob);
-
-  MOZ_ASSERT(!mOwnsRemoteBlob);
-
-  blob = new DOMFile(impl);
-  mBlob = blob;
+  MOZ_ASSERT(blob);
 
   return blob.forget();
 }
 
-already_AddRefed<DOMFileImpl>
-BlobParent::GetBlobImpl()
+bool
+BlobParent::SetMysteryBlobInfo(const nsString& aName,
+                               const nsString& aContentType,
+                               uint64_t aLength,
+                               uint64_t aLastModifiedDate)
 {
-  AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mBlob);
+  MOZ_ASSERT(mRemoteBlob);
+  MOZ_ASSERT(aLastModifiedDate != UINT64_MAX);
 
-  nsRefPtr<DOMFileImpl> impl;
-  if (mBlobImpl) {
-    // If we own a DOMFileImpl then just hand it out.
-    impl = mBlobImpl;
-  } else if (mBlob) {
-    // If we already have a blob (either a normal blob that we always own or a
-    // remote blob that we created) then just return its impl.
-    nsCOMPtr<nsIDOMBlob> blob = mBlob;
-    impl = static_cast<DOMFile*>(blob.get())->Impl();
+  ToConcreteBlob(mBlob)->SetLazyData(aName, aContentType, aLength,
+                                     aLastModifiedDate);
 
-    // Make sure the impl hasn't changed somehow if this is a remote blob that
-    // we created.
-    MOZ_ASSERT_IF(mRemoteBlob, impl == mRemoteBlob);
-  } else if (mOwnsRemoteBlob) {
-    // If this is a remote blob and this is the first time a caller is asking
-    // for the impl then we drop our strong reference and only hold a weak
-    // reference hereafter.
-    impl = dont_AddRef(mRemoteBlob);
-    mOwnsRemoteBlob = false;
-  } else {
-    // Hand out our weak reference.
-    impl = mRemoteBlob;
+  FileBlobConstructorParams params(aName, aContentType, aLength,
+                                   aLastModifiedDate);
+  return SendResolveMystery(params);
+}
+
+bool
+BlobParent::SetMysteryBlobInfo(const nsString& aContentType, uint64_t aLength)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mBlob);
+  MOZ_ASSERT(mRemoteBlob);
+
+  nsString voidString;
+  voidString.SetIsVoid(true);
+
+  ToConcreteBlob(mBlob)->SetLazyData(voidString, aContentType, aLength,
+                                     UINT64_MAX);
+
+  NormalBlobConstructorParams params(aContentType, aLength);
+  return SendResolveMystery(params);
+}
+
+nsIContentParent*
+BlobParent::Manager()
+{
+  return mStrongManager;
+}
+
+already_AddRefed<BlobParent::RemoteBlob>
+BlobParent::CreateRemoteBlob(const ParentBlobConstructorParams& aParams)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  const ChildBlobConstructorParams& blobParams = aParams.blobParams();
+
+  nsRefPtr<RemoteBlob> remoteBlob;
+
+  switch (blobParams.type()) {
+    case ChildBlobConstructorParams::TNormalBlobConstructorParams: {
+      const NormalBlobConstructorParams& params =
+        blobParams.get_NormalBlobConstructorParams();
+      remoteBlob = new RemoteBlob(params.contentType(), params.length());
+      break;
+    }
+
+    case ChildBlobConstructorParams::TFileBlobConstructorParams: {
+      const FileBlobConstructorParams& params =
+        blobParams.get_FileBlobConstructorParams();
+      remoteBlob =
+        new RemoteBlob(params.name(), params.contentType(), params.length(),
+                       params.modDate());
+      break;
+    }
+
+    case ChildBlobConstructorParams::TMysteryBlobConstructorParams: {
+      remoteBlob = new RemoteBlob();
+      break;
+    }
+
+    default:
+      MOZ_CRASH("Unknown params!");
   }
 
-  MOZ_ASSERT(impl);
+  MOZ_ASSERT(remoteBlob);
 
-  return impl.forget();
+  if (NS_FAILED(remoteBlob->SetMutable(false))) {
+    MOZ_CRASH("Failed to make remote blob immutable!");
+  }
+
+  return remoteBlob.forget();
 }
 
 void
 BlobParent::NoteDyingRemoteBlob()
 {
+  MOZ_ASSERT(mBlob);
   MOZ_ASSERT(mRemoteBlob);
   MOZ_ASSERT(!mOwnsBlob);
-  MOZ_ASSERT(!mOwnsRemoteBlob);
 
   // This may be called on any thread due to the fact that RemoteBlob is
   // designed to be passed between threads. We must start the shutdown process
   // on the main thread, so we proxy here if necessary.
-  if (!IsOnOwningThread()) {
+  if (!NS_IsMainThread()) {
     nsCOMPtr<nsIRunnable> runnable =
       NS_NewNonOwningRunnableMethod(this, &BlobParent::NoteDyingRemoteBlob);
-
-    if (mEventTarget) {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mEventTarget->Dispatch(runnable,
-                                                          NS_DISPATCH_NORMAL)));
-    } else {
-      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
+    if (NS_FAILED(NS_DispatchToMainThread(runnable))) {
+      MOZ_ASSERT(false, "Should never fail!");
     }
 
     return;
@@ -2628,16 +2020,13 @@ BlobParent::NoteDyingRemoteBlob()
   mBlob = nullptr;
   mRemoteBlob = nullptr;
 
-  mBlobImpl = nullptr;
-
-  unused << PBlobParent::Send__delete__(this);
+  mozilla::unused << PBlobParent::Send__delete__(this);
 }
 
 void
 BlobParent::NoteRunnableCompleted(OpenStreamRunnable* aRunnable)
 {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aRunnable);
+  MOZ_ASSERT(NS_IsMainThread());
 
   for (uint32_t index = 0; index < mOpenStreamRunnables.Length(); index++) {
     nsRevocableEventPtr<OpenStreamRunnable>& runnable =
@@ -2653,39 +2042,26 @@ BlobParent::NoteRunnableCompleted(OpenStreamRunnable* aRunnable)
   MOZ_CRASH("Runnable not in our array!");
 }
 
-bool
-BlobParent::IsOnOwningThread() const
-{
-  return EventTargetIsOnCurrentThread(mEventTarget);
-}
-
 void
 BlobParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   if (mRemoteBlob) {
-    mRemoteBlob->NoteDyingActor();
+    mRemoteBlob->SetActor(nullptr);
   }
 
   if (mBlob && mOwnsBlob) {
     mBlob->Release();
   }
 
-  if (mRemoteBlob && mOwnsRemoteBlob) {
-    mRemoteBlob->Release();
-  }
-
-  mBlobImpl = nullptr;
-
-  mBackgroundManager = nullptr;
-  mContentManager = nullptr;
+  mStrongManager = nullptr;
 }
 
 PBlobStreamParent*
 BlobParent::AllocPBlobStreamParent()
 {
-  AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   return new InputStreamParent();
 }
@@ -2693,41 +2069,18 @@ BlobParent::AllocPBlobStreamParent()
 bool
 BlobParent::RecvPBlobStreamConstructor(PBlobStreamParent* aActor)
 {
-  AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aActor);
-  MOZ_ASSERT_IF(mBlob, !mBlobImpl);
-  MOZ_ASSERT_IF(!mBlob, mBlobImpl);
+  MOZ_ASSERT(mBlob);
   MOZ_ASSERT(!mRemoteBlob);
 
-  nsRefPtr<DOMFile> blob = static_cast<DOMFile*>(mBlob);
-
-  nsRefPtr<DOMFileImpl> impl;
-  if (blob) {
-    impl = blob->Impl();
-  } else {
-    impl = mBlobImpl;
-  }
-
-  MOZ_ASSERT(impl);
-
   nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = impl->GetInternalStream(getter_AddRefs(stream));
+  nsresult rv = mBlob->GetInternalStream(getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, false);
 
-  // If the stream is entirely backed by memory then we can serialize and send
-  // it immediately.
-  if (impl->IsMemoryFile()) {
-    InputStreamParams params;
-    nsTArray<FileDescriptor> fds;
-    SerializeInputStream(stream, params, fds);
+  nsRefPtr<DOMFile> blob = static_cast<DOMFile*>(mBlob);
+  nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(blob->Impl());
 
-    MOZ_ASSERT(params.type() != InputStreamParams::T__None);
-    MOZ_ASSERT(fds.IsEmpty());
-
-    return PBlobStreamParent::Send__delete__(aActor, params, void_t());
-  }
-
-  nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(impl);
   nsCOMPtr<IPrivateRemoteInputStream> remoteStream;
   if (remoteBlob) {
     remoteStream = do_QueryInterface(stream);
@@ -2745,7 +2098,7 @@ BlobParent::RecvPBlobStreamConstructor(PBlobStreamParent* aActor)
   // to the real stream.
   nsCOMPtr<nsIIPCSerializableInputStream> serializableStream;
   if (!remoteBlob ||
-      remoteBlob->GetBlobParent() == this ||
+      static_cast<PBlobParent*>(remoteBlob->GetPBlob()) == this ||
       !remoteStream) {
     serializableStream = do_QueryInterface(stream);
     if (!serializableStream) {
@@ -2754,11 +2107,9 @@ BlobParent::RecvPBlobStreamConstructor(PBlobStreamParent* aActor)
     }
   }
 
-  nsCOMPtr<nsIThread> target;
-  rv = NS_NewNamedThread("Blob Opener", getter_AddRefs(target));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
+  nsCOMPtr<nsIEventTarget> target =
+    do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(target, false);
 
   nsRefPtr<OpenStreamRunnable> runnable =
     new OpenStreamRunnable(this, aActor, stream, serializableStream, target);
@@ -2774,7 +2125,7 @@ BlobParent::RecvPBlobStreamConstructor(PBlobStreamParent* aActor)
 bool
 BlobParent::DeallocPBlobStreamParent(PBlobStreamParent* aActor)
 {
-  AssertIsOnOwningThread();
+  MOZ_ASSERT(NS_IsMainThread());
 
   delete static_cast<InputStreamParent*>(aActor);
   return true;
@@ -2783,135 +2134,41 @@ BlobParent::DeallocPBlobStreamParent(PBlobStreamParent* aActor)
 bool
 BlobParent::RecvResolveMystery(const ResolveMysteryParams& aParams)
 {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aParams.type() != ResolveMysteryParams::T__None);
-  MOZ_ASSERT_IF(mBlob, !mBlobImpl);
-  MOZ_ASSERT_IF(mBlob, mOwnsBlob);
-  MOZ_ASSERT_IF(mBlobImpl, !mBlob);
-  MOZ_ASSERT_IF(mBlobImpl, mBackgroundManager);
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mBlob);
   MOZ_ASSERT(!mRemoteBlob);
-  MOZ_ASSERT(!mOwnsRemoteBlob);
+  MOZ_ASSERT(mOwnsBlob);
 
-  nsRefPtr<DOMFileImpl> blobImpl;
-  if (mBlob) {
-    blobImpl = static_cast<DOMFile*>(mBlob)->Impl();
-  } else {
-    blobImpl = mBlobImpl;
+  if (!mBlobIsFile) {
+    MOZ_ASSERT(false, "Must always be a file!");
+    return false;
   }
 
-  MOZ_ASSERT(blobImpl);
+  DOMFile* blob = ToConcreteBlob(mBlob);
 
   switch (aParams.type()) {
     case ResolveMysteryParams::TNormalBlobConstructorParams: {
       const NormalBlobConstructorParams& params =
         aParams.get_NormalBlobConstructorParams();
-
-      if (NS_WARN_IF(params.length() == UINT64_MAX)) {
-        ASSERT_UNLESS_FUZZING();
-        return false;
-      }
-
       nsString voidString;
       voidString.SetIsVoid(true);
-
-      blobImpl->SetLazyData(voidString,
-                            params.contentType(),
-                            params.length(),
-                            UINT64_MAX);
-      return true;
+      blob->SetLazyData(voidString, params.contentType(),
+                        params.length(), UINT64_MAX);
+      break;
     }
 
     case ResolveMysteryParams::TFileBlobConstructorParams: {
       const FileBlobConstructorParams& params =
         aParams.get_FileBlobConstructorParams();
-      if (NS_WARN_IF(params.name().IsVoid())) {
-        ASSERT_UNLESS_FUZZING();
-        return false;
-      }
-
-      if (NS_WARN_IF(params.length() == UINT64_MAX)) {
-        ASSERT_UNLESS_FUZZING();
-        return false;
-      }
-
-      if (NS_WARN_IF(params.modDate() == UINT64_MAX)) {
-        ASSERT_UNLESS_FUZZING();
-        return false;
-      }
-
-      blobImpl->SetLazyData(params.name(),
-                            params.contentType(),
-                            params.length(),
-                            params.modDate());
-      return true;
+      blob->SetLazyData(params.name(), params.contentType(),
+                        params.length(), params.modDate());
+      break;
     }
 
     default:
       MOZ_CRASH("Unknown params!");
   }
 
-  MOZ_CRASH("Should never get here!");
-}
-
-bool
-BlobParent::RecvGetFileId(int64_t* aFileId)
-{
-  using namespace mozilla::dom::indexedDB;
-
-  AssertIsOnOwningThread();
-  MOZ_ASSERT_IF(mBlob, !mBlobImpl);
-  MOZ_ASSERT_IF(!mBlob, mBlobImpl);
-  MOZ_ASSERT(!mRemoteBlob);
-
-  if (NS_WARN_IF(!IndexedDatabaseManager::InTestingMode())) {
-    ASSERT_UNLESS_FUZZING();
-    return false;
-  }
-
-  nsRefPtr<DOMFileImpl> blobImpl;
-  if (mBlob) {
-    blobImpl = static_cast<DOMFile*>(mBlob)->Impl();
-  } else {
-    blobImpl = mBlobImpl;
-  }
-
-  MOZ_ASSERT(blobImpl);
-
-  *aFileId = blobImpl->GetFileId();
-  return true;
-}
-
-bool
-BlobParent::RecvGetFilePath(nsString* aFilePath)
-{
-  using namespace mozilla::dom::indexedDB;
-
-  AssertIsOnOwningThread();
-  MOZ_ASSERT_IF(mBlob, !mBlobImpl);
-  MOZ_ASSERT_IF(!mBlob, mBlobImpl);
-  MOZ_ASSERT(!mRemoteBlob);
-
-  if (NS_WARN_IF(!IndexedDatabaseManager::InTestingMode())) {
-    ASSERT_UNLESS_FUZZING();
-    return false;
-  }
-
-  nsRefPtr<DOMFileImpl> blobImpl;
-  if (mBlob) {
-    blobImpl = static_cast<DOMFile*>(mBlob)->Impl();
-  } else {
-    blobImpl = mBlobImpl;
-  }
-
-  MOZ_ASSERT(blobImpl);
-
-  nsString filePath;
-  nsresult rv = blobImpl->GetMozFullPathInternal(filePath);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  *aFilePath = filePath;
   return true;
 }
 
@@ -2919,8 +2176,8 @@ bool
 InputStreamChild::Recv__delete__(const InputStreamParams& aParams,
                                  const OptionalFileDescriptorSet& aFDs)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mRemoteStream);
-  mRemoteStream->AssertIsOnOwningThread();
 
   nsTArray<FileDescriptor> fds;
   if (aFDs.type() == OptionalFileDescriptorSet::TPFileDescriptorSetChild) {
@@ -2935,7 +2192,9 @@ InputStreamChild::Recv__delete__(const InputStreamParams& aParams,
   }
 
   nsCOMPtr<nsIInputStream> stream = DeserializeInputStream(aParams, fds);
-  MOZ_ASSERT(stream);
+  if (!stream) {
+    return false;
+  }
 
   mRemoteStream->SetStream(stream);
   return true;
@@ -2951,8 +2210,8 @@ bool
 InputStreamParent::Recv__delete__(const InputStreamParams& aParams,
                                   const OptionalFileDescriptorSet& aFDs)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mRemoteStream);
-  mRemoteStream->AssertIsOnOwningThread();
 
   if (aFDs.type() != OptionalFileDescriptorSet::Tvoid_t) {
     NS_WARNING("Child cannot send FileDescriptors to the parent!");

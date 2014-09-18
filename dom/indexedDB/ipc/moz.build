@@ -1,0 +1,41 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.mozilla.dom.indexedDB += [
+    'SerializationHelpers.h',
+]
+
+# Need to enable these tests sometime soon.
+#XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
+
+UNIFIED_SOURCES += [
+    'IndexedDBChild.cpp',
+    'IndexedDBParent.cpp',
+]
+
+IPDL_SOURCES += [
+    'IndexedDBParams.ipdlh',
+    'PIndexedDB.ipdl',
+    'PIndexedDBCursor.ipdl',
+    'PIndexedDBDatabase.ipdl',
+    'PIndexedDBDeleteDatabaseRequest.ipdl',
+    'PIndexedDBIndex.ipdl',
+    'PIndexedDBObjectStore.ipdl',
+    'PIndexedDBRequest.ipdl',
+    'PIndexedDBTransaction.ipdl',
+]
+
+FAIL_ON_WARNINGS = True
+
+MOCHITEST_MANIFESTS += ['mochitest.ini']
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'
+LOCAL_INCLUDES += [
+    '/dom/indexedDB',
+]
+

@@ -8,7 +8,7 @@
 #include "DeviceStorageFileDescriptor.h"
 #include "nsDeviceStorage.h"
 #include "nsDOMFile.h"
-#include "mozilla/dom/ipc/BlobChild.h"
+#include "mozilla/dom/ipc/Blob.h"
 
 namespace mozilla {
 namespace dom {

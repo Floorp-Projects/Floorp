@@ -265,8 +265,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitClampVToUint8(LClampVToUint8 *lir);
     bool visitCallIteratorStart(LCallIteratorStart *lir);
     bool visitIteratorStart(LIteratorStart *lir);
-    bool visitIteratorNext(LIteratorNext *lir);
     bool visitIteratorMore(LIteratorMore *lir);
+    bool visitIsNoIterAndBranch(LIsNoIterAndBranch *lir);
     bool visitIteratorEnd(LIteratorEnd *lir);
     bool visitArgumentsLength(LArgumentsLength *lir);
     bool visitGetFrameArgument(LGetFrameArgument *lir);

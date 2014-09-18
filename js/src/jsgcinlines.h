@@ -41,7 +41,7 @@ ThreadSafeContext::isThreadLocal(T thing) const
     JS_ASSERT(!IsInsideNursery(thing));
 
     // The thing is not in the nursery, but is it in the private tenured area?
-    if (allocator_->arenas.containsArena(runtime_, thing->arenaHeader()))
+    if (allocator_->arenas.containsArena(runtime_, thing->asTenured()->arenaHeader()))
     {
         // GC should be suppressed in preparation for mutating thread local
         // objects, as we don't want to trip any barriers.
@@ -92,7 +92,7 @@ GetGCThingTraceKind(const void *thing)
     if (IsInsideNursery(cell))
         return JSTRACE_OBJECT;
 #endif
-    return MapAllocToTraceKind(cell->tenuredGetAllocKind());
+    return MapAllocToTraceKind(cell->asTenured()->getAllocKind());
 }
 
 inline void
@@ -232,9 +232,9 @@ class ArenaCellIterImpl
         return thing == limit;
     }
 
-    Cell *getCell() const {
+    TenuredCell *getCell() const {
         JS_ASSERT(!done());
-        return reinterpret_cast<Cell *>(thing);
+        return reinterpret_cast<TenuredCell *>(thing);
     }
 
     template<typename T> T *get() const {
@@ -249,6 +249,10 @@ class ArenaCellIterImpl
             moveForwardIfFree();
     }
 };
+
+template<>
+JSObject *
+ArenaCellIterImpl::get<JSObject>() const;
 
 class ArenaCellIterUnderGC : public ArenaCellIterImpl
 {
@@ -570,7 +574,7 @@ CheckIncrementalZoneState(ThreadSafeContext *cx, T *t)
 
     Zone *zone = cx->asJSContext()->zone();
     JS_ASSERT_IF(t && zone->wasGCStarted() && (zone->isGCMarking() || zone->isGCSweeping()),
-                 t->arenaHeader()->allocatedDuringIncremental);
+                 t->asTenured()->arenaHeader()->allocatedDuringIncremental);
 #endif
 }
 
