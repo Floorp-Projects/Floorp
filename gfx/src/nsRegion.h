@@ -68,6 +68,10 @@ public:
   {
     return IsEqual(aRgn);
   }
+  bool operator!=(const nsRegion& aRgn) const
+  {
+    return !(*this == aRgn);
+  }
 
   friend std::ostream& operator<<(std::ostream& stream, const nsRegion& m);
 
@@ -463,6 +467,10 @@ public:
   bool operator==(const nsIntRegion& aRgn) const
   {
     return IsEqual(aRgn);
+  }
+  bool operator!=(const nsIntRegion& aRgn) const
+  {
+    return !(*this == aRgn);
   }
 
   friend std::ostream& operator<<(std::ostream& stream, const nsIntRegion& m) {

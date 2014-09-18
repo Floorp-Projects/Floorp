@@ -102,19 +102,22 @@ nsMathMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   if (aDocument) {
     aDocument->RegisterPendingLinkUpdate(this);
-    
-    if (!aDocument->GetMathMLEnabled()) {
+  }
+
+  nsIDocument* doc = GetComposedDoc();
+  if (doc) {
+    if (!doc->GetMathMLEnabled()) {
       // Enable MathML and setup the style sheet during binding, not element
       // construction, because we could move a MathML element from the document
       // that created it to another document.
-      aDocument->SetMathMLEnabled();
-      aDocument->
+      doc->SetMathMLEnabled();
+      doc->
         EnsureOnDemandBuiltInUASheet(nsLayoutStylesheetCache::MathMLSheet());
 
       // Rebuild style data for the presshell, because style system
       // optimizations may have taken place assuming MathML was disabled.
       // (See nsRuleNode::CheckSpecifiedProperties.)
-      nsCOMPtr<nsIPresShell> shell = aDocument->GetShell();
+      nsCOMPtr<nsIPresShell> shell = doc->GetShell();
       if (shell) {
         shell->GetPresContext()->PostRebuildAllStyleDataEvent(nsChangeHint(0));
       }
