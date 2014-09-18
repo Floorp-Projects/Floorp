@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta charset="utf-8">
+<title>Test for bug 1066554 - Shadow DOM loads MathML stylesheets as needed</title>
+<body>
+  <div id="x"></div>
+  <script>
+    function insertShadowMathML() {
+      var x = document.getElementById("x");
+      x.createShadowRoot();
+      x.shadowRoot.innerHTML =
+        '<math><msup><mi>X</mi><mi>X</mi></msup></math>';
+      document.documentElement.removeAttribute("class");
+    }
+    window.addEventListener("MozReftestInvalidate", insertShadowMathML, false);
+  </script>
+</body>
+</html>
