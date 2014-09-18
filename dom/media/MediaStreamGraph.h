@@ -174,7 +174,7 @@ public:
    * at aTrackOffset (relative to the start of the stream).
    */
   virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                        TrackTicks aTrackOffset,
+                                        StreamTime aTrackOffset,
                                         uint32_t aTrackEvents,
                                         const MediaSegment& aQueuedMedia) {}
 };
@@ -197,7 +197,7 @@ public:
    * Note that NotifyQueuedTrackChanges() calls will also still occur.
    */
   virtual void NotifyRealtimeData(MediaStreamGraph* aGraph, TrackID aID,
-                                  TrackTicks aTrackOffset,
+                                  StreamTime aTrackOffset,
                                   uint32_t aTrackEvents,
                                   const MediaSegment& aMedia) {}
 };
@@ -487,10 +487,12 @@ public:
 
   double StreamTimeToSeconds(StreamTime aTime)
   {
-    return TrackTicksToSeconds(mBuffer.GraphRate(), aTime);
+    NS_ASSERTION(0 <= aTime && aTime <= STREAM_TIME_MAX, "Bad time");
+    return static_cast<double>(aTime)/mBuffer.GraphRate();
   }
   int64_t StreamTimeToMicroseconds(StreamTime aTime)
   {
+    NS_ASSERTION(0 <= aTime && aTime <= STREAM_TIME_MAX, "Bad time");
     return (aTime*1000000)/mBuffer.GraphRate();
   }
   StreamTime MicrosecondsToStreamTimeRoundDown(int64_t aMicroseconds) {
@@ -618,7 +620,7 @@ protected:
     // blocking.
     MediaTime mBlockedAudioTime;
     // Last tick written to the audio output.
-    TrackTicks mLastTickWritten;
+    StreamTime mLastTickWritten;
     TrackID mTrackID;
   };
   nsTArray<AudioOutputStream> mAudioOutputStreams;
@@ -722,7 +724,7 @@ public:
    * AdvanceKnownTracksTime). Takes ownership of aSegment. aSegment should
    * contain data starting after aStart.
    */
-  void AddTrack(TrackID aID, TrackTicks aStart, MediaSegment* aSegment)
+  void AddTrack(TrackID aID, StreamTime aStart, MediaSegment* aSegment)
   {
     AddTrackInternal(aID, GraphRate(), aStart, aSegment);
   }
@@ -730,7 +732,7 @@ public:
   /**
    * Like AddTrack, but resamples audio from aRate to the graph rate.
    */
-  void AddAudioTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
+  void AddAudioTrack(TrackID aID, TrackRate aRate, StreamTime aStart,
                      AudioSegment* aSegment)
   {
     AddTrackInternal(aID, aRate, aStart, aSegment);
@@ -800,7 +802,7 @@ public:
    * any "extra" buffering, but NotifyQueued TrackChanges() on a TrackUnion
    * will be buffered.
    */
-  TrackTicks GetBufferedTicks(TrackID aID);
+  StreamTime GetBufferedTicks(TrackID aID);
 
   void RegisterForAudioMixing();
 
@@ -836,7 +838,7 @@ protected:
 #ifdef DEBUG
     int mResamplerChannelCount;
 #endif
-    TrackTicks mStart;
+    StreamTime mStart;
     // Each time the track updates are flushed to the media graph thread,
     // this is cleared.
     uint32_t mCommands;
@@ -852,7 +854,7 @@ protected:
   void ResampleAudioToGraphSampleRate(TrackData* aTrackData, MediaSegment* aSegment);
 
   void AddTrackInternal(TrackID aID, TrackRate aRate,
-                        TrackTicks aStart, MediaSegment* aSegment);
+                        StreamTime aStart, MediaSegment* aSegment);
 
   TrackData* FindDataForTrack(TrackID aID)
   {

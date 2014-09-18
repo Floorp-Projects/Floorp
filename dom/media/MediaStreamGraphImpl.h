@@ -350,7 +350,7 @@ public:
    * Queue audio (mix of stream audio and silence for blocked intervals)
    * to the audio output stream. Returns the number of frames played.
    */
-  TrackTicks PlayAudio(MediaStream* aStream, GraphTime aFrom, GraphTime aTo);
+  StreamTime PlayAudio(MediaStream* aStream, GraphTime aFrom, GraphTime aTo);
   /**
    * Set the correct current video frame for stream aStream.
    */
@@ -401,11 +401,14 @@ public:
 
   double MediaTimeToSeconds(GraphTime aTime)
   {
-    return TrackTicksToSeconds(GraphRate(), aTime);
+    NS_ASSERTION(0 <= aTime && aTime <= STREAM_TIME_MAX, "Bad time");
+    return static_cast<double>(aTime)/GraphRate();
   }
   GraphTime SecondsToMediaTime(double aS)
   {
-    return SecondsToTicksRoundDown(GraphRate(), aS);
+    NS_ASSERTION(0 <= aS && aS <= TRACK_TICKS_MAX/TRACK_RATE_MAX,
+                 "Bad seconds");
+    return GraphRate() * aS;
   }
   GraphTime MillisecondsToMediaTime(int32_t aMS)
   {

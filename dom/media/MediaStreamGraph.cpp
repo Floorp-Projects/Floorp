@@ -195,7 +195,7 @@ MediaStreamGraphImpl::ExtractPendingInput(SourceMediaStream* aStream,
       aStream->ApplyTrackDisabling(data->mID, data->mData);
       for (uint32_t j = 0; j < aStream->mListeners.Length(); ++j) {
         MediaStreamListener* l = aStream->mListeners[j];
-        TrackTicks offset = (data->mCommands & SourceMediaStream::TRACK_CREATE)
+        StreamTime offset = (data->mCommands & SourceMediaStream::TRACK_CREATE)
             ? data->mStart : aStream->mBuffer.FindTrack(data->mID)->GetSegment()->GetDuration();
         l->NotifyQueuedTrackChanges(this, data->mID,
                                     offset, data->mCommands, *data->mData);
@@ -950,19 +950,19 @@ MediaStreamGraphImpl::CreateOrDestroyAudioStreams(GraphTime aAudioOutputStartTim
   }
 }
 
-TrackTicks
+StreamTime
 MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
                                 GraphTime aFrom, GraphTime aTo)
 {
   MOZ_ASSERT(mRealtime, "Should only attempt to play audio in realtime mode");
 
-  TrackTicks ticksWritten = 0;
+  StreamTime ticksWritten = 0;
   // We compute the number of needed ticks by converting a difference of graph
   // time rather than by substracting two converted stream time to ensure that
   // the rounding between {Graph,Stream}Time and track ticks is not dependant
   // on the absolute value of the {Graph,Stream}Time, and so that number of
   // ticks to play is the same for each cycle.
-  TrackTicks ticksNeeded = aTo - aFrom;
+  StreamTime ticksNeeded = aTo - aFrom;
 
   if (aStream->mAudioOutputStreams.IsEmpty()) {
     return 0;
@@ -983,7 +983,7 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
     // because of the rounding issue. We track that to ensure we don't skip a
     // sample. One sample may be played twice, but this should not happen
     // again during an unblocked sequence of track samples.
-    TrackTicks offset = GraphTimeToStreamTime(aStream, aFrom);
+    StreamTime offset = GraphTimeToStreamTime(aStream, aFrom);
     if (audioOutput.mLastTickWritten &&
         audioOutput.mLastTickWritten != offset) {
       // If there is a global underrun of the MSG, this property won't hold, and
@@ -1006,7 +1006,7 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
 
       // Check how many ticks of sound we can provide if we are blocked some
       // time in the middle of this cycle.
-      TrackTicks toWrite = 0;
+      StreamTime toWrite = 0;
       if (end >= aTo) {
         toWrite = ticksNeeded;
       } else {
@@ -1021,8 +1021,8 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
                                     aStream, toWrite, MediaTimeToSeconds(t), MediaTimeToSeconds(end),
                                     offset, offset + toWrite));
       } else {
-        TrackTicks endTicksNeeded = offset + toWrite;
-        TrackTicks endTicksAvailable = audio->GetDuration();
+        StreamTime endTicksNeeded = offset + toWrite;
+        StreamTime endTicksAvailable = audio->GetDuration();
         STREAM_LOG(PR_LOG_DEBUG+1, ("MediaStream %p writing %ld samples for %f to %f (samples %ld to %ld)\n",
                                      aStream, toWrite, MediaTimeToSeconds(t), MediaTimeToSeconds(end),
                                      offset, endTicksNeeded));
@@ -1093,12 +1093,12 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
   MOZ_ASSERT(framePosition >= aStream->mBufferStartTime, "frame position before buffer?");
   StreamTime frameBufferTime = GraphTimeToStreamTime(aStream, framePosition);
 
-  TrackTicks start;
+  StreamTime start;
   const VideoFrame* frame = nullptr;
   for (StreamBuffer::TrackIter tracks(aStream->GetStreamBuffer(), MediaSegment::VIDEO);
        !tracks.IsEnded(); tracks.Next()) {
     VideoSegment* segment = tracks->Get<VideoSegment>();
-    TrackTicks thisStart;
+    StreamTime thisStart;
     const VideoFrame* thisFrame =
         segment->GetFrameAt(frameBufferTime, &thisStart);
     if (thisFrame && thisFrame->GetImage()) {
@@ -1196,10 +1196,10 @@ MediaStreamGraphImpl::PrepareUpdatesToMainThreadState(bool aFinalUpdate)
 GraphTime
 MediaStreamGraphImpl::RoundUpToNextAudioBlock(GraphTime aTime)
 {
-  TrackTicks ticks = aTime;
+  StreamTime ticks = aTime;
   uint64_t block = ticks >> WEBAUDIO_BLOCK_SIZE_BITS;
   uint64_t nextBlock = block + 1;
-  TrackTicks nextTicks = nextBlock << WEBAUDIO_BLOCK_SIZE_BITS;
+  StreamTime nextTicks = nextBlock << WEBAUDIO_BLOCK_SIZE_BITS;
   return nextTicks;
 }
 
@@ -1297,7 +1297,7 @@ MediaStreamGraphImpl::Process(GraphTime aFrom, GraphTime aTo)
   bool doneAllProducing = false;
   // This is the number of frame that are written to the AudioStreams, for
   // this cycle.
-  TrackTicks ticksPlayed = 0;
+  StreamTime ticksPlayed = 0;
 
   mMixer.StartMixing();
 
@@ -1336,7 +1336,7 @@ MediaStreamGraphImpl::Process(GraphTime aFrom, GraphTime aTo)
     if (mRealtime) {
       CreateOrDestroyAudioStreams(aFrom, stream);
       if (CurrentDriver()->AsAudioCallbackDriver()) {
-        TrackTicks ticksPlayedForThisStream = PlayAudio(stream, aFrom, aTo);
+        StreamTime ticksPlayedForThisStream = PlayAudio(stream, aFrom, aTo);
         if (!ticksPlayed) {
           ticksPlayed = ticksPlayedForThisStream;
         } else {
@@ -2270,7 +2270,7 @@ SourceMediaStream::SetPullEnabled(bool aEnabled)
 }
 
 void
-SourceMediaStream::AddTrackInternal(TrackID aID, TrackRate aRate, TrackTicks aStart,
+SourceMediaStream::AddTrackInternal(TrackID aID, TrackRate aRate, StreamTime aStart,
                                     MediaSegment* aSegment)
 {
   MutexAutoLock lock(mMutex);
@@ -2361,7 +2361,7 @@ SourceMediaStream::NotifyDirectConsumers(TrackData *aTrack,
 
   for (uint32_t j = 0; j < mDirectListeners.Length(); ++j) {
     MediaStreamDirectListener* l = mDirectListeners[j];
-    TrackTicks offset = 0; // FIX! need a separate TrackTicks.... or the end of the internal buffer
+    StreamTime offset = 0; // FIX! need a separate StreamTime.... or the end of the internal buffer
     l->NotifyRealtimeData(static_cast<MediaStreamGraph*>(GraphImpl()), aTrack->mID,
                           offset, aTrack->mCommands, *aSegment);
   }
@@ -2505,7 +2505,7 @@ SourceMediaStream::EndAllTrackAndFinish()
   // we will call NotifyEvent() to let GetUserMedia know
 }
 
-TrackTicks
+StreamTime
 SourceMediaStream::GetBufferedTicks(TrackID aID)
 {
   StreamBuffer::Track* track  = mBuffer.FindTrack(aID);

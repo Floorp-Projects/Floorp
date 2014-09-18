@@ -39,7 +39,7 @@ public:
    * change from MediaStreamGraph. Called on the MediaStreamGraph thread.
    */
   virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                        TrackTicks aTrackOffset,
+                                        StreamTime aTrackOffset,
                                         uint32_t aTrackEvents,
                                         const MediaSegment& aQueuedMedia) = 0;
 
@@ -146,7 +146,7 @@ public:
   {}
 
   virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                        TrackTicks aTrackOffset,
+                                        StreamTime aTrackOffset,
                                         uint32_t aTrackEvents,
                                         const MediaSegment& aQueuedMedia) MOZ_OVERRIDE;
 
@@ -239,7 +239,7 @@ public:
    * change from MediaStreamGraph. Called on the MediaStreamGraph thread.
    */
   virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
-                                        TrackTicks aTrackOffset,
+                                        StreamTime aTrackOffset,
                                         uint32_t aTrackEvents,
                                         const MediaSegment& aQueuedMedia) MOZ_OVERRIDE;
   /**
@@ -297,10 +297,10 @@ protected:
   TrackRate mTrackRate;
 
   /**
-   * The total duration of frames in encoded video in TrackTicks, kept track of
+   * The total duration of frames in encoded video in StreamTime, kept track of
    * in subclasses.
    */
-  TrackTicks mTotalFrameDuration;
+  StreamTime mTotalFrameDuration;
 
   /**
    * The last unique frame we've sent to track encoder, kept track of in

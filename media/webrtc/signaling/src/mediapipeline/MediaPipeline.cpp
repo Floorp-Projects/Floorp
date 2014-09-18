@@ -940,7 +940,7 @@ nsresult MediaPipeline::PipelineTransport::SendRtcpPacket_s(
 // Called if we're attached with AddDirectListener()
 void MediaPipelineTransmit::PipelineListener::
 NotifyRealtimeData(MediaStreamGraph* graph, TrackID tid,
-                   TrackTicks offset,
+                   StreamTime offset,
                    uint32_t events,
                    const MediaSegment& media) {
   MOZ_MTLOG(ML_DEBUG, "MediaPipeline::NotifyRealtimeData()");
@@ -950,7 +950,7 @@ NotifyRealtimeData(MediaStreamGraph* graph, TrackID tid,
 
 void MediaPipelineTransmit::PipelineListener::
 NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
-                         TrackTicks offset,
+                         StreamTime offset,
                          uint32_t events,
                          const MediaSegment& queued_media) {
   MOZ_MTLOG(ML_DEBUG, "MediaPipeline::NotifyQueuedTrackChanges()");
@@ -972,7 +972,7 @@ NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
 
 void MediaPipelineTransmit::PipelineListener::
 NewData(MediaStreamGraph* graph, TrackID tid,
-        TrackTicks offset,
+        StreamTime offset,
         uint32_t events,
         const MediaSegment& media) {
   if (!active_) {
@@ -1543,7 +1543,7 @@ NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) {
   nsRefPtr<layers::Image> image = image_;
   // our constructor sets track_rate_ to the graph rate
   MOZ_ASSERT(track_rate_ == source_->GraphRate());
-  TrackTicks delta = desired_time - played_ticks_;
+  StreamTime delta = desired_time - played_ticks_;
 
   // Don't append if we've already provided a frame that supposedly
   // goes past the current aDesiredTime Doing so means a negative
