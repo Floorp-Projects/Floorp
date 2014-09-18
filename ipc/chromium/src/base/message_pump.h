@@ -5,16 +5,14 @@
 #ifndef BASE_MESSAGE_PUMP_H_
 #define BASE_MESSAGE_PUMP_H_
 
-#include "nsISupportsImpl.h"
+#include "base/ref_counted.h"
 
 namespace base {
 
 class TimeTicks;
 
-class MessagePump {
+class MessagePump : public RefCountedThreadSafe<MessagePump> {
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MessagePump)
-
   // Please see the comments above the Run method for an illustration of how
   // these delegate methods are used.
   class Delegate {
@@ -40,6 +38,8 @@ class MessagePump {
     // Returns true to indicate that idle work was done.
     virtual bool DoIdleWork() = 0;
   };
+
+  virtual ~MessagePump() {}
 
   // The Run method is called to enter the message pump's run loop.
   //
@@ -123,9 +123,6 @@ class MessagePump {
   // cancelling any pending DoDelayedWork callback.  This method may only be
   // used on the thread that called Run.
   virtual void ScheduleDelayedWork(const TimeTicks& delayed_work_time) = 0;
-
-protected:
-  virtual ~MessagePump() {};
 };
 
 }  // namespace base

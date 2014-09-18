@@ -201,9 +201,9 @@ bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
 }
 
 bool Channel::ChannelImpl::EnqueueHelloMessage() {
-  mozilla::UniquePtr<Message> m = mozilla::MakeUnique<Message>(MSG_ROUTING_NONE,
-                                                               HELLO_MESSAGE_TYPE,
-                                                               IPC::Message::PRIORITY_NORMAL);
+  scoped_ptr<Message> m(new Message(MSG_ROUTING_NONE,
+                                    HELLO_MESSAGE_TYPE,
+                                    IPC::Message::PRIORITY_NORMAL));
   if (!m->WriteInt(GetCurrentProcessId())) {
     CloseHandle(pipe_);
     pipe_ = INVALID_HANDLE_VALUE;

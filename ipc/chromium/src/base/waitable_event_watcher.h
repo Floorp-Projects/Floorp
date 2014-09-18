@@ -12,7 +12,6 @@
 #else
 #include "base/message_loop.h"
 #include "base/waitable_event.h"
-#include "nsAutoPtr.h"
 #endif
 
 namespace base {
@@ -142,10 +141,10 @@ class WaitableEventWatcher
   void WillDestroyCurrentMessageLoop();
 
   MessageLoop* message_loop_;
-  nsRefPtr<Flag> cancel_flag_;
+  scoped_refptr<Flag> cancel_flag_;
   AsyncWaiter* waiter_;
   AsyncCallbackTask* callback_task_;
-  nsRefPtr<WaitableEvent::WaitableEventKernel> kernel_;
+  scoped_refptr<WaitableEvent::WaitableEventKernel> kernel_;
 #endif
 };
 
