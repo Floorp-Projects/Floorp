@@ -8,6 +8,7 @@
 #include "base/thread.h"
 #include "chrome/common/ipc_sync_channel.h"
 #include "chrome/common/message_router.h"
+#include "mozilla/UniquePtr.h"
 
 class ResourceDispatcher;
 
@@ -69,7 +70,7 @@ class ChildThread : public IPC::Channel::Listener,
   MessageLoop* owner_loop_;
 
   std::wstring channel_name_;
-  scoped_ptr<IPC::Channel> channel_;
+  mozilla::UniquePtr<IPC::Channel> channel_;
 
   // Used only on the background render thread to implement message routing
   // functionality to the consumers of the ChildThread.
