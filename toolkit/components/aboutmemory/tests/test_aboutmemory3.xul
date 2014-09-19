@@ -305,9 +305,29 @@ Other Measurements\n\
 \n\
 End of P\n\
 P2 (pid NNN)\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+Explicit Allocations\n\
+\n\
+0.00 MB (100.0%) -- explicit\n\
+└──0.00 MB (100.0%) ── window-objects/top(bar.com, id=NNN)/...\n\
+\n\
 Other Measurements\n\
 \n\
-0.00 MB ── z-moz-nullprincipal:{NNNNNNNN-NNNN-NNNN-NNNN-NNNNNNNNNNNN} 0xNNN-blah(0xNNN) pid NNN pid=NNN\n\
+0.00 MB (100.0%) -- p3\n\
+└──0.00 MB (100.0%) ── zone(0xNNN)/p3\n\
+\n\
+0.00 MB (100.0%) -- p4\n\
+└──0.00 MB (100.0%) ── js-zone(0xNNN)/p4\n\
+\n\
+0.00 MB (100.0%) -- p5\n\
+└──0.00 MB (100.0%) ── worker(foo.com, 0xNNN)/p5\n\
+\n\
+0.00 MB (100.0%) -- p6\n\
+└──0.00 MB (100.0%) ── z-moz-nullprincipal:{NNNNNNNN-NNNN-NNNN-NNNN-NNNNNNNNNNNN}/p6\n\
+\n\
+0.00 MB ── p1 (pid NNN)\n\
+0.00 MB ── p2 (blah, pid=NNN)\n\
 \n\
 End of P2 (pid NNN)\n\
 P3\n\
@@ -380,9 +400,29 @@ Other Measurements\n\
 \n\
 End of P\n\
 P2 (pid NNN)\n\
+\n\
+WARNING: the 'heap-allocated' memory reporter does not work for this platform and/or configuration. This means that 'heap-unclassified' is not shown and the 'explicit' tree shows less memory than it should.\n\
+Explicit Allocations\n\
+\n\
+11 B (100.0%) -- explicit\n\
+└──11 B (100.0%) ── window-objects/top(bar.com, id=NNN)/...\n\
+\n\
 Other Measurements\n\
 \n\
-11 B ── z-moz-nullprincipal:{NNNNNNNN-NNNN-NNNN-NNNN-NNNNNNNNNNNN} 0xNNN-blah(0xNNN) pid NNN pid=NNN\n\
+11 B (100.0%) -- p3\n\
+└──11 B (100.0%) ── zone(0xNNN)/p3\n\
+\n\
+11 B (100.0%) -- p4\n\
+└──11 B (100.0%) ── js-zone(0xNNN)/p4\n\
+\n\
+11 B (100.0%) -- p5\n\
+└──11 B (100.0%) ── worker(foo.com, 0xNNN)/p5\n\
+\n\
+11 B (100.0%) -- p6\n\
+└──11 B (100.0%) ── z-moz-nullprincipal:{NNNNNNNN-NNNN-NNNN-NNNN-NNNNNNNNNNNN}/p6\n\
+\n\
+11 B ── p1 (pid NNN)\n\
+11 B ── p2 (blah, pid=NNN)\n\
 \n\
 End of P2 (pid NNN)\n\
 P3\n\
