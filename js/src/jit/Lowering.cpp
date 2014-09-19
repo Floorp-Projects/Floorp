@@ -1288,6 +1288,12 @@ LIRGenerator::visitMinMax(MMinMax *ins)
         return defineReuseInput(lir, ins, 0);
     }
 
+    if (ins->specialization() == MIRType_Float32) {
+        LMinMaxF *lir = new(alloc()) LMinMaxF(useRegisterAtStart(first), useRegister(second));
+        return defineReuseInput(lir, ins, 0);
+    }
+
+    MOZ_ASSERT(ins->specialization() == MIRType_Double);
     LMinMaxD *lir = new(alloc()) LMinMaxD(useRegisterAtStart(first), useRegister(second));
     return defineReuseInput(lir, ins, 0);
 }
@@ -3721,15 +3727,30 @@ LIRGenerator::visitSimdExtractElement(MSimdExtractElement *ins)
         // Note: there could be int16x8 in the future, which doesn't use the
         // same instruction. We either need to pass the arity or create new LIns.
         LUse use = useRegisterAtStart(ins->input());
-        return define(new(alloc()) LSimdExtractElementI(use, ins->lane()), ins);
+        return define(new(alloc()) LSimdExtractElementI(use), ins);
     }
 
     if (ins->input()->type() == MIRType_Float32x4) {
         LUse use = useRegisterAtStart(ins->input());
-        return define(new(alloc()) LSimdExtractElementF(use, ins->lane()), ins);
+        return define(new(alloc()) LSimdExtractElementF(use), ins);
     }
 
     MOZ_CRASH("Unknown SIMD kind when extracting element");
+}
+
+bool
+LIRGenerator::visitSimdInsertElement(MSimdInsertElement *ins)
+{
+    JS_ASSERT(IsSimdType(ins->type()));
+
+    LUse vec = useRegisterAtStart(ins->vector());
+    LUse val = useRegister(ins->value());
+    if (ins->type() == MIRType_Int32x4)
+        return defineReuseInput(new(alloc()) LSimdInsertElementI(vec, val), ins, 0);
+    if (ins->type() == MIRType_Float32x4)
+        return defineReuseInput(new(alloc()) LSimdInsertElementF(vec, val), ins, 0);
+
+    MOZ_CRASH("Unknown SIMD kind when generating constant");
 }
 
 bool

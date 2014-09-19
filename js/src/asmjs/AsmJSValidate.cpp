@@ -1423,7 +1423,11 @@ class MOZ_STACK_CLASS ModuleCompiler
             !addStandardLibrarySimdOpName("select", AsmJSSimdOperation_select) ||
             !addStandardLibrarySimdOpName("splat", AsmJSSimdOperation_splat) ||
             !addStandardLibrarySimdOpName("max", AsmJSSimdOperation_max) ||
-            !addStandardLibrarySimdOpName("min", AsmJSSimdOperation_min))
+            !addStandardLibrarySimdOpName("min", AsmJSSimdOperation_min) ||
+            !addStandardLibrarySimdOpName("withX", AsmJSSimdOperation_withX) ||
+            !addStandardLibrarySimdOpName("withY", AsmJSSimdOperation_withY) ||
+            !addStandardLibrarySimdOpName("withZ", AsmJSSimdOperation_withZ) ||
+            !addStandardLibrarySimdOpName("withW", AsmJSSimdOperation_withW))
         {
             return false;
         }
@@ -2474,6 +2478,18 @@ class FunctionCompiler
 
         JS_ASSERT(IsSimdType(lhs->type()) && rhs->type() == lhs->type());
         MSimdBinaryComp *ins = MSimdBinaryComp::NewAsmJS(alloc(), lhs, rhs, op);
+        curBlock_->add(ins);
+        return ins;
+    }
+
+    MDefinition *insertElementSimd(MDefinition *vec, MDefinition *val, SimdLane lane, MIRType type)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        MOZ_ASSERT(IsSimdType(vec->type()) && vec->type() == type);
+        MOZ_ASSERT(!IsSimdType(val->type()));
+        MSimdInsertElement *ins = MSimdInsertElement::NewAsmJS(alloc(), vec, val, type, lane);
         curBlock_->add(ins);
         return ins;
     }
@@ -3567,6 +3583,10 @@ IsSimdValidOperationType(AsmJSSimdType type, AsmJSSimdOperation op)
       case AsmJSSimdOperation_xor:
       case AsmJSSimdOperation_select:
       case AsmJSSimdOperation_splat:
+      case AsmJSSimdOperation_withX:
+      case AsmJSSimdOperation_withY:
+      case AsmJSSimdOperation_withZ:
+      case AsmJSSimdOperation_withW:
         return true;
       case AsmJSSimdOperation_mul:
       case AsmJSSimdOperation_div:
@@ -4353,13 +4373,21 @@ CheckMathMinMax(FunctionCompiler &f, ParseNode *callNode, MDefinition **def, boo
     if (!CheckExpr(f, firstArg, &firstDef, &firstType))
         return false;
 
-    bool opIsDouble = firstType.isMaybeDouble();
-    bool opIsInteger = firstType.isInt();
+    if (firstType.isMaybeDouble()) {
+        *type = MathRetType::Double;
+        firstType = Type::MaybeDouble;
+    } else if (firstType.isMaybeFloat()) {
+        *type = MathRetType::Float;
+        firstType = Type::MaybeFloat;
+    } else if (firstType.isInt()) {
+        *type = MathRetType::Signed;
+        firstType = Type::Int;
+    } else {
+        return f.failf(firstArg, "%s is not a subtype of double?, float? or int",
+                       firstType.toChars());
+    }
+
     MIRType opType = firstType.toMIRType();
-
-    if (!opIsDouble && !opIsInteger)
-        return f.failf(firstArg, "%s is not a subtype of double? or int", firstType.toChars());
-
     MDefinition *lastDef = firstDef;
     ParseNode *nextArg = NextNode(firstArg);
     for (unsigned i = 1; i < CallArgListLength(callNode); i++, nextArg = NextNode(nextArg)) {
@@ -4368,15 +4396,12 @@ CheckMathMinMax(FunctionCompiler &f, ParseNode *callNode, MDefinition **def, boo
         if (!CheckExpr(f, nextArg, &nextDef, &nextType))
             return false;
 
-        if (opIsDouble && !nextType.isMaybeDouble())
-            return f.failf(nextArg, "%s is not a subtype of double?", nextType.toChars());
-        if (opIsInteger && !nextType.isInt())
-            return f.failf(nextArg, "%s is not a subtype of int", nextType.toChars());
+        if (!(nextType <= firstType))
+            return f.failf(nextArg, "%s is not a subtype of %s", nextType.toChars(), firstType.toChars());
 
         lastDef = f.minMax(lastDef, nextDef, opType, isMax);
     }
 
-    *type = MathRetType(opIsDouble ? MathRetType::Double : MathRetType::Signed);
     *def = lastDef;
     return true;
 }
@@ -4818,6 +4843,35 @@ class CheckSimdSelectArgs
     }
 };
 
+class CheckSimdVectorScalarArgs
+{
+    Type formalType_;
+
+  public:
+    explicit CheckSimdVectorScalarArgs(Type t) : formalType_(t) {}
+
+    bool operator()(FunctionCompiler &f, ParseNode *arg, unsigned argIndex, Type actualType) const
+    {
+        MOZ_ASSERT(argIndex < 2);
+        if (argIndex == 0) {
+            // First argument is the vector
+            if (!(actualType <= formalType_)) {
+                return f.failf(arg, "%s is not a subtype of %s", actualType.toChars(),
+                               formalType_.toChars());
+            }
+            return true;
+        }
+
+        // Second argument is the scalar
+        Type coercedFormalType = formalType_.simdToCoercedScalarType();
+        if (!(actualType <= coercedFormalType)) {
+            return f.failf(arg, "%s is not a subtype of %s", actualType.toChars(),
+                           coercedFormalType.toChars());
+        }
+        return true;
+    }
+};
+
 } // anonymous namespace
 
 template<class OpEnum>
@@ -4844,6 +4898,18 @@ CheckSimdBinary<MSimdBinaryComp::Operation>(FunctionCompiler &f, ParseNode *call
         return false;
     *def = f.binarySimd(argDefs[0], argDefs[1], op);
     *type = Type::Int32x4;
+    return true;
+}
+
+static bool
+CheckSimdWith(FunctionCompiler &f, ParseNode *call, Type retType, SimdLane lane, MDefinition **def,
+              Type *type)
+{
+    DefinitionVector defs;
+    if (!CheckSimdCallArgs(f, call, 2, CheckSimdVectorScalarArgs(retType), &defs))
+        return false;
+    *def = f.insertElementSimd(defs[0], defs[1], lane, retType.toMIRType());
+    *type = retType;
     return true;
 }
 
@@ -4888,6 +4954,15 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
         return CheckSimdBinary(f, call, retType, MSimdBinaryBitwise::or_, def, type);
       case AsmJSSimdOperation_xor:
         return CheckSimdBinary(f, call, retType, MSimdBinaryBitwise::xor_, def, type);
+
+      case AsmJSSimdOperation_withX:
+        return CheckSimdWith(f, call, retType, SimdLane::LaneX, def, type);
+      case AsmJSSimdOperation_withY:
+        return CheckSimdWith(f, call, retType, SimdLane::LaneY, def, type);
+      case AsmJSSimdOperation_withZ:
+        return CheckSimdWith(f, call, retType, SimdLane::LaneZ, def, type);
+      case AsmJSSimdOperation_withW:
+        return CheckSimdWith(f, call, retType, SimdLane::LaneW, def, type);
 
       case AsmJSSimdOperation_splat: {
         DefinitionVector defs;

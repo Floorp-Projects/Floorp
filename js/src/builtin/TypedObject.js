@@ -195,20 +195,6 @@ function TypedObjectSet(descr, typedObj, offset, fromValue) {
   if (!TypedObjectIsAttached(typedObj))
     ThrowError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
 
-  // Fast path: `fromValue` is a typed object with same type
-  // representation as the destination. In that case, we can just do a
-  // memcpy.
-  if (IsObject(fromValue) && ObjectIsTypedObject(fromValue)) {
-    if (!descr.variable && DescrsEquiv(descr, TypedObjectTypeDescr(fromValue))) {
-      if (!TypedObjectIsAttached(fromValue))
-        ThrowError(JSMSG_TYPEDOBJECT_HANDLE_UNATTACHED);
-
-      var size = DESCR_SIZE(descr);
-      Memcpy(typedObj, offset, fromValue, 0, size);
-      return;
-    }
-  }
-
   switch (DESCR_KIND(descr)) {
   case JS_TYPEREPR_SCALAR_KIND:
     TypedObjectSetScalar(descr, typedObj, offset, fromValue);
@@ -343,13 +329,33 @@ function TypedObjectSetReference(descr, typedObj, offset, fromValue) {
 
 // Sets `fromValue` to `this` assuming that `this` is a scalar type.
 function TypedObjectSetSimd(descr, typedObj, offset, fromValue) {
-  // It is only permitted to set a float32x4/int32x4 value from another
-  // float32x4/int32x4; in that case, the "fast path" that uses memcopy will
-  // have already matched. So if we get to this point, we're supposed
-  // to "adapt" fromValue, but there are no legal adaptions.
-  ThrowError(JSMSG_CANT_CONVERT_TO,
-             typeof(fromValue),
-             DESCR_STRING_REPR(descr));
+  if (!IsObject(fromValue) || !ObjectIsTypedObject(fromValue))
+    ThrowError(JSMSG_CANT_CONVERT_TO,
+               typeof(fromValue),
+               DESCR_STRING_REPR(descr));
+
+  if (!DescrsEquiv(descr, TypedObjectTypeDescr(fromValue)))
+    ThrowError(JSMSG_CANT_CONVERT_TO,
+               typeof(fromValue),
+               DESCR_STRING_REPR(descr));
+
+  var type = DESCR_TYPE(descr);
+  switch (type) {
+    case JS_SIMDTYPEREPR_FLOAT32:
+      Store_float32(typedObj, offset + 0, Load_float32(fromValue, 0));
+      Store_float32(typedObj, offset + 4, Load_float32(fromValue, 4));
+      Store_float32(typedObj, offset + 8, Load_float32(fromValue, 8));
+      Store_float32(typedObj, offset + 12, Load_float32(fromValue, 12));
+      break;
+    case JS_SIMDTYPEREPR_INT32:
+      Store_int32(typedObj, offset + 0, Load_int32(fromValue, 0));
+      Store_int32(typedObj, offset + 4, Load_int32(fromValue, 4));
+      Store_int32(typedObj, offset + 8, Load_int32(fromValue, 8));
+      Store_int32(typedObj, offset + 12, Load_int32(fromValue, 12));
+      break;
+    default:
+      assert(false, "Unhandled Simd type: " + type);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////

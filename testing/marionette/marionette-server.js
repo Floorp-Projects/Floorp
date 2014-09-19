@@ -2445,6 +2445,25 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
+   * Maximizes the Browser Window as if the user pressed the maximise button
+   *
+   * Not Supported on B2G or Fennec
+   */
+  maximizeWindow: function MDA_maximizeWindow (aRequest) {
+    this.command_id = this.getCommandId();
+
+    if (appName !== "Firefox") {
+      this.sendError("Not supported for mobile", 405, null, this.command_id);
+      return;
+    }
+
+    let curWindow = this.getCurrentWindow();
+    curWindow.moveTo(0,0);
+    curWindow.resizeTo(curWindow.screen.availWidth, curWindow.screen.availHeight);
+    this.sendOk(this.command_id);
+  },
+
+  /**
    * Helper function to convert an outerWindowID into a UID that Marionette
    * tracks.
    */
@@ -2653,7 +2672,8 @@ MarionetteServerConnection.prototype.requestTypes = {
   "getScreenOrientation": MarionetteServerConnection.prototype.getScreenOrientation,
   "setScreenOrientation": MarionetteServerConnection.prototype.setScreenOrientation,
   "getWindowSize": MarionetteServerConnection.prototype.getWindowSize,
-  "setWindowSize": MarionetteServerConnection.prototype.setWindowSize
+  "setWindowSize": MarionetteServerConnection.prototype.setWindowSize,
+  "maximizeWindow": MarionetteServerConnection.prototype.maximizeWindow
 };
 
 /**

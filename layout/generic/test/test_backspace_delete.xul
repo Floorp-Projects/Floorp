@@ -33,23 +33,40 @@ function execTests() {
   }
 
   var eatSpace;
+  var deleteImmediately;
 
-  function getPrefs() {
+  function getPrefs(branch) {
     const prefSvcContractID = "@mozilla.org/preferences-service;1";
     const prefSvcIID = Components.interfaces.nsIPrefService;
     return Components.classes[prefSvcContractID].getService(prefSvcIID)
-                                                 .getBranch("layout.word_select.");
+                                                 .getBranch(branch);
+  }
+
+  function setPref(branch, pref, newValue) {
+    getPrefs(branch).setBoolPref(pref, newValue);
+    return newValue;
+  }
+
+  function restorePref(branch, pref, newValue) {
+    try {
+      getPrefs(branch).clearUserPref(pref);
+    } catch(ex) {}
   }
 
   function setEatSpace(newValue) {
-    getPrefs().setBoolPref("eat_space_to_next_word", newValue);
-    eatSpace = newValue;
+    eatSpace = setPref("layout.word_select.", "eat_space_to_next_word", newValue);
   }
 
   function restoreEatSpace() {
-    try {
-      getPrefs().clearUserPref("eat_space_to_next_word");
-    } catch(ex) {}
+    restorePref("layout.word_select.", "eat_space_to_next_word");
+  }
+
+  function setDeleteImmediately(newValue) {
+    deleteImmediately = setPref("bidi.edit.", "delete_immediately", newValue);
+  }
+
+  function restoreDeleteImmediately() {
+    restorePref("bidi.edit.", "delete_immediately");
   }
 
   function doCommand(cmd) {
@@ -86,7 +103,7 @@ function execTests() {
 
   function testDelete(node, offset, text, richtext) {
     doCommand("cmd_deleteCharForward");
-    var msg = "Delete broken in \"" + editor.innerHTML + "\", offset " + offset;
+    var msg = "Delete broken in \"" + editor.innerHTML + "\", offset " + offset + " with deleteImmediately=" + deleteImmediately;
     if(typeof node == 'function'){
       node = node();
     }
@@ -99,7 +116,7 @@ function execTests() {
 
   function testBackspace(node, offset, text) {
     doCommand("cmd_deleteCharBackward");
-    var msg = "Backspace broken in \"" + editor.innerHTML + "\", offset " + offset;
+    var msg = "Backspace broken in \"" + editor.innerHTML + "\", offset " + offset + " with deleteImmediately=" + deleteImmediately;
     is(sel.anchorNode, node, msg);
 
     is(sel.anchorOffset, offset, msg);
@@ -195,9 +212,37 @@ function execTests() {
 
   // Tests for Bug 419406
   var s = "helloשלום";
+
+  setDeleteImmediately(true);
+
+  setupTest(s, 4);
+  testRight(editor.firstChild, 5);
+  testDelete(editor.firstChild, 5, "helloלום");
+
+  setDeleteImmediately(false);
+
   setupTest(s, 4);
   testRight(editor.firstChild, 5);
   testDelete(editor.firstChild, 5, "helloשלום");
+
+  // Tests for bug 1034337
+  s = "اهلاhello";
+
+  setDeleteImmediately(true);
+
+  setupTest(s, 4);
+  // first delete an ltr character to make sure that the caret is ltr
+  testDelete(editor.firstChild, 4, "اهلاello");
+  testBackspace(editor.firstChild, 3, "اهلello");
+
+  setDeleteImmediately(false);
+
+  setupTest(s, 4);
+  // first delete an ltr character to make sure that the caret is ltr
+  testDelete(editor.firstChild, 4, "اهلاello");
+  testBackspace(editor.firstChild, 4, "اهلاello");
+
+  restoreDeleteImmediately();
 
   // Tests for Bug 462188
   setupTest("You should not see this text.", 29);

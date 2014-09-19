@@ -21,6 +21,8 @@
     _(Float32x4)                    \
     _(SimdExtractElementI)          \
     _(SimdExtractElementF)          \
+    _(SimdInsertElementI)           \
+    _(SimdInsertElementF)           \
     _(SimdSignMaskX4)               \
     _(SimdBinaryCompIx4)            \
     _(SimdBinaryCompFx4)            \
@@ -115,6 +117,7 @@
     _(EmulatesUndefinedAndBranch)   \
     _(MinMaxI)                      \
     _(MinMaxD)                      \
+    _(MinMaxF)                      \
     _(NegI)                         \
     _(NegD)                         \
     _(NegF)                         \
