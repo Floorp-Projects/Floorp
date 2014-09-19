@@ -369,11 +369,7 @@ class TenuredHeap : public js::HeapBase<T>
         return (bits & flag) != 0;
     }
 
-    T getPtr() const {
-        T ptr = reinterpret_cast<T>(bits & ~flagsMask);
-        MOZ_ASSERT(JS::GetTenuredGCThingZone(ptr) != nullptr);
-        return ptr;
-    }
+    T getPtr() const { return reinterpret_cast<T>(bits & ~flagsMask); }
     uintptr_t getFlags() const { return bits & flagsMask; }
 
     operator T() const { return getPtr(); }
