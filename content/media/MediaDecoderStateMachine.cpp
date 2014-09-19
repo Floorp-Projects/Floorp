@@ -1419,21 +1419,11 @@ void MediaDecoderStateMachine::StartWaitForResources()
 void MediaDecoderStateMachine::NotifyWaitingForResourcesStatusChanged()
 {
   AssertCurrentThreadInMonitor();
-  DECODER_LOG("NotifyWaitingForResourcesStatusChanged");
-  RefPtr<nsIRunnable> task(
-    NS_NewRunnableMethod(this,
-      &MediaDecoderStateMachine::DoNotifyWaitingForResourcesStatusChanged));
-  mDecodeTaskQueue->Dispatch(task);
-}
-
-void MediaDecoderStateMachine::DoNotifyWaitingForResourcesStatusChanged()
-{
-  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  if (mState != DECODER_STATE_WAIT_FOR_RESOURCES) {
+  if (mState != DECODER_STATE_WAIT_FOR_RESOURCES ||
+      mReader->IsWaitingMediaResources()) {
     return;
   }
-  DECODER_LOG("DoNotifyWaitingForResourcesStatusChanged");
+  DECODER_LOG("NotifyWaitingForResourcesStatusChanged");
   // The reader is no longer waiting for resources (say a hardware decoder),
   // we can now proceed to decode metadata.
   SetState(DECODER_STATE_DECODING_NONE);

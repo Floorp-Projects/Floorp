@@ -135,7 +135,6 @@ MediaOmxReader::MediaOmxReader(AbstractMediaDecoder *aDecoder)
   , mSkipCount(0)
   , mUseParserDuration(false)
   , mLastParserDuration(-1)
-  , mIsWaitingResources(false)
 {
 #ifdef PR_LOGGING
   if (!gMediaDecoderLog) {
@@ -173,16 +172,10 @@ void MediaOmxReader::Shutdown()
 
 bool MediaOmxReader::IsWaitingMediaResources()
 {
-  return mIsWaitingResources;
-}
-
-void MediaOmxReader::UpdateIsWaitingMediaResources()
-{
-  if (mOmxDecoder.get()) {
-    mIsWaitingResources = mOmxDecoder->IsWaitingMediaResources();
-  } else {
-    mIsWaitingResources = false;
+  if (!mOmxDecoder.get()) {
+    return false;
   }
+  return mOmxDecoder->IsWaitingMediaResources();
 }
 
 bool MediaOmxReader::IsDormantNeeded()
@@ -252,20 +245,12 @@ nsresult MediaOmxReader::ReadMetadata(MediaInfo* aInfo,
     ProcessCachedData(0, true);
   }
 
-  if (!mOmxDecoder->AllocateMediaResources()) {
+  if (!mOmxDecoder->TryLoad()) {
     return NS_ERROR_FAILURE;
   }
-  // Bug 1050667, both MediaDecoderStateMachine and MediaOmxReader
-  // relies on IsWaitingMediaResources() function. And the waiting state will be
-  // changed by binder thread, so we store the waiting state in a cache value to
-  // make them in the same waiting state.
-  UpdateIsWaitingMediaResources();
+
   if (IsWaitingMediaResources()) {
     return NS_OK;
-  }
-  // After resources are available, set the metadata.
-  if (!mOmxDecoder->EnsureMetadata()) {
-    return NS_ERROR_FAILURE;
   }
 
   if (isMP3 && mMP3FrameParser.IsMP3()) {
