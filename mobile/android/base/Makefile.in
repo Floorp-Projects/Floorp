@@ -143,7 +143,9 @@ endif
 .proguard.deps: $(ALL_JARS)
 	$(REPORT_BUILD)
 	@$(TOUCH) $@
-	java -jar $(ANDROID_SDK_ROOT)/tools/proguard/lib/proguard.jar \
+	java \
+		-Xmx512m -Xms128m \
+		-jar $(ANDROID_SDK_ROOT)/tools/proguard/lib/proguard.jar \
 		@$(topsrcdir)/mobile/android/config/proguard.cfg \
 		-optimizationpasses $(PROGUARD_PASSES) \
 		-injars $(subst ::,:,$(subst $(NULL) ,:,$(strip $(ALL_JARS)))) \

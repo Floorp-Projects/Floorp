@@ -43,6 +43,9 @@ public:
   // MP4Reader.
   virtual HRESULT Output(int64_t aStreamOffset,
                          nsAutoPtr<MediaData>& aOutput) = 0;
+
+  // Destroys all resources.
+  virtual void Shutdown() = 0;
 };
 
 // Decodes audio and video using Windows Media Foundation. Samples are decoded
@@ -80,6 +83,8 @@ private:
   // Called on the task queue. Orders the MFT to drain, and then extracts
   // all available output.
   void ProcessDrain();
+
+  void ProcessShutdown();
 
   RefPtr<MediaTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
