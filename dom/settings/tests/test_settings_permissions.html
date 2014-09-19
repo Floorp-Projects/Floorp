@@ -138,8 +138,6 @@ var steps = [
     ok(true, "All requests on a failed lock should fail");
     var lock = mozSettings.createLock();
     lock.onsettingstransactionfailure = function (evt) {
-      // Stop listening at this point
-      lock.onsettingstransactionfailure = null;
       ok(evt.error == "Lock failed a permissions check, all requests now failing.", "transaction failure on permissions error message correct.");
       ok(true, "transaction failed (expected) ");
       next();
