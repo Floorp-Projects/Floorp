@@ -113,9 +113,9 @@
                  crop="end"
                  value="&profilerUI.table.percentage;"/>
           <label class="plain call-tree-header"
-                 type="invocations"
+                 type="samples"
                  crop="end"
-                 value="&profilerUI.table.invocations;"/>
+                 value="&profilerUI.table.samples;"/>
           <label class="plain call-tree-header"
                  type="function"
                  crop="end"

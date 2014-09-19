@@ -1483,4 +1483,41 @@ add_task(function* test_copy() {
   });
 
   yield duplicate_and_test(filledFolderGUID);
+
+  // Cleanup
+  yield PT.clearTransactionsHistory();
+});
+
+add_task(function* test_array_input_for_transact() {
+  let rootGuid = yield PlacesUtils.promiseItemGUID(root);
+
+  let folderTxn = PT.NewFolder(yield createTestFolderInfo());
+  let folderGuid = yield PT.transact(folderTxn);
+
+  let sep1_txn = PT.NewSeparator({ parentGUID: folderGuid });
+  let sep2_txn = PT.NewSeparator({ parentGUID: folderGuid });
+  yield PT.transact([sep1_txn, sep2_txn]);
+  ensureUndoState([[sep2_txn, sep1_txn], [folderTxn]], 0);
+
+  let ensureChildCount = function* (count) {
+    let tree = yield PlacesUtils.promiseBookmarksTree(folderGuid);
+    if (count == 0)
+      Assert.ok(!("children" in tree));
+    else
+      Assert.equal(tree.children.length, count);
+  };
+
+  yield ensureChildCount(2);
+  yield PT.undo();
+  yield ensureChildCount(0);
+  yield PT.redo()
+  yield ensureChildCount(2);
+  yield PT.undo();
+  yield ensureChildCount(0);
+
+  yield PT.undo();
+  Assert.equal((yield PlacesUtils.promiseBookmarksTree(folderGuid)), null);
+
+  // Cleanup
+  yield PT.clearTransactionsHistory();
 });

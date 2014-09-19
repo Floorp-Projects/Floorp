@@ -10,6 +10,8 @@
 #include "TrackEncoder.h"
 #include "ContainerWriter.h"
 #include "MediaStreamGraph.h"
+#include "nsIMemoryReporter.h"
+#include "mozilla/MemoryReporting.h"
 
 namespace mozilla {
 
@@ -66,6 +68,7 @@ public :
     , mVideoEncoder(aVideoEncoder)
     , mStartTime(TimeStamp::Now())
     , mMIMEType(aMIMEType)
+    , mSizeOfBuffer(0)
     , mState(MediaEncoder::ENCODE_METADDATA)
     , mShutdown(false)
   {}
@@ -140,6 +143,13 @@ public :
   static bool IsOMXEncoderEnabled();
 #endif
 
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
+  /*
+   * Measure the size of the buffer, and memory occupied by mAudioEncoder
+   * and mVideoEncoder
+   */
+  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+
 private:
   // Get encoded data from trackEncoder and write to muxer
   nsresult WriteEncodedDataToMuxer(TrackEncoder *aTrackEncoder);
@@ -150,6 +160,7 @@ private:
   nsAutoPtr<VideoTrackEncoder> mVideoEncoder;
   TimeStamp mStartTime;
   nsString mMIMEType;
+  int64_t mSizeOfBuffer;
   int mState;
   bool mShutdown;
   // Get duration from create encoder, for logging purpose

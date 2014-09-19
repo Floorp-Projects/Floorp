@@ -36,6 +36,7 @@ function test() {
 
 function continue_test() {
   function test_autoFill(aTyped, aExpected, aCallback) {
+    info(`Testing with input: ${aTyped}`);
     gURLBar.inputField.value = aTyped.substr(0, aTyped.length - 1);
     gURLBar.focus();
     gURLBar.selectionStart = aTyped.length - 1;
@@ -49,7 +50,7 @@ function continue_test() {
   }
 
   test_autoFill("http://", "http://", function () {
-    test_autoFill("http://a", "http://autofilltrimurl.com/", function () {
+    test_autoFill("http://au", "http://autofilltrimurl.com/", function () {
       test_autoFill("http://www.autofilltrimurl.com", "http://www.autofilltrimurl.com/", function () {
         // Now ensure selecting from the popup correctly trims.
         is(gURLBar.controller.matchCount, 1, "Found the expected number of matches");
