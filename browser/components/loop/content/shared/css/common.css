@@ -400,7 +400,7 @@ p {
   padding: 5px 10px;
   color: #888;
   margin: 0;
-  border-bottom: 1px solid #CCC;
+  border-top: 1px solid #CCC;
   background: #EEE;
   display: flex;
   align-items: center;
