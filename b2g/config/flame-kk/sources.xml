@@ -141,7 +141,7 @@
   <project name="platform/frameworks/av" path="frameworks/av" revision="c1814713bd2d07c2af0c236007badc8732a34324"/>
   <project name="platform/frameworks/base" path="frameworks/base" revision="6b58ab45e3e56c1fc20708cc39fa2264c52558df"/>
   <project name="platform/frameworks/native" path="frameworks/native" revision="a46a9f1ac0ed5662d614c277cbb14eb3f332f365"/>
-  <project name="platform/hardware/libhardware" path="hardware/libhardware" revision="9982f697972cfab09379fd909307e993a6247ebf"/>
+  <project name="platform/hardware/libhardware" path="hardware/libhardware" revision="7196881a0e9dd7bfbbcf0af64c8064e70f0fa094"/>
   <project name="platform/hardware/qcom/audio" path="hardware/qcom/audio" revision="8d7676dfb68ee0cd069affedd5d1e97316a184ba"/>
   <project name="platform/hardware/qcom/camera" path="hardware/qcom/camera" revision="2a1ded216a91bf62a72b1640cf01ab4998f37028"/>
   <project name="platform/hardware/qcom/display" path="hardware/qcom/display" revision="e5a971282719907f73fb1da964ca40aad67a3be0"/>
