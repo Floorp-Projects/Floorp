@@ -64,7 +64,9 @@ loop.contacts = (function(_, mozL10n) {
 
       return (
         React.DOM.li({onClick: this.handleContactClick, className: contactCSSClass}, 
-          React.DOM.div({className: "avatar"}), 
+          React.DOM.div({className: "avatar"}, 
+            React.DOM.img({src: navigator.mozLoop.getUserAvatar(email.value)})
+          ), 
           React.DOM.div({className: "details"}, 
             React.DOM.div({className: "username"}, React.DOM.strong(null, names.firstName), " ", names.lastName, 
               React.DOM.i({className: cx({"icon icon-google": this.props.contact.category[0] == "google"})}), 
@@ -151,7 +153,7 @@ loop.contacts = (function(_, mozL10n) {
       if (comp !== 0) {
         return comp;
       }
-      // If names are equal, compare against unique ids make sure we have
+      // If names are equal, compare against unique ids to make sure we have
       // consistent ordering.
       return contact1._guid - contact2._guid;
     },
