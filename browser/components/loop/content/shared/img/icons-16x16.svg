@@ -24,6 +24,10 @@ use[id$="-hover"] {
 use[id$="-active"] {
   fill: #0095dd;
 }
+
+use[id$="-red"] {
+  fill: #d74345
+}
 </style>
 <defs style="display:none">
   <path id="audio-shape" fill-rule="evenodd" clip-rule="evenodd" d="M11.429,6.857v2.286c0,1.894-1.535,3.429-3.429,3.429
@@ -88,6 +92,7 @@ use[id$="-active"] {
 <use id="audio-hover"         xlink:href="#audio-shape"/>
 <use id="audio-active"        xlink:href="#audio-shape"/>
 <use id="block"               xlink:href="#block-shape"/>
+<use id="block-red"           xlink:href="#block-shape"/>
 <use id="block-hover"         xlink:href="#block-shape"/>
 <use id="block-active"        xlink:href="#block-shape"/>
 <use id="contacts"            xlink:href="#contacts-shape"/>
