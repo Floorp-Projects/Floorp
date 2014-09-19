@@ -719,6 +719,7 @@ let SettingsRequestManager = {
 
   removeLock: function(aLockID) {
     if (DEBUG) debug("Removing lock " + aLockID);
+    if (this.lockInfo[aLockID]) {
     let transaction = this.lockInfo[aLockID]._transaction;
     if (transaction) {
       try {
@@ -732,6 +733,7 @@ let SettingsRequestManager = {
       }
     }
     delete this.lockInfo[aLockID];
+    }
     let index = this.settingsLockQueue.indexOf(aLockID);
     if (index > -1) {
       this.settingsLockQueue.splice(index, 1);
