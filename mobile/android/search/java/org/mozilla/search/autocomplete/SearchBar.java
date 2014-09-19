@@ -5,6 +5,11 @@
 package org.mozilla.search.autocomplete;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
@@ -17,17 +22,25 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.search.R;
+import org.mozilla.search.providers.SearchEngine;
 
-public class ClearableEditText extends FrameLayout {
+public class SearchBar extends FrameLayout {
 
-    private EditText editText;
-    private ImageButton clearButton;
-    private InputMethodManager inputMethodManager;
+    private final EditText editText;
+    private final ImageButton clearButton;
+    private final ImageView engineIcon;
+
+    private final Drawable focusedBackground;
+    private final Drawable defaultBackgound;
+
+    private final InputMethodManager inputMethodManager;
 
     private TextListener listener;
 
@@ -39,10 +52,10 @@ public class ClearableEditText extends FrameLayout {
         public void onFocusChange(boolean hasFocus);
     }
 
-    public ClearableEditText(Context context, AttributeSet attrs) {
+    public SearchBar(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        LayoutInflater.from(context).inflate(R.layout.clearable_edit_text, this);
+        LayoutInflater.from(context).inflate(R.layout.search_bar, this);
 
         editText = (EditText) findViewById(R.id.edit_text);
         editText.addTextChangedListener(new TextWatcher() {
@@ -94,6 +107,10 @@ public class ClearableEditText extends FrameLayout {
                 editText.setText("");
             }
         });
+        engineIcon = (ImageView) findViewById(R.id.engine_icon);
+
+        focusedBackground = getResources().getDrawable(R.drawable.edit_text_focused);
+        defaultBackgound = getResources().getDrawable(R.drawable.edit_text_default);
 
         inputMethodManager = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
     }
@@ -109,6 +126,24 @@ public class ClearableEditText extends FrameLayout {
         return editText.getText().toString();
     }
 
+    public void setEngine(SearchEngine engine) {
+        int color = engine.getColor();
+        if (color == Color.TRANSPARENT) {
+            // Fall back to default orange if the search engine doesn't specify a color.
+            color = getResources().getColor(R.color.highlight_orange);
+        }
+        // Update the focused background color.
+        focusedBackground.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.MULTIPLY));
+
+        final String iconURL = engine.getIconURL();
+        final BitmapDrawable d = new BitmapDrawable(getResources(), BitmapUtils.getBitmapFromDataURI(iconURL));
+        engineIcon.setImageDrawable(d);
+        engineIcon.setContentDescription(engine.getName());
+
+        editText.setHint(getResources().getString(R.string.search_bar_hint, engine.getName()));
+    }
+
+    @SuppressWarnings("deprecation")
     public void setActive(boolean active) {
         if (this.active == active) {
             return;
@@ -123,6 +158,11 @@ public class ClearableEditText extends FrameLayout {
         final int leftDrawable = active ? R.drawable.search_icon_active : R.drawable.search_icon_inactive;
         editText.setCompoundDrawablesWithIntrinsicBounds(leftDrawable, 0, 0, 0);
 
+        // We can't use a selector drawable because we apply a color filter to the focused
+        // background at run time.
+        // TODO: setBackgroundDrawable is deprecated in API level 16
+        editText.setBackgroundDrawable(active ? focusedBackground : defaultBackgound);
+
         if (active) {
             editText.requestFocus();
             inputMethodManager.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT);
@@ -136,6 +176,7 @@ public class ClearableEditText extends FrameLayout {
         // Only show the clear button when there is text in the input.
         final boolean visible = active && (editText.getText().length() > 0);
         clearButton.setVisibility(visible ? View.VISIBLE : View.GONE);
+        engineIcon.setVisibility(visible ? View.GONE : View.VISIBLE);
     }
 
     public void setTextListener(TextListener listener) {
