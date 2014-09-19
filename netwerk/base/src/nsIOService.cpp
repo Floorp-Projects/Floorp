@@ -37,6 +37,7 @@
 #include "nsPIDNSService.h"
 #include "nsIProtocolProxyService2.h"
 #include "MainThreadUtils.h"
+#include "nsIWidget.h"
 
 #if defined(XP_WIN)
 #include "nsNativeConnectionHelper.h"
@@ -199,6 +200,7 @@ nsIOService::Init()
         observerService->AddObserver(this, kProfileDoChange, true);
         observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
         observerService->AddObserver(this, NS_NETWORK_LINK_TOPIC, true);
+        observerService->AddObserver(this, NS_WIDGET_WAKE_OBSERVER_TOPIC, true);
     }
     else
         NS_WARNING("failed to get observer service");
@@ -910,14 +912,12 @@ nsIOService::Observe(nsISupports *subject,
         nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
         if (prefBranch)
             PrefsChanged(prefBranch, NS_ConvertUTF16toUTF8(data).get());
-    }
-    else if (!strcmp(topic, kProfileChangeNetTeardownTopic)) {
+    } else if (!strcmp(topic, kProfileChangeNetTeardownTopic)) {
         if (!mOffline) {
             mOfflineForProfileChange = true;
             SetOffline(true);
         }
-    }
-    else if (!strcmp(topic, kProfileChangeNetRestoreTopic)) {
+    } else if (!strcmp(topic, kProfileChangeNetRestoreTopic)) {
         if (mOfflineForProfileChange) {
             mOfflineForProfileChange = false;
             if (!mManageOfflineStatus ||
@@ -925,8 +925,7 @@ nsIOService::Observe(nsISupports *subject,
                 SetOffline(false);
             }
         } 
-    } 
-    else if (!strcmp(topic, kProfileDoChange)) { 
+    } else if (!strcmp(topic, kProfileDoChange)) { 
         if (data && NS_LITERAL_STRING("startup").Equals(data)) {
             // Lazy initialization of network link service (see bug 620472)
             InitializeNetworkLinkService();
@@ -938,8 +937,7 @@ nsIOService::Observe(nsISupports *subject,
             GetPrefBranch(getter_AddRefs(prefBranch));
             PrefsChanged(prefBranch, MANAGE_OFFLINE_STATUS_PREF);
         }
-    }
-    else if (!strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    } else if (!strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
         // Remember we passed XPCOM shutdown notification to prevent any
         // changes of the offline status from now. We must not allow going
         // online after this point.
@@ -952,6 +950,19 @@ nsIOService::Observe(nsISupports *subject,
     } else if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {
         if (!mOfflineForProfileChange && mManageOfflineStatus) {
             OnNetworkLinkEvent(NS_ConvertUTF16toUTF8(data).get());
+        }
+    } else if (!strcmp(topic, NS_WIDGET_WAKE_OBSERVER_TOPIC)) {
+        // coming back alive from sleep
+        nsCOMPtr<nsIObserverService> observerService =
+            mozilla::services::GetObserverService();
+
+        NS_ASSERTION(observerService, "The observer service should not be null");
+
+        if (observerService) {
+            (void)observerService->
+                NotifyObservers(nullptr,
+                                NS_NETWORK_LINK_TOPIC,
+                                MOZ_UTF16(NS_NETWORK_LINK_DATA_CHANGED));
         }
     }
 
