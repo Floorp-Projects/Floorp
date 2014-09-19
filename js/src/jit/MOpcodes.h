@@ -16,6 +16,7 @@ namespace jit {
     _(SimdSplatX4)                                                          \
     _(SimdConstant)                                                         \
     _(SimdExtractElement)                                                   \
+    _(SimdInsertElement)                                                    \
     _(SimdSignMask)                                                         \
     _(SimdBinaryComp)                                                       \
     _(SimdBinaryArith)                                                      \
