@@ -501,6 +501,14 @@ class TestEmitterBasic(unittest.TestCase):
             'lists test that does not exist: test_missing.html'):
             self.read_topsrcdir(reader)
 
+    def test_test_manifest_missing_test_error_unfiltered(self):
+        """Missing test files should result in error, even when the test list is not filtered."""
+        reader = self.reader('test-manifest-missing-test-file-unfiltered')
+
+        with self.assertRaisesRegexp(SandboxValidationError,
+            'lists test that does not exist: missing.js'):
+            self.read_topsrcdir(reader)
+
     def test_ipdl_sources(self):
         reader = self.reader('ipdl_sources')
         objs = self.read_topsrcdir(reader)
