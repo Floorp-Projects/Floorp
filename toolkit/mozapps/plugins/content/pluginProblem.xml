@@ -41,11 +41,6 @@
                     <html:div class="msgReload">&reloadPlugin.pre;<html:a class="reloadLink" anonid="reloadLink" href="">&reloadPlugin.middle;</html:a>&reloadPlugin.post;</html:div>
                 </html:div>
 
-                <html:div class="installStatus" anonid="installStatus">
-                    <html:div class="msg msgInstallPlugin">
-		        <html:a class="action-link" anonid="installPluginLink" href="">&installPlugin;</html:a>
-		    </html:div>
-                </html:div>
                 <html:div class="msg msgManagePlugins"><html:a class="action-link" anonid="managePluginsLink" href="">&managePlugins;</html:a></html:div>
                 <html:div class="submitStatus" anonid="submitStatus">
                     <html:div class="msg msgPleaseSubmit" anonid="pleaseSubmit">

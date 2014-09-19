@@ -45,6 +45,14 @@
             is(project.location, hostedAppManifest, "Location is valid");
             is(project.name, "hosted manifest name property", "name field has been updated");
 
+            yield nextTick();
+
+            hostedAppManifest = TEST_BASE + "/app";
+            yield win.Cmds.importHostedApp(hostedAppManifest);
+
+            project = win.AppManager.selectedProject;
+            ok(project.location.endsWith('manifest.webapp'), "The manifest was found and the project was updated");
+
             info("opening panel");
             yield win.Cmds.showProjectPanel();
             info("panel open");
@@ -52,7 +60,7 @@
             let panelNode = win.document.querySelector("#project-panel");
             let items = panelNode.querySelectorAll(".panel-item");
             // 3 controls, + 2 projects
-            is(items.length, 5, "5 projects in panel");
+            is(items.length, 6, "6 projects in panel");
             is(items[3].getAttribute("label"), "A name (in app directory)", "Panel label is correct");
             is(items[4].getAttribute("label"), "hosted manifest name property", "Panel label is correct");
 
@@ -71,4 +79,3 @@
     </script>
   </body>
 </html>
-

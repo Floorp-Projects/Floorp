@@ -664,8 +664,6 @@ pref("plugins.update.notifyUser", false);
 
 pref("plugins.click_to_play", true);
 
-pref("plugins.hideMissingPluginsNotification", false);
-
 pref("plugin.default.state", 1);
 
 // Plugins bundled in XPIs are enabled by default.
@@ -844,9 +842,6 @@ pref("plugin.state.personalplugin", 2);
 #ifdef UNIX_BUT_NOT_MAC
 pref("plugin.state.libplugins", 2);
 #endif
-
-// display door hanger if flash not installed
-pref("plugins.notifyMissingFlash", true);
 
 #ifdef XP_MACOSX
 pref("browser.preferences.animateFadeIn", true);
