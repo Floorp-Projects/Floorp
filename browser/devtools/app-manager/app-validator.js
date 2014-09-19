@@ -8,6 +8,7 @@ const promise = require("devtools/toolkit/deprecated-sync-thenables");
 
 const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
+const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 let XMLHttpRequest = CC("@mozilla.org/xmlextras/xmlhttprequest;1");
 let strings = Services.strings.createBundle("chrome://browser/locale/devtools/app-manager.properties");
 
@@ -51,40 +52,97 @@ AppValidator.prototype._getPackagedManifestURL = function () {
   return Services.io.newFileURI(manifestFile).spec;
 };
 
-AppValidator.prototype._fetchManifest = function (manifestURL) {
+AppValidator.checkManifest = function(manifestURL) {
   let deferred = promise.defer();
-  this.manifestURL = manifestURL;
+  let error;
 
   let req = new XMLHttpRequest();
   req.overrideMimeType('text/plain');
+
   try {
     req.open("GET", manifestURL, true);
   } catch(e) {
-    this.error(strings.formatStringFromName("validator.invalidManifestURL", [manifestURL], 1));
-    deferred.resolve(null);
+    error = strings.formatStringFromName("validator.invalidManifestURL", [manifestURL], 1);
+    deferred.reject(error);
     return deferred.promise;
   }
   req.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE | Ci.nsIRequest.INHIBIT_CACHING;
-  req.onload = (function () {
+
+  req.onload = function () {
     let manifest = null;
     try {
       manifest = JSON.parse(req.responseText);
     } catch(e) {
-      this.error(strings.formatStringFromName("validator.invalidManifestJSON", [e, manifestURL], 2));
+      error = strings.formatStringFromName("validator.invalidManifestJSON", [e, manifestURL], 2);
+      deferred.reject(error);
     }
-    deferred.resolve(manifest);
-  }).bind(this);
-  req.onerror = (function () {
-    this.error(strings.formatStringFromName("validator.noAccessManifestURL", [req.statusText, manifestURL], 2));
-    deferred.resolve(null);
-  }).bind(this);
+
+    deferred.resolve({manifest, manifestURL});
+  };
+
+  req.onerror = function () {
+    error = strings.formatStringFromName("validator.noAccessManifestURL", [req.statusText, manifestURL], 2);
+    deferred.reject(error);
+ };
 
   try {
     req.send(null);
   } catch(e) {
-    this.error(strings.formatStringFromName("validator.noAccessManifestURL", [e, manifestURL], 2));
-    deferred.resolve();
+    error = strings.formatStringFromName("validator.noAccessManifestURL", [e, manifestURL], 2);
+    deferred.reject(error);
   }
+
+  return deferred.promise;
+};
+
+AppValidator.findManifestAtOrigin = function(manifestURL) {
+  let fixedManifest = Services.io.newURI(manifestURL, null, null).prePath + '/manifest.webapp';
+  return AppValidator.checkManifest(fixedManifest);
+};
+
+AppValidator.findManifestPath = function(manifestURL) {
+  let deferred = promise.defer();
+
+  if (manifestURL.endsWith('manifest.webapp')) {
+    deferred.reject();
+  } else {
+    let fixedManifest = manifestURL + '/manifest.webapp';
+    deferred.resolve(AppValidator.checkManifest(fixedManifest));
+  }
+
+  return deferred.promise;
+};
+
+AppValidator.checkAlternateManifest = function(manifestURL) {
+  return Task.spawn(function*() {
+    let result;
+    try {
+      result = yield AppValidator.findManifestPath(manifestURL);
+    } catch(e) {
+      result = yield AppValidator.findManifestAtOrigin(manifestURL);
+    }
+
+    return result;
+  });
+};
+
+AppValidator.prototype._fetchManifest = function (manifestURL) {
+  let deferred = promise.defer();
+  this.manifestURL = manifestURL;
+
+  AppValidator.checkManifest(manifestURL)
+              .then(({manifest, manifestURL}) => {
+                deferred.resolve(manifest);
+              }, error => {
+                AppValidator.checkAlternateManifest(manifestURL)
+                            .then(({manifest, manifestURL}) => {
+                              this.manifestURL = manifestURL;
+                              deferred.resolve(manifest);
+                            }, () => {
+                              this.error(error);
+                              deferred.resolve(null);
+                            });
+                });
 
   return deferred.promise;
 };

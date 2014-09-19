@@ -51,16 +51,16 @@ let test = Task.async(function*() {
 
   ok($$(".timeline-marker-sidebar").length,
     "Some marker sidebar nodes should have been created.");
-  ok($$(".timeline-marker-sidebar > .timeline-marker-bullet").length,
+  ok($$(".timeline-marker-sidebar:not(spacer) > .timeline-marker-bullet").length,
     "Some marker color bullets should have been created inside the sidebar.");
-  ok($$(".timeline-marker-sidebar > .timeline-marker-name").length,
+  ok($$(".timeline-marker-sidebar:not(spacer) > .timeline-marker-name").length,
     "Some marker name labels should have been created inside the sidebar.");
 
   // Test the markers waterfall (right).
 
   ok($$(".timeline-marker-waterfall").length,
     "Some marker waterfall nodes should have been created.");
-  ok($$(".timeline-marker-waterfall > .timeline-marker-bar").length,
+  ok($$(".timeline-marker-waterfall:not(spacer) > .timeline-marker-bar").length,
     "Some marker color bars should have been created inside the waterfall.");
 
   yield teardown(panel);

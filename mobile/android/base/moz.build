@@ -538,7 +538,7 @@ if CONFIG['MOZ_NATIVE_DEVICES']:
     gbjar.extra_jars += moz_native_devices_jars
     gbjar.sources += moz_native_devices_sources
 
-gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough']
+gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough', '-J-Xmx512m', '-J-Xms128m']
 
 noajar = add_java_jar('nineoldandroids')
 noajar.sources += [ thirdparty_source_dir + f for f in [
