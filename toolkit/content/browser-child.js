@@ -92,6 +92,7 @@ let WebProgressListener = {
       json.documentURI = content.document.documentURIObject.spec;
       json.charset = content.document.characterSet;
       json.mayEnableCharacterEncodingMenu = docShell.mayEnableCharacterEncodingMenu;
+      json.principal = content.document.nodePrincipal;
     }
 
     sendAsyncMessage("Content:LocationChange", json, objects);

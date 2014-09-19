@@ -333,20 +333,7 @@ PluginContent.prototype = {
         break;
 
       case "PluginNotFound": {
-        let installable = this.showInstallNotification(plugin, eventType);
-        let contentWindow = plugin.ownerDocument.defaultView;
-        // For non-object plugin tags, register a click handler to install the
-        // plugin. Object tags can, and often do, deal with that themselves,
-        // so don't stomp on the page developers toes.
-        if (installable && !(plugin instanceof contentWindow.HTMLObjectElement)) {
-          let installStatus = this.getPluginUI(plugin, "installStatus");
-          installStatus.setAttribute("installable", "true");
-          let iconStatus = this.getPluginUI(plugin, "icon");
-          iconStatus.setAttribute("installable", "true");
-
-          let installLink = this.getPluginUI(plugin, "installPluginLink");
-          this.addLinkClickCallback(installLink, "installSinglePlugin", plugin);
-        }
+        /* NOP */
         break;
       }
 
@@ -471,13 +458,6 @@ PluginContent.prototype = {
       objLoadingContent.cancelPlayPreview();
   },
 
-  // Callback for user clicking on a missing (unsupported) plugin.
-  installSinglePlugin: function (plugin) {
-    this.global.sendAsyncMessage("PluginContent:InstallSinglePlugin", {
-      pluginInfo: this._getPluginInfo(plugin),
-    });
-  },
-
   // Forward a link click callback to the chrome process.
   forwardCallback: function (name) {
     this.global.sendAsyncMessage("PluginContent:LinkClickCallback", { name: name });
@@ -504,13 +484,6 @@ PluginContent.prototype = {
 
   reloadPage: function () {
     this.global.content.location.reload();
-  },
-
-  showInstallNotification: function (plugin) {
-    let [shown] = this.global.sendSyncMessage("PluginContent:ShowInstallNotification", {
-      pluginInfo: this._getPluginInfo(plugin),
-    });
-    return shown;
   },
 
   // Event listener for click-to-play plugins.

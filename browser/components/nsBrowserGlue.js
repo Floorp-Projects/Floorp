@@ -1480,11 +1480,7 @@ BrowserGlue.prototype = {
     }
 
     if (currentUIVersion < 13) {
-      try {
-        if (Services.prefs.getBoolPref("plugins.hide_infobar_for_missing_plugin"))
-          Services.prefs.setBoolPref("plugins.notifyMissingFlash", false);
-      }
-      catch (ex) {}
+      /* Obsolete */
     }
 
     if (currentUIVersion < 14) {

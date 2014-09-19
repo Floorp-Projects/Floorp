@@ -34,6 +34,8 @@ function test() {
       [ 'http://example.com/', 'q', 'http://example.com/?q=%s' ],
       [ 'http://example.com/new-path-here/', 'q', 'http://example.com/new-path-here/?q=%s' ],
       [ '', 'q', 'http://example.org/browser/browser/base/content/test/general/dummy_page.html?q=%s' ],
+      // Tests for proper behaviour when called on a form whose action contains a question mark.
+      [ 'http://example.com/search?oe=utf-8', 'q', 'http://example.com/search?oe=utf-8&q=%s' ],
     ]
 
     for (let data of testData) {
