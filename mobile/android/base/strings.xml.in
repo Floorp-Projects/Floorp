@@ -181,10 +181,8 @@
   <string name="pref_cookies_not_accept_foreign">&pref_cookies_not_accept_foreign;</string>
   <string name="pref_cookies_disabled">&pref_cookies_disabled;</string>
 
-  <string name="pref_donottrack_menu">&pref_donottrack_menu;</string>
-  <string name="pref_donottrack_disallow_tracking">&pref_donottrack_disallow_tracking;</string>
-  <string name="pref_donottrack_allow_tracking">&pref_donottrack_allow_tracking;</string>
-  <string name="pref_donottrack_no_pref">&pref_donottrack_no_pref;</string>
+  <string name="pref_donottrack_title">&pref_donottrack_title;</string>
+  <string name="pref_donottrack_summary">&pref_donottrack_summary;</string>
 
   <string name="pref_char_encoding">&pref_char_encoding;</string>
   <string name="pref_char_encoding_on">&pref_char_encoding_on;</string>
