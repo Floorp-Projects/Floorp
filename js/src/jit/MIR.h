@@ -4574,6 +4574,9 @@ class MMinMax
         return true;
     }
 
+    bool isFloat32Commutative() const { return true; }
+    void trySpecializeFloat32(TempAllocator &alloc);
+
     ALLOW_CLONE(MMinMax)
 };
 
