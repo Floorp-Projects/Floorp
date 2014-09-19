@@ -3739,6 +3739,21 @@ LIRGenerator::visitSimdExtractElement(MSimdExtractElement *ins)
 }
 
 bool
+LIRGenerator::visitSimdInsertElement(MSimdInsertElement *ins)
+{
+    JS_ASSERT(IsSimdType(ins->type()));
+
+    LUse vec = useRegisterAtStart(ins->vector());
+    LUse val = useRegister(ins->value());
+    if (ins->type() == MIRType_Int32x4)
+        return defineReuseInput(new(alloc()) LSimdInsertElementI(vec, val), ins, 0);
+    if (ins->type() == MIRType_Float32x4)
+        return defineReuseInput(new(alloc()) LSimdInsertElementF(vec, val), ins, 0);
+
+    MOZ_CRASH("Unknown SIMD kind when generating constant");
+}
+
+bool
 LIRGenerator::visitSimdSignMask(MSimdSignMask *ins)
 {
     MDefinition *input = ins->input();

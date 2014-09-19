@@ -2285,6 +2285,57 @@ CodeGeneratorX86Shared::visitSimdExtractElementF(LSimdExtractElementF *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitSimdInsertElementI(LSimdInsertElementI *ins)
+{
+    FloatRegister vector = ToFloatRegister(ins->vector());
+    Register value = ToRegister(ins->value());
+    FloatRegister output = ToFloatRegister(ins->output());
+    MOZ_ASSERT(vector == output); // defineReuseInput(0)
+
+    unsigned component = unsigned(ins->lane());
+
+    // Note that, contrarily to float32x4, we cannot use movd if the inserted
+    // value goes into the first component, as movd clears out the higher lanes
+    // of the output.
+    if (AssemblerX86Shared::HasSSE41()) {
+        masm.pinsrd(component, value, output);
+        return true;
+    }
+
+    masm.reserveStack(Simd128DataSize);
+    masm.storeAlignedInt32x4(vector, Address(StackPointer, 0));
+    masm.store32(value, Address(StackPointer, component * sizeof(int32_t)));
+    masm.loadAlignedInt32x4(Address(StackPointer, 0), output);
+    masm.freeStack(Simd128DataSize);
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitSimdInsertElementF(LSimdInsertElementF *ins)
+{
+    FloatRegister vector = ToFloatRegister(ins->vector());
+    FloatRegister value = ToFloatRegister(ins->value());
+    FloatRegister output = ToFloatRegister(ins->output());
+    MOZ_ASSERT(vector == output); // defineReuseInput(0)
+
+    if (ins->lane() == SimdLane::LaneX) {
+        // As both operands are registers, movss doesn't modify the upper bits
+        // of the destination operand.
+        if (value != output)
+            masm.movss(value, output);
+        return true;
+    }
+
+    unsigned component = unsigned(ins->lane());
+    masm.reserveStack(Simd128DataSize);
+    masm.storeAlignedFloat32x4(vector, Address(StackPointer, 0));
+    masm.storeFloat32(value, Address(StackPointer, component * sizeof(int32_t)));
+    masm.loadAlignedFloat32x4(Address(StackPointer, 0), output);
+    masm.freeStack(Simd128DataSize);
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitSimdSignMaskX4(LSimdSignMaskX4 *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
