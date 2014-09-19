@@ -108,7 +108,6 @@ XPIDL_SOURCES += [
     'nsIThreadRetargetableRequest.idl',
     'nsIThreadRetargetableStreamListener.idl',
     'nsITimedChannel.idl',
-    'nsITLSServerSocket.idl',
     'nsITraceableChannel.idl',
     'nsITransport.idl',
     'nsIUDPSocket.idl',
