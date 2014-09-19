@@ -31,7 +31,7 @@ function test() {
     "The root's duration cell displays the correct value.");
   is($$perc(0).getAttribute("value"), "100%",
     "The root's percentage cell displays the correct value.");
-  is($$sampl(0).getAttribute("value"), "",
+  is($$sampl(0).getAttribute("value"), "3",
     "The root's samples cell displays the correct value.");
   is($$fun(".call-tree-name")[0].getAttribute("value"), "(root)",
     "The root's function cell displays the correct name.");
@@ -84,7 +84,7 @@ function test() {
 
   is($$dur(2).getAttribute("value"), "11",
     "The .A.B node's duration cell displays the correct value.");
-  is($$perc(2).getAttribute("value"), "61.11%",
+  is($$perc(2).getAttribute("value"), "66.66%",
     "The .A.B node's percentage cell displays the correct value.");
   is($$sampl(2).getAttribute("value"), "2",
     "The .A.B node's samples cell displays the correct value.");
@@ -103,7 +103,7 @@ function test() {
 
   is($$dur(3).getAttribute("value"), "7",
     "The .A.E node's duration cell displays the correct value.");
-  is($$perc(3).getAttribute("value"), "38.88%",
+  is($$perc(3).getAttribute("value"), "33.33%",
     "The .A.E node's percentage cell displays the correct value.");
   is($$sampl(3).getAttribute("value"), "1",
     "The .A.E node's samples cell displays the correct value.");

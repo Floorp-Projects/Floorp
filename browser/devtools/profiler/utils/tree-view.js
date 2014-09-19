@@ -63,7 +63,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     this.document = document;
 
     let frameInfo = this.frame.getInfo();
-    let framePercentage = this.frame.duration / this.root.frame.duration * 100;
+    let framePercentage = this.frame.samples / this.root.frame.samples * 100;
 
     let durationCell = this._createTimeCell(this.frame.duration);
     let percentageCell = this._createExecutionCell(framePercentage);
