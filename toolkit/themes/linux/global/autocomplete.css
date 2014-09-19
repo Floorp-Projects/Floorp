@@ -117,15 +117,6 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   color: MenuText;
 }
 
-.autocomplete-richlistitem[type~="autofill"] .ac-url-box {
-  display: none;
-}
-
-.autocomplete-richlistitem[type~="autofill"] .ac-title-box {
-  margin-top: 12px;
-  margin-bottom: 12px;
-}
-
 .ac-url-box {
   margin-top: 1px;
 }
