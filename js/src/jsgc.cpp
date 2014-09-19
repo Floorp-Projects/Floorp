@@ -455,6 +455,13 @@ ArenaHeader::checkSynchronizedWithFreeList() const
 }
 #endif
 
+void
+ArenaHeader::unmarkAll()
+{
+    uintptr_t *word = chunk()->bitmap.arenaBits(this);
+    memset(word, 0, ArenaBitmapWords * sizeof(uintptr_t));
+}
+
 /* static */ void
 Arena::staticAsserts()
 {
@@ -2491,6 +2498,9 @@ GCRuntime::releaseRelocatedArenas(ArenaHeader *relocatedList)
     while (relocatedList) {
         ArenaHeader *aheader = relocatedList;
         relocatedList = relocatedList->next;
+
+        // Clear the mark bits
+        aheader->unmarkAll();
 
         // Mark arena as empty
         AllocKind thingKind = aheader->getAllocKind();
@@ -5642,12 +5652,12 @@ GCRuntime::collect(bool incremental, int64_t budget, JSGCInvocationKind gckind,
                    JS::gcreason::Reason reason)
 {
     /* GC shouldn't be running in parallel execution mode */
-    MOZ_ASSERT(!InParallelSection());
+    MOZ_ALWAYS_TRUE(!InParallelSection());
 
     JS_AbortIfWrongThread(rt);
 
     /* If we attempt to invoke the GC while we are running in the GC, assert. */
-    MOZ_ASSERT(!rt->isHeapBusy());
+    MOZ_ALWAYS_TRUE(!rt->isHeapBusy());
 
     /* The engine never locks across anything that could GC. */
     MOZ_ASSERT(!rt->currentThreadHasExclusiveAccess());
@@ -6359,7 +6369,32 @@ JS::AutoAssertOnGC::VerifyIsSafeToGC(JSRuntime *rt)
     if (rt->gc.isInsideUnsafeRegion())
         MOZ_CRASH("[AutoAssertOnGC] possible GC in GC-unsafe region");
 }
+
+JS::AutoAssertNoAlloc::AutoAssertNoAlloc(JSRuntime *rt)
+  : gc(nullptr)
+{
+    disallowAlloc(rt);
+}
+
+void JS::AutoAssertNoAlloc::disallowAlloc(JSRuntime *rt)
+{
+    JS_ASSERT(!gc);
+    gc = &rt->gc;
+    gc->disallowAlloc();
+}
+
+JS::AutoAssertNoAlloc::~AutoAssertNoAlloc()
+{
+    if (gc)
+        gc->allowAlloc();
+}
 #endif
+
+JS::AutoAssertGCCallback::AutoAssertGCCallback(JSObject *obj)
+  : AutoSuppressGCAnalysis()
+{
+    MOZ_ASSERT(obj->runtimeFromMainThread()->isHeapMajorCollecting());
+}
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 void

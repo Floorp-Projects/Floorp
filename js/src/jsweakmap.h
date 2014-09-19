@@ -91,7 +91,7 @@ class WeakMapBase {
     virtual void finish() = 0;
 
     // Object that this weak map is part of, if any.
-    JSObject *memberOf;
+    HeapPtrObject memberOf;
 
     // Compartment that this weak map is part of.
     JSCompartment *compartment;

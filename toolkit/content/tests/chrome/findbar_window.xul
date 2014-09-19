@@ -392,24 +392,6 @@
       testClipboardSearchString(SEARCH_TEXT);
     }
 
-    // Perform an async function in serial on each of the list items.
-    function asyncForEach(list, async, callback) {
-      let i = 0;
-      let len = list.length;
-
-      if (!len)
-        return callback();
-
-      async(list[i], function handler() {
-          i++;
-          if (i < len) {
-            async(list[i], handler, i);
-          } else {
-            callback();
-          }
-      }, i);
-    }
-
     function testFindCountUI(callback) {
       clearFocus();
       document.getElementById("cmd_find").doCommand();
@@ -444,46 +426,45 @@
       let timeout = gFindBar._matchesCountTimeoutLength + 20;
 
       function assertMatches(aTest, aMatches) {
-        window.opener.wrappedJSObject.SimpleTest.is(aTest.current, aMatches[1],
+        window.opener.wrappedJSObject.SimpleTest.is(aMatches[1], aTest.current,
           "Currently highlighted match should be at " + aTest.current);
-        window.opener.wrappedJSObject.SimpleTest.is(aTest.total, aMatches[2],
+        window.opener.wrappedJSObject.SimpleTest.is(aMatches[2], aTest.total,
           "Total amount of matches should be " + aTest.total);
       }
 
-      function testString(aTest, aNext) {
-        gFindBar.clear();
-        enterStringIntoFindField(aTest.text);
-
-        setTimeout(function() {
+      function* generatorTest() {
+        for (let test of tests) {
+          gFindBar.clear();
+          yield;
+          enterStringIntoFindField(test.text);
+          yield;
           let matches = foundMatches.value.match(regex);
-          if (!aTest.total) {
+          if (!test.total) {
             ok(!matches, "No message should be shown when 0 matches are expected");
-            aNext();
           } else {
-            assertMatches(aTest, matches);
-            let cycleTests = [];
-            let cycles = aTest.total;
-            while (--cycles) {
-              aTest.current++;
-              if (aTest.current > aTest.total)
-                aTest.current = 1;
-              cycleTests.push({
-                current: aTest.current,
-                total: aTest.total
-              });
-            }
-            asyncForEach(cycleTests, function(aCycleTest, aNextCycle) {
+            assertMatches(test, matches);
+            for (let i = 1; i < test.total; i++) {
               gFindBar.onFindAgainCommand();
-              setTimeout(function() {
-                assertMatches(aCycleTest, foundMatches.value.match(regex));
-                aNextCycle();
-              }, timeout);
-            }, aNext);
+              yield;
+              // test.current + 1, test.current + 2, ..., test.total, 1, ..., test.current
+              let current = (test.current + i - 1) % test.total + 1;
+              assertMatches({
+                current: current,
+                total: test.total
+              }, foundMatches.value.match(regex));
+            }
           }
-        }, timeout);
+        }
+        callback();
       }
-
-      asyncForEach(tests, testString, callback);
+      let test = generatorTest();
+      let resultListener = {
+        onMatchesCountResult: function() {
+          test.next();
+        }
+      };
+      gFindBar.browser.finder.addResultListener(resultListener);
+      test.next();
     }
 
     function testClipboardSearchString(aExpected) {

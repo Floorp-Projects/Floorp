@@ -291,6 +291,55 @@ CodeGeneratorARM::visitMinMaxD(LMinMaxD *ins)
 }
 
 bool
+CodeGeneratorARM::visitMinMaxF(LMinMaxF *ins)
+{
+    FloatRegister first = ToFloatRegister(ins->first());
+    FloatRegister second = ToFloatRegister(ins->second());
+    FloatRegister output = ToFloatRegister(ins->output());
+
+    JS_ASSERT(first == output);
+
+    Assembler::Condition cond = ins->mir()->isMax()
+        ? Assembler::VFP_LessThanOrEqual
+        : Assembler::VFP_GreaterThanOrEqual;
+    Label nan, equal, returnSecond, done;
+
+    masm.compareFloat(first, second);
+    // First or second is NaN, result is NaN.
+    masm.ma_b(&nan, Assembler::VFP_Unordered);
+    // Make sure we handle -0 and 0 right.
+    masm.ma_b(&equal, Assembler::VFP_Equal);
+    masm.ma_b(&returnSecond, cond);
+    masm.ma_b(&done);
+
+    // Check for zero.
+    masm.bind(&equal);
+    masm.compareFloat(first, NoVFPRegister);
+    // First wasn't 0 or -0, so just return it.
+    masm.ma_b(&done, Assembler::VFP_NotEqualOrUnordered);
+    // So now both operands are either -0 or 0.
+    if (ins->mir()->isMax()) {
+        // -0 + -0 = -0 and -0 + 0 = 0.
+        masm.ma_vadd_f32(second, first, first);
+    } else {
+        masm.ma_vneg_f32(first, first);
+        masm.ma_vsub_f32(first, second, first);
+        masm.ma_vneg_f32(first, first);
+    }
+    masm.ma_b(&done);
+
+    masm.bind(&nan);
+    masm.loadConstantFloat32(GenericNaN(), output);
+    masm.ma_b(&done);
+
+    masm.bind(&returnSecond);
+    masm.ma_vmov_f32(second, output);
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
 CodeGeneratorARM::visitAbsD(LAbsD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());

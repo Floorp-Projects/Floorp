@@ -97,6 +97,10 @@ void
 AppendToString(std::stringstream& aStream, const FrameMetrics& m,
                const char* pfx="", const char* sfx="", bool detailed = false);
 
+void
+AppendToString(std::stringstream& aStream, const ScrollableLayerGuid& s,
+               const char* pfx="", const char* sfx="");
+
 template<class T>
 void
 AppendToString(std::stringstream& aStream, const mozilla::gfx::MarginTyped<T>& m,

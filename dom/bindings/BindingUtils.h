@@ -1213,6 +1213,24 @@ ClearWrapper(T* p, void*)
   ClearWrapper(p, cache);
 }
 
+template<class T>
+inline void
+UpdateWrapper(T* p, nsWrapperCache* cache, JSObject* obj, const JSObject* old)
+{
+  JS::AutoAssertGCCallback inCallback(obj);
+  cache->UpdateWrapper(obj, old);
+}
+
+template<class T>
+inline void
+UpdateWrapper(T* p, void*, JSObject* obj, const JSObject* old)
+{
+  JS::AutoAssertGCCallback inCallback(obj);
+  nsWrapperCache* cache;
+  CallQueryInterface(p, &cache);
+  UpdateWrapper(p, cache, obj, old);
+}
+
 // Attempt to preserve the wrapper, if any, for a Paris DOM bindings object.
 // Return true if we successfully preserved the wrapper, or there is no wrapper
 // to preserve. In the latter case we don't need to preserve the wrapper, because

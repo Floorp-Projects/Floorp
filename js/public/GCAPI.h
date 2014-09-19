@@ -393,10 +393,32 @@ class JS_PUBLIC_API(AutoAssertOnGC)
 };
 
 /*
- * Disable the static rooting hazard analysis in the live region, but assert if
- * any GC occurs while this guard object is live. This is most useful to help
- * the exact rooting hazard analysis in complex regions, since it cannot
- * understand dataflow.
+ * Assert if an allocation of a GC thing occurs while this class is live. This
+ * class does not disable the static rooting hazard analysis.
+ */
+class JS_PUBLIC_API(AutoAssertNoAlloc)
+{
+#ifdef JS_DEBUG
+    js::gc::GCRuntime *gc;
+
+  public:
+    AutoAssertNoAlloc() : gc(nullptr) {}
+    explicit AutoAssertNoAlloc(JSRuntime *rt);
+    void disallowAlloc(JSRuntime *rt);
+    ~AutoAssertNoAlloc();
+#else
+  public:
+    AutoAssertNoAlloc() {}
+    explicit AutoAssertNoAlloc(JSRuntime *rt) {}
+    void disallowAlloc(JSRuntime *rt) {}
+#endif
+};
+
+/*
+ * Disable the static rooting hazard analysis in the live region and assert if
+ * any allocation that could potentially trigger a GC occurs while this guard
+ * object is live. This is most useful to help the exact rooting hazard analysis
+ * in complex regions, since it cannot understand dataflow.
  *
  * Note: GC behavior is unpredictable even when deterministice and is generally
  *       non-deterministic in practice. The fact that this guard has not
@@ -406,11 +428,25 @@ class JS_PUBLIC_API(AutoAssertOnGC)
  *       that the hazard analysis is correct for that code, rather than relying
  *       on this class.
  */
-class JS_PUBLIC_API(AutoSuppressGCAnalysis) : public AutoAssertOnGC
+class JS_PUBLIC_API(AutoSuppressGCAnalysis) : public AutoAssertNoAlloc
 {
   public:
-    AutoSuppressGCAnalysis() : AutoAssertOnGC() {}
-    explicit AutoSuppressGCAnalysis(JSRuntime *rt) : AutoAssertOnGC(rt) {}
+    AutoSuppressGCAnalysis() : AutoAssertNoAlloc() {}
+    explicit AutoSuppressGCAnalysis(JSRuntime *rt) : AutoAssertNoAlloc(rt) {}
+};
+
+/*
+ * Assert that code is only ever called from a GC callback, disable the static
+ * rooting hazard analysis and assert if any allocation that could potentially
+ * trigger a GC occurs while this guard object is live.
+ *
+ * This is useful to make the static analysis ignore code that runs in GC
+ * callbacks.
+ */
+class JS_PUBLIC_API(AutoAssertGCCallback) : public AutoSuppressGCAnalysis
+{
+  public:
+    explicit AutoAssertGCCallback(JSObject *obj);
 };
 
 /*

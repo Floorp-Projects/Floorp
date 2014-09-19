@@ -53,3 +53,23 @@ class TestSetWindowSize(MarionetteTestCase):
         size = self.marionette.window_size
         self.assertEqual(size['width'], width, "Window width should not have changed")
         self.assertEqual(size['height'], height, "Window height should not have changed")
+
+    def test_that_we_can_maximise_the_window(self):
+        # valid size
+        width = self.max_width - 100
+        height = self.max_height - 100
+        self.marionette.set_window_size(width, height)
+
+        # event handler
+        self.marionette.execute_script("""
+        window.wrappedJSObject.rcvd_event = false;
+        window.onresize = function() {
+            window.wrappedJSObject.rcvd_event = true;
+        };
+        """)
+        self.marionette.maximize_window()
+        self.wait_for_condition(lambda m: m.execute_script("return window.wrappedJSObject.rcvd_event;"))
+
+        size = self.marionette.window_size
+        self.assertEqual(size['width'], self.max_width, "Window width does not use availWidth")
+        self.assertEqual(size['height'], self.max_height, "Window height does not use availHeight")
