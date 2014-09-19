@@ -964,6 +964,9 @@ public abstract class GeckoApp
             }
             if (image != null) {
                 String path = Media.insertImage(getContentResolver(),image, null, null);
+                if (path == null) {
+                    return;
+                }
                 final Intent intent = new Intent(Intent.ACTION_ATTACH_DATA);
                 intent.addCategory(Intent.CATEGORY_DEFAULT);
                 intent.setData(Uri.parse(path));
