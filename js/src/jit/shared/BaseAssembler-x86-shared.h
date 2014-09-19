@@ -352,13 +352,15 @@ private:
         OP3_ROUNDSS_VsdWsd  = 0x0A,
         OP3_ROUNDSD_VsdWsd  = 0x0B,
         OP3_PTEST_VdVd      = 0x17,
+        OP3_INSERTPS_VpsUps = 0x21,
         OP3_PINSRD_VdqEdIb  = 0x22
     } ThreeByteOpcodeID;
 
     typedef enum {
         ESCAPE_PTEST        = 0x38,
         ESCAPE_PINSRD       = 0x3A,
-        ESCAPE_ROUNDSD      = 0x3A
+        ESCAPE_ROUNDSD      = 0x3A,
+        ESCAPE_INSERTPS     = 0x3A
     } ThreeByteEscape;
 
     TwoByteOpcodeID jccRel32(Condition cond)
@@ -3602,6 +3604,16 @@ public:
         m_formatter.prefix(PRE_SSE_66);
         m_formatter.threeByteOp(OP3_ROUNDSS_VsdWsd, ESCAPE_ROUNDSD, (RegisterID)dst, (RegisterID)src);
         m_formatter.immediate8(mode); // modes are the same for roundsd and roundss
+    }
+
+    void insertps_irr(unsigned mask, XMMRegisterID src, XMMRegisterID dst)
+    {
+        MOZ_ASSERT(mask < 256);
+        spew("insertps     $%u, %s, %s",
+             mask, nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_66);
+        m_formatter.threeByteOp(OP3_INSERTPS_VpsUps, ESCAPE_INSERTPS, (RegisterID)dst, (RegisterID)src);
+        m_formatter.immediate8(uint8_t(mask));
     }
 
     void pinsrd_irr(unsigned lane, RegisterID src, XMMRegisterID dst)
