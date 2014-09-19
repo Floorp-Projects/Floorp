@@ -222,6 +222,7 @@ function isRootedPointerTypeName(name)
 function isSuppressConstructor(name)
 {
     return name.indexOf("::AutoSuppressGC") != -1
+        || name.indexOf("::AutoAssertGCCallback") != -1
         || name.indexOf("::AutoEnterAnalysis") != -1
         || name.indexOf("::AutoSuppressGCAnalysis") != -1
         || name.indexOf("::AutoIgnoreRootingHazards") != -1;
