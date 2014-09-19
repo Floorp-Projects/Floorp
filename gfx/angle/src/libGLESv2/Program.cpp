@@ -1,4 +1,3 @@
-#include "precompiled.h"
 //
 // Copyright (c) 2002-2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
@@ -173,7 +172,7 @@ bool Program::attachShader(Shader *shader)
             return false;
         }
 
-        mVertexShader = (VertexShader*)shader;
+        mVertexShader = shader;
         mVertexShader->addRef();
     }
     else if (shader->getType() == GL_FRAGMENT_SHADER)
@@ -183,7 +182,7 @@ bool Program::attachShader(Shader *shader)
             return false;
         }
 
-        mFragmentShader = (FragmentShader*)shader;
+        mFragmentShader = shader;
         mFragmentShader->addRef();
     }
     else UNREACHABLE();
@@ -244,7 +243,7 @@ void Program::bindAttributeLocation(GLuint index, const char *name)
 // Links the HLSL code of the vertex and pixel shader by matching up their varyings,
 // compiling them into binaries, determining the attribute mappings, and collecting
 // a list of uniforms
-bool Program::link()
+bool Program::link(const Caps &caps)
 {
     unlink(false);
 
@@ -253,7 +252,7 @@ bool Program::link()
 
     mProgramBinary.set(new ProgramBinary(mRenderer));
     mLinked = mProgramBinary->link(mInfoLog, mAttributeBindings, mFragmentShader, mVertexShader,
-                                   mTransformFeedbackVaryings, mTransformFeedbackBufferMode);
+                                   mTransformFeedbackVaryings, mTransformFeedbackBufferMode, caps);
 
     return mLinked;
 }
@@ -303,14 +302,14 @@ ProgramBinary* Program::getProgramBinary() const
     return mProgramBinary.get();
 }
 
-bool Program::setProgramBinary(const void *binary, GLsizei length)
+bool Program::setProgramBinary(GLenum binaryFormat, const void *binary, GLsizei length)
 {
     unlink(false);
 
     mInfoLog.reset();
 
     mProgramBinary.set(new ProgramBinary(mRenderer));
-    mLinked = mProgramBinary->load(mInfoLog, binary, length);
+    mLinked = mProgramBinary->load(mInfoLog, binaryFormat, binary, length);
     if (!mLinked)
     {
         mProgramBinary.set(NULL);
@@ -502,14 +501,14 @@ bool Program::isFlaggedForDeletion() const
     return mDeleteStatus;
 }
 
-void Program::validate()
+void Program::validate(const Caps &caps)
 {
     mInfoLog.reset();
 
     ProgramBinary *programBinary = getProgramBinary();
     if (isLinked() && programBinary)
     {
-        programBinary->validate(mInfoLog);
+        programBinary->validate(mInfoLog, caps);
     }
     else
     {

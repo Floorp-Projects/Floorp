@@ -10,14 +10,13 @@
 #ifndef LIBGLESV2_RESOURCEMANAGER_H_
 #define LIBGLESV2_RESOURCEMANAGER_H_
 
-#include <GLES3/gl3.h>
-#include <GLES2/gl2.h>
-
-#include <unordered_map>
-
 #include "common/angleutils.h"
 #include "libGLESv2/angletypes.h"
 #include "libGLESv2/HandleAllocator.h"
+
+#include "angle_gl.h"
+
+#include <unordered_map>
 
 namespace rx
 {

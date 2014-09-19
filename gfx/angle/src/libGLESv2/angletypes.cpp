@@ -1,4 +1,3 @@
-#include "precompiled.h"
 //
 // Copyright (c) 2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
@@ -13,6 +12,25 @@
 
 namespace gl
 {
+
+SamplerState::SamplerState()
+    : minFilter(GL_NEAREST_MIPMAP_LINEAR),
+      magFilter(GL_LINEAR),
+      wrapS(GL_REPEAT),
+      wrapT(GL_REPEAT),
+      wrapR(GL_REPEAT),
+      maxAnisotropy(1.0f),
+      baseLevel(0),
+      maxLevel(1000),
+      minLod(-1000.0f),
+      maxLod(1000.0f),
+      compareMode(GL_NONE),
+      compareFunc(GL_LEQUAL),
+      swizzleRed(GL_RED),
+      swizzleGreen(GL_GREEN),
+      swizzleBlue(GL_BLUE),
+      swizzleAlpha(GL_ALPHA)
+{}
 
 bool SamplerState::swizzleRequired() const
 {
@@ -90,15 +108,15 @@ VertexFormat::VertexFormat(GLenum type, GLboolean normalized, GLuint components,
     }
 }
 
-VertexFormat::VertexFormat(const VertexAttribute &attribute)
-    : mType(attribute.mType),
-      mNormalized(attribute.mNormalized ? GL_TRUE : GL_FALSE),
-      mComponents(attribute.mSize),
-      mPureInteger(attribute.mPureInteger)
+VertexFormat::VertexFormat(const VertexAttribute &attrib)
+    : mType(attrib.type),
+      mNormalized(attrib.normalized ? GL_TRUE : GL_FALSE),
+      mComponents(attrib.size),
+      mPureInteger(attrib.pureInteger)
 {
     // Ensure we aren't initializing a vertex format which should be using
     // the current-value type
-    ASSERT(attribute.mArrayEnabled);
+    ASSERT(attrib.enabled);
 
     // Float data can not be normalized, so ignore the user setting
     if (mType == GL_FLOAT || mType == GL_HALF_FLOAT || mType == GL_FIXED)
@@ -107,13 +125,13 @@ VertexFormat::VertexFormat(const VertexAttribute &attribute)
     }
 }
 
-VertexFormat::VertexFormat(const VertexAttribute &attribute, GLenum currentValueType)
-    : mType(attribute.mType),
-      mNormalized(attribute.mNormalized ? GL_TRUE : GL_FALSE),
-      mComponents(attribute.mSize),
-      mPureInteger(attribute.mPureInteger)
+VertexFormat::VertexFormat(const VertexAttribute &attrib, GLenum currentValueType)
+    : mType(attrib.type),
+      mNormalized(attrib.normalized ? GL_TRUE : GL_FALSE),
+      mComponents(attrib.size),
+      mPureInteger(attrib.pureInteger)
 {
-    if (!attribute.mArrayEnabled)
+    if (!attrib.enabled)
     {
         mType = currentValueType;
         mNormalized = GL_FALSE;

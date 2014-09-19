@@ -1443,8 +1443,8 @@ WebGLContext::ValidateUniformLocation(const char* info, WebGLUniformLocation *lo
 bool
 WebGLContext::ValidateSamplerUniformSetter(const char* info, WebGLUniformLocation *location, GLint value)
 {
-    if (location->Info().type != SH_SAMPLER_2D &&
-        location->Info().type != SH_SAMPLER_CUBE)
+    if (location->Info().type != LOCAL_GL_SAMPLER_2D &&
+        location->Info().type != LOCAL_GL_SAMPLER_CUBE)
     {
         return true;
     }

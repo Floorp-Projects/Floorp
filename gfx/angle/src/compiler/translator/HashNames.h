@@ -9,7 +9,7 @@
 
 #include <map>
 
-#include "compiler/translator/intermediate.h"
+#include "compiler/translator/IntermNode.h"
 
 #define HASHED_NAME_PREFIX "webgl_"
 

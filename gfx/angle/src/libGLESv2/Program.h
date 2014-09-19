@@ -10,12 +10,16 @@
 #ifndef LIBGLESV2_PROGRAM_H_
 #define LIBGLESV2_PROGRAM_H_
 
-#include <string>
-#include <set>
-
 #include "common/angleutils.h"
 #include "common/RefCountObject.h"
 #include "libGLESv2/Constants.h"
+#include "libGLESv2/ProgramBinary.h"
+
+#include <GLES2/gl2.h>
+
+#include <vector>
+#include <string>
+#include <set>
 
 namespace rx
 {
@@ -24,10 +28,8 @@ class Renderer;
 
 namespace gl
 {
+struct Caps;
 class ResourceManager;
-class FragmentShader;
-class VertexShader;
-class ProgramBinary;
 class Shader;
 
 extern const char * const g_fakepath;
@@ -75,9 +77,9 @@ class Program
 
     void bindAttributeLocation(GLuint index, const char *name);
 
-    bool link();
+    bool link(const Caps &caps);
     bool isLinked();
-    bool setProgramBinary(const void *binary, GLsizei length);
+    bool setProgramBinary(GLenum binaryFormat, const void *binary, GLsizei length);
     ProgramBinary *getProgramBinary() const;
 
     int getInfoLogLength() const;
@@ -110,7 +112,7 @@ class Program
     void flagForDeletion();
     bool isFlaggedForDeletion() const;
 
-    void validate();
+    void validate(const Caps &caps);
     bool isValidated() const;
 
     GLint getProgramBinaryLength() const;
@@ -121,8 +123,8 @@ class Program
     void unlink(bool destroy = false);
     void resetUniformBlockBindings();
 
-    FragmentShader *mFragmentShader;
-    VertexShader *mVertexShader;
+    Shader *mFragmentShader;
+    Shader *mVertexShader;
 
     AttributeBindings mAttributeBindings;
 

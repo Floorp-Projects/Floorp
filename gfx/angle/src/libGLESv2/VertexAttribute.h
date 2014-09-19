@@ -14,94 +14,57 @@
 namespace gl
 {
 
-class VertexAttribute
+struct VertexAttribute
 {
-  public:
-    VertexAttribute() : mType(GL_FLOAT), mSize(4), mNormalized(false), mPureInteger(false),
-                        mStride(0), mPointer(NULL), mArrayEnabled(false), mDivisor(0)
-    {
-    }
+    bool enabled; // From glEnable/DisableVertexAttribArray
 
-    int typeSize() const
-    {
-        switch (mType)
-        {
-          case GL_BYTE:                        return mSize * sizeof(GLbyte);
-          case GL_UNSIGNED_BYTE:               return mSize * sizeof(GLubyte);
-          case GL_SHORT:                       return mSize * sizeof(GLshort);
-          case GL_UNSIGNED_SHORT:              return mSize * sizeof(GLushort);
-          case GL_INT:                         return mSize * sizeof(GLint);
-          case GL_UNSIGNED_INT:                return mSize * sizeof(GLuint);
-          case GL_INT_2_10_10_10_REV:          return 4;
-          case GL_UNSIGNED_INT_2_10_10_10_REV: return 4;
-          case GL_FIXED:                       return mSize * sizeof(GLfixed);
-          case GL_HALF_FLOAT:                  return mSize * sizeof(GLhalf);
-          case GL_FLOAT:                       return mSize * sizeof(GLfloat);
-          default: UNREACHABLE();              return mSize * sizeof(GLfloat);
-        }
-    }
-
-    GLsizei stride() const
-    {
-        return (mArrayEnabled ? (mStride ? mStride : typeSize()) : 16);
-    }
-
-    void setState(gl::Buffer *boundBuffer, GLint size, GLenum type, bool normalized,
-                  bool pureInteger, GLsizei stride, const void *pointer)
-    {
-        mBoundBuffer.set(boundBuffer);
-        mSize = size;
-        mType = type;
-        mNormalized = normalized;
-        mPureInteger = pureInteger;
-        mStride = stride;
-        mPointer = pointer;
-    }
-
-    template <typename T>
-    T querySingleParameter(GLenum pname) const
-    {
-        switch (pname)
-        {
-          case GL_VERTEX_ATTRIB_ARRAY_ENABLED:
-            return static_cast<T>(mArrayEnabled ? GL_TRUE : GL_FALSE);
-          case GL_VERTEX_ATTRIB_ARRAY_SIZE:
-            return static_cast<T>(mSize);
-          case GL_VERTEX_ATTRIB_ARRAY_STRIDE:
-            return static_cast<T>(mStride);
-          case GL_VERTEX_ATTRIB_ARRAY_TYPE:
-            return static_cast<T>(mType);
-          case GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
-            return static_cast<T>(mNormalized ? GL_TRUE : GL_FALSE);
-          case GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
-            return static_cast<T>(mBoundBuffer.id());
-          case GL_VERTEX_ATTRIB_ARRAY_DIVISOR:
-            return static_cast<T>(mDivisor);
-          case GL_VERTEX_ATTRIB_ARRAY_INTEGER:
-            return static_cast<T>(mPureInteger ? GL_TRUE : GL_FALSE);
-          default:
-            UNREACHABLE();
-            return static_cast<T>(0);
-        }
-    }
-
-    // From glVertexAttribPointer
-    GLenum mType;
-    GLint mSize;
-    bool mNormalized;
-    bool mPureInteger;
-    GLsizei mStride;   // 0 means natural stride
+    GLenum type;
+    GLuint size;
+    bool normalized;
+    bool pureInteger;
+    GLuint stride; // 0 means natural stride
 
     union
     {
-        const void *mPointer;
-        intptr_t mOffset;
+        const GLvoid *pointer;
+        GLintptr offset;
     };
+    BindingPointer<Buffer> buffer; // Captured when glVertexAttribPointer is called.
 
-    BindingPointer<Buffer> mBoundBuffer;   // Captured when glVertexAttribPointer is called.
-    bool mArrayEnabled;   // From glEnable/DisableVertexAttribArray
-    unsigned int mDivisor;
+    GLuint divisor;
+
+    VertexAttribute();
 };
+
+template <typename T>
+T QuerySingleVertexAttributeParameter(const VertexAttribute& attrib, GLenum pname)
+{
+  switch (pname)
+  {
+    case GL_VERTEX_ATTRIB_ARRAY_ENABLED:
+      return static_cast<T>(attrib.enabled ? GL_TRUE : GL_FALSE);
+    case GL_VERTEX_ATTRIB_ARRAY_SIZE:
+      return static_cast<T>(attrib.size);
+    case GL_VERTEX_ATTRIB_ARRAY_STRIDE:
+      return static_cast<T>(attrib.stride);
+    case GL_VERTEX_ATTRIB_ARRAY_TYPE:
+      return static_cast<T>(attrib.type);
+    case GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
+      return static_cast<T>(attrib.normalized ? GL_TRUE : GL_FALSE);
+    case GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
+      return static_cast<T>(attrib.buffer.id());
+    case GL_VERTEX_ATTRIB_ARRAY_DIVISOR:
+      return static_cast<T>(attrib.divisor);
+    case GL_VERTEX_ATTRIB_ARRAY_INTEGER:
+      return static_cast<T>(attrib.pureInteger ? GL_TRUE : GL_FALSE);
+    default:
+      UNREACHABLE();
+      return static_cast<T>(0);
+  }
+}
+
+size_t ComputeVertexAttributeTypeSize(const VertexAttribute& attrib);
+size_t ComputeVertexAttributeStride(const VertexAttribute& attrib);
 
 struct VertexAttribCurrentValueData
 {
