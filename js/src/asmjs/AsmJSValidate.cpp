@@ -4353,13 +4353,21 @@ CheckMathMinMax(FunctionCompiler &f, ParseNode *callNode, MDefinition **def, boo
     if (!CheckExpr(f, firstArg, &firstDef, &firstType))
         return false;
 
-    bool opIsDouble = firstType.isMaybeDouble();
-    bool opIsInteger = firstType.isInt();
+    if (firstType.isMaybeDouble()) {
+        *type = MathRetType::Double;
+        firstType = Type::MaybeDouble;
+    } else if (firstType.isMaybeFloat()) {
+        *type = MathRetType::Float;
+        firstType = Type::MaybeFloat;
+    } else if (firstType.isInt()) {
+        *type = MathRetType::Signed;
+        firstType = Type::Int;
+    } else {
+        return f.failf(firstArg, "%s is not a subtype of double?, float? or int",
+                       firstType.toChars());
+    }
+
     MIRType opType = firstType.toMIRType();
-
-    if (!opIsDouble && !opIsInteger)
-        return f.failf(firstArg, "%s is not a subtype of double? or int", firstType.toChars());
-
     MDefinition *lastDef = firstDef;
     ParseNode *nextArg = NextNode(firstArg);
     for (unsigned i = 1; i < CallArgListLength(callNode); i++, nextArg = NextNode(nextArg)) {
@@ -4368,15 +4376,12 @@ CheckMathMinMax(FunctionCompiler &f, ParseNode *callNode, MDefinition **def, boo
         if (!CheckExpr(f, nextArg, &nextDef, &nextType))
             return false;
 
-        if (opIsDouble && !nextType.isMaybeDouble())
-            return f.failf(nextArg, "%s is not a subtype of double?", nextType.toChars());
-        if (opIsInteger && !nextType.isInt())
-            return f.failf(nextArg, "%s is not a subtype of int", nextType.toChars());
+        if (!(nextType <= firstType))
+            return f.failf(nextArg, "%s is not a subtype of %s", nextType.toChars(), firstType.toChars());
 
         lastDef = f.minMax(lastDef, nextDef, opType, isMax);
     }
 
-    *type = MathRetType(opIsDouble ? MathRetType::Double : MathRetType::Signed);
     *def = lastDef;
     return true;
 }

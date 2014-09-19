@@ -4539,7 +4539,7 @@ class MMinMax
       : MBinaryInstruction(left, right),
         isMax_(isMax)
     {
-        JS_ASSERT(type == MIRType_Double || type == MIRType_Int32);
+        JS_ASSERT(IsNumberType(type));
         setResultType(type);
         setMovable();
         specialization_ = type;
