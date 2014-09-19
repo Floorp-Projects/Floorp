@@ -277,14 +277,6 @@ ifeq ($(MOZ_PKG_FORMAT),APK)
 JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
 include $(MOZILLA_DIR)/config/android-common.mk
 
-# DEBUG_JARSIGNER is defined by android-common.mk and always debug
-# signs.  We want to release sign if possible.
-ifdef MOZ_SIGN_CMD
-RELEASE_JARSIGNER := $(MOZ_SIGN_CMD) -f jar
-else
-RELEASE_JARSIGNER := $(DEBUG_JARSIGNER)
-endif
-
 DIST_FILES =
 
 # Place the files in the order they are going to be opened by the linker
@@ -354,14 +346,6 @@ UPLOAD_EXTRA_FILES += ../embedding/android/geckoview_example/geckoview_example.a
 
 # Robocop/Robotium tests, Android Background tests, and Fennec need to
 # be signed with the same key, which means release signing them all.
-
-# $(1) is the full path to input:  foo-debug-unsigned-unaligned.apk.
-# $(2) is the full path to output: foo.apk.
-RELEASE_SIGN_ANDROID_APK = \
-  cp $(1) $(2)-unaligned.apk && \
-  $(RELEASE_JARSIGNER) $(2)-unaligned.apk && \
-  $(ZIPALIGN) -f -v 4 $(2)-unaligned.apk $(2) && \
-  $(RM) $(2)-unaligned.apk
 
 ROBOCOP_PATH = $(abspath $(_ABS_DIST)/../build/mobile/robocop)
 # Normally, $(NSINSTALL) would be used instead of cp, but INNER_ROBOCOP_PACKAGE
