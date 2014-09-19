@@ -102,6 +102,15 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   padding: 5px 2px;
 }
 
+.autocomplete-richlistitem[type~="autofill"] .ac-url-box {
+  display: none;
+}
+
+.autocomplete-richlistitem[type~="autofill"] .ac-title-box {
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
 .ac-url-box {
   margin-top: 1px;
 }

@@ -1011,7 +1011,7 @@ OnSharedPreferenceChangeListener
         } else if (PREFS_SUGGESTED_SITES.equals(key)) {
             refreshSuggestedSites();
         } else if (PREFS_NEW_TABLET_UI.equals(key)) {
-            Toast.makeText(this, "Restart the browser for the changes to take effect", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.new_tablet_restart, Toast.LENGTH_SHORT).show();
         }
     }
 
