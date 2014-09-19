@@ -312,10 +312,11 @@ def processLeakLog(leakLogFile, leakThreshold = 0):
     log.info("TEST-INFO | leakcheck | threshold set at %d bytes" % leakThreshold)
 
   (leakLogFileDir, leakFileBase) = os.path.split(leakLogFile)
-  fileNameRegExp = re.compile(r"_([a-z]*)_pid\d*$")
   if leakFileBase[-4:] == ".log":
     leakFileBase = leakFileBase[:-4]
     fileNameRegExp = re.compile(r"_([a-z]*)_pid\d*.log$")
+  else:
+    fileNameRegExp = re.compile(r"_([a-z]*)_pid\d*$")
 
   for fileName in os.listdir(leakLogFileDir):
     if fileName.find(leakFileBase) != -1:
