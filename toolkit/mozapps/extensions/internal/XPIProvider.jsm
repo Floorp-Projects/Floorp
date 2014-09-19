@@ -1494,7 +1494,7 @@ XPIState.prototype = {
    */
   getModTime(aFile, aId) {
     let changed = false;
-    let scanStarted = Date.now();
+    let scanStarted = Cu.now();
     // For an unknown or enabled add-on, we do a full recursive scan.
     if (!('scanTime' in this) || this.enabled) {
       logger.debug('getModTime: Recursive scan of ' + aId);
@@ -1539,7 +1539,7 @@ XPIState.prototype = {
       }
     }
     // Record duration of file-modified check
-    XPIProvider.setTelemetry(aId, "scan_MS", Date.now() - scanStarted);
+    XPIProvider.setTelemetry(aId, "scan_MS", Math.round(Cu.now() - scanStarted));
 
     return changed;
   },
@@ -3539,10 +3539,10 @@ this.XPIProvider = {
     }
 
     // Telemetry probe added around getInstallState() to check perf
-    let telemetryCaptureTime = Date.now();
+    let telemetryCaptureTime = Cu.now();
     let installChanged = XPIStates.getInstallState();
     let telemetry = Services.telemetry;
-    telemetry.getHistogramById("CHECK_ADDONS_MODIFIED_MS").add(Date.now() - telemetryCaptureTime);
+    telemetry.getHistogramById("CHECK_ADDONS_MODIFIED_MS").add(Math.round(Cu.now() - telemetryCaptureTime));
     if (installChanged) {
       updateReasons.push("directoryState");
     }
