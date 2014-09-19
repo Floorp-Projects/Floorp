@@ -54,16 +54,6 @@
         <item>0</item>
         <item>1</item>
         <item>2</item>
-      </string-array>
-    <string-array name="pref_donottrack_entries">
-      <item>@string/pref_donottrack_disallow_tracking</item>
-      <item>@string/pref_donottrack_allow_tracking</item>
-      <item>@string/pref_donottrack_no_pref</item>
-    </string-array>
-    <string-array name="pref_donottrack_values">
-      <item>1</item>
-      <item>2</item>
-      <item>0</item>
     </string-array>
     <string-array name="pref_import_android_entries">
         <item>@string/bookmarks_title</item>
