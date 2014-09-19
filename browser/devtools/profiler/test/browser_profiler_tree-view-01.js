@@ -37,10 +37,10 @@ function test() {
   is(container.childNodes[0].childNodes[1].getAttribute("value"), "100%",
     "The root node in the tree has the correct percentage cell value.");
 
-  is(container.childNodes[0].childNodes[2].getAttribute("type"), "invocations",
-    "The root node in the tree has an invocations cell.");
+  is(container.childNodes[0].childNodes[2].getAttribute("type"), "samples",
+    "The root node in the tree has an samples cell.");
   is(container.childNodes[0].childNodes[2].getAttribute("value"), "",
-    "The root node in the tree has the correct invocations cell value.");
+    "The root node in the tree has the correct samples cell value.");
 
   is(container.childNodes[0].childNodes[3].getAttribute("type"), "function",
     "The root node in the tree has a function cell.");
