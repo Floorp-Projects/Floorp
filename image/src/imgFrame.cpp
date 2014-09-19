@@ -122,6 +122,7 @@ imgFrame::imgFrame() :
   mCompositingFailed(false),
   mNonPremult(false),
   mDiscardable(false),
+  mOptimizable(false),
   mInformedDiscardTracker(false)
 {
   static bool hasCheckedOptimize = false;
@@ -298,8 +299,10 @@ imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
 nsresult imgFrame::Optimize()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mLockCount == 1,
+             "Should only optimize when holding the lock exclusively");
 
-  if (gDisableOptimize)
+  if (!mOptimizable || gDisableOptimize)
     return NS_OK;
 
   if (mPalettedImageData || mOptSurface || mSinglePixel)
@@ -400,6 +403,15 @@ nsresult imgFrame::Optimize()
     mVBufPtr = nullptr;
     mImageSurface = nullptr;
   }
+
+#ifdef MOZ_WIDGET_ANDROID
+  // On Android, free mImageSurface unconditionally if we're discardable.
+  // XXX(seth): We'd eventually like to do this on all platforms, but right now
+  // we'd read back from the GPU too much to make it worthwhile.
+  if (mDiscardable) {
+    mImageSurface = nullptr;
+  }
+#endif
 
   return NS_OK;
 }
@@ -719,42 +731,40 @@ nsresult imgFrame::UnlockImageData()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  NS_ABORT_IF_FALSE(mLockCount != 0, "Unlocking an unlocked image!");
-  if (mLockCount == 0) {
+  MOZ_ASSERT(mLockCount > 0, "Unlocking an unlocked image!");
+  if (mLockCount <= 0) {
     return NS_ERROR_FAILURE;
+  }
+
+  // If we're about to become unlocked, we don't need to hold on to our data
+  // surface anymore. (But we don't need to do anything for paletted images,
+  // which don't have surfaces.)
+  if (mLockCount == 1 && !mPalettedImageData) {
+    // Convert the data surface to a GPU surface or a single color if possible.
+    // This will also release mImageSurface if possible.
+    Optimize();
+    
+    // Allow the OS to release our data surface.
+    mVBufPtr = nullptr;
   }
 
   mLockCount--;
 
-  NS_ABORT_IF_FALSE(mLockCount >= 0, "Unbalanced locks and unlocks");
-  if (mLockCount < 0) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // If we are not the last lock, there's nothing to do.
-  if (mLockCount != 0) {
-    return NS_OK;
-  }
-
-  // Paletted images don't have surfaces, so there's nothing to do.
-  if (mPalettedImageData)
-    return NS_OK;
-
-  mVBufPtr = nullptr;
-  if (mVBuf && mDiscardable) {
-    mImageSurface = nullptr;
-  }
-
   return NS_OK;
 }
 
-void imgFrame::SetDiscardable()
+void
+imgFrame::SetDiscardable()
 {
   MOZ_ASSERT(mLockCount, "Expected to be locked when SetDiscardable is called");
-  // Disabled elsewhere due to the cost of calling GetSourceSurfaceForSurface.
-#ifdef MOZ_WIDGET_ANDROID
   mDiscardable = true;
-#endif
+}
+
+void
+imgFrame::SetOptimizable()
+{
+  MOZ_ASSERT(mLockCount, "Expected to be locked when SetOptimizable is called");
+  mOptimizable = true;
 }
 
 TemporaryRef<SourceSurface>
