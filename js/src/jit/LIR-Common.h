@@ -143,42 +143,39 @@ class LSimdSplatX4 : public LInstructionHelper<1, 1, 0>
     }
 };
 
-// Extracts an element from a given SIMD int32x4 lane.
-class LSimdExtractElementI : public LInstructionHelper<1, 1, 0>
+class LSimdExtractElementBase : public LInstructionHelper<1, 1, 0>
 {
-    SimdLane lane_;
-
-  public:
-    LIR_HEADER(SimdExtractElementI);
-
-    LSimdExtractElementI(const LAllocation &base, SimdLane lane) : lane_(lane) {
+  protected:
+    LSimdExtractElementBase(const LAllocation &base) {
         setOperand(0, base);
     }
+
+  public:
     const LAllocation *getBase() {
         return getOperand(0);
     }
     SimdLane lane() const {
-        return lane_;
+        return mir_->toSimdExtractElement()->lane();
     }
 };
 
-// Extracts an element from a given SIMD float32x4 lane.
-class LSimdExtractElementF : public LInstructionHelper<1, 1, 0>
+// Extracts an element from a given SIMD int32x4 lane.
+class LSimdExtractElementI : public LSimdExtractElementBase
 {
-    SimdLane lane_;
-
+  public:
+    LIR_HEADER(SimdExtractElementI);
+    LSimdExtractElementI(const LAllocation &base)
+      : LSimdExtractElementBase(base)
+    {}
+};
+// Extracts an element from a given SIMD float32x4 lane.
+class LSimdExtractElementF : public LSimdExtractElementBase
+{
   public:
     LIR_HEADER(SimdExtractElementF);
-
-    LSimdExtractElementF(const LAllocation &base, SimdLane lane) : lane_(lane) {
-        setOperand(0, base);
-    }
-    const LAllocation *getBase() {
-        return getOperand(0);
-    }
-    SimdLane lane() const {
-        return lane_;
-    }
+    LSimdExtractElementF(const LAllocation &base)
+      : LSimdExtractElementBase(base)
+    {}
 };
 
 class LSimdSignMaskX4 : public LInstructionHelper<1, 1, 0>
