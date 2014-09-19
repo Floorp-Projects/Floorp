@@ -43,7 +43,35 @@ var mediaPlayerDevice = {
     return new MediaPlayerApp(aService);
   },
   types: ["video/mp4", "video/webm", "application/x-mpegurl"],
-  extensions: ["mp4", "webm", "m3u", "m3u8"]
+  extensions: ["mp4", "webm", "m3u", "m3u8"],
+  init: function() {
+    Services.obs.addObserver(this, "MediaPlayer:Added", false);
+    Services.obs.addObserver(this, "MediaPlayer:Changed", false);
+    Services.obs.addObserver(this, "MediaPlayer:Removed", false);
+  },
+  observe: function(subject, topic, data) {
+    if (topic === "MediaPlayer:Added") {
+      let service = this.toService(JSON.parse(data));
+      SimpleServiceDiscovery.addService(service);
+    } else if (topic === "MediaPlayer:Changed") {
+      let service = this.toService(JSON.parse(data));
+      SimpleServiceDiscovery.updateService(service);
+    } else if (topic === "MediaPlayer:Removed") {
+      SimpleServiceDiscovery.removeService(data);
+    }
+  },
+  toService: function(display) {
+    // Convert the native data into something matching what is created in _processService()
+    return {
+      location: display.location,
+      target: "media:router",
+      friendlyName: display.friendlyName,
+      uuid: display.uuid,
+      manufacturer: display.manufacturer,
+      modelName: display.modelName,
+      mirror: display.mirror
+    };
+  }
 };
 
 var CastingApps = {
@@ -59,6 +87,9 @@ var CastingApps = {
     // Register targets
     SimpleServiceDiscovery.registerDevice(rokuDevice);
     SimpleServiceDiscovery.registerDevice(matchstickDevice);
+
+    // MediaPlayerDevice will notify us any time the native device list changes.
+    mediaPlayerDevice.init();
     SimpleServiceDiscovery.registerDevice(mediaPlayerDevice);
 
     // Search for devices continuously every 120 seconds

@@ -5,34 +5,43 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.mozglue.JNITarget;
-import org.mozilla.gecko.util.NativeEventListener;
-import org.mozilla.gecko.util.NativeJSObject;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.json.JSONException;
-
-import android.content.Context;
+import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v7.media.MediaControlIntent;
 import android.support.v7.media.MediaRouteSelector;
 import android.support.v7.media.MediaRouter;
 import android.support.v7.media.MediaRouter.RouteInfo;
 import android.util.Log;
-
 import com.google.android.gms.cast.CastMediaControlIntent;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.mozilla.gecko.mozglue.JNITarget;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.NativeEventListener;
+import org.mozilla.gecko.util.NativeJSObject;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Iterator;
+import java.util.Map;
 
 /* Manages a list of GeckoMediaPlayers methods (i.e. Chromecast/Miracast). Routes messages
  * from Gecko to the correct caster based on the id of the display
  */
-class MediaPlayerManager implements NativeEventListener,
-                                    GeckoAppShell.AppStateListener {
+public class MediaPlayerManager extends Fragment implements NativeEventListener {
+    /**
+     * Create a new instance of DetailsFragment, initialized to
+     * show the text at 'index'.
+     */
+    @JNITarget
+    public static MediaPlayerManager newInstance() {
+        return new MediaPlayerManager();
+    }
+
     private static final String LOGTAG = "GeckoMediaPlayerManager";
+
+    @JNITarget
+    public static final String MEDIA_PLAYER_TAG = "MPManagerFragment";
 
     private static final boolean SHOW_DEBUG = false;
     // Simplified debugging interfaces
@@ -48,99 +57,42 @@ class MediaPlayerManager implements NativeEventListener,
         }
     }
 
-    private final Context context;
-    private final MediaRouter mediaRouter;
+    private MediaRouter mediaRouter = null;
     private final Map<String, GeckoMediaPlayer> displays = new HashMap<String, GeckoMediaPlayer>();
-    private static MediaPlayerManager instance;
 
-    @JNITarget
-    public static void init(Context context) {
-        if (instance != null) {
-            debug("MediaPlayerManager initialized twice");
-            return;
-        }
-
-        instance = new MediaPlayerManager(context);
-    }
-
-    private MediaPlayerManager(Context context) {
-        this.context = context;
-
-        if (context instanceof GeckoApp) {
-            GeckoApp app = (GeckoApp) context;
-            app.addAppStateListener(this);
-        }
-
-        mediaRouter = MediaRouter.getInstance(context);
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
-                                                                  "MediaPlayer:Load",
-                                                                  "MediaPlayer:Start",
-                                                                  "MediaPlayer:Stop",
-                                                                  "MediaPlayer:Play",
-                                                                  "MediaPlayer:Pause",
-                                                                  "MediaPlayer:Get",
-                                                                  "MediaPlayer:End",
-                                                                  "MediaPlayer:Mirror",
-                                                                  "MediaPlayer:Message");
+                "MediaPlayer:Load",
+                "MediaPlayer:Start",
+                "MediaPlayer:Stop",
+                "MediaPlayer:Play",
+                "MediaPlayer:Pause",
+                "MediaPlayer:End",
+                "MediaPlayer:Mirror",
+                "MediaPlayer:Message");
     }
 
+    @Override
     @JNITarget
-    public static void onDestroy() {
-        if (instance == null) {
-            return;
-        }
-
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(instance,
+    public void onDestroy() {
+        super.onDestroy();
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
                                                                     "MediaPlayer:Load",
                                                                     "MediaPlayer:Start",
                                                                     "MediaPlayer:Stop",
                                                                     "MediaPlayer:Play",
                                                                     "MediaPlayer:Pause",
-                                                                    "MediaPlayer:Get",
                                                                     "MediaPlayer:End",
                                                                     "MediaPlayer:Mirror",
                                                                     "MediaPlayer:Message");
-        if (instance.context instanceof GeckoApp) {
-            GeckoApp app = (GeckoApp) instance.context;
-            app.removeAppStateListener(instance);
-        }
     }
 
     // GeckoEventListener implementation
     @Override
     public void handleMessage(String event, final NativeJSObject message, final EventCallback callback) {
         debug(event);
-
-        if ("MediaPlayer:Get".equals(event)) {
-            final JSONObject result = new JSONObject();
-            final JSONArray disps = new JSONArray();
-
-            final Iterator<GeckoMediaPlayer> items = displays.values().iterator();
-            while (items.hasNext()) {
-                GeckoMediaPlayer disp = items.next();
-                try {
-                    JSONObject json = disp.toJSON();
-                    if (json == null) {
-                        items.remove();
-                    } else {
-                        disps.put(json);
-                    }
-                } catch(Exception ex) {
-                    // This may happen if the device isn't a real Chromecast,
-                    // for example Matchstick casting devices.
-                    Log.e(LOGTAG, "Couldn't create JSON for display", ex);
-                }
-            }
-
-            try {
-                result.put("displays", disps);
-            } catch(JSONException ex) {
-                Log.i(LOGTAG, "Error sending displays", ex);
-            }
-
-            callback.sendSuccess(result);
-            return;
-        }
 
         final GeckoMediaPlayer display = displays.get(message.getString("id"));
         if (display == null) {
@@ -179,6 +131,8 @@ class MediaPlayerManager implements NativeEventListener,
             public void onRouteRemoved(MediaRouter router, RouteInfo route) {
                 debug("onRouteRemoved: route=" + route);
                 displays.remove(route.getId());
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(
+                        "MediaPlayer:Removed", route.getId()));
             }
 
             @SuppressWarnings("unused")
@@ -201,18 +155,22 @@ class MediaPlayerManager implements NativeEventListener,
             @Override
             public void onRouteAdded(MediaRouter router, MediaRouter.RouteInfo route) {
                 debug("onRouteAdded: route=" + route);
-                GeckoMediaPlayer display = getMediaPlayerForRoute(route);
+                final GeckoMediaPlayer display = getMediaPlayerForRoute(route);
                 if (display != null) {
                     displays.put(route.getId(), display);
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(
+                            "MediaPlayer:Added", display.toJSON().toString()));
                 }
             }
 
             @Override
             public void onRouteChanged(MediaRouter router, MediaRouter.RouteInfo route) {
                 debug("onRouteChanged: route=" + route);
-                GeckoMediaPlayer display = displays.get(route.getId());
+                final GeckoMediaPlayer display = displays.get(route.getId());
                 if (display != null) {
                     displays.put(route.getId(), display);
+                    GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent(
+                            "MediaPlayer:Changed", display.toJSON().toString()));
                 }
             }
         };
@@ -220,7 +178,7 @@ class MediaPlayerManager implements NativeEventListener,
     private GeckoMediaPlayer getMediaPlayerForRoute(MediaRouter.RouteInfo route) {
         try {
             if (route.supportsControlCategory(MediaControlIntent.CATEGORY_REMOTE_PLAYBACK)) {
-                return new ChromeCast(context, route);
+                return new ChromeCast(getActivity(), route);
             }
         } catch(Exception ex) {
             debug("Error handling presentation", ex);
@@ -229,23 +187,28 @@ class MediaPlayerManager implements NativeEventListener,
         return null;
     }
 
-    /* Implementing GeckoAppShell.AppStateListener */
     @Override
     public void onPause() {
+        super.onPause();
         mediaRouter.removeCallback(callback);
+        mediaRouter = null;
     }
 
     @Override
     public void onResume() {
-        MediaRouteSelector selectorBuilder = new MediaRouteSelector.Builder()
+        super.onResume();
+
+        // The mediaRouter shouldn't exist here, but this is a nice safety check.
+        if (mediaRouter != null) {
+            return;
+        }
+
+        mediaRouter = MediaRouter.getInstance(getActivity());
+        final MediaRouteSelector selectorBuilder = new MediaRouteSelector.Builder()
             .addControlCategory(MediaControlIntent.CATEGORY_LIVE_VIDEO)
             .addControlCategory(MediaControlIntent.CATEGORY_REMOTE_PLAYBACK)
             .addControlCategory(CastMediaControlIntent.categoryForCast(ChromeCast.MIRROR_RECEIVER_APP_ID))
             .build();
         mediaRouter.addCallback(selectorBuilder, callback, MediaRouter.CALLBACK_FLAG_REQUEST_DISCOVERY);
     }
-
-    @Override
-    public void onOrientationChanged() { }
-
 }
