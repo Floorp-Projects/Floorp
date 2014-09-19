@@ -157,6 +157,44 @@ let AudioNodeActor = exports.AudioNodeActor = protocol.ActorClass({
   }),
 
   /**
+   * Returns a boolean indicating if the AudioNode has been "bypassed",
+   * via `AudioNodeActor#bypass` method.
+   *
+   * @return Boolean
+   */
+  isBypassed: method(function () {
+    let node = this.node.get();
+    if (node === null) {
+      return false;
+    }
+
+    return node.passThrough;
+  }, {
+    response: { bypassed: RetVal("boolean") }
+  }),
+
+  /**
+   * Takes a boolean, either enabling or disabling the "passThrough" option
+   * on an AudioNode. If a node is bypassed, an effects processing node (like gain, biquad),
+   * will allow the audio stream to pass through the node, unaffected.
+   *
+   * @param Boolean enable
+   *        Whether the bypass value should be set on or off.
+   */
+  bypass: method(function (enable) {
+    let node = this.node.get();
+
+    if (node === null) {
+      return;
+    }
+
+    node.passThrough = enable;
+  }, {
+    request: { enable: Arg(0, "boolean") },
+    oneway: true
+  }),
+
+  /**
    * Changes a param on the audio node. Responds with either `undefined`
    * on success, or a description of the error upon param set failure.
    *
