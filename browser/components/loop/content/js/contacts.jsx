@@ -176,6 +176,9 @@ loop.contacts = (function(_, mozL10n) {
                   shownContacts.available.sort(this.sortContacts).map(viewForItem) :
                   null}
                 {shownContacts.blocked ?
+                  <h3 className="header">{mozL10n.get("contacts_blocked_contacts")}</h3> :
+                  null}
+                {shownContacts.blocked ?
                   shownContacts.blocked.sort(this.sortContacts).map(viewForItem) :
                   null}
               </ul>
