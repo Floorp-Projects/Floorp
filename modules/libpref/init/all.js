@@ -1924,7 +1924,7 @@ pref("bidi.support", 1);
 // Whether delete and backspace should immediately delete characters not
 // visually adjacent to the caret, or adjust the visual position of the caret
 // on the first keypress and delete the character on a second keypress
-pref("bidi.edit.delete_immediately", false);
+pref("bidi.edit.delete_immediately", true);
 
 // Bidi caret movement style:
 // 0 = logical
