@@ -260,8 +260,8 @@
   width: 5em;
 }
 
-.call-tree-header[type="invocations"],
-.call-tree-cell[type="invocations"] {
+.call-tree-header[type="samples"],
+.call-tree-cell[type="samples"] {
   width: 5em;
 }
 

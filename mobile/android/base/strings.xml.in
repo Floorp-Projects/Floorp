@@ -433,6 +433,10 @@
   <string name="updater_apply_title">&updater_apply_title2;</string>
   <string name="updater_apply_select">&updater_apply_select2;</string>
 
+  <!-- New tablet UI -->
+  <string name="new_tablet_restart">&new_tablet_restart;</string>
+  <string name="new_tablet_pref">&new_tablet_pref;</string>
+
   <!-- Search suggestions opt-in -->
   <string name="suggestions_prompt">&suggestions_prompt3;</string>
 

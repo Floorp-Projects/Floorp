@@ -666,47 +666,57 @@ Search.prototype = {
     // wait for the initialization of PlacesSearchAutocompleteProvider first.
     yield PlacesSearchAutocompleteProvider.ensureInitialized();
 
-    // For any given search, we run many queries:
-    // 1) search engine domains
-    // 2) inline completion
-    // 3) keywords (this._keywordQuery)
-    // 4) adaptive learning (this._adaptiveQuery)
-    // 5) open pages not supported by history (this._switchToTabQuery)
-    // 6) query based on match behavior
+    // For any given search, we run many queries/heuristics:
+    // 1) by alias (as defined in SearchService)
+    // 2) inline completion from search engine resultDomains
+    // 3) inline completion for hosts (this._hostQuery) or urls (this._urlQuery)
+    // 4) directly typed in url (ie, can be navigated to as-is)
+    // 5) submission for the current search engine
+    // 6) keywords (this._keywordQuery)
+    // 7) adaptive learning (this._adaptiveQuery)
+    // 8) open pages not supported by history (this._switchToTabQuery)
+    // 9) query based on match behavior
     //
-    // (3) only gets ran if we get any filtered tokens, since if there are no
-    // tokens, there is nothing to match.
+    // (6) only gets ran if we get any filtered tokens, since if there are no
+    // tokens, there is nothing to match. This is the *first* query we check if
+    // we want to run, but it gets queued to be run later.
+    //
+    // (1), (4), (5) only get run if actions are enabled. When actions are
+    // enabled, the first result is always a special result (resulting from one
+    // of the queries between (1) and (6) inclusive). As such, the UI is
+    // expected to auto-select the first result when actions are enabled. If the
+    // first result is an inline completion result, that will also be the
+    // default result and therefore be autofilled (this also happens if actions
+    // are not enabled).
 
     // Get the final query, based on the tokens found in the search string.
     let queries = [ this._adaptiveQuery,
                     this._switchToTabQuery,
                     this._searchQuery ];
 
-    let hasKeyword = false;
+    // When actions are enabled, we run a series of heuristics to determine what
+    // the first result should be - which is always a special result.
+    // |hasFirstResult| is used to keep track of whether we've obtained such a
+    // result yet, so we can skip further heuristics and not add any additional
+    // special results.
+    let hasFirstResult = false;
+
     if (this._searchTokens.length > 0 &&
         PlacesUtils.bookmarks.getURIForKeyword(this._searchTokens[0])) {
+      // This may be a keyword of a bookmark.
       queries.unshift(this._keywordQuery);
-      hasKeyword = true;
+      hasFirstResult = true;
     }
 
-    if (this._shouldAutofill) {
-      if (this._searchTokens.length == 1 && !hasKeyword)
-        yield this._matchSearchEngineUrl();
+    let shouldAutofill = this._shouldAutofill;
+    if (this.pending && !hasFirstResult && shouldAutofill) {
+      // Or it may look like a URL we know about from search engines.
+      hasFirstResult = yield this._matchSearchEngineUrl();
+    }
 
-      // Hosts have no "/" in them.
-      let lastSlashIndex = this._searchString.lastIndexOf("/");
-      // Search only URLs if there's a slash in the search string...
-      if (lastSlashIndex != -1) {
-        // ...but not if it's exactly at the end of the search string.
-        if (lastSlashIndex < this._searchString.length - 1) {
-          queries.unshift(this._urlQuery);
-        }
-      } else if (this.pending) {
-        // The host query is executed immediately, while any other is delayed
-        // to avoid overloading the connection.
-        let [ query, params ] = this._hostQuery;
-        yield conn.executeCached(query, params, this._onResultRow.bind(this));
-      }
+    if (this.pending && !hasFirstResult && shouldAutofill) {
+      // It may also look like a URL we know from the database.
+      hasFirstResult = yield this._matchKnownUrl(conn, queries);
     }
 
     yield this._sleep(Prefs.delay);
@@ -740,54 +750,90 @@ Search.prototype = {
     }
   }),
 
+  _matchKnownUrl: function* (conn, queries) {
+    // Hosts have no "/" in them.
+    let lastSlashIndex = this._searchString.lastIndexOf("/");
+    // Search only URLs if there's a slash in the search string...
+    if (lastSlashIndex != -1) {
+      // ...but not if it's exactly at the end of the search string.
+      if (lastSlashIndex < this._searchString.length - 1) {
+        // We don't want to execute this query right away because it needs to
+        // search the entire DB without an index, but we need to know if we have
+        // a result as it will influence other heuristics. So we guess by
+        // assuming that if we get a result from a *host* query and it *looks*
+        // like a URL, then we'll probably have a result.
+        let gotResult = false;
+        let [ query, params ] = this._urlPredictQuery;
+        yield conn.executeCached(query, params, row => {
+          gotResult = true;
+          queries.unshift(this._urlQuery);
+        });
+        return gotResult;
+      }
+
+      return false;
+    }
+
+    let gotResult = false;
+    let [ query, params ] = this._hostQuery;
+    yield conn.executeCached(query, params, row => {
+      gotResult = true;
+      this._onResultRow(row);
+    });
+
+    return gotResult;
+  },
+
   _matchSearchEngineUrl: function* () {
     if (!Prefs.autofillSearchEngines)
-      return;
+      return false;
 
     let match = yield PlacesSearchAutocompleteProvider.findMatchByToken(
                                                            this._searchString);
-    if (match) {
-      // The match doesn't contain a 'scheme://www.' prefix, but since we have
-      // stripped it from the search string, here we could still be matching
-      // 'https://www.g' to 'google.com'.
-      // There are a couple cases where we don't want to match though:
-      //
-      //  * If the protocol differs we should not match. For example if the user
-      //    searched https we should not return http.
-      try {
-        let prefixURI = NetUtil.newURI(this._strippedPrefix);
-        let finalURI = NetUtil.newURI(match.url);
-        if (prefixURI.scheme != finalURI.scheme)
-          return;
-      } catch (e) {}
+    if (!match)
+      return false;
 
-      //  * If the user typed "www." but the final url doesn't have it, we
-      //    should not match as well, the two urls may point to different pages.
-      if (this._strippedPrefix.endsWith("www.") &&
-          !stripHttpAndTrim(match.url).startsWith("www."))
-        return;
+    // The match doesn't contain a 'scheme://www.' prefix, but since we have
+    // stripped it from the search string, here we could still be matching
+    // 'https://www.g' to 'google.com'.
+    // There are a couple cases where we don't want to match though:
+    //
+    //  * If the protocol differs we should not match. For example if the user
+    //    searched https we should not return http.
+    try {
+      let prefixURI = NetUtil.newURI(this._strippedPrefix);
+      let finalURI = NetUtil.newURI(match.url);
+      if (prefixURI.scheme != finalURI.scheme)
+        return false;
+    } catch (e) {}
 
-      let value = this._strippedPrefix + match.token;
+    //  * If the user typed "www." but the final url doesn't have it, we
+    //    should not match as well, the two urls may point to different pages.
+    if (this._strippedPrefix.endsWith("www.") &&
+        !stripHttpAndTrim(match.url).startsWith("www."))
+      return false;
 
-      // In any case, we should never arrive here with a value that doesn't
-      // match the search string.  If this happens there is some case we
-      // are not handling properly yet.
-      if (!value.startsWith(this._originalSearchString)) {
-        Components.utils.reportError(`Trying to inline complete in-the-middle
-                                      ${this._originalSearchString} to ${value}`);
-        return;
-      }
+    let value = this._strippedPrefix + match.token;
 
-      this._result.setDefaultIndex(0);
-      this._addFrecencyMatch({
-        value: value,
-        comment: match.engineName,
-        icon: match.iconUrl,
-        style: "priority-search",
-        finalCompleteValue: match.url,
-        frecency: FRECENCY_SEARCHENGINES_DEFAULT
-      });
+    // In any case, we should never arrive here with a value that doesn't
+    // match the search string.  If this happens there is some case we
+    // are not handling properly yet.
+    if (!value.startsWith(this._originalSearchString)) {
+      Components.utils.reportError(`Trying to inline complete in-the-middle
+                                    ${this._originalSearchString} to ${value}`);
+      return false;
     }
+
+    this._result.setDefaultIndex(0);
+    this._addFrecencyMatch({
+      value: value,
+      comment: match.engineName,
+      icon: match.iconUrl,
+      style: "priority-search",
+      finalCompleteValue: match.url,
+      frecency: FRECENCY_SEARCHENGINES_DEFAULT
+    });
+    return true;
   },
 
   _onResultRow: function (row) {
@@ -917,6 +963,7 @@ Search.prototype = {
     let trimmedHost = row.getResultByIndex(QUERYINDEX_URL);
     let untrimmedHost = row.getResultByIndex(QUERYINDEX_TITLE);
     let frecency = row.getResultByIndex(QUERYINDEX_FRECENCY);
+
     // If the untrimmed value doesn't preserve the user's input just
     // ignore it and complete to the found host.
     if (untrimmedHost &&
@@ -928,7 +975,19 @@ Search.prototype = {
     // Remove the trailing slash.
     match.comment = stripHttpAndTrim(trimmedHost);
     match.finalCompleteValue = untrimmedHost;
+
+    try {
+      let iconURI = NetUtil.newURI(untrimmedHost);
+      iconURI.path = "/favicon.ico";
+      match.icon = PlacesUtils.favicons.getFaviconLinkForIcon(iconURI).spec;
+    } catch (e) {
+      // This can fail, which is ok.
+    }
+
+    // Although this has a frecency, this query is executed before any other
+    // queries that would result in frecency matches.
     match.frecency = frecency;
+    match.style = "autofill";
     return match;
   },
 
@@ -962,7 +1021,10 @@ Search.prototype = {
     match.value = this._strippedPrefix + url;
     match.comment = url;
     match.finalCompleteValue = untrimmedURL;
+    // Although this has a frecency, this query is executed before any other
+    // queries that would result in frecency matches.
     match.frecency = frecency;
+    match.style = "autofill";
     return match;
   },
 
@@ -1162,6 +1224,9 @@ Search.prototype = {
     if (!Prefs.autofill)
       return false;
 
+    if (!this._searchTokens.length == 1)
+      return false;
+
     // Then, we should not try to autofill if the behavior is not the default.
     // TODO (bug 751709): Ideally we should have a more fine-grained behavior
     // here, but for now it's enough to just check for default behavior.
@@ -1182,18 +1247,11 @@ Search.prototype = {
     // This may confuse completeDefaultIndex cause the AUTOCOMPLETE_MATCH
     // tokenizer ends up trimming the search string and returning a value
     // that doesn't match it, or is even shorter.
-    if (/\s/.test(this._originalSearchString)) {
+    if (/\s/.test(this._originalSearchString))
       return false;
-    }
 
-    // Don't autoFill if the search term is recognized as a keyword, otherwise
-    // it will override default keywords behavior.  Note that keywords are
-    // hashed on first use, so while the first query may delay a little bit,
-    // next ones will just hit the memory hash.
-    if (this._searchString.length == 0 ||
-        PlacesUtils.bookmarks.getURIForKeyword(this._searchString)) {
+    if (this._searchString.length == 0)
       return false;
-    }
 
     return true;
   },
@@ -1216,6 +1274,29 @@ Search.prototype = {
       {
         query_type: QUERYTYPE_AUTOFILL_HOST,
         searchString: this._searchString.toLowerCase()
+      }
+    ];
+  },
+
+  /**
+   * Obtains a query to predict whether this._urlQuery is likely to return a
+   * result. We do by extracting what should be a host out of the input and
+   * performing a host query based on that.
+   */
+  get _urlPredictQuery() {
+    // We expect this to be a full URL, not just a host. We want to extract the
+    // host and use that as a guess for whether we'll get a result from a URL
+    // query.
+    let slashIndex = this._searchString.indexOf("/");
+
+    let host = this._searchString.substring(0, slashIndex);
+    host = host.toLowerCase();
+
+    return [
+      SQL_HOST_QUERY,
+      {
+        query_type: QUERYTYPE_AUTOFILL_HOST,
+        searchString: host
       }
     ];
   },
