@@ -580,9 +580,11 @@ let SettingsRequestManager = {
     while (currentTask) {
       if (DEBUG) debug("Running Operation " + currentTask.operation);
       if (lock.finalizing) {
+        // We should really never get to this point, but if we do,
+        // fail every task that happens.
         Cu.reportError("Settings lock trying to run more tasks after finalizing. Ignoring tasks, but this is bad. Lock: " + aLockID);
-        continue;
-      }
+        currentTask.defer.reject("Cannot call new task after finalizing");
+      } else {
       let p;
       switch (currentTask.operation) {
         case "get":
@@ -607,6 +609,7 @@ let SettingsRequestManager = {
         ret.task.defer.reject(ret.error);
       });
       promises.push(p);
+      }
       currentTask = lock.tasks.shift();
     }
   },
@@ -708,6 +711,7 @@ let SettingsRequestManager = {
 
   removeLock: function(aLockID) {
     if (DEBUG) debug("Removing lock " + aLockID);
+    if (this.lockInfo[aLockID]) {
     let transaction = this.lockInfo[aLockID]._transaction;
     if (transaction) {
       try {
@@ -721,6 +725,7 @@ let SettingsRequestManager = {
       }
     }
     delete this.lockInfo[aLockID];
+    }
     let index = this.settingsLockQueue.indexOf(aLockID);
     if (index > -1) {
       this.settingsLockQueue.splice(index, 1);
