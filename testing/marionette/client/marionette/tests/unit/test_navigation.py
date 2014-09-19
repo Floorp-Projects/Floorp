@@ -2,10 +2,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette_test import MarionetteTestCase
+from marionette_test import MarionetteTestCase, skip_if_b2g
 from errors import MarionetteException, TimeoutException
 
 class TestNavigate(MarionetteTestCase):
+
     def test_navigate(self):
         self.assertTrue(self.marionette.execute_script("window.location.href = 'about:blank'; return true;"))
         self.assertEqual("about:blank", self.marionette.execute_script("return window.location.href;"))
@@ -60,6 +61,7 @@ class TestNavigate(MarionetteTestCase):
         self.assertEqual("Marionette Test", self.marionette.title)
         self.assertTrue(self.marionette.execute_script("return window.document.getElementById('someDiv') == undefined;"))
 
+    @skip_if_b2g
     def test_navigate_frame(self):
         self.marionette.navigate(self.marionette.absolute_url("test_iframe.html"))
         self.marionette.switch_to_frame(0)
