@@ -36,23 +36,14 @@ typedef Image* ImageKey;
  * SurfaceKey contains the information we need to look up a specific cached
  * surface. Together with an ImageKey, this uniquely identifies the surface.
  *
- * XXX(seth): Right now this is specialized to the needs of VectorImage. We'll
- * generalize it in bug 919071.
+ * Callers should construct a SurfaceKey using the appropriate helper function
+ * for their image type - either RasterSurfaceKey or VectorSurfaceKey.
  */
 class SurfaceKey
 {
   typedef gfx::IntSize IntSize;
-public:
-  SurfaceKey(const IntSize& aSize,
-             const Maybe<SVGImageContext>& aSVGContext,
-             const float aAnimationTime,
-             const uint32_t aFlags)
-    : mSize(aSize)
-    , mSVGContext(aSVGContext)
-    , mAnimationTime(aAnimationTime)
-    , mFlags(aFlags)
-  { }
 
+public:
   bool operator==(const SurfaceKey& aOther) const
   {
     return aOther.mSize == mSize &&
@@ -72,15 +63,51 @@ public:
   IntSize Size() const { return mSize; }
 
 private:
+  SurfaceKey(const IntSize& aSize,
+             const Maybe<SVGImageContext>& aSVGContext,
+             const float aAnimationTime,
+             const uint32_t aFlags)
+    : mSize(aSize)
+    , mSVGContext(aSVGContext)
+    , mAnimationTime(aAnimationTime)
+    , mFlags(aFlags)
+  { }
+
   static uint32_t HashSIC(const SVGImageContext& aSIC) {
     return aSIC.Hash();
   }
+
+  friend SurfaceKey RasterSurfaceKey(const IntSize&, const uint32_t);
+  friend SurfaceKey VectorSurfaceKey(const IntSize&,
+                                     const Maybe<SVGImageContext>&,
+                                     const float);
 
   IntSize                mSize;
   Maybe<SVGImageContext> mSVGContext;
   float                  mAnimationTime;
   uint32_t               mFlags;
 };
+
+inline SurfaceKey
+RasterSurfaceKey(const gfx::IntSize& aSize,
+                 const uint32_t aFlags)
+{
+  // We don't care about aAnimationTime for RasterImage because it's not
+  // currently possible to store anything but the first frame in the
+  // SurfaceCache.
+  return SurfaceKey(aSize, Nothing(), 0.0f, aFlags);
+}
+
+inline SurfaceKey
+VectorSurfaceKey(const gfx::IntSize& aSize,
+                 const Maybe<SVGImageContext>& aSVGContext,
+                 const float aAnimationTime)
+{
+  // We don't care about aFlags for VectorImage because none of the flags we
+  // have right now influence VectorImage's rendering. If we add a new flag that
+  // *does* affect how a VectorImage renders, we'll have to change this.
+  return SurfaceKey(aSize, aSVGContext, aAnimationTime, 0);
+}
 
 /**
  * SurfaceCache is an imagelib-global service that allows caching of temporary
