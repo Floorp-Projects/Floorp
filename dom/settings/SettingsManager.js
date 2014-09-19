@@ -86,6 +86,14 @@ SettingsLock.prototype = {
 
   _closeHelper: function() {
     if (DEBUG) debug("closing lock " + this._id);
+    // sendMessage can get queued to run later in a thread via
+    // _closeHelper, but the SettingsManager may have died in between
+    // the time it was scheduled and the time it runs. Make sure our
+    // window is valid before sending, otherwise just ignore.
+    if (!this._settingsManager._window) {
+      if (DEBUG) debug("SettingsManager died, cannot send " + aMessageName + " message window principal.");
+      return;
+    }
     this._open = false;
     this._closeCalled = false;
     if (!this._requests || Object.keys(this._requests).length == 0) {
