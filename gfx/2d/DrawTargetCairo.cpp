@@ -1388,6 +1388,13 @@ DrawTargetCairo::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFo
 bool
 DrawTargetCairo::InitAlreadyReferenced(cairo_surface_t* aSurface, const IntSize& aSize, SurfaceFormat* aFormat)
 {
+  if (cairo_surface_status(aSurface)) {
+    gfxCriticalError() << "Attempt to create DrawTarget for invalid surface. "
+                       << aSize << " Cairo Status: " << cairo_surface_status(aSurface);
+    cairo_surface_destroy(aSurface);
+    return false;
+  }
+
   mContext = cairo_create(aSurface);
   mSurface = aSurface;
   mSize = aSize;
