@@ -7,8 +7,8 @@
 #include "jit/JitOptions.h"
 #include "mozilla/TypeTraits.h"
 
-#include "jsfun.h"
 #include <cstdlib>
+#include "jsfun.h"
 using namespace js;
 using namespace js::jit;
 
