@@ -20,7 +20,7 @@ function test() {
   let $$fun = node => container.querySelectorAll(".call-tree-cell[type=function] > " + node);
   let $$dur = i => container.querySelectorAll(".call-tree-cell[type=duration]")[i];
   let $$perc = i => container.querySelectorAll(".call-tree-cell[type=percentage]")[i];
-  let $$invoc = i => container.querySelectorAll(".call-tree-cell[type=invocations]")[i];
+  let $$sampl = i => container.querySelectorAll(".call-tree-cell[type=samples]")[i];
 
   is(container.childNodes.length, 1,
     "The container node should have one child available.");
@@ -31,8 +31,8 @@ function test() {
     "The root's duration cell displays the correct value.");
   is($$perc(0).getAttribute("value"), "100%",
     "The root's percentage cell displays the correct value.");
-  is($$invoc(0).getAttribute("value"), "",
-    "The root's invocations cell displays the correct value.");
+  is($$sampl(0).getAttribute("value"), "",
+    "The root's samples cell displays the correct value.");
   is($$fun(".call-tree-name")[0].getAttribute("value"), "(root)",
     "The root's function cell displays the correct name.");
   is($$fun(".call-tree-url")[0].getAttribute("value"), "",
@@ -57,8 +57,8 @@ function test() {
     "The .A node's duration cell displays the correct value.");
   is($$perc(1).getAttribute("value"), "100%",
     "The .A node's percentage cell displays the correct value.");
-  is($$invoc(1).getAttribute("value"), "3",
-    "The .A node's invocations cell displays the correct value.");
+  is($$sampl(1).getAttribute("value"), "3",
+    "The .A node's samples cell displays the correct value.");
   is($$fun(".call-tree-name")[1].getAttribute("value"), "A",
     "The .A node's function cell displays the correct name.");
   is($$fun(".call-tree-url")[1].getAttribute("value"), "baz",
@@ -86,8 +86,8 @@ function test() {
     "The .A.B node's duration cell displays the correct value.");
   is($$perc(2).getAttribute("value"), "61.11%",
     "The .A.B node's percentage cell displays the correct value.");
-  is($$invoc(2).getAttribute("value"), "2",
-    "The .A.B node's invocations cell displays the correct value.");
+  is($$sampl(2).getAttribute("value"), "2",
+    "The .A.B node's samples cell displays the correct value.");
   is($$fun(".call-tree-name")[2].getAttribute("value"), "B",
     "The .A.B node's function cell displays the correct name.");
   is($$fun(".call-tree-url")[2].getAttribute("value"), "baz",
@@ -105,8 +105,8 @@ function test() {
     "The .A.E node's duration cell displays the correct value.");
   is($$perc(3).getAttribute("value"), "38.88%",
     "The .A.E node's percentage cell displays the correct value.");
-  is($$invoc(3).getAttribute("value"), "1",
-    "The .A.E node's invocations cell displays the correct value.");
+  is($$sampl(3).getAttribute("value"), "1",
+    "The .A.E node's samples cell displays the correct value.");
   is($$fun(".call-tree-name")[3].getAttribute("value"), "E",
     "The .A.E node's function cell displays the correct name.");
   is($$fun(".call-tree-url")[3].getAttribute("value"), "baz",

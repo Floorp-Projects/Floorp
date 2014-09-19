@@ -23,7 +23,7 @@ exports._isContent = isContent; // used in tests
 /**
  * A call tree for a thread. This is essentially a linkage between all frames
  * of all samples into a single tree structure, with additional information
- * on each node, like the time spent (in milliseconds) and invocations count.
+ * on each node, like the time spent (in milliseconds) and samples count.
  *
  * Example:
  * {
@@ -32,8 +32,8 @@ exports._isContent = isContent; // used in tests
  *     "FunctionName (url:line)": {
  *       line: number,
  *       category: number,
+ *       samples: number,
  *       duration: number,
- *       invocations: number,
  *       calls: {
  *         ...
  *       }
@@ -132,8 +132,8 @@ function FrameNode({ location, line, category }) {
   this.line = line;
   this.category = category;
   this.sampleTimes = [];
+  this.samples = 0;
   this.duration = 0;
-  this.invocations = 0;
   this.calls = {};
 }
 
@@ -165,8 +165,8 @@ FrameNode.prototype = {
     let location = frame.location;
     let child = _store[location] || (_store[location] = new FrameNode(frame));
     child.sampleTimes.push({ start: time, end: time + duration });
+    child.samples++;
     child.duration += duration;
-    child.invocations++;
     child.insert(frames, ++index, time, duration);
   },
 
