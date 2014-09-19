@@ -57,7 +57,7 @@ InsertionPoint.prototype = {
     return this._index = val;
   },
 
-  promiseGUID: function () PlacesUtils.promiseItemGUID(this.itemId),
+  promiseGuid: function () PlacesUtils.promiseItemGUID(this.itemId),
 
   get index() {
     if (this.dropNearItemId > 0) {
@@ -781,7 +781,7 @@ PlacesController.prototype = {
       return;
     }
 
-    let txn = PlacesTransactions.NewSeparator({ parentGUID: yield ip.promiseGUID()
+    let txn = PlacesTransactions.NewSeparator({ parentGUID: yield ip.promiseGuid()
                                               , index: ip.index });
     let guid = yield PlacesTransactions.transact(txn);
     let itemId = yield PlacesUtils.promiseItemId(guid);
@@ -1293,7 +1293,7 @@ PlacesController.prototype = {
       else {
         yield PlacesTransactions.transact(function *() {
           let insertionIndex = ip.index;
-          let parent = yield ip.promiseGUID();
+          let parent = yield ip.promiseGuid();
 
           for (let item of items) {
             let doCopy = action == "copy";
@@ -1603,12 +1603,15 @@ let PlacesControllerDragHelper = {
    * @param   insertionPoint
    *          The insertion point where the items should be dropped
    */
-  onDrop: function PCDH_onDrop(insertionPoint, dt) {
+  onDrop: Task.async(function* (insertionPoint, dt) {
     let doCopy = ["copy", "link"].indexOf(dt.dropEffect) != -1;
 
     let transactions = [];
     let dropCount = dt.mozItemCount;
     let movedCount = 0;
+    let parentGuid = PlacesUIUtils.useAsyncTransactions ?
+                       (yield insertionPoint.promiseGuid()) : null;
+    let tagName = insertionPoint.tagName;
     for (let i = 0; i < dropCount; ++i) {
       let flavor = this.getFirstValidFlavor(dt.mozTypesAt(i));
       if (!flavor)
@@ -1647,8 +1650,10 @@ let PlacesControllerDragHelper = {
           insertionPoint.orientation == Ci.nsITreeView.DROP_ON) {
         let uri = NetUtil.newURI(unwrapped.uri);
         let tagItemId = insertionPoint.itemId;
-        let tagTxn = new PlacesTagURITransaction(uri, [tagItemId]);
-        transactions.push(tagTxn);
+        if (PlacesUIUtils.useAsyncTransactions)
+          transactions.push(PlacesTransactions.Tag({ uri: uri, tag: tagName }));
+        else
+          transactions.push(new PlacesTagURITransaction(uri, [tagItemId]));
       }
       else {
         // If this is not a copy, check for safety that we can move the source,
@@ -1658,15 +1663,30 @@ let PlacesControllerDragHelper = {
                                        "reverting to a copy operation.");
           doCopy = true;
         }
-        transactions.push(PlacesUIUtils.makeTransaction(unwrapped,
-                          flavor, insertionPoint.itemId,
-                          index, doCopy));
+        if (PlacesUIUtils.useAsyncTransactions) {
+          transactions.push(
+            PlacesUIUtils.getTransactionForData(unwrapped,
+                                                flavor,
+                                                parentGuid,
+                                                index,
+                                                doCopy));
+        }
+        else {
+          transactions.push(PlacesUIUtils.makeTransaction(unwrapped,
+                              flavor, insertionPoint.itemId,
+                              index, doCopy));
+        }
       }
     }
 
-    let txn = new PlacesAggregatedTransaction("DropItems", transactions);
-    PlacesUtils.transactionManager.doTransaction(txn);
-  },
+    if (PlacesUIUtils.useAsyncTransactions) {
+      yield PlacesTransactions.transact(transactions);
+    }
+    else {
+      let txn = new PlacesAggregatedTransaction("DropItems", transactions);
+      PlacesUtils.transactionManager.doTransaction(txn);
+    }
+  }),
 
   /**
    * Checks if we can insert into a container.
