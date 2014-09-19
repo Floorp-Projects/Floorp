@@ -18,7 +18,6 @@ loop.shared.models = (function(l10n) {
       ongoing:      false,         // Ongoing call flag
       callerId:     undefined,     // Loop caller id
       loopToken:    undefined,     // Loop conversation token
-      loopCallId:   undefined,     // LoopService id for incoming session
       sessionId:    undefined,     // OT session id
       sessionToken: undefined,     // OT session token
       apiKey:       undefined,     // OT api key
