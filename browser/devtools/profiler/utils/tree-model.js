@@ -52,6 +52,7 @@ exports._isContent = isContent; // used in tests
  *        @see ThreadNode.prototype.insert
  */
 function ThreadNode(threadSamples, contentOnly, beginAt, endAt) {
+  this.samples = 0;
   this.duration = 0;
   this.calls = {};
   this._previousSampleTime = 0;
@@ -97,6 +98,7 @@ ThreadNode.prototype = {
 
     let sampleDuration = sampleTime - this._previousSampleTime;
     this._previousSampleTime = sampleTime;
+    this.samples++;
     this.duration += sampleDuration;
 
     FrameNode.prototype.insert(

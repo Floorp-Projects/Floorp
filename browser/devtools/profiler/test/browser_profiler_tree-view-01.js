@@ -39,7 +39,7 @@ function test() {
 
   is(container.childNodes[0].childNodes[2].getAttribute("type"), "samples",
     "The root node in the tree has an samples cell.");
-  is(container.childNodes[0].childNodes[2].getAttribute("value"), "",
+  is(container.childNodes[0].childNodes[2].getAttribute("value"), "3",
     "The root node in the tree has the correct samples cell value.");
 
   is(container.childNodes[0].childNodes[3].getAttribute("type"), "function",
