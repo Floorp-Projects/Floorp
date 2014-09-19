@@ -10,6 +10,7 @@
 #include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
 
 #include "jspubtd.h"
@@ -178,7 +179,9 @@ class Base {
 
     // Return the size of this node, in bytes. Include any structures that this
     // node owns exclusively that are not exposed as their own ubi::Nodes.
-    virtual size_t size() const { return 0; }
+    // |mallocSizeOf| should be a malloc block sizing function; see
+    // |mfbt/MemoryReporting.h.
+    virtual size_t size(mozilla::MallocSizeOf mallocSizeof) const { return 0; }
 
     // Return an EdgeRange that initially contains all the referent's outgoing
     // edges. The EdgeRange should be freed with 'js_delete'. (You could use
@@ -321,9 +324,13 @@ class Node {
     JS::Value exposeToJS() const;
 
     const char16_t *typeName()      const { return base()->typeName(); }
-    size_t size()                   const { return base()->size(); }
     JS::Zone *zone()                const { return base()->zone(); }
     JSCompartment *compartment()    const { return base()->compartment(); }
+
+    size_t size(mozilla::MallocSizeOf mallocSizeof) const {
+        return base()->size(mallocSizeof);
+    }
+
     EdgeRange *edges(JSContext *cx, bool wantNames = true) const {
         return base()->edges(cx, wantNames);
     }
@@ -455,7 +462,7 @@ template<> struct Concrete<JSScript> : TracerConcreteWithCompartment<JSScript> {
 template<>
 class Concrete<void> : public Base {
     const char16_t *typeName() const MOZ_OVERRIDE;
-    size_t size() const MOZ_OVERRIDE;
+    size_t size(mozilla::MallocSizeOf mallocSizeOf) const MOZ_OVERRIDE;
     EdgeRange *edges(JSContext *cx, bool wantNames) const MOZ_OVERRIDE;
     JS::Zone *zone() const MOZ_OVERRIDE;
     JSCompartment *compartment() const MOZ_OVERRIDE;
