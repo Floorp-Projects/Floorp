@@ -1288,6 +1288,12 @@ LIRGenerator::visitMinMax(MMinMax *ins)
         return defineReuseInput(lir, ins, 0);
     }
 
+    if (ins->specialization() == MIRType_Float32) {
+        LMinMaxF *lir = new(alloc()) LMinMaxF(useRegisterAtStart(first), useRegister(second));
+        return defineReuseInput(lir, ins, 0);
+    }
+
+    MOZ_ASSERT(ins->specialization() == MIRType_Double);
     LMinMaxD *lir = new(alloc()) LMinMaxD(useRegisterAtStart(first), useRegister(second));
     return defineReuseInput(lir, ins, 0);
 }

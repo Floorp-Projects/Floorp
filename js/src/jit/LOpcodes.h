@@ -115,6 +115,7 @@
     _(EmulatesUndefinedAndBranch)   \
     _(MinMaxI)                      \
     _(MinMaxD)                      \
+    _(MinMaxF)                      \
     _(NegI)                         \
     _(NegD)                         \
     _(NegF)                         \

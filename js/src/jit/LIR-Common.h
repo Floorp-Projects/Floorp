@@ -2699,6 +2699,14 @@ class LMinMaxD : public LMinMaxBase
     {}
 };
 
+class LMinMaxF : public LMinMaxBase
+{
+  public:
+    LIR_HEADER(MinMaxF)
+    LMinMaxF(const LAllocation &first, const LAllocation &second) : LMinMaxBase(first, second)
+    {}
+};
+
 // Negative of an integer
 class LNegI : public LInstructionHelper<1, 1, 0>
 {

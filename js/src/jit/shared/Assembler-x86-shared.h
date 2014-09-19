@@ -1931,6 +1931,10 @@ class AssemblerX86Shared : public AssemblerShared
         JS_ASSERT(HasSSE2());
         masm.orpd_rr(src.code(), dest.code());
     }
+    void orps(FloatRegister src, FloatRegister dest) {
+        JS_ASSERT(HasSSE2());
+        masm.orps_rr(src.code(), dest.code());
+    }
     void andpd(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.andpd_rr(src.code(), dest.code());
@@ -1976,6 +1980,10 @@ class AssemblerX86Shared : public AssemblerShared
             MOZ_CRASH("unexpected operand kind");
         }
     }
+    void minss(FloatRegister src, FloatRegister dest) {
+        JS_ASSERT(HasSSE2());
+        masm.minss_rr(src.code(), dest.code());
+    }
     void maxsd(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
         masm.maxsd_rr(src.code(), dest.code());
@@ -1992,6 +2000,10 @@ class AssemblerX86Shared : public AssemblerShared
           default:
             MOZ_CRASH("unexpected operand kind");
         }
+    }
+    void maxss(FloatRegister src, FloatRegister dest) {
+        JS_ASSERT(HasSSE2());
+        masm.maxss_rr(src.code(), dest.code());
     }
     void fisttp(const Operand &dest) {
         JS_ASSERT(HasSSE3());
