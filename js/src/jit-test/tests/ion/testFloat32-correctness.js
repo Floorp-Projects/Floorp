@@ -89,6 +89,38 @@ function sqrt() {
 }
 test(setupSqrt, sqrt);
 
+// MMinMax
+function setupMinMax() {
+    f32[0] = -0;
+    f32[1] = 0;
+    f32[2] = 1;
+    f32[3] = 4;
+    f32[4] = -1;
+    f32[5] = Infinity;
+    f32[6] = NaN;
+    f32[7] = 13.37;
+    f32[8] = -Infinity;
+    f32[9] = Math.pow(2,31) - 1;
+}
+function minMax() {
+    for(var i = 0; i < 9; ++i) {
+        for(var j = 0; j < 9; j++) {
+            var minf = Math.fround(Math.min(f32[i], f32[j]));
+            var mind = 1 / (1 / Math.min(f32[i], f32[j])); // force no float32 by chaining arith ops
+            assertFloat32(minf, true);
+            assertFloat32(mind, false);
+            assertEq( minf, Math.fround(mind) );
+
+            var maxf = Math.fround(Math.max(f32[i], f32[j]));
+            var maxd = 1 / (1 / Math.max(f32[i], f32[j])); // force no float32 by chaining arith ops
+            assertFloat32(maxf, true);
+            assertFloat32(maxd, false);
+            assertEq( maxf, Math.fround(maxd) );
+        }
+    }
+}
+test(setupMinMax, minMax);
+
 // MTruncateToInt32
 // The only way to get a MTruncateToInt32 with a Float32 input is to use Math.imul
 function setupTruncateToInt32() {

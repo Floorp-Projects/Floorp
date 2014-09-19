@@ -448,40 +448,24 @@
         ]]></getter>
       </property>
 
-      <method name="_updateMatchesCountWorker">
-        <parameter name="aRes"/>
-        <body><![CDATA[
-          let word = this._findField.value;
-          if (aRes == this.nsITypeAheadFind.FIND_NOTFOUND || !word) {
-            this._foundMatches.hidden = true;
-            this._foundMatches.value = "";
-          } else {
-            let matchesCount = this.browser.finder.requestMatchesCount(
-              word, this._matchesCountLimit, this._findMode == this.FIND_LINKS);
-            window.clearTimeout(this._updateMatchesCountTimeout);
-            this._updateMatchesCountTimeout = null;
-          }
-        ]]></body>
-      </method>
-
       <!--
         - Updates the search match count after each find operation on a new string.
         - @param aRes
         -        the result of the find operation
         -->
       <method name="_updateMatchesCount">
-        <parameter name="aRes"/>
         <body><![CDATA[
           if (this._matchesCountLimit == 0 || !this._dispatchFindEvent("matchescount"))
             return;
 
           if (this._updateMatchesCountTimeout) {
             window.clearTimeout(this._updateMatchesCountTimeout);
-            this._updateMatchesCountTimeout = null;
           }
           this._updateMatchesCountTimeout =
-            window.setTimeout(() => this._updateMatchesCountWorker(aRes),
-                              this._matchesCountTimeoutLength);
+            window.setTimeout(() => {
+              this.browser.finder.requestMatchesCount(this._findField.value, this._matchesCountLimit,
+                  this._findMode == this.FIND_LINKS);
+            }, this._matchesCountTimeoutLength);
         ]]></body>
       </method>
 

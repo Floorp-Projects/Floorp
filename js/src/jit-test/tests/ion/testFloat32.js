@@ -61,8 +61,8 @@ function test(f) {
         f();
 }
 
-var f32 = new Float32Array(2);
-var f64 = new Float64Array(2);
+var f32 = new Float32Array(4);
+var f64 = new Float64Array(4);
 
 function acceptAdd() {
     var use = f32[0] + 1;
@@ -150,6 +150,79 @@ function refuseSqrt() {
     f32[0] = res + 1;
 }
 test(refuseSqrt);
+
+function acceptMin() {
+    var res = Math.min(f32[0], f32[1]);
+    assertFloat32(res, true);
+    f64[0] = res;
+}
+test(acceptMin);
+
+// In theory, we could do it, as Math.min/max actually behave as a Phi (it's a
+// float32 producer iff its inputs are producers, it's a consumer iff its uses
+// are consumers). In practice, this would involve some overhead for big chains
+// of min/max.
+function refuseMinAdd() {
+    var res = Math.min(f32[0], f32[1]) + f32[2];
+    assertFloat32(res, false);
+    f32[3] = res;
+}
+test(refuseMinAdd);
+
+function acceptSeveralMinMax() {
+    var x = Math.min(f32[0], f32[1]);
+    var y = Math.max(f32[2], f32[3]);
+    var res = Math.min(x, y);
+    assertFloat32(res, true);
+    f64[0] = res;
+}
+test(acceptSeveralMinMax);
+
+function acceptSeveralMinMax2() {
+    var res = Math.min(f32[0], f32[1], f32[2], f32[3]);
+    assertFloat32(res, true);
+    f64[0] = res;
+}
+test(acceptSeveralMinMax2);
+
+function partialMinMax() {
+    var x = Math.min(f32[0], f32[1]);
+    var y = Math.min(f64[0], f32[1]);
+    var res  = Math.min(x, y);
+    assertFloat32(x, true);
+    assertFloat32(y, false);
+    assertFloat32(res, false);
+    f64[0] = res;
+}
+test(partialMinMax);
+
+function refuseSeveralMinMax() {
+    var res = Math.min(f32[0], f32[1] + f32[2], f32[2], f32[3]);
+    assertFloat32(res, false);
+    f64[0] = res;
+}
+test(refuseSeveralMinMax);
+
+function refuseMin() {
+    var res = Math.min(f32[0], 42.13 + f32[1]);
+    assertFloat32(res, false);
+    f64[0] = res;
+}
+test(refuseMin);
+
+function acceptMax() {
+    var res = Math.max(f32[0], f32[1]);
+    assertFloat32(res, true);
+    f64[0] = res;
+}
+test(acceptMax);
+
+function refuseMax() {
+    var res = Math.max(f32[0], 42.13 + f32[1]);
+    assertFloat32(res, false);
+    f64[0] = res;
+}
+test(refuseMax);
 
 function acceptAbs() {
     var res = Math.abs(f32[0]);

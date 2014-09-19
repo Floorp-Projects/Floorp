@@ -852,20 +852,6 @@ bool ClampToUint8(ThreadSafeContext *cx, unsigned argc, Value *vp);
 extern const JSJitInfo ClampToUint8JitInfo;
 
 /*
- * Usage: Memcpy(targetDatum, targetOffset,
- *               sourceDatum, sourceOffset,
- *               size)
- *
- * Intrinsic function. Copies size bytes from the data for
- * `sourceDatum` at `sourceOffset` into the data for
- * `targetDatum` at `targetOffset`.
- *
- * Both `sourceDatum` and `targetDatum` must be attached.
- */
-bool Memcpy(ThreadSafeContext *cx, unsigned argc, Value *vp);
-extern const JSJitInfo MemcpyJitInfo;
-
-/*
  * Usage: GetTypedObjectModule()
  *
  * Returns the global "typed object" module, which provides access

@@ -1698,8 +1698,31 @@ MBinaryArithInstruction::trySpecializeFloat32(TempAllocator &alloc)
     MDefinition *left = lhs();
     MDefinition *right = rhs();
 
-    if (!left->canProduceFloat32() || !right->canProduceFloat32()
-        || !CheckUsesAreFloat32Consumers(this))
+    if (!left->canProduceFloat32() || !right->canProduceFloat32() ||
+        !CheckUsesAreFloat32Consumers(this))
+    {
+        if (left->type() == MIRType_Float32)
+            ConvertDefinitionToDouble<0>(alloc, left, this);
+        if (right->type() == MIRType_Float32)
+            ConvertDefinitionToDouble<1>(alloc, right, this);
+        return;
+    }
+
+    specialization_ = MIRType_Float32;
+    setResultType(MIRType_Float32);
+}
+
+void
+MMinMax::trySpecializeFloat32(TempAllocator &alloc)
+{
+    if (specialization_ == MIRType_Int32)
+        return;
+
+    MDefinition *left = lhs();
+    MDefinition *right = rhs();
+
+    if (!(left->canProduceFloat32() || (left->isMinMax() && left->type() == MIRType_Float32)) ||
+        !(right->canProduceFloat32() || (right->isMinMax() && right->type() == MIRType_Float32)))
     {
         if (left->type() == MIRType_Float32)
             ConvertDefinitionToDouble<0>(alloc, left, this);

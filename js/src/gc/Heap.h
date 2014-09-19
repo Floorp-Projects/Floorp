@@ -624,6 +624,8 @@ struct ArenaHeader : public JS::shadow::ArenaHeader
     inline ArenaHeader *getNextAllocDuringSweep() const;
     inline void setNextAllocDuringSweep(ArenaHeader *aheader);
     inline void unsetAllocDuringSweep();
+
+    void unmarkAll();
 };
 
 struct Arena

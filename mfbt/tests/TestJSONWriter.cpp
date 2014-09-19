@@ -294,16 +294,18 @@ void TestBasicElements()
 
 void TestStringEscaping()
 {
+  // This test uses hexadecimal character escapes because UTF8 literals cause
+  // problems for some compilers (see bug 1069726).
   const char* expected = "\
 {\n\
- \"ascii\": \"~}|{zyxwvutsrqponmlkjihgfedcba`_^]\\\\[ZYXWVUTSRQPONMLKJIHGFEDCBA@?>=<;:9876543210/.-,+*)('&%$#\\\"! \\u001f\\u001e\\u001d\\u001c\\u001b\\u001a\\u0019\\u0018\\u0017\\u0016\\u0015\\u0014\\u0013\\u0012\\u0011\\u0010\\u000f\\u000e\\r\\f\\u000b\\n\\t\\b\\u0007\\u0006\\u0005\\u0004\\u0003\\u0002\\u0001\",\n\
- \"مرحبا هناك\": true,\n\
- \"բարեւ չկա\": -123,\n\
- \"你好\": 1.234,\n\
- \"γεια εκεί\": \"سلام\",\n\
- \"halló þarna\": \"0x1234\",\n\
- \"こんにちは\": {\n\
-  \"привет\": [\n\
+ \"ascii\": \"\x7F~}|{zyxwvutsrqponmlkjihgfedcba`_^]\\\\[ZYXWVUTSRQPONMLKJIHGFEDCBA@?>=<;:9876543210/.-,+*)('&%$#\\\"! \\u001f\\u001e\\u001d\\u001c\\u001b\\u001a\\u0019\\u0018\\u0017\\u0016\\u0015\\u0014\\u0013\\u0012\\u0011\\u0010\\u000f\\u000e\\r\\f\\u000b\\n\\t\\b\\u0007\\u0006\\u0005\\u0004\\u0003\\u0002\\u0001\",\n\
+ \"\xD9\x85\xD8\xB1\xD8\xAD\xD8\xA8\xD8\xA7 \xD9\x87\xD9\x86\xD8\xA7\xD9\x83\": true,\n\
+ \"\xD5\xA2\xD5\xA1\xD6\x80\xD5\xA5\xD6\x82 \xD5\xB9\xD5\xAF\xD5\xA1\": -123,\n\
+ \"\xE4\xBD\xA0\xE5\xA5\xBD\": 1.234,\n\
+ \"\xCE\xB3\xCE\xB5\xCE\xB9\xCE\xB1 \xCE\xB5\xCE\xBA\xCE\xB5\xCE\xAF\": \"\xD8\xB3\xD9\x84\xD8\xA7\xD9\x85\",\n\
+ \"hall\xC3\xB3 \xC3\xBE" "arna\": \"0x1234\",\n\
+ \"\xE3\x81\x93\xE3\x82\x93\xE3\x81\xAB\xE3\x81\xA1\xE3\x81\xAF\": {\n\
+  \"\xD0\xBF\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82\": [\n\
   ]\n\
  }\n\
 }\n\
@@ -323,14 +325,14 @@ void TestStringEscaping()
     w.StringProperty("ascii", buf);
 
     // Test lots of unicode stuff. Note that this file is encoded as UTF-8.
-    w.BoolProperty("مرحبا هناك", true);
-    w.IntProperty("բարեւ չկա", -123);
-    w.DoubleProperty("你好", 1.234);
-    w.StringProperty("γεια εκεί", "سلام");
-    w.PointerProperty("halló þarna", (void*)0x1234);
-    w.StartObjectProperty("こんにちは");
+    w.BoolProperty("\xD9\x85\xD8\xB1\xD8\xAD\xD8\xA8\xD8\xA7 \xD9\x87\xD9\x86\xD8\xA7\xD9\x83", true);
+    w.IntProperty("\xD5\xA2\xD5\xA1\xD6\x80\xD5\xA5\xD6\x82 \xD5\xB9\xD5\xAF\xD5\xA1", -123);
+    w.DoubleProperty("\xE4\xBD\xA0\xE5\xA5\xBD", 1.234);
+    w.StringProperty("\xCE\xB3\xCE\xB5\xCE\xB9\xCE\xB1 \xCE\xB5\xCE\xBA\xCE\xB5\xCE\xAF", "\xD8\xB3\xD9\x84\xD8\xA7\xD9\x85");
+    w.PointerProperty("hall\xC3\xB3 \xC3\xBE" "arna", (void*)0x1234);
+    w.StartObjectProperty("\xE3\x81\x93\xE3\x82\x93\xE3\x81\xAB\xE3\x81\xA1\xE3\x81\xAF");
     {
-      w.StartArrayProperty("привет");
+      w.StartArrayProperty("\xD0\xBF\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82");
       w.EndArray();
     }
     w.EndObject();

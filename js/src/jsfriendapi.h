@@ -252,14 +252,14 @@ namespace js {
  *     allow for potention JSClass extensions.
  */
 #define PROXY_MAKE_EXT(outerObject, innerObject, iteratorObject,        \
-                       isWrappedNative)                                 \
+                       isWrappedNative, objectMoved)                    \
     {                                                                   \
         outerObject,                                                    \
         innerObject,                                                    \
         iteratorObject,                                                 \
         isWrappedNative,                                                \
         js::proxy_WeakmapKeyDelegate,                                   \
-        js::proxy_ObjectMoved                                           \
+        objectMoved                                                     \
     }
 
 #define PROXY_CLASS_WITH_EXT(name, extraSlots, flags, ext)                              \
@@ -313,7 +313,8 @@ namespace js {
                          nullptr, /* outerObject */                     \
                          nullptr, /* innerObject */                     \
                          nullptr, /* iteratorObject */                  \
-                         false    /* isWrappedNative */                 \
+                         false,   /* isWrappedNative */                 \
+                         js::proxy_ObjectMoved                          \
                        ))
 
 /*
