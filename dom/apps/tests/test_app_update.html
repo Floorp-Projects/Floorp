@@ -196,8 +196,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     yield undefined;
     info("Uninstalled hosted appcache app");
 
+    /**
+      * DISABLED FOR NOW UNTIL WE CAN TEST PINNING PROPERLY
+      */
     // Install the trusted app.
-    setAppVersion(4, continueTest);
+    /*setAppVersion(4, continueTest);
     yield undefined;
     ok(true, "Installing trusted app");
     var request = navigator.mozApps.install(gTrustedManifestURL);
@@ -215,14 +218,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     }
     is(app.installState, "installed", "Trusted App is installed");
     is(app.manifest.type, "trusted", "App is trusted");
-
+*/
     // Check the cached app.
-    checkAppState(app, true, 4, continueTest);
-    yield undefined;
+    /*checkAppState(app, true, 4, continueTest);
+    yield undefined;*/
 
     // Check for updates. The current infrastructure always returns a new appcache
     // manifest, so there should always be an update.
-    var lastCheck = app.lastUpdateCheck;
+    /*var lastCheck = app.lastUpdateCheck;
     ok(true, "Setting callbacks");
     app.ondownloadapplied = function() ok(true, "downloadapplied fired.");
     app.ondownloadavailable = function() ok(false, "downloadavailable fired");
@@ -231,15 +234,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     request.onerror = mozAppsError;
     request.onsuccess = continueTest;
     yield undefined;
-    todo(app.lastUpdateCheck > lastCheck, "lastUpdateCheck updated appropriately");
+    todo(app.lastUpdateCheck > lastCheck, "lastUpdateCheck updated appropriately");*/
 
 
     // Uninstall the app.
-    request = navigator.mozApps.mgmt.uninstall(app);
+    /*request = navigator.mozApps.mgmt.uninstall(app);
     request.onerror = mozAppsError;
     request.onsuccess = continueTest;
     yield undefined;
-    info("Uninstalled trusted app");
+    info("Uninstalled trusted app");*/
   }
 
   function setAppVersion(version, cb) {
