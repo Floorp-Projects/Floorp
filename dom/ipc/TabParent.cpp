@@ -338,12 +338,8 @@ TabParent::ActorDestroy(ActorDestroyReason why)
   if (mIMETabParent == this) {
     mIMETabParent = nullptr;
   }
-
-  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  MOZ_ASSERT(os);
-  os->NotifyObservers(NS_ISUPPORTS_CAST(nsITabParent*, this), "ipc:browser-destroyed", nullptr);
-
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
+  nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   nsRefPtr<nsFrameMessageManager> fmm;
   if (frameLoader) {
     fmm = frameLoader->GetFrameMessageManager();
@@ -352,7 +348,7 @@ TabParent::ActorDestroy(ActorDestroyReason why)
                    nullptr);
     frameLoader->DestroyChild();
 
-    if (why == AbnormalShutdown) {
+    if (why == AbnormalShutdown && os) {
       os->NotifyObservers(NS_ISUPPORTS_CAST(nsIFrameLoader*, frameLoader),
                           "oop-frameloader-crashed", nullptr);
       nsContentUtils::DispatchTrustedEvent(frameElement->OwnerDoc(), frameElement,
@@ -361,6 +357,9 @@ TabParent::ActorDestroy(ActorDestroyReason why)
     }
   }
 
+  if (os) {
+    os->NotifyObservers(NS_ISUPPORTS_CAST(nsITabParent*, this), "ipc:browser-destroyed", nullptr);
+  }
   if (fmm) {
     fmm->Disconnect();
   }
