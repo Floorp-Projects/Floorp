@@ -42,7 +42,13 @@ describe("loop.panel", function() {
       getLoopCharPref: sandbox.stub().returns("unseen"),
       copyString: sandbox.stub(),
       noteCallUrlExpiry: sinon.spy(),
-      composeEmail: sinon.spy()
+      composeEmail: sinon.spy(),
+      contacts: {
+        getAll: function(callback) {
+          callback(null, []);
+        },
+        on: sandbox.stub()
+      }
     };
 
     document.mozL10n.initialize(navigator.mozLoop);
