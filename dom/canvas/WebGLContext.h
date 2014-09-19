@@ -17,7 +17,6 @@
 #include "WebGLActiveInfo.h"
 #include "WebGLObjectModel.h"
 #include "WebGLRenderbuffer.h"
-#include "WebGLStrongTypes.h"
 #include <stdarg.h>
 
 #include "nsTArray.h"
@@ -124,7 +123,7 @@ struct WebGLContextOptions {
 };
 
 // From WebGLContextUtils
-TexTarget TexImageTargetToTexTarget(TexImageTarget texImageTarget);
+GLenum TexImageTargetToTexTarget(GLenum texImageTarget);
 
 class WebGLContext :
     public nsIDOMWebGLRenderingContext,
@@ -225,7 +224,8 @@ public:
 
     void DummyFramebufferOperation(const char *info);
 
-    WebGLTexture* activeBoundTextureForTarget(const TexTarget texTarget) const {
+    WebGLTexture* activeBoundTextureForTarget(GLenum texTarget) const {
+        MOZ_ASSERT(texTarget == LOCAL_GL_TEXTURE_2D || texTarget == LOCAL_GL_TEXTURE_CUBE_MAP);
         return texTarget == LOCAL_GL_TEXTURE_2D ? mBound2DTextures[mActiveTexture]
                                                 : mBoundCubeMapTextures[mActiveTexture];
     }
@@ -234,8 +234,8 @@ public:
      * GL_TEXTURE_2D, GL_TEXTURE_CUBE_MAP_[POSITIVE|NEGATIVE]_[X|Y|Z], and
      * not the actual texture binding target: GL_TEXTURE_2D or GL_TEXTURE_CUBE_MAP.
      */
-    WebGLTexture* activeBoundTextureForTexImageTarget(const TexImageTarget texImgTarget) const {
-        const TexTarget texTarget = TexImageTargetToTexTarget(texImgTarget);
+    WebGLTexture* activeBoundTextureForTexImageTarget(GLenum texImgTarget) const {
+        const GLenum texTarget = TexImageTargetToTexTarget(texImgTarget);
         return activeBoundTextureForTarget(texTarget);
     }
 
@@ -465,24 +465,21 @@ public:
                     dom::ImageData* pixels, ErrorResult& rv);
     // Allow whatever element types the bindings are willing to pass
     // us in TexImage2D
-    bool TexImageFromVideoElement(TexImageTarget texImageTarget, GLint level,
+    bool TexImageFromVideoElement(GLenum texImageTarget, GLint level,
                                   GLenum internalformat, GLenum format, GLenum type,
                                   mozilla::dom::Element& image);
 
     template<class ElementType>
-    void TexImage2D(GLenum rawTexImgTarget, GLint level,
+    void TexImage2D(GLenum texImageTarget, GLint level,
                     GLenum internalformat, GLenum format, GLenum type,
                     ElementType& elt, ErrorResult& rv)
     {
         if (IsContextLost())
             return;
 
-        auto dims = 2;
-
-        if (!ValidateTexImageTarget(dims, rawTexImgTarget, WebGLTexImageFunc::TexImage))
-            return ErrorInvalidEnumInfo("texSubImage2D: target", rawTexImgTarget);
-
-        const TexImageTarget texImageTarget(rawTexImgTarget);
+        const GLenum target = TexImageTargetToTexTarget(texImageTarget);
+        if (target == LOCAL_GL_NONE)
+            return ErrorInvalidEnumInfo("texImage2D: target", target);
 
         if (!ValidateTexImageFormatAndType(format, type, WebGLTexImageFunc::TexImage))
             return;
@@ -494,7 +491,7 @@ public:
         if (level > maxLevel)
             return ErrorInvalidValue("texImage2D: level %d is too large, max is %d", level, maxLevel);
 
-        WebGLTexture* tex = activeBoundTextureForTexImageTarget(texImageTarget);
+        WebGLTexture* tex = activeBoundTextureForTarget(target);
 
         if (!tex)
             return ErrorInvalidOperation("no texture is bound to this target");
@@ -539,17 +536,16 @@ public:
     // Allow whatever element types the bindings are willing to pass
     // us in TexSubImage2D
     template<class ElementType>
-    void TexSubImage2D(GLenum rawTexImageTarget, GLint level,
+    void TexSubImage2D(GLenum texImageTarget, GLint level,
                        GLint xoffset, GLint yoffset, GLenum format,
                        GLenum type, ElementType& elt, ErrorResult& rv)
     {
         if (IsContextLost())
             return;
 
-        if (!ValidateTexImageTarget(2, rawTexImageTarget, WebGLTexImageFunc::TexSubImage))
-            return ErrorInvalidEnumInfo("texSubImage2D: target", rawTexImageTarget);
-
-        const TexImageTarget texImageTarget(rawTexImageTarget);
+        const GLenum target = TexImageTargetToTexTarget(texImageTarget);
+        if (target == LOCAL_GL_NONE)
+            return ErrorInvalidEnumInfo("texSubImage2D: target", texImageTarget);
 
         if (!ValidateTexImageFormatAndType(format, type, WebGLTexImageFunc::TexImage))
             return;
@@ -1092,7 +1088,7 @@ protected:
     bool ValidateGLSLString(const nsAString& string, const char *info);
 
     bool ValidateCopyTexImage(GLenum format, WebGLTexImageFunc func);
-    bool ValidateTexImage(GLuint dims, TexImageTarget texImageTarget,
+    bool ValidateTexImage(GLuint dims, GLenum target,
                           GLint level, GLint internalFormat,
                           GLint xoffset, GLint yoffset, GLint zoffset,
                           GLint width, GLint height, GLint depth,
@@ -1102,7 +1098,7 @@ protected:
     bool ValidateTexImageFormat(GLenum format, WebGLTexImageFunc func);
     bool ValidateTexImageType(GLenum type, WebGLTexImageFunc func);
     bool ValidateTexImageFormatAndType(GLenum format, GLenum type, WebGLTexImageFunc func);
-    bool ValidateTexImageSize(TexImageTarget target, GLint level,
+    bool ValidateTexImageSize(GLenum target, GLint level,
                               GLint width, GLint height, GLint depth,
                               WebGLTexImageFunc func);
     bool ValidateTexSubImageSize(GLint x, GLint y, GLint z,
@@ -1110,7 +1106,7 @@ protected:
                                  GLsizei baseWidth, GLsizei baseHeight, GLsizei baseDepth,
                                  WebGLTexImageFunc func);
 
-    bool ValidateCompTexImageSize(GLint level, GLenum format,
+    bool ValidateCompTexImageSize(GLenum target, GLint level, GLenum format,
                                   GLint xoffset, GLint yoffset,
                                   GLsizei width, GLsizei height,
                                   GLsizei levelWidth, GLsizei levelHeight,
@@ -1128,13 +1124,13 @@ protected:
     void MakeContextCurrent() const;
 
     // helpers
-    void TexImage2D_base(TexImageTarget target, GLint level, GLenum internalformat,
+    void TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
                          GLsizei width, GLsizei height, GLsizei srcStrideOrZero, GLint border,
                          GLenum format, GLenum type,
                          void *data, uint32_t byteLength,
                          int jsArrayType,
                          WebGLTexelFormat srcFormat, bool srcPremultiplied);
-    void TexSubImage2D_base(TexImageTarget target, GLint level,
+    void TexSubImage2D_base(GLenum target, GLint level,
                             GLint xoffset, GLint yoffset,
                             GLsizei width, GLsizei height, GLsizei srcStrideOrZero,
                             GLenum format, GLenum type,
@@ -1172,7 +1168,7 @@ protected:
                                                     RefPtr<gfx::DataSourceSurface>& imageOut,
                                                     WebGLTexelFormat *format);
 
-    void CopyTexSubImage2D_base(TexImageTarget texImageTarget,
+    void CopyTexSubImage2D_base(GLenum target,
                                 GLint level,
                                 GLenum internalformat,
                                 GLint xoffset,
@@ -1204,12 +1200,17 @@ private:
     bool ValidateObjectAssumeNonNull(const char* info, ObjectType *aObject);
 
 protected:
-    int32_t MaxTextureSizeForTarget(TexTarget target) const {
+    int32_t MaxTextureSizeForTarget(GLenum target) const {
+        MOZ_ASSERT(target == LOCAL_GL_TEXTURE_2D ||
+                   (target >= LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X &&
+                    target <= LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z),
+                   "Invalid target enum");
         return (target == LOCAL_GL_TEXTURE_2D) ? mGLMaxTextureSize : mGLMaxCubeMapTextureSize;
     }
 
-    int32_t MaxTextureLevelForTexImageTarget(TexImageTarget texImageTarget) const {
-        const TexTarget target = TexImageTargetToTexTarget(texImageTarget);
+    int32_t MaxTextureLevelForTexImageTarget(GLenum texImageTarget) const {
+        const GLenum target = TexImageTargetToTexTarget(texImageTarget);
+        MOZ_ASSERT(target == LOCAL_GL_TEXTURE_2D || target == LOCAL_GL_TEXTURE_CUBE_MAP);
         return (target == LOCAL_GL_TEXTURE_2D) ? mGLMaxTextureSizeLog2 : mGLMaxCubeMapTextureSizeLog2;
     }
 
@@ -1221,7 +1222,7 @@ protected:
                              GLenum usage);
     /** like glTexImage2D but if the call may change the texture size, checks any GL error generated
      * by this glTexImage2D call and returns it */
-    GLenum CheckedTexImage2D(TexImageTarget texImageTarget,
+    GLenum CheckedTexImage2D(GLenum target,
                              GLint level,
                              GLenum internalFormat,
                              GLsizei width,

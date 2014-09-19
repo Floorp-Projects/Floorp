@@ -24,7 +24,7 @@ WebGLFramebuffer::WrapObject(JSContext* cx)
 }
 
 WebGLFramebuffer::WebGLFramebuffer(WebGLContext* context)
-    : WebGLBindableName<GLenum>()
+    : WebGLBindableName()
     , WebGLContextBoundObject(context)
     , mStatus(0)
     , mDepthAttachment(LOCAL_GL_DEPTH_ATTACHMENT)
@@ -42,7 +42,6 @@ WebGLFramebuffer::WebGLFramebuffer(WebGLContext* context)
 
 WebGLFramebuffer::Attachment::Attachment(GLenum aAttachmentPoint)
     : mAttachmentPoint(aAttachmentPoint)
-    , mTexImageTarget(LOCAL_GL_NONE)
     , mNeedsFinalize(false)
 {}
 
@@ -85,9 +84,9 @@ WebGLFramebuffer::GetFormatForAttachment(const WebGLFramebuffer::Attachment& att
 
     if (attachment.Texture()) {
         const WebGLTexture& tex = *attachment.Texture();
-        MOZ_ASSERT(tex.HasImageInfoAt(attachment.ImageTarget(), 0));
+        MOZ_ASSERT(tex.HasImageInfoAt(tex.Target(), 0));
 
-        const WebGLTexture::ImageInfo& imgInfo = tex.ImageInfoAt(attachment.ImageTarget(), 0);
+        const WebGLTexture::ImageInfo& imgInfo = tex.ImageInfoAt(tex.Target(), 0);
         return imgInfo.WebGLFormat();
     }
 
@@ -131,7 +130,7 @@ WebGLFramebuffer::Attachment::IsReadableFloat() const
 }
 
 void
-WebGLFramebuffer::Attachment::SetTexImage(WebGLTexture* tex, TexImageTarget target, GLint level)
+WebGLFramebuffer::Attachment::SetTexImage(WebGLTexture* tex, GLenum target, GLint level)
 {
     mTexturePtr = tex;
     mRenderbufferPtr = nullptr;
@@ -396,18 +395,14 @@ WebGLFramebuffer::Attachment::FinalizeAttachment(GLContext* gl, GLenum attachmen
     if (Texture()) {
         MOZ_ASSERT(gl == Texture()->Context()->gl);
 
-        const GLenum imageTarget = ImageTarget().get();
-        const GLint mipLevel = MipLevel();
-        const GLuint glName = Texture()->GLName();
-
         if (attachmentLoc == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
             gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_DEPTH_ATTACHMENT,
-                                      imageTarget, glName, mipLevel);
+                                      TexImageTarget(), Texture()->GLName(), TexImageLevel());
             gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_STENCIL_ATTACHMENT,
-                                      imageTarget, glName, mipLevel);
+                                      TexImageTarget(), Texture()->GLName(), TexImageLevel());
         } else {
             gl->fFramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, attachmentLoc,
-                                      imageTarget, glName, mipLevel);
+                                      TexImageTarget(), Texture()->GLName(), TexImageLevel());
         }
         return;
     }
@@ -505,7 +500,7 @@ WebGLFramebuffer::FramebufferRenderbuffer(GLenum target,
 void
 WebGLFramebuffer::FramebufferTexture2D(GLenum target,
                                        GLenum attachment,
-                                       TexImageTarget texImageTarget,
+                                       GLenum textarget,
                                        WebGLTexture* wtex,
                                        GLint level)
 {
@@ -517,9 +512,16 @@ WebGLFramebuffer::FramebufferTexture2D(GLenum target,
     if (target != LOCAL_GL_FRAMEBUFFER)
         return mContext->ErrorInvalidEnumInfo("framebufferTexture2D: target", target);
 
+    if (textarget != LOCAL_GL_TEXTURE_2D &&
+        (textarget < LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
+         textarget > LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z))
+    {
+        return mContext->ErrorInvalidEnumInfo("framebufferTexture2D: invalid texture target", textarget);
+    }
+
     if (wtex) {
         bool isTexture2D = wtex->Target() == LOCAL_GL_TEXTURE_2D;
-        bool isTexTarget2D = texImageTarget == LOCAL_GL_TEXTURE_2D;
+        bool isTexTarget2D = textarget == LOCAL_GL_TEXTURE_2D;
         if (isTexture2D != isTexTarget2D) {
             return mContext->ErrorInvalidOperation("framebufferTexture2D: mismatched texture and texture target");
         }
@@ -553,7 +555,7 @@ WebGLFramebuffer::FramebufferTexture2D(GLenum target,
     if (wtex)
         wtex->AttachTo(this, attachment);
 
-    a->SetTexImage(wtex, texImageTarget, level);
+    a->SetTexImage(wtex, textarget, level);
 }
 
 WebGLFramebuffer::Attachment*

@@ -7,7 +7,6 @@
 #define WEBGLCONTEXTUTILS_H_
 
 #include "WebGLContext.h"
-#include "WebGLStrongTypes.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/BindingUtils.h"
 
@@ -32,7 +31,7 @@ GLenum DriverTypeFromType(gl::GLContext* gl, GLenum webGLType);
 // the currently bound texture is appropriate for this texImageTarget.
 //
 // Returns GL_NONE if passed an invalid texture image target
-TexTarget TexImageTargetToTexTarget(TexImageTarget texImageTarget);
+GLenum TexImageTargetToTexTarget(GLenum texImageTarget);
 
 struct GLComponents
 {

@@ -8,7 +8,6 @@
 
 #include "WebGLBindableName.h"
 #include "WebGLObjectModel.h"
-#include "WebGLStrongTypes.h"
 
 #include "nsWrapperCache.h"
 
@@ -25,7 +24,7 @@ namespace gl {
 
 class WebGLFramebuffer MOZ_FINAL
     : public nsWrapperCache
-    , public WebGLBindableName<GLenum>
+    , public WebGLBindableName
     , public WebGLRefCountedObject<WebGLFramebuffer>
     , public LinkedListElement<WebGLFramebuffer>
     , public WebGLContextBoundObject
@@ -42,7 +41,7 @@ public:
         WebGLRefPtr<WebGLTexture> mTexturePtr;
         WebGLRefPtr<WebGLRenderbuffer> mRenderbufferPtr;
         GLenum mAttachmentPoint;
-        TexImageTarget mTexImageTarget;
+        GLenum mTexImageTarget;
         GLint mTexImageLevel;
         mutable bool mNeedsFinalize;
 
@@ -58,7 +57,7 @@ public:
         bool HasAlpha() const;
         bool IsReadableFloat() const;
 
-        void SetTexImage(WebGLTexture* tex, TexImageTarget target, GLint level);
+        void SetTexImage(WebGLTexture* tex, GLenum target, GLint level);
         void SetRenderbuffer(WebGLRenderbuffer* rb);
 
         const WebGLTexture* Texture() const {
@@ -73,10 +72,10 @@ public:
         WebGLRenderbuffer* Renderbuffer() {
             return mRenderbufferPtr;
         }
-        TexImageTarget ImageTarget() const {
+        GLenum TexImageTarget() const {
             return mTexImageTarget;
         }
-        GLint MipLevel() const {
+        GLint TexImageLevel() const {
             return mTexImageLevel;
         }
 
@@ -102,7 +101,7 @@ public:
 
     void FramebufferTexture2D(GLenum target,
                               GLenum attachment,
-                              TexImageTarget texImageTarget,
+                              GLenum textarget,
                               WebGLTexture* wtex,
                               GLint level);
 
