@@ -38,7 +38,7 @@ public class testGeckoRequest extends UITest {
 
     public void testGeckoRequest() {
         GeckoHelper.blockForReady();
-        NavigationHelper.enterAndLoadUrl(StringHelper.ROBOCOP_JS_HARNESS_URL + "?path=" + TEST_JS);
+        NavigationHelper.enterAndLoadUrl(StringHelper.getHarnessUrlForJavascript(TEST_JS));
 
         // Register a listener for this request.
         js.syncCall("add_request_listener", REQUEST_EVENT);
