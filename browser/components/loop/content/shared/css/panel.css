@@ -39,6 +39,7 @@
   padding: 0 10px;
   height: 16px;
   cursor: pointer;
+  overflow: hidden;
   background-repeat: no-repeat;
   background-size: 16px 16px;
   background-position: center;
@@ -82,6 +83,7 @@
 
 .share {
   background: #fbfbfb;
+  margin-bottom: 14px;
 }
 
 .share .description,
@@ -313,5 +315,4 @@ body[dir=rtl] .dropdown-menu-item {
   background: #EAEAEA;
   color: #7F7F7F;
   padding: 14px;
-  margin-top: 14px;
 }
