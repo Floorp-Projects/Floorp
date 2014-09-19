@@ -38,7 +38,7 @@ protected:
 
 private:
     enum {
-        kWhatPush = 'push'
+        kWhatPush = 1
     };
 
     FILE *mFile;
