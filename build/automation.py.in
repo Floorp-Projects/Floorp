@@ -755,9 +755,9 @@ class Automation(object):
     args = []
 
     if debuggerInfo:
-      args.extend(debuggerInfo["args"])
+      args.extend(debuggerInfo.args)
       args.append(cmd)
-      cmd = os.path.abspath(debuggerInfo["path"])
+      cmd = os.path.abspath(debuggerInfo.path)
 
     if self.IS_MAC:
       args.append("-foreground")
@@ -850,7 +850,7 @@ class Automation(object):
     cmd, args = self.buildCommandLine(app, debuggerInfo, profileDir, testURL, extraArgs)
     startTime = datetime.now()
 
-    if debuggerInfo and debuggerInfo["interactive"]:
+    if debuggerInfo and debuggerInfo.interactive:
       # If an interactive debugger is attached, don't redirect output,
       # don't use timeouts, and don't capture ctrl-c.
       timeout = None
