@@ -1249,8 +1249,7 @@ PlacesController.prototype = {
   /**
    * Paste Bookmarks and Folders from the clipboard
    */
-  paste: Task.async(function *() {
-
+  paste: Task.async(function* () {
     // No reason to proceed if there isn't a valid insertion point.
     let ip = this._view.insertionPoint;
     if (!ip)
@@ -1291,7 +1290,7 @@ PlacesController.prototype = {
           PlacesTransactions.Tag({ uris: uris, tag: ip.tagName }));
       }
       else {
-        yield PlacesTransactions.transact(function *() {
+        yield PlacesTransactions.transact(function* () {
           let insertionIndex = ip.index;
           let parent = yield ip.promiseGuid();
 
