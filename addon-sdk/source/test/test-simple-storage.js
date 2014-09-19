@@ -6,7 +6,6 @@ const file = require("sdk/io/file");
 const prefs = require("sdk/preferences/service");
 
 const QUOTA_PREF = "extensions.addon-sdk.simple-storage.quota";
-const WRITE_PERIOD_PREF = "extensions.addon-sdk.simple-storage.writePeriod";
 
 let {Cc,Ci} = require("chrome");
 
@@ -35,13 +34,12 @@ exports.testSetGet = function (assert, done) {
     // Load the module again and make sure the value stuck.
     loader = Loader(module);
     ss = loader.require("sdk/simple-storage");
-    assert.equal(ss.storage.foo, val, "Value should persist");
     manager(loader).jsonStore.onWrite = function (storage) {
-      assert.fail("Nothing should be written since `storage` was not changed.");
+      file.remove(storeFilename);
+      done();
     };
+    assert.equal(ss.storage.foo, val, "Value should persist");
     loader.unload();
-    file.remove(storeFilename);
-    done();
   };
   let val = "foo";
   ss.storage.foo = val;
@@ -162,11 +160,10 @@ exports.testQuotaExceededHandle = function (assert, done) {
       assert.equal(ss.storage.x, 4, "x value should be correct");
       assert.equal(ss.storage.y, 5, "y value should be correct");
       manager(loader).jsonStore.onWrite = function (storage) {
-        assert.fail("Nothing should be written since `storage` was not changed.");
+        prefs.reset(QUOTA_PREF);
+        done();
       };
       loader.unload();
-      prefs.reset(QUOTA_PREF);
-      done();
     };
     loader.unload();
   });
@@ -200,9 +197,6 @@ exports.testQuotaExceededNoHandle = function (assert, done) {
       assert.equal(ss.storage, val,
                        "Over-quota value should not have been written, " +
                        "old value should have persisted: " + ss.storage);
-      manager(loader).jsonStore.onWrite = function (storage) {
-        assert.fail("Nothing should be written since `storage` was not changed.");
-      };
       loader.unload();
       prefs.reset(QUOTA_PREF);
       done();
@@ -257,184 +251,6 @@ exports.testUninstall = function (assert, done) {
   loader.unload();
 };
 
-exports.testChangeInnerArray = function(assert, done) {
-  prefs.set(WRITE_PERIOD_PREF, 10);
-
-  let expected = {
-    x: [5, 7],
-    y: [7, 28],
-    z: [6, 2]
-  };
-
-  // Load the module, set a value.
-  let loader = Loader(module);
-  let ss = loader.require("sdk/simple-storage");
-  manager(loader).jsonStore.onWrite = function (storage) {
-    assert.ok(file.exists(storeFilename), "Store file should exist");
-
-    // Load the module again and check the result
-    loader = Loader(module);
-    ss = loader.require("sdk/simple-storage");
-    assert.equal(JSON.stringify(ss.storage),
-                     JSON.stringify(expected), "Should see the expected object");
-
-    // Add a property
-    ss.storage.x.push(["bar"]);
-    expected.x.push(["bar"]);
-    manager(loader).jsonStore.onWrite = function (storage) {
-      assert.equal(JSON.stringify(ss.storage),
-                       JSON.stringify(expected), "Should see the expected object");
-
-      // Modify a property
-      ss.storage.y[0] = 42;
-      expected.y[0] = 42;
-      manager(loader).jsonStore.onWrite = function (storage) {
-        assert.equal(JSON.stringify(ss.storage),
-                         JSON.stringify(expected), "Should see the expected object");
-
-        // Delete a property
-        delete ss.storage.z[1];
-        delete expected.z[1];
-        manager(loader).jsonStore.onWrite = function (storage) {
-          assert.equal(JSON.stringify(ss.storage),
-                           JSON.stringify(expected), "Should see the expected object");
-
-          // Modify the new inner-object
-          ss.storage.x[2][0] = "baz";
-          expected.x[2][0] = "baz";
-          manager(loader).jsonStore.onWrite = function (storage) {
-            assert.equal(JSON.stringify(ss.storage),
-                             JSON.stringify(expected), "Should see the expected object");
-
-            manager(loader).jsonStore.onWrite = function (storage) {
-              assert.fail("Nothing should be written since `storage` was not changed.");
-            };
-            loader.unload();
-
-            // Load the module again and check the result
-            loader = Loader(module);
-            ss = loader.require("sdk/simple-storage");
-            assert.equal(JSON.stringify(ss.storage),
-                             JSON.stringify(expected), "Should see the expected object");
-            loader.unload();
-            file.remove(storeFilename);
-            prefs.reset(WRITE_PERIOD_PREF);
-            done();
-          };
-        };
-      };
-    };
-  };
-
-  ss.storage = {
-    x: [5, 7],
-    y: [7, 28],
-    z: [6, 2]
-  };
-  assert.equal(JSON.stringify(ss.storage),
-                   JSON.stringify(expected), "Should see the expected object");
-
-  loader.unload();
-};
-
-exports.testChangeInnerObject = function(assert, done) {
-  prefs.set(WRITE_PERIOD_PREF, 10);
-
-  let expected = {
-    x: {
-      a: 5,
-      b: 7
-    },
-    y: {
-      c: 7,
-      d: 28
-    },
-    z: {
-      e: 6,
-      f: 2
-    }
-  };
-
-  // Load the module, set a value.
-  let loader = Loader(module);
-  let ss = loader.require("sdk/simple-storage");
-  manager(loader).jsonStore.onWrite = function (storage) {
-    assert.ok(file.exists(storeFilename), "Store file should exist");
-
-    // Load the module again and check the result
-    loader = Loader(module);
-    ss = loader.require("sdk/simple-storage");
-    assert.equal(JSON.stringify(ss.storage),
-                     JSON.stringify(expected), "Should see the expected object");
-
-    // Add a property
-    ss.storage.x.g = {foo: "bar"};
-    expected.x.g = {foo: "bar"};
-    manager(loader).jsonStore.onWrite = function (storage) {
-      assert.equal(JSON.stringify(ss.storage),
-                       JSON.stringify(expected), "Should see the expected object");
-
-      // Modify a property
-      ss.storage.y.c = 42;
-      expected.y.c = 42;
-      manager(loader).jsonStore.onWrite = function (storage) {
-        assert.equal(JSON.stringify(ss.storage),
-                         JSON.stringify(expected), "Should see the expected object");
-
-        // Delete a property
-        delete ss.storage.z.f;
-        delete expected.z.f;
-        manager(loader).jsonStore.onWrite = function (storage) {
-          assert.equal(JSON.stringify(ss.storage),
-                           JSON.stringify(expected), "Should see the expected object");
-
-          // Modify the new inner-object
-          ss.storage.x.g.foo = "baz";
-          expected.x.g.foo = "baz";
-          manager(loader).jsonStore.onWrite = function (storage) {
-            assert.equal(JSON.stringify(ss.storage),
-                             JSON.stringify(expected), "Should see the expected object");
-
-            manager(loader).jsonStore.onWrite = function (storage) {
-              assert.fail("Nothing should be written since `storage` was not changed.");
-            };
-            loader.unload();
-
-            // Load the module again and check the result
-            loader = Loader(module);
-            ss = loader.require("sdk/simple-storage");
-            assert.equal(JSON.stringify(ss.storage),
-                             JSON.stringify(expected), "Should see the expected object");
-            loader.unload();
-            file.remove(storeFilename);
-            prefs.reset(WRITE_PERIOD_PREF);
-            done();
-          };
-        };
-      };
-    };
-  };
-
-  ss.storage = {
-    x: {
-      a: 5,
-      b: 7
-    },
-    y: {
-      c: 7,
-      d: 28
-    },
-    z: {
-      e: 6,
-      f: 2
-    }
-  };
-  assert.equal(JSON.stringify(ss.storage),
-                   JSON.stringify(expected), "Should see the expected object");
-
-  loader.unload();
-};
-
 exports.testSetNoSetRead = function (assert, done) {
   // Load the module, set a value.
   let loader = Loader(module);
@@ -453,13 +269,12 @@ exports.testSetNoSetRead = function (assert, done) {
     // Load the module a third time and make sure the value stuck.
     loader = Loader(module);
     ss = loader.require("sdk/simple-storage");
-    assert.equal(ss.storage.foo, val, "Value should persist");
     manager(loader).jsonStore.onWrite = function (storage) {
-      assert.fail("Nothing should be written since `storage` was not changed.");
+      file.remove(storeFilename);
+      done();
     };
+    assert.equal(ss.storage.foo, val, "Value should persist");
     loader.unload();
-    file.remove(storeFilename);
-    done();
   };
   let val = "foo";
   ss.storage.foo = val;
@@ -480,13 +295,12 @@ function setGetRoot(assert, done, val, compare) {
     // Load the module again and make sure the value stuck.
     loader = Loader(module);
     ss = loader.require("sdk/simple-storage");
-    assert.ok(compare(ss.storage, val), "Value should persist");
-    manager(loader).jsonStore.onWrite = function (storage) {
-      assert.fail("Nothing should be written since `storage` was not changed.");
+    manager(loader).jsonStore.onWrite = function () {
+      file.remove(storeFilename);
+      done();
     };
+    assert.ok(compare(ss.storage, val), "Value should persist");
     loader.unload();
-    file.remove(storeFilename);
-    done();
   };
   ss.storage = val;
   assert.ok(compare(ss.storage, val), "Value read should be value set");
