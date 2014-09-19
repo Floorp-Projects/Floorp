@@ -150,7 +150,8 @@ function clearSubview(aSubview) {
   parent.appendChild(aSubview);
 }
 
-const CustomizableWidgets = [{
+const CustomizableWidgets = [
+  {
     id: "history-panelmenu",
     type: "view",
     viewId: "PanelUI-history",
@@ -922,6 +923,18 @@ const CustomizableWidgets = [{
         aDocument.defaultView.LoopUI.openCallPanel(event);
       });
       return node;
+    }
+  }, {
+    id: "web-apps-button",
+    label: "web-apps-button.label",
+    tooltiptext: "web-apps-button.tooltiptext",
+    onCommand: function(aEvent) {
+      let win = aEvent.target &&
+                aEvent.target.ownerDocument &&
+                aEvent.target.ownerDocument.defaultView;
+      if (win && typeof win.BrowserOpenApps == "function") {
+        win.BrowserOpenApps();
+      }
     }
   }];
 
