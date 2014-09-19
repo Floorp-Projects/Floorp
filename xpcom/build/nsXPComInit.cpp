@@ -131,6 +131,7 @@ extern nsresult nsStringInputStreamConstructor(nsISupports*, REFNSIID, void**);
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CountingAllocatorBase.h"
 #include "mozilla/SystemMemoryReporter.h"
+#include "mozilla/UniquePtr.h"
 
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
@@ -522,8 +523,7 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
 
   if (XRE_GetProcessType() == GeckoProcessType_Default &&
       !BrowserProcessSubThread::GetMessageLoop(BrowserProcessSubThread::IO)) {
-    scoped_ptr<BrowserProcessSubThread> ioThread(
-      new BrowserProcessSubThread(BrowserProcessSubThread::IO));
+    UniquePtr<BrowserProcessSubThread> ioThread = MakeUnique<BrowserProcessSubThread>(BrowserProcessSubThread::IO);
 
     base::Thread::Options options;
     options.message_loop_type = MessageLoop::TYPE_IO;

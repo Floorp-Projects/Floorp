@@ -11,6 +11,7 @@
 #include <string>
 
 #include "base/message_loop.h"
+#include "mozilla/UniquePtr.h"
 
 class NonThreadSafe;
 
@@ -107,7 +108,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
 
   ScopedRunnableMethodFactory<ChannelImpl> factory_;
 
-  scoped_ptr<NonThreadSafe> thread_check_;
+  mozilla::UniquePtr<NonThreadSafe> thread_check_;
 
   DISALLOW_COPY_AND_ASSIGN(ChannelImpl);
 };

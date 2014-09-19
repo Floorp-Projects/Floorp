@@ -9,13 +9,11 @@
 #include <queue>
 #include <string>
 #include <vector>
-
 #include <map>
+
 #include "base/lock.h"
 #include "base/message_pump.h"
 #include "base/observer_list.h"
-#include "base/ref_counted.h"
-#include "base/scoped_ptr.h"
 #include "base/task.h"
 #include "base/timer.h"
 
@@ -26,6 +24,8 @@
 #elif defined(OS_POSIX)
 #include "base/message_pump_libevent.h"
 #endif
+
+#include "nsAutoPtr.h"
 
 namespace mozilla {
 namespace ipc {
@@ -415,7 +415,7 @@ public:
   // once we're out of nested message loops.
   TaskQueue deferred_non_nestable_work_queue_;
 
-  scoped_refptr<base::MessagePump> pump_;
+  nsRefPtr<base::MessagePump> pump_;
 
   base::ObserverList<DestructionObserver> destruction_observers_;
 
