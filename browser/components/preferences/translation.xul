@@ -80,10 +80,8 @@
               accesskey="&removeAllSites.accesskey;"
               oncommand="gTranslationExceptions.onAllSitesDeleted();"/>
       <spacer flex="1"/>
-#ifndef XP_MACOSX
       <button oncommand="close();" icon="close"
               label="&button.close.label;" accesskey="&button.close.accesskey;"/>
-#endif
     </hbox>
   </hbox>
 </window>
