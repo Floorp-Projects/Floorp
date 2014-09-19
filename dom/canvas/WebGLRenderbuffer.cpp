@@ -43,7 +43,7 @@ WebGLRenderbuffer::WrapObject(JSContext *cx) {
 }
 
 WebGLRenderbuffer::WebGLRenderbuffer(WebGLContext *context)
-    : WebGLBindableName<GLenum>()
+    : WebGLBindableName()
     , WebGLContextBoundObject(context)
     , mPrimaryRB(0)
     , mSecondaryRB(0)

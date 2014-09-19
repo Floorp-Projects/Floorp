@@ -215,7 +215,7 @@ WebGLContext::BindRenderbuffer(GLenum target, WebGLRenderbuffer *wrb)
 }
 
 void
-WebGLContext::BindTexture(GLenum rawTarget, WebGLTexture *newTex)
+WebGLContext::BindTexture(GLenum target, WebGLTexture *newTex)
 {
     if (IsContextLost())
         return;
@@ -223,10 +223,18 @@ WebGLContext::BindTexture(GLenum rawTarget, WebGLTexture *newTex)
      if (!ValidateObjectAllowDeletedOrNull("bindTexture", newTex))
         return;
 
-    // Need to check rawTarget first before comparing against newTex->Target() as
-    // newTex->Target() returns a TexTarget, which will assert on invalid value.
+    if (newTex) {
+        // silently ignore a deleted texture
+        if (newTex->IsDeleted())
+            return;
+
+        if (newTex->Target() != LOCAL_GL_NONE && newTex->Target() != target)
+            return ErrorInvalidOperation("bindTexture: this texture has already been bound to a different target");
+    }
+
     WebGLRefPtr<WebGLTexture>* currentTexPtr = nullptr;
-    switch (rawTarget) {
+
+    switch (target) {
         case LOCAL_GL_TEXTURE_2D:
             currentTexPtr = &mBound2DTextures[mActiveTexture];
             break;
@@ -234,19 +242,8 @@ WebGLContext::BindTexture(GLenum rawTarget, WebGLTexture *newTex)
             currentTexPtr = &mBoundCubeMapTextures[mActiveTexture];
             break;
        default:
-            return ErrorInvalidEnumInfo("bindTexture: target", rawTarget);
+            return ErrorInvalidEnumInfo("bindTexture: target", target);
     }
-
-    if (newTex) {
-        // silently ignore a deleted texture
-        if (newTex->IsDeleted())
-            return;
-
-        if (newTex->HasEverBeenBound() && newTex->Target() != rawTarget)
-            return ErrorInvalidOperation("bindTexture: this texture has already been bound to a different target");
-    }
-
-    const TexTarget target(rawTarget);
 
     WebGLTextureFakeBlackStatus currentTexFakeBlackStatus = WebGLTextureFakeBlackStatus::NotNeeded;
     if (*currentTexPtr) {
@@ -268,7 +265,7 @@ WebGLContext::BindTexture(GLenum rawTarget, WebGLTexture *newTex)
     if (newTex)
         newTex->Bind(target);
     else
-        gl->fBindTexture(target.get(), 0 /* == texturename */);
+        gl->fBindTexture(target, 0 /* == texturename */);
 }
 
 void WebGLContext::BlendEquation(GLenum mode)
@@ -352,7 +349,7 @@ WebGLContext::CheckFramebufferStatus(GLenum target)
 }
 
 void
-WebGLContext::CopyTexSubImage2D_base(TexImageTarget texImageTarget,
+WebGLContext::CopyTexSubImage2D_base(GLenum target,
                                      GLint level,
                                      GLenum internalformat,
                                      GLint xoffset,
@@ -372,7 +369,7 @@ WebGLContext::CopyTexSubImage2D_base(TexImageTarget texImageTarget,
 
     // TODO: This changes with color_buffer_float. Reassess when the
     // patch lands.
-    if (!ValidateTexImage(2, texImageTarget, level, internalformat,
+    if (!ValidateTexImage(2, target, level, internalformat,
                           xoffset, yoffset, 0,
                           width, height, 0,
                           0, internalformat, LOCAL_GL_UNSIGNED_BYTE,
@@ -389,16 +386,16 @@ WebGLContext::CopyTexSubImage2D_base(TexImageTarget texImageTarget,
 
     MakeContextCurrent();
 
-    WebGLTexture *tex = activeBoundTextureForTexImageTarget(texImageTarget);
+    WebGLTexture *tex = activeBoundTextureForTexImageTarget(target);
 
     if (!tex)
         return ErrorInvalidOperation("%s: no texture is bound to this target");
 
     if (CanvasUtils::CheckSaneSubrectSize(x, y, width, height, framebufferWidth, framebufferHeight)) {
         if (sub)
-            gl->fCopyTexSubImage2D(texImageTarget.get(), level, xoffset, yoffset, x, y, width, height);
+            gl->fCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
         else
-            gl->fCopyTexImage2D(texImageTarget.get(), level, internalformat, x, y, width, height, 0);
+            gl->fCopyTexImage2D(target, level, internalformat, x, y, width, height, 0);
     } else {
 
         // the rect doesn't fit in the framebuffer
@@ -432,10 +429,10 @@ WebGLContext::CopyTexSubImage2D_base(TexImageTarget texImageTarget,
         // now initialize the texture as black
 
         if (sub)
-            gl->fTexSubImage2D(texImageTarget.get(), level, 0, 0, width, height,
+            gl->fTexSubImage2D(target, level, 0, 0, width, height,
                                internalformat, LOCAL_GL_UNSIGNED_BYTE, tempZeroData);
         else
-            gl->fTexImage2D(texImageTarget.get(), level, internalformat, width, height,
+            gl->fTexImage2D(target, level, internalformat, width, height,
                             0, internalformat, LOCAL_GL_UNSIGNED_BYTE, tempZeroData);
         free(tempZeroData);
 
@@ -459,12 +456,12 @@ WebGLContext::CopyTexSubImage2D_base(TexImageTarget texImageTarget,
         GLsizei actual_height  = actual_y_plus_height - actual_y;
         GLint   actual_yoffset = yoffset + actual_y - y;
 
-        gl->fCopyTexSubImage2D(texImageTarget.get(), level, actual_xoffset, actual_yoffset, actual_x, actual_y, actual_width, actual_height);
+        gl->fCopyTexSubImage2D(target, level, actual_xoffset, actual_yoffset, actual_x, actual_y, actual_width, actual_height);
     }
 }
 
 void
-WebGLContext::CopyTexImage2D(GLenum rawTexImgTarget,
+WebGLContext::CopyTexImage2D(GLenum target,
                              GLint level,
                              GLenum internalformat,
                              GLint x,
@@ -481,10 +478,7 @@ WebGLContext::CopyTexImage2D(GLenum rawTexImgTarget,
     const GLenum format = internalformat; // WebGL/ES Format
     const GLenum type = LOCAL_GL_UNSIGNED_BYTE; // WebGL/ES Format
 
-    if (!ValidateTexImageTarget(2, rawTexImgTarget, WebGLTexImageFunc::CopyTexImage))
-        return;
-
-    if (!ValidateTexImage(2, rawTexImgTarget, level, format,
+    if (!ValidateTexImage(2, target, level, format,
                           0, 0, 0,
                           width, height, 0,
                           border, format, type,
@@ -499,13 +493,11 @@ WebGLContext::CopyTexImage2D(GLenum rawTexImgTarget,
     if (!mBoundFramebuffer)
         ClearBackbufferIfNeeded();
 
-    const TexImageTarget texImageTarget(rawTexImgTarget);
-
     // check if the memory size of this texture may change with this call
     bool sizeMayChange = true;
-    WebGLTexture* tex = activeBoundTextureForTexImageTarget(texImageTarget);
-    if (tex->HasImageInfoAt(texImageTarget, level)) {
-        const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(texImageTarget, level);
+    WebGLTexture* tex = activeBoundTextureForTexImageTarget(target);
+    if (tex->HasImageInfoAt(target, level)) {
+        const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(target, level);
 
         sizeMayChange = width != imageInfo.Width() ||
                         height != imageInfo.Height() ||
@@ -516,7 +508,7 @@ WebGLContext::CopyTexImage2D(GLenum rawTexImgTarget,
     if (sizeMayChange)
         GetAndFlushUnderlyingGLErrors();
 
-    CopyTexSubImage2D_base(texImageTarget, level, format, 0, 0, x, y, width, height, false);
+    CopyTexSubImage2D_base(target, level, format, 0, 0, x, y, width, height, false);
 
     if (sizeMayChange) {
         GLenum error = GetAndFlushUnderlyingGLErrors();
@@ -526,12 +518,12 @@ WebGLContext::CopyTexImage2D(GLenum rawTexImgTarget,
         }
     }
 
-    tex->SetImageInfo(texImageTarget, level, width, height, format, type,
+    tex->SetImageInfo(target, level, width, height, format, type,
                       WebGLImageDataStatus::InitializedImageData);
 }
 
 void
-WebGLContext::CopyTexSubImage2D(GLenum rawTexImgTarget,
+WebGLContext::CopyTexSubImage2D(GLenum target,
                                 GLint level,
                                 GLint xoffset,
                                 GLint yoffset,
@@ -543,7 +535,7 @@ WebGLContext::CopyTexSubImage2D(GLenum rawTexImgTarget,
     if (IsContextLost())
         return;
 
-    switch (rawTexImgTarget) {
+    switch (target) {
         case LOCAL_GL_TEXTURE_2D:
         case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X:
         case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X:
@@ -553,15 +545,13 @@ WebGLContext::CopyTexSubImage2D(GLenum rawTexImgTarget,
         case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
             break;
         default:
-            return ErrorInvalidEnumInfo("copyTexSubImage2D: target", rawTexImgTarget);
+            return ErrorInvalidEnumInfo("copyTexSubImage2D: target", target);
     }
-
-    const TexImageTarget texImageTarget(rawTexImgTarget);
 
     if (level < 0)
         return ErrorInvalidValue("copyTexSubImage2D: level may not be negative");
 
-    GLsizei maxTextureSize = MaxTextureSizeForTarget(TexImageTargetToTexTarget(texImageTarget));
+    GLsizei maxTextureSize = MaxTextureSizeForTarget(target);
     if (!(maxTextureSize >> level))
         return ErrorInvalidValue("copyTexSubImage2D: 2^level exceeds maximum texture size");
 
@@ -571,14 +561,14 @@ WebGLContext::CopyTexSubImage2D(GLenum rawTexImgTarget,
     if (xoffset < 0 || yoffset < 0)
         return ErrorInvalidValue("copyTexSubImage2D: xoffset and yoffset may not be negative");
 
-    WebGLTexture *tex = activeBoundTextureForTexImageTarget(texImageTarget);
+    WebGLTexture *tex = activeBoundTextureForTexImageTarget(target);
     if (!tex)
         return ErrorInvalidOperation("copyTexSubImage2D: no texture bound to this target");
 
-    if (!tex->HasImageInfoAt(texImageTarget, level))
+    if (!tex->HasImageInfoAt(target, level))
         return ErrorInvalidOperation("copyTexSubImage2D: no texture image previously defined for this level and face");
 
-    const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(texImageTarget, level);
+    const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(target, level);
     GLsizei texWidth = imageInfo.Width();
     GLsizei texHeight = imageInfo.Height();
 
@@ -592,10 +582,10 @@ WebGLContext::CopyTexSubImage2D(GLenum rawTexImgTarget,
         ClearBackbufferIfNeeded();
 
     if (imageInfo.HasUninitializedImageData()) {
-        tex->DoDeferredImageInitialization(texImageTarget, level);
+        tex->DoDeferredImageInitialization(target, level);
     }
 
-    return CopyTexSubImage2D_base(texImageTarget, level, imageInfo.WebGLFormat(), xoffset, yoffset, x, y, width, height, true);
+    return CopyTexSubImage2D_base(target, level, imageInfo.WebGLFormat(), xoffset, yoffset, x, y, width, height, true);
 }
 
 
@@ -702,11 +692,11 @@ WebGLContext::DeleteTexture(WebGLTexture *tex)
 
     GLuint activeTexture = mActiveTexture;
     for (int32_t i = 0; i < mGLMaxTextureUnits; i++) {
-        if ((mBound2DTextures[i] == tex && tex->Target() == LOCAL_GL_TEXTURE_2D) ||
-            (mBoundCubeMapTextures[i] == tex && tex->Target() == LOCAL_GL_TEXTURE_CUBE_MAP))
+        if ((tex->Target() == LOCAL_GL_TEXTURE_2D && mBound2DTextures[i] == tex) ||
+            (tex->Target() == LOCAL_GL_TEXTURE_CUBE_MAP && mBoundCubeMapTextures[i] == tex))
         {
             ActiveTexture(LOCAL_GL_TEXTURE0 + i);
-            BindTexture(tex->Target().get(), static_cast<WebGLTexture*>(nullptr));
+            BindTexture(tex->Target(), static_cast<WebGLTexture*>(nullptr));
         }
     }
     ActiveTexture(LOCAL_GL_TEXTURE0 + activeTexture);
@@ -811,14 +801,7 @@ WebGLContext::FramebufferTexture2D(GLenum target,
     if (!mBoundFramebuffer)
         return ErrorInvalidOperation("framebufferRenderbuffer: cannot modify framebuffer 0");
 
-    if (textarget != LOCAL_GL_TEXTURE_2D &&
-        (textarget < LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
-         textarget > LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z))
-    {
-        return ErrorInvalidEnumInfo("framebufferTexture2D: invalid texture target", textarget);
-    }
-
-    return mBoundFramebuffer->FramebufferTexture2D(target, attachment, TexImageTarget(textarget), tobj, level);
+    return mBoundFramebuffer->FramebufferTexture2D(target, attachment, textarget, tobj, level);
 }
 
 void
@@ -874,24 +857,21 @@ WebGLContext::GetActiveAttrib(WebGLProgram *prog, uint32_t index)
 }
 
 void
-WebGLContext::GenerateMipmap(GLenum rawTarget)
+WebGLContext::GenerateMipmap(GLenum target)
 {
     if (IsContextLost())
         return;
 
-    if (!ValidateTextureTargetEnum(rawTarget, "generateMipmap"))
+    if (!ValidateTextureTargetEnum(target, "generateMipmap"))
         return;
-
-    const TexTarget target(rawTarget);
 
     WebGLTexture *tex = activeBoundTextureForTarget(target);
 
     if (!tex)
         return ErrorInvalidOperation("generateMipmap: No texture is bound to this target.");
 
-    const TexImageTarget imageTarget = (target == LOCAL_GL_TEXTURE_2D)
-                                                  ? LOCAL_GL_TEXTURE_2D
-                                                  : LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+    GLenum imageTarget = (target == LOCAL_GL_TEXTURE_2D) ? LOCAL_GL_TEXTURE_2D
+                                                         : LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X;
     if (!tex->HasImageInfoAt(imageTarget, 0))
     {
         return ErrorInvalidOperation("generateMipmap: Level zero of texture is not defined.");
@@ -925,11 +905,11 @@ WebGLContext::GenerateMipmap(GLenum rawTarget)
         // overhead so we do it unconditionally.
         //
         // note that the choice of GL_NEAREST_MIPMAP_NEAREST really matters. See Chromium bug 101105.
-        gl->fTexParameteri(target.get(), LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST_MIPMAP_NEAREST);
-        gl->fGenerateMipmap(target.get());
-        gl->fTexParameteri(target.get(), LOCAL_GL_TEXTURE_MIN_FILTER, tex->MinFilter());
+        gl->fTexParameteri(target, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST_MIPMAP_NEAREST);
+        gl->fGenerateMipmap(target);
+        gl->fTexParameteri(target, LOCAL_GL_TEXTURE_MIN_FILTER, tex->MinFilter());
     } else {
-        gl->fGenerateMipmap(target.get());
+        gl->fGenerateMipmap(target);
     }
 }
 
@@ -1193,10 +1173,10 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
                 return WebGLObjectAsJSValue(cx, fba.Texture(), rv);
 
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
-                return JS::Int32Value(fba.MipLevel());
+                return JS::Int32Value(fba.TexImageLevel());
 
             case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE: {
-                GLenum face = fba.ImageTarget().get();
+                GLenum face = fba.TexImageTarget();
                 if (face == LOCAL_GL_TEXTURE_2D)
                     face = 0;
                 return JS::Int32Value(face);
@@ -1219,8 +1199,8 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
                     return JS::NumberValue(uint32_t(LOCAL_GL_NONE));
 
                 uint32_t ret = LOCAL_GL_NONE;
-                GLenum type = fba.Texture()->ImageInfoAt(fba.ImageTarget(),
-                                                         fba.MipLevel()).WebGLType();
+                GLenum type = fba.Texture()->ImageInfoAt(fba.TexImageTarget(),
+                                                         fba.TexImageLevel()).WebGLType();
                 switch (type) {
                 case LOCAL_GL_UNSIGNED_BYTE:
                 case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
@@ -1465,7 +1445,7 @@ WebGLContext::GetProgramInfoLog(WebGLProgram *prog, nsACString& retval)
 // here we have to support all pnames with both int and float params.
 // See this discussion:
 //  https://www.khronos.org/webgl/public-mailing-list/archives/1008/msg00014.html
-void WebGLContext::TexParameter_base(GLenum rawTarget, GLenum pname,
+void WebGLContext::TexParameter_base(GLenum target, GLenum pname,
                                      GLint *intParamPtr,
                                      GLfloat *floatParamPtr)
 {
@@ -1477,12 +1457,10 @@ void WebGLContext::TexParameter_base(GLenum rawTarget, GLenum pname,
     GLint intParam = intParamPtr ? *intParamPtr : GLint(*floatParamPtr);
     GLfloat floatParam = floatParamPtr ? *floatParamPtr : GLfloat(*intParamPtr);
 
-    if (!ValidateTextureTargetEnum(rawTarget, "texParameter: target"))
+    if (!ValidateTextureTargetEnum(target, "texParameter: target"))
         return;
 
-    const TexTarget texTarget = TexTarget(rawTarget);
-
-    WebGLTexture *tex = activeBoundTextureForTarget(texTarget);
+    WebGLTexture *tex = activeBoundTextureForTarget(target);
     if (!tex)
         return ErrorInvalidOperation("texParameter: no texture is bound to this target");
 
@@ -1568,23 +1546,21 @@ void WebGLContext::TexParameter_base(GLenum rawTarget, GLenum pname,
 
     MakeContextCurrent();
     if (intParamPtr)
-        gl->fTexParameteri(texTarget.get(), pname, intParam);
+        gl->fTexParameteri(target, pname, intParam);
     else
-        gl->fTexParameterf(texTarget.get(), pname, floatParam);
+        gl->fTexParameterf(target, pname, floatParam);
 }
 
 JS::Value
-WebGLContext::GetTexParameter(GLenum rawTarget, GLenum pname)
+WebGLContext::GetTexParameter(GLenum target, GLenum pname)
 {
     if (IsContextLost())
         return JS::NullValue();
 
     MakeContextCurrent();
 
-    if (!ValidateTextureTargetEnum(rawTarget, "getTexParameter: target"))
+    if (!ValidateTextureTargetEnum(target, "getTexParameter: target"))
         return JS::NullValue();
-
-    const TexTarget target(rawTarget);
 
     if (!activeBoundTextureForTarget(target)) {
         ErrorInvalidOperation("getTexParameter: no texture bound");
@@ -1598,13 +1574,13 @@ WebGLContext::GetTexParameter(GLenum rawTarget, GLenum pname)
         case LOCAL_GL_TEXTURE_WRAP_T:
         {
             GLint i = 0;
-            gl->fGetTexParameteriv(target.get(), pname, &i);
+            gl->fGetTexParameteriv(target, pname, &i);
             return JS::NumberValue(uint32_t(i));
         }
         case LOCAL_GL_TEXTURE_MAX_ANISOTROPY_EXT:
             if (IsExtensionEnabled(WebGLExtensionID::EXT_texture_filter_anisotropic)) {
                 GLfloat f = 0.f;
-                gl->fGetTexParameterfv(target.get(), pname, &f);
+                gl->fGetTexParameterfv(target, pname, &f);
                 return JS::DoubleValue(f);
             }
 
@@ -3299,7 +3275,7 @@ WebGLContext::CompileShader(WebGLShader *shader)
 }
 
 void
-WebGLContext::CompressedTexImage2D(GLenum rawTexImgTarget, GLint level, GLenum internalformat,
+WebGLContext::CompressedTexImage2D(GLenum target, GLint level, GLenum internalformat,
                                    GLsizei width, GLsizei height, GLint border,
                                    const ArrayBufferView& view)
 {
@@ -3308,10 +3284,7 @@ WebGLContext::CompressedTexImage2D(GLenum rawTexImgTarget, GLint level, GLenum i
 
     const WebGLTexImageFunc func = WebGLTexImageFunc::CompTexImage;
 
-    if (!ValidateTexImageTarget(2, rawTexImgTarget, WebGLTexImageFunc::CompTexImage))
-        return;
-
-    if (!ValidateTexImage(2, rawTexImgTarget, level, internalformat,
+    if (!ValidateTexImage(2, target, level, internalformat,
                           0, 0, 0, width, height, 0,
                           border, internalformat, LOCAL_GL_UNSIGNED_BYTE,
                           func))
@@ -3322,27 +3295,26 @@ WebGLContext::CompressedTexImage2D(GLenum rawTexImgTarget, GLint level, GLenum i
     view.ComputeLengthAndData();
 
     uint32_t byteLength = view.Length();
-    if (!ValidateCompTexImageDataSize(level, internalformat, width, height, byteLength, func)) {
+    if (!ValidateCompTexImageDataSize(target, internalformat, width, height, byteLength, func)) {
         return;
     }
 
-    if (!ValidateCompTexImageSize(level, internalformat, 0, 0, width, height, width, height, func))
+    if (!ValidateCompTexImageSize(target, level, internalformat, 0, 0,
+                                  width, height, width, height, func))
     {
         return;
     }
 
-    const TexImageTarget texImageTarget(rawTexImgTarget);
-
     MakeContextCurrent();
-    gl->fCompressedTexImage2D(texImageTarget.get(), level, internalformat, width, height, border, byteLength, view.Data());
-    WebGLTexture* tex = activeBoundTextureForTexImageTarget(texImageTarget);
+    gl->fCompressedTexImage2D(target, level, internalformat, width, height, border, byteLength, view.Data());
+    WebGLTexture* tex = activeBoundTextureForTexImageTarget(target);
     MOZ_ASSERT(tex);
-    tex->SetImageInfo(texImageTarget, level, width, height, internalformat, LOCAL_GL_UNSIGNED_BYTE,
+    tex->SetImageInfo(target, level, width, height, internalformat, LOCAL_GL_UNSIGNED_BYTE,
                       WebGLImageDataStatus::InitializedImageData);
 }
 
 void
-WebGLContext::CompressedTexSubImage2D(GLenum rawTexImgTarget, GLint level, GLint xoffset,
+WebGLContext::CompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset,
                                       GLint yoffset, GLsizei width, GLsizei height,
                                       GLenum format, const ArrayBufferView& view)
 {
@@ -3351,10 +3323,7 @@ WebGLContext::CompressedTexSubImage2D(GLenum rawTexImgTarget, GLint level, GLint
 
     const WebGLTexImageFunc func = WebGLTexImageFunc::CompTexSubImage;
 
-    if (!ValidateTexImageTarget(2, rawTexImgTarget, WebGLTexImageFunc::CompTexSubImage))
-        return;
-
-    if (!ValidateTexImage(2, rawTexImgTarget,
+    if (!ValidateTexImage(2, target,
                           level, format,
                           xoffset, yoffset, 0,
                           width, height, 0,
@@ -3364,19 +3333,17 @@ WebGLContext::CompressedTexSubImage2D(GLenum rawTexImgTarget, GLint level, GLint
         return;
     }
 
-    const TexImageTarget texImageTarget(rawTexImgTarget);
-
-    WebGLTexture *tex = activeBoundTextureForTexImageTarget(texImageTarget);
+    WebGLTexture *tex = activeBoundTextureForTexImageTarget(target);
     MOZ_ASSERT(tex);
-    WebGLTexture::ImageInfo& levelInfo = tex->ImageInfoAt(texImageTarget, level);
+    WebGLTexture::ImageInfo& levelInfo = tex->ImageInfoAt(target, level);
 
     view.ComputeLengthAndData();
 
     uint32_t byteLength = view.Length();
-    if (!ValidateCompTexImageDataSize(level, format, width, height, byteLength, func))
+    if (!ValidateCompTexImageDataSize(target, format, width, height, byteLength, func))
         return;
 
-    if (!ValidateCompTexImageSize(level, format,
+    if (!ValidateCompTexImageSize(target, level, format,
                                   xoffset, yoffset,
                                   width, height,
                                   levelInfo.Width(), levelInfo.Height(),
@@ -3386,10 +3353,10 @@ WebGLContext::CompressedTexSubImage2D(GLenum rawTexImgTarget, GLint level, GLint
     }
 
     if (levelInfo.HasUninitializedImageData())
-        tex->DoDeferredImageInitialization(texImageTarget, level);
+        tex->DoDeferredImageInitialization(target, level);
 
     MakeContextCurrent();
-    gl->fCompressedTexSubImage2D(texImageTarget.get(), level, xoffset, yoffset, width, height, format, byteLength, view.Data());
+    gl->fCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, byteLength, view.Data());
 }
 
 JS::Value
@@ -3576,7 +3543,7 @@ WebGLContext::GetShaderTranslatedSource(WebGLShader *shader, nsAString& retval)
     retval.Assign(shader->TranslatedSource());
 }
 
-GLenum WebGLContext::CheckedTexImage2D(TexImageTarget texImageTarget,
+GLenum WebGLContext::CheckedTexImage2D(GLenum target,
                                        GLint level,
                                        GLenum internalFormat,
                                        GLsizei width,
@@ -3587,13 +3554,13 @@ GLenum WebGLContext::CheckedTexImage2D(TexImageTarget texImageTarget,
                                        const GLvoid *data)
 {
     MOZ_ASSERT(internalFormat == format);
-    WebGLTexture *tex = activeBoundTextureForTexImageTarget(texImageTarget);
+    WebGLTexture *tex = activeBoundTextureForTexImageTarget(target);
     MOZ_ASSERT(tex != nullptr, "no texture bound");
 
     bool sizeMayChange = true;
 
-    if (tex->HasImageInfoAt(texImageTarget, level)) {
-        const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(texImageTarget, level);
+    if (tex->HasImageInfoAt(target, level)) {
+        const WebGLTexture::ImageInfo& imageInfo = tex->ImageInfoAt(target, level);
         sizeMayChange = width != imageInfo.Width() ||
                         height != imageInfo.Height() ||
                         format != imageInfo.WebGLFormat() ||
@@ -3610,7 +3577,7 @@ GLenum WebGLContext::CheckedTexImage2D(TexImageTarget texImageTarget,
         GetAndFlushUnderlyingGLErrors();
     }
 
-    gl->fTexImage2D(texImageTarget.get(), level, driverInternalFormat, width, height, border, driverFormat, driverType, data);
+    gl->fTexImage2D(target, level, driverInternalFormat, width, height, border, driverFormat, driverType, data);
 
     GLenum error = LOCAL_GL_NO_ERROR;
     if (sizeMayChange) {
@@ -3621,7 +3588,7 @@ GLenum WebGLContext::CheckedTexImage2D(TexImageTarget texImageTarget,
 }
 
 void
-WebGLContext::TexImage2D_base(TexImageTarget texImageTarget, GLint level, GLenum internalformat,
+WebGLContext::TexImage2D_base(GLenum target, GLint level, GLenum internalformat,
                               GLsizei width, GLsizei height, GLsizei srcStrideOrZero,
                               GLint border,
                               GLenum format, GLenum type,
@@ -3631,7 +3598,7 @@ WebGLContext::TexImage2D_base(TexImageTarget texImageTarget, GLint level, GLenum
 {
     const WebGLTexImageFunc func = WebGLTexImageFunc::TexImage;
 
-    if (!ValidateTexImage(2, texImageTarget, level, internalformat,
+    if (!ValidateTexImage(2, target, level, internalformat,
                           0, 0, 0,
                           width, height, 0,
                           border, format, type, func))
@@ -3674,7 +3641,7 @@ WebGLContext::TexImage2D_base(TexImageTarget texImageTarget, GLint level, GLenum
         return ErrorInvalidOperation("texImage2D: not enough data for operation (need %d, have %d)",
                                  bytesNeeded, byteLength);
 
-    WebGLTexture *tex = activeBoundTextureForTexImageTarget(texImageTarget);
+    WebGLTexture *tex = activeBoundTextureForTexImageTarget(target);
 
     if (!tex)
         return ErrorInvalidOperation("texImage2D: no texture is bound to this target");
@@ -3713,7 +3680,7 @@ WebGLContext::TexImage2D_base(TexImageTarget texImageTarget, GLint level, GLenum
         imageInfoStatusIfSuccess = WebGLImageDataStatus::InitializedImageData;
     }
 
-    GLenum error = CheckedTexImage2D(texImageTarget, level, internalformat, width,
+    GLenum error = CheckedTexImage2D(target, level, internalformat, width,
                                      height, border, format, type, pixels);
 
     if (error) {
@@ -3726,11 +3693,11 @@ WebGLContext::TexImage2D_base(TexImageTarget texImageTarget, GLint level, GLenum
     // have NoImageData at this point.
     MOZ_ASSERT(imageInfoStatusIfSuccess != WebGLImageDataStatus::NoImageData);
 
-    tex->SetImageInfo(texImageTarget, level, width, height, format, type, imageInfoStatusIfSuccess);
+    tex->SetImageInfo(target, level, width, height, format, type, imageInfoStatusIfSuccess);
 }
 
 void
-WebGLContext::TexImage2D(GLenum rawTarget, GLint level,
+WebGLContext::TexImage2D(GLenum target, GLint level,
                          GLenum internalformat, GLsizei width,
                          GLsizei height, GLint border, GLenum format,
                          GLenum type, const Nullable<ArrayBufferView> &pixels, ErrorResult& rv)
@@ -3754,16 +3721,13 @@ WebGLContext::TexImage2D(GLenum rawTarget, GLint level,
         jsArrayType = int(JS_GetArrayBufferViewType(view.Obj()));
     }
 
-    if (!ValidateTexImageTarget(2, rawTarget, WebGLTexImageFunc::TexImage))
-        return;
-
-    return TexImage2D_base(rawTarget, level, internalformat, width, height, 0, border, format, type,
+    return TexImage2D_base(target, level, internalformat, width, height, 0, border, format, type,
                            data, length, jsArrayType,
                            WebGLTexelFormat::Auto, false);
 }
 
 void
-WebGLContext::TexImage2D(GLenum rawTarget, GLint level,
+WebGLContext::TexImage2D(GLenum target, GLint level,
                          GLenum internalformat, GLenum format,
                          GLenum type, ImageData* pixels, ErrorResult& rv)
 {
@@ -3780,21 +3744,15 @@ WebGLContext::TexImage2D(GLenum rawTarget, GLint level,
     MOZ_ASSERT(inited);
     arr.ComputeLengthAndData();
 
-    void* pixelData = arr.Data();
-    const uint32_t pixelDataLength = arr.Length();
-
-    if (!ValidateTexImageTarget(2, rawTarget, WebGLTexImageFunc::TexImage))
-        return;
-
-    return TexImage2D_base(rawTarget, level, internalformat, pixels->Width(),
+    return TexImage2D_base(target, level, internalformat, pixels->Width(),
                            pixels->Height(), 4*pixels->Width(), 0,
-                           format, type, pixelData, pixelDataLength, -1,
+                           format, type, arr.Data(), arr.Length(), -1,
                            WebGLTexelFormat::RGBA8, false);
 }
 
 
 void
-WebGLContext::TexSubImage2D_base(TexImageTarget texImageTarget, GLint level,
+WebGLContext::TexSubImage2D_base(GLenum target, GLint level,
                                  GLint xoffset, GLint yoffset,
                                  GLsizei width, GLsizei height, GLsizei srcStrideOrZero,
                                  GLenum format, GLenum type,
@@ -3804,7 +3762,7 @@ WebGLContext::TexSubImage2D_base(TexImageTarget texImageTarget, GLint level,
 {
     const WebGLTexImageFunc func = WebGLTexImageFunc::TexSubImage;
 
-    if (!ValidateTexImage(2, texImageTarget, level, format,
+    if (!ValidateTexImage(2, target, level, format,
                           xoffset, yoffset, 0,
                           width, height, 0,
                           0, format, type, func))
@@ -3839,11 +3797,11 @@ WebGLContext::TexSubImage2D_base(TexImageTarget texImageTarget, GLint level,
     if (byteLength < bytesNeeded)
         return ErrorInvalidOperation("texSubImage2D: not enough data for operation (need %d, have %d)", bytesNeeded, byteLength);
 
-    WebGLTexture *tex = activeBoundTextureForTexImageTarget(texImageTarget);
-    const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(texImageTarget, level);
+    WebGLTexture *tex = activeBoundTextureForTexImageTarget(target);
+    const WebGLTexture::ImageInfo &imageInfo = tex->ImageInfoAt(target, level);
 
     if (imageInfo.HasUninitializedImageData())
-        tex->DoDeferredImageInitialization(texImageTarget, level);
+        tex->DoDeferredImageInitialization(target, level);
 
     MakeContextCurrent();
 
@@ -3877,11 +3835,11 @@ WebGLContext::TexSubImage2D_base(TexImageTarget texImageTarget, GLint level,
     GLenum driverFormat = LOCAL_GL_NONE;
     DriverFormatsFromFormatAndType(gl, format, type, &driverInternalFormat, &driverFormat);
 
-    gl->fTexSubImage2D(texImageTarget.get(), level, xoffset, yoffset, width, height, driverFormat, driverType, pixels);
+    gl->fTexSubImage2D(target, level, xoffset, yoffset, width, height, driverFormat, driverType, pixels);
 }
 
 void
-WebGLContext::TexSubImage2D(GLenum rawTarget, GLint level,
+WebGLContext::TexSubImage2D(GLenum target, GLint level,
                             GLint xoffset, GLint yoffset,
                             GLsizei width, GLsizei height,
                             GLenum format, GLenum type,
@@ -3897,10 +3855,7 @@ WebGLContext::TexSubImage2D(GLenum rawTarget, GLint level,
     const ArrayBufferView& view = pixels.Value();
     view.ComputeLengthAndData();
 
-    if (!ValidateTexImageTarget(2, rawTarget, WebGLTexImageFunc::TexSubImage))
-        return;
-
-    return TexSubImage2D_base(rawTarget, level, xoffset, yoffset,
+    return TexSubImage2D_base(target, level, xoffset, yoffset,
                               width, height, 0, format, type,
                               view.Data(), view.Length(),
                               JS_GetArrayBufferViewType(view.Obj()),

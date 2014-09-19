@@ -8,41 +8,19 @@
 
 #include "WebGLTypes.h"
 
-#include "GLDefs.h"
-#include "mozilla/TypeTraits.h"
-#include "mozilla/Assertions.h"
-
 namespace mozilla {
 
 /** Represents a GL name that can be bound to a target.
  */
-template<typename T>
 class WebGLBindableName
 {
 public:
+    WebGLBindableName();
+    void BindTo(GLenum target);
 
-    WebGLBindableName()
-        : mGLName(0)
-        , mTarget(LOCAL_GL_NONE)
-    { }
-
-    void BindTo(T target)
-    {
-        MOZ_ASSERT(target != LOCAL_GL_NONE, "Can't bind to GL_NONE.");
-        MOZ_ASSERT(!HasEverBeenBound() || mTarget == target, "Rebinding is illegal.");
-
-        bool targetChanged = (target != mTarget);
-        mTarget = target;
-        if (targetChanged)
-            OnTargetChanged();
-    }
-
-    bool HasEverBeenBound() const { return mTarget != LOCAL_GL_NONE; }
+    bool HasEverBeenBound() const { return mTarget != 0; }
     GLuint GLName() const { return mGLName; }
-    T Target() const {
-        MOZ_ASSERT(HasEverBeenBound());
-        return mTarget;
-    }
+    GLenum Target() const { return mTarget; }
 
 protected:
 
@@ -50,7 +28,7 @@ protected:
     virtual void OnTargetChanged() {}
 
     GLuint mGLName;
-    T mTarget;
+    GLenum mTarget;
 };
 
 } // namespace mozilla

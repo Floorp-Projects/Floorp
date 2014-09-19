@@ -18,7 +18,7 @@ namespace mozilla {
 
 class WebGLRenderbuffer MOZ_FINAL
     : public nsWrapperCache
-    , public WebGLBindableName<GLenum>
+    , public WebGLBindableName
     , public WebGLRefCountedObject<WebGLRenderbuffer>
     , public LinkedListElement<WebGLRenderbuffer>
     , public WebGLRectangleObject
