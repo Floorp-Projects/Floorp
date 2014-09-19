@@ -187,6 +187,7 @@ var gPlayTests = [
   { name:"detodos.opus", type:"audio/ogg; codecs=opus", duration:2.9135 },
   // Opus data in a webm container
   { name:"detodos.webm", type:"audio/webm; codecs=opus", duration:2.9135 },
+  { name:"bug1066943.webm", type:"audio/webm; codecs=opus", duration:1.383 },
 
   // Multichannel Opus in an ogg container
   { name:"test-1-mono.opus", type:"audio/ogg; codecs=opus", duration:1.044 },
