@@ -96,22 +96,22 @@ SearchSuggestionUIController.prototype = {
         row.classList.add("selected");
         row.firstChild.setAttribute("aria-selected", "true");
         this._table.setAttribute("aria-activedescendant", row.firstChild.id);
-        this.input.value = this.suggestionAtIndex(i);
       }
       else {
         row.classList.remove("selected");
         row.firstChild.setAttribute("aria-selected", "false");
       }
     }
-
-    // Update the input when there is no selection.
-    if (idx < 0) {
-      this.input.value = this._stickyInputValue;
-    }
   },
 
   get numSuggestions() {
     return this._table.children.length;
+  },
+
+  selectAndUpdateInput: function (idx) {
+    this.selectedIndex = idx;
+    this.input.value = idx >= 0 ? this.suggestionAtIndex(idx) :
+                       this._stickyInputValue;
   },
 
   suggestionAtIndex: function (idx) {
@@ -125,7 +125,7 @@ SearchSuggestionUIController.prototype = {
       let suggestionStr = this.suggestionAtIndex(idx);
       this._sendMsg("RemoveFormHistoryEntry", suggestionStr);
       this._table.children[idx].remove();
-      this.selectedIndex = -1;
+      this.selectAndUpdateInput(-1);
     }
   },
 
@@ -150,7 +150,7 @@ SearchSuggestionUIController.prototype = {
       this._stickyInputValue = "";
       this._hideSuggestions();
     }
-    this.selectedIndex = -1;
+    this.selectAndUpdateInput(-1);
   },
 
   _onKeypress: function (event) {
@@ -201,7 +201,7 @@ SearchSuggestionUIController.prototype = {
       else if (this.numSuggestions <= newSelectedIndex) {
         newSelectedIndex = -1;
       }
-      this.selectedIndex = newSelectedIndex;
+      this.selectAndUpdateInput(newSelectedIndex);
 
       // Prevent the input's caret from moving.
       event.preventDefault();
@@ -214,6 +214,10 @@ SearchSuggestionUIController.prototype = {
 
   _onBlur: function () {
     this._hideSuggestions();
+  },
+
+  _onMousemove: function (event) {
+    this.selectedIndex = this._indexOfTableRowOrDescendent(event.target);
   },
 
   _onMousedown: function (event) {
@@ -291,6 +295,7 @@ SearchSuggestionUIController.prototype = {
     row.classList.add("searchSuggestionRow");
     row.classList.add(type);
     row.setAttribute("role", "presentation");
+    row.addEventListener("mousemove", this);
     row.addEventListener("mousedown", this);
 
     let entry = document.createElementNS(HTML_NS, "td");
@@ -334,7 +339,7 @@ SearchSuggestionUIController.prototype = {
     while (this._table.firstElementChild) {
       this._table.firstElementChild.remove();
     }
-    this.selectedIndex = -1;
+    this.selectAndUpdateInput(-1);
   },
 
   _indexOfTableRowOrDescendent: function (row) {
