@@ -21,6 +21,8 @@
     _(Float32x4)                    \
     _(SimdExtractElementI)          \
     _(SimdExtractElementF)          \
+    _(SimdInsertElementI)           \
+    _(SimdInsertElementF)           \
     _(SimdSignMaskX4)               \
     _(SimdBinaryCompIx4)            \
     _(SimdBinaryCompFx4)            \
