@@ -1054,6 +1054,12 @@ CycleCollectedJSRuntime::DeferredFinalize(DeferredFinalizeAppendFunction aAppend
 void
 CycleCollectedJSRuntime::DeferredFinalize(nsISupports* aSupports)
 {
+  // We'll crash here if aSupports is invalid, which is better (more
+  // informative) than crashing in ReleaseSliceNow().  See bug 997908.
+  // This patch should be backed out when bug 997908 gets fixed, or if
+  // it doesn't actually help fix that bug.
+  NS_IF_ADDREF(aSupports);
+  NS_IF_RELEASE(aSupports);
   mDeferredSupports.AppendElement(aSupports);
 }
 
