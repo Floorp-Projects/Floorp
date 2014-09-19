@@ -60,7 +60,7 @@ public class testSettingsMenuItems extends PixelTest {
     // Privacy menu items.
     String[] PATH_PRIVACY = { StringHelper.PRIVACY_SECTION_LABEL };
     String[][] OPTIONS_PRIVACY = {
-        { StringHelper.TRACKING_LABEL, "Do not tell sites anything about my tracking preferences", "Tell sites that I do not want to be tracked", "Tell sites that I want to be tracked", "Do not tell sites anything about my tracking preferences" },
+        { StringHelper.TRACKING_LABEL },
         { StringHelper.COOKIES_LABEL, "Enabled", "Enabled, excluding 3rd party", "Disabled" },
         { StringHelper.REMEMBER_PASSWORDS_LABEL },
         { StringHelper.MASTER_PASSWORD_LABEL },
