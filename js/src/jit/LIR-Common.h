@@ -2656,16 +2656,16 @@ class LThrow : public LCallInstructionHelper<0, BOX_PIECES, 0>
     static const size_t Value = 0;
 };
 
-class LMinMaxI : public LInstructionHelper<1, 2, 0>
+class LMinMaxBase : public LInstructionHelper<1, 2, 0>
 {
-  public:
-    LIR_HEADER(MinMaxI)
-    LMinMaxI(const LAllocation &first, const LAllocation &second)
+  protected:
+    LMinMaxBase(const LAllocation &first, const LAllocation &second)
     {
         setOperand(0, first);
         setOperand(1, second);
     }
 
+  public:
     const LAllocation *first() {
         return this->getOperand(0);
     }
@@ -2683,31 +2683,20 @@ class LMinMaxI : public LInstructionHelper<1, 2, 0>
     }
 };
 
-class LMinMaxD : public LInstructionHelper<1, 2, 0>
+class LMinMaxI : public LMinMaxBase
+{
+  public:
+    LIR_HEADER(MinMaxI)
+    LMinMaxI(const LAllocation &first, const LAllocation &second) : LMinMaxBase(first, second)
+    {}
+};
+
+class LMinMaxD : public LMinMaxBase
 {
   public:
     LIR_HEADER(MinMaxD)
-    LMinMaxD(const LAllocation &first, const LAllocation &second)
-    {
-        setOperand(0, first);
-        setOperand(1, second);
-    }
-
-    const LAllocation *first() {
-        return this->getOperand(0);
-    }
-    const LAllocation *second() {
-        return this->getOperand(1);
-    }
-    const LDefinition *output() {
-        return this->getDef(0);
-    }
-    MMinMax *mir() const {
-        return mir_->toMinMax();
-    }
-    const char *extraName() const {
-        return mir()->isMax() ? "Max" : "Min";
-    }
+    LMinMaxD(const LAllocation &first, const LAllocation &second) : LMinMaxBase(first, second)
+    {}
 };
 
 // Negative of an integer
