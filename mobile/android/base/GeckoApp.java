@@ -1914,7 +1914,7 @@ public abstract class GeckoApp
         }
 
         if (mAppStateListeners != null) {
-            for (GeckoAppShell.AppStateListener listener: mAppStateListeners) {
+            for (GeckoAppShell.AppStateListener listener : mAppStateListeners) {
                 listener.onResume();
             }
         }
@@ -1946,7 +1946,7 @@ public abstract class GeckoApp
                     Log.w(LOGTAG, "Can't record session: rec is null.");
                 }
             }
-         });
+        });
     }
 
     @Override
@@ -1996,7 +1996,7 @@ public abstract class GeckoApp
         });
 
         if (mAppStateListeners != null) {
-            for(GeckoAppShell.AppStateListener listener: mAppStateListeners) {
+            for (GeckoAppShell.AppStateListener listener : mAppStateListeners) {
                 listener.onPause();
             }
         }
