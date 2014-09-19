@@ -264,7 +264,7 @@ SettingsManager.prototype = {
     let lock_index = this._locks.indexOf(aLockID);
     if (lock_index != -1) {
       if (DEBUG) debug("Unregistering lock " + aLockID);
-      this._locks.splice(lock_index, -1);
+      this._locks.splice(lock_index, 1);
     }
   },
   
