@@ -5,9 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jit/JitOptions.h"
+#include "mozilla/TypeTraits.h"
 
+#include <cstdlib>
 #include "jsfun.h"
-
 using namespace js;
 using namespace js::jit;
 
@@ -16,58 +17,87 @@ namespace jit {
 
 JitOptions js_JitOptions;
 
+template<typename T> struct IsBool : mozilla::FalseType {};
+template<> struct IsBool<bool> : mozilla::TrueType {};
+
+template<typename T>
+T overrideDefault(const char *param, T dflt) {
+    char *str = getenv(param);
+    if (!str)
+        return dflt;
+    if (IsBool<T>::value) {
+        if (strcmp(str, "true") == 0 ||
+            strcmp(str, "yes")) {
+            return true;
+        }
+        if (strcmp(str, "false") == 0 ||
+            strcmp(str, "no")) {
+            return false;
+        }
+        fprintf(stderr, "Warning: I didn't understand %s=\"%s\"", param, str);
+    } else {
+        char *endp;
+        int retval = strtol(str, &endp, 0);
+        if (*endp == '\0')
+            return retval;
+
+        fprintf(stderr, "Warning: I didn't understand %s=\"%s\"", param, str);
+    }
+    return dflt;
+}
+#define SET_DEFAULT(var, dflt) var = overrideDefault("JIT_OPTION_" #var, dflt)
 JitOptions::JitOptions()
 {
     // Whether to perform expensive graph-consistency DEBUG-only assertions.
     // It can be useful to disable this to reduce DEBUG-compile time of large
     // asm.js programs.
-    checkGraphConsistency = true;
+    SET_DEFAULT(checkGraphConsistency, true);
 
 #ifdef CHECK_OSIPOINT_REGISTERS
     // Emit extra code to verify live regs at the start of a VM call
     // are not modified before its OsiPoint.
-    checkOsiPointRegisters = false;
+    SET_DEFAULT(checkOsiPointRegisters, false);
 #endif
 
     // Whether to enable extra code to perform dynamic validation of
     // RangeAnalysis results.
-    checkRangeAnalysis = false;
+    SET_DEFAULT(checkRangeAnalysis, false);
 
     // Whether Ion should compile try-catch statements.
-    compileTryCatch = true;
+    SET_DEFAULT(compileTryCatch, true);
 
     // Toggle whether eager scalar replacement is globally disabled.
-    disableScalarReplacement = true; // experimental
+    SET_DEFAULT(disableScalarReplacement, true); // experimental
 
     // Toggle whether global value numbering is globally disabled.
-    disableGvn = false;
+    SET_DEFAULT(disableGvn, false);
 
     // Toggles whether loop invariant code motion is globally disabled.
-    disableLicm = false;
+    SET_DEFAULT(disableLicm, false);
 
     // Toggles whether inlining is globally disabled.
-    disableInlining = false;
+    SET_DEFAULT(disableInlining, false);
 
     // Toggles whether Edge Case Analysis is gobally disabled.
-    disableEdgeCaseAnalysis = false;
+    SET_DEFAULT(disableEdgeCaseAnalysis, false);
 
     // Toggles whether Range Analysis is globally disabled.
-    disableRangeAnalysis = false;
+    SET_DEFAULT(disableRangeAnalysis, false);
 
     // Toggles whether Loop Unrolling is globally disabled.
-    disableLoopUnrolling = true;
+    SET_DEFAULT(disableLoopUnrolling, true);
 
     // Toggles whether Effective Address Analysis is globally disabled.
-    disableEaa = false;
+    SET_DEFAULT(disableEaa, false);
 
     // Whether functions are compiled immediately.
-    eagerCompilation = false;
+    SET_DEFAULT(eagerCompilation, false);
 
     // Force how many invocation or loop iterations are needed before compiling
     // a function with the highest ionmonkey optimization level.
     // (i.e. OptimizationLevel_Normal)
-    forceDefaultIonWarmUpThreshold = false;
-    forcedDefaultIonWarmUpThreshold = 1000;
+    SET_DEFAULT(forceDefaultIonWarmUpThreshold, false);
+    SET_DEFAULT(forcedDefaultIonWarmUpThreshold, 1000);
 
     // Force the used register allocator instead of letting the
     // optimization pass decide.
@@ -75,39 +105,39 @@ JitOptions::JitOptions()
     forcedRegisterAllocator = RegisterAllocator_LSRA;
 
     // Toggles whether large scripts are rejected.
-    limitScriptSize = true;
+    SET_DEFAULT(limitScriptSize, true);
 
     // Toggles whether functions may be entered at loop headers.
-    osr = true;
+    SET_DEFAULT(osr, true);
 
     // How many invocations or loop iterations are needed before functions
     // are compiled with the baseline compiler.
-    baselineWarmUpThreshold = 10;
+    SET_DEFAULT(baselineWarmUpThreshold, 10);
 
     // Number of exception bailouts (resuming into catch/finally block) before
     // we invalidate and forbid Ion compilation.
-    exceptionBailoutThreshold = 10;
+    SET_DEFAULT(exceptionBailoutThreshold, 10);
 
     // Number of bailouts without invalidation before we set
     // JSScript::hadFrequentBailouts and invalidate.
-    frequentBailoutThreshold = 10;
+    SET_DEFAULT(frequentBailoutThreshold, 10);
 
     // How many actual arguments are accepted on the C stack.
-    maxStackArgs = 4096;
+    SET_DEFAULT(maxStackArgs, 4096);
 
     // How many times we will try to enter a script via OSR before
     // invalidating the script.
-    osrPcMismatchesBeforeRecompile = 6000;
+    SET_DEFAULT(osrPcMismatchesBeforeRecompile, 6000);
 
     // The bytecode length limit for small function.
     //
     // The default for this was arrived at empirically via benchmarking.
     // We may want to tune it further after other optimizations have gone
     // in.
-    smallFunctionMaxBytecodeLength_ = 100;
+    SET_DEFAULT(smallFunctionMaxBytecodeLength_, 100);
 
     // How many uses of a parallel kernel before we attempt compilation.
-    compilerWarmUpThresholdPar = 1;
+    SET_DEFAULT(compilerWarmUpThresholdPar, 1);
 }
 
 bool

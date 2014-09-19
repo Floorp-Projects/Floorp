@@ -10,6 +10,7 @@
 #include "DOMMediaStream.h"
 #include "EncodedBufferCache.h"
 #include "MediaEncoder.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/AudioStreamTrack.h"
@@ -34,6 +35,73 @@ PRLogModuleInfo* gMediaRecorderLog;
 namespace mozilla {
 
 namespace dom {
+
+/**
++ * MediaRecorderReporter measures memory being used by the Media Recorder.
++ *
++ * It is a singleton reporter and the single class object lives as long as at
++ * least one Recorder is registered. In MediaRecorder, the reporter is unregistered
++ * when it is destroyed.
++ */
+class MediaRecorderReporter MOZ_FINAL : public nsIMemoryReporter
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  MediaRecorderReporter() {};
+  static MediaRecorderReporter* UniqueInstance();
+  void InitMemoryReporter();
+
+  static void AddMediaRecorder(MediaRecorder *aRecorder)
+  {
+    GetRecorders().AppendElement(aRecorder);
+  }
+
+  static void RemoveMediaRecorder(MediaRecorder *aRecorder)
+  {
+    RecordersArray& recorders = GetRecorders();
+    recorders.RemoveElement(aRecorder);
+    if (recorders.IsEmpty()) {
+      sUniqueInstance = nullptr;
+    }
+  }
+
+  NS_METHOD
+  CollectReports(nsIHandleReportCallback* aHandleReport,
+                 nsISupports* aData, bool aAnonymize)
+  {
+    int64_t amount = 0;
+    RecordersArray& recorders = GetRecorders();
+    for (size_t i = 0; i < recorders.Length(); ++i) {
+      amount += recorders[i]->SizeOfExcludingThis(MallocSizeOf);
+    }
+
+  #define MEMREPORT(_path, _amount, _desc)                                    \
+    do {                                                                      \
+      nsresult rv;                                                            \
+      rv = aHandleReport->Callback(EmptyCString(), NS_LITERAL_CSTRING(_path), \
+                                   KIND_HEAP, UNITS_BYTES, _amount,           \
+                                   NS_LITERAL_CSTRING(_desc), aData);         \
+      NS_ENSURE_SUCCESS(rv, rv);                                              \
+    } while (0)
+
+    MEMREPORT("explicit/media/recorder", amount,
+              "Memory used by media recorder.");
+
+    return NS_OK;
+  }
+
+private:
+  MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf)
+  virtual ~MediaRecorderReporter();
+  static StaticRefPtr<MediaRecorderReporter> sUniqueInstance;
+  typedef nsTArray<MediaRecorder*> RecordersArray;
+  static RecordersArray& GetRecorders()
+  {
+    return UniqueInstance()->mRecorders;
+  }
+  RecordersArray mRecorders;
+};
+NS_IMPL_ISUPPORTS(MediaRecorderReporter, nsIMemoryReporter);
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaRecorder, DOMEventTargetHelper,
                                    mDOMStream, mAudioNode)
@@ -331,6 +399,14 @@ public:
     }
     return false;
   }
+
+  size_t
+  SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+  {
+    size_t amount = mEncoder->SizeOfExcludingThis(aMallocSizeOf);
+    return amount;
+  }
+
 
 private:
   // Only DestroyRunnable is allowed to delete Session object.
@@ -681,7 +757,7 @@ MediaRecorder::Start(const Optional<int32_t>& aTimeSlice, ErrorResult& aResult)
 
     timeSlice = aTimeSlice.Value();
   }
-
+  MediaRecorderReporter::AddMediaRecorder(this);
   mState = RecordingState::Recording;
   // Start a session.
   mSessions.AppendElement();
@@ -693,6 +769,7 @@ void
 MediaRecorder::Stop(ErrorResult& aResult)
 {
   LOG(PR_LOG_DEBUG, ("MediaRecorder.Stop %p", this));
+  MediaRecorderReporter::RemoveMediaRecorder(this);
   if (mState == RecordingState::Inactive) {
     aResult.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
@@ -986,6 +1063,37 @@ MediaRecorder::GetSourcePrincipal()
   MOZ_ASSERT(mAudioNode != nullptr);
   nsIDocument* doc = mAudioNode->GetOwner()->GetExtantDoc();
   return doc ? doc->NodePrincipal() : nullptr;
+}
+
+size_t
+MediaRecorder::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t amount = 42;
+  for (size_t i = 0; i < mSessions.Length(); ++i) {
+    amount += mSessions[i]->SizeOfExcludingThis(aMallocSizeOf);
+  }
+  return amount;
+}
+
+StaticRefPtr<MediaRecorderReporter> MediaRecorderReporter::sUniqueInstance;
+
+MediaRecorderReporter* MediaRecorderReporter::UniqueInstance()
+{
+  if (!sUniqueInstance) {
+    sUniqueInstance = new MediaRecorderReporter();
+    sUniqueInstance->InitMemoryReporter();
+  }
+  return sUniqueInstance;
+ }
+
+void MediaRecorderReporter::InitMemoryReporter()
+{
+  RegisterWeakMemoryReporter(this);
+}
+
+MediaRecorderReporter::~MediaRecorderReporter()
+{
+  UnregisterWeakMemoryReporter(this);
 }
 
 }

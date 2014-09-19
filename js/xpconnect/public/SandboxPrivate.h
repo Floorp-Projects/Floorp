@@ -49,6 +49,11 @@ public:
         ClearWrapper();
     }
 
+    void ObjectMoved(JSObject *obj, const JSObject *old)
+    {
+        UpdateWrapper(obj, old);
+    }
+
 private:
     virtual ~SandboxPrivate() { }
 

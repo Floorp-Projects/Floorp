@@ -2750,7 +2750,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     // more "legitimate" sources like content scripts.
     nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
     if (controller) {
-      APZC_LOG("%p sending scroll update acknowledgement with gen %lu\n", this, aLayerMetrics.GetScrollGeneration());
+      APZC_LOG("%p sending scroll update acknowledgement with gen %u\n", this, aLayerMetrics.GetScrollGeneration());
       controller->AcknowledgeScrollUpdate(aLayerMetrics.GetScrollId(),
                                           aLayerMetrics.GetScrollGeneration());
     }

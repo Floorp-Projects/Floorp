@@ -269,6 +269,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitGetDOMMember(MGetDOMMember *ins);
     bool visitRecompileCheck(MRecompileCheck *ins);
     bool visitSimdExtractElement(MSimdExtractElement *ins);
+    bool visitSimdInsertElement(MSimdInsertElement *ins);
     bool visitSimdSignMask(MSimdSignMask *ins);
     bool visitSimdBinaryComp(MSimdBinaryComp *ins);
     bool visitSimdBinaryArith(MSimdBinaryArith *ins);

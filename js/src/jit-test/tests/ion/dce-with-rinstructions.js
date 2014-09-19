@@ -461,6 +461,14 @@ function rmin_number(i) {
     return i;
 }
 
+var uceFault_min_float = eval(uneval(uceFault).replace('uceFault', 'uceFault_min_float'));
+function rmin_float(i) {
+    var x = Math.fround(Math.min(Math.fround(20), Math.fround(13.37)));
+    if (uceFault_min_number(i) || uceFault_min_number(i))
+        assertEq(x, Math.fround(13.37));
+    return i;
+}
+
 var uceFault_min_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_min_object'));
 function rmin_object(i) {
     var t = i;
@@ -477,6 +485,14 @@ function rmax_number(i) {
     var x = Math.max(i, i-1, i-2.1);
     if (uceFault_max_number(i) || uceFault_max_number(i))
         assertEq(x, i);
+    return i;
+}
+
+var uceFault_max_float = eval(uneval(uceFault).replace('uceFault', 'uceFault_max_float'));
+function rmax_float(i) {
+    var x = Math.fround(Math.max(Math.fround(2), Math.fround(13.37)));
+    if (uceFault_max_number(i) || uceFault_max_number(i))
+        assertEq(x, Math.fround(13.37));
     return i;
 }
 
@@ -975,8 +991,10 @@ for (i = 0; i < 100; i++) {
     rpowhalf_number(i);
     rpowhalf_object(i);
     rmin_number(i);
+    rmin_float(i);
     rmin_object(i);
     rmax_number(i);
+    rmax_float(i);
     rmax_object(i);
     rabs_number(i);
     rabs_object(i);

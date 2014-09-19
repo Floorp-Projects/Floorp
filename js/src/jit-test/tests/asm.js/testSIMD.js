@@ -477,6 +477,35 @@ var f32x4 = SIMD.float32x4(0, 0, -0, NaN);
 var another = SIMD.float32x4(0, -0, 0, 0);
 assertEqX4(asmLink(asmCompile('glob', USE_ASM + F32 + F32D + "function f(x,y) {x=f4(x); y=f4(y); x=f4d(x,y); return f4(x);} return f"), this)(f32x4, another), [NaN, NaN, NaN, NaN]);
 
+// With
+const WXF = 'var w = f4.withX;';
+const WYF = 'var w = f4.withY;';
+const WZF = 'var w = f4.withZ;';
+const WWF = 'var w = f4.withW;';
+
+assertAsmTypeFail('glob', USE_ASM + F32 + WXF + "function f() {var x = f4(1,2,3,4); x = w(x, 1);} return f");
+assertAsmTypeFail('glob', USE_ASM + F32 + WXF + "function f() {var x = f4(1,2,3,4); x = w(x, 1.0);} return f");
+assertAsmTypeFail('glob', USE_ASM + F32 + WXF + "function f() {var x = f4(1,2,3,4); x = w(x, x);} return f");
+assertAsmTypeFail('glob', USE_ASM + F32 + WXF + FROUND + "function f() {var x = f4(1,2,3,4); x = w(1, f32(1));} return f");
+assertAsmTypeFail('glob', USE_ASM + F32 + WXF + FROUND + "function f() {var x = f4(1,2,3,4); x = w(1., f32(1));} return f");
+assertAsmTypeFail('glob', USE_ASM + F32 + WXF + FROUND + "function f() {var x = f4(1,2,3,4); x = w(f32(1), f32(1));} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + F32 + WXF + FROUND + "function f() {var x = f4(1,2,3,4); var y = i4(1,2,3,4); x = w(y, f32(1));} return f");
+
+CheckF4(WXF + FROUND, 'var x = f4(1,2,3,4); x = w(x, f32(13.37));', [Math.fround(13.37), 2, 3, 4]);
+CheckF4(WYF + FROUND, 'var x = f4(1,2,3,4); x = w(x, f32(13.37));', [1, Math.fround(13.37), 3, 4]);
+CheckF4(WZF + FROUND, 'var x = f4(1,2,3,4); x = w(x, f32(13.37));', [1, 2, Math.fround(13.37), 4]);
+CheckF4(WWF + FROUND, 'var x = f4(1,2,3,4); x = w(x, f32(13.37));', [1, 2, 3, Math.fround(13.37)]);
+CheckF4(WWF + FROUND, 'var x = f4(1,2,3,4); x = w(x, f32(13.37) + f32(6.63));', [1, 2, 3, Math.fround(Math.fround(13.37) + Math.fround(6.63))]);
+
+const WXI = 'var w = i4.withX;';
+const WYI = 'var w = i4.withY;';
+const WZI = 'var w = i4.withZ;';
+const WWI = 'var w = i4.withW;';
+CheckI4(WXI, 'var x = i4(1,2,3,4); x = w(x, 42);', [42, 2, 3, 4]);
+CheckI4(WYI, 'var x = i4(1,2,3,4); x = w(x, 42);', [1, 42, 3, 4]);
+CheckI4(WZI, 'var x = i4(1,2,3,4); x = w(x, 42);', [1, 2, 42, 4]);
+CheckI4(WWI, 'var x = i4(1,2,3,4); x = w(x, 42);', [1, 2, 3, 42]);
+
 // Comparisons
 // True yields all bits set to 1 (i.e as an int32, 0xFFFFFFFF === -1), false
 // yields all bits set to 0 (i.e 0).

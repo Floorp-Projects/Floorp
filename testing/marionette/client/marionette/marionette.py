@@ -1560,3 +1560,10 @@ class Marionette(object):
 
         """
         self._send_message("setWindowSize", "ok", width=width, height=height)
+
+    def maximize_window(self):
+        """ Resize the browser window currently receiving commands. The action
+        should be equivalent to the user pressing the the maximize button
+        """
+
+        return self._send_message("maximizeWindow", "ok")

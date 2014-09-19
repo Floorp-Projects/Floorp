@@ -1219,7 +1219,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           <xul:label class="ac-normal-text ac-comment" xbl:inherits="selected" value=":"/>
           <xul:description anonid="extra" class="ac-normal-text ac-comment" xbl:inherits="selected"/>
         </xul:hbox>
-        <xul:image anonid="type-image" class="ac-type-icon"/>
+        <xul:image anonid="type-image" class="ac-type-icon" xbl:inherits="selected"/>
       </xul:hbox>
       <xul:hbox align="center" class="ac-url-box">
         <xul:spacer class="ac-site-icon"/>
@@ -1634,29 +1634,37 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
             // Treat tagged matches as bookmarks for the star
             type = "bookmark";
-          } else if (type == "keyword") {
+          // keyword and favicon type results for search engines
+          // have an extra magnifying glass icon after them
+          } else if (type == "keyword" || type == "search favicon") {
             // Configure the extra box for keyword display
             this._extraBox.hidden = false;
             this._extraBox.childNodes[0].hidden = true;
-            this._extraBox.childNodes[1].hidden = false;
+            // The second child node is ":" and it should be hidden for non keyword types
+            this._extraBox.childNodes[1].hidden = type == "keyword" ? false : true;
             this._extraBox.pack = "start";
             this._titleBox.flex = 0;
 
             // Hide the ellipsis so it doesn't take up space.
             this._titleOverflowEllipsis.hidden = true;
 
-            // Put the parameters next to the title if we have any
-            let search = this.getAttribute("text");
-            let params = "";
-            let paramsIndex = search.indexOf(' ');
-            if (paramsIndex != -1)
-              params = search.substr(paramsIndex + 1);
+            if (type == "keyword") {
+              // Put the parameters next to the title if we have any
+              let search = this.getAttribute("text");
+              let params = "";
+              let paramsIndex = search.indexOf(" ");
+              if (paramsIndex != -1)
+                params = search.substr(paramsIndex + 1);
 
-            // Emphasize the keyword parameters
-            this._setUpDescription(this._extra, params);
+              // Emphasize the keyword parameters
+              this._setUpDescription(this._extra, params);
 
-            // Don't emphasize keyword searches in the title or url
-            this.setAttribute("text", "");
+              // Don't emphasize keyword searches in the title or url
+              this.setAttribute("text", "");
+            }
+            // If the result has the type favicon and a known search provider,
+            // customize it the same way as a keyword result.
+            type = "keyword";
           }
 
           // Give the image the icon style and a special one for the type

@@ -1898,8 +1898,9 @@ TabChild::RecvHandleDoubleTap(const CSSPoint& aPoint, const ScrollableLayerGuid&
 bool
 TabChild::RecvHandleSingleTap(const CSSPoint& aPoint, const ScrollableLayerGuid& aGuid)
 {
-  TABC_LOG("Handling single tap at %s with %p %p %d\n",
-    Stringify(aPoint).c_str(), mGlobal.get(), mTabChildGlobal.get(), mTouchEndCancelled);
+  TABC_LOG("Handling single tap at %s on %s with %p %p %d\n",
+    Stringify(aPoint).c_str(), Stringify(aGuid).c_str(), mGlobal.get(),
+    mTabChildGlobal.get(), mTouchEndCancelled);
 
   if (!mGlobal || !mTabChildGlobal) {
     return true;
