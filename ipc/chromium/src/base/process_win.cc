@@ -5,7 +5,6 @@
 #include "base/process.h"
 #include "base/logging.h"
 #include "base/process_util.h"
-#include "base/scoped_ptr.h"
 
 namespace base {
 

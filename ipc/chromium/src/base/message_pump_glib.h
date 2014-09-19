@@ -7,8 +7,8 @@
 
 #include "base/message_pump.h"
 #include "base/observer_list.h"
-#include "base/scoped_ptr.h"
 #include "base/time.h"
+#include "mozilla/UniquePtr.h"
 
 typedef union _GdkEvent GdkEvent;
 typedef struct _GMainContext GMainContext;
@@ -128,8 +128,8 @@ class MessagePumpForUI : public MessagePump {
   // Dispatch() will be called.
   int wakeup_pipe_read_;
   int wakeup_pipe_write_;
-  // Use a scoped_ptr to avoid needing the definition of GPollFD in the header.
-  scoped_ptr<GPollFD> wakeup_gpollfd_;
+  // Use an autoptr to avoid needing the definition of GPollFD in the header.
+  mozilla::UniquePtr<GPollFD> wakeup_gpollfd_;
 
   // List of observers.
   ObserverList<Observer> observers_;
