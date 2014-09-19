@@ -18,7 +18,11 @@ function _evalURI(uri, sandbox) {
   let theURI = SpecialPowers.Services.io
                             .newURI(uri, window.document.characterSet, baseURI);
 
-  req.open('GET', theURI.spec, false);
+  // We append a random slug to avoid caching: see
+  // https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Bypassing_the_cache.
+  req.open('GET', theURI.spec + ((/\?/).test(theURI.spec) ? "&slug=" : "?slug=") + (new Date()).getTime(), false);
+  req.setRequestHeader('Cache-Control', 'no-cache');
+  req.setRequestHeader('Pragma', 'no-cache');
   req.send();
 
   return SpecialPowers.Cu.evalInSandbox(req.responseText, sandbox, "1.8", uri, 1);
