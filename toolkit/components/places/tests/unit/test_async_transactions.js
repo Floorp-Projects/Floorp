@@ -1521,3 +1521,39 @@ add_task(function* test_array_input_for_transact() {
   // Cleanup
   yield PT.clearTransactionsHistory();
 });
+
+add_task(function* test_copy_excluding_annotations() {
+  let rootGuid = yield PlacesUtils.promiseItemGUID(root);
+
+  let folderInfo = yield createTestFolderInfo();
+  let anno = n => { return { name: n, value: 1 } };
+  folderInfo.annotations = [anno("a"), anno("b"), anno("c")];
+  let folderGuid = yield PT.transact(PT.NewFolder(folderInfo));
+
+  let ensureAnnosSet = function* (guid, ...expectedAnnoNames) {
+    let tree = yield PlacesUtils.promiseBookmarksTree(guid);
+    let annoNames = "annos" in tree ?
+                      [for (a of tree.annos) a.name].sort() : [];
+    Assert.deepEqual(annoNames, expectedAnnoNames);
+  };
+
+  yield ensureAnnosSet(folderGuid, "a", "b", "c");
+
+  let excluding_a_dupeGuid =
+    yield PT.transact(PT.Copy({ GUID: folderGuid
+                              , newParentGUID: rootGuid
+                              , excludingAnnotation: "a" }));
+  yield ensureAnnosSet(excluding_a_dupeGuid,  "b", "c");
+
+  let excluding_ac_dupeGuid =
+    yield PT.transact(PT.Copy({ GUID: folderGuid
+                              , newParentGUID: rootGuid
+                              , excludingAnnotations: ["a", "c"] }));
+  yield ensureAnnosSet(excluding_ac_dupeGuid,  "b");
+
+  // Cleanup
+  yield PT.undo();
+  yield PT.undo();
+  yield PT.undo();
+  yield PT.clearTransactionsHistory();
+});

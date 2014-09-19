@@ -375,8 +375,10 @@ this.PlacesUIUtils = {
       let info = { GUID: aData.itemGuid
                  , newParentGUID: aNewParentGuid
                  , newIndex: aIndex };
-      if (aCopy)
+      if (aCopy) {
+        info.excludingAnnotation = "Places/SmartBookmark";
         return PlacesTransactions.Copy(info);
+      }
       return PlacesTransactions.Move(info);
     }
 
