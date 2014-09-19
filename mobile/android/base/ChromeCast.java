@@ -161,7 +161,7 @@ class ChromeCast implements GeckoMediaPlayer {
     public ChromeCast(Context context, RouteInfo route) {
         int status =  GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
         if (status != ConnectionResult.SUCCESS) {
-            throw new IllegalStateException("Play services are required for Chromecast support (go status code " + status + ")");
+            throw new IllegalStateException("Play services are required for Chromecast support (got status code " + status + ")");
         }
 
         this.context = context;
