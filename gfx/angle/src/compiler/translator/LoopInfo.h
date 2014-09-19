@@ -7,7 +7,7 @@
 #ifndef COMPILER_TRANSLATOR_LOOP_INFO_H_
 #define COMPILER_TRANSLATOR_LOOP_INFO_H_
 
-#include "compiler/translator/intermediate.h"
+#include "compiler/translator/IntermNode.h"
 
 class TLoopIndexInfo
 {

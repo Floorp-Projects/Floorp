@@ -21,18 +21,21 @@ class Renderer;
 
 namespace gl
 {
-class Renderbuffer;
+class FramebufferAttachment;
 class Colorbuffer;
 class Depthbuffer;
 class Stencilbuffer;
 class DepthStencilbuffer;
+struct Caps;
 
 class Framebuffer
 {
   public:
-    explicit Framebuffer(rx::Renderer *renderer);
+    Framebuffer(rx::Renderer *renderer, GLuint id);
 
     virtual ~Framebuffer();
+
+    GLuint id() const { return mId; }
 
     void setColorbuffer(unsigned int colorAttachment, GLenum type, GLuint colorbuffer, GLint level, GLint layer);
     void setDepthbuffer(GLenum type, GLuint depthbuffer, GLint level, GLint layer);
@@ -42,38 +45,16 @@ class Framebuffer
     void detachTexture(GLuint texture);
     void detachRenderbuffer(GLuint renderbuffer);
 
-    unsigned int getRenderTargetSerial(unsigned int colorAttachment) const;
-    unsigned int getDepthbufferSerial() const;
-    unsigned int getStencilbufferSerial() const;
-
-    Renderbuffer *getColorbuffer(unsigned int colorAttachment) const;
-    Renderbuffer *getDepthbuffer() const;
-    Renderbuffer *getStencilbuffer() const;
-    Renderbuffer *getDepthStencilBuffer() const;
-    Renderbuffer *getDepthOrStencilbuffer() const;
-    Renderbuffer *getReadColorbuffer() const;
+    FramebufferAttachment *getColorbuffer(unsigned int colorAttachment) const;
+    FramebufferAttachment *getDepthbuffer() const;
+    FramebufferAttachment *getStencilbuffer() const;
+    FramebufferAttachment *getDepthStencilBuffer() const;
+    FramebufferAttachment *getDepthOrStencilbuffer() const;
+    FramebufferAttachment *getReadColorbuffer() const;
     GLenum getReadColorbufferType() const;
-    Renderbuffer *getFirstColorbuffer() const;
+    FramebufferAttachment *getFirstColorbuffer() const;
 
-    GLenum getColorbufferType(unsigned int colorAttachment) const;
-    GLenum getDepthbufferType() const;
-    GLenum getStencilbufferType() const;
-    GLenum getDepthStencilbufferType() const;
-
-    GLuint getColorbufferHandle(unsigned int colorAttachment) const;
-    GLuint getDepthbufferHandle() const;
-    GLuint getStencilbufferHandle() const;
-    GLenum getDepthStencilbufferHandle() const;
-
-    GLenum getColorbufferMipLevel(unsigned int colorAttachment) const;
-    GLenum getDepthbufferMipLevel() const;
-    GLenum getStencilbufferMipLevel() const;
-    GLenum getDepthStencilbufferMipLevel() const;
-
-    GLenum getColorbufferLayer(unsigned int colorAttachment) const;
-    GLenum getDepthbufferLayer() const;
-    GLenum getStencilbufferLayer() const;
-    GLenum getDepthStencilbufferLayer() const;
+    virtual FramebufferAttachment *getAttachment(GLenum attachment) const;
 
     GLenum getDrawBufferState(unsigned int colorAttachment) const;
     void setDrawBufferState(unsigned int colorAttachment, GLenum drawBuffer);
@@ -85,21 +66,28 @@ class Framebuffer
     bool usingExtendedDrawBuffers() const;
 
     virtual GLenum completeness() const;
+    bool hasValidDepthStencil() const;
+
+    void invalidate(const Caps &caps, GLsizei numAttachments, const GLenum *attachments);
+    void invalidateSub(const Caps &caps, GLsizei numAttachments, const GLenum *attachments,
+                       GLint x, GLint y, GLsizei width, GLsizei height);
 
   protected:
-    FramebufferTextureBindingPointer<Renderbuffer> mColorbuffers[IMPLEMENTATION_MAX_DRAW_BUFFERS];
+    rx::Renderer *mRenderer;
+
+    GLuint mId;
+
+    FramebufferAttachment *mColorbuffers[IMPLEMENTATION_MAX_DRAW_BUFFERS];
     GLenum mDrawBufferStates[IMPLEMENTATION_MAX_DRAW_BUFFERS];
     GLenum mReadBufferState;
 
-    FramebufferTextureBindingPointer<Renderbuffer> mDepthbuffer;
-    FramebufferTextureBindingPointer<Renderbuffer> mStencilbuffer;
+    FramebufferAttachment *mDepthbuffer;
+    FramebufferAttachment *mStencilbuffer;
 
-    rx::Renderer *mRenderer;
-
-  private:
+private:
     DISALLOW_COPY_AND_ASSIGN(Framebuffer);
 
-    Renderbuffer *lookupRenderbuffer(GLenum type, GLuint handle, GLint level, GLint layer) const;
+    FramebufferAttachment *createAttachment(GLenum type, GLuint handle, GLint level, GLint layer) const;
 };
 
 class DefaultFramebuffer : public Framebuffer
@@ -108,6 +96,7 @@ class DefaultFramebuffer : public Framebuffer
     DefaultFramebuffer(rx::Renderer *Renderer, Colorbuffer *colorbuffer, DepthStencilbuffer *depthStencil);
 
     virtual GLenum completeness() const;
+    virtual FramebufferAttachment *getAttachment(GLenum attachment) const;
 
   private:
     DISALLOW_COPY_AND_ASSIGN(DefaultFramebuffer);

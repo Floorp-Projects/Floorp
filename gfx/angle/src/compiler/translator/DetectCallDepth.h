@@ -8,7 +8,7 @@
 #define COMPILER_DETECT_RECURSION_H_
 
 #include <limits.h>
-#include "compiler/translator/intermediate.h"
+#include "compiler/translator/IntermNode.h"
 #include "compiler/translator/VariableInfo.h"
 
 class TInfoSink;

@@ -8,7 +8,7 @@
 #define COMPILIER_BUILT_IN_FUNCTION_EMULATOR_H_
 
 #include "compiler/translator/InfoSink.h"
-#include "compiler/translator/intermediate.h"
+#include "compiler/translator/IntermNode.h"
 
 //
 // This class decides which built-in functions need to be replaced with the
@@ -17,7 +17,7 @@
 //
 class BuiltInFunctionEmulator {
 public:
-    BuiltInFunctionEmulator(ShShaderType shaderType);
+    BuiltInFunctionEmulator(sh::GLenum shaderType);
     // Records that a function is called by the shader and might needs to be
     // emulated.  If the function's group is not in mFunctionGroupFilter, this
     // becomes an no-op.

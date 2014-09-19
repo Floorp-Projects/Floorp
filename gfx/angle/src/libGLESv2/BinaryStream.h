@@ -12,6 +12,10 @@
 #include "common/angleutils.h"
 #include "common/mathutil.h"
 
+#include <cstddef>
+#include <string>
+#include <vector>
+
 namespace gl
 {
 

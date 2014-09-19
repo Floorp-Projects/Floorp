@@ -7,28 +7,25 @@
 #ifndef COMPILER_TRANSLATORHLSL_H_
 #define COMPILER_TRANSLATORHLSL_H_
 
-#include "compiler/translator/ShHandle.h"
-#include "common/shadervars.h"
+#include "compiler/translator/Compiler.h"
 
-class TranslatorHLSL : public TCompiler {
-public:
-    TranslatorHLSL(ShShaderType type, ShShaderSpec spec, ShShaderOutput output);
-
+class TranslatorHLSL : public TCompiler
+{
+  public:
+    TranslatorHLSL(sh::GLenum type, ShShaderSpec spec, ShShaderOutput output);
     virtual TranslatorHLSL *getAsTranslatorHLSL() { return this; }
-    const std::vector<gl::Uniform> &getUniforms() { return mActiveUniforms; }
-    const std::vector<gl::InterfaceBlock> &getInterfaceBlocks() const { return mActiveInterfaceBlocks; }
-    const std::vector<gl::Attribute> &getOutputVariables() { return mActiveOutputVariables; }
-    const std::vector<gl::Attribute> &getAttributes() { return mActiveAttributes; }
-    const std::vector<gl::Varying> &getVaryings() { return mActiveVaryings; }
 
-protected:
+    bool hasInterfaceBlock(const std::string &interfaceBlockName) const;
+    unsigned int getInterfaceBlockRegister(const std::string &interfaceBlockName) const;
+
+    bool hasUniform(const std::string &uniformName) const;
+    unsigned int getUniformRegister(const std::string &uniformName) const;
+
+  protected:
     virtual void translate(TIntermNode* root);
 
-    std::vector<gl::Uniform> mActiveUniforms;
-    std::vector<gl::InterfaceBlock> mActiveInterfaceBlocks;
-    std::vector<gl::Attribute> mActiveOutputVariables;
-    std::vector<gl::Attribute> mActiveAttributes;
-    std::vector<gl::Varying> mActiveVaryings;
+    std::map<std::string, unsigned int> mInterfaceBlockRegisterMap;
+    std::map<std::string, unsigned int> mUniformRegisterMap;
 };
 
 #endif  // COMPILER_TRANSLATORHLSL_H_

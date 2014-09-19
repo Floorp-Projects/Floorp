@@ -9,7 +9,7 @@
 #include "compiler/translator/OutputGLSL.h"
 #include "compiler/translator/VersionGLSL.h"
 
-static void writeVersion(ShShaderType type, TIntermNode* root,
+static void writeVersion(sh::GLenum type, TIntermNode* root,
                          TInfoSinkBase& sink) {
     TVersionGLSL versionGLSL(type);
     root->traverse(&versionGLSL);
@@ -21,7 +21,7 @@ static void writeVersion(ShShaderType type, TIntermNode* root,
     }
 }
 
-TranslatorGLSL::TranslatorGLSL(ShShaderType type, ShShaderSpec spec)
+TranslatorGLSL::TranslatorGLSL(sh::GLenum type, ShShaderSpec spec)
     : TCompiler(type, spec, SH_GLSL_OUTPUT) {
 }
 

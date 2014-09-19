@@ -9,89 +9,97 @@
 #ifndef LIBGLESV2_FORMATUTILS_H_
 #define LIBGLESV2_FORMATUTILS_H_
 
-#include <GLES3/gl3.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-
+#include "libGLESv2/Caps.h"
 #include "libGLESv2/angletypes.h"
 
-typedef void (*MipGenerationFunction)(unsigned int sourceWidth, unsigned int sourceHeight, unsigned int sourceDepth,
-                                      const unsigned char *sourceData, int sourceRowPitch, int sourceDepthPitch,
-                                      unsigned char *destData, int destRowPitch, int destDepthPitch);
+#include "angle_gl.h"
 
-typedef void (*LoadImageFunction)(int width, int height, int depth,
-                                  const void *input, unsigned int inputRowPitch, unsigned int inputDepthPitch,
-                                  void *output, unsigned int outputRowPitch, unsigned int outputDepthPitch);
+#include <cstddef>
+#include <cstdint>
 
-typedef void (*InitializeTextureDataFunction)(int width, int height, int depth,
-                                              void *output, unsigned int outputRowPitch, unsigned int outputDepthPitch);
+typedef void (*MipGenerationFunction)(size_t sourceWidth, size_t sourceHeight, size_t sourceDepth,
+                                      const uint8_t *sourceData, size_t sourceRowPitch, size_t sourceDepthPitch,
+                                      uint8_t *destData, size_t destRowPitch, size_t destDepthPitch);
 
-typedef void (*ColorReadFunction)(const void *source, void *dest);
-typedef void (*ColorWriteFunction)(const void *source, void *dest);
-typedef void (*ColorCopyFunction)(const void *source, void *dest);
+typedef void (*LoadImageFunction)(size_t width, size_t height, size_t depth,
+                                  const uint8_t *input, size_t inputRowPitch, size_t inputDepthPitch,
+                                  uint8_t *output, size_t outputRowPitch, size_t outputDepthPitch);
 
-typedef void (*VertexCopyFunction)(const void *input, size_t stride, size_t count, void *output);
+typedef void (*InitializeTextureDataFunction)(size_t width, size_t height, size_t depth,
+                                              uint8_t *output, size_t outputRowPitch, size_t outputDepthPitch);
 
-namespace rx
-{
+typedef void (*ColorReadFunction)(const uint8_t *source, uint8_t *dest);
+typedef void (*ColorWriteFunction)(const uint8_t *source, uint8_t *dest);
+typedef void (*ColorCopyFunction)(const uint8_t *source, uint8_t *dest);
 
-class Renderer;
-
-}
+typedef void (*VertexCopyFunction)(const uint8_t *input, size_t stride, size_t count, uint8_t *output);
 
 namespace gl
 {
 
-class Context;
+struct FormatType
+{
+    FormatType();
 
-bool IsValidInternalFormat(GLenum internalFormat, const Context *context);
-bool IsValidFormat(GLenum format, GLuint clientVersion);
-bool IsValidType(GLenum type, GLuint clientVersion);
+    GLenum internalFormat;
+    ColorWriteFunction colorWriteFunction;
+};
+const FormatType &GetFormatTypeInfo(GLenum format, GLenum type);
 
-bool IsValidFormatCombination(GLenum internalFormat, GLenum format, GLenum type, GLuint clientVersion);
-bool IsValidCopyTexImageCombination(GLenum textureInternalFormat, GLenum frameBufferInternalFormat, GLuint readBufferHandle, GLuint clientVersion);
+struct Type
+{
+    Type();
 
-bool IsSizedInternalFormat(GLenum internalFormat, GLuint clientVersion);
-GLenum GetSizedInternalFormat(GLenum format, GLenum type, GLuint clientVersion);
+    GLuint bytes;
+    bool specialInterpretation;
+};
+const Type &GetTypeInfo(GLenum type);
 
-GLuint GetPixelBytes(GLenum internalFormat, GLuint clientVersion);
-GLuint GetAlphaBits(GLenum internalFormat, GLuint clientVersion);
-GLuint GetRedBits(GLenum internalFormat, GLuint clientVersion);
-GLuint GetGreenBits(GLenum internalFormat, GLuint clientVersion);
-GLuint GetBlueBits(GLenum internalFormat, GLuint clientVersion);
-GLuint GetLuminanceBits(GLenum internalFormat, GLuint clientVersion);
-GLuint GetDepthBits(GLenum internalFormat, GLuint clientVersion);
-GLuint GetStencilBits(GLenum internalFormat, GLuint clientVersion);
+struct InternalFormat
+{
+    InternalFormat();
 
-GLuint GetTypeBytes(GLenum type);
-bool IsSpecialInterpretationType(GLenum type);
-bool IsFloatOrFixedComponentType(GLenum type);
+    GLuint redBits;
+    GLuint greenBits;
+    GLuint blueBits;
 
-GLenum GetFormat(GLenum internalFormat, GLuint clientVersion);
-GLenum GetType(GLenum internalFormat, GLuint clientVersion);
+    GLuint luminanceBits;
 
-GLenum GetComponentType(GLenum internalFormat, GLuint clientVersion);
-GLuint GetComponentCount(GLenum internalFormat, GLuint clientVersion);
-GLenum GetColorEncoding(GLenum internalFormat, GLuint clientVersion);
+    GLuint alphaBits;
+    GLuint sharedBits;
 
-bool IsColorRenderingSupported(GLenum internalFormat, const rx::Renderer *renderer);
-bool IsColorRenderingSupported(GLenum internalFormat, const Context *context);
-bool IsTextureFilteringSupported(GLenum internalFormat, const rx::Renderer *renderer);
-bool IsTextureFilteringSupported(GLenum internalFormat, const Context *context);
-bool IsDepthRenderingSupported(GLenum internalFormat, const rx::Renderer *renderer);
-bool IsDepthRenderingSupported(GLenum internalFormat, const Context *context);
-bool IsStencilRenderingSupported(GLenum internalFormat, const rx::Renderer *renderer);
-bool IsStencilRenderingSupported(GLenum internalFormat, const Context *context);
+    GLuint depthBits;
+    GLuint stencilBits;
 
-GLuint GetRowPitch(GLenum internalFormat, GLenum type, GLuint clientVersion, GLsizei width, GLint alignment);
-GLuint GetDepthPitch(GLenum internalFormat, GLenum type, GLuint clientVersion, GLsizei width, GLsizei height, GLint alignment);
-GLuint GetBlockSize(GLenum internalFormat, GLenum type, GLuint clientVersion, GLsizei width, GLsizei height);
+    GLuint pixelBytes;
 
-bool IsFormatCompressed(GLenum internalFormat, GLuint clientVersion);
-GLuint GetCompressedBlockWidth(GLenum internalFormat, GLuint clientVersion);
-GLuint GetCompressedBlockHeight(GLenum internalFormat, GLuint clientVersion);
+    GLuint componentCount;
 
-ColorWriteFunction GetColorWriteFunction(GLenum format, GLenum type, GLuint clientVersion);
+    bool compressed;
+    GLuint compressedBlockWidth;
+    GLuint compressedBlockHeight;
+
+    GLenum format;
+    GLenum type;
+
+    GLenum componentType;
+    GLenum colorEncoding;
+
+    typedef bool (*SupportCheckFunction)(GLuint, const Extensions &);
+    SupportCheckFunction textureSupport;
+    SupportCheckFunction renderSupport;
+    SupportCheckFunction filterSupport;
+
+    GLuint computeRowPitch(GLenum type, GLsizei width, GLint alignment) const;
+    GLuint computeDepthPitch(GLenum type, GLsizei width, GLsizei height, GLint alignment) const;
+    GLuint computeBlockSize(GLenum type, GLsizei width, GLsizei height) const;
+};
+const InternalFormat &GetInternalFormatInfo(GLenum internalFormat);
+
+GLenum GetSizedInternalFormat(GLenum internalFormat, GLenum type);
+
+typedef std::set<GLenum> FormatSet;
+const FormatSet &GetAllSizedInternalFormats();
 
 }
 
