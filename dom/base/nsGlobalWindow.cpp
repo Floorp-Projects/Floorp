@@ -669,10 +669,12 @@ public:
                        unsigned flags,
                        JS::MutableHandle<JS::Value> vp) const MOZ_OVERRIDE;
 
+  static void ObjectMoved(JSObject *obj, const JSObject *old);
+
   static const nsOuterWindowProxy singleton;
 
 protected:
-  nsGlobalWindow* GetWindow(JSObject *proxy) const
+  static nsGlobalWindow* GetWindow(JSObject *proxy)
   {
     return nsGlobalWindow::FromSupports(
       static_cast<nsISupports*>(js::GetProxyExtra(proxy, 0).toPrivate()));
@@ -704,7 +706,8 @@ const js::Class OuterWindowProxyClass =
             nullptr, /* outerObject */
             js::proxy_innerObject,
             nullptr, /* iteratorObject */
-            false   /* isWrappedNative */
+            false,   /* isWrappedNative */
+            nsOuterWindowProxy::ObjectMoved
         ));
 
 bool
@@ -1022,6 +1025,15 @@ nsOuterWindowProxy::unwatch(JSContext *cx, JS::Handle<JSObject*> proxy,
                             JS::Handle<jsid> id) const
 {
   return js::UnwatchGuts(cx, proxy, id);
+}
+
+void
+nsOuterWindowProxy::ObjectMoved(JSObject *obj, const JSObject *old)
+{
+  nsGlobalWindow* global = GetWindow(obj);
+  if (global) {
+    global->UpdateWrapper(obj, old);
+  }
 }
 
 const nsOuterWindowProxy

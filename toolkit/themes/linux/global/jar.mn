@@ -39,6 +39,7 @@ toolkit.jar:
 +  skin/classic/global/console/console.png                     (console/console.png)
 +  skin/classic/global/console/console-toolbar.png             (console/console-toolbar.png)
 +  skin/classic/global/dirListing/remote.png                   (dirListing/remote.png)
++  skin/classic/global/icons/autocomplete-search.svg           (icons/autocomplete-search.svg)
 +  skin/classic/global/icons/Authentication.png                (icons/Authentication.png)
 +  skin/classic/global/icons/autoscroll.png                    (icons/autoscroll.png)
 +  skin/classic/global/icons/blacklist_favicon.png             (icons/blacklist_favicon.png)

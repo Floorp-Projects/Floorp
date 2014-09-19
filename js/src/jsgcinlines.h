@@ -325,37 +325,9 @@ class ZoneCellIterUnderGC : public ZoneCellIterImpl
     }
 };
 
-/* In debug builds, assert that no allocation occurs. */
-class AutoAssertNoAlloc
-{
-#ifdef JS_DEBUG
-    GCRuntime *gc;
-
-  public:
-    AutoAssertNoAlloc() : gc(nullptr) {}
-    explicit AutoAssertNoAlloc(JSRuntime *rt) : gc(nullptr) {
-        disallowAlloc(rt);
-    }
-    void disallowAlloc(JSRuntime *rt) {
-        JS_ASSERT(!gc);
-        gc = &rt->gc;
-        gc->disallowAlloc();
-    }
-    ~AutoAssertNoAlloc() {
-        if (gc)
-            gc->allowAlloc();
-    }
-#else
-  public:
-    AutoAssertNoAlloc() {}
-    explicit AutoAssertNoAlloc(JSRuntime *) {}
-    void disallowAlloc(JSRuntime *rt) {}
-#endif
-};
-
 class ZoneCellIter : public ZoneCellIterImpl
 {
-    AutoAssertNoAlloc noAlloc;
+    JS::AutoAssertNoAlloc noAlloc;
     ArenaLists *lists;
     AllocKind kind;
 
