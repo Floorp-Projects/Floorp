@@ -14,7 +14,6 @@
 #include "mozilla/NullPtr.h"
 #include "mozilla/Scoped.h"
 #include "mozilla/TemplateLib.h"
-#include "mozilla/UniquePtr.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -626,14 +625,6 @@ namespace js {
 /* Integral types for all hash functions. */
 typedef uint32_t HashNumber;
 const unsigned HashNumberSizeBits = 32;
-
-typedef mozilla::UniquePtr<char, JS::FreePolicy> UniqueChars;
-
-static inline UniqueChars make_string_copy(const char* str)
-{
-    JS_OOM_POSSIBLY_FAIL();
-    return UniqueChars(strdup(str));
-}
 
 namespace detail {
 
