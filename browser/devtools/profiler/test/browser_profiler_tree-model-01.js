@@ -130,7 +130,7 @@ function test() {
   is(Object.keys(root.calls.A.calls.E.calls.F.calls).length, 0,
     "The correct number of child calls were calculated for the '.A.E.F' node.");
 
-  // Check the location, sample times, duration and invocations of the root.
+  // Check the location, sample times, duration and samples of the root.
 
   is(root.calls.A.location, "A",
     "The '.A' node has the correct location.");
@@ -139,8 +139,8 @@ function test() {
     "The '.A' node has the correct sample times.");
   is(root.calls.A.duration, 20,
     "The '.A' node has the correct duration in milliseconds.");
-  is(root.calls.A.invocations, 4,
-    "The '.A' node has the correct number of invocations.");
+  is(root.calls.A.samples, 4,
+    "The '.A' node has the correct number of samples.");
 
   // ...and the rightmost leaf.
 
@@ -151,8 +151,8 @@ function test() {
     "The '.A.E.F' node has the correct sample times.");
   is(root.calls.A.calls.E.calls.F.duration, 7,
     "The '.A.E.F' node has the correct duration in milliseconds.");
-  is(root.calls.A.calls.E.calls.F.invocations, 1,
-    "The '.A.E.F' node has the correct number of invocations.");
+  is(root.calls.A.calls.E.calls.F.samples, 1,
+    "The '.A.E.F' node has the correct number of samples.");
 
   // ...and the leftmost leaf.
 
@@ -163,8 +163,8 @@ function test() {
     "The '.A.B.C.D.E.F.G' node has the correct sample times.");
   is(root.calls.A.calls.B.calls.C.calls.D.calls.E.calls.F.calls.G.duration, 2,
     "The '.A.B.C.D.E.F.G' node has the correct duration in milliseconds.");
-  is(root.calls.A.calls.B.calls.C.calls.D.calls.E.calls.F.calls.G.invocations, 1,
-    "The '.A.B.C.D.E.F.G' node has the correct number of invocations.");
+  is(root.calls.A.calls.B.calls.C.calls.D.calls.E.calls.F.calls.G.samples, 1,
+    "The '.A.B.C.D.E.F.G' node has the correct number of samples.");
 
   finish();
 }

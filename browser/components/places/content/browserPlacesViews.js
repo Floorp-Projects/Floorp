@@ -169,7 +169,7 @@ PlacesViewBase.prototype = {
     let index = PlacesUtils.bookmarks.DEFAULT_INDEX;
     let container = this._resultNode;
     let orientation = Ci.nsITreeView.DROP_BEFORE;
-    let isTag = false;
+    let tagName = null;
 
     let selectedNode = this.selectedNode;
     if (selectedNode) {
@@ -185,7 +185,8 @@ PlacesViewBase.prototype = {
         // In all other cases the insertion point is before that node.
         container = selectedNode.parent;
         index = container.getChildIndex(selectedNode);
-        isTag = PlacesUtils.nodeIsTagQuery(container);
+        if (PlacesUtils.nodeIsTagQuery(container))
+          tagName = container.title;
       }
     }
 
@@ -193,7 +194,7 @@ PlacesViewBase.prototype = {
       return null;
 
     return new InsertionPoint(PlacesUtils.getConcreteItemId(container),
-                              index, orientation, isTag);
+                              index, orientation, tagName);
   },
 
   buildContextMenu: function PVB_buildContextMenu(aPopup) {
@@ -1392,10 +1393,12 @@ PlacesToolbar.prototype = {
         else if (this.isRTL ? (aEvent.clientX > eltRect.left + threshold)
                             : (aEvent.clientX < eltRect.right - threshold)) {
           // Drop inside this folder.
+          let tagName = PlacesUtils.nodeIsTagQuery(elt._placesNode) ?
+                        elt._placesNode.title : null;
           dropPoint.ip =
             new InsertionPoint(PlacesUtils.getConcreteItemId(elt._placesNode),
                                -1, Ci.nsITreeView.DROP_ON,
-                               PlacesUtils.nodeIsTagQuery(elt._placesNode));
+                               tagName);
           dropPoint.beforeIndex = eltIndex;
           dropPoint.folderElt = elt;
         }
@@ -1637,6 +1640,7 @@ PlacesToolbar.prototype = {
     let dropPoint = this._getDropPoint(aEvent);
     if (dropPoint && dropPoint.ip) {
       PlacesControllerDragHelper.onDrop(dropPoint.ip, aEvent.dataTransfer)
+                                .then(null, Components.utils.reportError);
       aEvent.preventDefault();
     }
 
