@@ -64,7 +64,9 @@ loop.contacts = (function(_, mozL10n) {
 
       return (
         <li onClick={this.handleContactClick} className={contactCSSClass}>
-          <div className="avatar" />
+          <div className="avatar">
+            <img src={navigator.mozLoop.getUserAvatar(email.value)} />
+          </div>
           <div className="details">
             <div className="username"><strong>{names.firstName}</strong> {names.lastName}
               <i className={cx({"icon icon-google": this.props.contact.category[0] == "google"})} />
@@ -151,7 +153,7 @@ loop.contacts = (function(_, mozL10n) {
       if (comp !== 0) {
         return comp;
       }
-      // If names are equal, compare against unique ids make sure we have
+      // If names are equal, compare against unique ids to make sure we have
       // consistent ordering.
       return contact1._guid - contact2._guid;
     },
