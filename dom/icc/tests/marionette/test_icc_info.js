@@ -35,7 +35,7 @@ taskHelper.push(function basicTest() {
   // See it here {B2G_HOME}/external/qemu/telephony/sim_card.c#L299.
   is(iccInfo.iccid, 89014103211118510720);
 
-  if (iccInfo instanceof Ci.nsIDOMMozGsmIccInfo) {
+  if (iccInfo instanceof MozGsmIccInfo) {
     log("Test Gsm IccInfo");
     is(iccInfo.iccType, "sim");
     is(iccInfo.spn, "Android");

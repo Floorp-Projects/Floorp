@@ -5,11 +5,11 @@
 #include "nsISupports.idl"
 #include "nsINetworkManager.idl"
 
-interface nsIDOMMozIccInfo;
+interface nsICellInfoListCallback;
+interface nsIIccInfo;
 interface nsIMobileConnectionInfo;
 interface nsIMobileMessageCallback;
 interface nsINeighboringCellIdsCallback;
-interface nsICellInfoListCallback;
 
 [scriptable, uuid(6e0f45b8-410e-11e3-8c8e-b715b2cd0128)]
 interface nsIRilNetworkInterface : nsINetworkInterface
@@ -23,14 +23,14 @@ interface nsIRilNetworkInterface : nsINetworkInterface
   readonly attribute long      mmsPort;  // -1 if not set.
 };
 
-[scriptable, uuid(0226a2c1-a3b9-416a-92cb-c89e4dad4be0)]
+[scriptable, uuid(08a69c70-34b1-11e4-8c21-0800200c9a66)]
 interface nsIRilContext : nsISupports
 {
   readonly attribute DOMString cardState;
 
   readonly attribute DOMString imsi;
 
-  readonly attribute nsIDOMMozIccInfo iccInfo;
+  readonly attribute nsIIccInfo iccInfo;
 };
 
 [scriptable, function, uuid(3bc96351-53b0-47a1-a888-c74c64b60f25)]
