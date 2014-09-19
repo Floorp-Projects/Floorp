@@ -48,7 +48,7 @@ class MachCommands(MachCommandBase):
         dirs_to_files = {}
 
         for path, dirs, files in os.walk(js_src_dir):
-            js_files = [f for f in files if f.endswith(('.js', '.jsm'))]
+            js_files = [f for f in files if f.endswith(('.js', '.jsm', '.html'))]
             if not js_files:
                 continue
 
