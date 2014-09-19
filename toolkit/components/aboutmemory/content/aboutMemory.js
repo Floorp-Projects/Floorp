@@ -821,20 +821,41 @@ function makeDReportMap(aJSONReports)
     assert(jr.amount      !== undefined, "Missing amount");
     assert(jr.description !== undefined, "Missing description");
 
-    // Strip out some non-deterministic stuff that prevents clean diffs --
-    // e.g. PIDs, addresses, null principal UUIDs. (Note that we don't strip
-    // out all UUIDs because some of them -- such as those used by add-ons --
-    // are deterministic.)
+    // Strip out some non-deterministic stuff that prevents clean diffs.
+    // Ideally the memory reports themselves would contain information about
+    // which parts of the the process and path need to be stripped -- saving us
+    // from hardwiring knowledge of specific reporters here -- but we have no
+    // mechanism for that. (Any future redesign of how memory reporters work
+    // should include such a mechanism.)
+
+    // Strip PIDs:
+    // - pid 123
+    // - pid=123
     let pidRegex = /pid([ =])\d+/g;
     let pidSubst = "pid$1NNN";
-    let strippedProcess = jr.process.replace(pidRegex, pidSubst);
-    let strippedPath = jr.path.replace(/0x[0-9A-Fa-f]+/g, "0xNNN");
-    strippedPath = strippedPath.replace(pidRegex, pidSubst);
-    strippedPath = strippedPath.replace(
+    let process = jr.process.replace(pidRegex, pidSubst);
+    let path = jr.path.replace(pidRegex, pidSubst);
+
+    // Strip addresses:
+    // - .../js-zone(0x12345678)/...
+    // - .../zone(0x12345678)/...
+    // - .../worker(<URL>, 0x12345678)/...
+    path = path.replace(/zone\(0x[0-9A-Fa-f]+\)\//, "zone(0xNNN)/");
+    path = path.replace(/\/worker\((.+), 0x[0-9A-Fa-f]+\)\//,
+                        "/worker($1, 0xNNN)/");
+
+    // Strip top window IDs:
+    // - explicit/window-objects/top(<URL>, id=123)/...
+    path = path.replace(/^(explicit\/window-objects\/top\(.*, id=)\d+\)/,
+                        "$1NNN)");
+
+    // Strip null principal UUIDs (but not other UUIDs, because they may be
+    // deterministic, such as those used by add-ons).
+    path = path.replace(
       /moz-nullprincipal:{........-....-....-....-............}/g,
       "moz-nullprincipal:{NNNNNNNN-NNNN-NNNN-NNNN-NNNNNNNNNNNN}");
-    let processPath = strippedProcess + kProcessPathSep + strippedPath;
 
+    let processPath = process + kProcessPathSep + path;
     let rOld = dreportMap[processPath];
     if (rOld === undefined) {
       dreportMap[processPath] =

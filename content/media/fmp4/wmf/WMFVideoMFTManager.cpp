@@ -399,4 +399,10 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset,
   return S_OK;
 }
 
+void
+WMFVideoMFTManager::Shutdown()
+{
+  mDecoder = nullptr;
+}
+
 } // namespace mozilla

@@ -65,6 +65,14 @@ struct GLContextSymbols
     PFNGLBUFFERSUBDATAPROC fBufferSubData;
     typedef void (GLAPIENTRY * PFNGLCLEARPROC) (GLbitfield);
     PFNGLCLEARPROC fClear;
+    typedef void (GLAPIENTRY * PFNGLCLEARBUFFERFIPROC) (GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil);
+    PFNGLCLEARBUFFERFIPROC fClearBufferfi;
+    typedef void (GLAPIENTRY * PFNGLCLEARBUFFERFVPROC) (GLenum buffer, GLint drawbuffer, const GLfloat* value);
+    PFNGLCLEARBUFFERFVPROC fClearBufferfv;
+    typedef void (GLAPIENTRY * PFNGLCLEARBUFFERIVPROC) (GLenum buffer, GLint drawbuffer, const GLint* value);
+    PFNGLCLEARBUFFERIVPROC fClearBufferiv;
+    typedef void (GLAPIENTRY * PFNGLCLEARBUFFERUIVPROC) (GLenum buffer, GLint drawbuffer, const GLuint* value);
+    PFNGLCLEARBUFFERUIVPROC fClearBufferuiv;
     typedef void (GLAPIENTRY * PFNGLCLEARCOLORPROC) (GLclampf, GLclampf, GLclampf, GLclampf);
     PFNGLCLEARCOLORPROC fClearColor;
     typedef void (GLAPIENTRY * PFNGLCLEARSTENCILPROC) (GLint);
