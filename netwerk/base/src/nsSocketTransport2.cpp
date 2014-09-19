@@ -943,6 +943,15 @@ nsSocketTransport::InitWithConnectedSocket(PRFileDesc *fd, const NetAddr *addr)
 }
 
 nsresult
+nsSocketTransport::InitWithConnectedSocket(PRFileDesc* aFD,
+                                           const NetAddr* aAddr,
+                                           nsISupports* aSecInfo)
+{
+    mSecInfo = aSecInfo;
+    return InitWithConnectedSocket(aFD, aAddr);
+}
+
+nsresult
 nsSocketTransport::PostEvent(uint32_t type, nsresult status, nsISupports *param)
 {
     SOCKET_LOG(("nsSocketTransport::PostEvent [this=%p type=%u status=%x param=%p]\n",

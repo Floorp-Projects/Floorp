@@ -45,8 +45,8 @@ PostEvent(nsServerSocket *s, nsServerSocketFunc func)
 //-----------------------------------------------------------------------------
 
 nsServerSocket::nsServerSocket()
-  : mLock("nsServerSocket.mLock")
-  , mFD(nullptr)
+  : mFD(nullptr)
+  , mLock("nsServerSocket.mLock")
   , mAttached(false)
   , mKeepWhenOffline(false)
 {
@@ -154,6 +154,25 @@ nsServerSocket::TryAttach()
   return NS_OK;
 }
 
+void
+nsServerSocket::CreateClientTransport(PRFileDesc* aClientFD,
+                                      const NetAddr& aClientAddr)
+{
+  nsRefPtr<nsSocketTransport> trans = new nsSocketTransport;
+  if (NS_WARN_IF(!trans)) {
+    mCondition = NS_ERROR_OUT_OF_MEMORY;
+    return;
+  }
+
+  nsresult rv = trans->InitWithConnectedSocket(aClientFD, &aClientAddr);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    mCondition = rv;
+    return;
+  }
+
+  mListener->OnSocketAccepted(this, trans);
+}
+
 //-----------------------------------------------------------------------------
 // nsServerSocket::nsASocketHandler
 //-----------------------------------------------------------------------------
@@ -185,25 +204,14 @@ nsServerSocket::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
 
   clientFD = PR_Accept(mFD, &prClientAddr, PR_INTERVAL_NO_WAIT);
   PRNetAddrToNetAddr(&prClientAddr, &clientAddr);
-  if (!clientFD)
-  {
+  if (!clientFD) {
     NS_WARNING("PR_Accept failed");
     mCondition = NS_ERROR_UNEXPECTED;
+    return;
   }
-  else
-  {
-    nsRefPtr<nsSocketTransport> trans = new nsSocketTransport;
-    if (!trans)
-      mCondition = NS_ERROR_OUT_OF_MEMORY;
-    else
-    {
-      nsresult rv = trans->InitWithConnectedSocket(clientFD, &clientAddr);
-      if (NS_FAILED(rv))
-        mCondition = rv;
-      else
-        mListener->OnSocketAccepted(this, trans);
-    }
-  }
+
+  // Accept succeeded, create socket transport and notify consumer
+  CreateClientTransport(clientFD, clientAddr);
 }
 
 void
@@ -328,6 +336,7 @@ NS_IMETHODIMP
 nsServerSocket::InitWithAddress(const PRNetAddr *aAddr, int32_t aBackLog)
 {
   NS_ENSURE_TRUE(mFD == nullptr, NS_ERROR_ALREADY_INITIALIZED);
+  nsresult rv;
 
   //
   // configure listening socket...
@@ -373,12 +382,18 @@ nsServerSocket::InitWithAddress(const PRNetAddr *aAddr, int32_t aBackLog)
     goto fail;
   }
 
+  // Set any additional socket defaults needed by child classes
+  rv = SetSocketDefaults();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    goto fail;
+  }
+
   // wait until AsyncListen is called before polling the socket for
   // client connections.
   return NS_OK;
 
 fail:
-  nsresult rv = ErrorAccordingToNSPR(PR_GetError());
+  rv = ErrorAccordingToNSPR(PR_GetError());
   Close();
   return rv;
 }
@@ -509,6 +524,13 @@ nsServerSocket::AsyncListen(nsIServerSocketListener *aListener)
     mListener = new ServerSocketListenerProxy(aListener);
     mListenerTarget = NS_GetCurrentThread();
   }
+
+  // Child classes may need to do additional setup just before listening begins
+  nsresult rv = OnSocketListen();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   return PostEvent(this, &nsServerSocket::OnMsgAttach);
 }
 
