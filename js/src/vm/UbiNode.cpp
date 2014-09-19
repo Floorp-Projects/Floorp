@@ -27,6 +27,7 @@
 
 #include "jsobjinlines.h"
 
+using JS::HandleValue;
 using JS::Value;
 using JS::ubi::Concrete;
 using JS::ubi::Edge;
