@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1067491 - Test taking a census over the RDP.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Memory monitoring actor test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="memory-helpers.js" type="application/javascript;version=1.8"></script>
+<script>
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+
+  Task.spawn(function* () {
+    var { memory, client } = yield startServerAndGetSelectedTabMemory();
+    yield memory.attach();
+
+    var census = yield memory.takeCensus();
+    is(typeof census, "object");
+
+    yield memory.detach();
+    destroyServerAndFinish(client);
+  });
+};
+</script>
+</pre>
+</body>
+</html>

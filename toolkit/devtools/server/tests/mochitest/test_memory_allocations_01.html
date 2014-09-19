@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1067491 - Test recording allocations.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Memory monitoring actor test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="memory-helpers.js" type="application/javascript;version=1.8"></script>
+<script>
+window.onload = function() {
+  SimpleTest.waitForExplicitFinish();
+
+  Task.spawn(function* () {
+    var { memory, client } = yield startServerAndGetSelectedTabMemory();
+    yield memory.attach();
+
+    yield memory.startRecordingAllocations();
+    ok(true, "Can start recording allocations");
+
+    // Allocate some objects.
+
+    var alloc1, alloc2, alloc3;
+    (function outer() {
+      (function middle() {
+        (function inner() {
+          alloc1 = {};                alloc1.line = Error().lineNumber;
+          alloc2 = [];                alloc2.line = Error().lineNumber;
+          alloc3 = new function() {}; alloc3.line = Error().lineNumber;
+        }());
+      }());
+    }());
+
+    var response = yield memory.getAllocations();
+
+    yield memory.stopRecordingAllocations();
+    ok(true, "Can stop recording allocations");
+
+    // Filter out allocations by library and test code, and get only the
+    // allocations that occurred in our test case above.
+
+    function isTestAllocation(alloc) {
+      var frame = response.frames[alloc];
+      return frame
+        && frame.functionDisplayName === "inner"
+        && (frame.line === alloc1.line
+            || frame.line === alloc2.line
+            || frame.line === alloc3.line);
+    }
+
+    var testAllocations = response.allocations.filter(isTestAllocation);
+    ok(testAllocations.length >= 3,
+       "Should find our 3 test allocations (plus some allocations for the error "
+       + "objects used to get line numbers)");
+
+    // For each of the test case's allocations, ensure that the parent frame
+    // indices are correct. Also test that we did get an allocation at each
+    // line we expected (rather than a bunch on the first line and none on the
+    // others, etc).
+
+    var expectedLines = new Set([alloc1.line, alloc2.line, alloc3.line]);
+
+    for (var alloc of testAllocations) {
+      var innerFrame = response.frames[alloc];
+      ok(innerFrame, "Should get the inner frame");
+      is(innerFrame.functionDisplayName, "inner");
+      expectedLines.delete(innerFrame.line);
+
+      var middleFrame = response.frames[innerFrame.parent];
+      ok(middleFrame, "Should get the middle frame");
+      is(middleFrame.functionDisplayName, "middle");
+
+      var outerFrame = response.frames[middleFrame.parent];
+      ok(outerFrame, "Should get the outer frame");
+      is(outerFrame.functionDisplayName, "outer");
+
+      // Not going to test the rest of the frames because they are Task.jsm
+      // and promise frames and it gets gross. Plus, I wouldn't want this test
+      // to start failing if they changed their implementations in a way that
+      // added or removed stack frames here.
+    }
+
+    is(expectedLines.size, 0,
+       "Should have found all the expected lines");
+
+    yield memory.detach();
+    destroyServerAndFinish(client);
+  });
+};
+</script>
+</pre>
+</body>
+</html>

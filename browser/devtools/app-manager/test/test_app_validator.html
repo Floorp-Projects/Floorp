@@ -40,12 +40,12 @@
       next();
     }
 
-    function createHosted(path) {
+    function createHosted(path, manifestFile="/manifest.webapp") {
       let dirPath = getTestFilePath("validator/" + path);
       httpserver.registerDirectory("/", nsFile(dirPath));
       return new AppValidator({
         type: "hosted",
-        location: origin + "/manifest.webapp"
+        location: origin + manifestFile
       });
     }
 
@@ -153,6 +153,38 @@
         let validator = createPackaged("no-name-or-icon");
         validator.validate().then(() => {
           checkNoNameOrIcon(validator);
+        });
+      },
+
+      // Test a regular URL instead of a direct link to the manifest
+      function () {
+        let validator = createHosted("valid", "/");
+        validator.validate().then(() => {
+          is(validator.warnings.length, 0, "manifest found got no warning");
+          is(validator.errors.length, 0, "manifest found got no error");
+
+          next();
+        });
+      },
+
+      // Test finding a manifest at origin's root
+      function () {
+        let validator = createHosted("valid", "/unexisting-dir");
+        validator.validate().then(() => {
+          is(validator.warnings.length, 0, "manifest found at origin root got no warning");
+          is(validator.errors.length, 0, "manifest found at origin root got no error");
+
+          next();
+        });
+      },
+
+      // Test priorization of manifest.webapp at provided location instead of a manifest located at origin's root
+      function() {
+        let validator = createHosted("valid", "/alsoValid");
+        validator.validate().then(() => {
+          is(validator.manifest.name, "valid at subfolder", "manifest at subfolder was used");
+
+          next();
         });
       }
     ];
