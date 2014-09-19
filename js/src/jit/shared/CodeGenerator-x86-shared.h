@@ -214,6 +214,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     bool visitFloat32x4(LFloat32x4 *ins);
     bool visitSimdExtractElementI(LSimdExtractElementI *lir);
     bool visitSimdExtractElementF(LSimdExtractElementF *lir);
+    bool visitSimdInsertElementI(LSimdInsertElementI *lir);
+    bool visitSimdInsertElementF(LSimdInsertElementF *lir);
     bool visitSimdSignMaskX4(LSimdSignMaskX4 *ins);
     bool visitSimdBinaryCompIx4(LSimdBinaryCompIx4 *lir);
     bool visitSimdBinaryCompFx4(LSimdBinaryCompFx4 *lir);

@@ -178,6 +178,47 @@ class LSimdExtractElementF : public LSimdExtractElementBase
     {}
 };
 
+class LSimdInsertElementBase : public LInstructionHelper<1, 2, 0>
+{
+  protected:
+    LSimdInsertElementBase(const LAllocation &vec, const LAllocation &val)
+    {
+        setOperand(0, vec);
+        setOperand(1, val);
+    }
+
+  public:
+    const LAllocation *vector() {
+        return getOperand(0);
+    }
+    const LAllocation *value() {
+        return getOperand(1);
+    }
+    const SimdLane lane() const {
+        return mir_->toSimdInsertElement()->lane();
+    }
+};
+
+// Replace an element from a given SIMD int32x4 lane with a given value.
+class LSimdInsertElementI : public LSimdInsertElementBase
+{
+  public:
+    LIR_HEADER(SimdInsertElementI);
+    LSimdInsertElementI(const LAllocation &vec, const LAllocation &val)
+      : LSimdInsertElementBase(vec, val)
+    {}
+};
+
+// Replace an element from a given SIMD float32x4 lane with a given value.
+class LSimdInsertElementF : public LSimdInsertElementBase
+{
+  public:
+    LIR_HEADER(SimdInsertElementF);
+    LSimdInsertElementF(const LAllocation &vec, const LAllocation &val)
+      : LSimdInsertElementBase(vec, val)
+    {}
+};
+
 class LSimdSignMaskX4 : public LInstructionHelper<1, 1, 0>
 {
   public:

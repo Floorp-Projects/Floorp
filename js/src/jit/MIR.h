@@ -1402,6 +1402,50 @@ class MSimdExtractElement : public MUnaryInstruction
     }
 };
 
+// Replaces the datum in the given lane by a scalar value of the same type.
+class MSimdInsertElement : public MBinaryInstruction
+{
+  private:
+    SimdLane lane_;
+
+    MSimdInsertElement(MDefinition *vec, MDefinition *val, MIRType type, SimdLane lane)
+      : MBinaryInstruction(vec, val), lane_(lane)
+    {
+        MOZ_ASSERT(IsSimdType(type) && vec->type() == type);
+        MOZ_ASSERT(SimdTypeToScalarType(type) == val->type());
+
+        setMovable();
+        setResultType(type);
+    }
+
+  public:
+    INSTRUCTION_HEADER(SimdInsertElement)
+
+    static MSimdInsertElement *NewAsmJS(TempAllocator &alloc, MDefinition *vec, MDefinition *val,
+                                         MIRType type, SimdLane lane)
+    {
+        return new(alloc) MSimdInsertElement(vec, val, type, lane);
+    }
+
+    MDefinition *vector() {
+        return getOperand(0);
+    }
+    MDefinition *value() {
+        return getOperand(1);
+    }
+    SimdLane lane() const {
+        return lane_;
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+
+    bool congruentTo(const MDefinition *ins) const {
+        return binaryCongruentTo(ins) && lane_ == ins->toSimdInsertElement()->lane();
+    }
+};
+
 // Extracts the sign bits from a given vector, returning an MIRType_Int32.
 class MSimdSignMask : public MUnaryInstruction
 {

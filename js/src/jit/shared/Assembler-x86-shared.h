@@ -525,7 +525,7 @@ class AssemblerX86Shared : public AssemblerShared
         }
     }
 
-    // movsd and movss are only provided in load/store form since the
+    // movsd is only provided in load/store form since the
     // register-to-register form has different semantics (it doesn't clobber
     // the whole output register) and isn't needed currently.
     void movsd(const Address &src, FloatRegister dest) {
@@ -540,6 +540,10 @@ class AssemblerX86Shared : public AssemblerShared
     void movsd(FloatRegister src, const BaseIndex &dest) {
         masm.movsd_rm(src.code(), dest.offset, dest.base.code(), dest.index.code(), dest.scale);
     }
+    // Although movss is not only provided in load/store form (for the same
+    // reasons as movsd above), the register to register form should be only
+    // used in contexts where we care about not clearing the higher lanes of
+    // the FloatRegister.
     void movss(const Address &src, FloatRegister dest) {
         masm.movss_mr(src.offset, src.base.code(), dest.code());
     }
@@ -551,6 +555,9 @@ class AssemblerX86Shared : public AssemblerShared
     }
     void movss(FloatRegister src, const BaseIndex &dest) {
         masm.movss_rm(src.code(), dest.offset, dest.base.code(), dest.index.code(), dest.scale);
+    }
+    void movss(FloatRegister src, const FloatRegister &dest) {
+        masm.movss_rr(src.code(), dest.code());
     }
     void movdqu(const Operand &src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
