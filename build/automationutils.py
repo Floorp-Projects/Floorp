@@ -207,11 +207,7 @@ def processSingleLeakFile(leakLogFileName, processType, leakThreshold):
                       r"(?P<size>-?\d+)\s+(?P<bytesLeaked>-?\d+)\s+"
                       r"-?\d+\s+(?P<numLeaked>-?\d+)")
 
-  processString = ""
-  if processType:
-    # eg 'plugin'
-    processString = " %s process:" % processType
-
+  processString = " %s process:" % processType
   crashedOnPurpose = False
   totalBytesLeaked = None
   logAsWarning = False
@@ -271,7 +267,7 @@ def processSingleLeakFile(leakLogFileName, processType, leakThreshold):
 
   # totalBytesLeaked was seen and is non-zero.
   if totalBytesLeaked > leakThreshold:
-    if processType and processType == "tab":
+    if processType == "tab":
       # For now, ignore tab process leaks. See bug 1051230.
       log.info("WARNING | leakcheck | ignoring leaks in tab process")
       prefix = "WARNING"
@@ -302,6 +298,15 @@ def processLeakLog(leakLogFile, leakThreshold = 0):
 
   Use this function if you want an additional PASS/FAIL summary.
   It must be used with the |XPCOM_MEM_BLOAT_LOG| environment variable.
+
+  The base of leakLogFile for a non-default process needs to end with
+    _proctype_pid12345.log
+  "proctype" is a string denoting the type of the process, which should
+  be the result of calling XRE_ChildProcessTypeToString(). 12345 is
+  a series of digits that is the pid for the process. The .log is
+  optional.
+
+  All other file names are treated as being for default processes.
   """
 
   if not os.path.exists(leakLogFile):
@@ -321,10 +326,11 @@ def processLeakLog(leakLogFile, leakThreshold = 0):
   for fileName in os.listdir(leakLogFileDir):
     if fileName.find(leakFileBase) != -1:
       thisFile = os.path.join(leakLogFileDir, fileName)
-      processType = None
       m = fileNameRegExp.search(fileName)
       if m:
         processType = m.group(1)
+      else:
+        processType = "default"
       processSingleLeakFile(thisFile, processType, leakThreshold)
 
 def replaceBackSlashes(input):
