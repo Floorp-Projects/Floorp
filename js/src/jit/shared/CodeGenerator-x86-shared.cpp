@@ -537,6 +537,58 @@ CodeGeneratorX86Shared::visitMinMaxD(LMinMaxD *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitMinMaxF(LMinMaxF *ins)
+{
+    FloatRegister first = ToFloatRegister(ins->first());
+    FloatRegister second = ToFloatRegister(ins->second());
+#ifdef DEBUG
+    FloatRegister output = ToFloatRegister(ins->output());
+    JS_ASSERT(first == output);
+#endif
+
+    Label done, nan, minMaxInst;
+
+    // Do a ucomiss to catch equality and NaNs, which both require special
+    // handling. If the operands are ordered and inequal, we branch straight to
+    // the min/max instruction. If we wanted, we could also branch for less-than
+    // or greater-than here instead of using min/max, however these conditions
+    // will sometimes be hard on the branch predictor.
+    masm.ucomiss(first, second);
+    masm.j(Assembler::NotEqual, &minMaxInst);
+    if (!ins->mir()->range() || ins->mir()->range()->canBeNaN())
+        masm.j(Assembler::Parity, &nan);
+
+    // Ordered and equal. The operands are bit-identical unless they are zero
+    // and negative zero. These instructions merge the sign bits in that
+    // case, and are no-ops otherwise.
+    if (ins->mir()->isMax())
+        masm.andps(second, first);
+    else
+        masm.orps(second, first);
+    masm.jump(&done);
+
+    // x86's min/max are not symmetric; if either operand is a NaN, they return
+    // the read-only operand. We need to return a NaN if either operand is a
+    // NaN, so we explicitly check for a NaN in the read-write operand.
+    if (!ins->mir()->range() || ins->mir()->range()->canBeNaN()) {
+        masm.bind(&nan);
+        masm.ucomiss(first, first);
+        masm.j(Assembler::Parity, &done);
+    }
+
+    // When the values are inequal, or second is NaN, x86's min and max will
+    // return the value we need.
+    masm.bind(&minMaxInst);
+    if (ins->mir()->isMax())
+        masm.maxss(second, first);
+    else
+        masm.minss(second, first);
+
+    masm.bind(&done);
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitAbsD(LAbsD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
