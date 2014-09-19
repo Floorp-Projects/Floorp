@@ -41,12 +41,6 @@ function debug(s) {
 
 const RILCONTENTHELPER_CID =
   Components.ID("{472816e1-1fd6-4405-996c-806f9ea68174}");
-const ICCINFO_CID =
-  Components.ID("{39d64d90-26a6-11e4-8c21-0800200c9a66}");
-const GSMICCINFO_CID =
-  Components.ID("{e0fa785b-ad3f-46ed-bc56-fcb0d6fe4fa8}");
-const CDMAICCINFO_CID =
-  Components.ID("{3d1f844f-9ec5-48fb-8907-aed2e5421709}");
 const ICCCARDLOCKERROR_CID =
   Components.ID("{08a71987-408c-44ff-93fd-177c0a85c3dd}");
 
@@ -108,16 +102,9 @@ MobileIccCardLockRetryCount.prototype = {
 
 function IccInfo() {}
 IccInfo.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMMozIccInfo]),
-  classID: ICCINFO_CID,
-  classInfo: XPCOMUtils.generateCI({
-    classID:          ICCINFO_CID,
-    classDescription: "MozIccInfo",
-    flags:            Ci.nsIClassInfo.DOM_OBJECT,
-    interfaces:       [Ci.nsIDOMMozIccInfo]
-  }),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIIccInfo]),
 
-  // nsIDOMMozIccInfo
+  // nsIIccInfo
 
   iccType: null,
   iccid: null,
@@ -130,34 +117,20 @@ IccInfo.prototype = {
 
 function GsmIccInfo() {}
 GsmIccInfo.prototype = {
-  __proto__: IccInfo.prototype,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMMozGsmIccInfo]),
-  classID: GSMICCINFO_CID,
-  classInfo: XPCOMUtils.generateCI({
-    classID:          GSMICCINFO_CID,
-    classDescription: "MozGsmIccInfo",
-    flags:            Ci.nsIClassInfo.DOM_OBJECT,
-    interfaces:       [Ci.nsIDOMMozGsmIccInfo]
-  }),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIGsmIccInfo,
+                                         Ci.nsIIccInfo]),
 
-  // nsIDOMMozGsmIccInfo
+  // nsIGsmIccInfo
 
   msisdn: null
 };
 
 function CdmaIccInfo() {}
 CdmaIccInfo.prototype = {
-  __proto__: IccInfo.prototype,
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDOMMozCdmaIccInfo]),
-  classID: CDMAICCINFO_CID,
-  classInfo: XPCOMUtils.generateCI({
-    classID:          CDMAICCINFO_CID,
-    classDescription: "MozCdmaIccInfo",
-    flags:            Ci.nsIClassInfo.DOM_OBJECT,
-    interfaces:       [Ci.nsIDOMMozCdmaIccInfo]
-  }),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsICdmaIccInfo,
+                                         Ci.nsIIccInfo]),
 
-  // nsIDOMMozCdmaIccInfo
+  // nsICdmaIccInfo
 
   mdn: null,
   prlVersion: 0

@@ -2,28 +2,42 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Icc.h"
+#include "mozilla/dom/Icc.h"
 
+#include "mozilla/dom/DOMRequest.h"
+#include "mozilla/dom/IccInfo.h"
 #include "mozilla/dom/MozIccBinding.h"
 #include "mozilla/dom/MozStkCommandEvent.h"
-#include "mozilla/dom/DOMRequest.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "nsIDOMIccInfo.h"
+#include "nsIIccInfo.h"
+#include "nsIIccProvider.h"
 #include "nsJSON.h"
 #include "nsRadioInterfaceLayer.h"
 #include "nsServiceManagerUtils.h"
 
 using namespace mozilla::dom;
 
-Icc::Icc(nsPIDOMWindow* aWindow, long aClientId, const nsAString& aIccId)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(Icc, DOMEventTargetHelper, mIccInfo)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(Icc)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
+
+NS_IMPL_ADDREF_INHERITED(Icc, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(Icc, DOMEventTargetHelper)
+
+Icc::Icc(nsPIDOMWindow* aWindow, long aClientId, nsIIccInfo* aIccInfo)
   : mLive(true)
   , mClientId(aClientId)
-  , mIccId(aIccId)
 {
   SetIsDOMBinding();
   BindToOwner(aWindow);
 
   mProvider = do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
+
+  if (aIccInfo) {
+    aIccInfo->GetIccid(mIccId);
+    UpdateIccInfo(aIccInfo);
+  }
 
   // Not being able to acquire the provider isn't fatal since we check
   // for it explicitly below.
@@ -35,6 +49,7 @@ Icc::Icc(nsPIDOMWindow* aWindow, long aClientId, const nsAString& aIccId)
 void
 Icc::Shutdown()
 {
+  mIccInfo.SetNull();
   mProvider = nullptr;
   mLive = false;
 }
@@ -74,6 +89,38 @@ Icc::NotifyStkEvent(const nsAString& aName, const nsAString& aMessage)
   return DispatchTrustedEvent(event);
 }
 
+void
+Icc::UpdateIccInfo(nsIIccInfo* aIccInfo)
+{
+  if (!aIccInfo) {
+    mIccInfo.SetNull();
+    return;
+  }
+
+  nsCOMPtr<nsIGsmIccInfo> gsmIccInfo(do_QueryInterface(aIccInfo));
+  if (gsmIccInfo) {
+    if (mIccInfo.IsNull() || !mIccInfo.Value().IsMozGsmIccInfo()) {
+      mIccInfo.SetValue().SetAsMozGsmIccInfo() = new GsmIccInfo(GetOwner());
+    }
+    mIccInfo.Value().GetAsMozGsmIccInfo().get()->Update(gsmIccInfo);
+    return;
+  }
+
+  nsCOMPtr<nsICdmaIccInfo> cdmaIccInfo(do_QueryInterface(aIccInfo));
+  if (cdmaIccInfo) {
+    if (mIccInfo.IsNull() || !mIccInfo.Value().IsMozCdmaIccInfo()) {
+      mIccInfo.SetValue().SetAsMozCdmaIccInfo() = new CdmaIccInfo(GetOwner());
+    }
+    mIccInfo.Value().GetAsMozCdmaIccInfo().get()->Update(cdmaIccInfo);
+    return;
+  }
+
+  if (mIccInfo.IsNull() || !mIccInfo.Value().IsMozIccInfo()) {
+    mIccInfo.SetValue().SetAsMozIccInfo() = new IccInfo(GetOwner());
+  }
+  mIccInfo.Value().GetAsMozIccInfo().get()->Update(aIccInfo);
+}
+
 // WrapperCache
 
 JSObject*
@@ -84,20 +131,10 @@ Icc::WrapObject(JSContext* aCx)
 
 // MozIcc WebIDL
 
-already_AddRefed<nsIDOMMozIccInfo>
-Icc::GetIccInfo() const
+void
+Icc::GetIccInfo(Nullable<OwningMozIccInfoOrMozGsmIccInfoOrMozCdmaIccInfo>& aIccInfo) const
 {
-  if (!mProvider) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIDOMMozIccInfo> iccInfo;
-  nsresult rv = mProvider->GetIccInfo(mClientId, getter_AddRefs(iccInfo));
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  return iccInfo.forget();
+  aIccInfo = mIccInfo;
 }
 
 void
