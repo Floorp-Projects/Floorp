@@ -1,4 +1,4 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */
 /* Copyright 2012 Mozilla Foundation
  *
@@ -22,8 +22,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.0.712';
-PDFJS.build = '6969ed4';
+PDFJS.version = '1.0.801';
+PDFJS.build = 'e77e5c4';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -373,6 +373,7 @@ var PasswordException = (function PasswordExceptionClosure() {
 
   return PasswordException;
 })();
+PDFJS.PasswordException = PasswordException;
 
 var UnknownErrorException = (function UnknownErrorExceptionClosure() {
   function UnknownErrorException(msg, details) {
@@ -386,6 +387,7 @@ var UnknownErrorException = (function UnknownErrorExceptionClosure() {
 
   return UnknownErrorException;
 })();
+PDFJS.UnknownErrorException = UnknownErrorException;
 
 var InvalidPDFException = (function InvalidPDFExceptionClosure() {
   function InvalidPDFException(msg) {
@@ -398,6 +400,7 @@ var InvalidPDFException = (function InvalidPDFExceptionClosure() {
 
   return InvalidPDFException;
 })();
+PDFJS.InvalidPDFException = InvalidPDFException;
 
 var MissingPDFException = (function MissingPDFExceptionClosure() {
   function MissingPDFException(msg) {
@@ -410,6 +413,22 @@ var MissingPDFException = (function MissingPDFExceptionClosure() {
 
   return MissingPDFException;
 })();
+PDFJS.MissingPDFException = MissingPDFException;
+
+var UnexpectedResponseException =
+    (function UnexpectedResponseExceptionClosure() {
+  function UnexpectedResponseException(msg, status) {
+    this.name = 'UnexpectedResponseException';
+    this.message = msg;
+    this.status = status;
+  }
+
+  UnexpectedResponseException.prototype = new Error();
+  UnexpectedResponseException.constructor = UnexpectedResponseException;
+
+  return UnexpectedResponseException;
+})();
+PDFJS.UnexpectedResponseException = UnexpectedResponseException;
 
 var NotImplementedException = (function NotImplementedExceptionClosure() {
   function NotImplementedException(msg) {
@@ -1453,6 +1472,12 @@ var ChunkedStream = (function ChunkedStreamClosure() {
 
       this.pos = end;
       return bytes.subarray(pos, end);
+    },
+
+    peekByte: function ChunkedStream_peekByte() {
+      var peekedByte = this.getByte();
+      this.pos--;
+      return peekedByte;
     },
 
     peekBytes: function ChunkedStream_peekBytes(length) {
@@ -6863,20 +6888,21 @@ var CalRGBCS = (function CalRGBCSClosure() {
       convertToRgb(this, src, srcOffset, dest, destOffset, 1);
     },
     getRgbBuffer: function CalRGBCS_getRgbBuffer(src, srcOffset, count,
-                                                 dest, destOffset, bits) {
+                                                 dest, destOffset, bits,
+                                                 alpha01) {
       var scale = 1 / ((1 << bits) - 1);
 
       for (var i = 0; i < count; ++i) {
         convertToRgb(this, src, srcOffset, dest, destOffset, scale);
         srcOffset += 3;
-        destOffset += 3;
+        destOffset += 3 + alpha01;
       }
     },
-    getOutputLength: function CalRGBCS_getOutputLength(inputLength) {
-      return inputLength;
+    getOutputLength: function CalRGBCS_getOutputLength(inputLength, alpha01) {
+      return (inputLength * (3 + alpha01) / 3) | 0;
     },
     isPassthrough: ColorSpace.prototype.isPassthrough,
-    createRgbBuffer: ColorSpace.prototype.createRgbBuffer,
+    fillRgb: ColorSpace.prototype.fillRgb,
     isDefaultDecode: function CalRGBCS_isDefaultDecode(decodeMap) {
       return ColorSpace.isDefaultDecode(decodeMap, this.numComps);
     },
@@ -11106,9 +11132,14 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         // The Symbolic attribute can be misused for regular fonts
         // Heuristic: we have to check if the font is a standard one also
         if (!!(properties.flags & FontFlags.Symbolic)) {
-          encoding = (!properties.file && /Symbol/i.test(properties.name) ?
-                      Encodings.SymbolSetEncoding :
-                      Encodings.MacRomanEncoding);
+          encoding = Encodings.MacRomanEncoding;
+          if (!properties.file) {
+            if (/Symbol/i.test(properties.name)) {
+              encoding = Encodings.SymbolSetEncoding;
+            } else if (/Dingbats/i.test(properties.name)) {
+              encoding = Encodings.ZapfDingbatsEncoding;
+            }
+          }
         }
         properties.defaultEncoding = encoding;
       }
@@ -13613,7 +13644,7 @@ var Encodings = {
     'parenrighttp', 'parenrightex', 'parenrightbt', 'bracketrighttp',
     'bracketrightex', 'bracketrightbt', 'bracerighttp', 'bracerightmid',
     'bracerightbt'],
-  zapfDingbatsEncoding: ['', '', '', '', '', '', '', '', '', '', '', '', '', '',
+  ZapfDingbatsEncoding: ['', '', '', '', '', '', '', '', '', '', '', '', '', '',
     '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
     'space', 'a1', 'a2', 'a202', 'a3', 'a4', 'a5', 'a119', 'a118', 'a117',
     'a11', 'a12', 'a13', 'a14', 'a15', 'a16', 'a105', 'a17', 'a18', 'a19',
@@ -13624,19 +13655,19 @@ var Encodings = {
     'a57', 'a58', 'a59', 'a60', 'a61', 'a62', 'a63', 'a64', 'a65', 'a66',
     'a67', 'a68', 'a69', 'a70', 'a71', 'a72', 'a73', 'a74', 'a203', 'a75',
     'a204', 'a76', 'a77', 'a78', 'a79', 'a81', 'a82', 'a83', 'a84', 'a97',
-    'a98', 'a99', 'a100', '', '', '', '', '', '', '', '', '', '', '', '', '',
-    '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
-    '', '', 'a101', 'a102', 'a103', 'a104', 'a106', 'a107', 'a108', 'a112',
-    'a111', 'a110', 'a109', 'a120', 'a121', 'a122', 'a123', 'a124', 'a125',
-    'a126', 'a127', 'a128', 'a129', 'a130', 'a131', 'a132', 'a133', 'a134',
-    'a135', 'a136', 'a137', 'a138', 'a139', 'a140', 'a141', 'a142', 'a143',
-    'a144', 'a145', 'a146', 'a147', 'a148', 'a149', 'a150', 'a151', 'a152',
-    'a153', 'a154', 'a155', 'a156', 'a157', 'a158', 'a159', 'a160', 'a161',
-    'a163', 'a164', 'a196', 'a165', 'a192', 'a166', 'a167', 'a168', 'a169',
-    'a170', 'a171', 'a172', 'a173', 'a162', 'a174', 'a175', 'a176', 'a177',
-    'a178', 'a179', 'a193', 'a180', 'a199', 'a181', 'a200', 'a182', '', 'a201',
-    'a183', 'a184', 'a197', 'a185', 'a194', 'a198', 'a186', 'a195', 'a187',
-    'a188', 'a189', 'a190', 'a191']
+    'a98', 'a99', 'a100', '', 'a89', 'a90', 'a93', 'a94', 'a91', 'a92', 'a205',
+    'a85', 'a206', 'a86', 'a87', 'a88', 'a95', 'a96', '', '', '', '', '', '',
+    '', '', '', '', '', '', '', '', '', '', '', '', '', 'a101', 'a102', 'a103',
+    'a104', 'a106', 'a107', 'a108', 'a112', 'a111', 'a110', 'a109', 'a120',
+    'a121', 'a122', 'a123', 'a124', 'a125', 'a126', 'a127', 'a128', 'a129',
+    'a130', 'a131', 'a132', 'a133', 'a134', 'a135', 'a136', 'a137', 'a138',
+    'a139', 'a140', 'a141', 'a142', 'a143', 'a144', 'a145', 'a146', 'a147',
+    'a148', 'a149', 'a150', 'a151', 'a152', 'a153', 'a154', 'a155', 'a156',
+    'a157', 'a158', 'a159', 'a160', 'a161', 'a163', 'a164', 'a196', 'a165',
+    'a192', 'a166', 'a167', 'a168', 'a169', 'a170', 'a171', 'a172', 'a173',
+    'a162', 'a174', 'a175', 'a176', 'a177', 'a178', 'a179', 'a193', 'a180',
+    'a199', 'a181', 'a200', 'a182', '', 'a201', 'a183', 'a184', 'a197', 'a185',
+    'a194', 'a198', 'a186', 'a195', 'a187', 'a188', 'a189', 'a190', 'a191']
 };
 
 /**
@@ -13806,8 +13837,11 @@ var GlyphMapForStandardFonts = {
   '156': 8747, '157': 170, '158': 186, '159': 8486, '160': 230, '161': 248,
   '162': 191, '163': 161, '164': 172, '165': 8730, '166': 402, '167': 8776,
   '168': 8710, '169': 171, '170': 187, '171': 8230, '210': 218, '223': 711,
-  '227': 353, '229': 382, '234': 253, '253': 268, '254': 269, '258': 258,
-  '268': 283, '269': 313, '278': 328, '284': 345, '292': 367, '305': 963,
+  '224': 321, '225': 322, '227': 353, '229': 382, '234': 253, '252': 263,
+  '253': 268, '254': 269, '258': 258, '260': 260, '261': 261, '265': 280,
+  '266': 281, '268': 283, '269': 313, '275': 323, '276': 324, '278': 328,
+  '284': 345, '285': 346, '286': 347, '292': 367, '295': 377, '296': 378,
+  '298': 380, '305': 963,
   '306': 964, '307': 966, '308': 8215, '309': 8252, '310': 8319, '311': 8359,
   '312': 8592, '313': 8593, '337': 9552, '493': 1039, '494': 1040, '705': 1524,
   '706': 8362, '710': 64288, '711': 64298, '759': 1617, '761': 1776,
@@ -13848,29 +13882,42 @@ var GlyphMapForStandardFonts = {
   '3316': 578, '3379': 42785, '3393': 1159, '3416': 8377
 };
 
-// Some characters, e.g. copyrightserif, mapped to the private use area and
+// Some characters, e.g. copyrightserif, are mapped to the private use area and
 // might not be displayed using standard fonts. Mapping/hacking well-known chars
 // to the similar equivalents in the normal characters range.
+var SpecialPUASymbols = {
+  '63721': 0x00A9, // copyrightsans (0xF8E9) => copyright
+  '63193': 0x00A9, // copyrightserif (0xF6D9) => copyright
+  '63720': 0x00AE, // registersans (0xF8E8) => registered
+  '63194': 0x00AE, // registerserif (0xF6DA) => registered
+  '63722': 0x2122, // trademarksans (0xF8EA) => trademark
+  '63195': 0x2122, // trademarkserif (0xF6DB) => trademark
+  '63729': 0x23A7, // bracelefttp (0xF8F1)
+  '63730': 0x23A8, // braceleftmid (0xF8F2)
+  '63731': 0x23A9, // braceleftbt (0xF8F3)
+  '63740': 0x23AB, // bracerighttp (0xF8FC)
+  '63741': 0x23AC, // bracerightmid (0xF8FD)
+  '63742': 0x23AD, // bracerightmid (0xF8FE)
+  '63726': 0x23A1, // bracketlefttp (0xF8EE)
+  '63727': 0x23A2, // bracketleftex (0xF8EF)
+  '63728': 0x23A3, // bracketleftbt (0xF8F0)
+  '63737': 0x23A4, // bracketrighttp (0xF8F9)
+  '63738': 0x23A5, // bracketrightex (0xF8FA)
+  '63739': 0x23A6, // bracketrightbt (0xF8FB)
+  '63723': 0x239B, // parenlefttp (0xF8EB)
+  '63724': 0x239C, // parenleftex (0xF8EC)
+  '63725': 0x239D, // parenleftbt (0xF8ED)
+  '63734': 0x239E, // parenrighttp (0xF8F6)
+  '63735': 0x239F, // parenrightex (0xF8F7)
+  '63736': 0x23A0, // parenrightbt (0xF8F8)
+};
 function mapSpecialUnicodeValues(code) {
   if (code >= 0xFFF0 && code <= 0xFFFF) { // Specials unicode block.
     return 0;
+  } else if (code >= 0xF600 && code <= 0xF8FF) {
+    return (SpecialPUASymbols[code] || code);
   }
-  switch (code) {
-    case 0xF8E9: // copyrightsans
-    case 0xF6D9: // copyrightserif
-      return 0x00A9; // copyright
-
-    case 0xF8E8: // registersans
-    case 0xF6DA: // registerserif
-      return 0x00AE; // registered
-
-    case 0xF8EA: // trademarksans
-    case 0xF6DB: // trademarkserif
-      return 0x2122; // trademark
-
-    default:
-      return code;
-  }
+  return code;
 }
 
 var UnicodeRanges = [
@@ -15725,7 +15772,7 @@ var OpenTypeFileBuilder = (function OpenTypeFileBuilderClosure() {
  */
 var Font = (function FontClosure() {
   function Font(name, file, properties) {
-    var charCode, glyphName;
+    var charCode, glyphName, fontChar;
 
     this.name = name;
     this.loadedName = properties.loadedName;
@@ -15815,7 +15862,23 @@ var Font = (function FontClosure() {
       } else if (/Symbol/i.test(fontName)) {
         var symbols = Encodings.SymbolSetEncoding;
         for (charCode in symbols) {
-          var fontChar = GlyphsUnicode[symbols[charCode]];
+          fontChar = GlyphsUnicode[symbols[charCode]];
+          if (!fontChar) {
+            continue;
+          }
+          this.toFontChar[charCode] = fontChar;
+        }
+      } else if (/Dingbats/i.test(fontName)) {
+        var dingbats = Encodings.ZapfDingbatsEncoding;
+        for (charCode in dingbats) {
+          fontChar = DingbatsGlyphsUnicode[dingbats[charCode]];
+          if (!fontChar) {
+            continue;
+          }
+          this.toFontChar[charCode] = fontChar;
+        }
+        for (charCode in properties.differences) {
+          fontChar = DingbatsGlyphsUnicode[properties.differences[charCode]];
           if (!fontChar) {
             continue;
           }
@@ -16648,16 +16711,12 @@ var Font = (function FontClosure() {
         var numMissing = numOfSidebearings -
           ((metrics.length - numOfMetrics * 4) >> 1);
 
-        var i, ii;
         if (numMissing > 0) {
-          font.pos = (font.start ? font.start : 0) + metrics.offset;
-          var entries = '';
-          for (i = 0, ii = metrics.length; i < ii; i++) {
-            entries += String.fromCharCode(font.getByte());
-          }
-          for (i = 0; i < numMissing; i++) {
-            entries += '\x00\x00';
-          }
+          // For each missing glyph, we set both the width and lsb to 0 (zero).
+          // Since we need to add two properties for each glyph, this explains
+          // the use of |numMissing * 2| when initializing the typed array.
+          var entries = new Uint8Array(metrics.length + numMissing * 2);
+          entries.set(metrics.data);
           metrics.data = entries;
         }
       }
@@ -17389,7 +17448,15 @@ var Font = (function FontClosure() {
         // where the the font is symbolic and it has an encoding.
         if (hasEncoding &&
             (cmapPlatformId === 3 && cmapEncodingId === 1 ||
-             cmapPlatformId === 1 && cmapEncodingId === 0)) {
+             cmapPlatformId === 1 && cmapEncodingId === 0) ||
+            (cmapPlatformId === -1 && cmapEncodingId === -1 && // Temporary hack
+             !!Encodings[properties.baseEncodingName])) {      // Temporary hack
+          // When no preferred cmap table was found and |baseEncodingName| is
+          // one of the predefined encodings, we seem to obtain a better
+          // |charCodeToGlyphId| map from the code below (fixes bug 1057544).
+          // TODO: Note that this is a hack which should be removed as soon as
+          //       we have proper support for more exotic cmap tables.
+
           var baseEncoding = [];
           if (properties.baseEncodingName === 'MacRomanEncoding' ||
               properties.baseEncodingName === 'WinAnsiEncoding') {
@@ -25399,6 +25466,211 @@ var GlyphsUnicode = {
   '.notdef': 0x0000
 };
 
+var DingbatsGlyphsUnicode = {
+  space: 0x0020,
+  a1: 0x2701,
+  a2: 0x2702,
+  a202: 0x2703,
+  a3: 0x2704,
+  a4: 0x260E,
+  a5: 0x2706,
+  a119: 0x2707,
+  a118: 0x2708,
+  a117: 0x2709,
+  a11: 0x261B,
+  a12: 0x261E,
+  a13: 0x270C,
+  a14: 0x270D,
+  a15: 0x270E,
+  a16: 0x270F,
+  a105: 0x2710,
+  a17: 0x2711,
+  a18: 0x2712,
+  a19: 0x2713,
+  a20: 0x2714,
+  a21: 0x2715,
+  a22: 0x2716,
+  a23: 0x2717,
+  a24: 0x2718,
+  a25: 0x2719,
+  a26: 0x271A,
+  a27: 0x271B,
+  a28: 0x271C,
+  a6: 0x271D,
+  a7: 0x271E,
+  a8: 0x271F,
+  a9: 0x2720,
+  a10: 0x2721,
+  a29: 0x2722,
+  a30: 0x2723,
+  a31: 0x2724,
+  a32: 0x2725,
+  a33: 0x2726,
+  a34: 0x2727,
+  a35: 0x2605,
+  a36: 0x2729,
+  a37: 0x272A,
+  a38: 0x272B,
+  a39: 0x272C,
+  a40: 0x272D,
+  a41: 0x272E,
+  a42: 0x272F,
+  a43: 0x2730,
+  a44: 0x2731,
+  a45: 0x2732,
+  a46: 0x2733,
+  a47: 0x2734,
+  a48: 0x2735,
+  a49: 0x2736,
+  a50: 0x2737,
+  a51: 0x2738,
+  a52: 0x2739,
+  a53: 0x273A,
+  a54: 0x273B,
+  a55: 0x273C,
+  a56: 0x273D,
+  a57: 0x273E,
+  a58: 0x273F,
+  a59: 0x2740,
+  a60: 0x2741,
+  a61: 0x2742,
+  a62: 0x2743,
+  a63: 0x2744,
+  a64: 0x2745,
+  a65: 0x2746,
+  a66: 0x2747,
+  a67: 0x2748,
+  a68: 0x2749,
+  a69: 0x274A,
+  a70: 0x274B,
+  a71: 0x25CF,
+  a72: 0x274D,
+  a73: 0x25A0,
+  a74: 0x274F,
+  a203: 0x2750,
+  a75: 0x2751,
+  a204: 0x2752,
+  a76: 0x25B2,
+  a77: 0x25BC,
+  a78: 0x25C6,
+  a79: 0x2756,
+  a81: 0x25D7,
+  a82: 0x2758,
+  a83: 0x2759,
+  a84: 0x275A,
+  a97: 0x275B,
+  a98: 0x275C,
+  a99: 0x275D,
+  a100: 0x275E,
+  a101: 0x2761,
+  a102: 0x2762,
+  a103: 0x2763,
+  a104: 0x2764,
+  a106: 0x2765,
+  a107: 0x2766,
+  a108: 0x2767,
+  a112: 0x2663,
+  a111: 0x2666,
+  a110: 0x2665,
+  a109: 0x2660,
+  a120: 0x2460,
+  a121: 0x2461,
+  a122: 0x2462,
+  a123: 0x2463,
+  a124: 0x2464,
+  a125: 0x2465,
+  a126: 0x2466,
+  a127: 0x2467,
+  a128: 0x2468,
+  a129: 0x2469,
+  a130: 0x2776,
+  a131: 0x2777,
+  a132: 0x2778,
+  a133: 0x2779,
+  a134: 0x277A,
+  a135: 0x277B,
+  a136: 0x277C,
+  a137: 0x277D,
+  a138: 0x277E,
+  a139: 0x277F,
+  a140: 0x2780,
+  a141: 0x2781,
+  a142: 0x2782,
+  a143: 0x2783,
+  a144: 0x2784,
+  a145: 0x2785,
+  a146: 0x2786,
+  a147: 0x2787,
+  a148: 0x2788,
+  a149: 0x2789,
+  a150: 0x278A,
+  a151: 0x278B,
+  a152: 0x278C,
+  a153: 0x278D,
+  a154: 0x278E,
+  a155: 0x278F,
+  a156: 0x2790,
+  a157: 0x2791,
+  a158: 0x2792,
+  a159: 0x2793,
+  a160: 0x2794,
+  a161: 0x2192,
+  a163: 0x2194,
+  a164: 0x2195,
+  a196: 0x2798,
+  a165: 0x2799,
+  a192: 0x279A,
+  a166: 0x279B,
+  a167: 0x279C,
+  a168: 0x279D,
+  a169: 0x279E,
+  a170: 0x279F,
+  a171: 0x27A0,
+  a172: 0x27A1,
+  a173: 0x27A2,
+  a162: 0x27A3,
+  a174: 0x27A4,
+  a175: 0x27A5,
+  a176: 0x27A6,
+  a177: 0x27A7,
+  a178: 0x27A8,
+  a179: 0x27A9,
+  a193: 0x27AA,
+  a180: 0x27AB,
+  a199: 0x27AC,
+  a181: 0x27AD,
+  a200: 0x27AE,
+  a182: 0x27AF,
+  a201: 0x27B1,
+  a183: 0x27B2,
+  a184: 0x27B3,
+  a197: 0x27B4,
+  a185: 0x27B5,
+  a194: 0x27B6,
+  a198: 0x27B7,
+  a186: 0x27B8,
+  a195: 0x27B9,
+  a187: 0x27BA,
+  a188: 0x27BB,
+  a189: 0x27BC,
+  a190: 0x27BD,
+  a191: 0x27BE,
+  a89: 0x2768, // 0xF8D7
+  a90: 0x2769, // 0xF8D8
+  a93: 0x276A, // 0xF8D9
+  a94: 0x276B, // 0xF8DA
+  a91: 0x276C, // 0xF8DB
+  a92: 0x276D, // 0xF8DC
+  a205: 0x276E, // 0xF8DD
+  a85: 0x276F, // 0xF8DE
+  a206: 0x2770, // 0xF8DF
+  a86: 0x2771, // 0xF8E0
+  a87: 0x2772, // 0xF8E1
+  a88: 0x2773, // 0xF8E2
+  a95: 0x2774, // 0xF8E3
+  a96: 0x2775, // 0xF8E4
+  '.notdef': 0x0000
+};
 
 
 var PDFImage = (function PDFImageClosure() {
@@ -29318,6 +29590,9 @@ var Parser = (function ParserClosure() {
         return new NullStream(stream);
       }
       try {
+        if (params) {
+          params = this.fetchIfRef(params);
+        }
         var xrefStreamStats = this.xref.stats.streamTypes;
         if (name === 'FlateDecode' || name === 'Fl') {
           xrefStreamStats[StreamType.FLATE] = true;
@@ -29341,6 +29616,22 @@ var Parser = (function ParserClosure() {
           return new LZWStream(stream, maybeLength, earlyChange);
         }
         if (name === 'DCTDecode' || name === 'DCT') {
+          // According to the specification: for inline images, the ID operator
+          // shall be followed by a single whitespace character (unless it uses
+          // ASCII85Decode or ASCIIHexDecode filters).
+          // In practice this only seems to be followed for inline JPEG images,
+          // and generally ignoring the first byte of the stream if it is a
+          // whitespace char can even *cause* issues (e.g. in the CCITTFaxDecode
+          // filters used in issue2984.pdf).
+          // Hence when the first byte of the stream of an inline JPEG image is
+          // a whitespace character, we thus simply skip over it.
+          if (isCmd(this.buf1, 'ID')) {
+            var firstByte = stream.peekByte();
+            if (firstByte === 0x0A /* LF */ || firstByte === 0x0D /* CR */ ||
+                firstByte === 0x20 /* SPACE */) {
+              stream.skip();
+            }
+          }
           xrefStreamStats[StreamType.DCT] = true;
           return new JpegStream(stream, maybeLength, stream.dict, this.xref);
         }
@@ -29447,7 +29738,7 @@ var Lexer = (function LexerClosure() {
       return (this.currentChar = this.stream.getByte());
     },
     peekChar: function Lexer_peekChar() {
-      return this.stream.peekBytes(1)[0];
+      return this.stream.peekByte();
     },
     getNumber: function Lexer_getNumber() {
       var ch = this.currentChar;
@@ -30104,6 +30395,11 @@ var Stream = (function StreamClosure() {
       this.pos = end;
       return bytes.subarray(pos, end);
     },
+    peekByte: function Stream_peekByte() {
+      var peekedByte = this.getByte();
+      this.pos--;
+      return peekedByte;
+    },
     peekBytes: function Stream_peekBytes(length) {
       var bytes = this.getBytes(length);
       this.pos -= bytes.length;
@@ -30232,6 +30528,11 @@ var DecodeStream = (function DecodeStreamClosure() {
 
       this.pos = end;
       return this.buffer.subarray(pos, end);
+    },
+    peekByte: function DecodeStream_peekByte() {
+      var peekedByte = this.getByte();
+      this.pos--;
+      return peekedByte;
     },
     peekBytes: function DecodeStream_peekBytes(length) {
       var bytes = this.getBytes(length);
@@ -30558,7 +30859,7 @@ var FlateStream = (function FlateStreamClosure() {
       var end = bufferLength + blockLen;
       this.bufferLength = end;
       if (blockLen === 0) {
-        if (str.peekBytes(1).length === 0) {
+        if (str.peekByte() === -1) {
           this.eof = true;
         }
       } else {
@@ -31064,7 +31365,8 @@ var Jbig2Stream = (function Jbig2StreamClosure() {
 
     var jbig2Image = new Jbig2Image();
 
-    var chunks = [], decodeParams = this.dict.get('DecodeParms');
+    var chunks = [], xref = this.dict.xref;
+    var decodeParams = xref.fetchIfRef(this.dict.get('DecodeParms'));
 
     // According to the PDF specification, DecodeParms can be either
     // a dictionary, or an array whose elements are dictionaries.
@@ -31073,7 +31375,7 @@ var Jbig2Stream = (function Jbig2StreamClosure() {
         warn('JBIG2 - \'DecodeParms\' array with multiple elements ' +
              'not supported.');
       }
-      decodeParams = decodeParams[0];
+      decodeParams = xref.fetchIfRef(decodeParams[0]);
     }
     if (decodeParams && decodeParams.has('JBIG2Globals')) {
       var globalsStream = decodeParams.get('JBIG2Globals');
@@ -32593,14 +32895,16 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
         },
 
         onError: function onError(status) {
+          var exception;
           if (status === 404) {
-            var exception = new MissingPDFException('Missing PDF "' +
-                                                    source.url + '".');
-            handler.send('MissingPDF', { exception: exception });
+            exception = new MissingPDFException('Missing PDF "' +
+                                                source.url + '".');
+            handler.send('MissingPDF', exception);
           } else {
-            handler.send('DocError', 'Unexpected server response (' +
-                         status + ') while retrieving PDF "' +
-                         source.url + '".');
+            exception = new UnexpectedResponseException(
+              'Unexpected server response (' + status +
+              ') while retrieving PDF "' + source.url + '".', status);
+            handler.send('UnexpectedResponse', exception);
           }
         },
 
@@ -32652,26 +32956,19 @@ var WorkerMessageHandler = PDFJS.WorkerMessageHandler = {
       var onFailure = function(e) {
         if (e instanceof PasswordException) {
           if (e.code === PasswordResponses.NEED_PASSWORD) {
-            handler.send('NeedPassword', {
-              exception: e
-            });
+            handler.send('NeedPassword', e);
           } else if (e.code === PasswordResponses.INCORRECT_PASSWORD) {
-            handler.send('IncorrectPassword', {
-              exception: e
-            });
+            handler.send('IncorrectPassword', e);
           }
         } else if (e instanceof InvalidPDFException) {
-          handler.send('InvalidPDF', {
-            exception: e
-          });
+          handler.send('InvalidPDF', e);
         } else if (e instanceof MissingPDFException) {
-          handler.send('MissingPDF', {
-            exception: e
-          });
+          handler.send('MissingPDF', e);
+        } else if (e instanceof UnexpectedResponseException) {
+          handler.send('UnexpectedResponse', e);
         } else {
-          handler.send('UnknownError', {
-            exception: new UnknownErrorException(e.message, e.toString())
-          });
+          handler.send('UnknownError',
+                       new UnknownErrorException(e.message, e.toString()));
         }
       };
 
@@ -34605,7 +34902,7 @@ var JpxImage = (function JpxImageClosure() {
       codeblockWidth: xcb_,
       codeblockHeight: ycb_,
       numcodeblockwide: cbx1 - cbx0 + 1,
-      numcodeblockhigh: cby1 - cby1 + 1
+      numcodeblockhigh: cby1 - cby0 + 1
     };
     subband.codeblocks = codeblocks;
     subband.precincts = precincts;
