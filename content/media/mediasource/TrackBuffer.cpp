@@ -6,26 +6,18 @@
 
 #include "TrackBuffer.h"
 
+#include "ContainerParser.h"
 #include "MediaSourceDecoder.h"
 #include "SharedThreadPool.h"
 #include "MediaTaskQueue.h"
 #include "SourceBufferDecoder.h"
 #include "SourceBufferResource.h"
 #include "VideoUtils.h"
-#include "mozilla/FloatingPoint.h"
 #include "mozilla/dom/TimeRanges.h"
 #include "nsError.h"
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
 #include "prlog.h"
-
-#if defined(DEBUG)
-#include <sys/stat.h>
-#include <sys/types.h>
-#endif
-
-struct JSContext;
-class JSObject;
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* GetMediaSourceLog();
@@ -47,9 +39,9 @@ TrackBuffer::TrackBuffer(MediaSourceDecoder* aParentDecoder, const nsACString& a
   , mType(aType)
   , mLastStartTimestamp(0)
   , mLastEndTimestamp(0)
-  , mHasInit(false)
 {
   MOZ_COUNT_CTOR(TrackBuffer);
+  mParser = ContainerParser::CreateForMIMEType(aType);
   mTaskQueue = new MediaTaskQueue(GetMediaDecodeThreadPool());
   aParentDecoder->AddTrackBuffer(this);
 }
@@ -102,6 +94,53 @@ TrackBuffer::Shutdown()
 
 bool
 TrackBuffer::AppendData(const uint8_t* aData, uint32_t aLength)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  // TODO: Run more of the buffer append algorithm asynchronously.
+  if (mParser->IsInitSegmentPresent(aData, aLength)) {
+    MSE_DEBUG("TrackBuffer(%p)::AppendData: New initialization segment.", this);
+    if (!NewDecoder()) {
+      return false;
+    }
+  } else if (!mParser->HasInitData()) {
+    MSE_DEBUG("TrackBuffer(%p)::AppendData: Non-init segment appended during initialization.", this);
+    return false;
+  }
+
+  int64_t start, end;
+  if (mParser->ParseStartAndEndTimestamps(aData, aLength, start, end)) {
+    if (mParser->IsMediaSegmentPresent(aData, aLength) &&
+        !mParser->TimestampsFuzzyEqual(start, mLastEndTimestamp)) {
+      MSE_DEBUG("TrackBuffer(%p)::AppendData: Data last=[%lld, %lld] overlaps [%lld, %lld]",
+                this, mLastStartTimestamp, mLastEndTimestamp, start, end);
+
+      // This data is earlier in the timeline than data we have already
+      // processed, so we must create a new decoder to handle the decoding.
+      if (!NewDecoder()) {
+        return false;
+      }
+      MSE_DEBUG("TrackBuffer(%p)::AppendData: Decoder marked as initialized.", this);
+      const nsTArray<uint8_t>& initData = mParser->InitData();
+      AppendDataToCurrentResource(initData.Elements(), initData.Length());
+      mLastStartTimestamp = start;
+    }
+    mLastEndTimestamp = end;
+    MSE_DEBUG("TrackBuffer(%p)::AppendData: Segment last=[%lld, %lld] [%lld, %lld]",
+              this, mLastStartTimestamp, mLastEndTimestamp, start, end);
+  }
+
+  if (!AppendDataToCurrentResource(aData, aLength)) {
+    return false;
+  }
+
+  // Schedule the state machine thread to ensure playback starts if required
+  // when data is appended.
+  mParentDecoder->ScheduleStateMachineThread();
+  return true;
+}
+
+bool
+TrackBuffer::AppendDataToCurrentResource(const uint8_t* aData, uint32_t aLength)
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (!mCurrentDecoder) {
@@ -179,7 +218,9 @@ bool
 TrackBuffer::NewDecoder()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!mCurrentDecoder && mParentDecoder);
+  MOZ_ASSERT(mParentDecoder);
+
+  DiscardDecoder();
 
   nsRefPtr<SourceBufferDecoder> decoder = mParentDecoder->CreateSubDecoder(mType);
   if (!decoder) {
@@ -191,7 +232,6 @@ TrackBuffer::NewDecoder()
 
   mLastStartTimestamp = 0;
   mLastEndTimestamp = 0;
-  mHasInit = true;
 
   return QueueInitializeDecoder(decoder);
 }
@@ -316,7 +356,7 @@ bool
 TrackBuffer::HasInitSegment()
 {
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
-  return mHasInit;
+  return mParser->HasInitData();
 }
 
 bool
@@ -324,29 +364,7 @@ TrackBuffer::IsReady()
 {
   ReentrantMonitorAutoEnter mon(mParentDecoder->GetReentrantMonitor());
   MOZ_ASSERT((mInfo.HasAudio() || mInfo.HasVideo()) || mInitializedDecoders.IsEmpty());
-  return HasInitSegment() && (mInfo.HasAudio() || mInfo.HasVideo());
-}
-
-void
-TrackBuffer::LastTimestamp(int64_t& aStart, int64_t& aEnd)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  aStart = mLastStartTimestamp;
-  aEnd = mLastEndTimestamp;
-}
-
-void
-TrackBuffer::SetLastStartTimestamp(int64_t aStart)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  mLastStartTimestamp = aStart;
-}
-
-void
-TrackBuffer::SetLastEndTimestamp(int64_t aEnd)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  mLastEndTimestamp = aEnd;
+  return mParser->HasInitData() && (mInfo.HasAudio() || mInfo.HasVideo());
 }
 
 bool

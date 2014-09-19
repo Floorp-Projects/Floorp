@@ -9,15 +9,11 @@
 #include "AsyncEventRunner.h"
 #include "MediaSourceUtils.h"
 #include "TrackBuffer.h"
-#include "WebMBufferedParser.h"
-#include "mozilla/Endian.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/MediaSourceBinding.h"
 #include "mozilla/dom/TimeRanges.h"
-#include "mp4_demuxer/BufferStream.h"
-#include "mp4_demuxer/MoofParser.h"
 #include "nsError.h"
 #include "nsIEventTarget.h"
 #include "nsIRunnable.h"
@@ -41,273 +37,6 @@ extern PRLogModuleInfo* GetMediaSourceAPILog();
 #endif
 
 namespace mozilla {
-
-class ContainerParser {
-public:
-  virtual ~ContainerParser() {}
-
-  // Return true if aData starts with an initialization segment.
-  // The base implementation exists only for debug logging and is expected
-  // to be called first from the overriding implementation.
-  virtual bool IsInitSegmentPresent(const uint8_t* aData, uint32_t aLength)
-  {
-    MSE_DEBUG("ContainerParser(%p)::IsInitSegmentPresent aLength=%u [%x%x%x%x]",
-              this, aLength,
-              aLength > 0 ? aData[0] : 0,
-              aLength > 1 ? aData[1] : 0,
-              aLength > 2 ? aData[2] : 0,
-              aLength > 3 ? aData[3] : 0);
-    return false;
-  }
-
-  // Return true if aData starts with a media segment.
-  // The base implementation exists only for debug logging and is expected
-  // to be called first from the overriding implementation.
-  virtual bool IsMediaSegmentPresent(const uint8_t* aData, uint32_t aLength)
-  {
-    MSE_DEBUG("ContainerParser(%p)::IsMediaSegmentPresent aLength=%u [%x%x%x%x]",
-              this, aLength,
-              aLength > 0 ? aData[0] : 0,
-              aLength > 1 ? aData[1] : 0,
-              aLength > 2 ? aData[2] : 0,
-              aLength > 3 ? aData[3] : 0);
-    return false;
-  }
-
-  // Parse aData to extract the start and end frame times from the media
-  // segment.  aData may not start on a parser sync boundary.  Return true
-  // if aStart and aEnd have been updated.
-  virtual bool ParseStartAndEndTimestamps(const uint8_t* aData, uint32_t aLength,
-                                          int64_t& aStart, int64_t& aEnd)
-  {
-    return false;
-  }
-
-  // Compare aLhs and rHs, considering any error that may exist in the
-  // timestamps from the format's base representation.  Return true if aLhs
-  // == aRhs within the error epsilon.
-  virtual bool TimestampsFuzzyEqual(int64_t aLhs, int64_t aRhs)
-  {
-    NS_WARNING("Using default ContainerParser::TimestampFuzzyEquals implementation");
-    return aLhs == aRhs;
-  }
-
-  virtual const nsTArray<uint8_t>& InitData()
-  {
-    MOZ_ASSERT(mInitData.Length() > 0);
-    return mInitData;
-  }
-
-  static ContainerParser* CreateForMIMEType(const nsACString& aType);
-
-protected:
-  nsTArray<uint8_t> mInitData;
-};
-
-class WebMContainerParser : public ContainerParser {
-public:
-  WebMContainerParser()
-    : mParser(0), mOffset(0)
-  {}
-
-  static const unsigned NS_PER_USEC = 1000;
-
-  bool IsInitSegmentPresent(const uint8_t* aData, uint32_t aLength)
-  {
-    ContainerParser::IsInitSegmentPresent(aData, aLength);
-    // XXX: This is overly primitive, needs to collect data as it's appended
-    // to the SB and handle, rather than assuming everything is present in a
-    // single aData segment.
-    // 0x1a45dfa3 // EBML
-    // ...
-    // DocType == "webm"
-    // ...
-    // 0x18538067 // Segment (must be "unknown" size)
-    // 0x1549a966 // -> Segment Info
-    // 0x1654ae6b // -> One or more Tracks
-    if (aLength >= 4 &&
-        aData[0] == 0x1a && aData[1] == 0x45 && aData[2] == 0xdf && aData[3] == 0xa3) {
-      return true;
-    }
-    return false;
-  }
-
-  bool IsMediaSegmentPresent(const uint8_t* aData, uint32_t aLength)
-  {
-    ContainerParser::IsMediaSegmentPresent(aData, aLength);
-    // XXX: This is overly primitive, needs to collect data as it's appended
-    // to the SB and handle, rather than assuming everything is present in a
-    // single aData segment.
-    // 0x1a45dfa3 // EBML
-    // ...
-    // DocType == "webm"
-    // ...
-    // 0x18538067 // Segment (must be "unknown" size)
-    // 0x1549a966 // -> Segment Info
-    // 0x1654ae6b // -> One or more Tracks
-    if (aLength >= 4 &&
-        aData[0] == 0x1f && aData[1] == 0x43 && aData[2] == 0xb6 && aData[3] == 0x75) {
-      return true;
-    }
-    return false;
-  }
-
-  bool ParseStartAndEndTimestamps(const uint8_t* aData, uint32_t aLength,
-                                  int64_t& aStart, int64_t& aEnd)
-  {
-    bool initSegment = IsInitSegmentPresent(aData, aLength);
-    if (initSegment) {
-      mOffset = 0;
-      mParser = WebMBufferedParser(0);
-      mOverlappedMapping.Clear();
-    }
-
-    // XXX if it only adds new mappings, overlapped but not available
-    // (e.g. overlap < 0) frames are "lost" from the reported mappings here.
-    nsTArray<WebMTimeDataOffset> mapping;
-    mapping.AppendElements(mOverlappedMapping);
-    mOverlappedMapping.Clear();
-    ReentrantMonitor dummy("dummy");
-    mParser.Append(aData, aLength, mapping, dummy);
-
-    // XXX This is a bit of a hack.  Assume if there are no timecodes
-    // present and it's an init segment that it's _just_ an init segment.
-    // We should be more precise.
-    if (initSegment) {
-      uint32_t length = aLength;
-      if (!mapping.IsEmpty()) {
-        length = mapping[0].mSyncOffset;
-        MOZ_ASSERT(length <= aLength);
-      }
-      MSE_DEBUG("WebMContainerParser(%p)::ParseStartAndEndTimestamps: Stashed init of %u bytes.",
-                this, length);
-
-      mInitData.ReplaceElementsAt(0, mInitData.Length(), aData, length);
-    }
-    mOffset += aLength;
-
-    if (mapping.IsEmpty()) {
-      return false;
-    }
-
-    // Exclude frames that we don't enough data to cover the end of.
-    uint32_t endIdx = mapping.Length() - 1;
-    while (mOffset < mapping[endIdx].mEndOffset && endIdx > 0) {
-      endIdx -= 1;
-    }
-
-    if (endIdx == 0) {
-      return false;
-    }
-
-    uint64_t frameDuration = mapping[endIdx].mTimecode - mapping[endIdx - 1].mTimecode;
-    aStart = mapping[0].mTimecode / NS_PER_USEC;
-    aEnd = (mapping[endIdx].mTimecode + frameDuration) / NS_PER_USEC;
-
-    MSE_DEBUG("WebMContainerParser(%p)::ParseStartAndEndTimestamps: [%lld, %lld] [fso=%lld, leo=%lld, l=%u endIdx=%u]",
-              this, aStart, aEnd, mapping[0].mSyncOffset, mapping[endIdx].mEndOffset, mapping.Length(), endIdx);
-
-    mapping.RemoveElementsAt(0, endIdx + 1);
-    mOverlappedMapping.AppendElements(mapping);
-
-    return true;
-  }
-
-  bool TimestampsFuzzyEqual(int64_t aLhs, int64_t aRhs)
-  {
-    int64_t error = mParser.GetTimecodeScale() / NS_PER_USEC;
-    return llabs(aLhs - aRhs) <= error * 2;
-  }
-
-private:
-  WebMBufferedParser mParser;
-  nsTArray<WebMTimeDataOffset> mOverlappedMapping;
-  int64_t mOffset;
-};
-
-class MP4ContainerParser : public ContainerParser {
-public:
-  MP4ContainerParser() {}
-
-  bool IsInitSegmentPresent(const uint8_t* aData, uint32_t aLength)
-  {
-    ContainerParser::IsInitSegmentPresent(aData, aLength);
-    // Each MP4 atom has a chunk size and chunk type. The root chunk in an MP4
-    // file is the 'ftyp' atom followed by a file type. We just check for a
-    // vaguely valid 'ftyp' atom.
-
-    if (aLength < 8) {
-      return false;
-    }
-
-    uint32_t chunk_size = BigEndian::readUint32(aData);
-    if (chunk_size < 8) {
-      return false;
-    }
-
-    return aData[4] == 'f' && aData[5] == 't' && aData[6] == 'y' &&
-           aData[7] == 'p';
-  }
-
-  bool ParseStartAndEndTimestamps(const uint8_t* aData, uint32_t aLength,
-                                  int64_t& aStart, int64_t& aEnd)
-  {
-    bool initSegment = IsInitSegmentPresent(aData, aLength);
-    if (initSegment) {
-      mStream = new mp4_demuxer::BufferStream();
-      mParser = new mp4_demuxer::MoofParser(mStream, 0);
-    } else if (!mStream || !mParser) {
-      return false;
-    }
-
-    mStream->AppendBytes(aData, aLength);
-    nsTArray<MediaByteRange> byteRanges;
-    byteRanges.AppendElement(mStream->GetByteRange());
-    mParser->RebuildFragmentedIndex(byteRanges);
-
-    if (initSegment) {
-      const MediaByteRange& range = mParser->mInitRange;
-      MSE_DEBUG("MP4ContainerParser(%p)::ParseStartAndEndTimestamps: Stashed init of %u bytes.",
-                this, range.mEnd - range.mStart);
-
-      mInitData.ReplaceElementsAt(0, mInitData.Length(),
-                                  aData + range.mStart,
-                                  range.mEnd - range.mStart);
-    }
-
-    mp4_demuxer::Interval<mp4_demuxer::Microseconds> compositionRange =
-      mParser->GetCompositionRange(byteRanges);
-
-    mStream->DiscardBefore(mParser->mOffset);
-
-    if (compositionRange.IsNull()) {
-      return false;
-    }
-    aStart = compositionRange.start;
-    aEnd = compositionRange.end;
-    MSE_DEBUG("MP4ContainerParser(%p)::ParseStartAndEndTimestamps: [%lld, %lld]",
-              this, aStart, aEnd);
-    return true;
-  }
-
-private:
-  nsRefPtr<mp4_demuxer::BufferStream> mStream;
-  nsAutoPtr<mp4_demuxer::MoofParser> mParser;
-};
-
-
-/*static*/ ContainerParser*
-ContainerParser::CreateForMIMEType(const nsACString& aType)
-{
-  if (aType.LowerCaseEqualsLiteral("video/webm") || aType.LowerCaseEqualsLiteral("audio/webm")) {
-    return new WebMContainerParser();
-  }
-
-  if (aType.LowerCaseEqualsLiteral("video/mp4") || aType.LowerCaseEqualsLiteral("audio/mp4")) {
-    return new MP4ContainerParser();
-  }
-  return new ContainerParser();
-}
 
 namespace dom {
 
@@ -497,7 +226,6 @@ SourceBuffer::Ended()
 SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   : DOMEventTargetHelper(aMediaSource->GetParentObject())
   , mMediaSource(aMediaSource)
-  , mType(aType)
   , mAppendWindowStart(0)
   , mAppendWindowEnd(PositiveInfinity<double>())
   , mTimestampOffset(0)
@@ -508,10 +236,9 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   MOZ_ASSERT(aMediaSource);
   mEvictionThreshold = Preferences::GetUint("media.mediasource.eviction_threshold",
                                             75 * (1 << 20));
-  mParser = ContainerParser::CreateForMIMEType(aType);
   mTrackBuffer = new TrackBuffer(aMediaSource->GetDecoder(), aType);
-  MSE_DEBUG("SourceBuffer(%p)::SourceBuffer: Create mParser=%p mTrackBuffer=%p",
-            this, mParser.get(), mTrackBuffer.get());
+  MSE_DEBUG("SourceBuffer(%p)::SourceBuffer: Create mTrackBuffer=%p",
+            this, mTrackBuffer.get());
 }
 
 SourceBuffer::~SourceBuffer()
@@ -586,52 +313,7 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
     return;
   }
   StartUpdating();
-  // TODO: Run more of the buffer append algorithm asynchronously.
-  if (mParser->IsInitSegmentPresent(aData, aLength)) {
-    MSE_DEBUG("SourceBuffer(%p)::AppendData: New initialization segment.", this);
-    mMediaSource->QueueInitializationEvent();
-    mTrackBuffer->DiscardDecoder();
-    if (!mTrackBuffer->NewDecoder()) {
-      aRv.Throw(NS_ERROR_FAILURE); // XXX: Review error handling.
-      return;
-    }
-    MSE_DEBUG("SourceBuffer(%p)::AppendData: Decoder marked as initialized.", this);
-  } else if (!mTrackBuffer->HasInitSegment()) {
-    MSE_DEBUG("SourceBuffer(%p)::AppendData: Non-init segment appended during initialization.", this);
-    Optional<MediaSourceEndOfStreamError> decodeError(MediaSourceEndOfStreamError::Decode);
-    ErrorResult dummy;
-    mMediaSource->EndOfStream(decodeError, dummy);
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-  int64_t start, end;
-  if (mParser->ParseStartAndEndTimestamps(aData, aLength, start, end)) {
-    int64_t lastStart, lastEnd;
-    mTrackBuffer->LastTimestamp(lastStart, lastEnd);
-    if (mParser->IsMediaSegmentPresent(aData, aLength) &&
-        !mParser->TimestampsFuzzyEqual(start, lastEnd)) {
-      MSE_DEBUG("SourceBuffer(%p)::AppendData: Data last=[%lld, %lld] overlaps [%lld, %lld]",
-                this, lastStart, lastEnd, start, end);
 
-      // This data is earlier in the timeline than data we have already
-      // processed, so we must create a new decoder to handle the decoding.
-      mTrackBuffer->DiscardDecoder();
-
-      // If we've got a decoder here, it's not initialized, so we can use it
-      // rather than creating a new one.
-      if (!mTrackBuffer->NewDecoder()) {
-        aRv.Throw(NS_ERROR_FAILURE); // XXX: Review error handling.
-        return;
-      }
-      MSE_DEBUG("SourceBuffer(%p)::AppendData: Decoder marked as initialized.", this);
-      const nsTArray<uint8_t>& initData = mParser->InitData();
-      mTrackBuffer->AppendData(initData.Elements(), initData.Length());
-      mTrackBuffer->SetLastStartTimestamp(start);
-    }
-    mTrackBuffer->SetLastEndTimestamp(end);
-    MSE_DEBUG("SourceBuffer(%p)::AppendData: Segment last=[%lld, %lld] [%lld, %lld]",
-              this, lastStart, lastEnd, start, end);
-  }
   if (!mTrackBuffer->AppendData(aData, aLength)) {
     Optional<MediaSourceEndOfStreamError> decodeError(MediaSourceEndOfStreamError::Decode);
     ErrorResult dummy;
@@ -640,9 +322,9 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
     return;
   }
 
-  // Schedule the state machine thread to ensure playback starts
-  // if required when data is appended.
-  mMediaSource->GetDecoder()->ScheduleStateMachineThread();
+  if (mTrackBuffer->HasInitSegment()) {
+    mMediaSource->QueueInitializationEvent();
+  }
 
   // Run the final step of the buffer append algorithm asynchronously to
   // ensure the SourceBuffer's updating flag transition behaves as required
