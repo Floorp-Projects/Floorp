@@ -58,6 +58,8 @@ this.EXPORTED_SYMBOLS = ["PlacesTransactions"];
  *  - feedURI: an nsIURI object, holding the url for a live bookmark.
  *  - siteURI: an nsIURI object, holding the url for the site with which
  *             a live bookmark is associated.
+ *  - tag - a string.
+ *  - tags: an array of strings.
  *  - GUID, parentGUID, newParentGUID: a valid places GUID string.
  *  - title: a string
  *  - index, newIndex: the position of an item in its containing folder,
@@ -65,7 +67,8 @@ this.EXPORTED_SYMBOLS = ["PlacesTransactions"];
  *    integer and PlacesUtils.bookmarks.DEFAULT_INDEX
  *  - annotation: see PlacesUtils.setAnnotationsForItem
  *  - annotations: an array of annotation objects as above.
- *  - tags: an array of strings.
+ *  - excludingAnnotation: a string (annotation name).
+ *  - excludingAnnotations: an array of string (annotation names).
  *
  * Batching transactions
  * ---------------------
@@ -745,7 +748,8 @@ DefineTransaction.defineInputProps(["GUID", "parentGUID", "newParentGUID"],
                                    DefineTransaction.isGUID);
 DefineTransaction.defineInputProps(["title"],
                                    DefineTransaction.isStrOrNull, null);
-DefineTransaction.defineInputProps(["keyword", "postData", "tag"],
+DefineTransaction.defineInputProps(["keyword", "postData", "tag",
+                                    "excludingAnnotation"],
                                    DefineTransaction.isStr, "");
 DefineTransaction.defineInputProps(["index", "newIndex"],
                                    DefineTransaction.isIndex,
@@ -754,7 +758,9 @@ DefineTransaction.defineInputProps(["annotation"],
                                    DefineTransaction.isAnnotationObject);
 DefineTransaction.defineArrayInputProp("uris", "uri");
 DefineTransaction.defineArrayInputProp("tags", "tag");
-DefineTransaction.defineArrayInputProp("annotations", "annotation")
+DefineTransaction.defineArrayInputProp("annotations", "annotation");
+DefineTransaction.defineArrayInputProp("excludingAnnotations",
+                                       "excludingAnnotation");
 
 /**
  * Internal helper for implementing the execute method of NewBookmark, NewFolder
@@ -816,12 +822,16 @@ function* ExecuteCreateItem(aTransaction, aParentGUID, aCreateItemFunction,
  * @param [optional] aRestoring (default: false)
  *        Whether or not the items are restored.  Only in restore mode, are
  *        the guid, dateAdded and lastModified properties honored.
+ * @param [optional] aExcludingAnnotations
+ *        Array of annotations names to ignore in aBookmarksTree. This argument
+ *        is ignored if aRestoring is set.
  * @note the id, root and charset properties of items in aBookmarksTree are
  *       always ignored.  The index property is ignored for all items but the
  *       root one.
  * @return {Promise}
  */
-function* createItemsFromBookmarksTree(aBookmarksTree, aRestoring = false) {
+function* createItemsFromBookmarksTree(aBookmarksTree, aRestoring = false,
+                                       aExcludingAnnotations = []) {
   function extractLivemarkDetails(aAnnos) {
     let feedURI = null, siteURI = null;
     aAnnos = aAnnos.filter(
@@ -890,8 +900,14 @@ function* createItemsFromBookmarksTree(aBookmarksTree, aRestoring = false) {
         break;
       }
     }
-    if (annos.length > 0)
+    if (annos.length > 0) {
+      if (!aRestoring && aExcludingAnnotations.length > 0) {
+        annos = [for(a of annos)
+                 if (aExcludingAnnotations.indexOf(a.name) == -1) a];
+      }
+
       PlacesUtils.setAnnotationsForItem(itemId, annos);
+    }
 
     if (aRestoring) {
       if ("dateAdded" in aItem)
@@ -1377,12 +1393,12 @@ PT.Untag.prototype = {
  * Transaction for copying an item.
  *
  * Required Input Properties: guid, newParentGUID
- * Optional Input Properties: newIndex.
+ * Optional Input Properties: newIndex, excludingAnnotations.
  */
 PT.Copy = DefineTransaction(["GUID", "newParentGUID"],
-                            ["newIndex"]);
+                            ["newIndex", "excludingAnnotations"]);
 PT.Copy.prototype = {
-  execute: function* (aGUID, aNewParentGUID, aNewIndex) {
+  execute: function* (aGUID, aNewParentGUID, aNewIndex, aExcludingAnnotations) {
     let creationInfo = null;
     try {
       creationInfo = yield PlacesUtils.promiseBookmarksTree(aGUID);
@@ -1394,7 +1410,9 @@ PT.Copy.prototype = {
     creationInfo.parentGUID = aNewParentGUID;
     creationInfo.index = aNewIndex;
 
-    let newItemId = yield createItemsFromBookmarksTree(creationInfo, false);
+    let newItemId =
+      yield createItemsFromBookmarksTree(creationInfo, false,
+                                         aExcludingAnnotations);
     let newItemInfo = null;
     this.undo = function* () {
       if (!newItemInfo) {
