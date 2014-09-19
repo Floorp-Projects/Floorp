@@ -77,7 +77,6 @@ UNIFIED_SOURCES += [
     'RedirectChannelRegistrar.cpp',
     'StreamingProtocolService.cpp',
     'Tickler.cpp',
-    'TLSServerSocket.cpp',
 ]
 
 # These files cannot be built in unified mode because they force NSPR logging.

@@ -12,11 +12,6 @@
 
 //-----------------------------------------------------------------------------
 
-class nsIEventTarget;
-namespace mozilla { namespace net {
-union NetAddr;
-}} // namespace mozilla::net
-
 class nsServerSocket : public nsASocketHandler
                      , public nsIServerSocket
 {
@@ -34,26 +29,20 @@ public:
   virtual uint64_t ByteCountReceived() { return 0; }
   nsServerSocket();
 
-  virtual void CreateClientTransport(PRFileDesc* clientFD,
-                                     const mozilla::net::NetAddr& clientAddr);
-  virtual nsresult SetSocketDefaults() { return NS_OK; }
-  virtual nsresult OnSocketListen() { return NS_OK; }
-
-protected:
-  virtual ~nsServerSocket();
-  PRFileDesc*                       mFD;
-  nsCOMPtr<nsIServerSocketListener> mListener;
-
 private:
+  virtual ~nsServerSocket();
+
   void OnMsgClose();
   void OnMsgAttach();
-
+  
   // try attaching our socket (mFD) to the STS's poll list.
   nsresult TryAttach();
 
   // lock protects access to mListener; so it is not cleared while being used.
   mozilla::Mutex                    mLock;
+  PRFileDesc                       *mFD;
   PRNetAddr                         mAddr;
+  nsCOMPtr<nsIServerSocketListener> mListener;
   nsCOMPtr<nsIEventTarget>          mListenerTarget;
   bool                              mAttached;
   bool                              mKeepWhenOffline;
