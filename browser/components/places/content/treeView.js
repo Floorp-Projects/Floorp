@@ -1343,9 +1343,10 @@ PlacesTreeView.prototype = {
     if (PlacesControllerDragHelper.disallowInsertion(container))
       return null;
 
+    let tagName = PlacesUtils.nodeIsTagQuery(container) ? container.title : null;
     return new InsertionPoint(PlacesUtils.getConcreteItemId(container),
                               index, orientation,
-                              PlacesUtils.nodeIsTagQuery(container),
+                              tagName,
                               dropNearItemId);
   },
 
