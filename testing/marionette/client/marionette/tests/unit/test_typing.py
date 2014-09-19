@@ -168,7 +168,8 @@ class TestTyping(MarionetteTestCase):
 
         #  And leave no rubbish/printable keys in the "keyReporter"
         self.assertEqual(element.get_attribute("value"), "")
-  
+
+    ''' Disabled. Reenable in Bug 1068728
     def testNumericShiftKeys(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
@@ -179,6 +180,7 @@ class TestTyping(MarionetteTestCase):
         element.send_keys(numericShiftsEtc)
         self.assertEqual(element.get_attribute("value"), numericShiftsEtc)
         self.assertTrue(" up: 16" in result.text.strip())
+    '''
 
     def testLowerCaseAlphaKeys(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
@@ -189,6 +191,7 @@ class TestTyping(MarionetteTestCase):
         element.send_keys(lowerAlphas)
         self.assertEqual(element.get_attribute("value"), lowerAlphas)
 
+    ''' Disabled. Reenable in Bug 1068735
     def testUppercaseAlphaKeys(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
@@ -199,7 +202,9 @@ class TestTyping(MarionetteTestCase):
         element.send_keys(upperAlphas)
         self.assertEqual(element.get_attribute("value"), upperAlphas)
         self.assertTrue(" up: 16" in result.text.strip())
+    '''
 
+    ''' Disabled. Reenable in Bug 1068726
     def testAllPrintableKeys(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
@@ -211,7 +216,9 @@ class TestTyping(MarionetteTestCase):
 
         self.assertTrue(element.get_attribute("value"), allPrintable)
         self.assertTrue(" up: 16" in result.text.strip())
+    '''
 
+    ''' Disabled. Reenable in Bug 1068733
     def testSpecialSpaceKeys(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")
         self.marionette.navigate(test_html)
@@ -219,6 +226,7 @@ class TestTyping(MarionetteTestCase):
         element = self.marionette.find_element("id", "keyReporter")
         element.send_keys("abcd" + Keys.SPACE + "fgh" + Keys.SPACE + "ij")
         self.assertEqual(element.get_attribute("value"), "abcd fgh ij")
+    '''
 
     def testShouldTypeAnInteger(self):
         test_html = self.marionette.absolute_url("javascriptPage.html")

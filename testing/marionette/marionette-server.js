@@ -2420,8 +2420,8 @@ MarionetteServerConnection.prototype = {
   setWindowSize: function MDA_setWindowSize(aRequest) {
     this.command_id = this.getCommandId();
 
-    if (appName == "B2G") {
-      this.sendError("Not supported on B2G", 405, null, this.command_id);
+    if (appName !== "Firefox") {
+      this.sendError("Not supported on mobile", 405, null, this.command_id);
       return;
     }
 
