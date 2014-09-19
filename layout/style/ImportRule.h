@@ -34,7 +34,8 @@ private:
   ImportRule(const ImportRule& aCopy);
   ~ImportRule();
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ImportRule, nsIStyleRule)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   DECL_STYLE_RULE_INHERIT
 

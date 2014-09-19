@@ -33,6 +33,7 @@ var Shell = Class({
     this.doc = host.document;
     this.resource = resource;
     this.elt = this.doc.createElement("vbox");
+    this.elt.classList.add("view-project-detail");
     this.elt.shell = this;
 
     let constructor = this._editorTypeForResource();

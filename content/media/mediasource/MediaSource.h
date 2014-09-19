@@ -92,7 +92,7 @@ public:
 
   // Queue InitializationEvent to run on the main thread.  Called when a
   // SourceBuffer has an initialization segment appended, but only
-  // dispatched the first time (using mFirstSourceBufferInitialization).
+  // dispatched the first time (using mFirstSourceBufferInitialized).
   // Demarcates the point in time at which only currently registered
   // TrackBuffers are treated as essential by the MediaSourceReader for
   // initialization.
@@ -130,7 +130,7 @@ private:
 
   MediaSourceReadyState mReadyState;
 
-  bool mFirstSourceBufferInitialization;
+  bool mFirstSourceBufferInitialized;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(MediaSource, MOZILLA_DOM_MEDIASOURCE_IMPLEMENTATION_IID)
