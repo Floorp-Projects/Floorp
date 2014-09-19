@@ -104,7 +104,25 @@ public class StringHelper {
     public static final String ROBOCOP_TEXT_PAGE_URL = "/robocop/robocop_text_page.html";
     public static final String ROBOCOP_ADOBE_FLASH_URL = "/robocop/robocop_adobe_flash.html";
     public static final String ROBOCOP_INPUT_URL = "/robocop/robocop_input.html";
-    public static final String ROBOCOP_JS_HARNESS_URL = "/robocop/robocop_javascript.html";
+
+    private static final String ROBOCOP_JS_HARNESS_URL = "/robocop/robocop_javascript.html";
+
+    /**
+     * Build a URL for loading a Javascript file in the Robocop Javascript
+     * harness.
+     * <p>
+     * We append a random slug to avoid caching: see
+     * <a href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Bypassing_the_cache">https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#Bypassing_the_cache</a>.
+     *
+     * @param javascriptUrl to load.
+     * @return URL with harness wrapper.
+     */
+    public static String getHarnessUrlForJavascript(String javascriptUrl) {
+        // We include a slug to make sure we never cache the harness.
+        return ROBOCOP_JS_HARNESS_URL +
+                "?slug=" + System.currentTimeMillis() +
+                "&path=" + javascriptUrl;
+    }
 
     // Robocop page titles
     public static final String ROBOCOP_BIG_LINK_TITLE = "Big Link";
