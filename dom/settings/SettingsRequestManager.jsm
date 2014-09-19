@@ -582,7 +582,7 @@ let SettingsRequestManager = {
       if (lock.finalizing) {
         // We should really never get to this point, but if we do,
         // fail every task that happens.
-        Cu.reportError("Settings lock trying to run more tasks after finalizing. Ignoring tasks, but this is bad. Lock: " + aLockID);
+        Cu.reportError("Settings lock " + aLockID + " trying to run task '" + currentTask.operation + "' after finalizing. Ignoring tasks, but this is bad. Lock: " + aLockID);
         currentTask.defer.reject("Cannot call new task after finalizing");
       } else {
       let p;
