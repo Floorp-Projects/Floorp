@@ -59,30 +59,69 @@ static const JSFunctionSpec exception_methods[] = {
     JS_FS_END
 };
 
-
-const Class ErrorObject::class_ = {
-    js_Error_str,
-    JSCLASS_IMPLEMENTS_BARRIERS |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Error) |
-    JSCLASS_HAS_RESERVED_SLOTS(ErrorObject::RESERVED_SLOTS),
-    JS_PropertyStub,         /* addProperty */
-    JS_DeletePropertyStub,   /* delProperty */
-    JS_PropertyStub,         /* getProperty */
-    JS_StrictPropertyStub,   /* setProperty */
-    JS_EnumerateStub,
-    JS_ResolveStub,
-    JS_ConvertStub,
-    exn_finalize,
-    nullptr,                 /* call        */
-    nullptr,                 /* hasInstance */
-    nullptr,                 /* construct   */
-    nullptr,                 /* trace       */
-    {
-        ErrorObject::createConstructor,
-        ErrorObject::createProto,
-        nullptr,
-        exception_methods
+#define IMPLEMENT_ERROR_SUBCLASS(name) \
+    { \
+        js_Error_str, /* yes, really */ \
+        JSCLASS_IMPLEMENTS_BARRIERS | \
+        JSCLASS_HAS_CACHED_PROTO(JSProto_##name) | \
+        JSCLASS_HAS_RESERVED_SLOTS(ErrorObject::RESERVED_SLOTS), \
+        JS_PropertyStub,         /* addProperty */ \
+        JS_DeletePropertyStub,   /* delProperty */ \
+        JS_PropertyStub,         /* getProperty */ \
+        JS_StrictPropertyStub,   /* setProperty */ \
+        JS_EnumerateStub, \
+        JS_ResolveStub, \
+        JS_ConvertStub, \
+        exn_finalize, \
+        nullptr,                 /* call        */ \
+        nullptr,                 /* hasInstance */ \
+        nullptr,                 /* construct   */ \
+        nullptr,                 /* trace       */ \
+        { \
+            ErrorObject::createConstructor, \
+            ErrorObject::createProto, \
+            nullptr, \
+            exception_methods, \
+            nullptr, \
+            nullptr, \
+            JSProto_Error \
+        } \
     }
+
+const Class
+ErrorObject::classes[JSEXN_LIMIT] = {
+    {
+        js_Error_str,
+        JSCLASS_IMPLEMENTS_BARRIERS |
+        JSCLASS_HAS_CACHED_PROTO(JSProto_Error) |
+        JSCLASS_HAS_RESERVED_SLOTS(ErrorObject::RESERVED_SLOTS),
+        JS_PropertyStub,         /* addProperty */
+        JS_DeletePropertyStub,   /* delProperty */
+        JS_PropertyStub,         /* getProperty */
+        JS_StrictPropertyStub,   /* setProperty */
+        JS_EnumerateStub,
+        JS_ResolveStub,
+        JS_ConvertStub,
+        exn_finalize,
+        nullptr,                 /* call        */
+        nullptr,                 /* hasInstance */
+        nullptr,                 /* construct   */
+        nullptr,                 /* trace       */
+        {
+            ErrorObject::createConstructor,
+            ErrorObject::createProto,
+            nullptr,
+            exception_methods,
+            0
+        }
+    },
+    IMPLEMENT_ERROR_SUBCLASS(InternalError),
+    IMPLEMENT_ERROR_SUBCLASS(EvalError),
+    IMPLEMENT_ERROR_SUBCLASS(RangeError),
+    IMPLEMENT_ERROR_SUBCLASS(ReferenceError),
+    IMPLEMENT_ERROR_SUBCLASS(SyntaxError),
+    IMPLEMENT_ERROR_SUBCLASS(TypeError),
+    IMPLEMENT_ERROR_SUBCLASS(URIError)
 };
 
 JSErrorReport *
@@ -465,7 +504,7 @@ JS_STATIC_ASSERT(JSProto_Error + JSEXN_URIERR       == JSProto_URIError);
 /* static */ JSObject *
 ErrorObject::createProto(JSContext *cx, JSProtoKey key)
 {
-    RootedObject errorProto(cx, GenericCreatePrototype<&ErrorObject::class_>(cx, key));
+    RootedObject errorProto(cx, GenericCreatePrototype(cx, key));
     if (!errorProto)
         return nullptr;
 

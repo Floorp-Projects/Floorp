@@ -795,11 +795,11 @@ GenericCreateConstructor(JSContext *cx, JSProtoKey key)
     return cx->global()->createConstructor(cx, ctor, name, length, kind);
 }
 
-template<const Class *clasp>
-JSObject *
+inline JSObject *
 GenericCreatePrototype(JSContext *cx, JSProtoKey key)
 {
     MOZ_ASSERT(key != JSProto_Object);
+    const Class *clasp = ProtoKeyToClass(key);
     JSProtoKey parentKey = ParentKeyForStandardClass(key);
     if (!GlobalObject::ensureConstructor(cx, cx->global(), parentKey))
         return nullptr;
