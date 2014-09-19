@@ -3481,6 +3481,19 @@ nsDocument::SetBaseURI(nsIURI* aURI)
     }
   }
 
+  // Check if CSP allows this base-uri
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  nsresult rv = NodePrincipal()->GetCsp(getter_AddRefs(csp));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (csp) {
+    bool permitsBaseURI = false;
+    rv = csp->PermitsBaseURI(aURI, &permitsBaseURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!permitsBaseURI) {
+      return NS_OK;
+    }
+  }
+
   if (aURI) {
     mDocumentBaseURI = NS_TryToMakeImmutable(aURI);
   } else {
