@@ -27,7 +27,7 @@
 #define THIRD_PARTY_COMPILER_ARRAY_BOUNDS_CLAMPER_H_
 
 #include "compiler/translator/InfoSink.h"
-#include "compiler/translator/intermediate.h"
+#include "compiler/translator/IntermNode.h"
 
 class ArrayBoundsClamper {
 public:

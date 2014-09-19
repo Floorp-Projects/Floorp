@@ -10,6 +10,10 @@
 #ifndef LIBGLESV2_VERTEXCONVERSION_H_
 #define LIBGLESV2_VERTEXCONVERSION_H_
 
+#include <limits>
+#include <cstdint>
+#include <cstddef>
+
 namespace rx
 {
 
@@ -154,11 +158,13 @@ struct VertexDataConverter
     static const bool identity = (WidenRule::initialWidth == WidenRule::finalWidth) && Converter::identity;
     static const std::size_t finalSize = WidenRule::finalWidth * sizeof(OutputType);
 
-    static void convertArray(const InputType *in, std::size_t stride, std::size_t n, OutputType *out)
+    static void convertArray(const uint8_t *input, size_t stride, size_t n, uint8_t *output)
     {
+        OutputType *out = reinterpret_cast<OutputType*>(output);
+
         for (std::size_t i = 0; i < n; i++)
         {
-            const InputType *ein = pointerAddBytes(in, i * stride);
+            const InputType *ein = reinterpret_cast<const InputType*>(input + i * stride);
 
             copyComponent(out, ein, 0, static_cast<OutputType>(DefaultValueRule::zero()));
             copyComponent(out, ein, 1, static_cast<OutputType>(DefaultValueRule::zero()));
@@ -169,19 +175,7 @@ struct VertexDataConverter
         }
     }
 
-    static void convertArray(const void *in, std::size_t stride, std::size_t n, void *out)
-    {
-        return convertArray(static_cast<const InputType*>(in), stride, n, static_cast<OutputType*>(out));
-    }
-
   private:
-    // Advance the given pointer by a number of bytes (not pointed-to elements).
-    template <class T>
-    static T *pointerAddBytes(T *basePtr, std::size_t numBytes)
-    {
-        return reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(basePtr) + numBytes);
-    }
-
     static void copyComponent(OutputType *out, const InputType *in, std::size_t elementindex, OutputType defaultvalue)
     {
         if (WidenRule::finalWidth > elementindex)

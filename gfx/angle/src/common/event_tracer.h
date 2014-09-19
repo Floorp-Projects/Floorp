@@ -5,12 +5,14 @@
 #ifndef COMMON_EVENT_TRACER_H_
 #define COMMON_EVENT_TRACER_H_
 
+#include "common/platform.h"
+
 #if !defined(TRACE_ENTRY)
-#if defined(_WIN32)
-#define TRACE_ENTRY __stdcall
-#else
-#define TRACE_ENTRY
-#endif // // _WIN32
+#   ifdef ANGLE_PLATFORM_WINDOWS
+#       define TRACE_ENTRY __stdcall
+#   else
+#       define TRACE_ENTRY
+#   endif // ANGLE_PLATFORM_WINDOWS
 #endif //TRACE_ENTRY
 
 extern "C" {

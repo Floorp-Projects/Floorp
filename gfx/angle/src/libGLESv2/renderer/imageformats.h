@@ -10,7 +10,7 @@
 #ifndef LIBGLESV2_RENDERER_IMAGEFORMATS_H_
 #define LIBGLESV2_RENDERER_IMAGEFORMATS_H_
 
-#include "libGLESv2/angletypes.h"
+#include "common/mathutil.h"
 
 namespace rx
 {
