@@ -130,15 +130,6 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
 }
 %endif
 
-.autocomplete-richlistitem[type~="autofill"] .ac-url-box {
-  display: none;
-}
-
-.autocomplete-richlistitem[type~="autofill"] .ac-title-box {
-  margin-top: 12px;
-  margin-bottom: 12px;
-}
-
 .ac-title-box {
   margin-top: 4px;
 }
