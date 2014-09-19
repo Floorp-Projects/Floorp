@@ -7,7 +7,6 @@ package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
 import org.mozilla.gecko.home.HomeConfig.PanelType;
-import org.mozilla.gecko.home.HomePager;
 
 import android.content.Context;
 import android.os.Bundle;
