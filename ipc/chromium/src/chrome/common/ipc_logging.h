@@ -14,6 +14,7 @@
 #include "base/singleton.h"
 #include "base/waitable_event_watcher.h"
 #include "chrome/common/ipc_message_utils.h"
+#include "mozilla/UniquePtr.h"
 
 class MessageLoop;
 
@@ -91,8 +92,8 @@ class Logging : public base::WaitableEventWatcher::Delegate,
 
   base::WaitableEventWatcher watcher_;
 
-  scoped_ptr<base::WaitableEvent> logging_event_on_;
-  scoped_ptr<base::WaitableEvent> logging_event_off_;
+  mozilla::UniquePtr<base::WaitableEvent> logging_event_on_;
+  mozilla::UniquePtr<base::WaitableEvent> logging_event_off_;
   bool enabled_;
 
   std::vector<LogData> queued_logs_;
