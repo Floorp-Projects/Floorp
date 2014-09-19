@@ -22,6 +22,12 @@
 # include <io.h>     /* for isatty() */
 #endif
 #include <locale.h>
+#ifdef HAVE_MALLOC_H /* for malloc_usable_size on Linux, _msize on Windows */
+#include <malloc.h>
+#endif
+#ifdef HAVE_MALLOC_MALLOC_H
+#include <malloc/malloc.h> /* for malloc_size on OSX */
+#endif
 #include <math.h>
 #include <signal.h>
 #include <stdio.h>
@@ -57,6 +63,7 @@
 #include "frontend/Parser.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/Ion.h"
+#include "js/Debug.h"
 #include "js/OldDebugAPI.h"
 #include "js/StructuredClone.h"
 #include "perf/jsperf.h"
@@ -5848,6 +5855,26 @@ DummyPreserveWrapperCallback(JSContext *cx, JSObject *obj)
     return true;
 }
 
+size_t
+ShellMallocSizeOf(const void *constPtr)
+{
+    // Match the type that all the library functions we might use here expect.
+    void *ptr = (void *) constPtr;
+
+    if (!ptr)
+        return 0;
+
+#if defined(HAVE_MALLOC_USABLE_SIZE)
+    return malloc_usable_size(ptr);
+#elif defined(HAVE_MALLOC_SIZE)
+    return malloc_size(ptr);
+#elif HAVE__MSIZE
+    return _msize(ptr);
+#else
+    return 0;
+#endif
+}
+
 int
 main(int argc, char **argv, char **envp)
 {
@@ -6094,6 +6121,8 @@ main(int argc, char **argv, char **envp)
     JS::SetAsmJSCacheOps(rt, &asmJSCacheOps);
 
     JS_SetNativeStackQuota(rt, gMaxStackSize);
+
+    JS::dbg::SetDebuggerMallocSizeOf(rt, ShellMallocSizeOf);
 
     if (!offThreadState.init())
         return 1;
