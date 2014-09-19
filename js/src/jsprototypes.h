@@ -35,6 +35,7 @@
 #define CLASP(name)                 (&name##Class)
 #define OCLASP(name)                (&name##Object::class_)
 #define TYPED_ARRAY_CLASP(type)     (&TypedArrayObject::classes[Scalar::type])
+#define ERROR_CLASP(type)           (&ErrorObject::classes[type])
 #define SHARED_TYPED_ARRAY_CLASP(type) (&SharedTypedArrayObject::classes[Scalar::type])
 
 #ifdef ENABLE_PARALLEL_JS
@@ -79,14 +80,14 @@
     real(Number,                 8,     js_InitNumberClass,        OCLASP(Number)) \
     real(String,                 9,     js_InitStringClass,        OCLASP(String)) \
     real(RegExp,                10,     js_InitRegExpClass,        OCLASP(RegExp)) \
-    real(Error,                 11,     js_InitViaClassSpec,       OCLASP(Error)) \
-    real(InternalError,         12,     js_InitViaClassSpec,       OCLASP(Error)) \
-    real(EvalError,             13,     js_InitViaClassSpec,       OCLASP(Error)) \
-    real(RangeError,            14,     js_InitViaClassSpec,       OCLASP(Error)) \
-    real(ReferenceError,        15,     js_InitViaClassSpec,       OCLASP(Error)) \
-    real(SyntaxError,           16,     js_InitViaClassSpec,       OCLASP(Error)) \
-    real(TypeError,             17,     js_InitViaClassSpec,       OCLASP(Error)) \
-    real(URIError,              18,     js_InitViaClassSpec,       OCLASP(Error)) \
+    real(Error,                 11,     js_InitViaClassSpec,       ERROR_CLASP(JSEXN_ERR)) \
+    real(InternalError,         12,     js_InitViaClassSpec,       ERROR_CLASP(JSEXN_INTERNALERR)) \
+    real(EvalError,             13,     js_InitViaClassSpec,       ERROR_CLASP(JSEXN_EVALERR)) \
+    real(RangeError,            14,     js_InitViaClassSpec,       ERROR_CLASP(JSEXN_RANGEERR)) \
+    real(ReferenceError,        15,     js_InitViaClassSpec,       ERROR_CLASP(JSEXN_REFERENCEERR)) \
+    real(SyntaxError,           16,     js_InitViaClassSpec,       ERROR_CLASP(JSEXN_SYNTAXERR)) \
+    real(TypeError,             17,     js_InitViaClassSpec,       ERROR_CLASP(JSEXN_TYPEERR)) \
+    real(URIError,              18,     js_InitViaClassSpec,       ERROR_CLASP(JSEXN_URIERR)) \
     real(Iterator,              19,     js_InitIteratorClasses,    OCLASP(PropertyIterator)) \
     real(StopIteration,         20,     js_InitIteratorClasses,    OCLASP(StopIteration)) \
     real(ArrayBuffer,           21,     js_InitArrayBufferClass,   &js::ArrayBufferObject::protoClass) \
