@@ -136,9 +136,8 @@ interface TestJSImplInterface {
   TestJSImplInterface receiveSelf();
   TestJSImplInterface? receiveNullableSelf();
 
-  // Callback interface ignores 'resultNotAddRefed'. See bug 843272.
-  //TestJSImplInterface receiveWeakSelf();
-  //TestJSImplInterface? receiveWeakNullableSelf();
+  TestJSImplInterface receiveWeakSelf();
+  TestJSImplInterface? receiveWeakNullableSelf();
 
   // A version to test for casting to TestJSImplInterface&
   void passSelf(TestJSImplInterface arg);
@@ -170,9 +169,8 @@ interface TestJSImplInterface {
   // Non-castable interface types
   IndirectlyImplementedInterface receiveOther();
   IndirectlyImplementedInterface? receiveNullableOther();
-  // Callback interface ignores 'resultNotAddRefed'. See bug 843272.
-  //IndirectlyImplementedInterface receiveWeakOther();
-  //IndirectlyImplementedInterface? receiveWeakNullableOther();
+  IndirectlyImplementedInterface receiveWeakOther();
+  IndirectlyImplementedInterface? receiveWeakNullableOther();
 
   void passOther(IndirectlyImplementedInterface arg);
   void passNullableOther(IndirectlyImplementedInterface? arg);
@@ -186,9 +184,8 @@ interface TestJSImplInterface {
   // External interface types
   TestExternalInterface receiveExternal();
   TestExternalInterface? receiveNullableExternal();
-  // Callback interface ignores 'resultNotAddRefed'. See bug 843272.
-  //TestExternalInterface receiveWeakExternal();
-  //TestExternalInterface? receiveWeakNullableExternal();
+  TestExternalInterface receiveWeakExternal();
+  TestExternalInterface? receiveWeakNullableExternal();
   void passExternal(TestExternalInterface arg);
   void passNullableExternal(TestExternalInterface? arg);
   attribute TestExternalInterface nonNullExternal;
@@ -201,9 +198,8 @@ interface TestJSImplInterface {
   // Callback interface types
   TestCallbackInterface receiveCallbackInterface();
   TestCallbackInterface? receiveNullableCallbackInterface();
-  // Callback interface ignores 'resultNotAddRefed'. See bug 843272.
-  //TestCallbackInterface receiveWeakCallbackInterface();
-  //TestCallbackInterface? receiveWeakNullableCallbackInterface();
+  TestCallbackInterface receiveWeakCallbackInterface();
+  TestCallbackInterface? receiveWeakNullableCallbackInterface();
   void passCallbackInterface(TestCallbackInterface arg);
   void passNullableCallbackInterface(TestCallbackInterface? arg);
   attribute TestCallbackInterface nonNullCallbackInterface;
