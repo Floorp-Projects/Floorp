@@ -175,7 +175,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame, isPendingFrame) {
                                       /* useCapture = */ false,
                                       /* wantsUntrusted = */ false);
 
-  Services.obs.addObserver(this, 'ipc:browser-destroyed', /* ownsWeak = */ false);
+  Services.obs.addObserver(this, 'ipc:browser-destroyed', /* ownsWeak = */ true);
 
   this._window._browserElementParents.set(this, null);
 
@@ -919,7 +919,6 @@ BrowserElementParent.prototype = {
       }
       break;
     case 'remote-browser-frame-shown':
-      // XXXkhuey why don't we check _isAlive() here?
       if (this._frameLoader == subject) {
         if (!this._mm) {
           this._setupMessageListener();
@@ -928,10 +927,10 @@ BrowserElementParent.prototype = {
         Services.obs.removeObserver(this, 'remote-browser-frame-shown');
       }
     case 'ipc:browser-destroyed':
-      if (this._isAlive() && subject == this._frameLoader.tabParent) {
+      if (this._isAlive() && subject == this._frameLoader) {
         Services.obs.removeObserver(this, 'ipc:browser-destroyed');
         this._frameElement.removeEventListener('mozdocommand',
-                                               this._doCommandHandlerBinder);
+                                               this._doCommandHandlerBinder)
       }
       break;
     default:
