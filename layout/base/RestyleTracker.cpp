@@ -49,9 +49,13 @@ CollectLaterSiblings(nsISupports* aElement,
   return PL_DHASH_NEXT;
 }
 
+struct RestyleEnumerateData : RestyleTracker::Hints {
+  nsRefPtr<dom::Element> mElement;
+};
+
 struct RestyleCollector {
   RestyleTracker* tracker;
-  RestyleTracker::RestyleEnumerateData** restyleArrayPtr;
+  RestyleEnumerateData** restyleArrayPtr;
 };
 
 static PLDHashOperator
@@ -91,10 +95,8 @@ CollectRestyles(nsISupports* aElement,
   element->UnsetFlags(collector->tracker->RestyleBit() |
                       collector->tracker->RootBit());
 
-  RestyleTracker::RestyleEnumerateData** restyleArrayPtr =
-    collector->restyleArrayPtr;
-  RestyleTracker::RestyleEnumerateData* currentRestyle =
-    *restyleArrayPtr;
+  RestyleEnumerateData** restyleArrayPtr = collector->restyleArrayPtr;
+  RestyleEnumerateData* currentRestyle = *restyleArrayPtr;
   currentRestyle->mElement = element;
   currentRestyle->mRestyleHint = aData->mRestyleHint;
   currentRestyle->mChangeHint = aData->mChangeHint;
@@ -231,8 +233,6 @@ RestyleTracker::DoProcessRestyles()
         ProcessOneRestyle(currentRestyle->mElement,
                           currentRestyle->mRestyleHint,
                           currentRestyle->mChangeHint);
-
-        MOZ_ASSERT(currentRestyle->mDescendants.IsEmpty());
       }
     }
   }

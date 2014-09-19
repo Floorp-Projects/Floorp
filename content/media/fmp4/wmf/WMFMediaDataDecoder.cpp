@@ -48,8 +48,16 @@ WMFMediaDataDecoder::Init()
 nsresult
 WMFMediaDataDecoder::Shutdown()
 {
-  mDecoder = nullptr;
+  mTaskQueue->FlushAndDispatch(NS_NewRunnableMethod(this, &WMFMediaDataDecoder::ProcessShutdown));
   return NS_OK;
+}
+
+void
+WMFMediaDataDecoder::ProcessShutdown()
+{
+  mMFTManager->Shutdown();
+  mMFTManager = nullptr;
+  mDecoder = nullptr;
 }
 
 // Inserts data into the decoder's pipeline.
