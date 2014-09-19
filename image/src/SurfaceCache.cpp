@@ -522,8 +522,10 @@ SurfaceCache::Shutdown()
 SurfaceCache::Lookup(const ImageKey    aImageKey,
                      const SurfaceKey& aSurfaceKey)
 {
-  MOZ_ASSERT(sInstance, "Should be initialized");
   MOZ_ASSERT(NS_IsMainThread());
+  if (!sInstance) {
+    return DrawableFrameRef();
+  }
 
   return sInstance->Lookup(aImageKey, aSurfaceKey);
 }
@@ -533,19 +535,21 @@ SurfaceCache::Insert(imgFrame*         aSurface,
                      const ImageKey    aImageKey,
                      const SurfaceKey& aSurfaceKey)
 {
-  MOZ_ASSERT(sInstance, "Should be initialized");
   MOZ_ASSERT(NS_IsMainThread());
-
-  Cost cost = ComputeCost(aSurfaceKey.Size());
-  return sInstance->Insert(aSurface, aSurfaceKey.Size(), cost, aImageKey,
-                           aSurfaceKey);
+  if (sInstance) {
+    Cost cost = ComputeCost(aSurfaceKey.Size());
+    sInstance->Insert(aSurface, aSurfaceKey.Size(), cost, aImageKey,
+                      aSurfaceKey);
+  }
 }
 
 /* static */ bool
 SurfaceCache::CanHold(const IntSize& aSize)
 {
-  MOZ_ASSERT(sInstance, "Should be initialized");
   MOZ_ASSERT(NS_IsMainThread());
+  if (!sInstance) {
+    return false;
+  }
 
   Cost cost = ComputeCost(aSize);
   return sInstance->CanHold(cost);
@@ -555,30 +559,28 @@ SurfaceCache::CanHold(const IntSize& aSize)
 SurfaceCache::RemoveIfPresent(const ImageKey    aImageKey,
                               const SurfaceKey& aSurfaceKey)
 {
-  MOZ_ASSERT(sInstance, "Should be initialized");
   MOZ_ASSERT(NS_IsMainThread());
-
-  return sInstance->RemoveIfPresent(aImageKey, aSurfaceKey);
+  if (sInstance) {
+    sInstance->RemoveIfPresent(aImageKey, aSurfaceKey);
+  }
 }
 
 /* static */ void
 SurfaceCache::Discard(Image* aImageKey)
 {
-  MOZ_ASSERT(sInstance, "Should be initialized");
   MOZ_ASSERT(NS_IsMainThread());
-
-  return sInstance->Discard(aImageKey);
+  if (sInstance) {
+    sInstance->Discard(aImageKey);
+  }
 }
 
 /* static */ void
 SurfaceCache::DiscardAll()
 {
   MOZ_ASSERT(NS_IsMainThread());
-
   if (sInstance) {
     sInstance->DiscardAll();
   }
-  // nothing to discard
 }
 
 } // namespace image
