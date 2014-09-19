@@ -252,7 +252,8 @@ public:
       image->UnlockImage();
     }
 
-    if (DiscardingEnabled() && dstFrame) {
+    if (dstFrame) {
+      dstFrame->SetOptimizable();
       dstFrame->SetDiscardable();
     }
 
@@ -1422,21 +1423,17 @@ RasterImage::DecodingComplete()
     CONTAINER_ENSURE_SUCCESS(rv);
   }
 
-  // If there's only 1 frame, optimize it. Optimizing animated images
+  // If there's only 1 frame, mark it as optimizable. Optimizing animated images
   // is not supported.
   //
   // We don't optimize the frame for multipart images because we reuse
   // the frame.
   if ((GetNumFrames() == 1) && !mMultipart) {
-    // CanForciblyDiscard is used instead of CanForciblyDiscardAndRedecode
-    // because we know decoding is complete at this point and this is not
-    // an animation
     nsRefPtr<imgFrame> firstFrame = mFrameBlender.RawGetFrame(0);
+    firstFrame->SetOptimizable();
     if (DiscardingEnabled() && CanForciblyDiscard()) {
       firstFrame->SetDiscardable();
     }
-    rv = firstFrame->Optimize();
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Double-buffer our frame in the multipart case, since we'll start decoding
@@ -2604,6 +2601,11 @@ RasterImage::RequestScale(imgFrame* aFrame, nsIntSize aSize)
   // We can't store more than one scaled version of an image right now, so if
   // there's more than one instance of this image, bail.
   if (mLockCount != 1) {
+    return;
+  }
+
+  // We don't scale frames which aren't fully decoded.
+  if (!aFrame->ImageComplete()) {
     return;
   }
 
