@@ -1419,11 +1419,11 @@ class AssemblerX86Shared : public AssemblerShared
         masm.unpcklps_rr(src.code(), dest.code());
     }
     void pinsrd(unsigned lane, Register src, FloatRegister dest) {
-        JS_ASSERT(HasSSE2());
+        JS_ASSERT(HasSSE41());
         masm.pinsrd_irr(lane, src.code(), dest.code());
     }
     void pinsrd(unsigned lane, const Operand &src, FloatRegister dest) {
-        JS_ASSERT(HasSSE2());
+        JS_ASSERT(HasSSE41());
         switch (src.kind()) {
           case Operand::REG:
             masm.pinsrd_irr(lane, src.reg(), dest.code());
@@ -1958,17 +1958,28 @@ class AssemblerX86Shared : public AssemblerShared
         JS_ASSERT(HasSSE2());
         masm.sqrtss_rr(src.code(), dest.code());
     }
-    void roundsd(FloatRegister src, FloatRegister dest,
-                 X86Assembler::RoundingMode mode)
-    {
+    void roundsd(FloatRegister src, FloatRegister dest, X86Assembler::RoundingMode mode) {
         JS_ASSERT(HasSSE41());
         masm.roundsd_rr(src.code(), dest.code(), mode);
     }
-    void roundss(FloatRegister src, FloatRegister dest,
-                 X86Assembler::RoundingMode mode)
-    {
+    void roundss(FloatRegister src, FloatRegister dest, X86Assembler::RoundingMode mode) {
         JS_ASSERT(HasSSE41());
         masm.roundss_rr(src.code(), dest.code(), mode);
+    }
+    unsigned insertpsMask(SimdLane sourceLane, SimdLane destLane, unsigned zeroMask = 0)
+    {
+        // Note that the sourceLane bits are ignored in the case of a source
+        // memory operand, and the source is the given 32-bits memory location.
+        MOZ_ASSERT(zeroMask < 16);
+        unsigned ret = zeroMask ;
+        ret |= unsigned(destLane) << 4;
+        ret |= unsigned(sourceLane) << 6;
+        MOZ_ASSERT(ret < 256);
+        return ret;
+    }
+    void insertps(FloatRegister src, FloatRegister dest, unsigned mask) {
+        JS_ASSERT(HasSSE41());
+        masm.insertps_irr(mask, src.code(), dest.code());
     }
     void minsd(FloatRegister src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());
