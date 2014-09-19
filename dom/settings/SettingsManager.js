@@ -351,16 +351,15 @@ SettingsManager.prototype = {
     cpmm.addMessageListener("Settings:Change:Return:OK", this);
     this._window = aWindow;
     this._principal = this._window.document.nodePrincipal;
-    Services.obs.addObserver(this, "inner-window-destroyed", false);
+    Services.obs.addObserver(this, "dom-window-destroyed", false);
     let util = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
     this.innerWindowID = util.currentInnerWindowID;
   },
 
   observe: function(aSubject, aTopic, aData) {
-    if (aTopic == "inner-window-destroyed") {
-      let wId = aSubject.QueryInterface(Ci.nsISupportsPRUint64).data;
-      if (wId == this.innerWindowID) {
-        if (DEBUG) debug("Topic: " + aTopic);
+    if (aTopic == "dom-window-destroyed") {
+      let window = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      if (window == this._window) {
         this.cleanup();
       }
     }
@@ -391,7 +390,7 @@ SettingsManager.prototype = {
   },
 
   cleanup: function() {
-    Services.obs.removeObserver(this, "inner-window-destroyed");
+    Services.obs.removeObserver(this, "dom-window-destroyed");
     cpmm.removeMessageListener("Settings:Change:Return:OK", this);
     mrm.unregisterStrongReporter(this);
     // At this point, the window is dying, so there's nothing left
