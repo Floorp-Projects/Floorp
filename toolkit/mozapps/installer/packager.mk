@@ -336,7 +336,6 @@ GECKO_APP_AP_PATH = $(abspath $(DEPTH)/mobile/android/base)
 
 ifdef ENABLE_TESTS
 INNER_ROBOCOP_PACKAGE=echo
-INNER_BACKGROUND_TESTS_PACKAGE=echo
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 UPLOAD_EXTRA_FILES += robocop.apk
 UPLOAD_EXTRA_FILES += fennec_ids.txt
@@ -354,19 +353,9 @@ ROBOCOP_PATH = $(abspath $(_ABS_DIST)/../build/mobile/robocop)
 INNER_ROBOCOP_PACKAGE= \
   cp $(GECKO_APP_AP_PATH)/fennec_ids.txt $(_ABS_DIST) && \
   $(call RELEASE_SIGN_ANDROID_APK,$(ROBOCOP_PATH)/robocop-debug-unsigned-unaligned.apk,$(_ABS_DIST)/robocop.apk)
-
-BACKGROUND_TESTS_PATH = $(abspath $(_ABS_DIST)/../mobile/android/tests/background/junit3)
-INNER_BACKGROUND_TESTS_PACKAGE= \
-  $(call RELEASE_SIGN_ANDROID_APK,$(BACKGROUND_TESTS_PATH)/background-junit3-debug-unsigned-unaligned.apk,$(_ABS_DIST)/background-junit3.apk)
-
-BROWSER_TESTS_PATH = $(abspath $(_ABS_DIST)/../mobile/android/tests/browser/junit3)
-INNER_BROWSER_TESTS_PACKAGE= \
-  $(call RELEASE_SIGN_ANDROID_APK,$(BROWSER_TESTS_PATH)/browser-junit3-debug-unsigned-unaligned.apk,$(_ABS_DIST)/browser-junit3.apk)
 endif
 else
 INNER_ROBOCOP_PACKAGE=echo 'Testing is disabled - No Android Robocop for you'
-INNER_BACKGROUND_TESTS_PACKAGE=echo 'Testing is disabled - No Android Background JUnit 3 tests for you'
-INNER_BROWSER_TESTS_PACKAGE=echo 'Testing is disabled - No Android Browser JUnit 3tests for you'
 endif
 
 # Create geckoview_library/geckoview_{assets,library}.zip for third-party GeckoView consumers.
@@ -460,8 +449,6 @@ INNER_MAKE_PACKAGE	= \
   $(RELEASE_JARSIGNER) $(_ABS_DIST)/gecko.apk && \
   $(ZIPALIGN) -f -v 4 $(_ABS_DIST)/gecko.apk $(PACKAGE) && \
   $(INNER_ROBOCOP_PACKAGE) && \
-  $(INNER_BACKGROUND_TESTS_PACKAGE) && \
-  $(INNER_BROWSER_TESTS_PACKAGE) && \
   $(INNER_MAKE_GECKOVIEW_LIBRARY) && \
   $(INNER_MAKE_GECKOVIEW_EXAMPLE)
 
