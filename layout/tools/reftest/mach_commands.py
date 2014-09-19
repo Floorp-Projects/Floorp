@@ -255,7 +255,7 @@ class ReftestRunner(MozbuildObject):
         pass_thru = False
 
         if debugger:
-            extra_args.append('--debugger=%s' % debugger)
+            extra_args.append('--debugger=\'%s\'' % debugger)
             pass_thru = True
             if debugger_args:
                 # Use _make_shell_string (which quotes) so that we
