@@ -18,8 +18,8 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.BrowserDB.URLColumns;
+import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
-import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -117,6 +117,7 @@ public class HistoryPanel extends HomeFragment {
                 info.url = cursor.getString(cursor.getColumnIndexOrThrow(Combined.URL));
                 info.title = cursor.getString(cursor.getColumnIndexOrThrow(Combined.TITLE));
                 info.historyId = cursor.getInt(cursor.getColumnIndexOrThrow(Combined.HISTORY_ID));
+                info.itemType = RemoveItemType.HISTORY;
                 final int bookmarkIdCol = cursor.getColumnIndexOrThrow(Combined.BOOKMARK_ID);
                 if (cursor.isNull(bookmarkIdCol)) {
                     // If this is a combined cursor, we may get a history item without a
