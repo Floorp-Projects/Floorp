@@ -42,6 +42,16 @@ function test_sockets(serverSocket) {
 }
 
 function run_test() {
+  var ps = Cc["@mozilla.org/preferences-service;1"]
+    .getService(Ci.nsIPrefBranch);
+  // disable network changed events to avoid the the risk of having the dns
+  // cache getting flushed behind our back
+  ps.setBoolPref("network.notify.changed", false);
+
+  do_register_cleanup(function() {
+    ps.clearUserPref("network.notify.changed");
+  });
+
   let serverSocket = Components.classes["@mozilla.org/network/server-socket;1"]
     .createInstance(Ci.nsIServerSocket);
   serverSocket.init(-1, true, -1);
