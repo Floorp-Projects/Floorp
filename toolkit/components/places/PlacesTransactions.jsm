@@ -322,8 +322,8 @@ let PlacesTransactions = {
    * history.
    *
    * @param aToTransact
-   *        Either a transaction object or a generator function (ES6-style only)
-   *        that yields transaction objects.
+   *        Either a transaction object or an array of transaction objects, or a
+   *        generator function (ES6-style only) that yields transaction objects.
    *
    *        Generator mode how-to: when a transaction is yielded, it's executed.
    *        Then, if it was executed successfully, the resolution of |execute|
@@ -333,13 +333,16 @@ let PlacesTransactions = {
    *        same way as in a Task (see Task.jsm).
    *
    * @return {Promise}
-   * @resolves either to the resolution of |execute|, in single-transaction mode,
-   * or to the return value of the generator, in generator-mode.
+   * @resolves either to the resolution of |execute|, in single-transaction
+   * mode, or to the return value of the generator, in generator-mode. For an
+   * array of transactions, there's no resolution value.
+   *
    * @rejects either if |execute| threw, in single-transaction mode, or if
    * the generator function threw (or didn't handle) an exception, in generator
    * mode.
    * @throws if aTransactionOrGeneratorFunction is neither a transaction object
-   * created by this module or a generator function.
+   * created by this module, nor an array of such object, nor a generator
+   * function.
    * @note If no transaction was executed successfully, the transactions history
    * is not affected.
    *
@@ -351,6 +354,19 @@ let PlacesTransactions = {
    * are not protected from consumers who use the raw places APIs directly.
    */
   transact: function (aToTransact) {
+    if (Array.isArray(aToTransact)) {
+      if (aToTransact.some(
+           o => !TransactionsHistory.isProxifiedTransactionObject(o))) {
+        throw new Error("aToTransact contains non-transaction element");
+      }
+      // Proceed as if a generator yielding the transactions was passed in.
+      return this.transact(function* () {
+        for (let t of aToTransact) {
+          yield t;
+        }
+      });
+    }
+
     let isGeneratorObj =
       o => Object.prototype.toString.call(o) ==  "[object Generator]";
 
