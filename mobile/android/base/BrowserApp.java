@@ -82,7 +82,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -153,7 +152,7 @@ public class BrowserApp extends GeckoApp
 
     // Request ID for startActivityForResult.
     private static final int ACTIVITY_REQUEST_PREFERENCES = 1001;
-    public static final String ACTION_NEW_PROFILE = "org.mozilla.gecko.NEW_PROFILE";
+    private static final String PREF_FIRSTRUN_STARTPANE = "firstrun_startpane";
 
     private BrowserSearch mBrowserSearch;
     private View mBrowserSearchContainer;
@@ -611,8 +610,6 @@ public class BrowserApp extends GeckoApp
             "Updater:Launch",
             "BrowserToolbar:Visibility");
 
-        registerOnboardingReceiver(this);
-
         Distribution distribution = Distribution.init(this);
 
         // Init suggested sites engine in BrowserDB.
@@ -673,24 +670,34 @@ public class BrowserApp extends GeckoApp
         }
     }
 
-    private void registerOnboardingReceiver(Context context) {
-        final LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
+    /**
+     * Check and show Onboarding start pane if Firefox has never been launched and
+     * is not opening a external link from another application.
+     *
+     * @param context Context of application; used to show Start Pane if appropriate
+     * @param intentAction Intent that launched this activity
+     */
+    private void checkStartPane(Context context, String intentAction) {
+        final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
 
-        // Receiver for launching first run start pane on new profile creation.
-        mOnboardingReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                launchStartPane(BrowserApp.this);
+        try {
+            final SharedPreferences prefs = GeckoSharedPrefs.forProfile(this);
+
+            if (prefs.contains(PREF_FIRSTRUN_STARTPANE)) {
+                return;
+             }
+
+            if (!Intent.ACTION_VIEW.equals(intentAction)) {
+                final Intent startIntent = new Intent(this, StartPane.class);
+                context.startActivity(startIntent);
             }
-        };
+            // Don't bother trying again to show the v1 minimal first run.
+            prefs.edit().putBoolean(PREF_FIRSTRUN_STARTPANE, true).apply();
 
-        lbm.registerReceiver(mOnboardingReceiver, new IntentFilter(ACTION_NEW_PROFILE));
-    }
-
-    private void launchStartPane(Context context) {
-         final Intent startIntent = new Intent(context, StartPane.class);
-         context.startActivity(startIntent);
-     }
+        } finally {
+            StrictMode.setThreadPolicy(savedPolicy);
+        }
+      }
 
     private Class<?> getMediaPlayerManager() {
         if (AppConstants.MOZ_MEDIA_PLAYER) {
@@ -1092,6 +1099,8 @@ public class BrowserApp extends GeckoApp
 
     @Override
     protected void initializeChrome() {
+        checkStartPane(this, getIntent().getAction());
+
         super.initializeChrome();
 
         mDoorHangerPopup.setAnchor(mBrowserToolbar.getDoorHangerAnchor());
@@ -2568,7 +2577,6 @@ public class BrowserApp extends GeckoApp
         // or if the user has explicitly enabled the clear on shutdown pref.
         // (We check the pref last to save the pref read.)
         // In ICS+, it's easy to kill an app through the task switcher.
-        final SharedPreferences prefs = GeckoSharedPrefs.forProfile(this);
         final boolean visible = Versions.preICS ||
                                 HardwareUtils.isTelevision() ||
                                 !PrefUtils.getStringSet(GeckoSharedPrefs.forProfile(this),
@@ -2931,6 +2939,8 @@ public class BrowserApp extends GeckoApp
             String uri = intent.getDataString();
             GeckoAppShell.sendEventToGecko(GeckoEvent.createURILoadEvent(uri));
         }
+
+        checkStartPane(this, action);
 
         if (!mInitialized) {
             return;
