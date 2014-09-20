@@ -2102,6 +2102,9 @@ def MakeClearCachedValueNativeName(member):
 def MakeJSImplClearCachedValueNativeName(member):
     return "_" + MakeClearCachedValueNativeName(member)
 
+def IDLToCIdentifier(name):
+    return name.replace("-", "_")
+
 
 class MethodDefiner(PropertyDefiner):
     """
@@ -2288,7 +2291,7 @@ class MethodDefiner(PropertyDefiner):
                 jitinfo = "nullptr"
             else:
                 selfHostedName = "nullptr"
-                accessor = m.get("nativeName", m["name"])
+                accessor = m.get("nativeName", IDLToCIdentifier(m["name"]))
                 if m.get("methodInfo", True):
                     # Cast this in case the methodInfo is a
                     # JSTypedMethodJitInfo.
@@ -2380,7 +2383,7 @@ class AttrDefiner(PropertyDefiner):
 
         def getter(attr):
             if self.static:
-                accessor = 'get_' + attr.identifier.name
+                accessor = 'get_' + IDLToCIdentifier(attr.identifier.name)
                 jitinfo = "nullptr"
             else:
                 if attr.hasLenientThis():
@@ -2391,7 +2394,8 @@ class AttrDefiner(PropertyDefiner):
                     accessor = "genericGetter"
                 else:
                     accessor = "GenericBindingGetter"
-                jitinfo = "&%s_getterinfo" % attr.identifier.name
+                jitinfo = ("&%s_getterinfo" %
+                           IDLToCIdentifier(attr.identifier.name))
             return "{ { JS_CAST_NATIVE_TO(%s, JSPropertyOp), %s } }" % \
                    (accessor, jitinfo)
 
@@ -2401,7 +2405,7 @@ class AttrDefiner(PropertyDefiner):
                 attr.getExtendedAttribute("Replaceable") is None):
                 return "JSOP_NULLWRAPPER"
             if self.static:
-                accessor = 'set_' + attr.identifier.name
+                accessor = 'set_' + IDLToCIdentifier(attr.identifier.name)
                 jitinfo = "nullptr"
             else:
                 if attr.hasLenientThis():
@@ -2412,7 +2416,7 @@ class AttrDefiner(PropertyDefiner):
                     accessor = "genericSetter"
                 else:
                     accessor = "GenericBindingSetter"
-                jitinfo = "&%s_setterinfo" % attr.identifier.name
+                jitinfo = "&%s_setterinfo" % IDLToCIdentifier(attr.identifier.name)
             return "{ { JS_CAST_NATIVE_TO(%s, JSStrictPropertyOp), %s } }" % \
                    (accessor, jitinfo)
 
@@ -2555,7 +2559,7 @@ class CGJsonifyAttributesMethod(CGAbstractMethod):
                       }
                     }
                     """,
-                    name=m.identifier.name)
+                    name=IDLToCIdentifier(m.identifier.name))
         ret += 'return true;\n'
         return ret
 
@@ -7308,7 +7312,7 @@ class CGAbstractStaticBindingMethod(CGAbstractStaticMethod):
 
 
 def MakeNativeName(name):
-    return name[0].upper() + name[1:]
+    return name[0].upper() + IDLToCIdentifier(name[1:])
 
 
 class CGGenericMethod(CGAbstractBindingMethod):
@@ -7394,7 +7398,7 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
     """
     def __init__(self, descriptor, method):
         self.method = method
-        name = CppKeywords.checkMethodName(method.identifier.name)
+        name = CppKeywords.checkMethodName(IDLToCIdentifier(method.identifier.name))
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('%s*' % descriptor.nativeType, 'self'),
@@ -7637,7 +7641,7 @@ class CGStaticMethod(CGAbstractStaticBindingMethod):
     """
     def __init__(self, descriptor, method):
         self.method = method
-        name = method.identifier.name
+        name = IDLToCIdentifier(method.identifier.name)
         CGAbstractStaticBindingMethod.__init__(self, descriptor, name)
 
     def generate_code(self):
@@ -7695,7 +7699,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
     """
     def __init__(self, descriptor, attr):
         self.attr = attr
-        name = 'get_' + attr.identifier.name
+        name = 'get_' + IDLToCIdentifier(attr.identifier.name)
         args = [
             Argument('JSContext*', 'cx'),
             Argument('JS::Handle<JSObject*>', 'obj'),
@@ -7761,7 +7765,7 @@ class CGStaticGetter(CGAbstractStaticBindingMethod):
     """
     def __init__(self, descriptor, attr):
         self.attr = attr
-        name = 'get_' + attr.identifier.name
+        name = 'get_' + IDLToCIdentifier(attr.identifier.name)
         CGAbstractStaticBindingMethod.__init__(self, descriptor, name)
 
     def generate_code(self):
@@ -7827,7 +7831,7 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
     """
     def __init__(self, descriptor, attr):
         self.attr = attr
-        name = 'set_' + attr.identifier.name
+        name = 'set_' + IDLToCIdentifier(attr.identifier.name)
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('%s*' % descriptor.nativeType, 'self'),
@@ -7852,7 +7856,7 @@ class CGStaticSetter(CGAbstractStaticBindingMethod):
     """
     def __init__(self, descriptor, attr):
         self.attr = attr
-        name = 'set_' + attr.identifier.name
+        name = 'set_' + IDLToCIdentifier(attr.identifier.name)
         CGAbstractStaticBindingMethod.__init__(self, descriptor, name)
 
     def generate_code(self):
@@ -8007,10 +8011,12 @@ class CGMemberJITInfo(CGThing):
 
     def define(self):
         if self.member.isAttr():
-            getterinfo = ("%s_getterinfo" % self.member.identifier.name)
+            getterinfo = ("%s_getterinfo" %
+                          IDLToCIdentifier(self.member.identifier.name))
             # We need the cast here because JSJitGetterOp has a "void* self"
             # while we have the right type.
-            getter = ("(JSJitGetterOp)get_%s" % self.member.identifier.name)
+            getter = ("(JSJitGetterOp)get_%s" %
+                      IDLToCIdentifier(self.member.identifier.name))
             getterinfal = "infallible" in self.descriptor.getExtendedAttributes(self.member, getter=True)
             getterconst = (self.member.getExtendedAttribute("SameObject") or
                            self.member.getExtendedAttribute("Constant"))
@@ -8044,10 +8050,12 @@ class CGMemberJITInfo(CGThing):
             if (not self.member.readonly or
                 self.member.getExtendedAttribute("PutForwards") is not None or
                 self.member.getExtendedAttribute("Replaceable") is not None):
-                setterinfo = ("%s_setterinfo" % self.member.identifier.name)
+                setterinfo = ("%s_setterinfo" %
+                              IDLToCIdentifier(self.member.identifier.name))
                 # Actually a JSJitSetterOp, but JSJitGetterOp is first in the
                 # union.
-                setter = ("(JSJitGetterOp)set_%s" % self.member.identifier.name)
+                setter = ("(JSJitGetterOp)set_%s" %
+                          IDLToCIdentifier(self.member.identifier.name))
                 # Setters are always fallible, since they have to do a typed unwrap.
                 result += self.defineJitInfo(setterinfo, setter, "Setter",
                                              False, False, "AliasEverything",
@@ -8056,8 +8064,10 @@ class CGMemberJITInfo(CGThing):
                                              None)
             return result
         if self.member.isMethod():
-            methodinfo = ("%s_methodinfo" % self.member.identifier.name)
-            name = CppKeywords.checkMethodName(self.member.identifier.name)
+            methodinfo = ("%s_methodinfo" %
+                          IDLToCIdentifier(self.member.identifier.name))
+            name = CppKeywords.checkMethodName(
+                IDLToCIdentifier(self.member.identifier.name))
             if self.member.returnsPromise():
                 name = CGMethodPromiseWrapper.makeName(name)
             # Actually a JSJitMethodOp, but JSJitGetterOp is first in the union.
@@ -8271,7 +8281,9 @@ class CGStaticMethodJitinfo(CGGeneric):
             "  JSJitInfo::AliasEverything, JSVAL_TYPE_MISSING, false, false,\n"
             "  false, false, 0\n"
             "};\n" %
-            (method.identifier.name, method.identifier.name))
+            (IDLToCIdentifier(method.identifier.name),
+             CppKeywords.checkMethodName(
+                 IDLToCIdentifier(method.identifier.name))))
 
 
 def getEnumValueName(value):
@@ -11494,7 +11506,7 @@ class CGDictionary(CGThing):
 
     @staticmethod
     def makeMemberName(name):
-        return "m" + name[0].upper() + name[1:].replace("-", "_")
+        return "m" + name[0].upper() + IDLToCIdentifier(name[1:])
 
     def getMemberType(self, memberInfo):
         _, conversionInfo = memberInfo
@@ -11701,7 +11713,7 @@ class CGDictionary(CGThing):
 
     @staticmethod
     def makeIdName(name):
-        return name.replace("-", "_") + "_id"
+        return IDLToCIdentifier(name) + "_id"
 
     @staticmethod
     def getDictionaryDependenciesFromType(type):
