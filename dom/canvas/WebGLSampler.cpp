@@ -13,8 +13,7 @@
 using namespace mozilla;
 
 WebGLSampler::WebGLSampler(WebGLContext* context)
-    : WebGLBindableName()
-    , WebGLContextBoundObject(context)
+    : WebGLContextBoundObject(context)
 {
     SetIsDOMBinding();
     MOZ_CRASH("Not Implemented.");

@@ -16,12 +16,14 @@ browser.jar:
   content/browser/loop/js/conversation.js           (content/js/conversation.js)
   content/browser/loop/js/otconfig.js               (content/js/otconfig.js)
   content/browser/loop/js/panel.js                  (content/js/panel.js)
+  content/browser/loop/js/contacts.js               (content/js/contacts.js)
 
   # Shared styles
   content/browser/loop/shared/css/reset.css         (content/shared/css/reset.css)
   content/browser/loop/shared/css/common.css        (content/shared/css/common.css)
   content/browser/loop/shared/css/panel.css         (content/shared/css/panel.css)
   content/browser/loop/shared/css/conversation.css  (content/shared/css/conversation.css)
+  content/browser/loop/shared/css/contacts.css      (content/shared/css/contacts.css)
 
   # Shared images
   content/browser/loop/shared/img/happy.png                     (content/shared/img/happy.png)
@@ -46,6 +48,8 @@ browser.jar:
   content/browser/loop/shared/img/svg/glyph-signin-16x16.svg    (content/shared/img/svg/glyph-signin-16x16.svg)
   content/browser/loop/shared/img/svg/glyph-signout-16x16.svg   (content/shared/img/svg/glyph-signout-16x16.svg)
   content/browser/loop/shared/img/audio-call-avatar.svg         (content/shared/img/audio-call-avatar.svg)
+  content/browser/loop/shared/img/icons-10x10.svg               (content/shared/img/icons-10x10.svg)
+  content/browser/loop/shared/img/icons-14x14.svg               (content/shared/img/icons-14x14.svg)
   content/browser/loop/shared/img/icons-16x16.svg               (content/shared/img/icons-16x16.svg)
 
   # Shared scripts
