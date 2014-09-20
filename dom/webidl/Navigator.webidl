@@ -358,6 +358,10 @@ callback NavigatorUserMediaErrorCallback = void (MediaStreamError error);
 
 partial interface Navigator {
   [Throws, Func="Navigator::HasUserMediaSupport"]
+  readonly attribute MediaDevices mediaDevices;
+
+  // Deprecated. Use mediaDevices.getUserMedia instead.
+  [Throws, Func="Navigator::HasUserMediaSupport"]
   void mozGetUserMedia(MediaStreamConstraints constraints,
                        NavigatorUserMediaSuccessCallback successCallback,
                        NavigatorUserMediaErrorCallback errorCallback);
