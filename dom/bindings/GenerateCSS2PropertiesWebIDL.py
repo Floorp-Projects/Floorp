@@ -7,7 +7,7 @@ import string
 
 propList = eval(sys.stdin.read())
 props = ""
-for [prop, id, flags, pref] in propList:
+for [name, prop, id, flags, pref] in propList:
     extendedAttrs = ["Throws", "TreatNullAs=EmptyString"]
     # To limit the overhead of Func= annotations, we only generate them when
     # necessary, which is when the
