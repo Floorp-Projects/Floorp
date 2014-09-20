@@ -3990,7 +3990,17 @@ dnl ========================================================
 dnl JavaScript shell
 dnl ========================================================
 
-AC_CHECK_HEADERS(malloc.h malloc/malloc.h)
+MALLOC_HEADERS="malloc.h malloc_np.h malloc/malloc.h sys/malloc.h"
+MALLOC_H=
+
+for file in $MALLOC_HEADERS; do
+  MOZ_CHECK_HEADER($file, [MALLOC_H=$file])
+  if test "$MALLOC_H" != ""; then
+    AC_DEFINE_UNQUOTED(MALLOC_H, <$MALLOC_H>)
+    break
+  fi
+done
+
 AC_CHECK_FUNCS(setlocale localeconv malloc_size malloc_usable_size)
 
 AC_SUBST(MOZILLA_VERSION)
