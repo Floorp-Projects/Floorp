@@ -23,9 +23,6 @@ const PREF_BRANCH = "browser.newtab.";
 // The interval between swapping in a preload docShell and kicking off the
 // next preload in the background.
 const PRELOADER_INTERVAL_MS = 600;
-// The initial delay before we start preloading our first new tab page. The
-// timer is started after the first 'browser-delayed-startup' has been sent.
-const PRELOADER_INIT_DELAY_MS = 5000;
 // The number of miliseconds we'll wait after we received a notification that
 // causes us to update our list of browsers and tabbrowser sizes. This acts as
 // kind of a damper when too many events are occuring in quick succession.
@@ -52,11 +49,10 @@ function clearTimer(timer) {
 
 this.BrowserNewTabPreloader = {
   init: function Preloader_init() {
-    Initializer.start();
+    Preferences.init();
   },
 
   uninit: function Preloader_uninit() {
-    Initializer.stop();
     HostFrame.destroy();
     Preferences.uninit();
     HiddenBrowsers.uninit();
@@ -80,47 +76,6 @@ this.BrowserNewTabPreloader = {
 };
 
 Object.freeze(BrowserNewTabPreloader);
-
-let Initializer = {
-  _timer: null,
-  _observing: false,
-
-  start: function Initializer_start() {
-    Services.obs.addObserver(this, TOPIC_DELAYED_STARTUP, false);
-    this._observing = true;
-  },
-
-  stop: function Initializer_stop() {
-    this._timer = clearTimer(this._timer);
-
-    if (this._observing) {
-      Services.obs.removeObserver(this, TOPIC_DELAYED_STARTUP);
-      this._observing = false;
-    }
-  },
-
-  observe: function Initializer_observe(aSubject, aTopic, aData) {
-    if (aTopic == TOPIC_DELAYED_STARTUP) {
-      Services.obs.removeObserver(this, TOPIC_DELAYED_STARTUP);
-      this._observing = false;
-      this._startTimer();
-    } else if (aTopic == TOPIC_TIMER_CALLBACK) {
-      this._timer = null;
-      this._startPreloader();
-    }
-  },
-
-  _startTimer: function Initializer_startTimer() {
-    this._timer = createTimer(this, PRELOADER_INIT_DELAY_MS);
-  },
-
-  _startPreloader: function Initializer_startPreloader() {
-    Preferences.init();
-    if (Preferences.enabled) {
-      HiddenBrowsers.init();
-    }
-  }
-};
 
 let Preferences = {
   _enabled: null,
@@ -153,8 +108,6 @@ let Preferences = {
 
     if (prevEnabled && !this.enabled) {
       HiddenBrowsers.uninit();
-    } else if (!prevEnabled && this.enabled) {
-      HiddenBrowsers.init();
     }
   },
 };
@@ -168,7 +121,7 @@ let HiddenBrowsers = {
     TOPIC_XUL_WINDOW_CLOSED
   ],
 
-  init: function () {
+  _init: function () {
     this._browsers = new Map();
     this._updateBrowserSizes();
     this._topics.forEach(t => Services.obs.addObserver(this, t, false));
@@ -187,9 +140,9 @@ let HiddenBrowsers = {
   },
 
   get: function (width, height) {
-    // We haven't been initialized, yet.
+    // Initialize if this is the first call.
     if (!this._browsers) {
-      return null;
+      this._init();
     }
 
     let key = width + "x" + height;
