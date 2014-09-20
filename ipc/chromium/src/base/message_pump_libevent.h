@@ -62,7 +62,6 @@ class MessagePumpLibevent : public MessagePump {
   };
 
   MessagePumpLibevent();
-  virtual ~MessagePumpLibevent();
 
   enum Mode {
     WATCH_READ = 1 << 0,
@@ -138,6 +137,10 @@ class MessagePumpLibevent : public MessagePump {
   virtual void Quit();
   virtual void ScheduleWork();
   virtual void ScheduleDelayedWork(const TimeTicks& delayed_work_time);
+
+ protected:
+
+  virtual ~MessagePumpLibevent();
 
  private:
 
