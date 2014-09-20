@@ -1723,7 +1723,7 @@ pref("security.mixed_content.block_active_content", false);
 pref("security.mixed_content.block_display_content", false);
 
 // Disable pinning checks by default.
-pref("security.cert_pinning.enforcement_level", 2);
+pref("security.cert_pinning.enforcement_level", 0);
 
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.
@@ -4077,7 +4077,7 @@ pref("dom.mozApps.signed_apps_installable_from", "https://marketplace.firefox.co
 // Only checked on startup, so restart after changing this pref.
 // Ignored on Android, where we always report debug messages because it's
 // unnecessary to restrict reporting, per bug 1003469.
-pref("dom.mozApps.debug", true);
+pref("dom.mozApps.debug", false);
 
 // Minimum delay in milliseconds between network activity notifications (0 means
 // no notifications). The delay is the same for both download and upload, though
