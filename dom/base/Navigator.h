@@ -207,8 +207,6 @@ public:
                          nsTArray<nsRefPtr<nsDOMDeviceStorage> >& aStores,
                          ErrorResult& aRv);
   DesktopNotificationCenter* GetMozNotification(ErrorResult& aRv);
-  bool MozIsLocallyAvailable(const nsAString& aURI, bool aWhenOffline,
-                             ErrorResult& aRv);
   MobileMessageManager* GetMozMobileMessage();
   Telephony* GetMozTelephony(ErrorResult& aRv);
   network::Connection* GetConnection(ErrorResult& aRv);
