@@ -9,8 +9,8 @@
 #include <vector>
 #include "base/basictypes.h"
 #include "base/message_loop.h"
-#include "base/scoped_ptr.h"
 #include "base/waitable_event.h"
+#include "mozilla/UniquePtr.h"
 
 class ChildThread;
 
@@ -51,7 +51,7 @@ class ChildProcess {
  private:
   // NOTE: make sure that child_thread_ is listed before shutdown_event_, since
   // it depends on it (indirectly through IPC::SyncChannel).
-  scoped_ptr<ChildThread> child_thread_;
+  mozilla::UniquePtr<ChildThread> child_thread_;
 
   int ref_count_;
 

@@ -22,7 +22,6 @@
 #include "base/lock.h"
 #include "base/logging.h"
 #include "base/process_util.h"
-#include "base/scoped_ptr.h"
 #include "base/string_util.h"
 #include "base/singleton.h"
 #include "chrome/common/chrome_switches.h"
@@ -30,6 +29,7 @@
 #include "chrome/common/ipc_logging.h"
 #include "chrome/common/ipc_message_utils.h"
 #include "mozilla/ipc/ProtocolUtils.h"
+#include "mozilla/UniquePtr.h"
 
 #ifdef MOZ_TASK_TRACER
 #include "GeckoTaskTracerImpl.h"
@@ -371,9 +371,9 @@ void Channel::ChannelImpl::ResetFileDescriptor(int fd) {
 }
 
 bool Channel::ChannelImpl::EnqueueHelloMessage() {
-  scoped_ptr<Message> msg(new Message(MSG_ROUTING_NONE,
-                                      HELLO_MESSAGE_TYPE,
-                                      IPC::Message::PRIORITY_NORMAL));
+  mozilla::UniquePtr<Message> msg(new Message(MSG_ROUTING_NONE,
+                                              HELLO_MESSAGE_TYPE,
+                                              IPC::Message::PRIORITY_NORMAL));
   if (!msg->WriteInt(base::GetCurrentProcId())) {
     Close();
     return false;
