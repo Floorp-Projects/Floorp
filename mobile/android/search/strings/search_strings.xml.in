@@ -1,7 +1,7 @@
     <string name="search_plus_content_description">&search_plus_content_description;</string>
 
     <string name="search_app_name">&search_app_name;</string>
-    <string name="search_for_something">&search_for_something;</string>
+    <string name="search_bar_hint">&search_bar_hint;</string>
 
     <string name="search_empty_title">&search_empty_title;</string>
     <string name="search_empty_message">&search_empty_message;</string>

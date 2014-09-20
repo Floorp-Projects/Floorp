@@ -1055,15 +1055,24 @@ Search.prototype = {
     let title = bookmarkTitle || historyTitle;
 
     if (queryType == QUERYTYPE_KEYWORD) {
-      // If we do not have a title, then we must have a keyword, so let the UI
-      // know it is a keyword.  Otherwise, we found an exact page match, so just
-      // show the page like a regular result.  Because the page title is likely
-      // going to be more specific than the bookmark title (keyword title).
-      if (!historyTitle) {
+      if (this._enableActions) {
         match.style = "keyword";
-      }
-      else {
-        title = historyTitle;
+        url = makeActionURL("keyword", {
+          url: escapedURL,
+          input: this._originalSearchString,
+        });
+        action = "keyword";
+      } else {
+        // If we do not have a title, then we must have a keyword, so let the UI
+        // know it is a keyword.  Otherwise, we found an exact page match, so just
+        // show the page like a regular result.  Because the page title is likely
+        // going to be more specific than the bookmark title (keyword title).
+        if (!historyTitle) {
+          match.style = "keyword"
+        }
+        else {
+          title = historyTitle;
+        }
       }
     }
 

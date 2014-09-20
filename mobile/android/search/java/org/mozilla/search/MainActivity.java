@@ -23,7 +23,7 @@ import org.mozilla.gecko.LocaleAware;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.SearchHistory;
-import org.mozilla.search.autocomplete.ClearableEditText;
+import org.mozilla.search.autocomplete.SearchBar;
 import org.mozilla.search.autocomplete.SuggestionsFragment;
 import org.mozilla.search.providers.SearchEngine;
 import org.mozilla.search.providers.SearchEngineManager;
@@ -67,7 +67,7 @@ public class MainActivity extends LocaleAware.LocaleAwareFragmentActivity
     private AsyncQueryHandler queryHandler;
 
     // Main views in layout.
-    private ClearableEditText editText;
+    private SearchBar searchBar;
     private View preSearch;
     private View postSearch;
 
@@ -106,15 +106,15 @@ public class MainActivity extends LocaleAware.LocaleAwareFragmentActivity
 
         queryHandler = new AsyncQueryHandler(getContentResolver()) {};
 
-        editText = (ClearableEditText) findViewById(R.id.search_edit_text);
-        editText.setOnClickListener(new View.OnClickListener() {
+        searchBar = (SearchBar) findViewById(R.id.search_bar);
+        searchBar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 setEditState(EditState.EDITING);
             }
         });
 
-        editText.setTextListener(new ClearableEditText.TextListener() {
+        searchBar.setTextListener(new SearchBar.TextListener() {
             @Override
             public void onChange(String text) {
                 // Only load suggestions if we're in edit mode.
@@ -165,7 +165,7 @@ public class MainActivity extends LocaleAware.LocaleAwareFragmentActivity
             setEditState(EditState.valueOf(savedInstanceState.getString(KEY_EDIT_STATE)));
 
             final String query = savedInstanceState.getString(KEY_QUERY);
-            editText.setText(query);
+            searchBar.setText(query);
 
             // If we're in the postsearch state, we need to re-do the query.
             if (searchState == SearchState.POSTSEARCH) {
@@ -187,7 +187,7 @@ public class MainActivity extends LocaleAware.LocaleAwareFragmentActivity
         suggestionsFragment = null;
         postSearchFragment = null;
         queryHandler = null;
-        editText = null;
+        searchBar = null;
         preSearch = null;
         postSearch = null;
         settingsButton = null;
@@ -216,7 +216,7 @@ public class MainActivity extends LocaleAware.LocaleAwareFragmentActivity
         // Enter editing mode and reset the query. We must reset the query after entering
         // edit mode in order for the suggestions to update.
         setEditState(EditState.EDITING);
-        editText.setText("");
+        searchBar.setText("");
     }
 
     @Override
@@ -225,12 +225,12 @@ public class MainActivity extends LocaleAware.LocaleAwareFragmentActivity
 
         outState.putString(KEY_SEARCH_STATE, searchState.toString());
         outState.putString(KEY_EDIT_STATE, editState.toString());
-        outState.putString(KEY_QUERY, editText.getText());
+        outState.putString(KEY_QUERY, searchBar.getText());
     }
 
     @Override
     public void onSuggest(String query) {
-        editText.setText(query);
+        searchBar.setText(query);
     }
 
     @Override
@@ -281,6 +281,7 @@ public class MainActivity extends LocaleAware.LocaleAwareFragmentActivity
     public void execute(SearchEngine engine) {
         this.engine = engine;
         suggestionsFragment.setEngine(engine);
+        searchBar.setEngine(engine);
     }
 
     /**
@@ -328,7 +329,7 @@ public class MainActivity extends LocaleAware.LocaleAwareFragmentActivity
                 setEditState(EditState.WAITING);
                 setSearchState(SearchState.POSTSEARCH);
 
-                editText.setText(query);
+                searchBar.setText(query);
 
                 // We need to manually clear the animation for the views to be hidden on gingerbread.
                 animationText.clearAnimation();
@@ -361,7 +362,7 @@ public class MainActivity extends LocaleAware.LocaleAwareFragmentActivity
 
         updateSettingsButtonVisibility();
 
-        editText.setActive(editState == EditState.EDITING);
+        searchBar.setActive(editState == EditState.EDITING);
         suggestions.setVisibility(editState == EditState.EDITING ? View.VISIBLE : View.INVISIBLE);
     }
 

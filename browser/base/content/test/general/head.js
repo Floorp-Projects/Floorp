@@ -670,3 +670,90 @@ function makeActionURI(action, params) {
   let url = "moz-action:" + action + "," + JSON.stringify(params);
   return NetUtil.newURI(url);
 }
+
+function is_hidden(element) {
+  var style = element.ownerDocument.defaultView.getComputedStyle(element, "");
+  if (style.display == "none")
+    return true;
+  if (style.visibility != "visible")
+    return true;
+  if (style.display == "-moz-popup")
+    return ["hiding","closed"].indexOf(element.state) != -1;
+
+  // Hiding a parent element will hide all its children
+  if (element.parentNode != element.ownerDocument)
+    return is_hidden(element.parentNode);
+
+  return false;
+}
+
+function is_visible(element) {
+  var style = element.ownerDocument.defaultView.getComputedStyle(element, "");
+  if (style.display == "none")
+    return false;
+  if (style.visibility != "visible")
+    return false;
+  if (style.display == "-moz-popup" && element.state != "open")
+    return false;
+
+  // Hiding a parent element will hide all its children
+  if (element.parentNode != element.ownerDocument)
+    return is_visible(element.parentNode);
+
+  return true;
+}
+
+function is_element_visible(element, msg) {
+  isnot(element, null, "Element should not be null, when checking visibility");
+  ok(is_visible(element), msg);
+}
+
+function is_element_hidden(element, msg) {
+  isnot(element, null, "Element should not be null, when checking visibility");
+  ok(is_hidden(element), msg);
+}
+
+function promisePopupEvent(popup, eventSuffix) {
+  let endState = {shown: "open", hidden: "closed"}[eventSuffix];
+
+  if (popup.state = endState)
+    return Promise.resolve();
+
+  let eventType = "popup" + eventSuffix;
+  let deferred = Promise.defer();
+  popup.addEventListener(eventType, function onPopupShown(event) {
+    popup.removeEventListener(eventType, onPopupShown);
+    deferred.resolve();
+  });
+
+  return deferred.promise;
+}
+
+function promisePopupShown(popup) {
+  return promisePopupEvent(popup, "shown");
+}
+
+function promisePopupHidden(popup) {
+  return promisePopupEvent(popup, "hidden");
+}
+
+let gURLBarOnSearchComplete = null;
+function promiseSearchComplete() {
+  info("Waiting for onSearchComplete");
+  let deferred = Promise.defer();
+  
+  if (!gURLBarOnSearchComplete) {
+    gURLBarOnSearchComplete = gURLBar.onSearchComplete;
+    registerCleanupFunction(() => {
+      gURLBar.onSearchComplete = gURLBarOnSearchComplete;
+    });
+  }
+
+  gURLBar.onSearchComplete = function () {
+    ok(gURLBar.popupOpen, "The autocomplete popup is correctly open");
+    gURLBarOnSearchComplete.apply(gURLBar);
+    deferred.resolve();
+  }
+  
+  return deferred.promise;
+}
