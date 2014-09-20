@@ -3362,7 +3362,8 @@ class IDLAttribute(IDLInterfaceMember):
               identifier == "AvailableIn" or
               identifier == "NewObject" or
               identifier == "UnsafeInPrerendering" or
-              identifier == "CheckPermissions"):
+              identifier == "CheckPermissions" or
+              identifier == "BinaryName"):
             # Known attributes that we don't need to do anything with here
             pass
         else:
@@ -3963,7 +3964,8 @@ class IDLMethod(IDLInterfaceMember, IDLScope):
               identifier == "Pref" or
               identifier == "Func" or
               identifier == "AvailableIn" or
-              identifier == "CheckPermissions"):
+              identifier == "CheckPermissions" or
+              identifier == "BinaryName"):
             # Known attributes that we don't need to do anything with here
             pass
         else:
