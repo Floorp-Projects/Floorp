@@ -536,9 +536,13 @@ interface TestJSImplInterface {
 
   // binaryNames tests
   void methodRenamedFrom();
+  [BinaryName="otherMethodRenamedTo"]
+  void otherMethodRenamedFrom();
   void methodRenamedFrom(byte argument);
   readonly attribute byte attributeGetterRenamedFrom;
   attribute byte attributeRenamedFrom;
+  [BinaryName="otherAttributeRenamedTo"]
+  attribute byte otherAttributeRenamedFrom;
 
   void passDictionary(optional Dict x);
   [Cached, Pure]
