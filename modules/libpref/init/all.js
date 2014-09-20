@@ -4296,3 +4296,10 @@ pref("camera.control.low_memory_thresholdMB", 404);
 
 // UDPSocket API
 pref("dom.udpsocket.enabled", false);
+
+// Experiment: Get TTL from DNS records.
+//     Unset initially (0); Randomly chosen on first run; will remain unchanged
+//     unless adjusted by the user or experiment ends. Variants defined in
+//     nsHostResolver.cpp.
+pref("dns.ttl-experiment.variant", 0);
+pref("dns.ttl-experiment.enabled", true);

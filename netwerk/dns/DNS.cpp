@@ -296,6 +296,7 @@ AddrInfo::Init(const char *host, const char *cname)
 {
   MOZ_ASSERT(host, "Cannot initialize AddrInfo with a null host pointer!");
 
+  ttl = NO_TTL_DATA;
   size_t hostlen = strlen(host);
   mHostName = static_cast<char*>(moz_xmalloc(hostlen + 1));
   memcpy(mHostName, host, hostlen + 1);
