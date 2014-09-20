@@ -2143,6 +2143,114 @@
     "extended_statistics_ok": true,
     "description": "Time for an unsuccessful DNS OS resolution (msec)"
   },
+  "DNS_CACHE_HIT_VAR_CONTROL_HIGH": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a cached value was available for a lookup. 0 is a miss, 1 is a hit. (variant: DNS_VARIANT_CONTROL, priority: high)"
+  },
+  "DNS_CACHE_HIT_VAR_CONTROL_MEDIUM": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a cached value was available for a lookup. 0 is a miss, 1 is a hit. (variant: DNS_VARIANT_CONTROL, priority: medium)"
+  },
+  "DNS_CACHE_HIT_VAR_CONTROL_LOW": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a cached value was available for a lookup. 0 is a miss, 1 is a hit. (variant: DNS_VARIANT_CONTROL, priority: low)"
+  },
+  "DNS_CACHE_HIT_VAR_TTL_ONLY_HIGH": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a cached value was available for a lookup. 0 is a miss, 1 is a hit. (variant: DNS_VARIANT_TTL_ONLY, priority: high)"
+  },
+  "DNS_CACHE_HIT_VAR_TTL_ONLY_MEDIUM": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a cached value was available for a lookup. 0 is a miss, 1 is a hit. (variant: DNS_VARIANT_TTL_ONLY, priority: medium)"
+  },
+  "DNS_CACHE_HIT_VAR_TTL_ONLY_LOW": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a cached value was available for a lookup. 0 is a miss, 1 is a hit. (variant: DNS_VARIANT_TTL_ONLY, priority: low)"
+  },
+  "DNS_CACHE_HIT_VAR_TTL_PLUS_CONST_GRACE_HIGH": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a cached value was available for a lookup. 0 is a miss, 1 is a hit. (variant: DNS_VARIANT_TTL_PLUS_CONST_GRACE, priority: high)"
+  },
+  "DNS_CACHE_HIT_VAR_TTL_PLUS_CONST_GRACE_MEDIUM": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a cached value was available for a lookup. 0 is a miss, 1 is a hit. (variant: DNS_VARIANT_TTL_PLUS_CONST_GRACE, priority: medium)"
+  },
+  "DNS_CACHE_HIT_VAR_TTL_PLUS_CONST_GRACE_LOW": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a cached value was available for a lookup. 0 is a miss, 1 is a hit. (variant: DNS_VARIANT_TTL_PLUS_CONST_GRACE, priority: low)"
+  },
+  "DNS_BLACKLIST_COUNT_VAR_CONTROL_HIGH": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 21,
+    "n_buckets": 20,
+    "description": "The number of unusable addresses reported for each record (variant: DNS_VARIANT_CONTROL, priority: high)"
+  },
+  "DNS_BLACKLIST_COUNT_VAR_CONTROL_MEDIUM": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 21,
+    "n_buckets": 20,
+    "description": "The number of unusable addresses reported for each record (variant: DNS_VARIANT_CONTROL, priority: medium)"
+  },
+  "DNS_BLACKLIST_COUNT_VAR_CONTROL_LOW": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 21,
+    "n_buckets": 20,
+    "description": "The number of unusable addresses reported for each record (variant: DNS_VARIANT_CONTROL, priority: low)"
+  },
+  "DNS_BLACKLIST_COUNT_VAR_TTL_ONLY_HIGH": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 21,
+    "n_buckets": 20,
+    "description": "The number of unusable addresses reported for each record (variant: DNS_VARIANT_TTL_ONLY, priority: high)"
+  },
+  "DNS_BLACKLIST_COUNT_VAR_TTL_ONLY_MEDIUM": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 21,
+    "n_buckets": 20,
+    "description": "The number of unusable addresses reported for each record (variant: DNS_VARIANT_TTL_ONLY, priority: medium)"
+  },
+  "DNS_BLACKLIST_COUNT_VAR_TTL_ONLY_LOW": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 21,
+    "n_buckets": 20,
+    "description": "The number of unusable addresses reported for each record (variant: DNS_VARIANT_TTL_ONLY, priority: low)"
+  },
+  "DNS_BLACKLIST_COUNT_VAR_TTL_PLUS_CONST_GRACE_HIGH": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 21,
+    "n_buckets": 20,
+    "description": "The number of unusable addresses reported for each record (variant: DNS_VARIANT_TTL_PLUS_CONST_GRACE, priority: high)"
+  },
+  "DNS_BLACKLIST_COUNT_VAR_TTL_PLUS_CONST_GRACE_MEDIUM": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 21,
+    "n_buckets": 20,
+    "description": "The number of unusable addresses reported for each record (variant: DNS_VARIANT_TTL_PLUS_CONST_GRACE, priority: medium)"
+  },
+  "DNS_BLACKLIST_COUNT_VAR_TTL_PLUS_CONST_GRACE_LOW": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": 21,
+    "n_buckets": 20,
+    "description": "The number of unusable addresses reported for each record (variant: DNS_VARIANT_TTL_PLUS_CONST_GRACE, priority: low)"
+  },
   "PREDICTOR_PREDICT_ATTEMPTS": {
     "expires_in_version": "never",
     "kind": "exponential",
