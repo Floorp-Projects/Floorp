@@ -198,7 +198,8 @@ SharedArrayBufferObject::class_constructor(JSContext *cx, unsigned argc, Value *
     uint32_t length;
     bool overflow;
     if (!ToLengthClamped(cx, args.get(0), &length, &overflow)) {
-        if (overflow)
+        // Bug 1068458: Limit length to 2^31-1.
+        if (overflow || length > INT32_MAX)
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SHARED_ARRAY_BAD_LENGTH);
         return false;
     }
@@ -214,10 +215,14 @@ SharedArrayBufferObject *
 SharedArrayBufferObject::New(JSContext *cx, uint32_t length)
 {
     if (!IsValidAsmJSHeapLength(length)) {
-        ScopedJSFreePtr<char> msg(
-            JS_smprintf("SharedArrayBuffer byteLength 0x%x is not a valid length. The next valid "
-                        "length is 0x%x", length, RoundUpToNextValidAsmJSHeapLength(length)));
-        JS_ReportError(cx, msg.get());
+        mozilla::UniquePtr<char[], JS::FreePolicy> msg;
+        if (length > INT32_MAX)
+            msg.reset(JS_smprintf("SharedArrayBuffer byteLength 0x%x is too large", length));
+        else
+            msg.reset(JS_smprintf("SharedArrayBuffer byteLength 0x%x is not a valid length. The next valid "
+                                  "length is 0x%x", length, RoundUpToNextValidAsmJSHeapLength(length)));
+        if (msg)
+            JS_ReportError(cx, msg.get());
         return nullptr;
     }
 
