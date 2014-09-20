@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 
 // Utility methods for entering/exiting guest mode.
 public class GuestSession {
@@ -16,6 +15,7 @@ public class GuestSession {
 
     private static PendingIntent getNotificationIntent(Context context) {
         Intent intent = new Intent(NOTIFICATION_INTENT);
+        intent.setClass(context, BrowserApp.class);
         return PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 

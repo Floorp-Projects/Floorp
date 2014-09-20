@@ -52,9 +52,9 @@ interface nsINavBookmarkObserver : nsISupports
    *        The title of the added item.
    * @param aDateAdded
    *        The stored date added value, in microseconds from the epoch.
-   * @param aGUID
+   * @param aGuid
    *        The unique ID associated with the item.
-   * @param aParentGUID
+   * @param aParentGuid
    *        The unique ID associated with the item's parent.
    */
   void onItemAdded(in long long aItemId,
@@ -64,8 +64,8 @@ interface nsINavBookmarkObserver : nsISupports
                    in nsIURI aURI,
                    in AUTF8String aTitle,
                    in PRTime aDateAdded,
-                   in ACString aGUID,
-                   in ACString aParentGUID);
+                   in ACString aGuid,
+                   in ACString aParentGuid);
 
   /**
    * Notifies that an item was removed.  Called after the actual remove took
@@ -84,9 +84,9 @@ interface nsINavBookmarkObserver : nsISupports
    *        The type of the item to be removed (see TYPE_* constants below).
    * @param aURI
    *        The URI of the added item if it was TYPE_BOOKMARK, null otherwise.
-   * @param aGUID
+   * @param aGuid
    *        The unique ID associated with the item.
-   * @param aParentGUID
+   * @param aParentGuid
    *        The unique ID associated with the item's parent.
    */
   void onItemRemoved(in long long aItemId,
@@ -94,8 +94,8 @@ interface nsINavBookmarkObserver : nsISupports
                      in long aIndex,
                      in unsigned short aItemType,
                      in nsIURI aURI,
-                     in ACString aGUID,
-                     in ACString aParentGUID);
+                     in ACString aGuid,
+                     in ACString aParentGuid);
 
   /**
    * Notifies that an item's information has changed.  This will be called
@@ -119,9 +119,9 @@ interface nsINavBookmarkObserver : nsISupports
    *        The type of the item to be removed (see TYPE_* constants below).
    * @param aParentId
    *        The id of the folder containing the item.
-   * @param aGUID
+   * @param aGuid
    *        The unique ID associated with the item.
-   * @param aParentGUID
+   * @param aParentGuid
    *        The unique ID associated with the item's parent.
    *
    * @note List of values that may be associated with properties:
@@ -142,8 +142,8 @@ interface nsINavBookmarkObserver : nsISupports
                      in PRTime aLastModified,
                      in unsigned short aItemType,
                      in long long aParentId,
-                     in ACString aGUID,
-                     in ACString aParentGUID);
+                     in ACString aGuid,
+                     in ACString aParentGuid);
 
   /**
    * Notifies that the item was visited.  Can be invoked only for TYPE_BOOKMARK
@@ -162,9 +162,9 @@ interface nsINavBookmarkObserver : nsISupports
    *        The nsIURI for this bookmark.
    * @param aParentId
    *        The id of the folder containing the item.
-   * @param aGUID
+   * @param aGuid
    *        The unique ID associated with the item.
-   * @param aParentGUID
+   * @param aParentGuid
    *        The unique ID associated with the item's parent.
    *
    * @see onItemChanged with property = "cleartime" for when all visits to an
@@ -181,8 +181,8 @@ interface nsINavBookmarkObserver : nsISupports
                      in unsigned long aTransitionType,
                      in nsIURI aURI,
                      in long long aParentId,
-                     in ACString aGUID,
-                     in ACString aParentGUID);
+                     in ACString aGuid,
+                     in ACString aParentGuid);
 
   /**
    * Notifies that an item has been moved.
@@ -199,11 +199,11 @@ interface nsINavBookmarkObserver : nsISupports
    *        The index inside the new parent.
    * @param aItemType
    *        The type of the item to be removed (see TYPE_* constants below).
-   * @param aGUID
+   * @param aGuid
    *        The unique ID associated with the item.
-   * @param aOldParentGUID
+   * @param aOldParentGuid
    *        The unique ID associated with the old item's parent.
-   * @param aNewParentGUID
+   * @param aNewParentGuid
    *        The unique ID associated with the new item's parent.
    */
   void onItemMoved(in long long aItemId,
@@ -212,9 +212,9 @@ interface nsINavBookmarkObserver : nsISupports
                    in long long aNewParentId,
                    in long aNewIndex,
                    in unsigned short aItemType,
-                   in ACString aGUID,
-                   in ACString aOldParentGUID,
-                   in ACString aNewParentGUID);
+                   in ACString aGuid,
+                   in ACString aOldParentGuid,
+                   in ACString aNewParentGuid);
 };
 
 /**
@@ -276,7 +276,7 @@ interface nsINavBookmarksService : nsISupports
    *         The index to insert at, or DEFAULT_INDEX to append
    *  @param aTitle
    *         The title for the new bookmark
-   *  @param [optional] aGUID
+   *  @param [optional] aGuid
    *         The GUID to be set for the new item.  If not set, a new GUID is
    *         generated.  Unless you've a very sound reason, such as an undo
    *         manager implementation, do not pass this argument.
@@ -284,11 +284,11 @@ interface nsINavBookmarksService : nsISupports
    *
    *  @note aTitle will be truncated to TITLE_LENGTH_MAX and
    *        aURI will be truncated to URI_LENGTH_MAX.
-   *  @throws if aGUID is malformed.
+   *  @throws if aGuid is malformed.
    */
   long long insertBookmark(in long long aParentId, in nsIURI aURI,
                            in long aIndex, in AUTF8String aTitle,
-                           [optional] in ACString aGUID);
+                           [optional] in ACString aGuid);
 
   /**
    * Removes a child item. Used to delete a bookmark or separator.
@@ -305,16 +305,16 @@ interface nsINavBookmarksService : nsISupports
    *         The name of the new folder
    *  @param aIndex
    *         The index to insert at, or DEFAULT_INDEX to append
-   *  @param [optional] aGUID
+   *  @param [optional] aGuid
    *         The GUID to be set for the new item.  If not set, a new GUID is
    *         generated.  Unless you've a very sound reason, such as an undo
    *         manager implementation, do not pass this argument.
    *  @return The ID of the newly-inserted folder.
-   *  @throws if aGUID is malformed.
+   *  @throws if aGuid is malformed.
    */
   long long createFolder(in long long aParentFolder, in AUTF8String name,
                          in long index,
-                         [optional] in ACString aGUID);
+                         [optional] in ACString aGuid);
 
   /**
    * Gets an undo-able transaction for removing a folder from the bookmarks
@@ -364,15 +364,15 @@ interface nsINavBookmarksService : nsISupports
    *         The id of the parent folder
    *  @param aIndex
    *         The separator's index under folder, or DEFAULT_INDEX to append
-   *  @param [optional] aGUID
+   *  @param [optional] aGuid
    *         The GUID to be set for the new item.  If not set, a new GUID is
    *         generated.  Unless you've a very sound reason, such as an undo
    *         manager implementation, do not pass this argument.
    *  @return The ID of the new separator.
-   *  @throws if aGUID is malformed.
+   *  @throws if aGuid is malformed.
    */
   long long insertSeparator(in long long aParentId, in long aIndex,
-                            [optional] in ACString aGUID);
+                            [optional] in ACString aGuid);
 
   /**
    * Get the itemId given the containing folder and the index.
