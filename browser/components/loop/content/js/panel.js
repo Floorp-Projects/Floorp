@@ -14,6 +14,7 @@ loop.panel = (function(_, mozL10n) {
   var sharedViews = loop.shared.views;
   var sharedModels = loop.shared.models;
   var sharedMixins = loop.shared.mixins;
+  var ContactsList = loop.contacts.ContactsList;
   var __ = mozL10n.get; // aliasing translation function as __ for concision
 
   /**
@@ -498,7 +499,7 @@ loop.panel = (function(_, mozL10n) {
               ToSView(null)
             ), 
             Tab({name: "contacts"}, 
-              React.DOM.span(null, "contacts")
+              ContactsList(null)
             )
           ), 
           React.DOM.div({className: "footer"}, 
