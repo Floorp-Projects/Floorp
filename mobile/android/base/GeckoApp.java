@@ -1563,12 +1563,6 @@ public abstract class GeckoApp
             }
         });
 
-        PrefsHelper.getPref("app.geo.reportdata", new PrefsHelper.PrefHandlerBase() {
-            @Override public void prefValue(String pref, int value) {
-                // Acting on this pref is Bug 1036508; for now, do nothing.
-            }
-        });
-
         // Trigger the completion of the telemetry timer that wraps activity startup,
         // then grab the duration to give to FHR.
         mJavaUiStartupTimer.stop();

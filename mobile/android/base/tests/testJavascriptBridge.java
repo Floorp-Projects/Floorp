@@ -32,8 +32,7 @@ public class testJavascriptBridge extends UITest {
 
     public void testJavascriptBridge() {
         GeckoHelper.blockForReady();
-        NavigationHelper.enterAndLoadUrl(StringHelper.ROBOCOP_JS_HARNESS_URL +
-                                         "?path=" + TEST_JS);
+        NavigationHelper.enterAndLoadUrl(StringHelper.getHarnessUrlForJavascript(TEST_JS));
         js.syncCall("check_js_int_arg", 1);
     }
 
