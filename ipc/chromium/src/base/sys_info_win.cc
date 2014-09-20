@@ -7,8 +7,8 @@
 #include <windows.h>
 
 #include "base/logging.h"
-#include "base/scoped_ptr.h"
 #include "base/string_util.h"
+#include "mozilla/UniquePtr.h"
 
 namespace base {
 
@@ -57,7 +57,7 @@ std::wstring SysInfo::GetEnvVar(const wchar_t* var) {
   if (value_length == 0) {
     return L"";
   }
-  scoped_array<wchar_t> value(new wchar_t[value_length]);
+  mozilla::UniquePtr<wchar_t[]> value(new wchar_t[value_length]);
   GetEnvironmentVariable(var, value.get(), value_length);
   return std::wstring(value.get());
 }

@@ -20,6 +20,7 @@
 #include "base/string_tokenizer.h"
 #include "base/string_util.h"
 #include "nsLiteralString.h"
+#include "mozilla/UniquePtr.h"
 
 #ifdef MOZ_B2G_LOADER
 #include "ProcessUtils.h"
@@ -207,13 +208,13 @@ LaunchAppProcLoader(const std::vector<std::string>& argv,
                     ChildPrivileges privs,
                     ProcessHandle* process_handle) {
   size_t i;
-  scoped_array<char*> argv_cstr(new char*[argv.size() + 1]);
+  mozilla::UniquePtr<char*[]> argv_cstr(new char*[argv.size() + 1]);
   for (i = 0; i < argv.size(); i++) {
     argv_cstr[i] = const_cast<char*>(argv[i].c_str());
   }
   argv_cstr[argv.size()] = nullptr;
 
-  scoped_array<char*> env_cstr(new char*[env_vars_to_set.size() + 1]);
+  mozilla::UniquePtr<char*[]> env_cstr(new char*[env_vars_to_set.size() + 1]);
   i = 0;
   for (environment_map::const_iterator it = env_vars_to_set.begin();
        it != env_vars_to_set.end(); ++it) {
@@ -261,7 +262,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
   }
 #endif // MOZ_B2G_LOADER
 
-  scoped_array<char*> argv_cstr(new char*[argv.size() + 1]);
+  mozilla::UniquePtr<char*[]> argv_cstr(new char*[argv.size() + 1]);
   // Illegal to allocate memory after fork and before execvp
   InjectiveMultimap fd_shuffle1, fd_shuffle2;
   fd_shuffle1.reserve(fds_to_remap.size());
