@@ -94,6 +94,7 @@ nsFtpState::nsFtpState()
     , mServerIsIPv6(false)
     , mUseUTF8(false)
     , mControlStatus(NS_OK)
+    , mDoomCache(false)
     , mDeferredCallbackPending(false)
 {
     LOG_ALWAYS(("FTP:(%x) nsFtpState created", this));

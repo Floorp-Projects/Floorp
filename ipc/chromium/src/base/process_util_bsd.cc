@@ -18,6 +18,7 @@
 #include "base/logging.h"
 #include "base/string_tokenizer.h"
 #include "base/string_util.h"
+#include "mozilla/UniquePtr.h"
 
 #if defined(_POSIX_SPAWN) && _POSIX_SPAWN > 0
 #define HAVE_POSIX_SPAWN	1
@@ -225,7 +226,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
                ChildPrivileges privs,
                bool wait, ProcessHandle* process_handle,
                ProcessArchitecture arch) {
-  scoped_array<char*> argv_cstr(new char*[argv.size() + 1]);
+  mozilla::UniquePtr<char*[]> argv_cstr(new char*[argv.size() + 1]);
   // Illegal to allocate memory after fork and before execvp
   InjectiveMultimap fd_shuffle1, fd_shuffle2;
   fd_shuffle1.reserve(fds_to_remap.size());
