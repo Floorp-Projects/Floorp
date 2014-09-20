@@ -9,6 +9,7 @@
 #include "WebGLBindableName.h"
 #include "WebGLFramebufferAttachable.h"
 #include "WebGLObjectModel.h"
+#include "WebGLStrongTypes.h"
 
 #include "nsWrapperCache.h"
 
@@ -28,7 +29,7 @@ inline bool is_pot_assuming_nonnegative(GLsizei x)
 // WrapObject calls in GetParameter and GetFramebufferAttachmentParameter.
 class WebGLTexture MOZ_FINAL
     : public nsWrapperCache
-    , public WebGLBindableName
+    , public WebGLBindableName<TexTarget>
     , public WebGLRefCountedObject<WebGLTexture>
     , public LinkedListElement<WebGLTexture>
     , public WebGLContextBoundObject
@@ -129,13 +130,11 @@ public:
     };
 
 private:
-    static size_t FaceForTarget(GLenum target) {
-        // Call this out explicitly:
-        MOZ_ASSERT(target != LOCAL_GL_TEXTURE_CUBE_MAP);
-        MOZ_ASSERT(target == LOCAL_GL_TEXTURE_2D ||
-                   (target >= LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X &&
-                    target <= LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z));
-        return target == LOCAL_GL_TEXTURE_2D ? 0 : target - LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+    static size_t FaceForTarget(TexImageTarget texImageTarget) {
+        if (texImageTarget == LOCAL_GL_TEXTURE_2D)
+            return 0;
+
+        return texImageTarget.get() - LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X;
     }
 
     ImageInfo& ImageInfoAtFace(size_t face, GLint level) {
@@ -152,20 +151,16 @@ private:
     }
 
 public:
-    ImageInfo& ImageInfoAt(GLenum imageTarget, GLint level) {
-        MOZ_ASSERT(imageTarget);
-
+    ImageInfo& ImageInfoAt(TexImageTarget imageTarget, GLint level) {
         size_t face = FaceForTarget(imageTarget);
         return ImageInfoAtFace(face, level);
     }
 
-    const ImageInfo& ImageInfoAt(GLenum imageTarget, GLint level) const {
+    const ImageInfo& ImageInfoAt(TexImageTarget imageTarget, GLint level) const {
         return const_cast<WebGLTexture*>(this)->ImageInfoAt(imageTarget, level);
     }
 
-    bool HasImageInfoAt(GLenum imageTarget, GLint level) const {
-        MOZ_ASSERT(imageTarget);
-
+    bool HasImageInfoAt(TexImageTarget imageTarget, GLint level) const {
         size_t face = FaceForTarget(imageTarget);
         CheckedUint32 checked_index = CheckedUint32(level) * mFacesCount + face;
         return checked_index.isValid() &&
@@ -183,7 +178,7 @@ public:
 
     int64_t MemoryUsage() const;
 
-    void SetImageDataStatus(GLenum imageTarget, GLint level, WebGLImageDataStatus newStatus) {
+    void SetImageDataStatus(TexImageTarget imageTarget, GLint level, WebGLImageDataStatus newStatus) {
         MOZ_ASSERT(HasImageInfoAt(imageTarget, level));
         ImageInfo& imageInfo = ImageInfoAt(imageTarget, level);
         // there is no way to go from having image data to not having any
@@ -195,7 +190,7 @@ public:
         imageInfo.mImageDataStatus = newStatus;
     }
 
-    void DoDeferredImageInitialization(GLenum imageTarget, GLint level);
+    void DoDeferredImageInitialization(TexImageTarget imageTarget, GLint level);
 
 protected:
 
@@ -222,13 +217,13 @@ protected:
         return mWrapS == LOCAL_GL_CLAMP_TO_EDGE && mWrapT == LOCAL_GL_CLAMP_TO_EDGE;
     }
 
-    bool DoesTexture2DMipmapHaveAllLevelsConsistentlyDefined(GLenum texImageTarget) const;
+    bool DoesTexture2DMipmapHaveAllLevelsConsistentlyDefined(TexImageTarget texImageTarget) const;
 
 public:
 
-    void Bind(GLenum aTarget);
+    void Bind(TexTarget aTexTarget);
 
-    void SetImageInfo(GLenum aTarget, GLint aLevel,
+    void SetImageInfo(TexImageTarget aTarget, GLint aLevel,
                       GLsizei aWidth, GLsizei aHeight,
                       GLenum aFormat, GLenum aType, WebGLImageDataStatus aStatus);
 
