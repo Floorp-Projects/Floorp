@@ -1418,18 +1418,6 @@ DocAccessible::ContentInserted(nsIContent* aContainerNode,
 }
 
 void
-DocAccessible::ContentRemoved(nsIContent* aContainerNode,
-                              nsIContent* aChildNode)
-{
-  // Update the whole tree of this document accessible when the container is
-  // null (document element is removed).
-  Accessible* container = aContainerNode ?
-    GetAccessibleOrContainer(aContainerNode) : this;
-
-  UpdateTree(container, aChildNode, false);
-}
-
-void
 DocAccessible::RecreateAccessible(nsIContent* aContent)
 {
 #ifdef A11Y_LOG
