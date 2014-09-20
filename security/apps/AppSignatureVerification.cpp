@@ -44,6 +44,59 @@ extern PRLogModuleInfo* gPIPNSSLog;
 
 namespace {
 
+// Reads a maximum of 1MB from a stream into the supplied buffer.
+// The reason for the 1MB limit is because this function is used to read
+// signature-related files and we want to avoid OOM. The uncompressed length of
+// an entry can be hundreds of times larger than the compressed version,
+// especially if someone has specifically crafted the entry to cause OOM or to
+// consume massive amounts of disk space.
+//
+// @param stream  The input stream to read from.
+// @param buf     The buffer that we read the stream into, which must have
+//                already been allocated.
+nsresult
+ReadStream(const nsCOMPtr<nsIInputStream>& stream, /*out*/ SECItem& buf)
+{
+  // The size returned by Available() might be inaccurate so we need
+  // to check that Available() matches up with the actual length of
+  // the file.
+  uint64_t length;
+  nsresult rv = stream->Available(&length);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Cap the maximum accepted size of signature-related files at 1MB (which is
+  // still crazily huge) to avoid OOM. The uncompressed length of an entry can be
+  // hundreds of times larger than the compressed version, especially if
+  // someone has speifically crafted the entry to cause OOM or to consume
+  // massive amounts of disk space.
+  static const uint32_t MAX_LENGTH = 1024 * 1024;
+  if (length > MAX_LENGTH) {
+    return NS_ERROR_FILE_TOO_BIG;
+  }
+
+  // With bug 164695 in mind we +1 to leave room for null-terminating
+  // the buffer.
+  SECITEM_AllocItem(buf, static_cast<uint32_t>(length + 1));
+
+  // buf.len == length + 1. We attempt to read length + 1 bytes
+  // instead of length, so that we can check whether the metadata for
+  // the entry is incorrect.
+  uint32_t bytesRead;
+  rv = stream->Read(char_ptr_cast(buf.data), buf.len, &bytesRead);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  if (bytesRead != length) {
+    return NS_ERROR_FILE_CORRUPTED;
+  }
+
+  buf.data[buf.len - 1] = 0; // null-terminate
+
+  return NS_OK;
+}
+
 // Finds exactly one (signature metadata) entry that matches the given
 // search pattern, and then load it. Fails if there are no matches or if
 // there is more than one match. If bugDigest is not null then on success
@@ -82,38 +135,10 @@ FindAndLoadOneEntry(nsIZipReader * zip,
   rv = zip->GetInputStream(filename, getter_AddRefs(stream));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // The size returned by Available() might be inaccurate so we need to check
-  // that Available() matches up with the actual length of the file.
-  uint64_t len64;
-  rv = stream->Available(&len64);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-
-  // Cap the maximum accepted size of signature-related files at 1MB (which is
-  // still crazily huge) to avoid OOM. The uncompressed length of an entry can be
-  // hundreds of times larger than the compressed version, especially if
-  // someone has speifically crafted the entry to cause OOM or to consume
-  // massive amounts of disk space.
-  //
-  // Also, keep in mind bug 164695 and that we must leave room for
-  // null-terminating the buffer.
-  static const uint32_t MAX_LENGTH = 1024 * 1024;
-  static_assert(MAX_LENGTH < UINT32_MAX, "MAX_LENGTH < UINT32_MAX");
-  NS_ENSURE_TRUE(len64 < MAX_LENGTH, NS_ERROR_FILE_CORRUPTED);
-  NS_ENSURE_TRUE(len64 < UINT32_MAX, NS_ERROR_FILE_CORRUPTED); // bug 164695
-  SECITEM_AllocItem(buf, static_cast<uint32_t>(len64 + 1));
-
-  // buf.len == len64 + 1. We attempt to read len64 + 1 bytes instead of len64,
-  // so that we can check whether the metadata in the ZIP for the entry is
-  // incorrect.
-  uint32_t bytesRead;
-  rv = stream->Read(char_ptr_cast(buf.data), buf.len, &bytesRead);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (bytesRead != len64) {
+  rv = ReadStream(stream, buf);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_SIGNED_JAR_ENTRY_INVALID;
   }
-
-  buf.data[buf.len - 1] = 0; // null-terminate
 
   if (bufDigest) {
     rv = bufDigest->DigestBuf(SEC_OID_SHA1, buf.data, buf.len - 1);
