@@ -703,6 +703,15 @@ static const bool FALSE_START_ENABLED_DEFAULT = true;
 static const bool NPN_ENABLED_DEFAULT = true;
 static const bool ALPN_ENABLED_DEFAULT = false;
 
+static void
+ConfigureTLSSessionIdentifiers()
+{
+  bool disableSessionIdentifiers =
+    Preferences::GetBool("security.ssl.disable_session_identifiers", false);
+  SSL_OptionSetDefault(SSL_ENABLE_SESSION_TICKETS, !disableSessionIdentifiers);
+  SSL_OptionSetDefault(SSL_NO_CACHE, disableSessionIdentifiers);
+}
+
 namespace {
 
 class CipherSuiteChangeObserver : public nsIObserver
@@ -994,7 +1003,7 @@ nsNSSComponent::InitializeNSS()
   InitCertVerifierLog();
   LoadLoadableRoots();
 
-  SSL_OptionSetDefault(SSL_ENABLE_SESSION_TICKETS, true);
+  ConfigureTLSSessionIdentifiers();
 
   bool requireSafeNegotiation =
     Preferences::GetBool("security.ssl.require_safe_negotiation",
@@ -1304,6 +1313,8 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
       SSL_OptionSetDefault(SSL_ENABLE_ALPN,
                            Preferences::GetBool("security.ssl.enable_alpn",
                                                 ALPN_ENABLED_DEFAULT));
+    } else if (prefName.Equals("security.ssl.disable_session_identifiers")) {
+      ConfigureTLSSessionIdentifiers();
     } else if (prefName.EqualsLiteral("security.OCSP.enabled") ||
                prefName.EqualsLiteral("security.OCSP.require") ||
                prefName.EqualsLiteral("security.OCSP.GET.enabled") ||
