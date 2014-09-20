@@ -716,6 +716,9 @@ interface TestJSImplInterface {
   attribute TestCallbackInterface jsonifierShouldSkipThis3;
   jsonifier;
 
+  attribute byte dashed-attribute;
+  void dashed-method();
+
   // If you add things here, add them to TestCodeGen as well
 };
 

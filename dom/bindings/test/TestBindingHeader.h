@@ -834,6 +834,10 @@ public:
                             TestInterface*, const Dict&, double,
                             const Optional<float>&);
 
+  void SetDashed_attribute(int8_t);
+  int8_t Dashed_attribute();
+  void Dashed_method();
+
   // Methods and properties imported via "implements"
   bool ImplementedProperty();
   void SetImplementedProperty(bool);
