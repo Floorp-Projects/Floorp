@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1421489317664000);
+const PRTime gPreloadListExpirationTime = INT64_C(1422094044784000);
 
 class nsSTSPreload
 {
@@ -18,6 +18,7 @@ class nsSTSPreload
 };
 
 static const nsSTSPreload kSTSPreloadList[] = {
+  { "accounts.firefox.com", true },
   { "accounts.google.com", true },
   { "aclu.org", false },
   { "activiti.alfresco.com", false },
@@ -78,11 +79,10 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "bugzil.la", true },
   { "bugzilla.mozilla.org", true },
   { "business.lookout.com", false },
-  { "bytepark.de", true },
+  { "bytepark.de", false },
   { "ca.gparent.org", false },
   { "carezone.com", false },
   { "cartouche24.eu", true },
-  { "celltek-server.de", true },
   { "certible.com", true },
   { "check.torproject.org", false },
   { "checkout.google.com", true },
@@ -122,7 +122,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "detectify.com", false },
   { "developer.mydigipass.com", false },
   { "die-besten-weisheiten.de", true },
-  { "dillonkorman.com", true },
   { "dist.torproject.org", false },
   { "dl.google.com", true },
   { "dm.lookout.com", false },
@@ -216,9 +215,9 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "jelmer.co.uk", true },
   { "jelmer.uk", true },
   { "jfreitag.de", true },
+  { "jitsi.org", false },
   { "jonas-keidel.de", true },
   { "jonaswitmer.ch", true },
-  { "julian-kipka.de", true },
   { "k-dev.de", true },
   { "kardize24.pl", true },
   { "keeperapp.com", true },
@@ -502,6 +501,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "www.mylookout.com", false },
   { "www.noisebridge.net", false },
   { "www.opsmate.com", true },
+  { "www.paypal.com", false },
   { "www.python.org", true },
   { "www.schokokeks.org", false },
   { "www.simbolo.co.uk", false },
