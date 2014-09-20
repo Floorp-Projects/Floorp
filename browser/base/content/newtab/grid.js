@@ -193,6 +193,13 @@ let gGrid = {
    * Make sure the correct number of rows and columns are visible
    */
   _resizeGrid: function Grid_resizeGrid() {
+    // If we're somehow called before the page has finished loading,
+    // let's bail out to avoid caching zero heights and widths.
+    // We'll be called again when the load event fires.
+    if (document.readyState != "complete") {
+      return;
+    }
+
     // Save the cell's computed height/width including margin and border
     if (this._cellMargin === undefined) {
       let refCell = document.querySelector(".newtab-cell");
