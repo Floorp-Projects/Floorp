@@ -255,6 +255,7 @@ WEBIDL_FILES = [
     'ListBoxObject.webidl',
     'LocalMediaStream.webidl',
     'Location.webidl',
+    'MediaDevices.webidl',
     'MediaElementAudioSourceNode.webidl',
     'MediaError.webidl',
     'MediaList.webidl',

@@ -69,6 +69,7 @@
 #include "mozIThirdPartyUtil.h"
 
 #ifdef MOZ_MEDIA_NAVIGATOR
+#include "mozilla/dom/MediaDevices.h"
 #include "MediaManager.h"
 #endif
 #ifdef MOZ_B2G_BT
@@ -1213,6 +1214,21 @@ Navigator::SendBeacon(const nsAString& aUrl,
 }
 
 #ifdef MOZ_MEDIA_NAVIGATOR
+MediaDevices*
+Navigator::GetMediaDevices(ErrorResult& aRv)
+{
+  if (!mMediaDevices) {
+    if (!mWindow ||
+        !mWindow->GetOuterWindow() ||
+        mWindow->GetOuterWindow()->GetCurrentInnerWindow() != mWindow) {
+      aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+      return nullptr;
+    }
+    mMediaDevices = new MediaDevices(mWindow);
+  }
+  return mMediaDevices;
+}
+
 void
 Navigator::MozGetUserMedia(const MediaStreamConstraints& aConstraints,
                            NavigatorUserMediaSuccessCallback& aOnSuccess,
