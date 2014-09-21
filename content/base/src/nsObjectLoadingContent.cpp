@@ -2503,10 +2503,18 @@ nsObjectLoadingContent::OpenChannel()
   }
   nsRefPtr<ObjectInterfaceRequestorShim> shim =
     new ObjectInterfaceRequestorShim(this);
-  rv = NS_NewChannel(getter_AddRefs(chan), mURI, nullptr, group, shim,
+
+  rv = NS_NewChannel(getter_AddRefs(chan),
+                     mURI,
+                     thisContent,
+                     nsILoadInfo::SEC_NORMAL,
+                     nsIContentPolicy::TYPE_OBJECT,
+                     channelPolicy,
+                     group, // aLoadGroup
+                     shim,  // aCallbacks
                      nsIChannel::LOAD_CALL_CONTENT_SNIFFERS |
-                     nsIChannel::LOAD_CLASSIFY_URI,
-                     channelPolicy);
+                     nsIChannel::LOAD_CLASSIFY_URI);
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Referrer
