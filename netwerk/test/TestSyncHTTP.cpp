@@ -9,6 +9,7 @@
 #include <nsIChannel.h>
 #include <nsIHTTPChannel.h>
 #include <nsIInputStream.h>
+#include "nsContentUtils.h"
 #include <nsNetUtil.h>
 
 /*
@@ -56,7 +57,12 @@ main(int argc, char **argv)
         rv = NS_NewURI(getter_AddRefs(c[i].uri), argv[i+1]);
         RETURN_IF_FAILED(rv, "NS_NewURI");
 
-        rv = NS_OpenURI(getter_AddRefs(c[i].channel), c[i].uri, nullptr, nullptr);
+        rv = NS_OpenURI(getter_AddRefs(c[i].channel,
+                        c[i].uri,
+                        nsContentUtils::GetSystemPrincipal(),
+                        nsILoadInfo::SEC_NORMAL,
+                        nsIContentPolicy::TYPE_OTHER);
+
         RETURN_IF_FAILED(rv, "NS_OpenURI");
 
         nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(c[i].channel);
