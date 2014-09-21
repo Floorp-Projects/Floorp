@@ -109,7 +109,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
       } else {
         // No DOM Window. Store the global and use the SafeJSContext.
         JSObject* glob = js::GetGlobalForObjectCrossCompartment(realCallback);
-        globalObject = xpc::GetNativeForGlobal(glob);
+        globalObject = xpc::NativeGlobal(glob);
         MOZ_ASSERT(globalObject);
         cx = nsContentUtils::GetSafeJSContext();
       }
