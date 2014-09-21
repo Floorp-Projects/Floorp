@@ -124,8 +124,37 @@ ChannelFromScriptURL(nsIPrincipal* principal,
   uint32_t flags = nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI;
 
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), uri, ios, loadGroup, nullptr,
-                     flags, channelPolicy);
+  // If we have the document, use it
+  if (parentDoc) {
+    rv = NS_NewChannel(getter_AddRefs(channel),
+                       uri,
+                       parentDoc,
+                       nsILoadInfo::SEC_NORMAL,
+                       nsIContentPolicy::TYPE_SCRIPT,
+                       channelPolicy,
+                       loadGroup,
+                       nullptr, // aCallbacks
+                       flags,
+                       ios);
+  } else {
+    // we should use 'principal' here; needs to be fixed before
+    // we move security checks to AsyncOpen. We use nullPrincipal
+    // for now, because the loadGroup is null and hence causes
+    // GetChannelUriPrincipal to return the wrong principal.
+    nsCOMPtr<nsIPrincipal> nullPrincipal =
+      do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+    rv = NS_NewChannel(getter_AddRefs(channel),
+                       uri,
+                       nullPrincipal,
+                       nsILoadInfo::SEC_NORMAL,
+                       nsIContentPolicy::TYPE_SCRIPT,
+                       channelPolicy,
+                       loadGroup,
+                       nullptr, // aCallbacks
+                       flags,
+                       ios);
+  }
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   channel.forget(aChannel);
