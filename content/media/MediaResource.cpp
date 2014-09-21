@@ -31,6 +31,7 @@
 #include "nsHostObjectProtocolHandler.h"
 #include <algorithm>
 #include "nsProxyRelease.h"
+#include "nsIContentPolicy.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gMediaResourceLog;
@@ -932,9 +933,12 @@ ChannelMediaResource::RecreateChannel()
 
   nsresult rv = NS_NewChannel(getter_AddRefs(mChannel),
                               mURI,
-                              nullptr,
+                              element,
+                              nsILoadInfo::SEC_NORMAL,
+                              nsIContentPolicy::TYPE_MEDIA,
+                              nullptr,   // aChannelPolicy
                               loadGroup,
-                              nullptr,
+                              nullptr,  // aCallbacks
                               loadFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1434,7 +1438,14 @@ already_AddRefed<MediaResource> FileMediaResource::CloneData(MediaDecoder* aDeco
 
   nsCOMPtr<nsIChannel> channel;
   nsresult rv =
-    NS_NewChannel(getter_AddRefs(channel), mURI, nullptr, loadGroup, nullptr, 0);
+    NS_NewChannel(getter_AddRefs(channel),
+                  mURI,
+                  element,
+                  nsILoadInfo::SEC_NORMAL,
+                  nsIContentPolicy::TYPE_MEDIA,
+                  nullptr,   // aChannelPolicy
+                  loadGroup);
+
   if (NS_FAILED(rv))
     return nullptr;
 
