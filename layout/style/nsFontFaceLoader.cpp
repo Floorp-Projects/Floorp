@@ -340,13 +340,18 @@ nsUserFontSet::StartLoad(gfxUserFontEntry* aUserFontEntry,
     channelPolicy->SetContentSecurityPolicy(csp);
     channelPolicy->SetLoadType(nsIContentPolicy::TYPE_FONT);
   }
-  rv = NS_NewChannel(getter_AddRefs(channel),
-                     aFontFaceSrc->mURI,
-                     nullptr,
-                     loadGroup,
-                     nullptr,
-                     nsIRequest::LOAD_NORMAL,
-                     channelPolicy);
+  // Note we are calling NS_NewChannelInternal() with both a node and a
+  // principal.  This is because the document where the font is being loaded
+  // might have a different origin from the principal of the stylesheet
+  // that initiated the font load.
+  rv = NS_NewChannelInternal(getter_AddRefs(channel),
+                             aFontFaceSrc->mURI,
+                             ps->GetDocument(),
+                             aUserFontEntry->mPrincipal,
+                             nsILoadInfo::SEC_NORMAL,
+                             nsIContentPolicy::TYPE_FONT,
+                             channelPolicy,
+                             loadGroup);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -955,13 +960,22 @@ nsUserFontSet::SyncLoadFontData(gfxUserFontEntry* aFontToLoad,
     channelPolicy->SetContentSecurityPolicy(csp);
     channelPolicy->SetLoadType(nsIContentPolicy::TYPE_FONT);
   }
-  rv = NS_NewChannel(getter_AddRefs(channel),
-                     aFontFaceSrc->mURI,
-                     nullptr,
-                     nullptr,
-                     nullptr,
-                     nsIRequest::LOAD_NORMAL,
-                     channelPolicy);
+
+  nsIPresShell* ps = mPresContext->PresShell();
+  if (!ps) {
+    return NS_ERROR_FAILURE;
+  }
+  // Note we are calling NS_NewChannelInternal() with both a node and a
+  // principal.  This is because the document where the font is being loaded
+  // might have a different origin from the principal of the stylesheet
+  // that initiated the font load.
+  rv = NS_NewChannelInternal(getter_AddRefs(channel),
+                             aFontFaceSrc->mURI,
+                             ps->GetDocument(),
+                             aFontToLoad->mPrincipal,
+                             nsILoadInfo::SEC_NORMAL,
+                             nsIContentPolicy::TYPE_FONT,
+                             channelPolicy);
 
   NS_ENSURE_SUCCESS(rv, rv);
 
