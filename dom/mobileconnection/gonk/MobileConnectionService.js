@@ -137,7 +137,7 @@ MMIResult.prototype = {
 function MobileConnectionProvider(aClientId, aRadioInterface) {
   this._clientId = aClientId;
   this._radioInterface = aRadioInterface;
-  this._operatorInfo = {};
+  this._operatorInfo = new MobileNetworkInfo();
   // An array of nsIMobileConnectionListener instances.
   this._listeners = [];
 
@@ -328,16 +328,52 @@ MobileConnectionProvider.prototype = {
     return true;
   },
 
-  _updateInfo: function(aDestInfo, aSrcInfo) {
+  _updateConnectionInfo: function(aDestInfo, aSrcInfo) {
     let isUpdated = false;
     for (let key in aSrcInfo) {
-      // For updating MobileConnectionInfo
-      if (key === "cell" && aSrcInfo.cell) {
-        if (!aDestInfo.cell) {
+      if (key === "network" || key === "cell") {
+        // nsIMobileNetworkInfo and nsIMobileCellInfo are handled explicitly below.
+        continue;
+      }
+
+      if (aDestInfo[key] !== aSrcInfo[key]) {
+        isUpdated = true;
+        aDestInfo[key] = aSrcInfo[key];
+      }
+    }
+
+    // Make sure we also reset the operator and signal strength information
+    // if we drop off the network.
+    if (aDestInfo.state !== RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED) {
+      aDestInfo.cell = null;
+      aDestInfo.network = null;
+      aDestInfo.signalStrength = null;
+      aDestInfo.relSignalStrength = null;
+    } else {
+      aDestInfo.network = this._operatorInfo;
+
+      if (aSrcInfo.cell == null) {
+        if (aDestInfo.cell != null) {
+          isUpdated = true;
+          aDestInfo.cell = null;
+        }
+      } else {
+        if (aDestInfo.cell == null) {
           aDestInfo.cell = new MobileCellInfo();
         }
         isUpdated = this._updateInfo(aDestInfo.cell, aSrcInfo.cell) || isUpdated;
-      } else if (aDestInfo[key] !== aSrcInfo[key]) {
+      }
+    }
+
+    // Check roaming state
+    isUpdated = this._checkRoamingBetweenOperators(aDestInfo) || isUpdated;
+    return isUpdated;
+  },
+
+  _updateInfo: function(aDestInfo, aSrcInfo) {
+    let isUpdated = false;
+    for (let key in aSrcInfo) {
+      if (aDestInfo[key] !== aSrcInfo[key]) {
         isUpdated = true;
         aDestInfo[key] = aSrcInfo[key];
       }
@@ -393,30 +429,13 @@ MobileConnectionProvider.prototype = {
   },
 
   updateVoiceInfo: function(aNewInfo, aBatch = false) {
-    let isUpdated = this._updateInfo(this.voice, aNewInfo);
-
-    // Make sure we also reset the operator and signal strength information
-    // if we drop off the network.
-    if (this.voice.state !== RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED) {
-      this.voice.cell = null;
-      this.voice.network = null;
-      this.voice.signalStrength = null;
-      this.voice.relSignalStrength = null;
-    } else {
-      this.voice.network = this._operatorInfo;
-    }
-
-    // Check roaming state
-    isUpdated = this._checkRoamingBetweenOperators(this.voice) || isUpdated;
-
+    let isUpdated = this._updateConnectionInfo(this.voice, aNewInfo);
     if (isUpdated && !aBatch) {
       this.deliverListenerEvent("notifyVoiceChanged");
     }
   },
 
   updateDataInfo: function(aNewInfo, aBatch = false) {
-    let isUpdated = false;
-
     // For the data connection, the `connected` flag indicates whether
     // there's an active data call. We get correct `connected` state here.
     let active = gNetworkManager.active;
@@ -427,22 +446,7 @@ MobileConnectionProvider.prototype = {
       aNewInfo.connected = true;
     }
 
-    isUpdated = this._updateInfo(this.data, aNewInfo);
-
-    // Make sure we also reset the operator and signal strength information
-    // if we drop off the network.
-    if (this.data.state !== RIL.GECKO_MOBILE_CONNECTION_STATE_REGISTERED) {
-      this.data.cell = null;
-      this.data.network = null;
-      this.data.signalStrength = null;
-      this.data.relSignalStrength = null;
-    } else {
-      this.data.network = this._operatorInfo;
-    }
-
-    // Check roaming state
-    isUpdated = this._checkRoamingBetweenOperators(this.data) || isUpdated;
-
+    let isUpdated = this._updateConnectionInfo(this.data, aNewInfo);
     if (isUpdated && !aBatch) {
       this.deliverListenerEvent("notifyDataChanged");
     }
