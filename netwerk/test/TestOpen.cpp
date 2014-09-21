@@ -12,6 +12,7 @@
 #include "nsIInputStream.h"
 #include "nsNetUtil.h"
 #include "mozilla/unused.h"
+#include "nsIScriptSecurityManager.h"
 
 #include <stdio.h>
 
@@ -51,7 +52,19 @@ main(int argc, char **argv)
     rv = NS_NewURI(getter_AddRefs(uri), argv[1]);
     RETURN_IF_FAILED(rv, "NS_NewURI");
 
-    rv = NS_OpenURI(getter_AddRefs(stream), uri);
+    nsCOMPtr<nsIScriptSecurityManager> secman =
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    RETURN_IF_FAILED(rv, "Couldn't get script security manager!");
+       nsCOMPtr<nsIPrincipal> systemPrincipal;
+    rv = secman->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+    RETURN_IF_FAILED(rv, "Couldn't get system principal!");
+
+    rv = NS_OpenURI(getter_AddRefs(stream),
+                    uri,
+                    systemPrincipal,
+                    nsILoadInfo::SEC_NORMAL,
+                    nsIContentPolicy::TYPE_OTHER);
+
     RETURN_IF_FAILED(rv, "NS_OpenURI");
 
     FILE* outfile = fopen(argv[2], "wb");
