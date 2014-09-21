@@ -61,7 +61,7 @@ nsStructuredCloneContainer::InitFromJSVal(JS::Handle<JS::Value> aData)
     // part of the "own" "deep clone" sub-steps, so we need an AutoEntryScript.
     // http://www.whatwg.org/specs/web-apps/current-work/#internal-structured-cloning-algorithm
     nsIGlobalObject* nativeGlobal =
-      xpc::GetNativeForGlobal(js::GetGlobalForObjectCrossCompartment(&aData.toObject()));
+      xpc::NativeGlobal(js::GetGlobalForObjectCrossCompartment(&aData.toObject()));
     dom::AutoEntryScript aes(nativeGlobal);
     success = JS_WriteStructuredClone(aes.cx(), aData, &jsBytes, &mSize,
                                       nullptr, nullptr,

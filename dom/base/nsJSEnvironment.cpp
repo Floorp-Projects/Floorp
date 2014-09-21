@@ -484,7 +484,7 @@ SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
   }
 
   if (!globalObject) {
-    globalObject = xpc::GetNativeForGlobal(xpc::PrivilegedJunkScope());
+    globalObject = xpc::NativeGlobal(xpc::PrivilegedJunkScope());
   }
 
   if (globalObject) {
@@ -2581,7 +2581,7 @@ NS_DOMReadStructuredClone(JSContext* cx,
   if (tag == SCTAG_DOM_IMAGEDATA) {
     return ReadStructuredCloneImageData(cx, reader);
   } else if (tag == SCTAG_DOM_WEBCRYPTO_KEY) {
-    nsIGlobalObject *global = xpc::GetNativeForGlobal(JS::CurrentGlobalOrNull(cx));
+    nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(cx));
     if (!global) {
       return nullptr;
     }
