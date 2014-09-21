@@ -968,7 +968,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
       // }
       // JSContext* cx = aes.cx();
       nsIGlobalObject* nativeGlobal =
-        xpc::GetNativeForGlobal(js::GetGlobalForObjectCrossCompartment(wrappedJS->GetJSObject()));
+        xpc::NativeGlobal(js::GetGlobalForObjectCrossCompartment(wrappedJS->GetJSObject()));
       AutoEntryScript aes(nativeGlobal);
       JSContext* cx = aes.cx();
       JS::Rooted<JSObject*> object(cx, wrappedJS->GetJSObject());
