@@ -5,10 +5,10 @@
 #ifndef mozilla_dom_MobileConnection_h
 #define mozilla_dom_MobileConnection_h
 
-#include "MobileConnectionInfo.h"
-#include "MobileNetworkInfo.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/DOMRequest.h"
+#include "mozilla/dom/MobileConnectionInfo.h"
+#include "mozilla/dom/MobileNetworkInfo.h"
 #include "mozilla/dom/MozMobileConnectionBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIMobileConnectionService.h"
