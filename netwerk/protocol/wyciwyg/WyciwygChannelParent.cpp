@@ -13,6 +13,8 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoParent.h"
 #include "SerializedLoadContext.h"
+#include "nsIContentPolicy.h"
+#include "mozilla/ipc/BackgroundUtils.h"
 
 using namespace mozilla::ipc;
 
@@ -58,7 +60,10 @@ NS_IMPL_ISUPPORTS(WyciwygChannelParent,
 //-----------------------------------------------------------------------------
 
 bool
-WyciwygChannelParent::RecvInit(const URIParams& aURI)
+WyciwygChannelParent::RecvInit(const URIParams&          aURI,
+                               const ipc::PrincipalInfo& aRequestingPrincipalInfo,
+                               const uint32_t&           aSecurityFlags,
+                               const uint32_t&           aContentPolicyType)
 {
   nsresult rv;
 
@@ -75,8 +80,24 @@ WyciwygChannelParent::RecvInit(const URIParams& aURI)
   if (NS_FAILED(rv))
     return SendCancelEarly(rv);
 
+  nsCOMPtr<nsIPrincipal> requestingPrincipal =
+    mozilla::ipc::PrincipalInfoToPrincipal(aRequestingPrincipalInfo, &rv);
+  if (NS_FAILED(rv)) {
+    return SendCancelEarly(rv);
+  }
+
   nsCOMPtr<nsIChannel> chan;
-  rv = NS_NewChannel(getter_AddRefs(chan), uri, ios);
+  rv = NS_NewChannel(getter_AddRefs(chan),
+                     uri,
+                     requestingPrincipal,
+                     aSecurityFlags,
+                     aContentPolicyType,
+                     nullptr,   // aChannelPolicy
+                     nullptr,   // loadGroup
+                     nullptr,   // aCallbacks
+                     nsIRequest::LOAD_NORMAL,
+                     ios);
+
   if (NS_FAILED(rv))
     return SendCancelEarly(rv);
 
