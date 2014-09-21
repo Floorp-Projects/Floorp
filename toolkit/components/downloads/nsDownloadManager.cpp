@@ -22,6 +22,7 @@
 #include "nsILocalFileWin.h"
 #include "nsILoadContext.h"
 #include "nsIXULAppInfo.h"
+#include "nsContentUtils.h"
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsArrayEnumerator.h"
@@ -3528,7 +3529,15 @@ nsDownload::Resume()
   // Create a new channel for the source URI
   nsCOMPtr<nsIChannel> channel;
   nsCOMPtr<nsIInterfaceRequestor> ir(do_QueryInterface(wbp));
-  rv = NS_NewChannel(getter_AddRefs(channel), mSource, nullptr, nullptr, ir);
+  rv = NS_NewChannel(getter_AddRefs(channel),
+                     mSource,
+                     nsContentUtils::GetSystemPrincipal(),
+                     nsILoadInfo::SEC_NORMAL,
+                     nsIContentPolicy::TYPE_OTHER,
+                     nullptr,  // aChannelPolicy
+                     nullptr,  // aLoadGroup
+                     ir);
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(channel);
