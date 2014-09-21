@@ -11,6 +11,7 @@
 #include "hnjalloc.h"
 #undef FILE // Undo the damage done in hnjalloc.h
 #include "nsNetUtil.h"
+#include "nsContentUtils.h"
 
 #define BUFSIZE 1024
 
@@ -36,7 +37,12 @@ hnjFopen(const char* aURISpec, const char* aMode)
     }
 
     nsCOMPtr<nsIInputStream> instream;
-    rv = NS_OpenURI(getter_AddRefs(instream), uri);
+    rv = NS_OpenURI(getter_AddRefs(instream),
+                    uri,
+                    nsContentUtils::GetSystemPrincipal(),
+                    nsILoadInfo::SEC_NORMAL,
+                    nsIContentPolicy::TYPE_OTHER);
+
     if (NS_FAILED(rv)) {
         return nullptr;
     }
