@@ -7,7 +7,7 @@
  */
 
 function ifWebGLSupported() {
-  let [target, debuggee, front] = yield initBackend(OVERLAPPING_GEOMETRY_CANVAS_URL);
+  let { target, front } = yield initBackend(OVERLAPPING_GEOMETRY_CANVAS_URL);
   front.setup({ reload: true });
 
   let [firstProgramActor, secondProgramActor] = yield getPrograms(front, 2);
