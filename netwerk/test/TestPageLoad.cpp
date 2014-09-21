@@ -17,6 +17,7 @@
 #include "nsCOMArray.h"
 #include "nsIComponentRegistrar.h"
 #include <algorithm>
+#include "nsIScriptSecurityManager.h"
 
 namespace TestPageLoad {
 
@@ -298,7 +299,23 @@ nsresult auxLoad(char *uriBuf)
     }
     printf("\n");
     uriList.AppendObject(uri);
-    rv = NS_NewChannel(getter_AddRefs(chan), uri, nullptr, nullptr, callbacks);
+
+    nsCOMPtr<nsIScriptSecurityManager> secman =
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    RETURN_IF_FAILED(rv, rv, "Couldn't get script security manager!");
+       nsCOMPtr<nsIPrincipal> systemPrincipal;
+    rv = secman->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+    RETURN_IF_FAILED(rv, rv, "Couldn't get system principal!");
+
+    rv = NS_NewChannel(getter_AddRefs(chan),
+                       uri,
+                       systemPrincipal,
+                       nsILoadInfo::SEC_NORMAL,
+                       nsIContentPolicy::TYPE_OTHER,
+                       nullptr,   // aChannelPolicy
+                       nullptr,   // loadGroup
+                       callbacks);
+
     RETURN_IF_FAILED(rv, rv, "NS_NewChannel");
 
     gKeepRunning++;
@@ -342,7 +359,22 @@ int main(int argc, char **argv)
         rv = NS_NewURI(getter_AddRefs(baseURI), argv[1]);
         RETURN_IF_FAILED(rv, -1, "NS_NewURI");
 
-        rv = NS_NewChannel(getter_AddRefs(chan), baseURI, nullptr, nullptr, callbacks);
+        nsCOMPtr<nsIScriptSecurityManager> secman =
+          do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+        RETURN_IF_FAILED(rv, -1, "Couldn't get script security manager!");
+           nsCOMPtr<nsIPrincipal> systemPrincipal;
+        rv = secman->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+        RETURN_IF_FAILED(rv, -1, "Couldn't get system principal!");
+
+        rv = NS_NewChannel(getter_AddRefs(chan),
+                           baseURI,
+                           systemPrincipal,
+                           nsILoadInfo::SEC_NORMAL,
+                           nsIContentPolicy::TYPE_OTHER,
+                           nullptr,   // aChannelPolicy
+                           nullptr,   // loadGroup
+                           callbacks);
+
         RETURN_IF_FAILED(rv, -1, "NS_OpenURI");
         gKeepRunning++;
 
