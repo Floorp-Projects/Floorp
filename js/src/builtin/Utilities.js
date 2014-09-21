@@ -156,11 +156,6 @@ function ToLength(v) {
     return v < 0x1fffffffffffff ? v : 0x1fffffffffffff;
 }
 
-/* Spec: ECMAScript Draft, 6 edition Aug 24, 2014, 7.2.4 */
-function SameValueZero(x, y) {
-    return x !== x && y !== y || x === y
-}
-
 /********** Testing code **********/
 
 #ifdef ENABLE_PARALLEL_JS
