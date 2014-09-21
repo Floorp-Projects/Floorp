@@ -626,3 +626,17 @@ nsTransferable::SetIsPrivateData(bool aIsPrivateData)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsTransferable::GetRequestingNode(nsIDOMNode** outRequestingNode)
+{
+  nsCOMPtr<nsIDOMNode> node = do_QueryReferent(mRequestingNode);
+  node.forget(outRequestingNode);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTransferable::SetRequestingNode(nsIDOMNode* aRequestingNode)
+{
+  mRequestingNode = do_GetWeakReference(aRequestingNode);
+  return NS_OK;
+}
