@@ -42,9 +42,13 @@ int main(int argc, char** argv)
   }
 
   // Get an input stream from the url
-  nsresult ec;
   nsIInputStream* in;
-  ec = NS_OpenURI(&in, url);
+  nsresult ec = NS_OpenURI(&in,
+                           url,
+                           nsContentUtils::GetSystemPrincipal(),
+                           nsILoadInfo::SEC_NORMAL,
+                           nsIContentPolicy::TYPE_OTHER);
+
   if (nullptr == in) {
     printf("open of url('%s') failed: error=%x\n", urlName, ec);
     return -1;
