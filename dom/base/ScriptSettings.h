@@ -214,6 +214,10 @@ public:
   // false and use of cx() will cause an assertion.
   bool Init(nsIGlobalObject* aGlobalObject);
 
+  // This is a helper that grabs the native global associated with aObject and
+  // invokes the above Init() with that.
+  bool Init(JSObject* aObject);
+
   // Unsurprisingly, this uses aCx and enters the compartment of aGlobalObject.
   // If aGlobalObject or its associated JS global are null then it returns
   // false and use of cx() will cause an assertion.

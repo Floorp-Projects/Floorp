@@ -303,6 +303,12 @@ AutoJSAPI::Init(nsIGlobalObject* aGlobalObject)
 }
 
 bool
+AutoJSAPI::Init(JSObject* aObject)
+{
+  return Init(xpc::NativeGlobal(aObject));
+}
+
+bool
 AutoJSAPI::InitWithLegacyErrorReporting(nsIGlobalObject* aGlobalObject)
 {
   MOZ_ASSERT(NS_IsMainThread());
