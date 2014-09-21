@@ -90,6 +90,7 @@
 #include "nsTextNode.h"
 #include "nsJSUtils.h"
 #include "mozilla/dom/URL.h"
+#include "nsIContentPolicy.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -2691,18 +2692,19 @@ XULDocument::LoadOverlayInternal(nsIURI* aURI, bool aIsDynamic,
 
         nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
         nsCOMPtr<nsIChannel> channel;
-        rv = NS_NewChannel(getter_AddRefs(channel), aURI, nullptr, group);
+        // Set the owner of the channel to be our principal so
+        // that the overlay's JSObjects etc end up being created
+        // with the right principal and in the correct
+        // compartment.
+        rv = NS_NewChannel(getter_AddRefs(channel),
+                           aURI,
+                           NodePrincipal(),
+                           nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
+                           nsIContentPolicy::TYPE_OTHER,
+                           nullptr,    // aChannelPolicy
+                           group);
 
         if (NS_SUCCEEDED(rv)) {
-            // Set the owner of the channel to be our principal so
-            // that the overlay's JSObjects etc end up being created
-            // with the right principal and in the correct
-            // compartment.
-            nsCOMPtr<nsILoadInfo> loadInfo =
-                new LoadInfo(NodePrincipal(), LoadInfo::eInheritPrincipal,
-                             LoadInfo::eNotSandboxed);
-            channel->SetLoadInfo(loadInfo);
-
             rv = channel->AsyncOpen(listener, nullptr);
         }
 
@@ -3333,8 +3335,15 @@ XULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, bool* aBlock)
 
         // Note: the loader will keep itself alive while it's loading.
         nsCOMPtr<nsIStreamLoader> loader;
-        rv = NS_NewStreamLoader(getter_AddRefs(loader), aScriptProto->mSrcURI,
-                                this, nullptr, group);
+        rv = NS_NewStreamLoader(getter_AddRefs(loader),
+                                aScriptProto->mSrcURI,
+                                this, // aObserver
+                                this, // aRequestingContext
+                                nsILoadInfo::SEC_NORMAL,
+                                nsIContentPolicy::TYPE_OTHER,
+                                nullptr, // aContext
+                                group);
+
         if (NS_FAILED(rv)) {
             mCurrentScriptProto = nullptr;
             return rv;
