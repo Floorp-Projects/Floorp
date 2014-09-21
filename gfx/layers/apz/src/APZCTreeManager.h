@@ -386,7 +386,7 @@ private:
                                               uint64_t aLayersId,
                                               const gfx::Matrix4x4& aAncestorTransform,
                                               const nsIntRegion& aObscured,
-                                              AsyncPanZoomController*& aOutParent,
+                                              AsyncPanZoomController* aParent,
                                               AsyncPanZoomController* aNextSibling,
                                               TreeBuildingState& aState);
 

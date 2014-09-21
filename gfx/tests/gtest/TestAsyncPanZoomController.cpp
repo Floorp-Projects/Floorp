@@ -1408,6 +1408,17 @@ protected:
     };
     root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
   }
+
+  void CreatePotentiallyLeakingTree() {
+    const char* layerTreeSyntax = "c(c(c(c))c(c(c)))";
+    // LayerID                     0 1 2 3  4 5 6
+    root = CreateLayerTree(layerTreeSyntax, nullptr, nullptr, lm, layers);
+    SetScrollableFrameMetrics(layers[0], FrameMetrics::START_SCROLL_ID);
+    SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID + 1);
+    SetScrollableFrameMetrics(layers[5], FrameMetrics::START_SCROLL_ID + 1);
+    SetScrollableFrameMetrics(layers[3], FrameMetrics::START_SCROLL_ID + 2);
+    SetScrollableFrameMetrics(layers[6], FrameMetrics::START_SCROLL_ID + 3);
+  }
 };
 
 class APZHitTestingTester : public APZCTreeManagerTester {
@@ -1693,6 +1704,23 @@ TEST_F(APZCTreeManagerTester, ScrollableThebesLayers) {
   SetScrollableFrameMetrics(layers[2], FrameMetrics::START_SCROLL_ID + 1);
   manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
   EXPECT_EQ(ApzcOf(layers[1]), ApzcOf(layers[2]));
+}
+
+TEST_F(APZCTreeManagerTester, Bug1068268) {
+  CreatePotentiallyLeakingTree();
+  ScopedLayerTreeRegistration registration(0, root, mcc);
+
+  manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
+  EXPECT_EQ(ApzcOf(layers[2]), ApzcOf(layers[0])->GetLastChild());
+  EXPECT_EQ(ApzcOf(layers[2]), ApzcOf(layers[0])->GetFirstChild());
+  EXPECT_EQ(ApzcOf(layers[0]), ApzcOf(layers[2])->GetParent());
+  EXPECT_EQ(ApzcOf(layers[2]), ApzcOf(layers[5]));
+
+  EXPECT_EQ(ApzcOf(layers[3]), ApzcOf(layers[2])->GetFirstChild());
+  EXPECT_EQ(ApzcOf(layers[6]), ApzcOf(layers[2])->GetLastChild());
+  EXPECT_EQ(ApzcOf(layers[3]), ApzcOf(layers[6])->GetPrevSibling());
+  EXPECT_EQ(ApzcOf(layers[2]), ApzcOf(layers[3])->GetParent());
+  EXPECT_EQ(ApzcOf(layers[2]), ApzcOf(layers[6])->GetParent());
 }
 
 TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
