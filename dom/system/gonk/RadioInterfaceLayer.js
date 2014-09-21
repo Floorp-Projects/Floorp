@@ -201,7 +201,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gTelephonyService",
 
 XPCOMUtils.defineLazyServiceGetter(this, "gMobileConnectionService",
                                    "@mozilla.org/mobileconnection/mobileconnectionservice;1",
-                                   "nsIMobileConnectionGonkService");
+                                   "nsIGonkMobileConnectionService");
 
 XPCOMUtils.defineLazyGetter(this, "WAP", function() {
   let wap = {};
@@ -3002,8 +3002,8 @@ RadioInterface.prototype = {
                                    this.clientId,
                                    message.iccid ? message : null);
 
-    // In bug 864489, icc related code will be move to IccGonkProvider, we may
-    // need a better way to notify icc change to MobileConnectionGonkProvider.
+    // In bug 864489, icc related code will be move to gonk IccProvider, we may
+    // need a better way to notify icc change to MobileConnectionService.
     gMobileConnectionService.notifyIccChanged(this.clientId,
                                               message.iccid || null);
 
