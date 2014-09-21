@@ -8,6 +8,7 @@
 #include "nsISupportsArray.idl"
 #include "nsIFormatConverter.idl"
 
+interface nsIDOMNode;
 
 %{ C++
 
@@ -81,7 +82,7 @@ interface nsIFlavorDataProvider : nsISupports
 };
 
 
-[scriptable, uuid(5a611a60-e5b5-11e1-aff1-0800200c9a66)]
+[scriptable, uuid(97e0c418-1c1e-4106-bad1-9fcb11dff2fe)]
 interface nsITransferable : nsISupports
 {
   const long kFlavorHasDataProvider = 0;
@@ -193,6 +194,13 @@ interface nsITransferable : nsISupports
    * of the context in which the transferable was created.
    */
   [noscript] attribute boolean isPrivateData;
+
+  /**
+   * The source dom node this transferable was created from.
+   * Note, currently only in use on Windows for network principal
+   * information in drag operations.
+   */
+  [noscript] attribute nsIDOMNode requestingNode;
 
 };
 
