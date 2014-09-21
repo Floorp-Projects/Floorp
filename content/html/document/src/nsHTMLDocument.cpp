@@ -6,6 +6,7 @@
 
 #include "nsHTMLDocument.h"
 
+#include "nsIContentPolicy.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/HTMLAllCollection.h"
 #include "nsCOMPtr.h"
@@ -1510,8 +1511,13 @@ nsHTMLDocument::Open(JSContext* cx,
   // So we reset the document and create a new one.
   nsCOMPtr<nsIChannel> channel;
   nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
-
-  rv = NS_NewChannel(getter_AddRefs(channel), uri, nullptr, group);
+  rv = NS_NewChannel(getter_AddRefs(channel),
+                     uri,
+                     callerDoc,
+                     nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
+                     nsIContentPolicy::TYPE_OTHER,
+                     nullptr,   // aChannelPolicy
+                     group);
 
   if (rv.Failed()) {
     return nullptr;
@@ -1520,12 +1526,6 @@ nsHTMLDocument::Open(JSContext* cx,
   // We can't depend on channels implementing property bags, so do our
   // base URI manually after reset.
 
-  // Set the caller principal, if any, on the channel so that we'll
-  // make sure to use it when we reset.
-  nsCOMPtr<nsILoadInfo> loadInfo =
-    new LoadInfo(callerPrincipal, LoadInfo::eInheritPrincipal,
-                 LoadInfo::eNotSandboxed);
-  rv = channel->SetLoadInfo(loadInfo);
   if (rv.Failed()) {
     return nullptr;
   }
@@ -2373,7 +2373,12 @@ nsHTMLDocument::CreateAndAddWyciwygChannel(void)
   // document.write() script to cache
   nsCOMPtr<nsIChannel> channel;
   // Create a wyciwyg Channel
-  rv = NS_NewChannel(getter_AddRefs(channel), wcwgURI);
+  rv = NS_NewChannel(getter_AddRefs(channel),
+                     wcwgURI,
+                     NodePrincipal(),
+                     nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
+                     nsIContentPolicy::TYPE_OTHER);
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   mWyciwygChannel = do_QueryInterface(channel);
@@ -2385,12 +2390,6 @@ nsHTMLDocument::CreateAndAddWyciwygChannel(void)
   SetDocumentCharacterSetSource(kCharsetFromHintPrevDoc);
   mWyciwygChannel->SetCharsetAndSource(kCharsetFromHintPrevDoc,
                                        GetDocumentCharacterSet());
-
-  // Use our new principal
-  nsCOMPtr<nsILoadInfo> loadInfo =
-    new LoadInfo(NodePrincipal(), LoadInfo::eInheritPrincipal,
-                 LoadInfo::eNotSandboxed);
-  channel->SetLoadInfo(loadInfo);
 
   // Inherit load flags from the original document's channel
   channel->SetLoadFlags(mLoadFlags);

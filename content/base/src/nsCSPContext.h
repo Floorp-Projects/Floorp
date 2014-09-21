@@ -15,6 +15,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsISerializable.h"
 #include "nsIStreamListener.h"
+#include "nsWeakPtr.h"
 #include "nsXPCOM.h"
 
 #define NS_CSPCONTEXT_CONTRACTID "@mozilla.org/cspcontext;1"
@@ -66,6 +67,7 @@ class nsCSPContext : public nsIContentSecurityPolicy
     nsCOMPtr<nsIURI>                           mSelfURI;
     nsDataHashtable<nsCStringHashKey, int16_t> mShouldLoadCache;
     nsCOMPtr<nsILoadGroup>                     mCallingChannelLoadGroup;
+    nsWeakPtr                                  mLoadingContext;
 };
 
 // Class that listens to violation report transmission and logs errors.

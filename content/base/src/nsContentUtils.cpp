@@ -6509,8 +6509,8 @@ nsContentUtils::SetUpChannelOwner(nsIPrincipal* aLoadingPrincipal,
   nsCOMPtr<nsILoadInfo> loadInfo =
     new LoadInfo(loadingPrincipal,
                  inherit ?
-                   LoadInfo::eInheritPrincipal : LoadInfo::eDontInheritPrincipal,
-                 aIsSandboxed ? LoadInfo::eSandboxed : LoadInfo::eNotSandboxed);
+                   nsILoadInfo::eInheritPrincipal : nsILoadInfo::eDontInheritPrincipal,
+                 aIsSandboxed ? nsILoadInfo::eSandboxed : nsILoadInfo::eNotSandboxed);
   aChannel->SetLoadInfo(loadInfo);
   return inherit && !aIsSandboxed;
 }
