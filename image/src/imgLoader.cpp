@@ -635,7 +635,8 @@ static nsresult NewImageChannel(nsIChannel **aResult,
                                 const nsCString& aAcceptHeader,
                                 nsLoadFlags aLoadFlags,
                                 nsIChannelPolicy *aPolicy,
-                                nsIPrincipal *aLoadingPrincipal)
+                                nsIPrincipal *aLoadingPrincipal,
+                                nsISupports *aRequestingContext)
 {
   nsresult rv;
   nsCOMPtr<nsIHttpChannel> newHttpChannel;
@@ -660,13 +661,27 @@ static nsresult NewImageChannel(nsIChannel **aResult,
   // canceled too.
   //
   aLoadFlags |= nsIChannel::LOAD_CLASSIFY_URI;
-  rv = NS_NewChannel(aResult,
-                     aURI,        // URI
-                     nullptr,      // Cached IOService
-                     nullptr,      // LoadGroup
-                     callbacks,   // Notification Callbacks
-                     aLoadFlags,
-                     aPolicy);
+
+  nsCOMPtr<nsIPrincipal> requestingPrincipal = aLoadingPrincipal;
+  if (!requestingPrincipal) {
+    requestingPrincipal = nsContentUtils::GetSystemPrincipal();
+  }
+  nsCOMPtr<nsINode> requestingNode = do_QueryInterface(aRequestingContext);
+  // Note we are calling NS_NewChannelInternal() here with a node and a principal.
+  // This is for things like background images that are specified by user
+  // stylesheets, where the document is being styled, but the principal is that
+  // of the user stylesheet.
+  rv = NS_NewChannelInternal(aResult,
+                             aURI,
+                             requestingNode,
+                             requestingPrincipal,
+                             nsILoadInfo::SEC_NORMAL,
+                             nsIContentPolicy::TYPE_IMAGE,
+                             aPolicy,
+                             nullptr,   // loadGroup
+                             callbacks,
+                             aLoadFlags);
+
   if (NS_FAILED(rv))
     return rv;
 
@@ -1480,7 +1495,8 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
                          mAcceptHeader,
                          aLoadFlags,
                          aPolicy,
-                         aLoadingPrincipal);
+                         aLoadingPrincipal,
+                         aCX);
     if (NS_FAILED(rv)) {
       return false;
     }
@@ -1994,7 +2010,8 @@ nsresult imgLoader::LoadImage(nsIURI *aURI,
                          mAcceptHeader,
                          requestFlags,
                          aPolicy,
-                         aLoadingPrincipal);
+                         aLoadingPrincipal,
+                         aCX);
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
 
