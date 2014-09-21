@@ -213,7 +213,7 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
                                      uint64_t aLayersId,
                                      const gfx::Matrix4x4& aAncestorTransform,
                                      const nsIntRegion& aObscured,
-                                     AsyncPanZoomController*& aOutParent,
+                                     AsyncPanZoomController* aParent,
                                      AsyncPanZoomController* aNextSibling,
                                      TreeBuildingState& aState)
 {
@@ -313,9 +313,10 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
     // Bind the APZC instance into the tree of APZCs
     if (aNextSibling) {
       aNextSibling->SetPrevSibling(apzc);
-    } else if (aOutParent) {
-      aOutParent->SetLastChild(apzc);
+    } else if (aParent) {
+      aParent->SetLastChild(apzc);
     } else {
+      MOZ_ASSERT(!mRootApzc);
       mRootApzc = apzc;
       apzc->MakeRoot();
     }
@@ -370,9 +371,6 @@ APZCTreeManager::PrepareAPZCForLayer(const LayerMetricsWrapper& aLayer,
     apzc->AddHitTestRegion(unobscured);
     APZCTM_LOG("Adding region %s to visible region of APZC %p\n", Stringify(unobscured).c_str(), apzc);
   }
-
-  // Let this apzc be the parent of other controllers when we recurse downwards
-  aOutParent = apzc;
 
   return apzc;
 }
@@ -430,8 +428,15 @@ APZCTreeManager::UpdatePanZoomControllerTree(TreeBuildingState& aState,
   }
 
   // If there's no APZC at this level, any APZCs for our child layers will
-  // have our siblings as siblings.
-  AsyncPanZoomController* next = apzc ? nullptr : aNextSibling;
+  // have our siblings as their siblings, and our parent as their parent.
+  AsyncPanZoomController* next = aNextSibling;
+  if (apzc) {
+    // Otherwise, use this APZC as the parent going downwards, and start off
+    // with its first child as the next sibling
+    aParent = apzc;
+    next = apzc->GetFirstChild();
+  }
+
   for (LayerMetricsWrapper child = aLayer.GetLastChild(); child; child = child.GetPrevSibling()) {
     gfx::TreeAutoIndent indent(mApzcTreeLog);
     next = UpdatePanZoomControllerTree(aState, child, childLayersId,
