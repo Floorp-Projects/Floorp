@@ -25,16 +25,14 @@ namespace mobileconnection {
  * shutdown. For multi-sim device, more than one instance will
  * be created and each instance represents a sim slot.
  */
-class MobileConnectionChild : public PMobileConnectionChild
+class MobileConnectionChild MOZ_FINAL : public PMobileConnectionChild
+                                      , public nsIMobileConnection
 {
-  NS_INLINE_DECL_REFCOUNTING(MobileConnectionChild)
-
 public:
-  MobileConnectionChild()
-    : mLive(true)
-  {
-    MOZ_COUNT_CTOR(MobileConnectionChild);
-  }
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMOBILECONNECTION
+
+  MobileConnectionChild(uint32_t aServiceId);
 
   void
   Init();
@@ -42,47 +40,19 @@ public:
   void
   Shutdown();
 
-  void
-  RegisterListener(nsIMobileConnectionListener* aListener);
+private:
+  MobileConnectionChild() MOZ_DELETE;
 
-  void
-  UnregisterListener(nsIMobileConnectionListener* aListener);
-
-  MobileConnectionInfo*
-  GetVoiceInfo();
-
-  MobileConnectionInfo*
-  GetDataInfo();
-
-  void
-  GetIccId(nsAString& aIccId);
-
-  void
-  GetRadioState(nsAString& aRadioState);
-
-  nsIVariant*
-  GetSupportedNetworkTypes();
-
-  void
-  GetLastNetwork(nsAString& aNetwork);
-
-  void
-  GetLastHomeNetwork(nsAString& aNetwork);
-
-  void
-  GetNetworkSelectionMode(nsAString& aMode);
-
-  bool
-  SendRequest(MobileConnectionRequest aRequest,
-              nsIMobileConnectionCallback* aRequestCallback);
-
-protected:
-  virtual
+  // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
   ~MobileConnectionChild()
   {
     MOZ_COUNT_DTOR(MobileConnectionChild);
-    Shutdown();
   }
+
+protected:
+  bool
+  SendRequest(const MobileConnectionRequest& aRequest,
+              nsIMobileConnectionCallback* aCallback);
 
   virtual void
   ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
@@ -137,9 +107,9 @@ protected:
   RecvNotifyNetworkSelectionModeChanged(const nsString& aMode) MOZ_OVERRIDE;
 
 private:
+  uint32_t mServiceId;
   bool mLive;
   nsCOMArray<nsIMobileConnectionListener> mListeners;
-  nsCOMPtr<nsIWritableVariant> mSupportedNetworkTypes;
   nsRefPtr<MobileConnectionInfo> mVoice;
   nsRefPtr<MobileConnectionInfo> mData;
   nsString mIccId;
@@ -147,6 +117,7 @@ private:
   nsString mLastNetwork;
   nsString mLastHomeNetwork;
   nsString mNetworkSelectionMode;
+  nsTArray<nsString> mSupportedNetworkTypes;
 };
 
 /******************************************************************************
