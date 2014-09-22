@@ -1,4 +1,9 @@
-#include "precompiled.h"
+//
+// Copyright 2014 The ANGLE Project Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+//
+
 #include "libGLESv2/renderer/d3d/HLSLCompiler.h"
 #include "libGLESv2/Program.h"
 #include "libGLESv2/main.h"
@@ -26,11 +31,11 @@ bool HLSLCompiler::initialize()
     TRACE_EVENT0("gpu", "initializeCompiler");
 #if defined(ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES)
     // Find a D3DCompiler module that had already been loaded based on a predefined list of versions.
-    static TCHAR* d3dCompilerNames[] = ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES;
+    static const char *d3dCompilerNames[] = ANGLE_PRELOADED_D3DCOMPILER_MODULE_NAMES;
 
     for (size_t i = 0; i < ArraySize(d3dCompilerNames); ++i)
     {
-        if (GetModuleHandleEx(0, d3dCompilerNames[i], &mD3DCompilerModule))
+        if (GetModuleHandleExA(0, d3dCompilerNames[i], &mD3DCompilerModule))
         {
             break;
         }
@@ -105,14 +110,11 @@ ShaderBlob *HLSLCompiler::compileToBinary(gl::InfoLog &infoLog, const char *hlsl
                 return gl::error(GL_OUT_OF_MEMORY, (ShaderBlob*)NULL);
             }
 
-            infoLog.append("Warning: D3D shader compilation failed with ");
-            infoLog.append(flagNames[i]);
-            infoLog.append(" flags.");
+            infoLog.append("Warning: D3D shader compilation failed with %s flags.", flagNames[i]);
+
             if (i + 1 < attempts)
             {
-                infoLog.append(" Retrying with ");
-                infoLog.append(flagNames[i + 1]);
-                infoLog.append(".\n");
+                infoLog.append(" Retrying with %s.\n", flagNames[i + 1]);
             }
         }
     }

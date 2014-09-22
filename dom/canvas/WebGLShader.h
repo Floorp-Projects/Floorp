@@ -38,7 +38,7 @@ public:
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
     GLuint GLName() { return mGLName; }
-    GLenum ShaderType() { return mType; }
+    sh::GLenum ShaderType() { return mType; }
 
     void SetSource(const nsAString& src) {
         // XXX do some quick gzip here maybe -- getting this will be very rare
@@ -85,7 +85,7 @@ protected:
     }
 
     GLuint mGLName;
-    GLenum mType;
+    sh::GLenum mType;
     nsString mSource;
     nsString mTranslatedSource;
     nsCString mTranslationLog; // The translation log should contain only ASCII characters

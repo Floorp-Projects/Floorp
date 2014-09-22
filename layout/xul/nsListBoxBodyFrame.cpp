@@ -1512,8 +1512,7 @@ nsListBoxBodyFrame::RemoveChildFrame(nsBoxLayoutState &aState,
   nsAccessibilityService* accService = nsIPresShell::AccService();
   if (accService) {
     nsIContent* content = aFrame->GetContent();
-    accService->ContentRemoved(PresContext()->PresShell(), content->GetParent(),
-                               content);
+    accService->ContentRemoved(PresContext()->PresShell(), content);
   }
 #endif
 

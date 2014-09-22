@@ -16,7 +16,8 @@ void
 WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintptr readOffset,
                                  GLintptr writeOffset, GLsizeiptr size)
 {
-    MOZ_CRASH("Not Implemented.");
+    MakeContextCurrent();
+    gl->fCopyBufferSubData(readTarget, writeTarget, readOffset, writeOffset, size);
 }
 
 void
