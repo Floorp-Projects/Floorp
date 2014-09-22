@@ -225,11 +225,12 @@
             'Traversal Rule test document'])]
         ]);
 
-        contentTest.start(function () {
-          closeBrowserWindow();
-          SimpleTest.finish();
-        });
-
+        addA11yLoadEvent(function() {
+          contentTest.start(function () {
+            closeBrowserWindow();
+            SimpleTest.finish();
+          });
+        }, doc.defaultView)
       });
       iframe.src = 'data:text/html;charset=utf-8,' + doc.defaultView.frameContents;
       doc.getElementById('appframe').appendChild(iframe);
