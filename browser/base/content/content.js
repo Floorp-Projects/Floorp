@@ -644,6 +644,8 @@ let DOMFullscreenHandler = {
 DOMFullscreenHandler.init();
 
 ContentWebRTC.init();
+addMessageListener("webrtc:Allow", ContentWebRTC);
+addMessageListener("webrtc:Deny", ContentWebRTC);
 addMessageListener("webrtc:StopSharing", ContentWebRTC);
 
 function gKeywordURIFixup(fixupInfo) {
