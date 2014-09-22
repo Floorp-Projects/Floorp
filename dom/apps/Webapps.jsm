@@ -64,6 +64,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 XPCOMUtils.defineLazyModuleGetter(this, "ScriptPreloader",
                                   "resource://gre/modules/ScriptPreloader.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "TrustedHostedAppsUtils",
+                                  "resource://gre/modules/TrustedHostedAppsUtils.jsm");
+
 #ifdef MOZ_WIDGET_GONK
 XPCOMUtils.defineLazyGetter(this, "libcutils", function() {
   Cu.import("resource://gre/modules/systemlibs.js");
@@ -1411,6 +1414,24 @@ this.DOMApplicationRegistry = {
       return;
     }
 
+    // Check if launching trusted hosted app
+    if (this.kTrustedHosted == app.kind) {
+      debug("Launching Trusted Hosted App!");
+      // sanity check on manifest host's CA
+      // (proper CA check with pinning is done by regular networking code)
+      if (!TrustedHostedAppsUtils.isHostPinned(aManifestURL)) {
+        debug("Trusted App Host certificate Not OK");
+        aOnFailure("TRUSTED_APPLICATION_HOST_CERTIFICATE_INVALID");
+        return;
+      }
+
+      debug("Trusted App Host pins exist");
+      if (!TrustedHostedAppsUtils.verifyCSPWhiteList(app.csp)) {
+        aOnFailure("TRUSTED_APPLICATION_WHITELIST_VALIDATION_FAILED");
+        return;
+      }
+    }
+
     // We have to clone the app object as nsIDOMApplication objects are
     // stringified as an empty object. (see bug 830376)
     let appClone = AppsUtils.cloneAppObject(app);
@@ -2295,6 +2316,23 @@ this.DOMApplicationRegistry = {
     // in which case we don't need to load it.
     if (app.manifest) {
       if (checkManifest()) {
+        if (this.kTrustedHosted == this.appKind(app, app.manifest)) {
+          // sanity check on manifest host's CA
+          // (proper CA check with pinning is done by regular networking code)
+          if (!TrustedHostedAppsUtils.isHostPinned(app.manifestURL)) {
+            sendError("TRUSTED_APPLICATION_HOST_CERTIFICATE_INVALID");
+            return;
+          }
+
+          // Signature of the manifest should be verified here.
+          // Bug 1059216.
+
+          if (!TrustedHostedAppsUtils.verifyCSPWhiteList(app.manifest.csp)) {
+            sendError("TRUSTED_APPLICATION_WHITELIST_VALIDATION_FAILED");
+            return;
+          }
+        }
+
         installApp();
       }
       return;
@@ -2319,6 +2357,19 @@ this.DOMApplicationRegistry = {
         app.manifest = xhr.response;
         if (checkManifest()) {
           app.etag = xhr.getResponseHeader("Etag");
+          if (this.kTrustedHosted == this.appKind(app, app.manifest)) {
+            // checking trusted host for pinning is not needed here, since
+            // network code will have already done that
+
+            // Signature of the manifest should be verified here.
+            // Bug 1059216.
+
+            if (!TrustedHostedAppsUtils.verifyCSPWhiteList(app.manifest.csp)) {
+              sendError("TRUSTED_APPLICATION_WHITELIST_VALIDATION_FAILED");
+              return;
+            }
+          }
+
           installApp();
         }
       } else {
