@@ -5,6 +5,7 @@
 
 package org.mozilla.search;
 
+import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -13,6 +14,7 @@ import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.appwidget.AppWidgetProviderInfo;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -63,7 +65,6 @@ public class SearchWidget extends AppWidgetProvider {
     public void onReceive(final Context context, final Intent intent) {
         // This will hold the intent to redispatch
         final Intent redirect;
-        Log.i(LOGTAG, "Got intent  " + intent.getAction());
         if (intent.getAction().equals(ACTION_LAUNCH_BROWSER)) {
             redirect = buildRedirectIntent(Intent.ACTION_MAIN,
                     AppConstants.ANDROID_PACKAGE_NAME,
@@ -105,9 +106,17 @@ public class SearchWidget extends AppWidgetProvider {
 
     // Utility to create the view for this widget and attach any event listeners to it
     private void addView(final AppWidgetManager manager, final Context context, final int id, final Bundle options) {
-        final RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.search_widget);
+        final int category = options.getInt(AppWidgetManager.OPTION_APPWIDGET_HOST_CATEGORY, -1);
+        final boolean isKeyguard = category == AppWidgetProviderInfo.WIDGET_CATEGORY_KEYGUARD;
 
-        addClickIntent(context, views, R.id.search_button, ACTION_LAUNCH_SEARCH);
+        final RemoteViews views;
+        if (isKeyguard) {
+            views = new RemoteViews(context.getPackageName(), R.layout.keyguard_widget);
+        } else {
+            views = new RemoteViews(context.getPackageName(), R.layout.search_widget);
+            addClickIntent(context, views, R.id.search_button, ACTION_LAUNCH_SEARCH);
+        }
+
         addClickIntent(context, views, R.id.new_tab_button, ACTION_LAUNCH_NEW_TAB);
         // Clicking the logo also launches the browser
         addClickIntent(context, views, R.id.logo_button, ACTION_LAUNCH_BROWSER);
@@ -119,7 +128,7 @@ public class SearchWidget extends AppWidgetProvider {
     private void addClickIntent(final Context context, final RemoteViews views, final int viewId, final String action) {
         final Intent intent = new Intent(context, SearchWidget.class);
         intent.setAction(action);
-        intent.setData(Uri.parse("about:home"));
+        intent.setData(Uri.parse(AboutPages.HOME));
         final PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
         views.setOnClickPendingIntent(viewId, pendingIntent);
     }

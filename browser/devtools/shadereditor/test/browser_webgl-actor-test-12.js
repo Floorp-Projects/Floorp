@@ -7,7 +7,7 @@
  */
 
 function ifWebGLSupported() {
-  let [target, debuggee, front] = yield initBackend(SHADER_ORDER_URL);
+  let { target, front } = yield initBackend(SHADER_ORDER_URL);
   front.setup({ reload: true });
 
   let programActor = yield once(front, "program-linked");

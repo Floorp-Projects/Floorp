@@ -265,3 +265,10 @@ interface nsITelephonyService : nsISupports
   attribute bool microphoneMuted;
   attribute bool speakerEnabled;
 };
+
+%{C++
+template<typename T> struct already_AddRefed;
+
+already_AddRefed<nsITelephonyService>
+NS_CreateTelephonyService();
+%}

@@ -10,8 +10,13 @@
         android:right="-2dp"
         android:left="-2dp">
         <shape>
+            <!-- Padding creates vertical space between the text and the underline -->
+            <padding
+                android:top="@dimen/search_bar_padding_y"
+                android:bottom="@dimen/search_bar_padding_y"/>
             <solid android:color="@android:color/transparent"/>
-            <stroke android:width="2dp" android:color="@color/highlight_orange"/>
+            <!-- We apply a color filter to set the color for the selected search engine -->
+            <stroke android:width="2dp" android:color="@android:color/white"/>
         </shape>
     </item>
 

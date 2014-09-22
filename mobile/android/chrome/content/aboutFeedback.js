@@ -13,6 +13,7 @@ let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Messaging.jsm");
+Cu.import("resource://gre/modules/UpdateChannel.jsm");
 document.addEventListener("DOMContentLoaded", init, false);
 
 function dump(a) {
@@ -116,10 +117,13 @@ function sendFeedback(aEvent) {
     data["url"] = urlElement.value;
   }
 
-  let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
-  data["device"] = sysInfo.get("device");
-  data["manufacturer"] = sysInfo.get("manufacturer");
+  data["device"] = Services.sysinfo.get("device");
+  data["manufacturer"] = Services.sysinfo.get("manufacturer");
   data["source"] = "about:feedback";
+  data["platform"] = Services.appinfo.OS;
+  data["version"] = Services.appinfo.version;
+  data["locale"] = Services.locale.getSystemLocale().getCategory("NSILOCALE_CTYPE");
+  data["channel"] = UpdateChannel.get();
 
   let req = new XMLHttpRequest();
   req.addEventListener("error", function() {

@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="fe92ddd450e03b38edb2d465de7897971d68ac68">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="c7ef0bf06ce1c98cbe68aa52e2ecd862acb23e9c"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="3802009e1ab6c3ddfc3eb15522e3140a96b33336"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="b81855b6b67f285d6f27a4f8c1cfe2e0387ea57c"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
@@ -135,10 +135,10 @@
   <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="960533f716ce31dfad357e87fa2f1d9ee5e94674"/>
   <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="893238eb1215f8fd4f3747169170cc5e1cc33969"/>
   <project name="kernel_lk" path="bootable/bootloader/lk" remote="b2g" revision="fda40423ffa573dc6cafd3780515010cb2a086be"/>
-  <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="b2af89ae378a119819a9c86d9a12e573c7130459"/>
+  <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="30b96dfca99cb384bf520a16b81f3aba56f09907"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="5b71e40213f650459e95d35b6f14af7e88d8ab62"/>
   <project name="platform_external_libnfc-nci" path="external/libnfc-nci" remote="t2m" revision="4186bdecb4dae911b39a8202252cc2310d91b0be"/>
-  <project name="platform/frameworks/av" path="frameworks/av" revision="c1814713bd2d07c2af0c236007badc8732a34324"/>
+  <project name="platform/frameworks/av" path="frameworks/av" revision="ea2f399b3ca0a23524d2828f85f69902caefc22e"/>
   <project name="platform/frameworks/base" path="frameworks/base" revision="6b58ab45e3e56c1fc20708cc39fa2264c52558df"/>
   <project name="platform/frameworks/native" path="frameworks/native" revision="a46a9f1ac0ed5662d614c277cbb14eb3f332f365"/>
   <project name="platform/hardware/libhardware" path="hardware/libhardware" revision="7196881a0e9dd7bfbbcf0af64c8064e70f0fa094"/>
@@ -154,5 +154,5 @@
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="54a712b46fe937dacdaed9b1261c63847129a719"/>
   <project name="platform/system/qcom" path="system/qcom" revision="63e3f6f176caad587d42bba4c16b66d953fb23c2"/>
   <project name="platform/vendor/qcom-opensource/wlan/prima" path="vendor/qcom/opensource/wlan/prima" revision="d8952a42771045fca73ec600e2b42a4c7129d723"/>
-  <project name="platform/vendor/qcom/msm8610" path="device/qcom/msm8610" revision="5d1dbc698de7294697373b436dd44e240f40e1ac"/>
+  <project name="platform/vendor/qcom/msm8610" path="device/qcom/msm8610" revision="7704e16da545f4207812e593743d6743e1afb9c5"/>
 </manifest>

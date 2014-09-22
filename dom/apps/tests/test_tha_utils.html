@@ -1,0 +1,237 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Trusted Hosted Apps Utils</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+
+  <script type="application/javascript;version=1.7">
+  Components.utils.import("resource://gre/modules/TrustedHostedAppsUtils.jsm");
+
+  SimpleTest.waitForExplicitFinish();
+
+  let tests = [{
+    key: "getCSPWhiteList with no argument",
+    func: function test1() {
+      let cspWhiteList = TrustedHostedAppsUtils.getCSPWhiteList();
+      ok(!cspWhiteList.valid, "Should be invalid");
+      is(cspWhiteList.list.length, 0, "List should be empty");
+      nextTest();
+    }
+  },{
+    key: "getCSPWhiteList without style-src",
+    func: function test2() {
+      let cspWhiteList = TrustedHostedAppsUtils.getCSPWhiteList(
+        "script-src https://script.example.com; stylee-src https://style.example.com"
+      );
+      ok(!cspWhiteList.valid, "Should be invalid");
+      is(cspWhiteList.list.length, 0, "List should be empty");
+      nextTest();
+    }
+  },{
+    key: "getCSPWhiteList without script-src",
+    func: function test3() {
+      let cspWhiteList = TrustedHostedAppsUtils.getCSPWhiteList(
+        "script-source https://script.example.com; style-src https://style.example.com"
+      );
+      ok(!cspWhiteList.valid, "Should be invalid");
+      is(cspWhiteList.list.length, 0, "List should be empty");
+      nextTest();
+    }
+  },{
+    key: "getCSPWhiteList without source",
+    func: function test4() {
+      let cspWhiteList = TrustedHostedAppsUtils.getCSPWhiteList(
+        "script-src; style-src https://style.example.com"
+      );
+      ok(!cspWhiteList.valid, "Should be invalid");
+      is(cspWhiteList.list.length, 0, "List should be empty");
+      nextTest();
+    }
+  },{
+    key: "getCSPWhiteList working",
+    func: function test5() {
+      let cspWhiteList = TrustedHostedAppsUtils.getCSPWhiteList(
+        "script-src https://script.example.com; style-src https://style.example.com"
+      );
+      ok(cspWhiteList.valid, "Should be valid");
+      is(cspWhiteList.list.length, 2, "List should have two sources");
+      ok(cspWhiteList.list.every(aEl => ["https://script.example.com", "https://style.example.com"].indexOf(aEl) != -1), "Sources: " + cspWhiteList.list);
+      nextTest();
+    }
+  },{
+    key: "getCSPWhiteList working with duplicates",
+    func: function test6() {
+      let cspWhiteList = TrustedHostedAppsUtils.getCSPWhiteList(
+        "script-src https://script.example.com;" +
+        "style-src https://style.example.com;" +
+        "style-src https://style.example.com;" +
+        "style-src https://style.example.com;" +
+        "style-src https://style.example.com;"
+      );
+      ok(cspWhiteList.valid, "Should be valid");
+      is(cspWhiteList.list.length, 2, "List should have two sources");
+      ok(cspWhiteList.list.every(aEl => ["https://script.example.com", "https://style.example.com"].indexOf(aEl) != -1), "Sources: " + cspWhiteList.list);
+      nextTest();
+    }
+  },{
+    key: "getCSPWhiteList working with duplicates and many sources",
+    func: function test7() {
+      let cspWhiteList = TrustedHostedAppsUtils.getCSPWhiteList(
+        "script-src https://script.example.com https://script2.example.com;" +
+        "style-src https://style.example.com;" +
+        "style-src https://style.example.com https://script1.example.com;" +
+        "style-src https://style.example.com https://style2.example.com;" +
+        "style-src https://style3.example.com;"
+      );
+      ok(cspWhiteList.valid, "Should be valid");
+      is(cspWhiteList.list.length, 6, "List should have 6 sources");
+      ok(cspWhiteList.list.every(aEl => ["https://script.example.com",
+                                       "https://script1.example.com",
+                                       "https://script2.example.com",
+                                       "https://style.example.com",
+                                       "https://style2.example.com",
+                                       "https://style3.example.com"].indexOf(aEl) != -1),
+        "Sources: " + cspWhiteList.list);
+      nextTest();
+    }
+  },{
+    key: "getCSPWhiteList only adds sources from required directives",
+    func: function test8() {
+      let cspWhiteList = TrustedHostedAppsUtils.getCSPWhiteList(
+        "script-src https://script.example.com https://script2.example.com;" +
+        "style-src https://style.example.com;" +
+        "img-src https://img.example.com;" +
+        "audio-src https://audio.example.com https://audio2.example.com;" +
+        "video-src https://video.example.com;" +
+        "default-src *;" +
+        "media-src http://media.example.com;" +
+        "child-src http://child.example.com;" +
+        "frame-src http://frame.example.com;" +
+        "frame-ancestrs http://frame-a.example.com;" +
+        "font-src http://font.example.com;" +
+        "connect-src http://connect.example.com;"
+      );
+      ok(cspWhiteList.valid, "Should be valid");
+      is(cspWhiteList.list.length, 3, "List should have 3 sources");
+      ok(cspWhiteList.list.every(aEl => ["https://script.example.com",
+                                       "https://script2.example.com",
+                                       "https://style.example.com"].indexOf(aEl) != -1),
+        "Sources: " + cspWhiteList.list);
+      nextTest();
+    }
+  },{
+    key: "getCSPWhiteList allows 'self' but doesn't add it",
+    func: function test9() {
+      let cspWhiteList = TrustedHostedAppsUtils.getCSPWhiteList(
+        "script-src 'self';" +
+        "style-src 'self'"
+      );
+      ok(cspWhiteList.valid, "Should be valid");
+      is(cspWhiteList.list.length, 0, "List should have no source");
+      nextTest();
+    }
+  },{
+    key: "getCSPWhiteList allows *",
+    func: function test10() {
+      let cspWhiteList = TrustedHostedAppsUtils.getCSPWhiteList(
+        "script-src *;" +
+        "style-src https://style.example.com"
+      );
+      ok(cspWhiteList.valid, "Should be valid");
+      is(cspWhiteList.list.length, 2, "List should have 2 sources");
+      nextTest();
+    }
+  },{
+    key: "isHostPinned doesn't allow *",
+    func: function test11() {
+      let isHostPinned = TrustedHostedAppsUtils.isHostPinned("*");
+      ok(!isHostPinned, "Should not be pinned");
+      nextTest();
+    }
+  },{
+    key: "isHostPinned doesn't allow http urls",
+    func: function test12() {
+      let isHostPinned = TrustedHostedAppsUtils.isHostPinned("http://example.com");
+      ok(!isHostPinned, "Should not be pinned:(" + isHostPinned + ") http://example.com");
+      nextTest();
+    }
+  },{
+    key: "isHostPinned doesn't allow shema-less urls",
+    func: function test13() {
+      let isHostPinned = TrustedHostedAppsUtils.isHostPinned("example.com");
+      ok(!isHostPinned, "Should not be pinned:(" + isHostPinned + ") example.com");
+      nextTest();
+    }
+  },{
+    key: "isHostPinned doesn't allow 'unsafe-eval'",
+    func: function test14() {
+      let isHostPinned = TrustedHostedAppsUtils.isHostPinned("'unsafe-eval'");
+      ok(!isHostPinned, "Should not be pinned:(" + isHostPinned + ") 'unsafe-eval'");
+      nextTest();
+    }
+  },{
+    key: "isHostPinned doesn't allow 'unsafe-inline'",
+    func: function test15() {
+      let isHostPinned = TrustedHostedAppsUtils.isHostPinned("'unsafe-inline'");
+      ok(!isHostPinned, "Should not be pinned:(" + isHostPinned + ") 'unsafe-inline'");
+      nextTest();
+    }
+  },{
+    key: "isHostPinned doesn't allow foobar",
+    func: function test16() {
+      let isHostPinned = TrustedHostedAppsUtils.isHostPinned("foobar");
+      ok(!isHostPinned, "Should not be pinned:(" + isHostPinned + ") foobar");
+      nextTest();
+    }
+  },{
+    key: "isHostPinned doesn't allow https://www.example.com:*",
+    func: function test17() {
+      let isHostPinned = TrustedHostedAppsUtils.isHostPinned("https://example.com:*");
+      ok(!isHostPinned, "Should not be pinned:(" + isHostPinned + ") https://example.com:*");
+      nextTest();
+    }
+
+  },{
+    key: "isHostPinned doesn't allow https://*.example.com",
+    func: function test18() {
+      let isHostPinned = TrustedHostedAppsUtils.isHostPinned("https://*.example.com");
+      ok(!isHostPinned, "Should not be pinned:(" + isHostPinned + ") https://*.example.com");
+      nextTest();
+    }
+  }];
+
+  let testGenerator = function _testGenerator() {
+    for (let i = 0; i < tests.length; ++i) {
+      yield tests[i];
+    }
+  }();
+
+  let nextTest = () => {
+    try {
+      let t = testGenerator.next();
+      info("test: " + t.key);
+      t.func();
+    } catch(e) {
+      if (e instanceof StopIteration) {
+        SimpleTest.finish();
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    nextTest();
+  });
+
+  </script>
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test"></pre>
+  <div id="container"></div>
+</body>
+</html>
