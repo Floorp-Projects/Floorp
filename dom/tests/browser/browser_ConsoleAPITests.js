@@ -174,10 +174,10 @@ function testConsoleGroup(aMessageObject) {
 function startTraceTest() {
   gLevel = "trace";
   gArgs = [
-    {filename: TEST_URI, functionName: "window.foobar585956c", language: 2, lineNumber: 6},
-    {filename: TEST_URI, functionName: "foobar585956b", language: 2, lineNumber: 11},
-    {filename: TEST_URI, functionName: "foobar585956a", language: 2, lineNumber: 15},
-    {filename: TEST_URI, functionName: "onclick", language: 2, lineNumber: 1}
+    {columnNumber: 8, filename: TEST_URI, functionName: "window.foobar585956c", language: 2, lineNumber: 6},
+    {columnNumber: 15, filename: TEST_URI, functionName: "foobar585956b", language: 2, lineNumber: 11},
+    {columnNumber: 15, filename: TEST_URI, functionName: "foobar585956a", language: 2, lineNumber: 15},
+    {columnNumber: 0, filename: TEST_URI, functionName: "onclick", language: 2, lineNumber: 1}
   ];
 
   let button = gWindow.document.getElementById("test-trace");
