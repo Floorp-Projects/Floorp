@@ -30,7 +30,8 @@ public:
   nsVolume(const nsAString& aName, const nsAString& aMountPoint,
            const int32_t& aState, const int32_t& aMountGeneration,
            const bool& aIsMediaPresent, const bool& aIsSharing,
-           const bool& aIsFormatting, const bool& aIsFake)
+           const bool& aIsFormatting, const bool& aIsFake,
+           const bool& aIsUnmounting)
     : mName(aName),
       mMountPoint(aMountPoint),
       mState(aState),
@@ -39,7 +40,8 @@ public:
       mIsFake(aIsFake),
       mIsMediaPresent(aIsMediaPresent),
       mIsSharing(aIsSharing),
-      mIsFormatting(aIsFormatting)
+      mIsFormatting(aIsFormatting),
+      mIsUnmounting(aIsUnmounting)
   {
   }
 
@@ -53,7 +55,8 @@ public:
       mIsFake(false),
       mIsMediaPresent(false),
       mIsSharing(false),
-      mIsFormatting(false)
+      mIsFormatting(false),
+      mIsUnmounting(false)
   {
   }
 
@@ -78,6 +81,7 @@ public:
   bool IsMediaPresent() const         { return mIsMediaPresent; }
   bool IsSharing() const              { return mIsSharing; }
   bool IsFormatting() const           { return mIsFormatting; }
+  bool IsUnmounting() const           { return mIsUnmounting; }
 
   typedef nsTArray<nsRefPtr<nsVolume> > Array;
 
@@ -103,6 +107,7 @@ private:
   bool     mIsMediaPresent;
   bool     mIsSharing;
   bool     mIsFormatting;
+  bool     mIsUnmounting;
 };
 
 } // system

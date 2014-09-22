@@ -208,7 +208,8 @@ nsVolumeService::CreateOrGetVolumeByPath(const nsAString& aPath, nsIVolume** aRe
                                          true  /* isMediaPresent*/,
                                          false /* isSharing */,
                                          false /* isFormatting */,
-                                         true  /* isFake */);
+                                         true  /* isFake */,
+                                         false /* isUnmounting*/);
   vol.forget(aResult);
   return NS_OK;
 }
@@ -269,6 +270,7 @@ nsVolumeService::GetVolumesForIPC(nsTArray<VolumeInfo>* aResult)
     volInfo->isSharing()        = vol->mIsSharing;
     volInfo->isFormatting()     = vol->mIsFormatting;
     volInfo->isFake()           = vol->mIsFake;
+    volInfo->isUnmounting()     = vol->mIsUnmounting;
   }
 }
 
@@ -296,7 +298,8 @@ nsVolumeService::GetVolumesFromParent()
                                           volInfo.isMediaPresent(),
                                           volInfo.isSharing(),
                                           volInfo.isFormatting(),
-                                          volInfo.isFake());
+                                          volInfo.isFake(),
+                                          volInfo.isUnmounting());
     UpdateVolume(vol, false);
   }
 }
@@ -420,7 +423,8 @@ nsVolumeService::CreateFakeVolume(const nsAString& name, const nsAString& path)
                                           true  /* isMediaPresent */,
                                           false /* isSharing */,
                                           false /* isFormatting */,
-                                          true  /* isFake */);
+                                          true  /* isFake */,
+                                          false /* isUnmounting */);
     vol->LogState();
     UpdateVolume(vol.get());
     return NS_OK;
@@ -470,11 +474,11 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
     DBG("UpdateVolumeRunnable::Run '%s' state %s gen %d locked %d "
-        "media %d sharing %d formatting %d",
+        "media %d sharing %d formatting %d unmounting %d",
         mVolume->NameStr().get(), mVolume->StateStr(),
         mVolume->MountGeneration(), (int)mVolume->IsMountLocked(),
         (int)mVolume->IsMediaPresent(), mVolume->IsSharing(),
-        mVolume->IsFormatting());
+        mVolume->IsFormatting(), mVolume->IsUnmounting());
 
     mVolumeService->UpdateVolume(mVolume);
     mVolumeService = nullptr;
@@ -491,11 +495,11 @@ void
 nsVolumeService::UpdateVolumeIOThread(const Volume* aVolume)
 {
   DBG("UpdateVolumeIOThread: Volume '%s' state %s mount '%s' gen %d locked %d "
-      "media %d sharing %d formatting %d",
+      "media %d sharing %d formatting %d unmounting %d",
       aVolume->NameStr(), aVolume->StateStr(), aVolume->MountPoint().get(),
       aVolume->MountGeneration(), (int)aVolume->IsMountLocked(),
       (int)aVolume->MediaPresent(), (int)aVolume->IsSharing(),
-      (int)aVolume->IsFormatting());
+      (int)aVolume->IsFormatting(), (int)mVolume->IsUnmounting());
   MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
   NS_DispatchToMainThread(new UpdateVolumeRunnable(this, aVolume));
 }
