@@ -122,10 +122,8 @@ Zone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
     }
 
     if (!fop->runtime()->debuggerList.isEmpty()) {
-        gcstats::MaybeAutoPhase ap1(gc.stats, !gc.isHeapCompacting(),
-                                    gcstats::PHASE_SWEEP_TABLES);
         gcstats::MaybeAutoPhase ap2(gc.stats, !gc.isHeapCompacting(),
-                                    gcstats::PHASE_SWEEP_TABLES_BREAKPOINT);
+                                    gcstats::PHASE_SWEEP_BREAKPOINT);
         sweepBreakpoints(fop);
     }
 }

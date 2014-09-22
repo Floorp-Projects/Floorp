@@ -544,18 +544,12 @@ JSCompartment::markRoots(JSTracer *trc)
 void
 JSCompartment::sweepInnerViews()
 {
-    JSRuntime *rt = runtimeFromMainThread();
-    gcstats::MaybeAutoPhase ap(rt->gc.stats, !rt->isHeapCompacting(),
-                               gcstats::PHASE_SWEEP_TABLES_INNER_VIEWS);
-    innerViews.sweep(rt);
+    innerViews.sweep(runtimeFromMainThread());
 }
 
 void
 JSCompartment::sweepTypeObjectTables()
 {
-    JSRuntime *rt = runtimeFromMainThread();
-    gcstats::MaybeAutoPhase ap(rt->gc.stats, !rt->isHeapCompacting(),
-                               gcstats::PHASE_SWEEP_TABLES_TYPE_OBJECT);
     sweepNewTypeObjectTable(newTypeObjects);
     sweepNewTypeObjectTable(lazyTypeObjects);
 }
@@ -641,10 +635,6 @@ JSCompartment::sweepNativeIterators()
 void
 JSCompartment::sweepCrossCompartmentWrappers()
 {
-    JSRuntime *rt = runtimeFromMainThread();
-    gcstats::MaybeAutoPhase ap(rt->gc.stats, !rt->isHeapCompacting(),
-                               gcstats::PHASE_SWEEP_TABLES_WRAPPER);
-
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
         CrossCompartmentKey key = e.front().key();
