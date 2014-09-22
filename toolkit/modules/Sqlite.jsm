@@ -37,6 +37,12 @@ XPCOMUtils.defineLazyServiceGetter(this, "FinalizationWitnessService",
 // used for logging to distinguish connection instances.
 let connectionCounters = new Map();
 
+// Tracks identifiers of wrapped connections, that are Storage connections
+// opened through mozStorage and then wrapped by Sqlite.jsm to use its syntactic
+// sugar API.  Since these connections have an unknown origin, we use this set
+// to differentiate their behavior.
+let wrappedConnections = new Set();
+
 /**
  * Once `true`, reject any attempt to open or close a database.
  */
@@ -64,6 +70,20 @@ function logScriptError(message) {
   if (Debugging.failTestsOnAutoClose) {
     Promise.reject(new Error(message));
   }
+}
+
+/**
+ * Gets connection identifier from its database file path.
+ *
+ * @param path
+ *        A file string path pointing to a database file.
+ * @return the connection identifier.
+ */
+function getIdentifierByPath(path) {
+  let basename = OS.Path.basename(path);
+  let number = connectionCounters.get(basename) || 0;
+  connectionCounters.set(basename, number + 1);
+  return basename + "#" + number;
 }
 
 /**
@@ -95,17 +115,17 @@ XPCOMUtils.defineLazyGetter(this, "Barriers", () => {
    * The observer is passed the connection identifier of the database
    * connection that is being finalized.
    */
-  let finalizationObserver = function (subject, topic, connectionIdentifier) {
-    let connectionData = ConnectionData.byId.get(connectionIdentifier);
+  let finalizationObserver = function (subject, topic, identifier) {
+    let connectionData = ConnectionData.byId.get(identifier);
 
     if (connectionData === undefined) {
       logScriptError("Error: Attempt to finalize unknown Sqlite connection: " +
-                     connectionIdentifier + "\n");
+                     identifier + "\n");
       return;
     }
 
-    ConnectionData.byId.delete(connectionIdentifier);
-    logScriptError("Warning: Sqlite connection '" + connectionIdentifier +
+    ConnectionData.byId.delete(identifier);
+    logScriptError("Warning: Sqlite connection '" + identifier +
                    "' was not properly closed. Auto-close triggered by garbage collection.\n");
     connectionData.close();
   };
@@ -170,13 +190,17 @@ XPCOMUtils.defineLazyGetter(this, "Barriers", () => {
  * OpenedConnection needs to use the methods in this object, it will
  * dispatch its method calls here.
  */
-function ConnectionData(connection, basename, number, options) {
-  this._log = Log.repository.getLoggerWithMessagePrefix("Sqlite.Connection." + basename,
-                                                        "Conn #" + number + ": ");
+function ConnectionData(connection, identifier, options={}) {
+  this._log = Log.repository.getLoggerWithMessagePrefix("Sqlite.Connection." +
+                                                        identifier + ": ");
   this._log.info("Opened");
 
   this._dbConn = connection;
-  this._connectionIdentifier = basename + " Conn #" + number;
+
+  // This is a unique identifier for the connection, generated through
+  // getIdentifierByPath.  It may be used for logging or as a key in Maps.
+  this._identifier = identifier;
+
   this._open = true;
 
   this._cachedStatements = new Map();
@@ -204,10 +228,10 @@ function ConnectionData(connection, basename, number, options) {
   this._closeRequested = false;
 
   Barriers.connections.client.addBlocker(
-    this._connectionIdentifier + ": waiting for shutdown",
+    this._identifier + ": waiting for shutdown",
     this._deferredClose.promise,
     () =>  ({
-      identifier: this._connectionIdentifier,
+      identifier: this._identifier,
       isCloseRequested: this._closeRequested,
       hasDbConn: !!this._dbConn,
       hasInProgressTransaction: !!this._inProgressTransaction,
@@ -224,7 +248,7 @@ function ConnectionData(connection, basename, number, options) {
  * database. Used by finalization witnesses to be able to close opened
  * connections on garbage collection.
  *
- * Key: _connectionIdentifier of ConnectionData
+ * Key: _identifier of ConnectionData
  * Value: ConnectionData object
  */
 ConnectionData.byId = new Map();
@@ -304,15 +328,23 @@ ConnectionData.prototype = Object.freeze({
     // function and asyncClose() finishing. See also bug 726990.
     this._open = false;
 
-    this._log.debug("Calling asyncClose().");
-    this._dbConn.asyncClose(() => {
+    // We must always close the connection at the Sqlite.jsm-level, not
+    // necessarily at the mozStorage-level.
+    let markAsClosed = () => {
       this._log.info("Closed");
       this._dbConn = null;
       // Now that the connection is closed, no need to keep
       // a blocker for Barriers.connections.
       Barriers.connections.client.removeBlocker(deferred.promise);
       deferred.resolve();
-    });
+    }
+    if (wrappedConnections.has(this._identifier)) {
+      wrappedConnections.delete(this._identifier);
+      markAsClosed();
+    } else {
+      this._log.debug("Calling asyncClose().");
+      this._dbConn.asyncClose(markAsClosed);
+    }
   },
 
   executeCached: function (sql, params=null, onRow=null) {
@@ -722,12 +754,7 @@ function openConnection(options) {
   }
 
   let file = FileUtils.File(path);
-
-  let basename = OS.Path.basename(path);
-  let number = connectionCounters.get(basename) || 0;
-  connectionCounters.set(basename, number + 1);
-
-  let identifier = basename + "#" + number;
+  let identifier = getIdentifierByPath(path);
 
   log.info("Opening database: " + path + " (" + identifier + ")");
   let deferred = Promise.defer();
@@ -746,8 +773,8 @@ function openConnection(options) {
     log.info("Connection opened");
     try {
       deferred.resolve(
-        new OpenedConnection(connection.QueryInterface(Ci.mozIStorageAsyncConnection), basename, number,
-        openedOptions));
+        new OpenedConnection(connection.QueryInterface(Ci.mozIStorageAsyncConnection),
+                            identifier, openedOptions));
     } catch (ex) {
       log.warn("Could not open database: " + CommonUtils.exceptionStr(ex));
       deferred.reject(ex);
@@ -759,7 +786,7 @@ function openConnection(options) {
 /**
  * Creates a clone of an existing and open Storage connection.  The clone has
  * the same underlying characteristics of the original connection and is
- * returned in form of on OpenedConnection handle.
+ * returned in form of an OpenedConnection handle.
  *
  * The following parameters can control the cloned connection:
  *
@@ -812,10 +839,7 @@ function cloneStorageConnection(options) {
   }
 
   let path = source.databaseFile.path;
-  let basename = OS.Path.basename(path);
-  let number = connectionCounters.get(basename) || 0;
-  connectionCounters.set(basename, number + 1);
-  let identifier = basename + "#" + number;
+  let identifier = getIdentifierByPath(path);
 
   log.info("Cloning database: " + path + " (" + identifier + ")");
   let deferred = Promise.defer();
@@ -828,14 +852,62 @@ function cloneStorageConnection(options) {
     log.info("Connection cloned");
     try {
       let conn = connection.QueryInterface(Ci.mozIStorageAsyncConnection);
-      deferred.resolve(new OpenedConnection(conn, basename, number,
-                                            openedOptions));
+      deferred.resolve(new OpenedConnection(conn, identifier, openedOptions));
     } catch (ex) {
       log.warn("Could not clone database: " + CommonUtils.exceptionStr(ex));
       deferred.reject(ex);
     }
   });
   return deferred.promise;
+}
+
+/**
+ * Wraps an existing and open Storage connection with Sqlite.jsm API.  The
+ * wrapped connection clone has the same underlying characteristics of the
+ * original connection and is returned in form of an OpenedConnection handle.
+ *
+ * Clients are responsible for closing both the Sqlite.jsm wrapper and the
+ * underlying mozStorage connection.
+ *
+ * The following parameters can control the wrapped connection:
+ *
+ *   connection -- (mozIStorageAsyncConnection) The original Storage connection
+ *       to wrap.
+ *
+ * @param options
+ *        (Object) Parameters to control connection and wrap options.
+ *
+ * @return Promise<OpenedConnection>
+ */
+function wrapStorageConnection(options) {
+  let log = Log.repository.getLogger("Sqlite.ConnectionWrapper");
+
+  let connection = options && options.connection;
+  if (!connection || !(connection instanceof Ci.mozIStorageAsyncConnection)) {
+    throw new TypeError("connection not specified or invalid.");
+  }
+
+  if (isClosed) {
+    throw new Error("Sqlite.jsm has been shutdown. Cannot wrap connection to: " + connection.database.path);
+  }
+
+  let path = connection.databaseFile.path;
+  let identifier = getIdentifierByPath(path);
+
+  log.info("Wrapping database: " + path + " (" + identifier + ")");
+  return new Promise(resolve => {
+    try {
+      let conn = connection.QueryInterface(Ci.mozIStorageAsyncConnection);
+      let wrapper = new OpenedConnection(conn, identifier);
+      // We must not handle shutdown of a wrapped connection, since that is
+      // already handled by the opener.
+      wrappedConnections.add(identifier);
+      resolve(wrapper);
+    } catch (ex) {
+      log.warn("Could not wrap database: " + CommonUtils.exceptionStr(ex));
+      throw ex;
+    }
+  });
 }
 
 /**
@@ -877,25 +949,24 @@ function cloneStorageConnection(options) {
  *
  * @param connection
  *        (mozIStorageConnection) Underlying SQLite connection.
- * @param basename
- *        (string) The basename of this database name. Used for logging.
- * @param number
- *        (Number) The connection number to this database.
- * @param options
+ * @param identifier
+ *        (string) The unique identifier of this database. It may be used for
+ *        logging or as a key in Maps.
+ * @param options [optional]
  *        (object) Options to control behavior of connection. See
  *        `openConnection`.
  */
-function OpenedConnection(connection, basename, number, options) {
+function OpenedConnection(connection, identifier, options={}) {
   // Store all connection data in a field distinct from the
   // witness. This enables us to store an additional reference to this
   // field without preventing garbage collection of
   // OpenedConnection. On garbage collection, we will still be able to
   // close the database using this extra reference.
-  this._connectionData = new ConnectionData(connection, basename, number, options);
+  this._connectionData = new ConnectionData(connection, identifier, options);
 
   // Store the extra reference in a map with connection identifier as
   // key.
-  ConnectionData.byId.set(this._connectionData._connectionIdentifier,
+  ConnectionData.byId.set(this._connectionData._identifier,
                           this._connectionData);
 
   // Make a finalization witness. If this object is garbage collected
@@ -904,7 +975,7 @@ function OpenedConnection(connection, basename, number, options) {
   // connection identifier string of the database.
   this._witness = FinalizationWitnessService.make(
     "sqlite-finalization-witness",
-    this._connectionData._connectionIdentifier);
+    this._connectionData._identifier);
 }
 
 OpenedConnection.prototype = Object.freeze({
@@ -964,8 +1035,8 @@ OpenedConnection.prototype = Object.freeze({
     // Unless cleanup has already been done by a previous call to
     // `close`, delete the database entry from map and tell the
     // finalization witness to forget.
-    if (ConnectionData.byId.has(this._connectionData._connectionIdentifier)) {
-      ConnectionData.byId.delete(this._connectionData._connectionIdentifier);
+    if (ConnectionData.byId.has(this._connectionData._identifier)) {
+      ConnectionData.byId.delete(this._connectionData._identifier);
       this._witness.forget();
     }
     return this._connectionData.close();
@@ -1175,6 +1246,7 @@ OpenedConnection.prototype = Object.freeze({
 this.Sqlite = {
   openConnection: openConnection,
   cloneStorageConnection: cloneStorageConnection,
+  wrapStorageConnection: wrapStorageConnection,
   /**
    * Shutdown barrier client. May be used by clients to perform last-minute
    * cleanup prior to the shutdown of this module.
