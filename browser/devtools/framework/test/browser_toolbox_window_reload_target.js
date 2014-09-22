@@ -24,16 +24,17 @@ function test() {
 }
 
 function startReloadTest(aToolbox) {
+  getFrameScript(); // causes frame-script-utils to be loaded into the child.
   toolbox = aToolbox;
 
   reloadsSent = 0;
   let reloads = 0;
-  let reloadCounter = (event) => {
+  let reloadCounter = (msg) => {
     reloads++;
     info("Detected reload #"+reloads);
     is(reloads, reloadsSent, "Reloaded from devtools window once and only for "+description+"");
   };
-  gBrowser.selectedBrowser.addEventListener('load', reloadCounter, true);
+  gBrowser.selectedBrowser.messageManager.addMessageListener("devtools:test:load", reloadCounter);
 
   testAllTheTools("docked", () => {
     let origHostType = toolbox.hostType;
@@ -41,7 +42,7 @@ function startReloadTest(aToolbox) {
       toolbox.doc.defaultView.focus();
       testAllTheTools("undocked", () => {
         toolbox.switchHost(origHostType).then(() => {
-          gBrowser.selectedBrowser.removeEventListener('load', reloadCounter, true);
+          gBrowser.selectedBrowser.messageManager.removeMessageListener("devtools:test:load", reloadCounter);
           // If we finish too early, the inspector breaks promises:
           toolbox.getPanel("inspector").once("new-root", finishUp);
         });
@@ -78,10 +79,10 @@ function synthesizeKeyForToolbox(keyId) {
 
 function testReload(key, docked, toolID, callback) {
   let complete = () => {
-    gBrowser.selectedBrowser.removeEventListener('load', complete, true);
+    gBrowser.selectedBrowser.messageManager.removeMessageListener("devtools:test:load", complete);
     return callback();
   };
-  gBrowser.selectedBrowser.addEventListener('load', complete, true);
+  gBrowser.selectedBrowser.messageManager.addMessageListener("devtools:test:load", complete);
 
   description = docked+" devtools with tool "+toolID+", key #" + key;
   info("Testing reload in "+description);
