@@ -22,6 +22,8 @@
 #include "prio.h"
 #include "prprf.h"
 #include <algorithm>
+#include "nsIContentPolicy.h"
+#include "nsContentUtils.h"
 
 // Default values used to initialize a nsIncrementalDownload object.
 #define DEFAULT_CHUNK_SIZE (4096 * 16)  // bytes
@@ -260,8 +262,16 @@ nsIncrementalDownload::ProcessTimeout()
   // Fetch next chunk
   
   nsCOMPtr<nsIChannel> channel;
-  nsresult rv = NS_NewChannel(getter_AddRefs(channel), mFinalURI, nullptr,
-                              nullptr, this, mLoadFlags);
+  nsresult rv = NS_NewChannel(getter_AddRefs(channel),
+                              mFinalURI,
+                              nsContentUtils::GetSystemPrincipal(),
+                              nsILoadInfo::SEC_NORMAL,
+                              nsIContentPolicy::TYPE_OTHER,
+                              nullptr,   // aChannelPolicy
+                              nullptr,   // loadGroup
+                              this,      // aCallbacks
+                              mLoadFlags);
+
   if (NS_FAILED(rv))
     return rv;
 

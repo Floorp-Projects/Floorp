@@ -5,19 +5,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Telephony.h"
-#include "mozilla/dom/CallEvent.h"
-#include "mozilla/dom/TelephonyBinding.h"
-#include "mozilla/dom/Promise.h"
 
-#include "nsIURI.h"
-#include "nsPIDOMWindow.h"
-#include "nsIPermissionManager.h"
-
-#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/CallEvent.h"
+#include "mozilla/dom/MozMobileConnectionBinding.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/TelephonyBinding.h"
+#include "mozilla/dom/UnionTypes.h"
+
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
+#include "nsIPermissionManager.h"
+#include "nsIURI.h"
 #include "nsNetUtil.h"
+#include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
@@ -25,6 +26,7 @@
 #include "TelephonyCall.h"
 #include "TelephonyCallGroup.h"
 #include "TelephonyCallId.h"
+#include "TelephonyCallback.h"
 
 // Service instantiation
 #include "ipc/TelephonyIPCService.h"
@@ -34,6 +36,7 @@
 #include "nsXULAppAPI.h" // For XRE_GetProcessType()
 
 using namespace mozilla::dom;
+using namespace mozilla::dom::telephony;
 using mozilla::ErrorResult;
 
 class Telephony::Listener : public nsITelephonyListener
@@ -57,43 +60,6 @@ public:
   {
     MOZ_ASSERT(mTelephony);
     mTelephony = nullptr;
-  }
-};
-
-class Telephony::Callback : public nsITelephonyCallback
-{
-  nsRefPtr<Telephony> mTelephony;
-  nsRefPtr<Promise> mPromise;
-  uint32_t mServiceId;
-
-  virtual ~Callback() {}
-
-public:
-  NS_DECL_ISUPPORTS
-
-  Callback(Telephony* aTelephony, Promise* aPromise, uint32_t aServiceId)
-    : mTelephony(aTelephony), mPromise(aPromise), mServiceId(aServiceId)
-  {
-    MOZ_ASSERT(mTelephony);
-  }
-
-  NS_IMETHODIMP
-  NotifyDialError(const nsAString& aError)
-  {
-    mPromise->MaybeRejectBrokenly(aError);
-    return NS_OK;
-  }
-
-  NS_IMETHODIMP
-  NotifyDialSuccess(uint32_t aCallIndex, const nsAString& aNumber)
-  {
-    nsRefPtr<TelephonyCallId> id = mTelephony->CreateCallId(aNumber);
-    nsRefPtr<TelephonyCall> call =
-      mTelephony->CreateCall(id, mServiceId, aCallIndex,
-                             nsITelephonyService::CALL_STATE_DIALING);
-
-    mPromise->MaybeResolve(call);
-    return NS_OK;
   }
 };
 
@@ -270,7 +236,8 @@ Telephony::DialInternal(uint32_t aServiceId, const nsAString& aNumber,
   }
 
   nsCOMPtr<nsITelephonyCallback> callback =
-    new Callback(this, promise, aServiceId);
+    new TelephonyCallback(GetOwner(), this, promise, aServiceId);
+
   nsresult rv = mService->Dial(aServiceId, aNumber, aEmergency, callback);
   if (NS_FAILED(rv)) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -381,7 +348,6 @@ NS_IMPL_ADDREF_INHERITED(Telephony, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(Telephony, DOMEventTargetHelper)
 
 NS_IMPL_ISUPPORTS(Telephony::Listener, nsITelephonyListener)
-NS_IMPL_ISUPPORTS(Telephony::Callback, nsITelephonyCallback)
 
 // Telephony WebIDL
 

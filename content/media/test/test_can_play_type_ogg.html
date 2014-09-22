@@ -21,9 +21,16 @@ a Bug 469247</a>
 <pre id="test">
 <script src="can_play_type_ogg.js"></script>
 <script>
-check_ogg(document.getElementById('v'), true);
 
-mediaTestCleanup();
+SimpleTest.waitForExplicitFinish();
+
+function finish() {
+  mediaTestCleanup();
+  SimpleTest.finish();
+}
+
+check_ogg(document.getElementById('v'), true, finish);
+
 </script>
 </pre>
 </body>

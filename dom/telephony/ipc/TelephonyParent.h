@@ -114,6 +114,9 @@ protected:
   virtual void
   ActorDestroy(ActorDestroyReason why);
 
+  nsresult
+  SendResponse(const IPCTelephonyResponse& aResponse);
+
 private:
   bool mActorDestroyed;
 

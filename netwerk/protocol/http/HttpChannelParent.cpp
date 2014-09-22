@@ -27,6 +27,8 @@
 #include "SerializedLoadContext.h"
 #include "nsIAuthInformation.h"
 #include "nsIAuthPromptCallback.h"
+#include "nsIContentPolicy.h"
+#include "mozilla/ipc/BackgroundUtils.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -93,7 +95,9 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.redirectionLimit(), a.allowPipelining(), a.allowSTS(),
                        a.forceAllowThirdPartyCookie(), a.resumeAt(),
                        a.startPos(), a.entityID(), a.chooseApplicationCache(),
-                       a.appCacheClientID(), a.allowSpdy(), a.fds());
+                       a.appCacheClientID(), a.allowSpdy(), a.fds(),
+                       a.requestingPrincipalInfo(), a.securityFlags(),
+                       a.contentPolicyType());
   }
   case HttpChannelCreationArgs::THttpChannelConnectArgs:
   {
@@ -176,7 +180,10 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const bool&                chooseApplicationCache,
                                  const nsCString&           appCacheClientID,
                                  const bool&                allowSpdy,
-                                 const OptionalFileDescriptorSet& aFds)
+                                 const OptionalFileDescriptorSet& aFds,
+                                 const ipc::PrincipalInfo&  aRequestingPrincipalInfo,
+                                 const uint32_t&            aSecurityFlags,
+                                 const uint32_t&            aContentPolicyType)
 {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (!uri) {
@@ -200,8 +207,24 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
 
+  nsCOMPtr<nsIPrincipal> requestingPrincipal =
+    mozilla::ipc::PrincipalInfoToPrincipal(aRequestingPrincipalInfo, &rv);
+  if (NS_FAILED(rv)) {
+    return SendFailedAsyncOpen(rv);
+  }
+
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), uri, ios, nullptr, nullptr, loadFlags);
+  rv = NS_NewChannel(getter_AddRefs(channel),
+                     uri,
+                     requestingPrincipal,
+                     aSecurityFlags,
+                     aContentPolicyType,
+                     nullptr,   // aChannelPolicy
+                     nullptr,   // loadGroup
+                     nullptr,   // aCallbacks
+                     loadFlags,
+                     ios);
+
   if (NS_FAILED(rv))
     return SendFailedAsyncOpen(rv);
 
