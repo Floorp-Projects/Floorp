@@ -57,20 +57,6 @@ const EMERGENCY_CB_MODE_TIMEOUT_MS = 300000;  // 5 mins = 300000 ms.
 
 const ICC_MAX_LINEAR_FIXED_RECORDS = 0xfe;
 
-// MMI match groups
-const MMI_MATCH_GROUP_FULL_MMI = 1;
-const MMI_MATCH_GROUP_PROCEDURE = 2;
-const MMI_MATCH_GROUP_SERVICE_CODE = 3;
-const MMI_MATCH_GROUP_SIA = 4;
-const MMI_MATCH_GROUP_SIB = 5;
-const MMI_MATCH_GROUP_SIC = 6;
-const MMI_MATCH_GROUP_PWD_CONFIRM = 7;
-const MMI_MATCH_GROUP_DIALING_NUMBER = 8;
-
-const MMI_MAX_LENGTH_SHORT_CODE = 2;
-
-const MMI_END_OF_USSD = "#";
-
 const GET_CURRENT_CALLS_RETRY_MAX = 3;
 
 let RILQUIRKS_CALLSTATE_EXTRA_UINT32;
@@ -2402,206 +2388,9 @@ RilObject.prototype = {
                                    {callback: callback});
   },
 
-  /**
-   * Parse the dial number to extract its mmi code part.
-   *
-   * @param number
-   *        Phone number to be parsed
-   */
-  parseMMIFromDialNumber: function(options) {
-    // We don't have to parse mmi in cdma.
-    if (!this._isCdma) {
-      options.mmi = this._parseMMI(options.number);
-    }
-    this.sendChromeMessage(options);
-  },
-
-  /**
-   * Helper to parse MMI/USSD string. TS.22.030 Figure 3.5.3.2.
-   */
-  _parseMMI: function(mmiString) {
-    if (!mmiString || !mmiString.length) {
-      return null;
-    }
-
-    let matches = this._getMMIRegExp().exec(mmiString);
-    if (matches) {
-      return {
-        fullMMI: matches[MMI_MATCH_GROUP_FULL_MMI],
-        procedure: matches[MMI_MATCH_GROUP_PROCEDURE],
-        serviceCode: matches[MMI_MATCH_GROUP_SERVICE_CODE],
-        sia: matches[MMI_MATCH_GROUP_SIA],
-        sib: matches[MMI_MATCH_GROUP_SIB],
-        sic: matches[MMI_MATCH_GROUP_SIC],
-        pwd: matches[MMI_MATCH_GROUP_PWD_CONFIRM],
-        dialNumber: matches[MMI_MATCH_GROUP_DIALING_NUMBER]
-      };
-    }
-
-    if (this._isPoundString(mmiString) || this._isMMIShortString(mmiString)) {
-      return {
-        fullMMI: mmiString
-      };
-    }
-
-    return null;
-  },
-
-  /**
-   * Build the regex to parse MMI string.
-   *
-   * The resulting groups after matching will be:
-   *    1 = full MMI string that might be used as a USSD request.
-   *    2 = MMI procedure.
-   *    3 = Service code.
-   *    4 = SIA.
-   *    5 = SIB.
-   *    6 = SIC.
-   *    7 = Password registration.
-   *    8 = Dialing number.
-   *
-   * @see TS.22.030 Figure 3.5.3.2.
-   */
-  _buildMMIRegExp: function() {
-    // The general structure of the codes is as follows:
-    //    - Activation (*SC*SI#).
-    //    - Deactivation (#SC*SI#).
-    //    - Interrogation (*#SC*SI#).
-    //    - Registration (**SC*SI#).
-    //    - Erasure (##SC*SI#).
-    //
-    // where SC = Service Code (2 or 3 digits) and SI = Supplementary Info
-    // (variable length).
-
-    // MMI procedure, which could be *, #, *#, **, ##
-    let procedure = "(\\*[*#]?|##?)";
-
-    // MMI Service code, which is a 2 or 3 digits that uniquely specifies the
-    // Supplementary Service associated with the MMI code.
-    let serviceCode = "(\\d{2,3})";
-
-    // MMI Supplementary Information SIA, SIB and SIC. SIA may comprise e.g. a
-    // PIN code or Directory Number, SIB may be used to specify the tele or
-    // bearer service and SIC to specify the value of the "No Reply Condition
-    // Timer". Where a particular service request does not require any SI,
-    // "*SI" is not entered. The use of SIA, SIB and SIC is optional and shall
-    // be entered in any of the following formats:
-    //    - *SIA*SIB*SIC#
-    //    - *SIA*SIB#
-    //    - *SIA**SIC#
-    //    - *SIA#
-    //    - **SIB*SIC#
-    //    - ***SIC#
-    //
-    // Also catch the additional NEW_PASSWORD for the case of a password
-    // registration procedure. Ex:
-    //    - *  03 * ZZ * OLD_PASSWORD * NEW_PASSWORD * NEW_PASSWORD #
-    //    - ** 03 * ZZ * OLD_PASSWORD * NEW_PASSWORD * NEW_PASSWORD #
-    //    - *  03 **     OLD_PASSWORD * NEW_PASSWORD * NEW_PASSWORD #
-    //    - ** 03 **     OLD_PASSWORD * NEW_PASSWORD * NEW_PASSWORD #
-    let si = "\\*([^*#]*)";
-    let allSi = "";
-    for (let i = 0; i < 4; ++i) {
-      allSi = "(?:" + si + allSi + ")?";
-    }
-
-    let fullmmi = "(" + procedure + serviceCode + allSi + "#)";
-
-    // dial string after the #.
-    let dialString = "([^#]*)";
-
-    return new RegExp(fullmmi + dialString);
-  },
-
-  /**
-   * Provide the regex to parse MMI string.
-   */
-  _getMMIRegExp: function() {
-    if (!this._mmiRegExp) {
-      this._mmiRegExp = this._buildMMIRegExp();
-    }
-
-    return this._mmiRegExp;
-  },
-
-  /**
-   * Helper to parse # string. TS.22.030 Figure 3.5.3.2.
-   */
-  _isPoundString: function(mmiString) {
-    return (mmiString.charAt(mmiString.length - 1) === MMI_END_OF_USSD);
-  },
-
-  /**
-   * Helper to parse short string. TS.22.030 Figure 3.5.3.2.
-   */
-  _isMMIShortString: function(mmiString) {
-    if (mmiString.length > 2) {
-      return false;
-    }
-
-    // TODO: Should take care of checking if the string is an emergency number
-    // in Bug 889737. See Bug 1023141 for more background.
-
-    // In a call case.
-    if (Object.getOwnPropertyNames(this.currentCalls).length > 0) {
-      return true;
-    }
-
-    // Input string is 2 digits starting with a "1"
-    if ((mmiString.length == 2) && (mmiString.charAt(0) === '1')) {
-      return false;
-    }
-
-    return true;
-  },
-
-  _serviceCodeToKeyString: function(serviceCode) {
-    switch (serviceCode) {
-      case MMI_SC_CFU:
-      case MMI_SC_CF_BUSY:
-      case MMI_SC_CF_NO_REPLY:
-      case MMI_SC_CF_NOT_REACHABLE:
-      case MMI_SC_CF_ALL:
-      case MMI_SC_CF_ALL_CONDITIONAL:
-        return MMI_KS_SC_CALL_FORWARDING;
-      case MMI_SC_PIN:
-        return MMI_KS_SC_PIN;
-      case MMI_SC_PIN2:
-        return MMI_KS_SC_PIN2;
-      case MMI_SC_PUK:
-        return MMI_KS_SC_PUK;
-      case MMI_SC_PUK2:
-        return MMI_KS_SC_PUK2;
-      case MMI_SC_IMEI:
-        return MMI_KS_SC_IMEI;
-      case MMI_SC_CLIP:
-        return MMI_KS_SC_CLIP;
-      case MMI_SC_CLIR:
-        return MMI_KS_SC_CLIR;
-      case MMI_SC_BAOC:
-      case MMI_SC_BAOIC:
-      case MMI_SC_BAOICxH:
-      case MMI_SC_BAIC:
-      case MMI_SC_BAICr:
-      case MMI_SC_BA_ALL:
-      case MMI_SC_BA_MO:
-      case MMI_SC_BA_MT:
-        return MMI_KS_SC_CALL_BARRING;
-      case MMI_SC_CALL_WAITING:
-        return MMI_KS_SC_CALL_WAITING;
-      default:
-        return MMI_KS_SC_USSD;
-    }
-  },
-
   sendMMI: function(options) {
     if (DEBUG) {
       this.context.debug("SendMMI " + JSON.stringify(options));
-    }
-
-    let mmi = this._parseMMI(options.mmi);
-    if (DEBUG) {
-      this.context.debug("MMI " + JSON.stringify(mmi));
     }
 
     let _sendMMIError = (function(errorMsg) {
@@ -2611,13 +2400,11 @@ RilObject.prototype = {
     }).bind(this);
 
     // It's neither a valid mmi code nor an ongoing ussd.
+    let mmi = options.mmi;
     if (!mmi && !this._ussdSession) {
       _sendMMIError(MMI_ERROR_KS_ERROR);
       return;
     }
-
-    options.mmiServiceCode = mmi ?
-      this._serviceCodeToKeyString(mmi.serviceCode) : MMI_KS_SC_USSD;
 
     function _isValidPINPUKRequest() {
       // The only allowed MMI procedure for ICC PIN, PIN2, PUK and PUK2 handling
@@ -3576,36 +3363,34 @@ RilObject.prototype = {
       return;
     }
 
-    let mmiServiceCode = options.mmiServiceCode;
+    let serviceCode = options.mmi.serviceCode;
 
     if (options.success) {
-      switch (mmiServiceCode) {
-        case MMI_KS_SC_PIN:
+      switch (serviceCode) {
+        case MMI_SC_PIN:
           options.statusMessage = MMI_SM_KS_PIN_CHANGED;
           break;
-        case MMI_KS_SC_PIN2:
+        case MMI_SC_PIN2:
           options.statusMessage = MMI_SM_KS_PIN2_CHANGED;
           break;
-        case MMI_KS_SC_PUK:
+        case MMI_SC_PUK:
           options.statusMessage = MMI_SM_KS_PIN_UNBLOCKED;
           break;
-        case MMI_KS_SC_PUK2:
+        case MMI_SC_PUK2:
           options.statusMessage = MMI_SM_KS_PIN2_UNBLOCKED;
           break;
       }
     } else {
       if (options.retryCount <= 0) {
-        if (mmiServiceCode === MMI_KS_SC_PUK) {
+        if (serviceCode === MMI_SC_PUK) {
           options.errorMsg = MMI_ERROR_KS_SIM_BLOCKED;
-        } else if (mmiServiceCode === MMI_KS_SC_PIN) {
+        } else if (serviceCode === MMI_SC_PIN) {
           options.errorMsg = MMI_ERROR_KS_NEEDS_PUK;
         }
       } else {
-        if (mmiServiceCode === MMI_KS_SC_PIN ||
-            mmiServiceCode === MMI_KS_SC_PIN2) {
+        if (serviceCode === MMI_SC_PIN || serviceCode === MMI_SC_PIN2) {
           options.errorMsg = MMI_ERROR_KS_BAD_PIN;
-        } else if (mmiServiceCode === MMI_KS_SC_PUK ||
-                   mmiServiceCode === MMI_KS_SC_PUK2) {
+        } else if (serviceCode === MMI_SC_PUK || serviceCode === MMI_SC_PUK2) {
           options.errorMsg = MMI_ERROR_KS_BAD_PUK;
         }
         if (options.retryCount !== undefined) {
@@ -6030,7 +5815,7 @@ RilObject.prototype[REQUEST_QUERY_CALL_FORWARD_STATUS] =
   this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_SET_CALL_FORWARD] =
-  function REQUEST_SET_CALL_FORWARD(length, options) {
+    function REQUEST_SET_CALL_FORWARD(length, options) {
   options.success = (options.rilRequestError === 0);
   if (!options.success) {
     options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
