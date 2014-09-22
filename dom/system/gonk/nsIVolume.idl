@@ -5,7 +5,7 @@
 #include "nsISupports.idl"
 #include "nsIVolumeStat.idl"
 
-[scriptable, uuid(13caa69c-8f1f-11e3-8e36-10bf48d707fb)]
+[scriptable, uuid(9D0DC356-395D-11E4-9306-A97C1D5D46B0)]
 interface nsIVolume : nsISupports
 {
   // These MUST match the states from android's system/vold/Volume.h header
@@ -66,6 +66,8 @@ interface nsIVolume : nsISupports
   // mFormatRequest == true and mState == STATE_MOUNTED, and sets false
   // once the volume has been formatted and mounted again.
   readonly attribute boolean isFormatting;
+
+  readonly attribute boolean isUnmounting;
 
   nsIVolumeStat getStats();
 
