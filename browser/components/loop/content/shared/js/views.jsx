@@ -30,11 +30,12 @@ loop.shared.views = (function(_, OT, l10n) {
       scope: React.PropTypes.string.isRequired,
       type: React.PropTypes.string.isRequired,
       action: React.PropTypes.func.isRequired,
-      enabled: React.PropTypes.bool.isRequired
+      enabled: React.PropTypes.bool.isRequired,
+      visible: React.PropTypes.bool.isRequired
     },
 
     getDefaultProps: function() {
-      return {enabled: true};
+      return {enabled: true, visible: true};
     },
 
     handleClick: function() {
@@ -48,7 +49,8 @@ loop.shared.views = (function(_, OT, l10n) {
         "btn": true,
         "media-control": true,
         "local-media": this.props.scope === "local",
-        "muted": !this.props.enabled
+        "muted": !this.props.enabled,
+        "hide": !this.props.visible
       };
       classesObj["btn-mute-" + this.props.type] = true;
       return cx(classesObj);
@@ -78,8 +80,8 @@ loop.shared.views = (function(_, OT, l10n) {
   var ConversationToolbar = React.createClass({
     getDefaultProps: function() {
       return {
-        video: {enabled: true},
-        audio: {enabled: true}
+        video: {enabled: true, visible: true},
+        audio: {enabled: true, visible: true}
       };
     },
 
@@ -103,7 +105,7 @@ loop.shared.views = (function(_, OT, l10n) {
     },
 
     render: function() {
-      /* jshint ignore:start */
+      var cx = React.addons.classSet;
       return (
         <ul className="conversation-toolbar">
           <li className="conversation-toolbar-btn-box">
@@ -115,25 +117,31 @@ loop.shared.views = (function(_, OT, l10n) {
           <li className="conversation-toolbar-btn-box">
             <MediaControlButton action={this.handleToggleVideo}
                                 enabled={this.props.video.enabled}
+                                visible={this.props.video.visible}
                                 scope="local" type="video" />
           </li>
           <li className="conversation-toolbar-btn-box">
             <MediaControlButton action={this.handleToggleAudio}
                                 enabled={this.props.audio.enabled}
+                                visible={this.props.audio.visible}
                                 scope="local" type="audio" />
           </li>
         </ul>
       );
-      /* jshint ignore:end */
     }
   });
 
+  /**
+   * Conversation view.
+   */
   var ConversationView = React.createClass({
     mixins: [Backbone.Events],
 
     propTypes: {
       sdk: React.PropTypes.object.isRequired,
-      model: React.PropTypes.object.isRequired
+      video: React.PropTypes.object,
+      audio: React.PropTypes.object,
+      initiate: React.PropTypes.bool
     },
 
     // height set to 100%" to fix video layout on Google Chrome
@@ -149,10 +157,11 @@ loop.shared.views = (function(_, OT, l10n) {
       }
     },
 
-    getInitialProps: function() {
+    getDefaultProps: function() {
       return {
-        video: {enabled: true},
-        audio: {enabled: true}
+        initiate: true,
+        video: {enabled: true, visible: true},
+        audio: {enabled: true, visible: true}
       };
     },
 
@@ -164,26 +173,30 @@ loop.shared.views = (function(_, OT, l10n) {
     },
 
     componentWillMount: function() {
-      this.publisherConfig.publishVideo = this.props.video.enabled;
+      if (this.props.initiate) {
+        this.publisherConfig.publishVideo = this.props.video.enabled;
+      }
     },
 
     componentDidMount: function() {
-      this.listenTo(this.props.model, "session:connected",
-                                      this.startPublishing);
-      this.listenTo(this.props.model, "session:stream-created",
-                                      this._streamCreated);
-      this.listenTo(this.props.model, ["session:peer-hungup",
-                                       "session:network-disconnected",
-                                       "session:ended"].join(" "),
-                                       this.stopPublishing);
-
-      this.props.model.startSession();
+      if (this.props.initiate) {
+        this.listenTo(this.props.model, "session:connected",
+                                        this.startPublishing);
+        this.listenTo(this.props.model, "session:stream-created",
+                                        this._streamCreated);
+        this.listenTo(this.props.model, ["session:peer-hungup",
+                                         "session:network-disconnected",
+                                         "session:ended"].join(" "),
+                                         this.stopPublishing);
+        this.props.model.startSession();
+      }
 
       /**
        * OT inserts inline styles into the markup. Using a listener for
        * resize events helps us trigger a full width/height on the element
        * so that they update to the correct dimensions.
-       * */
+       * XXX: this should be factored as a mixin.
+       */
       window.addEventListener('orientationchange', this.updateVideoContainer);
       window.addEventListener('resize', this.updateVideoContainer);
     },
@@ -282,10 +295,12 @@ loop.shared.views = (function(_, OT, l10n) {
      * Unpublishes local stream.
      */
     stopPublishing: function() {
-      // Unregister listeners for publisher events
-      this.stopListening(this.publisher);
+      if (this.publisher) {
+        // Unregister listeners for publisher events
+        this.stopListening(this.publisher);
 
-      this.props.model.session.unpublish(this.publisher);
+        this.props.model.session.unpublish(this.publisher);
+      }
     },
 
     render: function() {
@@ -362,7 +377,7 @@ loop.shared.views = (function(_, OT, l10n) {
       return {category: "", description: ""};
     },
 
-    getInitialProps: function() {
+    getDefaultProps: function() {
       return {pending: false};
     },
 
@@ -467,8 +482,16 @@ loop.shared.views = (function(_, OT, l10n) {
 
   /**
    * Feedback received view.
+   *
+   * Props:
+   * - {Function} onAfterFeedbackReceived Function to execute after the
+   *   WINDOW_AUTOCLOSE_TIMEOUT_IN_SECONDS timeout has elapsed
    */
   var FeedbackReceived = React.createClass({
+    propTypes: {
+      onAfterFeedbackReceived: React.PropTypes.func
+    },
+
     getInitialState: function() {
       return {countdown: WINDOW_AUTOCLOSE_TIMEOUT_IN_SECONDS};
     },
@@ -488,7 +511,9 @@ loop.shared.views = (function(_, OT, l10n) {
     render: function() {
       if (this.state.countdown < 1) {
         clearInterval(this._timer);
-        window.close();
+        if (this.props.onAfterFeedbackReceived) {
+          this.props.onAfterFeedbackReceived();
+        }
       }
       return (
         <FeedbackLayout title={l10n.get("feedback_thank_you_heading")}>
@@ -509,6 +534,7 @@ loop.shared.views = (function(_, OT, l10n) {
     propTypes: {
       // A loop.FeedbackAPIClient instance
       feedbackApiClient: React.PropTypes.object.isRequired,
+      onAfterFeedbackReceived: React.PropTypes.func,
       // The current feedback submission flow step name
       step: React.PropTypes.oneOf(["start", "form", "finished"])
     },
@@ -517,7 +543,7 @@ loop.shared.views = (function(_, OT, l10n) {
       return {pending: false, step: this.props.step || "start"};
     },
 
-    getInitialProps: function() {
+    getDefaultProps: function() {
       return {step: "start"};
     },
 
@@ -552,7 +578,10 @@ loop.shared.views = (function(_, OT, l10n) {
     render: function() {
       switch(this.state.step) {
         case "finished":
-          return <FeedbackReceived />;
+          return (
+            <FeedbackReceived
+              onAfterFeedbackReceived={this.props.onAfterFeedbackReceived} />
+          );
         case "form":
           return <FeedbackForm feedbackApiClient={this.props.feedbackApiClient}
                                sendFeedback={this.sendFeedback}

@@ -114,7 +114,7 @@ loop.Client = (function($) {
       } else {
         sessionType = this.mozLoop.LOOP_SESSION_TYPE.GUEST;
       }
-      
+
       this.mozLoop.hawkRequest(sessionType, "/call-url/", "POST",
                                {callerId: nickname},
         function (error, responseText) {

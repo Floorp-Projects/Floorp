@@ -187,13 +187,12 @@ describe("loop.shared.views", function() {
         initSession: sandbox.stub().returns(fakeSession)
       };
       model = new sharedModels.ConversationModel(fakeSessionData, {
-        sdk: fakeSDK,
-        pendingCallTimeout: 1000
+        sdk: fakeSDK
       });
     });
 
     describe("#componentDidMount", function() {
-      it("should start a session", function() {
+      it("should start a session by default", function() {
         sandbox.stub(model, "startSession");
 
         mountTestComponent({
@@ -203,6 +202,19 @@ describe("loop.shared.views", function() {
         });
 
         sinon.assert.calledOnce(model.startSession);
+      });
+
+      it("shouldn't start a session if initiate is false", function() {
+        sandbox.stub(model, "startSession");
+
+        mountTestComponent({
+          initiate: false,
+          sdk: fakeSDK,
+          model: model,
+          video: {enabled: true}
+        });
+
+        sinon.assert.notCalled(model.startSession);
       });
 
       it("should set the correct stream publish options", function() {
