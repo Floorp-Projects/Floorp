@@ -20,7 +20,8 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
  #include "speex_resampler.h"
  #include "arch.h"
  #else /* OUTSIDE_SPEEX */
-@@ -633,24 +635,23 @@ static int update_filter(SpeexResamplerS
+@@ -632,25 +634,26 @@ static int update_filter(SpeexResamplerS
+          st->oversample >>= 1;
        if (st->oversample < 1)
           st->oversample = 1;
     } else {
@@ -28,17 +29,20 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
        st->cutoff = quality_map[st->quality].upsample_bandwidth;
     }
     
-    /* Choose the resampling type that requires the least amount of memory */
+-   /* Choose the resampling type that requires the least amount of memory */
 -#ifdef RESAMPLE_FULL_SINC_TABLE
 -   use_direct = 1;
 -   if (INT_MAX/sizeof(spx_word16_t)/st->den_rate < st->filt_len)
 -      goto fail;
 +   use_direct =
 +#ifdef RESAMPLE_HUGEMEM
-+     st->den_rate <= 16*(st->oversample+8)
++      /* Choose the direct resampler, even with higher initialization costs,
++         when resampling any multiple of 100 to 44100. */
++      st->den_rate <= 441
  #else
 -   use_direct = st->filt_len*st->den_rate <= st->filt_len*st->oversample+8
-+     st->filt_len*st->den_rate <= st->filt_len*st->oversample+8
++      /* Choose the resampling type that requires the least amount of memory */
++      st->filt_len*st->den_rate <= st->filt_len*st->oversample+8
 +#endif
                  && INT_MAX/sizeof(spx_word16_t)/st->den_rate >= st->filt_len;
 -#endif

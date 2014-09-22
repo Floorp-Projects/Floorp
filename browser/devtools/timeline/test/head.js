@@ -78,20 +78,19 @@ function removeTab(tab) {
  *        The location of the new tab to spawn.
  * @return object
  *         A promise resolved once the timeline is initialized, with the
- *         [target, debuggee, panel] instances.
+ *         {target, panel} instances.
  */
 function* initTimelinePanel(url) {
   info("Initializing a timeline pane.");
 
   let tab = yield addTab(url);
   let target = TargetFactory.forTab(tab);
-  let debuggee = target.window.wrappedJSObject;
 
   yield target.makeRemote();
 
   let toolbox = yield gDevTools.showToolbox(target, "timeline");
   let panel = toolbox.getCurrentPanel();
-  return [target, debuggee, panel];
+  return { target, panel };
 }
 
 /**

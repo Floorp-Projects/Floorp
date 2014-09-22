@@ -42,6 +42,10 @@ XPCOMUtils.defineLazyServiceGetter(Svc, 'mime',
 XPCOMUtils.defineLazyServiceGetter(Svc, 'pluginHost',
                                    '@mozilla.org/plugin/host;1',
                                    'nsIPluginHost');
+XPCOMUtils.defineLazyModuleGetter(this, "PdfjsChromeUtils",
+                                  "resource://pdf.js/PdfjsChromeUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PdfjsContentUtils",
+                                  "resource://pdf.js/PdfjsContentUtils.jsm");
 
 function getBoolPref(aPref, aDefaultValue) {
   try {
@@ -57,6 +61,13 @@ function getIntPref(aPref, aDefaultValue) {
   } catch (ex) {
     return aDefaultValue;
   }
+}
+
+function isDefaultHandler() {
+ if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
+   return PdfjsContentUtils.isDefaultHandlerApp();
+ }
+ return PdfjsChromeUtils.isDefaultHandlerApp();
 }
 
 function initializeDefaultPreferences() {
@@ -118,16 +129,29 @@ Factory.prototype = {
 let PdfJs = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
   _registered: false,
+  _initialized: false,
 
-  init: function init() {
+  init: function init(remote) {
+    if (Services.appinfo.processType != Services.appinfo.PROCESS_TYPE_DEFAULT) {
+      throw new Error("PdfJs.init should only get called in the parent process.");
+    }
+    PdfjsChromeUtils.init();
+    if (!remote) {
+      PdfjsContentUtils.init();
+    }
+    this.initPrefs();
+    this.updateRegistration();
+  },
+
+  initPrefs: function initPrefs() {
+    if (this._initialized) {
+      return;
+    }
+    this._initialized = true;
+
     if (!getBoolPref(PREF_DISABLED, true)) {
       this._migrate();
     }
-
-    if (this.enabled)
-      this._ensureRegistered();
-    else
-      this._ensureUnregistered();
 
     // Listen for when pdf.js is completely disabled or a different pdf handler
     // is chosen.
@@ -138,6 +162,26 @@ let PdfJs = {
     Services.obs.addObserver(this, TOPIC_PLUGIN_INFO_UPDATED, false);
 
     initializeDefaultPreferences();
+  },
+
+  updateRegistration: function updateRegistration() {
+    if (this.enabled) {
+      this._ensureRegistered();
+    } else {
+      this._ensureUnregistered();
+    }
+  },
+
+  uninit: function uninit() {
+    if (this._initialized) {
+      Services.prefs.removeObserver(PREF_DISABLED, this, false);
+      Services.prefs.removeObserver(PREF_DISABLED_PLUGIN_TYPES, this, false);
+      Services.obs.removeObserver(this, TOPIC_PDFJS_HANDLER_CHANGED, false);
+      Services.obs.removeObserver(this, TOPIC_PLUGINS_LIST_UPDATED, false);
+      Services.obs.removeObserver(this, TOPIC_PLUGIN_INFO_UPDATED, false);
+      this._initialized = false;
+    }
+    this._ensureUnregistered();
   },
 
   _migrate: function migrate() {
@@ -202,10 +246,12 @@ let PdfJs = {
 
   // nsIObserver
   observe: function observe(aSubject, aTopic, aData) {
-    if (this.enabled)
-      this._ensureRegistered();
-    else
-      this._ensureUnregistered();
+    this.updateRegistration();
+    if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT) {
+      let jsm = "resource://pdf.js/PdfjsChromeUtils.jsm";
+      let PdfjsChromeUtils = Components.utils.import(jsm, {}).PdfjsChromeUtils;
+      PdfjsChromeUtils.notifyChildOfSettingsChange();
+    }
   },
   
   /**
@@ -219,11 +265,8 @@ let PdfJs = {
       return false;
     }
 
-    // the 'application/pdf' handler is selected as internal?
-    var handlerInfo = Svc.mime
-                         .getFromTypeAndExtension(PDF_CONTENT_TYPE, 'pdf');
-    if (handlerInfo.alwaysAskBeforeHandling ||
-        handlerInfo.preferredAction !== Ci.nsIHandlerInfo.handleInternally) {
+    // Check if the 'application/pdf' preview handler is configured properly.
+    if (!isDefaultHandler()) {
       return false;
     }
 

@@ -190,34 +190,6 @@ protected:
     static jmethodID jVibrateA;
 };
 
-class JavaDomKeyLocation : public AutoGlobalWrappedJavaObject {
-public:
-    static void InitStubs(JNIEnv *jEnv);
-    static JavaDomKeyLocation* Wrap(jobject obj);
-    JavaDomKeyLocation(jobject obj, JNIEnv* env) : AutoGlobalWrappedJavaObject(obj, env) {};
-    static jobject valueOf(const nsAString& a0);
-    static jobjectArray values();
-    static jobject getDOM_KEY_LOCATION_JOYSTICK();
-    static jobject getDOM_KEY_LOCATION_LEFT();
-    static jobject getDOM_KEY_LOCATION_MOBILE();
-    static jobject getDOM_KEY_LOCATION_NUMPAD();
-    static jobject getDOM_KEY_LOCATION_RIGHT();
-    static jobject getDOM_KEY_LOCATION_STANDARD();
-    int32_t getvalue();
-    JavaDomKeyLocation() : AutoGlobalWrappedJavaObject() {};
-protected:
-    static jclass mDomKeyLocationClass;
-    static jmethodID jvalueOf;
-    static jmethodID jvalues;
-    static jfieldID jDOM_KEY_LOCATION_JOYSTICK;
-    static jfieldID jDOM_KEY_LOCATION_LEFT;
-    static jfieldID jDOM_KEY_LOCATION_MOBILE;
-    static jfieldID jDOM_KEY_LOCATION_NUMPAD;
-    static jfieldID jDOM_KEY_LOCATION_RIGHT;
-    static jfieldID jDOM_KEY_LOCATION_STANDARD;
-    static jfieldID jvalue;
-};
-
 class GeckoJavaSampler : public AutoGlobalWrappedJavaObject {
 public:
     static void InitStubs(JNIEnv *jEnv);

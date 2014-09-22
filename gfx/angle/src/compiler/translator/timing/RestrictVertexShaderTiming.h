@@ -7,7 +7,7 @@
 #ifndef COMPILER_TIMING_RESTRICT_VERTEX_SHADER_TIMING_H_
 #define COMPILER_TIMING_RESTRICT_VERTEX_SHADER_TIMING_H_
 
-#include "compiler/translator/intermediate.h"
+#include "compiler/translator/IntermNode.h"
 #include "compiler/translator/InfoSink.h"
 
 class TInfoSinkBase;
