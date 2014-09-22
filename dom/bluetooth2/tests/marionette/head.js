@@ -288,18 +288,17 @@ function getSettings(aKey) {
  * @return A deferred promise.
  */
 function setSettings(aSettings) {
+  let lock = window.navigator.mozSettings.createLock();
+  let request = lock.set(aSettings);
   let deferred = Promise.defer();
-
-  let request = navigator.mozSettings.createLock().set(aSettings);
-  request.addEventListener("success", function() {
+  lock.onsettingstransactionsuccess = function () {
     ok(true, "setSettings(" + JSON.stringify(aSettings) + ")");
     deferred.resolve();
-  });
-  request.addEventListener("error", function() {
+  };
+  lock.onsettingstransactionfailure = function (aEvent) {
     ok(false, "setSettings(" + JSON.stringify(aSettings) + ")");
     deferred.reject();
-  });
-
+  };
   return deferred.promise;
 }
 
