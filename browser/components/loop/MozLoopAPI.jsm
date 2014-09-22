@@ -458,6 +458,14 @@ function injectLoopAPI(targetWindow) {
       }
     },
 
+    openFxASettings: {
+      enumerable: true,
+      writable: true,
+      value: function() {
+        return MozLoopService.openFxASettings();
+      },
+    },
+
     /**
      * Copies passed string onto the system clipboard.
      *
