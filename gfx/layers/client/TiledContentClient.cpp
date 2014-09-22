@@ -1002,9 +1002,9 @@ void PadDrawTargetOutFromRegion(RefPtr<DrawTarget> drawTarget, nsIntRegion &regi
     static int clamp(int x, int min, int max)
     {
       if (x < min)
-	x = min;
+        x = min;
       if (x > max)
-	x = max;
+        x = max;
       return x;
     }
 
@@ -1017,31 +1017,31 @@ void PadDrawTargetOutFromRegion(RefPtr<DrawTarget> drawTarget, nsIntRegion &regi
       const int height = lb->size.height;
 
       if (side == VisitSide::TOP) {
-	if (y1 > 0) {
-	  x1 = clamp(x1, 0, width - 1);
-	  x2 = clamp(x2, 0, width - 1);
-	  memcpy(&bitmap[x1*bpp + (y1-1) * stride], &bitmap[x1*bpp + y1 * stride], (x2 - x1) * bpp);
-	}
+        if (y1 > 0) {
+          x1 = clamp(x1, 0, width - 1);
+          x2 = clamp(x2, 0, width - 1);
+          memcpy(&bitmap[x1*bpp + (y1-1) * stride], &bitmap[x1*bpp + y1 * stride], (x2 - x1) * bpp);
+        }
       } else if (side == VisitSide::BOTTOM) {
-	if (y1 < height) {
-	  x1 = clamp(x1, 0, width - 1);
-	  x2 = clamp(x2, 0, width - 1);
-	  memcpy(&bitmap[x1*bpp + y1 * stride], &bitmap[x1*bpp + (y1-1) * stride], (x2 - x1) * bpp);
-	}
+        if (y1 < height) {
+          x1 = clamp(x1, 0, width - 1);
+          x2 = clamp(x2, 0, width - 1);
+          memcpy(&bitmap[x1*bpp + y1 * stride], &bitmap[x1*bpp + (y1-1) * stride], (x2 - x1) * bpp);
+        }
       } else if (side == VisitSide::LEFT) {
-	if (x1 > 0) {
-	  while (y1 != y2) {
-	    memcpy(&bitmap[(x1-1)*bpp + y1 * stride], &bitmap[x1*bpp + y1*stride], bpp);
-	    y1++;
-	  }
-	}
+        if (x1 > 0) {
+          while (y1 != y2) {
+            memcpy(&bitmap[(x1-1)*bpp + y1 * stride], &bitmap[x1*bpp + y1*stride], bpp);
+            y1++;
+          }
+        }
       } else if (side == VisitSide::RIGHT) {
-	if (x1 < width) {
-	  while (y1 != y2) {
-	    memcpy(&bitmap[x1*bpp + y1 * stride], &bitmap[(x1-1)*bpp + y1*stride], bpp);
-	    y1++;
-	  }
-	}
+        if (x1 < width) {
+          while (y1 != y2) {
+            memcpy(&bitmap[x1*bpp + y1 * stride], &bitmap[(x1-1)*bpp + y1*stride], bpp);
+            y1++;
+          }
+        }
       }
 
     }
@@ -1266,18 +1266,18 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
     // won't be noticable
     if (mResolution == 1) {
       nsIntRect unscaledTile = nsIntRect(aTileOrigin.x,
-					 aTileOrigin.y,
-					 GetTileSize().width,
-					 GetTileSize().height);
+                                         aTileOrigin.y,
+                                         GetTileSize().width,
+                                         GetTileSize().height);
 
       nsIntRegion tileValidRegion = GetValidRegion();
       tileValidRegion.Or(tileValidRegion, aDirtyRegion);
       // We only need to pad out if the tile has area that's not valid
       if (!tileValidRegion.Contains(unscaledTile)) {
-	tileValidRegion = tileValidRegion.Intersect(unscaledTile);
-	// translate the region into tile space and pad
-	tileValidRegion.MoveBy(-nsIntPoint(unscaledTile.x, unscaledTile.y));
-	PadDrawTargetOutFromRegion(drawTarget, tileValidRegion);
+        tileValidRegion = tileValidRegion.Intersect(unscaledTile);
+        // translate the region into tile space and pad
+        tileValidRegion.MoveBy(-nsIntPoint(unscaledTile.x, unscaledTile.y));
+        PadDrawTargetOutFromRegion(drawTarget, tileValidRegion);
       }
     }
 

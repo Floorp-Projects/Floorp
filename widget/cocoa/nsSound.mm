@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSound.h"
+#include "nsContentUtils.h"
 #include "nsObjCExceptions.h"
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"
@@ -61,7 +62,12 @@ nsSound::Play(nsIURL *aURL)
 {
   nsCOMPtr<nsIURI> uri(do_QueryInterface(aURL));
   nsCOMPtr<nsIStreamLoader> loader;
-  return NS_NewStreamLoader(getter_AddRefs(loader), uri, this);
+  return NS_NewStreamLoader(getter_AddRefs(loader),
+                            uri,
+                            this, // aObserver
+                            nsContentUtils::GetSystemPrincipal(),
+                            nsILoadInfo::SEC_NORMAL,
+                            nsIContentPolicy::TYPE_OTHER);
 }
 
 NS_IMETHODIMP
