@@ -1524,7 +1524,7 @@ SetAddonInterposition(const nsACString &addonIdStr, nsIAddonInterposition *inter
         // We enter the junk scope just to allocate a string, which actually will go
         // in the system zone.
         AutoJSAPI jsapi;
-        jsapi.Init(xpc::GetNativeForGlobal(xpc::PrivilegedJunkScope()));
+        jsapi.Init(xpc::PrivilegedJunkScope());
         addonId = NewAddonId(jsapi.cx(), addonIdStr);
         if (!addonId)
             return false;

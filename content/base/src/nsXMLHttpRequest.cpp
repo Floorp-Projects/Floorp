@@ -352,7 +352,7 @@ nsXMLHttpRequest::Init()
   // Instead of grabbing some random global from the context stack,
   // let's use the default one (junk scope) for now.
   // We should move away from this Init...
-  Construct(subjectPrincipal, xpc::GetNativeForGlobal(xpc::PrivilegedJunkScope()));
+  Construct(subjectPrincipal, xpc::NativeGlobal(xpc::PrivilegedJunkScope()));
   return NS_OK;
 }
 

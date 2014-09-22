@@ -425,12 +425,6 @@ bool
 Throw(JSContext *cx, nsresult rv);
 
 /**
- * Every global should hold a native that implements the nsIGlobalObject interface.
- */
-nsIGlobalObject *
-GetNativeForGlobal(JSObject *global);
-
-/**
  * Returns the nsISupports native behind a given reflector (either DOM or
  * XPCWN).
  */
@@ -457,6 +451,12 @@ PrivilegedJunkScope();
  */
 JSObject *
 CompilationScope();
+
+/**
+ * Returns the nsIGlobalObject corresponding to |aObj|'s JS global.
+ */
+nsIGlobalObject*
+NativeGlobal(JSObject *aObj);
 
 /**
  * If |aObj| is a window, returns the associated nsGlobalWindow.

@@ -16,7 +16,7 @@ namespace gl
 {
 class Buffer;
 class ProgramBinary;
-class VertexAttribute;
+struct VertexAttribute;
 struct VertexAttribCurrentValueData;
 
 enum TextureType
@@ -147,6 +147,8 @@ struct DepthStencilState
 
 struct SamplerState
 {
+    SamplerState();
+
     GLenum minFilter;
     GLenum magFilter;
     GLenum wrapS;

@@ -1,4 +1,3 @@
-#include "precompiled.h"
 //
 // Copyright (c) 2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
@@ -9,14 +8,13 @@
 
 #include "libGLESv2/Query.h"
 #include "libGLESv2/renderer/QueryImpl.h"
-#include "libGLESv2/renderer/Renderer.h"
 
 namespace gl
 {
-
-Query::Query(rx::Renderer *renderer, GLenum type, GLuint id) : RefCountObject(id)
-{ 
-    mQuery = renderer->createQuery(type);
+Query::Query(rx::QueryImpl *impl, GLuint id)
+    : RefCountObject(id),
+      mQuery(impl)
+{
 }
 
 Query::~Query()
@@ -26,7 +24,11 @@ Query::~Query()
 
 void Query::begin()
 {
-    mQuery->begin();
+    // TODO: Rather than keeping track of whether the query was successfully
+    // created via a boolean in the GL-level Query object, we should probably
+    // use the error system to track these failed creations at the context level,
+    // and reset the active query ID for the target to 0 upon failure.
+    mStarted = mQuery->begin();
 }
 
 void Query::end()
@@ -51,7 +53,7 @@ GLenum Query::getType() const
 
 bool Query::isStarted() const
 {
-    return mQuery->isStarted();
+    return mStarted;
 }
 
 }

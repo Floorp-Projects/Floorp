@@ -69,40 +69,9 @@ enum TBasicType
     EbtStruct,
     EbtInterfaceBlock,
     EbtAddress,            // should be deprecated??
-    EbtInvariant          // used as a type when qualifying a previously declared variable as being invariant
 };
 
-inline const char* getBasicString(TBasicType t)
-{
-    switch (t)
-    {
-      case EbtVoid:                 return "void";                 break;
-      case EbtFloat:                return "float";                break;
-      case EbtInt:                  return "int";                  break;
-      case EbtUInt:                 return "uint";                 break;
-      case EbtBool:                 return "bool";                 break;
-      case EbtSampler2D:            return "sampler2D";            break;
-      case EbtSampler3D:            return "sampler3D";            break;
-      case EbtSamplerCube:          return "samplerCube";          break;
-      case EbtSamplerExternalOES:   return "samplerExternalOES";   break;
-      case EbtSampler2DRect:        return "sampler2DRect";        break;
-      case EbtSampler2DArray:       return "sampler2DArray";       break;
-      case EbtISampler2D:           return "isampler2D";           break;
-      case EbtISampler3D:           return "isampler3D";           break;
-      case EbtISamplerCube:         return "isamplerCube";         break;
-      case EbtISampler2DArray:      return "isampler2DArray";      break;
-      case EbtUSampler2D:           return "usampler2D";           break;
-      case EbtUSampler3D:           return "usampler3D";           break;
-      case EbtUSamplerCube:         return "usamplerCube";         break;
-      case EbtUSampler2DArray:      return "usampler2DArray";      break;
-      case EbtSampler2DShadow:      return "sampler2DShadow";      break;
-      case EbtSamplerCubeShadow:    return "samplerCubeShadow";    break;
-      case EbtSampler2DArrayShadow: return "sampler2DArrayShadow"; break;
-      case EbtStruct:               return "structure";            break;
-      case EbtInterfaceBlock:       return "interface block";      break;
-      default:                      return "unknown type";
-    }
-}
+const char* getBasicString(TBasicType t);
 
 inline bool IsSampler(TBasicType type)
 {

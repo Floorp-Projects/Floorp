@@ -253,12 +253,6 @@ partial interface Navigator {
   readonly attribute DesktopNotificationCenter mozNotification;
 };
 
-// nsIDOMClientInformation
-partial interface Navigator {
-  [Throws]
-  boolean mozIsLocallyAvailable(DOMString uri, boolean whenOffline);
-};
-
 #ifdef MOZ_WEBSMS_BACKEND
 partial interface Navigator {
   [CheckPermissions="sms", Pref="dom.sms.enabled"]

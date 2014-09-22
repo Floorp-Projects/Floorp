@@ -24,7 +24,6 @@ class InputEvent;
 
 namespace layers {
 class APZCTreeManager;
-class GestureEventListener;
 class TargetConfig;
 class LayerTransactionParent;
 struct TextureFactoryIdentifier;

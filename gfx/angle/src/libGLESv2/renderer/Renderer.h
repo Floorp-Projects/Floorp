@@ -12,6 +12,11 @@
 
 #include "libGLESv2/Uniform.h"
 #include "libGLESv2/angletypes.h"
+#include "libGLESv2/Caps.h"
+
+#include <cstdint>
+
+#include <EGL/egl.h>
 
 #if !defined(ANGLE_COMPILE_OPTIMIZATION_LEVEL)
 // WARNING: D3DCOMPILE_OPTIMIZATION_LEVEL3 may lead to a DX9 shader compiler hang.
@@ -29,7 +34,7 @@ namespace gl
 class InfoLog;
 class ProgramBinary;
 struct LinkedVarying;
-class VertexAttribute;
+struct VertexAttribute;
 class Buffer;
 class Texture;
 class Framebuffer;
@@ -46,14 +51,19 @@ class VertexBuffer;
 class IndexBuffer;
 class QueryImpl;
 class FenceImpl;
+class BufferImpl;
+class VertexArrayImpl;
 class BufferStorage;
 struct TranslatedIndexData;
+class ShaderImpl;
 class ShaderExecutable;
 class SwapChain;
 class RenderTarget;
 class Image;
 class TextureStorage;
 class UniformStorage;
+class TextureImpl;
+class TransformFeedbackImpl;
 
 struct ConfigDesc
 {
@@ -117,10 +127,11 @@ class Renderer
                              bool ignoreViewport) = 0;
 
     virtual bool applyRenderTarget(gl::Framebuffer *frameBuffer) = 0;
-    virtual void applyShaders(gl::ProgramBinary *programBinary, bool rasterizerDiscard, bool transformFeedbackActive, const gl::VertexFormat inputLayout[]) = 0;
+    virtual void applyShaders(gl::ProgramBinary *programBinary, const gl::VertexFormat inputLayout[], const gl::Framebuffer *framebuffer,
+                              bool rasterizerDiscard, bool transformFeedbackActive) = 0;
     virtual void applyUniforms(const gl::ProgramBinary &programBinary) = 0;
     virtual bool applyPrimitiveType(GLenum primitiveType, GLsizei elementCount) = 0;
-    virtual GLenum applyVertexBuffer(gl::ProgramBinary *programBinary, const gl::VertexAttribute vertexAttributes[], gl::VertexAttribCurrentValueData currentValues[],
+    virtual GLenum applyVertexBuffer(gl::ProgramBinary *programBinary, const gl::VertexAttribute vertexAttributes[], const gl::VertexAttribCurrentValueData currentValues[],
                                      GLint first, GLsizei count, GLsizei instances) = 0;
     virtual GLenum applyIndexBuffer(const GLvoid *indices, gl::Buffer *elementArrayBuffer, GLsizei count, GLenum mode, GLenum type, TranslatedIndexData *indexInfo) = 0;
     virtual void applyTransformFeedbackBuffers(gl::Buffer *transformFeedbackBuffers[], GLintptr offsets[]) = 0;
@@ -139,72 +150,25 @@ class Renderer
     virtual bool testDeviceLost(bool notify) = 0;
     virtual bool testDeviceResettable() = 0;
 
-    // Renderer capabilities
+    // Renderer capabilities (virtual because it is used by egl::Display, do not override)
+    virtual const gl::Caps &getRendererCaps() const;
+    virtual const gl::TextureCapsMap &getRendererTextureCaps() const;
+    virtual const gl::Extensions &getRendererExtensions() const;
+
     virtual DWORD getAdapterVendor() const = 0;
     virtual std::string getRendererDescription() const = 0;
     virtual GUID getAdapterIdentifier() const = 0;
 
-    virtual bool getBGRATextureSupport() const = 0;
-    virtual bool getDXT1TextureSupport() const = 0;
-    virtual bool getDXT3TextureSupport() const = 0;
-    virtual bool getDXT5TextureSupport() const = 0;
-    virtual bool getEventQuerySupport() const = 0;
-    virtual bool getFloat32TextureSupport() const = 0;
-    virtual bool getFloat32TextureFilteringSupport() const= 0;
-    virtual bool getFloat32TextureRenderingSupport() const= 0;
-    virtual bool getFloat16TextureSupport()  const= 0;
-    virtual bool getFloat16TextureFilteringSupport() const= 0;
-    virtual bool getFloat16TextureRenderingSupport() const = 0;
-    virtual bool getRGB565TextureSupport() const = 0;
-    virtual bool getLuminanceTextureSupport() const = 0;
-    virtual bool getLuminanceAlphaTextureSupport() const = 0;
-    virtual bool getRGTextureSupport() const = 0;
-    bool getVertexTextureSupport() const { return getMaxVertexTextureImageUnits() > 0; }
-    virtual unsigned int getMaxVertexTextureImageUnits() const = 0;
-    virtual unsigned int getMaxCombinedTextureImageUnits() const = 0;
     virtual unsigned int getReservedVertexUniformVectors() const = 0;
     virtual unsigned int getReservedFragmentUniformVectors() const = 0;
-    virtual unsigned int getMaxVertexUniformVectors() const = 0;
-    virtual unsigned int getMaxFragmentUniformVectors() const = 0;
-    virtual unsigned int getMaxVaryingVectors() const = 0;
-    virtual unsigned int getMaxVertexShaderUniformBuffers() const = 0;
-    virtual unsigned int getMaxFragmentShaderUniformBuffers() const = 0;
     virtual unsigned int getReservedVertexUniformBuffers() const = 0;
     virtual unsigned int getReservedFragmentUniformBuffers() const = 0;
-    virtual unsigned int getMaxTransformFeedbackBuffers() const = 0;
-    virtual unsigned int getMaxTransformFeedbackSeparateComponents() const = 0;
-    virtual unsigned int getMaxTransformFeedbackInterleavedComponents() const = 0;
-    virtual unsigned int getMaxUniformBufferSize() const = 0;
-    virtual bool getNonPower2TextureSupport() const = 0;
-    virtual bool getDepthTextureSupport() const = 0;
-    virtual bool getOcclusionQuerySupport() const = 0;
-    virtual bool getInstancingSupport() const = 0;
-    virtual bool getTextureFilterAnisotropySupport() const = 0;
-    virtual bool getPBOSupport() const = 0;
-    virtual float getTextureMaxAnisotropy() const = 0;
     virtual bool getShareHandleSupport() const = 0;
-    virtual bool getDerivativeInstructionSupport() const = 0;
     virtual bool getPostSubBufferSupport() const = 0;
-    virtual int getMaxRecommendedElementsIndices() const = 0;
-    virtual int getMaxRecommendedElementsVertices() const = 0;
 
     virtual int getMajorShaderModel() const = 0;
-    virtual float getMaxPointSize() const = 0;
-    virtual int getMaxViewportDimension() const = 0;
-    virtual int getMaxTextureWidth() const = 0;
-    virtual int getMaxTextureHeight() const = 0;
-    virtual int getMaxTextureDepth() const = 0;
-    virtual int getMaxTextureArrayLayers() const = 0;
-    virtual bool get32BitIndexSupport() const = 0;
     virtual int getMinSwapInterval() const = 0;
     virtual int getMaxSwapInterval() const = 0;
-
-    virtual GLsizei getMaxSupportedSamples() const = 0;
-    virtual GLsizei getMaxSupportedFormatSamples(GLenum internalFormat) const = 0;
-    virtual GLsizei getNumSampleCounts(GLenum internalFormat) const = 0;
-    virtual void getSampleCounts(GLenum internalFormat, GLsizei bufSize, GLint *params) const = 0;
-
-    virtual unsigned int getMaxRenderTargets() const = 0;
 
     // Pixel operations
     virtual bool copyToRenderTarget(TextureStorageInterface2D *dest, TextureStorageInterface2D *source) = 0;
@@ -224,13 +188,17 @@ class Renderer
     virtual bool blitRect(gl::Framebuffer *readTarget, const gl::Rectangle &readRect, gl::Framebuffer *drawTarget, const gl::Rectangle &drawRect,
                           const gl::Rectangle *scissor, bool blitRenderTarget, bool blitDepth, bool blitStencil, GLenum filter) = 0;
     virtual void readPixels(gl::Framebuffer *framebuffer, GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
-                            GLenum type, GLuint outputPitch, const gl::PixelPackState &pack, void* pixels) = 0;
+                            GLenum type, GLuint outputPitch, const gl::PixelPackState &pack, uint8_t *pixels) = 0;
 
     // RenderTarget creation
     virtual RenderTarget *createRenderTarget(SwapChain *swapChain, bool depth) = 0;
     virtual RenderTarget *createRenderTarget(int width, int height, GLenum format, GLsizei samples) = 0;
 
+    // Shader creation
+    virtual ShaderImpl *createShader(GLenum type) = 0;
+
     // Shader operations
+    virtual void releaseShaderCompiler() = 0;
     virtual ShaderExecutable *loadExecutable(const void *function, size_t length, rx::ShaderType type,
                                              const std::vector<gl::LinkedVarying> &transformFeedbackVaryings,
                                              bool separatedOutputBuffers) = 0;
@@ -248,14 +216,23 @@ class Renderer
     virtual TextureStorage *createTextureStorage3D(GLenum internalformat, bool renderTarget, GLsizei width, GLsizei height, GLsizei depth, int levels) = 0;
     virtual TextureStorage *createTextureStorage2DArray(GLenum internalformat, bool renderTarget, GLsizei width, GLsizei height, GLsizei depth, int levels) = 0;
 
+    // Texture creation
+    virtual TextureImpl *createTexture(GLenum target) = 0;
+
     // Buffer creation
+    virtual BufferImpl *createBuffer() = 0;
     virtual VertexBuffer *createVertexBuffer() = 0;
     virtual IndexBuffer *createIndexBuffer() = 0;
-    virtual BufferStorage *createBufferStorage() = 0;
+
+    // Vertex Array creation
+    virtual VertexArrayImpl *createVertexArray() = 0;
 
     // Query and Fence creation
     virtual QueryImpl *createQuery(GLenum type) = 0;
     virtual FenceImpl *createFence() = 0;
+
+    // Transform Feedback creation
+    virtual TransformFeedbackImpl* createTransformFeedback() = 0;
 
     // Current GLES client version
     void setCurrentClientVersion(int clientVersion) { mCurrentClientVersion = clientVersion; }
@@ -267,7 +244,6 @@ class Renderer
                                          GLenum destinationFormat, GLenum sourcePixelsType, const gl::Box &destArea) = 0;
 
     virtual bool getLUID(LUID *adapterLuid) const = 0;
-    virtual GLenum getNativeTextureFormat(GLenum internalFormat) const = 0;
     virtual rx::VertexConversionType getVertexConversionType(const gl::VertexFormat &vertexFormat) const = 0;
     virtual GLenum getVertexComponentType(const gl::VertexFormat &vertexFormat) const = 0;
 
@@ -276,6 +252,13 @@ class Renderer
 
   private:
     DISALLOW_COPY_AND_ASSIGN(Renderer);
+
+    virtual void generateCaps(gl::Caps *outCaps, gl::TextureCapsMap* outTextureCaps, gl::Extensions *outExtensions) const = 0;
+
+    mutable bool mCapsInitialized;
+    mutable gl::Caps mCaps;
+    mutable gl::TextureCapsMap mTextureCaps;
+    mutable gl::Extensions mExtensions;
 
     int mCurrentClientVersion;
 };

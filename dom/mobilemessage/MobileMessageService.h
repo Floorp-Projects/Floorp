@@ -5,9 +5,8 @@
 #ifndef mozilla_dom_mobilemessage_MobileMessageService_h
 #define mozilla_dom_mobilemessage_MobileMessageService_h
 
+#include "mozilla/Attributes.h" // For MOZ_FINAL
 #include "nsIMobileMessageService.h"
-#include "mozilla/ClearOnShutdown.h"
-#include "mozilla/StaticPtr.h"
 
 namespace mozilla {
 namespace dom {
@@ -19,13 +18,11 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMOBILEMESSAGESERVICE
 
-  static already_AddRefed<MobileMessageService> GetInstance();
+  MobileMessageService() { MOZ_COUNT_CTOR(MobileMessageService); }
 
 private:
-  ~MobileMessageService() {}
-
-  static StaticRefPtr<MobileMessageService> sSingleton;
-
+  // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
+  ~MobileMessageService() { MOZ_COUNT_DTOR(MobileMessageService); }
 };
 
 } // namespace mobilemessage
