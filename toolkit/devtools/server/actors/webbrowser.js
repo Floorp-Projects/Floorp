@@ -789,7 +789,9 @@ TabActor.prototype = {
       metadata = Cu.getSandboxMetadata(global);
     }
     catch (e) {}
-    if (metadata["inner-window-id"] && metadata["inner-window-id"] == id) {
+    if (metadata
+        && metadata["inner-window-id"]
+        && metadata["inner-window-id"] == id) {
       return true;
     }
 
