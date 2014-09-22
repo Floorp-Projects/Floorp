@@ -37,6 +37,33 @@ function formatStackFrame(aFrame) {
          ':' + aFrame.columnNumber + ')';
 }
 
+function ConsoleMessage(aMsg, aLevel) {
+  this.timeStamp = Date.now();
+  this.msg = aMsg;
+
+  switch (aLevel) {
+    case 'error':
+    case 'assert':
+      this.logLevel = Ci.nsIConsoleMessage.error;
+      break;
+    case 'warn':
+      this.logLevel = Ci.nsIConsoleMessage.warn;
+      break;
+    case 'log':
+    case 'info':
+      this.logLevel = Ci.nsIConsoleMessage.info;
+      break;
+    default:
+      this.logLevel = Ci.nsIConsoleMessage.debug;
+      break;
+  }
+}
+
+ConsoleMessage.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIConsoleMessage]),
+  toString: function() { return this.msg; }
+};
+
 const gFactoryResetFile = "/persist/__post_reset_cmd__";
 
 function ProcessGlobal() {}
@@ -132,8 +159,8 @@ ProcessGlobal.prototype = {
         args.push('\n' + stackTrace);
       }
 
-      let prefix = 'Content JS ' + message.level.toUpperCase() + ': ';
-      Services.console.logStringMessage(prefix + Array.join(args, ' '));
+      let msg = 'Content JS ' + message.level.toUpperCase() + ': ' + Array.join(args, ' ');
+      Services.console.logMessage(new ConsoleMessage(msg, message.level));
       break;
     }
     }
