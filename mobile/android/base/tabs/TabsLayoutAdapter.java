@@ -81,7 +81,7 @@ public class TabsLayoutAdapter extends BaseAdapter {
     }
 
     View newView(int position, ViewGroup parent) {
-        final View view = mInflater.inflate(R.layout.tabs_row, parent, false);
+        final View view = mInflater.inflate(R.layout.tabs_layout_item_view, parent, false);
         final TabsLayoutItemView item = new TabsLayoutItemView(view);
         view.setTag(item);
         return view;

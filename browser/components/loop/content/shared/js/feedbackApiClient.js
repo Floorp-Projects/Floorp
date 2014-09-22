@@ -51,7 +51,8 @@ loop.FeedbackAPIClient = (function($, _) {
                        "platform",
                        "version",
                        "channel",
-                       "user_agent"],
+                       "user_agent",
+                       "url"],
 
     /**
      * Creates a formatted payload object compliant with the Feedback API spec
