@@ -38,9 +38,6 @@
         <!-- Style for the PanelGridView -->
         <attr name="panelGridViewStyle" format="reference" />
 
-        <!-- Style for the TabsGridLayout -->
-        <attr name="tabGridLayoutViewStyle" format="reference" />
-
         <!-- Default style for the TopSitesGridView -->
         <attr name="topSitesGridViewStyle" format="reference" />
 
