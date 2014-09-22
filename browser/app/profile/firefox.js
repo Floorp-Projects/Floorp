@@ -843,6 +843,15 @@ pref("plugin.state.personalplugin", 2);
 pref("plugin.state.libplugins", 2);
 #endif
 
+// Novell iPrint Client, bug 1036693
+#ifdef XP_WIN
+pref("plugin.state.npnipp", 2);
+pref("plugin.state.npnisp", 2);
+#endif
+#ifdef XP_MACOSX
+pref("plugin.state.iprint", 2);
+#endif
+
 #ifdef XP_MACOSX
 pref("browser.preferences.animateFadeIn", true);
 #else
