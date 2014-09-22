@@ -1664,6 +1664,13 @@ DeviceStorageFile::GetStatus(nsAString& aStatus)
     aStatus.AssignLiteral("unavailable");
     return;
   }
+  bool isUnmounting;
+  rv = vol->GetIsUnmounting(&isUnmounting);
+  NS_ENSURE_SUCCESS_VOID(rv);
+  if (isUnmounting) {
+    aStatus.AssignLiteral("unavailable");
+    return;
+  }
   int32_t volState;
   rv = vol->GetState(&volState);
   NS_ENSURE_SUCCESS_VOID(rv);
