@@ -139,9 +139,8 @@ TEST_F(pkixder_universal_types_tests, BooleanInvalidZeroLength)
 // OptionalBoolean implements decoding of OPTIONAL BOOLEAN DEFAULT FALSE.
 // If the field is present, it must be a valid encoding of a BOOLEAN with
 // value TRUE. If the field is not present, it defaults to FALSE. For
-// compatibility reasons, OptionalBoolean can be told to accept an encoding
-// where the field is present with value FALSE (this is technically not a
-// valid DER encoding).
+// compatibility reasons, OptionalBoolean also accepts encodings where the field
+// is present with value FALSE (this is technically not a valid DER encoding).
 TEST_F(pkixder_universal_types_tests, OptionalBooleanValidEncodings)
 {
   const uint8_t DER_OPTIONAL_BOOLEAN_PRESENT_TRUE[] = {
@@ -154,7 +153,7 @@ TEST_F(pkixder_universal_types_tests, OptionalBooleanValidEncodings)
   ASSERT_EQ(Success, input1.Init(DER_OPTIONAL_BOOLEAN_PRESENT_TRUE,
                                  sizeof DER_OPTIONAL_BOOLEAN_PRESENT_TRUE));
   bool value = false;
-  ASSERT_EQ(Success, OptionalBoolean(input1, false, value)) <<
+  ASSERT_EQ(Success, OptionalBoolean(input1, value)) <<
     "Should accept the only valid encoding of a present OPTIONAL BOOLEAN";
   ASSERT_TRUE(value);
   ASSERT_TRUE(input1.AtEnd());
@@ -169,7 +168,7 @@ TEST_F(pkixder_universal_types_tests, OptionalBooleanValidEncodings)
   Input input2;
   ASSERT_EQ(Success, input2.Init(DER_INTEGER_05, sizeof DER_INTEGER_05));
   value = true;
-  ASSERT_EQ(Success, OptionalBoolean(input2, false, value)) <<
+  ASSERT_EQ(Success, OptionalBoolean(input2, value)) <<
     "Should accept a valid encoding of an omitted OPTIONAL BOOLEAN";
   ASSERT_FALSE(value);
   ASSERT_FALSE(input2.AtEnd());
@@ -177,7 +176,7 @@ TEST_F(pkixder_universal_types_tests, OptionalBooleanValidEncodings)
   Input input3;
   ASSERT_EQ(Success, input3.Init(reinterpret_cast<const uint8_t*>(""), 0));
   value = true;
-  ASSERT_EQ(Success, OptionalBoolean(input3, false, value)) <<
+  ASSERT_EQ(Success, OptionalBoolean(input3, value)) <<
     "Should accept another valid encoding of an omitted OPTIONAL BOOLEAN";
   ASSERT_FALSE(value);
   ASSERT_TRUE(input3.AtEnd());
@@ -194,25 +193,11 @@ TEST_F(pkixder_universal_types_tests, OptionalBooleanInvalidEncodings)
   Input input1;
   ASSERT_EQ(Success, input1.Init(DER_OPTIONAL_BOOLEAN_PRESENT_FALSE,
                                  sizeof DER_OPTIONAL_BOOLEAN_PRESENT_FALSE));
-  bool value;
-  // If the second parameter to OptionalBoolean is false, invalid encodings
-  // that include the field even when it is the DEFAULT FALSE are rejected.
-  bool allowInvalidEncodings = false;
-  ASSERT_EQ(Result::ERROR_BAD_DER,
-            OptionalBoolean(input1, allowInvalidEncodings, value)) <<
-    "Should reject an invalid encoding of present OPTIONAL BOOLEAN";
-
-  Input input2;
-  ASSERT_EQ(Success, input2.Init(DER_OPTIONAL_BOOLEAN_PRESENT_FALSE,
-                                 sizeof DER_OPTIONAL_BOOLEAN_PRESENT_FALSE));
-  value = true;
-  // If the second parameter to OptionalBoolean is true, invalid encodings
-  // that include the field even when it is the DEFAULT FALSE are accepted.
-  allowInvalidEncodings = true;
-  ASSERT_EQ(Success, OptionalBoolean(input2, allowInvalidEncodings, value)) <<
-    "Should now accept an invalid encoding of present OPTIONAL BOOLEAN";
+  bool value = true;
+  ASSERT_EQ(Success, OptionalBoolean(input1, value)) <<
+    "Should accept an invalid, default-value encoding of OPTIONAL BOOLEAN";
   ASSERT_FALSE(value);
-  ASSERT_TRUE(input2.AtEnd());
+  ASSERT_TRUE(input1.AtEnd());
 
   const uint8_t DER_OPTIONAL_BOOLEAN_PRESENT_42[] = {
     0x01,                       // BOOLEAN
@@ -220,14 +205,11 @@ TEST_F(pkixder_universal_types_tests, OptionalBooleanInvalidEncodings)
     0x42                        // (invalid value for a BOOLEAN)
   };
 
-  Input input3;
-  ASSERT_EQ(Success, input3.Init(DER_OPTIONAL_BOOLEAN_PRESENT_42,
+  Input input2;
+  ASSERT_EQ(Success, input2.Init(DER_OPTIONAL_BOOLEAN_PRESENT_42,
                                  sizeof DER_OPTIONAL_BOOLEAN_PRESENT_42));
-  // Even with the second parameter to OptionalBoolean as true, encodings
-  // of BOOLEAN that are invalid altogether are rejected.
-  ASSERT_EQ(Result::ERROR_BAD_DER,
-            OptionalBoolean(input3, allowInvalidEncodings, value)) <<
-    "Should reject another invalid encoding of present OPTIONAL BOOLEAN";
+  ASSERT_EQ(Result::ERROR_BAD_DER, OptionalBoolean(input2, value)) <<
+    "Should reject an invalid-valued encoding of OPTIONAL BOOLEAN";
 }
 
 TEST_F(pkixder_universal_types_tests, Enumerated)
