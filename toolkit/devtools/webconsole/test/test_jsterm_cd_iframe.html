@@ -11,6 +11,8 @@
 <body>
 <p>Test for the cd() function</p>
 
+<iframe id="content-iframe" src="http://example.com/chrome/toolkit/devtools/webconsole/test/sandboxed_iframe.html"></iframe>
+
 <script class="testbody" type="text/javascript;version=1.8">
 SimpleTest.waitForExplicitFinish();
 
@@ -33,7 +35,11 @@ function onAttach(aState, aResponse)
 
   gState = aState;
 
-  let tests = [doCheckParent, doCdIframe, doCheckIframe, doCdParent,
+  let tests = [doCheckParent, doCdIframe, doCheckIframe,
+      doCdContentIframe,
+      doCdSandboxedIframe, doCheckSandboxedIframe,
+      doCdParent,
+      doCdParent,
       doCheckParent2];
   runTests(tests, testEnd);
 }
@@ -92,6 +98,69 @@ function onFooObjectFromIframe(aResponse)
     from: gState.actor,
     input: "window.foobarObject.bug609872",
     result: "child",
+  });
+
+  ok(!aResponse.exception, "no js eval exception");
+  ok(!aResponse.helperResult, "no helper result");
+
+  nextTest();
+}
+
+function doCdContentIframe()
+{
+  info("test cd('#content-iframe')");
+  gState.client.evaluateJS("cd('#content-iframe')", onCdContentIframe);
+}
+
+function onCdContentIframe(aResponse)
+{
+  checkObject(aResponse, {
+    from: gState.actor,
+    input: "cd('#content-iframe')",
+    result: { type: "undefined" },
+    helperResult: { type: "cd" },
+  });
+
+  ok(!aResponse.exception, "no eval exception");
+
+  nextTest();
+}
+function doCdSandboxedIframe()
+{
+  // Don't use string to ensure we don't get security exception
+  // when passing a content window reference.
+  let cmd = "cd(document.getElementById('sandboxed-iframe').contentWindow)";
+  info("test " + cmd);
+  gState.client.evaluateJS(cmd, onCdSandboxedIframe.bind(null, cmd));
+}
+
+function onCdSandboxedIframe(cmd, aResponse)
+{
+  checkObject(aResponse, {
+    from: gState.actor,
+    input: cmd,
+    result: { type: "undefined" },
+    helperResult: { type: "cd" },
+  });
+
+  ok(!aResponse.exception, "no eval exception");
+
+  nextTest();
+}
+
+function doCheckSandboxedIframe()
+{
+  info("check foobarObject from the sandboxed iframe");
+  gState.client.evaluateJS("window.foobarObject.bug1051224",
+                           onFooObjectFromSandboxedIframe);
+}
+
+function onFooObjectFromSandboxedIframe(aResponse)
+{
+  checkObject(aResponse, {
+    from: gState.actor,
+    input: "window.foobarObject.bug1051224",
+    result: "sandboxed",
   });
 
   ok(!aResponse.exception, "no js eval exception");
