@@ -1659,7 +1659,9 @@ TypedObject::obj_trace(JSTracer *trace, JSObject *object)
     gc::MarkSlot(trace, &typedObj.getFixedSlotRef(JS_BUFVIEW_SLOT_OWNER), "typed object owner");
 
     // When this is called for compacting GC, the related objects we touch here
-    // may not have had their slots updated yet.
+    // may not have had their slots updated yet. Note that this does not apply
+    // to generational GC because these objects (type descriptors and
+    // prototypes) are never allocated in the nursery.
     TypeDescr &descr = typedObj.maybeForwardedTypeDescr();
 
     if (descr.opaque()) {

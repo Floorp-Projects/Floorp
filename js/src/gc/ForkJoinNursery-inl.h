@@ -63,13 +63,21 @@ ForkJoinNursery::isInsideFromspace(const void *addr)
     return false;
 }
 
+MOZ_ALWAYS_INLINE bool
+ForkJoinNursery::isForwarded(Cell *cell)
+{
+    JS_ASSERT(isInsideFromspace(cell));
+    const RelocationOverlay *overlay = RelocationOverlay::fromCell(cell);
+    return overlay->isForwarded();
+}
+
 template <typename T>
 MOZ_ALWAYS_INLINE bool
 ForkJoinNursery::getForwardedPointer(T **ref)
 {
     JS_ASSERT(ref);
     JS_ASSERT(isInsideFromspace(*ref));
-    const RelocationOverlay *overlay = reinterpret_cast<const RelocationOverlay *>(*ref);
+    const RelocationOverlay *overlay = RelocationOverlay::fromCell(*ref);
     if (!overlay->isForwarded())
         return false;
     // This static_cast from Cell* restricts T to valid (GC thing) types.
