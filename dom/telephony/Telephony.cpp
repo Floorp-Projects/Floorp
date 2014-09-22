@@ -85,7 +85,7 @@ public:
   }
 
   NS_IMETHODIMP
-  NotifyDialSuccess(uint32_t aCallIndex, const nsAString& aNumber)
+  NotifyDialCallSuccess(uint32_t aCallIndex, const nsAString& aNumber)
   {
     nsRefPtr<TelephonyCallId> id = mTelephony->CreateCallId(aNumber);
     nsRefPtr<TelephonyCall> call =
