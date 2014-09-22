@@ -79,12 +79,21 @@ protected:
   RecvNotifyEnumerateCallState(const uint32_t& aClientId,
                                const IPCCallStateData& aData) MOZ_OVERRIDE;
 
+  virtual bool
+  RecvNotifyDialMMI(const nsString& aServiceCode) MOZ_OVERRIDE;
+
 private:
   bool
   DoResponse(const DialResponseError& aResponse);
 
   bool
   DoResponse(const DialResponseCallSuccess& aResponse);
+
+  bool
+  DoResponse(const DialResponseMMISuccess& aResponse);
+
+  bool
+  DoResponse(const DialResponseMMIError& aResponse);
 
   nsCOMPtr<nsITelephonyListener> mListener;
   nsCOMPtr<nsITelephonyCallback> mCallback;
