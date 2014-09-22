@@ -3219,7 +3219,7 @@ GCHelperState::finish()
 }
 
 GCHelperState::State
-GCHelperState::state() const
+GCHelperState::state()
 {
     JS_ASSERT(rt->gc.currentThreadOwnsGCLock());
     return state_;
@@ -3368,15 +3368,6 @@ GCHelperState::waitBackgroundSweepOrAllocEnd()
         waitForBackgroundThread();
     if (rt->gc.incrementalState == NO_INCREMENTAL)
         rt->gc.assertBackgroundSweepingFinished();
-}
-
-void
-GCHelperState::assertStateIsIdle() const
-{
-#ifdef DEBUG
-    AutoLockGC lock(rt);
-    JS_ASSERT(state() == IDLE);
-#endif
 }
 
 /* Must be called with the GC lock taken. */
@@ -5536,16 +5527,15 @@ GCRuntime::gcCycle(bool incremental, int64_t budget, JSGCInvocationKind gckind,
     // Assert if this is a GC unsafe region.
     JS::AutoAssertOnGC::VerifyIsSafeToGC(rt);
 
-    // As we about to purge caches and clear the mark bits we must wait for
-    // any background finalization to finish. We must also wait for the
-    // background allocation to finish so we can avoid taking the GC lock
-    // when manipulating the chunks during the GC.
-    if (incrementalState == NO_INCREMENTAL) {
+    /*
+     * As we about to purge caches and clear the mark bits we must wait for
+     * any background finalization to finish. We must also wait for the
+     * background allocation to finish so we can avoid taking the GC lock
+     * when manipulating the chunks during the GC.
+     */
+    {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_WAIT_BACKGROUND_THREAD);
         waitBackgroundSweepOrAllocEnd();
-    } else {
-        // The helper thread does not run between incremental slices.
-        helperState.assertStateIsIdle();
     }
 
     State prevState = incrementalState;
