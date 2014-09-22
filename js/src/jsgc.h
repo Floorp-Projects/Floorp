@@ -56,7 +56,7 @@ enum State {
 const char *
 TraceKindAsAscii(JSGCTraceKind kind);
 
-/* Map from C++ type to finalize kind. JSObject does not have a 1:1 mapping, so must use Arena::thingSize. */
+/* Map from C++ type to alloc kind. JSObject does not have a 1:1 mapping, so must use Arena::thingSize. */
 template <typename T> struct MapTypeToFinalizeKind {};
 template <> struct MapTypeToFinalizeKind<JSScript>          { static const AllocKind kind = FINALIZE_SCRIPT; };
 template <> struct MapTypeToFinalizeKind<LazyScript>        { static const AllocKind kind = FINALIZE_LAZY_SCRIPT; };
@@ -1175,23 +1175,67 @@ namespace gc {
 void
 MergeCompartments(JSCompartment *source, JSCompartment *target);
 
-#ifdef JSGC_COMPACTING
+#if defined(JSGC_GENERATIONAL) || defined(JSGC_COMPACTING)
+
+/*
+ * This structure overlays a Cell in the Nursery and re-purposes its memory
+ * for managing the Nursery collection process.
+ */
+class RelocationOverlay
+{
+    friend class MinorCollectionTracer;
+    friend class ForkJoinNursery;
+
+    /* The low bit is set so this should never equal a normal pointer. */
+    static const uintptr_t Relocated = uintptr_t(0xbad0bad1);
+
+    // Putting the magic value after the forwarding pointer is a terrible hack
+    // to make ObjectImpl::zone() work on forwarded objects.
+
+    /* The location |this| was moved to. */
+    Cell *newLocation_;
+
+    /* Set to Relocated when moved. */
+    uintptr_t magic_;
+
+    /* A list entry to track all relocated things. */
+    RelocationOverlay *next_;
+
+  public:
+    static RelocationOverlay *fromCell(Cell *cell) {
+        return reinterpret_cast<RelocationOverlay *>(cell);
+    }
+
+    bool isForwarded() const {
+        return magic_ == Relocated;
+    }
+
+    Cell *forwardingAddress() const {
+        JS_ASSERT(isForwarded());
+        return newLocation_;
+    }
+
+    void forwardTo(Cell *cell) {
+        MOZ_ASSERT(!isForwarded());
+        MOZ_ASSERT(ObjectImpl::offsetOfShape() == offsetof(RelocationOverlay, newLocation_));
+        newLocation_ = cell;
+        magic_ = Relocated;
+        next_ = nullptr;
+    }
+
+    RelocationOverlay *next() const {
+        return next_;
+    }
+};
 
 /* Functions for checking and updating things that might be moved by compacting GC. */
-
-#ifdef JS_PUNBOX64
-const uintptr_t ForwardedCellMagicValue = 0xf1f1f1f1f1f1f1f1;
-#else
-const uintptr_t ForwardedCellMagicValue = 0xf1f1f1f1;
-#endif
 
 template <typename T>
 inline bool
 IsForwarded(T *t)
 {
-    static_assert(mozilla::IsBaseOf<Cell, T>::value, "T must be a subclass of Cell");
-    uintptr_t *ptr = reinterpret_cast<uintptr_t *>(t);
-    return ptr[1] == ForwardedCellMagicValue;
+    RelocationOverlay *overlay = RelocationOverlay::fromCell(t);
+    return overlay->isForwarded();
 }
 
 inline bool
@@ -1214,9 +1258,9 @@ template <typename T>
 inline T *
 Forwarded(T *t)
 {
-    JS_ASSERT(IsForwarded(t));
-    uintptr_t *ptr = reinterpret_cast<uintptr_t *>(t);
-    return reinterpret_cast<T *>(ptr[0]);
+    RelocationOverlay *overlay = RelocationOverlay::fromCell(t);
+    MOZ_ASSERT(overlay->isForwarded());
+    return reinterpret_cast<T*>(overlay->forwardingAddress());
 }
 
 inline Value
@@ -1246,7 +1290,7 @@ template <typename T> inline bool IsForwarded(T t) { return false; }
 template <typename T> inline T Forwarded(T t) { return t; }
 template <typename T> inline T MaybeForwarded(T t) { return t; }
 
-#endif // JSGC_COMPACTING
+#endif // JSGC_GENERATIONAL || JSGC_COMPACTING
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 
