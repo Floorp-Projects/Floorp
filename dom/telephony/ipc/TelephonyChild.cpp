@@ -4,6 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TelephonyChild.h"
+
 #include "TelephonyIPCService.h"
 
 USING_TELEPHONY_NAMESPACE
@@ -145,9 +146,10 @@ TelephonyRequestChild::Recv__delete__(const IPCTelephonyResponse& aResponse)
     case IPCTelephonyResponse::TEnumerateCallsResponse:
       mListener->EnumerateCallStateComplete();
       break;
-    case IPCTelephonyResponse::TDialResponse:
-      // Do nothing.
-      break;
+    case IPCTelephonyResponse::TDialResponseError:
+      return DoResponse(aResponse.get_DialResponseError());
+    case IPCTelephonyResponse::TDialResponseCallSuccess:
+      return DoResponse(aResponse.get_DialResponseCallSuccess());
     default:
       MOZ_CRASH("Unknown type!");
   }
@@ -177,20 +179,17 @@ TelephonyRequestChild::RecvNotifyEnumerateCallState(const uint32_t& aClientId,
 }
 
 bool
-TelephonyRequestChild::RecvNotifyDialError(const nsString& aError)
+TelephonyRequestChild::DoResponse(const DialResponseError& aResponse)
 {
   MOZ_ASSERT(mCallback);
-
-  mCallback->NotifyDialError(aError);
+  mCallback->NotifyDialError(aResponse.name());
   return true;
 }
 
 bool
-TelephonyRequestChild::RecvNotifyDialCallSuccess(const uint32_t& aCallIndex,
-                                             const nsString& aNumber)
+TelephonyRequestChild::DoResponse(const DialResponseCallSuccess& aResponse)
 {
   MOZ_ASSERT(mCallback);
-
-  mCallback->NotifyDialCallSuccess(aCallIndex, aNumber);
+  mCallback->NotifyDialCallSuccess(aResponse.callIndex(), aResponse.number());
   return true;
 }
