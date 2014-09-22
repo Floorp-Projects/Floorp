@@ -2017,13 +2017,22 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
       return res;
     } else if (wsType == WSType::text) {
       // found normal text to delete.  
+      nsRefPtr<Text> nodeAsText = visNode_->GetAsText();
       int32_t so = visOffset;
       int32_t eo = visOffset+1;
       if (aAction == nsIEditor::ePrevious) 
       { 
         if (so == 0) return NS_ERROR_UNEXPECTED;
-        so--; 
-        eo--; 
+        so--;
+        eo--;
+        // bug 1068979: delete both codepoints if surrogate pair
+        if (so > 0) {
+          const nsTextFragment *text = nodeAsText->GetText();
+          if (NS_IS_LOW_SURROGATE(text->CharAt(so)) &&
+              NS_IS_HIGH_SURROGATE(text->CharAt(so - 1))) {
+            so--;
+          }
+        }
       }
       else
       {
@@ -2053,7 +2062,6 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
           address_of(visNode_), &so, address_of(visNode_), &eo);
       NS_ENSURE_SUCCESS(res, res);
       visNode = GetAsDOMNode(visNode_);
-      nsRefPtr<Text> nodeAsText = visNode_->GetAsText();
       NS_ENSURE_STATE(mHTMLEditor);
       res = mHTMLEditor->DeleteText(*nodeAsText, std::min(so, eo),
                                     DeprecatedAbs(eo - so));
