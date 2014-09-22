@@ -2279,24 +2279,16 @@ this.DOMApplicationRegistry = {
     // in which case we don't need to load it.
     if (app.manifest) {
       if (checkManifest()) {
-        if (this.kTrustedHosted == this.appKind(app, app.manifest)) {
-          // sanity check on manifest host's CA
-          // (proper CA check with pinning is done by regular networking code)
-          if (!TrustedHostedAppsUtils.isHostPinned(app.manifestURL)) {
-            sendError("TRUSTED_APPLICATION_HOST_CERTIFICATE_INVALID");
-            return;
-          }
-
-          // Signature of the manifest should be verified here.
-          // Bug 1059216.
-
-          if (!TrustedHostedAppsUtils.verifyCSPWhiteList(app.manifest.csp)) {
-            sendError("TRUSTED_APPLICATION_WHITELIST_VALIDATION_FAILED");
-            return;
-          }
+        debug("Installed manifest check OK");
+        if (this.kTrustedHosted !== this.appKind(app, app.manifest)) {
+          installApp();
+          return;
         }
-
-        installApp();
+        TrustedHostedAppsUtils.verifyManifest(aData)
+        	.then(installApp, sendError);
+      } else {
+        debug("Installed manifest check failed");
+        // checkManifest() sends error before return
       }
       return;
     }
@@ -2319,21 +2311,20 @@ this.DOMApplicationRegistry = {
 
         app.manifest = xhr.response;
         if (checkManifest()) {
+          debug("Downloaded manifest check OK");
           app.etag = xhr.getResponseHeader("Etag");
-          if (this.kTrustedHosted == this.appKind(app, app.manifest)) {
-            // checking trusted host for pinning is not needed here, since
-            // network code will have already done that
-
-            // Signature of the manifest should be verified here.
-            // Bug 1059216.
-
-            if (!TrustedHostedAppsUtils.verifyCSPWhiteList(app.manifest.csp)) {
-              sendError("TRUSTED_APPLICATION_WHITELIST_VALIDATION_FAILED");
-              return;
-            }
+          if (this.kTrustedHosted !== this.appKind(app, app.manifest)) {
+            installApp();
+            return;
           }
 
-          installApp();
+          debug("App kind: " + this.kTrustedHosted);
+          TrustedHostedAppsUtils.verifyManifest(aData)
+            .then(installApp, sendError);
+          return;
+        } else {
+          debug("Downloaded manifest check failed");
+          // checkManifest() sends error before return
         }
       } else {
         sendError("MANIFEST_URL_ERROR");
