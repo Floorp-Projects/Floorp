@@ -138,6 +138,13 @@ describe("loop.FeedbackAPIClient", function() {
         expect(parsed.user_agent).eql("MOZAGENT");
       });
 
+      it("should send url information when provided", function() {
+        client.send({url: "http://fake.invalid"}, function(){});
+
+        var parsed = JSON.parse(requests[0].requestBody);
+        expect(parsed.url).eql("http://fake.invalid");
+      });
+
       it("should throw on invalid feedback data", function() {
         expect(function() {
           client.send("invalid data", function(){});
