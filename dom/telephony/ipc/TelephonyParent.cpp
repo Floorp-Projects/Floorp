@@ -434,6 +434,14 @@ TelephonyRequestParent::DoRequest(const DialRequest& aRequest)
   return true;
 }
 
+nsresult
+TelephonyRequestParent::SendResponse(const IPCTelephonyResponse& aResponse)
+{
+  NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
+
+  return Send__delete__(this, aResponse) ? NS_OK : NS_ERROR_FAILURE;
+}
+
 // nsITelephonyListener
 
 NS_IMETHODIMP
@@ -529,18 +537,12 @@ TelephonyRequestParent::SupplementaryServiceNotification(uint32_t aClientId,
 NS_IMETHODIMP
 TelephonyRequestParent::NotifyDialError(const nsAString& aError)
 {
-  NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
-
-  return (SendNotifyDialError(nsString(aError)) &&
-          Send__delete__(this, DialResponse())) ? NS_OK : NS_ERROR_FAILURE;
+  return SendResponse(DialResponseError(nsAutoString(aError)));
 }
 
 NS_IMETHODIMP
 TelephonyRequestParent::NotifyDialCallSuccess(uint32_t aCallIndex,
                                               const nsAString& aNumber)
 {
-  NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
-
-  return (SendNotifyDialCallSuccess(aCallIndex, nsString(aNumber)) &&
-          Send__delete__(this, DialResponse())) ? NS_OK : NS_ERROR_FAILURE;
+  return SendResponse(DialResponseCallSuccess(aCallIndex, nsAutoString(aNumber)));
 }
