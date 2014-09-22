@@ -246,6 +246,15 @@ pref("security.alternate_certificate_error_page", "certerror");
 
 pref("security.warn_viewing_mixed", false); // Warning is disabled.  See Bug 616712.
 
+// 2 = strict certificate pinning checks.
+// This default preference is more strict than Firefox because B2G
+// currently does not have a way to install local root certificates.
+// Strict checking is effectively equivalent to non-strict checking as
+// long as that is true.  If an ability to add local certificates is
+// added, there may be a need to change this pref.
+pref("security.cert_pinning.enforcement_level", 2);
+
+
 // Override some named colors to avoid inverse OS themes
 pref("ui.-moz-dialog", "#efebe7");
 pref("ui.-moz-dialogtext", "#101010");
