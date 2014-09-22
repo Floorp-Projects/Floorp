@@ -13,11 +13,21 @@ const promise = require("promise");
 
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 
+// These type strings are used for logging events to Telemetry
+let RuntimeTypes = {
+  usb: "USB",
+  wifi: "WIFI",
+  simulator: "SIMULATOR",
+  remote: "REMOTE",
+  local: "LOCAL"
+};
+
 function USBRuntime(id) {
   this.id = id;
 }
 
 USBRuntime.prototype = {
+  type: RuntimeTypes.usb,
   connect: function(connection) {
     let device = Devices.getByName(this.id);
     if (!device) {
@@ -59,6 +69,7 @@ function WiFiRuntime(deviceName) {
 }
 
 WiFiRuntime.prototype = {
+  type: RuntimeTypes.wifi,
   connect: function(connection) {
     let service = discovery.getRemoteService("devtools", this.deviceName);
     if (!service) {
@@ -82,6 +93,7 @@ function SimulatorRuntime(version) {
 }
 
 SimulatorRuntime.prototype = {
+  type: RuntimeTypes.simulator,
   connect: function(connection) {
     let port = ConnectionManager.getFreeTCPPort();
     let simulator = Simulator.getByVersion(this.version);
@@ -105,6 +117,7 @@ SimulatorRuntime.prototype = {
 }
 
 let gLocalRuntime = {
+  type: RuntimeTypes.local,
   connect: function(connection) {
     if (!DebuggerServer.initialized) {
       DebuggerServer.init();
@@ -118,9 +131,13 @@ let gLocalRuntime = {
   getName: function() {
     return Strings.GetStringFromName("local_runtime");
   },
+  getID: function () {
+    return "local";
+  }
 }
 
 let gRemoteRuntime = {
+  type: RuntimeTypes.remote,
   connect: function(connection) {
     let win = Services.wm.getMostRecentWindow("devtools:webide");
     if (!win) {

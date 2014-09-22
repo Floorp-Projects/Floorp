@@ -207,3 +207,41 @@ body,
   flex: 1;
 }
 
+/**
+ * Feedback form overlay (standalone only)
+ */
+.standalone .ended-conversation {
+  position: relative;
+  height: 100%;
+  background-color: #444;
+  text-align: left; /* as backup */
+  text-align: start;
+}
+
+.standalone .ended-conversation .feedback {
+  position: absolute;
+  width: 50%;
+  max-width: 400px;
+  margin: 10px auto;
+  top: 20px;
+  left: 10%;
+  right: 10%;
+  background: #FFF;
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.4);
+  border-radius: 3px;
+  z-index: 1002; /* ensures the form is always on top of the control bar */
+}
+
+.standalone .ended-conversation .local-stream {
+  /* Hide  local media stream when feedback form is shown. */
+  display: none;
+}
+
+@media screen and (max-width:640px) {
+  .standalone .ended-conversation .feedback {
+    width: 92%;
+    top: 10%;
+    left: 5px;
+    right: 5px;
+  }
+}

@@ -11,6 +11,10 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
+const WEBRTC_PLAYER_NAME = "WebRTC Player";
+const MIRROR_PORT = 8011;
+const JSON_MESSAGE_TERMINATOR = "\r\n";
+
 function log(msg) {
   //Services.console.logStringMessage(msg);
 }
@@ -29,13 +33,14 @@ function RokuApp(service) {
 #else
   this.app = "Firefox Nightly";
 #endif
-  this.appID = -1;
+  this.mediaAppID = -1;
+  this.mirrorAppID = -1;
 }
 
 RokuApp.prototype = {
   status: function status(callback) {
     // We have no way to know if the app is running, so just return "unknown"
-    // but we use this call to fetch the appID for the given app name
+    // but we use this call to fetch the mediaAppID for the given app name
     let url = this.resourceURL + "query/apps";
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("GET", url, true);
@@ -48,7 +53,9 @@ RokuApp.prototype = {
         let apps = doc.querySelectorAll("app");
         for (let app of apps) {
           if (app.textContent == this.app) {
-            this.appID = app.id;
+            this.mediaAppID = app.id;
+          } else if (app.textContent == WEBRTC_PLAYER_NAME) {
+            this.mirrorAppID = app.id
           }
         }
       }
@@ -69,11 +76,11 @@ RokuApp.prototype = {
   },
 
   start: function start(callback) {
-    // We need to make sure we have cached the appID
-    if (this.appID == -1) {
+    // We need to make sure we have cached the mediaAppID
+    if (this.mediaAppID == -1) {
       this.status(function() {
-        // If we found the appID, use it to make a new start call
-        if (this.appID != -1) {
+        // If we found the mediaAppID, use it to make a new start call
+        if (this.mediaAppID != -1) {
           this.start(callback);
         } else {
           // We failed to start the app, so let the caller know
@@ -85,7 +92,7 @@ RokuApp.prototype = {
 
     // Start a given app with any extra query data. Each app uses it's own data scheme.
     // NOTE: Roku will also pass "source=external-control" as a param
-    let url = this.resourceURL + "launch/" + this.appID + "?version=" + parseInt(PROTOCOL_VERSION);
+    let url = this.resourceURL + "launch/" + this.mediaAppID + "?version=" + parseInt(PROTOCOL_VERSION);
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("POST", url, true);
     xhr.overrideMimeType("text/plain");
@@ -129,7 +136,7 @@ RokuApp.prototype = {
   },
 
   remoteMedia: function remoteMedia(callback, listener) {
-    if (this.appID != -1) {
+    if (this.mediaAppID != -1) {
       if (callback) {
         callback(new RemoteMedia(this.resourceURL, listener));
       }
@@ -137,6 +144,44 @@ RokuApp.prototype = {
       if (callback) {
         callback();
       }
+    }
+  },
+
+  mirror: function(callback, win, viewport, mirrorStartedCallback) {
+    if (this.mirrorAppID == -1) {
+      // The status function may not have been called yet if mirrorAppID is -1
+      this.status(this._createRemoteMirror.bind(this, callback, win, viewport, mirrorStartedCallback));
+    } else {
+      this._createRemoteMirror(callback, win, viewport, mirrorStartedCallback);
+    }
+  },
+
+  _createRemoteMirror: function(callback, win, viewport, mirrorStartedCallback) {
+    if (this.mirrorAppID == -1) {
+      // TODO: Inform user to install Roku WebRTC Player Channel.
+      log("RokuApp: Failed to find Mirror App ID.");
+    } else {
+      let url = this.resourceURL + "launch/" + this.mirrorAppID;
+      let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
+      xhr.open("POST", url, true);
+      xhr.overrideMimeType("text/plain");
+
+      xhr.addEventListener("load", (function() {
+        // 204 seems to be returned if the channel is already running
+        if ((xhr.status == 200) || (xhr.status == 204)) {
+          this.remoteMirror = new RemoteMirror(this.resourceURL, win, viewport, mirrorStartedCallback);
+        }
+      }).bind(this), false);
+
+      xhr.addEventListener("error", function() {
+        log("RokuApp: XHR Failed to launch application: " + WEBRTC_PLAYER_NAME);
+      }, false);
+
+      xhr.send(null);
+    }
+
+    if (callback) {
+      callback();
     }
   }
 }
@@ -225,11 +270,153 @@ RemoteMedia.prototype = {
     this._sendMsg({ type: "STOP" });
   },
 
-  load: function load(aData) {
-    this._sendMsg({ type: "LOAD", title: aData.title, source: aData.source, poster: aData.poster });
+  load: function load(data) {
+    this._sendMsg({ type: "LOAD", title: data.title, source: data.source, poster: data.poster });
   },
 
   get status() {
     return this._status;
   }
 }
+
+function RemoteMirror(url, win, viewport, mirrorStartedCallback) {
+  this._serverURI = Services.io.newURI(url , null, null);
+  this._window = win;
+  this._iceCandidates = [];
+  this.mirrorStarted = mirrorStartedCallback;
+
+  // This code insures the generated tab mirror is not wider than 800 nor taller than 600
+  // Better dimensions should be chosen after the Roku Channel is working.
+  let windowId = win.BrowserApp.selectedBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
+  let cWidth =  Math.max(viewport.cssWidth, viewport.width);
+  let cHeight = Math.max(viewport.cssHeight, viewport.height);
+
+  const MAX_WIDTH = 800;
+  const MAX_HEIGHT = 600;
+
+  let tWidth = 0;
+  let tHeight = 0;
+
+  if ((cWidth / MAX_WIDTH) > (cHeight / MAX_HEIGHT)) {
+    tHeight = Math.ceil((MAX_WIDTH / cWidth) * cHeight);
+    tWidth = MAX_WIDTH;
+  } else {
+    tWidth = Math.ceil((MAX_HEIGHT / cHeight) * cWidth);
+    tHeight = MAX_HEIGHT;
+  }
+
+  let constraints = {
+    video: {
+      mediaSource: "browser",
+      browserWindow: windowId,
+      scrollWithPage: true,
+      advanced: [
+        {
+          width: { min: tWidth, max: tWidth },
+          height: { min: tHeight, max: tHeight }
+        },
+        { aspectRatio: cWidth / cHeight }
+      ]
+    }
+  };
+
+  this._window.navigator.mozGetUserMedia(constraints, this._onReceiveGUMStream.bind(this), function() {});
+}
+
+RemoteMirror.prototype = {
+  _sendOffer: function(offer) {
+    if (!this._baseSocket) {
+      this._baseSocket = Cc["@mozilla.org/tcp-socket;1"].createInstance(Ci.nsIDOMTCPSocket);
+    }
+    this._jsonOffer = JSON.stringify(offer);
+    this._socket = this._baseSocket.open(this._serverURI.host, MIRROR_PORT, { useSecureTransport: false, binaryType: "string" });
+    this._socket.onopen = this._onSocketOpen.bind(this);
+    this._socket.ondata = this._onSocketData.bind(this);
+    this._socket.onerror = this._onSocketError.bind(this);
+  },
+
+  _onReceiveGUMStream: function(stream) {
+    this._pc = new this._window.mozRTCPeerConnection;
+    this._pc.addStream(stream);
+    this._pc.onicecandidate = (evt => {
+      // Usually the last candidate is null, expected?
+      if (!evt.candidate) {
+        return;
+      }
+      let jsonCandidate = JSON.stringify(evt.candidate);
+      this._iceCandidates.push(jsonCandidate);
+      this._sendIceCandidates();
+    });
+
+    this._pc.createOffer(offer => {
+      this._pc.setLocalDescription(
+        new this._window.mozRTCSessionDescription(offer),
+        () => this._sendOffer(offer),
+        () => log("RemoteMirror: Failed to set local description."));
+    },
+    () => log("RemoteMirror: Failed to create offer."));
+  },
+
+  _stopMirror: function() {
+    if (this._socket) {
+      this._socket.close();
+      this._socket = null;
+    }
+    if (this._pc) {
+      this._pc.close();
+      this._pc = null;
+    }
+    this._jsonOffer = null;
+    this._iceCandidates = [];
+  },
+
+  _onSocketData: function(response) {
+    if (response.type == "data") {
+      response.data.split(JSON_MESSAGE_TERMINATOR).forEach(data => {
+        if (data) {
+          let parsedData = JSON.parse(data);
+          if (parsedData.type == "answer") {
+            this._pc.setRemoteDescription(
+              new this._window.mozRTCSessionDescription(parsedData),
+              () => this.mirrorStarted(this._stopMirror.bind(this)),
+              () => log("RemoteMirror: Failed to set remote description."));
+          } else {
+            this._pc.addIceCandidate(new this._window.mozRTCIceCandidate(parsedData))
+          }
+        } else {
+          log("RemoteMirror: data is null");
+        }
+      });
+    } else if (response.type == "error") {
+      log("RemoteMirror: Got socket error.");
+      this._stopMirror();
+    } else {
+      log("RemoteMirror: Got unhandled socket event: " + response.type);
+    }
+  },
+
+  _onSocketError: function(err) {
+    log("RemoteMirror: Error socket.onerror: " + (err.data ? err.data : "NO DATA"));
+    this._stopMirror();
+  },
+
+  _onSocketOpen: function() {
+    this._open = true;
+    if (this._jsonOffer) {
+      let jsonOffer = this._jsonOffer + JSON_MESSAGE_TERMINATOR;
+      this._socket.send(jsonOffer, jsonOffer.length);
+      this._jsonOffer = null;
+      this._sendIceCandidates();
+    }
+  },
+
+  _sendIceCandidates: function() {
+    if (this._socket && this._open) {
+      this._iceCandidates.forEach(value => {
+        value = value + JSON_MESSAGE_TERMINATOR;
+        this._socket.send(value, value.length);
+      });
+      this._iceCandidates = [];
+    }
+  }
+};
