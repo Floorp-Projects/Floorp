@@ -9,11 +9,11 @@
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu, Constructor: CC } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/DirectoryLinksProvider.jsm");
+Cu.import("resource:///modules/DirectoryLinksProvider.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Http.jsm");
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/osfile.jsm")
+Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
