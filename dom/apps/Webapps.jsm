@@ -2021,7 +2021,7 @@ this.DOMApplicationRegistry = {
         xhr.setRequestHeader("If-None-Match", app.etag);
       }
       xhr.channel.notificationCallbacks =
-        this.createLoadContext(app.installerAppId, app.installerIsBrowser);
+        AppsUtils.createLoadContext(app.installerAppId, app.installerIsBrowser);
 
       xhr.addEventListener("load", onload.bind(this, xhr, oldManifest), false);
       xhr.addEventListener("error", (function() {
@@ -2052,30 +2052,6 @@ this.DOMApplicationRegistry = {
     });
   },
 
-  // Creates a nsILoadContext object with a given appId and isBrowser flag.
-  createLoadContext: function createLoadContext(aAppId, aIsBrowser) {
-    return {
-       associatedWindow: null,
-       topWindow : null,
-       appId: aAppId,
-       isInBrowserElement: aIsBrowser,
-       usePrivateBrowsing: false,
-       isContent: false,
-
-       isAppOfType: function(appType) {
-         throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-       },
-
-       QueryInterface: XPCOMUtils.generateQI([Ci.nsILoadContext,
-                                              Ci.nsIInterfaceRequestor,
-                                              Ci.nsISupports]),
-       getInterface: function(iid) {
-         if (iid.equals(Ci.nsILoadContext))
-           return this;
-         throw Cr.NS_ERROR_NO_INTERFACE;
-       }
-     }
-  },
 
   updatePackagedApp: Task.async(function*(aData, aId, aApp, aNewManifest) {
     debug("updatePackagedApp");
@@ -2316,24 +2292,16 @@ this.DOMApplicationRegistry = {
     // in which case we don't need to load it.
     if (app.manifest) {
       if (checkManifest()) {
-        if (this.kTrustedHosted == this.appKind(app, app.manifest)) {
-          // sanity check on manifest host's CA
-          // (proper CA check with pinning is done by regular networking code)
-          if (!TrustedHostedAppsUtils.isHostPinned(app.manifestURL)) {
-            sendError("TRUSTED_APPLICATION_HOST_CERTIFICATE_INVALID");
-            return;
-          }
-
-          // Signature of the manifest should be verified here.
-          // Bug 1059216.
-
-          if (!TrustedHostedAppsUtils.verifyCSPWhiteList(app.manifest.csp)) {
-            sendError("TRUSTED_APPLICATION_WHITELIST_VALIDATION_FAILED");
-            return;
-          }
+        debug("Installed manifest check OK");
+        if (this.kTrustedHosted !== this.appKind(app, app.manifest)) {
+          installApp();
+          return;
         }
-
-        installApp();
+        TrustedHostedAppsUtils.verifyManifest(aData)
+        	.then(installApp, sendError);
+      } else {
+        debug("Installed manifest check failed");
+        // checkManifest() sends error before return
       }
       return;
     }
@@ -2342,8 +2310,8 @@ this.DOMApplicationRegistry = {
                 .createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("GET", app.manifestURL, true);
     xhr.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
-    xhr.channel.notificationCallbacks = this.createLoadContext(aData.appId,
-                                                               aData.isBrowser);
+    xhr.channel.notificationCallbacks = AppsUtils.createLoadContext(aData.appId,
+                                                                    aData.isBrowser);
     xhr.responseType = "json";
 
     xhr.addEventListener("load", (function() {
@@ -2356,21 +2324,20 @@ this.DOMApplicationRegistry = {
 
         app.manifest = xhr.response;
         if (checkManifest()) {
+          debug("Downloaded manifest check OK");
           app.etag = xhr.getResponseHeader("Etag");
-          if (this.kTrustedHosted == this.appKind(app, app.manifest)) {
-            // checking trusted host for pinning is not needed here, since
-            // network code will have already done that
-
-            // Signature of the manifest should be verified here.
-            // Bug 1059216.
-
-            if (!TrustedHostedAppsUtils.verifyCSPWhiteList(app.manifest.csp)) {
-              sendError("TRUSTED_APPLICATION_WHITELIST_VALIDATION_FAILED");
-              return;
-            }
+          if (this.kTrustedHosted !== this.appKind(app, app.manifest)) {
+            installApp();
+            return;
           }
 
-          installApp();
+          debug("App kind: " + this.kTrustedHosted);
+          TrustedHostedAppsUtils.verifyManifest(aData)
+            .then(installApp, sendError);
+          return;
+        } else {
+          debug("Downloaded manifest check failed");
+          // checkManifest() sends error before return
         }
       } else {
         sendError("MANIFEST_URL_ERROR");
@@ -2455,8 +2422,8 @@ this.DOMApplicationRegistry = {
                 .createInstance(Ci.nsIXMLHttpRequest);
     xhr.open("GET", app.manifestURL, true);
     xhr.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
-    xhr.channel.notificationCallbacks = this.createLoadContext(aData.appId,
-                                                               aData.isBrowser);
+    xhr.channel.notificationCallbacks = AppsUtils.createLoadContext(aData.appId,
+                                                                    aData.isBrowser);
     xhr.responseType = "json";
 
     xhr.addEventListener("load", (function() {
@@ -3219,52 +3186,15 @@ this.DOMApplicationRegistry = {
   _getPackage: function(aRequestChannel, aId, aOldApp, aNewApp) {
     let deferred = Promise.defer();
 
-    // Staging the zip in TmpD until all the checks are done.
-    let zipFile =
-      FileUtils.getFile("TmpD", ["webapps", aId, "application.zip"], true);
-
-    // We need an output stream to write the channel content to the zip file.
-    let outputStream = Cc["@mozilla.org/network/file-output-stream;1"]
-                         .createInstance(Ci.nsIFileOutputStream);
-    // write, create, truncate
-    outputStream.init(zipFile, 0x02 | 0x08 | 0x20, parseInt("0664", 8), 0);
-    let bufferedOutputStream =
-      Cc['@mozilla.org/network/buffered-output-stream;1']
-        .createInstance(Ci.nsIBufferedOutputStream);
-    bufferedOutputStream.init(outputStream, 1024);
-
-    // Create a listener that will give data to the file output stream.
-    let listener = Cc["@mozilla.org/network/simple-stream-listener;1"]
-                     .createInstance(Ci.nsISimpleStreamListener);
-
-    listener.init(bufferedOutputStream, {
-      onStartRequest: function(aRequest, aContext) {
-        // Nothing to do there anymore.
-      },
-
-      onStopRequest: function(aRequest, aContext, aStatusCode) {
-        bufferedOutputStream.close();
-        outputStream.close();
-
-        if (!Components.isSuccessCode(aStatusCode)) {
-          deferred.reject("NETWORK_ERROR");
-          return;
-        }
-
-        // If we get a 4XX or a 5XX http status, bail out like if we had a
-        // network error.
-        let responseStatus = aRequestChannel.responseStatus;
-        if (responseStatus >= 400 && responseStatus <= 599) {
-          // unrecoverable error, don't bug the user
-          aOldApp.downloadAvailable = false;
-          deferred.reject("NETWORK_ERROR");
-          return;
-        }
-
-        deferred.resolve(zipFile);
+    AppsUtils.getFile(aRequestChannel, aId, "application.zip").then((aFile) => {
+      deferred.resolve(aFile);
+    }, function(rejectStatus) {
+      debug("Failed to download package file: " + rejectStatus.msg);
+      if (!rejectStatus.downloadAvailable) {
+        aOldApp.downloadAvailable = false;
       }
+      deferred.reject(rejectStatus.msg);
     });
-    aRequestChannel.asyncOpen(listener, null);
 
     // send a first progress event to correctly set the DOM object's properties
     this._sendDownloadProgressEvent(aNewApp, 0);

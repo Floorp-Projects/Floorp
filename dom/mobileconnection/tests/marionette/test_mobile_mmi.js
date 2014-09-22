@@ -33,7 +33,7 @@ function testInvalidMMICode() {
       ok(true, MMI_CODE + " fail");
       is(aError.name, "emMmiError", "MMI error name");
       is(aError.message, "", "No message");
-      is(aError.serviceCode, "", "No serviceCode");
+      is(aError.serviceCode, "scUssd", "Service code USSD");
       is(aError.additionalInformation, null, "No additional information");
     });
 }

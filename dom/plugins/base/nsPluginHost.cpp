@@ -2817,11 +2817,12 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
     owner->GetDOMElement(getter_AddRefs(element));
     owner->GetDocument(getter_AddRefs(doc));
   }
+  nsCOMPtr<nsIPrincipal> principal = doc ? doc->NodePrincipal() : nullptr;
 
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
                                  url,
-                                 (doc ? doc->NodePrincipal() : nullptr),
+                                 principal,
                                  element,
                                  EmptyCString(), //mime guess
                                  nullptr,         //extra
@@ -2841,22 +2842,29 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
   if (NS_FAILED(rv))
     return rv;
 
+  if (!principal) {
+    principal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  // @arg loadgroup:
+  // do not add this internal plugin's channel on the
+  // load group otherwise this channel could be canceled
+  // form |nsDocShell::OnLinkClickSync| bug 166613
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), url, nullptr,
-    nullptr, /* do not add this internal plugin's channel
-            on the load group otherwise this channel could be canceled
-            form |nsDocShell::OnLinkClickSync| bug 166613 */
-    listenerPeer);
+  rv = NS_NewChannelInternal(getter_AddRefs(channel),
+                             url,
+                             doc,
+                             principal,
+                             nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
+                             nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
+                             nullptr,  // aChannelPolicy
+                             nullptr,  // aLoadGroup 
+                             listenerPeer);
+
   if (NS_FAILED(rv))
     return rv;
 
   if (doc) {
-    // Set the owner of channel to the document principal...
-    nsCOMPtr<nsILoadInfo> loadInfo =
-      new LoadInfo(doc->NodePrincipal(), LoadInfo::eInheritPrincipal,
-                   LoadInfo::eNotSandboxed);
-    channel->SetLoadInfo(loadInfo);
-
     // And if it's a script allow it to execute against the
     // document's script context.
     nsCOMPtr<nsIScriptChannel> scriptChannel(do_QueryInterface(channel));

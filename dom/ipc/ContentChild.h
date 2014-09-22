@@ -312,7 +312,8 @@ public:
                                       const bool& aIsMediaPresent,
                                       const bool& aIsSharing,
                                       const bool& aIsFormatting,
-                                      const bool& aIsFake) MOZ_OVERRIDE;
+                                      const bool& aIsFake,
+                                      const bool& aIsUnmounting) MOZ_OVERRIDE;
 
     virtual bool RecvNuwaFork() MOZ_OVERRIDE;
 
