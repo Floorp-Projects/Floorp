@@ -20,7 +20,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  expect = 'ReferenceError: x is not defined';
+  expect = "ReferenceError: x is not defined, did you mean 'gc'?";
   try
   {
     delete (0 ? 3 : x());
