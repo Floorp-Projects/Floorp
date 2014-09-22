@@ -172,10 +172,12 @@
            }, { focused: 'html' })]
         ]);
 
-      textTest.start(function () {
-        closeBrowserWindow();
-        SimpleTest.finish();
-      });
+      addA11yLoadEvent(function() {
+        textTest.start(function () {
+          closeBrowserWindow();
+          SimpleTest.finish();
+        });
+      }, doc.defaultView);
     }
 
     SimpleTest.waitForExplicitFinish();
