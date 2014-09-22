@@ -10,9 +10,20 @@
  * provide an object that can be qi'ed to provide more specific
  * message information.
  */
-[scriptable, uuid(c14c151b-5ea4-47ed-8e85-d392cdd3e154)]
+[scriptable, uuid(3aba9617-10e2-4839-83ae-2e6fc4df428b)]
 interface nsIConsoleMessage : nsISupports
 {
+    /** Log level constants. */
+    const uint32_t debug = 0;
+    const uint32_t info = 1;
+    const uint32_t warn = 2;
+    const uint32_t error = 3;
+
+    /**
+     * The log level of this message.
+     */
+    readonly attribute uint32_t logLevel;
+
     /**
      * The time (in milliseconds from the Epoch) that the message instance
      * was initialised.

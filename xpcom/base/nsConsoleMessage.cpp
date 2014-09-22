@@ -34,6 +34,13 @@ nsConsoleMessage::GetMessageMoz(char16_t** aResult)
 }
 
 NS_IMETHODIMP
+nsConsoleMessage::GetLogLevel(uint32_t* aLogLevel)
+{
+  *aLogLevel = nsConsoleMessage::info;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsConsoleMessage::GetTimeStamp(int64_t* aTimeStamp)
 {
   *aTimeStamp = mTimeStamp;
