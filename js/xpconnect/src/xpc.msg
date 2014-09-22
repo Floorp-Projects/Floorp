@@ -203,6 +203,9 @@ XPC_MSG_DEF(NS_ERROR_SIGNED_JAR_ENTRY_TOO_LARGE     , "An entry in the JAR is to
 XPC_MSG_DEF(NS_ERROR_SIGNED_JAR_ENTRY_INVALID       , "An entry in the JAR is invalid.")
 XPC_MSG_DEF(NS_ERROR_SIGNED_JAR_MANIFEST_INVALID    , "The JAR's manifest or signature file is invalid.")
 
+/* Codes related to signed manifests */
+XPC_MSG_DEF(NS_ERROR_SIGNED_APP_MANIFEST_INVALID   , "The signed app manifest or signature file is invalid.")
+
 /* Codes for printing-related errors. */
 XPC_MSG_DEF(NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE , "No printers available.")
 XPC_MSG_DEF(NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND       , "The selected printer could not be found.")
