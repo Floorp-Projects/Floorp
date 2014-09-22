@@ -7,7 +7,7 @@
  */
 
 function ifWebGLSupported() {
-  let [target, debuggee, front] = yield initBackend(SIMPLE_CANVAS_URL);
+  let { target, front } = yield initBackend(SIMPLE_CANVAS_URL);
 
   let navigated = once(target, "navigate");
   let linked = once(front, "program-linked");
