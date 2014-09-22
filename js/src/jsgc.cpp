@@ -4641,136 +4641,114 @@ GCRuntime::beginSweepingZoneGroup()
     }
 
     if (sweepingAtoms) {
+        gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_ATOMS);
+        rt->sweepAtoms();
+    }
+
+    {
+        gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
+        gcstats::AutoSCC scc(stats, zoneGroupIndex);
+
         {
-            gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_ATOMS);
-            rt->sweepAtoms();
-        }
-        {
-            gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_SYMBOL_REGISTRY);
-            rt->symbolRegistry().sweep();
-        }
-    }
-
-    {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
-        gcstats::AutoPhase apdc(stats, gcstats::PHASE_SWEEP_DISCARD_CODE);
-
-        for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
-            zone->discardJitCode(&fop);
-        }
-    }
-
-    {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
-        gcstats::AutoSCC scc(stats, zoneGroupIndex);
-        gcstats::MaybeAutoPhase apiv(stats, !isHeapCompacting(),
-                                     gcstats::PHASE_SWEEP_INNER_VIEWS);
-
-        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
-            c->sweepInnerViews();
-        }
-    }
-
-    {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
-        gcstats::AutoSCC scc(stats, zoneGroupIndex);
-        gcstats::MaybeAutoPhase apccw(stats, !isHeapCompacting(),
-                                      gcstats::PHASE_SWEEP_CC_WRAPPER);
-
-        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
-            c->sweepCrossCompartmentWrappers();
-        }
-    }
-
-    {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
-        gcstats::AutoSCC scc(stats, zoneGroupIndex);
-        gcstats::MaybeAutoPhase apbs(stats, !isHeapCompacting(),
-                                     gcstats::PHASE_SWEEP_BASE_SHAPE);
-
-        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
-            c->sweepBaseShapeTable();
-        }
-    }
-
-    {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
-        gcstats::AutoSCC scc(stats, zoneGroupIndex);
-        gcstats::MaybeAutoPhase apis(stats, !isHeapCompacting(),
-                                     gcstats::PHASE_SWEEP_INITIAL_SHAPE);
-
-        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
-            c->sweepInitialShapeTable();
-        }
-    }
-
-    {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
-        gcstats::AutoSCC scc(stats, zoneGroupIndex);
-        gcstats::MaybeAutoPhase apto(stats, !isHeapCompacting(),
-                                     gcstats::PHASE_SWEEP_TYPE_OBJECT);
-
-        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
-            c->sweepTypeObjectTables();
-        }
-    }
-
-    {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
-        gcstats::AutoSCC scc(stats, zoneGroupIndex);
-        gcstats::MaybeAutoPhase apre(stats, !isHeapCompacting(),
-                                     gcstats::PHASE_SWEEP_REGEXP);
-
-        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
-            c->sweepRegExps();
-        }
-    }
-
-    {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
-        gcstats::AutoSCC scc(stats, zoneGroupIndex);
-        gcstats::MaybeAutoPhase apmisc(stats, !isHeapCompacting(),
-                                       gcstats::PHASE_SWEEP_MISC);
-
-        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
-            c->sweepCallsiteClones();
-            c->sweepSavedStacks();
-            c->sweepGlobalObject(&fop);
-            c->sweepSelfHostingScriptSource();
-            c->sweepJitCompartment(&fop);
-            c->sweepDebugScopes();
-            c->sweepWeakMaps();
-            c->sweepNativeIterators();
-        }
-    }
-
-    /* Collect watch points associated with unreachable objects. */
-    WatchpointMap::sweepAll(rt);
-
-    /* Detach unreachable debuggers and global objects from each other. */
-    Debugger::sweepAll(&fop);
-
-    {
-        gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
-        gcstats::AutoSCC scc(stats, zoneGroupIndex);
-
-        for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
-            // If there is an OOM while sweeping types, the type information
-            // will be deoptimized so that it is still correct (i.e.
-            // overapproximates the possible types in the zone), but the
-            // constraints might not have been triggered on the deoptimization
-            // or even copied over completely. In this case, destroy all JIT
-            // code and new script information in the zone, the only things
-            // whose correctness depends on the type constraints.
-            bool oom = false;
-            zone->sweep(&fop, releaseObservedTypes && !zone->isPreservingCode(), &oom);
-
-            if (oom) {
-                zone->setPreservingCode(false);
-                zone->discardJitCode(&fop);
-                zone->types.clearAllNewScriptsOnOOM();
+            gcstats::MaybeAutoPhase apiv(stats, !isHeapCompacting(),
+                                         gcstats::PHASE_SWEEP_INNER_VIEWS);
+            for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
+                c->sweepInnerViews();
             }
         }
+
+        {
+            gcstats::MaybeAutoPhase apccw(stats, !isHeapCompacting(),
+                                          gcstats::PHASE_SWEEP_CC_WRAPPER);
+            for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
+                c->sweepCrossCompartmentWrappers();
+            }
+        }
+
+        {
+            gcstats::MaybeAutoPhase apbs(stats, !isHeapCompacting(),
+                                         gcstats::PHASE_SWEEP_BASE_SHAPE);
+            for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
+                c->sweepBaseShapeTable();
+            }
+        }
+
+        {
+            gcstats::MaybeAutoPhase apis(stats, !isHeapCompacting(),
+                                         gcstats::PHASE_SWEEP_INITIAL_SHAPE);
+            for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
+                c->sweepInitialShapeTable();
+            }
+        }
+
+        {
+            gcstats::MaybeAutoPhase apto(stats, !isHeapCompacting(),
+                                         gcstats::PHASE_SWEEP_TYPE_OBJECT);
+            for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
+                c->sweepTypeObjectTables();
+            }
+        }
+
+        {
+            gcstats::MaybeAutoPhase apre(stats, !isHeapCompacting(),
+                                         gcstats::PHASE_SWEEP_REGEXP);
+            for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
+                c->sweepRegExps();
+            }
+        }
+
+        {
+            gcstats::MaybeAutoPhase apmisc(stats, !isHeapCompacting(),
+                                           gcstats::PHASE_SWEEP_MISC);
+            for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
+                c->sweepCallsiteClones();
+                c->sweepSavedStacks();
+                c->sweepGlobalObject(&fop);
+                c->sweepSelfHostingScriptSource();
+                c->sweepJitCompartment(&fop);
+                c->sweepDebugScopes();
+                c->sweepWeakMaps();
+                c->sweepNativeIterators();
+            }
+
+            // Collect watch points associated with unreachable objects.
+            WatchpointMap::sweepAll(rt);
+
+            // Detach unreachable debuggers and global objects from each other.
+            Debugger::sweepAll(&fop);
+        }
+
+        {
+            gcstats::AutoPhase apdc(stats, gcstats::PHASE_SWEEP_DISCARD_CODE);
+            for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+                zone->discardJitCode(&fop);
+            }
+        }
+
+        {
+            for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+                // If there is an OOM while sweeping types, the type information
+                // will be deoptimized so that it is still correct (i.e.
+                // overapproximates the possible types in the zone), but the
+                // constraints might not have been triggered on the deoptimization
+                // or even copied over completely. In this case, destroy all JIT
+                // code and new script information in the zone, the only things
+                // whose correctness depends on the type constraints.
+                bool oom = false;
+                zone->sweep(&fop, releaseObservedTypes && !zone->isPreservingCode(), &oom);
+
+                if (oom) {
+                    zone->setPreservingCode(false);
+                    zone->discardJitCode(&fop);
+                    zone->types.clearAllNewScriptsOnOOM();
+                }
+            }
+        }
+    }
+
+    if (sweepingAtoms) {
+        gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_SYMBOL_REGISTRY);
+        rt->symbolRegistry().sweep();
     }
 
     /*
