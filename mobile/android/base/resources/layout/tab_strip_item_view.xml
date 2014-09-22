@@ -5,6 +5,14 @@
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
 
+   <ImageView
+        android:id="@+id/favicon"
+        android:layout_width="@dimen/tab_strip_favicon_size"
+        android:layout_height="match_parent"
+        android:layout_marginRight="9dp"
+        android:scaleType="centerInside"
+        android:duplicateParentState="true"/>
+
     <org.mozilla.gecko.widget.ThemedTextView
         android:id="@+id/title"
         android:layout_width="0dip"
