@@ -248,9 +248,6 @@ nsGtkIMModule::OnDestroyWindow(nsWindow* aWindow)
 void
 nsGtkIMModule::PrepareToDestroyContext(GtkIMContext *aContext)
 {
-    MozContainer* container = mOwnerWindow->GetMozContainer();
-    NS_PRECONDITION(container, "The container of the window is null");
-
 #if (MOZ_WIDGET_GTK == 2)
     GtkIMMulticontext *multicontext = GTK_IM_MULTICONTEXT(aContext);
     GtkIMContext *slave = multicontext->slave;
@@ -263,36 +260,7 @@ nsGtkIMModule::PrepareToDestroyContext(GtkIMContext *aContext)
 
     GType slaveType = G_TYPE_FROM_INSTANCE(slave);
     const gchar *im_type_name = g_type_name(slaveType);
-    if (strcmp(im_type_name, "GtkIMContextXIM") == 0) {
-        if (gtk_check_version(2, 12, 1) == nullptr) {
-            return; // gtk bug has been fixed
-        }
-
-        struct GtkIMContextXIM
-        {
-            GtkIMContext parent;
-            gpointer private_data;
-            // ... other fields
-        };
-
-        gpointer signal_data =
-            reinterpret_cast<GtkIMContextXIM*>(slave)->private_data;
-        if (!signal_data) {
-            return;
-        }
-
-        g_signal_handlers_disconnect_matched(
-            gtk_widget_get_display(GTK_WIDGET(container)),
-            G_SIGNAL_MATCH_DATA, 0, 0, nullptr, nullptr, signal_data);
-
-        // Add a reference to prevent the XIM module from being unloaded
-        // and reloaded: each time the module is loaded and used, it
-        // opens (and doesn't close) new XOpenIM connections.
-        static gpointer gtk_xim_context_class =
-            g_type_class_ref(slaveType);
-        // Mute unused variable warning:
-        (void)gtk_xim_context_class;
-    } else if (strcmp(im_type_name, "GtkIMContextIIIM") == 0) {
+    if (strcmp(im_type_name, "GtkIMContextIIIM") == 0) {
         // Add a reference to prevent the IIIM module from being unloaded
         static gpointer gtk_iiim_context_class =
             g_type_class_ref(slaveType);
