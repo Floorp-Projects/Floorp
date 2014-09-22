@@ -31,6 +31,9 @@ const char* kObservedPrefs[] = {
 // TODO: Bug 767082 - WebSMS: sSmsChild leaks at shutdown
 PSmsChild* gSmsChild;
 
+// SmsIPCService is owned by nsLayoutModule.
+SmsIPCService* sSingleton = nullptr;
+
 PSmsChild*
 GetSmsChild()
 {
@@ -101,11 +104,29 @@ NS_IMPL_ISUPPORTS(SmsIPCService,
                   nsIMobileMessageDatabaseService,
                   nsIObserver)
 
+/* static */ already_AddRefed<SmsIPCService>
+SmsIPCService::GetSingleton()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!sSingleton) {
+    sSingleton = new SmsIPCService();
+  }
+
+  nsRefPtr<SmsIPCService> service = sSingleton;
+  return service.forget();
+}
+
 SmsIPCService::SmsIPCService()
 {
   Preferences::AddStrongObservers(this, kObservedPrefs);
   mMmsDefaultServiceId = getDefaultServiceId(kPrefMmsDefaultServiceId);
   mSmsDefaultServiceId = getDefaultServiceId(kPrefSmsDefaultServiceId);
+}
+
+SmsIPCService::~SmsIPCService()
+{
+  sSingleton = nullptr;
 }
 
 /*

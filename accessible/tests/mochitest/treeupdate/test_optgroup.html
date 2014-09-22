@@ -51,7 +51,7 @@
                 { COMBOBOX_OPTION: [
                   { TEXT_LEAF: [] }
                 ] },
-              { COMBOBOX_OPTION: [
+                { COMBOBOX_OPTION: [
                   { TEXT_LEAF: [] }
                 ] },
               ]},
@@ -71,6 +71,7 @@
     {
       this.selectNode = getNode(aID);
       this.select = getAccessible(this.selectNode);
+      this.selectList = this.select.firstChild;
 
       this.invoke = function removeOptGroup_invoke()
       {
@@ -79,7 +80,7 @@
       }
 
       this.eventSeq = [
-        new invokerChecker(EVENT_REORDER, this.select)
+        new invokerChecker(EVENT_REORDER, this.selectList)
       ];
 
       this.finalCheck = function removeOptGroup_finalCheck()

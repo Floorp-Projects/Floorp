@@ -22,7 +22,6 @@
  * limitations under the License.
  */
 
-#include "nssgtest.h"
 #include "pkix/pkix.h"
 #include "pkixgtest.h"
 #include "pkixtestutil.h"
@@ -97,27 +96,19 @@ char const* const rootName = "Test CA 1";
 void deleteCertID(CertID* certID) { delete certID; }
 } // unnamed namespace
 
-class pkixocsp_VerifyEncodedResponse : public NSSTest
+class pkixocsp_VerifyEncodedResponse : public ::testing::Test
 {
 public:
-  static bool SetUpTestCaseInner()
-  {
-    rootKeyPair = GenerateKeyPair();
-    return rootKeyPair.get() != nullptr;
-  }
-
   static void SetUpTestCase()
   {
-    NSSTest::SetUpTestCase();
-    if (!SetUpTestCaseInner()) {
+    rootKeyPair = GenerateKeyPair();
+    if (!rootKeyPair) {
       abort();
     }
   }
 
   void SetUp()
   {
-    NSSTest::SetUp();
-
     rootNameDER = CNToDERName(rootName);
     if (rootNameDER == ENCODING_FAILED) {
       abort();

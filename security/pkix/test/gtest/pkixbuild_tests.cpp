@@ -23,7 +23,7 @@
  */
 
 #include "cert.h"
-#include "nssgtest.h"
+#include "nss.h"
 #include "pkix/pkix.h"
 #include "pkix/pkixnss.h"
 #include "pkixgtest.h"
@@ -201,20 +201,24 @@ public:
   }
 };
 
-class pkixbuild : public NSSTest
+class pkixbuild : public ::testing::Test
 {
 public:
   static void SetUpTestCase()
   {
-    NSSTest::SetUpTestCase();
-    // Initialize the tail of the cert chains we'll be using once, to make the
-    // tests run faster (generating the keys is slow).
+    // XXX(Bug 1070444): We have to initialize NSS explicitly for these tests,
+    // unlike other tests, because we're using NSS directly.
+    if (NSS_NoDB_Init(nullptr) != SECSuccess) {
+      abort();
+    }
+
     if (!trustDomain.SetUpCertChainTail()) {
       abort();
     }
   }
 
 protected:
+
   static TestTrustDomain trustDomain;
 };
 
