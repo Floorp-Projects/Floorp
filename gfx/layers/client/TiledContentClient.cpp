@@ -1108,14 +1108,6 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
   }
   aTile.SetCompositableClient(mCompositableClient);
 
-  // Discard our front and backbuffers if our contents changed. In this case
-  // the calling code will already have taken care of invalidating the entire
-  // layer.
-  if (HasFormatChanged()) {
-    aTile.DiscardBackBuffer();
-    aTile.DiscardFrontBuffer();
-  }
-
   bool createdTextureClient = false;
   nsIntRegion offsetScaledDirtyRegion = aDirtyRegion.MovedBy(-aTileOrigin);
   offsetScaledDirtyRegion.ScaleRoundOut(mResolution, mResolution);
