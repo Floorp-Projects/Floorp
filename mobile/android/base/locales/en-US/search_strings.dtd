@@ -3,7 +3,10 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!ENTITY search_app_name '&brandShortName; Search'>
-<!ENTITY search_for_something 'Search for something'>
+
+<!--  Localization note (search_bar_hint): The &formatS; will be replaced with the name of
+      the currently selected search engine. -->
+<!ENTITY search_bar_hint 'Search with &formatS;'>
 
 <!ENTITY search_empty_title '&brandShortName; Search'>
 <!ENTITY search_empty_message 'Quickly search for anything you want'>

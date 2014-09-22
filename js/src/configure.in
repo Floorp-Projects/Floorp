@@ -1736,6 +1736,7 @@ ia64*-hpux*)
         LDFLAGS="$LDFLAGS -DYNAMICBASE"
     fi
     AC_DEFINE(HAVE_SNPRINTF)
+    AC_DEFINE(HAVE__MSIZE)
     AC_DEFINE(_WINDOWS)
     AC_DEFINE(WIN32)
     AC_DEFINE(XP_WIN)
@@ -3912,8 +3913,8 @@ dnl ========================================================
 dnl JavaScript shell
 dnl ========================================================
 
-AC_HAVE_FUNCS(setlocale)
-AC_HAVE_FUNCS(localeconv)
+AC_CHECK_HEADERS(malloc.h malloc/malloc.h)
+AC_CHECK_FUNCS(setlocale localeconv malloc_size malloc_usable_size)
 
 AC_SUBST(MOZILLA_VERSION)
 

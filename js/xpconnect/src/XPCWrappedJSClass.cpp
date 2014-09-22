@@ -489,7 +489,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
     // QI on an XPCWrappedJS can run script, so we need an AutoEntryScript.
     // This is inherently Gecko-specific.
     nsIGlobalObject* nativeGlobal =
-      GetNativeForGlobal(js::GetGlobalForObjectCrossCompartment(self->GetJSObject()));
+      NativeGlobal(js::GetGlobalForObjectCrossCompartment(self->GetJSObject()));
     AutoEntryScript aes(nativeGlobal, /* aIsMainThread = */ true);
     XPCCallContext ccx(NATIVE_CALLER, aes.cx());
     if (!ccx.IsValid()) {
@@ -890,7 +890,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     // AutoEntryScript. This is probably Gecko-specific at this point, and
     // definitely will be when we turn off XPConnect for the web.
     nsIGlobalObject* nativeGlobal =
-      GetNativeForGlobal(js::GetGlobalForObjectCrossCompartment(wrapper->GetJSObject()));
+      NativeGlobal(js::GetGlobalForObjectCrossCompartment(wrapper->GetJSObject()));
     AutoEntryScript aes(nativeGlobal, /* aIsMainThread = */ true);
     XPCCallContext ccx(NATIVE_CALLER, aes.cx());
     if (!ccx.IsValid())

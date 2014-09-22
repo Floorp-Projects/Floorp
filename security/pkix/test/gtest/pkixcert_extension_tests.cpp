@@ -22,8 +22,8 @@
  * limitations under the License.
  */
 
-#include "nssgtest.h"
 #include "pkix/pkix.h"
+#include "pkixgtest.h"
 #include "pkixtestutil.h"
 
 using namespace mozilla::pkix;
@@ -110,14 +110,8 @@ private:
   }
 };
 
-class pkixcert_extension: public NSSTest
+class pkixcert_extension : public ::testing::Test
 {
-public:
-  static void SetUpTestCase()
-  {
-    NSSTest::SetUpTestCase();
-  }
-
 protected:
   static TrustEverythingTrustDomain trustDomain;
 };

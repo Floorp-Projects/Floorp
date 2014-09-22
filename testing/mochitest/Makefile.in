@@ -92,6 +92,20 @@ DIST_BIN = $(DIST)/bin
 $(_DEST_DIR):
 	$(NSINSTALL) -D $@
 
+# On Android only, include a release signed Robocop APK in the test package.
+ifeq ($(MOZ_BUILD_APP),mobile/android)
+JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
+include $(topsrcdir)/config/android-common.mk
+
+stage-package-android:
+	$(NSINSTALL) -D $(_DEST_DIR)
+	$(call RELEASE_SIGN_ANDROID_APK,\
+		$(DEPTH)/build/mobile/robocop/robocop-debug-unsigned-unaligned.apk,\
+		$(_DEST_DIR)/robocop.apk)
+
+stage-package: stage-package-android
+endif
+
 stage-package:
 	$(NSINSTALL) -D $(PKG_STAGE)/mochitest && $(NSINSTALL) -D $(PKG_STAGE)/bin/plugins && $(NSINSTALL) -D $(DIST)/plugins && $(NSINSTALL) -D $(PKG_STAGE)/bin/plugins/gmp-fake/1.0
 	cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/mochitest

@@ -71,7 +71,7 @@
         <item name="android:layout_gravity">center</item>
     </style>
 
-    <style name="Widget.Home.HistoryListView">
+    <style name="Widget.Home.HomeList">
         <item name="topDivider">true</item>
         <item name="android:scrollbarStyle">outsideOverlay</item>
     </style>

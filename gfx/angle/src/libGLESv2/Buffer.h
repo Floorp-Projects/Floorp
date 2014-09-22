@@ -18,9 +18,7 @@
 namespace rx
 {
 class Renderer;
-class BufferStorage;
-class StaticIndexBufferInterface;
-class StaticVertexBufferInterface;
+class BufferImpl;
 };
 
 namespace gl
@@ -29,7 +27,7 @@ namespace gl
 class Buffer : public RefCountObject
 {
   public:
-    Buffer(rx::Renderer *renderer, GLuint id);
+    Buffer(rx::BufferImpl *impl, GLuint id);
 
     virtual ~Buffer();
 
@@ -39,43 +37,35 @@ class Buffer : public RefCountObject
     GLvoid *mapRange(GLintptr offset, GLsizeiptr length, GLbitfield access);
     void unmap();
 
-    GLenum usage() const;
-    GLint accessFlags() const;
-    GLboolean mapped() const;
-    GLvoid *mapPointer() const;
-    GLint64 mapOffset() const;
-    GLint64 mapLength() const;
+    GLenum  getUsage() const { return mUsage; }
+    GLint getAccessFlags() const {  return mAccessFlags; }
+    GLboolean isMapped() const { return mMapped; }
+    GLvoid *getMapPointer() const { return mMapPointer; }
+    GLint64 getMapOffset() const { return mMapOffset; }
+    GLint64 getMapLength() const { return mMapLength; }
+    GLint64 getSize() const { return mSize; }
 
-    rx::BufferStorage *getStorage() const;
-    GLint64 size() const;
+    rx::BufferImpl *getImplementation() const { return mBuffer; }
 
     void markTransformFeedbackUsage();
 
-    rx::StaticVertexBufferInterface *getStaticVertexBuffer();
-    rx::StaticIndexBufferInterface *getStaticIndexBuffer();
-    void invalidateStaticData();
-    void promoteStaticUsage(int dataSize);
-
-    rx::IndexRangeCache *getIndexRangeCache();
+    rx::IndexRangeCache *getIndexRangeCache() { return &mIndexRangeCache; }
+    const rx::IndexRangeCache *getIndexRangeCache() const { return &mIndexRangeCache; }
 
   private:
     DISALLOW_COPY_AND_ASSIGN(Buffer);
 
-    rx::Renderer *mRenderer;
+    rx::BufferImpl *mBuffer;
+
     GLenum mUsage;
+    GLint64 mSize;
     GLint mAccessFlags;
     GLboolean mMapped;
     GLvoid *mMapPointer;
     GLint64 mMapOffset;
     GLint64 mMapLength;
 
-    rx::BufferStorage *mBufferStorage;
-
     rx::IndexRangeCache mIndexRangeCache;
-
-    rx::StaticVertexBufferInterface *mStaticVertexBuffer;
-    rx::StaticIndexBufferInterface *mStaticIndexBuffer;
-    unsigned int mUnmodifiedDataUse;
 };
 
 }

@@ -62,7 +62,7 @@
         <item name="android:listSelector">@drawable/action_bar_button</item>
     </style>
 
-    <style name="Widget.Home.HistoryListView">
+    <style name="Widget.Home.HomeList">
         <item name="android:paddingTop">0dip</item>
         <item name="android:paddingRight">0dip</item>
         <item name="android:paddingLeft">0dip</item>

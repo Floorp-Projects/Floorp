@@ -420,6 +420,12 @@ struct GLContextSymbols
     typedef realGLboolean (GLAPIENTRY * PFNGLUNMAPBUFFER) (GLenum target);
     PFNGLUNMAPBUFFER fUnmapBuffer;
 
+    // ARB_copy_buffer / OpenGL 3.1 / OpenGL ES 3.0
+    typedef void (GLAPIENTRY * PFNGLCOPYBUFFERSUBDATAPROC) (GLenum readTarget, GLenum writeTarget,
+                                                            GLintptr readOffset, GLintptr writeOffset,
+                                                            GLsizeiptr size);
+    PFNGLCOPYBUFFERSUBDATAPROC fCopyBufferSubData;
+
     typedef GLenum (GLAPIENTRY * PFNGLGETGRAPHICSRESETSTATUS) (void);
     PFNGLGETGRAPHICSRESETSTATUS fGetGraphicsResetStatus;
 

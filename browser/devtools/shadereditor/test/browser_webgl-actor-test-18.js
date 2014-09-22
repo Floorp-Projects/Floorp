@@ -6,7 +6,7 @@
  */
 
 function ifWebGLSupported() {
-  let [target, debuggee, front] = yield initBackend(MULTIPLE_CONTEXTS_URL);
+  let { target, front } = yield initBackend(MULTIPLE_CONTEXTS_URL);
   front.setup({ reload: true });
 
   yield getPrograms(front, 2);
