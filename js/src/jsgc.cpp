@@ -3559,6 +3559,8 @@ GCRuntime::shouldPreserveJITCode(JSCompartment *comp, int64_t currentTime,
 
     if (alwaysPreserveCode)
         return true;
+    if (comp->preserveJitCode())
+        return true;
     if (comp->lastAnimationTime + PRMJ_USEC_PER_SEC >= currentTime)
         return true;
     if (reason == JS::gcreason::DEBUG_GC)

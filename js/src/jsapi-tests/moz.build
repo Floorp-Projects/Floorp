@@ -57,6 +57,7 @@ UNIFIED_SOURCES += [
     'testOriginPrincipals.cpp',
     'testParseJSON.cpp',
     'testPersistentRooted.cpp',
+    'testPreserveJitCode.cpp',
     'testProfileStrings.cpp',
     'testPropCache.cpp',
     'testRegExp.cpp',
