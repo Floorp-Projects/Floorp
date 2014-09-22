@@ -909,14 +909,16 @@ AutoMounter::UpdateState()
             break;
           }
 
-          // Mark the volume as if we've started sharing. This will cause
-          // apps which watch device storage notifications to see the volume
-          // go into the shared state, and prompt them to close any open files
-          // that they might have.
+          // Mark the volume as if we've started sharing/formatting/unmmounting.
+          // This will cause apps which watch device storage notifications to see
+          // the volume go into the different state, and prompt them to close any
+          // open files that they might have.
           if (tryToShare && vol->IsSharingEnabled()) {
             vol->SetIsSharing(true);
           } else if (vol->IsFormatRequested()){
             vol->SetIsFormatting(true);
+          } else if (vol->IsUnmountRequested()){
+            vol->SetIsUnmounting(true);
           }
 
           // Check to see if there are any open files on the volume and

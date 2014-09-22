@@ -54,6 +54,16 @@ const AUDIO_STATE_NAME = [
 
 const DEFAULT_EMERGENCY_NUMBERS = ["112", "911"];
 
+// MMI match groups
+const MMI_MATCH_GROUP_FULL_MMI = 1;
+const MMI_MATCH_GROUP_PROCEDURE = 2;
+const MMI_MATCH_GROUP_SERVICE_CODE = 3;
+const MMI_MATCH_GROUP_SIA = 4;
+const MMI_MATCH_GROUP_SIB = 5;
+const MMI_MATCH_GROUP_SIC = 6;
+const MMI_MATCH_GROUP_PWD_CONFIRM = 7;
+const MMI_MATCH_GROUP_DIALING_NUMBER = 8;
+
 let DEBUG;
 function debug(s) {
   dump("TelephonyService: " + s + "\n");
@@ -99,15 +109,52 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSystemMessenger",
                                    "@mozilla.org/system-message-internal;1",
                                    "nsISystemMessagesInternal");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gGonkMobileConnectionService",
+                                   "@mozilla.org/mobileconnection/mobileconnectionservice;1",
+                                   "nsIGonkMobileConnectionService");
+
 XPCOMUtils.defineLazyGetter(this, "gPhoneNumberUtils", function() {
   let ns = {};
   Cu.import("resource://gre/modules/PhoneNumberUtils.jsm", ns);
   return ns.PhoneNumberUtils;
 });
 
+function MMIResult(aMmiServiceCode, aOptions) {
+  this.serviceCode = aMmiServiceCode;
+  this.statusMessage = aOptions.statusMessage;
+  this.additionalInformation = aOptions.additionalInformation;
+}
+MMIResult.prototype = {
+  __exposedProps__ : {serviceCode: 'r',
+                      statusMessage: 'r',
+                      additionalInformation: 'r'},
+};
+
+function CallForwardingOptions(aOptions) {
+  this.active = aOptions.active;
+  this.action = aOptions.action;
+  this.reason = aOptions.reason;
+  this.number = aOptions.number;
+  this.timeSeconds = aOptions.timeSeconds;
+  this.serviceClass = aOptions.serviceClass;
+}
+CallForwardingOptions.prototype = {
+  __exposedProps__ : {active: 'r',
+                      action: 'r',
+                      reason: 'r',
+                      number: 'r',
+                      timeSeconds: 'r',
+                      serviceClass: 'r'},
+};
+
 function TelephonyService() {
   this._numClients = gRadioInterfaceLayer.numRadioInterfaces;
   this._listeners = [];
+
+  this._mmiRegExp = null;
+
+  this._isDialing = false;
+  this._cachedDialRequest = null;
   this._currentCalls = {};
 
   this._cdmaCallWaitingNumber = null;
@@ -300,6 +347,10 @@ TelephonyService.prototype = {
     }
   },
 
+  _rulesToCallForwardingOptions: function(aRules) {
+    return aRules.map(rule => new CallForwardingOptions(rule));
+  },
+
   _updateDebugFlag: function() {
     try {
       DEBUG = RIL.DEBUG_RIL ||
@@ -430,12 +481,13 @@ TelephonyService.prototype = {
     aListener.enumerateCallStateComplete();
   },
 
+  _hasCalls: function(aClientId) {
+    return Object.keys(this._currentCalls[aClientId]).length !== 0;
+  },
+
   _hasCallsOnOtherClient: function(aClientId) {
     for (let cid = 0; cid < this._numClients; ++cid) {
-      if (cid === aClientId) {
-        continue;
-      }
-      if (Object.keys(this._currentCalls[cid]).length !== 0) {
+      if (cid !== aClientId && this._hasCalls(cid)) {
         return true;
       }
     }
@@ -499,36 +551,51 @@ TelephonyService.prototype = {
     this.notifyCallStateChanged(aClientId, parentCall);
   },
 
-  _composeDialRequest: function(aClientId, aNumber) {
-    return new Promise((resolve, reject) => {
-      this._sendToRilWorker(aClientId, "parseMMIFromDialNumber",
-                            {number: aNumber}, response => {
-        let options = {};
-        let mmi = response.mmi;
-
-        if (!mmi) {
-          resolve({
-            number: aNumber
-          });
-        } else if (this._isTemporaryCLIR(mmi)) {
-          resolve({
-            number: mmi.dialNumber,
-            clirMode: this._getTemporaryCLIRMode(mmi.procedure)
-          });
-        } else {
-          reject(DIAL_ERROR_BAD_NUMBER);
-        }
-      });
-    });
-  },
-
-  cachedDialRequest: null,
-  isDialing: false,
-
   dial: function(aClientId, aNumber, aIsDialEmergency, aCallback) {
     if (DEBUG) debug("Dialing " + (aIsDialEmergency ? "emergency " : "") + aNumber);
 
-    if (this.isDialing) {
+    // We don't try to be too clever here, as the phone is probably in the
+    // locked state. Let's just check if it's a number without normalizing
+    if (!aIsDialEmergency) {
+      aNumber = gPhoneNumberUtils.normalize(aNumber);
+    }
+
+    // Validate the number.
+    // Note: isPlainPhoneNumber also accepts USSD and SS numbers
+    if (!gPhoneNumberUtils.isPlainPhoneNumber(aNumber)) {
+      if (DEBUG) debug("Error: Number '" + aNumber + "' is not viable. Drop.");
+      aCallback.notifyDialError(DIAL_ERROR_BAD_NUMBER);
+      return;
+    }
+
+    let mmi = this._parseMMI(aNumber, this._hasCalls(aClientId));
+    if (!mmi) {
+      this._dialCall(aClientId,
+                     { number: aNumber,
+                       isDialEmergency: aIsDialEmergency }, aCallback);
+    } else if (this._isTemporaryCLIR(mmi)) {
+      this._dialCall(aClientId,
+                     { number: mmi.dialNumber,
+                       clirMode: this._getTemporaryCLIRMode(mmi.procedure),
+                       isDialEmergency: aIsDialEmergency }, aCallback);
+    } else {
+      // Reject MMI code from dialEmergency api.
+      if (aIsDialEmergency) {
+        aCallback.notifyDialError(DIAL_ERROR_BAD_NUMBER);
+        return;
+      }
+
+      this._dialMMI(aClientId, mmi, aCallback);
+    }
+  },
+
+  /**
+   * @param aOptions.number
+   * @param aOptions.clirMode (optional)
+   * @param aOptions.isDialEmergency
+   */
+  _dialCall: function(aClientId, aOptions, aCallback) {
+    if (this._isDialing) {
       if (DEBUG) debug("Error: Already has a dialing call.");
       aCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
       return;
@@ -549,63 +616,43 @@ TelephonyService.prototype = {
       return;
     }
 
-    // We don't try to be too clever here, as the phone is probably in the
-    // locked state. Let's just check if it's a number without normalizing
-    if (!aIsDialEmergency) {
-      aNumber = gPhoneNumberUtils.normalize(aNumber);
-    }
-
-    // Validate the number.
-    // Note: isPlainPhoneNumber also accepts USSD and SS numbers
-    if (!gPhoneNumberUtils.isPlainPhoneNumber(aNumber)) {
-      if (DEBUG) debug("Error: Number '" + aNumber + "' is not viable. Drop.");
-      aCallback.notifyDialError(DIAL_ERROR_BAD_NUMBER);
-      return;
-    }
-
-    this._composeDialRequest(aClientId, aNumber).then(options => {
-      options.isEmergency = this._isEmergencyNumber(options.number);
-      options.isDialEmergency = aIsDialEmergency;
-
-      if (options.isEmergency) {
-        // Automatically select a proper clientId for emergency call.
-        aClientId = gRadioInterfaceLayer.getClientIdForEmergencyCall() ;
-        if (aClientId === -1) {
-          if (DEBUG) debug("Error: No client is avaialble for emergency call.");
-          aCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
-          return;
-        }
+    aOptions.isEmergency = this._isEmergencyNumber(aOptions.number);
+    if (aOptions.isEmergency) {
+      // Automatically select a proper clientId for emergency call.
+      aClientId = gRadioInterfaceLayer.getClientIdForEmergencyCall() ;
+      if (aClientId === -1) {
+        if (DEBUG) debug("Error: No client is avaialble for emergency call.");
+        aCallback.notifyDialError(DIAL_ERROR_INVALID_STATE_ERROR);
+        return;
       }
+    }
 
-      // Before we dial, we have to hold the active call first.
-      let activeCall = this._getOneActiveCall(aClientId);
-      if (!activeCall) {
-        this._dialInternal(aClientId, options, aCallback);
+    // Before we dial, we have to hold the active call first.
+    let activeCall = this._getOneActiveCall(aClientId);
+    if (!activeCall) {
+      this._sendDialCallRequest(aClientId, aOptions, aCallback);
+    } else {
+      if (DEBUG) debug("There is an active call. Hold it first before dial.");
+
+      this._cachedDialRequest = {
+        clientId: aClientId,
+        options: aOptions,
+        callback: aCallback
+      };
+
+      if (activeCall.isConference) {
+        this.holdConference(aClientId);
       } else {
-        if (DEBUG) debug("There is an active call. Hold it first before dial.");
-
-        this.cachedDialRequest = {
-          clientId: aClientId,
-          options: options,
-          callback: aCallback
-        };
-
-        if (activeCall.isConference) {
-          this.holdConference(aClientId);
-        } else {
-          this.holdCall(aClientId, activeCall.callIndex);
-        }
+        this.holdCall(aClientId, activeCall.callIndex);
       }
-    }, cause => {
-      aCallback.notifyDialError(DIAL_ERROR_BAD_NUMBER);
-    });
+    }
   },
 
-  _dialInternal: function(aClientId, aOptions, aCallback) {
-    this.isDialing = true;
+  _sendDialCallRequest: function(aClientId, aOptions, aCallback) {
+    this._isDialing = true;
 
     this._sendToRilWorker(aClientId, "dial", aOptions, response => {
-      this.isDialing = false;
+      this._isDialing = false;
 
       if (!response.success) {
         aCallback.notifyDialError(response.errorMsg);
@@ -616,13 +663,245 @@ TelephonyService.prototype = {
         Object.keys(this._currentCalls[aClientId])[0];
 
       if (currentCdmaCallIndex == null) {
-        aCallback.notifyDialSuccess(response.callIndex, response.number);
+        aCallback.notifyDialCallSuccess(response.callIndex, response.number);
       } else {
         // RIL doesn't hold the 2nd call. We create one by ourselves.
-        aCallback.notifyDialSuccess(CDMA_SECOND_CALL_INDEX, response.number);
+        aCallback.notifyDialCallSuccess(CDMA_SECOND_CALL_INDEX, response.number);
         this._addCdmaChildCall(aClientId, response.number, currentCdmaCallIndex);
       }
     });
+  },
+
+  /**
+   * @param aMmi
+   *        Parsed MMI structure.
+   */
+  _dialMMI: function(aClientId, aMmi, aCallback) {
+    let mmiServiceCode = aMmi ?
+      this._serviceCodeToKeyString(aMmi.serviceCode) : RIL.MMI_KS_SC_USSD;
+
+    aCallback.notifyDialMMI(mmiServiceCode);
+
+    this._sendToRilWorker(aClientId, "sendMMI", { mmi: aMmi }, response => {
+      if (DEBUG) debug("MMI response: " + JSON.stringify(response));
+
+      if (!response.success) {
+        if (response.additionalInformation != null) {
+          aCallback.notifyDialMMIErrorWithInfo(response.errorMsg,
+                                               response.additionalInformation);
+        } else {
+          aCallback.notifyDialMMIError(response.errorMsg);
+        }
+        return;
+      }
+
+      // We expect to have an IMEI at this point if the request was supposed
+      // to query for the IMEI, so getting a successful reply from the RIL
+      // without containing an actual IMEI number is considered an error.
+      if (mmiServiceCode === RIL.MMI_KS_SC_IMEI &&
+          !response.statusMessage) {
+        aCallback.notifyDialMMIError(RIL.GECKO_ERROR_GENERIC_FAILURE);
+        return;
+      }
+
+      // MMI query call forwarding options request returns a set of rules that
+      // will be exposed in the form of an array of MozCallForwardingOptions
+      // instances.
+      if (mmiServiceCode === RIL.MMI_KS_SC_CALL_FORWARDING) {
+        if (response.isSetCallForward) {
+          gGonkMobileConnectionService.notifyCFStateChanged(aClientId,
+                                                            response.action,
+                                                            response.reason,
+                                                            response.number,
+                                                            response.timeSeconds,
+                                                            response.serviceClass);
+        }
+
+        if (response.additionalInformation != null) {
+          response.additionalInformation =
+            this._rulesToCallForwardingOptions(response.additionalInformation);
+        }
+      }
+
+      let result = new MMIResult(mmiServiceCode, response);
+      aCallback.notifyDialMMISuccess(result);
+    });
+  },
+
+  /**
+   * Build the regex to parse MMI string. TS.22.030
+   *
+   * The resulting groups after matching will be:
+   *    1 = full MMI string that might be used as a USSD request.
+   *    2 = MMI procedure.
+   *    3 = Service code.
+   *    4 = SIA.
+   *    5 = SIB.
+   *    6 = SIC.
+   *    7 = Password registration.
+   *    8 = Dialing number.
+   */
+  _buildMMIRegExp: function() {
+    // The general structure of the codes is as follows:
+    //    - Activation (*SC*SI#).
+    //    - Deactivation (#SC*SI#).
+    //    - Interrogation (*#SC*SI#).
+    //    - Registration (**SC*SI#).
+    //    - Erasure (##SC*SI#).
+    //
+    // where SC = Service Code (2 or 3 digits) and SI = Supplementary Info
+    // (variable length).
+
+    // Procedure, which could be *, #, *#, **, ##
+    let procedure = "(\\*[*#]?|##?)";
+
+    // Service code, which is a 2 or 3 digits that uniquely specifies the
+    // Supplementary Service associated with the MMI code.
+    let serviceCode = "(\\d{2,3})";
+
+    // Supplementary Information SIA, SIB and SIC. SIA may comprise e.g. a PIN
+    // code or Directory Number, SIB may be used to specify the tele or bearer
+    // service and SIC to specify the value of the "No Reply Condition  Timer".
+    // Where a particular service request does not require any SI,  "*SI" is
+    // not entered. The use of SIA, SIB and SIC is optional and shall be
+    // entered in any of the following formats:
+    //    - *SIA*SIB*SIC#
+    //    - *SIA*SIB#
+    //    - *SIA**SIC#
+    //    - *SIA#
+    //    - **SIB*SIC#
+    //    - ***SIC#
+    //
+    // Also catch the additional NEW_PASSWORD for the case of a password
+    // registration procedure. Ex:
+    //    - *  03 * ZZ * OLD_PASSWORD * NEW_PASSWORD * NEW_PASSWORD #
+    //    - ** 03 * ZZ * OLD_PASSWORD * NEW_PASSWORD * NEW_PASSWORD #
+    //    - *  03 **     OLD_PASSWORD * NEW_PASSWORD * NEW_PASSWORD #
+    //    - ** 03 **     OLD_PASSWORD * NEW_PASSWORD * NEW_PASSWORD #
+    let si = "\\*([^*#]*)";
+    let allSi = "";
+    for (let i = 0; i < 4; ++i) {
+      allSi = "(?:" + si + allSi + ")?";
+    }
+
+    let fullmmi = "(" + procedure + serviceCode + allSi + "#)";
+
+    // Dial string after the #.
+    let dialString = "([^#]*)";
+
+    return new RegExp(fullmmi + dialString);
+  },
+
+  /**
+   * Provide the regex to parse MMI string.
+   */
+  _getMMIRegExp: function() {
+    if (!this._mmiRegExp) {
+      this._mmiRegExp = this._buildMMIRegExp();
+    }
+
+    return this._mmiRegExp;
+  },
+
+  /**
+   * Helper to parse # string. TS.22.030 Figure 3.5.3.2.
+   */
+  _isPoundString: function(aMmiString) {
+    return (aMmiString.charAt(aMmiString.length - 1) === "#");
+  },
+
+  /**
+   * Helper to parse short string. TS.22.030 Figure 3.5.3.2.
+   */
+  _isShortString: function(aMmiString, hasCalls) {
+    if (aMmiString.length > 2) {
+      return false;
+    }
+
+    if (hasCalls) {
+      return true;
+    }
+
+    // Input string is
+    //   - emergency number or
+    //   - 2 digits starting with a "1"
+    if (this._isEmergencyNumber(aMmiString) ||
+        (aMmiString.length == 2) && (aMmiString.charAt(0) === '1')) {
+      return false;
+    }
+
+    return true;
+  },
+
+  /**
+   * Helper to parse MMI/USSD string. TS.22.030 Figure 3.5.3.2.
+   */
+  _parseMMI: function(aMmiString, hasCalls) {
+    if (!aMmiString) {
+      return null;
+    }
+
+    let matches = this._getMMIRegExp().exec(aMmiString);
+    if (matches) {
+      return {
+        fullMMI: matches[MMI_MATCH_GROUP_FULL_MMI],
+        procedure: matches[MMI_MATCH_GROUP_PROCEDURE],
+        serviceCode: matches[MMI_MATCH_GROUP_SERVICE_CODE],
+        sia: matches[MMI_MATCH_GROUP_SIA],
+        sib: matches[MMI_MATCH_GROUP_SIB],
+        sic: matches[MMI_MATCH_GROUP_SIC],
+        pwd: matches[MMI_MATCH_GROUP_PWD_CONFIRM],
+        dialNumber: matches[MMI_MATCH_GROUP_DIALING_NUMBER]
+      };
+    }
+
+    if (this._isPoundString(aMmiString) ||
+        this._isShortString(aMmiString, hasCalls)) {
+      return {
+        fullMMI: aMmiString
+      };
+    }
+
+    return null;
+  },
+
+  _serviceCodeToKeyString: function(aServiceCode) {
+    switch (aServiceCode) {
+      case RIL.MMI_SC_CFU:
+      case RIL.MMI_SC_CF_BUSY:
+      case RIL.MMI_SC_CF_NO_REPLY:
+      case RIL.MMI_SC_CF_NOT_REACHABLE:
+      case RIL.MMI_SC_CF_ALL:
+      case RIL.MMI_SC_CF_ALL_CONDITIONAL:
+        return RIL.MMI_KS_SC_CALL_FORWARDING;
+      case RIL.MMI_SC_PIN:
+        return RIL.MMI_KS_SC_PIN;
+      case RIL.MMI_SC_PIN2:
+        return RIL.MMI_KS_SC_PIN2;
+      case RIL.MMI_SC_PUK:
+        return RIL.MMI_KS_SC_PUK;
+      case RIL.MMI_SC_PUK2:
+        return RIL.MMI_KS_SC_PUK2;
+      case RIL.MMI_SC_IMEI:
+        return RIL.MMI_KS_SC_IMEI;
+      case RIL.MMI_SC_CLIP:
+        return RIL.MMI_KS_SC_CLIP;
+      case RIL.MMI_SC_CLIR:
+        return RIL.MMI_KS_SC_CLIR;
+      case RIL.MMI_SC_BAOC:
+      case RIL.MMI_SC_BAOIC:
+      case RIL.MMI_SC_BAOICxH:
+      case RIL.MMI_SC_BAIC:
+      case RIL.MMI_SC_BAICr:
+      case RIL.MMI_SC_BA_ALL:
+      case RIL.MMI_SC_BA_MO:
+      case RIL.MMI_SC_BA_MT:
+        return RIL.MMI_KS_SC_CALL_BARRING;
+      case RIL.MMI_SC_CALL_WAITING:
+        return RIL.MMI_KS_SC_CALL_WAITING;
+      default:
+        return RIL.MMI_KS_SC_USSD;
+    }
   },
 
   hangUp: function(aClientId, aCallIndex) {
@@ -932,12 +1211,12 @@ TelephonyService.prototype = {
     }
 
     // Handle cached dial request.
-    if (this.cachedDialRequest && !this._getOneActiveCall()) {
+    if (this._cachedDialRequest && !this._getOneActiveCall()) {
       if (DEBUG) debug("All calls held. Perform the cached dial request.");
 
-      let request = this.cachedDialRequest;
-      this._dialInternal(request.clientId, request.options, request.callback);
-      this.cachedDialRequest = null;
+      let request = this._cachedDialRequest;
+      this._sendDialCallRequest(request.clientId, request.options, request.callback);
+      this._cachedDialRequest = null;
     }
 
     this._notifyAllListeners("callStateChanged", [aClientId,
@@ -985,6 +1264,11 @@ TelephonyService.prototype = {
     if (DEBUG) debug("handleConferenceCallStateChanged: " + aState);
     aState = this._convertRILCallState(aState);
     this._notifyAllListeners("conferenceCallStateChanged", [aState]);
+  },
+
+  dialMMI: function(aClientId, aMmiString, aCallback) {
+    let mmi = this._parseMMI(aMmiString, this._hasCalls(aClientId));
+    this._dialMMI(aClientId, mmi, aCallback);
   },
 
   /**
