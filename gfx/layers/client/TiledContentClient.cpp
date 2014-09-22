@@ -1065,6 +1065,8 @@ ClientTiledLayerBuffer::PostValidate(const nsIntRegion& aPaintRegion)
     drawTarget->SetTransform(Matrix());
 
     RefPtr<gfxContext> ctx = new gfxContext(drawTarget);
+    ctx->SetMatrix(
+      ctx->CurrentMatrix().Scale(mResolution, mResolution));
 
     mCallback(mThebesLayer, ctx, aPaintRegion, DrawRegionClip::DRAW, nsIntRegion(), mCallbackData);
     mMoz2DTiles.clear();
@@ -1182,7 +1184,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
     } else {
       moz2DTile.mDrawTarget = dt;
     }
-    moz2DTile.mTileOrigin = gfx::IntPoint(aTileOrigin.x, aTileOrigin.y);
+    moz2DTile.mTileOrigin = gfx::IntPoint(aTileOrigin.x * mResolution, aTileOrigin.y * mResolution);
     if (!dt || (backBufferOnWhite && !dtOnWhite)) {
       aTile.DiscardFrontBuffer();
       return aTile;
