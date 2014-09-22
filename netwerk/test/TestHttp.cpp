@@ -6,6 +6,9 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
 #include <algorithm>
+#include "nsIContentPolicy.h"
+#include "mozilla/LoadInfo.h"
+#include "nsContentUtils.h"
 
 #define RETURN_IF_FAILED(rv, step) \
     PR_BEGIN_MACRO \
@@ -162,7 +165,12 @@ int main(int argc, char **argv)
         rv = NS_NewURI(getter_AddRefs(uri), argv[1]);
         RETURN_IF_FAILED(rv, "NS_NewURI");
 
-        rv = NS_NewChannel(getter_AddRefs(chan), uri, nullptr, nullptr, callbacks);
+        rv = NS_NewChannel(getter_AddRefs(chan),
+                           uri,
+                           nsContentUtils::GetSystemPrincipal(),
+                           nsILoadInfo::SEC_NORMAL,
+                           nsIContentPolicy::TYPE_OTHER);
+
         RETURN_IF_FAILED(rv, "NS_OpenURI");
 
         rv = chan->AsyncOpen(listener, nullptr);

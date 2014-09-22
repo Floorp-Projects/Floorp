@@ -19,6 +19,7 @@
 #include "nsStreamUtils.h"
 #include "nsIPrivateBrowsingChannel.h"
 #include "nsISupportsPriority.h"
+#include "nsContentUtils.h"
 #include <algorithm>
 
 using namespace mozilla::places;
@@ -541,7 +542,12 @@ AsyncFetchAndSetIconFromNetwork::Run()
   nsresult rv = NS_NewURI(getter_AddRefs(iconURI), mIcon.spec);
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), iconURI);
+  rv = NS_NewChannel(getter_AddRefs(channel),
+                     iconURI,
+                     nsContentUtils::GetSystemPrincipal(),
+                     nsILoadInfo::SEC_NORMAL,
+                     nsIContentPolicy::TYPE_OTHER);
+
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIInterfaceRequestor> listenerRequestor =
     do_QueryInterface(reinterpret_cast<nsISupports*>(this));

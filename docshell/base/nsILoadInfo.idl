@@ -5,8 +5,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsIContentPolicy.idl"
 
+interface nsIDOMDocument;
+interface nsINode;
 interface nsIPrincipal;
+
+typedef unsigned long nsSecurityFlags;
+
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
@@ -14,8 +20,48 @@ interface nsIPrincipal;
 interface nsILoadInfo : nsISupports
 {
   /**
-   * loadingPrincipal is the principal that started the load.  Will
-   * never be null.
+   * No special security flags:
+   */
+  const unsigned long SEC_NORMAL = 0;
+
+  /**
+   * Force inheriting of the Principal. The resulting resource will use the
+   * principal of the document which is doing the load. Setting this flag
+   * will cause GetChannelResultPrincipal to return the same principal as
+   * the loading principal that's passed in when creating the channel.
+   *
+   * This will happen independently of the scheme of the URI that the
+   * channel is loading.
+   *
+   * So if the loading document comes from "http://a.com/", and the channel
+   * is loading the URI "http://b.com/whatever", GetChannelResultPrincipal
+   * will return a principal from "http://a.com/".
+   *
+   * This flag can not be used together with SEC_SANDBOXED.
+   */
+  const unsigned long SEC_FORCE_INHERIT_PRINCIPAL = 0x01;
+
+  /**
+   * Sandbox the load. The resulting resource will use a freshly created
+   * null principal. So GetChannelResultPrincipal will always return a
+   * null principal whenever this flag is set.
+   *
+   * This will happen independently of the scheme of the URI that the
+   * channel is loading.
+   *
+   * This flag can not be used together with SEC_FORCE_INHERIT_PRINCIPAL.
+   */
+  const unsigned long SEC_SANDBOXED = 0x02;
+
+  /**
+   * The loadingPrincipal is the principal that is responsible for the load.
+   * It is *NOT* the principal tied to the resource/URI that this
+   * channel is loading, it's the principal of the resource's
+   * caller or requester. For example, if this channel is loading
+   * an image from http://b.com that is embedded in a document
+   * who's origin is http://a.com, the loadingPrincipal is http://a.com.
+   *
+   * The loadingPrincipal will never be null.
    */
   readonly attribute nsIPrincipal loadingPrincipal;
 
@@ -24,6 +70,52 @@ interface nsILoadInfo : nsISupports
    */
   [noscript, notxpcom, nostdcall, binaryname(LoadingPrincipal)]
   nsIPrincipal binaryLoadingPrincipal();
+
+
+  /**
+   * The loadingDocument of the channel.
+   *
+   * The loadingDocument of a channel is the document that requested the
+   * load of the resource. It is *not* the resource itself, it's the
+   * resource's caller or requester in which the load is happening.
+   *
+   * <script> example: Assume a document who's origin is http://a.com embeds
+   * a script from http://b.com. The loadingDocument for the channel
+   * associated with the http://b.com script load is the document with origin
+   * http://a.com
+   *
+   * <iframe> example: Assume a document with origin http://a.com embeds
+   * <iframe src="http://b.com">. The loadingDocument for the channel associated
+   * with the http://b.com network request is the document who's origin is
+   * http://a.com. Now assume the iframe to http://b.com then further embeds
+   * <script src="http://c.com">. The loadingDocument for the channel associated
+   * with the http://c.com network request is the iframe with origin http://b.com.
+   *
+   * Warning: The loadingDocument can be null!
+   */
+  readonly attribute nsIDOMDocument loadingDocument;
+
+  /**
+   * A C++-friendly version of loadingDocument (loadingNode).
+   * This is the node most proximally responsible for the load.
+   */
+  [noscript, notxpcom, nostdcall, binaryname(LoadingNode)]
+  nsINode binaryLoadingNode();
+
+  /**
+   * The securityFlags of that channel.
+   */
+  readonly attribute nsSecurityFlags securityFlags;
+
+%{ C++
+  inline nsSecurityFlags GetSecurityFlags()
+  {
+    nsSecurityFlags result;
+    mozilla::DebugOnly<nsresult> rv = GetSecurityFlags(&result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return result;
+  }
+%}
 
   /**
    * If forceInheritPrincipal is true, the data coming from the channel should
@@ -39,4 +131,21 @@ interface nsILoadInfo : nsISupports
    * hence should use a NullPrincipal.
    */
   [infallible] readonly attribute boolean loadingSandboxed;
+
+  /**
+   * The contentPolicyType of the channel, used for security checks
+   * like Mixed Content Blocking and Content Security Policy.
+   */
+   readonly attribute nsContentPolicyType contentPolicyType;
+
+%{ C++
+  inline nsContentPolicyType GetContentPolicyType()
+  {
+    nsContentPolicyType result;
+    mozilla::DebugOnly<nsresult> rv = GetContentPolicyType(&result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return result;
+  }
+%}
+
 };

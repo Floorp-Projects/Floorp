@@ -392,16 +392,6 @@ struct AssertionConditionType
 #endif /* DEBUG */
 
 /*
- * MOZ_NIGHTLY_ASSERT is defined for both debug and release builds on the
- * Nightly channel, but only debug builds on Aurora, Beta, and Release.
- */
-#if defined(NIGHTLY_BUILD)
-#  define MOZ_NIGHTLY_ASSERT(...) MOZ_RELEASE_ASSERT(__VA_ARGS__)
-#else
-#  define MOZ_NIGHTLY_ASSERT(...) MOZ_ASSERT(__VA_ARGS__)
-#endif
-
-/*
  * MOZ_ASSERT_IF(cond1, cond2) is equivalent to MOZ_ASSERT(cond2) if cond1 is
  * true.
  *
@@ -497,26 +487,17 @@ struct AssertionConditionType
  */
 
 /*
- * Assert in all debug builds plus the Nightly channel's release builds. Take
- * this extra testing precaution because hitting MOZ_ASSUME_UNREACHABLE_MARKER
- * could trigger exploitable undefined behavior.
+ * Unconditional assert in debug builds for (assumed) unreachable code paths
+ * that have a safe return without crashing in release builds.
  */
 #define MOZ_ASSERT_UNREACHABLE(reason) \
-   MOZ_NIGHTLY_ASSERT(false, "MOZ_ASSERT_UNREACHABLE: " reason)
+   MOZ_ASSERT(false, "MOZ_ASSERT_UNREACHABLE: " reason)
 
 #define MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(reason) \
    do { \
      MOZ_ASSERT_UNREACHABLE(reason); \
      MOZ_ASSUME_UNREACHABLE_MARKER(); \
    } while (0)
-
-/*
- * TODO: Bug 990764: Audit all MOZ_ASSUME_UNREACHABLE calls and replace them
- * with MOZ_ASSERT_UNREACHABLE, MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE, or
- * MOZ_CRASH. For now, preserve the macro's same meaning of unreachable.
- */
-#define MOZ_ASSUME_UNREACHABLE(reason) \
-   MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(reason)
 
 /*
  * MOZ_ALWAYS_TRUE(expr) and MOZ_ALWAYS_FALSE(expr) always evaluate the provided

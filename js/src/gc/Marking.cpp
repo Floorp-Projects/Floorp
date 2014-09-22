@@ -183,7 +183,8 @@ CheckMarkedThing(JSTracer *trc, T **thingp)
         return;
 
 #ifdef JSGC_COMPACTING
-    JS_ASSERT_IF(!MovingTracer::IsMovingTracer(trc), !IsForwarded(*thingp));
+    JS_ASSERT_IF(!MovingTracer::IsMovingTracer(trc) && !Nursery::IsMinorCollectionTracer(trc),
+                 !IsForwarded(*thingp));
 #endif
 
     /*

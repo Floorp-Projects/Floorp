@@ -488,7 +488,6 @@ function queryCharsetFromCode(aCode) {
   codes[1284] = "windows-1254";
   codes[1285] = "windows-1255";
   codes[1286] = "windows-1256";
-  codes[1536] = "us-ascii";
   codes[1584] = "GB2312";
   codes[1585] = "gbk";
   codes[1600] = "EUC-KR";

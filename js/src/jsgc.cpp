@@ -2095,21 +2095,6 @@ AutoDisableCompactingGC::~AutoDisableCompactingGC()
     gc.enableCompactingGC();
 }
 
-static void
-ForwardCell(TenuredCell *dest, TenuredCell *src)
-{
-    // Mark a cell has having been relocated and astore forwarding pointer to
-    // the new cell.
-    MOZ_ASSERT(src->zone() == dest->zone());
-
-    // Putting the values this way round is a terrible hack to make
-    // ObjectImpl::zone() work on forwarded objects.
-    MOZ_ASSERT(ObjectImpl::offsetOfShape() == 0);
-    uintptr_t *ptr = reinterpret_cast<uintptr_t *>(src);
-    ptr[0] = reinterpret_cast<uintptr_t>(dest); // Forwarding address
-    ptr[1] = ForwardedCellMagicValue; // Moved!
-}
-
 static bool
 ArenaContainsGlobal(ArenaHeader *arena)
 {
@@ -2200,6 +2185,7 @@ static bool
 RelocateCell(Zone *zone, TenuredCell *src, AllocKind thingKind, size_t thingSize)
 {
     // Allocate a new cell.
+    MOZ_ASSERT(zone == src->zone());
     void *dstAlloc = zone->allocator.arenas.allocateFromFreeList(thingKind, thingSize);
     if (!dstAlloc)
         dstAlloc = js::gc::ArenaLists::refillFreeListInGC(zone, thingKind);
@@ -2230,7 +2216,8 @@ RelocateCell(Zone *zone, TenuredCell *src, AllocKind thingKind, size_t thingSize
     dst->copyMarkBitsFrom(src);
 
     // Mark source cell as forwarded and leave a pointer to the destination.
-    ForwardCell(dst, src);
+    RelocationOverlay* overlay = RelocationOverlay::fromCell(src);
+    overlay->forwardTo(dst);
 
     return true;
 }
@@ -3232,7 +3219,7 @@ GCHelperState::finish()
 }
 
 GCHelperState::State
-GCHelperState::state() const
+GCHelperState::state()
 {
     JS_ASSERT(rt->gc.currentThreadOwnsGCLock());
     return state_;
@@ -3381,15 +3368,6 @@ GCHelperState::waitBackgroundSweepOrAllocEnd()
         waitForBackgroundThread();
     if (rt->gc.incrementalState == NO_INCREMENTAL)
         rt->gc.assertBackgroundSweepingFinished();
-}
-
-void
-GCHelperState::assertStateIsIdle() const
-{
-#ifdef DEBUG
-    AutoLockGC lock(rt);
-    JS_ASSERT(state() == IDLE);
-#endif
 }
 
 /* Must be called with the GC lock taken. */
@@ -3558,6 +3536,8 @@ GCRuntime::shouldPreserveJITCode(JSCompartment *comp, int64_t currentTime,
         return false;
 
     if (alwaysPreserveCode)
+        return true;
+    if (comp->preserveJitCode())
         return true;
     if (comp->lastAnimationTime + PRMJ_USEC_PER_SEC >= currentTime)
         return true;
@@ -5547,16 +5527,15 @@ GCRuntime::gcCycle(bool incremental, int64_t budget, JSGCInvocationKind gckind,
     // Assert if this is a GC unsafe region.
     JS::AutoAssertOnGC::VerifyIsSafeToGC(rt);
 
-    // As we about to purge caches and clear the mark bits we must wait for
-    // any background finalization to finish. We must also wait for the
-    // background allocation to finish so we can avoid taking the GC lock
-    // when manipulating the chunks during the GC.
-    if (incrementalState == NO_INCREMENTAL) {
+    /*
+     * As we about to purge caches and clear the mark bits we must wait for
+     * any background finalization to finish. We must also wait for the
+     * background allocation to finish so we can avoid taking the GC lock
+     * when manipulating the chunks during the GC.
+     */
+    {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_WAIT_BACKGROUND_THREAD);
         waitBackgroundSweepOrAllocEnd();
-    } else {
-        // The helper thread does not run between incremental slices.
-        helperState.assertStateIsIdle();
     }
 
     State prevState = incrementalState;
@@ -5647,8 +5626,10 @@ GCRuntime::scanZonesBeforeGC()
             zone->scheduleGC();
 
         zoneStats.zoneCount++;
-        if (zone->isGCScheduled())
-            zoneStats.collectedCount++;
+        if (zone->isGCScheduled()) {
+            zoneStats.collectedZoneCount++;
+            zoneStats.collectedCompartmentCount += zone->compartments.length();
+        }
     }
 
     for (CompartmentsIter c(rt, WithAtoms); !c.done(); c.next())
