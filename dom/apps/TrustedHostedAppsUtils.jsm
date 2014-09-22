@@ -40,8 +40,6 @@ let debug = Services.prefs.getBoolPref("dom.mozApps.debug") ?
 
 /**
  * Verification functions for Trusted Hosted Apps.
- * (Manifest signature verification is in Webapps.jsm as part of
- * regular signature verification.)
  */
 this.TrustedHostedAppsUtils = {
 
@@ -174,6 +172,7 @@ this.TrustedHostedAppsUtils = {
     aCertDb.verifySignedManifestAsync(
       root, aManifestStream, aSignatureStream,
       function(aRv, aCert) {
+        debug("Signature verification returned code, cert & root: " + aRv + " " + aCert + " " + root);
         if (Components.isSuccessCode(aRv)) {
           deferred.resolve(aCert);
         } else if (aRv == Cr.NS_ERROR_FILE_CORRUPTED ||
@@ -253,5 +252,21 @@ this.TrustedHostedAppsUtils = {
     }, deferred.reject);
 
     return deferred.promise;
+  },
+
+  verifyManifest: function(aData) {
+    return new Promise((resolve, reject) => {
+      // sanity check on manifest host's CA (proper CA check with
+      // pinning is done by regular networking code)
+      if (!this.isHostPinned(aData.app.manifestURL)) {
+        reject("TRUSTED_APPLICATION_HOST_CERTIFICATE_INVALID");
+        return;
+      }
+      if (!this.verifyCSPWhiteList(aData.app.manifest.csp)) {
+        reject("TRUSTED_APPLICATION_WHITELIST_VALIDATION_FAILED");
+        return;
+      }
+      this.verifySignedManifest(aData.app, aData.appId).then(resolve, reject);
+    });
   }
 };
