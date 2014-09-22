@@ -409,6 +409,10 @@ var SimpleServiceDiscovery = {
 
     // Only add and notify if we don't already know about this service
     if (!this._services.has(service.uuid)) {
+      let device = this._devices.get(service.target);
+      if (device && device.mirror) {
+        service.mirror = true;
+      }
       this._services.set(service.uuid, service);
       Services.obs.notifyObservers(null, EVENT_SERVICE_FOUND, service.uuid);
     }

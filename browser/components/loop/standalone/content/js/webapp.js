@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* global loop:true, React */
-/* jshint newcap:false */
+/* jshint newcap:false, maxlen:false */
 
 var loop = loop || {};
 loop.webapp = (function($, _, OT, mozL10n) {
@@ -18,19 +18,13 @@ loop.webapp = (function($, _, OT, mozL10n) {
       sharedViews = loop.shared.views;
 
   /**
-   * App router.
-   * @type {loop.webapp.WebappRouter}
-   */
-  var router;
-
-  /**
    * Homepage view.
    */
   var HomeView = React.createClass({displayName: 'HomeView',
     render: function() {
       return (
         React.DOM.p(null, mozL10n.get("welcome"))
-      )
+      );
     }
   });
 
@@ -104,7 +98,6 @@ loop.webapp = (function($, _, OT, mozL10n) {
     },
 
     render: function() {
-      /* jshint ignore:start */
       return (
         React.DOM.div({className: "expired-url-info"}, 
           React.DOM.div({className: "info-panel"}, 
@@ -115,7 +108,6 @@ loop.webapp = (function($, _, OT, mozL10n) {
           PromoteFirefoxView({helper: this.props.helper})
         )
       );
-      /* jshint ignore:end */
     }
   });
 
@@ -146,7 +138,6 @@ loop.webapp = (function($, _, OT, mozL10n) {
       });
 
       return (
-        /* jshint ignore:start */
         React.DOM.header({className: "standalone-header header-box container-box"}, 
           ConversationBranding(null), 
           React.DOM.div({className: "loop-logo", title: "Firefox WebRTC! logo"}), 
@@ -157,7 +148,6 @@ loop.webapp = (function($, _, OT, mozL10n) {
             callUrlCreationDateString
           )
         )
-        /* jshint ignore:end */
       );
     }
   });
@@ -176,7 +166,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
     getInitialState: function() {
       return {
         callState: this.props.callState || "connecting"
-      }
+      };
     },
 
     propTypes: {
@@ -200,7 +190,6 @@ loop.webapp = (function($, _, OT, mozL10n) {
     render: function() {
       var callState = mozL10n.get("call_progress_" + this.state.callState + "_description");
       return (
-        /* jshint ignore:start */
         React.DOM.div({className: "container"}, 
           React.DOM.div({className: "container-box"}, 
             React.DOM.header({className: "pending-header header-box"}, 
@@ -229,7 +218,6 @@ loop.webapp = (function($, _, OT, mozL10n) {
 
           ConversationFooter(null)
         )
-        /* jshint ignore:end */
       );
     }
   });
@@ -237,18 +225,21 @@ loop.webapp = (function($, _, OT, mozL10n) {
   /**
    * Conversation launcher view. A ConversationModel is associated and attached
    * as a `model` property.
+   *
+   * Required properties:
+   * - {loop.shared.models.ConversationModel}    model    Conversation model.
+   * - {loop.shared.models.NotificationCollection} notifications
    */
   var StartConversationView = React.createClass({displayName: 'StartConversationView',
-    /**
-     * Constructor.
-     *
-     * Required options:
-     * - {loop.shared.models.ConversationModel}    model    Conversation model.
-     * - {loop.shared.models.NotificationCollection} notifications
-     *
-     */
+    propTypes: {
+      model: React.PropTypes.instanceOf(sharedModels.ConversationModel)
+                                       .isRequired,
+      // XXX Check more tightly here when we start injecting window.loop.*
+      notifications: React.PropTypes.object.isRequired,
+      client: React.PropTypes.object.isRequired
+    },
 
-    getInitialProps: function() {
+    getDefaultProps: function() {
       return {showCallOptionsMenu: false};
     },
 
@@ -258,14 +249,6 @@ loop.webapp = (function($, _, OT, mozL10n) {
         disableCallButton: false,
         showCallOptionsMenu: this.props.showCallOptionsMenu
       };
-    },
-
-    propTypes: {
-      model: React.PropTypes.instanceOf(sharedModels.ConversationModel)
-                                       .isRequired,
-      // XXX Check more tightly here when we start injecting window.loop.*
-      notifications: React.PropTypes.object.isRequired,
-      client: React.PropTypes.object.isRequired
     },
 
     componentDidMount: function() {
@@ -348,7 +331,6 @@ loop.webapp = (function($, _, OT, mozL10n) {
       });
 
       return (
-        /* jshint ignore:start */
         React.DOM.div({className: "container"}, 
           React.DOM.div({className: "container-box"}, 
 
@@ -407,7 +389,37 @@ loop.webapp = (function($, _, OT, mozL10n) {
 
           ConversationFooter(null)
         )
-        /* jshint ignore:end */
+      );
+    }
+  });
+
+  /**
+   * Ended conversation view.
+   */
+  var EndedConversationView = React.createClass({displayName: 'EndedConversationView',
+    propTypes: {
+      conversation: React.PropTypes.instanceOf(sharedModels.ConversationModel)
+                         .isRequired,
+      sdk: React.PropTypes.object.isRequired,
+      feedbackApiClient: React.PropTypes.object.isRequired,
+      onAfterFeedbackReceived: React.PropTypes.func.isRequired
+    },
+
+    render: function() {
+      return (
+        React.DOM.div({className: "ended-conversation"}, 
+          sharedViews.FeedbackView({
+            feedbackApiClient: this.props.feedbackApiClient, 
+            onAfterFeedbackReceived: this.props.onAfterFeedbackReceived}
+          ), 
+          sharedViews.ConversationView({
+            initiate: false, 
+            sdk: this.props.sdk, 
+            model: this.props.conversation, 
+            audio: {enabled: false, visible: false}, 
+            video: {enabled: false, visible: false}}
+          )
+        )
       );
     }
   });
@@ -426,7 +438,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
       helper: React.PropTypes.instanceOf(WebappHelper).isRequired,
       notifications: React.PropTypes.instanceOf(sharedModels.NotificationCollection)
                           .isRequired,
-      sdk: React.PropTypes.object.isRequired
+      sdk: React.PropTypes.object.isRequired,
+      feedbackApiClient: React.PropTypes.object.isRequired
     },
 
     getInitialState: function() {
@@ -450,13 +463,23 @@ loop.webapp = (function($, _, OT, mozL10n) {
       this.props.conversation.off(null, null, this);
     },
 
+    shouldComponentUpdate: function(nextProps, nextState) {
+      // Only rerender if current state has actually changed
+      return nextState.callStatus !== this.state.callStatus;
+    },
+
+    callStatusSwitcher: function(status) {
+      return function() {
+        this.setState({callStatus: status});
+      }.bind(this);
+    },
+
     /**
      * Renders the conversation views.
      */
     render: function() {
       switch (this.state.callStatus) {
         case "failure":
-        case "end":
         case "start": {
           return (
             StartConversationView({
@@ -472,9 +495,20 @@ loop.webapp = (function($, _, OT, mozL10n) {
         case "connected": {
           return (
             sharedViews.ConversationView({
+              initiate: true, 
               sdk: this.props.sdk, 
               model: this.props.conversation, 
               video: {enabled: this.props.conversation.hasVideoStream("outgoing")}}
+            )
+          );
+        }
+        case "end": {
+          return (
+            EndedConversationView({
+              sdk: this.props.sdk, 
+              conversation: this.props.conversation, 
+              feedbackApiClient: this.props.feedbackApiClient, 
+              onAfterFeedbackReceived: this.callStatusSwitcher("start")}
             )
           );
         }
@@ -484,7 +518,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
           );
         }
         default: {
-          return HomeView(null)
+          return HomeView(null);
         }
       }
     },
@@ -494,7 +528,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
      * @param {{code: number, message: string}} error
      */
     _notifyError: function(error) {
-      console.log(error);
+      console.error(error);
       this.props.notifications.errorL10n("connection_error_see_console_notification");
       this.setState({callStatus: "end"});
     },
@@ -628,13 +662,15 @@ loop.webapp = (function($, _, OT, mozL10n) {
      * @param {String} reason The reason the call was terminated.
      */
     _handleCallTerminated: function(reason) {
-      this.setState({callStatus: "end"});
-      // For reasons other than cancel, display some notification text.
       if (reason !== "cancel") {
         // XXX This should really display the call failed view - bug 1046959
         // will implement this.
         this.props.notifications.errorL10n("call_timeout_notification_text");
       }
+      // redirects the user to the call start view
+      // XXX should switch callStatus to failed for specific reasons when we
+      // get the call failed view; for now, switch back to start.
+      this.setState({callStatus: "start"});
     },
 
     /**
@@ -657,7 +693,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
       helper: React.PropTypes.instanceOf(WebappHelper).isRequired,
       notifications: React.PropTypes.instanceOf(sharedModels.NotificationCollection)
                           .isRequired,
-      sdk: React.PropTypes.object.isRequired
+      sdk: React.PropTypes.object.isRequired,
+      feedbackApiClient: React.PropTypes.object.isRequired
     },
 
     getInitialState: function() {
@@ -679,7 +716,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
              conversation: this.props.conversation, 
              helper: this.props.helper, 
              notifications: this.props.notifications, 
-             sdk: this.props.sdk}
+             sdk: this.props.sdk, 
+             feedbackApiClient: this.props.feedbackApiClient}
           )
         );
       } else {
@@ -721,6 +759,12 @@ loop.webapp = (function($, _, OT, mozL10n) {
     var conversation = new sharedModels.ConversationModel({}, {
       sdk: OT
     });
+    var feedbackApiClient = new loop.FeedbackAPIClient(
+      loop.config.feedbackApiUrl, {
+        product: loop.config.feedbackProductName,
+        user_agent: navigator.userAgent,
+        url: document.location.origin
+      });
 
     // Obtain the loopToken and pass it to the conversation
     var locationHash = helper.locationHash();
@@ -733,7 +777,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
       conversation: conversation, 
       helper: helper, 
       notifications: notifications, 
-      sdk: OT}
+      sdk: OT, 
+      feedbackApiClient: feedbackApiClient}
     ), document.querySelector("#main"));
 
     // Set the 'lang' and 'dir' attributes to <html> when the page is translated
@@ -746,6 +791,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
     PendingConversationView: PendingConversationView,
     StartConversationView: StartConversationView,
     OutgoingConversationView: OutgoingConversationView,
+    EndedConversationView: EndedConversationView,
     HomeView: HomeView,
     UnsupportedBrowserView: UnsupportedBrowserView,
     UnsupportedDeviceView: UnsupportedDeviceView,

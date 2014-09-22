@@ -7,6 +7,9 @@ const Cu = Components.utils;
 
 const { DebuggerServer } = Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
 const { DebuggerClient } = Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const {require} = devtools;
+
 
 const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm");
@@ -114,9 +117,46 @@ addMessageListener("install", function (aMessage) {
   }
 });
 
+addMessageListener("getAppActor", function (aMessage) {
+  let { manifestURL } = aMessage;
+  let request = {type: "getAppActor", manifestURL: manifestURL};
+  webappActorRequest(request, function (aResponse) {
+    sendAsyncMessage("appActor", aResponse);
+  });
+});
+
+let Frames = [];
+addMessageListener("addFrame", function (aMessage) {
+  let win = Services.wm.getMostRecentWindow("navigator:browser");
+  let doc = win.document;
+  let frame = doc.createElementNS("http://www.w3.org/1999/xhtml", "iframe");
+  frame.setAttribute("mozbrowser", "true");
+  if (aMessage.mozapp) {
+    frame.setAttribute("mozapp", aMessage.mozapp);
+  }
+  if (aMessage.remote) {
+    frame.setAttribute("remote", aMessage.remote);
+  }
+  if (aMessage.src) {
+    frame.setAttribute("src", aMessage.src);
+  }
+  doc.documentElement.appendChild(frame);
+  Frames.push(frame);
+  sendAsyncMessage("frameAdded");
+});
+
 addMessageListener("cleanup", function () {
   webappActorRequest({type: "unwatchApps"}, function () {
     gClient.close();
   });
 });
 
+let AppFramesMock = {
+  list: function () {
+    return Frames;
+  },
+  addObserver: function () {},
+  removeObserver: function () {}
+};
+
+require("devtools/server/actors/webapps").setAppFramesMock(AppFramesMock);

@@ -14,6 +14,7 @@
 #include "mozilla/NullPtr.h"
 #include "mozilla/Scoped.h"
 #include "mozilla/TemplateLib.h"
+#include "mozilla/UniquePtr.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -121,6 +122,12 @@ static inline void* js_realloc(void* p, size_t bytes)
 static inline void js_free(void* p)
 {
     free(p);
+}
+
+static inline char* js_strdup(const char* s)
+{
+    JS_OOM_POSSIBLY_FAIL();
+    return strdup(s);
 }
 #endif/* JS_USE_CUSTOM_ALLOCATOR */
 
@@ -625,6 +632,13 @@ namespace js {
 /* Integral types for all hash functions. */
 typedef uint32_t HashNumber;
 const unsigned HashNumberSizeBits = 32;
+
+typedef mozilla::UniquePtr<char, JS::FreePolicy> UniqueChars;
+
+static inline UniqueChars make_string_copy(const char* str)
+{
+    return UniqueChars(js_strdup(str));
+}
 
 namespace detail {
 

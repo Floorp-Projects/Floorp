@@ -16,6 +16,7 @@ var rokuDevice = {
     Cu.import("resource://gre/modules/RokuApp.jsm");
     return new RokuApp(aService);
   },
+  mirror: Services.prefs.getBoolPref("browser.mirroring.enabled.roku"),
   types: ["video/mp4"],
   extensions: ["mp4"]
 };
@@ -52,7 +53,7 @@ var CastingApps = {
   mirrorStopMenuId: -1,
 
   init: function ca_init() {
-    if (!this.isEnabled()) {
+    if (!this.isCastingEnabled()) {
       return;
     }
 
@@ -99,22 +100,25 @@ var CastingApps = {
     NativeWindow.contextmenus.remove(this._castMenuId);
   },
 
+  _mirrorStarted: function(stopMirrorCallback) {
+    this.stopMirrorCallback = stopMirrorCallback;
+    NativeWindow.menu.update(this.mirrorStartMenuId, { visible: false });
+    NativeWindow.menu.update(this.mirrorStopMenuId, { visible: true });
+  },
+
   serviceAdded: function(aService) {
-    if (aService.mirror && this.mirrorStartMenuId == -1) {
+    if (this.isMirroringEnabled() && aService.mirror && this.mirrorStartMenuId == -1) {
       this.mirrorStartMenuId = NativeWindow.menu.add({
         name: Strings.browser.GetStringFromName("casting.mirrorTab"),
         callback: function() {
-          function callbackFunc(aService) {
+          let callbackFunc = function(aService) {
             let app = SimpleServiceDiscovery.findAppForService(aService);
-            if (app)
-              app.mirror(function() {
-              });
-          }
+            if (app) {
+              app.mirror(function() {}, window, BrowserApp.selectedTab.getViewport(), this._mirrorStarted.bind(this));
+            }
+          }.bind(this);
 
-          function filterFunc(aService) {
-            return aService.mirror == true;
-          }
-          this.prompt(callbackFunc, filterFunc);
+          this.prompt(callbackFunc, aService => aService.mirror);
         }.bind(this),
         parent: NativeWindow.menu.toolsMenuID
       });
@@ -125,6 +129,9 @@ var CastingApps = {
           if (this.tabMirror) {
             this.tabMirror.stop();
             this.tabMirror = null;
+          } else if (this.stopMirrorCallback) {
+            this.stopMirrorCallback();
+            this.stopMirrorCallback = null;
           }
           NativeWindow.menu.update(this.mirrorStartMenuId, { visible: true });
           NativeWindow.menu.update(this.mirrorStopMenuId, { visible: false });
@@ -132,7 +139,9 @@ var CastingApps = {
         parent: NativeWindow.menu.toolsMenuID
       });
     }
-    NativeWindow.menu.update(this.mirrorStopMenuId, { visible: false });
+    if (this.mirrorStartMenuId != -1) {
+      NativeWindow.menu.update(this.mirrorStopMenuId, { visible: false });
+    }
   },
 
   serviceLost: function(aService) {
@@ -150,8 +159,12 @@ var CastingApps = {
     }
   },
 
-  isEnabled: function isEnabled() {
+  isCastingEnabled: function isCastingEnabled() {
     return Services.prefs.getBoolPref("browser.casting.enabled");
+  },
+
+  isMirroringEnabled: function isMirroringEnabled() {
+    return Services.prefs.getBoolPref("browser.mirroring.enabled");
   },
 
   observe: function (aSubject, aTopic, aData) {

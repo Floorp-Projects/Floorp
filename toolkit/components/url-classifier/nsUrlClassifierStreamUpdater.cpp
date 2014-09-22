@@ -17,6 +17,7 @@
 #include "prlog.h"
 #include "nsIInterfaceRequestor.h"
 #include "mozilla/LoadContext.h"
+#include "nsContentUtils.h"
 
 static const char* gQuitApplicationMessage = "quit-application";
 
@@ -93,8 +94,16 @@ nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
   nsresult rv;
   uint32_t loadFlags = nsIChannel::INHIBIT_CACHING |
                        nsIChannel::LOAD_BYPASS_CACHE;
-  rv = NS_NewChannel(getter_AddRefs(mChannel), aUpdateUrl, nullptr, nullptr, this,
+  rv = NS_NewChannel(getter_AddRefs(mChannel),
+                     aUpdateUrl,
+                     nsContentUtils::GetSystemPrincipal(),
+                     nsILoadInfo::SEC_NORMAL,
+                     nsIContentPolicy::TYPE_OTHER,
+                     nullptr,  // aChannelPolicy
+                     nullptr,  // aLoadGroup
+                     this,     // aInterfaceRequestor
                      loadFlags);
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   mBeganStream = false;

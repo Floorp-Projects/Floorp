@@ -10,6 +10,7 @@ include protocol PFTPChannel;
 include protocol PRtspChannel;
 include URIParams;
 include InputStreamParams;
+include PBackgroundSharedTypes;
 
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using RequestHeaderTuples from "mozilla/net/PHttpChannelParams.h";
@@ -49,6 +50,9 @@ struct HttpChannelOpenArgs
   nsCString                   appCacheClientID;
   bool                        allowSpdy;
   OptionalFileDescriptorSet   fds;
+  PrincipalInfo               requestingPrincipalInfo;
+  uint32_t                    securityFlags;
+  uint32_t                    contentPolicyType;
 };
 
 struct HttpChannelConnectArgs
@@ -68,10 +72,13 @@ union HttpChannelCreationArgs
 
 struct FTPChannelOpenArgs
 {
-  URIParams uri;
-  uint64_t startPos;
-  nsCString entityID;
+  URIParams                 uri;
+  uint64_t                  startPos;
+  nsCString                 entityID;
   OptionalInputStreamParams uploadStream;
+  PrincipalInfo             requestingPrincipalInfo;
+  uint32_t                  securityFlags;
+  uint32_t                  contentPolicyType;
 };
 
 struct FTPChannelConnectArgs

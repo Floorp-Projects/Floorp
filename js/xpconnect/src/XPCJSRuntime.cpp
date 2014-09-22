@@ -3017,7 +3017,11 @@ ReadSourceFromFilename(JSContext *cx, const char *filename, char16_t **src, size
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIChannel> scriptChannel;
-    rv = NS_NewChannel(getter_AddRefs(scriptChannel), uri);
+    rv = NS_NewChannel(getter_AddRefs(scriptChannel),
+                       uri,
+                       nsContentUtils::GetSystemPrincipal(),
+                       nsILoadInfo::SEC_NORMAL,
+                       nsIContentPolicy::TYPE_OTHER);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Only allow local reading.

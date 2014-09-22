@@ -59,16 +59,17 @@ URIUtils::ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode)
     nsCOMPtr<nsIChannel> channel = sourceDoc->GetChannel();
     if (!channel) {
         // Need to synthesize one
-        if (NS_FAILED(NS_NewChannel(getter_AddRefs(channel),
+        nsresult rv = NS_NewChannel(getter_AddRefs(channel),
                                     sourceDoc->GetDocumentURI(),
-                                    nullptr,
-                                    loadGroup))) {
+                                    sourceDoc,
+                                    nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
+                                    nsIContentPolicy::TYPE_OTHER,
+                                    nullptr,   // aChannelPolicy
+                                    loadGroup);
+
+        if (NS_FAILED(rv)) {
             return;
         }
-        nsCOMPtr<nsILoadInfo> loadInfo =
-            new LoadInfo(sourcePrincipal, LoadInfo::eInheritPrincipal,
-                         LoadInfo::eNotSandboxed);
-        channel->SetLoadInfo(loadInfo);
     }
     aNewDoc->Reset(channel, loadGroup);
     aNewDoc->SetPrincipal(sourcePrincipal);

@@ -443,8 +443,17 @@ XMLDocument::Load(const nsAString& aUrl, ErrorResult& aRv)
   nsCOMPtr<nsIChannel> channel;
   // nsIRequest::LOAD_BACKGROUND prevents throbber from becoming active,
   // which in turn keeps STOP button from becoming active  
-  rv = NS_NewChannel(getter_AddRefs(channel), uri, nullptr, loadGroup, req, 
+  rv = NS_NewChannel(getter_AddRefs(channel),
+                     uri,
+                     callingDoc ? callingDoc.get() :
+                                  static_cast<nsIDocument*>(this),
+                     nsILoadInfo::SEC_NORMAL,
+                     nsIContentPolicy::TYPE_XMLHTTPREQUEST,
+                     nullptr,   // aChannelPolicy
+                     loadGroup,
+                     req,
                      nsIRequest::LOAD_BACKGROUND);
+
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return false;

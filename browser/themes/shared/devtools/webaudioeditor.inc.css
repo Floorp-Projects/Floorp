@@ -105,9 +105,9 @@ g.edgePath.param-connection {
   fill: #4c9ed9; /* Select Highlight Blue */
 }
 
-/* Text in nodes */
+/* Text in nodes and edges */
 text {
-  cursor: pointer;
+  cursor: default; /* override the "text" cursor */
   font-weight: 300;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
   font-size: 14px;
@@ -121,6 +121,10 @@ text {
 }
 .theme-light g.selected text {
   fill: #f0f1f2; /* Toolbars */
+}
+
+.nodes text {
+  cursor: pointer;
 }
 
 /**

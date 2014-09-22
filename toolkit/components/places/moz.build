@@ -62,6 +62,7 @@ if CONFIG['MOZ_PLACES']:
     EXTRA_JS_MODULES += [
         'BookmarkHTMLUtils.jsm',
         'BookmarkJSONUtils.jsm',
+        'Bookmarks.jsm',
         'ClusterLib.js',
         'ColorAnalyzer_worker.js',
         'ColorConversion.js',
