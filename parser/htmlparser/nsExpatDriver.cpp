@@ -15,6 +15,7 @@
 #include "nsIUnicharInputStream.h"
 #include "nsISimpleUnicharStreamFactory.h"
 #include "nsNetUtil.h"
+#include "nsNullPrincipal.h"
 #include "prprf.h"
 #include "prmem.h"
 #include "nsTextFormatter.h"
@@ -799,7 +800,23 @@ nsExpatDriver::OpenInputStreamFromExternalDTD(const char16_t* aFPIStr,
   CopyUTF8toUTF16(absURL, aAbsURL);
 
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), uri);
+  if (doc) {
+    rv = NS_NewChannel(getter_AddRefs(channel),
+                       uri,
+                       doc,
+                       nsILoadInfo::SEC_NORMAL,
+                       nsIContentPolicy::TYPE_DTD);
+  }
+  else {
+    nsCOMPtr<nsIPrincipal> nullPrincipal =
+      do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = NS_NewChannel(getter_AddRefs(channel),
+                       uri,
+                       nullPrincipal,
+                       nsILoadInfo::SEC_NORMAL,
+                       nsIContentPolicy::TYPE_DTD);
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   channel->SetContentType(NS_LITERAL_CSTRING("application/xml"));

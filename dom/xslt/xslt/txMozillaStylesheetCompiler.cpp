@@ -456,7 +456,12 @@ txCompileObserver::startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
                              nsIPrincipal* aReferrerPrincipal)
 {
     nsCOMPtr<nsIChannel> channel;
-    nsresult rv = NS_NewChannel(getter_AddRefs(channel), aUri);
+    nsresult rv = NS_NewChannel(getter_AddRefs(channel),
+                                aUri,
+                                aReferrerPrincipal,
+                                nsILoadInfo::SEC_NORMAL,
+                                nsIContentPolicy::TYPE_STYLESHEET);
+
     NS_ENSURE_SUCCESS(rv, rv);
 
     channel->SetLoadGroup(mLoadGroup);

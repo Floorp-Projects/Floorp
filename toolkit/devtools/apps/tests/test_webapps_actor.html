@@ -225,6 +225,21 @@ var steps = [
     SpecialPowers.popPrefEnv(next);
   },
   function() {
+    info("== TEST == Get packaged app actor");
+    addFrame(
+      { mozapp: PACKAGED_APP_MANIFEST, remote: true },
+      function () {
+        getAppActor(PACKAGED_APP_MANIFEST, function (response) {
+          let tabActor = response.actor;
+          ok(!!tabActor, "TabActor is correctly instanciated in child.js");
+          ok("actor" in tabActor, "Tab actor is available in child");
+          ok("consoleActor" in tabActor, "Console actor is available in child");
+          next();
+        });
+      });
+
+  },
+  function() {
     info("== TEST == Uninstall packaged app");
     uninstall(PACKAGED_APP_MANIFEST);
   },
@@ -307,6 +322,22 @@ function uninstall(manifestURL) {
     type: "uninstall",
     manifestURL: manifestURL
   });
+}
+
+function getAppActor(manifestURL, callback) {
+  mm.addMessageListener("appActor", function onAppActor(aResponse) {
+    mm.removeMessageListener("appActor", onAppActor);
+    callback(aResponse);
+  });
+  mm.sendAsyncMessage("getAppActor", { manifestURL: manifestURL });
+}
+
+function addFrame(options, callback) {
+  mm.addMessageListener("frameAdded", function onFrameAdded() {
+    mm.removeMessageListener("frameAdded", onFrameAdded);
+    callback();
+  });
+  mm.sendAsyncMessage("addFrame", options);
 }
 
 </script>

@@ -7,6 +7,7 @@
 #include "gc/Statistics.h"
 
 #include "mozilla/PodOperations.h"
+#include "mozilla/UniquePtr.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -26,8 +27,8 @@ using namespace js::gcstats;
 
 using mozilla::PodArrayZero;
 
-/* Except for the first and last, slices of less than 42ms are not reported. */
-static const int64_t SLICE_MIN_REPORT_TIME = 42 * PRMJ_USEC_PER_MSEC;
+/* Except for the first and last, slices of less than 10ms are not reported. */
+static const int64_t SLICE_MIN_REPORT_TIME = 10 * PRMJ_USEC_PER_MSEC;
 
 class gcstats::StatisticsSerializer
 {
@@ -276,44 +277,44 @@ static const PhaseInfo phases[] = {
     { PHASE_MARK_DISCARD_CODE, "Mark Discard Code", PHASE_NO_PARENT },
     { PHASE_PURGE, "Purge", PHASE_NO_PARENT },
     { PHASE_MARK, "Mark", PHASE_NO_PARENT },
-    { PHASE_MARK_ROOTS, "Mark Roots", PHASE_MARK },
-    { PHASE_MARK_DELAYED, "Mark Delayed", PHASE_MARK },
+        { PHASE_MARK_ROOTS, "Mark Roots", PHASE_MARK },
+        { PHASE_MARK_DELAYED, "Mark Delayed", PHASE_MARK },
     { PHASE_SWEEP, "Sweep", PHASE_NO_PARENT },
-    { PHASE_SWEEP_MARK, "Mark During Sweeping", PHASE_SWEEP },
-    { PHASE_SWEEP_MARK_TYPES, "Mark Types During Sweeping", PHASE_SWEEP_MARK },
-    { PHASE_SWEEP_MARK_INCOMING_BLACK, "Mark Incoming Black Pointers", PHASE_SWEEP_MARK },
-    { PHASE_SWEEP_MARK_WEAK, "Mark Weak", PHASE_SWEEP_MARK },
-    { PHASE_SWEEP_MARK_INCOMING_GRAY, "Mark Incoming Gray Pointers", PHASE_SWEEP_MARK },
-    { PHASE_SWEEP_MARK_GRAY, "Mark Gray", PHASE_SWEEP_MARK },
-    { PHASE_SWEEP_MARK_GRAY_WEAK, "Mark Gray and Weak", PHASE_SWEEP_MARK },
-    { PHASE_FINALIZE_START, "Finalize Start Callback", PHASE_SWEEP },
-    { PHASE_SWEEP_ATOMS, "Sweep Atoms", PHASE_SWEEP },
-    { PHASE_SWEEP_SYMBOL_REGISTRY, "Sweep Symbol Registry", PHASE_SWEEP },
-    { PHASE_SWEEP_COMPARTMENTS, "Sweep Compartments", PHASE_SWEEP },
-    { PHASE_SWEEP_DISCARD_CODE, "Sweep Discard Code", PHASE_SWEEP_COMPARTMENTS },
-    { PHASE_SWEEP_TABLES, "Sweep Tables", PHASE_SWEEP_COMPARTMENTS },
-    { PHASE_SWEEP_TABLES_INNER_VIEWS, "Sweep Inner Views", PHASE_SWEEP_TABLES },
-    { PHASE_SWEEP_TABLES_WRAPPER, "Sweep Cross Compartment Wrappers", PHASE_SWEEP_TABLES },
-    { PHASE_SWEEP_TABLES_BASE_SHAPE, "Sweep Base Shapes", PHASE_SWEEP_TABLES },
-    { PHASE_SWEEP_TABLES_INITIAL_SHAPE, "Sweep Initial Shapes", PHASE_SWEEP_TABLES },
-    { PHASE_SWEEP_TABLES_TYPE_OBJECT, "Sweep Type Objects", PHASE_SWEEP_TABLES },
-    { PHASE_SWEEP_TABLES_BREAKPOINT, "Sweep Breakpoints", PHASE_SWEEP_TABLES },
-    { PHASE_SWEEP_TABLES_REGEXP, "Sweep Regexps", PHASE_SWEEP_TABLES },
-    { PHASE_DISCARD_ANALYSIS, "Discard Analysis", PHASE_SWEEP_COMPARTMENTS },
-    { PHASE_DISCARD_TI, "Discard TI", PHASE_DISCARD_ANALYSIS },
-    { PHASE_FREE_TI_ARENA, "Free TI Arena", PHASE_DISCARD_ANALYSIS },
-    { PHASE_SWEEP_TYPES, "Sweep Types", PHASE_DISCARD_ANALYSIS },
-    { PHASE_SWEEP_OBJECT, "Sweep Object", PHASE_SWEEP },
-    { PHASE_SWEEP_STRING, "Sweep String", PHASE_SWEEP },
-    { PHASE_SWEEP_SCRIPT, "Sweep Script", PHASE_SWEEP },
-    { PHASE_SWEEP_SHAPE, "Sweep Shape", PHASE_SWEEP },
-    { PHASE_SWEEP_JITCODE, "Sweep JIT code", PHASE_SWEEP },
+        { PHASE_SWEEP_MARK, "Mark During Sweeping", PHASE_SWEEP },
+            { PHASE_SWEEP_MARK_TYPES, "Mark Types During Sweeping", PHASE_SWEEP_MARK },
+            { PHASE_SWEEP_MARK_INCOMING_BLACK, "Mark Incoming Black Pointers", PHASE_SWEEP_MARK },
+            { PHASE_SWEEP_MARK_WEAK, "Mark Weak", PHASE_SWEEP_MARK },
+            { PHASE_SWEEP_MARK_INCOMING_GRAY, "Mark Incoming Gray Pointers", PHASE_SWEEP_MARK },
+            { PHASE_SWEEP_MARK_GRAY, "Mark Gray", PHASE_SWEEP_MARK },
+            { PHASE_SWEEP_MARK_GRAY_WEAK, "Mark Gray and Weak", PHASE_SWEEP_MARK },
+        { PHASE_FINALIZE_START, "Finalize Start Callback", PHASE_SWEEP },
+        { PHASE_SWEEP_ATOMS, "Sweep Atoms", PHASE_SWEEP },
+        { PHASE_SWEEP_SYMBOL_REGISTRY, "Sweep Symbol Registry", PHASE_SWEEP },
+        { PHASE_SWEEP_COMPARTMENTS, "Sweep Compartments", PHASE_SWEEP },
+            { PHASE_SWEEP_DISCARD_CODE, "Sweep Discard Code", PHASE_SWEEP_COMPARTMENTS },
+            { PHASE_SWEEP_TABLES, "Sweep Tables", PHASE_SWEEP_COMPARTMENTS },
+                { PHASE_SWEEP_TABLES_INNER_VIEWS, "Sweep Inner Views", PHASE_SWEEP_TABLES },
+                { PHASE_SWEEP_TABLES_WRAPPER, "Sweep Cross Compartment Wrappers", PHASE_SWEEP_TABLES },
+                { PHASE_SWEEP_TABLES_BASE_SHAPE, "Sweep Base Shapes", PHASE_SWEEP_TABLES },
+                { PHASE_SWEEP_TABLES_INITIAL_SHAPE, "Sweep Initial Shapes", PHASE_SWEEP_TABLES },
+                { PHASE_SWEEP_TABLES_TYPE_OBJECT, "Sweep Type Objects", PHASE_SWEEP_TABLES },
+                { PHASE_SWEEP_TABLES_BREAKPOINT, "Sweep Breakpoints", PHASE_SWEEP_TABLES },
+                { PHASE_SWEEP_TABLES_REGEXP, "Sweep Regexps", PHASE_SWEEP_TABLES },
+            { PHASE_DISCARD_ANALYSIS, "Discard Analysis", PHASE_SWEEP_COMPARTMENTS },
+                { PHASE_DISCARD_TI, "Discard TI", PHASE_DISCARD_ANALYSIS },
+                { PHASE_FREE_TI_ARENA, "Free TI Arena", PHASE_DISCARD_ANALYSIS },
+                { PHASE_SWEEP_TYPES, "Sweep Types", PHASE_DISCARD_ANALYSIS },
+        { PHASE_SWEEP_OBJECT, "Sweep Object", PHASE_SWEEP },
+        { PHASE_SWEEP_STRING, "Sweep String", PHASE_SWEEP },
+        { PHASE_SWEEP_SCRIPT, "Sweep Script", PHASE_SWEEP },
+        { PHASE_SWEEP_SHAPE, "Sweep Shape", PHASE_SWEEP },
+        { PHASE_SWEEP_JITCODE, "Sweep JIT code", PHASE_SWEEP },
+        { PHASE_FINALIZE_END, "Finalize End Callback", PHASE_SWEEP },
+        { PHASE_DESTROY, "Deallocate", PHASE_SWEEP },
     { PHASE_COMPACT, "Compact", PHASE_NO_PARENT },
-    { PHASE_COMPACT_MOVE, "Compact Move", PHASE_COMPACT },
-    { PHASE_COMPACT_UPDATE, "Compact Update", PHASE_COMPACT, },
-    { PHASE_COMPACT_UPDATE_GRAY, "Compact Update Gray", PHASE_COMPACT_UPDATE, },
-    { PHASE_FINALIZE_END, "Finalize End Callback", PHASE_SWEEP },
-    { PHASE_DESTROY, "Deallocate", PHASE_SWEEP },
+        { PHASE_COMPACT_MOVE, "Compact Move", PHASE_COMPACT },
+        { PHASE_COMPACT_UPDATE, "Compact Update", PHASE_COMPACT, },
+            { PHASE_COMPACT_UPDATE_GRAY, "Compact Update Gray", PHASE_COMPACT_UPDATE, },
     { PHASE_GC_END, "End Callback", PHASE_NO_PARENT },
     { PHASE_LIMIT, nullptr, PHASE_NO_PARENT }
 };
@@ -370,7 +371,7 @@ Statistics::formatData(StatisticsSerializer &ss, uint64_t timestamp)
     else
         ss.appendString("Reason", ExplainReason(slices[0].reason));
     ss.appendDecimal("Total Time", "ms", t(total));
-    ss.appendNumber("Zones Collected", "%d", "", zoneStats.collectedCount);
+    ss.appendNumber("Zones Collected", "%d", "", zoneStats.collectedZoneCount);
     ss.appendNumber("Total Zones", "%d", "", zoneStats.zoneCount);
     ss.appendNumber("Total Compartments", "%d", "", zoneStats.compartmentCount);
     ss.appendNumber("Minor GCs", "%d", "", counts[STAT_MINOR_GC]);
@@ -425,6 +426,176 @@ Statistics::formatData(StatisticsSerializer &ss, uint64_t timestamp)
     ss.endObject();
 
     return !ss.isOOM();
+}
+
+typedef Vector<UniqueChars, 8, SystemAllocPolicy> FragmentVector;
+
+static UniqueChars
+Join(const FragmentVector &fragments) {
+    size_t length = 0;
+    for (size_t i = 0; i < fragments.length(); ++i)
+        length += fragments[i] ? strlen(fragments[i].get()) : 0;
+
+    char *joined = js_pod_malloc<char>(length + 1);
+    joined[length] = '\0';
+
+    char *cursor = joined;
+    for (size_t i = 0; i < fragments.length(); ++i) {
+        if (fragments[i])
+            strcpy(cursor, fragments[i].get());
+        cursor += fragments[i] ? strlen(fragments[i].get()) : 0;
+    }
+
+    return UniqueChars(joined);
+}
+
+UniqueChars
+Statistics::formatDescription()
+{
+    int64_t sccTotal, sccLongest;
+    sccDurations(&sccTotal, &sccLongest);
+
+    double mmu20 = computeMMU(20 * PRMJ_USEC_PER_MSEC);
+    double mmu50 = computeMMU(50 * PRMJ_USEC_PER_MSEC);
+
+    const char *format =
+"=================================================================\n\
+  Reason: %s\n\
+  Incremental: %s%s\n\
+  Zones Collected: %d of %d\n\
+  Compartments Collected: %d of %d\n\
+  MinorGCs since last GC: %d\n\
+  MMU 20ms:%.1f%%; 50ms:%.1f%%\n\
+  SCC Sweep Total (MaxPause): %.3fms (%.3fms)\n\
+  HeapSize: %.3f MiB\n\
+  Chunk Delta (magnitude): %+d  (%d)\n\
+";
+    char buffer[1024];
+    memset(buffer, 0, sizeof(buffer));
+    JS_snprintf(buffer, sizeof(buffer), format,
+                ExplainReason(slices[0].reason),
+                nonincrementalReason ? "no - " : "yes",
+                                                  nonincrementalReason ? nonincrementalReason : "",
+                zoneStats.collectedZoneCount, zoneStats.zoneCount,
+                zoneStats.collectedCompartmentCount, zoneStats.compartmentCount,
+                counts[STAT_MINOR_GC],
+                mmu20 * 100., mmu50 * 100.,
+                t(sccTotal), t(sccLongest),
+                double(preBytes) / 1024. / 1024.,
+                counts[STAT_NEW_CHUNK] - counts[STAT_DESTROY_CHUNK], counts[STAT_NEW_CHUNK] +
+                                                                  counts[STAT_DESTROY_CHUNK]);
+    return make_string_copy(buffer);
+}
+
+UniqueChars
+Statistics::formatSliceDescription(unsigned i, const SliceData &slice)
+{
+    const char *format =
+"\
+  ---- Slice %u ----\n\
+    Reason: %s\n\
+    Reset: %s%s\n\
+    Page Faults: %ld\n\
+    Pause: %.3fms  (@ %.3fms)\n\
+";
+    char buffer[1024];
+    memset(buffer, 0, sizeof(buffer));
+    JS_snprintf(buffer, sizeof(buffer), format, i,
+                ExplainReason(slice.reason),
+                slice.resetReason ? "yes - " : "no", slice.resetReason ? slice.resetReason : "",
+                uint64_t(slice.endFaults - slice.startFaults),
+                t(slice.duration()), t(slice.start - slices[0].start));
+    return make_string_copy(buffer);
+}
+
+UniqueChars
+Statistics::formatTotals()
+{
+    int64_t total, longest;
+    gcDuration(&total, &longest);
+
+    const char *format =
+"\
+  ---- Totals ----\n\
+    Total Time: %.3f\n\
+    Max Pause: %.3f\n\
+";
+    char buffer[1024];
+    memset(buffer, 0, sizeof(buffer));
+    JS_snprintf(buffer, sizeof(buffer), format, t(total), t(longest));
+    return make_string_copy(buffer);
+}
+
+static int64_t
+SumChildTimes(Phase phase, int64_t *phaseTimes)
+{
+    int64_t total = 0;
+    for (unsigned i = 0; phases[i].name; i++) {
+        if (phases[i].parent == phase)
+            total += phaseTimes[phases[i].index];
+    }
+    return total;
+}
+
+UniqueChars
+Statistics::formatPhaseTimes(int64_t *phaseTimes)
+{
+    static const char *LevelToIndent[] = { "", "  ", "    ", "      " };
+    static const int64_t MaxUnaccountedChildTimeUS = 50;
+
+    FragmentVector fragments;
+    char buffer[128];
+    for (unsigned i = 0; phases[i].name; i++) {
+        unsigned level = 0;
+        unsigned current = i;
+        while (phases[current].parent != PHASE_NO_PARENT) {
+            current = phases[current].parent;
+            level++;
+        }
+        MOZ_ASSERT(level < 4);
+
+        int64_t ownTime = phaseTimes[phases[i].index];
+        int64_t childTime = SumChildTimes(Phase(i), phaseTimes);
+        if (ownTime > 0) {
+            JS_snprintf(buffer, sizeof(buffer), "      %s%s: %.3fms\n",
+                        LevelToIndent[level], phases[i].name, t(ownTime));
+            if (!fragments.append(make_string_copy(buffer)))
+                return UniqueChars(nullptr);
+
+            if (childTime && (ownTime - childTime) > MaxUnaccountedChildTimeUS) {
+                MOZ_ASSERT(level < 3);
+                JS_snprintf(buffer, sizeof(buffer), "      %s%s: %.3fms\n",
+                            LevelToIndent[level + 1], "Other", t(ownTime - childTime));
+                if (!fragments.append(make_string_copy(buffer)))
+                    return UniqueChars(nullptr);
+            }
+        }
+    }
+    return Join(fragments);
+}
+
+UniqueChars
+Statistics::formatDetailedMessage()
+{
+    FragmentVector fragments;
+
+    if (!fragments.append(formatDescription()))
+        return UniqueChars(nullptr);
+
+    if (slices.length() > 1) {
+        for (unsigned i = 0; i < slices.length(); i++) {
+            if (!fragments.append(formatSliceDescription(i, slices[i])))
+                return UniqueChars(nullptr);
+            if (!fragments.append(formatPhaseTimes(slices[i].phaseTimes)))
+                return UniqueChars(nullptr);
+        }
+    }
+    if (!fragments.append(formatTotals()))
+        return UniqueChars(nullptr);
+    if (!fragments.append(formatPhaseTimes(phaseTimes)))
+        return UniqueChars(nullptr);
+
+    return Join(fragments);
 }
 
 char16_t *
@@ -522,13 +693,9 @@ void
 Statistics::printStats()
 {
     if (fullFormat) {
-        StatisticsSerializer ss(StatisticsSerializer::AsText);
-        formatData(ss, 0);
-        char *msg = ss.finishCString();
-        if (msg) {
-            fprintf(fp, "GC(T+%.3fs) %s\n", t(slices[0].start - startupTime) / 1000.0, msg);
-            js_free(msg);
-        }
+        UniqueChars msg = formatDetailedMessage();
+        if (msg)
+            fprintf(fp, "GC(T+%.3fs) %s\n", t(slices[0].start - startupTime) / 1000.0, msg.get());
     } else {
         int64_t total, longest;
         gcDuration(&total, &longest);

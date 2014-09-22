@@ -1320,7 +1320,15 @@ nsExternalResourceMap::PendingLoad::StartLoad(nsIURI* aURI,
 
   nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), aURI, nullptr, loadGroup, req);
+  rv = NS_NewChannel(getter_AddRefs(channel),
+                     aURI,
+                     aRequestingNode,
+                     nsILoadInfo::SEC_NORMAL,
+                     nsIContentPolicy::TYPE_OTHER,
+                     nullptr, // aChannelPolicy
+                     loadGroup,
+                     req); // aCallbacks
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   mURI = aURI;

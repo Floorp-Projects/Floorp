@@ -122,7 +122,7 @@ loop.StandaloneClient = (function($) {
         try {
           cb(null, this._validate(sessionData, expectedCallsProperties));
         } catch (err) {
-          console.log("Error requesting call info", err);
+          console.error("Error requesting call info", err.message);
           cb(err);
         }
       }.bind(this));
