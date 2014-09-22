@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2014 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -9,7 +9,14 @@
 #ifndef COMMON_ANGLEUTILS_H_
 #define COMMON_ANGLEUTILS_H_
 
+#include "common/platform.h"
+
 #include <stddef.h>
+#include <limits.h>
+#include <string>
+#include <set>
+#include <sstream>
+#include <cstdarg>
 
 // A macro to disallow the copy constructor and operator= functions
 // This must be used in the private: declarations for a class
@@ -17,19 +24,8 @@
   TypeName(const TypeName&);               \
   void operator=(const TypeName&)
 
-// Macros for writing try catch blocks. Defining ANGLE_NO_EXCEPTIONS
-// when building angle will disable the usage of try/catch for compilers
-// without proper support for them (such as clang-cl).
-#ifdef ANGLE_NO_EXCEPTIONS
-#define ANGLE_TRY if (true)
-#define ANGLE_CATCH_ALL else
-#else
-#define ANGLE_TRY try
-#define ANGLE_CATCH_ALL catch(...)
-#endif
-
-template <typename T, unsigned int N>
-inline unsigned int ArraySize(T(&)[N])
+template <typename T, size_t N>
+inline size_t ArraySize(T(&)[N])
 {
     return N;
 }
@@ -61,6 +57,16 @@ void SafeDelete(T*& resource)
 }
 
 template <typename T>
+void SafeDeleteContainer(T& resource)
+{
+    for (typename T::iterator i = resource.begin(); i != resource.end(); i++)
+    {
+        SafeDelete(*i);
+    }
+    resource.clear();
+}
+
+template <typename T>
 void SafeDeleteArray(T*& resource)
 {
     delete[] resource;
@@ -88,6 +94,46 @@ inline void StructZero(T *obj)
 {
     memset(obj, 0, sizeof(T));
 }
+
+inline const char* MakeStaticString(const std::string &str)
+{
+    static std::set<std::string> strings;
+    std::set<std::string>::iterator it = strings.find(str);
+    if (it != strings.end())
+    {
+        return it->c_str();
+    }
+
+    return strings.insert(str).first->c_str();
+}
+
+inline std::string ArrayString(unsigned int i)
+{
+    // We assume UINT_MAX and GL_INVALID_INDEX are equal
+    // See DynamicHLSL.cpp
+    if (i == UINT_MAX)
+    {
+        return "";
+    }
+
+    std::stringstream strstr;
+
+    strstr << "[";
+    strstr << i;
+    strstr << "]";
+
+    return strstr.str();
+}
+
+inline std::string Str(int i)
+{
+    std::stringstream strstr;
+    strstr << i;
+    return strstr.str();
+}
+
+std::string FormatString(const char *fmt, va_list vararg);
+std::string FormatString(const char *fmt, ...);
 
 #if defined(_MSC_VER)
 #define snprintf _snprintf

@@ -32,7 +32,6 @@
 #include "pkix/enumclass.h"
 #include "pkix/pkixtypes.h"
 #include "pkix/ScopedPtr.h"
-#include "secitem.h"
 
 namespace mozilla { namespace pkix { namespace test {
 
@@ -63,18 +62,6 @@ public:
   {
   }
 };
-
-namespace {
-
-inline void
-SECITEM_FreeItem_true(SECItem* item)
-{
-  SECITEM_FreeItem(item, true);
-}
-
-} // unnamed namespace
-
-typedef mozilla::pkix::ScopedPtr<SECItem, SECITEM_FreeItem_true> ScopedSECItem;
 
 // python DottedOIDToCode.py --tlv id-kp-OCSPSigning 1.3.6.1.5.5.7.3.9
 static const uint8_t tlv_id_kp_OCSPSigning[] = {
@@ -156,8 +143,9 @@ enum Version { v1 = 0, v2 = 1, v3 = 2 };
 // serialNumber is assumed to be the DER encoding of an INTEGER.
 //
 // If extensions is null, then no extensions will be encoded. Otherwise,
-// extensions must point to a null-terminated array of SECItem*. If the first
-// item of the array is null then an empty Extensions sequence will be encoded.
+// extensions must point to an array of ByteStrings, terminated with an empty
+// ByteString. (If the first item of the array is empty then an empty
+// Extensions sequence will be encoded.)
 //
 // If issuerPrivateKey is null, then the certificate will be self-signed.
 // Parameter order is based on the order of the attributes of the certificate

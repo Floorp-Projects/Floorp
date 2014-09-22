@@ -6,7 +6,7 @@
  */
 
 let test = Task.async(function*() {
-  let [target, debuggee, panel] = yield initTimelinePanel("about:blank");
+  let { target, panel } = yield initTimelinePanel("about:blank");
   let { EVENTS, TimelineView, TimelineController } = panel.panelWin;
 
   yield DevToolsUtils.waitForTime(1000);

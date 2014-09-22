@@ -77,6 +77,7 @@ static const char *sExtensionNames[] = {
     "GL_ARB_ES2_compatibility",
     "GL_ARB_ES3_compatibility",
     "GL_ARB_color_buffer_float",
+    "GL_ARB_copy_buffer",
     "GL_ARB_depth_texture",
     "GL_ARB_draw_buffers",
     "GL_ARB_draw_instanced",
@@ -1026,6 +1027,20 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
                 MarkUnsupported(GLFeature::clear_buffers);
                 ClearSymbols(clearBuffersSymbols);
+            }
+        }
+
+        if (IsSupported(GLFeature::copy_buffer)) {
+            SymLoadStruct copyBufferSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fCopyBufferSubData, { "CopyBufferSubData", nullptr } },
+                END_SYMBOLS
+            };
+
+            if (!LoadSymbols(copyBufferSymbols, trygl, prefix)) {
+                NS_ERROR("GL supports copy_buffer without supplying its function.");
+
+                MarkUnsupported(GLFeature::copy_buffer);
+                ClearSymbols(copyBufferSymbols);
             }
         }
 
