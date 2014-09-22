@@ -176,20 +176,55 @@ interface nsITelephonyListener : nsISupports
                              in AString message);
 };
 
-[scriptable, uuid(553f3bf2-e938-4995-9914-36e10599bc78)]
+/**
+ * A callback interface for handling asynchronous response of Telephony.dial().
+ */
+[scriptable, uuid(67533db3-cd38-475c-a774-8d0bbf9169fb)]
 interface nsITelephonyCallback : nsISupports
 {
   /**
+   * Called when a dial request is treated as an MMI code and it is about to
+   * process the request.
+   *
+   * @param serviceCode
+   *        MMI service code key string that defined in MMI_KS_SC_*
+   */
+  void notifyDialMMI(in AString serviceCode);
+
+  /**
    * Called when a dial request fails.
+   *
    * @param error
    *        Error from RIL.
    */
   void notifyDialError(in AString error);
 
   /**
-   * Called when a dial request succeeds.
+   * Called when a dial request is treated as a call setup and the result
+   * succeeds.
+   *
+   * @param callIndex
+   *        Call index from RIL.
+   * @param number
+   *        Dialed out phone number (ex: Temporary CLIR prefix will be removed)
    */
   void notifyDialCallSuccess(in unsigned long callIndex, in AString number);
+
+  /**
+   * Called when a MMI code request succeeds.
+   * The function should only be called after notifyDialMMI.
+   *
+   * @param result
+   *        Result of the request. See MozMMIResult.
+   */
+  void notifyDialMMISuccess(in jsval result);
+
+  /**
+   * Called when a MMI code request fails.
+   * The function should only be called after notifyDialMMI.
+   */
+  void notifyDialMMIError(in AString error);
+  void notifyDialMMIErrorWithInfo(in AString error, in unsigned short info);
 };
 
 %{C++
