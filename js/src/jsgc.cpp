@@ -4705,11 +4705,14 @@ GCRuntime::beginSweepingZoneGroup()
                 c->sweepSavedStacks();
                 c->sweepGlobalObject(&fop);
                 c->sweepSelfHostingScriptSource();
-                c->sweepJitCompartment(&fop);
                 c->sweepDebugScopes();
+                c->sweepJitCompartment(&fop);
                 c->sweepWeakMaps();
                 c->sweepNativeIterators();
             }
+
+            // Bug 1071218: the following two methods have not yet been
+            // refactored to work on a single zone-group at once.
 
             // Collect watch points associated with unreachable objects.
             WatchpointMap::sweepAll(rt);
@@ -4726,22 +4729,18 @@ GCRuntime::beginSweepingZoneGroup()
         }
 
         {
+            gcstats::MaybeAutoPhase ap(stats, !isHeapCompacting(),
+                                       gcstats::PHASE_DISCARD_ANALYSIS);
             for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
-                // If there is an OOM while sweeping types, the type information
-                // will be deoptimized so that it is still correct (i.e.
-                // overapproximates the possible types in the zone), but the
-                // constraints might not have been triggered on the deoptimization
-                // or even copied over completely. In this case, destroy all JIT
-                // code and new script information in the zone, the only things
-                // whose correctness depends on the type constraints.
-                bool oom = false;
-                zone->sweep(&fop, releaseObservedTypes && !zone->isPreservingCode(), &oom);
+                zone->sweepAnalysis(&fop, releaseObservedTypes && !zone->isPreservingCode());
+            }
+        }
 
-                if (oom) {
-                    zone->setPreservingCode(false);
-                    zone->discardJitCode(&fop);
-                    zone->types.clearAllNewScriptsOnOOM();
-                }
+        {
+            gcstats::MaybeAutoPhase ap(stats, !isHeapCompacting(),
+                                       gcstats::PHASE_SWEEP_BREAKPOINT);
+            for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
+                zone->sweepBreakpoints(&fop);
             }
         }
     }
