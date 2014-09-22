@@ -4651,12 +4651,6 @@ GCRuntime::beginSweepingZoneGroup()
         }
     }
 
-    /* Collect watch points associated with unreachable objects. */
-    WatchpointMap::sweepAll(rt);
-
-    /* Detach unreachable debuggers and global objects from each other. */
-    Debugger::sweepAll(&fop);
-
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
         gcstats::AutoPhase apdc(stats, gcstats::PHASE_SWEEP_DISCARD_CODE);
@@ -4677,17 +4671,32 @@ GCRuntime::beginSweepingZoneGroup()
             c->sweepBaseShapeTable();
             c->sweepInitialShapeTable();
             c->sweepTypeObjectTables();
+            c->sweepRegExps();
+        }
+    }
+
+    {
+        gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
+        gcstats::AutoSCC scc(stats, zoneGroupIndex);
+        gcstats::AutoPhase apst(stats, gcstats::PHASE_SWEEP_TABLES);
+
+        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
             c->sweepCallsiteClones();
             c->sweepSavedStacks();
             c->sweepGlobalObject(&fop);
             c->sweepSelfHostingScriptSource();
             c->sweepJitCompartment(&fop);
-            c->sweepRegExps();
             c->sweepDebugScopes();
             c->sweepWeakMaps();
             c->sweepNativeIterators();
         }
     }
+
+    /* Collect watch points associated with unreachable objects. */
+    WatchpointMap::sweepAll(rt);
+
+    /* Detach unreachable debuggers and global objects from each other. */
+    Debugger::sweepAll(&fop);
 
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
