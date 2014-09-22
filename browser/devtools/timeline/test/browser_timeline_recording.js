@@ -6,7 +6,7 @@
  */
 
 let test = Task.async(function*() {
-  let [target, debuggee, panel] = yield initTimelinePanel(SIMPLE_URL);
+  let { target, panel } = yield initTimelinePanel(SIMPLE_URL);
   let { gFront, TimelineController } = panel.panelWin;
 
   is((yield gFront.isRecording()), false,

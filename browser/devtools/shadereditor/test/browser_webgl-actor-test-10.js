@@ -7,7 +7,7 @@
  */
 
 function ifWebGLSupported() {
-  let [target, debuggee, front] = yield initBackend(SIMPLE_CANVAS_URL);
+  let { target, front } = yield initBackend(SIMPLE_CANVAS_URL);
 
   front.setup({ reload: true });
   yield testHighlighting((yield once(front, "program-linked")));
