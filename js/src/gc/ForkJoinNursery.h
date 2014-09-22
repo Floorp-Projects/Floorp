@@ -165,6 +165,8 @@ class ForkJoinNursery
     // Return true iff collection is ongoing and obj is inside the current fromspace.
     MOZ_ALWAYS_INLINE bool isInsideFromspace(const void *obj);
 
+    MOZ_ALWAYS_INLINE bool isForwarded(Cell *cell);
+
     template <typename T>
     MOZ_ALWAYS_INLINE bool getForwardedPointer(T **ref);
 

@@ -2095,21 +2095,6 @@ AutoDisableCompactingGC::~AutoDisableCompactingGC()
     gc.enableCompactingGC();
 }
 
-static void
-ForwardCell(TenuredCell *dest, TenuredCell *src)
-{
-    // Mark a cell has having been relocated and astore forwarding pointer to
-    // the new cell.
-    MOZ_ASSERT(src->zone() == dest->zone());
-
-    // Putting the values this way round is a terrible hack to make
-    // ObjectImpl::zone() work on forwarded objects.
-    MOZ_ASSERT(ObjectImpl::offsetOfShape() == 0);
-    uintptr_t *ptr = reinterpret_cast<uintptr_t *>(src);
-    ptr[0] = reinterpret_cast<uintptr_t>(dest); // Forwarding address
-    ptr[1] = ForwardedCellMagicValue; // Moved!
-}
-
 static bool
 ArenaContainsGlobal(ArenaHeader *arena)
 {
@@ -2200,6 +2185,7 @@ static bool
 RelocateCell(Zone *zone, TenuredCell *src, AllocKind thingKind, size_t thingSize)
 {
     // Allocate a new cell.
+    MOZ_ASSERT(zone == src->zone());
     void *dstAlloc = zone->allocator.arenas.allocateFromFreeList(thingKind, thingSize);
     if (!dstAlloc)
         dstAlloc = js::gc::ArenaLists::refillFreeListInGC(zone, thingKind);
@@ -2230,7 +2216,8 @@ RelocateCell(Zone *zone, TenuredCell *src, AllocKind thingKind, size_t thingSize
     dst->copyMarkBitsFrom(src);
 
     // Mark source cell as forwarded and leave a pointer to the destination.
-    ForwardCell(dst, src);
+    RelocationOverlay* overlay = RelocationOverlay::fromCell(src);
+    overlay->forwardTo(dst);
 
     return true;
 }
