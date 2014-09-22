@@ -994,7 +994,8 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
 
       nsCOMPtr<nsIDocument> document;
       FetchBindingDocument(aBoundElement, aBoundDocument, documentURI,
-                           aBindingURI, aForceSyncLoad, getter_AddRefs(document));
+                           aBindingURI, aOriginPrincipal, aForceSyncLoad,
+                           getter_AddRefs(document));
 
       if (document) {
         nsBindingManager *xblDocBindingManager = document->BindingManager();
@@ -1031,7 +1032,8 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
 nsresult
 nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoundDocument,
                                    nsIURI* aDocumentURI, nsIURI* aBindingURI,
-                                   bool aForceSyncLoad, nsIDocument** aResult)
+                                   nsIPrincipal* aOriginPrincipal, bool aForceSyncLoad,
+                                   nsIDocument** aResult)
 {
   nsresult rv = NS_OK;
   // Initialize our out pointer to nullptr
@@ -1058,8 +1060,25 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Open channel
+  // Note: There are some cases where aOriginPrincipal and aBoundDocument are purposely
+  // set to null (to bypass security checks) when calling LoadBindingDocumentInfo() which calls
+  // FetchBindingDocument().  LoadInfo will end up with no principal or node in those cases,
+  // so we use systemPrincipal.  This achieves the same result of bypassing security checks,
+  // but it gives the wrong information to potential future consumers of loadInfo.
+  nsCOMPtr<nsIPrincipal> requestingPrincipal = aOriginPrincipal ? aOriginPrincipal
+                                                                : nsContentUtils::GetSystemPrincipal();
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannel(getter_AddRefs(channel), aDocumentURI, nullptr, loadGroup);
+  // Note that we are calling NS_NewChannelInternal here with both a node and a principal.
+  // This is because the principal and node could be different.
+  rv = NS_NewChannelInternal(getter_AddRefs(channel),
+                             aDocumentURI,
+                             aBoundDocument,
+                             requestingPrincipal,
+                             nsILoadInfo::SEC_NORMAL,
+                             nsIContentPolicy::TYPE_OTHER,
+                             nullptr,   // aChannelPolicy
+                             loadGroup);
+
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIInterfaceRequestor> sameOriginChecker = nsContentUtils::GetSameOriginChecker();

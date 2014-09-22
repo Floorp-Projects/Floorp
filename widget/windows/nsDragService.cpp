@@ -214,6 +214,8 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
       anArrayTransferables->GetElementAt(i, getter_AddRefs(supports));
       nsCOMPtr<nsITransferable> trans(do_QueryInterface(supports));
       if (trans) {
+        // set the requestingNode on the transferable
+        trans->SetRequestingNode(aDOMNode);
         nsRefPtr<IDataObject> dataObj;
         rv = nsClipboard::CreateNativeDataObject(trans,
                                                  getter_AddRefs(dataObj), uri);
@@ -231,6 +233,8 @@ nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
     anArrayTransferables->GetElementAt(0, getter_AddRefs(supports));
     nsCOMPtr<nsITransferable> trans(do_QueryInterface(supports));
     if (trans) {
+      // set the requestingNode on the transferable
+      trans->SetRequestingNode(aDOMNode);
       rv = nsClipboard::CreateNativeDataObject(trans,
                                                getter_AddRefs(itemToDrag),
                                                uri);

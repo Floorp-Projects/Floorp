@@ -86,6 +86,7 @@
 #include "nsWSRunObject.h"
 #include "nsXPCOM.h"
 #include "nscore.h"
+#include "nsContentUtils.h"
 
 class nsIAtom;
 class nsILoadContext;
@@ -1080,7 +1081,12 @@ nsresult nsHTMLEditor::InsertObject(const char* aType, nsISupports* aObject, boo
     nsCOMPtr<nsIInputStream> imageStream;
     if (insertAsImage) {
       NS_ASSERTION(fileURI, "The file URI should be retrieved earlier");
-      rv = NS_OpenURI(getter_AddRefs(imageStream), fileURI);
+      rv = NS_OpenURI(getter_AddRefs(imageStream),
+                      fileURI,
+                      nsContentUtils::GetSystemPrincipal(),
+                      nsILoadInfo::SEC_NORMAL,
+                      nsIContentPolicy::TYPE_OTHER);
+
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       imageStream = do_QueryInterface(aObject);

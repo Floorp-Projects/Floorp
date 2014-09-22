@@ -21,10 +21,11 @@ class nsXPIDLString;
 template<class T> class nsReadingIterator;
 #endif
 
-#include "../src/nsCSPContext.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsNetUtil.h"
 #include "TestHarness.h"
+#include "nsIScriptSecurityManager.h"
+#include "../src/nsCSPContext.h"
 
 #ifndef MOZILLA_INTERNAL_API
 #undef nsString_h___
@@ -92,10 +93,21 @@ nsresult runTest(uint32_t aExpectedPolicyCount, // this should be 0 for policies
   nsresult rv = NS_NewURI(getter_AddRefs(selfURI), "http://www.selfuri.com");
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIScriptSecurityManager> secman =
+    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+     nsCOMPtr<nsIPrincipal> systemPrincipal;
+  rv = secman->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // we also init the csp with a dummyChannel, which is unused
   // for the parser tests but surpresses assertions in SetRequestContext.
   nsCOMPtr<nsIChannel> dummyChannel;
-  rv = NS_NewChannel(getter_AddRefs(dummyChannel), selfURI);
+  rv = NS_NewChannel(getter_AddRefs(dummyChannel),
+                     selfURI,
+                     systemPrincipal,
+                     nsILoadInfo::SEC_NORMAL,
+                     nsIContentPolicy::TYPE_OTHER);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // create a CSP object
