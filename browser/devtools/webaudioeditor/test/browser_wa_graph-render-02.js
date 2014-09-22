@@ -8,7 +8,7 @@
 function spawnTest() {
   let [target, debuggee, panel] = yield initWebAudioEditor(COMPLEX_CONTEXT_URL);
   let { panelWin } = panel;
-  let { gFront, $, $$ } = panelWin;
+  let { gFront, $, $$, EVENTS } = panelWin;
 
   let started = once(gFront, "start-context");
 
