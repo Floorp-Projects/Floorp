@@ -469,13 +469,11 @@ nsCategoryManager::nsCategoryManager()
 void
 nsCategoryManager::InitMemoryReporter()
 {
-  RegisterWeakMemoryReporter(this);
+  RegisterStrongMemoryReporter(this);
 }
 
 nsCategoryManager::~nsCategoryManager()
 {
-  UnregisterWeakMemoryReporter(this);
-
   // the hashtable contains entries that must be deleted before the arena is
   // destroyed, or else you will have PRLocks undestroyed and other Really
   // Bad Stuff (TM)

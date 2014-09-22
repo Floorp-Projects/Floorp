@@ -769,7 +769,7 @@ class ObjectImpl : public gc::Cell
         getSlotRef(slot).set(this->asObjectPtr(), HeapSlot::Slot, slot, value);
     }
 
-    inline void setCrossCompartmentSlot(uint32_t slot, const Value &value) {
+    MOZ_ALWAYS_INLINE void setCrossCompartmentSlot(uint32_t slot, const Value &value) {
         MOZ_ASSERT(slotInRange(slot));
         getSlotRef(slot).set(this->asObjectPtr(), HeapSlot::Slot, slot, value);
     }

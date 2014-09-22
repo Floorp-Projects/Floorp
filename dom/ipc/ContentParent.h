@@ -451,7 +451,7 @@ private:
     AllocPMemoryReportRequestParent(const uint32_t& aGeneration,
                                     const bool &aAnonymize,
                                     const bool &aMinimizeMemoryUsage,
-                                    const FileDescriptor &aDMDFile) MOZ_OVERRIDE;
+                                    const MaybeFileDesc &aDMDFile) MOZ_OVERRIDE;
     virtual bool DeallocPMemoryReportRequestParent(PMemoryReportRequestParent* actor) MOZ_OVERRIDE;
 
     virtual PCycleCollectWithLogsParent*

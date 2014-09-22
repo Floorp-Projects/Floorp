@@ -925,7 +925,7 @@ bool WebMReader::DecodeVideoFrame(bool &aKeyframeSkip,
     vpx_image_t      *img;
 
     while ((img = vpx_codec_get_frame(&mVPX, &iter))) {
-      NS_ASSERTION(img->fmt == IMG_FMT_I420, "WebM image format is not I420");
+      NS_ASSERTION(img->fmt == VPX_IMG_FMT_I420, "WebM image format is not I420");
 
       // Chroma shifts are rounded down as per the decoding examples in the VP8 SDK
       VideoData::YCbCrBuffer b;

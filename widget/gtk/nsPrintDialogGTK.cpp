@@ -4,11 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <gtk/gtk.h>
-#if (MOZ_WIDGET_GTK == 2)
-#include <gtk/gtkprintunixdialog.h>
-#else
 #include <gtk/gtkunixprint.h>
-#endif
 #include <stdlib.h>
 
 #include "mozilla/ArrayUtils.h"

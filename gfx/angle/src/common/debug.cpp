@@ -7,14 +7,13 @@
 // debug.cpp: Debugging utilities.
 
 #include "common/debug.h"
+#include "common/platform.h"
+#include "common/angleutils.h"
+
 #include <stdarg.h>
 #include <vector>
 #include <fstream>
 #include <cstdio>
-
-#if defined(ANGLE_ENABLE_PERF)
-#include <d3d9.h>
-#endif
 
 namespace gl
 {
@@ -27,22 +26,7 @@ typedef void (*PerfOutputFunction)(unsigned int, const wchar_t*);
 static void output(bool traceFileDebugOnly, PerfOutputFunction perfFunc, const char *format, va_list vararg)
 {
 #if defined(ANGLE_ENABLE_PERF) || defined(ANGLE_ENABLE_TRACE)
-    static std::vector<char> asciiMessageBuffer(512);
-
-    // Attempt to just print to the current buffer
-    int len = vsnprintf(&asciiMessageBuffer[0], asciiMessageBuffer.size(), format, vararg);
-    if (len < 0 || static_cast<size_t>(len) >= asciiMessageBuffer.size())
-    {
-        // Buffer was not large enough, calculate the required size and resize the buffer
-        len = vsnprintf(NULL, 0, format, vararg);
-        asciiMessageBuffer.resize(len + 1);
-
-        // Print again
-        vsnprintf(&asciiMessageBuffer[0], asciiMessageBuffer.size(), format, vararg);
-    }
-
-    // NULL terminate the buffer to be safe
-    asciiMessageBuffer[len] = '\0';
+    std::string formattedMessage = FormatString(format, vararg);
 #endif
 
 #if defined(ANGLE_ENABLE_PERF)
@@ -50,12 +34,12 @@ static void output(bool traceFileDebugOnly, PerfOutputFunction perfFunc, const c
     {
         // The perf function only accepts wide strings, widen the ascii message
         static std::wstring wideMessage;
-        if (wideMessage.capacity() < asciiMessageBuffer.size())
+        if (wideMessage.capacity() < formattedMessage.length())
         {
-            wideMessage.reserve(asciiMessageBuffer.size());
+            wideMessage.reserve(formattedMessage.size());
         }
 
-        wideMessage.assign(asciiMessageBuffer.begin(), asciiMessageBuffer.begin() + len);
+        wideMessage.assign(formattedMessage.begin(), formattedMessage.end());
 
         perfFunc(0, wideMessage.c_str());
     }
@@ -72,7 +56,7 @@ static void output(bool traceFileDebugOnly, PerfOutputFunction perfFunc, const c
     static std::ofstream file(TRACE_OUTPUT_FILE, std::ofstream::app);
     if (file)
     {
-        file.write(&asciiMessageBuffer[0], len);
+        file.write(formattedMessage.c_str(), formattedMessage.length());
         file.flush();
     }
 
