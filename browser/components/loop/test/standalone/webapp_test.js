@@ -13,11 +13,15 @@ describe("loop.webapp", function() {
   var sharedModels = loop.shared.models,
       sharedViews = loop.shared.views,
       sandbox,
-      notifications;
+      notifications,
+      feedbackApiClient;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
     notifications = new sharedModels.NotificationCollection();
+    feedbackApiClient = new loop.FeedbackAPIClient("http://invalid", {
+      product: "Loop"
+    });
   });
 
   afterEach(function() {
@@ -31,6 +35,7 @@ describe("loop.webapp", function() {
       sandbox.stub(React, "renderComponent");
       sandbox.stub(loop.webapp.WebappHelper.prototype,
                    "locationHash").returns("#call/fake-Token");
+      loop.config.feedbackApiUrl = "http://fake.invalid";
       conversationSetStub =
         sandbox.stub(sharedModels.ConversationModel.prototype, "set");
     });
@@ -77,7 +82,8 @@ describe("loop.webapp", function() {
         client: client,
         conversation: conversation,
         notifications: notifications,
-        sdk: {}
+        sdk: {},
+        feedbackApiClient: feedbackApiClient
       });
     });
 
@@ -305,7 +311,7 @@ describe("loop.webapp", function() {
           conversation.trigger("session:ended");
 
           TestUtils.findRenderedComponentWithType(ocView,
-            loop.webapp.StartConversationView);
+            loop.webapp.EndedConversationView);
         });
       });
 
@@ -314,7 +320,7 @@ describe("loop.webapp", function() {
           conversation.trigger("session:peer-hungup");
 
           TestUtils.findRenderedComponentWithType(ocView,
-            loop.webapp.StartConversationView);
+            loop.webapp.EndedConversationView);
         });
 
         it("should notify the user", function() {
@@ -333,7 +339,7 @@ describe("loop.webapp", function() {
             conversation.trigger("session:network-disconnected");
 
             TestUtils.findRenderedComponentWithType(ocView,
-              loop.webapp.StartConversationView);
+              loop.webapp.EndedConversationView);
           });
 
         it("should notify the user", function() {
@@ -474,8 +480,10 @@ describe("loop.webapp", function() {
         loop.webapp.WebappRootView({
         client: client,
         helper: webappHelper,
+        notifications: notifications,
         sdk: sdk,
-        conversation: conversationModel
+        conversation: conversationModel,
+        feedbackApiClient: feedbackApiClient
       }));
     }
 
@@ -769,6 +777,32 @@ describe("loop.webapp", function() {
 
         expect(tos.classList.contains("hide")).to.equal(true);
       });
+    });
+  });
+
+  describe("EndedConversationView", function() {
+    var view, conversation;
+
+    beforeEach(function() {
+      conversation = new sharedModels.ConversationModel({}, {
+        sdk: {}
+      });
+      view = React.addons.TestUtils.renderIntoDocument(
+        loop.webapp.EndedConversationView({
+          conversation: conversation,
+          sdk: {},
+          feedbackApiClient: feedbackApiClient,
+          onAfterFeedbackReceived: function(){}
+        })
+      );
+    });
+
+    it("should render a ConversationView", function() {
+      TestUtils.findRenderedComponentWithType(view, sharedViews.ConversationView);
+    });
+
+    it("should render a FeedbackView", function() {
+      TestUtils.findRenderedComponentWithType(view, sharedViews.FeedbackView);
     });
   });
 

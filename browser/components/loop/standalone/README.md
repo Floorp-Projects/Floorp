@@ -29,8 +29,12 @@ appropriate configuration file:
 
 - `LOOP_SERVER_URL` defines the root url of the loop server, without trailing
   slash (default: `http://localhost:5000`).
-- `LOOP_PENDING_CALL_TIMEOUT` defines the amount of time a pending outgoing call
-  should be considered timed out, in milliseconds (default: `20000`).
+- `LOOP_FEEDBACK_API_URL` sets the root URL for the
+  [input API](https://input.mozilla.org/); defaults to the input stage server
+  (https://input.allizom.org/api/v1/feedback). **Don't forget to set this
+  value to the production server URL when deploying to production.**
+- `LOOP_FEEDBACK_PRODUCT_NAME` defines the product name to be sent to the input
+  API (defaults: Loop).
 
 Usage
 -----

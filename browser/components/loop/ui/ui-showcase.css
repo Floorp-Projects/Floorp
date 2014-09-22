@@ -37,7 +37,7 @@
 
 .showcase > section {
   position: relative;
-  padding-top: 12em;
+  padding-top: 14em;
   clear: both;
 }
 
@@ -148,4 +148,10 @@
   /* Height of obsolute box covers media control buttons. UI showcase only.
    * When tokbox inserts the markup into the page the problem goes away */
   bottom: auto;
+}
+
+.standalone .ended-conversation .remote_wrapper,
+.standalone .video-layout-wrapper {
+  /* Removes the fake video image for ended conversations */
+  background: none;
 }

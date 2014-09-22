@@ -406,6 +406,7 @@ loop.conversation = (function(OT, mozL10n) {
 
       /*jshint newcap:false*/
       this.loadReactComponent(sharedViews.ConversationView({
+        initiate: true,
         sdk: OT,
         model: this._conversation,
         video: {enabled: videoStream}
@@ -440,7 +441,8 @@ loop.conversation = (function(OT, mozL10n) {
       });
 
       this.loadReactComponent(sharedViews.FeedbackView({
-        feedbackApiClient: feedbackClient
+        feedbackApiClient: feedbackClient,
+        onAfterFeedbackReceived: window.close.bind(window)
       }));
     }
   });

@@ -13,6 +13,9 @@
 # to the Gruntfile and getting rid of this Makefile entirely.
 
 LOOP_SERVER_URL := $(shell echo $${LOOP_SERVER_URL-http://localhost:5000})
+LOOP_FEEDBACK_API_URL := $(shell echo $${LOOP_FEEDBACK_API_URL-"https://input.allizom.org/api/v1/feedback"})
+LOOP_FEEDBACK_PRODUCT_NAME := $(shell echo $${LOOP_FEEDBACK_PRODUCT_NAME-Loop})
+
 NODE_LOCAL_BIN=./node_modules/.bin
 
 install: npm_install tos
@@ -67,4 +70,6 @@ remove_old_config:
 config:
 	@echo "var loop = loop || {};" > content/config.js
 	@echo "loop.config = loop.config || {};" >> content/config.js
-	@echo "loop.config.serverUrl          = '`echo $(LOOP_SERVER_URL)`';" >> content/config.js
+	@echo "loop.config.serverUrl = '`echo $(LOOP_SERVER_URL)`';" >> content/config.js
+	@echo "loop.config.feedbackApiUrl = '`echo $(LOOP_FEEDBACK_API_URL)`';" >> content/config.js
+	@echo "loop.config.feedbackProductName = '`echo $(LOOP_FEEDBACK_PRODUCT_NAME)`';" >> content/config.js
