@@ -35,6 +35,7 @@ using namespace mozilla::widget::android;
 #ifdef MOZ_WIDGET_GONK
 #include <sys/system_properties.h>
 #include "mozilla/Preferences.h"
+#include "nsPrintfCString.h"
 #endif
 
 #ifdef ANDROID
@@ -320,6 +321,9 @@ nsSystemInfo::Init()
   if (__system_property_get("ro.build.version.sdk", sdk)) {
     android_sdk_version = atoi(sdk);
     SetPropertyAsInt32(NS_LITERAL_STRING("sdk_version"), android_sdk_version);
+
+    SetPropertyAsACString(NS_LITERAL_STRING("secondaryLibrary"),
+                          nsPrintfCString("SDK %u", android_sdk_version));
   }
 
   char characteristics[PROP_VALUE_MAX];
