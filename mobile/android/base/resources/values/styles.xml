@@ -191,6 +191,18 @@
         <item name="android:drawSelectorOnTop">true</item>
     </style>
 
+    <style name="Widget.TabsGridLayout" parent="Widget.GridView">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:stretchMode">columnWidth</item>
+        <item name="android:numColumns">auto_fit</item>
+        <item name="android:columnWidth">@dimen/tabs_grid_view_column_width</item>
+        <item name="android:horizontalSpacing">2dp</item>
+        <item name="android:verticalSpacing">2dp</item>
+        <item name="android:drawSelectorOnTop">true</item>
+    </style>
+
     <style name="Widget.BookmarkItemView" parent="Widget.TwoLinePageRow"/>
 
     <style name="Widget.BookmarksListView" parent="Widget.HomeListView"/>
