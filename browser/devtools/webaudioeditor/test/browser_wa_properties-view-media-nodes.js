@@ -20,14 +20,16 @@ function waitForDeviceClosed() {
 
   let deferred = Promise.defer();
 
-  const TOPIC = "recording-device-events";
-  Services.obs.addObserver(function deviceEventsObserver() {
-    info("Observing " + TOPIC);
-    if (!webrtcUI.showGlobalIndicator) {
-      Services.obs.removeObserver(deviceEventsObserver, TOPIC);
+  const message = "webrtc:UpdateGlobalIndicators";
+  let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+               .getService(Ci.nsIMessageBroadcaster);
+  ppmm.addMessageListener(message, function listener(aMessage) {
+    info("Received " + message + " message");
+    if (!aMessage.data.showGlobalIndicator) {
+      ppmm.removeMessageListener(message, listener);
       deferred.resolve();
     }
-  }, TOPIC, false);
+  });
 
   return deferred.promise;
 }
