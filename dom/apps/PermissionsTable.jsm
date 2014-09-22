@@ -48,7 +48,7 @@ this.PermissionsTable =  { geolocation: {
                            },
                            camera: {
                              app: DENY_ACTION,
-                             trusted: DENY_ACTION,
+                             trusted: PROMPT_ACTION,
                              privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION
                            },
@@ -99,28 +99,28 @@ this.PermissionsTable =  { geolocation: {
                            },
                            "device-storage:pictures": {
                              app: DENY_ACTION,
-                             trusted: DENY_ACTION,
+                             trusted: PROMPT_ACTION,
                              privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION,
                              access: ["read", "write", "create"]
                            },
                            "device-storage:videos": {
                              app: DENY_ACTION,
-                             trusted: DENY_ACTION,
+                             trusted: PROMPT_ACTION,
                              privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION,
                              access: ["read", "write", "create"]
                            },
                            "device-storage:music": {
                              app: DENY_ACTION,
-                             trusted: DENY_ACTION,
+                             trusted: PROMPT_ACTION,
                              privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION,
                              access: ["read", "write", "create"]
                            },
                            "device-storage:sdcard": {
                              app: DENY_ACTION,
-                             trusted: DENY_ACTION,
+                             trusted: PROMPT_ACTION,
                              privileged: PROMPT_ACTION,
                              certified: ALLOW_ACTION,
                              access: ["read", "write", "create"]
@@ -368,7 +368,7 @@ this.PermissionsTable =  { geolocation: {
                            },
                            "audio-channel-publicnotification": {
                              app: DENY_ACTION,
-                             trusted: DENY_ACTION,
+                             trusted: ALLOW_ACTION,
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
