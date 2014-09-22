@@ -14,14 +14,12 @@
         android:drawableLeft="@drawable/search_icon_inactive"
         android:drawablePadding="5dp"
         android:textSize="@dimen/query_text_size"
-        android:background="@drawable/edit_text_background"
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:textColorHighlight="@color/highlight_orange"
         android:textSelectHandle="@drawable/handle_middle"
         android:textSelectHandleLeft="@drawable/handle_start"
-        android:textSelectHandleRight="@drawable/handle_end"
-        android:hint="@string/search_for_something" />
+        android:textSelectHandleRight="@drawable/handle_end" />
 
     <ImageButton
         android:id="@+id/clear_button"
@@ -32,6 +30,14 @@
         android:background="@android:color/transparent"
         android:src="@drawable/search_clear"
         android:scaleType="centerInside"
+        android:visibility="gone"/>
+
+    <ImageView
+        android:id="@+id/engine_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="right|center_vertical"
+        android:background="@android:color/transparent"
         android:visibility="gone"/>
 
 </merge>

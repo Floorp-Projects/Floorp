@@ -19,7 +19,7 @@
         <item name="android:verticalSpacing">20dp</item>
     </style>
 
-    <style name="Widget.Home.HistoryListView">
+    <style name="Widget.Home.HomeList">
         <item name="android:scrollbarStyle">outsideOverlay</item>
         <item name="topDivider">true</item>
     </style>

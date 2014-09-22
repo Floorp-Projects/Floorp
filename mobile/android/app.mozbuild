@@ -9,6 +9,9 @@ if not CONFIG['LIBXUL_SDK']:
 elif CONFIG['ENABLE_TESTS']:
     add_tier_dir('testharness', 'testing/mochitest')
 
+if CONFIG['ENABLE_TESTS']:
+    add_tier_dir('testharness', 'testing/instrumentation')
+
 if CONFIG['MOZ_EXTENSIONS']:
     add_tier_dir('app', 'extensions')
 

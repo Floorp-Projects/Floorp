@@ -18,9 +18,9 @@ loop.shared.models = (function(l10n) {
       ongoing:      false,         // Ongoing call flag
       callerId:     undefined,     // Loop caller id
       loopToken:    undefined,     // Loop conversation token
-      loopCallId:   undefined,     // LoopService id for incoming session
       sessionId:    undefined,     // OT session id
       sessionToken: undefined,     // OT session token
+      sessionType:  undefined,     // Hawk session type
       apiKey:       undefined,     // OT api key
       callId:       undefined,     // The callId on the server
       progressURL:  undefined,     // The websocket url to use for progress
@@ -139,6 +139,7 @@ loop.shared.models = (function(l10n) {
       this.set({
         sessionId:      sessionData.sessionId,
         sessionToken:   sessionData.sessionToken,
+        sessionType:    sessionData.sessionType,
         apiKey:         sessionData.apiKey,
         callId:         sessionData.callId,
         progressURL:    sessionData.progressURL,

@@ -7,7 +7,7 @@
  */
 
 let test = Task.async(function*() {
-  let [target, debuggee, panel] = yield initTimelinePanel(SIMPLE_URL);
+  let { target, panel } = yield initTimelinePanel(SIMPLE_URL);
   let { $, EVENTS } = panel.panelWin;
 
   is($("#record-button").hasAttribute("checked"), false,

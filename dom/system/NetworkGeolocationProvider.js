@@ -412,14 +412,14 @@ WifiGeoPositionProvider.prototype = {
       let service = Cc["@mozilla.org/mobileconnection/mobileconnectionservice;1"]
                     .getService(Ci.nsIMobileConnectionService);
 
-      let numInterfaces = radioService.numRadioInterfaces;
       let result = [];
-      for (let i = 0; i < numInterfaces; i++) {
-        LOG("Looking for SIM in slot:" + i + " of " + numInterfaces);
-        let voice = service.getVoiceConnectionInfo(i);
-        let cell = voice.cell;
-        let type = voice.type;
-        let network = voice.network;
+      for (let i = 0; i < service.length; i++) {
+        LOG("Looking for SIM in slot:" + i + " of " + service.length);
+        let connection = service.getItemByServiceId(i);
+        let voice = connection && connection.voice;
+        let cell = voice && voice.cell;
+        let type = voice && voice.type;
+        let network = voice && voice.network;
 
         if (network && cell && type) {
           if (type === "gsm" || type === "gprs" || type === "edge") {

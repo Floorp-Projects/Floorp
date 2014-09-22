@@ -1321,100 +1321,6 @@ void GeckoAppShell::VibrateA(jlongArray a0, int32_t a1) {
     AndroidBridge::HandleUncaughtException(env);
     env->PopLocalFrame(nullptr);
 }
-jclass JavaDomKeyLocation::mDomKeyLocationClass = 0;
-jmethodID JavaDomKeyLocation::jvalueOf = 0;
-jmethodID JavaDomKeyLocation::jvalues = 0;
-jfieldID JavaDomKeyLocation::jDOM_KEY_LOCATION_JOYSTICK = 0;
-jfieldID JavaDomKeyLocation::jDOM_KEY_LOCATION_LEFT = 0;
-jfieldID JavaDomKeyLocation::jDOM_KEY_LOCATION_MOBILE = 0;
-jfieldID JavaDomKeyLocation::jDOM_KEY_LOCATION_NUMPAD = 0;
-jfieldID JavaDomKeyLocation::jDOM_KEY_LOCATION_RIGHT = 0;
-jfieldID JavaDomKeyLocation::jDOM_KEY_LOCATION_STANDARD = 0;
-jfieldID JavaDomKeyLocation::jvalue = 0;
-void JavaDomKeyLocation::InitStubs(JNIEnv *jEnv) {
-    initInit();
-
-    mDomKeyLocationClass = getClassGlobalRef("org/mozilla/gecko/GeckoEvent$DomKeyLocation");
-    jvalueOf = getStaticMethod("valueOf", "(Ljava/lang/String;)Lorg/mozilla/gecko/GeckoEvent$DomKeyLocation;");
-    jvalues = getStaticMethod("values", "()[Lorg/mozilla/gecko/GeckoEvent$DomKeyLocation;");
-    jDOM_KEY_LOCATION_JOYSTICK = getStaticField("DOM_KEY_LOCATION_JOYSTICK", "Lorg/mozilla/gecko/GeckoEvent$DomKeyLocation;");
-    jDOM_KEY_LOCATION_LEFT = getStaticField("DOM_KEY_LOCATION_LEFT", "Lorg/mozilla/gecko/GeckoEvent$DomKeyLocation;");
-    jDOM_KEY_LOCATION_MOBILE = getStaticField("DOM_KEY_LOCATION_MOBILE", "Lorg/mozilla/gecko/GeckoEvent$DomKeyLocation;");
-    jDOM_KEY_LOCATION_NUMPAD = getStaticField("DOM_KEY_LOCATION_NUMPAD", "Lorg/mozilla/gecko/GeckoEvent$DomKeyLocation;");
-    jDOM_KEY_LOCATION_RIGHT = getStaticField("DOM_KEY_LOCATION_RIGHT", "Lorg/mozilla/gecko/GeckoEvent$DomKeyLocation;");
-    jDOM_KEY_LOCATION_STANDARD = getStaticField("DOM_KEY_LOCATION_STANDARD", "Lorg/mozilla/gecko/GeckoEvent$DomKeyLocation;");
-    jvalue = getField("value", "I");
-}
-
-JavaDomKeyLocation* JavaDomKeyLocation::Wrap(jobject obj) {
-    JNIEnv *env = GetJNIForThread();
-    JavaDomKeyLocation* ret = new JavaDomKeyLocation(obj, env);
-    env->DeleteLocalRef(obj);
-    return ret;
-}
-
-jobject JavaDomKeyLocation::valueOf(const nsAString& a0) {
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (env->PushLocalFrame(2) != 0) {
-        AndroidBridge::HandleUncaughtException(env);
-        MOZ_CRASH("Exception should have caused crash.");
-    }
-
-    jstring j0 = AndroidBridge::NewJavaString(env, a0);
-
-    jobject temp = env->CallStaticObjectMethod(mDomKeyLocationClass, jvalueOf, j0);
-    AndroidBridge::HandleUncaughtException(env);
-    jobject ret = static_cast<jobject>(env->PopLocalFrame(temp));
-    return ret;
-}
-
-jobjectArray JavaDomKeyLocation::values() {
-    JNIEnv *env = AndroidBridge::GetJNIEnv();
-    if (env->PushLocalFrame(1) != 0) {
-        AndroidBridge::HandleUncaughtException(env);
-        MOZ_CRASH("Exception should have caused crash.");
-    }
-
-    jobject temp = env->CallStaticObjectMethod(mDomKeyLocationClass, jvalues);
-    AndroidBridge::HandleUncaughtException(env);
-    jobjectArray ret = static_cast<jobjectArray>(env->PopLocalFrame(temp));
-    return ret;
-}
-
-jobject JavaDomKeyLocation::getDOM_KEY_LOCATION_JOYSTICK() {
-    JNIEnv *env = GetJNIForThread();
-    return static_cast<jobject>(env->GetStaticObjectField(mDomKeyLocationClass, jDOM_KEY_LOCATION_JOYSTICK));
-}
-
-jobject JavaDomKeyLocation::getDOM_KEY_LOCATION_LEFT() {
-    JNIEnv *env = GetJNIForThread();
-    return static_cast<jobject>(env->GetStaticObjectField(mDomKeyLocationClass, jDOM_KEY_LOCATION_LEFT));
-}
-
-jobject JavaDomKeyLocation::getDOM_KEY_LOCATION_MOBILE() {
-    JNIEnv *env = GetJNIForThread();
-    return static_cast<jobject>(env->GetStaticObjectField(mDomKeyLocationClass, jDOM_KEY_LOCATION_MOBILE));
-}
-
-jobject JavaDomKeyLocation::getDOM_KEY_LOCATION_NUMPAD() {
-    JNIEnv *env = GetJNIForThread();
-    return static_cast<jobject>(env->GetStaticObjectField(mDomKeyLocationClass, jDOM_KEY_LOCATION_NUMPAD));
-}
-
-jobject JavaDomKeyLocation::getDOM_KEY_LOCATION_RIGHT() {
-    JNIEnv *env = GetJNIForThread();
-    return static_cast<jobject>(env->GetStaticObjectField(mDomKeyLocationClass, jDOM_KEY_LOCATION_RIGHT));
-}
-
-jobject JavaDomKeyLocation::getDOM_KEY_LOCATION_STANDARD() {
-    JNIEnv *env = GetJNIForThread();
-    return static_cast<jobject>(env->GetStaticObjectField(mDomKeyLocationClass, jDOM_KEY_LOCATION_STANDARD));
-}
-
-int32_t JavaDomKeyLocation::getvalue() {
-    JNIEnv *env = GetJNIForThread();
-    return env->GetIntField(wrapped_obj, jvalue);
-}
 jclass GeckoJavaSampler::mGeckoJavaSamplerClass = 0;
 jmethodID GeckoJavaSampler::jGetFrameNameJavaProfilingWrapper = 0;
 jmethodID GeckoJavaSampler::jGetSampleTimeJavaProfiling = 0;
@@ -2573,7 +2479,6 @@ void Clipboard::SetClipboardText(const nsAString& a0) {
 
 void InitStubs(JNIEnv *jEnv) {
     GeckoAppShell::InitStubs(jEnv);
-    JavaDomKeyLocation::InitStubs(jEnv);
     GeckoJavaSampler::InitStubs(jEnv);
     RestrictedProfiles::InitStubs(jEnv);
     SurfaceBits::InitStubs(jEnv);

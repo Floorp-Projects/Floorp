@@ -7,8 +7,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MainActivity">
 
-    <org.mozilla.search.autocomplete.ClearableEditText
-        android:id="@+id/search_edit_text"
+    <org.mozilla.search.autocomplete.SearchBar
+        android:id="@+id/search_bar"
         android:layout_width="match_parent"
         android:layout_height="@dimen/search_bar_height"
         android:paddingTop="@dimen/search_bar_padding_y"

@@ -16,7 +16,7 @@ var gRGB_TO_HSL = {
 };
 
 let test = Task.async(function*() {
-  let [target, debuggee, panel] = yield initTimelinePanel(SIMPLE_URL);
+  let { target, panel } = yield initTimelinePanel(SIMPLE_URL);
   let { TIMELINE_BLUEPRINT } = devtools.require("devtools/timeline/global");
   let { $, $$, EVENTS, TimelineController } = panel.panelWin;
 

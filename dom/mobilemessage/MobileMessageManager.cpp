@@ -23,9 +23,22 @@
 #include "nsIMmsService.h"
 #include "nsIMobileMessageCallback.h"
 #include "nsIMobileMessageDatabaseService.h"
+#include "nsIMobileMessageService.h"
 #include "nsIObserverService.h"
 #include "nsISmsService.h"
 #include "nsServiceManagerUtils.h" // For do_GetService()
+
+// Service instantiation
+#include "ipc/SmsIPCService.h"
+#include "MobileMessageService.h"
+#ifdef MOZ_WIDGET_ANDROID
+#include "android/MobileMessageDatabaseService.h"
+#include "android/SmsService.h"
+#elif defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
+#include "nsIRilMobileMessageDatabaseService.h"
+#include "gonk/SmsService.h"
+#endif
+#include "nsXULAppAPI.h" // For XRE_GetProcessType()
 
 #define RECEIVED_EVENT_NAME         NS_LITERAL_STRING("received")
 #define RETRIEVING_EVENT_NAME       NS_LITERAL_STRING("retrieving")
@@ -686,3 +699,62 @@ MobileMessageManager::GetSmscAddress(const Optional<uint32_t>& aServiceId,
 
 } // namespace dom
 } // namespace mozilla
+
+already_AddRefed<nsISmsService>
+NS_CreateSmsService()
+{
+  nsCOMPtr<nsISmsService> smsService;
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    smsService = SmsIPCService::GetSingleton();
+  } else {
+#ifdef MOZ_WIDGET_ANDROID
+    smsService = new SmsService();
+#elif defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
+    smsService = new SmsService();
+#endif
+  }
+
+  return smsService.forget();
+}
+
+already_AddRefed<nsIMobileMessageDatabaseService>
+NS_CreateMobileMessageDatabaseService()
+{
+  nsCOMPtr<nsIMobileMessageDatabaseService> mobileMessageDBService;
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mobileMessageDBService = SmsIPCService::GetSingleton();
+  } else {
+#ifdef MOZ_WIDGET_ANDROID
+    mobileMessageDBService = new MobileMessageDatabaseService();
+#elif defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
+    mobileMessageDBService =
+      do_CreateInstance(RIL_MOBILE_MESSAGE_DATABASE_SERVICE_CONTRACTID);
+#endif
+  }
+
+  return mobileMessageDBService.forget();
+}
+
+already_AddRefed<nsIMmsService>
+NS_CreateMmsService()
+{
+  nsCOMPtr<nsIMmsService> mmsService;
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mmsService = SmsIPCService::GetSingleton();
+  } else {
+#if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
+    mmsService = do_CreateInstance("@mozilla.org/mms/rilmmsservice;1");
+#endif
+  }
+
+  return mmsService.forget();
+}
+
+already_AddRefed<nsIMobileMessageService>
+NS_CreateMobileMessageService()
+{
+  nsCOMPtr<nsIMobileMessageService> service = new MobileMessageService();
+  return service.forget();
+}
