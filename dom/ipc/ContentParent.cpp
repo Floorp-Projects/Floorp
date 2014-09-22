@@ -2639,6 +2639,7 @@ ContentParent::Observe(nsISupports* aSubject,
         bool     isSharing;
         bool     isFormatting;
         bool     isFake;
+        bool     isUnmounting;
 
         vol->GetName(volName);
         vol->GetMountPoint(mountPoint);
@@ -2648,6 +2649,7 @@ ContentParent::Observe(nsISupports* aSubject,
         vol->GetIsSharing(&isSharing);
         vol->GetIsFormatting(&isFormatting);
         vol->GetIsFake(&isFake);
+        vol->GetIsUnmounting(&isUnmounting);
 
 #ifdef MOZ_NUWA_PROCESS
         if (!(IsNuwaReady() && IsNuwaProcess()))
@@ -2655,7 +2657,8 @@ ContentParent::Observe(nsISupports* aSubject,
         {
             unused << SendFileSystemUpdate(volName, mountPoint, state,
                                            mountGeneration, isMediaPresent,
-                                           isSharing, isFormatting, isFake);
+                                           isSharing, isFormatting, isFake,
+                                           isUnmounting);
         }
     } else if (!strcmp(aTopic, "phone-state-changed")) {
         nsString state(aData);
