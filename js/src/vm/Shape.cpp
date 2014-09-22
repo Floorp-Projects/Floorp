@@ -1545,10 +1545,6 @@ BaseShape::assertConsistency()
 void
 JSCompartment::sweepBaseShapeTable()
 {
-    GCRuntime &gc = runtimeFromMainThread()->gc;
-    gcstats::MaybeAutoPhase ap(gc.stats, !gc.isHeapCompacting(),
-                               gcstats::PHASE_SWEEP_TABLES_BASE_SHAPE);
-
     if (baseShapes.initialized()) {
         for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
             UnownedBaseShape *base = e.front().unbarrieredGet();
@@ -1843,10 +1839,6 @@ EmptyShape::insertInitialShape(ExclusiveContext *cx, HandleShape shape, HandleOb
 void
 JSCompartment::sweepInitialShapeTable()
 {
-    GCRuntime &gc = runtimeFromMainThread()->gc;
-    gcstats::MaybeAutoPhase ap(gc.stats, !gc.isHeapCompacting(),
-                               gcstats::PHASE_SWEEP_TABLES_INITIAL_SHAPE);
-
     if (initialShapes.initialized()) {
         for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
             const InitialShapeEntry &entry = e.front();

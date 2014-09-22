@@ -4663,14 +4663,65 @@ GCRuntime::beginSweepingZoneGroup()
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
         gcstats::AutoSCC scc(stats, zoneGroupIndex);
-        gcstats::AutoPhase apst(stats, gcstats::PHASE_SWEEP_TABLES);
+        gcstats::MaybeAutoPhase apiv(stats, !isHeapCompacting(),
+                                     gcstats::PHASE_SWEEP_INNER_VIEWS);
 
         for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
             c->sweepInnerViews();
+        }
+    }
+
+    {
+        gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
+        gcstats::AutoSCC scc(stats, zoneGroupIndex);
+        gcstats::MaybeAutoPhase apccw(stats, !isHeapCompacting(),
+                                      gcstats::PHASE_SWEEP_CC_WRAPPER);
+
+        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
             c->sweepCrossCompartmentWrappers();
+        }
+    }
+
+    {
+        gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
+        gcstats::AutoSCC scc(stats, zoneGroupIndex);
+        gcstats::MaybeAutoPhase apbs(stats, !isHeapCompacting(),
+                                     gcstats::PHASE_SWEEP_BASE_SHAPE);
+
+        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
             c->sweepBaseShapeTable();
+        }
+    }
+
+    {
+        gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
+        gcstats::AutoSCC scc(stats, zoneGroupIndex);
+        gcstats::MaybeAutoPhase apis(stats, !isHeapCompacting(),
+                                     gcstats::PHASE_SWEEP_INITIAL_SHAPE);
+
+        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
             c->sweepInitialShapeTable();
+        }
+    }
+
+    {
+        gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
+        gcstats::AutoSCC scc(stats, zoneGroupIndex);
+        gcstats::MaybeAutoPhase apto(stats, !isHeapCompacting(),
+                                     gcstats::PHASE_SWEEP_TYPE_OBJECT);
+
+        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
             c->sweepTypeObjectTables();
+        }
+    }
+
+    {
+        gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
+        gcstats::AutoSCC scc(stats, zoneGroupIndex);
+        gcstats::MaybeAutoPhase apre(stats, !isHeapCompacting(),
+                                     gcstats::PHASE_SWEEP_REGEXP);
+
+        for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
             c->sweepRegExps();
         }
     }
@@ -4678,7 +4729,8 @@ GCRuntime::beginSweepingZoneGroup()
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_COMPARTMENTS);
         gcstats::AutoSCC scc(stats, zoneGroupIndex);
-        gcstats::AutoPhase apst(stats, gcstats::PHASE_SWEEP_TABLES);
+        gcstats::MaybeAutoPhase apmisc(stats, !isHeapCompacting(),
+                                       gcstats::PHASE_SWEEP_MISC);
 
         for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
             c->sweepCallsiteClones();
