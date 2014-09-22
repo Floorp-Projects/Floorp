@@ -10,13 +10,13 @@ let connectCount = 0;
 function spawnTest() {
   let [target, debuggee, panel] = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS, gAudioNodes } = panelWin;
+  let { gFront, $, $$, EVENTS } = panelWin;
 
   let started = once(gFront, "start-context");
 
   reload(target);
 
-  gAudioNodes.on("connect", onConnectNode);
+  panelWin.on(EVENTS.CONNECT_NODE, onConnectNode);
 
   let [actors] = yield Promise.all([
     get3(gFront, "create-node"),
@@ -35,7 +35,7 @@ function spawnTest() {
 
   is(connectCount, 2, "Only two node connect events should be fired.");
 
-  gAudioNodes.off("connect", onConnectNode);
+  panelWin.off(EVENTS.CONNECT_NODE, onConnectNode);
 
   yield teardown(panel);
   finish();
