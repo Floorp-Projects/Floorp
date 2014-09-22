@@ -180,7 +180,7 @@ public:
     };
     
     // Additional bit flags...
-    enum {SCRIPTABLE = 4, BUILTINCLASS = 8};
+    enum {SCRIPTABLE = 4, BUILTINCLASS = 8, HASNOTXPCOM = 16};
 
     uint8_t GetResolveState() const {return mFlags.GetState();}
     
@@ -195,6 +195,17 @@ public:
                 {mFlags.SetFlagBit(uint8_t(BUILTINCLASS),on);}
     bool GetBuiltinClassFlag() const
                 {return mFlags.GetFlagBit(uint8_t(BUILTINCLASS));}
+
+
+    // AddRef/Release are special and are not considered for the NOTXPCOM flag.
+    void SetHasNotXPCOMFlag()
+    {
+        mFlags.SetFlagBit(HASNOTXPCOM, true);
+    }
+    bool GetHasNotXPCOMFlag() const
+    {
+        return mFlags.GetFlagBit(HASNOTXPCOM);
+    }
 
     const nsID* GetTheIID()  const {return &mIID;}
     const char* GetTheName() const {return mName;}

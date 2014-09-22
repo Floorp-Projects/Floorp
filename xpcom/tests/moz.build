@@ -110,6 +110,11 @@ if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT'):
         'TestDeadlockDetectorScalability',
     ])
 
+XPIDL_MODULE = 'xpcomtest'
+XPIDL_SOURCES += [
+    'NotXPCOMTest.idl',
+]
+
 LOCAL_INCLUDES += [
     '../ds',
 ]
