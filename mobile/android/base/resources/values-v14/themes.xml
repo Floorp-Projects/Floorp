@@ -6,39 +6,16 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--
-        Base application theme. This could be overridden by GeckoBaseTheme
-        in other res/values-XXX/themes.xml.
-    -->
-    <style name="GeckoBase" parent="@android:style/Theme.Holo.Light">
-        <item name="android:windowContentOverlay">@null</item>
-        <item name="android:windowActionBar">false</item>
-        <item name="android:windowNoTitle">true</item>
-        <item name="arrowPopupWidth">match_parent</item>
-    </style>
-
-    <style name="GeckoDialogBase" parent="@android:style/Theme.Holo.Light.Dialog">
-        <item name="android:windowContentOverlay">@null</item>
-        <item name="android:windowActionBar">false</item>
-        <item name="android:windowNoTitle">true</item>
-    </style>
-
-    <style name="GeckoTitleDialogBase" parent="@android:style/Theme.Holo.Light.Dialog" />
-
-    <style name="GeckoPreferencesBase" parent="GeckoBase">
-        <item name="android:windowActionBar">true</item>
-        <item name="android:windowNoTitle">false</item>
-        <item name="android:actionBarStyle">@style/ActionBar.GeckoPreferences</item>
-    </style>
-
-    <!--
-        Activity based themes for API 11+. This theme completely replaces
-        GeckoAppBase from res/values/themes.xml on API 11+ devices.
+        Activity based themes for API 14+. This theme completely replaces
+        GeckoAppBase from res/values/themes.xml on API 14+ devices.
     -->
     <style name="GeckoAppBase" parent="Gecko">
         <item name="android:actionButtonStyle">@style/GeckoActionBar.Button</item>
         <item name="android:actionModeCopyDrawable">@drawable/ab_copy</item>
         <item name="android:actionModeCutDrawable">@drawable/ab_cut</item>
         <item name="android:actionModePasteDrawable">@drawable/ab_paste</item>
+        <item name="android:actionModeSelectAllDrawable">@drawable/ab_select_all</item>
+        <item name="android:actionModeStyle">@style/GeckoActionBar</item>
         <item name="android:listViewStyle">@style/Widget.ListView</item>
         <item name="android:panelBackground">@drawable/menu_panel_bg</item>
         <item name="android:spinnerDropDownItemStyle">@style/Widget.DropDownItem.Spinner</item>
