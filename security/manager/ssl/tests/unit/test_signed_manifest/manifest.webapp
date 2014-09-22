@@ -1,0 +1,10 @@
+{ "name": "Trusted App Example",
+  "description": "A Manifest for a Trusted Hosted Application",
+  "type": "trusted",
+  "launch_path": "/index.html",
+  "icons": { "128" : "icon-128.png" },
+  "version": 1,
+  "csp" : "script-src https://www.example.com; style-src https://www.example.com",
+  "permissions": { "device-storage:videos":{ "access": "readonly" }, "device-storage:pictures":{ "access": "readwrite" } },
+  "default_locale": "en-US"
+}
