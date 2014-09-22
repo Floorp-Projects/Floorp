@@ -1597,7 +1597,7 @@ function JSTermHelpers(aOwner)
       return node ? aOwner.makeDebuggeeValue(node) : null;
     },
     enumerable: true,
-    configurable: false
+    configurable: true
   });
 
   /**
