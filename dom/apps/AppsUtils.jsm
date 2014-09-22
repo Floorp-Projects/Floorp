@@ -22,7 +22,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "WebappOSUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
 
-// Shared code for AppsServiceChild.jsm, Webapps.jsm and Webapps.js
+// Shared code for AppsServiceChild.jsm, TrustedHostedAppsUtils.jsm,
+// Webapps.jsm and Webapps.js
 
 this.EXPORTED_SYMBOLS =
   ["AppsUtils", "ManifestHelper", "isAbsoluteURI", "mozIApplication"];
@@ -114,6 +115,84 @@ this.AppsUtils = {
     let obj = {};
     _setAppProperties(obj, aApp);
     return obj;
+  },
+
+  // Creates a nsILoadContext object with a given appId and isBrowser flag.
+  createLoadContext: function createLoadContext(aAppId, aIsBrowser) {
+    return {
+       associatedWindow: null,
+       topWindow : null,
+       appId: aAppId,
+       isInBrowserElement: aIsBrowser,
+       usePrivateBrowsing: false,
+       isContent: false,
+
+       isAppOfType: function(appType) {
+         throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+       },
+
+       QueryInterface: XPCOMUtils.generateQI([Ci.nsILoadContext,
+                                              Ci.nsIInterfaceRequestor,
+                                              Ci.nsISupports]),
+       getInterface: function(iid) {
+         if (iid.equals(Ci.nsILoadContext))
+           return this;
+         throw Cr.NS_ERROR_NO_INTERFACE;
+       }
+     }
+  },
+
+  // Sends data downloaded from aRequestChannel to a file
+  // identified by aId and aFileName.
+  getFile: function(aRequestChannel, aId, aFileName) {
+    let deferred = Promise.defer();
+
+    // Staging the file in TmpD until all the checks are done.
+    let file = FileUtils.getFile("TmpD", ["webapps", aId, aFileName], true);
+
+    // We need an output stream to write the channel content to the out file.
+    let outputStream = Cc["@mozilla.org/network/file-output-stream;1"]
+                         .createInstance(Ci.nsIFileOutputStream);
+    // write, create, truncate
+    outputStream.init(file, 0x02 | 0x08 | 0x20, parseInt("0664", 8), 0);
+    let bufferedOutputStream =
+      Cc['@mozilla.org/network/buffered-output-stream;1']
+        .createInstance(Ci.nsIBufferedOutputStream);
+    bufferedOutputStream.init(outputStream, 1024);
+
+    // Create a listener that will give data to the file output stream.
+    let listener = Cc["@mozilla.org/network/simple-stream-listener;1"]
+                     .createInstance(Ci.nsISimpleStreamListener);
+
+    listener.init(bufferedOutputStream, {
+      onStartRequest: function(aRequest, aContext) {
+        // Nothing to do there anymore.
+      },
+
+      onStopRequest: function(aRequest, aContext, aStatusCode) {
+        bufferedOutputStream.close();
+        outputStream.close();
+
+        if (!Components.isSuccessCode(aStatusCode)) {
+          deferred.reject({ msg: "NETWORK_ERROR", downloadAvailable: true});
+          return;
+        }
+
+        // If we get a 4XX or a 5XX http status, bail out like if we had a
+        // network error.
+        let responseStatus = aRequestChannel.responseStatus;
+        if (responseStatus >= 400 && responseStatus <= 599) {
+          // unrecoverable error, don't bug the user
+          deferred.reject({ msg: "NETWORK_ERROR", downloadAvailable: false});
+          return;
+        }
+
+        deferred.resolve(file);
+      }
+    });
+    aRequestChannel.asyncOpen(listener, null);
+
+    return deferred.promise;
   },
 
   getAppByManifestURL: function getAppByManifestURL(aApps, aManifestURL) {
