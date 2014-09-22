@@ -179,6 +179,7 @@ function AccessFuContentTest(aFuncResultPairs) {
 AccessFuContentTest.prototype = {
   expected: [],
   currentAction: null,
+  actionNum: -1,
 
   start: function(aFinishedCallback) {
     Logger.logLevel = Logger.DEBUG;
@@ -216,6 +217,13 @@ AccessFuContentTest.prototype = {
     Logger.logLevel = Logger.INFO;
     for (var mm of this.mms) {
         mm.sendAsyncMessage('AccessFu:Stop');
+        mm.removeMessageListener('AccessFu:Present', this);
+        mm.removeMessageListener('AccessFu:Input', this);
+        mm.removeMessageListener('AccessFu:CursorCleared', this);
+        mm.removeMessageListener('AccessFu:Focused', this);
+        mm.removeMessageListener('AccessFu:AriaHidden', this);
+        mm.removeMessageListener('AccessFu:Ready', this);
+        mm.removeMessageListener('AccessFu:ContentStarted', this);
       }
     if (this.finishedCallback) {
       this.finishedCallback();
@@ -239,12 +247,15 @@ AccessFuContentTest.prototype = {
     aMessageManager.addMessageListener('AccessFu:Present', this);
     aMessageManager.addMessageListener('AccessFu:Input', this);
     aMessageManager.addMessageListener('AccessFu:CursorCleared', this);
+    aMessageManager.addMessageListener('AccessFu:Focused', this);
+    aMessageManager.addMessageListener('AccessFu:AriaHidden', this);
     aMessageManager.addMessageListener('AccessFu:Ready', function () {
       aMessageManager.addMessageListener('AccessFu:ContentStarted', aCallback);
       aMessageManager.sendAsyncMessage('AccessFu:Start',
         { buildApp: 'browser',
           androidSdkVersion: Utils.AndroidSdkVersion,
-          logLevel: 'DEBUG' });
+          logLevel: 'DEBUG',
+          inTest: true });
     });
 
     aMessageManager.loadFrameScript(
@@ -262,6 +273,7 @@ AccessFuContentTest.prototype = {
     var currentPair = this.queue.shift();
 
     if (currentPair) {
+      this.actionNum++;
       this.currentAction = currentPair[0];
       if (typeof this.currentAction === 'function') {
         this.currentAction(this.mms[0]);
@@ -287,122 +299,18 @@ AccessFuContentTest.prototype = {
       return;
     }
 
-    // |expected| can simply be a name of a message, no more further testing.
-    if (aMessage.name === expected) {
-      ok(true, 'Received ' + expected);
+    var actionsString = typeof this.currentAction === 'function' ?
+      this.currentAction.name + '()' : JSON.stringify(this.currentAction);
+
+    if (typeof expected === 'string') {
+      ok(true, 'Got ' + expected + ' after ' + actionsString);
       this.pump();
-      return;
-    }
-
-    var editState = this.extractEditeState(aMessage);
-    var speech = this.extractUtterance(aMessage);
-    var android = this.extractAndroid(aMessage, expected.android);
-    if ((speech && expected.speak)
-        || (android && expected.android)
-        || (editState && expected.editState)) {
-      if (expected.speak) {
-        var checkFunc = SimpleTest[expected.speak_checkFunc] || isDeeply;
-        checkFunc.apply(SimpleTest, [speech, expected.speak,
-          'spoken: ' + JSON.stringify(speech) +
-          ' expected: ' + JSON.stringify(expected.speak) +
-          ' after: ' + (typeof this.currentAction === 'function' ?
-            this.currentAction.toString() :
-            JSON.stringify(this.currentAction))]);
-      }
-
-      if (expected.android) {
-        var checkFunc = SimpleTest[expected.android_checkFunc] || ok;
-        checkFunc.apply(SimpleTest,
-          this.lazyCompare(android, expected.android));
-      }
-
-      if (expected.editState) {
-        var checkFunc = SimpleTest[expected.editState_checkFunc] || isDeeply;
-        checkFunc.apply(SimpleTest, [editState, expected.editState,
-          'editState: ' + JSON.stringify(editState) +
-          ' expected: ' + JSON.stringify(expected.editState) +
-          ' after: ' + (typeof this.currentAction === 'function' ?
-            this.currentAction.toString() :
-            JSON.stringify(this.currentAction))]);
-      }
-
-      if (expected.focused) {
-        var doc = currentTabDocument();
-        is(doc.activeElement, doc.querySelector(expected.focused),
-          'Correct element is focused: ' + expected.focused);
-      }
-
+    } else if (expected.ignore && !expected.ignore(aMessage)) {
+      expected.is(aMessage.json, 'after ' + actionsString +
+        ' (' + this.actionNum + ')');
+      expected.is_correct_focus();
       this.pump();
     }
-
-  },
-
-  lazyCompare: function lazyCompare(aReceived, aExpected) {
-    var matches = true;
-    var delta = [];
-    for (var attr in aExpected) {
-      var expected = aExpected[attr];
-      var received = aReceived !== undefined ? aReceived[attr] : null;
-      if (typeof expected === 'object') {
-        var [childMatches, childDelta] = this.lazyCompare(received, expected);
-        if (!childMatches) {
-          delta.push(attr + ' [ ' + childDelta + ' ]');
-          matches = false;
-        }
-      } else {
-        if (received !== expected) {
-          delta.push(
-            attr + ' [ expected ' + expected + ' got ' + received + ' ]');
-          matches = false;
-        }
-      }
-    }
-    return [matches, delta.join(' ')];
-  },
-
-  extractEditeState: function(aMessage) {
-    if (!aMessage || aMessage.name !== 'AccessFu:Input') {
-      return null;
-    }
-
-    return aMessage.json;
-  },
-
-  extractUtterance: function(aMessage) {
-    if (!aMessage || aMessage.name !== 'AccessFu:Present') {
-      return null;
-    }
-
-    for (var output of aMessage.json) {
-      if (output && output.type === 'B2G') {
-        if (output.details && output.details.data[0].string !== 'clickAction') {
-          return output.details.data;
-        }
-      }
-    }
-
-    return null;
-  },
-
-  extractAndroid: function(aMessage, aExpectedEvents) {
-    if (!aMessage || aMessage.name !== 'AccessFu:Present') {
-      return null;
-    }
-
-    for (var output of aMessage.json) {
-      if (output && output.type === 'Android') {
-        for (var i in output.details) {
-          // Only extract if event types match expected event types.
-          var exp = aExpectedEvents ? aExpectedEvents[i] : null;
-          if (!exp || (output.details[i].eventType !== exp.eventType)) {
-            return null;
-          }
-        }
-        return output.details;
-      }
-    }
-
-    return null;
   }
 };
 
@@ -538,6 +446,213 @@ var ContentMessages = {
     'paragraph': 8 // MOVEMENT_GRANULARITY_PARAGRAPH
   }
 };
+
+function ExpectedMessage (aName, aOptions) {
+  this.name = aName;
+  this.options = aOptions || {};
+  this.json = {};
+}
+
+ExpectedMessage.prototype.lazyCompare = function(aReceived, aExpected, aInfo) {
+  if (aExpected && !aReceived) {
+    return [false, 'Expected something but got nothing -- ' + aInfo];
+  }
+
+  var matches = true;
+  var delta = [];
+  for (var attr in aExpected) {
+    var expected = aExpected[attr];
+    var received = aReceived[attr];
+    if (typeof expected === 'object') {
+      var [childMatches, childDelta] = this.lazyCompare(received, expected);
+      if (!childMatches) {
+        delta.push(attr + ' [ ' + childDelta + ' ]');
+        matches = false;
+      }
+    } else {
+      if (received !== expected) {
+        delta.push(
+          attr + ' [ expected ' + JSON.stringify(expected) +
+          ' got ' + JSON.stringify(received) + ' ]');
+        matches = false;
+      }
+    }
+  }
+
+  var msg = delta.length ? delta.join(' ') : 'Structures lazily match';
+  return [matches, msg + ' -- ' + aInfo];
+};
+
+ExpectedMessage.prototype.is = function(aReceived, aInfo) {
+  var checkFunc = this.options.todo ? 'todo' : 'ok';
+  SimpleTest[checkFunc].apply(
+    SimpleTest, this.lazyCompare(aReceived, this.json, aInfo));
+};
+
+ExpectedMessage.prototype.is_correct_focus = function(aInfo) {
+  if (!this.options.focused) {
+    return;
+  }
+
+  var checkFunc = this.options.focused_todo ? 'todo_is' : 'is';
+  var doc = currentTabDocument();
+  SimpleTest[checkFunc].apply(SimpleTest,
+    [ doc.activeElement, doc.querySelector(this.options.focused),
+      'Correct element is focused: ' + this.options.focused + ' -- ' + aInfo ]);
+};
+
+ExpectedMessage.prototype.ignore = function(aMessage) {
+  return aMessage.name !== this.name;
+};
+
+function ExpectedPresent(aB2g, aAndroid, aOptions) {
+  ExpectedMessage.call(this, 'AccessFu:Present', aOptions);
+  if (aB2g) {
+    this.json.b2g = aB2g;
+  }
+
+  if (aAndroid) {
+    this.json.android = aAndroid;
+  }
+}
+
+ExpectedPresent.prototype = Object.create(ExpectedMessage.prototype);
+
+ExpectedPresent.prototype.is = function(aReceived, aInfo) {
+  var received = this.extract_presenters(aReceived);
+
+  for (var presenter of ['b2g', 'android']) {
+    if (!this.options['no_' + presenter]) {
+      var todo = this.options.todo || this.options[presenter + '_todo']
+      SimpleTest[todo ? 'todo' : 'ok'].apply(
+        SimpleTest, this.lazyCompare(received[presenter],
+          this.json[presenter], aInfo + ' (' + presenter + ')'));
+    }
+  }
+};
+
+ExpectedPresent.prototype.extract_presenters = function(aReceived) {
+  var received = { count: 0 };
+  for (var presenter of aReceived) {
+    if (presenter) {
+      received[presenter.type.toLowerCase()] = presenter.details;
+      received.count++;
+    }
+  }
+
+  return received
+};
+
+ExpectedPresent.prototype.ignore = function(aMessage) {
+  if (ExpectedMessage.prototype.ignore.call(this, aMessage)) {
+    return true;
+  }
+
+  var received = this.extract_presenters(aMessage.json);
+  return received.count === 0 ||
+    (received.visual && received.visual.eventType === 'viewport-change') ||
+    (received.android &&
+      received.android[0].eventType === AndroidEvent.VIEW_SCROLLED);
+};
+
+function ExpectedCursorChange(aSpeech, aOptions) {
+  ExpectedPresent.call(this, {
+    eventType: 'vc-change',
+    data: aSpeech
+  }, [{
+    eventType: 0x8000, // VIEW_ACCESSIBILITY_FOCUSED
+  }], aOptions);
+}
+
+ExpectedCursorChange.prototype = Object.create(ExpectedPresent.prototype);
+
+function ExpectedCursorTextChange(aSpeech, aStartOffset, aEndOffset, aOptions) {
+  ExpectedPresent.call(this, {
+    eventType: 'vc-change',
+    data: aSpeech
+  }, [{
+    eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+    fromIndex: aStartOffset,
+    toIndex: aEndOffset
+  }], aOptions);
+
+  // bug 980509
+  this.options.b2g_todo = true;
+}
+
+ExpectedCursorTextChange.prototype =
+  Object.create(ExpectedCursorChange.prototype);
+
+function ExpectedClickAction(aOptions) {
+  ExpectedPresent.call(this, {
+    eventType: 'action',
+    data: [{ string: 'clickAction' }]
+  }, [{
+    eventType: AndroidEvent.VIEW_CLICKED
+  }], aOptions);
+}
+
+ExpectedClickAction.prototype = Object.create(ExpectedPresent.prototype);
+
+function ExpectedCheckAction(aChecked, aOptions) {
+  ExpectedPresent.call(this, {
+    eventType: 'action',
+    data: [{ string: aChecked ? 'checkAction' : 'uncheckAction' }]
+  }, [{
+    eventType: AndroidEvent.VIEW_CLICKED,
+    checked: aChecked
+  }], aOptions);
+}
+
+ExpectedCheckAction.prototype = Object.create(ExpectedPresent.prototype);
+
+function ExpectedValueChange(aValue, aOptions) {
+  ExpectedPresent.call(this, {
+    eventType: 'value-change',
+    data: [aValue]
+  }, null, aOptions);
+}
+
+ExpectedValueChange.prototype = Object.create(ExpectedPresent.prototype);
+
+function ExpectedEditState(aEditState, aOptions) {
+  ExpectedMessage.call(this, 'AccessFu:Input', aOptions);
+  this.json = aEditState;
+}
+
+ExpectedEditState.prototype = Object.create(ExpectedMessage.prototype);
+
+function ExpectedTextSelectionChanged(aStart, aEnd, aOptions) {
+  ExpectedPresent.call(this, null, [{
+    eventType: AndroidEvent.VIEW_TEXT_SELECTION_CHANGED,
+    brailleOutput: {
+     selectionStart: aStart,
+     selectionEnd: aEnd
+   }}], aOptions);
+}
+
+ExpectedTextSelectionChanged.prototype =
+  Object.create(ExpectedPresent.prototype);
+
+function ExpectedTextCaretChanged(aFrom, aTo, aOptions) {
+  ExpectedPresent.call(this, null, [{
+    eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
+    fromIndex: aFrom,
+    toIndex: aTo
+  }], aOptions);
+}
+
+ExpectedTextCaretChanged.prototype = Object.create(ExpectedPresent.prototype);
+
+function ExpectedAnnouncement(aAnnouncement, aOptions) {
+  ExpectedPresent.call(this, null, [{
+    eventType: AndroidEvent.ANNOUNCEMENT,
+    text: [ aAnnouncement],
+    addedCount: aAnnouncement.length
+  }], aOptions);
+}
+
+ExpectedAnnouncement.prototype = Object.create(ExpectedPresent.prototype);
 
 var AndroidEvent = {
   VIEW_CLICKED: 0x01,
