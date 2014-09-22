@@ -96,7 +96,10 @@ protected:
                    const bool&                chooseApplicationCache,
                    const nsCString&           appCacheClientID,
                    const bool&                allowSpdy,
-                   const OptionalFileDescriptorSet& aFds);
+                   const OptionalFileDescriptorSet& aFds,
+                   const ipc::PrincipalInfo&  aRequestingPrincipalInfo,
+                   const uint32_t&            aSecurityFlags,
+                   const uint32_t&            aContentPolicyType);
 
   virtual bool RecvSetPriority(const uint16_t& priority) MOZ_OVERRIDE;
   virtual bool RecvSetCacheTokenCachedCharset(const nsCString& charset) MOZ_OVERRIDE;
