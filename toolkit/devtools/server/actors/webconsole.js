@@ -913,13 +913,45 @@ WebConsoleActor.prototype =
     };
     JSTermHelpers(helpers);
 
-    // Make sure the helpers can be used during eval.
+    let evalWindow = this.evalWindow;
+    function maybeExport(obj, name) {
+      if (typeof obj[name] != "function") {
+        return;
+      }
+
+      // By default, chrome-implemented functions that are exposed to content
+      // refuse to accept arguments that are cross-origin for the caller. This
+      // is generally the safe thing, but causes problems for certain console
+      // helpers like cd(), where we users sometimes want to pass a cross-origin
+      // window.
+      //
+      // We have a proper way to waive this security check from FF34 onward, but
+      // for FF33 need to do some more tricky circumvention.
+
+      // Create a content function that boxes up its arguments into an Array
+      // and forwards that to chrome, which then uses an xray waiver to access
+      // it. Be careful not to do anything that might hit a standard object
+      // (like .push() or Array.from());
+      let funToExport = obj[name];
+      let boxerSource = "var args = []; \
+                         for (var i = 0; i < arguments.length; ++i) \
+                           args[i] = arguments[i]; \
+                         return arguments.callee.__chromeFun__(args);";
+      let boxer = evalWindow.Function(boxerSource);
+      let unboxer = function(args) { return funToExport.apply(null, Cu.waiveXrays(args)); };
+      Object.defineProperty(Cu.waiveXrays(boxer), '__chromeFun__', { value: unboxer });
+      obj[name] = boxer;
+    }
     for (let name in helpers.sandbox) {
       let desc = Object.getOwnPropertyDescriptor(helpers.sandbox, name);
-      if (desc.get || desc.set) {
-        continue;
+      maybeExport(desc, 'get');
+      maybeExport(desc, 'set');
+      maybeExport(desc, 'value');
+      if (desc.value) {
+        // Make sure the helpers can be used during eval.
+        desc.value = aDebuggerGlobal.makeDebuggeeValue(desc.value);
       }
-      helpers.sandbox[name] = aDebuggerGlobal.makeDebuggeeValue(desc.value);
+      Object.defineProperty(helpers.sandbox, name, desc);
     }
     return helpers;
   },
