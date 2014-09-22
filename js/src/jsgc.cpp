@@ -4672,7 +4672,20 @@ GCRuntime::beginSweepingZoneGroup()
         gcstats::AutoPhase apst(stats, gcstats::PHASE_SWEEP_TABLES);
 
         for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
-            c->sweep(&fop, releaseObservedTypes && !c->zone()->isPreservingCode());
+            c->sweepInnerViews();
+            c->sweepCrossCompartmentWrappers();
+            c->sweepBaseShapeTable();
+            c->sweepInitialShapeTable();
+            c->sweepTypeObjectTables();
+            c->sweepCallsiteClones();
+            c->sweepSavedStacks();
+            c->sweepGlobalObject(&fop);
+            c->sweepSelfHostingScriptSource();
+            c->sweepJitCompartment(&fop);
+            c->sweepRegExps();
+            c->sweepDebugScopes();
+            c->sweepWeakMaps();
+            c->sweepNativeIterators();
         }
     }
 
