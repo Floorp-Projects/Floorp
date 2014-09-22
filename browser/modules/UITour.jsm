@@ -1132,8 +1132,7 @@ this.UITour = {
         });
         break;
       case "appinfo":
-        let props = ["defaultUpdateChannel", "distributionID", "isOfficialBranding",
-                     "isReleaseBuild", "name", "vendor", "version"];
+        let props = ["defaultUpdateChannel", "version"];
         let appinfo = {};
         props.forEach(property => appinfo[property] = Services.appinfo[property]);
         this.sendPageCallback(aContentDocument, aCallbackID, appinfo);
