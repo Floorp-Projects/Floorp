@@ -892,14 +892,20 @@ function generateEvents(type, x, y, touchId, target) {
       break;
     case 'contextmenu':
       isTap = false;
-      let event = curFrame.document.createEvent('HTMLEvents');
-      event.initEvent('contextmenu', true, true);
+      let event = curFrame.document.createEvent('MouseEvents');
       if (mouseEventsOnly) {
         target = doc.elementFromPoint(lastCoordinates[0], lastCoordinates[1]);
       }
       else {
         target = touchIds[touchId].target;
       }
+      let [ clientX, clientY,
+            pageX, pageY,
+            screenX, screenY ] = getCoordinateInfo(target, x, y);
+      event.initMouseEvent('contextmenu', true, true,
+                           target.ownerDocument.defaultView, 1,
+                           screenX, screenY, clientX, clientY,
+                           false, false, false, false, 0, null);
       target.dispatchEvent(event);
       break;
     default:
@@ -945,18 +951,29 @@ function singleTap(msg) {
 }
 
 /**
+ * Given an element and a pair of coordinates, returns an array of the form
+ * [ clientX, clientY, pageX, pageY, screenX, screenY ]
+ */
+function getCoordinateInfo(el, corx, cory) {
+  let win = el.ownerDocument.defaultView;
+  return [ corx, // clientX
+           cory, // clientY
+           corx + win.pageXOffset, // pageX
+           cory + win.pageYOffset, // pageY
+           corx + win.mozInnerScreenX, // screenX
+           cory + win.mozInnerScreenY // screenY
+         ];
+}
+
+/**
  * Function to create a touch based on the element
  * corx and cory are relative to the viewport, id is the touchId
  */
 function createATouch(el, corx, cory, touchId) {
   let doc = el.ownerDocument;
   let win = doc.defaultView;
-  let clientX = corx;
-  let clientY = cory;
-  let pageX = clientX + win.pageXOffset,
-      pageY = clientY + win.pageYOffset;
-  let screenX = clientX + win.mozInnerScreenX,
-      screenY = clientY + win.mozInnerScreenY;
+  let [clientX, clientY, pageX, pageY, screenX, screenY] =
+    getCoordinateInfo(el, corx, cory);
   let atouch = doc.createTouch(win, el, touchId, pageX, pageY, screenX, screenY, clientX, clientY);
   return atouch;
 }
