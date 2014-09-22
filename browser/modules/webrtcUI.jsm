@@ -23,16 +23,28 @@ XPCOMUtils.defineLazyServiceGetter(this, "MediaManagerService",
 this.webrtcUI = {
   init: function () {
     Services.obs.addObserver(handleRequest, "getUserMedia:request", false);
-    Services.obs.addObserver(updateIndicators, "recording-device-events", false);
-    Services.obs.addObserver(removeBrowserSpecificIndicator, "recording-window-ended", false);
     Services.obs.addObserver(maybeAddMenuIndicator, "browser-delayed-startup-finished", false);
+
+    let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+                 .getService(Ci.nsIMessageBroadcaster);
+    ppmm.addMessageListener("webrtc:UpdateGlobalIndicators", this);
+
+    let mm = Cc["@mozilla.org/globalmessagemanager;1"]
+               .getService(Ci.nsIMessageListenerManager);
+    mm.addMessageListener("webrtc:UpdateBrowserIndicators", this);
   },
 
   uninit: function () {
     Services.obs.removeObserver(handleRequest, "getUserMedia:request");
-    Services.obs.removeObserver(updateIndicators, "recording-device-events");
-    Services.obs.removeObserver(removeBrowserSpecificIndicator, "recording-window-ended");
     Services.obs.removeObserver(maybeAddMenuIndicator, "browser-delayed-startup-finished");
+
+    let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
+                 .getService(Ci.nsIMessageBroadcaster);
+    ppmm.removeMessageListener("webrtc:UpdateGlobalIndicators", this);
+
+    let mm = Cc["@mozilla.org/globalmessagemanager;1"]
+               .getService(Ci.nsIMessageListenerManager);
+    mm.removeMessageListener("webrtc:UpdateBrowserIndicators", this);
   },
 
   showGlobalIndicator: false,
@@ -119,12 +131,19 @@ this.webrtcUI = {
     let stringId = "getUserMedia.share" + (type || "SelectedItems") + ".label";
     let popupnotification = aMenuList.parentNode.parentNode;
     popupnotification.setAttribute("buttonlabel", bundle.getString(stringId));
-  }
-}
+  },
 
-function getBrowserForWindowId(aWindowID) {
-  return getBrowserForWindow(Services.wm.getOuterWindowWithId(aWindowID));
-}
+  receiveMessage: function(aMessage) {
+    switch (aMessage.name) {
+      case "webrtc:UpdateGlobalIndicators":
+        updateIndicators(aMessage.data)
+        break;
+      case "webrtc:UpdateBrowserIndicators":
+        updateBrowserSpecificIndicator(aMessage.target, aMessage.data);
+        break;
+    }
+  }
+};
 
 function getBrowserForWindow(aContentWindow) {
   return aContentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -696,33 +715,11 @@ function maybeAddMenuIndicator(window) {
 
 var gIndicatorWindow = null;
 
-function updateIndicators() {
-  let contentWindowSupportsArray = MediaManagerService.activeMediaCaptureWindows;
-  let count = contentWindowSupportsArray.Count();
-
-  webrtcUI.showGlobalIndicator = count > 0;
-  webrtcUI.showCameraIndicator = false;
-  webrtcUI.showMicrophoneIndicator = false;
-  webrtcUI.showScreenSharingIndicator = "";
-
-  for (let i = 0; i < count; ++i) {
-    let contentWindow = contentWindowSupportsArray.GetElementAt(i);
-    let camera = {}, microphone = {}, screen = {}, window = {}, app = {};
-    MediaManagerService.mediaCaptureWindowState(contentWindow, camera,
-                                                microphone, screen, window, app);
-    if (camera.value)
-      webrtcUI.showCameraIndicator = true;
-    if (microphone.value)
-      webrtcUI.showMicrophoneIndicator = true;
-    if (screen.value)
-      webrtcUI.showScreenSharingIndicator = "Screen";
-    else if (window.value && webrtcUI.showScreenSharingIndicator != "Screen")
-      webrtcUI.showScreenSharingIndicator = "Window";
-    else if (app.value && !webrtcUI.showScreenSharingIndicator)
-      webrtcUI.showScreenSharingIndicator = "Application";
-
-    updateBrowserSpecificIndicator(getBrowserForWindow(contentWindow));
-  }
+function updateIndicators(data) {
+  webrtcUI.showGlobalIndicator = data.showGlobalIndicator;
+  webrtcUI.showCameraIndicator = data.showCameraIndicator;
+  webrtcUI.showMicrophoneIndicator = data.showMicrophoneIndicator;
+  webrtcUI.showScreenSharingIndicator = data.showScreenSharingIndicator;
 
   let browserWindowEnum = Services.wm.getEnumerator("navigator:browser");
   while (browserWindowEnum.hasMoreElements()) {
@@ -755,28 +752,20 @@ function updateIndicators() {
   }
 }
 
-function updateBrowserSpecificIndicator(aBrowser) {
-  let camera = {}, microphone = {}, screen = {}, window = {}, app = {};
-  MediaManagerService.mediaCaptureWindowState(aBrowser.contentWindow,
-                                              camera, microphone, screen,
-                                              window, app);
+function updateBrowserSpecificIndicator(aBrowser, aState) {
   let captureState;
-  if (camera.value && microphone.value) {
+  if (aState.camera && aState.microphone) {
     captureState = "CameraAndMicrophone";
-  } else if (camera.value) {
+  } else if (aState.camera) {
     captureState = "Camera";
-  } else if (microphone.value) {
+  } else if (aState.microphone) {
     captureState = "Microphone";
   }
 
   let chromeWin = aBrowser.ownerDocument.defaultView;
   let stringBundle = chromeWin.gNavigatorBundle;
 
-  let uri = aBrowser.contentWindow.document.documentURIObject;
-  let windowId = aBrowser.contentWindow
-                         .QueryInterface(Ci.nsIInterfaceRequestor)
-                         .getInterface(Ci.nsIDOMWindowUtils)
-                         .currentInnerWindowID;
+  let windowId = aState.windowId;
   let mainAction = {
     label: stringBundle.getString("getUserMedia.continueSharing.label"),
     accessKey: stringBundle.getString("getUserMedia.continueSharing.accesskey"),
@@ -787,15 +776,16 @@ function updateBrowserSpecificIndicator(aBrowser) {
     label: stringBundle.getString("getUserMedia.stopSharing.label"),
     accessKey: stringBundle.getString("getUserMedia.stopSharing.accesskey"),
     callback: function () {
+      let uri = Services.io.newURI(aState.documentURI, null, null);
       let perms = Services.perms;
-      if (camera.value &&
+      if (aState.camera &&
           perms.testExactPermission(uri, "camera") == perms.ALLOW_ACTION)
         perms.remove(uri.host, "camera");
-      if (microphone.value &&
+      if (aState.microphone &&
           perms.testExactPermission(uri, "microphone") == perms.ALLOW_ACTION)
         perms.remove(uri.host, "microphone");
 
-      Services.obs.notifyObservers(null, "getUserMedia:revoke", windowId);
+      aBrowser.messageManager.sendAsyncMessage("webrtc:StopSharing", windowId);
     }
   }];
   let options = {
@@ -822,7 +812,7 @@ function updateBrowserSpecificIndicator(aBrowser) {
   }
 
   // Now handle the screen sharing indicator.
-  if (!screen.value && !window.value && !app.value) {
+  if (!aState.screen) {
     removeBrowserNotification(aBrowser,"webRTC-sharingScreen");
     return;
   }
@@ -842,17 +832,12 @@ function updateBrowserSpecificIndicator(aBrowser) {
     label: stringBundle.getString("getUserMedia.stopSharing.label"),
     accessKey: stringBundle.getString("getUserMedia.stopSharing.accesskey"),
     callback: function () {
-      Services.obs.notifyObservers(null, "getUserMedia:revoke", "screen:" + windowId);
+      aBrowser.messageManager.sendAsyncMessage("webrtc:StopSharing",
+                                               "screen:" + windowId);
     }
   }];
-  // If we are sharing both a window and the screen, show 'Screen'.
-  let stringId = "getUserMedia.sharing";
-  if (screen.value)
-    stringId += "Screen";
-  else if (app.value)
-    stringId += "Application";
-  else
-    stringId += "Window";
+  // If we are sharing both a window and the screen, we show 'Screen'.
+  let stringId = "getUserMedia.sharing" + aState.screen;
   chromeWin.PopupNotifications.show(aBrowser, "webRTC-sharingScreen",
                                     stringBundle.getString(stringId + ".message"),
                                     "webRTC-sharingScreen-notification-icon",
@@ -865,11 +850,4 @@ function removeBrowserNotification(aBrowser, aNotificationId) {
     win.PopupNotifications.getNotification(aNotificationId, aBrowser);
   if (notification)
     win.PopupNotifications.remove(notification);
-}
-
-function removeBrowserSpecificIndicator(aSubject, aTopic, aData) {
-  let browser = getBrowserForWindowId(aData);
-  // If the tab has already been closed, ignore the notification.
-  if (browser.contentWindow)
-    updateBrowserSpecificIndicator(browser);
 }
