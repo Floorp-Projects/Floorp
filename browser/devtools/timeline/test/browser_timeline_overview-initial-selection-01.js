@@ -7,7 +7,7 @@
  */
 
 let test = Task.async(function*() {
-  let [target, debuggee, panel] = yield initTimelinePanel(SIMPLE_URL);
+  let { target, panel } = yield initTimelinePanel(SIMPLE_URL);
   let { EVENTS, TimelineView, TimelineController } = panel.panelWin;
   let { OVERVIEW_INITIAL_SELECTION_RATIO: selectionRatio } = panel.panelWin;
 

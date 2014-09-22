@@ -7,7 +7,7 @@
  */
 
 function ifWebGLSupported() {
-  let [target, debuggee, panel] = yield initShaderEditor(BLENDED_GEOMETRY_CANVAS_URL);
+  let { target, debuggee, panel } = yield initShaderEditor(BLENDED_GEOMETRY_CANVAS_URL);
   let { gFront, EVENTS, ShadersListView, ShadersEditorsView } = panel.panelWin;
 
   reload(target);

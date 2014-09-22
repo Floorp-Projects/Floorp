@@ -12,6 +12,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Messaging.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 
 // Define the "log" function as a binding of the Log.d function so it specifies
 // the "debug" priority and a log tag.
@@ -36,7 +37,10 @@ const SSDP_DISCOVER_PACKET =
   "MX: 2\r\n" +
   "ST: %SEARCH_TARGET%\r\n\r\n";
 
-const SSDP_DISCOVER_TIMEOUT = 10000;
+const SSDP_DISCOVER_ATTEMPTS = 3;
+const SSDP_DISCOVER_DELAY = 500;
+const SSDP_DISCOVER_TIMEOUT_MULTIPLIER = 2;
+const SSDP_TRANSMISSION_INTERVAL = 1000;
 
 const EVENT_SERVICE_FOUND = "ssdp-service-found";
 const EVENT_SERVICE_LOST = "ssdp-service-lost";
@@ -149,6 +153,7 @@ var SimpleServiceDiscovery = {
     let socket = Cc["@mozilla.org/network/udp-socket;1"].createInstance(Ci.nsIUDPSocket);
     try {
       socket.init(SSDP_PORT, false);
+      socket.joinMulticast(SSDP_ADDRESS);
       socket.asyncListen(this);
     } catch (e) {
       // We were unable to create the broadcast socket. Just return, but don't
@@ -157,17 +162,29 @@ var SimpleServiceDiscovery = {
       return;
     }
 
+    // Make the timeout SSDP_DISCOVER_TIMEOUT_MULTIPLIER times as long as the time needed to send out the discovery packets.
+    const SSDP_DISCOVER_TIMEOUT = this._devices.size * SSDP_DISCOVER_ATTEMPTS * SSDP_TRANSMISSION_INTERVAL * SSDP_DISCOVER_TIMEOUT_MULTIPLIER;
     this._searchSocket = socket;
     this._searchTimeout.initWithCallback(this._searchShutdown.bind(this), SSDP_DISCOVER_TIMEOUT, Ci.nsITimer.TYPE_ONE_SHOT);
 
     let data = SSDP_DISCOVER_PACKET;
-    for (let [key, device] of this._devices) {
-      let msgData = data.replace("%SEARCH_TARGET%", device.target);
-      try {
-        let msgRaw = converter.convertToByteArray(msgData);
-        socket.send(SSDP_ADDRESS, SSDP_PORT, msgRaw, msgRaw.length);
-      } catch (e) {
-        log("failed to convert to byte array: " + e);
+
+    // Send discovery packets out at 1 per SSDP_TRANSMISSION_INTERVAL and send each SSDP_DISCOVER_ATTEMPTS times
+    // to allow for packet loss on noisy networks.
+    let timeout = SSDP_DISCOVER_DELAY;
+    for (let attempts = 0; attempts < SSDP_DISCOVER_ATTEMPTS; attempts++) {
+      for (let [key, device] of this._devices) {
+        let target = device.target;
+        setTimeout(function() {
+          let msgData = data.replace("%SEARCH_TARGET%", target);
+          try {
+            let msgRaw = converter.convertToByteArray(msgData);
+            socket.send(SSDP_ADDRESS, SSDP_PORT, msgRaw, msgRaw.length);
+          } catch (e) {
+            log("failed to convert to byte array: " + e);
+          }
+        }, timeout);
+        timeout += SSDP_TRANSMISSION_INTERVAL;
       }
     }
 

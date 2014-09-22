@@ -7,6 +7,7 @@
     android:minWidth="300dp"
     android:minHeight="40dp"
     android:label="@string/search_widget_name"
-    android:widgetCategory="home_screen"
+    android:widgetCategory="home_screen|keyguard"
     android:previewImage="@drawable/launcher_widget"
-    android:initialLayout="@layout/search_widget"/>
+    android:initialLayout="@layout/search_widget"
+    android:initialKeyguardLayout="@layout/keyguard_widget"/>

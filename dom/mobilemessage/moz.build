@@ -13,8 +13,6 @@ EXPORTS.mozilla.dom.mobilemessage += [
     'Constants.h',            # Required by almost all cpp files
     'ipc/SmsChild.h',
     'ipc/SmsParent.h',
-    'MobileMessageService.h', # Required by nsLayoutModule.cpp
-    'SmsServicesFactory.h',   # Required by nsLayoutModule.cpp
     'Types.h',                # Required by IPDL SmsTypes.h
 ]
 
@@ -62,7 +60,6 @@ UNIFIED_SOURCES += [
     'MobileMessageService.cpp',
     'MobileMessageThread.cpp',
     'SmsMessage.cpp',
-    'SmsServicesFactory.cpp',
 ]
 
 IPDL_SOURCES += [

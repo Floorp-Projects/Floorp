@@ -7,7 +7,7 @@
 search_activity_sources = [
     'java/org/mozilla/search/AcceptsSearchQuery.java',
     'java/org/mozilla/search/autocomplete/AutoCompleteAdapter.java',
-    'java/org/mozilla/search/autocomplete/ClearableEditText.java',
+    'java/org/mozilla/search/autocomplete/SearchBar.java',
     'java/org/mozilla/search/autocomplete/SuggestionsFragment.java',
     'java/org/mozilla/search/Constants.java',
     'java/org/mozilla/search/MainActivity.java',

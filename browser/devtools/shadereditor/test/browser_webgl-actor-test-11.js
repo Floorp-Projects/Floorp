@@ -7,7 +7,7 @@
  */
 
 function ifWebGLSupported() {
-  let [target, debuggee, front] = yield initBackend(SIMPLE_CANVAS_URL);
+  let { target, front } = yield initBackend(SIMPLE_CANVAS_URL);
 
   let linked = once(front, "program-linked");
   front.setup({ reload: true });

@@ -1,0 +1,24 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+_DEST_DIR = $(DEPTH)/_tests/instrumentation
+PKG_STAGE = $(DIST)/test-stage
+
+include $(topsrcdir)/config/rules.mk
+
+# Fennec and all instrumentation tests need to be signed with the same
+# key, which means release signing them all.
+
+JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
+include $(topsrcdir)/config/android-common.mk
+
+stage-package:
+	$(NSINSTALL) -D $(_DEST_DIR)
+	$(call RELEASE_SIGN_ANDROID_APK,\
+		$(DEPTH)/mobile/android/tests/background/junit3/background-junit3-debug-unsigned-unaligned.apk,\
+		$(_DEST_DIR)/background-junit3.apk)
+	$(call RELEASE_SIGN_ANDROID_APK,\
+		$(DEPTH)/mobile/android/tests/browser/junit3/browser-junit3-debug-unsigned-unaligned.apk,\
+		$(_DEST_DIR)/browser-junit3.apk)
+	@(cd $(DEPTH)/_tests/ && tar $(TAR_CREATE_FLAGS) - instrumentation) | (cd $(PKG_STAGE) && tar -xf -)

@@ -57,7 +57,7 @@ InsertionPoint.prototype = {
     return this._index = val;
   },
 
-  promiseGuid: function () PlacesUtils.promiseItemGUID(this.itemId),
+  promiseGuid: function () PlacesUtils.promiseItemGuid(this.itemId),
 
   get index() {
     if (this.dropNearItemId > 0) {
@@ -781,7 +781,7 @@ PlacesController.prototype = {
       return;
     }
 
-    let txn = PlacesTransactions.NewSeparator({ parentGUID: yield ip.promiseGuid()
+    let txn = PlacesTransactions.NewSeparator({ parentGuid: yield ip.promiseGuid()
                                               , index: ip.index });
     let guid = yield PlacesTransactions.transact(txn);
     let itemId = yield PlacesUtils.promiseItemId(guid);
@@ -808,7 +808,7 @@ PlacesController.prototype = {
       PlacesUtils.transactionManager.doTransaction(txn);
       return;
     }
-    let guid = yield PlacesUtils.promiseItemGUID(itemId);
+    let guid = yield PlacesUtils.promiseItemGuid(itemId);
     yield PlacesTransactions.transact(PlacesTransactions.SortByName(guid));
   }),
 
