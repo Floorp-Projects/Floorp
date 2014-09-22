@@ -19,6 +19,7 @@
 #include "MainThreadUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/net/DNS.h"
+#include <algorithm>
 
 #include "prlog.h"
 #if defined(PR_LOGGING)
