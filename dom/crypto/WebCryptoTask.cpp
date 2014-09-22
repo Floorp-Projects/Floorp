@@ -1286,7 +1286,7 @@ public:
     mDataIsSet = false;
 
     // Get the current global object from the context
-    nsIGlobalObject *global = xpc::GetNativeForGlobal(JS::CurrentGlobalOrNull(aCx));
+    nsIGlobalObject *global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
     if (!global) {
       mEarlyRv = NS_ERROR_DOM_UNKNOWN_ERR;
       return;
@@ -1955,7 +1955,7 @@ public:
       const ObjectOrString& aAlgorithm, bool aExtractable,
       const Sequence<nsString>& aKeyUsages)
   {
-    nsIGlobalObject* global = xpc::GetNativeForGlobal(JS::CurrentGlobalOrNull(aCx));
+    nsIGlobalObject* global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
     if (!global) {
       mEarlyRv = NS_ERROR_DOM_UNKNOWN_ERR;
       return;
@@ -2082,7 +2082,7 @@ public:
       const ObjectOrString& aAlgorithm, bool aExtractable,
       const Sequence<nsString>& aKeyUsages)
   {
-    nsIGlobalObject* global = xpc::GetNativeForGlobal(JS::CurrentGlobalOrNull(aCx));
+    nsIGlobalObject* global = xpc::NativeGlobal(JS::CurrentGlobalOrNull(aCx));
     if (!global) {
       mEarlyRv = NS_ERROR_DOM_UNKNOWN_ERR;
       return;

@@ -23,13 +23,24 @@
 #define COMPILER_EXPORT
 #endif
 
-#include "KHR/khrplatform.h"
 #include <stddef.h>
+
+#include "KHR/khrplatform.h"
 
 //
 // This is the platform independent interface between an OGL driver
 // and the shading language compiler.
 //
+
+namespace sh
+{
+// GLenum alias
+typedef unsigned int GLenum;
+}
+
+// Must be included after GLenum proxy typedef
+// Note: make sure to increment ANGLE_SH_VERSION when changing ShaderVars.h
+#include "ShaderVars.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,18 +48,7 @@ extern "C" {
 
 // Version number for shader translation API.
 // It is incremented every time the API changes.
-#define ANGLE_SH_VERSION 125
-
-//
-// The names of the following enums have been derived by replacing GL prefix
-// with SH. For example, SH_INFO_LOG_LENGTH is equivalent to GL_INFO_LOG_LENGTH.
-// The enum values are also equal to the values of their GL counterpart. This
-// is done to make it easier for applications to use the shader library.
-//
-typedef enum {
-  SH_FRAGMENT_SHADER = 0x8B30,
-  SH_VERTEX_SHADER   = 0x8B31
-} ShShaderType;
+#define ANGLE_SH_VERSION 130
 
 typedef enum {
   SH_GLES2_SPEC = 0x8B40,
@@ -86,52 +86,6 @@ typedef enum {
 } ShShaderOutput;
 
 typedef enum {
-  SH_NONE           = 0,
-  SH_INT            = 0x1404,
-  SH_UNSIGNED_INT   = 0x1405,
-  SH_FLOAT          = 0x1406,
-  SH_FLOAT_VEC2     = 0x8B50,
-  SH_FLOAT_VEC3     = 0x8B51,
-  SH_FLOAT_VEC4     = 0x8B52,
-  SH_INT_VEC2       = 0x8B53,
-  SH_INT_VEC3       = 0x8B54,
-  SH_INT_VEC4       = 0x8B55,
-  SH_UNSIGNED_INT_VEC2 = 0x8DC6,
-  SH_UNSIGNED_INT_VEC3 = 0x8DC7,
-  SH_UNSIGNED_INT_VEC4 = 0x8DC8,
-  SH_BOOL           = 0x8B56,
-  SH_BOOL_VEC2      = 0x8B57,
-  SH_BOOL_VEC3      = 0x8B58,
-  SH_BOOL_VEC4      = 0x8B59,
-  SH_FLOAT_MAT2     = 0x8B5A,
-  SH_FLOAT_MAT3     = 0x8B5B,
-  SH_FLOAT_MAT4     = 0x8B5C,
-  SH_FLOAT_MAT2x3   = 0x8B65,
-  SH_FLOAT_MAT2x4   = 0x8B66,
-  SH_FLOAT_MAT3x2   = 0x8B67,
-  SH_FLOAT_MAT3x4   = 0x8B68,
-  SH_FLOAT_MAT4x2   = 0x8B69,
-  SH_FLOAT_MAT4x3   = 0x8B6A,
-  SH_SAMPLER_2D     = 0x8B5E,
-  SH_SAMPLER_3D     = 0x8B5F,
-  SH_SAMPLER_CUBE   = 0x8B60,
-  SH_SAMPLER_2D_RECT_ARB = 0x8B63,
-  SH_SAMPLER_EXTERNAL_OES = 0x8D66,
-  SH_SAMPLER_2D_ARRAY   = 0x8DC1,
-  SH_INT_SAMPLER_2D     = 0x8DCA,
-  SH_INT_SAMPLER_3D     = 0x8DCB,
-  SH_INT_SAMPLER_CUBE   = 0x8DCC,
-  SH_INT_SAMPLER_2D_ARRAY = 0x8DCF,
-  SH_UNSIGNED_INT_SAMPLER_2D     = 0x8DD2,
-  SH_UNSIGNED_INT_SAMPLER_3D     = 0x8DD3,
-  SH_UNSIGNED_INT_SAMPLER_CUBE   = 0x8DD4,
-  SH_UNSIGNED_INT_SAMPLER_2D_ARRAY = 0x8DD7,
-  SH_SAMPLER_2D_SHADOW       = 0x8B62,
-  SH_SAMPLER_CUBE_SHADOW     = 0x8DC5,
-  SH_SAMPLER_2D_ARRAY_SHADOW = 0x8DC4
-} ShDataType;
-
-typedef enum {
   SH_PRECISION_HIGHP     = 0x5001,
   SH_PRECISION_MEDIUMP   = 0x5002,
   SH_PRECISION_LOWP      = 0x5003,
@@ -151,14 +105,9 @@ typedef enum {
   SH_NAME_MAX_LENGTH                = 0x6001,
   SH_HASHED_NAME_MAX_LENGTH         = 0x6002,
   SH_HASHED_NAMES_COUNT             = 0x6003,
-  SH_ACTIVE_UNIFORMS_ARRAY          = 0x6004,
-  SH_SHADER_VERSION                 = 0x6005,
-  SH_ACTIVE_INTERFACE_BLOCKS_ARRAY  = 0x6006,
-  SH_ACTIVE_OUTPUT_VARIABLES_ARRAY  = 0x6007,
-  SH_ACTIVE_ATTRIBUTES_ARRAY        = 0x6008,
-  SH_ACTIVE_VARYINGS_ARRAY          = 0x6009,
-  SH_RESOURCES_STRING_LENGTH        = 0x600A,
-  SH_OUTPUT_TYPE                    = 0x600B
+  SH_SHADER_VERSION                 = 0x6004,
+  SH_RESOURCES_STRING_LENGTH        = 0x6005,
+  SH_OUTPUT_TYPE                    = 0x6006
 } ShShaderInfo;
 
 // Compile options.
@@ -193,7 +142,7 @@ typedef enum {
   // This flag only has an effect if all of the following are true:
   // - The shader spec is SH_WEBGL_SPEC.
   // - The compile options contain the SH_TIMING_RESTRICTIONS flag.
-  // - The shader type is SH_FRAGMENT_SHADER.
+  // - The shader type is GL_FRAGMENT_SHADER.
   SH_DEPENDENCY_GRAPH = 0x0400,
 
   // Enforce the GLSL 1.017 Appendix A section 7 packing restrictions.
@@ -236,6 +185,15 @@ typedef enum {
   // It is intended as a workaround for drivers which incorrectly optimize
   // out such varyings and cause a link failure.
   SH_INIT_VARYINGS_WITHOUT_STATIC_USE = 0x20000,
+
+  // This flag scalarizes vec/ivec/bvec/mat constructor args.
+  // It is intended as a workaround for Linux/Mac driver bugs.
+  SH_SCALARIZE_VEC_AND_MAT_CONSTRUCTOR_ARGS = 0x40000,
+
+  // This flag overwrites a struct name with a unique prefix.
+  // It is intended as a workaround for drivers that do not handle
+  // struct scopes correctly, including all Mac drivers and Linux AMD.
+  SH_REGENERATE_STRUCT_NAMES = 0x80000,
 } ShCompileOptions;
 
 // Defines alternate strategies for implementing array index clamping.
@@ -345,14 +303,14 @@ COMPILER_EXPORT void ShGetBuiltInResourcesString(const ShHandle handle, size_t o
 // Returns the handle of constructed compiler, null if the requested compiler is
 // not supported.
 // Parameters:
-// type: Specifies the type of shader - SH_FRAGMENT_SHADER or SH_VERTEX_SHADER.
+// type: Specifies the type of shader - GL_FRAGMENT_SHADER or GL_VERTEX_SHADER.
 // spec: Specifies the language spec the compiler must conform to -
 //       SH_GLES2_SPEC or SH_WEBGL_SPEC.
 // output: Specifies the output code type - SH_ESSL_OUTPUT, SH_GLSL_OUTPUT,
 //         SH_HLSL9_OUTPUT or SH_HLSL11_OUTPUT.
 // resources: Specifies the built-in resources.
 COMPILER_EXPORT ShHandle ShConstructCompiler(
-    ShShaderType type,
+    sh::GLenum type,
     ShShaderSpec spec,
     ShShaderOutput output,
     const ShBuiltInResources* resources);
@@ -476,7 +434,7 @@ COMPILER_EXPORT void ShGetVariableInfo(const ShHandle handle,
                                        int index,
                                        size_t* length,
                                        int* size,
-                                       ShDataType* type,
+                                       sh::GLenum* type,
                                        ShPrecisionType* precision,
                                        int* staticUse,
                                        char* name,
@@ -500,21 +458,21 @@ COMPILER_EXPORT void ShGetNameHashingEntry(const ShHandle handle,
                                            char* name,
                                            char* hashedName);
 
-// Returns a parameter from a compiled shader.
+// Shader variable inspection.
+// Returns a pointer to a list of variables of the designated type.
+// (See ShaderVars.h for type definitions, included above)
+// Returns NULL on failure.
 // Parameters:
 // handle: Specifies the compiler
-// pname: Specifies the parameter to query.
-// The following parameters are defined:
-// SH_ACTIVE_UNIFORMS_ARRAY: an STL vector of active uniforms. Valid only for
-//                           HLSL output.
-// params: Requested parameter
-COMPILER_EXPORT void ShGetInfoPointer(const ShHandle handle,
-                                      ShShaderInfo pname,
-                                      void** params);
+COMPILER_EXPORT const std::vector<sh::Uniform> *ShGetUniforms(const ShHandle handle);
+COMPILER_EXPORT const std::vector<sh::Varying> *ShGetVaryings(const ShHandle handle);
+COMPILER_EXPORT const std::vector<sh::Attribute> *ShGetAttributes(const ShHandle handle);
+COMPILER_EXPORT const std::vector<sh::Attribute> *ShGetOutputVariables(const ShHandle handle);
+COMPILER_EXPORT const std::vector<sh::InterfaceBlock> *ShGetInterfaceBlocks(const ShHandle handle);
 
 typedef struct
 {
-    ShDataType type;
+    sh::GLenum type;
     int size;
 } ShVariableInfo;
 
@@ -530,6 +488,29 @@ COMPILER_EXPORT int ShCheckVariablesWithinPackingLimits(
     int maxVectors,
     ShVariableInfo* varInfoArray,
     size_t varInfoArraySize);
+
+// Gives the compiler-assigned register for an interface block.
+// The method writes the value to the output variable "indexOut".
+// Returns true if it found a valid interface block, false otherwise.
+// Parameters:
+// handle: Specifies the compiler
+// interfaceBlockName: Specifies the interface block
+// indexOut: output variable that stores the assigned register
+COMPILER_EXPORT bool ShGetInterfaceBlockRegister(const ShHandle handle,
+                                                 const char *interfaceBlockName,
+                                                 unsigned int *indexOut);
+
+// Gives the compiler-assigned register for uniforms in the default
+// interface block.
+// The method writes the value to the output variable "indexOut".
+// Returns true if it found a valid default uniform, false otherwise.
+// Parameters:
+// handle: Specifies the compiler
+// interfaceBlockName: Specifies the uniform
+// indexOut: output variable that stores the assigned register
+COMPILER_EXPORT bool ShGetUniformRegister(const ShHandle handle,
+                                          const char *uniformName,
+                                          unsigned int *indexOut);
 
 #ifdef __cplusplus
 }

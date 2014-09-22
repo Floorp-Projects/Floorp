@@ -7,7 +7,7 @@
 #ifndef COMPILER_FLAGSTD140STRUCTS_H_
 #define COMPILER_FLAGSTD140STRUCTS_H_
 
-#include "compiler/translator/intermediate.h"
+#include "compiler/translator/IntermNode.h"
 
 namespace sh
 {

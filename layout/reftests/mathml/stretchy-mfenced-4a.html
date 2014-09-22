@@ -1,0 +1,21 @@
+﻿<!doctype>
+<html>
+  <head>
+    <title>Stretchy mfenced</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  </head>
+  <body>
+    <!-- See bug 687807 -->
+    <math >
+      <mrow>
+        <mo stretchy="false">&#x2192;</mo>
+          <munderover>
+            <mo stretchy="true">&#x2192;</mo>
+            <mtext>AAAAAA</mtext>
+            <mtext>BBBBBB</mtext>
+          </munderover>
+        <mo stretchy="false">&#x2192;</mo>
+      </mrow>
+    </math>
+  </body>
+</html>

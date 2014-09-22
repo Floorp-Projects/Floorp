@@ -27,6 +27,7 @@
 
 #include "jsobjinlines.h"
 
+using JS::HandleValue;
 using JS::Value;
 using JS::ubi::Concrete;
 using JS::ubi::Edge;
@@ -37,10 +38,15 @@ using JS::ubi::TracerConcreteWithCompartment;
 
 // All operations on null ubi::Nodes crash.
 const char16_t *Concrete<void>::typeName() const          { MOZ_CRASH("null ubi::Node"); }
-size_t Concrete<void>::size() const                       { MOZ_CRASH("null ubi::Node"); }
 EdgeRange *Concrete<void>::edges(JSContext *, bool) const { MOZ_CRASH("null ubi::Node"); }
 JS::Zone *Concrete<void>::zone() const                    { MOZ_CRASH("null ubi::Node"); }
 JSCompartment *Concrete<void>::compartment() const        { MOZ_CRASH("null ubi::Node"); }
+
+size_t
+Concrete<void>::size(mozilla::MallocSizeOf mallocSizeof) const
+{
+    MOZ_CRASH("null ubi::Node");
+}
 
 Node::Node(JSGCTraceKind kind, void *ptr)
 {
@@ -60,7 +66,7 @@ Node::Node(JSGCTraceKind kind, void *ptr)
     }
 }
 
-Node::Node(Value value)
+Node::Node(HandleValue value)
 {
     if (value.isObject())
         construct(&value.toObject());

@@ -3131,7 +3131,7 @@ WebGLContext::CompileShader(WebGLShader *shader)
     }
 #endif
 
-    compiler = ShConstructCompiler((ShShaderType) shader->ShaderType(),
+    compiler = ShConstructCompiler(shader->ShaderType(),
                                    SH_WEBGL_SPEC,
                                    targetShaderSourceLanguage,
                                    &resources);
@@ -3224,7 +3224,7 @@ WebGLContext::CompileShader(WebGLShader *shader)
     for (size_t i = 0; i < num_uniforms; i++) {
         size_t length;
         int size;
-        ShDataType type;
+        sh::GLenum type;
         ShPrecisionType precision;
         int staticUse;
         ShGetVariableInfo(compiler, SH_ACTIVE_UNIFORMS, (int)i,
@@ -3251,7 +3251,7 @@ WebGLContext::CompileShader(WebGLShader *shader)
     for (size_t i = 0; i < num_attributes; i++) {
         size_t length;
         int size;
-        ShDataType type;
+        sh::GLenum type;
         ShPrecisionType precision;
         int staticUse;
         ShGetVariableInfo(compiler, SH_ACTIVE_ATTRIBUTES, (int)i,
