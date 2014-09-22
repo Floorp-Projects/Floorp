@@ -661,9 +661,10 @@ this.DOMApplicationRegistry = {
       } catch(e) {} // getCharPref will throw on non-b2g platforms. That's ok.
 
       if (runUpdate) {
-
         // Run migration before uninstall of core apps happens.
-        Services.obs.notifyObservers(null, "webapps-before-update-merge", null);
+        var appMigrator = Components.classes["@mozilla.org/app-migrator;1"]
+                           .createInstance(Components.interfaces.nsIObserver);
+        appMigrator.observe(null, "webapps-before-update-merge", null);
 
 #ifdef MOZ_WIDGET_GONK
         yield this.installSystemApps();
