@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf8">
+<script>
+  function go() {
+    var styleNode = document.createElement("style");
+    styleNode.textContent =
+      "@counter-style triangle { symbols: b; } \n" +
+      "@counter-style disc     { system: extends triangle; } \n";
+
+    // NOTE: The bug goes away if you remove this trivial rule:
+    styleNode.textContent += "ul {}";
+
+    document.getElementsByTagName("head")[0].appendChild(styleNode);
+  }
+</script>
+</head>
+<body onload="go()">
+  <ul><li>&lt;---That should be a 'b' character.

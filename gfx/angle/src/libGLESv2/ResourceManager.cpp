@@ -1,4 +1,3 @@
-#include "precompiled.h"
 //
 // Copyright (c) 2002-2013 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
@@ -17,6 +16,7 @@
 #include "libGLESv2/Texture.h"
 #include "libGLESv2/Sampler.h"
 #include "libGLESv2/Fence.h"
+#include "libGLESv2/renderer/Renderer.h"
 
 namespace gl
 {
@@ -92,13 +92,9 @@ GLuint ResourceManager::createShader(GLenum type)
 {
     GLuint handle = mProgramShaderHandleAllocator.allocate();
 
-    if (type == GL_VERTEX_SHADER)
+    if (type == GL_VERTEX_SHADER || type == GL_FRAGMENT_SHADER)
     {
-        mShaderMap[handle] = new VertexShader(this, mRenderer, handle);
-    }
-    else if (type == GL_FRAGMENT_SHADER)
-    {
-        mShaderMap[handle] = new FragmentShader(this, mRenderer, handle);
+        mShaderMap[handle] = new Shader(this, mRenderer->createShader(type), type, handle);
     }
     else UNREACHABLE();
 
@@ -150,7 +146,9 @@ GLuint ResourceManager::createFenceSync()
 {
     GLuint handle = mFenceSyncHandleAllocator.allocate();
 
-    mFenceSyncMap[handle] = new FenceSync(mRenderer, handle);
+    FenceSync *fenceSync = new FenceSync(mRenderer, handle);
+    fenceSync->addRef();
+    mFenceSyncMap[handle] = fenceSync;
 
     return handle;
 }
@@ -362,7 +360,7 @@ void ResourceManager::checkBufferAllocation(unsigned int buffer)
 {
     if (buffer != 0 && !getBuffer(buffer))
     {
-        Buffer *bufferObject = new Buffer(mRenderer, buffer);
+        Buffer *bufferObject = new Buffer(mRenderer->createBuffer(), buffer);
         mBufferMap[buffer] = bufferObject;
         bufferObject->addRef();
     }
@@ -376,19 +374,19 @@ void ResourceManager::checkTextureAllocation(GLuint texture, TextureType type)
 
         if (type == TEXTURE_2D)
         {
-            textureObject = new Texture2D(mRenderer, texture);
+            textureObject = new Texture2D(mRenderer->createTexture(GL_TEXTURE_2D), texture);
         }
         else if (type == TEXTURE_CUBE)
         {
-            textureObject = new TextureCubeMap(mRenderer, texture);
+            textureObject = new TextureCubeMap(mRenderer->createTexture(GL_TEXTURE_CUBE_MAP), texture);
         }
         else if (type == TEXTURE_3D)
         {
-            textureObject = new Texture3D(mRenderer, texture);
+            textureObject = new Texture3D(mRenderer->createTexture(GL_TEXTURE_3D), texture);
         }
         else if (type == TEXTURE_2D_ARRAY)
         {
-            textureObject = new Texture2DArray(mRenderer, texture);
+            textureObject = new Texture2DArray(mRenderer->createTexture(GL_TEXTURE_2D_ARRAY), texture);
         }
         else
         {
@@ -405,7 +403,7 @@ void ResourceManager::checkRenderbufferAllocation(GLuint renderbuffer)
 {
     if (renderbuffer != 0 && !getRenderbuffer(renderbuffer))
     {
-        Renderbuffer *renderbufferObject = new Renderbuffer(mRenderer, renderbuffer, new Colorbuffer(mRenderer, 0, 0, GL_RGBA4, 0));
+        Renderbuffer *renderbufferObject = new Renderbuffer(renderbuffer, new Colorbuffer(mRenderer, 0, 0, GL_RGBA4, 0));
         mRenderbufferMap[renderbuffer] = renderbufferObject;
         renderbufferObject->addRef();
     }

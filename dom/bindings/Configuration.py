@@ -470,6 +470,16 @@ class Descriptor(DescriptorProvider):
                         m.getExtendedAttribute("AvailableIn") == "PrivilegedApps"):
                         self.featureDetectibleThings.add("%s.%s" % (self.interface.identifier.name, m.identifier.name))
 
+            for member in self.interface.members:
+                if not member.isAttr() and not member.isMethod():
+                    continue
+                binaryName = member.getExtendedAttribute("BinaryName")
+                if binaryName:
+                    assert isinstance(binaryName, list)
+                    assert len(binaryName) == 1
+                    self._binaryNames.setdefault(member.identifier.name,
+                                                 binaryName[0])
+
         # Build the prototype chain.
         self.prototypeChain = []
         parent = interface

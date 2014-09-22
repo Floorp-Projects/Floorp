@@ -121,6 +121,12 @@ static const JSWrapObjectCallbacks DefaultWrapObjectCallbacks = {
     nullptr
 };
 
+static size_t
+ReturnZeroSize(const void *p)
+{
+    return 0;
+}
+
 JSRuntime::JSRuntime(JSRuntime *parentRuntime)
   : JS::shadow::Runtime(
 #ifdef JSGC_GENERATIONAL
@@ -223,7 +229,8 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
     enteredPolicy(nullptr),
 #endif
     largeAllocationFailureCallback(nullptr),
-    oomCallback(nullptr)
+    oomCallback(nullptr),
+    debuggerMallocSizeOf(ReturnZeroSize)
 {
     liveRuntimesCount++;
 

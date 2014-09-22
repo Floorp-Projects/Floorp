@@ -28,9 +28,11 @@
 
 #include "cryptohi.h"
 #include "keyhi.h"
+#include "nss.h"
 #include "pk11pub.h"
 #include "pkix/pkixnss.h"
 #include "secerr.h"
+#include "secitem.h"
 
 namespace mozilla { namespace pkix { namespace test {
 
@@ -40,6 +42,23 @@ typedef ScopedPtr<SECKEYPublicKey, SECKEY_DestroyPublicKey>
   ScopedSECKEYPublicKey;
 typedef ScopedPtr<SECKEYPrivateKey, SECKEY_DestroyPrivateKey>
   ScopedSECKEYPrivateKey;
+
+inline void
+SECITEM_FreeItem_true(SECItem* item)
+{
+  SECITEM_FreeItem(item, true);
+}
+
+typedef mozilla::pkix::ScopedPtr<SECItem, SECITEM_FreeItem_true> ScopedSECItem;
+
+Result
+InitNSSIfNeeded()
+{
+  if (NSS_NoDB_Init(nullptr) != SECSuccess) {
+    return MapPRErrorCodeToResult(PR_GetError());
+  }
+  return Success;
+}
 
 class NSSTestKeyPair : public TestKeyPair
 {
@@ -109,6 +128,10 @@ TestKeyPair* CreateTestKeyPair(const ByteString& spki,
 TestKeyPair*
 GenerateKeyPair()
 {
+  if (InitNSSIfNeeded() != Success) {
+    return nullptr;
+  }
+
   ScopedPtr<PK11SlotInfo, PK11_FreeSlot> slot(PK11_GetInternalSlot());
   if (!slot) {
     return nullptr;
@@ -167,8 +190,7 @@ GenerateKeyPair()
 ByteString
 SHA1(const ByteString& toHash)
 {
-  if (toHash.length() >
-        static_cast<size_t>(std::numeric_limits<int32_t>::max())) {
+  if (InitNSSIfNeeded() != Success) {
     return ENCODING_FAILED;
   }
 
@@ -184,6 +206,10 @@ SHA1(const ByteString& toHash)
 Result
 TestCheckPublicKey(Input subjectPublicKeyInfo)
 {
+  Result rv = InitNSSIfNeeded();
+  if (rv != Success) {
+    return rv;
+  }
   return CheckPublicKey(subjectPublicKeyInfo);
 }
 
@@ -191,12 +217,20 @@ Result
 TestVerifySignedData(const SignedDataWithSignature& signedData,
                      Input subjectPublicKeyInfo)
 {
+  Result rv = InitNSSIfNeeded();
+  if (rv != Success) {
+    return rv;
+  }
   return VerifySignedData(signedData, subjectPublicKeyInfo, nullptr);
 }
 
 Result
 TestDigestBuf(Input item, /*out*/ uint8_t* digestBuf, size_t digestBufLen)
 {
+  Result rv = InitNSSIfNeeded();
+  if (rv != Success) {
+    return rv;
+  }
   return DigestBuf(item, digestBuf, digestBufLen);
 }
 

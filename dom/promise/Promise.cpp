@@ -1024,7 +1024,7 @@ Promise::MaybeReportRejected()
 
   nsRefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
   if (MOZ_LIKELY(NS_IsMainThread())) {
-    nsIGlobalObject* global = xpc::GetNativeForGlobal(js::GetGlobalForObjectCrossCompartment(obj));
+    nsIGlobalObject* global = xpc::NativeGlobal(js::GetGlobalForObjectCrossCompartment(obj));
     xpcReport->Init(report.report(), report.message(), global);
   } else {
     xpcReport->InitOnWorkerThread(report.report(), report.message(),

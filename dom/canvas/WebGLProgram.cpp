@@ -126,8 +126,8 @@ WebGLProgram::UpperBoundNumSamplerUniforms() {
             continue;
         for (size_t j = 0; j < shader->mUniformInfos.Length(); ++j) {
             WebGLUniformInfo u = shader->mUniformInfos[j];
-            if (u.type == SH_SAMPLER_2D ||
-                u.type == SH_SAMPLER_CUBE)
+            if (u.type == LOCAL_GL_SAMPLER_2D ||
+                u.type == LOCAL_GL_SAMPLER_CUBE)
             {
                 numSamplerUniforms += u.arraySize;
             }
