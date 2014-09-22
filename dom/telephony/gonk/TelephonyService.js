@@ -481,12 +481,13 @@ TelephonyService.prototype = {
     aListener.enumerateCallStateComplete();
   },
 
+  _hasCalls: function(aClientId) {
+    return Object.keys(this._currentCalls[aClientId]).length !== 0;
+  },
+
   _hasCallsOnOtherClient: function(aClientId) {
     for (let cid = 0; cid < this._numClients; ++cid) {
-      if (cid === aClientId) {
-        continue;
-      }
-      if (Object.keys(this._currentCalls[cid]).length !== 0) {
+      if (cid !== aClientId && this._hasCalls(cid)) {
         return true;
       }
     }
@@ -567,7 +568,7 @@ TelephonyService.prototype = {
       return;
     }
 
-    let mmi = this._parseMMI(aClientId, aNumber);
+    let mmi = this._parseMMI(aNumber, this._hasCalls(aClientId));
     if (!mmi) {
       this._dialCall(aClientId,
                      { number: aNumber,
@@ -812,13 +813,12 @@ TelephonyService.prototype = {
   /**
    * Helper to parse short string. TS.22.030 Figure 3.5.3.2.
    */
-  _isShortString: function(aClientId, aMmiString) {
+  _isShortString: function(aMmiString, hasCalls) {
     if (aMmiString.length > 2) {
       return false;
     }
 
-    // In a call case.
-    if (Object.getOwnPropertyNames(this._currentCalls[aClientId]).length > 0) {
+    if (hasCalls) {
       return true;
     }
 
@@ -836,7 +836,11 @@ TelephonyService.prototype = {
   /**
    * Helper to parse MMI/USSD string. TS.22.030 Figure 3.5.3.2.
    */
-  _parseMMI: function(aClientId, aMmiString) {
+  _parseMMI: function(aMmiString, hasCalls) {
+    if (!aMmiString) {
+      return null;
+    }
+
     let matches = this._getMMIRegExp().exec(aMmiString);
     if (matches) {
       return {
@@ -852,7 +856,7 @@ TelephonyService.prototype = {
     }
 
     if (this._isPoundString(aMmiString) ||
-        this._isShortString(aClientId, aMmiString)) {
+        this._isShortString(aMmiString, hasCalls)) {
       return {
         fullMMI: aMmiString
       };
@@ -1263,7 +1267,7 @@ TelephonyService.prototype = {
   },
 
   dialMMI: function(aClientId, aMmiString, aCallback) {
-    let mmi = this._parseMMI(aClientId, aMmiString);
+    let mmi = this._parseMMI(aMmiString, this._hasCalls(aClientId));
     this._dialMMI(aClientId, mmi, aCallback);
   },
 

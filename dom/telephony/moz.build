@@ -44,6 +44,7 @@ IPDL_SOURCES += [
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
+    XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
     XPIDL_SOURCES += [
         'nsIGonkTelephonyService.idl',
     ]
