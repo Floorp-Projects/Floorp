@@ -874,6 +874,13 @@
 #undef MODULE
 
   /* ======================================================================= */
+  /* 38: NS_ERROR_MODULE_SIGNED_APP */
+  /* ======================================================================= */
+#define MODULE NS_ERROR_MODULE_SIGNED_APP
+  ERROR(NS_ERROR_SIGNED_APP_MANIFEST_INVALID,   FAILURE(1)),
+#undef MODULE
+
+  /* ======================================================================= */
   /* 51: NS_ERROR_MODULE_GENERAL */
   /* ======================================================================= */
 #define MODULE NS_ERROR_MODULE_GENERAL

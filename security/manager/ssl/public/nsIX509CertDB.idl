@@ -12,6 +12,7 @@ interface nsIFile;
 interface nsIInterfaceRequestor;
 interface nsIZipReader;
 interface nsIX509CertList;
+interface nsIInputStream;
 
 %{C++
 #define NS_X509CERTDB_CONTRACTID "@mozilla.org/security/x509certdb;1"
@@ -27,11 +28,18 @@ interface nsIOpenSignedAppFileCallback : nsISupports
                                  in nsIX509Cert aSignerCert);
 };
 
+[scriptable, function, uuid(3d6a9c87-5c5f-46fc-9410-96da6092f0f2)]
+interface nsIVerifySignedManifestCallback : nsISupports
+{
+  void verifySignedManifestFinished(in nsresult rv,
+                                    in nsIX509Cert aSignerCert);
+};
+
 /**
  * This represents a service to access and manipulate
  * X.509 certificates stored in a database.
  */
-[scriptable, uuid(dd6e4af8-23bb-41d9-a1e3-9ce925429f2f)]
+[scriptable, uuid(8b01c2af-3a44-44d3-8ea5-51c2455e6c4b)]
 interface nsIX509CertDB : nsISupports {
 
   /**
@@ -301,9 +309,27 @@ interface nsIX509CertDB : nsISupports {
   const AppTrustedRoot AppMarketplaceDevReviewersRoot = 4;
   const AppTrustedRoot AppMarketplaceStageRoot = 5;
   const AppTrustedRoot AppXPCShellRoot = 6;
+  const AppTrustedRoot TrustedHostedAppPublicRoot = 7;
+  const AppTrustedRoot TrustedHostedAppTestRoot = 8;
   void openSignedAppFileAsync(in AppTrustedRoot trustedRoot,
                               in nsIFile aJarFile,
                               in nsIOpenSignedAppFileCallback callback);
+
+  /**
+   * Given streams containing a signature and a manifest file, verifies
+   * that the signature is valid for the manifest. The signature must
+   * come from a certificate that is trusted for code signing and that
+   * was issued by the given trusted root.
+   *
+   *  On success, NS_OK and the trusted certificate that signed the
+   *  Manifest are returned.
+   *
+   *  On failure, an error code is returned.
+   */
+  void verifySignedManifestAsync(in AppTrustedRoot trustedRoot,
+                                 in nsIInputStream aManifestStream,
+                                 in nsIInputStream aSignatureStream,
+                                 in nsIVerifySignedManifestCallback callback);
 
   /*
    * Add a cert to a cert DB from a binary string.
