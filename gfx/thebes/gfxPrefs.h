@@ -212,6 +212,24 @@ private:
 
   DECL_GFX_PREF(Live, "gl.msaa-level",                         MSAALevel, uint32_t, 2);
 
+  DECL_GFX_PREF(Once, "image.cache.timeweight",                ImageCacheTimeWeight, int32_t, 500);
+  DECL_GFX_PREF(Once, "image.cache.size",                      ImageCacheSize, int32_t, 5*1024*1024);
+  DECL_GFX_PREF(Live, "image.high_quality_downscaling.enabled", ImageHQDownscalingEnabled, bool, false);
+  DECL_GFX_PREF(Live, "image.high_quality_downscaling.min_factor", ImageHQDownscalingMinFactor, uint32_t, 1000);
+  DECL_GFX_PREF(Live, "image.high_quality_upscaling.max_size", ImageHQUpscalingMaxSize, uint32_t, 20971520);
+  DECL_GFX_PREF(Live, "image.mem.decode_bytes_at_a_time",      ImageMemDecodeBytesAtATime, uint32_t, 200000);
+  DECL_GFX_PREF(Live, "image.mem.decodeondraw",                ImageMemDecodeOnDraw, bool, false);
+  DECL_GFX_PREF(Live, "image.mem.discardable",                 ImageMemDiscardable, bool, false);
+  DECL_GFX_PREF(Live, "image.mem.hard_limit_decoded_image_kb", ImageMemHardLimitDecodedImageKB, uint32_t, 0);
+  DECL_GFX_PREF(Live, "image.mem.max_decoded_image_kb",        ImageMemMaxDecodedImageKB, uint32_t, 50*1024);
+  DECL_GFX_PREF(Live, "image.mem.max_ms_before_yield",         ImageMemMaxMSBeforeYield, uint32_t, 400);
+  DECL_GFX_PREF(Once, "image.mem.surfacecache.max_size_kb",    ImageMemSurfaceCacheMaxSizeKB, uint32_t, 100 * 1024);
+  DECL_GFX_PREF(Once, "image.mem.surfacecache.min_expiration_ms", ImageMemSurfaceCacheMinExpirationMS, uint32_t, 60*1000);
+  DECL_GFX_PREF(Once, "image.mem.surfacecache.size_factor",    ImageMemSurfaceCacheSizeFactor, uint32_t, 64);
+  DECL_GFX_PREF(Live, "image.mozsamplesize.enabled",           ImageMozSampleSizeEnabled, bool, false);
+  DECL_GFX_PREF(Live, "image.multithreaded_decoding.enabled",  ImageMTDecodingEnabled, bool, true);
+  DECL_GFX_PREF(Live, "image.multithreaded_decoding.limit",    ImageMTDecodingLimit, int32_t, -1);
+
   DECL_GFX_PREF(Once, "layers.acceleration.disabled",          LayersAccelerationDisabled, bool, false);
   DECL_GFX_PREF(Live, "layers.acceleration.draw-fps",          LayersDrawFPS, bool, false);
   DECL_GFX_PREF(Live, "layers.acceleration.draw-fps.print-histogram",  FPSPrintHistogram, bool, false);
