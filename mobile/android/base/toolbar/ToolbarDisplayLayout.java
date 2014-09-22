@@ -12,6 +12,7 @@ import java.util.List;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SiteIdentity;
 import org.mozilla.gecko.SiteIdentity.SecurityMode;
@@ -146,10 +147,16 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
         mPrivateDomainColor = new ForegroundColorSpan(res.getColor(R.color.url_bar_domaintext_private));
 
         mFavicon = (ImageButton) findViewById(R.id.favicon);
-        if (Versions.feature16Plus) {
-            mFavicon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        if (NewTabletUI.isEnabled(context)) {
+            // We don't show favicons in the toolbar on new tablet.
+            // TODO: removeView(mFavicon);
+            mFavicon.setVisibility(View.GONE);
+        } else {
+            if (Versions.feature16Plus) {
+                mFavicon.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+            }
+            mFaviconSize = Math.round(res.getDimension(R.dimen.browser_toolbar_favicon_size));
         }
-        mFaviconSize = Math.round(res.getDimension(R.dimen.browser_toolbar_favicon_size));
 
         mSiteSecurity = (ImageButton) findViewById(R.id.site_security);
         mSiteSecurityVisible = (mSiteSecurity.getVisibility() == View.VISIBLE);
@@ -351,6 +358,11 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
     }
 
     private void updateFavicon(Tab tab) {
+        if (NewTabletUI.isEnabled(getContext())) {
+            // We don't display favicons in the toolbar for the new Tablet UI.
+            return;
+        }
+
         if (tab == null) {
             mFavicon.setImageDrawable(null);
             return;
@@ -489,7 +501,11 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
     }
 
     View getDoorHangerAnchor() {
-        return mFavicon;
+        if (!NewTabletUI.isEnabled(getContext())) {
+            return mFavicon;
+        } else {
+            return mSiteSecurity;
+        }
     }
 
     void prepareForwardAnimation(PropertyAnimator anim, ForwardButtonAnimation animation, int width) {
