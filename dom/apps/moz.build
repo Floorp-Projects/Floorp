@@ -44,6 +44,7 @@ EXTRA_PP_JS_MODULES += [
     'AppsUtils.jsm',
     'OperatorApps.jsm',
     'ScriptPreloader.jsm',
+    'TrustedHostedAppsUtils.jsm',
     'Webapps.jsm',
 ]
 

@@ -46,3 +46,10 @@ interface nsIMobileMessageDatabaseService : nsISupports
 
   nsICursorContinueCallback createThreadCursor(in nsIMobileMessageCursorCallback callback);
 };
+
+%{C++
+template<typename T> struct already_AddRefed;
+
+already_AddRefed<nsIMobileMessageDatabaseService>
+NS_CreateMobileMessageDatabaseService();
+%}

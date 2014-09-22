@@ -2,7 +2,7 @@
 * License, v. 2.0. If a copy of the MPL was not distributed with this file,
 * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MobileConnectionChild.h"
+#include "mozilla/dom/mobileconnection/MobileConnectionChild.h"
 
 #include "MobileConnectionCallback.h"
 #include "mozilla/dom/MozMobileConnectionBinding.h"
@@ -11,15 +11,23 @@
 using namespace mozilla::dom;
 using namespace mozilla::dom::mobileconnection;
 
+NS_IMPL_ISUPPORTS(MobileConnectionChild, nsIMobileConnection)
+
+MobileConnectionChild::MobileConnectionChild(uint32_t aServiceId)
+  : mServiceId(aServiceId)
+  , mLive(true)
+{
+  MOZ_COUNT_CTOR(MobileConnectionChild);
+}
+
 void
 MobileConnectionChild::Init()
 {
   nsIMobileConnectionInfo* rawVoice;
   nsIMobileConnectionInfo* rawData;
-  nsTArray<nsString> types;
 
   SendInit(&rawVoice, &rawData, &mLastNetwork, &mLastHomeNetwork, &mIccId,
-           &mNetworkSelectionMode, &mRadioState, &types);
+           &mNetworkSelectionMode, &mRadioState, &mSupportedNetworkTypes);
 
   // Use dont_AddRef here because this instances is already AddRef-ed in
   // MobileConnectionIPCSerializer.h
@@ -32,35 +40,6 @@ MobileConnectionChild::Init()
   nsCOMPtr<nsIMobileConnectionInfo> data = dont_AddRef(rawData);
   mData = new MobileConnectionInfo(nullptr);
   mData->Update(data);
-
-
-  // Initial SupportedNetworkTypes
-  nsresult rv;
-  mSupportedNetworkTypes = do_CreateInstance(NS_VARIANT_CONTRACTID, &rv);
-
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  uint32_t arrayLen = types.Length();
-  if (arrayLen == 0) {
-    mSupportedNetworkTypes->SetAsEmptyArray();
-  } else {
-    // Note: The resulting nsIVariant dupes both the array and its elements.
-    const char16_t** array = reinterpret_cast<const char16_t**>
-                               (NS_Alloc(arrayLen * sizeof(const char16_t***)));
-    if (array) {
-      for (uint32_t i = 0; i < arrayLen; ++i) {
-        array[i] = types[i].get();
-      }
-
-      mSupportedNetworkTypes->SetAsArray(nsIDataType::VTYPE_WCHAR_STR,
-                                         nullptr,
-                                         arrayLen,
-                                         reinterpret_cast<void*>(array));
-      NS_Free(array);
-    }
-  }
 }
 
 void
@@ -74,79 +53,309 @@ MobileConnectionChild::Shutdown()
   mListeners.Clear();
   mVoice = nullptr;
   mData = nullptr;
-  mSupportedNetworkTypes = nullptr;
 }
 
-void
+// nsIMobileConnection
+
+NS_IMETHODIMP
+MobileConnectionChild::GetServiceId(uint32_t* aServiceId)
+{
+  *aServiceId = mServiceId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 MobileConnectionChild::RegisterListener(nsIMobileConnectionListener* aListener)
 {
-  if (!mListeners.Contains(aListener)) {
-    mListeners.AppendObject(aListener);
-  }
+  NS_ENSURE_TRUE(!mListeners.Contains(aListener), NS_ERROR_UNEXPECTED);
+
+  mListeners.AppendObject(aListener);
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 MobileConnectionChild::UnregisterListener(nsIMobileConnectionListener* aListener)
 {
+  NS_ENSURE_TRUE(mListeners.Contains(aListener), NS_ERROR_UNEXPECTED);
+
   mListeners.RemoveObject(aListener);
+  return NS_OK;
 }
 
-MobileConnectionInfo*
-MobileConnectionChild::GetVoiceInfo()
+NS_IMETHODIMP
+MobileConnectionChild::GetVoice(nsIMobileConnectionInfo** aVoice)
 {
-  return mVoice;
+  nsRefPtr<nsIMobileConnectionInfo> voice(mVoice);
+  voice.forget(aVoice);
+  return NS_OK;
 }
 
-MobileConnectionInfo*
-MobileConnectionChild::GetDataInfo()
+NS_IMETHODIMP
+MobileConnectionChild::GetData(nsIMobileConnectionInfo** aData)
 {
-  return mData;
+  nsRefPtr<nsIMobileConnectionInfo> data(mData);
+  data.forget(aData);
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 MobileConnectionChild::GetIccId(nsAString& aIccId)
 {
   aIccId = mIccId;
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 MobileConnectionChild::GetRadioState(nsAString& aRadioState)
 {
   aRadioState = mRadioState;
+  return NS_OK;
 }
 
-nsIVariant*
-MobileConnectionChild::GetSupportedNetworkTypes()
+NS_IMETHODIMP
+MobileConnectionChild::GetSupportedNetworkTypes(char16_t*** aTypes,
+                                                uint32_t* aLength)
 {
-  return mSupportedNetworkTypes;
+  NS_ENSURE_ARG(aTypes);
+  NS_ENSURE_ARG(aLength);
+
+  *aLength = mSupportedNetworkTypes.Length();
+  *aTypes =
+    static_cast<char16_t**>(nsMemory::Alloc((*aLength) * sizeof(char16_t*)));
+  NS_ENSURE_TRUE(*aTypes, NS_ERROR_OUT_OF_MEMORY);
+
+  for (uint32_t i = 0; i < *aLength; i++) {
+    (*aTypes)[i] = ToNewUnicode(mSupportedNetworkTypes[i]);
+  }
+
+  return NS_OK;
 }
 
-void
-MobileConnectionChild::GetLastNetwork(nsAString& aNetwork)
+NS_IMETHODIMP
+MobileConnectionChild::GetLastKnownNetwork(nsAString& aNetwork)
 {
   aNetwork = mLastNetwork;
+  return NS_OK;
 }
 
-void
-MobileConnectionChild::GetLastHomeNetwork(nsAString& aNetwork)
+NS_IMETHODIMP
+MobileConnectionChild::GetLastKnownHomeNetwork(nsAString& aNetwork)
 {
   aNetwork = mLastHomeNetwork;
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 MobileConnectionChild::GetNetworkSelectionMode(nsAString& aMode)
 {
   aMode = mNetworkSelectionMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::GetNetworks(nsIMobileConnectionCallback* aCallback)
+{
+  return SendRequest(GetNetworksRequest(), aCallback) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::SelectNetwork(nsIMobileNetworkInfo* aNetwork,
+                                     nsIMobileConnectionCallback* aCallback)
+{
+  nsCOMPtr<nsIMobileNetworkInfo> network = aNetwork;
+  // We release the ref after serializing process is finished in
+  // MobileConnectionIPCSerializer.
+  return SendRequest(SelectNetworkRequest(network.forget().take()), aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::SelectNetworkAutomatically(nsIMobileConnectionCallback* aCallback)
+{
+  return SendRequest(SelectNetworkAutoRequest(), aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP
+MobileConnectionChild::SetPreferredNetworkType(const nsAString& aType,
+                                               nsIMobileConnectionCallback* aCallback)
+{
+  return SendRequest(SetPreferredNetworkTypeRequest(nsAutoString(aType)),
+                     aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::GetPreferredNetworkType(nsIMobileConnectionCallback* aCallback)
+{
+  return SendRequest(GetPreferredNetworkTypeRequest(), aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::SetRoamingPreference(const nsAString& aMode,
+                                            nsIMobileConnectionCallback* aCallback)
+{
+  return SendRequest(SetRoamingPreferenceRequest(nsAutoString(aMode)),
+                     aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::GetRoamingPreference(nsIMobileConnectionCallback* aCallback)
+{
+  return SendRequest(GetRoamingPreferenceRequest(), aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::SetVoicePrivacyMode(bool aEnabled,
+                                           nsIMobileConnectionCallback* aCallback)
+{
+  return SendRequest(SetVoicePrivacyModeRequest(aEnabled), aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::GetVoicePrivacyMode(nsIMobileConnectionCallback* aCallback)
+{
+  return SendRequest(GetVoicePrivacyModeRequest(), aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::SendMMI(const nsAString& aMmi,
+                               nsIMobileConnectionCallback* aCallback)
+{
+  return SendRequest(SendMmiRequest(nsAutoString(aMmi)), aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::CancelMMI(nsIMobileConnectionCallback* aCallback)
+{
+  return SendRequest(CancelMmiRequest(), aCallback) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::SetCallForwarding(JS::Handle<JS::Value> aOptions,
+                                         nsIMobileConnectionCallback* aCallback)
+{
+  AutoSafeJSContext cx;
+  IPC::MozCallForwardingOptions options;
+  if(!options.Init(cx, aOptions)) {
+    return NS_ERROR_TYPE_ERR;
+  }
+
+  return SendRequest(SetCallForwardingRequest(options), aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::GetCallForwarding(uint16_t aReason,
+                                         nsIMobileConnectionCallback* aCallback)
+{
+  return SendRequest(GetCallForwardingRequest(aReason), aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::SetCallBarring(JS::Handle<JS::Value> aOptions,
+                                      nsIMobileConnectionCallback* aCallback)
+{
+  AutoSafeJSContext cx;
+  IPC::MozCallBarringOptions options;
+  if(!options.Init(cx, aOptions)) {
+    return NS_ERROR_TYPE_ERR;
+  }
+
+  return SendRequest(SetCallBarringRequest(options), aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::GetCallBarring(JS::Handle<JS::Value> aOptions,
+                                      nsIMobileConnectionCallback* aCallback)
+{
+  AutoSafeJSContext cx;
+  IPC::MozCallBarringOptions options;
+  if(!options.Init(cx, aOptions)) {
+    return NS_ERROR_TYPE_ERR;
+  }
+
+  return SendRequest(GetCallBarringRequest(options), aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::ChangeCallBarringPassword(JS::Handle<JS::Value> aOptions,
+                                                 nsIMobileConnectionCallback* aCallback)
+{
+  AutoSafeJSContext cx;
+  IPC::MozCallBarringOptions options;
+  if(!options.Init(cx, aOptions)) {
+    return NS_ERROR_TYPE_ERR;
+  }
+
+  return SendRequest(ChangeCallBarringPasswordRequest(options), aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::SetCallWaiting(bool aEnabled,
+                                      nsIMobileConnectionCallback* aCallback)
+{
+  return SendRequest(SetCallWaitingRequest(aEnabled), aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::GetCallWaiting(nsIMobileConnectionCallback* aCallback)
+{
+  return SendRequest(GetCallWaitingRequest(), aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::SetCallingLineIdRestriction(uint16_t aMode,
+                                                   nsIMobileConnectionCallback* aCallback)
+{
+  return SendRequest(SetCallingLineIdRestrictionRequest(aMode), aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::GetCallingLineIdRestriction(nsIMobileConnectionCallback* aCallback)
+{
+  return SendRequest(GetCallingLineIdRestrictionRequest(), aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::ExitEmergencyCbMode(nsIMobileConnectionCallback* aCallback)
+{
+  return SendRequest(ExitEmergencyCbModeRequest(), aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+MobileConnectionChild::SetRadioEnabled(bool aEnabled,
+                                       nsIMobileConnectionCallback* aCallback)
+{
+  return SendRequest(SetRadioEnabledRequest(aEnabled), aCallback)
+    ? NS_OK : NS_ERROR_FAILURE;
 }
 
 bool
-MobileConnectionChild::SendRequest(MobileConnectionRequest aRequest,
-                                   nsIMobileConnectionCallback* aRequestCallback)
+MobileConnectionChild::SendRequest(const MobileConnectionRequest& aRequest,
+                                   nsIMobileConnectionCallback* aCallback)
 {
   NS_ENSURE_TRUE(mLive, false);
 
   // Deallocated in MobileConnectionChild::DeallocPMobileConnectionRequestChild().
-  MobileConnectionRequestChild* actor = new MobileConnectionRequestChild(aRequestCallback);
+  MobileConnectionRequestChild* actor =
+    new MobileConnectionRequestChild(aCallback);
   SendPMobileConnectionRequestConstructor(actor, aRequest);
 
   return true;
