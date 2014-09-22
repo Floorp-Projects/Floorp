@@ -23,6 +23,7 @@
   var CallUrlExpiredView    = loop.webapp.CallUrlExpiredView;
   var PendingConversationView = loop.webapp.PendingConversationView;
   var StartConversationView = loop.webapp.StartConversationView;
+  var EndedConversationView = loop.webapp.EndedConversationView;
 
   // 3. Shared components
   var ConversationToolbar = loop.shared.views.ConversationToolbar;
@@ -335,6 +336,19 @@
             </Example>
             <Example summary="Non-Firefox User">
               <CallUrlExpiredView helper={{isFirefox: returnFalse}} />
+            </Example>
+          </Section>
+
+          <Section name="EndedConversationView">
+            <Example summary="Displays the feedback form">
+              <div className="standalone">
+                <EndedConversationView sdk={mockSDK}
+                                       video={{enabled: true}}
+                                       audio={{enabled: true}}
+                                       conversation={mockConversationModel}
+                                       feedbackApiClient={stageFeedbackApiClient}
+                                       onAfterFeedbackReceived={noop} />
+              </div>
             </Example>
           </Section>
 
