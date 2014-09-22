@@ -20,7 +20,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  expect = 'ReferenceError: setter is not defined';
+  expect = "ReferenceError: setter is not defined, did you mean 'stop'?";
   try
   {
     eval("setter/*\n*/;");
