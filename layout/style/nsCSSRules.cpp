@@ -1397,59 +1397,6 @@ DOMCI_DATA(CSSNameSpaceRule, css::NameSpaceRule)
 // nsCSSFontFaceStyleDecl and related routines
 //
 
-// A src: descriptor is represented as an array value; each entry in
-// the array can be eCSSUnit_URL, eCSSUnit_Local_Font, or
-// eCSSUnit_Font_Format.  Blocks of eCSSUnit_Font_Format may appear
-// only after one of the first two.  (css3-fonts only contemplates
-// annotating URLs with formats, but we handle the general case.)
-static void
-AppendSerializedFontSrc(const nsCSSValue& src, nsAString & aResult)
-{
-  NS_PRECONDITION(src.GetUnit() == eCSSUnit_Array,
-                  "improper value unit for src:");
-
-  const nsCSSValue::Array& sources = *src.GetArrayValue();
-  size_t i = 0;
-
-  while (i < sources.Count()) {
-    nsAutoString formats;
-
-    if (sources[i].GetUnit() == eCSSUnit_URL) {
-      aResult.AppendLiteral("url(");
-      nsDependentString url(sources[i].GetOriginalURLValue());
-      nsStyleUtil::AppendEscapedCSSString(url, aResult);
-      aResult.Append(')');
-    } else if (sources[i].GetUnit() == eCSSUnit_Local_Font) {
-      aResult.AppendLiteral("local(");
-      nsDependentString local(sources[i].GetStringBufferValue());
-      nsStyleUtil::AppendEscapedCSSString(local, aResult);
-      aResult.Append(')');
-    } else {
-      NS_NOTREACHED("entry in src: descriptor with improper unit");
-      i++;
-      continue;
-    }
-
-    i++;
-    formats.Truncate();
-    while (i < sources.Count() &&
-           sources[i].GetUnit() == eCSSUnit_Font_Format) {
-      formats.Append('"');
-      formats.Append(sources[i].GetStringBufferValue());
-      formats.AppendLiteral("\", ");
-      i++;
-    }
-    if (formats.Length() > 0) {
-      formats.Truncate(formats.Length() - 2); // remove the last comma
-      aResult.AppendLiteral(" format(");
-      aResult.Append(formats);
-      aResult.Append(')');
-    }
-    aResult.AppendLiteral(", ");
-  }
-  aResult.Truncate(aResult.Length() - 2); // remove the last comma-space
-}
-
 // Mapping from nsCSSFontDesc codes to nsCSSFontFaceStyleDecl fields.
 nsCSSValue nsCSSFontFaceStyleDecl::* const
 nsCSSFontFaceStyleDecl::Fields[] = {
@@ -1531,7 +1478,7 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
     return NS_OK;
 
   case eCSSFontDesc_Src:
-    AppendSerializedFontSrc(val, aResult);
+    nsStyleUtil::AppendSerializedFontSrc(val, aResult);
     return NS_OK;
 
   case eCSSFontDesc_UnicodeRange:
