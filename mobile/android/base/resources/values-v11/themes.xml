@@ -50,6 +50,7 @@
         <item name="topSitesGridItemViewStyle">@style/Widget.TopSitesGridItemView</item>
         <item name="topSitesGridViewStyle">@style/Widget.TopSitesGridView</item>
         <item name="panelGridViewStyle">@style/Widget.PanelGridView</item>
+        <item name="tabGridLayoutViewStyle">@style/Widget.TabsGridLayout</item>
         <item name="topSitesThumbnailViewStyle">@style/Widget.TopSitesThumbnailView</item>
         <item name="homeListViewStyle">@style/Widget.HomeListView</item>
         <item name="geckoMenuListViewStyle">@style/Widget.GeckoMenuListView</item>
