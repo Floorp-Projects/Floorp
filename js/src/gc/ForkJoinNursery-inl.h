@@ -12,6 +12,8 @@
 
 #include "gc/ForkJoinNursery.h"
 
+#include "jsgc.h"
+
 namespace js {
 namespace gc {
 
