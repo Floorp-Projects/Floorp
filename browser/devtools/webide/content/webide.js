@@ -134,13 +134,15 @@ let UI = {
         this.updateCommands();
         break;
       case "project":
-        this.updateTitle();
-        this.destroyToolbox();
-        this.updateCommands();
-        this.updateProjectButton();
-        this.openProject();
-        this.autoStartProject();
-        break;
+        this._updatePromise = Task.spawn(function() {
+          UI.updateTitle();
+          yield UI.destroyToolbox();
+          UI.updateCommands();
+          UI.updateProjectButton();
+          UI.openProject();
+          UI.autoStartProject();
+        });
+        return;
       case "project-is-not-running":
       case "project-is-running":
       case "list-tabs-response":
@@ -159,6 +161,7 @@ let UI = {
       case "install-progress":
         this.updateProgress(Math.round(100 * details.bytesSent / details.totalBytes));
     };
+    this._updatePromise = promise.resolve();
   },
 
   openInBrowser: function(url) {
@@ -717,11 +720,12 @@ let UI = {
 
   destroyToolbox: function() {
     if (this.toolboxPromise) {
-      this.toolboxPromise.then(toolbox => {
+      return this.toolboxPromise.then(toolbox => {
         toolbox.destroy();
         this.toolboxPromise = null;
       }, console.error);
     }
+    return promise.resolve();
   },
 
   createToolbox: function() {

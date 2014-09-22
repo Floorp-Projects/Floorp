@@ -110,7 +110,7 @@ function waitForUpdate(win, update) {
       return;
     }
     win.AppManager.off("app-manager-update", onUpdate);
-    deferred.resolve();
+    deferred.resolve(win.UI._updatePromise);
   });
   return deferred.promise;
 }
