@@ -1,7 +1,8 @@
 [
-{"size": 118323840,
-"digest": "f18aabdf19ce8b630d9724ecf7d3a130e6b020a9e4d4e222bba6d4b3d4303c30dc3c5162a55b0f85de926077be59e17cfe49eb7314dca7e1bb5741a260148083",
-"filename": "backup-flame.tar.xz",
-"algorithm": "sha512"
+{
+"size": 91247216,
+"digest": "2b4be549f98695488ea7288d9e7f8ac0fa45112bedefa485a6e016c4af73fa21bb6b3992beda516f268417207c5deb57afad3959d3b1fbd07d5269b3a6be6a27",
+"algorithm": "sha512",
+"filename": "backup-flame.tar.xz"
 }
 ]
