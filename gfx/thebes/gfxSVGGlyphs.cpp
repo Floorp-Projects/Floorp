@@ -374,8 +374,10 @@ gfxSVGGlyphsDocument::ParseDocument(const uint8_t *aBuffer, uint32_t aBufLen)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsILoadInfo> loadInfo =
-      new LoadInfo(principal, LoadInfo::eInheritPrincipal,
-                   LoadInfo::eNotSandboxed);
+      new LoadInfo(principal,
+                   nullptr,
+                   nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
+                   nsIContentPolicy::TYPE_OTHER);
     channel->SetLoadInfo(loadInfo);
 
     // Set this early because various decisions during page-load depend on it.

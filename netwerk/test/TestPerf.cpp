@@ -5,6 +5,7 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsISupportsArray.h"
+#include "nsContentUtils.h"
 #include <algorithm>
 
 namespace TestPerf {
@@ -21,7 +22,16 @@ load_sync_1(nsISupports *element, void *data)
     nsAutoCString spec;
     nsresult rv;
 
-    rv = NS_OpenURI(getter_AddRefs(stream), uri, gIOService);
+    rv = NS_OpenURI(getter_AddRefs(stream),
+                    uri,
+                    nsContentUtils::GetSystemPrincipal(),
+                    nsILoadInfo::SEC_NORMAL,
+                    nsIContentPolicy::TYPE_OTHER,
+                    nullptr, // aLoadGroup
+                    nullptr, // aCallbacks
+                    LOAD_NORMAL,
+                    gIOService);
+
     if (NS_FAILED(rv)) {
         uri->GetAsciiSpec(spec);
         fprintf(stderr, "*** failed opening %s [rv=%x]\n", spec.get(), rv);
@@ -121,7 +131,17 @@ load_async_1(nsISupports *element, void *data)
     if (!listener)
         return true;
     NS_ADDREF(listener);
-    nsresult rv = NS_OpenURI(listener, nullptr, uri, gIOService);
+
+    nsresult rv = NS_OpenURI(listener,
+                             nullptr,   // aContext
+                             uri,
+                             nsContentUtils::GetSystemPrincipal(),
+                             nsILoadInfo::SEC_NORMAL,
+                             nsIContentPolicy::TYPE_OTHER,
+                             nullptr,   // aLoadGroup
+                             nullptr,   // aCallbacks
+                             gIOService);
+
     NS_RELEASE(listener);
     if (NS_SUCCEEDED(rv))
         gRequestCount++;

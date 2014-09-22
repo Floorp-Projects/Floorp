@@ -1734,13 +1734,43 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
     channelPolicy->SetContentSecurityPolicy(csp);
     channelPolicy->SetLoadType(nsIContentPolicy::TYPE_XMLHTTPREQUEST);
   }
-  rv = NS_NewChannel(getter_AddRefs(mChannel),
-                     uri,
-                     nullptr,                    // ioService
-                     loadGroup,
-                     nullptr,                    // callbacks
-                     nsIRequest::LOAD_BACKGROUND,
-                     channelPolicy);
+
+  nsCOMPtr<nsIPrincipal> documentPrincipal;
+  if (IsSystemXHR()) {
+    // Don't give this document the system principal.  We need to keep track of
+    // mPrincipal being system because we use it for various security checks
+    // that should be passing, but the document data shouldn't get a system
+    // principal.
+    documentPrincipal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    documentPrincipal = mPrincipal;
+  }
+
+  // If we have the document, use it
+  if (doc) {
+    rv = NS_NewChannel(getter_AddRefs(mChannel),
+                       uri,
+                       doc,
+                       nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
+                       nsIContentPolicy::TYPE_XMLHTTPREQUEST,
+                       channelPolicy,
+                       loadGroup,
+                       nullptr,   // aCallbacks
+                       nsIRequest::LOAD_BACKGROUND);
+  } else {
+    //otherwise use the principal
+    rv = NS_NewChannel(getter_AddRefs(mChannel),
+                       uri,
+                       documentPrincipal,
+                       nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
+                       nsIContentPolicy::TYPE_XMLHTTPREQUEST,
+                       channelPolicy,
+                       loadGroup,
+                       nullptr,   // aCallbacks
+                       nsIRequest::LOAD_BACKGROUND);
+  }
+
   if (NS_FAILED(rv)) return rv;
 
   mState &= ~(XML_HTTP_REQUEST_USE_XSITE_AC |
@@ -1969,11 +1999,6 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   } else {
     documentPrincipal = mPrincipal;
   }
-
-  nsCOMPtr<nsILoadInfo> loadInfo =
-    new LoadInfo(documentPrincipal, LoadInfo::eInheritPrincipal,
-                 LoadInfo::eNotSandboxed);
-  channel->SetLoadInfo(loadInfo);
 
   nsresult status;
   request->GetStatus(&status);

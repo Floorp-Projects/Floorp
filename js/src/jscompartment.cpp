@@ -59,6 +59,7 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     selfHostingScriptSource(nullptr),
     gcIncomingGrayPointers(nullptr),
     gcWeakMapList(nullptr),
+    gcPreserveJitCode(options.preserveJitCode()),
     debugModeBits(0),
     rngState(0),
     watchpointMap(nullptr),
