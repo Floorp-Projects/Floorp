@@ -304,13 +304,7 @@ static Result
 DecodeBasicConstraints(Reader& input, /*out*/ bool& isCA,
                        /*out*/ long& pathLenConstraint)
 {
-  // TODO(bug 989518): cA is by default false. According to DER, default
-  // values must not be explicitly encoded in a SEQUENCE. So, if this
-  // value is present and false, it is an encoding error. However, Go Daddy
-  // has issued many certificates with this improper encoding, so we can't
-  // enforce this yet (hence passing true for allowInvalidExplicitEncoding
-  // to der::OptionalBoolean).
-  if (der::OptionalBoolean(input, true, isCA) != Success) {
+  if (der::OptionalBoolean(input, isCA) != Success) {
     return Result::ERROR_EXTENSION_VALUE_INVALID;
   }
 
