@@ -194,21 +194,8 @@ function testCloseSelection() {
   return Promise.all([
     ok(!sh.isSelectionActive(), "Selection should not be active at start of testCloseSelection"),
 
+  // Various ways to close an active selection.
   ]).then(function() {
-    // Start by selecting all in an <input>.
-    sh.startSelection(inputNode);
-    return is(sh._activeType, sh.TYPE_SELECTION, "Selection should be active in <input> before Gesture:SingleTap");
-
-  }).then(function() {
-    // Tap outside <input> to close active selection.
-    sh.observe(null, "Gesture:SingleTap", JSON.stringify({
-      x: 1,
-      y: 1
-    }));
-    return ok(!sh.isSelectionActive(), "Gesture:SingleTap outside <input> should close active selection");
-
-  // Various other ways to close an active selection.
-  }).then(function() {
     sh.startSelection(inputNode);
     sh.observe(null, "TextSelection:End", {});
     return ok(!sh.isSelectionActive(), "TextSelection:End should close active selection");
