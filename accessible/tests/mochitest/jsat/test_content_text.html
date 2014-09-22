@@ -26,266 +26,150 @@
       var textTest = new AccessFuContentTest(
         [
           // Read-only text tests
-          [ContentMessages.simpleMoveFirst, {
-            speak: ['These are my awards, Mother. From Army. ' +
-              'The seal is for marksmanship, and the gorilla is ' +
-              'for sand racing.', 'Text content test document']
-          }],
-          [ContentMessages.moveNextBy('word'), {
-            speak: 'These',
-            speak_checkFunc: 'todo_is', // Bug 980509
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-              fromIndex: 0,
-              toIndex: 5
-            }]
-          }],
-          [ContentMessages.moveNextBy('word'), {
-            speak: 'are',
-            speak_checkFunc: 'todo_is', // Bug 980509
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-              fromIndex: 6,
-              toIndex: 9
-            }]
-          }],
-          [ContentMessages.moveNextBy('word'), {
-            speak: 'my',
-            speak_checkFunc: 'todo_is', // Bug 980509
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-              fromIndex: 10,
-              toIndex: 12
-            }]
-          }],
-          [ContentMessages.moveNextBy('word'), {
-            speak: 'awards,',
-            speak_checkFunc: 'todo_is', // Bug 980509
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-              fromIndex: 13,
-              toIndex: 20
-            }]
-          }],
-          [ContentMessages.moveNextBy('word'), {
-            speak: 'Mother.',
-            speak_checkFunc: 'todo_is', // Bug 980509
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-              fromIndex: 21,
-              toIndex: 28
-            }]
-          }],
-          [ContentMessages.movePreviousBy('word'), {
-            speak: 'awards,',
-            speak_checkFunc: 'todo_is', // Bug 980509
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-              fromIndex: 13,
-              toIndex: 20
-            }]
-          }],
-          [ContentMessages.movePreviousBy('word'), {
-            speak: 'my',
-            speak_checkFunc: 'todo_is', // Bug 980509
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-              fromIndex: 10,
-              toIndex: 12
-            }]
-          }],
-          [ContentMessages.movePreviousBy('word'), {
-            speak: 'are',
-            speak_checkFunc: 'todo_is', // Bug 980509
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-              fromIndex: 6,
-              toIndex: 9
-            }]
-          }],
-          [ContentMessages.movePreviousBy('word'), {
-            speak: 'These',
-            speak_checkFunc: 'todo_is', // Bug 980509
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-              fromIndex: 0,
-              toIndex: 5
-            }]
-          }],
-          [ContentMessages.simpleMoveNext, {
-            speak: 'You\'re a good guy, mon frere. ' +
+          [ContentMessages.simpleMoveFirst,
+           new ExpectedCursorChange(
+            ['These are my awards, Mother. From Army. The seal is for ' +
+             'marksmanship, and the gorilla is for sand racing.',
+             'Text content test document'])],
+          [ContentMessages.moveNextBy('word'),
+           new ExpectedCursorTextChange('These', 0, 5)],
+          [ContentMessages.moveNextBy('word'),
+           new ExpectedCursorTextChange('are', 6, 9)],
+          [ContentMessages.moveNextBy('word'),
+           new ExpectedCursorTextChange('my', 10, 12)],
+          [ContentMessages.moveNextBy('word'),
+           new ExpectedCursorTextChange('awards,', 13, 20)],
+          [ContentMessages.moveNextBy('word'),
+           new ExpectedCursorTextChange('Mother.', 21, 28)],
+          [ContentMessages.movePreviousBy('word'),
+           new ExpectedCursorTextChange('awards,', 13, 20)],
+          [ContentMessages.movePreviousBy('word'),
+           new ExpectedCursorTextChange('my', 10, 12)],
+          [ContentMessages.movePreviousBy('word'),
+           new ExpectedCursorTextChange('are', 6, 9)],
+          [ContentMessages.movePreviousBy('word'),
+           new ExpectedCursorTextChange('These', 0, 5)],
+          [ContentMessages.simpleMoveNext,
+           new ExpectedCursorChange(['You\'re a good guy, mon frere. ' +
               'That means brother in French. ' +
               'I don\'t know how I know that. ' +
-              'I took four years of Spanish.',
-          }],
+              'I took four years of Spanish.'])],
           // XXX: Word boundary should be past the apostraphe.
-          [ContentMessages.moveNextBy('word'), {
-            speak: 'You\'re',
-            speak_checkFunc: 'todo_is', // Bug 980509
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-              fromIndex: 0,
-              toIndex: 6
-            }],
-            android_checkFunc: 'todo' // Bug 980512
-          }],
+          [ContentMessages.moveNextBy('word'),
+           new ExpectedCursorTextChange('You\'re', 0, 6,
+             { android_todo: true /* Bug 980512 */})],
 
           // Editable text tests.
-          [ContentMessages.focusSelector('textarea'), {
-            editState: {
-              editing: true,
-              multiline: true,
-              atStart: true,
-              atEnd: false
-            }
-           }, {
-             speak: ['Please refrain from Mayoneggs during this ' +
-               'salmonella scare.', {string: 'textarea'}]
-           }, { // When we first focus, caret is at 0.
-             android: [{
-              eventType: AndroidEvent.VIEW_TEXT_SELECTION_CHANGED,
-              brailleOutput: {
-                selectionStart: 0,
-                selectionEnd: 0
-              }
-            }]
-          }],
-          [ContentMessages.activateCurrent(10), {
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-              fromIndex: 0,
-              toIndex: 10
-            }]
-           }, {
-            editState: { editing: true,
-                         multiline: true,
-                         atStart: false,
-                         atEnd: false }
-           }, {
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_SELECTION_CHANGED,
-              brailleOutput: {
-                selectionStart: 10,
-                selectionEnd: 10
-              }
-            }]
-          }],
-          [ContentMessages.activateCurrent(20), {
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-              fromIndex: 10,
-              toIndex: 20
-            }]
-           }, {
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_SELECTION_CHANGED,
-              brailleOutput: {
-                selectionStart: 20,
-                selectionEnd: 20
-              }
-            }]
-          }],
-          [ContentMessages.moveCaretNextBy('word'), {
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-              fromIndex: 20,
-              toIndex: 29
-            }]
-          }],
-          [ContentMessages.moveCaretNextBy('word'), {
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-              fromIndex: 29,
-              toIndex: 36
-            }]
-          }],
-          [ContentMessages.moveCaretNextBy('character'), {
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-              fromIndex: 36,
-              toIndex: 37
-            }]
-          }],
-          [ContentMessages.moveCaretNextBy('character'), {
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-              fromIndex: 37,
-              toIndex: 38
-            }]
-          }],
-          [ContentMessages.moveCaretNextBy('paragraph'), {
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-              fromIndex: 38,
-              toIndex: 59
-            }]
-          }],
-          [ContentMessages.moveCaretPreviousBy('word'), {
-            android: [{
-              eventType: AndroidEvent.VIEW_TEXT_TRAVERSED_AT_MOVEMENT_GRANULARITY,
-              fromIndex: 53,
-              toIndex: 59
-            }],
-            focused: 'textarea'
-          }],
+          [ContentMessages.focusSelector('textarea'),
+           new ExpectedAnnouncement('editing'),
+           new ExpectedEditState({
+            editing: true,
+            multiline: true,
+            atStart: true,
+            atEnd: false
+           }),
+           new ExpectedCursorChange(
+            ['Please refrain from Mayoneggs during this salmonella scare.',
+             {string: 'textarea'}]),
+           new ExpectedTextSelectionChanged(0, 0)
+          ],
+          [ContentMessages.activateCurrent(10),
+           new ExpectedTextCaretChanged(0, 10),
+           new ExpectedEditState({ editing: true,
+             multiline: true,
+             atStart: false,
+             atEnd: false }),
+           new ExpectedTextSelectionChanged(10, 10)],
+          [ContentMessages.activateCurrent(20),
+           new ExpectedTextCaretChanged(10, 20),
+           new ExpectedTextSelectionChanged(20, 20)
+          ],
+          [ContentMessages.moveCaretNextBy('word'),
+           new ExpectedTextCaretChanged(20, 29),
+           new ExpectedTextSelectionChanged(29, 29)
+          ],
+          [ContentMessages.moveCaretNextBy('word'),
+           new ExpectedTextCaretChanged(29, 36),
+           new ExpectedTextSelectionChanged(36, 36)
+          ],
+          [ContentMessages.moveCaretNextBy('character'),
+           new ExpectedTextCaretChanged(36, 37),
+           new ExpectedTextSelectionChanged(37, 37)
+          ],
+          [ContentMessages.moveCaretNextBy('character'),
+           new ExpectedTextCaretChanged(37, 38),
+           new ExpectedTextSelectionChanged(38, 38)
+          ],
+          [ContentMessages.moveCaretNextBy('paragraph'),
+           new ExpectedTextCaretChanged(38, 59),
+           new ExpectedTextSelectionChanged(59, 59)
+          ],
+          [ContentMessages.moveCaretPreviousBy('word'),
+           new ExpectedTextCaretChanged(53, 59),
+           new ExpectedTextSelectionChanged(53, 53)
+          ],
 
           // bug xxx
-          [ContentMessages.simpleMoveNext, {
-            speak: ['So we don\'t get dessert?', {string: 'label'}],
-            focused: 'html'
-           }, {
-            editState: {
-              editing: false,
-              multiline: false,
-              atStart: true,
-              atEnd: false }
-          }],
-          [ContentMessages.simpleMoveNext, {
-            speak: [{ string : 'entry' }],
-            focused: 'html'
-          }],
-          [ContentMessages.activateCurrent(0), {
-            editState: {
-              editing: true,
-              multiline: false,
-              atStart: true,
-              atEnd: true
-            },
-            focused: 'input[type=text]'
-          }],
-          [ContentMessages.simpleMovePrevious, {
-            editState: {
-              editing: false,
-              multiline: false,
-              atStart: true,
-              atEnd: false
-            },
-            focused: 'html'
-          }],
-          [ContentMessages.simpleMoveNext, {
-            speak: [{ string : 'entry' }],
-            focused: 'html'
-          }],
-          [ContentMessages.activateCurrent(0), {
-            editState: {
-              editing: true,
-              multiline: false,
-              atStart: true,
-              atEnd: true
-            },
-            focused: 'input[type=text]'
-          }],
-          [ContentMessages.simpleMovePrevious, {
-            speak: [ 'So we don\'t get dessert?', {string: 'label'} ]
-           }, {
-            editState: {
-              editing: false,
-              multiline: false,
-              atStart: true,
-              atEnd: false
-            },
-            focused: 'html'
-          }]
+          [ContentMessages.simpleMoveNext,
+           new ExpectedCursorChange(
+            ['So we don\'t get dessert?', {string: 'label'}],
+            { focused: 'html'}),
+           new ExpectedAnnouncement('navigating'),
+           new ExpectedEditState({
+            editing: false,
+            multiline: false,
+            atStart: true,
+            atEnd: false })],
+          [ContentMessages.simpleMoveNext,
+           new ExpectedCursorChange(
+            [{ string : 'entry' }],
+            { focused: 'html'})],
+          [ContentMessages.activateCurrent(0),
+           new ExpectedClickAction(),
+           new ExpectedAnnouncement('editing'),
+           new ExpectedEditState({
+            editing: true,
+            multiline: false,
+            atStart: true,
+            atEnd: true
+           }, { focused: 'input[type=text]' }),
+           new ExpectedTextSelectionChanged(0, 0)
+           ],
+          [ContentMessages.simpleMovePrevious,
+           new ExpectedCursorChange(
+            ['So we don\'t get dessert?', {string: 'label'}]),
+           new ExpectedAnnouncement('navigating'),
+           new ExpectedEditState({
+            editing: false,
+            multiline: false,
+            atStart: true,
+            atEnd: false
+           }, { focused: 'html' })],
+          [ContentMessages.simpleMoveNext,
+           new ExpectedCursorChange(
+            [{ string : 'entry' }],
+            { focused: 'html'})],
+          [ContentMessages.activateCurrent(0),
+           new ExpectedClickAction(),
+           new ExpectedAnnouncement('editing'),
+           new ExpectedEditState({
+            editing: true,
+            multiline: false,
+            atStart: true,
+            atEnd: true
+           },
+           { focused: 'input[type=text]' }),
+           new ExpectedTextSelectionChanged(0, 0)],
+          [ContentMessages.simpleMovePrevious,
+           new ExpectedCursorChange(
+            [ 'So we don\'t get dessert?', {string: 'label'} ]),
+           new ExpectedAnnouncement('navigating'),
+           new ExpectedEditState({
+            editing: false,
+            multiline: false,
+            atStart: true,
+            atEnd: false
+           }, { focused: 'html' })]
         ]);
 
       textTest.start(function () {
