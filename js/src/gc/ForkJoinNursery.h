@@ -36,6 +36,7 @@ namespace gc {
 class ForkJoinGCShared;
 class ForkJoinNursery;
 class ForkJoinNurseryCollectionTracer;
+class RelocationOverlay;
 
 // This tracer comes into play when a class has a tracer function, but
 // is otherwise unused and has no other functionality.
