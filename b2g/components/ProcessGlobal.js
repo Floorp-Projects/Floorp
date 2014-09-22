@@ -33,7 +33,8 @@ function log(msg) {
 function formatStackFrame(aFrame) {
   let functionName = aFrame.functionName || '<anonymous>';
   return '    at ' + functionName +
-         ' (' + aFrame.filename + ':' + aFrame.lineNumber + ')';
+         ' (' + aFrame.filename + ':' + aFrame.lineNumber +
+         ':' + aFrame.columnNumber + ')';
 }
 
 const gFactoryResetFile = "/persist/__post_reset_cmd__";
