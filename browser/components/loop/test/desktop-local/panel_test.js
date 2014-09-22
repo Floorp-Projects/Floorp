@@ -191,6 +191,7 @@ describe("loop.panel", function() {
       beforeEach(function() {
         navigator.mozLoop.logInToFxA = sandbox.stub();
         navigator.mozLoop.logOutFromFxA = sandbox.stub();
+        navigator.mozLoop.openFxASettings = sandbox.stub();
       });
 
       it("should show a signin entry when user is not authenticated",
@@ -223,6 +224,17 @@ describe("loop.panel", function() {
 
         expect(view.getDOMNode().querySelectorAll(".icon-account"))
           .to.have.length.of(1);
+      });
+
+      it("should open the FxA settings when the account entry is clicked", function() {
+        navigator.mozLoop.userProfile = {email: "test@example.com"};
+
+        var view = TestUtils.renderIntoDocument(loop.panel.SettingsDropdown());
+
+        TestUtils.Simulate.click(
+          view.getDOMNode().querySelector(".icon-account"));
+
+        sinon.assert.calledOnce(navigator.mozLoop.openFxASettings);
       });
 
       it("should hide any account entry when user is not authenticated",

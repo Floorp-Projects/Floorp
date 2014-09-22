@@ -221,7 +221,6 @@ body[dir=rtl] .dropdown-menu-item {
 /* Sign in/up link */
 
 .signin-link {
-  display: none; /* XXX This should be displayed as soon bug 979845 lands */
   flex: 2 1 auto;
   margin-top: 14px;
   border-right: 1px solid #aaa;
@@ -239,7 +238,6 @@ body[dir=rtl] .dropdown-menu-item {
 /* Settings (gear) menu */
 
 .btn-settings {
-  display: none; /* XXX This should be displayed as soon bug 979845 lands */
   background: transparent url(../img/svg/glyph-settings-16x16.svg) no-repeat center center;
   background-size: contain;
   width: 12px;
