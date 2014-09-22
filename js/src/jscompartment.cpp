@@ -542,64 +542,86 @@ JSCompartment::markRoots(JSTracer *trc)
 }
 
 void
-JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
+JSCompartment::sweepInnerViews()
 {
-    JS_ASSERT(!activeAnalysis);
     JSRuntime *rt = runtimeFromMainThread();
+    gcstats::MaybeAutoPhase ap(rt->gc.stats, !rt->isHeapCompacting(),
+                               gcstats::PHASE_SWEEP_TABLES_INNER_VIEWS);
+    innerViews.sweep(rt);
+}
 
-    {
-        gcstats::MaybeAutoPhase ap(rt->gc.stats, !rt->isHeapCompacting(),
-                                   gcstats::PHASE_SWEEP_TABLES_INNER_VIEWS);
-        innerViews.sweep(rt);
-    }
+void
+JSCompartment::sweepTypeObjectTables()
+{
+    JSRuntime *rt = runtimeFromMainThread();
+    gcstats::MaybeAutoPhase ap(rt->gc.stats, !rt->isHeapCompacting(),
+                               gcstats::PHASE_SWEEP_TABLES_TYPE_OBJECT);
+    sweepNewTypeObjectTable(newTypeObjects);
+    sweepNewTypeObjectTable(lazyTypeObjects);
+}
 
-    {
-        gcstats::MaybeAutoPhase ap(rt->gc.stats, !rt->isHeapCompacting(),
-                                   gcstats::PHASE_SWEEP_TABLES_WRAPPER);
-        sweepCrossCompartmentWrappers();
-    }
+void
+JSCompartment::sweepSavedStacks()
+{
+    savedStacks_.sweep(runtimeFromMainThread());
+}
 
-    /* Remove dead references held weakly by the compartment. */
-
-    sweepBaseShapeTable();
-    sweepInitialShapeTable();
-    {
-        gcstats::MaybeAutoPhase ap(rt->gc.stats, !rt->isHeapCompacting(),
-                                   gcstats::PHASE_SWEEP_TABLES_TYPE_OBJECT);
-        sweepNewTypeObjectTable(newTypeObjects);
-        sweepNewTypeObjectTable(lazyTypeObjects);
-    }
-    sweepCallsiteClones();
-    savedStacks_.sweep(rt);
-
+void
+JSCompartment::sweepGlobalObject(FreeOp *fop)
+{
     if (global_ && IsObjectAboutToBeFinalized(global_.unsafeGet())) {
         if (debugMode())
             Debugger::detachAllDebuggersFromGlobal(fop, global_);
         global_.set(nullptr);
     }
+}
 
+void
+JSCompartment::sweepSelfHostingScriptSource()
+{
     if (selfHostingScriptSource &&
         IsObjectAboutToBeFinalized((JSObject **) selfHostingScriptSource.unsafeGet()))
     {
         selfHostingScriptSource.set(nullptr);
     }
+}
 
+void
+JSCompartment::sweepJitCompartment(FreeOp *fop)
+{
     if (jitCompartment_)
         jitCompartment_->sweep(fop, this);
+}
 
+void
+JSCompartment::sweepRegExps()
+{
     /*
      * JIT code increments activeWarmUpCounter for any RegExpShared used by jit
      * code for the lifetime of the JIT script. Thus, we must perform
      * sweeping after clearing jit code.
      */
-    regExps.sweep(rt);
+    regExps.sweep(runtimeFromMainThread());
+}
 
+void
+JSCompartment::sweepDebugScopes()
+{
+    JSRuntime *rt = runtimeFromMainThread();
     if (debugScopes)
         debugScopes->sweep(rt);
+}
 
+void
+JSCompartment::sweepWeakMaps()
+{
     /* Finalize unreachable (key,value) pairs in all weak maps. */
     WeakMapBase::sweepCompartment(this);
+}
 
+void
+JSCompartment::sweepNativeIterators()
+{
     /* Sweep list of native iterators. */
     NativeIterator *ni = enumerators->next();
     while (ni != enumerators) {
@@ -619,6 +641,10 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 void
 JSCompartment::sweepCrossCompartmentWrappers()
 {
+    JSRuntime *rt = runtimeFromMainThread();
+    gcstats::MaybeAutoPhase ap(rt->gc.stats, !rt->isHeapCompacting(),
+                               gcstats::PHASE_SWEEP_TABLES_WRAPPER);
+
     /* Remove dead wrappers from the table. */
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
         CrossCompartmentKey key = e.front().key();
