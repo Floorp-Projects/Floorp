@@ -94,8 +94,9 @@ let mockPushHandler = {
  * enables us to check parameters and return messages similar to the push
  * server.
  */
-let MockWebSocketChannel = function(initRegStatus) {
-  this.initRegStatus = initRegStatus;
+let MockWebSocketChannel = function(options) {
+  let _options = options || {};
+  this.defaultMsgHandler = _options.defaultMsgHandler;
 };
 
 MockWebSocketChannel.prototype = {
@@ -136,6 +137,8 @@ MockWebSocketChannel.prototype = {
                           channelID: this.channelID,
                           pushEndpoint: kEndPointUrl}));
         break;
+      default:
+        this.defaultMsgHandler && this.defaultMsgHandler(message);
     }
   },
 

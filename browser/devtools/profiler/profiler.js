@@ -24,6 +24,8 @@ devtools.lazyRequireGetter(this, "CATEGORIES",
   "devtools/profiler/global", true);
 devtools.lazyRequireGetter(this, "CATEGORY_MAPPINGS",
   "devtools/profiler/global", true);
+devtools.lazyRequireGetter(this, "CATEGORY_OTHER",
+  "devtools/profiler/global", true);
 devtools.lazyRequireGetter(this, "ThreadNode",
   "devtools/profiler/tree-model", true);
 devtools.lazyRequireGetter(this, "CallView",

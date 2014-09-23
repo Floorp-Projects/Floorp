@@ -71,28 +71,33 @@
     <style name="Gecko.TitleDialog" parent="GeckoTitleDialogBase"/>
 
     <!--
-        Activity based themes.
+        Activity based themes, dependent on API level. This theme is replaced
+        by GeckoAppBase from res/values-vXX/themes.xml on newer devices.
     -->
-    <style name="Gecko.App">
-        <item name="android:windowBackground">@android:color/white</item>
+    <style name="GeckoAppBase" parent="Gecko">
         <item name="android:buttonStyle">@style/Widget.Button</item>
         <item name="android:dropDownItemStyle">@style/Widget.DropDownItem</item>
         <item name="android:editTextStyle">@style/Widget.EditText</item>
-        <item name="android:gridViewStyle">@style/Widget.GridView</item>
         <item name="android:textViewStyle">@style/Widget.TextView</item>
-        <item name="android:spinnerStyle">@style/Widget.Spinner</item>
-        <item name="bookmarksListViewStyle">@style/Widget.BookmarksListView</item>
-        <item name="topSitesGridItemViewStyle">@style/Widget.TopSitesGridItemView</item>
-        <item name="topSitesGridViewStyle">@style/Widget.TopSitesGridView</item>
-        <item name="panelGridViewStyle">@style/Widget.PanelGridView</item>
-        <item name="topSitesThumbnailViewStyle">@style/Widget.TopSitesThumbnailView</item>
-        <item name="homeListViewStyle">@style/Widget.HomeListView</item>
-        <item name="geckoMenuListViewStyle">@style/Widget.GeckoMenuListView</item>
         <item name="menuItemDefaultStyle">@style/Widget.MenuItemDefault</item>
+    </style>
+
+    <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+    <style name="Gecko.App" parent="GeckoAppBase">
+        <item name="android:gridViewStyle">@style/Widget.GridView</item>
+        <item name="android:spinnerStyle">@style/Widget.Spinner</item>
+        <item name="android:windowBackground">@android:color/white</item>
+        <item name="bookmarksListViewStyle">@style/Widget.BookmarksListView</item>
+        <item name="floatingHintEditTextStyle">@style/FloatingHintEditText</item>
+        <item name="geckoMenuListViewStyle">@style/Widget.GeckoMenuListView</item>
+        <item name="homeListViewStyle">@style/Widget.HomeListView</item>
         <item name="menuItemActionBarStyle">@style/Widget.MenuItemActionBar</item>
         <item name="menuItemActionModeStyle">@style/GeckoActionBar.Button</item>
         <item name="menuItemShareActionButtonStyle">@style/Widget.MenuItemSecondaryActionBar</item>
-        <item name="floatingHintEditTextStyle">@style/FloatingHintEditText</item>
+        <item name="panelGridViewStyle">@style/Widget.PanelGridView</item>
+        <item name="topSitesGridItemViewStyle">@style/Widget.TopSitesGridItemView</item>
+        <item name="topSitesGridViewStyle">@style/Widget.TopSitesGridView</item>
+        <item name="topSitesThumbnailViewStyle">@style/Widget.TopSitesThumbnailView</item>
     </style>
 
     <style name="Gecko.Preferences" parent="GeckoPreferencesBase">
