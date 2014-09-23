@@ -10,5 +10,5 @@
     android:layout_width="@dimen/new_tablet_tab_strip_item_width"
     android:layout_height="match_parent"
     android:background="@drawable/new_tablet_tab_strip_item_bg"
-    android:paddingLeft="28dp"
+    android:paddingLeft="25dp"
     android:paddingRight="15dp"/>

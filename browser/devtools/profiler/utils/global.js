@@ -44,6 +44,11 @@ const CATEGORY_MAPPINGS = {
   "2048": CATEGORIES[7], // js::ProfileEntry::Category::EVENTS
 };
 
+// Human-readable "other" category bitmask. Older Geckos don't have all the
+// necessary instrumentation in the sampling profiler backend for creating
+// a categories graph, in which case we default to the "other" category.
+const CATEGORY_OTHER = 8;
+
 // Human-readable JIT category bitmask. Certain pseudo-frames in a sample,
 // like "EnterJIT", don't have any associated `cateogry` information.
 const CATEGORY_JIT = 32;
@@ -52,4 +57,5 @@ const CATEGORY_JIT = 32;
 exports.L10N = L10N;
 exports.CATEGORIES = CATEGORIES;
 exports.CATEGORY_MAPPINGS = CATEGORY_MAPPINGS;
+exports.CATEGORY_OTHER = CATEGORY_OTHER;
 exports.CATEGORY_JIT = CATEGORY_JIT;

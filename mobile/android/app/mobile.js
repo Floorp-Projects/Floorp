@@ -456,13 +456,19 @@ pref("font.size.inflation.minTwips", 120);
 // When true, zooming will be enabled on all sites, even ones that declare user-scalable=no.
 pref("browser.ui.zoom.force-user-scalable", false);
 
-// Touch radius (area around the touch location to look for target elements),
-// in 1/240-inch pixels:
-pref("browser.ui.touch.left", 32);
-pref("browser.ui.touch.right", 32);
-pref("browser.ui.touch.top", 48);
-pref("browser.ui.touch.bottom", 16);
-pref("browser.ui.touch.weight.visited", 120); // percentage
+pref("ui.touch.radius.enabled", true);
+pref("ui.touch.radius.leftmm", 3);
+pref("ui.touch.radius.topmm", 5);
+pref("ui.touch.radius.rightmm", 3);
+pref("ui.touch.radius.bottommm", 2);
+pref("ui.touch.radius.visitedWeight", 120);
+
+pref("ui.mouse.radius.enabled", true);
+pref("ui.mouse.radius.leftmm", 3);
+pref("ui.mouse.radius.topmm", 5);
+pref("ui.mouse.radius.rightmm", 3);
+pref("ui.mouse.radius.bottommm", 2);
+pref("ui.mouse.radius.visitedWeight", 120);
 
 // The percentage of the screen that needs to be scrolled before margins are exposed.
 pref("browser.ui.show-margins-threshold", 10);
