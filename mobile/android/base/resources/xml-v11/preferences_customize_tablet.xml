@@ -43,6 +43,7 @@
             gecko:entryValues="@array/pref_import_android_values"
             gecko:initialValues="@array/pref_import_android_defaults"
             android:title="@string/pref_import_android"
+            android:summary="@string/pref_import_android_summary"
             android:positiveButtonText="@string/bookmarkhistory_button_import"
             android:negativeButtonText="@string/button_cancel"
             android:persistent="false" />

@@ -125,11 +125,15 @@
   <string name="settings_title">&settings_title;</string>
   <string name="pref_category_advanced">&pref_category_advanced;</string>
   <string name="pref_category_customize">&pref_category_customize;</string>
+  <string name="pref_category_customize_summary">&pref_category_customize_summary;</string>
   <string name="pref_category_search">&pref_category_search3;</string>
   <string name="pref_category_search_summary">&pref_category_search_summary;</string>
   <string name="pref_category_display">&pref_category_display;</string>
+  <string name="pref_category_display_summary">&pref_category_display_summary;</string>
   <string name="pref_category_privacy_short">&pref_category_privacy_short;</string>
+  <string name="pref_category_privacy_summary">&pref_category_privacy_summary;</string>
   <string name="pref_category_vendor">&pref_category_vendor;</string>
+  <string name="pref_category_vendor_summary">&pref_category_vendor_summary;</string>
   <string name="pref_category_datareporting">&pref_category_datareporting;</string>
   <string name="pref_category_installed_search_engines">&pref_category_installed_search_engines;</string>
   <string name="pref_category_add_search_providers">&pref_category_add_search_providers;</string>
@@ -139,10 +143,12 @@
   <string name="pref_search_hint">&pref_search_hint;</string>
 
   <string name="pref_category_language">&pref_category_language;</string>
+  <string name="pref_category_language_summary">&pref_category_language_summary;</string>
   <string name="pref_browser_locale">&pref_browser_locale;</string>
   <string name="locale_system_default">&locale_system_default;</string>
 
   <string name="pref_category_devtools">&pref_category_devtools;</string>
+  <string name="pref_category_devtools_summary">&pref_category_devtools_summary;</string>
   <string name="pref_developer_paint_flashing">&pref_developer_paint_flashing;</string>
   <string name="pref_developer_remotedebugging">&pref_developer_remotedebugging;</string>
 
@@ -206,6 +212,7 @@
   <string name="pref_restore_always">&pref_restore_always;</string>
   <string name="pref_restore_quit">&pref_restore_quit;</string>
   <string name="pref_sync">&pref_sync;</string>
+  <string name="pref_sync_summary">&pref_sync_summary;</string>
   <string name="pref_search_suggestions">&pref_search_suggestions;</string>
   <string name="pref_private_data_history2">&pref_private_data_history2;</string>
   <string name="pref_private_data_formdata">&pref_private_data_formdata;</string>
@@ -216,6 +223,7 @@
   <string name="pref_private_data_siteSettings">&pref_private_data_siteSettings2;</string>
   <string name="pref_private_data_downloadFiles2">&pref_private_data_downloadFiles2;</string>
   <string name="pref_import_android">&pref_import_android;</string>
+  <string name="pref_import_android_summary">&pref_import_android_summary;</string>
   <string name="pref_update_autodownload">&pref_update_autodownload2;</string>
   <string name="pref_update_autodownload_wifi">&pref_update_autodownload_wifi;</string>
   <string name="pref_update_autodownload_disabled">&pref_update_autodownload_never;</string>

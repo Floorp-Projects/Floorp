@@ -6,9 +6,8 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/search_card_background"
-    android:paddingTop="0dp"
-    android:paddingBottom="0dp"
+    android:background="@drawable/search_row_background"
+    android:padding="@dimen/search_row_padding"
     android:descendantFocusability="blocksDescendants"
     android:orientation="horizontal">
 
@@ -17,9 +16,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:paddingLeft="@dimen/suggestion_card_padding_x"
-        android:paddingTop="@dimen/card_padding_y"
-        android:paddingBottom="@dimen/card_padding_y"
         android:textSize="@dimen/query_text_size"/>
 
     <ImageButton
@@ -27,8 +23,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="right|center_vertical"
-        android:paddingLeft="@dimen/jump_button_padding_x"
-        android:paddingRight="@dimen/jump_button_padding_x"
+        android:paddingLeft="@dimen/search_row_padding"
         android:src="@drawable/search_plus"
         android:contentDescription="@string/search_plus_content_description"
         android:background="@android:color/transparent" />
