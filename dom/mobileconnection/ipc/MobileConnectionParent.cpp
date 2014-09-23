@@ -579,12 +579,12 @@ MobileConnectionRequestParent::NotifyGetNetworksSuccess(uint32_t aCount,
 }
 
 NS_IMETHODIMP
-MobileConnectionRequestParent::NotifySendCancelMmiSuccess(JS::Handle<JS::Value> aResult)
+MobileConnectionRequestParent::NotifySendCancelMmiSuccess(JS::Handle<JS::Value> aResult,
+                                                          JSContext* aCx)
 {
-  AutoSafeJSContext cx;
-  RootedDictionary<MozMMIResult> result(cx);
+  RootedDictionary<MozMMIResult> result(aCx);
 
-  if (!result.Init(cx, aResult)) {
+  if (!result.Init(aCx, aResult)) {
     return NS_ERROR_TYPE_ERR;
   }
 
@@ -605,13 +605,13 @@ MobileConnectionRequestParent::NotifySendCancelMmiSuccess(JS::Handle<JS::Value> 
 
   if (additionInformation.IsObject()) {
     uint32_t length;
-    JS::Rooted<JS::Value> value(cx);
-    JS::Rooted<JSObject*> object(cx, additionInformation.GetAsObject());
+    JS::Rooted<JS::Value> value(aCx);
+    JS::Rooted<JSObject*> object(aCx, additionInformation.GetAsObject());
 
-    if (!JS_IsArrayObject(cx, object) ||
-        !JS_GetArrayLength(cx, object, &length) || length <= 0 ||
+    if (!JS_IsArrayObject(aCx, object) ||
+        !JS_GetArrayLength(aCx, object, &length) || length <= 0 ||
         // Check first element to decide the format of array.
-        !JS_GetElement(cx, object, 0, &value)) {
+        !JS_GetElement(aCx, object, 0, &value)) {
       return NS_ERROR_TYPE_ERR;
     }
 
@@ -620,12 +620,12 @@ MobileConnectionRequestParent::NotifySendCancelMmiSuccess(JS::Handle<JS::Value> 
       // String[]
       nsTArray<nsString> infos;
       for (uint32_t i = 0; i < length; i++) {
-        if (!JS_GetElement(cx, object, i, &value) || !value.isString()) {
+        if (!JS_GetElement(aCx, object, i, &value) || !value.isString()) {
           return NS_ERROR_TYPE_ERR;
         }
 
         nsAutoJSString str;
-        if (!str.init(cx, value.toString())) {
+        if (!str.init(aCx, value.toString())) {
           return NS_ERROR_FAILURE;
         }
         infos.AppendElement(str);
@@ -639,7 +639,7 @@ MobileConnectionRequestParent::NotifySendCancelMmiSuccess(JS::Handle<JS::Value> 
       nsTArray<IPC::MozCallForwardingOptions> infos;
       for (uint32_t i = 0; i < length; i++) {
         IPC::MozCallForwardingOptions info;
-        if (!JS_GetElement(cx, object, i, &value) || !info.Init(cx, value)) {
+        if (!JS_GetElement(aCx, object, i, &value) || !info.Init(aCx, value)) {
           return NS_ERROR_TYPE_ERR;
         }
 
@@ -656,23 +656,23 @@ MobileConnectionRequestParent::NotifySendCancelMmiSuccess(JS::Handle<JS::Value> 
 }
 
 NS_IMETHODIMP
-MobileConnectionRequestParent::NotifyGetCallForwardingSuccess(JS::Handle<JS::Value> aResults)
+MobileConnectionRequestParent::NotifyGetCallForwardingSuccess(JS::Handle<JS::Value> aResults,
+                                                              JSContext* aCx)
 {
   uint32_t length;
-  AutoSafeJSContext cx;
-  JS::Rooted<JSObject*> object(cx, &aResults.toObject());
+  JS::Rooted<JSObject*> object(aCx, &aResults.toObject());
   nsTArray<IPC::MozCallForwardingOptions> results;
 
-  if (!JS_IsArrayObject(cx, object) ||
-      !JS_GetArrayLength(cx, object, &length)) {
+  if (!JS_IsArrayObject(aCx, object) ||
+      !JS_GetArrayLength(aCx, object, &length)) {
     return NS_ERROR_TYPE_ERR;
   }
 
   for (uint32_t i = 0; i < length; i++) {
-    JS::Rooted<JS::Value> entry(cx);
+    JS::Rooted<JS::Value> entry(aCx);
     IPC::MozCallForwardingOptions info;
 
-    if (!JS_GetElement(cx, object, i, &entry) || !info.Init(cx, entry)) {
+    if (!JS_GetElement(aCx, object, i, &entry) || !info.Init(aCx, entry)) {
       return NS_ERROR_TYPE_ERR;
     }
 
