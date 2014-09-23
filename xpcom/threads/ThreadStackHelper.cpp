@@ -547,8 +547,7 @@ ThreadStackHelper::AppendJSEntry(const volatile StackEntry* aEntry,
   const char* label;
   if (IsChromeJSScript(aEntry->script())) {
     const char* const filename = JS_GetScriptFilename(aEntry->script());
-    unsigned lineno = JS_PCToLineNumber(nullptr, aEntry->script(),
-                                        aEntry->pc());
+    unsigned lineno = JS_PCToLineNumber(aEntry->script(), aEntry->pc());
     MOZ_ASSERT(filename);
 
     char buffer[64]; // Enough to fit longest js file name from the tree

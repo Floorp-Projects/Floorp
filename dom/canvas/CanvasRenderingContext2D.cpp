@@ -4622,6 +4622,7 @@ CanvasPath::AddPath(CanvasPath& aCanvasPath, const Optional<NonNull<SVGMatrix>>&
     }
   }
 
+  EnsurePathBuilder(); // in case a path is added to itself
   tempPath->StreamToSink(mPathBuilder);
 }
 
