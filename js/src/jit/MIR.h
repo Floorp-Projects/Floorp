@@ -5798,6 +5798,7 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineListNode<MPhi>
     bool addInputSlow(MDefinition *ins, bool *ptypeChange = nullptr);
 
     MDefinition *foldsTo(TempAllocator &alloc);
+    MDefinition *foldsTernary();
 
     bool congruentTo(const MDefinition *ins) const;
 
