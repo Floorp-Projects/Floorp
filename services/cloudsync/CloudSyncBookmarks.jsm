@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 
 Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/CloudSyncPlacesWrapper.jsm");
 Cu.import("resource://gre/modules/CloudSyncEventSource.jsm");
 Cu.import("resource://gre/modules/CloudSyncBookmarksFolderCache.jsm");
@@ -484,7 +485,15 @@ let RootFolder = function (rootId, rootName) {
         }
 
         if (item.hasOwnProperty("index") && !item.hasOwnProperty("parent")) {
-          promises.push(PlacesWrapper.bookmarks.setItemIndex(localId, item.index));
+          promises.push(Task.spawn(function* () {
+            let localItem = (yield getLocalItemsById([item.id]))[0];
+            let parent = yield PlacesWrapper.guidToLocalId(localItem.parent);
+            let index = item.index;
+            if (CS_FOLDER & item.type) {
+              folderCache.setParent(localId, parent);
+            }
+            yield PlacesWrapper.moveItem(localId, parent, index);
+          }));
         }
 
         Promise.all(promises)
