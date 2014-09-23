@@ -511,20 +511,9 @@ class SnapshotIterator
         }
     }
 
-    Value maybeReadAllocByIndex(size_t index) {
-        while (index--) {
-            JS_ASSERT(moreAllocations());
-            skip();
-        }
-
-        MaybeReadFallback fallback(UndefinedValue());
-        Value s = maybeRead(fallback);
-
-        while (moreAllocations())
-            skip();
-
-        return s;
-    }
+    // Iterate over all the allocations and return only the value of the
+    // allocation located at one index.
+    Value maybeReadAllocByIndex(size_t index);
 
 #ifdef TRACK_SNAPSHOTS
     void spewBailingFrom() const {
