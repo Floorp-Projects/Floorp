@@ -23,7 +23,7 @@ class PBrowserParent;
 class TCPSocketParentBase : public nsITCPSocketParent
 {
 public:
-  NS_DECL_CYCLE_COLLECTION_CLASS(TCPSocketParentBase)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TCPSocketParentBase)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   void AddIPDLReference();
@@ -33,6 +33,7 @@ protected:
   TCPSocketParentBase();
   virtual ~TCPSocketParentBase();
 
+  JS::Heap<JSObject*> mIntermediaryObj;
   nsCOMPtr<nsITCPSocketIntermediary> mIntermediary;
   nsCOMPtr<nsIDOMTCPSocket> mSocket;
   bool mIPCOpen;
@@ -45,7 +46,7 @@ public:
   NS_DECL_NSITCPSOCKETPARENT
   NS_IMETHOD_(MozExternalRefCountType) Release() MOZ_OVERRIDE;
 
-  TCPSocketParent() : mIntermediaryObj(nullptr) {}
+  TCPSocketParent() {}
 
   virtual bool RecvOpen(const nsString& aHost, const uint16_t& aPort,
                         const bool& useSSL, const nsString& aBinaryType);
@@ -60,8 +61,6 @@ public:
 
 private:
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
-
-  JSObject* mIntermediaryObj;
 };
 
 } // namespace dom
