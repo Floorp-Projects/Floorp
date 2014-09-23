@@ -13,15 +13,18 @@
 
     <org.mozilla.gecko.preferences.SyncPreference android:key="android.not_a_preference.sync"
                                                   android:title="@string/pref_sync"
+                                                  android:summary="@string/pref_sync_summary"
                                                   android:persistent="false" />
 
     <PreferenceScreen android:title="@string/pref_category_customize"
+                      android:summary="@string/pref_category_customize_summary"
                       android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
         <extra android:name="resource"
                android:value="preferences_customize"/>
     </PreferenceScreen>
 
     <PreferenceScreen android:title="@string/pref_category_display"
+                      android:summary="@string/pref_category_display_summary"
                       android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
         <extra android:name="resource"
                android:value="preferences_display" />
@@ -29,24 +32,28 @@
 
 
     <PreferenceScreen android:title="@string/pref_category_privacy_short"
+                      android:summary="@string/pref_category_privacy_summary"
                       android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
         <extra android:name="resource"
                android:value="preferences_privacy" />
     </PreferenceScreen>
 
     <PreferenceScreen android:title="@string/pref_category_language"
+                      android:summary="@string/pref_category_language_summary"
                       android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
         <extra android:name="resource"
                android:value="preferences_locale" />
     </PreferenceScreen>
 
     <PreferenceScreen android:title="@string/pref_category_vendor"
+                      android:summary="@string/pref_category_vendor_summary"
                       android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
         <extra android:name="resource"
                android:value="preferences_vendor"/>
     </PreferenceScreen>
 
     <PreferenceScreen android:title="@string/pref_category_devtools"
+                      android:summary="@string/pref_category_devtools_summary"
                       android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
         <extra android:name="resource"
                android:value="preferences_devtools"/>

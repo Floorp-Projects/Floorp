@@ -13,9 +13,11 @@
 
     <org.mozilla.gecko.preferences.SyncPreference android:key="android.not_a_preference.sync"
                                                   android:title="@string/pref_sync"
+                                                  android:summary="@string/pref_category_customize_summary"
                                                   android:persistent="false" />
 
-    <PreferenceScreen android:title="@string/pref_category_customize" >
+    <PreferenceScreen android:title="@string/pref_category_customize"
+                      android:summary="@string/pref_category_customize_summary" >
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
                 android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
@@ -25,7 +27,8 @@
         </intent>
     </PreferenceScreen>
 
-    <PreferenceScreen android:title="@string/pref_category_display" >
+    <PreferenceScreen android:title="@string/pref_category_display"
+                      android:summary="@string/pref_category_display_summary" >
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
                 android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
@@ -35,7 +38,8 @@
         </intent>
     </PreferenceScreen>
 
-    <PreferenceScreen android:title="@string/pref_category_privacy_short" >
+    <PreferenceScreen android:title="@string/pref_category_privacy_short"
+                      android:summary="@string/pref_category_privacy_summary" >
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
                 android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
@@ -45,7 +49,8 @@
         </intent>
     </PreferenceScreen>
 
-    <PreferenceScreen android:title="@string/pref_category_language" >
+    <PreferenceScreen android:title="@string/pref_category_language"
+                      android:summary="@string/pref_category_language_summary" >
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
                 android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
@@ -55,7 +60,8 @@
         </intent>
     </PreferenceScreen>
 
-    <PreferenceScreen android:title="@string/pref_category_vendor">
+    <PreferenceScreen android:title="@string/pref_category_vendor"
+                      android:summary="@string/pref_category_vendor_summary" >
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
                 android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
@@ -64,7 +70,8 @@
                 android:value="preferences_vendor" />
         </intent>
     </PreferenceScreen>
-    <PreferenceScreen android:title="@string/pref_category_devtools">
+    <PreferenceScreen android:title="@string/pref_category_devtools"
+                      android:summary="@string/pref_category_devtools_summary" >
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
                 android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
