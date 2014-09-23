@@ -572,8 +572,8 @@ assertProg("f.p = 1; var f; f.p; function f(){}",
 // global let is var
 assertGlobalDecl("let {x:y} = foo;", varDecl([{ id: objPatt([{ key: ident("x"), value: ident("y") }]),
                                                 init: ident("foo") }]));
-// function-global let is var
-assertLocalDecl("let {x:y} = foo;", varDecl([{ id: objPatt([{ key: ident("x"), value: ident("y") }]),
+// function-global let is let
+assertLocalDecl("let {x:y} = foo;", letDecl([{ id: objPatt([{ key: ident("x"), value: ident("y") }]),
                                                init: ident("foo") }]));
 // block-local let is let
 assertBlockDecl("let {x:y} = foo;", letDecl([{ id: objPatt([{ key: ident("x"), value: ident("y") }]),
@@ -681,7 +681,7 @@ function testVarPatternCombinations(makePattSrc, makePattPatt) {
         assertDecl("var " + pattSrcs[i].join(",") + ";", varDecl(pattPatts[i]));
 
         assertGlobalDecl("let " + pattSrcs[i].join(",") + ";", varDecl(pattPatts[i]));
-        assertLocalDecl("let " + pattSrcs[i].join(",") + ";", varDecl(pattPatts[i]));
+        assertLocalDecl("let " + pattSrcs[i].join(",") + ";", letDecl(pattPatts[i]));
         assertBlockDecl("let " + pattSrcs[i].join(",") + ";", letDecl(pattPatts[i]));
 
         assertDecl("const " + pattSrcs[i].join(",") + ";", constDecl(pattPatts[i]));
