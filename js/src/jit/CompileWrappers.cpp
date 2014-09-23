@@ -132,6 +132,12 @@ CompileRuntime::names()
     return *runtime()->commonNames;
 }
 
+const PropertyName *
+CompileRuntime::emptyString()
+{
+    return runtime()->emptyString;
+}
+
 const StaticStrings &
 CompileRuntime::staticStrings()
 {

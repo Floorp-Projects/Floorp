@@ -235,6 +235,7 @@ protected: //data
   uint16_t mReadyState;
 
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsWeakPtr              mOriginDocument;
 
   uint32_t mOutgoingBufferedAmount;
 

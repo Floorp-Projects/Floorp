@@ -283,22 +283,20 @@ Boolean(Reader& input, /*out*/ bool& value)
   }
 }
 
-// This is for any BOOLEAN DEFAULT FALSE.
-// (If it is present and false, this is a bad encoding.)
-// TODO(bug 989518): For compatibility reasons, in some places we allow
-// invalid encodings with the explicit default value.
+// This is for BOOLEAN DEFAULT FALSE.
+// The standard stipulates that "The encoding of a set value or sequence value
+// shall not include an encoding for any component value which is equal to its
+// default value." However, it appears to be common that other libraries
+// incorrectly include the value of a BOOLEAN even when it's equal to the
+// default value, so we allow invalid explicit encodings here.
 inline Result
-OptionalBoolean(Reader& input, bool allowInvalidExplicitEncoding,
-                /*out*/ bool& value)
+OptionalBoolean(Reader& input, /*out*/ bool& value)
 {
   value = false;
   if (input.Peek(BOOLEAN)) {
     Result rv = Boolean(input, value);
     if (rv != Success) {
       return rv;
-    }
-    if (!allowInvalidExplicitEncoding && !value) {
-      return Result::ERROR_BAD_DER;
     }
   }
   return Success;
@@ -543,7 +541,7 @@ OptionalExtensions(Reader& input, uint8_t tag,
       return rv;
     }
     bool critical;
-    rv = OptionalBoolean(extension, false, critical);
+    rv = OptionalBoolean(extension, critical);
     if (rv != Success) {
       return rv;
     }

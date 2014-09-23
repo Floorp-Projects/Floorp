@@ -115,6 +115,16 @@ its prototype:
     * `"debugger"`: a frame for a call to user code invoked by the debugger
       (see the `eval` method below).
 
+`implementation`
+:   A string describing which tier of the JavaScript engine this frame is
+    executing in:
+
+    * `"interpreter"`: a frame running in the interpreter.
+
+    * `"baseline"`: a frame running in the unoptimizing, baseline JIT.
+
+    * `"ion"`: a frame running in the optimizing JIT.
+
 `this`
 :   The value of `this` for this frame (a debuggee value).
 

@@ -260,6 +260,15 @@ static const FeatureInfo sFeatureInfoArr[] = {
          */
     },
     {
+        "map_buffer_range",
+        300, // OpenGL version
+        300, // OpenGL ES version
+        GLContext::ARB_map_buffer_range,
+        {
+            GLContext::Extensions_End
+        }
+    },
+    {
         "occlusion_query",
         200, // OpenGL version
         0,   // OpenGL ES version
@@ -455,6 +464,15 @@ static const FeatureInfo sFeatureInfoArr[] = {
         {
             GLContext::EXT_transform_feedback,
             GLContext::NV_transform_feedback,
+            GLContext::Extensions_End
+        }
+    },
+    {
+        "uniform_buffer_object",
+        310, // OpenGL version
+        300, // OpenGL ES version
+        GLContext::ARB_uniform_buffer_object,
+        {
             GLContext::Extensions_End
         }
     },

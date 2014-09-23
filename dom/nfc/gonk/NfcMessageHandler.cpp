@@ -130,6 +130,9 @@ NfcMessageHandler::GeneralResponse(const Parcel& aParcel, EventOptions& aOptions
     case NfcRequest::CloseReq:
       type = kCloseResponse;
       break;
+    default:
+      CHROMIUM_LOG("Nfcd, unknown general response %d", pendingReq);
+      return false;
   }
 
   aOptions.mType = NS_ConvertUTF8toUTF16(type);
@@ -293,6 +296,15 @@ NfcMessageHandler::TechDiscoveredNotification(const Parcel& aParcel, EventOption
   if (ndefMsgCount != 0) {
     ReadNDEFMessage(aParcel, aOptions);
   }
+
+  int32_t ndefInfo = aParcel.readInt32();
+  if (ndefInfo) {
+    NdefType type = static_cast<NdefType>(aParcel.readInt32());
+    int32_t maxSupportLength = aParcel.readInt32();
+    int32_t isReadOnly = aParcel.readInt32();
+    int32_t isFormatable = aParcel.readInt32();
+  }
+
   return true;
 }
 

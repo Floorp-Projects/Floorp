@@ -97,6 +97,20 @@ BaseWebSocketChannel::SetLoadGroup(nsILoadGroup *aLoadGroup)
 }
 
 NS_IMETHODIMP
+BaseWebSocketChannel::SetLoadInfo(nsILoadInfo* aLoadInfo)
+{
+  mLoadInfo = aLoadInfo;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BaseWebSocketChannel::GetLoadInfo(nsILoadInfo** aLoadInfo)
+{
+  NS_IF_ADDREF(*aLoadInfo = mLoadInfo);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 BaseWebSocketChannel::GetExtensions(nsACString &aExtensions)
 {
   LOG(("BaseWebSocketChannel::GetExtensions() %p\n", this));
