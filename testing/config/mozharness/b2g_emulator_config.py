@@ -10,7 +10,7 @@ config = {
         "--xre-path=%(xre_path)s", "--symbols-path=%(symbols_path)s", "--busybox=%(busybox)s",
         "--total-chunks=%(total_chunks)s", "--this-chunk=%(this_chunk)s",
         "--extra-profile-file=jsreftest/tests/user.js",
-        "%(test_manifest)s",
+        "jsreftest/tests/jstests.list",
     ],
 
     "mochitest_options": [
@@ -30,7 +30,7 @@ config = {
         "--remote-webserver=%(remote_webserver)s", "--ignore-window-size",
         "--xre-path=%(xre_path)s", "--symbols-path=%(symbols_path)s", "--busybox=%(busybox)s",
         "--total-chunks=%(total_chunks)s", "--this-chunk=%(this_chunk)s", "--enable-oop",
-        "%(test_manifest)s",
+        "tests/layout/reftests/reftest.list",
     ],
 
     "crashtest_options": [
@@ -39,12 +39,12 @@ config = {
         "--remote-webserver=%(remote_webserver)s", "--ignore-window-size",
         "--xre-path=%(xre_path)s", "--symbols-path=%(symbols_path)s", "--busybox=%(busybox)s",
         "--total-chunks=%(total_chunks)s", "--this-chunk=%(this_chunk)s",
-        "%(test_manifest)s",
+        "tests/testing/crashtest/crashtests.list",
     ],
 
     "xpcshell_options": [
         "--adbpath=%(adbpath)s", "--b2gpath=%(b2gpath)s", "--emulator=%(emulator)s",
-        "--logdir=%(logcat_dir)s", "--manifest=%(test_manifest)s", "--use-device-libs",
+        "--logdir=%(logcat_dir)s", "--manifest=tests/xpcshell_b2g.ini", "--use-device-libs",
         "--testing-modules-dir=%(modules_dir)s", "--symbols-path=%(symbols_path)s",
         "--busybox=%(busybox)s", "--total-chunks=%(total_chunks)s", "--this-chunk=%(this_chunk)s",
     ],
