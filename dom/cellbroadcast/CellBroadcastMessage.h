@@ -28,16 +28,16 @@ public:
 
   CellBroadcastMessage(nsPIDOMWindow* aWindow,
                        uint32_t aServiceId,
-                       const nsAString& aGsmGeographicalScope,
+                       uint32_t aGsmGeographicalScope,
                        uint16_t aMessageCode,
                        uint16_t aMessageId,
                        const nsAString& aLanguage,
                        const nsAString& aBody,
-                       const nsAString& aMessageClass,
+                       uint32_t aMessageClass,
                        uint64_t aTimestamp,
                        uint32_t aCdmaServiceCategory,
                        bool aHasEtwsInfo,
-                       const nsAString& aEtwsWarningType,
+                       uint32_t aEtwsWarningType,
                        bool aEtwsEmergencyUserAlert,
                        bool aEtwsPopup);
 
@@ -99,7 +99,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CellBroadcastEtwsInfo)
 
   CellBroadcastEtwsInfo(nsPIDOMWindow* aWindow,
-                        const nsAString& aWarningType,
+                        uint32_t aWarningType,
                         bool aEmergencyUserAlert,
                         bool aPopup);
 
