@@ -231,7 +231,13 @@ public:
     StyleColorToString(CurrentState().shadowColor, shadowColor);
   }
 
+  void GetFilter(nsAString& filter)
+  {
+    filter = CurrentState().filterString;
+  }
+
   void SetShadowColor(const nsAString& shadowColor);
+  void SetFilter(const nsAString& filter, mozilla::ErrorResult& error);
   void ClearRect(double x, double y, double w, double h);
   void FillRect(double x, double y, double w, double h);
   void StrokeRect(double x, double y, double w, double h);
@@ -919,6 +925,7 @@ protected:
           fillRule(other.fillRule),
           lineCap(other.lineCap),
           lineJoin(other.lineJoin),
+          filterString(other.filterString),
           imageSmoothingEnabled(other.imageSmoothingEnabled)
     { }
 
@@ -977,6 +984,7 @@ protected:
     mozilla::gfx::CapStyle lineCap;
     mozilla::gfx::JoinStyle lineJoin;
 
+    nsString filterString;
     bool imageSmoothingEnabled;
   };
 
