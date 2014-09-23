@@ -127,6 +127,13 @@ DirectProxyHandler::setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObje
 }
 
 bool
+DirectProxyHandler::setImmutablePrototype(JSContext *cx, HandleObject proxy, bool *succeeded) const
+{
+    RootedObject target(cx, proxy->as<ProxyObject>().target());
+    return JSObject::setImmutablePrototype(cx, target, succeeded);
+}
+
+bool
 DirectProxyHandler::objectClassIs(HandleObject proxy, ESClassValue classValue,
                                   JSContext *cx) const
 {

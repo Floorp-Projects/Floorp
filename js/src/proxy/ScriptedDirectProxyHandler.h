@@ -35,6 +35,9 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
                                 MutableHandleObject protop) const MOZ_OVERRIDE;
     virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto,
                                 bool *bp) const MOZ_OVERRIDE;
+    /* Non-standard, but needed to handle revoked proxies. */
+    virtual bool setImmutablePrototype(JSContext *cx, HandleObject proxy,
+                                       bool *succeeded) const MOZ_OVERRIDE;
 
     virtual bool has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const MOZ_OVERRIDE;
     virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
