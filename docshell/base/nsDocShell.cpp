@@ -3056,14 +3056,14 @@ nsDocShell::RemoveWeakScrollObserver(nsIScrollObserver* aObserver)
 }
 
 void
-nsDocShell::NotifyAsyncPanZoomStarted()
+nsDocShell::NotifyAsyncPanZoomStarted(const mozilla::CSSIntPoint aScrollPos)
 {
     nsTObserverArray<nsWeakPtr>::ForwardIterator iter(mScrollObservers);
     while (iter.HasMore()) {
         nsWeakPtr ref = iter.GetNext();
         nsCOMPtr<nsIScrollObserver> obs = do_QueryReferent(ref);
         if (obs) {
-            obs->AsyncPanZoomStarted();
+            obs->AsyncPanZoomStarted(aScrollPos);
         } else {
             mScrollObservers.RemoveElement(ref);
         }
@@ -3071,14 +3071,14 @@ nsDocShell::NotifyAsyncPanZoomStarted()
 }
 
 void
-nsDocShell::NotifyAsyncPanZoomStopped()
+nsDocShell::NotifyAsyncPanZoomStopped(const mozilla::CSSIntPoint aScrollPos)
 {
     nsTObserverArray<nsWeakPtr>::ForwardIterator iter(mScrollObservers);
     while (iter.HasMore()) {
         nsWeakPtr ref = iter.GetNext();
         nsCOMPtr<nsIScrollObserver> obs = do_QueryReferent(ref);
         if (obs) {
-            obs->AsyncPanZoomStopped();
+            obs->AsyncPanZoomStopped(aScrollPos);
         } else {
             mScrollObservers.RemoveElement(ref);
         }
