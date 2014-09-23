@@ -17,7 +17,7 @@
   </project>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="e1fd99454b6cd5da4f2c58f928fc04c6d03f478f"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="3c898380b47f298cd3b7a0dacb3a6529e94322d4"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="b81855b6b67f285d6f27a4f8c1cfe2e0387ea57c"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="562d357b72279a9e35d4af5aeecc8e1ffa2f44f1"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="f3e998242fb9a857cf50f5bf3a02304a530ea617"/>
@@ -122,7 +122,7 @@
   <!-- Flame specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="e8a318f7690092e639ba88891606f4183e846d3f"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="878804e0becfe5635bb8ccbf2671333d546c6fb6"/>
-  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="eab9ed2db026c9a2c7943f3bfac350255fa46691"/>
+  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="b04c1a7d96f01a743f23a544870cd5be2c8d172e"/>
   <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="49417cfc622074daa3c76b345a199f6731375800"/>
   <project name="kernel_lk" path="bootable/bootloader/lk" remote="b2g" revision="6f00133ac0f47e90027bd7e263a16b405bfac503"/>
   <project name="platform_bootable_recovery" path="bootable/recovery" remote="b2g" revision="e81502511cda303c803e63f049574634bc96f9f2"/>
