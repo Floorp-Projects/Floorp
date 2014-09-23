@@ -64,7 +64,6 @@ URIUtils::ResetWithSource(nsIDocument *aNewDoc, nsIDOMNode *aSourceNode)
                                     sourceDoc,
                                     nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
                                     nsIContentPolicy::TYPE_OTHER,
-                                    nullptr,   // aChannelPolicy
                                     loadGroup);
 
         if (NS_FAILED(rv)) {
