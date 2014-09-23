@@ -25,6 +25,7 @@
 #include "imgIEncoder.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/EnumeratedArray.h"
+#include "FilterSupport.h"
 
 class nsGlobalWindow;
 class nsXULElement;
@@ -704,6 +705,12 @@ protected:
     */
   mozilla::gfx::SurfaceFormat GetSurfaceFormat() const;
 
+  /**
+   * Update CurrentState().filter with the filter description for
+   * CurrentState().filterChain.
+   */
+  void UpdateFilter();
+
   void DrawImage(const HTMLImageOrCanvasOrVideoElement &imgElt,
                  double sx, double sy, double sw, double sh,
                  double dx, double dy, double dw, double dh,
@@ -838,6 +845,16 @@ protected:
       (state.shadowBlur != 0.f || state.shadowOffset.x != 0.f || state.shadowOffset.y != 0.f);
   }
 
+  /**
+    * Returns true if the result of a drawing operation should be
+    * drawn with a filter.
+    */
+  bool NeedToApplyFilter()
+  {
+    const ContextState& state = CurrentState();
+    return state.filter.mPrimitives.Length() > 0;
+  }
+
   mozilla::gfx::CompositionOp UsedOperation()
   {
     if (NeedToDrawShadow()) {
@@ -932,6 +949,8 @@ protected:
           lineJoin(other.lineJoin),
           filterString(other.filterString),
           filterChain(other.filterChain),
+          filter(other.filter),
+          filterAdditionalImages(other.filterAdditionalImages),
           imageSmoothingEnabled(other.imageSmoothingEnabled)
     { }
 
@@ -992,6 +1011,9 @@ protected:
 
     nsString filterString;
     nsTArray<nsStyleFilter> filterChain;
+    mozilla::gfx::FilterDescription filter;
+    nsTArray<mozilla::RefPtr<mozilla::gfx::SourceSurface>> filterAdditionalImages;
+
     bool imageSmoothingEnabled;
   };
 

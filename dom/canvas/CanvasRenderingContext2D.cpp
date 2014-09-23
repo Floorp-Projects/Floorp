@@ -102,6 +102,8 @@
 #include "SVGContentUtils.h"
 #include "SVGImageContext.h"
 #include "nsIScreenManager.h"
+#include "nsFilterInstance.h"
+#include "nsSVGLength2.h"
 
 #undef free // apparently defined by some windows header, clashing with a free()
             // method in SkTypes.h
@@ -1858,7 +1860,45 @@ CanvasRenderingContext2D::SetFilter(const nsAString& filter, ErrorResult& error)
   if (ParseFilter(filter, filterChain, error)) {
     CurrentState().filterString = filter;
     filterChain.SwapElements(CurrentState().filterChain);
+    if (mCanvasElement) {
+      UpdateFilter();
+    }
   }
+}
+
+class CanvasUserSpaceMetrics : public UserSpaceMetricsWithSize
+{
+public:
+  CanvasUserSpaceMetrics(const gfx::IntSize& aSize)
+    : mSize(aSize)
+  {
+  }
+
+  virtual float GetEmLength() const MOZ_OVERRIDE
+  { return 10.0f; }
+  virtual float GetExLength() const MOZ_OVERRIDE
+  { return 10.0f; }
+  virtual gfx::Size GetSize() const MOZ_OVERRIDE
+  { return Size(mSize); }
+
+private:
+  gfx::IntSize mSize;
+};
+
+void
+CanvasRenderingContext2D::UpdateFilter()
+{
+  nsIPresShell* presShell = GetPresShell();
+  if (!presShell || presShell->IsDestroying()) {
+    return;
+  }
+
+  CurrentState().filter =
+    nsFilterInstance::GetFilterDescription(mCanvasElement,
+      CurrentState().filterChain,
+      CanvasUserSpaceMetrics(IntSize(mWidth, mHeight)),
+      gfxRect(0, 0, mWidth, mHeight),
+      CurrentState().filterAdditionalImages);
 }
 
 //
