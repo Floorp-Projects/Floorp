@@ -202,10 +202,10 @@ private:
     nsCOMPtr<nsIInputStream>        mRequestStream;
     uint64_t                        mRequestSize;
 
-    nsAHttpConnection              *mConnection;      // hard ref
-    nsHttpConnectionInfo           *mConnInfo;        // hard ref
+    nsRefPtr<nsAHttpConnection>     mConnection;
+    nsRefPtr<nsHttpConnectionInfo>  mConnInfo;
     nsHttpRequestHead              *mRequestHead;     // weak ref
-    nsHttpResponseHead             *mResponseHead;    // hard ref
+    nsHttpResponseHead             *mResponseHead;    // owning pointer
 
     nsAHttpSegmentReader           *mReader;
     nsAHttpSegmentWriter           *mWriter;
