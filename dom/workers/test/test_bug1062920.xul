@@ -35,13 +35,14 @@
     SpecialPowers.pushPrefEnv({"set": [
       ["general.appname.override", "appName overridden"],
       ["general.appversion.override", "appVersion overridden"],
-      ["general.platform.override", "platform overridden"]
+      ["general.platform.override", "platform overridden"],
+      ["general.useragent.override", "userAgent overridden"]
     ]}, checkValues);
   }
 
   var tests = [
-    checkValues,
-    replaceAndCheckValues
+    replaceAndCheckValues,
+    checkValues
   ];
 
   function runTests() {
