@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<meta charset="utf-8">
+<title>Test for bug 1050493</title>
+
+<style>
+body {
+  position: relative;
+}
+#box {
+    width: 50px;
+    height: 50px;
+    background-color: red;
+    position: absolute;
+}
+</style>
+
+<div style="left: 0; top: 0;" id="box"></div>
+
+<script>
+var positions = [
+  { x: 4.6260797642782014, y: 0.46260797642782014 },
+  { x: 5.0304173163526205, y: 0.4878118314685598 },
+  { x: 5.0304173163526205, y: 0.5041006554218519 },
+  { x: 5.556750627747686, y: 0.5041006554218519 }];
+var s = document.getElementById('box').style,
+  i = 0;
+function f() {
+  if (i < positions.length) {
+    s.left = positions[i].x + "px";
+    s.top = positions[i].y + "px";
+    i++;
+    requestAnimationFrame(f);
+  } else {
+    document.documentElement.className = "";
+  }
+}
+window.addEventListener("MozReftestInvalidate", function () {
+  f();
+});
+</script>
