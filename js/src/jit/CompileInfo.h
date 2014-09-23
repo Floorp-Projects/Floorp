@@ -444,6 +444,16 @@ class CompileInfo
     // would have to be executed and that they cannot be removed even if they
     // are unused.
     bool isObservableSlot(uint32_t slot) const {
+        if (isObservableFrameSlot(slot))
+            return true;
+
+        if (isObservableArgumentSlot(slot))
+            return true;
+
+        return false;
+    }
+
+    bool isObservableFrameSlot(uint32_t slot) const {
         if (!funMaybeLazy())
             return false;
 
@@ -458,6 +468,13 @@ class CompileInfo
         if (hasArguments() && (slot == scopeChainSlot() || slot == argsObjSlot()))
             return true;
 
+        return false;
+    }
+
+    bool isObservableArgumentSlot(uint32_t slot) const {
+        if (!funMaybeLazy())
+            return false;
+
         // Function.arguments can be used to access all arguments in non-strict
         // scripts, so we can't optimize out any arguments.
         if ((hasArguments() || !script()->strict()) &&
@@ -467,6 +484,19 @@ class CompileInfo
         }
 
         return false;
+    }
+
+    // Returns true if a slot can be recovered before or during a bailout.  A
+    // definition which can be observed and recovered, implies that this
+    // definition can be optimized away as long as we can compute its values.
+    bool isRecoverableOperand(uint32_t slot) const {
+        if (isObservableFrameSlot(slot))
+            return false;
+
+        if (needsArgsObj() && isObservableArgumentSlot(slot))
+            return false;
+
+        return true;
     }
 
   private:

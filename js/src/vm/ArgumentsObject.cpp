@@ -193,8 +193,8 @@ ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction calle
     if (!data)
         return nullptr;
 
-    JSObject *obj = JSObject::create(cx, FINALIZE_KIND, GetInitialHeap(GenericObject, clasp),
-                                     shape, type);
+    RootedObject obj(cx);
+    obj = JSObject::create(cx, FINALIZE_KIND, GetInitialHeap(GenericObject, clasp), shape, type);
     if (!obj) {
         js_free(data);
         return nullptr;
@@ -204,15 +204,21 @@ ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction calle
     data->callee.init(ObjectValue(*callee.get()));
     data->script = script;
 
-    /* Copy [0, numArgs) into data->slots. */
+    // Initialize with dummy UndefinedValue, and attach it to the argument
+    // object such as the GC can trace ArgumentsData as they are recovered.
     HeapValue *dst = data->args, *dstEnd = data->args + numArgs;
+    for (HeapValue *iter = dst; iter != dstEnd; iter++)
+        iter->init(UndefinedValue());
+
+    obj->initFixedSlot(DATA_SLOT, PrivateValue(data));
+
+    /* Copy [0, numArgs) into data->slots. */
     copy.copyArgs(cx, dst, numArgs);
 
     data->deletedBits = reinterpret_cast<size_t *>(dstEnd);
     ClearAllBitArrayElements(data->deletedBits, numDeletedWords);
 
     obj->initFixedSlot(INITIAL_LENGTH_SLOT, Int32Value(numActuals << PACKED_BITS_COUNT));
-    obj->initFixedSlot(DATA_SLOT, PrivateValue(data));
 
     copy.maybeForwardToCallObject(obj, data);
 

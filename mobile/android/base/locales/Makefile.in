@@ -28,16 +28,12 @@ strings-xml-in := $(srcdir)/../strings.xml.in
 
 GARBAGE += $(strings-xml)
 
-dir-res-raw         := ../res/raw
-suggestedsites-json := $(dir-res-raw)/suggestedsites.json
-
-GARBAGE += \
-  $(suggestedsites-json) \
-  $(NULL)
+dir-res-raw := ../res/raw
+suggestedsites := $(dir-res-raw)/suggestedsites.json
+browsersearch := $(dir-res-raw)/browsersearch.json
 
 libs realchrome:: \
   $(strings-xml) \
-  $(suggestedsites-json) \
   $(NULL)
 
 chrome-%:: AB_CD=$*
@@ -45,6 +41,7 @@ chrome-%::
 	@$(MAKE) \
 	  $(dir-res-values)-$(AB_rCD)/strings.xml \
 	  $(dir-res-raw)-$(AB_rCD)/suggestedsites.json \
+	  $(dir-res-raw)-$(AB_rCD)/browsersearch.json \
 	  AB_CD=$*
 
 # setup the path to bookmarks.inc. copied and tweaked version of MERGE_FILE from config/config.mk
@@ -94,21 +91,42 @@ $(dir-strings-xml)/strings.xml: $(strings-xml-preqs)
       $< \
 	  -o $@)
 
-suggestedsites-srcdir := $(if $(filter en-US,$(AB_CD)),,$(or $(realpath $(L10NBASEDIR)),$(abspath $(L10NBASEDIR)))/$(AB_CD)/mobile/chrome)
+# Arg 1: Valid Make identifier, like suggestedsites.
+# Arg 2: File name, like suggestedsites.json.
+define generated_file_template
 
 # Determine the ../res/raw[-*] path.  This can be ../res/raw when no
 # locale is explicitly specified.
-suggestedsites-json-bypath = $(filter %/suggestedsites.json,$(MAKECMDGOALS))
-ifeq (,$(strip $(suggestedsites-json-bypath)))
-  suggestedsites-json-bypath = $(suggestedsites-json)
+$(1)-bypath = $(filter %/$(2),$(MAKECMDGOALS))
+ifeq (,$$(strip $$($(1)-bypath)))
+  $(1)-bypath = $($(1))
 endif
-suggestedsites-dstdir-raw = $(patsubst %/,%,$(dir $(suggestedsites-json-bypath)))
+$(1)-dstdir-raw = $$(patsubst %/,%,$$(dir $$($(1)-bypath)))
+
+GARBAGE += $($(1))
+
+libs realchrome:: $($(1))
+endef
+
+# L10NBASEDIR is not defined for en-US.
+l10n-srcdir := $(if $(filter en-US,$(AB_CD)),,$(or $(realpath $(L10NBASEDIR)),$(abspath $(L10NBASEDIR)))/$(AB_CD)/mobile/chrome)
+
+$(eval $(call generated_file_template,suggestedsites,suggestedsites.json))
 
 $(suggestedsites-dstdir-raw)/suggestedsites.json: FORCE
 	$(call py_action,generate_suggestedsites, \
 		--verbose \
 		--android-package-name=$(ANDROID_PACKAGE_NAME) \
 		--resources=$(srcdir)/../resources \
-		$(if $(filter en-US,$(AB_CD)),,--srcdir=$(suggestedsites-srcdir)) \
+		$(if $(filter en-US,$(AB_CD)),,--srcdir=$(l10n-srcdir)) \
+		--srcdir=$(topsrcdir)/mobile/locales/en-US/chrome \
+		$@)
+
+$(eval $(call generated_file_template,browsersearch,browsersearch.json))
+
+$(browsersearch-dstdir-raw)/browsersearch.json: FORCE
+	$(call py_action,generate_browsersearch, \
+		--verbose \
+		$(if $(filter en-US,$(AB_CD)),,--srcdir=$(l10n-srcdir)) \
 		--srcdir=$(topsrcdir)/mobile/locales/en-US/chrome \
 		$@)

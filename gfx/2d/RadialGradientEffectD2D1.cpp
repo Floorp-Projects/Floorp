@@ -382,7 +382,7 @@ RadialGradientEffectD2D1::CreateGradientTexture()
   HRESULT hr = mEffectContext->CreateResourceTexture(nullptr, &props, &textureData.front(), &stride, 4096 * 4, byRef(tex));
 
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to create resource texture: " << hr;
+    gfxWarning() << "Failed to create resource texture: " << hexa(hr);
   }
 
   return tex.forget();
