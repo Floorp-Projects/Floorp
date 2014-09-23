@@ -55,7 +55,7 @@ function openAndLoadSubDialog(aURL, aFeatures = null, aParams = null, aClosingCa
 
     // Check that stylesheets were injected
     let expectedStyleSheetURLs = content.gSubDialog._injectedStyleSheets.slice(0);
-    for (let styleSheet of content.document.styleSheets) {
+    for (let styleSheet of content.gSubDialog._frame.contentDocument.styleSheets) {
       let i = expectedStyleSheetURLs.indexOf(styleSheet.href);
       if (i >= 0) {
         info("found " + styleSheet.href);
