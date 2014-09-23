@@ -395,13 +395,15 @@ GMPChild::DeallocPGMPVideoDecoderChild(PGMPVideoDecoderChild* aActor)
 PGMPDecryptorChild*
 GMPChild::AllocPGMPDecryptorChild()
 {
-  return new GMPDecryptorChild(this);
+  GMPDecryptorChild* actor = new GMPDecryptorChild(this);
+  actor->AddRef();
+  return actor;
 }
 
 bool
 GMPChild::DeallocPGMPDecryptorChild(PGMPDecryptorChild* aActor)
 {
-  delete aActor;
+  static_cast<GMPDecryptorChild*>(aActor)->Release();
   return true;
 }
 
