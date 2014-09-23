@@ -2,23 +2,25 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<FrameLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:background="@color/global_background_color">
 
     <ViewStub android:id="@+id/empty_view_stub"
         android:layout="@layout/search_empty"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
 
     <ListView
         android:id="@+id/list_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:divider="@null"
-        android:dividerHeight="0dp"
-        android:listSelector="@android:color/transparent"/>
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingLeft="@dimen/search_row_padding"
+        android:paddingRight="@dimen/search_row_padding"/>
 
-</FrameLayout>
+</LinearLayout>

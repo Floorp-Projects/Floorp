@@ -63,12 +63,6 @@ const STATE_UPGRADE_BACKUP = "upgradeBackup";
 const STATE_EMPTY = "empty";
 
 let Agent = {
-  // Boolean that tells whether we already made a
-  // call to write(). We will only attempt to move
-  // sessionstore.js to sessionstore.bak on the
-  // first write.
-  hasWrittenState: false,
-
   // Path to the files used by the SessionWorker
   Paths: null,
 

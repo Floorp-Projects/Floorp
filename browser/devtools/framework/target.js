@@ -220,6 +220,14 @@ TabTarget.prototype = {
   },
 
   get window() {
+    // XXX - this is a footgun for e10s - there .contentWindow will be null,
+    // and even though .contentWindowAsCPOW *might* work, it will not work
+    // in all contexts.  Consumers of .window need to be refactored to not
+    // rely on this.
+    if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
+      Cu.reportError("The .window getter on devtools' |target| object isn't e10s friendly!\n"
+                     + Error().stack);
+    }
     // Be extra careful here, since this may be called by HS_getHudByWindow
     // during shutdown.
     if (this._tab && this._tab.linkedBrowser) {
@@ -542,7 +550,7 @@ TabWebProgressListener.prototype = {
     }
 
     // emit event if the top frame is navigating
-    if (this.target && this.target.window == progress.DOMWindow) {
+    if (progress.isTopLevel) {
       // Emit the event if the target is not remoted or store the payload for
       // later emission otherwise.
       if (this.target._client) {

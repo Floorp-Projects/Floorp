@@ -30,7 +30,6 @@ EXTRA_JS_MODULES += [
     'Log.jsm',
     'NewTabUtils.jsm',
     'PageMenu.jsm',
-    'PermissionsUtils.jsm',
     'PopupNotifications.jsm',
     'Preferences.jsm',
     'PrivateBrowsingUtils.jsm',

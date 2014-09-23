@@ -119,7 +119,6 @@ function sendFeedback(aEvent) {
 
   data["device"] = Services.sysinfo.get("device");
   data["manufacturer"] = Services.sysinfo.get("manufacturer");
-  data["source"] = "about:feedback";
   data["platform"] = Services.appinfo.OS;
   data["version"] = Services.appinfo.version;
   data["locale"] = Services.locale.getSystemLocale().getCategory("NSILOCALE_CTYPE");
