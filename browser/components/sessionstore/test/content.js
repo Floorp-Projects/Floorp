@@ -11,6 +11,10 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/sessionstore/FrameTree.jsm", this);
 let gFrameTree = new FrameTree(this);
 
+function executeSoon(callback) {
+  Services.tm.mainThread.dispatch(callback, Components.interfaces.nsIThread.DISPATCH_NORMAL);
+}
+
 gFrameTree.addObserver({
   onFrameTreeReset: function () {
     sendAsyncMessage("ss-test:onFrameTreeReset");
@@ -74,7 +78,11 @@ addEventListener("hashchange", function () {
 });
 
 addEventListener("MozStorageChanged", function () {
-  sendSyncMessage("ss-test:MozStorageChanged");
+  // It's possible that this event handler runs before the one in
+  // content-sessionStore.js. We run ours a little later to make sure
+  // that the session store code has seen the event before we allow
+  // the test to proceed.
+  executeSoon(() => sendSyncMessage("ss-test:MozStorageChanged"));
 }, true);
 
 addMessageListener("ss-test:modifySessionStorage", function (msg) {
@@ -106,8 +114,31 @@ addMessageListener("ss-test:getStyleSheets", function (msg) {
 });
 
 addMessageListener("ss-test:enableStyleSheetsForSet", function (msg) {
-  content.document.enableStyleSheetsForSet(msg.data);
-  sendAsyncMessage("ss-test:enableStyleSheetsForSet");
+  let sheets = content.document.styleSheets;
+  let change = false;
+  for (let i = 0; i < sheets.length; i++) {
+    if (sheets[i].disabled != (msg.data.indexOf(sheets[i].title) == -1)) {
+      change = true;
+      break;
+    }
+  }
+  function observer() {
+    Services.obs.removeObserver(observer, "style-sheet-applicable-state-changed");
+
+    // It's possible our observer will run before the one in
+    // content-sessionStore.js. Therefore, we run ours a little
+    // later.
+    executeSoon(() => sendAsyncMessage("ss-test:enableStyleSheetsForSet"));
+  }
+  if (change) {
+    // We don't want to reply until content-sessionStore.js has seen
+    // the change.
+    Services.obs.addObserver(observer, "style-sheet-applicable-state-changed", false);
+
+    content.document.enableStyleSheetsForSet(msg.data);
+  } else {
+    sendAsyncMessage("ss-test:enableStyleSheetsForSet");
+  }
 });
 
 addMessageListener("ss-test:enableSubDocumentStyleSheetsForSet", function (msg) {
