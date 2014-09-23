@@ -1,0 +1,23 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(93142a4f-e4cf-424a-b833-e638f87d2607)]
+interface ScriptableOK : nsISupports
+{
+  void method1();
+};
+
+[scriptable, uuid(237d01a3-771e-4c6e-adf9-c97f9aab2950)]
+interface ScriptableWithNotXPCOM : nsISupports
+{
+  [notxpcom] void method2();
+};
+
+[scriptable, uuid(4f06ec60-3bb3-4712-ab18-b2b595285558)]
+interface ScriptableWithNotXPCOMBase : ScriptableWithNotXPCOM
+{
+  void method3();
+};

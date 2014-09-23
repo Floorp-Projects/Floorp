@@ -10,7 +10,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(13b75be1-f950-497b-81e4-a0214a14e5ae)]
+[scriptable, uuid(f80ac10b-68dd-4482-a8c2-3cbe13fa89af)]
 interface nsIStackFrame : nsISupports
 {
     // see nsIProgrammingLanguage for list of language consts
@@ -20,6 +20,7 @@ interface nsIStackFrame : nsISupports
     readonly attribute AString                 name;
     // Valid line numbers begin at '1'. '0' indicates unknown.
     readonly attribute int32_t                 lineNumber;
+    readonly attribute int32_t                 columnNumber;
     readonly attribute AUTF8String             sourceLine;
     readonly attribute nsIStackFrame           caller;
 
