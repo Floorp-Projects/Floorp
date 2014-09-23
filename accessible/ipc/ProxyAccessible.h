@@ -54,6 +54,11 @@ public:
    */
   role Role() const { return mRole; }
 
+  /*
+   * Return the states for the proxied accessible.
+   */
+  uint64_t State() const;
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */

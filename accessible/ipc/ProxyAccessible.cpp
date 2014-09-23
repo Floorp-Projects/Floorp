@@ -6,6 +6,7 @@
 
 #include "ProxyAccessible.h"
 #include "DocAccessibleParent.h"
+#include "mozilla/unused.h"
 #include "mozilla/a11y/Platform.h"
 
 namespace mozilla {
@@ -37,6 +38,14 @@ ProxyAccessible::SetChildDoc(DocAccessibleParent* aParent)
     mChildren.Clear();
     mOuterDoc = false;
   }
+}
+
+uint64_t
+ProxyAccessible::State() const
+{
+  uint64_t state = 0;
+  unused << mDoc->SendState(mID, &state);
+  return state;
 }
 }
 }
