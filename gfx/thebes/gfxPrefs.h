@@ -286,6 +286,7 @@ private:
 
   DECL_GFX_PREF(Once, "webgl.force-layers-readback",           WebGLForceLayersReadback, bool, false);
 
+  DECL_GFX_PREF(Once, "layers.stereo-video.enabled",           StereoVideoEnabled, bool, false);
 public:
   // Manage the singleton:
   static gfxPrefs& GetSingleton()
