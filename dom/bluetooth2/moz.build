@@ -48,11 +48,16 @@ if CONFIG['MOZ_B2G_BT']:
             DEFINES['MOZ_B2G_BT_BLUEZ'] = True
         elif CONFIG['MOZ_B2G_BT_BLUEDROID']:
             SOURCES += [
+                'bluedroid/BluetoothA2dpHALInterface.cpp',
                 'bluedroid/BluetoothA2dpManager.cpp',
+                'bluedroid/BluetoothAvrcpHALInterface.cpp',
+                'bluedroid/BluetoothHALHelpers.cpp',
                 'bluedroid/BluetoothHALInterface.cpp',
+                'bluedroid/BluetoothHandsfreeHALInterface.cpp',
                 'bluedroid/BluetoothOppManager.cpp',
                 'bluedroid/BluetoothServiceBluedroid.cpp',
                 'bluedroid/BluetoothSocket.cpp',
+                'bluedroid/BluetoothSocketHALInterface.cpp',
                 'bluedroid/BluetoothUtils.cpp',
             ]
             LOCAL_INCLUDES += [
