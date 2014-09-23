@@ -1148,6 +1148,46 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             }
         }
 
+        if (IsSupported(GLFeature::uniform_matrix_nonsquare)) {
+            SymLoadStruct umnSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fUniformMatrix2x3fv, { "UniformMatrix2x3fv", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniformMatrix2x4fv, { "UniformMatrix2x4fv", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniformMatrix3x2fv, { "UniformMatrix3x2fv", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniformMatrix3x4fv, { "UniformMatrix3x4fv", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniformMatrix4x2fv, { "UniformMatrix4x2fv", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniformMatrix4x3fv, { "UniformMatrix4x3fv", nullptr } },
+                END_SYMBOLS
+            };
+
+            if (!LoadSymbols(&umnSymbols[0], trygl, prefix)) {
+                NS_ERROR("GL supports uniform matrix with non-square dim without supplying its functions.");
+
+                MarkUnsupported(GLFeature::uniform_matrix_nonsquare);
+                ClearSymbols(umnSymbols);
+            }
+        }
+
+        if (IsSupported(GLFeature::uniform_uint)) {
+            SymLoadStruct uuSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fUniform1ui,  { "Uniform1ui", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniform2ui,  { "Uniform2ui", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniform3ui,  { "Uniform3ui", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniform4ui,  { "Uniform4ui", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniform1uiv, { "Uniform1uiv", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniform2uiv, { "Uniform2uiv", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniform3uiv, { "Uniform3uiv", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniform4uiv, { "Uniform4uiv", nullptr } },
+                END_SYMBOLS
+            };
+
+            if (!LoadSymbols(&uuSymbols[0], trygl, prefix)) {
+                NS_ERROR("GL support uniform with GLuint without supplying its functions.");
+
+                MarkUnsupported(GLFeature::uniform_uint);
+                ClearSymbols(uuSymbols);
+            }
+        }
+
         if (IsExtensionSupported(KHR_debug)) {
             SymLoadStruct extSymbols[] = {
                 { (PRFuncPtr*) &mSymbols.fDebugMessageControl,  { "DebugMessageControl",  "DebugMessageControlKHR",  nullptr } },
