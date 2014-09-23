@@ -22,13 +22,13 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_mozilla_gecko_background_native
   if (dkLen < 0) {
     env->ThrowNew(env->FindClass("java/lang/IllegalArgumentException"),
                   "dkLen should not be less than 0");
-    return NULL;
+    return nullptr;
   }
 
-  jbyte *password = env->GetByteArrayElements(jpassword, NULL);
+  jbyte *password = env->GetByteArrayElements(jpassword, nullptr);
   size_t passwordLen = env->GetArrayLength(jpassword);
 
-  jbyte *salt = env->GetByteArrayElements(jsalt, NULL);
+  jbyte *salt = env->GetByteArrayElements(jsalt, nullptr);
   size_t saltLen = env->GetArrayLength(jsalt);
 
   uint8_t hashResult[dkLen];
@@ -39,8 +39,8 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_mozilla_gecko_background_native
   env->ReleaseByteArrayElements(jsalt, salt, JNI_ABORT);
 
   jbyteArray out = env->NewByteArray(dkLen);
-  if (out == NULL) {
-    return NULL;
+  if (out == nullptr) {
+    return nullptr;
   }
   env->SetByteArrayRegion(out, 0, dkLen, (jbyte *) hashResult);
 
@@ -54,7 +54,7 @@ using namespace mozilla;
  */
 extern "C" JNIEXPORT jbyteArray JNICALL Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha1
     (JNIEnv *env, jclass jc, jbyteArray jstr) {
-  jbyte *str = env->GetByteArrayElements(jstr, NULL);
+  jbyte *str = env->GetByteArrayElements(jstr, nullptr);
   size_t strLen = env->GetArrayLength(jstr);
 
   SHA1Sum sha1;
@@ -65,8 +65,8 @@ extern "C" JNIEXPORT jbyteArray JNICALL Java_org_mozilla_gecko_background_native
   env->ReleaseByteArrayElements(jstr, str, JNI_ABORT);
 
   jbyteArray out = env->NewByteArray(SHA1Sum::kHashSize);
-  if (out == NULL) {
-    return NULL;
+  if (out == nullptr) {
+    return nullptr;
   }
   env->SetByteArrayRegion(out, 0, SHA1Sum::kHashSize, (jbyte *) hashResult);
 
