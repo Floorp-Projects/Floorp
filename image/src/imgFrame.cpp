@@ -411,9 +411,10 @@ nsresult imgFrame::Optimize()
   }
 
 #ifdef MOZ_WIDGET_ANDROID
-  // On Android, free mImageSurface unconditionally if we're discardable.
+  // On Android, free mImageSurface unconditionally if we're discardable. This
+  // allows the operating system to free our volatile buffer.
   // XXX(seth): We'd eventually like to do this on all platforms, but right now
-  // we'd read back from the GPU too much to make it worthwhile.
+  // converting raw memory to a SourceSurface is expensive on some backends.
   if (mDiscardable) {
     mImageSurface = nullptr;
   }
