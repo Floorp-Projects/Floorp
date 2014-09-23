@@ -91,6 +91,7 @@ typedef int64_t GMPTimestamp;
 #define GMP_EME_CAP_DECRYPT_AND_DECODE_AUDIO (uint64_t(1) << 2)
 #define GMP_EME_CAP_DECRYPT_AND_DECODE_VIDEO (uint64_t(1) << 3)
 
+// Callbacks to be called from the CDM. Threadsafe.
 class GMPDecryptorCallback {
 public:
   // Resolves a promise for a session created or loaded.

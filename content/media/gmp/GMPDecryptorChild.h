@@ -21,8 +21,9 @@ class GMPDecryptorChild : public GMPDecryptorCallback
                         , public PGMPDecryptorChild
 {
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(GMPDecryptorChild);
+
   explicit GMPDecryptorChild(GMPChild* aPlugin);
-  ~GMPDecryptorChild();
 
   void Init(GMPDecryptor* aSession);
 
@@ -82,6 +83,7 @@ public:
   virtual void GetPluginVoucher(const uint8_t** aVoucher,
                                 uint8_t* aVoucherLength) MOZ_OVERRIDE;
 private:
+  ~GMPDecryptorChild();
 
   // GMPDecryptorChild
   virtual bool RecvInit() MOZ_OVERRIDE;
@@ -117,10 +119,7 @@ private:
   // GMP's GMPDecryptor implementation.
   // Only call into this on the (GMP process) main thread.
   GMPDecryptor* mSession;
-
-#ifdef DEBUG
   GMPChild* mPlugin;
-#endif
 };
 
 } // namespace gmp
