@@ -52,15 +52,15 @@ XPCOMUtils.defineLazyServiceGetter(this, "appsService",
                                    "nsIAppsService");
 
 #ifdef MOZ_B2G_RIL
-XPCOMUtils.defineLazyServiceGetter(this, "gRil",
+XPCOMUtils.defineLazyServiceGetter(this, "Ril",
                                    "@mozilla.org/ril;1",
                                    "nsIRadioInterfaceLayer");
 
-XPCOMUtils.defineLazyServiceGetter(this, "iccProvider",
+XPCOMUtils.defineLazyServiceGetter(this, "IccProvider",
                                    "@mozilla.org/ril/content-helper;1",
                                    "nsIIccProvider");
 
-XPCOMUtils.defineLazyServiceGetter(this, "mobileConnectionService",
+XPCOMUtils.defineLazyServiceGetter(this, "MobileConnectionService",
                                    "@mozilla.org/mobileconnection/mobileconnectionservice;1",
                                    "nsIMobileConnectionService");
 #endif
@@ -104,30 +104,84 @@ this.MobileIdentityManager = {
     this.messageManagers = null;
   },
 
-
   /*********************************************************
    * Getters
    ********************************************************/
+#ifdef MOZ_B2G_RIL
+  // We have these getters to allow mocking RIL stuff from the tests.
+  get ril() {
+    if (this._ril) {
+      return this._ril;
+    }
+    return Ril;
+  },
+
+  get iccProvider() {
+    if (this._iccProvider) {
+      return this._iccProvider;
+    }
+    return IccProvider;
+  },
+
+  get mobileConnectionService() {
+    if (this._mobileConnectionService) {
+      return this._mobileConnectionService;
+    }
+    return MobileConnectionService;
+  },
+#endif
 
   get iccInfo() {
     if (this._iccInfo) {
       return this._iccInfo;
     }
 #ifdef MOZ_B2G_RIL
+    let self = this;
+    let iccListener = {
+      notifyStkCommand: function() {},
+
+      notifyStkSessionEnd: function() {},
+
+      notifyCardStateChanged: function() {},
+
+      notifyIccInfoChanged: function() {
+        // If we receive a notification about an ICC info change, we clear
+        // the ICC related caches so they can be rebuilt with the new changes.
+
+        log.debug("ICC info changed observed. Clearing caches");
+
+        // We don't need to keep listening for changes until we rebuild the
+        // cache again.
+        for (let i = 0; i < self._iccInfo.length; i++) {
+          self.iccProvider.unregisterIccMsg(self._iccInfo[i].clientId,
+                                            iccListener);
+        }
+
+        self._iccInfo = null;
+        self._iccIds = null;
+      }
+    };
+
+    // _iccInfo is a local cache containing the information about the SIM cards
+    // that it is interesting for the Mobile ID flow.
+    // The index of this array does not necesarily need to match the real
+    // identifier of the SIM card ("clientId" or "serviceId" in RIL language).
     this._iccInfo = [];
-    for (let i = 0; i < gRil.numRadioInterfaces; i++) {
-      let rilContext = gRil.getRadioInterface(i).rilContext;
+
+    for (let i = 0; i < this.ril.numRadioInterfaces; i++) {
+      let rilContext = this.ril.getRadioInterface(i).rilContext;
       if (!rilContext) {
         log.warn("Tried to get the RIL context for an invalid service ID " + i);
         continue;
       }
+
       let info = rilContext.iccInfo;
       if (!info) {
         log.warn("No ICC info");
         continue;
       }
 
-      let connection = mobileConnectionService.getItemByServiceId(i);
+      let connection = this.mobileConnectionService.getItemByServiceId(i);
       let voice = connection && connection.voice;
       let data = connection && connection.data;
       let operator = null;
@@ -144,15 +198,21 @@ this.MobileIdentityManager = {
       }
 
       this._iccInfo.push({
+        // Because it is possible that the _iccInfo array index doesn't match
+        // the real client ID, we need to store this value for later usage.
+        clientId: i,
         iccId: info.iccid,
         mcc: info.mcc,
         mnc: info.mnc,
         // GSM SIMs may have MSISDN while CDMA SIMs may have MDN
         msisdn: info.msisdn || info.mdn || null,
         operator: operator,
-        serviceId: i,
         roaming: voice && voice.roaming
       });
+
+      // We need to subscribe to ICC change notifications so we can refresh
+      // the cache if any change is observed.
+      this.iccProvider.registerIccMsg(i, iccListener);
     }
 
     return this._iccInfo;
@@ -213,9 +273,9 @@ this.MobileIdentityManager = {
     log.debug("getVerificationOptionsForIcc " + aServiceId);
     log.debug("iccInfo ${}", this.iccInfo[aServiceId]);
     // First of all we need to check if we already have existing credentials
-    // for the given SIM information (ICC id or MSISDN). If we have no valid
-    // credentials, we have to check with the server which options to do we
-    // have to verify the associated phone number.
+    // for the given SIM information (ICC ID or MSISDN). If we have no valid
+    // credentials, we have to check with the server which options do we have
+    // to verify the associated phone number.
     return this.credStore.getByIccId(this.iccInfo[aServiceId].iccId)
     .then(
       (creds) => {
@@ -566,8 +626,11 @@ this.MobileIdentityManager = {
   // This prompt will be considered as the permission prompt and its choice
   // will be remembered per origin by default.
   prompt: function prompt(aPrincipal, aManifestURL, aPhoneInfo) {
-    log.debug("prompt " + aPrincipal + ", " + aManifestURL + ", " +
-              aPhoneInfo);
+    log.debug("prompt ${principal} ${manifest} ${phoneInfo}", {
+      principal: aPrincipal,
+      manifest: aManifestURL,
+      phoneInfo: aPhoneInfo
+    });
 
     let phoneInfoArray = [];
 
@@ -578,19 +641,22 @@ this.MobileIdentityManager = {
     if (this.iccInfo) {
       for (let i = 0; i < this.iccInfo.length; i++) {
         // If we don't know the msisdn, there is no previous credentials and
-        // a silent verification is not possible, we don't allow the user to
-        // choose this option.
-        if (!this.iccInfo[i].msisdn && !this.iccInfo[i].credentials &&
-            !this.iccInfo[i].canDoSilentVerification) {
+        // a silent verification is not possible or if the msisdn is the one
+        // that is already chosen, we don't list this SIM as an option.
+        if ((!this.iccInfo[i].msisdn && !this.iccInfo[i].credentials &&
+            !this.iccInfo[i].canDoSilentVerification) ||
+            ((aPhoneInfo) &&
+             (this.iccInfo[i].msisdn == aPhoneInfo.msisdn ||
+              this.iccInfo[i].iccId == aPhoneInfo.iccId))) {
           continue;
         }
 
         let phoneInfo = new MobileIdentityUIGluePhoneInfo(
           this.iccInfo[i].msisdn,
           this.iccInfo[i].operator,
-          i,     // service ID
-          false, // external
-          false  // primary
+          i,                      // service ID
+          this.iccInfo[i].iccId,  // iccId
+          false                   // primary
         );
         phoneInfoArray.push(phoneInfo);
       }
@@ -674,7 +740,7 @@ this.MobileIdentityManager = {
             aCreds.msisdn,
             null,           // operator
             undefined,      // service ID
-            !!aCreds.iccId, // external
+            aCreds.iccId,   // iccId
             true            // primary
           );
         }
