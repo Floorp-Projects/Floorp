@@ -6698,8 +6698,8 @@ nsLayoutUtils::UpdateImageVisibilityForFrame(nsIFrame* aImageFrame)
 }
 
 /* static */ bool
-nsLayoutUtils::GetContentViewerBounds(nsPresContext* aPresContext,
-                                      LayoutDeviceIntRect& aOutRect)
+nsLayoutUtils::GetContentViewerSize(nsPresContext* aPresContext,
+                                    LayoutDeviceIntSize& aOutSize)
 {
   nsCOMPtr<nsIDocShell> docShell = aPresContext->GetDocShell();
   if (!docShell) {
@@ -6714,7 +6714,7 @@ nsLayoutUtils::GetContentViewerBounds(nsPresContext* aPresContext,
 
   nsIntRect bounds;
   cv->GetBounds(bounds);
-  aOutRect = LayoutDeviceIntRect::FromUntyped(bounds);
+  aOutSize = LayoutDeviceIntRect::FromUntyped(bounds).Size();
   return true;
 }
 
@@ -6752,9 +6752,9 @@ nsLayoutUtils::CalculateCompositionSizeForFrame(nsIFrame* aFrame)
         }
 #endif
       } else {
-        LayoutDeviceIntRect contentBounds;
-        if (nsLayoutUtils::GetContentViewerBounds(presContext, contentBounds)) {
-          size = LayoutDevicePixel::ToAppUnits(contentBounds.Size(), auPerDevPixel);
+        LayoutDeviceIntSize contentSize;
+        if (nsLayoutUtils::GetContentViewerSize(presContext, contentSize)) {
+          size = LayoutDevicePixel::ToAppUnits(contentSize, auPerDevPixel);
         }
       }
     }
@@ -6820,14 +6820,14 @@ nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
         }
 #endif
       } else {
-        LayoutDeviceIntRect contentBounds;
-        if (nsLayoutUtils::GetContentViewerBounds(rootPresContext, contentBounds)) {
+        LayoutDeviceIntSize contentSize;
+        if (nsLayoutUtils::GetContentViewerSize(rootPresContext, contentSize)) {
           LayoutDeviceToLayerScale scale(1.0f);
           if (rootPresContext->GetParentPresContext()) {
             gfxSize res = rootPresContext->GetParentPresContext()->PresShell()->GetCumulativeResolution();
             scale = LayoutDeviceToLayerScale(res.width, res.height);
           }
-          rootCompositionSize = contentBounds.Size() * scale;
+          rootCompositionSize = contentSize * scale;
         }
       }
     }
