@@ -152,14 +152,14 @@
             <Example summary="Default / incoming video call" dashed="true" style={{width: "280px"}}>
               <div className="fx-embedded">
                 <IncomingCallView model={mockConversationModel}
-                                  video={{enabled: true}} />
+                                  video={true} />
               </div>
             </Example>
 
             <Example summary="Default / incoming audio only call" dashed="true" style={{width: "280px"}}>
               <div className="fx-embedded">
                 <IncomingCallView model={mockConversationModel}
-                                  video={{enabled: false}} />
+                                  video={false} />
               </div>
             </Example>
           </Section>
@@ -169,7 +169,7 @@
               <div className="fx-embedded" >
                 <IncomingCallView  model={mockConversationModel}
                                    showDeclineMenu={true}
-                                   video={{enabled: true}} />
+                                   video={true} />
               </div>
             </Example>
           </Section>
