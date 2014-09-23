@@ -566,6 +566,10 @@ this.FxAccountsManager = {
           } else if (permission == Ci.nsIPermissionManager.DENY_ACTION &&
                      !this._refreshing) {
             return this._error(ERROR_PERMISSION_DENIED);
+          } else if (this._refreshing) {
+            // If we are blocked asking for a password we should not continue
+            // the getAssertion process.
+            return Promise.resolve(null);
           }
           return this._getAssertion(aAudience, principal);
         }

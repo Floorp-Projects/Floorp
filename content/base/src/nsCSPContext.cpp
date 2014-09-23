@@ -1242,6 +1242,7 @@ nsCSPContext::Write(nsIObjectOutputStream* aStream)
 
   nsAutoString polStr;
   for (uint32_t p = 0; p < mPolicies.Length(); p++) {
+    polStr.Truncate();
     mPolicies[p]->toString(polStr);
     aStream->WriteWStringZ(polStr.get());
     aStream->WriteBoolean(mPolicies[p]->getReportOnlyFlag());
