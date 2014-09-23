@@ -11,6 +11,7 @@
 
 #include "ImageFactory.h"
 #include "RasterImage.h"
+#include "ShutdownTracker.h"
 #include "SurfaceCache.h"
 
 #include "imgLoader.h"
@@ -85,6 +86,7 @@ static bool sInitialized = false;
 nsresult
 mozilla::image::InitModule()
 {
+  mozilla::image::ShutdownTracker::Initialize();
   mozilla::image::DiscardTracker::Initialize();
   mozilla::image::ImageFactory::Initialize();
   mozilla::image::RasterImage::Initialize();
