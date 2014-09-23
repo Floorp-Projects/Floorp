@@ -29,6 +29,7 @@ class imgINotificationObserver;
 class nsILoadGroup;
 class imgCacheExpirationTracker;
 class imgMemoryReporter;
+class nsIChannelPolicy;
 
 namespace mozilla {
 namespace image {
@@ -257,6 +258,7 @@ public:
                      nsISupports *aCX,
                      nsLoadFlags aLoadFlags,
                      nsISupports *aCacheKey,
+                     nsIChannelPolicy *aPolicy,
                      const nsAString& initiatorType,
                      imgRequestProxy **_retval);
   nsresult LoadImageWithChannel(nsIChannel *channel,
@@ -338,6 +340,7 @@ private: // methods
                        imgINotificationObserver *aObserver, nsISupports *aCX,
                        nsLoadFlags aLoadFlags, bool aCanMakeNewChannel,
                        imgRequestProxy **aProxyRequest,
+                       nsIChannelPolicy *aPolicy,
                        nsIPrincipal* aLoadingPrincipal,
                        int32_t aCORSMode);
 
@@ -348,6 +351,7 @@ private: // methods
                                        imgINotificationObserver *aObserver,
                                        nsISupports *aCX, nsLoadFlags aLoadFlags,
                                        imgRequestProxy **aProxyRequest,
+                                       nsIChannelPolicy *aPolicy,
                                        nsIPrincipal* aLoadingPrincipal,
                                        int32_t aCORSMode);
 
