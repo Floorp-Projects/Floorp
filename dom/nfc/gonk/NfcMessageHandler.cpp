@@ -130,6 +130,9 @@ NfcMessageHandler::GeneralResponse(const Parcel& aParcel, EventOptions& aOptions
     case NfcRequest::CloseReq:
       type = kCloseResponse;
       break;
+    default:
+      CHROMIUM_LOG("Nfcd, unknown general response %d", pendingReq);
+      return false;
   }
 
   aOptions.mType = NS_ConvertUTF8toUTF16(type);
