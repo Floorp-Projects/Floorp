@@ -122,7 +122,7 @@
   transition: opacity 100ms ease-out;
 }
 
-.newtab-thumbnail.enhanced-content:hover {
+.newtab-site:hover .newtab-thumbnail.enhanced-content {
   opacity: 0;
 }
 
