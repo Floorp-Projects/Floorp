@@ -2493,7 +2493,8 @@ protected:
     nsXPCWrappedJS(JSContext* cx,
                    JSObject* aJSObj,
                    nsXPCWrappedJSClass* aClass,
-                   nsXPCWrappedJS* root);
+                   nsXPCWrappedJS* root,
+                   nsresult* rv);
 
     bool CanSkip();
     void Destroy();
