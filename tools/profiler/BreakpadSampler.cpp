@@ -39,7 +39,7 @@
 #include "mozilla/Services.h"
 
 // JS
-#include "js/OldDebugAPI.h"
+#include "jsfriendapi.h"
 
 // This file's exports are listed in GeckoProfilerImpl.h.
 
@@ -106,11 +106,11 @@ void genProfileEntry(/*MODIFIED*/UnwinderThreadBuffer* utb,
           jsbytecode *jspc = js::ProfilingGetPC(stack->mRuntime, entry.script(),
                                                 lastpc);
           if (jspc) {
-            lineno = JS_PCToLineNumber(nullptr, entry.script(), jspc);
+            lineno = JS_PCToLineNumber(entry.script(), jspc);
           }
         }
       } else {
-        lineno = JS_PCToLineNumber(nullptr, entry.script(), entry.pc());
+        lineno = JS_PCToLineNumber(entry.script(), entry.pc());
       }
     } else {
       lineno = entry.line();
