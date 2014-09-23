@@ -1515,8 +1515,7 @@ RuntimeService::RegisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
       if (NS_FAILED(Navigator::GetAppVersion(mNavigatorProperties.mAppVersion,
                                              false /* aUsePrefOverriddenValue */)) ||
           NS_FAILED(Navigator::GetPlatform(mNavigatorProperties.mPlatform,
-                                           false /* aUsePrefOverriddenValue */)) ||
-          NS_FAILED(NS_GetNavigatorUserAgent(mNavigatorProperties.mUserAgent))) {
+                                           false /* aUsePrefOverriddenValue */))) {
         JS_ReportError(aCx, "Failed to load navigator strings!");
         UnregisterWorker(aCx, aWorkerPrivate);
         return false;
