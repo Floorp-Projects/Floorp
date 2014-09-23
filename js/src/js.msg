@@ -43,6 +43,7 @@
 
 MSG_DEF(JSMSG_NOT_AN_ERROR,            0, JSEXN_NONE, "<Error #0 is reserved>")
 MSG_DEF(JSMSG_NOT_DEFINED,             1, JSEXN_REFERENCEERR, "{0} is not defined")
+MSG_DEF(JSMSG_NOT_DEFINED_DID_YOU_MEAN, 2, JSEXN_REFERENCEERR, "{0} is not defined, did you mean '{1}'?")
 MSG_DEF(JSMSG_MORE_ARGS_NEEDED,        3, JSEXN_TYPEERR, "{0} requires more than {1} argument{2}")
 MSG_DEF(JSMSG_INCOMPATIBLE_PROTO,      3, JSEXN_TYPEERR, "{0}.prototype.{1} called on incompatible {2}")
 MSG_DEF(JSMSG_NO_CONSTRUCTOR,          1, JSEXN_TYPEERR, "{0} has no constructor")

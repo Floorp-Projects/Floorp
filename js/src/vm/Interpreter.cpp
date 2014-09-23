@@ -267,8 +267,8 @@ GetPropertyOperation(JSContext *cx, InterpreterFrame *fp, HandleScript script, j
 static inline bool
 NameOperation(JSContext *cx, InterpreterFrame *fp, jsbytecode *pc, MutableHandleValue vp)
 {
-    JSObject *obj = fp->scopeChain();
-    PropertyName *name = fp->script()->getName(pc);
+    RootedScript script(cx, fp->script());
+    PropertyName *name = script->getName(pc);
 
     /*
      * Skip along the scope chain to the enclosing global object. This is
@@ -279,6 +279,7 @@ NameOperation(JSContext *cx, InterpreterFrame *fp, jsbytecode *pc, MutableHandle
      * the actual behavior even if the id could be found on the scope chain
      * before the global object.
      */
+    JSObject *obj = fp->scopeChain();
     if (IsGlobalOp(JSOp(*pc)))
         obj = &obj->global();
 
@@ -299,10 +300,10 @@ NameOperation(JSContext *cx, InterpreterFrame *fp, jsbytecode *pc, MutableHandle
     /* Kludge to allow (typeof foo == "undefined") tests. */
     JSOp op2 = JSOp(pc[JSOP_NAME_LENGTH]);
     if (op2 == JSOP_TYPEOF) {
-        if (!FetchName<true>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp))
+        if (!FetchName<true>(cx, script, pc, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp))
             return false;
     } else {
-        if (!FetchName<false>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp))
+        if (!FetchName<false>(cx, script, pc, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp))
             return false;
     }
 
@@ -3540,7 +3541,9 @@ js::CallProperty(JSContext *cx, HandleValue v, HandlePropertyName name, MutableH
 }
 
 bool
-js::GetScopeName(JSContext *cx, HandleObject scopeChain, HandlePropertyName name, MutableHandleValue vp)
+js::GetScopeName(JSContext *cx, HandleScript script, jsbytecode *pc,
+                 HandleObject scopeChain, HandlePropertyName name,
+                 MutableHandleValue vp)
 {
     RootedShape shape(cx);
     RootedObject obj(cx), pobj(cx);
@@ -3548,9 +3551,7 @@ js::GetScopeName(JSContext *cx, HandleObject scopeChain, HandlePropertyName name
         return false;
 
     if (!shape) {
-        JSAutoByteString printable;
-        if (AtomToPrintableString(cx, name, &printable))
-            js_ReportIsNotDefined(cx, printable.ptr());
+        js_ReportIsNotDefined(cx, script, pc, name);
         return false;
     }
 

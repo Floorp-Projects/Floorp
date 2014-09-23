@@ -5076,9 +5076,8 @@ GetPropertyHelperInline(JSContext *cx,
 
             if (op == JSOP_GETXPROP) {
                 /* Undefined property during a name lookup, report an error. */
-                JSAutoByteString printable;
-                if (js_ValueToPrintable(cx, IdToValue(id), &printable))
-                    js_ReportIsNotDefined(cx, printable.ptr());
+                RootedAtom atom(cx, JSID_TO_ATOM(id));
+                js_ReportIsNotDefined(cx, atom);
                 return false;
             }
 
