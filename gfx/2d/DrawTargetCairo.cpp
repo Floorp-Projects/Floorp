@@ -167,6 +167,7 @@ CopyToImageSurface(unsigned char *aData,
                           aRect.y * aStride +
                           aRect.x * pixelWidth;
 
+  MOZ_ASSERT(aStride >= aRect.width * pixelWidth);
   for (int32_t y = 0; y < aRect.height; ++y) {
     memcpy(surfData + y * surfStride,
            source + y * aStride,
