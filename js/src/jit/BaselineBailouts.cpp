@@ -1380,12 +1380,8 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
     jsbytecode *topCallerPC = nullptr;
 
     while (true) {
-        if (!snapIter.instruction()->isResumePoint()) {
-            if (!snapIter.instruction()->recover(cx, snapIter))
-                return BAILOUT_RETURN_FATAL_ERROR;
-            snapIter.nextInstruction();
-            continue;
-        }
+        // Skip recover instructions as they are already recovered by |initInstructionResults|.
+        snapIter.settleOnFrame();
 
         if (frameNo > 0) {
             TraceLogStartEvent(logger, TraceLogCreateTextId(logger, scr));
