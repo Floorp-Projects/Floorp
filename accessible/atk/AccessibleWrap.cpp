@@ -784,19 +784,21 @@ GetLocaleCB(AtkObject* aAtkObj)
 AtkObject *
 getParentCB(AtkObject *aAtkObj)
 {
-  if (!aAtkObj->accessible_parent) {
-    AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-    if (!accWrap)
-      return nullptr;
+  if (aAtkObj->accessible_parent)
+    return aAtkObj->accessible_parent;
 
-    Accessible* accParent = accWrap->Parent();
-    if (!accParent)
-      return nullptr;
-
-    AtkObject* parent = AccessibleWrap::GetAtkObject(accParent);
-    if (parent)
-      atk_object_set_parent(aAtkObj, parent);
+  AtkObject* atkParent = nullptr;
+  if (AccessibleWrap* wrapper = GetAccessibleWrap(aAtkObj)) {
+    Accessible* parent = wrapper->Parent();
+    atkParent = parent ? AccessibleWrap::GetAtkObject(parent) : nullptr;
+  } else if (ProxyAccessible* proxy = GetProxy(aAtkObj)) {
+    ProxyAccessible* parent = proxy->Parent();
+    atkParent = parent ? GetWrapperFor(parent) : nullptr;
   }
+
+  if (atkParent)
+    atk_object_set_parent(aAtkObj, atkParent);
+
   return aAtkObj->accessible_parent;
 }
 
@@ -982,6 +984,12 @@ GetProxy(AtkObject* aObj)
 
   return reinterpret_cast<ProxyAccessible*>(MAI_ATK_OBJECT(aObj)->accWrap
       & ~IS_PROXY);
+}
+
+AtkObject*
+GetWrapperFor(ProxyAccessible* aProxy)
+{
+  return reinterpret_cast<AtkObject*>(aProxy->GetWrapper() & ~IS_PROXY);
 }
 
 static uint16_t
