@@ -357,6 +357,21 @@ ScriptedDirectProxyHandler::setPrototypeOf(JSContext *cx, HandleObject proxy,
     return DirectProxyHandler::setPrototypeOf(cx, proxy, proto, bp);
 }
 
+// Not yet part of ES6, but hopefully to be standards-tracked -- and needed to
+// handle revoked proxies in any event.
+bool
+ScriptedDirectProxyHandler::setImmutablePrototype(JSContext *cx, HandleObject proxy,
+                                                  bool *succeeded) const
+{
+    RootedObject target(cx, proxy->as<ProxyObject>().target());
+    if (!target) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_PROXY_REVOKED);
+        return false;
+    }
+
+    return DirectProxyHandler::setImmutablePrototype(cx, proxy, succeeded);
+}
+
 // Corresponds to the "standard" property descriptor getOwn getPrototypeOf dance. It's so explicit
 // here because ScriptedDirectProxyHandler allows script visibility for this operation.
 bool
