@@ -312,7 +312,6 @@ nsresult auxLoad(char *uriBuf)
                        systemPrincipal,
                        nsILoadInfo::SEC_NORMAL,
                        nsIContentPolicy::TYPE_OTHER,
-                       nullptr,   // aChannelPolicy
                        nullptr,   // loadGroup
                        callbacks);
 
@@ -371,7 +370,6 @@ int main(int argc, char **argv)
                            systemPrincipal,
                            nsILoadInfo::SEC_NORMAL,
                            nsIContentPolicy::TYPE_OTHER,
-                           nullptr,   // aChannelPolicy
                            nullptr,   // loadGroup
                            callbacks);
 
