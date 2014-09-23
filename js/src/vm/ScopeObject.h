@@ -597,6 +597,33 @@ class ClonedBlockObject : public BlockObject
     void copyUnaliasedValues(AbstractFramePtr frame);
 };
 
+// Internal scope object used by JSOP_BINDNAME upon encountering an
+// uninitialized lexical slot.
+//
+// ES6 lexical bindings cannot be accessed in any way (throwing
+// ReferenceErrors) until initialized. Normally, NAME operations
+// unconditionally check for uninitialized lexical slots. When getting or
+// looking up names, this can be done without slowing down normal operations
+// on the return value. When setting names, however, we do not want to pollute
+// all set-property paths with uninitialized lexical checks. For setting names
+// (i.e. JSOP_SETNAME), we emit an accompanying, preceding JSOP_BINDNAME which
+// finds the right scope on which to set the name. Moreover, when the name on
+// the scope is an uninitialized lexical, we cannot throw eagerly, as the spec
+// demands that the error be thrown after evaluating the RHS of
+// assignments. Instead, this sentinel scope object is pushed on the stack.
+// Attempting to access anything on this scope throws the appropriate
+// ReferenceError.
+class UninitializedLexicalObject : public ScopeObject
+{
+  public:
+    static const unsigned RESERVED_SLOTS = 1;
+    static const gc::AllocKind FINALIZE_KIND = gc::FINALIZE_OBJECT2_BACKGROUND;
+
+    static const Class class_;
+
+    static UninitializedLexicalObject *create(JSContext *cx, HandleObject enclosing);
+};
+
 template<XDRMode mode>
 bool
 XDRStaticBlockObject(XDRState<mode> *xdr, HandleObject enclosingScope,
@@ -910,7 +937,8 @@ template<>
 inline bool
 JSObject::is<js::ScopeObject>() const
 {
-    return is<js::CallObject>() || is<js::DeclEnvObject>() || is<js::NestedScopeObject>();
+    return is<js::CallObject>() || is<js::DeclEnvObject>() || is<js::NestedScopeObject>() ||
+           is<js::UninitializedLexicalObject>();
 }
 
 template<>
