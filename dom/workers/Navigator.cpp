@@ -36,9 +36,7 @@ WorkerNavigator::Create(bool aOnLine)
     rts->GetNavigatorProperties();
 
   nsRefPtr<WorkerNavigator> navigator =
-    new WorkerNavigator(properties.mAppName, properties.mAppVersion,
-                        properties.mPlatform, properties.mUserAgent,
-                        aOnLine);
+    new WorkerNavigator(properties, aOnLine);
 
   return navigator.forget();
 }
@@ -271,6 +269,48 @@ WorkerNavigator::GetDataStores(JSContext* aCx,
   runnable->Dispatch(aCx);
 
   return promise.forget();
+}
+
+void
+WorkerNavigator::GetAppName(nsString& aAppName) const
+{
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
+
+  if (!mProperties.mAppNameOverridden.IsEmpty() &&
+      !workerPrivate->UsesSystemPrincipal()) {
+    aAppName = mProperties.mAppNameOverridden;
+  } else {
+    aAppName = mProperties.mAppName;
+  }
+}
+
+void
+WorkerNavigator::GetAppVersion(nsString& aAppVersion) const
+{
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
+
+  if (!mProperties.mAppVersionOverridden.IsEmpty() &&
+      !workerPrivate->UsesSystemPrincipal()) {
+    aAppVersion = mProperties.mAppVersionOverridden;
+  } else {
+    aAppVersion = mProperties.mAppVersion;
+  }
+}
+
+void
+WorkerNavigator::GetPlatform(nsString& aPlatform) const
+{
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
+
+  if (!mProperties.mPlatformOverridden.IsEmpty() &&
+      !workerPrivate->UsesSystemPrincipal()) {
+    aPlatform = mProperties.mPlatformOverridden;
+  } else {
+    aPlatform = mProperties.mPlatform;
+  }
 }
 
 END_WORKERS_NAMESPACE
