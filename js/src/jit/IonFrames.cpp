@@ -1284,6 +1284,7 @@ MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
 #endif
 
     activation->markRematerializedFrames(trc);
+    activation->markIonRecovery(trc);
 
     for (JitFrameIterator frames(activations); !frames.done(); ++frames) {
         switch (frames.type()) {
@@ -1498,6 +1499,14 @@ RelocatableValue&
 RInstructionResults::operator [](size_t index)
 {
     return (*results_)[index];
+}
+
+void
+RInstructionResults::trace(JSTracer *trc)
+{
+    // Note: The vector necessary exists, otherwise this object would not have
+    // been stored on the activation from where the trace function is called.
+    gc::MarkValueRange(trc, results_->length(), results_->begin(), "ion-recover-results");
 }
 
 
