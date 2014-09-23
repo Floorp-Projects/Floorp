@@ -17,13 +17,13 @@
 // To create a new type from a set of GLenums do the following:
 //
 //   STRONG_GLENUM_BEGIN(TypeName)
-//     Enum1,
-//     Enum2,
+//     STRONG_GLENUM_VALUE(ENUM1),
+//     STRONG_GLENUM_VALUE(ENUM2),
 //     ...
 //   STRONG_GLENUM_END()
 //
 // where TypeName is the name you want to give the type. Now simply use TypeName
-// instead of GLenum.
+// instead of GLenum. The enum values must be given without GL_ prefix.
 //
 // ~~~~~~~~~~~~~~~~
 // Important Notes:
@@ -33,10 +33,10 @@
 // when using constants. For example we want to make sure that GL_ENUM_X is
 // a valid value for the type in code like:
 //
-//   if (myNewType == LOCAL_GL_SOME_ENUM)
+//   if (myNewType == STRONG_GLENUM_VALUE(SOME_ENUM))
 //       ...
 //
-// The operators will assert that LOCAL_GL_SOME_ENUM is a value that myNewType
+// The operators will assert that STRONG_GLENUM_VALUE(SOME_ENUM) is a value that myNewType
 // can have.
 //
 // ----
@@ -47,7 +47,7 @@
 //
 // Definitely XXX - DO NOT DO - XXX:
 //
-//   if (myNewType.get() == LOCAL_GL_SOME_ENUM)
+//   if (myNewType.get() == STRONG_GLENUM_VALUE(SOME_ENUM))
 //       ...
 //
 // As that undermines the debug checks that were implemented in the ==, and !=
@@ -77,76 +77,125 @@
 // is an attempt at fixing this by providing a small wrapper around GLenum that
 // validates its values.
 //
-#ifdef DEBUG
+// Comparison between STRONG_GLENUM's vs. enum classes
+// ===================================================
+//
+// The present STRONG_GLENUM's differ from ordinary enum classes
+// in that they assert at runtime that their values are legal, and in that they
+// allow implicit conversion from integers to STRONG_GLENUM's but disallow
+// implicit conversion from STRONG_GLENUM's to integers (enum classes are the opposite).
+//
+// When to use GLenum's vs. STRONG_GLENUM's vs. enum classes
+// =========================================================
+//
+// Rule of thumb:
+// * For unchecked GLenum constants, such as WebGL method parameters that haven't been
+//   validated yet, use GLenum.
+// * For already-validated GLenum constants, use STRONG_GLENUM's.
+// * For custom constants that aren't GL enum values, use enum classes.
 
-template<size_t N>
-static bool
-IsValueInArr(GLenum value, const GLenum (&arr)[N])
+template<typename Details>
+class StrongGLenum MOZ_FINAL
 {
-    for (size_t i = 0; i < N; ++i) {
-        if (value == arr[i])
-            return true;
+private:
+    static const GLenum NonexistantGLenum = 0xdeaddead;
+
+    GLenum mValue;
+
+    static void AssertOnceThatEnumValuesAreSorted()
+    {
+#ifdef DEBUG
+        static bool alreadyChecked = false;
+        if (alreadyChecked) {
+            return;
+        }
+        for (size_t i = 1; i < Details::valuesCount(); i++) {
+            MOZ_ASSERT(Details::values()[i] > Details::values()[i - 1],
+                       "GLenum values should be sorted in ascending order");
+        }
+        alreadyChecked = true;
+#endif
     }
 
-    return false;
-}
+public:
+    StrongGLenum(const StrongGLenum& other)
+        : mValue(other.mValue)
+    {
+        AssertOnceThatEnumValuesAreSorted();
+    }
 
+    StrongGLenum()
+#ifdef DEBUG
+        : mValue(NonexistantGLenum)
 #endif
+    {
+        AssertOnceThatEnumValuesAreSorted();
+    }
+
+    StrongGLenum(GLenum val)
+        : mValue(val)
+    {
+        AssertOnceThatEnumValuesAreSorted();
+        MOZ_ASSERT(IsValueLegal(mValue));
+    }
+
+    GLenum get() const {
+        MOZ_ASSERT(mValue != NonexistantGLenum);
+        return mValue;
+    }
+
+    bool operator==(const StrongGLenum& other) const {
+        return get() == other.get();
+    }
+
+    bool operator!=(const StrongGLenum& other) const {
+        return get() != other.get();
+    }
+
+    static bool IsValueLegal(GLenum value) {
+        if (value > UINT16_MAX) {
+            return false;
+        }
+        return std::binary_search(Details::values(),
+                                  Details::values() + Details::valuesCount(),
+                                  uint16_t(value));
+    }
+};
 
 #define STRONG_GLENUM_BEGIN(NAME)                  \
-    class NAME {                                   \
-    private:                                       \
-        GLenum mValue;                             \
-    public:                                        \
-        MOZ_CONSTEXPR NAME(const NAME& other)      \
-            : mValue(other.mValue) { }             \
-                                                   \
-        bool operator==(const NAME& other) const { \
-            return mValue == other.mValue;         \
-        }                                          \
-                                                   \
-        bool operator!=(const NAME& other) const { \
-            return mValue != other.mValue;         \
-        }                                          \
-                                                   \
-        GLenum get() const {                       \
-            MOZ_ASSERT(mValue != LOCAL_GL_NONE);   \
-            return mValue;                         \
-        }                                          \
-                                                   \
-        NAME(GLenum val)                           \
-            : mValue(val)                          \
-        {                                          \
-            const GLenum validValues[] = {
+    const uint16_t NAME##Values[] = {
 
-#define STRONG_GLENUM_END()                        \
-            };                                     \
-            (void)validValues;                     \
-            MOZ_ASSERT(IsValueInArr(mValue, validValues)); \
-        }                                          \
-    };
+#define STRONG_GLENUM_VALUE(VALUE) LOCAL_GL_##VALUE
+
+#define STRONG_GLENUM_END(NAME)                        \
+    };                                     \
+    struct NAME##Details { \
+        static size_t valuesCount() { return MOZ_ARRAY_LENGTH(NAME##Values); } \
+        static const uint16_t* values() { return NAME##Values; } \
+    }; \
+    typedef StrongGLenum<NAME##Details> NAME;
 
 /******************************************************************************
  *  Add your types after this comment
  *****************************************************************************/
 
 STRONG_GLENUM_BEGIN(TexImageTarget)
-    LOCAL_GL_NONE,
-    LOCAL_GL_TEXTURE_2D,
-    LOCAL_GL_TEXTURE_3D,
-    LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X,
-    LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
-    LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
-    LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
-    LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
-    LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
-STRONG_GLENUM_END()
+    STRONG_GLENUM_VALUE(NONE),
+    STRONG_GLENUM_VALUE(TEXTURE_2D),
+    STRONG_GLENUM_VALUE(TEXTURE_3D),
+    STRONG_GLENUM_VALUE(TEXTURE_CUBE_MAP_POSITIVE_X),
+    STRONG_GLENUM_VALUE(TEXTURE_CUBE_MAP_NEGATIVE_X),
+    STRONG_GLENUM_VALUE(TEXTURE_CUBE_MAP_POSITIVE_Y),
+    STRONG_GLENUM_VALUE(TEXTURE_CUBE_MAP_NEGATIVE_Y),
+    STRONG_GLENUM_VALUE(TEXTURE_CUBE_MAP_POSITIVE_Z),
+    STRONG_GLENUM_VALUE(TEXTURE_CUBE_MAP_NEGATIVE_Z),
+STRONG_GLENUM_END(TexImageTarget)
 
 STRONG_GLENUM_BEGIN(TexTarget)
-    LOCAL_GL_NONE,
-    LOCAL_GL_TEXTURE_2D,
-    LOCAL_GL_TEXTURE_3D,
-    LOCAL_GL_TEXTURE_CUBE_MAP,
-STRONG_GLENUM_END()
+    STRONG_GLENUM_VALUE(NONE),
+    STRONG_GLENUM_VALUE(TEXTURE_2D),
+    STRONG_GLENUM_VALUE(TEXTURE_3D),
+    STRONG_GLENUM_VALUE(TEXTURE_CUBE_MAP),
+STRONG_GLENUM_END(TexTarget)
 
 #endif
