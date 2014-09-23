@@ -2599,8 +2599,7 @@ TypeCompartment::setTypeToHomogenousArray(ExclusiveContext *cx,
             return;
         obj->setType(objType);
 
-        if (!objType->unknownProperties())
-            objType->addPropertyType(cx, JSID_VOID, elementType);
+        AddTypePropertyId(cx, objType, JSID_VOID, elementType);
 
         key.proto = objProto;
         (void) p.add(cx, *arrayTypeTable, key, objType);
@@ -2727,7 +2726,7 @@ UpdateObjectTableEntryTypes(ExclusiveContext *cx, ObjectTableEntry &entry,
                 /* Include 'double' in the property types to avoid the update below later. */
                 entry.types[i] = Type::DoubleType();
             }
-            entry.object->addPropertyType(cx, IdToTypeId(properties[i].id), ntype);
+            AddTypePropertyId(cx, entry.object, IdToTypeId(properties[i].id), ntype);
         }
     }
 }
@@ -2804,8 +2803,7 @@ TypeCompartment::fixObjectType(ExclusiveContext *cx, JSObject *obj)
     for (size_t i = 0; i < properties.length(); i++) {
         ids[i] = properties[i].id;
         types[i] = GetValueTypeForTable(obj->getSlot(i));
-        if (!objType->unknownProperties())
-            objType->addPropertyType(cx, IdToTypeId(ids[i]), types[i]);
+        AddTypePropertyId(cx, objType, IdToTypeId(ids[i]), types[i]);
     }
 
     ObjectTableKey key;
@@ -3050,10 +3048,13 @@ TypeObject::matchDefiniteProperties(HandleObject obj)
     return true;
 }
 
-static inline void
-InlineAddTypeProperty(ExclusiveContext *cx, TypeObject *obj, jsid id, Type type)
+void
+types::AddTypePropertyId(ExclusiveContext *cx, TypeObject *obj, jsid id, Type type)
 {
     JS_ASSERT(id == IdToTypeId(id));
+
+    if (obj->unknownProperties())
+        return;
 
     AutoEnterAnalysis enter(cx);
 
@@ -3083,21 +3084,14 @@ InlineAddTypeProperty(ExclusiveContext *cx, TypeObject *obj, jsid id, Type type)
     if (obj->newScript() && obj->newScript()->initializedType()) {
         if (type.isObjectUnchecked() && types->unknownObject())
             type = Type::AnyObjectType();
-        if (!obj->newScript()->initializedType()->unknownProperties())
-            obj->newScript()->initializedType()->addPropertyType(cx, id, type);
+        AddTypePropertyId(cx, obj->newScript()->initializedType(), id, type);
     }
 }
 
 void
-TypeObject::addPropertyType(ExclusiveContext *cx, jsid id, Type type)
+types::AddTypePropertyId(ExclusiveContext *cx, TypeObject *obj, jsid id, const Value &value)
 {
-    InlineAddTypeProperty(cx, this, id, type);
-}
-
-void
-TypeObject::addPropertyType(ExclusiveContext *cx, jsid id, const Value &value)
-{
-    InlineAddTypeProperty(cx, this, id, GetValueType(value));
+    AddTypePropertyId(cx, obj, id, GetValueType(value));
 }
 
 void
