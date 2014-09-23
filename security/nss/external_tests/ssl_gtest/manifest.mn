@@ -1,0 +1,21 @@
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../..
+DEPTH      = ../..
+MODULE = nss
+
+CPPSRCS = \
+      ssl_loopback_unittest.cc \
+      ssl_gtest.cc \
+      test_io.cc \
+      tls_parser.cc \
+      $(NULL)
+
+INCLUDES += -I$(CORE_DEPTH)/external_tests/google_test/gtest/include
+
+REQUIRES = nspr nss libdbm gtest
+
+PROGRAM = ssl_gtest
+EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX)

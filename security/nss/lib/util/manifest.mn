@@ -22,6 +22,7 @@ EXPORTS = \
 	pkcs11t.h \
 	pkcs11n.h \
 	pkcs11u.h \
+	pkcs1sig.h \
 	portreg.h \
 	secasn1.h \
 	secasn1t.h \
@@ -58,6 +59,7 @@ CSRCS = \
 	nssrwlk.c \
 	nssilock.c \
 	oidstring.c \
+	pkcs1sig.c \
 	portreg.c \
 	secalgid.c \
 	secasn1d.c \
