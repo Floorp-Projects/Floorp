@@ -1032,27 +1032,26 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
         {
             PsshInfo pssh;
 
+            // We need the contents of the box header before data_offset. Make
+            // sure we don't underflow somehow.
+            CHECK(data_offset >= 8);
+
+            uint32_t version = 0;
+            if (mDataSource->readAt(data_offset, &version, 4) < 4) {
+                return ERROR_IO;
+            }
+
             if (mDataSource->readAt(data_offset + 4, &pssh.uuid, 16) < 16) {
                 return ERROR_IO;
             }
 
-            uint32_t psshdatalen = 0;
-            if (mDataSource->readAt(data_offset + 20, &psshdatalen, 4) < 4) {
+            // Copy the contents of the box (including header) verbatim.
+            pssh.datalen = chunk_data_size + 8;
+            pssh.data = new uint8_t[pssh.datalen];
+            if (mDataSource->readAt(data_offset - 8, pssh.data, pssh.datalen) < pssh.datalen) {
                 return ERROR_IO;
-            }
-            pssh.datalen = ntohl(psshdatalen);
-            ALOGV("pssh data size: %d", pssh.datalen);
-            if (pssh.datalen + 20 > chunk_size) {
-                // pssh data length exceeds size of containing box
-                return ERROR_MALFORMED;
             }
 
-            pssh.data = new uint8_t[pssh.datalen];
-            ALOGV("allocated pssh @ %p", pssh.data);
-            ssize_t requested = (ssize_t) pssh.datalen;
-            if (mDataSource->readAt(data_offset + 24, pssh.data, requested) < requested) {
-                return ERROR_IO;
-            }
             mPssh.push_back(pssh);
 
             *offset += chunk_size;
