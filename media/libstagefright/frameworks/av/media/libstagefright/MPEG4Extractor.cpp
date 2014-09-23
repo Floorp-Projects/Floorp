@@ -3318,6 +3318,28 @@ status_t MPEG4Source::read(
                 mBuffer->meta_data()->setInt32(kKeyIsSyncFrame, 1);
             }
 
+            if (mSampleTable->hasCencInfo()) {
+                Vector<uint16_t> clearSizes;
+                Vector<uint32_t> cipherSizes;
+                uint8_t iv[16];
+                status_t err = mSampleTable->getSampleCencInfo(
+                        mCurrentSampleIndex, clearSizes, cipherSizes, iv);
+
+                if (err != OK) {
+                    return err;
+                }
+
+                const auto& meta = mBuffer->meta_data();
+                meta->setData(kKeyPlainSizes, 0, clearSizes.array(),
+                              clearSizes.size() * sizeof(uint16_t));
+                meta->setData(kKeyEncryptedSizes, 0, cipherSizes.array(),
+                              cipherSizes.size() * sizeof(uint32_t));
+                meta->setData(kKeyCryptoIV, 0, iv, sizeof(iv));
+                meta->setInt32(kKeyCryptoDefaultIVSize, mDefaultIVSize);
+                meta->setInt32(kKeyCryptoMode, mCryptoMode);
+                meta->setData(kKeyCryptoKey, 0, mCryptoKey, 16);
+            }
+
             ++mCurrentSampleIndex;
         }
 
