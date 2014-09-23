@@ -991,6 +991,16 @@ protected:
       return !(patternStyles[whichStyle] || gradientStyles[whichStyle]);
     }
 
+    int32_t ShadowBlurRadius() const
+    {
+      static const gfxFloat GAUSSIAN_SCALE_FACTOR = (3 * sqrt(2 * M_PI) / 4) * 1.5;
+      return (int32_t)floor(ShadowBlurSigma() * GAUSSIAN_SCALE_FACTOR + 0.5);
+    }
+
+    mozilla::gfx::Float ShadowBlurSigma() const
+    {
+      return std::min(SIGMA_MAX, shadowBlur / 2.0f);
+    }
 
     std::vector<mozilla::RefPtr<mozilla::gfx::Path> > clipsPushed;
 
@@ -1044,6 +1054,7 @@ protected:
   friend class CanvasGeneralPattern;
   friend class CanvasFilterChainObserver;
   friend class AdjustedTarget;
+  friend class AdjustedTargetForShadow;
 
   // other helpers
   void GetAppUnitsValues(int32_t *perDevPixel, int32_t *perCSSPixel)
