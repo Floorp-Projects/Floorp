@@ -39,6 +39,7 @@ MediaKeySession::MediaKeySession(nsPIDOMWindow* aParent,
   , mKeySystem(aKeySystem)
   , mSessionType(aSessionType)
   , mIsClosed(false)
+  , mUninitialized(true)
 {
   MOZ_ASSERT(aParent);
   mClosed = mKeys->MakePromise(aRv);
@@ -93,6 +94,70 @@ Promise*
 MediaKeySession::Closed() const
 {
   return mClosed;
+}
+
+already_AddRefed<Promise>
+MediaKeySession::GenerateRequest(const nsAString& aInitDataType,
+                                 const ArrayBufferViewOrArrayBuffer& aInitData,
+                                 ErrorResult& aRv)
+{
+  nsRefPtr<Promise> promise(mKeys->MakePromise(aRv));
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  if (!mUninitialized) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return promise.forget();
+  }
+
+  mUninitialized = false;
+
+  nsTArray<uint8_t> data;
+  if (aInitDataType.IsEmpty() ||
+      !CopyArrayBufferViewOrArrayBufferData(aInitData, data)) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return promise.forget();
+  }
+
+  PromiseId pid = mKeys->StorePromise(promise);
+  mKeys->OnSessionPending(pid, this);
+
+  mKeys->GetCDMProxy()->CreateSession(mSessionType,
+                                      pid,
+                                      aInitDataType, data);
+
+  return promise.forget();
+}
+
+already_AddRefed<Promise>
+MediaKeySession::Load(const nsAString& aSessionId, ErrorResult& aRv)
+{
+  nsRefPtr<Promise> promise(mKeys->MakePromise(aRv));
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  if (aSessionId.IsEmpty()) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    // "The sessionId parameter is empty."
+    return promise.forget();
+  }
+
+  if (!mUninitialized) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return promise.forget();
+  }
+
+  mUninitialized = false;
+
+  Init(aSessionId);
+  auto pid = mKeys->StorePromise(promise);
+  mKeys->OnSessionPending(pid, this);
+
+  mKeys->GetCDMProxy()->LoadSession(pid, aSessionId);
+
+  return promise.forget();
 }
 
 already_AddRefed<Promise>

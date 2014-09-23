@@ -109,6 +109,9 @@ public:
                                   const nsAString& aSessionId);
 
   // Main thread only.
+  void OnResolveLoadSessionPromise(uint32_t aPromiseId, bool aSuccess);
+
+  // Main thread only.
   void OnSessionMessage(const nsAString& aSessionId,
                         nsTArray<uint8_t>& aMessage,
                         const nsAString& aDestinationURL);

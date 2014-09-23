@@ -374,6 +374,16 @@ CDMProxy::OnResolveNewSessionPromise(uint32_t aPromiseId,
 }
 
 void
+CDMProxy::OnResolveLoadSessionPromise(uint32_t aPromiseId, bool aSuccess)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (mKeys.IsNull()) {
+    return;
+  }
+  mKeys->OnSessionLoaded(aPromiseId, aSuccess);
+}
+
+void
 CDMProxy::OnSessionMessage(const nsAString& aSessionId,
                            nsTArray<uint8_t>& aMessage,
                            const nsAString& aDestinationURL)

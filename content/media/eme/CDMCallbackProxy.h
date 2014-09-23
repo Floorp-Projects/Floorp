@@ -20,6 +20,9 @@ public:
   virtual void ResolveNewSessionPromise(uint32_t aPromiseId,
                                         const nsCString& aSessionId) MOZ_OVERRIDE;
 
+  virtual void ResolveLoadSessionPromise(uint32_t aPromiseId,
+                                         bool aSuccess) MOZ_OVERRIDE;
+
   virtual void ResolvePromise(uint32_t aPromiseId) MOZ_OVERRIDE;
 
   virtual void RejectPromise(uint32_t aPromiseId,
