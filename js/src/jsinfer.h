@@ -1194,8 +1194,6 @@ struct TypeObject : public gc::TenuredCell
     bool addDefiniteProperties(ExclusiveContext *cx, Shape *shape);
     bool matchDefiniteProperties(HandleObject obj);
     void addPrototype(JSContext *cx, TypeObject *proto);
-    void addPropertyType(ExclusiveContext *cx, jsid id, Type type);
-    void addPropertyType(ExclusiveContext *cx, jsid id, const Value &value);
     void markPropertyNonData(ExclusiveContext *cx, jsid id);
     void markPropertyNonWritable(ExclusiveContext *cx, jsid id);
     void markStateChange(ExclusiveContext *cx);

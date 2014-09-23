@@ -1845,6 +1845,9 @@ AttachFinishedCompilations(JSContext *cx)
         if (!builder)
             break;
 
+// TODO bug 1047346: Enable lazy linking for other architectures again by
+//                   fixing the lazy link stub.
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
         // Try to defer linking if the script is on the stack, to postpone
         // invalidating them.
         if (builder->info().executionMode() == SequentialExecution &&
@@ -1874,6 +1877,7 @@ AttachFinishedCompilations(JSContext *cx)
                 continue;
             }
         }
+#endif
 
         if (CodeGenerator *codegen = builder->backgroundCodegen()) {
             RootedScript script(cx, builder->script());

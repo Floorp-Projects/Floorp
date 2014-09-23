@@ -11,7 +11,7 @@
  */
 
 /*
- * Created on Tue Aug 26 10:16:12 2014 from UCD data files with version info:
+ * Created on Tue Sep 23 08:31:06 2014 from UCD data files with version info:
  *
 
 # Date: 2014-06-12, 20:18:00 GMT [KW]
@@ -52,8 +52,8 @@ Standard.
 # Unihan_Variants.txt
 # Date: 2014-05-09 18:17:02 GMT [JHJ]
 
-# VerticalOrientation-12.txt
-# Date: 2014-07-07, 21:00:00 GMT [EM, KI, LI]
+# VerticalOrientation-13.txt
+# Date: 2014-09-03, 17:30:00 GMT [EM, KI, LI]
 
  *
  * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *

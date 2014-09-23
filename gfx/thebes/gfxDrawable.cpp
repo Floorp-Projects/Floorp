@@ -34,6 +34,10 @@ gfxSurfaceDrawable::DrawWithSamplingRect(gfxContext* aContext,
                                          const GraphicsFilter& aFilter,
                                          gfxFloat aOpacity)
 {
+  if (!mSourceSurface) {
+    return true;
+  }
+
   // When drawing with CLAMP we can expand the sampling rect to the nearest pixel
   // without changing the result.
   gfxRect samplingRect = aSamplingRect;
