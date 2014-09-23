@@ -1776,8 +1776,25 @@ SnapshotIterator::initInstructionResults(JSContext *cx, RInstructionResults *res
     MOZ_ASSERT(recover_.numInstructions() > 1);
     size_t numResults = recover_.numInstructions() - 1;
     instructionResults_ = results;
-    if (!instructionResults_->isInitialized() && !instructionResults_->init(cx, numResults, fp_))
-        return false;
+    if (!instructionResults_->isInitialized()) {
+        if (!instructionResults_->init(cx, numResults, fp_))
+            return false;
+
+        // Fill with the results of recover instructions.
+        SnapshotIterator s(*this);
+        while (s.moreInstructions()) {
+            // Skip resume point and only interpret recover instructions.
+            if (s.instruction()->isResumePoint()) {
+                s.skipInstruction();
+                continue;
+            }
+
+            if (!s.instruction()->recover(cx, s))
+                return false;
+            s.nextInstruction();
+        }
+    }
+
     return true;
 }
 
