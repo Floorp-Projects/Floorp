@@ -2288,6 +2288,25 @@ let E10SUINotification = {
         this._showE10sAccessibilityWarning();
       }
     } else {
+      let displayFeedbackRequest = false;
+      try {
+        displayFeedbackRequest = Services.prefs.getBoolPref("browser.requestE10sFeedback");
+      } catch (e) {}
+
+      if (displayFeedbackRequest) {
+        let win = RecentWindow.getMostRecentBrowserWindow();
+        if (!win) {
+          return;
+        }
+
+        Services.prefs.clearUserPref("browser.requestE10sFeedback");
+        let url = Services.urlFormatter.formatURLPref("app.feedback.baseURL");
+        url += "?utm_source=tab&utm_campaign=e10sfeedback";
+
+        win.openUILinkIn(url, "tab");
+        return;
+      }
+
       let e10sPromptShownCount = 0;
       try {
         e10sPromptShownCount = Services.prefs.getIntPref("browser.displayedE10SPrompt");
