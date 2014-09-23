@@ -129,64 +129,6 @@ ApplicationAccessible::Bounds() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIAccessibleApplication
-
-NS_IMETHODIMP
-ApplicationAccessible::GetAppName(nsAString& aName)
-{
-  aName.Truncate();
-
-  if (!mAppInfo)
-    return NS_ERROR_FAILURE;
-
-  nsAutoCString cname;
-  nsresult rv = mAppInfo->GetName(cname);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  AppendUTF8toUTF16(cname, aName);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ApplicationAccessible::GetAppVersion(nsAString& aVersion)
-{
-  aVersion.Truncate();
-
-  if (!mAppInfo)
-    return NS_ERROR_FAILURE;
-
-  nsAutoCString cversion;
-  nsresult rv = mAppInfo->GetVersion(cversion);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  AppendUTF8toUTF16(cversion, aVersion);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ApplicationAccessible::GetPlatformName(nsAString& aName)
-{
-  aName.AssignLiteral("Gecko");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ApplicationAccessible::GetPlatformVersion(nsAString& aVersion)
-{
-  aVersion.Truncate();
-
-  if (!mAppInfo)
-    return NS_ERROR_FAILURE;
-
-  nsAutoCString cversion;
-  nsresult rv = mAppInfo->GetPlatformVersion(cversion);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  AppendUTF8toUTF16(cversion, aVersion);
-  return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // Accessible public methods
 
 void
