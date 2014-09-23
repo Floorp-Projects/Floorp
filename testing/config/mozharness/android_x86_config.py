@@ -12,7 +12,7 @@ config = {
                 "--deviceIP=%(device_ip)s", "--devicePort=%(device_port)s",
                 "--http-port=%(http_port)s", "--ssl-port=%(ssl_port)s",
                 "--certificate-path=%(certs_path)s", "--symbols-path=%(symbols_path)s",
-                "--quiet", "--log-raw=%(raw_log_file)s"
+                "--quiet", "--log-raw=%(raw_log_file)s",
             ],
         },
         "reftest": {
@@ -32,6 +32,7 @@ config = {
                 "--xre-path=%(xre_path)s", "--testing-modules-dir=%(modules_dir)s",
                 "--apk=%(installer_path)s", "--no-logfiles",
                 "--symbols-path=%(symbols_path)s",
+                "--manifest=tests/xpcshell_android.ini",
             ],
         },
     }, # end suite_definitions
