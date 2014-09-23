@@ -65,16 +65,22 @@ WebGLFramebuffer::Attachment::IsDeleteRequested() const
 }
 
 bool
+WebGLFramebuffer::Attachment::IsDefined() const
+{
+    return Renderbuffer() ||
+           (Texture() && Texture()->HasImageInfoAt(ImageTarget(), 0));
+}
+
+bool
 WebGLFramebuffer::Attachment::HasAlpha() const
 {
     MOZ_ASSERT(HasImage());
 
-    GLenum format = 0;
     if (Texture() && Texture()->HasImageInfoAt(mTexImageTarget, mTexImageLevel))
-        format = Texture()->ImageInfoAt(mTexImageTarget, mTexImageLevel).WebGLFormat();
+        return FormatHasAlpha(Texture()->ImageInfoAt(mTexImageTarget, mTexImageLevel).WebGLFormat());
     else if (Renderbuffer())
-        format = Renderbuffer()->InternalFormat();
-    return FormatHasAlpha(format);
+        return FormatHasAlpha(Renderbuffer()->InternalFormat());
+    else return false;
 }
 
 GLenum
@@ -88,7 +94,7 @@ WebGLFramebuffer::GetFormatForAttachment(const WebGLFramebuffer::Attachment& att
         MOZ_ASSERT(tex.HasImageInfoAt(attachment.ImageTarget(), 0));
 
         const WebGLTexture::ImageInfo& imgInfo = tex.ImageInfoAt(attachment.ImageTarget(), 0);
-        return imgInfo.WebGLFormat();
+        return imgInfo.WebGLFormat().get();
     }
 
     if (attachment.Renderbuffer())
@@ -102,7 +108,7 @@ WebGLFramebuffer::Attachment::IsReadableFloat() const
 {
     const WebGLTexture* tex = Texture();
     if (tex && tex->HasImageInfoAt(mTexImageTarget, mTexImageLevel)) {
-        GLenum type = tex->ImageInfoAt(mTexImageTarget, mTexImageLevel).WebGLType();
+        GLenum type = tex->ImageInfoAt(mTexImageTarget, mTexImageLevel).WebGLType().get();
         switch (type) {
         case LOCAL_GL_FLOAT:
         case LOCAL_GL_HALF_FLOAT_OES:
@@ -322,7 +328,7 @@ WebGLFramebuffer::Attachment::IsComplete() const
         MOZ_ASSERT(Texture()->HasImageInfoAt(mTexImageTarget, mTexImageLevel));
         const WebGLTexture::ImageInfo& imageInfo =
             Texture()->ImageInfoAt(mTexImageTarget, mTexImageLevel);
-        GLenum webGLFormat = imageInfo.WebGLFormat();
+        GLenum webGLFormat = imageInfo.WebGLFormat().get();
 
         if (mAttachmentPoint == LOCAL_GL_DEPTH_ATTACHMENT)
             return IsValidFBOTextureDepthFormat(webGLFormat);

@@ -6486,7 +6486,7 @@ js_DumpBacktrace(JSContext *cx)
     size_t depth = 0;
     for (ScriptFrameIter i(cx); !i.done(); ++i, ++depth) {
         const char *filename = JS_GetScriptFilename(i.script());
-        unsigned line = JS_PCToLineNumber(cx, i.script(), i.pc());
+        unsigned line = PCToLineNumber(i.script(), i.pc());
         JSScript *script = i.script();
         sprinter.printf("#%d %14p   %s:%d (%p @ %d)\n",
                         depth, (i.isJit() ? 0 : i.interpFrame()), filename, line,

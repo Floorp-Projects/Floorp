@@ -72,14 +72,14 @@ SourceSurfaceD2D::InitFromData(unsigned char *aData,
   hr = aRT->CreateBitmap(D2DIntSize(aSize), props, byRef(mBitmap));
 
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to create D2D Bitmap for data. Code: " << hr;
+    gfxWarning() << "Failed to create D2D Bitmap for data. Code: " << hexa(hr);
     return false;
   }
 
   hr = mBitmap->CopyFromMemory(nullptr, aData, aStride);
 
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to copy data to D2D bitmap. Code: " << hr;
+    gfxWarning() << "Failed to copy data to D2D bitmap. Code: " << hexa(hr);
     return false;
   }
 
@@ -101,7 +101,7 @@ SourceSurfaceD2D::InitFromTexture(ID3D10Texture2D *aTexture,
   hr = aTexture->QueryInterface((IDXGISurface**)&surf);
 
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to QI texture to surface. Code: " << hr;
+    gfxWarning() << "Failed to QI texture to surface. Code: " << hexa(hr);
     return false;
   }
 
@@ -115,7 +115,7 @@ SourceSurfaceD2D::InitFromTexture(ID3D10Texture2D *aTexture,
   hr = aRT->CreateSharedBitmap(IID_IDXGISurface, surf, &props, byRef(mBitmap));
 
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to create SharedBitmap. Code: " << hr;
+    gfxWarning() << "Failed to create SharedBitmap. Code: " << hexa(hr);
     return false;
   }
 
@@ -150,14 +150,14 @@ DataSourceSurfaceD2D::DataSourceSurfaceD2D(SourceSurfaceD2D* aSourceSurface)
   HRESULT hr = aSourceSurface->mDevice->CreateTexture2D(&desc, nullptr,
                                                         byRef(sourceTexture));
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to create texture. Code: " << hr;
+    gfxWarning() << "Failed to create texture. Code: " << hexa(hr);
     return;
   }
 
   RefPtr<IDXGISurface> dxgiSurface;
   hr = sourceTexture->QueryInterface((IDXGISurface**)byRef(dxgiSurface));
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to create DXGI surface. Code: " << hr;
+    gfxWarning() << "Failed to create DXGI surface. Code: " << hexa(hr);
     return;
   }
 
@@ -170,7 +170,7 @@ DataSourceSurfaceD2D::DataSourceSurfaceD2D(SourceSurfaceD2D* aSourceSurface)
                                                                &rtProps,
                                                                byRef(renderTarget));
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to create render target. Code: " << hr;
+    gfxWarning() << "Failed to create render target. Code: " << hexa(hr);
     return;
   }
 
@@ -189,7 +189,7 @@ DataSourceSurfaceD2D::DataSourceSurfaceD2D(SourceSurfaceD2D* aSourceSurface)
   }
   hr = renderTarget->EndDraw();
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to draw bitmap. Code: " << hr;
+    gfxWarning() << "Failed to draw bitmap. Code: " << hexa(hr);
     return;
   }
 
@@ -198,7 +198,7 @@ DataSourceSurfaceD2D::DataSourceSurfaceD2D(SourceSurfaceD2D* aSourceSurface)
   desc.BindFlags = 0;
   hr = aSourceSurface->mDevice->CreateTexture2D(&desc, nullptr, byRef(mTexture));
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to create staging texture. Code: " << hr;
+    gfxWarning() << "Failed to create staging texture. Code: " << hexa(hr);
     mTexture = nullptr;
     return;
   }
@@ -273,7 +273,7 @@ DataSourceSurfaceD2D::Map(MapType aMapType, MappedSurface *aMappedSurface)
   HRESULT hr = mTexture->Map(0, mapType, 0, &map);
 
   if (FAILED(hr)) {
-    gfxWarning() << "Texture map failed with code: " << hr;
+    gfxWarning() << "Texture map failed with code: " << hexa(hr);
     return false;
   }
 
@@ -306,7 +306,7 @@ DataSourceSurfaceD2D::EnsureMappedTexture()
 
   HRESULT hr = mTexture->Map(0, D3D10_MAP_READ, 0, &mData);
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to map texture. Code: " << hr;
+    gfxWarning() << "Failed to map texture. Code: " << hexa(hr);
     mTexture = nullptr;
   } else {
     mMapped = true;

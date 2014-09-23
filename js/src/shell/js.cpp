@@ -1788,7 +1788,7 @@ LineToPC(JSContext *cx, unsigned argc, jsval *vp)
     if (!ToUint32(cx, args.get(lineArg), &lineno))
          return false;
 
-    jsbytecode *pc = JS_LineNumberToPC(cx, script, lineno);
+    jsbytecode *pc = js_LineNumberToPC(script, lineno);
     if (!pc)
         return false;
     args.rval().setInt32(script->pcToOffset(pc));
@@ -1805,7 +1805,7 @@ PCToLine(JSContext *cx, unsigned argc, jsval *vp)
 
     if (!GetScriptAndPCArgs(cx, args.length(), args.array(), &script, &i))
         return false;
-    lineno = JS_PCToLineNumber(cx, script, script->offsetToPC(i));
+    lineno = PCToLineNumber(script, script->offsetToPC(i));
     if (!lineno)
         return false;
     args.rval().setInt32(lineno);
@@ -2234,7 +2234,7 @@ DisassWithSrc(JSContext *cx, unsigned argc, jsval *vp)
         }
 
         /* burn the leading lines */
-        line2 = JS_PCToLineNumber(cx, script, pc);
+        line2 = PCToLineNumber(script, pc);
         for (line1 = 0; line1 < line2 - 1; line1++) {
             char *tmp = fgets(linebuf, LINE_BUF_LEN, file);
             if (!tmp) {
@@ -2246,7 +2246,7 @@ DisassWithSrc(JSContext *cx, unsigned argc, jsval *vp)
 
         bupline = 0;
         while (pc < end) {
-            line2 = JS_PCToLineNumber(cx, script, pc);
+            line2 = PCToLineNumber(script, pc);
 
             if (line2 < line1) {
                 if (bupline != line2) {
@@ -2678,7 +2678,7 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
     {
         AutoCompartment ac(cx, env);
         ok = EvaluateInEnv(cx, env, thisv, frame, stableChars.twoByteRange(), fpscript->filename(),
-                           JS_PCToLineNumber(cx, fpscript, fi.pc()), args.rval());
+                           PCToLineNumber(fpscript, fi.pc()), args.rval());
     }
     return ok;
 }
@@ -5821,7 +5821,7 @@ Shell(JSContext *cx, OptionParser *op, char **envp)
     int result = ProcessArgs(cx, glob, op);
 
     if (enableDisassemblyDumps)
-        JS_DumpCompartmentPCCounts(cx);
+        js::DumpCompartmentPCCounts(cx);
 
     if (!op->getBoolOption("no-js-cache-per-process")) {
         if (jsCacheAsmJSPath) {
