@@ -945,6 +945,36 @@ cert_ssl()
   pk12u -o ${R_STAPLINGDIR}/ca.p12 -n TestCA -k ${R_PWFILE} -w ${R_PWFILE} -d ${R_CADIR}
   pk12u -i ${R_STAPLINGDIR}/ca.p12 -k ${R_PWFILE} -w ${R_PWFILE} -d ${R_STAPLINGDIR}
 }
+
+############################# ssl_gtest ##########################
+# local shell function to create serve certs for SSL gtests
+##################################################################
+cert_ssl_gtests()
+{
+  CERTFAILED=0
+  echo "$SCRIPTNAME: Creating ssl_gtest DB dir"
+  cert_init_cert ${SSLGTESTDIR} "server" 1 ${D_EXT_SERVER}
+  echo "$SCRIPTNAME: Creating database for ssl_gtests"
+  certu -N -d "${SSLGTESTDIR}" --empty-password 2>&1
+  # the ssl server used here is special: is a self-signed server
+  # certificate with name server.
+  echo "$SCRIPTNAME: Creating server cert for ssl_gtests"
+  certu -S -z ${R_NOISE_FILE} -g 2048 -d ${SSLGTESTDIR} -n server -s "CN=server" -t C,C,C -x -m 1 -w -2 -v 120 -Z SHA256 -1 -2 <<CERTSCRIPT
+0
+2
+9
+n
+n
+
+n
+CERTSCRIPT
+
+  if [ "$RET" -ne 0 ]; then
+     echo "return value is $RET"
+     Exit 6 "Fatal - failed to create server cert for ssl_gtests"
+  fi
+}
+
 ############################## cert_stresscerts ################################
 # local shell function to create client certs for SSL stresstest
 ########################################################################
@@ -1702,6 +1732,7 @@ cert_init
 cert_all_CA
 cert_extended_ssl 
 cert_ssl 
+cert_ssl_gtests
 cert_smime_client        
 if [ -z "$NSS_TEST_DISABLE_FIPS" ]; then
     cert_fips

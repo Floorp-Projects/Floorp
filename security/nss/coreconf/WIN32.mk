@@ -30,9 +30,16 @@ else
 	BSDECHO      = echo
 	RC           = rc.exe
 	MT           = mt.exe
+	# Check for clang-cl
+	CLANG_CL    := $(shell expr `$(CC) -? 2>&1 | grep -w clang | wc -l` \> 0)
 	# Determine compiler version
-	CC_VERSION  := $(shell $(CC) 2>&1 | sed -ne \
+	ifeq ($(CLANG_CL),1)
+	    # clang-cl pretends to be MSVC 2012.
+	    CC_VERSION  := 17.00.00.00
+	else
+	    CC_VERSION  := $(shell $(CC) 2>&1 | sed -ne \
 		's|.* \([0-9]\+\.[0-9]\+\.[0-9]\+\(\.[0-9]\+\)\?\).*|\1|p')
+	endif
 	# Change the dots to spaces.
 	_CC_VERSION_WORDS := $(subst ., ,$(CC_VERSION))
 	_CC_VMAJOR  := $(word 1,$(_CC_VERSION_WORDS))
@@ -203,12 +210,18 @@ endif
 ifeq (,$(filter-out x386 x86_64,$(CPU_ARCH)))
 ifdef USE_64
 	DEFINES += -D_AMD64_
+	# Use subsystem 5.02 to allow running on Windows XP.
+	ifeq ($(_MSC_VER_GE_11),1)
+		LDFLAGS += -SUBSYSTEM:CONSOLE,5.02
+	endif
 else
 	DEFINES += -D_X86_
 	# VS2012 defaults to -arch:SSE2. Use -arch:IA32 to avoid requiring
 	# SSE2.
+	# Use subsystem 5.01 to allow running on Windows XP.
 	ifeq ($(_MSC_VER_GE_11),1)
 		OS_CFLAGS += -arch:IA32
+		LDFLAGS += -SUBSYSTEM:CONSOLE,5.01
 	endif
 endif
 endif
