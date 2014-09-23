@@ -57,7 +57,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         {
 
             GLContext::EXT_transform_feedback,
-            GLContext::NV_transform_feedback,
+            GLContext::NV_transform_feedback2,
             GLContext::Extensions_End
         }
     },
@@ -476,13 +476,13 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "transform_feedback",
-        300, // OpenGL version
+        "transform_feedback2",
+        400, // OpenGL version
         300, // OpenGL ES version
         GLContext::Extension_None,
         {
-            GLContext::EXT_transform_feedback,
-            GLContext::NV_transform_feedback,
+            GLContext::ARB_transform_feedback2,
+            GLContext::NV_transform_feedback2,
             GLContext::Extensions_End
         }
     },
