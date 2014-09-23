@@ -299,7 +299,7 @@ PathBuilderD2D::Finish()
 
   HRESULT hr = mSink->Close();
   if (FAILED(hr)) {
-    gfxDebug() << "Failed to close PathSink. Code: " << hr;
+    gfxDebug() << "Failed to close PathSink. Code: " << hexa(hr);
     return nullptr;
   }
 
@@ -319,14 +319,14 @@ PathD2D::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule) 
   HRESULT hr = DrawTargetD2D::factory()->CreatePathGeometry(byRef(path));
 
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to create PathGeometry. Code: " << hr;
+    gfxWarning() << "Failed to create PathGeometry. Code: " << hexa(hr);
     return nullptr;
   }
 
   RefPtr<ID2D1GeometrySink> sink;
   hr = path->Open(byRef(sink));
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to open Geometry for writing. Code: " << hr;
+    gfxWarning() << "Failed to open Geometry for writing. Code: " << hexa(hr);
     return nullptr;
   }
 
@@ -367,7 +367,7 @@ PathD2D::StreamToSink(PathSink *aSink) const
                            D2D1::IdentityMatrix(), &sink);
 
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to stream D2D path to sink. Code: " << hr;
+    gfxWarning() << "Failed to stream D2D path to sink. Code: " << hexa(hr);
     return;
   }
 }
@@ -418,7 +418,7 @@ PathD2D::GetBounds(const Matrix &aTransform) const
 
   Rect bounds = ToRect(d2dBounds);
   if (FAILED(hr) || !bounds.IsFinite()) {
-    gfxWarning() << "Failed to get stroked bounds for path. Code: " << hr;
+    gfxWarning() << "Failed to get stroked bounds for path. Code: " << hexa(hr);
     return Rect();
   }
 
@@ -438,7 +438,7 @@ PathD2D::GetStrokedBounds(const StrokeOptions &aStrokeOptions,
 
   Rect bounds = ToRect(d2dBounds);
   if (FAILED(hr) || !bounds.IsFinite()) {
-    gfxWarning() << "Failed to get stroked bounds for path. Code: " << hr;
+    gfxWarning() << "Failed to get stroked bounds for path. Code: " << hexa(hr);
     return Rect();
   }
 

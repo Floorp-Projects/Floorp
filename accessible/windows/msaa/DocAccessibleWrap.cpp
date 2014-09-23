@@ -61,16 +61,16 @@ DocAccessibleWrap::get_accValue(VARIANT aVarChild, BSTR __RPC_FAR* aValue)
 
   // If document is being used to create a widget, don't use the URL hack
   roles::Role role = Role();
-  if (role != roles::DOCUMENT && role != roles::APPLICATION && 
-      role != roles::DIALOG && role != roles::ALERT) 
+  if (role != roles::DOCUMENT && role != roles::APPLICATION &&
+      role != roles::DIALOG && role != roles::ALERT)
     return hr;
 
-  nsAutoString URL;
-  nsresult rv = GetURL(URL);
-  if (URL.IsEmpty())
+  nsAutoString url;
+  URL(url);
+  if (url.IsEmpty())
     return S_FALSE;
 
-  *aValue = ::SysAllocStringLen(URL.get(), URL.Length());
+  *aValue = ::SysAllocStringLen(url.get(), url.Length());
   return *aValue ? S_OK : E_OUTOFMEMORY;
 
   A11Y_TRYBLOCK_END

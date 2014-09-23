@@ -74,8 +74,11 @@ class RemoteAutomation(Automation):
         else:
             env['MOZ_CRASHREPORTER_DISABLE'] = '1'
 
-        # Crash on non-local network connections.
-        env['MOZ_DISABLE_NONLOCAL_CONNECTIONS'] = '1'
+        # Crash on non-local network connections by default.
+        # MOZ_DISABLE_NONLOCAL_CONNECTIONS can be set to "0" to temporarily
+        # enable non-local connections for the purposes of local testing.
+        # Don't override the user's choice here.  See bug 1049688.
+        env.setdefault('MOZ_DISABLE_NONLOCAL_CONNECTIONS', '1')
 
         return env
 

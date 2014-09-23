@@ -595,7 +595,7 @@ WebGLContext::CopyTexSubImage2D(GLenum rawTexImgTarget,
         tex->DoDeferredImageInitialization(texImageTarget, level);
     }
 
-    return CopyTexSubImage2D_base(texImageTarget, level, imageInfo.WebGLFormat(), xoffset, yoffset, x, y, width, height, true);
+    return CopyTexSubImage2D_base(texImageTarget, level, imageInfo.WebGLFormat().get(), xoffset, yoffset, x, y, width, height, true);
 }
 
 
@@ -900,7 +900,7 @@ WebGLContext::GenerateMipmap(GLenum rawTarget)
     if (!tex->IsFirstImagePowerOfTwo())
         return ErrorInvalidOperation("generateMipmap: Level zero of texture does not have power-of-two width and height.");
 
-    GLenum webGLFormat = tex->ImageInfoAt(imageTarget, 0).WebGLFormat();
+    TexInternalFormat webGLFormat = tex->ImageInfoAt(imageTarget, 0).WebGLFormat();
     if (IsTextureFormatCompressed(webGLFormat))
         return ErrorInvalidOperation("generateMipmap: Texture data at level zero is compressed.");
 
@@ -1177,7 +1177,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
         switch (pname) {
              case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING_EXT:
                 if (IsExtensionEnabled(WebGLExtensionID::EXT_sRGB)) {
-                    const GLenum webGLFormat =
+                    const TexInternalFormat webGLFormat =
                         fba.Texture()->ImageInfoBase().WebGLFormat();
                     return (webGLFormat == LOCAL_GL_SRGB ||
                             webGLFormat == LOCAL_GL_SRGB_ALPHA) ?
@@ -1219,9 +1219,9 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
                     return JS::NumberValue(uint32_t(LOCAL_GL_NONE));
 
                 uint32_t ret = LOCAL_GL_NONE;
-                GLenum type = fba.Texture()->ImageInfoAt(fba.ImageTarget(),
-                                                         fba.MipLevel()).WebGLType();
-                switch (type) {
+                TexType type = fba.Texture()->ImageInfoAt(fba.ImageTarget(),
+                                                          fba.MipLevel()).WebGLType();
+                switch (type.get()) {
                 case LOCAL_GL_UNSIGNED_BYTE:
                 case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
                 case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:
@@ -2409,7 +2409,7 @@ WebGLContext::RenderbufferStorage(GLenum target, GLenum internalformat, GLsizei 
         bool hasExtensions = IsExtensionEnabled(WebGLExtensionID::OES_texture_half_float) &&
                              IsExtensionEnabled(WebGLExtensionID::EXT_color_buffer_half_float);
         if (!hasExtensions)
-            return ErrorInvalidEnumInfo("renderbufferStorage: internalformat", target);
+            return ErrorInvalidEnumInfo("renderbufferStorage: internalformat", internalformat);
         break;
     }
     case LOCAL_GL_RGB32F:
@@ -2417,7 +2417,7 @@ WebGLContext::RenderbufferStorage(GLenum target, GLenum internalformat, GLsizei 
         bool hasExtensions = IsExtensionEnabled(WebGLExtensionID::OES_texture_float) &&
                              IsExtensionEnabled(WebGLExtensionID::WEBGL_color_buffer_float);
         if (!hasExtensions)
-            return ErrorInvalidEnumInfo("renderbufferStorage: internalformat", target);
+            return ErrorInvalidEnumInfo("renderbufferStorage: internalformat", internalformat);
         break;
     }
     default:
@@ -4032,12 +4032,12 @@ BaseTypeAndSizeFromUniformType(GLenum uType, GLenum *baseType, GLint *unitSize)
 }
 
 
-WebGLTexelFormat mozilla::GetWebGLTexelFormat(GLenum internalformat, GLenum type)
+WebGLTexelFormat mozilla::GetWebGLTexelFormat(TexInternalFormat internalformat, TexType type)
 {
     //
     // WEBGL_depth_texture
     if (internalformat == LOCAL_GL_DEPTH_COMPONENT) {
-        switch (type) {
+        switch (type.get()) {
             case LOCAL_GL_UNSIGNED_SHORT:
                 return WebGLTexelFormat::D16;
             case LOCAL_GL_UNSIGNED_INT:
@@ -4048,7 +4048,7 @@ WebGLTexelFormat mozilla::GetWebGLTexelFormat(GLenum internalformat, GLenum type
     }
 
     if (internalformat == LOCAL_GL_DEPTH_STENCIL) {
-        switch (type) {
+        switch (type.get()) {
             case LOCAL_GL_UNSIGNED_INT_24_8_EXT:
                 return WebGLTexelFormat::D24S8;
         }
@@ -4069,7 +4069,7 @@ WebGLTexelFormat mozilla::GetWebGLTexelFormat(GLenum internalformat, GLenum type
     }
 
     if (type == LOCAL_GL_UNSIGNED_BYTE) {
-        switch (internalformat) {
+        switch (internalformat.get()) {
             case LOCAL_GL_RGBA:
             case LOCAL_GL_SRGB_ALPHA_EXT:
                 return WebGLTexelFormat::RGBA8;
@@ -4089,7 +4089,7 @@ WebGLTexelFormat mozilla::GetWebGLTexelFormat(GLenum internalformat, GLenum type
 
     if (type == LOCAL_GL_FLOAT) {
         // OES_texture_float
-        switch (internalformat) {
+        switch (internalformat.get()) {
             case LOCAL_GL_RGBA:
             case LOCAL_GL_RGBA32F:
                 return WebGLTexelFormat::RGBA32F;
@@ -4110,7 +4110,7 @@ WebGLTexelFormat mozilla::GetWebGLTexelFormat(GLenum internalformat, GLenum type
         MOZ_CRASH("Invalid WebGL texture format/type?");
     } else if (type == LOCAL_GL_HALF_FLOAT_OES) {
         // OES_texture_half_float
-        switch (internalformat) {
+        switch (internalformat.get()) {
             case LOCAL_GL_RGBA:
             case LOCAL_GL_RGBA16F:
                 return WebGLTexelFormat::RGBA16F;
@@ -4132,7 +4132,7 @@ WebGLTexelFormat mozilla::GetWebGLTexelFormat(GLenum internalformat, GLenum type
         }
     }
 
-    switch (type) {
+    switch (type.get()) {
         case LOCAL_GL_UNSIGNED_SHORT_4_4_4_4:
            return WebGLTexelFormat::RGBA4444;
         case LOCAL_GL_UNSIGNED_SHORT_5_5_5_1:

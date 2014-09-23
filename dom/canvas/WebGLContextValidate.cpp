@@ -1039,13 +1039,8 @@ WebGLContext::ValidateTexSubImageSize(GLint xoffset, GLint yoffset, GLint /*zoff
  * ValidateTexImageFormatAndType().
  */
 uint32_t
-WebGLContext::GetBitsPerTexel(GLenum format, GLenum type)
+WebGLContext::GetBitsPerTexel(TexInternalFormat format, TexType type)
 {
-    // If there is no defined format or type, we're not taking up any memory
-    if (!format || !type) {
-        return 0;
-    }
-
     /* Known fixed-sized types */
     if (type == LOCAL_GL_UNSIGNED_SHORT_4_4_4_4 ||
         type == LOCAL_GL_UNSIGNED_SHORT_5_5_5_1 ||
@@ -1058,7 +1053,7 @@ WebGLContext::GetBitsPerTexel(GLenum format, GLenum type)
         return 32;
 
     int bitsPerComponent = 0;
-    switch (type) {
+    switch (type.get()) {
     case LOCAL_GL_UNSIGNED_BYTE:
         bitsPerComponent = 8;
         break;
@@ -1079,7 +1074,7 @@ WebGLContext::GetBitsPerTexel(GLenum format, GLenum type)
         break;
     }
 
-    switch (format) {
+    switch (format.get()) {
         // Uncompressed formats
     case LOCAL_GL_ALPHA:
     case LOCAL_GL_LUMINANCE:
@@ -1309,7 +1304,7 @@ WebGLContext::ValidateCopyTexImage(GLenum format, WebGLTexImageFunc func)
 // TODO: Texture dims is here for future expansion in WebGL 2.0
 bool
 WebGLContext::ValidateTexImage(GLuint dims, TexImageTarget texImageTarget,
-                               GLint level, GLint internalFormat,
+                               GLint level, GLenum internalFormat,
                                GLint xoffset, GLint yoffset, GLint zoffset,
                                GLint width, GLint height, GLint depth,
                                GLint border, GLenum format, GLenum type,
@@ -1339,7 +1334,7 @@ WebGLContext::ValidateTexImage(GLuint dims, TexImageTarget texImageTarget,
      * (e.g., GL_FLOAT requires GL_OES_texture_float) are filtered
      * elsewhere.
      */
-    if ((GLint) format != internalFormat) {
+    if (format != internalFormat) {
         ErrorInvalidOperation("%s: format does not match internalformat", info);
         return false;
     }

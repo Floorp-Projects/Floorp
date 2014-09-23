@@ -670,3 +670,4 @@ VFY_End
 VFY_Update
 VFY_VerifyDataDirect
 VFY_VerifyDataWithAlgorithmID
+_SGN_VerifyPKCS1DigestInfo

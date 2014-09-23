@@ -395,6 +395,127 @@ add_test(function(test_getAssertion_refreshAuth) {
   );
 });
 
+add_test(function(test_getAssertion_no_permissions) {
+  do_print("= getAssertion no permissions =");
+
+  let noPermissionsPrincipal = {origin: 'app://dummy', appId: 28};
+  let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                 .getService(Ci.nsIScriptSecurityManager);
+  let uri = Services.io.newURI(noPermissionsPrincipal.origin, null, null);
+  let _principal = secMan.getAppCodebasePrincipal(uri,
+    noPermissionsPrincipal.appId, false);
+  let permMan = Cc["@mozilla.org/permissionmanager;1"]
+                  .getService(Ci.nsIPermissionManager);
+  permMan.addFromPrincipal(_principal, FXACCOUNTS_PERMISSION,
+                           Ci.nsIPermissionManager.DENY_ACTION);
+
+  FxAccountsUIGlue._activeSession = {
+    email: "user@domain.org",
+    verified: true,
+    sessionToken: "1234"
+  };
+
+  FxAccountsManager.getAssertion("audience", noPermissionsPrincipal).then(
+    result => {
+      do_throw("Unexpected success");
+    },
+    error => {
+      do_check_false(FxAccountsUIGlue._signInFlowCalled);
+      do_check_false(FxAccountsUIGlue._refreshAuthCalled);
+      FxAccountsManager._fxAccounts._reset();
+      FxAccountsUIGlue._reset();
+      run_next_test();
+    }
+  );
+});
+
+add_test(function(test_getAssertion_permission_prompt_action) {
+  do_print("= getAssertion PROMPT_ACTION permission =");
+
+  let promptPermissionsPrincipal = {origin: 'app://dummy-prompt', appId: 29};
+  let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                 .getService(Ci.nsIScriptSecurityManager);
+  let uri = Services.io.newURI(promptPermissionsPrincipal.origin, null, null);
+  let _principal = secMan.getAppCodebasePrincipal(uri,
+    promptPermissionsPrincipal.appId, false);
+  let permMan = Cc["@mozilla.org/permissionmanager;1"]
+                  .getService(Ci.nsIPermissionManager);
+  permMan.addFromPrincipal(_principal, FXACCOUNTS_PERMISSION,
+                           Ci.nsIPermissionManager.PROMPT_ACTION);
+
+  FxAccountsUIGlue._activeSession = {
+    email: "user@domain.org",
+    verified: true,
+    sessionToken: "1234"
+  };
+
+  FxAccountsManager.getAssertion("audience", promptPermissionsPrincipal).then(
+    result => {
+      do_check_false(FxAccountsUIGlue._signInFlowCalled);
+      do_check_true(FxAccountsUIGlue._refreshAuthCalled);
+      do_check_eq(result, "assertion");
+
+      let permission = permMan.testPermissionFromPrincipal(
+        _principal,
+        FXACCOUNTS_PERMISSION
+      );
+      do_check_eq(permission, Ci.nsIPermissionManager.ALLOW_ACTION);
+      FxAccountsManager._fxAccounts._reset();
+      FxAccountsUIGlue._reset();
+      run_next_test();
+    },
+    error => {
+      do_throw("Unexpected error: " + error);
+    }
+  );
+});
+
+add_test(function(test_getAssertion_permission_prompt_action_refreshing) {
+  do_print("= getAssertion PROMPT_ACTION permission already refreshing =");
+
+  let promptPermissionsPrincipal = {origin: 'app://dummy-prompt-2', appId: 30};
+  let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                 .getService(Ci.nsIScriptSecurityManager);
+  let uri = Services.io.newURI(promptPermissionsPrincipal.origin, null, null);
+  let _principal = secMan.getAppCodebasePrincipal(uri,
+    promptPermissionsPrincipal.appId, false);
+  let permMan = Cc["@mozilla.org/permissionmanager;1"]
+                  .getService(Ci.nsIPermissionManager);
+  permMan.addFromPrincipal(_principal, FXACCOUNTS_PERMISSION,
+                           Ci.nsIPermissionManager.PROMPT_ACTION);
+
+  FxAccountsUIGlue._activeSession = {
+    email: "user@domain.org",
+    verified: true,
+    sessionToken: "1234"
+  };
+
+  FxAccountsManager._refreshing = true;
+
+  FxAccountsManager.getAssertion("audience", promptPermissionsPrincipal).then(
+    result => {
+      do_check_false(FxAccountsUIGlue._signInFlowCalled);
+      do_check_false(FxAccountsUIGlue._refreshAuthCalled);
+      do_check_null(result);
+
+      let permission = permMan.testPermissionFromPrincipal(
+        _principal,
+        FXACCOUNTS_PERMISSION
+      );
+      do_check_eq(permission, Ci.nsIPermissionManager.PROMPT_ACTION);
+
+      FxAccountsManager._refreshing = false;
+
+      FxAccountsManager._fxAccounts._reset();
+      FxAccountsUIGlue._reset();
+      run_next_test();
+    },
+    error => {
+      do_throw("Unexpected error: " + error);
+    }
+  );
+});
+
 add_test(function(test_getAssertion_server_state_change) {
   FxAccountsManager._fxAccounts._signedInUser.verified = true;
   FxAccountsManager._activeSession.verified = true;

@@ -49,9 +49,7 @@ public:
         explicit Attachment(GLenum aAttachmentPoint = LOCAL_GL_COLOR_ATTACHMENT0);
         ~Attachment();
 
-        bool IsDefined() const {
-            return Texture() || Renderbuffer();
-        }
+        bool IsDefined() const;
 
         bool IsDeleteRequested() const;
 
