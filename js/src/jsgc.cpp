@@ -4650,56 +4650,49 @@ GCRuntime::beginSweepingZoneGroup()
         gcstats::AutoSCC scc(stats, zoneGroupIndex);
 
         {
-            gcstats::MaybeAutoPhase apiv(stats, !isHeapCompacting(),
-                                         gcstats::PHASE_SWEEP_INNER_VIEWS);
+            gcstats::AutoPhase apiv(stats, gcstats::PHASE_SWEEP_INNER_VIEWS);
             for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
                 c->sweepInnerViews();
             }
         }
 
         {
-            gcstats::MaybeAutoPhase apccw(stats, !isHeapCompacting(),
-                                          gcstats::PHASE_SWEEP_CC_WRAPPER);
+            gcstats::AutoPhase apccw(stats, gcstats::PHASE_SWEEP_CC_WRAPPER);
             for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
                 c->sweepCrossCompartmentWrappers();
             }
         }
 
         {
-            gcstats::MaybeAutoPhase apbs(stats, !isHeapCompacting(),
-                                         gcstats::PHASE_SWEEP_BASE_SHAPE);
+            gcstats::AutoPhase apbs(stats, gcstats::PHASE_SWEEP_BASE_SHAPE);
             for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
                 c->sweepBaseShapeTable();
             }
         }
 
         {
-            gcstats::MaybeAutoPhase apis(stats, !isHeapCompacting(),
-                                         gcstats::PHASE_SWEEP_INITIAL_SHAPE);
+            gcstats::AutoPhase apis(stats, gcstats::PHASE_SWEEP_INITIAL_SHAPE);
             for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
                 c->sweepInitialShapeTable();
             }
         }
 
         {
-            gcstats::MaybeAutoPhase apto(stats, !isHeapCompacting(),
-                                         gcstats::PHASE_SWEEP_TYPE_OBJECT);
+            gcstats::AutoPhase apto(stats, gcstats::PHASE_SWEEP_TYPE_OBJECT);
             for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
                 c->sweepTypeObjectTables();
             }
         }
 
         {
-            gcstats::MaybeAutoPhase apre(stats, !isHeapCompacting(),
-                                         gcstats::PHASE_SWEEP_REGEXP);
+            gcstats::AutoPhase apre(stats, gcstats::PHASE_SWEEP_REGEXP);
             for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
                 c->sweepRegExps();
             }
         }
 
         {
-            gcstats::MaybeAutoPhase apmisc(stats, !isHeapCompacting(),
-                                           gcstats::PHASE_SWEEP_MISC);
+            gcstats::AutoPhase apmisc(stats, gcstats::PHASE_SWEEP_MISC);
             for (GCCompartmentGroupIter c(rt); !c.done(); c.next()) {
                 c->sweepCallsiteClones();
                 c->sweepSavedStacks();
@@ -4729,16 +4722,14 @@ GCRuntime::beginSweepingZoneGroup()
         }
 
         {
-            gcstats::MaybeAutoPhase ap(stats, !isHeapCompacting(),
-                                       gcstats::PHASE_DISCARD_ANALYSIS);
+            gcstats::AutoPhase ap(stats, gcstats::PHASE_DISCARD_ANALYSIS);
             for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
                 zone->sweepAnalysis(&fop, releaseObservedTypes && !zone->isPreservingCode());
             }
         }
 
         {
-            gcstats::MaybeAutoPhase ap(stats, !isHeapCompacting(),
-                                       gcstats::PHASE_SWEEP_BREAKPOINT);
+            gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP_BREAKPOINT);
             for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
                 zone->sweepBreakpoints(&fop);
             }
