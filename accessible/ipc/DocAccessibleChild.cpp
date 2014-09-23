@@ -36,5 +36,19 @@ DocAccessibleChild::ShowEvent(AccShowEvent* aShowEvent)
   SerializeTree(aShowEvent->GetAccessible(), data.NewTree());
   SendShowEvent(data);
 }
+
+bool
+DocAccessibleChild::RecvState(const uint64_t& aID, uint64_t* aState)
+{
+  Accessible* acc = mDoc->GetAccessibleByUniqueID((void*)aID);
+  if (!acc) {
+    *aState = states::DEFUNCT;
+    return true;
+  }
+
+  *aState = acc->State();
+
+  return true;
+}
 }
 }
