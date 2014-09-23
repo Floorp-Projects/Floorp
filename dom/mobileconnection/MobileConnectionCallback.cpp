@@ -231,13 +231,15 @@ MobileConnectionCallback::NotifyGetNetworksSuccess(uint32_t aCount,
 }
 
 NS_IMETHODIMP
-MobileConnectionCallback::NotifySendCancelMmiSuccess(JS::Handle<JS::Value> aResult)
+MobileConnectionCallback::NotifySendCancelMmiSuccess(JS::Handle<JS::Value> aResult,
+                                                     JSContext* aCx)
 {
   return NotifySuccess(aResult);
 }
 
 NS_IMETHODIMP
-MobileConnectionCallback::NotifyGetCallForwardingSuccess(JS::Handle<JS::Value> aResults)
+MobileConnectionCallback::NotifyGetCallForwardingSuccess(JS::Handle<JS::Value> aResults,
+                                                         JSContext* aCx)
 {
   return NotifySuccess(aResults);
 }

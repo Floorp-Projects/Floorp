@@ -124,7 +124,7 @@ interface nsIMobileConnectionListener : nsISupports
 #define NO_ADDITIONAL_INFORMATION 0
 %}
 
-[scriptable, builtinclass, uuid(e9d7c247-34c6-42bf-875b-f99b19db394f)]
+[scriptable, builtinclass, uuid(7f2dbbe0-42f2-11e4-916c-0800200c9a66)]
 interface nsIMobileConnectionCallback : nsISupports
 {
   /**
@@ -139,8 +139,10 @@ interface nsIMobileConnectionCallback : nsISupports
   void notifyGetNetworksSuccess(in uint32_t count,
                                 [array, size_is(count)] in nsIMobileNetworkInfo networks);
 
+  [implicit_jscontext]
   void notifySendCancelMmiSuccess(in jsval result /* MozMMIResult */);
 
+  [implicit_jscontext]
   void notifyGetCallForwardingSuccess(in jsval results /* Array of MozCallForwardingOptions */);
 
   void notifyGetCallBarringSuccess(in unsigned short program,
