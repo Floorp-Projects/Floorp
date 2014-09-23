@@ -123,7 +123,7 @@ AbstractFile.prototype = {
   write: function write(buffer, options = {}) {
 
     let {ptr, bytes} =
-      SharedAll.normalizeToPointer(buffer, options.bytes || undefined);
+      SharedAll.normalizeToPointer(buffer, ("bytes" in options) ? options.bytes : undefined);
 
     let pos = 0;
     while (pos < bytes) {
