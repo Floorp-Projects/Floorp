@@ -79,6 +79,7 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/Endian.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/ipc/DocumentRendererParent.h"
@@ -390,10 +391,8 @@ public:
     RefPtr<SourceSurface> strokePaint =
       DoSourcePaint(mStrokePaintRect, CanvasRenderingContext2D::Style::STROKE);
 
-    Matrix transform = mFinalTarget->GetTransform();
-
-    mgfx::Point offset(mPostFilterBounds.TopLeft() - mOffset);
-    mFinalTarget->SetTransform(Matrix::Translation(offset));
+    AutoSaveTransform autoSaveTransform(mFinalTarget);
+    mFinalTarget->SetTransform(Matrix());
 
     mgfx::FilterSupport::RenderFilterDescription(
       mFinalTarget, mCtx->CurrentState().filter,
@@ -402,9 +401,8 @@ public:
       fillPaint, mFillPaintRect,
       strokePaint, mStrokePaintRect,
       mCtx->CurrentState().filterAdditionalImages,
+      mPostFilterBounds.TopLeft() - mOffset,
       DrawOptions(1.0f, mCompositionOp));
-
-    mFinalTarget->SetTransform(transform);
   }
 
   DrawTarget* DT()
