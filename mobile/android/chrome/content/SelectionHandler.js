@@ -948,7 +948,7 @@ var SelectionHandler = {
     if (selectedText.length) {
       let req = Services.search.defaultEngine.getSubmission(selectedText);
       let parent = BrowserApp.selectedTab;
-      let isPrivate = PrivateBrowsingUtils.isWindowPrivate(parent.browser.contentWindow);
+      let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(parent.browser);
       // Set current tab as parent of new tab, and set new tab as private if the parent is.
       BrowserApp.addTab(req.uri.spec, {parentId: parent.id,
                                        selected: true,
