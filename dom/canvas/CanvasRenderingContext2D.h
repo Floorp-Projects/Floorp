@@ -26,6 +26,7 @@
 #include "nsLayoutUtils.h"
 #include "mozilla/EnumeratedArray.h"
 #include "FilterSupport.h"
+#include "nsSVGEffects.h"
 
 class nsGlobalWindow;
 class nsXULElement;
@@ -43,6 +44,7 @@ class StringOrCanvasGradientOrCanvasPattern;
 class OwningStringOrCanvasGradientOrCanvasPattern;
 class TextMetrics;
 class SVGMatrix;
+class CanvasFilterChainObserver;
 
 extern const mozilla::gfx::Float SIGMA_MAX;
 
@@ -951,6 +953,7 @@ protected:
           lineJoin(other.lineJoin),
           filterString(other.filterString),
           filterChain(other.filterChain),
+          filterChainObserver(other.filterChainObserver),
           filter(other.filter),
           filterAdditionalImages(other.filterAdditionalImages),
           imageSmoothingEnabled(other.imageSmoothingEnabled)
@@ -1016,6 +1019,7 @@ protected:
 
     nsString filterString;
     nsTArray<nsStyleFilter> filterChain;
+    nsRefPtr<nsSVGFilterChainObserver> filterChainObserver;
     mozilla::gfx::FilterDescription filter;
     nsTArray<mozilla::RefPtr<mozilla::gfx::SourceSurface>> filterAdditionalImages;
 
@@ -1033,6 +1037,7 @@ protected:
   }
 
   friend class CanvasGeneralPattern;
+  friend class CanvasFilterChainObserver;
   friend class AdjustedTarget;
 
   // other helpers

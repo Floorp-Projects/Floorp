@@ -1855,6 +1855,30 @@ CanvasRenderingContext2D::ParseFilter(const nsAString& aString,
   return true;
 }
 
+class CanvasFilterChainObserver : public nsSVGFilterChainObserver
+{
+public:
+  CanvasFilterChainObserver(nsTArray<nsStyleFilter> &aFilters,
+                            Element *aCanvasElement,
+                            CanvasRenderingContext2D *aContext)
+    : nsSVGFilterChainObserver(aFilters, aCanvasElement)
+    , mContext(aContext)
+  {
+  }
+
+  virtual void DoUpdate() MOZ_OVERRIDE
+  {
+    // Refresh the cached FilterDescription in mContext->CurrentState().filter.
+    // If this filter is not at the top of the state stack, we'll refresh the
+    // wrong filter, but that's ok, because we'll refresh the right filter
+    // when we pop the state stack in CanvasRenderingContext2D::Restore().
+    mContext->UpdateFilter();
+  }
+
+private:
+  CanvasRenderingContext2D *mContext;
+};
+
 void
 CanvasRenderingContext2D::SetFilter(const nsAString& filter, ErrorResult& error)
 {
@@ -1863,6 +1887,9 @@ CanvasRenderingContext2D::SetFilter(const nsAString& filter, ErrorResult& error)
     CurrentState().filterString = filter;
     filterChain.SwapElements(CurrentState().filterChain);
     if (mCanvasElement) {
+      CurrentState().filterChainObserver =
+        new CanvasFilterChainObserver(CurrentState().filterChain,
+                                      mCanvasElement, this);
       UpdateFilter();
     }
   }
