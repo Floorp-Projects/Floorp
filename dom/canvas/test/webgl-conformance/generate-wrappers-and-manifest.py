@@ -9,6 +9,34 @@
 import os
 import re
 
+WRAPPER_TEMPLATE_FILEPATH = 'mochi-wrapper.html.template'
+WRAPPERS_DIR = '_wrappers'
+MANIFEST_TEMPLATE_FILEPATH = 'mochitest.ini.template'
+MANIFEST_OUTPUT_FILEPATH = '../_webgl-conformance.ini'
+ERRATA_FILEPATH = 'mochitest-errata.ini'
+BASE_TEST_LIST_FILENAME = '00_test_list.txt'
+FILE_PATH_PREFIX = os.path.basename(os.getcwd()) # 'webgl-conformance'
+
+SUPPORT_DIRS = [
+    'conformance',
+    'resources',
+]
+
+EXTRA_SUPPORT_FILES = [
+    'always-fail.html',
+]
+
+ACCEPTABLE_ERRATA_KEYS = set([
+  'skip-if',
+])
+
+GENERATED_HEADER = '''
+# This is a GENERATED FILE. Do not edit it directly.
+# Regenerated it by using `python generate-wrapper-and-manifest.py`.
+# Mark skipped tests in mochitest-errata.ini.
+# Mark failing tests in mochi-single.html.
+'''.strip()
+
 ########################################################################
 # GetTestList
 
@@ -19,8 +47,6 @@ def GetTestList():
 
 ##############################
 # Internals
-
-BASE_TEST_LIST_FILENAME = '00_test_list.txt'
 
 def AccumTests(path, listFile, out_testList):
     listFilePath = os.path.join(path, listFile)
@@ -219,6 +245,11 @@ def WriteWrappers(testWebPathList):
     return wrapperManifestPathList
 
 
+def PathFromManifestDir(path):
+    print('path: ' + path)
+    return os.path.join(FILE_PATH_PREFIX, path)
+
+
 def WriteManifest(wrapperManifestPathList, supportFilePathList):
     errataMap = LoadErrata()
 
@@ -231,14 +262,18 @@ def WriteManifest(wrapperManifestPathList, supportFilePathList):
 
     # SUPPORT_FILES
     supportFilePathList = sorted(supportFilePathList)
+    supportFilePathList = [PathFromManifestDir(x) for x in supportFilePathList]
     supportFilesStr = '\n'.join(supportFilePathList)
 
     # MANIFEST_TESTS
-    headerList = ['[' + x + ']' for x in wrapperManifestPathList]
-
     manifestTestLineList = []
-    for header in headerList:
-        manifestTestLineList.append(header)
+    for wrapperManifestPath in wrapperManifestPathList:
+        header = '[' + wrapperManifestPath + ']'
+        transformedHeader = '[' + PathFromManifestDir(wrapperManifestPath) + ']'
+        # header: '[foo.html]'
+        # transformedHeader: '[webgl-conformance/foo.html]'
+
+        manifestTestLineList.append(transformedHeader)
 
         if not header in errataMap:
             continue
@@ -254,6 +289,7 @@ def WriteManifest(wrapperManifestPathList, supportFilePathList):
 
     # Fill the template.
     templateDict = {
+        'HEADER': GENERATED_HEADER,
         'DEFAULT_ERRATA': defaultErrataStr,
         'SUPPORT_FILES': supportFilesStr,
         'MANIFEST_TESTS': manifestTestsStr,
@@ -266,11 +302,6 @@ def WriteManifest(wrapperManifestPathList, supportFilePathList):
 ##############################
 # Internals
 
-WRAPPER_TEMPLATE_FILEPATH = 'mochi-wrapper.html.template'
-WRAPPERS_DIR = '_wrappers'
-MANIFEST_TEMPLATE_FILEPATH = 'mochitest.ini.template'
-MANIFEST_OUTPUT_FILEPATH = '_mochitest.ini'
-ERRATA_FILEPATH = 'mochitest-errata.ini'
 kManifestHeaderRegex = re.compile(r'\[[^\]]*?\]')
 
 
@@ -279,8 +310,10 @@ def LoadErrata():
 
     nodeHeader = None
     nodeLineList = []
+    lineNum = 0
     with open(ERRATA_FILEPATH, 'rb') as f:
         for line in f:
+            lineNum += 1
             line = line.rstrip()
             cur = line.lstrip()
             if cur.startswith('#'):
@@ -290,6 +323,12 @@ def LoadErrata():
                 continue
 
             if not cur.startswith('['):
+                split = cur.split('=')
+                key = split[0].strip()
+                if not key in ACCEPTABLE_ERRATA_KEYS:
+                    text = 'Unacceptable errata key on line {}: {}'
+                    text = text.format(str(lineNum), key)
+                    raise Exception(text)
                 nodeLineList.append(line)
                 continue
 
@@ -305,16 +344,6 @@ def LoadErrata():
     return nodeMap
 
 ########################################################################
-
-SUPPORT_DIRS = [
-    'conformance',
-    'resources',
-]
-
-EXTRA_SUPPORT_FILES = [
-    'always-fail.html',
-]
-
 
 def GetSupportFileList():
     ret = []

@@ -38,6 +38,7 @@ dictionary ConsoleEvent {
   DOMString level = "";
   DOMString filename = "";
   unsigned long lineNumber = 0;
+  unsigned long columnNumber = 0;
   DOMString functionName = "";
   double timeStamp = 0;
   sequence<any> arguments;
@@ -67,6 +68,7 @@ dictionary ConsoleProfileEvent {
 dictionary ConsoleStackEntry {
   DOMString filename = "";
   unsigned long lineNumber = 0;
+  unsigned long columnNumber = 0;
   DOMString functionName = "";
   unsigned long language = 0;
 };
