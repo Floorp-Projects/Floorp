@@ -380,6 +380,11 @@ public:
                                    const ContainerLayerParameters& aParameters,
                                    nsRect* aOutClipRect,
                                    nsTArray<FrameMetrics>* aOutput) const = 0;
+
+  /**
+   * If this scroll frame is ignoring viewporting clipping
+   */
+  virtual bool IsIgnoringViewportClipping() const = 0;
 };
 
 #endif
