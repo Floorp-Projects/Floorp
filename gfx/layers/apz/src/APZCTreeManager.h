@@ -44,7 +44,7 @@ class AsyncPanZoomController;
 class CompositorParent;
 class APZPaintLogHelper;
 class OverscrollHandoffChain;
-class OverscrollHandoffState;
+struct OverscrollHandoffState;
 class LayerMetricsWrapper;
 
 /**
