@@ -5686,6 +5686,18 @@ static int32_t RoundUp(double aDouble)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  // Weird things can happen on keyboard input if the key window isn't in the
+  // current space.  For example see bug 1056251.  To get around this, always
+  // make sure that, if our window is key, it's also made frontmost.  Doing
+  // this automatically switches to whatever space our window is in.  Safari
+  // does something similar.  Our window should normally always be key --
+  // otherwise why is the OS sending us a key down event?  But it's just
+  // possible we're in Gecko's hidden window, so we check first.
+  NSWindow *viewWindow = [self window];
+  if (viewWindow && [viewWindow isKeyWindow]) {
+    [viewWindow orderWindow:NSWindowAbove relativeTo:0];
+  }
+
 #if !defined(RELEASE_BUILD) || defined(DEBUG)
   if (mGeckoChild && mTextInputHandler && mTextInputHandler->IsFocused()) {
 #ifdef MOZ_CRASHREPORTER
