@@ -828,6 +828,8 @@ protected:
 
   bool                      mNextPaintCompressed : 1;
 
+  bool                      mHasCSSBackgroundColor : 1;
+
   static bool               sDisableNonTestMouseEvents;
 };
 
