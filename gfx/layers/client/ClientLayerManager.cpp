@@ -20,7 +20,6 @@
 #include "mozilla/layers/PLayerChild.h"  // for PLayerChild
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/TextureClientPool.h" // for TextureClientPool
-#include "mozilla/layers/SimpleTextureClientPool.h" // for SimpleTextureClientPool
 #include "ClientReadbackLayer.h"        // for ClientReadbackLayer
 #include "nsAString.h"
 #include "nsIWidget.h"                  // for nsIWidget
@@ -645,23 +644,6 @@ ClientLayerManager::GetTexturePool(SurfaceFormat aFormat)
                             mForwarder));
 
   return mTexturePools.LastElement();
-}
-
-SimpleTextureClientPool*
-ClientLayerManager::GetSimpleTileTexturePool(SurfaceFormat aFormat)
-{
-  int index = (int) aFormat;
-  mSimpleTilePools.EnsureLengthAtLeast(index+1);
-
-  if (mSimpleTilePools[index].get() == nullptr) {
-    mSimpleTilePools[index] = new SimpleTextureClientPool(aFormat, IntSize(gfxPrefs::LayersTileWidth(),
-                                                                           gfxPrefs::LayersTileHeight()),
-                                                          gfxPrefs::LayersTileMaxPoolSize(),
-                                                          gfxPrefs::LayersTileShrinkPoolTimeout(),
-                                                          mForwarder);
-  }
-
-  return mSimpleTilePools[index];
 }
 
 void
