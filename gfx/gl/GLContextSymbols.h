@@ -534,6 +534,28 @@ struct GLContextSymbols
     typedef void (GLAPIENTRY * PFNGLFLUSHMAPPEDBUFFERRANGEPROC) (GLenum target, GLintptr offset, GLsizeiptr length);
     PFNGLFLUSHMAPPEDBUFFERRANGEPROC fFlushMappedBufferRange;
 
+    // sampler_object
+    typedef void (GLAPIENTRY * PFNGLGENSAMPLERSPROC) (GLsizei count, GLuint *samplers);
+    PFNGLGENSAMPLERSPROC fGenSamplers;
+    typedef void (GLAPIENTRY * PFNGLDELETESAMPLERSPROC) (GLsizei count, const GLuint *samplers);
+    PFNGLDELETESAMPLERSPROC fDeleteSamplers;
+    typedef realGLboolean (GLAPIENTRY * PFNGLISSAMPLERPROC) (GLuint sampler);
+    PFNGLISSAMPLERPROC fIsSampler;
+    typedef void (GLAPIENTRY * PFNGLBINDSAMPLERPROC) (GLuint unit, GLuint sampler);
+    PFNGLBINDSAMPLERPROC fBindSampler;
+    typedef void (GLAPIENTRY * PFNGLSAMPLERPARAMETERIPROC) (GLuint sampler, GLenum pname, GLint param);
+    PFNGLSAMPLERPARAMETERIPROC fSamplerParameteri;
+    typedef void (GLAPIENTRY * PFNGLSAMPLERPARAMETERIVPROC) (GLuint sampler, GLenum pname, const GLint *param);
+    PFNGLSAMPLERPARAMETERIVPROC fSamplerParameteriv;
+    typedef void (GLAPIENTRY * PFNGLSAMPLERPARAMETERFPROC) (GLuint sampler, GLenum pname, GLfloat param);
+    PFNGLSAMPLERPARAMETERFPROC fSamplerParameterf;
+    typedef void (GLAPIENTRY * PFNGLSAMPLERPARAMETERFVPROC) (GLuint sampler, GLenum pname, const GLfloat *param);
+    PFNGLSAMPLERPARAMETERFVPROC fSamplerParameterfv;
+    typedef void (GLAPIENTRY * PFNGLGETSAMPLERPARAMETERIVPROC) (GLuint sampler, GLenum pname, GLint *params);
+    PFNGLGETSAMPLERPARAMETERIVPROC fGetSamplerParameteriv;
+    typedef void (GLAPIENTRY * PFNGLGETSAMPLERPARAMETERFVPROC) (GLuint sampler, GLenum pname, GLfloat *params);
+    PFNGLGETSAMPLERPARAMETERFVPROC fGetSamplerParameterfv;
+
     // uniform_buffer_object
     typedef void (GLAPIENTRY * PFNGLGETUNIFORMINDICESPROC) (GLuint program, GLsizei uniformCount,
                                                             const GLchar* const* uniformNames, GLuint* uniformIndices);
