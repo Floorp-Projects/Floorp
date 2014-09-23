@@ -266,8 +266,6 @@ class JitFrameIterator
 #endif
 };
 
-class IonJSFrameLayout;
-
 class RResumePoint;
 
 // Reads frame information in snapshot-encoding order (that is, outermost frame
