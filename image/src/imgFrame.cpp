@@ -121,6 +121,7 @@ imgFrame::imgFrame() :
   mBlendMethod(1), /* imgIContainer::kBlendOver */
   mSinglePixel(false),
   mCompositingFailed(false),
+  mHasNoAlpha(false),
   mNonPremult(false),
   mDiscardable(false),
   mOptimizable(false),
@@ -745,6 +746,14 @@ nsresult imgFrame::UnlockImageData()
   // surface anymore. (But we don't need to do anything for paletted images,
   // which don't have surfaces.)
   if (mLockCount == 1 && !mPalettedImageData) {
+    // If we're using a surface format with alpha but the image has no alpha,
+    // change the format. This doesn't change the underlying data at all, but
+    // allows DrawTargets to avoid blending when drawing known opaque images.
+    if (mHasNoAlpha && mFormat == SurfaceFormat::B8G8R8A8 && mImageSurface) {
+      mFormat = SurfaceFormat::B8G8R8X8;
+      mImageSurface = CreateLockedSurface(mVBuf, mSize, mFormat);
+    }
+
     // Convert the data surface to a GPU surface or a single color if possible.
     // This will also release mImageSurface if possible.
     Optimize();
@@ -851,17 +860,10 @@ bool imgFrame::ImageComplete() const
 
 // A hint from the image decoders that this image has no alpha, even
 // though we're decoding it as B8G8R8A8. 
-// Since this is only called during decoding, there is a mImageSurface
-// that should be updated to use B8G8R8X8. This doesn't change the
-// underlying data at all, but allows DrawTargets to avoid blending
-// when drawing known opaque images.
 void imgFrame::SetHasNoAlpha()
 {
-  if (mFormat == SurfaceFormat::B8G8R8A8) {
-    mFormat = SurfaceFormat::B8G8R8X8;
-    MOZ_ASSERT(mImageSurface);
-    mImageSurface = CreateLockedSurface(mVBuf, mSize, mFormat);
-  }
+  MOZ_ASSERT(mLockCount, "Expected to be locked when SetHasNoAlpha is called");
+  mHasNoAlpha = true;
 }
 
 void imgFrame::SetAsNonPremult(bool aIsNonPremult)
