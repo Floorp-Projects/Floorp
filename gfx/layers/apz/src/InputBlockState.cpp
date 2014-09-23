@@ -7,7 +7,7 @@
 #include "InputBlockState.h"
 #include "mozilla/layers/APZCTreeManager.h" // for AllowedTouchBehavior
 #include "gfxPrefs.h"                       // for gfxPrefs
-#include "OverscrollHandoffChain.h"
+#include "OverscrollHandoffState.h"
 
 #define TBS_LOG(...)
 // #define TBS_LOG(...) printf_stderr("TBS: " __VA_ARGS__)

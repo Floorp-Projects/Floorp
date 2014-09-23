@@ -10,6 +10,7 @@
 #include <vector>
 #include "nsAutoPtr.h"
 #include "nsISupportsImpl.h"  // for NS_INLINE_DECL_REFCOUNTING
+#include "Units.h"            // for ScreenPoint
 
 namespace mozilla {
 namespace layers {
@@ -110,6 +111,28 @@ private:
   void ForEachApzc(APZCMethod aMethod) const;
 };
 
+/**
+ * This class groups the state maintained during overscroll handoff.
+ */
+struct OverscrollHandoffState {
+  OverscrollHandoffState(const OverscrollHandoffChain& aChain,
+                         const ScreenPoint& aPanDistance)
+      : mChain(aChain), mChainIndex(0), mPanDistance(aPanDistance) {}
+
+  // The chain of APZCs along which we hand off scroll.
+  // This is const to indicate that the chain does not change over the
+  // course of handoff.
+  const OverscrollHandoffChain& mChain;
+
+  // The index of the APZC in the chain that we are currently giving scroll to.
+  // This is non-const to indicate that this changes over the course of handoff.
+  uint32_t mChainIndex;
+
+  // The total distance since touch-start of the pan that triggered the
+  // handoff. This is const to indicate that it does not change over the
+  // course of handoff.
+  const ScreenPoint mPanDistance;
+};
 // Don't pollute other files with this macro for now.
 #undef NS_INLINE_DECL_THREADSAFE_MUTABLE_REFCOUNTING
 
