@@ -96,7 +96,7 @@ ProfilerConnection.prototype = {
     }
     // Check if we already have a grip to the `listTabs` response object
     // and, if we do, use it to get to the profiler actor.
-    else if (this._target.root) {
+    else if (this._target.root && this._target.root.profilerActor) {
       this._profiler = this._target.root.profilerActor;
       yield this._registerEventNotifications();
     }
@@ -117,7 +117,20 @@ ProfilerConnection.prototype = {
    * used in tandem with the profiler actor.
    */
   _connectMiscActors: function() {
+    // Only initialize the framerate front if the respective actor is available.
+    // Older Gecko versions don't have an existing implementation, in which case
+    // all the methods we need can be easily mocked.
+    if (this._target.form && this._target.form.framerateActor) {
     this._framerate = new FramerateFront(this._target.client, this._target.form);
+    } else {
+      this._framerate = {
+        startRecording: () => {},
+        stopRecording: () => {},
+        cancelRecording: () => {},
+        isRecording: () => false,
+        getPendingTicks: () => null
+      };
+    }
   },
 
   /**
@@ -146,11 +159,11 @@ ProfilerConnection.prototype = {
 
     // Handle requests to the framerate actor.
     if (actor == "framerate") {
+      switch (method) {
       // Only stop recording framerate if there are no other pending consumers.
       // Otherwise, for example, the next time `console.profileEnd` is called
       // there won't be any framerate data available, since we're reusing the
       // same actor for multiple overlapping recordings.
-      switch (method) {
         case "startRecording":
           this._pendingFramerateConsumers++;
           break;
@@ -158,6 +171,12 @@ ProfilerConnection.prototype = {
         case "cancelRecording":
           if (--this._pendingFramerateConsumers > 0) return;
           break;
+        // Some versions of the framerate actor don't have a 'getPendingTicks'
+        // method available, in which case it's impossible to get all the
+        // accumulated framerate data without stopping the recording. Bail out.
+        case "getPendingTicks":
+          if (method in this._framerate) break;
+          return null;
       }
       checkPendingFramerateConsumers(this);
       return this._framerate[method].apply(this._framerate, args);
@@ -387,9 +406,13 @@ ProfilerFront.prototype = {
    * Overrides the options sent to the built-in profiler module when activating,
    * such as the maximum entries count, the sampling interval etc.
    *
-   * Used in tests.
+   * Used in tests and for older backend implementations.
    */
-  _options: undefined
+  _customProfilerOptions: {
+    entries: 1000000,
+    interval: 1,
+    features: ["js"]
+  }
 };
 
 /**

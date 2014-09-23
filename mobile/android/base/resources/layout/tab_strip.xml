@@ -10,7 +10,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:paddingTop="8dp"/>
+        android:paddingTop="8dp"
+        android:paddingLeft="2dp"/>
 
     <ImageButton
         android:id="@+id/add_tab"
