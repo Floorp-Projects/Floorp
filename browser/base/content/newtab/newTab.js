@@ -278,7 +278,7 @@ function inPrivateBrowsingMode() {
 const HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
 const XUL_NAMESPACE = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-const TILES_EXPLAIN_LINK = "https://support.mozilla.org/kb/how-do-sponsored-tiles-work";
+const TILES_EXPLAIN_LINK = "https://support.mozilla.org/kb/how-do-tiles-work-firefox";
 const TILES_PRIVACY_LINK = "https://www.mozilla.org/privacy/";
 
 #include transformations.js
