@@ -764,6 +764,12 @@ StackFrameToStackEntry(nsIStackFrame* aStackFrame,
 
   aStackEntry.mLineNumber = lineNumber;
 
+  int32_t columnNumber;
+  rv = aStackFrame->GetColumnNumber(&columnNumber);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aStackEntry.mColumnNumber = columnNumber;
+
   rv = aStackFrame->GetName(aStackEntry.mFunctionName);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1062,6 +1068,7 @@ Console::ProcessCallData(ConsoleCallData* aData)
   event.mLevel = aData->mMethodString;
   event.mFilename = frame.mFilename;
   event.mLineNumber = frame.mLineNumber;
+  event.mColumnNumber = frame.mColumnNumber;
   event.mFunctionName = frame.mFunctionName;
   event.mTimeStamp = aData->mTimeStamp;
   event.mPrivate = aData->mPrivate;

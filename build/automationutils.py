@@ -212,7 +212,9 @@ def processSingleLeakFile(leakLogFileName, processType, leakThreshold):
   totalBytesLeaked = None
   logAsWarning = False
   leakAnalysis = []
+  leakedObjectAnalysis = []
   leakedObjectNames = []
+  recordLeakedObjects = False
   with open(leakLogFileName, "r") as leaks:
     for line in leaks:
       if line.find("purposefully crash") > -1:
@@ -232,16 +234,33 @@ def processSingleLeakFile(leakLogFileName, processType, leakThreshold):
         log.info(line.rstrip())
       # Analyse the leak log, but output later or it will interrupt the leak table
       if name == "TOTAL":
-        totalBytesLeaked = bytesLeaked
+        # Multiple default processes can end up writing their bloat views into a single
+        # log, particularly on B2G. Eventually, these should be split into multiple
+        # logs (bug 1068869), but for now, we report the largest leak.
+        if totalBytesLeaked != None:
+          leakAnalysis.append("WARNING | leakcheck |%s multiple BloatView byte totals found"
+                              % processString)
+        else:
+          totalBytesLeaked = 0
+        if bytesLeaked > totalBytesLeaked:
+          totalBytesLeaked = bytesLeaked
+          # Throw out the information we had about the previous bloat view.
+          leakedObjectNames = []
+          leakedObjectAnalysis = []
+          recordLeakedObjects = True
+        else:
+          recordLeakedObjects = False
       if size < 0 or bytesLeaked < 0 or numLeaked < 0:
         leakAnalysis.append("TEST-UNEXPECTED-FAIL | leakcheck |%s negative leaks caught!"
                             % processString)
         logAsWarning = True
         continue
-      if name != "TOTAL" and numLeaked != 0:
+      if name != "TOTAL" and numLeaked != 0 and recordLeakedObjects:
         leakedObjectNames.append(name)
-        leakAnalysis.append("TEST-INFO | leakcheck |%s leaked %d %s (%s bytes)"
-                            % (processString, numLeaked, name, bytesLeaked))
+        leakedObjectAnalysis.append("TEST-INFO | leakcheck |%s leaked %d %s (%s bytes)"
+                                    % (processString, numLeaked, name, bytesLeaked))
+
+  leakAnalysis.extend(leakedObjectAnalysis)
   if logAsWarning:
     log.warning('\n'.join(leakAnalysis))
   else:
