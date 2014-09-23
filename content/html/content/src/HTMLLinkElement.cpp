@@ -263,6 +263,15 @@ HTMLLinkElement::UpdateImport()
     return;
   }
 
+  // Until the script execution order is not sorted out for nested cases
+  // let's not allow them.
+  if (!doc->IsMasterDocument()) {
+    nsContentUtils::LogSimpleConsoleError(
+      NS_LITERAL_STRING("Nested imports are not supported yet"),
+      "Imports");
+    return;
+  }
+
   // 2. rel type should be import.
   nsAutoString rel;
   GetAttr(kNameSpaceID_None, nsGkAtoms::rel, rel);
@@ -517,7 +526,7 @@ HTMLLinkElement::WrapNode(JSContext* aCx)
 already_AddRefed<nsIDocument>
 HTMLLinkElement::GetImport()
 {
-  return mImportLoader ? nsRefPtr<nsIDocument>(mImportLoader->GetImport()).forget() : nullptr;
+  return mImportLoader ? mImportLoader->GetImport() : nullptr;
 }
 
 } // namespace dom
