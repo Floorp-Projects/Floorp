@@ -691,6 +691,11 @@ public:
                                uint32_t *aArgCount, const char*** aArgNames);
 
   /**
+   * Returns true if this document is in a Private Browsing window.
+   */
+  static bool IsInPrivateBrowsing(nsIDocument* aDoc);
+
+  /**
    * If aNode is not an element, return true exactly when aContent's binding
    * parent is null.
    *
