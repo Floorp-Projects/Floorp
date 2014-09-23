@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "OverscrollHandoffChain.h"
+#include "OverscrollHandoffState.h"
 
 #include <algorithm>              // for std::stable_sort
 #include "mozilla/Assertions.h"
@@ -90,13 +90,25 @@ OverscrollHandoffChain::ClearOverscroll() const
 void
 OverscrollHandoffChain::SnapBackOverscrolledApzc() const
 {
-  for (uint32_t i = 0; i < Length(); ++i) {
+  uint32_t i = 0;
+  for (i = 0; i < Length(); ++i) {
     AsyncPanZoomController* apzc = mChain[i];
     if (!apzc->IsDestroyed() && apzc->SnapBackIfOverscrolled()) {
       // At most one APZC along the hand-off chain can be overscrolled.
       break;
     }
   }
+
+  // In debug builds, verify our assumption that only one APZC is overscrolled.
+#ifdef DEBUG
+  ++i;
+  for (; i < Length(); ++i) {
+    AsyncPanZoomController* apzc = mChain[i];
+    if (!apzc->IsDestroyed()) {
+      MOZ_ASSERT(!apzc->IsOverscrolled());
+    }
+  }
+#endif
 }
 
 bool
