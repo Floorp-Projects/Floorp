@@ -130,6 +130,11 @@ SettingsLock.prototype = {
 
     // Finalizing a transaction does not return a request ID since we are
     // supposed to fire callbacks.
+    //
+    // We also destroy the DOMRequestHelper after we've received the
+    // finalize message. At this point, we will be guarenteed no more
+    // request returns are coming from the SettingsRequestManager.
+
     if (!msg.requestID) {
       let event;
       switch (aMessage.name) {
@@ -137,6 +142,7 @@ SettingsLock.prototype = {
           if (DEBUG) debug("Lock finalize ok: " + this._id);
           event = new this._window.MozSettingsTransactionEvent("settingstransactionsuccess", {});
           this.__DOM_IMPL__.dispatchEvent(event);
+          this.destroyDOMRequestHelper();
           break;
         case "Settings:Finalize:KO":
           if (DEBUG) debug("Lock finalize failed: " + this._id);
@@ -144,12 +150,13 @@ SettingsLock.prototype = {
             error: msg.errorMsg
           });
           this.__DOM_IMPL__.dispatchEvent(event);
+          this.destroyDOMRequestHelper();
           break;
         default:
           if (DEBUG) debug("Message type " + aMessage.name + " is missing a requestID");
-                }
-          return;
-            }
+      }
+      return;
+    }
 
 
     let req = this.getRequest(msg.requestID);
