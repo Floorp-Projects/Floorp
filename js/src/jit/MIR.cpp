@@ -1179,6 +1179,65 @@ MPhi::removeAllOperands()
 }
 
 MDefinition *
+MPhi::foldsTernary()
+{
+    // Look if this MPhi is a ternary construct.
+    // This is a very loose term as it actually only checks for
+    //
+    //      MTest X
+    //       /  \
+    //    ...    ...
+    //       \  /
+    //     MPhi X Y
+    //
+    // Which we will simply call:
+    // x ? x : y or x ? y : x
+
+    if (numOperands() != 2)
+        return nullptr;
+
+    MOZ_ASSERT(block()->numPredecessors() == 2);
+
+    MBasicBlock *pred = block()->immediateDominator();
+    if (!pred || !pred->lastIns()->isTest())
+        return nullptr;
+
+    // We found a ternary construct.
+    MTest *test = pred->lastIns()->toTest();
+    bool firstIsTrueBranch = test->ifTrue()->dominates(block()->getPredecessor(0));
+    MDefinition *trueDef = firstIsTrueBranch ? getOperand(0) : getOperand(1);
+    MDefinition *falseDef = firstIsTrueBranch ? getOperand(1) : getOperand(0);
+
+    // Accept either
+    // testArg ? testArg : constant or
+    // testArg ? constant : testArg
+    if (!trueDef->isConstant() && !falseDef->isConstant())
+        return nullptr;
+
+    MConstant *c = trueDef->isConstant() ? trueDef->toConstant() : falseDef->toConstant();
+    MDefinition *testArg = (trueDef == c) ? falseDef : trueDef;
+    if (testArg != test->input())
+        return nullptr;
+
+    // If testArg is a number type we can:
+    // - fold testArg ? testArg : 0 to testArg
+    // - fold testArg ? 0 : testArg to 0
+    if (IsNumberType(testArg->type()) && c->vp()->toNumber() == 0)
+        return trueDef;
+
+    // If testArg is a string type we can:
+    // - fold testArg ? testArg : "" to testArg
+    // - fold testArg ? "" : testArg to ""
+    if (testArg->type() == MIRType_String &&
+        c->vp()->toString() == GetIonContext()->runtime->emptyString())
+    {
+        return trueDef;
+    }
+
+    return nullptr;
+}
+
+MDefinition *
 MPhi::operandIfRedundant()
 {
     if (inputs_.length() == 0)
@@ -1200,6 +1259,9 @@ MDefinition *
 MPhi::foldsTo(TempAllocator &alloc)
 {
     if (MDefinition *def = operandIfRedundant())
+        return def;
+
+    if (MDefinition *def = foldsTernary())
         return def;
 
     return this;
