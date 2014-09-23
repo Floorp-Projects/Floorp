@@ -224,17 +224,17 @@ GetLengthProperty(const Value &lval, MutableHandleValue vp)
 }
 
 template <bool TypeOf> inline bool
-FetchName(JSContext *cx, HandleObject obj, HandleObject obj2, HandlePropertyName name,
-          HandleShape shape, MutableHandleValue vp)
+FetchName(JSContext *cx, HandleScript script, jsbytecode *pc, HandleObject obj,
+          HandleObject obj2, HandlePropertyName name, HandleShape shape,
+          MutableHandleValue vp)
 {
+    if (!shape && TypeOf) {
+        vp.setUndefined();
+        return true;
+    }
+
     if (!shape) {
-        if (TypeOf) {
-            vp.setUndefined();
-            return true;
-        }
-        JSAutoByteString printable;
-        if (AtomToPrintableString(cx, name, &printable))
-            js_ReportIsNotDefined(cx, printable.ptr());
+        js_ReportIsNotDefined(cx, script, pc, name);
         return false;
     }
 

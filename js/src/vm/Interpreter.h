@@ -372,7 +372,8 @@ bool
 CallProperty(JSContext *cx, HandleValue value, HandlePropertyName name, MutableHandleValue vp);
 
 bool
-GetScopeName(JSContext *cx, HandleObject obj, HandlePropertyName name, MutableHandleValue vp);
+GetScopeName(JSContext *cx, HandleScript script, jsbytecode *pc, HandleObject obj,
+             HandlePropertyName name, MutableHandleValue vp);
 
 bool
 GetScopeNameForTypeOf(JSContext *cx, HandleObject obj, HandlePropertyName name,
