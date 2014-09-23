@@ -49,10 +49,11 @@ public class PreSearchFragment extends Fragment {
 
     private static final String[] PROJECTION = new String[]{ SearchHistory.QUERY, SearchHistory._ID };
 
-    // Limit search history query results to 5 items. This value matches the number of search
-    // suggestions we return in SearchFragment.
+    // Limit search history query results to 10 items.
+    private static final int SEARCH_HISTORY_LIMIT = 10;
+
     private static final Uri SEARCH_HISTORY_URI = SearchHistory.CONTENT_URI.buildUpon().
-            appendQueryParameter(BrowserContract.PARAM_LIMIT, String.valueOf(Constants.SUGGESTION_MAX)).build();
+            appendQueryParameter(BrowserContract.PARAM_LIMIT, String.valueOf(SEARCH_HISTORY_LIMIT)).build();
 
     private static final int LOADER_ID_SEARCH_HISTORY = 1;
 
@@ -81,7 +82,7 @@ public class PreSearchFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getLoaderManager().initLoader(LOADER_ID_SEARCH_HISTORY, null, new SearchHistoryLoaderCallbacks());
-        cursorAdapter = new SimpleCursorAdapter(getActivity(), R.layout.search_card_history, null,
+        cursorAdapter = new SimpleCursorAdapter(getActivity(), R.layout.search_history_row, null,
                 PROJECTION, new int[]{R.id.site_name}, 0);
     }
 

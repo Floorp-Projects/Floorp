@@ -11,9 +11,8 @@
     <color name="edit_text_default">#AFB1B3</color>
 
     <!-- card colors -->
-    <color name="card_background">#ffffff</color>
-    <color name="card_background_pressed">#DCDCE1</color>
-    <color name="card_border">#BFBFBF</color>
+    <color name="row_background">#ffffff</color>
+    <color name="row_background_pressed">#DCDCE1</color>
 
     <color name="widget_logo_default">#EBEBF0</color>
     <color name="widget_button_pressed">#33000000</color>
