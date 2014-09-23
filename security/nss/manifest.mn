@@ -11,3 +11,7 @@ IMPORTS =	nspr20/v4.8 \
 RELEASE = nss
 
 DIRS = coreconf lib cmd
+
+ifdef NSS_BUILD_GTESTS
+DIRS += external_tests
+endif

@@ -1,0 +1,31 @@
+GTest-based Unit Tests
+
+This directory contains GTest-based unit tests for NSS.
+
+Currently, these are only loopback-type tests of libsssl,
+but could be expanded to other types of tests. To make these
+work do:
+
+- Set NSS_BUILD_GTESTS=1 before starting your build
+
+- cd tests/
+
+- Set NSS_TESTS=ssl_gtests and NSS_CYCLES=standard
+
+- run ./all.sh
+
+This will run the certutil tests (generating a test db) and
+will finalize with a call to the ssl_gtest
+
+You should be able to run the unit tests manually as:
+
+  ssl_gtest -d ${SSLGTESTDIR}
+
+Where $SSLGTESTDIR the directory created by ./all.sh or a manually
+created directory with a database containing a certificate called
+server (with its private keys)
+
+
+There is a very trivial set of tests that demonstrate some
+of the features.
+
