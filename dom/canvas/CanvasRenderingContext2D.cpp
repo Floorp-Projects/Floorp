@@ -104,6 +104,8 @@
 #include "nsIScreenManager.h"
 #include "nsFilterInstance.h"
 #include "nsSVGLength2.h"
+#include "nsDeviceContext.h"
+#include "nsFontMetrics.h"
 
 #undef free // apparently defined by some windows header, clashing with a free()
             // method in SkTypes.h
@@ -1869,20 +1871,40 @@ CanvasRenderingContext2D::SetFilter(const nsAString& filter, ErrorResult& error)
 class CanvasUserSpaceMetrics : public UserSpaceMetricsWithSize
 {
 public:
-  CanvasUserSpaceMetrics(const gfx::IntSize& aSize)
+  CanvasUserSpaceMetrics(const gfx::IntSize& aSize, const nsFont& aFont,
+                         nsIAtom* aFontLanguage, nsPresContext* aPresContext)
     : mSize(aSize)
+    , mFont(aFont)
+    , mFontLanguage(aFontLanguage)
+    , mPresContext(aPresContext)
   {
   }
 
   virtual float GetEmLength() const MOZ_OVERRIDE
-  { return 10.0f; }
+  {
+    return NSAppUnitsToFloatPixels(mFont.size,
+                                   nsPresContext::AppUnitsPerCSSPixel());
+  }
+
   virtual float GetExLength() const MOZ_OVERRIDE
-  { return 10.0f; }
+  {
+    gfxTextPerfMetrics* tp = mPresContext->GetTextPerfMetrics();
+    nsRefPtr<nsFontMetrics> fontMetrics;
+    nsDeviceContext* dc = mPresContext->DeviceContext();
+    dc->GetMetricsFor(mFont, mFontLanguage, nullptr, tp,
+                      *getter_AddRefs(fontMetrics));
+    return NSAppUnitsToFloatPixels(fontMetrics->XHeight(),
+                                   nsPresContext::AppUnitsPerCSSPixel());
+  }
+
   virtual gfx::Size GetSize() const MOZ_OVERRIDE
   { return Size(mSize); }
 
 private:
   gfx::IntSize mSize;
+  const nsFont& mFont;
+  nsIAtom* mFontLanguage;
+  nsPresContext* mPresContext;
 };
 
 void
@@ -1896,7 +1918,10 @@ CanvasRenderingContext2D::UpdateFilter()
   CurrentState().filter =
     nsFilterInstance::GetFilterDescription(mCanvasElement,
       CurrentState().filterChain,
-      CanvasUserSpaceMetrics(IntSize(mWidth, mHeight)),
+      CanvasUserSpaceMetrics(IntSize(mWidth, mHeight),
+                             CurrentState().fontFont,
+                             CurrentState().fontLanguage,
+                             presShell->GetPresContext()),
       gfxRect(0, 0, mWidth, mHeight),
       CurrentState().filterAdditionalImages);
 }
@@ -2566,6 +2591,9 @@ CanvasRenderingContext2D::SetFont(const nsAString& font,
   NS_ASSERTION(CurrentState().fontGroup, "Could not get font group");
   CurrentState().fontGroup->SetTextPerfMetrics(c->GetTextPerfMetrics());
   CurrentState().font = usedFont;
+  CurrentState().fontFont = fontStyle->mFont;
+  CurrentState().fontFont.size = fontStyle->mSize;
+  CurrentState().fontLanguage = fontStyle->mLanguage;
 }
 
 void
