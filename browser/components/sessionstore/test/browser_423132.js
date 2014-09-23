@@ -66,7 +66,7 @@ function test() {
       cs.removeAll();
       newWin.close();
       finish();
-    });
+    }, true, testURL);
   }, false);
 }
 

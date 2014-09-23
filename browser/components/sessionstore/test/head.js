@@ -304,13 +304,17 @@ let promiseForEachSessionRestoreFile = Task.async(function*(cb) {
   }
 });
 
-function whenBrowserLoaded(aBrowser, aCallback = next, ignoreSubFrames = true) {
-  aBrowser.addEventListener("load", function onLoad(event) {
-    if (!ignoreSubFrames || event.target == aBrowser.contentDocument) {
-      aBrowser.removeEventListener("load", onLoad, true);
+function whenBrowserLoaded(aBrowser, aCallback = next, ignoreSubFrames = true, expectedURL = null) {
+  aBrowser.messageManager.addMessageListener("ss-test:loadEvent", function onLoad(msg) {
+    if (expectedURL && aBrowser.currentURI.spec != expectedURL) {
+      return;
+    }
+
+    if (!ignoreSubFrames || !msg.data.subframe) {
+      aBrowser.messageManager.removeMessageListener("ss-test:loadEvent", onLoad);
       executeSoon(aCallback);
     }
-  }, true);
+  });
 }
 function promiseBrowserLoaded(aBrowser, ignoreSubFrames = true) {
   let deferred = Promise.defer();
@@ -498,6 +502,16 @@ function promiseWindowClosed(win) {
   }, "domwindowclosed", false);
 
   win.close();
+  return deferred.promise;
+}
+
+function runInContent(browser, func, arg, callback = null) {
+  let deferred = Promise.defer();
+
+  let mm = browser.messageManager;
+  mm.sendAsyncMessage("ss-test:run", {code: func.toSource()}, {arg: arg});
+  mm.addMessageListener("ss-test:runFinished", ({data}) => deferred.resolve(data));
+
   return deferred.promise;
 }
 
