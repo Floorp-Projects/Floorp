@@ -14,7 +14,6 @@ struct AccessibleData
   uint64_t ID;
   uint32_t Role;
   uint32_t ChildrenCount;
-  nsString Name;
 };
 
 struct ShowEventData
@@ -41,6 +40,7 @@ parent:
 
 child:
   prio(high) sync State(uint64_t aID) returns(uint64_t states);
+  prio(high) sync Name(uint64_t aID) returns(nsString name);
 };
 
 }

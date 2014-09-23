@@ -47,5 +47,11 @@ ProxyAccessible::State() const
   unused << mDoc->SendState(mID, &state);
   return state;
 }
+
+void
+ProxyAccessible::Name(nsString& aName) const
+{
+  unused << mDoc->SendName(mID, &aName);
+}
 }
 }
