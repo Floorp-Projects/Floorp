@@ -8,6 +8,7 @@ SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.setSelectionChangeEnabledPref(true);
 browserElementTestHelpers.addPermission();
+const { Services } = SpecialPowers.Cu.import('resource://gre/modules/Services.jsm');
 var gTextarea = null;
 var mm;
 var iframe;
@@ -60,10 +61,8 @@ function runTest() {
 }
 
 function doCommand(cmd) {
-  let doc = iframe.ownerDocument;
-  let event = doc.createEvent('CustomEvent');
-  event.initCustomEvent('mozdocommand', true, true, { cmd: cmd });
-  SpecialPowers.wrap(iframe).dispatchEvent(event);
+  Services.obs.notifyObservers({wrappedJSObject: iframe},
+                               'copypaste-docommand', cmd);
 }
 
 function dispatchTest(e) {
