@@ -30,8 +30,8 @@ add_task(function() {
     yield promiseBrowserLoaded(tab2.linkedBrowser);
 
     info("Flush to make sure chrome received all data.");
-    SyncHandlers.get(tab1.linkedBrowser).flush();
-    SyncHandlers.get(tab2.linkedBrowser).flush();
+    TabState.flush(tab1.linkedBrowser);
+    TabState.flush(tab2.linkedBrowser);
 
     info("Checking out state");
     let state = yield promiseRecoveryFileContents();
@@ -81,7 +81,7 @@ add_task(function () {
   let tab = win.gBrowser.addTab("about:mozilla");
   let browser = tab.linkedBrowser;
   yield promiseBrowserLoaded(browser);
-  SyncHandlers.get(browser).flush();
+  TabState.flush(browser);
 
   // Check that we consider the tab as private.
   let state = JSON.parse(ss.getTabState(tab));
@@ -95,7 +95,7 @@ add_task(function () {
   tab = win.gBrowser.addTab("about:mozilla");
   browser = tab.linkedBrowser;
   yield promiseBrowserLoaded(browser);
-  SyncHandlers.get(browser).flush();
+  TabState.flush(browser);
 
   // Check that we consider the tab as private.
   state = JSON.parse(ss.getTabState(tab));
@@ -120,7 +120,7 @@ add_task(function () {
   let tab = win.gBrowser.addTab("about:mozilla");
   let browser = tab.linkedBrowser;
   yield promiseBrowserLoaded(browser);
-  SyncHandlers.get(browser).flush();
+  TabState.flush(browser);
 
   // Check that we consider the tab as private.
   let state = JSON.parse(ss.getTabState(tab));

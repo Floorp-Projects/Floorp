@@ -18,7 +18,7 @@ add_task(function test_set_tabstate() {
   yield promiseBrowserLoaded(tab.linkedBrowser);
 
   // get the tab's state
-  SyncHandlers.get(tab.linkedBrowser).flush();
+  TabState.flush(tab.linkedBrowser);
   let state = ss.getTabState(tab);
   ok(state, "get the tab's state");
 

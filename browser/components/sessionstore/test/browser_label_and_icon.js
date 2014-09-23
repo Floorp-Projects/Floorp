@@ -25,7 +25,7 @@ add_task(function test_label_and_icon() {
   yield promiseBrowserLoaded(browser);
 
   // Retrieve the tab state.
-  SyncHandlers.get(browser).flush();
+  TabState.flush(browser);
   let state = ss.getTabState(tab);
   gBrowser.removeTab(tab);
   browser = null;
