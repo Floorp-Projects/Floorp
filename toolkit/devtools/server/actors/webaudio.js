@@ -284,6 +284,7 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
 
     this._onDestroyNode = this._onDestroyNode.bind(this);
     this._onGlobalDestroyed = this._onGlobalDestroyed.bind(this);
+    this._onGlobalCreated = this._onGlobalCreated.bind(this);
   },
 
   destroy: function(conn) {
@@ -322,6 +323,9 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
       holdWeak: true,
       storeCalls: false
     });
+    // Bind to `window-ready` so we can reenable recording on the
+    // call watcher
+    on(this.tabActor, "window-ready", this._onGlobalCreated);
     // Bind to the `window-destroyed` event so we can unbind events between
     // the global destruction and the `finalize` cleanup method on the actor.
     on(this.tabActor, "window-destroyed", this._onGlobalDestroyed);
@@ -395,6 +399,7 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
     this.tabActor = null;
     this._initialized = false;
     off(this.tabActor, "window-destroyed", this._onGlobalDestroyed);
+    off(this.tabActor, "window-ready", this._onGlobalCreated);
     this._nativeToActorID = null;
     this._callWatcher.eraseRecording();
     this._callWatcher.finalize();
@@ -567,6 +572,14 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
       this._nativeToActorID.delete(nativeID);
       emit(this, "destroy-node", actor);
     }
+  },
+
+  /**
+   * Ensures that the new global has recording on
+   * so we can proxy the function calls.
+   */
+  _onGlobalCreated: function () {
+    this._callWatcher.resumeRecording();
   },
 
   /**

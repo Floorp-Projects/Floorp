@@ -191,5 +191,18 @@ let tests = [
       {"domain": null, "name": "foo", "value": 4},
       {"domain": "b.com", "name": "foo", "value": 5}
     ]);
-  }
+  },
+
+  function setSetsCurrentDate() {
+    // Because Date.now() is not guaranteed to be monotonically increasing
+    // we just do here rough sanity check with one minute tolerance.
+    const MINUTE = 60 * 1000;
+    let now = Date.now();
+    let start = now - MINUTE;
+    let end = now + MINUTE;
+    yield set("a.com", "foo", 1);
+    let timestamp = yield getDate("a.com", "foo");
+    ok(start <= timestamp, "Timestamp is not too early (" + start + "<=" + timestamp + ").");
+    ok(timestamp <= end, "Timestamp is not too late (" + timestamp + "<=" + end + ").");
+  },
 ];
