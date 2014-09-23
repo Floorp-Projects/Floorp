@@ -2025,7 +2025,7 @@ CanvasRenderingContext2D::FillRect(double x, double y, double w,
   mgfx::Rect bounds;
 
   EnsureTarget();
-  if (NeedToDrawShadow()) {
+  if (NeedToCalculateBounds()) {
     bounds = mgfx::Rect(x, y, w, h);
     bounds = mTarget->GetTransform().TransformBounds(bounds);
   }
@@ -2055,7 +2055,7 @@ CanvasRenderingContext2D::StrokeRect(double x, double y, double w,
     return;
   }
 
-  if (NeedToDrawShadow()) {
+  if (NeedToCalculateBounds()) {
     bounds = mgfx::Rect(x - state.lineWidth / 2.0f, y - state.lineWidth / 2.0f,
                         w + state.lineWidth, h + state.lineWidth);
     bounds = mTarget->GetTransform().TransformBounds(bounds);
@@ -2132,7 +2132,7 @@ CanvasRenderingContext2D::Fill(const CanvasWindingRule& winding)
 
   mgfx::Rect bounds;
 
-  if (NeedToDrawShadow()) {
+  if (NeedToCalculateBounds()) {
     bounds = mPath->GetBounds(mTarget->GetTransform());
   }
 
@@ -2155,7 +2155,7 @@ void CanvasRenderingContext2D::Fill(const CanvasPath& path, const CanvasWindingR
 
   mgfx::Rect bounds;
 
-  if (NeedToDrawShadow()) {
+  if (NeedToCalculateBounds()) {
     bounds = gfxpath->GetBounds(mTarget->GetTransform());
   }
 
@@ -2183,7 +2183,7 @@ CanvasRenderingContext2D::Stroke()
                               state.dashOffset);
 
   mgfx::Rect bounds;
-  if (NeedToDrawShadow()) {
+  if (NeedToCalculateBounds()) {
     bounds =
       mPath->GetStrokedBounds(strokeOptions, mTarget->GetTransform());
   }
@@ -2214,7 +2214,7 @@ CanvasRenderingContext2D::Stroke(const CanvasPath& path)
                               state.dashOffset);
 
   mgfx::Rect bounds;
-  if (NeedToDrawShadow()) {
+  if (NeedToCalculateBounds()) {
     bounds =
       gfxpath->GetStrokedBounds(strokeOptions, mTarget->GetTransform());
   }
@@ -3122,7 +3122,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   const ContextState &state = CurrentState();
 
   // This is only needed to know if we can know the drawing bounding box easily.
-  bool doDrawShadow = NeedToDrawShadow();
+  bool doCalculateBounds = NeedToCalculateBounds();
 
   CanvasBidiProcessor processor;
 
@@ -3141,7 +3141,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   processor.mCtx = this;
   processor.mOp = aOp;
   processor.mBoundingBox = gfxRect(0, 0, 0, 0);
-  processor.mDoMeasureBoundingBox = doDrawShadow || !mIsEntireFrameInvalid;
+  processor.mDoMeasureBoundingBox = doCalculateBounds || !mIsEntireFrameInvalid;
   processor.mState = &CurrentState();
   processor.mFontgrp = currentFontStyle;
 
@@ -3266,7 +3266,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   mTarget->SetTransform(oldTransform);
 
   if (aOp == CanvasRenderingContext2D::TextDrawOperation::FILL &&
-      !doDrawShadow) {
+      !doCalculateBounds) {
     RedrawUser(boundingBox);
     return NS_OK;
   }
@@ -3679,7 +3679,7 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
 
   mgfx::Rect bounds;
 
-  if (NeedToDrawShadow()) {
+  if (NeedToCalculateBounds()) {
     bounds = mgfx::Rect(dx, dy, dw, dh);
     bounds = mTarget->GetTransform().TransformBounds(bounds);
   }
