@@ -602,6 +602,18 @@ struct GLContextSymbols
     PFNGLGETACTIVEUNIFORMBLOCKNAMEPROC fGetActiveUniformBlockName;
     typedef void (GLAPIENTRY * PFNGLUNIFORMBLOCKBINDINGPROC) (GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding);
     PFNGLUNIFORMBLOCKBINDINGPROC fUniformBlockBinding;
+
+    // vertex attrib - integer
+    typedef void (GLAPIENTRY * PFNGLVERTEXATTRIBI4IPROC) (GLuint index, GLint x, GLint y, GLint z, GLint w);
+    PFNGLVERTEXATTRIBI4IPROC fVertexAttribI4i;
+    typedef void (GLAPIENTRY * PFNGLVERTEXATTRIBI4IVPROC) (GLuint index, const GLint* v);
+    PFNGLVERTEXATTRIBI4IVPROC fVertexAttribI4iv;
+    typedef void (GLAPIENTRY * PFNGLVERTEXATTRIBI4UIPROC) (GLuint index, GLuint x, GLuint y, GLuint z, GLuint w);
+    PFNGLVERTEXATTRIBI4UIPROC fVertexAttribI4ui;
+    typedef void (GLAPIENTRY * PFNGLVERTEXATTRIBI4UIVPROC) (GLuint index, const GLuint* v);
+    PFNGLVERTEXATTRIBI4UIVPROC fVertexAttribI4uiv;
+    typedef void (GLAPIENTRY * PFNGLVERTEXATTRIBIPOINTERPROC) (GLuint index, GLint size, GLenum type, GLsizei stride, const GLvoid* ptr);
+    PFNGLVERTEXATTRIBIPOINTERPROC fVertexAttribIPointer;
 };
 
 }

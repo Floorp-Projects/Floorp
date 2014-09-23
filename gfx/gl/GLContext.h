@@ -97,6 +97,7 @@ MOZ_BEGIN_ENUM_CLASS(GLFeature)
     get_query_object_iv,
     instanced_arrays,
     instanced_non_arrays,
+    integer_vertex_attribs,
     map_buffer_range,
     occlusion_query,
     occlusion_query_boolean,
@@ -1978,6 +1979,46 @@ public:
         AFTER_GL_CALL;
     }
 
+    void fVertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fVertexAttribI4i);
+        mSymbols.fVertexAttribI4i(index, x, y, z, w);
+        AFTER_GL_CALL;
+    }
+
+    void fVertexAttribI4iv(GLuint index, const GLint* v)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fVertexAttribI4iv);
+        mSymbols.fVertexAttribI4iv(index, v);
+        AFTER_GL_CALL;
+    }
+
+    void fVertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fVertexAttribI4ui);
+        mSymbols.fVertexAttribI4ui(index, x, y, z, w);
+        AFTER_GL_CALL;
+    }
+
+    void fVertexAttribI4uiv(GLuint index, const GLuint* v)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fVertexAttribI4uiv);
+        mSymbols.fVertexAttribI4uiv(index, v);
+        AFTER_GL_CALL;
+    }
+
+    void fVertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride, const GLvoid* offset)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fVertexAttribIPointer);
+        mSymbols.fVertexAttribIPointer(index, size, type, stride, offset);
+        AFTER_GL_CALL;
+    }
+
     void fCompileShader(GLuint shader) {
         BEFORE_GL_CALL;
         mSymbols.fCompileShader(shader);
@@ -1985,13 +2026,15 @@ public:
     }
 
 private:
-    void raw_fCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border) {
+    void raw_fCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
+    {
         BEFORE_GL_CALL;
         mSymbols.fCopyTexImage2D(target, level, internalformat, x, y, width, height, border);
         AFTER_GL_CALL;
     }
 
-    void raw_fCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height) {
+    void raw_fCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+    {
         BEFORE_GL_CALL;
         mSymbols.fCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
         AFTER_GL_CALL;
