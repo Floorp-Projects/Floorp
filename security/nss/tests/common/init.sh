@@ -76,6 +76,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
 
         CERT_EXTENSIONS_DIR=${HOSTDIR}/cert_extensions
         STAPLINGDIR=${HOSTDIR}/stapling
+        SSLGTESTDIR=${HOSTDIR}/ssl_gtests
 
         PWFILE=${HOSTDIR}/tests.pw
         NOISE_FILE=${HOSTDIR}/tests_noise
@@ -538,6 +539,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     R_EXT_CLIENTDIR=../ext_client
     R_CERT_EXT=../cert_extensions
     R_STAPLINGDIR=../stapling
+    R_SSLGTESTDIR=../ssl_gtests
 
     #
     # profiles are either paths or domains depending on the setting of
