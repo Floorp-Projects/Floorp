@@ -1078,8 +1078,9 @@ add_task(function* test_edit_keyword() {
   ensureUndoState();
 });
 
-add_task(function* doTest() {
-  let bm_info_a = { uri: NetUtil.newURI("http://bookmarked.uri")
+add_task(function* test_tag_uri() {
+  // This also tests passing uri specs.
+  let bm_info_a = { uri: "http://bookmarked.uri"
                   , parentGuid: yield PlacesUtils.promiseItemGuid(root) };
   let bm_info_b = { uri: NetUtil.newURI("http://bookmarked2.uri")
                   , parentGuid: yield PlacesUtils.promiseItemGuid(root) };
@@ -1101,6 +1102,9 @@ add_task(function* doTest() {
   function* doTest(aInfo) {
     let uris = "uri" in aInfo ? [aInfo.uri] : aInfo.uris;
     let tags = "tag" in aInfo ? [aInfo.tag] : aInfo.tags;
+
+    let ensureURI = uri => typeof(uri) == "string" ? NetUtil.newURI(uri) : uri;
+    uris = [for (uri of uris) ensureURI(uri)];
 
     let tagWillAlsoBookmark = new Set();
     for (let uri of uris) {
@@ -1556,4 +1560,18 @@ add_task(function* test_copy_excluding_annotations() {
   yield PT.undo();
   yield PT.undo();
   yield PT.clearTransactionsHistory();
+});
+
+add_task(function* test_invalid_uri_spec_throws() {
+  let rootGuid = yield PlacesUtils.promiseItemGuid(root);
+  Assert.throws(() =>
+    PT.NewBookmark({ parentGuid: rootGuid
+                   , uri:        "invalid uri spec"
+                   , title:      "test bookmark" }));
+  Assert.throws(() =>
+    PT.Tag({ tag: "TheTag"
+           , uris: ["invalid uri spec"] }));
+  Assert.throws(() =>
+    PT.Tag({ tag: "TheTag"
+           , uris: ["about:blank", "invalid uri spec"] }));
 });

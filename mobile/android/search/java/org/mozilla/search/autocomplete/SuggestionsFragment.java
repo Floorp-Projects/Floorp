@@ -26,7 +26,6 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.search.AcceptsSearchQuery;
 import org.mozilla.search.AcceptsSearchQuery.SuggestionAnimation;
-import org.mozilla.search.Constants;
 import org.mozilla.search.R;
 import org.mozilla.search.providers.SearchEngine;
 
@@ -45,6 +44,9 @@ public class SuggestionsFragment extends Fragment {
 
     // Timeout for the suggestion client to respond
     private static final int SUGGESTION_TIMEOUT = 3000;
+
+    // Number of search suggestions to show.
+    private static final int SUGGESTION_MAX = 5;
 
     // Color of search term match in search suggestion
     private static final int SUGGESTION_HIGHLIGHT_COLOR = 0xFF999999;
@@ -134,7 +136,7 @@ public class SuggestionsFragment extends Fragment {
 
     public void setEngine(SearchEngine engine) {
         suggestClient = new SuggestClient(getActivity(), engine.getSuggestionTemplate(GECKO_SEARCH_TERMS_URL_PARAM),
-                SUGGESTION_TIMEOUT, Constants.SUGGESTION_MAX);
+                SUGGESTION_TIMEOUT, SUGGESTION_MAX);
     }
 
     public void loadSuggestions(String query) {

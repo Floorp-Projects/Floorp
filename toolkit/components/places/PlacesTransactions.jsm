@@ -54,7 +54,7 @@ this.EXPORTED_SYMBOLS = ["PlacesTransactions"];
  * valid values across all transactions which accept it in the input object.
  * Here is a list of all supported input properties along with their expected
  * values:
- *  - uri: an nsIURI object.
+ *  - uri: an nsIURI object or an uri spec string.
  *  - feedURI: an nsIURI object, holding the url for a live bookmark.
  *  - siteURI: an nsIURI object, holding the url for the site with which
  *             a live bookmark is associated.
@@ -576,15 +576,28 @@ function DefineTransaction(aRequiredProps = [], aOptionalProps = []) {
   return ctor;
 }
 
-DefineTransaction.isStr = v => typeof(v) == "string";
-DefineTransaction.isStrOrNull = v => typeof(v) == "string" || v === null;
-DefineTransaction.isURI = v => v instanceof Components.interfaces.nsIURI;
-DefineTransaction.isIndex = v => Number.isInteger(v) &&
-                                 v >= PlacesUtils.bookmarks.DEFAULT_INDEX;
-DefineTransaction.isGuid = v => /^[a-zA-Z0-9\-_]{12}$/.test(v);
-DefineTransaction.isPrimitive = v => v === null || (typeof(v) != "object" &&
-                                                    typeof(v) != "function");
-DefineTransaction.isAnnotationObject = function (obj) {
+function simpleValidateFunc(aCheck) {
+  return v => {
+    if (!aCheck(v))
+      throw new Error("Invalid value");
+    return v;
+  };
+}
+
+DefineTransaction.strValidate = simpleValidateFunc(v => typeof(v) == "string");
+DefineTransaction.strOrNullValidate =
+  simpleValidateFunc(v => typeof(v) == "string" || v === null);
+DefineTransaction.indexValidate =
+  simpleValidateFunc(v => Number.isInteger(v) &&
+                          v >= PlacesUtils.bookmarks.DEFAULT_INDEX);
+DefineTransaction.guidValidate =
+  simpleValidateFunc(v => /^[a-zA-Z0-9\-_]{12}$/.test(v));
+
+function isPrimitive(v) {
+  return v === null || (typeof(v) != "object" && typeof(v) != "function");
+}
+
+DefineTransaction.annotationObjectValidate = function (obj) {
   let checkProperty = (aPropName, aRequired, aCheckFunc) => {
     if (aPropName in obj)
       return aCheckFunc(obj[aPropName]);
@@ -593,22 +606,27 @@ DefineTransaction.isAnnotationObject = function (obj) {
   };
 
   if (obj &&
-      checkProperty("name",    true,  DefineTransaction.isStr)      &&
+      checkProperty("name", true, v => typeof(v) == "string" && v.length > 0) &&
       checkProperty("expires", false, Number.isInteger) &&
-      checkProperty("flags",   false, Number.isInteger) &&
-      checkProperty("value",   false, DefineTransaction.isPrimitive) ) {
+      checkProperty("flags", false, Number.isInteger) &&
+      checkProperty("value", false, isPrimitive) ) {
     // Nothing else should be set
     let validKeys = ["name", "value", "flags", "expires"];
     if (Object.keys(obj).every( (k) => validKeys.indexOf(k) != -1 ))
-      return true;
+      return obj;
   }
-  return false;
+  throw new Error("Invalid annotation object");
+};
+
+DefineTransaction.uriValidate = function(uriOrSpec) {
+  if (uriOrSpec instanceof Components.interfaces.nsIURI)
+    return uriOrSpec;
+  return NetUtil.newURI(uriOrSpec);
 };
 
 DefineTransaction.inputProps = new Map();
 DefineTransaction.defineInputProps =
-function (aNames, aValidationFunction,
-          aDefaultValue, aTransformFunction = null) {
+function (aNames, aValidationFunction, aDefaultValue) {
   for (let name of aNames) {
     // Workaround bug 449811.
     let propName = name;
@@ -616,9 +634,12 @@ function (aNames, aValidationFunction,
       validateValue: function (aValue) {
         if (aValue === undefined)
           return aDefaultValue;
-        if (!aValidationFunction(aValue))
+        try {
+          return aValidationFunction(aValue);
+        }
+        catch(ex) {
           throw new Error(`Invalid value for input property ${propName}`);
-        return aTransformFunction ? aTransformFunction(aValue) : aValue;
+        }
       },
 
       validateInput: function (aInput, aRequired) {
@@ -720,7 +741,7 @@ function (aInput, aRequiredProps = [], aOptionalProps = []) {
   // the moment anyway).
   let input = aInput;
   let isSinglePropertyInput =
-    this.isPrimitive(aInput) ||
+    isPrimitive(aInput) ||
     Array.isArray(aInput) ||
     (aInput instanceof Components.interfaces.nsISupports);
   if (isSinglePropertyInput) {
@@ -743,19 +764,19 @@ function (aInput, aRequiredProps = [], aOptionalProps = []) {
 // Update the documentation at the top of this module if you add or
 // remove properties.
 DefineTransaction.defineInputProps(["uri", "feedURI", "siteURI"],
-                                   DefineTransaction.isURI, null);
+                                   DefineTransaction.uriValidate, null);
 DefineTransaction.defineInputProps(["guid", "parentGuid", "newParentGuid"],
-                                   DefineTransaction.isGuid);
+                                   DefineTransaction.guidValidate);
 DefineTransaction.defineInputProps(["title"],
-                                   DefineTransaction.isStrOrNull, null);
+                                   DefineTransaction.strOrNullValidate, null);
 DefineTransaction.defineInputProps(["keyword", "postData", "tag",
                                     "excludingAnnotation"],
-                                   DefineTransaction.isStr, "");
+                                   DefineTransaction.strValidate, "");
 DefineTransaction.defineInputProps(["index", "newIndex"],
-                                   DefineTransaction.isIndex,
+                                   DefineTransaction.indexValidate,
                                    PlacesUtils.bookmarks.DEFAULT_INDEX);
 DefineTransaction.defineInputProps(["annotation"],
-                                   DefineTransaction.isAnnotationObject);
+                                   DefineTransaction.annotationObjectValidate);
 DefineTransaction.defineArrayInputProp("uris", "uri");
 DefineTransaction.defineArrayInputProp("tags", "tag");
 DefineTransaction.defineArrayInputProp("annotations", "annotation");

@@ -14,8 +14,6 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <vbox id="editBookmarkPanelContent" flex="1">
-    <broadcaster id="paneElementsBroadcaster"/>
-
     <hbox id="editBMPanel_selectionCount" hidden="true" pack="center">
       <label id="editBMPanel_itemsCountText"/>
     </hbox>
@@ -30,56 +28,46 @@
           <label value="&editBookmarkOverlay.name.label;"
                  class="editBMPanel_rowLabel"
                  accesskey="&editBookmarkOverlay.name.accesskey;"
-                 control="editBMPanel_namePicker"
-                 observes="paneElementsBroadcaster"/>
-          <textbox id="editBMPanel_namePicker"
-                   observes="paneElementsBroadcaster"/>
+                 control="editBMPanel_namePicker"/>
+          <textbox id="editBMPanel_namePicker"/>
         </row>
 
         <row align="center" id="editBMPanel_locationRow">
           <label value="&editBookmarkOverlay.location.label;"
                  class="editBMPanel_rowLabel"
                  accesskey="&editBookmarkOverlay.location.accesskey;"
-                 control="editBMPanel_locationField"
-                 observes="paneElementsBroadcaster"/>
+                 control="editBMPanel_locationField"/>
           <textbox id="editBMPanel_locationField"
-                   class="uri-element"
-                   observes="paneElementsBroadcaster"/>
+                   class="uri-element"/>
         </row>
 
         <row align="center" id="editBMPanel_feedLocationRow">
           <label value="&editBookmarkOverlay.feedLocation.label;"
                  class="editBMPanel_rowLabel"
                  accesskey="&editBookmarkOverlay.feedLocation.accesskey;"
-                 control="editBMPanel_feedLocationField"
-                 observes="paneElementsBroadcaster"/>
+                 control="editBMPanel_feedLocationField"/>
           <textbox id="editBMPanel_feedLocationField"
-                   class="uri-element"
-                   observes="paneElementsBroadcaster"/>
+                   class="uri-element"/>
         </row>
 
         <row align="center" id="editBMPanel_siteLocationRow">
           <label value="&editBookmarkOverlay.siteLocation.label;"
                  class="editBMPanel_rowLabel"
                  accesskey="&editBookmarkOverlay.siteLocation.accesskey;"
-                 control="editBMPanel_siteLocationField"
-                 observes="paneElementsBroadcaster"/>
+                 control="editBMPanel_siteLocationField"/>
           <textbox id="editBMPanel_siteLocationField"
-                   class="uri-element"
-                   observes="paneElementsBroadcaster"/>
+                   class="uri-element"/>
         </row>
 
         <row align="center" id="editBMPanel_folderRow">
           <label value="&editBookmarkOverlay.folder.label;"
                  class="editBMPanel_rowLabel"
-                 control="editBMPanel_folderMenuList"
-                 observes="paneElementsBroadcaster"/>
+                 control="editBMPanel_folderMenuList"/>
           <hbox flex="1" align="center">
             <menulist id="editBMPanel_folderMenuList"
                       class="folder-icon"
                       flex="1"
-                      oncommand="gEditItemOverlay.onFolderMenuListCommand(event);"
-                      observes="paneElementsBroadcaster">
+                      oncommand="gEditItemOverlay.onFolderMenuListCommand(event);">
               <menupopup>
                 <!-- Static item for special folders -->
                 <menuitem id="editBMPanel_toolbarFolderItem"
@@ -100,8 +88,7 @@
                     tooltiptext="&editBookmarkOverlay.foldersExpanderDown.tooltip;"
                     tooltiptextdown="&editBookmarkOverlay.foldersExpanderDown.tooltip;"
                     tooltiptextup="&editBookmarkOverlay.expanderUp.tooltip;"
-                    oncommand="gEditItemOverlay.toggleFolderTreeVisibility();"
-                    observes="paneElementsBroadcaster"/>
+                    oncommand="gEditItemOverlay.toggleFolderTreeVisibility();"/>
           </hbox>
         </row>
 
@@ -116,8 +103,7 @@
                   minheight="150"
                   editable="true"
                   onselect="gEditItemOverlay.onFolderTreeSelect();"
-                  hidecolumnpicker="true"
-                  observes="paneElementsBroadcaster">
+                  hidecolumnpicker="true">
               <treecols>
                 <treecol anonid="title" flex="1" primary="true" hideheader="true"/>
               </treecols>
@@ -137,8 +123,7 @@
           <label value="&editBookmarkOverlay.tags.label;"
                  class="editBMPanel_rowLabel"
                  accesskey="&editBookmarkOverlay.tags.accesskey;"
-                 control="editBMPanel_tagsField"
-                 observes="paneElementsBroadcaster"/>
+                 control="editBMPanel_tagsField"/>
           <hbox flex="1" align="center">
             <textbox id="editBMPanel_tagsField"
                      type="autocomplete"
@@ -148,17 +133,14 @@
                      completedefaultindex="true"
                      tabscrolling="true"
                      showcommentcolumn="true"
-                     observes="paneElementsBroadcaster"
                      placeholder="&editBookmarkOverlay.tagsEmptyDesc.label;"
-                     maxlength="1000"
-                     />
+                     maxlength="1000"/>
             <button id="editBMPanel_tagsSelectorExpander"
                     class="expander-down"
                     tooltiptext="&editBookmarkOverlay.tagsExpanderDown.tooltip;"
                     tooltiptextdown="&editBookmarkOverlay.tagsExpanderDown.tooltip;"
                     tooltiptextup="&editBookmarkOverlay.expanderUp.tooltip;"
-                    oncommand="gEditItemOverlay.toggleTagsSelector();"
-                    observes="paneElementsBroadcaster"/>
+                    oncommand="gEditItemOverlay.toggleTagsSelector();"/>
           </hbox>
         </row>
 
@@ -167,8 +149,7 @@
              collapsed="true">
           <spacer/>
           <listbox id="editBMPanel_tagsSelector"
-                   height="150"
-                   observes="paneElementsBroadcaster"/>
+                   height="150"/>
         </row>
 
         <row align="center" id="editBMPanel_keywordRow">
@@ -176,10 +157,8 @@
           <label value="&editBookmarkOverlay.keyword.label;"
                  class="editBMPanel_rowLabel"
                  accesskey="&editBookmarkOverlay.keyword.accesskey;"
-                 control="editBMPanel_keywordField"
-                 observes="paneElementsBroadcaster"/>
-          <textbox id="editBMPanel_keywordField"
-                   observes="paneElementsBroadcaster"/>
+                 control="editBMPanel_keywordField"/>
+          <textbox id="editBMPanel_keywordField"/>
         </row>
 
         <row id="editBMPanel_descriptionRow">
@@ -187,11 +166,9 @@
           <label value="&editBookmarkOverlay.description.label;"
                  class="editBMPanel_rowLabel"
                  accesskey="&editBookmarkOverlay.description.accesskey;"
-                 control="editBMPanel_descriptionField"
-                 observes="paneElementsBroadcaster"/>
+                 control="editBMPanel_descriptionField"/>
           <textbox id="editBMPanel_descriptionField"
-                   multiline="true"
-                   observes="paneElementsBroadcaster"/>
+                   multiline="true"/>
         </row>
       </rows>
     </grid>
@@ -199,14 +176,12 @@
     <checkbox id="editBMPanel_loadInSidebarCheckbox"
               label="&editBookmarkOverlay.loadInSidebar.label;"
               accesskey="&editBookmarkOverlay.loadInSidebar.accesskey;"
-              oncommand="gEditItemOverlay.onLoadInSidebarCheckboxCommand();"
-              observes="paneElementsBroadcaster">
+              oncommand="gEditItemOverlay.onLoadInSidebarCheckboxCommand();">
       <observes element="additionalInfoBroadcaster" attribute="hidden"/>
     </checkbox>
 
     <!-- If the ids are changing or additional fields are being added, be sure
          to sync the values in places.js -->
     <broadcaster id="additionalInfoBroadcaster"/>
-
   </vbox>
 </overlay>
