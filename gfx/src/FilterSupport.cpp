@@ -1237,14 +1237,15 @@ FilterSupport::RenderFilterDescription(DrawTarget* aDT,
                                        const IntRect& aFillPaintRect,
                                        SourceSurface* aStrokePaint,
                                        const IntRect& aStrokePaintRect,
-                                       nsTArray<RefPtr<SourceSurface>>& aAdditionalImages)
+                                       nsTArray<RefPtr<SourceSurface>>& aAdditionalImages,
+                                       const DrawOptions& aOptions)
 {
   RefPtr<FilterNode> resultFilter =
     FilterNodeGraphFromDescription(aDT, aFilter, aRenderRect,
                                    aSourceGraphic, aSourceGraphicRect, aFillPaint, aFillPaintRect,
                                    aStrokePaint, aStrokePaintRect, aAdditionalImages);
 
-  aDT->DrawFilter(resultFilter, aRenderRect, Point(0, 0));
+  aDT->DrawFilter(resultFilter, aRenderRect, Point(0, 0), aOptions);
 }
 
 static nsIntRegion
