@@ -1117,6 +1117,8 @@ class MachDebug(MachCommandBase):
         if self.mozconfig['make_extra']:
             for arg in self.mozconfig['make_extra']:
                 print(arg, file=out)
+        if self.mozconfig['make_flags']:
+            print('MOZ_MAKE_FLAGS=%s' % ' '.join(self.mozconfig['make_flags']))
         objdir = mozpath.normsep(self.topobjdir)
         print('MOZ_OBJDIR=%s' % objdir, file=out)
         if 'MOZ_CURRENT_PROJECT' in os.environ:
