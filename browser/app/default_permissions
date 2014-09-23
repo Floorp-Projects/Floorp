@@ -6,4 +6,11 @@
 # * permission is an integer between 1 and 15
 # See nsPermissionManager.cpp for more...
 
-# (This file is intentionally blank for the moment...)
+# UITour
+host	uitour	1	www.mozilla.org
+host	uitour	1	support.mozilla.org
+host	uitour	1	about:home
+
+# XPInstall
+host	install	1	addons.mozilla.org
+host	install	1	marketplace.firefox.com
