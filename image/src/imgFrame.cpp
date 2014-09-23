@@ -7,6 +7,7 @@
 #include "imgFrame.h"
 #include "ImageRegion.h"
 #include "DiscardTracker.h"
+#include "ShutdownTracker.h"
 
 #include "prenv.h"
 
@@ -301,6 +302,10 @@ nsresult imgFrame::Optimize()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mLockCount == 1,
              "Should only optimize when holding the lock exclusively");
+
+  // Don't optimize during shutdown because gfxPlatform may not be available.
+  if (ShutdownTracker::ShutdownHasStarted())
+    return NS_OK;
 
   if (!mOptimizable || gDisableOptimize)
     return NS_OK;
