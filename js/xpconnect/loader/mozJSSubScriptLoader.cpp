@@ -113,6 +113,7 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *targetObj
                        nsContentUtils::GetSystemPrincipal(),
                        nsILoadInfo::SEC_NORMAL,
                        nsIContentPolicy::TYPE_OTHER,
+                       nullptr,  // aChannelPolicy
                        nullptr,  // aLoadGroup
                        nullptr,  // aCallbacks
                        nsIRequest::LOAD_NORMAL,

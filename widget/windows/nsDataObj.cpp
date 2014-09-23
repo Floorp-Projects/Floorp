@@ -74,6 +74,7 @@ nsresult nsDataObj::CStream::Init(nsIURI *pSourceURI,
                      aRequestingNode,
                      nsILoadInfo::SEC_NORMAL,
                      nsIContentPolicy::TYPE_OTHER,
+                     nullptr,   // aChannelPolicy
                      nullptr,   // loadGroup
                      nullptr,   // aCallbacks
                      nsIRequest::LOAD_FROM_CACHE);

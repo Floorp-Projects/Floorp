@@ -1140,6 +1140,7 @@ NS_StartCORSPreflight(nsIChannel* aRequestChannel,
     rv = NS_NewChannelInternal(getter_AddRefs(preflightChannel),
                                uri,
                                loadInfo,
+                               nullptr,   // aChannelPolicy
                                loadGroup,
                                nullptr,   // aCallbacks
                                loadFlags);
@@ -1151,6 +1152,7 @@ NS_StartCORSPreflight(nsIChannel* aRequestChannel,
                                nsContentUtils::GetSystemPrincipal(),
                                nsILoadInfo::SEC_NORMAL,
                                nsIContentPolicy::TYPE_OTHER,
+                               nullptr,   // aChannelPolicy
                                loadGroup,
                                nullptr,   // aCallbacks
                                loadFlags);
