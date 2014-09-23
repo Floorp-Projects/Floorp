@@ -1341,19 +1341,13 @@ Shape::setObjectMetadata(JSContext *cx, JSObject *metadata, TaggedProto proto, S
 /* static */ bool
 js::ObjectImpl::preventExtensions(JSContext *cx, Handle<ObjectImpl*> obj)
 {
-#ifdef DEBUG
-    bool extensible;
-    if (!JSObject::isExtensible(cx, obj, &extensible))
-        return false;
-    MOZ_ASSERT(extensible,
-               "Callers must ensure |obj| is extensible before calling "
-               "preventExtensions");
-#endif
-
     if (Downcast(obj)->is<ProxyObject>()) {
         RootedObject object(cx, obj->asObjectPtr());
         return js::Proxy::preventExtensions(cx, object);
     }
+
+    if (!obj->nonProxyIsExtensible())
+        return true;
 
     RootedObject self(cx, obj->asObjectPtr());
 
