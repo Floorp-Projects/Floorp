@@ -153,6 +153,9 @@ user_pref("layout.css.ruby.enabled", true);
 // Disable spammy layout warnings because they pollute test logs
 user_pref("layout.spammy_warnings.enabled", false);
 
+// Enable Media Source Extensions for testing
+user_pref("media.mediasource.enabled", true);
+
 // Enable mozContacts
 user_pref("dom.mozContacts.enabled", true);
 

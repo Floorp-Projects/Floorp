@@ -1491,25 +1491,28 @@ jit::AccountForCFGChanges(MIRGenerator *mir, MIRGraph &graph, bool updateAliasAn
 bool
 jit::RemoveUnmarkedBlocks(MIRGenerator *mir, MIRGraph &graph, uint32_t numMarkedBlocks)
 {
-    // If all blocks are marked, the CFG is unmodified. Just clear the marks.
     if (numMarkedBlocks == graph.numBlocks()) {
+        // If all blocks are marked, no blocks need removal. Just clear the
+        // marks. We'll still need to update the dominator tree below though,
+        // since we may have removed edges even if we didn't remove any blocks.
         graph.unmarkBlocks();
-        return true;
-    }
+    } else {
+        // Find unmarked blocks and remove them.
+        for (ReversePostorderIterator iter(graph.rpoBegin()); iter != graph.rpoEnd();) {
+            MBasicBlock *block = *iter++;
 
-    for (ReversePostorderIterator iter(graph.rpoBegin()); iter != graph.rpoEnd();) {
-        MBasicBlock *block = *iter++;
+            if (block->isMarked()) {
+                block->unmark();
+                continue;
+            }
 
-        if (block->isMarked()) {
-            block->unmark();
-            continue;
+            for (size_t i = 0, e = block->numSuccessors(); i != e; ++i)
+                block->getSuccessor(i)->removePredecessor(block);
+            graph.removeBlockIncludingPhis(block);
         }
-
-        for (size_t i = 0, e = block->numSuccessors(); i != e; ++i)
-            block->getSuccessor(i)->removePredecessor(block);
-        graph.removeBlockIncludingPhis(block);
     }
 
+    // Renumber the blocks and update the dominator tree.
     return AccountForCFGChanges(mir, graph, /*updateAliasAnalysis=*/false);
 }
 
