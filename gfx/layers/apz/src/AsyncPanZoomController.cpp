@@ -15,7 +15,7 @@
 #include "GestureEventListener.h"       // for GestureEventListener
 #include "InputData.h"                  // for MultiTouchInput, etc
 #include "InputBlockState.h"            // for InputBlockState, TouchBlockState
-#include "OverscrollHandoffChain.h"     // for OverscrollHandoffChain
+#include "OverscrollHandoffState.h"     // for OverscrollHandoffState
 #include "Units.h"                      // for CSSRect, CSSPoint, etc
 #include "UnitTransforms.h"             // for TransformTo
 #include "base/message_loop.h"          // for MessageLoop
@@ -246,6 +246,11 @@ typedef mozilla::gfx::Matrix4x4 Matrix4x4;
  * When flinging in an overscrolled state, if the velocity goes below this
  * number, we stop the fling.
  * Units: screen pixels per millisecond
+ *
+ * "apz.overscroll.min_pan_distance_ratio"
+ * The minimum ratio of the pan distance along one axis to the pan distance
+ * along the other axis needed to initiate overscroll along the first axis
+ * during panning.
  *
  * "apz.overscroll.stretch_factor"
  * How much overscrolling can stretch content along an axis.
@@ -1397,8 +1402,10 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent, bool 
 
   // TODO: Handle pan events sent without pan begin / pan end events properly.
   if (mPanGestureState) {
+    OverscrollHandoffState handoffState(
+        *mPanGestureState->GetOverscrollHandoffChain(), aEvent.mPanDisplacement);
     CallDispatchScroll(aEvent.mPanStartPoint, aEvent.mPanStartPoint + aEvent.mPanDisplacement,
-                       *mPanGestureState->GetOverscrollHandoffChain(), 0);
+                       handoffState);
   }
 
   return nsEventStatus_eConsumeNoDefault;
@@ -1684,8 +1691,7 @@ void AsyncPanZoomController::UpdateWithTouchAtDevicePoint(const MultiTouchInput&
 
 bool AsyncPanZoomController::AttemptScroll(const ScreenPoint& aStartPoint,
                                            const ScreenPoint& aEndPoint,
-                                           const OverscrollHandoffChain& aOverscrollHandoffChain,
-                                           uint32_t aOverscrollHandoffChainIndex) {
+                                           OverscrollHandoffState& aOverscrollHandoffState) {
 
   // "start - end" rather than "end - start" because e.g. moving your finger
   // down (*positive* direction along y axis) causes the vertical scroll offset
@@ -1720,8 +1726,9 @@ bool AsyncPanZoomController::AttemptScroll(const ScreenPoint& aStartPoint,
   // overscroll).
   // Note: "+ overscroll" rather than "- overscroll" because "overscroll"
   // is what's left of "displacement", and "displacement" is "start - end".
+  ++aOverscrollHandoffState.mChainIndex;
   if (CallDispatchScroll(aEndPoint + overscroll, aEndPoint,
-                         aOverscrollHandoffChain, aOverscrollHandoffChainIndex + 1)) {
+                         aOverscrollHandoffState)) {
     return true;
   }
 
@@ -1729,7 +1736,24 @@ bool AsyncPanZoomController::AttemptScroll(const ScreenPoint& aStartPoint,
   // overscroll, try to accept it ourselves. We only accept it if we
   // are pannable.
   APZC_LOG("%p taking overscroll during panning\n", this);
-  return OverscrollBy(overscroll);
+  return OverscrollForPanning(overscroll, aOverscrollHandoffState.mPanDistance);
+}
+
+bool AsyncPanZoomController::OverscrollForPanning(ScreenPoint aOverscroll,
+                                                  const ScreenPoint& aPanDistance) {
+  // Only allow entering overscroll along an axis if the pan distance along
+  // that axis is greater than the pan distance along the other axis by a
+  // configurable factor. If we are already overscrolled, don't check this.
+  if (!IsOverscrolled()) {
+    if (aPanDistance.x < gfxPrefs::APZMinPanDistanceRatio() * aPanDistance.y) {
+      aOverscroll.x = 0;
+    }
+    if (aPanDistance.y < gfxPrefs::APZMinPanDistanceRatio() * aPanDistance.x) {
+      aOverscroll.y = 0;
+    }
+  }
+
+  return OverscrollBy(aOverscroll);
 }
 
 bool AsyncPanZoomController::OverscrollBy(const ScreenPoint& aOverscroll) {
@@ -1833,16 +1857,14 @@ void AsyncPanZoomController::StartSnapBack() {
 
 bool AsyncPanZoomController::CallDispatchScroll(const ScreenPoint& aStartPoint,
                                                 const ScreenPoint& aEndPoint,
-                                                const OverscrollHandoffChain& aOverscrollHandoffChain,
-                                                uint32_t aOverscrollHandoffChainIndex) {
+                                                OverscrollHandoffState& aOverscrollHandoffState) {
   // Make a local copy of the tree manager pointer and check if it's not
   // null before calling DispatchScroll(). This is necessary because
   // Destroy(), which nulls out mTreeManager, could be called concurrently.
   APZCTreeManager* treeManagerLocal = mTreeManager;
   return treeManagerLocal
       && treeManagerLocal->DispatchScroll(this, aStartPoint, aEndPoint,
-                                          aOverscrollHandoffChain,
-                                          aOverscrollHandoffChainIndex);
+                                          aOverscrollHandoffState);
 }
 
 void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
@@ -1856,8 +1878,9 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
   UpdateWithTouchAtDevicePoint(aEvent);
 
   if (prevTouchPoint != touchPoint) {
-    CallDispatchScroll(prevTouchPoint, touchPoint,
-        *CurrentTouchBlock()->GetOverscrollHandoffChain(), 0);
+    OverscrollHandoffState handoffState(
+        *CurrentTouchBlock()->GetOverscrollHandoffChain(), ScreenPoint(dx, dy));
+    CallDispatchScroll(prevTouchPoint, touchPoint, handoffState);
   }
 }
 
