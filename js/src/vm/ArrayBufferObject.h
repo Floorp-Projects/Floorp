@@ -247,11 +247,16 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
                             uint8_t *oldDataPointer, BufferContents newContents);
     void setFirstView(ArrayBufferViewObject *view);
 
+    uint8_t *inlineDataPointer() const;
+
   public:
     uint8_t *dataPointer() const;
     size_t byteLength() const;
     BufferContents contents() const {
         return BufferContents(dataPointer(), bufferKind());
+    }
+    bool hasInlineData() const {
+        return dataPointer() == inlineDataPointer();
     }
 
     void releaseData(FreeOp *fop);
@@ -325,16 +330,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
 class ArrayBufferViewObject : public JSObject
 {
-  protected:
-    /* Offset of view in underlying ArrayBufferObject */
-    static const size_t BYTEOFFSET_SLOT  = JS_BUFVIEW_SLOT_BYTEOFFSET;
-
-    /* Byte length of view */
-    static const size_t LENGTH_SLOT      = JS_BUFVIEW_SLOT_LENGTH;
-
-    /* Underlying ArrayBufferObject */
-    static const size_t BUFFER_SLOT      = JS_BUFVIEW_SLOT_OWNER;
-
   public:
     static ArrayBufferObject *bufferObject(JSContext *cx, Handle<ArrayBufferViewObject *> obj);
 
@@ -343,6 +338,7 @@ class ArrayBufferViewObject : public JSObject
     uint8_t *dataPointer() {
         return static_cast<uint8_t *>(getPrivate());
     }
+    static void trace(JSTracer *trc, JSObject *obj);
 };
 
 bool
