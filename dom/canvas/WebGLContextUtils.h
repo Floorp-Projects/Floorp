@@ -13,12 +13,12 @@
 
 namespace mozilla {
 
-bool IsGLDepthFormat(GLenum webGLFormat);
-bool IsGLDepthStencilFormat(GLenum webGLFormat);
-bool FormatHasAlpha(GLenum webGLFormat);
-void DriverFormatsFromFormatAndType(gl::GLContext* gl, GLenum webGLFormat, GLenum webGLType,
+bool IsGLDepthFormat(TexInternalFormat webGLFormat);
+bool IsGLDepthStencilFormat(TexInternalFormat webGLFormat);
+bool FormatHasAlpha(TexInternalFormat webGLFormat);
+void DriverFormatsFromFormatAndType(gl::GLContext* gl, TexInternalFormat webGLFormat, TexType webGLType,
                                     GLenum* out_driverInternalFormat, GLenum* out_driverFormat);
-GLenum DriverTypeFromType(gl::GLContext* gl, GLenum webGLType);
+GLenum DriverTypeFromType(gl::GLContext* gl, TexType webGLType);
 
 // For use with the different texture calls, i.e.
 //   TexImage2D, CopyTex[Sub]Image2D, ...
@@ -51,7 +51,7 @@ struct GLComponents
         : mComponents(0)
     { }
 
-    explicit GLComponents(GLenum aFormat);
+    explicit GLComponents(TexInternalFormat aFormat);
 
     // Returns true iff other has all (or more) of
     // the components present in this GLComponents

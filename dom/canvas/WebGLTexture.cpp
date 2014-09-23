@@ -138,7 +138,7 @@ WebGLTexture::Bind(TexTarget aTexTarget) {
 void
 WebGLTexture::SetImageInfo(TexImageTarget aTexImageTarget, GLint aLevel,
                   GLsizei aWidth, GLsizei aHeight,
-                  GLenum aFormat, GLenum aType, WebGLImageDataStatus aStatus)
+                  TexInternalFormat aFormat, TexType aType, WebGLImageDataStatus aStatus)
 {
     MOZ_ASSERT(TexImageTargetToTexTarget(aTexImageTarget) == mTarget);
     if (TexImageTargetToTexTarget(aTexImageTarget) != mTarget)
@@ -459,7 +459,7 @@ ClearByMask(WebGLContext* context, GLbitfield mask)
 static bool
 ClearWithTempFB(WebGLContext* context, GLuint tex,
                 TexImageTarget texImageTarget, GLint level,
-                GLenum baseInternalFormat,
+                TexInternalFormat baseInternalFormat,
                 GLsizei width, GLsizei height)
 {
     if (texImageTarget != LOCAL_GL_TEXTURE_2D)
@@ -472,7 +472,7 @@ ClearWithTempFB(WebGLContext* context, GLuint tex,
     gl::ScopedBindFramebuffer autoFB(gl, fb.FB());
     GLbitfield mask = 0;
 
-    switch (baseInternalFormat) {
+    switch (baseInternalFormat.get()) {
     case LOCAL_GL_LUMINANCE:
     case LOCAL_GL_LUMINANCE_ALPHA:
     case LOCAL_GL_ALPHA:
@@ -542,8 +542,8 @@ WebGLTexture::DoDeferredImageInitialization(TexImageTarget imageTarget, GLint le
     mContext->MakeContextCurrent();
 
     // Try to clear with glCLear.
-    GLenum format = imageInfo.mWebGLFormat;
-    GLenum type = imageInfo.mWebGLType;
+    TexInternalFormat format = imageInfo.mWebGLFormat;
+    TexType type = imageInfo.mWebGLType;
     WebGLTexelFormat texelformat = GetWebGLTexelFormat(format, type);
 
     bool cleared = ClearWithTempFB(mContext, GLName(),
