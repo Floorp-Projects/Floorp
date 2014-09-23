@@ -664,7 +664,7 @@ GeckoMediaPluginService::HasPluginForAPI(const nsAString& aOrigin,
   NS_ENSURE_ARG(aResult);
 
   nsCString temp(aAPI);
-  GMPParent *parent = SelectPluginForAPI(aOrigin, temp, *aTags);
+  GMPParent *parent = SelectPluginForAPI(aOrigin, temp, *aTags, false);
   *aResult = !!parent;
 
   return NS_OK;
@@ -673,33 +673,55 @@ GeckoMediaPluginService::HasPluginForAPI(const nsAString& aOrigin,
 GMPParent*
 GeckoMediaPluginService::SelectPluginForAPI(const nsAString& aOrigin,
                                             const nsCString& aAPI,
-                                            const nsTArray<nsCString>& aTags)
+                                            const nsTArray<nsCString>& aTags,
+                                            bool aCloneCrossOrigin)
 {
-  MutexAutoLock lock(mMutex);
-  for (uint32_t i = 0; i < mPlugins.Length(); i++) {
-    GMPParent* gmp = mPlugins[i];
-    bool supportsAllTags = true;
-    for (uint32_t t = 0; t < aTags.Length(); t++) {
-      const nsCString& tag = aTags[t];
-      if (!gmp->SupportsAPI(aAPI, tag)) {
-        supportsAllTags = false;
-        break;
+  MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread || !aCloneCrossOrigin,
+             "Can't clone GMP plugins on non-GMP threads.");
+
+  GMPParent* gmpToClone = nullptr;
+  {
+    MutexAutoLock lock(mMutex);
+    for (uint32_t i = 0; i < mPlugins.Length(); i++) {
+      GMPParent* gmp = mPlugins[i];
+      bool supportsAllTags = true;
+      for (uint32_t t = 0; t < aTags.Length(); t++) {
+        const nsCString& tag = aTags[t];
+        if (!gmp->SupportsAPI(aAPI, tag)) {
+          supportsAllTags = false;
+          break;
+        }
       }
-    }
-    if (!supportsAllTags) {
-      continue;
-    }
-    if (aOrigin.IsEmpty()) {
-      if (gmp->CanBeSharedCrossOrigin()) {
+      if (!supportsAllTags) {
+        continue;
+      }
+      if (aOrigin.IsEmpty()) {
+        if (gmp->CanBeSharedCrossOrigin()) {
+          return gmp;
+        }
+      } else if (gmp->CanBeUsedFrom(aOrigin)) {
+        if (!aOrigin.IsEmpty()) {
+          gmp->SetOrigin(aOrigin);
+        }
         return gmp;
       }
-    } else if (gmp->CanBeUsedFrom(aOrigin)) {
-      if (!aOrigin.IsEmpty()) {
-        gmp->SetOrigin(aOrigin);
-      }
-      return gmp;
+
+      // This GMP has the correct type but has the wrong origin; hold on to it
+      // in case we need to clone it.
+      gmpToClone = gmp;
     }
   }
+
+  // Plugin exists, but we can't use it due to cross-origin separation. Create a
+  // new one.
+  if (aCloneCrossOrigin && gmpToClone) {
+    GMPParent* clone = ClonePlugin(gmpToClone);
+    if (!aOrigin.IsEmpty()) {
+      clone->SetOrigin(aOrigin);
+    }
+    return clone;
+  }
+
   return nullptr;
 }
 
