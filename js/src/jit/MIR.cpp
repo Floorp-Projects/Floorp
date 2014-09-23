@@ -1181,17 +1181,18 @@ MPhi::removeAllOperands()
 MDefinition *
 MPhi::foldsTernary()
 {
-    // Look if this MPhi is a ternary construct.
-    // This is a very loose term as it actually only checks for
-    //
-    //      MTest X
-    //       /  \
-    //    ...    ...
-    //       \  /
-    //     MPhi X Y
-    //
-    // Which we will simply call:
-    // x ? x : y or x ? y : x
+    /* Look if this MPhi is a ternary construct.
+     * This is a very loose term as it actually only checks for
+     *
+     *      MTest X
+     *       /  \
+     *    ...    ...
+     *       \  /
+     *     MPhi X Y
+     *
+     * Which we will simply call:
+     * x ? x : y or x ? y : x
+     */
 
     if (numOperands() != 2)
         return nullptr;
