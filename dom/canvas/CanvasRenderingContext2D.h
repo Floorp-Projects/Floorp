@@ -857,6 +857,11 @@ protected:
     return state.filter.mPrimitives.Length() > 0;
   }
 
+  bool NeedToCalculateBounds()
+  {
+    return NeedToDrawShadow() || NeedToApplyFilter();
+  }
+
   mozilla::gfx::CompositionOp UsedOperation()
   {
     if (NeedToDrawShadow()) {
