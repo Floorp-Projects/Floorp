@@ -1744,7 +1744,7 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
         const Class *clasp = type->clasp();
         if (clasp->trace) {
             // Global objects all have the same trace hook. That hook is safe without barriers
-            // if the gloal has no custom trace hook of it's own, or has been moved to a different
+            // if the global has no custom trace hook of its own, or has been moved to a different
             // compartment, and so can't have one.
             JS_ASSERT_IF(runtime()->gc.isIncrementalGCEnabled() &&
                          !(clasp->trace == JS_GlobalObjectTraceHook &&

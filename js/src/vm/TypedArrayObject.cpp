@@ -92,8 +92,8 @@ TypedArrayLayout::dataOffset()
 void
 TypedArrayObject::neuter(void *newData)
 {
-    setSlot(LENGTH_SLOT, Int32Value(0));
-    setSlot(BYTEOFFSET_SLOT, Int32Value(0));
+    setSlot(TypedArrayLayout::LENGTH_SLOT, Int32Value(0));
+    setSlot(TypedArrayLayout::BYTEOFFSET_SLOT, Int32Value(0));
     setPrivate(newData);
 }
 
@@ -119,7 +119,7 @@ TypedArrayObject::ensureHasBuffer(JSContext *cx, Handle<TypedArrayObject *> tarr
     memcpy(buffer->dataPointer(), tarray->viewData(), tarray->byteLength());
     InitArrayBufferViewDataPointer(tarray, buffer, 0);
 
-    tarray->setSlot(BUFFER_SLOT, ObjectValue(*buffer));
+    tarray->setSlot(TypedArrayLayout::BUFFER_SLOT, ObjectValue(*buffer));
     return true;
 }
 
@@ -348,7 +348,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         if (!obj)
             return nullptr;
 
-        obj->setSlot(BUFFER_SLOT, ObjectOrNullValue(buffer));
+        obj->setSlot(TypedArrayLayout::BUFFER_SLOT, ObjectOrNullValue(buffer));
 
         if (buffer) {
             InitArrayBufferViewDataPointer(obj, buffer, byteOffset);
@@ -358,8 +358,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             memset(data, 0, len * sizeof(NativeType));
         }
 
-        obj->setSlot(LENGTH_SLOT, Int32Value(len));
-        obj->setSlot(BYTEOFFSET_SLOT, Int32Value(byteOffset));
+        obj->setSlot(TypedArrayLayout::LENGTH_SLOT, Int32Value(len));
+        obj->setSlot(TypedArrayLayout::BYTEOFFSET_SLOT, Int32Value(byteOffset));
 
 #ifdef DEBUG
         if (buffer) {
@@ -372,7 +372,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         }
 
         // Verify that the private slot is at the expected place
-        JS_ASSERT(obj->numFixedSlots() == DATA_SLOT);
+        JS_ASSERT(obj->numFixedSlots() == TypedArrayLayout::DATA_SLOT);
 #endif
 
         if (buffer) {
@@ -950,14 +950,14 @@ DataViewObject::create(JSContext *cx, uint32_t byteOffset, uint32_t byteLength,
     }
 
     DataViewObject &dvobj = obj->as<DataViewObject>();
-    dvobj.setFixedSlot(BYTEOFFSET_SLOT, Int32Value(byteOffset));
-    dvobj.setFixedSlot(LENGTH_SLOT, Int32Value(byteLength));
-    dvobj.setFixedSlot(BUFFER_SLOT, ObjectValue(*arrayBuffer));
+    dvobj.setFixedSlot(TypedArrayLayout::BYTEOFFSET_SLOT, Int32Value(byteOffset));
+    dvobj.setFixedSlot(TypedArrayLayout::LENGTH_SLOT, Int32Value(byteLength));
+    dvobj.setFixedSlot(TypedArrayLayout::BUFFER_SLOT, ObjectValue(*arrayBuffer));
     InitArrayBufferViewDataPointer(&dvobj, arrayBuffer, byteOffset);
     JS_ASSERT(byteOffset + byteLength <= arrayBuffer->byteLength());
 
     // Verify that the private slot is at the expected place
-    JS_ASSERT(dvobj.numFixedSlots() == DATA_SLOT);
+    JS_ASSERT(dvobj.numFixedSlots() == TypedArrayLayout::DATA_SLOT);
 
     if (!arrayBuffer->addView(cx, &dvobj))
         return nullptr;
@@ -1722,7 +1722,7 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
 #define IMPL_TYPED_ARRAY_CLASS(_typedArray)                                    \
 {                                                                              \
     #_typedArray,                                                              \
-    JSCLASS_HAS_RESERVED_SLOTS(TypedArrayObject::RESERVED_SLOTS) |             \
+    JSCLASS_HAS_RESERVED_SLOTS(TypedArrayLayout::RESERVED_SLOTS) |             \
     JSCLASS_HAS_PRIVATE | JSCLASS_IMPLEMENTS_BARRIERS |                        \
     JSCLASS_HAS_CACHED_PROTO(JSProto_##_typedArray),                           \
     JS_PropertyStub,         /* addProperty */                                 \
@@ -1736,7 +1736,7 @@ IMPL_TYPED_ARRAY_COMBINED_UNWRAPPERS(Float64, double, double)
     nullptr,                 /* call        */                                 \
     nullptr,                 /* hasInstance */                                 \
     nullptr,                 /* construct   */                                 \
-    nullptr,                 /* trace  */                                      \
+    ArrayBufferViewObject::trace, /* trace  */                                 \
     TYPED_ARRAY_CLASS_SPEC(_typedArray),                                       \
     {                                                                          \
         nullptr,             /* outerObject */                                 \
@@ -1895,7 +1895,7 @@ const Class DataViewObject::class_ = {
     nullptr,                 /* call        */
     nullptr,                 /* hasInstance */
     nullptr,                 /* construct   */
-    nullptr,                 /* trace       */
+    ArrayBufferViewObject::trace, /* trace       */
 };
 
 const JSFunctionSpec DataViewObject::jsfuncs[] = {
@@ -2003,8 +2003,8 @@ DataViewObject::initClass(JSContext *cx)
 void
 DataViewObject::neuter(void *newData)
 {
-    setSlot(LENGTH_SLOT, Int32Value(0));
-    setSlot(BYTEOFFSET_SLOT, Int32Value(0));
+    setSlot(TypedArrayLayout::LENGTH_SLOT, Int32Value(0));
+    setSlot(TypedArrayLayout::BYTEOFFSET_SLOT, Int32Value(0));
     setPrivate(newData);
 }
 

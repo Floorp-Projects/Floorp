@@ -69,20 +69,14 @@ class TypedArrayLayout
     bool isNeuterable() const { return isNeuterable_; }
     const Class *addressOfFirstClass() const { return firstClass_; }
     const Class *addressOfMaxClass() const { return maxClass_; }
+
+  protected:
+    static_assert(js::detail::TypedArrayLengthSlot == LENGTH_SLOT,
+                  "bad inlined constant in jsfriendapi.h");
 };
 
 class TypedArrayObject : public ArrayBufferViewObject
 {
-  protected:
-    // Typed array properties stored in slots, beyond those shared by all
-    // ArrayBufferViews.
-    static const size_t DATA_SLOT      = TypedArrayLayout::DATA_SLOT;
-
-    static const size_t RESERVED_SLOTS = TypedArrayLayout::RESERVED_SLOTS;
-
-    static_assert(js::detail::TypedArrayLengthSlot == LENGTH_SLOT,
-                  "bad inlined constant in jsfriendapi.h");
-
   public:
     typedef TypedArrayObject AnyTypedArray;
     typedef ArrayBufferObject BufferType;
@@ -107,7 +101,7 @@ class TypedArrayObject : public ArrayBufferViewObject
         return &protoClasses[type];
     }
 
-    static const size_t FIXED_DATA_START = DATA_SLOT + 1;
+    static const size_t FIXED_DATA_START = TypedArrayLayout::DATA_SLOT + 1;
 
     // For typed arrays which can store their data inline, the array buffer
     // object is created lazily.
@@ -128,16 +122,16 @@ class TypedArrayObject : public ArrayBufferViewObject
     inline size_t bytesPerElement() const;
 
     static Value bufferValue(TypedArrayObject *tarr) {
-        return tarr->getFixedSlot(BUFFER_SLOT);
+        return tarr->getFixedSlot(TypedArrayLayout::BUFFER_SLOT);
     }
     static Value byteOffsetValue(TypedArrayObject *tarr) {
-        return tarr->getFixedSlot(BYTEOFFSET_SLOT);
+        return tarr->getFixedSlot(TypedArrayLayout::BYTEOFFSET_SLOT);
     }
     static Value byteLengthValue(TypedArrayObject *tarr) {
-        return Int32Value(tarr->getFixedSlot(LENGTH_SLOT).toInt32() * tarr->bytesPerElement());
+        return Int32Value(tarr->getFixedSlot(TypedArrayLayout::LENGTH_SLOT).toInt32() * tarr->bytesPerElement());
     }
     static Value lengthValue(TypedArrayObject *tarr) {
-        return tarr->getFixedSlot(LENGTH_SLOT);
+        return tarr->getFixedSlot(TypedArrayLayout::LENGTH_SLOT);
     }
 
     static bool
@@ -164,7 +158,7 @@ class TypedArrayObject : public ArrayBufferViewObject
 
     void *viewData() const {
         // Keep synced with js::Get<Type>ArrayLengthAndData in jsfriendapi.h!
-        return static_cast<void*>(getPrivate(DATA_SLOT));
+        return static_cast<void*>(getPrivate(TypedArrayLayout::DATA_SLOT));
     }
 
     Value getElement(uint32_t index);
@@ -339,19 +333,19 @@ class DataViewObject : public ArrayBufferViewObject
     static const Class class_;
 
     static Value byteOffsetValue(DataViewObject *view) {
-        Value v = view->getReservedSlot(BYTEOFFSET_SLOT);
+        Value v = view->getReservedSlot(TypedArrayLayout::BYTEOFFSET_SLOT);
         JS_ASSERT(v.toInt32() >= 0);
         return v;
     }
 
     static Value byteLengthValue(DataViewObject *view) {
-        Value v = view->getReservedSlot(LENGTH_SLOT);
+        Value v = view->getReservedSlot(TypedArrayLayout::LENGTH_SLOT);
         JS_ASSERT(v.toInt32() >= 0);
         return v;
     }
 
     static Value bufferValue(DataViewObject *view) {
-        return view->getReservedSlot(BUFFER_SLOT);
+        return view->getReservedSlot(TypedArrayLayout::BUFFER_SLOT);
     }
 
     uint32_t byteOffset() const {
