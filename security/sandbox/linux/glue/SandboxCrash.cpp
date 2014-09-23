@@ -18,6 +18,7 @@
 #include "mozilla/NullPtr.h"
 #include "mozilla/unused.h"
 #include "mozilla/dom/Exceptions.h"
+#include "nsContentUtils.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
 
@@ -37,6 +38,11 @@ SandboxLogJSStack(void)
     // This might be a worker thread... or it might be a non-JS
     // thread, or a non-NSPR thread.  There's isn't a good API for
     // dealing with this, yet.
+    return;
+  }
+  if (!nsContentUtils::XPConnect()) {
+    // There is no content (e.g., the process is a media plugin), in
+    // which case this will probably crash and definitely not work.
     return;
   }
   nsCOMPtr<nsIStackFrame> frame = dom::GetCurrentJSStack();
