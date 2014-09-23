@@ -2211,6 +2211,7 @@ InlineFrameIterator::dump() const
     }
 
     SnapshotIterator si = snapshotIterator();
+    MaybeReadFallback fallback(UndefinedValue());
     fprintf(stderr, "  slots: %u\n", si.numAllocations() - 1);
     for (unsigned i = 0; i < si.numAllocations() - 1; i++) {
         if (isFunction) {
@@ -2223,7 +2224,7 @@ InlineFrameIterator::dump() const
             else {
                 if (i - 2 == callee()->nargs() && numActualArgs() > callee()->nargs()) {
                     DumpOp d(callee()->nargs());
-                    unaliasedForEachActual(GetJSContextFromJitCode(), d, ReadFrame_Overflown);
+                    unaliasedForEachActual(GetJSContextFromJitCode(), d, ReadFrame_Overflown, fallback);
                 }
 
                 fprintf(stderr, "  slot %d: ", int(i - 2 - callee()->nargs()));
@@ -2231,7 +2232,7 @@ InlineFrameIterator::dump() const
         } else
             fprintf(stderr, "  slot %u: ", i);
 #ifdef DEBUG
-        js_DumpValue(si.maybeRead());
+        js_DumpValue(si.maybeRead(fallback));
 #else
         fprintf(stderr, "?\n");
 #endif
