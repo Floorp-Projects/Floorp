@@ -165,6 +165,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 {
     friend class Breakpoint;
     friend class DebuggerMemory;
+    friend class SavedStacks;
     friend class mozilla::LinkedListElement<Debugger>;
     friend bool (::JS_DefineDebuggerObject)(JSContext *cx, JS::HandleObject obj);
     friend bool SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata);
@@ -209,6 +210,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     typedef mozilla::LinkedList<AllocationSite> AllocationSiteList;
 
     bool trackingAllocationSites;
+    double allocationSamplingProbability;
     AllocationSiteList allocationsLog;
     size_t allocationsLogLength;
     size_t maxAllocationsLogLength;

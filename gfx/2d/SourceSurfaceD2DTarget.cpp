@@ -67,7 +67,7 @@ SourceSurfaceD2DTarget::GetDataSurface()
   HRESULT hr = Factory::GetDirect3D10Device()->CreateTexture2D(&desc, nullptr, byRef(dataSurf->mTexture));
 
   if (FAILED(hr)) {
-    gfxDebug() << "Failed to create staging texture for SourceSurface. Code: " << hr;
+    gfxDebug() << "Failed to create staging texture for SourceSurface. Code: " << hexa(hr);
     return nullptr;
   }
   Factory::GetDirect3D10Device()->CopyResource(dataSurf->mTexture, mTexture);
@@ -94,7 +94,7 @@ SourceSurfaceD2DTarget::GetSRView()
   HRESULT hr = Factory::GetDirect3D10Device()->CreateShaderResourceView(mTexture, nullptr, byRef(mSRView));
 
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to create ShaderResourceView. Code: " << hr;
+    gfxWarning() << "Failed to create ShaderResourceView. Code: " << hexa(hr);
   }
 
   return mSRView;
@@ -143,7 +143,7 @@ SourceSurfaceD2DTarget::GetBitmap(ID2D1RenderTarget *aRT)
   hr = mTexture->QueryInterface((IDXGISurface**)byRef(surf));
 
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to query interface texture to DXGISurface. Code: " << hr;
+    gfxWarning() << "Failed to query interface texture to DXGISurface. Code: " << hexa(hr);
     return nullptr;
   }
 
@@ -157,7 +157,7 @@ SourceSurfaceD2DTarget::GetBitmap(ID2D1RenderTarget *aRT)
                            byRef(mBitmap));
 
     if (FAILED(hr)) {
-      gfxWarning() << "Failed in CreateBitmap. Code: " << hr;
+      gfxWarning() << "Failed in CreateBitmap. Code: " << hexa(hr);
       return nullptr;
     }
 
@@ -276,7 +276,7 @@ DataSourceSurfaceD2DTarget::Map(MapType aMapType, MappedSurface *aMappedSurface)
   HRESULT hr = mTexture->Map(0, mapType, 0, &map);
 
   if (FAILED(hr)) {
-    gfxWarning() << "Texture map failed with code: " << hr;
+    gfxWarning() << "Texture map failed with code: " << hexa(hr);
     return false;
   }
 
@@ -304,7 +304,7 @@ DataSourceSurfaceD2DTarget::EnsureMapped()
   if (!mMapped) {
     HRESULT hr = mTexture->Map(0, D3D10_MAP_READ, 0, &mMap);
     if (FAILED(hr)) {
-      gfxWarning() << "Failed to map texture to memory. Code: " << hr;
+      gfxWarning() << "Failed to map texture to memory. Code: " << hexa(hr);
       return;
     }
     mMapped = true;

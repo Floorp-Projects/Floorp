@@ -1814,6 +1814,17 @@ CurrentGlobalOrNull(JSContext *cx);
 extern JS_PUBLIC_API(JSObject *)
 JS_InitReflect(JSContext *cx, JS::HandleObject global);
 
+/*
+ * Add various profiling-related functions as properties of the given object.
+ * Defined in builtin/Profilers.cpp.
+ */
+extern JS_PUBLIC_API(bool)
+JS_DefineProfilingFunctions(JSContext *cx, JS::HandleObject obj);
+
+/* Defined in vm/Debugger.cpp. */
+extern JS_PUBLIC_API(bool)
+JS_DefineDebuggerObject(JSContext *cx, JS::HandleObject obj);
+
 #ifdef JS_HAS_CTYPES
 /*
  * Initialize the 'ctypes' object on a global variable 'obj'. The 'ctypes'

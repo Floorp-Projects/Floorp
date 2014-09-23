@@ -839,6 +839,9 @@ namespace js {
 namespace jit { struct IonScriptCounts; }
 void
 DumpIonScriptCounts(js::Sprinter *sp, jit::IonScriptCounts *ionCounts);
+
+void
+DumpCompartmentPCCounts(JSContext *cx);
 }
 
 #endif /* jsopcode_h */
