@@ -381,7 +381,7 @@ let DirectoryLinksProvider = {
       this._enhancedLinks.clear();
 
       // all directory links have a frecency of DIRECTORY_FRECENCY
-      aCallback(rawLinks.map((link, position) => {
+      return rawLinks.map((link, position) => {
         // Stash the enhanced image for the site
         if (link.enhancedImageURI) {
           this._enhancedLinks.set(NewTabUtils.extractSite(link.url), link);
@@ -390,8 +390,11 @@ let DirectoryLinksProvider = {
         link.frecency = DIRECTORY_FRECENCY;
         link.lastVisitDate = rawLinks.length - position;
         return link;
-      }));
-    });
+      });
+    }).catch(ex => {
+      Cu.reportError(ex);
+      return [];
+    }).then(aCallback);
   },
 
   init: function DirectoryLinksProvider_init() {
