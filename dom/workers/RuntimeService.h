@@ -105,8 +105,11 @@ public:
   struct NavigatorProperties
   {
     nsString mAppName;
+    nsString mAppNameOverridden;
     nsString mAppVersion;
+    nsString mAppVersionOverridden;
     nsString mPlatform;
+    nsString mPlatformOverridden;
     nsString mUserAgent;
   };
 
@@ -203,6 +206,15 @@ public:
     sDefaultJSSettings.content.contextOptions = aContentCxOptions;
     sDefaultJSSettings.chrome.contextOptions = aChromeCxOptions;
   }
+
+  void
+  UpdateAppNameOverridePreference(const nsAString& aValue);
+
+  void
+  UpdateAppVersionOverridePreference(const nsAString& aValue);
+
+  void
+  UpdatePlatformOverridePreference(const nsAString& aValue);
 
   void
   UpdateAllWorkerRuntimeAndContextOptions();
