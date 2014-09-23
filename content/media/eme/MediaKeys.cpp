@@ -274,73 +274,25 @@ MediaKeys::OnCDMCreated(PromiseId aId)
   }
 }
 
-already_AddRefed<Promise>
-MediaKeys::LoadSession(const nsAString& aSessionId, ErrorResult& aRv)
-{
-  nsRefPtr<Promise> promise(MakePromise(aRv));
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  if (aSessionId.IsEmpty()) {
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    // "The sessionId parameter is empty."
-    return promise.forget();
-  }
-
-  // TODO: The spec doesn't specify what to do in this case...
-  if (mKeySessions.Contains(aSessionId)) {
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    return promise.forget();
-  }
-
-  // Create session.
-  nsRefPtr<MediaKeySession> session(
-    new MediaKeySession(GetParentObject(), this, mKeySystem, SessionType::Persistent, aRv));
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  session->Init(aSessionId);
-  auto pid = StorePromise(promise);
-  mPendingSessions.Put(pid, session);
-  mProxy->LoadSession(pid, aSessionId);
-
-  return promise.forget();
-}
-
-already_AddRefed<Promise>
-MediaKeys::CreateSession(const nsAString& initDataType,
-                         const ArrayBufferViewOrArrayBuffer& aInitData,
-                         SessionType aSessionType,
+already_AddRefed<MediaKeySession>
+MediaKeys::CreateSession(SessionType aSessionType,
                          ErrorResult& aRv)
 {
-  nsRefPtr<Promise> promise(MakePromise(aRv));
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
-  nsTArray<uint8_t> data;
-  if (initDataType.IsEmpty() ||
-      !CopyArrayBufferViewOrArrayBufferData(aInitData, data)) {
-    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    return promise.forget();
-  }
-
   nsRefPtr<MediaKeySession> session = new MediaKeySession(GetParentObject(),
                                                           this,
                                                           mKeySystem,
                                                           aSessionType,
                                                           aRv);
-  auto pid = StorePromise(promise);
-  // Hang onto session until the CDM has finished setting it up.
-  mPendingSessions.Put(pid, session);
-  mProxy->CreateSession(aSessionType,
-                        pid,
-                        initDataType,
-                        data);
 
-  return promise.forget();
+  return session.forget();
+}
+
+void
+MediaKeys::OnSessionPending(PromiseId aId, MediaKeySession* aSession)
+{
+  MOZ_ASSERT(mPromises.Contains(aId));
+  MOZ_ASSERT(!mPendingSessions.Contains(aId));
+  mPendingSessions.Put(aId, aSession);
 }
 
 void
@@ -368,6 +320,35 @@ MediaKeys::OnSessionCreated(PromiseId aId, const nsAString& aSessionId)
   session->Init(aSessionId);
   mKeySessions.Put(aSessionId, session);
   promise->MaybeResolve(session);
+}
+
+void
+MediaKeys::OnSessionLoaded(PromiseId aId, bool aSuccess)
+{
+  nsRefPtr<Promise> promise(RetrievePromise(aId));
+  if (!promise) {
+    NS_WARNING("MediaKeys tried to resolve a non-existent promise");
+    return;
+  }
+  MOZ_ASSERT(mPendingSessions.Contains(aId));
+
+  nsRefPtr<MediaKeySession> session;
+  bool gotSession = mPendingSessions.Get(aId, getter_AddRefs(session));
+  // Session has completed creation/loading, remove it from mPendingSessions,
+  // and resolve the promise with it. We store it in mKeySessions, so we can
+  // find it again if we need to send messages to it etc.
+  mPendingSessions.Remove(aId);
+  if (!gotSession || !session) {
+    NS_WARNING("Received activation for non-existent session!");
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
+    return;
+  }
+
+  MOZ_ASSERT(!session->GetSessionId().IsEmpty() &&
+             !mKeySessions.Contains(session->GetSessionId()));
+
+  mKeySessions.Put(session->GetSessionId(), session);
+  promise->MaybeResolve(aSuccess);
 }
 
 void

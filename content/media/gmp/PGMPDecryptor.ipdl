@@ -53,6 +53,9 @@ parent:
   ResolveNewSessionPromise(uint32_t aPromiseId,
                            nsCString aSessionId);
 
+  ResolveLoadSessionPromise(uint32_t aPromiseId,
+                            bool aSuccess);
+
   ResolvePromise(uint32_t aPromiseId);
 
   RejectPromise(uint32_t aPromiseId,
