@@ -343,9 +343,18 @@ Breakpoint::nextInSite()
 /*** Debugger hook dispatch **********************************************************************/
 
 Debugger::Debugger(JSContext *cx, JSObject *dbg)
-  : object(dbg), uncaughtExceptionHook(nullptr), enabled(true), trackingAllocationSites(false),
-    allocationsLogLength(0), maxAllocationsLogLength(DEFAULT_MAX_ALLOCATIONS_LOG_LENGTH),
-    frames(cx->runtime()), scripts(cx), sources(cx), objects(cx), environments(cx)
+  : object(dbg),
+    uncaughtExceptionHook(nullptr),
+    enabled(true),
+    trackingAllocationSites(false),
+    allocationSamplingProbability(1.0),
+    allocationsLogLength(0),
+    maxAllocationsLogLength(DEFAULT_MAX_ALLOCATIONS_LOG_LENGTH),
+    frames(cx->runtime()),
+    scripts(cx),
+    sources(cx),
+    objects(cx),
+    environments(cx)
 {
     assertSameCompartment(cx, dbg);
 
@@ -3296,7 +3305,7 @@ DebuggerScript_getOffsetLine(JSContext *cx, unsigned argc, Value *vp)
     size_t offset;
     if (!ScriptOffset(cx, script, args[0], &offset))
         return false;
-    unsigned lineno = JS_PCToLineNumber(cx, script, script->offsetToPC(offset));
+    unsigned lineno = PCToLineNumber(script, script->offsetToPC(offset));
     args.rval().setNumber(lineno);
     return true;
 }
