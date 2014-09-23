@@ -517,20 +517,28 @@ Proxy::defaultValue(JSContext *cx, HandleObject proxy, JSType hint, MutableHandl
 
 JSObject * const TaggedProto::LazyProto = reinterpret_cast<JSObject *>(0x1);
 
-bool
+/* static */ bool
 Proxy::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject proto)
 {
-    MOZ_ASSERT(proxy->getTaggedProto().isLazy());
+    MOZ_ASSERT(proxy->hasLazyPrototype());
     JS_CHECK_RECURSION(cx, return false);
     return proxy->as<ProxyObject>().handler()->getPrototypeOf(cx, proxy, proto);
 }
 
-bool
+/* static */ bool
 Proxy::setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp)
 {
-    MOZ_ASSERT(proxy->getTaggedProto().isLazy());
+    MOZ_ASSERT(proxy->hasLazyPrototype());
     JS_CHECK_RECURSION(cx, return false);
     return proxy->as<ProxyObject>().handler()->setPrototypeOf(cx, proxy, proto, bp);
+}
+
+/* static */ bool
+Proxy::setImmutablePrototype(JSContext *cx, HandleObject proxy, bool *succeeded)
+{
+    JS_CHECK_RECURSION(cx, return false);
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    return handler->setImmutablePrototype(cx, proxy, succeeded);
 }
 
 /* static */ bool
@@ -859,7 +867,7 @@ ProxyObject::renew(JSContext *cx, const BaseProxyHandler *handler, Value priv)
     MOZ_ASSERT(getParent() == cx->global());
     MOZ_ASSERT(getClass() == &ProxyObject::class_);
     MOZ_ASSERT(!getClass()->ext.innerObject);
-    MOZ_ASSERT(getTaggedProto().isLazy());
+    MOZ_ASSERT(hasLazyPrototype());
 
     setHandler(handler);
     setCrossCompartmentPrivate(priv);
