@@ -10,7 +10,9 @@
 #include <sstream>
 #include <stdio.h>
 
+#if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
 #include "nsDebug.h"
+#endif
 #include "Point.h"
 #include "BaseRect.h"
 #include "Matrix.h"
@@ -69,7 +71,11 @@ struct BasicLogger
     }
 #else
     if (aLevel >= sGfxLogLevel) {
+#if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
       printf_stderr("%s", aString.c_str());
+#else
+      printf("%s", aString.c_str());
+#endif
     }
 #endif
   }
@@ -100,6 +106,14 @@ public:
 MOZ_BEGIN_ENUM_CLASS(LogOptions, int)
   NoNewline = 0x01
 MOZ_END_ENUM_CLASS(LogOptions)
+
+template<typename T>
+struct Hexa {
+  Hexa(T aVal) : mVal(aVal) {}
+  T mVal;
+};
+template<typename T>
+Hexa<T> hexa(T val) { return Hexa<T>(val); }
 
 template<int L, typename Logger = BasicLogger>
 class Log
@@ -145,7 +159,9 @@ public:
     { mMessage << "Rect" << aRect; return *this; }
   Log &operator<<(const Matrix& aMatrix)
     { mMessage << "Matrix(" << aMatrix._11 << " " << aMatrix._12 << " ; " << aMatrix._21 << " " << aMatrix._22 << " ; " << aMatrix._31 << " " << aMatrix._32 << ")"; return *this; }
-
+  template<typename T>
+  Log &operator<<(Hexa<T> aHex)
+    { mMessage << "0x" << std::hex << aHex.mVal << std::dec; return *this; }
 
 private:
 

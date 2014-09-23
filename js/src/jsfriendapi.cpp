@@ -14,6 +14,7 @@
 #include "jscompartment.h"
 #include "jsgc.h"
 #include "jsobj.h"
+#include "jsprf.h"
 #include "jsproxy.h"
 #include "jswatchpoint.h"
 #include "jsweakmap.h"
@@ -22,6 +23,7 @@
 
 #include "builtin/TestingFunctions.h"
 #include "proxy/DeadObjectProxy.h"
+#include "vm/ArgumentsObject.h"
 #include "vm/WrapperObject.h"
 
 #include "jsobjinlines.h"
@@ -601,6 +603,12 @@ JS_GetCustomIteratorCount(JSContext *cx)
     return sCustomIteratorCount;
 }
 
+JS_FRIEND_API(unsigned)
+JS_PCToLineNumber(JSScript *script, jsbytecode *pc)
+{
+    return PCToLineNumber(script, pc);
+}
+
 JS_FRIEND_API(bool)
 JS_IsDeadWrapper(JSObject *obj)
 {
@@ -709,6 +717,219 @@ js_DumpObject(JSObject *obj)
 }
 
 #endif
+
+static const char *
+FormatValue(JSContext *cx, const Value &vArg, JSAutoByteString &bytes)
+{
+    RootedValue v(cx, vArg);
+
+    /*
+     * We could use Maybe<AutoCompartment> here, but G++ can't quite follow
+     * that, and warns about uninitialized members being used in the
+     * destructor.
+     */
+    RootedString str(cx);
+    if (v.isObject()) {
+        AutoCompartment ac(cx, &v.toObject());
+        str = ToString<CanGC>(cx, v);
+    } else {
+        str = ToString<CanGC>(cx, v);
+    }
+
+    if (!str)
+        return nullptr;
+    const char *buf = bytes.encodeLatin1(cx, str);
+    if (!buf)
+        return nullptr;
+    const char *found = strstr(buf, "function ");
+    if (found && (found - buf <= 2))
+        return "[function]";
+    return buf;
+}
+
+static char *
+FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int num,
+            bool showArgs, bool showLocals, bool showThisProps)
+{
+    JS_ASSERT(!cx->isExceptionPending());
+    RootedScript script(cx, iter.script());
+    jsbytecode* pc = iter.pc();
+
+    RootedObject scopeChain(cx, iter.scopeChain());
+    JSAutoCompartment ac(cx, scopeChain);
+
+    const char *filename = script->filename();
+    unsigned lineno = PCToLineNumber(script, pc);
+    RootedFunction fun(cx, iter.maybeCallee());
+    RootedString funname(cx);
+    if (fun)
+        funname = fun->atom();
+
+    RootedValue thisVal(cx);
+    if (iter.hasUsableAbstractFramePtr() && iter.computeThis(cx)) {
+        thisVal = iter.computedThisValue();
+    }
+
+    // print the frame number and function name
+    if (funname) {
+        JSAutoByteString funbytes;
+        buf = JS_sprintf_append(buf, "%d %s(", num, funbytes.encodeLatin1(cx, funname));
+    } else if (fun) {
+        buf = JS_sprintf_append(buf, "%d anonymous(", num);
+    } else {
+        buf = JS_sprintf_append(buf, "%d <TOP LEVEL>", num);
+    }
+    if (!buf)
+        return buf;
+
+    if (showArgs && iter.hasArgs()) {
+        BindingVector bindings(cx);
+        if (fun && fun->isInterpreted()) {
+            if (!FillBindingVector(script, &bindings))
+                return buf;
+        }
+
+
+        bool first = true;
+        for (unsigned i = 0; i < iter.numActualArgs(); i++) {
+            RootedValue arg(cx);
+            if (i < iter.numFormalArgs() && script->formalIsAliased(i)) {
+                for (AliasedFormalIter fi(script); ; fi++) {
+                    if (fi.frameIndex() == i) {
+                        arg = iter.callObj().aliasedVar(fi);
+                        break;
+                    }
+                }
+            } else if (script->argsObjAliasesFormals() && iter.hasArgsObj()) {
+                arg = iter.argsObj().arg(i);
+            } else {
+                arg = iter.unaliasedActual(i, DONT_CHECK_ALIASING);
+            }
+
+            JSAutoByteString valueBytes;
+            const char *value = FormatValue(cx, arg, valueBytes);
+
+            JSAutoByteString nameBytes;
+            const char *name = nullptr;
+
+            if (i < bindings.length()) {
+                name = nameBytes.encodeLatin1(cx, bindings[i].name());
+                if (!buf)
+                    return nullptr;
+            }
+
+            if (value) {
+                buf = JS_sprintf_append(buf, "%s%s%s%s%s%s",
+                                        !first ? ", " : "",
+                                        name ? name :"",
+                                        name ? " = " : "",
+                                        arg.isString() ? "\"" : "",
+                                        value ? value : "?unknown?",
+                                        arg.isString() ? "\"" : "");
+                if (!buf)
+                    return buf;
+
+                first = false;
+            } else {
+                buf = JS_sprintf_append(buf, "    <Failed to get argument while inspecting stack frame>\n");
+                if (!buf)
+                    return buf;
+                cx->clearPendingException();
+
+            }
+        }
+    }
+
+    // print filename and line number
+    buf = JS_sprintf_append(buf, "%s [\"%s\":%d]\n",
+                            fun ? ")" : "",
+                            filename ? filename : "<unknown>",
+                            lineno);
+    if (!buf)
+        return buf;
+
+
+    // Note: Right now we don't dump the local variables anymore, because
+    // that is hard to support across all the JITs etc.
+
+    // print the value of 'this'
+    if (showLocals) {
+        if (!thisVal.isUndefined()) {
+            JSAutoByteString thisValBytes;
+            RootedString thisValStr(cx, ToString<CanGC>(cx, thisVal));
+            const char *str = nullptr;
+            if (thisValStr &&
+                (str = thisValBytes.encodeLatin1(cx, thisValStr)))
+            {
+                buf = JS_sprintf_append(buf, "    this = %s\n", str);
+                if (!buf)
+                    return buf;
+            } else {
+                buf = JS_sprintf_append(buf, "    <failed to get 'this' value>\n");
+                cx->clearPendingException();
+            }
+        }
+    }
+
+    if (showThisProps && thisVal.isObject()) {
+        RootedObject obj(cx, &thisVal.toObject());
+
+        AutoIdVector keys(cx);
+        if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &keys)) {
+            cx->clearPendingException();
+            return buf;
+        }
+
+        RootedId id(cx);
+        for (size_t i = 0; i < keys.length(); i++) {
+            RootedId id(cx, keys[i]);
+            RootedValue key(cx, IdToValue(id));
+            RootedValue v(cx);
+
+            if (!JSObject::getGeneric(cx, obj, obj, id, &v)) {
+                buf = JS_sprintf_append(buf, "    <Failed to fetch property while inspecting stack frame>\n");
+                cx->clearPendingException();
+                continue;
+            }
+
+            JSAutoByteString nameBytes;
+            JSAutoByteString valueBytes;
+            const char *name = FormatValue(cx, key, nameBytes);
+            const char *value = FormatValue(cx, v, valueBytes);
+            if (name && value) {
+                buf = JS_sprintf_append(buf, "    this.%s = %s%s%s\n",
+                                        name,
+                                        v.isString() ? "\"" : "",
+                                        value,
+                                        v.isString() ? "\"" : "");
+                if (!buf)
+                    return buf;
+            } else {
+                buf = JS_sprintf_append(buf, "    <Failed to format values while inspecting stack frame>\n");
+                cx->clearPendingException();
+            }
+        }
+    }
+
+    JS_ASSERT(!cx->isExceptionPending());
+    return buf;
+}
+
+JS_FRIEND_API(char *)
+JS::FormatStackDump(JSContext *cx, char *buf, bool showArgs, bool showLocals, bool showThisProps)
+{
+    int num = 0;
+
+    for (NonBuiltinScriptFrameIter i(cx); !i.done(); ++i) {
+        buf = FormatFrame(cx, i, buf, num, showArgs, showLocals, showThisProps);
+        num++;
+    }
+
+    if (!num)
+        buf = JS_sprintf_append(buf, "JavaScript stack is empty\n");
+
+    return buf;
+}
 
 struct DumpHeapTracer : public JSTracer
 {

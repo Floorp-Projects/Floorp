@@ -7,7 +7,6 @@ const Cu = Components.utils;
 const Ci = Components.interfaces;
 
 Cu.import("resource:///modules/devtools/gDevTools.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
@@ -21,6 +20,7 @@ const ProjectEditor = require("projecteditor/projecteditor");
 const {Devices} = Cu.import("resource://gre/modules/devtools/Devices.jsm");
 const {GetAvailableAddons} = require("devtools/webide/addons");
 const {GetTemplatesJSON, GetAddonsJSON} = require("devtools/webide/remote-resources");
+const utils = require("devtools/webide/utils");
 
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 
@@ -134,13 +134,15 @@ let UI = {
         this.updateCommands();
         break;
       case "project":
-        this.updateTitle();
-        this.destroyToolbox();
-        this.updateCommands();
-        this.updateProjectButton();
-        this.openProject();
-        this.autoStartProject();
-        break;
+        this._updatePromise = Task.spawn(function() {
+          UI.updateTitle();
+          yield UI.destroyToolbox();
+          UI.updateCommands();
+          UI.updateProjectButton();
+          UI.openProject();
+          UI.autoStartProject();
+        });
+        return;
       case "project-is-not-running":
       case "project-is-running":
       case "list-tabs-response":
@@ -159,6 +161,7 @@ let UI = {
       case "install-progress":
         this.updateProgress(Math.round(100 * details.bytesSent / details.totalBytes));
     };
+    this._updatePromise = promise.resolve();
   },
 
   openInBrowser: function(url) {
@@ -252,10 +255,11 @@ let UI = {
       this.cancelBusyTimeout();
       this.unbusy();
     }, (e) => {
+      let message = operationDescription + (e ? (": " + e) : "");
       this.cancelBusyTimeout();
       let operationCanceled = e && e.canceled;
       if (!operationCanceled) {
-        UI.reportError("error_operationFail", operationDescription);
+        UI.reportError("error_operationFail", message);
         console.error(e);
       }
       this.unbusy();
@@ -503,8 +507,7 @@ let UI = {
 
     let forceDetailsOnly = false;
     if (project.type == "packaged") {
-      let directory = new FileUtils.File(project.location);
-      forceDetailsOnly = !directory.exists();
+      forceDetailsOnly = !utils.doesFileExist(project.location);
     }
 
     // Show only the details screen
@@ -544,6 +547,28 @@ let UI = {
       yield UI.createToolbox();
     });
   },
+
+  importAndSelectApp: Task.async(function* (source) {
+    let isPackaged = !!source.path;
+    let project;
+    try {
+      project = yield AppProjects[isPackaged ? "addPackaged" : "addHosted"](source);
+    } catch (e) {
+      if (e === "Already added") {
+        // Select project that's already been added,
+        // and allow it to be revalidated and selected
+        project = AppProjects.get(isPackaged ? source.path : source);
+      } else {
+        throw e;
+      }
+    }
+
+    // Validate project
+    yield AppManager.validateProject(project);
+
+    // Select project
+    AppManager.selectedProject = project;
+  }),
 
   /********** DECK **********/
 
@@ -695,11 +720,12 @@ let UI = {
 
   destroyToolbox: function() {
     if (this.toolboxPromise) {
-      this.toolboxPromise.then(toolbox => {
+      return this.toolboxPromise.then(toolbox => {
         toolbox.destroy();
         this.toolboxPromise = null;
       }, console.error);
     }
+    return promise.resolve();
   },
 
   createToolbox: function() {
@@ -785,68 +811,29 @@ let Cmds = {
   importPackagedApp: function(location) {
     return UI.busyUntil(Task.spawn(function* () {
 
-      let directory;
+      let directory = utils.getPackagedDirectory(window, location);
 
-      if (!location) {
-        let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-        fp.init(window, Strings.GetStringFromName("importPackagedApp_title"), Ci.nsIFilePicker.modeGetFolder);
-        let res = fp.show();
-        if (res == Ci.nsIFilePicker.returnCancel) {
-          return promise.resolve();
-        }
-        directory = fp.file;
-      } else {
-        directory = new FileUtils.File(location);
-      }
-
-      // Add project
-      let project = yield AppProjects.addPackaged(directory);
-
-      // Validate project
-      yield AppManager.validateProject(project);
-
-      // Select project
-      AppManager.selectedProject = project;
-    }), "importing packaged app");
-  },
-
-
-  importHostedApp: function(location) {
-    return UI.busyUntil(Task.spawn(function* () {
-      let ret = {value: null};
-
-      let url;
-      if (!location) {
-        Services.prompt.prompt(window,
-                               Strings.GetStringFromName("importHostedApp_title"),
-                               Strings.GetStringFromName("importHostedApp_header"),
-                               ret, null, {});
-        location = ret.value;
-      }
-
-      if (!location) {
+      if (!directory) {
+        // User cancelled directory selection
         return;
       }
 
-      // Clean location string and add "http://" if missing
-      location = location.trim();
-      try { // Will fail if no scheme
-        Services.io.extractScheme(location);
-      } catch(e) {
-        location = "http://" + location;
-      }
-
-      // Add project
-      let project = yield AppProjects.addHosted(location)
-
-      // Validate project
-      yield AppManager.validateProject(project);
-
-      // Select project
-      AppManager.selectedProject = project;
-    }), "importing hosted app");
+      yield UI.importAndSelectApp(directory);
+    }), "importing packaged app");
   },
 
+  importHostedApp: function(location) {
+    return UI.busyUntil(Task.spawn(function* () {
+
+      let url = utils.getHostedURL(window, location);
+
+      if (!url) {
+        return;
+      }
+
+      yield UI.importAndSelectApp(url);
+    }), "importing hosted app");
+  },
 
   showProjectPanel: function() {
     let deferred = promise.defer();
@@ -1101,4 +1088,4 @@ let Cmds = {
   showPrefs: function() {
     UI.selectDeckPanel("prefs");
   },
-}
+};
