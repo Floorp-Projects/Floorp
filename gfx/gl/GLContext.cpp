@@ -1112,6 +1112,28 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             }
         }
 
+        if (IsSupported(GLFeature::integer_vertex_attribs)) {
+            SymLoadStruct integerVASymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fVertexAttribI4i, { "VertexAttribI4i", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fVertexAttribI4iv, { "VertexAttribI4iv", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fVertexAttribI4ui, { "VertexAttribI4ui", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fVertexAttribI4uiv, { "VertexAttribI4uiv", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fVertexAttribIPointer, { "VertexAttribIPointer", nullptr } },
+                { nullptr, { nullptr } }
+            };
+
+            if (!LoadSymbols(integerVASymbols, trygl, prefix)) {
+                NS_ERROR("GL supports integer vertex attribs without supplying its functions.");
+
+                MarkUnsupported(GLFeature::integer_vertex_attribs);
+                mSymbols.fVertexAttribI4i = nullptr;
+                mSymbols.fVertexAttribI4iv = nullptr;
+                mSymbols.fVertexAttribI4ui = nullptr;
+                mSymbols.fVertexAttribI4uiv = nullptr;
+                mSymbols.fVertexAttribIPointer = nullptr;
+            }
+        }
+
         if (IsSupported(GLFeature::map_buffer_range)) {
             SymLoadStruct mapBufferRangeSymbols[] = {
                 { (PRFuncPtr*) &mSymbols.fMapBufferRange, { "MapBufferRange", nullptr } },
