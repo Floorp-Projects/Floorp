@@ -582,6 +582,10 @@ struct IonScript
     bool invalidated() const {
         return refcount_ != 0;
     }
+
+    // Invalidate the current compilation.
+    bool invalidate(JSContext *cx, bool resetUses, const char *reason);
+
     size_t refcount() const {
         return refcount_;
     }
