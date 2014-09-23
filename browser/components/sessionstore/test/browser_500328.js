@@ -99,7 +99,7 @@ function test() {
         history.replaceState({obj3:/^a$/}, "title-obj3");
       }
       runInContent(browser, contentTest, null).then(function() {
-        SyncHandlers.get(tab.linkedBrowser).flush();
+        TabState.flush(tab.linkedBrowser);
         let state = ss.getTabState(tab);
         gBrowser.removeTab(tab);
 

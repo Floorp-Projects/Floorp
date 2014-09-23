@@ -72,7 +72,7 @@ function testTabRestoreData(aFormData, aExpectedValue, aCallback) {
       let value = select.options[select.selectedIndex].value;
 
       // Flush to make sure we have the latest form data.
-      SyncHandlers.get(tab.linkedBrowser).flush();
+      TabState.flush(tab.linkedBrowser);
       let restoredTabState = JSON.parse(ss.getTabState(tab));
 
       // If aExpectedValue=null we don't expect any form data to be collected.
