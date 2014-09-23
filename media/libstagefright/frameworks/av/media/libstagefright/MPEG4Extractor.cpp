@@ -358,7 +358,9 @@ MPEG4Extractor::MPEG4Extractor(const sp<DataSource> &source)
       mLastTrack(NULL),
       mFileMetaData(new MetaData),
       mFirstSINF(NULL),
-      mIsDrm(false) {
+      mIsDrm(false),
+      mDrmScheme(0)
+{
 }
 
 MPEG4Extractor::~MPEG4Extractor() {
@@ -956,6 +958,16 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             break;
         }
 
+        case FOURCC('s', 'c', 'h', 'm'):
+        {
+            if (!mDataSource->getUInt32(data_offset, &mDrmScheme)) {
+                return ERROR_IO;
+            }
+
+            *offset += chunk_size;
+            break;
+        }
+
         case FOURCC('t', 'e', 'n', 'c'):
         {
             if (chunk_size < 32) {
@@ -1422,6 +1434,34 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             status_t err =
                 mLastTrack->sampleTable->setSyncSampleParams(
                         data_offset, chunk_data_size);
+
+            if (err != OK) {
+                return err;
+            }
+
+            *offset += chunk_size;
+            break;
+        }
+
+        case FOURCC('s', 'a', 'i', 'z'):
+        {
+            status_t err =
+                mLastTrack->sampleTable->setSampleAuxiliaryInformationSizeParams(
+                        data_offset, chunk_data_size, mDrmScheme);
+
+            if (err != OK) {
+                return err;
+            }
+
+            *offset += chunk_size;
+            break;
+        }
+
+        case FOURCC('s', 'a', 'i', 'o'):
+        {
+            status_t err =
+                mLastTrack->sampleTable->setSampleAuxiliaryInformationOffsetParams(
+                        data_offset, chunk_data_size, mDrmScheme);
 
             if (err != OK) {
                 return err;
@@ -3405,6 +3445,28 @@ status_t MPEG4Source::read(
 
         if (isSyncSample) {
             mBuffer->meta_data()->setInt32(kKeyIsSyncFrame, 1);
+        }
+
+        if (mSampleTable->hasCencInfo()) {
+            Vector<uint16_t> clearSizes;
+            Vector<uint32_t> cipherSizes;
+            uint8_t iv[16];
+            status_t err = mSampleTable->getSampleCencInfo(
+                    mCurrentSampleIndex, clearSizes, cipherSizes, iv);
+
+            if (err != OK) {
+                return err;
+            }
+
+            const auto& meta = mBuffer->meta_data();
+            meta->setData(kKeyPlainSizes, 0, clearSizes.array(),
+                          clearSizes.size() * sizeof(uint16_t));
+            meta->setData(kKeyEncryptedSizes, 0, cipherSizes.array(),
+                          cipherSizes.size() * sizeof(uint32_t));
+            meta->setData(kKeyCryptoIV, 0, iv, sizeof(iv));
+            meta->setInt32(kKeyCryptoDefaultIVSize, mDefaultIVSize);
+            meta->setInt32(kKeyCryptoMode, mCryptoMode);
+            meta->setData(kKeyCryptoKey, 0, mCryptoKey, 16);
         }
 
         ++mCurrentSampleIndex;

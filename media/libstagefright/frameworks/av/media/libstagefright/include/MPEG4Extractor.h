@@ -131,6 +131,7 @@ private:
 
     bool mIsDrm;
     TrackExtends mTrackExtends;
+    uint32_t mDrmScheme;
 
     status_t parseDrmSINF(off64_t *offset, off64_t data_offset);
 
