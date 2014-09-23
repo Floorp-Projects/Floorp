@@ -3296,7 +3296,7 @@ DebuggerScript_getOffsetLine(JSContext *cx, unsigned argc, Value *vp)
     size_t offset;
     if (!ScriptOffset(cx, script, args[0], &offset))
         return false;
-    unsigned lineno = JS_PCToLineNumber(cx, script, script->offsetToPC(offset));
+    unsigned lineno = PCToLineNumber(script, script->offsetToPC(offset));
     args.rval().setNumber(lineno);
     return true;
 }
