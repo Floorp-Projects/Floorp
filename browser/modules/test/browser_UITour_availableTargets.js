@@ -27,6 +27,7 @@ let tests = [
         "help",
         "home",
         "pinnedTab",
+        "privateWindow",
         "quit",
         "search",
         "searchProvider",
@@ -52,6 +53,7 @@ let tests = [
         "help",
         "home",
         "pinnedTab",
+        "privateWindow",
         "quit",
         "search",
         "searchProvider",
@@ -82,6 +84,7 @@ let tests = [
         "help",
         "home",
         "pinnedTab",
+        "privateWindow",
         "quit",
         "urlbar",
       ]);
