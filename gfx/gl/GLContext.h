@@ -107,6 +107,7 @@ MOZ_BEGIN_ENUM_CLASS(GLFeature)
     renderbuffer_color_half_float,
     robustness,
     sRGB,
+    sampler_objects,
     standard_derivatives,
     texture_float,
     texture_float_linear,
@@ -362,6 +363,7 @@ public:
         ARB_occlusion_query2,
         ARB_pixel_buffer_object,
         ARB_robustness,
+        ARB_sampler_objects,
         ARB_sync,
         ARB_texture_float,
         ARB_texture_non_power_of_two,
@@ -2700,6 +2702,91 @@ public:
         ASSERT_SYMBOL_PRESENT(fFlushMappedBufferRange);
         BEFORE_GL_CALL;
         mSymbols.fFlushMappedBufferRange(target, offset, length);
+        AFTER_GL_CALL;
+    }
+
+
+// -----------------------------------------------------------------------------
+// Core GL & Extension ARB_sampler_objects
+public:
+    void fGenSamplers(GLsizei count, GLuint *samplers)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGenSamplers);
+        mSymbols.fGenSamplers(count, samplers);
+        AFTER_GL_CALL;
+    }
+
+    void fDeleteSamplers(GLsizei count, const GLuint *samplers)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fDeleteSamplers);
+        mSymbols.fDeleteSamplers(count, samplers);
+        AFTER_GL_CALL;
+    }
+
+    realGLboolean fIsSampler(GLuint sampler)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fIsSampler);
+        realGLboolean result = mSymbols.fIsSampler(sampler);
+        AFTER_GL_CALL;
+        return result;
+    }
+
+    void fBindSampler(GLuint unit, GLuint sampler)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fBindSampler);
+        mSymbols.fBindSampler(unit, sampler);
+        AFTER_GL_CALL;
+    }
+
+    void fSamplerParameteri(GLuint sampler, GLenum pname, GLint param)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fSamplerParameteri);
+        mSymbols.fSamplerParameteri(sampler, pname, param);
+        AFTER_GL_CALL;
+    }
+
+    void fSamplerParameteriv(GLuint sampler, GLenum pname, const GLint *param)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fSamplerParameteriv);
+        mSymbols.fSamplerParameteriv(sampler, pname, param);
+        AFTER_GL_CALL;
+    }
+
+    void fSamplerParameterf(GLuint sampler, GLenum pname, GLfloat param)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fSamplerParameterf);
+        mSymbols.fSamplerParameterf(sampler, pname, param);
+        AFTER_GL_CALL;
+    }
+
+    void fSamplerParameterfv(GLuint sampler, GLenum pname, const GLfloat *param)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fSamplerParameterfv);
+        mSymbols.fSamplerParameterfv(sampler, pname, param);
+        AFTER_GL_CALL;
+    }
+
+    void fGetSamplerParameteriv(GLuint sampler, GLenum pname, GLint *params)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetSamplerParameteriv);
+        mSymbols.fGetSamplerParameteriv(sampler, pname, params);
+        AFTER_GL_CALL;
+    }
+
+    void fGetSamplerParameterfv(GLuint sampler, GLenum pname, GLfloat *params)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGetSamplerParameterfv);
+        mSymbols.fGetSamplerParameterfv(sampler, pname, params);
         AFTER_GL_CALL;
     }
 

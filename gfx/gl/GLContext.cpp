@@ -89,6 +89,7 @@ static const char *sExtensionNames[] = {
     "GL_ARB_occlusion_query2",
     "GL_ARB_pixel_buffer_object",
     "GL_ARB_robustness",
+    "GL_ARB_sampler_objects",
     "GL_ARB_sync",
     "GL_ARB_texture_float",
     "GL_ARB_texture_non_power_of_two",
@@ -897,6 +898,29 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
                 MarkUnsupported(GLFeature::instanced_arrays);
                 ClearSymbols(coreSymbols);
+            }
+        }
+
+        if (IsSupported(GLFeature::sampler_objects)) {
+            SymLoadStruct samplerObjectsSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fGenSamplers, { "GenSamplers", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fDeleteSamplers, { "DeleteSamplers", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fIsSampler, { "IsSampler", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fBindSampler, { "BindSampler", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fSamplerParameteri, { "SamplerParameteri", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fSamplerParameteriv, { "SamplerParameteriv", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fSamplerParameterf, { "SamplerParameterf", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fSamplerParameterfv, { "SamplerParameterfv", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetSamplerParameteriv, { "GetSamplerParameteriv", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetSamplerParameterfv, { "GetSamplerParameterfv", nullptr } },
+                END_SYMBOLS
+            };
+
+            if (!LoadSymbols(samplerObjectsSymbols, trygl, prefix)) {
+                NS_ERROR("GL supports sampler objects without supplying its functions.");
+
+                MarkUnsupported(GLFeature::sampler_objects);
+                ClearSymbols(samplerObjectsSymbols);
             }
         }
 
