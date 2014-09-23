@@ -70,7 +70,7 @@ endif
 
 SH := /bin/sh
 PERL ?= perl
-PYTHON ?= python
+PYTHON ?= $(shell which python2.7 > /dev/null 2>&1 && echo python2.7 || echo python)
 
 CONFIG_GUESS_SCRIPT := $(wildcard $(TOPSRCDIR)/build/autoconf/config.guess)
 ifdef CONFIG_GUESS_SCRIPT
