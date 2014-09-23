@@ -290,6 +290,8 @@ class RInstructionResults
     IonJSFrameLayout *frame() const;
 
     RelocatableValue& operator[](size_t index);
+
+    void trace(JSTracer *trc);
 };
 
 class RResumePoint;
