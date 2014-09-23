@@ -86,6 +86,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsWrapperCacheInlines.h"
@@ -289,80 +290,57 @@ public:
 };
 
 /* This is an RAII based class that can be used as a drawtarget for
- * operations that need a shadow drawn. It will automatically provide a
- * temporary target when needed, and if so blend it back with a shadow.
- *
- * aBounds specifies the bounds of the drawing operation that will be
- * drawn to the target, it is given in device space! This function will
- * change aBounds to incorporate shadow bounds. If this is nullptr the drawing
- * operation will be assumed to cover an infinite rect.
+ * operations that need to have a shadow applied to their results.
+ * All coordinates passed to the constructor are in device space.
  */
-class AdjustedTarget
+class AdjustedTargetForShadow
 {
 public:
   typedef CanvasRenderingContext2D::ContextState ContextState;
 
-  explicit AdjustedTarget(CanvasRenderingContext2D* ctx,
-                 mgfx::Rect *aBounds = nullptr)
+  AdjustedTargetForShadow(CanvasRenderingContext2D *ctx,
+                          DrawTarget *aFinalTarget,
+                          const mgfx::Rect& aBounds,
+                          mgfx::CompositionOp aCompositionOp)
     : mCtx(nullptr)
+    , mCompositionOp(aCompositionOp)
   {
-    if (!ctx->NeedToDrawShadow()) {
-      mTarget = ctx->mTarget;
-      return;
-    }
     mCtx = ctx;
+    mFinalTarget = aFinalTarget;
 
     const ContextState &state = mCtx->CurrentState();
 
-    mSigma = state.shadowBlur / 2.0f;
+    mSigma = state.ShadowBlurSigma();
 
-    if (mSigma > SIGMA_MAX) {
-      mSigma = SIGMA_MAX;
-    }
+    mgfx::Rect bounds = aBounds;
 
-    Matrix transform = mCtx->mTarget->GetTransform();
+    int32_t blurRadius = state.ShadowBlurRadius();
 
-    mTempRect = mgfx::Rect(0, 0, ctx->mWidth, ctx->mHeight);
+    // We actually include the bounds of the shadow blur, this makes it
+    // easier to execute the actual blur on hardware, and shouldn't affect
+    // the amount of pixels that need to be touched.
+    bounds.Inflate(blurRadius);
 
-    static const gfxFloat GAUSSIAN_SCALE_FACTOR = (3 * sqrt(2 * M_PI) / 4) * 1.5;
-    int32_t blurRadius = (int32_t) floor(mSigma * GAUSSIAN_SCALE_FACTOR + 0.5);
-
-    // We need to enlarge and possibly offset our temporary surface
-    // so that things outside of the canvas may cast shadows.
-    mTempRect.Inflate(Margin(blurRadius + std::max<Float>(state.shadowOffset.y, 0),
-                             blurRadius + std::max<Float>(-state.shadowOffset.x, 0),
-                             blurRadius + std::max<Float>(-state.shadowOffset.y, 0),
-                             blurRadius + std::max<Float>(state.shadowOffset.x, 0)));
-
-    if (aBounds) {
-      // We actually include the bounds of the shadow blur, this makes it
-      // easier to execute the actual blur on hardware, and shouldn't affect
-      // the amount of pixels that need to be touched.
-      aBounds->Inflate(Margin(blurRadius, blurRadius,
-                              blurRadius, blurRadius));
-      mTempRect = mTempRect.Intersect(*aBounds);
-    }
-
-    mTempRect.ScaleRoundOut(1.0f);
-
-    transform._31 -= mTempRect.x;
-    transform._32 -= mTempRect.y;
+    bounds.RoundOut();
+    bounds.ToIntRect(&mTempRect);
 
     mTarget =
-      mCtx->mTarget->CreateShadowDrawTarget(IntSize(int32_t(mTempRect.width), int32_t(mTempRect.height)),
-                                            SurfaceFormat::B8G8R8A8, mSigma);
+      mFinalTarget->CreateShadowDrawTarget(mTempRect.Size(),
+                                           SurfaceFormat::B8G8R8A8, mSigma);
 
     if (!mTarget) {
       // XXX - Deal with the situation where our temp size is too big to
-      // fit in a texture.
-      mTarget = ctx->mTarget;
+      // fit in a texture (bug 1066622).
+      mTarget = mFinalTarget;
       mCtx = nullptr;
+      mFinalTarget = nullptr;
     } else {
-      mTarget->SetTransform(transform);
+      mTarget->SetTransform(
+        mFinalTarget->GetTransform().PostTranslate(-mTempRect.TopLeft()));
     }
   }
 
-  ~AdjustedTarget()
+  ~AdjustedTargetForShadow()
   {
     if (!mCtx) {
       return;
@@ -370,10 +348,74 @@ public:
 
     RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
 
-    mCtx->mTarget->DrawSurfaceWithShadow(snapshot, mTempRect.TopLeft(),
-                                         Color::FromABGR(mCtx->CurrentState().shadowColor),
-                                         mCtx->CurrentState().shadowOffset, mSigma,
-                                         mCtx->CurrentState().op);
+    mFinalTarget->DrawSurfaceWithShadow(snapshot, mTempRect.TopLeft(),
+                                        Color::FromABGR(mCtx->CurrentState().shadowColor),
+                                        mCtx->CurrentState().shadowOffset, mSigma,
+                                        mCompositionOp);
+  }
+
+  DrawTarget* DT()
+  {
+    return mTarget;
+  }
+
+  mgfx::IntPoint OffsetToFinalDT()
+  {
+    return mTempRect.TopLeft();
+  }
+
+private:
+  RefPtr<DrawTarget> mTarget;
+  RefPtr<DrawTarget> mFinalTarget;
+  CanvasRenderingContext2D *mCtx;
+  Float mSigma;
+  mgfx::IntRect mTempRect;
+  mgfx::CompositionOp mCompositionOp;
+};
+
+/* This is an RAII based class that can be used as a drawtarget for
+ * operations that need a shadow or a filter drawn. It will automatically
+ * provide a temporary target when needed, and if so blend it back with a
+ * shadow, filter, or both.
+ * If both a shadow and a filter are needed, the filter is applied first,
+ * and the shadow is applied to the filtered results.
+ *
+ * aBounds specifies the bounds of the drawing operation that will be
+ * drawn to the target, it is given in device space! If this is nullptr the
+ * drawing operation will be assumed to cover the whole canvas.
+ */
+class AdjustedTarget
+{
+public:
+  typedef CanvasRenderingContext2D::ContextState ContextState;
+
+  explicit AdjustedTarget(CanvasRenderingContext2D* ctx,
+                          const mgfx::Rect *aBounds = nullptr)
+  {
+    mTarget = ctx->mTarget;
+
+    // All rects in this function are in the device space of ctx->mTarget.
+
+    // In order to keep our temporary surfaces as small as possible, we first
+    // calculate what their maximum required bounds would need to be if we
+    // were to fill the whole canvas. Everything outside those bounds we don't
+    // need to render.
+    mgfx::Rect r(0, 0, ctx->mWidth, ctx->mHeight);
+    mgfx::Rect maxSourceNeededBoundsForShadow =
+      MaxSourceNeededBoundsForShadow(r, ctx);
+
+    mgfx::Rect bounds = maxSourceNeededBoundsForShadow;
+    if (aBounds) {
+      bounds = bounds.Intersect(*aBounds);
+    }
+
+    mozilla::gfx::CompositionOp op = ctx->CurrentState().op;
+
+    if (ctx->NeedToDrawShadow()) {
+      mShadowTarget = MakeUnique<AdjustedTargetForShadow>(
+        ctx, mTarget, bounds, op);
+      mTarget = mShadowTarget->DT();
+    }
   }
 
   operator DrawTarget*()
@@ -387,10 +429,25 @@ public:
   }
 
 private:
+
+  mgfx::Rect
+  MaxSourceNeededBoundsForShadow(const mgfx::Rect& aDestBounds, CanvasRenderingContext2D *ctx)
+  {
+    if (!ctx->NeedToDrawShadow()) {
+      return aDestBounds;
+    }
+
+    const ContextState &state = ctx->CurrentState();
+    mgfx::Rect sourceBounds = aDestBounds - state.shadowOffset;
+    sourceBounds.Inflate(state.ShadowBlurRadius());
+
+    // Union the shadow source with the original rect because we're going to
+    // draw both.
+    return sourceBounds.Union(aDestBounds);
+  }
+
   RefPtr<DrawTarget> mTarget;
-  CanvasRenderingContext2D *mCtx;
-  Float mSigma;
-  mgfx::Rect mTempRect;
+  UniquePtr<AdjustedTargetForShadow> mShadowTarget;
 };
 
 void
