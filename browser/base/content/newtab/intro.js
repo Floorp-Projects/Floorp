@@ -49,7 +49,7 @@ let gIntro = {
       this._nodes.panel.appendChild(h1);
       h1.textContent = newTabString("intro.header");
 
-      ['<a href="' + TILES_EXPLAIN_LINK + '">' + newTabString("learn.link") + "</a>",
+      ['<a href="' + TILES_INTRO_LINK + '">' + newTabString("learn.link") + "</a>",
        '<a href="' + TILES_PRIVACY_LINK + '">' + newTabString("privacy.link") + "</a>",
        '<input type="button" class="newtab-customize"/>',
       ].forEach((arg, index) => {
