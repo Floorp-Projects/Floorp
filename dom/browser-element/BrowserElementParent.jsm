@@ -85,6 +85,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame, isPendingFrame) {
 
   Services.obs.addObserver(this, 'ask-children-to-exit-fullscreen', /* ownsWeak = */ true);
   Services.obs.addObserver(this, 'oop-frameloader-crashed', /* ownsWeak = */ true);
+  Services.obs.addObserver(this, 'copypaste-docommand', /* ownsWeak = */ true);
 
   let defineMethod = function(name, fn) {
     XPCNativeWrapper.unwrap(self._frameElement)[name] = function() {
@@ -168,14 +169,6 @@ function BrowserElementParent(frameLoader, hasRemoteFrame, isPendingFrame) {
                                   /* useCapture = */ false,
                                   /* wantsUntrusted = */ false);
   }
-
-  this._doCommandHandlerBinder = this._doCommandHandler.bind(this);
-  this._frameElement.addEventListener('mozdocommand',
-                                      this._doCommandHandlerBinder,
-                                      /* useCapture = */ false,
-                                      /* wantsUntrusted = */ false);
-
-  Services.obs.addObserver(this, 'ipc:browser-destroyed', /* ownsWeak = */ true);
 
   this._window._browserElementParents.set(this, null);
 
@@ -496,11 +489,6 @@ BrowserElementParent.prototype = {
     let evt = this._createEvent('selectionchange', data.json,
                                 /* cancelable = */ false);
     this._frameElement.dispatchEvent(evt);
-  },
-
-  _doCommandHandler: function(e) {
-    e.stopPropagation();
-    this._sendAsyncMsg('do-command', { command: e.detail.cmd });
   },
 
   _createEvent: function(evtName, detail, cancelable) {
@@ -926,11 +914,9 @@ BrowserElementParent.prototype = {
         }
         Services.obs.removeObserver(this, 'remote-browser-frame-shown');
       }
-    case 'ipc:browser-destroyed':
-      if (this._isAlive() && subject == this._frameLoader) {
-        Services.obs.removeObserver(this, 'ipc:browser-destroyed');
-        this._frameElement.removeEventListener('mozdocommand',
-                                               this._doCommandHandlerBinder)
+    case 'copypaste-docommand':
+      if (this._isAlive() && this._frameElement.isEqualNode(subject.wrappedJSObject)) {
+        this._sendAsyncMsg('do-command', { command: data });
       }
       break;
     default:

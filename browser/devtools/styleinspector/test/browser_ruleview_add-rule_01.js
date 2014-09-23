@@ -15,12 +15,14 @@ let PAGE_CONTENT = [
   '</style>',
   '<div id="testid" class="testclass">Styled Node</div>',
   '<span class="testclass2">This is a span</span>',
+  '<span class="class1 class2">Multiple classes</span>',
   '<p>Empty<p>'
 ].join("\n");
 
 const TEST_DATA = [
   { node: "#testid", expected: "#testid" },
   { node: ".testclass2", expected: ".testclass2" },
+  { node: ".class1.class2", expected: ".class1" },
   { node: "p", expected: "p" }
 ];
 

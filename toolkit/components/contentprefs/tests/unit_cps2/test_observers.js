@@ -69,6 +69,25 @@ let tests = [
     observerArgsOK(args.bar, []);
   },
 
+  function observerForName_removeAllDomainsSince() {
+    yield setWithDate("a.com", "foo", 1, 100);
+    yield setWithDate("b.com", "foo", 2, 200);
+    yield setWithDate("c.com", "foo", 3, 300);
+
+    yield setWithDate("a.com", "bar", 1, 000);
+    yield setWithDate("b.com", "bar", 2, 100);
+    yield setWithDate("c.com", "bar", 3, 200);
+    yield setGlobal("foo", 2);
+
+    yield cps.removeAllDomainsSince(200, null, makeCallback());
+
+    let args = yield on("Removed", ["foo", "bar", null]);
+
+    observerArgsOK(args.foo, [["b.com", "foo"], ["c.com", "foo"]]);
+    observerArgsOK(args.bar, [["c.com", "bar"]]);
+    observerArgsOK(args.null, [["b.com", "foo"], ["c.com", "bar"], ["c.com", "foo"]]);
+  },
+
   function observerForName_removeAllDomains() {
     yield set("a.com", "foo", 1);
     yield setGlobal("foo", 2);

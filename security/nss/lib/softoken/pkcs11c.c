@@ -23,6 +23,7 @@
 #include "blapi.h"
 #include "pkcs11.h"
 #include "pkcs11i.h"
+#include "pkcs1sig.h"
 #include "lowkeyi.h"
 #include "secder.h"
 #include "secdig.h"
@@ -2856,65 +2857,42 @@ sftk_hashCheckSign(SFTKHashVerifyInfo *info, const unsigned char *sig,
 }
 
 SECStatus
-RSA_HashCheckSign(SECOidTag hashOid, NSSLOWKEYPublicKey *key,
+RSA_HashCheckSign(SECOidTag digestOid, NSSLOWKEYPublicKey *key,
                   const unsigned char *sig, unsigned int sigLen,
-                  const unsigned char *hash, unsigned int hashLen)
+                  const unsigned char *digestData, unsigned int digestLen)
 {
-    SECItem it;
-    SGNDigestInfo *di = NULL;
-    SECStatus rv = SECSuccess;
+    unsigned char *pkcs1DigestInfoData;
+    SECItem pkcs1DigestInfo;
+    SECItem digest;
+    unsigned int bufferSize;
+    SECStatus rv;
 
-    it.data = NULL;
-    it.len = nsslowkey_PublicModulusLen(key);
-    if (!it.len) {
-        goto loser;
+    /* pkcs1DigestInfo.data must be less than key->u.rsa.modulus.len */
+    bufferSize = key->u.rsa.modulus.len;
+    pkcs1DigestInfoData = PORT_ZAlloc(bufferSize);
+    if (!pkcs1DigestInfoData) {
+        PORT_SetError(SEC_ERROR_NO_MEMORY);
+        return SECFailure;
     }
 
-    it.data = (unsigned char *)PORT_Alloc(it.len);
-    if (it.data == NULL) {
-        goto loser;
-    }
-
+    pkcs1DigestInfo.data = pkcs1DigestInfoData;
+    pkcs1DigestInfo.len = bufferSize;
+    
     /* decrypt the block */
-    rv = RSA_CheckSignRecover(&key->u.rsa, it.data, &it.len, it.len, sig,
-                              sigLen);
+    rv = RSA_CheckSignRecover(&key->u.rsa, pkcs1DigestInfo.data,
+                             &pkcs1DigestInfo.len, pkcs1DigestInfo.len,
+                             sig, sigLen);
     if (rv != SECSuccess) {
-        goto loser;
+        PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
+    } else {
+        digest.data = (PRUint8*) digestData;
+        digest.len = digestLen;
+        rv = _SGN_VerifyPKCS1DigestInfo(
+                digestOid, &digest, &pkcs1DigestInfo,
+                PR_TRUE /*XXX: unsafeAllowMissingParameters*/);
     }
 
-    di = SGN_DecodeDigestInfo(&it);
-    if (di == NULL) {
-        goto loser;
-    }
-    if (di->digest.len != hashLen) {
-        goto loser; 
-    }
-
-    /* make sure the tag is OK */
-    if (SECOID_GetAlgorithmTag(&di->digestAlgorithm) != hashOid) {
-        goto loser;
-    }
-    /* make sure the "parameters" are not too bogus. */
-    if (di->digestAlgorithm.parameters.len > 2) {
-        goto loser;
-    }
-    /* Now check the signature */
-    if (PORT_Memcmp(hash, di->digest.data, di->digest.len) == 0) {
-        goto done;
-    }
-
-  loser:
-    PORT_SetError(SEC_ERROR_BAD_SIGNATURE);
-    rv = SECFailure;
-
-  done:
-    if (it.data != NULL) {
-        PORT_Free(it.data);
-    }
-    if (di != NULL) {
-        SGN_DestroyDigestInfo(di);
-    }
-
+    PORT_Free(pkcs1DigestInfoData);
     return rv;
 }
 

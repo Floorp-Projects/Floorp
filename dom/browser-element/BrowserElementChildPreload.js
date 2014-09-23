@@ -512,6 +512,7 @@ BrowserElementChild.prototype = {
     debug('Got iconchanged: (' + e.target.href + ')');
     let icon = { href: e.target.href };
     this._maybeCopyAttribute(e.target, icon, 'sizes');
+    this._maybeCopyAttribute(e.target, icon, 'rel');
     sendAsyncMsg('iconchange', icon);
   },
 

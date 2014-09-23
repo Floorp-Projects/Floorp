@@ -1322,7 +1322,7 @@ public class BrowserApp extends GeckoApp
         if (mMainLayoutAnimator != null)
             mMainLayoutAnimator.stop();
 
-        boolean isSideBar = (HardwareUtils.isTablet() && getOrientation() == Configuration.ORIENTATION_LANDSCAPE);
+        boolean isSideBar = !NewTabletUI.isEnabled(this) && (HardwareUtils.isTablet() && getOrientation() == Configuration.ORIENTATION_LANDSCAPE);
         final int sidebarWidth = getResources().getDimensionPixelSize(R.dimen.tabs_sidebar_width);
 
         ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) mTabsPanel.getLayoutParams();

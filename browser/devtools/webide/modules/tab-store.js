@@ -122,7 +122,11 @@ TabStore.prototype = {
     return this._selectedTab;
   },
   set selectedTab(tab) {
+    if (this._selectedTab === tab) {
+      return;
+    }
     this._selectedTab = tab;
+    this._selectedTabTargetPromise = null;
     // Attach to the tab to follow navigation events
     if (this._selectedTab) {
       this.getTargetForTab();
@@ -158,6 +162,11 @@ TabStore.prototype = {
         form: store._selectedTab,
         client: store._connection.client,
         chrome: false
+      });
+    });
+    this._selectedTabTargetPromise.then(target => {
+      target.once("close", () => {
+        this._selectedTabTargetPromise = null;
       });
     });
     return this._selectedTabTargetPromise;
