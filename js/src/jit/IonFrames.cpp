@@ -1773,6 +1773,50 @@ SnapshotIterator::skipInstruction()
 }
 
 bool
+SnapshotIterator::initInstructionResults(MaybeReadFallback &fallback)
+{
+    MOZ_ASSERT(fallback.canRecoverResults());
+    JSContext *cx = fallback.maybeCx;
+
+    // If there is only one resume point in the list of instructions, then there
+    // is no instruction to recover, and thus no need to register any results.
+    MOZ_ASSERT(recover_.numInstructionsRead() == 1);
+    if (recover_.numInstructions() == 1)
+        return true;
+
+    IonJSFrameLayout *fp = fallback.frame->jsFrame();
+    RInstructionResults *results = fallback.activation->maybeIonFrameRecovery(fp);
+    if (!results) {
+        // We do not have the result yet, which means that an observable stack
+        // slot is requested.  As we do not want to bailout every time for the
+        // same reason, we need to recompile without optimizing away the
+        // observable stack slots.  The script would later be recompiled to have
+        // support for Argument objects.
+        if (!ionScript_->invalidate(cx, /* resetUses = */ false, "Observe recovered instruction."))
+            return false;
+
+        // Start a new snapshot at the beginning of the JitFrameIterator.  This
+        // SnapshotIterator is used for evaluating the content of all recover
+        // instructions.  The result is then saved on the JitActivation.
+        SnapshotIterator s(*fallback.frame);
+        RInstructionResults tmp;
+        if (!s.initInstructionResults(cx, &tmp))
+            return false;
+
+        // Register the list of result on the activation.
+        if (!fallback.activation->registerIonFrameRecovery(fallback.frame->jsFrame(),
+                                                           mozilla::Move(tmp)))
+            return false;
+
+        results = fallback.activation->maybeIonFrameRecovery(fp);
+    }
+
+    MOZ_ASSERT(results->isInitialized());
+    instructionResults_ = results;
+    return true;
+}
+
+bool
 SnapshotIterator::initInstructionResults(JSContext *cx, RInstructionResults *results)
 {
     MOZ_ASSERT(recover_.numInstructionsRead() == 1);
