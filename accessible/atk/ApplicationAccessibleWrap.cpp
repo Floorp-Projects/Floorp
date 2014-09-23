@@ -85,7 +85,7 @@ ApplicationAccessibleWrap::Name(nsString& aName)
   // Firefox or Thunderbird) like IA2 does. Thus let's return an application
   // name as accessible name that was used to get a branding name (for example,
   // Minefield aka nightly Firefox or Daily aka nightly Thunderbird).
-  GetAppName(aName);
+  AppName(aName);
   return eNameOK;
 }
 
