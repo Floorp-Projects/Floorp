@@ -1343,10 +1343,10 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
         return BAILOUT_RETURN_FATAL_ERROR;
     JitSpew(JitSpew_BaselineBailouts, "  Incoming frame ptr = %p", builder.startFrame());
 
-    AutoValueVector instructionResults(cx);
+    RInstructionResults instructionResults;
     SnapshotIterator snapIter(iter);
 
-    if (!snapIter.initIntructionResults(instructionResults))
+    if (!snapIter.initInstructionResults(cx, &instructionResults))
         return BAILOUT_RETURN_FATAL_ERROR;
 
 #ifdef TRACK_SNAPSHOTS
