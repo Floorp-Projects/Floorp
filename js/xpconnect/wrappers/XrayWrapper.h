@@ -420,6 +420,8 @@ class XrayWrapper : public Base {
                                 JS::MutableHandleObject protop) const MOZ_OVERRIDE;
     virtual bool setPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
                                 JS::HandleObject proto, bool *bp) const MOZ_OVERRIDE;
+    virtual bool setImmutablePrototype(JSContext *cx, JS::HandleObject wrapper,
+                                       bool *succeeded) const MOZ_OVERRIDE;
     virtual bool has(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
                      bool *bp) const MOZ_OVERRIDE;
     virtual bool get(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> receiver,

@@ -268,6 +268,9 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop) const;
     virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto, bool *bp) const;
 
+    /* Non-standard but conceptual kin to {g,s}etPrototypeOf, so lives here. */
+    virtual bool setImmutablePrototype(JSContext *cx, HandleObject proxy, bool *succeeded) const;
+
     /*
      * These standard internal methods are implemented, as a convenience, so
      * that ProxyHandler subclasses don't have to provide every single method.
@@ -371,6 +374,8 @@ class JS_PUBLIC_API(DirectProxyHandler) : public BaseProxyHandler
                                 MutableHandleObject protop) const MOZ_OVERRIDE;
     virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto,
                                 bool *bp) const MOZ_OVERRIDE;
+    virtual bool setImmutablePrototype(JSContext *cx, HandleObject proxy,
+                                       bool *succeeded) const MOZ_OVERRIDE;
     virtual bool has(JSContext *cx, HandleObject proxy, HandleId id,
                      bool *bp) const MOZ_OVERRIDE;
     virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver,
