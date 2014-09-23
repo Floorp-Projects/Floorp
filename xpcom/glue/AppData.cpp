@@ -43,6 +43,7 @@ ScopedAppData::ScopedAppData(const nsXREAppData* aAppData)
 
   SetAllocatedString(this->vendor, aAppData->vendor);
   SetAllocatedString(this->name, aAppData->name);
+  SetAllocatedString(this->remotingName, aAppData->remotingName);
   SetAllocatedString(this->version, aAppData->version);
   SetAllocatedString(this->buildID, aAppData->buildID);
   SetAllocatedString(this->ID, aAppData->ID);
@@ -70,6 +71,7 @@ ScopedAppData::~ScopedAppData()
 {
   SetAllocatedString(this->vendor, nullptr);
   SetAllocatedString(this->name, nullptr);
+  SetAllocatedString(this->remotingName, nullptr);
   SetAllocatedString(this->version, nullptr);
   SetAllocatedString(this->buildID, nullptr);
   SetAllocatedString(this->ID, nullptr);
