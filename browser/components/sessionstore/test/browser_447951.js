@@ -32,12 +32,14 @@ function test() {
       is(tabState.entries[0].url, baseURL + 0, "... but not more");
 
       // visit yet another anchor (appending it to session history)
-      tab.linkedBrowser.contentDocument.querySelector("a").click();
+      runInContent(tab.linkedBrowser, function(win) {
+        win.document.querySelector("a").click();
+      }, null).then(check);
 
       function check() {
         SyncHandlers.get(tab.linkedBrowser).flush();
         tabState = JSON.parse(ss.getTabState(tab));
-        if (tabState.entries[tabState.entries.length - 1].url != baseURL + "end") {
+        if (tab.linkedBrowser.currentURI.spec != baseURL + "end") {
           // It may take a few passes through the event loop before we
           // get the right URL.
           executeSoon(check);
@@ -55,8 +57,6 @@ function test() {
         gBrowser.removeTab(tab);
         finish();
       }
-
-      check();
     });
   });
 }
