@@ -233,6 +233,16 @@ static const FeatureInfo sFeatureInfoArr[] = {
          */
     },
     {
+        "gpu_shader4",
+        300, // OpenGL version
+        300, // OpenGL ES version
+        GLContext::Extension_None,
+        {
+            GLContext::EXT_gpu_shader4,
+            GLContext::Extensions_End
+        }
+    },
+    {
         "instanced_arrays",
         330, // OpenGL version
         300, // OpenGL ES version
@@ -258,14 +268,6 @@ static const FeatureInfo sFeatureInfoArr[] = {
          * ANGLE_instanced_arrays and NV_instanced_arrays forbid this, but GLES3
          * has no such restriction.
          */
-    },
-    {
-        "integer_vertex_attribs",
-        300, // OpenGL version
-        300, // OpenGL ES version
-        {
-            GLContext::Extensions_End
-        }
     },
     {
         "map_buffer_range",
@@ -496,15 +498,6 @@ static const FeatureInfo sFeatureInfoArr[] = {
     {
         "uniform_matrix_nonsquare",
         210, // OpenGL version
-        300, // OpenGL ES version
-        GLContext::Extension_None,
-        {
-            GLContext::Extensions_End
-        }
-    },
-    {
-        "uniform_uint",
-        300, // OpenGL version
         300, // OpenGL ES version
         GLContext::Extension_None,
         {
