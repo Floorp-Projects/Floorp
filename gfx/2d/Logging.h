@@ -10,7 +10,9 @@
 #include <sstream>
 #include <stdio.h>
 
+#if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
 #include "nsDebug.h"
+#endif
 #include "Point.h"
 #include "BaseRect.h"
 #include "Matrix.h"
@@ -69,7 +71,11 @@ struct BasicLogger
     }
 #else
     if (aLevel >= sGfxLogLevel) {
+#if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
       printf_stderr("%s", aString.c_str());
+#else
+      printf("%s", aString.c_str());
+#endif
     }
 #endif
   }
