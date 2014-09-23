@@ -229,10 +229,6 @@ struct GLContextSymbols
     PFNGLUNIFORM1IPROC fUniform1i;
     typedef void (GLAPIENTRY * PFNGLUNIFORM1IVPROC) (GLint location, GLsizei count, const GLint* value);
     PFNGLUNIFORM1IVPROC fUniform1iv;
-    typedef void (GLAPIENTRY * PFNGLUNIFORM1UIPROC) (GLint location, GLuint v0);
-    PFNGLUNIFORM1UIPROC fUniform1ui;
-    typedef void (GLAPIENTRY * PFNGLUNIFORM1UIVPROC) (GLint location, GLsizei count, const GLuint* value);
-    PFNGLUNIFORM1UIVPROC fUniform1uiv;
     typedef void (GLAPIENTRY * PFNGLUNIFORM2FPROC) (GLint location, GLfloat v0, GLfloat v1);
     PFNGLUNIFORM2FPROC fUniform2f;
     typedef void (GLAPIENTRY * PFNGLUNIFORM2FVPROC) (GLint location, GLsizei count, const GLfloat* value);
@@ -241,10 +237,6 @@ struct GLContextSymbols
     PFNGLUNIFORM2IPROC fUniform2i;
     typedef void (GLAPIENTRY * PFNGLUNIFORM2IVPROC) (GLint location, GLsizei count, const GLint* value);
     PFNGLUNIFORM2IVPROC fUniform2iv;
-    typedef void (GLAPIENTRY * PFNGLUNIFORM2UIPROC) (GLint location, GLuint v0, GLuint v1);
-    PFNGLUNIFORM2UIPROC fUniform2ui;
-    typedef void (GLAPIENTRY * PFNGLUNIFORM2UIVPROC) (GLint location, GLsizei count, const GLuint* value);
-    PFNGLUNIFORM2UIVPROC fUniform2uiv;
     typedef void (GLAPIENTRY * PFNGLUNIFORM3FPROC) (GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
     PFNGLUNIFORM3FPROC fUniform3f;
     typedef void (GLAPIENTRY * PFNGLUNIFORM3FVPROC) (GLint location, GLsizei count, const GLfloat* value);
@@ -253,10 +245,6 @@ struct GLContextSymbols
     PFNGLUNIFORM3IPROC fUniform3i;
     typedef void (GLAPIENTRY * PFNGLUNIFORM3IVPROC) (GLint location, GLsizei count, const GLint* value);
     PFNGLUNIFORM3IVPROC fUniform3iv;
-    typedef void (GLAPIENTRY * PFNGLUNIFORM3UIPROC) (GLint location, GLuint v0, GLuint v1, GLuint v2);
-    PFNGLUNIFORM3UIPROC fUniform3ui;
-    typedef void (GLAPIENTRY * PFNGLUNIFORM3UIVPROC) (GLint location, GLsizei count, const GLuint* value);
-    PFNGLUNIFORM3UIVPROC fUniform3uiv;
     typedef void (GLAPIENTRY * PFNGLUNIFORM4FPROC) (GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
     PFNGLUNIFORM4FPROC fUniform4f;
     typedef void (GLAPIENTRY * PFNGLUNIFORM4FVPROC) (GLint location, GLsizei count, const GLfloat* value);
@@ -265,10 +253,6 @@ struct GLContextSymbols
     PFNGLUNIFORM4IPROC fUniform4i;
     typedef void (GLAPIENTRY * PFNGLUNIFORM4IVPROC) (GLint location, GLsizei count, const GLint* value);
     PFNGLUNIFORM4IVPROC fUniform4iv;
-    typedef void (GLAPIENTRY * PFNGLUNIFORM4UIPROC) (GLint location, GLuint v0, GLuint v1, GLuint v2, GLuint v3);
-    PFNGLUNIFORM4UIPROC fUniform4ui;
-    typedef void (GLAPIENTRY * PFNGLUNIFORM4UIVPROC) (GLint location, GLsizei count, const GLuint* value);
-    PFNGLUNIFORM4UIVPROC fUniform4uiv;
     typedef void (GLAPIENTRY * PFNGLUNIFORMMATRIX2FVPROC) (GLint location, GLsizei count, realGLboolean transpose, const GLfloat* value);
     PFNGLUNIFORMMATRIX2FVPROC fUniformMatrix2fv;
     typedef void (GLAPIENTRY * PFNGLUNIFORMMATRIX2X3FVPROC) (GLint location, GLsizei count, realGLboolean transpose, const GLfloat* value);
@@ -603,7 +587,7 @@ struct GLContextSymbols
     typedef void (GLAPIENTRY * PFNGLUNIFORMBLOCKBINDINGPROC) (GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding);
     PFNGLUNIFORMBLOCKBINDINGPROC fUniformBlockBinding;
 
-    // vertex attrib - integer
+    // EXT_gpu_shader4
     typedef void (GLAPIENTRY * PFNGLVERTEXATTRIBI4IPROC) (GLuint index, GLint x, GLint y, GLint z, GLint w);
     PFNGLVERTEXATTRIBI4IPROC fVertexAttribI4i;
     typedef void (GLAPIENTRY * PFNGLVERTEXATTRIBI4IVPROC) (GLuint index, const GLint* v);
@@ -614,6 +598,24 @@ struct GLContextSymbols
     PFNGLVERTEXATTRIBI4UIVPROC fVertexAttribI4uiv;
     typedef void (GLAPIENTRY * PFNGLVERTEXATTRIBIPOINTERPROC) (GLuint index, GLint size, GLenum type, GLsizei stride, const GLvoid* ptr);
     PFNGLVERTEXATTRIBIPOINTERPROC fVertexAttribIPointer;
+    typedef void (GLAPIENTRY * PFNGLUNIFORM1UIPROC) (GLint location, GLuint v0);
+    PFNGLUNIFORM1UIPROC fUniform1ui;
+    typedef void (GLAPIENTRY * PFNGLUNIFORM2UIPROC) (GLint location, GLuint v0, GLuint v1);
+    PFNGLUNIFORM2UIPROC fUniform2ui;
+    typedef void (GLAPIENTRY * PFNGLUNIFORM3UIPROC) (GLint location, GLuint v0, GLuint v1, GLuint v2);
+    PFNGLUNIFORM3UIPROC fUniform3ui;
+    typedef void (GLAPIENTRY * PFNGLUNIFORM4UIPROC) (GLint location, GLuint v0, GLuint v1, GLuint v2, GLuint v3);
+    PFNGLUNIFORM4UIPROC fUniform4ui;
+    typedef void (GLAPIENTRY * PFNGLUNIFORM1UIVPROC) (GLint location, GLsizei count, const GLuint* value);
+    PFNGLUNIFORM1UIVPROC fUniform1uiv;
+    typedef void (GLAPIENTRY * PFNGLUNIFORM2UIVPROC) (GLint location, GLsizei count, const GLuint* value);
+    PFNGLUNIFORM2UIVPROC fUniform2uiv;
+    typedef void (GLAPIENTRY * PFNGLUNIFORM3UIVPROC) (GLint location, GLsizei count, const GLuint* value);
+    PFNGLUNIFORM3UIVPROC fUniform3uiv;
+    typedef void (GLAPIENTRY * PFNGLUNIFORM4UIVPROC) (GLint location, GLsizei count, const GLuint* value);
+    PFNGLUNIFORM4UIVPROC fUniform4uiv;
+    typedef GLint (GLAPIENTRY * PFNGLGETFRAGDATALOCATIONPROC) (GLuint program, const GLchar* name);
+    PFNGLGETFRAGDATALOCATIONPROC fGetFragDataLocation;
 };
 
 }
