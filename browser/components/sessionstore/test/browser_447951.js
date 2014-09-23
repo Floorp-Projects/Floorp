@@ -26,7 +26,7 @@ function test() {
 
     ss.setTabState(tab, JSON.stringify(tabState));
     whenTabRestored(tab, function() {
-      SyncHandlers.get(tab.linkedBrowser).flush();
+      TabState.flush(tab.linkedBrowser);
       tabState = JSON.parse(ss.getTabState(tab));
       is(tabState.entries.length, max_entries, "session history filled to the limit");
       is(tabState.entries[0].url, baseURL + 0, "... but not more");
@@ -37,7 +37,7 @@ function test() {
       }, null).then(check);
 
       function check() {
-        SyncHandlers.get(tab.linkedBrowser).flush();
+        TabState.flush(tab.linkedBrowser);
         tabState = JSON.parse(ss.getTabState(tab));
         if (tab.linkedBrowser.currentURI.spec != baseURL + "end") {
           // It may take a few passes through the event loop before we

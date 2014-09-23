@@ -18,23 +18,10 @@ for (let script of FRAME_SCRIPTS) {
   mm.loadFrameScript(script, true);
 }
 
-mm.addMessageListener("SessionStore:setupSyncHandler", onSetupSyncHandler);
-
-/**
- * This keeps track of all SyncHandlers passed to chrome from frame scripts.
- * We need this to let tests communicate with frame scripts and cause (a)sync
- * flushes.
- */
-let SyncHandlers = new WeakMap();
-function onSetupSyncHandler(msg) {
-  SyncHandlers.set(msg.target, msg.objects.handler);
-}
-
 registerCleanupFunction(() => {
   for (let script of FRAME_SCRIPTS) {
     mm.removeDelayedFrameScript(script, true);
   }
-  mm.removeMessageListener("SessionStore:setupSyncHandler", onSetupSyncHandler);
 });
 
 let tmp = {};
@@ -43,7 +30,8 @@ Cu.import("resource://gre/modules/Task.jsm", tmp);
 Cu.import("resource:///modules/sessionstore/SessionStore.jsm", tmp);
 Cu.import("resource:///modules/sessionstore/SessionSaver.jsm", tmp);
 Cu.import("resource:///modules/sessionstore/SessionFile.jsm", tmp);
-let {Promise, Task, SessionStore, SessionSaver, SessionFile} = tmp;
+Cu.import("resource:///modules/sessionstore/TabState.jsm", tmp);
+let {Promise, Task, SessionStore, SessionSaver, SessionFile, TabState} = tmp;
 
 let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 

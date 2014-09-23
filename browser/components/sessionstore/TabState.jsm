@@ -39,6 +39,10 @@ this.TabState = Object.freeze({
     TabStateInternal.flush(browser);
   },
 
+  flushAsync: function (browser) {
+    TabStateInternal.flushAsync(browser);
+  },
+
   flushWindow: function (window) {
     TabStateInternal.flushWindow(window);
   },
@@ -90,6 +94,18 @@ let TabStateInternal = {
     if (this._syncHandlers.has(browser.permanentKey)) {
       let lastID = this._latestMessageID.get(browser.permanentKey);
       this._syncHandlers.get(browser.permanentKey).flush(lastID);
+    }
+  },
+
+  /**
+   * DO NOT USE - DEBUGGING / TESTING ONLY
+   *
+   * This function is used to simulate certain situations where race conditions
+   * can occur by sending data shortly before flushing synchronously.
+   */
+  flushAsync: function(browser) {
+    if (this._syncHandlers.has(browser.permanentKey)) {
+      this._syncHandlers.get(browser.permanentKey).flushAsync();
     }
   },
 
