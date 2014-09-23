@@ -183,6 +183,7 @@ nsHttpHandler::nsHttpHandler()
     , mSpdyV3(true)
     , mSpdyV31(true)
     , mHttp2DraftEnabled(true)
+    , mHttp2Enabled(true)
     , mEnforceHttp2TlsProfile(true)
     , mCoalesceSpdy(true)
     , mSpdyPersistentSettings(false)
@@ -1155,6 +1156,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled.http2draft"), &cVar);
         if (NS_SUCCEEDED(rv))
             mHttp2DraftEnabled = cVar;
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("spdy.enabled.http2"))) {
+        rv = prefs->GetBoolPref(HTTP_PREF("spdy.enabled.http2"), &cVar);
+        if (NS_SUCCEEDED(rv))
+            mHttp2Enabled = cVar;
     }
 
     if (PREF_CHANGED(HTTP_PREF("spdy.enforce-tls-profile"))) {

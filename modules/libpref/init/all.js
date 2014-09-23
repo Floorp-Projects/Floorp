@@ -1212,6 +1212,7 @@ pref("network.http.spdy.enabled", true);
 pref("network.http.spdy.enabled.v3", true);
 pref("network.http.spdy.enabled.v3-1", true);
 pref("network.http.spdy.enabled.http2draft", true);
+pref("network.http.spdy.enabled.http2", false);
 pref("network.http.spdy.enforce-tls-profile", true);
 pref("network.http.spdy.chunk-size", 16000);
 pref("network.http.spdy.timeout", 180);
