@@ -1344,6 +1344,7 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
     JitSpew(JitSpew_BaselineBailouts, "  Incoming frame ptr = %p", builder.startFrame());
 
     RInstructionResults instructionResults;
+    activation->maybeTakeIonFrameRecovery(iter.jsFrame(), &instructionResults);
     SnapshotIterator snapIter(iter);
 
     if (!snapIter.initInstructionResults(cx, &instructionResults))
