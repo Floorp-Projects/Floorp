@@ -600,12 +600,14 @@ finalizeCB(GObject *aObj)
 const gchar*
 getNameCB(AtkObject* aAtkObj)
 {
-  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-  if (!accWrap)
-    return nullptr;
-
   nsAutoString name;
-  accWrap->Name(name);
+  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
+  if (accWrap)
+    accWrap->Name(name);
+  else if (ProxyAccessible* proxy = GetProxy(aAtkObj))
+    proxy->Name(name);
+  else
+    return nullptr;
 
   // XXX Firing an event from here does not seem right
   MaybeFireNameChange(aAtkObj, name);
