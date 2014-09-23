@@ -19,4 +19,5 @@ EXTRA_JS_MODULES.devtools.webide += [
     'modules/remote-resources.js',
     'modules/runtimes.js',
     'modules/tab-store.js',
+    'modules/utils.js',
 ]

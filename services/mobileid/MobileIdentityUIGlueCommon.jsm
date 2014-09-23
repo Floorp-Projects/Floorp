@@ -8,13 +8,14 @@ this.EXPORTED_SYMBOLS = ["MobileIdentityUIGluePhoneInfo",
                          "MobileIdentityUIGluePromptResult"];
 
 this.MobileIdentityUIGluePhoneInfo = function (aMsisdn, aOperator, aServiceId,
-                                               aExternal, aPrimary) {
+                                               aIccId, aPrimary) {
   this.msisdn = aMsisdn;
   this.operator = aOperator;
   this.serviceId = aServiceId;
+  this.iccId = aIccId;
   // A phone number is considered "external" when it doesn't or we don't know
   // if it does belong to any of the device SIM cards.
-  this.external = aExternal;
+  this.external = !!aIccId;
   this.primary = aPrimary;
 }
 

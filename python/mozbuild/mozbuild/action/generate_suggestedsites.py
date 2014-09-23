@@ -29,10 +29,12 @@ from __future__ import print_function
 
 import argparse
 import json
-import re
 import sys
 import os
 
+from mozbuild.dotproperties import (
+    DotProperties,
+)
 from mozbuild.util import (
     FileAvoidWrite,
 )
@@ -42,57 +44,17 @@ from mozpack.files import (
 import mozpack.path as mozpath
 
 
-def read_properties_file(filename):
-    """Reads a properties file into a dict.
-
-    Ignores empty, comment lines, and keys not starting with the prefix for
-    suggested sites ('browser.suggestedsites'). Removes the prefix from all
-    matching keys i.e. turns 'browser.suggestedsites.foo' into simply 'foo'
-    """
-    prefix = 'browser.suggestedsites.'
-    properties = {}
-    for l in open(filename, 'rt').readlines():
-        line = l.strip()
-        if not line.startswith(prefix):
-            continue
-        (k, v) = re.split('\s*=\s*', line, 1)
-        properties[k[len(prefix):]] = v
-    return properties
-
-
 def merge_properties(filename, srcdirs):
     """Merges properties from the given file in the given source directories."""
-    properties = {}
+    properties = DotProperties()
     for srcdir in srcdirs:
         path = mozpath.join(srcdir, filename)
         try:
-            properties.update(read_properties_file(path))
-        except IOError, e:
+            properties.update(path)
+        except IOError:
             # Ignore non-existing files
             continue
     return properties
-
-
-def get_site_list_from_properties(properties):
-    """Turns {'list.0':'foo', 'list.1':'bar'} into ['foo', 'bar']."""
-    prefix = 'list.'
-    indexes = []
-    for k, v in properties.iteritems():
-        if not k.startswith(prefix):
-            continue
-        indexes.append(int(k[len(prefix):]))
-    return [properties[prefix + str(index)] for index in sorted(indexes)]
-
-
-def get_site_from_properties(name, properties):
-    """Turns {'foo.title':'title', ...} into {'title':'title', ...}."""
-    prefix = '{name}.'.format(name=name)
-    try:
-        site = dict((k, properties[prefix + k]) for k in ('title', 'url', 'bgcolor'))
-    except IndexError, e:
-        raise Exception("Could not find required property for '{name}: {error}'"
-                        .format(name=name, error=str(e)))
-    return site
 
 
 def main(args):
@@ -115,8 +77,8 @@ def main(args):
     opts = parser.parse_args(args)
 
     # Use reversed order so that the first srcdir has higher priority to override keys.
-    all_properties = merge_properties('region.properties', reversed(opts.srcdir))
-    names = get_site_list_from_properties(all_properties)
+    properties = merge_properties('region.properties', reversed(opts.srcdir))
+    names = properties.get_list('browser.suggestedsites.list')
     if opts.verbose:
         print('Reading {len} suggested sites: {names}'.format(len=len(names), names=names))
 
@@ -128,7 +90,7 @@ def main(args):
     # respective image URL.
     sites = []
     for name in names:
-        site = get_site_from_properties(name, all_properties)
+        site = properties.get_dict('browser.suggestedsites.{name}'.format(name=name), required_keys=('title', 'url', 'bgcolor'))
         site['imageurl'] = image_url_template.format(name=name)
         sites.append(site)
 

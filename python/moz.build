@@ -43,6 +43,7 @@ PYTHON_UNIT_TESTS += [
     'mozbuild/mozbuild/test/frontend/test_sandbox.py',
     'mozbuild/mozbuild/test/test_base.py',
     'mozbuild/mozbuild/test/test_containers.py',
+    'mozbuild/mozbuild/test/test_dotproperties.py',
     'mozbuild/mozbuild/test/test_expression.py',
     'mozbuild/mozbuild/test/test_jarmaker.py',
     'mozbuild/mozbuild/test/test_line_endings.py',

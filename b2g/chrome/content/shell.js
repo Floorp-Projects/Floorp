@@ -738,7 +738,8 @@ let DoCommandHelper = {
 
   handleEvent: function docommand_handleEvent(cmd) {
     if (this._event) {
-      shell.sendEvent(this._event.target, 'mozdocommand', { cmd: cmd });
+      Services.obs.notifyObservers({ wrappedJSObject: this._event.target },
+                                   'copypaste-docommand', cmd);
       this._event = null;
     }
   }
