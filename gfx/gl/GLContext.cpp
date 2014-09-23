@@ -1112,25 +1112,30 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
             }
         }
 
-        if (IsSupported(GLFeature::integer_vertex_attribs)) {
-            SymLoadStruct integerVASymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fVertexAttribI4i, { "VertexAttribI4i", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fVertexAttribI4iv, { "VertexAttribI4iv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fVertexAttribI4ui, { "VertexAttribI4ui", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fVertexAttribI4uiv, { "VertexAttribI4uiv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fVertexAttribIPointer, { "VertexAttribIPointer", nullptr } },
-                { nullptr, { nullptr } }
+        if (IsSupported(GLFeature::gpu_shader4)) {
+            SymLoadStruct gpuShader4Symbols[] = {
+                { (PRFuncPtr*) &mSymbols.fVertexAttribI4i, { "VertexAttribI4i", "VertexAttribI4iEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fVertexAttribI4iv, { "VertexAttribI4iv","VertexAttribI4ivEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fVertexAttribI4ui, { "VertexAttribI4ui", "VertexAttribI4uiEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fVertexAttribI4uiv, { "VertexAttribI4uiv", "VertexAttribI4uivEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fVertexAttribIPointer, { "VertexAttribIPointer", "VertexAttribIPointerEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniform1ui,  { "Uniform1ui", "Uniform1uiEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniform2ui,  { "Uniform2ui", "Uniform2uiEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniform3ui,  { "Uniform3ui", "Uniform3uiEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniform4ui,  { "Uniform4ui", "Uniform4uiEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniform1uiv, { "Uniform1uiv", "Uniform1uivEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniform2uiv, { "Uniform2uiv", "Uniform2uivEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniform3uiv, { "Uniform3uiv", "Uniform3uivEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniform4uiv, { "Uniform4uiv", "Uniform4uivEXT", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetFragDataLocation, { "GetFragDataLocation", "GetFragDataLocationEXT", nullptr } },
+                END_SYMBOLS
             };
 
-            if (!LoadSymbols(integerVASymbols, trygl, prefix)) {
-                NS_ERROR("GL supports integer vertex attribs without supplying its functions.");
+            if (!LoadSymbols(gpuShader4Symbols, trygl, prefix)) {
+                NS_ERROR("GL supports gpu_shader4 without supplying its functions.");
 
-                MarkUnsupported(GLFeature::integer_vertex_attribs);
-                mSymbols.fVertexAttribI4i = nullptr;
-                mSymbols.fVertexAttribI4iv = nullptr;
-                mSymbols.fVertexAttribI4ui = nullptr;
-                mSymbols.fVertexAttribI4uiv = nullptr;
-                mSymbols.fVertexAttribIPointer = nullptr;
+                MarkUnsupported(GLFeature::gpu_shader4);
+                ClearSymbols(gpuShader4Symbols);
             }
         }
 
@@ -1186,27 +1191,6 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
                 MarkUnsupported(GLFeature::uniform_matrix_nonsquare);
                 ClearSymbols(umnSymbols);
-            }
-        }
-
-        if (IsSupported(GLFeature::uniform_uint)) {
-            SymLoadStruct uuSymbols[] = {
-                { (PRFuncPtr*) &mSymbols.fUniform1ui,  { "Uniform1ui", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniform2ui,  { "Uniform2ui", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniform3ui,  { "Uniform3ui", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniform4ui,  { "Uniform4ui", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniform1uiv, { "Uniform1uiv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniform2uiv, { "Uniform2uiv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniform3uiv, { "Uniform3uiv", nullptr } },
-                { (PRFuncPtr*) &mSymbols.fUniform4uiv, { "Uniform4uiv", nullptr } },
-                END_SYMBOLS
-            };
-
-            if (!LoadSymbols(&uuSymbols[0], trygl, prefix)) {
-                NS_ERROR("GL support uniform with GLuint without supplying its functions.");
-
-                MarkUnsupported(GLFeature::uniform_uint);
-                ClearSymbols(uuSymbols);
             }
         }
 
