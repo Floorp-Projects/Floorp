@@ -663,7 +663,14 @@ this.DOMApplicationRegistry = {
       if (runUpdate) {
 
         // Run migration before uninstall of core apps happens.
-        Services.obs.notifyObservers(null, "webapps-before-update-merge", null);
+        try {
+          let appMigrator = Components.classes["@mozilla.org/app-migrator;1"].createInstance(Components.interfaces.nsIObserver);
+          appMigrator.observe(null, "webapps-before-update-merge", null);
+        } catch(e) {
+          debug("Exception running app migration: ");
+          debug(e.name + " " + e.message);
+          debug("Skipping app migration.");
+        }
 
 #ifdef MOZ_WIDGET_GONK
         yield this.installSystemApps();
