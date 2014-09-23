@@ -115,7 +115,7 @@ MOZ_BEGIN_ENUM_CLASS(GLFeature)
     texture_half_float,
     texture_half_float_linear,
     texture_non_power_of_two,
-    transform_feedback,
+    transform_feedback2,
     uniform_buffer_object,
     uniform_matrix_nonsquare,
     vertex_array_object,
@@ -370,6 +370,7 @@ public:
         ARB_texture_float,
         ARB_texture_non_power_of_two,
         ARB_texture_rectangle,
+        ARB_transform_feedback2,
         ARB_uniform_buffer_object,
         ARB_vertex_array_object,
         EXT_bgra,
@@ -407,6 +408,7 @@ public:
         NV_half_float,
         NV_instanced_arrays,
         NV_transform_feedback,
+        NV_transform_feedback2,
         OES_EGL_image,
         OES_EGL_image_external,
         OES_EGL_sync,
@@ -2670,7 +2672,7 @@ public:
 
 
 // -----------------------------------------------------------------------------
-// Package XXX_transform_feedback
+// GL 4.0, GL ES 3.0, ARB_transform_feedback2, NV_transform_feedback2
 public:
     void fBindBufferBase(GLenum target, GLuint index, GLuint buffer)
     {
@@ -2685,6 +2687,39 @@ public:
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fBindBufferRange);
         mSymbols.fBindBufferRange(target, index, buffer, offset, size);
+        AFTER_GL_CALL;
+    }
+
+    void fGenTransformFeedbacks(GLsizei n, GLuint* ids)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fGenTransformFeedbacks);
+        mSymbols.fGenTransformFeedbacks(n, ids);
+        AFTER_GL_CALL;
+    }
+
+    void fDeleteTransformFeedbacks(GLsizei n, GLuint* ids)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fDeleteTransformFeedbacks);
+        mSymbols.fDeleteTransformFeedbacks(n, ids);
+        AFTER_GL_CALL;
+    }
+
+    realGLboolean fIsTransformFeedback(GLuint id)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fIsTransformFeedback);
+        realGLboolean result = mSymbols.fIsTransformFeedback(id);
+        AFTER_GL_CALL;
+        return result;
+    }
+
+    void fBindTransformFeedback(GLenum target, GLuint id)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fBindTransformFeedback);
+        mSymbols.fBindTransformFeedback(target, id);
         AFTER_GL_CALL;
     }
 
@@ -2717,6 +2752,22 @@ public:
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fGetTransformFeedbackVarying);
         mSymbols.fGetTransformFeedbackVarying(program, index, bufSize, length, size, type, name);
+        AFTER_GL_CALL;
+    }
+
+    void fPauseTransformFeedback()
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fPauseTransformFeedback);
+        mSymbols.fPauseTransformFeedback();
+        AFTER_GL_CALL;
+    }
+
+    void fResumeTransformFeedback()
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fResumeTransformFeedback);
+        mSymbols.fResumeTransformFeedback();
         AFTER_GL_CALL;
     }
 
