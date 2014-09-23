@@ -63,7 +63,7 @@ dbupgrade_main()
 	# test upgrade to the new database
 	echo "nss" > ${PWFILE}
 	html_head "Legacy to shared Library update"
-	dirs="alicedir bobdir CA cert_extensions client clientCA dave eccurves eve ext_client ext_server SDR server serverCA stapling tools/copydir"
+	dirs="alicedir bobdir CA cert_extensions client clientCA dave eccurves eve ext_client ext_server SDR server serverCA ssl_gtests stapling tools/copydir"
 	for i in $dirs
 	do
 		echo $i
