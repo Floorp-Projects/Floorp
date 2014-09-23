@@ -8,7 +8,7 @@
 namespace mozilla {
 
 #define NFCD_MAJOR_VERSION 1
-#define NFCD_MINOR_VERSION 8
+#define NFCD_MINOR_VERSION 9
 
 enum NfcRequest {
   ConfigReq = 0,
@@ -81,6 +81,15 @@ enum SecureElementOrigin {
   ESE = 1,
   ASSD = 2,
   OriginEndGuard = 3
+};
+
+enum NdefType {
+  UNKNOWN = -1,
+  TYPE1_TAG = 0,
+  TYPE2_TAG = 1,
+  TYPE3_TAG = 2,
+  TYPE4_TAG = 3,
+  MIFARE_CLASSIC_TAG = 4
 };
 
 } // namespace mozilla

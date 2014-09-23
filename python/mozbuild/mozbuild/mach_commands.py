@@ -774,6 +774,41 @@ class Install(MachCommandBase):
     def install(self):
         return self._run_make(directory=".", target='install', ensure_exit_code=False)
 
+
+def get_run_args(mach_command, params, remote, background):
+    """
+    Parses the given options to create an args array for running firefox.
+    Creates a scratch profile and uses that if one is not specified.
+    """
+    try:
+        args = [mach_command.get_binary_path('app')]
+    except Exception as e:
+        print("It looks like your program isn't built.",
+            "You can run |mach build| to build it.")
+        print(e)
+        return None
+
+    if not remote:
+        args.append('-no-remote')
+
+    if not background and sys.platform == 'darwin':
+        args.append('-foreground')
+
+    if '-profile' not in params and '-P' not in params:
+        path = os.path.join(mach_command.topobjdir, 'tmp', 'scratch_user')
+        if not os.path.isdir(path):
+            os.makedirs(path)
+        args.append('-profile')
+        args.append(path)
+
+    if params:
+        args.extend(params)
+
+    if '--' in args:
+        args.remove('--')
+
+    return args
+
 @CommandProvider
 class RunProgram(MachCommandBase):
     """Launch the compiled binary"""
@@ -787,25 +822,10 @@ class RunProgram(MachCommandBase):
     @CommandArgument('+background', '+b', action='store_true',
         help='Do not pass the -foreground argument by default on Mac')
     def run(self, params, remote, background):
-        try:
-            args = [self.get_binary_path('app')]
-        except Exception as e:
-            print("It looks like your program isn't built.",
-                "You can run |mach build| to build it.")
-            print(e)
+        args = get_run_args(self, params, remote, background)
+        if not args:
             return 1
-        if not remote:
-            args.append('-no-remote')
-        if not background and sys.platform == 'darwin':
-            args.append('-foreground')
-        if '-profile' not in params and '-P' not in params:
-            path = os.path.join(self.topobjdir, 'tmp', 'scratch_user')
-            if not os.path.isdir(path):
-                os.makedirs(path)
-            args.append('-profile')
-            args.append(path)
-        if params:
-            args.extend(params)
+
         return self.run_process(args=args, ensure_exit_code=False,
             pass_thru=True)
 
@@ -888,6 +908,72 @@ class DebugProgram(MachCommandBase):
             extra_env['JS_DISABLE_SLOW_SCRIPT_SIGNALS'] = '1'
         return self.run_process(args=args, append_env=extra_env,
             ensure_exit_code=False, pass_thru=True)
+
+@CommandProvider
+class RunDmd(MachCommandBase):
+    """Launch the compiled binary with DMD enabled"""
+
+    @Command('dmd', category='post-build',
+        description='Run the compiled program with DMD enabled.')
+    @CommandArgument('params', default=None, nargs='...',
+        help=('Command-line arguments to be passed through to the program. '
+              'Not specifying a -profile or -P option will result in a '
+              'temporary profile being used. If passing -params use a "--" to '
+              'indicate the start of params to pass to firefox.'))
+    @CommandArgument('--remote', '-r', action='store_true',
+        help='Do not pass the -no-remote argument by default.')
+    @CommandArgument('--background', '-b', action='store_true',
+        help='Do not pass the -foreground argument by default on Mac')
+    @CommandArgument('--sample_below', default=None, type=str,
+        help='The sample size to use, [1..n]. Default is 4093.')
+    @CommandArgument('--max_frames', default=None, type=str,
+        help='The max number of stack frames to capture in allocation traces, [1..24] Default is 24.')
+    @CommandArgument('--max_records', default=None, type=str,
+        help='Number of stack trace records to print of each kind, [1..1000000]. Default is 1000.')
+    def dmd(self, params, remote, background, sample_below, max_frames, max_records):
+        args = get_run_args(self, params, remote, background)
+        if not args:
+            return 1
+
+        lib_dir = os.path.join(self.distdir, 'lib')
+        lib_name = self.substs['DLL_PREFIX'] + 'dmd' + self.substs['DLL_SUFFIX']
+        dmd_lib = os.path.join(lib_dir, lib_name)
+        if not os.path.exists(dmd_lib):
+            print("You need to build with |--enable-dmd| to use dmd.")
+            return 1
+
+        dmd_params = []
+
+        if sample_below:
+            dmd_params.append('--sample-below=' + sample_below)
+        if max_frames:
+            dmd_params.append('--max-frames=' + max_frames)
+        if max_records:
+            dmd_params.append('--max-records=' + max_records)
+
+        if dmd_params:
+            dmd_str = " ".join(dmd_params)
+        else:
+            dmd_str = "1"
+
+        env_vars = {
+            "Darwin": {
+                "DYLD_INSERT_LIBRARIES": dmd_lib,
+                "LD_LIBRARY_PATH": lib_dir,
+                "DMD": dmd_str,
+            },
+            "Linux": {
+                "LD_LIBRARY_PATH": lib_dir,
+                "DMD": dmd_str,
+            },
+            "WINNT": {
+                "MOZ_REPLACE_MALLOC_LIB": dmd_lib,
+                "DMD": dmd_str,
+            },
+        }
+
+        return self.run_process(args=args, ensure_exit_code=False,
+            pass_thru=True, append_env=env_vars[self.substs['OS_ARCH']])
 
 @CommandProvider
 class Buildsymbols(MachCommandBase):

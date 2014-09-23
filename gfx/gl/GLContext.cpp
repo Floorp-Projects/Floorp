@@ -85,6 +85,7 @@ static const char *sExtensionNames[] = {
     "GL_ARB_framebuffer_sRGB",
     "GL_ARB_half_float_pixel",
     "GL_ARB_instanced_arrays",
+    "GL_ARB_map_buffer_range",
     "GL_ARB_occlusion_query2",
     "GL_ARB_pixel_buffer_object",
     "GL_ARB_robustness",
@@ -92,6 +93,7 @@ static const char *sExtensionNames[] = {
     "GL_ARB_texture_float",
     "GL_ARB_texture_non_power_of_two",
     "GL_ARB_texture_rectangle",
+    "GL_ARB_uniform_buffer_object",
     "GL_ARB_vertex_array_object",
     "GL_EXT_bgra",
     "GL_EXT_blend_minmax",
@@ -1083,6 +1085,42 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
                 MarkUnsupported(GLFeature::draw_range_elements);
                 ClearSymbols(coreSymbols);
+            }
+        }
+
+        if (IsSupported(GLFeature::map_buffer_range)) {
+            SymLoadStruct mapBufferRangeSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fMapBufferRange, { "MapBufferRange", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fFlushMappedBufferRange, { "FlushMappedBufferRange", nullptr } },
+                END_SYMBOLS
+            };
+
+            if (!LoadSymbols(mapBufferRangeSymbols, trygl, prefix)) {
+                NS_ERROR("GL supports map_buffer_range without supplying its functions.");
+
+                MarkUnsupported(GLFeature::map_buffer_range);
+                ClearSymbols(mapBufferRangeSymbols);
+            }
+        }
+
+        if (IsSupported(GLFeature::uniform_buffer_object)) {
+            SymLoadStruct uboSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fGetUniformIndices, { "GetUniformIndices", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetActiveUniformsiv, { "GetActiveUniformsiv", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetActiveUniformName, { "GetActiveUniformName", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetUniformBlockIndex, { "GetUniformBlockIndex", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetActiveUniformBlockiv, { "GetActiveUniformBlockiv", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fGetActiveUniformBlockName, { "GetActiveUniformBlockName", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fUniformBlockBinding, { "UniformBlockBinding", nullptr } },
+                END_SYMBOLS
+            };
+
+            if (!LoadSymbols(&uboSymbols[0], trygl, prefix)) {
+                NS_ERROR("GL supports ARB_uniform_buffer_object without supplying its functions.");
+
+                MarkExtensionUnsupported(ARB_uniform_buffer_object);
+                MarkUnsupported(GLFeature::uniform_buffer_object);
+                ClearSymbols(uboSymbols);
             }
         }
 

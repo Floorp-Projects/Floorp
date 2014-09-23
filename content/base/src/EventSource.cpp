@@ -753,13 +753,6 @@ EventSource::InitChannelAndRequestEventSource()
   nsCOMPtr<nsIDocument> doc =
     nsContentUtils::GetDocumentFromScriptContext(sc);
 
-  nsCOMPtr<nsIPrincipal> principal = mPrincipal;
-  if (nsContentUtils::IsSystemPrincipal(principal)) {
-    // Don't give this channel the system principal.
-    principal = do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   nsCOMPtr<nsIChannel> channel;
   // If we have the document, use it
   if (doc) {
@@ -776,7 +769,7 @@ EventSource::InitChannelAndRequestEventSource()
     // otherwise use the principal
     rv = NS_NewChannel(getter_AddRefs(channel),
                        mSrc,
-                       principal,
+                       mPrincipal,
                        nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
                        nsIContentPolicy::TYPE_DATAREQUEST,
                        channelPolicy,    // aChannelPolicy

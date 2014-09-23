@@ -1636,7 +1636,7 @@ ia64*-hpux*)
         LIBS="$LIBS -lgdi32 -lwinmm -lwsock32 -lpsapi"
         MOZ_FIX_LINK_PATHS=
         DLL_PREFIX=
-        IMPORT_LIB_SUFFIX=dll.a
+        IMPORT_LIB_SUFFIX=a
 
         WIN32_CONSOLE_EXE_LDFLAGS=-mconsole
         WIN32_GUI_EXE_LDFLAGS=-mwindows

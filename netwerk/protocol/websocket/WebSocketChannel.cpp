@@ -2796,6 +2796,9 @@ WebSocketChannel::AsyncOpen(nsIURI *aURI,
               getter_AddRefs(localChannel));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = localChannel->SetLoadInfo(mLoadInfo);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Pass most GetInterface() requests through to our instantiator, but handle
   // nsIChannelEventSink in this object in order to deal with redirects
   localChannel->SetNotificationCallbacks(this);

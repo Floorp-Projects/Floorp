@@ -152,9 +152,9 @@ static int GreatestCommonDenominator(int a, int b) {
 }
 
 void MediaOptimization::SetEncodingData(VideoCodecType send_codec_type,
-                                        int32_t max_bit_rate,
-                                        uint32_t frame_rate,
-                                        uint32_t target_bitrate,
+                                        int32_t max_bit_rate,    // in bits/s
+                                        uint32_t frame_rate,     // in fps*1000
+                                        uint32_t target_bitrate, // in bits/s
                                         uint16_t width,
                                         uint16_t height,
                                         uint8_t  divisor,
@@ -166,19 +166,19 @@ void MediaOptimization::SetEncodingData(VideoCodecType send_codec_type,
   // after the processing of the first frame.
   last_change_time_ = clock_->TimeInMilliseconds();
   content_->Reset();
-  content_->UpdateFrameRate(frame_rate);
+  content_->UpdateFrameRate(static_cast<float>(frame_rate) / 1000.0f);
 
   max_bit_rate_ = max_bit_rate;
   send_codec_type_ = send_codec_type;
   target_bit_rate_ = target_bitrate;
   float target_bitrate_kbps = static_cast<float>(target_bitrate) / 1000.0f;
   loss_prot_logic_->UpdateBitRate(target_bitrate_kbps);
-  loss_prot_logic_->UpdateFrameRate(static_cast<float>(frame_rate));
+  loss_prot_logic_->UpdateFrameRate(static_cast<float>(frame_rate) / 1000.0f);
   loss_prot_logic_->UpdateFrameSize(width, height);
   loss_prot_logic_->UpdateNumLayers(num_layers);
   frame_dropper_->Reset();
-  frame_dropper_->SetRates(target_bitrate_kbps, static_cast<float>(frame_rate));
-  user_frame_rate_ = static_cast<float>(frame_rate);
+  frame_dropper_->SetRates(target_bitrate_kbps, static_cast<float>(frame_rate) / 1000.0f);
+  user_frame_rate_ = static_cast<float>(frame_rate)/1000.0f;
   codec_width_ = width;
   codec_height_ = height;
   int gcd = GreatestCommonDenominator(codec_width_, codec_height_);
