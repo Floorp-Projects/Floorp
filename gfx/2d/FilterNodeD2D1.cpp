@@ -535,7 +535,7 @@ FilterNodeD2D1::Create(DrawTarget* aDT, ID2D1DeviceContext *aDC, FilterType aTyp
   hr = aDC->CreateEffect(GetCLDIDForFilterType(aType), byRef(effect));
 
   if (FAILED(hr)) {
-    gfxWarning() << "Failed to create effect for FilterType: " << hr;
+    gfxWarning() << "Failed to create effect for FilterType: " << hexa(hr);
     return nullptr;
   }
 
