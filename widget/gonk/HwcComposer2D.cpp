@@ -196,10 +196,6 @@ HwcComposer2D::EnableVsync(bool aEnable)
 bool
 HwcComposer2D::RegisterHwcEventCallback()
 {
-    if (!gfxPrefs::FrameUniformityHWVsyncEnabled()) {
-        return false;
-    }
-
     HwcDevice* device = (HwcDevice*)GetGonkDisplay()->GetHWCDevice();
     if (!device || !device->registerProcs) {
         LOGE("Failed to get hwc");
@@ -209,9 +205,14 @@ HwcComposer2D::RegisterHwcEventCallback()
     // Disable Vsync first, and then register callback functions.
     device->eventControl(device, HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, false);
     device->registerProcs(device, &sHWCProcs);
-
     mHasHWVsync = true;
-    return true;
+
+    if (!gfxPrefs::FrameUniformityHWVsyncEnabled()) {
+        device->eventControl(device, HWC_DISPLAY_PRIMARY, HWC_EVENT_VSYNC, false);
+        mHasHWVsync = false;
+    }
+
+    return mHasHWVsync;
 }
 
 void
