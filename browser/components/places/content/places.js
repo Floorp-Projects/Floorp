@@ -561,19 +561,6 @@ var PlacesOrganizer = {
     fp.open(fpCallback);
   },
 
-  _paneDisabled: false,
-  _setDetailsFieldsDisabledState:
-  function PO__setDetailsFieldsDisabledState(aDisabled) {
-    if (aDisabled) {
-      document.getElementById("paneElementsBroadcaster")
-              .setAttribute("disabled", "true");
-    }
-    else {
-      document.getElementById("paneElementsBroadcaster")
-              .removeAttribute("disabled");
-    }
-  },
-
   _detectAndSetDetailsPaneMinimalState:
   function PO__detectAndSetDetailsPaneMinimalState(aNode) {
     /**
