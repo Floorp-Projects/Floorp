@@ -9,10 +9,13 @@
 
 #include "mozilla/Attributes.h"
 
+#include <math.h>
+
 #include "jsapi.h"
 #include "jscompartment.h"
 #include "jsfriendapi.h"
 #include "jshashutil.h"
+#include "jsmath.h"
 #include "jsnum.h"
 
 #include "gc/Marking.h"
@@ -703,6 +706,31 @@ SavedStacks::getLocation(JSContext *cx, const FrameIter &iter, MutableHandleLoca
     return true;
 }
 
+void
+SavedStacks::chooseSamplingProbability(JSContext *cx)
+{
+    GlobalObject::DebuggerVector *dbgs = cx->global()->getDebuggers();
+    if (!dbgs || dbgs->empty())
+        return;
+
+    Debugger *allocationTrackingDbg = nullptr;
+    mozilla::DebugOnly<Debugger **> begin = dbgs->begin();
+
+    for (Debugger **dbgp = dbgs->begin(); dbgp < dbgs->end(); dbgp++) {
+        // The set of debuggers had better not change while we're iterating,
+        // such that the vector gets reallocated.
+        JS_ASSERT(dbgs->begin() == begin);
+
+        if ((*dbgp)->trackingAllocationSites && (*dbgp)->enabled)
+            allocationTrackingDbg = *dbgp;
+    }
+
+    if (!allocationTrackingDbg)
+        return;
+
+    allocationSamplingProbability = allocationTrackingDbg->allocationSamplingProbability;
+}
+
 SavedStacks::FrameState::FrameState(const FrameIter &iter)
     : principals(iter.compartment()->principals),
       name(iter.isNonEvalFunctionFrame() ? iter.functionDisplayAtom() : nullptr),
@@ -736,8 +764,43 @@ SavedStacks::FrameState::trace(JSTracer *trc) {
 bool
 SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata)
 {
+    SavedStacks &stacks = cx->compartment()->savedStacks();
+    if (stacks.allocationSkipCount > 0) {
+        stacks.allocationSkipCount--;
+        return true;
+    }
+
+    stacks.chooseSamplingProbability(cx);
+    if (stacks.allocationSamplingProbability == 0.0)
+        return true;
+
+    // If the sampling probability is set to 1.0, we are always taking a sample
+    // and can therefore leave allocationSkipCount at 0.
+    if (stacks.allocationSamplingProbability != 1.0) {
+        // Rather than generating a random number on every allocation to decide
+        // if we want to sample that particular allocation (which would be
+        // expensive), we calculate the number of allocations to skip before
+        // taking the next sample.
+        //
+        // P = the probability we sample any given event.
+        //
+        // ~P = 1-P, the probability we don't sample a given event.
+        //
+        // (~P)^n = the probability that we skip at least the next n events.
+        //
+        // let X = random between 0 and 1.
+        //
+        // floor(log base ~P of X) = n, aka the number of events we should skip
+        // until we take the next sample. Any value for X less than (~P)^n
+        // yields a skip count greater than n, so the likelihood of a skip count
+        // greater than n is (~P)^n, as required.
+        double notSamplingProb = 1.0 - stacks.allocationSamplingProbability;
+        stacks.allocationSkipCount = std::floor(std::log(random_nextDouble(&stacks.rngState)) /
+                                                std::log(notSamplingProb));
+    }
+
     RootedSavedFrame frame(cx);
-    if (!cx->compartment()->savedStacks().saveCurrentStack(cx, &frame))
+    if (!stacks.saveCurrentStack(cx, &frame))
         return false;
     *pmetadata = frame;
 

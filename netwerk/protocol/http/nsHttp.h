@@ -29,6 +29,7 @@ namespace net {
         SPDY_VERSION_2_REMOVED = 2,
         SPDY_VERSION_3 = 3,
         SPDY_VERSION_31 = 4,
+        HTTP_VERSION_2 = 5,
 
         // leave room for official versions. telem goes to 48
         // 24 was a internal spdy/3.1

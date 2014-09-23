@@ -2527,7 +2527,7 @@ Simulator::decodeType01(SimInstruction *instr)
                         int32_t value = get_register(rt);
                         switch (instr->bits(22,21)) {
                         case 0:
-                            writeW(address, rt, instr);
+                            writeW(address, value, instr);
                             break;
                         case 1: {
                             MOZ_ASSERT((rt % 2) == 0);

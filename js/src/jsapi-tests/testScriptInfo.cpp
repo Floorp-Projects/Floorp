@@ -22,7 +22,6 @@ catch (e)          \n\
 }\n\
 //@ sourceMappingURL=http://example.com/path/to/source-map.json";
 
-// Bug 670958 - fix JS_GetScriptLineExtent, among others
 BEGIN_TEST(testScriptInfo)
 {
     unsigned startLine = 1000;
@@ -33,9 +32,7 @@ BEGIN_TEST(testScriptInfo)
     CHECK(JS_CompileScript(cx, global, code, strlen(code), options, &script));
     CHECK(script);
 
-    jsbytecode *start = JS_LineNumberToPC(cx, script, startLine);
     CHECK_EQUAL(JS_GetScriptBaseLineNumber(cx, script), startLine);
-    CHECK_EQUAL(JS_PCToLineNumber(cx, script, start), startLine);
     CHECK(strcmp(JS_GetScriptFilename(script), __FILE__) == 0);
     const char16_t *sourceMap = JS_GetScriptSourceMap(cx, script);
     CHECK(sourceMap);

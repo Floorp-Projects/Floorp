@@ -42,7 +42,7 @@
 #endif
 
 // JS
-#include "js/OldDebugAPI.h"
+#include "jsfriendapi.h"
 #include "js/ProfilingFrameIterator.h"
 
 #if defined(MOZ_PROFILING) && (defined(XP_MACOSX) || defined(XP_WIN))
@@ -368,11 +368,11 @@ void addPseudoEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
           jsbytecode *jspc = js::ProfilingGetPC(stack->mRuntime, entry.script(),
                                                 lastpc);
           if (jspc) {
-            lineno = JS_PCToLineNumber(nullptr, entry.script(), jspc);
+            lineno = JS_PCToLineNumber(entry.script(), jspc);
           }
         }
       } else {
-        lineno = JS_PCToLineNumber(nullptr, entry.script(), entry.pc());
+        lineno = JS_PCToLineNumber(entry.script(), entry.pc());
       }
     } else {
       lineno = entry.line();
