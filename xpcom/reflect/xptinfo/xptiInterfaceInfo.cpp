@@ -107,6 +107,19 @@ xptiInterfaceEntry::ResolveLocked()
         }
 
         mParent = parent;
+        if (parent->GetHasNotXPCOMFlag()) {
+            SetHasNotXPCOMFlag();
+        } else {
+            for (uint16_t idx = 0; idx < mDescriptor->num_methods; ++idx) {
+                nsXPTMethodInfo* method = reinterpret_cast<nsXPTMethodInfo*>(
+                    mDescriptor->method_descriptors + idx);
+                if (method->IsNotXPCOM()) {
+                    SetHasNotXPCOMFlag();
+                    break;
+                }
+            }
+        }
+
 
         mMethodBaseIndex =
             parent->mMethodBaseIndex + 
