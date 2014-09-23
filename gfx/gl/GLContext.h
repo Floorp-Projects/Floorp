@@ -110,6 +110,9 @@ MOZ_BEGIN_ENUM_CLASS(GLFeature)
     sRGB,
     sampler_objects,
     standard_derivatives,
+    texture_3D,
+    texture_3D_compressed,
+    texture_3D_copy,
     texture_float,
     texture_float_linear,
     texture_half_float,
@@ -368,6 +371,7 @@ public:
         ARB_robustness,
         ARB_sampler_objects,
         ARB_sync,
+        ARB_texture_compression,
         ARB_texture_float,
         ARB_texture_non_power_of_two,
         ARB_texture_rectangle,
@@ -379,6 +383,7 @@ public:
         EXT_blend_minmax,
         EXT_color_buffer_float,
         EXT_color_buffer_half_float,
+        EXT_copy_texture,
         EXT_draw_buffers,
         EXT_draw_instanced,
         EXT_draw_range_elements,
@@ -394,6 +399,7 @@ public:
         EXT_robustness,
         EXT_sRGB,
         EXT_shader_texture_lod,
+        EXT_texture3D,
         EXT_texture_compression_dxt1,
         EXT_texture_compression_s3tc,
         EXT_texture_filter_anisotropic,
@@ -424,6 +430,7 @@ public:
         OES_rgb8_rgba8,
         OES_standard_derivatives,
         OES_stencil8,
+        OES_texture_3D,
         OES_texture_float,
         OES_texture_float_linear,
         OES_texture_half_float,
@@ -3077,6 +3084,57 @@ public:
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fTexStorage3D);
         mSymbols.fTexStorage3D(target, levels, internalformat, width, height, depth);
+        AFTER_GL_CALL;
+    }
+
+// -----------------------------------------------------------------------------
+// 3D Textures
+    void fTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset,
+                        GLint zoffset, GLsizei width, GLsizei height, GLsizei depth,
+                        GLenum format, GLenum type, const GLvoid* pixels)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fTexSubImage3D);
+        mSymbols.fTexSubImage3D(target, level, xoffset, yoffset, zoffset,
+                                width, height, depth, format, type,
+                                pixels);
+        AFTER_GL_CALL;
+    }
+
+    void fCopyTexSubImage3D(GLenum target, GLint level, GLint xoffset,
+                            GLint yoffset, GLint zoffset, GLint x,
+                            GLint y, GLsizei width, GLsizei height)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fCopyTexSubImage3D);
+        mSymbols.fCopyTexSubImage3D(target, level, xoffset, yoffset, zoffset,
+                                    x, y, width, height);
+        AFTER_GL_CALL;
+    }
+
+    void fCompressedTexImage3D(GLenum target, GLint level, GLenum internalformat,
+                               GLsizei width, GLsizei height, GLsizei depth,
+                               GLint border, GLsizei imageSize, const GLvoid* data)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fCompressedTexImage3D);
+        mSymbols.fCompressedTexImage3D(target, level, internalformat,
+                                       width, height, depth,
+                                       border, imageSize, data);
+        AFTER_GL_CALL;
+    }
+
+    void fCompressedTexSubImage3D(GLenum target, GLint level,
+                                  GLint xoffset, GLint yoffset, GLint zoffset,
+                                  GLsizei width, GLsizei height, GLsizei depth,
+                                  GLenum format, GLsizei imageSize, const GLvoid* data)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fCompressedTexSubImage3D);
+        mSymbols.fCompressedTexSubImage3D(target, level,
+                                          xoffset, yoffset, zoffset,
+                                          width, height, depth,
+                                          format, imageSize, data);
         AFTER_GL_CALL;
     }
 

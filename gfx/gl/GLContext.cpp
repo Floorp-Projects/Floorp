@@ -91,6 +91,7 @@ static const char *sExtensionNames[] = {
     "GL_ARB_robustness",
     "GL_ARB_sampler_objects",
     "GL_ARB_sync",
+    "GL_ARB_texture_compression",
     "GL_ARB_texture_float",
     "GL_ARB_texture_non_power_of_two",
     "GL_ARB_texture_rectangle",
@@ -102,6 +103,7 @@ static const char *sExtensionNames[] = {
     "GL_EXT_blend_minmax",
     "GL_EXT_color_buffer_float",
     "GL_EXT_color_buffer_half_float",
+    "GL_EXT_copy_texture",
     "GL_EXT_draw_buffers",
     "GL_EXT_draw_instanced",
     "GL_EXT_draw_range_elements",
@@ -117,6 +119,7 @@ static const char *sExtensionNames[] = {
     "GL_EXT_robustness",
     "GL_EXT_sRGB",
     "GL_EXT_shader_texture_lod",
+    "GL_EXT_texture3D",
     "GL_EXT_texture_compression_dxt1",
     "GL_EXT_texture_compression_s3tc",
     "GL_EXT_texture_filter_anisotropic",
@@ -147,6 +150,7 @@ static const char *sExtensionNames[] = {
     "GL_OES_rgb8_rgba8",
     "GL_OES_standard_derivatives",
     "GL_OES_stencil8",
+    "GL_OES_texture_3D",
     "GL_OES_texture_float",
     "GL_OES_texture_float_linear",
     "GL_OES_texture_half_float",
@@ -1192,6 +1196,72 @@ GLContext::InitWithPrefix(const char *prefix, bool trygl)
 
                 MarkUnsupported(GLFeature::map_buffer_range);
                 ClearSymbols(mapBufferRangeSymbols);
+            }
+        }
+
+        if (IsSupported(GLFeature::texture_3D)) {
+            SymLoadStruct coreSymbols[] = {
+                // TexImage3D is not required for WebGL2 so not queried here.
+                { (PRFuncPtr*) &mSymbols.fTexSubImage3D, { "TexSubImage3D", nullptr } },
+                END_SYMBOLS
+            };
+
+            SymLoadStruct extSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fTexSubImage3D, { "TexSubImage3DEXT", "TexSubImage3DOES", nullptr } },
+                END_SYMBOLS
+            };
+
+            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::texture_3D);
+
+            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
+                NS_ERROR("GL supports 3D textures without supplying functions.");
+
+                MarkUnsupported(GLFeature::texture_3D);
+                ClearSymbols(coreSymbols);
+            }
+        }
+
+        if (IsSupported(GLFeature::texture_3D_compressed)) {
+            SymLoadStruct coreSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fCompressedTexImage3D, { "CompressedTexImage3D", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fCompressedTexSubImage3D, { "CompressedTexSubImage3D", nullptr } },
+                END_SYMBOLS
+            };
+
+            SymLoadStruct extSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fCompressedTexImage3D, { "CompressedTexImage3DARB", "CompressedTexImage3DOES", nullptr } },
+                { (PRFuncPtr*) &mSymbols.fCompressedTexSubImage3D, { "CompressedTexSubImage3DARB", "CompressedTexSubImage3DOES", nullptr } },
+                END_SYMBOLS
+            };
+
+            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::texture_3D_compressed);
+
+            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
+                NS_ERROR("GL supports 3D textures without supplying functions.");
+
+                MarkUnsupported(GLFeature::texture_3D_compressed);
+                ClearSymbols(coreSymbols);
+            }
+        }
+
+        if (IsSupported(GLFeature::texture_3D_copy)) {
+            SymLoadStruct coreSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fCopyTexSubImage3D, { "CopyTexSubImage3D", nullptr } },
+                END_SYMBOLS
+            };
+
+            SymLoadStruct extSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fCopyTexSubImage3D, { "CopyTexSubImage3DEXT", "CopyTexSubImage3DOES", nullptr } },
+                END_SYMBOLS
+            };
+
+            bool useCore = IsFeatureProvidedByCoreSymbols(GLFeature::texture_3D_copy);
+
+            if (!LoadSymbols(useCore ? coreSymbols : extSymbols, trygl, prefix)) {
+                NS_ERROR("GL supports 3D textures without supplying functions.");
+
+                MarkUnsupported(GLFeature::texture_3D_copy);
+                ClearSymbols(coreSymbols);
             }
         }
 
