@@ -7,9 +7,8 @@
     android:id="@+id/site_name"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/search_card_background"
-    android:paddingTop="@dimen/card_padding_y"
-    android:paddingBottom="@dimen/card_padding_y"
-    android:paddingLeft="@dimen/card_padding_x"
-    android:paddingRight="@dimen/card_padding_x"
+    android:background="@drawable/search_row_background"
+    android:drawableLeft="@drawable/search_history"
+    android:drawablePadding="@dimen/search_history_drawable_padding"
+    android:padding="@dimen/search_row_padding"
     android:textSize="@dimen/query_text_size"/>

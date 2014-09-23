@@ -13,8 +13,8 @@
         android:layout_height="@dimen/search_bar_height"
         android:paddingTop="@dimen/search_bar_padding_y"
         android:paddingBottom="@dimen/search_bar_padding_y"
-        android:paddingLeft="@dimen/card_background_padding_x"
-        android:paddingRight="@dimen/card_background_padding_x"
+        android:paddingLeft="@dimen/search_row_padding"
+        android:paddingRight="@dimen/search_row_padding"
         android:layout_gravity="top"/>
 
     <fragment
@@ -58,16 +58,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="@dimen/search_bar_height"
-        android:background="@color/card_background"
-        android:visibility="invisible"
-        android:layout_gravity="top"/>
-
-    <TextView
-        android:id="@+id/animation_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="@dimen/card_padding_x"
-        android:textSize="@dimen/query_text_size"
+        android:background="@color/row_background"
         android:visibility="invisible"
         android:layout_gravity="top"/>
 
