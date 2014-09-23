@@ -633,6 +633,26 @@ struct GLContextSymbols
     PFNGLUNIFORM4UIVPROC fUniform4uiv;
     typedef GLint (GLAPIENTRY * PFNGLGETFRAGDATALOCATIONPROC) (GLuint program, const GLchar* name);
     PFNGLGETFRAGDATALOCATIONPROC fGetFragDataLocation;
+
+    // 3D Textures
+    typedef void (GLAPIENTRY * PFNGLTEXSUBIMAGE3DPROC) (GLenum target, GLint level, GLint xoffset,
+                                                        GLint yoffset, GLint zoffset, GLsizei width,
+                                                        GLsizei height, GLsizei depth, GLenum format,
+                                                        GLenum type, const GLvoid* pixels);
+    PFNGLTEXSUBIMAGE3DPROC fTexSubImage3D;
+    typedef void (GLAPIENTRY * PFNGLCOPYTEXSUBIMAGE3DPROC) (GLenum target, GLint level, GLint xoffset,
+                                                            GLint yoffset, GLint zoffset, GLint x,
+                                                            GLint y, GLsizei width, GLsizei height);
+    PFNGLCOPYTEXSUBIMAGE3DPROC fCopyTexSubImage3D;
+    typedef void (GLAPIENTRY * PFNGLCOMPRESSEDTEXIMAGE3D) (GLenum target, GLint level, GLenum internalformat,
+                                                           GLsizei width, GLsizei height, GLsizei depth,
+                                                           GLint border, GLsizei imageSize, const GLvoid* data);
+    PFNGLCOMPRESSEDTEXIMAGE3D fCompressedTexImage3D;
+    typedef void (GLAPIENTRY * PFNGLCOMPRESSEDTEXSUBIMAGE3D) (GLenum target, GLint level,
+                                                              GLint xoffset, GLint yoffset, GLint zoffset,
+                                                              GLsizei width, GLsizei height, GLsizei depth,
+                                                              GLenum format, GLsizei imageSize, const GLvoid* data);
+    PFNGLCOMPRESSEDTEXSUBIMAGE3D fCompressedTexSubImage3D;
 };
 
 }
