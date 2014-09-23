@@ -100,6 +100,7 @@ function runTest() {
       iframe1.src = createHtml(createLink('testapple1', '100x100', 'apple-touch-icon'));
     } else if (numIconChanges == 8) {
       is(e.detail.href, 'http://example.com/testapple1.png');
+      is(e.detail.rel, 'apple-touch-icon');
       is(e.detail.sizes, '100x100');
       SimpleTest.finish();
     } else {
