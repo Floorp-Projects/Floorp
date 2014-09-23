@@ -67,6 +67,24 @@ CellBroadcastService.prototype = {
     } catch (e) {}
   },
 
+  _convertCbGsmGeographicalScope: function(aGeographicalScope) {
+    return (aGeographicalScope >= Ci.nsICellBroadcastService.GSM_GEOGRAPHICAL_SCOPE_INVALID)
+      ? null
+      : RIL.CB_GSM_GEOGRAPHICAL_SCOPE_NAMES[aGeographicalScope];
+  },
+
+  _convertCbMessageClass: function(aMessageClass) {
+    return (aMessageClass >= Ci.nsICellBroadcastService.GSM_MESSAGE_CLASS)
+      ? null
+      : RIL.GECKO_SMS_MESSAGE_CLASSES[aMessageClass];
+  },
+
+  _convertCbEtwsWarningType: function(aWarningType) {
+    return (aWarningType >= Ci.nsICellBroadcastService.GSM_ETWS_WARNING_INVALID)
+      ? null
+      : RIL.CB_ETWS_WARNING_TYPE_NAMES[aWarningType];
+  },
+
   /**
    * nsICellBroadcastService interface
    */
@@ -108,12 +126,12 @@ CellBroadcastService.prototype = {
     // Align the same layout to MozCellBroadcastMessage
     let systemMessage = {
       serviceId: aServiceId,
-      gsmGeographicalScope: aGsmGeographicalScope,
+      gsmGeographicalScope: this._convertCbGsmGeographicalScope(aGsmGeographicalScope),
       messageCode: aMessageCode,
       messageId: aMessageId,
       language: aLanguage,
       body: aBody,
-      messageClass: aMessageClass,
+      messageClass: this._convertCbMessageClass(aMessageClass),
       timestamp: aTimestamp,
       cdmaServiceCategory: null,
       etws: null
@@ -121,7 +139,7 @@ CellBroadcastService.prototype = {
 
     if (aHasEtwsInfo) {
       systemMessage.etws = {
-        warningType: aEtwsWarningType,
+        warningType: this._convertCbEtwsWarningType(aEtwsWarningType),
         emergencyUserAlert: aEtwsEmergencyUserAlert,
         popup: aEtwsPopup
       };

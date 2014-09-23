@@ -15,16 +15,16 @@ sync protocol PCellBroadcast {
 
 child:
   NotifyReceivedMessage(uint32_t aServiceId,
-                        nsString aGsmGeographicalScope,
+                        uint32_t aGsmGeographicalScope,
                         uint16_t aMessageCode,
                         uint16_t aMessageId,
                         nsString aLanguage,
                         nsString aBody,
-                        nsString aMessageClass,
+                        uint32_t aMessageClass,
                         uint64_t aTimestamp,
                         uint32_t aCdmaServiceCategory,
                         bool aHasEtwsInfo,
-                        nsString aEtwsWarningType,
+                        uint32_t aEtwsWarningType,
                         bool aEtwsEmergencyUserAlert,
                         bool aEtwsPopup);
 

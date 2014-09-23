@@ -41,30 +41,30 @@ CellBroadcastParent::ActorDestroy(ActorDestroyReason aWhy)
  */
 NS_IMETHODIMP
 CellBroadcastParent::NotifyMessageReceived(uint32_t aServiceId,
-                                           const nsAString& aGsmGeographicalScope,
+                                           uint32_t aGsmGeographicalScope,
                                            uint16_t aMessageCode,
                                            uint16_t aMessageId,
                                            const nsAString& aLanguage,
                                            const nsAString& aBody,
-                                           const nsAString& aMessageClass,
+                                           uint32_t aMessageClass,
                                            DOMTimeStamp aTimestamp,
                                            uint32_t aCdmaServiceCategory,
                                            bool aHasEtwsInfo,
-                                           const nsAString& aEtwsWarningType,
+                                           uint32_t aEtwsWarningType,
                                            bool aEtwsEmergencyUserAlert,
                                            bool aEtwsPopup)
 {
   return SendNotifyReceivedMessage(aServiceId,
-                                   nsString(aGsmGeographicalScope),
+                                   aGsmGeographicalScope,
                                    aMessageCode,
                                    aMessageId,
                                    nsString(aLanguage),
                                    nsString(aBody),
-                                   nsString(aMessageClass),
+                                   aMessageClass,
                                    aTimestamp,
                                    aCdmaServiceCategory,
                                    aHasEtwsInfo,
-                                   nsString(aEtwsWarningType),
+                                   aEtwsWarningType,
                                    aEtwsEmergencyUserAlert,
                                    aEtwsPopup) ? NS_OK : NS_ERROR_FAILURE;
 }

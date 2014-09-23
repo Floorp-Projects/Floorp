@@ -63,16 +63,16 @@ CellBroadcastIPCService::UnregisterListener(nsICellBroadcastListener* aListener)
 
 bool
 CellBroadcastIPCService::RecvNotifyReceivedMessage(const uint32_t& aServiceId,
-                                              const nsString& aGsmGeographicalScope,
+                                              const uint32_t& aGsmGeographicalScope,
                                               const uint16_t& aMessageCode,
                                               const uint16_t& aMessageId,
                                               const nsString& aLanguage,
                                               const nsString& aBody,
-                                              const nsString& aMessageClass,
+                                              const uint32_t& aMessageClass,
                                               const uint64_t& aTimestamp,
                                               const uint32_t& aCdmaServiceCategory,
                                               const bool& aHasEtwsInfo,
-                                              const nsString& aEtwsWarningType,
+                                              const uint32_t& aEtwsWarningType,
                                               const bool& aEtwsEmergencyUserAlert,
                                               const bool& aEtwsPopup)
 {

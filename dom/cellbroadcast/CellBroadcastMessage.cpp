@@ -6,23 +6,41 @@
 #include "CellBroadcastMessage.h"
 #include "mozilla/dom/MozCellBroadcastMessageBinding.h"
 #include "nsPIDOMWindow.h"
-
-#define CONVERT_STRING_TO_NULLABLE_ENUM(_string, _enumType, _enum)      \
-{                                                                       \
-  _enum.SetNull();                                                      \
-                                                                        \
-  uint32_t i = 0;                                                       \
-  for (const EnumEntry* entry = _enumType##Values::strings;             \
-       entry->value;                                                    \
-       ++entry, ++i) {                                                  \
-    if (_string.EqualsASCII(entry->value)) {                            \
-      _enum.SetValue(static_cast<_enumType>(i));                        \
-    }                                                                   \
-  }                                                                     \
-}
+#include "nsICellBroadcastService.h"
 
 namespace mozilla {
 namespace dom {
+
+/**
+ * Converter for XPIDL Constants to WebIDL Enumerations
+ */
+
+template<class T> struct EnumConverter {};
+
+template<class T>
+struct StaticEnumConverter
+{
+  typedef T WebidlEnumType;
+  typedef uint32_t XpidlEnumType;
+
+  static MOZ_CONSTEXPR WebidlEnumType
+  x2w(XpidlEnumType aXpidlEnum) { return static_cast<WebidlEnumType>(aXpidlEnum); }
+};
+
+template<class T>
+MOZ_CONSTEXPR T
+ToWebidlEnum(uint32_t aXpidlEnum) { return EnumConverter<T>::x2w(aXpidlEnum); }
+
+// Declare converters here:
+template <>
+struct EnumConverter<CellBroadcastGsmGeographicalScope> :
+  public StaticEnumConverter<CellBroadcastGsmGeographicalScope> {};
+template <>
+struct EnumConverter<CellBroadcastMessageClass> :
+  public StaticEnumConverter<CellBroadcastMessageClass> {};
+template <>
+struct EnumConverter<CellBroadcastEtwsWarningType> :
+  public StaticEnumConverter<CellBroadcastEtwsWarningType> {};
 
 /**
  * CellBroadcastMessage Implementation.
@@ -40,16 +58,16 @@ NS_INTERFACE_MAP_END
 
 CellBroadcastMessage::CellBroadcastMessage(nsPIDOMWindow* aWindow,
                                            uint32_t aServiceId,
-                                           const nsAString& aGsmGeographicalScope,
+                                           uint32_t aGsmGeographicalScope,
                                            uint16_t aMessageCode,
                                            uint16_t aMessageId,
                                            const nsAString& aLanguage,
                                            const nsAString& aBody,
-                                           const nsAString& aMessageClass,
+                                           uint32_t aMessageClass,
                                            uint64_t aTimestamp,
                                            uint32_t aCdmaServiceCategory,
                                            bool aHasEtwsInfo,
-                                           const nsAString& aEtwsWarningType,
+                                           uint32_t aEtwsWarningType,
                                            bool aEtwsEmergencyUserAlert,
                                            bool aEtwsPopup)
   : mWindow(aWindow)
@@ -65,18 +83,18 @@ CellBroadcastMessage::CellBroadcastMessage(nsPIDOMWindow* aWindow,
                                                        aEtwsPopup)
                            : nullptr)
 {
-  CONVERT_STRING_TO_NULLABLE_ENUM(aGsmGeographicalScope,
-                                  CellBroadcastGsmGeographicalScope,
-                                  mGsmGeographicalScope)
+  if (aGsmGeographicalScope < nsICellBroadcastService::GSM_GEOGRAPHICAL_SCOPE_INVALID) {
+    mGsmGeographicalScope.SetValue(
+      ToWebidlEnum<CellBroadcastGsmGeographicalScope>(aGsmGeographicalScope));
+  }
 
-  CONVERT_STRING_TO_NULLABLE_ENUM(aMessageClass,
-                                  CellBroadcastMessageClass,
-                                  mMessageClass)
+  if (aMessageClass < nsICellBroadcastService::GSM_MESSAGE_CLASS_INVALID) {
+    mMessageClass.SetValue(
+      ToWebidlEnum<CellBroadcastMessageClass>(aMessageClass));
+  }
 
   // CdmaServiceCategory represents a 16bit unsigned value.
-  if (aCdmaServiceCategory > 0xFFFFU) {
-    mCdmaServiceCategory.SetNull();
-  } else {
+  if (aCdmaServiceCategory <= 0xFFFFU) {
     mCdmaServiceCategory.SetValue(static_cast<uint16_t>(aCdmaServiceCategory));
   }
 
@@ -111,16 +129,17 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CellBroadcastEtwsInfo)
 NS_INTERFACE_MAP_END
 
 CellBroadcastEtwsInfo::CellBroadcastEtwsInfo(nsPIDOMWindow* aWindow,
-                                             const nsAString& aWarningType,
+                                             uint32_t aWarningType,
                                              bool aEmergencyUserAlert,
                                              bool aPopup)
   : mWindow(aWindow)
   , mEmergencyUserAlert(aEmergencyUserAlert)
   , mPopup(aPopup)
 {
-  CONVERT_STRING_TO_NULLABLE_ENUM(aWarningType,
-                                  CellBroadcastEtwsWarningType,
-                                  mWarningType)
+  if (aWarningType < nsICellBroadcastService::GSM_ETWS_WARNING_INVALID) {
+    mWarningType.SetValue(
+      ToWebidlEnum<CellBroadcastEtwsWarningType>(aWarningType));
+  }
 
   SetIsDOMBinding();
 }
