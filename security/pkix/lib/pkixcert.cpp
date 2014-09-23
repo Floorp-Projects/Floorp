@@ -124,65 +124,60 @@ BackCert::Init()
 
   static const uint8_t CSC = der::CONTEXT_SPECIFIC | der::CONSTRUCTED;
 
-  // RFC 5280 says: "These fields MUST only appear if the version is 2 or 3
-  // (Section 4.1.2.1). These fields MUST NOT appear if the version is 1."
-  if (version != der::Version::v1) {
+  // According to RFC 5280, all fields below this line are forbidden for
+  // certificate versions less than v3.  However, for compatibility reasons,
+  // we parse v1/v2 certificates in the same way as v3 certificates.  So if
+  // these fields appear in a v1 certificate, they will be used.
 
-    // Ignore issuerUniqueID if present.
-    if (tbsCertificate.Peek(CSC | 1)) {
-      rv = der::ExpectTagAndSkipValue(tbsCertificate, CSC | 1);
-      if (rv != Success) {
-        return rv;
-      }
-    }
-
-    // Ignore subjectUniqueID if present.
-    if (tbsCertificate.Peek(CSC | 2)) {
-      rv = der::ExpectTagAndSkipValue(tbsCertificate, CSC | 2);
-      if (rv != Success) {
-        return rv;
-      }
-    }
-  }
-
-  // Extensions were added in v3, so only accept extensions in v3 certificates.
-  // v4 certificates are not defined but there are some certificates issued
-  // with v4 that expect v3 decoding. For compatibility reasons we handle them
-  // as v3 certificates.
-  if (version == der::Version::v3 || version == der::Version::v4) {
-    rv = der::OptionalExtensions(tbsCertificate, CSC | 3,
-                                 bind(&BackCert::RememberExtension, this, _1,
-                                      _2, _3, _4));
+  // Ignore issuerUniqueID if present.
+  if (tbsCertificate.Peek(CSC | 1)) {
+    rv = der::ExpectTagAndSkipValue(tbsCertificate, CSC | 1);
     if (rv != Success) {
       return rv;
     }
-    // The Netscape Certificate Type extension is an obsolete
-    // Netscape-proprietary mechanism that we ignore in favor of the standard
-    // extensions. However, some CAs have issued certificates with the Netscape
-    // Cert Type extension marked critical. Thus, for compatibility reasons, we
-    // "understand" this extension by ignoring it when it is not critical, and
-    // by ensuring that the equivalent standardized extensions are present when
-    // it is marked critical, based on the assumption that the information in
-    // the Netscape Cert Type extension is consistent with the information in
-    // the standard extensions.
-    //
-    // Here is a mapping between the Netscape Cert Type extension and the
-    // standard extensions:
-    //
-    // Netscape Cert Type  |  BasicConstraints.cA  |  Extended Key Usage
-    // --------------------+-----------------------+----------------------
-    // SSL Server          |  false                |  id_kp_serverAuth
-    // SSL Client          |  false                |  id_kp_clientAuth
-    // S/MIME Client       |  false                |  id_kp_emailProtection
-    // Object Signing      |  false                |  id_kp_codeSigning
-    // SSL Server CA       |  true                 |  id_pk_serverAuth
-    // SSL Client CA       |  true                 |  id_kp_clientAuth
-    // S/MIME CA           |  true                 |  id_kp_emailProtection
-    // Object Signing CA   |  true                 |  id_kp_codeSigning
-    if (criticalNetscapeCertificateType.GetLength() > 0 &&
-        (basicConstraints.GetLength() == 0 || extKeyUsage.GetLength() == 0)) {
-      return Result::ERROR_UNKNOWN_CRITICAL_EXTENSION;
+  }
+
+  // Ignore subjectUniqueID if present.
+  if (tbsCertificate.Peek(CSC | 2)) {
+    rv = der::ExpectTagAndSkipValue(tbsCertificate, CSC | 2);
+    if (rv != Success) {
+      return rv;
     }
+  }
+
+  rv = der::OptionalExtensions(tbsCertificate, CSC | 3,
+                               bind(&BackCert::RememberExtension, this, _1,
+                                    _2, _3, _4));
+  if (rv != Success) {
+    return rv;
+  }
+
+  // The Netscape Certificate Type extension is an obsolete
+  // Netscape-proprietary mechanism that we ignore in favor of the standard
+  // extensions. However, some CAs have issued certificates with the Netscape
+  // Cert Type extension marked critical. Thus, for compatibility reasons, we
+  // "understand" this extension by ignoring it when it is not critical, and
+  // by ensuring that the equivalent standardized extensions are present when
+  // it is marked critical, based on the assumption that the information in
+  // the Netscape Cert Type extension is consistent with the information in
+  // the standard extensions.
+  //
+  // Here is a mapping between the Netscape Cert Type extension and the
+  // standard extensions:
+  //
+  // Netscape Cert Type  |  BasicConstraints.cA  |  Extended Key Usage
+  // --------------------+-----------------------+----------------------
+  // SSL Server          |  false                |  id_kp_serverAuth
+  // SSL Client          |  false                |  id_kp_clientAuth
+  // S/MIME Client       |  false                |  id_kp_emailProtection
+  // Object Signing      |  false                |  id_kp_codeSigning
+  // SSL Server CA       |  true                 |  id_pk_serverAuth
+  // SSL Client CA       |  true                 |  id_kp_clientAuth
+  // S/MIME CA           |  true                 |  id_kp_emailProtection
+  // Object Signing CA   |  true                 |  id_kp_codeSigning
+  if (criticalNetscapeCertificateType.GetLength() > 0 &&
+      (basicConstraints.GetLength() == 0 || extKeyUsage.GetLength() == 0)) {
+    return Result::ERROR_UNKNOWN_CRITICAL_EXTENSION;
   }
 
   return der::End(tbsCertificate);

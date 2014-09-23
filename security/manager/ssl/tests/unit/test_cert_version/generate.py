@@ -74,6 +74,15 @@ def generate_certs():
   generate_ca(db, srcdir, noise_file, "v3_ca", 3, True )
   generate_ca(db, srcdir, noise_file, "v3_ca_missing_bc", 3, False)
 
+
+  CertUtils.generate_self_signed_cert(db, srcdir, noise_file, "v1_self_signed",
+                                      1, False, False)
+  CertUtils.generate_self_signed_cert(db, srcdir, noise_file, "v1_self_signed_bc",
+                                      1, True, False)
+  CertUtils.generate_self_signed_cert(db, srcdir, noise_file, "v2_self_signed",
+                                      2, False, False)
+  CertUtils.generate_self_signed_cert(db, srcdir, noise_file, "v2_self_signed_bc",
+                                      2, True, False)
   CertUtils.generate_self_signed_cert(db, srcdir, noise_file, "v3_self_signed",
                                       3, False, False)
   CertUtils.generate_self_signed_cert(db, srcdir, noise_file, "v3_self_signed_bc",
