@@ -2943,6 +2943,25 @@ RadioInterface.prototype = {
     gMessageManager.sendIccMessage("RIL:StkCommand", this.clientId, message);
   },
 
+  _convertCbGsmGeographicalScope: function(aGeographicalScope) {
+    return (aGeographicalScope != null)
+      ? aGeographicalScope
+      : Ci.nsICellBroadcastService.GSM_GEOGRAPHICAL_SCOPE_INVALID;
+  },
+
+  _convertCbMessageClass: function(aMessageClass) {
+    let index = RIL.GECKO_SMS_MESSAGE_CLASSES.indexOf(aMessageClass);
+    return (index != -1)
+      ? index
+      : Ci.nsICellBroadcastService.GSM_MESSAGE_CLASS_INVALID;
+  },
+
+  _convertCbEtwsWarningType: function(aWarningType) {
+    return (aWarningType != null)
+      ? aWarningType
+      : Ci.nsICellBroadcastService.GSM_ETWS_WARNING_INVALID;
+  },
+
   handleCellbroadcastMessageReceived: function(aMessage) {
     let etwsInfo = aMessage.etws;
     let hasEtwsInfo = etwsInfo != null;
@@ -2952,18 +2971,18 @@ RadioInterface.prototype = {
 
     gCellBroadcastService
       .notifyMessageReceived(this.clientId,
-                             RIL.CB_GSM_GEOGRAPHICAL_SCOPE_NAMES[aMessage.geographicalScope],
+                             this._convertCbGsmGeographicalScope(aMessage.geographicalScope),
                              aMessage.messageCode,
                              aMessage.messageId,
                              aMessage.language,
                              aMessage.fullBody,
-                             aMessage.messageClass,
+                             this._convertCbMessageClass(aMessage.messageClass),
                              Date.now(),
                              serviceCategory,
                              hasEtwsInfo,
-                             (hasEtwsInfo && etwsInfo.warningType != null)
-                               ? RIL.CB_ETWS_WARNING_TYPE_NAMES[etwsInfo.warningType]
-                               : null,
+                             (hasEtwsInfo)
+                               ? this._convertCbEtwsWarningType(etwsInfo.warningType)
+                               : Ci.nsICellBroadcastService.GSM_ETWS_WARNING_INVALID,
                              hasEtwsInfo ? etwsInfo.emergencyUserAlert : false,
                              hasEtwsInfo ? etwsInfo.popup : false);
   },

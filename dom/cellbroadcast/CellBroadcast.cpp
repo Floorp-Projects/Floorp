@@ -111,16 +111,16 @@ CellBroadcast::WrapObject(JSContext* aCx)
 
 NS_IMETHODIMP
 CellBroadcast::NotifyMessageReceived(uint32_t aServiceId,
-                                     const nsAString& aGsmGeographicalScope,
+                                     uint32_t aGsmGeographicalScope,
                                      uint16_t aMessageCode,
                                      uint16_t aMessageId,
                                      const nsAString& aLanguage,
                                      const nsAString& aBody,
-                                     const nsAString& aMessageClass,
+                                     uint32_t aMessageClass,
                                      DOMTimeStamp aTimestamp,
                                      uint32_t aCdmaServiceCategory,
                                      bool aHasEtwsInfo,
-                                     const nsAString& aEtwsWarningType,
+                                     uint32_t aEtwsWarningType,
                                      bool aEtwsEmergencyUserAlert,
                                      bool aEtwsPopup) {
   MozCellBroadcastEventInit init;

@@ -6,8 +6,8 @@
 
 enum CellBroadcastGsmGeographicalScope {"cell-immediate", "plmn",
                                         "location-area", "cell"};
-enum CellBroadcastMessageClass {"normal", "class-0", "class-1", "class-2",
-                                "class-3", "user-1", "user-2"};
+enum CellBroadcastMessageClass {"class-0", "class-1", "class-2",
+                                "class-3", "user-1", "user-2", "normal"};
 enum CellBroadcastEtwsWarningType {"earthquake", "tsunami",
                                    "earthquake-tsunami", "test", "other"};
 

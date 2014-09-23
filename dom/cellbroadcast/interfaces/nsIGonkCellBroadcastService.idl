@@ -9,23 +9,23 @@
         "@mozilla.org/cellbroadcast/gonkservice;1"
 %}
 
-[scriptable, uuid(f72ced60-21f9-11e4-8896-6fdff2f5c909)]
+[scriptable, uuid(7cac92aa-42f8-11e4-96f3-7f490e355277)]
 interface nsIGonkCellBroadcastService : nsICellBroadcastService
 {
   /**
    * Called when a cellbroadcast message has been received by the network.
    */
   void notifyMessageReceived(in unsigned long aServiceId,
-                             in DOMString aGsmGeographicalScope,
+                             in unsigned long aGsmGeographicalScope,
                              in unsigned short aMessageCode,
                              in unsigned short aMessageId,
                              in DOMString aLanguage,
                              in DOMString aBody,
-                             in DOMString aMessageClass,
+                             in unsigned long aMessageClass,
                              in DOMTimeStamp aTimestamp,
                              in unsigned long aCdmaServiceCategory,
                              in boolean aHasEtwsInfo,
-                             in DOMString aEtwsWarningType,
+                             in unsigned long aEtwsWarningType,
                              in boolean aEtwsEmergencyUserAlert,
                              in boolean aEtwsPopup);
 };
