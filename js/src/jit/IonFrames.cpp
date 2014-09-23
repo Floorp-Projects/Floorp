@@ -1838,6 +1838,28 @@ SnapshotIterator::nextFrame()
     settleOnFrame();
 }
 
+Value
+SnapshotIterator::maybeReadAllocByIndex(size_t index)
+{
+    while (index--) {
+        JS_ASSERT(moreAllocations());
+        skip();
+    }
+
+    Value s;
+    {
+        // This MaybeReadFallback method cannot GC.
+        JS::AutoSuppressGCAnalysis nogc;
+        MaybeReadFallback fallback(UndefinedValue());
+        s = maybeRead(fallback);
+    }
+
+    while (moreAllocations())
+        skip();
+
+    return s;
+}
+
 IonScript *
 JitFrameIterator::ionScript() const
 {
