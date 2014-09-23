@@ -649,6 +649,11 @@ protected:
 
   static void StyleColorToString(const nscolor& aColor, nsAString& aStr);
 
+   // Returns whether a filter was successfully parsed.
+  bool ParseFilter(const nsAString& aString,
+                   nsTArray<nsStyleFilter>& aFilterChain,
+                   ErrorResult& error);
+
   /**
    * Creates the error target, if it doesn't exist
    */
@@ -926,6 +931,7 @@ protected:
           lineCap(other.lineCap),
           lineJoin(other.lineJoin),
           filterString(other.filterString),
+          filterChain(other.filterChain),
           imageSmoothingEnabled(other.imageSmoothingEnabled)
     { }
 
@@ -985,6 +991,7 @@ protected:
     mozilla::gfx::JoinStyle lineJoin;
 
     nsString filterString;
+    nsTArray<nsStyleFilter> filterChain;
     bool imageSmoothingEnabled;
   };
 

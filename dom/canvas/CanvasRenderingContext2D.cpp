@@ -1614,10 +1614,251 @@ CanvasRenderingContext2D::SetShadowColor(const nsAString& shadowColor)
 // filters
 //
 
+static already_AddRefed<StyleRule>
+CreateStyleRule(nsINode* aNode,
+  const nsCSSProperty aProp1, const nsAString& aValue1, bool* aChanged1,
+  const nsCSSProperty aProp2, const nsAString& aValue2, bool* aChanged2,
+  ErrorResult& error)
+{
+  nsRefPtr<StyleRule> rule;
+
+  nsIPrincipal* principal = aNode->NodePrincipal();
+  nsIDocument* document = aNode->OwnerDoc();
+
+  nsIURI* docURL = document->GetDocumentURI();
+  nsIURI* baseURL = document->GetDocBaseURI();
+
+  // Pass the CSS Loader object to the parser, to allow parser error reports
+  // to include the outer window ID.
+  nsCSSParser parser(document->CSSLoader());
+
+  error = parser.ParseStyleAttribute(EmptyString(), docURL, baseURL,
+                                     principal, getter_AddRefs(rule));
+  if (error.Failed()) {
+    return nullptr;
+  }
+
+  if (aProp1 != eCSSProperty_UNKNOWN) {
+    error = parser.ParseProperty(aProp1, aValue1, docURL, baseURL, principal,
+                                 rule->GetDeclaration(), aChanged1, false);
+    if (error.Failed()) {
+      return nullptr;
+    }
+  }
+
+  if (aProp2 != eCSSProperty_UNKNOWN) {
+    error = parser.ParseProperty(aProp2, aValue2, docURL, baseURL, principal,
+                                 rule->GetDeclaration(), aChanged2, false);
+    if (error.Failed()) {
+      return nullptr;
+    }
+  }
+
+  rule->RuleMatched();
+
+  return rule.forget();
+}
+
+static already_AddRefed<StyleRule>
+CreateFontStyleRule(const nsAString& aFont,
+                    nsINode* aNode,
+                    bool* aOutFontChanged,
+                    ErrorResult& error)
+{
+  bool lineHeightChanged;
+  return CreateStyleRule(aNode,
+    eCSSProperty_font, aFont, aOutFontChanged,
+    eCSSProperty_line_height, NS_LITERAL_STRING("normal"), &lineHeightChanged,
+    error);
+}
+
+static already_AddRefed<nsStyleContext>
+GetFontParentStyleContext(Element* aElement, nsIPresShell* presShell,
+                          ErrorResult& error)
+{
+  if (aElement && aElement->IsInDoc()) {
+    // inherit from the canvas element
+    return nsComputedDOMStyle::GetStyleContextForElement(aElement, nullptr,
+                                                         presShell);
+  }
+
+  // otherwise inherit from default (10px sans-serif)
+  bool changed;
+  nsRefPtr<css::StyleRule> parentRule =
+    CreateFontStyleRule(NS_LITERAL_STRING("10px sans-serif"),
+                        presShell->GetDocument(), &changed, error);
+
+  if (error.Failed()) {
+    return nullptr;
+  }
+
+  nsTArray<nsCOMPtr<nsIStyleRule>> parentRules;
+  parentRules.AppendElement(parentRule);
+  return presShell->StyleSet()->ResolveStyleForRules(nullptr, parentRules);
+}
+
+static bool
+PropertyIsInheritOrInitial(StyleRule* aRule, const nsCSSProperty aProperty)
+{
+  css::Declaration* declaration = aRule->GetDeclaration();
+  // We know the declaration is not !important, so we can use
+  // GetNormalBlock().
+  const nsCSSValue* filterVal =
+    declaration->GetNormalBlock()->ValueFor(aProperty);
+  return (!filterVal || (filterVal->GetUnit() == eCSSUnit_Unset ||
+                         filterVal->GetUnit() == eCSSUnit_Inherit ||
+                         filterVal->GetUnit() == eCSSUnit_Initial));
+}
+
+static already_AddRefed<nsStyleContext>
+GetFontStyleContext(Element* aElement, const nsAString& aFont,
+                    nsIPresShell* presShell,
+                    nsAString& aOutUsedFont,
+                    ErrorResult& error)
+{
+  bool fontParsedSuccessfully = false;
+  nsRefPtr<css::StyleRule> rule =
+    CreateFontStyleRule(aFont, presShell->GetDocument(),
+                        &fontParsedSuccessfully, error);
+
+  if (error.Failed()) {
+    return nullptr;
+  }
+
+  if (!fontParsedSuccessfully) {
+    // We got a syntax error.  The spec says this value must be ignored.
+    return nullptr;
+  }
+
+  // In addition to unparseable values, the spec says we need to reject
+  // 'inherit' and 'initial'. The easiest way to check for this is to look
+  // at font-size-adjust, which the font shorthand resets to either 'none' or
+  // '-moz-system-font'.
+  if (PropertyIsInheritOrInitial(rule, eCSSProperty_font_size_adjust)) {
+    return nullptr;
+  }
+
+  // have to get a parent style context for inherit-like relative
+  // values (2em, bolder, etc.)
+  nsRefPtr<nsStyleContext> parentContext =
+    GetFontParentStyleContext(aElement, presShell, error);
+
+  if (error.Failed()) {
+    error.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsTArray<nsCOMPtr<nsIStyleRule>> rules;
+  rules.AppendElement(rule);
+  // add a rule to prevent text zoom from affecting the style
+  rules.AppendElement(new nsDisableTextZoomStyleRule);
+
+  nsStyleSet* styleSet = presShell->StyleSet();
+  nsRefPtr<nsStyleContext> sc =
+    styleSet->ResolveStyleForRules(parentContext, rules);
+
+  // The font getter is required to be reserialized based on what we
+  // parsed (including having line-height removed).  (Older drafts of
+  // the spec required font sizes be converted to pixels, but that no
+  // longer seems to be required.)
+  rule->GetDeclaration()->GetValue(eCSSProperty_font, aOutUsedFont);
+
+  return sc.forget();
+}
+
+static already_AddRefed<StyleRule>
+CreateFilterStyleRule(const nsAString& aFilter,
+                      nsINode* aNode,
+                      bool* aOutFilterChanged,
+                      ErrorResult& error)
+{
+  bool dummy;
+  return CreateStyleRule(aNode,
+    eCSSProperty_filter, aFilter, aOutFilterChanged,
+    eCSSProperty_UNKNOWN, EmptyString(), &dummy,
+    error);
+}
+
+static already_AddRefed<nsStyleContext>
+ResolveStyleForFilterRule(const nsAString& aFilterString,
+                          nsIPresShell* aPresShell,
+                          nsStyleContext* aParentContext,
+                          ErrorResult& error)
+{
+  nsIDocument* document = aPresShell->GetDocument();
+  bool filterChanged = false;
+  nsRefPtr<css::StyleRule> rule =
+    CreateFilterStyleRule(aFilterString, document, &filterChanged, error);
+
+  if (error.Failed()) {
+    return nullptr;
+  }
+
+  if (!filterChanged) {
+    // Refuse to accept the filter, but do not throw an error.
+    return nullptr;
+  }
+
+  // In addition to unparseable values, the spec says we need to reject
+  // 'inherit' and 'initial'.
+  if (PropertyIsInheritOrInitial(rule, eCSSProperty_filter)) {
+    return nullptr;
+  }
+
+  nsTArray<nsCOMPtr<nsIStyleRule>> rules;
+  rules.AppendElement(rule);
+
+  nsRefPtr<nsStyleContext> sc =
+    aPresShell->StyleSet()->ResolveStyleForRules(aParentContext, rules);
+
+  return sc.forget();
+}
+
+bool
+CanvasRenderingContext2D::ParseFilter(const nsAString& aString,
+                                      nsTArray<nsStyleFilter>& aFilterChain,
+                                      ErrorResult& error)
+{
+  if (!mCanvasElement && !mDocShell) {
+    NS_WARNING("Canvas element must be non-null or a docshell must be provided");
+    error.Throw(NS_ERROR_FAILURE);
+    return false;
+  }
+
+  nsIPresShell* presShell = GetPresShell();
+  if (!presShell) {
+    error.Throw(NS_ERROR_FAILURE);
+    return false;
+  }
+
+  nsString usedFont;
+  nsRefPtr<nsStyleContext> parentContext =
+    GetFontStyleContext(mCanvasElement, GetFont(),
+                        presShell, usedFont, error);
+  if (!parentContext) {
+    error.Throw(NS_ERROR_FAILURE);
+    return false;
+  }
+
+  nsRefPtr<nsStyleContext> sc =
+    ResolveStyleForFilterRule(aString, presShell, parentContext, error);
+
+  if (!sc) {
+    return false;
+  }
+
+  aFilterChain = sc->StyleSVGReset()->mFilters;
+  return true;
+}
+
 void
 CanvasRenderingContext2D::SetFilter(const nsAString& filter, ErrorResult& error)
 {
-  CurrentState().filterString = filter;
+  nsTArray<nsStyleFilter> filterChain;
+  if (ParseFilter(filter, filterChain, error)) {
+    CurrentState().filterString = filter;
+    filterChain.SwapElements(CurrentState().filterChain);
+  }
 }
 
 //
@@ -2213,57 +2454,6 @@ CanvasRenderingContext2D::TransformWillUpdate()
 // text
 //
 
-/**
- * Helper function for SetFont that creates a style rule for the given font.
- * @param aFont The CSS font string
- * @param aNode The canvas element
- * @param aResult Pointer in which to place the new style rule.
- * @remark Assumes all pointer arguments are non-null.
- */
-static nsresult
-CreateFontStyleRule(const nsAString& aFont,
-                    nsINode* aNode,
-                    StyleRule** aResult)
-{
-  nsRefPtr<StyleRule> rule;
-  bool changed;
-
-  nsIPrincipal* principal = aNode->NodePrincipal();
-  nsIDocument* document = aNode->OwnerDoc();
-
-  nsIURI* docURL = document->GetDocumentURI();
-  nsIURI* baseURL = document->GetDocBaseURI();
-
-  // Pass the CSS Loader object to the parser, to allow parser error reports
-  // to include the outer window ID.
-  nsCSSParser parser(document->CSSLoader());
-
-  nsresult rv = parser.ParseStyleAttribute(EmptyString(), docURL, baseURL,
-                                           principal, getter_AddRefs(rule));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = parser.ParseProperty(eCSSProperty_font, aFont, docURL, baseURL,
-                            principal, rule->GetDeclaration(), &changed,
-                            false);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = parser.ParseProperty(eCSSProperty_line_height,
-                            NS_LITERAL_STRING("normal"), docURL, baseURL,
-                            principal, rule->GetDeclaration(), &changed,
-                            false);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rule->RuleMatched();
-
-  rule.forget(aResult);
-  return NS_OK;
-}
-
 void
 CanvasRenderingContext2D::SetFont(const nsAString& font,
                                   ErrorResult& error)
@@ -2287,80 +2477,15 @@ CanvasRenderingContext2D::SetFont(const nsAString& font,
     error.Throw(NS_ERROR_FAILURE);
     return;
   }
-  nsIDocument* document = presShell->GetDocument();
 
-  nsRefPtr<css::StyleRule> rule;
-  error = CreateFontStyleRule(font, document, getter_AddRefs(rule));
-
-  if (error.Failed()) {
-    return;
-  }
-
-  css::Declaration *declaration = rule->GetDeclaration();
-  // The easiest way to see whether we got a syntax error or whether
-  // we got 'inherit' or 'initial' is to look at font-size-adjust,
-  // which the shorthand resets to either 'none' or
-  // '-moz-system-font'.
-  // We know the declaration is not !important, so we can use
-  // GetNormalBlock().
-  const nsCSSValue *fsaVal =
-    declaration->GetNormalBlock()->ValueFor(eCSSProperty_font_size_adjust);
-  if (!fsaVal || (fsaVal->GetUnit() != eCSSUnit_None &&
-                  fsaVal->GetUnit() != eCSSUnit_System_Font)) {
-      // We got an all-property value or a syntax error.  The spec says
-      // this value must be ignored.
-    return;
-  }
-
-  nsTArray< nsCOMPtr<nsIStyleRule> > rules;
-  rules.AppendElement(rule);
-
-  nsStyleSet* styleSet = presShell->StyleSet();
-
-  // have to get a parent style context for inherit-like relative
-  // values (2em, bolder, etc.)
-  nsRefPtr<nsStyleContext> parentContext;
-
-  if (mCanvasElement && mCanvasElement->IsInDoc()) {
-      // inherit from the canvas element
-      parentContext = nsComputedDOMStyle::GetStyleContextForElement(
-              mCanvasElement,
-              nullptr,
-              presShell);
-  } else {
-    // otherwise inherit from default (10px sans-serif)
-    nsRefPtr<css::StyleRule> parentRule;
-    error = CreateFontStyleRule(NS_LITERAL_STRING("10px sans-serif"),
-                                document,
-                                getter_AddRefs(parentRule));
-
-    if (error.Failed()) {
-      return;
-    }
-
-    nsTArray< nsCOMPtr<nsIStyleRule> > parentRules;
-    parentRules.AppendElement(parentRule);
-    parentContext = styleSet->ResolveStyleForRules(nullptr, parentRules);
-  }
-
-  if (!parentContext) {
-    error.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  // add a rule to prevent text zoom from affecting the style
-  rules.AppendElement(new nsDisableTextZoomStyleRule);
-
+  nsString usedFont;
   nsRefPtr<nsStyleContext> sc =
-      styleSet->ResolveStyleForRules(parentContext, rules);
+    GetFontStyleContext(mCanvasElement, font, presShell, usedFont, error);
   if (!sc) {
-    error.Throw(NS_ERROR_FAILURE);
     return;
   }
 
   const nsStyleFont* fontStyle = sc->StyleFont();
-
-  NS_ASSERTION(fontStyle, "Could not obtain font style");
 
   nsIAtom* language = sc->StyleFont()->mLanguage;
   if (!language) {
@@ -2400,12 +2525,7 @@ CanvasRenderingContext2D::SetFont(const nsAString& font,
                                                   c->GetUserFontSet());
   NS_ASSERTION(CurrentState().fontGroup, "Could not get font group");
   CurrentState().fontGroup->SetTextPerfMetrics(c->GetTextPerfMetrics());
-
-  // The font getter is required to be reserialized based on what we
-  // parsed (including having line-height removed).  (Older drafts of
-  // the spec required font sizes be converted to pixels, but that no
-  // longer seems to be required.)
-  declaration->GetValue(eCSSProperty_font, CurrentState().font);
+  CurrentState().font = usedFont;
 }
 
 void
