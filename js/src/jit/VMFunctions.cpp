@@ -222,13 +222,8 @@ MutatePrototype(JSContext *cx, HandleObject obj, HandleValue value)
 bool
 InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value)
 {
-    // Copy the incoming value. This may be overwritten; the return value is discarded.
-    RootedValue rval(cx, value);
     RootedId id(cx, NameToId(name));
-
-    MOZ_ASSERT(name != cx->names().proto,
-               "__proto__ should have been handled by JSOP_MUTATEPROTO");
-    return DefineNativeProperty(cx, obj, id, rval, nullptr, nullptr, JSPROP_ENUMERATE);
+    return DefineNativeProperty(cx, obj, id, value, nullptr, nullptr, JSPROP_ENUMERATE);
 }
 
 template<bool Equal>
