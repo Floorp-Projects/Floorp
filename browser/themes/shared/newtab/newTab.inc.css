@@ -135,12 +135,13 @@
 }
 
 /* TITLES */
+.newtab-sponsored,
 .newtab-title {
-  color: #737373;
+  color: #5c5c5c;
 }
 
 .newtab-site:hover .newtab-title {
-  color: #4a4a4a;
+  color: #222;
 }
 
 .newtab-site[pinned] .newtab-title {
