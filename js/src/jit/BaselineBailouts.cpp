@@ -379,6 +379,33 @@ struct BaselineStackBuilder
     }
 };
 
+// Ensure that all value locations are readable from the SnapshotIterator.
+// Remove RInstructionResults from the JitActivation if the frame got recovered
+// ahead of the bailout.
+class SnapshotIteratorForBailout : public SnapshotIterator
+{
+    RInstructionResults results_;
+  public:
+
+    SnapshotIteratorForBailout(const IonBailoutIterator &iter)
+      : SnapshotIterator(iter),
+        results_()
+    {
+    }
+
+    // Take previously computed result out of the activation, or compute the
+    // results of all recover instructions contained in the snapshot.
+    bool init(JSContext *cx, JitActivation *activation) {
+        activation->maybeTakeIonFrameRecovery(fp_, &results_);
+        if (!results_.isInitialized() && !computeInstructionResults(cx, &results_))
+            return false;
+
+        MOZ_ASSERT(results_.isInitialized());
+        instructionResults_ = &results_;
+        return true;
+    }
+};
+
 static inline bool
 IsInlinableFallback(ICFallbackStub *icEntry)
 {
@@ -1343,10 +1370,8 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
         return BAILOUT_RETURN_FATAL_ERROR;
     JitSpew(JitSpew_BaselineBailouts, "  Incoming frame ptr = %p", builder.startFrame());
 
-    AutoValueVector instructionResults(cx);
-    SnapshotIterator snapIter(iter);
-
-    if (!snapIter.initIntructionResults(instructionResults))
+    SnapshotIteratorForBailout snapIter(iter);
+    if (!snapIter.init(cx, activation))
         return BAILOUT_RETURN_FATAL_ERROR;
 
 #ifdef TRACK_SNAPSHOTS
@@ -1380,12 +1405,8 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
     jsbytecode *topCallerPC = nullptr;
 
     while (true) {
-        if (!snapIter.instruction()->isResumePoint()) {
-            if (!snapIter.instruction()->recover(cx, snapIter))
-                return BAILOUT_RETURN_FATAL_ERROR;
-            snapIter.nextInstruction();
-            continue;
-        }
+        // Skip recover instructions as they are already recovered by |initInstructionResults|.
+        snapIter.settleOnFrame();
 
         if (frameNo > 0) {
             TraceLogStartEvent(logger, TraceLogCreateTextId(logger, scr));

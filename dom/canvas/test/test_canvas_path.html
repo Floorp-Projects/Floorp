@@ -378,6 +378,8 @@ function test_addpath_canvas() {
   shouldThrow(ctx, "p5.addPath(null, m)");
   shouldThrow(ctx, "p5.addPath([], m)");
   shouldThrow(ctx, "p5.addPath({}, m)");
+
+  p5 = p5.addPath(p5);
 }
 </script>
 
