@@ -47,6 +47,13 @@ struct nsXREAppData
   const char* name;
 
   /**
+   * The internal name of the application for remoting purposes. When left
+   * unspecified, "name" is used instead. This must be ASCII, and is normally
+   * lowercase, e.g. "firefox". Optional (may be null but not an empty string).
+   */
+  const char* remotingName;
+
+  /**
    * The major version, e.g. "0.8.0+". Optional (may be null), but
    * required for advanced application features such as the extension
    * manager and update service. Must not be the empty string.
