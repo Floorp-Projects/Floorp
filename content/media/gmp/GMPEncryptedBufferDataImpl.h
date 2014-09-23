@@ -59,8 +59,14 @@ public:
     mData.SetLength(aSize);
   }
 
+  // Set metadata object to be freed when this buffer is destroyed.
+  void SetMetadata(GMPEncryptedBufferDataImpl* aMetadata) {
+    mMetadata = aMetadata;
+  }
+
   uint32_t mId;
   nsTArray<uint8_t> mData;
+  nsAutoPtr<GMPEncryptedBufferDataImpl> mMetadata;
 };
 
 } // namespace gmp

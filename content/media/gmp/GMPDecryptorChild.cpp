@@ -310,11 +310,15 @@ GMPDecryptorChild::RecvDecrypt(const uint32_t& aId,
     return false;
   }
 
-  GMPEncryptedBufferDataImpl metadata(aMetadata);
-
   // Note: the GMPBufferImpl created here is deleted when the GMP passes
   // it back in the Decrypted() callback above.
-  mSession->Decrypt(new GMPBufferImpl(aId, aBuffer), &metadata);
+  GMPBufferImpl* buffer = new GMPBufferImpl(aId, aBuffer);
+
+  // |metadata| lifetime is managed by |buffer|.
+  GMPEncryptedBufferDataImpl* metadata = new GMPEncryptedBufferDataImpl(aMetadata);
+  buffer->SetMetadata(metadata);
+
+  mSession->Decrypt(buffer, metadata);
   return true;
 }
 
