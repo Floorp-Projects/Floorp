@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1068979
+-->
+<head>
+  <title>Test for Bug 1068979</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1068979">Mozilla Bug 1068979</a>
+<p id="display"></p>
+<div id="content">
+  <div id="editor1" contenteditable="true">&#x1d400;</div>
+  <div id="editor2" contenteditable="true">a<u>&#x1d401;</u>b</div>
+  <div id="editor3" contenteditable="true">a&#x1d402;<u>b</u></div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1068979 **/
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  // Test backspacing over SMP characters pasted-in to a contentEditable
+  getSelection().selectAllChildren(document.getElementById("editor1"));
+  var ed1 = document.getElementById("editor1");
+  var ch1 = ed1.textContent;
+  ed1.focus();
+  synthesizeKey("C", {accelKey: true});
+  synthesizeKey("V", {accelKey: true});
+  synthesizeKey("V", {accelKey: true});
+  synthesizeKey("V", {accelKey: true});
+  synthesizeKey("V", {accelKey: true});
+  is(ed1.textContent, ch1 + ch1 + ch1 + ch1, "Should have four SMP characters");
+  sendKey("back_space");
+  is(ed1.textContent, ch1 + ch1 + ch1, "Three complete characters should remain");
+  sendKey("back_space");
+  is(ed1.textContent, ch1 + ch1, "Two complete characters should remain");
+  sendKey("back_space");
+  is(ed1.textContent, ch1, "Only one complete SMP character should remain");
+  ed1.blur();
+
+  // Test backspacing across an SMP character in a sub-element
+  getSelection().selectAllChildren(document.getElementById("editor2"));
+  var ed2 = document.getElementById("editor2");
+  ed2.focus();
+  sendKey("right");
+  sendKey("back_space");
+  sendKey("back_space");
+  is(ed2.textContent, "a", "Only the 'a' should remain");
+  ed2.blur();
+
+  // Test backspacing across an SMP character from a following sub-element
+  getSelection().selectAllChildren(document.getElementById("editor3"));
+  var ed3 = document.getElementById("editor3");
+  ed3.focus();
+  sendKey("right");
+  sendKey("left");
+  sendKey("back_space");
+  is(ed3.textContent, "ab", "The letters 'ab' should remain");
+  ed3.blur();
+
+  SimpleTest.finish();
+});
+
+</script>
+</pre>
+</body>
+</html>

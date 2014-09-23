@@ -2074,7 +2074,7 @@ ia64*-hpux*)
         LIBS="$LIBS -luuid -lgdi32 -lwinmm -lwsock32 -luserenv -lsecur32 -lnetapi32"
         MOZ_FIX_LINK_PATHS=
         DLL_PREFIX=
-        IMPORT_LIB_SUFFIX=dll.a
+        IMPORT_LIB_SUFFIX=a
 
         WIN32_CONSOLE_EXE_LDFLAGS=-mconsole
         WIN32_GUI_EXE_LDFLAGS=-mwindows
@@ -6939,11 +6939,7 @@ if test "${OS_TARGET}" = "Android"; then
   :
 elif test "${OS_TARGET}" = "WINNT" -o "${OS_TARGET}" = "Darwin"; then
   dnl On Windows and OSX, we want to link all our binaries against mozglue
-  if test -z "$GNU_CC"; then
-    MOZ_GLUE_LDFLAGS='$(call EXPAND_LIBNAME_PATH,mozglue,$(LIBXUL_DIST)/lib)'
-  else
-    MOZ_GLUE_LDFLAGS='-L$(LIBXUL_DIST)/lib $(call EXPAND_LIBNAME,mozglue)'
-  fi
+  MOZ_GLUE_LDFLAGS='$(call EXPAND_LIBNAME_PATH,mozglue,$(LIBXUL_DIST)/lib)'
 else
   dnl On other Unix systems, we only want to link executables against mozglue
   MOZ_GLUE_PROGRAM_LDFLAGS='$(MKSHLIB_FORCE_ALL) $(call EXPAND_LIBNAME_PATH,mozglue,$(LIBXUL_DIST)/lib)'

@@ -11,7 +11,7 @@
 #include "nsISupports.idl"
 #include "nsIConsoleMessage.idl"
 
-[scriptable, uuid(cac9d8e8-0d53-4fa8-9903-bb367e4fa1fe)]
+[scriptable, uuid(d6a8dae2-367f-4939-a843-11e0c48e240c)]
 interface nsIScriptError : nsIConsoleMessage
 {
     /** pseudo-flag for default case */

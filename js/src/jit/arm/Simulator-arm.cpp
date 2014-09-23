@@ -2486,7 +2486,67 @@ Simulator::decodeType01(SimInstruction *instr)
                         MOZ_CRASH();
                 }
             } else {
-                MOZ_CRASH(); // Not used atm.
+                if (instr->bit(23)) {
+                    // Load-exclusive / store-exclusive.
+                    //
+                    // Bare-bones simulation: the store always succeeds, and we do not
+                    // execute any fences.  Also, we allow readDW and writeDW to split
+                    // the memory transaction.
+                    //
+                    // The next step up would involve remembering the value that was
+                    // read with load-exclusive so that we could use compareExchange
+                    // for the store-exclusive, and to implement atomic doubleword
+                    // read and write.
+                    //
+                    // Also see DMB/DSB/ISB below.
+                    if (instr->bit(20)) {
+                        // Load-exclusive.
+                        int rn = instr->rnValue();
+                        int rt = instr->rtValue();
+                        int32_t address = get_register(rn);
+                        switch (instr->bits(22,21)) {
+                        case 0:
+                            set_register(rt, readW(address, instr));
+                            break;
+                        case 1:
+                            set_dw_register(rt, readDW(address));
+                            break;
+                        case 2:
+                            set_register(rt, readBU(address));
+                            break;
+                        case 3:
+                            set_register(rt, readHU(address, instr));
+                            break;
+                        }
+                    } else {
+                        // Store-exclusive.
+                        int rn = instr->rnValue();
+                        int rd = instr->rdValue();
+                        int rt = instr->bits(3,0);
+                        int32_t address = get_register(rn);
+                        int32_t value = get_register(rt);
+                        switch (instr->bits(22,21)) {
+                        case 0:
+                            writeW(address, rt, instr);
+                            break;
+                        case 1: {
+                            MOZ_ASSERT((rt % 2) == 0);
+                            int32_t value2 = get_register(rt+1);
+                            writeDW(address, value, value2);
+                            break;
+                        }
+                        case 2:
+                            writeB(address, (uint8_t)value);
+                            break;
+                        case 3:
+                            writeH(address, (uint16_t)value, instr);
+                            break;
+                        }
+                        set_register(rd, 0);
+                    }
+                } else {
+                    MOZ_CRASH(); // Not used atm
+                }
             }
         } else {
             // Extra load/store instructions.
@@ -2885,6 +2945,21 @@ Simulator::decodeType2(SimInstruction *instr)
     }
 }
 
+static uint32_t
+rotateBytes(uint32_t val, int32_t rotate)
+{
+    switch (rotate) {
+    default:
+        return val;
+    case 1:
+        return (val >> 8) | (val << 24);
+    case 2:
+        return (val >> 16) | (val << 16);
+    case 3:
+        return (val >> 24) | (val << 8);
+    }
+}
+
 void
 Simulator::decodeType3(SimInstruction *instr)
 {
@@ -2963,27 +3038,21 @@ Simulator::decodeType3(SimInstruction *instr)
                     MOZ_CRASH();
                     break;
                   case 1:
-                    MOZ_CRASH();
+                    if (instr->bits(7,4) == 7 && instr->bits(19,16) == 15) {
+                        uint32_t rm_val = rotateBytes(get_register(instr->rmValue()), instr->bits(11, 10));
+                        if (instr->bit(20))
+                            set_register(rd, (int32_t)(int16_t)(rm_val & 0xFFFF)); // SXTH
+                        else
+                            set_register(rd, (int32_t)(int8_t)(rm_val & 0xFF));    // SXTB
+                    } else {
+                        MOZ_CRASH();
+                    }
                     break;
                   case 2:
                     if ((instr->bit(20) == 0) && (instr->bits(9, 6) == 1)) {
                         if (instr->bits(19, 16) == 0xF) {
                             // Uxtb16.
-                            uint32_t rm_val = get_register(instr->rmValue());
-                            int32_t rotate = instr->bits(11, 10);
-                            switch (rotate) {
-                              case 0:
-                                break;
-                              case 1:
-                                rm_val = (rm_val >> 8) | (rm_val << 24);
-                                break;
-                              case 2:
-                                rm_val = (rm_val >> 16) | (rm_val << 16);
-                                break;
-                              case 3:
-                                rm_val = (rm_val >> 24) | (rm_val << 8);
-                                break;
-                            }
+                            uint32_t rm_val = rotateBytes(get_register(instr->rmValue()), instr->bits(11, 10));
                             set_register(rd, (rm_val & 0xFF) | (rm_val & 0xFF0000));
                         } else {
                             MOZ_CRASH();
@@ -2996,40 +3065,12 @@ Simulator::decodeType3(SimInstruction *instr)
                     if ((instr->bit(20) == 0) && (instr->bits(9, 6) == 1)) {
                         if (instr->bits(19, 16) == 0xF) {
                             // Uxtb.
-                            uint32_t rm_val = get_register(instr->rmValue());
-                            int32_t rotate = instr->bits(11, 10);
-                            switch (rotate) {
-                              case 0:
-                                break;
-                              case 1:
-                                rm_val = (rm_val >> 8) | (rm_val << 24);
-                                break;
-                              case 2:
-                                rm_val = (rm_val >> 16) | (rm_val << 16);
-                                break;
-                              case 3:
-                                rm_val = (rm_val >> 24) | (rm_val << 8);
-                                break;
-                            }
+                            uint32_t rm_val = rotateBytes(get_register(instr->rmValue()), instr->bits(11, 10));
                             set_register(rd, (rm_val & 0xFF));
                         } else {
                             // Uxtab.
                             uint32_t rn_val = get_register(rn);
-                            uint32_t rm_val = get_register(instr->rmValue());
-                            int32_t rotate = instr->bits(11, 10);
-                            switch (rotate) {
-                              case 0:
-                                  break;
-                              case 1:
-                                rm_val = (rm_val >> 8) | (rm_val << 24);
-                                break;
-                              case 2:
-                                rm_val = (rm_val >> 16) | (rm_val << 16);
-                                break;
-                              case 3:
-                                rm_val = (rm_val >> 24) | (rm_val << 8);
-                                break;
-                            }
+                            uint32_t rm_val = rotateBytes(get_register(instr->rmValue()), instr->bits(11, 10));
                             set_register(rd, rn_val + (rm_val & 0xFF));
                         }
                     } else {
@@ -3992,6 +4033,23 @@ Simulator::decodeSpecialCondition(SimInstruction *instr)
         }
         break;
       case 0xA:
+        if (instr->bits(31,20) == 0xf57) {
+            // Minimal simulation: do nothing.
+            //
+            // If/when we upgrade load-exclusive and store-exclusive (above) to do something
+            // useful concurrency-wise, we should also upgrade these instructions.
+            switch (instr->bits(7,4)) {
+            case 5: // DMB
+            case 4: // DSB
+            case 6: // ISB
+                break;
+            default:
+                MOZ_CRASH();
+            }
+        } else {
+            MOZ_CRASH();
+        }
+        break;
       case 0xB:
         if (instr->bits(22, 20) == 5 && instr->bits(15, 12) == 0xf) {
             // pld: ignore instruction.
