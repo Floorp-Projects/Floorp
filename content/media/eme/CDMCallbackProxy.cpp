@@ -56,6 +56,38 @@ CDMCallbackProxy::ResolveNewSessionPromise(uint32_t aPromiseId,
   NS_DispatchToMainThread(task);
 }
 
+class LoadSessionTask : public nsRunnable {
+public:
+  LoadSessionTask(CDMProxy* aProxy,
+                  uint32_t aPromiseId,
+                  bool aSuccess)
+    : mProxy(aProxy)
+    , mPid(aPromiseId)
+    , mSuccess(aSuccess)
+  {
+  }
+
+  NS_IMETHOD Run() {
+    mProxy->OnResolveLoadSessionPromise(mPid, mSuccess);
+    return NS_OK;
+  }
+
+  nsRefPtr<CDMProxy> mProxy;
+  dom::PromiseId mPid;
+  bool mSuccess;
+};
+
+void
+CDMCallbackProxy::ResolveLoadSessionPromise(uint32_t aPromiseId, bool aSuccess)
+{
+  MOZ_ASSERT(mProxy->IsOnGMPThread());
+
+  nsRefPtr<nsIRunnable> task(new LoadSessionTask(mProxy,
+                                                 aPromiseId,
+                                                 aSuccess));
+  NS_DispatchToMainThread(task);
+}
+
 void
 CDMCallbackProxy::ResolvePromise(uint32_t aPromiseId)
 {

@@ -54,6 +54,13 @@ GMPDecryptorChild::ResolveNewSessionPromise(uint32_t aPromiseId,
 }
 
 void
+GMPDecryptorChild::ResolveLoadSessionPromise(uint32_t aPromiseId,
+                                             bool aSuccess)
+{
+  CALL_ON_GMP_THREAD(SendResolveLoadSessionPromise, aPromiseId, aSuccess);
+}
+
+void
 GMPDecryptorChild::ResolvePromise(uint32_t aPromiseId)
 {
   CALL_ON_GMP_THREAD(SendResolvePromise, aPromiseId);

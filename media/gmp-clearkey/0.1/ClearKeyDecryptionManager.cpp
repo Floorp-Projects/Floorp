@@ -169,8 +169,8 @@ ClearKeyDecryptionManager::LoadSession(uint32_t aPromiseId,
                                        uint32_t aSessionIdLength)
 {
   // TODO implement "persistent" sessions.
-  mCallback->RejectPromise(aPromiseId, kGMPNotSupportedError,
-                           nullptr /* message */, 0 /* messageLen */);
+  mCallback->ResolveLoadSessionPromise(aPromiseId, false);
+
   CK_LOGD("ClearKeyDecryptionManager::LoadSession");
 }
 

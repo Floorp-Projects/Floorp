@@ -153,6 +153,18 @@ GMPDecryptorParent::RecvResolveNewSessionPromise(const uint32_t& aPromiseId,
 }
 
 bool
+GMPDecryptorParent::RecvResolveLoadSessionPromise(const uint32_t& aPromiseId,
+                                                  const bool& aSuccess)
+{
+  if (!mIsOpen) {
+    NS_WARNING("Trying to use a dead GMP decrypter!");
+    return false;
+  }
+  mCallback->ResolveLoadSessionPromise(aPromiseId, aSuccess);
+  return true;
+}
+
+bool
 GMPDecryptorParent::RecvResolvePromise(const uint32_t& aPromiseId)
 {
   if (!mIsOpen) {
