@@ -321,6 +321,13 @@ BaseProxyHandler::setPrototypeOf(JSContext *cx, HandleObject, HandleObject, bool
 }
 
 bool
+BaseProxyHandler::setImmutablePrototype(JSContext *cx, HandleObject proxy, bool *succeeded) const
+{
+    *succeeded = false;
+    return true;
+}
+
+bool
 BaseProxyHandler::watch(JSContext *cx, HandleObject proxy, HandleId id, HandleObject callable) const
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
