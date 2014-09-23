@@ -312,7 +312,7 @@ var PlacesCommandHook = {
       PlacesUtils.transactionManager.doTransaction(txn);
       itemId = txn.item.id;
       // Set the character-set
-      if (charset && !PrivateBrowsingUtils.isWindowPrivate(aBrowser.contentWindow))
+      if (charset && !PrivateBrowsingUtils.isBrowserPrivate(aBrowser))
         PlacesUtils.setCharsetForURI(uri, charset);
     }
 
