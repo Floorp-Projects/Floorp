@@ -593,7 +593,7 @@ KeyboardMayHaveIME()
   HKL locales[10];
   int result = GetKeyboardLayoutList(10, locales);
   for (int i = 0; i < result; i++) {
-    int kb = (unsigned)locales[i] & 0xFFFF;
+    int kb = (uintptr_t)locales[i] & 0xFFFF;
     if (kb == 0x0411 ||  // japanese
         kb == 0x0412 ||  // korean
         kb == 0x0C04 ||  // HK Chinese
