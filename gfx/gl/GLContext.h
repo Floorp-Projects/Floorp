@@ -116,6 +116,8 @@ MOZ_BEGIN_ENUM_CLASS(GLFeature)
     texture_non_power_of_two,
     transform_feedback,
     uniform_buffer_object,
+    uniform_matrix_nonsquare,
+    uniform_uint,
     vertex_array_object,
     EnumMax
 MOZ_END_ENUM_CLASS(GLFeature)
@@ -1716,6 +1718,20 @@ public:
         AFTER_GL_CALL;
     }
 
+    void fUniform1ui(GLint location, GLuint v0) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fUniform1ui);
+        mSymbols.fUniform1ui(location, v0);
+        AFTER_GL_CALL;
+    }
+
+    void fUniform1uiv(GLint location, GLsizei count, const GLuint* value) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fUniform1uiv);
+        mSymbols.fUniform1uiv(location, count, value);
+        AFTER_GL_CALL;
+    }
+
     void fUniform2f(GLint location, GLfloat v0, GLfloat v1) {
         BEFORE_GL_CALL;
         mSymbols.fUniform2f(location, v0, v1);
@@ -1737,6 +1753,20 @@ public:
     void fUniform2iv(GLint location, GLsizei count, const GLint* value) {
         BEFORE_GL_CALL;
         mSymbols.fUniform2iv(location, count, value);
+        AFTER_GL_CALL;
+    }
+
+    void fUniform2ui(GLint location, GLuint v0, GLuint v1) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fUniform2ui);
+        mSymbols.fUniform2ui(location, v0, v1);
+        AFTER_GL_CALL;
+    }
+
+    void fUniform2uiv(GLint location, GLsizei count, const GLuint* value) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fUniform2uiv);
+        mSymbols.fUniform2uiv(location, count, value);
         AFTER_GL_CALL;
     }
 
@@ -1764,6 +1794,20 @@ public:
         AFTER_GL_CALL;
     }
 
+    void fUniform3ui(GLint location, GLuint v0, GLuint v1, GLuint v2) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fUniform3ui);
+        mSymbols.fUniform3ui(location, v0, v1, v2);
+        AFTER_GL_CALL;
+    }
+
+    void fUniform3uiv(GLint location, GLsizei count, const GLuint* value) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fUniform3uiv);
+        mSymbols.fUniform3uiv(location, count, value);
+        AFTER_GL_CALL;
+    }
+
     void fUniform4f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) {
         BEFORE_GL_CALL;
         mSymbols.fUniform4f(location, v0, v1, v2, v3);
@@ -1788,9 +1832,37 @@ public:
         AFTER_GL_CALL;
     }
 
+    void fUniform4ui(GLint location, GLuint v0, GLuint v1, GLuint v2, GLuint v3) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fUniform4ui);
+        mSymbols.fUniform4ui(location, v0, v1, v2, v3);
+        AFTER_GL_CALL;
+    }
+
+    void fUniform4uiv(GLint location, GLsizei count, const GLuint* value) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fUniform4uiv);
+        mSymbols.fUniform4uiv(location, count, value);
+        AFTER_GL_CALL;
+    }
+
     void fUniformMatrix2fv(GLint location, GLsizei count, realGLboolean transpose, const GLfloat* value) {
         BEFORE_GL_CALL;
         mSymbols.fUniformMatrix2fv(location, count, transpose, value);
+        AFTER_GL_CALL;
+    }
+
+    void fUniformMatrix2x3fv(GLint location, GLsizei count, realGLboolean transpose, const GLfloat* value) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fUniformMatrix2x3fv);
+        mSymbols.fUniformMatrix2x3fv(location, count, transpose, value);
+        AFTER_GL_CALL;
+    }
+
+    void fUniformMatrix2x4fv(GLint location, GLsizei count, realGLboolean transpose, const GLfloat* value) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fUniformMatrix2x4fv);
+        mSymbols.fUniformMatrix2x4fv(location, count, transpose, value);
         AFTER_GL_CALL;
     }
 
@@ -1800,9 +1872,37 @@ public:
         AFTER_GL_CALL;
     }
 
+    void fUniformMatrix3x2fv(GLint location, GLsizei count, realGLboolean transpose, const GLfloat* value) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fUniformMatrix3x2fv);
+        mSymbols.fUniformMatrix3x2fv(location, count, transpose, value);
+        AFTER_GL_CALL;
+    }
+
+    void fUniformMatrix3x4fv(GLint location, GLsizei count, realGLboolean transpose, const GLfloat* value) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fUniformMatrix3x4fv);
+        mSymbols.fUniformMatrix3x4fv(location, count, transpose, value);
+        AFTER_GL_CALL;
+    }
+
     void fUniformMatrix4fv(GLint location, GLsizei count, realGLboolean transpose, const GLfloat* value) {
         BEFORE_GL_CALL;
         mSymbols.fUniformMatrix4fv(location, count, transpose, value);
+        AFTER_GL_CALL;
+    }
+
+    void fUniformMatrix4x2fv(GLint location, GLsizei count, realGLboolean transpose, const GLfloat* value) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fUniformMatrix4x2fv);
+        mSymbols.fUniformMatrix4x2fv(location, count, transpose, value);
+        AFTER_GL_CALL;
+    }
+
+    void fUniformMatrix4x3fv(GLint location, GLsizei count, realGLboolean transpose, const GLfloat* value) {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fUniformMatrix4x3fv);
+        mSymbols.fUniformMatrix4x3fv(location, count, transpose, value);
         AFTER_GL_CALL;
     }
 
