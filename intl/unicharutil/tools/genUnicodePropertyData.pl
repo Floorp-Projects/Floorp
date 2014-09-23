@@ -32,8 +32,8 @@
 #     This file should be in a sub-directory "security" immediately below the
 #        directory containing the other Unicode data files.
 #
-#     We also require the latest data file for UTR50, currently revision-12:
-#        http://www.unicode.org/Public/vertical/revision-12/VerticalOrientation-12.txt
+#     We also require the latest data file for UTR50, currently revision-13:
+#        http://www.unicode.org/Public/vertical/revision-13/VerticalOrientation-13.txt
 #     This file should be in a sub-directory "vertical" immediately below the
 #        directory containing the other Unicode data files.
 #
@@ -58,14 +58,15 @@ if ($#ARGV != 1) {
     print <<__EOT;
 # Run this tool using a command line of the form
 #
-#     perl genUnicodePropertyData.pl \
-#             /path/to/harfbuzz/src  \
+#     perl genUnicodePropertyData.pl \\
+#             /path/to/harfbuzz/src  \\
 #             /path/to/UCD-directory
 #
 # where harfbuzz/src is the directory containing harfbuzz .cc and .hh files,
 # and UCD-directory is a directory containing the current Unicode Character
 # Database files (UnicodeData.txt, etc), available from
-# http://www.unicode.org/Public/UNIDATA/
+# http://www.unicode.org/Public/UNIDATA/, with additional resources as
+# detailed in the source comments.
 #
 # This will generate (or overwrite!) the files
 #
@@ -644,8 +645,8 @@ while (<FH>) {
 }
 close FH;
 
-# read VerticalOrientation-12.txt
-open FH, "< $ARGV[1]/vertical/VerticalOrientation-12.txt" or die "can't open UTR50 data file VerticalOrientation-12.txt\n";
+# read VerticalOrientation-13.txt
+open FH, "< $ARGV[1]/vertical/VerticalOrientation-13.txt" or die "can't open UTR50 data file VerticalOrientation-13.txt\n";
 push @versionInfo, "";
 while (<FH>) {
     chomp;
