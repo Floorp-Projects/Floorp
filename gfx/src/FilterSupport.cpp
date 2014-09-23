@@ -1238,6 +1238,7 @@ FilterSupport::RenderFilterDescription(DrawTarget* aDT,
                                        SourceSurface* aStrokePaint,
                                        const IntRect& aStrokePaintRect,
                                        nsTArray<RefPtr<SourceSurface>>& aAdditionalImages,
+                                       const Point& aDestPoint,
                                        const DrawOptions& aOptions)
 {
   RefPtr<FilterNode> resultFilter =
@@ -1245,7 +1246,7 @@ FilterSupport::RenderFilterDescription(DrawTarget* aDT,
                                    aSourceGraphic, aSourceGraphicRect, aFillPaint, aFillPaintRect,
                                    aStrokePaint, aStrokePaintRect, aAdditionalImages);
 
-  aDT->DrawFilter(resultFilter, aRenderRect, Point(0, 0), aOptions);
+  aDT->DrawFilter(resultFilter, aRenderRect, aDestPoint, aOptions);
 }
 
 static nsIntRegion

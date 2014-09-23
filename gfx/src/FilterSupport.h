@@ -432,6 +432,7 @@ public:
                           SourceSurface* aStrokePaint,
                           const IntRect& aStrokePaintRect,
                           nsTArray<RefPtr<SourceSurface>>& aAdditionalImages,
+                          const Point& aDestPoint,
                           const DrawOptions& aOptions = DrawOptions());
 
   /**
