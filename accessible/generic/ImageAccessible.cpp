@@ -146,33 +146,20 @@ ImageAccessible::DoAction(uint8_t aIndex)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIAccessibleImage
+// ImageAccessible
 
-NS_IMETHODIMP
-ImageAccessible::GetImagePosition(uint32_t aCoordType, int32_t* aX, int32_t* aY)
+nsIntPoint
+ImageAccessible::Position(uint32_t aCoordType)
 {
-  NS_ENSURE_ARG_POINTER(aX);
-  NS_ENSURE_ARG_POINTER(aY);
-
   nsIntRect rect = Bounds();
-  *aX = rect.x;
-  *aY = rect.y;
-  nsAccUtils::ConvertScreenCoordsTo(aX, aY, aCoordType, this);
-
-  return NS_OK;
+  nsAccUtils::ConvertScreenCoordsTo(&rect.x, &rect.y, aCoordType, this);
+  return rect.TopLeft();
 }
 
-NS_IMETHODIMP
-ImageAccessible::GetImageSize(int32_t* aWidth, int32_t* aHeight)
+nsIntSize
+ImageAccessible::Size()
 {
-  NS_ENSURE_ARG_POINTER(aWidth);
-  NS_ENSURE_ARG_POINTER(aHeight);
-
-  nsIntRect rect = Bounds();
-  *aWidth = rect.width;
-  *aHeight = rect.height;
-
-  return NS_OK;
+  return Bounds().Size();
 }
 
 // Accessible

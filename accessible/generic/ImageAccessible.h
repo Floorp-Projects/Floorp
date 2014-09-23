@@ -7,7 +7,7 @@
 #define mozilla_a11y_ImageAccessible_h__
 
 #include "BaseAccessibles.h"
-#include "nsIAccessibleImage.h"
+#include "xpcAccessibleImage.h"
 
 class nsGenericHTMLElement;
 
@@ -20,16 +20,13 @@ namespace a11y {
  * - support basic state
  */
 class ImageAccessible : public LinkableAccessible,
-                        public nsIAccessibleImage
+                        public xpcAccessibleImage
 {
 public:
   ImageAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIAccessibleImage
-  NS_DECL_NSIACCESSIBLEIMAGE
 
   // Accessible
   virtual a11y::role NativeRole() MOZ_OVERRIDE;
@@ -40,6 +37,10 @@ public:
   virtual uint8_t ActionCount() MOZ_OVERRIDE;
   virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) MOZ_OVERRIDE;
   virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
+
+  // ImageAccessible
+  nsIntPoint Position(uint32_t aCoordType);
+  nsIntSize Size();
 
 protected:
   virtual ~ImageAccessible();
