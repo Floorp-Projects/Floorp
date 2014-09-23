@@ -379,6 +379,33 @@ struct BaselineStackBuilder
     }
 };
 
+// Ensure that all value locations are readable from the SnapshotIterator.
+// Remove RInstructionResults from the JitActivation if the frame got recovered
+// ahead of the bailout.
+class SnapshotIteratorForBailout : public SnapshotIterator
+{
+    RInstructionResults results_;
+  public:
+
+    SnapshotIteratorForBailout(const IonBailoutIterator &iter)
+      : SnapshotIterator(iter),
+        results_()
+    {
+    }
+
+    // Take previously computed result out of the activation, or compute the
+    // results of all recover instructions contained in the snapshot.
+    bool init(JSContext *cx, JitActivation *activation) {
+        activation->maybeTakeIonFrameRecovery(fp_, &results_);
+        if (!results_.isInitialized() && !computeInstructionResults(cx, &results_))
+            return false;
+
+        MOZ_ASSERT(results_.isInitialized());
+        instructionResults_ = &results_;
+        return true;
+    }
+};
+
 static inline bool
 IsInlinableFallback(ICFallbackStub *icEntry)
 {
@@ -1343,11 +1370,8 @@ jit::BailoutIonToBaseline(JSContext *cx, JitActivation *activation, IonBailoutIt
         return BAILOUT_RETURN_FATAL_ERROR;
     JitSpew(JitSpew_BaselineBailouts, "  Incoming frame ptr = %p", builder.startFrame());
 
-    RInstructionResults instructionResults;
-    activation->maybeTakeIonFrameRecovery(iter.jsFrame(), &instructionResults);
-    SnapshotIterator snapIter(iter);
-
-    if (!snapIter.initInstructionResults(cx, &instructionResults))
+    SnapshotIteratorForBailout snapIter(iter);
+    if (!snapIter.init(cx, activation))
         return BAILOUT_RETURN_FATAL_ERROR;
 
 #ifdef TRACK_SNAPSHOTS

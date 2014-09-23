@@ -296,16 +296,21 @@ class RInstructionResults
 
 struct MaybeReadFallback
 {
+    enum NoGCValue {
+        NoGC_UndefinedValue,
+        NoGC_MagicOptimizedOut
+    };
+
     JSContext *maybeCx;
     JitActivation *activation;
     JitFrameIterator *frame;
-    const Value unreadablePlaceholder;
+    const NoGCValue unreadablePlaceholder_;
 
     MaybeReadFallback(const Value &placeholder = UndefinedValue())
       : maybeCx(nullptr),
         activation(nullptr),
         frame(nullptr),
-        unreadablePlaceholder(placeholder)
+        unreadablePlaceholder_(noGCPlaceholder(placeholder))
     {
     }
 
@@ -313,11 +318,23 @@ struct MaybeReadFallback
       : maybeCx(cx),
         activation(activation),
         frame(frame),
-        unreadablePlaceholder(UndefinedValue())
+        unreadablePlaceholder_(NoGC_UndefinedValue)
     {
     }
 
     bool canRecoverResults() { return maybeCx; }
+
+    Value unreadablePlaceholder() const {
+        if (unreadablePlaceholder_ == NoGC_MagicOptimizedOut)
+            return MagicValue(JS_OPTIMIZED_OUT);
+        return UndefinedValue();
+    }
+
+    NoGCValue noGCPlaceholder(Value v) const {
+        if (v.isMagic(JS_OPTIMIZED_OUT))
+            return NoGC_MagicOptimizedOut;
+        return NoGC_UndefinedValue;
+    }
 };
 
 
@@ -327,6 +344,7 @@ class RResumePoint;
 // to innermost frame).
 class SnapshotIterator
 {
+  protected:
     SnapshotReader snapshot_;
     RecoverReader recover_;
     IonJSFrameLayout *fp_;
@@ -388,6 +406,10 @@ class SnapshotIterator
 
     int32_t readOuterNumActualArgs() const;
 
+    // Used by recover instruction to store the value back into the instruction
+    // results array.
+    void storeInstructionResult(Value v);
+
   public:
     // Exhibits frame properties contained in the snapshot.
     uint32_t pcOffset() const;
@@ -420,14 +442,16 @@ class SnapshotIterator
         return recover_.moreInstructions();
     }
 
+  protected:
     // Register a vector used for storing the results of the evaluation of
     // recover instructions. This vector should be registered before the
     // beginning of the iteration. This function is in charge of allocating
     // enough space for all instructions results, and return false iff it fails.
     bool initInstructionResults(MaybeReadFallback &fallback);
-    bool initInstructionResults(JSContext *cx, RInstructionResults *results);
 
-    void storeInstructionResult(Value v);
+    // This function is used internally for computing the result of the recover
+    // instructions.
+    bool computeInstructionResults(JSContext *cx, RInstructionResults *results) const;
 
   public:
     // Handle iterating over frames of the snapshots.
@@ -461,7 +485,7 @@ class SnapshotIterator
 
         if (fallback.canRecoverResults()) {
             if (!initInstructionResults(fallback))
-                return fallback.unreadablePlaceholder;
+                return fallback.unreadablePlaceholder();
 
             if (allocationReadable(a))
                 return allocationValue(a);
@@ -469,7 +493,7 @@ class SnapshotIterator
             MOZ_ASSERT_UNREACHABLE("All allocations should be readable.");
         }
 
-        return fallback.unreadablePlaceholder;
+        return fallback.unreadablePlaceholder();
     }
 
     void readCommonFrameSlots(Value *scopeChain, Value *rval) {

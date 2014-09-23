@@ -1485,7 +1485,7 @@ bool
 RInstructionResults::isInitialized() const
 {
     MOZ_ASSERT_IF(results_, fp_);
-    return results_;
+    return fp_;
 }
 
 IonJSFrameLayout *
@@ -1780,7 +1780,6 @@ SnapshotIterator::initInstructionResults(MaybeReadFallback &fallback)
 
     // If there is only one resume point in the list of instructions, then there
     // is no instruction to recover, and thus no need to register any results.
-    MOZ_ASSERT(recover_.numInstructionsRead() == 1);
     if (recover_.numInstructions() == 1)
         return true;
 
@@ -1795,20 +1794,28 @@ SnapshotIterator::initInstructionResults(MaybeReadFallback &fallback)
         if (!ionScript_->invalidate(cx, /* resetUses = */ false, "Observe recovered instruction."))
             return false;
 
-        // Start a new snapshot at the beginning of the JitFrameIterator.  This
-        // SnapshotIterator is used for evaluating the content of all recover
-        // instructions.  The result is then saved on the JitActivation.
-        SnapshotIterator s(*fallback.frame);
+        // Register the list of result on the activation.  We need to do that
+        // before we initialize the list such as if any recover instruction
+        // cause a GC, we can ensure that the results are properly traced by the
+        // activation.
         RInstructionResults tmp;
-        if (!s.initInstructionResults(cx, &tmp))
-            return false;
-
-        // Register the list of result on the activation.
         if (!fallback.activation->registerIonFrameRecovery(fallback.frame->jsFrame(),
                                                            mozilla::Move(tmp)))
             return false;
 
         results = fallback.activation->maybeIonFrameRecovery(fp);
+
+        // Start a new snapshot at the beginning of the JitFrameIterator.  This
+        // SnapshotIterator is used for evaluating the content of all recover
+        // instructions.  The result is then saved on the JitActivation.
+        SnapshotIterator s(*fallback.frame);
+        if (!s.computeInstructionResults(cx, results)) {
+
+            // If the evaluation failed because of OOMs, then we discard the
+            // current set of result that we collected so far.
+            fallback.activation->maybeTakeIonFrameRecovery(fp, &tmp);
+            return false;
+        }
     }
 
     MOZ_ASSERT(results->isInitialized());
@@ -1817,24 +1824,26 @@ SnapshotIterator::initInstructionResults(MaybeReadFallback &fallback)
 }
 
 bool
-SnapshotIterator::initInstructionResults(JSContext *cx, RInstructionResults *results)
+SnapshotIterator::computeInstructionResults(JSContext *cx, RInstructionResults *results) const
 {
+    MOZ_ASSERT(!results->isInitialized());
     MOZ_ASSERT(recover_.numInstructionsRead() == 1);
 
-    // The last instruction will always be a resume point, no need to allocate
-    // space for it.
-    if (recover_.numInstructions() == 1)
-        return true;
-
-    MOZ_ASSERT(recover_.numInstructions() > 1);
+    // The last instruction will always be a resume point.
     size_t numResults = recover_.numInstructions() - 1;
-    instructionResults_ = results;
-    if (!instructionResults_->isInitialized()) {
-        if (!instructionResults_->init(cx, numResults, fp_))
+    if (!results->isInitialized()) {
+        if (!results->init(cx, numResults, fp_))
             return false;
+
+        // No need to iterate over the only resume point.
+        if (!numResults) {
+            MOZ_ASSERT(results->isInitialized());
+            return true;
+        }
 
         // Fill with the results of recover instructions.
         SnapshotIterator s(*this);
+        s.instructionResults_ = results;
         while (s.moreInstructions()) {
             // Skip resume point and only interpret recover instructions.
             if (s.instruction()->isResumePoint()) {
@@ -1848,6 +1857,7 @@ SnapshotIterator::initInstructionResults(JSContext *cx, RInstructionResults *res
         }
     }
 
+    MOZ_ASSERT(results->isInitialized());
     return true;
 }
 
