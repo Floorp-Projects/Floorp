@@ -468,7 +468,7 @@ loop.conversation = (function(OT, mozL10n) {
       notifications: new loop.shared.models.NotificationCollection()
     });
 
-    window.addEventListener("unload", (event) => {
+    window.addEventListener("unload", function(event) {
       // Handle direct close of dialog box via [x] control.
       navigator.mozLoop.releaseCallData(router._conversation.get("callId"));
     });
