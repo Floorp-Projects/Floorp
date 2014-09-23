@@ -928,6 +928,8 @@ protected:
 
     ContextState(const ContextState& other)
         : fontGroup(other.fontGroup),
+          fontLanguage(other.fontLanguage),
+          fontFont(other.fontFont),
           gradientStyles(other.gradientStyles),
           patternStyles(other.patternStyles),
           colorStyles(other.colorStyles),
@@ -985,6 +987,9 @@ protected:
     std::vector<mozilla::RefPtr<mozilla::gfx::Path> > clipsPushed;
 
     nsRefPtr<gfxFontGroup> fontGroup;
+    nsCOMPtr<nsIAtom> fontLanguage;
+    nsFont fontFont;
+
     EnumeratedArray<Style, Style::MAX, nsRefPtr<CanvasGradient>> gradientStyles;
     EnumeratedArray<Style, Style::MAX, nsRefPtr<CanvasPattern>> patternStyles;
     EnumeratedArray<Style, Style::MAX, nscolor> colorStyles;
