@@ -78,11 +78,13 @@
 <!ENTITY settings_title "Settings">
 <!ENTITY pref_category_advanced "Advanced">
 <!ENTITY pref_category_customize "Customize">
+<!ENTITY pref_category_customize_summary "Home, search, tabs, import">
 
 <!-- Localization note (pref_category_language) : This is the preferences
      section in which the user picks the locale in which to display Firefox
      UI. The locale includes both language and region concepts. -->
 <!ENTITY pref_category_language "Language">
+<!ENTITY pref_category_language_summary "Change the language of your browser">
 <!ENTITY pref_browser_locale "Browser language">
 
 <!-- Localization note (locale_system_default) : This string indicates that
@@ -116,8 +118,11 @@
 <!ENTITY pref_category_search3 "Search">
 <!ENTITY pref_category_search_summary "Customize your search providers">
 <!ENTITY pref_category_display "Display">
+<!ENTITY pref_category_display_summary "Text, title bar, full-screen browsing">
 <!ENTITY pref_category_privacy_short "Privacy">
+<!ENTITY pref_category_privacy_summary "Control passwords, cookies, tracking, data">
 <!ENTITY pref_category_vendor "&vendorShortName;">
+<!ENTITY pref_category_vendor_summary "About &brandShortName;, FAQs, data choices">
 <!ENTITY pref_category_datareporting "Data choices">
 <!ENTITY pref_learn_more "Learn more">
 <!ENTITY pref_category_installed_search_engines "Installed search engines">
@@ -132,6 +137,7 @@
      it is applicable. -->
 <!ENTITY pref_search_hint "TIP: Add any website to your list of search providers by long-pressing on its search field and then tapping the &formatI; icon.">
 <!ENTITY pref_category_devtools "Developer tools">
+<!ENTITY pref_category_devtools_summary "Remote debugging, paint flashing">
 <!ENTITY pref_developer_paint_flashing "Paint flashing">
 <!ENTITY pref_developer_remotedebugging "Remote debugging">
 <!ENTITY pref_remember_signons "Remember passwords">
@@ -207,8 +213,10 @@ size. -->
 
 <!ENTITY pref_use_master_password "Use master password">
 <!ENTITY pref_sync "Sync">
+<!ENTITY pref_sync_summary "Sync your tabs, bookmarks, passwords, history">
 <!ENTITY pref_search_suggestions "Show search suggestions">
 <!ENTITY pref_import_android "Import from Android">
+<!ENTITY pref_import_android_summary "Import bookmarks and history from the native browser">
 <!ENTITY pref_private_data_history2 "Browsing history">
 <!ENTITY pref_private_data_formdata "Form &amp; search history">
 <!ENTITY pref_private_data_cookies2 "Cookies &amp; active logins">
