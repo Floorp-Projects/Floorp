@@ -418,3 +418,7 @@ ER3(SSL_ERROR_NEXT_PROTOCOL_NO_CALLBACK, (SSL_ERROR_BASE + 129),
 
 ER3(SSL_ERROR_NEXT_PROTOCOL_NO_PROTOCOL, (SSL_ERROR_BASE + 130),
 "The server supports no protocols that the client advertises in the ALPN extension.")
+
+ER3(SSL_ERROR_INAPPROPRIATE_FALLBACK_ALERT, (SSL_ERROR_BASE + 131),
+"The server rejected the handshake because the client downgraded to a lower "
+"TLS version than the server supports.")

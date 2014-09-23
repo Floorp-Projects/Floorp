@@ -81,7 +81,8 @@ static sslOptions ssl_defaults = {
     PR_FALSE,   /* enableOCSPStapling */
     PR_TRUE,    /* enableNPN          */
     PR_FALSE,   /* enableALPN         */
-    PR_TRUE     /* reuseServerECDHEKey */
+    PR_TRUE,    /* reuseServerECDHEKey */
+    PR_FALSE    /* enableFallbackSCSV */
 };
 
 /*
@@ -789,6 +790,10 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
         ss->opt.reuseServerECDHEKey = on;
         break;
 
+      case SSL_ENABLE_FALLBACK_SCSV:
+        ss->opt.enableFallbackSCSV = on;
+        break;
+
       default:
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         rv = SECFailure;
@@ -863,6 +868,7 @@ SSL_OptionGet(PRFileDesc *fd, PRInt32 which, PRBool *pOn)
     case SSL_ENABLE_ALPN:         on = ss->opt.enableALPN;         break;
     case SSL_REUSE_SERVER_ECDHE_KEY:
                                   on = ss->opt.reuseServerECDHEKey; break;
+    case SSL_ENABLE_FALLBACK_SCSV: on = ss->opt.enableFallbackSCSV; break;
 
     default:
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -928,6 +934,9 @@ SSL_OptionGetDefault(PRInt32 which, PRBool *pOn)
     case SSL_ENABLE_ALPN:         on = ssl_defaults.enableALPN;         break;
     case SSL_REUSE_SERVER_ECDHE_KEY:
        on = ssl_defaults.reuseServerECDHEKey;
+       break;
+    case SSL_ENABLE_FALLBACK_SCSV:
+       on = ssl_defaults.enableFallbackSCSV;
        break;
 
     default:
@@ -1106,6 +1115,10 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
 
       case SSL_REUSE_SERVER_ECDHE_KEY:
         ssl_defaults.reuseServerECDHEKey = on;
+        break;
+
+      case SSL_ENABLE_FALLBACK_SCSV:
+        ssl_defaults.enableFallbackSCSV = on;
         break;
 
       default:

@@ -141,6 +141,9 @@ else
 	DEFINES += -DUSE_HW_AES -DINTEL_GCM
 	ASFILES += intel-aes-x86-masm.asm intel-gcm-x86-masm.asm
 	EXTRA_SRCS += intel-gcm-wrap.c
+	ifeq ($(CLANG_CL),1)
+	    INTEL_GCM_CLANG_CL = 1
+	endif
     endif
 endif
 else
@@ -667,4 +670,11 @@ $(OBJDIR)/$(PROG_PREFIX)intel-gcm-wrap$(OBJ_SUFFIX): CFLAGS += -mssse3
 ifneq (,$(findstring clang,$(shell $(AS) --version)))
 $(OBJDIR)/$(PROG_PREFIX)intel-gcm$(OBJ_SUFFIX): ASFLAGS += -no-integrated-as
 endif
+endif
+
+ifdef INTEL_GCM_CLANG_CL
+#
+# clang-cl needs -mssse3
+#
+$(OBJDIR)/$(PROG_PREFIX)intel-gcm-wrap$(OBJ_SUFFIX): CFLAGS += -mssse3
 endif
