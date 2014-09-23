@@ -29,7 +29,17 @@ add_task(function session_storage() {
   is(storage["http://mochi.test:8888"].test, OUTER_VALUE,
     "sessionStorage data for mochi.test has been serialized correctly");
 
-  // Ensure that modifying sessionStore values works.
+  // Ensure that modifying sessionStore values works for the inner frame only.
+  yield modifySessionStorage2(browser, {test: "modified1"});
+  TabState.flush(browser);
+
+  ({storage} = JSON.parse(ss.getTabState(tab)));
+  is(storage["http://example.com"].test, "modified1",
+    "sessionStorage data for example.com has been serialized correctly");
+  is(storage["http://mochi.test:8888"].test, OUTER_VALUE,
+    "sessionStorage data for mochi.test has been serialized correctly");
+
+  // Ensure that modifying sessionStore values works for both frames.
   yield modifySessionStorage(browser, {test: "modified"});
   yield modifySessionStorage2(browser, {test: "modified2"});
   TabState.flush(browser);
