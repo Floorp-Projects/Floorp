@@ -165,7 +165,9 @@ EvaluateExactReciprocal(TempAllocator &alloc, MDiv *ins)
     foldedRhs->setResultType(ins->type());
     ins->block()->insertBefore(ins, foldedRhs);
 
-    return MMul::New(alloc, left, foldedRhs, ins->type());
+    MMul *mul = MMul::New(alloc, left, foldedRhs, ins->type());
+    mul->setCommutative();
+    return mul;
 }
 
 void
