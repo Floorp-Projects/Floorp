@@ -41,6 +41,11 @@ nsPerformanceTiming::nsPerformanceTiming(nsPerformance* aPerformance,
 {
   MOZ_ASSERT(aPerformance, "Parent performance object should be provided");
   SetIsDOMBinding();
+
+  if (!nsContentUtils::IsPerformanceTimingEnabled()) {
+    mZeroTime = 0;
+  }
+
   // The aHttpChannel argument is null if this nsPerformanceTiming object
   // is being used for the navigation timing (document) and has a non-null
   // value for the resource timing (any resources within the page).
