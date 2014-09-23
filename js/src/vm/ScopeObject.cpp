@@ -34,11 +34,10 @@ typedef MutableHandle<ArgumentsObject *> MutableHandleArgumentsObject;
 
 /*****************************************************************************/
 
-static JSObject *
-InnermostStaticScope(JSScript *script, jsbytecode *pc)
+JSObject *
+js::InnermostStaticScope(JSScript *script, jsbytecode *pc)
 {
     JS_ASSERT(script->containsPC(pc));
-    JS_ASSERT(JOF_OPTYPE(*pc) == JOF_SCOPECOORD);
 
     NestedScopeObject *scope = script->getStaticScope(pc);
     if (scope)

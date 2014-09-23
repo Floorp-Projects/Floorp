@@ -149,6 +149,14 @@ StaticScopeIter<allowGC>::fun() const
     return obj->template as<JSFunction>();
 }
 
+template <AllowGC allowGC>
+inline PropertyName *
+StaticScopeIter<allowGC>::lambdaName() const
+{
+    JS_ASSERT(type() == NAMED_LAMBDA);
+    return obj->template as<JSFunction>().name();
+}
+
 }  /* namespace js */
 
 #endif /* vm_ScopeObject_inl_h */

@@ -14,6 +14,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 
+#include <algorithm>
 #include <ctype.h>
 #include <stdarg.h>
 #include <string.h>
@@ -49,6 +50,7 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
+#include "vm/ScopeObject-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -879,10 +881,178 @@ js::CallErrorReporter(JSContext *cx, const char *message, JSErrorReport *reportp
         onError(cx, message, reportp);
 }
 
-void
-js_ReportIsNotDefined(JSContext *cx, const char *name)
+static const size_t MAX_NAME_LENGTH_FOR_EDIT_DISTANCE = 1000;
+static const size_t MAX_REFERENCE_ERROR_NAMES_TO_CHECK = 1000;
+
+/*
+ * The edit distance between two strings is defined as the Levenshtein distance,
+ * which is described here: (http://en.wikipedia.org/wiki/Levenshtein_distance).
+ * Intuitively, this is the number of insert, delete, and/or substitution
+ * operations required to get from one string to the other.
+ *
+ * Given two atoms, this function computes their edit distance using dynamic
+ * programming. The resulting algorithm has O(m * n) complexity, but since it is
+ * only used for ReferenceError reporting, and the given atoms are expected to
+ * be small, its performance should be good enough. Despite that, we will only
+ * compute the edit distance for names whose length are shorter than
+ * MAX_NAME_LENGTH_FOR_EDIT_DISTANCE. We shouldn't ever find a pair with an edit
+ * distance of 0 (or else there wouldn't have been a ReferenceError), so we set
+ * the value presult points to to 0 and return true when a name is too long.
+ */
+static bool ComputeEditDistance(JSContext *cx, HandleAtom atom1,
+                                HandleAtom atom2, size_t *presult)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_DEFINED, name);
+    *presult = 0;
+
+    const size_t m = atom1->length();
+    if (m >= MAX_NAME_LENGTH_FOR_EDIT_DISTANCE)
+        return true;
+    const size_t n = atom2->length();
+    if (m >= MAX_NAME_LENGTH_FOR_EDIT_DISTANCE)
+        return true;
+
+    Vector<size_t> d(cx);
+    if (!d.growBy((m + 1) * (n + 1)))
+        return false;
+
+    AutoStableStringChars aChars(cx);
+    AutoStableStringChars bChars(cx);
+    if (!aChars.initTwoByte(cx, atom1) || !bChars.initTwoByte(cx, atom2))
+        return false;
+
+    const char16_t *a = aChars.twoByteRange().start().get();
+    const char16_t *b = bChars.twoByteRange().start().get();
+
+    /*
+     * D(i, j) is defined as the edit distance between the i-length prefix
+     * of a and the m-length prefix of b.
+     */
+#define D(i, j) (d[(i) * ((n) + 1) + (j)])
+
+    /*
+     * Given the i-length prefix of a, the 0-length prefix of b can be
+     * obtained by deleting i characters.
+     */
+    for (size_t i = 0; i <= m; ++i)
+        D(i, 0) = i;
+
+    /*
+     * Given the j-length prefix of b, the 0-length prefix of a can be
+     * obtained by inserting i characters.
+     */
+    for (size_t j = 0; j <= n; ++j)
+        D(0, j) = j;
+
+    for (size_t i = 1; i <= m; ++i) {
+        for (size_t j = 1; j <= n; ++j) {
+            /*
+             * If the i-length prefix of a and the j-length prefix of b are
+             * equal in their last character, their edit distance equals
+             * that of the i-1-length and j-1-length prefix of a and b,
+             * respectively.
+             */
+            if (a[i - 1] == b[j - 1])
+                D(i, j) = D(i - 1, j - 1); // No operation required
+            else {
+                D(i, j) = std::min(
+                                   D(i - 1, j) + 1, // Deletion
+                                   std::min(
+                                            D(i, j - 1) + 1, // Insertion
+                                            D(i - 1, j - 1) + 1 // Substitution
+                                            )
+                                   );
+            }
+        }
+    }
+
+    *presult = D(m, n);
+
+#undef D
+
+    return true;
+}
+
+void
+js_ReportIsNotDefined(JSContext *cx, HandleScript script, jsbytecode *pc, HandleAtom atom)
+{
+    /*
+     * Walk the static scope chain and the global object to find the name that
+     * most closely matches the one we are looking for, so we can provide it as
+     * a hint to the user.
+     *
+     * To quantify how closely one name matches another, we define a metric on
+     * strings known as the edit distance (see ComputeEditDistance for details).
+     * We then pick the name with the shortest edit distance from the name we
+     * were trying to find.
+     */
+    AutoIdVector ids(cx);
+    for (StaticScopeIter<CanGC> ssi(cx, InnermostStaticScope(script, pc)); !ssi.done(); ssi++) {
+        switch (ssi.type()) {
+          case StaticScopeIter<NoGC>::BLOCK:
+            if (!GetPropertyNames(cx, &ssi.block(), JSITER_OWNONLY, &ids)) {
+                /*
+                 * If GetPropertyNames fails (due to overrecursion), we still
+                 * want to act as if we had never called it, and report the
+                 * reference error instead. Otherwise, we would break
+                 * tests/gc/bug-886560.js.
+                 */
+                js_ReportIsNotDefined(cx, atom);
+                return;
+            }
+            break;
+
+          case StaticScopeIter<NoGC>::FUNCTION:
+          {
+            RootedScript script(cx, ssi.funScript());
+            for (BindingIter bi(script); !bi.done(); bi++)
+                ids.append(NameToId(bi->name()));
+            break;
+          }
+
+          case StaticScopeIter<CanGC>::NAMED_LAMBDA:
+            ids.append(NameToId(ssi.lambdaName()));
+            break;
+        }
+    }
+    if (!GetPropertyNames(cx, cx->global(), JSITER_OWNONLY, &ids)) {
+        // See comment above
+        js_ReportIsNotDefined(cx, atom);
+        return;
+    }
+
+    RootedAtom bestMatch(cx);
+    size_t minDistance = (size_t) -1;
+    size_t max = std::min(ids.length(), MAX_REFERENCE_ERROR_NAMES_TO_CHECK);
+    for (size_t i = 0; i < max; ++i) {
+        RootedAtom otherAtom(cx, JSID_TO_ATOM(ids[i]));
+        size_t distance;
+        if (!ComputeEditDistance(cx, atom, otherAtom, &distance))
+            return;
+        if (distance != 0 && distance < minDistance) {
+            bestMatch = JSID_TO_ATOM(ids[i]);
+            minDistance = distance;
+        }
+    }
+
+    if (!bestMatch) {
+        // We didn't find any suitable suggestions.
+        js_ReportIsNotDefined(cx, atom);
+        return;
+    }
+
+    JSAutoByteString bytes1(cx, atom);
+    JSAutoByteString bytes2(cx, bestMatch);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
+                         JSMSG_NOT_DEFINED_DID_YOU_MEAN, bytes1.ptr(),
+                         bytes2.ptr());
+}
+
+void
+js_ReportIsNotDefined(JSContext *cx, HandleAtom atom)
+{
+    JSAutoByteString bytes(cx, atom);
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_DEFINED,
+                         bytes.ptr());
 }
 
 bool
