@@ -44,6 +44,7 @@ class AsyncPanZoomController;
 class CompositorParent;
 class APZPaintLogHelper;
 class OverscrollHandoffChain;
+class OverscrollHandoffState;
 class LayerMetricsWrapper;
 
 /**
@@ -312,8 +313,7 @@ public:
   bool DispatchScroll(AsyncPanZoomController* aApzc,
                       ScreenPoint aStartPoint,
                       ScreenPoint aEndPoint,
-                      const OverscrollHandoffChain& aOverscrollHandoffChain,
-                      uint32_t aOverscrollHandoffChainIndex);
+                      OverscrollHandoffState& aOverscrollHandoffState);
 
   /**
    * This is a callback for AsyncPanZoomController to call when it wants to
