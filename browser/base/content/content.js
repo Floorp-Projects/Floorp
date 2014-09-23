@@ -7,6 +7,7 @@ let {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource:///modules/ContentWebRTC.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
   "resource://gre/modules/BrowserUtils.jsm");
@@ -641,6 +642,11 @@ let DOMFullscreenHandler = {
   }
 };
 DOMFullscreenHandler.init();
+
+ContentWebRTC.init();
+addMessageListener("webrtc:Allow", ContentWebRTC);
+addMessageListener("webrtc:Deny", ContentWebRTC);
+addMessageListener("webrtc:StopSharing", ContentWebRTC);
 
 function gKeywordURIFixup(fixupInfo) {
   fixupInfo.QueryInterface(Ci.nsIURIFixupInfo);

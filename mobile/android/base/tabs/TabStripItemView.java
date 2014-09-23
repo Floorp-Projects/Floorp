@@ -5,7 +5,15 @@
 
 package org.mozilla.gecko.tabs;
 
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.widget.ThemedImageButton;
+import org.mozilla.gecko.widget.ThemedLinearLayout;
+import org.mozilla.gecko.widget.ThemedTextView;
+
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -17,16 +25,11 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Checkable;
-
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.widget.ThemedImageButton;
-import org.mozilla.gecko.widget.ThemedLinearLayout;
-import org.mozilla.gecko.widget.ThemedTextView;
+import android.widget.ImageView;
 
 public class TabStripItemView extends ThemedLinearLayout
                               implements Checkable {
+    @SuppressWarnings("unused")
     private static final String LOGTAG = "GeckoTabStripItem";
 
     private static final int[] STATE_CHECKED = {
@@ -36,6 +39,7 @@ public class TabStripItemView extends ThemedLinearLayout
     private int id = -1;
     private boolean checked;
 
+    private final ImageView faviconView;
     private final ThemedTextView titleView;
     private final ThemedImageButton closeView;
 
@@ -43,6 +47,9 @@ public class TabStripItemView extends ThemedLinearLayout
     private final Path tabShape;
     private final Region tabRegion;
     private final Region tabClipRegion;
+
+    private final int faviconSize;
+    private Bitmap lastFavicon;
 
     public TabStripItemView(Context context) {
         this(context, null);
@@ -62,6 +69,8 @@ public class TabStripItemView extends ThemedLinearLayout
         tabPaint.setStrokeWidth(0.0f);
         tabPaint.setXfermode(new PorterDuffXfermode(Mode.DST_IN));
 
+        faviconSize = getResources().getDimensionPixelSize(R.dimen.tab_strip_favicon_size);
+
         LayoutInflater.from(context).inflate(R.layout.tab_strip_item_view, this);
         setOnClickListener(new View.OnClickListener() {
             @Override
@@ -74,6 +83,7 @@ public class TabStripItemView extends ThemedLinearLayout
             }
         });
 
+        faviconView = (ImageView) findViewById(R.id.favicon);
         titleView = (ThemedTextView) findViewById(R.id.title);
 
         closeView = (ThemedImageButton) findViewById(R.id.close);
@@ -187,7 +197,25 @@ public class TabStripItemView extends ThemedLinearLayout
         }
 
         id = tab.getId();
+        updateFavicon(tab.getFavicon());
         titleView.setText(tab.getDisplayTitle());
         setPrivateMode(tab.isPrivate());
+    }
+
+    private void updateFavicon(final Bitmap favicon) {
+        if (favicon == null) {
+            lastFavicon = null;
+            faviconView.setImageResource(R.drawable.favicon_none);
+            return;
+        } else if (favicon == lastFavicon) {
+            return;
+        }
+
+        // Cache the original so we can debounce without scaling.
+        lastFavicon = favicon;
+
+        final Bitmap scaledFavicon =
+                Bitmap.createScaledBitmap(favicon, faviconSize, faviconSize, false);
+        faviconView.setImageBitmap(scaledFavicon);
     }
 }

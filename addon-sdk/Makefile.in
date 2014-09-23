@@ -2,17 +2,36 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+TESTADDONS = source/test/addons
+ADDONSRC = $(srcdir)/$(TESTADDONS)
+TESTROOT = $(CURDIR)/$(DEPTH)/_tests/testing/mochitest/jetpack-addon/$(relativesrcdir)/$(TESTADDONS)
+
+# Build a list of the test add-ons
+ADDONS = $(patsubst $(ADDONSRC)/%/package.json,$(TESTADDONS)/%.xpi,$(wildcard $(ADDONSRC)/*/package.json))
+
+INSTALL_TARGETS += test_addons
+test_addons_FILES = $(ADDONS)
+test_addons_DEST = $(TESTROOT)
+
+sinclude $(topsrcdir)/config/rules.mk
+
+# This can switch to just zipping the files when native jetpacks land
+$(TESTADDONS)/%.xpi: FORCE $(call mkdir_deps,$(CURDIR)/$(TESTADDONS)) $(ADDONSRC)/%
+	$(PYTHON) $(srcdir)/source/bin/cfx xpi --pkgdir=$(lastword $^) --output-file=$@
+
+#libs:: $(ADDONS)
+
 TEST_FILES = \
-  source/app-extension \
-  source/bin \
-  source/python-lib \
-  source/test \
-  source/package.json \
-  source/mapping.json \
+  $(srcdir)/source/app-extension \
+  $(srcdir)/source/bin \
+  $(srcdir)/source/python-lib \
+  $(srcdir)/source/test \
+  $(srcdir)/source/package.json \
+  $(srcdir)/source/mapping.json \
   $(NULL)
 
 # Remove this once the test harness uses the APIs built into Firefox
-TEST_FILES += source/lib
+TEST_FILES += $(srcdir)/source/lib
 
 PKG_STAGE = $(DIST)/test-stage
 

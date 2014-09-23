@@ -45,10 +45,15 @@
                   android:layout_toRightOf="@id/back"
                   android:layout_toLeftOf="@id/menu_items"/>
 
+    <!-- We add extra padding to the left side to compensate for site security's
+         negative margin, which is used to move the site security icon closer to
+         the favicon in toolbar_display_layout. -->
     <org.mozilla.gecko.toolbar.ToolbarDisplayLayout android:id="@+id/display_layout"
                   style="@style/UrlBar.Button.Container"
                   android:layout_toRightOf="@id/back"
-                  android:layout_toLeftOf="@id/menu_items"/>
+                  android:layout_toLeftOf="@id/menu_items"
+                  android:paddingLeft="8dip"
+                  android:paddingRight="4dip"/>
 
     <LinearLayout android:id="@+id/menu_items"
                   android:layout_width="wrap_content"
