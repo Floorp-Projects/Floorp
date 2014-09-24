@@ -227,7 +227,7 @@ let UI = {
     this._busyTimeout = setTimeout(() => {
       this.unbusy();
       UI.reportError("error_operationTimeout", this._busyOperationDescription);
-    }, 30000);
+    }, 6000);
   },
 
   cancelBusyTimeout: function() {
