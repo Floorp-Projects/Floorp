@@ -1412,15 +1412,17 @@ if test "$GNU_CC"; then
         fi
     fi
 
-    # Turn on GNU-specific warnings:
+    # Turn on gcc/clang warnings:
+    # https://gcc.gnu.org/onlinedocs/gcc-4.4.0/gcc/Warning-Options.html
+    #
     # -Wall - turn on a lot of warnings
-    # -Wpointer-arith - good to have
     # -Wdeclaration-after-statement - MSVC doesn't like these
-    # -Werror=return-type - catches missing returns, zero false positives
-    # -Werror=int-to-pointer-cast - catches cast to pointer from integer of different size
-    # -Wtype-limits - catches overflow bugs, few false positives
     # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
+    # -Wint-to-pointer-cast - catches cast to pointer from integer of different size
+    # -Wpointer-arith - catches pointer arithmetic using NULL or sizeof(void)
+    # -Wreturn-type - catches missing returns, zero false positives
     # -Wsign-compare - catches comparison of signed and unsigned types
+    # -Wtype-limits - catches overflow bugs, few false positives
     #
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall -Wpointer-arith -Wdeclaration-after-statement"
     MOZ_C_SUPPORTS_WARNING(-W, error=return-type, ac_c_has_werror_return_type)
@@ -1478,15 +1480,17 @@ if test "$GNU_CXX"; then
     # FIXME: Let us build with strict aliasing. bug 414641.
     CXXFLAGS="$CXXFLAGS -fno-exceptions -fno-strict-aliasing"
 
-    # Turn on GNU-specific warnings:
+    # Turn on gcc/clang warnings:
+    # https://gcc.gnu.org/onlinedocs/gcc-4.4.0/gcc/Warning-Options.html
+    #
     # -Wall - turn on a lot of warnings
-    # -Wpointer-arith - good to have
-    # -Woverloaded-virtual - ???
-    # -Werror=return-type - catches missing returns, zero false positives
-    # -Werror=int-to-pointer-cast - catches cast to pointer from integer of different size
-    # -Werror=type-limits - catches overflow bugs, few false positives
     # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
+    # -Wint-to-pointer-cast - catches cast to pointer from integer of different size
+    # -Woverloaded-virtual - function declaration hides virtual function from base class
+    # -Wpointer-arith - catches pointer arithmetic using NULL or sizeof(void)
+    # -Wreturn-type - catches missing returns, zero false positives
     # -Wsign-compare - catches comparison of signed and unsigned types
+    # -Wtype-limits - catches overflow bugs, few false positives
     #
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall -Wpointer-arith -Woverloaded-virtual"
     MOZ_CXX_SUPPORTS_WARNING(-W, error=return-type, ac_cxx_has_werror_return_type)
