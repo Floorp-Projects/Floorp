@@ -192,6 +192,12 @@ browser.jar:
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/monitor.png
   skin/classic/browser/monitor_16-10.png
+  skin/classic/browser/panic-panel/header.png               (../shared/panic-panel/header.png)
+  skin/classic/browser/panic-panel/header@2x.png            (../shared/panic-panel/header@2x.png)
+  skin/classic/browser/panic-panel/header-small.png         (../shared/panic-panel/header-small.png)
+  skin/classic/browser/panic-panel/header-small@2x.png      (../shared/panic-panel/header-small@2x.png)
+  skin/classic/browser/panic-panel/icons.png                (../shared/panic-panel/icons.png)
+  skin/classic/browser/panic-panel/icons@2x.png             (../shared/panic-panel/icons@2x.png)
   skin/classic/browser/places/allBookmarks.png              (places/allBookmarks.png)
 * skin/classic/browser/places/places.css                    (places/places.css)
 * skin/classic/browser/places/organizer.css                 (places/organizer.css)
