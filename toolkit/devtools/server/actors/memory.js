@@ -6,7 +6,7 @@
 
 const { Cc, Ci, Cu } = require("chrome");
 let protocol = require("devtools/server/protocol");
-let { method, RetVal, Arg } = protocol;
+let { method, RetVal, Arg, types } = protocol;
 const { reportException } = require("devtools/toolkit/DevToolsUtils");
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 
@@ -36,6 +36,13 @@ function expectState(expectedState, method) {
     return method.apply(this, args);
   };
 }
+
+types.addDictType("AllocationsRecordingOptions", {
+  // The probability we sample any given allocation when recording
+  // allocations. Must be between 0.0 and 1.0. Defaults to 1.0, or sampling
+  // every allocation.
+  probability: "number"
+});
 
 /**
  * An actor that returns memory usage data for its parent actor's window.
@@ -118,6 +125,11 @@ let MemoryActor = protocol.ActorClass({
   },
 
   _initFrames: function() {
+    if (this._framesToCounts) {
+      // The maps are already initialized.
+      return;
+    }
+
     this._framesToCounts = new Map();
     this._framesToIndices = new Map();
     this._framesToForms = new Map();
@@ -160,19 +172,27 @@ let MemoryActor = protocol.ActorClass({
 
   /**
    * Start recording allocation sites.
+   *
+   * @param AllocationsRecordingOptions options
+   *        See the protocol.js definition of AllocationsRecordingOptions above.
    */
-  startRecordingAllocations: method(expectState("attached", function() {
+  startRecordingAllocations: method(expectState("attached", function(options = {}) {
     this._initFrames();
+    this.dbg.memory.allocationSamplingProbability = options.probability != null
+      ? options.probability
+      : 1.0;
     this.dbg.memory.trackingAllocationSites = true;
   }), {
-    request: {},
+    request: {
+      options: Arg(0, "nullable:AllocationsRecordingOptions")
+    },
     response: {}
   }),
 
   /**
    * Stop recording allocation sites.
    */
-  stopRecordingAllocations: method(expectState("attached", function(shouldRecord) {
+  stopRecordingAllocations: method(expectState("attached", function() {
     this.dbg.memory.trackingAllocationSites = false;
     this._clearFrames();
   }), {

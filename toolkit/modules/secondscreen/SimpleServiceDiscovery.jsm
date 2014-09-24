@@ -11,12 +11,18 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Messaging.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
+#ifdef ANDROID
+Cu.import("resource://gre/modules/Messaging.jsm");
+#endif
 
 // Define the "log" function as a binding of the Log.d function so it specifies
 // the "debug" priority and a log tag.
-let log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.d.bind(null, "SSDP");
+#ifdef ANDROID
+let log = Cu.import("resource://gre/modules/AndroidLog.jsm",{}).AndroidLog.d.bind(null, "SSDP");
+#else
+let log = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).logStringMessage
+#endif
 
 XPCOMUtils.defineLazyGetter(this, "converter", function () {
   let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
@@ -188,10 +194,13 @@ var SimpleServiceDiscovery = {
       }
     }
 
+#ifdef ANDROID
     // We also query Java directly here for any devices that Android might support natively (i.e. Chromecast or Miracast)
     this.getAndroidDevices();
+#endif
   },
 
+#ifdef ANDROID
   getAndroidDevices: function() {
     Messaging.sendRequestForResult({ type: "MediaPlayer:Get" }).then((result) => {
       for (let id in result.displays) {
@@ -212,6 +221,7 @@ var SimpleServiceDiscovery = {
       }
     });
   },
+#endif
 
   _searchFixedDevices: function _searchFixedDevices() {
     let fixedDevices = null;

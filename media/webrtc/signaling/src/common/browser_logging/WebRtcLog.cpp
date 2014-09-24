@@ -7,6 +7,9 @@
 #include "prlog.h"
 #include "prenv.h"
 #include "webrtc/system_wrappers/interface/trace.h"
+#ifdef WEBRTC_GONK
+#include "webrtc/system_wrappers/interface/logcat_trace_context.h"
+#endif
 
 #include "nscore.h"
 #ifdef MOZILLA_INTERNAL_API
@@ -53,6 +56,10 @@ public:
 };
 
 static WebRtcTraceCallback gWebRtcCallback;
+#ifdef WEBRTC_GONK
+static webrtc::LogcatTraceContext gWebRtcLogcatCallback;
+#endif
+
 
 #ifdef MOZILLA_INTERNAL_API
 void GetWebRtcLogPrefs(uint32_t *aTraceMask, nsACString* aLogFile, nsACString *aAECLogDir, bool *aMultiLog)
@@ -115,8 +122,13 @@ void ConfigWebRtcLog(uint32_t trace_mask, nsCString &aLogFile, nsCString &aAECLo
     logFile.Append(default_log);
   }
 #elif defined(ANDROID)
+#ifdef WEBRTC_GONK
+  // Special case: use callback to log through logcat.
+  logFile.Assign("logcat");
+#else
   // Special case: use callback to pipe to NSPR logging.
   logFile.Assign("nspr");
+#endif
   // for AEC, force the user to specify a directory
   aecLogDir.Assign("/dev/null");
 #else
@@ -137,6 +149,10 @@ void ConfigWebRtcLog(uint32_t trace_mask, nsCString &aLogFile, nsCString &aAECLo
   if (trace_mask != 0) {
     if (aLogFile.EqualsLiteral("nspr")) {
       webrtc::Trace::SetTraceCallback(&gWebRtcCallback);
+#ifdef WEBRTC_GONK
+    } else if (aLogFile.EqualsLiteral("logcat")) {
+      webrtc::Trace::SetTraceCallback(&gWebRtcLogcatCallback);
+#endif
     } else {
       webrtc::Trace::SetTraceFile(aLogFile.get(), multi_log);
     }

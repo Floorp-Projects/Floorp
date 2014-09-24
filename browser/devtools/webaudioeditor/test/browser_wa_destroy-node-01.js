@@ -12,24 +12,24 @@
 function spawnTest() {
   let [target, debuggee, panel] = yield initWebAudioEditor(DESTROY_NODES_URL);
   let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS } = panelWin;
+  let { gFront, $, $$, gAudioNodes } = panelWin;
 
   let started = once(gFront, "start-context");
 
   reload(target);
 
-  let destroyed = getN(panelWin, EVENTS.DESTROY_NODE, 10);
+  let destroyed = getN(gAudioNodes, "remove", 10);
 
   forceCC();
 
   let [created] = yield Promise.all([
-    getNSpread(panelWin, EVENTS.CREATE_NODE, 13),
+    getNSpread(gAudioNodes, "add", 13),
     waitForGraphRendered(panelWin, 13, 2)
   ]);
 
-  // Since CREATE_NODE emits several arguments (eventName and actorID), let's
-  // flatten it to just the actorIDs
-  let actorIDs = created.map(ev => ev[1]);
+  // Flatten arrays of event arguments and take the first (AudioNodeModel)
+  // and get its ID.
+  let actorIDs = created.map(ev => ev[0].id);
 
   // Click a soon-to-be dead buffer node
   yield clickGraphNode(panelWin, actorIDs[5]);
@@ -40,7 +40,7 @@ function spawnTest() {
   yield Promise.all([destroyed, waitForGraphRendered(panelWin, 3, 2)]);
 
   // Test internal storage
-  is(panelWin.AudioNodes.length, 3, "All nodes should be GC'd except one gain, osc and dest node.");
+  is(panelWin.gAudioNodes.length, 3, "All nodes should be GC'd except one gain, osc and dest node.");
 
   // Test graph rendering
   ok(findGraphNode(panelWin, actorIDs[0]), "dest should be in graph");
