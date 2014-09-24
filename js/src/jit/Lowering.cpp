@@ -3969,6 +3969,11 @@ LIRGenerator::visitBlock(MBasicBlock *block)
     if (!visitInstruction(block->lastIns()))
         return false;
 
+    // If we have a resume point check that all the following blocks have one,
+    // otherwise reuse the last resume point as the entry resume point of the
+    // basic block.  This is used to handle fallible code which is moved/added
+    // into split edge blocks, which do not have resume points.  See
+    // SplitCriticalEdgesForBlock.
     if (lastResumePoint_) {
         for (size_t s = 0; s < block->numSuccessors(); s++) {
             MBasicBlock *succ = block->getSuccessor(s);
