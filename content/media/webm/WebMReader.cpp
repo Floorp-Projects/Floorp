@@ -1062,8 +1062,14 @@ nsresult WebMReader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
                                                         ranges[index].mEnd,
                                                         &start, &end);
     if (rv) {
-      double startTime = start / NS_PER_S - aStartTime;
-      double endTime = end / NS_PER_S - aStartTime;
+      int64_t startOffset = aStartTime * NS_PER_USEC;
+      NS_ASSERTION(startOffset >= 0 && uint64_t(startOffset) <= start,
+                   "startOffset negative or larger than start time");
+      if (!(startOffset >= 0 && uint64_t(startOffset) <= start)) {
+        startOffset = 0;
+      }
+      double startTime = (start - startOffset) / NS_PER_S;
+      double endTime = (end - startOffset) / NS_PER_S;
       // If this range extends to the end of the file, the true end time
       // is the file's duration.
       if (mContext && resource->IsDataCachedToEndOfResource(ranges[index].mStart)) {
