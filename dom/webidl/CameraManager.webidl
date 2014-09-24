@@ -36,10 +36,10 @@ interface CameraManager
      identifiers returned by getListOfCameras() below.
   */
   [Throws]
-  void getCamera(DOMString camera,
-                 CameraConfiguration initialConfiguration,
-                 GetCameraCallback callback,
-                 optional CameraErrorCallback errorCallback);
+  Promise<CameraGetPromiseData> getCamera(DOMString camera,
+                                          optional CameraConfiguration initialConfiguration,
+                                          optional GetCameraCallback callback,
+                                          optional CameraErrorCallback errorCallback);
 
   /* return an array of camera identifiers, e.g.
        [ "front", "back" ]
