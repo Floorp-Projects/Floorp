@@ -6,7 +6,7 @@
 
 SharedLibrary('clearkey')
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'ClearKeyDecryptionManager.cpp',
     'ClearKeySession.cpp',
     'ClearKeyUtils.cpp',
