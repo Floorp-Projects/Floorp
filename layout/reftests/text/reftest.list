@@ -16,6 +16,7 @@ random-if(!cocoaWidget) == font-size-adjust-02.html font-size-adjust-02-ref.html
 == justification-2b.html justification-2-ref.html
 == justification-2c.html justification-2-ref.html
 != justification-2d.html justification-2-ref.html
+== justification-space-diacritic.html justification-space-diacritic-ref.html
 HTTP(..) load ligature-with-space-1.html
 == line-editing-1a.html line-editing-1-ref.html
 == line-editing-1b.html line-editing-1-ref.html
