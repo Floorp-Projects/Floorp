@@ -11,7 +11,7 @@
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <default remote="caf" revision="b2g/ics_strawberry" sync-j="4"/>
   <!-- Gonk specific things and forks -->
-  <project name="platform_build" path="build" remote="b2g" revision="4d1e85908d792d9468c4da7040acd191fbb51b40">
+  <project name="platform_build" path="build" remote="b2g" revision="84923f1940625c47ff4c1fdf01b10fde3b7d909e">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
