@@ -246,9 +246,6 @@ extern JS_FRIEND_API(bool)
 JS_WrapPropertyDescriptor(JSContext *cx, JS::MutableHandle<JSPropertyDescriptor> desc);
 
 extern JS_FRIEND_API(bool)
-JS_WrapAutoIdVector(JSContext *cx, JS::AutoIdVector &props);
-
-extern JS_FRIEND_API(bool)
 JS_EnumerateState(JSContext *cx, JS::HandleObject obj, JSIterateOp enum_op,
                   JS::MutableHandleValue statep, JS::MutableHandleId idp);
 
