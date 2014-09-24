@@ -54,16 +54,6 @@ UnmungePluginDsoPath(const std::string& munged);
 
 extern PRLogModuleInfo* GetPluginLog();
 
-const uint32_t kAllowAsyncDrawing = 0x1;
-
-inline bool IsDrawingModelAsync(int16_t aModel) {
-  return aModel == NPDrawingModelAsyncBitmapSurface
-#ifdef XP_WIN
-         || aModel == NPDrawingModelAsyncWindowsDXGISurface
-#endif
-         ;
-}
-
 #if defined(_MSC_VER)
 #define FULLFUNCTION __FUNCSIG__
 #elif defined(__GNUC__)
@@ -315,32 +305,6 @@ template <>
 struct ParamTraits<NPWindowType>
 {
   typedef NPWindowType paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam)
-  {
-    aMsg->WriteInt16(int16_t(aParam));
-  }
-
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
-  {
-    int16_t result;
-    if (aMsg->ReadInt16(aIter, &result)) {
-      *aResult = paramType(result);
-      return true;
-    }
-    return false;
-  }
-
-  static void Log(const paramType& aParam, std::wstring* aLog)
-  {
-    aLog->append(StringPrintf(L"%d", int16_t(aParam)));
-  }
-};
-
-template <>
-struct ParamTraits<NPImageFormat>
-{
-  typedef NPImageFormat paramType;
 
   static void Write(Message* aMsg, const paramType& aParam)
   {

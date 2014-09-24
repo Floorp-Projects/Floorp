@@ -49,7 +49,7 @@ child:
   intr NP_GetEntryPoints()
     returns (NPError rv);
 
-  intr NP_Initialize(uint32_t aFlags)
+  intr NP_Initialize()
     returns (NPError rv);
 
   intr PPluginInstance(nsCString aMimeType,
