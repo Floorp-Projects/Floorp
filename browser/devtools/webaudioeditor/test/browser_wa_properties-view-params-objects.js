@@ -7,7 +7,7 @@
  */
 
 function spawnTest() {
-  let [target, debuggee, panel] = yield initWebAudioEditor(BUFFER_AND_ARRAY_URL);
+  let { target, panel } = yield initWebAudioEditor(BUFFER_AND_ARRAY_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, InspectorView } = panelWin;
   let gVars = InspectorView._propsView;
