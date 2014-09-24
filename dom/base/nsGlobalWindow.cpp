@@ -11572,6 +11572,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
     // very likely situation where an event handler will try to read its value.
 
     if (mNavigator) {
+      NavigatorBinding::ClearCachedLanguageValue(mNavigator);
       NavigatorBinding::ClearCachedLanguagesValue(mNavigator);
     }
 
