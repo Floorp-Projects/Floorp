@@ -79,10 +79,7 @@ public:
     return false;
   }
 
-  void GetUserAgent(nsString& aUserAgent) const
-  {
-    aUserAgent = mProperties.mUserAgent;
-  }
+  void GetUserAgent(nsString& aUserAgent) const;
 
   bool OnLine() const
   {
