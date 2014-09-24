@@ -22,7 +22,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
-#include "StructuredCloneTags.h"
+#include "mozilla/dom/StructuredCloneTags.h"
 
 #include "Queue.h"
 #include "WorkerFeature.h"

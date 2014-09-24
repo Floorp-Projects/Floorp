@@ -9,9 +9,11 @@
 #include "nsISupportsImpl.h"
 #include "nsWrapperCache.h"
 
+#include "mozilla/dom/InternalRequest.h"
+// Required here due to certain WebIDL enums/classes being declared in both
+// files.
 #include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/UnionTypes.h"
-
 
 class nsPIDOMWindow;
 
@@ -28,7 +30,7 @@ class Request MOZ_FINAL : public nsISupports
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Request)
 
 public:
-  Request(nsISupports* aOwner);
+  Request(nsIGlobalObject* aOwner, InternalRequest* aRequest);
 
   JSObject*
   WrapObject(JSContext* aCx)
@@ -39,34 +41,40 @@ public:
   void
   GetUrl(DOMString& aUrl) const
   {
-    aUrl.AsAString() = EmptyString();
+    aUrl.AsAString() = NS_ConvertUTF8toUTF16(mRequest->mURL);
   }
 
   void
   GetMethod(nsCString& aMethod) const
   {
-    aMethod = EmptyCString();
+    aMethod = mRequest->mMethod;
   }
 
   RequestMode
   Mode() const
   {
-    return RequestMode::Same_origin;
+    return mRequest->mMode;
   }
 
   RequestCredentials
   Credentials() const
   {
-    return RequestCredentials::Omit;
+    return mRequest->mCredentialsMode;
   }
 
   void
   GetReferrer(DOMString& aReferrer) const
   {
-    aReferrer.AsAString() = EmptyString();
+    if (mRequest->ReferrerIsNone()) {
+      aReferrer.AsAString() = EmptyString();
+      return;
+    }
+
+    // FIXME(nsm): Spec doesn't say what to do if referrer is client.
+    aReferrer.AsAString() = NS_ConvertUTF8toUTF16(mRequest->mReferrerURL);
   }
 
-  Headers* Headers_() const { return mHeaders; }
+  Headers* Headers_() const { return mRequest->Headers_(); }
 
   static already_AddRefed<Request>
   Constructor(const GlobalObject& aGlobal, const RequestOrScalarValueString& aInput,
@@ -93,12 +101,38 @@ public:
   Text(ErrorResult& aRv);
 
   bool
-  BodyUsed();
+  BodyUsed() const
+  {
+    return mBodyUsed;
+  }
+
+  already_AddRefed<InternalRequest>
+  GetInternalRequest();
 private:
+  enum ConsumeType
+  {
+    CONSUME_ARRAYBUFFER,
+    CONSUME_BLOB,
+    // FormData not supported right now,
+    CONSUME_JSON,
+    CONSUME_TEXT,
+  };
+
   ~Request();
 
-  nsCOMPtr<nsISupports> mOwner;
-  nsRefPtr<Headers> mHeaders;
+  already_AddRefed<Promise>
+  ConsumeBody(ConsumeType aType, ErrorResult& aRv);
+
+  void
+  SetBodyUsed()
+  {
+    mBodyUsed = true;
+  }
+
+  nsCOMPtr<nsIGlobalObject> mOwner;
+  nsRefPtr<InternalRequest> mRequest;
+  bool mBodyUsed;
+  nsCString mMimeType;
 };
 
 } // namespace dom
