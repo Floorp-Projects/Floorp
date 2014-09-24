@@ -171,6 +171,7 @@ nsWindow::nsWindow()
 
 nsWindow::~nsWindow()
 {
+    HwcComposer2D::GetInstance()->SetCompositorParent(nullptr);
 }
 
 void
@@ -529,6 +530,7 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
         uint64_t rootLayerTreeId = mCompositorParent->RootLayerTreeId();
         CompositorParent::SetControllerForLayerTree(rootLayerTreeId, new ParentProcessController());
         CompositorParent::GetAPZCTreeManager(rootLayerTreeId)->SetDPI(GetDPI());
+        HwcComposer2D::GetInstance()->SetCompositorParent(mCompositorParent);
     }
     MOZ_ASSERT(mLayerManager);
     return mLayerManager;
