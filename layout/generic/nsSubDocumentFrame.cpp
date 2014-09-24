@@ -1021,7 +1021,7 @@ BeginSwapDocShellsForDocument(nsIDocument* aDocument, void*)
     }
   }
   aDocument->EnumerateActivityObservers(
-    nsObjectFrame::BeginSwapDocShells, nullptr);
+    nsPluginFrame::BeginSwapDocShells, nullptr);
   aDocument->EnumerateSubDocuments(BeginSwapDocShellsForDocument, nullptr);
   return true;
 }
@@ -1118,7 +1118,7 @@ EndSwapDocShellsForDocument(nsIDocument* aDocument, void*)
   }
 
   aDocument->EnumerateActivityObservers(
-    nsObjectFrame::EndSwapDocShells, nullptr);
+    nsPluginFrame::EndSwapDocShells, nullptr);
   aDocument->EnumerateSubDocuments(EndSwapDocShellsForDocument, nullptr);
   return true;
 }

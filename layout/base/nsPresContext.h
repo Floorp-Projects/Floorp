@@ -60,7 +60,7 @@ class gfxUserFontSet;
 class gfxTextPerfMetrics;
 class nsUserFontSet;
 struct nsFontFaceRuleContainer;
-class nsObjectFrame;
+class nsPluginFrame;
 class nsTransitionManager;
 class nsAnimationManager;
 class nsRefreshDriver;
@@ -1445,7 +1445,7 @@ public:
    * Compute geometry updates for each plugin given that aList is the display
    * list for aFrame. The updates are not yet applied;
    * ApplyPluginGeometryUpdates is responsible for that. In the meantime they
-   * are stored on each nsObjectFrame.
+   * are stored on each nsPluginFrame.
    * This needs to be called even when aFrame is a popup, since although
    * windowed plugins aren't allowed in popups, windowless plugins are
    * and ComputePluginGeometryUpdates needs to be called for them.
