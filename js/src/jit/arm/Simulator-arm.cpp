@@ -651,6 +651,7 @@ ReadLine(const char *prompt)
     return result;
 }
 
+// Observe that llvm-mc may have a different name on your system.  Make a symlink.
 static void
 DisassembleInstruction(uint32_t pc)
 {
