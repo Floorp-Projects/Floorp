@@ -1801,7 +1801,11 @@ LIRGenerator::visitToDouble(MToDouble *convert)
         // should still be, however, there is a bug in LSRA's implementation of
         // *AtStart, which is quite fundamental. This should be reverted when that
         // is fixed, or lsra is deprecated.
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
         LFloat32ToDouble *lir = new(alloc()) LFloat32ToDouble(useRegister(opd));
+#else
+        LFloat32ToDouble *lir = new(alloc()) LFloat32ToDouble(useRegisterAtStart(opd));
+#endif
         return define(lir, convert);
       }
 
