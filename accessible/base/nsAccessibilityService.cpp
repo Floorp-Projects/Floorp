@@ -1619,8 +1619,8 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       newAcc = new OuterDocAccessible(aContent, document);
       break;
     case ePluginType: {
-      nsPluginFrame* objectFrame = do_QueryFrame(aFrame);
-      newAcc = CreatePluginAccessible(objectFrame, aContent, aContext);
+      nsPluginFrame* pluginFrame = do_QueryFrame(aFrame);
+      newAcc = CreatePluginAccessible(pluginFrame, aContent, aContext);
       break;
     }
     case eTextLeafType:

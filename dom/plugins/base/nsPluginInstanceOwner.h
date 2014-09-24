@@ -276,7 +276,7 @@ private:
  
   nsPluginNativeWindow       *mPluginWindow;
   nsRefPtr<nsNPAPIPluginInstance> mInstance;
-  nsPluginFrame              *mObjectFrame;
+  nsPluginFrame              *mPluginFrame;
   nsIContent                 *mContent; // WEAK, content owns us
   nsCString                   mDocumentBase;
   bool                        mWidgetCreationComplete;
