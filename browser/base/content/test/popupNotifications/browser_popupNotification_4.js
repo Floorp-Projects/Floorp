@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 function test() {
   waitForExplicitFinish();
 
@@ -206,5 +206,28 @@ let tests = [
       notification.remove();
       goNext();
     }
+  },
+  // panel updates should fire the showing and shown callbacks again.
+  { id: "Test#11",
+    run: function() {
+      this.notifyObj = new BasicNotification(this.id);
+      this.notification = showNotification(this.notifyObj);
+    },
+    onShown: function (popup) {
+      checkPopup(popup, this.notifyObj);
+
+      this.notifyObj.showingCallbackTriggered = false;
+      this.notifyObj.shownCallbackTriggered = false;
+
+      // Force an update of the panel. This is typically called
+      // automatically when receiving 'activate' or 'TabSelect' events,
+      // but from a setTimeout, which is inconvenient for the test.
+      PopupNotifications._update();
+
+      checkPopup(popup, this.notifyObj);
+
+      this.notification.remove();
+    },
+    onHidden: function() { }
   }
 ];
