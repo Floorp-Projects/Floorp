@@ -521,7 +521,8 @@ public:
   explicit VideoDevice(Source* aSource);
   NS_IMETHOD GetType(nsAString& aType);
   Source* GetSource();
-  bool SatisfyConstraintSet(const dom::MediaTrackConstraintSet &aConstraints);
+  bool SatisfiesConstraintSets(
+    const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets);
 };
 
 class AudioDevice : public MediaDevice
@@ -532,7 +533,8 @@ public:
   explicit AudioDevice(Source* aSource);
   NS_IMETHOD GetType(nsAString& aType);
   Source* GetSource();
-  bool SatisfyConstraintSet(const dom::MediaTrackConstraintSet &aConstraints);
+  bool SatisfiesConstraintSets(
+    const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets);
 };
 
 // we could add MediaManager if needed
