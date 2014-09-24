@@ -15,6 +15,8 @@
 #include "nsProxyRelease.h"
 #include "RuntimeService.h"
 
+#include "nsIDocument.h"
+
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
@@ -310,6 +312,61 @@ WorkerNavigator::GetPlatform(nsString& aPlatform) const
     aPlatform = mProperties.mPlatformOverridden;
   } else {
     aPlatform = mProperties.mPlatform;
+  }
+}
+
+namespace {
+
+class GetUserAgentRunnable MOZ_FINAL : public WorkerMainThreadRunnable
+{
+  nsString& mUA;
+
+public:
+  GetUserAgentRunnable(WorkerPrivate* aWorkerPrivate, nsString& aUA)
+    : WorkerMainThreadRunnable(aWorkerPrivate)
+    , mUA(aUA)
+  {
+    MOZ_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->AssertIsOnWorkerThread();
+  }
+
+  virtual bool MainThreadRun() MOZ_OVERRIDE
+  {
+    AssertIsOnMainThread();
+
+    nsCOMPtr<nsPIDOMWindow> window = mWorkerPrivate->GetWindow();
+    nsCOMPtr<nsIURI> uri;
+    if (window && window->GetDocShell()) {
+      nsIDocument* doc = window->GetExtantDoc();
+      if (doc) {
+        doc->NodePrincipal()->GetURI(getter_AddRefs(uri));
+      }
+    }
+
+    bool isCallerChrome = mWorkerPrivate->UsesSystemPrincipal();
+    nsresult rv = dom::Navigator::GetUserAgent(window, uri,
+                                               isCallerChrome, mUA);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to retrieve user-agent from the worker thread.");
+    }
+
+    return true;
+  }
+};
+
+} // anonymous namespace
+
+void
+WorkerNavigator::GetUserAgent(nsString& aUserAgent) const
+{
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
+
+  nsRefPtr<GetUserAgentRunnable> runnable =
+    new GetUserAgentRunnable(workerPrivate, aUserAgent);
+
+  if (!runnable->Dispatch(workerPrivate->GetJSContext())) {
+    JS_ReportPendingException(workerPrivate->GetJSContext());
   }
 }
 
