@@ -110,7 +110,6 @@ public:
     nsString mAppVersionOverridden;
     nsString mPlatform;
     nsString mPlatformOverridden;
-    nsString mUserAgent;
     nsTArray<nsString> mLanguages;
   };
 
