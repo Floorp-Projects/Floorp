@@ -8,7 +8,6 @@
 
 #include "mozilla/Atomics.h"
 #include "base/compiler_specific.h"
-#include "base/lazy_instance.h"
 #include "base/logging.h"
 #include "base/message_pump_default.h"
 #include "base/string_util.h"
@@ -41,10 +40,10 @@ using base::Time;
 using base::TimeDelta;
 using base::TimeTicks;
 
-// A lazily created thread local storage for quick access to a thread's message
-// loop, if one exists.  This should be safe and free of static constructors.
-static base::LazyInstance<base::ThreadLocalPointer<MessageLoop> > lazy_tls_ptr =
-    LAZY_INSTANCE_INITIALIZER;
+static base::ThreadLocalPointer<MessageLoop>& get_tls_ptr() {
+  static base::ThreadLocalPointer<MessageLoop> tls_ptr;
+  return tls_ptr;
+}
 
 //------------------------------------------------------------------------------
 
@@ -84,10 +83,7 @@ static LPTOP_LEVEL_EXCEPTION_FILTER GetTopSEHFilter() {
 
 // static
 MessageLoop* MessageLoop::current() {
-  // TODO(darin): sadly, we cannot enable this yet since people call us even
-  // when they have no intention of using us.
-  //DCHECK(loop) << "Ouch, did you forget to initialize me?";
-  return lazy_tls_ptr.Pointer()->Get();
+  return get_tls_ptr().Get();
 }
 
 static mozilla::Atomic<int32_t> message_loop_id_seq(0);
@@ -106,7 +102,7 @@ MessageLoop::MessageLoop(Type type)
       permanent_hang_timeout_(0),
       next_sequence_num_(0) {
   DCHECK(!current()) << "should only have one message loop per thread";
-  lazy_tls_ptr.Pointer()->Set(this);
+  get_tls_ptr().Set(this);
 
   switch (type_) {
   case TYPE_MOZILLA_UI:
@@ -183,7 +179,7 @@ MessageLoop::~MessageLoop() {
   DCHECK(!did_work);
 
   // OK, now make it so that no one can find us.
-  lazy_tls_ptr.Pointer()->Set(NULL);
+  get_tls_ptr().Set(NULL);
 }
 
 void MessageLoop::AddDestructionObserver(DestructionObserver *obs) {

@@ -930,7 +930,7 @@ SessionStore.prototype = {
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
 
     let closedTabs = this._windows[aWindow.__SSID].closedTabs;
-    let isPrivate = PrivateBrowsingUtils.isWindowPrivate(aWindow.BrowserApp.selectedBrowser.contentWindow);
+    let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(aWindow.BrowserApp.selectedBrowser);
 
     let tabs = closedTabs
       .filter(tab => tab.isPrivate == isPrivate)

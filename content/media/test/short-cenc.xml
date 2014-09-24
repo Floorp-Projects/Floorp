@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  This XML file describes the encryption applied to short-cenc.mp4. To generate
+  short-cenc, run the following command:
+
+    MP4Box -crypt short-cenc.xml -out short-cenc.mp4 short.mp4
+-->
+
+<GPACDRM type="CENC AES-CTR">
+
+  <DRMInfo type="pssh" version="1">
+    <!--
+    SystemID specified in
+    https://dvcs.w3.org/hg/html-media/raw-file/tip/encrypted-media/cenc-format.html
+    -->
+    <BS ID128="1077efecc0b24d02ace33c1e52e2fb4b" />
+    <!-- Number of KeyIDs = 2 -->
+    <BS bits="32" value="2" />
+    <!-- KeyID -->
+    <BS ID128="0x7e571d017e571d017e571d017e571d01" />
+    <BS ID128="0x7e571d027e571d027e571d027e571d02" />
+  </DRMInfo>
+
+  <CrypTrack trackID="1" isEncrypted="1" IV_size="16" saiSavedBox="senc"
+    first_IV="0x00000000000000000000000000000000">
+    <key KID="0x7e571d017e571d017e571d017e571d01"
+      value="0x7e5711117e5711117e5711117e571111" />
+  </CrypTrack>
+
+  <CrypTrack trackID="2" isEncrypted="1" IV_size="16" saiSavedBox="senc"
+    first_IV="0x00000000000000000000000000000000">
+    <key KID="0x7e571d027e571d027e571d027e571d02"
+      value="0x7e5722227e5722227e5722227e572222" />
+  </CrypTrack>
+
+</GPACDRM>

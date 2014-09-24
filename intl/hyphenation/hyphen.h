@@ -55,6 +55,8 @@
 extern "C" {
 #endif /* __cplusplus */
 
+#include <stdio.h>
+
 typedef struct _HyphenDict HyphenDict;
 typedef struct _HyphenState HyphenState;
 typedef struct _HyphenTrans HyphenTrans;
@@ -94,6 +96,7 @@ struct _HyphenTrans {
 };
 
 HyphenDict *hnj_hyphen_load (const char *fn);
+HyphenDict *hnj_hyphen_load_file (FILE *f);
 void hnj_hyphen_free (HyphenDict *dict);
 
 /* obsolete, use hnj_hyphen_hyphenate2() or *hyphenate3() functions) */

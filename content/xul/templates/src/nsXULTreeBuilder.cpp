@@ -31,6 +31,7 @@
 #include "nsWhitespaceTokenizer.h"
 #include "nsTreeContentView.h"
 #include "nsIXULStore.h"
+#include "mozilla/BinarySearch.h"
 
 // For security check
 #include "nsIDocument.h"
@@ -62,6 +63,8 @@ public:
 protected:
     friend nsresult
     NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+
+    friend struct ResultComparator;
 
     nsXULTreeBuilder();
     ~nsXULTreeBuilder();
@@ -1067,6 +1070,17 @@ nsXULTreeBuilder::GetInsertionLocations(nsIXULTemplateResult* aResult,
     return (iter->mContainerState == nsTreeRows::eContainerState_Open);
 }
 
+struct ResultComparator
+{
+    nsXULTreeBuilder* const mTreebuilder;
+    nsIXULTemplateResult* const mResult;
+    ResultComparator(nsXULTreeBuilder* aTreebuilder, nsIXULTemplateResult* aResult)
+      : mTreebuilder(aTreebuilder), mResult(aResult) {}
+    int operator()(const nsTreeRows::Row& aSubtree) const {
+        return mTreebuilder->CompareResults(mResult, aSubtree.mMatch->mResult);
+    }
+};
+
 nsresult
 nsXULTreeBuilder::ReplaceMatch(nsIXULTemplateResult* aOldResult,
                                nsTemplateMatch* aNewMatch,
@@ -1165,24 +1179,13 @@ nsXULTreeBuilder::ReplaceMatch(nsIXULTemplateResult* aOldResult,
             // If we get here, then we're inserting into an open
             // container. By default, place the new element at the
             // end of the container
-            int32_t index = parent->Count();
+            size_t index = parent->Count();
 
             if (mSortVariable) {
-                // Figure out where to put the new element by doing an
-                // insertion sort.
-                int32_t left = 0;
-                int32_t right = index;
-
-                while (left < right) {
-                    index = (left + right) / 2;
-                    int32_t cmp = CompareResults((*parent)[index].mMatch->mResult, result);
-                    if (cmp < 0)
-                        left = ++index;
-                    else if (cmp > 0)
-                        right = index;
-                    else
-                        break;
-                }
+                // Figure out where to put the new element through
+                // binary search.
+                mozilla::BinarySearchIf(*parent, 0, parent->Count(),
+                                        ResultComparator(this, result), &index);
             }
 
             nsTreeRows::iterator iter =

@@ -9,6 +9,7 @@ interface nsIURI;
 interface nsIChannel;
 interface nsIDocShell;
 interface nsIPrincipal;
+interface nsIURI;
 
 /**
  * nsIContentSecurityPolicy
@@ -17,7 +18,7 @@ interface nsIPrincipal;
  * one of these per document/principal.
  */
 
-[scriptable, uuid(ee599622-99e3-491a-890e-6ee254bf1390)]
+[scriptable, uuid(dc86b261-5e41-4cab-ace3-a0278f5a7ec7)]
 interface nsIContentSecurityPolicy : nsISerializable
 {
 
@@ -194,6 +195,16 @@ interface nsIContentSecurityPolicy : nsISerializable
    *    here when violated).
    */
   boolean permitsAncestry(in nsIDocShell docShell);
+
+  /**
+   * Whether this policy allows setting the document's base URI to
+   * a given value.
+   *
+   * @return
+   *    Whether or not the provided URI is allowed to be used as the
+   *    document's base URI. (block the setting if false).
+   */
+  boolean permitsBaseURI(in nsIURI aURI);
 
   /**
    * Delegate method called by the service when sub-elements of the protected

@@ -63,6 +63,13 @@ public:
 
   Promise* Closed() const;
 
+  already_AddRefed<Promise> GenerateRequest(const nsAString& aInitDataType,
+                                            const ArrayBufferViewOrArrayBuffer& aInitData,
+                                            ErrorResult& aRv);
+
+  already_AddRefed<Promise> Load(const nsAString& aSessionId,
+                                 ErrorResult& aRv);
+
   already_AddRefed<Promise> Update(const ArrayBufferViewOrArrayBuffer& response,
                                    ErrorResult& aRv);
 
@@ -92,6 +99,7 @@ private:
   nsString mSessionId;
   const SessionType mSessionType;
   bool mIsClosed;
+  bool mUninitialized;
 };
 
 } // namespace dom

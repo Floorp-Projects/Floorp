@@ -148,8 +148,8 @@ public:
   Log &operator <<(unsigned long long aLong) { mMessage << aLong; return *this; }
   Log &operator <<(Float aFloat) { mMessage << aFloat; return *this; }
   Log &operator <<(double aDouble) { mMessage << aDouble; return *this; }
-  template <typename T, typename Sub>
-  Log &operator <<(const BasePoint<T, Sub>& aPoint)
+  template <typename T, typename Sub, typename Coord>
+  Log &operator <<(const BasePoint<T, Sub, Coord>& aPoint)
     { mMessage << "Point" << aPoint; return *this; }
   template <typename T, typename Sub>
   Log &operator <<(const BaseSize<T, Sub>& aSize)

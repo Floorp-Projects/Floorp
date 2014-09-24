@@ -4,7 +4,6 @@
 
 #include "chrome/common/ipc_sync_channel.h"
 
-#include "base/lazy_instance.h"
 #include "base/logging.h"
 #include "base/thread_local.h"
 #include "base/message_loop.h"
@@ -38,15 +37,21 @@ namespace IPC {
 class SyncChannel::ReceivedSyncMsgQueue {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SyncChannel::ReceivedSyncMsgQueue)
+
+  static base::ThreadLocalPointer<ReceivedSyncMsgQueue>& get_tls_ptr() {
+    static base::ThreadLocalPointer<ReceivedSyncMsgQueue> tls_ptr;
+    return tls_ptr;
+  }
+
   // Returns the ReceivedSyncMsgQueue instance for this thread, creating one
   // if necessary.  Call RemoveContext on the same thread when done.
   static ReceivedSyncMsgQueue* AddContext() {
     // We want one ReceivedSyncMsgQueue per listener thread (i.e. since multiple
     // SyncChannel objects can block the same thread).
-    ReceivedSyncMsgQueue* rv = lazy_tls_ptr_.Pointer()->Get();
+    ReceivedSyncMsgQueue* rv = get_tls_ptr().Get();
     if (!rv) {
       rv = new ReceivedSyncMsgQueue();
-      ReceivedSyncMsgQueue::lazy_tls_ptr_.Pointer()->Set(rv);
+      get_tls_ptr().Set(rv);
     }
     rv->listener_count_++;
     return rv;
@@ -121,17 +126,13 @@ class SyncChannel::ReceivedSyncMsgQueue {
     }
 
     if (--listener_count_ == 0) {
-      DCHECK(lazy_tls_ptr_.Pointer()->Get());
-      lazy_tls_ptr_.Pointer()->Set(NULL);
+      DCHECK(get_tls_ptr().Get());
+      get_tls_ptr().Set(NULL);
     }
   }
 
   WaitableEvent* dispatch_event() { return &dispatch_event_; }
   MessageLoop* listener_message_loop() { return listener_message_loop_; }
-
-  // Holds a pointer to the per-thread ReceivedSyncMsgQueue object.
-  static base::LazyInstance<base::ThreadLocalPointer<ReceivedSyncMsgQueue> >
-      lazy_tls_ptr_;
 
   // Called on the ipc thread to check if we can unblock any current Send()
   // calls based on a queued reply.
@@ -180,9 +181,6 @@ class SyncChannel::ReceivedSyncMsgQueue {
   bool task_pending_;
   int listener_count_;
 };
-
-base::LazyInstance<base::ThreadLocalPointer<SyncChannel::ReceivedSyncMsgQueue> >
-  SyncChannel::ReceivedSyncMsgQueue::lazy_tls_ptr_ = LAZY_INSTANCE_INITIALIZER;
 
 SyncChannel::SyncContext::SyncContext(
     Channel::Listener* listener,

@@ -20,6 +20,9 @@ function test() {
 
     ss.setTabState(tab, JSON.stringify({ entries: [] }));
     whenTabRestored(tab, function() {
+      // We may have a different sessionHistory object if the tab
+      // switched from non-remote to remote.
+      history = tab.linkedBrowser.webNavigation.sessionHistory;
       ok(history.count == 0, "the tab was restored without any history whatsoever");
 
       gBrowser.removeTab(tab);

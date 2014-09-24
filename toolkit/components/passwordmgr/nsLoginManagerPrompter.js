@@ -253,7 +253,7 @@ LoginManagerPrompter.prototype = {
     // Whether we are in private browsing mode
     get _inPrivateBrowsing() {
       if (this._window) {
-        return PrivateBrowsingUtils.isWindowPrivate(this._window);
+        return PrivateBrowsingUtils.isContentWindowPrivate(this._window);
       } else {
         // If we don't that we're in private browsing mode if the caller did
         // not provide a window.  The callers which really care about this

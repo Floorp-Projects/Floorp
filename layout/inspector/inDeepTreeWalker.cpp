@@ -26,15 +26,16 @@
 
 ////////////////////////////////////////////////////
 
-inDeepTreeWalker::inDeepTreeWalker() 
+inDeepTreeWalker::inDeepTreeWalker()
   : mShowAnonymousContent(false),
     mShowSubDocuments(false),
+    mShowDocumentsAsNodes(false),
     mWhatToShow(nsIDOMNodeFilter::SHOW_ALL)
 {
 }
 
-inDeepTreeWalker::~inDeepTreeWalker() 
-{ 
+inDeepTreeWalker::~inDeepTreeWalker()
+{
 }
 
 NS_IMPL_ISUPPORTS(inDeepTreeWalker,
@@ -72,14 +73,32 @@ inDeepTreeWalker::SetShowSubDocuments(bool aShowSubDocuments)
 }
 
 NS_IMETHODIMP
+inDeepTreeWalker::GetShowDocumentsAsNodes(bool *aShowDocumentsAsNodes)
+{
+  *aShowDocumentsAsNodes = mShowDocumentsAsNodes;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+inDeepTreeWalker::SetShowDocumentsAsNodes(bool aShowDocumentsAsNodes)
+{
+  mShowDocumentsAsNodes = aShowDocumentsAsNodes;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 inDeepTreeWalker::Init(nsIDOMNode* aRoot, uint32_t aWhatToShow)
 {
-  mRoot = aRoot;
-  mWhatToShow = aWhatToShow;
-  
-  PushNode(aRoot);
+  if (!aRoot) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
-  return NS_OK;
+  mRoot = aRoot;
+  mCurrentNode = aRoot;
+  mWhatToShow = aWhatToShow;
+
+  mDOMUtils = do_GetService("@mozilla.org/inspector/dom-utils;1");
+  return mDOMUtils ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
 ////////////////////////////////////////////////////
@@ -90,7 +109,6 @@ inDeepTreeWalker::GetRoot(nsIDOMNode** aRoot)
 {
   *aRoot = mRoot;
   NS_IF_ADDREF(*aRoot);
-  
   return NS_OK;
 }
 
@@ -112,107 +130,223 @@ inDeepTreeWalker::GetCurrentNode(nsIDOMNode** aCurrentNode)
 {
   *aCurrentNode = mCurrentNode;
   NS_IF_ADDREF(*aCurrentNode);
-  
   return NS_OK;
+}
+
+already_AddRefed<nsIDOMNode>
+inDeepTreeWalker::GetParent()
+{
+  if (mCurrentNode == mRoot) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDOMNode> parent;
+  MOZ_ASSERT(mDOMUtils, "mDOMUtils should have been initiated already in Init");
+  mDOMUtils->GetParentForNode(mCurrentNode, mShowAnonymousContent,
+                              getter_AddRefs(parent));
+
+  uint16_t nodeType = 0;
+  if (parent) {
+    parent->GetNodeType(&nodeType);
+  }
+  // For compatibility reasons by default we skip the document nodes
+  // from the walk.
+  if (!mShowDocumentsAsNodes &&
+      nodeType == nsIDOMNode::DOCUMENT_NODE &&
+      parent != mRoot) {
+    mDOMUtils->GetParentForNode(parent, mShowAnonymousContent,
+                                getter_AddRefs(parent));
+  }
+
+  return parent.forget();
+}
+
+static already_AddRefed<nsINodeList>
+GetChildren(nsIDOMNode* aParent,
+            bool aShowAnonymousContent,
+            bool aShowSubDocuments)
+{
+  MOZ_ASSERT(aParent);
+
+  nsCOMPtr<nsINodeList> ret;
+  if (aShowSubDocuments) {
+    nsCOMPtr<nsIDOMDocument> domdoc = inLayoutUtils::GetSubDocumentFor(aParent);
+    if (domdoc) {
+      aParent = domdoc;
+    }
+  }
+
+  nsCOMPtr<nsIContent> parentAsContent = do_QueryInterface(aParent);
+  if (parentAsContent && aShowAnonymousContent) {
+      ret = parentAsContent->GetChildren(nsIContent::eAllChildren);
+  } else {
+    // If it's not a content, then it's a document (or an attribute but we can ignore that
+    // case here). If aShowAnonymousContent is false we also want to fall back to ChildNodes
+    // so we can skip any native anon content that GetChildren would return.
+    nsCOMPtr<nsINode> parentNode = do_QueryInterface(aParent);
+    MOZ_ASSERT(parentNode);
+    ret = parentNode->ChildNodes();
+  }
+  return ret.forget();
 }
 
 NS_IMETHODIMP
 inDeepTreeWalker::SetCurrentNode(nsIDOMNode* aCurrentNode)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // mCurrentNode can only be null if init either failed, or has not been
+  // called yet.
+  if (!mCurrentNode || !aCurrentNode) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // If Document nodes are skipped by the walk, we should not allow
+  // one to set one as the current node either.
+  uint16_t nodeType = 0;
+  aCurrentNode->GetNodeType(&nodeType);
+  if (!mShowDocumentsAsNodes && nodeType == nsIDOMNode::DOCUMENT_NODE) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return SetCurrentNode(aCurrentNode, nullptr);
+}
+
+
+nsresult
+inDeepTreeWalker::SetCurrentNode(nsIDOMNode* aCurrentNode,
+                                 nsINodeList* aSiblings)
+{
+  MOZ_ASSERT(aCurrentNode);
+
+  // We want to store the original state so in case of error
+  // we can restore that.
+  nsCOMPtr<nsINodeList> tmpSiblings = mSiblings;
+  nsCOMPtr<nsIDOMNode> tmpCurrent = mCurrentNode;
+  mSiblings = aSiblings;
+  mCurrentNode = aCurrentNode;
+
+  // If siblings were not passed in as argument we have to
+  // get them from the parent node of aCurrentNode.
+  // Note: in the mShowDoucmentsAsNodes case when a sub document
+  // is set as the current, we don't want to get the children
+  // from the iframe accidentally here, so let's just skip this
+  // part for document nodes, they should never have siblings.
+  uint16_t nodeType = 0;
+  aCurrentNode->GetNodeType(&nodeType);
+  if (!mSiblings && nodeType != nsIDOMNode::DOCUMENT_NODE) {
+    nsCOMPtr<nsIDOMNode> parent = GetParent();
+    if (parent) {
+      mSiblings = GetChildren(parent,
+                              mShowAnonymousContent,
+                              mShowSubDocuments);
+    }
+  }
+
+  if (mSiblings && mSiblings->Length()) {
+    // We cached all the siblings (if there are any) of the current node, but we
+    // still have to set the index too, to be able to iterate over them.
+    nsCOMPtr<nsIContent> currentAsContent = do_QueryInterface(mCurrentNode);
+    MOZ_ASSERT(currentAsContent);
+    int32_t index = mSiblings->IndexOf(currentAsContent);
+    if (index < 0) {
+      // If someone tries to set current node to some value that is not reachable
+      // otherwise, let's throw. (For example mShowAnonymousContent is false and some
+      // XBL anon content was passed in)
+
+      // Restore state first.
+      mCurrentNode = tmpCurrent;
+      mSiblings = tmpSiblings;
+      return NS_ERROR_INVALID_ARG;
+    }
+    mCurrentIndex = index;
+  } else {
+    mCurrentIndex = -1;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 inDeepTreeWalker::ParentNode(nsIDOMNode** _retval)
 {
   *_retval = nullptr;
-  if (!mCurrentNode) return NS_OK;
-
-  if (mStack.Length() == 1) {
-    // No parent
+  if (!mCurrentNode || mCurrentNode == mRoot) {
     return NS_OK;
   }
 
-  // Pop off the current node, and push the new one
-  mStack.RemoveElementAt(mStack.Length()-1);
-  DeepTreeStackItem& top = mStack.ElementAt(mStack.Length() - 1);
-  mCurrentNode = top.node;
-  top.lastIndex = 0;
-  NS_ADDREF(*_retval = mCurrentNode);
+  nsCOMPtr<nsIDOMNode> parent = GetParent();
+
+  if (!parent) {
+    return NS_OK;
+  }
+
+  nsresult rv = SetCurrentNode(parent);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  parent.forget(_retval);
+  return NS_OK;
+}
+
+// FirstChild and LastChild are very similar methods, this is the generic
+// version for internal use. With aReverse = true it returns the LastChild.
+nsresult
+inDeepTreeWalker::EdgeChild(nsIDOMNode** _retval, bool aFront)
+{
+  if (!mCurrentNode) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *_retval = nullptr;
+
+  nsCOMPtr<nsIDOMNode> echild;
+  if (mShowSubDocuments && mShowDocumentsAsNodes) {
+    // GetChildren below, will skip the document node from
+    // the walk. But if mShowDocumentsAsNodes is set to true
+    // we want to include the (sub)document itself too.
+    echild = inLayoutUtils::GetSubDocumentFor(mCurrentNode);
+  }
+
+  nsCOMPtr<nsINodeList> children;
+  if (!echild) {
+    children = GetChildren(mCurrentNode,
+                           mShowAnonymousContent,
+                           mShowSubDocuments);
+    if (children && children->Length() > 0) {
+      nsINode* childNode = children->Item(aFront ? 0 : children->Length() - 1);
+      echild = childNode ? childNode->AsDOMNode() : nullptr;
+    }
+  }
+
+  if (echild) {
+    nsresult rv = SetCurrentNode(echild, children);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ADDREF(*_retval = mCurrentNode);
+  }
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
-inDeepTreeWalker::FirstChild(nsIDOMNode **_retval)
+inDeepTreeWalker::FirstChild(nsIDOMNode** _retval)
 {
-  *_retval = nullptr;
-  if (!mCurrentNode) {
-    return NS_OK;
-  }
-
-  DeepTreeStackItem& top = mStack.ElementAt(mStack.Length() - 1);
-  nsCOMPtr<nsIDOMNode> kid;
-  top.kids->Item(0, getter_AddRefs(kid));
-  if (!kid) {
-    return NS_OK;
-  }
-  top.lastIndex = 1;
-  PushNode(kid);
-  kid.forget(_retval);
-  return NS_OK;
+  return EdgeChild(_retval, /* aFront = */ true);
 }
 
 NS_IMETHODIMP
 inDeepTreeWalker::LastChild(nsIDOMNode **_retval)
 {
-  *_retval = nullptr;
-  if (!mCurrentNode) {
-    return NS_OK;
-  }
-
-  DeepTreeStackItem& top = mStack.ElementAt(mStack.Length() - 1);
-  nsCOMPtr<nsIDOMNode> kid;
-  uint32_t length;
-  top.kids->GetLength(&length);
-  top.kids->Item(length - 1, getter_AddRefs(kid));
-  if (!kid) {
-    return NS_OK;
-  }
-  top.lastIndex = length;
-  PushNode(kid);
-  kid.forget(_retval);
-  return NS_OK;
+  return EdgeChild(_retval, /* aFront = */ false);
 }
 
 NS_IMETHODIMP
 inDeepTreeWalker::PreviousSibling(nsIDOMNode **_retval)
 {
   *_retval = nullptr;
-  if (!mCurrentNode) {
+  if (!mCurrentNode || !mSiblings || mCurrentIndex < 1) {
     return NS_OK;
   }
 
-  NS_ASSERTION(mStack.Length() > 0, "Should have things in mStack");
-
-  if (mStack.Length() == 1) {
-    // No previous sibling
-    return NS_OK;
-  }
-
-  DeepTreeStackItem& parent = mStack.ElementAt(mStack.Length()-2);
-  nsCOMPtr<nsIDOMNode> previousSibling;
-  parent.kids->Item(parent.lastIndex-2, getter_AddRefs(previousSibling));
-  if (!previousSibling) {
-    return NS_OK;
-  }
-
-  // Our mStack's topmost element is our current node. Since we're trying to
-  // change that to the previous sibling, pop off the current node, and push
-  // the new one.
-  mStack.RemoveElementAt(mStack.Length() - 1);
-  parent.lastIndex--;
-  PushNode(previousSibling);
-  previousSibling.forget(_retval);
+  nsIContent* prev = mSiblings->Item(--mCurrentIndex);
+  mCurrentNode = prev->AsDOMNode();
+  NS_ADDREF(*_retval = mCurrentNode);
   return NS_OK;
 }
 
@@ -220,38 +354,21 @@ NS_IMETHODIMP
 inDeepTreeWalker::NextSibling(nsIDOMNode **_retval)
 {
   *_retval = nullptr;
-  if (!mCurrentNode) {
+  if (!mCurrentNode || !mSiblings ||
+      mCurrentIndex + 1 >= (int32_t) mSiblings->Length()) {
     return NS_OK;
   }
 
-  NS_ASSERTION(mStack.Length() > 0, "Should have things in mStack");
-
-  if (mStack.Length() == 1) {
-    // No next sibling
-    return NS_OK;
-  }
-
-  DeepTreeStackItem& parent = mStack.ElementAt(mStack.Length()-2);
-  nsCOMPtr<nsIDOMNode> nextSibling;
-  parent.kids->Item(parent.lastIndex, getter_AddRefs(nextSibling));
-  if (!nextSibling) {
-    return NS_OK;
-  }
-
-  // Our mStack's topmost element is our current node. Since we're trying to
-  // change that to the next sibling, pop off the current node, and push
-  // the new one.
-  mStack.RemoveElementAt(mStack.Length() - 1);
-  parent.lastIndex++;
-  PushNode(nextSibling);
-  nextSibling.forget(_retval);
+  nsIContent* next = mSiblings->Item(++mCurrentIndex);
+  mCurrentNode = next->AsDOMNode();
+  NS_ADDREF(*_retval = mCurrentNode);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 inDeepTreeWalker::PreviousNode(nsIDOMNode **_retval)
 {
-  if (!mCurrentNode || mStack.Length() == 1) {
+  if (!mCurrentNode || mCurrentNode == mRoot) {
     // Nowhere to go from here
     *_retval = nullptr;
     return NS_OK;
@@ -280,6 +397,10 @@ inDeepTreeWalker::PreviousNode(nsIDOMNode **_retval)
 NS_IMETHODIMP
 inDeepTreeWalker::NextNode(nsIDOMNode **_retval)
 {
+  if (!mCurrentNode) {
+    return NS_OK;
+  }
+
   // First try our kids
   FirstChild(_retval);
 
@@ -319,87 +440,3 @@ inDeepTreeWalker::NextNode(nsIDOMNode **_retval)
   NS_NOTREACHED("how did we get here?");
   return NS_OK;
 }
-
-void
-inDeepTreeWalker::PushNode(nsIDOMNode* aNode)
-{
-  mCurrentNode = aNode;
-  if (!aNode) return;
-
-  DeepTreeStackItem item;
-  item.node = aNode;
-
-  nsCOMPtr<nsIDOMNodeList> kids;
-  if (mShowSubDocuments) {
-    nsCOMPtr<nsIDOMDocument> domdoc = inLayoutUtils::GetSubDocumentFor(aNode);
-    if (domdoc) {
-      domdoc->GetChildNodes(getter_AddRefs(kids));
-    }
-  }
-  
-  if (!kids) {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
-    if (content && mShowAnonymousContent) {
-      kids = content->GetChildren(nsIContent::eAllChildren);
-    }
-  }
-  if (!kids) {
-    aNode->GetChildNodes(getter_AddRefs(kids));
-  }
-  
-  item.kids = kids;
-  item.lastIndex = 0;
-  mStack.AppendElement(item);
-}
-
-/*
-// This NextNode implementation does not require the use of stacks, 
-// as does the one above. However, it does not handle anonymous 
-// content and sub-documents.
-NS_IMETHODIMP
-inDeepTreeWalker::NextNode(nsIDOMNode **_retval)
-{
-  if (!mCurrentNode) return NS_OK;
-  
-  // walk down the tree first
-  nsCOMPtr<nsIDOMNode> next;
-  mCurrentNode->GetFirstChild(getter_AddRefs(next));
-  if (!next) {
-    mCurrentNode->GetNextSibling(getter_AddRefs(next));
-    if (!next) { 
-      // we've hit the end, so walk back up the tree until another
-      // downward opening is found, or the top of the tree
-      nsCOMPtr<nsIDOMNode> subject = mCurrentNode;
-      nsCOMPtr<nsIDOMNode> parent;
-      while (1) {
-        subject->GetParentNode(getter_AddRefs(parent));
-        if (!parent) // hit the top of the tree
-          break;
-        parent->GetNextSibling(getter_AddRefs(subject));
-        if (subject) { // found a downward opening
-          next = subject;
-          break;
-        } else // walk up another level
-          subject = parent;
-      } 
-    }
-  }
-  
-  mCurrentNode = next;
-  
-  *_retval = next;
-  NS_IF_ADDREF(*_retval);
-  
-  return NS_OK;
-}
-
-
-char* getURL(nsIDOMDocument* aDoc)
-{
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
-  nsIURI *uri = doc->GetDocumentURI();
-  char* s;
-  uri->GetSpec(&s);
-  return s;
-}
-*/

@@ -317,6 +317,10 @@ class MacroAssemblerARM : public Assembler
     void ma_vpop(VFPRegister r);
     void ma_vpush(VFPRegister r);
 
+    // Barriers.
+    void ma_dmb(BarrierOption option=BarrierSY);
+    void ma_dsb(BarrierOption option=BarrierSY);
+
     // Branches when done from within arm-specific code.
     BufferOffset ma_b(Label *dest, Condition c = Always);
     void ma_bx(Register dest, Condition c = Always);
@@ -1450,6 +1454,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void breakpoint();
     // Conditional breakpoint.
     void breakpoint(Condition cc);
+
+    // Trigger the simulator's interactive read-eval-print loop.
+    // The message will be printed at the stopping point.
+    // (On non-simulator builds, does nothing.)
+    void simulatorStop(const char* msg);
 
     void compareDouble(FloatRegister lhs, FloatRegister rhs);
     void branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,

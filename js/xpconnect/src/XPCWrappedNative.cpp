@@ -940,8 +940,11 @@ XPCWrappedNative::FlatJSObjectFinalized()
         for (int i = XPC_WRAPPED_NATIVE_TEAROFFS_PER_CHUNK-1; i >= 0; i--, to++) {
             JSObject* jso = to->GetJSObjectPreserveColor();
             if (jso) {
-                MOZ_ASSERT(JS_IsAboutToBeFinalizedUnbarriered(&jso));
                 JS_SetPrivate(jso, nullptr);
+#ifdef DEBUG
+                JS_UpdateWeakPointerAfterGCUnbarriered(&jso);
+                MOZ_ASSERT(!jso);
+#endif
                 to->JSObjectFinalized();
             }
 

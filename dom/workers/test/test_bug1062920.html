@@ -1,0 +1,70 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for navigator property override</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  function checkValues() {
+    var worker = new Worker("bug1062920_worker.js");
+
+    worker.onmessage = function(event) {
+      var ifr = document.createElement('IFRAME');
+      ifr.src = "about:blank";
+
+      ifr.addEventListener('load', function() {
+        var nav = ifr.contentWindow.navigator;
+        is(event.data.appCodeName, nav.appCodeName, "appCodeName should match");
+        is(event.data.appName, nav.appName, "appName should match");
+        is(event.data.appVersion, nav.appVersion, "appVersion should match");
+        is(event.data.platform, nav.platform, "platform should match");
+        is(event.data.userAgent, nav.userAgent, "userAgent should match");
+        is(event.data.product, nav.product, "product should match");
+        runTests();
+      }, false);
+
+      document.getElementById('content').appendChild(ifr);
+    };
+  }
+
+  function replaceAndCheckValues() {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["general.appname.override", "appName overridden"],
+      ["general.appversion.override", "appVersion overridden"],
+      ["general.platform.override", "platform overridden"],
+      ["general.useragent.override", "userAgent overridden"]
+    ]}, checkValues);
+  }
+
+  var tests = [
+    checkValues,
+    replaceAndCheckValues
+  ];
+
+  function runTests() {
+    if (tests.length == 0) {
+      SimpleTest.finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  runTests();
+
+</script>
+</pre>
+</body>
+</html>

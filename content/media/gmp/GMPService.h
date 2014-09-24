@@ -47,7 +47,8 @@ private:
 
   GMPParent* SelectPluginForAPI(const nsAString& aOrigin,
                                 const nsCString& aAPI,
-                                const nsTArray<nsCString>& aTags);
+                                const nsTArray<nsCString>& aTags,
+                                bool aCloneCrossOrigin = true);
 
   void UnloadPlugins();
   void CrashPlugins();

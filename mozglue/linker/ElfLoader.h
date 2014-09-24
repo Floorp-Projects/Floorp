@@ -118,6 +118,11 @@ public:
   virtual bool Contains(void *addr) const = 0;
 
   /**
+   * Returns the base address of the loaded library.
+   */
+  virtual void *GetBase() const = 0;
+
+  /**
    * Returns the file name of the library without the containing directory.
    */
   const char *GetName() const;
@@ -267,6 +272,7 @@ public:
   virtual ~SystemElf();
   virtual void *GetSymbolPtr(const char *symbol) const;
   virtual bool Contains(void *addr) const { return false; /* UNIMPLEMENTED */ }
+  virtual void *GetBase() const { return nullptr; /* UNIMPLEMENTED */ }
 
 #ifdef __ARM_EABI__
   virtual const void *FindExidx(int *pcount) const;
@@ -321,13 +327,14 @@ public:
     return signalHandlingBroken;
   }
 
+  static int __wrap_sigaction(int signum, const struct sigaction *act,
+                              struct sigaction *oldact);
+
 protected:
   SEGVHandler();
   ~SEGVHandler();
 
 private:
-  static int __wrap_sigaction(int signum, const struct sigaction *act,
-                              struct sigaction *oldact);
 
   /**
    * The constructor doesn't do all initialization, and the tail is done

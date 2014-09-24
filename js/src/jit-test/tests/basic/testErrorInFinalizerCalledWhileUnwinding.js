@@ -25,7 +25,7 @@ try {
     test();
 } catch(e) {
     caught = true;
-    assertEq(''+e, "ReferenceError: not_defined is not defined");
+    assertEq(e.toString().contains("ReferenceError: not_defined is not defined"), true);
 }
 
 assertEq(finalizerRun, true);

@@ -79,6 +79,7 @@
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/Endian.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/ipc/DocumentRendererParent.h"
@@ -86,6 +87,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
 #include "nsCCUncollectableMarker.h"
 #include "nsWrapperCacheInlines.h"
@@ -102,6 +104,10 @@
 #include "SVGContentUtils.h"
 #include "SVGImageContext.h"
 #include "nsIScreenManager.h"
+#include "nsFilterInstance.h"
+#include "nsSVGLength2.h"
+#include "nsDeviceContext.h"
+#include "nsFontMetrics.h"
 
 #undef free // apparently defined by some windows header, clashing with a free()
             // method in SkTypes.h
@@ -285,80 +291,94 @@ public:
 };
 
 /* This is an RAII based class that can be used as a drawtarget for
- * operations that need a shadow drawn. It will automatically provide a
- * temporary target when needed, and if so blend it back with a shadow.
- *
- * aBounds specifies the bounds of the drawing operation that will be
- * drawn to the target, it is given in device space! This function will
- * change aBounds to incorporate shadow bounds. If this is nullptr the drawing
- * operation will be assumed to cover an infinite rect.
+ * operations that need to have a filter applied to their results.
+ * All coordinates passed to the constructor are in device space.
  */
-class AdjustedTarget
+class AdjustedTargetForFilter
 {
 public:
   typedef CanvasRenderingContext2D::ContextState ContextState;
 
-  explicit AdjustedTarget(CanvasRenderingContext2D* ctx,
-                 mgfx::Rect *aBounds = nullptr)
+  AdjustedTargetForFilter(CanvasRenderingContext2D *ctx,
+                          DrawTarget *aFinalTarget,
+                          const mgfx::IntPoint& aFilterSpaceToTargetOffset,
+                          const mgfx::IntRect& aPreFilterBounds,
+                          const mgfx::IntRect& aPostFilterBounds,
+                          mgfx::CompositionOp aCompositionOp)
     : mCtx(nullptr)
+    , mCompositionOp(aCompositionOp)
   {
-    if (!ctx->NeedToDrawShadow()) {
-      mTarget = ctx->mTarget;
-      return;
-    }
     mCtx = ctx;
+    mFinalTarget = aFinalTarget;
+    mPostFilterBounds = aPostFilterBounds;
+    mOffset = aFilterSpaceToTargetOffset;
 
-    const ContextState &state = mCtx->CurrentState();
+    nsIntRegion sourceGraphicNeededRegion;
+    nsIntRegion fillPaintNeededRegion;
+    nsIntRegion strokePaintNeededRegion;
 
-    mSigma = state.shadowBlur / 2.0f;
+    FilterSupport::ComputeSourceNeededRegions(
+      ctx->CurrentState().filter, mgfx::ThebesIntRect(mPostFilterBounds),
+      sourceGraphicNeededRegion, fillPaintNeededRegion, strokePaintNeededRegion);
 
-    if (mSigma > SIGMA_MAX) {
-      mSigma = SIGMA_MAX;
+    mSourceGraphicRect = mgfx::ToIntRect(sourceGraphicNeededRegion.GetBounds());
+    mFillPaintRect = mgfx::ToIntRect(fillPaintNeededRegion.GetBounds());
+    mStrokePaintRect = mgfx::ToIntRect(strokePaintNeededRegion.GetBounds());
+
+    mSourceGraphicRect = mSourceGraphicRect.Intersect(aPreFilterBounds);
+
+    if (mSourceGraphicRect.IsEmpty()) {
+      // The filter might not make any use of the source graphic. We need to
+      // create a DrawTarget that we can return from DT() anyway, so we'll
+      // just use a 1x1-sized one.
+      mSourceGraphicRect.SizeTo(1, 1);
     }
-
-    Matrix transform = mCtx->mTarget->GetTransform();
-
-    mTempRect = mgfx::Rect(0, 0, ctx->mWidth, ctx->mHeight);
-
-    static const gfxFloat GAUSSIAN_SCALE_FACTOR = (3 * sqrt(2 * M_PI) / 4) * 1.5;
-    int32_t blurRadius = (int32_t) floor(mSigma * GAUSSIAN_SCALE_FACTOR + 0.5);
-
-    // We need to enlarge and possibly offset our temporary surface
-    // so that things outside of the canvas may cast shadows.
-    mTempRect.Inflate(Margin(blurRadius + std::max<Float>(state.shadowOffset.y, 0),
-                             blurRadius + std::max<Float>(-state.shadowOffset.x, 0),
-                             blurRadius + std::max<Float>(-state.shadowOffset.y, 0),
-                             blurRadius + std::max<Float>(state.shadowOffset.x, 0)));
-
-    if (aBounds) {
-      // We actually include the bounds of the shadow blur, this makes it
-      // easier to execute the actual blur on hardware, and shouldn't affect
-      // the amount of pixels that need to be touched.
-      aBounds->Inflate(Margin(blurRadius, blurRadius,
-                              blurRadius, blurRadius));
-      mTempRect = mTempRect.Intersect(*aBounds);
-    }
-
-    mTempRect.ScaleRoundOut(1.0f);
-
-    transform._31 -= mTempRect.x;
-    transform._32 -= mTempRect.y;
 
     mTarget =
-      mCtx->mTarget->CreateShadowDrawTarget(IntSize(int32_t(mTempRect.width), int32_t(mTempRect.height)),
-                                            SurfaceFormat::B8G8R8A8, mSigma);
+      mFinalTarget->CreateSimilarDrawTarget(mSourceGraphicRect.Size(), SurfaceFormat::B8G8R8A8);
 
     if (!mTarget) {
       // XXX - Deal with the situation where our temp size is too big to
-      // fit in a texture.
-      mTarget = ctx->mTarget;
+      // fit in a texture (bug 1066622).
+      mTarget = mFinalTarget;
       mCtx = nullptr;
-    } else {
-      mTarget->SetTransform(transform);
+      mFinalTarget = nullptr;
+      return;
     }
+
+    mTarget->SetTransform(
+      mFinalTarget->GetTransform().PostTranslate(-mSourceGraphicRect.TopLeft() + mOffset));
   }
 
-  ~AdjustedTarget()
+  // Return a SourceSurface that contains the FillPaint or StrokePaint source.
+  TemporaryRef<SourceSurface>
+  DoSourcePaint(mgfx::IntRect& aRect, CanvasRenderingContext2D::Style aStyle)
+  {
+    if (aRect.IsEmpty()) {
+      return nullptr;
+    }
+
+    RefPtr<DrawTarget> dt =
+      mFinalTarget->CreateSimilarDrawTarget(aRect.Size(), SurfaceFormat::B8G8R8A8);
+    if (!dt) {
+      aRect.SetEmpty();
+      return nullptr;
+    }
+
+    Matrix transform =
+      mFinalTarget->GetTransform().PostTranslate(-aRect.TopLeft() + mOffset);
+
+    dt->SetTransform(transform);
+
+    if (transform.Invert()) {
+      mgfx::Rect dtBounds(0, 0, aRect.width, aRect.height);
+      mgfx::Rect fillRect = transform.TransformBounds(dtBounds);
+      dt->FillRect(fillRect, CanvasGeneralPattern().ForStyle(mCtx, aStyle, dt));
+    }
+    return dt->Snapshot();
+  }
+
+  ~AdjustedTargetForFilter()
   {
     if (!mCtx) {
       return;
@@ -366,10 +386,204 @@ public:
 
     RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
 
-    mCtx->mTarget->DrawSurfaceWithShadow(snapshot, mTempRect.TopLeft(),
-                                         Color::FromABGR(mCtx->CurrentState().shadowColor),
-                                         mCtx->CurrentState().shadowOffset, mSigma,
-                                         mCtx->CurrentState().op);
+    RefPtr<SourceSurface> fillPaint =
+      DoSourcePaint(mFillPaintRect, CanvasRenderingContext2D::Style::FILL);
+    RefPtr<SourceSurface> strokePaint =
+      DoSourcePaint(mStrokePaintRect, CanvasRenderingContext2D::Style::STROKE);
+
+    AutoSaveTransform autoSaveTransform(mFinalTarget);
+    mFinalTarget->SetTransform(Matrix());
+
+    mgfx::FilterSupport::RenderFilterDescription(
+      mFinalTarget, mCtx->CurrentState().filter,
+      mgfx::Rect(mPostFilterBounds),
+      snapshot, mSourceGraphicRect,
+      fillPaint, mFillPaintRect,
+      strokePaint, mStrokePaintRect,
+      mCtx->CurrentState().filterAdditionalImages,
+      mPostFilterBounds.TopLeft() - mOffset,
+      DrawOptions(1.0f, mCompositionOp));
+  }
+
+  DrawTarget* DT()
+  {
+    return mTarget;
+  }
+
+private:
+  RefPtr<DrawTarget> mTarget;
+  RefPtr<DrawTarget> mFinalTarget;
+  CanvasRenderingContext2D *mCtx;
+  mgfx::IntRect mSourceGraphicRect;
+  mgfx::IntRect mFillPaintRect;
+  mgfx::IntRect mStrokePaintRect;
+  mgfx::IntRect mPostFilterBounds;
+  mgfx::IntPoint mOffset;
+  mgfx::CompositionOp mCompositionOp;
+};
+
+/* This is an RAII based class that can be used as a drawtarget for
+ * operations that need to have a shadow applied to their results.
+ * All coordinates passed to the constructor are in device space.
+ */
+class AdjustedTargetForShadow
+{
+public:
+  typedef CanvasRenderingContext2D::ContextState ContextState;
+
+  AdjustedTargetForShadow(CanvasRenderingContext2D *ctx,
+                          DrawTarget *aFinalTarget,
+                          const mgfx::Rect& aBounds,
+                          mgfx::CompositionOp aCompositionOp)
+    : mCtx(nullptr)
+    , mCompositionOp(aCompositionOp)
+  {
+    mCtx = ctx;
+    mFinalTarget = aFinalTarget;
+
+    const ContextState &state = mCtx->CurrentState();
+
+    mSigma = state.ShadowBlurSigma();
+
+    mgfx::Rect bounds = aBounds;
+
+    int32_t blurRadius = state.ShadowBlurRadius();
+
+    // We actually include the bounds of the shadow blur, this makes it
+    // easier to execute the actual blur on hardware, and shouldn't affect
+    // the amount of pixels that need to be touched.
+    bounds.Inflate(blurRadius);
+
+    bounds.RoundOut();
+    bounds.ToIntRect(&mTempRect);
+
+    mTarget =
+      mFinalTarget->CreateShadowDrawTarget(mTempRect.Size(),
+                                           SurfaceFormat::B8G8R8A8, mSigma);
+
+    if (!mTarget) {
+      // XXX - Deal with the situation where our temp size is too big to
+      // fit in a texture (bug 1066622).
+      mTarget = mFinalTarget;
+      mCtx = nullptr;
+      mFinalTarget = nullptr;
+    } else {
+      mTarget->SetTransform(
+        mFinalTarget->GetTransform().PostTranslate(-mTempRect.TopLeft()));
+    }
+  }
+
+  ~AdjustedTargetForShadow()
+  {
+    if (!mCtx) {
+      return;
+    }
+
+    RefPtr<SourceSurface> snapshot = mTarget->Snapshot();
+
+    mFinalTarget->DrawSurfaceWithShadow(snapshot, mTempRect.TopLeft(),
+                                        Color::FromABGR(mCtx->CurrentState().shadowColor),
+                                        mCtx->CurrentState().shadowOffset, mSigma,
+                                        mCompositionOp);
+  }
+
+  DrawTarget* DT()
+  {
+    return mTarget;
+  }
+
+  mgfx::IntPoint OffsetToFinalDT()
+  {
+    return mTempRect.TopLeft();
+  }
+
+private:
+  RefPtr<DrawTarget> mTarget;
+  RefPtr<DrawTarget> mFinalTarget;
+  CanvasRenderingContext2D *mCtx;
+  Float mSigma;
+  mgfx::IntRect mTempRect;
+  mgfx::CompositionOp mCompositionOp;
+};
+
+/* This is an RAII based class that can be used as a drawtarget for
+ * operations that need a shadow or a filter drawn. It will automatically
+ * provide a temporary target when needed, and if so blend it back with a
+ * shadow, filter, or both.
+ * If both a shadow and a filter are needed, the filter is applied first,
+ * and the shadow is applied to the filtered results.
+ *
+ * aBounds specifies the bounds of the drawing operation that will be
+ * drawn to the target, it is given in device space! If this is nullptr the
+ * drawing operation will be assumed to cover the whole canvas.
+ */
+class AdjustedTarget
+{
+public:
+  typedef CanvasRenderingContext2D::ContextState ContextState;
+
+  explicit AdjustedTarget(CanvasRenderingContext2D* ctx,
+                          const mgfx::Rect *aBounds = nullptr)
+  {
+    mTarget = ctx->mTarget;
+
+    // All rects in this function are in the device space of ctx->mTarget.
+
+    // In order to keep our temporary surfaces as small as possible, we first
+    // calculate what their maximum required bounds would need to be if we
+    // were to fill the whole canvas. Everything outside those bounds we don't
+    // need to render.
+    mgfx::Rect r(0, 0, ctx->mWidth, ctx->mHeight);
+    mgfx::Rect maxSourceNeededBoundsForShadow =
+      MaxSourceNeededBoundsForShadow(r, ctx);
+    mgfx::Rect maxSourceNeededBoundsForFilter =
+      MaxSourceNeededBoundsForFilter(maxSourceNeededBoundsForShadow, ctx);
+
+    mgfx::Rect bounds = maxSourceNeededBoundsForFilter;
+    if (aBounds) {
+      bounds = bounds.Intersect(*aBounds);
+    }
+    mgfx::Rect boundsAfterFilter = BoundsAfterFilter(bounds, ctx);
+
+    mozilla::gfx::CompositionOp op = ctx->CurrentState().op;
+
+    mgfx::IntPoint offsetToFinalDT;
+
+    // First set up the shadow draw target, because the shadow goes outside.
+    // It applies to the post-filter results, if both a filter and a shadow
+    // are used.
+    if (ctx->NeedToDrawShadow()) {
+      mShadowTarget = MakeUnique<AdjustedTargetForShadow>(
+        ctx, mTarget, boundsAfterFilter, op);
+      mTarget = mShadowTarget->DT();
+      offsetToFinalDT = mShadowTarget->OffsetToFinalDT();
+
+      // If we also have a filter, the filter needs to be drawn with OP_OVER
+      // because shadow drawing already applies op on the result.
+      op = mgfx::CompositionOp::OP_OVER;
+    }
+
+    // Now set up the filter draw target.
+    if (ctx->NeedToApplyFilter()) {
+      bounds.RoundOut();
+
+      mgfx::IntRect intBounds;
+      if (!bounds.ToIntRect(&intBounds)) {
+        return;
+      }
+      mFilterTarget = MakeUnique<AdjustedTargetForFilter>(
+        ctx, mTarget, offsetToFinalDT, intBounds,
+        mgfx::RoundedToInt(boundsAfterFilter), op);
+      mTarget = mFilterTarget->DT();
+    }
+  }
+
+  ~AdjustedTarget()
+  {
+    // The order in which the targets are finalized is important.
+    // Filters are inside, any shadow applies to the post-filter results.
+    mFilterTarget.reset();
+    mShadowTarget.reset();
   }
 
   operator DrawTarget*()
@@ -383,10 +597,65 @@ public:
   }
 
 private:
+
+  mgfx::Rect
+  MaxSourceNeededBoundsForFilter(const mgfx::Rect& aDestBounds, CanvasRenderingContext2D *ctx)
+  {
+    if (!ctx->NeedToApplyFilter()) {
+      return aDestBounds;
+    }
+
+    nsIntRegion sourceGraphicNeededRegion;
+    nsIntRegion fillPaintNeededRegion;
+    nsIntRegion strokePaintNeededRegion;
+
+    FilterSupport::ComputeSourceNeededRegions(
+      ctx->CurrentState().filter, mgfx::ThebesIntRect(mgfx::RoundedToInt(aDestBounds)),
+      sourceGraphicNeededRegion, fillPaintNeededRegion, strokePaintNeededRegion);
+
+    return mgfx::Rect(mgfx::ToIntRect(sourceGraphicNeededRegion.GetBounds()));
+  }
+
+  mgfx::Rect
+  MaxSourceNeededBoundsForShadow(const mgfx::Rect& aDestBounds, CanvasRenderingContext2D *ctx)
+  {
+    if (!ctx->NeedToDrawShadow()) {
+      return aDestBounds;
+    }
+
+    const ContextState &state = ctx->CurrentState();
+    mgfx::Rect sourceBounds = aDestBounds - state.shadowOffset;
+    sourceBounds.Inflate(state.ShadowBlurRadius());
+
+    // Union the shadow source with the original rect because we're going to
+    // draw both.
+    return sourceBounds.Union(aDestBounds);
+  }
+
+  mgfx::Rect
+  BoundsAfterFilter(const mgfx::Rect& aBounds, CanvasRenderingContext2D *ctx)
+  {
+    if (!ctx->NeedToApplyFilter()) {
+      return aBounds;
+    }
+
+    mgfx::Rect bounds(aBounds);
+    bounds.RoundOut();
+
+    mgfx::IntRect intBounds;
+    if (!bounds.ToIntRect(&intBounds)) {
+      return mgfx::Rect();
+    }
+
+    nsIntRegion extents =
+      mgfx::FilterSupport::ComputePostFilterExtents(ctx->CurrentState().filter,
+                                                    mgfx::ThebesIntRect(intBounds));
+    return mgfx::Rect(mgfx::ToIntRect(extents.GetBounds()));
+  }
+
   RefPtr<DrawTarget> mTarget;
-  CanvasRenderingContext2D *mCtx;
-  Float mSigma;
-  mgfx::Rect mTempRect;
+  UniquePtr<AdjustedTargetForShadow> mShadowTarget;
+  UniquePtr<AdjustedTargetForFilter> mFilterTarget;
 };
 
 void
@@ -1611,6 +1880,345 @@ CanvasRenderingContext2D::SetShadowColor(const nsAString& shadowColor)
 }
 
 //
+// filters
+//
+
+static already_AddRefed<StyleRule>
+CreateStyleRule(nsINode* aNode,
+  const nsCSSProperty aProp1, const nsAString& aValue1, bool* aChanged1,
+  const nsCSSProperty aProp2, const nsAString& aValue2, bool* aChanged2,
+  ErrorResult& error)
+{
+  nsRefPtr<StyleRule> rule;
+
+  nsIPrincipal* principal = aNode->NodePrincipal();
+  nsIDocument* document = aNode->OwnerDoc();
+
+  nsIURI* docURL = document->GetDocumentURI();
+  nsIURI* baseURL = document->GetDocBaseURI();
+
+  // Pass the CSS Loader object to the parser, to allow parser error reports
+  // to include the outer window ID.
+  nsCSSParser parser(document->CSSLoader());
+
+  error = parser.ParseStyleAttribute(EmptyString(), docURL, baseURL,
+                                     principal, getter_AddRefs(rule));
+  if (error.Failed()) {
+    return nullptr;
+  }
+
+  if (aProp1 != eCSSProperty_UNKNOWN) {
+    error = parser.ParseProperty(aProp1, aValue1, docURL, baseURL, principal,
+                                 rule->GetDeclaration(), aChanged1, false);
+    if (error.Failed()) {
+      return nullptr;
+    }
+  }
+
+  if (aProp2 != eCSSProperty_UNKNOWN) {
+    error = parser.ParseProperty(aProp2, aValue2, docURL, baseURL, principal,
+                                 rule->GetDeclaration(), aChanged2, false);
+    if (error.Failed()) {
+      return nullptr;
+    }
+  }
+
+  rule->RuleMatched();
+
+  return rule.forget();
+}
+
+static already_AddRefed<StyleRule>
+CreateFontStyleRule(const nsAString& aFont,
+                    nsINode* aNode,
+                    bool* aOutFontChanged,
+                    ErrorResult& error)
+{
+  bool lineHeightChanged;
+  return CreateStyleRule(aNode,
+    eCSSProperty_font, aFont, aOutFontChanged,
+    eCSSProperty_line_height, NS_LITERAL_STRING("normal"), &lineHeightChanged,
+    error);
+}
+
+static already_AddRefed<nsStyleContext>
+GetFontParentStyleContext(Element* aElement, nsIPresShell* presShell,
+                          ErrorResult& error)
+{
+  if (aElement && aElement->IsInDoc()) {
+    // inherit from the canvas element
+    return nsComputedDOMStyle::GetStyleContextForElement(aElement, nullptr,
+                                                         presShell);
+  }
+
+  // otherwise inherit from default (10px sans-serif)
+  bool changed;
+  nsRefPtr<css::StyleRule> parentRule =
+    CreateFontStyleRule(NS_LITERAL_STRING("10px sans-serif"),
+                        presShell->GetDocument(), &changed, error);
+
+  if (error.Failed()) {
+    return nullptr;
+  }
+
+  nsTArray<nsCOMPtr<nsIStyleRule>> parentRules;
+  parentRules.AppendElement(parentRule);
+  return presShell->StyleSet()->ResolveStyleForRules(nullptr, parentRules);
+}
+
+static bool
+PropertyIsInheritOrInitial(StyleRule* aRule, const nsCSSProperty aProperty)
+{
+  css::Declaration* declaration = aRule->GetDeclaration();
+  // We know the declaration is not !important, so we can use
+  // GetNormalBlock().
+  const nsCSSValue* filterVal =
+    declaration->GetNormalBlock()->ValueFor(aProperty);
+  return (!filterVal || (filterVal->GetUnit() == eCSSUnit_Unset ||
+                         filterVal->GetUnit() == eCSSUnit_Inherit ||
+                         filterVal->GetUnit() == eCSSUnit_Initial));
+}
+
+static already_AddRefed<nsStyleContext>
+GetFontStyleContext(Element* aElement, const nsAString& aFont,
+                    nsIPresShell* presShell,
+                    nsAString& aOutUsedFont,
+                    ErrorResult& error)
+{
+  bool fontParsedSuccessfully = false;
+  nsRefPtr<css::StyleRule> rule =
+    CreateFontStyleRule(aFont, presShell->GetDocument(),
+                        &fontParsedSuccessfully, error);
+
+  if (error.Failed()) {
+    return nullptr;
+  }
+
+  if (!fontParsedSuccessfully) {
+    // We got a syntax error.  The spec says this value must be ignored.
+    return nullptr;
+  }
+
+  // In addition to unparseable values, the spec says we need to reject
+  // 'inherit' and 'initial'. The easiest way to check for this is to look
+  // at font-size-adjust, which the font shorthand resets to either 'none' or
+  // '-moz-system-font'.
+  if (PropertyIsInheritOrInitial(rule, eCSSProperty_font_size_adjust)) {
+    return nullptr;
+  }
+
+  // have to get a parent style context for inherit-like relative
+  // values (2em, bolder, etc.)
+  nsRefPtr<nsStyleContext> parentContext =
+    GetFontParentStyleContext(aElement, presShell, error);
+
+  if (error.Failed()) {
+    error.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsTArray<nsCOMPtr<nsIStyleRule>> rules;
+  rules.AppendElement(rule);
+  // add a rule to prevent text zoom from affecting the style
+  rules.AppendElement(new nsDisableTextZoomStyleRule);
+
+  nsStyleSet* styleSet = presShell->StyleSet();
+  nsRefPtr<nsStyleContext> sc =
+    styleSet->ResolveStyleForRules(parentContext, rules);
+
+  // The font getter is required to be reserialized based on what we
+  // parsed (including having line-height removed).  (Older drafts of
+  // the spec required font sizes be converted to pixels, but that no
+  // longer seems to be required.)
+  rule->GetDeclaration()->GetValue(eCSSProperty_font, aOutUsedFont);
+
+  return sc.forget();
+}
+
+static already_AddRefed<StyleRule>
+CreateFilterStyleRule(const nsAString& aFilter,
+                      nsINode* aNode,
+                      bool* aOutFilterChanged,
+                      ErrorResult& error)
+{
+  bool dummy;
+  return CreateStyleRule(aNode,
+    eCSSProperty_filter, aFilter, aOutFilterChanged,
+    eCSSProperty_UNKNOWN, EmptyString(), &dummy,
+    error);
+}
+
+static already_AddRefed<nsStyleContext>
+ResolveStyleForFilterRule(const nsAString& aFilterString,
+                          nsIPresShell* aPresShell,
+                          nsStyleContext* aParentContext,
+                          ErrorResult& error)
+{
+  nsIDocument* document = aPresShell->GetDocument();
+  bool filterChanged = false;
+  nsRefPtr<css::StyleRule> rule =
+    CreateFilterStyleRule(aFilterString, document, &filterChanged, error);
+
+  if (error.Failed()) {
+    return nullptr;
+  }
+
+  if (!filterChanged) {
+    // Refuse to accept the filter, but do not throw an error.
+    return nullptr;
+  }
+
+  // In addition to unparseable values, the spec says we need to reject
+  // 'inherit' and 'initial'.
+  if (PropertyIsInheritOrInitial(rule, eCSSProperty_filter)) {
+    return nullptr;
+  }
+
+  nsTArray<nsCOMPtr<nsIStyleRule>> rules;
+  rules.AppendElement(rule);
+
+  nsRefPtr<nsStyleContext> sc =
+    aPresShell->StyleSet()->ResolveStyleForRules(aParentContext, rules);
+
+  return sc.forget();
+}
+
+bool
+CanvasRenderingContext2D::ParseFilter(const nsAString& aString,
+                                      nsTArray<nsStyleFilter>& aFilterChain,
+                                      ErrorResult& error)
+{
+  if (!mCanvasElement && !mDocShell) {
+    NS_WARNING("Canvas element must be non-null or a docshell must be provided");
+    error.Throw(NS_ERROR_FAILURE);
+    return false;
+  }
+
+  nsIPresShell* presShell = GetPresShell();
+  if (!presShell) {
+    error.Throw(NS_ERROR_FAILURE);
+    return false;
+  }
+
+  nsString usedFont;
+  nsRefPtr<nsStyleContext> parentContext =
+    GetFontStyleContext(mCanvasElement, GetFont(),
+                        presShell, usedFont, error);
+  if (!parentContext) {
+    error.Throw(NS_ERROR_FAILURE);
+    return false;
+  }
+
+  nsRefPtr<nsStyleContext> sc =
+    ResolveStyleForFilterRule(aString, presShell, parentContext, error);
+
+  if (!sc) {
+    return false;
+  }
+
+  aFilterChain = sc->StyleSVGReset()->mFilters;
+  return true;
+}
+
+class CanvasFilterChainObserver : public nsSVGFilterChainObserver
+{
+public:
+  CanvasFilterChainObserver(nsTArray<nsStyleFilter> &aFilters,
+                            Element *aCanvasElement,
+                            CanvasRenderingContext2D *aContext)
+    : nsSVGFilterChainObserver(aFilters, aCanvasElement)
+    , mContext(aContext)
+  {
+  }
+
+  virtual void DoUpdate() MOZ_OVERRIDE
+  {
+    // Refresh the cached FilterDescription in mContext->CurrentState().filter.
+    // If this filter is not at the top of the state stack, we'll refresh the
+    // wrong filter, but that's ok, because we'll refresh the right filter
+    // when we pop the state stack in CanvasRenderingContext2D::Restore().
+    mContext->UpdateFilter();
+  }
+
+private:
+  CanvasRenderingContext2D *mContext;
+};
+
+void
+CanvasRenderingContext2D::SetFilter(const nsAString& filter, ErrorResult& error)
+{
+  nsTArray<nsStyleFilter> filterChain;
+  if (ParseFilter(filter, filterChain, error)) {
+    CurrentState().filterString = filter;
+    filterChain.SwapElements(CurrentState().filterChain);
+    if (mCanvasElement) {
+      CurrentState().filterChainObserver =
+        new CanvasFilterChainObserver(CurrentState().filterChain,
+                                      mCanvasElement, this);
+      UpdateFilter();
+    }
+  }
+}
+
+class CanvasUserSpaceMetrics : public UserSpaceMetricsWithSize
+{
+public:
+  CanvasUserSpaceMetrics(const gfx::IntSize& aSize, const nsFont& aFont,
+                         nsIAtom* aFontLanguage, nsPresContext* aPresContext)
+    : mSize(aSize)
+    , mFont(aFont)
+    , mFontLanguage(aFontLanguage)
+    , mPresContext(aPresContext)
+  {
+  }
+
+  virtual float GetEmLength() const MOZ_OVERRIDE
+  {
+    return NSAppUnitsToFloatPixels(mFont.size,
+                                   nsPresContext::AppUnitsPerCSSPixel());
+  }
+
+  virtual float GetExLength() const MOZ_OVERRIDE
+  {
+    gfxTextPerfMetrics* tp = mPresContext->GetTextPerfMetrics();
+    nsRefPtr<nsFontMetrics> fontMetrics;
+    nsDeviceContext* dc = mPresContext->DeviceContext();
+    dc->GetMetricsFor(mFont, mFontLanguage, nullptr, tp,
+                      *getter_AddRefs(fontMetrics));
+    return NSAppUnitsToFloatPixels(fontMetrics->XHeight(),
+                                   nsPresContext::AppUnitsPerCSSPixel());
+  }
+
+  virtual gfx::Size GetSize() const MOZ_OVERRIDE
+  { return Size(mSize); }
+
+private:
+  gfx::IntSize mSize;
+  const nsFont& mFont;
+  nsIAtom* mFontLanguage;
+  nsPresContext* mPresContext;
+};
+
+void
+CanvasRenderingContext2D::UpdateFilter()
+{
+  nsIPresShell* presShell = GetPresShell();
+  if (!presShell || presShell->IsDestroying()) {
+    return;
+  }
+
+  CurrentState().filter =
+    nsFilterInstance::GetFilterDescription(mCanvasElement,
+      CurrentState().filterChain,
+      CanvasUserSpaceMetrics(IntSize(mWidth, mHeight),
+                             CurrentState().fontFont,
+                             CurrentState().fontLanguage,
+                             presShell->GetPresContext()),
+      gfxRect(0, 0, mWidth, mHeight),
+      CurrentState().filterAdditionalImages);
+}
+
+//
 // rects
 //
 
@@ -1682,7 +2290,7 @@ CanvasRenderingContext2D::FillRect(double x, double y, double w,
   mgfx::Rect bounds;
 
   EnsureTarget();
-  if (NeedToDrawShadow()) {
+  if (NeedToCalculateBounds()) {
     bounds = mgfx::Rect(x, y, w, h);
     bounds = mTarget->GetTransform().TransformBounds(bounds);
   }
@@ -1712,7 +2320,7 @@ CanvasRenderingContext2D::StrokeRect(double x, double y, double w,
     return;
   }
 
-  if (NeedToDrawShadow()) {
+  if (NeedToCalculateBounds()) {
     bounds = mgfx::Rect(x - state.lineWidth / 2.0f, y - state.lineWidth / 2.0f,
                         w + state.lineWidth, h + state.lineWidth);
     bounds = mTarget->GetTransform().TransformBounds(bounds);
@@ -1789,7 +2397,7 @@ CanvasRenderingContext2D::Fill(const CanvasWindingRule& winding)
 
   mgfx::Rect bounds;
 
-  if (NeedToDrawShadow()) {
+  if (NeedToCalculateBounds()) {
     bounds = mPath->GetBounds(mTarget->GetTransform());
   }
 
@@ -1812,7 +2420,7 @@ void CanvasRenderingContext2D::Fill(const CanvasPath& path, const CanvasWindingR
 
   mgfx::Rect bounds;
 
-  if (NeedToDrawShadow()) {
+  if (NeedToCalculateBounds()) {
     bounds = gfxpath->GetBounds(mTarget->GetTransform());
   }
 
@@ -1840,7 +2448,7 @@ CanvasRenderingContext2D::Stroke()
                               state.dashOffset);
 
   mgfx::Rect bounds;
-  if (NeedToDrawShadow()) {
+  if (NeedToCalculateBounds()) {
     bounds =
       mPath->GetStrokedBounds(strokeOptions, mTarget->GetTransform());
   }
@@ -1871,7 +2479,7 @@ CanvasRenderingContext2D::Stroke(const CanvasPath& path)
                               state.dashOffset);
 
   mgfx::Rect bounds;
-  if (NeedToDrawShadow()) {
+  if (NeedToCalculateBounds()) {
     bounds =
       gfxpath->GetStrokedBounds(strokeOptions, mTarget->GetTransform());
   }
@@ -2203,57 +2811,6 @@ CanvasRenderingContext2D::TransformWillUpdate()
 // text
 //
 
-/**
- * Helper function for SetFont that creates a style rule for the given font.
- * @param aFont The CSS font string
- * @param aNode The canvas element
- * @param aResult Pointer in which to place the new style rule.
- * @remark Assumes all pointer arguments are non-null.
- */
-static nsresult
-CreateFontStyleRule(const nsAString& aFont,
-                    nsINode* aNode,
-                    StyleRule** aResult)
-{
-  nsRefPtr<StyleRule> rule;
-  bool changed;
-
-  nsIPrincipal* principal = aNode->NodePrincipal();
-  nsIDocument* document = aNode->OwnerDoc();
-
-  nsIURI* docURL = document->GetDocumentURI();
-  nsIURI* baseURL = document->GetDocBaseURI();
-
-  // Pass the CSS Loader object to the parser, to allow parser error reports
-  // to include the outer window ID.
-  nsCSSParser parser(document->CSSLoader());
-
-  nsresult rv = parser.ParseStyleAttribute(EmptyString(), docURL, baseURL,
-                                           principal, getter_AddRefs(rule));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rv = parser.ParseProperty(eCSSProperty_font, aFont, docURL, baseURL,
-                            principal, rule->GetDeclaration(), &changed,
-                            false);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = parser.ParseProperty(eCSSProperty_line_height,
-                            NS_LITERAL_STRING("normal"), docURL, baseURL,
-                            principal, rule->GetDeclaration(), &changed,
-                            false);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  rule->RuleMatched();
-
-  rule.forget(aResult);
-  return NS_OK;
-}
-
 void
 CanvasRenderingContext2D::SetFont(const nsAString& font,
                                   ErrorResult& error)
@@ -2277,80 +2834,15 @@ CanvasRenderingContext2D::SetFont(const nsAString& font,
     error.Throw(NS_ERROR_FAILURE);
     return;
   }
-  nsIDocument* document = presShell->GetDocument();
 
-  nsRefPtr<css::StyleRule> rule;
-  error = CreateFontStyleRule(font, document, getter_AddRefs(rule));
-
-  if (error.Failed()) {
-    return;
-  }
-
-  css::Declaration *declaration = rule->GetDeclaration();
-  // The easiest way to see whether we got a syntax error or whether
-  // we got 'inherit' or 'initial' is to look at font-size-adjust,
-  // which the shorthand resets to either 'none' or
-  // '-moz-system-font'.
-  // We know the declaration is not !important, so we can use
-  // GetNormalBlock().
-  const nsCSSValue *fsaVal =
-    declaration->GetNormalBlock()->ValueFor(eCSSProperty_font_size_adjust);
-  if (!fsaVal || (fsaVal->GetUnit() != eCSSUnit_None &&
-                  fsaVal->GetUnit() != eCSSUnit_System_Font)) {
-      // We got an all-property value or a syntax error.  The spec says
-      // this value must be ignored.
-    return;
-  }
-
-  nsTArray< nsCOMPtr<nsIStyleRule> > rules;
-  rules.AppendElement(rule);
-
-  nsStyleSet* styleSet = presShell->StyleSet();
-
-  // have to get a parent style context for inherit-like relative
-  // values (2em, bolder, etc.)
-  nsRefPtr<nsStyleContext> parentContext;
-
-  if (mCanvasElement && mCanvasElement->IsInDoc()) {
-      // inherit from the canvas element
-      parentContext = nsComputedDOMStyle::GetStyleContextForElement(
-              mCanvasElement,
-              nullptr,
-              presShell);
-  } else {
-    // otherwise inherit from default (10px sans-serif)
-    nsRefPtr<css::StyleRule> parentRule;
-    error = CreateFontStyleRule(NS_LITERAL_STRING("10px sans-serif"),
-                                document,
-                                getter_AddRefs(parentRule));
-
-    if (error.Failed()) {
-      return;
-    }
-
-    nsTArray< nsCOMPtr<nsIStyleRule> > parentRules;
-    parentRules.AppendElement(parentRule);
-    parentContext = styleSet->ResolveStyleForRules(nullptr, parentRules);
-  }
-
-  if (!parentContext) {
-    error.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  // add a rule to prevent text zoom from affecting the style
-  rules.AppendElement(new nsDisableTextZoomStyleRule);
-
+  nsString usedFont;
   nsRefPtr<nsStyleContext> sc =
-      styleSet->ResolveStyleForRules(parentContext, rules);
+    GetFontStyleContext(mCanvasElement, font, presShell, usedFont, error);
   if (!sc) {
-    error.Throw(NS_ERROR_FAILURE);
     return;
   }
 
   const nsStyleFont* fontStyle = sc->StyleFont();
-
-  NS_ASSERTION(fontStyle, "Could not obtain font style");
 
   nsIAtom* language = sc->StyleFont()->mLanguage;
   if (!language) {
@@ -2390,12 +2882,10 @@ CanvasRenderingContext2D::SetFont(const nsAString& font,
                                                   c->GetUserFontSet());
   NS_ASSERTION(CurrentState().fontGroup, "Could not get font group");
   CurrentState().fontGroup->SetTextPerfMetrics(c->GetTextPerfMetrics());
-
-  // The font getter is required to be reserialized based on what we
-  // parsed (including having line-height removed).  (Older drafts of
-  // the spec required font sizes be converted to pixels, but that no
-  // longer seems to be required.)
-  declaration->GetValue(eCSSProperty_font, CurrentState().font);
+  CurrentState().font = usedFont;
+  CurrentState().fontFont = fontStyle->mFont;
+  CurrentState().fontFont.size = fontStyle->mSize;
+  CurrentState().fontLanguage = fontStyle->mLanguage;
 }
 
 void
@@ -2897,7 +3387,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   const ContextState &state = CurrentState();
 
   // This is only needed to know if we can know the drawing bounding box easily.
-  bool doDrawShadow = NeedToDrawShadow();
+  bool doCalculateBounds = NeedToCalculateBounds();
 
   CanvasBidiProcessor processor;
 
@@ -2916,7 +3406,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   processor.mCtx = this;
   processor.mOp = aOp;
   processor.mBoundingBox = gfxRect(0, 0, 0, 0);
-  processor.mDoMeasureBoundingBox = doDrawShadow || !mIsEntireFrameInvalid;
+  processor.mDoMeasureBoundingBox = doCalculateBounds || !mIsEntireFrameInvalid;
   processor.mState = &CurrentState();
   processor.mFontgrp = currentFontStyle;
 
@@ -3041,7 +3531,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   mTarget->SetTransform(oldTransform);
 
   if (aOp == CanvasRenderingContext2D::TextDrawOperation::FILL &&
-      !doDrawShadow) {
+      !doCalculateBounds) {
     RedrawUser(boundingBox);
     return NS_OK;
   }
@@ -3454,7 +3944,7 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
 
   mgfx::Rect bounds;
 
-  if (NeedToDrawShadow()) {
+  if (NeedToCalculateBounds()) {
     bounds = mgfx::Rect(dx, dy, dw, dh);
     bounds = mTarget->GetTransform().TransformBounds(bounds);
   }
