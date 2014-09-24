@@ -607,6 +607,8 @@ public:
   void PassUnion24(const ImageDataOrNullSequenceOrLong&);
   void PassUnion25(const ImageDataSequenceSequenceOrLong&);
   void PassUnion26(const ImageDataOrNullSequenceSequenceOrLong&);
+  void PassUnion27(const StringSequenceOrEventInit&);
+  void PassUnion28(const EventInitOrStringSequence&);
   void PassUnionWithCallback(const EventHandlerNonNullOrNullOrLong& arg);
   void PassUnionWithByteString(const ByteStringOrLong&);
   void PassUnionWithMozMap(const StringMozMapOrString&);
@@ -773,7 +775,11 @@ public:
   void Overload17(const MozMap<int32_t>&);
   void Overload18(const MozMap<nsString>&);
   void Overload18(const Sequence<nsString>&);
-
+  void Overload19(const Sequence<int32_t>&);
+  void Overload19(JSContext*, const Dict&);
+  void Overload20(JSContext*, const Dict&);
+  void Overload20(const Sequence<int32_t>&);
+  
   // Variadic handling
   void PassVariadicThirdArg(const nsAString&, int32_t,
                             const Sequence<OwningNonNull<TestInterface> >&);
