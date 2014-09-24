@@ -1797,7 +1797,11 @@ LIRGenerator::visitToDouble(MToDouble *convert)
 
       case MIRType_Float32:
       {
-        LFloat32ToDouble *lir = new(alloc()) LFloat32ToDouble(useRegisterAtStart(opd));
+        // Bug 1039993: this used to be useRegisterAtStart, and theoreticall, it
+        // should still be, however, there is a bug in LSRA's implementation of
+        // *AtStart, which is quite fundamental. This should be reverted when that
+        // is fixed, or lsra is deprecated.
+        LFloat32ToDouble *lir = new(alloc()) LFloat32ToDouble(useRegister(opd));
         return define(lir, convert);
       }
 
