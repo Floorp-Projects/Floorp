@@ -30,7 +30,6 @@ GARBAGE += $(strings-xml)
 
 dir-res-raw := ../res/raw
 suggestedsites := $(dir-res-raw)/suggestedsites.json
-browsersearch := $(dir-res-raw)/browsersearch.json
 
 libs realchrome:: \
   $(strings-xml) \
@@ -41,7 +40,6 @@ chrome-%::
 	@$(MAKE) \
 	  $(dir-res-values)-$(AB_rCD)/strings.xml \
 	  $(dir-res-raw)-$(AB_rCD)/suggestedsites.json \
-	  $(dir-res-raw)-$(AB_rCD)/browsersearch.json \
 	  AB_CD=$*
 
 # setup the path to bookmarks.inc. copied and tweaked version of MERGE_FILE from config/config.mk
@@ -118,15 +116,6 @@ $(suggestedsites-dstdir-raw)/suggestedsites.json: FORCE
 		--verbose \
 		--android-package-name=$(ANDROID_PACKAGE_NAME) \
 		--resources=$(srcdir)/../resources \
-		$(if $(filter en-US,$(AB_CD)),,--srcdir=$(l10n-srcdir)) \
-		--srcdir=$(topsrcdir)/mobile/locales/en-US/chrome \
-		$@)
-
-$(eval $(call generated_file_template,browsersearch,browsersearch.json))
-
-$(browsersearch-dstdir-raw)/browsersearch.json: FORCE
-	$(call py_action,generate_browsersearch, \
-		--verbose \
 		$(if $(filter en-US,$(AB_CD)),,--srcdir=$(l10n-srcdir)) \
 		--srcdir=$(topsrcdir)/mobile/locales/en-US/chrome \
 		$@)
