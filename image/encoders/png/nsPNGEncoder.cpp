@@ -3,15 +3,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ImageLogging.h"
 #include "nsCRT.h"
 #include "nsPNGEncoder.h"
-#include "prprf.h"
-#include "nsString.h"
 #include "nsStreamUtils.h"
+#include "nsString.h"
+#include "prprf.h"
 
 using namespace mozilla;
 
-NS_IMPL_ISUPPORTS(nsPNGEncoder, imgIEncoder, nsIInputStream, nsIAsyncInputStream)
+#ifdef PR_LOGGING
+static PRLogModuleInfo *
+GetPNGEncoderLog()
+{
+  static PRLogModuleInfo *sPNGEncoderLog;
+  if (!sPNGEncoderLog)
+    sPNGEncoderLog = PR_NewLogModule("PNGEncoder");
+  return sPNGEncoderLog;
+}
+#endif
+
+NS_IMPL_ISUPPORTS(nsPNGEncoder, imgIEncoder, nsIInputStream,
+                  nsIAsyncInputStream)
 
 nsPNGEncoder::nsPNGEncoder() : mPNG(nullptr), mPNGinfo(nullptr),
                                mIsAnimation(false),
@@ -20,7 +33,8 @@ nsPNGEncoder::nsPNGEncoder() : mPNG(nullptr), mPNGinfo(nullptr),
                                mImageBufferUsed(0), mImageBufferReadPoint(0),
                                mCallback(nullptr),
                                mCallbackTarget(nullptr), mNotifyThreshold(0),
-                               mReentrantMonitor("nsPNGEncoder.mReentrantMonitor")
+                               mReentrantMonitor(
+                                              "nsPNGEncoder.mReentrantMonitor")
 {
 }
 
@@ -72,7 +86,7 @@ NS_IMETHODIMP nsPNGEncoder::InitFromData(const uint8_t* aData,
 
 // nsPNGEncoder::StartImageEncode
 //
-// 
+//
 // See ::InitFromData for other info.
 NS_IMETHODIMP nsPNGEncoder::StartImageEncode(uint32_t aWidth,
                                              uint32_t aHeight,
@@ -241,7 +255,7 @@ NS_IMETHODIMP nsPNGEncoder::AddImageFrame(const uint8_t* aData,
   }
 #endif
 
-  // Stride is the padded width of each row, so it better be longer 
+  // Stride is the padded width of each row, so it better be longer
   // (I'm afraid people will not understand what stride means, so
   // check it well)
   if ((aInputFormat == INPUT_FORMAT_RGB &&
@@ -567,7 +581,8 @@ NS_IMETHODIMP nsPNGEncoder::AsyncWait(nsIInputStreamCallback *aCallback,
   // We set the callback absolutely last, because NotifyListener uses it to
   // determine if someone needs to be notified.  If we don't set it last,
   // NotifyListener might try to fire off a notification to a null target
-  // which will generally cause non-threadsafe objects to be used off the main thread
+  // which will generally cause non-threadsafe objects to be used off the main
+  // thread
   mCallback = aCallback;
 
   // What we are being asked for may be present already
@@ -631,36 +646,24 @@ nsPNGEncoder::StripAlpha(const uint8_t* aSrc, uint8_t* aDest,
 
 // nsPNGEncoder::WarningCallback
 
-void // static
+void
 nsPNGEncoder::WarningCallback(png_structp png_ptr,
                             png_const_charp warning_msg)
 {
-#ifdef DEBUG
-	// XXX: these messages are probably useful callers...
-        // use nsIConsoleService?
-	PR_fprintf(PR_STDERR, "PNG Encoder: %s\n", warning_msg);;
-#endif
+  PR_LOG(GetPNGEncoderLog(), PR_LOG_WARNING,
+         ("libpng warning: %s\n", warning_msg));
 }
 
 
 // nsPNGEncoder::ErrorCallback
 
-void // static
+void
 nsPNGEncoder::ErrorCallback(png_structp png_ptr,
                             png_const_charp error_msg)
 {
-#ifdef DEBUG
-	// XXX: these messages are probably useful callers...
-        // use nsIConsoleService?
-	PR_fprintf(PR_STDERR, "PNG Encoder: %s\n", error_msg);;
-#endif
-#if PNG_LIBPNG_VER < 10500
-        longjmp(png_ptr->jmpbuf, 1);
-#else
-        png_longjmp(png_ptr, 1);
-#endif
+  PR_LOG(GetPNGEncoderLog(), PR_LOG_ERROR, ("libpng error: %s\n", error_msg));
+  png_longjmp(png_ptr, 1);
 }
-
 
 // nsPNGEncoder::WriteCallback
 
