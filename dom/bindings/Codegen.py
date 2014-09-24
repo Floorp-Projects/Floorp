@@ -7004,14 +7004,10 @@ class CGMethodCall(CGThing):
             # 2)  A Date object being passed to a Date or "object" arg.
             # 3)  A RegExp object being passed to a RegExp or "object" arg.
             # 4)  A callable object being passed to a callback or "object" arg.
-            # 5)  Any non-Date and non-RegExp object being passed to a
-            #     array or sequence or callback interface dictionary or
+            # 5)  An iterable object being passed to a sequence arg.
+            # 6)  Any non-Date and non-RegExp object being passed to a
+            #     array or callback interface or dictionary or
             #     "object" arg.
-            #
-            # We can can coalesce these five cases together, as long as we make
-            # sure to check whether our object works as an interface argument
-            # before checking whether it works as an arraylike or dictionary or
-            # callback function or callback interface.
 
             # First grab all the overloads that have a non-callback interface
             # (which includes typed arrays and arraybuffers) at the
@@ -7031,17 +7027,20 @@ class CGMethodCall(CGThing):
             objectSigs.extend(s for s in possibleSignatures
                               if distinguishingType(s).isCallback())
 
-            # Now append all the overloads that take an array or sequence or
-            # dictionary or callback interface:
+            # And all the overloads that take sequences
             objectSigs.extend(s for s in possibleSignatures
-                              if (distinguishingType(s).isArray() or
-                                  distinguishingType(s).isSequence() or
-                                  distinguishingType(s).isDictionary() or
-                                  distinguishingType(s).isCallbackInterface()))
+                              if distinguishingType(s).isSequence())
 
-            # Now append all the overloads that take MozMap:
-            objectSigs.extend(s for s in possibleSignatures
-                              if (distinguishingType(s).isMozMap()))
+            # Now append all the overloads that take an array or dictionary or
+            # callback interface or MozMap.  There should be only one of these!
+            genericObjectSigs = [
+                s for s in possibleSignatures
+                if (distinguishingType(s).isArray() or
+                    distinguishingType(s).isDictionary() or
+                    distinguishingType(s).isMozMap() or
+                    distinguishingType(s).isCallbackInterface()) ]
+            assert len(genericObjectSigs) <= 1
+            objectSigs.extend(genericObjectSigs)
 
             # There might be more than one thing in objectSigs; we need to check
             # which ones we unwrap to.
