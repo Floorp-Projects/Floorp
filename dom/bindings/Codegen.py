@@ -11554,14 +11554,17 @@ class CGDictionary(CGThing):
             # that we throw if we have no value provided.
             conversion += dedent(
                 """
-                // Skip the undefined check if we have no cx.  In that
-                // situation the caller is default-constructing us and we'll
-                // just assume they know what they're doing.
-                if (cx && (isNull || temp->isUndefined())) {
+                if (!isNull && !temp->isUndefined()) {
+                ${convert}
+                } else if (cx) {
+                  // Don't error out if we have no cx.  In that
+                  // situation the caller is default-constructing us and we'll
+                  // just assume they know what they're doing.
                   return ThrowErrorMessage(cx, MSG_MISSING_REQUIRED_DICTIONARY_MEMBER,
                                            "%s");
                 }
-                ${convert}""" % self.getMemberSourceDescription(member))
+                """ % self.getMemberSourceDescription(member))
+            conversionReplacements["convert"] = indent(conversionReplacements["convert"]).rstrip();
         else:
             conversion += (
                 "if (!isNull && !temp->isUndefined()) {\n"
