@@ -1083,9 +1083,13 @@ gfxContext::Paint(gfxFloat alpha)
 void
 gfxContext::PushGroup(gfxContentType content)
 {
+  DrawTarget* oldDT = mDT;
+
   PushNewDT(content);
 
-  PushClipsToDT(mDT);
+  if (oldDT != mDT) {
+    PushClipsToDT(mDT);
+  }
   mDT->SetTransform(GetDTTransform());
 }
 
@@ -1115,6 +1119,11 @@ gfxContext::PushGroupAndCopyBackground(gfxContentType content)
     Point oldDeviceOffset = CurrentState().deviceOffset;
 
     PushNewDT(gfxContentType::COLOR);
+
+    if (oldDT == mDT) {
+      // Creating new DT failed.
+      return;
+    }
 
     Point offset = CurrentState().deviceOffset - oldDeviceOffset;
     Rect surfRect(0, 0, Float(mDT->GetSize().width), Float(mDT->GetSize().height));
@@ -1632,8 +1641,11 @@ gfxContext::PushNewDT(gfxContentType content)
     newDT = mDT->CreateSimilarDrawTarget(IntSize(64, 64), format);
 
     if (!newDT) {
-      // If even this fails.. we're most likely just out of memory!
-      NS_ABORT_OOM(BytesPerPixel(format) * 64 * 64);
+      if (!gfxPlatform::GetPlatform()->DidRenderingDeviceReset()) {
+        // If even this fails.. we're most likely just out of memory!
+        NS_ABORT_OOM(BytesPerPixel(format) * 64 * 64);
+      }
+      newDT = CurrentState().drawTarget;
     }
   }
 
