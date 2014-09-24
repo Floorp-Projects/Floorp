@@ -13,6 +13,7 @@ import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.LightweightTheme;
 import org.mozilla.gecko.LightweightThemeDrawable;
+import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -66,7 +67,11 @@ public class TabsPanel extends LinearLayout
     }
 
     public static View createTabsLayout(final Context context, final AttributeSet attrs) {
-       return new TabsListLayout(context, attrs);
+        if (NewTabletUI.isEnabled(context)) {
+            return new TabsGridLayout(context, attrs);
+        } else {
+            return new TabsListLayout(context, attrs);
+        }
     }
 
     public static interface TabsLayoutChangeListener {
