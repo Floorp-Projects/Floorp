@@ -242,7 +242,7 @@ namespace {
 struct SequenceAdaptor
 {
 	const composition* const mSequence;
-	SequenceAdaptor(const composition* aSequence) : mSequence(aSequence) {}
+	explicit SequenceAdaptor(const composition* aSequence) : mSequence(aSequence) {}
 	uint32_t operator[](size_t aIdx) const {
 		return mSequence[aIdx].c2;
 	}
