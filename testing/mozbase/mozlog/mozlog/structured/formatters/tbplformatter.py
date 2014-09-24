@@ -31,10 +31,11 @@ class TbplFormatter(BaseFormatter):
         return "PROCESS | %(process)s | %(data)s\n" % data
 
     def crash(self, data):
-        id = self.id_str(data["test"]) if "test" in data else "pid: " % data["process"]
+        id = self.id_str(data["test"]) if "test" in data else "pid: %s" % data["process"]
 
-        rv = ["PROCESS-CRASH | %s | application crashed [%s]" % (id,
-                                                                 data["signature"])]
+        signature = data["signature"] if data["signature"] else "unknown top frame"
+        rv = ["PROCESS-CRASH | %s | application crashed [%s]" % (id, signature)]
+
         if data.get("minidump_path"):
             rv.append("Crash dump filename: %s" % data["minidump_path"])
 
