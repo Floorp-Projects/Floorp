@@ -669,11 +669,28 @@ addMultiTouch(MultiTouchInput& aMultiTouch,
     int32_t id = args->pointerProperties[aIndex].id;
     PointerCoords coords = args->pointerCoords[aIndex];
     float force = coords.getAxisValue(AMOTION_EVENT_AXIS_PRESSURE);
+
+    float orientation = coords.getAxisValue(AMOTION_EVENT_AXIS_ORIENTATION);
+    float rotationAngle = orientation * 180 / M_PI;
+    if (rotationAngle == 90) {
+      rotationAngle = -90;
+    }
+
+    float radiusX, radiusY;
+    if (rotationAngle < 0) {
+      radiusX = coords.getAxisValue(AMOTION_EVENT_AXIS_TOUCH_MINOR) / 2;
+      radiusY = coords.getAxisValue(AMOTION_EVENT_AXIS_TOUCH_MAJOR) / 2;
+      rotationAngle += 90;
+    } else {
+      radiusX = coords.getAxisValue(AMOTION_EVENT_AXIS_TOUCH_MAJOR) / 2;
+      radiusY = coords.getAxisValue(AMOTION_EVENT_AXIS_TOUCH_MINOR) / 2;
+    }
+
     ScreenIntPoint point(floor(coords.getX() + 0.5),
                          floor(coords.getY() + 0.5));
 
-    SingleTouchData touchData(id, point, ScreenSize(0, 0),
-                              0, force);
+    SingleTouchData touchData(id, point, ScreenSize(radiusX, radiusY),
+                              rotationAngle, force);
 
     aMultiTouch.mTouches.AppendElement(touchData);
 }
