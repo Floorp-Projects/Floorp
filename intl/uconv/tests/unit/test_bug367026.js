@@ -22,6 +22,7 @@ const charset = "HZ-GB-2312";
     
 function run_test() {
     var converter = CreateScriptableConverter();
+    converter.isInternal = true;
 
     checkEncode(converter, charset, inASCII, expectedASCII);
     checkEncode(converter, charset, inMixed, expectedMixed);

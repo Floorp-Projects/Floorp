@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html class=reftest-wait>
+<meta charset=utf-8>
+<script>
+function runTest() {
+  var r = document.documentElement;
+  var d = window[0].document;
+  var i = d.createElement("iframe");
+  i.src = "data:text/html,PASS";
+  i.onload = function() {
+    r.removeAttribute("class");
+  }
+  d.body.appendChild(i);
+}
+</script>
+<body onload="runTest();">
+<iframe src="bug945215-1.html" width=400 height=200></iframe>
