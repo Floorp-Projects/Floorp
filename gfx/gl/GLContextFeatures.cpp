@@ -509,16 +509,6 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "texture_storage",
-        420, // OpenGL version
-        300, // OpenGL ES version
-        GLContext::ARB_texture_storage,
-        {
-            GLContext::EXT_texture_storage,
-            GLContext::Extensions_End
-        }
-    },
-    {
         "transform_feedback2",
         400, // OpenGL version
         300, // OpenGL ES version
