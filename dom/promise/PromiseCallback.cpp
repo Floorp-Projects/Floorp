@@ -203,13 +203,13 @@ WrapperPromiseCallback::Call(JSContext* aCx,
 
   ErrorResult rv;
 
-  // PromiseReactionTask step 6
+  // If invoking callback threw an exception, run resolver's reject with the
+  // thrown exception as argument and the synchronous flag set.
   JS::Rooted<JS::Value> retValue(aCx);
   mCallback->Call(value, &retValue, rv, CallbackObject::eRethrowExceptions);
 
   rv.WouldReportJSException();
 
-  // PromiseReactionTask step 7
   if (rv.Failed() && rv.IsJSException()) {
     JS::Rooted<JS::Value> value(aCx);
     rv.StealJSException(aCx, &value);
@@ -219,7 +219,7 @@ WrapperPromiseCallback::Call(JSContext* aCx,
       return;
     }
 
-    mNextPromise->RejectInternal(aCx, value);
+    mNextPromise->RejectInternal(aCx, value, Promise::SyncTask);
     return;
   }
 
@@ -284,13 +284,14 @@ WrapperPromiseCallback::Call(JSContext* aCx,
     }
   }
 
-  // Otherwise, run resolver's resolve with value.
+  // Otherwise, run resolver's resolve with value and the synchronous flag
+  // set.
   if (!JS_WrapValue(aCx, &retValue)) {
     NS_WARNING("Failed to wrap value into the right compartment.");
     return;
   }
 
-  mNextPromise->ResolveInternal(aCx, retValue);
+  mNextPromise->ResolveInternal(aCx, retValue, Promise::SyncTask);
 }
 
 // NativePromiseCallback
