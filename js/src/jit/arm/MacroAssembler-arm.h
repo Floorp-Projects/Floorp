@@ -317,6 +317,10 @@ class MacroAssemblerARM : public Assembler
     void ma_vpop(VFPRegister r);
     void ma_vpush(VFPRegister r);
 
+    // Barriers.
+    void ma_dmb(BarrierOption option=BarrierSY);
+    void ma_dsb(BarrierOption option=BarrierSY);
+
     // Branches when done from within arm-specific code.
     BufferOffset ma_b(Label *dest, Condition c = Always);
     void ma_bx(Register dest, Condition c = Always);

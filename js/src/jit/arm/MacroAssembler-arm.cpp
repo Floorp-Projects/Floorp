@@ -1325,6 +1325,24 @@ MacroAssemblerARM::ma_vpush(VFPRegister r)
     finishFloatTransfer();
 }
 
+// Barriers
+void
+MacroAssemblerARM::ma_dmb(BarrierOption option)
+{
+    if (HasDMBDSBISB())
+        as_dmb(option);
+    else
+        as_dmb_trap();
+}
+void
+MacroAssemblerARM::ma_dsb(BarrierOption option)
+{
+    if (HasDMBDSBISB())
+        as_dsb(option);
+    else
+        as_dsb_trap();
+}
+
 // Branches when done from within arm-specific code.
 BufferOffset
 MacroAssemblerARM::ma_b(Label *dest, Assembler::Condition c)

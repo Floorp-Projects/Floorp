@@ -1463,6 +1463,39 @@ Assembler::as_tst(Register src1, Operand2 op2, Condition c)
     return as_alu(InvalidReg, src1, op2, OpTst, SetCond, c);
 }
 
+static MOZ_CONSTEXPR_VAR Register NoAddend = { Registers::pc };
+
+static const int SignExtend = 0x06000070;
+
+enum SignExtend {
+    SxSxtb = 10 << 20,
+    SxSxth = 11 << 20,
+    SxUxtb = 14 << 20,
+    SxUxth = 15 << 20
+};
+
+// Sign extension operations.
+BufferOffset
+Assembler::as_sxtb(Register dest, Register src, int rotate, Condition c)
+{
+    return writeInst((int)c | SignExtend | SxSxtb | RN(NoAddend) | RD(dest) | ((rotate & 3) << 10) | src.code());
+}
+BufferOffset
+Assembler::as_sxth(Register dest, Register src, int rotate, Condition c)
+{
+    return writeInst((int)c | SignExtend | SxSxth | RN(NoAddend) | RD(dest) | ((rotate & 3) << 10) | src.code());
+}
+BufferOffset
+Assembler::as_uxtb(Register dest, Register src, int rotate, Condition c)
+{
+    return writeInst((int)c | SignExtend | SxUxtb | RN(NoAddend) | RD(dest) | ((rotate & 3) << 10) | src.code());
+}
+BufferOffset
+Assembler::as_uxth(Register dest, Register src, int rotate, Condition c)
+{
+    return writeInst((int)c | SignExtend | SxUxth | RN(NoAddend) | RD(dest) | ((rotate & 3) << 10) | src.code());
+}
+
 // Not quite ALU worthy, but these are useful none the less. These also have
 // the isue of these being formatted completly differently from the standard ALU
 // operations.
@@ -1813,6 +1846,90 @@ Assembler::PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
       }
     }
     return true;
+}
+
+// Atomic instruction stuff:
+
+BufferOffset
+Assembler::as_ldrex(Register rt, Register rn, Condition c)
+{
+    return writeInst(0x01900f9f | (int)c | RT(rt) | RN(rn));
+}
+
+BufferOffset
+Assembler::as_ldrexh(Register rt, Register rn, Condition c)
+{
+    return writeInst(0x01f00f9f | (int)c | RT(rt) | RN(rn));
+}
+
+BufferOffset
+Assembler::as_ldrexb(Register rt, Register rn, Condition c)
+{
+    return writeInst(0x01d00f9f | (int)c | RT(rt) | RN(rn));
+}
+
+BufferOffset
+Assembler::as_strex(Register rd, Register rt, Register rn, Condition c)
+{
+    return writeInst(0x01800f90 | (int)c | RD(rd) | RN(rn) | rt.code());
+}
+
+BufferOffset
+Assembler::as_strexh(Register rd, Register rt, Register rn, Condition c)
+{
+    return writeInst(0x01e00f90 | (int)c | RD(rd) | RN(rn) | rt.code());
+}
+
+BufferOffset
+Assembler::as_strexb(Register rd, Register rt, Register rn, Condition c)
+{
+    return writeInst(0x01c00f90 | (int)c | RD(rd) | RN(rn) | rt.code());
+}
+
+// Memory barrier stuff:
+
+BufferOffset
+Assembler::as_dmb(BarrierOption option)
+{
+    return writeInst(0xf57ff050U | (int)option);
+}
+BufferOffset
+Assembler::as_dsb(BarrierOption option)
+{
+    return writeInst(0xf57ff040U | (int)option);
+}
+BufferOffset
+Assembler::as_isb()
+{
+    return writeInst(0xf57ff06fU); // option == SY
+}
+BufferOffset
+Assembler::as_dsb_trap()
+{
+    // DSB is "mcr 15, 0, r0, c7, c10, 4".
+    // See eg https://bugs.kde.org/show_bug.cgi?id=228060.
+    // ARMv7 manual, "VMSA CP15 c7 register summary".
+    // Flagged as "legacy" starting with ARMv8, may be disabled on chip, see
+    // ARMv8 manual E2.7.3 and G3.18.16.
+    return writeInst(0xee070f9a);
+}
+BufferOffset
+Assembler::as_dmb_trap()
+{
+    // DMB is "mcr 15, 0, r0, c7, c10, 5".
+    // ARMv7 manual, "VMSA CP15 c7 register summary".
+    // Flagged as "legacy" starting with ARMv8, may be disabled on chip, see
+    // ARMv8 manual E2.7.3 and G3.18.16.
+    return writeInst(0xee070fba);
+}
+BufferOffset
+Assembler::as_isb_trap()
+{
+    // ISB is "mcr 15, 0, r0, c7, c5, 4".
+    // ARMv7 manual, "VMSA CP15 c7 register summary".
+    // Flagged as "legacy" starting with ARMv8, may be disabled on chip, see
+    // ARMv8 manual E2.7.3 and G3.18.16.
+    return writeInst(0xee070f94);
 }
 
 // Control flow stuff:
