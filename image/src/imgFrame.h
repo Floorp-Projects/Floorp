@@ -205,6 +205,7 @@ private: // data
   int8_t       mBlendMethod;
   bool mSinglePixel;
   bool mCompositingFailed;
+  bool mHasNoAlpha;
   bool mNonPremult;
   bool mDiscardable;
   bool mOptimizable;

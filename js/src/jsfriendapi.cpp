@@ -1235,10 +1235,11 @@ js::GetAnyCompartmentInZone(JS::Zone *zone)
     return comp.get();
 }
 
-bool
-JS::ObjectPtr::isAboutToBeFinalized()
+void
+JS::ObjectPtr::updateWeakPointerAfterGC()
 {
-    return JS_IsAboutToBeFinalized(&value);
+    if (js::gc::IsObjectAboutToBeFinalized(value.unsafeGet()))
+        value = nullptr;
 }
 
 void

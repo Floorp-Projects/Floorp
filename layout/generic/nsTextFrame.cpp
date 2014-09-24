@@ -12,6 +12,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/BinarySearch.h"
 
 #include "nsCOMPtr.h"
 #include "nsBlockFrame.h"
@@ -120,39 +121,33 @@ struct TabWidthStore {
   nsTArray<TabWidth> mWidths;
 };
 
+namespace {
+
+struct TabwidthAdaptor
+{
+  const nsTArray<TabWidth>& mWidths;
+  TabwidthAdaptor(const nsTArray<TabWidth>& aWidths)
+    : mWidths(aWidths) {}
+  uint32_t operator[](size_t aIdx) const {
+    return mWidths[aIdx].mOffset;
+  }
+};
+
+} // namespace
+
 void
 TabWidthStore::ApplySpacing(gfxTextRun::PropertyProvider::Spacing *aSpacing,
                             uint32_t aOffset, uint32_t aLength)
 {
-  uint32_t i = 0, len = mWidths.Length();
+  size_t i = 0;
+  const size_t len = mWidths.Length();
 
   // If aOffset is non-zero, do a binary search to find where to start
   // processing the tab widths, in case the list is really long. (See bug
   // 953247.)
   // We need to start from the first entry where mOffset >= aOffset.
   if (aOffset > 0) {
-    uint32_t lo = 0, hi = len;
-    while (lo < hi) {
-      i = (lo + hi) / 2;
-      const TabWidth& tw = mWidths[i];
-      if (tw.mOffset < aOffset) {
-        // mWidths[i] precedes the target range; new search range
-        // will be [i+1, hi)
-        lo = ++i;
-        continue;
-      }
-      if (tw.mOffset > aOffset) {
-        // mWidths[i] is within (or beyond) the target range;
-        // new search range is [lo, i). If it turns out that
-        // mWidths[i] was the first entry within the range,
-        // we'll never move hi any further, and end up exiting
-        // when i == lo == this value of hi.
-        hi = i;
-        continue;
-      }
-      // Found an exact match for aOffset, so end search now
-      break;
-    }
+    mozilla::BinarySearch(TabwidthAdaptor(mWidths), 0, len, aOffset, &i);
   }
 
   uint32_t limit = aOffset + aLength;
@@ -2676,16 +2671,10 @@ nsTextFrame::GetTrimmedOffsets(const nsTextFragment* aFrag,
   return offsets;
 }
 
-/*
- * Currently only Unicode characters below 0x10000 have their spacing modified
- * by justification. If characters above 0x10000 turn out to need
- * justification spacing, that will require extra work. Currently,
- * this function must not include 0xd800 to 0xdbff because these characters
- * are surrogates.
- */
 static bool IsJustifiableCharacter(const nsTextFragment* aFrag, int32_t aPos,
-                                     bool aLangIsCJ)
+                                   bool aLangIsCJ)
 {
+  NS_ASSERTION(aPos >= 0, "negative position?!");
   char16_t ch = aFrag->CharAt(aPos);
   if (ch == '\n' || ch == '\t' || ch == '\r')
     return true;
@@ -2698,24 +2687,37 @@ static bool IsJustifiableCharacter(const nsTextFragment* aFrag, int32_t aPos,
   }
   if (ch < 0x2150u)
     return false;
-  if (aLangIsCJ && (
-       (0x2150u <= ch && ch <= 0x22ffu) || // Number Forms, Arrows, Mathematical Operators
-       (0x2460u <= ch && ch <= 0x24ffu) || // Enclosed Alphanumerics
-       (0x2580u <= ch && ch <= 0x27bfu) || // Block Elements, Geometric Shapes, Miscellaneous Symbols, Dingbats
-       (0x27f0u <= ch && ch <= 0x2bffu) || // Supplemental Arrows-A, Braille Patterns, Supplemental Arrows-B,
-                                           // Miscellaneous Mathematical Symbols-B, Supplemental Mathematical Operators,
-                                           // Miscellaneous Symbols and Arrows
-       (0x2e80u <= ch && ch <= 0x312fu) || // CJK Radicals Supplement, CJK Radicals Supplement,
-                                           // Ideographic Description Characters, CJK Symbols and Punctuation,
-                                           // Hiragana, Katakana, Bopomofo
-       (0x3190u <= ch && ch <= 0xabffu) || // Kanbun, Bopomofo Extended, Katakana Phonetic Extensions,
-                                           // Enclosed CJK Letters and Months, CJK Compatibility,
-                                           // CJK Unified Ideographs Extension A, Yijing Hexagram Symbols,
-                                           // CJK Unified Ideographs, Yi Syllables, Yi Radicals
-       (0xf900u <= ch && ch <= 0xfaffu) || // CJK Compatibility Ideographs
-       (0xff5eu <= ch && ch <= 0xff9fu)    // Halfwidth and Fullwidth Forms(a part)
-     ))
-    return true;
+  if (aLangIsCJ) {
+    if ((0x2150u <= ch && ch <= 0x22ffu) || // Number Forms, Arrows, Mathematical Operators
+        (0x2460u <= ch && ch <= 0x24ffu) || // Enclosed Alphanumerics
+        (0x2580u <= ch && ch <= 0x27bfu) || // Block Elements, Geometric Shapes, Miscellaneous Symbols, Dingbats
+        (0x27f0u <= ch && ch <= 0x2bffu) || // Supplemental Arrows-A, Braille Patterns, Supplemental Arrows-B,
+                                            // Miscellaneous Mathematical Symbols-B, Supplemental Mathematical Operators,
+                                            // Miscellaneous Symbols and Arrows
+        (0x2e80u <= ch && ch <= 0x312fu) || // CJK Radicals Supplement, CJK Radicals Supplement,
+                                            // Ideographic Description Characters, CJK Symbols and Punctuation,
+                                            // Hiragana, Katakana, Bopomofo
+        (0x3190u <= ch && ch <= 0xabffu) || // Kanbun, Bopomofo Extended, Katakana Phonetic Extensions,
+                                            // Enclosed CJK Letters and Months, CJK Compatibility,
+                                            // CJK Unified Ideographs Extension A, Yijing Hexagram Symbols,
+                                            // CJK Unified Ideographs, Yi Syllables, Yi Radicals
+        (0xf900u <= ch && ch <= 0xfaffu) || // CJK Compatibility Ideographs
+        (0xff5eu <= ch && ch <= 0xff9fu)    // Halfwidth and Fullwidth Forms(a part)
+       ) {
+      return true;
+    }
+    char16_t ch2;
+    if (NS_IS_HIGH_SURROGATE(ch) && aFrag->GetLength() > uint32_t(aPos) + 1 &&
+        NS_IS_LOW_SURROGATE(ch2 = aFrag->CharAt(aPos + 1))) {
+      uint32_t u = SURROGATE_TO_UCS4(ch, ch2);
+      if (0x20000u <= u && u <= 0x2ffffu) { // CJK Unified Ideographs Extension B,
+                                            // CJK Unified Ideographs Extension C,
+                                            // CJK Unified Ideographs Extension D,
+                                            // CJK Compatibility Ideographs Supplement
+        return true;
+      }
+    }
+  }
   return false;
 }
 

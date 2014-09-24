@@ -66,4 +66,3 @@ dictionary EventInit {
   boolean bubbles = false;
   boolean cancelable = false;
 };
-

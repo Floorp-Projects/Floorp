@@ -11,41 +11,51 @@
 #include "nsIDOMNode.h"
 #include "nsTArray.h"
 
+class nsINodeList;
 class inIDOMUtils;
-
-////////////////////////////////////////////////////
-
-struct DeepTreeStackItem
-{
-  nsCOMPtr<nsIDOMNode> node;
-  nsCOMPtr<nsIDOMNodeList> kids;
-  uint32_t lastIndex; // Index one bigger than the index of whatever
-                      // kid we're currently at in |kids|.
-};
-
-////////////////////////////////////////////////////
 
 class inDeepTreeWalker : public inIDeepTreeWalker
 {
 public:
-	NS_DECL_ISUPPORTS
-	NS_DECL_INIDEEPTREEWALKER
+  NS_DECL_ISUPPORTS
+  NS_DECL_INIDEEPTREEWALKER
 
   inDeepTreeWalker();
 
+  nsresult SetCurrentNode(nsIDOMNode* aCurrentNode,
+                          nsINodeList* aSiblings);
 protected:
   virtual ~inDeepTreeWalker();
 
-  void PushNode(nsIDOMNode* aNode);
+  already_AddRefed<nsIDOMNode> GetParent();
+  nsresult EdgeChild(nsIDOMNode** _retval, bool aReverse);
 
   bool mShowAnonymousContent;
   bool mShowSubDocuments;
+  bool mShowDocumentsAsNodes;
+
+  // The root node. previousNode and parentNode will return
+  // null from here.
   nsCOMPtr<nsIDOMNode> mRoot;
   nsCOMPtr<nsIDOMNode> mCurrentNode;
-  uint32_t mWhatToShow;
-  
-  nsAutoTArray<DeepTreeStackItem, 8> mStack;
   nsCOMPtr<inIDOMUtils> mDOMUtils;
+
+  // We cache the siblings of mCurrentNode as a list of nodes.
+  // Notes: normally siblings are all the children of the parent
+  // of mCurrentNode (that are interesting for use for the walk)
+  // and mCurrentIndex is the index of mCurrentNode in that list
+  // But if mCurrentNode is a (sub) document then instead of
+  // storing a list that has only one element (the document)
+  // and setting mCurrentIndex to null, we set mSibilings to null.
+  // The reason for this is purely technical, since nsINodeList is
+  // nsIContent based hence we cannot use it to store a document node.
+  nsCOMPtr<nsINodeList> mSiblings;
+
+  // Index of mCurrentNode in the mSiblings list.
+  int32_t mCurrentIndex;
+
+  // Currently unused. Should be a filter for nodes.
+  uint32_t mWhatToShow;
 };
 
 // {BFCB82C2-5611-4318-90D6-BAF4A7864252}

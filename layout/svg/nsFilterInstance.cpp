@@ -486,7 +486,7 @@ nsFilterInstance::Render(gfxContext* aContext)
     mSourceGraphic.mSourceSurface, mSourceGraphic.mSurfaceRect,
     mFillPaint.mSourceSurface, mFillPaint.mSurfaceRect,
     mStrokePaint.mSourceSurface, mStrokePaint.mSurfaceRect,
-    mInputImages);
+    mInputImages, Point(0, 0));
 
   return NS_OK;
 }

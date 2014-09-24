@@ -7,16 +7,28 @@
 #include "GMPChild.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/unused.h"
+#include "runnable_utils.h"
 #include <ctime>
+
+#define ON_GMP_THREAD() (mPlugin->GMPMessageLoop() == MessageLoop::current())
+
+#define CALL_ON_GMP_THREAD(_func, ...) \
+  do { \
+    if (ON_GMP_THREAD()) { \
+      _func(__VA_ARGS__); \
+    } else { \
+      mPlugin->GMPMessageLoop()->PostTask( \
+        FROM_HERE, NewRunnableMethod(this, &GMPDecryptorChild::_func, __VA_ARGS__) \
+      ); \
+    } \
+  } while(false)
 
 namespace mozilla {
 namespace gmp {
 
 GMPDecryptorChild::GMPDecryptorChild(GMPChild* aPlugin)
   : mSession(nullptr)
-#ifdef DEBUG
   , mPlugin(aPlugin)
-#endif
 {
   MOZ_ASSERT(mPlugin);
 }
@@ -37,18 +49,21 @@ GMPDecryptorChild::ResolveNewSessionPromise(uint32_t aPromiseId,
                                             const char* aSessionId,
                                             uint32_t aSessionIdLength)
 {
-  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
+  CALL_ON_GMP_THREAD(SendResolveNewSessionPromise,
+                     aPromiseId, nsAutoCString(aSessionId, aSessionIdLength));
+}
 
-  nsAutoCString id(aSessionId, aSessionIdLength);
-  SendResolveNewSessionPromise(aPromiseId, id);
+void
+GMPDecryptorChild::ResolveLoadSessionPromise(uint32_t aPromiseId,
+                                             bool aSuccess)
+{
+  CALL_ON_GMP_THREAD(SendResolveLoadSessionPromise, aPromiseId, aSuccess);
 }
 
 void
 GMPDecryptorChild::ResolvePromise(uint32_t aPromiseId)
 {
-  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
-
-  SendResolvePromise(aPromiseId);
+  CALL_ON_GMP_THREAD(SendResolvePromise, aPromiseId);
 }
 
 void
@@ -57,10 +72,8 @@ GMPDecryptorChild::RejectPromise(uint32_t aPromiseId,
                                  const char* aMessage,
                                  uint32_t aMessageLength)
 {
-  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
-
-  nsAutoCString msg(aMessage, aMessageLength);
-  SendRejectPromise(aPromiseId, aException, msg);
+  CALL_ON_GMP_THREAD(SendRejectPromise,
+                     aPromiseId, aException, nsAutoCString(aMessage, aMessageLength));
 }
 
 void
@@ -71,13 +84,11 @@ GMPDecryptorChild::SessionMessage(const char* aSessionId,
                                   const char* aDestinationURL,
                                   uint32_t aDestinationURLLength)
 {
-  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
-
-  nsAutoCString id(aSessionId, aSessionIdLength);
   nsTArray<uint8_t> msg;
   msg.AppendElements(aMessage, aMessageLength);
-  nsAutoCString url(aDestinationURL, aDestinationURLLength);
-  SendSessionMessage(id, msg, url);
+  CALL_ON_GMP_THREAD(SendSessionMessage,
+                     nsAutoCString(aSessionId, aSessionIdLength), msg,
+                     nsAutoCString(aDestinationURL, aDestinationURLLength));
 }
 
 void
@@ -85,20 +96,16 @@ GMPDecryptorChild::ExpirationChange(const char* aSessionId,
                                     uint32_t aSessionIdLength,
                                     GMPTimestamp aExpiryTime)
 {
-  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
-
-  nsAutoCString id(aSessionId, aSessionIdLength);
-  SendExpirationChange(id, aExpiryTime);
+  CALL_ON_GMP_THREAD(SendExpirationChange,
+                     nsAutoCString(aSessionId, aSessionIdLength), aExpiryTime);
 }
 
 void
 GMPDecryptorChild::SessionClosed(const char* aSessionId,
                                  uint32_t aSessionIdLength)
 {
-  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
-
-  nsAutoCString id(aSessionId, aSessionIdLength);
-  SendSessionClosed(id);
+  CALL_ON_GMP_THREAD(SendSessionClosed,
+                     nsAutoCString(aSessionId, aSessionIdLength));
 }
 
 void
@@ -109,11 +116,10 @@ GMPDecryptorChild::SessionError(const char* aSessionId,
                                 const char* aMessage,
                                 uint32_t aMessageLength)
 {
-  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
-
-  nsAutoCString id(aSessionId, aSessionIdLength);
-  nsAutoCString msg(aMessage, aMessageLength);
-  SendSessionError(id, aException, aSystemCode, msg);
+  CALL_ON_GMP_THREAD(SendSessionError,
+                     nsAutoCString(aSessionId, aSessionIdLength),
+                     aException, aSystemCode,
+                     nsAutoCString(aMessage, aMessageLength));
 }
 
 void
@@ -122,12 +128,10 @@ GMPDecryptorChild::KeyIdUsable(const char* aSessionId,
                                const uint8_t* aKeyId,
                                uint32_t aKeyIdLength)
 {
-  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
-
-  nsAutoCString sid(aSessionId, aSessionIdLength);
   nsAutoTArray<uint8_t, 16> kid;
   kid.AppendElements(aKeyId, aKeyIdLength);
-  SendKeyIdUsable(sid, kid);
+  CALL_ON_GMP_THREAD(SendKeyIdUsable,
+                     nsAutoCString(aSessionId, aSessionIdLength), kid);
 }
 
 void
@@ -136,23 +140,27 @@ GMPDecryptorChild::KeyIdNotUsable(const char* aSessionId,
                                   const uint8_t* aKeyId,
                                   uint32_t aKeyIdLength)
 {
-  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
-
-  nsAutoCString sid(aSessionId, aSessionIdLength);
   nsAutoTArray<uint8_t, 16> kid;
   kid.AppendElements(aKeyId, aKeyIdLength);
-  SendKeyIdNotUsable(sid, kid);
+  CALL_ON_GMP_THREAD(SendKeyIdNotUsable,
+                     nsAutoCString(aSessionId, aSessionIdLength), kid);
 }
 
 void
 GMPDecryptorChild::Decrypted(GMPBuffer* aBuffer, GMPErr aResult)
 {
-  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
+  if (!ON_GMP_THREAD()) {
+    // We should run this whole method on the GMP thread since the buffer needs
+    // to be deleted after the SendDecrypted call.
+    CALL_ON_GMP_THREAD(Decrypted, aBuffer, aResult);
+    return;
+  }
 
   if (!aBuffer) {
     NS_WARNING("GMPDecryptorCallback passed bull GMPBuffer");
     return;
   }
+
   auto buffer = static_cast<GMPBufferImpl*>(aBuffer);
   SendDecrypted(buffer->mId, aResult, buffer->mData);
   delete buffer;
@@ -161,9 +169,7 @@ GMPDecryptorChild::Decrypted(GMPBuffer* aBuffer, GMPErr aResult)
 void
 GMPDecryptorChild::SetCapabilities(uint64_t aCaps)
 {
-  MOZ_ASSERT(mPlugin->GMPMessageLoop() == MessageLoop::current());
-
-  SendSetCaps(aCaps);
+  CALL_ON_GMP_THREAD(SendSetCaps, aCaps);
 }
 
 void
@@ -310,11 +316,15 @@ GMPDecryptorChild::RecvDecrypt(const uint32_t& aId,
     return false;
   }
 
-  GMPEncryptedBufferDataImpl metadata(aMetadata);
-
   // Note: the GMPBufferImpl created here is deleted when the GMP passes
   // it back in the Decrypted() callback above.
-  mSession->Decrypt(new GMPBufferImpl(aId, aBuffer), &metadata);
+  GMPBufferImpl* buffer = new GMPBufferImpl(aId, aBuffer);
+
+  // |metadata| lifetime is managed by |buffer|.
+  GMPEncryptedBufferDataImpl* metadata = new GMPEncryptedBufferDataImpl(aMetadata);
+  buffer->SetMetadata(metadata);
+
+  mSession->Decrypt(buffer, metadata);
   return true;
 }
 

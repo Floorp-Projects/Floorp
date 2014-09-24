@@ -99,7 +99,6 @@ public:
   int8_t aac_profile;
   mozilla::Vector<uint8_t> extra_data;
   mozilla::Vector<uint8_t> audio_specific_config;
-  CryptoTrack crypto;
 
   void Update(stagefright::sp<stagefright::MetaData>& aMetaData,
               const char* aMimeType);

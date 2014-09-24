@@ -65,7 +65,7 @@ function test()
       info("private tab opened");
       privateBrowser.selectedBrowser.removeEventListener("load", onLoad, true);
       privateContent = privateBrowser.selectedBrowser.contentWindow;
-      ok(PrivateBrowsingUtils.isWindowPrivate(privateContent), "tab window is private");
+      ok(PrivateBrowsingUtils.isBrowserPrivate(privateBrowser.selectedBrowser), "tab window is private");
       openConsole(privateTab, consoleOpened);
     }, true);
   }

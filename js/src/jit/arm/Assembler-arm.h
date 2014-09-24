@@ -1137,6 +1137,11 @@ class Assembler : public AssemblerShared
         return static_cast<Condition>(cond);
     }
 
+    enum BarrierOption {
+        BarrierSY = 15,         // Full system barrier
+        BarrierST = 14          // StoreStore barrier
+    };
+
     // This should be protected, but since CodeGenerator wants to use it, it
     // needs to go out here :(
 
@@ -1348,8 +1353,13 @@ class Assembler : public AssemblerShared
                 Condition c = Always);
     BufferOffset as_tst(Register src1, Operand2 op2,
                 Condition c = Always);
+    // Sign extension operations:
+    BufferOffset as_sxtb(Register dest, Register src, int rotate, Condition c = Always);
+    BufferOffset as_sxth(Register dest, Register src, int rotate, Condition c = Always);
+    BufferOffset as_uxtb(Register dest, Register src, int rotate, Condition c = Always);
+    BufferOffset as_uxth(Register dest, Register src, int rotate, Condition c = Always);
 
-    // Not quite ALU worthy, but useful none the less: These also have the isue
+    // Not quite ALU worthy, but useful none the less: These also have the issue
     // of these being formatted completly differently from the standard ALU
     // operations.
     BufferOffset as_movw(Register dest, Imm16 imm, Condition c = Always, Instruction *pos = nullptr);
@@ -1400,6 +1410,36 @@ class Assembler : public AssemblerShared
     BufferOffset as_FImm64Pool(VFPRegister dest, double value, Condition c = Always);
     // Load a 32 bit floating point immediate from a pool into a register.
     BufferOffset as_FImm32Pool(VFPRegister dest, float value, Condition c = Always);
+
+    // Atomic instructions: ldrex, ldrexh, ldrexb, strex, strexh, strexb.
+    //
+    // The halfword and byte versions are available from ARMv6K forward.
+    //
+    // The word versions are available from ARMv6 forward and can be used to
+    // implement the halfword and byte versions on older systems.
+
+    // LDREX rt, [rn]
+    BufferOffset as_ldrex(Register rt, Register rn, Condition c = Always);
+    BufferOffset as_ldrexh(Register rt, Register rn, Condition c = Always);
+    BufferOffset as_ldrexb(Register rt, Register rn, Condition c = Always);
+
+    // STREX rd, rt, [rn]
+    BufferOffset as_strex(Register rd, Register rt, Register rn, Condition c = Always);
+    BufferOffset as_strexh(Register rd, Register rt, Register rn, Condition c = Always);
+    BufferOffset as_strexb(Register rd, Register rt, Register rn, Condition c = Always);
+
+    // Memory synchronization: dmb, dsb, isb.
+    //
+    // These are available from ARMv7 forward.
+
+    BufferOffset as_dmb(BarrierOption option = BarrierSY);
+    BufferOffset as_dsb(BarrierOption option = BarrierSY);
+    BufferOffset as_isb();
+
+    // Memory synchronization for architectures before ARMv7.
+    BufferOffset as_dsb_trap();
+    BufferOffset as_dmb_trap();
+    BufferOffset as_isb_trap();
 
     // Control flow stuff:
 

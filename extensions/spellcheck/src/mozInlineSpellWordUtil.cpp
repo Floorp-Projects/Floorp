@@ -23,6 +23,7 @@
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
 #include <algorithm>
+#include "mozilla/BinarySearch.h"
 
 using namespace mozilla;
 
@@ -658,6 +659,45 @@ mozInlineSpellWordUtil::MapDOMPositionToSoftTextOffset(NodeOffset aNodeOffset)
   return -1;
 }
 
+namespace {
+
+template<class T>
+class FirstLargerOffset
+{
+  int32_t mSoftTextOffset;
+
+public:
+  FirstLargerOffset(int32_t aSoftTextOffset) : mSoftTextOffset(aSoftTextOffset) {}
+  int operator()(const T& t) const {
+  // We want the first larger offset, so never return 0 (which would
+  // short-circuit evaluation before finding the last such offset).
+    return mSoftTextOffset < t.mSoftTextOffset ? -1 : 1;
+  }
+};
+
+template<class T>
+bool
+FindLastNongreaterOffset(const nsTArray<T>& aContainer, int32_t aSoftTextOffset, size_t* aIndex)
+{
+  if (aContainer.Length() == 0) {
+    return false;
+  }
+
+  BinarySearchIf(aContainer, 0, aContainer.Length(),
+                 FirstLargerOffset<T>(aSoftTextOffset), aIndex);
+  if (*aIndex > 0) {
+    // There was at least one mapping with offset <= aSoftTextOffset. Step back
+    // to find the last element with |mSoftTextOffset <= aSoftTextOffset|.
+    *aIndex -= 1;
+  } else {
+    // Every mapping had offset greater than aSoftTextOffset.
+    MOZ_ASSERT(aContainer[*aIndex].mSoftTextOffset > aSoftTextOffset);
+  }
+  return true;
+}
+
+} // namespace
+
 mozInlineSpellWordUtil::NodeOffset
 mozInlineSpellWordUtil::MapSoftTextOffsetToDOMPosition(int32_t aSoftTextOffset,
                                                        DOMMapHint aHint)
@@ -665,42 +705,32 @@ mozInlineSpellWordUtil::MapSoftTextOffsetToDOMPosition(int32_t aSoftTextOffset,
   NS_ASSERTION(mSoftTextValid, "Soft text must be valid if we're to map out of it");
   if (!mSoftTextValid)
     return NodeOffset(nullptr, -1);
-  
-  // The invariant is that the range start..end includes the last mapping,
-  // if any, such that mSoftTextOffset <= aSoftTextOffset
-  int32_t start = 0;
-  int32_t end = mSoftTextDOMMapping.Length();
-  while (end - start >= 2) {
-    int32_t mid = (start + end)/2;
-    const DOMTextMapping& map = mSoftTextDOMMapping[mid];
-    if (map.mSoftTextOffset > aSoftTextOffset) {
-      end = mid;
-    } else {
-      start = mid;
-    }
-  }
-  
-  if (start >= end)
-    return NodeOffset(nullptr, -1);
 
-  // 'start' is now the last mapping, if any, such that
+  // Find the last mapping, if any, such that mSoftTextOffset <= aSoftTextOffset
+  size_t index;
+  bool found = FindLastNongreaterOffset(mSoftTextDOMMapping, aSoftTextOffset, &index);
+  if (!found) {
+    return NodeOffset(nullptr, -1);
+  }
+
+  // 'index' is now the last mapping, if any, such that
   // mSoftTextOffset <= aSoftTextOffset.
   // If we're doing HINT_END, then we may want to return the end of the
   // the previous mapping instead of the start of this mapping
-  if (aHint == HINT_END && start > 0) {
-    const DOMTextMapping& map = mSoftTextDOMMapping[start - 1];
+  if (aHint == HINT_END && index > 0) {
+    const DOMTextMapping& map = mSoftTextDOMMapping[index - 1];
     if (map.mSoftTextOffset + map.mLength == aSoftTextOffset)
       return NodeOffset(map.mNodeOffset.mNode, map.mNodeOffset.mOffset + map.mLength);
   }
-  
+
   // We allow ourselves to return the end of this mapping even if we're
   // doing HINT_START. This will only happen if there is no mapping which this
   // point is the start of. I'm not 100% sure this is OK...
-  const DOMTextMapping& map = mSoftTextDOMMapping[start];
+  const DOMTextMapping& map = mSoftTextDOMMapping[index];
   int32_t offset = aSoftTextOffset - map.mSoftTextOffset;
   if (offset >= 0 && offset <= map.mLength)
     return NodeOffset(map.mNodeOffset.mNode, map.mNodeOffset.mOffset + offset);
-    
+
   return NodeOffset(nullptr, -1);
 }
 
@@ -712,51 +742,41 @@ mozInlineSpellWordUtil::FindRealWordContaining(int32_t aSoftTextOffset,
   if (!mSoftTextValid)
     return -1;
 
-  // The invariant is that the range start..end includes the last word,
-  // if any, such that mSoftTextOffset <= aSoftTextOffset
-  int32_t start = 0;
-  int32_t end = mRealWords.Length();
-  while (end - start >= 2) {
-    int32_t mid = (start + end)/2;
-    const RealWord& word = mRealWords[mid];
-    if (word.mSoftTextOffset > aSoftTextOffset) {
-      end = mid;
-    } else {
-      start = mid;
-    }
-  }
-  
-  if (start >= end)
+  // Find the last word, if any, such that mSoftTextOffset <= aSoftTextOffset
+  size_t index;
+  bool found = FindLastNongreaterOffset(mRealWords, aSoftTextOffset, &index);
+  if (!found) {
     return -1;
+  }
 
-  // 'start' is now the last word, if any, such that
+  // 'index' is now the last word, if any, such that
   // mSoftTextOffset <= aSoftTextOffset.
   // If we're doing HINT_END, then we may want to return the end of the
   // the previous word instead of the start of this word
-  if (aHint == HINT_END && start > 0) {
-    const RealWord& word = mRealWords[start - 1];
+  if (aHint == HINT_END && index > 0) {
+    const RealWord& word = mRealWords[index - 1];
     if (word.mSoftTextOffset + word.mLength == aSoftTextOffset)
-      return start - 1;
+      return index - 1;
   }
-  
+
   // We allow ourselves to return the end of this word even if we're
   // doing HINT_START. This will only happen if there is no word which this
   // point is the start of. I'm not 100% sure this is OK...
-  const RealWord& word = mRealWords[start];
+  const RealWord& word = mRealWords[index];
   int32_t offset = aSoftTextOffset - word.mSoftTextOffset;
   if (offset >= 0 && offset <= word.mLength)
-    return start;
+    return index;
 
   if (aSearchForward) {
     if (mRealWords[0].mSoftTextOffset > aSoftTextOffset) {
       // All words have mSoftTextOffset > aSoftTextOffset
       return 0;
     }
-    // 'start' is the last word such that mSoftTextOffset <= aSoftTextOffset.
-    // Word start+1, if it exists, will be the first with
+    // 'index' is the last word such that mSoftTextOffset <= aSoftTextOffset.
+    // Word index+1, if it exists, will be the first with
     // mSoftTextOffset > aSoftTextOffset.
-    if (start + 1 < int32_t(mRealWords.Length()))
-      return start + 1;
+    if (index + 1 < mRealWords.Length())
+      return index + 1;
   }
 
   return -1;

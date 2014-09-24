@@ -52,7 +52,7 @@ Tests of DOM Worker Threads (Bug 437152)
     worker.onerror = function(otherEvent) {
       otherEvent.preventDefault();
       is(otherEvent.target, worker);
-      is(otherEvent.message, "ReferenceError: Components is not defined");
+      ok(otherEvent.message.contains("ReferenceError: Components is not defined"));
       gotErrors = true;
 
       worker.onerror = function(oneMoreEvent) {

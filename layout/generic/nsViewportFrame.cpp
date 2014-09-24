@@ -190,7 +190,7 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
   // being already set.  Note that the computed height may be
   // unconstrained; that's ok.  Consumers should watch out for that.
   SetSize(nsSize(aReflowState.ComputedWidth(), aReflowState.ComputedHeight()));
- 
+
   // Reflow the main content first so that the placeholders of the
   // fixed-position frames will be in the right places on an initial
   // reflow.
@@ -236,10 +236,6 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
   aDesiredSize.SetSize(wm, maxSize);
   aDesiredSize.SetOverflowAreasToDesiredBounds();
 
-  if (mFrames.NotEmpty()) {
-    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, mFrames.FirstChild());
-  }
-
   if (IsAbsoluteContainer()) {
     // Make a copy of the reflow state and change the computed width and height
     // to reflect the available space for the fixed items
@@ -262,6 +258,16 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
                                          rect,
                                          false, true, true, // XXX could be optimized
                                          &aDesiredSize.mOverflowAreas);
+
+    nsIScrollableFrame* rootScrollFrame =
+                    aPresContext->PresShell()->GetRootScrollFrameAsScrollable();
+    if (rootScrollFrame && !rootScrollFrame->IsIgnoringViewportClipping()) {
+      aDesiredSize.SetOverflowAreasToDesiredBounds();
+    }
+  }
+
+  if (mFrames.NotEmpty()) {
+    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, mFrames.FirstChild());
   }
 
   // If we were dirty then do a repaint
@@ -285,6 +291,18 @@ ViewportFrame::Reflow(nsPresContext*           aPresContext,
 
   NS_FRAME_TRACE_REFLOW_OUT("ViewportFrame::Reflow", aStatus);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+}
+
+bool
+ViewportFrame::UpdateOverflow()
+{
+  nsIScrollableFrame* rootScrollFrame =
+    PresContext()->PresShell()->GetRootScrollFrameAsScrollable();
+  if (rootScrollFrame && !rootScrollFrame->IsIgnoringViewportClipping()) {
+    return false;
+  }
+
+  return nsFrame::UpdateOverflow();
 }
 
 nsIAtom*
