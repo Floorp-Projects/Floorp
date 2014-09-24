@@ -19,6 +19,8 @@
 
 #include "Composer2D.h"
 #include "Layers.h"
+#include "mozilla/Mutex.h"
+
 #include <vector>
 #include <list>
 
@@ -34,6 +36,7 @@ namespace gl {
 }
 
 namespace layers {
+class CompositorParent;
 class ContainerLayer;
 class Layer;
 }
@@ -91,7 +94,9 @@ public:
 #if ANDROID_VERSION >= 17
     bool RegisterHwcEventCallback();
     void Vsync(int aDisplay, int64_t aTimestamp);
+    void Invalidate();
 #endif
+    void SetCompositorParent(layers::CompositorParent* aCompositorParent);
 
 private:
     void Reset();
@@ -128,6 +133,8 @@ private:
     nsTArray<layers::LayerComposite*> mHwcLayerMap;
     bool                    mPrepared;
     bool                    mHasHWVsync;
+    nsRefPtr<layers::CompositorParent> mCompositorParent;
+    Mutex mLock;
 };
 
 } // namespace mozilla
