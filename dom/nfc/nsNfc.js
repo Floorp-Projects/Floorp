@@ -138,7 +138,7 @@ function mozNfc() {
     debug("No NFC support.")
   }
 
-  this._nfcContentHelper.registerPeerEventListener(this);
+  this._nfcContentHelper.registerEventTarget(this);
 }
 mozNfc.prototype = {
   _nfcContentHelper: null,
@@ -289,7 +289,7 @@ mozNfc.prototype = {
   contractID: "@mozilla.org/navigatorNfc;1",
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
                                          Ci.nsIDOMGlobalPropertyInitializer,
-                                         Ci.nsINfcPeerEventListener]),
+                                         Ci.nsINfcDOMEventTarget]),
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([MozNFCTag, MozNFCPeer, mozNfc]);
