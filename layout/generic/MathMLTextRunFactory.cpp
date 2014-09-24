@@ -195,7 +195,7 @@ namespace {
 struct MathVarMappingWrapper
 {
   const MathVarMapping* const mTable;
-  MathVarMappingWrapper(const MathVarMapping* aTable) : mTable(aTable) {}
+  explicit MathVarMappingWrapper(const MathVarMapping* aTable) : mTable(aTable) {}
   uint32_t operator[](size_t index) const {
     return mTable[index].mKey;
   }
