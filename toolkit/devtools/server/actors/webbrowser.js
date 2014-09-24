@@ -102,9 +102,10 @@ const unwrapDebuggerObjectGlobal = wrappedGlobal => {
     //
     // Note that addon sandboxes have a DOMWindow as their prototype. So make
     // sure that we can touch the prototype too (whatever it is), in case _it_
-    // is it a nuked window reference.
+    // is it a nuked window reference. We force stringification to make sure
+    // that any dead object proxies make themselves known.
     let global = wrappedGlobal.unsafeDereference();
-    Object.getPrototypeOf(global);
+    Object.getPrototypeOf(global) + "";
     return global;
   }
   catch (e) {
