@@ -210,10 +210,15 @@ BrowserElementParent.prototype = {
     let appManifestURL =
           this._frameElement.QueryInterface(Ci.nsIMozBrowserFrame).appManifestURL;
     if (appManifestURL) {
-      let appId =
-            DOMApplicationRegistry.getAppLocalIdByManifestURL(appManifestURL);
-      if (appId != Ci.nsIScriptSecurityManager.NO_APP_ID) {
-        DOMApplicationRegistry.registerBrowserElementParentForApp(this, appId);
+      let inParent = Cc["@mozilla.org/xre/app-info;1"]
+                       .getService(Ci.nsIXULRuntime)
+                       .processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+      if (inParent) {
+        DOMApplicationRegistry.registerBrowserElementParentForApp(
+          { manifestURL: appManifestURL }, this._mm);
+      } else {
+        this._mm.sendAsyncMessage("Webapps:RegisterBEP",
+                                  { manifestURL: appManifestURL });
       }
     }
   },
