@@ -7,8 +7,8 @@
 
 interface nsIVariant;
 
-[scriptable, uuid(57fc2998-1058-4fd5-8dd9-0e303218d5fd)]
-interface nsINfcPeerEventListener : nsISupports
+[scriptable, uuid(e81cc1ac-6f0b-4581-a9fb-7ee47ed0158e)]
+interface nsINfcDOMEventTarget : nsISupports
 {
   /**
    * Callback function used to notify peerready.
@@ -27,7 +27,7 @@ interface nsINfcPeerEventListener : nsISupports
    void notifyPeerLost(in DOMString sessionToken);
 };
 
-[scriptable, uuid(9a41d969-3375-4933-814e-2da781c8f691)]
+[scriptable, uuid(7eaf4c31-e1d1-422e-aa55-181f4eb156b0)]
 interface nsINfcContentHelper : nsISupports
 {
   const long NFC_EVENT_PEER_READY = 0x01;
@@ -65,11 +65,11 @@ interface nsINfcContentHelper : nsISupports
                             in DOMString sessionToken);
 
   /**
-   * Register the peer event listener.
+   * Register the event target.
    *
-   * @param listener  An instance of the nsINfcPeerEventListener.
+   * @param target  An instance of the nsINfcDOMEventTarget.
    */
-  void registerPeerEventListener(in nsINfcPeerEventListener listener);
+  void registerEventTarget(in nsINfcDOMEventTarget target);
 
  /**
   * Register the given application id with Chrome process
