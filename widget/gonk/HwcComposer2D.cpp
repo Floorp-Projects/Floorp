@@ -21,6 +21,7 @@
 #include "HwcUtils.h"
 #include "HwcComposer2D.h"
 #include "LayerScope.h"
+#include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/PLayerTransaction.h"
 #include "mozilla/layers/ShadowLayerUtilsGralloc.h"
@@ -72,7 +73,7 @@ namespace mozilla {
 static void
 HookInvalidate(const struct hwc_procs* aProcs)
 {
-    // no op
+    HwcComposer2D::GetInstance()->Invalidate();
 }
 
 static void
@@ -111,6 +112,7 @@ HwcComposer2D::HwcComposer2D()
 #endif
     , mPrepared(false)
     , mHasHWVsync(false)
+    , mLock("mozilla.HwcComposer2D.mLock")
 {
 }
 
@@ -231,7 +233,29 @@ HwcComposer2D::Vsync(int aDisplay, int64_t aTimestamp)
 {
     GeckoTouchDispatcher::NotifyVsync(aTimestamp);
 }
+
+// Called on the "invalidator" thread (run from HAL).
+void
+HwcComposer2D::Invalidate()
+{
+    if (!Initialized()) {
+        LOGE("HwcComposer2D::Invalidate failed!");
+        return;
+    }
+
+    MutexAutoLock lock(mLock);
+    if (mCompositorParent) {
+        mCompositorParent->ScheduleRenderOnCompositorThread();
+    }
+}
 #endif
+
+void
+HwcComposer2D::SetCompositorParent(CompositorParent* aCompositorParent)
+{
+    MutexAutoLock lock(mLock);
+    mCompositorParent = aCompositorParent;
+}
 
 bool
 HwcComposer2D::ReallocLayerList()
