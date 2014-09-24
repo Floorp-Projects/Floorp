@@ -9,8 +9,8 @@
 function spawnTest() {
   let [target, debuggee, panel] = yield initWebAudioEditor(SIMPLE_CONTEXT_URL);
   let { panelWin } = panel;
-  let { gFront, $, $$, EVENTS, WebAudioInspectorView } = panelWin;
-  let gVars = WebAudioInspectorView._propsView;
+  let { gFront, $, $$, EVENTS, InspectorView } = panelWin;
+  let gVars = InspectorView._propsView;
 
   let started = once(gFront, "start-context");
 
@@ -22,7 +22,7 @@ function spawnTest() {
   ]);
   let nodeIds = actors.map(actor => actor.actorID);
 
-  ok(!WebAudioInspectorView.isVisible(), "InspectorView hidden on start.");
+  ok(!InspectorView.isVisible(), "InspectorView hidden on start.");
   ok(isVisible($("#web-audio-editor-details-pane-empty")),
     "InspectorView empty message should show when no node's selected.");
   ok(!isVisible($("#web-audio-editor-tabs")),
@@ -37,7 +37,7 @@ function spawnTest() {
     once(panelWin, EVENTS.UI_INSPECTOR_TOGGLED)
   ]);
 
-  ok(WebAudioInspectorView.isVisible(), "InspectorView shown once node selected.");
+  ok(InspectorView.isVisible(), "InspectorView shown once node selected.");
   ok(!isVisible($("#web-audio-editor-details-pane-empty")),
     "InspectorView empty message hidden when node selected.");
   ok(isVisible($("#web-audio-editor-tabs")),
