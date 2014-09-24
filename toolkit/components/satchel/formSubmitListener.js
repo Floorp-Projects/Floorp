@@ -104,7 +104,7 @@ var satchelFormListener = {
             if (!this.enabled)
                 return;
 
-            if (PrivateBrowsingUtils.isWindowPrivate(domWin))
+            if (PrivateBrowsingUtils.isContentWindowPrivate(domWin))
                 return;
 
             this.log("Form submit observer notified.");

@@ -91,7 +91,8 @@ MoveEmitterMIPS::breakCycle(const MoveOperand &from, const MoveOperand &to,
             masm.storeFloat32(temp, cycleSlot(slotId, 0));
             masm.storeFloat32(temp, cycleSlot(slotId, 4));
         } else {
-            masm.storeFloat32(to.floatReg(), cycleSlot(slotId, 0));
+            // Just always store the largest possible size.
+            masm.storeDouble(to.floatReg().doubleOverlay(), cycleSlot(slotId, 0));
         }
         break;
       case MoveOp::DOUBLE:

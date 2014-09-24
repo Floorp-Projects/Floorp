@@ -57,7 +57,7 @@ static const FeatureInfo sFeatureInfoArr[] = {
         {
 
             GLContext::EXT_transform_feedback,
-            GLContext::NV_transform_feedback,
+            GLContext::NV_transform_feedback2,
             GLContext::Extensions_End
         }
     },
@@ -233,6 +233,16 @@ static const FeatureInfo sFeatureInfoArr[] = {
          */
     },
     {
+        "gpu_shader4",
+        300, // OpenGL version
+        300, // OpenGL ES version
+        GLContext::Extension_None,
+        {
+            GLContext::EXT_gpu_shader4,
+            GLContext::Extensions_End
+        }
+    },
+    {
         "instanced_arrays",
         330, // OpenGL version
         300, // OpenGL ES version
@@ -381,12 +391,54 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
+        "sampler_objects",
+        330, // OpenGL version
+        300, // OpenGL ES version
+        GLContext::ARB_sampler_objects,
+        {
+            GLContext::Extensions_End
+        }
+    },
+    {
         "standard_derivatives",
         200, // OpenGL version
         300, // OpenGL ES version
         GLContext::Extension_None,
         {
             GLContext::OES_standard_derivatives,
+            GLContext::Extensions_End
+        }
+    },
+    {
+        "texture_3D",
+        120, // OpenGL version
+        300, // OpenGL ES version
+        GLContext::Extension_None,
+        {
+            GLContext::EXT_texture3D,
+            GLContext::OES_texture_3D,
+            GLContext::Extensions_End
+        }
+    },
+    {
+        "texture_3D_compressed",
+        130, // OpenGL version
+        300, // OpenGL ES version
+        GLContext::Extension_None,
+        {
+            GLContext::ARB_texture_compression,
+            GLContext::OES_texture_3D,
+            GLContext::Extensions_End
+        }
+    },
+    {
+        "texture_3D_copy",
+        120, // OpenGL version
+        300, // OpenGL ES version
+        GLContext::Extension_None,
+        {
+            GLContext::EXT_copy_texture,
+            GLContext::OES_texture_3D,
             GLContext::Extensions_End
         }
     },
@@ -457,13 +509,13 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
-        "transform_feedback",
-        300, // OpenGL version
+        "transform_feedback2",
+        400, // OpenGL version
         300, // OpenGL ES version
         GLContext::Extension_None,
         {
-            GLContext::EXT_transform_feedback,
-            GLContext::NV_transform_feedback,
+            GLContext::ARB_transform_feedback2,
+            GLContext::NV_transform_feedback2,
             GLContext::Extensions_End
         }
     },
@@ -472,6 +524,15 @@ static const FeatureInfo sFeatureInfoArr[] = {
         310, // OpenGL version
         300, // OpenGL ES version
         GLContext::ARB_uniform_buffer_object,
+        {
+            GLContext::Extensions_End
+        }
+    },
+    {
+        "uniform_matrix_nonsquare",
+        210, // OpenGL version
+        300, // OpenGL ES version
+        GLContext::Extension_None,
         {
             GLContext::Extensions_End
         }

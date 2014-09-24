@@ -201,7 +201,7 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
   if (iterOnWhite) {
     diagnostics |= DiagnosticFlags::COMPONENT_ALPHA;
   }
-  GetCompositor()->DrawDiagnostics(diagnostics, *aVisibleRegion, aClipRect,
+  GetCompositor()->DrawDiagnostics(diagnostics, nsIntRegion(mBufferRect), aClipRect,
                                    aTransform, mFlashCounter);
 }
 

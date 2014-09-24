@@ -629,6 +629,20 @@ var gMetadataTests = [
   },
 ];
 
+// Test files for Encrypted Media Extensions
+var gEMETests = [
+  {
+    name:"short-cenc.mp4",
+    type:"video/mp4",
+    keys: {
+      // "keyid" : "key"
+      "7e571d017e571d017e571d017e571d01" : "7e5711117e5711117e5711117e571111",
+      "7e571d027e571d027e571d027e571d02" : "7e5722227e5722227e5722227e572222",
+    },
+    sessionType:"temporary",
+  },
+];
+
 function checkMetadata(msg, e, test) {
   if (test.width) {
     is(e.videoWidth, test.width, msg + " video width");

@@ -200,7 +200,7 @@ EMEDecoderModule::CreateH264Decoder(const VideoDecoderConfig& aConfig,
                                     MediaTaskQueue* aVideoTaskQueue,
                                     MediaDataDecoderCallback* aCallback)
 {
-  if (mCDMDecodesVideo) {
+  if (mCDMDecodesVideo && aConfig.crypto.valid) {
     nsRefPtr<MediaDataDecoder> decoder(new EMEH264Decoder(mProxy,
                                                           aConfig,
                                                           aLayersBackend,
@@ -219,6 +219,10 @@ EMEDecoderModule::CreateH264Decoder(const VideoDecoderConfig& aConfig,
     return nullptr;
   }
 
+  if (!aConfig.crypto.valid) {
+    return decoder.forget();
+  }
+
   nsRefPtr<MediaDataDecoder> emeDecoder(new EMEDecryptor(decoder,
                                                          aCallback,
                                                          mTaskQueue,
@@ -231,7 +235,7 @@ EMEDecoderModule::CreateAudioDecoder(const AudioDecoderConfig& aConfig,
                                      MediaTaskQueue* aAudioTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
 {
-  if (mCDMDecodesAudio) {
+  if (mCDMDecodesAudio && aConfig.crypto.valid) {
     nsRefPtr<MediaDataDecoder> decoder(new EMEAudioDecoder(mProxy,
                                                            aConfig,
                                                            aAudioTaskQueue,
@@ -244,6 +248,10 @@ EMEDecoderModule::CreateAudioDecoder(const AudioDecoderConfig& aConfig,
                                                               aCallback));
   if (!decoder) {
     return nullptr;
+  }
+
+  if (!aConfig.crypto.valid) {
+    return decoder.forget();
   }
 
   nsRefPtr<MediaDataDecoder> emeDecoder(new EMEDecryptor(decoder,

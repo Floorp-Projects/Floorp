@@ -420,6 +420,20 @@ class GlobalObject : public JSObject
         return getOrCreateObject(cx, DATE_TIME_FORMAT_PROTO, initDateTimeFormatProto);
     }
 
+    static JSFunction *
+    getOrCreateTypedArrayConstructor(JSContext *cx, Handle<GlobalObject*> global) {
+        if (!ensureConstructor(cx, global, JSProto_TypedArray))
+            return nullptr;
+        return &global->getConstructor(JSProto_TypedArray).toObject().as<JSFunction>();
+    }
+
+    static JSObject *
+    getOrCreateTypedArrayPrototype(JSContext *cx, Handle<GlobalObject*> global) {
+        if (!ensureConstructor(cx, global, JSProto_TypedArray))
+            return nullptr;
+        return &global->getPrototype(JSProto_TypedArray).toObject();
+    }
+
   private:
     typedef bool (*ObjectInitOp)(JSContext *cx, Handle<GlobalObject*> global);
 
@@ -795,11 +809,11 @@ GenericCreateConstructor(JSContext *cx, JSProtoKey key)
     return cx->global()->createConstructor(cx, ctor, name, length, kind);
 }
 
-template<const Class *clasp>
-JSObject *
+inline JSObject *
 GenericCreatePrototype(JSContext *cx, JSProtoKey key)
 {
     MOZ_ASSERT(key != JSProto_Object);
+    const Class *clasp = ProtoKeyToClass(key);
     JSProtoKey parentKey = ParentKeyForStandardClass(key);
     if (!GlobalObject::ensureConstructor(cx, cx->global(), parentKey))
         return nullptr;

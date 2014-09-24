@@ -6,6 +6,7 @@
 
 #include "MathTableStructures.h"
 #include "harfbuzz/hb.h"
+#include "mozilla/BinarySearch.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -355,54 +356,70 @@ gfxMathTable::GetGlyphAssembly(uint32_t aGlyphID, bool aVertical)
   return reinterpret_cast<const GlyphAssembly*>(start);
 }
 
+namespace {
+
+struct GlyphArrayWrapper
+{
+  const GlyphID* const mGlyphArray;
+  GlyphArrayWrapper(const GlyphID* const aGlyphArray) : mGlyphArray(aGlyphArray)
+  {}
+  uint16_t operator[](size_t index) const {
+    return mGlyphArray[index];
+  }
+};
+
+struct RangeRecordComparator
+{
+  const uint32_t mGlyph;
+  RangeRecordComparator(uint32_t aGlyph) : mGlyph(aGlyph) {}
+  int operator()(const RangeRecord& aRecord) const {
+    if (mGlyph < static_cast<uint16_t>(aRecord.mStart)) {
+      return -1;
+    }
+    if (mGlyph > static_cast<uint16_t>(aRecord.mEnd)) {
+      return 1;
+    }
+    return 0;
+  }
+};
+
+} // namespace
+
 int32_t
 gfxMathTable::GetCoverageIndex(const Coverage* aCoverage, uint32_t aGlyph)
 {
+  using mozilla::BinarySearch;
+  using mozilla::BinarySearchIf;
+
   if (uint16_t(aCoverage->mFormat) == 1) {
     // Coverage Format 1: list of individual glyph indices in the glyph set.
     const CoverageFormat1* table =
       reinterpret_cast<const CoverageFormat1*>(aCoverage);
-    uint16_t count = table->mGlyphCount;
+    const uint16_t count = table->mGlyphCount;
     const char* start = reinterpret_cast<const char*>(table + 1);
     if (ValidStructure(start, count * sizeof(GlyphID))) {
-      const GlyphID* glyphArray =
-        reinterpret_cast<const GlyphID*>(start);
-      uint32_t imin = 0, imax = count;
-      while (imin < imax) {
-        uint32_t imid = (imin + imax) >> 1;
-        uint16_t glyphMid = glyphArray[imid];
-        if (glyphMid == aGlyph) {
-          return imid;
-        }
-        if (glyphMid < aGlyph) {
-          imin = imid + 1;
-        } else {
-          imax = imid;
-        }
+      const GlyphID* glyphArray = reinterpret_cast<const GlyphID*>(start);
+      size_t index;
+
+      if (BinarySearch(GlyphArrayWrapper(glyphArray), 0, count, aGlyph, &index)) {
+        return index;
       }
     }
   } else if (uint16_t(aCoverage->mFormat) == 2) {
     // Coverage Format 2: ranges of consecutive indices.
     const CoverageFormat2* table =
       reinterpret_cast<const CoverageFormat2*>(aCoverage);
-    uint16_t count = table->mRangeCount;
+    const uint16_t count = table->mRangeCount;
     const char* start = reinterpret_cast<const char*>(table + 1);
     if (ValidStructure(start, count * sizeof(RangeRecord))) {
-      const RangeRecord* rangeArray =
-        reinterpret_cast<const RangeRecord*>(start);
-      uint32_t imin = 0, imax = count;
-      while (imin < imax) {
-        uint32_t imid = (imin + imax) >> 1;
-        uint16_t rStart = rangeArray[imid].mStart;
-        uint16_t rEnd = rangeArray[imid].mEnd;
-        if (rEnd < aGlyph) {
-          imin = imid + 1;
-        } else if (aGlyph < rStart) {
-          imax = imid;
-        } else {
-          return (uint16_t(rangeArray[imid].mStartCoverageIndex) +
-                  aGlyph - rStart);
-        }
+      const RangeRecord* rangeArray = reinterpret_cast<const RangeRecord*>(start);
+      size_t index;
+
+      if (BinarySearchIf(rangeArray, 0, count, RangeRecordComparator(aGlyph),
+                         &index)) {
+        uint16_t rStart = rangeArray[index].mStart;
+        uint16_t startCoverageIndex = rangeArray[index].mStartCoverageIndex;
+        return (startCoverageIndex + aGlyph - rStart);
       }
     }
   }

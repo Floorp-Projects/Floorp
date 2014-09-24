@@ -1979,7 +1979,8 @@ class IDLSequenceType(IDLType):
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
         return (other.isPrimitive() or other.isString() or other.isEnum() or
-                other.isDate() or other.isNonCallbackInterface() or other.isMozMap())
+                other.isDate() or other.isInterface() or other.isDictionary() or
+                other.isCallback() or other.isMozMap())
 
     def _getDependentObjects(self):
         return self.inner._getDependentObjects()
@@ -2471,7 +2472,8 @@ class IDLWrapperType(IDLType):
                     other.isDate())
         if self.isDictionary() and other.nullable():
             return False
-        if other.isPrimitive() or other.isString() or other.isEnum() or other.isDate():
+        if (other.isPrimitive() or other.isString() or other.isEnum() or
+            other.isDate() or other.isSequence()):
             return True
         if self.isDictionary():
             return other.isNonCallbackInterface()
@@ -2489,7 +2491,7 @@ class IDLWrapperType(IDLType):
                     (self.isNonCallbackInterface() or
                      other.isNonCallbackInterface()))
         if (other.isDictionary() or other.isCallback() or
-            other.isSequence() or other.isMozMap() or other.isArray()):
+            other.isMozMap() or other.isArray()):
             return self.isNonCallbackInterface()
 
         # Not much else |other| can be
@@ -3543,7 +3545,8 @@ class IDLCallbackType(IDLType, IDLObjectWithScope):
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
         return (other.isPrimitive() or other.isString() or other.isEnum() or
-                other.isNonCallbackInterface() or other.isDate())
+                other.isNonCallbackInterface() or other.isDate() or
+                other.isSequence())
 
     def addExtendedAttributes(self, attrs):
         unhandledAttrs = []
@@ -3990,8 +3993,11 @@ class IDLImplementsStatement(IDLObject):
         IDLObject.__init__(self, location)
         self.implementor = implementor;
         self.implementee = implementee
+        self._finished = False
 
     def finish(self, scope):
+        if self._finished:
+            return
         assert(isinstance(self.implementor, IDLIdentifierPlaceholder))
         assert(isinstance(self.implementee, IDLIdentifierPlaceholder))
         implementor = self.implementor.finish(scope)
@@ -4016,6 +4022,8 @@ class IDLImplementsStatement(IDLObject):
                               "interface",
                               [self.implementee.location])
         implementor.addImplementedInterface(implementee)
+        self.implementor = implementor
+        self.implementee = implementee
 
     def validate(self):
         pass

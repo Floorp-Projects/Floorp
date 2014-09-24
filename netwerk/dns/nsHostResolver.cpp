@@ -32,7 +32,6 @@
 #include "nsURLHelper.h"
 #include "nsThreadUtils.h"
 #include "GetAddrInfo.h"
-#include "mtransport/runnable_utils.h"
 
 #include "mozilla/HashFunctions.h"
 #include "mozilla/TimeStamp.h"
@@ -584,23 +583,16 @@ HostDB_RemoveEntry(PLDHashTable *table,
 //----------------------------------------------------------------------------
 
 #if TTL_AVAILABLE
+static const char kTtlExperiment[] = "dns.ttl-experiment.";
 static const char kTtlExperimentEnabled[] = "dns.ttl-experiment.enabled";
 static const char kNetworkExperimentsEnabled[] = "network.allow-experiments";
 static const char kTtlExperimentVariant[] = "dns.ttl-experiment.variant";
 
-
-static void
-SetTtlExperimentVariantCallback(DnsExpirationVariant aVariant)
+void
+nsHostResolver::DnsExperimentChangedInternal()
 {
-    DebugOnly<nsresult> rv = Preferences::SetInt(
-            "dns.ttl-experiment.variant", sDnsVariant);
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                     "Could not save experiment variant.");
-}
+    MOZ_ASSERT(NS_IsMainThread(), "Can only get prefs on main thread!");
 
-static void
-_DnsExperimentChangedInternal(const char* aPref, void*)
-{
     if (!Preferences::GetBool(kTtlExperimentEnabled) ||
             !Preferences::GetBool(kNetworkExperimentsEnabled)) {
         sDnsVariant = DNS_EXP_VARIANT_CONTROL;
@@ -618,12 +610,10 @@ _DnsExperimentChangedInternal(const char* aPref, void*)
         LOG(("No DNS TTL experiment variant saved. Randomly picked %d.",
              variant));
 
-        // We can't set a property inside of this callback, so run it on the
-        // main thread.
-        DebugOnly<nsresult> rv = NS_DispatchToMainThread(
-            WrapRunnableNM(SetTtlExperimentVariantCallback, variant));
+        DebugOnly<nsresult> rv = Preferences::SetInt(
+            kTtlExperimentVariant, variant);
         NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                         "Could not dispatch set TTL experiment callback.");
+                         "Could not set experiment variant pref.");
     } else {
         LOG(("Using saved DNS TTL experiment %d.", variant));
     }
@@ -631,24 +621,34 @@ _DnsExperimentChangedInternal(const char* aPref, void*)
     sDnsVariant = variant;
 }
 
-static void
-DnsExperimentChanged(const char* aPref, void*)
+void
+nsHostResolver::DnsExperimentChanged(const char* aPref, void* aClosure)
 {
-    if (strcmp(aPref, kNetworkExperimentsEnabled) != 0
-            && strcmp(aPref, kTtlExperimentEnabled) != 0
-            && strcmp(aPref, kTtlExperimentVariant) != 0) {
+    MOZ_ASSERT(NS_IsMainThread(),
+               "Should be getting pref changed notification on main thread!");
+
+    if (strcmp(aPref, kNetworkExperimentsEnabled) != 0 &&
+        strncmp(aPref, kTtlExperiment, strlen(kTtlExperiment)) != 0) {
+        LOG(("DnsExperimentChanged ignoring pref \"%s\"", aPref));
         return;
     }
 
+    auto self = static_cast<nsHostResolver*>(aClosure);
+    MOZ_ASSERT(self);
+
+    // We can't set a pref in the context of a pref change callback, so
+    // dispatch DnsExperimentChangedInternal for async getting/setting.
     DebugOnly<nsresult> rv = NS_DispatchToMainThread(
-        WrapRunnableNM(_DnsExperimentChangedInternal, aPref, nullptr));
+        NS_NewRunnableMethod(self, &DnsExperimentChangedInternal));
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                      "Could not dispatch DnsExperimentChanged event.");
 }
 
-static void
-InitCRandom()
+void
+nsHostResolver::InitCRandom()
 {
+    MOZ_ASSERT(NS_IsMainThread(), "Should be seeding rand() on main thread!");
+
     srand(time(nullptr));
 }
 #endif
@@ -703,15 +703,15 @@ nsHostResolver::Init()
     // callback won't be called.
     {
         DebugOnly<nsresult> rv = NS_DispatchToMainThread(
-            WrapRunnableNM(InitCRandom));
+            NS_NewRunnableMethod(this, &nsHostResolver::InitCRandom));
         NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                          "Could not dispatch InitCRandom event.");
         rv = Preferences::RegisterCallbackAndCall(
-            &DnsExperimentChanged, "dns.ttl-experiment.", nullptr);
+            &DnsExperimentChanged, kTtlExperiment, this);
         NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                          "Could not register DNS experiment callback.");
         rv = Preferences::RegisterCallback(
-            &DnsExperimentChanged, "network.", nullptr);
+            &DnsExperimentChanged, kNetworkExperimentsEnabled, this);
         NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                          "Could not register network experiment callback.");
     }
@@ -754,11 +754,11 @@ nsHostResolver::Shutdown()
 #if TTL_AVAILABLE
     {
         DebugOnly<nsresult> rv = Preferences::UnregisterCallback(
-            &DnsExperimentChanged, "dns.ttl-experiment.", this);
+            &DnsExperimentChanged, kTtlExperiment, this);
         NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                          "Could not unregister TTL experiment callback.");
         rv = Preferences::UnregisterCallback(
-            &DnsExperimentChanged, "network.", this);
+            &DnsExperimentChanged, kNetworkExperimentsEnabled, this);
         NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                          "Could not unregister network experiment callback.");
     }

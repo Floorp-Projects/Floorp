@@ -124,6 +124,50 @@ JNI_Throw(JNIEnv* jenv, const char* classname, const char* msg)
     jenv->DeleteLocalRef(cls);
 }
 
+namespace {
+    JavaVM* sJavaVM;
+}
+
+void
+abortThroughJava(const char* msg)
+{
+    struct sigaction sigact = {};
+    if (SEGVHandler::__wrap_sigaction(SIGSEGV, nullptr, &sigact)) {
+        return; // sigaction call failed.
+    }
+
+    Dl_info info = {};
+    if ((sigact.sa_flags & SA_SIGINFO) &&
+        __wrap_dladdr(reinterpret_cast<void*>(sigact.sa_sigaction), &info) &&
+        info.dli_fname && strstr(info.dli_fname, "libxul.so")) {
+
+        return; // Existing signal handler is in libxul (i.e. we have crash reporter).
+    }
+
+    JNIEnv* env = nullptr;
+    if (!sJavaVM || sJavaVM->AttachCurrentThreadAsDaemon(&env, nullptr) != JNI_OK) {
+        return;
+    }
+
+    if (!env || env->PushLocalFrame(2) != JNI_OK) {
+        return;
+    }
+
+    jclass loader = env->FindClass("org/mozilla/gecko/mozglue/GeckoLoader");
+    if (!loader) {
+        return;
+    }
+
+    jmethodID method = env->GetStaticMethodID(loader, "abort", "(Ljava/lang/String;)V");
+    jstring str = env->NewStringUTF(msg);
+
+    if (method && str) {
+        env->CallStaticVoidMethod(loader, method, str);
+    }
+
+    env->PopLocalFrame(nullptr);
+}
+
 #define JNI_STUBS
 #include "jni-stubs.inc"
 #undef JNI_STUBS
@@ -302,6 +346,8 @@ loadNSSLibs(const char *apkName)
 extern "C" NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_mozglue_GeckoLoader_loadGeckoLibsNative(JNIEnv *jenv, jclass jGeckoAppShellClass, jstring jApkName)
 {
+  jenv->GetJavaVM(&sJavaVM);
+
   const char* str;
   // XXX: java doesn't give us true UTF8, we should figure out something
   // better to do here
