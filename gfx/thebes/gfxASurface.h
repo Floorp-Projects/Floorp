@@ -126,12 +126,6 @@ public:
      */
     static int32_t FormatStrideForWidth(gfxImageFormat format, int32_t width);
 
-    /* Return the default set of context flags for this surface; these are
-     * hints to the context about any special rendering considerations.  See
-     * gfxContext::SetFlag for documentation.
-     */
-    virtual int32_t GetDefaultContextFlags() const { return 0; }
-
     static gfxContentType ContentFromFormat(gfxImageFormat format);
 
     void SetSubpixelAntialiasingEnabled(bool aEnabled);
