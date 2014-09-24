@@ -303,9 +303,7 @@ ImageClientSingle::UpdateImageInternal(ImageContainer* aContainer,
 
     bool bufferCreated = false;
     if (!mFrontBuffer) {
-      gfxImageFormat format
-        = gfxPlatform::GetPlatform()->OptimalFormatForContent(gfx::ContentForFormat(surface->GetFormat()));
-      mFrontBuffer = CreateTextureClientForDrawing(gfx::ImageFormatToSurfaceFormat(format), size,
+      mFrontBuffer = CreateTextureClientForDrawing(surface->GetFormat(), size,
                                                    gfx::BackendType::NONE, mTextureFlags);
       if (!mFrontBuffer) {
         return false;
