@@ -217,6 +217,13 @@ public:
                               nsIPrincipal* aSheetPrincipal,
                               nsCSSValue& aValue);
 
+  bool ParseFontFaceDescriptor(nsCSSFontDesc aDescID,
+                               const nsAString& aBuffer,
+                               nsIURI* aSheetURL,
+                               nsIURI* aBaseURL,
+                               nsIPrincipal* aSheetPrincipal,
+                               nsCSSValue& aValue);
+
   bool IsValueValidForProperty(const nsCSSProperty aPropID,
                                const nsAString& aPropValue);
 
@@ -2544,6 +2551,27 @@ CSSParserImpl::ParseCounterDescriptor(nsCSSCounterDesc aDescID,
   InitScanner(scanner, reporter, aSheetURL, aBaseURL, aSheetPrincipal);
 
   bool success = ParseCounterDescriptorValue(aDescID, aValue) &&
+                 !GetToken(true);
+
+  OUTPUT_ERROR();
+  ReleaseScanner();
+
+  return success;
+}
+
+bool
+CSSParserImpl::ParseFontFaceDescriptor(nsCSSFontDesc aDescID,
+                                       const nsAString& aBuffer,
+                                       nsIURI* aSheetURL,
+                                       nsIURI* aBaseURL,
+                                       nsIPrincipal* aSheetPrincipal,
+                                       nsCSSValue& aValue)
+{
+  nsCSSScanner scanner(aBuffer, 0);
+  css::ErrorReporter reporter(scanner, mSheet, mChildLoader, aSheetURL);
+  InitScanner(scanner, reporter, aSheetURL, aBaseURL, aSheetPrincipal);
+
+  bool success = ParseFontDescriptorValue(aDescID, aValue) &&
                  !GetToken(true);
 
   OUTPUT_ERROR();
@@ -15251,10 +15279,22 @@ nsCSSParser::ParseCounterDescriptor(nsCSSCounterDesc aDescID,
 }
 
 bool
+nsCSSParser::ParseFontFaceDescriptor(nsCSSFontDesc aDescID,
+                                     const nsAString& aBuffer,
+                                     nsIURI* aSheetURL,
+                                     nsIURI* aBaseURL,
+                                     nsIPrincipal* aSheetPrincipal,
+                                     nsCSSValue& aValue)
+{
+  return static_cast<CSSParserImpl*>(mImpl)->
+    ParseFontFaceDescriptor(aDescID, aBuffer,
+                           aSheetURL, aBaseURL, aSheetPrincipal, aValue);
+}
+
+bool
 nsCSSParser::IsValueValidForProperty(const nsCSSProperty aPropID,
                                      const nsAString&    aPropValue)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
     IsValueValidForProperty(aPropID, aPropValue);
 }
-
