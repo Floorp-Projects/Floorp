@@ -287,7 +287,7 @@ public:
     uint64_t aWindowID,
     nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback>& aSuccess,
     nsCOMPtr<nsIDOMGetUserMediaErrorCallback>& aError,
-    nsTArray<nsCOMPtr<nsIMediaDevice> >* aDevices)
+    nsTArray<nsRefPtr<MediaDevice>>* aDevices)
     : mDevices(aDevices)
     , mWindowID(aWindowID)
     , mManager(MediaManager::GetInstance())
@@ -338,7 +338,7 @@ public:
 private:
   nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback> mSuccess;
   nsCOMPtr<nsIDOMGetUserMediaErrorCallback> mError;
-  nsAutoPtr<nsTArray<nsCOMPtr<nsIMediaDevice> > > mDevices;
+  nsAutoPtr<nsTArray<nsRefPtr<MediaDevice>>> mDevices;
   uint64_t mWindowID;
   nsRefPtr<MediaManager> mManager;
 };
@@ -370,14 +370,6 @@ protected:
  * nsIMediaDevice implementation.
  */
 NS_IMPL_ISUPPORTS(MediaDevice, nsIMediaDevice)
-
-MediaDevice* MediaDevice::Create(MediaEngineVideoSource* source) {
-  return new VideoDevice(source);
-}
-
-MediaDevice* MediaDevice::Create(MediaEngineAudioSource* source) {
-  return new AudioDevice(source);
-}
 
 MediaDevice::MediaDevice(MediaEngineSource* aSource)
   : mHasFacingMode(false)
@@ -421,8 +413,43 @@ VideoDevice::VideoDevice(MediaEngineVideoSource* aSource)
   mMediaSource = aSource->GetMediaSource();
 }
 
+/**
+ * Helper functions that implement the constraints algorithm from
+ * http://dev.w3.org/2011/webrtc/editor/getusermedia.html#methods-5
+ */
+
+// Reminder: add handling for new constraints both here and in GetSources below!
+
+bool
+VideoDevice::SatisfyConstraintSet(const MediaTrackConstraintSet &aConstraints)
+{
+  if (aConstraints.mFacingMode.WasPassed()) {
+    nsString s;
+    GetFacingMode(s);
+    if (!s.EqualsASCII(dom::VideoFacingModeEnumValues::strings[
+        uint32_t(aConstraints.mFacingMode.Value())].value)) {
+      return false;
+    }
+  }
+  nsString s;
+  GetMediaSource(s);
+  if (!s.EqualsASCII(dom::MediaSourceEnumValues::strings[
+      uint32_t(aConstraints.mMediaSource)].value)) {
+    return false;
+  }
+  // TODO: Add more video-specific constraints
+  return true;
+}
+
 AudioDevice::AudioDevice(MediaEngineAudioSource* aSource)
   : MediaDevice(aSource) {}
+
+bool
+AudioDevice::SatisfyConstraintSet(const MediaTrackConstraintSet &aConstraints)
+{
+  // TODO: Add audio-specific constraints
+  return true;
+}
 
 NS_IMETHODIMP
 MediaDevice::GetName(nsAString& aName)
@@ -484,16 +511,16 @@ MediaDevice::GetMediaSource(nsAString& aMediaSource)
   return NS_OK;
 }
 
-MediaEngineVideoSource*
+VideoDevice::Source*
 VideoDevice::GetSource()
 {
-  return static_cast<MediaEngineVideoSource*>(&*mSource);
+  return static_cast<Source*>(&*mSource);
 }
 
-MediaEngineAudioSource*
+AudioDevice::Source*
 AudioDevice::GetSource()
 {
-  return static_cast<MediaEngineAudioSource*>(&*mSource);
+  return static_cast<Source*>(&*mSource);
 }
 
 /**
@@ -886,61 +913,24 @@ GetInvariant(const OwningBooleanOrMediaTrackConstraints &aUnion) {
       aUnion.GetAsMediaTrackConstraints() : empty;
 }
 
-/**
- * Helper functions that implement the constraints algorithm from
- * http://dev.w3.org/2011/webrtc/editor/getusermedia.html#methods-5
- */
-
-// Reminder: add handling for new constraints both here and in GetSources below!
-
-static bool SatisfyConstraintSet(const MediaEngineVideoSource *,
-                                 const MediaTrackConstraintSet &aConstraints,
-                                 nsIMediaDevice &aCandidate)
-{
-  nsString s;
-  if (aConstraints.mFacingMode.WasPassed()) {
-    aCandidate.GetFacingMode(s);
-    if (!s.EqualsASCII(dom::VideoFacingModeEnumValues::strings[
-        uint32_t(aConstraints.mFacingMode.Value())].value)) {
-      return false;
-    }
-  }
-  aCandidate.GetMediaSource(s);
-  if (!s.EqualsASCII(dom::MediaSourceEnumValues::strings[
-      uint32_t(aConstraints.mMediaSource)].value)) {
-    return false;
-  }
-  // TODO: Add more video-specific constraints
-  return true;
-}
-
-static bool SatisfyConstraintSet(const MediaEngineAudioSource *,
-                                 const MediaTrackConstraintSet &aConstraints,
-                                 nsIMediaDevice &aCandidate)
-{
-  // TODO: Add audio-specific constraints
-  return true;
-}
-
-typedef nsTArray<nsCOMPtr<nsIMediaDevice> > SourceSet;
-
 // Source getter that constrains list returned
 
-template<class SourceType, class ConstraintsType>
-static SourceSet *
+template<class DeviceType, class ConstraintsType>
+static void
   GetSources(MediaEngine *engine,
              ConstraintsType &aConstraints,
-             void (MediaEngine::* aEnumerate)(MediaSourceType, nsTArray<nsRefPtr<SourceType> >*),
+             void (MediaEngine::* aEnumerate)(MediaSourceType,
+                 nsTArray<nsRefPtr<typename DeviceType::Source> >*),
+             nsTArray<nsRefPtr<DeviceType>>& aResult,
              const char* media_device_name = nullptr)
 {
-  ScopedDeletePtr<SourceSet> result(new SourceSet);
+  typedef nsTArray<nsRefPtr<DeviceType>> SourceSet;
 
-  const SourceType * const type = nullptr;
   nsString deviceName;
   // First collect sources
   SourceSet candidateSet;
   {
-    nsTArray<nsRefPtr<SourceType> > sources;
+    nsTArray<nsRefPtr<typename DeviceType::Source> > sources;
     // all MediaSourceEnums are contained in MediaSourceType
     (engine->*aEnumerate)((MediaSourceType)((int)aConstraints.mMediaSource), &sources);
     /**
@@ -953,11 +943,11 @@ static SourceSet *
       sources[i]->GetName(deviceName);
       if (media_device_name && strlen(media_device_name) > 0)  {
         if (deviceName.EqualsASCII(media_device_name)) {
-          candidateSet.AppendElement(MediaDevice::Create(sources[i]));
+          candidateSet.AppendElement(new DeviceType(sources[i]));
           break;
         }
       } else {
-        candidateSet.AppendElement(MediaDevice::Create(sources[i]));
+        candidateSet.AppendElement(new DeviceType(sources[i]));
       }
     }
   }
@@ -972,14 +962,14 @@ static SourceSet *
     // which maximizes code-reuse by ignoring constraints of the other type
     // (specifically, SatisfyConstraintSet is reused for the advanced algorithm
     // where the spec requires it to ignore constraints of the other type)
-    return result.forget();
+    return;
   }
 
   // Now on to the actual algorithm: First apply required constraints.
 
   for (uint32_t i = 0; i < candidateSet.Length();) {
     // Overloading instead of template specialization keeps things local
-    if (!SatisfyConstraintSet(type, c.mRequired, *candidateSet[i])) {
+    if (!candidateSet[i]->SatisfyConstraintSet(c.mRequired)) {
       candidateSet.RemoveElementAt(i);
     } else {
       ++i;
@@ -1020,7 +1010,7 @@ static SourceSet *
     for (int i = 0; i < int(array.Length()); i++) {
       SourceSet rejects;
       for (uint32_t j = 0; j < candidateSet.Length();) {
-        if (!SatisfyConstraintSet(type, array[i], *candidateSet[j])) {
+        if (!candidateSet[j]->SatisfyConstraintSet(array[i])) {
           rejects.AppendElement(candidateSet[j]);
           candidateSet.RemoveElementAt(j);
         } else {
@@ -1033,9 +1023,8 @@ static SourceSet *
 
   // TODO: Proper non-ordered handling of nonrequired constraints (Bug 907352)
 
-  result->MoveElementsFrom(candidateSet);
-  result->MoveElementsFrom(tailSet);
-  return result.forget();
+  aResult.MoveElementsFrom(candidateSet);
+  aResult.MoveElementsFrom(tailSet);
 }
 
 /**
@@ -1193,29 +1182,28 @@ public:
     MOZ_ASSERT(mError);
     if (IsOn(mConstraints.mVideo)) {
       VideoTrackConstraintsN constraints(GetInvariant(mConstraints.mVideo));
-      ScopedDeletePtr<SourceSet> sources(GetSources(backend, constraints,
-                               &MediaEngine::EnumerateVideoDevices));
+      nsTArray<nsRefPtr<VideoDevice>> sources;
+      GetSources(backend, constraints, &MediaEngine::EnumerateVideoDevices, sources);
 
-      if (!sources->Length()) {
+      if (!sources.Length()) {
         Fail(NS_LITERAL_STRING("NO_DEVICES_FOUND"));
         return NS_ERROR_FAILURE;
       }
       // Pick the first available device.
-      mVideoDevice = do_QueryObject((*sources)[0]);
+      mVideoDevice = sources[0];
       LOG(("Selected video device"));
     }
-
     if (IsOn(mConstraints.mAudio)) {
       AudioTrackConstraintsN constraints(GetInvariant(mConstraints.mAudio));
-      ScopedDeletePtr<SourceSet> sources (GetSources(backend, constraints,
-          &MediaEngine::EnumerateAudioDevices));
+      nsTArray<nsRefPtr<AudioDevice>> sources;
+      GetSources(backend, constraints, &MediaEngine::EnumerateAudioDevices, sources);
 
-      if (!sources->Length()) {
+      if (!sources.Length()) {
         Fail(NS_LITERAL_STRING("NO_DEVICES_FOUND"));
         return NS_ERROR_FAILURE;
       }
       // Pick the first available device.
-      mAudioDevice = do_QueryObject((*sources)[0]);
+      mAudioDevice = sources[0];
       LOG(("Selected audio device"));
     }
 
@@ -1341,20 +1329,26 @@ public:
     else
       backend = mManager->GetBackend(mWindowId);
 
+    typedef nsTArray<nsRefPtr<MediaDevice>> SourceSet;
+
     ScopedDeletePtr<SourceSet> final(new SourceSet);
     if (IsOn(mConstraints.mVideo)) {
       VideoTrackConstraintsN constraints(GetInvariant(mConstraints.mVideo));
-      ScopedDeletePtr<SourceSet> s(GetSources(backend, constraints,
-              &MediaEngine::EnumerateVideoDevices,
-              mLoopbackVideoDevice.get()));
-      final->MoveElementsFrom(*s);
+      nsTArray<nsRefPtr<VideoDevice>> s;
+      GetSources(backend, constraints, &MediaEngine::EnumerateVideoDevices, s,
+                 mLoopbackVideoDevice.get());
+      for (uint32_t i = 0; i < s.Length(); i++) {
+        final->AppendElement(s[i]);
+      }
     }
     if (IsOn(mConstraints.mAudio)) {
       AudioTrackConstraintsN constraints(GetInvariant(mConstraints.mAudio));
-      ScopedDeletePtr<SourceSet> s (GetSources(backend, constraints,
-          &MediaEngine::EnumerateAudioDevices,
-          mLoopbackAudioDevice.get()));
-      final->MoveElementsFrom(*s);
+      nsTArray<nsRefPtr<AudioDevice>> s;
+      GetSources(backend, constraints, &MediaEngine::EnumerateAudioDevices, s,
+                 mLoopbackAudioDevice.get());
+      for (uint32_t i = 0; i < s.Length(); i++) {
+        final->AppendElement(s[i]);
+      }
     }
 
     NS_DispatchToMainThread(new DeviceSuccessCallbackRunnable(mWindowId,
