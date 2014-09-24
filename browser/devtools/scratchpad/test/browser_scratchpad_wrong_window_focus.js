@@ -47,8 +47,9 @@ function testFocus(sw, hud) {
 
   function onMessage(event, messages) {
     let msg = [...messages][0];
+    let node = msg.node;
 
-    var loc = msg.querySelector(".message-location");
+    var loc = node.querySelector(".message-location");
     ok(loc, "location element exists");
     is(loc.textContent.trim(), sw.Scratchpad.uniqueName + ":1",
         "location value is correct");
@@ -74,7 +75,7 @@ function testFocus(sw, hud) {
 
   // Sending messages to web console is an asynchronous operation. That's
   // why we have to setup an observer here.
-  hud.ui.once("messages-added", onMessage);
+  hud.ui.once("new-messages", onMessage);
 
   sp.setText("console.log('foo');");
   sp.run().then(function ([selection, error, result]) {

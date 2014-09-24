@@ -83,20 +83,27 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
   },
 
   /**
-   * Convert a window to a docShell.
-   * @param {nsIDOMWindow}
-   * @return {nsIDocShell}
-   */
-  toDocShell: win => win.QueryInterface(Ci.nsIInterfaceRequestor)
-                        .getInterface(Ci.nsIWebNavigation)
-                        .QueryInterface(Ci.nsIDocShell),
-
-  /**
-   * Get the list of docShells in the currently attached tabActor.
+   * Get the list of docShells in the currently attached tabActor. Note that we
+   * always list the docShells included in the real root docShell, even if the
+   * tabActor was switched to a child frame. This is because for now, paint
+   * markers are only recorded at parent frame level so switching the timeline
+   * to a child frame would hide all paint markers.
+   * See https://bugzilla.mozilla.org/show_bug.cgi?id=1050773#c14
    * @return {Array}
    */
   get docShells() {
-    return this.tabActor.windows.map(this.toDocShell);
+    let docShellsEnum = this.tabActor.originalDocShell.getDocShellEnumerator(
+      Ci.nsIDocShellTreeItem.typeAll,
+      Ci.nsIDocShell.ENUMERATE_FORWARDS
+    );
+
+    let docShells = [];
+    while (docShellsEnum.hasMoreElements()) {
+      let docShell = docShellsEnum.getNext();
+      docShells.push(docShell.QueryInterface(Ci.nsIDocShell));
+    }
+
+    return docShells;
   },
 
   /**
@@ -171,7 +178,12 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
    */
   _onWindowReady: function({window}) {
     if (this._isRecording) {
-      this.toDocShell(window).recordProfileTimelineMarkers = true;
+      // XXX As long as bug 1070089 isn't fixed, each docShell has its own start
+      // recording time, so markers aren't going to be properly ordered.
+      let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIWebNavigation)
+                           .QueryInterface(Ci.nsIDocShell);
+      docShell.recordProfileTimelineMarkers = true;
     }
   }
 });
