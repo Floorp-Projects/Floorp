@@ -719,6 +719,11 @@ Search.prototype = {
       hasFirstResult = yield this._matchKnownUrl(conn, queries);
     }
 
+    if (this.pending && this._enableActions && !hasFirstResult) {
+      // When all else fails, we search using the current search engine.
+      yield this._matchCurrentSearchEngine();
+    }
+
     yield this._sleep(Prefs.delay);
     if (!this.pending)
       return;
@@ -834,6 +839,33 @@ Search.prototype = {
       frecency: FRECENCY_SEARCHENGINES_DEFAULT
     });
     return true;
+  },
+
+  _matchCurrentSearchEngine: function* () {
+    let match = yield PlacesSearchAutocompleteProvider.getDefaultMatch();
+    if (!match)
+      return;
+
+    let query = this._originalSearchString;
+
+    yield this._addSearchEngineMatch(match, query);
+  },
+
+  _addSearchEngineMatch: function* (match, query) {
+    let value = makeActionURL("searchengine", {
+      engineName: match.engineName,
+      input: this._originalSearchString,
+      searchQuery: query,
+    });
+
+    this._addMatch({
+      value: value,
+      comment: match.engineName,
+      icon: match.iconUrl,
+      style: "action searchengine",
+      finalCompleteValue: this._trimmedOriginalSearchString,
+      frecency: FRECENCY_SEARCHENGINES_DEFAULT,
+    });
   },
 
   _onResultRow: function (row) {
