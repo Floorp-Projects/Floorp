@@ -651,6 +651,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                             return false;
                     } else {
                         bool found = false;
+
                         for (size_t i = 0; i < ins->numDefs(); i++) {
                             if (ins->getDef(i)->isFixed() &&
                                 ins->getDef(i)->output()->aliases(LAllocation(*iter))) {
@@ -664,10 +665,17 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                 }
             }
 
+            DebugOnly<bool> hasDoubleDef = false;
+            DebugOnly<bool> hasFloat32Def = false;
             for (size_t i = 0; i < ins->numDefs(); i++) {
                 if (ins->getDef(i)->policy() != LDefinition::PASSTHROUGH) {
                     LDefinition *def = ins->getDef(i);
-
+#ifdef DEBUG
+                    if (def->type() == LDefinition::DOUBLE)
+                        hasDoubleDef = true;
+                    if (def->type() == LDefinition::FLOAT32)
+                        hasFloat32Def = true;
+#endif
                     CodePosition from;
                     if (def->policy() == LDefinition::FIXED && def->output()->isRegister() && forLSRA) {
                         // The fixed range covers the current instruction so the
@@ -795,7 +803,10 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                         }
                     }
 
-                    JS_ASSERT(!(hasUseRegister && hasUseRegisterAtStart));
+                    JS_ASSERT_IF(hasUnaliasedDouble() && hasFloat32Def && vregs[use].type() == LDefinition::DOUBLE,
+                                 !use->usedAtStart());
+                    JS_ASSERT_IF(hasMultiAlias() && hasDoubleDef && vregs[use].type() == LDefinition::FLOAT32,
+                                 !use->usedAtStart());
 #endif
 
                     // Don't treat RECOVERED_INPUT uses as keeping the vreg alive.
