@@ -82,46 +82,44 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
         marginBottom->SetFloatValue((float)bodyMarginHeight, eCSSUnit_Pixel);
     }
 
-    if (eCompatibility_NavQuirks == mode){
       // topmargin (IE-attribute)
-      value = mPart->GetParsedAttr(nsGkAtoms::topmargin);
-      if (value && value->Type() == nsAttrValue::eInteger) {
-        bodyTopMargin = value->GetIntegerValue();
-        if (bodyTopMargin < 0) bodyTopMargin = 0;
-        nsCSSValue* marginTop = aData->ValueForMarginTop();
-        if (marginTop->GetUnit() == eCSSUnit_Null)
-          marginTop->SetFloatValue((float)bodyTopMargin, eCSSUnit_Pixel);
-      }
+    value = mPart->GetParsedAttr(nsGkAtoms::topmargin);
+    if (value && value->Type() == nsAttrValue::eInteger) {
+      bodyTopMargin = value->GetIntegerValue();
+      if (bodyTopMargin < 0) bodyTopMargin = 0;
+      nsCSSValue* marginTop = aData->ValueForMarginTop();
+      if (marginTop->GetUnit() == eCSSUnit_Null)
+        marginTop->SetFloatValue((float)bodyTopMargin, eCSSUnit_Pixel);
+    }
 
       // bottommargin (IE-attribute)
-      value = mPart->GetParsedAttr(nsGkAtoms::bottommargin);
-      if (value && value->Type() == nsAttrValue::eInteger) {
-        bodyBottomMargin = value->GetIntegerValue();
-        if (bodyBottomMargin < 0) bodyBottomMargin = 0;
-        nsCSSValue* marginBottom = aData->ValueForMarginBottom();
-        if (marginBottom->GetUnit() == eCSSUnit_Null)
-          marginBottom->SetFloatValue((float)bodyBottomMargin, eCSSUnit_Pixel);
-      }
+    value = mPart->GetParsedAttr(nsGkAtoms::bottommargin);
+    if (value && value->Type() == nsAttrValue::eInteger) {
+      bodyBottomMargin = value->GetIntegerValue();
+      if (bodyBottomMargin < 0) bodyBottomMargin = 0;
+      nsCSSValue* marginBottom = aData->ValueForMarginBottom();
+      if (marginBottom->GetUnit() == eCSSUnit_Null)
+        marginBottom->SetFloatValue((float)bodyBottomMargin, eCSSUnit_Pixel);
+    }
 
       // leftmargin (IE-attribute)
-      value = mPart->GetParsedAttr(nsGkAtoms::leftmargin);
-      if (value && value->Type() == nsAttrValue::eInteger) {
-        bodyLeftMargin = value->GetIntegerValue();
-        if (bodyLeftMargin < 0) bodyLeftMargin = 0;
-        nsCSSValue* marginLeft = aData->ValueForMarginLeftValue();
-        if (marginLeft->GetUnit() == eCSSUnit_Null)
-          marginLeft->SetFloatValue((float)bodyLeftMargin, eCSSUnit_Pixel);
-      }
+    value = mPart->GetParsedAttr(nsGkAtoms::leftmargin);
+    if (value && value->Type() == nsAttrValue::eInteger) {
+      bodyLeftMargin = value->GetIntegerValue();
+      if (bodyLeftMargin < 0) bodyLeftMargin = 0;
+      nsCSSValue* marginLeft = aData->ValueForMarginLeftValue();
+      if (marginLeft->GetUnit() == eCSSUnit_Null)
+        marginLeft->SetFloatValue((float)bodyLeftMargin, eCSSUnit_Pixel);
+    }
 
       // rightmargin (IE-attribute)
-      value = mPart->GetParsedAttr(nsGkAtoms::rightmargin);
-      if (value && value->Type() == nsAttrValue::eInteger) {
-        bodyRightMargin = value->GetIntegerValue();
-        if (bodyRightMargin < 0) bodyRightMargin = 0;
-        nsCSSValue* marginRight = aData->ValueForMarginRightValue();
-        if (marginRight->GetUnit() == eCSSUnit_Null)
-          marginRight->SetFloatValue((float)bodyRightMargin, eCSSUnit_Pixel);
-      }
+    value = mPart->GetParsedAttr(nsGkAtoms::rightmargin);
+    if (value && value->Type() == nsAttrValue::eInteger) {
+      bodyRightMargin = value->GetIntegerValue();
+      if (bodyRightMargin < 0) bodyRightMargin = 0;
+      nsCSSValue* marginRight = aData->ValueForMarginRightValue();
+      if (marginRight->GetUnit() == eCSSUnit_Null)
+        marginRight->SetFloatValue((float)bodyRightMargin, eCSSUnit_Pixel);
     }
 
   }
