@@ -148,8 +148,9 @@ MediaEngineWebRTCVideoSource::NotifyPull(MediaStreamGraph* aGraph,
 }
 
 /*static*/
-bool MediaEngineWebRTCVideoSource::SatisfyConstraintSet(const MediaTrackConstraintSet &aConstraints,
-                                                        const webrtc::CaptureCapability& aCandidate) {
+bool
+MediaEngineWebRTCVideoSource::SatisfiesConstraintSet(const MediaTrackConstraintSet &aConstraints,
+                                                     const webrtc::CaptureCapability& aCandidate) {
   if (!MediaEngineCameraVideoSource::IsWithin(aCandidate.width, aConstraints.mWidth) ||
       !MediaEngineCameraVideoSource::IsWithin(aCandidate.height, aConstraints.mHeight)) {
     return false;
@@ -158,6 +159,41 @@ bool MediaEngineWebRTCVideoSource::SatisfyConstraintSet(const MediaTrackConstrai
     return false;
   }
   return true;
+}
+
+typedef nsTArray<uint8_t> CapabilitySet;
+
+// SatisfiesConstraintSets (plural) answers for the capture device as a whole
+// whether it can satisfy an accumulated number of capabilitySets.
+
+bool
+MediaEngineWebRTCVideoSource::SatisfiesConstraintSets(
+    const nsTArray<const MediaTrackConstraintSet*>& aConstraintSets)
+{
+  NS_ConvertUTF16toUTF8 uniqueId(mUniqueId);
+  int num = mViECapture->NumberOfCapabilities(uniqueId.get(), kMaxUniqueIdLength);
+  if (num <= 0) {
+    return true;
+  }
+
+  CapabilitySet candidateSet;
+  for (int i = 0; i < num; i++) {
+    candidateSet.AppendElement(i);
+  }
+
+  for (size_t j = 0; j < aConstraintSets.Length(); j++) {
+    for (size_t i = 0; i < candidateSet.Length();  ) {
+      webrtc::CaptureCapability cap;
+      mViECapture->GetCaptureCapability(uniqueId.get(), kMaxUniqueIdLength,
+                                        candidateSet[i], cap);
+      if (!SatisfiesConstraintSet(*aConstraintSets[j], cap)) {
+        candidateSet.RemoveElementAt(i);
+      } else {
+        ++i;
+      }
+    }
+  }
+  return !!candidateSet.Length();
 }
 
 void
@@ -177,9 +213,7 @@ MediaEngineWebRTCVideoSource::ChooseCapability(
   LOG(("ChooseCapability: prefs: %dx%d @%d-%dfps",
        aPrefs.mWidth, aPrefs.mHeight, aPrefs.mFPS, aPrefs.mMinFPS));
 
-  typedef nsTArray<uint8_t> SourceSet;
-
-  SourceSet candidateSet;
+  CapabilitySet candidateSet;
   for (int i = 0; i < num; i++) {
     candidateSet.AppendElement(i);
   }
@@ -190,14 +224,14 @@ MediaEngineWebRTCVideoSource::ChooseCapability(
     webrtc::CaptureCapability cap;
     mViECapture->GetCaptureCapability(uniqueId.get(), kMaxUniqueIdLength,
                                       candidateSet[i], cap);
-    if (!SatisfyConstraintSet(aConstraints.mRequired, cap)) {
+    if (!SatisfiesConstraintSet(aConstraints.mRequired, cap)) {
       candidateSet.RemoveElementAt(i);
     } else {
       ++i;
     }
   }
 
-  SourceSet tailSet;
+  CapabilitySet tailSet;
 
   // Then apply advanced (formerly known as optional) constraints.
 
@@ -205,12 +239,12 @@ MediaEngineWebRTCVideoSource::ChooseCapability(
     auto &array = aConstraints.mAdvanced.Value();
 
     for (uint32_t i = 0; i < array.Length(); i++) {
-      SourceSet rejects;
+      CapabilitySet rejects;
       for (uint32_t j = 0; j < candidateSet.Length();) {
         webrtc::CaptureCapability cap;
         mViECapture->GetCaptureCapability(uniqueId.get(), kMaxUniqueIdLength,
                                           candidateSet[j], cap);
-        if (!SatisfyConstraintSet(array[i], cap)) {
+        if (!SatisfiesConstraintSet(array[i], cap)) {
           rejects.AppendElement(candidateSet[j]);
           candidateSet.RemoveElementAt(j);
         } else {
