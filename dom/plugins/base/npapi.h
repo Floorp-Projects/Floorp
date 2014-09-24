@@ -59,7 +59,7 @@
 /*----------------------------------------------------------------------*/
 
 #define NP_VERSION_MAJOR 0
-#define NP_VERSION_MINOR 27
+#define NP_VERSION_MINOR 28
 
 
 /* The OS/2 version of Netscape uses RC_DATA to define the
@@ -186,33 +186,6 @@ typedef enum {
   NPFocusPrevious = 1
 } NPFocusDirection;
 
-/* These formats describe the format in the memory byte-order. This means if
- * a 32-bit value of a pixel is viewed on a little-endian system the layout will
- * be 0xAARRGGBB. The Alpha channel will be stored in the most significant
- * bits. */
-typedef enum {
-  /* 32-bit per pixel 8-bit per channel - premultiplied alpha */
-  NPImageFormatBGRA32     = 0x1,
-  /* 32-bit per pixel 8-bit per channel - 1 unused channel */
-  NPImageFormatBGRX32     = 0x2 
-} NPImageFormat;
-
-typedef struct _NPAsyncSurface
-{
-  uint32_t version;
-  NPSize size;
-  NPImageFormat format;
-  union {
-    struct {
-      uint32_t stride;
-      void *data;
-    } bitmap;
-#if defined(XP_WIN)
-    HANDLE sharedHandle;
-#endif
-  };
-} NPAsyncSurface;
-
 /* Return values for NPP_HandleEvent */
 #define kNPEventNotHandled 0
 #define kNPEventHandled 1
@@ -259,24 +232,27 @@ typedef struct
 #endif /* XP_UNIX */
 
 typedef enum {
+  NPDrawingModelDUMMY
 #if defined(XP_MACOSX)
 #ifndef NP_NO_QUICKDRAW
-  NPDrawingModelQuickDraw = 0,
+  , NPDrawingModelQuickDraw = 0
 #endif
-  NPDrawingModelCoreGraphics = 1,
-  NPDrawingModelOpenGL = 2,
-  NPDrawingModelCoreAnimation = 3,
-  NPDrawingModelInvalidatingCoreAnimation = 4,
+  , NPDrawingModelCoreGraphics = 1
+  , NPDrawingModelOpenGL = 2
+  , NPDrawingModelCoreAnimation = 3
+  , NPDrawingModelInvalidatingCoreAnimation = 4
 #endif
 #if defined(XP_WIN)
-  NPDrawingModelSyncWin = 5,
+  , NPDrawingModelSyncWin = 5
 #endif
 #if defined(MOZ_X11)
-  NPDrawingModelSyncX = 6,
+  , NPDrawingModelSyncX = 6
 #endif
-  NPDrawingModelAsyncBitmapSurface = 7
+#if 0 /* OBSOLETE */
+  , NPDrawingModelAsyncBitmapSurfaceOBSOLETE = 7
 #if defined(XP_WIN)
-  , NPDrawingModelAsyncWindowsDXGISurface = 8
+  , NPDrawingModelAsyncWindowsDXGISurfaceOBSOLETE = 8
+#endif
 #endif
 } NPDrawingModel;
 
@@ -420,9 +396,11 @@ typedef enum {
   , NPNVsupportsCoreAnimationBool = 2003
   , NPNVsupportsInvalidatingCoreAnimationBool = 2004
 #endif
-  , NPNVsupportsAsyncBitmapSurfaceBool = 2007
+#if 0 /* OBSOLETE */
+  , NPNVsupportsAsyncBitmapSurfaceBoolOBSOLETE = 2007
 #if defined(XP_WIN)
-  , NPNVsupportsAsyncWindowsDXGISurfaceBool = 2008
+  , NPNVsupportsAsyncWindowsDXGISurfaceBoolOBSOLETE = 2008
+#endif
 #endif
 #if defined(XP_MACOSX)
 #ifndef NP_NO_CARBON
@@ -867,11 +845,6 @@ NPBool      NPN_ConvertPoint(NPP instance, double sourceX, double sourceY, NPCoo
 NPBool      NPN_HandleEvent(NPP instance, void *event, NPBool handled);
 NPBool      NPN_UnfocusInstance(NPP instance, NPFocusDirection direction);
 void        NPN_URLRedirectResponse(NPP instance, void* notifyData, NPBool allow);
-NPError     NPN_InitAsyncSurface(NPP instance, NPSize *size,
-                                 NPImageFormat format, void *initData,
-                                 NPAsyncSurface *surface);
-NPError     NPN_FinalizeAsyncSurface(NPP instance, NPAsyncSurface *surface);
-void        NPN_SetCurrentAsyncSurface(NPP instance, NPAsyncSurface *surface, NPRect *changed);
 
 #ifdef __cplusplus
 }  /* end extern "C" */
