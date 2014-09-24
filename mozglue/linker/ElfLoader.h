@@ -327,13 +327,14 @@ public:
     return signalHandlingBroken;
   }
 
+  static int __wrap_sigaction(int signum, const struct sigaction *act,
+                              struct sigaction *oldact);
+
 protected:
   SEGVHandler();
   ~SEGVHandler();
 
 private:
-  static int __wrap_sigaction(int signum, const struct sigaction *act,
-                              struct sigaction *oldact);
 
   /**
    * The constructor doesn't do all initialization, and the tail is done
