@@ -280,7 +280,6 @@ protected:
 private:
     nsresult SetupPACThread();
     nsresult ResetPACThread();
-    nsresult ReloadNetworkPAC();
 
 public:
     // The Sun Forte compiler and others implement older versions of the
