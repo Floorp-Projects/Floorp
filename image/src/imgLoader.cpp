@@ -634,7 +634,6 @@ static nsresult NewImageChannel(nsIChannel **aResult,
                                 nsILoadGroup *aLoadGroup,
                                 const nsCString& aAcceptHeader,
                                 nsLoadFlags aLoadFlags,
-                                nsIChannelPolicy *aPolicy,
                                 nsIPrincipal *aLoadingPrincipal,
                                 nsISupports *aRequestingContext)
 {
@@ -690,7 +689,6 @@ static nsresult NewImageChannel(nsIChannel **aResult,
                              requestingPrincipal,
                              securityFlags,
                              nsIContentPolicy::TYPE_IMAGE,
-                             aPolicy,
                              nullptr,   // loadGroup
                              callbacks,
                              aLoadFlags);
@@ -1454,7 +1452,6 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
                                                 nsISupports *aCX,
                                                 nsLoadFlags aLoadFlags,
                                                 imgRequestProxy **aProxyRequest,
-                                                nsIChannelPolicy *aPolicy,
                                                 nsIPrincipal* aLoadingPrincipal,
                                                 int32_t aCORSMode)
 {
@@ -1502,7 +1499,6 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
                          aLoadGroup,
                          mAcceptHeader,
                          aLoadFlags,
-                         aPolicy,
                          aLoadingPrincipal,
                          aCX);
     if (NS_FAILED(rv)) {
@@ -1582,7 +1578,6 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
                                 nsLoadFlags aLoadFlags,
                                 bool aCanMakeNewChannel,
                                 imgRequestProxy **aProxyRequest,
-                                nsIChannelPolicy *aPolicy,
                                 nsIPrincipal* aLoadingPrincipal,
                                 int32_t aCORSMode)
 {
@@ -1687,7 +1682,7 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
 
     return ValidateRequestWithNewChannel(request, aURI, aInitialDocumentURI,
                                          aReferrerURI, aLoadGroup, aObserver,
-                                         aCX, aLoadFlags, aProxyRequest, aPolicy,
+                                         aCX, aLoadFlags, aProxyRequest,
                                          aLoadingPrincipal, aCORSMode);
   }
 
@@ -1862,7 +1857,6 @@ NS_IMETHODIMP imgLoader::LoadImageXPCOM(nsIURI *aURI,
                                    nsISupports *aCX,
                                    nsLoadFlags aLoadFlags,
                                    nsISupports *aCacheKey,
-                                   nsIChannelPolicy *aPolicy,
                                    imgIRequest **_retval)
 {
     imgRequestProxy *proxy;
@@ -1875,29 +1869,32 @@ NS_IMETHODIMP imgLoader::LoadImageXPCOM(nsIURI *aURI,
                                 aCX,
                                 aLoadFlags,
                                 aCacheKey,
-                                aPolicy,
                                 EmptyString(),
                                 &proxy);
     *_retval = proxy;
     return result;
 }
 
-
-
-/* imgIRequest loadImage(in nsIURI aURI, in nsIURI aInitialDocumentURL, in nsIURI aReferrerURI, in nsIPrincipal aLoadingPrincipal, in nsILoadGroup aLoadGroup, in imgINotificationObserver aObserver, in nsISupports aCX, in nsLoadFlags aLoadFlags, in nsISupports cacheKey, in nsIChannelPolicy channelPolicy); */
-
+// imgIRequest loadImage(in nsIURI aURI,
+//                       in nsIURI aInitialDocumentURL,
+//                       in nsIURI aReferrerURI,
+//                       in nsIPrincipal aLoadingPrincipal,
+//                       in nsILoadGroup aLoadGroup,
+//                       in imgINotificationObserver aObserver,
+//                       in nsISupports aCX,
+//                       in nsLoadFlags aLoadFlags,
+//                       in nsISupports cacheKey);
 nsresult imgLoader::LoadImage(nsIURI *aURI,
-			      nsIURI *aInitialDocumentURI,
-			      nsIURI *aReferrerURI,
-			      nsIPrincipal* aLoadingPrincipal,
-			      nsILoadGroup *aLoadGroup,
-			      imgINotificationObserver *aObserver,
-			      nsISupports *aCX,
-			      nsLoadFlags aLoadFlags,
-			      nsISupports *aCacheKey,
-			      nsIChannelPolicy *aPolicy,
-			      const nsAString& initiatorType,
-			      imgRequestProxy **_retval)
+                              nsIURI *aInitialDocumentURI,
+                              nsIURI *aReferrerURI,
+                              nsIPrincipal* aLoadingPrincipal,
+                              nsILoadGroup *aLoadGroup,
+                              imgINotificationObserver *aObserver,
+                              nsISupports *aCX,
+                              nsLoadFlags aLoadFlags,
+                              nsISupports *aCacheKey,
+                              const nsAString& initiatorType,
+                              imgRequestProxy **_retval)
 {
 	VerifyCacheSizes();
 
@@ -1975,7 +1972,7 @@ nsresult imgLoader::LoadImage(nsIURI *aURI,
   if (cache.Get(spec, getter_AddRefs(entry)) && entry) {
     if (ValidateEntry(entry, aURI, aInitialDocumentURI, aReferrerURI,
                       aLoadGroup, aObserver, aCX, requestFlags, true,
-                      _retval, aPolicy, aLoadingPrincipal, corsmode)) {
+                      _retval, aLoadingPrincipal, corsmode)) {
       request = entry->GetRequest();
 
       // If this entry has no proxies, its request has no reference to the entry.
@@ -2017,7 +2014,6 @@ nsresult imgLoader::LoadImage(nsIURI *aURI,
                          aLoadGroup,
                          mAcceptHeader,
                          requestFlags,
-                         aPolicy,
                          aLoadingPrincipal,
                          aCX);
     if (NS_FAILED(rv))
@@ -2201,7 +2197,7 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel *channel, imgINotificationOb
       // XXX -- should this be changed? it's pretty much verbatim from the old
       // code, but seems nonsensical.
       if (ValidateEntry(entry, uri, nullptr, nullptr, nullptr, aObserver, aCX,
-                        requestFlags, false, nullptr, nullptr, nullptr,
+                        requestFlags, false, nullptr, nullptr,
                         imgIRequest::CORS_NONE)) {
         request = entry->GetRequest();
       } else {
