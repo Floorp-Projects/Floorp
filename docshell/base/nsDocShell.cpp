@@ -2861,22 +2861,24 @@ nsDocShell::PopProfileTimelineMarkers(JSContext* aCx,
           mProfileTimelineMarkers[j]->mPayload);
         const char* endMarkerName = mProfileTimelineMarkers[j]->mName;
 
-        // Look for Layer markers to stream out paint markers
+        // Look for Layer markers to stream out paint markers.
         if (strcmp(endMarkerName, "Layer") == 0) {
           hasSeenPaintedLayer = true;
         }
 
         bool isSameMarkerType = strcmp(startMarkerName, endMarkerName) == 0;
-        bool isValidType = strcmp(endMarkerName, "Paint") != 0 ||
-                           hasSeenPaintedLayer;
+        bool isPaint = strcmp(startMarkerName, "Paint") == 0;
 
-        if (endPayload->GetMetaData() == TRACING_INTERVAL_END &&
-            isSameMarkerType && isValidType) {
-          mozilla::dom::ProfileTimelineMarker marker;
-          marker.mName = NS_ConvertUTF8toUTF16(startMarkerName);
-          marker.mStart = mProfileTimelineMarkers[i]->mTime;
-          marker.mEnd = mProfileTimelineMarkers[j]->mTime;
-          profileTimelineMarkers.AppendElement(marker);
+        // Pair start and end markers.
+        if (endPayload->GetMetaData() == TRACING_INTERVAL_END && isSameMarkerType) {
+          // But ignore paint start/end if no layer has been painted.
+          if (!isPaint || (isPaint && hasSeenPaintedLayer)) {
+            mozilla::dom::ProfileTimelineMarker marker;
+            marker.mName = NS_ConvertUTF8toUTF16(startMarkerName);
+            marker.mStart = mProfileTimelineMarkers[i]->mTime;
+            marker.mEnd = mProfileTimelineMarkers[j]->mTime;
+            profileTimelineMarkers.AppendElement(marker);
+          }
 
           break;
         }

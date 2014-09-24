@@ -6,13 +6,10 @@
  * the correct node in the InspectorView
  */
 
-let EVENTS = null;
-
 function spawnTest() {
   let [target, debuggee, panel] = yield initWebAudioEditor(COMPLEX_CONTEXT_URL);
   let panelWin = panel.panelWin;
-  let { gFront, $, $$, WebAudioInspectorView } = panelWin;
-  EVENTS = panelWin.EVENTS;
+  let { gFront, $, $$, InspectorView } = panelWin;
 
   let started = once(gFront, "start-context");
 
@@ -25,28 +22,28 @@ function spawnTest() {
 
   let nodeIds = actors.map(actor => actor.actorID);
 
-  ok(!WebAudioInspectorView.isVisible(), "InspectorView hidden on start.");
+  ok(!InspectorView.isVisible(), "InspectorView hidden on start.");
 
   yield clickGraphNode(panelWin, nodeIds[1], true);
 
-  ok(WebAudioInspectorView.isVisible(), "InspectorView visible after selecting a node.");
-  is(WebAudioInspectorView.getCurrentAudioNode().id, nodeIds[1], "InspectorView has correct node set.");
+  ok(InspectorView.isVisible(), "InspectorView visible after selecting a node.");
+  is(InspectorView.getCurrentAudioNode().id, nodeIds[1], "InspectorView has correct node set.");
 
   yield clickGraphNode(panelWin, nodeIds[2]);
 
-  ok(WebAudioInspectorView.isVisible(), "InspectorView still visible after selecting another node.");
-  is(WebAudioInspectorView.getCurrentAudioNode().id, nodeIds[2], "InspectorView has correct node set on second node.");
+  ok(InspectorView.isVisible(), "InspectorView still visible after selecting another node.");
+  is(InspectorView.getCurrentAudioNode().id, nodeIds[2], "InspectorView has correct node set on second node.");
 
   yield clickGraphNode(panelWin, nodeIds[2]);
-  is(WebAudioInspectorView.getCurrentAudioNode().id, nodeIds[2], "Clicking the same node again works (idempotent).");
+  is(InspectorView.getCurrentAudioNode().id, nodeIds[2], "Clicking the same node again works (idempotent).");
 
   yield clickGraphNode(panelWin, $("rect", findGraphNode(panelWin, nodeIds[3])));
-  is(WebAudioInspectorView.getCurrentAudioNode().id, nodeIds[3], "Clicking on a <rect> works as expected.");
+  is(InspectorView.getCurrentAudioNode().id, nodeIds[3], "Clicking on a <rect> works as expected.");
 
   yield clickGraphNode(panelWin, $("tspan", findGraphNode(panelWin, nodeIds[4])));
-  is(WebAudioInspectorView.getCurrentAudioNode().id, nodeIds[4], "Clicking on a <tspan> works as expected.");
+  is(InspectorView.getCurrentAudioNode().id, nodeIds[4], "Clicking on a <tspan> works as expected.");
 
-  ok(WebAudioInspectorView.isVisible(),
+  ok(InspectorView.isVisible(),
     "InspectorView still visible after several nodes have been clicked.");
 
   yield teardown(panel);
