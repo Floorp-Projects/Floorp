@@ -96,15 +96,20 @@ exports.sendShutdownEvent = sendShutdownEvent;
  *          failed.
  */
 const unwrapDebuggerObjectGlobal = wrappedGlobal => {
-  let global;
   try {
-    global = wrappedGlobal.unsafeDereference();
+    // Because of bug 991399 we sometimes get nuked window references here. We
+    // just bail out in that case.
+    //
+    // Note that addon sandboxes have a DOMWindow as their prototype. So make
+    // sure that we can touch the prototype too (whatever it is), in case _it_
+    // is it a nuked window reference.
+    let global = wrappedGlobal.unsafeDereference();
+    Object.getPrototypeOf(global);
+    return global;
   }
   catch (e) {
-    // Because of bug 991399 we sometimes get bad objects here. If we
-    // can't dereference them then they won't be useful to us.
+    return undefined;
   }
-  return global;
 };
 
 /**
