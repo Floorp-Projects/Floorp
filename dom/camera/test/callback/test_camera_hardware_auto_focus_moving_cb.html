@@ -7,7 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=965421
   <title>Bug 965421 - Test camera hardware API for Auto focus moving Callback</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="camera_common.js"></script>
+  <script type="text/javascript" src="../camera_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -53,14 +53,23 @@ var tests = [
   {
     key: "autofocus-moving-true",
     func: function testAutoFocusMovingIsTrue(camera) {
-      var handler = function(evt) {
-        camera.removeEventListener("focus", handler);
-        ok(evt.newState == "focusing", "autofocus event state focusing == " + evt.newState);
+      camera.onAutoFocusMoving = function(aIsMoving) {
+        ok(aIsMoving == true,"onAutoFocusMoving callback received true correctly");
         camera.focusMode = 'auto';
         next();
       }
-      camera.addEventListener("focus", handler);
       camera.focusMode = 'continuous-picture';
+    }
+  },
+  {
+    key: "autofocus-moving-false",
+    func: function testAutoFocusMovingIsFalse(camera) {
+      camera.onAutoFocusMoving = function(aIsMoving) {
+        ok(aIsMoving == false, "onAutoFocusMoving callback received false correctly");
+        camera.focusMode = 'auto';
+        end();
+      }
+      camera.focusMode = 'continuous-video';
     }
   },
 ];
@@ -91,13 +100,13 @@ CameraTest.begin("hardware", function(test) {
     } catch(e) { }
     ok(enabled, PREF_AUTOFOCUSCALLBACK_ENABLED + " is " + enabled);
 
-    function onSuccess(d) {
-      document.getElementById('viewfinder').mozSrcObject = d.camera;
-      cameraObj = d.camera;
+    function onSuccess(camera, config) {
+      document.getElementById('viewfinder').mozSrcObject = camera;
+      cameraObj = camera;
       CameraTest.next = function() {
         try {
           var t = testGenerator.next();
-          test.set(t.key, t.func.bind(undefined, d.camera));
+          test.set(t.key, t.func.bind(undefined, camera));
         } catch(e) {
           if (e instanceof StopIteration) {
             end();
@@ -112,7 +121,7 @@ CameraTest.begin("hardware", function(test) {
       ok(false, "getCamera() failed with: " + error);
       end();
     }
-    navigator.mozCameras.getCamera(whichCamera, initialConfig).then(onSuccess, onError);
+    navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError);
   })
 });
 

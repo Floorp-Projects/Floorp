@@ -29,7 +29,7 @@ var config = {
 };
 
 function onError(e) {
-  ok(false, "Error " + e);
+  ok(false, "Error" + JSON.stringify(e));
 }
 
 var capabilities = [ 'previewSizes', 'pictureSizes', 'fileFormats', 'maxFocusAreas', 'minExposureCompensation',
@@ -102,17 +102,12 @@ var Camera = {
     this._zoomRatios = this.cameraObj.capabilities.zoomRatios;
   },
   takePictureSuccess: function taken_foto(blob) {
-    ok(blob.size > 100 , "Blob Size Gathered = " + blob.size);
-    ok("image/" + test.fileFormat ==  blob.type, "Blob Type = " + blob.type);
-  },
-  takePictureEvent: function taken_foto_evt(e) {
-    var blob = e.data;
     var img = new Image();
     var test = this._currentTest;
     img.onload = function Imgsize() {
-      ok(this.width == test.pictureSize.width, "The image taken has the width " +
+      ok(this.width == test.pictureSize.width, "The image taken has the width " + 
                                               this.width + " pictureSize width = " + test.pictureSize.width);
-      ok(this.height == test.pictureSize.height, "The image taken has the height " +
+      ok(this.height == test.pictureSize.height, "The image taken has the height " + 
                                               this.height + " picturesize height = " + test.pictureSize.height);
       Camera._testsCompleted++;
       if(Camera._testsCompleted == Camera._tests.length) {
@@ -201,7 +196,7 @@ var Camera = {
     config.fileFormat = test.fileFormat;
     config.pictureSize = test.pictureSize;
     ok(true, "testing picture size " + JSON.stringify(config.pictureSize));
-    Camera.cameraObj.takePicture(config).then(this.takePictureSuccess.bind(this), onError);
+    Camera.cameraObj.takePicture(config, this.takePictureSuccess.bind(this), onError);
   },
   onConfigChange: function onConfigChange(config) {
     ok(config.mode === options.mode, "configuration mode = " + config.mode);
@@ -210,27 +205,24 @@ var Camera = {
       config.previewSize.height === options.previewSize.height,
       "preview size (w x h) = " + config.previewSize.width + " x " + config.previewSize.height);
   },
-  onPreviewStateChange: function onPreviewStateChange(e) {
-    if (e.newState === 'started') {
-      ok(true, "viewfinder is ready and playing");
-      Camera.cameraObj.removeEventListener('previewstatechange', Camera.onPreviewStateChange);
-      Camera.onReady();
-    }
-  },
   setUp: function setup_tests() {
-    function onSuccess(d) {
-      Camera.cameraObj = d.camera;
-      Camera.cameraObj.addEventListener('previewstatechange', Camera.onPreviewStateChange);
-      Camera.cameraObj.addEventListener('configurationchanged', Camera.onConfigChange);
-      Camera.cameraObj.addEventListener('shutter', Camera.shutter);
-      Camera.cameraObj.addEventListener('picture', Camera.takePictureEvent.bind(Camera));
-      Camera.viewfinder.mozSrcObject = d.camera;
+    function onSuccess(camera) {
+      Camera.cameraObj = camera;
+      Camera.viewfinder.mozSrcObject = camera;
       Camera.viewfinder.play();
+      Camera.cameraObj.onPreviewStateChange = function(state) {
+        if (state === 'started') {
+          ok(true, "viewfinder is ready and playing");
+          Camera.cameraObj.onPreviewStateChange = null;
+          Camera.onReady();
+        }
+      };
       SimpleTest.expectAssertions(0);
       ok(true, "Camera Control object has been successfully initialized");
-      Camera.cameraObj.setConfiguration(options).then(Camera.onConfigChange, onError);
+      Camera.cameraObj.setConfiguration(options, Camera.onConfigChange, onError);
+      Camera.cameraObj.onShutter = Camera.shutter;
     };
-    navigator.mozCameras.getCamera(whichCamera, null).then(onSuccess, onError);
+    navigator.mozCameras.getCamera(whichCamera, null, onSuccess, onError);
   }
 }
 
