@@ -606,7 +606,7 @@ SampleTable::parseSampleCencInfo() {
 
     mCencInfo = new SampleCencInfo[mCencInfoCount];
     for (uint32_t i = 0; i < mCencInfoCount; i++) {
-        mCencInfo[i].mSubsamples = nullptr;
+        mCencInfo[i].mSubsamples = NULL;
     }
 
     uint64_t nextOffset = mCencOffsets[0];
