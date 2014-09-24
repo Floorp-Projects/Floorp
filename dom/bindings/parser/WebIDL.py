@@ -3990,8 +3990,11 @@ class IDLImplementsStatement(IDLObject):
         IDLObject.__init__(self, location)
         self.implementor = implementor;
         self.implementee = implementee
+        self._finished = False
 
     def finish(self, scope):
+        if self._finished:
+            return
         assert(isinstance(self.implementor, IDLIdentifierPlaceholder))
         assert(isinstance(self.implementee, IDLIdentifierPlaceholder))
         implementor = self.implementor.finish(scope)
@@ -4016,6 +4019,8 @@ class IDLImplementsStatement(IDLObject):
                               "interface",
                               [self.implementee.location])
         implementor.addImplementedInterface(implementee)
+        self.implementor = implementor
+        self.implementee = implementee
 
     def validate(self):
         pass

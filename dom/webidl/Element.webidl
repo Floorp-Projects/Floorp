@@ -219,3 +219,4 @@ Element implements ChildNode;
 Element implements NonDocumentTypeChildNode;
 Element implements ParentNode;
 Element implements Animatable;
+Element implements GeometryUtils;
