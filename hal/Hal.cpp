@@ -6,6 +6,7 @@
 
 #include "Hal.h"
 #include "HalImpl.h"
+#include "HalLog.h"
 #include "HalSandbox.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
@@ -129,7 +130,7 @@ Vibrate(const nsTArray<uint32_t>& pattern, const WindowIdentifier &id)
   // only the window corresponding to the bottommost process has its
   // visibility state set correctly.
   if (!id.HasTraveledThroughIPC() && !WindowIsActive(id.GetWindow())) {
-    HAL_LOG(("Vibrate: Window is inactive, dropping vibrate."));
+    HAL_LOG("Vibrate: Window is inactive, dropping vibrate.");
     return;
   }
 

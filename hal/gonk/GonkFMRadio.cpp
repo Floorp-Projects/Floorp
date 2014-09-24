@@ -14,6 +14,7 @@
  */
 
 #include "Hal.h"
+#include "HalLog.h"
 #include "tavarua.h"
 #include "nsThreadUtils.h"
 #include "mozilla/FileUtils.h"
@@ -113,20 +114,20 @@ initMsmFMRadio(hal::FMRadioSettings &aInfo)
 
   rc = setControl(V4L2_CID_PRIVATE_TAVARUA_STATE, FM_RECV);
   if (rc < 0) {
-    HAL_LOG(("Unable to turn on radio |%s|", strerror(errno)));
+    HAL_LOG("Unable to turn on radio |%s|", strerror(errno));
     return;
   }
 
   int preEmphasis = aInfo.preEmphasis() <= 50;
   rc = setControl(V4L2_CID_PRIVATE_TAVARUA_EMPHASIS, preEmphasis);
   if (rc) {
-    HAL_LOG(("Unable to configure preemphasis"));
+    HAL_LOG("Unable to configure preemphasis");
     return;
   }
 
   rc = setControl(V4L2_CID_PRIVATE_TAVARUA_RDS_STD, 0);
   if (rc) {
-    HAL_LOG(("Unable to configure RDS"));
+    HAL_LOG("Unable to configure RDS");
     return;
   }
 
@@ -142,13 +143,13 @@ initMsmFMRadio(hal::FMRadioSettings &aInfo)
     spacing = FM_CH_SPACE_200KHZ;
     break;
   default:
-    HAL_LOG(("Unsupported space value - %d", aInfo.spaceType()));
+    HAL_LOG("Unsupported space value - %d", aInfo.spaceType());
     return;
   }
 
   rc = setControl(V4L2_CID_PRIVATE_TAVARUA_SPACING, spacing);
   if (rc) {
-    HAL_LOG(("Unable to configure spacing"));
+    HAL_LOG("Unable to configure spacing");
     return;
   }
 
@@ -166,13 +167,13 @@ initMsmFMRadio(hal::FMRadioSettings &aInfo)
   tuner.audmode = V4L2_TUNER_MODE_STEREO;
   rc = ioctl(fd, VIDIOC_S_TUNER, &tuner);
   if (rc < 0) {
-    HAL_LOG(("Unable to adjust band limits"));
+    HAL_LOG("Unable to adjust band limits");
     return;
   }
 
   rc = setControl(V4L2_CID_PRIVATE_TAVARUA_REGION, TAVARUA_REGION_OTHER);
   if (rc < 0) {
-    HAL_LOG(("Unable to configure region"));
+    HAL_LOG("Unable to configure region");
     return;
   }
 
@@ -185,7 +186,7 @@ initMsmFMRadio(hal::FMRadioSettings &aInfo)
   rc = setControl(V4L2_CID_PRIVATE_TAVARUA_SET_AUDIO_PATH,
                   noAnalog ? FM_DIGITAL_PATH : FM_ANALOG_PATH);
   if (rc < 0) {
-    HAL_LOG(("Unable to set audio path"));
+    HAL_LOG("Unable to set audio path");
     return;
   }
 
@@ -272,7 +273,7 @@ void
 EnableFMRadio(const hal::FMRadioSettings& aInfo)
 {
   if (sRadioEnabled) {
-    HAL_LOG(("Radio already enabled!"));
+    HAL_LOG("Radio already enabled!");
     return;
   }
 
@@ -282,7 +283,7 @@ EnableFMRadio(const hal::FMRadioSettings& aInfo)
 
   mozilla::ScopedClose fd(open("/dev/radio0", O_RDWR));
   if (fd < 0) {
-    HAL_LOG(("Unable to open radio device"));
+    HAL_LOG("Unable to open radio device");
     hal::NotifyFMRadioStatus(info);
     return;
   }
@@ -290,23 +291,23 @@ EnableFMRadio(const hal::FMRadioSettings& aInfo)
   struct v4l2_capability cap;
   int rc = ioctl(fd, VIDIOC_QUERYCAP, &cap);
   if (rc < 0) {
-    HAL_LOG(("Unable to query radio device"));
+    HAL_LOG("Unable to query radio device");
     hal::NotifyFMRadioStatus(info);
     return;
   }
 
   sMsmFMMode = !strcmp((char *)cap.driver, "radio-tavarua") ||
       !strcmp((char *)cap.driver, "radio-iris");
-  HAL_LOG(("Radio: %s (%s)\n", cap.driver, cap.card));
+  HAL_LOG("Radio: %s (%s)\n", cap.driver, cap.card);
 
   if (!(cap.capabilities & V4L2_CAP_RADIO)) {
-    HAL_LOG(("/dev/radio0 isn't a radio"));
+    HAL_LOG("/dev/radio0 isn't a radio");
     hal::NotifyFMRadioStatus(info);
     return;
   }
 
   if (!(cap.capabilities & V4L2_CAP_TUNER)) {
-    HAL_LOG(("/dev/radio0 doesn't support the tuner interface"));
+    HAL_LOG("/dev/radio0 doesn't support the tuner interface");
     hal::NotifyFMRadioStatus(info);
     return;
   }
@@ -316,7 +317,7 @@ EnableFMRadio(const hal::FMRadioSettings& aInfo)
     sRadioFD = fd.forget();
     sMsmFMVersion = cap.version;
     if (pthread_create(&sRadioThread, nullptr, runMsmFMRadio, nullptr)) {
-      HAL_LOG(("Couldn't create radio thread"));
+      HAL_LOG("Couldn't create radio thread");
       hal::NotifyFMRadioStatus(info);
     }
     return;
@@ -329,7 +330,7 @@ EnableFMRadio(const hal::FMRadioSettings& aInfo)
   tuner.audmode = V4L2_TUNER_MODE_STEREO;
   rc = ioctl(fd, VIDIOC_S_TUNER, &tuner);
   if (rc < 0) {
-    HAL_LOG(("Unable to adjust band limits"));
+    HAL_LOG("Unable to adjust band limits");
   }
 
   int emphasis;
@@ -349,7 +350,7 @@ EnableFMRadio(const hal::FMRadioSettings& aInfo)
   }
   rc = setControl(V4L2_CID_TUNE_DEEMPHASIS, emphasis);
   if (rc < 0) {
-    HAL_LOG(("Unable to configure deemphasis"));
+    HAL_LOG("Unable to configure deemphasis");
   }
 
   sRadioFD = fd.forget();
@@ -370,7 +371,7 @@ DisableFMRadio()
   if (sMsmFMMode) {
     int rc = setControl(V4L2_CID_PRIVATE_TAVARUA_STATE, FM_OFF);
     if (rc < 0) {
-      HAL_LOG(("Unable to turn off radio"));
+      HAL_LOG("Unable to turn off radio");
     }
 
     pthread_join(sRadioThread, nullptr);
@@ -408,7 +409,7 @@ FMRadioSeek(const hal::FMRadioSeekDirection& aDirection)
                                           hal::FM_RADIO_OPERATION_STATUS_SUCCESS));
 
   if (rc < 0) {
-    HAL_LOG(("Could not initiate hardware seek"));
+    HAL_LOG("Could not initiate hardware seek");
     return;
   }
 
@@ -426,7 +427,7 @@ GetFMRadioSettings(hal::FMRadioSettings* aInfo)
   struct v4l2_tuner tuner = {0};
   int rc = ioctl(sRadioFD, VIDIOC_G_TUNER, &tuner);
   if (rc < 0) {
-    HAL_LOG(("Could not query fm radio for settings"));
+    HAL_LOG("Could not query fm radio for settings");
     return;
   }
 
@@ -443,7 +444,7 @@ SetFMRadioFrequency(const uint32_t frequency)
 
   int rc = ioctl(sRadioFD, VIDIOC_S_FREQUENCY, &freq);
   if (rc < 0)
-    HAL_LOG(("Could not set radio frequency"));
+    HAL_LOG("Could not set radio frequency");
 
   if (sMsmFMMode && rc >= 0)
     return;
@@ -463,7 +464,7 @@ GetFMRadioFrequency()
   struct v4l2_frequency freq;
   int rc = ioctl(sRadioFD, VIDIOC_G_FREQUENCY, &freq);
   if (rc < 0) {
-    HAL_LOG(("Could not get radio frequency"));
+    HAL_LOG("Could not get radio frequency");
     return 0;
   }
 
@@ -482,7 +483,7 @@ GetFMRadioSignalStrength()
   struct v4l2_tuner tuner = {0};
   int rc = ioctl(sRadioFD, VIDIOC_G_TUNER, &tuner);
   if (rc < 0) {
-    HAL_LOG(("Could not query fm radio for signal strength"));
+    HAL_LOG("Could not query fm radio for signal strength");
     return 0;
   }
 

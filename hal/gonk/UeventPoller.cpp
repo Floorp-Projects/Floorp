@@ -28,6 +28,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
+#include "HalLog.h"
 #include "nsDebug.h"
 #include "base/message_loop.h"
 #include "mozilla/FileUtils.h"
@@ -133,7 +134,8 @@ NetlinkPoller::OpenSocket()
 
     // Once there was any other place in the same process assigning saddr.nl_pid by
     // gettid(), we can detect it and print warning message.
-    printf_stderr("The netlink socket address saddr.nl_pid=%u is in use. Let the kernel re-assign.\n", saddr.nl_pid);
+    HAL_LOG("The netlink socket address saddr.nl_pid=%u is in use. "
+            "Let the kernel re-assign.\n", saddr.nl_pid);
     saddr.nl_pid = 0;
   } while (true);
 
