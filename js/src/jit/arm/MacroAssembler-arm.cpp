@@ -3716,6 +3716,16 @@ MacroAssemblerARMCompat::breakpoint()
 }
 
 void
+MacroAssemblerARMCompat::simulatorStop(const char* msg)
+{
+#if defined(JS_ARM_SIMULATOR)
+    JS_ASSERT(sizeof(char*) == 4);
+    writeInst(0xefffffff);
+    writeInst((int)msg);
+#endif
+}
+
+void
 MacroAssemblerARMCompat::ensureDouble(const ValueOperand &source, FloatRegister dest, Label *failure)
 {
     Label isDouble, done;

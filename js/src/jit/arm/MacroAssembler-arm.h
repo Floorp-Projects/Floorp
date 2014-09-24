@@ -1451,6 +1451,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     // Conditional breakpoint.
     void breakpoint(Condition cc);
 
+    // Trigger the simulator's interactive read-eval-print loop.
+    // The message will be printed at the stopping point.
+    // (On non-simulator builds, does nothing.)
+    void simulatorStop(const char* msg);
+
     void compareDouble(FloatRegister lhs, FloatRegister rhs);
     void branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
                       Label *label);
