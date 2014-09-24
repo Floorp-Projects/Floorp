@@ -423,7 +423,19 @@ MobileConnectionRequestParent::DoRequest(const SetCallForwardingRequest& aReques
 {
   NS_ENSURE_TRUE(mMobileConnection, false);
 
-  AutoSafeJSContext cx;
+  // There are cases (bug 1070083) where this is called with no JS on the stack.
+  // And since mobileConnectionService might be JS-Implemented, so we just
+  // create it in the System-Principaled Junk Scope. We are going to get rid of
+  // the "jsval" used in MobileConnection's interface in bug 1047196, after that
+  // we don't need these things.
+  // Note that using xpc::PrivilegedJunkScope requires explicit case-by-case
+  // approval from the XPConnect module owner (bholley).
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(xpc::PrivilegedJunkScope()))) {
+    return false;
+  }
+
+  JSContext* cx = jsapi.cx();
   JS::Rooted<JS::Value> options(cx);
   if (!ToJSValue(cx, aRequest.options(), &options)) {
     JS_ClearPendingException(cx);
@@ -446,7 +458,19 @@ MobileConnectionRequestParent::DoRequest(const SetCallBarringRequest& aRequest)
 {
   NS_ENSURE_TRUE(mMobileConnection, false);
 
-  AutoSafeJSContext cx;
+  // There are cases (bug 1070083) where this is called with no JS on the stack.
+  // And since mobileConnectionService might be JS-Implemented, so we just
+  // create it in the System-Principaled Junk Scope. We are going to get rid of
+  // the "jsval" used in MobileConnection's interface in bug 1047196, after that
+  // we don't need these things.
+  // Note that using xpc::PrivilegedJunkScope requires explicit case-by-case
+  // approval from the XPConnect module owner (bholley).
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(xpc::PrivilegedJunkScope()))) {
+    return false;
+  }
+
+  JSContext* cx = jsapi.cx();
   JS::Rooted<JS::Value> options(cx);
   if (!ToJSValue(cx, aRequest.options(), &options)) {
     JS_ClearPendingException(cx);
@@ -461,7 +485,19 @@ MobileConnectionRequestParent::DoRequest(const GetCallBarringRequest& aRequest)
 {
   NS_ENSURE_TRUE(mMobileConnection, false);
 
-  AutoSafeJSContext cx;
+  // There are cases (bug 1070083) where this is called with no JS on the stack.
+  // And since mobileConnectionService might be JS-Implemented, so we just
+  // create it in the System-Principaled Junk Scope. We are going to get rid of
+  // the "jsval" used in MobileConnection's interface in bug 1047196, after that
+  // we don't need these things.
+  // Note that using xpc::PrivilegedJunkScope requires explicit case-by-case
+  // approval from the XPConnect module owner (bholley).
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(xpc::PrivilegedJunkScope()))) {
+    return false;
+  }
+
+  JSContext* cx = jsapi.cx();
   JS::Rooted<JS::Value> options(cx);
   if (!ToJSValue(cx, aRequest.options(), &options)) {
     JS_ClearPendingException(cx);
@@ -476,7 +512,19 @@ MobileConnectionRequestParent::DoRequest(const ChangeCallBarringPasswordRequest&
 {
   NS_ENSURE_TRUE(mMobileConnection, false);
 
-  AutoSafeJSContext cx;
+  // There are cases (bug 1070083) where this is called with no JS on the stack.
+  // And since mobileConnectionService might be JS-Implemented, so we just
+  // create it in the System-Principaled Junk Scope. We are going to get rid of
+  // the "jsval" used in MobileConnection's interface in bug 1047196, after that
+  // we don't need these things.
+  // Note that using xpc::PrivilegedJunkScope requires explicit case-by-case
+  // approval from the XPConnect module owner (bholley).
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(xpc::PrivilegedJunkScope()))) {
+    return false;
+  }
+
+  JSContext* cx = jsapi.cx();
   JS::Rooted<JS::Value> options(cx);
   if (!ToJSValue(cx, aRequest.options(), &options)) {
     JS_ClearPendingException(cx);
