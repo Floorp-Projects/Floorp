@@ -137,6 +137,7 @@
 #include "nsIParserService.h"
 #include "nsIPermissionManager.h"
 #include "nsIPluginHost.h"
+#include "nsIRequest.h"
 #include "nsIRunnable.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptError.h"
@@ -6962,4 +6963,46 @@ nsContentUtils::IsJavascriptMIMEType(const nsAString& aMIMEType)
   }
 
   return false;
+}
+
+uint64_t
+nsContentUtils::GetInnerWindowID(nsIRequest* aRequest)
+{
+  // can't do anything if there's no nsIRequest!
+  if (!aRequest) {
+    return 0;
+  }
+
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  nsresult rv = aRequest->GetLoadGroup(getter_AddRefs(loadGroup));
+
+  if (NS_FAILED(rv) || !loadGroup) {
+    return 0;
+  }
+
+  nsCOMPtr<nsIInterfaceRequestor> callbacks;
+  rv = loadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
+  if (NS_FAILED(rv) || !callbacks) {
+    return 0;
+  }
+
+  nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(callbacks);
+  if (!loadContext) {
+    return 0;
+  }
+
+  nsCOMPtr<nsIDOMWindow> window;
+  rv = loadContext->GetAssociatedWindow(getter_AddRefs(window));
+  if (NS_FAILED(rv) || !window) {
+    return 0;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> pwindow = do_QueryInterface(window);
+  if (!pwindow) {
+    return 0;
+  }
+
+  nsPIDOMWindow* inner = pwindow->IsInnerWindow() ? pwindow.get() : pwindow->GetCurrentInnerWindow();
+
+  return inner ? inner->WindowID() : 0;
 }
