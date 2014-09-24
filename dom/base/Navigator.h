@@ -27,7 +27,6 @@ class nsDOMCameraManager;
 class nsDOMDeviceStorage;
 class nsIDOMBlob;
 class nsIPrincipal;
-class nsIURI;
 
 namespace mozilla {
 namespace dom {
@@ -167,11 +166,6 @@ public:
 
   static nsresult GetAppVersion(nsAString& aAppVersion,
                                 bool aUsePrefOverriddenValue);
-
-  static nsresult GetUserAgent(nsPIDOMWindow* aWindow,
-                               nsIURI* aURI,
-                               bool aIsCallerChrome,
-                               nsAString& aUserAgent);
 
   already_AddRefed<Promise> GetDataStores(const nsAString& aName,
                                           const nsAString& aOwner,
@@ -361,5 +355,7 @@ private:
 
 } // namespace dom
 } // namespace mozilla
+
+nsresult NS_GetNavigatorUserAgent(nsAString& aUserAgent);
 
 #endif // mozilla_dom_Navigator_h
