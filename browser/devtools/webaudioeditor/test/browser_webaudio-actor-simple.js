@@ -6,7 +6,7 @@
  */
 
 function spawnTest () {
-  let [target, debuggee, front] = yield initBackend(SIMPLE_CONTEXT_URL);
+  let { target, front } = yield initBackend(SIMPLE_CONTEXT_URL);
   let [_, __, [destNode, oscNode, gainNode], [connect1, connect2]] = yield Promise.all([
     front.setup({ reload: true }),
     once(front, "start-context"),
