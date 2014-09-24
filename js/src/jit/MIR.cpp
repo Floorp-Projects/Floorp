@@ -332,6 +332,8 @@ MTest::foldsTo(TempAllocator &alloc)
       case MIRType_Undefined:
       case MIRType_Null:
         return MGoto::New(alloc, ifFalse());
+      case MIRType_Symbol:
+        return MGoto::New(alloc, ifTrue());
       case MIRType_Object:
         if (!operandMightEmulateUndefined())
             return MGoto::New(alloc, ifTrue());
@@ -3116,6 +3118,10 @@ MNot::foldsTo(TempAllocator &alloc)
     // NOT of an undefined or null value is always true
     if (input()->type() == MIRType_Undefined || input()->type() == MIRType_Null)
         return MConstant::New(alloc, BooleanValue(true));
+
+    // NOT of a symbol is always false.
+    if (input()->type() == MIRType_Symbol)
+        return MConstant::New(alloc, BooleanValue(false));
 
     // NOT of an object that can't emulate undefined is always false.
     if (input()->type() == MIRType_Object && !operandMightEmulateUndefined())

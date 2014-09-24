@@ -700,6 +700,12 @@ LIRGenerator::visitTest(MTest *test)
     // TestPolicy).
     MOZ_ASSERT(opd->type() != MIRType_String);
 
+    // Testing a constant.
+    if (opd->isConstant()) {
+        bool result = opd->toConstant()->valueToBoolean();
+        return add(new(alloc()) LGoto(result ? ifTrue : ifFalse));
+    }
+
     if (opd->type() == MIRType_Value) {
         LDefinition temp0, temp1;
         if (test->operandMightEmulateUndefined()) {
@@ -709,18 +715,17 @@ LIRGenerator::visitTest(MTest *test)
             temp0 = LDefinition::BogusTemp();
             temp1 = LDefinition::BogusTemp();
         }
-        LTestVAndBranch *lir = new(alloc()) LTestVAndBranch(ifTrue, ifFalse, tempDouble(), temp0, temp1);
+        LTestVAndBranch *lir =
+            new(alloc()) LTestVAndBranch(ifTrue, ifFalse, tempDouble(), temp0, temp1);
         if (!useBox(lir, LTestVAndBranch::Input, opd))
             return false;
         return add(lir, test);
     }
 
+    // Objects are truthy, except if it might emulate undefined.
     if (opd->type() == MIRType_Object) {
-        // If the object might emulate undefined, we have to test for that.
         if (test->operandMightEmulateUndefined())
             return add(new(alloc()) LTestOAndBranch(useRegister(opd), ifTrue, ifFalse, temp()), test);
-
-        // Otherwise we know it's truthy.
         return add(new(alloc()) LGoto(ifTrue));
     }
 
@@ -732,30 +737,6 @@ LIRGenerator::visitTest(MTest *test)
     // All symbols are truthy.
     if (opd->type() == MIRType_Symbol)
         return add(new(alloc()) LGoto(ifTrue));
-
-    // Constant Double operand.
-    if (opd->type() == MIRType_Double && opd->isConstant()) {
-        bool result = opd->toConstant()->valueToBoolean();
-        return add(new(alloc()) LGoto(result ? ifTrue : ifFalse));
-    }
-
-    // Constant Float32 operand.
-    if (opd->type() == MIRType_Float32 && opd->isConstant()) {
-        bool result = opd->toConstant()->valueToBoolean();
-        return add(new(alloc()) LGoto(result ? ifTrue : ifFalse));
-    }
-
-    // Constant Int32 operand.
-    if (opd->type() == MIRType_Int32 && opd->isConstant()) {
-        int32_t num = opd->toConstant()->value().toInt32();
-        return add(new(alloc()) LGoto(num ? ifTrue : ifFalse));
-    }
-
-    // Constant Boolean operand.
-    if (opd->type() == MIRType_Boolean && opd->isConstant()) {
-        bool result = opd->toConstant()->value().toBoolean();
-        return add(new(alloc()) LGoto(result ? ifTrue : ifFalse));
-    }
 
     // Check if the operand for this test is a compare operation. If it is, we want
     // to emit an LCompare*AndBranch rather than an LTest*AndBranch, to fuse the
