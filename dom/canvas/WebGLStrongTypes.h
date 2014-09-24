@@ -8,8 +8,9 @@
 #define WEBGLSTRONGTYPES_H_
 
 #include "GLDefs.h"
-#include "mozilla/Assertions.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 
 // Usage:
 // ===========
@@ -132,8 +133,8 @@ public:
         AssertOnceThatEnumValuesAreSorted();
     }
 
-    StrongGLenum(GLenum val)
-        : mValue(val)
+    MOZ_IMPLICIT StrongGLenum(GLenum aVal)
+        : mValue(aVal)
     {
         AssertOnceThatEnumValuesAreSorted();
         MOZ_ASSERT(IsValueLegal(mValue));
