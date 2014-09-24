@@ -4,6 +4,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
@@ -50,14 +51,34 @@ Sanitizer.prototype = {
    * Returns a promise which is resolved if no errors occurred.  If an error
    * occurs, a message is reported to the console and all other items are still
    * cleared before the promise is finally rejected.
+   *
+   * If the consumer specifies the (optional) array parameter, only those
+   * items get cleared (irrespective of the preference settings)
    */
-  sanitize: function ()
+  sanitize: function (aItemsToClear)
   {
     var deferred = Promise.defer();
-    var psvc = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefService);
-    var branch = psvc.getBranch(this.prefDomain);
     var seenError = false;
+    if (Array.isArray(aItemsToClear)) {
+      var itemsToClear = [...aItemsToClear];
+    } else {
+      let branch = Services.prefs.getBranch(this.prefDomain);
+      itemsToClear = Object.keys(this.items).filter(itemName => branch.getBoolPref(itemName));
+    }
+
+    // Ensure open windows get cleared first, if they're in our list, so that they don't stick
+    // around in the recently closed windows list, and so we can cancel the whole thing
+    // if the user selects to keep a window open from a beforeunload prompt.
+    let openWindowsIndex = itemsToClear.indexOf("openWindows");
+    if (openWindowsIndex != -1) {
+      itemsToClear.splice(openWindowsIndex, 1);
+      let item = this.items.openWindows;
+      if (!item.clear()) {
+        // When cancelled, reject the deferred and return the promise:
+        deferred.reject();
+        return deferred.promise;
+      }
+    }
 
     // Cache the range of times to clear
     if (this.ignoreTimespan)
@@ -65,16 +86,16 @@ Sanitizer.prototype = {
     else
       range = this.range || Sanitizer.getClearRange();
 
-    let itemCount = Object.keys(this.items).length;
+    let itemCount = Object.keys(itemsToClear).length;
     let onItemComplete = function() {
       if (!--itemCount) {
         seenError ? deferred.reject() : deferred.resolve();
       }
     };
-    for (var itemName in this.items) {
+    for (let itemName of itemsToClear) {
       let item = this.items[itemName];
       item.range = range;
-      if ("clear" in item && branch.getBoolPref(itemName)) {
+      if ("clear" in item) {
         let clearCallback = (itemName, aCanClear) => {
           // Some of these clear() may raise exceptions (see bug #265028)
           // to sanitize as much as possible, we catch and store them,
@@ -401,7 +422,89 @@ Sanitizer.prototype = {
       {
         return true;
       }
-    }
+    },
+    openWindows: {
+      privateStateForNewWindow: "non-private",
+      _canCloseWindow: function(aWindow) {
+        // Bug 967873 - Proxy nsDocumentViewer::PermitUnload to the child process
+        if (!aWindow.gMultiProcessBrowser) {
+          // Cargo-culted out of browser.js' WindowIsClosing because we don't care
+          // about TabView or the regular 'warn me before closing windows with N tabs'
+          // stuff here, and more importantly, we want to set aCallerClosesWindow to true
+          // when calling into permitUnload:
+          for (let browser of aWindow.gBrowser.browsers) {
+            let ds = browser.docShell;
+            // 'true' here means we will be closing the window soon, so please don't dispatch
+            // another onbeforeunload event when we do so. If unload is *not* permitted somewhere,
+            // we will reset the flag that this triggers everywhere so that we don't interfere
+            // with the browser after all:
+            if (ds.contentViewer && !ds.contentViewer.permitUnload(true)) {
+              return false;
+            }
+          }
+        }
+        return true;
+      },
+      _resetAllWindowClosures: function(aWindowList) {
+        for (let win of aWindowList) {
+          win.getInterface(Ci.nsIDocShell).contentViewer.resetCloseWindow();
+        }
+      },
+      clear: function()
+      {
+        // NB: this closes all *browser* windows, not other windows like the library, about window,
+        // browser console, etc.
+
+        // Keep track of the time in case we get stuck in la-la-land because of onbeforeunload
+        // dialogs
+        let existingWindow = Services.appShell.hiddenDOMWindow;
+        let startDate = existingWindow.performance.now();
+
+        // First check if all these windows are OK with being closed:
+        let windowEnumerator = Services.wm.getEnumerator("navigator:browser");
+        let windowList = [];
+        while (windowEnumerator.hasMoreElements()) {
+          let someWin = windowEnumerator.getNext();
+          windowList.push(someWin);
+          // If someone says "no" to a beforeunload prompt, we abort here:
+          if (!this._canCloseWindow(someWin)) {
+            this._resetAllWindowClosures(windowList);
+            return false;
+          }
+
+          // ...however, beforeunload prompts spin the event loop, and so the code here won't get
+          // hit until the prompt has been dismissed. If more than 1 minute has elapsed since we
+          // started prompting, stop, because the user might not even remember initiating the
+          // 'forget', and the timespans will be all wrong by now anyway:
+          if (existingWindow.performance.now() > (startDate + 60 * 1000)) {
+            this._resetAllWindowClosures(windowList);
+            return false;
+          }
+        }
+
+        // If/once we get here, we should actually be able to close all windows.
+
+        // First create a new window. We do this first so that on non-mac, we don't
+        // accidentally close the app by closing all the windows.
+        let handler = Cc["@mozilla.org/browser/clh;1"].getService(Ci.nsIBrowserHandler);
+        let defaultArgs = handler.defaultArgs;
+        let features = "chrome,all,dialog=no," + this.privateStateForNewWindow;
+        let newWindow = existingWindow.openDialog("chrome://browser/content/", "_blank",
+                                                  features, defaultArgs);
+
+        // Then close all those windows we checked:
+        while (windowList.length) {
+          windowList.pop().close();
+        }
+        newWindow.focus();
+        return true;
+      },
+
+      get canClear()
+      {
+        return true;
+      }
+    },
   }
 };
 
@@ -419,6 +522,8 @@ Sanitizer.TIMESPAN_HOUR       = 1;
 Sanitizer.TIMESPAN_2HOURS     = 2;
 Sanitizer.TIMESPAN_4HOURS     = 3;
 Sanitizer.TIMESPAN_TODAY      = 4;
+Sanitizer.TIMESPAN_5MIN       = 5;
+Sanitizer.TIMESPAN_24HOURS    = 6;
 
 // Return a 2 element array representing the start and end times,
 // in the uSec-since-epoch format that PRTime likes.  If we should
@@ -433,8 +538,11 @@ Sanitizer.getClearRange = function (ts) {
   // PRTime is microseconds while JS time is milliseconds
   var endDate = Date.now() * 1000;
   switch (ts) {
+    case Sanitizer.TIMESPAN_5MIN :
+      var startDate = endDate - 300000000; // 5*60*1000000
+      break;
     case Sanitizer.TIMESPAN_HOUR :
-      var startDate = endDate - 3600000000; // 1*60*60*1000000
+      startDate = endDate - 3600000000; // 1*60*60*1000000
       break;
     case Sanitizer.TIMESPAN_2HOURS :
       startDate = endDate - 7200000000; // 2*60*60*1000000
@@ -448,6 +556,9 @@ Sanitizer.getClearRange = function (ts) {
       d.setMinutes(0);
       d.setSeconds(0);
       startDate = d.valueOf() * 1000; // convert to epoch usec
+      break;
+    case Sanitizer.TIMESPAN_24HOURS :
+      startDate = endDate - 86400000000; // 24*60*60*1000000
       break;
     default:
       throw "Invalid time span for clear private data: " + ts;
