@@ -707,7 +707,7 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
   }
 
   // If it's the end of the touch sequence then clear out variables so we
-  // keep dangling references and leak things.
+  // don't keep dangling references and leak things.
   if (mTouchCount == 0) {
     mApzcForInputBlock = nullptr;
     mInOverscrolledApzc = false;
