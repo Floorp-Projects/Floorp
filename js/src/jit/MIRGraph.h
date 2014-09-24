@@ -244,6 +244,10 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // than two predecessors.
     void removePredecessor(MBasicBlock *pred);
 
+    // A version of removePredecessor which expects that phi operands to
+    // |pred| have already been removed.
+    void removePredecessorWithoutPhiOperands(MBasicBlock *pred, size_t predIndex);
+
     // Resets all the dominator info so that it can be recomputed.
     void clearDominatorInfo();
 
@@ -565,6 +569,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     size_t numSuccessors() const;
     MBasicBlock *getSuccessor(size_t index) const;
     size_t getSuccessorIndex(MBasicBlock *) const;
+    size_t getPredecessorIndex(MBasicBlock *) const;
 
     void setLoopDepth(uint32_t loopDepth) {
         loopDepth_ = loopDepth;
