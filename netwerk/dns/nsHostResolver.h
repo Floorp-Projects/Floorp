@@ -119,9 +119,6 @@ public:
     };
     static DnsPriority GetPriority(uint16_t aFlags);
 
-    bool RemoveOrRefresh(); // Returns whether the host record can be removed
-                            // or needs to be refreshed
-
 private:
     friend class nsHostResolver;
 
@@ -143,10 +140,6 @@ private:
     // The number of times ReportUnusable() has been called in the record's
     // lifetime.
     uint32_t mBlacklistedCount;
-
-    // when the results from this resolve is returned, it is not to be
-    // trusted, but instead a new resolve must be made!
-    bool    mResolveAgain;
 
     // a list of addresses associated with this record that have been reported
     // as unusable. the list is kept as a set of strings to make it independent
@@ -285,11 +278,6 @@ public:
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
-    /**
-     * Flush the DNS cache.
-     */
-    void FlushCache();
-
 private:
    explicit nsHostResolver(uint32_t maxCacheEntries,
                            uint32_t defaultCacheEntryLifetime,
@@ -299,13 +287,7 @@ private:
     nsresult Init();
     nsresult IssueLookup(nsHostRecord *);
     bool     GetHostToLookup(nsHostRecord **m);
-
-    enum LookupStatus {
-      LOOKUP_OK,
-      LOOKUP_RESOLVEAGAIN,
-    };
-
-    LookupStatus OnLookupComplete(nsHostRecord *, nsresult, mozilla::net::AddrInfo *);
+    void     OnLookupComplete(nsHostRecord *, nsresult, mozilla::net::AddrInfo *);
     void     DeQueue(PRCList &aQ, nsHostRecord **aResult);
     void     ClearPendingQueue(PRCList *aPendingQueue);
     nsresult ConditionallyCreateThread(nsHostRecord *rec);
