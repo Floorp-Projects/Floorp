@@ -954,9 +954,12 @@ let Cmds = {
 
 
     let runtimeappsHeaderNode = document.querySelector("#panel-header-runtimeapps");
-    let sortedApps = AppManager.webAppsStore.object.all;
+    let sortedApps = [];
+    for (let [manifestURL, app] of AppManager.apps) {
+      sortedApps.push(app);
+    }
     sortedApps = sortedApps.sort((a, b) => {
-      return a.name > b.name;
+      return a.manifest.name > b.manifest.name;
     });
     let mainProcess = AppManager.isMainProcessDebuggable();
     if (AppManager.connection.status == Connection.Status.CONNECTED &&
@@ -991,16 +994,16 @@ let Cmds = {
       let app = sortedApps[i];
       let panelItemNode = document.createElement("toolbarbutton");
       panelItemNode.className = "panel-item";
-      panelItemNode.setAttribute("label", app.name);
+      panelItemNode.setAttribute("label", app.manifest.name);
       panelItemNode.setAttribute("image", app.iconURL);
       runtimeAppsNode.appendChild(panelItemNode);
       panelItemNode.addEventListener("click", () => {
         UI.hidePanels();
         AppManager.selectedProject = {
           type: "runtimeApp",
-          app: app,
+          app: app.manifest,
           icon: app.iconURL,
-          name: app.name
+          name: app.manifest.name
         };
       }, true);
     }
