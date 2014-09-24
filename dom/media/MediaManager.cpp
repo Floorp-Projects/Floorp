@@ -421,31 +421,37 @@ VideoDevice::VideoDevice(MediaEngineVideoSource* aSource)
 // Reminder: add handling for new constraints both here and in GetSources below!
 
 bool
-VideoDevice::SatisfyConstraintSet(const MediaTrackConstraintSet &aConstraints)
+VideoDevice::SatisfiesConstraintSets(
+    const nsTArray<const MediaTrackConstraintSet*>& aConstraintSets)
 {
-  if (aConstraints.mFacingMode.WasPassed()) {
+  // Interrogate device-inherent properties first.
+  for (size_t i = 0; i < aConstraintSets.Length(); i++) {
+    auto& c = *aConstraintSets[i];
+    if (c.mFacingMode.WasPassed()) {
+      nsString s;
+      GetFacingMode(s);
+      if (!s.EqualsASCII(dom::VideoFacingModeEnumValues::strings[
+          static_cast<uint32_t>(c.mFacingMode.Value())].value)) {
+        return false;
+      }
+    }
     nsString s;
-    GetFacingMode(s);
-    if (!s.EqualsASCII(dom::VideoFacingModeEnumValues::strings[
-        uint32_t(aConstraints.mFacingMode.Value())].value)) {
+    GetMediaSource(s);
+    if (!s.EqualsASCII(dom::MediaSourceEnumValues::strings[
+        static_cast<uint32_t>(c.mMediaSource)].value)) {
       return false;
     }
   }
-  nsString s;
-  GetMediaSource(s);
-  if (!s.EqualsASCII(dom::MediaSourceEnumValues::strings[
-      uint32_t(aConstraints.mMediaSource)].value)) {
-    return false;
-  }
-  // TODO: Add more video-specific constraints
-  return true;
+  // Forward request to underlying object to interrogate per-mode capabilities.
+  return GetSource()->SatisfiesConstraintSets(aConstraintSets);
 }
 
 AudioDevice::AudioDevice(MediaEngineAudioSource* aSource)
   : MediaDevice(aSource) {}
 
 bool
-AudioDevice::SatisfyConstraintSet(const MediaTrackConstraintSet &aConstraints)
+AudioDevice::SatisfiesConstraintSets(
+    const nsTArray<const MediaTrackConstraintSet*>& aConstraintSets)
 {
   // TODO: Add audio-specific constraints
   return true;
@@ -960,16 +966,22 @@ static void
     // this media-type. The spec requires these to fail, so getting them out of
     // the way early provides a necessary invariant for the remaining algorithm
     // which maximizes code-reuse by ignoring constraints of the other type
-    // (specifically, SatisfyConstraintSet is reused for the advanced algorithm
+    // (specifically, SatisfiesConstraintSets is reused for the advanced algorithm
     // where the spec requires it to ignore constraints of the other type)
     return;
   }
 
   // Now on to the actual algorithm: First apply required constraints.
 
+  // Stack constraintSets that pass, starting with the required one, because the
+  // whole stack must be re-satisfied each time a capability-set is ruled out
+  // (this avoids storing state and pushing algorithm into the lower-level code).
+  nsTArray<const MediaTrackConstraintSet*> aggregateConstraints;
+  aggregateConstraints.AppendElement(&c.mRequired);
+
   for (uint32_t i = 0; i < candidateSet.Length();) {
     // Overloading instead of template specialization keeps things local
-    if (!candidateSet[i]->SatisfyConstraintSet(c.mRequired)) {
+    if (!candidateSet[i]->SatisfiesConstraintSets(aggregateConstraints)) {
       candidateSet.RemoveElementAt(i);
     } else {
       ++i;
@@ -1008,9 +1020,10 @@ static void
     auto &array = c.mAdvanced.Value();
 
     for (int i = 0; i < int(array.Length()); i++) {
+      aggregateConstraints.AppendElement(&array[i]);
       SourceSet rejects;
       for (uint32_t j = 0; j < candidateSet.Length();) {
-        if (!candidateSet[j]->SatisfyConstraintSet(array[i])) {
+        if (!candidateSet[j]->SatisfiesConstraintSets(aggregateConstraints)) {
           rejects.AppendElement(candidateSet[j]);
           candidateSet.RemoveElementAt(j);
         } else {
@@ -1018,6 +1031,9 @@ static void
         }
       }
       (candidateSet.Length()? tailSet : candidateSet).MoveElementsFrom(rejects);
+      if (!candidateSet.Length()) {
+        aggregateConstraints.RemoveElementAt(aggregateConstraints.Length() - 1);
+      }
     }
   }
 
