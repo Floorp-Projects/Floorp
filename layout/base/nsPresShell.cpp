@@ -6278,7 +6278,8 @@ nsIPresShell::SetCapturingContent(nsIContent* aContent, uint8_t aFlags)
 class AsyncCheckPointerCaptureStateCaller : public nsRunnable
 {
 public:
-  AsyncCheckPointerCaptureStateCaller(int32_t aPointerId) : mPointerId(aPointerId) {}
+  explicit AsyncCheckPointerCaptureStateCaller(int32_t aPointerId)
+    : mPointerId(aPointerId) {}
 
   NS_IMETHOD Run()
   {
