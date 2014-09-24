@@ -10,8 +10,6 @@ typedef TestJSImplInterface? NullableTestJSImplInterface;
 
 callback MyTestCallback = void();
 
-TestInterface implements ImplementedInterface;
-
 enum MyTestEnum {
   "a",
   "b"
