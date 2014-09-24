@@ -65,6 +65,31 @@ def createSquareGlyph(aFont, aCodePoint):
     p.lineTo(0, em)
     p.closePath();
 
+def createLLTriangleGlyph(aFont, aCodePoint):
+    g = aFont.createChar(aCodePoint)
+    p = g.glyphPen()
+    p.moveTo(0, 0)
+    p.lineTo(em, 0)
+    p.lineTo(0, em)
+    p.closePath();
+
+def createURTriangleGlyph(aFont, aCodePoint):
+    g = aFont.createChar(aCodePoint)
+    p = g.glyphPen()
+    p.moveTo(em, 0)
+    p.lineTo(em, em)
+    p.lineTo(0, em)
+    p.closePath();
+
+def createDiamondGlyph(aFont, aCodePoint):
+    g = aFont.createChar(aCodePoint)
+    p = g.glyphPen()
+    p.moveTo(0, em/2)
+    p.lineTo(em/2, 0)
+    p.lineTo(em, em/2)
+    p.lineTo(em/2, em)
+    p.closePath();
+
 ################################################################################
 # Glyph variants and constructions
 f = newMathFont("stretchy")
@@ -496,4 +521,21 @@ f.math.LowerLimitBaselineDropMin = 0
 f.math.AccentBaseHeight = 6 * em
 f.math.FlattenedAccentBaseHeight = 3 * em
 createSquareGlyph(f, ord("~"))
+saveMathFont(f)
+
+f = newMathFont("dtls-1")
+createSquareGlyph(f, ord("a"))
+createLLTriangleGlyph(f, ord("b"))
+createSquareGlyph(f, ord("c"))
+createDiamondGlyph(f, 0x1D51E) #mathvariant=fraktur a
+createURTriangleGlyph(f, 0x1D51F) #mathvariant=fraktur b
+createDiamondGlyph(f, 0x1D520) #mathvariant=fraktur c
+f.addLookup("gsub", "gsub_single", (), (("dtls", (("latn", ("dflt")),)),))
+f.addLookupSubtable("gsub", "gsub_n")
+glyph = f["a"]
+glyph.addPosSub("gsub_n", "b")
+glyph2 = f[0x1D51F]
+glyph2.glyphname="urtriangle"
+glyph3 = f[0x1D51E]
+glyph3.addPosSub("gsub_n", "urtriangle")
 saveMathFont(f)
