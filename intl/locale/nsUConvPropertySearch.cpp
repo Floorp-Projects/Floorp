@@ -5,6 +5,20 @@
 #include "nsUConvPropertySearch.h"
 #include "nsCRT.h"
 #include "nsString.h"
+#include "mozilla/BinarySearch.h"
+
+namespace {
+
+struct PropertyComparator
+{
+  const nsCString& mKey;
+  PropertyComparator(const nsCString& aKey) : mKey(aKey) {}
+  int operator()(const char* (&aProperty)[3]) const {
+    return mKey.Compare(aProperty[0]);
+  }
+};
+
+}
 
 // static
 nsresult
@@ -13,23 +27,18 @@ nsUConvPropertySearch::SearchPropertyValue(const char* aProperties[][3],
                                            const nsACString& aKey,
                                            nsACString& aValue)
 {
-  const char* key = PromiseFlatCString(aKey).get();
-  int32_t lo = 0;
-  int32_t hi = aNumberOfProperties - 1;
-  while (lo <= hi) {
-    uint32_t mid = (lo + hi) / 2;
-    int32_t comp = nsCRT::strcmp(aProperties[mid][0], key);
-    if (comp > 0) {
-      hi = mid - 1;
-    } else if (comp < 0) {
-      lo = mid + 1;
-    } else {
-      nsDependentCString val(aProperties[mid][1],
-                             NS_PTR_TO_UINT32(aProperties[mid][2]));
-      aValue.Assign(val);
-      return NS_OK;
-    }
+  using mozilla::BinarySearchIf;
+
+  const nsCString& flat = PromiseFlatCString(aKey);
+  size_t index;
+  if (BinarySearchIf(aProperties, 0, aNumberOfProperties,
+                     PropertyComparator(flat), &index)) {
+    nsDependentCString val(aProperties[index][1],
+                           NS_PTR_TO_UINT32(aProperties[index][2]));
+    aValue.Assign(val);
+    return NS_OK;
   }
+
   aValue.Truncate();
   return NS_ERROR_FAILURE;
 }

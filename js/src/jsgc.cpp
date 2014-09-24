@@ -1623,29 +1623,29 @@ GCRuntime::callFinalizeCallbacks(FreeOp *fop, JSFinalizeStatus status) const
 }
 
 bool
-GCRuntime::addMovingGCCallback(JSMovingGCCallback callback, void *data)
+GCRuntime::addWeakPointerCallback(JSWeakPointerCallback callback, void *data)
 {
-    return movingCallbacks.append(Callback<JSMovingGCCallback>(callback, data));
+    return updateWeakPointerCallbacks.append(Callback<JSWeakPointerCallback>(callback, data));
 }
 
 void
-GCRuntime::removeMovingGCCallback(JSMovingGCCallback callback)
+GCRuntime::removeWeakPointerCallback(JSWeakPointerCallback callback)
 {
-    for (Callback<JSMovingGCCallback> *p = movingCallbacks.begin();
-         p < movingCallbacks.end(); p++)
+    for (Callback<JSWeakPointerCallback> *p = updateWeakPointerCallbacks.begin();
+         p < updateWeakPointerCallbacks.end(); p++)
     {
         if (p->op == callback) {
-            movingCallbacks.erase(p);
+            updateWeakPointerCallbacks.erase(p);
             break;
         }
     }
 }
 
 void
-GCRuntime::callMovingGCCallbacks() const
+GCRuntime::callWeakPointerCallbacks() const
 {
-    for (const Callback<JSMovingGCCallback> *p = movingCallbacks.begin();
-         p < movingCallbacks.end(); p++)
+    for (const Callback<JSWeakPointerCallback> *p = updateWeakPointerCallbacks.begin();
+         p < updateWeakPointerCallbacks.end(); p++)
     {
         p->op(rt, p->data);
     }
@@ -2461,7 +2461,7 @@ GCRuntime::updatePointersToRelocatedCells()
     MovingTracer::Sweep(&trc);
 
     // Call callbacks to get the rest of the system to fixup other untraced pointers.
-    callMovingGCCallbacks();
+    callWeakPointerCallbacks();
 }
 
 void
@@ -4636,6 +4636,7 @@ GCRuntime::beginSweepingZoneGroup()
     {
         gcstats::AutoPhase ap(stats, gcstats::PHASE_FINALIZE_START);
         callFinalizeCallbacks(&fop, JSFINALIZE_GROUP_START);
+        callWeakPointerCallbacks();
     }
 
     if (sweepingAtoms) {

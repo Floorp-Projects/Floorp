@@ -531,6 +531,23 @@ public final class GeckoLoader {
         }
     }
 
+    @SuppressWarnings("serial")
+    public static class AbortException extends Exception {
+        public AbortException(String msg) {
+            super(msg);
+        }
+    }
+
+    @JNITarget
+    public static void abort(final String msg) {
+        final Thread thread = Thread.currentThread();
+        final Thread.UncaughtExceptionHandler uncaughtHandler =
+            thread.getUncaughtExceptionHandler();
+        if (uncaughtHandler != null) {
+            uncaughtHandler.uncaughtException(thread, new AbortException(msg));
+        }
+    }
+
     // These methods are implemented in mozglue/android/nsGeckoUtils.cpp
     private static native void putenv(String map);
 

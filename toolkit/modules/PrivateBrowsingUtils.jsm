@@ -19,6 +19,17 @@ this.PrivateBrowsingUtils = {
   // Rather than passing content windows to this function, please use
   // isBrowserPrivate since it works with e10s.
   isWindowPrivate: function pbu_isWindowPrivate(aWindow) {
+    if (!(aWindow instanceof Components.interfaces.nsIDOMChromeWindow)) {
+      dump("WARNING: content window passed to PrivateBrowsingUtils.isWindowPrivate. " +
+           "Use isContentWindowPrivate instead (but only for frame scripts).\n"
+           + new Error().stack);
+    }
+
+    return this.privacyContextFromWindow(aWindow).usePrivateBrowsing;
+  },
+
+  // This should be used only in frame scripts.
+  isContentWindowPrivate: function pbu_isWindowPrivate(aWindow) {
     return this.privacyContextFromWindow(aWindow).usePrivateBrowsing;
   },
 

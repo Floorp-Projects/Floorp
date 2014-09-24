@@ -6,7 +6,8 @@
 #include "MathMLTextRunFactory.h"
 
 #include "mozilla/ArrayUtils.h"
- 
+#include "mozilla/BinarySearch.h"
+
 #include "nsStyleConsts.h"
 #include "nsStyleContext.h"
 #include "nsTextFrameUtils.h"
@@ -189,24 +190,29 @@ static const MathVarMapping gLatinExceptionMapTable[] = {
   { 0x1D551, 0x2124 }
 };
 
+namespace {
+
+struct MathVarMappingWrapper
+{
+  const MathVarMapping* const mTable;
+  MathVarMappingWrapper(const MathVarMapping* aTable) : mTable(aTable) {}
+  uint32_t operator[](size_t index) const {
+    return mTable[index].mKey;
+  }
+};
+
+} // namespace
+
 // Finds a MathVarMapping struct with the specified key (aKey) within aTable.
 // aTable must be an array, whose length is specified by aNumElements
 static uint32_t
 MathvarMappingSearch(uint32_t aKey, const MathVarMapping* aTable, uint32_t aNumElements)
 {
-  uint32_t low = 0;
-  uint32_t high = aNumElements;
-  while (high > low) {
-    uint32_t midPoint = (low+high) >> 1;
-    if (aKey == aTable[midPoint].mKey) {
-      return aTable[midPoint].mReplacement;
-    }
-    if (aKey > aTable[midPoint].mKey) {
-      low = midPoint + 1;
-    } else {
-      high = midPoint;
-    }
+  size_t index;
+  if (BinarySearch(MathVarMappingWrapper(aTable), 0, aNumElements, aKey, &index)) {
+    return aTable[index].mReplacement;
   }
+
   return 0;
 }
 

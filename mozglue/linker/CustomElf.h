@@ -36,6 +36,7 @@ public:
   virtual ~CustomElf();
   virtual void *GetSymbolPtr(const char *symbol) const;
   virtual bool Contains(void *addr) const;
+  virtual void *GetBase() const { return GetPtr(0); }
 
 #ifdef __ARM_EABI__
   virtual const void *FindExidx(int *pcount) const;

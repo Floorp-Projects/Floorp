@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="DOM Worker Threads Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript" src="dom_worker_helper.js"/>
+
+  <script type="application/javascript">
+
+  function checkValues() {
+    var worker = new Worker("bug1062920_worker.js");
+
+    worker.onmessage = function(event) {
+      is(event.data.appCodeName, navigator.appCodeName, "appCodeName should match");
+      is(event.data.appName, navigator.appName, "appName should match");
+      isnot(event.data.appName, "appName overridden", "appName is not overridden");
+      is(event.data.appVersion, navigator.appVersion, "appVersion should match");
+      isnot(event.data.appVersion, "appVersion overridden", "appVersion is not overridden");
+      is(event.data.platform, navigator.platform, "platform should match");
+      isnot(event.data.platform, "platform overridden", "platform is not overridden");
+      is(event.data.userAgent, navigator.userAgent, "userAgent should match");
+      is(event.data.product, navigator.product, "product should match");
+      runTests();
+    };
+  }
+
+  function replaceAndCheckValues() {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["general.appname.override", "appName overridden"],
+      ["general.appversion.override", "appVersion overridden"],
+      ["general.platform.override", "platform overridden"],
+      ["general.useragent.override", "userAgent overridden"]
+    ]}, checkValues);
+  }
+
+  var tests = [
+    replaceAndCheckValues,
+    checkValues
+  ];
+
+  function runTests() {
+    if (tests.length == 0) {
+      SimpleTest.finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  runTests();
+
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <label id="test-result"/>
+</window>

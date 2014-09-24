@@ -15,6 +15,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/BinarySearch.h"
 
 #include <math.h>
 
@@ -174,6 +175,24 @@ TimerThread::Shutdown()
 #include "ipc/Nuwa.h"
 #endif
 
+namespace {
+
+struct MicrosecondsToInterval
+{
+  PRIntervalTime operator[](size_t aMs) const {
+    return PR_MicrosecondsToInterval(aMs);
+  }
+};
+
+struct IntervalComparator
+{
+  int operator()(PRIntervalTime aInterval) const {
+    return (0 < aInterval) ? -1 : 1;
+  }
+};
+
+} // namespace
+
 /* void Run(); */
 NS_IMETHODIMP
 TimerThread::Run()
@@ -191,28 +210,22 @@ TimerThread::Run()
   MonitorAutoLock lock(mMonitor);
 
   // We need to know how many microseconds give a positive PRIntervalTime. This
-  // is platform-dependent, we calculate it at runtime now.
-  // First we find a value such that PR_MicrosecondsToInterval(high) = 1
-  int32_t low = 0, high = 1;
-  while (PR_MicrosecondsToInterval(high) == 0) {
-    high <<= 1;
+  // is platform-dependent and we calculate it at runtime, finding a value |v|
+  // such that |PR_MicrosecondsToInterval(v) > 0| and then binary-searching in
+  // the range [0, v) to find the ms-to-interval scale.
+  uint32_t usForPosInterval = 1;
+  while (PR_MicrosecondsToInterval(usForPosInterval) == 0) {
+    usForPosInterval <<= 1;
   }
-  // We now have
-  //    PR_MicrosecondsToInterval(low)  = 0
-  //    PR_MicrosecondsToInterval(high) = 1
-  // and we can proceed to find the critical value using binary search
-  while (high - low > 1) {
-    int32_t mid = (high + low) >> 1;
-    if (PR_MicrosecondsToInterval(mid) == 0) {
-      low = mid;
-    } else {
-      high = mid;
-    }
-  }
+
+  size_t usIntervalResolution;
+  BinarySearchIf(MicrosecondsToInterval(), 0, usForPosInterval, IntervalComparator(), &usIntervalResolution);
+  MOZ_ASSERT(PR_MicrosecondsToInterval(usIntervalResolution - 1) == 0);
+  MOZ_ASSERT(PR_MicrosecondsToInterval(usIntervalResolution) == 1);
 
   // Half of the amount of microseconds needed to get positive PRIntervalTime.
   // We use this to decide how to round our wait times later
-  int32_t halfMicrosecondsIntervalResolution = high >> 1;
+  int32_t halfMicrosecondsIntervalResolution = usIntervalResolution / 2;
   bool forceRunNextTimer = false;
 
   while (!mShutdown) {

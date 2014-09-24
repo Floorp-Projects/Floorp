@@ -1219,7 +1219,7 @@ public:
     nsCOMPtr<nsIContent> mOverrideContent;
     bool                 mReleaseContent;
     
-    PointerCaptureInfo(nsIContent* aPendingContent) :
+    explicit PointerCaptureInfo(nsIContent* aPendingContent) :
       mPendingContent(aPendingContent), mReleaseContent(false)
     {
       MOZ_COUNT_CTOR(PointerCaptureInfo);

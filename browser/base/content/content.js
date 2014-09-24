@@ -157,7 +157,7 @@ let AboutHomeListener = {
 
   onUpdate: function(aData) {
     let doc = content.document;
-    if (aData.showRestoreLastSession && !PrivateBrowsingUtils.isWindowPrivate(content))
+    if (aData.showRestoreLastSession && !PrivateBrowsingUtils.isContentWindowPrivate(content))
       doc.getElementById("launcher").setAttribute("session", "true");
 
     // Inject search engine and snippets URL.

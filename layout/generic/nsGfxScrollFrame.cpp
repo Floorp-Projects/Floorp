@@ -52,6 +52,7 @@
 #include "nsIScrollPositionListener.h"
 #include "StickyScrollContainer.h"
 #include "nsIFrameInlines.h"
+#include "gfxPlatform.h"
 #include "gfxPrefs.h"
 #include <mozilla/layers/AxisPhysicsModel.h>
 #include <mozilla/layers/AxisPhysicsMSDModel.h>
@@ -1864,7 +1865,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   EnsureImageVisPrefsCached();
 
   if (mScrollingActive &&
-      gfxPrefs::LayersTilesEnabled() &&
+      gfxPlatform::GetPlatform()->UseTiling() &&
       !nsLayoutUtils::UsesAsyncScrolling() &&
       mOuter->GetContent()) {
     // If we have tiling but no APZ, then set a 0-margin display port on
@@ -3004,18 +3005,18 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
                                        nsRect* aClipRect,
                                        nsTArray<FrameMetrics>* aOutput) const
 {
+  nsRect viewport = mScrollPort +
+    mOuter->GetOffsetToCrossDoc(aContainerReferenceFrame);
+  if (!(mIsRoot && mOuter->PresContext()->PresShell()->GetIsViewportOverridden())) {
+    *aClipRect = viewport;
+  }
+
   if (!mShouldBuildScrollableLayer || BuildScrollContainerLayers()) {
     return;
   }
 
   MOZ_ASSERT(mScrolledFrame->GetContent());
 
-  nsRect viewport = mScrollPort +
-    mOuter->GetOffsetToCrossDoc(aContainerReferenceFrame);
-
-  if (!(mIsRoot && mOuter->PresContext()->PresShell()->GetIsViewportOverridden())) {
-    *aClipRect = viewport;
-  }
   *aOutput->AppendElement() =
       nsDisplayScrollLayer::ComputeFrameMetrics(mScrolledFrame, mOuter,
         aContainerReferenceFrame, aLayer, mScrollParentID,

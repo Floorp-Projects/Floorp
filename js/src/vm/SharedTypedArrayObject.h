@@ -34,6 +34,22 @@ class SharedTypedArrayObject : public JSObject
     static const size_t DATA_SLOT        = TypedArrayLayout::DATA_SLOT;
 
   public:
+    typedef SharedTypedArrayObject AnyTypedArray;
+    typedef SharedArrayBufferObject BufferType;
+
+    template<typename T> struct OfType;
+
+    static bool ensureHasBuffer(JSContext *cx, Handle<SharedTypedArrayObject*> tarray) {
+        return true;
+    }
+
+    static bool sameBuffer(Handle<SharedTypedArrayObject*> a, Handle<SharedTypedArrayObject*> b) {
+        // Object equality isn't good enough for shared typed arrays.
+        return a->buffer()->globalID() == b->buffer()->globalID();
+    }
+
+    static bool is(HandleValue v);
+
     static const Class classes[Scalar::TypeMax];
     static const Class protoClasses[Scalar::TypeMax];
 
@@ -45,10 +61,7 @@ class SharedTypedArrayObject : public JSObject
     static Value byteOffsetValue(SharedTypedArrayObject *tarr) {
         return tarr->getFixedSlot(BYTEOFFSET_SLOT);
     }
-    static Value byteLengthValue(SharedTypedArrayObject *tarr) {
-        int32_t size = Scalar::byteSize(tarr->type());
-        return Int32Value(tarr->getFixedSlot(LENGTH_SLOT).toInt32() * size);
-    }
+    static inline Value byteLengthValue(SharedTypedArrayObject *tarr);
     static Value lengthValue(SharedTypedArrayObject *tarr) {
         return tarr->getFixedSlot(LENGTH_SLOT);
     }
@@ -60,6 +73,9 @@ class SharedTypedArrayObject : public JSObject
     SharedArrayBufferObject *buffer() const;
 
     inline Scalar::Type type() const;
+
+    inline size_t bytesPerElement() const;
+
     void *viewData() const {
         return getPrivate(DATA_SLOT);
     }
@@ -112,6 +128,19 @@ SharedTypedArrayObject::type() const
 {
     JS_ASSERT(IsSharedTypedArrayClass(getClass()));
     return static_cast<Scalar::Type>(getClass() - &classes[0]);
+}
+
+inline size_t
+SharedTypedArrayObject::bytesPerElement() const
+{
+    return Scalar::byteSize(type());
+}
+
+/* static */ inline Value
+SharedTypedArrayObject::byteLengthValue(SharedTypedArrayObject *tarr)
+{
+    size_t size = tarr->bytesPerElement();
+    return Int32Value(tarr->getFixedSlot(LENGTH_SLOT).toInt32() * size);
 }
 
 }  // namespace js

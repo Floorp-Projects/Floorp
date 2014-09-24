@@ -24,6 +24,7 @@ jfieldID AndroidGeckoEvent::jTimeField = 0;
 jfieldID AndroidGeckoEvent::jPoints = 0;
 jfieldID AndroidGeckoEvent::jPointIndicies = 0;
 jfieldID AndroidGeckoEvent::jPressures = 0;
+jfieldID AndroidGeckoEvent::jToolTypes = 0;
 jfieldID AndroidGeckoEvent::jPointRadii = 0;
 jfieldID AndroidGeckoEvent::jOrientations = 0;
 jfieldID AndroidGeckoEvent::jXField = 0;
@@ -138,6 +139,7 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jPointIndicies = getField("mPointIndicies", "[I");
     jOrientations = getField("mOrientations", "[F");
     jPressures = getField("mPressures", "[F");
+    jToolTypes = getField("mToolTypes", "[I");
     jPointRadii = getField("mPointRadii", "[Landroid/graphics/Point;");
     jXField = getField("mX", "D");
     jYField = getField("mY", "D");
@@ -463,6 +465,7 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             ReadPointArray(mPointRadii, jenv, jPointRadii, mCount);
             ReadFloatArray(mOrientations, jenv, jOrientations, mCount);
             ReadFloatArray(mPressures, jenv, jPressures, mCount);
+            ReadIntArray(mToolTypes, jenv, jToolTypes, mCount);
             ReadPointArray(mPoints, jenv, jPoints, mCount);
             ReadIntArray(mPointIndicies, jenv, jPointIndicies, mCount);
 
@@ -689,14 +692,29 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
     int endIndex = Count();
 
     switch (Action()) {
+        case AndroidMotionEvent::ACTION_HOVER_ENTER: {
+            if (ToolTypes()[0] == AndroidMotionEvent::TOOL_TYPE_MOUSE) {
+                break;
+            }
+        }
         case AndroidMotionEvent::ACTION_DOWN:
         case AndroidMotionEvent::ACTION_POINTER_DOWN: {
             type = NS_TOUCH_START;
             break;
         }
+        case AndroidMotionEvent::ACTION_HOVER_MOVE: {
+            if (ToolTypes()[0] == AndroidMotionEvent::TOOL_TYPE_MOUSE) {
+                break;
+            }
+        }
         case AndroidMotionEvent::ACTION_MOVE: {
             type = NS_TOUCH_MOVE;
             break;
+        }
+        case AndroidMotionEvent::ACTION_HOVER_EXIT: {
+            if (ToolTypes()[0] == AndroidMotionEvent::TOOL_TYPE_MOUSE) {
+                break;
+            }
         }
         case AndroidMotionEvent::ACTION_UP:
         case AndroidMotionEvent::ACTION_POINTER_UP: {
@@ -817,10 +835,10 @@ AndroidGeckoEvent::MakeMouseEvent(nsIWidget* widget)
                 msg = NS_MOUSE_MOVE;
                 break;
             case AndroidMotionEvent::ACTION_HOVER_ENTER:
-                msg = NS_MOUSEENTER;
+                msg = NS_MOUSE_ENTER;
                 break;
             case AndroidMotionEvent::ACTION_HOVER_EXIT:
-                msg = NS_MOUSELEAVE;
+                msg = NS_MOUSE_EXIT;
                 break;
             default:
                 break;

@@ -21,5 +21,9 @@ for (var propdef of propdefs)
 {
   var f = new Function("return { " + propdef.c + " };");
   for (var i = 0; i < 100; i++)
-    assertEq(typeof f().__proto__, propdef.t);
+  {
+    var inst = f();
+    assertEq(typeof inst.__proto__, propdef.t);
+    assertEq(Object.getPrototypeOf(inst), Object.prototype);
+  }
 }
