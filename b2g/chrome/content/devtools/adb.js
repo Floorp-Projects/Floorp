@@ -8,6 +8,8 @@
 
 // This file is only loaded on Gonk to manage ADB state
 
+Components.utils.import("resource://gre/modules/FileUtils.jsm");
+
 const DEBUG = false;
 var debug = function(str) {
   dump("AdbController: " + str + "\n");
@@ -177,6 +179,34 @@ let AdbController = {
       // This means that the pref doesn't exist. Which is fine. We just leave
       // enableAdb alone.
     }
+
+    // Check wakelock to prevent adb from disconnecting when phone is locked
+    let lockFile = Cc['@mozilla.org/file/local;1'].createInstance(Ci.nsIFile);
+    lockFile.initWithPath('/sys/power/wake_lock');
+    if(lockFile.exists()) {
+      let foStream = Cc["@mozilla.org/network/file-input-stream;1"]
+            .createInstance(Ci.nsIFileInputStream);
+      let coStream = Cc["@mozilla.org/intl/converter-input-stream;1"]
+            .createInstance(Ci.nsIConverterInputStream);
+      let str = {};
+      foStream.init(lockFile, FileUtils.MODE_RDONLY, 0, 0);
+      coStream.init(foStream, "UTF-8", 0, 0);
+      coStream.readString(-1, str);
+      coStream.close();
+      foStream.close();
+      let wakeLockContents = str.value.replace(/\n/, "");
+      let wakeLockList = wakeLockContents.split(" ");
+      if (wakeLockList.indexOf("adb") >= 0) {
+        enableAdb = true;
+        useDisableAdbTimer = false;
+        DEBUG && debug("Keeping ADB enabled as ADB wakelock is present.");
+      } else {
+        DEBUG && debug("ADB wakelock not found.");
+      }
+    } else {
+      DEBUG && debug("Wake_lock file not found.");
+    }
+
     DEBUG && debug("updateState: enableAdb = " + enableAdb +
                    " remoteDebuggerEnabled = " + this.remoteDebuggerEnabled +
                    " lockEnabled = " + this.lockEnabled +
