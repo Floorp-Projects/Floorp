@@ -10,7 +10,7 @@ interface nsIDOMNode;
 interface nsIDOMEvent;
 interface nsIDOMClientRect;
 
-[scriptable, uuid(b1192cac-467b-42ca-88d6-fcdec5bb4ef7)]
+[scriptable, uuid(492861e3-d168-410f-b2bb-6eb8ce503d4a)]
 interface nsIPopupBoxObject : nsISupports
 {
   /**
