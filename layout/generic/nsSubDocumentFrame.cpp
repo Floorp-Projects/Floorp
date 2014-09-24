@@ -34,7 +34,7 @@
 #include "nsIObjectLoadingContent.h"
 #include "nsLayoutUtils.h"
 #include "FrameLayerBuilder.h"
-#include "nsObjectFrame.h"
+#include "nsPluginFrame.h"
 #include "nsContentUtils.h"
 #include "nsIPermissionManager.h"
 #include "nsServiceManagerUtils.h"
