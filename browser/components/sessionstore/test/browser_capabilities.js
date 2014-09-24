@@ -31,7 +31,7 @@ add_task(function docshell_capabilities() {
   yield promiseBrowserLoaded(browser);
 
   // Flush to make sure chrome received all data.
-  SyncHandlers.get(browser).flush();
+  TabState.flush(browser);
 
   // Check that we correctly save disallowed features.
   let disallowedState = JSON.parse(ss.getTabState(tab));
@@ -45,7 +45,7 @@ add_task(function docshell_capabilities() {
   yield promiseTabRestored(tab);
 
   // Flush to make sure chrome received all data.
-  SyncHandlers.get(browser).flush();
+  TabState.flush(browser);
 
   // After restoring disallowed features must be available again.
   state = JSON.parse(ss.getTabState(tab));

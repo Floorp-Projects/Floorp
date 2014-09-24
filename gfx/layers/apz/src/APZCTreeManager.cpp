@@ -23,7 +23,7 @@
 #include "mozilla/gfx/Logging.h"        // for gfx::TreeLog
 #include "UnitTransforms.h"             // for ViewAs
 #include "gfxPrefs.h"                   // for gfxPrefs
-#include "OverscrollHandoffChain.h"     // for OverscrollHandoffChain
+#include "OverscrollHandoffState.h"     // for OverscrollHandoffState
 #include "LayersLogging.h"              // for Stringify
 
 #define APZCTM_LOG(...)
@@ -707,7 +707,7 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
   }
 
   // If it's the end of the touch sequence then clear out variables so we
-  // keep dangling references and leak things.
+  // don't keep dangling references and leak things.
   if (mTouchCount == 0) {
     mApzcForInputBlock = nullptr;
     mInOverscrolledApzc = false;
@@ -896,18 +896,19 @@ bool
 APZCTreeManager::DispatchScroll(AsyncPanZoomController* aPrev,
                                 ScreenPoint aStartPoint,
                                 ScreenPoint aEndPoint,
-                                const OverscrollHandoffChain& aOverscrollHandoffChain,
-                                uint32_t aOverscrollHandoffChainIndex)
+                                OverscrollHandoffState& aOverscrollHandoffState)
 {
+  const OverscrollHandoffChain& overscrollHandoffChain = aOverscrollHandoffState.mChain;
+  uint32_t overscrollHandoffChainIndex = aOverscrollHandoffState.mChainIndex;
   nsRefPtr<AsyncPanZoomController> next;
   // If we have reached the end of the overscroll handoff chain, there is
   // nothing more to scroll, so we ignore the rest of the pan gesture.
-  if (aOverscrollHandoffChainIndex >= aOverscrollHandoffChain.Length()) {
+  if (overscrollHandoffChainIndex >= overscrollHandoffChain.Length()) {
     // Nothing more to scroll - ignore the rest of the pan gesture.
     return false;
   }
 
-  next = aOverscrollHandoffChain.GetApzcAtIndex(aOverscrollHandoffChainIndex);
+  next = overscrollHandoffChain.GetApzcAtIndex(overscrollHandoffChainIndex);
 
   if (next == nullptr || next->IsDestroyed()) {
     return false;
@@ -924,8 +925,7 @@ APZCTreeManager::DispatchScroll(AsyncPanZoomController* aPrev,
 
   // Scroll |next|. If this causes overscroll, it will call DispatchScroll()
   // again with an incremented index.
-  return next->AttemptScroll(aStartPoint, aEndPoint, aOverscrollHandoffChain,
-      aOverscrollHandoffChainIndex);
+  return next->AttemptScroll(aStartPoint, aEndPoint, aOverscrollHandoffState);
 }
 
 bool

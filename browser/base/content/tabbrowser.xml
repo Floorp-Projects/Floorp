@@ -1514,9 +1514,6 @@
               return false;
             }
 
-            if (aURL.startsWith("chrome:"))
-              return false;
-
             return true;
           ]]>
         </body>

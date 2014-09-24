@@ -18,7 +18,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMWindowUtils.h"
 #include "nsIHttpChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -491,47 +490,6 @@ nsCSPContext::LogViolationDetails(uint16_t aViolationType,
 
 #undef CASE_CHECK_AND_REPORT
 
-uint64_t
-getInnerWindowID(nsIRequest* aRequest) {
-  // can't do anything if there's no nsIRequest!
-  if (!aRequest) {
-    return 0;
-  }
-
-  nsCOMPtr<nsILoadGroup> loadGroup;
-  nsresult rv = aRequest->GetLoadGroup(getter_AddRefs(loadGroup));
-
-  if (NS_FAILED(rv) || !loadGroup) {
-    return 0;
-  }
-
-  nsCOMPtr<nsIInterfaceRequestor> callbacks;
-  rv = loadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
-  if (NS_FAILED(rv) || !callbacks) {
-    return 0;
-  }
-
-  nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(callbacks);
-  if (!loadContext) {
-    return 0;
-  }
-
-  nsCOMPtr<nsIDOMWindow> window;
-  rv = loadContext->GetAssociatedWindow(getter_AddRefs(window));
-  if (NS_FAILED(rv) || !window) {
-    return 0;
-  }
-
-  nsCOMPtr<nsPIDOMWindow> pwindow = do_QueryInterface(window);
-  if (!pwindow) {
-    return 0;
-  }
-
-  nsPIDOMWindow* inner = pwindow->IsInnerWindow() ? pwindow.get() : pwindow->GetCurrentInnerWindow();
-
-  return inner ? inner->WindowID() : 0;
-}
-
 NS_IMETHODIMP
 nsCSPContext::SetRequestContext(nsIURI* aSelfURI,
                                 nsIURI* aReferrer,
@@ -550,7 +508,7 @@ nsCSPContext::SetRequestContext(nsIURI* aSelfURI,
   NS_ASSERTION(mSelfURI, "No aSelfURI and no URI available from channel in SetRequestContext, can not translate 'self' into actual URI");
 
   if (aChannel) {
-    mInnerWindowID = getInnerWindowID(aChannel);
+    mInnerWindowID = nsContentUtils::GetInnerWindowID(aChannel);
     aChannel->GetLoadGroup(getter_AddRefs(mCallingChannelLoadGroup));
 
     // Storing the nsINode from the LoadInfo of the original channel,
@@ -1084,6 +1042,48 @@ nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell, bool* outPermitsAncestry)
       }
     }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSPContext::PermitsBaseURI(nsIURI* aURI, bool* outPermitsBaseURI)
+{
+  // Can't perform check without aURI
+  if (aURI == nullptr) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *outPermitsBaseURI = true;
+
+  for (uint32_t i = 0; i < mPolicies.Length(); i++) {
+    if (!mPolicies[i]->permitsBaseURI(aURI)) {
+      // policy is violated, report to caller if not report-only
+      if (!mPolicies[i]->getReportOnlyFlag()) {
+        *outPermitsBaseURI = false;
+      }
+      nsAutoString violatedDirective;
+      mPolicies[i]->getDirectiveStringForBaseURI(violatedDirective);
+      this->AsyncReportViolation(aURI,
+                                 mSelfURI,
+                                 violatedDirective,
+                                 i,             /* policy index        */
+                                 EmptyString(), /* no observer subject */
+                                 EmptyString(), /* no source file      */
+                                 EmptyString(), /* no script sample    */
+                                 0);            /* no line number      */
+    }
+  }
+
+#ifdef PR_LOGGING
+  {
+    nsAutoCString spec;
+    aURI->GetSpec(spec);
+    CSPCONTEXTLOG(("nsCSPContext::PermitsBaseURI, aUri: %s, isAllowed: %s",
+                  spec.get(),
+                  *outPermitsBaseURI ? "allow" : "deny"));
+  }
+#endif
+
   return NS_OK;
 }
 

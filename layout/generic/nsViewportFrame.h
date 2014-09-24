@@ -17,8 +17,8 @@
 class nsPresContext;
 
 /**
-  * ViewportFrame is the parent of a single child - the doc root frame or a scroll frame 
-  * containing the doc root frame. ViewportFrame stores this child in its primary child 
+  * ViewportFrame is the parent of a single child - the doc root frame or a scroll frame
+  * containing the doc root frame. ViewportFrame stores this child in its primary child
   * list.
   */
 class ViewportFrame : public nsContainerFrame {
@@ -67,6 +67,8 @@ public:
    * @see nsGkAtoms::viewportFrame
    */
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+
+  virtual bool UpdateOverflow() MOZ_OVERRIDE;
 
   /**
    * Adjust aReflowState to account for scrollbars and pres shell

@@ -18,23 +18,10 @@ for (let script of FRAME_SCRIPTS) {
   mm.loadFrameScript(script, true);
 }
 
-mm.addMessageListener("SessionStore:setupSyncHandler", onSetupSyncHandler);
-
-/**
- * This keeps track of all SyncHandlers passed to chrome from frame scripts.
- * We need this to let tests communicate with frame scripts and cause (a)sync
- * flushes.
- */
-let SyncHandlers = new WeakMap();
-function onSetupSyncHandler(msg) {
-  SyncHandlers.set(msg.target, msg.objects.handler);
-}
-
 registerCleanupFunction(() => {
   for (let script of FRAME_SCRIPTS) {
     mm.removeDelayedFrameScript(script, true);
   }
-  mm.removeMessageListener("SessionStore:setupSyncHandler", onSetupSyncHandler);
 });
 
 let tmp = {};
@@ -43,7 +30,8 @@ Cu.import("resource://gre/modules/Task.jsm", tmp);
 Cu.import("resource:///modules/sessionstore/SessionStore.jsm", tmp);
 Cu.import("resource:///modules/sessionstore/SessionSaver.jsm", tmp);
 Cu.import("resource:///modules/sessionstore/SessionFile.jsm", tmp);
-let {Promise, Task, SessionStore, SessionSaver, SessionFile} = tmp;
+Cu.import("resource:///modules/sessionstore/TabState.jsm", tmp);
+let {Promise, Task, SessionStore, SessionSaver, SessionFile, TabState} = tmp;
 
 let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
@@ -304,13 +292,17 @@ let promiseForEachSessionRestoreFile = Task.async(function*(cb) {
   }
 });
 
-function whenBrowserLoaded(aBrowser, aCallback = next, ignoreSubFrames = true) {
-  aBrowser.addEventListener("load", function onLoad(event) {
-    if (!ignoreSubFrames || event.target == aBrowser.contentDocument) {
-      aBrowser.removeEventListener("load", onLoad, true);
+function whenBrowserLoaded(aBrowser, aCallback = next, ignoreSubFrames = true, expectedURL = null) {
+  aBrowser.messageManager.addMessageListener("ss-test:loadEvent", function onLoad(msg) {
+    if (expectedURL && aBrowser.currentURI.spec != expectedURL) {
+      return;
+    }
+
+    if (!ignoreSubFrames || !msg.data.subframe) {
+      aBrowser.messageManager.removeMessageListener("ss-test:loadEvent", onLoad);
       executeSoon(aCallback);
     }
-  }, true);
+  });
 }
 function promiseBrowserLoaded(aBrowser, ignoreSubFrames = true) {
   let deferred = Promise.defer();
@@ -498,6 +490,16 @@ function promiseWindowClosed(win) {
   }, "domwindowclosed", false);
 
   win.close();
+  return deferred.promise;
+}
+
+function runInContent(browser, func, arg, callback = null) {
+  let deferred = Promise.defer();
+
+  let mm = browser.messageManager;
+  mm.sendAsyncMessage("ss-test:run", {code: func.toSource()}, {arg: arg});
+  mm.addMessageListener("ss-test:runFinished", ({data}) => deferred.resolve(data));
+
   return deferred.promise;
 }
 

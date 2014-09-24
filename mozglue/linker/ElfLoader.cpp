@@ -90,9 +90,11 @@ int
 __wrap_dladdr(void *addr, Dl_info *info)
 {
   RefPtr<LibHandle> handle = ElfLoader::Singleton.GetHandleByPtr(addr);
-  if (!handle)
-    return 0;
+  if (!handle) {
+    return dladdr(addr, info);
+  }
   info->dli_fname = handle->GetPath();
+  info->dli_fbase = handle->GetBase();
   return 1;
 }
 

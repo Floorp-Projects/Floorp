@@ -206,13 +206,13 @@ public:
                         nsIContent* aLastPopup,
                         nsPopupType aPopupType,
                         bool aDeselectMenu,
-                        bool aIsRollup)
+                        bool aIsCancel)
     : mPopup(aPopup),
       mNextPopup(aNextPopup),
       mLastPopup(aLastPopup),
       mPopupType(aPopupType),
       mDeselectMenu(aDeselectMenu),
-      mIsRollup(aIsRollup)
+      mIsRollup(aIsCancel)
   {
     NS_ASSERTION(aPopup, "null popup supplied to nsXULPopupHidingEvent constructor");
     // aNextPopup and aLastPopup may be null
@@ -438,7 +438,7 @@ public:
    * aAsynchronous - true if the first popuphiding event should be sent
    *                 asynchrously. This should be true if HidePopup is called
    *                 from a frame.
-   * aIsRollup - true if this popup is hiding due to a rollup or escape keypress.
+   * aIsCancel - true if this popup is hiding due to being cancelled.
    * aLastPopup - optional popup to close last when hiding a chain of menus.
    *              If null, then all popups will be closed.
    */
@@ -446,7 +446,7 @@ public:
                  bool aHideChain,
                  bool aDeselectMenu,
                  bool aAsynchronous,
-                 bool aIsRollup,
+                 bool aIsCancel,
                  nsIContent* aLastPopup = nullptr);
 
   /**
@@ -671,7 +671,7 @@ protected:
    * aPresContext - nsPresContext for the popup's frame
    * aPopupType - the PopupType of the frame. 
    * aDeselectMenu - true to unhighlight the menu when hiding it
-   * aIsRollup - true if this popup is hiding due to a rollup or escape keypress
+   * aIsCancel - true if this popup is hiding due to being cancelled.
    */
   void FirePopupHidingEvent(nsIContent* aPopup,
                             nsIContent* aNextPopup,
@@ -679,7 +679,7 @@ protected:
                             nsPresContext *aPresContext,
                             nsPopupType aPopupType,
                             bool aDeselectMenu,
-                            bool aIsRollup);
+                            bool aIsCancel);
 
   /**
    * Handle keyboard navigation within a menu popup specified by aItem.

@@ -388,7 +388,7 @@ IsScriptedProxy(JSObject *obj)
 class MOZ_STACK_CLASS ProxyOptions {
   protected:
     /* protected constructor for subclass */
-    ProxyOptions(bool singletonArg)
+    explicit ProxyOptions(bool singletonArg)
       : singleton_(singletonArg),
         clasp_(ProxyClassPtr)
     {}

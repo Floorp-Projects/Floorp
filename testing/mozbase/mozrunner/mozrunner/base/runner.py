@@ -8,6 +8,7 @@ import os
 import subprocess
 import traceback
 
+from mozlog.structured import get_default_logger
 from mozprocess import ProcessHandler
 import mozcrash
 
@@ -181,12 +182,22 @@ class BaseRunner(object):
 
         self.crashed = False
         try:
-            self.crashed = mozcrash.check_for_crashes(
-                dump_directory,
-                self.symbols_path,
-                dump_save_path=dump_save_path,
-                test_name=test_name,
-                quiet=quiet)
+            logger = get_default_logger()
+            if logger is not None:
+                if test_name is None:
+                    test_name = "runner.py"
+                self.crashed = mozcrash.log_crashes(logger,
+                                                    dump_directory,
+                                                    self.symbols_path,
+                                                    dump_save_path=dump_save_path,
+                                                    test=test_name)
+            else:
+                self.crashed = mozcrash.check_for_crashes(
+                    dump_directory,
+                    self.symbols_path,
+                    dump_save_path=dump_save_path,
+                    test_name=test_name,
+                    quiet=quiet)
         except:
             traceback.print_exc()
 

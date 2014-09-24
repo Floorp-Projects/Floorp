@@ -105,7 +105,7 @@ function test() {
   function test1(aCallback) {
     gDebugger.once(gDebugger.EVENTS.FETCHED_WATCH_EXPRESSIONS, () => {
       checkWatchExpressions(26, {
-        a: "ReferenceError: a is not defined",
+        a: "ReferenceError: a is not defined, did you mean 'z'?",
         this: { type: "object", class: "Object" },
         prop: { type: "object", class: "String" },
         args: { type: "undefined" }

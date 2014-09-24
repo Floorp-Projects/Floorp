@@ -67,6 +67,9 @@ private:
   virtual bool RecvResolveNewSessionPromise(const uint32_t& aPromiseId,
                                             const nsCString& aSessionId) MOZ_OVERRIDE;
 
+  virtual bool RecvResolveLoadSessionPromise(const uint32_t& aPromiseId,
+                                             const bool& aSuccess) MOZ_OVERRIDE;
+
   virtual bool RecvResolvePromise(const uint32_t& aPromiseId) MOZ_OVERRIDE;
 
   virtual bool RecvRejectPromise(const uint32_t& aPromiseId,

@@ -1010,8 +1010,7 @@ public:
    * an overscrolled state itself if it can.
    */
   bool AttemptScroll(const ScreenPoint& aStartPoint, const ScreenPoint& aEndPoint,
-                     const OverscrollHandoffChain& aOverscrollHandoffChain,
-                     uint32_t aOverscrollHandoffChainIndex = 0);
+                     OverscrollHandoffState& aOverscrollHandoffState);
 
   void FlushRepaintForOverscrollHandoff();
 
@@ -1029,8 +1028,15 @@ private:
    */
   bool CallDispatchScroll(const ScreenPoint& aStartPoint,
                           const ScreenPoint& aEndPoint,
-                          const OverscrollHandoffChain& aOverscrollHandoffChain,
-                          uint32_t aOverscrollHandoffChainIndex);
+                          OverscrollHandoffState& aOverscrollHandoffState);
+
+  /**
+   * A helper function for overscrolling during panning. This is a wrapper
+   * around OverscrollBy() that also implements restrictions on entering
+   * overscroll based on the pan angle.
+   */
+  bool OverscrollForPanning(ScreenPoint aOverscroll,
+                            const ScreenPoint& aPanDistance);
 
   /**
    * Try to overscroll by 'aOverscroll'.

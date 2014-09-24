@@ -139,26 +139,6 @@ def _parse_one(testcase, xul_tester):
             if xul_tester.test(cond):
                 testcase.random = True
             pos += 1
-        elif parts[pos].startswith('require-or'):
-            cond = parts[pos][len('require-or('):-1]
-            (preconditions, fallback_action) = re.split(",", cond)
-            for precondition in re.split("&&", preconditions):
-                if precondition == 'debugMode':
-                    testcase.options.append('-d')
-                elif precondition == 'true':
-                    pass
-                else:
-                    if fallback_action == "skip":
-                        testcase.expect = testcase.enable = False
-                    elif fallback_action == "fail":
-                        testcase.expect = False
-                    elif fallback_action == "random":
-                        testcase.random = True
-                    else:
-                        raise Exception(("Invalid precondition '%s' or fallback " +
-                                         " action '%s'") % (precondition, fallback_action))
-                    break
-            pos += 1
         elif parts[pos] == 'slow':
             testcase.slow = True
             pos += 1

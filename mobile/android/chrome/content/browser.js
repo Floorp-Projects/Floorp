@@ -1209,7 +1209,7 @@ var BrowserApp = {
         webBrowserPrint.cancel();
       }
     }
-    let isPrivate = PrivateBrowsingUtils.isWindowPrivate(aBrowser.contentWindow);
+    let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(aBrowser);
     let download = dm.addDownload(Ci.nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
                                   aBrowser.currentURI,
                                   Services.io.newFileURI(file), "", mimeInfo,
@@ -1629,7 +1629,7 @@ var BrowserApp = {
         this.isSearch = true;
 
         // Don't store queries in private browsing mode.
-        let isPrivate = PrivateBrowsingUtils.isWindowPrivate(this.selectedTab.browser.contentWindow);
+        let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(this.selectedTab.browser);
         let query = isPrivate ? "" : aData;
 
         let engine = aSubject.QueryInterface(Ci.nsISearchEngine);
@@ -2108,7 +2108,7 @@ var NativeWindow = {
     linkOpenableNonPrivateContext: {
       matches: function linkOpenableNonPrivateContextMatches(aElement) {
         let doc = aElement.ownerDocument;
-        if (!doc || PrivateBrowsingUtils.isWindowPrivate(doc.defaultView)) {
+        if (!doc || PrivateBrowsingUtils.isContentWindowPrivate(doc.defaultView)) {
           return false;
         }
 
@@ -2979,7 +2979,7 @@ nsBrowserAccess.prototype = {
         let parent = BrowserApp.getTabForWindow(aOpener.top);
         if (parent) {
           parentId = parent.id;
-          isPrivate = PrivateBrowsingUtils.isWindowPrivate(parent.browser.contentWindow);
+          isPrivate = PrivateBrowsingUtils.isBrowserPrivate(parent.browser);
         }
       }
 
@@ -6347,7 +6347,7 @@ var PopupBlockerObserver = {
         let popupName = pageReport[i].popupWindowName;
 
         let parent = BrowserApp.selectedTab;
-        let isPrivate = PrivateBrowsingUtils.isWindowPrivate(parent.browser.contentWindow);
+        let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(parent.browser);
         BrowserApp.addTab(popupURIspec, { parentId: parent.id, isPrivate: isPrivate });
       }
     }

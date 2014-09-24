@@ -24,6 +24,12 @@ interface MediaKeySession : EventTarget {
   // void, not any: https://www.w3.org/Bugs/Public/show_bug.cgi?id=26457
   readonly attribute Promise<void> closed;
 
+  [NewObject, Throws]
+  Promise<void> generateRequest(DOMString initDataType, (ArrayBufferView or ArrayBuffer) initData);
+
+  [NewObject, Throws]
+  Promise<boolean> load(DOMString sessionId);
+
   // session operations
   // void, not any: https://www.w3.org/Bugs/Public/show_bug.cgi?id=26457
   [NewObject, Throws]

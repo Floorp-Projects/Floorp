@@ -181,10 +181,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     gPrototypeProperties['Array'] = gPrototypeProperties['Array'].concat(pjsMethods);
   }
   for (var c of typedArrayClasses) {
-    gPrototypeProperties[c] = ["constructor", "BYTES_PER_ELEMENT", "length", "buffer",
-                               "byteLength", "byteOffset", "@@iterator", "subarray", "set",
-                               "copyWithin"];
+    gPrototypeProperties[c] = ["constructor", "BYTES_PER_ELEMENT"];
   }
+  gPrototypeProperties['TypedArray'] =
+    ["length", "buffer", "byteLength", "byteOffset", "@@iterator", "subarray",
+     "set", "copyWithin"];
+
   for (var c of errorObjectClasses) {
       gPrototypeProperties[c] = ["constructor", "name",
                                  // We don't actually resolve these empty data properties
@@ -203,29 +205,28 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     ["constructor", "toSource", "toString", "apply", "call", "bind",
      "isGenerator", "length", "name", "arguments", "caller"];
 
+  // Sort all the lists so we don't need to mutate them later (or copy them
+  // again to sort them).
+  for (var c of Object.keys(gPrototypeProperties))
+    gPrototypeProperties[c].sort();
+
   function filterOut(array, props) {
     return array.filter(p => props.indexOf(p) == -1);
   }
 
-  function testXray(classname, xray, xray2, propsToSkip) {
-    propsToSkip = propsToSkip || [];
-    let xrayProto = Object.getPrototypeOf(xray);
-    let localProto = window[classname].prototype;
-    is(Object.getOwnPropertyNames(localProto).sort().toSource(),
-       gPrototypeProperties[classname].sort().toSource(),
-       "A property on the " + classname +
-       " prototype has changed! You need a security audit from an XPConnect peer");
+  function appendUnique(array, vals) {
+    filterOut(vals, array).forEach(v => array.push(v));
+  }
 
-    let protoProps = filterOut(Object.getOwnPropertyNames(localProto), propsToSkip).sort();
-    let protoCallables = protoProps.filter(name => Object.getOwnPropertyDescriptor(localProto, name).get ||
-                                                   typeof localProto[name] == 'function' &&
-                                                   name != 'constructor');
-    let protoGetters = protoProps.filter(name => Object.getOwnPropertyDescriptor(localProto, name).get);
-    ok(protoCallables.length > 0, "Need something to test");
-    is(xrayProto, iwin[classname].prototype, "Xray proto is correct");
-    is(xrayProto, xray.__proto__, "Proto accessors agree");
-    var protoProto = classname == "Object" ? null : iwin.Object.prototype;
-    is(Object.getPrototypeOf(xrayProto), protoProto, "proto proto is correct");
+  function isTypedArrayClass(classname) {
+    return typedArrayClasses.indexOf(classname) >= 0;
+  }
+
+  function propertyIsGetter(obj, name, classname) {
+    return !!Object.getOwnPropertyDescriptor(obj, name).get;
+  }
+
+  function testProtoCallables(protoCallables, xray, xrayProto, localProto) {
     for (let name of protoCallables) {
       info("Running tests for property: " + name);
       // Test both methods and getter properties.
@@ -254,7 +255,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
         // If invoking this method returns something non-Xrayable, the
         // stringification is going to return [object Opaque]. This happens for
         // xrayedTypedArray.buffer, for instance, since we don't have Xrays
-        // To ArrayBuffers. Just check for that case.
+        // to ArrayBuffers. Just check for that case.
         if (!/Opaque/.test(method.call(xray))) {
           is(method.call(xray) + "",
              lookupCallable(xray.wrappedJSObject).call(xray.wrappedJSObject) + "",
@@ -262,6 +263,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
         }
       }
     }
+  }
+
+  function testXray(classname, xray, xray2, propsToSkip) {
+    propsToSkip = propsToSkip || [];
+    let xrayProto = Object.getPrototypeOf(xray);
+    let localProto = window[classname].prototype;
+    let desiredProtoProps = Object.getOwnPropertyNames(localProto).sort();
+
+    is(desiredProtoProps.toSource(),
+       gPrototypeProperties[classname].filter(id => typeof id === "string").toSource(),
+       "A property on the " + classname +
+       " prototype has changed! You need a security audit from an XPConnect peer");
+
+    let protoProps = filterOut(desiredProtoProps, propsToSkip);
+    let protoCallables = protoProps.filter(name => propertyIsGetter(localProto, name, classname) ||
+                                                   typeof localProto[name] == 'function' &&
+                                                   name != 'constructor');
+    ok(protoCallables.length > 0, "Need something to test");
+    is(xrayProto, iwin[classname].prototype, "Xray proto is correct");
+    is(xrayProto, xray.__proto__, "Proto accessors agree");
+    var protoProto = classname == "Object" ? null : iwin.Object.prototype;
+    is(Object.getPrototypeOf(xrayProto), protoProto, "proto proto is correct");
+    testProtoCallables(protoCallables, xray, xrayProto, localProto);
     is(Object.getOwnPropertyNames(xrayProto).sort().toSource(),
        protoProps.toSource(), "getOwnPropertyNames works");
 
@@ -435,9 +459,27 @@ function testTrickyObject(trickyObject) {
   }
 
   function testTypedArrays() {
-    for (var c of typedArrayClasses) {
-      testXray(c, new iwin[c](4), new iwin[c](), ['BYTES_PER_ELEMENT']);
+    // We don't invoke testXray with %TypedArray%, because that function isn't
+    // set up to deal with "anonymous" dependent classes (that is, classes not
+    // visible as a global property, which %TypedArray% is not), and fixing it
+    // up is more trouble than it's worth.
 
+    var typedArrayProto = Object.getPrototypeOf(Int8Array.prototype);
+
+  gPrototypeProperties['TypedArray'] =
+    ["length", "buffer", "byteLength", "byteOffset", "@@iterator", "subarray",
+     "set", "copyWithin"];
+
+    var desiredInheritedProps = Object.getOwnPropertyNames(typedArrayProto).sort();
+    var inheritedProps =
+      filterOut(desiredInheritedProps, ["BYTES_PER_ELEMENT", "constructor"]);
+
+    var inheritedCallables =
+      inheritedProps.filter(name => (propertyIsGetter(typedArrayProto, name) ||
+                                     typeof typedArrayProto[name] === "function") &&
+                                    name !== "constructor");
+
+    for (var c of typedArrayClasses) {
       var t = new iwin[c](10);
       checkThrows(function() { t[2]; }, /performant/, "direct property-wise reading of typed arrays forbidden over Xrays");
       checkThrows(function() { t[2] = 3; }, /performant/, "direct property-wise writing of typed arrays forbidden over Xrays");
@@ -447,12 +489,17 @@ function testTrickyObject(trickyObject) {
       is(t.wrappedJSObject.expando, 'hi', "access expandos over waivers works");
       is(Cu.cloneInto(t, window)[2], 3, "cloneInto works");
       is(Cu.cloneInto(t, window).expando, undefined, "cloneInto does not copy expandos");
-      is(Object.getOwnPropertyNames(t).sort().toSource(), Array.apply(null, Array(10)).map(function (_, i) {return i + "";}).toSource(),
+      is(Object.getOwnPropertyNames(t).sort().toSource(),
+         '["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]',
          "Only indexed properties visible over Xrays");
       Object.defineProperty(t.wrappedJSObject, 'length', {value: 42});
       is(t.wrappedJSObject.length, 42, "Set tricky expando")
       is(t.length, 10, "Length accessor works over Xrays")
       is(t.byteLength, t.length * window[c].prototype.BYTES_PER_ELEMENT, "byteLength accessor works over Xrays")
+
+      var xray = new iwin[c](0);
+      var xrayTypedArrayProto = Object.getPrototypeOf(Object.getPrototypeOf(xray));
+      testProtoCallables(inheritedCallables, new iwin[c](0), xrayTypedArrayProto, typedArrayProto);
     }
   }
 

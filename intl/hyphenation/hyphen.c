@@ -64,14 +64,14 @@
 static char *
 hnj_strdup (const char *s)
 {
-  char *new;
+  char *newstr;
   int l;
 
   l = strlen (s);
-  new = hnj_malloc (l + 1);
-  memcpy (new, s, l);
-  new[l] = 0;
-  return new;
+  newstr = (char *) hnj_malloc (l + 1);
+  memcpy (newstr, s, l);
+  newstr[l] = 0;
+  return newstr;
 }
 
 /* remove cross-platform text line end characters */
@@ -123,7 +123,7 @@ hnj_hash_new (void)
   HashTab *hashtab;
   int i;
 
-  hashtab = hnj_malloc (sizeof(HashTab));
+  hashtab = (HashTab *) hnj_malloc (sizeof(HashTab));
   for (i = 0; i < HASH_SIZE; i++)
     hashtab->entries[i] = NULL;
 
@@ -155,7 +155,7 @@ hnj_hash_insert (HashTab *hashtab, const char *key, int val)
   HashEntry *e;
 
   i = hnj_string_hash (key) % HASH_SIZE;
-  e = hnj_malloc (sizeof(HashEntry));
+  e = (HashEntry *) hnj_malloc (sizeof(HashEntry));
   e->next = hashtab->entries[i];
   e->key = hnj_strdup (key);
   e->val = val;
@@ -190,7 +190,7 @@ hnj_get_state (HyphenDict *dict, HashTab *hashtab, const char *string)
   /* predicate is true if dict->num_states is a power of two */
   if (!(dict->num_states & (dict->num_states - 1)))
     {
-      dict->states = hnj_realloc (dict->states,
+      dict->states = (HyphenState *) hnj_realloc (dict->states,
 				  (dict->num_states << 1) *
 				  sizeof(HyphenState));
     }
@@ -212,11 +212,11 @@ hnj_add_trans (HyphenDict *dict, int state1, int state2, char ch)
   num_trans = dict->states[state1].num_trans;
   if (num_trans == 0)
     {
-      dict->states[state1].trans = hnj_malloc (sizeof(HyphenTrans));
+      dict->states[state1].trans = (HyphenTrans *) hnj_malloc (sizeof(HyphenTrans));
     }
   else if (!(num_trans & (num_trans - 1)))
     {
-      dict->states[state1].trans = hnj_realloc (dict->states[state1].trans,
+      dict->states[state1].trans = (HyphenTrans *) hnj_realloc (dict->states[state1].trans,
 						(num_trans << 1) *
 						sizeof(HyphenTrans));
     }
@@ -360,7 +360,7 @@ void hnj_hyphen_load_line(char * buf, HyphenDict * dict, HashTab * hashtab) {
           }
 
 	  /* now, put in the prefix transitions */
-          for (; found < 0 ;j--)
+          for (; found < 0 && j > 0; --j)
 	    {
 	      last_state = state_num;
 	      ch = word[j - 1];
@@ -374,19 +374,28 @@ void hnj_hyphen_load_line(char * buf, HyphenDict * dict, HashTab * hashtab) {
 HyphenDict *
 hnj_hyphen_load (const char *fn)
 {
+  HyphenDict *result;
+  FILE *f;
+  f = fopen (fn, "r");
+  if (f == NULL)
+    return NULL;
+
+  result = hnj_hyphen_load_file(f);
+
+  fclose(f);
+  return result;
+}
+
+HyphenDict *
+hnj_hyphen_load_file (FILE *f)
+{
   HyphenDict *dict[2];
   HashTab *hashtab;
-  FILE *f;
   char buf[MAX_CHARS];
   int nextlevel = 0;
   int i, j, k;
   HashEntry *e;
   int state_num = 0;
-
-  f = fopen (fn, "r");
-  if (f == NULL)
-    return NULL;
-
 // loading one or two dictionaries (separated by NEXTLEVEL keyword)
 for (k = 0; k < 2; k++) { 
   hashtab = hnj_hash_new ();
@@ -394,9 +403,9 @@ for (k = 0; k < 2; k++) {
   global[k] = hashtab;
 #endif
   hnj_hash_insert (hashtab, "", 0);
-  dict[k] = hnj_malloc (sizeof(HyphenDict));
+  dict[k] = (HyphenDict *) hnj_malloc (sizeof(HyphenDict));
   dict[k]->num_states = 1;
-  dict[k]->states = hnj_malloc (sizeof(HyphenState));
+  dict[k]->states = (HyphenState *) hnj_malloc (sizeof(HyphenState));
   dict[k]->states[0].match = NULL;
   dict[k]->states[0].repl = NULL;
   dict[k]->states[0].fallback_state = -1;
@@ -497,7 +506,6 @@ for (k = 0; k < 2; k++) {
 #endif
   state_num = 0;
 }
-  fclose(f);
   if (nextlevel) dict[0]->nextlevel = dict[1];
   else {
     dict[1] -> nextlevel = dict[0];
@@ -553,7 +561,7 @@ int hnj_hyphen_hyphenate (HyphenDict *dict,
   char *match;
   int offset;
 
-  prep_word = hnj_malloc (word_size + 3);
+  prep_word = (char*) hnj_malloc (word_size + 3);
 
   j = 0;
   prep_word[j++] = '.';
@@ -780,10 +788,10 @@ int hnj_hyphen_hyph_(HyphenDict *dict, const char *word, int word_size,
   int nHyphCount;
 
   size_t prep_word_size = word_size + 3;
-  prep_word = hnj_malloc (prep_word_size);
-  matchlen = hnj_malloc ((word_size + 3) * sizeof(int));
-  matchindex = hnj_malloc ((word_size + 3) * sizeof(int));
-  matchrepl = hnj_malloc ((word_size + 3) * sizeof(char *));
+  prep_word = (char*) hnj_malloc (prep_word_size);
+  matchlen = (int*) hnj_malloc ((word_size + 3) * sizeof(int));
+  matchindex = (int*) hnj_malloc ((word_size + 3) * sizeof(int));
+  matchrepl = (char**) hnj_malloc ((word_size + 3) * sizeof(char *));
 
   j = 0;
   prep_word[j++] = '.';
@@ -948,10 +956,10 @@ int hnj_hyphen_hyph_(HyphenDict *dict, const char *word, int word_size,
      char * hyphens2;
      int begin = 0;
 
-     rep2 = hnj_malloc (word_size * sizeof(char *));
-     pos2 = hnj_malloc (word_size * sizeof(int));
-     cut2 = hnj_malloc (word_size * sizeof(int));
-     hyphens2 = hnj_malloc (word_size + 3);
+     rep2 = (char**) hnj_malloc (word_size * sizeof(char *));
+     pos2 = (int*) hnj_malloc (word_size * sizeof(int));
+     cut2 = (int*) hnj_malloc (word_size * sizeof(int));
+     hyphens2 = (char*) hnj_malloc (word_size + 3);
      for (i = 0; i < word_size; i++) rep2[i] = NULL;
      for (i = 0; i < word_size; i++) if 
         (hyphens[i]&1 || (begin > 0 && i + 1 == word_size)) {
