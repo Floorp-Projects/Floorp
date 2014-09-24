@@ -254,5 +254,7 @@ user_pref("loop.throttled", false);
 user_pref("browser.uitour.pinnedTabUrl", "http://%(server)s/uitour-dummy/pinnedTab");
 user_pref("browser.uitour.url", "http://%(server)s/uitour-dummy/tour");
 
+user_pref("media.eme.enabled", true);
+
 // Don't prompt about e10s
 user_pref("browser.displayedE10SPrompt", 5);
