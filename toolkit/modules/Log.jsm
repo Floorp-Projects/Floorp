@@ -535,7 +535,7 @@ BasicFormatter.prototype = {
    */
   formatText: function (message) {
     let params = message.params;
-    if (!params) {
+    if (typeof(params) == "undefined") {
       return message.message || "";
     }
     // Defensive handling of non-object params
@@ -543,7 +543,7 @@ BasicFormatter.prototype = {
     let pIsObject = (typeof(params) == 'object' || typeof(params) == 'function');
 
     // if we have params, try and find substitutions.
-    if (message.params && this.parameterFormatter) {
+    if (this.parameterFormatter) {
       // have we successfully substituted any parameters into the message?
       // in the log message
       let subDone = false;
