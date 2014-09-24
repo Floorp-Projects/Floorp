@@ -77,10 +77,10 @@ loop.shared.models = (function(l10n) {
     },
 
     /**
-     * Starts an incoming conversation.
+     * Indicates an incoming conversation has been accepted.
      */
-    incoming: function() {
-      this.trigger("call:incoming");
+    accepted: function() {
+      this.trigger("call:accepted");
     },
 
     /**
