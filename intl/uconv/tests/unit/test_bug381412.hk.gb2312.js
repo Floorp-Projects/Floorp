@@ -1,4 +1,4 @@
-const charset = "hz-gb-2312";
+const charset = "HZ-GB-2312";
 
 function dumpStrings(inString, outString) {
     var dispIn = "";
@@ -28,6 +28,7 @@ function run_test() {
 			       "nsIScriptableUnicodeConverter");
 
     var converter = new ScriptableUnicodeConverter();
+    converter.isInternal = true;
     converter.charset = charset;
 
     var leadByte, trailByte;
