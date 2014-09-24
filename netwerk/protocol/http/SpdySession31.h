@@ -193,8 +193,6 @@ public:
   int64_t RemoteSessionWindow() { return mRemoteSessionWindow; }
   void DecrementRemoteSessionWindow (uint32_t bytes) { mRemoteSessionWindow -= bytes; }
 
-  void SendPing() MOZ_OVERRIDE;
-
 private:
 
   enum stateType {
@@ -398,9 +396,6 @@ private:
   PRIntervalTime       mLastDataReadEpoch; // used for IdleTime()
   PRIntervalTime       mPingSentEpoch;
   uint32_t             mNextPingID;
-
-  PRIntervalTime       mPreviousPingThreshold; // backup for the former value
-  bool                 mPreviousUsed;          // true when backup is used
 
   // used as a temporary buffer while enumerating the stream hash during GoAway
   nsDeque  mGoAwayStreamsToRestart;
