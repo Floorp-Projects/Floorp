@@ -52,6 +52,11 @@
             '$(NSPR_CFLAGS)',
           ],
         }],
+        ['hardware_aec_ns==1', {
+          'defines': [
+            'WEBRTC_HARDWARE_AEC_NS',
+          ],
+        }],
         ['OS=="linux" or include_alsa_audio==1 or include_pulse_audio==1', {
           'include_dirs': [
             'linux',
@@ -81,7 +86,10 @@
         ['moz_widget_toolkit_gonk==1', {
           'cflags_mozilla': [
             '-I$(ANDROID_SOURCE)/frameworks/wilhelm/include',
+            '-I$(ANDROID_SOURCE)/frameworks/av/include',
             '-I$(ANDROID_SOURCE)/system/media/wilhelm/include',
+            '-I$(ANDROID_SOURCE)/system/media/audio_effects/include',
+            '-I$(ANDROID_SOURCE)/frameworks/native/include',
           ],
           'include_dirs': [
             'android',

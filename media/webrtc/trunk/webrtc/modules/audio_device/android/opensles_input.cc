@@ -22,6 +22,13 @@
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
+#if defined(WEBRTC_GONK) && defined(WEBRTC_HARDWARE_AEC_NS)
+#include <media/AudioSystem.h>
+#include <audio_effects/effect_aec.h>
+#include <audio_effects/effect_ns.h>
+#include <utils/Errors.h>
+#endif
+
 #define VOID_RETURN
 #define OPENSL_RETURN_ON_FAILURE(op, ret_val)                    \
   do {                                                           \
@@ -65,6 +72,10 @@ OpenSlesInput::OpenSlesInput(
       active_queue_(0),
       rec_sampling_rate_(0),
       agc_enabled_(false),
+#if defined(WEBRTC_GONK) && defined(WEBRTC_HARDWARE_AEC_NS)
+      aec_(NULL),
+      ns_(NULL),
+#endif
       recording_delay_(0),
       opensles_lib_(NULL) {
 }
@@ -390,6 +401,104 @@ bool OpenSlesInput::EnqueueAllBuffers() {
   return true;
 }
 
+#if defined(WEBRTC_GONK) && defined(WEBRTC_HARDWARE_AEC_NS)
+bool OpenSlesInput::CheckPlatformAEC() {
+  effect_descriptor_t fxDesc;
+  uint32_t numFx;
+
+  if (android::AudioEffect::queryNumberEffects(&numFx) != android::NO_ERROR) {
+    return false;
+  }
+
+  WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_, "Platform has %d effects", numFx);
+
+  for (uint32_t i = 0; i < numFx; i++) {
+    if (android::AudioEffect::queryEffect(i, &fxDesc) != android::NO_ERROR) {
+      continue;
+    }
+    if (memcmp(&fxDesc.type, FX_IID_AEC, sizeof(fxDesc.type)) == 0) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void OpenSlesInput::SetupVoiceMode() {
+  SLAndroidConfigurationItf configItf;
+  SLresult res = (*sles_recorder_)->GetInterface(sles_recorder_, SL_IID_ANDROIDCONFIGURATION_,
+                                                 (void*)&configItf);
+  WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_, "OpenSL GetInterface: %d", res);
+
+  if (res == SL_RESULT_SUCCESS) {
+    SLuint32 voiceMode = SL_ANDROID_RECORDING_PRESET_VOICE_COMMUNICATION;
+    SLuint32 voiceSize = sizeof(voiceMode);
+
+    res = (*configItf)->SetConfiguration(configItf,
+                                         SL_ANDROID_KEY_RECORDING_PRESET,
+                                         &voiceMode, voiceSize);
+    WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_, "OpenSL Set Voice mode res: %d", res);
+  }
+}
+
+void OpenSlesInput::SetupAECAndNS() {
+  bool hasAec = CheckPlatformAEC();
+  WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_, "Platform has AEC: %d", hasAec);
+  // This code should not have been enabled if this fails, because it means the
+  // software AEC has will have been disabled as well. If you hit this, you need
+  // to fix your B2G config or fix the hardware AEC on your device.
+  assert(hasAec);
+
+  SLAndroidConfigurationItf configItf;
+  SLresult res = (*sles_recorder_)->GetInterface(sles_recorder_, SL_IID_ANDROIDCONFIGURATION_,
+                                                 (void*)&configItf);
+  WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_, "OpenSL GetInterface: %d", res);
+
+  if (res == SL_RESULT_SUCCESS) {
+    SLuint32 sessionId = 0;
+    SLuint32 idSize = sizeof(sessionId);
+    res = (*configItf)->GetConfiguration(configItf,
+                                         SL_ANDROID_KEY_RECORDING_SESSION_ID,
+                                         &idSize, &sessionId);
+    WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_, "OpenSL Get sessionId res: %d", res);
+
+    if (res == SL_RESULT_SUCCESS && idSize == sizeof(sessionId)) {
+      WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_, "OpenSL sessionId: %d", sessionId);
+
+      aec_ = new android::AudioEffect(FX_IID_AEC, NULL, 0, 0, 0, sessionId, 0);
+      WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_, "OpenSL aec: %p", aec_);
+
+      if (aec_) {
+        android::status_t status = aec_->initCheck();
+        if (status == android::NO_ERROR || status == android::ALREADY_EXISTS) {
+          WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_, "OpenSL aec enabled");
+          aec_->setEnabled(true);
+        } else {
+          WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_, "OpenSL aec disabled: %d", status);
+          delete aec_;
+          aec_ = NULL;
+        }
+      }
+
+      ns_ = new android::AudioEffect(FX_IID_NS, NULL, 0, 0, 0, sessionId, 0);
+      WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_, "OpenSL ns: %p", ns_);
+
+      if (ns_) {
+        android::status_t status = ns_->initCheck();
+        if (status == android::NO_ERROR || status == android::ALREADY_EXISTS) {
+          WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_, "OpenSL ns enabled");
+          ns_->setEnabled(true);
+        } else {
+          WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_, "OpenSL ns disabled: %d", status);
+          delete ns_;
+          ns_ = NULL;
+        }
+      }
+    }
+  }
+}
+#endif
+
 bool OpenSlesInput::CreateAudioRecorder() {
   if (!event_.Start()) {
     assert(false);
@@ -425,10 +534,19 @@ bool OpenSlesInput::CreateAudioRecorder() {
                                                req),
       false);
 
+#if defined(WEBRTC_GONK) && defined(WEBRTC_HARDWARE_AEC_NS)
+  SetupVoiceMode();
+#endif
+
   // Realize the recorder in synchronous mode.
   OPENSL_RETURN_ON_FAILURE((*sles_recorder_)->Realize(sles_recorder_,
                                                       SL_BOOLEAN_FALSE),
                            false);
+
+#if defined(WEBRTC_GONK) && defined(WEBRTC_HARDWARE_AEC_NS)
+  SetupAECAndNS();
+#endif
+
   OPENSL_RETURN_ON_FAILURE(
       (*sles_recorder_)->GetInterface(sles_recorder_, SL_IID_RECORD_,
                                       static_cast<void*>(&sles_recorder_itf_)),
@@ -444,6 +562,14 @@ bool OpenSlesInput::CreateAudioRecorder() {
 
 void OpenSlesInput::DestroyAudioRecorder() {
   event_.Stop();
+
+#if defined(WEBRTC_GONK) && defined(WEBRTC_HARDWARE_AEC_NS)
+  delete aec_;
+  delete ns_;
+  aec_ = NULL;
+  ns_ = NULL;
+#endif
+
   if (sles_recorder_sbq_itf_) {
     // Release all buffers currently queued up.
     OPENSL_RETURN_ON_FAILURE(
