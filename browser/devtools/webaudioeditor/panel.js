@@ -35,6 +35,7 @@ WebAudioEditorPanel.prototype = {
       .then(() => {
         this.panelWin.gToolbox = this._toolbox;
         this.panelWin.gTarget = this.target;
+
         this.panelWin.gFront = new WebAudioFront(this.target.client, this.target.form);
         return this.panelWin.startupWebAudioEditor();
       })

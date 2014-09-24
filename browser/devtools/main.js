@@ -358,7 +358,7 @@ Tools.webAudioEditor = {
   tooltip: l10n("ToolboxWebAudioEditor1.tooltip", webAudioEditorStrings),
 
   isTargetSupported: function(target) {
-    return !target.isAddon;
+    return !target.isAddon && !target.chrome;
   },
 
   build: function(iframeWindow, toolbox) {

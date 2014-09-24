@@ -27,8 +27,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "appsService",
                                    "nsIAppsService");
 
 function B2GAppMigrator() {
-  Services.obs.addObserver(this, kMigrationMessageName, false);
-  Services.obs.addObserver(this, "xpcom-shutdown", false);
 }
 
 B2GAppMigrator.prototype = {
@@ -119,11 +117,6 @@ B2GAppMigrator.prototype = {
     switch (topic) {
       case kMigrationMessageName:
         this.executeBrowserMigration();
-        Services.obs.removeObserver(this, kMigrationMessageName);
-        break;
-      case "xpcom-shutdown":
-        Services.obs.removeObserver(this, kMigrationMessageName);
-        Services.obs.removeObserver(this, "xpcom-shutdown");
         break;
       default:
         debug("Unhandled topic: " + topic);
