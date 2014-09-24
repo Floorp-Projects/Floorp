@@ -167,7 +167,7 @@ let test = asyncTest(function* () {
     yield consoleOpened;
 
     let webconsoleUI = toolbox.getPanel("webconsole").hud.ui;
-    let messagesAdded = webconsoleUI.once("messages-added");
+    let messagesAdded = webconsoleUI.once("new-messages");
     yield messagesAdded;
 
     info("Checking if 'inspect($0)' was evaluated");
