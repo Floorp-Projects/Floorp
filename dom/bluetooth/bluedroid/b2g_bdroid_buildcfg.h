@@ -38,5 +38,7 @@
 
 /* CHLD values */
 #define BTA_AG_CHLD_VAL    "(0,1,2,3)"
+/* SDP AVRCP 1.5 feature */
+#define SDP_AVRCP_1_5 FALSE
 
 #endif /* B2G_BDROID_BUILDCFG_H */
