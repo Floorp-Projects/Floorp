@@ -361,7 +361,7 @@ namespace {
 struct GlyphArrayWrapper
 {
   const GlyphID* const mGlyphArray;
-  GlyphArrayWrapper(const GlyphID* const aGlyphArray) : mGlyphArray(aGlyphArray)
+  explicit GlyphArrayWrapper(const GlyphID* const aGlyphArray) : mGlyphArray(aGlyphArray)
   {}
   uint16_t operator[](size_t index) const {
     return mGlyphArray[index];
@@ -371,7 +371,7 @@ struct GlyphArrayWrapper
 struct RangeRecordComparator
 {
   const uint32_t mGlyph;
-  RangeRecordComparator(uint32_t aGlyph) : mGlyph(aGlyph) {}
+  explicit RangeRecordComparator(uint32_t aGlyph) : mGlyph(aGlyph) {}
   int operator()(const RangeRecord& aRecord) const {
     if (mGlyph < static_cast<uint16_t>(aRecord.mStart)) {
       return -1;
