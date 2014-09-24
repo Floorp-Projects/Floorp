@@ -97,7 +97,7 @@ GetObjectFrameLog()
 {
   static PRLogModuleInfo *sLog;
   if (!sLog)
-    sLog = PR_NewLogModule("nsObjectFrame");
+    sLog = PR_NewLogModule("nsPluginFrame");
   return sLog;
 }
 #endif /* PR_LOGGING */
@@ -145,7 +145,7 @@ using namespace mozilla::layers;
 
 class PluginBackgroundSink : public ReadbackSink {
 public:
-  PluginBackgroundSink(nsObjectFrame* aFrame, uint64_t aStartSequenceNumber)
+  PluginBackgroundSink(nsPluginFrame* aFrame, uint64_t aStartSequenceNumber)
     : mLastSequenceNumber(aStartSequenceNumber), mFrame(aFrame) {}
   ~PluginBackgroundSink()
   {
@@ -187,37 +187,37 @@ protected:
   }
 
   uint64_t mLastSequenceNumber;
-  nsObjectFrame* mFrame;
+  nsPluginFrame* mFrame;
 };
 
-nsObjectFrame::nsObjectFrame(nsStyleContext* aContext)
-  : nsObjectFrameSuper(aContext)
+nsPluginFrame::nsPluginFrame(nsStyleContext* aContext)
+  : nsPluginFrameSuper(aContext)
   , mReflowCallbackPosted(false)
 {
   PR_LOG(GetObjectFrameLog(), PR_LOG_DEBUG,
-         ("Created new nsObjectFrame %p\n", this));
+         ("Created new nsPluginFrame %p\n", this));
 }
 
-nsObjectFrame::~nsObjectFrame()
+nsPluginFrame::~nsPluginFrame()
 {
   PR_LOG(GetObjectFrameLog(), PR_LOG_DEBUG,
-         ("nsObjectFrame %p deleted\n", this));
+         ("nsPluginFrame %p deleted\n", this));
 }
 
-NS_QUERYFRAME_HEAD(nsObjectFrame)
-  NS_QUERYFRAME_ENTRY(nsObjectFrame)
+NS_QUERYFRAME_HEAD(nsPluginFrame)
+  NS_QUERYFRAME_ENTRY(nsPluginFrame)
   NS_QUERYFRAME_ENTRY(nsIObjectFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsObjectFrameSuper)
+NS_QUERYFRAME_TAIL_INHERITING(nsPluginFrameSuper)
 
 #ifdef ACCESSIBILITY
 a11y::AccType
-nsObjectFrame::AccessibleType()
+nsPluginFrame::AccessibleType()
 {
   return a11y::ePluginType;
 }
 
 #ifdef XP_WIN
-NS_IMETHODIMP nsObjectFrame::GetPluginPort(HWND *aPort)
+NS_IMETHODIMP nsPluginFrame::GetPluginPort(HWND *aPort)
 {
   *aPort = (HWND) mInstanceOwner->GetPluginPortFromWidget();
   return NS_OK;
@@ -226,18 +226,18 @@ NS_IMETHODIMP nsObjectFrame::GetPluginPort(HWND *aPort)
 #endif
 
 void
-nsObjectFrame::Init(nsIContent*       aContent,
+nsPluginFrame::Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow)
 {
   PR_LOG(GetObjectFrameLog(), PR_LOG_DEBUG,
-         ("Initializing nsObjectFrame %p for content %p\n", this, aContent));
+         ("Initializing nsPluginFrame %p for content %p\n", this, aContent));
 
-  nsObjectFrameSuper::Init(aContent, aParent, aPrevInFlow);
+  nsPluginFrameSuper::Init(aContent, aParent, aPrevInFlow);
 }
 
 void
-nsObjectFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsPluginFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   if (mReflowCallbackPosted) {
     PresContext()->PresShell()->CancelReflowCallback(this);
@@ -259,11 +259,11 @@ nsObjectFrame::DestroyFrom(nsIFrame* aDestructRoot)
     mBackgroundSink->Destroy();
   }
 
-  nsObjectFrameSuper::DestroyFrom(aDestructRoot);
+  nsPluginFrameSuper::DestroyFrom(aDestructRoot);
 }
 
 /* virtual */ void
-nsObjectFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
+nsPluginFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
 {
   if (HasView()) {
     nsView* view = GetView();
@@ -275,25 +275,25 @@ nsObjectFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     }
   }
 
-  nsObjectFrameSuper::DidSetStyleContext(aOldStyleContext);
+  nsPluginFrameSuper::DidSetStyleContext(aOldStyleContext);
 }
 
 nsIAtom*
-nsObjectFrame::GetType() const
+nsPluginFrame::GetType() const
 {
   return nsGkAtoms::objectFrame; 
 }
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult
-nsObjectFrame::GetFrameName(nsAString& aResult) const
+nsPluginFrame::GetFrameName(nsAString& aResult) const
 {
   return MakeFrameName(NS_LITERAL_STRING("ObjectFrame"), aResult);
 }
 #endif
 
 nsresult
-nsObjectFrame::PrepForDrawing(nsIWidget *aWidget)
+nsPluginFrame::PrepForDrawing(nsIWidget *aWidget)
 {
   mWidget = aWidget;
 
@@ -411,7 +411,7 @@ nsObjectFrame::PrepForDrawing(nsIWidget *aWidget)
 #define EMBED_DEF_HEIGHT 200
 
 /* virtual */ nscoord
-nsObjectFrame::GetMinISize(nsRenderingContext *aRenderingContext)
+nsPluginFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord result = 0;
 
@@ -427,13 +427,13 @@ nsObjectFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsObjectFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
+nsPluginFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
-  return nsObjectFrame::GetMinISize(aRenderingContext);
+  return nsPluginFrame::GetMinISize(aRenderingContext);
 }
 
 void
-nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
+nsPluginFrame::GetDesiredSize(nsPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aMetrics)
 {
@@ -498,12 +498,12 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
 }
 
 void
-nsObjectFrame::Reflow(nsPresContext*           aPresContext,
+nsPluginFrame::Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aMetrics,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&          aStatus)
 {
-  DO_GLOBAL_REFLOW_COUNT("nsObjectFrame");
+  DO_GLOBAL_REFLOW_COUNT("nsPluginFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
 
   // Get our desired size
@@ -548,7 +548,7 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
 ///////////// nsIReflowCallback ///////////////
 
 bool
-nsObjectFrame::ReflowFinished()
+nsPluginFrame::ReflowFinished()
 {
   mReflowCallbackPosted = false;
   CallSetWindow();
@@ -556,13 +556,13 @@ nsObjectFrame::ReflowFinished()
 }
 
 void
-nsObjectFrame::ReflowCallbackCanceled()
+nsPluginFrame::ReflowCallbackCanceled()
 {
   mReflowCallbackPosted = false;
 }
 
 void
-nsObjectFrame::FixupWindow(const nsSize& aSize)
+nsPluginFrame::FixupWindow(const nsSize& aSize)
 {
   nsPresContext* presContext = PresContext();
 
@@ -613,7 +613,7 @@ nsObjectFrame::FixupWindow(const nsSize& aSize)
 }
 
 nsresult
-nsObjectFrame::CallSetWindow(bool aCheckIsHidden)
+nsPluginFrame::CallSetWindow(bool aCheckIsHidden)
 {
   NPWindow *win = nullptr;
  
@@ -683,7 +683,7 @@ nsObjectFrame::CallSetWindow(bool aCheckIsHidden)
 }
 
 void
-nsObjectFrame::RegisterPluginForGeometryUpdates()
+nsPluginFrame::RegisterPluginForGeometryUpdates()
 {
   nsRootPresContext* rpc = PresContext()->GetRootPresContext();
   NS_ASSERTION(rpc, "We should have a root pres context!");
@@ -702,7 +702,7 @@ nsObjectFrame::RegisterPluginForGeometryUpdates()
 }
 
 void
-nsObjectFrame::UnregisterPluginForGeometryUpdates()
+nsPluginFrame::UnregisterPluginForGeometryUpdates()
 {
   if (!mRootPresContextRegisteredWith) {
     // Not registered...
@@ -713,7 +713,7 @@ nsObjectFrame::UnregisterPluginForGeometryUpdates()
 }
 
 void
-nsObjectFrame::SetInstanceOwner(nsPluginInstanceOwner* aOwner)
+nsPluginFrame::SetInstanceOwner(nsPluginInstanceOwner* aOwner)
 {
   // The ownership model here is historically fuzzy. This should only be called
   // by nsPluginInstanceOwner when it is given a new frame, and
@@ -743,15 +743,15 @@ nsObjectFrame::SetInstanceOwner(nsPluginInstanceOwner* aOwner)
 }
 
 bool
-nsObjectFrame::IsFocusable(int32_t *aTabIndex, bool aWithMouse)
+nsPluginFrame::IsFocusable(int32_t *aTabIndex, bool aWithMouse)
 {
   if (aTabIndex)
     *aTabIndex = -1;
-  return nsObjectFrameSuper::IsFocusable(aTabIndex, aWithMouse);
+  return nsPluginFrameSuper::IsFocusable(aTabIndex, aWithMouse);
 }
 
 bool
-nsObjectFrame::IsHidden(bool aCheckVisibilityStyle) const
+nsPluginFrame::IsHidden(bool aCheckVisibilityStyle) const
 {
   if (aCheckVisibilityStyle) {
     if (!StyleVisibility()->IsVisibleOrCollapsed())
@@ -780,7 +780,7 @@ nsObjectFrame::IsHidden(bool aCheckVisibilityStyle) const
   return false;
 }
 
-nsIntPoint nsObjectFrame::GetWindowOriginInPixels(bool aWindowless)
+nsIntPoint nsPluginFrame::GetWindowOriginInPixels(bool aWindowless)
 {
   nsView * parentWithView;
   nsPoint origin(0,0);
@@ -801,7 +801,7 @@ nsIntPoint nsObjectFrame::GetWindowOriginInPixels(bool aWindowless)
 }
 
 void
-nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
+nsPluginFrame::DidReflow(nsPresContext*            aPresContext,
                          const nsHTMLReflowState*  aReflowState,
                          nsDidReflowStatus         aStatus)
 {
@@ -814,7 +814,7 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
     objContent->HasNewFrame(this);
   }
 
-  nsObjectFrameSuper::DidReflow(aPresContext, aReflowState, aStatus);
+  nsPluginFrameSuper::DidReflow(aPresContext, aReflowState, aStatus);
 
   // The view is created hidden; once we have reflowed it and it has been
   // positioned then we show it.
@@ -830,7 +830,7 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
 }
 
 /* static */ void
-nsObjectFrame::PaintPrintPlugin(nsIFrame* aFrame, nsRenderingContext* aCtx,
+nsPluginFrame::PaintPrintPlugin(nsIFrame* aFrame, nsRenderingContext* aCtx,
                                 const nsRect& aDirtyRect, nsPoint aPt)
 {
   gfxContext* ctx = aCtx->ThebesContext();
@@ -845,7 +845,7 @@ nsObjectFrame::PaintPrintPlugin(nsIFrame* aFrame, nsRenderingContext* aCtx,
 
   // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
 
-  static_cast<nsObjectFrame*>(aFrame)->PrintPlugin(*aCtx, aDirtyRect);
+  static_cast<nsPluginFrame*>(aFrame)->PrintPlugin(*aCtx, aDirtyRect);
 }
 
 /**
@@ -876,7 +876,7 @@ public:
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE
   {
-    return static_cast<nsObjectFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this, aContainerParameters);
+    return static_cast<nsPluginFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this, aContainerParameters);
   }
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
@@ -925,7 +925,7 @@ public:
                                              LayerManager* aManager,
                                              const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE
   {
-    return static_cast<nsObjectFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this, aContainerParameters);
+    return static_cast<nsPluginFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this, aContainerParameters);
   }
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
@@ -961,7 +961,7 @@ void
 nsDisplayPlugin::Paint(nsDisplayListBuilder* aBuilder,
                        nsRenderingContext* aCtx)
 {
-  nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
+  nsPluginFrame* f = static_cast<nsPluginFrame*>(mFrame);
   bool snap;
   f->PaintPlugin(aBuilder, *aCtx, mVisibleRect, GetBounds(aBuilder, &snap));
 }
@@ -971,7 +971,7 @@ nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion)
 {
   if (aBuilder->IsForPluginGeometry()) {
-    nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
+    nsPluginFrame* f = static_cast<nsPluginFrame*>(mFrame);
     if (!aBuilder->IsInTransform() || f->IsPaintedByGecko()) {
       // Since transforms induce reference frames, we don't need to worry
       // about this method fluffing out due to non-rectilinear transforms.
@@ -1016,7 +1016,7 @@ nsDisplayPlugin::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 {
   *aSnap = false;
   nsRegion result;
-  nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
+  nsPluginFrame* f = static_cast<nsPluginFrame*>(mFrame);
   if (!aBuilder->IsForPluginGeometry()) {
     nsIWidget* widget = f->GetWidget();
     if (widget) {
@@ -1045,7 +1045,7 @@ nsDisplayPlugin::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 }
 
 nsresult
-nsObjectFrame::PluginEventNotifier::Run() {
+nsPluginFrame::PluginEventNotifier::Run() {
   nsCOMPtr<nsIObserverService> obsSvc =
     mozilla::services::GetObserverService();
   obsSvc->NotifyObservers(nullptr, "plugin-changed-event", mEventType.get());
@@ -1053,13 +1053,13 @@ nsObjectFrame::PluginEventNotifier::Run() {
 }
 
 void
-nsObjectFrame::NotifyPluginReflowObservers()
+nsPluginFrame::NotifyPluginReflowObservers()
 {
   nsContentUtils::AddScriptRunner(new PluginEventNotifier(NS_LITERAL_STRING("reflow")));
 }
 
 void
-nsObjectFrame::DidSetWidgetGeometry()
+nsPluginFrame::DidSetWidgetGeometry()
 {
 #if defined(XP_MACOSX)
   if (mInstanceOwner) {
@@ -1080,7 +1080,7 @@ nsObjectFrame::DidSetWidgetGeometry()
 }
 
 bool
-nsObjectFrame::IsOpaque() const
+nsPluginFrame::IsOpaque() const
 {
 #if defined(XP_MACOSX)
   // ???
@@ -1094,7 +1094,7 @@ nsObjectFrame::IsOpaque() const
 }
 
 bool
-nsObjectFrame::IsTransparentMode() const
+nsPluginFrame::IsTransparentMode() const
 {
 #if defined(XP_MACOSX)
   // ???
@@ -1125,7 +1125,7 @@ nsObjectFrame::IsTransparentMode() const
 }
 
 void
-nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+nsPluginFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
                                 const nsDisplayListSet& aLists)
 {
@@ -1141,7 +1141,7 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   if (type == nsPresContext::eContext_PrintPreview)
     return;
 
-  DO_GLOBAL_REFLOW_COUNT_DSP("nsObjectFrame");
+  DO_GLOBAL_REFLOW_COUNT_DSP("nsPluginFrame");
 
 #ifndef XP_MACOSX
   if (mWidget && aBuilder->IsInTransform()) {
@@ -1207,7 +1207,7 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
+nsPluginFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect)
 {
   nsCOMPtr<nsIObjectLoadingContent> obj(do_QueryInterface(mContent));
@@ -1420,7 +1420,7 @@ nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
 }
 
 nsRect
-nsObjectFrame::GetPaintedRect(nsDisplayPlugin* aItem)
+nsPluginFrame::GetPaintedRect(nsDisplayPlugin* aItem)
 {
   if (!mInstanceOwner)
     return nsRect();
@@ -1436,7 +1436,7 @@ nsObjectFrame::GetPaintedRect(nsDisplayPlugin* aItem)
 }
 
 LayerState
-nsObjectFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
+nsPluginFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager)
 {
   if (!mInstanceOwner)
@@ -1456,7 +1456,7 @@ nsObjectFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
 }
 
 already_AddRefed<Layer>
-nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
+nsPluginFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
                           LayerManager* aManager,
                           nsDisplayItem* aItem,
                           const ContainerLayerParameters& aContainerParameters)
@@ -1594,7 +1594,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 }
 
 void
-nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
+nsPluginFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
                            nsRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect, const nsRect& aPluginRect)
 {
@@ -1826,7 +1826,7 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
 }
 
 nsresult
-nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
+nsPluginFrame::HandleEvent(nsPresContext* aPresContext,
                            WidgetGUIEvent* anEvent,
                            nsEventStatus* anEventStatus)
 {
@@ -1869,7 +1869,7 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
   }
 
 #ifdef XP_WIN
-  rv = nsObjectFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
+  rv = nsPluginFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
   return rv;
 #endif
 
@@ -1893,10 +1893,10 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
   }
 #endif
 
-  rv = nsObjectFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
+  rv = nsPluginFrameSuper::HandleEvent(aPresContext, anEvent, anEventStatus);
 
   // We need to be careful from this point because the call to
-  // nsObjectFrameSuper::HandleEvent() might have killed us.
+  // nsPluginFrameSuper::HandleEvent() might have killed us.
 
 #ifdef XP_MACOSX
   if (anEvent->message == NS_MOUSE_BUTTON_UP) {
@@ -1908,7 +1908,7 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 nsresult
-nsObjectFrame::GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance)
+nsPluginFrame::GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance)
 {
   *aPluginInstance = nullptr;
 
@@ -1920,7 +1920,7 @@ nsObjectFrame::GetPluginInstance(nsNPAPIPluginInstance** aPluginInstance)
 }
 
 nsresult
-nsObjectFrame::GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor)
+nsPluginFrame::GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor)
 {
   if (!mInstanceOwner) {
     return NS_ERROR_FAILURE;
@@ -1937,11 +1937,11 @@ nsObjectFrame::GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor)
     return NS_ERROR_FAILURE;
   }
 
-  return nsObjectFrameSuper::GetCursor(aPoint, aCursor);
+  return nsPluginFrameSuper::GetCursor(aPoint, aCursor);
 }
 
 void
-nsObjectFrame::SetIsDocumentActive(bool aIsActive)
+nsPluginFrame::SetIsDocumentActive(bool aIsActive)
 {
 #ifndef XP_MACOSX
   if (mInstanceOwner) {
@@ -1952,7 +1952,7 @@ nsObjectFrame::SetIsDocumentActive(bool aIsActive)
 
 // static
 nsIObjectFrame *
-nsObjectFrame::GetNextObjectFrame(nsPresContext* aPresContext, nsIFrame* aRoot)
+nsPluginFrame::GetNextObjectFrame(nsPresContext* aPresContext, nsIFrame* aRoot)
 {
   nsIFrame* child = aRoot->GetFirstPrincipalChild();
 
@@ -1975,7 +1975,7 @@ nsObjectFrame::GetNextObjectFrame(nsPresContext* aPresContext, nsIFrame* aRoot)
 }
 
 /*static*/ void
-nsObjectFrame::BeginSwapDocShells(nsISupports* aSupports, void*)
+nsPluginFrame::BeginSwapDocShells(nsISupports* aSupports, void*)
 {
   NS_PRECONDITION(aSupports, "");
   nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
@@ -1984,19 +1984,19 @@ nsObjectFrame::BeginSwapDocShells(nsISupports* aSupports, void*)
   }
 
   // This function is called from a document content enumerator so we need
-  // to filter out the nsObjectFrames and ignore the rest.
+  // to filter out the nsPluginFrames and ignore the rest.
   nsIObjectFrame* obj = do_QueryFrame(content->GetPrimaryFrame());
   if (!obj)
     return;
 
-  nsObjectFrame* objectFrame = static_cast<nsObjectFrame*>(obj);
+  nsPluginFrame* objectFrame = static_cast<nsPluginFrame*>(obj);
   NS_ASSERTION(!objectFrame->mWidget || objectFrame->mWidget->GetParent(),
                "Plugin windows must not be toplevel");
   objectFrame->UnregisterPluginForGeometryUpdates();
 }
 
 /*static*/ void
-nsObjectFrame::EndSwapDocShells(nsISupports* aSupports, void*)
+nsPluginFrame::EndSwapDocShells(nsISupports* aSupports, void*)
 {
   NS_PRECONDITION(aSupports, "");
   nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
@@ -2005,12 +2005,12 @@ nsObjectFrame::EndSwapDocShells(nsISupports* aSupports, void*)
   }
 
   // This function is called from a document content enumerator so we need
-  // to filter out the nsObjectFrames and ignore the rest.
+  // to filter out the nsPluginFrames and ignore the rest.
   nsIObjectFrame* obj = do_QueryFrame(content->GetPrimaryFrame());
   if (!obj)
     return;
 
-  nsObjectFrame* objectFrame = static_cast<nsObjectFrame*>(obj);
+  nsPluginFrame* objectFrame = static_cast<nsPluginFrame*>(obj);
   nsRootPresContext* rootPC = objectFrame->PresContext()->GetRootPresContext();
   NS_ASSERTION(rootPC, "unable to register the plugin frame");
   nsIWidget* widget = objectFrame->mWidget;
@@ -2038,11 +2038,11 @@ nsObjectFrame::EndSwapDocShells(nsISupports* aSupports, void*)
 nsIFrame*
 NS_NewObjectFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsObjectFrame(aContext);
+  return new (aPresShell) nsPluginFrame(aContext);
 }
 
 bool
-nsObjectFrame::IsPaintedByGecko() const
+nsPluginFrame::IsPaintedByGecko() const
 {
 #ifdef XP_MACOSX
   return true;
@@ -2051,4 +2051,4 @@ nsObjectFrame::IsPaintedByGecko() const
 #endif
 }
 
-NS_IMPL_FRAMEARENA_HELPERS(nsObjectFrame)
+NS_IMPL_FRAMEARENA_HELPERS(nsPluginFrame)

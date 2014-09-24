@@ -145,7 +145,7 @@ nsresult nsPluginNativeWindowGtk::CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> 
 
       // Make sure to resize and re-place the window if required.
       SetAllocation();
-      // Need to reset "window" each time as nsObjectFrame::DidReflow sets it
+      // Need to reset "window" each time as nsPluginFrame::DidReflow sets it
       // to the ancestor window.
 #if (MOZ_WIDGET_GTK == 2)
       if (GTK_IS_XTBIN(mSocketWidget)) {
@@ -225,7 +225,7 @@ nsresult nsPluginNativeWindowGtk::CreateXEmbedWindow(bool aEnableXtFocus) {
   SetWindow(gtk_socket_get_id(GTK_SOCKET(mSocketWidget)));
 
   // Fill out the ws_info structure.
-  // (The windowless case is done in nsObjectFrame.cpp.)
+  // (The windowless case is done in nsPluginFrame.cpp.)
   GdkWindow *gdkWindow = gdk_x11_window_lookup_for_display(display, GetWindow());
   if(!gdkWindow)
     return NS_ERROR_FAILURE;

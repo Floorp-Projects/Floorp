@@ -1680,7 +1680,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const WidgetGUIEvent& anEvent)
 
   if (pPluginEvent && !pPluginEvent->event) {
     // Don't send null events to plugins.
-    NS_WARNING("nsObjectFrame ProcessEvent: trying to send null event to plugin.");
+    NS_WARNING("nsPluginFrame ProcessEvent: trying to send null event to plugin.");
     return rv;
   }
 
@@ -2372,7 +2372,7 @@ nsresult nsPluginInstanceOwner::Init(nsIContent* aContent)
   // done at a higher level than this (content).
   nsIFrame* frame = aContent->GetPrimaryFrame();
   nsIObjectFrame* iObjFrame = do_QueryFrame(frame);
-  nsObjectFrame* objFrame =  static_cast<nsObjectFrame*>(iObjFrame);
+  nsPluginFrame* objFrame =  static_cast<nsPluginFrame*>(iObjFrame);
   if (objFrame) {
     SetFrame(objFrame);
     // Some plugins require a specific sequence of shutdown and startup when
@@ -2580,7 +2580,7 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(int32_t inPaintState)
   if (!pluginWidget)
     return nullptr;
 
-  // If we've already set up a CGContext in nsObjectFrame::PaintPlugin(), we
+  // If we've already set up a CGContext in nsPluginFrame::PaintPlugin(), we
   // don't want calls to SetPluginPortAndDetectChange() to step on our work.
   if (mInCGPaintLevel < 1) {
     SetPluginPortAndDetectChange();
@@ -2818,7 +2818,7 @@ nsPluginInstanceOwner::GetContentsScaleFactor(double *result)
   return NS_OK;
 }
 
-void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
+void nsPluginInstanceOwner::SetFrame(nsPluginFrame *aFrame)
 {
   // Don't do anything if the frame situation hasn't changed.
   if (mObjectFrame == aFrame) {
@@ -2853,7 +2853,7 @@ void nsPluginInstanceOwner::SetFrame(nsObjectFrame *aFrame)
   }
 }
 
-nsObjectFrame* nsPluginInstanceOwner::GetFrame()
+nsPluginFrame* nsPluginInstanceOwner::GetFrame()
 {
   return mObjectFrame;
 }

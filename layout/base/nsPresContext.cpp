@@ -2860,7 +2860,7 @@ static PLDHashOperator
 SetPluginHidden(nsRefPtrHashKey<nsIContent>* aEntry, void* userArg)
 {
   nsIFrame* root = static_cast<nsIFrame*>(userArg);
-  nsObjectFrame* f = static_cast<nsObjectFrame*>(aEntry->GetKey()->GetPrimaryFrame());
+  nsPluginFrame* f = static_cast<nsPluginFrame*>(aEntry->GetKey()->GetPrimaryFrame());
   if (!f) {
     NS_WARNING("Null frame in SetPluginHidden");
     return PL_DHASH_NEXT;
@@ -3020,7 +3020,7 @@ SortConfigurations(nsTArray<nsIWidget::Configuration>* aConfigurations)
 static PLDHashOperator
 PluginDidSetGeometryEnumerator(nsRefPtrHashKey<nsIContent>* aEntry, void* userArg)
 {
-  nsObjectFrame* f = static_cast<nsObjectFrame*>(aEntry->GetKey()->GetPrimaryFrame());
+  nsPluginFrame* f = static_cast<nsPluginFrame*>(aEntry->GetKey()->GetPrimaryFrame());
   if (!f) {
     NS_WARNING("Null frame in PluginDidSetGeometryEnumerator");
     return PL_DHASH_NEXT;
@@ -3037,7 +3037,7 @@ PluginGetGeometryUpdate(nsRefPtrHashKey<nsIContent>* aEntry, void* userArg)
 {
   PluginGetGeometryUpdateClosure* closure =
     static_cast<PluginGetGeometryUpdateClosure*>(userArg);
-  nsObjectFrame* f = static_cast<nsObjectFrame*>(aEntry->GetKey()->GetPrimaryFrame());
+  nsPluginFrame* f = static_cast<nsPluginFrame*>(aEntry->GetKey()->GetPrimaryFrame());
   if (!f) {
     NS_WARNING("Null frame in GetPluginGeometryUpdate");
     return PL_DHASH_NEXT;
