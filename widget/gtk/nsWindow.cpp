@@ -58,6 +58,7 @@
 #include <startup-notification-1.0/libsn/sn.h>
 #endif
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Preferences.h"
 #include "nsIPrefService.h"
@@ -2164,7 +2165,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
                         imgSurf->Data(), intSize, imgSurf->Stride(), format);
        ctx = new gfxContext(dt);
     } else {
-        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected content type");
+        MOZ_CRASH("Unexpected content type");
     }
 
 #ifdef MOZ_X11
