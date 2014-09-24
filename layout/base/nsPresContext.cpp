@@ -41,7 +41,7 @@
 #include "nsFontFaceLoader.h"
 #include "mozilla/EventListenerManager.h"
 #include "prenv.h"
-#include "nsObjectFrame.h"
+#include "nsPluginFrame.h"
 #include "nsTransitionManager.h"
 #include "nsAnimationManager.h"
 #include "CounterStyleManager.h"
