@@ -69,9 +69,6 @@ private:
 
     // time of the last sent changed event
     mozilla::TimeStamp mChangedTime;
-
-    // Network changed events are enabled
-    bool mAllowChangedEvent;
 };
 
 #endif /* NSNOTIFYADDRLISTENER_H_ */
