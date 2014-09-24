@@ -27,12 +27,6 @@ TraceParent(JSTracer *trc, void *data)
     static_cast<JavaScriptParent *>(data)->trace(trc);
 }
 
-static void
-FixupParentAfterMovingGC(JSRuntime *rt, void *data)
-{
-    static_cast<JavaScriptParent *>(data)->fixupAfterMovingGC();
-}
-
 JavaScriptParent::JavaScriptParent(JSRuntime *rt)
   : JavaScriptShared(rt),
     JavaScriptBase<PJavaScriptParent>(rt)
@@ -42,7 +36,6 @@ JavaScriptParent::JavaScriptParent(JSRuntime *rt)
 JavaScriptParent::~JavaScriptParent()
 {
     JS_RemoveExtraGCRootsTracer(rt_, TraceParent, this);
-    JS_RemoveMovingGCCallback(rt_, FixupParentAfterMovingGC);
 }
 
 bool
@@ -52,15 +45,16 @@ JavaScriptParent::init()
         return false;
 
     JS_AddExtraGCRootsTracer(rt_, TraceParent, this);
-    JS_AddMovingGCCallback(rt_, FixupParentAfterMovingGC, this);
     return true;
 }
 
 void
 JavaScriptParent::trace(JSTracer *trc)
 {
-    if (active())
+    if (active()) {
         objects_.trace(trc);
+        objectIds_.trace(trc);
+    }
 }
 
 JSObject *

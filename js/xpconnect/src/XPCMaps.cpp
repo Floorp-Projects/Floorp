@@ -88,8 +88,11 @@ void
 JSObject2WrappedJSMap::UpdateWeakPointersAfterGC(XPCJSRuntime *runtime)
 {
     // Check all wrappers and update their JSObject pointer if it has been
-    // moved, or queue the wrapper for destruction if it is about to be
-    // finalized.
+    // moved, or if it is about to be finalized queue the wrapper for
+    // destruction by adding it to an array held by the runtime.
+    // Note that we do not want to be changing the refcount of these wrappers.
+    // We add them to the array now and Release the array members later to avoid
+    // the posibility of doing any JS GCThing allocations during the gc cycle.
 
     nsTArray<nsXPCWrappedJS*> &dying = runtime->WrappedJSToReleaseArray();
     MOZ_ASSERT(dying.IsEmpty());
@@ -102,24 +105,29 @@ JSObject2WrappedJSMap::UpdateWeakPointersAfterGC(XPCJSRuntime *runtime)
         while (wrapper) {
 #ifdef DEBUG
             if (!wrapper->IsSubjectToFinalization()) {
+                // If a wrapper is not subject to finalization then it roots its
+                // JS object.  If so, then it will not be about to be finalized
+                // and any necessary pointer update will have already happened
+                // when it was marked.
                 JSObject *obj = wrapper->GetJSObjectPreserveColor();
                 JSObject *prior = obj;
-                MOZ_ASSERT(!JS_IsAboutToBeFinalizedUnbarriered(&obj));
-                // If a wrapper is not subject to finalization then it roots its
-                // JS object.  If so, then any necessary pointer update will
-                // have already happened when it was marked.
+                JS_UpdateWeakPointerAfterGCUnbarriered(&obj);
                 MOZ_ASSERT(obj == prior);
             }
 #endif
-            if (wrapper->IsSubjectToFinalization() && wrapper->IsObjectAboutToBeFinalized())
-                dying.AppendElement(wrapper);
+            if (wrapper->IsSubjectToFinalization()) {
+                wrapper->UpdateObjectPointerAfterGC();
+                if (!wrapper->GetJSObjectPreserveColor())
+                    dying.AppendElement(wrapper);
+            }
             wrapper = wrapper->GetNextWrapper();
         }
 
         // Remove or update the JSObject key in the table if necessary.
         JSObject *obj = e.front().key();
         JSObject *prior = obj;
-        if (JS_IsAboutToBeFinalizedUnbarriered(&obj))
+        JS_UpdateWeakPointerAfterGCUnbarriered(&obj);
+        if (!obj)
             e.removeFront();
         else if (obj != prior)
             e.rekeyFront(obj);

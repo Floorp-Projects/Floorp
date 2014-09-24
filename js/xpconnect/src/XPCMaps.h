@@ -657,11 +657,14 @@ public:
 
     void Sweep() {
         for (Map::Enum e(mTable); !e.empty(); e.popFront()) {
-            JSObject *updated = e.front().key();
-            if (JS_IsAboutToBeFinalizedUnbarriered(&updated) || JS_IsAboutToBeFinalized(&e.front().value()))
+            JSObject *key = e.front().key();
+            JS::Heap<JSObject *> *valuep = &e.front().value();
+            JS_UpdateWeakPointerAfterGCUnbarriered(&key);
+            JS_UpdateWeakPointerAfterGC(valuep);
+            if (!key || !*valuep)
                 e.removeFront();
-            else if (updated != e.front().key())
-                e.rekeyFront(updated);
+            else if (key != e.front().key())
+                e.rekeyFront(key);
         }
     }
 
