@@ -45,6 +45,7 @@
 
 #include "Hal.h"
 #include "HalImpl.h"
+#include "HalLog.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/battery/Constants.h"
 #include "mozilla/FileUtils.h"
@@ -518,7 +519,7 @@ GetCurrentBatteryCharge(int* aCharge)
 
   #ifdef DEBUG
   if ((*aCharge < 0) || (*aCharge > 100)) {
-    HAL_LOG(("charge level contains unknown value: %d", *aCharge));
+    HAL_LOG("charge level contains unknown value: %d", *aCharge);
   }
   #endif
 
@@ -543,7 +544,7 @@ GetCurrentBatteryCharging(int* aCharging)
     if (chargingSrc != BATTERY_NOT_CHARGING &&
         chargingSrc != BATTERY_CHARGING_USB &&
         chargingSrc != BATTERY_CHARGING_AC) {
-      HAL_LOG(("charging_source contained unknown value: %d", chargingSrc));
+      HAL_LOG("charging_source contained unknown value: %d", chargingSrc);
     }
     #endif
 
@@ -607,13 +608,13 @@ bool ReadFromFile(const char *filename, char (&buf)[n])
   int fd = open(filename, O_RDONLY);
   ScopedClose autoClose(fd);
   if (fd < 0) {
-    HAL_LOG(("Unable to open file %s.", filename));
+    HAL_LOG("Unable to open file %s.", filename);
     return false;
   }
 
   ssize_t numRead = read(fd, buf, n);
   if (numRead < 0) {
-    HAL_LOG(("Error reading from file %s.", filename));
+    HAL_LOG("Error reading from file %s.", filename);
     return false;
   }
 
@@ -626,12 +627,12 @@ bool WriteToFile(const char *filename, const char *toWrite)
   int fd = open(filename, O_WRONLY);
   ScopedClose autoClose(fd);
   if (fd < 0) {
-    HAL_LOG(("Unable to open file %s.", filename));
+    HAL_LOG("Unable to open file %s.", filename);
     return false;
   }
 
   if (write(fd, toWrite, strlen(toWrite)) < 0) {
-    HAL_LOG(("Unable to write to file %s.", filename));
+    HAL_LOG("Unable to write to file %s.", filename);
     return false;
   }
 
@@ -719,8 +720,7 @@ SetScreenBrightness(double brightness)
   // Don't use De Morgan's law to push the ! into this expression; we want to
   // catch NaN too.
   if (!(0 <= brightness && brightness <= 1)) {
-    HAL_LOG(("SetScreenBrightness: Dropping illegal brightness %f.",
-             brightness));
+    HAL_LOG("SetScreenBrightness: Dropping illegal brightness %f.", brightness);
     return;
   }
 
@@ -809,12 +809,12 @@ AdjustSystemClock(int64_t aDeltaMilliseconds)
   } while (fd == -1 && errno == EINTR);
   ScopedClose autoClose(fd);
   if (fd < 0) {
-    HAL_LOG(("Failed to open /dev/alarm: %s", strerror(errno)));
+    HAL_LOG("Failed to open /dev/alarm: %s", strerror(errno));
     return;
   }
 
   if (ioctl(fd, ANDROID_ALARM_SET_RTC, &now) < 0) {
-    HAL_LOG(("ANDROID_ALARM_SET_RTC failed: %s", strerror(errno)));
+    HAL_LOG("ANDROID_ALARM_SET_RTC failed: %s", strerror(errno));
   }
 
   hal::NotifySystemClockChange(aDeltaMilliseconds);
@@ -1040,7 +1040,7 @@ EnableAlarm()
 
   int alarmFd = open("/dev/alarm", O_RDWR);
   if (alarmFd < 0) {
-    HAL_LOG(("Failed to open alarm device: %s.", strerror(errno)));
+    HAL_LOG("Failed to open alarm device: %s.", strerror(errno));
     return false;
   }
 
@@ -1052,7 +1052,7 @@ EnableAlarm()
   actions.sa_flags = 0;
   actions.sa_handler = ShutDownAlarm;
   if (sigaction(SIGUSR1, &actions, nullptr)) {
-    HAL_LOG(("Failed to set SIGUSR1 signal for alarm-watcher thread."));
+    HAL_LOG("Failed to set SIGUSR1 signal for alarm-watcher thread.");
     return false;
   }
 
@@ -1068,7 +1068,7 @@ EnableAlarm()
   if (status) {
     alarmData = nullptr;
     delete sInternalLockCpuMonitor;
-    HAL_LOG(("Failed to create alarm-watcher thread. Status: %d.", status));
+    HAL_LOG("Failed to create alarm-watcher thread. Status: %d.", status);
     return false;
   }
 
@@ -1099,7 +1099,7 @@ bool
 SetAlarm(int32_t aSeconds, int32_t aNanoseconds)
 {
   if (!sAlarmData) {
-    HAL_LOG(("We should have enabled the alarm."));
+    HAL_LOG("We should have enabled the alarm.");
     return false;
   }
 
@@ -1112,7 +1112,7 @@ SetAlarm(int32_t aSeconds, int32_t aNanoseconds)
                            ANDROID_ALARM_SET(ANDROID_ALARM_RTC_WAKEUP), &ts);
 
   if (result < 0) {
-    HAL_LOG(("Unable to set alarm: %s.", strerror(errno)));
+    HAL_LOG("Unable to set alarm: %s.", strerror(errno));
     return false;
   }
 
@@ -1294,7 +1294,7 @@ EnsureKernelLowMemKillerParamsSet()
   }
   kernelLowMemKillerParamsSet = true;
 
-  HAL_LOG(("Setting kernel's low-mem killer parameters."));
+  HAL_LOG("Setting kernel's low-mem killer parameters.");
 
   // Set /sys/module/lowmemorykiller/parameters/{adj,minfree,notify_trigger}
   // according to our prefs.  These files let us tune when the kernel kills
@@ -1396,15 +1396,15 @@ SetNiceForPid(int aPid, int aNice)
   errno = 0;
   int origProcPriority = getpriority(PRIO_PROCESS, aPid);
   if (errno) {
-    HAL_LOG(("Unable to get nice for pid=%d; error %d.  SetNiceForPid bailing.",
-             aPid, errno));
+    HAL_LOG("Unable to get nice for pid=%d; error %d.  SetNiceForPid bailing.",
+            aPid, errno);
     return;
   }
 
   int rv = setpriority(PRIO_PROCESS, aPid, aNice);
   if (rv) {
-    HAL_LOG(("Unable to set nice for pid=%d; error %d.  SetNiceForPid bailing.",
-             aPid, errno));
+    HAL_LOG("Unable to set nice for pid=%d; error %d.  SetNiceForPid bailing.",
+            aPid, errno);
     return;
   }
 
@@ -1418,7 +1418,7 @@ SetNiceForPid(int aPid, int aNice)
 
   DIR* tasksDir = opendir(nsPrintfCString("/proc/%d/task/", aPid).get());
   if (!tasksDir) {
-    HAL_LOG(("Unable to open /proc/%d/task.  SetNiceForPid bailing.", aPid));
+    HAL_LOG("Unable to open /proc/%d/task.  SetNiceForPid bailing.", aPid);
     return;
   }
 
@@ -1451,9 +1451,9 @@ SetNiceForPid(int aPid, int aNice)
     // Get and set the task's new priority.
     int origtaskpriority = getpriority(PRIO_PROCESS, tid);
     if (errno) {
-      HAL_LOG(("Unable to get nice for tid=%d (pid=%d); error %d.  This isn't "
-               "necessarily a problem; it could be a benign race condition.",
-               tid, aPid, errno));
+      HAL_LOG("Unable to get nice for tid=%d (pid=%d); error %d.  This isn't "
+              "necessarily a problem; it could be a benign race condition.",
+              tid, aPid, errno);
       continue;
     }
 
@@ -1471,15 +1471,15 @@ SetNiceForPid(int aPid, int aNice)
     rv = setpriority(PRIO_PROCESS, tid, newtaskpriority);
 
     if (rv) {
-      HAL_LOG(("Unable to set nice for tid=%d (pid=%d); error %d.  This isn't "
-               "necessarily a problem; it could be a benign race condition.",
-               tid, aPid, errno));
+      HAL_LOG("Unable to set nice for tid=%d (pid=%d); error %d.  This isn't "
+              "necessarily a problem; it could be a benign race condition.",
+              tid, aPid, errno);
       continue;
     }
   }
 
-  HAL_LOG(("Changed nice for pid %d from %d to %d.",
-           aPid, origProcPriority, aNice));
+  HAL_LOG("Changed nice for pid %d from %d to %d.",
+          aPid, origProcPriority, aNice);
 
   closedir(tasksDir);
 }
@@ -1490,8 +1490,8 @@ SetProcessPriority(int aPid,
                    ProcessCPUPriority aCPUPriority,
                    uint32_t aBackgroundLRU)
 {
-  HAL_LOG(("SetProcessPriority(pid=%d, priority=%d, cpuPriority=%d, LRU=%u)",
-           aPid, aPriority, aCPUPriority, aBackgroundLRU));
+  HAL_LOG("SetProcessPriority(pid=%d, priority=%d, cpuPriority=%d, LRU=%u)",
+          aPid, aPriority, aCPUPriority, aBackgroundLRU);
 
   // If this is the first time SetProcessPriority was called, set the kernel's
   // OOM parameters according to our prefs.
@@ -1513,11 +1513,11 @@ SetProcessPriority(int aPid,
     int clampedOomScoreAdj = clamped<int>(oomScoreAdj, OOM_SCORE_ADJ_MIN,
                                                        OOM_SCORE_ADJ_MAX);
     if(clampedOomScoreAdj != oomScoreAdj) {
-      HAL_LOG(("Clamping OOM adjustment for pid %d to %d", aPid,
-               clampedOomScoreAdj));
+      HAL_LOG("Clamping OOM adjustment for pid %d to %d", aPid,
+              clampedOomScoreAdj);
     } else {
-      HAL_LOG(("Setting OOM adjustment for pid %d to %d", aPid,
-               clampedOomScoreAdj));
+      HAL_LOG("Setting OOM adjustment for pid %d to %d", aPid,
+              clampedOomScoreAdj);
     }
 
     // We try the newer interface first, and fall back to the older interface
@@ -1532,8 +1532,8 @@ SetProcessPriority(int aPid,
                   nsPrintfCString("%d", oomAdj).get());
     }
   } else {
-    HAL_ERR(("Unable to read oom_score_adj pref for priority %s; "
-             "are the prefs messed up?", ProcessPriorityToString(aPriority)));
+    HAL_ERR("Unable to read oom_score_adj pref for priority %s; "
+            "are the prefs messed up?", ProcessPriorityToString(aPriority));
     MOZ_ASSERT(false);
   }
 
@@ -1548,14 +1548,14 @@ SetProcessPriority(int aPid,
     rv = Preferences::GetInt("hal.processPriorityManager.gonk.LowCPUNice",
                              &nice);
   } else {
-    HAL_ERR(("Unable to read niceness pref for priority %s; "
-             "are the prefs messed up?", ProcessPriorityToString(aPriority)));
+    HAL_ERR("Unable to read niceness pref for priority %s; "
+            "are the prefs messed up?", ProcessPriorityToString(aPriority));
     MOZ_ASSERT(false);
     rv = NS_ERROR_FAILURE;
   }
 
   if (NS_SUCCEEDED(rv)) {
-    HAL_LOG(("Setting nice for pid %d to %d", aPid, nice));
+    HAL_LOG("Setting nice for pid %d to %d", aPid, nice);
     SetNiceForPid(aPid, nice);
   }
 }
@@ -1573,13 +1573,13 @@ SetThreadNiceValue(pid_t aTid, ThreadPriority aThreadPriority, int aValue)
   MOZ_ASSERT(aThreadPriority < NUM_THREAD_PRIORITY);
   MOZ_ASSERT(aThreadPriority >= 0);
 
-  HAL_LOG(("Setting thread %d to priority level %s; nice level %d",
-           aTid, ThreadPriorityToString(aThreadPriority), aValue));
+  HAL_LOG("Setting thread %d to priority level %s; nice level %d",
+          aTid, ThreadPriorityToString(aThreadPriority), aValue);
   int rv = setpriority(PRIO_PROCESS, aTid, aValue);
 
   if (rv) {
-    HAL_LOG(("Failed to set thread %d to priority level %s; error %s", aTid,
-             ThreadPriorityToString(aThreadPriority), strerror(errno)));
+    HAL_LOG("Failed to set thread %d to priority level %s; error %s", aTid,
+            ThreadPriorityToString(aThreadPriority), strerror(errno));
   }
 }
 
@@ -1595,16 +1595,16 @@ SetRealTimeThreadPriority(pid_t aTid,
   MOZ_ASSERT(IsValidRealTimePriority(aValue, policy), "Invalid real time priority");
 
   // Setting real time priorities requires using sched_setscheduler
-  HAL_LOG(("Setting thread %d to priority level %s; Real Time priority %d, "
-           "Schedule FIFO", aTid, ThreadPriorityToString(aThreadPriority),
-           aValue));
+  HAL_LOG("Setting thread %d to priority level %s; Real Time priority %d, "
+          "Schedule FIFO", aTid, ThreadPriorityToString(aThreadPriority),
+          aValue);
   sched_param schedParam;
   schedParam.sched_priority = aValue;
   int rv = sched_setscheduler(aTid, policy, &schedParam);
 
   if (rv) {
-    HAL_LOG(("Failed to set thread %d to real time priority level %s; error %s",
-             aTid, ThreadPriorityToString(aThreadPriority), strerror(errno)));
+    HAL_LOG("Failed to set thread %d to real time priority level %s; error %s",
+            aTid, ThreadPriorityToString(aThreadPriority), strerror(errno));
   }
 }
 
@@ -1622,8 +1622,8 @@ SetThreadPriority(pid_t aTid, hal::ThreadPriority aThreadPriority)
       threadPriorityStr = ThreadPriorityToString(aThreadPriority);
       break;
     default:
-      HAL_ERR(("Unrecognized thread priority %d; Doing nothing",
-               aThreadPriority));
+      HAL_ERR("Unrecognized thread priority %d; Doing nothing",
+              aThreadPriority);
       return;
   }
 
@@ -1685,8 +1685,8 @@ SetCurrentThreadPriority(ThreadPriority aThreadPriority)
       break;
     }
     default:
-      HAL_LOG(("Unrecognized thread priority %d; Doing nothing",
-               aThreadPriority));
+      HAL_LOG("Unrecognized thread priority %d; Doing nothing",
+              aThreadPriority);
       return;
   }
 }

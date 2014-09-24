@@ -3,7 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <mozilla/Hal.h>
+#include "Hal.h"
+#include "HalLog.h"
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
 #include <mozilla/dom/battery/Constants.h>
@@ -186,7 +187,7 @@ UPowerClient::BeginListening()
   mDBusConnection = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
 
   if (!mDBusConnection) {
-    g_printerr("Failed to open connection to bus: %s\n", error->message);
+    HAL_LOG("Failed to open connection to bus: %s\n", error->message);
     g_error_free(error);
     return;
   }
@@ -277,7 +278,7 @@ UPowerClient::UpdateTrackedDeviceSync()
   // If that fails, that likely means upower isn't installed.
   if (!dbus_g_proxy_call(mUPowerProxy, "EnumerateDevices", &error, G_TYPE_INVALID,
                          typeGPtrArray, &devices, G_TYPE_INVALID)) {
-    g_printerr ("Error: %s\n", error->message);
+    HAL_LOG("Error: %s\n", error->message);
     g_error_free(error);
     return;
   }
@@ -350,7 +351,7 @@ UPowerClient::GetDevicePropertiesSync(DBusGProxy* aProxy)
   if (!dbus_g_proxy_call(aProxy, "GetAll", &error, G_TYPE_STRING,
                          "org.freedesktop.UPower.Device", G_TYPE_INVALID,
                          typeGHashTable, &hashTable, G_TYPE_INVALID)) {
-    g_printerr("Error: %s\n", error->message);
+    HAL_LOG("Error: %s\n", error->message);
     g_error_free(error);
     return nullptr;
   }
@@ -368,7 +369,7 @@ UPowerClient::GetDevicePropertiesCallback(DBusGProxy* aProxy,
                                              G_TYPE_VALUE);
   if (!dbus_g_proxy_end_call(aProxy, aCall, &error, typeGHashTable,
                              &hashTable, G_TYPE_INVALID)) {
-    g_printerr("Error: %s\n", error->message);
+    HAL_LOG("Error: %s\n", error->message);
     g_error_free(error);
   } else {
     sInstance->UpdateSavedInfo(hashTable);
