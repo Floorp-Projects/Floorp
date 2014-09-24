@@ -37,22 +37,22 @@ window.onload = function() {
     yield memory.stopRecordingAllocations();
     ok(true, "Can stop recording allocations");
 
-    // Find the index of our 10 allocations, and then assert that it is in the
-    // `allocator` frame.
+    // Assert that we have the 10 allocations in the `allocator` frame.
 
     var index = 0;
     var found = false;
+
     for (var count of response.counts) {
-      if (count === 10) {
+      if (count === 10
+          && response.frames[index]
+          && response.frames[index].functionDisplayName == "allocator") {
         found = true;
         break;
       }
       index++;
     }
-    ok(found, "Should find the 10 allocations.");
 
-    is(response.frames[index].functionDisplayName, "allocator",
-       "Should have found the allocator frame.");
+    ok(found, "Should find the 10 allocations in the allocator frame.");
 
     yield memory.detach();
     destroyServerAndFinish(client);

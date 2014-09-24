@@ -24,13 +24,11 @@ EXTRA_JS_MODULES += [
     'Prompt.jsm',
     'Sanitizer.jsm',
     'SharedPreferences.jsm',
-    'SimpleServiceDiscovery.jsm',
     'SSLExceptions.jsm',
     'TabMirror.jsm',
     'WebappManagerWorker.js',
 ]
 
 EXTRA_PP_JS_MODULES += [
-    'RokuApp.jsm',
     'WebappManager.jsm',
 ]

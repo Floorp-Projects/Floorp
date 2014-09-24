@@ -28,6 +28,7 @@ const MEDIA_NODES_URL = EXAMPLE_URL + "doc_media-node-creation.html";
 const BUFFER_AND_ARRAY_URL = EXAMPLE_URL + "doc_buffer-and-array.html";
 const DESTROY_NODES_URL = EXAMPLE_URL + "doc_destroy-nodes.html";
 const CONNECT_TOGGLE_URL = EXAMPLE_URL + "doc_connect-toggle.html";
+const CONNECT_TOGGLE_PARAM_URL = EXAMPLE_URL + "doc_connect-toggle-param.html";
 const CONNECT_PARAM_URL = EXAMPLE_URL + "doc_connect-param.html";
 const CONNECT_MULTI_PARAM_URL = EXAMPLE_URL + "doc_connect-multi-param.html";
 const IFRAME_CONTEXT_URL = EXAMPLE_URL + "doc_iframe-context.html";
@@ -37,7 +38,10 @@ waitForExplicitFinish();
 
 let gToolEnabled = Services.prefs.getBoolPref("devtools.webaudioeditor.enabled");
 
+gDevTools.testing = true;
+
 registerCleanupFunction(() => {
+  gDevTools.testing = false;
   info("finish() was called, cleaning up...");
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);
   Services.prefs.setBoolPref("devtools.webaudioeditor.enabled", gToolEnabled);
@@ -215,10 +219,7 @@ function waitForGraphRendered (front, nodeCount, edgeCount, paramEdgeCount) {
   let deferred = Promise.defer();
   let eventName = front.EVENTS.UI_GRAPH_RENDERED;
   front.on(eventName, function onGraphRendered (_, nodes, edges, pEdges) {
-    info(nodes);
-    info(edges)
-    info(pEdges);
-    let paramEdgesDone = paramEdgeCount ? paramEdgeCount === pEdges : true;
+    let paramEdgesDone = paramEdgeCount != null ? paramEdgeCount === pEdges : true;
     if (nodes === nodeCount && edges === edgeCount && paramEdgesDone) {
       front.off(eventName, onGraphRendered);
       deferred.resolve();
