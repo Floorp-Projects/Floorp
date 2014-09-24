@@ -288,7 +288,7 @@ nsPluginFrame::GetType() const
 nsresult
 nsPluginFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName(NS_LITERAL_STRING("ObjectFrame"), aResult);
+  return MakeFrameName(NS_LITERAL_STRING("PluginFrame"), aResult);
 }
 #endif
 
