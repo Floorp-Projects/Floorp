@@ -17,12 +17,6 @@ loop.panel = (function(_, mozL10n) {
   var ContactsList = loop.contacts.ContactsList;
   var __ = mozL10n.get; // aliasing translation function as __ for concision
 
-  /**
-   * Panel router.
-   * @type {loop.desktopRouter.DesktopRouter}
-   */
-  var router;
-
   var TabView = React.createClass({displayName: 'TabView',
     getInitialState: function() {
       return {
