@@ -1363,7 +1363,7 @@ protected:
                    webgl.mColorWriteMask[3] != false;
         }
 
-        ScopedMaskWorkaround(WebGLContext& webgl);
+        explicit ScopedMaskWorkaround(WebGLContext& aWebgl);
 
         ~ScopedMaskWorkaround();
     };

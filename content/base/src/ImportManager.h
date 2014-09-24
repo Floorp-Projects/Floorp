@@ -70,7 +70,7 @@ class ImportLoader MOZ_FINAL : public nsIStreamListener
   class Updater {
 
   public:
-    Updater(ImportLoader* aLoader) : mLoader(aLoader)
+    explicit Updater(ImportLoader* aLoader) : mLoader(aLoader)
     {}
 
     // After a new link is added that refers to this import, we

@@ -32,7 +32,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_FORWARD_SAFE_NSICELLBROADCASTLISTENER(mCellBroadcast)
 
-  Listener(CellBroadcast* aCellBroadcast)
+  explicit Listener(CellBroadcast* aCellBroadcast)
     : mCellBroadcast(aCellBroadcast)
   {
     MOZ_ASSERT(mCellBroadcast);
