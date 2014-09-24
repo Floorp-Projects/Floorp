@@ -18,7 +18,6 @@
 // anyway.  Remove the 0 above if we want it.
 #include <gdk/gdkx.h>
 #include <X11/extensions/scrnsaver.h>
-#include "base/lazy_instance.h"
 #include "base/thread_local.h"
 #endif
 
@@ -89,9 +88,8 @@ class IdleState {
 };
 
 bool OSIdleTimeSource(int32_t* milliseconds_interval_since_last_event) {
-  static LazyInstance<IdleState> state_instance = LAZY_INSTANCE_INITIALIZER;
-  IdleState* state = state_instance.Pointer();
-  int32_t idle_time = state->IdleTime();
+  static IdleState state;
+  int32_t idle_time = state.IdleTime();
   if (0 < idle_time) {
     *milliseconds_interval_since_last_event = idle_time;
     return true;
