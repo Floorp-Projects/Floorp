@@ -657,6 +657,34 @@ TabActor.prototype = {
   },
 
   /**
+   * Getter for the original docShell the tabActor got attached to in the first
+   * place.
+   * Note that your actor should normally *not* rely on this top level docShell
+   * if you want it to show information relative to the iframe that's currently
+   * being inspected in the toolbox.
+   */
+  get originalDocShell() {
+    if (!this._originalWindow) {
+      return this.docShell;
+    }
+
+    return this._originalWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                               .getInterface(Ci.nsIWebNavigation)
+                               .QueryInterface(Ci.nsIDocShell);
+  },
+
+  /**
+   * Getter for the original window the tabActor got attached to in the first
+   * place.
+   * Note that your actor should normally *not* rely on this top level window if
+   * you want it to show information relative to the iframe that's currently
+   * being inspected in the toolbox.
+   */
+  get originalWindow() {
+    return this._originalWindow || this.window;
+  },
+
+  /**
    * Getter for the nsIWebProgress for watching this window.
    */
   get webProgress() {
@@ -789,7 +817,9 @@ TabActor.prototype = {
       metadata = Cu.getSandboxMetadata(global);
     }
     catch (e) {}
-    if (metadata["inner-window-id"] && metadata["inner-window-id"] == id) {
+    if (metadata
+        && metadata["inner-window-id"]
+        && metadata["inner-window-id"] == id) {
       return true;
     }
 

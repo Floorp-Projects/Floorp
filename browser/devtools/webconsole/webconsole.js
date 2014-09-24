@@ -471,7 +471,7 @@ WebConsoleFrame.prototype = {
     }, (aReason) => { // on failure
       let node = this.createMessageNode(CATEGORY_JS, SEVERITY_ERROR,
                                         aReason.error + ": " + aReason.message);
-      this.outputMessage(CATEGORY_JS, node);
+      this.outputMessage(CATEGORY_JS, node, [aReason]);
       this._initDefer.reject(aReason);
     }).then(() => {
       let id = WebConsoleUtils.supportsString(this.hudId);
@@ -1454,14 +1454,15 @@ WebConsoleFrame.prototype = {
   /**
    * Log network event.
    *
-   * @param object aActorId
-   *        The network event actor ID to log.
+   * @param object aActor
+   *        The network event actor to log.
    * @return nsIDOMElement|null
    *         The message element to display in the Web Console output.
    */
-  logNetEvent: function WCF_logNetEvent(aActorId)
+  logNetEvent: function WCF_logNetEvent(aActor)
   {
-    let networkInfo = this._networkRequests[aActorId];
+    let actorId = aActor.actor;
+    let networkInfo = this._networkRequests[actorId];
     if (!networkInfo) {
       return null;
     }
@@ -1485,7 +1486,7 @@ WebConsoleFrame.prototype = {
     if (networkInfo.private) {
       messageNode.setAttribute("private", true);
     }
-    messageNode._connectionId = aActorId;
+    messageNode._connectionId = actorId;
     messageNode.url = request.url;
 
     let body = methodNode.parentNode;
@@ -1526,7 +1527,7 @@ WebConsoleFrame.prototype = {
 
     networkInfo.node = messageNode;
 
-    this._updateNetMessage(aActorId);
+    this._updateNetMessage(actorId);
 
     return messageNode;
   },
@@ -1730,7 +1731,7 @@ WebConsoleFrame.prototype = {
     };
 
     this._networkRequests[aActor.actor] = networkInfo;
-    this.outputMessage(CATEGORY_NETWORK, this.logNetEvent, [aActor.actor]);
+    this.outputMessage(CATEGORY_NETWORK, this.logNetEvent, [aActor]);
   },
 
   /**
@@ -1781,7 +1782,11 @@ WebConsoleFrame.prototype = {
     }
 
     if (networkInfo.node && this._updateNetMessage(aActorId)) {
-      this.emit("messages-updated", new Set([networkInfo.node]));
+      this.emit("new-messages", new Set([{
+        update: true,
+        node: networkInfo.node,
+        response: aPacket,
+      }]));
     }
 
     // For unit tests we pass the HTTP activity object to the test callback,
@@ -2009,7 +2014,7 @@ WebConsoleFrame.prototype = {
   {
     if (aEvent == "will-navigate") {
       if (this.persistLog) {
-        let marker = new Messages.NavigationMarker(aPacket.url, Date.now());
+        let marker = new Messages.NavigationMarker(aPacket, Date.now());
         this.output.addMessage(marker);
       }
       else {
@@ -2042,7 +2047,9 @@ WebConsoleFrame.prototype = {
    *        object and the arguments will be |aArguments|.
    * @param array [aArguments]
    *        If a method is given to output the message element then the method
-   *        will be invoked with the list of arguments given here.
+   *        will be invoked with the list of arguments given here. The last
+   *        object in this array should be the packet received from the
+   *        back end.
    */
   outputMessage: function WCF_outputMessage(aCategory, aMethodOrNode, aArguments)
   {
@@ -2114,18 +2121,17 @@ WebConsoleFrame.prototype = {
                            Utils.isOutputScrolledToBottom(outputNode);
 
     // Output the current batch of messages.
-    let newMessages = new Set();
-    let updatedMessages = new Set();
+    let messages = new Set();
     for (let i = 0; i < batch.length; i++) {
       let item = batch[i];
       let result = this._outputMessageFromQueue(hudIdSupportsString, item);
       if (result) {
-        if (result.isRepeated) {
-          updatedMessages.add(result.isRepeated);
-        }
-        else {
-          newMessages.add(result.node);
-        }
+        messages.add({
+          node: result.isRepeated ? result.isRepeated : result.node,
+          response: result.message,
+          update: !!result.isRepeated,
+        });
+
         if (result.visible && result.node == this.outputNode.lastChild) {
           lastVisibleNode = result.node;
         }
@@ -2167,11 +2173,8 @@ WebConsoleFrame.prototype = {
       scrollNode.scrollTop -= oldScrollHeight - scrollNode.scrollHeight;
     }
 
-    if (newMessages.size) {
-      this.emit("messages-added", newMessages);
-    }
-    if (updatedMessages.size) {
-      this.emit("messages-updated", updatedMessages);
+    if (messages.size) {
+      this.emit("new-messages", messages);
     }
 
     // If the output queue is empty, then run _flushCallback.
@@ -2228,6 +2231,10 @@ WebConsoleFrame.prototype = {
   {
     let [category, methodOrNode, args] = aItem;
 
+    // The last object in the args array should be message
+    // object or response packet received from the server.
+    let message = (args && args.length) ? args[args.length-1] : null;
+
     let node = typeof methodOrNode == "function" ?
                methodOrNode.apply(this, args || []) :
                methodOrNode;
@@ -2265,6 +2272,7 @@ WebConsoleFrame.prototype = {
       visible: visible,
       node: node,
       isRepeated: isRepeated,
+      message: message
     };
   },
 
@@ -2342,7 +2350,7 @@ WebConsoleFrame.prototype = {
     if (category == CATEGORY_NETWORK) {
       let connectionId = null;
       if (methodOrNode == this.logNetEvent) {
-        connectionId = args[0];
+        connectionId = args[0].actor;
       }
       else if (typeof methodOrNode != "function") {
         connectionId = methodOrNode._connectionId;

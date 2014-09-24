@@ -1222,9 +1222,9 @@ var gBrowserInit = {
     // Delay this a minute because there's no rush
     setTimeout(() => {
       this.gmpInstallManager = new GMPInstallManager();
-      // We don't really care about the results, if somenoe is interested they
+      // We don't really care about the results, if someone is interested they
       // can check the log.
-      this.gmpInstallManager.simpleCheckAndInstall();
+      this.gmpInstallManager.simpleCheckAndInstall().then(null, () => {});
     }, 1000 * 60);
 
     SessionStore.promiseInitialized.then(() => {
