@@ -612,8 +612,10 @@ RasterImage::GetFrame(uint32_t aFrameNum)
   if (!ref) {
     // The OS threw this frame away. We need to discard and redecode.
     MOZ_ASSERT(!mAnim, "Animated frames should be locked");
-    ForceDiscard();
-    WantDecodedFrames();
+    if (CanForciblyDiscardAndRedecode()) {
+      ForceDiscard();
+      WantDecodedFrames();
+    }
     return DrawableFrameRef();
   }
 
