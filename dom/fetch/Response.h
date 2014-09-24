@@ -27,7 +27,7 @@ class Response MOZ_FINAL : public nsISupports
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Response)
 
 public:
-  Response(nsISupports* aOwner);
+  explicit Response(nsISupports* aOwner);
 
   JSObject*
   WrapObject(JSContext* aCx)
