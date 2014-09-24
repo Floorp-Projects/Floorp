@@ -24,7 +24,7 @@ class nsINode;
 class nsIContent;
 class nsIFrame;
 class nsIPresShell;
-class nsObjectFrame;
+class nsPluginFrame;
 
 // 10ff6dca-b219-4b64-9a4c-67a62b86edce
 #define NS_IACCESSIBILITYSERVICE_IID \
