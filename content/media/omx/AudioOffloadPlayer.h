@@ -33,6 +33,10 @@
 
 namespace mozilla {
 
+namespace dom {
+class WakeLock;
+}
+
 /**
  * AudioOffloadPlayer adds support for audio tunneling to a digital signal
  * processor (DSP) in the device chipset. With tunneling, audio decoding is
@@ -193,6 +197,10 @@ private:
   // OFFLOAD_PAUSE_MAX_USECS. Used only from main thread so no lock is needed.
   nsCOMPtr<nsITimer> mResetTimer;
 
+  // To avoid device suspend when mResetTimer is going to be triggered.
+  // Used only from main thread so no lock is needed.
+  nsRefPtr<mozilla::dom::WakeLock> mWakeLock;
+
   int64_t GetMediaTimeUs();
 
   // Provide the playback position in microseconds from total number of
@@ -239,6 +247,9 @@ private:
   // Also make sure timer functions are always called from main thread
   nsresult StartTimeUpdate();
   nsresult StopTimeUpdate();
+
+  void WakeLockCreate();
+  void WakeLockRelease();
 
   // Notify end of stream by sending PlaybackEnded event to observer
   // (i.e.MediaDecoder)

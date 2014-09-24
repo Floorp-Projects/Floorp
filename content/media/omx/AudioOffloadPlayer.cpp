@@ -22,6 +22,8 @@
 #include "nsITimer.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "VideoUtils.h"
+#include "mozilla/dom/power/PowerManagerService.h"
+#include "mozilla/dom/WakeLock.h"
 
 #include <binder/IPCThreadState.h>
 #include <stagefright/foundation/ADebug.h>
@@ -215,6 +217,7 @@ status_t AudioOffloadPlayer::ChangeState(MediaDecoder::PlayState aState)
 
 static void ResetCallback(nsITimer* aTimer, void* aClosure)
 {
+  AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("%s", __FUNCTION__));
   AudioOffloadPlayer* player = static_cast<AudioOffloadPlayer*>(aClosure);
   if (player) {
     player->Reset();
@@ -227,6 +230,8 @@ void AudioOffloadPlayer::Pause(bool aPlayPendingSamples)
 
   if (mStarted) {
     CHECK(mAudioSink.get());
+    WakeLockCreate();
+
     if (aPlayPendingSamples) {
       mAudioSink->Stop();
     } else {
@@ -252,6 +257,7 @@ status_t AudioOffloadPlayer::Play()
   if (mResetTimer) {
     mResetTimer->Cancel();
     mResetTimer = nullptr;
+    WakeLockRelease();
   }
 
   status_t err = OK;
@@ -281,6 +287,7 @@ status_t AudioOffloadPlayer::Play()
 
 void AudioOffloadPlayer::Reset()
 {
+  MOZ_ASSERT(NS_IsMainThread());
   if (!mStarted) {
     return;
   }
@@ -323,6 +330,8 @@ void AudioOffloadPlayer::Reset()
   mStarted = false;
   mPlaying = false;
   mStartPosUs = 0;
+
+  WakeLockRelease();
 }
 
 status_t AudioOffloadPlayer::SeekTo(int64_t aTimeUs, bool aDispatchSeekEvents)
@@ -709,6 +718,32 @@ void AudioOffloadPlayer::SetVolume(double aVolume)
   MOZ_ASSERT(NS_IsMainThread());
   CHECK(mAudioSink.get());
   mAudioSink->SetVolume((float) aVolume);
+}
+
+void AudioOffloadPlayer::WakeLockCreate()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("%s", __FUNCTION__));
+  if (!mWakeLock) {
+    nsRefPtr<dom::power::PowerManagerService> pmService =
+      dom::power::PowerManagerService::GetInstance();
+    NS_ENSURE_TRUE_VOID(pmService);
+
+    ErrorResult rv;
+    mWakeLock = pmService->NewWakeLock(NS_LITERAL_STRING("cpu"), nullptr, rv);
+  }
+}
+
+void AudioOffloadPlayer::WakeLockRelease()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  AUDIO_OFFLOAD_LOG(PR_LOG_DEBUG, ("%s", __FUNCTION__));
+  if (mWakeLock) {
+    ErrorResult rv;
+    mWakeLock->Unlock(rv);
+    NS_WARN_IF_FALSE(!rv.Failed(), "Failed to unlock the wakelock.");
+    mWakeLock = nullptr;
+  }
 }
 
 } // namespace mozilla
