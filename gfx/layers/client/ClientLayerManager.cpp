@@ -28,6 +28,7 @@
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
 #include "TiledLayerBuffer.h"
 #include "mozilla/dom/WindowBinding.h"  // for Overfill Callback
+#include "FrameLayerBuilder.h"          // for FrameLayerbuilder
 #include "gfxPrefs.h"
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
@@ -275,6 +276,10 @@ ClientLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
 
   NS_ASSERTION(!aCallback || !mTransactionIncomplete,
                "If callback is not null, transaction must be complete");
+
+  if (gfxPlatform::GetPlatform()->DidRenderingDeviceReset()) {
+    FrameLayerBuilder::InvalidateAllLayers(this);
+  }
 
   return !mTransactionIncomplete;
 }
