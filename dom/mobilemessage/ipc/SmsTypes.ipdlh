@@ -99,11 +99,20 @@ struct ThreadData
   MessageType lastMessageType;
 };
 
+struct MobileMessageArrayData
+{
+  MobileMessageData[] messages;
+};
+
+struct ThreadArrayData
+{
+  ThreadData[] threads;
+};
+
 union MobileMessageCursorData
 {
-  MmsMessageData;
-  SmsMessageData;
-  ThreadData;
+  MobileMessageArrayData;
+  ThreadArrayData;
 };
 
 struct DeletedMessageInfoData
