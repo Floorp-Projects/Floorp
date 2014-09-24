@@ -33,17 +33,17 @@ Navigator implements NavigatorFeatures;
 [NoInterfaceObject, Exposed=(Window,Worker)]
 interface NavigatorID {
   // WebKit/Blink/Trident/Presto support this (hardcoded "Mozilla").
-  [Constant, Cached]
+  [Constant]
   readonly attribute DOMString appCodeName; // constant "Mozilla"
-  [Constant, Cached]
+  [Constant]
   readonly attribute DOMString appName;
-  [Constant, Cached]
+  [Constant]
   readonly attribute DOMString appVersion;
-  [Constant, Cached]
+  [Constant]
   readonly attribute DOMString platform;
-  [Constant, Cached]
+  [Constant]
   readonly attribute DOMString userAgent;
-  [Constant, Cached]
+  [Constant]
   readonly attribute DOMString product; // constant "Gecko"
 
   // Everyone but WebKit/Blink supports this.  See bug 679971.
@@ -52,11 +52,6 @@ interface NavigatorID {
 
 [NoInterfaceObject, Exposed=(Window,Worker)]
 interface NavigatorLanguage {
-
-  // These 2 values are cached. They are updated when pref
-  // intl.accept_languages is changed.
-
-  [Pure, Cached]
   readonly attribute DOMString? language;
   [Pure, Cached, Frozen]
   readonly attribute sequence<DOMString> languages;

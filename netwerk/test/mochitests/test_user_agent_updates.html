@@ -121,31 +121,22 @@ function testDownload(callback) {
       [PREF_UPDATES_INTERVAL, 1] // 1 second interval
     ]
   }, function waitForUpdate() setTimeout(function () {
-    var ifr = document.createElement('IFRAME');
-    ifr.src = "about:blank";
+    if (navigator.userAgent !== UA_OVERRIDE) {
+      waitForUpdate();
+      return;
+    }
+    info('Overrode navigator UA');
+    is(getUA(location.origin), UA_OVERRIDE, 'Header UA not overridden');
 
-    ifr.addEventListener('load', function() {
-      var nav = ifr.contentWindow.navigator;
-      if (nav.userAgent !== UA_OVERRIDE) {
-        waitForUpdate();
-        return;
-      }
+    var updateTime = parseInt(getUA('http://example.org'));
+    ok(startTime <= updateTime, 'Update was before start time');
+    ok(updateTime <= Date.now(), 'Update was after present time');
 
-      info('Overrode navigator UA');
-      is(getUA(location.origin), UA_OVERRIDE, 'Header UA not overridden');
-
-      var updateTime = parseInt(getUA('http://example.org'));
-      ok(startTime <= updateTime, 'Update was before start time');
-      ok(updateTime <= Date.now(), 'Update was after present time');
-
-      OVERRIDES.forEach(function (val) {
-        val.expected && is(getUA(val.host), val.expected,
-          'Incorrect URL parameter: ' + val.override);
-      });
-      callback();
-    }, false);
-
-    document.getElementById('content').appendChild(ifr);
+    OVERRIDES.forEach(function (val) {
+      val.expected && is(getUA(val.host), val.expected,
+        'Incorrect URL parameter: ' + val.override);
+    });
+    callback();
   }, 100));
 }
 
@@ -158,19 +149,12 @@ function testBadUpdate(callback) {
       [PREF_UPDATES_INTERVAL, 1] // 1 second interval
     ]
   }, function () setTimeout(function () {
-    var ifr = document.createElement('IFRAME');
-    ifr.src = "about:blank";
-
-    ifr.addEventListener('load', function() {
-      // We want to make sure a bad update doesn't cancel out previous
-      // overrides. We do this by waiting for 5 seconds (assuming the update
-      // occurs within 5 seconds), and check that the previous override hasn't
-      // changed.
-      is(navigator.userAgent, prevOverride,
-        'Invalid update deleted previous override');
-      callback();
-    }, false);
-    document.getElementById('content').appendChild(ifr);
+    // We want to make sure a bad update doesn't cancel out previous overrides.
+    // We do this by waiting for 5 seconds (assuming the update occurs within 5
+    // seconds), and check that the previous override hasn't changed.
+    is(navigator.userAgent, prevOverride,
+      'Invalid update deleted previous override');
+    callback();
   }, 5000));
 }
 
@@ -195,21 +179,13 @@ function testProfileLoad(callback) {
         // UserAgentUpdates.jsm and load saved file
         UAO.init();
         (function waitForLoad() {
-          var ifr = document.createElement('IFRAME');
-          ifr.src = "about:blank";
-
-          ifr.addEventListener('load', function() {
-            var nav = ifr.contentWindow.navigator;
-            if (nav.userAgent !== UA_ALT_OVERRIDE) {
-              setTimeout(waitForLoad, 100);
-              return;
-            }
-            is(getUA(location.origin), UA_ALT_OVERRIDE, 'Did not apply saved override');
-            saveFilePreviousSize = file.fileSize;
-            callback();
-          }, false);
-
-          document.getElementById('content').appendChild(ifr);
+          if (navigator.userAgent !== UA_ALT_OVERRIDE) {
+            setTimeout(waitForLoad, 100);
+            return;
+          }
+          is(getUA(location.origin), UA_ALT_OVERRIDE, 'Did not apply saved override');
+          saveFilePreviousSize = file.fileSize;
+          callback();
         })();
       });
     },
@@ -293,3 +269,4 @@ SpecialPowers.pushPrefEnv({
 </pre>
 </body>
 </html>
+
