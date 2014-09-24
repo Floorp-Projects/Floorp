@@ -43,6 +43,7 @@ const char kPrefTaskbarEnabled[] = "browser.taskbar.lists.enabled";
 
 NS_IMPL_ISUPPORTS(JumpListBuilder, nsIJumpListBuilder, nsIObserver)
 #define TOPIC_PROFILE_BEFORE_CHANGE "profile-before-change"
+#define TOPIC_CLEAR_PRIVATE_DATA "clear-private-data"
 
 JumpListBuilder::JumpListBuilder() :
   mMaxItems(0),
@@ -63,6 +64,7 @@ JumpListBuilder::JumpListBuilder() :
     do_GetService("@mozilla.org/observer-service;1");
   if (observerService) {
     observerService->AddObserver(this, TOPIC_PROFILE_BEFORE_CHANGE, false);
+    observerService->AddObserver(this, TOPIC_CLEAR_PRIVATE_DATA, false);
   }
 }
 
@@ -537,6 +539,11 @@ NS_IMETHODIMP JumpListBuilder::Observe(nsISupports* aSubject,
         new mozilla::widget::AsyncDeleteAllFaviconsFromDisk();
       mIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
     }
+  } else if (strcmp(aTopic, TOPIC_CLEAR_PRIVATE_DATA) == 0) {
+    // Delete JumpListCache icons from Disk, if any.
+    nsCOMPtr<nsIRunnable> event =
+      new mozilla::widget::AsyncDeleteAllFaviconsFromDisk(false);
+    mIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
   }
   return NS_OK;
 }

@@ -560,6 +560,7 @@ var gPrivacyPane = {
     // reset the timeSpan pref
     if (aClearEverything)
       ts.value = timeSpanOrig;
+    Services.obs.notifyObservers(null, "clear-private-data", null);
   },
 
   /**
