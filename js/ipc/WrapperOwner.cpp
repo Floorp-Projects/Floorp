@@ -31,7 +31,7 @@ OwnerOf(JSObject *obj)
 }
 
 ObjectId
-WrapperOwner::idOf(JSObject *obj)
+WrapperOwner::idOfUnchecked(JSObject *obj)
 {
     MOZ_ASSERT(IsCPOW(obj));
 
@@ -39,9 +39,16 @@ WrapperOwner::idOf(JSObject *obj)
     MOZ_ASSERT(v.isDouble());
 
     ObjectId objId = BitwiseCast<uint64_t>(v.toDouble());
-    MOZ_ASSERT(findCPOWById(objId) == obj);
     MOZ_ASSERT(objId);
 
+    return objId;
+}
+
+ObjectId
+WrapperOwner::idOf(JSObject *obj)
+{
+    ObjectId objId = idOfUnchecked(obj);
+    MOZ_ASSERT(findCPOWById(objId) == obj);
     return objId;
 }
 
@@ -84,6 +91,7 @@ class CPOWProxyHandler : public BaseProxyHandler
                                JSContext *cx) const MOZ_OVERRIDE;
     virtual const char* className(JSContext *cx, HandleObject proxy) const MOZ_OVERRIDE;
     virtual void finalize(JSFreeOp *fop, JSObject *proxy) const MOZ_OVERRIDE;
+    virtual void objectMoved(JSObject *proxy, const JSObject *old) const MOZ_OVERRIDE;
     virtual bool isCallable(JSObject *obj) const MOZ_OVERRIDE;
     virtual bool isConstructor(JSObject *obj) const MOZ_OVERRIDE;
 
@@ -648,6 +656,12 @@ CPOWProxyHandler::finalize(JSFreeOp *fop, JSObject *proxy) const
     OwnerOf(proxy)->drop(proxy);
 }
 
+void
+CPOWProxyHandler::objectMoved(JSObject *proxy, const JSObject *old) const
+{
+    OwnerOf(proxy)->updatePointer(proxy, old);
+}
+
 bool
 CPOWProxyHandler::isCallable(JSObject *obj) const
 {
@@ -676,6 +690,14 @@ WrapperOwner::drop(JSObject *obj)
     if (active())
         unused << SendDropObject(objId);
     decref();
+}
+
+void
+WrapperOwner::updatePointer(JSObject *obj, const JSObject *old)
+{
+    ObjectId objId = idOfUnchecked(obj);
+    MOZ_ASSERT(findCPOWById(objId) == old);
+    cpows_.add(objId, obj);
 }
 
 bool

@@ -1207,7 +1207,7 @@ class JS_PUBLIC_API(ObjectPtr)
         IncrementalObjectBarrier(value);
     }
 
-    bool isAboutToBeFinalized();
+    void updateWeakPointerAfterGC();
 
     ObjectPtr &operator=(JSObject *obj) {
         IncrementalObjectBarrier(value);

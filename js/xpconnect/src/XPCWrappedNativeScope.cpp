@@ -508,16 +508,18 @@ XPCWrappedNativeScope::UpdateWeakPointersAfterGC(XPCJSRuntime* rt)
         // Check for finalization of the global object.  Note that global
         // objects are never moved, so we don't need to handle updating the
         // object pointer here.
-        if (cur->mGlobalJSObject && cur->mGlobalJSObject.isAboutToBeFinalized()) {
-            cur->mGlobalJSObject.finalize(rt->Runtime());
-            // Move this scope from the live list to the dying list.
-            if (prev)
-                prev->mNext = next;
-            else
-                gScopes = next;
-            cur->mNext = gDyingScopes;
-            gDyingScopes = cur;
-            cur = nullptr;
+        if (cur->mGlobalJSObject) {
+            cur->mGlobalJSObject.updateWeakPointerAfterGC();
+            if (!cur->mGlobalJSObject) {
+                // Move this scope from the live list to the dying list.
+                if (prev)
+                    prev->mNext = next;
+                else
+                    gScopes = next;
+                cur->mNext = gDyingScopes;
+                gDyingScopes = cur;
+                cur = nullptr;
+            }
         }
 
         if (cur)

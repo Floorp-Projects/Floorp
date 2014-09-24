@@ -585,7 +585,7 @@ public:
                                  JSFinalizeStatus status,
                                  bool isCompartmentGC,
                                  void *data);
-    static void MovingGCCallback(JSRuntime *rt, void *data);
+    static void WeakPointerCallback(JSRuntime *rt, void *data);
 
     inline void AddVariantRoot(XPCTraceableVariant* variant);
     inline void AddWrappedJSRoot(nsXPCWrappedJS* wrappedJS);
@@ -2471,7 +2471,7 @@ public:
     // to find non-rooting wrappers for dying JS objects. See the top of
     // XPCWrappedJS.cpp for more details.
     bool IsSubjectToFinalization() const {return IsValid() && mRefCnt == 1;}
-    bool IsObjectAboutToBeFinalized() {return JS_IsAboutToBeFinalized(&mJSObj);}
+    void UpdateObjectPointerAfterGC() {JS_UpdateWeakPointerAfterGC(&mJSObj);}
 
     bool IsAggregatedToNative() const {return mRoot->mOuter != nullptr;}
     nsISupports* GetAggregatedNativeObject() const {return mRoot->mOuter;}
