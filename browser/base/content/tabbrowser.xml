@@ -1449,8 +1449,12 @@
 
             // Change the "remote" attribute.
             let parent = aBrowser.parentNode;
+            let permanentKey = aBrowser.permanentKey;
             parent.removeChild(aBrowser);
             aBrowser.setAttribute("remote", aShouldBeRemote ? "true" : "false");
+            // Tearing down the browser gives a new permanentKey but we want to
+            // keep the old one. Re-set it explicitly after unbinding from DOM.
+            aBrowser.permanentKey = permanentKey;
             parent.appendChild(aBrowser);
 
             // Restore the progress listener.
