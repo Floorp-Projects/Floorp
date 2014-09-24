@@ -750,7 +750,10 @@ CallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 } /* namespace js */
 
 extern void
-js_ReportIsNotDefined(JSContext *cx, const char *name);
+js_ReportIsNotDefined(JSContext *cx, js::HandleScript script, jsbytecode *pc, js::HandleAtom atom);
+
+extern void
+js_ReportIsNotDefined(JSContext *cx, js::HandleAtom atom);
 
 /*
  * Report an attempt to access the property of a null or undefined value (v).

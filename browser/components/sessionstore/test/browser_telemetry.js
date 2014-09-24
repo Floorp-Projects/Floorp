@@ -58,13 +58,13 @@ add_task(function history() {
   let tab = gBrowser.addTab("http://example.org:80/?");
   yield promiseBrowserLoaded(tab.linkedBrowser);
   try {
-    SyncHandlers.get(tab.linkedBrowser).flush();
+    TabState.flush(tab.linkedBrowser);
     let statistics = yield promiseStats();
 
     info("Now changing history");
     tab.linkedBrowser.loadURI("http://example.org:80/1");
     yield promiseBrowserLoaded(tab.linkedBrowser);
-    SyncHandlers.get(tab.linkedBrowser).flush();
+    TabState.flush(tab.linkedBrowser);
     let statistics2 = yield promiseStats();
 
     // We have changed history, so it must have increased
@@ -91,7 +91,7 @@ add_task(function close_tab() {
   let tab = gBrowser.addTab("http://example.org:80/?close_tab");
   yield promiseBrowserLoaded(tab.linkedBrowser);
   try {
-    SyncHandlers.get(tab.linkedBrowser).flush();
+    TabState.flush(tab.linkedBrowser);
     let statistics = yield promiseStats();
 
     info("Now closing a tab");
@@ -184,12 +184,12 @@ add_task(function dom_storage() {
   let tab = gBrowser.addTab("http://example.org:80/?dom_storage");
   yield promiseBrowserLoaded(tab.linkedBrowser);
   try {
-    SyncHandlers.get(tab.linkedBrowser).flush();
+    TabState.flush(tab.linkedBrowser);
     let statistics = yield promiseStats();
 
     info("Now adding some storage");
     yield modifySessionStorage(tab.linkedBrowser, {foo: "bar"});
-    SyncHandlers.get(tab.linkedBrowser).flush();
+    TabState.flush(tab.linkedBrowser);
 
     let statistics2 = yield promiseStats();
 
@@ -217,13 +217,13 @@ add_task(function formdata() {
   let tab = gBrowser.addTab("data:text/html;charset=utf-8,<input%20id='input'>");
   yield promiseBrowserLoaded(tab.linkedBrowser);
   try {
-    SyncHandlers.get(tab.linkedBrowser).flush();
+    TabState.flush(tab.linkedBrowser);
     let statistics = yield promiseStats();
 
     info("Now changing form data");
 
     yield setInputValue(tab.linkedBrowser, {id: "input", value: "This is some form data"});
-    SyncHandlers.get(tab.linkedBrowser).flush();
+    TabState.flush(tab.linkedBrowser);
 
     let statistics2 = yield promiseStats();
 

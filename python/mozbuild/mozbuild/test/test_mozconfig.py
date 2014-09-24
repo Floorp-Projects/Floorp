@@ -309,14 +309,14 @@ class TestMozconfigLoader(unittest.TestCase):
         """Ensures mk_add_options calls are captured."""
         with NamedTemporaryFile(mode='w') as mozconfig:
             mozconfig.write('mk_add_options MOZ_OBJDIR=/foo/bar\n')
-            mozconfig.write('mk_add_options MOZ_MAKE_FLAGS=-j8\n')
+            mozconfig.write('mk_add_options MOZ_MAKE_FLAGS="-j8 -s"\n')
             mozconfig.write('mk_add_options FOO="BAR BAZ"\n')
             mozconfig.write('mk_add_options BIZ=1\n')
             mozconfig.flush()
 
             result = self.get_loader().read_mozconfig(mozconfig.name)
             self.assertEqual(result['topobjdir'], '/foo/bar')
-            self.assertEqual(result['make_flags'], '-j8')
+            self.assertEqual(result['make_flags'], ['-j8', '-s'])
             self.assertEqual(result['make_extra'], ['FOO=BAR BAZ', 'BIZ=1'])
 
     def test_read_empty_mozconfig_objdir_environ(self):

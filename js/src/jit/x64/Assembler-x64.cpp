@@ -38,8 +38,8 @@ ABIArgGenerator::next(MIRType type)
             current_ = ABIArg(stackOffset_);
             stackOffset_ += Simd128DataSize;
         } else {
-            stackOffset_ += sizeof(uint64_t);
             current_ = ABIArg(stackOffset_);
+            stackOffset_ += sizeof(uint64_t);
         }
         return current_;
     }

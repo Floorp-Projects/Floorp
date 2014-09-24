@@ -28,7 +28,8 @@ add_task(function page_style() {
     if (title.startsWith("fail_")) {
       ok(!enabled.length, "didn't restore " + title);
     } else {
-      ok(enabled.length == 1 && enabled[0][0] == title, "restored " + title);
+      is(enabled.length, 1, "restored one style sheet");
+      is(enabled[0][0], title, "restored correct sheet");
     }
 
     gBrowser.removeTab(tab2);

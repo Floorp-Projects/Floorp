@@ -4205,8 +4205,7 @@ BindNameIC::update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain)
     if (scopeChain->is<GlobalObject>()) {
         holder = scopeChain;
     } else {
-        RootedShape shape(cx);
-        if (!LookupNameUnqualified(cx, name, scopeChain, &holder, &shape))
+        if (!LookupNameUnqualified(cx, name, scopeChain, &holder))
             return nullptr;
     }
 
@@ -4375,10 +4374,10 @@ NameIC::update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain,
     }
 
     if (cache.isTypeOf()) {
-        if (!FetchName<true>(cx, obj, holder, name, shape, vp))
+        if (!FetchName<true>(cx, script, pc, obj, holder, name, shape, vp))
             return false;
     } else {
-        if (!FetchName<false>(cx, obj, holder, name, shape, vp))
+        if (!FetchName<false>(cx, script, pc, obj, holder, name, shape, vp))
             return false;
     }
 

@@ -409,6 +409,11 @@ public:
         SAMPLE_PRESSURE = 2,
         SAMPLE_SIZE = 3,
         NUM_SAMPLE_DATA = 4,
+        TOOL_TYPE_UNKNOWN = 0,
+        TOOL_TYPE_FINGER = 1,
+        TOOL_TYPE_STYLUS = 2,
+        TOOL_TYPE_MOUSE = 3,
+        TOOL_TYPE_ERASER = 4,
         dummy_java_enum_list_end
     };
 };
@@ -497,6 +502,7 @@ public:
     const nsTArray<nsIntPoint>& Points() { return mPoints; }
     const nsTArray<int>& PointIndicies() { return mPointIndicies; }
     const nsTArray<float>& Pressures() { return mPressures; }
+    const nsTArray<int>& ToolTypes() { return mToolTypes; }
     const nsTArray<float>& Orientations() { return mOrientations; }
     const nsTArray<nsIntPoint>& PointRadii() { return mPointRadii; }
     const nsTArray<nsString>& PrefNames() { return mPrefNames; }
@@ -564,6 +570,7 @@ protected:
     nsTArray<int> mPointIndicies;
     nsTArray<float> mOrientations;
     nsTArray<float> mPressures;
+    nsTArray<int> mToolTypes;
     nsIntRect mRect;
     int mFlags, mMetaState;
     uint32_t mDomKeyLocation;
@@ -627,6 +634,7 @@ protected:
     static jfieldID jPointIndicies;
     static jfieldID jOrientations;
     static jfieldID jPressures;
+    static jfieldID jToolTypes;
     static jfieldID jPointRadii;
     static jfieldID jXField;
     static jfieldID jYField;

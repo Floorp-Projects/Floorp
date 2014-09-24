@@ -286,6 +286,8 @@ typedef JSObject *(*ClassObjectCreationOp)(JSContext *cx, JSProtoKey key);
 typedef bool (*FinishClassInitOp)(JSContext *cx, JS::HandleObject ctor,
                                   JS::HandleObject proto);
 
+const size_t JSCLASS_CACHED_PROTO_WIDTH = 6;
+
 struct ClassSpec
 {
     ClassObjectCreationOp createConstructor;
@@ -294,7 +296,29 @@ struct ClassSpec
     const JSFunctionSpec *prototypeFunctions;
     const JSPropertySpec *prototypeProperties;
     FinishClassInitOp finishInit;
+    uintptr_t flags;
+
+    static const size_t ParentKeyWidth = JSCLASS_CACHED_PROTO_WIDTH;
+
+    static const uintptr_t ParentKeyMask = (1 << ParentKeyWidth) - 1;
+    static const uintptr_t DontDefineConstructor = 1 << ParentKeyWidth;
+
     bool defined() const { return !!createConstructor; }
+
+    bool dependent() const {
+        MOZ_ASSERT(defined());
+        return (flags & ParentKeyMask);
+    }
+
+    JSProtoKey parentKey() const {
+        static_assert(JSProto_Null == 0, "zeroed key must be null");
+        return JSProtoKey(flags & ParentKeyMask);
+    }
+
+    bool shouldDefineConstructor() const {
+        MOZ_ASSERT(defined());
+        return !(flags & DontDefineConstructor);
+    }
 };
 
 struct ClassExtension
@@ -373,7 +397,7 @@ typedef void (*JSClassInternal)();
 struct JSClass {
     JS_CLASS_MEMBERS(JSFinalizeOp);
 
-    void                *reserved[32];
+    void                *reserved[33];
 };
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  // objects have private slot
@@ -446,7 +470,6 @@ struct JSClass {
 
 // Fast access to the original value of each standard class's prototype.
 #define JSCLASS_CACHED_PROTO_SHIFT      (JSCLASS_HIGH_FLAGS_SHIFT + 10)
-#define JSCLASS_CACHED_PROTO_WIDTH      6
 #define JSCLASS_CACHED_PROTO_MASK       JS_BITMASK(JSCLASS_CACHED_PROTO_WIDTH)
 #define JSCLASS_HAS_CACHED_PROTO(key)   (uint32_t(key) << JSCLASS_CACHED_PROTO_SHIFT)
 #define JSCLASS_CACHED_PROTO_KEY(clasp) ((JSProtoKey)                         \

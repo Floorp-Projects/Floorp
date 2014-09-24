@@ -844,7 +844,7 @@ nsXULPopupManager::HidePopup(nsIContent* aPopup,
                              bool aHideChain,
                              bool aDeselectMenu,
                              bool aAsynchronous,
-                             bool aIsRollup,
+                             bool aIsCancel,
                              nsIContent* aLastPopup)
 {
   // if the popup is on the nohide panels list, remove it but don't close any
@@ -937,12 +937,12 @@ nsXULPopupManager::HidePopup(nsIContent* aPopup,
     if (aAsynchronous) {
       nsCOMPtr<nsIRunnable> event =
         new nsXULPopupHidingEvent(popupToHide, nextPopup, lastPopup,
-                                  type, deselectMenu, aIsRollup);
+                                  type, deselectMenu, aIsCancel);
         NS_DispatchToCurrentThread(event);
     }
     else {
       FirePopupHidingEvent(popupToHide, nextPopup, lastPopup,
-                           popupFrame->PresContext(), type, deselectMenu, aIsRollup);
+                           popupFrame->PresContext(), type, deselectMenu, aIsCancel);
     }
   }
 }
@@ -1354,7 +1354,7 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
                                         nsPresContext *aPresContext,
                                         nsPopupType aPopupType,
                                         bool aDeselectMenu,
-                                        bool aIsRollup)
+                                        bool aIsCancel)
 {
   nsCOMPtr<nsIPresShell> presShell = aPresContext->PresShell();
 
@@ -1413,7 +1413,7 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
         aPopup->GetAttr(kNameSpaceID_None, nsGkAtoms::animate, animate);
 
         if (!animate.EqualsLiteral("false") &&
-            (!animate.EqualsLiteral("cancel") || aIsRollup)) {
+            (!animate.EqualsLiteral("cancel") || aIsCancel)) {
           presShell->FlushPendingNotifications(Flush_Layout);
 
           // Get the frame again in case the flush caused it to go away

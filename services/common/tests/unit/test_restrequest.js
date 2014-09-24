@@ -742,7 +742,7 @@ add_test(function test_exception_in_onProgress() {
     it.does.not.exist();
   };
   request.get(function onComplete(error) {
-    do_check_eq(error, "ReferenceError: it is not defined");
+    do_check_true(error.toString().contains("ReferenceError: it is not defined"));
     do_check_eq(this.status, this.ABORTED);
 
     server.stop(run_next_test);

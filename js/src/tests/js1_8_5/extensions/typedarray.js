@@ -439,7 +439,13 @@ function test()
     checkThrows(function() new Float32Array(null));
 
     a = new Uint8Array(0x100);
-    checkThrows(function() Uint32Array.prototype.subarray.apply(a, [0, 0x100]));
+    b = Uint32Array.prototype.subarray.apply(a, [0, 0x100]);
+    check(() => Object.prototype.toString.call(b) === "[object Uint8Array]");
+    check(() => b.buffer === a.buffer);
+    check(() => b.length === a.length);
+    check(() => b.byteLength === a.byteLength);
+    check(() => b.byteOffset === a.byteOffset);
+    check(() => b.BYTES_PER_ELEMENT === a.BYTES_PER_ELEMENT);
 
     // webidl section 4.4.6, getter bullet point 2.2: prototypes are not
     // platform objects, and calling the getter of any attribute defined on the
@@ -567,9 +573,14 @@ function test()
     check(function () Object.getPrototypeOf(view) == Object.getPrototypeOf(simple));
     check(function () Object.getPrototypeOf(view) == Int8Array.prototype);
 
-    // named properties are defined on the prototype
-    check(function () !Object.getOwnPropertyDescriptor(simple, 'byteLength'));
-    check(function () Object.getOwnPropertyDescriptor(Int8Array.prototype, 'byteLength'));
+    // Most named properties are defined on %TypedArray%.prototype.
+    check(() => !simple.hasOwnProperty('byteLength'));
+    check(() => !Int8Array.prototype.hasOwnProperty('byteLength'));
+    check(() => Object.getPrototypeOf(Int8Array.prototype).hasOwnProperty('byteLength'));
+
+    check(() => !simple.hasOwnProperty("BYTES_PER_ELEMENT"));
+    check(() => Int8Array.prototype.hasOwnProperty("BYTES_PER_ELEMENT"));
+    check(() => !Object.getPrototypeOf(Int8Array.prototype).hasOwnProperty("BYTES_PER_ELEMENT"));
 
     // crazy as it sounds, the named properties are configurable per WebIDL.
     // But we are currently discussing the situation, and typed arrays may be

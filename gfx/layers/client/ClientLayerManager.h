@@ -37,7 +37,6 @@ class CompositorChild;
 class ImageLayer;
 class PLayerChild;
 class TextureClientPool;
-class SimpleTextureClientPool;
 
 class ClientLayerManager MOZ_FINAL : public LayerManager
 {
@@ -124,7 +123,6 @@ public:
   virtual void SetIsFirstPaint() MOZ_OVERRIDE;
 
   TextureClientPool* GetTexturePool(gfx::SurfaceFormat aFormat);
-  SimpleTextureClientPool* GetSimpleTileTexturePool(gfx::SurfaceFormat aFormat);
 
   /// Utility methods for managing texture clients.
   void ReturnTextureClientDeferred(TextureClient& aClient);
@@ -336,9 +334,6 @@ private:
   nsAutoTArray<RefPtr<TextureClientPool>,2> mTexturePools;
   nsAutoTArray<dom::OverfillCallback*,0> mOverfillCallbacks;
   mozilla::TimeStamp mTransactionStart;
-
-  // indexed by gfx::SurfaceFormat
-  nsTArray<RefPtr<SimpleTextureClientPool> > mSimpleTilePools;
 
   nsRefPtr<MemoryPressureObserver> mMemoryPressureObserver;
 };

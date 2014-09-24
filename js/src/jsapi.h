@@ -690,7 +690,7 @@ typedef void
 (* JSFinalizeCallback)(JSFreeOp *fop, JSFinalizeStatus status, bool isCompartment, void *data);
 
 typedef void
-(* JSMovingGCCallback)(JSRuntime *rt, void *data);
+(* JSWeakPointerCallback)(JSRuntime *rt, void *data);
 
 typedef bool
 (* JSInterruptCallback)(JSContext *cx);
@@ -2039,12 +2039,6 @@ extern JS_PUBLIC_API(void)
 JS_RemoveFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb);
 
 extern JS_PUBLIC_API(bool)
-JS_AddMovingGCCallback(JSRuntime *rt, JSMovingGCCallback cb, void *data);
-
-extern JS_PUBLIC_API(void)
-JS_RemoveMovingGCCallback(JSRuntime *rt, JSMovingGCCallback cb);
-
-extern JS_PUBLIC_API(bool)
 JS_IsGCMarkingTracer(JSTracer *trc);
 
 /* For assertions only. */
@@ -2054,26 +2048,41 @@ JS_IsMarkingGray(JSTracer *trc);
 #endif
 
 /*
- * JS_IsAboutToBeFinalized checks if the given object is going to be finalized
- * at the end of the current GC. When called outside of the context of a GC,
- * this function will return false. Typically this function is used on weak
- * references, where the reference should be nulled out or destroyed if the
- * given object is about to be finalized.
+ * Weak pointers and garbage collection
  *
- * The argument to JS_IsAboutToBeFinalized is an in-out param: when the
- * function returns false, the object being referenced is still alive, but the
- * garbage collector might have moved it. In this case, the reference passed
- * to JS_IsAboutToBeFinalized will be updated to the object's new location.
+ * Weak pointers are by their nature not marked as part of garbage collection,
+ * but they may need to be updated in two cases after a GC:
+ *
+ *  1) Their referent was found not to be live and is about to be finalized
+ *  2) Their referent has been moved by a compacting GC
+ *
+ * To handle this, any part of the system that maintain weak pointers to
+ * JavaScript GC things must register a callback with
+ * JS_(Add,Remove)WeakPointerCallback().  This callback must then call
+ * JS_UpdateWeakPointerAfterGC() on all weak pointers it knows about.
+ *
+ * The argument to JS_UpdateWeakPointerAfterGC() is an in-out param.  If the
+ * referent is about to be finalized the pointer will be set to null.  If the
+ * referent has been moved then the pointer will be updated to point to the new
+ * location.
+ *
  * Callers of this method are responsible for updating any state that is
  * dependent on the object's address. For example, if the object's address is
  * used as a key in a hashtable, then the object must be removed and
  * re-inserted with the correct hash.
  */
-extern JS_PUBLIC_API(bool)
-JS_IsAboutToBeFinalized(JS::Heap<JSObject *> *objp);
 
 extern JS_PUBLIC_API(bool)
-JS_IsAboutToBeFinalizedUnbarriered(JSObject **objp);
+JS_AddWeakPointerCallback(JSRuntime *rt, JSWeakPointerCallback cb, void *data);
+
+extern JS_PUBLIC_API(void)
+JS_RemoveWeakPointerCallback(JSRuntime *rt, JSWeakPointerCallback cb);
+
+extern JS_PUBLIC_API(void)
+JS_UpdateWeakPointerAfterGC(JS::Heap<JSObject *> *objp);
+
+extern JS_PUBLIC_API(void)
+JS_UpdateWeakPointerAfterGCUnbarriered(JSObject **objp);
 
 typedef enum JSGCParamKey {
     /* Maximum nominal heap before last ditch GC. */

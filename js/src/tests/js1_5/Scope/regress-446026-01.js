@@ -23,7 +23,7 @@ var b = 45;
       };
     })();
 
-expect = 'ReferenceError: a is not defined | undefined | 45';
+expect = "ReferenceError: a is not defined, did you mean 'b'? | undefined | 45";
 actual = '';
 
 var foo;

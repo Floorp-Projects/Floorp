@@ -760,25 +760,6 @@ AndroidTap.prototype.pointerup = function AndroidTap_pointerup(aPoints) {
 };
 
 /**
- * Reject an android tap gesture.
- * @param  {?Function} aRejectTo An optional next gesture constructor.
- * @return {Object} structure that looks like {
- *   id: gesture_id, // Current AndroidTap gesture id.
- *   gestureType: next_gesture // Optional
- * }
- */
-AndroidTap.prototype._handleReject = function AndroidTap__handleReject(aRejectTo) {
-  let keys = Object.keys(this.points);
-  if (aRejectTo === Swipe && keys.length === 1) {
-    let key = keys[0];
-    let point = this.points[key];
-    // Two finger swipe is translated into single swipe.
-    this.points[key + '-copy'] = point;
-  }
-  return TapGesture.prototype._handleReject.call(this, aRejectTo);
-};
-
-/**
  * Double Tap gesture.
  * @param {Number} aTimeStamp An original pointer event's timeStamp that started
  * the gesture resolution sequence.

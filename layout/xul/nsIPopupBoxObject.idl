@@ -10,7 +10,7 @@ interface nsIDOMNode;
 interface nsIDOMEvent;
 interface nsIDOMClientRect;
 
-[scriptable, uuid(b1192cac-467b-42ca-88d6-fcdec5bb4ef7)]
+[scriptable, uuid(492861e3-d168-410f-b2bb-6eb8ce503d4a)]
 interface nsIPopupBoxObject : nsISupports
 {
   /**
@@ -22,9 +22,13 @@ interface nsIPopupBoxObject : nsISupports
                  in wstring popupAlignment);
 
   /**
-   *  Hide the popup if it is open.
+   *  Hide the popup if it is open. The cancel argument is used as a hint that
+   *  the popup is being closed because it has been cancelled, rather than
+   *  something being selected within the panel.
+   *
+   * @param cancel if true, then the popup is being cancelled.
    */
-  void hidePopup();
+  void hidePopup([optional] in bool cancel);
 
   /** 
    * Allow the popup to automatically position itself.
