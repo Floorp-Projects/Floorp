@@ -342,7 +342,6 @@ function testDecoderGetEncoding()
     {encoding: "x-mac-cyrillic", labels: ["x-mac-cyrillic", "x-mac-ukrainian"]},
     {encoding: "gbk", labels: ["chinese", "csgb2312", "csiso58gb231280", "gb2312", "gb_2312", "gb_2312-80", "gbk", "iso-ir-58", "x-gbk"]},
     {encoding: "gb18030", labels: ["gb18030"]},
-    {encoding: "hz-gb-2312", labels: ["hz-gb-2312"]},
     {encoding: "big5", labels: ["big5", "cn-big5", "csbig5", "x-x-big5"]},
     {encoding: "big5-hkscs", labels: ["big5-hkscs"]},
     {encoding: "euc-jp", labels: ["cseucpkdfmtjapanese", "euc-jp", "x-euc-jp"]},
@@ -352,7 +351,7 @@ function testDecoderGetEncoding()
     {encoding: "utf-16le", labels: ["utf-16", "utf-16le"]},
     {encoding: "utf-16be", labels: ["utf-16be"]},
     {encoding: "x-user-defined", labels: ["x-user-defined"]},
-    {error: "TypeError", labels: ["x-windows-949", "\u0130SO-8859-1", "csiso2022kr", "iso-2022-kr", "iso-2022-cn", "iso-2022-cn-ext", "replacement"]},
+    {error: "TypeError", labels: ["x-windows-949", "\u0130SO-8859-1", "csiso2022kr", "iso-2022-kr", "iso-2022-cn", "iso-2022-cn-ext", "replacement", "hz-gb-2312"]},
   ];
 
   for (var le of labelEncodings) {
