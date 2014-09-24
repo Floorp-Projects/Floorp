@@ -168,6 +168,29 @@ toolbar[brighttext] #sync-button[status="active"]:hover:active:not([disabled="tr
   -moz-image-region: rect(0, 684px, 18px, 666px);
 }
 
+#panic-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 702px, 18px, 684px);
+}
+
+%ifdef XP_MACOSX
+#panic-button[cui-areatype="toolbar"]:hover:active:not([disabled="true"]) {
+  -moz-image-region: rect(18px, 702px, 36px, 684px);
+}
+
+#panic-button[cui-areatype="toolbar"][open] {
+  -moz-image-region: rect(36px, 702px, 54px, 684px);
+}
+%else
+#panic-button[cui-areatype="toolbar"][open] {
+  -moz-image-region: rect(18px, 702px, 36px, 684px);
+}
+%endif
+
+#panic-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+  transform: scaleX(-1);
+}
+
+
 #loop-call-button > .toolbarbutton-badge-container {
   list-style-image: url(chrome://browser/skin/loop/toolbar.png);
   -moz-image-region: rect(0, 18px, 18px, 0);
