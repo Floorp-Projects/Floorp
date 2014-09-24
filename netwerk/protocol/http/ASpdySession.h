@@ -39,8 +39,6 @@ public:
     return true;
   }
 
-  virtual void SendPing() = 0;
-
   const static uint32_t kSendingChunkSize = 4095;
   const static uint32_t kTCPSendBufferSize = 131072;
 
