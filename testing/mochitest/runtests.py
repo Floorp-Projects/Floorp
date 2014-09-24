@@ -1532,11 +1532,10 @@ class Mochitest(MochitestUtilsMixin):
 
       # check for crashes
       minidump_path = os.path.join(self.profile.profile, "minidumps")
-      crashed = mozcrash.check_for_crashes(minidump_path,
-                                           symbolsPath,
-                                           test_name=self.lastTestSeen)
+      crash_count = mozcrash.log_crashes(self.log, minidump_path, symbolsPath,
+                                         test=self.lastTestSeen)
 
-      if crashed or zombieProcesses:
+      if crash_count or zombieProcesses:
         status = 1
 
     finally:
