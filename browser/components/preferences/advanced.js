@@ -383,6 +383,7 @@ var gAdvancedPane = {
       cache.clear();
     } catch(ex) {}
     this.updateActualCacheSize();
+    Services.obs.notifyObservers(null, "clear-private-data", null);
   },
 
   /**
@@ -395,6 +396,7 @@ var gAdvancedPane = {
 
     this.updateActualAppCacheSize();
     this.updateOfflineApps();
+    Services.obs.notifyObservers(null, "clear-private-data", null);
   },
 
   readOfflineNotify: function()
