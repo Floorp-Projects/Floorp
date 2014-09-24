@@ -6,7 +6,7 @@
  */
 
 function spawnTest() {
-  let { target, panel } = yield initWebAudioEditor(CONNECT_TOGGLE_URL);
+  let [target, debuggee, panel] = yield initWebAudioEditor(CONNECT_TOGGLE_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS } = panelWin;
 

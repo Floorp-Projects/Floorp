@@ -35,7 +35,7 @@ function waitForDeviceClosed() {
 }
 
 function spawnTest() {
-  let { target, panel } = yield initWebAudioEditor(MEDIA_NODES_URL);
+  let [target, debuggee, panel] = yield initWebAudioEditor(MEDIA_NODES_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS, InspectorView } = panelWin;
   let gVars = InspectorView._propsView;

@@ -434,10 +434,10 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
     if (!this._initialized) {
       return;
     }
+    this.tabActor = null;
     this._initialized = false;
     off(this.tabActor, "window-destroyed", this._onGlobalDestroyed);
     off(this.tabActor, "window-ready", this._onGlobalCreated);
-    this.tabActor = null;
     this._nativeToActorID = null;
     this._callWatcher.eraseRecording();
     this._callWatcher.finalize();
