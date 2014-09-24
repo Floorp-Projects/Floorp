@@ -40,7 +40,7 @@ this.Log = {
     Config: 30,
     Debug:  20,
     Trace:  10,
-    All:    0,
+    All:    -1, // We don't want All to be falsy.
     Desc: {
       70: "FATAL",
       60: "ERROR",
@@ -49,7 +49,7 @@ this.Log = {
       30: "CONFIG",
       20: "DEBUG",
       10: "TRACE",
-      0:  "ALL"
+      "-1":  "ALL",
     },
     Numbers: {
       "FATAL": 70,
@@ -59,7 +59,7 @@ this.Log = {
       "CONFIG": 30,
       "DEBUG": 20,
       "TRACE": 10,
-      "ALL": 0,
+      "ALL": -1,
     }
   },
 
