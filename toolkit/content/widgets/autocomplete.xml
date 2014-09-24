@@ -1577,17 +1577,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               url = action.params.url;
               let desc = this._stringBundle.GetStringFromName("switchToTab");
               this._setUpDescription(this._action, desc, true);
-            } else if (action.type == "searchengine") {
-              emphasiseUrl = false;
-
-              let sourceStr = this._stringBundle.GetStringFromName("searchWithEngineForQuery");
-              title = this._generateEmphasisPairs(sourceStr, [
-                                                    [action.params.engineName, false],
-                                                    [action.params.searchQuery, true]
-                                                  ]);
-              // Remove the image, so we can style it ourselves with a generic
-              // search icon.
-              this.removeAttribute("image");
             }
 
             // Remove the "action" substring so that the correct style, if any,
@@ -1710,6 +1699,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
           // URL is in the format moz-action:ACTION,PARAMS
           // Where PARAMS is a JSON encoded object.
+          aUrl = decodeURI(aUrl);
           let [, type, params] = aUrl.match(/^moz-action:([^,]+),(.*)$/);
 
           let action = {
