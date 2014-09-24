@@ -329,7 +329,7 @@ class RemoteInputStream MOZ_FINAL
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  RemoteInputStream(DOMFileImpl* aBlobImpl)
+  explicit RemoteInputStream(DOMFileImpl* aBlobImpl)
     : mMonitor("RemoteInputStream.mMonitor")
     , mBlobImpl(aBlobImpl)
     , mWeakSeekableStream(nullptr)
