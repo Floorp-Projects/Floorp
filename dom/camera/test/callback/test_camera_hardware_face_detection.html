@@ -7,7 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=965420
   <title>Bug 965420 - Test camera hardware API for face detection</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="camera_common.js"></script>
+  <script type="text/javascript" src="../camera_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -150,16 +150,12 @@ var tests = [
           }
         } ]
       };
-
-      var handler = function(evt) {
-        ok(compareFaces(evt.faces, expected),
-          "facedetected event received the detected faces correctly");
+      camera.onFacesDetected = function(aFaces) {
+        ok(compareFaces(aFaces, expected),
+          "onFaceDetected received the detected faces correctly");
         camera.stopFaceDetection();
-        camera.removeEventListener('facesdetected', handler);
         next();
-      };
-
-      camera.addEventListener('facesdetected', handler);
+      }
       camera.startFaceDetection();
     }
   },
@@ -212,16 +208,12 @@ var tests = [
           }
         } ]
       };
-
-      var handler = function(evt) {
-        ok(compareFaces(evt.faces, expected),
-          "facedetected event received the detected faces correctly");
+      camera.onFacesDetected = function(aFaces) {
+        ok(compareFaces(aFaces, expected),
+          "onFaceDetected received the detected faces correctly");
         camera.stopFaceDetection();
-        camera.removeEventListener('facesdetected', handler);
         next();
-      };
-
-      camera.addEventListener('facesdetected', handler);
+      }
       camera.startFaceDetection();
     }
   },
@@ -243,16 +235,12 @@ var tests = [
           mouth:    null
         } ]
       };
-
-      var handler = function(evt) {
-        ok(compareFaces(evt.faces, expected),
-          "facedetected event received the detected faces correctly");
+      camera.onFacesDetected = function(aFaces) {
+        ok(compareFaces(aFaces, expected),
+          "onFaceDetected received the detected faces correctly");
         camera.stopFaceDetection();
-        camera.removeEventListener('facesdetected', handler);
         next();
-      };
-
-      camera.addEventListener('facesdetected', handler);
+      }
       camera.startFaceDetection();
     }
   },
@@ -262,16 +250,12 @@ var tests = [
       var expected = {
         faces: []
       };
-
-      var handler = function(evt) {
-        ok(compareFaces(evt.faces, expected),
-          "facedetected event received the detected faces correctly");
+      camera.onFacesDetected = function(aFaces) {
+        ok(compareFaces(aFaces, expected),
+          "onFaceDetected received the detected faces correctly");
         camera.stopFaceDetection();
-        camera.removeEventListener('facesdetected', handler);
         next();
-      };
-
-      camera.addEventListener('facesdetected', handler);
+      }
       camera.startFaceDetection();
     }
   },
@@ -305,13 +289,13 @@ CameraTest.begin("hardware", function(test) {
     } catch(e) { }
     ok(enabled, PREF_FACEDETECTION_ENABLED + " is " + enabled);
 
-    function onSuccess(d) {
-      cameraObj = d.camera;
-      document.getElementById('viewfinder').mozSrcObject = cameraObj;
+    function onSuccess(camera, config) {
+      document.getElementById('viewfinder').mozSrcObject = camera;
+      cameraObj = camera;
       CameraTest.next = function() {
         try {
           var t = testGenerator.next();
-          test.set(t.key, t.func.bind(undefined, cameraObj));
+          test.set(t.key, t.func.bind(undefined, camera));
         } catch(e) {
           if (e instanceof StopIteration) {
             end();
@@ -326,7 +310,7 @@ CameraTest.begin("hardware", function(test) {
       ok(false, "getCamera() failed with: " + error);
       end();
     }
-    navigator.mozCameras.getCamera(whichCamera, initialConfig).then(onSuccess, onError);
+    navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError);
   })
 });
 
