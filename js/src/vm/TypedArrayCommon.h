@@ -330,12 +330,13 @@ class ElementSpecific
         }
 
         // Copy |source| in case it overlaps the target elements being set.
-        void *data = target->zone()->template pod_malloc<uint8_t>(len * SpecificArray::BYTES_PER_ELEMENT);
+        size_t sourceByteLen = len * source->bytesPerElement();
+        void *data = target->zone()->template pod_malloc<uint8_t>(sourceByteLen);
         if (!data)
             return false;
         mozilla::PodCopy(static_cast<uint8_t*>(data),
                          static_cast<uint8_t*>(source->viewData()),
-                         len * SpecificArray::BYTES_PER_ELEMENT);
+                         sourceByteLen);
 
         switch (source->type()) {
           case Scalar::Int8: {
