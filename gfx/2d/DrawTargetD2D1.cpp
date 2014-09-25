@@ -155,7 +155,10 @@ DrawTargetD2D1::DrawFilter(FilterNode *aNode,
 
   mDC->SetAntialiasMode(D2DAAMode(aOptions.mAntialiasMode));
 
-  mDC->DrawImage(static_cast<FilterNodeD2D1*>(aNode)->OutputEffect(), D2DPoint(aDestPoint), D2DRect(aSourceRect));
+  FilterNodeD2D1* node = static_cast<FilterNodeD2D1*>(aNode);
+  node->WillDraw(this);
+
+  mDC->DrawImage(node->OutputEffect(), D2DPoint(aDestPoint), D2DRect(aSourceRect));
 
   FinalizeDrawing(aOptions.mCompositionOp, ColorPattern(Color()));
 }
@@ -701,7 +704,7 @@ DrawTargetD2D1::CreateGradientStops(GradientStop *rawStops, uint32_t aNumStops, 
 TemporaryRef<FilterNode>
 DrawTargetD2D1::CreateFilter(FilterType aType)
 {
-  return FilterNodeD2D1::Create(this, mDC, aType);
+  return FilterNodeD2D1::Create(mDC, aType);
 }
 
 bool
