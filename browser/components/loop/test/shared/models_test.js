@@ -355,8 +355,8 @@ describe("loop.shared.models", function() {
 
     beforeEach(function() {
       collection = new sharedModels.NotificationCollection();
-      sandbox.stub(l10n, "get", function(x) {
-        return "translated:" + x;
+      sandbox.stub(l10n, "get", function(x, y) {
+        return "translated:" + x + (y ? ':' + y : '');
       });
       notifData = {level: "error", message: "plop"};
       testNotif = new sharedModels.NotificationModel(notifData);
@@ -399,6 +399,15 @@ describe("loop.shared.models", function() {
         expect(collection).to.have.length.of(1);
         expect(collection.at(0).get("level")).eql("error");
         expect(collection.at(0).get("message")).eql("translated:fakeId");
+      });
+
+      it("should notify an error using a l10n string id + l10n properties",
+        function() {
+          collection.errorL10n("fakeId", "fakeProp");
+
+          expect(collection).to.have.length.of(1);
+          expect(collection.at(0).get("level")).eql("error");
+          expect(collection.at(0).get("message")).eql("translated:fakeId:fakeProp");
       });
     });
 

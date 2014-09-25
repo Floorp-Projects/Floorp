@@ -73,14 +73,14 @@ protected:
 
 private:
     enum {
-        kWhatNotify               = 'noti',
-        kWhatDisconnect           = 'disc',
-        kWhatPerformSeek          = 'seek',
-        kWhatPerformPlay          = 'play',
-        kWhatPerformPause         = 'paus',
-        kWhatPerformResume        = 'resu',
-        kWhatPerformSuspend       = 'susp',
-        kWhatPerformPlaybackEnded = 'ende',
+        kWhatNotify = 1,
+        kWhatDisconnect,
+        kWhatPerformSeek,
+        kWhatPerformPlay,
+        kWhatPerformPause,
+        kWhatPerformResume,
+        kWhatPerformSuspend,
+        kWhatPerformPlaybackEnded,
     };
 
     enum State {

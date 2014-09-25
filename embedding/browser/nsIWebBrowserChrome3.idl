@@ -6,10 +6,13 @@
 #include "nsIURI.idl"
 #include "nsIDOMNode.idl"
 
+interface nsIDocShell;
+interface nsIInputStream;
+
 /**
  * nsIWebBrowserChrome3 is an extension to nsIWebBrowserChrome2.
  */
-[scriptable, uuid(7f2aa813-b250-4e46-afeb-97b1e91bc9a5)]
+[scriptable, uuid(9e6c2372-5d9d-4ce8-ab9e-c5df1494dc84)]
 interface nsIWebBrowserChrome3 : nsIWebBrowserChrome2
 {
   /**
@@ -30,4 +33,18 @@ interface nsIWebBrowserChrome3 : nsIWebBrowserChrome2
                                 in nsIURI linkURI,
                                 in nsIDOMNode linkNode,
                                 in boolean isAppTab);
+
+  /**
+   * Determines whether a load should continue.
+   *
+   * @param aDocShell
+   *        The docshell performing the load.
+   * @param aURI
+   *        The URI being loaded.
+   * @param aReferrer
+   *        The referrer of the load.
+   */
+  bool shouldLoadURI(in nsIDocShell    aDocShell,
+                     in nsIURI         aURI,
+                     in nsIURI         aReferrer);
 };

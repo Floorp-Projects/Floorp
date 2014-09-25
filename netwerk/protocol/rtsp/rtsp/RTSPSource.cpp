@@ -384,7 +384,7 @@ void RTSPSource::onMessageReceived(const sp<AMessage> &msg) {
             break;
         }
 
-        case RtspConnectionHandler::kWhatAccessUnit:
+        case RtspConnectionHandler::kWhatAccessUnitComplete:
         {
             size_t trackIndex;
             CHECK(msg->findSize("trackIndex", &trackIndex));

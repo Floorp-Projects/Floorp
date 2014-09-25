@@ -207,6 +207,7 @@
 @BINPATH@/components/dom_xpath.xpt
 @BINPATH@/components/dom_xul.xpt
 @BINPATH@/components/dom_time.xpt
+@BINPATH@/components/dom_engineeringmode.xpt
 @BINPATH@/components/downloads.xpt
 @BINPATH@/components/editor.xpt
 @BINPATH@/components/embed_base.xpt
@@ -594,6 +595,10 @@
 ; InputMethod API
 @BINPATH@/components/MozKeyboard.js
 @BINPATH@/components/InputMethod.manifest
+
+@BINPATH@/components/EngineeringMode.manifest
+@BINPATH@/components/EngineeringModeAPI.js
+@BINPATH@/components/EngineeringModeService.js
 
 #ifdef MOZ_DEBUG
 @BINPATH@/components/TestInterfaceJS.js

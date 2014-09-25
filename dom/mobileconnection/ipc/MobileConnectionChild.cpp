@@ -242,7 +242,12 @@ NS_IMETHODIMP
 MobileConnectionChild::SetCallForwarding(JS::Handle<JS::Value> aOptions,
                                          nsIMobileConnectionCallback* aCallback)
 {
-  AutoSafeJSContext cx;
+  AutoJSAPI jsapi;
+  if (!NS_WARN_IF(jsapi.Init(&aOptions.toObject()))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  JSContext* cx = jsapi.cx();
   IPC::MozCallForwardingOptions options;
   if(!options.Init(cx, aOptions)) {
     return NS_ERROR_TYPE_ERR;
@@ -264,7 +269,12 @@ NS_IMETHODIMP
 MobileConnectionChild::SetCallBarring(JS::Handle<JS::Value> aOptions,
                                       nsIMobileConnectionCallback* aCallback)
 {
-  AutoSafeJSContext cx;
+  AutoJSAPI jsapi;
+  if (!NS_WARN_IF(jsapi.Init(&aOptions.toObject()))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  JSContext* cx = jsapi.cx();
   IPC::MozCallBarringOptions options;
   if(!options.Init(cx, aOptions)) {
     return NS_ERROR_TYPE_ERR;
@@ -278,7 +288,12 @@ NS_IMETHODIMP
 MobileConnectionChild::GetCallBarring(JS::Handle<JS::Value> aOptions,
                                       nsIMobileConnectionCallback* aCallback)
 {
-  AutoSafeJSContext cx;
+  AutoJSAPI jsapi;
+  if (!NS_WARN_IF(jsapi.Init(&aOptions.toObject()))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  JSContext* cx = jsapi.cx();
   IPC::MozCallBarringOptions options;
   if(!options.Init(cx, aOptions)) {
     return NS_ERROR_TYPE_ERR;
@@ -292,7 +307,12 @@ NS_IMETHODIMP
 MobileConnectionChild::ChangeCallBarringPassword(JS::Handle<JS::Value> aOptions,
                                                  nsIMobileConnectionCallback* aCallback)
 {
-  AutoSafeJSContext cx;
+  AutoJSAPI jsapi;
+  if (!NS_WARN_IF(jsapi.Init(&aOptions.toObject()))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  JSContext* cx = jsapi.cx();
   IPC::MozCallBarringOptions options;
   if(!options.Init(cx, aOptions)) {
     return NS_ERROR_TYPE_ERR;

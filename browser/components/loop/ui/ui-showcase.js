@@ -149,14 +149,14 @@
           ), 
 
           Section({name: "IncomingCallView"}, 
-            Example({summary: "Default / incoming video call", dashed: "true", style: {width: "280px"}}, 
+            Example({summary: "Default / incoming video call", dashed: "true", style: {width: "260px", height: "254px"}}, 
               React.DOM.div({className: "fx-embedded"}, 
                 IncomingCallView({model: mockConversationModel, 
                                   video: true})
               )
             ), 
 
-            Example({summary: "Default / incoming audio only call", dashed: "true", style: {width: "280px"}}, 
+            Example({summary: "Default / incoming audio only call", dashed: "true", style: {width: "260px", height: "254px"}}, 
               React.DOM.div({className: "fx-embedded"}, 
                 IncomingCallView({model: mockConversationModel, 
                                   video: false})
@@ -165,7 +165,7 @@
           ), 
 
           Section({name: "IncomingCallView-ActiveState"}, 
-            Example({summary: "Default", dashed: "true", style: {width: "280px"}}, 
+            Example({summary: "Default", dashed: "true", style: {width: "260px", height: "254px"}}, 
               React.DOM.div({className: "fx-embedded"}, 
                 IncomingCallView({model: mockConversationModel, 
                                    showDeclineMenu: true, 
@@ -319,13 +319,13 @@
               React.DOM.strong(null, "Note:"), " For the useable demo, you can access submitted data at ", 
               React.DOM.a({href: "https://input.allizom.org/"}, "input.allizom.org"), "."
             ), 
-            Example({summary: "Default (useable demo)", dashed: "true", style: {width: "280px"}}, 
+            Example({summary: "Default (useable demo)", dashed: "true", style: {width: "260px"}}, 
               FeedbackView({feedbackApiClient: stageFeedbackApiClient})
             ), 
-            Example({summary: "Detailed form", dashed: "true", style: {width: "280px"}}, 
+            Example({summary: "Detailed form", dashed: "true", style: {width: "260px"}}, 
               FeedbackView({feedbackApiClient: stageFeedbackApiClient, step: "form"})
             ), 
-            Example({summary: "Thank you!", dashed: "true", style: {width: "280px"}}, 
+            Example({summary: "Thank you!", dashed: "true", style: {width: "260px"}}, 
               FeedbackView({feedbackApiClient: stageFeedbackApiClient, step: "finished"})
             )
           ), 
