@@ -6673,6 +6673,27 @@
     "n_buckets": 10,
     "description": "Sidebar showing: seconds that the sidebar has been opened"
   },
+  "SHUTDOWN_PHASE_DURATION_TICKS_QUIT_APPLICATION": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 65,
+    "n_buckets": 10,
+    "description": "Duration of shutdown phase quit-application, as measured by the shutdown terminator, in seconds of activity"
+  },
+  "SHUTDOWN_PHASE_DURATION_TICKS_PROFILE_CHANGE_TEARDOWN": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 65,
+    "n_buckets": 10,
+    "description": "Duration of shutdown phase profile-change-teardown, as measured by the shutdown terminator, in seconds of activity"
+  },
+  "SHUTDOWN_PHASE_DURATION_TICKS_XPCOM_WILL_SHUTDOWN": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 65,
+    "n_buckets": 10,
+    "description": "Duration of shutdown phase xpcom-will-shutdown, as measured by the shutdown terminator, in seconds of activity"
+  },
   "BR_9_2_1_SUBJECT_ALT_NAMES": {
     "expires_in_version": "never",
     "kind": "enumerated",
