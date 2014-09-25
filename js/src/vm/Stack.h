@@ -1674,7 +1674,7 @@ class FrameIter
     // Both methods exist because of speed. thisv() will never rematerialize
     // an Ion frame, whereas computedThisValue() will.
     Value       computedThisValue() const;
-    Value       thisv() const;
+    Value       thisv(JSContext *cx);
 
     Value       returnValue() const;
     void        setReturnValue(const Value &v);

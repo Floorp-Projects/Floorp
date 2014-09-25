@@ -6450,7 +6450,7 @@ js_DumpInterpreterFrame(JSContext *cx, InterpreterFrame *start)
             fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
             MaybeDumpObject("staticScope", i.script()->getStaticScope(pc));
         }
-        MaybeDumpValue("this", i.thisv());
+        MaybeDumpValue("this", i.thisv(cx));
         if (!i.isJit()) {
             fprintf(stderr, "  rval: ");
             dumpValue(i.interpFrame()->returnValue());
