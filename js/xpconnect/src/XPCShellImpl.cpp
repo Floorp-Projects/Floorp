@@ -446,7 +446,7 @@ SendCommand(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    JSString* str = ToString(cx, args[0]);
+    RootedString str(cx, ToString(cx, args[0]));
     if (!str) {
         JS_ReportError(cx, "Could not convert argument 1 to string!");
         return false;
@@ -687,7 +687,7 @@ SetInterruptCallback(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     // Otherwise, we should have a callable object.
-    if (!args[0].isObject() || !JS_ObjectIsCallable(cx, &args[0].toObject())) {
+    if (!args[0].isObject() || !JS::IsCallable(&args[0].toObject())) {
         JS_ReportError(cx, "Argument must be callable");
         return false;
     }

@@ -45,7 +45,7 @@ public:
               const nsAString& aScriptURL, const Optional<nsAString>& aName,
               ErrorResult& aRv);
 
-  already_AddRefed<MessagePort>
+  already_AddRefed<mozilla::dom::workers::MessagePort>
   Port();
 
   uint64_t

@@ -79,11 +79,11 @@ ComputeThis(JSContext *cx, AbstractFramePtr frame)
  * arguments object.
  */
 static inline bool
-IsOptimizedArguments(AbstractFramePtr frame, Value *vp)
+IsOptimizedArguments(AbstractFramePtr frame, MutableHandleValue vp)
 {
-    if (vp->isMagic(JS_OPTIMIZED_ARGUMENTS) && frame.script()->needsArgsObj())
-        *vp = ObjectValue(frame.argsObj());
-    return vp->isMagic(JS_OPTIMIZED_ARGUMENTS);
+    if (vp.isMagic(JS_OPTIMIZED_ARGUMENTS) && frame.script()->needsArgsObj())
+        vp.setObject(frame.argsObj());
+    return vp.isMagic(JS_OPTIMIZED_ARGUMENTS);
 }
 
 /*
@@ -92,15 +92,14 @@ IsOptimizedArguments(AbstractFramePtr frame, Value *vp)
  * is not the builtin Function.prototype.apply.
  */
 static inline bool
-GuardFunApplyArgumentsOptimization(JSContext *cx, AbstractFramePtr frame, HandleValue callee,
-                                   Value *args, uint32_t argc)
+GuardFunApplyArgumentsOptimization(JSContext *cx, AbstractFramePtr frame, CallArgs &args)
 {
-    if (argc == 2 && IsOptimizedArguments(frame, &args[1])) {
-        if (!IsNativeFunction(callee, js_fun_apply)) {
+    if (args.length() == 2 && IsOptimizedArguments(frame, args[1])) {
+        if (!IsNativeFunction(args.calleev(), js_fun_apply)) {
             RootedScript script(cx, frame.script());
             if (!JSScript::argumentsOptimizationFailed(cx, script))
                 return false;
-            args[1] = ObjectValue(frame.argsObj());
+            args[1].setObject(frame.argsObj());
         }
     }
 
@@ -224,17 +223,17 @@ GetLengthProperty(const Value &lval, MutableHandleValue vp)
 }
 
 template <bool TypeOf> inline bool
-FetchName(JSContext *cx, HandleScript script, jsbytecode *pc, HandleObject obj,
-          HandleObject obj2, HandlePropertyName name, HandleShape shape,
-          MutableHandleValue vp)
+FetchName(JSContext *cx, HandleObject obj, HandleObject obj2, HandlePropertyName name,
+          HandleShape shape, MutableHandleValue vp)
 {
-    if (!shape && TypeOf) {
-        vp.setUndefined();
-        return true;
-    }
-
     if (!shape) {
-        js_ReportIsNotDefined(cx, script, pc, name);
+        if (TypeOf) {
+            vp.setUndefined();
+            return true;
+        }
+        JSAutoByteString printable;
+        if (AtomToPrintableString(cx, name, &printable))
+            js_ReportIsNotDefined(cx, printable.ptr());
         return false;
     }
 
@@ -485,7 +484,7 @@ GetElemOptimizedArguments(JSContext *cx, AbstractFramePtr frame, MutableHandleVa
 {
     JS_ASSERT(!*done);
 
-    if (IsOptimizedArguments(frame, lref.address())) {
+    if (IsOptimizedArguments(frame, lref)) {
         if (rref.isInt32()) {
             int32_t i = rref.toInt32();
             if (i >= 0 && uint32_t(i) < frame.numActualArgs()) {

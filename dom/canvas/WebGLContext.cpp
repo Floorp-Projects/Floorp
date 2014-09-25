@@ -1431,7 +1431,7 @@ WebGLContext::PresentScreenBuffer()
 void
 WebGLContext::DummyFramebufferOperation(const char *info)
 {
-    GLenum status = CheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
+    FBStatus status = CheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE)
         ErrorInvalidFramebufferOperation("%s: incomplete framebuffer", info);
 }

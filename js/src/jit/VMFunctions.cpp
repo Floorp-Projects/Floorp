@@ -35,7 +35,8 @@ namespace jit {
 // run before the constructors for static VMFunctions.
 /* static */ VMFunction *VMFunction::functions;
 
-AutoDetectInvalidation::AutoDetectInvalidation(JSContext *cx, Value *rval, IonScript *ionScript)
+AutoDetectInvalidation::AutoDetectInvalidation(JSContext *cx, MutableHandleValue rval,
+                                               IonScript *ionScript)
   : cx_(cx),
     ionScript_(ionScript ? ionScript : GetTopIonJSScript(cx)->ionScript()),
     rval_(rval),
@@ -84,7 +85,7 @@ InvokeFunction(JSContext *cx, HandleObject obj0, uint32_t argc, Value *argv, Val
     // we use InvokeConstructor that creates it at the callee side.
     RootedValue rv(cx);
     if (thisv.isMagic(JS_IS_CONSTRUCTING)) {
-        if (!InvokeConstructor(cx, ObjectValue(*obj), argc, argvWithoutThis, rv.address()))
+        if (!InvokeConstructor(cx, ObjectValue(*obj), argc, argvWithoutThis, &rv))
             return false;
     } else {
         if (!Invoke(cx, thisv, ObjectValue(*obj), argc, argvWithoutThis, &rv))
@@ -348,7 +349,7 @@ ArrayPopDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 {
     JS_ASSERT(obj->is<ArrayObject>());
 
-    AutoDetectInvalidation adi(cx, rval.address());
+    AutoDetectInvalidation adi(cx, rval);
 
     JS::AutoValueArray<2> argv(cx);
     argv[0].setUndefined();
@@ -400,7 +401,7 @@ ArrayShiftDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 {
     JS_ASSERT(obj->is<ArrayObject>());
 
-    AutoDetectInvalidation adi(cx, rval.address());
+    AutoDetectInvalidation adi(cx, rval);
 
     JS::AutoValueArray<2> argv(cx);
     argv[0].setUndefined();
@@ -1114,7 +1115,7 @@ SetDenseElement(JSContext *cx, HandleObject obj, int32_t index, HandleValue valu
 void
 AutoDetectInvalidation::setReturnOverride()
 {
-    cx_->runtime()->jitRuntime()->setIonReturnOverride(*rval_);
+    cx_->runtime()->jitRuntime()->setIonReturnOverride(rval_.get());
 }
 
 #ifdef DEBUG

@@ -75,7 +75,7 @@
     { std::stringstream ss; \
       ss << nsPrintfCString(prefix, __VA_ARGS__).get(); \
       AppendToString(ss, fm, ":", "", true); \
-      APZC_LOG("%s", ss.str().c_str()); \
+      APZC_LOG("%s\n", ss.str().c_str()); \
     }
 #else
 #  define APZC_LOG(...)
@@ -2299,6 +2299,22 @@ void AsyncPanZoomController::FlushRepaintForOverscrollHandoff() {
   UpdateSharedCompositorFrameMetrics();
 }
 
+void AsyncPanZoomController::FlushRepaintForNewInputBlock() {
+  APZC_LOG("%p flushing repaint for new input block\n", this);
+
+  ReentrantMonitorAutoEnter lock(mMonitor);
+  // We need to send a new repaint request unthrottled, but that
+  // will obsolete any pending repaint request in the paint throttler.
+  // Therefore we should clear out the pending task and restore the
+  // state of mLastPaintRequestMetrics to what it was before the
+  // pending task was queued.
+  mPaintThrottler.CancelPendingTask();
+  mLastPaintRequestMetrics = mLastDispatchedPaintMetrics;
+
+  RequestContentRepaint(mFrameMetrics, false /* not throttled */);
+  UpdateSharedCompositorFrameMetrics();
+}
+
 bool AsyncPanZoomController::SnapBackIfOverscrolled() {
   ReentrantMonitorAutoEnter lock(mMonitor);
   if (IsOverscrolled()) {
@@ -2323,7 +2339,7 @@ void AsyncPanZoomController::RequestContentRepaint() {
   RequestContentRepaint(mFrameMetrics);
 }
 
-void AsyncPanZoomController::RequestContentRepaint(FrameMetrics& aFrameMetrics) {
+void AsyncPanZoomController::RequestContentRepaint(FrameMetrics& aFrameMetrics, bool aThrottled) {
   aFrameMetrics.SetDisplayPortMargins(
     CalculatePendingDisplayPort(aFrameMetrics,
                                 GetVelocityVector(),
@@ -2349,12 +2365,16 @@ void AsyncPanZoomController::RequestContentRepaint(FrameMetrics& aFrameMetrics) 
   }
 
   SendAsyncScrollEvent();
-  mPaintThrottler.PostTask(
-    FROM_HERE,
-    UniquePtr<CancelableTask>(NewRunnableMethod(this,
-                      &AsyncPanZoomController::DispatchRepaintRequest,
-                      aFrameMetrics)),
-    GetFrameTime());
+  if (aThrottled) {
+    mPaintThrottler.PostTask(
+      FROM_HERE,
+      UniquePtr<CancelableTask>(NewRunnableMethod(this,
+                        &AsyncPanZoomController::DispatchRepaintRequest,
+                        aFrameMetrics)),
+      GetFrameTime());
+  } else {
+    DispatchRepaintRequest(aFrameMetrics);
+  }
 
   aFrameMetrics.SetPresShellId(mLastContentPaintMetrics.GetPresShellId());
   mLastPaintRequestMetrics = aFrameMetrics;

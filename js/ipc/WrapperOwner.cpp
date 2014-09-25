@@ -11,6 +11,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "jsfriendapi.h"
 #include "xpcprivate.h"
+#include "WrapperFactory.h"
 
 using namespace js;
 using namespace JS;
@@ -38,8 +39,8 @@ WrapperOwner::idOfUnchecked(JSObject *obj)
     Value v = GetProxyExtra(obj, 1);
     MOZ_ASSERT(v.isDouble());
 
-    ObjectId objId = BitwiseCast<uint64_t>(v.toDouble());
-    MOZ_ASSERT(objId);
+    ObjectId objId = ObjectId::deserialize(BitwiseCast<uint64_t>(v.toDouble()));
+    MOZ_ASSERT(!objId.isNull());
 
     return objId;
 }
@@ -663,22 +664,49 @@ CPOWProxyHandler::objectMoved(JSObject *proxy, const JSObject *old) const
 }
 
 bool
-CPOWProxyHandler::isCallable(JSObject *obj) const
+CPOWProxyHandler::isCallable(JSObject *proxy) const
 {
-    return OwnerOf(obj)->isCallable(obj);
-}
-
-bool
-CPOWProxyHandler::isConstructor(JSObject *obj) const
-{
-    return isCallable(obj);
+    WrapperOwner *parent = OwnerOf(proxy);
+    if (!parent->active())
+        return false;
+    return parent->isCallable(proxy);
 }
 
 bool
 WrapperOwner::isCallable(JSObject *obj)
 {
     ObjectId objId = idOf(obj);
-    return !!(objId & OBJECT_IS_CALLABLE);
+
+    bool callable = false;
+    if (!CallIsCallable(objId, &callable)) {
+        NS_WARNING("IPC isCallable() failed");
+        return false;
+    }
+
+    return callable;
+}
+
+bool
+CPOWProxyHandler::isConstructor(JSObject *proxy) const
+{
+    WrapperOwner *parent = OwnerOf(proxy);
+    if (!parent->active())
+        return false;
+    return parent->isConstructor(proxy);
+}
+
+bool
+WrapperOwner::isConstructor(JSObject *obj)
+{
+    ObjectId objId = idOf(obj);
+
+    bool constructor = false;
+    if (!CallIsConstructor(objId, &constructor)) {
+        NS_WARNING("IPC isConstructor() failed");
+        return false;
+    }
+
+    return constructor;
 }
 
 void
@@ -843,15 +871,18 @@ WrapperOwner::toObjectVariant(JSContext *cx, JSObject *objArg, ObjectVariant *ob
     // wrappers, then the wrapper might be GCed while the target remained alive.
     // Whenever operating on an object that comes from the table, we wrap it
     // in findObjectById.
-    obj = js::UncheckedUnwrap(obj, false);
+    unsigned wrapperFlags = 0;
+    obj = js::UncheckedUnwrap(obj, false, &wrapperFlags);
     if (obj && IsCPOW(obj) && OwnerOf(obj) == this) {
-        *objVarp = LocalObject(idOf(obj));
+        *objVarp = LocalObject(idOf(obj).serialize());
         return true;
     }
+    bool waiveXray = wrapperFlags & xpc::WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG;
 
-    ObjectId id = objectIds_.find(obj);
-    if (id) {
-        *objVarp = RemoteObject(id);
+    ObjectId id = objectIdMap(waiveXray).find(obj);
+    if (!id.isNull()) {
+        MOZ_ASSERT(id.hasXrayWaiver() == waiveXray);
+        *objVarp = RemoteObject(id.serialize());
         return true;
     }
 
@@ -860,22 +891,13 @@ WrapperOwner::toObjectVariant(JSContext *cx, JSObject *objArg, ObjectVariant *ob
     if (mozilla::dom::IsDOMObject(obj))
         mozilla::dom::TryPreserveWrapper(obj);
 
-    id = ++lastId_;
-    if (id > MAX_CPOW_IDS) {
-        JS_ReportError(cx, "CPOW id limit reached");
-        return false;
-    }
-
-    id <<= OBJECT_EXTRA_BITS;
-    if (JS_ObjectIsCallable(cx, obj))
-        id |= OBJECT_IS_CALLABLE;
-
+    id = ObjectId(nextSerialNumber_++, waiveXray);
     if (!objects_.add(id, obj))
         return false;
-    if (!objectIds_.add(cx, obj, id))
+    if (!objectIdMap(waiveXray).add(cx, obj, id))
         return false;
 
-    *objVarp = RemoteObject(id);
+    *objVarp = RemoteObject(id.serialize());
     return true;
 }
 
@@ -892,14 +914,9 @@ WrapperOwner::fromObjectVariant(JSContext *cx, ObjectVariant objVar)
 JSObject *
 WrapperOwner::fromRemoteObjectVariant(JSContext *cx, RemoteObject objVar)
 {
-    ObjectId objId = objVar.id();
+    ObjectId objId = ObjectId::deserialize(objVar.serializedId());
     RootedObject obj(cx, findCPOWById(objId));
     if (!obj) {
-        // If we didn't find an existing CPOW, we need to create one.
-        if (objId > MAX_CPOW_IDS) {
-            JS_ReportError(cx, "unusable CPOW id");
-            return nullptr;
-        }
 
         // All CPOWs live in the privileged junk scope.
         RootedObject junkScope(cx, xpc::PrivilegedJunkScope());
@@ -920,7 +937,7 @@ WrapperOwner::fromRemoteObjectVariant(JSContext *cx, RemoteObject objVar)
         incref();
 
         SetProxyExtra(obj, 0, PrivateValue(this));
-        SetProxyExtra(obj, 1, DoubleValue(BitwiseCast<double>(objId)));
+        SetProxyExtra(obj, 1, DoubleValue(BitwiseCast<double>(objId.serialize())));
     }
 
     if (!JS_WrapObject(cx, &obj))
@@ -931,7 +948,7 @@ WrapperOwner::fromRemoteObjectVariant(JSContext *cx, RemoteObject objVar)
 JSObject *
 WrapperOwner::fromLocalObjectVariant(JSContext *cx, LocalObject objVar)
 {
-    ObjectId id = objVar.id();
+    ObjectId id = ObjectId::deserialize(objVar.serializedId());
     Rooted<JSObject*> obj(cx, findObjectById(cx, id));
     if (!obj)
         return nullptr;

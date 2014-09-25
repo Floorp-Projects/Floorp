@@ -256,6 +256,28 @@ XXX The winner is the outermost setting in conflicting settings like these:
                                  NS_MATHML_COMPRESSED,
                                  NS_MATHML_COMPRESSED);
   }
+
+  /* Set flags for dtls font feature settings.
+
+     dtls
+     Dotless Forms
+     This feature provides dotless forms for Math Alphanumeric
+     characters, such as U+1D422 MATHEMATICAL BOLD SMALL I,
+     U+1D423 MATHEMATICAL BOLD SMALL J, U+1D456
+     U+MATHEMATICAL ITALIC SMALL I, U+1D457 MATHEMATICAL ITALIC
+     SMALL J, and so on.
+     The dotless forms are to be used as base forms for placing
+     mathematical accents over them.
+
+     To opt out of this change, add the following to the stylesheet:
+     "font-feature-settings: 'dtls' 0"
+   */
+  if (overscriptFrame &&
+      NS_MATHML_EMBELLISH_IS_ACCENTOVER(mEmbellishData.flags) &&
+      !NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags)) {
+    PropagatePresentationDataFor(baseFrame, NS_MATHML_DTLS, NS_MATHML_DTLS);
+  }
+
   return NS_OK;
 }
 
