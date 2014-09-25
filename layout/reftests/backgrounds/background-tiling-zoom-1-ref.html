@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html reftest-zoom="1.3">
+<head>
+<title>Pixel rounding testcase</title>
+<style type="text/css">
+
+  html, body {
+    margin: 0;
+    border: none;
+    padding: 0;
+  }
+
+  div {
+    background-color: lime;
+    border: 1px solid black;
+    margin: 5px;
+    position: absolute
+  }
+
+  div.horizontal {
+    height: 10px;
+    left: 0px;
+  }
+
+  div.vertical {
+    top: 120px;
+    width: 10px;
+  }
+
+  div.horizontal-single-color {
+    height: 10px;
+    left: 40px;
+  }
+
+  div.vertical-single-color {
+    top: 160px;
+    width: 10px;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="horizontal" style="top: 0px; width: 30px"></div>
+<div class="horizontal" style="top: 20px; width: 30.1px"></div>
+<div class="horizontal" style="top: 40px; width: 30.3px"></div>
+<div class="horizontal" style="top: 60px; width: 30.5px"></div>
+<div class="horizontal" style="top: 80px; width: 30.7px"></div>
+<div class="horizontal" style="top: 100px; width: 30.9px"></div>
+
+<div class="horizontal-single-color" style="top: 0px; width: 30px"></div>
+<div class="horizontal-single-color" style="top: 20px; width: 30.1px"></div>
+<div class="horizontal-single-color" style="top: 40px; width: 30.3px"></div>
+<div class="horizontal-single-color" style="top: 60px; width: 30.5px"></div>
+<div class="horizontal-single-color" style="top: 80px; width: 30.7px"></div>
+<div class="horizontal-single-color" style="top: 100px; width: 30.9px"></div>
+
+<div class="vertical" style="left: 0px; height: 30px"></div>
+<div class="vertical" style="left: 20px; height: 30.1px"></div>
+<div class="vertical" style="left: 40px; height: 30.3px"></div>
+<div class="vertical" style="left: 60px; height: 30.5px"></div>
+<div class="vertical" style="left: 80px; height: 30.7px"></div>
+<div class="vertical" style="left: 100px; height: 30.9px"></div>
+
+<div class="vertical-single-color" style="left: 0px; height: 30px"></div>
+<div class="vertical-single-color" style="left: 20px; height: 30.1px"></div>
+<div class="vertical-single-color" style="left: 40px; height: 30.3px"></div>
+<div class="vertical-single-color" style="left: 60px; height: 30.5px"></div>
+<div class="vertical-single-color" style="left: 80px; height: 30.7px"></div>
+<div class="vertical-single-color" style="left: 100px; height: 30.9px"></div>
+
+</body>
+</html>
