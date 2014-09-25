@@ -19,14 +19,8 @@ using namespace mozilla::dom::mobilemessage;
 
 namespace {
 
-const char* kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
 #define kPrefMmsDefaultServiceId "dom.mms.defaultServiceId"
 #define kPrefSmsDefaultServiceId "dom.sms.defaultServiceId"
-const char* kObservedPrefs[] = {
-  kPrefMmsDefaultServiceId,
-  kPrefSmsDefaultServiceId,
-  nullptr
-};
 
 // TODO: Bug 767082 - WebSMS: sSmsChild leaks at shutdown
 PSmsChild* gSmsChild;
@@ -86,6 +80,7 @@ SendCursorRequest(const IPCMobileMessageCursor& aRequest,
 uint32_t
 getDefaultServiceId(const char* aPrefKey)
 {
+  static const char* kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
   int32_t id = mozilla::Preferences::GetInt(aPrefKey, 0);
   int32_t numRil = mozilla::Preferences::GetInt(kPrefRilNumRadioInterfaces, 1);
 
@@ -119,6 +114,11 @@ SmsIPCService::GetSingleton()
 
 SmsIPCService::SmsIPCService()
 {
+  static const char* kObservedPrefs[] = {
+    kPrefMmsDefaultServiceId,
+    kPrefSmsDefaultServiceId,
+    nullptr
+  };
   Preferences::AddStrongObservers(this, kObservedPrefs);
   mMmsDefaultServiceId = getDefaultServiceId(kPrefMmsDefaultServiceId);
   mSmsDefaultServiceId = getDefaultServiceId(kPrefSmsDefaultServiceId);
