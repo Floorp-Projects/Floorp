@@ -1064,10 +1064,11 @@ nsComputedDOMStyle::DoGetContent()
           NS_ABORT_IF_FALSE(eCSSUnit_None != a->Item(typeItem).GetUnit(),
                             "'none' should be handled as identifier value");
           nsString type;
-          a->Item(typeItem).GetStringValue(type);
+          a->Item(typeItem).AppendToString(eCSSProperty_list_style_type,
+                                           type, nsCSSValue::eNormalized);
           if (!type.LowerCaseEqualsLiteral("decimal")) {
             str.AppendLiteral(", ");
-            nsStyleUtil::AppendEscapedCSSIdent(type, str);
+            str.Append(type);
           }
 
           str.Append(char16_t(')'));
@@ -2977,12 +2978,42 @@ CSSValue*
 nsComputedDOMStyle::DoGetListStyleType()
 {
   nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
-  // want SetIdent
-  nsString type;
-  StyleList()->GetListStyleType(type);
-  nsString value;
-  nsStyleUtil::AppendEscapedCSSIdent(type, value);
-  val->SetString(value);
+  CounterStyle* style = StyleList()->GetCounterStyle();
+  AnonymousCounterStyle* anonymous = style->AsAnonymous();
+  if (!anonymous) {
+    // want SetIdent
+    nsString type;
+    StyleList()->GetListStyleType(type);
+    nsString value;
+    nsStyleUtil::AppendEscapedCSSIdent(type, value);
+    val->SetString(value);
+  } else {
+    nsAutoString tmp;
+    tmp.AppendLiteral("symbols(");
+
+    uint8_t system = anonymous->GetSystem();
+    NS_ASSERTION(system == NS_STYLE_COUNTER_SYSTEM_CYCLIC ||
+                 system == NS_STYLE_COUNTER_SYSTEM_NUMERIC ||
+                 system == NS_STYLE_COUNTER_SYSTEM_ALPHABETIC ||
+                 system == NS_STYLE_COUNTER_SYSTEM_SYMBOLIC ||
+                 system == NS_STYLE_COUNTER_SYSTEM_FIXED,
+                 "Invalid system for anonymous counter style.");
+    if (system != NS_STYLE_COUNTER_SYSTEM_SYMBOLIC) {
+      AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(
+              system, nsCSSProps::kCounterSystemKTable), tmp);
+      tmp.Append(' ');
+    }
+
+    const nsTArray<nsString>& symbols = anonymous->GetSymbols();
+    NS_ASSERTION(symbols.Length() > 0,
+                 "No symbols in the anonymous counter style");
+    for (size_t i = 0, iend = symbols.Length(); i < iend; i++) {
+      nsStyleUtil::AppendEscapedCSSString(symbols[i], tmp);
+      tmp.Append(' ');
+    }
+    tmp.Replace(tmp.Length() - 1, 1, char16_t(')'));
+    val->SetString(tmp);
+  }
   return val;
 }
 

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="test-common.css">
+<style type="text/css">
+  .invalid {
+    list-style-type: lower-greek;
+    list-style-type: symbols(a b c);
+    list-style-type: symbols(alphabetic a b c);
+    list-style-type: symbols(numeric 0 1 2);
+    list-style-type: symbols(additive 'a' 'b');
+    list-style-type: symbols(fixed);
+    list-style-type: symbols(alphabetic 'a');
+    list-style-type: symbols(numeric '0');
+  }
+</style>
+<ol start="-2" class="invalid">
+  <li><li><li><li><li>
+  <li><li><li><li><li>
+</ol>
