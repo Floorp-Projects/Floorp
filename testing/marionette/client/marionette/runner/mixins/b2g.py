@@ -74,6 +74,9 @@ class B2GTestResultMixin(object):
                 error_re = re.compile(r"""[\s\S]*(exception|error)[\s\S]*""",
                                       flags=re.IGNORECASE)
                 logcat = device_manager.getLogcat()
+                # Due to Bug 1050211
+                if len(logcat) == 1:
+                    logcat = logcat[0].splitlines()
                 latest = []
                 iters = len(logcat) - 1
                 # reading from the latest line
@@ -101,7 +104,7 @@ class B2GTestResultMixin(object):
 
     def b2g_output_modifier(self, test, result_expected, result_actual, output, context):
         # output is the actual string output from the test, so we have to do string comparison
-        if "Broken pipe" in output or "Connection timed out" in output:
+        if "IOError" in output or "Broken pipe" in output or "Connection timed out" in output:
             extra_output = self._diagnose_socket()
             if extra_output:
                 self.logger.error(extra_output)

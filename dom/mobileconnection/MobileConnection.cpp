@@ -21,6 +21,9 @@
 #include "nsJSUtils.h"
 #include "nsServiceManagerUtils.h"
 
+#ifdef CONVERT_STRING_TO_NULLABLE_ENUM
+#undef CONVERT_STRING_TO_NULLABLE_ENUM
+#endif
 #define CONVERT_STRING_TO_NULLABLE_ENUM(_string, _enumType, _enum)      \
 {                                                                       \
   uint32_t i = 0;                                                       \

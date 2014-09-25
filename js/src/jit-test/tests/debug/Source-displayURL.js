@@ -69,3 +69,23 @@ g.evaluate('function f() {}\n' +
            {displayURL: 'http://example.com/bar.js'});
 assertEq(getDisplayURL(), 'http://example.com/foo.js');
 
+
+// Bug 981987 reported that we hadn't set sourceURL yet when firing onNewScript
+// from the Function constructor.
+var capturedScript;
+var capturedDisplayURL;
+var capturedSourceMapURL;
+dbg.onNewScript = function (script) {
+  capturedScript = script;
+  capturedDisplayURL = script.source.displayURL;
+  capturedSourceMapURL = script.sourceMapURL;
+  dbg.onNewScript = undefined;
+};
+var fun = gw.makeDebuggeeValue(g.Function('//# sourceURL=munge.js\n//# sourceMappingURL=grunge.map\n'));
+assertEq(capturedScript, fun.script);
+
+assertEq(capturedDisplayURL, fun.script.source.displayURL);
+assertEq(capturedDisplayURL, 'munge.js');
+
+assertEq(capturedSourceMapURL, fun.script.sourceMapURL);
+assertEq(capturedSourceMapURL, 'grunge.map');

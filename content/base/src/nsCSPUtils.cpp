@@ -214,7 +214,7 @@ nsCSPBaseSrc::~nsCSPBaseSrc()
 // nsCSPKeywordSrc and nsCSPHashSource fall back to this base class
 // implementation which will never allow the load.
 bool
-nsCSPBaseSrc::permits(nsIURI* aUri, const nsAString& aNonce) const
+nsCSPBaseSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected) const
 {
 #ifdef PR_LOGGING
   {
@@ -251,7 +251,7 @@ nsCSPSchemeSrc::~nsCSPSchemeSrc()
 }
 
 bool
-nsCSPSchemeSrc::permits(nsIURI* aUri, const nsAString& aNonce) const
+nsCSPSchemeSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected) const
 {
 #ifdef PR_LOGGING
   {
@@ -288,7 +288,7 @@ nsCSPHostSrc::~nsCSPHostSrc()
 }
 
 bool
-nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce) const
+nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected) const
 {
 #ifdef PR_LOGGING
   {
@@ -342,6 +342,34 @@ nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce) const
     return false;
   }
 
+  // If there is a path, we have to enforce path-level matching,
+  // unless the channel got redirected, see:
+  // http://www.w3.org/TR/CSP11/#source-list-paths-and-redirects
+  if (!aWasRedirected && !mPath.IsEmpty()) {
+    // cloning uri so we can ignore the ref
+    nsCOMPtr<nsIURI> uri;
+    aUri->CloneIgnoringRef(getter_AddRefs(uri));
+
+    nsAutoCString uriPath;
+    rv = uri->GetPath(uriPath);
+    NS_ENSURE_SUCCESS(rv, false);
+    // check if the last character of mPath is '/'; if so
+    // we just have to check loading resource is within
+    // the allowed path.
+    if (mPath.Last() == '/') {
+      if (!StringBeginsWith(NS_ConvertUTF8toUTF16(uriPath), mPath)) {
+        return false;
+      }
+    }
+    // otherwise mPath whitelists a specific file, and we have to
+    // check if the loading resource matches that whitelisted file.
+    else {
+      if (!mPath.Equals(NS_ConvertUTF8toUTF16(uriPath))) {
+        return false;
+      }
+    }
+  }
+
   // If port uses wildcard, allow the load.
   if (mPort.EqualsASCII("*")) {
     return true;
@@ -369,7 +397,7 @@ nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce) const
     }
   }
 
-  // At the end: scheme, host, port, match; allow the load.
+  // At the end: scheme, host, path, and port match -> allow the load.
   return true;
 }
 
@@ -397,9 +425,8 @@ nsCSPHostSrc::toString(nsAString& outStr) const
     outStr.Append(mPort);
   }
 
-  // in CSP 1.1, paths are ignoed
-  // outStr.Append(mPath);
-  // outStr.Append(mFileAndArguments);
+  // append path
+  outStr.Append(mPath);
 }
 
 void
@@ -421,13 +448,6 @@ nsCSPHostSrc::appendPath(const nsAString& aPath)
 {
   mPath.Append(aPath);
   ToLowerCase(mPath);
-}
-
-void
-nsCSPHostSrc::setFileAndArguments(const nsAString& aFile)
-{
-  mFileAndArguments = aFile;
-  ToLowerCase(mFileAndArguments);
 }
 
 /* ===== nsCSPKeywordSrc ===================== */
@@ -469,7 +489,7 @@ nsCSPNonceSrc::~nsCSPNonceSrc()
 }
 
 bool
-nsCSPNonceSrc::permits(nsIURI* aUri, const nsAString& aNonce) const
+nsCSPNonceSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected) const
 {
 #ifdef PR_LOGGING
   {
@@ -599,7 +619,7 @@ nsCSPDirective::~nsCSPDirective()
 }
 
 bool
-nsCSPDirective::permits(nsIURI* aUri, const nsAString& aNonce) const
+nsCSPDirective::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected) const
 {
 #ifdef PR_LOGGING
   {
@@ -610,7 +630,7 @@ nsCSPDirective::permits(nsIURI* aUri, const nsAString& aNonce) const
 #endif
 
   for (uint32_t i = 0; i < mSrcs.Length(); i++) {
-    if (mSrcs[i]->permits(aUri, aNonce)) {
+    if (mSrcs[i]->permits(aUri, aNonce, aWasRedirected)) {
       return true;
     }
   }
@@ -621,7 +641,7 @@ bool
 nsCSPDirective::permits(nsIURI* aUri) const
 {
   nsString dummyNonce;
-  return permits(aUri, dummyNonce);
+  return permits(aUri, dummyNonce, false);
 }
 
 bool
@@ -754,6 +774,7 @@ bool
 nsCSPPolicy::permits(nsContentPolicyType aContentType,
                      nsIURI* aUri,
                      const nsAString& aNonce,
+                     bool aWasRedirected,
                      nsAString& outViolatedDirective) const
 {
 #ifdef PR_LOGGING
@@ -774,7 +795,7 @@ nsCSPPolicy::permits(nsContentPolicyType aContentType,
   for (uint32_t i = 0; i < mDirectives.Length(); i++) {
     // Check if the directive name matches
     if (mDirectives[i]->restrictsContentType(aContentType)) {
-      if (!mDirectives[i]->permits(aUri, aNonce)) {
+      if (!mDirectives[i]->permits(aUri, aNonce, aWasRedirected)) {
         mDirectives[i]->toString(outViolatedDirective);
         return false;
       }
@@ -795,7 +816,7 @@ nsCSPPolicy::permits(nsContentPolicyType aContentType,
   // If the above loop runs through, we haven't found a matching directive.
   // Avoid relooping, just store the result of default-src while looping.
   if (defaultDir) {
-    if (!defaultDir->permits(aUri, aNonce)) {
+    if (!defaultDir->permits(aUri, aNonce, aWasRedirected)) {
       defaultDir->toString(outViolatedDirective);
       return false;
     }

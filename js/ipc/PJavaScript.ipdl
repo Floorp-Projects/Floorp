@@ -45,6 +45,9 @@ both:
     rpc InstanceOf(uint64_t objId, JSIID iid) returns (ReturnStatus rs, bool instanceof);
     rpc DOMInstanceOf(uint64_t objId, int prototypeID, int depth) returns (ReturnStatus rs, bool instanceof);
 
+    rpc IsCallable(uint64_t objId) returns (bool result);
+    rpc IsConstructor(uint64_t objId) returns (bool result);
+
 parent:
     async __delete__();
 };

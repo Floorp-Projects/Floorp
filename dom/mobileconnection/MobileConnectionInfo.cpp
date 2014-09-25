@@ -10,6 +10,9 @@
 
 #include "jsapi.h"
 
+#ifdef CONVERT_STRING_TO_NULLABLE_ENUM
+#undef CONVERT_STRING_TO_NULLABLE_ENUM
+#endif
 #define CONVERT_STRING_TO_NULLABLE_ENUM(_string, _enumType, _enum)      \
 {                                                                       \
   _enum.SetNull();                                                      \
@@ -117,7 +120,7 @@ MobileConnectionInfo::Update(nsIMobileConnectionInfo* aInfo)
   CONVERT_STRING_TO_NULLABLE_ENUM(type, MobileConnectionType, mType);
 
   // Update mSignalStrength
-  AutoSafeJSContext cx;
+  AutoJSContext cx;
   JS::Rooted<JS::Value> signalStrength(cx, JSVAL_VOID);
   aInfo->GetSignalStrength(&signalStrength);
   if (signalStrength.isNumber()) {

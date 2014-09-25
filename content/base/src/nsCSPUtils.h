@@ -191,7 +191,7 @@ class nsCSPBaseSrc {
     nsCSPBaseSrc();
     virtual ~nsCSPBaseSrc();
 
-    virtual bool permits(nsIURI* aUri, const nsAString& aNonce) const;
+    virtual bool permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected) const;
     virtual bool allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) const;
     virtual void toString(nsAString& outStr) const = 0;
 };
@@ -203,7 +203,7 @@ class nsCSPSchemeSrc : public nsCSPBaseSrc {
     explicit nsCSPSchemeSrc(const nsAString& aScheme);
     virtual ~nsCSPSchemeSrc();
 
-    bool permits(nsIURI* aUri, const nsAString& aNonce) const;
+    bool permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected) const;
     void toString(nsAString& outStr) const;
 
   private:
@@ -217,20 +217,18 @@ class nsCSPHostSrc : public nsCSPBaseSrc {
     explicit nsCSPHostSrc(const nsAString& aHost);
     virtual ~nsCSPHostSrc();
 
-    bool permits(nsIURI* aUri, const nsAString& aNonce) const;
+    bool permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected) const;
     void toString(nsAString& outStr) const;
 
     void setScheme(const nsAString& aScheme);
     void setPort(const nsAString& aPort);
     void appendPath(const nsAString &aPath);
-    void setFileAndArguments(const nsAString& aFile);
 
   private:
     nsString mScheme;
     nsString mHost;
     nsString mPort;
     nsString mPath;
-    nsString mFileAndArguments;
 };
 
 /* =============== nsCSPKeywordSrc ============ */
@@ -254,7 +252,7 @@ class nsCSPNonceSrc : public nsCSPBaseSrc {
     explicit nsCSPNonceSrc(const nsAString& aNonce);
     virtual ~nsCSPNonceSrc();
 
-    bool permits(nsIURI* aUri, const nsAString& aNonce) const;
+    bool permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected) const;
     bool allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) const;
     void toString(nsAString& outStr) const;
 
@@ -298,7 +296,7 @@ class nsCSPDirective {
     explicit nsCSPDirective(enum CSPDirective aDirective);
     virtual ~nsCSPDirective();
 
-    bool permits(nsIURI* aUri, const nsAString& aNonce) const;
+    bool permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected) const;
     bool permits(nsIURI* aUri) const;
     bool allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) const;
     void toString(nsAString& outStr) const;
@@ -331,6 +329,7 @@ class nsCSPPolicy {
     bool permits(nsContentPolicyType aContentType,
                  nsIURI* aUri,
                  const nsAString& aNonce,
+                 bool aWasRedirected,
                  nsAString& outViolatedDirective) const;
     bool permitsBaseURI(nsIURI* aUri) const;
     bool allows(nsContentPolicyType aContentType,
