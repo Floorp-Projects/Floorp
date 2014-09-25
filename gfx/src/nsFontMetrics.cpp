@@ -150,7 +150,7 @@ nsFontMetrics::Destroy()
 
 const gfxFont::Metrics& nsFontMetrics::GetMetrics() const
 {
-    return mFontGroup->GetFontAt(0)->GetMetrics();
+    return mFontGroup->GetFirstValidFont()->GetMetrics();
 }
 
 nscoord

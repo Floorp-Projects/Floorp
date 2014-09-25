@@ -731,6 +731,10 @@ public:
 
     virtual ~gfxFontGroup();
 
+    virtual gfxFont* GetFirstValidFont() {
+        return GetFontAt(0);
+    }
+
     virtual gfxFont *GetFontAt(int32_t i) {
         // If it turns out to be hard for all clients that cache font
         // groups to call UpdateFontList at appropriate times, we could
@@ -837,7 +841,7 @@ public:
     enum { UNDERLINE_OFFSET_NOT_SET = INT16_MAX };
     virtual gfxFloat GetUnderlineOffset() {
         if (mUnderlineOffset == UNDERLINE_OFFSET_NOT_SET)
-            mUnderlineOffset = GetFontAt(0)->GetMetrics().underlineOffset;
+            mUnderlineOffset = GetFirstValidFont()->GetMetrics().underlineOffset;
         return mUnderlineOffset;
     }
 
