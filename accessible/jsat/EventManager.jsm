@@ -265,6 +265,12 @@ this.EventManager.prototype = {
       }
       case Events.DOCUMENT_LOAD_COMPLETE:
       {
+        let position = this.contentControl.vc.position;
+        if (position && Utils.isInSubtree(position, aEvent.accessible)) {
+          // Do not automove into the document if the virtual cursor is already
+          // positioned inside it.
+          break;
+        }
         this.contentControl.autoMove(
           aEvent.accessible, { delay: 500 });
         break;
