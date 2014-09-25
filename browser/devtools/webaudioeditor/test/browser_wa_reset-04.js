@@ -8,7 +8,7 @@
 function spawnTest() {
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
 
-  let [target, debuggee, panel, toolbox] = yield initWebAudioEditor(IFRAME_CONTEXT_URL);
+  let { target, panel, toolbox } = yield initWebAudioEditor(IFRAME_CONTEXT_URL);
   let { gFront, $ } = panel.panelWin;
 
   is($("#reload-notice").hidden, false,

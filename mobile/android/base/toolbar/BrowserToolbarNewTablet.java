@@ -12,7 +12,6 @@ import org.mozilla.gecko.animation.ViewHelper;
 import android.content.Context;
 import android.content.res.Resources;
 import android.util.AttributeSet;
-import android.view.View;
 
 /**
  * A toolbar implementation for the tablet redesign (bug 1014156).
@@ -30,7 +29,7 @@ class BrowserToolbarNewTablet extends BrowserToolbarTabletBase {
 
         final Resources res = getResources();
         urlBarViewOffset = res.getDimensionPixelSize(R.dimen.url_bar_offset_left);
-        defaultForwardMargin = res.getDimensionPixelSize(R.dimen.forward_default_offset);
+        defaultForwardMargin = res.getDimensionPixelSize(R.dimen.new_tablet_forward_default_offset);
     }
 
     @Override
@@ -48,15 +47,8 @@ class BrowserToolbarNewTablet extends BrowserToolbarTabletBase {
         hideUrlEditLayout();
     }
 
-    // TODO: Copy-pasta from BrowserToolbarTablet - implement a correctly working version.
     @Override
     protected void animateForwardButton(final ForwardButtonAnimation animation) {
-        // If the forward button is not visible, we must be
-        // in the phone UI.
-        if (forwardButton.getVisibility() != View.VISIBLE) {
-            return;
-        }
-
         final boolean showing = (animation == ForwardButtonAnimation.SHOW);
 
         // if the forward button's margin is non-zero, this means it has already
