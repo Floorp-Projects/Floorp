@@ -1,2 +1,5 @@
 category profile-after-change nsTerminator @mozilla.org/toolkit/shutdown-terminator;1
 
+component {3f78ada1-cba2-442a-82dd-d5fb300ddea7} nsTerminatorTelemetry.js
+contract @mozilla.org/toolkit/shutdown-terminator-telemetry;1 {3f78ada1-cba2-442a-82dd-d5fb300ddea7}
+category profile-after-change nsTerminatorTelemetry @mozilla.org/toolkit/shutdown-terminator-telemetry;1
