@@ -145,8 +145,22 @@
 }
 
 .newtab-site[pinned] .newtab-title {
-  color: #2c72c4;
-  font-weight: bold;
+  padding: 0 15px;
+}
+
+.newtab-site[pinned] .newtab-title::before {
+  background-image: -moz-image-rect(url("chrome://browser/skin/newtab/controls.svg"), 7, 278, 28, 266);
+  background-size: 10px;
+  content: "";
+  height: 17px;
+  left: 0;
+  position: absolute;
+  width: 10px;
+}
+
+.newtab-site[pinned] .newtab-title:-moz-locale-dir(rtl)::before {
+  left: auto;
+  right: 0;
 }
 
 /* CONTROLS */
