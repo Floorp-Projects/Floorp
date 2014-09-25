@@ -11,6 +11,7 @@ let gIntro = {
 
   _nodeIDSuffixes: [
     "panel",
+    "what",
   ],
 
   _nodes: {},
@@ -21,6 +22,7 @@ let gIntro = {
     }
 
     this._nodes.panel.addEventListener("popupshowing", e => this._setUpPanel());
+    this._nodes.what.addEventListener("click", e => this.showPanel());
   },
 
   showIfNecessary: function() {
@@ -31,11 +33,8 @@ let gIntro = {
   },
 
   showPanel: function() {
-    // Open the customize menu first
-    gCustomize.showPanel().then(nodes => {
-      // Point the panel at the 'what' menu item
-      this._nodes.panel.openPopup(nodes.what);
-    });
+    // Point the panel at the 'what' link
+    this._nodes.panel.openPopup(this._nodes.what);
   },
 
   _setUpPanel: function() {
