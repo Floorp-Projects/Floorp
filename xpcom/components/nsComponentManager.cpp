@@ -374,25 +374,6 @@ nsComponentManagerImpl::Init()
     GetLocationFromDirectoryService(NS_XPCOM_CURRENT_PROCESS_DIR);
 
   InitializeStaticModules();
-  InitializeModuleLocations();
-
-  ComponentLocation* cl = sModuleLocations->InsertElementAt(0);
-  nsCOMPtr<nsIFile> lf = CloneAndAppend(appDir,
-                                        NS_LITERAL_CSTRING("chrome.manifest"));
-  cl->type = NS_COMPONENT_LOCATION;
-  cl->location.Init(lf);
-
-  bool equals = false;
-  appDir->Equals(greDir, &equals);
-  if (!equals) {
-    cl = sModuleLocations->InsertElementAt(0);
-    cl->type = NS_COMPONENT_LOCATION;
-    lf = CloneAndAppend(greDir, NS_LITERAL_CSTRING("chrome.manifest"));
-    cl->location.Init(lf);
-  }
-
-  PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
-         ("nsComponentManager: Initialized."));
 
   nsresult rv = mNativeModuleLoader.Init();
   if (NS_FAILED(rv)) {
@@ -407,19 +388,43 @@ nsComponentManagerImpl::Init()
     RegisterModule((*sStaticModules)[i], nullptr);
   }
 
-  nsRefPtr<nsZipArchive> appOmnijar =
-    mozilla::Omnijar::GetReader(mozilla::Omnijar::APP);
-  if (appOmnijar) {
-    cl = sModuleLocations->InsertElementAt(1); // Insert after greDir
-    cl->type = NS_COMPONENT_LOCATION;
-    cl->location.Init(appOmnijar, "chrome.manifest");
-  }
+  // The overall order in which chrome.manifests are expected to be treated
+  // is the following:
+  // - greDir
+  // - greDir's omni.ja
+  // - appDir
+  // - appDir's omni.ja
+
+  InitializeModuleLocations();
+  ComponentLocation* cl = sModuleLocations->AppendElement();
+  nsCOMPtr<nsIFile> lf = CloneAndAppend(greDir,
+                                        NS_LITERAL_CSTRING("chrome.manifest"));
+  cl->type = NS_COMPONENT_LOCATION;
+  cl->location.Init(lf);
+
   nsRefPtr<nsZipArchive> greOmnijar =
     mozilla::Omnijar::GetReader(mozilla::Omnijar::GRE);
   if (greOmnijar) {
-    cl = sModuleLocations->InsertElementAt(0);
+    cl = sModuleLocations->AppendElement();
     cl->type = NS_COMPONENT_LOCATION;
     cl->location.Init(greOmnijar, "chrome.manifest");
+  }
+
+  bool equals = false;
+  appDir->Equals(greDir, &equals);
+  if (!equals) {
+    cl = sModuleLocations->AppendElement();
+    cl->type = NS_COMPONENT_LOCATION;
+    lf = CloneAndAppend(appDir, NS_LITERAL_CSTRING("chrome.manifest"));
+    cl->location.Init(lf);
+  }
+
+  nsRefPtr<nsZipArchive> appOmnijar =
+    mozilla::Omnijar::GetReader(mozilla::Omnijar::APP);
+  if (appOmnijar) {
+    cl = sModuleLocations->AppendElement();
+    cl->type = NS_COMPONENT_LOCATION;
+    cl->location.Init(appOmnijar, "chrome.manifest");
   }
 
   RereadChromeManifests(false);
@@ -433,6 +438,9 @@ nsComponentManagerImpl::Init()
   // above) because the memory reporter manager isn't initialized at that
   // point.  So we wait until now.
   nsCategoryManager::GetSingleton()->InitMemoryReporter();
+
+  PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG,
+         ("nsComponentManager: Initialized."));
 
   mStatus = NORMAL;
 
