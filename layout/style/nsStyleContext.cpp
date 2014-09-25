@@ -144,10 +144,10 @@ nsStyleContext::AssertStructsNotUsedElsewhere(
     if (data &&                                                                \
         !(aDestroyingContext->mBits & NS_STYLE_INHERIT_BIT(name_)) &&          \
          (mCachedInheritedData.mStyleStructs[eStyleStruct_##name_] == data)) { \
-      printf("style struct %p found on style context %p\n", data, this);       \
+      printf_stderr("style struct %p found on style context %p\n", data, this);\
       nsString url;                                                            \
       PresContext()->Document()->GetURL(url);                                  \
-      printf("  in %s\n", NS_LossyConvertUTF16toASCII(url).get());             \
+      printf_stderr("  in %s\n", NS_ConvertUTF16toUTF8(url).get());            \
       MOZ_ASSERT(false, "destroying " #name_ " style struct still present "    \
                         "in style context tree");                              \
     }
@@ -168,10 +168,11 @@ nsStyleContext::AssertStructsNotUsedElsewhere(
         if (data &&                                                            \
             !(aDestroyingContext->mBits & NS_STYLE_INHERIT_BIT(name_)) &&      \
             (mCachedResetData->mStyleStructs[eStyleStruct_##name_] == data)) { \
-          printf("style struct %p found on style context %p\n", data, this);   \
+          printf_stderr("style struct %p found on style context %p\n", data,   \
+                        this);                                                 \
           nsString url;                                                        \
           PresContext()->Document()->GetURL(url);                              \
-          printf("  in %s\n", NS_LossyConvertUTF16toASCII(url).get());         \
+          printf_stderr("  in %s\n", NS_ConvertUTF16toUTF8(url).get());        \
           MOZ_ASSERT(false, "destroying " #name_ " style struct still present "\
                             "in style context tree");                          \
         }
@@ -1032,6 +1033,20 @@ nsStyleContext::AssertStyleStructMaxDifferenceValid()
                                nsStyle##name::MaxDifference()));
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
+}
+
+/* static */ const char*
+nsStyleContext::StructName(nsStyleStructID aSID)
+{
+  switch (aSID) {
+#define STYLE_STRUCT(name_, checkdata_cb)                                     \
+    case eStyleStruct_##name_:                                                \
+      return #name_;
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+    default:
+      return "Unknown";
+  }
 }
 #endif
 

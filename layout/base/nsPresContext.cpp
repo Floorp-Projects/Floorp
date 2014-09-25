@@ -41,7 +41,7 @@
 #include "nsFontFaceLoader.h"
 #include "mozilla/EventListenerManager.h"
 #include "prenv.h"
-#include "nsObjectFrame.h"
+#include "nsPluginFrame.h"
 #include "nsTransitionManager.h"
 #include "nsAnimationManager.h"
 #include "CounterStyleManager.h"
@@ -1073,6 +1073,10 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
   NS_ENSURE_SUCCESS(rv, rv);
 
   mEventManager->SetPresContext(this);
+
+#ifdef RESTYLE_LOGGING
+  mRestyleLoggingEnabled = RestyleManager::RestyleLoggingInitiallyEnabled();
+#endif
 
 #ifdef DEBUG
   mInitialized = true;
@@ -2856,7 +2860,7 @@ static PLDHashOperator
 SetPluginHidden(nsRefPtrHashKey<nsIContent>* aEntry, void* userArg)
 {
   nsIFrame* root = static_cast<nsIFrame*>(userArg);
-  nsObjectFrame* f = static_cast<nsObjectFrame*>(aEntry->GetKey()->GetPrimaryFrame());
+  nsPluginFrame* f = static_cast<nsPluginFrame*>(aEntry->GetKey()->GetPrimaryFrame());
   if (!f) {
     NS_WARNING("Null frame in SetPluginHidden");
     return PL_DHASH_NEXT;
@@ -3016,7 +3020,7 @@ SortConfigurations(nsTArray<nsIWidget::Configuration>* aConfigurations)
 static PLDHashOperator
 PluginDidSetGeometryEnumerator(nsRefPtrHashKey<nsIContent>* aEntry, void* userArg)
 {
-  nsObjectFrame* f = static_cast<nsObjectFrame*>(aEntry->GetKey()->GetPrimaryFrame());
+  nsPluginFrame* f = static_cast<nsPluginFrame*>(aEntry->GetKey()->GetPrimaryFrame());
   if (!f) {
     NS_WARNING("Null frame in PluginDidSetGeometryEnumerator");
     return PL_DHASH_NEXT;
@@ -3033,7 +3037,7 @@ PluginGetGeometryUpdate(nsRefPtrHashKey<nsIContent>* aEntry, void* userArg)
 {
   PluginGetGeometryUpdateClosure* closure =
     static_cast<PluginGetGeometryUpdateClosure*>(userArg);
-  nsObjectFrame* f = static_cast<nsObjectFrame*>(aEntry->GetKey()->GetPrimaryFrame());
+  nsPluginFrame* f = static_cast<nsPluginFrame*>(aEntry->GetKey()->GetPrimaryFrame());
   if (!f) {
     NS_WARNING("Null frame in GetPluginGeometryUpdate");
     return PL_DHASH_NEXT;

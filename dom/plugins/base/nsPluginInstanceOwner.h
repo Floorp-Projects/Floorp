@@ -26,7 +26,7 @@
 class nsIInputStream;
 struct nsIntRect;
 class nsPluginDOMContextMenuListener;
-class nsObjectFrame;
+class nsPluginFrame;
 class nsDisplayListBuilder;
 
 namespace mozilla {
@@ -143,9 +143,9 @@ public:
   // changed, and SetWindow() needs to be called again.
   void* SetPluginPortAndDetectChange();
   // Flag when we've set up a Thebes (and CoreGraphics) context in
-  // nsObjectFrame::PaintPlugin().  We need to know this in
+  // nsPluginFrame::PaintPlugin().  We need to know this in
   // FixUpPluginWindow() (i.e. we need to know when FixUpPluginWindow() has
-  // been called from nsObjectFrame::PaintPlugin() when we're using the
+  // been called from nsPluginFrame::PaintPlugin() when we're using the
   // CoreGraphics drawing model).
   void BeginCGPaint();
   void EndCGPaint();
@@ -155,8 +155,8 @@ public:
   void UpdateDocumentActiveState(bool aIsActive);
 #endif // XP_MACOSX
 
-  void SetFrame(nsObjectFrame *aFrame);
-  nsObjectFrame* GetFrame();
+  void SetFrame(nsPluginFrame *aFrame);
+  nsPluginFrame* GetFrame();
 
   uint32_t GetLastEventloopNestingLevel() const {
     return mLastEventloopNestingLevel; 
@@ -276,7 +276,7 @@ private:
  
   nsPluginNativeWindow       *mPluginWindow;
   nsRefPtr<nsNPAPIPluginInstance> mInstance;
-  nsObjectFrame              *mObjectFrame;
+  nsPluginFrame              *mPluginFrame;
   nsIContent                 *mContent; // WEAK, content owns us
   nsCString                   mDocumentBase;
   bool                        mWidgetCreationComplete;

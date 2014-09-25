@@ -132,9 +132,6 @@ nsFontMetrics::Init(const nsFont& aFont, nsIAtom* aLanguage,
     mFontGroup = gfxPlatform::GetPlatform()->
         CreateFontGroup(aFont.fontlist, &style, aUserFontSet);
     mFontGroup->SetTextPerfMetrics(aTextPerf);
-    if (mFontGroup->FontListLength() < 1)
-        return NS_ERROR_UNEXPECTED;
-
     return NS_OK;
 }
 
@@ -150,7 +147,7 @@ nsFontMetrics::Destroy()
 
 const gfxFont::Metrics& nsFontMetrics::GetMetrics() const
 {
-    return mFontGroup->GetFontAt(0)->GetMetrics();
+    return mFontGroup->GetFirstValidFont()->GetMetrics();
 }
 
 nscoord
