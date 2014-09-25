@@ -3052,7 +3052,10 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
       // previous continuation, so newContext == oldContext.
 
       if (result != eRestyleResult_Stop) {
-        if (oldContext->IsShared() && newContext->IsShared()) {
+        if (copyFromContinuation) {
+          LOG_RESTYLE("not swapping style structs, since we copied from a "
+                      "continuation");
+        } else if (oldContext->IsShared() && newContext->IsShared()) {
           LOG_RESTYLE("not swapping style structs, since both old and contexts "
                       "are shared");
         } else if (oldContext->IsShared()) {
