@@ -255,7 +255,8 @@ BrowserElementParent.prototype = {
       "got-visible": this._gotDOMRequestResult,
       "visibilitychange": this._childVisibilityChange,
       "got-set-input-method-active": this._gotDOMRequestResult,
-      "selectionchange": this._handleSelectionChange
+      "selectionchange": this._handleSelectionChange,
+      "scrollviewchange": this._handleScrollViewChange
     };
 
     let mmSecuritySensitiveCalls = {
@@ -492,6 +493,12 @@ BrowserElementParent.prototype = {
 
   _handleSelectionChange: function(data) {
     let evt = this._createEvent('selectionchange', data.json,
+                                /* cancelable = */ false);
+    this._frameElement.dispatchEvent(evt);
+  },
+
+  _handleScrollViewChange: function(data) {
+    let evt = this._createEvent("scrollviewchange", data.json,
                                 /* cancelable = */ false);
     this._frameElement.dispatchEvent(evt);
   },

@@ -413,34 +413,34 @@ TimeStampValue::operator-(const TimeStampValue& aOther) const
 // ----------------------------------------------------------------------------
 
 double
-TimeDuration::ToSeconds() const
+BaseTimeDurationPlatformUtils::ToSeconds(int64_t aTicks)
 {
   // Converting before arithmetic avoids blocked store forward
-  return double(mValue) / (double(sFrequencyPerSec) * 1000.0);
+  return double(aTicks) / (double(sFrequencyPerSec) * 1000.0);
 }
 
 double
-TimeDuration::ToSecondsSigDigits() const
+BaseTimeDurationPlatformUtils::ToSecondsSigDigits(int64_t aTicks)
 {
   // don't report a value < mResolution ...
   LONGLONG resolution = sResolution;
   LONGLONG resolutionSigDigs = sResolutionSigDigs;
-  LONGLONG valueSigDigs = resolution * (mValue / resolution);
+  LONGLONG valueSigDigs = resolution * (aTicks / resolution);
   // and chop off insignificant digits
   valueSigDigs = resolutionSigDigs * (valueSigDigs / resolutionSigDigs);
   return double(valueSigDigs) / kNsPerSecd;
 }
 
-TimeDuration
-TimeDuration::FromMilliseconds(double aMilliseconds)
+int64_t
+BaseTimeDurationPlatformUtils::TicksFromMilliseconds(double aMilliseconds)
 {
-  return TimeDuration::FromTicks(ms2mt(aMilliseconds));
+  return ms2mt(aMilliseconds);
 }
 
-TimeDuration
-TimeDuration::Resolution()
+int64_t
+BaseTimeDurationPlatformUtils::ResolutionInTicks()
 {
-  return TimeDuration::FromTicks(int64_t(sResolution));
+  return static_cast<int64_t>(sResolution);
 }
 
 static bool

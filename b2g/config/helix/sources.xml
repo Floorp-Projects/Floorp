@@ -11,11 +11,11 @@
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <default remote="caf" revision="b2g/ics_strawberry" sync-j="4"/>
   <!-- Gonk specific things and forks -->
-  <project name="platform_build" path="build" remote="b2g" revision="4d1e85908d792d9468c4da7040acd191fbb51b40">
+  <project name="platform_build" path="build" remote="b2g" revision="84923f1940625c47ff4c1fdf01b10fde3b7d909e">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="03d7bcad57ea281869976a9aed0a38849f7c8bc5"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="c5d2e2f4ebf5f370d6003517057dcd47493dec90"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="5883a99b6528ced9dafaed8d3ca2405fb285537e"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>

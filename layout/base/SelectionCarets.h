@@ -64,6 +64,10 @@ public:
   // nsIScrollObserver
   virtual void ScrollPositionChanged() MOZ_OVERRIDE;
 
+  // AsyncPanZoom started/stopped callbacks from nsIScrollObserver
+  virtual void AsyncPanZoomStarted(const mozilla::CSSIntPoint aScrollPos) MOZ_OVERRIDE;
+  virtual void AsyncPanZoomStopped(const mozilla::CSSIntPoint aScrollPos) MOZ_OVERRIDE;
+
   void Terminate()
   {
     mPresShell = nullptr;
@@ -214,9 +218,12 @@ private:
 
   nscoord mCaretCenterToDownPointOffsetY;
   DragMode mDragMode;
-  bool mVisible;
-  bool mStartCaretVisible;
+
+  // True if AsyncPanZoom is enabled
+  bool mAPZenabled;
   bool mEndCaretVisible;
+  bool mStartCaretVisible;
+  bool mVisible;
 
   // Preference
   static int32_t sSelectionCaretsInflateSize;

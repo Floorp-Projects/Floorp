@@ -813,8 +813,8 @@ FindFontPatterns(gfxUserFontSet *mUserFontSet,
     gfxFontFamily *family = mUserFontSet->LookupFamily(utf16Family);
     if (family) {
         gfxUserFontEntry* userFontEntry =
-            mUserFontSet->FindUserFontEntry(family, style, needsBold,
-                                            aWaitForUserFont);
+            mUserFontSet->FindUserFontEntryAndLoad(family, style, needsBold,
+                                                   aWaitForUserFont);
         if (userFontEntry) {
             fontEntry = static_cast<gfxUserFcFontEntry*>
                 (userFontEntry->GetPlatformFontEntry());
@@ -826,9 +826,10 @@ FindFontPatterns(gfxUserFontSet *mUserFontSet,
         //       and probably never use it
         if (!fontEntry && aStyle != NS_FONT_STYLE_NORMAL) {
             style.style = NS_FONT_STYLE_NORMAL;
-            userFontEntry = mUserFontSet->FindUserFontEntry(family, style,
-                                                            needsBold,
-                                                            aWaitForUserFont);
+            userFontEntry =
+                mUserFontSet->FindUserFontEntryAndLoad(family, style,
+                                                       needsBold,
+                                                       aWaitForUserFont);
             if (userFontEntry) {
                 fontEntry = static_cast<gfxUserFcFontEntry*>
                     (userFontEntry->GetPlatformFontEntry());
@@ -1308,16 +1309,22 @@ gfxPangoFontGroup::GetBaseFont()
     return static_cast<gfxFcFont*>(mFonts[0].Font());
 }
 
+gfxFont*
+gfxPangoFontGroup::GetFirstValidFont()
+{
+    return GetFontAt(0);
+}
+
 gfxFont *
 gfxPangoFontGroup::GetFontAt(int32_t i)
 {
     // If it turns out to be hard for all clients that cache font
-    // groups to call UpdateFontList at appropriate times, we could
-    // instead consider just calling UpdateFontList from someplace
+    // groups to call UpdateUserFonts at appropriate times, we could
+    // instead consider just calling UpdateUserFonts from someplace
     // more central (such as here).
     NS_ASSERTION(!mUserFontSet || mCurrGeneration == GetGeneration(),
                  "Whoever was caching this font group should have "
-                 "called UpdateFontList on it");
+                 "called UpdateUserFonts on it");
 
     NS_PRECONDITION(i == 0, "Only have one font");
 
@@ -1325,7 +1332,7 @@ gfxPangoFontGroup::GetFontAt(int32_t i)
 }
 
 void
-gfxPangoFontGroup::UpdateFontList()
+gfxPangoFontGroup::UpdateUserFonts()
 {
     uint64_t newGeneration = GetGeneration();
     if (newGeneration == mCurrGeneration)

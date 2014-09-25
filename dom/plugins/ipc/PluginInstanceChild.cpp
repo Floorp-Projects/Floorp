@@ -1948,7 +1948,7 @@ PluginInstanceChild::SharedSurfacePaint(NPEvent& evcopy)
         break;
         case RENDER_BACK_ONE:
               // Handle a double pass render used in alpha extraction for transparent
-              // plugins. (See nsObjectFrame and gfxWindowsNativeDrawing for details.)
+              // plugins. (See nsPluginFrame and gfxWindowsNativeDrawing for details.)
               // We render twice, once to the shared dib, and once to a cache which
               // we copy back on a second paint. These paints can't be spread across
               // multiple rpc messages as delays cause animation frame changes.
