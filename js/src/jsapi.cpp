@@ -5043,7 +5043,7 @@ JS::Construct(JSContext *cx, HandleValue fval, const JS::HandleValueArray& args,
     assertSameCompartment(cx, fval, args);
     AutoLastFrameCheck lfc(cx);
 
-    return InvokeConstructor(cx, fval, args.length(), args.begin(), rval.address());
+    return InvokeConstructor(cx, fval, args.length(), args.begin(), rval);
 }
 
 static JSObject *

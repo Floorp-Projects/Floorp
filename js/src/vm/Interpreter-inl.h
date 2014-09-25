@@ -79,11 +79,11 @@ ComputeThis(JSContext *cx, AbstractFramePtr frame)
  * arguments object.
  */
 static inline bool
-IsOptimizedArguments(AbstractFramePtr frame, Value *vp)
+IsOptimizedArguments(AbstractFramePtr frame, MutableHandleValue vp)
 {
-    if (vp->isMagic(JS_OPTIMIZED_ARGUMENTS) && frame.script()->needsArgsObj())
-        *vp = ObjectValue(frame.argsObj());
-    return vp->isMagic(JS_OPTIMIZED_ARGUMENTS);
+    if (vp.isMagic(JS_OPTIMIZED_ARGUMENTS) && frame.script()->needsArgsObj())
+        vp.setObject(frame.argsObj());
+    return vp.isMagic(JS_OPTIMIZED_ARGUMENTS);
 }
 
 /*
@@ -92,15 +92,14 @@ IsOptimizedArguments(AbstractFramePtr frame, Value *vp)
  * is not the builtin Function.prototype.apply.
  */
 static inline bool
-GuardFunApplyArgumentsOptimization(JSContext *cx, AbstractFramePtr frame, HandleValue callee,
-                                   Value *args, uint32_t argc)
+GuardFunApplyArgumentsOptimization(JSContext *cx, AbstractFramePtr frame, CallArgs &args)
 {
-    if (argc == 2 && IsOptimizedArguments(frame, &args[1])) {
-        if (!IsNativeFunction(callee, js_fun_apply)) {
+    if (args.length() == 2 && IsOptimizedArguments(frame, args[1])) {
+        if (!IsNativeFunction(args.calleev(), js_fun_apply)) {
             RootedScript script(cx, frame.script());
             if (!JSScript::argumentsOptimizationFailed(cx, script))
                 return false;
-            args[1] = ObjectValue(frame.argsObj());
+            args[1].setObject(frame.argsObj());
         }
     }
 
@@ -485,7 +484,7 @@ GetElemOptimizedArguments(JSContext *cx, AbstractFramePtr frame, MutableHandleVa
 {
     JS_ASSERT(!*done);
 
-    if (IsOptimizedArguments(frame, lref.address())) {
+    if (IsOptimizedArguments(frame, lref)) {
         if (rref.isInt32()) {
             int32_t i = rref.toInt32();
             if (i >= 0 && uint32_t(i) < frame.numActualArgs()) {

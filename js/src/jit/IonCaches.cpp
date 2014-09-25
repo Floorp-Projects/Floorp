@@ -1724,7 +1724,7 @@ GetPropertyIC::update(JSContext *cx, size_t cacheIndex,
     RootedPropertyName name(cx, cache.name());
 
     // Override the return value if we are invalidated (bug 728188).
-    AutoDetectInvalidation adi(cx, vp.address(), ion);
+    AutoDetectInvalidation adi(cx, vp, ion);
 
     // If the cache is idempotent, we will redo the op in the interpreter.
     if (cache.idempotent())
@@ -3461,7 +3461,7 @@ GetElementIC::update(JSContext *cx, size_t cacheIndex, HandleObject obj,
     cache.getScriptedLocation(&script, &pc);
 
     // Override the return value when the script is invalidated (bug 728188).
-    AutoDetectInvalidation adi(cx, res.address(), ion);
+    AutoDetectInvalidation adi(cx, res, ion);
 
     if (cache.isDisabled()) {
         if (!GetObjectElementOperation(cx, JSOp(*pc), obj, /* wasObject = */true, idval, res))

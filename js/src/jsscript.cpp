@@ -939,12 +939,12 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
 
             if (classk == CK_BlockObject) {
                 Rooted<StaticBlockObject*> tmp(cx, static_cast<StaticBlockObject *>(objp->get()));
-                if (!XDRStaticBlockObject(xdr, enclosingStaticScope, tmp.address()))
+                if (!XDRStaticBlockObject(xdr, enclosingStaticScope, &tmp))
                     return false;
                 *objp = tmp;
             } else {
                 Rooted<StaticWithObject*> tmp(cx, static_cast<StaticWithObject *>(objp->get()));
-                if (!XDRStaticWithObject(xdr, enclosingStaticScope, tmp.address()))
+                if (!XDRStaticWithObject(xdr, enclosingStaticScope, &tmp))
                     return false;
                 *objp = tmp;
             }
