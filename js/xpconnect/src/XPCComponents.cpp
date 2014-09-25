@@ -3069,7 +3069,7 @@ nsXPCComponents_Utils::MakeObjectPropsNormal(HandleValue vobj, JSContext *cx)
 
         RootedObject propobj(cx, &v.toObject());
         // TODO Deal with non-functions.
-        if (!js::IsWrapper(propobj) || !JS_ObjectIsCallable(cx, propobj))
+        if (!js::IsWrapper(propobj) || !JS::IsCallable(propobj))
             continue;
 
         FunctionForwarderOptions forwarderOptions;

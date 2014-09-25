@@ -20,7 +20,7 @@ CallbackInterface::GetCallableProperty(JSContext* cx, JS::Handle<jsid> aPropId,
     return false;
   }
   if (!aCallable.isObject() ||
-      !JS_ObjectIsCallable(cx, &aCallable.toObject())) {
+      !JS::IsCallable(&aCallable.toObject())) {
     char* propName =
       JS_EncodeString(cx, JS_FORGET_STRING_FLATNESS(JSID_TO_FLAT_STRING(aPropId)));
     nsPrintfCString description("Property '%s'", propName);

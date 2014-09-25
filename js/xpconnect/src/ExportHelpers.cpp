@@ -143,7 +143,7 @@ StackScopedCloneWrite(JSContext *cx, JSStructuredCloneWriter *writer,
         return true;
     }
 
-    if (JS_ObjectIsCallable(cx, obj)) {
+    if (JS::IsCallable(obj)) {
         if (cloneData->mOptions->cloneFunctions) {
             cloneData->mFunctions.append(obj);
             return JS_WriteUint32Pair(writer, SCTAG_FUNCTION, cloneData->mFunctions.length() - 1);
@@ -347,7 +347,7 @@ ExportFunction(JSContext *cx, HandleValue vfunction, HandleValue vscope, HandleV
 
         // Unwrapping to see if we have a callable.
         funObj = UncheckedUnwrap(funObj);
-        if (!JS_ObjectIsCallable(cx, funObj)) {
+        if (!JS::IsCallable(funObj)) {
             JS_ReportError(cx, "First argument must be a function");
             return false;
         }
