@@ -54,7 +54,6 @@ static StaticRefPtr<GeckoTouchDispatcher> sTouchDispatcher;
 GeckoTouchDispatcher::GeckoTouchDispatcher()
   : mTouchQueueLock("GeckoTouchDispatcher::mTouchQueueLock")
   , mTouchEventsFiltered(false)
-  , mTouchDownCount(0)
   , mTouchTimeDiff(0)
   , mLastTouchTime(0)
 {
@@ -350,26 +349,9 @@ IsExpired(const MultiTouchInput& aTouch)
 void
 GeckoTouchDispatcher::DispatchTouchEvent(MultiTouchInput& aMultiTouch)
 {
-  if (!mTouchDownCount) {
+  if (aMultiTouch.mType == MultiTouchInput::MULTITOUCH_START &&
+      aMultiTouch.mTouches.Length() == 1) {
     mTouchEventsFiltered = IsExpired(aMultiTouch);
-  }
-
-  switch (aMultiTouch.mType) {
-    case MultiTouchInput::MULTITOUCH_START:
-      mTouchDownCount++;
-      break;
-    case MultiTouchInput::MULTITOUCH_MOVE:
-      break;
-    case MultiTouchInput::MULTITOUCH_END:
-    case MultiTouchInput::MULTITOUCH_CANCEL:
-      mTouchDownCount--;
-      if (mTouchDownCount == 0) {
-        MutexAutoLock lock(mTouchQueueLock);
-        mTouchMoveEvents.clear();
-      }
-      break;
-    default:
-      break;
   }
 
   if (mTouchEventsFiltered) {

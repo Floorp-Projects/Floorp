@@ -9,6 +9,8 @@ import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.mozilla.gecko.widget.SwipeDismissListViewTouchListener;
+import org.mozilla.gecko.widget.SwipeDismissListViewTouchListener.OnDismissCallback;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -160,6 +162,35 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
                     hide();
                 }
             });
+
+            // Create a ListView-specific touch listener. ListViews are given special treatment because
+            // by default they handle touches for their list items... i.e. they're in charge of drawing
+            // the pressed state (the list selector), handling list item clicks, etc.
+            final SwipeDismissListViewTouchListener touchListener = new SwipeDismissListViewTouchListener(mAutoCompleteList, new OnDismissCallback() {
+                @Override
+                public void onDismiss(ListView listView, final int position) {
+                    // Use the value stored with the autocomplete view, not the label text,
+                    // since they can be different.
+                    AutoCompleteListAdapter adapter = (AutoCompleteListAdapter) listView.getAdapter();
+                    Pair<String, String> item = adapter.getItem(position);
+
+                    // Remove the item from form history.
+                    broadcastGeckoEvent("FormAssist:Remove", item.second);
+
+                    // Update the list
+                    adapter.remove(item);
+                    adapter.notifyDataSetChanged();
+                    positionAndShowPopup();
+                }
+            });
+            mAutoCompleteList.setOnTouchListener(touchListener);
+
+            // Setting this scroll listener is required to ensure that during ListView scrolling,
+            // we don't look for swipes.
+            mAutoCompleteList.setOnScrollListener(touchListener.makeScrollListener());
+
+            // Setting this recycler listener is required to make sure animated views are reset.
+            mAutoCompleteList.setRecyclerListener(touchListener.makeRecyclerListener());
 
             addView(mAutoCompleteList);
         }
@@ -384,8 +415,9 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            if (convertView == null)
+            if (convertView == null) {
                 convertView = mInflater.inflate(mTextViewResourceId, null);
+            }
 
             Pair<String, String> item = getItem(position);
             TextView itemView = (TextView) convertView;

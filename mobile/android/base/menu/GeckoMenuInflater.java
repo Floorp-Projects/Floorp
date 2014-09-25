@@ -7,6 +7,7 @@ package org.mozilla.gecko.menu;
 import java.io.IOException;
 
 import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -126,12 +127,19 @@ public class GeckoMenuInflater extends MenuInflater {
         item.id = a.getResourceId(R.styleable.MenuItem_android_id, NO_ID);
         item.order = a.getInt(R.styleable.MenuItem_android_orderInCategory, 0);
         item.title = a.getText(R.styleable.MenuItem_android_title);
-        item.iconRes = a.getResourceId(R.styleable.MenuItem_android_icon, 0);
         item.checkable = a.getBoolean(R.styleable.MenuItem_android_checkable, false);
         item.checked = a.getBoolean(R.styleable.MenuItem_android_checked, false);
         item.visible = a.getBoolean(R.styleable.MenuItem_android_visible, true);
         item.enabled = a.getBoolean(R.styleable.MenuItem_android_enabled, true);
         item.hasSubMenu = false;
+
+        // TODO: (bug 1058909) Remove this branch when we remove old tablet. We do this to
+        // avoid using a new menu resource for new tablet (which only has a new reload button).
+        if (item.id == R.id.reload && NewTabletUI.isEnabled(mContext)) {
+            item.iconRes = R.drawable.new_tablet_ic_menu_reload;
+        } else {
+            item.iconRes = a.getResourceId(R.styleable.MenuItem_android_icon, 0);
+        }
 
         if (Versions.feature11Plus) {
             item.showAsAction = a.getInt(R.styleable.MenuItem_android_showAsAction, 0);

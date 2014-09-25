@@ -221,6 +221,11 @@ BrowserElementChild.prototype = {
                      /* useCapture = */ false,
                      /* wantsUntrusted = */ false);
 
+    addEventListener('scrollviewchange',
+                     this._ScrollViewChangeHandler.bind(this),
+                     /* useCapture = */ false,
+                     /* wantsUntrusted = */ false);
+
     // This listens to unload events from our message manager, but /not/ from
     // the |content| window.  That's because the window's unload event doesn't
     // bubble, and we're not using a capturing listener.  If we'd used
@@ -626,6 +631,16 @@ BrowserElementChild.prototype = {
     sendAsyncMsg('metachange', meta);
   },
 
+  _ScrollViewChangeHandler: function(e) {
+    e.stopPropagation();
+    let detail = {
+      state: e.state,
+      scrollX: e.scrollX,
+      scrollY: e.scrollY,
+    };
+    sendAsyncMsg('scrollviewchange', detail);
+  },
+
   _selectionChangeHandler: function(e) {
     e.stopPropagation();
     let boundingClientRect = e.boundingClientRect;
@@ -666,7 +681,7 @@ BrowserElementChild.prototype = {
       currentWindow = currentWindow.parent;
     }
 
-    sendAsyncMsg("selectionchange", detail);
+    sendAsyncMsg('selectionchange', detail);
   },
 
   _themeColorChangedHandler: function(eventType, target) {

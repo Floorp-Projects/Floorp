@@ -1,41 +1,38 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test() {
-  addTab("about:blank").then(function(tab) {
-    let target = TargetFactory.forTab(tab);
-    target.makeRemote().then(performChecks.bind(null, target));
-  }).then(null, console.error);
-
-  function performChecks(target) {
+function performChecks(target) {
+  return Task.spawn(function() {
     let toolIds = gDevTools.getToolDefinitionArray()
-                    .filter(def => def.isTargetSupported(target))
-                    .map(def => def.id);
+                           .filter(def => def.isTargetSupported(target))
+                           .map(def => def.id);
 
-    let open = function(index) {
+    let toolbox;
+    for (let index = 0; index < toolIds.length; index++) {
       let toolId = toolIds[index];
 
       info("About to open " + index + "/" + toolId);
-      gDevTools.showToolbox(target, toolId).then(function(toolbox) {
-        ok(toolbox, "toolbox exists for " + toolId);
-        is(toolbox.currentToolId, toolId, "currentToolId should be " + toolId);
+      toolbox = yield gDevTools.showToolbox(target, toolId);
+      ok(toolbox, "toolbox exists for " + toolId);
+      is(toolbox.currentToolId, toolId, "currentToolId should be " + toolId);
 
-        let panel = toolbox.getCurrentPanel();
-        ok(panel.isReady, toolId + " panel should be ready");
+      let panel = toolbox.getCurrentPanel();
+      ok(panel.isReady, toolId + " panel should be ready");
+    }
 
-        let nextIndex = index + 1;
-        if (nextIndex >= toolIds.length) {
-          toolbox.destroy().then(function() {
-            gBrowser.removeCurrentTab();
-            finish();
-          });
-        }
-        else {
-          open(nextIndex);
-        }
-      }, console.error);
-    };
+    yield toolbox.destroy();
+  });
+}
 
-    open(0);
-  }
+function test() {
+  Task.spawn(function() {
+    toggleAllTools(true);
+    let tab = yield addTab("about:blank");
+    let target = TargetFactory.forTab(tab);
+    yield target.makeRemote();
+    yield performChecks(target);
+    gBrowser.removeCurrentTab();
+    toggleAllTools(false);
+    finish();
+  }, console.error);
 }

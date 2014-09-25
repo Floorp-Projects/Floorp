@@ -117,7 +117,7 @@ public class GeckoProfileDirectories {
     @RobocopTarget
     public static File getMozillaDirectory(Context context) throws NoMozillaDirectoryException {
         final File mozillaDir = new File(context.getFilesDir(), MOZILLA_DIR_NAME);
-        if (mozillaDir.exists() || mozillaDir.mkdirs()) {
+        if (mozillaDir.mkdirs() || mozillaDir.isDirectory()) {
             return mozillaDir;
         }
 

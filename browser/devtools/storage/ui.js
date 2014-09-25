@@ -96,7 +96,7 @@ StorageUI.prototype = {
 
   destroy: function() {
     this.front.off("stores-update", this.onUpdate);
-    this._panelDoc.removeEventListener("keypress", this.handleKeypress)
+    this._panelDoc.removeEventListener("keypress", this.handleKeypress);
   },
 
   /**

@@ -14,11 +14,10 @@ const {Simulator} = Cu.import("resource://gre/modules/devtools/Simulator.jsm");
 const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js");
 const {TextEncoder, OS}  = Cu.import("resource://gre/modules/osfile.jsm", {});
 const {AppProjects} = require("devtools/app-manager/app-projects");
-const WebappsStore = require("devtools/app-manager/webapps-store");
 const TabStore = require("devtools/webide/tab-store");
 const {AppValidator} = require("devtools/app-manager/app-validator");
 const {ConnectionManager, Connection} = require("devtools/client/connection-manager");
-const AppActorFront = require("devtools/app-actor-front");
+const {AppActorFront} = require("devtools/app-actor-front");
 const {getDeviceFront} = require("devtools/server/actors/device");
 const {getPreferenceFront} = require("devtools/server/actors/preference");
 const {setTimeout} = require("sdk/timers");
@@ -46,9 +45,6 @@ exports.AppManager = AppManager = {
     this.onConnectionChanged = this.onConnectionChanged.bind(this);
     this.connection.on(Connection.Events.STATUS_CHANGED, this.onConnectionChanged);
 
-    this.onWebAppsStoreready = this.onWebAppsStoreready.bind(this);
-    this.webAppsStore = new WebappsStore(this.connection);
-    this.webAppsStore.on("store-ready", this.onWebAppsStoreready);
     this.tabStore = new TabStore(this.connection);
     this.onTabNavigate = this.onTabNavigate.bind(this);
     this.onTabClosed = this.onTabClosed.bind(this);
@@ -69,25 +65,18 @@ exports.AppManager = AppManager = {
     this.trackSimulatorRuntimes();
 
     this.onInstallProgress = this.onInstallProgress.bind(this);
-    AppActorFront.on("install-progress", this.onInstallProgress);
 
     this.observe = this.observe.bind(this);
     Services.prefs.addObserver(WIFI_SCANNING_PREF, this, false);
   },
 
   uninit: function() {
-    AppActorFront.off("install-progress", this.onInstallProgress);
-    this._unlistenToApps();
     this.selectedProject = null;
     this.selectedRuntime = null;
     this.untrackUSBRuntimes();
     this.untrackWiFiRuntimes();
     this.untrackSimulatorRuntimes();
-    this._runningApps.clear();
     this.runtimeList = null;
-    this.webAppsStore.off("store-ready", this.onWebAppsStoreready);
-    this.webAppsStore.destroy();
-    this.webAppsStore = null;
     this.tabStore.off("navigate", this.onTabNavigate);
     this.tabStore.off("closed", this.onTabClosed);
     this.tabStore.destroy();
@@ -136,14 +125,25 @@ exports.AppManager = AppManager = {
 
     if (this.connection.status != Connection.Status.CONNECTED) {
       console.log("Connection status changed: " + this.connection.status);
-      this._runningApps.clear();
-      this._unlistenToApps();
+      if (this._appsFront) {
+        this._appsFront.off("install-progress", this.onInstallProgress);
+        this._appsFront.unwatchApps();
+        this._appsFront = null;
+      }
       this._listTabsResponse = null;
     } else {
       this.connection.client.listTabs((response) => {
-        this._listenToApps();
+        let front = new AppActorFront(this.connection.client,
+                                      response);
+        front.on("install-progress", this.onInstallProgress);
+        front.watchApps(() => this.checkIfProjectIsRunning())
+             .then(() => front.fetchIcons())
+             .then(() => {
+               this._appsFront = front;
+               this.checkIfProjectIsRunning();
+               this.update("runtime-apps-found");
+             });
         this._listTabsResponse = response;
-        this._getRunningApps();
         this.update("list-tabs-response");
       });
     }
@@ -151,55 +151,16 @@ exports.AppManager = AppManager = {
     this.update("connection");
   },
 
+  get apps() {
+    if (this._appsFront) {
+      return this._appsFront.apps;
+    } else {
+      return new Map();
+    }
+  },
+
   onInstallProgress: function(event, details) {
     this.update("install-progress", details);
-  },
-
-  onWebAppsStoreready: function() {
-    this.update("runtime-apps-found");
-  },
-
-  _runningApps: new Set(),
-  _getRunningApps: function() {
-    let client = this.connection.client;
-    if (!this._listTabsResponse.webappsActor) {
-      return;
-    }
-    let request = {
-      to: this._listTabsResponse.webappsActor,
-      type: "listRunningApps"
-    };
-    client.request(request, (res) => {
-      if (res.error) {
-        this.reportError("error_listRunningApps");
-        console.error("listRunningApps error: " + res.error);
-      }
-      for (let m of res.apps) {
-        this._runningApps.add(m);
-      }
-    });
-    this.checkIfProjectIsRunning();
-  },
-  _listenToApps: function() {
-    let client = this.connection.client;
-    client.addListener("appOpen", (type, { manifestURL }) => {
-      this._runningApps.add(manifestURL);
-      this.checkIfProjectIsRunning();
-    });
-
-    client.addListener("appClose", (type, { manifestURL }) => {
-      this._runningApps.delete(manifestURL);
-      this.checkIfProjectIsRunning();
-    });
-
-    client.addListener("appUninstall", (type, { manifestURL }) => {
-      this._runningApps.delete(manifestURL);
-      this.checkIfProjectIsRunning();
-    });
-  },
-  _unlistenToApps: function() {
-    // Is that even possible?
-    // connection.client is null now.
   },
 
   isProjectRunning: function() {
@@ -207,8 +168,9 @@ exports.AppManager = AppManager = {
         this.selectedProject.type == "tab") {
       return true;
     }
-    let manifest = this.getProjectManifestURL(this.selectedProject);
-    return manifest && this._runningApps.has(manifest);
+
+    let app = this._getProjectFront(this.selectedProject);
+    return app && app.running;
   },
 
   checkIfProjectIsRunning: function() {
@@ -260,12 +222,10 @@ exports.AppManager = AppManager = {
     }
     return this.getTarget().then(target => {
       target.activeTab.reload();
-    });
+    }, console.error.bind(console));
   },
 
   getTarget: function() {
-    let client = this.connection.client;
-
     if (this.selectedProject.type == "mainProcess") {
       return devtools.TargetFactory.forRemoteTab({
         form: this._listTabsResponse,
@@ -278,13 +238,11 @@ exports.AppManager = AppManager = {
       return this.tabStore.getTargetForTab();
     }
 
-    let manifest = this.getProjectManifestURL(this.selectedProject);
-    if (!manifest) {
-      console.error("Can't find manifestURL for selected project");
-      return promise.reject();
+    let app = this._getProjectFront(this.selectedProject);
+    if (!app) {
+      return promise.reject("Can't find app front for selected project");
     }
 
-    let actor = this._listTabsResponse.webappsActor;
     return Task.spawn(function* () {
       // Once we asked the app to launch, the app isn't necessary completely loaded.
       // launch request only ask the app to launch and immediatly returns.
@@ -292,20 +250,17 @@ exports.AppManager = AppManager = {
 
       for (let i = 0; i < 10; i++) {
         try {
-          let target = yield AppActorFront.getTargetForApp(client, actor, manifest);
-          // Success
-          return target;
+          return yield app.getTarget();
         } catch(e) {}
         let deferred = promise.defer();
         setTimeout(deferred.resolve, 500);
         yield deferred.promise;
       }
 
-      AppManager.reportError("error_cantConnectToApp", manifest);
+      AppManager.reportError("error_cantConnectToApp", app.manifest.manifestURL);
       throw new Error("can't connect to app");
     });
   },
-
 
   getProjectManifestURL: function(project) {
     let manifest = null;
@@ -322,6 +277,14 @@ exports.AppManager = AppManager = {
     }
 
     return manifest;
+  },
+
+  _getProjectFront: function(project) {
+    let manifest = this.getProjectManifestURL(project);
+    if (manifest && this._appsFront) {
+      return this._appsFront.apps.get(manifest);
+    }
+    return null;
   },
 
   _selectedProject: null,
@@ -445,23 +408,19 @@ exports.AppManager = AppManager = {
     if (this.selectedProject && this.selectedProject.type != "runtimeApp") {
       return promise.reject("attempting to launch a non-runtime app");
     }
-    let client = this.connection.client;
-    let actor = this._listTabsResponse.webappsActor;
-    let manifest = this.getProjectManifestURL(this.selectedProject);
-    return AppActorFront.launchApp(client, actor, manifest);
+    let app = this._getProjectFront(this.selectedProject);
+    return app.launch();
   },
 
   launchOrReloadRuntimeApp: function() {
     if (this.selectedProject && this.selectedProject.type != "runtimeApp") {
       return promise.reject("attempting to launch / reload a non-runtime app");
     }
-    let client = this.connection.client;
-    let actor = this._listTabsResponse.webappsActor;
-    let manifest = this.getProjectManifestURL(this.selectedProject);
-    if (!this.isProjectRunning()) {
-      return AppActorFront.launchApp(client, actor, manifest);
+    let app = this._getProjectFront(this.selectedProject);
+    if (!app.running) {
+      return app.launch();
     } else {
-      return AppActorFront.reloadApp(client, actor, manifest);
+      return app.reload();
     }
   },
 
@@ -488,22 +447,20 @@ exports.AppManager = AppManager = {
         return;
       }
 
-      let client = self.connection.client;
-      let actor = self._listTabsResponse.webappsActor;
       let installPromise;
 
       if (project.type != "packaged" && project.type != "hosted") {
         return promise.reject("Don't know how to install project");
       }
 
+      let response;
       if (project.type == "packaged") {
-        let {appId} = yield AppActorFront.installPackaged(client,
-                                                          actor,
-                                                          project.location,
-                                                          project.packagedAppOrigin);
+        response = yield self._appsFront.installPackaged(project.location,
+                                                             project.packagedAppOrigin);
+
         // If the packaged app specified a custom origin override,
         // we need to update the local project origin
-        project.packagedAppOrigin = appId;
+        project.packagedAppOrigin = response.appId;
         // And ensure the indexed db on disk is also updated
         AppProjects.update(project);
       }
@@ -516,15 +473,13 @@ exports.AppManager = AppManager = {
           origin: origin.spec,
           manifestURL: project.location
         };
-        yield AppActorFront.installHosted(client,
-                                          actor,
-                                          appId,
-                                          metadata,
-                                          project.manifest);
+        response = yield self._appsFront.installHosted(appId,
+                                            metadata,
+                                            project.manifest);
       }
 
-      let manifest = self.getProjectManifestURL(project);
-      if (!self._runningApps.has(manifest)) {
+      let {app} = response;
+      if (!app.running) {
         let deferred = promise.defer();
         self.on("app-manager-update", function onUpdate(event, what) {
           if (what == "project-is-running") {
@@ -532,20 +487,17 @@ exports.AppManager = AppManager = {
             deferred.resolve();
           }
         });
-        yield AppActorFront.launchApp(client, actor, manifest);
+        yield app.launch();
         yield deferred.promise;
-
       } else {
-        yield AppActorFront.reloadApp(client, actor, manifest);
+        yield app.reload();
       }
     });
   },
 
   stopRunningApp: function() {
-    let client = this.connection.client;
-    let actor = this._listTabsResponse.webappsActor;
-    let manifest = this.getProjectManifestURL(this.selectedProject);
-    return AppActorFront.closeApp(client, actor, manifest);
+    let app = this._getProjectFront(this.selectedProject);
+    return app.close();
   },
 
   /* PROJECT VALIDATION */

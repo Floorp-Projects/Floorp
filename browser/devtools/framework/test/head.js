@@ -127,3 +127,16 @@ function waitForTick() {
   executeSoon(deferred.resolve);
   return deferred.promise;
 }
+
+function toggleAllTools(state) {
+  for (let [, tool] of gDevTools._tools) {
+    if (!tool.visibilityswitch) {
+      continue;
+    }
+    if (state) {
+      Services.prefs.setBoolPref(tool.visibilityswitch, true);
+    } else {
+      Services.prefs.clearUserPref(tool.visibilityswitch);
+    }
+  }
+}

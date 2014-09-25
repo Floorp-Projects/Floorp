@@ -6,7 +6,7 @@
  */
 
 function spawnTest () {
-  let [target, debuggee, front] = yield initBackend(SIMPLE_NODES_URL);
+  let { target, front } = yield initBackend(SIMPLE_NODES_URL);
   let [_, nodes] = yield Promise.all([
     front.setup({ reload: true }),
     getN(front, "create-node", 14)

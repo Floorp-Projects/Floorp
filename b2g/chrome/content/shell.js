@@ -332,6 +332,7 @@ var shell = {
     window.addEventListener('unload', this);
     this.contentBrowser.addEventListener('mozbrowserloadstart', this, true);
     this.contentBrowser.addEventListener('mozbrowserselectionchange', this, true);
+    this.contentBrowser.addEventListener('mozbrowserscrollviewchange', this, true);
 
     CustomEventManager.init();
     WebappsHelper.init();
@@ -359,6 +360,7 @@ var shell = {
     window.removeEventListener('sizemodechange', this);
     this.contentBrowser.removeEventListener('mozbrowserloadstart', this, true);
     this.contentBrowser.removeEventListener('mozbrowserselectionchange', this, true);
+    this.contentBrowser.removeEventListener('mozbrowserscrollviewchange', this, true);
     ppmm.removeMessageListener("content-handler", this);
 
     UserAgentOverrides.uninit();
@@ -500,7 +502,12 @@ var shell = {
 
         this.notifyContentStart();
        break;
-
+      case 'mozbrowserscrollviewchange':
+        this.sendChromeEvent({
+          type: 'scrollviewchange',
+          detail: evt.detail,
+        });
+        break;
       case 'mozbrowserselectionchange':
         // The mozbrowserselectionchange event, may have crossed the chrome-content boundary.
         // This event always dispatch to shell.js. But the offset we got from this event is
