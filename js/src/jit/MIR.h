@@ -1361,6 +1361,34 @@ class MSimdConstant : public MNullaryInstruction
     }
 };
 
+// Converts all lanes of a given vector into the type of another vector
+class MSimdConvert : public MUnaryInstruction
+{
+    MSimdConvert(MDefinition *obj, MIRType fromType, MIRType toType)
+      : MUnaryInstruction(obj)
+    {
+        MOZ_ASSERT(IsSimdType(obj->type()) && fromType == obj->type());
+        MOZ_ASSERT(IsSimdType(toType));
+        setResultType(toType);
+    }
+
+  public:
+    INSTRUCTION_HEADER(SimdConvert);
+    static MSimdConvert *NewAsmJS(TempAllocator &alloc, MDefinition *obj, MIRType fromType,
+                                  MIRType toType)
+    {
+        return new(alloc) MSimdConvert(obj, fromType, toType);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    ALLOW_CLONE(MSimdConvert)
+};
+
 // Extracts a lane element from a given vector type, given by its lane symbol.
 class MSimdExtractElement : public MUnaryInstruction
 {

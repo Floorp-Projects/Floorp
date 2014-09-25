@@ -305,6 +305,8 @@ private:
         OP2_MULPS_VpsWps    = 0x59,
         OP2_CVTSS2SD_VsdEd  = 0x5A,
         OP2_CVTSD2SS_VsdEd  = 0x5A,
+        OP2_CVTTPS2DQ_VdqWps = 0x5B,
+        OP2_CVTDQ2PS_VpsWdq = 0x5B,
         OP2_SUBSD_VsdWsd    = 0x5C,
         OP2_SUBPS_VpsWps    = 0x5C,
         OP2_MINSD_VsdWsd    = 0x5D,
@@ -2733,6 +2735,21 @@ public:
              nameIReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_F2);
         m_formatter.twoByteOp(OP2_CVTSI2SD_VsdEd, (RegisterID)dst, src);
+    }
+
+    void cvttps2dq_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("cvttps2dq   %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.prefix(PRE_SSE_F3);
+        m_formatter.twoByteOp(OP2_CVTTPS2DQ_VdqWps, (RegisterID)dst, (RegisterID)src);
+    }
+
+    void cvtdq2ps_rr(XMMRegisterID src, XMMRegisterID dst)
+    {
+        spew("cvtdq2ps   %s, %s",
+             nameFPReg(src), nameFPReg(dst));
+        m_formatter.twoByteOp(OP2_CVTDQ2PS_VpsWdq, (RegisterID)dst, (RegisterID)src);
     }
 
 #ifdef JS_CODEGEN_X64
