@@ -10,6 +10,7 @@
 #include "mozilla/dom/TabChild.h"
 #include "jsfriendapi.h"
 #include "xpcprivate.h"
+#include "WrapperFactory.h"
 #include "mozilla/Preferences.h"
 
 using namespace js;
@@ -123,7 +124,7 @@ ObjectToIdMap::find(JSObject *obj)
 {
     Table::Ptr p = table_->lookup(obj);
     if (!p)
-        return 0;
+        return ObjectId::nullId();
     return p->value();
 }
 
@@ -162,7 +163,7 @@ bool JavaScriptShared::sStackLoggingEnabled;
 JavaScriptShared::JavaScriptShared(JSRuntime *rt)
   : rt_(rt),
     refcount_(1),
-    lastId_(0)
+    nextSerialNumber_(1)
 {
     if (!sLoggingInitialized) {
         sLoggingInitialized = true;
@@ -186,7 +187,9 @@ JavaScriptShared::init()
         return false;
     if (!cpows_.init())
         return false;
-    if (!objectIds_.init())
+    if (!unwaivedObjectIds_.init())
+        return false;
+    if (!waivedObjectIds_.init())
         return false;
 
     return true;
@@ -381,9 +384,9 @@ JavaScriptShared::ConvertID(const JSIID &from, nsID *to)
 }
 
 JSObject *
-JavaScriptShared::findObjectById(JSContext *cx, uint32_t objId)
+JavaScriptShared::findObjectById(JSContext *cx, const ObjectId &objId)
 {
-    RootedObject obj(cx, findObjectById(objId));
+    RootedObject obj(cx, objects_.find(objId));
     if (!obj) {
         JS_ReportError(cx, "operation not possible on dead CPOW");
         return nullptr;
@@ -394,8 +397,13 @@ JavaScriptShared::findObjectById(JSContext *cx, uint32_t objId)
     // can access objects in other compartments using cross-compartment
     // wrappers.
     JSAutoCompartment ac(cx, scopeForTargetObjects());
-    if (!JS_WrapObject(cx, &obj))
-        return nullptr;
+    if (objId.hasXrayWaiver()) {
+        if (!xpc::WrapperFactory::WaiveXrayAndWrap(cx, &obj))
+            return nullptr;
+    } else {
+        if (!JS_WrapObject(cx, &obj))
+            return nullptr;
+    }
     return obj;
 }
 

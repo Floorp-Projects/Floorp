@@ -1033,7 +1033,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
       JS::Rooted<JS::Value> thisValue(cx, JS::UndefinedValue());
 
       JS::Rooted<JS::Value> funval(cx);
-      if (JS_ObjectIsCallable(cx, object)) {
+      if (JS::IsCallable(object)) {
         // If the listener is a JS function:
         funval.setObject(*object);
 
@@ -1055,7 +1055,7 @@ nsFrameMessageManager::ReceiveMessage(nsISupports* aTarget,
           return NS_ERROR_UNEXPECTED;
 
         // Check if the object is even callable.
-        NS_ENSURE_STATE(JS_ObjectIsCallable(cx, &funval.toObject()));
+        NS_ENSURE_STATE(JS::IsCallable(&funval.toObject()));
         thisValue.setObject(*object);
       }
 

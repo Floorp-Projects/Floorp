@@ -1937,6 +1937,15 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
           parent->GetContent()->Tag() == nsGkAtoms::mtext_)) {
         textFlags |= gfxTextRunFactory::TEXT_USE_MATH_SCRIPT;
       }
+      nsIMathMLFrame* mathFrame = do_QueryFrame(parent);
+      if (mathFrame) {
+        nsPresentationData presData;
+        mathFrame->GetPresentationData(presData);
+        if (NS_MATHML_IS_DTLS_SET(presData.flags)) {
+          mathFlags |= MathMLTextRunFactory::MATH_FONT_FEATURE_DTLS;
+          anyMathMLStyling = true;
+        }
+      }
     }
     nsIFrame* child = mLineContainer;
     uint8_t oldScriptLevel = 0;

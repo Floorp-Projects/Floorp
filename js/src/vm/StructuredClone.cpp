@@ -1955,7 +1955,7 @@ JS_StructuredClone(JSContext *cx, HandleValue value, MutableHandleValue vp,
     // so we copy the string by wrapping it.
     if (value.isString()) {
       RootedString strValue(cx, value.toString());
-      if (!cx->compartment()->wrap(cx, strValue.address())) {
+      if (!cx->compartment()->wrap(cx, &strValue)) {
         return false;
       }
       vp.setString(strValue);
