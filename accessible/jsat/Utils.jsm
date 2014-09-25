@@ -360,6 +360,16 @@ this.Utils = { // jshint ignore:line
     return hidden && hidden === 'true';
   },
 
+  visibleChildCount: function visibleChildCount(aAccessible) {
+    let count = 0;
+    for (let child = aAccessible.firstChild; child; child = child.nextSibling) {
+      if (!this.isHidden(child)) {
+        ++count;
+      }
+    }
+    return count;
+  },
+
   inHiddenSubtree: function inHiddenSubtree(aAccessible) {
     for (let acc=aAccessible; acc; acc=acc.parent) {
       if (this.isHidden(acc)) {

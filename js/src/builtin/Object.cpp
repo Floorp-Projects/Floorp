@@ -1066,17 +1066,21 @@ obj_freeze(JSContext *cx, unsigned argc, Value *vp)
     return JSObject::freeze(cx, obj);
 }
 
+// ES6 draft rev27 (2014/08/24) 19.1.2.12 Object.isFrozen(O)
 static bool
 obj_isFrozen(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject obj(cx);
-    if (!GetFirstArgumentAsObject(cx, args, "Object.preventExtensions", &obj))
-        return false;
 
-    bool frozen;
-    if (!JSObject::isFrozen(cx, obj, &frozen))
-        return false;
+    // step 1
+    bool frozen = true;
+
+    // step 2
+    if (args.get(0).isObject()) {
+        RootedObject obj(cx, &args.get(0).toObject());
+        if (!JSObject::isFrozen(cx, obj, &frozen))
+            return false;
+    }
     args.rval().setBoolean(frozen);
     return true;
 }

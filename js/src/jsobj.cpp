@@ -5076,8 +5076,9 @@ GetPropertyHelperInline(JSContext *cx,
 
             if (op == JSOP_GETXPROP) {
                 /* Undefined property during a name lookup, report an error. */
-                RootedAtom atom(cx, JSID_TO_ATOM(id));
-                js_ReportIsNotDefined(cx, atom);
+                JSAutoByteString printable;
+                if (js_ValueToPrintable(cx, IdToValue(id), &printable))
+                    js_ReportIsNotDefined(cx, printable.ptr());
                 return false;
             }
 
@@ -6450,7 +6451,7 @@ js_DumpInterpreterFrame(JSContext *cx, InterpreterFrame *start)
             fprintf(stderr, "  current op: %s\n", js_CodeName[*pc]);
             MaybeDumpObject("staticScope", i.script()->getStaticScope(pc));
         }
-        MaybeDumpValue("this", i.thisv());
+        MaybeDumpValue("this", i.thisv(cx));
         if (!i.isJit()) {
             fprintf(stderr, "  rval: ");
             dumpValue(i.interpFrame()->returnValue());

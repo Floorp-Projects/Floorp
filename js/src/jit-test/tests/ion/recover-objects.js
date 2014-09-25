@@ -1,5 +1,5 @@
 setJitCompilerOption("baseline.warmup.trigger", 10);
-setJitCompilerOption("ion.warmup.trigger", 20);
+setJitCompilerOption("ion.warmup.trigger", 30);
 
 var uceFault = function (i) {
     if (i > 98)
@@ -112,6 +112,20 @@ function dynamicSlots(i) {
     assertEq(obj.p0 + obj.p10 + obj.p20 + obj.p30 + obj.p40, 5 * i + 100);
 }
 
+// Check that we can correctly recover allocations of new objects.
+function Point(x, y)
+{
+    this.x = x;
+    this.y = y;
+}
+
+function createThisWithTemplate(i)
+{
+    var p = new Point(i - 1, i + 1);
+    bailout();
+    assertEq(p.y - p.x, 2);
+}
+
 
 for (var i = 0; i < 100; i++) {
     notSoEmpty1(i);
@@ -121,4 +135,5 @@ for (var i = 0; i < 100; i++) {
     withinIf(i);
     unknownLoad(i);
     dynamicSlots(i);
+    createThisWithTemplate(i);
 }

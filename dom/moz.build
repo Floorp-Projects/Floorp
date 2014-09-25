@@ -128,7 +128,8 @@ if CONFIG['MOZ_NFC']:
 if CONFIG['MOZ_B2G']:
     DIRS += [
         'downloads',
-        'mobileid'
+        'mobileid',
+        'engineeringmode'
     ]
 
 if CONFIG['MOZ_B2G_BT_API_V2']:

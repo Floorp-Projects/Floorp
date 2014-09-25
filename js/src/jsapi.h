@@ -3381,6 +3381,20 @@ extern JS_PUBLIC_API(uint16_t)
 JS_GetFunctionArity(JSFunction *fun);
 
 /*
+ * API for determining callability and constructability. This does the right
+ * thing for proxies.
+ */
+namespace JS {
+
+extern JS_PUBLIC_API(bool)
+IsCallable(JSObject *obj);
+
+extern JS_PUBLIC_API(bool)
+IsConstructor(JSObject *obj);
+
+} /* namespace JS */
+
+/*
  * Infallible predicate to test whether obj is a function object (faster than
  * comparing obj's class name to "Function", but equivalent unless someone has
  * overwritten the "Function" identifier with a different constructor and then
@@ -3388,9 +3402,6 @@ JS_GetFunctionArity(JSFunction *fun);
  */
 extern JS_PUBLIC_API(bool)
 JS_ObjectIsFunction(JSContext *cx, JSObject *obj);
-
-extern JS_PUBLIC_API(bool)
-JS_ObjectIsCallable(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(bool)
 JS_IsNativeFunction(JSObject *funobj, JSNative call);

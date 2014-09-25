@@ -1609,7 +1609,7 @@ NPObjWrapper_Convert(JSContext *cx, JS::Handle<JSObject*> obj, JSType hint, JS::
   JS::Rooted<JS::Value> v(cx, JSVAL_VOID);
   if (!JS_GetProperty(cx, obj, "toString", &v))
     return false;
-  if (!v.isPrimitive() && JS_ObjectIsCallable(cx, v.toObjectOrNull())) {
+  if (!v.isPrimitive() && JS::IsCallable(v.toObjectOrNull())) {
     if (!JS_CallFunctionValue(cx, obj, v, JS::HandleValueArray::empty(), vp))
       return false;
     if (vp.isPrimitive())

@@ -317,12 +317,9 @@ struct JSCompartment
     inline bool wrap(JSContext *cx, JS::MutableHandleValue vp,
                      JS::HandleObject existing = js::NullPtr());
 
-    bool wrap(JSContext *cx, JSString **strp);
-    bool wrap(JSContext *cx, js::HeapPtrString *strp);
+    bool wrap(JSContext *cx, js::MutableHandleString strp);
     bool wrap(JSContext *cx, JS::MutableHandleObject obj,
               JS::HandleObject existingArg = js::NullPtr());
-    bool wrap(JSContext *cx, js::PropertyOp *op);
-    bool wrap(JSContext *cx, js::StrictPropertyOp *op);
     bool wrap(JSContext *cx, JS::MutableHandle<js::PropertyDescriptor> desc);
     bool wrap(JSContext *cx, JS::MutableHandle<js::PropDesc> desc);
 

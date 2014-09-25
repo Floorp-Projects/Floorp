@@ -308,13 +308,13 @@ CopyStringPure(JSContext *cx, JSString *str)
 }
 
 bool
-JSCompartment::wrap(JSContext *cx, JSString **strp)
+JSCompartment::wrap(JSContext *cx, MutableHandleString strp)
 {
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(this));
     JS_ASSERT(cx->compartment() == this);
 
     /* If the string is already in this compartment, we are done. */
-    JSString *str = *strp;
+    JSString *str = strp;
     if (str->zoneFromAnyThread() == zone())
         return true;
 
@@ -328,7 +328,7 @@ JSCompartment::wrap(JSContext *cx, JSString **strp)
     /* Check the cache. */
     RootedValue key(cx, StringValue(str));
     if (WrapperMap::Ptr p = crossCompartmentWrappers.lookup(CrossCompartmentKey(key))) {
-        *strp = p->value().get().toString();
+        strp.set(p->value().get().toString());
         return true;
     }
 
@@ -339,17 +339,7 @@ JSCompartment::wrap(JSContext *cx, JSString **strp)
     if (!putWrapper(cx, CrossCompartmentKey(key), StringValue(copy)))
         return false;
 
-    *strp = copy;
-    return true;
-}
-
-bool
-JSCompartment::wrap(JSContext *cx, HeapPtrString *strp)
-{
-    RootedString str(cx, *strp);
-    if (!wrap(cx, str.address()))
-        return false;
-    *strp = str;
+    strp.set(copy);
     return true;
 }
 
@@ -457,37 +447,17 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
 }
 
 bool
-JSCompartment::wrap(JSContext *cx, PropertyOp *propp)
-{
-    RootedValue value(cx, CastAsObjectJsval(*propp));
-    if (!wrap(cx, &value))
-        return false;
-    *propp = CastAsPropertyOp(value.toObjectOrNull());
-    return true;
-}
-
-bool
-JSCompartment::wrap(JSContext *cx, StrictPropertyOp *propp)
-{
-    RootedValue value(cx, CastAsObjectJsval(*propp));
-    if (!wrap(cx, &value))
-        return false;
-    *propp = CastAsStrictPropertyOp(value.toObjectOrNull());
-    return true;
-}
-
-bool
 JSCompartment::wrap(JSContext *cx, MutableHandle<PropertyDescriptor> desc)
 {
     if (!wrap(cx, desc.object()))
         return false;
 
     if (desc.hasGetterObject()) {
-        if (!wrap(cx, &desc.getter()))
+        if (!wrap(cx, desc.getterObject()))
             return false;
     }
     if (desc.hasSetterObject()) {
-        if (!wrap(cx, &desc.setter()))
+        if (!wrap(cx, desc.setterObject()))
             return false;
     }
 

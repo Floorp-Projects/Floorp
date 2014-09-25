@@ -2948,7 +2948,7 @@ array_of(JSContext *cx, unsigned argc, Value *vp)
     {
         RootedValue v(cx);
         Value argv[1] = {NumberValue(args.length())};
-        if (!InvokeConstructor(cx, args.thisv(), 1, argv, v.address()))
+        if (!InvokeConstructor(cx, args.thisv(), 1, argv, &v))
             return false;
         obj = ToObject(cx, v);
         if (!obj)

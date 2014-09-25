@@ -2171,6 +2171,24 @@ CodeGeneratorX86Shared::visitFloat32x4(LFloat32x4 *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitInt32x4ToFloat32x4(LInt32x4ToFloat32x4 *ins)
+{
+    FloatRegister in = ToFloatRegister(ins->input());
+    FloatRegister out = ToFloatRegister(ins->output());
+    masm.convertInt32x4ToFloat32x4(in, out);
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitFloat32x4ToInt32x4(LFloat32x4ToInt32x4 *ins)
+{
+    FloatRegister in = ToFloatRegister(ins->input());
+    FloatRegister out = ToFloatRegister(ins->output());
+    masm.convertFloat32x4ToInt32x4(in, out);
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitSimdValueInt32x4(LSimdValueInt32x4 *ins)
 {
     MSimdValueX4 *mir = ins->mir();

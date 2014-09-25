@@ -149,7 +149,8 @@ InvokeConstructor(JSContext *cx, CallArgs args);
 
 /* See the fval overload of Invoke. */
 extern bool
-InvokeConstructor(JSContext *cx, Value fval, unsigned argc, const Value *argv, Value *rval);
+InvokeConstructor(JSContext *cx, Value fval, unsigned argc, const Value *argv,
+                  MutableHandleValue rval);
 
 /*
  * Executes a script with the given scopeChain/this. The 'type' indicates
@@ -372,8 +373,7 @@ bool
 CallProperty(JSContext *cx, HandleValue value, HandlePropertyName name, MutableHandleValue vp);
 
 bool
-GetScopeName(JSContext *cx, HandleScript script, jsbytecode *pc, HandleObject obj,
-             HandlePropertyName name, MutableHandleValue vp);
+GetScopeName(JSContext *cx, HandleObject obj, HandlePropertyName name, MutableHandleValue vp);
 
 bool
 GetScopeNameForTypeOf(JSContext *cx, HandleObject obj, HandlePropertyName name,
