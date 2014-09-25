@@ -106,7 +106,7 @@ static D3D9FormatInfoMap BuildD3D9FormatInfoMap()
     InsertD3DFormatInfo(&map, D3DFMT_A4R4G4B4,       16, 1, 1, GL_BGRA4_ANGLEX,                    GenerateMip<B4G4R4A4>,      ReadColor<B4G4R4A4, GLfloat>     );
     InsertD3DFormatInfo(&map, D3DFMT_A1R5G5B5,       16, 1, 1, GL_BGR5_A1_ANGLEX,                  GenerateMip<B5G5R5A1>,      ReadColor<B5G5R5A1, GLfloat>     );
     InsertD3DFormatInfo(&map, D3DFMT_R5G6B5,         16, 1, 1, GL_RGB565,                          GenerateMip<R5G6B5>,        ReadColor<R5G6B5, GLfloat>       );
-    InsertD3DFormatInfo(&map, D3DFMT_X8R8G8B8,       32, 1, 1, GL_BGRA8_EXT,                       GenerateMip<B8G8R8X8>,      ReadColor<B8G8R8X8, GLfloat>     );
+    InsertD3DFormatInfo(&map, D3DFMT_X8R8G8B8,       32, 1, 1, GL_BGR8_OES,                        GenerateMip<B8G8R8X8>,      ReadColor<B8G8R8X8, GLfloat>     );
     InsertD3DFormatInfo(&map, D3DFMT_A8R8G8B8,       32, 1, 1, GL_BGRA8_EXT,                       GenerateMip<B8G8R8A8>,      ReadColor<B8G8R8A8, GLfloat>     );
     InsertD3DFormatInfo(&map, D3DFMT_R16F,           16, 1, 1, GL_R16F_EXT,                        GenerateMip<R16F>,          ReadColor<R16F, GLfloat>         );
     InsertD3DFormatInfo(&map, D3DFMT_G16R16F,        32, 1, 1, GL_RG16F_EXT,                       GenerateMip<R16G16F>,       ReadColor<R16G16F, GLfloat>      );
