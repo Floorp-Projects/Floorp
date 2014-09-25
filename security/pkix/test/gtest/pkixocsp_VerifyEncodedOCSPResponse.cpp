@@ -63,7 +63,7 @@ public:
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
-  virtual Result IsChainValid(const DERArray&)
+  virtual Result IsChainValid(const DERArray&, Time)
   {
     ADD_FAILURE();
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
