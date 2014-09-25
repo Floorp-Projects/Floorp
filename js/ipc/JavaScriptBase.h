@@ -111,6 +111,14 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
         return Answer::AnswerDOMInstanceOf(objId, prototypeID, depth, rs, instanceof);
     }
 
+    bool AnswerIsCallable(const ObjectId &objId, bool *result) {
+        return Answer::AnswerIsCallable(objId, result);
+    }
+
+    bool AnswerIsConstructor(const ObjectId &objId, bool *result) {
+        return Answer::AnswerIsConstructor(objId, result);
+    }
+
     bool RecvDropObject(const ObjectId &objId) {
         return Answer::RecvDropObject(objId);
     }
@@ -194,6 +202,14 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     bool CallDOMInstanceOf(const ObjectId &objId, const int &prototypeID, const int &depth,
                            ReturnStatus *rs, bool *instanceof) {
         return Base::CallDOMInstanceOf(objId, prototypeID, depth, rs, instanceof);
+    }
+
+    bool CallIsCallable(const ObjectId &objId, bool *result) {
+        return Base::CallIsCallable(objId, result);
+    }
+
+    bool CallIsConstructor(const ObjectId &objId, bool *result) {
+        return Base::CallIsConstructor(objId, result);
     }
 
     /* The following code is needed to suppress a bogus MSVC warning (C4250). */
