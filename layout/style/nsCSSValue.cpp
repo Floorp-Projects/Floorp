@@ -853,13 +853,12 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
       nsStyleUtil::AppendEscapedCSSIdent(buffer, aResult);
     }
   }
-  else if (eCSSUnit_Array <= unit && unit <= eCSSUnit_Symbols) {
+  else if (eCSSUnit_Array <= unit && unit <= eCSSUnit_Steps) {
     switch (unit) {
       case eCSSUnit_Counter:  aResult.AppendLiteral("counter(");  break;
       case eCSSUnit_Counters: aResult.AppendLiteral("counters("); break;
       case eCSSUnit_Cubic_Bezier: aResult.AppendLiteral("cubic-bezier("); break;
       case eCSSUnit_Steps: aResult.AppendLiteral("steps("); break;
-      case eCSSUnit_Symbols: aResult.AppendLiteral("symbols("); break;
       default: break;
     }
 
@@ -867,9 +866,8 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     bool mark = false;
     for (size_t i = 0, i_end = array->Count(); i < i_end; ++i) {
       if (mark && array->Item(i).GetUnit() != eCSSUnit_Null) {
-        if ((unit == eCSSUnit_Array &&
-             eCSSProperty_transition_timing_function != aProperty) ||
-            unit == eCSSUnit_Symbols)
+        if (unit == eCSSUnit_Array &&
+            eCSSProperty_transition_timing_function != aProperty)
           aResult.Append(' ');
         else
           aResult.AppendLiteral(", ");
@@ -886,17 +884,6 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
           aResult.AppendLiteral("start");
         } else {
           aResult.AppendLiteral("end");
-        }
-        continue;
-      }
-      if (unit == eCSSUnit_Symbols && i == 0) {
-        NS_ABORT_IF_FALSE(array->Item(i).GetUnit() == eCSSUnit_Enumerated,
-                          "unexpected value");
-        int32_t system = array->Item(i).GetIntValue();
-        if (system != NS_STYLE_COUNTER_SYSTEM_SYMBOLIC) {
-          AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(
-                  system, nsCSSProps::kCounterSystemKTable), aResult);
-          mark = true;
         }
         continue;
       }
@@ -1418,7 +1405,6 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     case eCSSUnit_Attr:
     case eCSSUnit_Cubic_Bezier:
     case eCSSUnit_Steps:
-    case eCSSUnit_Symbols:
     case eCSSUnit_Counter:
     case eCSSUnit_Counters:     aResult.Append(char16_t(')'));    break;
     case eCSSUnit_Local_Font:   break;
@@ -1525,7 +1511,6 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     case eCSSUnit_Counters:
     case eCSSUnit_Cubic_Bezier:
     case eCSSUnit_Steps:
-    case eCSSUnit_Symbols:
     case eCSSUnit_Function:
     case eCSSUnit_Calc:
     case eCSSUnit_Calc_Plus:
