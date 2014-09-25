@@ -411,6 +411,35 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
                               ["555-12345", {"string": "listboxoption"}]],
           expectedBraille: [[{"string": "listboxoptionAbbr"}, "555-12345"],
                             ["555-12345", {"string": "listboxoptionAbbr"}]]
+        }, {
+          accOrElmOrID: "columnheader",
+          oldAccOrElmOrID: "grid",
+          expectedUtterance: [[{"string": "columnInfo", "args": [1]},
+            {"string": "rowInfo", "args" :[1]}, "Sunday"], ["Sunday",
+            {"string": "columnInfo", "args": [1]},
+            {"string": "rowInfo", "args" :[1]}]],
+          expectedBraille: [[{"string": "cellInfoAbbr", "args": [1, 1]},
+            "Sunday"], ["Sunday", {"string": "cellInfoAbbr", "args": [1, 1]}]]
+        }, {
+          accOrElmOrID: "rowheader",
+          oldAccOrElmOrID: "grid",
+          expectedUtterance: [[{"string": "columnInfo", "args": [1]},
+            {"string": "rowInfo", "args": [2]}, "Sunday", "Week 1"], ["Week 1",
+            {"string": "columnInfo", "args": [1]},
+            {"string": "rowInfo", "args": [2]}, "Sunday"]],
+          expectedBraille: [[{"string": "cellInfoAbbr", "args": [1, 2]},
+            "Sunday", "Week 1"], ["Week 1",
+            {"string": "cellInfoAbbr", "args": [1, 2]}, "Sunday"]]
+        }, {
+          accOrElmOrID: "gridcell1",
+          oldAccOrElmOrID: "grid",
+          expectedUtterance: [["3"], ["3"]],
+          expectedBraille: [["3"], ["3"]]
+        }, {
+          accOrElmOrID: "gridcell2",
+          oldAccOrElmOrID: "grid",
+          expectedUtterance: [["4", "7"], ["4", "7"]],
+          expectedBraille: [["4", "7"], ["4", "7"]]
         }];
 
         // Test all possible utterance order preference values.
@@ -539,6 +568,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=753984
           555-12345
         </li>
       </ul>
+      <section id="grid" role="grid">
+        <ol role="row">
+          <li role="presentation"></li>
+          <li id="columnheader" role="columnheader" aria-label="Sunday">S</li>
+          <li role="columnheader">M</li>
+        </ol>
+        <ol role="row">
+          <li id="rowheader" role="rowheader" aria-label="Week 1">1</li>
+          <li id="gridcell1" role="gridcell"><span>3</span><div></div></li>
+          <li id="gridcell2" role="gridcell"><span>4</span><div>7</div></li>
+        </ol>
+        <ol role="row">
+          <li role="rowheader">2</li>
+          <li role="gridcell">5</li>
+          <li role="gridcell">6</li>
+        </ol>
+      </section>
     </div>
   </body>
 </html>
