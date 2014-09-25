@@ -586,6 +586,51 @@ var f = asmLink(asmCompile('glob', USE_ASM + I32 + F32 + CVTFI + 'function f(x){
 assertEqX4(f(SIMD.float32x4(1,2,3,4)), [1, 2, 3, 4]);
 assertEqX4(f(SIMD.float32x4(NaN,Infinity,-Infinity,-0)), [UNDEFINED_INT32, UNDEFINED_INT32, UNDEFINED_INT32, 0]);
 
+// Cast operators
+const CVTIFB = 'var cvt=f4.fromInt32x4Bits;';
+const CVTFIB = 'var cvt=i4.fromFloat32x4Bits;';
+
+var cast = (function() {
+    var i32 = new Int32Array(1);
+    var f32 = new Float32Array(i32.buffer);
+
+    function fromInt32Bits(x) {
+        i32[0] = x;
+        return f32[0];
+    }
+
+    function fromFloat32Bits(x) {
+        f32[0] = x;
+        return i32[0];
+    }
+
+    return {
+        fromInt32Bits,
+        fromFloat32Bits
+    }
+})();
+
+assertAsmTypeFail('glob', USE_ASM + I32 + "var cvt=i4.fromInt32x4; return {}");
+assertAsmTypeFail('glob', USE_ASM + F32 + "var cvt=f4.fromFloat32x4; return {}");
+assertAsmTypeFail('glob', USE_ASM + I32 + F32 + CVTIFB + "function f() {var x=i4(1,2,3,4); x=cvt(x);} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + F32 + CVTIFB + "function f() {var x=f4(1,2,3,4); x=cvt(x);} return f");
+
+var f = asmLink(asmCompile('glob', USE_ASM + I32 + F32 + CVTIFB + 'function f(x){x=i4(x); var y=f4(0,0,0,0); y=cvt(x); return f4(y);} return f'), this);
+assertEqX4(f(SIMD.int32x4(1,2,3,4)), [1, 2, 3, 4].map(cast.fromInt32Bits));
+assertEqX4(f(SIMD.int32x4(0,INT32_MIN,INT32_MAX,-1)), [0, INT32_MIN, INT32_MAX, -1].map(cast.fromInt32Bits));
+
+var f = asmLink(asmCompile('glob', USE_ASM + I32 + F32 + F32A + CVTIFB + 'function f(x){x=i4(x); var y=f4(0,0,0,0); var z=f4(1,1,1,1); y=cvt(x); y=f4a(y, z); return f4(y)} return f'), this);
+assertEqX4(f(SIMD.int32x4(1,2,3,4)), [1, 2, 3, 4].map(cast.fromInt32Bits).map((x) => x+1));
+assertEqX4(f(SIMD.int32x4(0,INT32_MIN,INT32_MAX,-1)), [0, INT32_MIN, INT32_MAX, -1].map(cast.fromInt32Bits).map((x) => x+1));
+
+var f = asmLink(asmCompile('glob', USE_ASM + I32 + F32 + CVTFIB + 'function f(x){x=f4(x); var y=i4(0,0,0,0); y=cvt(x); return i4(y);} return f'), this);
+assertEqX4(f(SIMD.float32x4(1,2,3,4)), [1, 2, 3, 4].map(cast.fromFloat32Bits));
+assertEqX4(f(SIMD.float32x4(-0,NaN,+Infinity,-Infinity)), [-0, NaN, +Infinity, -Infinity].map(cast.fromFloat32Bits));
+
+var f = asmLink(asmCompile('glob', USE_ASM + I32 + F32 + I32A + CVTFIB + 'function f(x){x=f4(x); var y=i4(0,0,0,0); var z=i4(1,1,1,1); y=cvt(x); y=i4a(y,z); return i4(y);} return f'), this);
+assertEqX4(f(SIMD.float32x4(1,2,3,4)), [1, 2, 3, 4].map(cast.fromFloat32Bits).map((x) => x+1));
+assertEqX4(f(SIMD.float32x4(-0,NaN,+Infinity,-Infinity)), [-0, NaN, +Infinity, -Infinity].map(cast.fromFloat32Bits).map((x) => x+1));
+
 // Bitwise ops
 const ANDI32 = 'var andd=i4.and;';
 const ORI32 = 'var orr=i4.or;';
