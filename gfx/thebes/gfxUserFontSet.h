@@ -189,12 +189,20 @@ public:
     // the given name
     gfxUserFontFamily* LookupFamily(const nsAString& aName) const;
 
-    // Lookup a font entry for a given style, returns null if not loaded.
+    // Lookup a userfont entry for a given style, loaded or not.
     // aFamily must be a family returned by our LookupFamily method.
+    // If only invalid fonts in family, returns null.
     gfxUserFontEntry* FindUserFontEntry(gfxFontFamily* aFamily,
                                         const gfxFontStyle& aFontStyle,
-                                        bool& aNeedsBold,
-                                        bool& aWaitForUserFont);
+                                        bool& aNeedsBold);
+
+    // Lookup a font entry for a given style, returns null if not loaded.
+    // aFamily must be a family returned by our LookupFamily method.
+    // (only used by gfxPangoFontGroup for now)
+    gfxUserFontEntry* FindUserFontEntryAndLoad(gfxFontFamily* aFamily,
+                                               const gfxFontStyle& aFontStyle,
+                                               bool& aNeedsBold,
+                                               bool& aWaitForUserFont);
 
     // check whether the given source is allowed to be loaded;
     // returns the Principal (for use in the key when caching the loaded font),
@@ -213,7 +221,12 @@ public:
     uint64_t GetGeneration() { return mGeneration; }
 
     // increment the generation on font load
-    void IncrementGeneration();
+    void IncrementGeneration(bool aIsRebuild = false);
+
+    // Generation is bumped on font loads but that doesn't affect name-style
+    // mappings. Rebuilds do however affect name-style mappings so need to
+    // lookup fontlists again when that happens.
+    uint64_t GetRebuildGeneration() { return mRebuildGeneration; }
 
     // rebuild if local rules have been used
     void RebuildLocalRules();
@@ -448,7 +461,8 @@ protected:
     // font families defined by @font-face rules
     nsRefPtrHashtable<nsStringHashKey, gfxUserFontFamily> mFontFamilies;
 
-    uint64_t        mGeneration;
+    uint64_t        mGeneration;        // bumped on any font load change
+    uint64_t        mRebuildGeneration; // only bumped on rebuilds
 
     // true when local names have been looked up, false otherwise
     bool mLocalRulesUsed;

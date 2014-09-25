@@ -30,6 +30,8 @@ public:
 
     virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle);
 
+    virtual gfxFont* GetFirstValidFont();
+
     virtual gfxFont *GetFontAt(int32_t i);
 
     virtual void UpdateUserFonts();

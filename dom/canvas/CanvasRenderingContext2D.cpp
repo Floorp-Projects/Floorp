@@ -3456,7 +3456,6 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
 
   // offset pt.y based on text baseline
   processor.mFontgrp->UpdateUserFonts(); // ensure user font generation is current
-  NS_ASSERTION(processor.mFontgrp->FontListLength()>0, "font group contains no fonts");
   const gfxFont::Metrics& fontMetrics =
     processor.mFontgrp->GetFirstValidFont()->GetMetrics();
 
