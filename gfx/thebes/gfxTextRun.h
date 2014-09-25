@@ -723,27 +723,6 @@ private:
 
 class gfxFontGroup : public gfxTextRunFactory {
 public:
-    class FamilyFace {
-    public:
-        FamilyFace() { }
-
-        FamilyFace(gfxFontFamily* aFamily, gfxFont* aFont)
-            : mFamily(aFamily), mFont(aFont)
-        {
-            NS_ASSERTION(aFont, "font pointer must not be null");
-            NS_ASSERTION(!aFamily ||
-                         aFamily->ContainsFace(aFont->GetFontEntry()),
-                         "font is not a member of the given family");
-        }
-
-        gfxFontFamily* Family() const { return mFamily.get(); }
-        gfxFont* Font() const { return mFont.get(); }
-
-    private:
-        nsRefPtr<gfxFontFamily> mFamily;
-        nsRefPtr<gfxFont>       mFont;
-    };
-
     static void Shutdown(); // platform must call this to release the languageAtomService
 
     gfxFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
@@ -760,10 +739,17 @@ public:
         NS_ASSERTION(!mUserFontSet || mCurrGeneration == GetGeneration(),
                      "Whoever was caching this font group should have "
                      "called UpdateFontList on it");
-        NS_ASSERTION(mFonts.Length() > uint32_t(i) && mFonts[i].Font(), 
+        NS_ASSERTION(mFonts.Length() > uint32_t(i) &&
+                     (mFonts[i].Font() || mFonts[i].FontEntry()),
                      "Requesting a font index that doesn't exist");
 
-        return mFonts[i].Font();
+        nsRefPtr<gfxFont> font = mFonts[i].Font();
+        if (!font) {
+            gfxFontEntry *fe = mFonts[i].FontEntry();
+            font = fe->FindOrMakeFont(&mStyle, mFonts[i].NeedsBold());
+            mFonts[i].SetFont(font);
+        }
+        return font.get();
     }
 
     // Returns the first font in the font-group that has an OpenType MATH table,
@@ -913,6 +899,116 @@ public:
                             nsTArray<nsString>& aGenericFamilies);
 
 protected:
+    class FamilyFace {
+    public:
+        FamilyFace() : mFamily(nullptr), mFontEntry(nullptr),
+                       mNeedsBold(false), mFontCreated(false)
+        { }
+
+        FamilyFace(gfxFontFamily* aFamily, gfxFont* aFont)
+            : mFamily(aFamily), mNeedsBold(false), mFontCreated(true)
+        {
+            NS_ASSERTION(aFont, "font pointer must not be null");
+            NS_ASSERTION(!aFamily ||
+                         aFamily->ContainsFace(aFont->GetFontEntry()),
+                         "font is not a member of the given family");
+            mFont = aFont;
+            NS_ADDREF(aFont);
+        }
+
+        FamilyFace(gfxFontFamily* aFamily, gfxFontEntry* aFontEntry,
+                   bool aNeedsBold)
+            : mFamily(aFamily), mNeedsBold(aNeedsBold), mFontCreated(false)
+        {
+            NS_ASSERTION(aFontEntry, "font entry pointer must not be null");
+            NS_ASSERTION(!aFamily ||
+                         aFamily->ContainsFace(aFontEntry),
+                         "font is not a member of the given family");
+            mFontEntry = aFontEntry;
+            NS_ADDREF(aFontEntry);
+        }
+
+        FamilyFace(const FamilyFace& aOtherFamilyFace)
+            : mFamily(aOtherFamilyFace.mFamily),
+              mNeedsBold(aOtherFamilyFace.mNeedsBold),
+              mFontCreated(aOtherFamilyFace.mFontCreated)
+        {
+            if (mFontCreated) {
+                mFont = aOtherFamilyFace.mFont;
+                NS_ADDREF(mFont);
+            } else {
+                mFontEntry = aOtherFamilyFace.mFontEntry;
+                NS_IF_ADDREF(mFontEntry);
+            }
+        }
+
+        ~FamilyFace()
+        {
+            if (mFontCreated) {
+                NS_RELEASE(mFont);
+            } else {
+                NS_IF_RELEASE(mFontEntry);
+            }
+        }
+
+        FamilyFace& operator=(const FamilyFace& aOther)
+        {
+            if (mFontCreated) {
+                NS_RELEASE(mFont);
+            } else {
+                NS_IF_RELEASE(mFontEntry);
+            }
+
+            mFamily = aOther.mFamily;
+            mNeedsBold = aOther.mNeedsBold;
+            mFontCreated = aOther.mFontCreated;
+
+            if (mFontCreated) {
+                mFont = aOther.mFont;
+                NS_ADDREF(mFont);
+            } else {
+                mFontEntry = aOther.mFontEntry;
+                NS_IF_ADDREF(mFontEntry);
+            }
+
+            return *this;
+        }
+
+        gfxFontFamily* Family() const { return mFamily.get(); }
+        gfxFont* Font() const {
+            return mFontCreated ? mFont : nullptr;
+        }
+
+        gfxFontEntry* FontEntry() const {
+            return mFontCreated ? mFont->GetFontEntry() : mFontEntry;
+        }
+
+        bool NeedsBold() const { return mNeedsBold; }
+
+        void SetFont(gfxFont* aFont)
+        {
+            NS_ASSERTION(aFont, "font pointer must not be null");
+            NS_ADDREF(aFont);
+            if (mFontCreated) {
+                NS_RELEASE(mFont);
+            } else {
+                NS_IF_RELEASE(mFontEntry);
+            }
+            mFont = aFont;
+            mFontCreated = true;
+        }
+
+    private:
+        nsRefPtr<gfxFontFamily> mFamily;
+        // either a font or a font entry exists
+        union {
+            gfxFont*            mFont;
+            gfxFontEntry*       mFontEntry;
+        };
+        bool                    mNeedsBold   : 1;
+        bool                    mFontCreated : 1;
+    };
+
     mozilla::FontFamilyList mFamilyList;
     gfxFontStyle mStyle;
     nsTArray<FamilyFace> mFonts;
@@ -975,10 +1071,11 @@ protected:
                        int32_t aRunScript);
 
     // Helper for font-matching:
-    // see if aCh is supported in any of the faces from aFamily;
-    // if so return the best style match, else return null.
-    already_AddRefed<gfxFont> TryAllFamilyMembers(gfxFontFamily* aFamily,
-                                                  uint32_t aCh);
+    // When matching the italic case, allow use of the regular face
+    // if it supports a character but the italic one doesn't.
+    // Return null if regular face doesn't support aCh
+    already_AddRefed<gfxFont>
+    FindNonItalicFaceForChar(gfxFontFamily* aFamily, uint32_t aCh);
 
     // helper methods for looking up fonts
 
