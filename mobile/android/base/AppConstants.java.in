@@ -255,4 +255,11 @@ public class AppConstants {
 #else
     false;
 #endif
+
+    public static final boolean ANDROID_DOWNLOADS_INTEGRATION =
+#ifdef MOZ_ANDROID_DOWNLOADS_INTEGRATION
+    AppConstants.Versions.feature12Plus;
+#else
+    false;
+#endif
 }
