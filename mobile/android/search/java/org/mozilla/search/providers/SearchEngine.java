@@ -4,7 +4,6 @@
 
 package org.mozilla.search.providers;
 
-import android.graphics.Color;
 import android.net.Uri;
 import android.util.Log;
 import android.util.Xml;
@@ -193,14 +192,6 @@ public class SearchEngine {
 
     public String getIconURL() {
         return iconURL;
-    }
-
-    public int getColor() {
-        // TOOD: Add brand colors to search plugin XML.
-        if (identifier.equals("yahoo")) {
-            return 0xFF500095;
-        }
-        return Color.TRANSPARENT;
     }
 
     /**
