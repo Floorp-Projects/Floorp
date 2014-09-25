@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/FloatingPoint.h"
 #include "nscore.h"
 #include "nsDebug.h"
 
@@ -69,6 +70,12 @@ public:
 
   double ToSeconds() const
   {
+    if (mValue == INT64_MAX) {
+      return PositiveInfinity<double>();
+    }
+    if (mValue == INT64_MIN) {
+      return NegativeInfinity<double>();
+    }
     return TimeDurationPlatformUtils::ToSeconds(mValue);
   }
   // Return a duration value that includes digits of time we think to
@@ -76,6 +83,12 @@ public:
   // time to humans.
   double ToSecondsSigDigits() const
   {
+    if (mValue == INT64_MAX) {
+      return PositiveInfinity<double>();
+    }
+    if (mValue == INT64_MIN) {
+      return NegativeInfinity<double>();
+    }
     return TimeDurationPlatformUtils::ToSecondsSigDigits(mValue);
   }
   double ToMilliseconds() const { return ToSeconds() * 1000.0; }
@@ -92,6 +105,12 @@ public:
   }
   static TimeDuration FromMilliseconds(double aMilliseconds)
   {
+    if (aMilliseconds == PositiveInfinity<double>()) {
+      return Forever();
+    }
+    if (aMilliseconds == NegativeInfinity<double>()) {
+      return FromTicks(INT64_MIN);
+    }
     return FromTicks(
       TimeDurationPlatformUtils::TicksFromMilliseconds(aMilliseconds));
   }
