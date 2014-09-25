@@ -94,6 +94,7 @@ handlers.searchbutton = {
   },
 
   doSearch: function(value) {
+    UITelemetry.addEvent("neterror.1", "button", null, "search");
     let engine = Services.search.defaultEngine;
     let uri = engine.getSubmission(value).uri;
 
