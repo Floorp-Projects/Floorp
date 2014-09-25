@@ -43,7 +43,7 @@ WebGLRenderbuffer::WrapObject(JSContext *cx) {
 }
 
 WebGLRenderbuffer::WebGLRenderbuffer(WebGLContext *context)
-    : WebGLBindableName<GLenum>()
+    : WebGLBindableName<RBTarget>()
     , WebGLContextBoundObject(context)
     , mPrimaryRB(0)
     , mSecondaryRB(0)
@@ -182,10 +182,10 @@ WebGLRenderbuffer::RenderbufferStorage(GLenum internalFormat, GLsizei width, GLs
 }
 
 void
-WebGLRenderbuffer::FramebufferRenderbuffer(GLenum attachment) const {
+WebGLRenderbuffer::FramebufferRenderbuffer(FBAttachment attachment) const {
     GLContext* gl = mContext->gl;
     if (attachment != LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-        gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, attachment, LOCAL_GL_RENDERBUFFER, mPrimaryRB);
+        gl->fFramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, attachment.get(), LOCAL_GL_RENDERBUFFER, mPrimaryRB);
         return;
     }
 
@@ -200,10 +200,10 @@ WebGLRenderbuffer::FramebufferRenderbuffer(GLenum attachment) const {
 }
 
 GLint
-WebGLRenderbuffer::GetRenderbufferParameter(GLenum target, GLenum pname) const {
+WebGLRenderbuffer::GetRenderbufferParameter(RBTarget target, RBParam pname) const {
     GLContext* gl = mContext->gl;
 
-    switch (pname) {
+    switch (pname.get()) {
         case LOCAL_GL_RENDERBUFFER_STENCIL_SIZE: {
             if (NeedsDepthStencilEmu(mContext->gl, InternalFormatForGL())) {
                 if (gl->WorkAroundDriverBugs() &&
@@ -215,7 +215,7 @@ WebGLRenderbuffer::GetRenderbufferParameter(GLenum target, GLenum pname) const {
                 ScopedBindRenderbuffer autoRB(gl, mSecondaryRB);
 
                 GLint i = 0;
-                gl->fGetRenderbufferParameteriv(target, pname, &i);
+                gl->fGetRenderbufferParameteriv(target.get(), pname.get(), &i);
                 return i;
             }
             // Fall through otherwise.
@@ -228,7 +228,7 @@ WebGLRenderbuffer::GetRenderbufferParameter(GLenum target, GLenum pname) const {
         case LOCAL_GL_RENDERBUFFER_ALPHA_SIZE:
         case LOCAL_GL_RENDERBUFFER_DEPTH_SIZE: {
             GLint i = 0;
-            gl->fGetRenderbufferParameteriv(target, pname, &i);
+            gl->fGetRenderbufferParameteriv(target.get(), pname.get(), &i);
             return i;
         }
     }
