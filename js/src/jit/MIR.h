@@ -3629,31 +3629,30 @@ class MAssertRange
 // Caller-side allocation of |this| for |new|:
 // Given a templateobject, construct |this| for JSOP_NEW
 class MCreateThisWithTemplate
-  : public MNullaryInstruction
+  : public MUnaryInstruction
 {
-    // Template for |this|, provided by TI
-    AlwaysTenuredObject templateObject_;
     gc::InitialHeap initialHeap_;
 
-    MCreateThisWithTemplate(types::CompilerConstraintList *constraints, JSObject *templateObject,
+    MCreateThisWithTemplate(types::CompilerConstraintList *constraints, MConstant *templateConst,
                             gc::InitialHeap initialHeap)
-      : templateObject_(templateObject),
+      : MUnaryInstruction(templateConst),
         initialHeap_(initialHeap)
     {
         setResultType(MIRType_Object);
-        setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
+        setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject()));
     }
 
   public:
     INSTRUCTION_HEADER(CreateThisWithTemplate);
     static MCreateThisWithTemplate *New(TempAllocator &alloc, types::CompilerConstraintList *constraints,
-                                        JSObject *templateObject, gc::InitialHeap initialHeap)
+                                        MConstant *templateConst, gc::InitialHeap initialHeap)
     {
-        return new(alloc) MCreateThisWithTemplate(constraints, templateObject, initialHeap);
+        return new(alloc) MCreateThisWithTemplate(constraints, templateConst, initialHeap);
     }
 
+    // Template for |this|, provided by TI.
     JSObject *templateObject() const {
-        return templateObject_;
+        return &getOperand(0)->toConstant()->value().toObject();
     }
 
     gc::InitialHeap initialHeap() const {
@@ -3664,6 +3663,9 @@ class MCreateThisWithTemplate
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const;
 };
 
 // Caller-side allocation of |this| for |new|:

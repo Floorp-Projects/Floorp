@@ -3167,6 +3167,14 @@ MNewObject::shouldUseVM() const
     return obj->hasSingletonType() || obj->hasDynamicSlots();
 }
 
+bool
+MCreateThisWithTemplate::canRecoverOnBailout() const
+{
+    MOZ_ASSERT(!templateObject()->denseElementsAreCopyOnWrite());
+    MOZ_ASSERT(!templateObject()->is<ArrayObject>());
+    return true;
+}
+
 MObjectState::MObjectState(MDefinition *obj)
 {
     // This instruction is only used as a summary for bailout paths.
