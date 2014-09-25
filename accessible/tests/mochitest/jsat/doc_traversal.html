@@ -3,6 +3,11 @@
 <head>
   <title>Traversal Rule test document</title>
   <meta charset="utf-8" />
+  <style>
+    .content:before {
+      content: "Content";
+    }
+  </style>
 </head>
 <body>
   <h3 id="heading-1">A small first heading</h3>
@@ -96,6 +101,25 @@
     <td>1</td>
   </tr>
   </table>
+  <section id="grid" role="grid">
+    <ol role="row">
+      <li role="presentation"></li>
+      <li role="columnheader" aria-label="Sunday">S</li>
+      <li role="columnheader">M</li>
+    </ol>
+    <ol role="row">
+      <li role="rowheader" aria-label="Week 1">1</li>
+      <li role="gridcell"><span>3</span><div></div></li>
+      <li role="gridcell"><span>4</span><div>7</div></li>
+    </ol>
+    <ol role="row">
+      <li role="rowheader">2</li>
+      <li role="gridcell"><span>5</span><div role="presentation">8</div></li>
+      <li id="gridcell4" role="gridcell">
+        <span>6</span><div aria-hidden="true"><div class="content"></div></div>
+      </li>
+    </ol>
+  </section>
   <div id="separator-2" role="separator">Just an innocuous separator</div>
   <table id="table-2">
     <thead>

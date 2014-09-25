@@ -29,12 +29,12 @@ struct JSIID
 
 struct LocalObject
 {
-    uint64_t id;
+    uint64_t serializedId;
 };
 
 struct RemoteObject
 {
-    uint64_t id;
+    uint64_t serializedId;
 };
 
 union ObjectVariant

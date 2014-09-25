@@ -1535,7 +1535,7 @@ BaseStubConstructor(nsIWeakReference* aWeakOwner,
       }
 
       // Check if the object is even callable.
-      NS_ENSURE_STATE(JS_ObjectIsCallable(cx, &funval.toObject()));
+      NS_ENSURE_STATE(JS::IsCallable(&funval.toObject()));
       {
         // wrap parameters in the target compartment
         // we also pass in the calling window as the first argument

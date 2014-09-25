@@ -525,7 +525,7 @@ class SnapshotIterator
         }
 
         if (thisv)
-            *thisv = read();
+            *thisv = maybeRead(fallback);
         else
             skip();
 
@@ -718,15 +718,7 @@ class InlineFrameIterator
         return computeScopeChain(v);
     }
 
-    JSObject *thisObject() const {
-        // In strict modes, |this| may not be an object and thus may not be
-        // readable which can either segv in read or trigger the assertion.
-        Value v = thisValue();
-        JS_ASSERT(v.isObject());
-        return &v.toObject();
-    }
-
-    Value thisValue() const {
+    Value thisValue(MaybeReadFallback &fallback) const {
         // JS_ASSERT(isConstructing(...));
         SnapshotIterator s(si_);
 
@@ -740,7 +732,7 @@ class InlineFrameIterator
         if (script()->argumentsHasVarBinding())
             s.skip();
 
-        return s.read();
+        return s.maybeRead(fallback);
     }
 
     InlineFrameIterator &operator++() {

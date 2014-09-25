@@ -30,7 +30,7 @@ XPIDL_SOURCES += [
     'interfaces/nsINeighboringCellInfo.idl',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'DOMMMIError.cpp',
     'ipc/MobileConnectionChild.cpp',
     'ipc/MobileConnectionIPCService.cpp',

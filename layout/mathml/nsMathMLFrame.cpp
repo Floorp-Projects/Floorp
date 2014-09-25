@@ -57,8 +57,9 @@ NS_IMETHODIMP
 nsMathMLFrame::UpdatePresentationData(uint32_t        aFlagsValues,
                                       uint32_t        aWhichFlags)
 {
-  NS_ASSERTION(NS_MATHML_IS_COMPRESSED(aWhichFlags),
-               "aWhichFlags should only be compression flag"); 
+  NS_ASSERTION(NS_MATHML_IS_COMPRESSED(aWhichFlags) ||
+               NS_MATHML_IS_DTLS_SET(aWhichFlags),
+               "aWhichFlags should only be compression or dtls flag");
 
   if (NS_MATHML_IS_COMPRESSED(aWhichFlags)) {
     // updating the compression flag is allowed
@@ -67,6 +68,15 @@ nsMathMLFrame::UpdatePresentationData(uint32_t        aFlagsValues,
       mPresentationData.flags |= NS_MATHML_COMPRESSED;
     }
     // no else. the flag is sticky. it retains its value once it is set
+  }
+  // These flags determine whether the dtls font feature settings should
+  // be applied.
+  if (NS_MATHML_IS_DTLS_SET(aWhichFlags)) {
+    if (NS_MATHML_IS_DTLS_SET(aFlagsValues)) {
+      mPresentationData.flags |= NS_MATHML_DTLS;
+    } else {
+      mPresentationData.flags &= ~NS_MATHML_DTLS;
+    }
   }
   return NS_OK;
 }

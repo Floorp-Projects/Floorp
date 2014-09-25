@@ -1622,6 +1622,26 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
+   * Find element using the indicated search strategy
+   * starting from a known element. Used for WebDriver Compatibility only.
+   * @param  {object} aRequest
+   *         'using' member indicates which search method to use
+   *         'value' member is the value the client is looking for
+   *         'id' member is the value of the element to start from
+   */
+  findChildElement: function MDA_findChildElement(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
+    this.sendAsync("findElementContent",
+                    {
+                       value: aRequest.parameters.value,
+                       using: aRequest.parameters.using,
+                       element: aRequest.parameters.id,
+                       searchTimeout: this.searchTimeout
+                     },
+                     command_id);
+  },
+
+  /**
    * Find elements using the indicated search strategy.
    *
    * @param object aRequest
@@ -1658,6 +1678,26 @@ MarionetteServerConnection.prototype = {
                      },
                      command_id);
     }
+  },
+
+  /**
+   * Find elements using the indicated search strategy
+   * starting from a known element. Used for WebDriver Compatibility only.
+   * @param  {object} aRequest
+   *         'using' member indicates which search method to use
+   *         'value' member is the value the client is looking for
+   *         'id' member is the value of the element to start from
+   */
+  findChildElements: function MDA_findChildElement(aRequest) {
+    let command_id = this.command_id = this.getCommandId();
+    this.sendAsync("findElementsContent",
+                    {
+                       value: aRequest.parameters.value,
+                       using: aRequest.parameters.using,
+                       element: aRequest.parameters.id,
+                       searchTimeout: this.searchTimeout
+                     },
+                     command_id);
   },
 
   /**
@@ -2615,7 +2655,9 @@ MarionetteServerConnection.prototype.requestTypes = {
   "executeJSScript": MarionetteServerConnection.prototype.executeJSScript,
   "setSearchTimeout": MarionetteServerConnection.prototype.setSearchTimeout,
   "findElement": MarionetteServerConnection.prototype.findElement,
+  "findChildElement": MarionetteServerConnection.prototype.findChildElements, // Needed for WebDriver compat
   "findElements": MarionetteServerConnection.prototype.findElements,
+  "findChildElements":MarionetteServerConnection.prototype.findChildElements, // Needed for WebDriver compat
   "clickElement": MarionetteServerConnection.prototype.clickElement,
   "getElementAttribute": MarionetteServerConnection.prototype.getElementAttribute,
   "getElementText": MarionetteServerConnection.prototype.getElementText,

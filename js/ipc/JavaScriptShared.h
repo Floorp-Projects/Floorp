@@ -16,7 +16,47 @@
 namespace mozilla {
 namespace jsipc {
 
-typedef uint64_t ObjectId;
+class ObjectId {
+  public:
+    // Use 47 bits at most, to be safe, since jsval privates are encoded as
+    // doubles. See bug 1065811 comment 12 for an explanation.
+    static const size_t SERIAL_NUMBER_BITS = 47;
+    static const size_t FLAG_BITS = 1;
+    static const uint64_t SERIAL_NUMBER_MAX = (uint64_t(1) << SERIAL_NUMBER_BITS) - 1;
+
+    explicit ObjectId(uint64_t serialNumber, bool hasXrayWaiver)
+      : serialNumber_(serialNumber), hasXrayWaiver_(hasXrayWaiver)
+    {
+        if (MOZ_UNLIKELY(serialNumber == 0 || serialNumber > SERIAL_NUMBER_MAX))
+            MOZ_CRASH("Bad CPOW Id");
+    }
+
+    bool operator==(const ObjectId &other) const {
+        bool equal = serialNumber() == other.serialNumber();
+        MOZ_ASSERT_IF(equal, hasXrayWaiver() == other.hasXrayWaiver());
+        return equal;
+    }
+
+    bool isNull() { return !serialNumber_; }
+
+    uint64_t serialNumber() const { return serialNumber_; }
+    bool hasXrayWaiver() const { return hasXrayWaiver_; }
+    uint64_t serialize() const {
+        MOZ_ASSERT(serialNumber(), "Don't send a null ObjectId over IPC");
+        return uint64_t((serialNumber() << FLAG_BITS) | ((hasXrayWaiver() ? 1 : 0) << 0));
+    }
+
+    static ObjectId nullId() { return ObjectId(); }
+    static ObjectId deserialize(uint64_t data) {
+        return ObjectId(data >> FLAG_BITS, data & 1);
+    }
+
+  private:
+    ObjectId() : serialNumber_(0), hasXrayWaiver_(false) {}
+
+    uint64_t serialNumber_ : SERIAL_NUMBER_BITS;
+    bool hasXrayWaiver_ : 1;
+};
 
 class JavaScriptShared;
 
@@ -36,12 +76,27 @@ class CpowIdHolder : public CpowHolder
     const InfallibleTArray<CpowEntry> &cpows_;
 };
 
+// DefaultHasher<T> requires that T coerce to an integral type. We could make
+// ObjectId do that, but doing so would weaken our type invariants, so we just
+// reimplement it manually.
+struct ObjectIdHasher
+{
+    typedef ObjectId Lookup;
+    static js::HashNumber hash(const Lookup &l) {
+        return l.serialize();
+    }
+    static bool match(const ObjectId &k, const ObjectId &l) {
+        return k == l;
+    }
+    static void rekey(ObjectId &k, const ObjectId& newKey) {
+        k = newKey;
+    }
+};
+
 // Map ids -> JSObjects
 class IdToObjectMap
 {
-    typedef js::DefaultHasher<ObjectId> TableKeyHasher;
-
-    typedef js::HashMap<ObjectId, JS::Heap<JSObject *>, TableKeyHasher, js::SystemAllocPolicy> Table;
+    typedef js::HashMap<ObjectId, JS::Heap<JSObject *>, ObjectIdHasher, js::SystemAllocPolicy> Table;
 
   public:
     IdToObjectMap();
@@ -95,9 +150,6 @@ class JavaScriptShared
     void decref();
     void incref();
 
-    static const uint32_t OBJECT_EXTRA_BITS  = 1;
-    static const uint32_t OBJECT_IS_CALLABLE = (1 << 0);
-
     bool Unwrap(JSContext *cx, const InfallibleTArray<CpowEntry> &aCpows, JS::MutableHandleObject objp);
     bool Wrap(JSContext *cx, JS::HandleObject aObj, InfallibleTArray<CpowEntry> *outCpows);
 
@@ -119,13 +171,10 @@ class JavaScriptShared
     static void ConvertID(const nsID &from, JSIID *to);
     static void ConvertID(const JSIID &from, nsID *to);
 
-    JSObject *findCPOWById(uint32_t objId) {
+    JSObject *findCPOWById(const ObjectId &objId) {
         return cpows_.find(objId);
     }
-    JSObject *findObjectById(uint32_t objId) {
-        return objects_.find(objId);
-    }
-    JSObject *findObjectById(JSContext *cx, uint32_t objId);
+    JSObject *findObjectById(JSContext *cx, const ObjectId &objId);
 
     static bool LoggingEnabled() { return sLoggingEnabled; }
     static bool StackLoggingEnabled() { return sStackLoggingEnabled; }
@@ -143,16 +192,33 @@ class JavaScriptShared
     IdToObjectMap objects_;
     IdToObjectMap cpows_;
 
-    ObjectId lastId_;
-    ObjectToIdMap objectIds_;
+    uint64_t nextSerialNumber_;
+
+    // CPOW references can be weak, and any object we store in a map may be
+    // GCed (at which point the CPOW will report itself "dead" to the owner).
+    // This means that we don't want to store any js::Wrappers in the CPOW map,
+    // because CPOW will die if the wrapper is GCed, even if the underlying
+    // object is still alive.
+    //
+    // This presents a tricky situation for Xray waivers, since they're normally
+    // represented as a special same-compartment wrapper. We have to strip them
+    // off before putting them in the id-to-object and object-to-id maps, so we
+    // need a way of distinguishing them at lookup-time.
+    //
+    // For the id-to-object map, we encode waiver-or-not information into the id
+    // itself, which lets us do the right thing when accessing the object.
+    //
+    // For the object-to-id map, we just keep two maps, one for each type.
+    ObjectToIdMap unwaivedObjectIds_;
+    ObjectToIdMap waivedObjectIds_;
+    ObjectToIdMap &objectIdMap(bool waiver) {
+        return waiver ? waivedObjectIds_ : unwaivedObjectIds_;
+    }
 
     static bool sLoggingInitialized;
     static bool sLoggingEnabled;
     static bool sStackLoggingEnabled;
 };
-
-// Use 47 at most, to be safe, since jsval privates are encoded as doubles.
-static const uint64_t MAX_CPOW_IDS = (uint64_t(1) << 47) - 1;
 
 } // namespace jsipc
 } // namespace mozilla

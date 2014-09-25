@@ -10,6 +10,7 @@
 #include "nsTArray.h"
 #include "mozilla/WeakPtr.h"
 #include "WebGLFramebuffer.h"
+#include "WebGLStrongTypes.h"
 
 namespace mozilla {
 
@@ -17,13 +18,13 @@ class WebGLFramebufferAttachable
 {
     struct AttachmentPoint
     {
-        AttachmentPoint(const WebGLFramebuffer* fb, GLenum attachment)
+        AttachmentPoint(const WebGLFramebuffer* fb, FBAttachment attachment)
             : mFB(fb)
             , mAttachment(attachment)
         {}
 
         WeakPtr<const WebGLFramebuffer> mFB;
-        GLenum mAttachment;
+        FBAttachment mAttachment;
 
         bool operator==(const AttachmentPoint& o) const {
           return mFB == o.mFB && mAttachment == o.mAttachment;
@@ -35,8 +36,8 @@ class WebGLFramebufferAttachable
 public:
 
     // Track FBO/Attachment combinations
-    void AttachTo(WebGLFramebuffer* fb, GLenum attachment);
-    void DetachFrom(WebGLFramebuffer* fb, GLenum attachment);
+    void AttachTo(WebGLFramebuffer* fb, FBAttachment attachment);
+    void DetachFrom(WebGLFramebuffer* fb, FBAttachment attachment);
     void NotifyFBsStatusChanged();
 };
 

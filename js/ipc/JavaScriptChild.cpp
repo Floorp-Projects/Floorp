@@ -53,7 +53,8 @@ void
 JavaScriptChild::updateWeakPointers()
 {
     objects_.sweep();
-    objectIds_.sweep();
+    unwaivedObjectIds_.sweep();
+    waivedObjectIds_.sweep();
 }
 
 JSObject *
