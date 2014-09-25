@@ -11,6 +11,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/TypeTraits.h"
 #include "nscore.h"
 #include "nsDebug.h"
 
@@ -143,20 +144,20 @@ public:
 
   BaseTimeDuration operator+(const BaseTimeDuration& aOther) const
   {
-    return FromTicks(mValue + aOther.mValue);
+    return FromTicks(ValueCalculator::Add(mValue, aOther.mValue));
   }
   BaseTimeDuration operator-(const BaseTimeDuration& aOther) const
   {
-    return FromTicks(mValue - aOther.mValue);
+    return FromTicks(ValueCalculator::Subtract(mValue, aOther.mValue));
   }
   BaseTimeDuration& operator+=(const BaseTimeDuration& aOther)
   {
-    mValue += aOther.mValue;
+    mValue = ValueCalculator::Add(mValue, aOther.mValue);
     return *this;
   }
   BaseTimeDuration& operator-=(const BaseTimeDuration& aOther)
   {
-    mValue -= aOther.mValue;
+    mValue = ValueCalculator::Subtract(mValue, aOther.mValue);
     return *this;
   }
 
@@ -168,19 +169,19 @@ private:
 public:
   BaseTimeDuration MultDouble(double aMultiplier) const
   {
-    return FromTicks(static_cast<int64_t>(mValue * aMultiplier));
+    return FromTicks(ValueCalculator::Multiply(mValue, aMultiplier));
   }
   BaseTimeDuration operator*(const int32_t aMultiplier) const
   {
-    return FromTicks(mValue * int64_t(aMultiplier));
+    return FromTicks(ValueCalculator::Multiply(mValue, aMultiplier));
   }
   BaseTimeDuration operator*(const uint32_t aMultiplier) const
   {
-    return FromTicks(mValue * int64_t(aMultiplier));
+    return FromTicks(ValueCalculator::Multiply(mValue, aMultiplier));
   }
   BaseTimeDuration operator*(const int64_t aMultiplier) const
   {
-    return FromTicks(mValue * aMultiplier);
+    return FromTicks(ValueCalculator::Multiply(mValue, aMultiplier));
   }
   BaseTimeDuration operator*(const uint64_t aMultiplier) const
   {
@@ -188,20 +189,25 @@ public:
       NS_WARNING("Out-of-range multiplier when multiplying BaseTimeDuration");
       return Forever();
     }
-    return FromTicks(mValue * int64_t(aMultiplier));
+    return FromTicks(ValueCalculator::Multiply(mValue, aMultiplier));
   }
   BaseTimeDuration operator/(const int64_t aDivisor) const
   {
-    return FromTicks(mValue / aDivisor);
+    MOZ_ASSERT(aDivisor != 0, "Division by zero");
+    return FromTicks(ValueCalculator::Divide(mValue, aDivisor));
   }
   double operator/(const BaseTimeDuration& aOther) const
   {
-    return static_cast<double>(mValue) / aOther.mValue;
+#ifndef MOZ_B2G
+    // Bug 1066388 - This fails on B2G ICS Emulator
+    MOZ_ASSERT(aOther.mValue != 0, "Division by zero");
+#endif
+    return ValueCalculator::DivideDouble(mValue, aOther.mValue);
   }
   BaseTimeDuration operator%(const BaseTimeDuration& aOther) const
   {
     MOZ_ASSERT(aOther.mValue != 0, "Division by zero");
-    return FromTicks(mValue % aOther.mValue);
+    return FromTicks(ValueCalculator::Modulo(mValue, aOther.mValue));
   }
 
   template<typename E>
@@ -283,10 +289,48 @@ private:
   int64_t mValue;
 };
 
-// FIXME: To be filled-in a subsequent patch in this series.
+/**
+ * Perform arithmetic operations on the value of a BaseTimeDuration without
+ * doing strict checks on the range of values.
+ */
 class TimeDurationValueCalculator
-{ };
+{
+public:
+  static int64_t Add(int64_t aA, int64_t aB) { return aA + aB; }
+  static int64_t Subtract(int64_t aA, int64_t aB) { return aA - aB; }
 
+  template <typename T>
+  static int64_t Multiply(int64_t aA, T aB)
+  {
+    static_assert(IsIntegral<T>::value,
+                  "Using integer multiplication routine with non-integer type."
+                  " Further specialization required");
+    return aA * static_cast<int64_t>(aB);
+  }
+
+  static int64_t Divide(int64_t aA, int64_t aB) { return aA / aB; }
+  static double DivideDouble(int64_t aA, int64_t aB)
+  {
+    return static_cast<double>(aA) / aB;
+  }
+  static int64_t Modulo(int64_t aA, int64_t aB) { return aA % aB; }
+};
+
+template <>
+inline int64_t
+TimeDurationValueCalculator::Multiply<double>(int64_t aA, double aB)
+{
+  return static_cast<int64_t>(aA * aB);
+}
+
+/**
+ * Specialization of BaseTimeDuration that uses TimeDurationValueCalculator for
+ * arithmetic on the mValue member.
+ *
+ * Use this class for time durations that are *not* expected to hold values of
+ * Forever (or the negative equivalent) or when such time duration are *not*
+ * expected to be used in arithmetic operations.
+ */
 typedef BaseTimeDuration<TimeDurationValueCalculator> TimeDuration;
 
 /**
