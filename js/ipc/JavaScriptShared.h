@@ -24,8 +24,8 @@ class ObjectId {
     static const size_t FLAG_BITS = 1;
     static const uint64_t SERIAL_NUMBER_MAX = (uint64_t(1) << SERIAL_NUMBER_BITS) - 1;
 
-    explicit ObjectId(uint64_t serialNumber, bool isCallable)
-      : serialNumber_(serialNumber), isCallable_(isCallable)
+    explicit ObjectId(uint64_t serialNumber, bool hasXrayWaiver)
+      : serialNumber_(serialNumber), hasXrayWaiver_(hasXrayWaiver)
     {
         if (MOZ_UNLIKELY(serialNumber == 0 || serialNumber > SERIAL_NUMBER_MAX))
             MOZ_CRASH("Bad CPOW Id");
@@ -33,17 +33,17 @@ class ObjectId {
 
     bool operator==(const ObjectId &other) const {
         bool equal = serialNumber() == other.serialNumber();
-        MOZ_ASSERT_IF(equal, isCallable() == other.isCallable());
+        MOZ_ASSERT_IF(equal, hasXrayWaiver() == other.hasXrayWaiver());
         return equal;
     }
 
     bool isNull() { return !serialNumber_; }
 
     uint64_t serialNumber() const { return serialNumber_; }
-    bool isCallable() const { return isCallable_; }
+    bool hasXrayWaiver() const { return hasXrayWaiver_; }
     uint64_t serialize() const {
         MOZ_ASSERT(serialNumber(), "Don't send a null ObjectId over IPC");
-        return uint64_t((serialNumber() << FLAG_BITS) | ((isCallable() ? 1 : 0) << 0));
+        return uint64_t((serialNumber() << FLAG_BITS) | ((hasXrayWaiver() ? 1 : 0) << 0));
     }
 
     static ObjectId nullId() { return ObjectId(); }
@@ -52,10 +52,10 @@ class ObjectId {
     }
 
   private:
-    ObjectId() : serialNumber_(0), isCallable_(false) {}
+    ObjectId() : serialNumber_(0), hasXrayWaiver_(false) {}
 
     uint64_t serialNumber_ : SERIAL_NUMBER_BITS;
-    bool isCallable_ : 1;
+    bool hasXrayWaiver_ : 1;
 };
 
 class JavaScriptShared;
@@ -174,9 +174,6 @@ class JavaScriptShared
     JSObject *findCPOWById(const ObjectId &objId) {
         return cpows_.find(objId);
     }
-    JSObject *findObjectById(const ObjectId &objId) {
-        return objects_.find(objId);
-    }
     JSObject *findObjectById(JSContext *cx, const ObjectId &objId);
 
     static bool LoggingEnabled() { return sLoggingEnabled; }
@@ -196,7 +193,27 @@ class JavaScriptShared
     IdToObjectMap cpows_;
 
     uint64_t nextSerialNumber_;
-    ObjectToIdMap objectIds_;
+
+    // CPOW references can be weak, and any object we store in a map may be
+    // GCed (at which point the CPOW will report itself "dead" to the owner).
+    // This means that we don't want to store any js::Wrappers in the CPOW map,
+    // because CPOW will die if the wrapper is GCed, even if the underlying
+    // object is still alive.
+    //
+    // This presents a tricky situation for Xray waivers, since they're normally
+    // represented as a special same-compartment wrapper. We have to strip them
+    // off before putting them in the id-to-object and object-to-id maps, so we
+    // need a way of distinguishing them at lookup-time.
+    //
+    // For the id-to-object map, we encode waiver-or-not information into the id
+    // itself, which lets us do the right thing when accessing the object.
+    //
+    // For the object-to-id map, we just keep two maps, one for each type.
+    ObjectToIdMap unwaivedObjectIds_;
+    ObjectToIdMap waivedObjectIds_;
+    ObjectToIdMap &objectIdMap(bool waiver) {
+        return waiver ? waivedObjectIds_ : unwaivedObjectIds_;
+    }
 
     static bool sLoggingInitialized;
     static bool sLoggingEnabled;

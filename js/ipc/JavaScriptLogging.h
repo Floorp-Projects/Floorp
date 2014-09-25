@@ -96,7 +96,7 @@ class Logging
 
         if (local == incoming) {
             JS::RootedObject obj(cx);
-            obj = shared->findObjectById(id);
+            obj = shared->objects_.find(id);
             if (obj) {
                 JSAutoCompartment ac(cx, obj);
                 objDesc = js_ObjectClassName(cx, obj);
