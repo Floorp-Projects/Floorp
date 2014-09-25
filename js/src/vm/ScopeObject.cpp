@@ -2048,6 +2048,9 @@ DebugScopes::ensureCompartmentData(JSContext *cx)
     if (c->debugScopes && c->debugScopes->init())
         return c->debugScopes;
 
+    if (c->debugScopes)
+        js_delete<DebugScopes>(c->debugScopes);
+    c->debugScopes = nullptr;
     js_ReportOutOfMemory(cx);
     return nullptr;
 }
