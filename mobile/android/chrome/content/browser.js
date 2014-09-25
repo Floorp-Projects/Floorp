@@ -5318,6 +5318,7 @@ var FormAssistant = {
     Services.obs.addObserver(this, "FormAssist:AutoComplete", false);
     Services.obs.addObserver(this, "FormAssist:Blocklisted", false);
     Services.obs.addObserver(this, "FormAssist:Hidden", false);
+    Services.obs.addObserver(this, "FormAssist:Remove", false);
     Services.obs.addObserver(this, "invalidformsubmit", false);
     Services.obs.addObserver(this, "PanZoom:StateChange", false);
 
@@ -5335,6 +5336,7 @@ var FormAssistant = {
     Services.obs.removeObserver(this, "FormAssist:AutoComplete");
     Services.obs.removeObserver(this, "FormAssist:Blocklisted");
     Services.obs.removeObserver(this, "FormAssist:Hidden");
+    Services.obs.removeObserver(this, "FormAssist:Remove");
     Services.obs.removeObserver(this, "invalidformsubmit");
     Services.obs.removeObserver(this, "PanZoom:StateChange");
 
@@ -5398,6 +5400,18 @@ var FormAssistant = {
 
       case "FormAssist:Hidden":
         this._currentInputElement = null;
+        break;
+
+      case "FormAssist:Remove":
+        if (!this._currentInputElement) {
+          break;
+        }
+
+        FormHistory.update({
+          op: "remove",
+          fieldname: this._currentInputElement.name,
+          value: aData
+        });
         break;
     }
   },

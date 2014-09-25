@@ -97,7 +97,7 @@
                     android:id="@+id/browser_toolbar"
                     style="@style/BrowserToolbar"
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/browser_toolbar_height"
+                    android:layout_height="match_parent"
                     android:clickable="true"
                     android:focusable="true"
                     android:background="@drawable/url_bar_bg"/>

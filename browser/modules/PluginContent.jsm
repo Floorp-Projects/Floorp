@@ -285,7 +285,7 @@ PluginContent.prototype = {
     }
 
     if (eventType == "PluginRemoved") {
-      this.updateNotificationUI();
+      this.updateNotificationUI(event.target);
       return;
     }
 
@@ -698,7 +698,29 @@ PluginContent.prototype = {
     }, null, principal);
   },
 
-  updateNotificationUI: function () {
+  /**
+   * Updates the "hidden plugin" notification bar UI.
+   *
+   * @param document (optional)
+   *        Specify the document that is causing the update.
+   *        This is useful when the document is possibly no longer
+   *        the current loaded document (for example, if we're
+   *        responding to a PluginRemoved event for an unloading
+   *        document). If this parameter is omitted, it defaults
+   *        to the current top-level document.
+   */
+  updateNotificationUI: function (document) {
+    let principal;
+
+    if (document) {
+      // We're only interested in the top-level document, since that's
+      // the one that provides the Principal that we send back to the
+      // parent.
+      principal = document.defaultView.top.document.nodePrincipal;
+    } else {
+      principal = this.content.document.nodePrincipal;
+    }
+
     // Make a copy of the actions from the last popup notification.
     let haveInsecure = false;
     let actions = new Map();
@@ -718,9 +740,8 @@ PluginContent.prototype = {
     }
 
     // Remove plugins that are already active, or large enough to show an overlay.
-    let contentWindow = this.global.content;
-    let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                           .getInterface(Ci.nsIDOMWindowUtils);
+    let cwu = this.content.QueryInterface(Ci.nsIInterfaceRequestor)
+                          .getInterface(Ci.nsIDOMWindowUtils);
     for (let plugin of cwu.plugins) {
       let info = this._getPluginInfo(plugin);
       if (!actions.has(info.permissionString)) {
@@ -755,7 +776,6 @@ PluginContent.prototype = {
 
     // If there are any items remaining in `actions` now, they are hidden
     // plugins that need a notification bar.
-    let principal = contentWindow.document.nodePrincipal;
     this.global.sendAsyncMessage("PluginContent:UpdateHiddenPluginUI", {
       haveInsecure: haveInsecure,
       actions: [... actions.values()],

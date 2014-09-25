@@ -88,7 +88,6 @@
     <dimen name="text_selection_handle_shadow">11dp</dimen>
     <dimen name="validation_message_height">50dp</dimen>
     <dimen name="validation_message_margin_top">6dp</dimen>
-    <dimen name="forward_default_offset">-13dip</dimen>
     <dimen name="url_bar_offset_left">32dp</dimen>
     <dimen name="history_tab_indicator_height">50dp</dimen>
 

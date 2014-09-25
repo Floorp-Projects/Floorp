@@ -36,6 +36,7 @@ const PREF_RECENT_FILES_MAX = "devtools.scratchpad.recentFilesMax";
 const SHOW_TRAILING_SPACE = "devtools.scratchpad.showTrailingSpace";
 const ENABLE_AUTOCOMPLETION = "devtools.scratchpad.enableAutocompletion";
 const TAB_SIZE = "devtools.editor.tabsize";
+const FALLBACK_CHARSET_LIST = "intl.fallbackCharsetList.ISO-8859-1";
 
 const VARIABLES_VIEW_URL = "chrome://browser/content/devtools/widgets/VariablesView.xul";
 
@@ -1053,6 +1054,50 @@ var Scratchpad = {
   },
 
   /**
+   * Get a list of applicable charsets.
+   * The best charset, defaulting to "UTF-8"
+   *
+   * @param string aBestCharset
+   * @return array of strings
+   */
+  _getApplicableCharsets: function SP__getApplicableCharsets(aBestCharset="UTF-8") {
+    let charsets = Services.prefs.getCharPref(
+      FALLBACK_CHARSET_LIST).split(",").filter(function (value) {
+      return value.length;
+    });
+    charsets.unshift(aBestCharset);
+    return charsets;
+  },
+
+  /**
+   * Get content converted to unicode, using a list of input charset to try.
+   *
+   * @param string aContent
+   * @param array of string aCharsetArray
+   * @return string
+   */
+  _getUnicodeContent: function SP__getUnicodeContent(aContent, aCharsetArray) {
+    let content = null,
+        converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter),
+        success = aCharsetArray.some(charset => {
+          try {
+            converter.charset = charset;
+            content = converter.ConvertToUnicode(aContent);
+            return true;
+          } catch (e) {
+            this.notificationBox.appendNotification(
+              this.strings.formatStringFromName("importFromFile.convert.failed",
+                                                [ charset ], 1),
+              "file-import-convert-failed",
+              null,
+              this.notificationBox.PRIORITY_WARNING_HIGH,
+              null);
+          }
+        });
+    return content;
+  },
+
+  /**
    * Read the content of a file and put it into the textbox.
    *
    * @param nsILocalFile aFile
@@ -1072,17 +1117,32 @@ var Scratchpad = {
     let channel = NetUtil.newChannel(aFile);
     channel.contentType = "application/javascript";
 
+    this.notificationBox.removeAllNotifications(false);
+
     NetUtil.asyncFetch(channel, (aInputStream, aStatus) => {
       let content = null;
 
       if (Components.isSuccessCode(aStatus)) {
-        let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                        createInstance(Ci.nsIScriptableUnicodeConverter);
-        converter.charset = "UTF-8";
+        let charsets = this._getApplicableCharsets();
         content = NetUtil.readInputStreamToString(aInputStream,
                                                   aInputStream.available());
-        content = converter.ConvertToUnicode(content);
-
+        content = this._getUnicodeContent(content, charsets);
+        if (!content) {
+          let message = this.strings.formatStringFromName(
+            "importFromFile.convert.failed",
+            [ charsets.join(", ") ],
+            1);
+          this.notificationBox.appendNotification(
+            message,
+            "file-import-convert-failed",
+            null,
+            this.notificationBox.PRIORITY_CRITICAL_MEDIUM,
+            null);
+          if (aCallback) {
+            aCallback.call(this, aStatus, content);
+          }
+          return;
+        }
         // Check to see if the first line is a mode-line comment.
         let line = content.split("\n")[0];
         let modeline = this._scanModeLine(line);
@@ -1100,7 +1160,8 @@ var Scratchpad = {
       else if (!aSilentError) {
         window.alert(this.strings.GetStringFromName("openFile.failed"));
       }
-
+      this.setFilename(aFile.path);
+      this.setRecentFile(aFile);
       if (aCallback) {
         aCallback.call(this, aStatus, content);
       }
@@ -1145,9 +1206,7 @@ var Scratchpad = {
             return;
           }
 
-          this.setFilename(file.path);
           this.importFromFile(file, false);
-          this.setRecentFile(file);
         }
       });
     };

@@ -10,12 +10,14 @@ import java.util.List;
 
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.gfx.BitmapUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
 
 import android.app.Application;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -24,8 +26,6 @@ import android.graphics.Rect;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -36,8 +36,10 @@ import android.view.ViewParent;
 public class LightweightTheme implements GeckoEventListener {
     private static final String LOGTAG = "GeckoLightweightTheme";
 
+    private static final String PREFS_URL = "lightweightTheme.headerURL";
+    private static final String PREFS_COLOR = "lightweightTheme.color";
+
     private final Application mApplication;
-    final Handler mHandler;
 
     private Bitmap mBitmap;
     private int mColor;
@@ -53,15 +55,90 @@ public class LightweightTheme implements GeckoEventListener {
 
     private final List<OnChangeListener> mListeners;
 
+    class LightweightThemeRunnable implements Runnable {
+        private String mHeaderURL;
+        private String mColor;
+
+        private String mSavedURL;
+        private String mSavedColor;
+
+        LightweightThemeRunnable() {
+        }
+
+        LightweightThemeRunnable(final String headerURL, final String color) {
+            mHeaderURL = headerURL;
+            mColor = color;
+        }
+
+        private void loadFromPrefs() {
+            SharedPreferences prefs = GeckoSharedPrefs.forProfile(mApplication);
+            mSavedURL = prefs.getString(PREFS_URL, null);
+            mSavedColor = prefs.getString(PREFS_COLOR, null);
+        }
+
+        private void saveToPrefs() {
+            GeckoSharedPrefs.forProfile(mApplication)
+                            .edit()
+                            .putString(PREFS_URL, mHeaderURL)
+                            .putString(PREFS_COLOR, mColor)
+                            .apply();
+
+            // Let's keep the saved data in sync.
+            mSavedURL = mHeaderURL;
+            mSavedColor = mColor;
+        }
+
+        @Override
+        public void run() {
+            // Load the data from preferences, if it exists.
+            loadFromPrefs();
+
+            if (TextUtils.isEmpty(mHeaderURL)) {
+                // mHeaderURL is null is this is the early startup path. Use
+                // the saved values, if we have any.
+                mHeaderURL = mSavedURL;
+                mColor = mSavedColor;
+                if (TextUtils.isEmpty(mHeaderURL)) {
+                    // We don't have any saved values, so we probably don't have
+                    // any lightweight theme set yet.
+                    return;
+                }
+            } else if (TextUtils.equals(mHeaderURL, mSavedURL)) {
+                // If we are already using the given header, just return
+                // without doing any work.
+                return;
+            } else {
+                // mHeaderURL and mColor probably need to be saved if we get here.
+                saveToPrefs();
+            }
+
+            String croppedURL = mHeaderURL;
+            int mark = croppedURL.indexOf('?');
+            if (mark != -1) {
+                croppedURL = croppedURL.substring(0, mark);
+            }
+
+            // Get the image and convert it to a bitmap.
+            final Bitmap bitmap = BitmapUtils.decodeUrl(croppedURL);
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    setLightweightTheme(bitmap, mColor);
+                }
+            });
+        }
+    }
+
     public LightweightTheme(Application application) {
         mApplication = application;
-        mHandler = new Handler(Looper.getMainLooper());
         mListeners = new ArrayList<OnChangeListener>();
 
         // unregister isn't needed as the lifetime is same as the application.
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "LightweightTheme:Update",
             "LightweightTheme:Disable");
+
+        ThreadUtils.postToBackgroundThread(new LightweightThemeRunnable());
     }
 
     public void addListener(final OnChangeListener listener) {
@@ -82,27 +159,13 @@ public class LightweightTheme implements GeckoEventListener {
                 final String headerURL = lightweightTheme.getString("headerURL");
                 final String color = lightweightTheme.optString("accentcolor");
 
-                // Move any heavy lifting off the Gecko thread
-                ThreadUtils.postToBackgroundThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        String croppedURL = headerURL;
-                        int mark = croppedURL.indexOf('?');
-                        if (mark != -1)
-                            croppedURL = croppedURL.substring(0, mark);
-
-                        // Get the image and convert it to a bitmap.
-                        final Bitmap bitmap = BitmapUtils.decodeUrl(croppedURL);
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                setLightweightTheme(bitmap, color);
-                            }
-                        });
-                    }
-                });
+                ThreadUtils.postToBackgroundThread(new LightweightThemeRunnable(headerURL, color));
             } else if (event.equals("LightweightTheme:Disable")) {
-                mHandler.post(new Runnable() {
+                // Clear the saved data when a theme is disabled.
+                // Called on the Gecko thread, but should be very lightweight.
+                clearPrefs();
+
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         resetLightweightTheme();
@@ -112,6 +175,17 @@ public class LightweightTheme implements GeckoEventListener {
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
         }
+    }
+
+    /**
+     * Clear the data stored in preferences for fast path loading during startup
+     */
+    private void clearPrefs() {
+        GeckoSharedPrefs.forProfile(mApplication)
+                        .edit()
+                        .remove(PREFS_URL)
+                        .remove(PREFS_COLOR)
+                        .apply();
     }
 
     /**
@@ -136,29 +210,12 @@ public class LightweightTheme implements GeckoEventListener {
         final int bitmapWidth = bitmap.getWidth();
         final int bitmapHeight = bitmap.getHeight();
 
-        boolean useDominantColor = true;
-        if (!TextUtils.isEmpty(color)) {
-            try {
-                mColor = Color.parseColor(color);
-                useDominantColor = false;
-            } catch (IllegalArgumentException e) {
-                // Malformed color.
-            }
-        }
-
-        // Calculate the dominant color the hard way, if not given to us.
-        if (useDominantColor) {
-            // To find the dominant color, take <toolbar height> of pixels.
-            int cropLength = mApplication.getResources().getDimensionPixelSize(R.dimen.browser_toolbar_height);
-
-            // A cropped bitmap of the top/left pixels.
-            Bitmap cropped = Bitmap.createBitmap(bitmap,
-                                                 0, 0,
-                                                 cropLength > bitmapWidth ? bitmapWidth : cropLength,
-                                                 cropLength > bitmapHeight ? bitmapHeight : cropLength);
-
-            // Dominant color based on the cropped bitmap.
-            mColor = BitmapUtils.getDominantColor(cropped, false);
+        try {
+            mColor = Color.parseColor(color);
+        } catch (Exception e) {
+            // Malformed or missing color.
+            // Default to TRANSPARENT.
+            mColor = Color.TRANSPARENT;
         }
 
         // Calculate the luminance to determine if it's a light or a dark theme.
@@ -196,8 +253,9 @@ public class LightweightTheme implements GeckoEventListener {
             canvas.drawBitmap(bitmap, null, rect, paint);
         }
 
-        for (OnChangeListener listener : mListeners)
+        for (OnChangeListener listener : mListeners) {
             listener.onLightweightThemeChanged();
+        }
     }
 
     /**

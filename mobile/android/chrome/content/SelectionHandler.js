@@ -301,6 +301,10 @@ var SelectionHandler = {
     // Clear out any existing active selection
     this._closeSelection();
 
+    if (this._isNonTextInputElement(aElement)) {
+      return false;
+    }
+
     this._initTargetInfo(aElement, this.TYPE_SELECTION);
 
     // Perform the appropriate selection method, if we can't determine method, or it fails, return
@@ -799,6 +803,10 @@ var SelectionHandler = {
   isElementEditableText: function (aElement) {
     return (((aElement instanceof HTMLInputElement && aElement.mozIsTextField(false)) ||
             (aElement instanceof HTMLTextAreaElement)) && !aElement.readOnly);
+  },
+
+  _isNonTextInputElement: function(aElement) {
+    return (aElement instanceof HTMLInputElement && !aElement.mozIsTextField(false));
   },
 
   /*

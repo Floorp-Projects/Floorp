@@ -6,7 +6,7 @@
  */
 
 function spawnTest() {
-  let [target, debuggee, panel] = yield initWebAudioEditor(CONNECT_MULTI_PARAM_URL);
+  let { target, panel } = yield initWebAudioEditor(CONNECT_MULTI_PARAM_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, EVENTS } = panelWin;
 

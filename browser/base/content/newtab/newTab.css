@@ -186,10 +186,8 @@ input[type=button] {
 }
 
 .newtab-sponsored {
-  background-color: #f9f9f9;
   border: 1px solid #dcdcdc;
   border-radius: 2px;
-  color: #9b9b9b;
   cursor: pointer;
   display: none;
   font-family: Arial;
@@ -201,8 +199,9 @@ input[type=button] {
 }
 
 .newtab-sponsored:-moz-any(:hover, [active]) {
-  background-color: #dcdcdc;
-  color: #666666;
+  background-color: #3a72b1;
+  border: 0;
+  color: white;
 }
 
 .newtab-sponsored:-moz-locale-dir(rtl) {

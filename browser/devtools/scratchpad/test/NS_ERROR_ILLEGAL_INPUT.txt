@@ -1,0 +1,2 @@
+Typ	Datum	Uhrzeit	Quelle	Kategorie	Ereignis	Benutzer	Computer
+Informationen	10.08.2012	16:07:11	MSDTC	Datenträger 	2444	Nicht zutreffend	

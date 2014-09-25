@@ -73,7 +73,7 @@
                   style="@style/UrlBar.Button.Container"
                   android:layout_toRightOf="@id/back"
                   android:layout_toLeftOf="@id/menu_items"
-                  android:paddingLeft="8dip"
+                  android:paddingLeft="12dip"
                   android:paddingRight="8dip"/>
 
     <LinearLayout android:id="@id/menu_items"

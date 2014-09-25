@@ -138,12 +138,11 @@ function initBackend(aUrl) {
   return Task.spawn(function*() {
     let tab = yield addTab(aUrl);
     let target = TargetFactory.forTab(tab);
-    let debuggee = target.window.wrappedJSObject;
 
     yield target.makeRemote();
 
     let front = new WebAudioFront(target.client, target.form);
-    return [target, debuggee, front];
+    return { target, front };
   });
 }
 
@@ -153,14 +152,13 @@ function initWebAudioEditor(aUrl) {
   return Task.spawn(function*() {
     let tab = yield addTab(aUrl);
     let target = TargetFactory.forTab(tab);
-    let debuggee = target.window.wrappedJSObject;
 
     yield target.makeRemote();
 
     Services.prefs.setBoolPref("devtools.webaudioeditor.enabled", true);
     let toolbox = yield gDevTools.showToolbox(target, "webaudioeditor");
     let panel = toolbox.getCurrentPanel();
-    return [target, debuggee, panel, toolbox];
+    return { target, panel, toolbox };
   });
 }
 

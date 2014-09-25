@@ -306,6 +306,15 @@ var gPluginHandler = {
   },
 
   updateHiddenPluginUI: function (browser, haveInsecure, actions, principal, host) {
+    // It is possible that we've received a message from the frame script to show
+    // the hidden plugin notification for a principal that no longer matches the one
+    // that the browser's content now has assigned (ie, the browser has browsed away
+    // after the message was sent, but before the message was received). In that case,
+    // we should just ignore the message.
+    if (!principal.equals(browser.contentPrincipal)) {
+      return;
+    }
+
     // Set up the icon
     document.getElementById("plugins-notification-icon").classList.
       toggle("plugin-blocked", haveInsecure);
