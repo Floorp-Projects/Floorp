@@ -76,6 +76,11 @@ public:
   bool IsOutstanding() { return mOutstanding; }
 
   /**
+   * Cancel the queued task if there is one.
+   */
+  void CancelPendingTask();
+
+  /**
    * Return the time elapsed since the last request was processed
    */
   TimeDuration TimeSinceLastRequest(const TimeStamp& aTimeStamp);

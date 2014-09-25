@@ -588,6 +588,20 @@ APZCTreeManager::GetTouchInputBlockAPZC(const MultiTouchInput& aEvent,
     return apzc.forget();
   }
 
+  { // In this block we flush repaint requests for the entire APZ tree. We need to do this
+    // at the start of an input block for a number of reasons. One of the reasons is so that
+    // after we untransform the event into gecko space, it doesn't end up under something
+    // else. Another reason is that if we hit-test this event and end up on a layer's
+    // dispatch-to-content region we cannot be sure we actually got the correct layer. We
+    // have to fall back to the gecko hit-test to handle this case, but we can't untransform
+    // the event we send to gecko because we don't know the layer to untransform with
+    // respect to.
+    MonitorAutoLock lock(mTreeLock);
+    for (AsyncPanZoomController* apzc = mRootApzc; apzc; apzc = apzc->GetPrevSibling()) {
+      FlushRepaintsRecursively(apzc);
+    }
+  }
+
   apzc = GetTargetAPZC(aEvent.mTouches[0].mScreenPoint, aOutInOverscrolledApzc);
   for (size_t i = 1; i < aEvent.mTouches.Length(); i++) {
     nsRefPtr<AsyncPanZoomController> apzc2 = GetTargetAPZC(aEvent.mTouches[i].mScreenPoint, aOutInOverscrolledApzc);
@@ -833,6 +847,17 @@ APZCTreeManager::UpdateZoomConstraintsRecursively(AsyncPanZoomController* aApzc,
     if (!child->IsRootForLayersId()) {
       UpdateZoomConstraintsRecursively(child, aConstraints);
     }
+  }
+}
+
+void
+APZCTreeManager::FlushRepaintsRecursively(AsyncPanZoomController* aApzc)
+{
+  mTreeLock.AssertCurrentThreadOwns();
+
+  aApzc->FlushRepaintForNewInputBlock();
+  for (AsyncPanZoomController* child = aApzc->GetLastChild(); child; child = child->GetPrevSibling()) {
+    FlushRepaintsRecursively(child);
   }
 }
 
