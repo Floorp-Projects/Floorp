@@ -289,6 +289,7 @@ nsHostRecord::nsHostRecord(const nsHostKey *key)
     , mGetTtl(false)
 #endif
     , mBlacklistedCount(0)
+    , mResolveAgain(false)
 {
     host = ((char *) this) + sizeof(nsHostRecord);
     memcpy((char *) host, key->host, strlen(key->host) + 1);
@@ -467,6 +468,21 @@ nsHostRecord::GetPriority(uint16_t aFlags)
     return nsHostRecord::DNS_PRIORITY_LOW;
 }
 
+// Returns true if the entry can be removed, or false if it was marked to get
+// refreshed.
+bool
+nsHostRecord::RemoveOrRefresh()
+{
+  // This condition implies that the request has been passed to the OS
+  // resolver. The resultant DNS record should be considered stale and not
+  // trusted; set a flag to ensure it is called again.
+    if (resolving && !onQueue) {
+        mResolveAgain = true;
+        return false;
+    }
+    return true; // can be removed now
+}
+
 //----------------------------------------------------------------------------
 
 struct nsHostDBEnt : PLDHashEntryHdr
@@ -578,6 +594,21 @@ HostDB_RemoveEntry(PLDHashTable *table,
                    void *arg)
 {
     return PL_DHASH_REMOVE;
+}
+
+static PLDHashOperator
+HostDB_PruneEntry(PLDHashTable *table,
+                  PLDHashEntryHdr *hdr,
+                  uint32_t number,
+                  void *arg)
+{
+    nsHostDBEnt* ent = static_cast<nsHostDBEnt *>(hdr);
+
+    // Try to remove the record, or mark it for refresh
+    if (ent->rec->RemoveOrRefresh()) {
+        return PL_DHASH_REMOVE;
+    }
+    return PL_DHASH_NEXT;
 }
 
 //----------------------------------------------------------------------------
@@ -746,6 +777,41 @@ nsHostResolver::ClearPendingQueue(PRCList *aPendingQ)
     }
 }
 
+//
+// FlushCache() is what we call when the network has changed. We must not
+// trust names that were resolved before this change. They may resolve
+// differently now.
+//
+// This function removes all existing resolved host entries from the hash.
+// Names that are in the pending queues can be left there. Entries in the
+// cache that have 'Resolve' set true but not 'onQueue' are being resolved
+// right now, so we need to mark them to get re-resolved on completion!
+
+void
+nsHostResolver::FlushCache()
+{
+    PRCList evictionQ;
+    PR_INIT_CLIST(&evictionQ);
+
+    {
+        MutexAutoLock lock(mLock);
+        MoveCList(mEvictionQ, evictionQ);
+        mEvictionQSize = 0;
+
+        // prune the hash from all hosts already resolved
+        PL_DHashTableEnumerate(&mDB, HostDB_PruneEntry, nullptr);
+    }
+
+    if (!PR_CLIST_IS_EMPTY(&evictionQ)) {
+        PRCList *node = evictionQ.next;
+        while (node != &evictionQ) {
+            nsHostRecord *rec = static_cast<nsHostRecord *>(node);
+            node = node->next;
+            NS_RELEASE(rec);
+        }
+    }
+}
+
 void
 nsHostResolver::Shutdown()
 {
@@ -772,7 +838,7 @@ nsHostResolver::Shutdown()
 
     {
         MutexAutoLock lock(mLock);
-        
+
         mShutdown = true;
 
         MoveCList(mHighQ, pendingQHigh);
@@ -781,14 +847,14 @@ nsHostResolver::Shutdown()
         MoveCList(mEvictionQ, evictionQ);
         mEvictionQSize = 0;
         mPendingCount = 0;
-        
+
         if (mNumIdleThreads)
             mIdleThreadCV.NotifyAll();
-        
+
         // empty host database
         PL_DHashTableEnumerate(&mDB, HostDB_RemoveEntry, nullptr);
     }
-    
+
     ClearPendingQueue(&pendingQHigh);
     ClearPendingQueue(&pendingQMed);
     ClearPendingQueue(&pendingQLow);
@@ -1331,7 +1397,12 @@ nsHostResolver::PrepareRecordExpiration(nsHostRecord* rec) const
          rec->host, lifetime, grace, sDnsVariant));
 }
 
-void
+//
+// OnLookupComplete() checks if the resolving should be redone and if so it
+// returns LOOKUP_RESOLVEAGAIN, but only if 'status' is not NS_ERROR_ABORT.
+//
+
+nsHostResolver::LookupStatus
 nsHostResolver::OnLookupComplete(nsHostRecord* rec, nsresult status, AddrInfo* result)
 {
     // get the list of pending callbacks for this lookup, and notify
@@ -1340,6 +1411,11 @@ nsHostResolver::OnLookupComplete(nsHostRecord* rec, nsresult status, AddrInfo* r
     PR_INIT_CLIST(&cbs);
     {
         MutexAutoLock lock(mLock);
+
+        if (rec->mResolveAgain && (status != NS_ERROR_ABORT)) {
+            rec->mResolveAgain = false;
+            return LOOKUP_RESOLVEAGAIN;
+        }
 
         // grab list of callbacks to notify
         MoveCList(rec->callbacks, cbs);
@@ -1419,6 +1495,8 @@ nsHostResolver::OnLookupComplete(nsHostRecord* rec, nsresult status, AddrInfo* r
 #endif
 
     NS_RELEASE(rec);
+
+    return LOOKUP_OK;
 }
 
 void
@@ -1502,9 +1580,10 @@ nsHostResolver::ThreadFunc(void *arg)
     nsResState rs;
 #endif
     nsHostResolver *resolver = (nsHostResolver *)arg;
-    nsHostRecord *rec;
+    nsHostRecord *rec  = nullptr;
     AddrInfo *ai = nullptr;
-    while (resolver->GetHostToLookup(&rec)) {
+
+    while (rec || resolver->GetHostToLookup(&rec)) {
         LOG(("DNS lookup thread - Calling getaddrinfo for host [%s].\n",
              rec->host));
 
@@ -1548,7 +1627,13 @@ nsHostResolver::ThreadFunc(void *arg)
         // OnLookupComplete may release "rec", long before we lose it.
         LOG(("DNS lookup thread - lookup completed for host [%s]: %s.\n",
              rec->host, ai ? "success" : "failure: unknown host"));
-        resolver->OnLookupComplete(rec, status, ai);
+        if (LOOKUP_RESOLVEAGAIN == resolver->OnLookupComplete(rec, status, ai)) {
+            // leave 'rec' assigned and loop to make a renewed host resolve
+            LOG(("DNS lookup thread - Re-resolving host [%s].\n",
+                 rec->host));
+        } else {
+            rec = nullptr;
+        }
     }
     NS_RELEASE(resolver);
     LOG(("DNS lookup thread - queue empty, thread finished.\n"));
