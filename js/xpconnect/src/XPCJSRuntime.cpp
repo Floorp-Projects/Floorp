@@ -1662,9 +1662,9 @@ GetCompartmentName(JSCompartment *c, nsCString &name, int *anonymizeID,
             }
         }
 
-        // We might have a file:// URL that includes paths from the local
-        // filesystem, which should be omitted if we're anonymizing.
         if (*anonymizeID) {
+            // We might have a file:// URL that includes a path from the local
+            // filesystem, which should be omitted if we're anonymizing.
             static const char *filePrefix = "file://";
             int filePos = name.Find(filePrefix);
             if (filePos >= 0) {
@@ -1683,6 +1683,24 @@ GetCompartmentName(JSCompartment *c, nsCString &name, int *anonymizeID,
                     // safe.
                     name.Truncate(pathPos);
                     name += "<anonymized?!>";
+                }
+            }
+
+            // We might have a location like this:
+            //   inProcessTabChildGlobal?ownedBy=http://www.example.com/
+            // The owner should be omitted if it's not a chrome: URI and we're
+            // anonymizing.
+            static const char *ownedByPrefix =
+                "inProcessTabChildGlobal?ownedBy=";
+            int ownedByPos = name.Find(ownedByPrefix);
+            if (ownedByPos >= 0) {
+                const char *chrome = "chrome:";
+                int ownerPos = ownedByPos + strlen(ownedByPrefix);
+                const nsDependentCSubstring& ownerFirstPart =
+                    Substring(name, ownerPos, strlen(chrome));
+                if (!ownerFirstPart.EqualsASCII(chrome)) {
+                    name.Truncate(ownerPos);
+                    name += "<anonymized>";
                 }
             }
         }
