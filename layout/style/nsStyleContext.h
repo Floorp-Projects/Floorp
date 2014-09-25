@@ -396,7 +396,6 @@ public:
 #ifdef DEBUG
   void List(FILE* out, int32_t aIndent);
   static void AssertStyleStructMaxDifferenceValid();
-  static const char* StructName(nsStyleStructID aSID);
 #endif
 
 private:
