@@ -2449,14 +2449,12 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
   // overall decision.
   RestyleResult result = RestyleResult(0);
   uint32_t swappedStructs = 0;
-  nsIFrame* providerFrame = nullptr;
 
   nsRestyleHint thisRestyleHint = aRestyleHint;
 
   bool haveMoreContinuations = false;
   for (nsIFrame* f = mFrame; f; ) {
-    RestyleResult thisResult =
-      RestyleSelf(f, thisRestyleHint, &swappedStructs, &providerFrame);
+    RestyleResult thisResult = RestyleSelf(f, thisRestyleHint, &swappedStructs);
 
     if (thisResult != eRestyleResult_Stop) {
       // Calls to RestyleSelf for later same-style continuations must not
@@ -2495,10 +2493,8 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
     MOZ_ASSERT(mFrame->StyleContext() == oldContext,
                "frame should have been left with its old style context");
 
-    MOZ_ASSERT(providerFrame, "RestyleSelf should have supplied a providerFrame "
-                              "if it returned eRestyleResult_Stop");
-
-    nsStyleContext* newParent = providerFrame->StyleContext();
+    nsStyleContext* newParent =
+      mFrame->GetParentStyleContextFrame()->StyleContext();
 
     if (oldContext->GetParent() != newParent) {
       // If we received eRestyleResult_Stop, then the old style context was
@@ -2668,8 +2664,7 @@ ElementRestyler::ComputeRestyleResultFromNewContext(nsIFrame* aSelf,
 ElementRestyler::RestyleResult
 ElementRestyler::RestyleSelf(nsIFrame* aSelf,
                              nsRestyleHint aRestyleHint,
-                             uint32_t* aSwappedStructs,
-                             nsIFrame** aProviderFrame)
+                             uint32_t* aSwappedStructs)
 {
   MOZ_ASSERT(!(aRestyleHint & eRestyle_LaterSiblings),
              "eRestyle_LaterSiblings must not be part of aRestyleHint");
@@ -2707,7 +2702,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
   nsStyleContext* parentContext;
   // Get the frame providing the parent style context.  If it is a
   // child, then resolve the provider first.
-  nsIFrame* const providerFrame = aSelf->GetParentStyleContextFrame();
+  nsIFrame* providerFrame = aSelf->GetParentStyleContextFrame();
   bool isChild = providerFrame && providerFrame->GetParent() == aSelf;
   if (!isChild) {
     if (providerFrame)
@@ -2750,13 +2745,6 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
     // non-inherited hints were, so assume the worst.
     mParentFrameHintsNotHandledForDescendants =
       nsChangeHint_Hints_NotHandledForDescendants;
-  }
-
-  if (*aProviderFrame && *aProviderFrame != providerFrame) {
-    // XXX Uncomment when bug 979133 (restyle logging) lands.
-    // LOG_RESTYLE_CONTINUE("we had different provider frame from the previous "
-    //                      "same-style continuation");
-    result = eRestyleResult_Continue;
   }
 
   // We don't support using eRestyle_StyleAttribute when pseudo-elements
@@ -3044,10 +3032,6 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
         aSelf->SetAdditionalStyleContext(contextIndex, newExtraContext);
       }
     }
-  }
-
-  if (result == eRestyleResult_Stop) {
-    *aProviderFrame = providerFrame;
   }
 
   return result;
