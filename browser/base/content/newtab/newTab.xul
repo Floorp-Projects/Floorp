@@ -21,7 +21,7 @@
             title="&newtab.pageTitle;">
 
   <xul:panel id="newtab-intro-panel" orient="vertical" type="arrow"
-             noautohide="true" position="leftcenter topright">
+             noautohide="true">
   </xul:panel>
 
   <xul:panel id="newtab-search-panel" orient="vertical" type="arrow"
@@ -40,9 +40,6 @@
       <xul:label/>
     </xul:hbox>
     <xul:hbox id="newtab-customize-blank" class="newtab-customize-panel-item">
-      <xul:label/>
-    </xul:hbox>
-    <xul:hbox id="newtab-customize-what" class="newtab-customize-panel-item">
       <xul:label/>
     </xul:hbox>
   </xul:panel>
@@ -91,6 +88,8 @@
       <div id="newtab-margin-bottom"/>
 
     </div>
+
+    <div id="newtab-intro-what"></div>
 
     <input id="newtab-customize-button" type="button"/>
   </div>

@@ -11,7 +11,6 @@ let gCustomize = {
     "classic",
     "enhanced",
     "panel",
-    "what",
   ],
 
   _nodes: {},
@@ -22,7 +21,7 @@ let gCustomize = {
     }
 
     this._nodes.button.setAttribute("title", newTabString("customize.title"));
-    ["enhanced", "classic", "blank", "what"].forEach(name => {
+    ["enhanced", "classic", "blank"].forEach(name => {
       this._nodes[name].firstChild.textContent = newTabString("customize." + name);
     });
 
@@ -37,9 +36,6 @@ let gCustomize = {
     this._nodes.enhanced.addEventListener("click", e => {
       gAllPages.enabled = true;
       gAllPages.enhanced = true;
-    });
-    this._nodes.what.addEventListener("click", e => {
-      gIntro.showPanel();
     });
 
     this.updateSelected();
