@@ -47,6 +47,7 @@
 #include "SpdyZlibReporter.h"
 #include "nsIMemoryReporter.h"
 #include "nsIParentalControlsService.h"
+#include "nsINetworkLinkService.h"
 
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/Telemetry.h"
@@ -143,6 +144,7 @@ nsHttpHandler::nsHttpHandler()
     , mSpdyTimeout(PR_SecondsToInterval(180))
     , mResponseTimeout(PR_SecondsToInterval(300))
     , mResponseTimeoutEnabled(false)
+    , mNetworkChangedTimeout(5000)
     , mMaxRequestAttempts(10)
     , mMaxRequestDelay(10)
     , mIdleSynTimeout(250)
@@ -348,6 +350,7 @@ nsHttpHandler::Init()
         mObserverService->AddObserver(this, "net:failed-to-process-uri-content", true);
         mObserverService->AddObserver(this, "last-pb-context-exited", true);
         mObserverService->AddObserver(this, "browser:purge-session-history", true);
+        mObserverService->AddObserver(this, NS_NETWORK_LINK_TOPIC, false);
     }
 
     MakeNewRequestTokenBucket();
@@ -856,6 +859,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetIntPref(HTTP_PREF("response.timeout"), &val);
         if (NS_SUCCEEDED(rv))
             mResponseTimeout = PR_SecondsToInterval(clamped(val, 0, 0xffff));
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("network-changed.timeout"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("network-changed.timeout"), &val);
+        if (NS_SUCCEEDED(rv))
+            mNetworkChangedTimeout = clamped(val, 1, 600) * 1000;
     }
 
     if (PREF_CHANGED(HTTP_PREF("max-connections"))) {
@@ -1780,13 +1789,12 @@ nsHttpHandler::Observe(nsISupports *subject,
 {
     LOG(("nsHttpHandler::Observe [topic=\"%s\"]\n", topic));
 
-    if (strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
+    if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
         nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
         if (prefBranch)
             PrefsChanged(prefBranch, NS_ConvertUTF16toUTF8(data).get());
-    }
-    else if (strcmp(topic, "profile-change-net-teardown")    == 0 ||
-             strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)    == 0) {
+    } else if (!strcmp(topic, "profile-change-net-teardown") ||
+               !strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) ) {
 
         mHandlerActive = false;
 
@@ -1806,36 +1814,39 @@ nsHttpHandler::Observe(nsISupports *subject,
 
         if (!mDoNotTrackEnabled) {
             Telemetry::Accumulate(Telemetry::DNT_USAGE, DONOTTRACK_VALUE_UNSET);
-        }
-        else {
+        } else {
             Telemetry::Accumulate(Telemetry::DNT_USAGE, mDoNotTrackValue);
         }
-    }
-    else if (strcmp(topic, "profile-change-net-restore") == 0) {
+    } else if (!strcmp(topic, "profile-change-net-restore")) {
         // initialize connection manager
         InitConnectionMgr();
-    }
-    else if (strcmp(topic, "net:clear-active-logins") == 0) {
+    } else if (!strcmp(topic, "net:clear-active-logins")) {
         mAuthCache.ClearAll();
         mPrivateAuthCache.ClearAll();
-    }
-    else if (strcmp(topic, "net:prune-dead-connections") == 0) {
+    } else if (!strcmp(topic, "net:prune-dead-connections")) {
         if (mConnMgr) {
             mConnMgr->PruneDeadConnections();
         }
-    }
-    else if (strcmp(topic, "net:failed-to-process-uri-content") == 0) {
+    } else if (!strcmp(topic, "net:failed-to-process-uri-content")) {
         nsCOMPtr<nsIURI> uri = do_QueryInterface(subject);
-        if (uri && mConnMgr)
+        if (uri && mConnMgr) {
             mConnMgr->ReportFailedToProcess(uri);
-    }
-    else if (strcmp(topic, "last-pb-context-exited") == 0) {
+        }
+    } else if (!strcmp(topic, "last-pb-context-exited")) {
         mPrivateAuthCache.ClearAll();
-    } else if (strcmp(topic, "browser:purge-session-history") == 0) {
+    } else if (!strcmp(topic, "browser:purge-session-history")) {
         if (mConnMgr && gSocketTransportService) {
             nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(mConnMgr,
                 &nsHttpConnectionMgr::ClearConnectionHistory);
             gSocketTransportService->Dispatch(event, NS_DISPATCH_NORMAL);
+        }
+    } else if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {
+        nsAutoCString converted = NS_ConvertUTF16toUTF8(data);
+        if (!strcmp(converted.get(), NS_NETWORK_LINK_DATA_CHANGED)) {
+            if (mConnMgr) {
+                mConnMgr->PruneDeadConnections();
+                mConnMgr->VerifyTraffic();
+            }
         }
     }
 

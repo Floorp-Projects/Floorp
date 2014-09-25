@@ -1230,15 +1230,17 @@ FrameIter::computedThisValue() const
 }
 
 Value
-FrameIter::thisv() const
+FrameIter::thisv(JSContext *cx)
 {
     switch (data_.state_) {
       case DONE:
       case ASMJS:
         break;
       case JIT:
-        if (data_.jitFrames_.isIonJS())
-            return ionInlineFrames_.thisValue();
+        if (data_.jitFrames_.isIonJS()) {
+            jit::MaybeReadFallback recover(cx, activation()->asJit(), &data_.jitFrames_);
+            return ionInlineFrames_.thisValue(recover);
+        }
         return data_.jitFrames_.baselineFrame()->thisValue();
       case INTERP:
         return interpFrame()->thisValue();

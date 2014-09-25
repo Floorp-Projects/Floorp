@@ -35,7 +35,7 @@ EXPORTS += [
     'nsVolume.h',
     'nsVolumeService.h',
 ]
-SOURCES += [
+UNIFIED_SOURCES += [
     'AudioChannelManager.cpp',
     'AudioManager.cpp',
     'AutoMounter.cpp',
