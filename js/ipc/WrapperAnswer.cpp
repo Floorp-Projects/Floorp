@@ -679,9 +679,9 @@ WrapperAnswer::AnswerIsConstructor(const ObjectId &objId, bool *result)
 bool
 WrapperAnswer::RecvDropObject(const ObjectId &objId)
 {
-    JSObject *obj = findObjectById(objId);
+    JSObject *obj = objects_.find(objId);
     if (obj) {
-        objectIds_.remove(obj);
+        objectIdMap(objId.hasXrayWaiver()).remove(obj);
         objects_.remove(objId);
     }
     return true;

@@ -11,6 +11,7 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "jsfriendapi.h"
 #include "xpcprivate.h"
+#include "WrapperFactory.h"
 
 using namespace js;
 using namespace JS;
@@ -870,14 +871,17 @@ WrapperOwner::toObjectVariant(JSContext *cx, JSObject *objArg, ObjectVariant *ob
     // wrappers, then the wrapper might be GCed while the target remained alive.
     // Whenever operating on an object that comes from the table, we wrap it
     // in findObjectById.
-    obj = js::UncheckedUnwrap(obj, false);
+    unsigned wrapperFlags = 0;
+    obj = js::UncheckedUnwrap(obj, false, &wrapperFlags);
     if (obj && IsCPOW(obj) && OwnerOf(obj) == this) {
         *objVarp = LocalObject(idOf(obj).serialize());
         return true;
     }
+    bool waiveXray = wrapperFlags & xpc::WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG;
 
-    ObjectId id = objectIds_.find(obj);
+    ObjectId id = objectIdMap(waiveXray).find(obj);
     if (!id.isNull()) {
+        MOZ_ASSERT(id.hasXrayWaiver() == waiveXray);
         *objVarp = RemoteObject(id.serialize());
         return true;
     }
@@ -887,10 +891,10 @@ WrapperOwner::toObjectVariant(JSContext *cx, JSObject *objArg, ObjectVariant *ob
     if (mozilla::dom::IsDOMObject(obj))
         mozilla::dom::TryPreserveWrapper(obj);
 
-    id = ObjectId(nextSerialNumber_++, JS::IsCallable(obj));
+    id = ObjectId(nextSerialNumber_++, waiveXray);
     if (!objects_.add(id, obj))
         return false;
-    if (!objectIds_.add(cx, obj, id))
+    if (!objectIdMap(waiveXray).add(cx, obj, id))
         return false;
 
     *objVarp = RemoteObject(id.serialize());
