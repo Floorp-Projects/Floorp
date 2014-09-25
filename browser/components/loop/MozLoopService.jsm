@@ -20,6 +20,9 @@ const LOOP_SESSION_TYPE = {
   FXA: 2,
 };
 
+// See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
+const PREF_LOG_LEVEL = "loop.debug.loglevel";
+
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
@@ -29,9 +32,6 @@ Cu.import("resource://gre/modules/FxAccountsOAuthClient.jsm");
 Cu.importGlobalProperties(["URL"]);
 
 this.EXPORTED_SYMBOLS = ["MozLoopService", "LOOP_SESSION_TYPE"];
-
-XPCOMUtils.defineLazyModuleGetter(this, "console",
-  "resource://gre/modules/devtools/Console.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "injectLoopAPI",
   "resource:///modules/loop/MozLoopAPI.jsm");
@@ -67,6 +67,15 @@ XPCOMUtils.defineLazyServiceGetter(this, "gDNSService",
                                    "@mozilla.org/network/dns-service;1",
                                    "nsIDNSService");
 
+// Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
+XPCOMUtils.defineLazyGetter(this, "log", () => {
+  let ConsoleAPI = Cu.import("resource://gre/modules/devtools/Console.jsm", {}).ConsoleAPI;
+  let consoleOptions = {
+    maxLogLevel: Services.prefs.getCharPref(PREF_LOG_LEVEL).toLowerCase(),
+    prefix: "Loop",
+  };
+  return new ConsoleAPI(consoleOptions);
+});
 
 // The current deferred for the registration process. This is set if in progress
 // or the registration was successful. This is null if a registration attempt was
@@ -112,7 +121,7 @@ CallProgressSocket.prototype = {
   connect: function(onSuccess, onError) {
     this._onSuccess = onSuccess;
     this._onError = onError ||
-      (reason => {console.warn("MozLoopService::callProgessSocket - ", reason);});
+      (reason => {log.warn("MozLoopService::callProgessSocket - ", reason);});
 
     if (!onSuccess) {
       this._onError("missing onSuccess argument");
@@ -193,7 +202,7 @@ CallProgressSocket.prototype = {
       msg = JSON.parse(aMsg);
     }
     catch (error) {
-      console.error("MozLoopService: error parsing progress message - ", error);
+      log.error("MozLoopService: error parsing progress message - ", error);
       return;
     }
 
@@ -211,7 +220,7 @@ CallProgressSocket.prototype = {
    */
   _send: function(aMsg) {
     if (!this._handshakeComplete) {
-      console.warn("MozLoopService::_send error - handshake not complete");
+      log.warn("MozLoopService::_send error - handshake not complete");
       return;
     }
 
@@ -412,7 +421,7 @@ let MozLoopServiceInternal = {
    */
 
   _hawkRequestError: function(error) {
-    console.error("Loop hawkRequest error:", error);
+    log.error("Loop hawkRequest error:", error);
     throw error;
   },
 
@@ -449,7 +458,7 @@ let MozLoopServiceInternal = {
         Services.prefs.setCharPref(this.getSessionTokenPrefName(sessionType), sessionToken);
       } else {
         // XXX Bubble the precise details up to the UI somehow (bug 1013248).
-        console.warn("Loop server sent an invalid session token");
+        log.warn("Loop server sent an invalid session token");
         gRegisteredDeferred.reject("session-token-wrong-size");
         gRegisteredDeferred = null;
         return false;
@@ -494,7 +503,7 @@ let MozLoopServiceInternal = {
       // No need to clear the promise here, everything was good, so we don't need
       // to re-register.
     }, (error) => {
-      console.error("Failed to register with Loop server: ", error);
+      log.error("Failed to register with Loop server: ", error);
       gRegisteredDeferred.reject(error.errno);
       gRegisteredDeferred = null;
     });
@@ -536,7 +545,7 @@ let MozLoopServiceInternal = {
         }
 
         // XXX Bubble the precise details up to the UI somehow (bug 1013248).
-        console.error("Failed to register with the loop server. Error: ", error);
+        log.error("Failed to register with the loop server. Error: ", error);
         this.setError("registration", error);
         throw error;
       }
@@ -568,7 +577,7 @@ let MozLoopServiceInternal = {
           return;
         }
 
-        console.error("Failed to unregister with the loop server. Error: ", error);
+        log.error("Failed to unregister with the loop server. Error: ", error);
         throw error;
       });
   },
@@ -645,10 +654,10 @@ let MozLoopServiceInternal = {
           }
         });
       } else {
-        console.warn("Error: missing calls[] in response");
+        log.warn("Error: missing calls[] in response");
       }
     } catch (err) {
-      console.warn("Error parsing calls info", err);
+      log.warn("Error parsing calls info", err);
     }
   },
 
@@ -760,7 +769,7 @@ let MozLoopServiceInternal = {
 
         let worker = new ChromeWorker("MozLoopWorker.js");
         worker.onmessage = function(e) {
-          console.log(e.data.ok ?
+          log.info(e.data.ok ?
             "Successfully staged loop report for telemetry upload." :
             ("Failed to stage loop report. Error: " + e.data.fail));
         }
@@ -898,7 +907,7 @@ let MozLoopServiceInternal = {
         client.launchWebFlow();
       },
       error => {
-        console.error(error);
+        log.error(error);
         deferred.reject(error);
       }
     );
@@ -1068,7 +1077,7 @@ this.MozLoopService = {
 
       if (now_serving > ticket) {
         // Hot diggity! It's our turn! Activate the service.
-        console.log("MozLoopService: Activating Loop via soft-start");
+        log.info("MozLoopService: Activating Loop via soft-start");
         Services.prefs.setBoolPref("loop.throttled", false);
         buttonNode.hidden = false;
         this.initialize();
@@ -1234,7 +1243,7 @@ this.MozLoopService = {
     try {
       Services.prefs.setCharPref("loop." + prefName, value);
     } catch (ex) {
-      console.log("setLoopCharPref had trouble setting " + prefName +
+      log.error("setLoopCharPref had trouble setting " + prefName +
         "; exception: " + ex);
     }
   },
@@ -1256,7 +1265,7 @@ this.MozLoopService = {
     try {
       return Services.prefs.getCharPref("loop." + prefName);
     } catch (ex) {
-      console.log("getLoopCharPref had trouble getting " + prefName +
+      log.error("getLoopCharPref had trouble getting " + prefName +
         "; exception: " + ex);
       return null;
     }
@@ -1279,7 +1288,7 @@ this.MozLoopService = {
     try {
       return Services.prefs.getBoolPref("loop." + prefName);
     } catch (ex) {
-      console.log("getLoopBoolPref had trouble getting " + prefName +
+      log.error("getLoopBoolPref had trouble getting " + prefName +
         "; exception: " + ex);
       return null;
     }
@@ -1320,7 +1329,7 @@ this.MozLoopService = {
         gFxAOAuthProfile = result;
         MozLoopServiceInternal.notifyStatusChanged("login");
       }, error => {
-        console.error("Failed to retrieve profile", error);
+        log.error("Failed to retrieve profile", error);
         gFxAOAuthProfile = null;
         MozLoopServiceInternal.notifyStatusChanged();
       });
