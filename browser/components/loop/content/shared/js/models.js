@@ -366,12 +366,15 @@ loop.shared.models = (function(l10n) {
     },
 
     /**
-     * Adds a l10n rror notification to the stack and renders it.
+     * Adds a l10n error notification to the stack and renders it.
      *
      * @param  {String} messageId L10n message id
+     * @param  {Object} [l10nProps] An object with variables to be interpolated
+     *                  into the translation. All members' values must be
+     *                  strings or numbers.
      */
-    errorL10n: function(messageId) {
-      this.error(l10n.get(messageId));
+    errorL10n: function(messageId, l10nProps) {
+      this.error(l10n.get(messageId, l10nProps));
     }
   });
 

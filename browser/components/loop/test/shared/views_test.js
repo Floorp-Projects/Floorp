@@ -20,6 +20,9 @@ describe("loop.shared.views", function() {
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
     sandbox.useFakeTimers(); // exposes sandbox.clock as a fake timer
+    sandbox.stub(l10n, "get", function(x) {
+      return "translated:" + x;
+    });
   });
 
   afterEach(function() {
@@ -424,9 +427,6 @@ describe("loop.shared.views", function() {
     var comp, fakeFeedbackApiClient;
 
     beforeEach(function() {
-      sandbox.stub(l10n, "get", function(x) {
-        return x;
-      });
       fakeFeedbackApiClient = {send: sandbox.stub()};
       comp = TestUtils.renderIntoDocument(sharedViews.FeedbackView({
         feedbackApiClient: fakeFeedbackApiClient
@@ -601,9 +601,6 @@ describe("loop.shared.views", function() {
     }
 
     beforeEach(function() {
-      sandbox.stub(l10n, "get", function(x) {
-        return "translated:" + x;
-      });
       coll = new sharedModels.NotificationCollection();
       view = mountTestComponent({notifications: coll});
       testNotif = {level: "warning", message: "foo"};
