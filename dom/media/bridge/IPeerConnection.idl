@@ -2,6 +2,7 @@
 #include "nsIDOMWindow.idl"
 #include "nsIPropertyBag2.idl"
 
+interface nsIDOMMediaStream;
 interface nsIDOMDataChannel;
 
 /*

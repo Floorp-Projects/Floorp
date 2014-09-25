@@ -703,7 +703,7 @@ PeerConnectionImpl::GetFingerprintHexValue() const
 
 
 nsresult
-PeerConnectionImpl::CreateFakeMediaStream(uint32_t aHint, DOMMediaStream** aRetval)
+PeerConnectionImpl::CreateFakeMediaStream(uint32_t aHint, nsIDOMMediaStream** aRetval)
 {
   MOZ_ASSERT(aRetval);
   PC_AUTO_ENTER_API_CALL(false);
