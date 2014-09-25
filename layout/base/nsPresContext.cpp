@@ -1074,10 +1074,6 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
 
   mEventManager->SetPresContext(this);
 
-#ifdef RESTYLE_LOGGING
-  mRestyleLoggingEnabled = RestyleManager::RestyleLoggingInitiallyEnabled();
-#endif
-
 #ifdef DEBUG
   mInitialized = true;
 #endif
