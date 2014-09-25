@@ -384,7 +384,7 @@ describe("loop.webapp", function() {
               sinon.assert.notCalled(ocView._websocket.mediaUp);
             });
 
-          it("should notify the websocket that media is up if both streams" +
+          it("should notify tloadhe websocket that media is up if both streams" +
              "are connected", function() {
               conversation.set("publishedStream", true);
               conversation.set("subscribedStream", true);
@@ -691,7 +691,8 @@ describe("loop.webapp", function() {
           sdk: {}
         });
 
-        sandbox.spy(conversation, "listenTo");
+        conversation.onMarketplaceMessage = function() {};
+        sandbox.stub(notifications, "errorL10n");
         requestCallUrlInfo = sandbox.stub();
 
         view = React.addons.TestUtils.renderIntoDocument(
@@ -701,6 +702,8 @@ describe("loop.webapp", function() {
               client: {requestCallUrlInfo: requestCallUrlInfo}
             })
           );
+
+        loop.config.marketplaceUrl = "http://market/";
       });
 
       it("should call requestCallUrlInfo", function() {
@@ -710,21 +713,47 @@ describe("loop.webapp", function() {
                                        sinon.match.func);
       });
 
-      it("should listen for session:error events", function() {
-        sinon.assert.calledOnce(conversation.listenTo);
-        sinon.assert.calledWithExactly(conversation.listenTo, conversation,
-                                       "session:error", sinon.match.func);
-      });
-
-      it("should trigger a notication when a session:error model event is " +
-         " received", function() {
-        sandbox.stub(notifications, "errorL10n");
-        conversation.trigger("session:error", "tech error");
+      it("should add a notification when a session:error model event is " +
+         " received without an argument", function() {
+        conversation.trigger("session:error");
 
         sinon.assert.calledOnce(notifications.errorL10n);
         sinon.assert.calledWithExactly(notifications.errorL10n,
-                                       "unable_retrieve_call_info");
+          sinon.match.string, undefined);
       });
+
+      it("should add a notification with the custom message id when a " +
+         "session:error event is fired with an argument", function() {
+        conversation.trigger("session:error", "tech_error");
+
+        sinon.assert.calledOnce(notifications.errorL10n);
+        sinon.assert.calledWithExactly(notifications.errorL10n,
+                                       "tech_error", undefined);
+      });
+
+      it("should add a notification with the custom message id when a " +
+         "session:error event is fired with an argument and parameters",
+         function() {
+          conversation.trigger("session:error", "tech_error", {param: "value"});
+
+          sinon.assert.calledOnce(notifications.errorL10n);
+          sinon.assert.calledWithExactly(notifications.errorL10n,
+                                         "tech_error", { param: "value" });
+      });
+
+      it("should set marketplace hidden iframe src when fxos:app-needed is " +
+         "triggered", function(done) {
+        var marketplace = view.getDOMNode().querySelector("#marketplace");
+        expect(marketplace.src).to.be.equal("");
+
+        conversation.trigger("fxos:app-needed");
+
+        view.forceUpdate(function() {
+          expect(marketplace.src).to.be.equal(loop.config.marketplaceUrl);
+          done();
+        });
+      });
+
     });
 
     describe("#render", function() {
@@ -823,6 +852,200 @@ describe("loop.webapp", function() {
         }));
 
         expect(comp.getDOMNode().querySelectorAll("h3").length).eql(1);
+      });
+    });
+  });
+
+  describe("Firefox OS", function() {
+    var conversation, client;
+
+    before(function() {
+      client = new loop.StandaloneClient({
+        baseServerUrl: "http://fake.example.com"
+      });
+      sandbox.stub(client, "requestCallInfo");
+      conversation = new sharedModels.ConversationModel({}, {
+        sdk: {},
+        pendingCallTimeout: 1000
+      });
+    });
+
+    describe("Setup call", function() {
+      var conversation, setupOutgoingCall, view, requestCallUrlInfo;
+
+      beforeEach(function() {
+        conversation = new loop.webapp.FxOSConversationModel({
+          loopToken: "fakeToken"
+        });
+        setupOutgoingCall = sandbox.stub(conversation, "setupOutgoingCall");
+
+        var standaloneClientStub = {
+          requestCallUrlInfo: function(token, cb) {
+            cb(null, {urlCreationDate: 0});
+          },
+          settings: {baseServerUrl: loop.webapp.baseServerUrl}
+        };
+
+        view = React.addons.TestUtils.renderIntoDocument(
+            loop.webapp.StartConversationView({
+              model: conversation,
+              notifications: notifications,
+              client: standaloneClientStub
+            })
+        );
+      });
+
+      it("should start the conversation establishment process", function() {
+        var button = view.getDOMNode().querySelector("button");
+        React.addons.TestUtils.Simulate.click(button);
+
+        sinon.assert.calledOnce(setupOutgoingCall);
+      });
+    });
+
+    describe("FxOSConversationModel", function() {
+      var model, realMozActivity;
+
+      before(function() {
+        model = new loop.webapp.FxOSConversationModel({
+          loopToken: "fakeToken",
+          callerId: "callerId",
+          callType: "callType"
+        });
+
+        realMozActivity = window.MozActivity;
+
+        loop.config.fxosApp = {
+          name: "Firefox Hello"
+        };
+      });
+
+      after(function() {
+        window.MozActivity = realMozActivity;
+      });
+
+      describe("setupOutgoingCall", function() {
+        var _activityProps, _onerror, trigger;
+
+        function fireError(errorName) {
+          _onerror({
+            target: {
+              error: {
+                name: errorName
+              }
+            }
+          });
+        }
+
+        before(function() {
+          window.MozActivity = function(activityProps) {
+            _activityProps = activityProps;
+            return {
+              set onerror(callback) {
+                _onerror = callback;
+              }
+            };
+          };
+        });
+
+        after(function() {
+          window.MozActivity = realMozActivity;
+        });
+
+        beforeEach(function() {
+          trigger = sandbox.stub(model, "trigger");
+        });
+
+        afterEach(function() {
+          trigger.restore();
+        });
+
+        it("Activity properties", function() {
+          expect(_activityProps).to.not.exist;
+          model.setupOutgoingCall();
+          expect(_activityProps).to.exist;
+          expect(_activityProps).eql({
+            name: "loop-call",
+            data: {
+              type: "loop/token",
+              token: "fakeToken",
+              callerId: "callerId",
+              callType: "callType"
+            }
+          });
+        });
+
+        it("NO_PROVIDER activity error should trigger fxos:app-needed",
+          function() {
+            sinon.assert.notCalled(trigger);
+            model.setupOutgoingCall();
+            fireError("NO_PROVIDER");
+            sinon.assert.calledOnce(trigger);
+            sinon.assert.calledWithExactly(trigger, "fxos:app-needed");
+          }
+        );
+
+        it("Other activity error should trigger session:error",
+          function() {
+            sinon.assert.notCalled(trigger);
+            model.setupOutgoingCall();
+            fireError("whatever");
+            sinon.assert.calledOnce(trigger);
+            sinon.assert.calledWithExactly(trigger, "session:error",
+              "fxos_app_needed", { fxosAppName: loop.config.fxosApp.name });
+          }
+        );
+      });
+
+      describe("onMarketplaceMessage", function() {
+        var view, setupOutgoingCall, trigger;
+
+        before(function() {
+          view = React.addons.TestUtils.renderIntoDocument(
+            loop.webapp.StartConversationView({
+              model: model,
+              notifications: notifications,
+              client: {requestCallUrlInfo: sandbox.stub()}
+            })
+          );
+        });
+
+        beforeEach(function() {
+          setupOutgoingCall = sandbox.stub(model, "setupOutgoingCall");
+          trigger = sandbox.stub(model, "trigger");
+        });
+
+        afterEach(function() {
+          setupOutgoingCall.restore();
+          trigger.restore();
+        });
+
+        it("We should call trigger a FxOS outgoing call if we get " +
+           "install-package message without error", function() {
+          sinon.assert.notCalled(setupOutgoingCall);
+          model.onMarketplaceMessage({
+            data: {
+              name: "install-package"
+            }
+          });
+          sinon.assert.calledOnce(setupOutgoingCall);
+        });
+
+        it("We should trigger a session:error event if we get " +
+           "install-package message with an error", function() {
+          sinon.assert.notCalled(trigger);
+          sinon.assert.notCalled(setupOutgoingCall);
+          model.onMarketplaceMessage({
+            data: {
+              name: "install-package",
+              error: "error"
+            }
+          });
+          sinon.assert.notCalled(setupOutgoingCall);
+          sinon.assert.calledOnce(trigger);
+          sinon.assert.calledWithExactly(trigger, "session:error",
+            "fxos_app_needed", { fxosAppName: loop.config.fxosApp.name });
+        });
       });
     });
   });
