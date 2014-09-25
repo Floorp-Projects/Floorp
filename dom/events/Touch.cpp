@@ -93,6 +93,7 @@ Touch::GetTarget() const
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(mTarget);
   if (content && content->ChromeOnlyAccess() &&
+      !nsContentUtils::LegacyIsCallerNativeCode() &&
       !nsContentUtils::CanAccessNativeAnon()) {
     return content->FindFirstNonChromeOnlyAccessContent();
   }
