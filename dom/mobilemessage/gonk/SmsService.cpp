@@ -10,16 +10,12 @@
 
 namespace {
 
-const char* kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
 #define kPrefDefaultServiceId "dom.sms.defaultServiceId"
-const char* kObservedPrefs[] = {
-  kPrefDefaultServiceId,
-  nullptr
-};
 
 uint32_t
 getDefaultServiceId()
 {
+  static const char* kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
   int32_t id = mozilla::Preferences::GetInt(kPrefDefaultServiceId, 0);
   int32_t numRil = mozilla::Preferences::GetInt(kPrefRilNumRadioInterfaces, 1);
 
@@ -46,6 +42,10 @@ SmsService::SmsService()
   NS_WARN_IF_FALSE(mRil, "This shouldn't fail!");
 
   // Initialize observer.
+  static const char* kObservedPrefs[] = {
+    kPrefDefaultServiceId,
+    nullptr
+  };
   Preferences::AddStrongObservers(this, kObservedPrefs);
   mDefaultServiceId = getDefaultServiceId();
 }

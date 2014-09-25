@@ -15,6 +15,8 @@ namespace jit {
     _(SimdValueX4)                                                          \
     _(SimdSplatX4)                                                          \
     _(SimdConstant)                                                         \
+    _(SimdConvert)                                                          \
+    _(SimdReinterpretCast)                                                  \
     _(SimdExtractElement)                                                   \
     _(SimdInsertElement)                                                    \
     _(SimdSignMask)                                                         \

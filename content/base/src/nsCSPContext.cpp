@@ -173,6 +173,9 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
     if (!mPolicies[p]->permits(aContentType,
                                aContentLocation,
                                nonce,
+                               // aExtra is only non-null if
+                               // the channel got redirected.
+                               (aExtra != nullptr),
                                violatedDirective)) {
       // If the policy is violated and not report-only, reject the load and
       // report to the console
@@ -792,7 +795,8 @@ class CSPReportSenderRunnable MOZ_FINAL : public nsRunnable
                             uint64_t aInnerWindowID,
                             nsCSPContext* aCSPContext)
       : mBlockedContentSource(aBlockedContentSource)
-      , mOriginalURI(aOriginalURI) , mViolatedPolicyIndex(aViolatedPolicyIndex)
+      , mOriginalURI(aOriginalURI)
+      , mViolatedPolicyIndex(aViolatedPolicyIndex)
       , mReportOnlyFlag(aReportOnlyFlag)
       , mViolatedDirective(aViolatedDirective)
       , mSourceFile(aSourceFile)
@@ -1024,6 +1028,7 @@ nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell, bool* outPermitsAncestry)
       if (!mPolicies[i]->permits(nsIContentPolicy::TYPE_DOCUMENT,
                                  ancestorsArray[a],
                                  EmptyString(), // no nonce
+                                 false, // no redirect
                                  violatedDirective)) {
         // Policy is violated
         // Send reports, but omit the ancestor URI if cross-origin as per spec

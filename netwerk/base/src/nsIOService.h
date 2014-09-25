@@ -81,7 +81,7 @@ private:
     nsIOService();
     ~nsIOService();
 
-    nsresult TrackNetworkLinkStatusForOffline();
+    nsresult OnNetworkLinkEvent(const char *data);
 
     nsresult GetCachedProtocolHandler(const char *scheme,
                                                   nsIProtocolHandler* *hdlrResult,
@@ -129,6 +129,7 @@ private:
     nsTArray<int32_t>                    mRestrictedPortList;
 
     bool                                 mAutoDialEnabled;
+    bool                                 mNetworkNotifyChanged;
 public:
     // Used for all default buffer sizes that necko allocates.
     static uint32_t   gDefaultSegmentSize;
