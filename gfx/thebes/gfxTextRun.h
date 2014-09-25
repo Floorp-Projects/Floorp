@@ -731,39 +731,14 @@ public:
 
     virtual ~gfxFontGroup();
 
-    virtual gfxFont* GetFirstValidFont() {
-        return GetFontAt(0);
-    }
-
-    virtual gfxFont *GetFontAt(int32_t i) {
-        // If it turns out to be hard for all clients that cache font
-        // groups to call UpdateUserFonts at appropriate times, we could
-        // instead consider just calling UpdateUserFonts from someplace
-        // more central (such as here).
-        NS_ASSERTION(!mUserFontSet || mCurrGeneration == GetGeneration(),
-                     "Whoever was caching this font group should have "
-                     "called UpdateUserFonts on it");
-        NS_ASSERTION(mFonts.Length() > uint32_t(i) &&
-                     (mFonts[i].Font() || mFonts[i].FontEntry()),
-                     "Requesting a font index that doesn't exist");
-
-        nsRefPtr<gfxFont> font = mFonts[i].Font();
-        if (!font) {
-            gfxFontEntry *fe = mFonts[i].FontEntry();
-            font = fe->FindOrMakeFont(&mStyle, mFonts[i].NeedsBold());
-            mFonts[i].SetFont(font);
-        }
-        return font.get();
-    }
+    // Returns first valid font in the fontlist or default font.
+    // Initiates userfont loads if userfont not loaded
+    virtual gfxFont* GetFirstValidFont();
 
     // Returns the first font in the font-group that has an OpenType MATH table,
     // or null if no such font is available. The GetMathConstant methods may be
     // called on the returned font.
     gfxFont *GetFirstMathFont();
-
-    uint32_t FontListLength() const {
-        return mFonts.Length();
-    }
 
     const gfxFontStyle *GetStyle() const { return &mStyle; }
 
@@ -835,15 +810,12 @@ public:
 
     // This returns the preferred underline for this font group.
     // Some CJK fonts have wrong underline offset in its metrics.
-    // If this group has such "bad" font, each platform's gfxFontGroup initialized mUnderlineOffset.
-    // The value should be lower value of first font's metrics and the bad font's metrics.
-    // Otherwise, this returns from first font's metrics.
+    // If this group has such "bad" font, each platform's gfxFontGroup
+    // initialized mUnderlineOffset. The value should be lower value of
+    // first font's metrics and the bad font's metrics. Otherwise, this
+    // returns from first font's metrics.
     enum { UNDERLINE_OFFSET_NOT_SET = INT16_MAX };
-    virtual gfxFloat GetUnderlineOffset() {
-        if (mUnderlineOffset == UNDERLINE_OFFSET_NOT_SET)
-            mUnderlineOffset = GetFirstValidFont()->GetMetrics().underlineOffset;
-        return mUnderlineOffset;
-    }
+    virtual gfxFloat GetUnderlineOffset();
 
     virtual already_AddRefed<gfxFont>
         FindFontForChar(uint32_t ch, uint32_t prevCh, int32_t aRunScript,
@@ -868,6 +840,9 @@ public:
     // previously created text runs in the text run word cache.  For font groups based on stylesheets
     // with no @font-face rule, this always returns 0.
     uint64_t GetGeneration();
+
+    // generation of the latest fontset rebuild, 0 when no fontset present
+    uint64_t GetRebuildGeneration();
 
     // used when logging text performance
     gfxTextPerfMetrics *GetTextPerfMetrics() { return mTextPerf; }
@@ -906,11 +881,13 @@ protected:
     class FamilyFace {
     public:
         FamilyFace() : mFamily(nullptr), mFontEntry(nullptr),
-                       mNeedsBold(false), mFontCreated(false)
+                       mNeedsBold(false), mFontCreated(false),
+                       mLoading(false), mInvalid(false)
         { }
 
         FamilyFace(gfxFontFamily* aFamily, gfxFont* aFont)
-            : mFamily(aFamily), mNeedsBold(false), mFontCreated(true)
+            : mFamily(aFamily), mNeedsBold(false), mFontCreated(true),
+              mLoading(false), mInvalid(false)
         {
             NS_ASSERTION(aFont, "font pointer must not be null");
             NS_ASSERTION(!aFamily ||
@@ -922,7 +899,8 @@ protected:
 
         FamilyFace(gfxFontFamily* aFamily, gfxFontEntry* aFontEntry,
                    bool aNeedsBold)
-            : mFamily(aFamily), mNeedsBold(aNeedsBold), mFontCreated(false)
+            : mFamily(aFamily), mNeedsBold(aNeedsBold), mFontCreated(false),
+              mLoading(false), mInvalid(false)
         {
             NS_ASSERTION(aFontEntry, "font entry pointer must not be null");
             NS_ASSERTION(!aFamily ||
@@ -935,7 +913,9 @@ protected:
         FamilyFace(const FamilyFace& aOtherFamilyFace)
             : mFamily(aOtherFamilyFace.mFamily),
               mNeedsBold(aOtherFamilyFace.mNeedsBold),
-              mFontCreated(aOtherFamilyFace.mFontCreated)
+              mFontCreated(aOtherFamilyFace.mFontCreated),
+              mLoading(aOtherFamilyFace.mLoading),
+              mInvalid(aOtherFamilyFace.mInvalid)
         {
             if (mFontCreated) {
                 mFont = aOtherFamilyFace.mFont;
@@ -966,6 +946,8 @@ protected:
             mFamily = aOther.mFamily;
             mNeedsBold = aOther.mNeedsBold;
             mFontCreated = aOther.mFontCreated;
+            mLoading = aOther.mLoading;
+            mInvalid = aOther.mInvalid;
 
             if (mFontCreated) {
                 mFont = aOther.mFont;
@@ -988,6 +970,13 @@ protected:
         }
 
         bool NeedsBold() const { return mNeedsBold; }
+        bool IsUserFont() const {
+            return FontEntry()->mIsUserFontContainer;
+        }
+        bool IsLoading() const { return mLoading; }
+        bool IsInvalid() const { return mInvalid; }
+        void SetLoading(bool aIsLoading) { mLoading = aIsLoading; }
+        void SetInvalid() { mInvalid = true; }
 
         void SetFont(gfxFont* aFont)
         {
@@ -1011,11 +1000,22 @@ protected:
         };
         bool                    mNeedsBold   : 1;
         bool                    mFontCreated : 1;
+        bool                    mLoading     : 1;
+        bool                    mInvalid     : 1;
     };
 
+    // List of font families, either named or generic.
+    // Generic names map to system pref fonts based on language.
     mozilla::FontFamilyList mFamilyList;
-    gfxFontStyle mStyle;
+
+    // Fontlist containing a font entry for each family found. gfxFont objects
+    // are created as needed and userfont loads are initiated when needed.
+    // Code should be careful about addressing this array directly.
     nsTArray<FamilyFace> mFonts;
+
+    nsRefPtr<gfxFont> mDefaultFont;
+    gfxFontStyle mStyle;
+
     gfxFloat mUnderlineOffset;
     gfxFloat mHyphenWidth;
 
@@ -1050,6 +1050,14 @@ protected:
 
     // Initialize the list of fonts
     void BuildFontList();
+
+    // Get the font at index i within the fontlist.
+    // Will initiate userfont load if not already loaded.
+    // May return null if userfont not loaded or if font invalid
+    virtual gfxFont* GetFontAt(int32_t i);
+
+    // will always return a font or force a shutdown
+    gfxFont* GetDefaultFont();
 
     // Init this font group's font metrics. If there no bad fonts, you don't need to call this.
     // But if there are one or more bad fonts which have bad underline offset,

@@ -637,7 +637,7 @@ gfxUserFontEntry::FontDataDownloadComplete(const uint8_t* aFontData,
 gfxUserFontSet::gfxUserFontSet()
     : mFontFamilies(4), mLocalRulesUsed(false)
 {
-    IncrementGeneration();
+    IncrementGeneration(true);
     gfxPlatformFontList* fp = gfxPlatformFontList::PlatformFontList();
     if (fp) {
         fp->AddUserFontSet(this);
@@ -773,12 +773,9 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
 gfxUserFontEntry*
 gfxUserFontSet::FindUserFontEntry(gfxFontFamily* aFamily,
                                   const gfxFontStyle& aFontStyle,
-                                  bool& aNeedsBold,
-                                  bool& aWaitForUserFont)
+                                  bool& aNeedsBold)
 {
-    aWaitForUserFont = false;
     gfxUserFontFamily* family = static_cast<gfxUserFontFamily*>(aFamily);
-
     gfxFontEntry* fe = family->FindFontForStyle(aFontStyle, aNeedsBold);
 
     NS_ASSERTION(!fe || fe->mIsUserFontContainer,
@@ -789,6 +786,22 @@ gfxUserFontSet::FindUserFontEntry(gfxFontFamily* aFamily,
     }
 
     gfxUserFontEntry* userFontEntry = static_cast<gfxUserFontEntry*> (fe);
+    return userFontEntry;
+}
+
+gfxUserFontEntry*
+gfxUserFontSet::FindUserFontEntryAndLoad(gfxFontFamily* aFamily,
+                                         const gfxFontStyle& aFontStyle,
+                                         bool& aNeedsBold,
+                                         bool& aWaitForUserFont)
+{
+    aWaitForUserFont = false;
+    gfxUserFontEntry* userFontEntry =
+        FindUserFontEntry(aFamily, aFontStyle, aNeedsBold);
+
+    if (!userFontEntry) {
+        return nullptr;
+    }
 
     // start the load if it hasn't been loaded
     userFontEntry->Load();
@@ -801,13 +814,16 @@ gfxUserFontSet::FindUserFontEntry(gfxFontFamily* aFamily,
 }
 
 void
-gfxUserFontSet::IncrementGeneration()
+gfxUserFontSet::IncrementGeneration(bool aIsRebuild)
 {
     // add one, increment again if zero
     ++sFontSetGeneration;
     if (sFontSetGeneration == 0)
        ++sFontSetGeneration;
     mGeneration = sFontSetGeneration;
+    if (aIsRebuild) {
+        mRebuildGeneration = mGeneration;
+    }
 }
 
 void
