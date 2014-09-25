@@ -100,11 +100,6 @@ public:
     static void ClipToRegionSnapped(gfxContext* aContext, const nsIntRegion& aRegion);
 
     /**
-     * Clip aTarget to the region aRegion, snapping the rectangles.
-     */
-    static void ClipToRegionSnapped(mozilla::gfx::DrawTarget* aTarget, const nsIntRegion& aRegion);
-
-    /**
      * Create a path consisting of rectangles in |aRegion|.
      */
     static void PathFromRegion(gfxContext* aContext, const nsIntRegion& aRegion);
