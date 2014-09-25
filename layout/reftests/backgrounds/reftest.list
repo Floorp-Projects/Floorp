@@ -161,3 +161,5 @@ fails-if(Android&&AndroidVersion==15) fuzzy-if(!Android||(Android&&AndroidVersio
 
 == background-multiple-with-border-radius.html background-multiple-with-border-radius-ref.html
 == background-repeat-large-area.html background-repeat-large-area-ref.html
+
+fuzzy(30,474) == background-tiling-zoom-1.html background-tiling-zoom-1-ref.html
