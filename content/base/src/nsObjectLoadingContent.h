@@ -26,7 +26,7 @@
 class nsAsyncInstantiateEvent;
 class nsStopPluginRunnable;
 class AutoSetInstantiatingToFalse;
-class nsObjectFrame;
+class nsPluginFrame;
 class nsFrameLoader;
 class nsXULElement;
 class nsPluginInstanceOwner;
@@ -502,7 +502,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      * Gets the frame that's associated with this content node.
      * Does not flush.
      */
-    nsObjectFrame* GetExistingFrame();
+    nsPluginFrame* GetExistingFrame();
 
     // Helper class for SetupProtoChain
     class SetupProtoChainRunner MOZ_FINAL : public nsIRunnable

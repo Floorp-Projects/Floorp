@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifndef __ClearKeyDecryptor_h__
-#define __ClearKeyDecryptor_h_
+#define __ClearKeyDecryptor_h__
 
 #include <map>
 #include <string>

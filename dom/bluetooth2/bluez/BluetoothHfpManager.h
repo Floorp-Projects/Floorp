@@ -149,7 +149,7 @@ private:
 
   BluetoothHfpManager();
   void HandleShutdown();
-  void HandleVolumeChanged(const nsAString& aData);
+  void HandleVolumeChanged(nsISupports* aSubject);
 
   bool Init();
   void Notify(const hal::BatteryInformation& aBatteryInfo);
