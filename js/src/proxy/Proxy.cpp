@@ -860,7 +860,6 @@ ProxyObject::renew(JSContext *cx, const BaseProxyHandler *handler, Value priv)
     JS_ASSERT_IF(IsCrossCompartmentWrapper(this), IsDeadProxyObject(this));
     JS_ASSERT(getParent() == cx->global());
     JS_ASSERT(getClass() == &ProxyObject::class_);
-    JS_ASSERT(!isCallable());
     JS_ASSERT(!getClass()->ext.innerObject);
     JS_ASSERT(getTaggedProto().isLazy());
 

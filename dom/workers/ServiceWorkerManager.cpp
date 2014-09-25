@@ -478,69 +478,6 @@ public:
   }
 };
 
-/*
- * Implements the async aspects of the unregister algorithm.
- */
-class UnregisterRunnable : public nsRunnable
-{
-  nsCOMPtr<nsIServiceWorkerUnregisterCallback> mCallback;
-  nsCOMPtr<nsIURI> mScopeURI;
-
-public:
-  UnregisterRunnable(nsIServiceWorkerUnregisterCallback* aCallback,
-                     nsIURI* aScopeURI)
-    : mCallback(aCallback), mScopeURI(aScopeURI)
-  {
-    AssertIsOnMainThread();
-  }
-
-  NS_IMETHODIMP
-  Run()
-  {
-    AssertIsOnMainThread();
-
-    nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-
-    nsRefPtr<ServiceWorkerManager::ServiceWorkerDomainInfo> domainInfo =
-      swm->GetDomainInfo(mScopeURI);
-    MOZ_ASSERT(domainInfo);
-
-    nsCString spec;
-    nsresult rv = mScopeURI->GetSpecIgnoringRef(spec);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return mCallback->UnregisterFailed();
-    }
-
-    nsRefPtr<ServiceWorkerRegistrationInfo> registration;
-    if (!domainInfo->mServiceWorkerRegistrationInfos.Get(spec,
-                                                         getter_AddRefs(registration))) {
-      return mCallback->UnregisterSucceeded(false);
-    }
-
-    MOZ_ASSERT(registration);
-
-    registration->mPendingUninstall = true;
-    rv = mCallback->UnregisterSucceeded(true);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    // The "Wait until no document is using registration" can actually be
-    // handled by [[HandleDocumentUnload]] in Bug 1041340, so we simply check
-    // if the document is currently in use here.
-    if (!registration->IsControllingDocuments()) {
-      if (!registration->mPendingUninstall) {
-        return NS_OK;
-      }
-
-      registration->Clear();
-      domainInfo->RemoveRegistration(registration);
-    }
-
-    return NS_OK;
-  }
-};
-
 // If we return an error code here, the ServiceWorkerContainer will
 // automatically reject the Promise.
 NS_IMETHODIMP
@@ -1056,6 +993,69 @@ ServiceWorkerManager::Unregister(nsIServiceWorkerUnregisterCallback* aCallback,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
+
+  /*
+   * Implements the async aspects of the unregister algorithm.
+   */
+  class UnregisterRunnable : public nsRunnable
+  {
+    nsCOMPtr<nsIServiceWorkerUnregisterCallback> mCallback;
+    nsCOMPtr<nsIURI> mScopeURI;
+
+  public:
+    UnregisterRunnable(nsIServiceWorkerUnregisterCallback* aCallback,
+                       nsIURI* aScopeURI)
+      : mCallback(aCallback), mScopeURI(aScopeURI)
+    {
+      AssertIsOnMainThread();
+    }
+
+    NS_IMETHODIMP
+    Run()
+    {
+      AssertIsOnMainThread();
+
+      nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+
+      nsRefPtr<ServiceWorkerManager::ServiceWorkerDomainInfo> domainInfo =
+        swm->GetDomainInfo(mScopeURI);
+      MOZ_ASSERT(domainInfo);
+
+      nsCString spec;
+      nsresult rv = mScopeURI->GetSpecIgnoringRef(spec);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return mCallback->UnregisterFailed();
+      }
+
+      nsRefPtr<ServiceWorkerRegistrationInfo> registration;
+      if (!domainInfo->mServiceWorkerRegistrationInfos.Get(spec,
+                                                           getter_AddRefs(registration))) {
+        return mCallback->UnregisterSucceeded(false);
+      }
+
+      MOZ_ASSERT(registration);
+
+      registration->mPendingUninstall = true;
+      rv = mCallback->UnregisterSucceeded(true);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      // The "Wait until no document is using registration" can actually be
+      // handled by [[HandleDocumentUnload]] in Bug 1041340, so we simply check
+      // if the document is currently in use here.
+      if (!registration->IsControllingDocuments()) {
+        if (!registration->mPendingUninstall) {
+          return NS_OK;
+        }
+
+        registration->Clear();
+        domainInfo->RemoveRegistration(registration);
+      }
+
+      return NS_OK;
+    }
+  };
 
   nsRefPtr<nsIRunnable> unregisterRunnable =
     new UnregisterRunnable(aCallback, scopeURI);

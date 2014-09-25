@@ -142,6 +142,9 @@ let gPage = {
    */
   handleEvent: function Page_handleEvent(aEvent) {
     switch (aEvent.type) {
+      case "load":
+        this.onPageVisibleAndLoaded();
+        break;
       case "unload":
         gAllPages.unregister(this);
         break;
@@ -183,39 +186,41 @@ let gPage = {
       }
     }
 
-    // Allow the document to reflow so the page has sizing info
-    let i = 0;
-    let checkSizing = _ => setTimeout(_ => {
-      if (document.documentElement.clientWidth == 0) {
-        checkSizing();
-      }
-      else {
-        this.onPageFirstSized();
-      }
-    });
-    checkSizing();
+    if (document.readyState == "complete") {
+      this.onPageVisibleAndLoaded();
+    } else {
+      addEventListener("load", this);
+    }
   },
 
-  onPageFirstSized: function() {
-    // Work backwards to find the first visible site from the end
-    let {sites} = gGrid;
-    let lastIndex = sites.length;
-    while (lastIndex-- > 0) {
-      let site = sites[lastIndex];
-      if (site) {
-        let {node} = site;
-        let rect = node.getBoundingClientRect();
-        let target = document.elementFromPoint(rect.x + rect.width / 2,
-                                               rect.y + rect.height / 2);
-        if (node.contains(target)) {
-          break;
+  onPageVisibleAndLoaded() {
+    // Send the index of the last visible tile.
+    this.reportLastVisibleTileIndex();
+
+    // Show the panel now that anchors are sized
+    gIntro.showIfNecessary();
+  },
+
+  reportLastVisibleTileIndex() {
+    let cwu = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindowUtils);
+
+    let rect = cwu.getBoundsWithoutFlushing(gGrid.node);
+    let nodes = cwu.nodesFromRect(rect.left, rect.top, 0, rect.width,
+                                  rect.height, 0, true, false);
+
+    let i = -1;
+    let lastIndex = -1;
+    let sites = gGrid.sites;
+
+    for (let node of nodes) {
+      if (node.classList && node.classList.contains("newtab-cell")) {
+        if (sites[++i]) {
+          lastIndex = i;
         }
       }
     }
 
-    DirectoryLinksProvider.reportSitesAction(gGrid.sites, "view", lastIndex);
-
-    // Show the panel now that anchors are sized
-    gIntro.showIfNecessary();
+    DirectoryLinksProvider.reportSitesAction(sites, "view", lastIndex);
   }
 };

@@ -137,7 +137,7 @@ static bool
 IsObjectEscaped(MInstruction *ins)
 {
     MOZ_ASSERT(ins->type() == MIRType_Object);
-    MOZ_ASSERT(ins->isNewObject() || ins->isGuardShape());
+    MOZ_ASSERT(ins->isNewObject() || ins->isGuardShape() || ins->isCreateThisWithTemplate());
 
     // Check if the object is escaped. If the object is not the first argument
     // of either a known Store / Load, then we consider it as escaped. This is a
@@ -952,7 +952,7 @@ ScalarReplacement(MIRGenerator *mir, MIRGraph &graph)
             return false;
 
         for (MInstructionIterator ins = block->begin(); ins != block->end(); ins++) {
-            if (ins->isNewObject() && !IsObjectEscaped(*ins)) {
+            if ((ins->isNewObject() || ins->isCreateThisWithTemplate()) && !IsObjectEscaped(*ins)) {
                 ObjectMemoryView view(graph.alloc(), *ins);
                 if (!replaceObject.run(view))
                     return false;

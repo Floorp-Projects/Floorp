@@ -14,7 +14,7 @@ if CONFIG['MOZ_NFC']:
     EXPORTS.mozilla.dom += [
         'MozNDEFRecord.h',
     ]
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'MozNDEFRecord.cpp',
     ]
     EXTRA_COMPONENTS += [
@@ -24,7 +24,7 @@ if CONFIG['MOZ_NFC']:
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_NFC']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'gonk/NfcMessageHandler.cpp',
         'gonk/NfcService.cpp',
     ]
