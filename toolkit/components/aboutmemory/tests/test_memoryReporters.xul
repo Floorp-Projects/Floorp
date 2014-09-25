@@ -113,7 +113,7 @@
 
     // Shouldn't get any anonymized paths.
     if (aPath.contains('<anonymized')) {
-        present.anonymizedWhenUnnecessary = true;
+        present.anonymizedWhenUnnecessary = aPath;
     }
   }
 
@@ -122,12 +122,12 @@
   {
     // Shouldn't get http: or https: in any paths.
     if (aPath.contains('http:')) {
-        present.httpWhenAnonymized = true;
+        present.httpWhenAnonymized = aPath;
     }
 
     // file: URLs should have their path anonymized.
     if (aPath.search('file:..[^<]') !== -1) {
-        present.unanonymizedFilePathWhenAnonymized = true;
+        present.unanonymizedFilePathWhenAnonymized = aPath;
     }
   }
 
@@ -230,10 +230,15 @@
   ok(present.smallString1,                "small string 1 is present");
   ok(present.smallString2,                "small string 2 is present");
 
-  ok(!present.anonymizedWhenUnnecessary,  "anonymized paths are not present when unnecessary");
-  ok(!present.httpWhenAnonymized,         "http URLs are anonymized when necessary");
+  ok(!present.anonymizedWhenUnnecessary,
+     "anonymized paths are not present when unnecessary. Failed case: " +
+     present.anonymizedWhenUnnecessary);
+  ok(!present.httpWhenAnonymized,
+     "http URLs are anonymized when necessary. Failed case: " +
+     present.httpWhenAnonymized);
   ok(!present.unanonymizedFilePathWhenAnonymized,
-                                          "file URLs are anonymized when necessary");
+     "file URLs are anonymized when necessary. Failed case: " +
+     present.unanonymizedFilePathWhenAnonymized);
 
   // Reporter registration tests
 
