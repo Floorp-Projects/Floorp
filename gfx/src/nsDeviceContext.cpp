@@ -143,7 +143,7 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
                 mFontMetrics.RemoveElementAt(i);
                 mFontMetrics.AppendElement(fm);
             }
-            fm->GetThebesFontGroup()->UpdateFontList();
+            fm->GetThebesFontGroup()->UpdateUserFonts();
             NS_ADDREF(aMetrics = fm);
             return NS_OK;
         }

@@ -744,14 +744,14 @@ pref("hal.processPriorityManager.gonk.LowCPUNice", 18);
 // priority can be enabled by setting this pref to a value between 1 and 99.
 // Note that audio processing currently runs at RT priority 2 or 3 at most.
 //
-// If RT priority is disabled, then the compositor nice value is used.  The
-// code will default to ANDROID_PRIORITY_URGENT_DISPLAY which is -8.  Per gfx
-// request we are keeping the compositor at nice level 0 until we can complete
-// the investigation in bug 982972.
+// If RT priority is disabled, then the compositor nice value is used. We prefer
+// to use a nice value of -4, which matches Android's preferences. Setting a preference
+// of RT priority 1 would mean it is higher than audio, which is -16. The compositor
+// priority must be below the audio thread.
 //
 // Do not change these values without gfx team review.
 pref("hal.gonk.COMPOSITOR.rt_priority", 0);
-pref("hal.gonk.COMPOSITOR.nice", 0);
+pref("hal.gonk.COMPOSITOR.nice", -4);
 
 // Fire a memory pressure event when the system has less than Xmb of memory
 // remaining.  You should probably set this just above Y.KillUnderKB for
