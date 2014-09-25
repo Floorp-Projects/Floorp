@@ -76,18 +76,23 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, Mac
         JS_ASSERT(graph->argumentSlotCount() == 0);
         frameDepth_ += gen->maxAsmJSStackArgBytes();
 
-        // If the function uses any SIMD, we may need to insert padding so that
-        // local slots are aligned for SIMD.
         if (gen->usesSimd()) {
-            frameInitialAdjustment_ = ComputeByteAlignment(sizeof(AsmJSFrame), AsmJSStackAlignment);
+            // If the function uses any SIMD then we may need to insert padding
+            // so that local slots are aligned for SIMD.
+            frameInitialAdjustment_ = ComputeByteAlignment(sizeof(AsmJSFrame),
+                                                           AsmJSStackAlignment);
             frameDepth_ += frameInitialAdjustment_;
+            // Keep the stack aligned. Some SIMD sequences build values on the
+            // stack and need the stack aligned.
+            frameDepth_ += ComputeByteAlignment(sizeof(AsmJSFrame) + frameDepth_,
+                                                AsmJSStackAlignment);
+        } else if (gen->performsCall()) {
+            // An MAsmJSCall does not align the stack pointer at calls sites but
+            // instead relies on the a priori stack adjustment. This must be the
+            // last adjustment of frameDepth_.
+            frameDepth_ += ComputeByteAlignment(sizeof(AsmJSFrame) + frameDepth_,
+                                                AsmJSStackAlignment);
         }
-
-        // An MAsmJSCall does not align the stack pointer at calls sites but instead
-        // relies on the a priori stack adjustment. This must be the last
-        // adjustment of frameDepth_.
-        if (gen->performsCall())
-            frameDepth_ += ComputeByteAlignment(sizeof(AsmJSFrame) + frameDepth_, AsmJSStackAlignment);
 
         // FrameSizeClass is only used for bailing, which cannot happen in
         // asm.js code.
