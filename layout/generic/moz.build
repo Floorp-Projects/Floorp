@@ -27,7 +27,7 @@ EXPORTS += [
     'nsIScrollableFrame.h',
     'nsIScrollPositionListener.h',
     'nsIStatefulFrame.h',
-    'nsObjectFrame.h',
+    'nsPluginFrame.h',
     'nsQueryFrame.h',
     'nsSplittableFrame.h',
     'nsSubDocumentFrame.h',
@@ -100,10 +100,10 @@ UNIFIED_SOURCES += [
 ]
 
 # nsLineLayout.cpp needs to be built separately because it uses plarena.h.
-# nsObjectFrame.cpp needs to be built separately because of name clashes in the OS X headers.
+# nsPluginFrame.cpp needs to be built separately because of name clashes in the OS X headers.
 SOURCES += [
     'nsLineLayout.cpp',
-    'nsObjectFrame.cpp',
+    'nsPluginFrame.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
