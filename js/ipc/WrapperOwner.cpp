@@ -663,22 +663,49 @@ CPOWProxyHandler::objectMoved(JSObject *proxy, const JSObject *old) const
 }
 
 bool
-CPOWProxyHandler::isCallable(JSObject *obj) const
+CPOWProxyHandler::isCallable(JSObject *proxy) const
 {
-    return OwnerOf(obj)->isCallable(obj);
-}
-
-bool
-CPOWProxyHandler::isConstructor(JSObject *obj) const
-{
-    return isCallable(obj);
+    WrapperOwner *parent = OwnerOf(proxy);
+    if (!parent->active())
+        return false;
+    return parent->isCallable(proxy);
 }
 
 bool
 WrapperOwner::isCallable(JSObject *obj)
 {
     ObjectId objId = idOf(obj);
-    return !!(objId & OBJECT_IS_CALLABLE);
+
+    bool callable = false;
+    if (!CallIsCallable(objId, &callable)) {
+        NS_WARNING("IPC isCallable() failed");
+        return false;
+    }
+
+    return callable;
+}
+
+bool
+CPOWProxyHandler::isConstructor(JSObject *proxy) const
+{
+    WrapperOwner *parent = OwnerOf(proxy);
+    if (!parent->active())
+        return false;
+    return parent->isConstructor(proxy);
+}
+
+bool
+WrapperOwner::isConstructor(JSObject *obj)
+{
+    ObjectId objId = idOf(obj);
+
+    bool constructor = false;
+    if (!CallIsConstructor(objId, &constructor)) {
+        NS_WARNING("IPC isConstructor() failed");
+        return false;
+    }
+
+    return constructor;
 }
 
 void

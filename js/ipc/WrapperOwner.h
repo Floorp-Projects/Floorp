@@ -61,7 +61,7 @@ class WrapperOwner : public virtual JavaScriptShared
     bool objectClassIs(JSContext *cx, JS::HandleObject obj, js::ESClassValue classValue);
     const char* className(JSContext *cx, JS::HandleObject proxy);
     bool isCallable(JSObject *obj);
-    // isConstructable is implemented here as isCallable.
+    bool isConstructor(JSObject *obj);
 
     nsresult instanceOf(JSObject *obj, const nsID *id, bool *bp);
 
@@ -147,6 +147,9 @@ class WrapperOwner : public virtual JavaScriptShared
                                 ReturnStatus *rs, bool *instanceof) = 0;
     virtual bool CallDOMInstanceOf(const ObjectId &objId, const int &prototypeID, const int &depth,
                                    ReturnStatus *rs, bool *instanceof) = 0;
+
+    virtual bool CallIsCallable(const ObjectId &objId, bool *result) = 0;
+    virtual bool CallIsConstructor(const ObjectId &objId, bool *result) = 0;
 };
 
 bool
