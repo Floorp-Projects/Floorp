@@ -123,7 +123,7 @@ ObjectToIdMap::find(JSObject *obj)
 {
     Table::Ptr p = table_->lookup(obj);
     if (!p)
-        return 0;
+        return ObjectId::nullId();
     return p->value();
 }
 
@@ -162,7 +162,7 @@ bool JavaScriptShared::sStackLoggingEnabled;
 JavaScriptShared::JavaScriptShared(JSRuntime *rt)
   : rt_(rt),
     refcount_(1),
-    lastId_(0)
+    nextSerialNumber_(1)
 {
     if (!sLoggingInitialized) {
         sLoggingInitialized = true;
@@ -381,7 +381,7 @@ JavaScriptShared::ConvertID(const JSIID &from, nsID *to)
 }
 
 JSObject *
-JavaScriptShared::findObjectById(JSContext *cx, uint32_t objId)
+JavaScriptShared::findObjectById(JSContext *cx, const ObjectId &objId)
 {
     RootedObject obj(cx, findObjectById(objId));
     if (!obj) {
