@@ -45,7 +45,6 @@ Wrapper::New(JSContext *cx, JSObject *obj, JSObject *parent, const Wrapper *hand
 JSObject *
 Wrapper::Renew(JSContext *cx, JSObject *existing, JSObject *obj, const Wrapper *handler)
 {
-    JS_ASSERT(!obj->isCallable());
     existing->as<ProxyObject>().renew(cx, handler, ObjectValue(*obj));
     return existing;
 }

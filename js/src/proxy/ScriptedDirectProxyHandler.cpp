@@ -1109,14 +1109,15 @@ js::proxy(JSContext *cx, unsigned argc, jsval *vp)
     if (!handler)
         return false;
     RootedValue priv(cx, ObjectValue(*target));
-    JSObject *proxy =
+    JSObject *proxy_ =
         NewProxyObject(cx, &ScriptedDirectProxyHandler::singleton,
                        priv, TaggedProto::LazyProto, cx->global());
-    if (!proxy)
+    if (!proxy_)
         return false;
-    proxy->as<ProxyObject>().setExtra(ScriptedDirectProxyHandler::HANDLER_EXTRA, ObjectValue(*handler));
-    proxy->as<ProxyObject>().setExtra(ScriptedDirectProxyHandler::IS_CALLABLE_EXTRA,
-                                      BooleanValue(target->isCallable()));
+    Rooted<ProxyObject*> proxy(cx, &proxy_->as<ProxyObject>());
+    bool targetIsCallable = target->isCallable(); // Can GC - don't compute it inline.
+    proxy->setExtra(ScriptedDirectProxyHandler::HANDLER_EXTRA, ObjectValue(*handler));
+    proxy->setExtra(ScriptedDirectProxyHandler::IS_CALLABLE_EXTRA, BooleanValue(targetIsCallable));
     args.rval().setObject(*proxy);
     return true;
 }
