@@ -445,6 +445,23 @@ NS_IMETHODIMP nsContentTreeOwner::OnBeforeLinkTraversal(const nsAString &origina
   return NS_OK;
 }
 
+NS_IMETHODIMP nsContentTreeOwner::ShouldLoadURI(nsIDocShell *aDocShell,
+                                                nsIURI *aURI,
+                                                nsIURI *aReferrer,
+                                                bool *_retval)
+{
+  NS_ENSURE_STATE(mXULWindow);
+
+  nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow;
+  mXULWindow->GetXULBrowserWindow(getter_AddRefs(xulBrowserWindow));
+
+  if (xulBrowserWindow)
+    return xulBrowserWindow->ShouldLoadURI(aDocShell, aURI, aReferrer, _retval);
+
+  *_retval = true;
+  return NS_OK;
+}
+
 //*****************************************************************************
 // nsContentTreeOwner::nsIWebBrowserChrome2
 //*****************************************************************************   
