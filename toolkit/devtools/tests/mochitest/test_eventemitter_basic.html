@@ -49,10 +49,12 @@
 
         ok(emitter, "We have an event emitter");
 
+        let beenHere1 = false;
+        let beenHere2 = false;
+
         emitter.on("next", next);
         emitter.emit("next", "abc", "def");
 
-        let beenHere1 = false;
         function next(eventName, str1, str2) {
           is(eventName, "next", "Got event");
           is(str1, "abc", "Argument 1 is correct");
@@ -71,7 +73,6 @@
           emitter.emit("onlyonce");
         }
 
-        let beenHere2 = false;
         function onlyOnce() {
           ok(!beenHere2, "\"once\" listner has been called once");
           beenHere2 = true;
