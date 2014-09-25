@@ -867,7 +867,7 @@ WrapperOwner::toObjectVariant(JSContext *cx, JSObject *objArg, ObjectVariant *ob
     }
 
     id <<= OBJECT_EXTRA_BITS;
-    if (JS_ObjectIsCallable(cx, obj))
+    if (JS::IsCallable(obj))
         id |= OBJECT_IS_CALLABLE;
 
     if (!objects_.add(id, obj))

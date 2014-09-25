@@ -3997,16 +3997,26 @@ JS_GetFunctionArity(JSFunction *fun)
     return fun->nargs();
 }
 
+namespace JS {
+
+JS_PUBLIC_API(bool)
+IsCallable(JSObject *obj)
+{
+    return obj->isCallable();
+}
+
+JS_PUBLIC_API(bool)
+IsConstructor(JSObject *obj)
+{
+    return obj->isConstructor();
+}
+
+} /* namespace JS */
+
 JS_PUBLIC_API(bool)
 JS_ObjectIsFunction(JSContext *cx, JSObject *obj)
 {
     return obj->is<JSFunction>();
-}
-
-JS_PUBLIC_API(bool)
-JS_ObjectIsCallable(JSContext *cx, JSObject *obj)
-{
-    return obj->isCallable();
 }
 
 JS_PUBLIC_API(bool)

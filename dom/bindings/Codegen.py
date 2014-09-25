@@ -4911,7 +4911,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         conversion = indent(CGCallbackTempRoot(name).define())
 
         if allowTreatNonCallableAsNull and type.treatNonCallableAsNull():
-            haveCallable = "JS_ObjectIsCallable(cx, &${val}.toObject())"
+            haveCallable = "JS::IsCallable(&${val}.toObject())"
             if not isDefinitelyObject:
                 haveCallable = "${val}.isObject() && " + haveCallable
             if defaultValue is not None:
@@ -4936,7 +4936,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 template = conversion
         else:
             template = wrapObjectTemplate(
-                "if (JS_ObjectIsCallable(cx, &${val}.toObject())) {\n" +
+                "if (JS::IsCallable(&${val}.toObject())) {\n" +
                 conversion +
                 "} else {\n" +
                 indent(onFailureNotCallable(failureCode).define()) +
@@ -13417,7 +13417,7 @@ class CGCallback(CGClass):
     def getConstructors(self):
         if (not self.idlObject.isInterface() and
             not self.idlObject._treatNonObjectAsNull):
-            body = "MOZ_ASSERT(JS_ObjectIsCallable(nullptr, mCallback));\n"
+            body = "MOZ_ASSERT(JS::IsCallable(mCallback));\n"
         else:
             # Not much we can assert about it, other than not being null, and
             # CallbackObject does that already.
@@ -13879,7 +13879,7 @@ class CallCallback(CallbackMethod):
 
     def getCallGuard(self):
         if self.callback._treatNonObjectAsNull:
-            return "JS_ObjectIsCallable(cx, mCallback) && "
+            return "JS::IsCallable(mCallback) && "
         return ""
 
 
@@ -13927,7 +13927,7 @@ class CallbackOperationBase(CallbackMethod):
             return 'JS::Rooted<JS::Value> callable(cx);\n' + getCallableFromProp
         return fill(
             """
-            bool isCallable = JS_ObjectIsCallable(cx, mCallback);
+            bool isCallable = JS::IsCallable(mCallback);
             JS::Rooted<JS::Value> callable(cx);
             if (isCallable) {
               callable = JS::ObjectValue(*mCallback);
