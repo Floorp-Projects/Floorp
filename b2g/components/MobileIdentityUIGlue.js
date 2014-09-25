@@ -6,6 +6,7 @@
 
 const { interfaces: Ci, utils: Cu, classes: Cc } = Components;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/ContentRequestHelper.jsm");
 Cu.import("resource://gre/modules/MobileIdentityCommon.jsm");
 Cu.import("resource://gre/modules/MobileIdentityUIGlueCommon.jsm");
