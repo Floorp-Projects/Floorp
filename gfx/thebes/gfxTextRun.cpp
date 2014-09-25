@@ -1627,11 +1627,7 @@ gfxFontGroup::BuildFontList()
             gfxFontEntry *fe = defaultFamily->FindFontForStyle(mStyle,
                                                                needsBold);
             if (fe) {
-                nsRefPtr<gfxFont> font = fe->FindOrMakeFont(&mStyle,
-                                                            needsBold);
-                if (font) {
-                    mFonts.AppendElement(FamilyFace(defaultFamily, font));
-                }
+                mFonts.AppendElement(FamilyFace(defaultFamily, fe, needsBold));
             }
         }
 
@@ -1648,12 +1644,7 @@ gfxFontGroup::BuildFontList()
                 gfxFontEntry *fe = families[i]->FindFontForStyle(mStyle,
                                                                  needsBold);
                 if (fe) {
-                    nsRefPtr<gfxFont> font = fe->FindOrMakeFont(&mStyle,
-                                                                needsBold);
-                    if (font) {
-                        mFonts.AppendElement(FamilyFace(families[i], font));
-                        break;
-                    }
+                    mFonts.AppendElement(FamilyFace(families[i], fe, needsBold));
                 }
             }
         }
@@ -1670,18 +1661,19 @@ gfxFontGroup::BuildFontList()
         }
     }
 
-    if (!mStyle.systemFont) {
-        uint32_t count = mFonts.Length();
-        for (uint32_t i = 0; i < count; ++i) {
-            gfxFont* font = mFonts[i].Font();
-            if (font->GetFontEntry()->mIsBadUnderlineFont) {
-                gfxFloat first = mFonts[0].Font()->GetMetrics().underlineOffset;
-                gfxFloat bad = font->GetMetrics().underlineOffset;
-                mUnderlineOffset = std::min(first, bad);
-                break;
-            }
-        }
-    }
+// xxx comment this out for now
+//     if (!mStyle.systemFont) {
+//         uint32_t count = mFonts.Length();
+//         for (uint32_t i = 0; i < count; ++i) {
+//             gfxFont* font = mFonts[i].Font();
+//             if (font->GetFontEntry()->mIsBadUnderlineFont) {
+//                 gfxFloat first = mFonts[0].Font()->GetMetrics().underlineOffset;
+//                 gfxFloat bad = font->GetMetrics().underlineOffset;
+//                 mUnderlineOffset = std::min(first, bad);
+//                 break;
+//             }
+//         }
+//     }
 #endif
 }
 
@@ -1730,10 +1722,7 @@ gfxFontGroup::FindPlatformFont(const nsAString& aName,
 
     // add to the font group, unless it's already there
     if (fe && !HasFont(fe)) {
-        nsRefPtr<gfxFont> font = fe->FindOrMakeFont(&mStyle, needsBold);
-        if (font) {
-            mFonts.AppendElement(FamilyFace(family, font));
-        }
+        mFonts.AppendElement(FamilyFace(family, fe, needsBold));
     }
 }
 
@@ -1742,8 +1731,9 @@ gfxFontGroup::HasFont(const gfxFontEntry *aFontEntry)
 {
     uint32_t count = mFonts.Length();
     for (uint32_t i = 0; i < count; ++i) {
-        if (mFonts[i].Font()->GetFontEntry() == aFontEntry)
+        if (mFonts[i].FontEntry() == aFontEntry) {
             return true;
+        }
     }
     return false;
 }
@@ -2376,24 +2366,27 @@ gfxFontGroup::GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel,
 }
 
 already_AddRefed<gfxFont>
-gfxFontGroup::TryAllFamilyMembers(gfxFontFamily* aFamily, uint32_t aCh)
+gfxFontGroup::FindNonItalicFaceForChar(gfxFontFamily* aFamily, uint32_t aCh)
 {
+    NS_ASSERTION(mStyle.style != NS_FONT_STYLE_NORMAL,
+                 "should only be called in the italic/oblique case");
+
     if (!aFamily->TestCharacterMap(aCh)) {
         return nullptr;
     }
 
-    // Note that we don't need the actual runScript in matchData for
-    // gfxFontFamily::SearchAllFontsForChar, it's only used for the
-    // system-fallback case. So we can just set it to 0 here.
-    GlobalFontMatch matchData(aCh, 0, &mStyle);
-    aFamily->SearchAllFontsForChar(&matchData);
-    gfxFontEntry *fe = matchData.mBestMatch;
-    if (!fe) {
+    gfxFontStyle regularStyle = mStyle;
+    regularStyle.style = NS_FONT_STYLE_NORMAL;
+    bool needsBold;
+    gfxFontEntry *fe = aFamily->FindFontForStyle(regularStyle, needsBold);
+    if (!fe->HasCharacter(aCh)) {
         return nullptr;
     }
 
-    bool needsBold = mStyle.weight >= 600 && !fe->IsBold();
     nsRefPtr<gfxFont> font = fe->FindOrMakeFont(&mStyle, needsBold);
+    if (!font->Valid()) {
+        return nullptr;
+    }
     return font.forget();
 }
 
@@ -2410,18 +2403,24 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
     bool isVarSelector = gfxFontUtils::IsVarSelector(aCh);
 
     if (!isJoinControl && !wasJoinCauser && !isVarSelector) {
-        nsRefPtr<gfxFont> firstFont = mFonts[0].Font();
+        nsRefPtr<gfxFont> firstFont = GetFontAt(0);
         if (firstFont->HasCharacter(aCh)) {
             *aMatchType = gfxTextRange::kFontGroup;
             return firstFont.forget();
         }
-        // It's possible that another font in the family (e.g. regular face,
-        // where the requested style was italic) will support the character
-        nsRefPtr<gfxFont> font = TryAllFamilyMembers(mFonts[0].Family(), aCh);
-        if (font) {
-            *aMatchType = gfxTextRange::kFontGroup;
-            return font.forget();
+
+        // If italic, test the regular face to see if it supports the character.
+        // Only do this for platform fonts, not userfonts.
+        if (mStyle.style != NS_FONT_STYLE_NORMAL &&
+            !firstFont->GetFontEntry()->IsUserFont()) {
+            nsRefPtr<gfxFont> font =
+                FindNonItalicFaceForChar(mFonts[0].Family(), aCh);
+            if (font) {
+                *aMatchType = gfxTextRange::kFontGroup;
+                return font.forget();
+            }
         }
+
         // we don't need to check the first font again below
         ++nextIndex;
     }
@@ -2461,16 +2460,30 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
     // 1. check remaining fonts in the font group
     uint32_t fontListLength = FontListLength();
     for (uint32_t i = nextIndex; i < fontListLength; i++) {
-        nsRefPtr<gfxFont> font = mFonts[i].Font();
-        if (font->HasCharacter(aCh)) {
-            *aMatchType = gfxTextRange::kFontGroup;
-            return font.forget();
+        nsRefPtr<gfxFont> font;
+
+        // test the font entry, build font if needed
+        gfxFontEntry *fe = mFonts[i].FontEntry();
+        if (fe->HasCharacter(aCh)) {
+            font = mFonts[i].Font();
+            if (!font) {
+                font = fe->FindOrMakeFont(&mStyle, mFonts[i].NeedsBold());
+                mFonts[i].SetFont(font);
+            }
+            if (font->Valid()) {
+                *aMatchType = gfxTextRange::kFontGroup;
+                return font.forget();
+            }
         }
 
-        font = TryAllFamilyMembers(mFonts[i].Family(), aCh);
-        if (font) {
-            *aMatchType = gfxTextRange::kFontGroup;
-            return font.forget();
+        // If italic, test the regular face to see if it supports the character.
+        // Only do this for platform fonts, not userfonts.
+        if (mStyle.style != NS_FONT_STYLE_NORMAL && !fe->IsUserFont()) {
+            font = FindNonItalicFaceForChar(mFonts[i].Family(), aCh);
+            if (font) {
+                *aMatchType = gfxTextRange::kFontGroup;
+                return font.forget();
+            }
         }
     }
 
