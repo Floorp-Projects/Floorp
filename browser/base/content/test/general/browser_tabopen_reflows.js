@@ -23,9 +23,6 @@ const EXPECTED_REFLOWS = [
     "openUILinkIn@chrome://browser/content/utilityOverlay.js|" +
     "BrowserOpenTab@chrome://browser/content/browser.js|",
 
-  // unpreloaded newtab pages explicitly waits for reflows for sizing
-  "gPage.onPageFirstVisible/checkSizing/<@chrome://browser/content/newtab/newTab.js|",
-
   // accessing element.scrollPosition in _fillTrailingGap() flushes layout
   "get_scrollPosition@chrome://global/content/bindings/scrollbox.xml|" +
     "_fillTrailingGap@chrome://browser/content/tabbrowser.xml|" +

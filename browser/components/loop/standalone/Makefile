@@ -73,3 +73,6 @@ config:
 	@echo "loop.config.serverUrl = '`echo $(LOOP_SERVER_URL)`';" >> content/config.js
 	@echo "loop.config.feedbackApiUrl = '`echo $(LOOP_FEEDBACK_API_URL)`';" >> content/config.js
 	@echo "loop.config.feedbackProductName = '`echo $(LOOP_FEEDBACK_PRODUCT_NAME)`';" >> content/config.js
+	@echo "loop.config.fxosApp = loop.config.fxosApp || {};" >> content/config.js
+	@echo "loop.config.fxosApp.name = 'Loop';" >> content/config.js
+	@echo "loop.config.fxosApp.manifestUrl = 'http://fake-market.herokuapp.com/apps/packagedApp/manifest.webapp';" >> content/config.js
