@@ -3823,6 +3823,11 @@
     "kind": "boolean",
     "description": "Session restore: Whether the file read on startup contained parse-able JSON"
   },
+  "FX_SESSION_RESTORE_ALL_FILES_CORRUPT": {
+    "expires_in_version": "default",
+    "kind": "boolean",
+    "description": "Session restore: Whether none of the backup files contained parse-able JSON"
+  },
   "FX_SESSION_RESTORE_RESTORE_WINDOW_MS": {
     "expires_in_version": "default",
     "kind": "exponential",
