@@ -219,7 +219,6 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                      requestingPrincipal,
                      aSecurityFlags,
                      aContentPolicyType,
-                     nullptr,   // aChannelPolicy
                      nullptr,   // loadGroup
                      nullptr,   // aCallbacks
                      loadFlags,

@@ -1305,7 +1305,6 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
                        nsContentUtils::GetSystemPrincipal(),
                        nsILoadInfo::SEC_NORMAL,
                        nsIContentPolicy::TYPE_OTHER,
-                       nullptr, // aChannelPolicy
                        aLoadGroup);
     if (NS_FAILED(rv)) return rv;
     
