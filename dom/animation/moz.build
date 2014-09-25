@@ -14,7 +14,7 @@ EXPORTS.mozilla.dom += [
     'AnimationTimeline.h',
 ]
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'Animation.cpp',
     'AnimationEffect.cpp',
     'AnimationPlayer.cpp',
