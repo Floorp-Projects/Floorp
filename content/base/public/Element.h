@@ -747,8 +747,13 @@ public:
   {
     nsIScrollableFrame* sf = GetScrollFrame();
     if (sf) {
+      nsIScrollableFrame::ScrollMode scrollMode = nsIScrollableFrame::INSTANT;
+      if (sf->GetScrollbarStyles().mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
+        scrollMode = nsIScrollableFrame::SMOOTH_MSD;
+      }
       sf->ScrollToCSSPixels(CSSIntPoint(sf->GetScrollPositionCSSPixels().x,
-                                        aScrollTop));
+                                        aScrollTop),
+                            scrollMode);
     }
   }
   int32_t ScrollLeft()
@@ -760,8 +765,14 @@ public:
   {
     nsIScrollableFrame* sf = GetScrollFrame();
     if (sf) {
+      nsIScrollableFrame::ScrollMode scrollMode = nsIScrollableFrame::INSTANT;
+      if (sf->GetScrollbarStyles().mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
+        scrollMode = nsIScrollableFrame::SMOOTH_MSD;
+      }
+
       sf->ScrollToCSSPixels(CSSIntPoint(aScrollLeft,
-                                        sf->GetScrollPositionCSSPixels().y));
+                                        sf->GetScrollPositionCSSPixels().y),
+                            scrollMode);
     }
   }
   /* Scrolls without flushing the layout.
