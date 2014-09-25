@@ -4218,16 +4218,12 @@ Tab.prototype = {
     } catch (ex) { }
 
     // In restricted profiles, we refuse to let you open any file urls.
-    if (!ParentalControls.isAllowed(ParentalControls.VISIT_FILE_URLS)) {
-      let bannedSchemes = ["file", "chrome", "resource", "jar", "wyciwyg"];
+    if (!ParentalControls.isAllowed(ParentalControls.VISIT_FILE_URLS, fixedURI)) {
+      aRequest.cancel(Cr.NS_BINDING_ABORTED);
 
-      if (bannedSchemes.indexOf(fixedURI.scheme) > -1) {
-        aRequest.cancel(Cr.NS_BINDING_ABORTED);
-
-        aRequest = this.browser.docShell.displayLoadError(Cr.NS_ERROR_UNKNOWN_PROTOCOL, fixedURI, null);
-        if (aRequest) {
-          fixedURI = aRequest.URI;
-        }
+      aRequest = this.browser.docShell.displayLoadError(Cr.NS_ERROR_UNKNOWN_PROTOCOL, fixedURI, null);
+      if (aRequest) {
+        fixedURI = aRequest.URI;
       }
     }
 
