@@ -603,7 +603,7 @@ const xpc::SandboxCallableProxyHandler xpc::sandboxCallableProxyHandler;
 static JSObject*
 WrapCallable(JSContext *cx, HandleObject callable, HandleObject sandboxProtoProxy)
 {
-    MOZ_ASSERT(JS_ObjectIsCallable(cx, callable));
+    MOZ_ASSERT(JS::IsCallable(callable));
     // Our proxy is wrapping the callable.  So we need to use the
     // callable as the private.  We use the given sandboxProtoProxy as
     // the parent, and our call() hook depends on that.
@@ -678,7 +678,7 @@ xpc::SandboxProxyHandler::getPropertyDescriptor(JSContext *cx,
         return false;
     if (desc.value().isObject()) {
         RootedObject val (cx, &desc.value().toObject());
-        if (JS_ObjectIsCallable(cx, val)) {
+        if (JS::IsCallable(val)) {
             val = WrapCallable(cx, val, proxy);
             if (!val)
                 return false;

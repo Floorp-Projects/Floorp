@@ -687,7 +687,7 @@ SetInterruptCallback(JSContext *cx, unsigned argc, jsval *vp)
     }
 
     // Otherwise, we should have a callable object.
-    if (!args[0].isObject() || !JS_ObjectIsCallable(cx, &args[0].toObject())) {
+    if (!args[0].isObject() || !JS::IsCallable(&args[0].toObject())) {
         JS_ReportError(cx, "Argument must be callable");
         return false;
     }
