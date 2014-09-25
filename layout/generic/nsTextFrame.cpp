@@ -1795,7 +1795,7 @@ GetFirstFontMetrics(gfxFontGroup* aFontGroup)
 {
   if (!aFontGroup)
     return gfxFont::Metrics();
-  gfxFont* font = aFontGroup->GetFontAt(0);
+  gfxFont* font = aFontGroup->GetFirstValidFont();
   if (!font)
     return gfxFont::Metrics();
   return font->GetMetrics();
@@ -5660,7 +5660,7 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
     sdptr = sdptr->mNext;
   }
 
-  gfxFont* firstFont = aProvider.GetFontGroup()->GetFontAt(0);
+  gfxFont* firstFont = aProvider.GetFontGroup()->GetFirstValidFont();
   if (!firstFont)
     return; // OOM
   gfxFont::Metrics decorationMetrics(firstFont->GetMetrics());
@@ -6341,7 +6341,7 @@ nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
                                         GetFontSizeInflation());
   gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
-  gfxFont* firstFont = fontGroup->GetFontAt(0);
+  gfxFont* firstFont = fontGroup->GetFirstValidFont();
   if (!firstFont)
     return false; // OOM
   const gfxFont::Metrics& metrics = firstFont->GetMetrics();

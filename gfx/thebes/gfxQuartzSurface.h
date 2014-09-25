@@ -17,12 +17,12 @@ class gfxImageSurface;
 
 class gfxQuartzSurface : public gfxASurface {
 public:
-    gfxQuartzSurface(const gfxSize& size, gfxImageFormat format, bool aForPrinting = false);
-    gfxQuartzSurface(CGContextRef context, const gfxSize& size, bool aForPrinting = false);
-    gfxQuartzSurface(CGContextRef context, const gfxIntSize& size, bool aForPrinting = false);
-    gfxQuartzSurface(cairo_surface_t *csurf, const gfxIntSize& aSize, bool aForPrinting = false);
-    gfxQuartzSurface(unsigned char *data, const gfxSize& size, long stride, gfxImageFormat format, bool aForPrinting = false);
-    gfxQuartzSurface(unsigned char *data, const gfxIntSize& size, long stride, gfxImageFormat format, bool aForPrinting = false);
+    gfxQuartzSurface(const gfxSize& size, gfxImageFormat format);
+    gfxQuartzSurface(CGContextRef context, const gfxSize& size);
+    gfxQuartzSurface(CGContextRef context, const gfxIntSize& size);
+    gfxQuartzSurface(cairo_surface_t *csurf, const gfxIntSize& aSize);
+    gfxQuartzSurface(unsigned char *data, const gfxSize& size, long stride, gfxImageFormat format);
+    gfxQuartzSurface(unsigned char *data, const gfxIntSize& size, long stride, gfxImageFormat format);
 
     virtual ~gfxQuartzSurface();
 
@@ -35,8 +35,6 @@ public:
 
     CGContextRef GetCGContextWithClip(gfxContext *ctx);
 
-    virtual int32_t GetDefaultContextFlags() const;
-
     already_AddRefed<gfxImageSurface> GetAsImageSurface();
 
 protected:
@@ -44,7 +42,6 @@ protected:
 
     CGContextRef mCGContext;
     gfxSize      mSize;
-    bool mForPrinting;
 };
 
 #endif /* GFX_QUARTZSURFACE_H */

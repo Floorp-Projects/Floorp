@@ -21,12 +21,21 @@
         <item name="android:layout_marginLeft">@dimen/forward_default_offset</item>
     </style>
 
+    <style name="UrlBar.ImageButton.Forward.NewTablet">
+        <item name="android:layout_marginLeft">@dimen/new_tablet_forward_default_offset</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:paddingBottom">0dp</item>
+        <item name="android:layout_marginTop">11.5dp</item>
+        <item name="android:layout_marginBottom">11.5dp</item>
+        <item name="android:src">@drawable/new_tablet_ic_menu_forward</item>
+    </style>
+
     <style name="UrlBar.ImageButton.TabCount.NewTablet">
         <item name="android:background">@drawable/new_tablet_tabs_count</item>
     </style>
 
-
-   <style name="UrlBar.Button.Container">
+    <style name="UrlBar.Button.Container">
         <item name="android:layout_marginTop">6dp</item>
         <item name="android:layout_marginBottom">6dp</item>
         <!-- Start with forward hidden -->

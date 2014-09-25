@@ -88,7 +88,8 @@ public:
 protected:
     SurfaceFactory_ANGLEShareHandle(GLContext* gl,
                                     GLLibraryEGL* egl,
-                                    const SurfaceCaps& caps);
+                                    const SurfaceCaps& caps,
+                                    bool* const out_success);
 
     virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) MOZ_OVERRIDE {
         bool hasAlpha = mReadCaps.alpha;

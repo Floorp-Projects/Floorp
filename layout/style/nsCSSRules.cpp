@@ -1397,13 +1397,29 @@ DOMCI_DATA(CSSNameSpaceRule, css::NameSpaceRule)
 // nsCSSFontFaceStyleDecl and related routines
 //
 
-// Mapping from nsCSSFontDesc codes to nsCSSFontFaceStyleDecl fields.
-nsCSSValue nsCSSFontFaceStyleDecl::* const
-nsCSSFontFaceStyleDecl::Fields[] = {
-#define CSS_FONT_DESC(name_, method_) &nsCSSFontFaceStyleDecl::m##method_,
+// Mapping from nsCSSFontDesc codes to CSSFontFaceDescriptors fields.
+nsCSSValue CSSFontFaceDescriptors::* const
+CSSFontFaceDescriptors::Fields[] = {
+#define CSS_FONT_DESC(name_, method_) &CSSFontFaceDescriptors::m##method_,
 #include "nsCSSFontDescList.h"
 #undef CSS_FONT_DESC
 };
+
+const nsCSSValue&
+CSSFontFaceDescriptors::Get(nsCSSFontDesc aFontDescID) const
+{
+  MOZ_ASSERT(aFontDescID > eCSSFontDesc_UNKNOWN &&
+             aFontDescID < eCSSFontDesc_COUNT);
+  return this->*CSSFontFaceDescriptors::Fields[aFontDescID];
+}
+
+nsCSSValue&
+CSSFontFaceDescriptors::Get(nsCSSFontDesc aFontDescID)
+{
+  MOZ_ASSERT(aFontDescID > eCSSFontDesc_UNKNOWN &&
+             aFontDescID < eCSSFontDesc_COUNT);
+  return this->*CSSFontFaceDescriptors::Fields[aFontDescID];
+}
 
 // QueryInterface implementation for nsCSSFontFaceStyleDecl
 NS_INTERFACE_MAP_BEGIN(nsCSSFontFaceStyleDecl)
@@ -1435,7 +1451,7 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
   if (aFontDescID == eCSSFontDesc_UNKNOWN)
     return NS_OK;
 
-  const nsCSSValue& val = this->*nsCSSFontFaceStyleDecl::Fields[aFontDescID];
+  const nsCSSValue& val = mDescriptors.Get(aFontDescID);
 
   if (val.GetUnit() == eCSSUnit_Null) {
     // Avoid having to check no-value in the Family and Src cases below.
@@ -1505,8 +1521,7 @@ nsCSSFontFaceStyleDecl::GetCssText(nsAString & aCssText)
   for (nsCSSFontDesc id = nsCSSFontDesc(eCSSFontDesc_UNKNOWN + 1);
        id < eCSSFontDesc_COUNT;
        id = nsCSSFontDesc(id + 1)) {
-    if ((this->*nsCSSFontFaceStyleDecl::Fields[id]).GetUnit()
-          != eCSSUnit_Null &&
+    if (mDescriptors.Get(id).GetUnit() != eCSSUnit_Null &&
         NS_SUCCEEDED(GetPropertyValue(id, descStr))) {
       NS_ASSERTION(descStr.Length() > 0,
                    "GetCssText: non-null unit, empty property value");
@@ -1568,7 +1583,7 @@ nsCSSFontFaceStyleDecl::RemoveProperty(const nsAString & propertyName,
   } else {
     nsresult rv = GetPropertyValue(descID, aResult);
     NS_ENSURE_SUCCESS(rv, rv);
-    (this->*nsCSSFontFaceStyleDecl::Fields[descID]).Reset();
+    mDescriptors.Get(descID).Reset();
   }
   return NS_OK;
 }
@@ -1601,7 +1616,7 @@ nsCSSFontFaceStyleDecl::GetLength(uint32_t *aLength)
   for (nsCSSFontDesc id = nsCSSFontDesc(eCSSFontDesc_UNKNOWN + 1);
        id < eCSSFontDesc_COUNT;
        id = nsCSSFontDesc(id + 1))
-    if ((this->*nsCSSFontFaceStyleDecl::Fields[id]).GetUnit() != eCSSUnit_Null)
+    if (mDescriptors.Get(id).GetUnit() != eCSSUnit_Null)
       len++;
 
   *aLength = len;
@@ -1627,8 +1642,7 @@ nsCSSFontFaceStyleDecl::IndexedGetter(uint32_t index, bool& aFound, nsAString & 
   for (nsCSSFontDesc id = nsCSSFontDesc(eCSSFontDesc_UNKNOWN + 1);
        id < eCSSFontDesc_COUNT;
        id = nsCSSFontDesc(id + 1)) {
-    if ((this->*nsCSSFontFaceStyleDecl::Fields[id]).GetUnit()
-        != eCSSUnit_Null) {
+    if (mDescriptors.Get(id).GetUnit() != eCSSUnit_Null) {
       nset++;
       if (nset == int32_t(index)) {
         aFound = true;
@@ -1744,8 +1758,7 @@ nsCSSFontFaceRule::List(FILE* out, int32_t aIndent) const
   for (nsCSSFontDesc id = nsCSSFontDesc(eCSSFontDesc_UNKNOWN + 1);
        id < eCSSFontDesc_COUNT;
        id = nsCSSFontDesc(id + 1))
-    if ((mDecl.*nsCSSFontFaceStyleDecl::Fields[id]).GetUnit()
-        != eCSSUnit_Null) {
+    if (mDecl.mDescriptors.Get(id).GetUnit() != eCSSUnit_Null) {
       if (NS_FAILED(mDecl.GetPropertyValue(id, descStr)))
         descStr.AssignLiteral("#<serialization error>");
       else if (descStr.Length() == 0)
@@ -1824,7 +1837,7 @@ nsCSSFontFaceRule::SetDesc(nsCSSFontDesc aDescID, nsCSSValue const & aValue)
 
   // FIXME: handle dynamic changes
 
-  mDecl.*nsCSSFontFaceStyleDecl::Fields[aDescID] = aValue;
+  mDecl.mDescriptors.Get(aDescID) = aValue;
 }
 
 void
@@ -1834,7 +1847,7 @@ nsCSSFontFaceRule::GetDesc(nsCSSFontDesc aDescID, nsCSSValue & aValue)
                   aDescID < eCSSFontDesc_COUNT,
                   "aDescID out of range in nsCSSFontFaceRule::GetDesc");
 
-  aValue = mDecl.*nsCSSFontFaceStyleDecl::Fields[aDescID];
+  aValue = mDecl.mDescriptors.Get(aDescID);
 }
 
 /* virtual */ size_t

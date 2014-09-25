@@ -271,6 +271,11 @@ public:
   void SetAccurateVisibleRegions() { mAccurateVisibleRegions = true; }
   bool GetAccurateVisibleRegions() { return mAccurateVisibleRegions; }
   /**
+   * @return Returns true if we should include the caret in any display lists
+   * that we make.
+   */
+  bool IsBuildingCaret() { return mBuildCaret; }
+  /**
    * Allows callers to selectively override the regular paint suppression checks,
    * so that methods like GetFrameForPoint work when painting is suppressed.
    */

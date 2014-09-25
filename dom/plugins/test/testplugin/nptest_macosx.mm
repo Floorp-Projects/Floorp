@@ -100,7 +100,7 @@ pluginDoSetWindow(InstanceData* instanceData, NPWindow* newWindow)
 {
   // Ugh. Due to a terrible Gecko bug, we have to ignore position changes
   // when the clip rect doesn't change; the position can be wrong
-  // when set by a path other than nsObjectFrame::FixUpPluginWindow.
+  // when set by a path other than nsPluginFrame::FixUpPluginWindow.
   int32_t oldX = instanceData->window.x;
   int32_t oldY = instanceData->window.y;
   bool clipChanged =

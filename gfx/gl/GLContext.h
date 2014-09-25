@@ -118,6 +118,7 @@ MOZ_BEGIN_ENUM_CLASS(GLFeature)
     texture_half_float,
     texture_half_float_linear,
     texture_non_power_of_two,
+    texture_storage,
     transform_feedback2,
     uniform_buffer_object,
     uniform_matrix_nonsquare,
@@ -374,6 +375,7 @@ public:
         ARB_texture_float,
         ARB_texture_non_power_of_two,
         ARB_texture_rectangle,
+        ARB_texture_storage,
         ARB_transform_feedback2,
         ARB_uniform_buffer_object,
         ARB_vertex_array_object,
@@ -3066,6 +3068,23 @@ public:
         AFTER_GL_CALL;
     }
 
+// -----------------------------------------------------------------------------
+// Core GL 4.2, GL ES 3.0 & Extension ARB_texture_storage/EXT_texture_storage
+    void fTexStorage2D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fTexStorage2D);
+        mSymbols.fTexStorage2D(target, levels, internalformat, width, height);
+        AFTER_GL_CALL;
+    }
+
+    void fTexStorage3D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth)
+    {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fTexStorage3D);
+        mSymbols.fTexStorage3D(target, levels, internalformat, width, height, depth);
+        AFTER_GL_CALL;
+    }
 
 // -----------------------------------------------------------------------------
 // 3D Textures
