@@ -7,7 +7,7 @@
  */
 
 function ifTestingSupported() {
-  let [target, debuggee, front] = yield initCanavsDebuggerBackend(WEBGL_ENUM_URL);
+  let { target, front } = yield initCanvasDebuggerBackend(WEBGL_ENUM_URL);
 
   let navigated = once(target, "navigate");
 

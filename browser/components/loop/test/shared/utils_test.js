@@ -53,6 +53,39 @@ describe("loop.shared.utils", function() {
         expect(helper.isFirefox("Opera")).eql(false);
       });
     });
+
+    describe("#isFirefoxOS", function() {
+      describe("without mozActivities", function() {
+        it("shouldn't detect FirefoxOS on mobile platform", function() {
+          expect(helper.isFirefoxOS("mobi")).eql(false);
+        });
+
+        it("shouldn't detect FirefoxOS on non mobile platform", function() {
+          expect(helper.isFirefoxOS("whatever")).eql(false);
+        });
+      });
+
+      describe("with mozActivities", function() {
+        var realMozActivity;
+
+        before(function() {
+          realMozActivity = window.MozActivity;
+          window.MozActivity = {};
+        });
+
+        after(function() {
+          window.MozActivity = realMozActivity;
+        });
+
+        it("should detect FirefoxOS on mobile platform", function() {
+          expect(helper.isFirefoxOS("mobi")).eql(true);
+        });
+
+        it("shouldn't detect FirefoxOS on non mobile platform", function() {
+          expect(helper.isFirefoxOS("whatever")).eql(false);
+        });
+      });
+    });
   });
 
   describe("#getBoolPreference", function() {
