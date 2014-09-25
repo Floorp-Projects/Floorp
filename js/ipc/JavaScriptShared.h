@@ -16,7 +16,47 @@
 namespace mozilla {
 namespace jsipc {
 
-typedef uint64_t ObjectId;
+class ObjectId {
+  public:
+    // Use 47 bits at most, to be safe, since jsval privates are encoded as
+    // doubles. See bug 1065811 comment 12 for an explanation.
+    static const size_t SERIAL_NUMBER_BITS = 47;
+    static const size_t FLAG_BITS = 1;
+    static const uint64_t SERIAL_NUMBER_MAX = (uint64_t(1) << SERIAL_NUMBER_BITS) - 1;
+
+    explicit ObjectId(uint64_t serialNumber, bool isCallable)
+      : serialNumber_(serialNumber), isCallable_(isCallable)
+    {
+        if (MOZ_UNLIKELY(serialNumber == 0 || serialNumber > SERIAL_NUMBER_MAX))
+            MOZ_CRASH("Bad CPOW Id");
+    }
+
+    bool operator==(const ObjectId &other) const {
+        bool equal = serialNumber() == other.serialNumber();
+        MOZ_ASSERT_IF(equal, isCallable() == other.isCallable());
+        return equal;
+    }
+
+    bool isNull() { return !serialNumber_; }
+
+    uint64_t serialNumber() const { return serialNumber_; }
+    bool isCallable() const { return isCallable_; }
+    uint64_t serialize() const {
+        MOZ_ASSERT(serialNumber(), "Don't send a null ObjectId over IPC");
+        return uint64_t((serialNumber() << FLAG_BITS) | ((isCallable() ? 1 : 0) << 0));
+    }
+
+    static ObjectId nullId() { return ObjectId(); }
+    static ObjectId deserialize(uint64_t data) {
+        return ObjectId(data >> FLAG_BITS, data & 1);
+    }
+
+  private:
+    ObjectId() : serialNumber_(0), isCallable_(false) {}
+
+    uint64_t serialNumber_ : SERIAL_NUMBER_BITS;
+    bool isCallable_ : 1;
+};
 
 class JavaScriptShared;
 
@@ -36,12 +76,27 @@ class CpowIdHolder : public CpowHolder
     const InfallibleTArray<CpowEntry> &cpows_;
 };
 
+// DefaultHasher<T> requires that T coerce to an integral type. We could make
+// ObjectId do that, but doing so would weaken our type invariants, so we just
+// reimplement it manually.
+struct ObjectIdHasher
+{
+    typedef ObjectId Lookup;
+    static js::HashNumber hash(const Lookup &l) {
+        return l.serialize();
+    }
+    static bool match(const ObjectId &k, const ObjectId &l) {
+        return k == l;
+    }
+    static void rekey(ObjectId &k, const ObjectId& newKey) {
+        k = newKey;
+    }
+};
+
 // Map ids -> JSObjects
 class IdToObjectMap
 {
-    typedef js::DefaultHasher<ObjectId> TableKeyHasher;
-
-    typedef js::HashMap<ObjectId, JS::Heap<JSObject *>, TableKeyHasher, js::SystemAllocPolicy> Table;
+    typedef js::HashMap<ObjectId, JS::Heap<JSObject *>, ObjectIdHasher, js::SystemAllocPolicy> Table;
 
   public:
     IdToObjectMap();
@@ -95,9 +150,6 @@ class JavaScriptShared
     void decref();
     void incref();
 
-    static const uint32_t OBJECT_EXTRA_BITS  = 1;
-    static const uint32_t OBJECT_IS_CALLABLE = (1 << 0);
-
     bool Unwrap(JSContext *cx, const InfallibleTArray<CpowEntry> &aCpows, JS::MutableHandleObject objp);
     bool Wrap(JSContext *cx, JS::HandleObject aObj, InfallibleTArray<CpowEntry> *outCpows);
 
@@ -119,13 +171,13 @@ class JavaScriptShared
     static void ConvertID(const nsID &from, JSIID *to);
     static void ConvertID(const JSIID &from, nsID *to);
 
-    JSObject *findCPOWById(uint32_t objId) {
+    JSObject *findCPOWById(const ObjectId &objId) {
         return cpows_.find(objId);
     }
-    JSObject *findObjectById(uint32_t objId) {
+    JSObject *findObjectById(const ObjectId &objId) {
         return objects_.find(objId);
     }
-    JSObject *findObjectById(JSContext *cx, uint32_t objId);
+    JSObject *findObjectById(JSContext *cx, const ObjectId &objId);
 
     static bool LoggingEnabled() { return sLoggingEnabled; }
     static bool StackLoggingEnabled() { return sStackLoggingEnabled; }
@@ -143,16 +195,13 @@ class JavaScriptShared
     IdToObjectMap objects_;
     IdToObjectMap cpows_;
 
-    ObjectId lastId_;
+    uint64_t nextSerialNumber_;
     ObjectToIdMap objectIds_;
 
     static bool sLoggingInitialized;
     static bool sLoggingEnabled;
     static bool sStackLoggingEnabled;
 };
-
-// Use 47 at most, to be safe, since jsval privates are encoded as doubles.
-static const uint64_t MAX_CPOW_IDS = (uint64_t(1) << 47) - 1;
 
 } // namespace jsipc
 } // namespace mozilla
