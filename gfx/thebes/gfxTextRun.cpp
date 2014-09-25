@@ -1469,7 +1469,7 @@ gfxFontGroup::gfxFontGroup(const FontFamilyList& aFontFamilyList,
     , mSkipDrawing(false)
 {
     // We don't use SetUserFontSet() here, as we want to unconditionally call
-    // BuildFontList() rather than only do UpdateFontList() if it changed.
+    // BuildFontList() rather than only do UpdateUserFonts() if it changed.
     mCurrGeneration = GetGeneration();
     BuildFontList();
 }
@@ -2643,7 +2643,7 @@ gfxFontGroup::SetUserFontSet(gfxUserFontSet *aUserFontSet)
     }
     mUserFontSet = aUserFontSet;
     mCurrGeneration = GetGeneration() - 1;
-    UpdateFontList();
+    UpdateUserFonts();
 }
 
 uint64_t
@@ -2654,10 +2654,10 @@ gfxFontGroup::GetGeneration()
     return mUserFontSet->GetGeneration();
 }
 
-// note: gfxPangoFontGroup overrides UpdateFontList, such that
+// note: gfxPangoFontGroup overrides UpdateUserFonts, such that
 //       BuildFontList is never used
 void
-gfxFontGroup::UpdateFontList()
+gfxFontGroup::UpdateUserFonts()
 {
     if (mCurrGeneration != GetGeneration()) {
         // xxx - can probably improve this to detect when all fonts were found, so no need to update list

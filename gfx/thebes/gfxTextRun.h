@@ -737,12 +737,12 @@ public:
 
     virtual gfxFont *GetFontAt(int32_t i) {
         // If it turns out to be hard for all clients that cache font
-        // groups to call UpdateFontList at appropriate times, we could
-        // instead consider just calling UpdateFontList from someplace
+        // groups to call UpdateUserFonts at appropriate times, we could
+        // instead consider just calling UpdateUserFonts from someplace
         // more central (such as here).
         NS_ASSERTION(!mUserFontSet || mCurrGeneration == GetGeneration(),
                      "Whoever was caching this font group should have "
-                     "called UpdateFontList on it");
+                     "called UpdateUserFonts on it");
         NS_ASSERTION(mFonts.Length() > uint32_t(i) &&
                      (mFonts[i].Font() || mFonts[i].FontEntry()),
                      "Requesting a font index that doesn't exist");
@@ -873,12 +873,12 @@ public:
     gfxTextPerfMetrics *GetTextPerfMetrics() { return mTextPerf; }
     void SetTextPerfMetrics(gfxTextPerfMetrics *aTextPerf) { mTextPerf = aTextPerf; }
 
-    // This will call UpdateFontList() if the user font set is changed.
+    // This will call UpdateUserFonts() if the user font set is changed.
     void SetUserFontSet(gfxUserFontSet *aUserFontSet);
 
     // If there is a user font set, check to see whether the font list or any
     // caches need updating.
-    virtual void UpdateFontList();
+    virtual void UpdateUserFonts();
 
     bool ShouldSkipDrawing() const {
         return mSkipDrawing;
@@ -891,7 +891,7 @@ public:
     // The gfxFontGroup keeps ownership of this textrun.
     // It is only guaranteed to exist until the next call to GetEllipsisTextRun
     // (which might use a different appUnitsPerDev value) for the font group,
-    // or until UpdateFontList is called, or the fontgroup is destroyed.
+    // or until UpdateUserFonts is called, or the fontgroup is destroyed.
     // Get it/use it/forget it :) - don't keep a reference that might go stale.
     gfxTextRun* GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel,
                                    LazyReferenceContextGetter& aRefContextGetter);

@@ -32,7 +32,7 @@ public:
 
     virtual gfxFont *GetFontAt(int32_t i);
 
-    virtual void UpdateFontList();
+    virtual void UpdateUserFonts();
 
     virtual already_AddRefed<gfxFont>
         FindFontForChar(uint32_t aCh, uint32_t aPrevCh, int32_t aRunScript,
