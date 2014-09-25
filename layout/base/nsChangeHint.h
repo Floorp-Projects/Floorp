@@ -153,7 +153,8 @@ enum nsChangeHint {
   nsChangeHint_NeutralChange = 0x100000
 
   // IMPORTANT NOTE: When adding new hints, consider whether you need to
-  // add them to NS_HintsNotHandledForDescendantsIn() below.
+  // add them to NS_HintsNotHandledForDescendantsIn() below.  Please also
+  // add them to RestyleManager::ChangeHintToString.
 };
 
 // Redefine these operators to return nothing. This will catch any use
@@ -277,6 +278,9 @@ inline nsChangeHint NS_HintsNotHandledForDescendantsIn(nsChangeHint aChangeHint)
  * Similarly, eRestyle_ForceDescendants will cause the frame and all of its
  * descendants to be traversed and for the new style contexts that are created
  * to be set on the frames.
+ *
+ * NOTE: When adding new restyle hints, please also add them to
+ * RestyleManager::RestyleHintToString.
  */
 enum nsRestyleHint {
   // Rerun selector matching on the element.  If a new style context
