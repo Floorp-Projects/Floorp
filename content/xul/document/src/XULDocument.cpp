@@ -3700,7 +3700,7 @@ XULDocument::ExecuteScript(nsIScriptContext * aContext,
     NS_ENSURE_TRUE(baseGlobal, NS_ERROR_FAILURE);
     NS_ENSURE_TRUE(nsContentUtils::GetSecurityManager()->ScriptAllowed(baseGlobal), NS_OK);
 
-    JSAddonId *addonId = MapURIToAddonID(mCurrentPrototype->GetURI());
+    JSAddonId *addonId = mCurrentPrototype ? MapURIToAddonID(mCurrentPrototype->GetURI()) : nullptr;
     JS::Rooted<JSObject*> global(cx, xpc::GetAddonScope(cx, baseGlobal, addonId));
     NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
 
