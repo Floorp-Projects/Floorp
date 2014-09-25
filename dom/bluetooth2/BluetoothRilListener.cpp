@@ -182,7 +182,7 @@ MobileConnectionListener::Listen(bool aStart)
   NS_ENSURE_TRUE(service, false);
 
   nsCOMPtr<nsIMobileConnection> connection;
-  mcService->GetItemByServiceId(mClientId, getter_AddRefs(connection));
+  service->GetItemByServiceId(mClientId, getter_AddRefs(connection));
   NS_ENSURE_TRUE(connection, false);
 
   nsresult rv;
