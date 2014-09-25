@@ -3171,7 +3171,11 @@ MObjectState::MObjectState(MDefinition *obj)
 {
     // This instruction is only used as a summary for bailout paths.
     setRecoveredOnBailout();
-    JSObject *templateObject = obj->toNewObject()->templateObject();
+    JSObject *templateObject = nullptr;
+    if (obj->isNewObject())
+        templateObject = obj->toNewObject()->templateObject();
+    else
+        templateObject = obj->toCreateThisWithTemplate()->templateObject();
     numSlots_ = templateObject->slotSpan();
     numFixedSlots_ = templateObject->numFixedSlots();
 }
