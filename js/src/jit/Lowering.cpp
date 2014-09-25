@@ -3727,6 +3727,13 @@ LIRGenerator::visitSimdConvert(MSimdConvert *ins)
 }
 
 bool
+LIRGenerator::visitSimdReinterpretCast(MSimdReinterpretCast *ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->type()) && IsSimdType(ins->input()->type()));
+    return redefine(ins, ins->input());
+}
+
+bool
 LIRGenerator::visitSimdExtractElement(MSimdExtractElement *ins)
 {
     JS_ASSERT(IsSimdType(ins->input()->type()));
