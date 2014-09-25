@@ -10,7 +10,7 @@
  */
 
 function spawnTest() {
-  let [target, debuggee, panel] = yield initWebAudioEditor(DESTROY_NODES_URL);
+  let { target, panel } = yield initWebAudioEditor(DESTROY_NODES_URL);
   let { panelWin } = panel;
   let { gFront, $, $$, gAudioNodes } = panelWin;
 
