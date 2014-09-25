@@ -36,6 +36,7 @@
 #include "nsIFrameInlines.h"
 #include "ActiveLayerTracker.h"
 #include "nsDisplayList.h"
+#include "RestyleTrackerInlines.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -44,6 +45,19 @@
 namespace mozilla {
 
 using namespace layers;
+
+#define LOG_RESTYLE_CONTINUE(reason_, ...) \
+  LOG_RESTYLE("continuing restyle since " reason_, ##__VA_ARGS__)
+
+#ifdef RESTYLE_LOGGING
+static nsCString
+FrameTagToString(const nsIFrame* aFrame)
+{
+  nsCString result;
+  aFrame->ListTag(result);
+  return result;
+}
+#endif
 
 RestyleManager::RestyleManager(nsPresContext* aPresContext)
   : mPresContext(aPresContext)
@@ -60,6 +74,9 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
                      ELEMENT_IS_POTENTIAL_RESTYLE_ROOT)
   , mPendingAnimationRestyles(ELEMENT_HAS_PENDING_ANIMATION_RESTYLE |
                               ELEMENT_IS_POTENTIAL_ANIMATION_RESTYLE_ROOT)
+#ifdef RESTYLE_LOGGING
+  , mLoggingDepth(0)
+#endif
 {
   mPendingRestyles.Init(this);
   mPendingAnimationRestyles.Init(this);
@@ -2257,6 +2274,9 @@ ElementRestyler::ElementRestyler(nsPresContext* aPresContext,
   , mOurA11yNotification(eDontNotify)
   , mVisibleKidsOfHiddenElement(aVisibleKidsOfHiddenElement)
 #endif
+#ifdef RESTYLE_LOGGING
+  , mLoggingDepth(aRestyleTracker.LoggingDepth() + 1)
+#endif
 {
 }
 
@@ -2283,6 +2303,9 @@ ElementRestyler::ElementRestyler(const ElementRestyler& aParentRestyler,
   , mKidsDesiredA11yNotifications(mDesiredA11yNotifications)
   , mOurA11yNotification(eDontNotify)
   , mVisibleKidsOfHiddenElement(aParentRestyler.mVisibleKidsOfHiddenElement)
+#endif
+#ifdef RESTYLE_LOGGING
+  , mLoggingDepth(aParentRestyler.mLoggingDepth + 1)
 #endif
 {
   if (aConstructorFlags & FOR_OUT_OF_FLOW_CHILD) {
@@ -2325,6 +2348,9 @@ ElementRestyler::ElementRestyler(ParentContextFromChildFrame,
   , mOurA11yNotification(eDontNotify)
   , mVisibleKidsOfHiddenElement(aParentRestyler.mVisibleKidsOfHiddenElement)
 #endif
+#ifdef RESTYLE_LOGGING
+  , mLoggingDepth(aParentRestyler.mLoggingDepth + 1)
+#endif
 {
 }
 
@@ -2351,6 +2377,11 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
                (ourChange & nsChangeHint_NeedReflow),
                "Reflow hint bits set without actually asking for a reflow");
 
+  LOG_RESTYLE("CaptureChange, ourChange = %s, aChangeToAssume = %s",
+              RestyleManager::ChangeHintToString(ourChange).get(),
+              RestyleManager::ChangeHintToString(aChangeToAssume).get());
+  LOG_RESTYLE_INDENT();
+
   // nsChangeHint_UpdateEffects is inherited, but it can be set due to changes
   // in inherited properties (fill and stroke).  Avoid propagating it into
   // text nodes.
@@ -2362,11 +2393,17 @@ ElementRestyler::CaptureChange(nsStyleContext* aOldContext,
   NS_UpdateHint(ourChange, aChangeToAssume);
   if (NS_UpdateHint(mHintsHandled, ourChange)) {
     if (!(ourChange & nsChangeHint_ReconstructFrame) || mContent) {
+      LOG_RESTYLE("appending change %s",
+                  RestyleManager::ChangeHintToString(ourChange).get());
       mChangeList->AppendChange(mFrame, mContent, ourChange);
+    } else {
+      LOG_RESTYLE("change has already been handled");
     }
   }
   NS_UpdateHint(mHintsNotHandledForDescendants,
                 NS_HintsNotHandledForDescendantsIn(ourChange));
+  LOG_RESTYLE("mHintsNotHandledForDescendants = %s",
+              RestyleManager::ChangeHintToString(mHintsNotHandledForDescendants).get());
 }
 
 /**
@@ -2500,6 +2537,8 @@ ElementRestyler::Restyle(nsRestyleHint aRestyleHint)
       // If we received eRestyleResult_Stop, then the old style context was
       // left on mFrame.  Since we ended up restyling our parent, change
       // this old style context to point to its new parent.
+      LOG_RESTYLE("moving style context %p from old parent %p to new parent %p",
+                  oldContext.get(), oldContext->GetParent(), newParent);
       oldContext->MoveTo(newParent);
     }
 
@@ -2564,6 +2603,7 @@ ElementRestyler::ComputeRestyleResultFromFrame(nsIFrame* aSelf)
   // have, so we don't considering stopping if this frame has any additional
   // style contexts.
   if (aSelf->GetAdditionalStyleContext(0)) {
+    LOG_RESTYLE_CONTINUE("there are additional style contexts");
     return eRestyleResult_Continue;
   }
 
@@ -2573,7 +2613,14 @@ ElementRestyler::ComputeRestyleResultFromFrame(nsIFrame* aSelf)
   // that they get the correct style context parent.  Similarly for
   // nsLineFrames.
   nsIAtom* type = aSelf->GetType();
-  if (type == nsGkAtoms::letterFrame || type == nsGkAtoms::lineFrame) {
+
+  if (type == nsGkAtoms::letterFrame) {
+    LOG_RESTYLE_CONTINUE("frame is a letter frame");
+    return eRestyleResult_Continue;
+  }
+
+  if (type == nsGkAtoms::lineFrame) {
+    LOG_RESTYLE_CONTINUE("frame is a line frame");
     return eRestyleResult_Continue;
   }
 
@@ -2586,16 +2633,19 @@ ElementRestyler::ComputeRestyleResultFromFrame(nsIFrame* aSelf)
   // and we need to recompute the child's 'inherit' to that new value.
   nsStyleContext* oldContext = aSelf->StyleContext();
   if (oldContext->HasChildThatUsesGrandancestorStyle()) {
+    LOG_RESTYLE_CONTINUE("the old context uses grandancestor style");
     return eRestyleResult_Continue;
   }
 
   // We ignore all situations that involve :visited style.
   if (oldContext->GetStyleIfVisited()) {
+    LOG_RESTYLE_CONTINUE("the old style context has StyleIfVisited");
     return eRestyleResult_Continue;
   }
 
   nsStyleContext* parentContext = oldContext->GetParent();
   if (parentContext && parentContext->GetStyleIfVisited()) {
+    LOG_RESTYLE_CONTINUE("the old style context's parent has StyleIfVisited");
     return eRestyleResult_Continue;
   }
 
@@ -2606,6 +2656,7 @@ ElementRestyler::ComputeRestyleResultFromFrame(nsIFrame* aSelf)
   // pseudos.
   nsIAtom* pseudoTag = oldContext->GetPseudo();
   if (pseudoTag && pseudoTag != nsCSSAnonBoxes::mozNonElement) {
+    LOG_RESTYLE_CONTINUE("the old style context is for a pseudo");
     return eRestyleResult_Continue;
   }
 
@@ -2617,6 +2668,7 @@ ElementRestyler::ComputeRestyleResultFromFrame(nsIFrame* aSelf)
     // ancestor).
     nsIAtom* parentPseudoTag = parent->StyleContext()->GetPseudo();
     if (parentPseudoTag && parentPseudoTag != nsCSSAnonBoxes::mozNonElement) {
+      LOG_RESTYLE_CONTINUE("the old style context's parent is for a pseudo");
       return eRestyleResult_Continue;
     }
   }
@@ -2632,6 +2684,7 @@ ElementRestyler::ComputeRestyleResultFromNewContext(nsIFrame* aSelf,
   // that we can avoid the style context tree surgery having to deal to deal
   // with visited styles.
   if (aNewContext->GetStyleIfVisited()) {
+    LOG_RESTYLE_CONTINUE("the new style context has StyleIfVisited");
     return eRestyleResult_Continue;
   }
 
@@ -2644,6 +2697,8 @@ ElementRestyler::ComputeRestyleResultFromNewContext(nsIFrame* aSelf,
       oldContext->GetPseudo() != aNewContext->GetPseudo() ||
       oldContext->GetPseudoType() != aNewContext->GetPseudoType() ||
       oldContext->RuleNode() != aNewContext->RuleNode()) {
+    LOG_RESTYLE_CONTINUE("the old and new style contexts have different link/"
+                         "visited/pseudo/rulenodes");
     return eRestyleResult_Continue;
   }
 
@@ -2652,9 +2707,16 @@ ElementRestyler::ComputeRestyleResultFromNewContext(nsIFrame* aSelf,
   // bits, then we must keep restyling so that those new bit values are
   // propagated.
   if (oldContext->HasTextDecorationLines() !=
-        aNewContext->HasTextDecorationLines() ||
-      oldContext->HasPseudoElementData() !=
+        aNewContext->HasTextDecorationLines()) {
+    LOG_RESTYLE_CONTINUE("NS_STYLE_HAS_TEXT_DECORATION_LINES differs between old"
+                         " and new style contexts");
+    return eRestyleResult_Continue;
+  }
+
+  if (oldContext->HasPseudoElementData() !=
         aNewContext->HasPseudoElementData()) {
+    LOG_RESTYLE_CONTINUE("NS_STYLE_HAS_PSEUDO_ELEMENT_DATA differs between old"
+                         " and new style contexts");
     return eRestyleResult_Continue;
   }
 
@@ -2676,6 +2738,11 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
   // XXXbryner we may be able to avoid some of the refcounting goop here.
   // We do need a reference to oldContext for the lifetime of this function, and it's possible
   // that the frame has the last reference to it, so AddRef it here.
+
+  LOG_RESTYLE("RestyleSelf %s, aRestyleHint = %s",
+              FrameTagToString(aSelf).get(),
+              RestyleManager::RestyleHintToString(aRestyleHint).get());
+  LOG_RESTYLE_INDENT();
 
   RestyleResult result;
 
@@ -2717,6 +2784,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
                "ancestor filter.");
 
     // resolve the provider here (before aSelf below).
+    LOG_RESTYLE("resolving child provider frame");
 
     // assumeDifferenceHint forces the parent's change to be also
     // applied to this frame, no matter what
@@ -2736,6 +2804,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
     // Set |mResolvedChild| so we don't bother resolving the
     // provider again.
     mResolvedChild = providerFrame;
+    LOG_RESTYLE_CONTINUE("we had a provider frame");
     // Continue restyling past the odd style context inheritance.
     result = eRestyleResult_Continue;
   }
@@ -2756,6 +2825,8 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
     aRestyleHint = (aRestyleHint & ~eRestyle_StyleAttribute) | eRestyle_Self;
   }
 
+  LOG_RESTYLE("parentContext = %p", parentContext);
+
   // do primary context
   nsRefPtr<nsStyleContext> newContext;
   nsIFrame *prevContinuation =
@@ -2769,6 +2840,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
   if (copyFromContinuation) {
     // Just use the style context from the frame's previous
     // continuation.
+    LOG_RESTYLE("using previous continuation's context");
     newContext = prevContinuationContext;
   }
   else if (pseudoTag == nsCSSAnonBoxes::mozNonElement) {
@@ -2784,6 +2856,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
       Element* pseudoElement =
         (pseudoElementContent && pseudoElementContent->IsElement())
           ? pseudoElementContent->AsElement() : nullptr;
+      LOG_RESTYLE("reparenting style context");
       newContext =
         styleSet->ReparentStyleContext(oldContext, parentContext, element,
                                        pseudoElement);
@@ -2793,6 +2866,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
       // ReparentStyleContext that rebuilds the path in the rule tree
       // rather than reusing the rule node, as we need to do during a
       // rule tree reconstruct.
+      LOG_RESTYLE("resolving style with replacement");
       newContext =
         styleSet->ResolveStyleWithReplacement(element, parentContext, oldContext,
                                               aRestyleHint);
@@ -2870,11 +2944,19 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
       // we can use FindChildWithRules to keep a lot of the old
       // style contexts around.  However, we need to start from the
       // same root.
+      LOG_RESTYLE("restyling root and keeping old context");
+      LOG_RESTYLE_IF(this, result != eRestyleResult_Continue,
+                     "continuing restyle since this is the root");
       newContext = oldContext;
       // Never consider stopping restyling at the root.
       result = eRestyleResult_Continue;
     }
   }
+
+  LOG_RESTYLE("oldContext = %p, newContext = %p%s",
+              oldContext.get(), newContext.get(),
+              oldContext == newContext ? (const char*) " (same)" :
+                                         (const char*) "");
 
   if (newContext != oldContext) {
     if (result == eRestyleResult_Stop) {
@@ -2883,6 +2965,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
         // eRestyleResult_Stop and patch its parent to point to the
         // new parent style context, as that change might not be valid
         // for the other frames sharing the style context.
+        LOG_RESTYLE_CONTINUE("the old style context is shared");
         result = eRestyleResult_Continue;
       } else {
         // Look at some details of the new style context to see if it would
@@ -2906,6 +2989,9 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
         if (equalStructs != NS_STYLE_INHERIT_MASK) {
           // At least one struct had different data in it, so we must
           // continue restyling children.
+          LOG_RESTYLE_CONTINUE("there is different style data: %s",
+                      RestyleManager::StructNamesToString(
+                        ~equalStructs & NS_STYLE_INHERIT_MASK).get());
           result = eRestyleResult_Continue;
         }
       }
@@ -2918,6 +3004,9 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
       if (equalStructs != NS_STYLE_INHERIT_MASK) {
         // At least one struct had different data in it, so we must
         // continue restyling children.
+        LOG_RESTYLE_CONTINUE("there is different style data: %s",
+                    RestyleManager::StructNamesToString(
+                      ~equalStructs & NS_STYLE_INHERIT_MASK).get());
         result = eRestyleResult_Continue;
       }
     }
@@ -2946,6 +3035,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
            sid = nsStyleStructID(sid + 1)) {
         if (oldContext->HasCachedInheritedStyleData(sid) &&
             !oldContext->HasSameCachedStyleData(newContext, sid)) {
+          LOG_RESTYLE_CONTINUE("there are different struct pointers");
           result = eRestyleResult_Continue;
           break;
         }
@@ -2962,12 +3052,26 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
       // previous continuation, so newContext == oldContext.
 
       if (result != eRestyleResult_Stop) {
-        if (!oldContext->IsShared() && !newContext->IsShared()) {
+        if (oldContext->IsShared() && newContext->IsShared()) {
+          LOG_RESTYLE("not swapping style structs, since both old and contexts "
+                      "are shared");
+        } else if (oldContext->IsShared()) {
+          LOG_RESTYLE("not swapping style structs, since the old context is "
+                      "shared");
+        } else if (newContext->IsShared()) {
+          LOG_RESTYLE("not swapping style structs, since the new context is "
+                      "shared");
+        } else {
+          LOG_RESTYLE("swapping style structs between %p and %p",
+                      oldContext.get(), newContext.get());
           oldContext->SwapStyleData(newContext, equalStructs);
           *aSwappedStructs |= equalStructs;
         }
+        LOG_RESTYLE("setting new style context");
         aSelf->SetStyleContext(newContext);
       }
+    } else {
+      LOG_RESTYLE("not setting new style context, since we'll reframe");
     }
   }
   oldContext = nullptr;
@@ -2979,6 +3083,8 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
   for (nsStyleContext* oldExtraContext;
        (oldExtraContext = aSelf->GetAdditionalStyleContext(contextIndex));
        ++contextIndex) {
+    LOG_RESTYLE("extra context %d", contextIndex);
+    LOG_RESTYLE_INDENT();
     nsRefPtr<nsStyleContext> newExtraContext;
     nsIAtom* const extraPseudoTag = oldExtraContext->GetPseudo();
     const nsCSSPseudoElements::Type extraPseudoType =
@@ -3024,15 +3130,22 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
 
     MOZ_ASSERT(newExtraContext);
 
+    LOG_RESTYLE("newExtraContext = %p", newExtraContext.get());
+
     if (oldExtraContext != newExtraContext) {
       uint32_t equalStructs;
       CaptureChange(oldExtraContext, newExtraContext, assumeDifferenceHint,
                     &equalStructs);
       if (!(mHintsHandled & nsChangeHint_ReconstructFrame)) {
+        LOG_RESTYLE("setting new extra style context");
         aSelf->SetAdditionalStyleContext(contextIndex, newExtraContext);
+      } else {
+        LOG_RESTYLE("not setting new extra style context, since we'll reframe");
       }
     }
   }
+
+  LOG_RESTYLE("returning %s", RestyleResultToString(result).get());
 
   return result;
 }
@@ -3137,6 +3250,9 @@ ElementRestyler::RestyleUndisplayedChildren(nsRestyleHint aChildRestyleHint)
                    "Shouldn't have random pseudo style contexts in the "
                    "undisplayed map");
 
+      LOG_RESTYLE("RestyleUndisplayedChildren: undisplayed->mContent = %p",
+                  undisplayed->mContent.get());
+
       // Get the parent of the undisplayed content and check if it is a XBL
       // children element. Push the children element as an ancestor here because it does
       // not have a frame and would not otherwise be pushed as an ancestor.
@@ -3218,6 +3334,8 @@ ElementRestyler::MaybeReframeForBeforePseudo()
                                         nsCSSPseudoElements::ePseudo_before,
                                         mPresContext)) {
         // Have to create the new :before frame
+        LOG_RESTYLE("MaybeReframeForBeforePseudo, appending "
+                    "nsChangeHint_ReconstructFrame");
         NS_UpdateHint(mHintsHandled, nsChangeHint_ReconstructFrame);
         mChangeList->AppendChange(mFrame, mContent,
                                   nsChangeHint_ReconstructFrame);
@@ -3254,6 +3372,8 @@ ElementRestyler::MaybeReframeForAfterPseudo(nsIFrame* aFrame)
                                         mPresContext) &&
           !nsLayoutUtils::GetAfterFrame(aFrame)) {
         // have to create the new :after frame
+        LOG_RESTYLE("MaybeReframeForAfterPseudo, appending "
+                    "nsChangeHint_ReconstructFrame");
         NS_UpdateHint(mHintsHandled, nsChangeHint_ReconstructFrame);
         mChangeList->AppendChange(aFrame, mContent,
                                   nsChangeHint_ReconstructFrame);
@@ -3306,6 +3426,8 @@ void
 ElementRestyler::RestyleContentChildren(nsIFrame* aParent,
                                         nsRestyleHint aChildRestyleHint)
 {
+  LOG_RESTYLE("RestyleContentChildren");
+
   nsIFrame::ChildListIterator lists(aParent);
   TreeMatchContext::AutoAncestorPusher ancestorPusher(mTreeMatchContext);
   if (!lists.IsDone()) {
@@ -3510,5 +3632,139 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
     }
   }
 }
+
+#ifdef DEBUG
+/* static */ nsCString
+RestyleManager::RestyleHintToString(nsRestyleHint aHint)
+{
+  nsCString result;
+  bool any = false;
+  const char* names[] = { "Self", "Subtree", "LaterSiblings", "CSSTransitions",
+                          "CSSAnimations", "SVGAttrAnimations", "StyleAttribute",
+                          "ChangeAnimationPhase", "Force", "ForceDescendants" };
+  uint32_t hint = aHint & ((1 << ArrayLength(names)) - 1);
+  uint32_t rest = aHint & ~((1 << ArrayLength(names)) - 1);
+  for (uint32_t i = 0; i < ArrayLength(names); i++) {
+    if (hint & (1 << i)) {
+      if (any) {
+        result.AppendLiteral(" | ");
+      }
+      result.AppendPrintf("eRestyle_%s", names[i]);
+      any = true;
+    }
+  }
+  if (rest) {
+    if (any) {
+      result.AppendLiteral(" | ");
+    }
+    result.AppendPrintf("0x%0x", rest);
+  } else {
+    if (!any) {
+      result.AppendLiteral("0");
+    }
+  }
+  return result;
+}
+
+/* static */ nsCString
+RestyleManager::ChangeHintToString(nsChangeHint aHint)
+{
+  nsCString result;
+  bool any = false;
+  const char* names[] = {
+    "RepaintFrame", "NeedReflow", "ClearAncestorIntrinsics",
+    "ClearDescendantIntrinsics", "NeedDirtyReflow", "SyncFrameView",
+    "UpdateCursor", "UpdateEffects", "UpdateOpacityLayer",
+    "UpdateTransformLayer", "ReconstructFrame", "UpdateOverflow",
+    "UpdateSubtreeOverflow", "UpdatePostTransformOverflow",
+    "ChildrenOnlyTransform", "RecomputePosition", "AddOrRemoveTransform",
+    "BorderStyleNoneChange", "UpdateTextPath", "NeutralChange"
+  };
+  uint32_t hint = aHint & ((1 << ArrayLength(names)) - 1);
+  uint32_t rest = aHint & ~((1 << ArrayLength(names)) - 1);
+  if (hint == nsChangeHint_Hints_NotHandledForDescendants) {
+    result.AppendLiteral("nsChangeHint_Hints_NotHandledForDescendants");
+    hint = 0;
+    any = true;
+  } else {
+    if ((hint & NS_STYLE_HINT_FRAMECHANGE) == NS_STYLE_HINT_FRAMECHANGE) {
+      result.AppendLiteral("NS_STYLE_HINT_FRAMECHANGE");
+      hint = hint & ~NS_STYLE_HINT_FRAMECHANGE;
+      any = true;
+    } else if ((hint & NS_STYLE_HINT_REFLOW) == NS_STYLE_HINT_REFLOW) {
+      result.AppendLiteral("NS_STYLE_HINT_REFLOW");
+      hint = hint & ~NS_STYLE_HINT_REFLOW;
+      any = true;
+    } else if ((hint & nsChangeHint_AllReflowHints) == nsChangeHint_AllReflowHints) {
+      result.AppendLiteral("nsChangeHint_AllReflowHints");
+      hint = hint & ~nsChangeHint_AllReflowHints;
+      any = true;
+    } else if ((hint & NS_STYLE_HINT_VISUAL) == NS_STYLE_HINT_VISUAL) {
+      result.AppendLiteral("NS_STYLE_HINT_VISUAL");
+      hint = hint & ~NS_STYLE_HINT_VISUAL;
+      any = true;
+    }
+  }
+  for (uint32_t i = 0; i < ArrayLength(names); i++) {
+    if (hint & (1 << i)) {
+      if (any) {
+        result.AppendLiteral(" | ");
+      }
+      result.AppendPrintf("nsChangeHint_%s", names[i]);
+      any = true;
+    }
+  }
+  if (rest) {
+    if (any) {
+      result.AppendLiteral(" | ");
+    }
+    result.AppendPrintf("0x%0x", rest);
+  } else {
+    if (!any) {
+      result.AppendLiteral("NS_STYLE_HINT_NONE");
+    }
+  }
+  return result;
+}
+
+/* static */ nsCString
+RestyleManager::StructNamesToString(uint32_t aSIDs)
+{
+  nsCString result;
+  bool any = false;
+  for (nsStyleStructID sid = nsStyleStructID(0);
+       sid < nsStyleStructID_Length;
+       sid = nsStyleStructID(sid + 1)) {
+    if (aSIDs & nsCachedStyleData::GetBitForSID(sid)) {
+      if (any) {
+        result.AppendLiteral(",");
+      }
+      result.AppendPrintf("%s", nsStyleContext::StructName(sid));
+      any = true;
+    }
+  }
+  return result;
+}
+
+/* static */ nsCString
+ElementRestyler::RestyleResultToString(RestyleResult aRestyleResult)
+{
+  nsCString result;
+  switch (aRestyleResult) {
+    case eRestyleResult_Stop:
+      result.AssignLiteral("eRestyleResult_Stop");
+      break;
+    case eRestyleResult_Continue:
+      result.AssignLiteral("eRestyleResult_Continue");
+      break;
+    case eRestyleResult_ContinueAndForceDescendants:
+      result.AssignLiteral("eRestyleResult_ContinueAndForceDescendants");
+      break;
+    default:
+      result.AppendPrintf("RestyleResult(%d)", aRestyleResult);
+  }
+  return result;
+}
+#endif
 
 } // namespace mozilla
