@@ -352,10 +352,8 @@ js::ReportIsNotFunction(JSContext *cx, HandleValue v, int numToSkip, MaybeConstr
 JSObject *
 js::ValueToCallable(JSContext *cx, HandleValue v, int numToSkip, MaybeConstruct construct)
 {
-    if (v.isObject()) {
-        JSObject *callable = &v.toObject();
-        if (callable->isCallable())
-            return callable;
+    if (v.isObject() && v.toObject().isCallable()) {
+        return &v.toObject();
     }
 
     ReportIsNotFunction(cx, v, numToSkip, construct);
@@ -465,8 +463,7 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
     if (args.calleev().isPrimitive())
         return ReportIsNotFunction(cx, args.calleev(), args.length() + 1, construct);
 
-    JSObject &callee = args.callee();
-    const Class *clasp = callee.getClass();
+    const Class *clasp = args.callee().getClass();
 
     /* Invoke non-functions. */
     if (MOZ_UNLIKELY(clasp != &JSFunction::class_)) {
@@ -474,15 +471,15 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
         if (MOZ_UNLIKELY(clasp == &js_NoSuchMethodClass))
             return NoSuchMethod(cx, args.length(), args.base());
 #endif
-        JS_ASSERT_IF(construct, !callee.constructHook());
-        JSNative call = callee.callHook();
+        JS_ASSERT_IF(construct, !args.callee().constructHook());
+        JSNative call = args.callee().callHook();
         if (!call)
             return ReportIsNotFunction(cx, args.calleev(), args.length() + 1, construct);
         return CallJSNative(cx, call, args);
     }
 
     /* Invoke native functions. */
-    JSFunction *fun = &callee.as<JSFunction>();
+    JSFunction *fun = &args.callee().as<JSFunction>();
     JS_ASSERT_IF(construct, !fun->isNativeConstructor());
     if (fun->isNative())
         return CallJSNative(cx, fun->native(), args);
