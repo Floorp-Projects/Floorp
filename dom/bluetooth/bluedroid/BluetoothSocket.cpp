@@ -392,7 +392,10 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(sBluetoothSocketInterface);
 
-    sBluetoothSocketInterface->Accept(mFd, new AcceptResultHandler(GetIO()));
+    BluetoothSocketResultHandler* res = new AcceptResultHandler(GetIO());
+    GetIO()->mConsumer->SetCurrentResultHandler(res);
+
+    sBluetoothSocketInterface->Accept(mFd, res);
 
     return NS_OK;
   }
@@ -473,6 +476,7 @@ BluetoothSocket::BluetoothSocket(BluetoothSocketObserver* aObserver,
                                  bool aAuth,
                                  bool aEncrypt)
   : mObserver(aObserver)
+  , mCurrentRes(nullptr)
   , mImpl(nullptr)
   , mAuth(aAuth)
   , mEncrypt(aEncrypt)
@@ -524,13 +528,15 @@ BluetoothSocket::ConnectSocket(const nsAString& aDeviceAddress, int aChannel)
 
   mImpl = new DroidSocketImpl(XRE_GetIOMessageLoop(), this);
 
+  BluetoothSocketResultHandler* res = new ConnectSocketResultHandler(mImpl);
+  SetCurrentResultHandler(res);
+
   // TODO: uuid as argument
   sBluetoothSocketInterface->Connect(
     aDeviceAddress,
     BluetoothSocketType::RFCOMM,
     UUID_OBEX_OBJECT_PUSH,
-    aChannel, mEncrypt, mAuth,
-    new ConnectSocketResultHandler(mImpl));
+    aChannel, mEncrypt, mAuth, res);
 
   return true;
 }
@@ -573,12 +579,14 @@ BluetoothSocket::ListenSocket(int aChannel)
 
   mImpl = new DroidSocketImpl(XRE_GetIOMessageLoop(), this);
 
+  BluetoothSocketResultHandler* res = new ListenResultHandler(mImpl);
+  SetCurrentResultHandler(res);
+
   sBluetoothSocketInterface->Listen(
     BluetoothSocketType::RFCOMM,
     NS_LITERAL_STRING("OBEX Object Push"),
     UUID_OBEX_OBJECT_PUSH,
-    aChannel, mEncrypt, mAuth,
-    new ListenResultHandler(mImpl));
+    aChannel, mEncrypt, mAuth, res);
 
   return true;
 }
@@ -587,8 +595,15 @@ void
 BluetoothSocket::CloseSocket()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(sBluetoothSocketInterface);
+
   if (!mImpl) {
     return;
+  }
+
+  // Stop any watching |SocketMessageWatcher|
+  if (mCurrentRes) {
+    sBluetoothSocketInterface->Close(mCurrentRes);
   }
 
   // From this point on, we consider mImpl as being deleted.
@@ -630,6 +645,8 @@ BluetoothSocket::OnConnectSuccess()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mObserver);
+
+  SetCurrentResultHandler(nullptr);
   mObserver->OnSocketConnectSuccess(this);
 }
 
@@ -638,6 +655,8 @@ BluetoothSocket::OnConnectError()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mObserver);
+
+  SetCurrentResultHandler(nullptr);
   mObserver->OnSocketConnectError(this);
 }
 
