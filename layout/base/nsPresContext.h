@@ -37,6 +37,7 @@
 #include "nsThreadUtils.h"
 #include "ScrollbarStyles.h"
 #include "nsIMessageManager.h"
+#include "mozilla/RestyleLogging.h"
 
 class nsBidiPresUtils;
 class nsAString;
@@ -1151,6 +1152,14 @@ public:
    */
   bool MayHavePaintEventListenerInSubDocument();
 
+#ifdef RESTYLE_LOGGING
+  // Controls for whether debug information about restyling in this
+  // document should be output.
+  bool RestyleLoggingEnabled() const { return mRestyleLoggingEnabled; }
+  void StartRestyleLogging() { mRestyleLoggingEnabled = true; }
+  void StopRestyleLogging() { mRestyleLoggingEnabled = false; }
+#endif
+
 protected:
   void InvalidateThebesLayers();
   void AppUnitsPerDevPixelChanged();
@@ -1351,6 +1360,11 @@ protected:
   mutable unsigned mPaintFlashingInitialized : 1;
 
   unsigned mHasWarnedAboutPositionedTableParts : 1;
+
+#ifdef RESTYLE_LOGGING
+  // Should we output debug information about restyling for this document?
+  bool                  mRestyleLoggingEnabled;
+#endif
 
 #ifdef DEBUG
   bool                  mInitialized;
