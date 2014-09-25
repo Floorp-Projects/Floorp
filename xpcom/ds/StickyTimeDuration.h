@@ -8,6 +8,7 @@
 #define mozilla_StickyTimeDuration_h
 
 #include "mozilla/TimeStamp.h"
+#include "mozilla/FloatingPoint.h"
 
 namespace mozilla {
 
