@@ -15,7 +15,7 @@
 #include "nsIObserver.h"
 
 class nsImageFrame;
-class nsObjectFrame;
+class nsPluginFrame;
 class nsITreeView;
 
 namespace mozilla {
@@ -63,7 +63,7 @@ public:
   virtual Accessible* GetRootDocumentAccessible(nsIPresShell* aPresShell,
                                                 bool aCanCreate);
   already_AddRefed<Accessible>
-    CreatePluginAccessible(nsObjectFrame* aFrame, nsIContent* aContent,
+    CreatePluginAccessible(nsPluginFrame* aFrame, nsIContent* aContent,
                            Accessible* aContext);
 
   /**

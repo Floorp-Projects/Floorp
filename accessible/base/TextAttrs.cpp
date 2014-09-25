@@ -460,7 +460,7 @@ TextAttrsMgr::FontFamilyTextAttr::
   nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
 
   gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
-  gfxFont* font = fontGroup->GetFontAt(0);
+  gfxFont* font = fontGroup->GetFirstValidFont();
   gfxFontEntry* fontEntry = font->GetFontEntry();
   aFamily = fontEntry->FamilyName();
   return true;
@@ -618,7 +618,7 @@ TextAttrsMgr::FontWeightTextAttr::
   nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
 
   gfxFontGroup *fontGroup = fm->GetThebesFontGroup();
-  gfxFont *font = fontGroup->GetFontAt(0);
+  gfxFont *font = fontGroup->GetFirstValidFont();
 
   // When there doesn't exist a bold font in the family and so the rendering of
   // a non-bold font face is changed so that the user sees what looks like a

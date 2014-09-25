@@ -399,6 +399,7 @@ EXTRA_JS_MODULES.commonjs.sdk.ui.button.view += [
 
 EXTRA_JS_MODULES.commonjs.sdk.ui.frame += [
     'source/lib/sdk/ui/frame/model.js',
+    'source/lib/sdk/ui/frame/view.html',
     'source/lib/sdk/ui/frame/view.js',
 ]
 

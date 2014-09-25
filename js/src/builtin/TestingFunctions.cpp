@@ -1708,7 +1708,7 @@ ObjectAddress(JSContext *cx, unsigned argc, jsval *vp)
     }
 
 #ifdef JS_MORE_DETERMINISTIC
-    args.rval().setInt(0);
+    args.rval().setInt32(0);
 #else
     char buffer[64];
     JS_snprintf(buffer, sizeof(buffer), "%p", &args[0].toObject());

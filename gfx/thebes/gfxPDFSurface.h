@@ -34,13 +34,6 @@ public:
         return gfxIntSize(mSize.width, mSize.height);
     }
 
-    virtual int32_t GetDefaultContextFlags() const
-    {
-        return gfxContext::FLAG_SIMPLIFY_OPERATORS |
-               gfxContext::FLAG_DISABLE_SNAPPING |
-               gfxContext::FLAG_DISABLE_COPY_BACKGROUND;
-    }
-
 private:
     nsCOMPtr<nsIOutputStream> mStream;
     double mXDPI;

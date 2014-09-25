@@ -86,6 +86,10 @@ function firstCheck() {
   ok(!!entries[0], "redirected res8.resource is missing from entries");
   checkRedirectCrossOriginResourceSameOrigin(entries[0]);
 
+  entries = window.performance.getEntriesByName("http://mochi.test:8888/tests/dom/tests/mochitest/general/resource_timing.js");
+  ok(!!entries[0], "same origin resource_timing.js is missing from entries");
+  checkSameOrigin(entries[0]);
+
   is(bufferFullCounter, expectedBufferFullEvents, "Buffer full was called");
   finishTests();
 }
@@ -176,6 +180,7 @@ function finishTests() {
     <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res6.resource"> <!-- cross origin, Timing-Allow-Origin: "" (empty string) -->
     <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res7.resource"> <!-- cross origin, Timing-Allow-Origin: http://mochi.test:8888 http://test1.com header -->
     <object data="http://test1.example.com/tests/dom/tests/mochitest/general/res8.resource"> <!-- double cross origin redirect -->
+    <script type="text/javascript" src="http://mochi.test:8888/tests/dom/tests/mochitest/general/resource_timing.js"></script> <!-- same origin script -->
   </div>
 </body>
 

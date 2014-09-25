@@ -305,6 +305,8 @@ nsInProcessTabChildGlobal::PreHandleEvent(EventChainPreVisitor& aVisitor)
 nsresult
 nsInProcessTabChildGlobal::InitTabChildGlobal()
 {
+  // If you change this, please change GetCompartmentName() in XPCJSRuntime.cpp
+  // accordingly.
   nsAutoCString id;
   id.AssignLiteral("inProcessTabChildGlobal");
   nsIURI* uri = mOwner->OwnerDoc()->GetDocumentURI();

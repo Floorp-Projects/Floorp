@@ -41,7 +41,7 @@ let gIntro = {
   _setUpPanel: function() {
     // Build the panel if necessary
     if (this._nodes.panel.childNodes.length == 1) {
-      ['<a href="' + TILES_EXPLAIN_LINK + '">' + newTabString("learn.link") + "</a>",
+      ['<a href="' + TILES_INTRO_LINK + '">' + newTabString("learn.link") + "</a>",
        '<a href="' + TILES_PRIVACY_LINK + '">' + newTabString("privacy.link") + "</a>",
        '<input type="button" class="newtab-customize"/>',
       ].forEach((arg, index) => {
