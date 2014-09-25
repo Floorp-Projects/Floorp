@@ -38,6 +38,8 @@ Cu.import("resource://gre/modules/AsyncShutdown.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/devtools/Console.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RunState",
+  "resource:///modules/sessionstore/RunState.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryStopwatch",
   "resource://gre/modules/TelemetryStopwatch.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
@@ -268,7 +270,7 @@ let SessionFileInternal = {
     let refObj = {};
 
     let isFinalWrite = false;
-    if (Services.startup.shuttingDown) {
+    if (RunState.isQuitting) {
       // If shutdown has started, we will want to stop receiving
       // write instructions.
       isFinalWrite = this._isClosed = true;
