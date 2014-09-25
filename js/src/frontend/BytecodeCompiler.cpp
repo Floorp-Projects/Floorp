@@ -614,6 +614,12 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
     if (!NameFunctions(cx, fn))
         return false;
 
+    if (!SetDisplayURL(cx, parser.tokenStream, ss))
+        return false;
+
+    if (!SetSourceMap(cx, parser.tokenStream, ss))
+        return false;
+
     if (fn->pn_funbox->function()->isInterpreted()) {
         JS_ASSERT(fun == fn->pn_funbox->function());
 
@@ -646,12 +652,6 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
         fun.set(fn->pn_funbox->function());
         JS_ASSERT(IsAsmJSModuleNative(fun->native()));
     }
-
-    if (!SetDisplayURL(cx, parser.tokenStream, ss))
-        return false;
-
-    if (!SetSourceMap(cx, parser.tokenStream, ss))
-        return false;
 
     if (!sct.complete())
         return false;
