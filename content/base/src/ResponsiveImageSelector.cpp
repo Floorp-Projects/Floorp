@@ -352,10 +352,6 @@ bool
 ResponsiveImageSelector::ComputeFinalWidthForCurrentViewport(int32_t *aWidth)
 {
   unsigned int numSizes = mSizeQueries.Length();
-  if (!numSizes) {
-    return false;
-  }
-
   nsIDocument* doc = mContent ? mContent->OwnerDoc() : nullptr;
   nsIPresShell *presShell = doc ? doc->GetShell() : nullptr;
   nsPresContext *pctx = presShell ? presShell->GetPresContext() : nullptr;
