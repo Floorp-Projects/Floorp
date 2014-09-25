@@ -4073,17 +4073,21 @@ TypeNewScript::rollbackPartiallyInitializedObjects(JSContext *cx, TypeObject *ty
     Vector<uint32_t, 32> pcOffsets(cx);
     for (ScriptFrameIter iter(cx); !iter.done(); ++iter) {
         pcOffsets.append(iter.script()->pcToOffset(iter.pc()));
-        if (!iter.isConstructing() ||
-            iter.callee() != fun ||
-            !iter.thisv().isObject() ||
-            iter.thisv().toObject().hasLazyType() ||
-            iter.thisv().toObject().type() != type)
+
+        // This frame has no this.
+        if (!iter.isConstructing() || iter.callee() != fun)
+            continue;
+
+        Value thisv = iter.thisv(cx);
+        if (!thisv.isObject() ||
+            thisv.toObject().hasLazyType() ||
+            thisv.toObject().type() != type)
         {
             continue;
         }
 
         // Found a matching frame.
-        RootedObject obj(cx, &iter.thisv().toObject());
+        RootedObject obj(cx, &thisv.toObject());
 
         // Whether all identified 'new' properties have been initialized.
         bool finished = false;
