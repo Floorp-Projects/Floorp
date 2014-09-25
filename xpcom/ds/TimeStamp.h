@@ -32,6 +32,18 @@ typedef uint64_t TimeStampValue;
 class TimeStamp;
 
 /**
+ * Platform-specific implementation details of TimeDuration.
+ */
+class TimeDurationPlatformUtils
+{
+public:
+  static double ToSeconds(int64_t aTicks);
+  static double ToSecondsSigDigits(int64_t aTicks);
+  static int64_t TicksFromMilliseconds(double aMilliseconds);
+  static int64_t ResolutionInTicks();
+};
+
+/**
  * Instances of this class represent the length of an interval of time.
  * Negative durations are allowed, meaning the end is before the start.
  *
@@ -55,11 +67,17 @@ public:
   }
   // Default copy-constructor and assignment are OK
 
-  double ToSeconds() const;
+  double ToSeconds() const
+  {
+    return TimeDurationPlatformUtils::ToSeconds(mValue);
+  }
   // Return a duration value that includes digits of time we think to
   // be significant.  This method should be used when displaying a
   // time to humans.
-  double ToSecondsSigDigits() const;
+  double ToSecondsSigDigits() const
+  {
+    return TimeDurationPlatformUtils::ToSecondsSigDigits(mValue);
+  }
   double ToMilliseconds() const { return ToSeconds() * 1000.0; }
   double ToMicroseconds() const { return ToMilliseconds() * 1000.0; }
 
@@ -72,7 +90,11 @@ public:
   {
     return FromMilliseconds(aSeconds * 1000.0);
   }
-  static TimeDuration FromMilliseconds(double aMilliseconds);
+  static TimeDuration FromMilliseconds(double aMilliseconds)
+  {
+    return FromTicks(
+      TimeDurationPlatformUtils::TicksFromMilliseconds(aMilliseconds));
+  }
   static inline TimeDuration FromMicroseconds(double aMicroseconds)
   {
     return FromMilliseconds(aMicroseconds / 1000.0);
@@ -175,7 +197,9 @@ public:
   // which might be variable.  TimeDurations below this order of
   // magnitude are meaningless, and those at the same order of
   // magnitude or just above are suspect.
-  static TimeDuration Resolution();
+  static TimeDuration Resolution() {
+    return FromTicks(TimeDurationPlatformUtils::ResolutionInTicks());
+  }
 
   // We could define additional operators here:
   // -- convert to/from other time units
