@@ -33,9 +33,9 @@ typedef uint64_t TimeStampValue;
 class TimeStamp;
 
 /**
- * Platform-specific implementation details of TimeDuration.
+ * Platform-specific implementation details of BaseTimeDuration.
  */
-class TimeDurationPlatformUtils
+class BaseTimeDurationPlatformUtils
 {
 public:
   static double ToSeconds(int64_t aTicks);
@@ -53,20 +53,37 @@ public:
  * system-dependent unit when building with system clocks.  The
  * system-dependent unit must be constant, otherwise the semantics of
  * this class would be broken.
+ *
+ * The ValueCalculator template parameter determines how arithmetic
+ * operations are performed on the integer count of ticks (mValue).
  */
-class TimeDuration
+template <typename ValueCalculator>
+class BaseTimeDuration
 {
 public:
   // The default duration is 0.
-  MOZ_CONSTEXPR TimeDuration() : mValue(0) {}
+  MOZ_CONSTEXPR BaseTimeDuration() : mValue(0) {}
   // Allow construction using '0' as the initial value, for readability,
   // but no other numbers (so we don't have any implicit unit conversions).
   struct _SomethingVeryRandomHere;
-  MOZ_IMPLICIT TimeDuration(_SomethingVeryRandomHere* aZero) : mValue(0)
+  MOZ_IMPLICIT BaseTimeDuration(_SomethingVeryRandomHere* aZero) : mValue(0)
   {
     MOZ_ASSERT(!aZero, "Who's playing funny games here?");
   }
   // Default copy-constructor and assignment are OK
+
+  // Converting copy-constructor and assignment operator
+  template <typename E>
+  explicit BaseTimeDuration(const BaseTimeDuration<E>& aOther)
+    : mValue(aOther.mValue)
+  { }
+
+  template <typename E>
+  BaseTimeDuration& operator=(const BaseTimeDuration<E>& aOther)
+  {
+    mValue = aOther.mValue;
+    return *this;
+  }
 
   double ToSeconds() const
   {
@@ -76,7 +93,7 @@ public:
     if (mValue == INT64_MIN) {
       return NegativeInfinity<double>();
     }
-    return TimeDurationPlatformUtils::ToSeconds(mValue);
+    return BaseTimeDurationPlatformUtils::ToSeconds(mValue);
   }
   // Return a duration value that includes digits of time we think to
   // be significant.  This method should be used when displaying a
@@ -89,7 +106,7 @@ public:
     if (mValue == INT64_MIN) {
       return NegativeInfinity<double>();
     }
-    return TimeDurationPlatformUtils::ToSecondsSigDigits(mValue);
+    return BaseTimeDurationPlatformUtils::ToSecondsSigDigits(mValue);
   }
   double ToMilliseconds() const { return ToSeconds() * 1000.0; }
   double ToMicroseconds() const { return ToMilliseconds() * 1000.0; }
@@ -99,11 +116,11 @@ public:
   // mValue do not allow us to represent durations of that length,
   // long durations are clamped to the max/min representable value
   // instead of overflowing.
-  static inline TimeDuration FromSeconds(double aSeconds)
+  static inline BaseTimeDuration FromSeconds(double aSeconds)
   {
     return FromMilliseconds(aSeconds * 1000.0);
   }
-  static TimeDuration FromMilliseconds(double aMilliseconds)
+  static BaseTimeDuration FromMilliseconds(double aMilliseconds)
   {
     if (aMilliseconds == PositiveInfinity<double>()) {
       return Forever();
@@ -112,32 +129,32 @@ public:
       return FromTicks(INT64_MIN);
     }
     return FromTicks(
-      TimeDurationPlatformUtils::TicksFromMilliseconds(aMilliseconds));
+      BaseTimeDurationPlatformUtils::TicksFromMilliseconds(aMilliseconds));
   }
-  static inline TimeDuration FromMicroseconds(double aMicroseconds)
+  static inline BaseTimeDuration FromMicroseconds(double aMicroseconds)
   {
     return FromMilliseconds(aMicroseconds / 1000.0);
   }
 
-  static TimeDuration Forever()
+  static BaseTimeDuration Forever()
   {
     return FromTicks(INT64_MAX);
   }
 
-  TimeDuration operator+(const TimeDuration& aOther) const
+  BaseTimeDuration operator+(const BaseTimeDuration& aOther) const
   {
-    return TimeDuration::FromTicks(mValue + aOther.mValue);
+    return FromTicks(mValue + aOther.mValue);
   }
-  TimeDuration operator-(const TimeDuration& aOther) const
+  BaseTimeDuration operator-(const BaseTimeDuration& aOther) const
   {
-    return TimeDuration::FromTicks(mValue - aOther.mValue);
+    return FromTicks(mValue - aOther.mValue);
   }
-  TimeDuration& operator+=(const TimeDuration& aOther)
+  BaseTimeDuration& operator+=(const BaseTimeDuration& aOther)
   {
     mValue += aOther.mValue;
     return *this;
   }
-  TimeDuration& operator-=(const TimeDuration& aOther)
+  BaseTimeDuration& operator-=(const BaseTimeDuration& aOther)
   {
     mValue -= aOther.mValue;
     return *this;
@@ -146,78 +163,84 @@ public:
 private:
   // Block double multiplier (slower, imprecise if long duration) - Bug 853398.
   // If required, use MultDouble explicitly and with care.
-  TimeDuration operator*(const double aMultiplier) const MOZ_DELETE;
+  BaseTimeDuration operator*(const double aMultiplier) const MOZ_DELETE;
 
 public:
-  TimeDuration MultDouble(double aMultiplier) const
+  BaseTimeDuration MultDouble(double aMultiplier) const
   {
-    return TimeDuration::FromTicks(static_cast<int64_t>(mValue * aMultiplier));
+    return FromTicks(static_cast<int64_t>(mValue * aMultiplier));
   }
-  TimeDuration operator*(const int32_t aMultiplier) const
+  BaseTimeDuration operator*(const int32_t aMultiplier) const
   {
-    return TimeDuration::FromTicks(mValue * int64_t(aMultiplier));
+    return FromTicks(mValue * int64_t(aMultiplier));
   }
-  TimeDuration operator*(const uint32_t aMultiplier) const
+  BaseTimeDuration operator*(const uint32_t aMultiplier) const
   {
-    return TimeDuration::FromTicks(mValue * int64_t(aMultiplier));
+    return FromTicks(mValue * int64_t(aMultiplier));
   }
-  TimeDuration operator*(const int64_t aMultiplier) const
+  BaseTimeDuration operator*(const int64_t aMultiplier) const
   {
-    return TimeDuration::FromTicks(mValue * aMultiplier);
+    return FromTicks(mValue * aMultiplier);
   }
-  TimeDuration operator*(const uint64_t aMultiplier) const
+  BaseTimeDuration operator*(const uint64_t aMultiplier) const
   {
     if (aMultiplier > INT64_MAX) {
-      NS_WARNING("Out-of-range multiplier when multiplying TimeDuration");
-      return TimeDuration::Forever();
+      NS_WARNING("Out-of-range multiplier when multiplying BaseTimeDuration");
+      return Forever();
     }
-    return TimeDuration::FromTicks(mValue * int64_t(aMultiplier));
+    return FromTicks(mValue * int64_t(aMultiplier));
   }
-  TimeDuration operator/(const int64_t aDivisor) const
+  BaseTimeDuration operator/(const int64_t aDivisor) const
   {
-    return TimeDuration::FromTicks(mValue / aDivisor);
+    return FromTicks(mValue / aDivisor);
   }
-  double operator/(const TimeDuration& aOther) const
+  double operator/(const BaseTimeDuration& aOther) const
   {
     return static_cast<double>(mValue) / aOther.mValue;
   }
-  TimeDuration operator%(const TimeDuration& aOther) const
+  BaseTimeDuration operator%(const BaseTimeDuration& aOther) const
   {
     MOZ_ASSERT(aOther.mValue != 0, "Division by zero");
-    return TimeDuration::FromTicks(mValue % aOther.mValue);
+    return FromTicks(mValue % aOther.mValue);
   }
 
-  bool operator<(const TimeDuration& aOther) const
+  template<typename E>
+  bool operator<(const BaseTimeDuration<E>& aOther) const
   {
     return mValue < aOther.mValue;
   }
-  bool operator<=(const TimeDuration& aOther) const
+  template<typename E>
+  bool operator<=(const BaseTimeDuration<E>& aOther) const
   {
     return mValue <= aOther.mValue;
   }
-  bool operator>=(const TimeDuration& aOther) const
+  template<typename E>
+  bool operator>=(const BaseTimeDuration<E>& aOther) const
   {
     return mValue >= aOther.mValue;
   }
-  bool operator>(const TimeDuration& aOther) const
+  template<typename E>
+  bool operator>(const BaseTimeDuration<E>& aOther) const
   {
     return mValue > aOther.mValue;
   }
-  bool operator==(const TimeDuration& aOther) const
+  template<typename E>
+  bool operator==(const BaseTimeDuration<E>& aOther) const
   {
     return mValue == aOther.mValue;
   }
-  bool operator!=(const TimeDuration& aOther) const
+  template<typename E>
+  bool operator!=(const BaseTimeDuration<E>& aOther) const
   {
     return mValue != aOther.mValue;
   }
 
   // Return a best guess at the system's current timing resolution,
-  // which might be variable.  TimeDurations below this order of
+  // which might be variable.  BaseTimeDurations below this order of
   // magnitude are meaningless, and those at the same order of
   // magnitude or just above are suspect.
-  static TimeDuration Resolution() {
-    return FromTicks(TimeDurationPlatformUtils::ResolutionInTicks());
+  static BaseTimeDuration Resolution() {
+    return FromTicks(BaseTimeDurationPlatformUtils::ResolutionInTicks());
   }
 
   // We could define additional operators here:
@@ -229,34 +252,42 @@ public:
 
 private:
   friend class TimeStamp;
-  friend struct IPC::ParamTraits<mozilla::TimeDuration>;
+  friend struct IPC::ParamTraits<mozilla::BaseTimeDuration<ValueCalculator>>;
+  template <typename>
+  friend class BaseTimeDuration;
 
-  static TimeDuration FromTicks(int64_t aTicks)
+  static BaseTimeDuration FromTicks(int64_t aTicks)
   {
-    TimeDuration t;
+    BaseTimeDuration t;
     t.mValue = aTicks;
     return t;
   }
 
-  static TimeDuration FromTicks(double aTicks)
+  static BaseTimeDuration FromTicks(double aTicks)
   {
     // NOTE: this MUST be a >= test, because int64_t(double(INT64_MAX))
     // overflows and gives INT64_MIN.
     if (aTicks >= double(INT64_MAX)) {
-      return TimeDuration::FromTicks(INT64_MAX);
+      return FromTicks(INT64_MAX);
     }
 
     // This MUST be a <= test.
     if (aTicks <= double(INT64_MIN)) {
-      return TimeDuration::FromTicks(INT64_MIN);
+      return FromTicks(INT64_MIN);
     }
 
-    return TimeDuration::FromTicks(int64_t(aTicks));
+    return FromTicks(int64_t(aTicks));
   }
 
   // Duration, result is implementation-specific difference of two TimeStamps
   int64_t mValue;
 };
+
+// FIXME: To be filled-in a subsequent patch in this series.
+class TimeDurationValueCalculator
+{ };
+
+typedef BaseTimeDuration<TimeDurationValueCalculator> TimeDuration;
 
 /**
  * Instances of this class represent moments in time, or a special
