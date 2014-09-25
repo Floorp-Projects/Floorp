@@ -17,6 +17,7 @@ EXTRA_JS_MODULES += [
     'ContentSearch.jsm',
     'ContentWebRTC.jsm',
     'CustomizationTabPreloader.jsm',
+    'E10SUtils.jsm',
     'Feeds.jsm',
     'FormSubmitObserver.jsm',
     'FormValidationHandler.jsm',
