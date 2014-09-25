@@ -5,6 +5,7 @@
 package org.mozilla.search.autocomplete;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
@@ -127,18 +128,22 @@ public class SearchBar extends FrameLayout {
     }
 
     public void setEngine(SearchEngine engine) {
-        int color = engine.getColor();
-        if (color == Color.TRANSPARENT) {
-            // Fall back to default orange if the search engine doesn't specify a color.
-            color = getResources().getColor(R.color.highlight_orange);
-        }
-        // Update the focused background color.
-        focusedBackground.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.MULTIPLY));
-
         final String iconURL = engine.getIconURL();
-        final BitmapDrawable d = new BitmapDrawable(getResources(), BitmapUtils.getBitmapFromDataURI(iconURL));
+        final Bitmap bitmap = BitmapUtils.getBitmapFromDataURI(iconURL);
+        final BitmapDrawable d = new BitmapDrawable(getResources(), bitmap);
         engineIcon.setImageDrawable(d);
         engineIcon.setContentDescription(engine.getName());
+
+        // Update the focused background color.
+        int color = BitmapUtils.getDominantColor(bitmap);
+
+        // BitmapUtils#getDominantColor ignores black and white pixels, but it will
+        // return white if no dominant color was found. We don't want to create a
+        // white underline for the search bar, so we default to black instead.
+        if (color == Color.WHITE) {
+            color = Color.BLACK;
+        }
+        focusedBackground.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.MULTIPLY));
 
         editText.setHint(getResources().getString(R.string.search_bar_hint, engine.getName()));
     }

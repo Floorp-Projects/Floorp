@@ -633,6 +633,7 @@ exports.AppManager = AppManager = {
     discovery.on("devtools-device-added", this._updateWiFiRuntimes);
     discovery.on("devtools-device-updated", this._updateWiFiRuntimes);
     discovery.on("devtools-device-removed", this._updateWiFiRuntimes);
+    this._updateWiFiRuntimes();
   },
   untrackWiFiRuntimes: function() {
     if (!this.isWiFiScanningEnabled) {

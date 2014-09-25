@@ -9,11 +9,6 @@
 %tabBrowserDTD;
 ]>
 
-# MAKE_E10S_WORK surrounds code needed to have the front-end try to be smart
-# about using non-remote browsers for loading certain URIs when remote tabs
-# (browser.tabs.remote) are enabled.
-#define MAKE_E10S_WORK 1
-
 <bindings id="tabBrowserBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -1474,48 +1469,17 @@
         </body>
       </method>
 
-#ifdef MAKE_E10S_WORK
       <method name="updateBrowserRemotenessByURL">
         <parameter name="aBrowser"/>
         <parameter name="aURL"/>
         <body>
           <![CDATA[
-            let shouldBeRemote = this._shouldBrowserBeRemote(aURL);
+            let shouldBeRemote = gMultiProcessBrowser &&
+                                 E10SUtils.shouldBrowserBeRemote(aURL);
             return this.updateBrowserRemoteness(aBrowser, shouldBeRemote);
           ]]>
         </body>
       </method>
-
-      <!--
-        Returns true if we want to load the content for this URL in a
-        remote process. Eventually this should just check whether aURL
-        is unprivileged. Right now, though, we would like to load
-        some unprivileged URLs (like about:neterror) in the main
-        process since they interact with chrome code through
-        BrowserOnClick.
-      -->
-      <method name="_shouldBrowserBeRemote">
-        <parameter name="aURL"/>
-        <body>
-          <![CDATA[
-            if (!gMultiProcessBrowser)
-              return false;
-
-            // loadURI in browser.xml treats null as about:blank
-            if (!aURL)
-              aURL = "about:blank";
-
-            if (aURL.startsWith("about:") &&
-                aURL.toLowerCase() != "about:home" &&
-                aURL.toLowerCase() != "about:blank") {
-              return false;
-            }
-
-            return true;
-          ]]>
-        </body>
-      </method>
-#endif
 
       <method name="addTab">
         <parameter name="aURI"/>
@@ -1558,11 +1522,7 @@
             t.setAttribute("onerror", "this.removeAttribute('image');");
             t.className = "tabbrowser-tab";
 
-#ifdef MAKE_E10S_WORK
-            let remote = this._shouldBrowserBeRemote(aURI);
-#else
-            let remote = gMultiProcessBrowser;
-#endif
+            let remote = gMultiProcessBrowser && E10SUtils.shouldBrowserBeRemote(aURI);
             if (remote)
               t.setAttribute("remote", "true");
 
@@ -2790,18 +2750,7 @@
         <parameter name="aCharset"/>
         <body>
           <![CDATA[
-#ifdef MAKE_E10S_WORK
-            this.updateBrowserRemotenessByURL(this.mCurrentBrowser, aURI);
-            try {
-#endif
             return this.mCurrentBrowser.loadURI(aURI, aReferrerURI, aCharset);
-#ifdef MAKE_E10S_WORK
-            } catch (e) {
-              let url = this.mCurrentBrowser.currentURI.spec;
-              this.updateBrowserRemotenessByURL(this.mCurrentBrowser, url);
-              throw e;
-            }
-#endif
           ]]>
         </body>
       </method>
@@ -2815,18 +2764,7 @@
         <parameter name="aPostData"/>
         <body>
           <![CDATA[
-#ifdef MAKE_E10S_WORK
-            this.updateBrowserRemotenessByURL(this.mCurrentBrowser, aURI);
-            try {
-#endif
             return this.mCurrentBrowser.loadURIWithFlags(aURI, aFlags, aReferrerURI, aCharset, aPostData);
-#ifdef MAKE_E10S_WORK
-            } catch (e) {
-              let url = this.mCurrentBrowser.currentURI.spec;
-              this.updateBrowserRemotenessByURL(this.mCurrentBrowser, url);
-              throw e;
-            }
-#endif
           ]]>
         </body>
       </method>

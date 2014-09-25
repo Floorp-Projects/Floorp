@@ -28,6 +28,8 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.search.providers.SearchEngine;
 
+import java.net.URISyntaxException;
+
 public class PostSearchFragment extends Fragment {
 
     private static final String LOG_TAG = "PostSearchFragment";
@@ -89,25 +91,38 @@ public class PostSearchFragment extends Fragment {
         public void onPageStarted(WebView view, final String url, Bitmap favicon) {
             // Reset the error state.
             networkError = false;
+        }
 
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, String url) {
             // We keep URLs in the webview that are either about:blank or a search engine result page.
             if (TextUtils.equals(url, Constants.ABOUT_BLANK) || engine.isSearchResultsPage(url)) {
-                // Keeping the URL in the webview is a noop.
-                return;
+                return false;
             }
 
-            webview.stopLoading();
+            try {
+                // If the url URI does not have an intent scheme, the intent data will be the entire
+                // URI and its action will be ACTION_VIEW.
+                final Intent i = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
 
-            Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL,
-                    TelemetryContract.Method.CONTENT, "search-result");
+                // If the intent URI didn't specify a package, open this in Fennec.
+                if (i.getPackage() == null) {
+                    i.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.BROWSER_INTENT_CLASS_NAME);
+                    Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL,
+                            TelemetryContract.Method.CONTENT, "search-result");
+                } else {
+                    Telemetry.sendUIEvent(TelemetryContract.Event.LAUNCH,
+                            TelemetryContract.Method.INTENT, "search-result");
+                }
 
-            final Intent i = new Intent(Intent.ACTION_VIEW);
+                startActivity(i);
+                return true;
+            } catch (URISyntaxException e) {
+                Log.e(LOG_TAG, "Error parsing intent URI", e);
+            }
 
-            // This sends the URL directly to fennec, rather than to Android.
-            i.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.BROWSER_INTENT_CLASS_NAME);
-            i.setData(Uri.parse(url));
-            startActivity(i);
-        }
+            return false;
+}
 
         @Override
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {

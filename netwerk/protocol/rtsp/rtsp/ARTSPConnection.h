@@ -62,12 +62,12 @@ private:
     };
 
     enum {
-        kWhatConnect            = 'conn',
-        kWhatDisconnect         = 'disc',
-        kWhatCompleteConnection = 'comc',
-        kWhatSendRequest        = 'sreq',
-        kWhatReceiveResponse    = 'rres',
-        kWhatObserveBinaryData  = 'obin',
+        kWhatConnect = 1,
+        kWhatDisconnect,
+        kWhatCompleteConnection,
+        kWhatSendRequest,
+        kWhatReceiveResponse,
+        kWhatObserveBinaryData,
     };
 
     enum AuthType {

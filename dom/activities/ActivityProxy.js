@@ -56,7 +56,15 @@ ActivityProxy.prototype = {
     // Only let certified apps enumerate providers for this filter.
     if (aOptions.getFilterResults === true &&
         principal.appStatus != Ci.nsIPrincipal.APP_STATUS_CERTIFIED) {
-      Services.DOMRequest.fireError(this.activity, "SecurityError");
+      Services.DOMRequest.fireErrorAsync(this.activity, "SecurityError");
+      Services.obs.notifyObservers(null, "Activity:Error", null);
+      return;
+    }
+
+    // Only let certified app to initiate this activitiy.
+    if (aOptions.name === 'internal-system-engineering-mode' &&
+        principal.appStatus != Ci.nsIPrincipal.APP_STATUS_CERTIFIED) {
+      Services.DOMRequest.fireErrorAsync(this.activity, "SecurityError");
       Services.obs.notifyObservers(null, "Activity:Error", null);
       return;
     }

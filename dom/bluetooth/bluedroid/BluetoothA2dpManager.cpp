@@ -238,7 +238,7 @@ BluetoothA2dpManager::ResetAvrcp()
   mMediaNumber = 0;
   mTotalMediaCount = 0;
   mPosition = 0;
-  mPlayStatus = ControlPlayStatus::PLAYSTATUS_UNKNOWN;
+  mPlayStatus = ControlPlayStatus::PLAYSTATUS_STOPPED;
 }
 
 /*
