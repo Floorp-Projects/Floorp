@@ -365,6 +365,7 @@ ValidateSimdOperation(JSContext *cx, AsmJSModule::Global &global, HandleValue gl
           case AsmJSSimdOperation_withZ: native = simd_int32x4_withZ; break;
           case AsmJSSimdOperation_withW: native = simd_int32x4_withW; break;
           case AsmJSSimdOperation_fromFloat32x4: native = simd_int32x4_fromFloat32x4; break;
+          case AsmJSSimdOperation_fromFloat32x4Bits: native = simd_int32x4_fromFloat32x4Bits; break;
           case AsmJSSimdOperation_lessThanOrEqual:
           case AsmJSSimdOperation_greaterThanOrEqual:
           case AsmJSSimdOperation_notEqual:
@@ -373,6 +374,7 @@ ValidateSimdOperation(JSContext *cx, AsmJSModule::Global &global, HandleValue gl
           case AsmJSSimdOperation_max:
           case AsmJSSimdOperation_min:
           case AsmJSSimdOperation_fromInt32x4:
+          case AsmJSSimdOperation_fromInt32x4Bits:
             MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("shouldn't have been validated in the first "
                                                     "place");
         }
@@ -401,7 +403,9 @@ ValidateSimdOperation(JSContext *cx, AsmJSModule::Global &global, HandleValue gl
           case AsmJSSimdOperation_withZ: native = simd_float32x4_withZ; break;
           case AsmJSSimdOperation_withW: native = simd_float32x4_withW; break;
           case AsmJSSimdOperation_fromInt32x4: native = simd_float32x4_fromInt32x4; break;
+          case AsmJSSimdOperation_fromInt32x4Bits: native = simd_float32x4_fromInt32x4Bits; break;
           case AsmJSSimdOperation_fromFloat32x4:
+          case AsmJSSimdOperation_fromFloat32x4Bits:
              MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("shouldn't have been validated in the first "
                                                      "place");
         }
