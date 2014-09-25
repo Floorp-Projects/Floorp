@@ -549,6 +549,35 @@ JSObject::create(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::Initi
 }
 
 /* static */ inline JSObject *
+JSObject::copy(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
+               js::HandleObject templateObject)
+{
+    js::RootedShape shape(cx, templateObject->lastProperty());
+    js::RootedTypeObject type(cx, templateObject->type());
+    MOZ_ASSERT(!templateObject->denseElementsAreCopyOnWrite());
+
+    JSObject *obj = create(cx, kind, heap, shape, type);
+    if (!obj)
+        return nullptr;
+
+    size_t span = shape->slotSpan();
+    if (span) {
+        uint32_t numFixed = templateObject->numFixedSlots();
+        const js::Value *fixed = &templateObject->getSlot(0);
+        MOZ_ASSERT(numFixed <= span);
+        obj->copySlotRange(0, fixed, numFixed);
+
+        if (numFixed < span) {
+            uint32_t numSlots = span - numFixed;
+            const js::Value *slots = &templateObject->getSlot(numFixed);
+            obj->copySlotRange(numFixed, slots, numSlots);
+        }
+    }
+
+    return obj;
+}
+
+/* static */ inline JSObject *
 JSObject::createArrayInternal(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::InitialHeap heap,
                               js::HandleShape shape, js::HandleTypeObject type)
 {
