@@ -73,6 +73,7 @@ SpdySession3::SpdySession3(nsISocketTransport *aSocketTransport)
   , mLastReadEpoch(PR_IntervalNow())
   , mPingSentEpoch(0)
   , mNextPingID(1)
+  , mPreviousUsed(false)
 {
   MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
@@ -224,8 +225,14 @@ SpdySession3::ReadTimeoutTick(PRIntervalTime now)
 
     if ((now - mLastReadEpoch) < mPingThreshold) {
       // recent activity means ping is not an issue
-      if (mPingSentEpoch)
+      if (mPingSentEpoch) {
         mPingSentEpoch = 0;
+        if (mPreviousUsed) {
+          // restore the former value
+          mPingThreshold = mPreviousPingThreshold;
+          mPreviousUsed = false;
+        }
+      }
 
       return PR_IntervalToSeconds(mPingThreshold) -
         PR_IntervalToSeconds(now - mLastReadEpoch);
@@ -2812,6 +2819,35 @@ SpdySession3::PushBack(const char *buf, uint32_t len)
 {
   return mConnection->PushBack(buf, len);
 }
+
+void
+SpdySession3::SendPing()
+{
+  MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+
+  if (mPreviousUsed) {
+    // alredy in progress, get out
+    return;
+  }
+
+  mPingSentEpoch = PR_IntervalNow();
+  if (!mPingSentEpoch) {
+    mPingSentEpoch = 1; // avoid the 0 sentinel value
+  }
+  if (!mPingThreshold ||
+      (mPingThreshold > gHttpHandler->NetworkChangedTimeout())) {
+    mPreviousPingThreshold = mPingThreshold;
+    mPreviousUsed = true;
+    mPingThreshold = gHttpHandler->NetworkChangedTimeout();
+  }
+
+  GeneratePing(mNextPingID);
+  mNextPingID += 2;
+  ResumeRecv();
+
+  gHttpHandler->ConnMgr()->ActivateTimeoutTick();
+}
+
 
 } // namespace mozilla::net
 } // namespace mozilla

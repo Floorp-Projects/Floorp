@@ -900,13 +900,13 @@ js_CopyErrorObject(JSContext *cx, Handle<ErrorObject*> err)
     }
 
     RootedString message(cx, err->getMessage());
-    if (message && !cx->compartment()->wrap(cx, message.address()))
+    if (message && !cx->compartment()->wrap(cx, &message))
         return nullptr;
     RootedString fileName(cx, err->fileName(cx));
-    if (!cx->compartment()->wrap(cx, fileName.address()))
+    if (!cx->compartment()->wrap(cx, &fileName))
         return nullptr;
     RootedString stack(cx, err->stack(cx));
-    if (!cx->compartment()->wrap(cx, stack.address()))
+    if (!cx->compartment()->wrap(cx, &stack))
         return nullptr;
     uint32_t lineNumber = err->lineNumber();
     uint32_t columnNumber = err->columnNumber();

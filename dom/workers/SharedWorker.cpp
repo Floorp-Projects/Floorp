@@ -75,7 +75,7 @@ SharedWorker::Constructor(const GlobalObject& aGlobal, JSContext* aCx,
   return sharedWorker.forget();
 }
 
-already_AddRefed<MessagePort>
+already_AddRefed<mozilla::dom::workers::MessagePort>
 SharedWorker::Port()
 {
   AssertIsOnMainThread();

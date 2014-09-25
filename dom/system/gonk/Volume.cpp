@@ -378,7 +378,7 @@ Volume::HandleVoldResponse(int aResponseCode, nsCWhitespaceTokenizer& aTokenizer
   // The volume name will have already been parsed, and the tokenizer will point
   // to the token after the volume name
   switch (aResponseCode) {
-    case ResponseCode::VolumeListResult: {
+    case ::ResponseCode::VolumeListResult: {
       // Each line will look something like:
       //
       //  sdcard /mnt/sdcard 1
@@ -397,7 +397,7 @@ Volume::HandleVoldResponse(int aResponseCode, nsCWhitespaceTokenizer& aTokenizer
       break;
     }
 
-    case ResponseCode::VolumeStateChange: {
+    case ::ResponseCode::VolumeStateChange: {
       // Format of the line looks something like:
       //
       //  Volume sdcard /mnt/sdcard state changed from 7 (Shared-Unmounted) to 1 (Idle-Unmounted)
@@ -415,12 +415,12 @@ Volume::HandleVoldResponse(int aResponseCode, nsCWhitespaceTokenizer& aTokenizer
       break;
     }
 
-    case ResponseCode::VolumeDiskInserted:
+    case ::ResponseCode::VolumeDiskInserted:
       SetMediaPresent(true);
       break;
 
-    case ResponseCode::VolumeDiskRemoved: // fall-thru
-    case ResponseCode::VolumeBadRemoval:
+    case ::ResponseCode::VolumeDiskRemoved: // fall-thru
+    case ::ResponseCode::VolumeBadRemoval:
       SetMediaPresent(false);
       break;
 

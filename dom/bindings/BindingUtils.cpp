@@ -1699,7 +1699,7 @@ NativeToString(JSContext* cx, JS::Handle<JSObject*> wrapper,
       if (!JS_WrapValue(cx, &toString)) {
         return false;
       }
-      MOZ_ASSERT(JS_ObjectIsCallable(cx, &toString.toObject()));
+      MOZ_ASSERT(JS::IsCallable(&toString.toObject()));
       JS::Rooted<JS::Value> toStringResult(cx);
       if (JS_CallFunctionValue(cx, obj, toString, JS::HandleValueArray::empty(),
                                &toStringResult)) {

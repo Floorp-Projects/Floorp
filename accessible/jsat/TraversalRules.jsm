@@ -104,7 +104,7 @@ var gSimpleMatchFunc = function gSimpleMatchFunc(aAccessible) {
   // or has a flat subtree.
   function isSingleLineage(acc) {
     for (let child = acc; child; child = child.firstChild) {
-      if (child.childCount > 1) {
+      if (Utils.visibleChildCount(child) > 1) {
         return false;
       }
     }
@@ -118,7 +118,7 @@ var gSimpleMatchFunc = function gSimpleMatchFunc(aAccessible) {
       if ([Roles.TEXT_LEAF, Roles.STATICTEXT].indexOf(child.role) >= 0) {
         continue;
       }
-      if (child.childCount > 0 || child.actionCount > 0) {
+      if (Utils.visibleChildCount(child) > 0 || child.actionCount > 0) {
         return false;
       }
     }

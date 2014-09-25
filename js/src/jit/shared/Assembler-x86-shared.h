@@ -1496,6 +1496,14 @@ class AssemblerX86Shared : public AssemblerShared
         JS_ASSERT(HasSSE2());
         masm.cvtsi2sd_rr(src.code(), dest.code());
     }
+    void cvttps2dq(FloatRegister src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.cvttps2dq_rr(src.code(), dest.code());
+    }
+    void cvtdq2ps(FloatRegister src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.cvtdq2ps_rr(src.code(), dest.code());
+    }
     void movmskpd(FloatRegister src, Register dest) {
         JS_ASSERT(HasSSE2());
         masm.movmskpd_rr(src.code(), dest.code());

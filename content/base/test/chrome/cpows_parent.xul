@@ -223,7 +223,7 @@
       // (the privileged junk scope, but we don't have a good way to test for that
       // specifically).
       is(unprivilegedObject.expando, undefined, "parent->child references should get Xrays");
-      todo_is(unprivilegedObject.wrappedJSObject.expando, 42, "parent->child references should get waivable Xrays - see bug 1065811");
+      is(unprivilegedObject.wrappedJSObject.expando, 42, "parent->child references should get waivable Xrays");
 
       // Send an object to the child to let it verify invariants in the other direction.
       function passMe() { return 42; };

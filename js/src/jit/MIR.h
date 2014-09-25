@@ -1361,6 +1361,62 @@ class MSimdConstant : public MNullaryInstruction
     }
 };
 
+// Converts all lanes of a given vector into the type of another vector
+class MSimdConvert : public MUnaryInstruction
+{
+    MSimdConvert(MDefinition *obj, MIRType fromType, MIRType toType)
+      : MUnaryInstruction(obj)
+    {
+        MOZ_ASSERT(IsSimdType(obj->type()) && fromType == obj->type());
+        MOZ_ASSERT(IsSimdType(toType));
+        setResultType(toType);
+    }
+
+  public:
+    INSTRUCTION_HEADER(SimdConvert);
+    static MSimdConvert *NewAsmJS(TempAllocator &alloc, MDefinition *obj, MIRType fromType,
+                                  MIRType toType)
+    {
+        return new(alloc) MSimdConvert(obj, fromType, toType);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    ALLOW_CLONE(MSimdConvert)
+};
+
+// Casts bits of a vector input to another SIMD type (doesn't generate code).
+class MSimdReinterpretCast : public MUnaryInstruction
+{
+    MSimdReinterpretCast(MDefinition *obj, MIRType fromType, MIRType toType)
+      : MUnaryInstruction(obj)
+    {
+        MOZ_ASSERT(IsSimdType(obj->type()) && fromType == obj->type());
+        MOZ_ASSERT(IsSimdType(toType));
+        setResultType(toType);
+    }
+
+  public:
+    INSTRUCTION_HEADER(SimdReinterpretCast);
+    static MSimdReinterpretCast* NewAsmJS(TempAllocator &alloc, MDefinition *obj, MIRType fromType,
+                                          MIRType toType)
+    {
+        return new(alloc) MSimdReinterpretCast(obj, fromType, toType);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    ALLOW_CLONE(MSimdReinterpretCast)
+};
+
 // Extracts a lane element from a given vector type, given by its lane symbol.
 class MSimdExtractElement : public MUnaryInstruction
 {
@@ -3573,31 +3629,30 @@ class MAssertRange
 // Caller-side allocation of |this| for |new|:
 // Given a templateobject, construct |this| for JSOP_NEW
 class MCreateThisWithTemplate
-  : public MNullaryInstruction
+  : public MUnaryInstruction
 {
-    // Template for |this|, provided by TI
-    AlwaysTenuredObject templateObject_;
     gc::InitialHeap initialHeap_;
 
-    MCreateThisWithTemplate(types::CompilerConstraintList *constraints, JSObject *templateObject,
+    MCreateThisWithTemplate(types::CompilerConstraintList *constraints, MConstant *templateConst,
                             gc::InitialHeap initialHeap)
-      : templateObject_(templateObject),
+      : MUnaryInstruction(templateConst),
         initialHeap_(initialHeap)
     {
         setResultType(MIRType_Object);
-        setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
+        setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject()));
     }
 
   public:
     INSTRUCTION_HEADER(CreateThisWithTemplate);
     static MCreateThisWithTemplate *New(TempAllocator &alloc, types::CompilerConstraintList *constraints,
-                                        JSObject *templateObject, gc::InitialHeap initialHeap)
+                                        MConstant *templateConst, gc::InitialHeap initialHeap)
     {
-        return new(alloc) MCreateThisWithTemplate(constraints, templateObject, initialHeap);
+        return new(alloc) MCreateThisWithTemplate(constraints, templateConst, initialHeap);
     }
 
+    // Template for |this|, provided by TI.
     JSObject *templateObject() const {
-        return templateObject_;
+        return &getOperand(0)->toConstant()->value().toObject();
     }
 
     gc::InitialHeap initialHeap() const {
@@ -3608,6 +3663,9 @@ class MCreateThisWithTemplate
     AliasSet getAliasSet() const {
         return AliasSet::None();
     }
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const;
 };
 
 // Caller-side allocation of |this| for |new|:

@@ -355,6 +355,10 @@ public:
     void FramebufferTexture2D(GLenum target, GLenum attachment,
                               GLenum textarget, WebGLTexture *tobj,
                               GLint level);
+
+    // Framebuffer validation
+    bool ValidateFramebufferAttachment(GLenum attachment, const char* funcName);
+
     void FrontFace(GLenum mode);
     void GenerateMipmap(GLenum target);
     already_AddRefed<WebGLActiveInfo> GetActiveAttrib(WebGLProgram *prog,
