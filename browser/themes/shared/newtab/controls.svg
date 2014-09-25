@@ -6,9 +6,9 @@
      xmlns:xlink="http://www.w3.org/1999/xlink"
      x="0"
      y="0"
-     width="256"
+     width="288"
      height="32"
-     viewBox="0 0 256 32">
+     viewBox="0 0 288 32">
 
   <defs>
     <style type="text/css"><![CDATA[
@@ -16,6 +16,10 @@
 
       .glyphShape-style {
         fill: #737373;
+      }
+
+      .glyphShape-style-pin {
+        fill: #b4b4b4;
       }
 
       .glyphShape-style-hover-gear {
@@ -103,6 +107,10 @@
     <use xlink:href="#glyphShape-circle" class="glyphShape-style-circle-dropshadow" />
     <use xlink:href="#glyphShape-circle" class="glyphShape-style-circle" />
     <use xlink:href="#glyphShape-delete" class="glyphShape-style-hover-active" />
+  </g>
+
+  <g id="icon-pin-default" transform="translate(256)">
+    <use xlink:href="#glyphShape-pin"    class="glyphShape-style-pin" />
   </g>
 
 </svg>
