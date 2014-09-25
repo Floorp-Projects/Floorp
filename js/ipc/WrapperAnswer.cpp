@@ -636,6 +636,47 @@ WrapperAnswer::AnswerDOMInstanceOf(const ObjectId &objId, const int &prototypeID
 }
 
 bool
+WrapperAnswer::AnswerIsCallable(const ObjectId &objId, bool *result)
+{
+    AutoSafeJSContext cx;
+    JSAutoRequest request(cx);
+
+    RootedObject obj(cx, findObjectById(cx, objId));
+    if (!obj) {
+        // This is very unfortunate, but we have no choice.
+        *result = false;
+        return true;
+    }
+    JSAutoCompartment ac(cx, obj); // Not really necessary here, but be safe.
+
+    LOG("%s.isCallable()", ReceiverObj(objId));
+
+    *result = JS::IsCallable(obj);
+    return true;
+}
+
+bool
+WrapperAnswer::AnswerIsConstructor(const ObjectId &objId, bool *result)
+{
+    AutoSafeJSContext cx;
+    JSAutoRequest request(cx);
+
+    RootedObject obj(cx, findObjectById(cx, objId));
+    if (!obj) {
+        // This is very unfortunate, but we have no choice.
+        *result = false;
+        return true;
+    }
+    JSAutoCompartment ac(cx, obj); // Not really necessary here, but be safe.
+
+    LOG("%s.isConstructor()", ReceiverObj(objId));
+
+    *result = JS::IsConstructor(obj);
+    return true;
+}
+
+
+bool
 WrapperAnswer::RecvDropObject(const ObjectId &objId)
 {
     JSObject *obj = findObjectById(objId);
