@@ -630,12 +630,12 @@ class UninitializedLexicalObject : public ScopeObject
 template<XDRMode mode>
 bool
 XDRStaticBlockObject(XDRState<mode> *xdr, HandleObject enclosingScope,
-                     StaticBlockObject **objp);
+                     MutableHandle<StaticBlockObject*> objp);
 
 template<XDRMode mode>
 bool
 XDRStaticWithObject(XDRState<mode> *xdr, HandleObject enclosingScope,
-                    StaticWithObject **objp);
+                    MutableHandle<StaticWithObject*> objp);
 
 extern JSObject *
 CloneNestedScopeObject(JSContext *cx, HandleObject enclosingScope, Handle<NestedScopeObject*> src);

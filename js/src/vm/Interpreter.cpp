@@ -212,7 +212,7 @@ GetPropertyOperation(JSContext *cx, InterpreterFrame *fp, HandleScript script, j
     JSOp op = JSOp(*pc);
 
     if (op == JSOP_LENGTH) {
-        if (IsOptimizedArguments(fp, lval.address())) {
+        if (IsOptimizedArguments(fp, lval)) {
             vp.setInt32(fp->numActualArgs());
             return true;
         }
@@ -223,7 +223,7 @@ GetPropertyOperation(JSContext *cx, InterpreterFrame *fp, HandleScript script, j
 
     RootedId id(cx, NameToId(script->getName(pc)));
 
-    if (id == NameToId(cx->names().callee) && IsOptimizedArguments(fp, lval.address())) {
+    if (id == NameToId(cx->names().callee) && IsOptimizedArguments(fp, lval)) {
         vp.setObject(fp->callee());
         return true;
     }
@@ -583,7 +583,8 @@ js::InvokeConstructor(JSContext *cx, CallArgs args)
 }
 
 bool
-js::InvokeConstructor(JSContext *cx, Value fval, unsigned argc, const Value *argv, Value *rval)
+js::InvokeConstructor(JSContext *cx, Value fval, unsigned argc, const Value *argv,
+                      MutableHandleValue rval)
 {
     InvokeArgs args(cx);
     if (!args.init(argc))
@@ -596,7 +597,7 @@ js::InvokeConstructor(JSContext *cx, Value fval, unsigned argc, const Value *arg
     if (!InvokeConstructor(cx, args))
         return false;
 
-    *rval = args.rval();
+    rval.set(args.rval());
     return true;
 }
 
@@ -2508,8 +2509,7 @@ END_CASE(JSOP_SPREADCALL)
 CASE(JSOP_FUNAPPLY)
 {
     CallArgs args = CallArgsFromSp(GET_ARGC(REGS.pc), REGS.sp);
-    if (!GuardFunApplyArgumentsOptimization(cx, REGS.fp(), args.calleev(), args.array(),
-                                            args.length()))
+    if (!GuardFunApplyArgumentsOptimization(cx, REGS.fp(), args))
         goto error;
     /* FALL THROUGH */
 }

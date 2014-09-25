@@ -587,13 +587,13 @@ class AutoDetectInvalidation
 {
     JSContext *cx_;
     IonScript *ionScript_;
-    Value *rval_;
+    MutableHandleValue rval_;
     bool disabled_;
 
     void setReturnOverride();
 
   public:
-    AutoDetectInvalidation(JSContext *cx, Value *rval, IonScript *ionScript = nullptr);
+    AutoDetectInvalidation(JSContext *cx, MutableHandleValue rval, IonScript *ionScript = nullptr);
 
     void disable() {
         JS_ASSERT(!disabled_);
