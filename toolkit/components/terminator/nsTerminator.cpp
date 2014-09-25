@@ -18,8 +18,13 @@
 #include "nsTerminator.h"
 
 #include "prthread.h"
+#include "prmon.h"
+#include "plstr.h"
+
 #include "nsString.h"
 #include "nsServiceManagerUtils.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsAppDirectoryServiceDefs.h"
 
 #include "nsIObserverService.h"
 #include "nsIPrefService.h"
@@ -28,11 +33,13 @@
 #endif
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
+#include "mozilla/Telemetry.h"
 
 // Normally, the number of milliseconds that AsyncShutdown waits until
 // it decides to crash is specified as a preference. We use the
@@ -51,29 +58,74 @@ namespace mozilla {
 
 namespace {
 
-/**
- * Set to `true` by the main thread whenever we pass a shutdown phase,
- * which means that the shutdown is still ongoing. Reset to `false` by
- * the Terminator thread, once it has acknowledged the progress.
- */
-Atomic<bool> gProgress(false);
+// Utility function: create a thread that is non-joinable,
+// does not prevent the process from terminating, is never
+// cooperatively scheduled, and uses a default stack size.
+PRThread* CreateSystemThread(void (*start)(void* arg),
+                             void* arg)
+{
+  return PR_CreateThread(
+    PR_SYSTEM_THREAD, /* This thread will not prevent the process from terminating */
+    start,
+    arg,
+    PR_PRIORITY_LOW,
+    PR_GLOBAL_THREAD /* Make sure that the thread is never cooperatively scheduled */,
+    PR_UNJOINABLE_THREAD,
+    0 /* Use default stack size */
+  );
+}
+
+
+////////////////////////////////////////////
+//
+// The watchdog
+//
+// This nspr thread is in charge of crashing the process if any stage of shutdown
+// lasts more than some predefined duration. As a side-effect, it measures the
+// duration of each stage of shutdown.
+//
+
+// The heartbeat of the operation.
+//
+// Main thread:
+//
+// * Whenever a shutdown step has been completed, the main thread
+// swaps gHeartbeat to 0 to mark that the shutdown process is still
+// progressing. The value swapped away indicates the number of ticks
+// it took for the shutdown step to advance.
+//
+// Watchdog thread:
+//
+// * Every tick, the watchdog thread increments gHearbeat atomically.
+//
+// A note about precision:
+// Since gHeartbeat is generally reset to 0 between two ticks, this means
+// that gHeartbeat stays at 0 less than one tick. Consequently, values
+// extracted from gHeartbeat must be considered rounded up.
+Atomic<uint32_t> gHeartbeat(0);
 
 struct Options {
-  int32_t crashAfterMS;
+  /**
+   * How many ticks before we should crash the process.
+   */
+  uint32_t crashAfterTicks;
 };
 
+/**
+ * Entry point for the watchdog thread
+ */
 void
-Run(void* arg)
+RunWatchdog(void* arg)
 {
   PR_SetCurrentThreadName("Shutdown Hang Terminator");
 
   // Let's copy and deallocate options, that's one less leak to worry
   // about.
   UniquePtr<Options> options((Options*)arg);
-  int32_t crashAfterMS = options->crashAfterMS;
+  uint32_t crashAfterTicks = options->crashAfterTicks;
   options = nullptr;
 
-  int32_t timeToLive = crashAfterMS;
+  const uint32_t timeToLive = crashAfterTicks;
   while (true) {
     //
     // We do not want to sleep for the entire duration,
@@ -86,14 +138,8 @@ Run(void* arg)
     // more reasonable.
     //
     PR_Sleep(TICK_DURATION);
-    if (gProgress.exchange(false)) {
-      // We have passed at least one shutdown phase while waiting.
-      // Shutdown is still alive, reset the countdown.
-      timeToLive = crashAfterMS;
-      continue;
-    }
-    timeToLive -= TICK_DURATION;
-    if (timeToLive >= 0) {
+
+    if (gHeartbeat++ < timeToLive) {
       continue;
     }
 
@@ -102,21 +148,166 @@ Run(void* arg)
   }
 }
 
+////////////////////////////////////////////
+//
+// Writer thread
+//
+// This nspr thread is in charge of writing to disk statistics produced by the
+// watchdog thread and collected by the main thread. Note that we use a nspr
+// thread rather than usual XPCOM I/O simply because we outlive XPCOM and its
+// threads.
+//
+
+// Utility class, used by UniquePtr<> to close nspr files.
+class PR_CloseDelete
+{
+public:
+  MOZ_CONSTEXPR PR_CloseDelete() {}
+
+  PR_CloseDelete(const PR_CloseDelete& aOther)
+  {}
+
+  void operator()(PRFileDesc* aPtr) const
+  {
+    PR_Close(aPtr);
+  }
+};
+
+//
+// Communication between the main thread and the writer thread.
+//
+// Main thread:
+//
+// * Whenever a shutdown step has been completed, the main thread
+// obtains the number of ticks from the watchdog threads, builds
+// a string representing all the data gathered so far, places
+// this string in `gWriteData`, and wakes up the writer thread
+// using `gWriteReady`. If `gWriteData` already contained a non-null
+// pointer, this means that the writer thread is lagging behind the
+// main thread, and the main thread cleans up the memory.
+//
+// Writer thread:
+//
+// * When awake, the writer thread swaps `gWriteData` to nullptr. If
+// `gWriteData` contained data to write, the . If so, the writer
+// thread writes the data to a file named "ShutdownDuration.json.tmp",
+// then moves that file to "ShutdownDuration.json" and cleans up the
+// data. If `gWriteData` contains a nullptr, the writer goes to sleep
+// until it is awkened using `gWriteReady`.
+//
+//
+// The data written by the writer thread will be read by another
+// module upon the next restart and fed to Telemetry.
+//
+Atomic<nsCString*> gWriteData(nullptr);
+PRMonitor* gWriteReady = nullptr;
+
+void RunWriter(void* arg)
+{
+  PR_SetCurrentThreadName("Shutdown Statistics Writer");
+
+  // Setup destinationPath and tmpFilePath
+
+  nsCString destinationPath(static_cast<char*>(arg));
+  nsAutoCString tmpFilePath;
+  tmpFilePath.Append(destinationPath);
+  tmpFilePath.AppendLiteral(".tmp");
+
+  // Cleanup any file leftover from a previous run
+  unused << PR_Delete(tmpFilePath.get());
+  unused << PR_Delete(destinationPath.get());
+
+  while (true) {
+    //
+    // Check whether we have received data from the main thread.
+    //
+    // We perform the check before waiting on `gWriteReady` as we may
+    // have received data while we were busy writing.
+    //
+    // Also note that gWriteData may have been modified several times
+    // since we last checked. That's ok, we are not losing any important
+    // data (since we keep adding data), and we are not leaking memory
+    // (since the main thread deallocates any data that hasn't been
+    // consumed by the writer thread).
+    //
+    UniquePtr<nsCString> data(gWriteData.exchange(nullptr));
+    if (!data) {
+      // Data is not available yet.
+      // Wait until the main thread provides it.
+      PR_EnterMonitor(gWriteReady);
+      PR_Wait(gWriteReady, PR_INTERVAL_NO_TIMEOUT);
+      PR_ExitMonitor(gWriteReady);
+      continue;
+    }
+
+    //
+    // Write to a temporary file
+    //
+    // In case of any error, we simply give up. Since the data is
+    // hardly critical, we don't want to spend too much effort
+    // salvaging it.
+    //
+
+    UniquePtr<PRFileDesc, PR_CloseDelete>
+      tmpFileDesc(PR_Open(tmpFilePath.get(),
+                          PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE,
+                          00600));
+    if (tmpFileDesc == nullptr) {
+      break;
+    }
+    if (PR_Write(tmpFileDesc.get(), data->get(), data->Length()) == -1) {
+      break;
+    }
+    tmpFileDesc.reset();
+
+    //
+    // Rename on top of destination file.
+    //
+    // This is not sufficient to guarantee that the destination file
+    // will be written correctly, but, again, we don't care enough
+    // about the data to make more efforts.
+    //
+    if (PR_Rename(tmpFilePath.get(), destinationPath.get()) != PR_SUCCESS) {
+      break;
+    }
+  }
+}
+
+/**
+ * A step during shutdown.
+ *
+ * Shutdown is divided in steps, which all map to an observer
+ * notification. The duration of a step is defined as the number of
+ * ticks between the time we receive a notification and the next one.
+ */
+struct ShutdownStep
+{
+  char const* const mTopic;
+  int mTicks;
+
+  MOZ_CONSTEXPR ShutdownStep(const char *const topic)
+    : mTopic(topic)
+    , mTicks(-1)
+  {}
+
+};
+
+static ShutdownStep sShutdownSteps[] = {
+  ShutdownStep("quit-application"),
+  ShutdownStep("profile-change-teardown"),
+  ShutdownStep("profile-before-change"),
+  ShutdownStep("xpcom-will-shutdown"),
+  ShutdownStep("xpcom-shutdown"),
+};
+
 } // anonymous namespace
 
-
-static char const *const sObserverTopics[] = {
-  "quit-application",
-  "profile-change-teardown",
-  "profile-before-change",
-  "xpcom-will-shutdown",
-  "xpcom-shutdown",
-};
 
 NS_IMPL_ISUPPORTS(nsTerminator, nsIObserver)
 
 nsTerminator::nsTerminator()
   : mInitialized(false)
+  , mCurrentStep(-1)
 {
 }
 
@@ -129,45 +320,92 @@ nsTerminator::SelfInit()
     return NS_ERROR_UNEXPECTED;
   }
 
-  for (size_t i = 0; i < ArrayLength(sObserverTopics); ++i) {
-    DebugOnly<nsresult> rv = os->AddObserver(this, sObserverTopics[i], false);
+  for (size_t i = 0; i < ArrayLength(sShutdownSteps); ++i) {
+    DebugOnly<nsresult> rv = os->AddObserver(this, sShutdownSteps[i].mTopic, false);
 #if defined(DEBUG)
     NS_WARN_IF(NS_FAILED(rv));
 #endif // defined(DEBUG)
   }
+
   return NS_OK;
 }
 
-// Actually launch the thread. This takes place at the first sign of shutdown.
+// Actually launch these threads. This takes place at the first sign of shutdown.
 void
-nsTerminator::Start() {
-  // Determine how long we need to wait
+nsTerminator::Start()
+{
+  MOZ_ASSERT(!mInitialized);
+  StartWatchdog();
+  StartWriter();
+  mInitialized = true;
+}
 
+// Prepare, allocate and start the watchdog thread.
+// By design, it will never finish, nor be deallocated.
+void
+nsTerminator::StartWatchdog()
+{
   int32_t crashAfterMS =
     Preferences::GetInt("toolkit.asyncshutdown.crash_timeout",
                         FALLBACK_ASYNCSHUTDOWN_CRASH_AFTER_MS);
+  // Ignore negative values
+  if (crashAfterMS <= 0) {
+    crashAfterMS = FALLBACK_ASYNCSHUTDOWN_CRASH_AFTER_MS;
+  }
 
   // Add a little padding, to ensure that we do not crash before
   // AsyncShutdown.
-  crashAfterMS += ADDITIONAL_WAIT_BEFORE_CRASH_MS;
+  if (crashAfterMS > INT32_MAX - ADDITIONAL_WAIT_BEFORE_CRASH_MS) {
+    // Defend against overflow
+    crashAfterMS = INT32_MAX;
+  } else {
+    crashAfterMS += ADDITIONAL_WAIT_BEFORE_CRASH_MS;
+  }
 
   UniquePtr<Options> options(new Options());
-  options->crashAfterMS = crashAfterMS;
+  options->crashAfterTicks = crashAfterMS / TICK_DURATION;
 
-  // Allocate and start the thread.
-  // By design, it will never finish, nor be deallocated.
-  PRThread* thread = PR_CreateThread(
-    PR_SYSTEM_THREAD, /* This thread will not prevent the process from terminating */
-    Run,
-    options.release(),
-    PR_PRIORITY_LOW,
-    PR_GLOBAL_THREAD /* Make sure that the thread is never cooperatively scheduled */,
-    PR_UNJOINABLE_THREAD,
-    0 /* Use default stack size */
-  );
+  PRThread* watchdogThread = CreateSystemThread(RunWatchdog,
+                                                options.release());
+  MOZ_ASSERT(watchdogThread);
+}
 
-  MOZ_ASSERT(thread);
-  mInitialized = true;
+// Prepare, allocate and start the writer thread. By design, it will never
+// finish, nor be deallocated. In case of error, we degrade
+// gracefully to not writing Telemetry data.
+void
+nsTerminator::StartWriter()
+{
+
+  if (!Telemetry::CanRecord()) {
+    return;
+  }
+  nsCOMPtr<nsIFile> profLD;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR,
+                                       getter_AddRefs(profLD));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  rv = profLD->Append(NS_LITERAL_STRING("ShutdownDuration.json"));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  nsAutoString path;
+  rv = profLD->GetPath(path);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  gWriteReady = PR_NewMonitor();
+
+  PRThread* writerThread = CreateSystemThread(RunWriter,
+                                              ToNewUTF8String(path));
+
+  if (!writerThread) {
+    return;
+  }
 }
 
 
@@ -187,19 +425,101 @@ nsTerminator::Observe(nsISupports *, const char *aTopic, const char16_t *)
     Start();
   }
 
-  // Inform the thread that we have advanced by one phase.
-  gProgress.exchange(true);
+  UpdateHeartbeat(aTopic);
+  UpdateTelemetry();
+  UpdateCrashReport(aTopic);
 
-#if defined(MOZ_CRASHREPORTER)
-  // In case of crash, we wish to know where in shutdown we are
-  unused << CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ShutdownProgress"),
-                                               nsAutoCString(aTopic));
-#endif // defined(MOZ_CRASH_REPORTER)
-
+  // Perform a little cleanup
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   MOZ_RELEASE_ASSERT(os);
   (void)os->RemoveObserver(this, aTopic);
+
   return NS_OK;
 }
+
+void
+nsTerminator::UpdateHeartbeat(const char* aTopic)
+{
+  // Reset the clock, find out how long the current phase has lasted.
+  uint32_t ticks = gHeartbeat.exchange(0);
+  if (mCurrentStep > 0) {
+    sShutdownSteps[mCurrentStep].mTicks = ticks;
+  }
+
+  // Find out where we now are in the current shutdown.
+  // Don't assume that shutdown takes place in the expected order.
+  int nextStep = -1;
+  for (size_t i = 0; i < ArrayLength(sShutdownSteps); ++i) {
+    if (strcmp(sShutdownSteps[i].mTopic, aTopic) == 0) {
+      nextStep = i;
+      break;
+    }
+  }
+  MOZ_ASSERT(nextStep != -1);
+  mCurrentStep = nextStep;
+}
+
+void
+nsTerminator::UpdateTelemetry()
+{
+  if (!Telemetry::CanRecord() || !gWriteReady) {
+    return;
+  }
+
+  //
+  // We need Telemetry data on the effective duration of each step,
+  // to be able to tune the time-to-crash of each of both the
+  // Terminator and AsyncShutdown. However, at this stage, it is too
+  // late to record such data into Telemetry, so we write it to disk
+  // and read it upon the next startup.
+  //
+
+  // Build JSON.
+  UniquePtr<nsCString> telemetryData(new nsCString());
+  telemetryData->AppendLiteral("{");
+  size_t fields = 0;
+  for (size_t i = 0; i < ArrayLength(sShutdownSteps); ++i) {
+    if (sShutdownSteps[i].mTicks < 0) {
+      // Ignore this field.
+      continue;
+    }
+    if (fields++ > 0) {
+      telemetryData->Append(", ");
+    }
+    telemetryData->AppendLiteral("\"");
+    telemetryData->Append(sShutdownSteps[i].mTopic);
+    telemetryData->AppendLiteral("\": ");
+    telemetryData->AppendInt(sShutdownSteps[i].mTicks);
+  }
+  telemetryData->AppendLiteral("}");
+
+  if (fields == 0) {
+    // Nothing to write
+      return;
+  }
+
+  //
+  // Send data to the worker thread.
+  //
+  delete gWriteData.exchange(telemetryData.release()); // Clear any data that hasn't been written yet
+
+  // In case the worker thread was sleeping, wake it up.
+  PR_EnterMonitor(gWriteReady);
+  PR_Notify(gWriteReady);
+  PR_ExitMonitor(gWriteReady);
+}
+
+void
+nsTerminator::UpdateCrashReport(const char* aTopic)
+{
+#if defined(MOZ_CRASHREPORTER)
+  // In case of crash, we wish to know where in shutdown we are
+  nsAutoCString report(aTopic);
+
+  unused << CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ShutdownProgress"),
+                                               report);
+#endif // defined(MOZ_CRASH_REPORTER)
+}
+
 
 } // namespace mozilla
