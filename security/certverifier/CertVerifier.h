@@ -47,7 +47,7 @@ public:
    /*optional out*/ ScopedCERTCertList* builtChain = nullptr,
    /*optional out*/ SECOidTag* evOidPolicy = nullptr);
 
-  enum pinning_enforcement_config {
+  enum PinningMode {
     pinningDisabled = 0,
     pinningAllowUserCAMITM = 1,
     pinningStrict = 2,
@@ -63,8 +63,7 @@ public:
   bool IsOCSPDownloadEnabled() const { return mOCSPDownloadEnabled; }
 
   CertVerifier(ocsp_download_config odc, ocsp_strict_config osc,
-               ocsp_get_config ogc,
-               pinning_enforcement_config pinningEnforcementLevel);
+               ocsp_get_config ogc, PinningMode pinningMode);
   ~CertVerifier();
 
   void ClearOCSPCache() { mOCSPCache.Clear(); }
@@ -72,7 +71,7 @@ public:
   const bool mOCSPDownloadEnabled;
   const bool mOCSPStrict;
   const bool mOCSPGETEnabled;
-  const pinning_enforcement_config mPinningEnforcementLevel;
+  const PinningMode mPinningMode;
 
 private:
   OCSPCache mOCSPCache;

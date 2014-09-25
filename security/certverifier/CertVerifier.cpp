@@ -35,11 +35,11 @@ const CertVerifier::Flags CertVerifier::FLAG_MUST_BE_EV = 2;
 CertVerifier::CertVerifier(ocsp_download_config odc,
                            ocsp_strict_config osc,
                            ocsp_get_config ogc,
-                           pinning_enforcement_config pel)
+                           PinningMode pinningMode)
   : mOCSPDownloadEnabled(odc == ocsp_on)
   , mOCSPStrict(osc == ocsp_strict)
   , mOCSPGETEnabled(ogc == ocsp_get_enabled)
-  , mPinningEnforcementLevel(pel)
+  , mPinningMode(pinningMode)
 {
 }
 
@@ -84,7 +84,7 @@ IsCertBuiltInRoot(CERTCertificate* cert, bool& result) {
 struct ChainValidationCallbackState
 {
   const char* hostname;
-  const CertVerifier::pinning_enforcement_config pinningEnforcementLevel;
+  const CertVerifier::PinningMode pinningMode;
   const SECCertificateUsage usage;
   const Time time;
 };
@@ -115,10 +115,10 @@ SECStatus chainValidationCallback(void* state, const CERTCertList* certList,
   }
 
   if (callbackState->usage != certificateUsageSSLServer ||
-      callbackState->pinningEnforcementLevel == CertVerifier::pinningDisabled) {
+      callbackState->pinningMode == CertVerifier::pinningDisabled) {
     PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
            ("verifycert: Callback shortcut pel=%d \n",
-            callbackState->pinningEnforcementLevel));
+            callbackState->pinningMode));
     *chainOK = PR_TRUE;
     return SECSuccess;
   }
@@ -138,7 +138,7 @@ SECStatus chainValidationCallback(void* state, const CERTCertList* certList,
       // case key pinning is not enforced for certificates that chain to trust
       // anchors that are not in Mozilla's root program
       if (!isBuiltInRoot &&
-          (callbackState->pinningEnforcementLevel ==
+          (callbackState->pinningMode ==
              CertVerifier::pinningAllowUserCAMITM)) {
         *chainOK = PR_TRUE;
         return SECSuccess;
@@ -146,7 +146,7 @@ SECStatus chainValidationCallback(void* state, const CERTCertList* certList,
     }
   }
 
-  bool enforceTestMode = (callbackState->pinningEnforcementLevel ==
+  bool enforceTestMode = (callbackState->pinningMode ==
                           CertVerifier::pinningEnforceTestMode);
   *chainOK = PublicKeyPinningService::
     ChainHasValidPins(certList, callbackState->hostname, callbackState->time,
@@ -217,7 +217,7 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
   }
 
   ChainValidationCallbackState callbackState = {
-    hostname, mPinningEnforcementLevel, usage, time
+    hostname, mPinningMode, usage, time
   };
   CERTChainVerifyCallback callbackContainer;
   callbackContainer.isChainValid = chainValidationCallback;
