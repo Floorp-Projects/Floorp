@@ -285,7 +285,6 @@ nsresult nsAutoConfig::downloadAutoConfig()
                        nsContentUtils::GetSystemPrincipal(),
                        nsILoadInfo::SEC_NORMAL,
                        nsIContentPolicy::TYPE_OTHER,
-                       nullptr,  // aChannelPolicy
                        nullptr,  // loadGroup
                        nullptr,  // aCallbacks
                        nsIRequest::INHIBIT_PERSISTENT_CACHING |

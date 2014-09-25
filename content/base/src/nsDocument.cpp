@@ -1333,7 +1333,6 @@ nsExternalResourceMap::PendingLoad::StartLoad(nsIURI* aURI,
                      aRequestingNode,
                      nsILoadInfo::SEC_NORMAL,
                      nsIContentPolicy::TYPE_OTHER,
-                     nullptr, // aChannelPolicy
                      loadGroup,
                      req); // aCallbacks
 
