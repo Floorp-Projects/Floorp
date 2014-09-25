@@ -657,7 +657,6 @@ public:
   static const KTableValue kWritingModeKTable[];
   static const KTableValue kHyphensKTable[];
   static const KTableValue kCounterSystemKTable[];
-  static const KTableValue kCounterSymbolsSystemKTable[];
   static const KTableValue kCounterRangeKTable[];
   static const KTableValue kCounterSpeakAsKTable[];
 };

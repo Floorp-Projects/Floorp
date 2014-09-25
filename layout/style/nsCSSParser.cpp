@@ -513,7 +513,6 @@ protected:
 
   bool ParseCounterStyleRule(RuleAppendFunc aAppendFunc, void* aProcessData);
   bool ParseCounterStyleName(nsAString& aName, bool aForDefinition);
-  bool ParseCounterStyleNameValue(nsCSSValue& aValue);
   bool ParseCounterDescriptor(nsCSSCounterStyleRule *aRule);
   bool ParseCounterDescriptorValue(nsCSSCounterDesc aDescID,
                                    nsCSSValue& aValue);
@@ -937,7 +936,6 @@ protected:
                         const nsCSSProps::KTableValue aPropertyKTable[] = nullptr);
   bool ParseCounter(nsCSSValue& aValue);
   bool ParseAttr(nsCSSValue& aValue);
-  bool ParseSymbols(nsCSSValue& aValue);
   bool SetValueToURL(nsCSSValue& aValue, const nsString& aURL);
   bool TranslateDimension(nsCSSValue& aValue, int32_t aVariantMask,
                             float aNumber, const nsString& aUnit);
@@ -4361,17 +4359,6 @@ CSSParserImpl::ParseCounterStyleName(nsAString& aName, bool aForDefinition)
 }
 
 bool
-CSSParserImpl::ParseCounterStyleNameValue(nsCSSValue& aValue)
-{
-  nsString name;
-  if (ParseCounterStyleName(name, false)) {
-    aValue.SetStringValue(name, eCSSUnit_Ident);
-    return true;
-  }
-  return false;
-}
-
-bool
 CSSParserImpl::ParseCounterDescriptor(nsCSSCounterStyleRule* aRule)
 {
   if (eCSSToken_Ident != mToken.mType) {
@@ -4432,12 +4419,12 @@ CSSParserImpl::ParseCounterDescriptorValue(nsCSSCounterDesc aDescID,
           return true;
         }
         case NS_STYLE_COUNTER_SYSTEM_EXTENDS: {
-          nsCSSValue name;
-          if (!ParseCounterStyleNameValue(name)) {
+          nsString name;
+          if (!ParseCounterStyleName(name, false)) {
             REPORT_UNEXPECTED_TOKEN(PECounterExtendsNotIdent);
             return false;
           }
-          aValue.SetPairValue(system, name);
+          aValue.SetPairValue(system, nsCSSValue(name, eCSSUnit_Ident));
           return true;
         }
         default:
@@ -4495,8 +4482,14 @@ CSSParserImpl::ParseCounterDescriptorValue(nsCSSCounterDesc aDescID,
       return true;
     }
 
-    case eCSSCounterDesc_Fallback:
-      return ParseCounterStyleNameValue(aValue);
+    case eCSSCounterDesc_Fallback: {
+      nsString name;
+      if (!ParseCounterStyleName(name, false)) {
+        return false;
+      }
+      aValue.SetStringValue(name, eCSSUnit_Ident);
+      return true;
+    }
 
     case eCSSCounterDesc_Symbols: {
       nsCSSValueList* item = nullptr;
@@ -4546,7 +4539,7 @@ CSSParserImpl::ParseCounterDescriptorValue(nsCSSCounterDesc aDescID,
       // should always return in the loop
     }
 
-    case eCSSCounterDesc_SpeakAs:
+    case eCSSCounterDesc_SpeakAs: {
       if (ParseVariant(aValue, VARIANT_AUTO | VARIANT_KEYWORD,
                       nsCSSProps::kCounterSpeakAsKTable)) {
         if (aValue.GetUnit() == eCSSUnit_Enumerated &&
@@ -4558,7 +4551,13 @@ CSSParserImpl::ParseCounterDescriptorValue(nsCSSCounterDesc aDescID,
         }
         return true;
       }
-      return ParseCounterStyleNameValue(aValue);
+      nsString name;
+      if (ParseCounterStyleName(name, false)) {
+        aValue.SetStringValue(name, eCSSUnit_Ident);
+        return true;
+      }
+      return false;
+    }
 
     default:
       NS_NOTREACHED("unknown descriptor");
@@ -7207,15 +7206,15 @@ CSSParserImpl::ParseCounter(nsCSSValue& aValue)
     }
 
     // get optional type
-    int32_t typeItem = eCSSUnit_Counters == unit ? 2 : 1;
-    nsCSSValue& type = val->Item(typeItem);
+    nsString type = NS_LITERAL_STRING("decimal");
     if (ExpectSymbol(',', true)) {
-      if (!ParseCounterStyleNameValue(type) && !ParseSymbols(type)) {
+      if (!ParseCounterStyleName(type, false)) {
         break;
       }
-    } else {
-      type.SetStringValue(NS_LITERAL_STRING("decimal"), eCSSUnit_Ident);
     }
+
+    int32_t typeItem = eCSSUnit_Counters == unit ? 2 : 1;
+    val->Item(typeItem).SetStringValue(type, eCSSUnit_Ident);
 
     if (!ExpectSymbol(')', true)) {
       break;
@@ -7293,54 +7292,6 @@ CSSParserImpl::ParseAttr(nsCSSValue& aValue)
   }
   aValue.SetStringValue(attr, eCSSUnit_Attr);
   return true;
-}
-
-bool
-CSSParserImpl::ParseSymbols(nsCSSValue& aValue)
-{
-  if (!GetToken(true)) {
-    return false;
-  }
-  if (mToken.mType != eCSSToken_Function &&
-      !mToken.mIdent.LowerCaseEqualsLiteral("symbols")) {
-    UngetToken();
-    return false;
-  }
-
-  nsRefPtr<nsCSSValue::Array> params = nsCSSValue::Array::Create(2);
-  nsCSSValue& type = params->Item(0);
-  nsCSSValue& symbols = params->Item(1);
-
-  if (!ParseEnum(type, nsCSSProps::kCounterSymbolsSystemKTable)) {
-    type.SetIntValue(NS_STYLE_COUNTER_SYSTEM_SYMBOLIC, eCSSUnit_Enumerated);
-  }
-
-  bool first = true;
-  nsCSSValueList* item = symbols.SetListValue();
-  for (;;) {
-    // FIXME Should also include VARIANT_IMAGE. See bug 1071436.
-    if (!ParseVariant(item->mValue, VARIANT_STRING, nullptr)) {
-      break;
-    }
-    if (ExpectSymbol(')', true)) {
-      if (first) {
-        switch (type.GetIntValue()) {
-          case NS_STYLE_COUNTER_SYSTEM_NUMERIC:
-          case NS_STYLE_COUNTER_SYSTEM_ALPHABETIC:
-            // require at least two symbols
-            return false;
-        }
-      }
-      aValue.SetArrayValue(params, eCSSUnit_Symbols);
-      return true;
-    }
-    item->mNext = new nsCSSValueList;
-    item = item->mNext;
-    first = false;
-  }
-
-  SkipUntil(')');
-  return false;
 }
 
 bool
@@ -12918,10 +12869,11 @@ CSSParserImpl::ParseListStyleType(nsCSSValue& aValue)
     return true;
   }
 
-  if (ParseCounterStyleNameValue(aValue) || ParseSymbols(aValue)) {
+  nsString name;
+  if (ParseCounterStyleName(name, false)) {
+    aValue.SetStringValue(name, eCSSUnit_Ident);
     return true;
   }
-
   return false;
 }
 

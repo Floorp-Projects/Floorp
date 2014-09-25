@@ -1982,15 +1982,6 @@ const KTableValue nsCSSProps::kCounterSystemKTable[] = {
   eCSSKeyword_UNKNOWN, -1
 };
 
-const KTableValue nsCSSProps::kCounterSymbolsSystemKTable[] = {
-  eCSSKeyword_cyclic, NS_STYLE_COUNTER_SYSTEM_CYCLIC,
-  eCSSKeyword_numeric, NS_STYLE_COUNTER_SYSTEM_NUMERIC,
-  eCSSKeyword_alphabetic, NS_STYLE_COUNTER_SYSTEM_ALPHABETIC,
-  eCSSKeyword_symbolic, NS_STYLE_COUNTER_SYSTEM_SYMBOLIC,
-  eCSSKeyword_fixed, NS_STYLE_COUNTER_SYSTEM_FIXED,
-  eCSSKeyword_UNKNOWN, -1
-};
-
 const KTableValue nsCSSProps::kCounterRangeKTable[] = {
   eCSSKeyword_infinite, NS_STYLE_COUNTER_RANGE_INFINITE,
   eCSSKeyword_UNKNOWN, -1
