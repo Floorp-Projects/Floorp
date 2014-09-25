@@ -312,11 +312,11 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   }
 
   // Add a stream (main thread only)
-  nsresult AddStream(DOMMediaStream* aMediaStream, uint32_t hints,
+  nsresult AddStream(nsIDOMMediaStream* aMediaStream, uint32_t hints,
                      uint32_t *stream_id);
 
   // Remove a stream (main thread only)
-  nsresult RemoveStream(DOMMediaStream* aMediaStream,
+  nsresult RemoveStream(nsIDOMMediaStream* aMediaStream,
                         uint32_t hints,
                         uint32_t *stream_id);
 
