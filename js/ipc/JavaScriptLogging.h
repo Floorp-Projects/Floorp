@@ -160,9 +160,9 @@ class Logging
           case JSVariant::TObjectVariant: {
               const ObjectVariant &ovar = value.get_ObjectVariant();
               if (ovar.type() == ObjectVariant::TLocalObject)
-                  formatObject(incoming, true, ovar.get_LocalObject().id(), out);
+                  formatObject(incoming, true, ObjectId::deserialize(ovar.get_LocalObject().serializedId()), out);
               else
-                  formatObject(incoming, false, ovar.get_RemoteObject().id(), out);
+                  formatObject(incoming, false, ObjectId::deserialize(ovar.get_RemoteObject().serializedId()), out);
               break;
           }
           case JSVariant::Tdouble: {
