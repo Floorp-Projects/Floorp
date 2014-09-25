@@ -56,8 +56,6 @@ class StaticWithObject;
  *
  * (See also AssertDynamicScopeMatchesStaticScope.)
  */
-JSObject *InnermostStaticScope(JSScript *script, jsbytecode *pc);
-
 template <AllowGC allowGC>
 class StaticScopeIter
 {
@@ -95,7 +93,6 @@ class StaticScopeIter
     StaticWithObject &staticWith() const;
     JSScript *funScript() const;
     JSFunction &fun() const;
-    PropertyName *lambdaName() const;
 };
 
 /*****************************************************************************/
