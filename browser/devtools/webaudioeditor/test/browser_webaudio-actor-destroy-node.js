@@ -6,7 +6,7 @@
  */
 
 function spawnTest () {
-  let [target, debuggee, front] = yield initBackend(DESTROY_NODES_URL);
+  let { target, front } = yield initBackend(DESTROY_NODES_URL);
 
   let waitUntilDestroyed = getN(front, "destroy-node", 10);
   let [, , created] = yield Promise.all([
