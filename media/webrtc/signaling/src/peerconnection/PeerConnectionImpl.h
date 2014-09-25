@@ -54,6 +54,7 @@ class Fake_MediaStreamTrack;
 #endif
 
 class nsGlobalWindow;
+class nsIDOMMediaStream;
 class nsDOMDataChannel;
 
 namespace mozilla {
@@ -288,7 +289,7 @@ public:
   std::string GetFingerprintHexValue() const;
 
   // Create a fake media stream
-  nsresult CreateFakeMediaStream(uint32_t hint, mozilla::DOMMediaStream** retval);
+  nsresult CreateFakeMediaStream(uint32_t hint, nsIDOMMediaStream** retval);
 
   nsPIDOMWindow* GetWindow() const {
     PC_AUTO_ENTER_API_CALL_NO_CHECK();

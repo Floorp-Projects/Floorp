@@ -295,7 +295,7 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
 }
 
 nsresult
-PeerConnectionMedia::AddStream(DOMMediaStream* aMediaStream,
+PeerConnectionMedia::AddStream(nsIDOMMediaStream* aMediaStream,
                                uint32_t hints,
                                uint32_t *stream_id)
 {
@@ -305,6 +305,8 @@ PeerConnectionMedia::AddStream(DOMMediaStream* aMediaStream,
     CSFLogError(logTag, "%s - aMediaStream is NULL", __FUNCTION__);
     return NS_ERROR_FAILURE;
   }
+
+  DOMMediaStream* stream = static_cast<DOMMediaStream*>(aMediaStream);
 
   CSFLogDebug(logTag, "%s: MediaStream: %p", __FUNCTION__, aMediaStream);
 
@@ -334,14 +336,14 @@ PeerConnectionMedia::AddStream(DOMMediaStream* aMediaStream,
       CSFLogError(logTag, "Only one stream of any given type allowed");
       return NS_ERROR_FAILURE;
     }
-    if (aMediaStream == lss->GetMediaStream()) {
+    if (stream == lss->GetMediaStream()) {
       localSourceStream = lss;
       *stream_id = u;
       break;
     }
   }
   if (!localSourceStream) {
-    localSourceStream = new LocalSourceStreamInfo(aMediaStream, this);
+    localSourceStream = new LocalSourceStreamInfo(stream, this);
     mLocalSourceStreams.AppendElement(localSourceStream);
     *stream_id = mLocalSourceStreams.Length() - 1;
   }
@@ -357,19 +359,21 @@ PeerConnectionMedia::AddStream(DOMMediaStream* aMediaStream,
 }
 
 nsresult
-PeerConnectionMedia::RemoveStream(DOMMediaStream* aMediaStream,
+PeerConnectionMedia::RemoveStream(nsIDOMMediaStream* aMediaStream,
                                   uint32_t hints,
                                   uint32_t *stream_id)
 {
   MOZ_ASSERT(aMediaStream);
   ASSERT_ON_THREAD(mMainThread);
 
+  DOMMediaStream* stream = static_cast<DOMMediaStream*>(aMediaStream);
+
   CSFLogDebug(logTag, "%s: MediaStream: %p",
     __FUNCTION__, aMediaStream);
 
   for (uint32_t u = 0; u < mLocalSourceStreams.Length(); u++) {
     nsRefPtr<LocalSourceStreamInfo> localSourceStream = mLocalSourceStreams[u];
-    if (localSourceStream->GetMediaStream() == aMediaStream) {
+    if (localSourceStream->GetMediaStream() == stream) {
       *stream_id = u;
 
       if (hints & DOMMediaStream::HINT_CONTENTS_AUDIO) {
