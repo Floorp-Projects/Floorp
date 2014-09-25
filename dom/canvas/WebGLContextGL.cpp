@@ -64,7 +64,7 @@ WebGLContext::CurValidFBRectObject() const
     if (mBoundFramebuffer) {
         // We don't really need to ask the driver.
         // Use 'precheck' to just check that our internal state looks good.
-        GLenum precheckStatus = mBoundFramebuffer->PrecheckFramebufferStatus();
+        FBStatus precheckStatus = mBoundFramebuffer->PrecheckFramebufferStatus();
         if (precheckStatus == LOCAL_GL_FRAMEBUFFER_COMPLETE)
             rect = &mBoundFramebuffer->RectangleObject();
     } else {
@@ -348,7 +348,7 @@ WebGLContext::CheckFramebufferStatus(GLenum target)
     if (!mBoundFramebuffer)
         return LOCAL_GL_FRAMEBUFFER_COMPLETE;
 
-    return mBoundFramebuffer->CheckFramebufferStatus();
+    return mBoundFramebuffer->CheckFramebufferStatus().get();
 }
 
 void
@@ -795,7 +795,16 @@ WebGLContext::FramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum r
     if (!mBoundFramebuffer)
         return ErrorInvalidOperation("framebufferRenderbuffer: cannot modify framebuffer 0");
 
-    return mBoundFramebuffer->FramebufferRenderbuffer(target, attachment, rbtarget, wrb);
+    if (target != LOCAL_GL_FRAMEBUFFER)
+        return ErrorInvalidEnumInfo("framebufferRenderbuffer: target", target);
+
+    if (rbtarget != LOCAL_GL_RENDERBUFFER)
+        return ErrorInvalidEnumInfo("framebufferRenderbuffer: renderbuffer target:", rbtarget);
+
+    if (!ValidateFramebufferAttachment(attachment, "framebufferRenderbuffer"))
+        return;
+
+    return mBoundFramebuffer->FramebufferRenderbuffer(attachment, rbtarget, wrb);
 }
 
 void
@@ -811,6 +820,9 @@ WebGLContext::FramebufferTexture2D(GLenum target,
     if (!mBoundFramebuffer)
         return ErrorInvalidOperation("framebufferRenderbuffer: cannot modify framebuffer 0");
 
+    if (target != LOCAL_GL_FRAMEBUFFER)
+        return ErrorInvalidEnumInfo("framebufferTexture2D: target", target);
+
     if (textarget != LOCAL_GL_TEXTURE_2D &&
         (textarget < LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
          textarget > LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z))
@@ -818,7 +830,10 @@ WebGLContext::FramebufferTexture2D(GLenum target,
         return ErrorInvalidEnumInfo("framebufferTexture2D: invalid texture target", textarget);
     }
 
-    return mBoundFramebuffer->FramebufferTexture2D(target, attachment, TexImageTarget(textarget), tobj, level);
+    if (!ValidateFramebufferAttachment(attachment, "framebufferTexture2D"))
+        return;
+
+    return mBoundFramebuffer->FramebufferTexture2D(attachment, textarget, tobj, level);
 }
 
 void
@@ -1084,27 +1099,11 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
         return JS::NullValue();
     }
 
-    if (attachment != LOCAL_GL_DEPTH_ATTACHMENT &&
-        attachment != LOCAL_GL_STENCIL_ATTACHMENT &&
-        attachment != LOCAL_GL_DEPTH_STENCIL_ATTACHMENT)
-    {
-        if (IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers))
-        {
-            if (attachment < LOCAL_GL_COLOR_ATTACHMENT0 ||
-                attachment >= GLenum(LOCAL_GL_COLOR_ATTACHMENT0 + mGLMaxColorAttachments))
-            {
-                ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: attachment", attachment);
-                return JS::NullValue();
-            }
+    if (!ValidateFramebufferAttachment(attachment, "getFramebufferAttachmentParameter"))
+        return JS::NullValue();
 
-            mBoundFramebuffer->EnsureColorAttachments(attachment - LOCAL_GL_COLOR_ATTACHMENT0);
-        }
-        else if (attachment != LOCAL_GL_COLOR_ATTACHMENT0)
-        {
-            ErrorInvalidEnumInfo("getFramebufferAttachmentParameter: attachment", attachment);
-            return JS::NullValue();
-        }
-    }
+    if (IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers))
+        mBoundFramebuffer->EnsureColorAttachments(attachment - LOCAL_GL_COLOR_ATTACHMENT0);
 
     MakeContextCurrent();
 

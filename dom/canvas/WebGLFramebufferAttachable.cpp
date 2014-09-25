@@ -12,7 +12,7 @@
 using namespace mozilla;
 
 void
-WebGLFramebufferAttachable::AttachTo(WebGLFramebuffer* fb, GLenum attachment)
+WebGLFramebufferAttachable::AttachTo(WebGLFramebuffer* fb, FBAttachment attachment)
 {
     MOZ_ASSERT(fb);
     if (!fb)
@@ -25,7 +25,7 @@ WebGLFramebufferAttachable::AttachTo(WebGLFramebuffer* fb, GLenum attachment)
 }
 
 void
-WebGLFramebufferAttachable::DetachFrom(WebGLFramebuffer* fb, GLenum attachment)
+WebGLFramebufferAttachable::DetachFrom(WebGLFramebuffer* fb, FBAttachment attachment)
 {
     MOZ_ASSERT(fb);
     if (!fb)
