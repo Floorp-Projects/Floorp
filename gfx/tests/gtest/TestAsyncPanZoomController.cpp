@@ -1488,7 +1488,7 @@ protected:
     testStartTime = TimeStamp::Now();
     AsyncPanZoomController::SetFrameTime(testStartTime);
 
-    mcc = new NiceMock<MockContentController>();
+    mcc = new NiceMock<MockContentControllerDelayed>();
     manager = new TestAPZCTreeManager();
   }
 
@@ -1497,7 +1497,7 @@ protected:
   }
 
   TimeStamp testStartTime;
-  nsRefPtr<MockContentController> mcc;
+  nsRefPtr<MockContentControllerDelayed> mcc;
 
   nsTArray<nsRefPtr<Layer> > layers;
   nsRefPtr<LayerManager> lm;
@@ -1523,6 +1523,15 @@ protected:
   static TestAsyncPanZoomController* ApzcOf(Layer* aLayer) {
     EXPECT_EQ(1u, aLayer->GetFrameMetricsCount());
     return (TestAsyncPanZoomController*)aLayer->GetAsyncPanZoomController(0);
+  }
+
+  void CreateSimpleScrollingLayer() {
+    const char* layerTreeSyntax = "t";
+    nsIntRegion layerVisibleRegion[] = {
+      nsIntRegion(nsIntRect(0,0,200,200)),
+    };
+    root = CreateLayerTree(layerTreeSyntax, layerVisibleRegion, nullptr, lm, layers);
+    SetScrollableFrameMetrics(root, FrameMetrics::START_SCROLL_ID, CSSRect(0, 0, 500, 500));
   }
 
   void CreateSimpleMultiLayerTree() {
@@ -1751,9 +1760,6 @@ TEST_F(APZHitTestingTester, HitTesting2) {
   // This causes layers[1] to scroll out of view, and an async transform
   // of -50 to be set on the root layer.
   int time = 0;
-  // Silence GMock warnings about "uninteresting mock function calls".
-  EXPECT_CALL(*mcc, PostDelayedTask(_,_)).Times(AtLeast(1));
-  EXPECT_CALL(*mcc, SendAsyncScrollDOMEvent(_,_,_)).Times(AtLeast(1));
   EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
 
   // This first pan will move the APZC by 50 pixels, and dispatch a paint request.
@@ -1900,6 +1906,76 @@ TEST_F(APZHitTestingTester, ComplexMultiLayerTree) {
   EXPECT_EQ(ApzcOf(layers[9]), hit.get());
   hit = GetTargetAPZC(ScreenPoint(250, 100));
   EXPECT_EQ(ApzcOf(layers[7]), hit.get());
+}
+
+TEST_F(APZHitTestingTester, TestRepaintFlushOnNewInputBlock) {
+  // The main purpose of this test is to verify that touch-start events (or anything
+  // that starts a new input block) don't ever get untransformed. This should always
+  // hold because the APZ code should flush repaints when we start a new input block
+  // and the transform to gecko space should be empty.
+
+  CreateSimpleScrollingLayer();
+  ScopedLayerTreeRegistration registration(0, root, mcc);
+  manager->UpdatePanZoomControllerTree(nullptr, root, false, 0, 0);
+  AsyncPanZoomController* apzcroot = ApzcOf(root);
+
+  // At this point, the following holds (all coordinates in screen pixels):
+  // layers[0] has content from (0,0)-(500,500), clipped by composition bounds (0,0)-(200,200)
+
+  MockFunction<void(std::string checkPointName)> check;
+
+  {
+    InSequence s;
+
+    EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(AtLeast(1));
+    EXPECT_CALL(check, Call("post-first-touch-start"));
+    EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(AtLeast(1));
+    EXPECT_CALL(check, Call("post-second-fling"));
+    EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(AtLeast(1));
+    EXPECT_CALL(check, Call("post-second-touch-start"));
+  }
+
+  int time = 0;
+  // This first pan will move the APZC by 50 pixels, and dispatch a paint request.
+  ApzcPanNoFling(apzcroot, time, 100, 50);
+
+  // Verify that a touch start doesn't get untransformed
+  ScreenIntPoint touchPoint(50, 50);
+  MultiTouchInput mti = MultiTouchInput(MultiTouchInput::MULTITOUCH_START, time, TimeStamp(), 0);
+  mti.mTouches.AppendElement(SingleTouchData(0, touchPoint, ScreenSize(0, 0), 0, 0));
+
+  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, manager->ReceiveInputEvent(mti, nullptr));
+  EXPECT_EQ(touchPoint, mti.mTouches[0].mScreenPoint);
+  check.Call("post-first-touch-start");
+
+  // Send a touchend to clear state
+  mti.mType = MultiTouchInput::MULTITOUCH_END;
+  manager->ReceiveInputEvent(mti, nullptr);
+
+  AsyncPanZoomController::SetFrameTime(testStartTime + TimeDuration::FromMilliseconds(1000));
+
+  // Now do two pans. The first of these will dispatch a repaint request, as above.
+  // The second will get stuck in the paint throttler because the first one doesn't
+  // get marked as "completed", so this will result in a non-empty LD transform.
+  // (Note that any outstanding repaint requests from the first half of this test
+  // don't impact this half because we advance the time by 1 second, which will trigger
+  // the max-wait-exceeded codepath in the paint throttler).
+  ApzcPanNoFling(apzcroot, time, 100, 50);
+  check.Call("post-second-fling");
+  ApzcPanNoFling(apzcroot, time, 100, 50);
+
+  // Ensure that a touch start again doesn't get untransformed by flushing
+  // a repaint
+  mti.mType = MultiTouchInput::MULTITOUCH_START;
+  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, manager->ReceiveInputEvent(mti, nullptr));
+  EXPECT_EQ(touchPoint, mti.mTouches[0].mScreenPoint);
+  check.Call("post-second-touch-start");
+
+  mti.mType = MultiTouchInput::MULTITOUCH_END;
+  EXPECT_EQ(nsEventStatus_eConsumeDoDefault, manager->ReceiveInputEvent(mti, nullptr));
+  EXPECT_EQ(touchPoint, mti.mTouches[0].mScreenPoint);
+
+  mcc->RunThroughDelayedTasks();
 }
 
 class APZOverscrollHandoffTester : public APZCTreeManagerTester {
