@@ -27,13 +27,13 @@ namespace {
 
 class DelayedEventRunnable MOZ_FINAL : public WorkerRunnable
 {
-  nsRefPtr<MessagePort> mMessagePort;
+  nsRefPtr<mozilla::dom::workers::MessagePort> mMessagePort;
   nsTArray<nsCOMPtr<nsIDOMEvent>> mEvents;
 
 public:
   DelayedEventRunnable(WorkerPrivate* aWorkerPrivate,
                        TargetAndBusyBehavior aBehavior,
-                       MessagePort* aMessagePort,
+                       mozilla::dom::workers::MessagePort* aMessagePort,
                        nsTArray<nsCOMPtr<nsIDOMEvent>>& aEvents)
   : WorkerRunnable(aWorkerPrivate, aBehavior), mMessagePort(aMessagePort)
   {
@@ -71,6 +71,8 @@ public:
 };
 
 } // anonymous namespace
+
+BEGIN_WORKERS_NAMESPACE
 
 MessagePort::MessagePort(nsPIDOMWindow* aWindow, SharedWorker* aSharedWorker,
                          uint64_t aSerial)
@@ -297,6 +299,8 @@ MessagePort::PreHandleEvent(EventChainPreVisitor& aVisitor)
 
   return DOMEventTargetHelper::PreHandleEvent(aVisitor);
 }
+
+END_WORKERS_NAMESPACE
 
 bool
 DelayedEventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
