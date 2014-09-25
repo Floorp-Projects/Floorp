@@ -121,15 +121,78 @@ function waitForNotificationPopup(notificationID, browser, callback) {
   );
 }
 
+/**
+ * Returns a Promise that resolves when a notification bar
+ * for a browser is shown. Alternatively, for old-style callers,
+ * can automatically call a callback before it resolves.
+ *
+ * @param notificationID
+ *        The ID of the notification to look for.
+ * @param browser
+ *        The browser to check for the notification bar.
+ * @param callback (optional)
+ *        A function to be called just before the Promise resolves.
+ *
+ * @return Promise
+ */
 function waitForNotificationBar(notificationID, browser, callback) {
-  let notification;
-  let notificationBox = gBrowser.getNotificationBox(browser);
-  waitForCondition(
-    () => (notification = notificationBox.getNotificationWithValue(notificationID)),
-    () => {
-      ok(notification, `Successfully got the ${notificationID} notification bar`);
-      callback(notification);
-    },
-    `Waited too long for the ${notificationID} notification bar`
-  );
+  return new Promise((resolve, reject) => {
+    let notification;
+    let notificationBox = gBrowser.getNotificationBox(browser);
+    waitForCondition(
+      () => (notification = notificationBox.getNotificationWithValue(notificationID)),
+      () => {
+        ok(notification, `Successfully got the ${notificationID} notification bar`);
+        if (callback) {
+          callback(notification);
+        }
+        resolve(notification);
+      },
+      `Waited too long for the ${notificationID} notification bar`
+    );
+  });
+}
+
+/**
+ * Due to layout being async, "PluginBindAttached" may trigger later.
+ * This returns a Promise that resolves once we've forced a layout
+ * flush, which triggers the PluginBindAttached event to fire.
+ *
+ * @param browser
+ *        The browser to force plugin bindings in.
+ *
+ * @return Promise
+ */
+function forcePluginBindingAttached(browser) {
+  return new Promise((resolve, reject) => {
+    let doc = browser.contentDocument;
+    let elems = doc.getElementsByTagName('embed');
+    if (elems.length < 1) {
+      elems = doc.getElementsByTagName('object');
+    }
+    elems[0].clientTop;
+    executeSoon(resolve);
+  });
+}
+
+/**
+ * Loads a page in a browser, and returns a Promise that
+ * resolves once the "load" event has been fired for that
+ * browser.
+ *
+ * @param browser
+ *        The browser to load the page in.
+ * @param uri
+ *        The URI to load.
+ *
+ * @return Promise
+ */
+function loadPage(browser, uri) {
+  return new Promise((resolve, reject) => {
+    browser.addEventListener("load", function onLoad(event) {
+      browser.removeEventListener("load", onLoad, true);
+      resolve();
+    }, true);
+    browser.loadURI(uri);
+  });
 }

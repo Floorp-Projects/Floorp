@@ -16,6 +16,8 @@
 #include "nsIObserverService.h"
 #include "nsISettingsService.h"
 #include "nsJSUtils.h"
+#include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/SettingChangeNotificationBinding.h"
 
 #define BAND_87500_108000_kHz 1
 #define BAND_76000_108000_kHz 2
@@ -678,9 +680,9 @@ FMRadioService::CancelSeek(FMRadioReplyRunnable* aReplyRunnable)
 }
 
 NS_IMETHODIMP
-FMRadioService::Observe(nsISupports * aSubject,
-                        const char * aTopic,
-                        const char16_t * aData)
+FMRadioService::Observe(nsISupports* aSubject,
+                        const char* aTopic,
+                        const char16_t* aData)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sFMRadioService);
@@ -691,47 +693,26 @@ FMRadioService::Observe(nsISupports * aSubject,
 
   // The string that we're interested in will be a JSON string looks like:
   //  {"key":"airplaneMode.enabled","value":true}
-  AutoSafeJSContext cx;
-  const nsDependentString dataStr(aData);
-  JS::Rooted<JS::Value> val(cx);
-  if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &val) ||
-      !val.isObject()) {
-    NS_WARNING("Bad JSON string format.");
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  JSContext* cx = jsapi.cx();
+  RootedDictionary<dom::SettingChangeNotification> setting(cx);
+  if (!WrappedJSToDictionary(cx, aSubject, setting)) {
+    return NS_OK;
+  }
+  if (!setting.mKey.EqualsASCII(SETTING_KEY_AIRPLANEMODE_ENABLED)) {
+    return NS_OK;
+  }
+  if (!setting.mValue.isBoolean()) {
     return NS_OK;
   }
 
-  JS::Rooted<JSObject*> obj(cx, &val.toObject());
-  JS::Rooted<JS::Value> key(cx);
-  if (!JS_GetProperty(cx, obj, "key", &key) ||
-      !key.isString()) {
-    NS_WARNING("Failed to get string property `key`.");
-    return NS_OK;
-  }
+  mAirplaneModeEnabled = setting.mValue.toBoolean();
+  mHasReadAirplaneModeSetting = true;
 
-  JS::Rooted<JSString*> jsKey(cx, key.toString());
-  nsAutoJSString keyStr;
-  if (!keyStr.init(cx, jsKey)) {
-    return NS_OK;
-  }
-
-  if (keyStr.EqualsLiteral(SETTING_KEY_AIRPLANEMODE_ENABLED)) {
-    JS::Rooted<JS::Value> value(cx);
-    if (!JS_GetProperty(cx, obj, "value", &value)) {
-      NS_WARNING("Failed to get property `value`.");
-      return NS_OK;
-    }
-
-    if (!value.isBoolean()) {
-      return NS_OK;
-    }
-
-    mAirplaneModeEnabled = value.toBoolean();
-    mHasReadAirplaneModeSetting = true;
-
-    // Disable the FM radio HW if Airplane mode is enabled.
-    if (mAirplaneModeEnabled) {
-      Disable(nullptr);
-    }
+  // Disable the FM radio HW if Airplane mode is enabled.
+  if (mAirplaneModeEnabled) {
+    Disable(nullptr);
   }
 
   return NS_OK;

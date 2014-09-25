@@ -20,6 +20,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/dom/SettingChangeNotificationBinding.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsJSUtils.h"
@@ -801,48 +802,33 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic, const ch
   // To process the volume control on each audio channel according to
   // change of settings
   else if (!strcmp(aTopic, "mozsettings-changed")) {
-    AutoSafeJSContext cx;
-    nsDependentString dataStr(aData);
-    JS::Rooted<JS::Value> val(cx);
-    if (!JS_ParseJSON(cx, dataStr.get(), dataStr.Length(), &val) ||
-        !val.isObject()) {
+    AutoJSAPI jsapi;
+    jsapi.Init();
+    JSContext* cx = jsapi.cx();
+    RootedDictionary<SettingChangeNotification> setting(cx);
+    if (!WrappedJSToDictionary(cx, aSubject, setting)) {
       return NS_OK;
     }
-
-    JS::Rooted<JSObject*> obj(cx, &val.toObject());
-    JS::Rooted<JS::Value> key(cx);
-    if (!JS_GetProperty(cx, obj, "key", &key) ||
-        !key.isString()) {
+    if (!StringBeginsWith(setting.mKey, NS_LITERAL_STRING("audio.volume."))) {
       return NS_OK;
     }
-
-    JS::Rooted<JSString*> jsKey(cx, JS::ToString(cx, key));
-    if (!jsKey) {
+    if (!setting.mValue.isNumber()) {
       return NS_OK;
     }
-    nsAutoJSString keyStr;
-    if (!keyStr.init(cx, jsKey) || keyStr.Find("audio.volume.", 0, false)) {
-      return NS_OK;
-    }
-
-    JS::Rooted<JS::Value> value(cx);
-    if (!JS_GetProperty(cx, obj, "value", &value) || !value.isInt32()) {
-      return NS_OK;
-    }
-
+    
     nsCOMPtr<nsIAudioManager> audioManager = do_GetService(NS_AUDIOMANAGER_CONTRACTID);
     NS_ENSURE_TRUE(audioManager, NS_OK);
 
-    int32_t index = value.toInt32();
-    if (keyStr.EqualsLiteral("audio.volume.content")) {
+    int32_t index = setting.mValue.toNumber();
+    if (setting.mKey.EqualsLiteral("audio.volume.content")) {
       audioManager->SetAudioChannelVolume((int32_t)AudioChannel::Content, index);
-    } else if (keyStr.EqualsLiteral("audio.volume.notification")) {
+    } else if (setting.mKey.EqualsLiteral("audio.volume.notification")) {
       audioManager->SetAudioChannelVolume((int32_t)AudioChannel::Notification, index);
-    } else if (keyStr.EqualsLiteral("audio.volume.alarm")) {
+    } else if (setting.mKey.EqualsLiteral("audio.volume.alarm")) {
       audioManager->SetAudioChannelVolume((int32_t)AudioChannel::Alarm, index);
-    } else if (keyStr.EqualsLiteral("audio.volume.telephony")) {
+    } else if (setting.mKey.EqualsLiteral("audio.volume.telephony")) {
       audioManager->SetAudioChannelVolume((int32_t)AudioChannel::Telephony, index);
-    } else if (!keyStr.EqualsLiteral("audio.volume.bt_sco")) {
+    } else if (!setting.mKey.EqualsLiteral("audio.volume.bt_sco")) {
       // bt_sco is not a valid audio channel so we manipulate it in
       // AudioManager.cpp. And the others should not be used.
       // We didn't use MOZ_CRASH or MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE here

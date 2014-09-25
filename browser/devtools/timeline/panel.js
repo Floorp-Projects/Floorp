@@ -57,6 +57,8 @@ TimelinePanel.prototype = {
     }
 
     yield this.panelWin.shutdownTimeline();
+    // Destroy front to ensure packet handler is removed from client
+    this.panelWin.gFront.destroy();
     this.emit("destroyed");
     this._destroyed = true;
   })
