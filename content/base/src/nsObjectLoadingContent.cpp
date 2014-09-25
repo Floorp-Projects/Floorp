@@ -65,8 +65,6 @@
 #include "nsObjectLoadingContent.h"
 #include "mozAutoDocUpdate.h"
 #include "nsIContentSecurityPolicy.h"
-#include "nsIChannelPolicy.h"
-#include "nsChannelPolicy.h"
 #include "GeckoProfiler.h"
 #include "nsPluginFrame.h"
 #include "nsDOMClassInfo.h"
@@ -2492,15 +2490,6 @@ nsObjectLoadingContent::OpenChannel()
 
   nsCOMPtr<nsILoadGroup> group = doc->GetDocumentLoadGroup();
   nsCOMPtr<nsIChannel> chan;
-  nsCOMPtr<nsIChannelPolicy> channelPolicy;
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  rv = doc->NodePrincipal()->GetCsp(getter_AddRefs(csp));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (csp) {
-    channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
-    channelPolicy->SetContentSecurityPolicy(csp);
-    channelPolicy->SetLoadType(nsIContentPolicy::TYPE_OBJECT);
-  }
   nsRefPtr<ObjectInterfaceRequestorShim> shim =
     new ObjectInterfaceRequestorShim(this);
 
@@ -2522,7 +2511,6 @@ nsObjectLoadingContent::OpenChannel()
                      thisContent,
                      securityFlags,
                      nsIContentPolicy::TYPE_OBJECT,
-                     channelPolicy,
                      group, // aLoadGroup
                      shim,  // aCallbacks
                      nsIChannel::LOAD_CALL_CONTENT_SNIFFERS |

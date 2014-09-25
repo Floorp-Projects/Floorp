@@ -6,7 +6,6 @@
 #include "ScriptLoader.h"
 
 #include "nsIChannel.h"
-#include "nsIChannelPolicy.h"
 #include "nsIContentPolicy.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIHttpChannel.h"
@@ -17,7 +16,6 @@
 #include "nsIURI.h"
 
 #include "jsapi.h"
-#include "nsChannelPolicy.h"
 #include "nsError.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
@@ -104,23 +102,6 @@ ChannelFromScriptURL(nsIPrincipal* principal,
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SECURITY_ERR);
   }
 
-  // Get Content Security Policy from parent document to pass into channel.
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  rv = principal->GetCsp(getter_AddRefs(csp));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIChannelPolicy> channelPolicy;
-  if (csp) {
-    channelPolicy = do_CreateInstance(NSCHANNELPOLICY_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = channelPolicy->SetContentSecurityPolicy(csp);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = channelPolicy->SetLoadType(nsIContentPolicy::TYPE_SCRIPT);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   uint32_t flags = nsIRequest::LOAD_NORMAL | nsIChannel::LOAD_CLASSIFY_URI;
 
   nsCOMPtr<nsIChannel> channel;
@@ -131,7 +112,6 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                        parentDoc,
                        nsILoadInfo::SEC_NORMAL,
                        nsIContentPolicy::TYPE_SCRIPT,
-                       channelPolicy,
                        loadGroup,
                        nullptr, // aCallbacks
                        flags,
@@ -148,7 +128,6 @@ ChannelFromScriptURL(nsIPrincipal* principal,
                        nullPrincipal,
                        nsILoadInfo::SEC_NORMAL,
                        nsIContentPolicy::TYPE_SCRIPT,
-                       channelPolicy,
                        loadGroup,
                        nullptr, // aCallbacks
                        flags,

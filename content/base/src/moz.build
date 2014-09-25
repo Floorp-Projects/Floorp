@@ -109,7 +109,6 @@ UNIFIED_SOURCES += [
     'nsAttrValue.cpp',
     'nsAttrValueOrString.cpp',
     'nsCCUncollectableMarker.cpp',
-    'nsChannelPolicy.cpp',
     'nsContentAreaDragDrop.cpp',
     'nsContentIterator.cpp',
     'nsContentList.cpp',
