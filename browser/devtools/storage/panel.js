@@ -64,6 +64,8 @@ StoragePanel.prototype = {
   destroy: function() {
     if (!this._destroyed) {
       this.UI.destroy();
+      // Destroy front to ensure packet handler is removed from client
+      this._front.destroy();
       this._destroyed = true;
 
       this._target.off("close", this.destroy);

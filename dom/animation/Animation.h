@@ -11,6 +11,7 @@
 #include "nsIDocument.h"
 #include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/StickyTimeDuration.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/Nullable.h"
@@ -61,8 +62,9 @@ struct ComputedTiming
   static const double kNullTimeFraction;
 
   // The total duration of the animation including all iterations.
-  // Will equal TimeDuration::Forever() if the animation repeats indefinitely.
-  TimeDuration mActiveDuration;
+  // Will equal StickyTimeDuration::Forever() if the animation repeats
+  // indefinitely.
+  StickyTimeDuration mActiveDuration;
 
   // Will be kNullTimeFraction if the animation is neither animating nor
   // filling at the sampled time.
@@ -205,7 +207,8 @@ public:
   }
 
   // Return the duration of the active interval for the given timing parameters.
-  static TimeDuration ActiveDuration(const AnimationTiming& aTiming);
+  static StickyTimeDuration
+  ActiveDuration(const AnimationTiming& aTiming);
 
   // After transitions finish they need to be retained for one throttle-able
   // cycle (for reasons see explanation in

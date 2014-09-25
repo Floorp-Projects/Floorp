@@ -723,27 +723,6 @@ private:
 
 class gfxFontGroup : public gfxTextRunFactory {
 public:
-    class FamilyFace {
-    public:
-        FamilyFace() { }
-
-        FamilyFace(gfxFontFamily* aFamily, gfxFont* aFont)
-            : mFamily(aFamily), mFont(aFont)
-        {
-            NS_ASSERTION(aFont, "font pointer must not be null");
-            NS_ASSERTION(!aFamily ||
-                         aFamily->ContainsFace(aFont->GetFontEntry()),
-                         "font is not a member of the given family");
-        }
-
-        gfxFontFamily* Family() const { return mFamily.get(); }
-        gfxFont* Font() const { return mFont.get(); }
-
-    private:
-        nsRefPtr<gfxFontFamily> mFamily;
-        nsRefPtr<gfxFont>       mFont;
-    };
-
     static void Shutdown(); // platform must call this to release the languageAtomService
 
     gfxFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
@@ -752,28 +731,14 @@ public:
 
     virtual ~gfxFontGroup();
 
-    virtual gfxFont *GetFontAt(int32_t i) {
-        // If it turns out to be hard for all clients that cache font
-        // groups to call UpdateFontList at appropriate times, we could
-        // instead consider just calling UpdateFontList from someplace
-        // more central (such as here).
-        NS_ASSERTION(!mUserFontSet || mCurrGeneration == GetGeneration(),
-                     "Whoever was caching this font group should have "
-                     "called UpdateFontList on it");
-        NS_ASSERTION(mFonts.Length() > uint32_t(i) && mFonts[i].Font(), 
-                     "Requesting a font index that doesn't exist");
-
-        return mFonts[i].Font();
-    }
+    // Returns first valid font in the fontlist or default font.
+    // Initiates userfont loads if userfont not loaded
+    virtual gfxFont* GetFirstValidFont();
 
     // Returns the first font in the font-group that has an OpenType MATH table,
     // or null if no such font is available. The GetMathConstant methods may be
     // called on the returned font.
     gfxFont *GetFirstMathFont();
-
-    uint32_t FontListLength() const {
-        return mFonts.Length();
-    }
 
     const gfxFontStyle *GetStyle() const { return &mStyle; }
 
@@ -845,15 +810,12 @@ public:
 
     // This returns the preferred underline for this font group.
     // Some CJK fonts have wrong underline offset in its metrics.
-    // If this group has such "bad" font, each platform's gfxFontGroup initialized mUnderlineOffset.
-    // The value should be lower value of first font's metrics and the bad font's metrics.
-    // Otherwise, this returns from first font's metrics.
+    // If this group has such "bad" font, each platform's gfxFontGroup
+    // initialized mUnderlineOffset. The value should be lower value of
+    // first font's metrics and the bad font's metrics. Otherwise, this
+    // returns from first font's metrics.
     enum { UNDERLINE_OFFSET_NOT_SET = INT16_MAX };
-    virtual gfxFloat GetUnderlineOffset() {
-        if (mUnderlineOffset == UNDERLINE_OFFSET_NOT_SET)
-            mUnderlineOffset = GetFontAt(0)->GetMetrics().underlineOffset;
-        return mUnderlineOffset;
-    }
+    virtual gfxFloat GetUnderlineOffset();
 
     virtual already_AddRefed<gfxFont>
         FindFontForChar(uint32_t ch, uint32_t prevCh, int32_t aRunScript,
@@ -879,16 +841,19 @@ public:
     // with no @font-face rule, this always returns 0.
     uint64_t GetGeneration();
 
+    // generation of the latest fontset rebuild, 0 when no fontset present
+    uint64_t GetRebuildGeneration();
+
     // used when logging text performance
     gfxTextPerfMetrics *GetTextPerfMetrics() { return mTextPerf; }
     void SetTextPerfMetrics(gfxTextPerfMetrics *aTextPerf) { mTextPerf = aTextPerf; }
 
-    // This will call UpdateFontList() if the user font set is changed.
+    // This will call UpdateUserFonts() if the user font set is changed.
     void SetUserFontSet(gfxUserFontSet *aUserFontSet);
 
     // If there is a user font set, check to see whether the font list or any
     // caches need updating.
-    virtual void UpdateFontList();
+    virtual void UpdateUserFonts();
 
     bool ShouldSkipDrawing() const {
         return mSkipDrawing;
@@ -901,7 +866,7 @@ public:
     // The gfxFontGroup keeps ownership of this textrun.
     // It is only guaranteed to exist until the next call to GetEllipsisTextRun
     // (which might use a different appUnitsPerDev value) for the font group,
-    // or until UpdateFontList is called, or the fontgroup is destroyed.
+    // or until UpdateUserFonts is called, or the fontgroup is destroyed.
     // Get it/use it/forget it :) - don't keep a reference that might go stale.
     gfxTextRun* GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel,
                                    LazyReferenceContextGetter& aRefContextGetter);
@@ -913,9 +878,144 @@ public:
                             nsTArray<nsString>& aGenericFamilies);
 
 protected:
+    class FamilyFace {
+    public:
+        FamilyFace() : mFamily(nullptr), mFontEntry(nullptr),
+                       mNeedsBold(false), mFontCreated(false),
+                       mLoading(false), mInvalid(false)
+        { }
+
+        FamilyFace(gfxFontFamily* aFamily, gfxFont* aFont)
+            : mFamily(aFamily), mNeedsBold(false), mFontCreated(true),
+              mLoading(false), mInvalid(false)
+        {
+            NS_ASSERTION(aFont, "font pointer must not be null");
+            NS_ASSERTION(!aFamily ||
+                         aFamily->ContainsFace(aFont->GetFontEntry()),
+                         "font is not a member of the given family");
+            mFont = aFont;
+            NS_ADDREF(aFont);
+        }
+
+        FamilyFace(gfxFontFamily* aFamily, gfxFontEntry* aFontEntry,
+                   bool aNeedsBold)
+            : mFamily(aFamily), mNeedsBold(aNeedsBold), mFontCreated(false),
+              mLoading(false), mInvalid(false)
+        {
+            NS_ASSERTION(aFontEntry, "font entry pointer must not be null");
+            NS_ASSERTION(!aFamily ||
+                         aFamily->ContainsFace(aFontEntry),
+                         "font is not a member of the given family");
+            mFontEntry = aFontEntry;
+            NS_ADDREF(aFontEntry);
+        }
+
+        FamilyFace(const FamilyFace& aOtherFamilyFace)
+            : mFamily(aOtherFamilyFace.mFamily),
+              mNeedsBold(aOtherFamilyFace.mNeedsBold),
+              mFontCreated(aOtherFamilyFace.mFontCreated),
+              mLoading(aOtherFamilyFace.mLoading),
+              mInvalid(aOtherFamilyFace.mInvalid)
+        {
+            if (mFontCreated) {
+                mFont = aOtherFamilyFace.mFont;
+                NS_ADDREF(mFont);
+            } else {
+                mFontEntry = aOtherFamilyFace.mFontEntry;
+                NS_IF_ADDREF(mFontEntry);
+            }
+        }
+
+        ~FamilyFace()
+        {
+            if (mFontCreated) {
+                NS_RELEASE(mFont);
+            } else {
+                NS_IF_RELEASE(mFontEntry);
+            }
+        }
+
+        FamilyFace& operator=(const FamilyFace& aOther)
+        {
+            if (mFontCreated) {
+                NS_RELEASE(mFont);
+            } else {
+                NS_IF_RELEASE(mFontEntry);
+            }
+
+            mFamily = aOther.mFamily;
+            mNeedsBold = aOther.mNeedsBold;
+            mFontCreated = aOther.mFontCreated;
+            mLoading = aOther.mLoading;
+            mInvalid = aOther.mInvalid;
+
+            if (mFontCreated) {
+                mFont = aOther.mFont;
+                NS_ADDREF(mFont);
+            } else {
+                mFontEntry = aOther.mFontEntry;
+                NS_IF_ADDREF(mFontEntry);
+            }
+
+            return *this;
+        }
+
+        gfxFontFamily* Family() const { return mFamily.get(); }
+        gfxFont* Font() const {
+            return mFontCreated ? mFont : nullptr;
+        }
+
+        gfxFontEntry* FontEntry() const {
+            return mFontCreated ? mFont->GetFontEntry() : mFontEntry;
+        }
+
+        bool NeedsBold() const { return mNeedsBold; }
+        bool IsUserFont() const {
+            return FontEntry()->mIsUserFontContainer;
+        }
+        bool IsLoading() const { return mLoading; }
+        bool IsInvalid() const { return mInvalid; }
+        void SetLoading(bool aIsLoading) { mLoading = aIsLoading; }
+        void SetInvalid() { mInvalid = true; }
+
+        void SetFont(gfxFont* aFont)
+        {
+            NS_ASSERTION(aFont, "font pointer must not be null");
+            NS_ADDREF(aFont);
+            if (mFontCreated) {
+                NS_RELEASE(mFont);
+            } else {
+                NS_IF_RELEASE(mFontEntry);
+            }
+            mFont = aFont;
+            mFontCreated = true;
+        }
+
+    private:
+        nsRefPtr<gfxFontFamily> mFamily;
+        // either a font or a font entry exists
+        union {
+            gfxFont*            mFont;
+            gfxFontEntry*       mFontEntry;
+        };
+        bool                    mNeedsBold   : 1;
+        bool                    mFontCreated : 1;
+        bool                    mLoading     : 1;
+        bool                    mInvalid     : 1;
+    };
+
+    // List of font families, either named or generic.
+    // Generic names map to system pref fonts based on language.
     mozilla::FontFamilyList mFamilyList;
-    gfxFontStyle mStyle;
+
+    // Fontlist containing a font entry for each family found. gfxFont objects
+    // are created as needed and userfont loads are initiated when needed.
+    // Code should be careful about addressing this array directly.
     nsTArray<FamilyFace> mFonts;
+
+    nsRefPtr<gfxFont> mDefaultFont;
+    gfxFontStyle mStyle;
+
     gfxFloat mUnderlineOffset;
     gfxFloat mHyphenWidth;
 
@@ -951,6 +1051,14 @@ protected:
     // Initialize the list of fonts
     void BuildFontList();
 
+    // Get the font at index i within the fontlist.
+    // Will initiate userfont load if not already loaded.
+    // May return null if userfont not loaded or if font invalid
+    virtual gfxFont* GetFontAt(int32_t i);
+
+    // will always return a font or force a shutdown
+    gfxFont* GetDefaultFont();
+
     // Init this font group's font metrics. If there no bad fonts, you don't need to call this.
     // But if there are one or more bad fonts which have bad underline offset,
     // you should call this with the *first* bad font.
@@ -975,10 +1083,11 @@ protected:
                        int32_t aRunScript);
 
     // Helper for font-matching:
-    // see if aCh is supported in any of the faces from aFamily;
-    // if so return the best style match, else return null.
-    already_AddRefed<gfxFont> TryAllFamilyMembers(gfxFontFamily* aFamily,
-                                                  uint32_t aCh);
+    // When matching the italic case, allow use of the regular face
+    // if it supports a character but the italic one doesn't.
+    // Return null if regular face doesn't support aCh
+    already_AddRefed<gfxFont>
+    FindNonItalicFaceForChar(gfxFontFamily* aFamily, uint32_t aCh);
 
     // helper methods for looking up fonts
 

@@ -48,14 +48,14 @@ class MachCommands(MachCommandBase):
         dirs_to_files = {}
 
         for path, dirs, files in os.walk(js_src_dir):
-            js_files = [f for f in files if f.endswith(('.js', '.jsm'))]
+            js_files = [f for f in files if f.endswith(('.js', '.jsm', '.html'))]
             if not js_files:
                 continue
 
             relative = mozpath.relpath(path, js_src_dir)
             dirs_to_files[relative] = js_files
 
-        moz_build = """# AUTOMATICALLY GENERATED FROM moz.build.in AND mach.  DO NOT EDIT.
+        moz_build = """# AUTOMATICALLY GENERATED FROM mozbuild.template AND mach.  DO NOT EDIT.
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.

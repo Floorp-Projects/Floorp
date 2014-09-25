@@ -51,7 +51,7 @@ GetCameraLog()
   return sLog;
 }
 
-WindowTable* nsDOMCameraManager::sActiveWindows = nullptr;
+::WindowTable* nsDOMCameraManager::sActiveWindows = nullptr;
 
 nsDOMCameraManager::nsDOMCameraManager(nsPIDOMWindow* aWindow)
   : mWindowId(aWindow->WindowID())
@@ -109,7 +109,7 @@ nsDOMCameraManager::CreateInstance(nsPIDOMWindow* aWindow)
 {
   // Initialize the shared active window tracker
   if (!sActiveWindows) {
-    sActiveWindows = new WindowTable();
+    sActiveWindows = new ::WindowTable();
   }
 
   nsRefPtr<nsDOMCameraManager> cameraManager =
