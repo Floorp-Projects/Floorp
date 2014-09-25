@@ -1550,6 +1550,8 @@ TabChild::DestroyWindow()
 void
 TabChild::ActorDestroy(ActorDestroyReason why)
 {
+  DestroyWindow();
+
   if (mTabChildGlobal) {
     // The messageManager relays messages via the TabChild which
     // no longer exists.
