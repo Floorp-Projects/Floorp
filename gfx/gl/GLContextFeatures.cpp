@@ -509,6 +509,20 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
+        "texture_storage",
+        420, // OpenGL version
+        300, // OpenGL ES version
+        GLContext::ARB_texture_storage,
+        {
+            /*
+             * Not including GL_EXT_texture_storage here because it
+             * doesn't guarantee glTexStorage3D, which is required for
+             * WebGL 2.
+             */
+            GLContext::Extensions_End
+        }
+    },
+    {
         "transform_feedback2",
         400, // OpenGL version
         300, // OpenGL ES version

@@ -367,7 +367,7 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
     if (drawingModel == NPDrawingModelCoreAnimation ||
         drawingModel == NPDrawingModelInvalidatingCoreAnimation) {
         // We need to request CoreGraphics otherwise
-        // the nsObjectFrame will try to draw a CALayer
+        // the nsPluginFrame will try to draw a CALayer
         // that can not be shared across process.
         mDrawingModel = drawingModel;
         *result = mNPNIface->setvalue(mNPP, NPPVpluginDrawingModel,
@@ -1231,7 +1231,7 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
 
             case WM_WINDOWPOSCHANGED:
             {
-                // We send this in nsObjectFrame just before painting
+                // We send this in nsPluginFrame just before painting
                 return SendWindowPosChanged(npremoteevent);
             }
             break;

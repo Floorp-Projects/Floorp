@@ -94,7 +94,7 @@ nsFontFaceLoader::StartedLoading(nsIStreamLoader* aStreamLoader)
                                        nsITimer::TYPE_ONE_SHOT);
     }
   } else {
-    mUserFontEntry->mLoadingState = gfxUserFontEntry::LOADING_SLOWLY;
+    mUserFontEntry->mFontDataLoadingState = gfxUserFontEntry::LOADING_SLOWLY;
   }
   mStreamLoader = aStreamLoader;
 }
@@ -114,7 +114,7 @@ nsFontFaceLoader::LoadTimerCallback(nsITimer* aTimer, void* aClosure)
 
   // If the entry is loading, check whether it's >75% done; if so,
   // we allow another timeout period before showing a fallback font.
-  if (ufe->mLoadingState == gfxUserFontEntry::LOADING_STARTED) {
+  if (ufe->mFontDataLoadingState == gfxUserFontEntry::LOADING_STARTED) {
     int64_t contentLength;
     uint32_t numBytesRead;
     if (NS_SUCCEEDED(loader->mChannel->GetContentLength(&contentLength)) &&
@@ -126,7 +126,7 @@ nsFontFaceLoader::LoadTimerCallback(nsITimer* aTimer, void* aClosure)
       // More than 3/4 the data has been downloaded, so allow 50% extra
       // time and hope the remainder will arrive before the additional
       // time expires.
-      ufe->mLoadingState = gfxUserFontEntry::LOADING_ALMOST_DONE;
+      ufe->mFontDataLoadingState = gfxUserFontEntry::LOADING_ALMOST_DONE;
       uint32_t delay;
       loader->mLoadTimer->GetDelay(&delay);
       loader->mLoadTimer->InitWithFuncCallback(LoadTimerCallback,
@@ -142,7 +142,7 @@ nsFontFaceLoader::LoadTimerCallback(nsITimer* aTimer, void* aClosure)
   // before, we mark this entry as "loading slowly", so the fallback
   // font will be used in the meantime, and tell the context to refresh.
   if (updateUserFontSet) {
-    ufe->mLoadingState = gfxUserFontEntry::LOADING_SLOWLY;
+    ufe->mFontDataLoadingState = gfxUserFontEntry::LOADING_SLOWLY;
     gfxUserFontSet* fontSet = loader->mFontSet;
     nsPresContext* ctx = loader->mFontSet->GetPresContext();
     NS_ASSERTION(ctx, "userfontset doesn't have a presContext?");
@@ -209,12 +209,12 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 
   // The userFontEntry is responsible for freeing the downloaded data
   // (aString) when finished with it; the pointer is no longer valid
-  // after OnLoadComplete returns.
+  // after FontDataDownloadComplete returns.
   // This is called even in the case of a failed download (HTTP 404, etc),
   // as there may still be data to be freed (e.g. an error page),
-  // and we need the fontSet to initiate loading the next source.
-  bool fontUpdate = mUserFontEntry->OnLoadComplete(aString,
-                                                   aStringLen, aStatus);
+  // and we need to load the next source.
+  bool fontUpdate =
+    mUserFontEntry->FontDataDownloadComplete(aString, aStringLen, aStatus);
 
   // when new font loaded, need to reflow
   if (fontUpdate) {
@@ -237,7 +237,7 @@ nsFontFaceLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 void
 nsFontFaceLoader::Cancel()
 {
-  mUserFontEntry->mLoadingState = gfxUserFontEntry::NOT_LOADING;
+  mUserFontEntry->mFontDataLoadingState = gfxUserFontEntry::NOT_LOADING;
   mUserFontEntry->mLoader = nullptr;
   mFontSet = nullptr;
   if (mLoadTimer) {
@@ -486,7 +486,7 @@ nsUserFontSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
   }
 
   if (modified) {
-    IncrementGeneration();
+    IncrementGeneration(true);
   }
 
   // local rules have been rebuilt, so clear the flag

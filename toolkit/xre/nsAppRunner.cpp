@@ -1517,6 +1517,7 @@ DumpHelp()
   printf("  -h or -help        Print this message.\n"
          "  -v or -version     Print %s version.\n"
          "  -P <profile>       Start with <profile>.\n"
+         "  -profile <path>    Start with profile at <path>.\n"
          "  -migration         Start with migration wizard.\n"
          "  -ProfileManager    Start with ProfileManager.\n"
          "  -no-remote         Do not accept or send remote commands; implies -new-instance.\n"
