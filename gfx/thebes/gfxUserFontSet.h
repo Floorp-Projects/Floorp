@@ -203,13 +203,13 @@ public:
                                    nsIPrincipal** aPrincipal,
                                    bool* aBypassCache) = 0;
 
-    // initialize the process that loads external font data, which upon 
-    // completion will call OnLoadComplete method
+    // initialize the process that loads external font data, which upon
+    // completion will call FontDataDownloadComplete method
     virtual nsresult StartLoad(gfxUserFontEntry* aUserFontEntry,
                                const gfxFontFaceSrc* aFontFaceSrc) = 0;
 
     // generation - each time a face is loaded, generation is
-    // incremented so that the change can be recognized 
+    // incremented so that the change can be recognized
     uint64_t GetGeneration() { return mGeneration; }
 
     // increment the generation on font load
@@ -465,12 +465,11 @@ class gfxUserFontEntry : public gfxFontEntry {
     friend class gfxOTSContext;
 
 public:
-    enum LoadStatus {
-        STATUS_LOADING = 0,
+    enum UserFontLoadState {
+        STATUS_NOT_LOADED = 0,
+        STATUS_LOADING,
         STATUS_LOADED,
-        STATUS_FORMAT_NOT_SUPPORTED,
-        STATUS_ERROR,
-        STATUS_END_OF_LIST
+        STATUS_FAILED
     };
 
     gfxUserFontEntry(gfxUserFontSet* aFontSet,
@@ -493,18 +492,23 @@ public:
                  uint32_t aLanguageOverride,
                  gfxSparseBitSet* aUnicodeRanges);
 
-    virtual gfxFont* CreateFontInstance(const gfxFontStyle* aFontStyle, bool aNeedsBold);
+    virtual gfxFont* CreateFontInstance(const gfxFontStyle* aFontStyle,
+                                        bool aNeedsBold);
 
     gfxFontEntry* GetPlatformFontEntry() { return mPlatformFontEntry; }
 
-    // when download has been completed, pass back data here
-    // aDownloadStatus == NS_OK ==> download succeeded, error otherwise
-    // returns true if platform font creation sucessful (or local()
-    // reference was next in line)
-    // Ownership of aFontData is passed in here; the font set must
-    // ensure that it is eventually deleted with NS_Free().
-    bool OnLoadComplete(const uint8_t* aFontData, uint32_t aLength,
-                        nsresult aDownloadStatus);
+    // is the font loading or loaded, or did it fail?
+    UserFontLoadState LoadState() const { return mUserFontLoadState; }
+
+    // whether to wait before using fallback font or not
+    bool WaitForUserFont() const {
+        return mUserFontLoadState == STATUS_LOADING &&
+               mFontDataLoadingState < LOADING_SLOWLY;
+    }
+
+    // load the font - starts the loading of sources which continues until
+    // a valid font resource is found or all sources fail
+    void Load();
 
 protected:
     const uint8_t* SanitizeOpenTypeData(const uint8_t* aData,
@@ -512,14 +516,26 @@ protected:
                                         uint32_t& aSaneLength,
                                         bool aIsCompressed);
 
-    // Attempt to load the next resource in the src list.
-    LoadStatus LoadNext();
+    // attempt to load the next resource in the src list.
+    void LoadNextSrc();
+
+    // change the load state
+    void SetLoadState(UserFontLoadState aLoadState);
+
+    // when download has been completed, pass back data here
+    // aDownloadStatus == NS_OK ==> download succeeded, error otherwise
+    // returns true if platform font creation sucessful (or local()
+    // reference was next in line)
+    // Ownership of aFontData is passed in here; the font set must
+    // ensure that it is eventually deleted with NS_Free().
+    bool FontDataDownloadComplete(const uint8_t* aFontData, uint32_t aLength,
+                                  nsresult aDownloadStatus);
 
     // helper method for creating a platform font
     // returns true if platform font creation successful
     // Ownership of aFontData is passed in here; the font must
     // ensure that it is eventually deleted with NS_Free().
-    bool LoadFont(const uint8_t* aFontData, uint32_t &aLength);
+    bool LoadPlatformFont(const uint8_t* aFontData, uint32_t& aLength);
 
     // store metadata and src details for current src into aFontEntry
     void StoreUserFontData(gfxFontEntry*      aFontEntry,
@@ -528,8 +544,13 @@ protected:
                            FallibleTArray<uint8_t>* aMetadata,
                            uint32_t           aMetaOrigLen);
 
+    // general load state
+    UserFontLoadState        mUserFontLoadState;
+
+    // detailed load state while font data is loading
+    // used to determine whether to use fallback font or not
     // note that code depends on the ordering of these values!
-    enum LoadingState {
+    enum FontDataLoadingState {
         NOT_LOADING = 0,     // not started to load any font resources yet
         LOADING_STARTED,     // loading has started; hide fallback font
         LOADING_ALMOST_DONE, // timeout happened but we're nearly done,
@@ -538,7 +559,8 @@ protected:
                              // so use the fallback font
         LOADING_FAILED       // failed to load any source: use fallback
     };
-    LoadingState             mLoadingState;
+    FontDataLoadingState     mFontDataLoadingState;
+
     bool                     mUnsupportedFormat;
 
     nsRefPtr<gfxFontEntry>   mPlatformFontEntry;
