@@ -160,6 +160,21 @@ public:
     mValue = ValueCalculator::Subtract(mValue, aOther.mValue);
     return *this;
   }
+  BaseTimeDuration operator-() const
+  {
+    // We don't just use FromTicks(ValueCalculator::Subtract(0, mValue))
+    // since that won't give the correct result for -TimeDuration::Forever().
+    int64_t ticks;
+    if (mValue == INT64_MAX) {
+      ticks = INT64_MIN;
+    } else if (mValue == INT64_MIN) {
+      ticks = INT64_MAX;
+    } else {
+      ticks = -mValue;
+    }
+
+    return FromTicks(ticks);
+  }
 
 private:
   // Block double multiplier (slower, imprecise if long duration) - Bug 853398.
