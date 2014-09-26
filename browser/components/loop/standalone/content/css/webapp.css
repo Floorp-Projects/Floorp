@@ -115,9 +115,8 @@ body,
   line-height: 2.2rem;
 }
 
-p.standalone-btn-label {
+.standalone-btn-label {
   font-size: 1.2rem;
-  line-height: 1.5rem;
 }
 
 .light-color-font {

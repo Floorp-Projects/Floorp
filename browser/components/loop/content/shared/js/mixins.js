@@ -31,10 +31,6 @@ loop.shared.mixins = (function() {
    * @type {Object}
    */
   var DropdownMenuMixin = {
-    get documentBody() {
-      return rootObject.document.body;
-    },
-
     getInitialState: function() {
       return {showMenu: false};
     },
@@ -44,13 +40,11 @@ loop.shared.mixins = (function() {
     },
 
     componentDidMount: function() {
-      this.documentBody.addEventListener("click", this._onBodyClick);
-      this.documentBody.addEventListener("blur", this.hideDropdownMenu);
+      rootObject.document.body.addEventListener("click", this._onBodyClick);
     },
 
     componentWillUnmount: function() {
-      this.documentBody.removeEventListener("click", this._onBodyClick);
-      this.documentBody.removeEventListener("blur", this.hideDropdownMenu);
+      rootObject.document.body.removeEventListener("click", this._onBodyClick);
     },
 
     showDropdownMenu: function() {
@@ -59,11 +53,7 @@ loop.shared.mixins = (function() {
 
     hideDropdownMenu: function() {
       this.setState({showMenu: false});
-    },
-
-    toggleDropdownMenu: function() {
-      this.setState({showMenu: !this.state.showMenu});
-    },
+    }
   };
 
   /**

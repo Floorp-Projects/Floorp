@@ -29,8 +29,8 @@ loop.shared.models = (function(l10n) {
                                    // requires.
       callType:     undefined,     // The type of incoming call selected by
                                    // other peer ("audio" or "audio-video")
-      selectedCallType: "audio-video", // The selected type for the call that was
-                                       // initiated ("audio" or "audio-video")
+      selectedCallType: undefined, // The selected type for the call that was
+                                   // initiated ("audio" or "audio-video")
       callToken:    undefined,     // Incoming call token.
                                    // Used for blocking a call url
       subscribedStream: false,     // Used to indicate that a stream has been
@@ -86,13 +86,8 @@ loop.shared.models = (function(l10n) {
     /**
      * Used to indicate that an outgoing call should start any necessary
      * set-up.
-     *
-     * @param {String} selectedCallType Call type ("audio" or "audio-video")
      */
-    setupOutgoingCall: function(selectedCallType) {
-      if (selectedCallType) {
-        this.set("selectedCallType", selectedCallType);
-      }
+    setupOutgoingCall: function() {
       this.trigger("call:outgoing:setup");
     },
 
