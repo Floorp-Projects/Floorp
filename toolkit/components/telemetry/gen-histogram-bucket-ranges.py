@@ -28,7 +28,8 @@ def main(argv):
             'flag': '3',
             'enumerated': '1',
             'linear': '1',
-            'exponential': '0'
+            'exponential': '0',
+            'count': '4',
             }
         # Use __setitem__ because Python lambdas are so limited.
         histogram_tools.table_dispatch(histogram.kind(), table,
