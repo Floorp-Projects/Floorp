@@ -93,7 +93,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       const OpPaintTextureRegion& op = aEdit.get_OpPaintTextureRegion();
       CompositableHost* compositable = AsCompositable(op);
       Layer* layer = compositable->GetLayer();
-      if (!layer || layer->GetType() != Layer::TYPE_THEBES) {
+      if (!layer || layer->GetType() != Layer::TYPE_PAINTED) {
         return false;
       }
       PaintedLayerComposite* thebes = static_cast<PaintedLayerComposite*>(layer);

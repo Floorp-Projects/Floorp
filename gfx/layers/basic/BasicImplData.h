@@ -21,7 +21,7 @@ class SurfaceDescriptor;
  * This is the ImplData for all Basic layers. It also exposes methods
  * private to the Basic implementation that are common to all Basic layer types.
  * In particular, there is an internal Paint() method that we can use
- * to paint the contents of non-Thebes layers.
+ * to paint the contents of non-PaintedLayers.
  *
  * The class hierarchy for Basic layers is like this:
  *                                 BasicImplData

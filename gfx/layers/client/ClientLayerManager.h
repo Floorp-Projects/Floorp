@@ -292,7 +292,7 @@ private:
 
   nsIWidget* mWidget;
   
-  /* Thebes layer callbacks; valid at the end of a transaciton,
+  /* PaintedLayer callbacks; valid at the end of a transaciton,
    * while rendering */
   DrawPaintedLayerCallback mPaintedLayerCallback;
   void *mPaintedLayerCallbackData;

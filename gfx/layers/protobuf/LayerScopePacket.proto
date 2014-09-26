@@ -94,7 +94,7 @@ message LayersPacket {
     optional uint64 mask = 19;    // mask layer
 
     // Specific info (100 to max)
-    // Thebes Layer
+    // Painted Layer
     optional Region valid = 100;
     // Color Layer
     optional uint32 color = 101;

@@ -65,7 +65,7 @@ public:
   }
 
   virtual LayerType GetType() const {
-    return TYPE_THEBES;
+    return TYPE_PAINTED;
   }
 
   virtual void InvalidateRegion(const nsIntRegion& aRegion) {

@@ -364,7 +364,7 @@ nsPluginFrame::PrepForDrawing(nsIWidget *aWidget)
 #ifdef XP_MACOSX
     // On Mac, we need to invalidate ourselves since even windowed
     // plugins are painted through Thebes and we need to ensure
-    // the Thebes layer containing the plugin is updated.
+    // the PaintedLayer containing the plugin is updated.
     if (parentWidget == GetNearestWidget()) {
       InvalidateFrame();
     }
