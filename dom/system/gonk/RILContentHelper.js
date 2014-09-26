@@ -309,7 +309,7 @@ RILContentHelper.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICellBroadcastProvider,
-                                         Ci.nsIVoicemailProvider,
+                                         Ci.nsIVoicemailService,
                                          Ci.nsIIccProvider,
                                          Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
@@ -317,7 +317,7 @@ RILContentHelper.prototype = {
   classInfo: XPCOMUtils.generateCI({classID: RILCONTENTHELPER_CID,
                                     classDescription: "RILContentHelper",
                                     interfaces: [Ci.nsICellBroadcastProvider,
-                                                 Ci.nsIVoicemailProvider,
+                                                 Ci.nsIVoicemailService,
                                                  Ci.nsIIccProvider]}),
 
   updateDebugFlag: function() {

@@ -51,22 +51,22 @@ private:
 NS_IMPL_ISUPPORTS(Voicemail::Listener, nsIVoicemailListener)
 
 Voicemail::Voicemail(nsPIDOMWindow* aWindow,
-                     nsIVoicemailProvider* aProvider)
+                     nsIVoicemailService* aService)
   : DOMEventTargetHelper(aWindow)
-  , mProvider(aProvider)
+  , mService(aService)
 {
   mListener = new Listener(this);
-  DebugOnly<nsresult> rv = mProvider->RegisterVoicemailMsg(mListener);
+  DebugOnly<nsresult> rv = mService->RegisterVoicemailMsg(mListener);
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                   "Failed registering voicemail messages with provider");
+                   "Failed registering voicemail messages with service");
 }
 
 Voicemail::~Voicemail()
 {
-  MOZ_ASSERT(mProvider && mListener);
+  MOZ_ASSERT(mService && mListener);
 
   mListener->Disconnect();
-  mProvider->UnregisterVoicemailMsg(mListener);
+  mService->UnregisterVoicemailMsg(mListener);
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(Voicemail, DOMEventTargetHelper)
@@ -95,7 +95,7 @@ Voicemail::PassedOrDefaultServiceId(const Optional<uint32_t>& aServiceId,
     }
     aResult = aServiceId.Value();
   } else {
-    mProvider->GetVoicemailDefaultServiceId(&aResult);
+    mService->GetVoicemailDefaultServiceId(&aResult);
   }
 
   return true;
@@ -107,7 +107,7 @@ already_AddRefed<MozVoicemailStatus>
 Voicemail::GetStatus(const Optional<uint32_t>& aServiceId,
                      ErrorResult& aRv) const
 {
-  if (!mProvider) {
+  if (!mService) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
@@ -119,7 +119,7 @@ Voicemail::GetStatus(const Optional<uint32_t>& aServiceId,
   }
   JSContext *cx = nsContentUtils::GetCurrentJSContext();
   JS::Rooted<JS::Value> status(cx);
-  nsresult rv = mProvider->GetVoicemailStatus(id, &status);
+  nsresult rv = mService->GetVoicemailStatus(id, &status);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return nullptr;
@@ -139,7 +139,7 @@ Voicemail::GetNumber(const Optional<uint32_t>& aServiceId, nsString& aNumber,
 {
   aNumber.SetIsVoid(true);
 
-  if (!mProvider) {
+  if (!mService) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
   }
@@ -150,7 +150,7 @@ Voicemail::GetNumber(const Optional<uint32_t>& aServiceId, nsString& aNumber,
     return;
   }
 
-  aRv = mProvider->GetVoicemailNumber(id, aNumber);
+  aRv = mService->GetVoicemailNumber(id, aNumber);
 }
 
 void
@@ -159,7 +159,7 @@ Voicemail::GetDisplayName(const Optional<uint32_t>& aServiceId, nsString& aDispl
 {
   aDisplayName.SetIsVoid(true);
 
-  if (!mProvider) {
+  if (!mService) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
   }
@@ -170,7 +170,7 @@ Voicemail::GetDisplayName(const Optional<uint32_t>& aServiceId, nsString& aDispl
     return;
   }
 
-  aRv = mProvider->GetVoicemailDisplayName(id, aDisplayName);
+  aRv = mService->GetVoicemailDisplayName(id, aDisplayName);
 }
 
 // nsIVoicemailListener
@@ -199,11 +199,11 @@ NS_NewVoicemail(nsPIDOMWindow* aWindow, Voicemail** aVoicemail)
     aWindow :
     aWindow->GetCurrentInnerWindow();
 
-  nsCOMPtr<nsIVoicemailProvider> provider =
+  nsCOMPtr<nsIVoicemailService> service =
     do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
-  NS_ENSURE_STATE(provider);
+  NS_ENSURE_STATE(service);
 
-  nsRefPtr<Voicemail> voicemail = new Voicemail(innerWindow, provider);
+  nsRefPtr<Voicemail> voicemail = new Voicemail(innerWindow, service);
   voicemail.forget(aVoicemail);
   return NS_OK;
 }
