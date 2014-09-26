@@ -963,6 +963,7 @@ class RunDmd(MachCommandBase):
                 "DMD": dmd_str,
             },
             "Linux": {
+                "LD_PRELOAD": dmd_lib,
                 "LD_LIBRARY_PATH": lib_dir,
                 "DMD": dmd_str,
             },
