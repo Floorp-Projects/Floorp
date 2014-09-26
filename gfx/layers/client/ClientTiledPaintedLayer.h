@@ -26,7 +26,7 @@ class SpecificLayerAttributes;
  * is better suited to mobile hardware to work around slow implementation
  * of glTexImage2D (for OGL compositors), and restrait memory bandwidth.
  *
- * Tiled Thebes layers use a different protocol compared with other
+ * Tiled PaintedLayers use a different protocol compared with other
  * layers. A copy of the tiled buffer is made and sent to the compositing
  * thread via the layers protocol. Tiles are uploaded by the buffers
  * asynchonously without using IPC, that means they are not safe for cross-
@@ -51,7 +51,7 @@ public:
   // Override name to distinguish it from ClientPaintedLayer in layer dumps
   virtual const char* Name() const { return "TiledPaintedLayer"; }
 
-  // Thebes Layer
+  // PaintedLayer
   virtual Layer* AsLayer() { return this; }
   virtual void InvalidateRegion(const nsIntRegion& aRegion) {
     mInvalidRegion.Or(mInvalidRegion, aRegion);

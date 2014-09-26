@@ -88,7 +88,7 @@ ShadowLayerParent::AsRefLayerComposite() const
 PaintedLayerComposite*
 ShadowLayerParent::AsPaintedLayerComposite() const
 {
-  return mLayer && mLayer->GetType() == Layer::TYPE_THEBES
+  return mLayer && mLayer->GetType() == Layer::TYPE_PAINTED
          ? static_cast<PaintedLayerComposite*>(mLayer.get())
          : nullptr;
 }

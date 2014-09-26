@@ -167,11 +167,11 @@ ClientLayerManager::CreatePaintedLayerWithHint(PaintedLayerCreationHint aHint)
        AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_D3D9 ||
        AsShadowForwarder()->GetCompositorBackendType() == LayersBackend::LAYERS_D3D11)) {
     nsRefPtr<ClientTiledPaintedLayer> layer = new ClientTiledPaintedLayer(this, aHint);
-    CREATE_SHADOW(Thebes);
+    CREATE_SHADOW(Painted);
     return layer.forget();
   } else {
     nsRefPtr<ClientPaintedLayer> layer = new ClientPaintedLayer(this, aHint);
-    CREATE_SHADOW(Thebes);
+    CREATE_SHADOW(Painted);
     return layer.forget();
   }
 }

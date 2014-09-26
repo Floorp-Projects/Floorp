@@ -41,7 +41,7 @@ class BasicLayerManager;
 class PaintedLayer;
 
 /**
- * A compositable client for Thebes layers. These are different to Image/Canvas
+ * A compositable client for PaintedLayers. These are different to Image/Canvas
  * clients due to sending a valid region across IPC and because we do a lot more
  * optimisation work, encapsualted in RotatedContentBuffers.
  *

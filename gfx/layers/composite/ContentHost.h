@@ -47,7 +47,7 @@ class TextureImageTextureSourceOGL;
 struct TexturedEffect;
 
 /**
- * ContentHosts are used for compositing Thebes layers, always matched by a
+ * ContentHosts are used for compositing Painted layers, always matched by a
  * ContentClient of the same type.
  *
  * ContentHosts support only UpdateThebes(), not Update().

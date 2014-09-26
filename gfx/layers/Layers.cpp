@@ -1343,7 +1343,7 @@ Layer::Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHtml)
   if (aDumpHtml) {
     aStream << nsPrintfCString("<li><a id=\"%p\" ", this).get();
 #ifdef MOZ_DUMP_PAINTING
-    if (GetType() == TYPE_CONTAINER || GetType() == TYPE_THEBES) {
+    if (GetType() == TYPE_CONTAINER || GetType() == TYPE_PAINTED) {
       WriteSnapshotLinkToDumpFile(this, aStream);
     }
 #endif

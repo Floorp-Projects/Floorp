@@ -380,11 +380,11 @@ public:
    */
   nsAutoCString mLog;
 
-  #define FLB_LOG_THEBES_DECISION(tld, ...) \
+  #define FLB_LOG_PAINTED_LAYER_DECISION(tld, ...) \
           tld->mLog.AppendPrintf("\t\t\t\t"); \
           tld->mLog.AppendPrintf(__VA_ARGS__);
 #else
-  #define FLB_LOG_THEBES_DECISION(...)
+  #define FLB_LOG_PAINTED_LAYER_DECISION(...)
 #endif
 
   /**
@@ -479,7 +479,7 @@ public:
    * image, a clip for SOME item in the layer. There is no guarantee which
    * item's clip will be stored here and mItemClip should not be used to clip
    * the whole layer - only some part of the clip should be used, as determined
-   * by ThebesDisplayItemLayerUserData::GetCommonClipCount() - which may even be
+   * by PaintedDisplayItemLayerUserData::GetCommonClipCount() - which may even be
    * no part at all.
    */
   DisplayItemClip mItemClip;
@@ -709,12 +709,12 @@ protected:
    * Grab the next recyclable ColorLayer, or create one if there are no
    * more recyclable ColorLayers.
    */
-  already_AddRefed<ColorLayer> CreateOrRecycleColorLayer(PaintedLayer* aThebes);
+  already_AddRefed<ColorLayer> CreateOrRecycleColorLayer(PaintedLayer* aPainted);
   /**
    * Grab the next recyclable ImageLayer, or create one if there are no
    * more recyclable ImageLayers.
    */
-  already_AddRefed<ImageLayer> CreateOrRecycleImageLayer(PaintedLayer* aThebes);
+  already_AddRefed<ImageLayer> CreateOrRecycleImageLayer(PaintedLayer* aPainted);
   /**
    * Grab a recyclable ImageLayer for use as a mask layer for aLayer (that is a
    * mask layer which has been used for aLayer before), or create one if such
@@ -872,7 +872,7 @@ protected:
    * The region of PaintedLayers that should be invalidated every time
    * we recycle one.
    */
-  nsIntRegion                      mInvalidThebesContent;
+  nsIntRegion                      mInvalidPaintedContent;
   nsAutoTArray<nsAutoPtr<PaintedLayerData>,1>  mPaintedLayerDataStack;
   /**
    * We collect the list of children in here. During ProcessDisplayItems,
@@ -894,10 +894,10 @@ protected:
   bool                             mFlattenToSingleLayer;
 };
 
-class ThebesDisplayItemLayerUserData : public LayerUserData
+class PaintedDisplayItemLayerUserData : public LayerUserData
 {
 public:
-  ThebesDisplayItemLayerUserData() :
+  PaintedDisplayItemLayerUserData() :
     mMaskClipCount(0),
     mForcedBackgroundColor(NS_RGBA(0,0,0,0)),
     mXScale(1.f), mYScale(1.f),
@@ -906,7 +906,7 @@ public:
     mAnimatedGeometryRootPosition(0, 0) {}
 
   /**
-   * Record the number of clips in the Thebes layer's mask layer.
+   * Record the number of clips in the PaintedLayer's mask layer.
    * Should not be reset when the layer is recycled since it is used to track
    * changes in the use of mask layers.
    */
@@ -993,15 +993,15 @@ struct MaskLayerUserData : public LayerUserData
 };
 
 /**
- * The address of gThebesDisplayItemLayerUserData is used as the user
+ * The address of gPaintedDisplayItemLayerUserData is used as the user
  * data key for PaintedLayers created by FrameLayerBuilder.
  * It identifies PaintedLayers used to draw non-layer content, which are
  * therefore eligible for recycling. We want display items to be able to
  * create their own dedicated PaintedLayers in BuildLayer, if necessary,
  * and we wouldn't want to accidentally recycle those.
- * The user data is a ThebesDisplayItemLayerUserData.
+ * The user data is a PaintedDisplayItemLayerUserData.
  */
-uint8_t gThebesDisplayItemLayerUserData;
+uint8_t gPaintedDisplayItemLayerUserData;
 /**
  * The address of gColorLayerUserData is used as the user
  * data key for ColorLayers created by FrameLayerBuilder.
@@ -1036,10 +1036,10 @@ MaskLayerUserData* GetMaskLayerUserData(Layer* aLayer)
   return static_cast<MaskLayerUserData*>(aLayer->GetUserData(&gMaskLayerUserData));
 }
 
-ThebesDisplayItemLayerUserData* GetThebesDisplayItemLayerUserData(Layer* aLayer)
+PaintedDisplayItemLayerUserData* GetPaintedDisplayItemLayerUserData(Layer* aLayer)
 {
-  return static_cast<ThebesDisplayItemLayerUserData*>(
-    aLayer->GetUserData(&gThebesDisplayItemLayerUserData));
+  return static_cast<PaintedDisplayItemLayerUserData*>(
+    aLayer->GetUserData(&gPaintedDisplayItemLayerUserData));
 }
 
 /* static */ void
@@ -1147,8 +1147,8 @@ InvalidatePostTransformRegion(PaintedLayer* aLayer, const nsRect& aRect,
                               const DisplayItemClip& aClip,
                               const nsIntPoint& aTranslation)
 {
-  ThebesDisplayItemLayerUserData* data =
-      static_cast<ThebesDisplayItemLayerUserData*>(aLayer->GetUserData(&gThebesDisplayItemLayerUserData));
+  PaintedDisplayItemLayerUserData* data =
+      static_cast<PaintedDisplayItemLayerUserData*>(aLayer->GetUserData(&gPaintedDisplayItemLayerUserData));
 
   nsRect rect = aClip.ApplyNonRoundedIntersection(aRect);
 
@@ -1160,9 +1160,9 @@ InvalidatePostTransformRegion(PaintedLayer* aLayer, const nsRect& aRect,
 static nsIntPoint
 GetTranslationForPaintedLayer(PaintedLayer* aLayer)
 {
-  ThebesDisplayItemLayerUserData* data =
-    static_cast<ThebesDisplayItemLayerUserData*>
-      (aLayer->GetUserData(&gThebesDisplayItemLayerUserData));
+  PaintedDisplayItemLayerUserData* data =
+    static_cast<PaintedDisplayItemLayerUserData*>
+      (aLayer->GetUserData(&gPaintedDisplayItemLayerUserData));
   NS_ASSERTION(data, "Must be a tracked painted layer!");
 
   return data->mTranslation;
@@ -1215,14 +1215,14 @@ FrameLayerBuilder::RemoveFrameFromLayerManager(nsIFrame* aFrame,
 
     PaintedLayer* t = data->mLayer->AsPaintedLayer();
     if (t) {
-      ThebesDisplayItemLayerUserData* thebesData =
-          static_cast<ThebesDisplayItemLayerUserData*>(t->GetUserData(&gThebesDisplayItemLayerUserData));
-      if (thebesData) {
+      PaintedDisplayItemLayerUserData* paintedData =
+          static_cast<PaintedDisplayItemLayerUserData*>(t->GetUserData(&gPaintedDisplayItemLayerUserData));
+      if (paintedData) {
         nsRegion old = data->mGeometry->ComputeInvalidationRegion();
-        nsIntRegion rgn = old.ScaleToOutsidePixels(thebesData->mXScale, thebesData->mYScale, thebesData->mAppUnitsPerDevPixel);
+        nsIntRegion rgn = old.ScaleToOutsidePixels(paintedData->mXScale, paintedData->mYScale, paintedData->mAppUnitsPerDevPixel);
         rgn.MoveBy(-GetTranslationForPaintedLayer(t));
-        thebesData->mRegionToInvalidate.Or(thebesData->mRegionToInvalidate, rgn);
-        thebesData->mRegionToInvalidate.SimplifyOutward(8);
+        paintedData->mRegionToInvalidate.Or(paintedData->mRegionToInvalidate, rgn);
+        paintedData->mRegionToInvalidate.SimplifyOutward(8);
       }
     }
 
@@ -1488,10 +1488,10 @@ FrameLayerBuilder::GetDebugOldLayerFor(nsIFrame* aFrame, uint32_t aDisplayItemKe
 }
 
 already_AddRefed<ColorLayer>
-ContainerState::CreateOrRecycleColorLayer(PaintedLayer *aThebes)
+ContainerState::CreateOrRecycleColorLayer(PaintedLayer *aPainted)
 {
-  ThebesDisplayItemLayerUserData* data =
-      static_cast<ThebesDisplayItemLayerUserData*>(aThebes->GetUserData(&gThebesDisplayItemLayerUserData));
+  PaintedDisplayItemLayerUserData* data =
+      static_cast<PaintedDisplayItemLayerUserData*>(aPainted->GetUserData(&gPaintedDisplayItemLayerUserData));
   nsRefPtr<ColorLayer> layer = data->mColorLayer;
   if (layer) {
     layer->SetMaskLayer(nullptr);
@@ -1501,7 +1501,7 @@ ContainerState::CreateOrRecycleColorLayer(PaintedLayer *aThebes)
     layer = mManager->CreateColorLayer();
     if (!layer)
       return nullptr;
-    // Mark this layer as being used for Thebes-painting display items
+    // Mark this layer as being used for painting display items
     data->mColorLayer = layer;
     layer->SetUserData(&gColorLayerUserData, nullptr);
 
@@ -1512,10 +1512,10 @@ ContainerState::CreateOrRecycleColorLayer(PaintedLayer *aThebes)
 }
 
 already_AddRefed<ImageLayer>
-ContainerState::CreateOrRecycleImageLayer(PaintedLayer *aThebes)
+ContainerState::CreateOrRecycleImageLayer(PaintedLayer *aPainted)
 {
-  ThebesDisplayItemLayerUserData* data =
-      static_cast<ThebesDisplayItemLayerUserData*>(aThebes->GetUserData(&gThebesDisplayItemLayerUserData));
+  PaintedDisplayItemLayerUserData* data =
+      static_cast<PaintedDisplayItemLayerUserData*>(aPainted->GetUserData(&gPaintedDisplayItemLayerUserData));
   nsRefPtr<ImageLayer> layer = data->mImageLayer;
   if (layer) {
     layer->SetMaskLayer(nullptr);
@@ -1525,7 +1525,7 @@ ContainerState::CreateOrRecycleImageLayer(PaintedLayer *aThebes)
     layer = mManager->CreateImageLayer();
     if (!layer)
       return nullptr;
-    // Mark this layer as being used for Thebes-painting display items
+    // Mark this layer as being used for painting display items
     data->mImageLayer = layer;
     layer->SetUserData(&gImageLayerUserData, nullptr);
 
@@ -1613,7 +1613,7 @@ ContainerState::CreateOrRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRoo
 {
   // We need a new painted layer
   nsRefPtr<PaintedLayer> layer;
-  ThebesDisplayItemLayerUserData* data;
+  PaintedDisplayItemLayerUserData* data;
   bool layerRecycled = false;
 #ifndef MOZ_WIDGET_ANDROID
   bool didResetScrollPositionForLayerPixelAlignment = false;
@@ -1646,8 +1646,8 @@ ContainerState::CreateOrRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRoo
       layer->SetMaskLayer(nullptr);
       layer->ClearExtraDumpInfo();
 
-      data = static_cast<ThebesDisplayItemLayerUserData*>
-          (layer->GetUserData(&gThebesDisplayItemLayerUserData));
+      data = static_cast<PaintedDisplayItemLayerUserData*>
+          (layer->GetUserData(&gPaintedDisplayItemLayerUserData));
       NS_ASSERTION(data, "Recycled PaintedLayers must have user data");
 
       // This gets called on recycled PaintedLayers that are going to be in the
@@ -1656,7 +1656,7 @@ ContainerState::CreateOrRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRoo
       // to, or if we need to invalidate the entire layer, we can do that.
       // This needs to be done before we update the PaintedLayer to its new
       // transform. See nsGfxScrollFrame::InvalidateInternal, where
-      // we ensure that mInvalidThebesContent is updated according to the
+      // we ensure that mInvalidPaintedContent is updated according to the
       // scroll position as of the most recent paint.
       if (!FuzzyEqual(data->mXScale, mParameters.mXScale, 0.00001f) ||
           !FuzzyEqual(data->mYScale, mParameters.mYScale, 0.00001f) ||
@@ -1699,9 +1699,9 @@ ContainerState::CreateOrRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRoo
     layer = mManager->CreatePaintedLayerWithHint(creationHint);
     if (!layer)
       return nullptr;
-    // Mark this layer as being used for Thebes-painting display items
-    data = new ThebesDisplayItemLayerUserData();
-    layer->SetUserData(&gThebesDisplayItemLayerUserData, data);
+    // Mark this layer as being used for painting display items
+    data = new PaintedDisplayItemLayerUserData();
+    layer->SetUserData(&gPaintedDisplayItemLayerUserData, data);
     ResetScrollPositionForLayerPixelAlignment(aAnimatedGeometryRoot);
 #ifndef MOZ_WIDGET_ANDROID
     didResetScrollPositionForLayerPixelAlignment = true;
@@ -1716,7 +1716,7 @@ ContainerState::CreateOrRecyclePaintedLayer(const nsIFrame* aAnimatedGeometryRoo
 
   mLayerBuilder->SavePreviousDataForLayer(layer, data->mMaskClipCount);
 
-  // Set up transform so that 0,0 in the Thebes layer corresponds to the
+  // Set up transform so that 0,0 in the Painted layer corresponds to the
   // (pixel-snapped) top-left of the aAnimatedGeometryRoot.
   nsPoint offset = aAnimatedGeometryRoot->GetOffsetToCrossDoc(aReferenceFrame);
   nscoord appUnitsPerDevPixel = aAnimatedGeometryRoot->PresContext()->AppUnitsPerDevPixel();
@@ -1835,7 +1835,7 @@ ContainerState::FindOpaqueBackgroundColorFor(int32_t aPaintedLayerIndex)
   for (int32_t i = aPaintedLayerIndex - 1; i >= 0; --i) {
     PaintedLayerData* candidate = mPaintedLayerDataStack[i];
     if (candidate->IntersectsVisibleAboveRegion(target->mVisibleRegion)) {
-      // Some non-Thebes content between target and candidate; this is
+      // Some non-PaintedLayer content between target and candidate; this is
       // hopeless
       break;
     }
@@ -2093,8 +2093,8 @@ ContainerState::PopPaintedLayerData()
   nsRefPtr<Layer> layer;
   nsRefPtr<ImageContainer> imageContainer = data->CanOptimizeImageLayer(mBuilder);
 
-  FLB_LOG_THEBES_DECISION(data, "Selecting layer for tld=%p\n", data);
-  FLB_LOG_THEBES_DECISION(data, "  Solid=%i, hasImage=%i, canOptimizeAwayThebes=%i\n",
+  FLB_LOG_PAINTED_LAYER_DECISION(data, "Selecting layer for tld=%p\n", data);
+  FLB_LOG_PAINTED_LAYER_DECISION(data, "  Solid=%i, hasImage=%i, canOptimizeAwayPaintedLayer=%i\n",
           data->mIsSolidColorInVisibleRegion, !!imageContainer,
           CanOptimizeAwayPaintedLayer(data, mLayerBuilder));
 
@@ -2118,7 +2118,7 @@ ContainerState::PopPaintedLayerData()
       layer = imageLayer;
       mLayerBuilder->StoreOptimizedLayerForFrame(data->mImage,
                                                  imageLayer);
-      FLB_LOG_THEBES_DECISION(data, "  Selected image layer=%p\n", layer.get());
+      FLB_LOG_PAINTED_LAYER_DECISION(data, "  Selected image layer=%p\n", layer.get());
     } else {
       nsRefPtr<ColorLayer> colorLayer = CreateOrRecycleColorLayer(data->mLayer);
       colorLayer->SetColor(data->mSolidColor);
@@ -2132,13 +2132,13 @@ ContainerState::PopPaintedLayerData()
       colorLayer->SetBounds(visibleRect);
 
       layer = colorLayer;
-      FLB_LOG_THEBES_DECISION(data, "  Selected color layer=%p\n", layer.get());
+      FLB_LOG_PAINTED_LAYER_DECISION(data, "  Selected color layer=%p\n", layer.get());
     }
 
     NS_ASSERTION(FindIndexOfLayerIn(mNewChildLayers, layer) < 0,
                  "Layer already in list???");
     NS_ASSERTION(newLayerEntry->mLayer == data->mLayer,
-                 "Thebes layer at wrong index");
+                 "Painted layer at wrong index");
     // Store optimized layer in reserved slot
     newLayerEntry = &mNewChildLayers[data->mNewChildLayersIndex + 1];
     NS_ASSERTION(!newLayerEntry->mLayer, "Slot already occupied?");
@@ -2157,7 +2157,7 @@ ContainerState::PopPaintedLayerData()
     layer = data->mLayer;
     imageContainer = nullptr;
     layer->SetClipRect(nullptr);
-    FLB_LOG_THEBES_DECISION(data, "  Selected painted layer=%p\n", layer.get());
+    FLB_LOG_PAINTED_LAYER_DECISION(data, "  Selected painted layer=%p\n", layer.get());
   }
 
   if (mLayerBuilder->IsBuildingRetainedLayers()) {
@@ -2193,8 +2193,8 @@ ContainerState::PopPaintedLayerData()
     }
 
     // Store the background color
-    ThebesDisplayItemLayerUserData* userData =
-      GetThebesDisplayItemLayerUserData(data->mLayer);
+    PaintedDisplayItemLayerUserData* userData =
+      GetPaintedDisplayItemLayerUserData(data->mLayer);
     NS_ASSERTION(userData, "where did our user data go?");
     if (userData->mForcedBackgroundColor != backgroundColor) {
       // Invalidate the entire target PaintedLayer since we're changing
@@ -2331,7 +2331,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
                             const nsIntRect& aDrawRect,
                             const DisplayItemClip& aClip)
 {
-  FLB_LOG_THEBES_DECISION(this, "Accumulating dp=%s(%p), f=%p against tld=%p\n", aItem->Name(), aItem, aItem->Frame(), this);
+  FLB_LOG_PAINTED_LAYER_DECISION(this, "Accumulating dp=%s(%p), f=%p against tld=%p\n", aItem->Name(), aItem, aItem->Frame(), this);
 
   bool snap;
   nsRect itemBounds = aItem->GetBounds(aState->mBuilder, &snap);
@@ -2371,9 +2371,9 @@ PaintedLayerData::Accumulate(ContainerState* aState,
       aClippedOpaqueRegion.Contains(mVisibleRegion) &&
       aItem->SupportsOptimizingToImage()) {
     mImage = static_cast<nsDisplayImageContainer*>(aItem);
-    FLB_LOG_THEBES_DECISION(this, "  Tracking image: nsDisplayImageContainer covers the layer\n");
+    FLB_LOG_PAINTED_LAYER_DECISION(this, "  Tracking image: nsDisplayImageContainer covers the layer\n");
   } else if (mImage) {
-    FLB_LOG_THEBES_DECISION(this, "  No longer tracking image\n");
+    FLB_LOG_PAINTED_LAYER_DECISION(this, "  No longer tracking image\n");
     mImage = nullptr;
   }
 
@@ -2392,7 +2392,7 @@ PaintedLayerData::Accumulate(ContainerState* aState,
       nsRect bounds = aItem->GetBounds(aState->mBuilder, &snap);
       if (!aState->ScaleToInsidePixels(bounds, snap).Contains(aVisibleRect)) {
         isUniform = false;
-        FLB_LOG_THEBES_DECISION(this, "  Display item does not cover the visible rect\n");
+        FLB_LOG_PAINTED_LAYER_DECISION(this, "  Display item does not cover the visible rect\n");
       }
     }
     if (isUniform) {
@@ -2406,11 +2406,11 @@ PaintedLayerData::Accumulate(ContainerState* aState,
         // we can just blend the colors together
         mSolidColor = NS_ComposeColors(mSolidColor, uniformColor);
       } else {
-        FLB_LOG_THEBES_DECISION(this, "  Layer not a solid color: Can't blend colors togethers\n");
+        FLB_LOG_PAINTED_LAYER_DECISION(this, "  Layer not a solid color: Can't blend colors togethers\n");
         mIsSolidColorInVisibleRegion = false;
       }
     } else {
-      FLB_LOG_THEBES_DECISION(this, "  Layer is not a solid color: Display item is not uniform over the visible bound\n");
+      FLB_LOG_PAINTED_LAYER_DECISION(this, "  Layer is not a solid color: Display item is not uniform over the visible bound\n");
       mIsSolidColorInVisibleRegion = false;
     }
 
@@ -2725,7 +2725,7 @@ ContainerState::ComputeOpaqueRect(nsDisplayItem* aItem,
  * For each item we compute the effective clip rect. Each item is assigned
  * to a layer. We invalidate the areas in PaintedLayers where an item
  * has moved from one PaintedLayer to another. Also,
- * aState->mInvalidThebesContent is invalidated in every PaintedLayer.
+ * aState->mInvalidPaintedContent is invalidated in every PaintedLayer.
  * We set the clip rect for items that generated their own layer, and
  * create a mask layer to do any rounded rect clipping.
  * (PaintedLayers don't need a clip rect on the layer, we clip the items
@@ -2894,7 +2894,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       }
 
       NS_ASSERTION(!ownLayer->AsPaintedLayer(),
-                   "Should never have created a dedicated Thebes layer!");
+                   "Should never have created a dedicated Painted layer!");
 
       const nsIFrame* fixedPosFrame =
         FindFixedPosFrameForLayerData(animatedGeometryRoot, shouldFixToViewport);
@@ -3040,7 +3040,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
 
         InvalidateForLayerChange(item, paintedLayerData->mLayer);
 
-        mLayerBuilder->AddThebesDisplayItem(paintedLayerData, item, itemClip, itemVisibleRect,
+        mLayerBuilder->AddPaintedDisplayItem(paintedLayerData, item, itemClip, itemVisibleRect,
                                             *this, layerState, topLeft);
         nsIntRegion opaquePixels = ComputeOpaqueRect(item,
             animatedGeometryRoot, paintedLayerData->mFixedPosFrameForLayerData,
@@ -3108,8 +3108,8 @@ FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData)
 
   nsAutoPtr<nsDisplayItemGeometry> geometry(item->AllocateGeometry(mDisplayListBuilder));
 
-  ThebesDisplayItemLayerUserData* layerData =
-    static_cast<ThebesDisplayItemLayerUserData*>(aData->mLayer->GetUserData(&gThebesDisplayItemLayerUserData));
+  PaintedDisplayItemLayerUserData* layerData =
+    static_cast<PaintedDisplayItemLayerUserData*>(aData->mLayer->GetUserData(&gPaintedDisplayItemLayerUserData));
   nsPoint shift = layerData->mAnimatedGeometryRootOrigin - layerData->mLastAnimatedGeometryRootOrigin;
 
   const DisplayItemClip& clip = item->GetClip();
@@ -3122,7 +3122,7 @@ FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData)
   bool notifyRenderingChanged = true;
   if (!aData->mGeometry) {
     // This item is being added for the first time, invalidate its entire area.
-    //TODO: We call GetGeometry again in AddThebesDisplayItem, we should reuse this.
+    //TODO: We call GetGeometry again in AddPaintedDisplayItem, we should reuse this.
     combined = clip.ApplyNonRoundedIntersection(geometry->ComputeInvalidationRegion());
 #ifdef MOZ_DUMP_PAINTING
     if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
@@ -3199,7 +3199,7 @@ FrameLayerBuilder::ComputeGeometryChangeForItem(DisplayItemData* aData)
 }
 
 void
-FrameLayerBuilder::AddThebesDisplayItem(PaintedLayerData* aLayerData,
+FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
                                         nsDisplayItem* aItem,
                                         const DisplayItemClip& aClip,
                                         const nsIntRect& aItemVisibleRect,
@@ -3208,9 +3208,9 @@ FrameLayerBuilder::AddThebesDisplayItem(PaintedLayerData* aLayerData,
                                         const nsPoint& aTopLeft)
 {
   PaintedLayer* layer = aLayerData->mLayer;
-  ThebesDisplayItemLayerUserData* thebesData =
-    static_cast<ThebesDisplayItemLayerUserData*>
-      (layer->GetUserData(&gThebesDisplayItemLayerUserData));
+  PaintedDisplayItemLayerUserData* paintedData =
+    static_cast<PaintedDisplayItemLayerUserData*>
+      (layer->GetUserData(&gPaintedDisplayItemLayerUserData));
   nsRefPtr<BasicLayerManager> tempManager;
   nsIntRect intClip;
   bool hasClip = false;
@@ -3228,13 +3228,13 @@ FrameLayerBuilder::AddThebesDisplayItem(PaintedLayerData* aLayerData,
     DisplayItemClip* oldClip = nullptr;
     GetOldLayerFor(aItem, nullptr, &oldClip);
     hasClip = aClip.ComputeRegionInClips(oldClip,
-                                         aTopLeft - thebesData->mLastAnimatedGeometryRootOrigin,
+                                         aTopLeft - paintedData->mLastAnimatedGeometryRootOrigin,
                                          &clip);
 
     if (hasClip) {
-      intClip = clip.GetBounds().ScaleToOutsidePixels(thebesData->mXScale,
-                                                      thebesData->mYScale,
-                                                      thebesData->mAppUnitsPerDevPixel);
+      intClip = clip.GetBounds().ScaleToOutsidePixels(paintedData->mXScale,
+                                                      paintedData->mYScale,
+                                                      paintedData->mAppUnitsPerDevPixel);
     }
   }
 
@@ -3269,7 +3269,7 @@ FrameLayerBuilder::AddThebesDisplayItem(PaintedLayerData* aLayerData,
       bool snap;
       nsRect visibleRect =
         aItem->GetVisibleRect().Intersect(aItem->GetBounds(mDisplayListBuilder, &snap));
-      nsIntRegion rgn = visibleRect.ToOutsidePixels(thebesData->mAppUnitsPerDevPixel);
+      nsIntRegion rgn = visibleRect.ToOutsidePixels(paintedData->mAppUnitsPerDevPixel);
       SetOuterVisibleRegion(tmpLayer, &rgn);
 
       // If BuildLayer didn't call BuildContainerLayerFor, then our new layer won't have been
@@ -3303,7 +3303,7 @@ FrameLayerBuilder::AddThebesDisplayItem(PaintedLayerData* aLayerData,
           printf_stderr("Inactive LayerManager(%p) for display item %s(%p) has an invalid region - invalidating layer %p\n", tempManager.get(), aItem->Name(), aItem->Frame(), layer);
         }
 #endif
-        invalid.ScaleRoundOut(thebesData->mXScale, thebesData->mYScale);
+        invalid.ScaleRoundOut(paintedData->mXScale, paintedData->mYScale);
 
         if (hasClip) {
           invalid.And(invalid, intClip);
@@ -3437,7 +3437,7 @@ ContainerState::CollectOldLayers()
        layer = layer->GetNextSibling()) {
     NS_ASSERTION(!layer->HasUserData(&gMaskLayerUserData),
                  "Mask layer in layer tree; could not be recycled.");
-    if (layer->HasUserData(&gThebesDisplayItemLayerUserData)) {
+    if (layer->HasUserData(&gPaintedDisplayItemLayerUserData)) {
       NS_ASSERTION(layer->AsPaintedLayer(), "Wrong layer type");
       mRecycledPaintedLayers.AppendElement(static_cast<PaintedLayer*>(layer));
     }
@@ -3921,7 +3921,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
 
     if (oldLayer) {
       NS_ASSERTION(oldLayer->Manager() == aManager, "Wrong manager");
-      if (oldLayer->HasUserData(&gThebesDisplayItemLayerUserData)) {
+      if (oldLayer->HasUserData(&gPaintedDisplayItemLayerUserData)) {
         // The old layer for this item is actually our PaintedLayer
         // because we rendered its layer into that PaintedLayer. So we
         // don't actually have a retained container layer.
@@ -4067,7 +4067,7 @@ FrameLayerBuilder::GetLeafLayerFor(nsDisplayListBuilder* aBuilder,
   Layer* layer = GetOldLayerFor(aItem);
   if (!layer)
     return nullptr;
-  if (layer->HasUserData(&gThebesDisplayItemLayerUserData)) {
+  if (layer->HasUserData(&gPaintedDisplayItemLayerUserData)) {
     // This layer was created to render Thebes-rendered content for this
     // display item. The display item should not use it for its own
     // layer rendering.
@@ -4123,7 +4123,7 @@ FrameLayerBuilder::GetDedicatedLayer(nsIFrame* aFrame, uint32_t aDisplayItemKey)
         Layer* layer = element->mLayer;
         if (!layer->HasUserData(&gColorLayerUserData) &&
             !layer->HasUserData(&gImageLayerUserData) &&
-            !layer->HasUserData(&gThebesDisplayItemLayerUserData)) {
+            !layer->HasUserData(&gPaintedDisplayItemLayerUserData)) {
           return layer;
         }
       }
@@ -4177,9 +4177,9 @@ FrameLayerBuilder::GetPaintedLayerScaleForFrame(nsIFrame* aFrame)
         continue;
       }
       for (Layer* l = container->GetFirstChild(); l; l = l->GetNextSibling()) {
-        ThebesDisplayItemLayerUserData* data =
-            static_cast<ThebesDisplayItemLayerUserData*>
-              (l->GetUserData(&gThebesDisplayItemLayerUserData));
+        PaintedDisplayItemLayerUserData* data =
+            static_cast<PaintedDisplayItemLayerUserData*>
+              (l->GetUserData(&gPaintedDisplayItemLayerUserData));
         if (data) {
           return PredictScaleForContent(aFrame, f, gfxSize(data->mXScale, data->mYScale));
         }
@@ -4444,9 +4444,9 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
   }
 
 
-  ThebesDisplayItemLayerUserData* userData =
-    static_cast<ThebesDisplayItemLayerUserData*>
-      (aLayer->GetUserData(&gThebesDisplayItemLayerUserData));
+  PaintedDisplayItemLayerUserData* userData =
+    static_cast<PaintedDisplayItemLayerUserData*>
+      (aLayer->GetUserData(&gPaintedDisplayItemLayerUserData));
   NS_ASSERTION(userData, "where did our user data go?");
 
   bool shouldDrawRectsSeparately = ShouldDrawRectsSeparately(aContext, aClip);
@@ -4578,11 +4578,11 @@ CalculateBounds(const nsTArray<DisplayItemClip::RoundedRect>& aRects, int32_t A2
 }
 
 static void
-SetClipCount(ThebesDisplayItemLayerUserData* aThebesData,
+SetClipCount(PaintedDisplayItemLayerUserData* apaintedData,
              uint32_t aClipCount)
 {
-  if (aThebesData) {
-    aThebesData->mMaskClipCount = aClipCount;
+  if (apaintedData) {
+    apaintedData->mMaskClipCount = aClipCount;
   }
 }
 
@@ -4595,11 +4595,11 @@ ContainerState::SetupMaskLayer(Layer *aLayer,
   // if the number of clips we are going to mask has decreased, then aLayer might have
   // cached graphics which assume the existence of a soon-to-be non-existent mask layer
   // in that case, invalidate the whole layer.
-  ThebesDisplayItemLayerUserData* thebesData = GetThebesDisplayItemLayerUserData(aLayer);
-  if (thebesData &&
-      aRoundedRectClipCount < thebesData->mMaskClipCount) {
-    PaintedLayer* thebes = aLayer->AsPaintedLayer();
-    thebes->InvalidateRegion(thebes->GetValidRegion().GetBounds());
+  PaintedDisplayItemLayerUserData* paintedData = GetPaintedDisplayItemLayerUserData(aLayer);
+  if (paintedData &&
+      aRoundedRectClipCount < paintedData->mMaskClipCount) {
+    PaintedLayer* painted = aLayer->AsPaintedLayer();
+    painted->InvalidateRegion(painted->GetValidRegion().GetBounds());
   }
 
   // don't build an unnecessary mask
@@ -4607,7 +4607,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer,
   if (aClip.GetRoundedRectCount() == 0 ||
       aRoundedRectClipCount == 0 ||
       layerBounds.IsEmpty()) {
-    SetClipCount(thebesData, 0);
+    SetClipCount(paintedData, 0);
     return;
   }
 
@@ -4624,7 +4624,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer,
 
   if (*userData == newData) {
     aLayer->SetMaskLayer(maskLayer);
-    SetClipCount(thebesData, aRoundedRectClipCount);
+    SetClipCount(paintedData, aRoundedRectClipCount);
     return;
   }
 
@@ -4678,7 +4678,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer,
     // fail if we can't get the right surface
     if (!dt) {
       NS_WARNING("Could not create DrawTarget for mask layer.");
-      SetClipCount(thebesData, 0);
+      SetClipCount(paintedData, 0);
       return;
     }
 
@@ -4725,7 +4725,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer,
   userData->mImageKey = lookupKey;
 
   aLayer->SetMaskLayer(maskLayer);
-  SetClipCount(thebesData, aRoundedRectClipCount);
+  SetClipCount(paintedData, aRoundedRectClipCount);
   return;
 }
 
