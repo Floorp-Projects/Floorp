@@ -496,20 +496,6 @@ public class SuggestedSites {
         return cursor;
     }
 
-    public boolean contains(String url) {
-        return (getSiteForUrl(url) != null);
-    }
-
-    public String getImageUrlForUrl(String url) {
-        final Site site = getSiteForUrl(url);
-        return (site != null ? site.imageUrl : null);
-    }
-
-    public String getBackgroundColorForUrl(String url) {
-        final Site site = getSiteForUrl(url);
-        return (site != null ? site.bgColor : null);
-    }
-
     private Set<String> loadBlacklist() {
         Log.d(LOGTAG, "Loading blacklisted suggested sites from SharedPreferences.");
         final Set<String> blacklist = new HashSet<String>();
