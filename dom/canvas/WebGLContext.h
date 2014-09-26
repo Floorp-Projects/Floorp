@@ -836,6 +836,7 @@ private:
 public:
     void Disable(GLenum cap);
     void Enable(GLenum cap);
+    bool GetStencilBits(GLint* out_stencilBits);
     JS::Value GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv);
     void GetParameter(JSContext* cx, GLenum pname,
                       JS::MutableHandle<JS::Value> retval, ErrorResult& rv) {
