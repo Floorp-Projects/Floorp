@@ -192,6 +192,8 @@ TestArray.addTest(
       .then(doExport)
       .then(
         complete(that, function(x) {
+          window.jwk_priv = x;
+          console.log(JSON.stringify(x));
           return hasBaseJwkFields(x) &&
                  hasFields(x, ['n', 'e', 'd', 'p', 'q', 'dp', 'dq', 'qi']) &&
                  x.kty == 'RSA' &&

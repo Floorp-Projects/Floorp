@@ -14,13 +14,10 @@
 #include "pk11pub.h"
 #include "keyhi.h"
 #include "ScopedNSSTypes.h"
-#include "mozilla/ErrorResult.h"
+#include "mozilla/dom/KeyAlgorithm.h"
 #include "mozilla/dom/CryptoBuffer.h"
-#include "mozilla/dom/KeyAlgorithmProxy.h"
 #include "js/StructuredClone.h"
 #include "js/TypeDecls.h"
-
-#define CRYPTOKEY_SC_VERSION 0x00000001
 
 class nsIGlobalObject;
 
@@ -103,28 +100,23 @@ public:
   // WebIDL methods
   void GetType(nsString& aRetVal) const;
   bool Extractable() const;
-  void GetAlgorithm(JSContext* cx, JS::MutableHandle<JSObject*> aRetVal,
-                    ErrorResult& aRv) const;
+  KeyAlgorithm* Algorithm() const;
   void GetUsages(nsTArray<nsString>& aRetVal) const;
 
   // The below methods are not exposed to JS, but C++ can use
   // them to manipulate the object
 
-  KeyAlgorithmProxy& Algorithm();
-  const KeyAlgorithmProxy& Algorithm() const;
   KeyType GetKeyType() const;
   nsresult SetType(const nsString& aType);
   void SetType(KeyType aType);
   void SetExtractable(bool aExtractable);
+  void SetAlgorithm(KeyAlgorithm* aAlgorithm);
   void ClearUsages();
   nsresult AddUsage(const nsString& aUsage);
   nsresult AddUsageIntersecting(const nsString& aUsage, uint32_t aUsageMask);
   void AddUsage(KeyUsage aUsage);
-  bool HasAnyUsage();
   bool HasUsage(KeyUsage aUsage);
   bool HasUsageOtherThan(uint32_t aUsages);
-  static bool IsRecognizedUsage(const nsString& aUsage);
-  static bool AllUsagesRecognized(const Sequence<nsString>& aUsages);
 
   void SetSymKey(const CryptoBuffer& aSymKey);
   void SetPrivateKey(SECKEYPrivateKey* aPrivateKey);
@@ -180,7 +172,7 @@ private:
 
   nsRefPtr<nsIGlobalObject> mGlobal;
   uint32_t mAttributes; // see above
-  KeyAlgorithmProxy mAlgorithm;
+  nsRefPtr<KeyAlgorithm> mAlgorithm;
 
   // Only one key handle should be set, according to the KeyType
   CryptoBuffer mSymKey;
