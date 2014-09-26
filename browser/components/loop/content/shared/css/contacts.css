@@ -2,30 +2,44 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+.contact-list {
+  border-top: 1px solid #ccc;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* Show six contacts and scroll for the rest */
+  max-height: 305px;
+}
+
+.contact,
+.contact-separator {
+  padding: 5px 10px;
+  font-size: 13px;
+}
+
 .contact {
+  position: relative;
   display: flex;
   flex-direction: row;
-  position: relative;
-  padding: 5px 10px;
-  color: #666;
-  font-size: 13px;
   align-items: center;
+  color: #666;
+}
+
+.contact-separator {
+  height: 24px;
+  background: #eee;
+  color: #888;
 }
 
 .contact:not(:first-child) {
   border-top: 1px solid #ddd;
 }
 
-.contact.blocked > .details > .username {
-  color: #d74345;
+.contact-separator:not(:first-child) {
+  border-top: 1px solid #ccc;
 }
 
 .contact:hover {
   background: #eee;
-}
-
-.contact.selected {
-  background: #ebebeb;
 }
 
 .contact:hover > .icons {
@@ -45,6 +59,7 @@
   background-repeat: no-repeat;
   background-color: #4ba6e7;
   background-size: contain;
+  -moz-user-select: none;
 }
 
 .contact > .avatar > img {
@@ -55,7 +70,10 @@
   font-size: 12px;
   line-height: 20px;
   color: #222;
-  font-weight: normal;
+}
+
+.contact.blocked > .details > .username {
+  color: #d74345;
 }
 
 .contact > .details > .username > strong {
@@ -93,41 +111,6 @@
   line-height: 16px;
 }
 
-.listWrapper {
-  overflow-x: hidden;
-  overflow-y: auto;
-  /* Show six contacts and scroll for the rest */
-  max-height: 305px;
-}
-
-.listPanels {
-  display: flex;
-  width: 200%;
-  flex-direction: row;
-  transition: 200ms ease-in;
-  transition-property: transform;
-}
-
-.listPanels > div {
-  flex: 0 0 50%;
-}
-
-.list {
-  display: flex;
-  flex-direction: column;
-  transition: opacity 0.3s ease-in-out;
-}
-
-.list.faded {
-  opacity: 0.3;
-}
-
-.list h3 {
-  margin: 0;
-  border-bottom: none;
-  border-top: 1px solid #ccc;
-}
-
 .icons {
   cursor: pointer;
   display: none;
@@ -135,6 +118,7 @@
   padding: 12px 10px;
   border-radius: 30px;
   background: #7ed321;
+  -moz-user-select: none;
 }
 
 .icons:hover {
@@ -160,4 +144,8 @@
   background-size: 10px 10px;
   width: 10px;
   height: 16px;
+}
+
+.contact-form > .button-group {
+  margin-top: 14px;
 }

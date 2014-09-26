@@ -11,6 +11,9 @@ var loop = loop || {};
 loop.contacts = (function(_, mozL10n) {
   "use strict";
 
+  const Button = loop.shared.views.Button;
+  const ButtonGroup = loop.shared.views.ButtonGroup;
+
   // Number of contacts to add to the list at the same time.
   const CONTACTS_CHUNK_SIZE = 100;
 
@@ -148,6 +151,13 @@ loop.contacts = (function(_, mozL10n) {
       this.setState({contacts: {}});
     },
 
+    handleImportButtonClick: function() {
+    },
+
+    handleAddContactButtonClick: function() {
+      this.props.startForm("contacts_add");
+    },
+
     sortContacts: function(contact1, contact2) {
       let comp = contact1.name[0].localeCompare(contact2.name[0]);
       if (comp !== 0) {
@@ -167,29 +177,128 @@ loop.contacts = (function(_, mozL10n) {
         return contact.blocked ? "blocked" : "available";
       });
 
+      // Buttons are temporarily hidden using "style".
       return (
-        <div className="listWrapper">
-          <div ref="listSlider" className="listPanels">
-            <div className="faded">
-              <ul>
-                {shownContacts.available ?
-                  shownContacts.available.sort(this.sortContacts).map(viewForItem) :
-                  null}
-                {shownContacts.blocked ?
-                  <h3 className="header">{mozL10n.get("contacts_blocked_contacts")}</h3> :
-                  null}
-                {shownContacts.blocked ?
-                  shownContacts.blocked.sort(this.sortContacts).map(viewForItem) :
-                  null}
-              </ul>
-            </div>
+        <div>
+          <div className="content-area" style={{display: "none"}}>
+            <ButtonGroup>
+              <Button caption={mozL10n.get("import_contacts_button")}
+                      disabled
+                      onClick={this.handleImportButtonClick} />
+              <Button caption={mozL10n.get("new_contact_button")}
+                      onClick={this.handleAddContactButtonClick} />
+            </ButtonGroup>
           </div>
+          <ul className="contact-list">
+            {shownContacts.available ?
+              shownContacts.available.sort(this.sortContacts).map(viewForItem) :
+              null}
+            {shownContacts.blocked ?
+              <div className="contact-separator">{mozL10n.get("contacts_blocked_contacts")}</div> :
+              null}
+            {shownContacts.blocked ?
+              shownContacts.blocked.sort(this.sortContacts).map(viewForItem) :
+              null}
+          </ul>
+        </div>
+      );
+    }
+  });
+
+  const ContactDetailsForm = React.createClass({
+    mixins: [React.addons.LinkedStateMixin],
+
+    propTypes: {
+      mode: React.PropTypes.string
+    },
+
+    getInitialState: function() {
+      return {
+        contact: null,
+        pristine: true,
+        name: "",
+        email: "",
+      };
+    },
+
+    initForm: function(contact) {
+      let state = this.getInitialState();
+      state.contact = contact || null;
+      this.setState(state);
+    },
+
+    handleAcceptButtonClick: function() {
+      // Allow validity error indicators to be displayed.
+      this.setState({
+        pristine: false,
+      });
+
+      if (!this.refs.name.getDOMNode().checkValidity() ||
+          !this.refs.email.getDOMNode().checkValidity()) {
+        return;
+      }
+
+      this.props.selectTab("contacts");
+
+      let contactsAPI = navigator.mozLoop.contacts;
+
+      switch (this.props.mode) {
+        case "edit":
+          this.setState({
+            contact: null,
+          });
+          break;
+        case "add":
+          contactsAPI.add({
+            id: navigator.mozLoop.generateUUID(),
+            name: [this.state.name.trim()],
+            email: [{
+              pref: true,
+              type: ["home"],
+              value: this.state.email.trim()
+            }],
+            category: ["local"]
+          }, err => {
+            if (err) {
+              throw err;
+            }
+          });
+          break;
+      }
+    },
+
+    handleCancelButtonClick: function() {
+      this.props.selectTab("contacts");
+    },
+
+    render: function() {
+      let cx = React.addons.classSet;
+      return (
+        <div className="content-area contact-form">
+          <header>{mozL10n.get("add_contact_button")}</header>
+          <label>{mozL10n.get("edit_contact_name_label")}</label>
+          <input ref="name" required pattern="\s*\S.*"
+                 className={cx({pristine: this.state.pristine})}
+                 valueLink={this.linkState("name")} />
+          <label>{mozL10n.get("edit_contact_email_label")}</label>
+          <input ref="email" required type="email"
+                 className={cx({pristine: this.state.pristine})}
+                 valueLink={this.linkState("email")} />
+          <ButtonGroup>
+            <Button additionalClass="button-cancel"
+                    caption={mozL10n.get("cancel_button")}
+                    onClick={this.handleCancelButtonClick} />
+            <Button additionalClass="button-accept"
+                    caption={mozL10n.get("add_contact_button")}
+                    onClick={this.handleAcceptButtonClick} />
+          </ButtonGroup>
         </div>
       );
     }
   });
 
   return {
-    ContactsList: ContactsList
+    ContactsList: ContactsList,
+    ContactDetailsForm: ContactDetailsForm,
   };
 })(_, document.mozL10n);
