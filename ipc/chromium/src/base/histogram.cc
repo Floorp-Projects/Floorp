@@ -1048,6 +1048,61 @@ FlagHistogram::AddSampleSet(const SampleSet& sample) {
     Accumulate(1, 1, one_index);
   }
 }
+
+//------------------------------------------------------------------------------
+// CountHistogram:
+//------------------------------------------------------------------------------
+
+Histogram *
+CountHistogram::FactoryGet(const std::string &name, Flags flags)
+{
+  Histogram *h(nullptr);
+
+  if (!StatisticsRecorder::FindHistogram(name, &h)) {
+    CountHistogram *fh = new CountHistogram(name);
+    fh->InitializeBucketRange();
+    fh->SetFlags(flags);
+    h = StatisticsRecorder::RegisterOrDeleteDuplicate(fh);
+  }
+
+  return h;
+}
+
+CountHistogram::CountHistogram(const std::string &name)
+  : LinearHistogram(name, 1, 2, 3) {
+}
+
+Histogram::ClassType
+CountHistogram::histogram_type() const
+{
+  return COUNT_HISTOGRAM;
+}
+
+void
+CountHistogram::Accumulate(Sample value, Count count, size_t index)
+{
+  size_t zero_index = BucketIndex(0);
+  LinearHistogram::Accumulate(1, 1, zero_index);
+}
+
+void
+CountHistogram::AddSampleSet(const SampleSet& sample) {
+  DCHECK_EQ(bucket_count(), sample.size());
+  // We can't be sure the SampleSet provided came from another CountHistogram,
+  // so we at least check that the unused buckets are empty.
+
+  const size_t indices[] = { BucketIndex(0), BucketIndex(1), BucketIndex(2) };
+
+  if (sample.counts(indices[1]) != 0 || sample.counts(indices[2]) != 0) {
+    return;
+  }
+
+  if (sample.counts(indices[0]) != 0) {
+    Accumulate(1, sample.counts(indices[0]), indices[0]);
+  }
+}
+
+
 //------------------------------------------------------------------------------
 // CustomHistogram:
 //------------------------------------------------------------------------------
