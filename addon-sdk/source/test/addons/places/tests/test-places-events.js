@@ -305,8 +305,16 @@ exports['test history-delete-visits'] = function (assert) {
   assert.pass('TODO test history-delete-visits');
 };
 
+// Bug 1060843
+// Wait a tick before finishing tests, as some bookmark activities require
+// completion of a result for events. For example, when creating a bookmark,
+// a `bookmark-item-added` event is fired, listened to by the first test here,
+// while constructing the bookmark item requires subsequent calls to that bookmark item.
+// If we destroy the underlying bookmark immediately, these calls will fail. 
+//
+// The places SDK abstraction around this alleviates it, but these are low level events.
+after(exports, (name, assert, done) => setTimeout(() => resetPlaces(done), 1));
 before(exports, (name, assert, done) => resetPlaces(done));
-after(exports, (name, assert, done) => resetPlaces(done));
 
 function saveP () {
   return promisedEmitter(save.apply(null, Array.slice(arguments)));

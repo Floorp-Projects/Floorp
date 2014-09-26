@@ -1,5 +1,5 @@
         <activity
-            android:name="org.mozilla.search.MainActivity"
+            android:name="org.mozilla.search.SearchActivity"
             android:launchMode="singleTop"
             android:icon="@drawable/search_launcher"
             android:label="@string/search_app_name"
@@ -45,9 +45,9 @@
             android:name="org.mozilla.search.SearchPreferenceActivity"
             android:logo="@drawable/search_launcher"
             android:label="@string/search_pref_title"
-            android:parentActivityName="org.mozilla.search.MainActivity"
+            android:parentActivityName="org.mozilla.search.SearchActivity"
             android:theme="@style/SettingsTheme" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="org.mozilla.search.MainActivity"/>
+                android:value="org.mozilla.search.SearchActivity"/>
         </activity>

@@ -3,13 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Cc, Ci, Cu, Cm, components } = require("chrome");
 const xulApp = require("sdk/system/xul-app");
 const self = require("sdk/self");
 const { Loader, main, unload } = require("toolkit/loader");
 const loaderOptions = require("@loader/options");
-
-const { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm", {});
 
 exports.testSelf = function(assert) {
   // Likewise, we can't assert anything about the full URL, because that

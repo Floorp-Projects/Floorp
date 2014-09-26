@@ -152,6 +152,7 @@ public class TestSuggestedSites extends BrowserTestCase {
         try {
             for (int i = 0; i < n; i++) {
                 JSONObject site = new JSONObject();
+                site.put("trackingid", prefix + "trackingId" + i);
                 site.put("url", prefix + "url" + i);
                 site.put("title", prefix + "title" + i);
                 site.put("imageurl", prefix + "imageUrl" + i);
@@ -238,6 +239,18 @@ public class TestSuggestedSites extends BrowserTestCase {
         checkCursorCount("{ broken: }", 0);
     }
 
+    public void testNoTrackingId() {
+        String content = "[{ url: \"url\", title: \"title\", imageurl: \"imageurl\", bgcolor: \"bgcolor\" }]";
+        resources.setSuggestedSitesResource(content);
+
+        Cursor c = new SuggestedSites(context).get(DEFAULT_LIMIT);
+        assertEquals(1, c.getCount());
+        c.moveToNext();
+
+        String trackingId = c.getString(c.getColumnIndexOrThrow(BrowserContract.SuggestedSites.TRACKING_ID));
+        assertNull(trackingId);
+    }
+
     public void testCursorContent() {
         resources.setSuggestedSitesResource(generateSites(3));
 
@@ -248,11 +261,20 @@ public class TestSuggestedSites extends BrowserTestCase {
         while (c.moveToNext()) {
             int position = c.getPosition();
 
+            String trackingId = c.getString(c.getColumnIndexOrThrow(BrowserContract.SuggestedSites.TRACKING_ID));
+            assertEquals("trackingId" + position, trackingId);
+
             String url = c.getString(c.getColumnIndexOrThrow(BrowserContract.SuggestedSites.URL));
             assertEquals("url" + position, url);
 
             String title = c.getString(c.getColumnIndexOrThrow(BrowserContract.SuggestedSites.TITLE));
             assertEquals("title" + position, title);
+
+            String imageUrl = c.getString(c.getColumnIndexOrThrow(BrowserContract.SuggestedSites.IMAGEURL));
+            assertEquals("imageUrl" + position, imageUrl);
+
+            String bgColor = c.getString(c.getColumnIndexOrThrow(BrowserContract.SuggestedSites.BGCOLOR));
+            assertEquals("bgColor" + position, bgColor);
         }
 
         c.close();
@@ -337,40 +359,6 @@ public class TestSuggestedSites extends BrowserTestCase {
         assertNotNull(c);
         assertEquals(0, c.getCount());
         c.close();
-    }
-
-    public void testImageUrlAndBgColor() {
-        final int count = 3;
-        resources.setSuggestedSitesResource(generateSites(count));
-
-        SuggestedSites suggestedSites = new SuggestedSites(context);
-
-        // Suggested sites hasn't been loaded yet.
-        for (int i = 0; i < count; i++) {
-            String url = "url" + i;
-            assertFalse(suggestedSites.contains(url));
-            assertNull(suggestedSites.getImageUrlForUrl(url));
-            assertNull(suggestedSites.getBackgroundColorForUrl(url));
-        }
-
-        Cursor c = suggestedSites.get(DEFAULT_LIMIT);
-        c.moveToPosition(-1);
-
-        // We should have cached results after the get() call.
-        while (c.moveToNext()) {
-            String url = c.getString(c.getColumnIndexOrThrow(BrowserContract.SuggestedSites.URL));
-            assertTrue(suggestedSites.contains(url));
-            assertEquals("imageUrl" + c.getPosition(),
-                         suggestedSites.getImageUrlForUrl(url));
-            assertEquals("bgColor" + c.getPosition(),
-                         suggestedSites.getBackgroundColorForUrl(url));
-        }
-        c.close();
-
-        // No valid values for unknown URLs.
-        assertFalse(suggestedSites.contains("foo"));
-        assertNull(suggestedSites.getImageUrlForUrl("foo"));
-        assertNull(suggestedSites.getBackgroundColorForUrl("foo"));
     }
 
     public void testLocaleChanges() {

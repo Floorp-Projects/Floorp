@@ -283,12 +283,13 @@ add_task(function test_on_row_exception_ignored() {
   }
 
   let i = 0;
-  yield c.execute("SELECT * FROM DIRS", null, function onRow(row) {
+  let hasResult = yield c.execute("SELECT * FROM DIRS", null, function onRow(row) {
     i++;
 
     throw new Error("Some silly error.");
   });
 
+  do_check_eq(hasResult, true);
   do_check_eq(i, 10);
 
   yield c.close();
@@ -304,7 +305,7 @@ add_task(function test_on_row_stop_iteration() {
   }
 
   let i = 0;
-  let result = yield c.execute("SELECT * FROM dirs", null, function onRow(row) {
+  let hasResult = yield c.execute("SELECT * FROM dirs", null, function onRow(row) {
     i++;
 
     if (i == 5) {
@@ -312,8 +313,23 @@ add_task(function test_on_row_stop_iteration() {
     }
   });
 
-  do_check_null(result);
+  do_check_eq(hasResult, true);
   do_check_eq(i, 5);
+
+  yield c.close();
+});
+
+// Ensure execute resolves to false when no rows are selected.
+add_task(function test_on_row_stop_iteration() {
+  let c = yield getDummyDatabase("no_on_row");
+
+  let i = 0;
+  let hasResult = yield c.execute(`SELECT * FROM dirs WHERE path="nonexistent"`, null, function onRow(row) {
+    i++;
+  });
+
+  do_check_eq(hasResult, false);
+  do_check_eq(i, 0);
 
   yield c.close();
 });

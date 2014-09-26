@@ -15,12 +15,11 @@ module.metadata = {
 const { getMostRecentBrowserWindow, windows: getWindows } = require('../window/utils');
 const { ignoreWindow } = require('../private-browsing/utils');
 const { isPrivateBrowsingSupported } = require('../self');
-const { isGlobalPBSupported } = require('../private-browsing/utils');
 
 function getWindow(anchor) {
   let window;
   let windows = getWindows("navigator:browser", {
-    includePrivate: isPrivateBrowsingSupported || isGlobalPBSupported
+    includePrivate: isPrivateBrowsingSupported
   });
 
   if (anchor) {
