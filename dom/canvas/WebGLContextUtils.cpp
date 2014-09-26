@@ -705,6 +705,22 @@ AssertUintParamCorrect(gl::GLContext* gl, GLenum pname, GLuint shadow)
       MOZ_ASSERT(false, "Bad cached value.");
     }
 }
+
+void
+AssertMaskedUintParamCorrect(gl::GLContext* gl, GLenum pname, GLuint mask, GLuint shadow)
+{
+    GLuint val = 0;
+    gl->GetUIntegerv(pname, &val);
+
+    const GLuint valMasked = val & mask;
+    const GLuint shadowMasked = shadow & mask;
+
+    if (valMasked != shadowMasked) {
+      printf_stderr("Failed 0x%04x shadow: Cached 0x%x/%u, should be 0x%x/%u.\n",
+                    pname, shadowMasked, shadowMasked, valMasked, valMasked);
+      MOZ_ASSERT(false, "Bad cached value.");
+    }
+}
 #else
 void
 AssertUintParamCorrect(gl::GLContext*, GLenum, GLuint)
@@ -802,8 +818,12 @@ WebGLContext::AssertCachedState()
 
     AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_CLEAR_VALUE, mStencilClearValue);
 
-    AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_REF,      mStencilRefFront);
-    AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_BACK_REF, mStencilRefBack);
+    GLint stencilBits = 0;
+    gl->fGetIntegerv(LOCAL_GL_STENCIL_BITS, &stencilBits);
+    const GLuint stencilRefMask = (1 << stencilBits) - 1;
+
+    AssertMaskedUintParamCorrect(gl, LOCAL_GL_STENCIL_REF,      stencilRefMask, mStencilRefFront);
+    AssertMaskedUintParamCorrect(gl, LOCAL_GL_STENCIL_BACK_REF, stencilRefMask, mStencilRefBack);
 
     AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_VALUE_MASK,      mStencilValueMaskFront);
     AssertUintParamCorrect(gl, LOCAL_GL_STENCIL_BACK_VALUE_MASK, mStencilValueMaskBack);
