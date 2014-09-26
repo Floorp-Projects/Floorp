@@ -54,7 +54,7 @@ struct TargetConfig {
 };
 
 // Create a shadow layer for |layer|
-struct OpCreateThebesLayer     { PLayer layer; };
+struct OpCreatePaintedLayer     { PLayer layer; };
 struct OpCreateContainerLayer  { PLayer layer; };
 struct OpCreateImageLayer      { PLayer layer; };
 struct OpCreateColorLayer      { PLayer layer; };
@@ -219,7 +219,7 @@ struct CommonLayerAttributes {
   string contentDescription;
 };
 
-struct ThebesLayerAttributes {
+struct PaintedLayerAttributes {
   nsIntRegion validRegion;
 };
 struct ContainerLayerAttributes {
@@ -235,7 +235,7 @@ struct ImageLayerAttributes     { GraphicsFilterType filter; IntSize scaleToSize
 
 union SpecificLayerAttributes {
   null_t;
-  ThebesLayerAttributes;
+  PaintedLayerAttributes;
   ContainerLayerAttributes;
   ColorLayerAttributes;
   CanvasLayerAttributes;
@@ -430,7 +430,7 @@ union CompositableOperation {
 
 // A unit of a changeset; a set of these comprise a changeset
 union Edit {
-  OpCreateThebesLayer;
+  OpCreatePaintedLayer;
   OpCreateContainerLayer;
   OpCreateImageLayer;
   OpCreateColorLayer;

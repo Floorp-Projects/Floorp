@@ -10,7 +10,7 @@
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
 #include "nsISupportsImpl.h"            // for Layer::AddRef, etc
 
-#include "mozilla/layers/ThebesLayerComposite.h"
+#include "mozilla/layers/PaintedLayerComposite.h"
 #include "mozilla/layers/CanvasLayerComposite.h"
 #include "mozilla/layers/ColorLayerComposite.h"
 #include "mozilla/layers/ImageLayerComposite.h"
@@ -85,11 +85,11 @@ ShadowLayerParent::AsRefLayerComposite() const
          : nullptr;
 }
 
-ThebesLayerComposite*
-ShadowLayerParent::AsThebesLayerComposite() const
+PaintedLayerComposite*
+ShadowLayerParent::AsPaintedLayerComposite() const
 {
-  return mLayer && mLayer->GetType() == Layer::TYPE_THEBES
-         ? static_cast<ThebesLayerComposite*>(mLayer.get())
+  return mLayer && mLayer->GetType() == Layer::TYPE_PAINTED
+         ? static_cast<PaintedLayerComposite*>(mLayer.get())
          : nullptr;
 }
 

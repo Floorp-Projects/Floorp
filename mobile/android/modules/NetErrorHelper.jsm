@@ -11,6 +11,8 @@ Cu.import("resource://gre/modules/UITelemetry.jsm");
 
 this.EXPORTED_SYMBOLS = ["NetErrorHelper"];
 
+const KEY_CODE_ENTER = 13;
+
 /* Handlers is a list of objects that will be notified when an error page is shown
  * or when an event occurs on the page that they are registered to handle. Registration
  * is done by just adding yourself to the dictionary.
@@ -78,12 +80,21 @@ handlers.searchbutton = {
     } else {
       let text = browser.contentDocument.querySelector("#searchtext");
       text.value = tab.userRequested;
+      text.addEventListener("keypress", (event) => {
+        if (event.keyCode === KEY_CODE_ENTER) {
+          this.doSearch(event.target.value);
+        }
+      });
     }
   },
 
   handleClick: function(event) {
-    let engine = Services.search.defaultEngine;
     let value = event.target.previousElementSibling.value;
+    this.doSearch(value);
+  },
+
+  doSearch: function(value) {
+    let engine = Services.search.defaultEngine;
     let uri = engine.getSubmission(value).uri;
 
     let browserWin = Services.wm.getMostRecentWindow("navigator:browser");

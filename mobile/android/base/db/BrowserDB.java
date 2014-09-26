@@ -21,7 +21,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 
 /**
@@ -252,22 +251,5 @@ public class BrowserDB {
 
     public static void setEnableContentProviders(boolean enableContentProviders) {
         sAreContentProvidersEnabled = enableContentProviders;
-    }
-
-    public static boolean hasSuggestedImageUrl(String url) {
-        return sSuggestedSites.contains(url);
-    }
-
-    public static String getSuggestedImageUrlForUrl(String url) {
-        return sSuggestedSites.getImageUrlForUrl(url);
-    }
-
-    public static int getSuggestedBackgroundColorForUrl(String url) {
-        final String bgColor = sSuggestedSites.getBackgroundColorForUrl(url);
-        if (bgColor != null) {
-            return Color.parseColor(bgColor);
-        }
-
-        return 0;
     }
 }

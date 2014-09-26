@@ -544,6 +544,17 @@ function injectLoopAPI(targetWindow) {
     },
 
     /**
+     * Returns a new GUID (UUID) in curly braces format.
+     */
+    generateUUID: {
+      enumerable: true,
+      writable: true,
+      value: function() {
+        return MozLoopService.generateUUID();
+      }
+    },
+
+    /**
      * Compose a URL pointing to the location of an avatar by email address.
      * At the moment we use the Gravatar service to match email addresses with
      * avatars. This might change in the future as avatars might come from another
