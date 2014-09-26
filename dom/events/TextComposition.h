@@ -248,6 +248,14 @@ private:
                      bool aIsSynthesized);
 
   /**
+   * MaybeDispatchCompositionUpdate() may dispatch a compositionupdate event
+   * if aEvent changes composition string.
+   * @return Returns false if dispatching the compositionupdate event caused
+   *         destroying this composition.
+   */
+  bool MaybeDispatchCompositionUpdate(const WidgetTextEvent* aEvent);
+
+  /**
    * Calculate composition offset then notify composition update to widget
    */
   void NotityUpdateComposition(WidgetGUIEvent* aEvent);
