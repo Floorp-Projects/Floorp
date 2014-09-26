@@ -115,6 +115,17 @@ from its prototype:
 :   This is `true` if this script's code is ECMAScript strict mode code, and
     `false` otherwise.
 
+`sourceMapURL`
+:   If this script was produced by a minimizer or translated from some other
+    language, and we know the URL of a <b>source map</b> document relating
+    the source positions in this script to the corresponding source
+    positions in the original source, then this property's value is that
+    URL. Otherwise, this is `null`.
+
+    (On the web, the translator may provide the source map URL in a
+    specially formatted comment in the JavaScript source code, or via a
+    header in the HTTP reply that carried the generated JavaScript.)
+
 ## Function Properties of the Debugger.Script Prototype Object
 
 The functions described below may only be called with a `this` value
