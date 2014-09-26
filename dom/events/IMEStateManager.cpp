@@ -164,8 +164,6 @@ static const char*
 GetNotifyIMEMessageName(IMEMessage aMessage)
 {
   switch (aMessage) {
-    case NOTIFY_IME_OF_CURSOR_POS_CHANGED:
-      return "NOTIFY_IME_OF_CURSOR_POS_CHANGED";
     case NOTIFY_IME_OF_FOCUS:
       return "NOTIFY_IME_OF_FOCUS";
     case NOTIFY_IME_OF_BLUR:
@@ -1024,9 +1022,6 @@ IMEStateManager::NotifyIME(IMEMessage aMessage,
   }
 
   switch (aMessage) {
-    case NOTIFY_IME_OF_CURSOR_POS_CHANGED:
-      return isSynthesizedForTests ?
-        NS_OK : aWidget->NotifyIME(IMENotification(aMessage));
     case REQUEST_TO_COMMIT_COMPOSITION:
       return composition ?
         composition->RequestToCommit(aWidget, false) : NS_OK;
