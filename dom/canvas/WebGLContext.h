@@ -1272,7 +1272,7 @@ protected:
         GLuint mGLName;
 
     public:
-        FakeBlackTexture(gl::GLContext* gl, GLenum target, GLenum format);
+        FakeBlackTexture(gl::GLContext* gl, TexTarget target, GLenum format);
         ~FakeBlackTexture();
         GLuint GLName() const { return mGLName; }
     };
