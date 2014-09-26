@@ -171,6 +171,8 @@ public:
   TrackTypeHints GetHintContents() const { return mHintContents; }
   void SetHintContents(TrackTypeHints aHintContents) { mHintContents = aHintContents; }
 
+  TrackTypeHints GetTrackTypesAvailable() const { return mTrackTypesAvailable; }
+
   /**
    * Create an nsDOMMediaStream whose underlying stream is a SourceMediaStream.
    */
