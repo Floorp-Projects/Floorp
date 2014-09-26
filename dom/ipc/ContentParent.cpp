@@ -53,6 +53,7 @@
 #include "mozilla/dom/mobilemessage/SmsParent.h"
 #include "mozilla/dom/telephony/TelephonyParent.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
+#include "mozilla/dom/voicemail/VoicemailParent.h"
 #include "mozilla/hal_sandbox/PHalParent.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -196,6 +197,7 @@ using namespace mozilla::dom::power;
 using namespace mozilla::dom::mobileconnection;
 using namespace mozilla::dom::mobilemessage;
 using namespace mozilla::dom::telephony;
+using namespace mozilla::dom::voicemail;
 using namespace mozilla::hal;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
@@ -3157,6 +3159,31 @@ bool
 ContentParent::DeallocPTelephonyParent(PTelephonyParent* aActor)
 {
     static_cast<TelephonyParent*>(aActor)->Release();
+    return true;
+}
+
+PVoicemailParent*
+ContentParent::AllocPVoicemailParent()
+{
+    if (!AssertAppProcessPermission(this, "voicemail")) {
+        return nullptr;
+    }
+
+    VoicemailParent* actor = new VoicemailParent();
+    actor->AddRef();
+    return actor;
+}
+
+bool
+ContentParent::RecvPVoicemailConstructor(PVoicemailParent* aActor)
+{
+    return static_cast<VoicemailParent*>(aActor)->Init();
+}
+
+bool
+ContentParent::DeallocPVoicemailParent(PVoicemailParent* aActor)
+{
+    static_cast<VoicemailParent*>(aActor)->Release();
     return true;
 }
 

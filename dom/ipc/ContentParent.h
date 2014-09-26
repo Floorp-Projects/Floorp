@@ -487,6 +487,10 @@ private:
     virtual PTelephonyParent* AllocPTelephonyParent() MOZ_OVERRIDE;
     virtual bool DeallocPTelephonyParent(PTelephonyParent*) MOZ_OVERRIDE;
 
+    virtual PVoicemailParent* AllocPVoicemailParent() MOZ_OVERRIDE;
+    virtual bool RecvPVoicemailConstructor(PVoicemailParent* aActor) MOZ_OVERRIDE;
+    virtual bool DeallocPVoicemailParent(PVoicemailParent* aActor) MOZ_OVERRIDE;
+
     virtual bool DeallocPStorageParent(PStorageParent* aActor) MOZ_OVERRIDE;
 
     virtual PBluetoothParent* AllocPBluetoothParent() MOZ_OVERRIDE;
