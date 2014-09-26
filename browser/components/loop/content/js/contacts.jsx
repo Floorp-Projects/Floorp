@@ -17,15 +17,113 @@ loop.contacts = (function(_, mozL10n) {
   // Number of contacts to add to the list at the same time.
   const CONTACTS_CHUNK_SIZE = 100;
 
-  const ContactDetail = React.createClass({
+  const ContactDropdown = React.createClass({
     propTypes: {
-      handleContactClick: React.PropTypes.func,
+      handleAction: React.PropTypes.func.isRequired,
+    },
+
+    getInitialState: function () {
+      return {
+        openDirUp: false,
+      };
+    },
+
+    componentDidMount: function () {
+      // This method is called once when the dropdown menu is added to the DOM
+      // inside the contact item.  If the menu extends outside of the visible
+      // area of the scrollable list, it is re-rendered in different direction.
+
+      let menuNode = this.getDOMNode();
+      let menuNodeRect = menuNode.getBoundingClientRect();
+
+      let listNode = document.getElementsByClassName("contact-list")[0];
+      let listNodeRect = listNode.getBoundingClientRect();
+
+      if (menuNodeRect.top + menuNodeRect.height >=
+          listNodeRect.top + listNodeRect.height) {
+        this.setState({
+          openDirUp: true,
+        });
+      }
+    },
+
+    onItemClick: function(event) {
+      this.props.handleAction(event.currentTarget.dataset.action);
+    },
+
+    render: function() {
+      let dropdownMenu = React.addons.classSet({
+        "dropdown-menu": true,
+        "dropdown-menu-up": this.state.openDirUp,
+      });
+
+      return (
+        <ul className={dropdownMenu}>
+          <li className="dropdown-menu-item disabled"
+              onClick={this.onItemClick} data-action="video-call">
+            <i className="icon icon-video-call" />
+            {mozL10n.get("video_call_menu_button")}
+          </li>
+          <li className="dropdown-menu-item disabled"
+              onClick={this.onItemClick} data-action="audio-call">
+            <i className="icon icon-audio-call" />
+            {mozL10n.get("audio_call_menu_button")}
+          </li>
+          <li className="dropdown-menu-item"
+              onClick={this.onItemClick} data-action="edit">
+            <i className="icon icon-edit" />
+            {mozL10n.get("edit_contact_menu_button")}
+          </li>
+          <li className="dropdown-menu-item disabled"
+              onClick={this.onItemClick} data-action="block">
+            <i className="icon icon-block" />
+            {mozL10n.get("block_contact_menu_button")}
+          </li>
+          <li className="dropdown-menu-item disabled"
+              onClick={this.onItemClick} data-action="delete">
+            <i className="icon icon-delete" />
+            {mozL10n.get("remove_contact_menu_button")}
+          </li>
+        </ul>
+      );
+    }
+  });
+
+  const ContactDetail = React.createClass({
+    getInitialState: function() {
+      return {
+        showMenu: false,
+      };
+    },
+
+    propTypes: {
+      handleContactAction: React.PropTypes.func,
       contact: React.PropTypes.object.isRequired
     },
 
-    handleContactClick: function() {
-      if (this.props.handleContactClick) {
-        this.props.handleContactClick(this.props.key);
+    _onBodyClick: function() {
+      // Hide the menu after other click handlers have been invoked.
+      setTimeout(this.hideDropdownMenu, 10);
+    },
+
+    showDropdownMenu: function() {
+      document.body.addEventListener("click", this._onBodyClick);
+      this.setState({showMenu: true});
+    },
+
+    hideDropdownMenu: function() {
+      document.body.removeEventListener("click", this._onBodyClick);
+      this.setState({showMenu: false});
+    },
+
+    componentWillUnmount: function() {
+      document.body.removeEventListener("click", this._onBodyClick);
+    },
+
+    handleAction: function(actionName) {
+      console.error("Actions not implemented: " + actionName);
+      if (this.props.handleContactAction) {
+        this.props.handleContactAction(this.props.key, actionName);
       }
     },
 
@@ -66,7 +164,7 @@ loop.contacts = (function(_, mozL10n) {
       });
 
       return (
-        <li onClick={this.handleContactClick} className={contactCSSClass}>
+        <li className={contactCSSClass} onMouseLeave={this.hideDropdownMenu}>
           <div className="avatar">
             <img src={navigator.mozLoop.getUserAvatar(email.value)} />
           </div>
@@ -78,9 +176,15 @@ loop.contacts = (function(_, mozL10n) {
             <div className="email">{email.value}</div>
           </div>
           <div className="icons">
-            <i className="icon icon-video" />
-            <i className="icon icon-caret-down" />
+            <i className="icon icon-video"
+               onClick={this.handleAction.bind(null, "video-call")} />
+            <i className="icon icon-caret-down"
+               onClick={this.showDropdownMenu} />
           </div>
+          {this.state.showMenu
+            ? <ContactDropdown handleAction={this.handleAction} />
+            : null
+          }
         </li>
       );
     }
