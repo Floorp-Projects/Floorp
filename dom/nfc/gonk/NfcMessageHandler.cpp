@@ -17,7 +17,6 @@ using namespace mozilla;
 using namespace mozilla::dom;
 
 static const char* kConfigRequest = "config";
-static const char* kGetDetailsNDEF = "getDetailsNDEF";
 static const char* kReadNDEFRequest = "readNDEF";
 static const char* kWriteNDEFRequest = "writeNDEF";
 static const char* kMakeReadOnlyNDEFRequest = "makeReadOnlyNDEF";
@@ -25,7 +24,6 @@ static const char* kConnectRequest = "connect";
 static const char* kCloseRequest = "close";
 
 static const char* kConfigResponse = "ConfigResponse";
-static const char* kGetDetailsNDEFResponse = "GetDetailsNDEFResponse";
 static const char* kReadNDEFResponse = "ReadNDEFResponse";
 static const char* kWriteNDEFResponse = "WriteNDEFResponse";
 static const char* kMakeReadOnlyNDEFResponse = "MakeReadOnlyNDEFResponse";
@@ -46,8 +44,6 @@ NfcMessageHandler::Marshall(Parcel& aParcel, const CommandOptions& aOptions)
 
   if (!strcmp(type, kConfigRequest)) {
     result = ConfigRequest(aParcel, aOptions);
-  } else if (!strcmp(type, kGetDetailsNDEF)) {
-    result = GetDetailsNDEFRequest(aParcel, aOptions);
   } else if (!strcmp(type, kReadNDEFRequest)) {
     result = ReadNDEFRequest(aParcel, aOptions);
   } else if (!strcmp(type, kWriteNDEFRequest)) {
@@ -82,9 +78,6 @@ NfcMessageHandler::Unmarshall(const Parcel& aParcel, EventOptions& aOptions)
       break;
     case NfcResponse::ConfigRsp:
       result = ConfigResponse(aParcel, aOptions);
-      break;
-    case NfcResponse::GetDetailsNDEFRsp:
-      result = GetDetailsNDEFResponse(aParcel, aOptions);
       break;
     case NfcResponse::ReadNDEFRsp:
       result = ReadNDEFResponse(aParcel, aOptions);
@@ -168,35 +161,6 @@ NfcMessageHandler::ConfigResponse(const Parcel& aParcel, EventOptions& aOptions)
   NS_ENSURE_TRUE(!mPowerLevelQueue.IsEmpty(), false);
   aOptions.mPowerLevel = mPowerLevelQueue[0];
   mPowerLevelQueue.RemoveElementAt(0);
-  return true;
-}
-
-bool
-NfcMessageHandler::GetDetailsNDEFRequest(Parcel& aParcel, const CommandOptions& aOptions)
-{
-  aParcel.writeInt32(NfcRequest::GetDetailsNDEFReq);
-  aParcel.writeInt32(aOptions.mSessionId);
-  mRequestIdQueue.AppendElement(aOptions.mRequestId);
-  return true;
-}
-
-bool
-NfcMessageHandler::GetDetailsNDEFResponse(const Parcel& aParcel, EventOptions& aOptions)
-{
-  aOptions.mType = NS_ConvertUTF8toUTF16(kGetDetailsNDEFResponse);
-  aOptions.mStatus = aParcel.readInt32();
-  aOptions.mSessionId = aParcel.readInt32();
-
-  if (aOptions.mStatus == NfcErrorCode::Success) {
-    int readOnly = aParcel.readInt32();
-    aOptions.mIsReadOnly = readOnly & 0xff;
-    aOptions.mCanBeMadeReadOnly = (readOnly >> 8) & 0xff;
-    aOptions.mMaxSupportedLength = aParcel.readInt32();
-  }
-
-  NS_ENSURE_TRUE(!mRequestIdQueue.IsEmpty(), false);
-  aOptions.mRequestId = mRequestIdQueue[0];
-  mRequestIdQueue.RemoveElementAt(0);
   return true;
 }
 
