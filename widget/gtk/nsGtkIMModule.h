@@ -69,6 +69,9 @@ public:
     void OnDestroyWindow(nsWindow* aWindow);
     // OnFocusChangeInGecko is a notification that an editor gets focus.
     void OnFocusChangeInGecko(bool aFocus);
+    // OnSelectionChange is a notification that selection (caret) is changed
+    // in the focused editor.
+    void OnSelectionChange(nsWindow* aCaller);
 
     // OnKeyEvent is called when aWindow gets a native key press event or a
     // native key release event.  If this returns TRUE, the key event was
@@ -79,12 +82,11 @@ public:
                       bool aKeyDownEventWasSent = false);
 
     // IME related nsIWidget methods.
-    nsresult CommitIMEComposition(nsWindow* aCaller);
+    nsresult EndIMEComposition(nsWindow* aCaller);
     void SetInputContext(nsWindow* aCaller,
                          const InputContext* aContext,
                          const InputContextAction* aAction);
     InputContext GetInputContext();
-    nsresult CancelIMEComposition(nsWindow* aCaller);
     void OnUpdateComposition();
 
     // If a software keyboard has been opened, this returns TRUE.

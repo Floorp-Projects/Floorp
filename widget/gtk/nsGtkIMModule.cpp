@@ -177,7 +177,7 @@ nsGtkIMModule::OnDestroyWindow(nsWindow* aWindow)
     NS_PRECONDITION(aWindow, "aWindow must not be null");
 
     if (mLastFocusedWindow == aWindow) {
-        CancelIMEComposition(aWindow);
+        EndIMEComposition(aWindow);
         if (mIsIMFocused) {
             Blur();
         }
@@ -413,14 +413,14 @@ nsGtkIMModule::ResetIME()
 }
 
 nsresult
-nsGtkIMModule::CommitIMEComposition(nsWindow* aCaller)
+nsGtkIMModule::EndIMEComposition(nsWindow* aCaller)
 {
     if (MOZ_UNLIKELY(IsDestroyed())) {
         return NS_OK;
     }
 
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): CommitIMEComposition, aCaller=%p, "
+        ("GtkIMModule(%p): EndIMEComposition, aCaller=%p, "
          "mCompositionState=%s",
          this, aCaller, GetCompositionStateName()));
 
@@ -435,41 +435,14 @@ nsGtkIMModule::CommitIMEComposition(nsWindow* aCaller)
         return NS_OK;
     }
 
-    // Currently, GTK doesn't have an API to commit composition forcibly.
-    // Therefore, TextComposition will recompute commit string with last
-    // dispatched composition string even if IME causes discarding the
-    // composition.  Therefore, we need to make IME finish composition here.
-    ResetIME();
-
-    return NS_OK;
-}
-
-nsresult
-nsGtkIMModule::CancelIMEComposition(nsWindow* aCaller)
-{
-    if (MOZ_UNLIKELY(IsDestroyed())) {
-        return NS_OK;
-    }
-
-    PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): CancelIMEComposition, aCaller=%p",
-         this, aCaller));
-
-    if (aCaller != mLastFocusedWindow) {
-        PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-            ("    FAILED, the caller isn't focused window, mLastFocusedWindow=%p",
-             mLastFocusedWindow));
-        return NS_OK;
-    }
-
-    if (!IsComposing()) {
-        return NS_OK;
-    }
-
-    // Currently, GTK doesn't have an API to cancel composition forcibly.
-    // Therefore, TextComposition will recompute commit string as empty string
-    // even if IME causes committing composition string with non-empty string.
-    // Therefore, we need to make IME finish composition here.
+    // Currently, GTK has API neither to commit nor to cancel composition
+    // forcibly.  Therefore, TextComposition will recompute commit string for
+    // the request even if native IME will cause unexpected commit string.
+    // So, we don't need to emulate commit or cancel composition with
+    // proper composition events and a text event.
+    // XXX ResetIME() might not enough for finishing compositoin on some
+    //     environments.  We should emulate focus change too because some IMEs
+    //     may commit or cancel composition at blur.
     ResetIME();
 
     return NS_OK;
@@ -526,7 +499,7 @@ nsGtkIMModule::SetInputContext(nsWindow* aCaller,
 
     // Release current IME focus if IME is enabled.
     if (changingEnabledState && IsEditable()) {
-        CommitIMEComposition(mLastFocusedWindow);
+        EndIMEComposition(mLastFocusedWindow);
         Blur();
     }
 
@@ -685,6 +658,29 @@ nsGtkIMModule::Blur()
 
     gtk_im_context_focus_out(im);
     mIsIMFocused = false;
+}
+
+void
+nsGtkIMModule::OnSelectionChange(nsWindow* aCaller)
+{
+    if (MOZ_UNLIKELY(IsDestroyed())) {
+        return;
+    }
+
+    PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+        ("GtkIMModule(%p): OnSelectionChange(aCaller=0x%p), "
+         "mCompositionState=%s",
+         this, aCaller, GetCompositionStateName()));
+
+    if (aCaller != mLastFocusedWindow) {
+        PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
+            ("    WARNING: the caller isn't focused window, "
+             "mLastFocusedWindow=%p",
+             mLastFocusedWindow));
+        return;
+    }
+
+    ResetIME();
 }
 
 /* static */
