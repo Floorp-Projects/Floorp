@@ -706,6 +706,12 @@ Search.prototype = {
       hasFirstResult = true;
     }
 
+    if (this._enableActions && !hasFirstResult) {
+      // If it's not a bookmarked keyword, then it may be a search engine
+      // with an alias - which works like a keyword.
+      hasFirstResult = yield this._matchSearchEngineAlias();
+    }
+
     let shouldAutofill = this._shouldAutofill;
     if (this.pending && !hasFirstResult && shouldAutofill) {
       // Or it may look like a URL we know about from search engines.
@@ -830,6 +836,21 @@ Search.prototype = {
       finalCompleteValue: match.url,
       frecency: FRECENCY_SEARCHENGINES_DEFAULT
     });
+    return true;
+  },
+
+  _matchSearchEngineAlias: function* () {
+    if (this._searchTokens.length < 2)
+      return false;
+
+    let match = yield PlacesSearchAutocompleteProvider.findMatchByAlias(
+                                                         this._searchTokens[0]);
+    if (!match)
+      return false;
+
+    let query = this._searchTokens.slice(1).join(" ");
+
+    yield this._addSearchEngineMatch(match, query);
     return true;
   },
 
