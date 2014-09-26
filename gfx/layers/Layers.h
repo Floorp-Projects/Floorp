@@ -79,7 +79,7 @@ class ClientLayerManager;
 class CommonLayerAttributes;
 class Layer;
 class LayerMetricsWrapper;
-class ThebesLayer;
+class PaintedLayer;
 class ContainerLayer;
 class ImageLayer;
 class ColorLayer;
@@ -159,8 +159,8 @@ static void LayerManagerUserDataDestroy(void *data)
  * BeginTransaction and BeginTransactionWithTarget start a transaction in
  * the Construction phase. When the client has finished constructing the layer
  * tree, it should call EndConstruction() to enter the drawing phase.
- * 2) Drawing: ThebesLayers are rendered into in this phase, in tree
- * order. When the client has finished drawing into the ThebesLayers, it should
+ * 2) Drawing: PaintedLayers are rendered into in this phase, in tree
+ * order. When the client has finished drawing into the PaintedLayers, it should
  * call EndTransaction to complete the transaction.
  *
  * All layer API calls happen on the main thread.
@@ -235,7 +235,7 @@ public:
   enum EndTransactionFlags {
     END_DEFAULT = 0,
     END_NO_IMMEDIATE_REDRAW = 1 << 0,  // Do not perform the drawing phase
-    END_NO_COMPOSITE = 1 << 1, // Do not composite after drawing thebes layer contents.
+    END_NO_COMPOSITE = 1 << 1, // Do not composite after drawing painted layer contents.
     END_NO_REMOTE_COMPOSITE = 1 << 2 // Do not schedule a composition with a remote Compositor, if one exists.
   };
 
@@ -246,7 +246,7 @@ public:
   /**
    * Attempts to end an "empty transaction". There must have been no
    * changes to the layer tree since the BeginTransaction().
-   * It's possible for this to fail; ThebesLayers may need to be updated
+   * It's possible for this to fail; PaintedLayers may need to be updated
    * due to VRAM data being lost, for example. In such cases this method
    * returns false, and the caller must proceed with a normal layer tree
    * update and EndTransaction.
@@ -254,20 +254,20 @@ public:
   virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) = 0;
 
   /**
-   * Function called to draw the contents of each ThebesLayer.
+   * Function called to draw the contents of each PaintedLayer.
    * aRegionToDraw contains the region that needs to be drawn.
    * This would normally be a subregion of the visible region.
    * The callee must draw all of aRegionToDraw. Drawing outside
    * aRegionToDraw will be clipped out or ignored.
    * The callee must draw all of aRegionToDraw.
-   * This region is relative to 0,0 in the ThebesLayer.
+   * This region is relative to 0,0 in the PaintedLayer.
    *
    * aRegionToInvalidate contains a region whose contents have been
    * changed by the layer manager and which must therefore be invalidated.
    * For example, this could be non-empty if a retained layer internally
    * switches from RGBA to RGB or back ... we might want to repaint it to
    * consistently use subpixel-AA or not.
-   * This region is relative to 0,0 in the ThebesLayer.
+   * This region is relative to 0,0 in the PaintedLayer.
    * aRegionToInvalidate may contain areas that are outside
    * aRegionToDraw; the callee must ensure that these areas are repainted
    * in the current layer manager transaction or in a later layer
@@ -277,9 +277,9 @@ public:
    * We guarantee that buffered contents in the visible
    * region are valid once drawing is complete.
    *
-   * The origin of aContext is 0,0 in the ThebesLayer.
+   * The origin of aContext is 0,0 in the PaintedLayer.
    */
-  typedef void (* DrawThebesLayerCallback)(ThebesLayer* aLayer,
+  typedef void (* DrawPaintedLayerCallback)(PaintedLayer* aLayer,
                                            gfxContext* aContext,
                                            const nsIntRegion& aRegionToDraw,
                                            DrawRegionClip aClip,
@@ -289,11 +289,11 @@ public:
   /**
    * Finish the construction phase of the transaction, perform the
    * drawing phase, and end the transaction.
-   * During the drawing phase, all ThebesLayers in the tree are
+   * During the drawing phase, all PaintedLayers in the tree are
    * drawn in tree order, exactly once each, except for those layers
    * where it is known that the visible region is empty.
    */
-  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
+  virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT) = 0;
 
@@ -373,35 +373,35 @@ public:
 #endif
 
   /**
-   * Hints that can be used during Thebes layer creation to influence the type
+   * Hints that can be used during PaintedLayer creation to influence the type
    * or properties of the layer created.
    *
    * NONE: No hint.
    * SCROLLABLE: This layer may represent scrollable content.
    */
-  enum ThebesLayerCreationHint {
+  enum PaintedLayerCreationHint {
     NONE, SCROLLABLE
   };
 
   /**
-   * Returns true if aLayer is optimized for the given ThebesLayerCreationHint.
+   * Returns true if aLayer is optimized for the given PaintedLayerCreationHint.
    */
-  virtual bool IsOptimizedFor(ThebesLayer* aLayer,
-                              ThebesLayerCreationHint aCreationHint)
+  virtual bool IsOptimizedFor(PaintedLayer* aLayer,
+                              PaintedLayerCreationHint aCreationHint)
   { return true; }
 
   /**
    * CONSTRUCTION PHASE ONLY
-   * Create a ThebesLayer for this manager's layer tree.
+   * Create a PaintedLayer for this manager's layer tree.
    */
-  virtual already_AddRefed<ThebesLayer> CreateThebesLayer() = 0;
+  virtual already_AddRefed<PaintedLayer> CreatePaintedLayer() = 0;
   /**
    * CONSTRUCTION PHASE ONLY
-   * Create a ThebesLayer for this manager's layer tree, with a creation hint
+   * Create a PaintedLayer for this manager's layer tree, with a creation hint
    * parameter to help optimise the type of layer created.
    */
-  virtual already_AddRefed<ThebesLayer> CreateThebesLayerWithHint(ThebesLayerCreationHint) {
-    return CreateThebesLayer();
+  virtual already_AddRefed<PaintedLayer> CreatePaintedLayerWithHint(PaintedLayerCreationHint) {
+    return CreatePaintedLayer();
   }
   /**
    * CONSTRUCTION PHASE ONLY
@@ -738,7 +738,7 @@ public:
     TYPE_READBACK,
     TYPE_REF,
     TYPE_SHADOW,
-    TYPE_THEBES
+    TYPE_PAINTED
   };
 
   /**
@@ -791,7 +791,7 @@ public:
   /**
    * CONSTRUCTION PHASE ONLY
    * This lets layout make some promises about what will be drawn into the
-   * visible region of the ThebesLayer. This enables internal quality
+   * visible region of the PaintedLayer. This enables internal quality
    * and performance optimizations.
    */
   void SetContentFlags(uint32_t aFlags)
@@ -1323,10 +1323,10 @@ public:
   virtual void Disconnect() {}
 
   /**
-   * Dynamic downcast to a Thebes layer. Returns null if this is not
-   * a ThebesLayer.
+   * Dynamic downcast to a PaintedLayer. Returns null if this is not
+   * a PaintedLayer.
    */
-  virtual ThebesLayer* AsThebesLayer() { return nullptr; }
+  virtual PaintedLayer* AsPaintedLayer() { return nullptr; }
 
   /**
    * Dynamic cast to a ContainerLayer. Returns null if this is not
@@ -1655,17 +1655,17 @@ protected:
 };
 
 /**
- * A Layer which we can draw into using Thebes. It is a conceptually
- * infinite surface, but each ThebesLayer has an associated "valid region"
- * of contents that it is currently storing, which is finite. ThebesLayer
+ * A Layer which we can paint into. It is a conceptually
+ * infinite surface, but each PaintedLayer has an associated "valid region"
+ * of contents that it is currently storing, which is finite. PaintedLayer
  * implementations can store content between paints.
  *
- * ThebesLayers are rendered into during the drawing phase of a transaction.
+ * PaintedLayers are rendered into during the drawing phase of a transaction.
  *
- * Currently the contents of a ThebesLayer are in the device output color
+ * Currently the contents of a PaintedLayer are in the device output color
  * space.
  */
-class ThebesLayer : public Layer {
+class PaintedLayer : public Layer {
 public:
   /**
    * CONSTRUCTION PHASE ONLY
@@ -1678,7 +1678,7 @@ public:
    * CONSTRUCTION PHASE ONLY
    * Set whether ComputeEffectiveTransforms should compute the
    * "residual translation" --- the translation that should be applied *before*
-   * mEffectiveTransform to get the ideal transform for this ThebesLayer.
+   * mEffectiveTransform to get the ideal transform for this PaintedLayer.
    * When this is true, ComputeEffectiveTransforms will compute the residual
    * and ensure that the layer is invalidated whenever the residual changes.
    * When it's false, a change in the residual will not trigger invalidation
@@ -1693,9 +1693,9 @@ public:
    */
   const nsIntRegion& GetValidRegion() const { return mValidRegion; }
 
-  virtual ThebesLayer* AsThebesLayer() { return this; }
+  virtual PaintedLayer* AsPaintedLayer() { return this; }
 
-  MOZ_LAYER_DECL_NAME("ThebesLayer", TYPE_THEBES)
+  MOZ_LAYER_DECL_NAME("PaintedLayer", TYPE_PAINTED)
 
   virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface)
   {
@@ -1717,13 +1717,13 @@ public:
     ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   }
 
-  LayerManager::ThebesLayerCreationHint GetCreationHint() const { return mCreationHint; }
+  LayerManager::PaintedLayerCreationHint GetCreationHint() const { return mCreationHint; }
 
   bool UsedForReadback() { return mUsedForReadback; }
   void SetUsedForReadback(bool aUsed) { mUsedForReadback = aUsed; }
   /**
    * Returns the residual translation. Apply this translation when drawing
-   * into the ThebesLayer so that when mEffectiveTransform is applied afterwards
+   * into the PaintedLayer so that when mEffectiveTransform is applied afterwards
    * by layer compositing, the results exactly match the "ideal transform"
    * (the product of the transform of this layer and its ancestors).
    * Returns 0,0 unless SetAllowResidualTranslation(true) has been called.
@@ -1732,8 +1732,8 @@ public:
   gfxPoint GetResidualTranslation() const { return mResidualTranslation; }
 
 protected:
-  ThebesLayer(LayerManager* aManager, void* aImplData,
-              LayerManager::ThebesLayerCreationHint aCreationHint = LayerManager::NONE)
+  PaintedLayer(LayerManager* aManager, void* aImplData,
+              LayerManager::PaintedLayerCreationHint aCreationHint = LayerManager::NONE)
     : Layer(aManager, aImplData)
     , mValidRegion()
     , mCreationHint(aCreationHint)
@@ -1757,9 +1757,9 @@ protected:
   /**
    * The creation hint that was used when constructing this layer.
    */
-  const LayerManager::ThebesLayerCreationHint mCreationHint;
+  const LayerManager::PaintedLayerCreationHint mCreationHint;
   /**
-   * Set when this ThebesLayer is participating in readback, i.e. some
+   * Set when this PaintedLayer is participating in readback, i.e. some
    * ReadbackLayer (may) be getting its background from this layer.
    */
   bool mUsedForReadback;
@@ -2127,8 +2127,8 @@ public:
   {
     // Snap our local transform first, and snap the inherited transform as well.
     // This makes our snapping equivalent to what would happen if our content
-    // was drawn into a ThebesLayer (gfxContext would snap using the local
-    // transform, then we'd snap again when compositing the ThebesLayer).
+    // was drawn into a PaintedLayer (gfxContext would snap using the local
+    // transform, then we'd snap again when compositing the PaintedLayer).
     mEffectiveTransform =
         SnapTransform(GetLocalTransform(), gfxRect(0, 0, mBounds.width, mBounds.height),
                       nullptr)*

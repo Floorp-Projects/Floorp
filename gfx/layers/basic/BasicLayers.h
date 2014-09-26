@@ -37,7 +37,7 @@ class ReadbackProcessor;
  * This is a cairo/Thebes-only, main-thread-only implementation of layers.
  * 
  * In each transaction, the client sets up the layer tree and then during
- * the drawing phase, each ThebesLayer is painted directly into the target
+ * the drawing phase, each PaintedLayer is painted directly into the target
  * context (with appropriate clipping and Push/PopGroups performed
  * between layers).
  */
@@ -53,16 +53,16 @@ public:
   /**
    * Construct a BasicLayerManager which will have no default
    * target context. SetDefaultTarget or BeginTransactionWithTarget
-   * must be called for any rendering to happen. ThebesLayers will not
+   * must be called for any rendering to happen. PaintedLayers will not
    * be retained.
    */
   explicit BasicLayerManager(BasicLayerManagerType aType);
   /**
    * Construct a BasicLayerManager which will have no default
    * target context. SetDefaultTarget or BeginTransactionWithTarget
-   * must be called for any rendering to happen. ThebesLayers will be
+   * must be called for any rendering to happen. PaintedLayers will be
    * retained; that is, we will try to retain the visible contents of
-   * ThebesLayers as cairo surfaces. We create ThebesLayer buffers by
+   * PaintedLayers as cairo surfaces. We create PaintedLayer buffers by
    * creating similar surfaces to the default target context, or to
    * aWidget's GetThebesSurface if there is no default target context, or
    * to the passed-in context if there is no widget and no default
@@ -102,7 +102,7 @@ public:
   virtual void BeginTransaction();
   virtual void BeginTransactionWithTarget(gfxContext* aTarget);
   virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT);
-  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
+  virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT);
   virtual bool ShouldAvoidComponentAlphaLayers() { return IsWidgetLayerManager(); }
@@ -111,7 +111,7 @@ public:
 
   virtual void SetRoot(Layer* aLayer);
 
-  virtual already_AddRefed<ThebesLayer> CreateThebesLayer();
+  virtual already_AddRefed<PaintedLayer> CreatePaintedLayer();
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer();
   virtual already_AddRefed<ImageLayer> CreateImageLayer();
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer();
@@ -169,19 +169,19 @@ protected:
   // Paints aLayer to mTarget.
   void PaintLayer(gfxContext* aTarget,
                   Layer* aLayer,
-                  DrawThebesLayerCallback aCallback,
+                  DrawPaintedLayerCallback aCallback,
                   void* aCallbackData);
 
   // Clear the contents of a layer
   void ClearLayer(Layer* aLayer);
 
-  bool EndTransactionInternal(DrawThebesLayerCallback aCallback,
+  bool EndTransactionInternal(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT);
 
   void FlashWidgetUpdateArea(gfxContext* aContext);
 
-  // Widget whose surface should be used as the basis for ThebesLayer
+  // Widget whose surface should be used as the basis for PaintedLayer
   // buffers.
   nsIWidget* mWidget;
   // The default context for BeginTransaction.

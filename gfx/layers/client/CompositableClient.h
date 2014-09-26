@@ -110,7 +110,7 @@ private:
  * by this layer forwarder (the matching uses a global map on the compositor side,
  * see CompositableMap in ImageBridgeParent.cpp)
  *
- * Subclasses: Thebes layers use ContentClients, ImageLayers use ImageClients,
+ * Subclasses: Painted layers use ContentClients, ImageLayers use ImageClients,
  * Canvas layers use CanvasClients (but ImageHosts). We have a different subclass
  * where we have a different way of interfacing with the textures - in terms of
  * drawing into the compositable and/or passing its contents to the compostior.

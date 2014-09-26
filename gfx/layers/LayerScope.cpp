@@ -715,7 +715,7 @@ SenderHelper::SendLayer(LayerComposite* aLayer,
         }
         case Layer::TYPE_IMAGE:
         case Layer::TYPE_CANVAS:
-        case Layer::TYPE_THEBES: {
+        case Layer::TYPE_PAINTED: {
             // Get CompositableHost and Compositor
             CompositableHost* compHost = aLayer->GetCompositableHost();
             Compositor* comp = compHost->GetCompositor();

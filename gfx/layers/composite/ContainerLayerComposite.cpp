@@ -297,7 +297,7 @@ RenderLayers(ContainerT* aContainer,
     if (LayerHasCheckerboardingAPZC(layer, &color)) {
       // Ideally we would want to intersect the checkerboard region from the APZ with the layer bounds
       // and only fill in that area. However the layer bounds takes into account the base translation
-      // for the thebes layer whereas the checkerboard region does not. One does not simply
+      // for the painted layer whereas the checkerboard region does not. One does not simply
       // intersect areas in different coordinate spaces. So we do this a little more permissively
       // and only fill in the background when we know there is checkerboard, which in theory
       // should only occur transiently.

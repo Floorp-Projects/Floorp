@@ -23,7 +23,7 @@ namespace layers {
 // mSink may be released only on the main thread this object should always be
 // destroyed on the main thread!
 struct ReadbackTask {
-  // The texture that we copied the contents of the thebeslayer to.
+  // The texture that we copied the contents of the paintedlayer to.
   nsRefPtr<ID3D10Texture2D> mReadbackTexture;
   // The sink that we're trying to read back to.
   RefPtr<TextureReadbackSink> mSink;

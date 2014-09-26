@@ -10,7 +10,7 @@
 #include "gfxSharedImageSurface.h"
 
 #include "ImageLayerD3D9.h"
-#include "ThebesLayerD3D9.h"
+#include "PaintedLayerD3D9.h"
 #include "gfxPlatform.h"
 #include "gfx2DGlue.h"
 #include "yuv_convert.h"

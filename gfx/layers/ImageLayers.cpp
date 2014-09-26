@@ -44,8 +44,8 @@ void ImageLayer::ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSu
   }
   // Snap our local transform first, and snap the inherited transform as well.
   // This makes our snapping equivalent to what would happen if our content
-  // was drawn into a ThebesLayer (gfxContext would snap using the local
-  // transform, then we'd snap again when compositing the ThebesLayer).
+  // was drawn into a PaintedLayer (gfxContext would snap using the local
+  // transform, then we'd snap again when compositing the PaintedLayer).
   mEffectiveTransform =
       SnapTransform(local, sourceRect, nullptr) *
       SnapTransformTranslation(aTransformToSurface, nullptr);
