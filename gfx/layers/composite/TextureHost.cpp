@@ -291,9 +291,14 @@ TextureHost::CompositorRecycle()
 void
 TextureHost::SetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData)
 {
-    mCompositableBackendData = aBackendData;
+  mCompositableBackendData = aBackendData;
 }
 
+void
+TextureHost::UnsetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData)
+{
+  mCompositableBackendData = nullptr;
+}
 
 TextureHost::TextureHost(TextureFlags aFlags)
     : mActor(nullptr)
@@ -325,12 +330,6 @@ TextureHost::PrintInfo(std::stringstream& aStream, const char* aPrefix)
     Unlock();
   }
   AppendToString(aStream, mFlags, " [flags=", "]");
-}
-
-void
-TextureSource::SetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData)
-{
-    mCompositableBackendData = aBackendData;
 }
 
 TextureSource::TextureSource()
