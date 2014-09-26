@@ -5,7 +5,7 @@
 <merge
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".MainActivity">
+    tools:context=".SearchActivity">
 
     <org.mozilla.search.autocomplete.SearchBar
         android:id="@+id/search_bar"
