@@ -11,6 +11,7 @@
 
 #include "jscntxt.h"
 
+#include "builtin/TypedObject.h"
 #include "proxy/Proxy.h"
 #include "vm/ProxyObject.h"
 #include "vm/TypedArrayObject.h"
@@ -40,15 +41,17 @@ ClassCanHaveFixedData(const Class *clasp)
     // arrays we only use enough to cover the class reserved slots, so that
     // the remaining space in the object's allocation is available for the
     // buffer's data.
-    return clasp == &ArrayBufferObject::class_ || IsTypedArrayClass(clasp);
+    return clasp == &ArrayBufferObject::class_
+        || clasp == &InlineOpaqueTypedObject::class_
+        || IsTypedArrayClass(clasp);
 }
 
-inline void *
+inline uint8_t *
 ObjectImpl::fixedData(size_t nslots) const
 {
     JS_ASSERT(ClassCanHaveFixedData(getClass()));
     JS_ASSERT(nslots == numFixedSlots() + (hasPrivate() ? 1 : 0));
-    return &fixedSlots()[nslots];
+    return reinterpret_cast<uint8_t *>(&fixedSlots()[nslots]);
 }
 
 } // namespace js
