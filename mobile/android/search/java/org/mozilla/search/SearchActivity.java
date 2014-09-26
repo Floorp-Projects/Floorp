@@ -34,7 +34,7 @@ import org.mozilla.search.providers.SearchEngineManager.SearchEngineCallback;
  * State management is delegated to child fragments. Fragments communicate
  * with each other by passing messages through this activity.
  */
-public class MainActivity extends LocaleAware.LocaleAwareFragmentActivity
+public class SearchActivity extends LocaleAware.LocaleAwareFragmentActivity
         implements AcceptsSearchQuery, SearchEngineCallback {
 
     private static final String KEY_SEARCH_STATE = "search_state";
@@ -142,7 +142,7 @@ public class MainActivity extends LocaleAware.LocaleAwareFragmentActivity
         settingsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, SearchPreferenceActivity.class));
+                startActivity(new Intent(SearchActivity.this, SearchPreferenceActivity.class));
             }
         });
 
