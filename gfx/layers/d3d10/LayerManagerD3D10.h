@@ -81,11 +81,11 @@ public:
   virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT);
 
   struct CallbackInfo {
-    DrawThebesLayerCallback Callback;
+    DrawPaintedLayerCallback Callback;
     void *CallbackData;
   };
 
-  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
+  virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT);
 
@@ -105,7 +105,7 @@ public:
     return MAX_TEXTURE_SIZE;
   }
 
-  virtual already_AddRefed<ThebesLayer> CreateThebesLayer();
+  virtual already_AddRefed<PaintedLayer> CreatePaintedLayer();
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer();
   virtual already_AddRefed<ImageLayer> CreateImageLayer();
   virtual already_AddRefed<ColorLayer> CreateColorLayer();

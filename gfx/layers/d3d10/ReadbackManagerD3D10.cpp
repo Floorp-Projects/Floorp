@@ -20,14 +20,14 @@ namespace layers {
 // mLayer may be released only on the main thread this object should always be
 // destroyed on the main thread!
 struct ReadbackTask {
-  // The texture that we copied the contents of the thebeslayer to.
+  // The texture that we copied the contents of the paintedlayer to.
   nsRefPtr<ID3D10Texture2D> mReadbackTexture;
   // This exists purely to keep the ReadbackLayer alive for the lifetime of
   // mUpdate. Note that this addref and release should occur -solely- on the
   // main thread.
   nsRefPtr<ReadbackLayer> mLayer;
   ReadbackProcessor::Update mUpdate;
-  // The origin in ThebesLayer coordinates of mReadbackTexture.
+  // The origin in PaintedLayer coordinates of mReadbackTexture.
   gfxPoint mOrigin;
   // mLayer->GetBackgroundOffset() when the task is created.  We have
   // to save this in the ReadbackTask because it might change before
@@ -64,7 +64,7 @@ public:
     HRESULT hr = mTask->mReadbackTexture->Map(0, D3D10_MAP_READ, 0, &mappedTex);
 
     if (FAILED(hr)) {
-      // If this fails we're never going to get our ThebesLayer content.
+      // If this fails we're never going to get our PaintedLayer content.
       update->mLayer->GetSink()->SetUnknown(update->mSequenceCounter);
       return NS_OK;
     }

@@ -49,7 +49,7 @@ enum LayersPacket_Layer_LayerType {
   LayersPacket_Layer_LayerType_UnknownLayer = 0,
   LayersPacket_Layer_LayerType_LayerManager = 1,
   LayersPacket_Layer_LayerType_ContainerLayer = 2,
-  LayersPacket_Layer_LayerType_ThebesLayer = 3,
+  LayersPacket_Layer_LayerType_PaintedLayer = 3,
   LayersPacket_Layer_LayerType_CanvasLayer = 4,
   LayersPacket_Layer_LayerType_ImageLayer = 5,
   LayersPacket_Layer_LayerType_ColorLayer = 6,
@@ -904,7 +904,7 @@ class LayersPacket_Layer : public ::google::protobuf::MessageLite {
   static const LayerType UnknownLayer = LayersPacket_Layer_LayerType_UnknownLayer;
   static const LayerType LayerManager = LayersPacket_Layer_LayerType_LayerManager;
   static const LayerType ContainerLayer = LayersPacket_Layer_LayerType_ContainerLayer;
-  static const LayerType ThebesLayer = LayersPacket_Layer_LayerType_ThebesLayer;
+  static const LayerType PaintedLayer = LayersPacket_Layer_LayerType_PaintedLayer;
   static const LayerType CanvasLayer = LayersPacket_Layer_LayerType_CanvasLayer;
   static const LayerType ImageLayer = LayersPacket_Layer_LayerType_ImageLayer;
   static const LayerType ColorLayer = LayersPacket_Layer_LayerType_ColorLayer;

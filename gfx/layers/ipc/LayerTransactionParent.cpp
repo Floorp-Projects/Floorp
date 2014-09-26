@@ -26,7 +26,7 @@
 #include "mozilla/layers/PCompositableParent.h"
 #include "mozilla/layers/PLayerParent.h"  // for PLayerParent
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
-#include "mozilla/layers/ThebesLayerComposite.h"
+#include "mozilla/layers/PaintedLayerComposite.h"
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "mozilla/unused.h"
 #include "nsCoord.h"                    // for NSAppUnitsToFloatPixels
@@ -234,12 +234,12 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
 
     switch (edit.type()) {
     // Create* ops
-    case Edit::TOpCreateThebesLayer: {
-      MOZ_LAYERS_LOG(("[ParentSide] CreateThebesLayer"));
+    case Edit::TOpCreatePaintedLayer: {
+      MOZ_LAYERS_LOG(("[ParentSide] CreatePaintedLayer"));
 
-      nsRefPtr<ThebesLayerComposite> layer =
-        layer_manager()->CreateThebesLayerComposite();
-      AsLayerComposite(edit.get_OpCreateThebesLayer())->Bind(layer);
+      nsRefPtr<PaintedLayerComposite> layer =
+        layer_manager()->CreatePaintedLayerComposite();
+      AsLayerComposite(edit.get_OpCreatePaintedLayer())->Bind(layer);
       break;
     }
     case Edit::TOpCreateContainerLayer: {
@@ -329,17 +329,17 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       case Specific::Tnull_t:
         break;
 
-      case Specific::TThebesLayerAttributes: {
-        MOZ_LAYERS_LOG(("[ParentSide]   thebes layer"));
+      case Specific::TPaintedLayerAttributes: {
+        MOZ_LAYERS_LOG(("[ParentSide]   painted layer"));
 
-        ThebesLayerComposite* thebesLayer = layerParent->AsThebesLayerComposite();
-        if (!thebesLayer) {
+        PaintedLayerComposite* paintedLayer = layerParent->AsPaintedLayerComposite();
+        if (!paintedLayer) {
           return false;
         }
-        const ThebesLayerAttributes& attrs =
-          specific.get_ThebesLayerAttributes();
+        const PaintedLayerAttributes& attrs =
+          specific.get_PaintedLayerAttributes();
 
-        thebesLayer->SetValidRegion(attrs.validRegion());
+        paintedLayer->SetValidRegion(attrs.validRegion());
 
         break;
       }

@@ -36,7 +36,7 @@ MOZ_BEGIN_ENUM_CLASS(ImageFormat)
    * The CAIRO_SURFACE format creates a CairoImage. All backends should
    * support this format, because video rendering sometimes requires it.
    *
-   * This format is useful even though a ThebesLayer could be used.
+   * This format is useful even though a PaintedLayer could be used.
    * It makes it easy to render a cairo surface when another Image format
    * could be used. It can also avoid copying the surface data in some
    * cases.
