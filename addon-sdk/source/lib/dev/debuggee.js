@@ -22,7 +22,6 @@ const inputFor = port => inputs.get(port);
 const outputFor = port => outputs.get(port);
 const transportFor = port => transports.get(port);
 
-
 const fromTarget = target => {
   const debuggee = new Debuggee();
   const { port1, port2 } = new MessageChannel();

@@ -3,54 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 'use strict';
 
-const { Loader } = require('sdk/test/loader');
-
-const { loader } = LoaderWithHookedConsole(module);
-
-const pb = loader.require('sdk/private-browsing');
-const pbUtils = loader.require('sdk/private-browsing/utils');
 const xulApp = require("sdk/system/xul-app");
 const { open: openWindow, getMostRecentBrowserWindow } = require('sdk/window/utils');
 const { openTab, getTabContentWindow, getActiveTab, setTabURL, closeTab } = require('sdk/tabs/utils');
 const promise = require("sdk/core/promise");
 const windowHelpers = require('sdk/window/helpers');
 const events = require("sdk/system/events");
-
-function LoaderWithHookedConsole(module) {
-  let globals = {};
-  let errors = [];
-
-  globals.console = Object.create(console, {
-    error: {
-      value: function(e) {
-        errors.push(e);
-        if (!/DEPRECATED:/.test(e)) {
-          console.error(e);
-        }
-      }
-    }
-  });
-
-  let loader = Loader(module, globals);
-
-  return {
-    loader: loader,
-    errors: errors
-  }
-}
-
-function deactivate(callback) {
-  if (pbUtils.isGlobalPBSupported) {
-    if (callback)
-      pb.once('stop', callback);
-    pb.deactivate();
-  }
-}
-exports.deactivate = deactivate;
-
-exports.pb = pb;
-exports.pbUtils = pbUtils;
-exports.LoaderWithHookedConsole = LoaderWithHookedConsole;
 
 exports.openWebpage = function openWebpage(url, enablePrivate) {
   if (xulApp.is("Fennec")) {

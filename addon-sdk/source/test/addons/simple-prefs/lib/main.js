@@ -6,14 +6,13 @@
 const { Cu } = require('chrome');
 const sp = require('sdk/simple-prefs');
 const app = require('sdk/system/xul-app');
-const self = require('sdk/self');
-const { preferencesBranch } = self;
+const { id, preferencesBranch } = require('sdk/self');
 const { open } = require('sdk/preferences/utils');
 const { getTabForId } = require('sdk/tabs/utils');
 const { Tab } = require('sdk/tabs/tab');
-require('sdk/tabs');
-
+const { getAddonByID } = require('sdk/addon/manager');
 const { AddonManager } = Cu.import('resource://gre/modules/AddonManager.jsm', {});
+require('sdk/tabs');
 
 exports.testDefaultValues = function (assert) {
   assert.equal(sp.prefs.myHiddenInt, 5, 'myHiddenInt default is 5');
@@ -21,15 +20,13 @@ exports.testDefaultValues = function (assert) {
   assert.equal(sp.prefs.somePreference, 'TEST', 'somePreference default is correct');
 }
 
-exports.testOptionsType = function(assert, done) {
-  AddonManager.getAddonByID(self.id, function(aAddon) {
-    assert.equal(aAddon.optionsType, AddonManager.OPTIONS_TYPE_INLINE, 'options type is inline');
-    done();
-  });
+exports.testOptionsType = function*(assert) {
+  let addon = yield getAddonByID(id);
+  assert.equal(addon.optionsType, AddonManager.OPTIONS_TYPE_INLINE, 'options type is inline');
 }
 
 exports.testButton = function(assert, done) {
-  open(self).then(({ tabId, document }) => {
+  open({ id: id }).then(({ tabId, document }) => {
     let tab = Tab({ tab: getTabForId(tabId) });
     sp.once('sayHello', _ => {
       assert.pass('The button was pressed!');
@@ -44,7 +41,7 @@ exports.testButton = function(assert, done) {
 
 if (app.is('Firefox')) {
   exports.testAOM = function(assert, done) {
-    open(self).then(({ tabId }) => {
+    open({ id: id }).then(({ tabId }) => {
       let tab = Tab({ tab: getTabForId(tabId) });
       assert.pass('the add-on prefs page was opened.');
 
@@ -73,17 +70,17 @@ if (app.is('Firefox')) {
 
           // test somePreference
           assert.equal(msg.somePreference.type, 'string', 'some pref is a string');
-          assert.equal(msg.somePreference.pref, 'extensions.'+self.id+'.somePreference', 'somePreference path is correct');
+          assert.equal(msg.somePreference.pref, 'extensions.' + id + '.somePreference', 'somePreference path is correct');
           assert.equal(msg.somePreference.title, 'some-title', 'somePreference title is correct');
           assert.equal(msg.somePreference.desc, 'Some short description for the preference', 'somePreference description is correct');
-          assert.equal(msg.somePreference['data-jetpack-id'], self.id, 'data-jetpack-id attribute value is correct');
+          assert.equal(msg.somePreference['data-jetpack-id'], id, 'data-jetpack-id attribute value is correct');
 
           // test myInteger
           assert.equal(msg.myInteger.type, 'integer', 'myInteger is a int');
-          assert.equal(msg.myInteger.pref, 'extensions.'+self.id+'.myInteger', 'extensions.test-simple-prefs.myInteger');
+          assert.equal(msg.myInteger.pref, 'extensions.' + id + '.myInteger', 'extensions.test-simple-prefs.myInteger');
           assert.equal(msg.myInteger.title, 'my-int', 'myInteger title is correct');
           assert.equal(msg.myInteger.desc, 'How many of them we have.', 'myInteger desc is correct');
-          assert.equal(msg.myInteger['data-jetpack-id'], self.id, 'data-jetpack-id attribute value is correct');
+          assert.equal(msg.myInteger['data-jetpack-id'], id, 'data-jetpack-id attribute value is correct');
 
           // test myHiddenInt
           assert.equal(msg.myHiddenInt.type, undefined, 'myHiddenInt was not displayed');
@@ -92,7 +89,7 @@ if (app.is('Firefox')) {
           assert.equal(msg.myHiddenInt.desc, undefined, 'myHiddenInt was not displayed');
 
           // test sayHello
-          assert.equal(msg.sayHello['data-jetpack-id'], self.id, 'data-jetpack-id attribute value is correct');
+          assert.equal(msg.sayHello['data-jetpack-id'], id, 'data-jetpack-id attribute value is correct');
 
           tab.close(done);
         }
@@ -103,11 +100,10 @@ if (app.is('Firefox')) {
   // run it again, to test against inline options document caching
   // and duplication of <setting> nodes upon re-entry to about:addons
   exports.testAgainstDocCaching = exports.testAOM;
-
 }
 
 exports.testDefaultPreferencesBranch = function(assert) {
-  assert.equal(preferencesBranch, self.id, 'preferencesBranch default the same as self.id');
+  assert.equal(preferencesBranch, id, 'preferencesBranch default the same as self.id');
 }
 
 require('sdk/test/runner').runTestsFromModule(module);
