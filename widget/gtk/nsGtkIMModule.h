@@ -187,11 +187,6 @@ protected:
     // be processed as simple key event, this is set to TRUE by the commit
     // handler.
     bool mFilterKeyEvent;
-    // When mIgnoreNativeCompositionEvent is TRUE, all native composition
-    // should be ignored except that the compositon should be restarted in
-    // another content (nsIContent).  Don't refer this value directly, use
-    // ShouldIgnoreNativeCompositionEvent().
-    bool mIgnoreNativeCompositionEvent;
     // mKeyDownEventWasSent is used by OnKeyEvent() and
     // DispatchCompositionStart().  DispatchCompositionStart() dispatches
     // a keydown event if the composition start is caused by a native
@@ -288,8 +283,6 @@ protected:
 
     // Called before destroying the context to work around some platform bugs.
     void PrepareToDestroyContext(GtkIMContext *aContext);
-
-    bool ShouldIgnoreNativeCompositionEvent();
 
     /**
      *  WARNING:
