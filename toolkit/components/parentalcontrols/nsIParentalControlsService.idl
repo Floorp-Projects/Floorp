@@ -11,7 +11,7 @@ interface nsIFile;
 interface nsIInterfaceRequestor;
 interface nsIArray;
 
-[scriptable, uuid(b3585b2a-b4b3-4aa7-be92-b8ddaa6aec5f)]
+[scriptable, uuid(4bde6754-406a-45d1-b18e-dc685adc1db4)]
 interface nsIParentalControlsService : nsISupports
 {
   /**
@@ -25,6 +25,7 @@ interface nsIParentalControlsService : nsISupports
   const short BOOKMARK = 6; // Creating bookmarks
   const short ADD_CONTACT = 7; // Add contacts to the system database
   const short SET_IMAGE = 8; // Setting images as wall paper
+  const short MODIFY_ACCOUNTS = 9; // Modifying system accounts
 
   /**
    * @returns true if the current user account has parental controls
