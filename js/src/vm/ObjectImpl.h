@@ -873,7 +873,7 @@ class ObjectImpl : public gc::Cell
      * following this object, for use with objects which allocate a larger size
      * class than they need and store non-elements data inline.
      */
-    inline void *fixedData(size_t nslots) const;
+    inline uint8_t *fixedData(size_t nslots) const;
 
     /* GC support. */
     static ThingRootKind rootKind() { return THING_ROOT_OBJECT; }

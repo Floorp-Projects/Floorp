@@ -220,6 +220,25 @@ static const FeatureInfo sFeatureInfoArr[] = {
         }
     },
     {
+        "get_integer_indexed",
+        300, // OpenGL version
+        300, // OpenGL ES version
+        GLContext::Extension_None,
+        {
+            GLContext::EXT_draw_buffers2,
+            GLContext::Extensions_End
+        }
+    },
+    {
+        "get_integer64_indexed",
+        320, // OpenGL version
+        300, // OpenGL ES version
+        GLContext::Extension_None,
+        {
+            GLContext::Extensions_End
+        }
+    },
+    {
         "get_query_object_iv",
         200, // OpenGL version
         0,   // OpenGL ES version

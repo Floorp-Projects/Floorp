@@ -11,6 +11,8 @@ let {EventTarget} = require("sdk/event/target");
 let events = require("sdk/event/core");
 let object = require("sdk/util/object");
 
+exports.emit = events.emit;
+
 // Waiting for promise.done() to be added, see bug 851321
 function promiseDone(err) {
   console.error(err);
@@ -828,7 +830,13 @@ let Actor = Class({
       return;
     }
     let request = this._actorSpec.events.get(name);
-    let packet = request.write(args, this);
+    let packet;
+    try {
+      packet = request.write(args, this);
+    } catch(ex) {
+      console.error("Error sending event: " + name);
+      throw ex;
+    }
     packet.from = packet.from || this.actorID;
     this.conn.send(packet);
   },
@@ -936,17 +944,29 @@ let actorProto = function(actorProto) {
   protoSpec.methods.forEach(spec => {
     let handler = function(packet, conn) {
       try {
-        let args = spec.request.read(packet, this);
+        let args;
+        try {
+          args = spec.request.read(packet, this);
+        } catch(ex) {
+          console.error("Error writing request: " + packet.type);
+          throw ex;
+        }
 
         let ret = this[spec.name].apply(this, args);
 
-        if (spec.oneway) {
-          // No need to send a response.
-          return;
-        }
-
         let sendReturn = (ret) => {
-          let response = spec.response.write(ret, this);
+          if (spec.oneway) {
+            // No need to send a response.
+            return;
+          }
+
+          let response;
+          try {
+            response = spec.response.write(ret, this);
+          } catch(ex) {
+            console.error("Error writing response to: " + spec.name);
+            throw ex;
+          }
           response.from = this.actorID;
           // If spec.release has been specified, destroy the object.
           if (spec.release) {
@@ -1087,7 +1107,13 @@ let Front = Class({
     let type = packet.type || undefined;
     if (this._clientSpec.events && this._clientSpec.events.has(type)) {
       let event = this._clientSpec.events.get(packet.type);
-      let args = event.request.read(packet, this);
+      let args;
+      try {
+        args = event.request.read(packet, this);
+      } catch(ex) {
+        console.error("Error reading event: " + packet.type);
+        throw ex;
+      }
       if (event.pre) {
         event.pre.forEach((pre) => pre.apply(this, args));
       }
@@ -1203,7 +1229,13 @@ let frontProto = function(proto) {
         }
       }
 
-      let packet = spec.request.write(args, this);
+      let packet;
+      try {
+        packet = spec.request.write(args, this);
+      } catch(ex) {
+        console.error("Error writing request: " + name);
+        throw ex;
+      }
       if (spec.oneway) {
         // Fire-and-forget oneway packets.
         this.send(packet);
@@ -1211,7 +1243,13 @@ let frontProto = function(proto) {
       }
 
       return this.request(packet).then(response => {
-        let ret = spec.response.read(response, this);
+        let ret;
+        try {
+          ret = spec.response.read(response, this);
+        } catch(ex) {
+          console.error("Error reading response to: " + name);
+          throw ex;
+        }
 
         if (histogram) {
           histogram.add(+new Date - startTime);

@@ -8,6 +8,7 @@
 
 #include "2D.h"
 #include "Filters.h"
+#include <vector>
 #include <d2d1_1.h>
 #include <cguid.h>
 
@@ -18,11 +19,10 @@ class FilterNodeD2D1 : public FilterNode
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeD2D1)
-  static TemporaryRef<FilterNode> Create(DrawTarget* aDT, ID2D1DeviceContext *aDC, FilterType aType);
+  static TemporaryRef<FilterNode> Create(ID2D1DeviceContext *aDC, FilterType aType);
 
-  FilterNodeD2D1(DrawTarget* aDT, ID2D1Effect *aEffect, FilterType aType)
-    : mDT(aDT)
-    , mEffect(aEffect)
+  FilterNodeD2D1(ID2D1Effect *aEffect, FilterType aType)
+    : mEffect(aEffect)
     , mType(aType)
   {
     InitUnmappedProperties();
@@ -48,6 +48,12 @@ public:
   virtual void SetAttribute(uint32_t aIndex, const IntPoint &aValue);
   virtual void SetAttribute(uint32_t aIndex, const Matrix &aValue);
 
+  // Called by DrawTarget before it draws our OutputEffect, and recursively
+  // by the filter nodes that have this filter as one of their inputs. This
+  // gives us a chance to convert any input surfaces to the target format for
+  // the DrawTarget that we will draw to.
+  virtual void WillDraw(DrawTarget *aDT);
+
 protected:
   friend class DrawTargetD2D1;
   friend class DrawTargetD2D;
@@ -58,8 +64,9 @@ protected:
 
   void InitUnmappedProperties();
 
-  RefPtr<DrawTarget> mDT;
   RefPtr<ID2D1Effect> mEffect;
+  std::vector<RefPtr<FilterNodeD2D1>> mInputFilters;
+  std::vector<RefPtr<SourceSurface>> mInputSurfaces;
   FilterType mType;
 };
 
@@ -67,9 +74,8 @@ class FilterNodeConvolveD2D1 : public FilterNodeD2D1
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeConvolveD2D1)
-  FilterNodeConvolveD2D1(DrawTarget *aDT, ID2D1DeviceContext *aDC);
+  FilterNodeConvolveD2D1(ID2D1DeviceContext *aDC);
 
-  virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface);
   virtual void SetInput(uint32_t aIndex, FilterNode *aFilter);
 
   virtual void SetAttribute(uint32_t aIndex, uint32_t aValue);
@@ -77,13 +83,14 @@ public:
   virtual void SetAttribute(uint32_t aIndex, const IntPoint &aValue);
   virtual void SetAttribute(uint32_t aIndex, const IntRect &aValue);
 
+protected:
+  virtual ID2D1Effect* InputEffect();
+
 private:
   void UpdateChain();
   void UpdateOffset();
   void UpdateSourceRect();
 
-  RefPtr<ID2D1Image> mInput;
-  RefPtr<ID2D1Effect> mInputEffect;
   RefPtr<ID2D1Effect> mFloodEffect;
   RefPtr<ID2D1Effect> mCompositeEffect;
   RefPtr<ID2D1Effect> mCropEffect;
@@ -98,7 +105,7 @@ class FilterNodeComponentTransferD2D1 : public FilterNodeD2D1
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeComponentTransferD2D1)
-  FilterNodeComponentTransferD2D1(DrawTarget *aDT, ID2D1DeviceContext *aDC, ID2D1Effect *aEffect, FilterType aType);
+  FilterNodeComponentTransferD2D1(ID2D1DeviceContext *aDC, ID2D1Effect *aEffect, FilterType aType);
 
 protected:
   virtual ID2D1Effect* InputEffect() MOZ_OVERRIDE { return mPrePremultiplyEffect.get(); }

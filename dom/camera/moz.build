@@ -26,7 +26,7 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG['MOZ_B2G_CAMERA']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'GonkCameraControl.cpp',
         'GonkCameraHwMgr.cpp',
         'GonkCameraManager.cpp',

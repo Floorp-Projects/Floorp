@@ -932,7 +932,7 @@ FilterNodeSoftware::~FilterNodeSoftware()
 void
 FilterNodeSoftware::SetInput(uint32_t aIndex, FilterNode *aFilter)
 {
-  if (aFilter->GetBackendType() != FILTER_BACKEND_SOFTWARE) {
+  if (aFilter && aFilter->GetBackendType() != FILTER_BACKEND_SOFTWARE) {
     MOZ_ASSERT(false, "can only take software filters as inputs");
     return;
   }
@@ -955,10 +955,8 @@ FilterNodeSoftware::SetInput(uint32_t aInputEnumIndex,
     MOZ_CRASH();
     return;
   }
-  if ((uint32_t)inputIndex >= mInputSurfaces.size()) {
+  if ((uint32_t)inputIndex >= NumberOfSetInputs()) {
     mInputSurfaces.resize(inputIndex + 1);
-  }
-  if ((uint32_t)inputIndex >= mInputFilters.size()) {
     mInputFilters.resize(inputIndex + 1);
   }
   mInputSurfaces[inputIndex] = aSurface;
@@ -969,6 +967,10 @@ FilterNodeSoftware::SetInput(uint32_t aInputEnumIndex,
     aFilter->AddInvalidationListener(this);
   }
   mInputFilters[inputIndex] = aFilter;
+  if (!aSurface && !aFilter && (size_t)inputIndex == NumberOfSetInputs()) {
+    mInputSurfaces.resize(inputIndex);
+    mInputFilters.resize(inputIndex);
+  }
   Invalidate();
 }
 

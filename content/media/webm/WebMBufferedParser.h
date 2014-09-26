@@ -51,8 +51,13 @@ struct WebMBufferedParser
 {
   explicit WebMBufferedParser(int64_t aOffset)
     : mStartOffset(aOffset), mCurrentOffset(aOffset), mState(READ_ELEMENT_ID),
-      mVIntRaw(false), mTimecodeScale(1000000), mGotTimecodeScale(false)
-  {}
+      mVIntRaw(false), mClusterSyncPos(0), mTimecodeScale(1000000),
+      mGotTimecodeScale(false)
+  {
+    if (mStartOffset != 0) {
+      mState = FIND_CLUSTER_SYNC;
+    }
+  }
 
   uint32_t GetTimecodeScale() {
     MOZ_ASSERT(mGotTimecodeScale);
@@ -99,6 +104,10 @@ private:
     // Store element ID read into mVInt into mElement.mID.  Move to
     // READ_VINT with mVIntRaw false, then return to PARSE_ELEMENT.
     READ_ELEMENT_SIZE,
+
+    // Parser start state for parsers started at an arbitrary offset.  Scans
+    // forward for the first cluster, then move to READ_ELEMENT_ID.
+    FIND_CLUSTER_SYNC,
 
     // Simplistic core of the parser.  Does not pay attention to nesting of
     // elements.  Checks mElement for an element ID of interest, then moves
@@ -159,6 +168,10 @@ private:
   VInt mVInt;
 
   bool mVIntRaw;
+
+  // Current match position within CLUSTER_SYNC_ID.  Used to find sync
+  // within arbitrary data.
+  uint32_t mClusterSyncPos;
 
   // Number of bytes of mVInt left to read.  mVInt is complete once this
   // reaches 0.
