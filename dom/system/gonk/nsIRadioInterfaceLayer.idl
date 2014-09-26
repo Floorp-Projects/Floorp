@@ -23,14 +23,6 @@ interface nsIRilNetworkInterface : nsINetworkInterface
   readonly attribute long      mmsPort;  // -1 if not set.
 };
 
-[scriptable, uuid(c0c5cb9f-6372-4b5a-b74c-baacc2da5e4f)]
-interface nsIVoicemailInfo : nsISupports
-{
-  readonly attribute DOMString number;
-
-  readonly attribute DOMString displayName;
-};
-
 [scriptable, uuid(0226a2c1-a3b9-416a-92cb-c89e4dad4be0)]
 interface nsIRilContext : nsISupports
 {
