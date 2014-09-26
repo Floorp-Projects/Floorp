@@ -125,7 +125,6 @@ gfxCoreTextShaper::ShapeText(gfxContext      *aContext,
     CFAttributedStringRef attrStringObj =
         ::CFAttributedStringCreate(kCFAllocatorDefault, stringObj, attrObj);
     ::CFRelease(stringObj);
-    ::CFRelease(attrObj);
 
     // Create the CoreText line from our string, then we're done with it
     CTLineRef line = ::CTLineCreateWithAttributedString(attrStringObj);
@@ -142,12 +141,34 @@ gfxCoreTextShaper::ShapeText(gfxContext      *aContext,
     for (uint32_t runIndex = 0; runIndex < numRuns; runIndex++) {
         CTRunRef aCTRun =
             (CTRunRef)::CFArrayGetValueAtIndex(glyphRuns, runIndex);
+        CFDictionaryRef runAttr = ::CTRunGetAttributes(aCTRun);
+        if (runAttr != attrObj) {
+            // If Core Text manufactured a new dictionary, this may indicate
+            // unexpected font substitution. In that case, we fail (and fall
+            // back to harfbuzz shaping)...
+            const void* font1 = ::CFDictionaryGetValue(attrObj, kCTFontAttributeName);
+            const void* font2 = ::CFDictionaryGetValue(runAttr, kCTFontAttributeName);
+            if (font1 != font2) {
+                // ...except that if the fallback was only for a variation
+                // selector that is otherwise unsupported, we just ignore it.
+                CFRange range = ::CTRunGetStringRange(aCTRun);
+                if (range.length == 1 &&
+                    gfxFontUtils::IsVarSelector(aText[range.location -
+                                                      startOffset])) {
+                    continue;
+                }
+                NS_WARNING("unexpected font fallback in Core Text");
+                success = false;
+                break;
+            }
+        }
         if (SetGlyphsFromRun(aShapedText, aOffset, aLength, aCTRun, startOffset) != NS_OK) {
             success = false;
             break;
         }
     }
 
+    ::CFRelease(attrObj);
     ::CFRelease(line);
 
     return success;

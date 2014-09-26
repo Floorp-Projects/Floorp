@@ -397,7 +397,7 @@ public:
     gfxContextMatrixAutoSaveRestore autoSR(ctx);
     ctx->SetMatrix(ctx->CurrentMatrix().Translate(devPixelOffset));
 
-    mLayerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer, mBuilder);
+    mLayerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, mBuilder);
   }
 
 private:
@@ -541,7 +541,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
     nsFilterInstance::PaintFilteredFrame(aFrame, aCtx, tm, &callback, &dirtyRegion);
   } else {
     gfx->SetMatrix(matrixAutoSaveRestore.Matrix());
-    aLayerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer, aBuilder);
+    aLayerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer, aBuilder);
     gfx->SetMatrix(gfx->CurrentMatrix().Translate(devPixelOffsetToUserSpace));
   }
 

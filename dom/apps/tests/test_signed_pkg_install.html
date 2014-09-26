@@ -142,11 +142,52 @@ var steps = [
     var request = navigator.mozApps.installPackage(miniManifestURL);
     request.onerror = function(evt) {
       ok(false, "Application should have been correctly installed (error: " +
-                JSON.stringify(evt));
+                request.error.name);
     };
     request.onsuccess = function() {
       info("Application installed");
     };
+  },
+  function() {
+    // Set up the server side to send a different package on the next call.
+    info("== TEST == Set state to invalid app");
+    var url = gSJS + "?" + "nextApp=unsigned";
+    var xhr = new XMLHttpRequest();
+    xhr.addEventListener("load", function() {
+      is(xhr.responseText, "OK", "nextApp=unsigned OK");
+      PackagedTestHelper.next();
+    });
+    xhr.addEventListener("error", event => {
+      ok(false, "XHR error loading " + url + ": " + xhr.status + " - " +
+                xhr.statusText);
+    });
+    xhr.addEventListener("abort", event => {
+      ok(false, "XHR abort loading " + url);
+    });
+    xhr.open('GET', url, true);
+    xhr.send();
+  },
+  function() {
+    info("== TEST == Update app from an invalid source");
+    info("Updating app: " + gApp.manifest.name);
+    gApp.ondownloaderror = function() {
+      is(gApp.downloadError.name, "INVALID_SIGNATURE");
+      PackagedTestHelper.next();
+    };
+    gApp.ondownloadsuccess = function() {
+      info("App downloaded");
+      ok(false, "App should not download success");
+      PackagedTestHelper.finish();
+    };
+    info("App manifest: " + gApp.manifestURL);
+
+    // This update check will return a different mini manifest pointing to
+    // an invalid package.
+    var req = gApp.checkForUpdate();
+    req.onsuccess = function() {
+      gApp.download();
+    }
+    req.onerror = PackagedTestHelper.mozAppsError;
   },
   function() {
     info("== TEST == Uninstall a signed app");

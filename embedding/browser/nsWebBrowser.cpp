@@ -1637,7 +1637,7 @@ NS_IMETHODIMP nsWebBrowser::EnsureDocShellTreeOwner()
    return NS_OK;
 }
 
-static void DrawThebesLayer(ThebesLayer* aLayer,
+static void DrawPaintedLayer(PaintedLayer* aLayer,
                             gfxContext* aContext,
                             const nsIntRegion& aRegionToDraw,
                             DrawRegionClip aClip,
@@ -1682,14 +1682,14 @@ bool nsWebBrowser::PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion)
   NS_ASSERTION(layerManager, "Must be in paint event");
 
   layerManager->BeginTransaction();
-  nsRefPtr<ThebesLayer> root = layerManager->CreateThebesLayer();
+  nsRefPtr<PaintedLayer> root = layerManager->CreatePaintedLayer();
   if (root) {
     nsIntRect dirtyRect = aRegion.GetBounds();
     root->SetVisibleRegion(dirtyRect);
     layerManager->SetRoot(root);
   }
 
-  layerManager->EndTransaction(DrawThebesLayer, &mBackgroundColor);
+  layerManager->EndTransaction(DrawPaintedLayer, &mBackgroundColor);
   return true;
 }
 

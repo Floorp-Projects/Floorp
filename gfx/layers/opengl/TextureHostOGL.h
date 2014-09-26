@@ -57,6 +57,7 @@ namespace layers {
 class Compositor;
 class CompositorOGL;
 class TextureImageTextureSourceOGL;
+class TextureSharedDataGonkOGL;
 
 /**
  * CompositableBackendSpecificData implementation for the Gonk OpenGL backend.
@@ -69,18 +70,83 @@ class TextureImageTextureSourceOGL;
  */
 class CompositableDataGonkOGL : public CompositableBackendSpecificData
 {
-public:
-  CompositableDataGonkOGL();
+protected:
   virtual ~CompositableDataGonkOGL();
 
-  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+public:
+  CompositableDataGonkOGL();
   virtual void ClearData() MOZ_OVERRIDE;
+  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+
+  TextureSharedDataGonkOGL* GetTextureBackendSpecificData();
+protected:
+  nsRefPtr<TextureSharedDataGonkOGL> mTextureBackendSpecificData;
+  RefPtr<CompositorOGL> mCompositor;
+};
+
+/**
+ * Manage actual shared resources of CompositableDataGonkOGL.
+ * The resources are split from CompositableDataGonkOGL to handle two use cases.
+ * Normally TextureHost is used from one CompositableHost at the same time.
+ * In this case, performance is good if the resources are owned by CompositableDataGonkOGL.
+ * But TextureHost could be shared among multiple ImageHosts.
+ * If it happens, performance is good if the resource is owned by TextureHost.
+ * The resources ownership is carryed over from CompositableDataGonkOGL to TextureHost.
+ * See Bug 1017351.
+ */
+class TextureSharedDataGonkOGL
+{
+protected:
+  virtual ~TextureSharedDataGonkOGL();
+
+public:
+  NS_INLINE_DECL_REFCOUNTING(TextureSharedDataGonkOGL)
+
+  TextureSharedDataGonkOGL();
+  TextureSharedDataGonkOGL(GLuint aTexture, EGLImage aImage, CompositorOGL* aCompositor);
+
+  void SetCompositor(Compositor* aCompositor);
+  void ClearData();
+
+  // Mark TextureSharedDataGonkOGL as owned by TextureHost.
+  void SetOwnedByTextureHost()
+  {
+    mOwnedByCompositableHost = false;
+  }
+
+  // Check if this is owned by CompositableHost or TextureHost.
+  bool IsOwnedByCompositableHost()
+  {
+    return mOwnedByCompositableHost;
+  }
+
+  bool IsAllowingSharingTextureHost()
+  {
+    return mAllowSharingTextureHost;
+  }
+
+  void SetAllowSharingTextureHost(bool aAllow)
+  {
+    mAllowSharingTextureHost = aAllow;
+  }
+
+  // Create new TextureSharedDataGonkOGL.
+  // If aImage is already bound to OpenGL texture, the OpenGL textre is carried over
+  // to a new object. It could reduce calling fEGLImageTargetTexture2D()
+  // during resources ownership carry over from CompositableHost to TextureHost.
+  TemporaryRef<TextureSharedDataGonkOGL> GetNewTextureBackendSpecificData(EGLImage aImage);
+
   GLuint GetTexture();
   void DeleteTextureIfPresent();
   gl::GLContext* gl() const;
   void BindEGLImage(GLuint aTarget, EGLImage aImage);
   void ClearBoundEGLImage(EGLImage aImage);
+  bool IsEGLImageBound(EGLImage aImage);
 protected:
+  GLuint GetAndResetGLTextureOwnership();
+
+  bool mOwnedByCompositableHost;
+  bool mAllowSharingTextureHost;
   RefPtr<CompositorOGL> mCompositor;
   GLuint mTexture;
   EGLImage mBoundEGLImage;

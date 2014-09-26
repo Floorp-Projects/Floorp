@@ -31,7 +31,7 @@ class Matrix;
 namespace layers {
 
 class TextureClient;
-class ThebesLayer;
+class PaintedLayer;
 
 /**
  * This is a cairo/Thebes surface, but with a literal twist. Scrolling
@@ -115,7 +115,7 @@ protected:
                           gfx::SourceSurface* aMask,
                           const gfx::Matrix* aMaskTransform) const;
 
-  /** The area of the ThebesLayer that is covered by the buffer as a whole */
+  /** The area of the PaintedLayer that is covered by the buffer as a whole */
   nsIntRect             mBufferRect;
   /**
    * The x and y rotation of the buffer. Conceptually the buffer
@@ -169,7 +169,7 @@ protected:
 };
 
 /**
- * This class encapsulates the buffer used to retain ThebesLayer contents,
+ * This class encapsulates the buffer used to retain PaintedLayer contents,
  * i.e., the contents of the layer's GetVisibleRegion().
  */
 class RotatedContentBuffer : public RotatedBuffer
@@ -181,7 +181,7 @@ public:
   /**
    * Controls the size of the backing buffer of this.
    * - SizedToVisibleBounds: the backing buffer is exactly the same
-   *   size as the bounds of ThebesLayer's visible region
+   *   size as the bounds of PaintedLayer's visible region
    * - ContainsVisibleBounds: the backing buffer is large enough to
    *   fit visible bounds.  May be larger.
    */
@@ -267,7 +267,7 @@ public:
    * will need to call BorrowDrawTargetForPainting multiple times to achieve
    * this.
    */
-  PaintState BeginPaint(ThebesLayer* aLayer,
+  PaintState BeginPaint(PaintedLayer* aLayer,
                         uint32_t aFlags);
 
   struct DrawIterator {
@@ -333,7 +333,7 @@ public:
    * drawn before this is called. The contents of the buffer are drawn
    * to aTarget.
    */
-  void DrawTo(ThebesLayer* aLayer,
+  void DrawTo(PaintedLayer* aLayer,
               gfx::DrawTarget* aTarget,
               float aOpacity,
               gfx::CompositionOp aOp,

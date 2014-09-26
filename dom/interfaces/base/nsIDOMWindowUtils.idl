@@ -1463,7 +1463,7 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute boolean mayHaveTouchEventListeners;
  
   /**
-   * Check if any ThebesLayer painting has been done for this element,
+   * Check if any PaintedLayer painting has been done for this element,
    * clears the painted flags if they have.
    */
   boolean checkAndClearPaintedState(in nsIDOMElement aElement);
