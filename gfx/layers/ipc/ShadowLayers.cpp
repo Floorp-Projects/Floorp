@@ -205,9 +205,9 @@ CreatedLayer(Transaction* aTxn, ShadowableLayer* aLayer)
 }
 
 void
-ShadowLayerForwarder::CreatedThebesLayer(ShadowableLayer* aThebes)
+ShadowLayerForwarder::CreatedPaintedLayer(ShadowableLayer* aThebes)
 {
-  CreatedLayer<OpCreateThebesLayer>(mTxn, aThebes);
+  CreatedLayer<OpCreatePaintedLayer>(mTxn, aThebes);
 }
 void
 ShadowLayerForwarder::CreatedContainerLayer(ShadowableLayer* aContainer)

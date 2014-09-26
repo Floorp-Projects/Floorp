@@ -1812,7 +1812,7 @@ TEST_F(APZHitTestingTester, HitTesting2) {
   EXPECT_EQ(Point(25, 75), transformToGecko * Point(25, 25));
 }
 
-TEST_F(APZCTreeManagerTester, ScrollableThebesLayers) {
+TEST_F(APZCTreeManagerTester, ScrollablePaintedLayers) {
   CreateSimpleMultiLayerTree();
   ScopedLayerTreeRegistration registration(0, root, mcc);
 

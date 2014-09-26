@@ -20,7 +20,7 @@ namespace mozilla {
 namespace layers {
 
 class LayerD3D9;
-class ThebesLayerD3D9;
+class PaintedLayerD3D9;
 
 /*
  * This is the LayerManager used for Direct3D 9. For now this will render on
@@ -66,11 +66,11 @@ public:
   virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT);
 
   struct CallbackInfo {
-    DrawThebesLayerCallback Callback;
+    DrawPaintedLayerCallback Callback;
     void *CallbackData;
   };
 
-  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
+  virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT);
 
@@ -91,7 +91,7 @@ public:
     return mDeviceManager->GetMaxTextureSize();
   }
 
-  virtual already_AddRefed<ThebesLayer> CreateThebesLayer();
+  virtual already_AddRefed<PaintedLayer> CreatePaintedLayer();
 
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer();
 

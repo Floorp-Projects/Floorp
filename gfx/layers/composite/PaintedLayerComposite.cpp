@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ThebesLayerComposite.h"
+#include "PaintedLayerComposite.h"
 #include "CompositableHost.h"           // for TiledLayerProperties, etc
 #include "FrameMetrics.h"               // for FrameMetrics
 #include "Units.h"                      // for CSSRect, LayerPixel, etc
@@ -34,23 +34,23 @@ namespace layers {
 
 class TiledLayerComposer;
 
-ThebesLayerComposite::ThebesLayerComposite(LayerManagerComposite *aManager)
-  : ThebesLayer(aManager, nullptr)
+PaintedLayerComposite::PaintedLayerComposite(LayerManagerComposite *aManager)
+  : PaintedLayer(aManager, nullptr)
   , LayerComposite(aManager)
   , mBuffer(nullptr)
 {
-  MOZ_COUNT_CTOR(ThebesLayerComposite);
+  MOZ_COUNT_CTOR(PaintedLayerComposite);
   mImplData = static_cast<LayerComposite*>(this);
 }
 
-ThebesLayerComposite::~ThebesLayerComposite()
+PaintedLayerComposite::~PaintedLayerComposite()
 {
-  MOZ_COUNT_DTOR(ThebesLayerComposite);
+  MOZ_COUNT_DTOR(PaintedLayerComposite);
   CleanupResources();
 }
 
 bool
-ThebesLayerComposite::SetCompositableHost(CompositableHost* aHost)
+PaintedLayerComposite::SetCompositableHost(CompositableHost* aHost)
 {
   switch (aHost->GetType()) {
     case CompositableType::BUFFER_CONTENT_INC:
@@ -65,13 +65,13 @@ ThebesLayerComposite::SetCompositableHost(CompositableHost* aHost)
 }
 
 void
-ThebesLayerComposite::Disconnect()
+PaintedLayerComposite::Disconnect()
 {
   Destroy();
 }
 
 void
-ThebesLayerComposite::Destroy()
+PaintedLayerComposite::Destroy()
 {
   if (!mDestroyed) {
     CleanupResources();
@@ -80,13 +80,13 @@ ThebesLayerComposite::Destroy()
 }
 
 Layer*
-ThebesLayerComposite::GetLayer()
+PaintedLayerComposite::GetLayer()
 {
   return this;
 }
 
 TiledLayerComposer*
-ThebesLayerComposite::GetTiledLayerComposer()
+PaintedLayerComposite::GetTiledLayerComposer()
 {
   if (!mBuffer) {
     return nullptr;
@@ -96,7 +96,7 @@ ThebesLayerComposite::GetTiledLayerComposer()
 }
 
 LayerRenderState
-ThebesLayerComposite::GetRenderState()
+PaintedLayerComposite::GetRenderState()
 {
   if (!mBuffer || !mBuffer->IsAttached() || mDestroyed) {
     return LayerRenderState();
@@ -105,12 +105,12 @@ ThebesLayerComposite::GetRenderState()
 }
 
 void
-ThebesLayerComposite::RenderLayer(const nsIntRect& aClipRect)
+PaintedLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 {
   if (!mBuffer || !mBuffer->IsAttached()) {
     return;
   }
-  PROFILER_LABEL("ThebesLayerComposite", "RenderLayer",
+  PROFILER_LABEL("PaintedLayerComposite", "RenderLayer",
     js::ProfileEntry::Category::GRAPHICS);
 
   MOZ_ASSERT(mBuffer->GetCompositor() == mCompositeManager->GetCompositor() &&
@@ -147,7 +147,7 @@ ThebesLayerComposite::RenderLayer(const nsIntRect& aClipRect)
 }
 
 CompositableHost*
-ThebesLayerComposite::GetCompositableHost()
+PaintedLayerComposite::GetCompositableHost()
 {
   if (mBuffer && mBuffer->IsAttached()) {
     return mBuffer.get();
@@ -157,7 +157,7 @@ ThebesLayerComposite::GetCompositableHost()
 }
 
 void
-ThebesLayerComposite::CleanupResources()
+PaintedLayerComposite::CleanupResources()
 {
   if (mBuffer) {
     mBuffer->Detach(this);
@@ -166,16 +166,16 @@ ThebesLayerComposite::CleanupResources()
 }
 
 void
-ThebesLayerComposite::GenEffectChain(EffectChain& aEffect)
+PaintedLayerComposite::GenEffectChain(EffectChain& aEffect)
 {
   aEffect.mLayerRef = this;
   aEffect.mPrimaryEffect = mBuffer->GenEffect(GetEffectFilter());
 }
 
 void
-ThebesLayerComposite::PrintInfo(std::stringstream& aStream, const char* aPrefix)
+PaintedLayerComposite::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
-  ThebesLayer::PrintInfo(aStream, aPrefix);
+  PaintedLayer::PrintInfo(aStream, aPrefix);
   if (mBuffer && mBuffer->IsAttached()) {
     aStream << "\n";
     nsAutoCString pfx(aPrefix);

@@ -389,7 +389,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         }
     }
     // Buffer rotation is not to be confused with the angled rotation done by a transform matrix
-    // It's a fancy ThebesLayer feature used for scrolling
+    // It's a fancy PaintedLayer feature used for scrolling
     if (state.BufferRotated()) {
         LOGD("%s Layer has a rotated buffer", aLayer->Name());
         return false;

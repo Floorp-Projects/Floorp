@@ -166,7 +166,7 @@ private:
 };
 
 /**
- * ContentHost for tiled Thebes layers. Since tiled layers are special snow
+ * ContentHost for tiled PaintedLayers. Since tiled layers are special snow
  * flakes, we have a unique update process. All the textures that back the
  * tiles are added in the usual way, but Updated is called on the host side
  * in response to a message that describes the transaction for every tile.

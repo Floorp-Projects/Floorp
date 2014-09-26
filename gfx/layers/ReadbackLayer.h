@@ -91,8 +91,8 @@ public:
   {
     // Snap our local transform first, and snap the inherited transform as well.
     // This makes our snapping equivalent to what would happen if our content
-    // was drawn into a ThebesLayer (gfxContext would snap using the local
-    // transform, then we'd snap again when compositing the ThebesLayer).
+    // was drawn into a PaintedLayer (gfxContext would snap using the local
+    // transform, then we'd snap again when compositing the PaintedLayer).
     mEffectiveTransform =
         SnapTransform(GetLocalTransform(), gfxRect(0, 0, mSize.width, mSize.height),
                       nullptr)*
@@ -140,7 +140,7 @@ public:
     mSink = nullptr;
   }
 
-  void NotifyThebesLayerRemoved(ThebesLayer* aLayer)
+  void NotifyPaintedLayerRemoved(PaintedLayer* aLayer)
   {
     if (mBackgroundLayer == aLayer) {
       mBackgroundLayer = nullptr;
@@ -182,14 +182,14 @@ protected:
   nsAutoPtr<ReadbackSink> mSink;
   nsIntSize mSize;
 
-  // This can refer to any (earlier) sibling ThebesLayer. That ThebesLayer
-  // must have mUsedForReadback set on it. If the ThebesLayer is removed
-  // for the container, this will be set to null by NotifyThebesLayerRemoved.
-  // This ThebesLayer contains the contents which have previously been reported
-  // to mSink. The ThebesLayer had only an integer translation transform,
+  // This can refer to any (earlier) sibling PaintedLayer. That PaintedLayer
+  // must have mUsedForReadback set on it. If the PaintedLayer is removed
+  // for the container, this will be set to null by NotifyPaintedLayerRemoved.
+  // This PaintedLayer contains the contents which have previously been reported
+  // to mSink. The PaintedLayer had only an integer translation transform,
   // and it covered the entire readback area. This layer also had only an
   // integer translation transform.
-  ThebesLayer* mBackgroundLayer;
+  PaintedLayer* mBackgroundLayer;
   // When mBackgroundLayer is non-null, this is the offset to add to
   // convert from the coordinates of mBackgroundLayer to the coordinates
   // of this layer.
