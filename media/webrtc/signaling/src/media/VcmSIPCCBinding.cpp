@@ -2549,12 +2549,12 @@ cc_boolean vcmCheckAttribs(cc_uint32_t media_type, void *sdp_p, int level,
             rcap->max_cpb = t_uint;
         }
 
-        if ( ccsdpAttrGetFmtpMaxCpb(sdp_p, level, 0, fmtp_inst, &t_uint) == SDP_SUCCESS )
+        if ( ccsdpAttrGetFmtpMaxDpb(sdp_p, level, 0, fmtp_inst, &t_uint) == SDP_SUCCESS )
         {
             rcap->max_dpb = t_uint;
         }
 
-        if ( ccsdpAttrGetFmtpMaxCpb(sdp_p, level, 0, fmtp_inst, &t_uint) == SDP_SUCCESS )
+        if ( ccsdpAttrGetFmtpMaxBr(sdp_p, level, 0, fmtp_inst, &t_uint) == SDP_SUCCESS )
         {
             rcap->max_br = t_uint;
         }
