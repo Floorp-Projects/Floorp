@@ -482,7 +482,7 @@ NetworkManager.prototype = {
       return Promise.reject("Invalid network interface.");
     }
 
-    return this.resolveHostname(host)
+    return this.resolveHostname(network, host)
       .then((ipAddresses) => this._updateRoutes(true,
                                                 ipAddresses,
                                                 network.name,
@@ -494,7 +494,7 @@ NetworkManager.prototype = {
       return Promise.reject("Invalid network interface.");
     }
 
-    return this.resolveHostname(host)
+    return this.resolveHostname(network, host)
       .then((ipAddresses) => this._updateRoutes(false,
                                                 ipAddresses,
                                                 network.name,
@@ -659,7 +659,7 @@ NetworkManager.prototype = {
     }
   },
 
-  resolveHostname: function(hostname) {
+  resolveHostname: function(network, hostname) {
     // Sanity check for null, undefined and empty string... etc.
     if (!hostname) {
       return Promise.reject(new Error("hostname is empty: " + hostname));
@@ -694,8 +694,18 @@ NetworkManager.prototype = {
       deferred.resolve(retval);
     };
 
+    // Bug 1058282 - Explicitly request ipv4 to get around 8.8.8.8 probe at
+    // http://androidxref.com/4.3_r2.1/xref/bionic/libc/netbsd/net/getaddrinfo.c#1923
+    //
+    // Whenever MMS connection is the only network interface, there is no
+    // default route so that any ip probe will fail.
+    let flags = 0;
+    if (network.type === Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_MMS) {
+      flags |= Ci.nsIDNSService.RESOLVE_DISABLE_IPV6;
+    }
+
     // TODO: Bug 992772 - Resolve the hostname with specified networkInterface.
-    gDNSService.asyncResolve(hostname, 0, onLookupComplete, Services.tm.mainThread);
+    gDNSService.asyncResolve(hostname, flags, onLookupComplete, Services.tm.mainThread);
 
     return deferred.promise;
   },
