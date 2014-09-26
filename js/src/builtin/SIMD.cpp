@@ -87,8 +87,7 @@ template<typename Elem>
 static Elem
 TypedObjectMemory(HandleValue v)
 {
-    TypedObject &obj = v.toObject().as<TypedObject>();
-    MOZ_ASSERT(!obj.owner().isNeutered());
+    OwnedTypedObject &obj = v.toObject().as<OwnedTypedObject>();
     return reinterpret_cast<Elem>(obj.typedMem());
 }
 
@@ -139,7 +138,7 @@ static bool SignMask(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    TypedObject &typedObj = args.thisv().toObject().as<TypedObject>();
+    OwnedTypedObject &typedObj = args.thisv().toObject().as<OwnedTypedObject>();
     TypeDescr &descr = typedObj.typeDescr();
     if (descr.kind() != type::Simd || descr.as<SimdTypeDescr>().type() != SimdType::type) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
@@ -148,7 +147,6 @@ static bool SignMask(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    MOZ_ASSERT(!typedObj.owner().isNeutered());
     Elem *data = reinterpret_cast<Elem *>(typedObj.typedMem());
     int32_t mx = data[0] < 0.0 ? 1 : 0;
     int32_t my = data[1] < 0.0 ? 1 : 0;
@@ -324,11 +322,10 @@ SimdTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    Rooted<TypedObject*> result(cx, TypedObject::createZeroed(cx, descr, 0));
+    Rooted<TypedObject*> result(cx, OwnedTypedObject::createZeroed(cx, descr, 0));
     if (!result)
         return false;
 
-    MOZ_ASSERT(!result->owner().isNeutered());
     switch (descr->type()) {
       case SimdTypeDescr::TYPE_INT32: {
         int32_t *mem = reinterpret_cast<int32_t*>(result->typedMem());
@@ -720,11 +717,10 @@ js::CreateSimd(JSContext *cx, typename V::Elem *data)
     Rooted<TypeDescr*> typeDescr(cx, &V::GetTypeDescr(*cx->global()));
     JS_ASSERT(typeDescr);
 
-    Rooted<TypedObject *> result(cx, TypedObject::createZeroed(cx, typeDescr, 0));
+    Rooted<TypedObject *> result(cx, OwnedTypedObject::createZeroed(cx, typeDescr, 0));
     if (!result)
         return nullptr;
 
-    MOZ_ASSERT(!result->owner().isNeutered());
     Elem *resultMem = reinterpret_cast<Elem *>(result->typedMem());
     memcpy(resultMem, data, sizeof(Elem) * V::lanes);
     return result;

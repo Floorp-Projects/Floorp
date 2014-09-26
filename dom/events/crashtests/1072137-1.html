@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<script>
+
+function boom()
+{
+  var textareaRoot = document.createElement("textarea");
+  document.removeChild(document.documentElement);
+  document.appendChild(textareaRoot);
+  var input = document.createElement("input");
+  textareaRoot.appendChild(input);
+  input.select();
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>

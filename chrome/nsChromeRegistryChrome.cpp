@@ -996,14 +996,6 @@ nsChromeRegistryChrome::ManifestResource(ManifestProcessingContext& cx, int line
 
   nsCOMPtr<nsIResProtocolHandler> rph = do_QueryInterface(ph);
 
-  bool exists = false;
-  rv = rph->HasSubstitution(host, &exists);
-  if (exists) {
-    LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,
-                          "Duplicate resource declaration for '%s' ignored.", package);
-    return;
-  }
-
   nsCOMPtr<nsIURI> resolved = cx.ResolveURI(uri);
   if (!resolved) {
     LogMessageWithContext(cx.GetManifestURI(), lineno, nsIScriptError::warningFlag,

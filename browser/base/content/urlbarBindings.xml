@@ -155,7 +155,8 @@
                 returnValue = action.params.url;
                 break;
               }
-              case "keyword": {
+              case "keyword": // Fall through.
+              case "searchengine": {
                 returnValue = action.params.input;
                 break;
               }
@@ -320,6 +321,12 @@
                 return;
               } else if (action.type == "keyword") {
                 url = action.params.url;
+              } else if (action.type == "searchengine") {
+                let engine = Services.search.getEngineByName(action.params.engineName);
+                let submission = engine.getSubmission(action.params.searchQuery);
+
+                url = submission.uri.spec;
+                postData = submission.postData;
               }
             }
             continueOperation.call(this);
@@ -1003,6 +1010,7 @@
           // Check for middle-click or modified clicks on the URL bar
           if (gURLBar && this.mInput == gURLBar) {
             var url = controller.getValueAt(this.selectedIndex);
+            var options = {};
 
             // close the autocomplete popup and revert the entered address
             this.closePopup();
@@ -1019,6 +1027,13 @@
                   url = action.params.url;
                   break;
                 }
+                case "searchengine": {
+                  let engine = Services.search.getEngineByName(action.params.engineName);
+                  let submission = engine.getSubmission(action.params.searchQuery);
+                  url = submission.uri.spec;
+                  options.postData = submission.postData;
+                  break;
+                }
                 default: {
                   return;
                 }
@@ -1026,7 +1041,7 @@
             }
 
             // respect the usual clicking subtleties
-            openUILink(url, aEvent);
+            openUILink(url, aEvent, options);
           }
         ]]>
         </body>

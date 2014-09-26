@@ -207,7 +207,7 @@ def processSingleLeakFile(leakLogFileName, processType, leakThreshold):
                       r"(?P<size>-?\d+)\s+(?P<bytesLeaked>-?\d+)\s+"
                       r"-?\d+\s+(?P<numLeaked>-?\d+)")
 
-  processString = " %s process:" % processType
+  processString = "%s process:" % processType
   crashedOnPurpose = False
   totalBytesLeaked = None
   logAsWarning = False
@@ -238,7 +238,7 @@ def processSingleLeakFile(leakLogFileName, processType, leakThreshold):
         # log, particularly on B2G. Eventually, these should be split into multiple
         # logs (bug 1068869), but for now, we report the largest leak.
         if totalBytesLeaked != None:
-          leakAnalysis.append("WARNING | leakcheck |%s multiple BloatView byte totals found"
+          leakAnalysis.append("WARNING | leakcheck | %s multiple BloatView byte totals found"
                               % processString)
         else:
           totalBytesLeaked = 0
@@ -251,13 +251,13 @@ def processSingleLeakFile(leakLogFileName, processType, leakThreshold):
         else:
           recordLeakedObjects = False
       if size < 0 or bytesLeaked < 0 or numLeaked < 0:
-        leakAnalysis.append("TEST-UNEXPECTED-FAIL | leakcheck |%s negative leaks caught!"
+        leakAnalysis.append("TEST-UNEXPECTED-FAIL | leakcheck | %s negative leaks caught!"
                             % processString)
         logAsWarning = True
         continue
       if name != "TOTAL" and numLeaked != 0 and recordLeakedObjects:
         leakedObjectNames.append(name)
-        leakedObjectAnalysis.append("TEST-INFO | leakcheck |%s leaked %d %s (%s bytes)"
+        leakedObjectAnalysis.append("TEST-INFO | leakcheck | %s leaked %d %s (%s bytes)"
                                     % (processString, numLeaked, name, bytesLeaked))
 
   leakAnalysis.extend(leakedObjectAnalysis)
@@ -271,17 +271,17 @@ def processSingleLeakFile(leakLogFileName, processType, leakThreshold):
   if totalBytesLeaked is None:
     # We didn't see a line with name 'TOTAL'
     if crashedOnPurpose:
-      log.info("TEST-INFO | leakcheck |%s deliberate crash and thus no leak log"
+      log.info("TEST-INFO | leakcheck | %s deliberate crash and thus no leak log"
                % processString)
     else:
       # TODO: This should be a TEST-UNEXPECTED-FAIL, but was changed to a warning
       # due to too many intermittent failures (see bug 831223).
-      log.info("WARNING | leakcheck |%s missing output line for total leaks!"
+      log.info("WARNING | leakcheck | %s missing output line for total leaks!"
                % processString)
     return
 
   if totalBytesLeaked == 0:
-    log.info("TEST-PASS | leakcheck |%s no leaks detected!" % processString)
+    log.info("TEST-PASS | leakcheck | %s no leaks detected!" % processString)
     return
 
   # totalBytesLeaked was seen and is non-zero.
@@ -305,10 +305,10 @@ def processSingleLeakFile(leakLogFileName, processType, leakThreshold):
     leakedObjectSummary += ', ...'
 
   if logAsWarning:
-    log.warning("%s | leakcheck |%s %d bytes leaked (%s)"
+    log.warning("%s | leakcheck | %s %d bytes leaked (%s)"
                 % (prefix, processString, totalBytesLeaked, leakedObjectSummary))
   else:
-    log.info("%s | leakcheck |%s %d bytes leaked (%s)"
+    log.info("%s | leakcheck | %s %d bytes leaked (%s)"
              % (prefix, processString, totalBytesLeaked, leakedObjectSummary))
 
 def processLeakLog(leakLogFile, leakThreshold = 0):

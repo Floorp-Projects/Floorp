@@ -859,14 +859,24 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
   nsresult rv = GetSelection(getter_AddRefs(selection));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // NOTE: TextComposition should receive selection change notification before
+  //       TextEventHandlingMarker notifies TextComposition of the end of
+  //       handling TextEvent because TextComposition may need to ignore
+  //       selection changes caused by composition.  Therefore,
+  //       TextEventHandlingMarker must be destroyed after a call of
+  //       NotifiyEditorObservers(eNotifyEditorObserversOfEnd) or
+  //       NotifiyEditorObservers(eNotifyEditorObserversOfCancel) which notifies
+  //       TextComposition of a selection change.
+  MOZ_ASSERT(!mPlaceHolderBatch,
+    "UpdateIMEComposition() must be called without place holder batch");
+  TextComposition::TextEventHandlingMarker
+    textEventHandlingMarker(mComposition, widgetTextEvent);
+
   NotifyEditorObservers(eNotifyEditorObserversOfBefore);
 
   nsRefPtr<nsCaret> caretP = ps->GetCaret();
 
   {
-    TextComposition::TextEventHandlingMarker
-      textEventHandlingMarker(mComposition, widgetTextEvent);
-
     nsAutoPlaceHolderBatch batch(this, nsGkAtoms::IMETxnName);
 
     rv = InsertText(widgetTextEvent->theText);
