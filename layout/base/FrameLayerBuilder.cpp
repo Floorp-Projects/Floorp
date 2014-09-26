@@ -2130,6 +2130,7 @@ ContainerState::PopPaintedLayerData()
       nsIntRect visibleRect = data->mVisibleRegion.GetBounds();
       visibleRect.MoveBy(-GetTranslationForPaintedLayer(data->mLayer));
       colorLayer->SetBounds(visibleRect);
+      colorLayer->SetClipRect(nullptr);
 
       layer = colorLayer;
       FLB_LOG_PAINTED_LAYER_DECISION(data, "  Selected color layer=%p\n", layer.get());
