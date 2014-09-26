@@ -8,11 +8,6 @@
 
 #include "nsISupports.h"
 
-// Class ID for our HZToUnicode charset converter
-// {BA61519A-1DFA-11d3-B3BF-00805F8A6670}
-#define NS_HZTOUNICODE_CID \
-  { 0xba61519a, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
-
 // Class ID for our GBKToUnicode charset converter
 // {BA61519E-1DFA-11d3-B3BF-00805F8A6670}
 #define NS_GBKTOUNICODE_CID \
@@ -22,11 +17,6 @@
 // {BA61519B-1DFA-11d3-B3BF-00805F8A6670}
 #define NS_UNICODETOGBK_CID \
   { 0xba61519b, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
-
-// Class ID for our UnicodeToHZ charset converter
-// {BA61519D-1DFA-11d3-B3BF-00805F8A6670}
-#define NS_UNICODETOHZ_CID \
-  { 0xba61519d, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
 
 // Class ID for our UnicodeToGB18030 charset converter
 // {A59DA932-4091-11d5-A145-005004832142}
