@@ -81,9 +81,8 @@ ALL_JARS = \
   gecko-R.jar \
   gecko-browser.jar \
   gecko-mozglue.jar \
+  gecko-thirdparty.jar \
   gecko-util.jar \
-  nineoldandroids.jar \
-  squareup-picasso.jar \
   sync-thirdparty.jar \
   $(NULL)
 
