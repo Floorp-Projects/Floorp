@@ -76,16 +76,19 @@ MIRType MIRTypeFromValue(const js::Value &vp)
      * points.
      */                                                                         \
     _(Unused)                                                                   \
-    /* Marks if an instruction has fewer uses than the original code.
-     * E.g. UCE can remove code.
-     * Every instruction where an use is/was removed from an instruction and
-     * as a result the number of operands doesn't equal the original code
-     * need to get marked as UseRemoved. This is important for truncation
-     * analysis to know, since if all original uses are still present,
-     * it can ignore resumepoints.
-     * Currently this is done for every pass after IonBuilder and before
-     * Truncate Doubles. So every time removeUse is called, UseRemoved needs
-     * to get set.
+                                                                                \
+    /* When a branch is removed, the uses of multiple instructions are removed.
+     * The removal of branches is based on hypotheses.  These hypotheses might
+     * fail, in which case we need to bailout from the current code.
+     *
+     * When we implement a destructive optimization, we need to consider the
+     * failing cases, and consider the fact that we might resume the execution
+     * into a branch which was removed from the compiler.  As such, a
+     * destructive optimization need to take into acount removed branches.
+     *
+     * In order to let destructive optimizations know about removed branches, we
+     * have to annotate instructions with the UseRemoved flag.  This flag
+     * annotates instruction which were used in removed branches.
      */                                                                         \
     _(UseRemoved)                                                               \
                                                                                 \

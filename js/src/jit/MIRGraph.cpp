@@ -997,6 +997,36 @@ MBasicBlock::discardPhiAt(MPhiIterator &at)
     return result;
 }
 
+void
+MBasicBlock::flagOperandsOfPrunedBranches(MInstruction *ins)
+{
+    // Find the previous resume point which would be used for bailing out.
+    MResumePoint *rp = nullptr;
+    for (MInstructionReverseIterator iter = rbegin(ins); iter != rend(); iter++) {
+        rp = iter->resumePoint();
+        if (rp)
+            break;
+    }
+
+    // If none, take the entry resume point.
+    if (!rp)
+        rp = entryResumePoint();
+
+    // The only blocks which do not have any entryResumePoint in Ion, are the
+    // SplitEdge blocks.  SplitEdge blocks only have a Goto instruction before
+    // Range Analysis phase.  In adjustInputs, we are manipulating instructions
+    // which have a TypePolicy.  So, as a Goto has no operand and no type
+    // policy, the entry resume point should exists.
+    MOZ_ASSERT(rp);
+
+    // Flag all operand as being potentially used.
+    while (rp) {
+        for (size_t i = 0, end = rp->numOperands(); i < end; i++)
+            rp->getOperand(i)->setUseRemovedUnchecked();
+        rp = rp->caller();
+    }
+}
+
 bool
 MBasicBlock::addPredecessor(TempAllocator &alloc, MBasicBlock *pred)
 {
