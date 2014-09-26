@@ -19,6 +19,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.v4.util.LruCache;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -190,7 +191,7 @@ public class URLMetadata {
         }
     }
 
-    public static int deleteUnused(final ContentResolver cr) {
+    public static int deleteUnused(final ContentResolver cr, final String profile) {
         final String selection = URLMetadataTable.URL_COLUMN + " NOT IN "
                 + "(SELECT " + History.URL
                 + " FROM " + History.TABLE_NAME
@@ -201,6 +202,13 @@ public class URLMetadata {
                 + " WHERE " + Bookmarks.IS_DELETED + " = 0 "
                 + " AND " + Bookmarks.URL + " IS NOT NULL)";
 
-        return cr.delete(URLMetadataTable.CONTENT_URI, selection, null);
+        Uri uri = URLMetadataTable.CONTENT_URI;
+        if (!TextUtils.isEmpty(profile)) {
+            uri = uri.buildUpon()
+                     .appendQueryParameter(BrowserContract.PARAM_PROFILE, profile)
+                     .build();
+        }
+
+        return cr.delete(uri, selection, null);
     }
 }

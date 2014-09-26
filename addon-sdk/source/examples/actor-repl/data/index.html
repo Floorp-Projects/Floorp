@@ -18,40 +18,73 @@
   </body>
   <script>
       function debounce(fn, ms) {
-        var id
+        var id;
         return function(...args) {
-          clearTimeout(id)
-          id = setTimeout(fn, ms, ...args)
-        }
+          clearTimeout(id);
+          id = setTimeout(fn, ms, ...args);
+        };
       }
 
       function Try(fn) {
         return function(...args) {
-          try { return fn(...args) }
-          catch (error) { return null }
+          try { return fn(...args); }
+          catch (error) { return null; }
+        };
+      }
+
+      var parse = Try(JSON.parse);
+
+      var CommandHistory = {
+        init: function() {
+          this._state = {};
+          this._state.els = document.querySelectorAll("body > section.task > .request");
+          this._state.idx = this._state.els.length;
+        },
+        get prev() {
+          if (!!this._state.els && this._state.idx > 0) {
+            this._state.idx--;
+            return this._state.els[this._state.idx].textContent;
+          }
+
+          return "";
+        },
+        get next() {
+          if (!!this._state.els && this._state.idx < this._state.els.length-1) {
+            this._state.idx++;
+            return this._state.els[this._state.idx].textContent;
+          }
+
+          return "";
         }
       }
 
-      var parse = Try(JSON.parse)
+      function cmdHistory(fn, editor) {
+        editor.setValue(fn());
+        document.querySelector(".input").scrollIntoView();
+      }
+
+      var cmdHistoryNext = cmdHistory.bind(null, () => CommandHistory.next);
+      var cmdHistoryBack = cmdHistory.bind(null, () => CommandHistory.prev);
 
       function send(editor) {
-          var input = editor.getWrapperElement().parentNode
-          var code = editor.getValue().trim()
-          var packet = parse(code)
+          var input = editor.getWrapperElement().parentNode;
+          var code = editor.getValue().trim();
+          var packet = parse(code);
           if (packet) {
-            var task = document.querySelector("views .task").cloneNode(true)
-            var request = task.querySelector(".request")
-            var response = task.querySelector(".response")
+            var task = document.querySelector("views .task").cloneNode(true);
+            var request = task.querySelector(".request");
+            var response = task.querySelector(".response");
 
-            input.parentNode.insertBefore(task, input)
+            input.parentNode.insertBefore(task, input);
 
             CodeMirror.runMode(JSON.stringify(packet, 2, 2),
                                "application/json",
-                               request)
-            response.classList.add("pending")
+                               request);
+            response.classList.add("pending");
 
-            editor.setValue("")
-            document.activeElement.scrollIntoView()
+            editor.setValue("");
+
+            document.querySelector(".input").scrollIntoView();
 
             port.postMessage(packet);
           }
@@ -63,19 +96,23 @@
         matchBrackets: true,
         value: '{"to": "root", "type": "requestTypes"}',
         extraKeys: {"Cmd-Enter": send,
-                    "Ctrl-Enter": send}
+                    "Ctrl-Enter": send,
+                    "Cmd-Down": cmdHistoryNext,
+                    "Ctrl-Down": cmdHistoryNext,
+                    "Cmd-Up": cmdHistoryBack,
+                    "Ctrl-Up": cmdHistoryBack}
       });
       editor.on("change", debounce(function(editor) {
           var input = editor.getWrapperElement().parentNode;
-          if (parse(editor.getValue().trim()))
-            input.classList.remove("invalid")
-          else
-            input.classList.add("invalid")
-      }, 800))
+          if (parse(editor.getValue().trim())) {
+            input.classList.remove("invalid");
+          } else {
+            input.classList.add("invalid");
+          }
+      }, 800));
   </script>
   <script>
     window.addEventListener("message", event => {
-      console.log("REPL", event);
       window.port = event.ports[0];
       port.onmessage = onMessage;
     });
@@ -84,25 +121,27 @@
       var packet = event.data;
       var code = JSON.stringify(packet, 2, 2);
 
-      var input = editor.getWrapperElement().parentNode;
-      var response = document.querySelector(".task .response.pending")
+      var input = document.querySelector(".input");
+      var response = document.querySelector(".task .response.pending");
 
       if (!response) {
-        message = document.querySelector("views .task").cloneNode(true)
-        response = message.querySelector(".response")
-        response.classList.add("message")
+        message = document.querySelector("views .task").cloneNode(true);
+        response = message.querySelector(".response");
+        response.classList.add("message");
 
         input.parentNode.insertBefore(message, input);
       }
 
-      if (packet.error)
+      if (packet.error) {
         response.classList.add("error");
-
+      }
 
       CodeMirror.runMode(code, "application/json", response);
       response.classList.remove("pending");
 
-      document.activeElement.scrollIntoView()
+      document.querySelector(".input").scrollIntoView();
+
+      CommandHistory.init();
     };
   </script>
 </html>

@@ -27,7 +27,7 @@ add_task(function* test_tab_matches() {
   yield check_autocomplete({
     search: "abc.com",
     searchParam: "enable-actions",
-    matches: [ { uri: makeActionURI("searchengine", {engineName: "MozSearch", input: "abc.com", searchQuery: "abc.com"}), title: "MozSearch" },
+    matches: [ { uri: makeActionURI("visiturl", {url: "http://abc.com/", input: "abc.com"}), title: "http://abc.com/" },
                { uri: makeActionURI("switchtab", {url: "http://abc.com/"}), title: "ABC rocks" } ]
   });
 
