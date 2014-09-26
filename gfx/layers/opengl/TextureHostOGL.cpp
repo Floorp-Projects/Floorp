@@ -188,6 +188,9 @@ TextureSharedDataGonkOGL::gl() const
 void
 TextureSharedDataGonkOGL::SetCompositor(Compositor* aCompositor)
 {
+  if (gl() && mCompositor != aCompositor) {
+    DeleteTextureIfPresent();
+  }
   mCompositor = static_cast<CompositorOGL*>(aCompositor);
 }
 
@@ -224,7 +227,7 @@ GLuint
 TextureSharedDataGonkOGL::GetTexture()
 {
   if (!mTexture) {
-    if (gl()->MakeCurrent()) {
+    if (gl() && gl()->MakeCurrent()) {
       gl()->fGenTextures(1, &mTexture);
     }
   }
@@ -244,7 +247,8 @@ void
 TextureSharedDataGonkOGL::DeleteTextureIfPresent()
 {
   if (mTexture) {
-    if (gl()->MakeCurrent()) {
+    MOZ_ASSERT(gl());
+    if (gl() && gl()->MakeCurrent()) {
       gl()->fDeleteTextures(1, &mTexture);
     }
     mTexture = 0;
@@ -256,7 +260,10 @@ void
 TextureSharedDataGonkOGL::BindEGLImage(GLuint aTarget, EGLImage aImage)
 {
   if (mBoundEGLImage != aImage) {
-    gl()->fEGLImageTargetTexture2D(aTarget, aImage);
+    MOZ_ASSERT(gl());
+    if (gl()) {
+      gl()->fEGLImageTargetTexture2D(aTarget, aImage);
+    }
     mBoundEGLImage = aImage;
   }
 }
