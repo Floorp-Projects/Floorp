@@ -392,15 +392,7 @@ nsINode::GetComposedDocInternal() const
 
   // Cross ShadowRoot boundary.
   ShadowRoot* containingShadow = AsContent()->GetContainingShadow();
-
-  nsIContent* poolHost = containingShadow->GetPoolHost();
-  if (!poolHost) {
-    // This node is in an older shadow root that does not get projected into
-    // an insertion point, thus this node can not be in the composed document.
-    return nullptr;
-  }
-
-  return poolHost->GetComposedDoc();
+  return containingShadow->GetHost()->GetCrossShadowCurrentDoc();
 }
 
 #ifdef DEBUG
