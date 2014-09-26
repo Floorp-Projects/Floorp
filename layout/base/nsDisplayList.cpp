@@ -1237,7 +1237,7 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder,
 /**
  * We paint by executing a layer manager transaction, constructing a
  * single layer representing the display list, and then making it the
- * root of the layer manager, drawing into the ThebesLayers.
+ * root of the layer manager, drawing into the PaintedLayers.
  */
 void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
                                   nsRenderingContext* aCtx,
@@ -1385,7 +1385,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
 
   MaybeSetupTransactionIdAllocator(layerManager, view);
 
-  layerManager->EndTransaction(FrameLayerBuilder::DrawThebesLayer,
+  layerManager->EndTransaction(FrameLayerBuilder::DrawPaintedLayer,
                                aBuilder, flags);
   aBuilder->SetIsCompositingCheap(temp);
   layerBuilder->DidEndTransaction();
@@ -3222,7 +3222,7 @@ void nsDisplayWrapList::Paint(nsDisplayListBuilder* aBuilder,
 
 /**
  * Returns true if all descendant display items can be placed in the same
- * ThebesLayer --- GetLayerState returns LAYER_INACTIVE or LAYER_NONE,
+ * PaintedLayer --- GetLayerState returns LAYER_INACTIVE or LAYER_NONE,
  * and they all have the expected animated geometry root.
  */
 static LayerState

@@ -31,7 +31,7 @@ message LayersPacket {
       UnknownLayer = 0;
       LayerManager = 1;
       ContainerLayer = 2;
-      ThebesLayer = 3;
+      PaintedLayer = 3;
       CanvasLayer = 4;
       ImageLayer = 5;
       ColorLayer = 6;
