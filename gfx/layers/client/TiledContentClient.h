@@ -41,7 +41,7 @@ namespace mozilla {
 namespace layers {
 
 class BasicTileDescriptor;
-class ClientTiledThebesLayer;
+class ClientTiledPaintedLayer;
 class ClientLayerManager;
 
 
@@ -388,12 +388,12 @@ class ClientTiledLayerBuffer
   friend class TiledLayerBuffer<ClientTiledLayerBuffer, TileClient>;
 
 public:
-  ClientTiledLayerBuffer(ClientTiledThebesLayer* aThebesLayer,
+  ClientTiledLayerBuffer(ClientTiledPaintedLayer* aPaintedLayer,
                          CompositableClient* aCompositableClient,
                          ClientLayerManager* aManager,
                          SharedFrameMetricsHelper* aHelper);
   ClientTiledLayerBuffer()
-    : mThebesLayer(nullptr)
+    : mPaintedLayer(nullptr)
     , mCompositableClient(nullptr)
     , mManager(nullptr)
     , mLastPaintContentType(gfxContentType::COLOR)
@@ -403,7 +403,7 @@ public:
 
   void PaintThebes(const nsIntRegion& aNewValidRegion,
                    const nsIntRegion& aPaintRegion,
-                   LayerManager::DrawThebesLayerCallback aCallback,
+                   LayerManager::DrawPaintedLayerCallback aCallback,
                    void* aCallbackData);
 
   void ReadUnlock();
@@ -428,7 +428,7 @@ public:
                          nsIntRegion& aInvalidRegion,
                          const nsIntRegion& aOldValidRegion,
                          BasicTiledLayerPaintData* aPaintData,
-                         LayerManager::DrawThebesLayerCallback aCallback,
+                         LayerManager::DrawPaintedLayerCallback aCallback,
                          void* aCallbackData);
 
   SurfaceDescriptorTiles GetSurfaceDescriptorTiles();
@@ -456,10 +456,10 @@ protected:
 
 private:
   gfxContentType GetContentType(SurfaceMode* aMode = nullptr) const;
-  ClientTiledThebesLayer* mThebesLayer;
+  ClientTiledPaintedLayer* mPaintedLayer;
   CompositableClient* mCompositableClient;
   ClientLayerManager* mManager;
-  LayerManager::DrawThebesLayerCallback mCallback;
+  LayerManager::DrawPaintedLayerCallback mCallback;
   void* mCallbackData;
   CSSToParentLayerScale mFrameResolution;
   gfxContentType mLastPaintContentType;
@@ -504,11 +504,11 @@ class TiledContentClient : public CompositableClient
   // XXX: for now the layer which owns us interacts directly with our buffers.
   // We should have a content client for each tiled buffer which manages its
   // own valid region, resolution, etc. Then we could have a much cleaner
-  // interface and tidy up BasicTiledThebesLayer::PaintThebes (bug 862547).
-  friend class ClientTiledThebesLayer;
+  // interface and tidy up BasicTiledPaintedLayer::PaintThebes (bug 862547).
+  friend class ClientTiledPaintedLayer;
 
 public:
-  TiledContentClient(ClientTiledThebesLayer* aThebesLayer,
+  TiledContentClient(ClientTiledPaintedLayer* aPaintedLayer,
                      ClientLayerManager* aManager);
 
 protected:

@@ -23,7 +23,7 @@
 #include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_LOG
 #include "mozilla/layers/TextureHost.h"  // for TextureHost
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
-#include "mozilla/layers/ThebesLayerComposite.h"
+#include "mozilla/layers/PaintedLayerComposite.h"
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "mozilla/unused.h"
 #include "nsDebug.h"                    // for NS_WARNING, NS_ASSERTION
@@ -88,7 +88,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       break;
     }
     case CompositableOperation::TOpPaintTextureRegion: {
-      MOZ_LAYERS_LOG(("[ParentSide] Paint ThebesLayer"));
+      MOZ_LAYERS_LOG(("[ParentSide] Paint PaintedLayer"));
 
       const OpPaintTextureRegion& op = aEdit.get_OpPaintTextureRegion();
       CompositableHost* compositable = AsCompositable(op);
@@ -96,7 +96,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       if (!layer || layer->GetType() != Layer::TYPE_THEBES) {
         return false;
       }
-      ThebesLayerComposite* thebes = static_cast<ThebesLayerComposite*>(layer);
+      PaintedLayerComposite* thebes = static_cast<PaintedLayerComposite*>(layer);
 
       const ThebesBufferData& bufferData = op.bufferData();
 
@@ -117,7 +117,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       break;
     }
     case CompositableOperation::TOpPaintTextureIncremental: {
-      MOZ_LAYERS_LOG(("[ParentSide] Paint ThebesLayer"));
+      MOZ_LAYERS_LOG(("[ParentSide] Paint PaintedLayer"));
 
       const OpPaintTextureIncremental& op = aEdit.get_OpPaintTextureIncremental();
 

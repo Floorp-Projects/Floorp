@@ -50,7 +50,7 @@ class ShadowableLayer;
 class ShmemTextureClient;
 class SurfaceDescriptor;
 class TextureClient;
-class ThebesLayerComposite;
+class PaintedLayerComposite;
 class ThebesBuffer;
 class ThebesBufferData;
 class TiledLayerComposer;
@@ -189,7 +189,7 @@ public:
    * created, and a corresponding shadow layer should be created in
    * the compositing process.
    */
-  void CreatedThebesLayer(ShadowableLayer* aThebes);
+  void CreatedPaintedLayer(ShadowableLayer* aThebes);
   void CreatedContainerLayer(ShadowableLayer* aContainer);
   void CreatedImageLayer(ShadowableLayer* aImage);
   void CreatedColorLayer(ShadowableLayer* aColor);

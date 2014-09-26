@@ -1027,7 +1027,7 @@ nsDisplayPlugin::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
       // security reasons.)
       // We shouldn't be repainting the content under plugins much anyway
       // since there generally shouldn't be anything to invalidate or paint
-      // in ThebesLayers there.
+      // in PaintedLayers there.
   	  return result;
     }
   }
