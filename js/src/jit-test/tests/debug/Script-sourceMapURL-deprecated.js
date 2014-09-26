@@ -1,4 +1,4 @@
-// Source.prototype.sourceMapURL can be a string or null.
+// Script.prototype.sourceMapURL can be a string or null.
 
 let g = newGlobal();
 let dbg = new Debugger;
@@ -6,7 +6,7 @@ let gw = dbg.addDebuggee(g);
 
 function getSourceMapURL() {
     let fw = gw.makeDebuggeeValue(g.f);
-    return fw.script.source.sourceMapURL;
+    return fw.script.sourceMapURL;
 }
 
 // Without a source map
@@ -21,7 +21,7 @@ assertEq(getSourceMapURL(), 'file:///var/foo.js.map');
 let fired = false;
 dbg.onDebuggerStatement = function (frame) {
     fired = true;
-    assertEq(frame.script.source.sourceMapURL, 'file:///var/bar.js.map');
+    assertEq(frame.script.sourceMapURL, 'file:///var/bar.js.map');
 };
 g.evaluate('(function () { (function () { debugger; })(); })();',
            {sourceMapURL: 'file:///var/bar.js.map'});
