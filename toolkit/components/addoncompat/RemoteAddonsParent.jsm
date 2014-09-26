@@ -262,7 +262,7 @@ ComponentRegistrarInterposition.methods.registerFactory =
 
 ComponentRegistrarInterposition.methods.unregisterFactory =
   function(addon, target, class_, factory) {
-    AboutProtocolParent.tryUnregisterFactory(class_, factory);
+    AboutProtocolParent.unregisterFactory(class_, factory);
     target.unregisterFactory(class_, factory);
   };
 

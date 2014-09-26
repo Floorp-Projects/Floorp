@@ -44,6 +44,8 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
   static const unsigned char SIMPLEBLOCK_ID = 0xa3;
   static const uint32_t BLOCK_TIMECODE_LENGTH = 2;
 
+  static const unsigned char CLUSTER_SYNC_ID[] = { 0x1f, 0x43, 0xb6, 0x75 };
+
   const unsigned char* p = aBuffer;
 
   // Parse each byte in aBuffer one-by-one, producing timecodes and updating
@@ -62,6 +64,18 @@ void WebMBufferedParser::Append(const unsigned char* aBuffer, uint32_t aLength,
       mElement.mID = mVInt;
       mState = READ_VINT;
       mNextState = PARSE_ELEMENT;
+      break;
+    case FIND_CLUSTER_SYNC:
+      if (*p++ == CLUSTER_SYNC_ID[mClusterSyncPos]) {
+        mClusterSyncPos += 1;
+      } else {
+        mClusterSyncPos = 0;
+      }
+      if (mClusterSyncPos == sizeof(CLUSTER_SYNC_ID)) {
+        mVInt.mValue = CLUSTER_ID;
+        mVInt.mLength = sizeof(CLUSTER_SYNC_ID);
+        mState = READ_ELEMENT_SIZE;
+      }
       break;
     case PARSE_ELEMENT:
       mElement.mSize = mVInt;

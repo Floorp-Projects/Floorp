@@ -2074,19 +2074,8 @@ nsEditor::ForceCompositionEnd()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (!mComposition) {
-    // XXXmnakano see bug 558976, ResetInputState() has two meaning which are
-    // "commit the composition" and "cursor is moved".  This method name is
-    // "ForceCompositionEnd", so, ResetInputState() should be used only for the
-    // former here.  However, ResetInputState() is also used for the latter here
-    // because even if we don't have composition, we call ResetInputState() on
-    // Linux.  Currently, nsGtkIMModule can know the timing of the cursor move,
-    // so, the latter meaning should be gone.
-    // XXX This may commit a composition in another editor.
-    return IMEStateManager::NotifyIME(NOTIFY_IME_OF_CURSOR_POS_CHANGED, pc);
-  }
-
-  return IMEStateManager::NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, pc);
+  return mComposition ?
+    IMEStateManager::NotifyIME(REQUEST_TO_COMMIT_COMPOSITION, pc) : NS_OK;
 }
 
 NS_IMETHODIMP

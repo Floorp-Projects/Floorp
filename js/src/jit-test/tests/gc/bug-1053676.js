@@ -1,4 +1,4 @@
-// |jit-test| ion-eager; debug;
+// |jit-test| ion-eager;
 var x
 (function() {
     x

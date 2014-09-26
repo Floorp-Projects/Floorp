@@ -5091,17 +5091,19 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
 
   gfxSize destScale = didSnap ? gfxSize(currentMatrix._11, currentMatrix._22)
                               : gfxSize(1.0, 1.0);
-  gfxSize snappedDest(NSAppUnitsToIntPixels(dest.width * destScale.width,
-                                            aAppUnitsPerDevPixel),
-                      NSAppUnitsToIntPixels(dest.height * destScale.height,
-                                            aAppUnitsPerDevPixel));
+  gfxSize appUnitScaledDest(dest.width * destScale.width,
+                            dest.height * destScale.height);
+  gfxSize scaledDest = appUnitScaledDest / aAppUnitsPerDevPixel;
+  gfxSize snappedScaledDest =
+    gfxSize(NSAppUnitsToIntPixels(appUnitScaledDest.width, aAppUnitsPerDevPixel),
+            NSAppUnitsToIntPixels(appUnitScaledDest.height, aAppUnitsPerDevPixel));
 
-  if (snappedDest.IsEmpty()) {
+  if (scaledDest.IsEmpty() || snappedScaledDest.IsEmpty()) {
     return SnappedImageDrawingParameters();
   }
 
   nsIntSize intImageSize =
-    aImage->OptimalImageSizeForDest(snappedDest,
+    aImage->OptimalImageSizeForDest(snappedScaledDest,
                                     imgIContainer::FRAME_CURRENT,
                                     aGraphicsFilter, aImageFlags);
   gfxSize imageSize(intImageSize.width, intImageSize.height);
@@ -5149,7 +5151,7 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
       anchorPoint.Round();
     }
 
-    gfxRect anchoredDestRect(anchorPoint, snappedDest);
+    gfxRect anchoredDestRect(anchorPoint, scaledDest);
     gfxRect anchoredImageRect(imageSpaceAnchorPoint, imageSize);
     transform = TransformBetweenRects(anchoredImageRect, anchoredDestRect);
     invTransform = TransformBetweenRects(anchoredDestRect, anchoredImageRect);

@@ -60,6 +60,11 @@ public:
   // XXX We should return |const TextRangeArray*| here, but it causes compile
   //     error due to inaccessible Release() method.
   TextRangeArray* GetRanges() const { return mRanges; }
+  // Returns the widget which is proper to call NotifyIME().
+  nsIWidget* GetWidget() const
+  {
+    return mPresContext ? mPresContext->GetRootWidget() : nullptr;
+  }
   // Returns true if the composition is started with synthesized event which
   // came from nsDOMWindowUtils.
   bool IsSynthesizedForTests() const { return mIsSynthesizedForTests; }
@@ -72,12 +77,10 @@ public:
   void Destroy();
 
   /**
-   * SynthesizeCommit() dispatches compositionupdate, text and compositionend
-   * events for emulating commit on the content.
-   *
-   * @param aDiscard true when committing with empty string.  Otherwise, false.
+   * Request to commit (or cancel) the composition to IME.  This method should
+   * be called only by IMEStateManager::NotifyIME().
    */
-  void SynthesizeCommit(bool aDiscard);
+  nsresult RequestToCommit(nsIWidget* aWidget, bool aDiscard);
 
   /**
    * Send a notification to IME.  It depends on the IME or platform spec what
@@ -195,6 +198,24 @@ private:
   // string.
   bool mIsEditorHandlingEvent;
 
+  // mIsRequestingCommit or mIsRequestingCancel is true *only* while we're
+  // requesting commit or canceling the composition.  In other words, while
+  // one of these values is true, we're handling the request.
+  bool mIsRequestingCommit;
+  bool mIsRequestingCancel;
+
+  // mRequestedToCommitOrCancel is true *after* we requested IME to commit or
+  // cancel the composition.  In other words, we already requested of IME that
+  // it commits or cancels current composition.
+  // NOTE: Before this is set true, both mIsRequestingCommit and
+  //       mIsRequestingCancel are set false.
+  bool mRequestedToCommitOrCancel;
+
+  // mWasNativeCompositionEndEventDiscarded is true if this composition was
+  // requested commit or cancel itself but native compositionend event is
+  // discarded by PresShell due to not safe to dispatch events.
+  bool mWasNativeCompositionEndEventDiscarded;
+
   // Hide the default constructor and copy constructor.
   TextComposition() {}
   TextComposition(const TextComposition& aOther);
@@ -228,7 +249,32 @@ private:
    */
   void DispatchEvent(WidgetGUIEvent* aEvent,
                      nsEventStatus* aStatus,
-                     EventDispatchingCallback* aCallBack);
+                     EventDispatchingCallback* aCallBack,
+                     bool aIsSynthesized);
+
+  /**
+   * MaybeDispatchCompositionUpdate() may dispatch a compositionupdate event
+   * if aEvent changes composition string.
+   * @return Returns false if dispatching the compositionupdate event caused
+   *         destroying this composition.
+   */
+  bool MaybeDispatchCompositionUpdate(const WidgetTextEvent* aEvent);
+
+  /**
+   * If IME has already dispatched compositionend event but it was discarded
+   * by PresShell due to not safe to dispatch, this returns true.
+   */
+  bool WasNativeCompositionEndEventDiscarded() const
+  {
+    return mWasNativeCompositionEndEventDiscarded;
+  }
+
+  /**
+   * OnCompositionEventDiscarded() is called when PresShell discards
+   * compositionupdate, compositionend or text event due to not safe to
+   * dispatch event.
+   */
+  void OnCompositionEventDiscarded(const WidgetGUIEvent* aEvent);
 
   /**
    * Calculate composition offset then notify composition update to widget
@@ -242,18 +288,19 @@ private:
   class CompositionEventDispatcher : public nsRunnable
   {
   public:
-    CompositionEventDispatcher(nsPresContext* aPresContext,
+    CompositionEventDispatcher(TextComposition* aTextComposition,
                                nsINode* aEventTarget,
                                uint32_t aEventMessage,
-                               const nsAString& aData);
+                               const nsAString& aData,
+                               bool aIsSynthesizedEvent = false);
     NS_IMETHOD Run() MOZ_OVERRIDE;
 
   private:
-    nsRefPtr<nsPresContext> mPresContext;
+    nsRefPtr<TextComposition> mTextComposition;
     nsCOMPtr<nsINode> mEventTarget;
-    nsCOMPtr<nsIWidget> mWidget;
     uint32_t mEventMessage;
     nsString mData;
+    bool mIsSynthesizedEvent;
 
     CompositionEventDispatcher() {};
   };
@@ -270,9 +317,13 @@ private:
    *                            NS_COMPOSITION_UPDATE or NS_COMPOSITION_END.
    *                            Used for theText value if aEventMessage is
    *                            NS_TEXT_TEXT.
+   * @param aIsSynthesizingCommit   true if this is called for synthesizing
+   *                                commit or cancel composition.  Otherwise,
+   *                                false.
    */
   void DispatchCompositionEventRunnable(uint32_t aEventMessage,
-                                        const nsAString& aData);
+                                        const nsAString& aData,
+                                        bool aIsSynthesizingCommit = false);
 };
 
 /**

@@ -493,10 +493,6 @@ class MOZ_STACK_CLASS TokenStream
     void seek(const Position &pos);
     bool seek(const Position &pos, const TokenStream &other);
 
-    size_t positionToOffset(const Position &pos) const {
-        return pos.buf - userbuf.base();
-    }
-
     const char16_t *rawBase() const {
         return userbuf.base();
     }
