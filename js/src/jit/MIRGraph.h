@@ -301,6 +301,13 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // Discards a phi instruction and updates predecessor successorWithPhis.
     MPhiIterator discardPhiAt(MPhiIterator &at);
 
+    // Some instruction which are guarding against some MIRType value, or
+    // against a type expectation should be considered as removing a potenatial
+    // branch where the guard does not hold.  We need to register such
+    // instructions in order to do destructive optimizations correctly, such as
+    // Range Analysis.
+    void flagOperandsOfPrunedBranches(MInstruction *ins);
+
     // Mark this block as having been removed from the graph.
     void markAsDead() {
         MOZ_ASSERT(kind_ != DEAD);
