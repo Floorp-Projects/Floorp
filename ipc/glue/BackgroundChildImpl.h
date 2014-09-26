@@ -11,6 +11,14 @@
 template <class> class nsAutoPtr;
 
 namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+class IDBTransaction;
+
+} // namespace indexedDB
+} // namespace dom
+
 namespace ipc {
 
 // Instances of this class should never be created directly. This class is meant
@@ -40,13 +48,40 @@ protected:
 
   virtual bool
   DeallocPBackgroundTestChild(PBackgroundTestChild* aActor) MOZ_OVERRIDE;
+
+  virtual PBackgroundIDBFactoryChild*
+  AllocPBackgroundIDBFactoryChild(const OptionalWindowId& aOptionalWindowId)
+                                  MOZ_OVERRIDE;
+
+  virtual bool
+  DeallocPBackgroundIDBFactoryChild(PBackgroundIDBFactoryChild* aActor)
+                                    MOZ_OVERRIDE;
+
+  virtual PBlobChild*
+  AllocPBlobChild(const BlobConstructorParams& aParams) MOZ_OVERRIDE;
+
+  virtual bool
+  DeallocPBlobChild(PBlobChild* aActor) MOZ_OVERRIDE;
+
+  virtual PFileDescriptorSetChild*
+  AllocPFileDescriptorSetChild(const FileDescriptor& aFileDescriptor)
+                               MOZ_OVERRIDE;
+
+  virtual bool
+  DeallocPFileDescriptorSetChild(PFileDescriptorSetChild* aActor) MOZ_OVERRIDE;
 };
 
-class BackgroundChildImpl::ThreadLocal
+class BackgroundChildImpl::ThreadLocal MOZ_FINAL
 {
   friend class nsAutoPtr<ThreadLocal>;
 
-  // Add any members needed here.
+public:
+  mozilla::dom::indexedDB::IDBTransaction* mCurrentTransaction;
+
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  uint64_t mNextTransactionSerialNumber;
+  uint64_t mNextRequestSerialNumber;
+#endif
 
 public:
   ThreadLocal();
