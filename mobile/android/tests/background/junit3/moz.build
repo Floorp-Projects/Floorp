@@ -21,3 +21,5 @@ main.referenced_projects += ['Fennec']
 
 main.add_classpathentry('src', SRCDIR + '/src',
     dstdir='src/org/mozilla/gecko/background')
+
+ANDROID_INSTRUMENTATION_MANIFESTS += ['instrumentation.ini']
