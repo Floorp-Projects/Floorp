@@ -49,6 +49,13 @@ interface nsIVoicemailService : nsISupports
   void unregisterListener(in nsIVoicemailListener listener);
 };
 
+%{C++
+template<typename T> struct already_AddRefed;
+
+already_AddRefed<nsIVoicemailService>
+NS_CreateVoicemailService();
+%}
+
 [scriptable, uuid(a0bc19a2-3216-4f3f-89d3-8976a48cb829)]
 interface nsIVoicemailProvider : nsISupports
 {
