@@ -168,8 +168,25 @@
         }
         var path = _entityEncode(this.path);
         var html = this.results.map(function (t) {
-          var classname = t.info ? "info" : "result " + (t.pass ? "passed" : "failed");
-          var text = t.result + " | " + path + " | " + _entityEncode(t.msg);
+          var classname = "result ";
+          var result = "TEST-";
+          if (t.info) {
+            classname = "info";
+            result += "INFO";
+          }
+          else if (t.pass) {
+            classname += "passed";
+            if (t.todo)
+              result += "KNOWN-FAIL";
+            else
+              result += "PASS";
+          }
+          else {
+            classname += "failed";
+            result += "UNEXPECTED-" + t.status;
+          }
+          var message = t.name + (t.msg ? " - " + t.msg : "");
+          var text = result + " | " + path + " | " + _entityEncode(message);
           if (!t.info && !t.pass) {
             return '<p class="' + classname + '" id=\"ERROR' + (gErrorCount++) + '">' +
                    text + " <a href=\"javascript:scrollTo('ERROR" + gErrorCount + "')\">NEXT ERROR</a></p>";

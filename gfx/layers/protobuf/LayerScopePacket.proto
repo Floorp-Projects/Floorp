@@ -31,7 +31,7 @@ message LayersPacket {
       UnknownLayer = 0;
       LayerManager = 1;
       ContainerLayer = 2;
-      ThebesLayer = 3;
+      PaintedLayer = 3;
       CanvasLayer = 4;
       ImageLayer = 5;
       ColorLayer = 6;
@@ -94,7 +94,7 @@ message LayersPacket {
     optional uint64 mask = 19;    // mask layer
 
     // Specific info (100 to max)
-    // Thebes Layer
+    // Painted Layer
     optional Region valid = 100;
     // Color Layer
     optional uint32 color = 101;

@@ -282,7 +282,7 @@ public:
   // very wrong to assume that the certificate chain is valid.
   //
   // certChain.GetDER(0) is the trust anchor.
-  virtual Result IsChainValid(const DERArray& certChain) = 0;
+  virtual Result IsChainValid(const DERArray& certChain, Time time) = 0;
 
   // issuerCertToDup is only non-const so CERT_DupCertificate can be called on
   // it.

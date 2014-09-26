@@ -963,7 +963,7 @@ bool LayersPacket_Layer_LayerType_IsValid(int value) {
 const LayersPacket_Layer_LayerType LayersPacket_Layer::UnknownLayer;
 const LayersPacket_Layer_LayerType LayersPacket_Layer::LayerManager;
 const LayersPacket_Layer_LayerType LayersPacket_Layer::ContainerLayer;
-const LayersPacket_Layer_LayerType LayersPacket_Layer::ThebesLayer;
+const LayersPacket_Layer_LayerType LayersPacket_Layer::PaintedLayer;
 const LayersPacket_Layer_LayerType LayersPacket_Layer::CanvasLayer;
 const LayersPacket_Layer_LayerType LayersPacket_Layer::ImageLayer;
 const LayersPacket_Layer_LayerType LayersPacket_Layer::ColorLayer;

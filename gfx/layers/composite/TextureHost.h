@@ -131,11 +131,6 @@ public:
    * one device texture and must be tiled internally.
    */
   virtual BigImageIterator* AsBigImageIterator() { return nullptr; }
-
-  virtual void SetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData);
-
-protected:
-  RefPtr<CompositableBackendSpecificData> mCompositableBackendData;
 };
 
 /**
@@ -442,6 +437,8 @@ public:
   }
 
   virtual void SetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData);
+
+  virtual void UnsetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData);
 
   // If a texture host holds a reference to shmem, it should override this method
   // to forget about the shmem _without_ releasing it.

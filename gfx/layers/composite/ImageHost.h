@@ -45,6 +45,8 @@ public:
 
   virtual CompositableType GetType() { return mTextureInfo.mCompositableType; }
 
+  virtual void SetCompositableBackendSpecificData(CompositableBackendSpecificData* aBackendData) MOZ_OVERRIDE;
+
   virtual void Composite(EffectChain& aEffectChain,
                          float aOpacity,
                          const gfx::Matrix4x4& aTransform,

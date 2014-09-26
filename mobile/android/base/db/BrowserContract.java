@@ -107,6 +107,12 @@ public class BrowserContract {
         public static final String TIME_DELETED = "timeDeleted";
     }
 
+    public interface SuggestedSitesColumns {
+        public static final String BGCOLOR = "bgcolor";
+        public static final String IMAGEURL = "imageurl";
+        public static final String TRACKING_ID = "tracking_id";
+    }
+
     @RobocopTarget
     public static final class Favicons implements CommonColumns, DateSyncColumns {
         private Favicons() {}
@@ -410,7 +416,7 @@ public class BrowserContract {
     }
 
     @RobocopTarget
-    public static final class TopSites implements CommonColumns, URLColumns {
+    public static final class TopSites implements CommonColumns, URLColumns, SuggestedSitesColumns {
         private TopSites() {}
 
         public static final int TYPE_BLANK = 0;
@@ -435,7 +441,7 @@ public class BrowserContract {
     }
 
     @RobocopTarget
-    public static final class SuggestedSites implements CommonColumns, URLColumns {
+    public static final class SuggestedSites implements CommonColumns, URLColumns, SuggestedSitesColumns {
         private SuggestedSites() {}
 
         public static final Uri CONTENT_URI = Uri.withAppendedPath(AUTHORITY_URI, "suggestedsites");
