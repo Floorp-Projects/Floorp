@@ -6,7 +6,7 @@ MARIONETTE_CONTEXT = "chrome";
 
 Cu.import("resource://gre/modules/Promise.jsm");
 
-const VOICEMAIL_PROVIDER_CONTRACTID = "@mozilla.org/ril/content-helper;1";
+const VOICEMAIL_SERVICE_CONTRACTID = "@mozilla.org/ril/content-helper;1";
 
 const PREF_RIL_NUM_RADIO_INTERFACES = "ril.numRadioInterfaces";
 const PREF_DEFAULT_SERVICE_ID = "dom.voicemail.defaultServiceId";
@@ -121,6 +121,6 @@ function verify(contractId, ifaceName, attrName, prefKey, numRil) {
 }
 
 getNumRadioInterfaces()
-  .then(verify.bind(null, VOICEMAIL_PROVIDER_CONTRACTID, "nsIVoicemailProvider",
+  .then(verify.bind(null, VOICEMAIL_SERVICE_CONTRACTID, "nsIVoicemailService",
                     "voicemailDefaultServiceId", PREF_DEFAULT_SERVICE_ID))
   .then(finish);
