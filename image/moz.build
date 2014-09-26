@@ -6,5 +6,11 @@
 
 DIRS += ['public', 'src', 'decoders', 'encoders']
 DIRS += ['build']
-TEST_DIRS += ['test']
 
+BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+
+MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
+
+MOCHITEST_CHROME_MANIFESTS += ['test/mochitest/chrome.ini']
+
+XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
