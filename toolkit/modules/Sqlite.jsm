@@ -579,6 +579,7 @@ ConnectionData.prototype = Object.freeze({
     let userCancelled = false;
     let errors = [];
     let rows = [];
+    let handledRow = false;
 
     // Don't incur overhead for serializing params unless the messages go
     // somewhere.
@@ -603,6 +604,8 @@ ConnectionData.prototype = Object.freeze({
             rows.push(row);
             continue;
           }
+
+          handledRow = true;
 
           try {
             onRow(row);
@@ -629,8 +632,9 @@ ConnectionData.prototype = Object.freeze({
 
         switch (reason) {
           case Ci.mozIStorageStatementCallback.REASON_FINISHED:
-            // If there is an onRow handler, we always resolve to null.
-            let result = onRow ? null : rows;
+            // If there is an onRow handler, we always instead resolve to a
+            // boolean indicating whether the onRow handler was called or not.
+            let result = onRow ? handledRow : rows;
             deferred.resolve(result);
             break;
 
@@ -638,7 +642,7 @@ ConnectionData.prototype = Object.freeze({
             // It is not an error if the user explicitly requested cancel via
             // the onRow handler.
             if (userCancelled) {
-              let result = onRow ? null : rows;
+              let result = onRow ? handledRow : rows;
               deferred.resolve(result);
             } else {
               deferred.reject(new Error("Statement was cancelled."));
