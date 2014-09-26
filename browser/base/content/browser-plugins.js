@@ -139,11 +139,6 @@ var gPluginHandler = {
       // list again
       this.options.primaryPlugin = null;
     }
-    else if (event == "removed") {
-      // Once the notification is removed, let the content script clear any
-      // caches it may have populated.
-      this.browser.messageManager.sendAsyncMessage("BrowserPlugins:NotificationRemoved");
-    }
   },
 
   /**

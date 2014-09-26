@@ -38,12 +38,11 @@ PluginContent.prototype = {
     global.addEventListener("PluginOutdated",        this, true);
     global.addEventListener("PluginInstantiated",    this, true);
     global.addEventListener("PluginRemoved",         this, true);
+    global.addEventListener("pagehide",              this, true);
+    global.addEventListener("pageshow",              this, true);
     global.addEventListener("unload",                this);
 
-    global.addEventListener("pageshow", (event) => this.onPageShow(event), true);
-
     global.addMessageListener("BrowserPlugins:ActivatePlugins", this);
-    global.addMessageListener("BrowserPlugins:NotificationRemoved", this);
     global.addMessageListener("BrowserPlugins:NotificationShown", this);
     global.addMessageListener("BrowserPlugins:ContextMenuCommand", this);
   },
@@ -57,9 +56,6 @@ PluginContent.prototype = {
     switch (msg.name) {
       case "BrowserPlugins:ActivatePlugins":
         this.activatePlugins(msg.data.pluginInfo, msg.data.newState);
-        break;
-      case "BrowserPlugins:NotificationRemoved":
-        this.clearPluginDataCache();
         break;
       case "BrowserPlugins:NotificationShown":
         setTimeout(() => this.updateNotificationUI(), 0);
@@ -79,7 +75,7 @@ PluginContent.prototype = {
 
   onPageShow: function (event) {
     // Ignore events that aren't from the main document.
-    if (this.global.content && event.target != this.global.content.document) {
+    if (!this.content || event.target != this.content.document) {
       return;
     }
 
@@ -89,6 +85,15 @@ PluginContent.prototype = {
     if (event.persisted) {
       this.reshowClickToPlayNotification();
     }
+  },
+
+  onPageHide: function (event) {
+    // Ignore events that aren't from the main document.
+    if (!this.content || event.target != this.content.document) {
+      return;
+    }
+
+    this.clearPluginDataCache();
   },
 
   getPluginUI: function (plugin, anonid) {
@@ -281,6 +286,16 @@ PluginContent.prototype = {
 
     if (eventType == "unload") {
       this.uninit();
+      return;
+    }
+
+    if (eventType == "pagehide") {
+      this.onPageHide(event);
+      return;
+    }
+
+    if (eventType == "pageshow") {
+      this.onPageShow(event);
       return;
     }
 
