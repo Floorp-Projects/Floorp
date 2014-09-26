@@ -11,7 +11,7 @@ Cu.import("resource://testing-common/httpd.js");
 // XXX until bug 937114 is fixed
 Cu.importGlobalProperties(["atob"]);
 
-// The following boilerplate makes sure that XPCom calls
+// The following boilerplate makes sure that XPCOM calls
 // that use the profile directory work.
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
