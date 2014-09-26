@@ -46,6 +46,7 @@ TestArray.addTest(
     var key = tv.pbkdf2_sha1.password;
 
     function doDerive(x) {
+      console.log("deriving");
       if (!hasKeyFields(x)) {
         throw "Invalid key; missing field(s)";
       }
@@ -60,7 +61,7 @@ TestArray.addTest(
     }
     function fail(x) { console.log("failing"); error(that)(x); }
 
-    crypto.subtle.importKey("raw", key, alg, false, ["deriveBits"])
+    crypto.subtle.importKey("raw", key, alg, false, ["deriveKey"])
       .then( doDerive, fail )
       .then( memcmp_complete(that, tv.pbkdf2_sha1.derived), fail );
   }
@@ -75,6 +76,7 @@ TestArray.addTest(
     var key = tv.pbkdf2_sha1.password;
 
     function doDerive(x) {
+      console.log("deriving");
       if (!hasKeyFields(x)) {
         throw "Invalid key; missing field(s)";
       }
@@ -159,6 +161,7 @@ TestArray.addTest(
     var key = tv.pbkdf2_sha256.password;
 
     function doDerive(x) {
+      console.log("deriving");
       if (!hasKeyFields(x)) {
         throw "Invalid key; missing field(s)";
       }
