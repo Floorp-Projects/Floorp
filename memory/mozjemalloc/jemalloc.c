@@ -200,18 +200,6 @@
  */
 /* #define	MALLOC_BALANCE */
 
-/*
- * MALLOC_PAGEFILE causes all mmap()ed memory to be backed by temporary
- * files, so that if a chunk is mapped, it is guaranteed to be swappable.
- * This avoids asynchronous OOM failures that are due to VM over-commit.
- */
-/* #define MALLOC_PAGEFILE */
-
-#ifdef MALLOC_PAGEFILE
-/* Write size when initializing a page file. */
-#  define MALLOC_PAGEFILE_WRITE_SIZE 512
-#endif
-
 #if defined(MOZ_MEMORY_LINUX) && !defined(MOZ_MEMORY_ANDROID)
 #define	_GNU_SOURCE /* For mremap(2). */
 #if 0 /* Enable in order to test decommit code on Linux. */
@@ -1199,10 +1187,6 @@ static size_t		huge_allocated;
 static size_t		huge_mapped;
 #endif
 
-#ifdef MALLOC_PAGEFILE
-static char		pagefile_templ[PATH_MAX];
-#endif
-
 /****************************/
 /*
  * base (internal allocation).
@@ -1297,9 +1281,6 @@ static size_t	opt_quantum_2pow = QUANTUM_2POW_MIN;
 static size_t	opt_small_max_2pow = SMALL_MAX_2POW_DEFAULT;
 static size_t	opt_chunk_2pow = CHUNK_2POW_DEFAULT;
 #endif
-#ifdef MALLOC_PAGEFILE
-static bool	opt_pagefile = false;
-#endif
 #ifdef MALLOC_UTRACE
 static bool	opt_utrace = false;
 #endif
@@ -1356,14 +1337,10 @@ static void	base_node_dealloc(extent_node_t *node);
 #ifdef MALLOC_STATS
 static void	stats_print(arena_t *arena);
 #endif
-static void	*pages_map(void *addr, size_t size, int pfd);
+static void	*pages_map(void *addr, size_t size);
 static void	pages_unmap(void *addr, size_t size);
-static void	*chunk_alloc_mmap(size_t size, bool pagefile);
-#ifdef MALLOC_PAGEFILE
-static int	pagefile_init(size_t size);
-static void	pagefile_close(int pfd);
-#endif
-static void	*chunk_alloc(size_t size, bool zero, bool pagefile);
+static void	*chunk_alloc_mmap(size_t size);
+static void	*chunk_alloc(size_t size, bool zero);
 static void	chunk_dealloc_mmap(void *chunk, size_t size);
 static void	chunk_dealloc(void *chunk, size_t size);
 #ifndef NO_TLS
@@ -1996,19 +1973,10 @@ base_pages_alloc_mmap(size_t minsize)
 #if defined(MALLOC_DECOMMIT) || defined(MALLOC_STATS)
 	size_t pminsize;
 #endif
-	int pfd;
 
 	assert(minsize != 0);
 	csize = CHUNK_CEILING(minsize);
-#ifdef MALLOC_PAGEFILE
-	if (opt_pagefile) {
-		pfd = pagefile_init(csize);
-		if (pfd == -1)
-			return (true);
-	} else
-#endif
-		pfd = -1;
-	base_pages = pages_map(NULL, csize, pfd);
+	base_pages = pages_map(NULL, csize);
 	if (base_pages == NULL) {
 		ret = true;
 		goto RETURN;
@@ -2034,10 +2002,6 @@ base_pages_alloc_mmap(size_t minsize)
 
 	ret = false;
 RETURN:
-#ifdef MALLOC_PAGEFILE
-	if (pfd != -1)
-		pagefile_close(pfd);
-#endif
 	return (false);
 }
 
@@ -2301,7 +2265,7 @@ rb_wrap(static, extent_tree_ad_, extent_tree_t, extent_node_t, link_ad,
 #ifdef MOZ_MEMORY_WINDOWS
 
 static void *
-pages_map(void *addr, size_t size, int pfd)
+pages_map(void *addr, size_t size)
 {
 	void *ret = NULL;
 	ret = VirtualAlloc(addr, size, MEM_COMMIT | MEM_RESERVE,
@@ -2322,7 +2286,7 @@ pages_unmap(void *addr, size_t size)
 #else
 #ifdef JEMALLOC_USES_MAP_ALIGN
 static void *
-pages_map_align(size_t size, int pfd, size_t alignment)
+pages_map_align(size_t size, size_t alignment)
 {
 	void *ret;
 
@@ -2330,16 +2294,8 @@ pages_map_align(size_t size, int pfd, size_t alignment)
 	 * We don't use MAP_FIXED here, because it can cause the *replacement*
 	 * of existing mappings, and we only want to create new mappings.
 	 */
-#ifdef MALLOC_PAGEFILE
-	if (pfd != -1) {
-		ret = mmap((void *)alignment, size, PROT_READ | PROT_WRITE, MAP_PRIVATE |
-		    MAP_NOSYNC | MAP_ALIGN, pfd, 0);
-	} else
-#endif
-	       {
-		ret = mmap((void *)alignment, size, PROT_READ | PROT_WRITE, MAP_PRIVATE |
-		    MAP_NOSYNC | MAP_ALIGN | MAP_ANON, -1, 0);
-	}
+	ret = mmap((void *)alignment, size, PROT_READ | PROT_WRITE,
+		MAP_PRIVATE | MAP_NOSYNC | MAP_ALIGN | MAP_ANON, -1, 0);
 	assert(ret != NULL);
 
 	if (ret == MAP_FAILED)
@@ -2351,7 +2307,7 @@ pages_map_align(size_t size, int pfd, size_t alignment)
 #endif
 
 static void *
-pages_map(void *addr, size_t size, int pfd)
+pages_map(void *addr, size_t size)
 {
 	void *ret;
 #if defined(__ia64__)
@@ -2379,16 +2335,8 @@ pages_map(void *addr, size_t size, int pfd)
 	 * We don't use MAP_FIXED here, because it can cause the *replacement*
 	 * of existing mappings, and we only want to create new mappings.
 	 */
-#ifdef MALLOC_PAGEFILE
-	if (pfd != -1) {
-		ret = mmap(addr, size, PROT_READ | PROT_WRITE, MAP_PRIVATE |
-		    MAP_NOSYNC, pfd, 0);
-	} else
-#endif
-	       {
-		ret = mmap(addr, size, PROT_READ | PROT_WRITE, MAP_PRIVATE |
-		    MAP_ANON, -1, 0);
-	}
+	ret = mmap(addr, size, PROT_READ | PROT_WRITE,
+		MAP_PRIVATE | MAP_ANON, -1, 0);
 	assert(ret != NULL);
 
 	if (ret == MAP_FAILED) {
@@ -2610,32 +2558,22 @@ malloc_rtree_set(malloc_rtree_t *rtree, uintptr_t key, void *val)
 }
 #endif
 
-#if defined(MOZ_MEMORY_WINDOWS) || defined(JEMALLOC_USES_MAP_ALIGN) || defined(MALLOC_PAGEFILE)
+#if defined(MOZ_MEMORY_WINDOWS) || defined(JEMALLOC_USES_MAP_ALIGN)
 
 /* Allocate an aligned chunk while maintaining a 1:1 correspondence between
  * mmap and unmap calls.  This is important on Windows, but not elsewhere. */
 static void *
-chunk_alloc_mmap(size_t size, bool pagefile)
+chunk_alloc_mmap(size_t size)
 {
 	void *ret;
 #ifndef JEMALLOC_USES_MAP_ALIGN
 	size_t offset;
 #endif
-	int pfd;
-
-#ifdef MALLOC_PAGEFILE
-	if (opt_pagefile && pagefile) {
-		pfd = pagefile_init(size);
-		if (pfd == -1)
-			return (NULL);
-	} else
-#endif
-		pfd = -1;
 
 #ifdef JEMALLOC_USES_MAP_ALIGN
-	ret = pages_map_align(size, pfd, chunksize);
+	ret = pages_map_align(size, chunksize);
 #else
-	ret = pages_map(NULL, size, pfd);
+	ret = pages_map(NULL, size);
 	if (ret == NULL)
 		goto RETURN;
 
@@ -2643,14 +2581,13 @@ chunk_alloc_mmap(size_t size, bool pagefile)
 	if (offset != 0) {
 		/* Deallocate, then try to allocate at (ret + size - offset). */
 		pages_unmap(ret, size);
-		ret = pages_map((void *)((uintptr_t)ret + size - offset), size,
-		    pfd);
+		ret = pages_map((void *)((uintptr_t)ret + size - offset), size);
 		while (ret == NULL) {
 			/*
 			 * Over-allocate in order to map a memory region that
 			 * is definitely large enough.
 			 */
-			ret = pages_map(NULL, size + chunksize, -1);
+			ret = pages_map(NULL, size + chunksize);
 			if (ret == NULL)
 				goto RETURN;
 			/*
@@ -2660,10 +2597,10 @@ chunk_alloc_mmap(size_t size, bool pagefile)
 			offset = CHUNK_ADDR2OFFSET(ret);
 			pages_unmap(ret, size + chunksize);
 			if (offset == 0)
-				ret = pages_map(ret, size, pfd);
+				ret = pages_map(ret, size);
 			else {
 				ret = pages_map((void *)((uintptr_t)ret +
-				    chunksize - offset), size, pfd);
+				    chunksize - offset), size);
 			}
 			/*
 			 * Failure here indicates a race with another thread, so
@@ -2673,15 +2610,10 @@ chunk_alloc_mmap(size_t size, bool pagefile)
 	}
 RETURN:
 #endif
-#ifdef MALLOC_PAGEFILE
-	if (pfd != -1)
-		pagefile_close(pfd);
-#endif
-
 	return (ret);
 }
 
-#else /* ! (defined(MOZ_MEMORY_WINDOWS) || defined(JEMALLOC_USES_MAP_ALIGN) || defined(MALLOC_PAGEFILE)) */
+#else /* ! (defined(MOZ_MEMORY_WINDOWS) || defined(JEMALLOC_USES_MAP_ALIGN) */
 
 /* pages_trim, chunk_alloc_mmap_slow and chunk_alloc_mmap were cherry-picked
  * from upstream jemalloc 3.4.1 to fix Mozilla bug 956501. */
@@ -2721,7 +2653,7 @@ chunk_alloc_mmap_slow(size_t size, size_t alignment)
         if (alloc_size < size)
                 return (NULL);
         do {
-                pages = pages_map(NULL, alloc_size, -1);
+                pages = pages_map(NULL, alloc_size);
                 if (pages == NULL)
                         return (NULL);
                 leadsize = ALIGNMENT_CEILING((uintptr_t)pages, alignment) -
@@ -2734,7 +2666,7 @@ chunk_alloc_mmap_slow(size_t size, size_t alignment)
 }
 
 static void *
-chunk_alloc_mmap(size_t size, bool pagefile)
+chunk_alloc_mmap(size_t size)
 {
         void *ret;
         size_t offset;
@@ -2752,7 +2684,7 @@ chunk_alloc_mmap(size_t size, bool pagefile)
          * approach works most of the time.
          */
 
-        ret = pages_map(NULL, size, -1);
+        ret = pages_map(NULL, size);
         if (ret == NULL)
                 return (NULL);
         offset = ALIGNMENT_ADDR2OFFSET(ret, chunksize);
@@ -2765,87 +2697,17 @@ chunk_alloc_mmap(size_t size, bool pagefile)
         return (ret);
 }
 
-#endif /* defined(MOZ_MEMORY_WINDOWS) || defined(JEMALLOC_USES_MAP_ALIGN) || defined(MALLOC_PAGEFILE) */
-
-#ifdef MALLOC_PAGEFILE
-static int
-pagefile_init(size_t size)
-{
-	int ret;
-	size_t i;
-	char pagefile_path[PATH_MAX];
-	char zbuf[MALLOC_PAGEFILE_WRITE_SIZE];
-
-	/*
-	 * Create a temporary file, then immediately unlink it so that it will
-	 * not persist.
-	 */
-	strcpy(pagefile_path, pagefile_templ);
-	ret = mkstemp(pagefile_path);
-	if (ret == -1)
-		return (ret);
-	if (unlink(pagefile_path)) {
-		char buf[STRERROR_BUF];
-
-		strerror_r(errno, buf, sizeof(buf));
-		_malloc_message(_getprogname(), ": (malloc) Error in unlink(\"",
-		    pagefile_path, "\"):");
-		_malloc_message(buf, "\n", "", "");
-		if (opt_abort)
-			abort();
-	}
-
-	/*
-	 * Write sequential zeroes to the file in order to assure that disk
-	 * space is committed, with minimal fragmentation.  It would be
-	 * sufficient to write one zero per disk block, but that potentially
-	 * results in more system calls, for no real gain.
-	 */
-	memset(zbuf, 0, sizeof(zbuf));
-	for (i = 0; i < size; i += sizeof(zbuf)) {
-		if (write(ret, zbuf, sizeof(zbuf)) != sizeof(zbuf)) {
-			if (errno != ENOSPC) {
-				char buf[STRERROR_BUF];
-
-				strerror_r(errno, buf, sizeof(buf));
-				_malloc_message(_getprogname(),
-				    ": (malloc) Error in write(): ", buf, "\n");
-				if (opt_abort)
-					abort();
-			}
-			pagefile_close(ret);
-			return (-1);
-		}
-	}
-
-	return (ret);
-}
-
-static void
-pagefile_close(int pfd)
-{
-
-	if (close(pfd)) {
-		char buf[STRERROR_BUF];
-
-		strerror_r(errno, buf, sizeof(buf));
-		_malloc_message(_getprogname(),
-		    ": (malloc) Error in close(): ", buf, "\n");
-		if (opt_abort)
-			abort();
-	}
-}
-#endif
+#endif /* defined(MOZ_MEMORY_WINDOWS) || defined(JEMALLOC_USES_MAP_ALIGN) */
 
 static void *
-chunk_alloc(size_t size, bool zero, bool pagefile)
+chunk_alloc(size_t size, bool zero)
 {
 	void *ret;
 
 	assert(size != 0);
 	assert((size & chunksize_mask) == 0);
 
-	ret = chunk_alloc_mmap(size, pagefile);
+	ret = chunk_alloc_mmap(size);
 	if (ret != NULL) {
 		goto RETURN;
 	}
@@ -3503,7 +3365,7 @@ arena_run_alloc(arena_t *arena, arena_bin_t *bin, size_t size, bool large,
 	 */
 	{
 		arena_chunk_t *chunk = (arena_chunk_t *)
-		    chunk_alloc(chunksize, true, true);
+		    chunk_alloc(chunksize, true);
 		if (chunk == NULL)
 			return (NULL);
 
@@ -4904,7 +4766,7 @@ huge_malloc(size_t size, bool zero)
 	if (node == NULL)
 		return (NULL);
 
-	ret = chunk_alloc(csize, zero, true);
+	ret = chunk_alloc(csize, zero);
 	if (ret == NULL) {
 		base_node_dealloc(node);
 		return (NULL);
@@ -4976,7 +4838,6 @@ huge_palloc(size_t alignment, size_t size)
 	size_t alloc_size, chunk_size, offset;
 	size_t psize;
 	extent_node_t *node;
-	int pfd;
 
 	/*
 	 * This allocation requires alignment that is even larger than chunk
@@ -5004,25 +4865,14 @@ huge_palloc(size_t alignment, size_t size)
 	 * Windows requires that there be a 1:1 mapping between VM
 	 * allocation/deallocation operations.  Therefore, take care here to
 	 * acquire the final result via one mapping operation.
-	 *
-	 * The MALLOC_PAGEFILE code also benefits from this mapping algorithm,
-	 * since it reduces the number of page files.
 	 */
-#ifdef MALLOC_PAGEFILE
-	if (opt_pagefile) {
-		pfd = pagefile_init(size);
-		if (pfd == -1)
-			return (NULL);
-	} else
-#endif
-		pfd = -1;
 #ifdef JEMALLOC_USES_MAP_ALIGN
-		ret = pages_map_align(chunk_size, pfd, alignment);
+		ret = pages_map_align(chunk_size, alignment);
 #else
 	do {
 		void *over;
 
-		over = chunk_alloc(alloc_size, false, false);
+		over = chunk_alloc(alloc_size, false);
 		if (over == NULL) {
 			base_node_dealloc(node);
 			ret = NULL;
@@ -5034,7 +4884,7 @@ huge_palloc(size_t alignment, size_t size)
 		assert(offset < alloc_size);
 		ret = (void *)((uintptr_t)over + offset);
 		chunk_dealloc(over, alloc_size);
-		ret = pages_map(ret, chunk_size, pfd);
+		ret = pages_map(ret, chunk_size);
 		/*
 		 * Failure here indicates a race with another thread, so try
 		 * again.
@@ -5080,10 +4930,6 @@ huge_palloc(size_t alignment, size_t size)
 #endif
 
 RETURN:
-#ifdef MALLOC_PAGEFILE
-	if (pfd != -1)
-		pagefile_close(pfd);
-#endif
 	return (ret);
 }
 
@@ -5343,9 +5189,6 @@ malloc_print_stats(void)
 		_malloc_message(opt_poison ? "C" : "c", "", "", "");
 		_malloc_message(opt_junk ? "J" : "j", "", "", "");
 #endif
-#ifdef MALLOC_PAGEFILE
-		_malloc_message(opt_pagefile ? "o" : "O", "", "", "");
-#endif
 		_malloc_message("P", "", "", "");
 #ifdef MALLOC_UTRACE
 		_malloc_message(opt_utrace ? "U" : "u", "", "", "");
@@ -5552,37 +5395,6 @@ malloc_init_hard(void)
 	pagesize_mask = (size_t) result - 1;
 	pagesize_2pow = ffs((int)result) - 1;
 #endif
-	
-#ifdef MALLOC_PAGEFILE
-	/*
-	 * Determine where to create page files.  It is insufficient to
-	 * unconditionally use P_tmpdir (typically "/tmp"), since for some
-	 * operating systems /tmp is a separate filesystem that is rather small.
-	 * Therefore prefer, in order, the following locations:
-	 *
-	 * 1) MALLOC_TMPDIR
-	 * 2) TMPDIR
-	 * 3) P_tmpdir
-	 */
-	{
-		char *s;
-		size_t slen;
-		static const char suffix[] = "/jemalloc.XXXXXX";
-
-		if ((s = getenv("MALLOC_TMPDIR")) == NULL && (s =
-		    getenv("TMPDIR")) == NULL)
-			s = P_tmpdir;
-		slen = strlen(s);
-		if (slen + sizeof(suffix) > sizeof(pagefile_templ)) {
-			_malloc_message(_getprogname(),
-			    ": (malloc) Page file path too long\n",
-			    "", "");
-			abort();
-		}
-		memcpy(pagefile_templ, s, slen);
-		memcpy(&pagefile_templ[slen], suffix, sizeof(suffix));
-	}
-#endif
 
 	for (i = 0; i < 3; i++) {
 		unsigned j;
@@ -5734,16 +5546,6 @@ MALLOC_OUT:
 				case 'N':
 					opt_narenas_lshift++;
 					break;
-#ifdef MALLOC_PAGEFILE
-				case 'o':
-					/* Do not over-commit. */
-					opt_pagefile = true;
-					break;
-				case 'O':
-					/* Allow over-commit. */
-					opt_pagefile = false;
-					break;
-#endif
 				case 'p':
 					opt_print_stats = false;
 					break;
