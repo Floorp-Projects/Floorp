@@ -969,11 +969,14 @@ IMEStateManager::NotifyIME(IMEMessage aMessage,
     composition = sTextCompositions->GetCompositionFor(aWidget);
   }
 
+  bool isSynthesizedForTests =
+    composition && composition->IsSynthesizedForTests();
+
   PR_LOG(sISMLog, PR_LOG_ALWAYS,
     ("ISM: IMEStateManager::NotifyIME(aMessage=%s, aWidget=0x%p), "
      "composition=0x%p, composition->IsSynthesizedForTests()=%s",
      GetNotifyIMEMessageName(aMessage), aWidget, composition.get(),
-     GetBoolName(composition ? composition->IsSynthesizedForTests() : false)));
+     GetBoolName(isSynthesizedForTests)));
 
   if (NS_WARN_IF(!aWidget)) {
     PR_LOG(sISMLog, PR_LOG_ERROR,
@@ -981,80 +984,25 @@ IMEStateManager::NotifyIME(IMEMessage aMessage,
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (!composition || !composition->IsSynthesizedForTests()) {
-    switch (aMessage) {
-      case NOTIFY_IME_OF_CURSOR_POS_CHANGED:
-        return aWidget->NotifyIME(IMENotification(aMessage));
-      case REQUEST_TO_COMMIT_COMPOSITION:
-      case REQUEST_TO_CANCEL_COMPOSITION:
-      case NOTIFY_IME_OF_COMPOSITION_UPDATE:
-        return composition ?
-          aWidget->NotifyIME(IMENotification(aMessage)) : NS_OK;
-      default:
-        MOZ_CRASH("Unsupported notification");
-    }
-    MOZ_CRASH(
-      "Failed to handle the notification for non-synthesized composition");
-  }
-
-  // If the composition is synthesized events for automated tests, we should
-  // dispatch composition events for emulating the native composition behavior.
-  // NOTE: The dispatched events are discarded if it's not safe to run script.
   switch (aMessage) {
-    case REQUEST_TO_COMMIT_COMPOSITION: {
-      nsCOMPtr<nsIWidget> widget(aWidget);
-      nsEventStatus status = nsEventStatus_eIgnore;
-      if (!composition->LastData().IsEmpty()) {
-        WidgetTextEvent textEvent(true, NS_TEXT_TEXT, widget);
-        textEvent.theText = composition->LastData();
-        textEvent.mFlags.mIsSynthesizedForTests = true;
-        widget->DispatchEvent(&textEvent, status);
-        if (widget->Destroyed()) {
-          return NS_OK;
-        }
-      }
-
-      status = nsEventStatus_eIgnore;
-      WidgetCompositionEvent endEvent(true, NS_COMPOSITION_END, widget);
-      endEvent.data = composition->LastData();
-      endEvent.mFlags.mIsSynthesizedForTests = true;
-      widget->DispatchEvent(&endEvent, status);
-
-      return NS_OK;
-    }
-    case REQUEST_TO_CANCEL_COMPOSITION: {
-      nsCOMPtr<nsIWidget> widget(aWidget);
-      nsEventStatus status = nsEventStatus_eIgnore;
-      if (!composition->LastData().IsEmpty()) {
-        WidgetCompositionEvent updateEvent(true, NS_COMPOSITION_UPDATE, widget);
-        updateEvent.data = composition->LastData();
-        updateEvent.mFlags.mIsSynthesizedForTests = true;
-        widget->DispatchEvent(&updateEvent, status);
-        if (widget->Destroyed()) {
-          return NS_OK;
-        }
-
-        status = nsEventStatus_eIgnore;
-        WidgetTextEvent textEvent(true, NS_TEXT_TEXT, widget);
-        textEvent.theText = composition->LastData();
-        textEvent.mFlags.mIsSynthesizedForTests = true;
-        widget->DispatchEvent(&textEvent, status);
-        if (widget->Destroyed()) {
-          return NS_OK;
-        }
-      }
-
-      status = nsEventStatus_eIgnore;
-      WidgetCompositionEvent endEvent(true, NS_COMPOSITION_END, widget);
-      endEvent.data = composition->LastData();
-      endEvent.mFlags.mIsSynthesizedForTests = true;
-      widget->DispatchEvent(&endEvent, status);
-
-      return NS_OK;
-    }
+    case NOTIFY_IME_OF_CURSOR_POS_CHANGED:
+      return isSynthesizedForTests ?
+        NS_OK : aWidget->NotifyIME(IMENotification(aMessage));
+    case REQUEST_TO_COMMIT_COMPOSITION:
+      return composition ?
+        composition->RequestToCommit(aWidget, false) : NS_OK;
+    case REQUEST_TO_CANCEL_COMPOSITION:
+      return composition ?
+        composition->RequestToCommit(aWidget, true) : NS_OK;
+    case NOTIFY_IME_OF_COMPOSITION_UPDATE:
+      return composition && !isSynthesizedForTests ?
+        aWidget->NotifyIME(IMENotification(aMessage)) : NS_OK;
     default:
-      return NS_OK;
+      MOZ_CRASH("Unsupported notification");
   }
+  MOZ_CRASH(
+    "Failed to handle the notification for non-synthesized composition");
+  return NS_ERROR_FAILURE;
 }
 
 // static
