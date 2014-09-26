@@ -173,7 +173,7 @@ ContainerLayerD3D9::RenderLayer()
     d3drect.bottom = scissorRect.y + scissorRect.height;
     device()->SetScissorRect(&d3drect);
 
-    if (layerToRender->GetLayer()->GetType() == TYPE_THEBES) {
+    if (layerToRender->GetLayer()->GetType() == TYPE_PAINTED) {
       static_cast<PaintedLayerD3D9*>(layerToRender)->RenderPaintedLayer(&readback);
     } else {
       layerToRender->RenderLayer();

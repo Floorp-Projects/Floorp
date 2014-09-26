@@ -135,7 +135,7 @@ struct ContainerLayerParameters {
  * locates the last layer used to render the display item, if any, and
  * return it as a candidate for recycling.
  * 
- * FrameLayerBuilder sets up PaintedLayers so that 0,0 in the Thebes layer
+ * FrameLayerBuilder sets up PaintedLayers so that 0,0 in the Painted layer
  * corresponds to the (pixel-snapped) top-left of the aAnimatedGeometryRoot.
  * It sets up ContainerLayers so that 0,0 in the container layer
  * corresponds to the snapped top-left of the display item reference frame.
@@ -249,7 +249,7 @@ public:
   static void InvalidateAllLayersForFrame(nsIFrame *aFrame);
 
   /**
-   * Call this to determine if a frame has a dedicated (non-Thebes) layer
+   * Call this to determine if a frame has a dedicated (non-Painted) layer
    * for the given display item key. If there isn't one, we return null,
    * otherwise we return the layer.
    */
@@ -304,7 +304,7 @@ public:
    * aItem must have an underlying frame.
    * @param aTopLeft offset from active scrolled root to reference frame
    */
-  void AddThebesDisplayItem(PaintedLayerData* aLayer,
+  void AddPaintedDisplayItem(PaintedLayerData* aLayer,
                             nsDisplayItem* aItem,
                             const DisplayItemClip& aClip,
                             const nsIntRect& aItemVisibleRect,

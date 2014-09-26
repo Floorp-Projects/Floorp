@@ -373,7 +373,7 @@ public:
 #endif
 
   /**
-   * Hints that can be used during Thebes layer creation to influence the type
+   * Hints that can be used during PaintedLayer creation to influence the type
    * or properties of the layer created.
    *
    * NONE: No hint.
@@ -738,7 +738,7 @@ public:
     TYPE_READBACK,
     TYPE_REF,
     TYPE_SHADOW,
-    TYPE_THEBES
+    TYPE_PAINTED
   };
 
   /**
@@ -1323,7 +1323,7 @@ public:
   virtual void Disconnect() {}
 
   /**
-   * Dynamic downcast to a Thebes layer. Returns null if this is not
+   * Dynamic downcast to a PaintedLayer. Returns null if this is not
    * a PaintedLayer.
    */
   virtual PaintedLayer* AsPaintedLayer() { return nullptr; }
@@ -1655,7 +1655,7 @@ protected:
 };
 
 /**
- * A Layer which we can draw into using Thebes. It is a conceptually
+ * A Layer which we can paint into. It is a conceptually
  * infinite surface, but each PaintedLayer has an associated "valid region"
  * of contents that it is currently storing, which is finite. PaintedLayer
  * implementations can store content between paints.
@@ -1695,7 +1695,7 @@ public:
 
   virtual PaintedLayer* AsPaintedLayer() { return this; }
 
-  MOZ_LAYER_DECL_NAME("PaintedLayer", TYPE_THEBES)
+  MOZ_LAYER_DECL_NAME("PaintedLayer", TYPE_PAINTED)
 
   virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface)
   {

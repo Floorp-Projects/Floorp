@@ -77,7 +77,7 @@ FindBackgroundLayer(ReadbackLayer* aLayer, nsIntPoint* aOffset)
       return nullptr;
 
     Layer::LayerType type = l->GetType();
-    if (type != Layer::TYPE_COLOR && type != Layer::TYPE_THEBES)
+    if (type != Layer::TYPE_COLOR && type != Layer::TYPE_PAINTED)
       return nullptr;
 
     *aOffset = backgroundOffset - transformOffset;

@@ -24,9 +24,9 @@ namespace mozilla {
 namespace layers {
 
 /**
- * Thebes layers use ContentHosts for their compsositable host.
+ * PaintedLayers use ContentHosts for their compsositable host.
  * By using different ContentHosts, PaintedLayerComposite support tiled and
- * non-tiled Thebes layers and single or double buffering.
+ * non-tiled PaintedLayers and single or double buffering.
  */
 
 class CompositableHost;
@@ -77,7 +77,7 @@ public:
     Mutated();
   }
 
-  MOZ_LAYER_DECL_NAME("PaintedLayerComposite", TYPE_THEBES)
+  MOZ_LAYER_DECL_NAME("PaintedLayerComposite", TYPE_PAINTED)
 
 protected:
 
