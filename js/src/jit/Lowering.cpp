@@ -2479,7 +2479,7 @@ bool
 LIRGenerator::visitTypedObjectElements(MTypedObjectElements *ins)
 {
     JS_ASSERT(ins->type() == MIRType_Elements);
-    return define(new(alloc()) LTypedObjectElements(useRegisterAtStart(ins->object())), ins);
+    return define(new(alloc()) LTypedObjectElements(useRegister(ins->object())), ins);
 }
 
 bool

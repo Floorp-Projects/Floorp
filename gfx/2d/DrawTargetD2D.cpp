@@ -388,7 +388,10 @@ DrawTargetD2D::DrawFilter(FilterNode *aNode,
     hr = rt->QueryInterface((ID2D1DeviceContext**)byRef(dc));
 
     if (SUCCEEDED(hr)) {
-      dc->DrawImage(static_cast<FilterNodeD2D1*>(aNode)->OutputEffect(), D2DPoint(aDestPoint), D2DRect(aSourceRect));
+      FilterNodeD2D1* node = static_cast<FilterNodeD2D1*>(aNode);
+      node->WillDraw(this);
+
+      dc->DrawImage(node->OutputEffect(), D2DPoint(aDestPoint), D2DRect(aSourceRect));
 
       Rect destRect = aSourceRect;
       destRect.MoveBy(aDestPoint);
@@ -1320,7 +1323,7 @@ DrawTargetD2D::CreateFilter(FilterType aType)
   HRESULT hr = mRT->QueryInterface((ID2D1DeviceContext**)byRef(dc));
 
   if (SUCCEEDED(hr)) {
-    return FilterNodeD2D1::Create(this, dc, aType);
+    return FilterNodeD2D1::Create(dc, aType);
   }
 #endif
   return FilterNodeSoftware::Create(aType);

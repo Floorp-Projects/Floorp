@@ -408,7 +408,6 @@ NS_IMETHODIMP
 PuppetWidget::NotifyIME(const IMENotification& aIMENotification)
 {
   switch (aIMENotification.mMessage) {
-    case NOTIFY_IME_OF_CURSOR_POS_CHANGED:
     case REQUEST_TO_COMMIT_COMPOSITION:
       return IMEEndComposition(false);
     case REQUEST_TO_CANCEL_COMPOSITION:

@@ -51,9 +51,9 @@ UNIFIED_SOURCES += [
     'IOInterposer.cpp',
     'LateWriteChecks.cpp',
     'MainThreadIOLogger.cpp',
-    'nsXPComInit.cpp',
     'nsXPCOMStrings.cpp',
     'Services.cpp',
+    'XPCOMInit.cpp',
 ]
 
 if CONFIG['OS_ARCH'] != 'WINNT':

@@ -569,8 +569,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
      */
     bool functionArguments(FunctionSyntaxKind kind, Node *list, Node funcpn, bool *hasRest);
 
-    Node functionDef(HandlePropertyName name, const TokenStream::Position &start,
-                     FunctionType type, FunctionSyntaxKind kind, GeneratorKind generatorKind);
+    Node functionDef(HandlePropertyName name, FunctionType type, FunctionSyntaxKind kind,
+                     GeneratorKind generatorKind);
     bool functionArgsAndBody(Node pn, HandleFunction fun,
                              FunctionType type, FunctionSyntaxKind kind,
                              GeneratorKind generatorKind,

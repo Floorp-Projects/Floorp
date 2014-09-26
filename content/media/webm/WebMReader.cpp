@@ -585,8 +585,16 @@ bool WebMReader::DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset)
       }
 
       VorbisPCMValue** pcm = 0;
-      int32_t frames = 0;
-      while ((frames = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm)) > 0) {
+      int32_t frames = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm);
+      // If the first packet of audio in the media produces no data, we
+      // still need to produce an AudioData for it so that the correct media
+      // start time is calculated.  Otherwise we'd end up with a media start
+      // time derived from the timecode of the first packet that produced
+      // data.
+      if (frames == 0 && mAudioFrames == 0) {
+        AudioQueue().Push(new AudioData(aOffset, tstamp_usecs, 0, 0, nullptr, mChannels, rate));
+      }
+      while (frames > 0) {
         nsAutoArrayPtr<AudioDataValue> buffer(new AudioDataValue[frames * mChannels]);
         for (uint32_t j = 0; j < mChannels; ++j) {
           VorbisPCMValue* channel = pcm[j];
@@ -624,6 +632,8 @@ bool WebMReader::DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset)
         if (vorbis_synthesis_read(&mVorbisDsp, frames) != 0) {
           return false;
         }
+
+        frames = vorbis_synthesis_pcmout(&mVorbisDsp, &pcm);
       }
     } else if (mAudioCodec == NESTEGG_CODEC_OPUS) {
 #ifdef MOZ_OPUS
@@ -1052,8 +1062,14 @@ nsresult WebMReader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
                                                         ranges[index].mEnd,
                                                         &start, &end);
     if (rv) {
-      double startTime = start / NS_PER_S - aStartTime;
-      double endTime = end / NS_PER_S - aStartTime;
+      int64_t startOffset = aStartTime * NS_PER_USEC;
+      NS_ASSERTION(startOffset >= 0 && uint64_t(startOffset) <= start,
+                   "startOffset negative or larger than start time");
+      if (!(startOffset >= 0 && uint64_t(startOffset) <= start)) {
+        startOffset = 0;
+      }
+      double startTime = (start - startOffset) / NS_PER_S;
+      double endTime = (end - startOffset) / NS_PER_S;
       // If this range extends to the end of the file, the true end time
       // is the file's duration.
       if (mContext && resource->IsDataCachedToEndOfResource(ranges[index].mStart)) {
