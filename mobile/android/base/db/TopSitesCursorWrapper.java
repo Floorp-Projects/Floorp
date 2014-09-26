@@ -39,7 +39,8 @@ public class TopSitesCursorWrapper implements Cursor {
         TopSites.HISTORY_ID,
         TopSites.TYPE,
         TopSites.IMAGEURL,
-        TopSites.BGCOLOR
+        TopSites.BGCOLOR,
+        TopSites.TRACKING_ID,
     };
 
     private static final Map<String, Integer> columnIndexes =
@@ -51,6 +52,7 @@ public class TopSitesCursorWrapper implements Cursor {
         }
     }
 
+    private static final int INDEX_TRACKING_ID = columnIndexes.get(TopSites.TRACKING_ID);
     private static final int INDEX_IMAGEURL = columnIndexes.get(TopSites.IMAGEURL);
     private static final int INDEX_BGCOLOR = columnIndexes.get(TopSites.BGCOLOR);
 
@@ -257,7 +259,9 @@ public class TopSitesCursorWrapper implements Cursor {
     }
 
     private boolean isSuggestedSiteColumn(int columnIndex) {
-        return (columnIndex == INDEX_IMAGEURL) || (columnIndex == INDEX_BGCOLOR);
+        return columnIndex == INDEX_IMAGEURL ||
+               columnIndex == INDEX_BGCOLOR ||
+               columnIndex == INDEX_TRACKING_ID;
     }
 
     @Override
