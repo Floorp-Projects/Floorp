@@ -51,7 +51,8 @@ struct WebMBufferedParser
 {
   explicit WebMBufferedParser(int64_t aOffset)
     : mStartOffset(aOffset), mCurrentOffset(aOffset), mState(READ_ELEMENT_ID),
-      mVIntRaw(false), mTimecodeScale(1000000), mGotTimecodeScale(false)
+      mVIntRaw(false), mClusterSyncPos(0), mTimecodeScale(1000000),
+      mGotTimecodeScale(false)
   {
     if (mStartOffset != 0) {
       mState = FIND_CLUSTER_SYNC;
