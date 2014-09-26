@@ -40,7 +40,6 @@ public:
   nsresult FromJwkBase64(const nsString& aBase64);
   nsresult ToJwkBase64(nsString& aBase64);
   SECItem* ToSECItem() const;
-  JSObject* ToUint8Array(JSContext* aCx) const;
 
   bool GetBigIntValue(unsigned long& aRetVal);
 };

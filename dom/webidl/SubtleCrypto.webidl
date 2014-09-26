@@ -9,74 +9,113 @@
 
 typedef DOMString KeyType;
 typedef DOMString KeyUsage;
-typedef DOMString NamedCurve;
 typedef Uint8Array BigInteger;
+
+/***** KeyAlgorithm interfaces *****/
+
+[NoInterfaceObject]
+interface KeyAlgorithm {
+  readonly attribute DOMString name;
+};
+
+[NoInterfaceObject]
+interface AesKeyAlgorithm : KeyAlgorithm {
+  readonly attribute unsigned short length;
+};
+
+[NoInterfaceObject]
+interface HmacKeyAlgorithm : KeyAlgorithm {
+  readonly attribute KeyAlgorithm hash;
+  readonly attribute unsigned long length;
+};
+
+[NoInterfaceObject]
+interface RsaKeyAlgorithm : KeyAlgorithm {
+  readonly attribute unsigned long modulusLength;
+  [Throws]
+  readonly attribute BigInteger publicExponent;
+};
+
+[NoInterfaceObject]
+interface RsaHashedKeyAlgorithm : RsaKeyAlgorithm {
+  readonly attribute KeyAlgorithm hash;
+};
+
+[NoInterfaceObject]
+interface EcKeyAlgorithm : KeyAlgorithm {
+  readonly attribute NamedCurve namedCurve;
+};
+
 
 /***** Algorithm dictionaries *****/
 
 dictionary Algorithm {
-  required DOMString name;
+  DOMString name;
 };
 
 dictionary AesCbcParams : Algorithm {
-  required CryptoOperationData iv;
+  CryptoOperationData iv;
 };
 
 dictionary AesCtrParams : Algorithm {
-  required CryptoOperationData counter;
-  [EnforceRange] required octet length;
+  CryptoOperationData counter;
+  [EnforceRange] octet length;
 };
 
 dictionary AesGcmParams : Algorithm {
-  required CryptoOperationData iv;
+  CryptoOperationData iv;
   CryptoOperationData additionalData;
   [EnforceRange] octet tagLength;
 };
 
 dictionary HmacImportParams : Algorithm {
-  required AlgorithmIdentifier hash;
+  AlgorithmIdentifier hash;
 };
 
 dictionary Pbkdf2Params : Algorithm {
-  required CryptoOperationData salt;
-  [EnforceRange] required unsigned long iterations;
-  required AlgorithmIdentifier hash;
+  CryptoOperationData salt;
+  [EnforceRange] unsigned long iterations;
+  AlgorithmIdentifier hash;
 };
 
 dictionary RsaHashedImportParams {
-  required AlgorithmIdentifier hash;
+  AlgorithmIdentifier hash;
 };
 
 dictionary AesKeyGenParams : Algorithm {
-  [EnforceRange] required unsigned short length;
+  [EnforceRange] unsigned short length;
 };
 
 dictionary HmacKeyGenParams : Algorithm {
-  required AlgorithmIdentifier hash;
+  AlgorithmIdentifier hash;
   [EnforceRange] unsigned long length;
 };
 
-dictionary RsaHashedKeyGenParams : Algorithm {
-  [EnforceRange] required unsigned long modulusLength;
-  required BigInteger publicExponent;
-  required AlgorithmIdentifier hash;
+dictionary RsaKeyGenParams : Algorithm {
+  [EnforceRange] unsigned long modulusLength;
+  BigInteger publicExponent;
+};
+
+dictionary RsaHashedKeyGenParams : RsaKeyGenParams {
+  AlgorithmIdentifier hash;
 };
 
 dictionary RsaOaepParams : Algorithm {
-  CryptoOperationData label;
+  CryptoOperationData? label;
 };
 
 dictionary DhKeyGenParams : Algorithm {
-  required BigInteger prime;
-  required BigInteger generator;
+  BigInteger prime;
+  BigInteger generator;
 };
 
+typedef DOMString NamedCurve;
 dictionary EcKeyGenParams : Algorithm {
-  required NamedCurve namedCurve;
+  NamedCurve namedCurve;
 };
 
 dictionary AesDerivedKeyParams : Algorithm {
-  [EnforceRange] required unsigned long length;
+  [EnforceRange] unsigned long length;
 };
 
 dictionary HmacDerivedKeyParams : HmacImportParams {
@@ -84,7 +123,7 @@ dictionary HmacDerivedKeyParams : HmacImportParams {
 };
 
 dictionary EcdhKeyDeriveParams : Algorithm {
-  required CryptoKey public;
+  CryptoKey public;
 };
 
 
@@ -92,14 +131,14 @@ dictionary EcdhKeyDeriveParams : Algorithm {
 
 dictionary RsaOtherPrimesInfo {
   // The following fields are defined in Section 6.3.2.7 of JSON Web Algorithms
-  required DOMString r;
-  required DOMString d;
-  required DOMString t;
+  DOMString r;
+  DOMString d;
+  DOMString t;
 };
 
 dictionary JsonWebKey {
   // The following fields are defined in Section 3.1 of JSON Web Key
-  required DOMString kty;
+  DOMString kty;
   DOMString use;
   sequence<DOMString> key_ops;
   DOMString alg;
@@ -130,13 +169,14 @@ dictionary JsonWebKey {
 interface CryptoKey {
   readonly attribute KeyType type;
   readonly attribute boolean extractable;
-  [Cached, Constant, Throws] readonly attribute object algorithm;
+  readonly attribute KeyAlgorithm algorithm;
   [Cached, Constant, Frozen] readonly attribute sequence<KeyUsage> usages;
 };
 
-dictionary CryptoKeyPair {
-  required CryptoKey publicKey;
-  required CryptoKey privateKey;
+[Pref="dom.webcrypto.enabled"]
+interface CryptoKeyPair {
+  readonly attribute CryptoKey publicKey;
+  readonly attribute CryptoKey privateKey;
 };
 
 typedef DOMString KeyFormat;

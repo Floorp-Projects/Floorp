@@ -5,17 +5,30 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
+    'AesKeyAlgorithm.h',
+    'BasicSymmetricKeyAlgorithm.h',
     'CryptoBuffer.h',
     'CryptoKey.h',
-    'KeyAlgorithmProxy.h',
+    'CryptoKeyPair.h',
+    'EcKeyAlgorithm.h',
+    'HmacKeyAlgorithm.h',
+    'KeyAlgorithm.h',
+    'RsaHashedKeyAlgorithm.h',
+    'RsaKeyAlgorithm.h',
     'WebCryptoCommon.h',
     'WebCryptoTask.h',
 ]
 
 UNIFIED_SOURCES += [
+    'AesKeyAlgorithm.cpp',
     'CryptoBuffer.cpp',
     'CryptoKey.cpp',
-    'KeyAlgorithmProxy.cpp',
+    'CryptoKeyPair.cpp',
+    'EcKeyAlgorithm.cpp',
+    'HmacKeyAlgorithm.cpp',
+    'KeyAlgorithm.cpp',
+    'RsaHashedKeyAlgorithm.cpp',
+    'RsaKeyAlgorithm.cpp',
     'WebCryptoTask.cpp',
 ]
 
