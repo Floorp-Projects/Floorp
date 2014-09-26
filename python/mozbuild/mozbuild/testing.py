@@ -70,7 +70,7 @@ class TestMetadata(object):
         for path in sorted(self._tests_by_flavor.get(flavor, [])):
             yield self._tests_by_path[path]
 
-    def resolve_tests(self, paths=None, flavor=None, under_path=None):
+    def resolve_tests(self, paths=None, flavor=None, subsuite=None, under_path=None):
         """Resolve tests from an identifier.
 
         This is a generator of dicts describing each test.
@@ -88,12 +88,18 @@ class TestMetadata(object):
         If ``flavor`` is a string, it will be used to filter returned tests
         to only be the flavor specified. A flavor is something like
         ``xpcshell``.
+
+        If ``subsuite`` is a string, it will be used to filter returned tests
+        to only be in the subsuite specified.
         """
         def fltr(tests):
             for test in tests:
                 if flavor:
                    if (flavor == 'devtools' and test.get('flavor') != 'browser-chrome') or \
                       (flavor != 'devtools' and test.get('flavor') != flavor):
+                    continue
+
+                if subsuite and test.get('subsuite') != subsuite:
                     continue
 
                 if under_path \
