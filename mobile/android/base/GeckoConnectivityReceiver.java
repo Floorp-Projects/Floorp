@@ -20,7 +20,6 @@ public class GeckoConnectivityReceiver extends BroadcastReceiver {
      */
     private static final String LINK_DATA_UP = "up";
     private static final String LINK_DATA_DOWN = "down";
-    private static final String LINK_DATA_CHANGED = "changed";
     private static final String LINK_DATA_UNKNOWN = "unknown";
 
     private static final String LOGTAG = "GeckoConnectivityReceiver";
@@ -83,7 +82,6 @@ public class GeckoConnectivityReceiver extends BroadcastReceiver {
 
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             GeckoAppShell.sendEventToGecko(GeckoEvent.createNetworkLinkChangeEvent(status));
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createNetworkLinkChangeEvent(LINK_DATA_CHANGED));
         }
     }
 }
