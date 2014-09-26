@@ -1328,7 +1328,6 @@ static void	wrtmessage(const char *p1, const char *p2, const char *p3,
 #endif
 static void	malloc_printf(const char *format, ...);
 #endif
-static bool	base_pages_alloc_mmap(size_t minsize);
 static bool	base_pages_alloc(size_t minsize);
 static void	*base_alloc(size_t size);
 static void	*base_calloc(size_t number, size_t size);
@@ -1339,8 +1338,8 @@ static void	stats_print(arena_t *arena);
 #endif
 static void	*pages_map(void *addr, size_t size);
 static void	pages_unmap(void *addr, size_t size);
-static void	*chunk_alloc_mmap(size_t size);
-static void	*chunk_alloc(size_t size, bool zero);
+static void	*chunk_alloc_mmap(size_t size, size_t alignment);
+static void	*chunk_alloc(size_t size, size_t alignment, bool base, bool zero);
 static void	chunk_dealloc_mmap(void *chunk, size_t size);
 static void	chunk_dealloc(void *chunk, size_t size);
 #ifndef NO_TLS
@@ -1379,7 +1378,7 @@ static void	*arena_ralloc(void *ptr, size_t size, size_t oldsize);
 static bool	arena_new(arena_t *arena);
 static arena_t	*arenas_extend(unsigned ind);
 static void	*huge_malloc(size_t size, bool zero);
-static void	*huge_palloc(size_t alignment, size_t size);
+static void	*huge_palloc(size_t size, size_t alignment, bool zero);
 static void	*huge_ralloc(void *ptr, size_t size, size_t oldsize);
 static void	huge_dalloc(void *ptr);
 static void	malloc_print_stats(void);
@@ -1966,9 +1965,8 @@ pages_commit(void *addr, size_t size)
 }
 
 static bool
-base_pages_alloc_mmap(size_t minsize)
+base_pages_alloc(size_t minsize)
 {
-	bool ret;
 	size_t csize;
 #if defined(MALLOC_DECOMMIT) || defined(MALLOC_STATS)
 	size_t pminsize;
@@ -1976,11 +1974,9 @@ base_pages_alloc_mmap(size_t minsize)
 
 	assert(minsize != 0);
 	csize = CHUNK_CEILING(minsize);
-	base_pages = pages_map(NULL, csize);
-	if (base_pages == NULL) {
-		ret = true;
-		goto RETURN;
-	}
+	base_pages = chunk_alloc(csize, chunksize, true, false);
+	if (base_pages == NULL)
+		return (true);
 	base_next_addr = base_pages;
 	base_past_addr = (void *)((uintptr_t)base_pages + csize);
 #if defined(MALLOC_DECOMMIT) || defined(MALLOC_STATS)
@@ -2000,19 +1996,7 @@ base_pages_alloc_mmap(size_t minsize)
 #  endif
 #endif
 
-	ret = false;
-RETURN:
 	return (false);
-}
-
-static bool
-base_pages_alloc(size_t minsize)
-{
-
-	if (base_pages_alloc_mmap(minsize) == false)
-		return (false);
-
-	return (true);
 }
 
 static void *
@@ -2624,10 +2608,10 @@ chunk_alloc_mmap_slow(size_t size, size_t alignment)
 }
 
 static void *
-chunk_alloc_mmap(size_t size)
+chunk_alloc_mmap(size_t size, size_t alignment)
 {
 #ifdef JEMALLOC_USES_MAP_ALIGN
-        return pages_map_align(size, chunksize);
+        return pages_map_align(size, alignment);
 #else
         void *ret;
         size_t offset;
@@ -2648,10 +2632,10 @@ chunk_alloc_mmap(size_t size)
         ret = pages_map(NULL, size);
         if (ret == NULL)
                 return (NULL);
-        offset = ALIGNMENT_ADDR2OFFSET(ret, chunksize);
+        offset = ALIGNMENT_ADDR2OFFSET(ret, alignment);
         if (offset != 0) {
                 pages_unmap(ret, size);
-                return (chunk_alloc_mmap_slow(size, chunksize));
+                return (chunk_alloc_mmap_slow(size, alignment));
         }
 
         assert(ret != NULL);
@@ -2660,14 +2644,16 @@ chunk_alloc_mmap(size_t size)
 }
 
 static void *
-chunk_alloc(size_t size, bool zero)
+chunk_alloc(size_t size, size_t alignment, bool base, bool zero)
 {
 	void *ret;
 
 	assert(size != 0);
 	assert((size & chunksize_mask) == 0);
+	assert(alignment != 0);
+	assert((alignment & chunksize_mask) == 0);
 
-	ret = chunk_alloc_mmap(size);
+	ret = chunk_alloc_mmap(size, alignment);
 	if (ret != NULL) {
 		goto RETURN;
 	}
@@ -2677,7 +2663,7 @@ chunk_alloc(size_t size, bool zero)
 RETURN:
 
 #ifdef MALLOC_VALIDATE
-	if (ret != NULL) {
+	if (ret != NULL && base == false) {
 		if (malloc_rtree_set(chunk_rtree, (uintptr_t)ret, ret)) {
 			chunk_dealloc(ret, size);
 			return (NULL);
@@ -3325,7 +3311,7 @@ arena_run_alloc(arena_t *arena, arena_bin_t *bin, size_t size, bool large,
 	 */
 	{
 		arena_chunk_t *chunk = (arena_chunk_t *)
-		    chunk_alloc(chunksize, true);
+		    chunk_alloc(chunksize, chunksize, false, true);
 		if (chunk == NULL)
 			return (NULL);
 
@@ -4115,7 +4101,7 @@ ipalloc(size_t alignment, size_t size)
 		} else if (alignment <= chunksize)
 			ret = huge_malloc(ceil_size, false);
 		else
-			ret = huge_palloc(alignment, ceil_size);
+			ret = huge_palloc(ceil_size, alignment, false);
 	}
 
 	assert(((uintptr_t)ret & (alignment - 1)) == 0);
@@ -4708,6 +4694,12 @@ arenas_extend(unsigned ind)
 static void *
 huge_malloc(size_t size, bool zero)
 {
+	return huge_palloc(size, chunksize, zero);
+}
+
+static void *
+huge_palloc(size_t size, size_t alignment, bool zero)
+{
 	void *ret;
 	size_t csize;
 	size_t psize;
@@ -4726,7 +4718,7 @@ huge_malloc(size_t size, bool zero)
 	if (node == NULL)
 		return (NULL);
 
-	ret = chunk_alloc(csize, zero);
+	ret = chunk_alloc(csize, alignment, false, zero);
 	if (ret == NULL) {
 		base_node_dealloc(node);
 		return (NULL);
@@ -4787,109 +4779,6 @@ huge_malloc(size_t size, bool zero)
 	}
 #endif
 
-	return (ret);
-}
-
-/* Only handles large allocations that require more than chunk alignment. */
-static void *
-huge_palloc(size_t alignment, size_t size)
-{
-	void *ret;
-	size_t alloc_size, chunk_size, offset;
-	size_t psize;
-	extent_node_t *node;
-
-	/*
-	 * This allocation requires alignment that is even larger than chunk
-	 * alignment.  This means that huge_malloc() isn't good enough.
-	 *
-	 * Allocate almost twice as many chunks as are demanded by the size or
-	 * alignment, in order to assure the alignment can be achieved, then
-	 * unmap leading and trailing chunks.
-	 */
-	assert(alignment >= chunksize);
-
-	chunk_size = CHUNK_CEILING(size);
-
-	if (size >= alignment)
-		alloc_size = chunk_size + alignment - chunksize;
-	else
-		alloc_size = (alignment << 1) - chunksize;
-
-	/* Allocate an extent node with which to track the chunk. */
-	node = base_node_alloc();
-	if (node == NULL)
-		return (NULL);
-
-	/*
-	 * Windows requires that there be a 1:1 mapping between VM
-	 * allocation/deallocation operations.  Therefore, take care here to
-	 * acquire the final result via one mapping operation.
-	 */
-#ifdef JEMALLOC_USES_MAP_ALIGN
-		ret = pages_map_align(chunk_size, alignment);
-#else
-	do {
-		void *over;
-
-		over = chunk_alloc(alloc_size, false);
-		if (over == NULL) {
-			base_node_dealloc(node);
-			ret = NULL;
-			goto RETURN;
-		}
-
-		offset = (uintptr_t)over & (alignment - 1);
-		assert((offset & chunksize_mask) == 0);
-		assert(offset < alloc_size);
-		ret = (void *)((uintptr_t)over + offset);
-		chunk_dealloc(over, alloc_size);
-		ret = pages_map(ret, chunk_size);
-		/*
-		 * Failure here indicates a race with another thread, so try
-		 * again.
-		 */
-	} while (ret == NULL);
-#endif
-	/* Insert node into huge. */
-	node->addr = ret;
-	psize = PAGE_CEILING(size);
-	node->size = psize;
-
-	malloc_mutex_lock(&huge_mtx);
-	extent_tree_ad_insert(&huge, node);
-#ifdef MALLOC_STATS
-	huge_nmalloc++;
-        /* See note in huge_alloc() for why huge_allocated += psize is correct
-         * here even when DECOMMIT is not defined. */
-	huge_allocated += psize;
-	huge_mapped += chunk_size;
-#endif
-	malloc_mutex_unlock(&huge_mtx);
-
-#ifdef MALLOC_DECOMMIT
-	if (chunk_size - psize > 0) {
-		pages_decommit((void *)((uintptr_t)ret + psize),
-		    chunk_size - psize);
-	}
-#endif
-
-#ifdef MALLOC_FILL
-	if (opt_junk)
-#  ifdef MALLOC_DECOMMIT
-		memset(ret, 0xa5, psize);
-#  else
-		memset(ret, 0xa5, chunk_size);
-#  endif
-	else if (opt_zero)
-#  ifdef MALLOC_DECOMMIT
-		memset(ret, 0, psize);
-#  else
-		memset(ret, 0, chunk_size);
-#  endif
-#endif
-
-RETURN:
 	return (ret);
 }
 
