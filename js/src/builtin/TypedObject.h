@@ -58,12 +58,23 @@
  *
  * - Typed objects:
  *
- * A typed object is an instance of a *type object* (note the past
- * participle). There is one class for *transparent* typed objects and
- * one for *opaque* typed objects. These classes are equivalent in
- * basically every way, except that requesting the backing buffer of
- * an opaque typed object yields null. We use distinct js::Classes to
- * avoid the need for an extra slot in every typed object.
+ * A typed object is an instance of a *type object* (note the past participle).
+ * Typed objects can be either transparent or opaque, depending on whether
+ * their underlying buffer can be accessed. Transparent and opaque typed
+ * objects have different classes, and can have different physical layouts.
+ * The following layouts are currently possible:
+ *
+ * InlineOpaqueTypedObject: Typed objects whose data immediately follows the
+ *   object's header are inline typed objects. These do not have an associated
+ *   array buffer, so only opaque typed objects can be inline.
+ *
+ * OwnedTypedObject: Transparent or opaque typed objects whose data is owned by
+ *   another object, which can be either an array buffer or an inline typed
+ *   object (opaque objects only). Owned typed objects may be attached or
+ *   unattached. An unattached typed object has no memory associated with it.
+ *   When first created, objects are always attached, but they can become
+ *   unattached if their buffer is neutered (note that this implies that typed
+ *   objects of opaque types can't be unattached).
  *
  * Note that whether a typed object is opaque is not directly
  * connected to its type. That is, opaque types are *always*
@@ -77,31 +88,6 @@
  * fully override the property accessors etc. The overridden accessor
  * methods are the same in each and are defined in methods of
  * TypedObject.
- *
- * Typed objects may be attached or unattached. An unattached typed
- * object has no memory associated with it; it is basically a null
- * pointer. When first created, objects are always attached, but they
- * can become unattached if their buffer is neutered (note that this
- * implies that typed objects of opaque types can never be unattached).
- *
- * When a new typed object instance is created, fresh memory is
- * allocated and set as that typed object's private field. The object
- * is then considered the *owner* of that memory: when the object is
- * collected, its finalizer will free the memory. The fact that an
- * object `o` owns its memory is indicated by setting its reserved
- * slot JS_TYPEDOBJ_SLOT_OWNER to `o` (a trivial cycle, in other
- * words).
- *
- * Later, *derived* typed objects can be created, typically via an
- * access like `o.f` where `f` is some complex (non-scalar) type, but
- * also explicitly via Handle objects. In those cases, the memory
- * pointer of the derived object is set to alias the owner's memory
- * pointer, and the owner slot for the derived object is set to the
- * owner object, thus ensuring that the owner is not collected while
- * the derived object is alive. We always maintain the invariant that
- * JS_TYPEDOBJ_SLOT_OWNER is the true owner of the memory, meaning
- * that there is a shallow tree. This prevents an access pattern like
- * `a.b.c.d` from keeping all the intermediate objects alive.
  */
 
 namespace js {
@@ -537,10 +523,7 @@ class TypedObjectModuleObject : public JSObject {
     static const Class class_;
 };
 
-/*
- * Base type for typed objects and handles. Basically any type whose
- * contents consist of typed memory.
- */
+/* Base type for transparent and opaque typed objects. */
 class TypedObject : public ArrayBufferViewObject
 {
   private:
@@ -561,8 +544,6 @@ class TypedObject : public ArrayBufferViewObject
                                     MutableHandleValue vp);
 
   protected:
-    static void obj_trace(JSTracer *trace, JSObject *object);
-
     static bool obj_lookupGeneric(JSContext *cx, HandleObject obj,
                                   HandleId id, MutableHandleObject objp,
                                   MutableHandleShape propp);
@@ -616,76 +597,6 @@ class TypedObject : public ArrayBufferViewObject
                               MutableHandleValue statep, MutableHandleId idp);
 
   public:
-    static size_t offsetOfOwnerSlot();
-
-    // Each typed object contains a void* pointer pointing at the
-    // binary data that it represents. (That data may be owned by this
-    // object or this object may alias data owned by someone else.)
-    // This function returns the offset in bytes within the object
-    // where the `void*` pointer can be found. It is intended for use
-    // by the JIT.
-    static size_t offsetOfDataSlot();
-
-    // Offset of the byte offset slot.
-    static size_t offsetOfByteOffsetSlot();
-
-    // Helper for createUnattached()
-    static TypedObject *createUnattachedWithClass(JSContext *cx,
-                                                 const Class *clasp,
-                                                 HandleTypeDescr type,
-                                                 int32_t length);
-
-    // Creates an unattached typed object or handle (depending on the
-    // type parameter T). Note that it is only legal for unattached
-    // handles to escape to the end user; for non-handles, the caller
-    // should always invoke one of the `attach()` methods below.
-    //
-    // Arguments:
-    // - type: type object for resulting object
-    // - length: 0 unless this is an array, otherwise the length
-    static TypedObject *createUnattached(JSContext *cx, HandleTypeDescr type,
-                                        int32_t length);
-
-    // Creates a typedObj that aliases the memory pointed at by `owner`
-    // at the given offset. The typedObj will be a handle iff type is a
-    // handle and a typed object otherwise.
-    static TypedObject *createDerived(JSContext *cx,
-                                      HandleSizedTypeDescr type,
-                                      Handle<TypedObject*> typedContents,
-                                      int32_t offset);
-
-    // Creates a new typed object whose memory is freshly allocated
-    // and initialized with zeroes (or, in the case of references, an
-    // appropriate default value).
-    static TypedObject *createZeroed(JSContext *cx,
-                                     HandleTypeDescr typeObj,
-                                     int32_t length);
-
-    // User-accessible constructor (`new TypeDescriptor(...)`)
-    // used for sized types. Note that the callee here is the *type descriptor*,
-    // not the typedObj.
-    static bool constructSized(JSContext *cx, unsigned argc, Value *vp);
-
-    // As `constructSized`, but for unsized array types.
-    static bool constructUnsized(JSContext *cx, unsigned argc, Value *vp);
-
-    // Use this method when `buffer` is the owner of the memory.
-    void attach(JSContext *cx, ArrayBufferObject &buffer, int32_t offset);
-
-    // Otherwise, use this to attach to memory referenced by another typedObj.
-    void attach(JSContext *cx, TypedObject &typedObj, int32_t offset);
-
-    // Invoked when array buffer is transferred elsewhere
-    void neuter(void *newData);
-
-    int32_t offset() const {
-        return getReservedSlot(JS_BUFVIEW_SLOT_BYTEOFFSET).toInt32();
-    }
-
-    ArrayBufferObject &owner() const {
-        return getReservedSlot(JS_BUFVIEW_SLOT_OWNER).toObject().as<ArrayBufferObject>();
-    }
-
     TypedProto &typedProto() const {
         return getProto()->as<TypedProto>();
     }
@@ -702,13 +613,11 @@ class TypedObject : public ArrayBufferViewObject
         return maybeForwardedTypedProto().maybeForwardedTypeDescr();
     }
 
-    uint8_t *typedMem() const {
-        return (uint8_t*) getPrivate();
-    }
-
-    int32_t length() const {
-        return getReservedSlot(JS_BUFVIEW_SLOT_LENGTH).toInt32();
-    }
+    int32_t offset() const;
+    int32_t length() const;
+    uint8_t *typedMem() const;
+    bool isAttached() const;
+    bool maybeForwardedIsAttached() const;
 
     int32_t size() const {
         switch (typeDescr().kind()) {
@@ -736,23 +645,128 @@ class TypedObject : public ArrayBufferViewObject
         JS_ASSERT(offset <= (size_t) size());
         return typedMem() + offset;
     }
+
+    // Creates a new typed object whose memory is freshly allocated and
+    // initialized with zeroes (or, in the case of references, an appropriate
+    // default value).
+    static TypedObject *createZeroed(JSContext *cx, HandleTypeDescr typeObj, int32_t length);
+
+    // User-accessible constructor (`new TypeDescriptor(...)`) used for sized
+    // types. Note that the callee here is the type descriptor.
+    static bool constructSized(JSContext *cx, unsigned argc, Value *vp);
+
+    // As `constructSized`, but for unsized array types.
+    static bool constructUnsized(JSContext *cx, unsigned argc, Value *vp);
+
+    /* Accessors for self hosted code. */
+    static bool GetBuffer(JSContext *cx, unsigned argc, Value *vp);
+    static bool GetByteOffset(JSContext *cx, unsigned argc, Value *vp);
 };
 
 typedef Handle<TypedObject*> HandleTypedObject;
 
-class TransparentTypedObject : public TypedObject
+class OwnedTypedObject : public TypedObject
+{
+  public:
+    static const size_t DATA_SLOT = 3;
+
+    static size_t offsetOfOwnerSlot();
+
+    // Each typed object contains a void* pointer pointing at the
+    // binary data that it represents. (That data may be owned by this
+    // object or this object may alias data owned by someone else.)
+    // This function returns the offset in bytes within the object
+    // where the `void*` pointer can be found. It is intended for use
+    // by the JIT.
+    static size_t offsetOfDataSlot();
+
+    // Offset of the byte offset slot.
+    static size_t offsetOfByteOffsetSlot();
+
+    JSObject &owner() const {
+        return getReservedSlot(JS_BUFVIEW_SLOT_OWNER).toObject();
+    }
+
+    uint8_t *outOfLineTypedMem() const {
+        return static_cast<uint8_t *>(getPrivate(DATA_SLOT));
+    }
+
+    // Helper for createUnattached()
+    static OwnedTypedObject *createUnattachedWithClass(JSContext *cx,
+                                                       const Class *clasp,
+                                                       HandleTypeDescr type,
+                                                       int32_t length);
+
+    // Creates an unattached typed object or handle (depending on the
+    // type parameter T). Note that it is only legal for unattached
+    // handles to escape to the end user; for non-handles, the caller
+    // should always invoke one of the `attach()` methods below.
+    //
+    // Arguments:
+    // - type: type object for resulting object
+    // - length: 0 unless this is an array, otherwise the length
+    static OwnedTypedObject *createUnattached(JSContext *cx, HandleTypeDescr type,
+                                              int32_t length);
+
+    // Creates a typedObj that aliases the memory pointed at by `owner`
+    // at the given offset. The typedObj will be a handle iff type is a
+    // handle and a typed object otherwise.
+    static OwnedTypedObject *createDerived(JSContext *cx,
+                                           HandleSizedTypeDescr type,
+                                           Handle<TypedObject*> typedContents,
+                                           int32_t offset);
+
+    // Use this method when `buffer` is the owner of the memory.
+    void attach(JSContext *cx, ArrayBufferObject &buffer, int32_t offset);
+
+    // Otherwise, use this to attach to memory referenced by another typedObj.
+    void attach(JSContext *cx, TypedObject &typedObj, int32_t offset);
+
+    // Invoked when array buffer is transferred elsewhere
+    void neuter(void *newData);
+
+    static void obj_trace(JSTracer *trace, JSObject *object);
+};
+
+// Class for a transparent typed object, whose owner is an array buffer.
+class TransparentTypedObject : public OwnedTypedObject
 {
   public:
     static const Class class_;
 };
 
-typedef Handle<TransparentTypedObject*> HandleTransparentTypedObject;
-
-class OpaqueTypedObject : public TypedObject
+// Class for an opaque typed object, whose owner may be either an array buffer
+// or an opaque inlined typed object.
+class OwnedOpaqueTypedObject : public OwnedTypedObject
 {
   public:
     static const Class class_;
-    static const JSFunctionSpec handleStaticMethods[];
+};
+
+// Class for an opaque typed object whose data is allocated inline.
+class InlineOpaqueTypedObject : public TypedObject
+{
+  public:
+    static const Class class_;
+
+    static const size_t MaximumSize = JSObject::MAX_FIXED_SLOTS * sizeof(Value);
+
+    static gc::AllocKind allocKindForTypeDescriptor(TypeDescr *descr) {
+        size_t nbytes = descr->as<SizedTypeDescr>().size();
+        JS_ASSERT(nbytes <= MaximumSize);
+
+        size_t dataSlots = AlignBytes(nbytes, sizeof(Value) / sizeof(Value));
+        JS_ASSERT(nbytes <= dataSlots * sizeof(Value));
+        return gc::GetGCObjectKind(dataSlots);
+    }
+
+    uint8_t *inlineTypedMem() const;
+
+    static void obj_trace(JSTracer *trace, JSObject *object);
+
+    static size_t offsetOfDataStart();
+
+    static InlineOpaqueTypedObject *create(JSContext *cx, HandleTypeDescr descr);
 };
 
 /*
@@ -968,7 +982,8 @@ inline bool
 IsTypedObjectClass(const Class *class_)
 {
     return class_ == &TransparentTypedObject::class_ ||
-           class_ == &OpaqueTypedObject::class_;
+           class_ == &OwnedOpaqueTypedObject::class_ ||
+           class_ == &InlineOpaqueTypedObject::class_;
 }
 
 inline bool
@@ -1040,18 +1055,12 @@ JSObject::is<js::TypedObject>() const
     return IsTypedObjectClass(getClass());
 }
 
-template<>
+template <>
 inline bool
-JSObject::is<js::SizedArrayTypeDescr>() const
+JSObject::is<js::OwnedTypedObject>() const
 {
-    return getClass() == &js::SizedArrayTypeDescr::class_;
-}
-
-template<>
-inline bool
-JSObject::is<js::UnsizedArrayTypeDescr>() const
-{
-    return getClass() == &js::UnsizedArrayTypeDescr::class_;
+    return getClass() == &js::TransparentTypedObject::class_ ||
+           getClass() == &js::OwnedOpaqueTypedObject::class_;
 }
 
 inline void
