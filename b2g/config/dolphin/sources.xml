@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="3a2947df41a480de1457a6dcdbf46ad0af70d8e0">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="4e9aa22d15b77e5b3d7e763128ead2caffd3b801"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="e30d373eb5ed0514bce08a3b3d80d71b05a4dc32"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="5883a99b6528ced9dafaed8d3ca2405fb285537e"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
@@ -129,7 +129,7 @@
   <!-- dolphin specific things -->
   <project name="device/sprd" path="device/sprd" revision="0351ccd65808a2486e0fefb99674ca7a64c2c6dc"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="4e58336019b5cbcfd134caf55b142236cf986618"/>
-  <project name="platform/frameworks/av" path="frameworks/av" revision="facca8d3e35431b66f85a4eb42bc6c5b24bd04da"/>
+  <project name="platform/frameworks/av" path="frameworks/av" revision="4387fe988e5a1001f29ce05fcfda03ed2d32137b"/>
   <project name="platform/hardware/akm" path="hardware/akm" revision="6d3be412647b0eab0adff8a2768736cf4eb68039"/>
   <project groups="invensense" name="platform/hardware/invensense" path="hardware/invensense" revision="e6d9ab28b4f4e7684f6c07874ee819c9ea0002a2"/>
   <project name="platform/hardware/ril" path="hardware/ril" revision="865ce3b4a2ba0b3a31421ca671f4d6c5595f8690"/>

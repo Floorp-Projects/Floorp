@@ -151,7 +151,8 @@
 
           if (action) {
             switch (action.type) {
-              case "switchtab": {
+              case "switchtab": // Fall through.
+              case "visiturl": {
                 returnValue = action.params.url;
                 break;
               }
@@ -194,8 +195,10 @@
           // happened yet. We will need it to highlight search terms later.
           if (!this._searchServiceInitialized) {
             Services.search.init(() => {
-              this._searchServiceInitialized = true;
-              this.formatValue();
+              if (this.formatValue) {
+                this._searchServiceInitialized = true;
+                this.formatValue();
+              }
             });
 
             return;
@@ -327,6 +330,8 @@
 
                 url = submission.uri.spec;
                 postData = submission.postData;
+              } else if (action.type == "visiturl") {
+                url = action.params.url;
               }
             }
             continueOperation.call(this);
@@ -1022,8 +1027,9 @@
               // TODO (bug 1054816): Centralise the implementation of actions
               // into a JS module.
               switch (action.type) {
-                case "switchtab": //Fall through.
-                case "keyword": {
+                case "switchtab": // Fall through.
+                case "keyword": // Fall through.
+                case "visiturl": {
                   url = action.params.url;
                   break;
                 }

@@ -383,6 +383,9 @@ exports['test button window state'] = function(assert, done) {
   let nodes = [getWidget(button.id).node];
 
   openBrowserWindow().then(focus).then(window => {
+    let node;
+    let state;
+
     nodes.push(getWidget(button.id, window).node);
 
     let { activeWindow } = browserWindows;
@@ -402,7 +405,7 @@ exports['test button window state'] = function(assert, done) {
     assert.equal(button.disabled, false,
       'global disabled unchanged');
 
-    let state = button.state(mainWindow);
+    state = button.state(mainWindow);
 
     assert.equal(state.label, 'my button',
       'previous window label unchanged');
@@ -411,7 +414,7 @@ exports['test button window state'] = function(assert, done) {
     assert.equal(state.disabled, false,
       'previous window disabled unchanged');
 
-    let state = button.state(activeWindow);
+    state = button.state(activeWindow);
 
     assert.equal(state.label, 'New label',
       'active window label updated');
@@ -439,8 +442,8 @@ exports['test button window state'] = function(assert, done) {
       'active window label inherited');
 
     // check the nodes properties
-    let node = nodes[0];
-    let state = button.state(mainWindow);
+    node = nodes[0];
+    state = button.state(mainWindow);
 
     assert.equal(node.getAttribute('label'), state.label,
       'node label is correct');
@@ -452,8 +455,8 @@ exports['test button window state'] = function(assert, done) {
     assert.equal(node.hasAttribute('disabled'), state.disabled,
       'disabled is correct');
 
-    let node = nodes[1];
-    let state = button.state(activeWindow);
+    node = nodes[1];
+    state = button.state(activeWindow);
 
     assert.equal(node.getAttribute('label'), state.label,
       'node label is correct');
@@ -515,6 +518,8 @@ exports['test button tab state'] = function(assert, done) {
       // check the states
 
       Cu.schedulePreciseGC(() => {
+        let state;
+
         assert.equal(button.label, 'my button',
           'global label unchanged');
         assert.equal(button.icon, './icon.png',
@@ -522,7 +527,7 @@ exports['test button tab state'] = function(assert, done) {
         assert.equal(button.disabled, false,
           'global disabled unchanged');
 
-        let state = button.state(mainTab);
+        state = button.state(mainTab);
 
         assert.equal(state.label, 'Tab label',
           'previous tab label updated');
@@ -531,7 +536,7 @@ exports['test button tab state'] = function(assert, done) {
         assert.equal(state.disabled, false,
           'previous tab disabled unchanged');
 
-        let state = button.state(tab);
+        state = button.state(tab);
 
         assert.equal(state.label, 'Window label',
           'active tab inherited from window state');
@@ -561,7 +566,7 @@ exports['test button tab state'] = function(assert, done) {
 
         // check the node properties
 
-        let state = button.state(tabs.activeTab);
+        state = button.state(tabs.activeTab);
 
         assert.equal(node.getAttribute('label'), state.label,
           'node label is correct');
@@ -601,7 +606,7 @@ exports['test button tab state'] = function(assert, done) {
 
 };
 
-exports['test button click'] = function(assert, done) {
+exports['test button click'] = function*(assert) {
   let loader = Loader(module);
   let { ActionButton } = loader.require('sdk/ui');
   let { browserWindows } = loader.require('sdk/windows');
@@ -618,28 +623,28 @@ exports['test button click'] = function(assert, done) {
   let mainWindow = browserWindows.activeWindow;
   let chromeWindow = getMostRecentBrowserWindow();
 
-  openBrowserWindow().then(focus).then(window => {
-    button.state(mainWindow, { label: 'nothing' });
-    button.state(mainWindow.tabs.activeTab, { label: 'foo'})
-    button.state(browserWindows.activeWindow, { label: 'bar' });
+  let window = yield openBrowserWindow().then(focus);
 
-    button.click();
+  button.state(mainWindow, { label: 'nothing' });
+  button.state(mainWindow.tabs.activeTab, { label: 'foo'})
+  button.state(browserWindows.activeWindow, { label: 'bar' });
 
-    focus(chromeWindow).then(() => {
-      button.click();
+  button.click();
 
-      assert.deepEqual(labels, ['bar', 'foo'],
-        'button click works');
+  yield focus(chromeWindow);
 
-      close(window).
-        then(loader.unload).
-        then(done, assert.fail);
-    });
-  }).then(null, assert.fail);
+  button.click();
 
+  assert.deepEqual(labels, ['bar', 'foo'],
+    'button click works');
+
+  yield close(window);
+
+  loader.unload();
 }
 
 exports['test button icon set'] = function(assert) {
+  let size;
   const { CustomizableUI } = Cu.import('resource:///modules/CustomizableUI.jsm', {});
   let loader = Loader(module);
   let { ActionButton } = loader.require('sdk/ui');
@@ -670,12 +675,12 @@ exports['test button icon set'] = function(assert) {
   let { node, id: widgetId } = getWidget(button.id);
   let { devicePixelRatio } = node.ownerDocument.defaultView;
 
-  let size = 16 * devicePixelRatio;
+  size = 16 * devicePixelRatio;
 
   assert.equal(node.getAttribute('image'), data.url(button.icon[size].substr(2)),
     'the icon is set properly in navbar');
 
-  let size = 32 * devicePixelRatio;
+  size = 32 * devicePixelRatio;
 
   CustomizableUI.addWidgetToArea(widgetId, CustomizableUI.AREA_PANEL);
 

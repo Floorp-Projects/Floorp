@@ -1588,6 +1588,14 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               // Remove the image, so we can style it ourselves with a generic
               // search icon.
               this.removeAttribute("image");
+            } else if (action.type == "visiturl") {
+              emphasiseUrl = false;
+              url = action.params.url;
+
+              let sourceStr = this._stringBundle.GetStringFromName("visitURL");
+              title = this._generateEmphasisPairs(sourceStr, [
+                                                    [trimURL(url), true],
+                                                  ]);
             }
 
             // Remove the "action" substring so that the correct style, if any,
