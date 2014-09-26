@@ -125,6 +125,9 @@ CompositableDataGonkOGL::gl() const
 
 void CompositableDataGonkOGL::SetCompositor(Compositor* aCompositor)
 {
+  if (gl() && mCompositor != aCompositor) {
+    DeleteTextureIfPresent();
+  }
   mCompositor = static_cast<CompositorOGL*>(aCompositor);
 }
 
@@ -137,7 +140,7 @@ void CompositableDataGonkOGL::ClearData()
 GLuint CompositableDataGonkOGL::GetTexture()
 {
   if (!mTexture) {
-    if (gl()->MakeCurrent()) {
+    if (gl() && gl()->MakeCurrent()) {
       gl()->fGenTextures(1, &mTexture);
     }
   }
@@ -148,7 +151,8 @@ void
 CompositableDataGonkOGL::DeleteTextureIfPresent()
 {
   if (mTexture) {
-    if (gl()->MakeCurrent()) {
+    MOZ_ASSERT(gl());
+    if (gl() && gl()->MakeCurrent()) {
       gl()->fDeleteTextures(1, &mTexture);
     }
     mTexture = 0;
@@ -160,7 +164,10 @@ void
 CompositableDataGonkOGL::BindEGLImage(GLuint aTarget, EGLImage aImage)
 {
   if (mBoundEGLImage != aImage) {
-    gl()->fEGLImageTargetTexture2D(aTarget, aImage);
+    MOZ_ASSERT(gl());
+    if (gl()) {
+      gl()->fEGLImageTargetTexture2D(aTarget, aImage);
+    }
     mBoundEGLImage = aImage;
   }
 }
