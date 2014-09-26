@@ -1375,16 +1375,11 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
         if (sdp_parse_multiple_profile_payload_types(sdp_p, mca_p, ptr) !=
             SDP_SUCCESS) {
             sdp_p->conf_p->num_invalid_param++;
-	    SDP_FREE(mca_p);
+            SDP_FREE(mca_p);
             return (SDP_INVALID_PARAMETER);
         }
-    } else {
-        /* Transport is a non-AAL2 type.  Parse payloads normally. */
-        sdp_parse_payload_types(sdp_p, mca_p, ptr);
-    }
-
     /* Parse DTLS/SCTP port */
-    if (mca_p->transport == SDP_TRANSPORT_DTLSSCTP) {
+    } else if (mca_p->transport == SDP_TRANSPORT_DTLSSCTP) {
         ptr = sdp_getnextstrtok(ptr, port, sizeof(port), " \t", &result);
         if (result != SDP_SUCCESS) {
             sdp_parse_error(sdp_p->peerconnection,
@@ -1397,16 +1392,21 @@ sdp_result_e sdp_parse_media (sdp_t *sdp_p, u16 level, const char *ptr)
         port_ptr = port;
 
         if (sdp_getchoosetok(port_ptr, &port_ptr, "/ \t", &result)) {
-        	sctp_port = SDP_CHOOSE_PARAM;
+            sctp_port = SDP_CHOOSE_PARAM;
         } else {
-        	sctp_port = sdp_getnextnumtok(port_ptr, (const char **)&port_ptr,
+            sctp_port = sdp_getnextnumtok(port_ptr, (const char **)&port_ptr,
                                            "/ \t", &result);
             if (result != SDP_SUCCESS) {
-            	return (SDP_INVALID_PARAMETER);
+                return (SDP_INVALID_PARAMETER);
             }
             mca_p->sctpport = sctp_port;
         }
+    } else {
+        /* Transport is a non-AAL2 type and not SCTP.  Parse payloads
+           normally. */
+        sdp_parse_payload_types(sdp_p, mca_p, ptr);
     }
+
 
     /* Media line params are valid.  Add it into the SDP. */
     sdp_p->mca_count++;
