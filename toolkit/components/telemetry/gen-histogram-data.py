@@ -97,6 +97,9 @@ def static_asserts_for_boolean(histogram):
 def static_asserts_for_flag(histogram):
     pass
 
+def static_asserts_for_count(histogram):
+    pass
+
 def static_asserts_for_enumerated(histogram):
     n_values = histogram.high()
     static_assert("%s > 2" % n_values,
@@ -128,6 +131,7 @@ def write_histogram_static_asserts(histograms):
     table = {
         'boolean' : static_asserts_for_boolean,
         'flag' : static_asserts_for_flag,
+        'count': static_asserts_for_count,
         'enumerated' : static_asserts_for_enumerated,
         'linear' : static_asserts_for_linear,
         'exponential' : static_asserts_for_exponential,
