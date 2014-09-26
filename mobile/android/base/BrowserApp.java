@@ -121,11 +121,14 @@ import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.view.ViewTreeObserver;
 import android.view.Window;
+import android.view.WindowManager;
 import android.view.animation.Interpolator;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
+
+import com.readystatesoftware.systembartint.SystemBarTintManager;
 
 public class BrowserApp extends GeckoApp
                         implements TabsPanel.TabsLayoutChangeListener,
@@ -537,6 +540,8 @@ public class BrowserApp extends GeckoApp
 
         final Context appContext = getApplicationContext();
 
+        setupSystemUITinting();
+
         mBrowserChrome = (ViewGroup) findViewById(R.id.browser_chrome);
         mActionBarFlipper = (ViewFlipper) findViewById(R.id.browser_actionbar);
         mActionBar = (ActionModeCompatView) findViewById(R.id.actionbar);
@@ -679,6 +684,18 @@ public class BrowserApp extends GeckoApp
             // If we're restarting, we won't destroy the activity. Make sure we remove any guest notifications that might have been shown.
             GuestSession.hideNotification(this);
         }
+    }
+
+    private void setupSystemUITinting() {
+        if (!Versions.feature19Plus) {
+            return;
+        }
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+
+        SystemBarTintManager tintManager = new SystemBarTintManager(this);
+        tintManager.setTintColor(getResources().getColor(R.color.background_tabs));
+        tintManager.setStatusBarTintEnabled(true);
     }
 
     private void registerOnboardingReceiver(Context context) {
