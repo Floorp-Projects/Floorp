@@ -104,12 +104,14 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
 
 .autocomplete-richlistitem[actiontype="keyword"] .ac-url-box,
 .autocomplete-richlistitem[actiontype="searchengine"] .ac-url-box,
+.autocomplete-richlistitem[actiontype="visiturl"] .ac-url-box,
 .autocomplete-richlistitem[type~="autofill"] .ac-url-box {
   display: none;
 }
 
 .autocomplete-richlistitem[actiontype="keyword"] .ac-title-box,
 .autocomplete-richlistitem[actiontype="searchengine"] .ac-title-box,
+.autocomplete-richlistitem[actiontype="visiturl"] .ac-title-box,
 .autocomplete-richlistitem[type~="autofill"] .ac-title-box {
   margin-top: 12px;
   margin-bottom: 12px;
