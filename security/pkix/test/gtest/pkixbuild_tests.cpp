@@ -165,7 +165,7 @@ private:
     return Success;
   }
 
-  virtual Result IsChainValid(const DERArray&)
+  virtual Result IsChainValid(const DERArray&, Time)
   {
     return Success;
   }

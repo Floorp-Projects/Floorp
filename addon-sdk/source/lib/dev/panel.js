@@ -8,7 +8,6 @@ module.metadata = {
   "stability": "experimental"
 };
 
-
 const { Cu } = require("chrome");
 const { Class } = require("../sdk/core/heritage");
 const { curry } = require("../sdk/lang/functional");
@@ -21,12 +20,13 @@ const { contract, validate } = require("../sdk/util/contract");
 const { data: { url: resolve }} = require("../sdk/self");
 const { identify } = require("../sdk/ui/id");
 const { isLocalURL, URL } = require("../sdk/url");
-const { defer } = require("../sdk/core/promise");
 const { encode } = require("../sdk/base64");
 const { marshal, demarshal } = require("./ports");
 const { fromTarget } = require("./debuggee");
 const { removed } = require("../sdk/dom/events");
 const { id: addonID } = require("../sdk/self");
+const { viewFor } = require("../sdk/view/core");
+const { createView } = require("./panel/view");
 
 const OUTER_FRAME_URI = module.uri.replace(/\.js$/, ".html");
 const FRAME_SCRIPT = module.uri.replace("/panel.js", "/frame-script.js");
@@ -55,6 +55,9 @@ const panelFor = frame => panels.get(frame);
 // Weak mapping between panels and debugees they're targeting.
 const debuggees = new WeakMap();
 const debuggeeFor = panel => debuggees.get(panel);
+
+const frames = new WeakMap();
+const frameFor = panel => frames.get(panel);
 
 const setAttributes = (node, attributes) => {
   for (var key in attributes)
@@ -165,22 +168,29 @@ setup.define(Panel, (panel, {window, toolbox, url}) => {
   // we obtain original iframe and replace it with the one that has
   // desired configuration.
   const original = getFrameElement(window);
-  const frame = original.cloneNode(true);
+  const container = original.parentNode;
+  original.remove();
+  const frame = createView(panel, container.ownerDocument);
 
+  // Following modifications are a temporary workaround until Bug 1049188
+  // is fixed.
+  // Enforce certain iframe customizations regardless of users request.
   setAttributes(frame, {
+    "id": original.id,
     "src": url,
-    "sandbox": "allow-scripts",
-    // It would be great if we could allow remote iframes for sandboxing
-    // panel documents in a content process, but for now platform implementation
-    // is buggy on linux so this is disabled.
-    // "remote": true,
-    "type": "content",
-    "transparent": true,
-    "seamless": "seamless"
+    "flex": 1,
+    "forceOwnRefreshDriver": "",
+    "tooltip": "aHTMLTooltip"
   });
-
-  original.parentNode.replaceChild(frame, original);
   frame.style.visibility = "hidden";
+  frame.classList.add("toolbox-panel-iframe");
+  // Inject iframe into designated node until add-on author decides
+  // to inject it elsewhere instead.
+  if (!frame.parentNode)
+    container.appendChild(frame);
+
+  // associate view with a panel
+  frames.set(panel, frame);
 
   // associate panel model with a frame view.
   panels.set(frame, panel);
@@ -213,11 +223,29 @@ setup.define(Panel, (panel, {window, toolbox, url}) => {
   panel.setup({ debuggee: debuggee });
 });
 
+createView.define(Panel, (panel, document) => {
+  const frame = document.createElement("iframe");
+  setAttributes(frame, {
+    "sandbox": "allow-scripts",
+    // It would be great if we could allow remote iframes for sandboxing
+    // panel documents in a content process, but for now platform implementation
+    // is buggy on linux so this is disabled.
+    // "remote": true,
+    "type": "content",
+    "transparent": true,
+    "seamless": "seamless",
+  });
+  return frame;
+});
+
 dispose.define(Panel, function(panel) {
   debuggeeFor(panel).close();
 
   debuggees.delete(panel);
   managers.delete(panel);
+  frames.delete(panel);
   panel.readyState = "destroyed";
   panel.dispose();
 });
+
+viewFor.define(Panel, frameFor);

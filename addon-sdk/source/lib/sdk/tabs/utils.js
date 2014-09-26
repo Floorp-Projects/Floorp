@@ -15,10 +15,9 @@ const { Ci } = require('chrome');
 const { defer } = require("../lang/functional");
 const { windows, isBrowser } = require('../window/utils');
 const { isPrivateBrowsingSupported } = require('../self');
-const { isGlobalPBSupported } = require('../private-browsing/utils');
 
 // Bug 834961: ignore private windows when they are not supported
-function getWindows() windows(null, { includePrivate: isPrivateBrowsingSupported || isGlobalPBSupported });
+function getWindows() windows(null, { includePrivate: isPrivateBrowsingSupported });
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 

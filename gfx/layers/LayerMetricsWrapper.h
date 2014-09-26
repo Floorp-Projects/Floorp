@@ -77,7 +77,7 @@ namespace layers {
  * layers C1...Cn, where C1 has FrameMetrics FM1 and Cn has FrameMetrics Fn.
  * Although in this example C (in the first layer tree) and C0 (in the second
  * layer tree) are both ContainerLayers (because they have children), they
- * do not have to be. They may just be ThebesLayers or ColorLayers, for example,
+ * do not have to be. They may just be PaintedLayers or ColorLayers, for example,
  * which do not have any children. However, the type of C will always be the
  * same as the type of C0.
  *

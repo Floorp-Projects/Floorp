@@ -152,7 +152,7 @@ parser_groups = (
                                       "thunderbird"),
                                 metavar=None,
                                 type="choice",
-                                choices=["firefox", "fennec",
+                                choices=["firefox",
                                          "fennec-on-device", "thunderbird",
                                          "xulrunner"],
                                 default="firefox",
@@ -186,6 +186,12 @@ parser_groups = (
                                            "for doing so.  Use this to launch "
                                            "the application in a debugger like "
                                            "gdb."),
+                                     action="store_true",
+                                     default=False,
+                                     cmds=['run', 'test'])),
+        (("", "--no-quit",), dict(dest="no_quit",
+                                     help=("Prevent from killing Firefox when"
+                                           "running tests"),
                                      action="store_true",
                                      default=False,
                                      cmds=['run', 'test'])),
@@ -664,7 +670,7 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
 
     use_main = False
     inherited_options = ['verbose', 'enable_e10s', 'parseable', 'check_memory',
-                         'abort_on_missing']
+                         'no_quit', 'abort_on_missing']
     enforce_timeouts = False
 
     if command == "xpi":
@@ -855,7 +861,8 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
                                 jid=jid,
                                 update_url=options.update_url,
                                 bootstrap=True,
-                                enable_mobile=options.enable_mobile)
+                                enable_mobile=options.enable_mobile,
+                                harness_options=harness_options)
 
     if command == "xpi" and options.update_link:
         if not options.update_link.startswith("https"):
@@ -936,6 +943,7 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
                              args=options.cmdargs,
                              extra_environment=extra_environment,
                              norun=options.no_run,
+                             noquit=options.no_quit,
                              used_files=used_files,
                              enable_mobile=options.enable_mobile,
                              mobile_app_name=options.mobile_app_name,

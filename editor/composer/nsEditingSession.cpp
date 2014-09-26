@@ -25,7 +25,6 @@
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
 #include "nsIDOMHTMLDocument.h"         // for nsIDOMHTMLDocument
 #include "nsIDOMWindow.h"               // for nsIDOMWindow
-#include "nsIDOMWindowUtils.h"          // for nsIDOMWindowUtils
 #include "nsIDocShell.h"                // for nsIDocShell
 #include "nsIDocument.h"                // for nsIDocument
 #include "nsIDocumentStateListener.h"
@@ -33,6 +32,7 @@
 #include "nsIHTMLDocument.h"            // for nsIHTMLDocument, etc
 #include "nsIInterfaceRequestorUtils.h"  // for do_GetInterface
 #include "nsIPlaintextEditor.h"         // for nsIPlaintextEditor, etc
+#include "nsIPresShell.h"               // for nsIPresShell
 #include "nsIRefreshURI.h"              // for nsIRefreshURI
 #include "nsIRequest.h"                 // for nsIRequest
 #include "nsISelection.h"               // for nsISelection
@@ -45,6 +45,7 @@
 #include "nsLiteralString.h"            // for NS_LITERAL_STRING
 #include "nsPICommandUpdater.h"         // for nsPICommandUpdater
 #include "nsPIDOMWindow.h"              // for nsPIDOMWindow
+#include "nsPresContext.h"              // for nsPresContext
 #include "nsReadableUtils.h"            // for AppendUTF16toUTF8
 #include "nsStringFwd.h"                // for nsAFlatString
 
@@ -396,12 +397,13 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
 
   if (!mInteractive) {
     // Disable animation of images in this document:
-    nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));
-    NS_ENSURE_TRUE(utils, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
+    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+    nsPresContext* presContext = presShell->GetPresContext();
+    NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
-    rv = utils->GetImageAnimationMode(&mImageAnimationMode);
-    NS_ENSURE_SUCCESS(rv, rv);
-    utils->SetImageAnimationMode(imgIContainer::kDontAnimMode);
+    mImageAnimationMode = presContext->ImageAnimationMode();
+    presContext->SetImageAnimationMode(imgIContainer::kDontAnimMode);
   }
 
   // create and set editor
@@ -1303,9 +1305,14 @@ nsEditingSession::RestoreAnimationMode(nsIDOMWindow *aWindow)
 {
   if (!mInteractive)
   {
-    nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));
-    if (utils)
-      utils->SetImageAnimationMode(mImageAnimationMode);
+    nsCOMPtr<nsIDocShell> docShell = GetDocShellFromWindow(aWindow);
+    NS_ENSURE_TRUE(docShell, );
+    nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
+    NS_ENSURE_TRUE(presShell, );
+    nsPresContext* presContext = presShell->GetPresContext();
+    NS_ENSURE_TRUE(presContext, );
+
+    presContext->SetImageAnimationMode(mImageAnimationMode);
   }
 }
 
@@ -1390,12 +1397,13 @@ nsEditingSession::ReattachToWindow(nsIDOMWindow* aWindow)
   if (!mInteractive)
   {
     // Disable animation of images in this document:
-    nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));
-    NS_ENSURE_TRUE(utils, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
+    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+    nsPresContext* presContext = presShell->GetPresContext();
+    NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
 
-    rv = utils->GetImageAnimationMode(&mImageAnimationMode);
-    NS_ENSURE_SUCCESS(rv, rv);
-    utils->SetImageAnimationMode(imgIContainer::kDontAnimMode);
+    mImageAnimationMode = presContext->ImageAnimationMode();
+    presContext->SetImageAnimationMode(imgIContainer::kDontAnimMode);
   }
 
   // The third controller takes an nsIEditor as the context

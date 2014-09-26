@@ -1,0 +1,9 @@
+{
+  "name": "ui-button-apis",
+  "title": "Australis Button API Examples",
+  "id": "ui-button-apis@mozilla.org",
+  "description": "A Button API example",
+  "author": "jeff@canuckistani.ca (Jeff Griffiths | @canuckistani)",
+  "license": "MPL 2.0",
+  "version": "0.1"
+}
