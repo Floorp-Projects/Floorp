@@ -100,6 +100,7 @@ AUTOMATION_EXTRA_CMDLINE-upload = 2>&1 | tee $(AUTOMATION_UPLOAD_OUTPUT)
 
 # Note: We have to force -j1 here, at least until bug 1036563 is fixed.
 AUTOMATION_EXTRA_CMDLINE-l10n-check = -j1
+AUTOMATION_EXTRA_CMDLINE-pretty-l10n-check = -j1
 
 # The commands only run if the corresponding MOZ_AUTOMATION_* variable is
 # enabled. This means, for example, if we enable MOZ_AUTOMATION_UPLOAD, then
