@@ -34,7 +34,7 @@ public:
    * @param aUpdate  ReadbackProcessor::Update object. This is a void pointer
    *                 since we cannot forward declare a nested class, and do not
    *                 export ReadbackProcessor.h
-   * @param aOrigin  Origin of the aTexture surface in the ThebesLayer
+   * @param aOrigin  Origin of the aTexture surface in the PaintedLayer
    *                 coordinate system.
    */
   void PostTask(ID3D10Texture2D *aTexture, void *aUpdate, const gfxPoint &aOrigin);

@@ -31,9 +31,9 @@ class SurfaceDescriptor;
  *  |    |                          |   |   |
  *  |    +-> BasicContainerLayer <--+   |   |
  *  |                                   |   |
- *  +-> ThebesLayer                     |   |
+ *  +-> PaintedLayer                     |   |
  *  |    |                              |   |
- *  |    +-> BasicThebesLayer <---------+   |
+ *  |    +-> BasicPaintedLayer <---------+   |
  *  |                                       |
  *  +-> ImageLayer                          |
  *       |                                  |
@@ -64,17 +64,17 @@ public:
                      Layer* aMaskLayer) {}
 
   /**
-   * Like Paint() but called for ThebesLayers with the additional parameters
+   * Like Paint() but called for PaintedLayers with the additional parameters
    * they need.
    * If mClipToVisibleRegion is set, then the layer must clip to its
    * effective visible region (snapped or unsnapped, it doesn't matter).
    */
   virtual void PaintThebes(gfxContext* aContext,
                            Layer* aMasklayer,
-                           LayerManager::DrawThebesLayerCallback aCallback,
+                           LayerManager::DrawPaintedLayerCallback aCallback,
                            void* aCallbackData) {}
 
-  virtual void Validate(LayerManager::DrawThebesLayerCallback aCallback,
+  virtual void Validate(LayerManager::DrawPaintedLayerCallback aCallback,
                         void* aCallbackData,
                         ReadbackProcessor* aReadback) {}
 

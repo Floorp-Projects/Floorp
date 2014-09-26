@@ -1151,11 +1151,11 @@ ContainerLayer::HasOpaqueAncestorLayer(Layer* aLayer)
 void
 ContainerLayer::DidRemoveChild(Layer* aLayer)
 {
-  ThebesLayer* tl = aLayer->AsThebesLayer();
+  PaintedLayer* tl = aLayer->AsPaintedLayer();
   if (tl && tl->UsedForReadback()) {
     for (Layer* l = mFirstChild; l; l = l->GetNextSibling()) {
       if (l->GetType() == TYPE_READBACK) {
-        static_cast<ReadbackLayer*>(l)->NotifyThebesLayerRemoved(tl);
+        static_cast<ReadbackLayer*>(l)->NotifyPaintedLayerRemoved(tl);
       }
     }
   }
@@ -1620,7 +1620,7 @@ Layer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
 }
 
 void
-ThebesLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
+PaintedLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
   Layer::PrintInfo(aStream, aPrefix);
   if (!mValidRegion.IsEmpty()) {
@@ -1629,13 +1629,13 @@ ThebesLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 }
 
 void
-ThebesLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
+PaintedLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
 {
   Layer::DumpPacket(aPacket, aParent);
   // get this layer data
   using namespace layerscope;
   LayersPacket::Layer* layer = aPacket->mutable_layer(aPacket->layer_size()-1);
-  layer->set_type(LayersPacket::Layer::ThebesLayer);
+  layer->set_type(LayersPacket::Layer::PaintedLayer);
   if (!mValidRegion.IsEmpty()) {
     DumpRegion(layer->mutable_valid(), mValidRegion);
   }

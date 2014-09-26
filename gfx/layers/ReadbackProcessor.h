@@ -17,32 +17,32 @@ namespace layers {
 
 class ContainerLayer;
 class ReadbackLayer;
-class ThebesLayer;
+class PaintedLayer;
 
 class ReadbackProcessor {
 public:
   /**
    * Called by the container before processing any child layers. Call this
    * if any child layer might have changed in any way (other than content-only
-   * changes to layers other than ColorLayers and ThebesLayers).
+   * changes to layers other than ColorLayers and PaintedLayers).
    *
    * This method recomputes the relationship between ReadbackLayers and
    * sibling layers, and dispatches changes to ReadbackLayers. Except that
-   * if a ThebesLayer needs its contents sent to some ReadbackLayer, we'll
-   * just record that internally and later the ThebesLayer should call
-   * GetThebesLayerUpdates when it paints, to find out which rectangle needs
+   * if a PaintedLayer needs its contents sent to some ReadbackLayer, we'll
+   * just record that internally and later the PaintedLayer should call
+   * GetPaintedLayerUpdates when it paints, to find out which rectangle needs
    * to be sent, and the ReadbackLayer it needs to be sent to.
    */
   void BuildUpdates(ContainerLayer* aContainer);
 
   struct Update {
     /**
-     * The layer a ThebesLayer should send its contents to.
+     * The layer a PaintedLayer should send its contents to.
      */
     ReadbackLayer* mLayer;
     /**
-     * The rectangle of content that it should send, in the ThebesLayer's
-     * coordinate system. This rectangle is guaranteed to be in the ThebesLayer's
+     * The rectangle of content that it should send, in the PaintedLayer's
+     * coordinate system. This rectangle is guaranteed to be in the PaintedLayer's
      * visible region. Translate it to mLayer's coordinate system
      * by adding mLayer->GetBackgroundLayerOffset().
      */
@@ -54,16 +54,16 @@ public:
   };
   /**
    * Appends any ReadbackLayers that need to be updated, and the rects that
-   * need to be updated, to aUpdates. Only need to call this for ThebesLayers
+   * need to be updated, to aUpdates. Only need to call this for PaintedLayers
    * that have been marked UsedForReadback().
    * Each Update's mLayer's mBackgroundLayer will have been set to aLayer.
-   * If a ThebesLayer doesn't call GetThebesLayerUpdates, then all the
-   * ReadbackLayers that needed data from that ThebesLayer will be marked
+   * If a PaintedLayer doesn't call GetPaintedLayerUpdates, then all the
+   * ReadbackLayers that needed data from that PaintedLayer will be marked
    * as having unknown backgrounds.
    * @param aUpdateRegion if non-null, this region is set to the union
    * of the mUpdateRects.
    */
-  void GetThebesLayerUpdates(ThebesLayer* aLayer,
+  void GetPaintedLayerUpdates(PaintedLayer* aLayer,
                              nsTArray<Update>* aUpdates,
                              nsIntRegion* aUpdateRegion = nullptr);
 

@@ -5,7 +5,7 @@
 
 #include "ContainerLayerD3D9.h"
 
-#include "ThebesLayerD3D9.h"
+#include "PaintedLayerD3D9.h"
 #include "ReadbackProcessor.h"
 
 using namespace mozilla::gfx;
@@ -174,7 +174,7 @@ ContainerLayerD3D9::RenderLayer()
     device()->SetScissorRect(&d3drect);
 
     if (layerToRender->GetLayer()->GetType() == TYPE_THEBES) {
-      static_cast<ThebesLayerD3D9*>(layerToRender)->RenderThebesLayer(&readback);
+      static_cast<PaintedLayerD3D9*>(layerToRender)->RenderPaintedLayer(&readback);
     } else {
       layerToRender->RenderLayer();
     }
