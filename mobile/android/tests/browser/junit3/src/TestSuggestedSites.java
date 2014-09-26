@@ -152,6 +152,7 @@ public class TestSuggestedSites extends BrowserTestCase {
         try {
             for (int i = 0; i < n; i++) {
                 JSONObject site = new JSONObject();
+                site.put("trackingid", prefix + "trackingId" + i);
                 site.put("url", prefix + "url" + i);
                 site.put("title", prefix + "title" + i);
                 site.put("imageurl", prefix + "imageUrl" + i);
@@ -238,6 +239,18 @@ public class TestSuggestedSites extends BrowserTestCase {
         checkCursorCount("{ broken: }", 0);
     }
 
+    public void testNoTrackingId() {
+        String content = "[{ url: \"url\", title: \"title\", imageurl: \"imageurl\", bgcolor: \"bgcolor\" }]";
+        resources.setSuggestedSitesResource(content);
+
+        Cursor c = new SuggestedSites(context).get(DEFAULT_LIMIT);
+        assertEquals(1, c.getCount());
+        c.moveToNext();
+
+        String trackingId = c.getString(c.getColumnIndexOrThrow(BrowserContract.SuggestedSites.TRACKING_ID));
+        assertNull(trackingId);
+    }
+
     public void testCursorContent() {
         resources.setSuggestedSitesResource(generateSites(3));
 
@@ -247,6 +260,9 @@ public class TestSuggestedSites extends BrowserTestCase {
         c.moveToPosition(-1);
         while (c.moveToNext()) {
             int position = c.getPosition();
+
+            String trackingId = c.getString(c.getColumnIndexOrThrow(BrowserContract.SuggestedSites.TRACKING_ID));
+            assertEquals("trackingId" + position, trackingId);
 
             String url = c.getString(c.getColumnIndexOrThrow(BrowserContract.SuggestedSites.URL));
             assertEquals("url" + position, url);
