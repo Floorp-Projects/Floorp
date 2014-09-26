@@ -12,6 +12,7 @@ XPIDL_MODULE = 'dom_voicemail'
 
 EXPORTS.mozilla.dom += [
     'Voicemail.h',
+    'VoicemailStatus.h',
 ]
 
 EXPORTS.mozilla.dom.voicemail += [
@@ -27,6 +28,10 @@ SOURCES += [
     'ipc/VoicemailIPCService.cpp',
     'ipc/VoicemailParent.cpp',
     'Voicemail.cpp',
+]
+
+UNIFIED_SOURCES += [
+    'VoicemailStatus.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

@@ -79,8 +79,7 @@ function testLevel2DiscardActive() {
 
   function onLevel2Active(event) {
     let status = event.status;
-    // TODO: bug 905228 - MozVoicemailStatus is not defined.
-    //ok(status instanceof MozVoicemailStatus);
+    ok(status instanceof MozVoicemailStatus);
     is(status.hasMessages, true);
     is(status.messageCount, -1);
     is(status.returnNumber, MWI_LEVEL2_SENDER);
@@ -105,8 +104,7 @@ const MWI_LEVEL2_DISCARD_INACTIVE_PDU =
 function testLevel2DiscardInactive() {
   function onLevel2Inactive(event) {
     let status = event.status;
-    // TODO: bug 905228 - MozVoicemailStatus is not defined.
-    //ok(status instanceof MozVoicemailStatus);
+    ok(status instanceof MozVoicemailStatus);
     is(status.hasMessages, false);
     is(status.messageCount, 0);
     is(status.returnNumber, MWI_LEVEL2_SENDER);
@@ -150,8 +148,7 @@ function testLevel3DiscardActive() {
 
   function onLevel3Active(event) {
     let status = event.status;
-    // TODO: bug 905228 - MozVoicemailStatus is not defined.
-    //ok(status instanceof MozVoicemailStatus);
+    ok(status instanceof MozVoicemailStatus);
     is(status.hasMessages, true);
     is(status.messageCount, MWI_LEVEL3_ACTIVE_UDH_MSG_COUNT);
     is(status.returnNumber, MWI_LEVEL3_SENDER);
@@ -188,8 +185,7 @@ const MWI_LEVEL3_DISCARD_INACTIVE_PDU =
 function testLevel3DiscardInactive() {
   function onLevel3Inactive(event) {
     let status = event.status;
-    // TODO: bug 905228 - MozVoicemailStatus is not defined.
-    //ok(status instanceof MozVoicemailStatus);
+    ok(status instanceof MozVoicemailStatus);
     is(status.hasMessages, false);
     is(status.messageCount, 0);
     is(status.returnNumber, MWI_LEVEL3_SENDER);
