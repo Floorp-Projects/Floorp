@@ -59,6 +59,30 @@ TextComposition::MatchesNativeContext(nsIWidget* aWidget) const
   return mNativeContext == aWidget->GetInputContext().mNativeIMEContext;
 }
 
+bool
+TextComposition::MaybeDispatchCompositionUpdate(const WidgetTextEvent* aEvent)
+{
+  if (Destroyed()) {
+    return false;
+  }
+
+  if (mLastData == aEvent->theText) {
+    return true;
+  }
+
+  WidgetCompositionEvent compositionUpdate(aEvent->mFlags.mIsTrusted,
+                                           NS_COMPOSITION_UPDATE,
+                                           aEvent->widget);
+  compositionUpdate.time = aEvent->time;
+  compositionUpdate.timeStamp = aEvent->timeStamp;
+  mLastData = compositionUpdate.data = aEvent->theText;
+
+  nsEventStatus status = nsEventStatus_eConsumeNoDefault;
+  EventDispatcher::Dispatch(mNode, mPresContext,
+                            &compositionUpdate, nullptr, &status, nullptr);
+  return !Destroyed();
+}
+
 void
 TextComposition::DispatchEvent(WidgetGUIEvent* aEvent,
                                nsEventStatus* aStatus,
@@ -79,6 +103,57 @@ TextComposition::DispatchEvent(WidgetGUIEvent* aEvent,
   if (mRequestedToCommitOrCancel && !aIsSynthesized) {
     *aStatus = nsEventStatus_eConsumeNoDefault;
     return;
+  }
+
+  // IME may commit composition with empty string for a commit request or
+  // with non-empty string for a cancel request.  We should prevent such
+  // unexpected result.  E.g., web apps may be confused if they implement
+  // autocomplete which attempts to commit composition forcibly when the user
+  // selects one of suggestions but composition string is cleared by IME.
+  // Note that most Chinese IMEs don't expose actual composition string to us.
+  // They typically tell us an IDEOGRAPHIC SPACE or empty string as composition
+  // string.  Therefore, we should hack it only when:
+  // 1. committing string is empty string at requesting commit but the last
+  //    data isn't IDEOGRAPHIC SPACE.
+  // 2. non-empty string is committed at requesting cancel.
+  if (!aIsSynthesized && (mIsRequestingCommit || mIsRequestingCancel)) {
+    nsString* committingData = nullptr;
+    switch (aEvent->message) {
+      case NS_COMPOSITION_UPDATE:
+      case NS_COMPOSITION_END:
+        committingData = &aEvent->AsCompositionEvent()->data;
+        break;
+      case NS_TEXT_TEXT:
+        committingData = &aEvent->AsTextEvent()->theText;
+        break;
+      default:
+        NS_WARNING("Unexpected event comes during committing or "
+                   "canceling composition");
+        break;
+    }
+    if (committingData) {
+      if (mIsRequestingCommit && committingData->IsEmpty() &&
+          mLastData != IDEOGRAPHIC_SPACE) {
+        committingData->Assign(mLastData);
+      } else if (mIsRequestingCancel && !committingData->IsEmpty()) {
+        committingData->Truncate();
+      }
+
+      if (aEvent->message == NS_COMPOSITION_UPDATE) {
+        // If committing string is not different from the last data,
+        // we don't need to dispatch this.
+        if (committingData->Equals(mLastData)) {
+          return;
+        }
+      } else if (aEvent->message == NS_TEXT_TEXT) {
+        // If committing string is different from the last data,
+        // we need to dispatch compositionupdate before dispatching text event.
+        if (!MaybeDispatchCompositionUpdate(aEvent->AsTextEvent())) {
+          NS_WARNING("Dispatching compositionupdate caused destroying");
+          return;
+        }
+      }
+    }
   }
 
   if (aEvent->message == NS_COMPOSITION_UPDATE) {
