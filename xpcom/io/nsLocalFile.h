@@ -31,7 +31,7 @@
   nsresult InitWithUnicodePath(const char16_t *aPath);                                        \
   nsresult AppendRelativeUnicodePath(const char16_t *aRelativePath);
 
-// nsXPComInit needs to know about how we are implemented,
+// XPCOMInit needs to know about how we are implemented,
 // so here we will export it.  Other users should not depend
 // on this.
 
