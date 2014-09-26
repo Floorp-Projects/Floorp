@@ -34,12 +34,21 @@ add_task(function* hide_search_engine_nomatch() {
 add_task(function* add_search_engine_match() {
   let promiseTopic = promiseSearchTopic("engine-added");
   do_check_eq(null, yield PlacesSearchAutocompleteProvider.findMatchByToken("bacon"));
-  Services.search.addEngineWithDetails("bacon", "", "bacon", "Search Bacon",
+  Services.search.addEngineWithDetails("bacon", "", "pork", "Search Bacon",
                                        "GET", "http://www.bacon.moz/?search={searchTerms}");
   yield promiseSearchTopic;
   let match = yield PlacesSearchAutocompleteProvider.findMatchByToken("bacon");
   do_check_eq(match.url, "http://www.bacon.moz");
   do_check_eq(match.engineName, "bacon");
+  do_check_eq(match.iconUrl, null);
+});
+
+add_task(function* test_aliased_search_engine_match() {
+  do_check_eq(null, yield PlacesSearchAutocompleteProvider.findMatchByAlias("sober"));
+
+  let match = yield PlacesSearchAutocompleteProvider.findMatchByAlias("pork");
+  do_check_eq(match.engineName, "bacon");
+  do_check_eq(match.alias, "pork");
   do_check_eq(match.iconUrl, null);
 });
 

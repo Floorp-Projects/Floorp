@@ -740,23 +740,28 @@ function promisePopupHidden(popup) {
   return promisePopupEvent(popup, "hidden");
 }
 
+// NOTE: If you're using this, and attempting to interact with one of the
+// autocomplete results, your test is likely to be unreliable on Linux.
+// See bug 1073339.
 let gURLBarOnSearchComplete = null;
 function promiseSearchComplete() {
   info("Waiting for onSearchComplete");
-  let deferred = Promise.defer();
-  
-  if (!gURLBarOnSearchComplete) {
-    gURLBarOnSearchComplete = gURLBar.onSearchComplete;
-    registerCleanupFunction(() => {
-      gURLBar.onSearchComplete = gURLBarOnSearchComplete;
-    });
-  }
+  return new Promise(resolve => {
+    if (!gURLBarOnSearchComplete) {
+      gURLBarOnSearchComplete = gURLBar.onSearchComplete;
+      registerCleanupFunction(() => {
+        gURLBar.onSearchComplete = gURLBarOnSearchComplete;
+      });
+    }
 
-  gURLBar.onSearchComplete = function () {
-    ok(gURLBar.popupOpen, "The autocomplete popup is correctly open");
-    gURLBarOnSearchComplete.apply(gURLBar);
-    deferred.resolve();
-  }
-  
-  return deferred.promise;
+    gURLBar.onSearchComplete = function () {
+      ok(gURLBar.popupOpen, "The autocomplete popup is correctly open");
+      gURLBarOnSearchComplete.apply(gURLBar);
+      resolve();
+    }
+  }).then(() => {
+    // On Linux, the popup may or may not be open at this stage. So we need
+    // additional checks to ensure we wait long enough.
+    return promisePopupShown(gURLBar.popup);
+  });
 }

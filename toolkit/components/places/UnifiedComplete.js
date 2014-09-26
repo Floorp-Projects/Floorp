@@ -706,6 +706,12 @@ Search.prototype = {
       hasFirstResult = true;
     }
 
+    if (this._enableActions && !hasFirstResult) {
+      // If it's not a bookmarked keyword, then it may be a search engine
+      // with an alias - which works like a keyword.
+      hasFirstResult = yield this._matchSearchEngineAlias();
+    }
+
     let shouldAutofill = this._shouldAutofill;
     if (this.pending && !hasFirstResult && shouldAutofill) {
       // Or it may look like a URL we know about from search engines.
@@ -715,6 +721,11 @@ Search.prototype = {
     if (this.pending && !hasFirstResult && shouldAutofill) {
       // It may also look like a URL we know from the database.
       hasFirstResult = yield this._matchKnownUrl(conn, queries);
+    }
+
+    if (this.pending && this._enableActions && !hasFirstResult) {
+      // When all else fails, we search using the current search engine.
+      yield this._matchCurrentSearchEngine();
     }
 
     yield this._sleep(Prefs.delay);
@@ -826,6 +837,48 @@ Search.prototype = {
       frecency: FRECENCY_SEARCHENGINES_DEFAULT
     });
     return true;
+  },
+
+  _matchSearchEngineAlias: function* () {
+    if (this._searchTokens.length < 2)
+      return false;
+
+    let match = yield PlacesSearchAutocompleteProvider.findMatchByAlias(
+                                                         this._searchTokens[0]);
+    if (!match)
+      return false;
+
+    let query = this._searchTokens.slice(1).join(" ");
+
+    yield this._addSearchEngineMatch(match, query);
+    return true;
+  },
+
+  _matchCurrentSearchEngine: function* () {
+    let match = yield PlacesSearchAutocompleteProvider.getDefaultMatch();
+    if (!match)
+      return;
+
+    let query = this._originalSearchString;
+
+    yield this._addSearchEngineMatch(match, query);
+  },
+
+  _addSearchEngineMatch: function* (match, query) {
+    let value = makeActionURL("searchengine", {
+      engineName: match.engineName,
+      input: this._originalSearchString,
+      searchQuery: query,
+    });
+
+    this._addMatch({
+      value: value,
+      comment: match.engineName,
+      icon: match.iconUrl,
+      style: "action searchengine",
+      finalCompleteValue: this._trimmedOriginalSearchString,
+      frecency: FRECENCY_SEARCHENGINES_DEFAULT,
+    });
   },
 
   _onResultRow: function (row) {
