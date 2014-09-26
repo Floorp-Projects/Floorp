@@ -11,10 +11,12 @@ var loop = loop || {};
 loop.conversation = (function(mozL10n) {
   "use strict";
 
-  var sharedViews = loop.shared.views,
-      sharedModels = loop.shared.models;
+  var sharedViews = loop.shared.views;
+  var sharedMixins = loop.shared.mixins;
+  var sharedModels = loop.shared.models;
 
   var IncomingCallView = React.createClass({
+    mixins: [sharedMixins.DropdownMenuMixin],
 
     propTypes: {
       model: React.PropTypes.object.isRequired,
@@ -23,23 +25,9 @@ loop.conversation = (function(mozL10n) {
 
     getDefaultProps: function() {
       return {
-        showDeclineMenu: false,
+        showMenu: false,
         video: true
       };
-    },
-
-    getInitialState: function() {
-      return {showDeclineMenu: this.props.showDeclineMenu};
-    },
-
-    componentDidMount: function() {
-      window.addEventListener("click", this.clickHandler);
-      window.addEventListener("blur", this._hideDeclineMenu);
-    },
-
-    componentWillUnmount: function() {
-      window.removeEventListener("click", this.clickHandler);
-      window.removeEventListener("blur", this._hideDeclineMenu);
     },
 
     clickHandler: function(e) {
@@ -65,15 +53,6 @@ loop.conversation = (function(mozL10n) {
       /* Prevent event propagation
        * stop the click from reaching parent element */
       return false;
-    },
-
-    _toggleDeclineMenu: function() {
-      var currentState = this.state.showDeclineMenu;
-      this.setState({showDeclineMenu: !currentState});
-    },
-
-    _hideDeclineMenu: function() {
-      this.setState({showDeclineMenu: false});
     },
 
     /*
@@ -109,16 +88,13 @@ loop.conversation = (function(mozL10n) {
 
     render: function() {
       /* jshint ignore:start */
-      var btnClassAccept = "btn btn-accept";
-      var btnClassDecline = "btn btn-error btn-decline";
-      var conversationPanelClass = "incoming-call";
       var dropdownMenuClassesDecline = React.addons.classSet({
         "native-dropdown-menu": true,
         "conversation-window-dropdown": true,
-        "visually-hidden": !this.state.showDeclineMenu
+        "visually-hidden": !this.state.showMenu
       });
       return (
-        <div className={conversationPanelClass}>
+        <div className="incoming-call">
           <h2>{mozL10n.get("incoming_call_title2")}</h2>
           <div className="btn-group incoming-call-action-group">
 
@@ -128,13 +104,11 @@ loop.conversation = (function(mozL10n) {
               <div className="btn-group-chevron">
                 <div className="btn-group">
 
-                  <button className={btnClassDecline}
+                  <button className="btn btn-decline"
                           onClick={this._handleDecline}>
                     {mozL10n.get("incoming_call_cancel_button")}
                   </button>
-                  <div className="btn-chevron"
-                       onClick={this._toggleDeclineMenu}>
-                  </div>
+                  <div className="btn-chevron" onClick={this.toggleDropdownMenu} />
                 </div>
 
                 <ul className={dropdownMenuClassesDecline}>
