@@ -51,7 +51,7 @@ interface nsITranslationNodeList;
 interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 
-[scriptable, uuid(669095d8-1b96-472f-a48d-022adde26cfd)]
+[scriptable, uuid(ed12c067-506b-4b10-9853-d4bba5c1bb6c)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1472,6 +1472,13 @@ interface nsIDOMWindowUtils : nsISupports {
    * Get internal id of the stored blob, file or file handle.
    */
   [implicit_jscontext] long long getFileId(in jsval aFile);
+
+  /**
+   * Get internal file path of the stored file or file handle.
+   *
+   * TODO: File handle objects are actually not supported at the moment.
+   */
+  [implicit_jscontext] AString getFilePath(in jsval aFile);
 
   /**
    * Get file ref count info for given database and file id.

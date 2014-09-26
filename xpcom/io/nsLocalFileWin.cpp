@@ -605,12 +605,21 @@ struct PRFilePrivate
 // copied from nsprpub/pr/src/{io/prfile.c | md/windows/w95io.c} :
 // PR_Open and _PR_MD_OPEN
 nsresult
-OpenFile(const nsAFlatString& aName, int aOsflags, int aMode, PRFileDesc** aFd)
+OpenFile(const nsAFlatString& aName,
+         int aOsflags,
+         int aMode,
+         bool aShareDelete,
+         PRFileDesc** aFd)
 {
   int32_t access = 0;
 
+  int32_t shareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
   int32_t disposition = 0;
   int32_t attributes = 0;
+
+  if (aShareDelete) {
+    shareMode |= FILE_SHARE_DELETE;
+  }
 
   if (aOsflags & PR_SYNC) {
     attributes = FILE_FLAG_WRITE_THROUGH;
@@ -654,8 +663,7 @@ OpenFile(const nsAFlatString& aName, int aOsflags, int aMode, PRFileDesc** aFd)
     attributes |= FILE_ATTRIBUTE_READONLY;
   }
 
-  HANDLE file = ::CreateFileW(aName.get(), access,
-                              FILE_SHARE_READ | FILE_SHARE_WRITE,
+  HANDLE file = ::CreateFileW(aName.get(), access, shareMode,
                               nullptr, disposition, attributes, nullptr);
 
   if (file == INVALID_HANDLE_VALUE) {
@@ -1257,12 +1265,12 @@ NS_IMETHODIMP
 nsLocalFile::OpenNSPRFileDesc(int32_t aFlags, int32_t aMode,
                               PRFileDesc** aResult)
 {
-  nsresult rv = Resolve();
+  nsresult rv = OpenNSPRFileDescMaybeShareDelete(aFlags, aMode, false, aResult);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  return OpenFile(mResolvedPath, aFlags, aMode, aResult);
+  return NS_OK;
 }
 
 
@@ -1359,7 +1367,7 @@ nsLocalFile::Create(uint32_t aType, uint32_t aAttributes)
     PRFileDesc* file;
     rv = OpenFile(mResolvedPath,
                   PR_RDONLY | PR_CREATE_FILE | PR_APPEND | PR_EXCL,
-                  aAttributes, &file);
+                  aAttributes, false, &file);
     if (file) {
       PR_Close(file);
     }
@@ -1459,6 +1467,20 @@ nsLocalFile::AppendInternal(const nsAFlatString& aNode,
   mWorkingPath.Append(aNode);
 
   return NS_OK;
+}
+
+nsresult
+nsLocalFile::OpenNSPRFileDescMaybeShareDelete(int32_t aFlags,
+                                              int32_t aMode,
+                                              bool aShareDelete,
+                                              PRFileDesc** aResult)
+{
+  nsresult rv = Resolve();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return OpenFile(mResolvedPath, aFlags, aMode, aShareDelete, aResult);
 }
 
 #define TOUPPER(u) (((u) >= L'a' && (u) <= L'z') ? \
@@ -1803,6 +1825,19 @@ nsLocalFile::SetShortcut(nsIFile* aTargetFile,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsLocalFile::OpenNSPRFileDescShareDelete(int32_t aFlags,
+                                         int32_t aMode,
+                                         PRFileDesc** aResult)
+{
+  nsresult rv = OpenNSPRFileDescMaybeShareDelete(aFlags, aMode, true, aResult);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return NS_OK;
 }
 
 /**
@@ -2825,7 +2860,7 @@ nsLocalFile::IsWritable(bool* aIsWritable)
   // we can open the file with write access.
   if (*aIsWritable) {
     PRFileDesc* file;
-    rv = OpenFile(mResolvedPath, PR_WRONLY, 0, &file);
+    rv = OpenFile(mResolvedPath, PR_WRONLY, 0, false, &file);
     if (NS_SUCCEEDED(rv)) {
       PR_Close(file);
     } else if (rv == NS_ERROR_FILE_ACCESS_DENIED) {

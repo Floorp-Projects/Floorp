@@ -40,6 +40,11 @@
     }
 
     function runTests() {
+      function done() {
+        SpecialPowers.removePermission("browser", document);
+        SimpleTest.finish();
+      }
+
       ok("Browser prefs set.");
 
       let iframe = document.createElement("iframe");
@@ -49,6 +54,8 @@
 
       iframe.addEventListener("mozbrowserloadend", function() {
         ok(true, "Got iframe load event.");
+
+        const blobString = "this is a great success!";
 
         const messages = [
           "hi!",
@@ -60,6 +67,8 @@
           false,
           null,
           0,
+
+          // Make sure this one is always last.
           new Blob(["this ", "is ", "a ", "great ", "success!"],
                    {"type" : "text\/plain"}),
         ];
@@ -67,15 +76,45 @@
 
         let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
         mm.addMessageListener("test:ipcClonedMessage", function(message) {
-          // We need to wrap to access message.json, and unwrap to do the
-          // identity check.
-          is(SpecialPowers.unwrap(SpecialPowers.wrap(message).json),
+          let data = message.json;
+
+          if (data instanceof Blob) {
+            is(receivedMessageIndex, messages.length - 1, "Blob is last");
+            is (data.size,
+                messages[receivedMessageIndex].size,
+                "Correct blob size");
+            is (data.type,
+                messages[receivedMessageIndex].type,
+                "Correct blob type");
+
+            let result1, result2;
+
+            let reader1 = new FileReader();
+            reader1.onload = function() {
+              result1 = reader1.result == blobString ? reader1.result : "bad1";
+              if (result2) {
+                is(result1, result2, "Same results");
+                done();
+              }
+            };
+
+            let reader2 = new FileReader();
+            reader2.onload = function() {
+              result2 = reader2.result == blobString ? reader2.result : "bad2";
+              if (result1) {
+                is(result1, result2, "Same results");
+                done();
+              }
+            };
+
+            reader1.readAsText(data);
+            reader2.readAsText(messages[receivedMessageIndex]);
+            return;
+          }
+
+          is(message.json,
              messages[receivedMessageIndex++],
              "Got correct round-tripped response");
-          if (receivedMessageIndex == messages.length) {
-            SpecialPowers.removePermission("browser", document);
-            SimpleTest.finish();
-          }
         });
         mm.loadFrameScript("data:,(" + childFrameScript.toString() + ")();",
                            false);

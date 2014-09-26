@@ -29,10 +29,21 @@
 
       let request = indexedDB.open(name, { version: version,
                                            storage: "persistent" });
+      request.onerror = grabEventAndContinueHandler;
+      request.onupgradeneeded = unexpectedSuccessHandler;
+      request.onsuccess = unexpectedSuccessHandler;
+      let event = yield undefined;
+
+      is(event.type, "error", "Got error event");
+      is(event.target, request, "Got correct target");
+      is(event.target.error.name, "UnknownError", "Got correct error name");
+      event.preventDefault();
+
+      request = indexedDB.open(name, { version: version });
       request.onerror = errorHandler;
       request.onupgradeneeded = grabEventAndContinueHandler;
       request.onsuccess = grabEventAndContinueHandler;
-      let event = yield undefined;
+      event = yield undefined;
 
       is(event.type, "upgradeneeded", "Got correct event type");
 
@@ -103,6 +114,6 @@
 
 </head>
 
-<body onload="runTest();"></body>
+<body onload="runTest(true);"></body>
 
 </html>

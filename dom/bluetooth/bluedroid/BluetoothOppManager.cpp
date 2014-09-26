@@ -14,6 +14,7 @@
 #include "ObexBase.h"
 
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
+#include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
