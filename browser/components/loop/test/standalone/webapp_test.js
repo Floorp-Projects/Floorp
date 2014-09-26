@@ -196,14 +196,14 @@ describe("loop.webapp", function() {
               sandbox.stub(notifications, "errorL10n");
             });
 
-            it("should display the FailedConversationView", function() {
+            it("should display the StartConversationView", function() {
               ocView._websocket.trigger("progress", {
                 state: "terminated",
                 reason: "reject"
               });
 
               TestUtils.findRenderedComponentWithType(ocView,
-                loop.webapp.FailedConversationView);
+                loop.webapp.StartConversationView);
             });
 
             it("should display an error message if the reason is not 'cancel'",
@@ -271,14 +271,14 @@ describe("loop.webapp", function() {
       });
 
       describe("call:outgoing", function() {
-        it("should display FailedConversationView if session token is missing",
+        it("should set display the StartConversationView if session token is missing",
           function() {
             conversation.set("loopToken", "");
 
             ocView.startCall();
 
             TestUtils.findRenderedComponentWithType(ocView,
-              loop.webapp.FailedConversationView);
+              loop.webapp.StartConversationView);
           });
 
         it("should notify the user if session token is missing", function() {
@@ -400,11 +400,11 @@ describe("loop.webapp", function() {
             conversation.set("loopToken", "");
           });
 
-          it("should display the FailedConversationView", function() {
+          it("should set display the StartConversationView", function() {
             conversation.setupOutgoingCall();
 
             TestUtils.findRenderedComponentWithType(ocView,
-              loop.webapp.FailedConversationView);
+              loop.webapp.StartConversationView);
           });
 
           it("should display an error", function() {
@@ -416,12 +416,13 @@ describe("loop.webapp", function() {
 
         describe("Has loop token", function() {
           beforeEach(function() {
+            conversation.set("selectedCallType", "audio-video");
             sandbox.stub(conversation, "outgoing");
           });
 
           it("should call requestCallInfo on the client",
             function() {
-              conversation.setupOutgoingCall("audio-video");
+              conversation.setupOutgoingCall();
 
               sinon.assert.calledOnce(client.requestCallInfo);
               sinon.assert.calledWith(client.requestCallInfo, "fakeToken",
@@ -439,14 +440,14 @@ describe("loop.webapp", function() {
                   loop.webapp.CallUrlExpiredView);
               });
 
-            it("should set display the FailedConversationView on any other error",
+            it("should set display the StartConversationView on any other error",
                function() {
                 client.requestCallInfo.callsArgWith(2, {errno: 104});
 
                 conversation.setupOutgoingCall();
 
                 TestUtils.findRenderedComponentWithType(ocView,
-                  loop.webapp.FailedConversationView);
+                  loop.webapp.StartConversationView);
               });
 
             it("should notify the user on any other error", function() {
@@ -584,7 +585,8 @@ describe("loop.webapp", function() {
 
   describe("StartConversationView", function() {
     describe("#initiate", function() {
-      var conversation, view, fakeSubmitEvent, requestCallUrlInfo;
+      var conversation, setupOutgoingCall, view, fakeSubmitEvent,
+          requestCallUrlInfo;
 
       beforeEach(function() {
         conversation = new sharedModels.ConversationModel({}, {
@@ -592,6 +594,7 @@ describe("loop.webapp", function() {
         });
 
         fakeSubmitEvent = {preventDefault: sinon.spy()};
+        setupOutgoingCall = sinon.stub(conversation, "setupOutgoingCall");
 
         var standaloneClientStub = {
           requestCallUrlInfo: function(token, cb) {
@@ -602,7 +605,7 @@ describe("loop.webapp", function() {
 
         view = React.addons.TestUtils.renderIntoDocument(
             loop.webapp.StartConversationView({
-              conversation: conversation,
+              model: conversation,
               notifications: notifications,
               client: standaloneClientStub
             })
@@ -611,24 +614,20 @@ describe("loop.webapp", function() {
 
       it("should start the audio-video conversation establishment process",
         function() {
-          var setupOutgoingCall = sinon.stub(conversation, "setupOutgoingCall");
-
           var button = view.getDOMNode().querySelector(".btn-accept");
           React.addons.TestUtils.Simulate.click(button);
 
           sinon.assert.calledOnce(setupOutgoingCall);
-          sinon.assert.calledWithExactly(setupOutgoingCall, "audio-video");
+          sinon.assert.calledWithExactly(setupOutgoingCall);
       });
 
       it("should start the audio-only conversation establishment process",
         function() {
-          var setupOutgoingCall = sinon.stub(conversation, "setupOutgoingCall");
-
           var button = view.getDOMNode().querySelector(".start-audio-only-call");
           React.addons.TestUtils.Simulate.click(button);
 
           sinon.assert.calledOnce(setupOutgoingCall);
-          sinon.assert.calledWithExactly(setupOutgoingCall, "audio");
+          sinon.assert.calledWithExactly(setupOutgoingCall);
         });
 
       it("should disable audio-video button once session is initiated",
@@ -651,35 +650,35 @@ describe("loop.webapp", function() {
            expect(button.disabled).to.eql(true);
          });
 
-      it("should set selectedCallType to audio", function() {
-        conversation.set("loopToken", "fake");
+         it("should set selectedCallType to audio", function() {
+           conversation.set("loopToken", "fake");
 
-        var button = view.getDOMNode().querySelector(".start-audio-only-call");
-        React.addons.TestUtils.Simulate.click(button);
+           var button = view.getDOMNode().querySelector(".start-audio-only-call");
+           React.addons.TestUtils.Simulate.click(button);
 
-        expect(conversation.get("selectedCallType")).to.eql("audio");
+           expect(conversation.get("selectedCallType")).to.eql("audio");
+         });
+
+         it("should set selectedCallType to audio-video", function() {
+           conversation.set("loopToken", "fake");
+
+           var button = view.getDOMNode().querySelector(".standalone-call-btn-video-icon");
+           React.addons.TestUtils.Simulate.click(button);
+
+           expect(conversation.get("selectedCallType")).to.eql("audio-video");
+         });
+
+      it("should set state.urlCreationDateString to a locale date string",
+         function() {
+        // wrap in a jquery object because text is broken up
+        // into several span elements
+        var date = new Date(0);
+        var options = {year: "numeric", month: "long", day: "numeric"};
+        var timestamp = date.toLocaleDateString(navigator.language, options);
+
+        expect(view.state.urlCreationDateString).to.eql(timestamp);
       });
 
-      it("should set selectedCallType to audio-video", function() {
-        conversation.set("loopToken", "fake");
-
-        var button = view.getDOMNode().querySelector(".standalone-call-btn-video-icon");
-        React.addons.TestUtils.Simulate.click(button);
-
-        expect(conversation.get("selectedCallType")).to.eql("audio-video");
-      });
-
-      // XXX this test breaks while the feature actually works; find a way to
-      // test this properly.
-      it.skip("should set state.urlCreationDateString to a locale date string",
-        function() {
-          var date = new Date();
-          var options = {year: "numeric", month: "long", day: "numeric"};
-          var timestamp = date.toLocaleDateString(navigator.language, options);
-          var dateElem = view.getDOMNode().querySelector(".call-url-date");
-
-          expect(dateElem.textContent).to.eql(timestamp);
-        });
     });
 
     describe("Events", function() {
@@ -698,7 +697,7 @@ describe("loop.webapp", function() {
 
         view = React.addons.TestUtils.renderIntoDocument(
             loop.webapp.StartConversationView({
-              conversation: conversation,
+              model: conversation,
               notifications: notifications,
               client: {requestCallUrlInfo: requestCallUrlInfo}
             })
@@ -783,7 +782,7 @@ describe("loop.webapp", function() {
 
         view = React.addons.TestUtils.renderIntoDocument(
           loop.webapp.StartConversationView({
-            conversation: conversation,
+            model: conversation,
             notifications: notifications,
             client: {requestCallUrlInfo: requestCallUrlInfo}
           })
@@ -799,7 +798,7 @@ describe("loop.webapp", function() {
         localStorage.setItem("has-seen-tos", "true");
         view = React.addons.TestUtils.renderIntoDocument(
           loop.webapp.StartConversationView({
-            conversation: conversation,
+            model: conversation,
             notifications: notifications,
             client: {requestCallUrlInfo: requestCallUrlInfo}
           })
@@ -889,7 +888,7 @@ describe("loop.webapp", function() {
 
         view = React.addons.TestUtils.renderIntoDocument(
             loop.webapp.StartConversationView({
-              conversation: conversation,
+              model: conversation,
               notifications: notifications,
               client: standaloneClientStub
             })
@@ -1004,7 +1003,7 @@ describe("loop.webapp", function() {
         before(function() {
           view = React.addons.TestUtils.renderIntoDocument(
             loop.webapp.StartConversationView({
-              conversation: model,
+              model: model,
               notifications: notifications,
               client: {requestCallUrlInfo: sandbox.stub()}
             })
