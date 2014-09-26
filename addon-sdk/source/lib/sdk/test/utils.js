@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 'use strict';
 
 module.metadata = {
@@ -10,6 +9,9 @@ module.metadata = {
 
 const { defer } = require('../core/promise');
 const { setInterval, clearInterval } = require('../timers');
+const { getTabs, closeTab } = require("../tabs/utils");
+const { windows: getWindows } = require("../window/utils");
+const { close: closeWindow } = require("../window/helpers");
 
 function getTestNames (exports)
   Object.keys(exports).filter(name => /^test/.test(name))
@@ -107,3 +109,19 @@ function waitUntil (predicate, delay) {
   return promise;
 }
 exports.waitUntil = waitUntil;
+
+let cleanUI = function cleanUI() {
+  let { promise, resolve } = defer();
+
+  let windows = getWindows(null, { includePrivate: true });
+  if (windows.length > 1) {
+    return closeWindow(windows[1]).then(cleanUI);
+  }
+
+  getTabs(windows[0]).slice(1).forEach(closeTab);
+
+  resolve();
+
+  return promise;
+}
+exports.cleanUI = cleanUI;

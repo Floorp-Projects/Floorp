@@ -165,8 +165,7 @@ exports["test require#resolve with relative, dependencies"] = function(assert, d
     let program = main(loader);
     let fixtureRoot = program.require.resolve("./").replace(/native-addon-test\/(.*)/, "") + "native-addon-test/";
 
-    assert.ok(/^resource:\/\/[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}-at-jetpack\/addon-sdk\/tests\/fixtures\/native-addon-test\/$/.test(fixtureRoot),
-      "correct resolution root");
+    assert.equal(root + "/fixtures/native-addon-test/", fixtureRoot, "correct resolution root");
     assert.equal(program.require.resolve("test-math"), fixtureRoot + "node_modules/test-math/index.js", "works with node_modules");
     assert.equal(program.require.resolve("./newmodule"), fixtureRoot + "newmodule/lib/file.js", "works with directory mains");
     assert.equal(program.require.resolve("./dir/a"), fixtureRoot + "dir/a.js", "works with normal relative module lookups");

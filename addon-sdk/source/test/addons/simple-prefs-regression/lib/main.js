@@ -6,27 +6,24 @@
 const { Cu } = require('chrome');
 const sp = require('sdk/simple-prefs');
 const app = require('sdk/system/xul-app');
-const self = require('sdk/self');
 const tabs = require('sdk/tabs');
-const { preferencesBranch } = require('sdk/self');
-
+const { preferencesBranch, id } = require('sdk/self');
+const { getAddonByID } = require('sdk/addon/manager');
 const { AddonManager } = Cu.import('resource://gre/modules/AddonManager.jsm', {});
 
-exports.testRegression = function(assert) {
-  assert.equal(self.preferencesBranch, self.id, 'preferencesBranch returns id here');
+exports.testRegression = (assert) => {
+  assert.equal(preferencesBranch, id, 'preferencesBranch returns id here');
 }
 
-exports.testDefaultValues = function (assert) {
+exports.testDefaultValues = (assert) => {
   assert.equal(sp.prefs.myHiddenInt, 5, 'myHiddenInt default is 5');
   assert.equal(sp.prefs.myInteger, 8, 'myInteger default is 8');
   assert.equal(sp.prefs.somePreference, 'TEST', 'somePreference default is correct');
 }
 
-exports.testOptionsType = function(assert, done) {
-  AddonManager.getAddonByID(self.id, function(aAddon) {
-    assert.equal(aAddon.optionsType, AddonManager.OPTIONS_TYPE_INLINE, 'options type is inline');
-    done();
-  });
+exports.testOptionsType = function*(assert) {
+  let addon = yield getAddonByID(id);
+  assert.equal(addon.optionsType, AddonManager.OPTIONS_TYPE_INLINE, 'options type is inline');
 }
 
 if (app.is('Firefox')) {
@@ -38,7 +35,7 @@ if (app.is('Firefox')) {
             contentScriptWhen: 'end',
           	contentScript: 'function onLoad() {\n' +
                              'unsafeWindow.removeEventListener("load", onLoad, false);\n' +
-                             'AddonManager.getAddonByID("' + self.id + '", function(aAddon) {\n' +
+                             'AddonManager.getAddonByID("' + id + '", function(aAddon) {\n' +
                                'unsafeWindow.gViewController.viewObjects.detail.node.addEventListener("ViewChanged", function whenViewChanges() {\n' +
                                  'unsafeWindow.gViewController.viewObjects.detail.node.removeEventListener("ViewChanged", whenViewChanges, false);\n' +
                                  'setTimeout(function() {\n' + // TODO: figure out why this is necessary..
@@ -70,13 +67,13 @@ if (app.is('Firefox')) {
             onMessage: function(msg) {
               // test somePreference
               assert.equal(msg.somePreference.type, 'string', 'some pref is a string');
-              assert.equal(msg.somePreference.pref, 'extensions.'+self.preferencesBranch+'.somePreference', 'somePreference path is correct');
+              assert.equal(msg.somePreference.pref, 'extensions.'+preferencesBranch+'.somePreference', 'somePreference path is correct');
               assert.equal(msg.somePreference.title, 'some-title', 'somePreference title is correct');
               assert.equal(msg.somePreference.desc, 'Some short description for the preference', 'somePreference description is correct');
 
               // test myInteger
               assert.equal(msg.myInteger.type, 'integer', 'myInteger is a int');
-              assert.equal(msg.myInteger.pref, 'extensions.'+self.preferencesBranch+'.myInteger', 'extensions.test-simple-prefs.myInteger');
+              assert.equal(msg.myInteger.pref, 'extensions.'+preferencesBranch+'.myInteger', 'extensions.test-simple-prefs.myInteger');
               assert.equal(msg.myInteger.title, 'my-int', 'myInteger title is correct');
               assert.equal(msg.myInteger.desc, 'How many of them we have.', 'myInteger desc is correct');
 

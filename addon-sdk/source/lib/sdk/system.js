@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 'use strict';
 
 module.metadata = {
@@ -12,6 +11,7 @@ const { Cc, Ci, CC } = require('chrome');
 const options = require('@loader/options');
 const file = require('./io/file');
 const runtime = require("./system/runtime");
+const { when: unload } = require("./system/unload");
 
 const appStartup = Cc['@mozilla.org/toolkit/app-startup;1'].
                    getService(Ci.nsIAppStartup);
@@ -61,8 +61,9 @@ exports.exit = function exit(code) {
     return;
   }
 
-  // This is used by 'cfx' to find out exit code.
-  if ('resultFile' in options && options.resultFile) {
+  let resultsFile = 'resultFile' in options && options.resultFile;
+  function unloader() {
+    // This is used by 'cfx' to find out exit code.
     let mode = PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE;
     let stream = openFile(options.resultFile, mode);
     let status = code ? 'FAIL' : 'OK';
@@ -74,6 +75,16 @@ exports.exit = function exit(code) {
   if (code == 0) {
     forcedExit = true;
   }
+
+  // Bug 856999: Prevent automatic kill of Firefox when running tests
+  if (options.noQuit) {
+    if (resultsFile) {
+      unload(unloader);
+    }
+    return;
+  }
+
+  unloader();
   appStartup.quit(code ? E_ATTEMPT : E_FORCE);
 };
 
@@ -109,7 +120,7 @@ exports.pathFor = function pathFor(id) {
  */
 exports.platform = runtime.OS.toLowerCase();
 
-const [, architecture, compiler] = runtime.XPCOMABI ? 
+const [, architecture, compiler] = runtime.XPCOMABI ?
                                    runtime.XPCOMABI.match(/^([^-]*)-(.*)$/) :
                                    [, null, null];
 

@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 module.metadata = {
@@ -15,16 +14,11 @@ function MatchPattern(pattern) {
   if (cache[pattern]) return cache[pattern];
 
   if (typeof pattern.test == "function") {
-
     // For compatibility with -moz-document rules, we require the RegExp's
     // global, ignoreCase, and multiline flags to be set to false.
     if (pattern.global) {
       throw new Error("A RegExp match pattern cannot be set to `global` " +
                       "(i.e. //g).");
-    }
-    if (pattern.ignoreCase) {
-      throw new Error("A RegExp match pattern cannot be set to `ignoreCase` " +
-                      "(i.e. //i).");
     }
     if (pattern.multiline) {
       throw new Error("A RegExp match pattern cannot be set to `multiline` " +
@@ -71,7 +65,6 @@ function MatchPattern(pattern) {
 }
 
 MatchPattern.prototype = {
-
   test: function MatchPattern_test(urlStr) {
     try {
       var url = URL(urlStr);
@@ -88,13 +81,13 @@ MatchPattern.prototype = {
     // Assuming most URLs don't match most match patterns, we call `test` for
     // speed when determining whether or not the URL matches, then call `exec`
     // for the small subset that match to make sure the entire URL matches.
-    //
     if (this.regexp && this.regexp.test(urlStr) &&
         this.regexp.exec(urlStr)[0] == urlStr)
       return true;
 
     if (this.anyWebPage && /^(https?|ftp)$/.test(url.scheme))
       return true;
+
     if (this.exactURL && this.exactURL == urlStr)
       return true;
 
@@ -107,6 +100,7 @@ MatchPattern.prototype = {
          (url.host === this.domain ||
           url.host.slice(-this.domain.length - 1) === "." + this.domain))
       return true;
+
     if (this.urlPrefix && 0 == urlStr.indexOf(this.urlPrefix))
       return true;
 
@@ -114,7 +108,6 @@ MatchPattern.prototype = {
   },
 
   toString: function () '[object MatchPattern]'
-
 };
 
 exports.MatchPattern = MatchPattern;

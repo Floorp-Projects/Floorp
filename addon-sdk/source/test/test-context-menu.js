@@ -10,6 +10,7 @@ require("sdk/context-menu");
 const { Loader } = require('sdk/test/loader');
 const timer = require("sdk/timers");
 const { merge } = require("sdk/util/object");
+const { defer } = require("sdk/core/promise");
 
 // These should match the same constants in the module.
 const ITEM_CLASS = "addon-context-menu-item";
@@ -2664,6 +2665,58 @@ exports.testItemNoData = function (assert, done) {
 }
 
 
+exports.testItemNoAccessKey = function (assert, done) {
+  let test = new TestHelper(assert, done);
+  let loader = test.newLoader();
+
+  let item1 = new loader.cm.Item({ label: "item 1" });
+  let item2 = new loader.cm.Item({ label: "item 2", accesskey: null });
+  let item3 = new loader.cm.Item({ label: "item 3", accesskey: undefined });
+
+  assert.equal(item1.accesskey, undefined, "Should be no defined image");
+  assert.equal(item2.accesskey, null, "Should be no defined image");
+  assert.equal(item3.accesskey, undefined, "Should be no defined image");
+
+  test.showMenu().
+  then((popup) => test.checkMenu([item1, item2, item3], [], [])).
+  then(test.done).
+  catch(assert.fail);
+}
+
+
+// Test accesskey support.
+exports.testItemAccessKey = function (assert, done) {
+  let test = new TestHelper(assert, done);
+  let loader = test.newLoader();
+
+  let item = new loader.cm.Item({ label: "item", accesskey: "i" });
+  assert.equal(item.accesskey, "i", "Should have set the image to i");
+
+  let menu = new loader.cm.Menu({ label: "menu", accesskey: "m", items: [
+    loader.cm.Item({ label: "subitem" })
+  ]});
+  assert.equal(menu.accesskey, "m", "Should have set the accesskey to m");
+
+  test.showMenu().then((popup) => {
+    test.checkMenu([item, menu], [], []);
+
+    let accesskey = "e";
+    menu.accesskey = item.accesskey = accesskey;
+    assert.equal(item.accesskey, accesskey, "Should have set the accesskey to " + accesskey);
+    assert.equal(menu.accesskey, accesskey, "Should have set the accesskey to " + accesskey);
+    test.checkMenu([item, menu], [], []);
+
+    item.accesskey = null;
+    menu.accesskey = null;
+    assert.equal(item.accesskey, null, "Should have set the accesskey to " + accesskey);
+    assert.equal(menu.accesskey, null, "Should have set the accesskey to " + accesskey);
+    test.checkMenu([item, menu], [], []);
+  }).
+  then(test.done).
+  catch(assert.fail);
+};
+
+
 // Tests that items without an image don't attempt to show one
 exports.testItemNoImage = function (assert, done) {
   let test = new TestHelper(assert, done);
@@ -3695,6 +3748,7 @@ function TestHelper(assert, done) {
                        getMostRecentWindow("navigator:browser");
   this.overflowThreshValue = require("sdk/preferences/service").
                              get(OVERFLOW_THRESH_PREF, OVERFLOW_THRESH_DEFAULT);
+  this.done = this.done.bind(this);
 }
 
 TestHelper.prototype = {
@@ -3753,6 +3807,20 @@ TestHelper.prototype = {
     if (itemType === "Item" || itemType === "Menu") {
       this.assert.equal(elt.getAttribute("label"), item.label,
                             "Item should have correct title");
+
+      // validate accesskey prop
+      if (item.accesskey) {
+        this.assert.equal(elt.getAttribute("accesskey"),
+                          item.accesskey,
+                          "Item should have correct accesskey");
+      }
+      else {
+        this.assert.equal(elt.getAttribute("accesskey"),
+                          "",
+                          "Item should not have accesskey");
+      }
+
+      // validate image prop
       if (typeof(item.image) === "string") {
         this.assert.equal(elt.getAttribute("image"), item.image,
                               "Item should have correct image");
@@ -4034,11 +4102,16 @@ TestHelper.prototype = {
   // menu is opened in the top-left corner.  onShowncallback is passed the
   // popup.
   showMenu: function(targetNode, onshownCallback) {
+    let { promise, resolve } = defer();
+
     function sendEvent() {
       this.delayedEventListener(this.browserWindow, "popupshowing",
         function (e) {
           let popup = e.target;
-          onshownCallback.call(this, popup);
+          if (onshownCallback) {
+            onshownCallback.call(this, popup);
+          }
+          resolve(popup);
         }, false);
 
       let rect = targetNode ?
@@ -4070,6 +4143,8 @@ TestHelper.prototype = {
     }
     else
       sendEvent.call(this);
+
+    return promise;
   },
 
   hideMenu: function(onhiddenCallback) {

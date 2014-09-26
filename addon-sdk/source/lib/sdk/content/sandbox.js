@@ -78,15 +78,6 @@ const WorkerSandbox = Class({
   },
 
   /**
-   * Tells if content script has at least one listener registered for one event,
-   * through `self.on('xxx', ...)`.
-   * /!\ Shouldn't be used. Implemented to avoid breaking context-menu API.
-   */
-  hasListenerFor: function hasListenerFor(name) {
-    return modelFor(this).hasListenerFor(name);
-  },
-
-  /**
    * Configures sandbox and loads content scripts into it.
    * @param {Worker} worker
    *    content worker
@@ -190,10 +181,9 @@ const WorkerSandbox = Class({
     let chromeAPI = createChromeAPI();
     let result = Cu.waiveXrays(ContentWorker).inject(content, chromeAPI, onEvent, options);
 
-    // Merge `emitToContent` and `hasListenerFor` into our private
-    // model of the WorkerSandbox so we can communicate with content
-    // script
-    merge(model, result);
+    // Merge `emitToContent` into our private model of the
+    // WorkerSandbox so we can communicate with content script
+    model.emitToContent = result;
 
     let console = new PlainTextConsole(null, getInnerId(window));
 
