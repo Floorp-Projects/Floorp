@@ -136,7 +136,7 @@ InterpolationQualityFromFilter(Filter aFilter)
     case Filter::POINT:
       return kCGInterpolationNone;
     case Filter::GOOD:
-      return kCGInterpolationLow;
+      return kCGInterpolationDefault;
   }
 }
 
