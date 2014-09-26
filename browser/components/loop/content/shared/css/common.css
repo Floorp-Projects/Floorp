@@ -137,9 +137,7 @@ p {
 
 .btn-cancel,
 .btn-error,
-.btn-decline,
 .btn-hangup,
-.btn-decline + .btn-chevron,
 .btn-error + .btn-chevron {
   background-color: #d74345;
   border: 1px solid #d74345;
@@ -147,9 +145,7 @@ p {
 
   .btn-cancel:hover,
   .btn-error:hover,
-  .btn-decline:hover,
   .btn-hangup:hover,
-  .btn-decline + .btn-chevron:hover,
   .btn-error + .btn-chevron:hover {
     background-color: #c53436;
     border: 1px solid #c53436;
@@ -157,9 +153,7 @@ p {
 
   .btn-cancel:active,
   .btn-error:active,
-  .btn-decline:active,
   .btn-hangup:active,
-  .btn-decline + .btn-chevron:active,
   .btn-error + .btn-chevron:active {
     background-color: #ae2325;
     border: 1px solid #ae2325;
@@ -188,7 +182,6 @@ p {
 }
 
 .btn-group-chevron .btn {
-  border-radius: 2px;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
   flex: 2;
@@ -376,7 +369,7 @@ p {
   padding: 20px 0;
   border: 1px solid #e7e7e7;
   box-shadow: 0 2px 0 rgba(0, 0, 0, .03);
-  margin: 2rem 0;
+  margin-bottom: 25px;
 }
 
 .info-panel h1 {
