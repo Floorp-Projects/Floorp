@@ -33,14 +33,7 @@
 #define TYPROTO_DESCR(obj) \
     UnsafeGetReservedSlot(obj, JS_TYPROTO_SLOT_DESCR)
 
-// Typed object slots
-
-#define TYPEDOBJ_BYTEOFFSET(obj) \
-    TO_INT32(UnsafeGetReservedSlot(obj, JS_BUFVIEW_SLOT_BYTEOFFSET))
-#define TYPEDOBJ_OWNER(obj) \
-    UnsafeGetReservedSlot(obj, JS_BUFVIEW_SLOT_OWNER)
-#define TYPEDOBJ_LENGTH(obj) \
-    TO_INT32(UnsafeGetReservedSlot(obj, JS_BUFVIEW_SLOT_LENGTH))
+// Other
 
 #define HAS_PROPERTY(obj, prop) \
     callFunction(std_Object_hasOwnProperty, obj, prop)
@@ -570,9 +563,9 @@ function StorageOfTypedObject(obj) {
       else
         byteLength = DESCR_SIZE(descr);
 
-      return { buffer: TYPEDOBJ_OWNER(obj),
+      return { buffer: TypedObjectBuffer(obj),
                byteLength: byteLength,
-               byteOffset: TYPEDOBJ_BYTEOFFSET(obj) };
+               byteOffset: TypedObjectByteOffset(obj) };
     }
   }
 
@@ -1185,7 +1178,7 @@ function MapTypedParImplDepth1(inArray, inArrayType, outArrayType, func) {
   // Below we will be adjusting offsets within the input to point at
   // successive entries; we'll need to know the offset of inArray
   // relative to its owner (which is often but not always 0).
-  const inBaseOffset = TYPEDOBJ_BYTEOFFSET(inArray);
+  const inBaseOffset = TypedObjectByteOffset(inArray);
 
   ForkJoin(mapThread, 0, slicesInfo.count, ForkJoinMode(mode), outArray);
   return outArray;
