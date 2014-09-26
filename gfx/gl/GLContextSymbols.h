@@ -503,6 +503,8 @@ struct GLContextSymbols
 
     typedef void (GLAPIENTRY * PFNGLGETINTEGERI_V) (GLenum param, GLuint index, GLint* values);
     PFNGLGETINTEGERI_V fGetIntegeri_v;
+    typedef void (GLAPIENTRY * PFNGLGETINTEGER64I_VPROC) (GLenum target, GLuint index, GLint64* data);
+    PFNGLGETINTEGER64I_VPROC fGetInteger64i_v;
 
     // EXT_transform_feedback only
     typedef void (GLAPIENTRY * PFNGLBINDBUFFEROFFSET) (GLenum target, GLuint index, GLuint buffer, GLintptr offset);

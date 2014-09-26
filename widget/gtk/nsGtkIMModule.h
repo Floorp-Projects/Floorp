@@ -69,6 +69,9 @@ public:
     void OnDestroyWindow(nsWindow* aWindow);
     // OnFocusChangeInGecko is a notification that an editor gets focus.
     void OnFocusChangeInGecko(bool aFocus);
+    // OnSelectionChange is a notification that selection (caret) is changed
+    // in the focused editor.
+    void OnSelectionChange(nsWindow* aCaller);
 
     // OnKeyEvent is called when aWindow gets a native key press event or a
     // native key release event.  If this returns TRUE, the key event was
@@ -79,12 +82,11 @@ public:
                       bool aKeyDownEventWasSent = false);
 
     // IME related nsIWidget methods.
-    nsresult CommitIMEComposition(nsWindow* aCaller);
+    nsresult EndIMEComposition(nsWindow* aCaller);
     void SetInputContext(nsWindow* aCaller,
                          const InputContext* aContext,
                          const InputContextAction* aAction);
     InputContext GetInputContext();
-    nsresult CancelIMEComposition(nsWindow* aCaller);
     void OnUpdateComposition();
 
     // If a software keyboard has been opened, this returns TRUE.
@@ -187,11 +189,6 @@ protected:
     // be processed as simple key event, this is set to TRUE by the commit
     // handler.
     bool mFilterKeyEvent;
-    // When mIgnoreNativeCompositionEvent is TRUE, all native composition
-    // should be ignored except that the compositon should be restarted in
-    // another content (nsIContent).  Don't refer this value directly, use
-    // ShouldIgnoreNativeCompositionEvent().
-    bool mIgnoreNativeCompositionEvent;
     // mKeyDownEventWasSent is used by OnKeyEvent() and
     // DispatchCompositionStart().  DispatchCompositionStart() dispatches
     // a keydown event if the composition start is caused by a native
@@ -288,8 +285,6 @@ protected:
 
     // Called before destroying the context to work around some platform bugs.
     void PrepareToDestroyContext(GtkIMContext *aContext);
-
-    bool ShouldIgnoreNativeCompositionEvent();
 
     /**
      *  WARNING:
