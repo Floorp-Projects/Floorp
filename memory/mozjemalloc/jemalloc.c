@@ -2558,63 +2558,6 @@ malloc_rtree_set(malloc_rtree_t *rtree, uintptr_t key, void *val)
 }
 #endif
 
-#if defined(MOZ_MEMORY_WINDOWS) || defined(JEMALLOC_USES_MAP_ALIGN)
-
-/* Allocate an aligned chunk while maintaining a 1:1 correspondence between
- * mmap and unmap calls.  This is important on Windows, but not elsewhere. */
-static void *
-chunk_alloc_mmap(size_t size)
-{
-	void *ret;
-#ifndef JEMALLOC_USES_MAP_ALIGN
-	size_t offset;
-#endif
-
-#ifdef JEMALLOC_USES_MAP_ALIGN
-	ret = pages_map_align(size, chunksize);
-#else
-	ret = pages_map(NULL, size);
-	if (ret == NULL)
-		goto RETURN;
-
-	offset = CHUNK_ADDR2OFFSET(ret);
-	if (offset != 0) {
-		/* Deallocate, then try to allocate at (ret + size - offset). */
-		pages_unmap(ret, size);
-		ret = pages_map((void *)((uintptr_t)ret + size - offset), size);
-		while (ret == NULL) {
-			/*
-			 * Over-allocate in order to map a memory region that
-			 * is definitely large enough.
-			 */
-			ret = pages_map(NULL, size + chunksize);
-			if (ret == NULL)
-				goto RETURN;
-			/*
-			 * Deallocate, then allocate the correct size, within
-			 * the over-sized mapping.
-			 */
-			offset = CHUNK_ADDR2OFFSET(ret);
-			pages_unmap(ret, size + chunksize);
-			if (offset == 0)
-				ret = pages_map(ret, size);
-			else {
-				ret = pages_map((void *)((uintptr_t)ret +
-				    chunksize - offset), size);
-			}
-			/*
-			 * Failure here indicates a race with another thread, so
-			 * try again.
-			 */
-		}
-	}
-RETURN:
-#endif
-	return (ret);
-}
-
-#else /* ! (defined(MOZ_MEMORY_WINDOWS) || defined(JEMALLOC_USES_MAP_ALIGN) */
-
 /* pages_trim, chunk_alloc_mmap_slow and chunk_alloc_mmap were cherry-picked
  * from upstream jemalloc 3.4.1 to fix Mozilla bug 956501. */
 
@@ -2629,17 +2572,32 @@ RETURN:
 static void *
 pages_trim(void *addr, size_t alloc_size, size_t leadsize, size_t size)
 {
-        size_t trailsize;
         void *ret = (void *)((uintptr_t)addr + leadsize);
 
         assert(alloc_size >= leadsize + size);
-        trailsize = alloc_size - leadsize - size;
+#ifdef MOZ_MEMORY_WINDOWS
+        {
+                void *new_addr;
 
-        if (leadsize != 0)
-                pages_unmap(addr, leadsize);
-        if (trailsize != 0)
-                pages_unmap((void *)((uintptr_t)ret + size), trailsize);
-        return (ret);
+                pages_unmap(addr, alloc_size);
+                new_addr = pages_map(ret, size);
+                if (new_addr == ret)
+                        return (ret);
+                if (new_addr)
+                        pages_unmap(new_addr, size);
+                return (NULL);
+        }
+#else
+        {
+                size_t trailsize = alloc_size - leadsize - size;
+
+                if (leadsize != 0)
+                        pages_unmap(addr, leadsize);
+                if (trailsize != 0)
+                        pages_unmap((void *)((uintptr_t)ret + size), trailsize);
+                return (ret);
+        }
+#endif
 }
 
 static void *
@@ -2668,6 +2626,9 @@ chunk_alloc_mmap_slow(size_t size, size_t alignment)
 static void *
 chunk_alloc_mmap(size_t size)
 {
+#ifdef JEMALLOC_USES_MAP_ALIGN
+        return pages_map_align(size, chunksize);
+#else
         void *ret;
         size_t offset;
 
@@ -2695,9 +2656,8 @@ chunk_alloc_mmap(size_t size)
 
         assert(ret != NULL);
         return (ret);
+#endif
 }
-
-#endif /* defined(MOZ_MEMORY_WINDOWS) || defined(JEMALLOC_USES_MAP_ALIGN) */
 
 static void *
 chunk_alloc(size_t size, bool zero)
