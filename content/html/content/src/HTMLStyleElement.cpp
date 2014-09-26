@@ -156,9 +156,19 @@ HTMLStyleElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 void
 HTMLStyleElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
-  nsCOMPtr<nsIDocument> oldDoc = GetCurrentDoc();
+  nsCOMPtr<nsIDocument> oldDoc = GetUncomposedDoc();
+  nsCOMPtr<nsIDocument> oldComposedDoc = GetComposedDoc();
   ShadowRoot* oldShadow = GetContainingShadow();
+
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+
+  if (GetContainingShadow() && !oldComposedDoc) {
+    // The style is in a shadow tree and was already not
+    // in the composed document. Thus the sheet does not
+    // need to be updated.
+    return;
+  }
+
   UpdateStyleSheetInternal(oldDoc, oldShadow);
 }
 
