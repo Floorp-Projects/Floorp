@@ -56,6 +56,8 @@ EncodingUtils::FindEncodingForLabelNoReplacement(const nsACString& aLabel,
 bool
 EncodingUtils::IsAsciiCompatible(const nsACString& aPreferredName)
 {
+  // HZ and UTF-7 are no longer in mozilla-central, but keeping them here
+  // just in case for the benefit of comm-central.
   return !(aPreferredName.LowerCaseEqualsLiteral("utf-16") ||
            aPreferredName.LowerCaseEqualsLiteral("utf-16be") ||
            aPreferredName.LowerCaseEqualsLiteral("utf-16le") ||
