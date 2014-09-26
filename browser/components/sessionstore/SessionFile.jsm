@@ -265,7 +265,6 @@ let SessionFileInternal = {
     if (this._isClosed) {
       return Promise.reject(new Error("SessionFile is closed"));
     }
-    let refObj = {};
 
     let isFinalWrite = false;
     if (Services.startup.shuttingDown) {
@@ -274,50 +273,62 @@ let SessionFileInternal = {
       isFinalWrite = this._isClosed = true;
     }
 
-    let deferredWritten = Promise.defer();
-    return Task.spawn(function* task() {
-      TelemetryStopwatch.start("FX_SESSION_RESTORE_WRITE_FILE_LONGEST_OP_MS", refObj);
+    let refObj = {};
+    let name = "FX_SESSION_RESTORE_WRITE_FILE_LONGEST_OP_MS";
 
-      // Ensure that we can write sessionstore.js cleanly before the profile
-      // becomes unaccessible.
-      AsyncShutdown.profileBeforeChange.addBlocker(
-        "SessionFile: Finish writing Session Restore data",
-        deferredWritten.promise
-      );
+    let promise = new Promise(resolve => {
+      // Start measuring main thread impact.
+      TelemetryStopwatch.start(name, refObj);
+
+      let performShutdownCleanup = isFinalWrite &&
+        !sessionStartup.isAutomaticRestoreEnabled();
+
+      let options = {isFinalWrite, performShutdownCleanup};
 
       try {
-        let performShutdownCleanup = isFinalWrite &&
-          !sessionStartup.isAutomaticRestoreEnabled();
-        let options = {
-          isFinalWrite: isFinalWrite,
-          performShutdownCleanup: performShutdownCleanup
-        };
-        let promise = SessionWorker.post("write", [aData, options]);
-        // At this point, we measure how long we stop the main thread
-        TelemetryStopwatch.finish("FX_SESSION_RESTORE_WRITE_FILE_LONGEST_OP_MS", refObj);
-
-        // Now wait for the result and record how long the write took
-        let msg = yield promise;
-        this._recordTelemetry(msg.telemetry);
-
-        if (msg.result.upgradeBackup) {
-          // We have just completed a backup-on-upgrade, store the information
-          // in preferences.
-          Services.prefs.setCharPref(PREF_UPGRADE_BACKUP, Services.appinfo.platformBuildID);
-        }
-        deferredWritten.resolve();
-      } catch (ex) {
-        TelemetryStopwatch.cancel("FX_SESSION_RESTORE_WRITE_FILE_LONGEST_OP_MS", refObj);
-        console.error("Could not write session state file ", ex, ex.stack);
-        deferredWritten.reject(ex);
+        resolve(SessionWorker.post("write", [aData, options]));
       } finally {
-        AsyncShutdown.profileBeforeChange.removeBlocker(deferredWritten.promise);
+        // Record how long we stopped the main thread.
+        TelemetryStopwatch.finish(name, refObj);
       }
+    });
+
+    // Wait until the write is done.
+    promise = promise.then(msg => {
+      // Record how long the write took.
+      this._recordTelemetry(msg.telemetry);
+
+      if (msg.result.upgradeBackup) {
+        // We have just completed a backup-on-upgrade, store the information
+        // in preferences.
+        Services.prefs.setCharPref(PREF_UPGRADE_BACKUP,
+          Services.appinfo.platformBuildID);
+      }
+    }, err => {
+      // Catch and report any errors.
+      TelemetryStopwatch.cancel(name, refObj);
+      console.error("Could not write session state file ", err, err.stack);
+      // By not doing anything special here we ensure that |promise| cannot
+      // be rejected anymore. The shutdown/cleanup code at the end of the
+      // function will thus always be executed.
+    });
+
+    // Ensure that we can write sessionstore.js cleanly before the profile
+    // becomes unaccessible.
+    AsyncShutdown.profileBeforeChange.addBlocker(
+      "SessionFile: Finish writing Session Restore data", promise);
+
+    // This code will always be executed because |promise| can't fail anymore.
+    // We ensured that by having a reject handler that reports the failure but
+    // doesn't forward the rejection.
+    return promise.then(() => {
+      // Remove the blocker, no matter if writing failed or not.
+      AsyncShutdown.profileBeforeChange.removeBlocker(promise);
 
       if (isFinalWrite) {
         Services.obs.notifyObservers(null, "sessionstore-final-state-write-complete", "");
       }
-    }.bind(this));
+    });
   },
 
   wipe: function () {

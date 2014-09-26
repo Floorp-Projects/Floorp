@@ -30,6 +30,8 @@ exports.testMatchPatternTestTrue = function(assert) {
   ok("http://example.com/ice-cream", "http://example.com/ice-cream");
 
   ok(/.*zilla.*/, "https://bugzilla.redhat.com/show_bug.cgi?id=569753");
+  ok(/.*A.*/i, "http://A.com");
+  ok(/.*A.*/i, "http://a.com");
   ok(/https:.*zilla.*/, "https://bugzilla.redhat.com/show_bug.cgi?id=569753");
   ok('*.sample.com', 'http://ex.sample.com/foo.html');
   ok('*.amp.le.com', 'http://ex.amp.le.com');
@@ -106,12 +108,6 @@ exports.testMatchPatternErrors = function(assert) {
     function() new MatchPattern(/ /g),
     /^A RegExp match pattern cannot be set to `global` \(i\.e\. \/\/g\)\.$/,
     "MatchPattern throws on a RegExp set to `global` (i.e. //g)."
-  );
-
-  assert.throws(
-    function() new MatchPattern(/ /i),
-    /^A RegExp match pattern cannot be set to `ignoreCase` \(i\.e\. \/\/i\)\.$/,
-    "MatchPattern throws on a RegExp set to `ignoreCase` (i.e. //i)."
   );
 
   assert.throws(
