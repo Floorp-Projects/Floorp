@@ -52,14 +52,16 @@ NSSCertDBTrustDomain::NSSCertDBTrustDomain(SECTrustType certDBTrustType,
                                            OCSPCache& ocspCache,
              /*optional but shouldn't be*/ void* pinArg,
                                            CertVerifier::ocsp_get_config ocspGETConfig,
-                              /*optional*/ CERTChainVerifyCallback* checkChainCallback,
+                                           CertVerifier::PinningMode pinningMode,
+                              /*optional*/ const char* hostname,
                               /*optional*/ ScopedCERTCertList* builtChain)
   : mCertDBTrustType(certDBTrustType)
   , mOCSPFetching(ocspFetching)
   , mOCSPCache(ocspCache)
   , mPinArg(pinArg)
   , mOCSPGetConfig(ocspGETConfig)
-  , mCheckChainCallback(checkChainCallback)
+  , mPinningMode(pinningMode)
+  , mHostname(hostname)
   , mBuiltChain(builtChain)
 {
 }
@@ -633,16 +635,10 @@ NSSCertDBTrustDomain::VerifyAndMaybeCacheEncodedOCSPResponse(
 }
 
 Result
-NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray)
+NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time)
 {
   PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
-      ("NSSCertDBTrustDomain: Top of IsChainValid mCheckChainCallback=%p",
-       mCheckChainCallback));
-
-  if (!mBuiltChain && !mCheckChainCallback) {
-    // No need to create a CERTCertList, and nothing else to do.
-    return Success;
-  }
+         ("NSSCertDBTrustDomain: IsChainValid"));
 
   ScopedCERTCertList certList;
   SECStatus srv = ConstructCERTCertListFromReversedDERArray(certArray,
@@ -651,19 +647,10 @@ NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray)
     return MapPRErrorCodeToResult(PR_GetError());
   }
 
-  if (mCheckChainCallback) {
-    if (!mCheckChainCallback->isChainValid) {
-      return Result::FATAL_ERROR_INVALID_ARGS;
-    }
-    PRBool chainOK;
-    srv = (mCheckChainCallback->isChainValid)(
-            mCheckChainCallback->isChainValidArg, certList.get(), &chainOK);
-    if (srv != SECSuccess) {
-      return MapPRErrorCodeToResult(PR_GetError());
-    }
-    if (!chainOK) {
-      return Result::ERROR_KEY_PINNING_FAILURE;
-    }
+  Result result = CertListContainsExpectedKeys(certList, mHostname, time,
+                                               mPinningMode);
+  if (result != Success) {
+    return result;
   }
 
   if (mBuiltChain) {

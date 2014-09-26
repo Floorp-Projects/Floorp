@@ -5,7 +5,7 @@
 
 #include "ContainerLayerD3D10.h"
 
-#include "ThebesLayerD3D10.h"
+#include "PaintedLayerD3D10.h"
 #include "ReadbackProcessor.h"
 
 using namespace mozilla::gfx;
@@ -255,8 +255,8 @@ ContainerLayerD3D10::Validate()
 
   Layer *layer = GetFirstChild();
   while (layer) {
-    if (layer->GetType() == TYPE_THEBES) {
-      static_cast<ThebesLayerD3D10*>(layer)->Validate(&readback);
+    if (layer->GetType() == TYPE_PAINTED) {
+      static_cast<PaintedLayerD3D10*>(layer)->Validate(&readback);
     } else {
       static_cast<LayerD3D10*>(layer->ImplData())->Validate();
     }

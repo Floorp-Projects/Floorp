@@ -2,11 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GFX_CLIENTTILEDTHEBESLAYER_H
-#define GFX_CLIENTTILEDTHEBESLAYER_H
+#ifndef GFX_CLIENTTILEDPAINTEDLAYER_H
+#define GFX_CLIENTTILEDPAINTEDLAYER_H
 
 #include "ClientLayerManager.h"         // for ClientLayer, etc
-#include "Layers.h"                     // for ThebesLayer, etc
+#include "Layers.h"                     // for PaintedLayer, etc
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/layers/TiledContentClient.h"
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
@@ -21,12 +21,12 @@ class ShadowableLayer;
 class SpecificLayerAttributes;
 
 /**
- * An implementation of ThebesLayer that ONLY supports remote
- * composition that is backed by tiles. This thebes layer implementation
+ * An implementation of PaintedLayer that ONLY supports remote
+ * composition that is backed by tiles. This painted layer implementation
  * is better suited to mobile hardware to work around slow implementation
  * of glTexImage2D (for OGL compositors), and restrait memory bandwidth.
  *
- * Tiled Thebes layers use a different protocol compared with other
+ * Tiled PaintedLayers use a different protocol compared with other
  * layers. A copy of the tiled buffer is made and sent to the compositing
  * thread via the layers protocol. Tiles are uploaded by the buffers
  * asynchonously without using IPC, that means they are not safe for cross-
@@ -35,23 +35,23 @@ class SpecificLayerAttributes;
  *
  * There is no ContentClient for tiled layers. There is a ContentHost, however.
  */
-class ClientTiledThebesLayer : public ThebesLayer,
+class ClientTiledPaintedLayer : public PaintedLayer,
                                public ClientLayer
 {
-  typedef ThebesLayer Base;
+  typedef PaintedLayer Base;
 
 public:
-  explicit ClientTiledThebesLayer(ClientLayerManager* const aManager,
-                                  ClientLayerManager::ThebesLayerCreationHint aCreationHint = LayerManager::NONE);
+  explicit ClientTiledPaintedLayer(ClientLayerManager* const aManager,
+                                  ClientLayerManager::PaintedLayerCreationHint aCreationHint = LayerManager::NONE);
 
 protected:
-  ~ClientTiledThebesLayer();
+  ~ClientTiledPaintedLayer();
 
 public:
-  // Override name to distinguish it from ClientThebesLayer in layer dumps
-  virtual const char* Name() const { return "TiledThebesLayer"; }
+  // Override name to distinguish it from ClientPaintedLayer in layer dumps
+  virtual const char* Name() const { return "TiledPaintedLayer"; }
 
-  // Thebes Layer
+  // PaintedLayer
   virtual Layer* AsLayer() { return this; }
   virtual void InvalidateRegion(const nsIntRegion& aRegion) {
     mInvalidRegion.Or(mInvalidRegion, aRegion);
@@ -104,7 +104,7 @@ private:
    */
   bool RenderHighPrecision(nsIntRegion& aInvalidRegion,
                            const nsIntRegion& aVisibleRegion,
-                           LayerManager::DrawThebesLayerCallback aCallback,
+                           LayerManager::DrawPaintedLayerCallback aCallback,
                            void* aCallbackData);
 
   /**
@@ -113,7 +113,7 @@ private:
    */
   bool RenderLowPrecision(nsIntRegion& aInvalidRegion,
                           const nsIntRegion& aVisibleRegion,
-                          LayerManager::DrawThebesLayerCallback aCallback,
+                          LayerManager::DrawPaintedLayerCallback aCallback,
                           void* aCallbackData);
 
   /**

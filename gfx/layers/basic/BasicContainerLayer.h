@@ -84,7 +84,7 @@ public:
 
   void SetSupportsComponentAlphaChildren(bool aSupports) { mSupportsComponentAlphaChildren = aSupports; }
 
-  virtual void Validate(LayerManager::DrawThebesLayerCallback aCallback,
+  virtual void Validate(LayerManager::DrawPaintedLayerCallback aCallback,
                         void* aCallbackData,
                         ReadbackProcessor* aReadback) MOZ_OVERRIDE;
 

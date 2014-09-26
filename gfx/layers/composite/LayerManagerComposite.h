@@ -61,7 +61,7 @@ class ImageLayerComposite;
 class LayerComposite;
 class RefLayerComposite;
 class SurfaceDescriptor;
-class ThebesLayerComposite;
+class PaintedLayerComposite;
 class TiledLayerComposer;
 class TextRenderer;
 class CompositingRenderTarget;
@@ -120,7 +120,7 @@ public:
   void BeginTransactionWithDrawTarget(gfx::DrawTarget* aTarget, const nsIntRect& aRect);
 
   virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) MOZ_OVERRIDE;
-  virtual void EndTransaction(DrawThebesLayerCallback aCallback,
+  virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
                               EndTransactionFlags aFlags = END_DEFAULT) MOZ_OVERRIDE;
 
@@ -137,12 +137,12 @@ public:
 
   virtual void ClearCachedResources(Layer* aSubtree = nullptr) MOZ_OVERRIDE;
 
-  virtual already_AddRefed<ThebesLayer> CreateThebesLayer() MOZ_OVERRIDE;
+  virtual already_AddRefed<PaintedLayer> CreatePaintedLayer() MOZ_OVERRIDE;
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer() MOZ_OVERRIDE;
   virtual already_AddRefed<ImageLayer> CreateImageLayer() MOZ_OVERRIDE;
   virtual already_AddRefed<ColorLayer> CreateColorLayer() MOZ_OVERRIDE;
   virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() MOZ_OVERRIDE;
-  already_AddRefed<ThebesLayerComposite> CreateThebesLayerComposite();
+  already_AddRefed<PaintedLayerComposite> CreatePaintedLayerComposite();
   already_AddRefed<ContainerLayerComposite> CreateContainerLayerComposite();
   already_AddRefed<ImageLayerComposite> CreateImageLayerComposite();
   already_AddRefed<ColorLayerComposite> CreateColorLayerComposite();

@@ -3942,7 +3942,9 @@ void HTMLMediaElement::UpdateAudioChannelPlayingState()
      (!mPaused &&
       (HasAttr(kNameSpaceID_None, nsGkAtoms::loop) ||
        (mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA &&
-        !IsPlaybackEnded()) ||
+        !IsPlaybackEnded() &&
+        !(mSrcStream && !(mSrcStream->GetTrackTypesAvailable() &
+                          DOMMediaStream::HINT_CONTENTS_AUDIO))) ||
        mPlayingThroughTheAudioChannelBeforeSeek));
   if (playingThroughTheAudioChannel != mPlayingThroughTheAudioChannel) {
     mPlayingThroughTheAudioChannel = playingThroughTheAudioChannel;
