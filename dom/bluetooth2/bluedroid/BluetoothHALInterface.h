@@ -90,6 +90,7 @@ public:
   BluetoothHandsfreeInterface* GetBluetoothHandsfreeInterface();
   BluetoothA2dpInterface* GetBluetoothA2dpInterface();
   BluetoothAvrcpInterface* GetBluetoothAvrcpInterface();
+  BluetoothGattInterface* GetBluetoothGattInterface();
 
 protected:
   BluetoothHALInterface(const bt_interface_t* aInterface);

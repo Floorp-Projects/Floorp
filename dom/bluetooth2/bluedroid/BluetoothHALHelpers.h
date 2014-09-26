@@ -14,9 +14,13 @@
 #if ANDROID_VERSION >= 18
 #include <hardware/bt_rc.h>
 #endif
+#if ANDROID_VERSION >= 19
+#include <hardware/bt_gatt.h>
+#endif
 #include "BluetoothCommon.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
+#include "mozilla/dom/TypedArray.h"
 #include "nsThreadUtils.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
@@ -140,6 +144,9 @@ Convert(const uint8_t aIn[16], bt_uuid_t& aOut);
 
 nsresult
 Convert(const bt_uuid_t& aIn, BluetoothUuid& aOut);
+
+nsresult
+Convert(const BluetoothUuid& aIn, bt_uuid_t& aOut);
 
 nsresult
 Convert(const nsAString& aIn, bt_pin_code_t& aOut);
@@ -753,6 +760,35 @@ Convert(btrc_remote_features_t aIn, unsigned long& aOut)
   return NS_OK;
 }
 #endif // ANDROID_VERSION >= 19
+
+nsresult
+Convert(const uint8_t* aIn, BluetoothGattAdvData& aOut);
+
+#if ANDROID_VERSION >= 19
+nsresult
+Convert(const BluetoothGattId& aIn, btgatt_gatt_id_t& aOut);
+
+nsresult
+Convert(const btgatt_gatt_id_t& aIn, BluetoothGattId& aOut);
+
+nsresult
+Convert(const BluetoothGattServiceId& aIn, btgatt_srvc_id_t& aOut);
+
+nsresult
+Convert(const btgatt_srvc_id_t& aIn, BluetoothGattServiceId& aOut);
+
+nsresult
+Convert(const btgatt_read_params_t& aIn, BluetoothGattReadParam& aOut);
+
+nsresult
+Convert(const btgatt_write_params_t& aIn, BluetoothGattWriteParam& aOut);
+
+nsresult
+Convert(const btgatt_notify_params_t& aIn, BluetoothGattNotifyParam& aOut);
+#endif // ANDROID_VERSION >= 19
+
+nsresult
+Convert(const ArrayBuffer& aIn, char* aOut);
 
 /* |ConvertArray| is a helper for converting arrays. Pass an
  * instance of this structure as the first argument to |Convert|

@@ -123,6 +123,18 @@ Convert(const bt_uuid_t& aIn, BluetoothUuid& aOut)
 }
 
 nsresult
+Convert(const BluetoothUuid& aIn, bt_uuid_t& aOut)
+{
+  if (sizeof(aIn.mUuid) != sizeof(aOut.uu)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  memcpy(aOut.uu, aIn.mUuid, sizeof(aOut.uu));
+
+  return NS_OK;
+}
+
+nsresult
 Convert(const nsAString& aIn, bt_pin_code_t& aOut)
 {
   if (aIn.Length() > MOZ_ARRAY_LENGTH(aOut.pin)) {
@@ -210,6 +222,112 @@ Convert(const btrc_player_settings_t& aIn, BluetoothAvrcpPlayerSettings& aOut)
   return NS_OK;
 }
 #endif // ANDROID_VERSION >= 18
+
+nsresult
+Convert(const uint8_t* aIn, BluetoothGattAdvData& aOut)
+{
+  memcpy(aOut.mAdvData, aIn, sizeof(aOut.mAdvData));
+  return NS_OK;
+}
+
+#if ANDROID_VERSION >= 19
+nsresult
+Convert(const BluetoothGattId& aIn, btgatt_gatt_id_t& aOut)
+{
+  aOut.inst_id = aIn.mInstanceId;
+  return Convert(aIn.mUuid, aOut.uuid);
+}
+
+nsresult
+Convert(const btgatt_gatt_id_t& aIn, BluetoothGattId& aOut)
+{
+  aOut.mInstanceId = aIn.inst_id;
+  return Convert(aIn.uuid, aOut.mUuid);
+}
+
+nsresult
+Convert(const BluetoothGattServiceId& aIn, btgatt_srvc_id_t& aOut)
+{
+  aOut.is_primary = aIn.mIsPrimary;
+  return Convert(aIn.mId, aOut.id);
+}
+
+nsresult
+Convert(const btgatt_srvc_id_t& aIn, BluetoothGattServiceId& aOut)
+{
+  aOut.mIsPrimary = aIn.is_primary;
+  return Convert(aIn.id, aOut.mId);
+}
+
+nsresult
+Convert(const btgatt_read_params_t& aIn, BluetoothGattReadParam& aOut)
+{
+  nsresult rv;
+
+  rv = Convert(aIn.srvc_id, aOut.mServiceId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = Convert(aIn.char_id, aOut.mCharId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = Convert(aIn.descr_id, aOut.mDescriptorId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  memcpy(aOut.mValue, aIn.value.value, aIn.value.len);
+  aOut.mValueLength = aIn.value.len;
+  aOut.mValueType = aIn.value_type;
+  aOut.mStatus = aIn.status;
+
+  return NS_OK;
+}
+
+nsresult
+Convert(const btgatt_write_params_t& aIn, BluetoothGattWriteParam& aOut)
+{
+  nsresult rv;
+
+  rv = Convert(aIn.srvc_id, aOut.mServiceId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = Convert(aIn.char_id, aOut.mCharId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = Convert(aIn.descr_id, aOut.mDescriptorId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aOut.mStatus = aIn.status;
+
+  return NS_OK;
+}
+
+nsresult
+Convert(const btgatt_notify_params_t& aIn, BluetoothGattNotifyParam& aOut)
+{
+  nsresult rv;
+
+  rv = Convert(aIn.bda, aOut.mBdAddr);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = Convert(aIn.srvc_id, aOut.mServiceId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = Convert(aIn.char_id, aOut.mCharId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  memcpy(aOut.mValue, aIn.value, aIn.len);
+  aOut.mLength = aIn.len;
+  aOut.mIsNotify = aIn.is_notify;
+
+  return NS_OK;
+}
+#endif // ANDROID_VERSION >= 19
+
+nsresult
+Convert(const ArrayBuffer& aIn, char* aOut) {
+  aIn.ComputeLengthAndData();
+  memcpy(aOut, aIn.Data(), aIn.Length());
+  return NS_OK;
+}
 
 nsresult
 Convert(const bt_property_t& aIn, BluetoothProperty& aOut)
