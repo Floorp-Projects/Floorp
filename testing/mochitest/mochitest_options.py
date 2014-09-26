@@ -223,12 +223,12 @@ class MochitestOptions(optparse.OptionParser):
         [["--leak-threshold"],
         { "action": "store",
           "type": "int",
-          "dest": "defaultLeakThreshold",
+          "dest": "leakThreshold",
           "metavar": "THRESHOLD",
-          "help": "fail if the number of bytes leaked in default "
-                 "processes through refcounted objects (or bytes "
-                 "in classes with MOZ_COUNT_CTOR and MOZ_COUNT_DTOR) "
-                 "is greater than the given number",
+          "help": "fail if the number of bytes leaked through "
+                 "refcounted objects (or bytes in classes with "
+                 "MOZ_COUNT_CTOR and MOZ_COUNT_DTOR) is greater "
+                 "than the given number",
           "default": 0,
         }],
         [["--fatal-assertions"],
@@ -608,15 +608,6 @@ class MochitestOptions(optparse.OptionParser):
                 if not os.path.isfile(f):
                     self.error('Missing binary %s required for --use-test-media-devices')
 
-        options.leakThresholds = {
-            "default": options.defaultLeakThreshold,
-            "tab": 10000, # See dependencies of bug 1051230.
-        }
-
-        # Bug 1051230 - Leak logging does not yet work for tab processes on desktop.
-        # Bug 1065098 - The geckomediaplugin process fails to produce a leak log for some reason.
-        options.ignoreMissingLeaks = ["tab", "geckomediaplugin"]
-
         return options
 
 
@@ -774,7 +765,7 @@ class B2GOptions(MochitestOptions):
         defaults["testPath"] = ""
         defaults["extensionsToExclude"] = ["specialpowers"]
         # See dependencies of bug 1038943.
-        defaults["defaultLeakThreshold"] = 5180
+        defaults["leakThreshold"] = 5180
         self.set_defaults(**defaults)
 
     def verifyRemoteOptions(self, options):
@@ -820,12 +811,6 @@ class B2GOptions(MochitestOptions):
         options.app = temp
         options.sslPort = tempSSL
         options.httpPort = tempPort
-
-        # Bug 1071866 - B2G Mochitests do not always produce a leak log.
-        options.ignoreMissingLeaks.append("default")
-
-        # Bug 1070068 - Leak logging does not work for tab processes on B2G.
-        assert "tab" in options.ignoreMissingLeaks, "Ignore failures for tab processes on B2G"
 
         return options
 
