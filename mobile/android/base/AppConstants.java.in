@@ -73,7 +73,7 @@ public class AppConstants {
      * The name of the Java class that launches the browser.
      */
     public static final String BROWSER_INTENT_CLASS_NAME = "org.mozilla.gecko.BrowserApp";
-    public static final String SEARCH_INTENT_CLASS_NAME = "org.mozilla.search.MainActivity";
+    public static final String SEARCH_INTENT_CLASS_NAME = "org.mozilla.search.SearchActivity";
 
     public static final String GRE_MILESTONE = "@GRE_MILESTONE@";
 
