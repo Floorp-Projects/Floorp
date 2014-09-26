@@ -187,7 +187,7 @@ class MochitestRunner(MozbuildObject):
         return mochitest.run_remote_mochitests(parser, options)
 
     def run_desktop_test(self, context, suite=None, test_paths=None, debugger=None,
-        debugger_args=None, slowscript=False, screenshot_on_fail = False, shuffle=False, keep_open=False,
+        debugger_args=None, slowscript=False, screenshot_on_fail = False, shuffle=False, closure_behaviour='auto',
         rerun_failures=False, no_autorun=False, repeat=0, run_until_failure=False,
         slow=False, chunk_by_dir=0, total_chunks=None, this_chunk=None, extraPrefs=[],
         jsdebugger=False, debug_on_failure=False, start_at=None, end_at=None,
@@ -214,7 +214,7 @@ class MochitestRunner(MozbuildObject):
 
         shuffle is whether test order should be shuffled (defaults to false).
 
-        keep_open denotes whether to keep the browser open after tests
+        closure_behaviour denotes whether to keep the browser open after tests
         complete.
         """
         if rerun_failures and test_paths:
@@ -294,7 +294,7 @@ class MochitestRunner(MozbuildObject):
             options.dmdPath = self.bin_dir
 
         options.autorun = not no_autorun
-        options.closeWhenDone = not keep_open
+        options.closeWhenDone = closure_behaviour != 'open'
         options.slowscript = slowscript
         options.screenshotOnFail = screenshot_on_fail
         options.shuffle = shuffle
@@ -347,7 +347,7 @@ class MochitestRunner(MozbuildObject):
             manifest = TestManifest()
             manifest.tests.extend(tests)
 
-            if len(tests) == 1:
+            if len(tests) == 1 and closure_behaviour == 'auto' and suite == 'plain':
                 options.closeWhenDone = False
 
             options.manifestFile = manifest
@@ -434,9 +434,15 @@ def MochitestCommand(func):
         help='Shuffle execution order.')
     func = shuffle(func)
 
-    keep_open = CommandArgument('--keep-open', action='store_true',
-        help='Keep the browser open after tests complete.')
+    keep_open = CommandArgument('--keep-open', action='store_const',
+        dest='closure_behaviour', const='open', default='auto',
+        help='Always keep the browser open after tests complete.')
     func = keep_open(func)
+
+    autoclose = CommandArgument('--auto-close', action='store_const',
+        dest='closure_behaviour', const='close', default='auto',
+        help='Always close the browser after tests complete.')
+    func = autoclose(func)
 
     rerun = CommandArgument('--rerun-failures', action='store_true',
         help='Run only the tests that failed during the last test run.')

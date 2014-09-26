@@ -18,6 +18,7 @@ const { Style } = require('sdk/stylesheet/style');
 const fixtures = require('./fixtures');
 const { viewFor } = require('sdk/view/core');
 const app = require("sdk/system/xul-app");
+const { cleanUI } = require('sdk/test/utils');
 
 const URL = 'data:text/html;charset=utf-8,<html><head><title>#title#</title></head></html>';
 

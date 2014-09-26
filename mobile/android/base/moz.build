@@ -519,9 +519,8 @@ gbjar.generated_sources += sync_generated_java_files
 gbjar.extra_jars = [
     'gecko-R.jar',
     'gecko-mozglue.jar',
+    'gecko-thirdparty.jar',
     'gecko-util.jar',
-    'nineoldandroids.jar',
-    'squareup-picasso.jar',
     'sync-thirdparty.jar',
 ]
 
@@ -541,8 +540,9 @@ if CONFIG['MOZ_NATIVE_DEVICES']:
 
 gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough', '-J-Xmx512m', '-J-Xms128m']
 
-noajar = add_java_jar('nineoldandroids')
-noajar.sources += [ thirdparty_source_dir + f for f in [
+# gecko-thirdparty is a good place to put small independent libraries
+gtjar = add_java_jar('gecko-thirdparty')
+gtjar.sources += [ thirdparty_source_dir + f for f in [
     'com/nineoldandroids/animation/Animator.java',
     'com/nineoldandroids/animation/AnimatorInflater.java',
     'com/nineoldandroids/animation/AnimatorListenerAdapter.java',
@@ -570,12 +570,8 @@ noajar.sources += [ thirdparty_source_dir + f for f in [
     'com/nineoldandroids/view/ViewPropertyAnimator.java',
     'com/nineoldandroids/view/ViewPropertyAnimatorHC.java',
     'com/nineoldandroids/view/ViewPropertyAnimatorICS.java',
-    'com/nineoldandroids/view/ViewPropertyAnimatorPreHC.java'
-] ]
-#noajar.javac_flags += ['-Xlint:all']
-
-spjar = add_java_jar('squareup-picasso')
-spjar.sources += [ thirdparty_source_dir + f for f in [
+    'com/nineoldandroids/view/ViewPropertyAnimatorPreHC.java',
+    'com/readystatesoftware/systembartint/SystemBarTintManager.java',
     'com/squareup/picasso/Action.java',
     'com/squareup/picasso/AssetBitmapHunter.java',
     'com/squareup/picasso/BitmapHunter.java',
@@ -606,9 +602,10 @@ spjar.sources += [ thirdparty_source_dir + f for f in [
     'com/squareup/picasso/TargetAction.java',
     'com/squareup/picasso/Transformation.java',
     'com/squareup/picasso/UrlConnectionDownloader.java',
-    'com/squareup/picasso/Utils.java',
+    'com/squareup/picasso/Utils.java'
 ] ]
-#spjar.javac_flags += ['-Xlint:all']
+#gtjar.javac_flags += ['-Xlint:all']
+
 
 ANDROID_RES_DIRS += [
     SRCDIR + '/resources',
@@ -623,7 +620,7 @@ ANDROID_GENERATED_RESFILES += [
 
 for var in ('MOZ_ANDROID_ANR_REPORTER', 'MOZ_LINKER_EXTRACT', 'MOZILLA_OFFICIAL', 'MOZ_DEBUG',
             'MOZ_ANDROID_SEARCH_ACTIVITY', 'MOZ_NATIVE_DEVICES', 'MOZ_ANDROID_MLS_STUMBLER',
-            'MOZ_ANDROID_SHARE_OVERLAY'):
+            'MOZ_ANDROID_SHARE_OVERLAY', 'MOZ_ANDROID_DOWNLOADS_INTEGRATION'):
     if CONFIG[var]:
         DEFINES[var] = 1
 
@@ -665,8 +662,8 @@ if CONFIG['MOZ_ANDROID_SEARCH_ACTIVITY']:
         'gecko-R.jar',
         'gecko-browser.jar',
         'gecko-mozglue.jar',
-        'gecko-util.jar',
-        'nineoldandroids.jar'
+        'gecko-thirdparty.jar',
+        'gecko-util.jar'
     ]
 
 generated_recursive_make_targets = ['.aapt.deps', '.locales.deps'] # Captures dependencies on Android manifest and all resources.

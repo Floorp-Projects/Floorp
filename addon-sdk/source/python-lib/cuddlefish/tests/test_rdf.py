@@ -6,7 +6,7 @@ import unittest
 import xml.dom.minidom
 import os.path
 
-from cuddlefish import rdf, packaging
+from cuddlefish import rdf, packaging, property_parser
 
 parent = os.path.dirname
 test_dir = parent(os.path.abspath(__file__))
@@ -49,6 +49,52 @@ class RDFTests(unittest.TestCase):
             self.failUnlessEqual(m.get('em:name'), 'a long ' + n)
             self.failUnlessIn('<em:name>a long ' + n + '</em:name>', str(m), n)
 
+    def testLocalization(self):
+        # addon_title       -> <em:name>
+        # addon_author      -> <em:creator>
+        # addon_description -> <em:description>
+        # addon_homepageURL -> <em:homepageURL>
+        localizable_in = ["title", "author", "description", "homepage"]
+        localized_out  = ["name", "creator", "description", "homepageURL"]
+
+        basedir = os.path.join(test_dir, "bug-661083-files/packages")
+        for n in ["noLocalization", "twoLanguages"]:
+            harness_options = { "locale" : {} }
+            pkgdir = os.path.join(basedir, n)
+            localedir = os.path.join(pkgdir, "locale")
+            files = os.listdir(localedir)
+
+            for file in files:
+                filepath = os.path.join(localedir, file)
+                if os.path.isfile(filepath) and file.endswith(".properties"):
+                    language = file[:-len(".properties")]
+                    try:
+                        parsed_file = property_parser.parse_file(filepath)
+                    except property_parser.MalformedLocaleFileError, msg:
+                        self.fail(msg)
+
+                    harness_options["locale"][language] = parsed_file
+
+            cfg = packaging.get_config_in_dir(pkgdir)
+            m = rdf.gen_manifest(template_dir, cfg, 'JID', harness_options)
+
+            if n == "noLocalization":
+                self.failIf("<em:locale>" in str(m))
+                continue
+
+            for lang in harness_options["locale"]:
+                rdfstr = str(m)
+                node = "<em:locale>" + lang + "</em:locale>"
+                self.failUnlessIn(node, rdfstr, n)
+
+                for value_in in localizable_in:
+                    key_in = "extensions." + m.get('em:id') + "." + value_in
+                    tag_out = localized_out[localizable_in.index(value_in)]
+                    if key_in in harness_options["locale"][lang]:
+                        # E.g. "<em:creator>author-en-US</em:creator>"
+                        node = "<em:" + tag_out + ">" + value_in + "-" + lang \
+                            + "</em:" + tag_out + ">"
+                        self.failUnlessIn(node , rdfstr, n)
 
 if __name__ == '__main__':
     unittest.main()

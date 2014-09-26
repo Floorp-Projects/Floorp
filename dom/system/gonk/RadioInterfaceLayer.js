@@ -4169,7 +4169,15 @@ DataCall.prototype = {
       return;
     }
     if (this.state == RIL.GECKO_NETWORK_STATE_CONNECTED) {
-      networkInterface.notifyRILNetworkInterface();
+      // This needs to run asynchronously, to behave the same way as the case of
+      // non-shared apn, see bug 1059110.
+      Services.tm.currentThread.dispatch(function(state) {
+        // Do not notify if state changed while this event was being dispatched,
+        // the state probably was notified already or need not to be notified.
+        if (networkInterface.state == state) {
+          networkInterface.notifyRILNetworkInterface();
+        }
+      }.bind(null, RIL.GECKO_NETWORK_STATE_CONNECTED), Ci.nsIEventTarget.DISPATCH_NORMAL);
       return;
     }
 
@@ -4281,7 +4289,13 @@ DataCall.prototype = {
       // Notify the DISCONNECTED event immediately after network interface is
       // removed from requestedNetworkIfaces, to make the DataCall, shared or
       // not, to have the same behavior.
-      networkInterface.notifyRILNetworkInterface();
+      Services.tm.currentThread.dispatch(function(state) {
+        // Do not notify if state changed while this event was being dispatched,
+        // the state probably was notified already or need not to be notified.
+        if (networkInterface.state == state) {
+          networkInterface.notifyRILNetworkInterface();
+        }
+      }.bind(null, RIL.GECKO_NETWORK_STATE_DISCONNECTED), Ci.nsIEventTarget.DISPATCH_NORMAL);
     }
 
     // Only deactivate data call if no more network interface needs this

@@ -14,7 +14,10 @@ loop.panel = (function(_, mozL10n) {
   var sharedViews = loop.shared.views;
   var sharedModels = loop.shared.models;
   var sharedMixins = loop.shared.mixins;
+  var Button = sharedViews.Button;
+  var ButtonGroup = sharedViews.ButtonGroup;
   var ContactsList = loop.contacts.ContactsList;
+  var ContactDetailsForm = loop.contacts.ContactDetailsForm;
   var __ = mozL10n.get; // aliasing translation function as __ for concision
 
   var TabView = React.createClass({displayName: 'TabView',
@@ -27,10 +30,6 @@ loop.panel = (function(_, mozL10n) {
     handleSelectTab: function(event) {
       var tabName = event.target.dataset.tabName;
       this.setState({selectedTab: tabName});
-
-      if (this.props.onSelect) {
-        this.props.onSelect(tabName);
-      }
     },
 
     render: function() {
@@ -40,13 +39,14 @@ loop.panel = (function(_, mozL10n) {
       React.Children.forEach(this.props.children, function(tab, i) {
         var tabName = tab.props.name;
         var isSelected = (this.state.selectedTab == tabName);
-        tabButtons.push(
-          React.DOM.li({className: cx({selected: isSelected}), 
-              key: i, 
-              'data-tab-name': tabName, 
-              onClick: this.handleSelectTab}
-          )
-        );
+        if (!tab.props.hidden) {
+          tabButtons.push(
+            React.DOM.li({className: cx({selected: isSelected}), 
+                key: i, 
+                'data-tab-name': tabName, 
+                onClick: this.handleSelectTab})
+          );
+        }
         tabs.push(
           React.DOM.div({key: i, className: cx({tab: true, selected: isSelected})}, 
             tab.props.children
@@ -230,7 +230,7 @@ loop.panel = (function(_, mozL10n) {
       var cx = React.addons.classSet;
       return (
         React.DOM.div({className: "settings-menu dropdown"}, 
-          React.DOM.a({className: "btn btn-settings", onClick: this.showDropdownMenu, 
+          React.DOM.a({className: "button-settings", onClick: this.showDropdownMenu, 
              title: __("settings_menu_button_tooltip")}), 
           React.DOM.ul({className: cx({"dropdown-menu": true, hide: !this.state.showMenu}), 
               onMouseLeave: this.hideDropdownMenu}, 
@@ -247,26 +247,6 @@ loop.panel = (function(_, mozL10n) {
                                           __("settings_menu_item_signin"), 
                                    onClick: this.handleClickAuthEntry, 
                                    icon: this._isSignedIn() ? "signout" : "signin"})
-          )
-        )
-      );
-    }
-  });
-
-  /**
-   * Panel layout.
-   */
-  var PanelLayout = React.createClass({displayName: 'PanelLayout',
-    propTypes: {
-      summary: React.PropTypes.string.isRequired
-    },
-
-    render: function() {
-      return (
-        React.DOM.div({className: "share generate-url"}, 
-          React.DOM.div({className: "description"}, this.props.summary), 
-          React.DOM.div({className: "action"}, 
-            this.props.children
           )
         )
       );
@@ -388,25 +368,24 @@ loop.panel = (function(_, mozL10n) {
         "pending": this.state.pending,
         // Used in functional testing, signals that
         // call url was received from loop server
-         "callUrl": !this.state.pending
+        "callUrl": !this.state.pending
       });
       return (
-        PanelLayout({summary: __("share_link_header_text")}, 
-          React.DOM.div({className: "invite"}, 
-            React.DOM.input({type: "url", value: this.state.callUrl, readOnly: "true", 
-                   onCopy: this.handleLinkExfiltration, 
-                   className: inputCSSClass}), 
-            React.DOM.p({className: "btn-group url-actions"}, 
-              React.DOM.button({className: "btn btn-email", disabled: !this.state.callUrl, 
-                onClick: this.handleEmailButtonClick}, 
-                __("share_button")
-              ), 
-              React.DOM.button({className: "btn btn-copy", disabled: !this.state.callUrl, 
-                onClick: this.handleCopyButtonClick}, 
-                this.state.copied ? __("copied_url_button") :
-                                     __("copy_url_button")
-              )
-            )
+        React.DOM.div({className: "generate-url"}, 
+          React.DOM.header(null, __("share_link_header_text")), 
+          React.DOM.input({type: "url", value: this.state.callUrl, readOnly: "true", 
+                 onCopy: this.handleLinkExfiltration, 
+                 className: inputCSSClass}), 
+          ButtonGroup({additionalClass: "url-actions"}, 
+            Button({additionalClass: "button-email", 
+                    disabled: !this.state.callUrl, 
+                    onClick: this.handleEmailButtonClick, 
+                    caption: mozL10n.get("share_button")}), 
+            Button({additionalClass: "button-copy", 
+                    disabled: !this.state.callUrl, 
+                    onClick: this.handleCopyButtonClick, 
+                    caption: this.state.copied ? mozL10n.get("copied_url_button") :
+                                                 mozL10n.get("copy_url_button")})
           )
         )
       );
@@ -470,6 +449,15 @@ loop.panel = (function(_, mozL10n) {
       this.setState({userProfile: navigator.mozLoop.userProfile});
     },
 
+    startForm: function(name, contact) {
+      this.refs[name].initForm(contact);
+      this.selectTab(name);
+    },
+
+    selectTab: function(name) {
+      this.refs.tabView.setState({ selectedTab: name });
+    },
+
     componentDidMount: function() {
       window.addEventListener("LoopStatusChanged", this._onAuthStatusChange);
     },
@@ -486,15 +474,30 @@ loop.panel = (function(_, mozL10n) {
         React.DOM.div(null, 
           NotificationListView({notifications: this.props.notifications, 
                                 clearOnDocumentHidden: true}), 
-          TabView({onSelect: this.selectTab}, 
+          TabView({ref: "tabView"}, 
             Tab({name: "call"}, 
-              CallUrlResult({client: this.props.client, 
-                             notifications: this.props.notifications, 
-                             callUrl: this.props.callUrl}), 
-              ToSView(null)
+              React.DOM.div({className: "content-area"}, 
+                CallUrlResult({client: this.props.client, 
+                               notifications: this.props.notifications, 
+                               callUrl: this.props.callUrl}), 
+                ToSView(null)
+              )
             ), 
             Tab({name: "contacts"}, 
-              ContactsList(null)
+              ContactsList({selectTab: this.selectTab, 
+                            startForm: this.startForm})
+            ), 
+            Tab({name: "contacts_add", hidden: true}, 
+              ContactDetailsForm({ref: "contacts_add", mode: "add", 
+                                  selectTab: this.selectTab})
+            ), 
+            Tab({name: "contacts_edit", hidden: true}, 
+              ContactDetailsForm({ref: "contacts_edit", mode: "edit", 
+                                  selectTab: this.selectTab})
+            ), 
+            Tab({name: "contacts_import", hidden: true}, 
+              ContactDetailsForm({ref: "contacts_import", mode: "import", 
+                                  selectTab: this.selectTab})
             )
           ), 
           React.DOM.div({className: "footer"}, 
