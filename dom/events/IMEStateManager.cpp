@@ -1084,6 +1084,16 @@ IMEStateManager::GetRootEditableNode(nsPresContext* aPresContext,
     nsINode* root = nullptr;
     nsINode* node = aContent;
     while (node && IsEditable(node)) {
+      // If the node has independent selection like <input type="text"> or
+      // <textarea>, the node should be the root editable node for aContent.
+      // FYI: <select> element also has independent selection but IsEditable()
+      //      returns false.
+      // XXX: If somebody adds new editable element which has independent
+      //      selection but doesn't own editor, we'll need more checks here.
+      if (node->IsContent() &&
+          node->AsContent()->HasIndependentSelection()) {
+        return node;
+      }
       root = node;
       node = node->GetParentNode();
     }
