@@ -8,6 +8,7 @@ EXPORTS.mozilla.dom += [
     'Fetch.h',
     'Headers.h',
     'InternalRequest.h',
+    'InternalResponse.h',
     'Request.h',
     'Response.h',
 ]
@@ -16,6 +17,7 @@ UNIFIED_SOURCES += [
     'Fetch.cpp',
     'Headers.cpp',
     'InternalRequest.cpp',
+    'InternalResponse.cpp',
     'Request.cpp',
     'Response.cpp',
 ]
