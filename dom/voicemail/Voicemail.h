@@ -34,7 +34,8 @@ class Voicemail MOZ_FINAL : public DOMEventTargetHelper,
    */
   class Listener;
 
-  virtual ~Voicemail();
+  virtual
+  ~Voicemail();
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -42,7 +43,8 @@ public:
 
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
-  Voicemail(nsPIDOMWindow* aWindow, nsIVoicemailService* aService);
+  Voicemail(nsPIDOMWindow* aWindow,
+            nsIVoicemailService* aService);
 
   nsPIDOMWindow*
   GetParentObject() const
@@ -54,14 +56,17 @@ public:
   WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   already_AddRefed<MozVoicemailStatus>
-  GetStatus(const Optional<uint32_t>& aServiceId, ErrorResult& aRv) const;
-
-  void
-  GetNumber(const Optional<uint32_t>& aServiceId, nsString& aNumber,
+  GetStatus(const Optional<uint32_t>& aServiceId,
             ErrorResult& aRv) const;
 
   void
-  GetDisplayName(const Optional<uint32_t>& aServiceId, nsString& aDisplayName,
+  GetNumber(const Optional<uint32_t>& aServiceId,
+            nsString& aNumber,
+            ErrorResult& aRv) const;
+
+  void
+  GetDisplayName(const Optional<uint32_t>& aServiceId,
+                 nsString& aDisplayName,
                  ErrorResult& aRv) const;
 
   IMPL_EVENT_HANDLER(statuschanged)

@@ -134,7 +134,8 @@ Voicemail::GetStatus(const Optional<uint32_t>& aServiceId,
 }
 
 void
-Voicemail::GetNumber(const Optional<uint32_t>& aServiceId, nsString& aNumber,
+Voicemail::GetNumber(const Optional<uint32_t>& aServiceId,
+                     nsString& aNumber,
                      ErrorResult& aRv) const
 {
   aNumber.SetIsVoid(true);
@@ -154,7 +155,8 @@ Voicemail::GetNumber(const Optional<uint32_t>& aServiceId, nsString& aNumber,
 }
 
 void
-Voicemail::GetDisplayName(const Optional<uint32_t>& aServiceId, nsString& aDisplayName,
+Voicemail::GetDisplayName(const Optional<uint32_t>& aServiceId,
+                          nsString& aDisplayName,
                           ErrorResult& aRv) const
 {
   aDisplayName.SetIsVoid(true);
