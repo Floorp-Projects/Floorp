@@ -252,6 +252,7 @@ Navigator::Invalidate()
   }
 
   if (mVoicemail) {
+    mVoicemail->Shutdown();
     mVoicemail = nullptr;
   }
 
@@ -1662,10 +1663,7 @@ Navigator::GetMozVoicemail(ErrorResult& aRv)
       return nullptr;
     }
 
-    aRv = NS_NewVoicemail(mWindow, getter_AddRefs(mVoicemail));
-    if (aRv.Failed()) {
-      return nullptr;
-    }
+    mVoicemail = Voicemail::Create(mWindow, aRv);
   }
 
   return mVoicemail;
