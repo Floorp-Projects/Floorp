@@ -233,6 +233,10 @@ public:
     virtual PTelephonyChild* AllocPTelephonyChild() MOZ_OVERRIDE;
     virtual bool DeallocPTelephonyChild(PTelephonyChild*) MOZ_OVERRIDE;
 
+    virtual PVoicemailChild* AllocPVoicemailChild() MOZ_OVERRIDE;
+    PVoicemailChild* SendPVoicemailConstructor(PVoicemailChild* aActor);
+    virtual bool DeallocPVoicemailChild(PVoicemailChild*) MOZ_OVERRIDE;
+
     virtual PStorageChild* AllocPStorageChild() MOZ_OVERRIDE;
     virtual bool DeallocPStorageChild(PStorageChild* aActor) MOZ_OVERRIDE;
 
