@@ -31,6 +31,34 @@ protected:
 
   virtual bool
   DeallocPBackgroundTestParent(PBackgroundTestParent* aActor) MOZ_OVERRIDE;
+
+  virtual PBackgroundIDBFactoryParent*
+  AllocPBackgroundIDBFactoryParent(const OptionalWindowId& aOptionalWindowId)
+                                   MOZ_OVERRIDE;
+
+  virtual bool
+  RecvPBackgroundIDBFactoryConstructor(
+                                      PBackgroundIDBFactoryParent* aActor,
+                                      const OptionalWindowId& aOptionalWindowId)
+                                      MOZ_OVERRIDE;
+
+  virtual bool
+  DeallocPBackgroundIDBFactoryParent(PBackgroundIDBFactoryParent* aActor)
+                                     MOZ_OVERRIDE;
+
+  virtual PBlobParent*
+  AllocPBlobParent(const BlobConstructorParams& aParams) MOZ_OVERRIDE;
+
+  virtual bool
+  DeallocPBlobParent(PBlobParent* aActor) MOZ_OVERRIDE;
+
+  virtual PFileDescriptorSetParent*
+  AllocPFileDescriptorSetParent(const FileDescriptor& aFileDescriptor)
+                                MOZ_OVERRIDE;
+
+  virtual bool
+  DeallocPFileDescriptorSetParent(PFileDescriptorSetParent* aActor)
+                                  MOZ_OVERRIDE;
 };
 
 } // namespace ipc

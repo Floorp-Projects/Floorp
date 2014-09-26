@@ -187,7 +187,6 @@
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/MessagePortBinding.h"
 #include "mozilla/dom/indexedDB/IDBFactory.h"
-#include "mozilla/dom/quota/QuotaManager.h"
 
 #include "mozilla/dom/StructuredCloneTags.h"
 
@@ -1573,12 +1572,6 @@ nsGlobalWindow::FreeInnerObjects()
 
   // Kill all of the workers for this window.
   mozilla::dom::workers::CancelWorkersForWindow(this);
-
-  // Close all offline storages for this window.
-  quota::QuotaManager* quotaManager = quota::QuotaManager::Get();
-  if (quotaManager) {
-    quotaManager->AbortCloseStoragesForWindow(this);
-  }
 
   ClearAllTimeouts();
 
@@ -10593,9 +10586,11 @@ GetIndexedDBEnabledForAboutURI(nsIURI *aURI)
   return flags & nsIAboutModule::ENABLE_INDEXED_DB;
 }
 
-indexedDB::IDBFactory*
+mozilla::dom::indexedDB::IDBFactory*
 nsGlobalWindow::GetIndexedDB(ErrorResult& aError)
 {
+  using mozilla::dom::indexedDB::IDBFactory;
+
   if (!mIndexedDB) {
     // If the document has the sandboxed origin flag set
     // don't allow access to indexedDB.
@@ -10642,8 +10637,7 @@ nsGlobalWindow::GetIndexedDB(ErrorResult& aError)
     }
 
     // This may be null if being created from a file.
-    aError = indexedDB::IDBFactory::Create(this, nullptr,
-                                           getter_AddRefs(mIndexedDB));
+    aError = IDBFactory::CreateForWindow(this, getter_AddRefs(mIndexedDB));
   }
 
   return mIndexedDB;
