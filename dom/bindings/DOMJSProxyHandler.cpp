@@ -295,9 +295,9 @@ BaseDOMProxyHandler::unwatch(JSContext* cx, JS::Handle<JSObject*> proxy, JS::Han
 }
 
 bool
-BaseDOMProxyHandler::getOwnPropertyNames(JSContext* cx,
-                                         JS::Handle<JSObject*> proxy,
-                                         JS::AutoIdVector& props) const
+BaseDOMProxyHandler::ownPropertyKeys(JSContext* cx,
+                                     JS::Handle<JSObject*> proxy,
+                                     JS::AutoIdVector& props) const
 {
   return ownPropNames(cx, proxy, JSITER_OWNONLY | JSITER_HIDDEN, props);
 }

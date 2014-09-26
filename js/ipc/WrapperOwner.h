@@ -40,7 +40,7 @@ class WrapperOwner : public virtual JavaScriptShared
                                   JS::MutableHandle<JSPropertyDescriptor> desc);
     bool defineProperty(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
                         JS::MutableHandle<JSPropertyDescriptor> desc);
-    bool getOwnPropertyNames(JSContext *cx, JS::HandleObject proxy, JS::AutoIdVector &props);
+    bool ownPropertyKeys(JSContext *cx, JS::HandleObject proxy, JS::AutoIdVector &props);
     bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp);
     bool enumerate(JSContext *cx, JS::HandleObject proxy, JS::AutoIdVector &props);
 
@@ -93,8 +93,8 @@ class WrapperOwner : public virtual JavaScriptShared
   private:
     ObjectId idOfUnchecked(JSObject *obj);
 
-    bool getPropertyNames(JSContext *cx, JS::HandleObject proxy, uint32_t flags,
-                          JS::AutoIdVector &props);
+    bool getPropertyKeys(JSContext *cx, JS::HandleObject proxy, uint32_t flags,
+                         JS::AutoIdVector &props);
 
     // Catastrophic IPC failure.
     bool ipcfail(JSContext *cx);

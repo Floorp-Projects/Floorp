@@ -9652,7 +9652,7 @@ class CGEnumerateOwnProperties(CGAbstractStaticMethod):
                                         "EnumerateOwnProperties", "bool", args)
 
     def definition_body(self):
-        return "return js::GetProxyHandler(obj)->getOwnPropertyNames(cx, wrapper, props);\n"
+        return "return js::GetProxyHandler(obj)->ownPropertyKeys(cx, wrapper, props);\n"
 
 
 class CGEnumerateOwnPropertiesViaGetOwnPropertyNames(CGAbstractBindingMethod):
@@ -10761,7 +10761,7 @@ class CGDOMJSProxyHandler_slice(ClassMethod):
         self.descriptor = descriptor
 
     def getBody(self):
-        # Just like getOwnPropertyNames we'll assume that we have no holes, so
+        # Just like ownPropertyKeys we'll assume that we have no holes, so
         # we have all properties from 0 to length.  If that ever changes
         # (unlikely), we'll need to do something a bit more clever with how we
         # forward on to our ancestor.
