@@ -33,7 +33,6 @@ const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 
 const kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
 const kPrefRilDebuggingEnabled = "ril.debugging.enabled";
-const kPrefVoicemailDefaultServiceId = "dom.voicemail.defaultServiceId";
 
 let DEBUG;
 function debug(s) {
@@ -48,8 +47,6 @@ const GSMICCINFO_CID =
   Components.ID("{e0fa785b-ad3f-46ed-bc56-fcb0d6fe4fa8}");
 const CDMAICCINFO_CID =
   Components.ID("{3d1f844f-9ec5-48fb-8907-aed2e5421709}");
-const VOICEMAILSTATUS_CID=
-  Components.ID("{5467f2eb-e214-43ea-9b89-67711241ec8e}");
 const CELLBROADCASTMESSAGE_CID =
   Components.ID("{29474c96-3099-486f-bb4a-3c9a1da834e4}");
 const CELLBROADCASTETWSINFO_CID =
@@ -60,8 +57,6 @@ const ICCCARDLOCKERROR_CID =
 const RIL_IPC_MSG_NAMES = [
   "RIL:CardStateChanged",
   "RIL:IccInfoChanged",
-  "RIL:VoicemailNotification",
-  "RIL:VoicemailInfoChanged",
   "RIL:CardLockResult",
   "RIL:CardLockRetryCount",
   "RIL:StkCommand",
@@ -173,27 +168,6 @@ CdmaIccInfo.prototype = {
   prlVersion: 0
 };
 
-function VoicemailInfo() {}
-VoicemailInfo.prototype = {
-  number: null,
-  displayName: null
-};
-
-function VoicemailStatus(clientId) {
-  this.serviceId = clientId;
-}
-VoicemailStatus.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([]),
-  classID:        VOICEMAILSTATUS_CID,
-  contractID:     "@mozilla.org/voicemailstatus;1",
-
-  serviceId: -1,
-  hasMessages: false,
-  messageCount: -1, // Count unknown.
-  returnNumber: null,
-  returnMessage: null
-};
-
 function CellBroadcastMessage(clientId, pdu) {
   this.serviceId = clientId;
   this.gsmGeographicalScope = RIL.CB_GSM_GEOGRAPHICAL_SCOPE_NAMES[pdu.geographicalScope];
@@ -280,36 +254,27 @@ function RILContentHelper() {
   if (DEBUG) debug("Number of clients: " + this.numClients);
 
   this.rilContexts = [];
-  this.voicemailInfos = [];
-  this.voicemailStatuses = [];
   for (let clientId = 0; clientId < this.numClients; clientId++) {
     this.rilContexts[clientId] = {
       cardState:            RIL.GECKO_CARDSTATE_UNKNOWN,
       iccInfo:              null
     };
-
-    this.voicemailInfos[clientId] = new VoicemailInfo();
   }
-
-  this.voicemailDefaultServiceId = this.getVoicemailDefaultServiceId();
 
   this.initDOMRequestHelper(/* aWindow */ null, RIL_IPC_MSG_NAMES);
   this._windowsMap = [];
   this._cellBroadcastListeners = [];
-  this._voicemailListeners = [];
   this._iccListeners = [];
 
   Services.obs.addObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
 
   Services.prefs.addObserver(kPrefRilDebuggingEnabled, this, false);
-  Services.prefs.addObserver(kPrefVoicemailDefaultServiceId, this, false);
 }
 
 RILContentHelper.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICellBroadcastProvider,
-                                         Ci.nsIVoicemailProvider,
                                          Ci.nsIIccProvider,
                                          Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
@@ -317,7 +282,6 @@ RILContentHelper.prototype = {
   classInfo: XPCOMUtils.generateCI({classID: RILCONTENTHELPER_CID,
                                     classDescription: "RILContentHelper",
                                     interfaces: [Ci.nsICellBroadcastProvider,
-                                                 Ci.nsIVoicemailProvider,
                                                  Ci.nsIIccProvider]}),
 
   updateDebugFlag: function() {
@@ -675,51 +639,7 @@ RILContentHelper.prototype = {
   },
 
   _cellBroadcastListeners: null,
-  _voicemailListeners: null,
   _iccListeners: null,
-
-  voicemailInfos: null,
-  voicemailStatuses: null,
-
-  voicemailDefaultServiceId: 0,
-  getVoicemailDefaultServiceId: function() {
-    let id = Services.prefs.getIntPref(kPrefVoicemailDefaultServiceId);
-
-    if (id >= gNumRadioInterfaces || id < 0) {
-      id = 0;
-    }
-
-    return id;
-  },
-
-  getVoicemailInfo: function(clientId) {
-    // Get voicemail infomation by IPC only on first time.
-    this.getVoicemailInfo = function getVoicemailInfo(clientId) {
-      return this.voicemailInfos[clientId];
-    };
-
-    for (let cId = 0; cId < gNumRadioInterfaces; cId++) {
-      let voicemailInfo =
-        cpmm.sendSyncMessage("RIL:GetVoicemailInfo", {clientId: cId})[0];
-      if (voicemailInfo) {
-        this.updateInfo(voicemailInfo, this.voicemailInfos[cId]);
-      }
-    }
-
-    return this.voicemailInfos[clientId];
-  },
-
-  getVoicemailNumber: function(clientId) {
-    return this.getVoicemailInfo(clientId).number;
-  },
-
-  getVoicemailDisplayName: function(clientId) {
-    return this.getVoicemailInfo(clientId).displayName;
-  },
-
-  getVoicemailStatus: function(clientId) {
-    return this.voicemailStatuses[clientId];
-  },
 
   registerListener: function(listenerType, clientId, listener) {
     if (!this[listenerType]) {
@@ -752,22 +672,6 @@ RILContentHelper.prototype = {
       listeners.splice(index, 1);
       if (DEBUG) debug("Unregistered listener: " + listener);
     }
-  },
-
-  registerVoicemailMsg: function(listener) {
-    if (DEBUG) debug("Registering for voicemail-related messages");
-    // To follow the listener registration scheme, we add a dummy clientId 0.
-    // All voicemail events are routed to listener for client id 0.
-    // See |handleVoicemailNotification|.
-    this.registerListener("_voicemailListeners", 0, listener);
-    cpmm.sendAsyncMessage("RIL:RegisterVoicemailMsg");
-  },
-
-  unregisterVoicemailMsg: function(listener) {
-    // To follow the listener unregistration scheme, we add a dummy clientId 0.
-    // All voicemail events are routed to listener for client id 0.
-    // See |handleVoicemailNotification|.
-    this.unregisterListener("_voicemailListeners", 0, listener);
   },
 
   registerCellBroadcastMsg: function(listener) {
@@ -803,8 +707,6 @@ RILContentHelper.prototype = {
       case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
         if (data == kPrefRilDebuggingEnabled) {
           this.updateDebugFlag();
-        } else if (data == kPrefVoicemailDefaultServiceId) {
-          this.voicemailDefaultServiceId = this.getVoicemailDefaultServiceId();
         }
         break;
 
@@ -902,12 +804,6 @@ RILContentHelper.prototype = {
                            "_iccListeners",
                            "notifyIccInfoChanged",
                            null);
-        break;
-      case "RIL:VoicemailNotification":
-        this.handleVoicemailNotification(clientId, data);
-        break;
-      case "RIL:VoicemailInfoChanged":
-        this.updateInfo(data, this.voicemailInfos[clientId]);
         break;
       case "RIL:CardLockResult": {
         let requestId = data.requestId;
@@ -1048,46 +944,6 @@ RILContentHelper.prototype = {
     contact.id = iccContact.contactId;
 
     this.fireRequestSuccess(message.requestId, contact);
-  },
-
-  handleVoicemailNotification: function(clientId, message) {
-    let changed = false;
-    if (!this.voicemailStatuses[clientId]) {
-      this.voicemailStatuses[clientId] = new VoicemailStatus(clientId);
-    }
-
-    let voicemailStatus = this.voicemailStatuses[clientId];
-    if (voicemailStatus.hasMessages != message.active) {
-      changed = true;
-      voicemailStatus.hasMessages = message.active;
-    }
-
-    if (voicemailStatus.messageCount != message.msgCount) {
-      changed = true;
-      voicemailStatus.messageCount = message.msgCount;
-    } else if (message.msgCount == -1) {
-      // For MWI using DCS the message count is not available
-      changed = true;
-    }
-
-    if (voicemailStatus.returnNumber != message.returnNumber) {
-      changed = true;
-      voicemailStatus.returnNumber = message.returnNumber;
-    }
-
-    if (voicemailStatus.returnMessage != message.returnMessage) {
-      changed = true;
-      voicemailStatus.returnMessage = message.returnMessage;
-    }
-
-    if (changed) {
-      // To follow the event delivering scheme, we add a dummy clientId 0.
-      // All voicemail events are routed to listener for client id 0.
-      this._deliverEvent(0,
-                         "_voicemailListeners",
-                         "notifyStatusChanged",
-                         [voicemailStatus]);
-    }
   },
 
   _deliverEvent: function(clientId, listenerType, name, args) {

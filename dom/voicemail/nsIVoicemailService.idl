@@ -1,0 +1,137 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIVoicemailProvider;
+
+[scriptable, uuid(6a8b0133-960d-409d-88cd-583239e45f9f)]
+interface nsIVoicemailListener : nsISupports
+{
+  /**
+   * Called when a voicemail status (hasMessages, messageCount, returnNumber,
+   * returnMessage) changed.
+   */
+  void notifyStatusChanged(in nsIVoicemailProvider provider);
+
+  /**
+   * Called when a voicemail info (number, displayName) changed.
+   */
+  void notifyInfoChanged(in nsIVoicemailProvider provider);
+};
+
+%{C++
+#define NS_VOICEMAIL_SERVICE_CID \
+  { 0xcdd8fd72, 0x7d55, 0x496b, \
+    { 0xab, 0x1d, 0x74, 0x9f, 0xbc, 0x44, 0x56, 0x32 } }
+#define NS_VOICEMAIL_SERVICE_CONTRACTID \
+  "@mozilla.org/voicemail/voicemailservice;1"
+%}
+
+/**
+ * XPCOM component (in the content process) that provides the voicemail
+ * information.
+ */
+[scriptable, uuid(8ffd16c7-a614-4c4a-81f0-2a95e807152d)]
+interface nsIVoicemailService : nsISupports
+{
+  readonly attribute unsigned long numItems;
+
+  nsIVoicemailProvider getItemByServiceId(in unsigned long serviceId);
+
+  nsIVoicemailProvider getDefaultItem();
+
+  /**
+   * Called when any one who is interested in receiving unsolicited messages.
+   */
+  void registerListener(in nsIVoicemailListener listener);
+  void unregisterListener(in nsIVoicemailListener listener);
+};
+
+%{C++
+template<typename T> struct already_AddRefed;
+
+already_AddRefed<nsIVoicemailService>
+NS_CreateVoicemailService();
+%}
+
+[scriptable, uuid(a0bc19a2-3216-4f3f-89d3-8976a48cb829)]
+interface nsIVoicemailProvider : nsISupports
+{
+  readonly attribute unsigned long serviceId;
+
+  /**
+   * Voicemail center number. When changed, |notifyInfoChanged| of registered
+   * nsIVoicemailListener instances are called.
+   *
+   * Default: null
+   *
+   * @see 3GPP TS 31.102 subclause 4.2.63 "EFmwis (Message Waiting Indication Status)"
+   * @see 3GPP TS 51.011 subclause 10.3.45 "EFmwis (Message Waiting Indication Status)"
+   */
+  readonly attribute DOMString number;
+
+  /**
+   * Voicemail center display name. When changed, |notifyInfoChanged| of
+   * registered nsIVoicemailListener instances are called.
+   *
+   * Default: null
+   *
+   * @see 3GPP TS 31.102 subclause 4.2.63 "EFmwis (Message Waiting Indication Status)"
+   * @see 3GPP TS 51.011 subclause 10.3.45 "EFmwis (Message Waiting Indication Status)"
+   */
+  readonly attribute DOMString displayName;
+
+  /**
+   * Whether or not there are messages waiting in the voicemail box. When
+   * changed, |notifyStatusChanged| of registered nsIVoicemailListener instances
+   * are called.
+   *
+   * Default: false
+   *
+   * @see 3GPP TS 23.038 chapter 4 "SMS Data Coding Scheme"
+   * @see 3GPP TS 23.040 subclause 9.2.3.24.2 "Special SMS Message Indication"
+   */
+  readonly attribute boolean hasMessages;
+
+  /**
+   * When #hasMessages is true, #messageCount should be a positive number for
+   * the messages waiting, or -1 if the exact number is not available. When
+   * changed, |notifyStatusChanged| of registered nsIVoicemailListener instances
+   * are called.
+   *
+   * Default: 0
+   *
+   * @see 3GPP TS 23.040 subclause 9.2.3.24.2 "Special SMS Message Indication"
+   */
+  readonly attribute long messageCount;
+
+  /**
+   * A Return Call Message indicates to the MS to inform the user that a call
+   * (e.g. a telephone call) can be established to the address specified within
+   * the #returnNumber. The #returnMessage (if present) gives displayable
+   * information (e.g. the number of waiting voice messages).
+   *
+   * When #hasMessages is true this may contain a non-null string as the phone
+   * number of a Return Call Message. When changed, |notifyStatusChanged| of
+   * registered nsIVoicemailListener instances are called.
+   *
+   * Default: null
+   *
+   * @see 3GPP TS 23.040 subclause 9.2.3.9 "TPProtocolIdentifier (TPPID)"
+   */
+  readonly attribute DOMString returnNumber;
+
+  /**
+   * When #hasMessages is true this may contain a non-null string as the
+   * notification message of a Return Call Message. When changed,
+   * |notifyStatusChanged| of registered nsIVoicemailListener instances are
+   * called.
+   *
+   * Default: null
+   *
+   * @see 3GPP TS 23.040 subclause 9.2.3.9 "TPProtocolIdentifier (TPPID)"
+   */
+  readonly attribute DOMString returnMessage;
+};

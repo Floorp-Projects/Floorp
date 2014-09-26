@@ -298,6 +298,10 @@ interface CameraControl : MediaStream
   [Pref="camera.control.autofocus_moving_callback.enabled"]
   attribute CameraAutoFocusMovingCallback? onAutoFocusMoving;
 
+  /* this function is called whenever auto focus completes, due to continuous
+     autofocus or a solicited auto focus.  */
+  attribute CameraAutoFocusCallback? onAutoFocusCompleted;
+
   /* capture an image and return it as a blob to the 'onSuccess' callback;
      if the camera supports it, this may be invoked while the camera is
      already recording video.

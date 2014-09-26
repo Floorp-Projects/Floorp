@@ -127,11 +127,6 @@ const RIL_IPC_ICCMANAGER_MSG_NAMES = [
   "RIL:MatchMvno"
 ];
 
-const RIL_IPC_VOICEMAIL_MSG_NAMES = [
-  "RIL:RegisterVoicemailMsg",
-  "RIL:GetVoicemailInfo"
-];
-
 const RIL_IPC_CELLBROADCAST_MSG_NAMES = [
   "RIL:RegisterCellBroadcastMsg"
 ];
@@ -250,9 +245,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
       for (let msgName of RIL_IPC_ICCMANAGER_MSG_NAMES) {
         ppmm.addMessageListener(msgName, this);
       }
-      for (let msgname of RIL_IPC_VOICEMAIL_MSG_NAMES) {
-        ppmm.addMessageListener(msgname, this);
-      }
       for (let msgname of RIL_IPC_CELLBROADCAST_MSG_NAMES) {
         ppmm.addMessageListener(msgname, this);
       }
@@ -262,9 +254,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
       ppmm.removeMessageListener("child-process-shutdown", this);
       for (let msgName of RIL_IPC_ICCMANAGER_MSG_NAMES) {
         ppmm.removeMessageListener(msgName, this);
-      }
-      for (let msgname of RIL_IPC_VOICEMAIL_MSG_NAMES) {
-        ppmm.removeMessageListener(msgname, this);
       }
       for (let msgname of RIL_IPC_CELLBROADCAST_MSG_NAMES) {
         ppmm.removeMessageListener(msgname, this);
@@ -384,14 +373,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
           }
           return null;
         }
-      } else if (RIL_IPC_VOICEMAIL_MSG_NAMES.indexOf(msg.name) != -1) {
-        if (!msg.target.assertPermission("voicemail")) {
-          if (DEBUG) {
-            debug("Voicemail message " + msg.name +
-                  " from a content process with no 'voicemail' privileges.");
-          }
-          return null;
-        }
       } else if (RIL_IPC_CELLBROADCAST_MSG_NAMES.indexOf(msg.name) != -1) {
         if (!msg.target.assertPermission("cellbroadcast")) {
           if (DEBUG) {
@@ -408,9 +389,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
       switch (msg.name) {
         case "RIL:RegisterIccMsg":
           this._registerMessageTarget("icc", msg.target);
-          return null;
-        case "RIL:RegisterVoicemailMsg":
-          this._registerMessageTarget("voicemail", msg.target);
           return null;
         case "RIL:RegisterCellBroadcastMsg":
           this._registerMessageTarget("cellbroadcast", msg.target);
@@ -445,13 +423,6 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function() {
 
     sendMobileConnectionMessage: function(message, clientId, data) {
       this._sendTargetMessage("mobileconnection", message, {
-        clientId: clientId,
-        data: data
-      });
-    },
-
-    sendVoicemailMessage: function(message, clientId, data) {
-      this._sendTargetMessage("voicemail", message, {
         clientId: clientId,
         data: data
       });
@@ -1883,11 +1854,6 @@ function RadioInterface(aClientId, aWorkerMessenger) {
     imsi:           null
   };
 
-  this.voicemailInfo = {
-    number: null,
-    displayName: null
-  };
-
   this.operatorInfo = {};
 
   let lock = gSettingsService.createLock();
@@ -2067,9 +2033,6 @@ RadioInterface.prototype = {
       case "RIL:MatchMvno":
         this.matchMvno(msg.target, msg.json.data);
         break;
-      case "RIL:GetVoicemailInfo":
-        // This message is sync.
-        return this.voicemailInfo;
     }
     return null;
   },
@@ -2183,8 +2146,7 @@ RadioInterface.prototype = {
         this.handleIccMbdn(message);
         break;
       case "iccmwis":
-        gMessageManager.sendVoicemailMessage("RIL:VoicemailNotification",
-                                             this.clientId, message.mwi);
+        this.handleIccMwis(message.mwi);
         break;
       case "stkcommand":
         this.handleStkProactiveCommand(message);
@@ -2763,8 +2725,7 @@ RadioInterface.prototype = {
 
       mwi.returnNumber = message.sender;
       mwi.returnMessage = message.fullBody;
-      gMessageManager.sendVoicemailMessage("RIL:VoicemailNotification",
-                                           this.clientId, mwi);
+      this.handleIccMwis(mwi);
 
       // Dicarded MWI comes without text body.
       // Hence, we discard it here after notifying the MWI status.
@@ -2968,13 +2929,16 @@ RadioInterface.prototype = {
   },
 
   handleIccMbdn: function(message) {
-    let voicemailInfo = this.voicemailInfo;
+    let service = Cc["@mozilla.org/voicemail/voicemailservice;1"]
+                  .getService(Ci.nsIGonkVoicemailService);
+    service.notifyInfoChanged(this.clientId, message.number, message.alphaId);
+  },
 
-    voicemailInfo.number = message.number;
-    voicemailInfo.displayName = message.alphaId;
-
-    gMessageManager.sendVoicemailMessage("RIL:VoicemailInfoChanged",
-                                         this.clientId, voicemailInfo);
+  handleIccMwis: function(mwi) {
+    let service = Cc["@mozilla.org/voicemail/voicemailservice;1"]
+                  .getService(Ci.nsIGonkVoicemailService);
+    service.notifyStatusChanged(this.clientId, mwi.active, mwi.msgCount,
+                                mwi.returnNumber, mwi.returnMessage);
   },
 
   handleIccInfoChange: function(message) {
