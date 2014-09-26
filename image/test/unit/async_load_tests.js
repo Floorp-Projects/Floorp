@@ -194,7 +194,7 @@ function startImageCallback(otherCb)
     var listener2 = new ImageListener(null, function(foo, bar) { do_test_finished(); });
     var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                   .createScriptedObserver(listener2);
-    requests.push(gCurrentLoader.loadImageXPCOM(uri, null, null, null, null, outer, null, 0, null));
+    requests.push(gCurrentLoader.loadImageXPCOM(uri, null, null, null, null, outer, null, 0, null, null));
     listener2.synchronous = false;
 
     // Now that we've started another load, chain to the callback.
