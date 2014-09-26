@@ -155,7 +155,8 @@ AudioSegment::WriteTo(uint64_t aID, AudioStream* aOutput, AudioMixer* aMixer)
   // Offset in the buffer that will end up sent to the AudioStream, in samples.
   uint32_t offset = 0;
 
-  if (!GetDuration()) {
+  if (GetDuration() <= 0) {
+    MOZ_ASSERT(GetDuration() == 0);
     return;
   }
 
