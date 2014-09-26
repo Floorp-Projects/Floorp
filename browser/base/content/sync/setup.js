@@ -152,9 +152,9 @@ var gSyncSetup = {
 
     // Only open the dialog if username + password are actually correct.
     Weave.Service.login();
-    if ([Weave.LOGIN_FAILED_INVALID_PASSPHRASE,
-         Weave.LOGIN_FAILED_NO_PASSPHRASE,
-         Weave.LOGIN_SUCCEEDED].indexOf(Weave.Status.login) == -1) {
+    if (![Weave.LOGIN_FAILED_INVALID_PASSPHRASE,
+          Weave.LOGIN_FAILED_NO_PASSPHRASE,
+          Weave.LOGIN_SUCCEEDED].contains(Weave.Status.login)) {
       return;
     }
 
