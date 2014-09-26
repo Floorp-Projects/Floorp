@@ -18,7 +18,7 @@ var permissionObserver = {
     if (aTopic == "perm-changed") {
       var permission = aSubject.QueryInterface(Components.interfaces.nsIPermission);
       if (permission.host == gPermURI.host) {
-        if (gPermissions.indexOf(permission.type) > -1)
+        if (gPermissions.contains(permission.type))
           initRow(permission.type);
         else if (permission.type.startsWith("plugin"))
           setPluginsRadioState();
