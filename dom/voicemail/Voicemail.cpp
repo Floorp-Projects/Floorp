@@ -15,6 +15,13 @@
 #include "nsContentUtils.h"
 #include "nsServiceManagerUtils.h"
 
+// Service instantiation
+#include "ipc/VoicemailIPCService.h"
+#if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
+#include "nsIGonkVoicemailService.h"
+#endif
+#include "nsXULAppAPI.h" // For XRE_GetProcessType()
+
 using namespace mozilla::dom;
 using mozilla::ErrorResult;
 
@@ -236,4 +243,22 @@ Voicemail::NotifyStatusChanged(nsIVoicemailProvider* aProvider)
   nsRefPtr<MozVoicemailEvent> event =
     MozVoicemailEvent::Constructor(this, NS_LITERAL_STRING("statuschanged"), init);
   return DispatchTrustedEvent(event);
+}
+
+already_AddRefed<nsIVoicemailService>
+NS_CreateVoicemailService()
+{
+  nsCOMPtr<nsIVoicemailService> service;
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    service = new mozilla::dom::voicemail::VoicemailIPCService();
+  } else {
+#if defined(MOZ_B2G_RIL)
+#if defined(MOZ_WIDGET_GONK)
+    service = do_GetService(GONK_VOICEMAIL_SERVICE_CONTRACTID);
+#endif // MOZ_WIDGET_GONK
+#endif // MOZ_B2G_RIL
+  }
+
+  return service.forget();
 }
