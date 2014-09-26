@@ -86,8 +86,8 @@ struct AudioChunk {
   // Generic methods
   void SliceTo(TrackTicks aStart, TrackTicks aEnd)
   {
-    NS_ASSERTION(aStart >= 0 && aStart < aEnd && aEnd <= mDuration,
-                 "Slice out of bounds");
+    MOZ_ASSERT(aStart >= 0 && aStart < aEnd && aEnd <= mDuration,
+               "Slice out of bounds");
     if (mBuffer) {
       MOZ_ASSERT(aStart < INT32_MAX, "Can't slice beyond 32-bit sample lengths");
       for (uint32_t channel = 0; channel < mChannelData.Length(); ++channel) {
