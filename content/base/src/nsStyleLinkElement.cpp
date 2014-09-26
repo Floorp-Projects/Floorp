@@ -208,7 +208,8 @@ nsStyleLinkElement::UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
     // We remove this stylesheet from the cache to load a new version.
     nsCOMPtr<nsIContent> thisContent;
     CallQueryInterface(this, getter_AddRefs(thisContent));
-    nsIDocument* doc = thisContent->GetCrossShadowCurrentDoc();
+    nsCOMPtr<nsIDocument> doc = thisContent->IsInShadowTree() ?
+      thisContent->OwnerDoc() : thisContent->GetUncomposedDoc();
     if (doc && doc->CSSLoader()->GetEnabled() &&
         mStyleSheet && mStyleSheet->GetOriginalURI()) {
       doc->CSSLoader()->ObsoleteSheet(mStyleSheet->GetOriginalURI());
@@ -344,7 +345,8 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> doc = thisContent->GetCrossShadowCurrentDoc();
+  nsCOMPtr<nsIDocument> doc = thisContent->IsInShadowTree() ?
+    thisContent->OwnerDoc() : thisContent->GetUncomposedDoc();
   if (!doc || !doc->CSSLoader()->GetEnabled()) {
     return NS_OK;
   }
