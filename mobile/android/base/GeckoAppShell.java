@@ -211,7 +211,9 @@ public class GeckoAppShell
     public static native void dispatchMemoryPressure();
 
     public static void registerGlobalExceptionHandler() {
-        systemUncaughtHandler = Thread.getDefaultUncaughtExceptionHandler();
+        if (systemUncaughtHandler == null) {
+            systemUncaughtHandler = Thread.getDefaultUncaughtExceptionHandler();
+        }
 
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             @Override
