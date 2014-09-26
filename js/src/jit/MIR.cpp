@@ -3178,6 +3178,7 @@ MCreateThisWithTemplate::canRecoverOnBailout() const
 MObjectState::MObjectState(MDefinition *obj)
 {
     // This instruction is only used as a summary for bailout paths.
+    setResultType(MIRType_Object);
     setRecoveredOnBailout();
     JSObject *templateObject = nullptr;
     if (obj->isNewObject())
