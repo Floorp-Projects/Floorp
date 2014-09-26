@@ -196,7 +196,7 @@ def dumpLeakLog(leakLogFile, filter = False):
   # Simply copy the log.
   log.info(leakReport.rstrip("\n"))
 
-def processSingleLeakFile(leakLogFileName, processType, leakThreshold, ignoreMissingLeaks):
+def processSingleLeakFile(leakLogFileName, processType, leakThreshold):
   """Process a single leak log.
   """
 
@@ -273,14 +273,11 @@ def processSingleLeakFile(leakLogFileName, processType, leakThreshold, ignoreMis
     if crashedOnPurpose:
       log.info("TEST-INFO | leakcheck | %s deliberate crash and thus no leak log"
                % processString)
-    elif ignoreMissingLeaks:
-      log.info("TEST-INFO | leakcheck | %s ignoring missing output line for total leaks"
-               % processString)
     else:
-      log.info("TEST-UNEXPECTED-FAIL | leakcheck | %s missing output line for total leaks!"
+      # TODO: This should be a TEST-UNEXPECTED-FAIL, but was changed to a warning
+      # due to too many intermittent failures (see bug 831223).
+      log.info("WARNING | leakcheck | %s missing output line for total leaks!"
                % processString)
-      log.info("TEST-INFO | leakcheck | missing output line from log file %s"
-               % leakLogFileName)
     return
 
   if totalBytesLeaked == 0:
@@ -289,9 +286,14 @@ def processSingleLeakFile(leakLogFileName, processType, leakThreshold, ignoreMis
 
   # totalBytesLeaked was seen and is non-zero.
   if totalBytesLeaked > leakThreshold:
-    logAsWarning = True
-    # Fail the run if we're over the threshold (which defaults to 0)
-    prefix = "TEST-UNEXPECTED-FAIL"
+    if processType == "tab":
+      # For now, ignore tab process leaks. See bug 1051230.
+      log.info("WARNING | leakcheck | ignoring leaks in tab process")
+      prefix = "WARNING"
+    else:
+      logAsWarning = True
+      # Fail the run if we're over the threshold (which defaults to 0)
+      prefix = "TEST-UNEXPECTED-FAIL"
   else:
     prefix = "WARNING"
   # Create a comma delimited string of the first N leaked objects found,
@@ -309,7 +311,7 @@ def processSingleLeakFile(leakLogFileName, processType, leakThreshold, ignoreMis
     log.info("%s | leakcheck | %s %d bytes leaked (%s)"
              % (prefix, processString, totalBytesLeaked, leakedObjectSummary))
 
-def processLeakLog(leakLogFile, leakThresholds, ignoreMissingLeaks):
+def processLeakLog(leakLogFile, leakThreshold = 0):
   """Process the leak log, including separate leak logs created
   by child processes.
 
@@ -324,28 +326,14 @@ def processLeakLog(leakLogFile, leakThresholds, ignoreMissingLeaks):
   optional.
 
   All other file names are treated as being for default processes.
-
-  leakThresholds should be a dict mapping process types to leak thresholds,
-  in bytes. If a process type is not present in the dict the threshold
-  will be 0.
   """
 
   if not os.path.exists(leakLogFile):
     log.info("WARNING | leakcheck | refcount logging is off, so leaks can't be detected!")
     return
 
-  # This list is based on kGeckoProcessTypeString. ipdlunittest processes likely
-  # are not going to produce leak logs we will ever see.
-  knownProcessTypes = ["default", "plugin", "tab", "geckomediaplugin"]
-
-  for processType in knownProcessTypes:
-    log.info("TEST-INFO | leakcheck | %s process: leak threshold set at %d bytes"
-             % (processType, leakThresholds.get(processType, 0)))
-
-  for processType in leakThresholds:
-    if not processType in knownProcessTypes:
-      log.info("TEST-UNEXPECTED-FAIL | leakcheck | Unknown process type %s in leakThresholds"
-               % processType)
+  if leakThreshold != 0:
+    log.info("TEST-INFO | leakcheck | threshold set at %d bytes" % leakThreshold)
 
   (leakLogFileDir, leakFileBase) = os.path.split(leakLogFile)
   if leakFileBase[-4:] == ".log":
@@ -362,12 +350,7 @@ def processLeakLog(leakLogFile, leakThresholds, ignoreMissingLeaks):
         processType = m.group(1)
       else:
         processType = "default"
-      if not processType in knownProcessTypes:
-        log.info("TEST-UNEXPECTED-FAIL | leakcheck | Leak log with unknown process type %s"
-                 % processType)
-      leakThreshold = leakThresholds.get(processType, 0)
-      processSingleLeakFile(thisFile, processType, leakThreshold,
-                            processType in ignoreMissingLeaks)
+      processSingleLeakFile(thisFile, processType, leakThreshold)
 
 def replaceBackSlashes(input):
   return input.replace('\\', '/')
