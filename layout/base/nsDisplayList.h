@@ -2842,7 +2842,7 @@ public:
    * for this layer are send to our nsPresContext.
    * GENERATE_SCROLLABLE_LAYER : only valid on nsDisplaySubDocument (and
    * subclasses), indicates this layer is to be a scrollable layer, so call
-   * RecordFrameMetrics, etc.
+   * ComputeFrameMetrics, etc.
    * @param aScrollTarget when VERTICAL_SCROLLBAR or HORIZONTAL_SCROLLBAR
    * is set in the flags, this parameter should be the ViewID of the
    * scrollable content this scrollbar is for.

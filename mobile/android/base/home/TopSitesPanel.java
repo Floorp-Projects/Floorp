@@ -525,15 +525,12 @@ public class TopSitesPanel extends HomeFragment {
                 return;
             }
 
-            // Make sure we query suggested images without the user-entered wrapper.
-            final String decodedUrl = StringUtils.decodeUserEnteredUrl(url);
-
             // Suggested images have precedence over thumbnails, no need to wait
             // for them to be loaded. See: CursorLoaderCallbacks.onLoadFinished()
-            final String imageUrl = BrowserDB.getSuggestedImageUrlForUrl(decodedUrl);
+            final String imageUrl = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.IMAGEURL));
             if (!TextUtils.isEmpty(imageUrl)) {
-                final int bgColor = BrowserDB.getSuggestedBackgroundColorForUrl(decodedUrl);
-                view.displayThumbnail(imageUrl, bgColor);
+                final String bgColor = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.BGCOLOR));
+                view.displayThumbnail(imageUrl, Color.parseColor(bgColor));
                 return;
             }
 
@@ -624,10 +621,11 @@ public class TopSitesPanel extends HomeFragment {
             int i = 1;
             do {
                 final String url = c.getString(col);
+                final String imageUrl = c.getString(c.getColumnIndexOrThrow(TopSites.IMAGEURL));
 
                 // Only try to fetch thumbnails for non-empty URLs that
                 // don't have an associated suggested image URL.
-                if (TextUtils.isEmpty(url) || BrowserDB.hasSuggestedImageUrl(url)) {
+                if (TextUtils.isEmpty(url) || TextUtils.isEmpty(imageUrl)) {
                     continue;
                 }
 

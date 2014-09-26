@@ -229,6 +229,10 @@ function startup(data, reasonCode) {
       resultFile: options.resultFile,
       // Arguments passed as --static-args
       staticArgs: options.staticArgs,
+
+      // Option to prevent automatic kill of firefox during tests
+      noQuit: options.no_quit,
+
       // Add-on preferences branch name
       preferencesBranch: options.preferencesBranch,
 

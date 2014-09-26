@@ -1360,7 +1360,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
 
         return deleteFavicons(uri, faviconSelection, null) +
                deleteThumbnails(uri, thumbnailSelection, null) +
-               URLMetadata.deleteUnused(getContext().getContentResolver());
+               URLMetadata.deleteUnused(getContext().getContentResolver(),
+                                        uri.getQueryParameter(BrowserContract.PARAM_PROFILE));
     }
 
     @Override

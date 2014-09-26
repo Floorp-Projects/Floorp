@@ -3739,7 +3739,7 @@ this.DOMApplicationRegistry = {
       this.broadcastMessage("Webapps:UpdateState", {
         app: aOldApp,
         error: aError,
-        id: aNewApp.id
+        id: aId
       });
       this.broadcastMessage("Webapps:FireEvent", {
         eventType: "downloaderror",
