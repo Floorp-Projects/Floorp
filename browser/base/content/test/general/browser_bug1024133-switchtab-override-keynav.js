@@ -38,7 +38,8 @@ add_task(function* test_switchtab_override_keynav() {
   EventUtils.synthesizeKey("e" , {});
   yield searchDeferred.promise;
 
-  info("Select first autocomplete popup entry");
+  info("Select second autocomplete popup entry");
+  EventUtils.synthesizeKey("VK_DOWN" , {});
   EventUtils.synthesizeKey("VK_DOWN" , {});
   ok(/moz-action:switchtab/.test(gURLBar.value), "switch to tab entry found");
 

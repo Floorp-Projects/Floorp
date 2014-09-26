@@ -11,7 +11,6 @@ let gCustomize = {
     "classic",
     "enhanced",
     "panel",
-    "what",
   ],
 
   _nodes: {},
@@ -32,9 +31,6 @@ let gCustomize = {
     this._nodes.enhanced.addEventListener("click", e => {
       gAllPages.enabled = true;
       gAllPages.enhanced = true;
-    });
-    this._nodes.what.addEventListener("click", e => {
-      gIntro.showPanel();
     });
 
     this.updateSelected();
