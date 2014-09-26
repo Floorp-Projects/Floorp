@@ -24,4 +24,4 @@ public:
 
 } /* layers */
 } /* mozilla */
-#endif /* GFX_THEBESLAYERD3D10_H */
+#endif /* GFX_PAINTEDLAYERD3D10_H */

@@ -184,7 +184,7 @@ FRAME_STATE_BIT(Generic, 36, NS_FRAME_UPDATE_LAYER_TREE)
 // Frame can accept absolutely positioned children.
 FRAME_STATE_BIT(Generic, 37, NS_FRAME_HAS_ABSPOS_CHILDREN)
 
-// A display item for this frame has been painted as part of a ThebesLayer.
+// A display item for this frame has been painted as part of a PaintedLayer.
 FRAME_STATE_BIT(Generic, 38, NS_FRAME_PAINTED_THEBES)
 
 // Frame is or is a descendant of something with a fixed height, unless that

@@ -5,7 +5,7 @@
 
 #include "LayerManagerD3D9.h"
 
-#include "ThebesLayerD3D9.h"
+#include "PaintedLayerD3D9.h"
 #include "ContainerLayerD3D9.h"
 #include "ImageLayerD3D9.h"
 #include "ColorLayerD3D9.h"
@@ -128,7 +128,7 @@ LayerManagerD3D9::EndEmptyTransaction(EndTransactionFlags aFlags)
 }
 
 void
-LayerManagerD3D9::EndTransaction(DrawThebesLayerCallback aCallback,
+LayerManagerD3D9::EndTransaction(DrawPaintedLayerCallback aCallback,
                                  void* aCallbackData,
                                  EndTransactionFlags aFlags)
 {
@@ -167,10 +167,10 @@ LayerManagerD3D9::SetRoot(Layer *aLayer)
   mRoot = aLayer;
 }
 
-already_AddRefed<ThebesLayer>
-LayerManagerD3D9::CreateThebesLayer()
+already_AddRefed<PaintedLayer>
+LayerManagerD3D9::CreatePaintedLayer()
 {
-  nsRefPtr<ThebesLayer> layer = new ThebesLayerD3D9(this);
+  nsRefPtr<PaintedLayer> layer = new PaintedLayerD3D9(this);
   return layer.forget();
 }
 

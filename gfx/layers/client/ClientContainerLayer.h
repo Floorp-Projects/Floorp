@@ -16,7 +16,7 @@
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsTArray.h"                   // for nsAutoTArray
 #include "ReadbackProcessor.h"
-#include "ClientThebesLayer.h"
+#include "ClientPaintedLayer.h"
 
 namespace mozilla {
 namespace layers {
