@@ -2129,6 +2129,7 @@ ContainerState::PopThebesLayerData()
       nsIntRect visibleRect = data->mVisibleRegion.GetBounds();
       visibleRect.MoveBy(-GetTranslationForThebesLayer(data->mLayer));
       colorLayer->SetBounds(visibleRect);
+      colorLayer->SetClipRect(nullptr);
 
       layer = colorLayer;
       FLB_LOG_THEBES_DECISION(data, "  Selected color layer=%p\n", layer.get());
