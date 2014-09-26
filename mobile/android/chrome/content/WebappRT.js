@@ -65,8 +65,18 @@ let WebappRT = {
 
     // If the app is in debug mode, configure and enable the remote debugger.
     Messaging.sendRequestForResult({ type: "NativeApp:IsDebuggable" }).then((response) => {
-      if (response.isDebuggable) {
-        this._enableRemoteDebugger(aUrl);
+      let that = this;
+      let name = this._getAppName(aUrl);
+
+       if (response.isDebuggable) {
+        Notifications.create({
+          title: Strings.browser.formatStringFromName("remoteStartNotificationTitle", [name], 1),
+          message: Strings.browser.GetStringFromName("remoteStartNotificationMessage"),
+          icon: "drawable://warning_doorhanger",
+          onClick: function(aId, aCookie) {
+            that._enableRemoteDebugger(aUrl);
+          },
+        });
       }
     });
 
@@ -139,6 +149,18 @@ let WebappRT = {
     }
   },
 
+  _getAppName: function(aUrl) {
+    let name = Strings.browser.GetStringFromName("remoteNotificationGenericName");
+    let app = DOMApplicationRegistry.getAppByManifestURL(aUrl);
+
+    if (app) {
+      name = app.name;
+    }
+
+    return name;
+  },
+
+
   _enableRemoteDebugger: function(aUrl) {
     // Skip the connection prompt in favor of notifying the user below.
     Services.prefs.setBoolPref("devtools.debugger.prompt-connection", false);
@@ -158,13 +180,7 @@ let WebappRT = {
     // Notify the user that we enabled the debugger and which port it's using
     // so they can use the DevTools Connect… dialog to connect the client to it.
     DOMApplicationRegistry.registryReady.then(() => {
-      let name;
-      let app = DOMApplicationRegistry.getAppByManifestURL(aUrl);
-      if (app) {
-        name = app.name;
-      } else {
-        name = Strings.browser.GetStringFromName("remoteNotificationGenericName");
-      }
+      let name = this._getAppName(aUrl);
 
       Notifications.create({
         title: Strings.browser.formatStringFromName("remoteNotificationTitle", [name], 1),
