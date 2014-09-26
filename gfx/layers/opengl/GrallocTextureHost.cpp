@@ -121,10 +121,9 @@ GrallocTextureSourceOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
    * texture using fEGLImageTargetTexture2D.
    */
   MOZ_ASSERT(gl());
-  if (!IsValid()) {
+  if (!IsValid() || !gl()->MakeCurrent()) {
     return;
   }
-  gl()->MakeCurrent();
 
   GLuint tex = GetGLTexture();
   GLuint textureTarget = GetTextureTarget();
@@ -153,23 +152,32 @@ GrallocTextureSourceOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
 #endif
 }
 
-void GrallocTextureSourceOGL::Lock()
+bool GrallocTextureSourceOGL::Lock()
 {
-  if (mTextureBackendSpecificData) return;
+  if (mTextureBackendSpecificData) {
+    return true;
+  }
 
   MOZ_ASSERT(IsValid());
+  if (!IsValid()) {
+    return false;
+  }
+  if (!gl()->MakeCurrent()) {
+    NS_WARNING("Failed to make the gl context current");
+    return false;
+  }
 
   mTexture = mCompositor->GetTemporaryTexture(GetTextureTarget(), LOCAL_GL_TEXTURE0);
 
   GLuint textureTarget = GetTextureTarget();
 
-  gl()->MakeCurrent();
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
   gl()->fBindTexture(textureTarget, mTexture);
   if (!mEGLImage) {
     mEGLImage = EGLImageCreateFromNativeBuffer(gl(), mGraphicBuffer->getNativeBuffer());
   }
   gl()->fEGLImageTargetTexture2D(textureTarget, mEGLImage);
+  return true;
 }
 
 bool
@@ -231,9 +239,13 @@ GrallocTextureSourceOGL::SetTextureBackendSpecificData(TextureSharedDataGonkOGL*
     mNeedsReset = true;
   }
 
+  if (!gl() || !gl()->MakeCurrent()) {
+    NS_WARNING("Failed to make the context current");
+    return;
+  }
+
   if (!mNeedsReset) {
     // Update binding to the EGLImage
-    gl()->MakeCurrent();
     GLuint tex = GetGLTexture();
     GLuint textureTarget = GetTextureTarget();
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
@@ -253,7 +265,6 @@ GrallocTextureSourceOGL::SetTextureBackendSpecificData(TextureSharedDataGonkOGL*
   // Update mTextureBackendSpecificData after calling DeallocateDeviceData().
   mTextureBackendSpecificData = aBackendData;
 
-  gl()->MakeCurrent();
   GLuint tex = GetGLTexture();
   GLuint textureTarget = GetTextureTarget();
 
@@ -285,7 +296,9 @@ GrallocTextureSourceOGL::DeallocateDeviceData()
 {
   if (mEGLImage) {
     MOZ_ASSERT(gl());
-    gl()->MakeCurrent();
+    if (!gl() || !gl()->MakeCurrent()) {
+      return;
+    }
     if (mTextureBackendSpecificData) {
       mTextureBackendSpecificData->ClearBoundEGLImage(mEGLImage);
     }
@@ -432,10 +445,9 @@ GrallocTextureHostOGL::GetAsSurface() {
 
 TemporaryRef<gfx::DataSourceSurface>
 GrallocTextureSourceOGL::GetAsSurface() {
-  if (!IsValid()) {
+  if (!IsValid() || !gl()->MakeCurrent()) {
     return nullptr;
   }
-  gl()->MakeCurrent();
 
   GLuint tex = GetGLTexture();
   gl()->fActiveTexture(LOCAL_GL_TEXTURE0);

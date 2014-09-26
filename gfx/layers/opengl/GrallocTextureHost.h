@@ -71,7 +71,7 @@ public:
     return mEGLImage;
   }
 
-  void Lock();
+  bool Lock();
 
 protected:
   RefPtr<TextureSharedDataGonkOGL> mTextureBackendSpecificData;
