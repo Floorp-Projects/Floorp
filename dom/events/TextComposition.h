@@ -211,6 +211,11 @@ private:
   //       mIsRequestingCancel are set false.
   bool mRequestedToCommitOrCancel;
 
+  // mWasNativeCompositionEndEventDiscarded is true if this composition was
+  // requested commit or cancel itself but native compositionend event is
+  // discarded by PresShell due to not safe to dispatch events.
+  bool mWasNativeCompositionEndEventDiscarded;
+
   // Hide the default constructor and copy constructor.
   TextComposition() {}
   TextComposition(const TextComposition& aOther);
@@ -254,6 +259,22 @@ private:
    *         destroying this composition.
    */
   bool MaybeDispatchCompositionUpdate(const WidgetTextEvent* aEvent);
+
+  /**
+   * If IME has already dispatched compositionend event but it was discarded
+   * by PresShell due to not safe to dispatch, this returns true.
+   */
+  bool WasNativeCompositionEndEventDiscarded() const
+  {
+    return mWasNativeCompositionEndEventDiscarded;
+  }
+
+  /**
+   * OnCompositionEventDiscarded() is called when PresShell discards
+   * compositionupdate, compositionend or text event due to not safe to
+   * dispatch event.
+   */
+  void OnCompositionEventDiscarded(const WidgetGUIEvent* aEvent);
 
   /**
    * Calculate composition offset then notify composition update to widget
