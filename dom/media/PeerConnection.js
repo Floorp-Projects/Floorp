@@ -497,7 +497,11 @@ RTCPeerConnection.prototype = {
   },
 
   dispatchEvent: function(event) {
-    this.__DOM_IMPL__.dispatchEvent(event);
+    // PC can close while events are firing if there is an async dispatch
+    // in c++ land
+    if (!this._closed) {
+      this.__DOM_IMPL__.dispatchEvent(event);
+    }
   },
 
   // Log error message to web console and window.onerror, if present.
