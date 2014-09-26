@@ -440,6 +440,9 @@ pref("layers.async-pan-zoom.enabled", false);
 // Whether to enable containerless async scrolling
 pref("layout.async-containerless-scrolling.enabled", true);
 
+// Whether to enable event region building during painting
+pref("layout.event-regions.enabled", false);
+
 // APZ preferences. For documentation/details on what these prefs do, check 
 // gfx/layers/apz/src/AsyncPanZoomController.cpp.
 pref("apz.allow_checkerboarding", true);

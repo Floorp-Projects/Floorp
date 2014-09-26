@@ -389,6 +389,16 @@ GetObjectAllocKindForCopy(const Nursery &nursery, JSObject *obj)
         return GetBackgroundAllocKind(TypedArrayObject::AllocKindForLazyBuffer(nbytes));
     }
 
+    // Inlined opaque typed objects are followed by their data, so make sure we
+    // copy it all over to the new object.
+    if (obj->is<InlineOpaqueTypedObject>()) {
+        // Figure out the size of this object, from the prototype's TypeDescr.
+        // The objects we are traversing here are all tenured, so we don't need
+        // to check forwarding pointers.
+        TypeDescr *descr = &obj->as<InlineOpaqueTypedObject>().typeDescr();
+        return InlineOpaqueTypedObject::allocKindForTypeDescriptor(descr);
+    }
+
     AllocKind kind = GetGCObjectFixedSlotsKind(obj->numFixedSlots());
     JS_ASSERT(!IsBackgroundFinalized(kind));
     JS_ASSERT(CanBeFinalizedInBackground(kind, obj->getClass()));

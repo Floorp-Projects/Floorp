@@ -8,9 +8,6 @@ function* promise_first_result(inputText) {
   gURLBar.value = inputText.slice(0, -1);
   EventUtils.synthesizeKey(inputText.slice(-1) , {});
   yield promiseSearchComplete();
-  // On Linux, the popup may or may not be open at this stage. So we need
-  // additional checks to ensure we wait long enough.
-  yield promisePopupShown(gURLBar.popup);
 
   let firstResult = gURLBar.popup.richlistbox.firstChild;
   return firstResult;

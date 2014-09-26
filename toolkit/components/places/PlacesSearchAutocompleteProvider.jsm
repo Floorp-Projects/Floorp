@@ -25,6 +25,16 @@ const SearchAutocompleteProviderInternal = {
    */
   priorityMatches: null,
 
+  /**
+   * Array of objects in the format returned by findMatchByAlias.
+   */
+  aliasMatches: null,
+
+  /**
+   * Object for the default search match.
+   **/
+  defaultMatch: null,
+
   initialize: function () {
     return new Promise((resolve, reject) => {
       Services.search.init(status => {
@@ -60,6 +70,17 @@ const SearchAutocompleteProviderInternal = {
 
   _refresh: function () {
     this.priorityMatches = [];
+    this.aliasMatches = [];
+    this.defaultMatch = null;
+
+    let currentEngine = Services.search.currentEngine;
+    // This can be null in XCPShell.
+    if (currentEngine) {
+      this.defaultMatch = {
+        engineName: currentEngine.name,
+        iconUrl: currentEngine.iconURI ? currentEngine.iconURI.spec : null,
+      }
+    }
 
     // The search engines will always be processed in the order returned by the
     // search service, which can be defined by the user.
@@ -67,19 +88,25 @@ const SearchAutocompleteProviderInternal = {
   },
 
   _addEngine: function (engine) {
-    let token = engine.getResultDomain();
-    if (!token) {
-      return;
+    if (engine.alias) {
+      this.aliasMatches.push({
+        alias: engine.alias,
+        engineName: engine.name,
+        iconUrl: engine.iconURI ? engine.iconURI.spec : null,
+      });
     }
 
-    this.priorityMatches.push({
-      token: token,
-      // The searchForm property returns a simple URL for the search engine, but
-      // we may need an URL which includes an affiliate code (bug 990799).
-      url: engine.searchForm,
-      engineName: engine.name,
-      iconUrl: engine.iconURI ? engine.iconURI.spec : null,
-    });
+    let domain = engine.getResultDomain();
+    if (domain) {
+      this.priorityMatches.push({
+        token: domain,
+        // The searchForm property returns a simple URL for the search engine, but
+        // we may need an URL which includes an affiliate code (bug 990799).
+        url: engine.searchForm,
+        engineName: engine.name,
+        iconUrl: engine.iconURI ? engine.iconURI.spec : null,
+      });
+    }
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
@@ -123,7 +150,36 @@ this.PlacesSearchAutocompleteProvider = Object.freeze({
     // Match at the beginning for now.  In the future, an "options" argument may
     // allow the matching behavior to be tuned.
     return SearchAutocompleteProviderInternal.priorityMatches
-                 .find(m => m.token.startsWith(searchToken));
+                                             .find(m => m.token.startsWith(searchToken));
+  }),
+
+  /**
+   * Matches a given search string to an item that should be included by
+   * components wishing to search using search engine aliases, like
+   * autocomple.
+   *
+   * @param searchToken
+   *        Search string to match exactly a search engine alias.
+   *
+   * @return An object with the following properties, or undefined if the token
+   *         does not match any relevant URL:
+   *         {
+   *           alias: The matched search engine's alias.
+   *           engineName: The display name of the search engine.
+   *           iconUrl: Icon associated to the match, or null if not available.
+   *         }
+   */
+  findMatchByAlias: Task.async(function* (searchToken) {
+    yield this.ensureInitialized();
+
+    return SearchAutocompleteProviderInternal.aliasMatches
+                                             .find(m => m.alias == searchToken);
+  }),
+
+  getDefaultMatch: Task.async(function* () {
+    yield this.ensureInitialized();
+
+    return SearchAutocompleteProviderInternal.defaultMatch;
   }),
 
   /**
