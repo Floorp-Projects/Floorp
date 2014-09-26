@@ -102,7 +102,8 @@ public:
                                        nsPresContext* aPresContext,
                                        WidgetEvent* aEvent,
                                        nsEventStatus* aStatus,
-                                       EventDispatchingCallback* aCallBack);
+                                       EventDispatchingCallback* aCallBack,
+                                       bool aIsSynthesized = false);
 
   /**
    * Get TextComposition from widget.
