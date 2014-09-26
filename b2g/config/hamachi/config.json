@@ -16,6 +16,12 @@
         "{workdir}/sources.xml",
         "{workdir}/out/target/product/hamachi/*.mar"
     ],
+    "zip_files": [
+        "{workdir}/profile.sh",
+        ["{workdir}/gecko/tools/profiler/merge-profiles.py", "gecko/tools/profiler/"],
+        ["{workdir}/scripts/profile-symbolicate.py", "scripts/"],
+        ["{workdir}/gecko/tools/rb/fix_stack_using_bpsyms.py", "gecko/tools/rb/"]
+    ],
     "env": {
         "VARIANT": "user",
         "MOZILLA_OFFICIAL": "1",
