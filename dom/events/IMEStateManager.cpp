@@ -945,7 +945,14 @@ IMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
   //       emulating a commit, the instance shouldn't be removed from the array
   //       because IME may perform it later.  Then, we need to ignore the
   //       following commit events in TextComposition::DispatchEvent().
-  if (!aIsSynthesized && aEvent->message == NS_COMPOSITION_END) {
+  //       However, if commit or cancel for a request is performed synchronously
+  //       during not safe to dispatch events, PresShell must have discarded
+  //       compositionend event.  Then, the synthesized compositionend event is
+  //       the last event for the composition.  In this case, we need to
+  //       destroy the TextComposition with synthesized compositionend event.
+  if ((!aIsSynthesized ||
+       composition->WasNativeCompositionEndEventDiscarded()) &&
+      aEvent->message == NS_COMPOSITION_END) {
     TextCompositionArray::index_type i =
       sTextCompositions->IndexOf(GUIEvent->widget);
     if (i != TextCompositionArray::NoIndex) {
@@ -957,6 +964,38 @@ IMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
       sTextCompositions->RemoveElementAt(i);
     }
   }
+}
+
+// static
+void
+IMEStateManager::OnCompositionEventDiscarded(WidgetEvent* aEvent)
+{
+  // Note that this method is never called for synthesized events for emulating
+  // commit or cancel composition.
+
+  PR_LOG(sISMLog, PR_LOG_ALWAYS,
+    ("ISM: IMEStateManager::OnCompositionEventDiscarded(aEvent={ mClass=%s, "
+     "message=%s, mFlags={ mIsTrusted=%s } })",
+     GetEventClassIDName(aEvent->mClass),
+     GetEventMessageName(aEvent->message),
+     GetBoolName(aEvent->mFlags.mIsTrusted)));
+
+  MOZ_ASSERT(aEvent->mClass == eCompositionEventClass ||
+             aEvent->mClass == eTextEventClass);
+  if (!aEvent->mFlags.mIsTrusted) {
+    return;
+  }
+
+  // Ignore compositionstart for now because sTextCompositions may not have
+  // been created yet.
+  if (aEvent->message == NS_COMPOSITION_START) {
+    return;
+  }
+
+  WidgetGUIEvent* GUIEvent = aEvent->AsGUIEvent();
+  nsRefPtr<TextComposition> composition =
+    sTextCompositions->GetCompositionFor(GUIEvent->widget);
+  composition->OnCompositionEventDiscarded(GUIEvent);
 }
 
 // static
