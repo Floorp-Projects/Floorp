@@ -8,6 +8,7 @@
 #include "BluetoothHALHelpers.h"
 #include "BluetoothA2dpHALInterface.h"
 #include "BluetoothAvrcpHALInterface.h"
+#include "BluetoothGattHALInterface.h"
 #include "BluetoothHandsfreeHALInterface.h"
 #include "BluetoothSocketHALInterface.h"
 
@@ -59,6 +60,19 @@ struct interface_traits<BluetoothAvrcpHALInterface>
   static const char* profile_id()
   {
     return BT_PROFILE_AV_RC_ID;
+  }
+};
+#endif
+
+#if ANDROID_VERSION >= 19
+template<>
+struct interface_traits<BluetoothGattHALInterface>
+{
+  typedef const btgatt_interface_t const_interface_type;
+
+  static const char* profile_id()
+  {
+    return BT_PROFILE_GATT_ID;
   }
 };
 #endif
@@ -873,6 +887,22 @@ BluetoothHALInterface::CreateProfileInterface<BluetoothAvrcpHALInterface>()
 }
 #endif
 
+#if ANDROID_VERSION < 19
+/*
+ * Versions that we don't support GATT will call this function
+ * to create an GATT interface. All interface methods will fail with
+ * the error constant STATUS_UNSUPPORTED.
+ */
+template <>
+BluetoothGattHALInterface*
+BluetoothHALInterface::CreateProfileInterface<BluetoothGattHALInterface>()
+{
+  BT_WARNING("Bluetooth profile 'gatt' is not supported");
+
+  return new BluetoothGattHALInterface();
+}
+#endif
+
 template <class T>
 T*
 BluetoothHALInterface::GetProfileInterface()
@@ -910,6 +940,12 @@ BluetoothAvrcpInterface*
 BluetoothHALInterface::GetBluetoothAvrcpInterface()
 {
   return GetProfileInterface<BluetoothAvrcpHALInterface>();
+}
+
+BluetoothGattInterface*
+BluetoothHALInterface::GetBluetoothGattInterface()
+{
+  return GetProfileInterface<BluetoothGattHALInterface>();
 }
 
 END_BLUETOOTH_NAMESPACE

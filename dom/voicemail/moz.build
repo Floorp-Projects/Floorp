@@ -5,23 +5,51 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIVoicemailProvider.idl',
+    'nsIVoicemailService.idl',
 ]
 
 XPIDL_MODULE = 'dom_voicemail'
 
 EXPORTS.mozilla.dom += [
     'Voicemail.h',
+    'VoicemailStatus.h',
+]
+
+EXPORTS.mozilla.dom.voicemail += [
+    'ipc/VoicemailIPCService.h',
+    'ipc/VoicemailParent.h',
+]
+
+IPDL_SOURCES += [
+    'ipc/PVoicemail.ipdl',
 ]
 
 SOURCES += [
+    'ipc/VoicemailIPCService.cpp',
+    'ipc/VoicemailParent.cpp',
     'Voicemail.cpp',
 ]
+
+UNIFIED_SOURCES += [
+    'VoicemailStatus.cpp',
+]
+
+if CONFIG['MOZ_B2G_RIL']:
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+        XPIDL_SOURCES += [
+            'gonk/nsIGonkVoicemailService.idl',
+        ]
+        EXTRA_COMPONENTS += [
+            'gonk/VoicemailService.js',
+            'gonk/VoicemailService.manifest',
+        ]
 
 FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [
     '../base',
 ]
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

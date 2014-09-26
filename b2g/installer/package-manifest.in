@@ -159,7 +159,6 @@
 @BINPATH@/components/dom_system_gonk.xpt
 #endif
 #ifdef MOZ_B2G_RIL
-@BINPATH@/components/dom_voicemail.xpt
 @BINPATH@/components/dom_icc.xpt
 @BINPATH@/components/dom_cellbroadcast.xpt
 @BINPATH@/components/dom_wappush.xpt
@@ -200,6 +199,7 @@
 @BINPATH@/components/dom_threads.xpt
 @BINPATH@/components/dom_traversal.xpt
 @BINPATH@/components/dom_views.xpt
+@BINPATH@/components/dom_voicemail.xpt
 #ifdef MOZ_WEBSPEECH
 @BINPATH@/components/dom_webspeechrecognition.xpt
 #endif
@@ -448,6 +448,8 @@
 @BINPATH@/components/RILContentHelper.js
 @BINPATH@/components/TelephonyService.js
 @BINPATH@/components/TelephonyService.manifest
+@BINPATH@/components/VoicemailService.js
+@BINPATH@/components/VoicemailService.manifest
 #endif // MOZ_WIDGET_GONK && MOZ_B2G_RIL
 
 #ifndef MOZ_WIDGET_GONK
