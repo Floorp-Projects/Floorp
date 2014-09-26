@@ -678,7 +678,65 @@ loop.shared.views = (function(_, OT, l10n) {
     }
   });
 
+  var Button = React.createClass({
+    propTypes: {
+      caption: React.PropTypes.string.isRequired,
+      onClick: React.PropTypes.func.isRequired,
+      disabled: React.PropTypes.bool,
+      additionalClass: React.PropTypes.string,
+    },
+
+    getDefaultProps: function() {
+      return {
+        disabled: false,
+        additionalClass: "",
+      };
+    },
+
+    render: function() {
+      var cx = React.addons.classSet;
+      var classObject = { button: true, disabled: this.props.disabled };
+      if (this.props.additionalClass) {
+        classObject[this.props.additionalClass] = true;
+      }
+      return (
+        <button onClick={this.props.onClick}
+                disabled={this.props.disabled}
+                className={cx(classObject)}>
+          {this.props.caption}
+        </button>
+      )
+    }
+  });
+
+  var ButtonGroup = React.createClass({
+    PropTypes: {
+      additionalClass: React.PropTypes.string
+    },
+
+    getDefaultProps: function() {
+      return {
+        additionalClass: "",
+      };
+    },
+
+    render: function() {
+      var cx = React.addons.classSet;
+      var classObject = { "button-group": true };
+      if (this.props.additionalClass) {
+        classObject[this.props.additionalClass] = true;
+      }
+      return (
+        <div className={cx(classObject)}>
+          {this.props.children}
+        </div>
+      )
+    }
+  });
+
   return {
+    Button: Button,
+    ButtonGroup: ButtonGroup,
     ConversationView: ConversationView,
     ConversationToolbar: ConversationToolbar,
     FeedbackView: FeedbackView,

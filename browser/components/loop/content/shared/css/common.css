@@ -395,15 +395,3 @@ p {
   background: transparent url(../img/firefox-logo.png) no-repeat center center;
   background-size: contain;
 }
-
-.header {
-  padding: 5px 10px;
-  color: #888;
-  margin: 0;
-  border-top: 1px solid #CCC;
-  background: #EEE;
-  display: flex;
-  align-items: center;
-  flex-direction: row;
-  height: 24px;
-}

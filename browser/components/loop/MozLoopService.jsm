@@ -1164,6 +1164,13 @@ this.MozLoopService = {
   },
 
   /**
+   * Returns a new GUID (UUID) in curly braces format.
+   */
+  generateUUID: function() {
+    return uuidgen.generateUUID().toString();
+  },
+
+  /**
    * Retrieves MozLoopService "do not disturb" value.
    *
    * @return {Boolean}
