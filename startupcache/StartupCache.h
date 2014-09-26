@@ -26,7 +26,7 @@
  * arbitrary data, passed as a (char*, size) tuple. 
  *
  * Clients should use the GetSingleton() static method to access the cache. It 
- * will be available from the end of XPCOM init (NS_InitXPCOM3 in nsXPComInit.cpp), 
+ * will be available from the end of XPCOM init (NS_InitXPCOM3 in XPCOMInit.cpp), 
  * until XPCOM shutdown begins. The GetSingleton() method will return null if the cache
  * is unavailable. The cache is only provided for libxul builds --
  * it will fail to link in non-libxul builds. The XPCOM interface is provided
