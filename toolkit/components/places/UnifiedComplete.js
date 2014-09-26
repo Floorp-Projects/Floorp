@@ -711,7 +711,6 @@ Search.prototype = {
       // with an alias - which works like a keyword.
       hasFirstResult = yield this._matchSearchEngineAlias();
     }
-
     let shouldAutofill = this._shouldAutofill;
     if (this.pending && !hasFirstResult && shouldAutofill) {
       // Or it may look like a URL we know about from search engines.
@@ -720,20 +719,35 @@ Search.prototype = {
 
     if (this.pending && !hasFirstResult && shouldAutofill) {
       // It may also look like a URL we know from the database.
+      // Here we can only try to predict whether the URL autofill query is
+      // likely to return a result.  If the prediction ends up being wrong,
+      // later we will need to make up for the lack of a special first result.
       hasFirstResult = yield this._matchKnownUrl(conn, queries);
     }
 
     if (this.pending && this._enableActions && !hasFirstResult) {
-      // When all else fails, we search using the current search engine.
-      yield this._matchCurrentSearchEngine();
+      // If we don't have a result that matches what we know about, then
+      // we use a fallback for things we don't know about.
+      yield this._matchHeuristicFallback();
     }
+
+    // IMPORTANT: No other first result heuristics should run after
+    // _matchHeuristicFallback().
 
     yield this._sleep(Prefs.delay);
     if (!this.pending)
       return;
 
     for (let [query, params] of queries) {
-      yield conn.executeCached(query, params, this._onResultRow.bind(this));
+      let hasResult = yield conn.executeCached(query, params, this._onResultRow.bind(this));
+
+      if (this.pending && params.query_type == QUERYTYPE_AUTOFILL_URL &&
+          !hasResult) {
+        // If we predicted that our URL autofill query might have gotten a
+        // result, but it didn't, then we need to recover.
+        yield this._matchHeuristicFallback();
+      }
+
       if (!this.pending)
         return;
     }
@@ -879,6 +893,70 @@ Search.prototype = {
       finalCompleteValue: this._trimmedOriginalSearchString,
       frecency: FRECENCY_SEARCHENGINES_DEFAULT,
     });
+  },
+
+  // These are separated out so we can run them in two distinct cases:
+  // (1) We didn't match on anything that we know about
+  // (2) Our predictive query for URL autofill thought we may get a result,
+  //     but we didn't.
+  _matchHeuristicFallback: function* () {
+    // We may not have auto-filled, but this may still look like a URL.
+    let hasFirstResult = yield this._matchUnknownUrl();
+    // However, even if the input is a valid URL, we may not want to use
+    // it as such. This can happen if the host would require whitelisting,
+    // but isn't in the whitelist.
+
+    if (this.pending && !hasFirstResult) {
+      // When all else fails, we search using the current search engine.
+      yield this._matchCurrentSearchEngine();
+    }
+  },
+
+  // TODO (bug 1054814): Use visited URLs to inform which scheme to use, if the
+  // scheme isn't specificed.
+  _matchUnknownUrl: function* () {
+    let flags = Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
+                Ci.nsIURIFixup.FIXUP_FLAG_REQUIRE_WHITELISTED_HOST;
+    let fixupInfo = null;
+    try {
+      fixupInfo = Services.uriFixup.getFixupURIInfo(this._originalSearchString,
+                                                    flags);
+    } catch (e) {
+      return false;
+    }
+
+    let uri = fixupInfo.preferredURI;
+    // Check the host, as "http:///" is a valid nsIURI, but not useful to us.
+    // But, some schemes are expected to have no host. So we check just against
+    // schemes we know should have a host. This allows new schemes to be
+    // implemented without us accidentally blocking access to them.
+    let hostExpected = new Set(["http", "https", "ftp", "chrome", "resource"]);
+    if (!uri || (hostExpected.has(uri.scheme) && !uri.host))
+      return false;
+
+    let value = makeActionURL("visiturl", {
+      url: uri.spec,
+      input: this._originalSearchString,
+    });
+
+    let match = {
+      value: value,
+      comment: uri.spec,
+      style: "action visiturl",
+      finalCompleteValue: this._originalSearchString,
+      frecency: 0,
+    };
+
+    try {
+      let favicon = yield PlacesUtils.promiseFaviconLinkUrl(uri);
+      if (favicon)
+        match.icon = favicon.spec;
+    } catch (e) {
+      // It's possible we don't have a favicon for this - and that's ok.
+    };
+
+    this._addMatch(match);
+    return true;
   },
 
   _onResultRow: function (row) {
