@@ -164,14 +164,14 @@ Proxy::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
 }
 
 bool
-Proxy::getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &props)
+Proxy::ownPropertyKeys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
     JS_CHECK_RECURSION(cx, return false);
     const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE, BaseProxyHandler::ENUMERATE, true);
     if (!policy.allowed())
         return policy.returnValue();
-    return proxy->as<ProxyObject>().handler()->getOwnPropertyNames(cx, proxy, props);
+    return proxy->as<ProxyObject>().handler()->ownPropertyKeys(cx, proxy, props);
 }
 
 bool

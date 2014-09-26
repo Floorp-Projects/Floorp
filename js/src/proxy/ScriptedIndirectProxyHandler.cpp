@@ -206,8 +206,8 @@ ScriptedIndirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, 
 }
 
 bool
-ScriptedIndirectProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject proxy,
-                                                  AutoIdVector &props) const
+ScriptedIndirectProxyHandler::ownPropertyKeys(JSContext *cx, HandleObject proxy,
+                                              AutoIdVector &props) const
 {
     RootedObject handler(cx, GetIndirectProxyHandlerObject(proxy));
     RootedValue fval(cx), value(cx);
