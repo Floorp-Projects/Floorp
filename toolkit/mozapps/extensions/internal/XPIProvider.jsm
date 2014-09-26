@@ -28,6 +28,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ZipUtils",
                                   "resource://gre/modules/ZipUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PermissionsUtils",
+                                  "resource://gre/modules/PermissionsUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
@@ -76,6 +78,7 @@ const PREF_XPI_ENABLED                = "xpinstall.enabled";
 const PREF_XPI_WHITELIST_REQUIRED     = "xpinstall.whitelist.required";
 const PREF_XPI_DIRECT_WHITELISTED     = "xpinstall.whitelist.directRequest";
 const PREF_XPI_FILE_WHITELISTED       = "xpinstall.whitelist.fileRequest";
+const PREF_XPI_PERMISSIONS_BRANCH     = "xpinstall.";
 const PREF_XPI_UNPACK                 = "extensions.alwaysUnpack";
 const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts";
 const PREF_INSTALL_DISTRO_ADDONS      = "extensions.installDistroAddons";
@@ -3461,6 +3464,15 @@ this.XPIProvider = {
   },
 
   /**
+   * Imports the xpinstall permissions from preferences into the permissions
+   * manager for the user to change later.
+   */
+  importPermissions: function XPI_importPermissions() {
+    PermissionsUtils.importFromPrefs(PREF_XPI_PERMISSIONS_BRANCH,
+                                     XPI_PERMISSION);
+  },
+
+  /**
    * Checks for any changes that have occurred since the last time the
    * application was launched.
    *
@@ -3709,6 +3721,8 @@ this.XPIProvider = {
     if (this.isFileRequestWhitelisted() &&
         (aUri.schemeIs("chrome") || aUri.schemeIs("file")))
       return true;
+
+    this.importPermissions();
 
     let permission = Services.perms.testPermission(aUri, XPI_PERMISSION);
     if (permission == Ci.nsIPermissionManager.DENY_ACTION)
