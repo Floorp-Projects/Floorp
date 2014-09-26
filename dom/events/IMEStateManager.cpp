@@ -298,27 +298,12 @@ IMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
       // composition events which are caused by following APIs are ignored due
       // to unsafe to run script (in PresShell::HandleEvent()).
       nsCOMPtr<nsIWidget> widget = aPresContext->GetRootWidget();
-      if (widget) {
-        nsresult rv =
-          compositionInContent->NotifyIME(REQUEST_TO_CANCEL_COMPOSITION);
-        if (NS_FAILED(rv)) {
-          compositionInContent->NotifyIME(REQUEST_TO_COMMIT_COMPOSITION);
-        }
-        // By calling the APIs, the composition may have been finished normally.
-        compositionInContent =
-          sTextCompositions->GetCompositionFor(
-                               compositionInContent->GetPresContext(),
-                               compositionInContent->GetEventTargetNode());
+      MOZ_ASSERT(widget, "Why is there no widget?");
+      nsresult rv =
+        compositionInContent->NotifyIME(REQUEST_TO_CANCEL_COMPOSITION);
+      if (NS_FAILED(rv)) {
+        compositionInContent->NotifyIME(REQUEST_TO_COMMIT_COMPOSITION);
       }
-    }
-
-    // If the compositionInContent is still available, we should finish the
-    // composition just on the content forcibly.
-    if (compositionInContent) {
-      PR_LOG(sISMLog, PR_LOG_DEBUG,
-        ("ISM:   IMEStateManager::OnRemoveContent(), "
-         "composition in the content still alive, committing it forcibly..."));
-      compositionInContent->SynthesizeCommit(true);
     }
   }
 
@@ -904,17 +889,20 @@ IMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
                                           nsPresContext* aPresContext,
                                           WidgetEvent* aEvent,
                                           nsEventStatus* aStatus,
-                                          EventDispatchingCallback* aCallBack)
+                                          EventDispatchingCallback* aCallBack,
+                                          bool aIsSynthesized)
 {
   PR_LOG(sISMLog, PR_LOG_ALWAYS,
     ("ISM: IMEStateManager::DispatchCompositionEvent(aNode=0x%p, "
      "aPresContext=0x%p, aEvent={ mClass=%s, message=%s, "
-     " mFlags={ mIsTrusted=%s, mPropagationStopped=%s } })",
+     "mFlags={ mIsTrusted=%s, mPropagationStopped=%s } }, "
+     "aIsSynthesized=%s)",
      aEventTargetNode, aPresContext,
      GetEventClassIDName(aEvent->mClass),
      GetEventMessageName(aEvent->message),
      GetBoolName(aEvent->mFlags.mIsTrusted),
-     GetBoolName(aEvent->mFlags.mPropagationStopped)));
+     GetBoolName(aEvent->mFlags.mPropagationStopped),
+     GetBoolName(aIsSynthesized)));
 
   MOZ_ASSERT(aEvent->mClass == eCompositionEventClass ||
              aEvent->mClass == eTextEventClass);
@@ -929,6 +917,11 @@ IMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
   nsRefPtr<TextComposition> composition =
     sTextCompositions->GetCompositionFor(GUIEvent->widget);
   if (!composition) {
+    // If synthesized event comes after delayed native composition events
+    // for request of commit or cancel, we should ignore it.
+    if (NS_WARN_IF(aIsSynthesized)) {
+      return;
+    }
     PR_LOG(sISMLog, PR_LOG_DEBUG,
       ("ISM:   IMEStateManager::DispatchCompositionEvent(), "
        "adding new TextComposition to the array"));
@@ -943,12 +936,16 @@ IMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
 #endif // #ifdef DEBUG
 
   // Dispatch the event on composing target.
-  composition->DispatchEvent(GUIEvent, aStatus, aCallBack);
+  composition->DispatchEvent(GUIEvent, aStatus, aCallBack, aIsSynthesized);
 
   // WARNING: the |composition| might have been destroyed already.
 
   // Remove the ended composition from the array.
-  if (aEvent->message == NS_COMPOSITION_END) {
+  // NOTE: When TextComposition is synthesizing compositionend event for
+  //       emulating a commit, the instance shouldn't be removed from the array
+  //       because IME may perform it later.  Then, we need to ignore the
+  //       following commit events in TextComposition::DispatchEvent().
+  if (!aIsSynthesized && aEvent->message == NS_COMPOSITION_END) {
     TextCompositionArray::index_type i =
       sTextCompositions->IndexOf(GUIEvent->widget);
     if (i != TextCompositionArray::NoIndex) {
