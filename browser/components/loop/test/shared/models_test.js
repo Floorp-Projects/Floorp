@@ -76,19 +76,6 @@ describe("loop.shared.models", function() {
       });
 
       describe("#setupOutgoingCall", function() {
-        it("should set the a custom selected call type", function() {
-          conversation.setupOutgoingCall("audio");
-
-          expect(conversation.get("selectedCallType")).eql("audio");
-        });
-
-        it("should respect the default selected call type when none is passed",
-          function() {
-            conversation.setupOutgoingCall();
-
-            expect(conversation.get("selectedCallType")).eql("audio-video");
-          });
-
         it("should trigger a `call:outgoing:setup` event", function(done) {
           conversation.once("call:outgoing:setup", function() {
             done();
