@@ -170,7 +170,7 @@ BaseProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props) c
     assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
     MOZ_ASSERT(props.length() == 0);
 
-    if (!getOwnPropertyNames(cx, proxy, props))
+    if (!ownPropertyKeys(cx, proxy, props))
         return false;
 
     /* Select only the enumerable properties through in-place iteration. */

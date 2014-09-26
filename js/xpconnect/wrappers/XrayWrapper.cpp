@@ -1531,7 +1531,7 @@ DOMXrayTraits::enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flag
                               AutoIdVector &props)
 {
     JS::Rooted<JSObject*> obj(cx, getTargetObject(wrapper));
-    return XrayEnumerateProperties(cx, wrapper, obj, flags, props);
+    return XrayOwnPropertyKeys(cx, wrapper, obj, flags, props);
 }
 
 bool
@@ -1974,8 +1974,8 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, HandleObject wrapper,
 
 template <typename Base, typename Traits>
 bool
-XrayWrapper<Base, Traits>::getOwnPropertyNames(JSContext *cx, HandleObject wrapper,
-                                               AutoIdVector &props) const
+XrayWrapper<Base, Traits>::ownPropertyKeys(JSContext *cx, HandleObject wrapper,
+                                           AutoIdVector &props) const
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
     return enumerate(cx, wrapper, JSITER_OWNONLY | JSITER_HIDDEN, props);

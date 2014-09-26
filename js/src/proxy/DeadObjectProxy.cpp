@@ -55,8 +55,8 @@ DeadObjectProxy::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id
 }
 
 bool
-DeadObjectProxy::getOwnPropertyNames(JSContext *cx, HandleObject wrapper,
-                                     AutoIdVector &props) const
+DeadObjectProxy::ownPropertyKeys(JSContext *cx, HandleObject wrapper,
+                                 AutoIdVector &props) const
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEAD_OBJECT);
     return false;

@@ -92,11 +92,11 @@ FilteringWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext *cx, HandleOb
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::getOwnPropertyNames(JSContext *cx, HandleObject wrapper,
-                                                    AutoIdVector &props) const
+FilteringWrapper<Base, Policy>::ownPropertyKeys(JSContext *cx, HandleObject wrapper,
+                                                AutoIdVector &props) const
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
-    return Base::getOwnPropertyNames(cx, wrapper, props) &&
+    return Base::ownPropertyKeys(cx, wrapper, props) &&
            Filter<Policy>(cx, wrapper, props);
 }
 
@@ -210,8 +210,8 @@ CrossOriginXrayWrapper::getPrototypeOf(JSContext *cx, JS::HandleObject wrapper,
 }
 
 bool
-CrossOriginXrayWrapper::getOwnPropertyNames(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                                            JS::AutoIdVector &props) const
+CrossOriginXrayWrapper::ownPropertyKeys(JSContext *cx, JS::Handle<JSObject*> wrapper,
+                                        JS::AutoIdVector &props) const
 {
     // All properties on cross-origin objects are supposed |own|, despite what
     // the underlying native object may report. Override the inherited trap to
