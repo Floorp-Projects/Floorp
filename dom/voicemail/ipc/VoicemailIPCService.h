@@ -1,0 +1,57 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef mozilla_dom_voicemail_VoicemailIPCService_h
+#define mozilla_dom_voicemail_VoicemailIPCService_h
+
+#include "mozilla/Attributes.h"
+#include "mozilla/dom/voicemail/PVoicemailChild.h"
+#include "nsAutoPtr.h"
+#include "nsIVoicemailService.h"
+
+namespace mozilla {
+namespace dom {
+namespace voicemail {
+
+class VoicemailIPCService MOZ_FINAL : public PVoicemailChild
+                                    , public nsIVoicemailService
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIVOICEMAILSERVICE
+
+  VoicemailIPCService();
+
+  bool
+  RecvNotifyInfoChanged(const uint32_t& aServiceId,
+                        const nsString& aNumber,
+                        const nsString& aDisplayName) MOZ_OVERRIDE;
+
+  bool
+  RecvNotifyStatusChanged(const uint32_t& aServiceId,
+                          const bool& aHasMessages,
+                          const int32_t& aMessageCount,
+                          const nsString& aNumber,
+                          const nsString& aDisplayName) MOZ_OVERRIDE;
+
+  void
+  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+
+private:
+  // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
+  ~VoicemailIPCService();
+
+private:
+  bool mActorDestroyed;
+  nsTArray<nsCOMPtr<nsIVoicemailListener>> mListeners;
+  nsTArray<nsCOMPtr<nsIVoicemailProvider>> mProviders;
+};
+
+} // namespace voicemail
+} // namespace dom
+} // namespace mozilla
+
+#endif // mozilla_dom_voicemail_VoicemailIPCService_h

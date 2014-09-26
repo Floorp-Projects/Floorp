@@ -14,7 +14,18 @@ EXPORTS.mozilla.dom += [
     'Voicemail.h',
 ]
 
+EXPORTS.mozilla.dom.voicemail += [
+    'ipc/VoicemailIPCService.h',
+    'ipc/VoicemailParent.h',
+]
+
+IPDL_SOURCES += [
+    'ipc/PVoicemail.ipdl',
+]
+
 SOURCES += [
+    'ipc/VoicemailIPCService.cpp',
+    'ipc/VoicemailParent.cpp',
     'Voicemail.cpp',
 ]
 
@@ -23,5 +34,7 @@ FAIL_ON_WARNINGS = True
 LOCAL_INCLUDES += [
     '../base',
 ]
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
