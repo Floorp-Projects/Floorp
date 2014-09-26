@@ -2581,6 +2581,7 @@ class MArrayState : public MVariadicInstruction
     explicit MArrayState(MDefinition *arr)
     {
         // This instruction is only used as a summary for bailout paths.
+        setResultType(MIRType_Object);
         setRecoveredOnBailout();
         numElements_ = arr->toNewArray()->count();
     }
