@@ -110,6 +110,7 @@ public class BrowserContract {
     public interface SuggestedSitesColumns {
         public static final String BGCOLOR = "bgcolor";
         public static final String IMAGEURL = "imageurl";
+        public static final String TRACKING_ID = "tracking_id";
     }
 
     @RobocopTarget

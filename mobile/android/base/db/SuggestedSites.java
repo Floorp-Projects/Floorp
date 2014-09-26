@@ -80,24 +80,28 @@ public class SuggestedSites {
 
     private static final String[] COLUMNS = new String[] {
         BrowserContract.SuggestedSites._ID,
+        BrowserContract.SuggestedSites.TRACKING_ID,
         BrowserContract.SuggestedSites.URL,
         BrowserContract.SuggestedSites.TITLE,
         BrowserContract.SuggestedSites.IMAGEURL,
         BrowserContract.SuggestedSites.BGCOLOR
     };
 
+    private static final String JSON_KEY_TRACKING_ID = "trackingid";
     private static final String JSON_KEY_URL = "url";
     private static final String JSON_KEY_TITLE = "title";
     private static final String JSON_KEY_IMAGE_URL = "imageurl";
     private static final String JSON_KEY_BG_COLOR = "bgcolor";
 
     private static class Site {
+        public final String trackingId;
         public final String url;
         public final String title;
         public final String imageUrl;
         public final String bgColor;
 
         public Site(JSONObject json) throws JSONException {
+            this.trackingId = json.isNull(JSON_KEY_TRACKING_ID) ? null : json.getString(JSON_KEY_TRACKING_ID);
             this.url = json.getString(JSON_KEY_URL);
             this.title = json.getString(JSON_KEY_TITLE);
             this.imageUrl = json.getString(JSON_KEY_IMAGE_URL);
@@ -106,7 +110,8 @@ public class SuggestedSites {
             validate();
         }
 
-        public Site(String url, String title, String imageUrl, String bgColor) {
+        public Site(String trackingId, String url, String title, String imageUrl, String bgColor) {
+            this.trackingId = trackingId;
             this.url = url;
             this.title = title;
             this.imageUrl = imageUrl;
@@ -116,7 +121,7 @@ public class SuggestedSites {
         }
 
         private void validate() {
-            // Site instances must have non-empty values for all properties.
+            // Site instances must have non-empty values for all properties except IDs.
             if (TextUtils.isEmpty(url) ||
                 TextUtils.isEmpty(title) ||
                 TextUtils.isEmpty(imageUrl) ||
@@ -128,7 +133,8 @@ public class SuggestedSites {
 
         @Override
         public String toString() {
-            return "{ url = " + url + "\n" +
+            return "{ id = " + trackingId + "\n" +
+                     "url = " + url + "\n" +
                      "title = " + title + "\n" +
                      "imageUrl = " + imageUrl + "\n" +
                      "bgColor = " + bgColor + " }";
@@ -136,6 +142,9 @@ public class SuggestedSites {
 
         public JSONObject toJSON() throws JSONException {
             final JSONObject json = new JSONObject();
+
+            // If trackingId is null, the key is not added.
+            json.put(JSON_KEY_TRACKING_ID, trackingId);
 
             json.put(JSON_KEY_URL, url);
             json.put(JSON_KEY_TITLE, title);
@@ -484,6 +493,7 @@ public class SuggestedSites {
 
             final RowBuilder row = cursor.newRow();
             row.add(-1);
+            row.add(site.trackingId);
             row.add(site.url);
             row.add(site.title);
             row.add(site.imageUrl);
