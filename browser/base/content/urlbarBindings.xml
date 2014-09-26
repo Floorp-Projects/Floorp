@@ -195,8 +195,10 @@
           // happened yet. We will need it to highlight search terms later.
           if (!this._searchServiceInitialized) {
             Services.search.init(() => {
-              this._searchServiceInitialized = true;
-              this.formatValue();
+              if (this.formatValue) {
+                this._searchServiceInitialized = true;
+                this.formatValue();
+              }
             });
 
             return;
