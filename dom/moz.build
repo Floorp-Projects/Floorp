@@ -90,6 +90,7 @@ DIRS += [
     'promise',
     'smil',
     'telephony',
+    'voicemail',
     'inputmethod',
     'webidl',
     'xbl',
@@ -112,7 +113,6 @@ if CONFIG['MOZ_B2G_RIL']:
     DIRS += [
         'icc',
         'cellbroadcast',
-        'voicemail',
         'wappush',
     ]
 

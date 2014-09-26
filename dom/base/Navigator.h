@@ -88,11 +88,11 @@ class BluetoothManager;
 class CellBroadcast;
 class IccManager;
 class MobileConnectionArray;
-class Voicemail;
 #endif
 
 class PowerManager;
 class Telephony;
+class Voicemail;
 
 namespace time {
 class TimeManager;
@@ -221,6 +221,7 @@ public:
   DesktopNotificationCenter* GetMozNotification(ErrorResult& aRv);
   MobileMessageManager* GetMozMobileMessage();
   Telephony* GetMozTelephony(ErrorResult& aRv);
+  Voicemail* GetMozVoicemail(ErrorResult& aRv);
   network::Connection* GetConnection(ErrorResult& aRv);
   nsDOMCameraManager* GetMozCameras(ErrorResult& aRv);
   void MozSetMessageHandler(const nsAString& aType,
@@ -234,7 +235,6 @@ public:
 #ifdef MOZ_B2G_RIL
   MobileConnectionArray* GetMozMobileConnections(ErrorResult& aRv);
   CellBroadcast* GetMozCellBroadcast(ErrorResult& aRv);
-  Voicemail* GetMozVoicemail(ErrorResult& aRv);
   IccManager* GetMozIccManager(ErrorResult& aRv);
 #endif // MOZ_B2G_RIL
 #ifdef MOZ_GAMEPAD
@@ -331,12 +331,12 @@ private:
   nsRefPtr<PowerManager> mPowerManager;
   nsRefPtr<MobileMessageManager> mMobileMessageManager;
   nsRefPtr<Telephony> mTelephony;
+  nsRefPtr<Voicemail> mVoicemail;
   nsRefPtr<network::Connection> mConnection;
 #ifdef MOZ_B2G_RIL
   nsRefPtr<MobileConnectionArray> mMobileConnections;
   nsRefPtr<CellBroadcast> mCellBroadcast;
   nsRefPtr<IccManager> mIccManager;
-  nsRefPtr<Voicemail> mVoicemail;
 #endif
 #ifdef MOZ_B2G_BT
   nsRefPtr<bluetooth::BluetoothManager> mBluetooth;
