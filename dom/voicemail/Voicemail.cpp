@@ -103,7 +103,7 @@ Voicemail::PassedOrDefaultServiceId(const Optional<uint32_t>& aServiceId,
 
 // MozVoicemail WebIDL
 
-already_AddRefed<MozVoicemailStatus>
+already_AddRefed<VoicemailStatus>
 Voicemail::GetStatus(const Optional<uint32_t>& aServiceId,
                      ErrorResult& aRv) const
 {
@@ -129,7 +129,7 @@ Voicemail::GetStatus(const Optional<uint32_t>& aServiceId,
     return nullptr;
   }
   JS::Rooted<JSObject*> statusObj(cx, &status.toObject());
-  nsRefPtr<MozVoicemailStatus> res = new MozVoicemailStatus(statusObj, GetParentObject());
+  nsRefPtr<VoicemailStatus> res = new VoicemailStatus(statusObj, GetParentObject());
   return res.forget();
 }
 
@@ -186,7 +186,7 @@ Voicemail::NotifyStatusChanged(JS::HandleValue aStatus)
   if (aStatus.isObject()) {
     JSContext *cx = nsContentUtils::GetCurrentJSContext();
     JS::Rooted<JSObject*> statusObj(cx, &aStatus.toObject());
-    init.mStatus = new MozVoicemailStatus(statusObj, GetParentObject());
+    init.mStatus = new VoicemailStatus(statusObj, GetParentObject());
   }
 
   nsRefPtr<MozVoicemailEvent> event =

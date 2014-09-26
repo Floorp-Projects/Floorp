@@ -48,8 +48,6 @@ const GSMICCINFO_CID =
   Components.ID("{e0fa785b-ad3f-46ed-bc56-fcb0d6fe4fa8}");
 const CDMAICCINFO_CID =
   Components.ID("{3d1f844f-9ec5-48fb-8907-aed2e5421709}");
-const VOICEMAILSTATUS_CID=
-  Components.ID("{5467f2eb-e214-43ea-9b89-67711241ec8e}");
 const CELLBROADCASTMESSAGE_CID =
   Components.ID("{29474c96-3099-486f-bb4a-3c9a1da834e4}");
 const CELLBROADCASTETWSINFO_CID =
@@ -177,21 +175,6 @@ function VoicemailInfo() {}
 VoicemailInfo.prototype = {
   number: null,
   displayName: null
-};
-
-function VoicemailStatus(clientId) {
-  this.serviceId = clientId;
-}
-VoicemailStatus.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([]),
-  classID:        VOICEMAILSTATUS_CID,
-  contractID:     "@mozilla.org/voicemailstatus;1",
-
-  serviceId: -1,
-  hasMessages: false,
-  messageCount: -1, // Count unknown.
-  returnNumber: null,
-  returnMessage: null
 };
 
 function CellBroadcastMessage(clientId, pdu) {
