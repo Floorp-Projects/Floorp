@@ -1,4 +1,4 @@
-# AUTOMATICALLY GENERATED FROM moz.build.in AND mach.  DO NOT EDIT.
+# AUTOMATICALLY GENERATED FROM mozbuild.template AND mach.  DO NOT EDIT.
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -13,10 +13,13 @@ BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 JETPACK_PACKAGE_MANIFESTS += ['source/test/jetpack-package.ini']
 JETPACK_ADDON_MANIFESTS += ['source/test/addons/jetpack-addon.ini']
 
-DIRS += ["source/modules/system"]
-
 EXTRA_JS_MODULES.sdk += [
     'source/app-extension/bootstrap.js',
+]
+
+EXTRA_JS_MODULES.sdk.system += [
+    'source/modules/system/Startup.js',
+    'source/modules/system/XulApp.js',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != "gonk":
@@ -148,6 +151,10 @@ EXTRA_JS_MODULES.commonjs.dev += [
     'source/lib/dev/volcan.js',
 ]
 
+EXTRA_JS_MODULES.commonjs.dev.panel += [
+    'source/lib/dev/panel/view.js',
+]
+
 EXTRA_JS_MODULES.commonjs.diffpatcher += [
     'source/lib/diffpatcher/diff.js',
     'source/lib/diffpatcher/index.js',
@@ -211,6 +218,7 @@ EXTRA_JS_MODULES.commonjs.sdk.addon += [
     'source/lib/sdk/addon/events.js',
     'source/lib/sdk/addon/host.js',
     'source/lib/sdk/addon/installer.js',
+    'source/lib/sdk/addon/manager.js',
     'source/lib/sdk/addon/runner.js',
     'source/lib/sdk/addon/window.js',
 ]

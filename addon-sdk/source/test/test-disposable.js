@@ -254,8 +254,7 @@ exports["test disposables are GC-able"] = function(assert, done) {
   let foo1 = Foo(arg1, arg2)
   let foo2 = Foo(arg1, arg2)
 
-  let foo1 = null
-  let foo2 = null
+  foo1 = foo2 = null;
 
   Cu.schedulePreciseGC(function() {
     loader.unload();
@@ -362,4 +361,4 @@ exports["test multiple destroy"] = function(assert) {
   assert.equal(disposals, 3, "unload only disposed the remaining instance");
 }
 
-require('test').run(exports);
+require('sdk/test').run(exports);

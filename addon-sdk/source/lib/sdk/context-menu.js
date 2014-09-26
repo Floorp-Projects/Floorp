@@ -48,8 +48,9 @@ const OVERFLOW_THRESH_PREF =
 
 // The label of the overflow sub-xul:menu.
 //
-// TODO: Localize this.
+// TODO: Localize these.
 const OVERFLOW_MENU_LABEL = "Add-ons";
+const OVERFLOW_MENU_ACCESSKEY = "A";
 
 // The class of the overflow sub-xul:menu.
 const OVERFLOW_MENU_CLASS = "addon-content-menu-overflow-menu";
@@ -277,7 +278,7 @@ function removeItemFromArray(array, item) {
 // Converts anything that isn't false, null or undefined into a string
 function stringOrNull(val) val ? String(val) : val;
 
-// Shared option validation rules for Item and Menu
+// Shared option validation rules for Item, Menu, and Separator
 let baseItemRules = {
   parentMenu: {
     is: ["object", "undefined"],
@@ -312,6 +313,17 @@ let labelledItemRules =  mix(baseItemRules, {
     is: ["string"],
     ok: function (v) !!v,
     msg: "The item must have a non-empty string label."
+  },
+  accesskey: {
+    map: stringOrNull,
+    is: ["string", "undefined", "null"],
+    ok: (v) => {
+      if (!v) {
+        return true;
+      }
+      return typeof v == "string" && v.length === 1;
+    },
+    msg: "The item must have a single character accesskey, or no accesskey."
   },
   image: {
     map: stringOrNull,
@@ -352,18 +364,15 @@ let menuRules = mix(labelledItemRules, {
 let ContextWorker = Class({
   implements: [ Worker ],
 
-  //Returns true if any context listeners are defined in the worker's port.
-  anyContextListeners: function anyContextListeners() {
-    return this.getSandbox().hasListenerFor("context");
-  },
-
   // Calls the context workers context listeners and returns the first result
   // that is either a string or a value that evaluates to true. If all of the
-  // listeners returned false then returns false. If there are no listeners
-  // then returns null.
+  // listeners returned false then returns false. If there are no listeners,
+  // returns true (show the menu item by default).
   getMatchedContext: function getCurrentContexts(popupNode) {
     let results = this.getSandbox().emitSync("context", popupNode);
-    return results.reduce(function(val, result) val || result, null);
+    if (!results.length)
+      return true;
+    return results.reduce((val, result) => val || result);
   },
 
   // Emits a click event in the worker's port. popupNode is the node that was
@@ -389,7 +398,7 @@ function hasMatchingContext(contexts, popupNode) {
 // or no matched context then returns false.
 function getCurrentWorkerContext(item, popupNode) {
   let worker = getItemWorkerForWindow(item, popupNode.ownerDocument.defaultView);
-  if (!worker || !worker.anyContextListeners())
+  if (!worker)
     return true;
   return worker.getMatchedContext(popupNode);
 }
@@ -399,7 +408,7 @@ function getCurrentWorkerContext(item, popupNode) {
 function isItemVisible(item, popupNode, defaultVisibility) {
   if (!item.context.length) {
     let worker = getItemWorkerForWindow(item, popupNode.ownerDocument.defaultView);
-    if (!worker || !worker.anyContextListeners())
+    if (!worker)
       return defaultVisibility;
   }
 
@@ -445,7 +454,7 @@ function getItemWorkerForWindow(item, window) {
 
 // Called when an item is clicked to send out click events to the content
 // scripts
-function itemClicked(item, clickedItem, popupNode) {
+function itemActivated(item, clickedItem, popupNode) {
   let worker = getItemWorkerForWindow(item, popupNode.ownerDocument.defaultView);
 
   if (worker) {
@@ -456,7 +465,7 @@ function itemClicked(item, clickedItem, popupNode) {
   }
 
   if (item.parentMenu)
-    itemClicked(item.parentMenu, clickedItem, popupNode);
+    itemActivated(item.parentMenu, clickedItem, popupNode);
 }
 
 // All things that appear in the context menu extend this
@@ -529,6 +538,16 @@ let LabelledItem = Class({
 
   set label(val) {
     internal(this).options.label = val;
+
+    MenuManager.updateItem(this);
+  },
+
+  get accesskey() {
+    return internal(this).options.accesskey;
+  },
+
+  set accesskey(val) {
+    internal(this).options.accesskey = val;
 
     MenuManager.updateItem(this);
   },
@@ -874,6 +893,8 @@ let MenuWrapper = Class({
     xulNode.setAttribute("class", ITEM_CLASS);
     if (item instanceof LabelledItem) {
       xulNode.setAttribute("label", item.label);
+      if (item.accesskey)
+        xulNode.setAttribute("accesskey", item.accesskey);
       if (item.image) {
         xulNode.setAttribute("image", item.image);
         if (item instanceof Menu)
@@ -890,7 +911,7 @@ let MenuWrapper = Class({
         if (event.target !== xulNode)
           return;
 
-        itemClicked(item, item, self.contextMenu.triggerNode);
+        itemActivated(item, item, self.contextMenu.triggerNode);
       }, false);
     }
 
@@ -915,6 +936,7 @@ let MenuWrapper = Class({
 
     // TODO figure out why this requires setAttribute
     xulNode.setAttribute("label", item.label);
+    xulNode.setAttribute("accesskey", item.accesskey || "");
 
     if (item.image) {
       xulNode.setAttribute("image", item.image);
@@ -1050,6 +1072,7 @@ let MenuWrapper = Class({
             let overflowMenu = this.window.document.createElement("menu");
             overflowMenu.setAttribute("class", OVERFLOW_MENU_CLASS);
             overflowMenu.setAttribute("label", OVERFLOW_MENU_LABEL);
+            overflowMenu.setAttribute("accesskey", OVERFLOW_MENU_ACCESSKEY);
             this.contextMenu.insertBefore(overflowMenu, this.separator.nextSibling);
 
             overflowPopup = this.window.document.createElement("menupopup");
