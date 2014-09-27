@@ -85,13 +85,15 @@ public:
   bool CountAsActive() { return mCountAsActive; }
 
   void SetAllHeadersReceived();
+  void UnsetAllHeadersReceived() { mAllHeadersReceived = 0; }
   bool AllHeadersReceived() { return mAllHeadersReceived; }
 
   void UpdateTransportSendEvents(uint32_t count);
   void UpdateTransportReadEvents(uint32_t count);
 
   // NS_ERROR_ABORT terminates stream, other failure terminates session
-  nsresult ConvertResponseHeaders(Http2Decompressor *, nsACString &, nsACString &);
+  nsresult ConvertResponseHeaders(Http2Decompressor *, nsACString &,
+                                  nsACString &, int32_t &);
   nsresult ConvertPushHeaders(Http2Decompressor *, nsACString &, nsACString &);
 
   bool AllowFlowControlledWrite();
