@@ -145,8 +145,8 @@ class WrapperOwner : public virtual JavaScriptShared
     virtual bool SendRegExpToShared(const ObjectId &objId, ReturnStatus *rs, nsString *source,
                                     uint32_t *flags) = 0;
 
-    virtual bool SendGetPropertyNames(const ObjectId &objId, const uint32_t &flags,
-                                      ReturnStatus *rs, nsTArray<nsString> *names) = 0;
+    virtual bool SendGetPropertyKeys(const ObjectId &objId, const uint32_t &flags,
+                                     ReturnStatus *rs, nsTArray<nsString> *names) = 0;
     virtual bool SendInstanceOf(const ObjectId &objId, const JSIID &iid,
                                 ReturnStatus *rs, bool *instanceof) = 0;
     virtual bool SendDOMInstanceOf(const ObjectId &objId, const int &prototypeID, const int &depth,

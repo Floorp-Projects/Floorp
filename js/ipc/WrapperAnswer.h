@@ -54,8 +54,8 @@ class WrapperAnswer : public virtual JavaScriptShared
     bool RecvClassName(const ObjectId &objId, nsString *result);
     bool RecvRegExpToShared(const ObjectId &objId, ReturnStatus *rs, nsString *source, uint32_t *flags);
 
-    bool RecvGetPropertyNames(const ObjectId &objId, const uint32_t &flags,
-                              ReturnStatus *rs, nsTArray<nsString> *names);
+    bool RecvGetPropertyKeys(const ObjectId &objId, const uint32_t &flags,
+                             ReturnStatus *rs, nsTArray<nsString> *names);
     bool RecvInstanceOf(const ObjectId &objId, const JSIID &iid,
                         ReturnStatus *rs, bool *instanceof);
     bool RecvDOMInstanceOf(const ObjectId &objId, const int &prototypeID, const int &depth,

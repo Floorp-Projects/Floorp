@@ -101,9 +101,9 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
         return Answer::RecvRegExpToShared(ObjectId::deserialize(objId), rs, source, flags);
     }
 
-    bool RecvGetPropertyNames(const uint64_t &objId, const uint32_t &flags,
-                                ReturnStatus *rs, nsTArray<nsString> *names) {
-        return Answer::RecvGetPropertyNames(ObjectId::deserialize(objId), flags, rs, names);
+    bool RecvGetPropertyKeys(const uint64_t &objId, const uint32_t &flags,
+                             ReturnStatus *rs, nsTArray<nsString> *names) {
+        return Answer::RecvGetPropertyKeys(ObjectId::deserialize(objId), flags, rs, names);
     }
     bool RecvInstanceOf(const uint64_t &objId, const JSIID &iid,
                           ReturnStatus *rs, bool *instanceof) {
@@ -199,9 +199,9 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
         return Base::SendRegExpToShared(objId.serialize(), rs, source, flags);
     }
 
-    bool SendGetPropertyNames(const ObjectId &objId, const uint32_t &flags,
-                              ReturnStatus *rs, nsTArray<nsString> *names) {
-        return Base::SendGetPropertyNames(objId.serialize(), flags, rs, names);
+    bool SendGetPropertyKeys(const ObjectId &objId, const uint32_t &flags,
+                             ReturnStatus *rs, nsTArray<nsString> *names) {
+        return Base::SendGetPropertyKeys(objId.serialize(), flags, rs, names);
     }
     bool SendInstanceOf(const ObjectId &objId, const JSIID &iid,
                         ReturnStatus *rs, bool *instanceof) {
