@@ -1069,7 +1069,7 @@
     </toolbarpalette>
   </toolbox>
 
-  <hbox id="fullscr-toggler" collapsed="true"/>
+  <hbox id="fullscr-toggler" hidden="true"/>
 
   <deck id="content-deck" flex="1">
     <hbox flex="1" id="browser">

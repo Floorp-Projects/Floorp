@@ -625,7 +625,7 @@ public class TopSitesPanel extends HomeFragment {
 
                 // Only try to fetch thumbnails for non-empty URLs that
                 // don't have an associated suggested image URL.
-                if (TextUtils.isEmpty(url) || TextUtils.isEmpty(imageUrl)) {
+                if (TextUtils.isEmpty(url) || !TextUtils.isEmpty(imageUrl)) {
                     continue;
                 }
 
