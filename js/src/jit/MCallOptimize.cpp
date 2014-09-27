@@ -182,13 +182,13 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
     if (native == intrinsic_ObjectIsTypedObject)
         return inlineHasClass(callInfo,
                               &TransparentTypedObject::class_,
-                              &OwnedOpaqueTypedObject::class_,
+                              &OutlineOpaqueTypedObject::class_,
                               &InlineOpaqueTypedObject::class_);
     if (native == intrinsic_ObjectIsTransparentTypedObject)
         return inlineHasClass(callInfo, &TransparentTypedObject::class_);
     if (native == intrinsic_ObjectIsOpaqueTypedObject)
         return inlineHasClass(callInfo,
-                              &OwnedOpaqueTypedObject::class_,
+                              &OutlineOpaqueTypedObject::class_,
                               &InlineOpaqueTypedObject::class_);
     if (native == intrinsic_ObjectIsTypeDescr)
         return inlineObjectIsTypeDescr(callInfo);

@@ -87,7 +87,7 @@ template<typename Elem>
 static Elem
 TypedObjectMemory(HandleValue v)
 {
-    OwnedTypedObject &obj = v.toObject().as<OwnedTypedObject>();
+    OutlineTypedObject &obj = v.toObject().as<OutlineTypedObject>();
     return reinterpret_cast<Elem>(obj.typedMem());
 }
 
@@ -138,7 +138,7 @@ static bool SignMask(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    OwnedTypedObject &typedObj = args.thisv().toObject().as<OwnedTypedObject>();
+    OutlineTypedObject &typedObj = args.thisv().toObject().as<OutlineTypedObject>();
     TypeDescr &descr = typedObj.typeDescr();
     if (descr.kind() != type::Simd || descr.as<SimdTypeDescr>().type() != SimdType::type) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
@@ -322,7 +322,7 @@ SimdTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
         return false;
     }
 
-    Rooted<TypedObject*> result(cx, OwnedTypedObject::createZeroed(cx, descr, 0));
+    Rooted<TypedObject*> result(cx, OutlineTypedObject::createZeroed(cx, descr, 0));
     if (!result)
         return false;
 
@@ -717,7 +717,7 @@ js::CreateSimd(JSContext *cx, typename V::Elem *data)
     Rooted<TypeDescr*> typeDescr(cx, &V::GetTypeDescr(*cx->global()));
     JS_ASSERT(typeDescr);
 
-    Rooted<TypedObject *> result(cx, OwnedTypedObject::createZeroed(cx, typeDescr, 0));
+    Rooted<TypedObject *> result(cx, OutlineTypedObject::createZeroed(cx, typeDescr, 0));
     if (!result)
         return nullptr;
 
