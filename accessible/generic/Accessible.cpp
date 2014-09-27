@@ -240,6 +240,7 @@ Accessible::Description(nsString& aDescription)
   if (!aDescription.IsEmpty()) {
     aDescription.CompressWhitespace();
     nsAutoString name;
+    ENameValueFlag nameFlag = Name(name);
     // Don't expose a description if it is the same as the name.
     if (aDescription.Equals(name))
       aDescription.Truncate();
