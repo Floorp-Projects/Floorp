@@ -344,6 +344,7 @@ toolbarpaletteitem[place="toolbar"] {
 }
 
 #customization-lwtheme-menu-footer {
+  background: linear-gradient(hsla(210,4%,10%,.05) 60%, hsla(210,4%,10%,0)) border-box;
   border-top: 1px solid hsla(210,4%,10%,.05);
   margin-bottom: -10px;
 }
@@ -352,22 +353,18 @@ toolbarpaletteitem[place="toolbar"] {
   -moz-appearance: none;
   -moz-box-flex: 1;
   color: hsl(0,0%,50%);
-  border: 1px solid transparent;
+  border-style: none;
   padding: 10px;
   margin-left: 0;
   margin-right: 0;
 }
 
 .customization-lwtheme-menu-footeritem:hover {
-  background-color: hsla(210,4%,10%,.15);
+  background: linear-gradient(hsla(210,4%,10%,.08) 40%, hsla(210,4%,10%,0)) padding-box;
 }
 
-#customization-lwtheme-menu-footer:not(:hover) > .customization-lwtheme-menu-footeritem:first-child {
+.customization-lwtheme-menu-footeritem:first-child {
   -moz-border-end: 1px solid hsla(210,4%,10%,.15);
-}
-
-#customization-lwtheme-menu-footer:hover > .customization-lwtheme-menu-footeritem:first-child {
-  -moz-border-end-color: transparent;
 }
 
 %include customizeTip.inc.css
