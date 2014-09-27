@@ -2006,6 +2006,9 @@ pref("layout.css.mix-blend-mode.enabled", true);
 // Is support for CSS Filters enabled?
 pref("layout.css.filters.enabled", false);
 
+// Is support for basic shapes in clip-path enabled?
+pref("layout.css.clip-path-shapes.enabled", false);
+
 // Is support for CSS sticky positioning enabled?
 pref("layout.css.sticky.enabled", true);
 
