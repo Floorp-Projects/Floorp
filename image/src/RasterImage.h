@@ -541,10 +541,14 @@ private:
                                     uint32_t aFlags);
 
   TemporaryRef<gfx::SourceSurface> CopyFrame(uint32_t aWhichFrame,
-                                             uint32_t aFlags);
+                                             uint32_t aFlags,
+                                             bool aShouldSyncNotify = true);
+  TemporaryRef<gfx::SourceSurface> GetFrameInternal(uint32_t aWhichFrame,
+                                                    uint32_t aFlags,
+                                                    bool aShouldSyncNotify = true);
 
-  already_AddRefed<imgFrame> GetFrameNoDecode(uint32_t aFrameNum);
-  DrawableFrameRef GetFrame(uint32_t aFrameNum);
+  already_AddRefed<imgFrame> LookupFrameNoDecode(uint32_t aFrameNum);
+  DrawableFrameRef LookupFrame(uint32_t aFrameNum, uint32_t aFlags, bool aShouldSyncNotify = true);
   uint32_t GetCurrentFrameIndex() const;
   uint32_t GetRequestedFrameIndex(uint32_t aWhichFrame) const;
 
@@ -696,7 +700,7 @@ private: // data
                                  eShutdownIntent aIntent,
                                  bool aDone,
                                  bool aWasSize);
-  nsresult WantDecodedFrames();
+  nsresult WantDecodedFrames(uint32_t aFlags, bool aShouldSyncNotify);
   nsresult SyncDecode();
   nsresult InitDecoder(bool aDoSizeDecode);
   nsresult WriteToDecoder(const char *aBuffer, uint32_t aCount, DecodeStrategy aStrategy);
