@@ -107,6 +107,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "GlobalState",
   "resource:///modules/sessionstore/GlobalState.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivacyFilter",
   "resource:///modules/sessionstore/PrivacyFilter.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RevivableWindows",
+  "resource:///modules/sessionstore/RevivableWindows.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RunState",
   "resource:///modules/sessionstore/RunState.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ScratchpadManager",
@@ -701,7 +703,9 @@ let SessionStoreInternal = {
         this.saveStateDelayed(win);
         break;
     }
-    this._clearRestoringWindows();
+
+    // Any event handled here indicates a user action.
+    RevivableWindows.clear();
   },
 
   /**
@@ -1013,11 +1017,9 @@ let SessionStoreInternal = {
         SessionCookies.update([winData]);
       }
 
-#ifndef XP_MACOSX
       // Until we decide otherwise elsewhere, this window is part of a series
       // of closing windows to quit.
-      winData._shouldRestore = true;
-#endif
+      RevivableWindows.add(winData);
 
       // Store the window's close date to figure out when each individual tab
       // was closed. This timestamp should allow re-arranging data based on how
@@ -1039,9 +1041,8 @@ let SessionStoreInternal = {
         // with tabs we deem not worth saving then we might end up with a
         // random closed or even a pop-up window re-opened. To prevent that
         // we explicitly allow saving an "empty" window state.
-        let isLastWindow =
-          Object.keys(this._windows).length == 1 &&
-          !this._closedWindows.some(win => win._shouldRestore || false);
+        let numOpenWindows = Object.keys(this._windows).length;
+        let isLastWindow = numOpenWindows == 1 && RevivableWindows.isEmpty;
 
         if (hasSaveableTabs || isLastWindow) {
           // we don't want to save the busy state
@@ -1155,8 +1156,11 @@ let SessionStoreInternal = {
         delete this._windows[ix];
       }
     }
+
     // also clear all data about closed windows
     this._closedWindows = [];
+    RevivableWindows.clear();
+
     // give the tabbrowsers a chance to clear their histories first
     var win = this._getMostRecentBrowserWindow();
     if (win) {
@@ -1164,8 +1168,6 @@ let SessionStoreInternal = {
     } else if (RunState.isRunning) {
       SessionSaver.run();
     }
-
-    this._clearRestoringWindows();
   },
 
   /**
@@ -1219,11 +1221,12 @@ let SessionStoreInternal = {
       }
     }
 
+    // Purging domain data indicates a user action.
+    RevivableWindows.clear();
+
     if (RunState.isRunning) {
       SessionSaver.run();
     }
-
-    this._clearRestoringWindows();
   },
 
   /**
@@ -3344,21 +3347,6 @@ let SessionStoreInternal = {
       spliceTo = normalWindowIndex + 1;
 #endif
     this._closedWindows.splice(spliceTo, this._closedWindows.length);
-  },
-
-  /**
-   * Clears the set of windows that are "resurrected" before writing to disk to
-   * make closing windows one after the other until shutdown work as expected.
-   *
-   * This function should only be called when we are sure that there has been
-   * a user action that indicates the browser is actively being used and all
-   * windows that have been closed before are not part of a series of closing
-   * windows.
-   */
-  _clearRestoringWindows: function ssi_clearRestoringWindows() {
-    for (let i = 0; i < this._closedWindows.length; i++) {
-      delete this._closedWindows[i]._shouldRestore;
-    }
   },
 
   /**

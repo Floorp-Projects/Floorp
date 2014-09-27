@@ -46,6 +46,7 @@ EXTRA_JS_MODULES.sessionstore = [
 ]
 
 EXTRA_PP_JS_MODULES.sessionstore += [
+    'RevivableWindows.jsm',
     'SessionSaver.jsm',
     'SessionStore.jsm',
 ]
