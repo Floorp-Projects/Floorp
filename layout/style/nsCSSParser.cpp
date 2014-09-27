@@ -788,6 +788,7 @@ protected:
   bool ParseListStyleType(nsCSSValue& aValue);
   bool ParseMargin();
   bool ParseMarks(nsCSSValue& aValue);
+  bool ParseClipPath();
   bool ParseTransform(bool aIsPrefixed);
   bool ParseObjectPosition();
   bool ParseOutline();
@@ -960,6 +961,10 @@ protected:
   bool IsParsingCompoundProperty(void) const {
     return mParsingCompoundProperty;
   }
+
+  /* Functions for basic shapes */
+  bool ParseBasicShape(nsCSSValue& aValue);
+  bool ParsePolygonFunction(nsCSSValue& aValue);
 
   /* Functions for transform Parsing */
   bool ParseSingleTransform(bool aIsPrefixed, nsCSSValue& aValue);
@@ -9917,6 +9922,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseMarker();
   case eCSSProperty_paint_order:
     return ParsePaintOrder();
+  case eCSSProperty_clip_path:
+    return ParseClipPath();
   case eCSSProperty_all:
     return ParseAll();
   default:
@@ -13777,6 +13784,125 @@ bool CSSParserImpl::ParseTransform(bool aIsPrefixed)
     }
   }
   AppendValue(eCSSProperty_transform, value);
+  return true;
+}
+
+/* Reads a polygon function's argument list.
+ */
+bool
+CSSParserImpl::ParsePolygonFunction(nsCSSValue& aValue)
+{
+  uint16_t numArgs = 1;
+
+  nsCSSValue fillRuleValue;
+  if (ParseEnum(fillRuleValue, nsCSSProps::kFillRuleKTable)) {
+    numArgs++;
+
+    // The fill-rule must be comma separated from the polygon points.
+    if (!ExpectSymbol(',', true)) {
+      REPORT_UNEXPECTED_TOKEN(PEExpectedComma);
+      SkipUntil(')');
+      return false;
+    }
+  }
+
+  nsCSSValue coordinates;
+  nsCSSValuePairList* item = coordinates.SetPairListValue();
+  for (;;) {
+    nsCSSValue xValue, yValue;
+    if (!ParseVariant(xValue, VARIANT_LPCALC, nullptr) ||
+        !ParseVariant(yValue, VARIANT_LPCALC, nullptr)) {
+      REPORT_UNEXPECTED_TOKEN(PECoordinatePair);
+      SkipUntil(')');
+      return false;
+    }
+    item->mXValue = xValue;
+    item->mYValue = yValue;
+
+    // See whether to continue or whether to look for end of function.
+    if (!ExpectSymbol(',', true)) {
+      // We need to read the closing parenthesis.
+      if (!ExpectSymbol(')', true)) {
+        REPORT_UNEXPECTED_TOKEN(PEExpectedCloseParen);
+        SkipUntil(')');
+        return false;
+      }
+      break;
+    }
+    item->mNext = new nsCSSValuePairList;
+    item = item->mNext;
+  }
+
+  nsRefPtr<nsCSSValue::Array> functionArray =
+    aValue.InitFunction(eCSSKeyword_polygon, numArgs);
+  functionArray->Item(numArgs) = coordinates;
+  if (numArgs > 1) {
+    functionArray->Item(1) = fillRuleValue;
+  }
+
+  return true;
+}
+
+bool
+CSSParserImpl::ParseBasicShape(nsCSSValue& aValue)
+{
+  if (!GetToken(true)) {
+    return false;
+  }
+
+  if (mToken.mType != eCSSToken_Function) {
+    UngetToken();
+    return false;
+  }
+
+  nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
+  switch (keyword) {
+  case eCSSKeyword_polygon:
+    return ParsePolygonFunction(aValue);
+  default:
+    return false;
+  }
+}
+
+/* Parse a clip-path url to a <clipPath> element or a basic shape. */
+bool CSSParserImpl::ParseClipPath()
+{
+  nsCSSValue value;
+  if (!ParseVariant(value, VARIANT_HUO, nullptr)) {
+    if (!nsLayoutUtils::CSSClipPathShapesEnabled()) {
+      // With CSS Clip Path Shapes disabled, we should only accept
+      // SVG clipPath reference and none.
+      REPORT_UNEXPECTED_TOKEN(PEExpectedNoneOrURL);
+      return false;
+    }
+
+    bool shape = false, box = false;
+    nsCSSValueList* cur = value.SetListValue();
+    bool eof = false;
+    for (int i = 0; i < 2; ++i) {
+      if (ParseBasicShape(cur->mValue) && !shape) {
+        shape = true;
+      } else if (ParseEnum(cur->mValue, nsCSSProps::kClipShapeSizingKTable) &&
+                 !box) {
+        box = true;
+      } else {
+        break;
+      }
+      if (!GetToken(true)) {
+        eof = true;
+        break;
+      }
+      UngetToken();
+      cur->mNext = new nsCSSValueList;
+      cur = cur->mNext;
+    }
+    if (!shape && !box && !eof) {
+      REPORT_UNEXPECTED_EOF(PEClipPathEOF);
+      return false;
+    }
+  }
+
+  AppendValue(eCSSProperty_clip_path, value);
   return true;
 }
 

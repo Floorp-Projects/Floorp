@@ -719,6 +719,9 @@ private:
     return static_cast<char16_t*>(aBuffer->Data());
   }
 
+  void AppendPolygonToString(nsCSSProperty aProperty, nsAString& aResult,
+                             Serialization aValueSerialization) const;
+
 protected:
   nsCSSUnit mUnit;
   union {

@@ -5176,18 +5176,84 @@ nsComputedDOMStyle::DoGetStopColor()
 }
 
 CSSValue*
-nsComputedDOMStyle::DoGetClipPath()
+nsComputedDOMStyle::CreatePrimitiveValueForClipPath(
+  const nsStyleBasicShape* aStyleBasicShape, uint8_t aSizingBox)
 {
+  nsDOMCSSValueList* valueList = GetROCSSValueList(false);
+
+  if (aStyleBasicShape &&
+      aStyleBasicShape->GetShapeType() == nsStyleBasicShape::Type::ePolygon) {
+    nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+
+    // Shape function name and opening parenthesis.
+    nsAutoString shapeFunctionString;
+    AppendASCIItoUTF16(nsCSSKeywords::GetStringValue(eCSSKeyword_polygon),
+                       shapeFunctionString);
+    shapeFunctionString.Append('(');
+    uint8_t fillRule = aStyleBasicShape->GetFillRule();
+    if (fillRule == NS_STYLE_FILL_RULE_EVENODD) {
+      shapeFunctionString.AppendLiteral("evenodd");
+    }
+    for (size_t i = 0; i < aStyleBasicShape->Coordinates().Length(); i += 2) {
+      nsAutoString coordString;
+      if (i > 0 || fillRule) {
+        shapeFunctionString.AppendLiteral(", ");
+      }
+      SetCssTextToCoord(coordString,
+                        aStyleBasicShape->Coordinates()[i]);
+      shapeFunctionString.Append(coordString);
+      shapeFunctionString.Append(' ');
+      SetCssTextToCoord(coordString,
+                        aStyleBasicShape->Coordinates()[i + 1]);
+      shapeFunctionString.Append(coordString);
+    }
+    shapeFunctionString.Append(')');
+    val->SetString(shapeFunctionString);
+    valueList->AppendCSSValue(val);
+  }
+
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
 
+  if (aSizingBox == NS_STYLE_CLIP_SHAPE_SIZING_NOBOX) {
+    return valueList;
+  }
+
+  nsAutoString boxString;
+  AppendASCIItoUTF16(
+    nsCSSProps::ValueToKeyword(aSizingBox,
+                               nsCSSProps::kClipShapeSizingKTable),
+                               boxString);
+  val->SetString(boxString);
+  valueList->AppendCSSValue(val);
+
+  return valueList;
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetClipPath()
+{
   const nsStyleSVGReset* svg = StyleSVGReset();
-
-  if (svg->mClipPath)
-    val->SetURI(svg->mClipPath);
-  else
-    val->SetIdent(eCSSKeyword_none);
-
-  return val;
+  switch (svg->mClipPath.GetType()) {
+    case NS_STYLE_CLIP_PATH_SHAPE:
+      return CreatePrimitiveValueForClipPath(svg->mClipPath.GetBasicShape(),
+                                             svg->mClipPath.GetSizingBox());
+    case NS_STYLE_CLIP_PATH_BOX:
+      return CreatePrimitiveValueForClipPath(nullptr,
+                                             svg->mClipPath.GetSizingBox());
+    case NS_STYLE_CLIP_PATH_URL: {
+      nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+      val->SetURI(svg->mClipPath.GetURL());
+      return val;
+    }
+    case NS_STYLE_CLIP_PATH_NONE: {
+      nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+      val->SetIdent(eCSSKeyword_none);
+      return val;
+    }
+    default:
+      NS_NOTREACHED("unexpected type");
+  }
+  return nullptr;
 }
 
 void
