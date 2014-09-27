@@ -11,6 +11,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Likely.h"
 
+#include "nsAlgorithm.h"
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsNameSpaceManager.h"
@@ -4046,10 +4047,9 @@ nsresult
 nsTreeBodyFrame::ScrollToRow(int32_t aRow)
 {
   ScrollParts parts = GetScrollParts();
-  nsresult rv = ScrollToRowInternal(parts, aRow);
-  NS_ENSURE_SUCCESS(rv, rv);
+  ScrollToRowInternal(parts, aRow);
   UpdateScrollbars(parts);
-  return rv;
+  return NS_OK;
 }
 
 nsresult nsTreeBodyFrame::ScrollToRowInternal(const ScrollParts& aParts, int32_t aRow)
@@ -4062,62 +4062,40 @@ nsresult nsTreeBodyFrame::ScrollToRowInternal(const ScrollParts& aParts, int32_t
 nsresult
 nsTreeBodyFrame::ScrollByLines(int32_t aNumLines)
 {
-  if (!mView)
+  if (!mView) {
     return NS_OK;
-
-  int32_t newIndex = mTopRowIndex + aNumLines;
-  if (newIndex < 0)
-    newIndex = 0;
-  else {
-    int32_t lastPageTopRow = mRowCount - mPageLength;
-    if (newIndex > lastPageTopRow)
-      newIndex = lastPageTopRow;
   }
+  int32_t newIndex = mTopRowIndex + aNumLines;
   ScrollToRow(newIndex);
-  
   return NS_OK;
 }
 
 nsresult
 nsTreeBodyFrame::ScrollByPages(int32_t aNumPages)
 {
-  if (!mView)
+  if (!mView) {
     return NS_OK;
-
-  int32_t newIndex = mTopRowIndex + aNumPages * mPageLength;
-  if (newIndex < 0)
-    newIndex = 0;
-  else {
-    int32_t lastPageTopRow = mRowCount - mPageLength;
-    if (newIndex > lastPageTopRow)
-      newIndex = lastPageTopRow;
   }
+  int32_t newIndex = mTopRowIndex + aNumPages * mPageLength;
   ScrollToRow(newIndex);
-    
   return NS_OK;
 }
 
 nsresult
 nsTreeBodyFrame::ScrollInternal(const ScrollParts& aParts, int32_t aRow)
 {
-  if (!mView)
+  if (!mView) {
     return NS_OK;
-
-  int32_t delta = aRow - mTopRowIndex;
-
-  if (delta > 0) {
-    if (mTopRowIndex == (mRowCount - mPageLength + 1))
-      return NS_OK;
   }
-  else {
-    if (mTopRowIndex == 0)
-      return NS_OK;
+  int32_t maxTopRowIndex = std::max(0, mRowCount - mPageLength);
+  MOZ_ASSERT(mTopRowIndex == mozilla::clamped(mTopRowIndex, 0, maxTopRowIndex));
+
+  aRow = mozilla::clamped(aRow, 0, maxTopRowIndex);
+  if (aRow == mTopRowIndex) {
+    return NS_OK;
   }
-
-  mTopRowIndex += delta;
-
+  mTopRowIndex = aRow;
   Invalidate();
-
   PostScrollEvent();
   return NS_OK;
 }
