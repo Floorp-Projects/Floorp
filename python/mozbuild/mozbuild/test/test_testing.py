@@ -101,6 +101,32 @@ ALL_TESTS_JSON = b'''
             "support-files": "\\ndata/**\\nxpcshell_updater.ini",
             "tail": ""
         }
+    ],
+    "mobile/android/tests/background/junit3/src/common/TestAndroidLogWriters.java": [
+        {
+            "dir_relpath": "mobile/android/tests/background/junit3/src/common",
+            "file_relpath": "mobile/android/tests/background/junit3/src/common/TestAndroidLogWriters.java",
+            "flavor": "instrumentation",
+            "here": "/Users/nalexander/Mozilla/gecko-dev/mobile/android/tests/background/junit3",
+            "manifest": "/Users/nalexander/Mozilla/gecko-dev/mobile/android/tests/background/junit3/instrumentation.ini",
+            "name": "src/common/TestAndroidLogWriters.java",
+            "path": "/Users/nalexander/Mozilla/gecko-dev/mobile/android/tests/background/junit3/src/common/TestAndroidLogWriters.java",
+            "relpath": "src/common/TestAndroidLogWriters.java",
+            "subsuite": "background"
+        }
+    ],
+    "mobile/android/tests/browser/junit3/src/TestDistribution.java": [
+        {
+            "dir_relpath": "mobile/android/tests/browser/junit3/src",
+            "file_relpath": "mobile/android/tests/browser/junit3/src/TestDistribution.java",
+            "flavor": "instrumentation",
+            "here": "/Users/nalexander/Mozilla/gecko-dev/mobile/android/tests/browser/junit3",
+            "manifest": "/Users/nalexander/Mozilla/gecko-dev/mobile/android/tests/browser/junit3/instrumentation.ini",
+            "name": "src/TestDistribution.java",
+            "path": "/Users/nalexander/Mozilla/gecko-dev/mobile/android/tests/browser/junit3/src/TestDistribution.java",
+            "relpath": "src/TestDistribution.java",
+            "subsuite": "browser"
+        }
     ]
 }'''.strip()
 
@@ -127,14 +153,14 @@ class Base(unittest.TestCase):
 class TestTestMetadata(Base):
     def test_load(self):
         t = self._get_test_metadata()
-        self.assertEqual(len(t._tests_by_path), 4)
+        self.assertEqual(len(t._tests_by_path), 6)
 
         self.assertEqual(len(list(t.tests_with_flavor('xpcshell'))), 3)
         self.assertEqual(len(list(t.tests_with_flavor('mochitest-plain'))), 0)
 
     def test_resolve_all(self):
         t = self._get_test_metadata()
-        self.assertEqual(len(list(t.resolve_tests())), 5)
+        self.assertEqual(len(list(t.resolve_tests())), 7)
 
     def test_resolve_filter_flavor(self):
         t = self._get_test_metadata()
@@ -212,6 +238,22 @@ class TestTestResolver(Base):
 
         actual = list(r.resolve_tests(paths=['services'], cwd=r.topobjdir))
         self.assertEqual(actual, expected)
+
+    def test_subsuites(self):
+        """Test filtering by subsuite."""
+
+        r = self._get_resolver()
+
+        tests = list(r.resolve_tests(paths=['mobile']))
+        self.assertEqual(len(tests), 2)
+
+        tests = list(r.resolve_tests(paths=['mobile'], subsuite='browser'))
+        self.assertEqual(len(tests), 1)
+        self.assertEqual(tests[0]['name'], 'src/TestDistribution.java')
+
+        tests = list(r.resolve_tests(paths=['mobile'], subsuite='background'))
+        self.assertEqual(len(tests), 1)
+        self.assertEqual(tests[0]['name'], 'src/common/TestAndroidLogWriters.java')
 
 
 if __name__ == '__main__':
