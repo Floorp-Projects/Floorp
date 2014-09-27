@@ -103,7 +103,7 @@ TestArray.addTest(
         modulusLength: 2048,
         publicExponent: new Uint8Array([0x01, 0x00, 0x01])
       };
-      return crypto.subtle.generateKey(alg, false, ["encrypt"])
+      return crypto.subtle.generateKey(alg, false, ["encrypt", "decrypt"])
     }
 
     function doDerive() {
@@ -336,12 +336,12 @@ TestArray.addTest(
     }
 
     Promise.all([
-      crypto.subtle.importKey("jwk", tv.ecdh_p521.jwk_priv, alg, false, ["deriveBits"])
-        .then(setPriv, error(that)),
-      crypto.subtle.importKey("jwk", tv.ecdh_p521.jwk_pub, alg, false, ["deriveBits"])
-        .then(setPub, error(that))
-    ]).then(doDerive, error(that))
-      .then(doSignAndVerify, error(that))
+      crypto.subtle.importKey("jwk", tv.ecdh_p521.jwk_priv, alg, false, ["deriveKey"])
+        .then(setPriv),
+      crypto.subtle.importKey("jwk", tv.ecdh_p521.jwk_pub, alg, false, ["deriveKey"])
+        .then(setPub)
+    ]).then(doDerive)
+      .then(doSignAndVerify)
       .then(complete(that), error(that));
   }
 );
