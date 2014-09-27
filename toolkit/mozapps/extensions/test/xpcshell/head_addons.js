@@ -26,6 +26,7 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
 Components.utils.import("resource://gre/modules/Promise.jsm");
 Components.utils.import("resource://gre/modules/Task.jsm");
 Components.utils.import("resource://gre/modules/osfile.jsm");
+Components.utils.import("resource://gre/modules/AsyncShutdown.jsm");
 
 Services.prefs.setBoolPref("toolkit.osfile.log", true);
 
@@ -37,30 +38,17 @@ let AddonManagerInternal = AMscope.AddonManagerInternal;
 // down AddonManager from the test
 let MockAsyncShutdown = {
   hook: null,
+  status: null,
   profileBeforeChange: {
-    addBlocker: function(aName, aBlocker) {
+    addBlocker: function(aName, aBlocker, aOptions) {
       do_print("Mock profileBeforeChange blocker for '" + aName + "'");
       MockAsyncShutdown.hook = aBlocker;
+      MockAsyncShutdown.status = aOptions.fetchState;
     }
   },
-  Barrier: function (name) {
-    this.name = name;
-    this.client.addBlocker = (name, blocker) => {
-      do_print("Mock Barrier blocker for '" + name + "' for barrier '" + this.name + "'");
-      this.blockers.push({name: name, blocker: blocker});
-    };
-  },
+  // We can use the real Barrier
+  Barrier: AsyncShutdown.Barrier
 };
-
-MockAsyncShutdown.Barrier.prototype = Object.freeze({
-  blockers: [],
-  client: {},
-  wait: Task.async(function* () {
-    for (let b of this.blockers) {
-      yield b.blocker();
-    }
-  }),
-});
 
 AMscope.AsyncShutdown = MockAsyncShutdown;
 
