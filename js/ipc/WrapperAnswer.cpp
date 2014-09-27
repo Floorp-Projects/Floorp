@@ -594,7 +594,7 @@ WrapperAnswer::RecvGetPropertyNames(const ObjectId &objId, const uint32_t &flags
     LOG("%s.getPropertyNames()", ReceiverObj(objId));
 
     AutoIdVector props(cx);
-    if (!js::GetPropertyNames(cx, obj, flags, &props))
+    if (!js::GetPropertyKeys(cx, obj, flags, &props))
         return fail(cx, rs);
 
     for (size_t i = 0; i < props.length(); i++) {

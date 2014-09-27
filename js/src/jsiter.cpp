@@ -396,7 +396,7 @@ js::VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap)
 }
 
 JS_FRIEND_API(bool)
-js::GetPropertyNames(JSContext *cx, JSObject *obj, unsigned flags, AutoIdVector *props)
+js::GetPropertyKeys(JSContext *cx, JSObject *obj, unsigned flags, AutoIdVector *props)
 {
     return Snapshot(cx, obj,
                     flags & (JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS | JSITER_SYMBOLSONLY),

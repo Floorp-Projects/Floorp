@@ -170,7 +170,7 @@ js::ObjectToSource(JSContext *cx, HandleObject obj)
     MutableHandleString gsop[2] = {&str0, &str1};
 
     AutoIdVector idv(cx);
-    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_SYMBOLS, &idv))
+    if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_SYMBOLS, &idv))
         return nullptr;
 
     bool comma = false;
@@ -884,7 +884,7 @@ GetOwnPropertyKeys(JSContext *cx, const JS::CallArgs &args, unsigned flags)
 
     // Steps 3-10.
     AutoIdVector keys(cx);
-    if (!GetPropertyNames(cx, obj, flags, &keys))
+    if (!GetPropertyKeys(cx, obj, flags, &keys))
         return false;
 
     // Step 11.
