@@ -56,12 +56,12 @@ class ChromeObjectWrapper : public ChromeObjectWrapperBase
                        js::Wrapper::Action act, bool *bp) const MOZ_OVERRIDE;
 
     // NB: One might think we'd need to implement enumerate(), keys(), iterate(),
-    // and getPropertyNames() here. However, ES5 built-in properties aren't
+    // and getPropertyKeys() here. However, ES5 built-in properties aren't
     // enumerable (and SpiderMonkey's implementation seems to match the spec
     // modulo Error.prototype.fileName and Error.prototype.lineNumber). Since
     // we're only remapping the prototypes of standard objects, there would
     // never be anything more to enumerate up the prototype chain. So we can
-    // atually skip these.
+    // actually skip these.
 
     static const ChromeObjectWrapper singleton;
 };

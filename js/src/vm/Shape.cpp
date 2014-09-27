@@ -1344,7 +1344,7 @@ JSObject::preventExtensions(JSContext *cx, HandleObject obj)
      * properties.
      */
     AutoIdVector props(cx);
-    if (!js::GetPropertyNames(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY, &props))
+    if (!js::GetPropertyKeys(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY, &props))
         return false;
 
     /*

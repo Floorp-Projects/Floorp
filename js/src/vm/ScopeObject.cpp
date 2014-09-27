@@ -1698,7 +1698,7 @@ class DebugScopeProxy : public BaseProxyHandler
         // issue, and punch a hole through to the with object target.
         Rooted<JSObject*> target(cx, (scope->is<DynamicWithObject>()
                                       ? &scope->as<DynamicWithObject>().object() : scope));
-        if (!GetPropertyNames(cx, target, flags, &props))
+        if (!GetPropertyKeys(cx, target, flags, &props))
             return false;
 
         /*

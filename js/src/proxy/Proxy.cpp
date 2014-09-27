@@ -220,7 +220,7 @@ Proxy::enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props)
         return false;
     AutoIdVector protoProps(cx);
     INVOKE_ON_PROTOTYPE(cx, handler, proxy,
-                        GetPropertyNames(cx, proto, 0, &protoProps) &&
+                        GetPropertyKeys(cx, proto, 0, &protoProps) &&
                         AppendUnique(cx, props, protoProps));
 }
 

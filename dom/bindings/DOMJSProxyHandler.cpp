@@ -278,7 +278,7 @@ BaseDOMProxyHandler::enumerate(JSContext* cx, JS::Handle<JSObject*> proxy,
     return false;
   }
   return keys(cx, proxy, props) &&
-         (!proto || js::GetPropertyNames(cx, proto, 0, &props));
+         (!proto || js::GetPropertyKeys(cx, proto, 0, &props));
 }
 
 bool

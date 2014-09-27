@@ -10410,7 +10410,7 @@ class CGDOMJSProxyHandler_ownPropNames(ClassMethod):
 
         if UseHolderForUnforgeable(self.descriptor):
             addUnforgeable = dedent("""
-                if (!js::GetPropertyNames(cx, ${holder}, flags, &props)) {
+                if (!js::GetPropertyKeys(cx, ${holder}, flags, &props)) {
                   return false;
                 }
                 """)
@@ -10447,7 +10447,7 @@ class CGDOMJSProxyHandler_ownPropNames(ClassMethod):
 
             JS::Rooted<JSObject*> expando(cx);
             if (!isXray && (expando = DOMProxyHandler::GetExpandoObject(proxy)) &&
-                !js::GetPropertyNames(cx, expando, flags, &props)) {
+                !js::GetPropertyKeys(cx, expando, flags, &props)) {
               return false;
             }
 
