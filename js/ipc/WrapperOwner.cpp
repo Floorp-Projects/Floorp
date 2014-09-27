@@ -777,7 +777,7 @@ WrapperOwner::getPropertyKeys(JSContext *cx, HandleObject proxy, uint32_t flags,
 
     ReturnStatus status;
     InfallibleTArray<nsString> names;
-    if (!SendGetPropertyNames(objId, flags, &status, &names))
+    if (!SendGetPropertyKeys(objId, flags, &status, &names))
         return ipcfail(cx);
 
     LOG_STACK();
