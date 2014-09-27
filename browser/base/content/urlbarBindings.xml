@@ -213,7 +213,7 @@
 
           let protocol = value.match(/^[a-z\d.+\-]+:(?=[^\d])/);
           if (protocol &&
-              ["http:", "https:", "ftp:"].indexOf(protocol[0]) == -1)
+              !["http:", "https:", "ftp:"].contains(protocol[0]))
             return;
           let matchedURL = value.match(/^((?:[a-z]+:\/\/)?(?:[^\/]+@)?)(.+?)(?::\d+)?(?:\/|$)/);
           if (!matchedURL)

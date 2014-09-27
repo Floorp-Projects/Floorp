@@ -29,6 +29,7 @@ import org.mozilla.gecko.LocaleManager;
 import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.RestrictedProfiles;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.TelemetryContract.Method;
@@ -717,7 +718,8 @@ OnSharedPreferenceChangeListener
                     CharSequence selectedEntry = listPref.getEntry();
                     listPref.setSummary(selectedEntry);
                     continue;
-                } else if (PREFS_SYNC.equals(key) && GeckoProfile.get(this).inGuestMode()) {
+                } else if (PREFS_SYNC.equals(key) &&
+                           !RestrictedProfiles.isAllowed(RestrictedProfiles.Restriction.DISALLOW_MODIFY_ACCOUNTS)) {
                     // Don't show sync prefs while in guest mode.
                     preferences.removePreference(pref);
                     i--;
