@@ -1567,6 +1567,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           this._titleOverflowEllipsis.hidden = false;
 
           let types = new Set(type.split(/\s+/));
+          let initialTypes = new Set(types);
 
           // If the type includes an action, set up the item appropriately.
           if (types.has("action")) {
@@ -1655,7 +1656,8 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             type = "bookmark";
           // keyword and favicon type results for search engines
           // have an extra magnifying glass icon after them
-          } else if (type == "keyword" || type == "search favicon") {
+          } else if (type == "keyword" || (initialTypes.has("search") &&
+              initialTypes.has("favicon"))) {
             // Configure the extra box for keyword display
             this._extraBox.hidden = false;
             this._extraBox.childNodes[0].hidden = true;
@@ -1680,6 +1682,9 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
               // Don't emphasize keyword searches in the title or url
               this.setAttribute("text", "");
+            } else {
+              // Don't show any description for non keyword types.
+              this._setUpDescription(this._extra, "", true);
             }
             // If the result has the type favicon and a known search provider,
             // customize it the same way as a keyword result.
