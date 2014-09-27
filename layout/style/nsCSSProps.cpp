@@ -1880,6 +1880,17 @@ const KTableValue nsCSSProps::kFillRuleKTable[] = {
   eCSSKeyword_UNKNOWN, -1
 };
 
+const KTableValue nsCSSProps::kClipShapeSizingKTable[] = {
+  eCSSKeyword_content_box,   NS_STYLE_CLIP_SHAPE_SIZING_CONTENT,
+  eCSSKeyword_padding_box,   NS_STYLE_CLIP_SHAPE_SIZING_PADDING,
+  eCSSKeyword_border_box,    NS_STYLE_CLIP_SHAPE_SIZING_BORDER,
+  eCSSKeyword_margin_box,    NS_STYLE_CLIP_SHAPE_SIZING_MARGIN,
+  eCSSKeyword_fill_box,      NS_STYLE_CLIP_SHAPE_SIZING_FILL,
+  eCSSKeyword_stroke_box,    NS_STYLE_CLIP_SHAPE_SIZING_STROKE,
+  eCSSKeyword_view_box,      NS_STYLE_CLIP_SHAPE_SIZING_VIEW,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const KTableValue nsCSSProps::kFilterFunctionKTable[] = {
   eCSSKeyword_blur, NS_STYLE_FILTER_BLUR,
   eCSSKeyword_brightness, NS_STYLE_FILTER_BRIGHTNESS,

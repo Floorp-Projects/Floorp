@@ -3612,10 +3612,10 @@ CSS_PROP_SVGRESET(
     clip-path,
     clip_path,
     ClipPath,
-    CSS_PROPERTY_PARSE_VALUE |
+    CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_CREATES_STACKING_CONTEXT,
     "",
-    VARIANT_HUO,
+    0,
     nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
