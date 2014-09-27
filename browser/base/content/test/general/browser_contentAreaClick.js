@@ -212,8 +212,8 @@ let gClickHandler = {
 
     // Check that all required methods have been called.
     gCurrentTest.expectedInvokedMethods.forEach(function(aExpectedMethodName) {
-      isnot(gInvokedMethods.indexOf(aExpectedMethodName), -1,
-            gCurrentTest.desc + ":" + aExpectedMethodName + " was invoked");
+      ok(gInvokedMethods.contains(aExpectedMethodName),
+         gCurrentTest.desc + ":" + aExpectedMethodName + " was invoked");
     });
     
     if (gInvokedMethods.length != gCurrentTest.expectedInvokedMethods.length) {
