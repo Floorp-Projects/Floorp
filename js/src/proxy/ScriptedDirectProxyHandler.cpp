@@ -227,7 +227,7 @@ ArrayToIdVector(JSContext *cx, HandleObject proxy, HandleObject target, HandleVa
 
     // step l
     AutoIdVector ownProps(cx);
-    if (!GetPropertyNames(cx, target, flags, &ownProps))
+    if (!GetPropertyKeys(cx, target, flags, &ownProps))
         return false;
 
     // step m
