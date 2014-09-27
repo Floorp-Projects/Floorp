@@ -1371,7 +1371,7 @@ let BookmarkingUI = {
       // calls back.  For such an edge case, retain all unique entries from both
       // arrays.
       this._itemIds = this._itemIds.filter(
-        function (id) aItemIds.indexOf(id) == -1
+        function (id) !aItemIds.contains(id)
       ).concat(aItemIds);
 
       this._updateStar();
@@ -1592,7 +1592,7 @@ let BookmarkingUI = {
                                         aURI) {
     if (aURI && aURI.equals(this._uri)) {
       // If a new bookmark has been added to the tracked uri, register it.
-      if (this._itemIds.indexOf(aItemId) == -1) {
+      if (!this._itemIds.contains(aItemId)) {
         this._itemIds.push(aItemId);
         // Only need to update the UI if it wasn't marked as starred before:
         if (this._itemIds.length == 1) {
