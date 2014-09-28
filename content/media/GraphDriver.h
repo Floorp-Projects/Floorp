@@ -228,8 +228,6 @@ protected:
   };
   WaitState mWaitState;
 
-  // True if the graph needs another iteration after the current iteration.
-  bool mNeedAnotherIteration;
   TimeStamp mCurrentTimeStamp;
   // This is non-null only when this driver has recently switched from an other
   // driver, and has not cleaned it up yet (for example because the audio stream
