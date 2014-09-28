@@ -679,6 +679,40 @@ FunctionEnd
 !macroend
 !define SetUninstallKeys "!insertmacro SetUninstallKeys"
 
+; Due to a bug when associating some file handlers, only SHCTX was checked for
+; some file types such as ".pdf". SHCTX is set to HKCU or HKLM depending on
+; whether the installer has write access to HKLM. The bug would happen when
+; HCKU was checked and didn't exist since programs aren't required to set the
+; HKCU Software\Classes keys when associating handlers. The fix uses the merged
+; view in HKCR to check for existance of an existing association. This macro
+; cleans affected installations by removing the HKLM and HKCU value if it is set
+; to FirefoxHTML when there is a value for PersistentHandler or by removing the
+; HKCU value when the HKLM value has a value other than an empty string.
+!macro FixBadFileAssociation FILE_TYPE
+  ; Only delete the default value in case the key has values for OpenWithList,
+  ; OpenWithProgids, PersistentHandler, etc.
+  ReadRegStr $0 HKCU "Software\Classes\${FILE_TYPE}" ""
+  ReadRegStr $1 HKLM "Software\Classes\${FILE_TYPE}" ""
+  ReadRegStr $2 HKCR "${FILE_TYPE}\PersistentHandler" ""
+  ${If} "$2" != ""
+    ; Since there is a persistent handler remove FirefoxHTML as the default
+    ; value from both HKCU and HKLM if it set to FirefoxHTML.
+    ${If} "$0" == "FirefoxHTML"
+      DeleteRegValue HKCU "Software\Classes\${FILE_TYPE}" ""
+    ${EndIf}
+    ${If} "$1" == "FirefoxHTML"
+      DeleteRegValue HKLM "Software\Classes\${FILE_TYPE}" ""
+    ${EndIf}
+  ${ElseIf} "$0" == "FirefoxHTML"
+    ; Since KHCU is set to FirefoxHTML remove FirefoxHTML as the default value
+    ; from HKCU if HKLM is set to a value other than an empty string.
+    ${If} "$1" != ""
+      DeleteRegValue HKCU "Software\Classes\${FILE_TYPE}" ""
+    ${EndIf}
+  ${EndIf}
+!macroend
+!define FixBadFileAssociation "!insertmacro FixBadFileAssociation"
+
 ; Add app specific handler registry entries under Software\Classes if they
 ; don't exist (does not use SHCTX).
 !macro FixClassKeys
@@ -705,6 +739,14 @@ FunctionEnd
     ${WriteRegStr2} $TmpVal "$1\.xhtml" "" "xhtmlfile" 0
     ${WriteRegStr2} $TmpVal "$1\.xhtml" "Content Type" "application/xhtml+xml" 0
   ${EndIf}
+
+  ; Remove possibly badly associated file types
+  ${FixBadFileAssociation} ".pdf"
+  ${FixBadFileAssociation} ".oga"
+  ${FixBadFileAssociation} ".ogg"
+  ${FixBadFileAssociation} ".ogv"
+  ${FixBadFileAssociation} ".pdf"
+  ${FixBadFileAssociation} ".webm"
 !macroend
 !define FixClassKeys "!insertmacro FixClassKeys"
 
