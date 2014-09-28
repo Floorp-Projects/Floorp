@@ -438,9 +438,16 @@ public:
    * It is only safe to call this at the very end of an iteration, when there
    * has been a SwitchAtNextIteration call during the iteration. The driver
    * should return and pass the control to the new driver shortly after.
+   * We can also switch from Revive() (on MainThread), in which case the
+   * monitor is held
    */
   void SetCurrentDriver(GraphDriver* aDriver) {
-    MOZ_ASSERT(mDriver->OnThread());
+#ifdef DEBUG
+    // #ifdef since we're not wrapping it all in MOZ_ASSERT()
+    if (!mDriver->OnThread()) {
+      mMonitor.AssertCurrentThreadOwns();
+    }
+#endif
     mDriver = aDriver;
   }
 
