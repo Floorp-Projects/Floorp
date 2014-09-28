@@ -150,12 +150,6 @@ public:
   void Init();
   // The following methods run on the graph thread (or possibly the main thread if
   // mLifecycleState > LIFECYCLE_RUNNING)
-  void AssertOnGraphThreadOrNotRunning() {
-    // either we're on the right thread (and calling CurrentDriver() is safe),
-    // or we're going to assert anyways, so don't cross-check CurrentDriver
-    MOZ_ASSERT(mDriver->OnThread() ||
-               (mLifecycleState > LIFECYCLE_RUNNING && NS_IsMainThread()));
-  }
   /*
    * This does the actual iteration: Message processing, MediaStream ordering,
    * blocking computation and processing.
@@ -420,16 +414,7 @@ public:
   void PausedIndefinitly();
   void ResumedFromPaused();
 
-  /**
-   * Not safe to call off the MediaStreamGraph thread unless monitor is held!
-   */
   GraphDriver* CurrentDriver() {
-#ifdef DEBUG
-    // #ifdef since we're not wrapping it all in MOZ_ASSERT()
-    if (mDriver->OnThread()) {
-      mMonitor.AssertCurrentThreadOwns();
-    }
-#endif
     return mDriver;
   }
 
@@ -438,36 +423,13 @@ public:
    * It is only safe to call this at the very end of an iteration, when there
    * has been a SwitchAtNextIteration call during the iteration. The driver
    * should return and pass the control to the new driver shortly after.
-   * We can also switch from Revive() (on MainThread), in which case the
-   * monitor is held
    */
   void SetCurrentDriver(GraphDriver* aDriver) {
-#ifdef DEBUG
-    // #ifdef since we're not wrapping it all in MOZ_ASSERT()
-    if (mDriver->OnThread()) {
-      mMonitor.AssertCurrentThreadOwns();
-    }
-#endif
     mDriver = aDriver;
   }
 
   Monitor& GetMonitor() {
     return mMonitor;
-  }
-
-  void EnsureNextIteration() {
-    mNeedAnotherIteration = true; // atomic
-    if (mGraphDriverAsleep) { // atomic
-      MonitorAutoLock mon(mMonitor);
-      CurrentDriver()->WakeUp(); // Might not be the same driver; might have woken already
-    }
-  }
-
-  void EnsureNextIterationLocked() {
-    mNeedAnotherIteration = true; // atomic
-    if (mGraphDriverAsleep) { // atomic
-      CurrentDriver()->WakeUp(); // Might not be the same driver; might have woken already
-    }
   }
 
   // Data members
@@ -509,11 +471,6 @@ public:
    */
   int32_t mPortCount;
 
-  // True if the graph needs another iteration after the current iteration.
-  Atomic<bool> mNeedAnotherIteration;
-  // GraphDriver may need a WakeUp() if something changes
-  Atomic<bool> mGraphDriverAsleep;
-
   // mMonitor guards the data below.
   // MediaStreamGraph normally does its work without holding mMonitor, so it is
   // not safe to just grab mMonitor from some thread and start monkeying with
@@ -522,7 +479,7 @@ public:
   Monitor mMonitor;
 
   // Data guarded by mMonitor (must always be accessed with mMonitor held,
-  // regardless of the value of mLifecycleState).
+  // regardless of the value of mLifecycleState.
 
   /**
    * State to copy to main thread
@@ -602,6 +559,10 @@ public:
    * at construction.
    */
   TrackRate mSampleRate;
+  /**
+   * True when another iteration of the control loop is required.
+   */
+  bool mNeedAnotherIteration;
   /**
    * True when we need to do a forced shutdown during application shutdown.
    */
