@@ -53,7 +53,6 @@ GraphDriver::GraphDriver(MediaStreamGraphImpl* aGraphImpl)
     mNextStateComputedTime(0),
     mGraphImpl(aGraphImpl),
     mWaitState(WAITSTATE_RUNNING),
-    mNeedAnotherIteration(false),
     mCurrentTimeStamp(TimeStamp::Now()),
     mPreviousDriver(nullptr),
     mNextDriver(nullptr)
@@ -95,6 +94,7 @@ void GraphDriver::EnsureImmediateWakeUpLocked()
 {
   mGraphImpl->GetMonitor().AssertCurrentThreadOwns();
   mWaitState = WAITSTATE_WAKING_UP;
+  mGraphImpl->mGraphDriverAsleep = false; // atomic
   mGraphImpl->GetMonitor().Notify();
 }
 
@@ -113,22 +113,7 @@ void GraphDriver::UpdateStateComputedTime(GraphTime aStateComputedTime)
 
 void GraphDriver::EnsureNextIteration()
 {
-  MonitorAutoLock lock(mGraphImpl->GetMonitor());
-  EnsureNextIterationLocked();
-}
-
-void GraphDriver::EnsureNextIterationLocked()
-{
-  mGraphImpl->GetMonitor().AssertCurrentThreadOwns();
-
-  if (IsWaitingIndefinitly()) {
-    WakeUp();
-  }
-
-  if (mNeedAnotherIteration) {
-    return;
-  }
-  mNeedAnotherIteration = true;
+  mGraphImpl->EnsureNextIteration();
 }
 
 class MediaStreamGraphShutdownThreadRunnable : public nsRunnable {
@@ -361,7 +346,7 @@ SystemClockDriver::WaitForNextIteration()
 
   PRIntervalTime timeout = PR_INTERVAL_NO_TIMEOUT;
   TimeStamp now = TimeStamp::Now();
-  if (mNeedAnotherIteration) {
+  if (mGraphImpl->mNeedAnotherIteration) {
     int64_t timeoutMS = MEDIA_GRAPH_TARGET_PERIOD_MS -
       int64_t((now - mCurrentTimeStamp).ToMilliseconds());
     // Make sure timeoutMS doesn't overflow 32 bits by waking up at
@@ -369,8 +354,12 @@ SystemClockDriver::WaitForNextIteration()
     timeoutMS = std::max<int64_t>(0, std::min<int64_t>(timeoutMS, 60*1000));
     timeout = PR_MillisecondsToInterval(uint32_t(timeoutMS));
     STREAM_LOG(PR_LOG_DEBUG+1, ("Waiting for next iteration; at %f, timeout=%f", (now - mInitialTimeStamp).ToSeconds(), timeoutMS/1000.0));
+    if (mWaitState == WAITSTATE_WAITING_INDEFINITELY) {
+      mGraphImpl->mGraphDriverAsleep = false; // atomic
+    }
     mWaitState = WAITSTATE_WAITING_FOR_NEXT_ITERATION;
   } else {
+    mGraphImpl->mGraphDriverAsleep = true; // atomic
     mWaitState = WAITSTATE_WAITING_INDEFINITELY;
   }
   if (timeout > 0) {
@@ -380,8 +369,11 @@ SystemClockDriver::WaitForNextIteration()
           (TimeStamp::Now() - now).ToSeconds()));
   }
 
+  if (mWaitState == WAITSTATE_WAITING_INDEFINITELY) {
+    mGraphImpl->mGraphDriverAsleep = false; // atomic
+  }
   mWaitState = WAITSTATE_RUNNING;
-  mNeedAnotherIteration = false;
+  mGraphImpl->mNeedAnotherIteration = false;
 }
 
 void
@@ -389,6 +381,7 @@ SystemClockDriver::WakeUp()
 {
   mGraphImpl->GetMonitor().AssertCurrentThreadOwns();
   mWaitState = WAITSTATE_WAKING_UP;
+  mGraphImpl->mGraphDriverAsleep = false; // atomic
   mGraphImpl->GetMonitor().Notify();
 }
 
@@ -510,12 +503,14 @@ AsyncCubebTask::Run()
         LIFECYCLE_LOG("AsyncCubebOperation::SLEEP\n");
         MonitorAutoLock mon(mDriver->mGraphImpl->GetMonitor());
         // We might just have been awoken
-        if (mDriver->mNeedAnotherIteration) {
+        if (mDriver->mGraphImpl->mNeedAnotherIteration) {
           mDriver->mPauseRequested = false;
           mDriver->mWaitState = AudioCallbackDriver::WAITSTATE_RUNNING;
+          mDriver->mGraphImpl->mGraphDriverAsleep = false	; // atomic
           break;
         }
         mDriver->Stop();
+        mDriver->mGraphImpl->mGraphDriverAsleep = true; // atomic
         mDriver->mWaitState = AudioCallbackDriver::WAITSTATE_WAITING_INDEFINITELY;
         mDriver->mPauseRequested = false;
         mDriver->mGraphImpl->GetMonitor().Wait(PR_INTERVAL_NO_TIMEOUT);
@@ -718,7 +713,7 @@ void AudioCallbackDriver::WaitForNextIteration()
   // We can't block on the monitor in the audio callback, so we kick off a new
   // thread that will pause the audio stream, and restart it when unblocked.
   // We don't want to sleep when we haven't started the driver yet.
-  if (!mNeedAnotherIteration && mAudioStream && mGraphImpl->Running()) {
+  if (!mGraphImpl->mNeedAnotherIteration && mAudioStream && mGraphImpl->Running()) {
     STREAM_LOG(PR_LOG_DEBUG+1, ("AudioCallbackDriver going to sleep"));
     mPauseRequested = true;
     nsRefPtr<AsyncCubebTask> sleepEvent =
