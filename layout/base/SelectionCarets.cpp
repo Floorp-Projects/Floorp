@@ -300,16 +300,16 @@ IsRightToLeft(nsIFrame* aFrame)
 }
 
 /*
- * Reduce rect to 1 app unit width along either left or right edge base on
+ * Reduce rect to 1 css pixel width along either left or right edge base on
  * aToRightEdge parameter.
  */
 static void
 ReduceRectToVerticalEdge(nsRect& aRect, bool aToRightEdge)
 {
   if (aToRightEdge) {
-    aRect.x = aRect.XMost() - 1;
+    aRect.x = aRect.XMost() - AppUnitsPerCSSPixel();
   }
-  aRect.width = 1;
+  aRect.width = AppUnitsPerCSSPixel();
 }
 
 static nsIFrame*
