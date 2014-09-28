@@ -83,7 +83,7 @@ play_callback(SLPlayItf caller, void * user_ptr, SLuint32 event)
       assert(stm->draining);
       pthread_mutex_unlock(&stm->mutex);
       stm->state_callback(stm, stm->user_ptr, CUBEB_STATE_DRAINED);
-      (*stm->play)->SetPlayState(stm->play, SL_PLAYSTATE_STOPPED);
+      (*stm->play)->SetPlayState(stm->play, SL_PLAYSTATE_PAUSED);
       break;
     default:
       break;
@@ -116,7 +116,7 @@ bufferqueue_callback(SLBufferQueueItf caller, void * user_ptr)
       written = cubeb_resampler_fill(stm->resampler, buf,
                                         stm->queuebuf_len / stm->framesize);
       if (written < 0 || written * stm->framesize > stm->queuebuf_len) {
-        (*stm->play)->SetPlayState(stm->play, SL_PLAYSTATE_STOPPED);
+        (*stm->play)->SetPlayState(stm->play, SL_PLAYSTATE_PAUSED);
         return;
       }
     }
