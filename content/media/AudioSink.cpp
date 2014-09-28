@@ -55,10 +55,18 @@ AudioSink::Init()
                                   nullptr,
                                   MEDIA_THREAD_STACK_SIZE);
   if (NS_FAILED(rv)) {
+    mStateMachine->OnAudioSinkError();
     return rv;
   }
+
   nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(this, &AudioSink::AudioLoop);
-  return mThread->Dispatch(event, NS_DISPATCH_NORMAL);
+  rv =  mThread->Dispatch(event, NS_DISPATCH_NORMAL);
+  if (NS_FAILED(rv)) {
+    mStateMachine->OnAudioSinkError();
+    return rv;
+  }
+
+  return NS_OK;
 }
 
 int64_t
@@ -138,6 +146,8 @@ AudioSink::AudioLoop()
 
   if (NS_FAILED(InitializeAudioStream())) {
     NS_WARNING("Initializing AudioStream failed.");
+    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
+    mStateMachine->OnAudioSinkError();
     return;
   }
 
@@ -197,10 +207,13 @@ AudioSink::InitializeAudioStream()
   // circumstances, so we take care to drop the decoder monitor while
   // initializing.
   RefPtr<AudioStream> audioStream(new AudioStream());
-  audioStream->Init(mInfo.mChannels, mInfo.mRate,
-                    mChannel, AudioStream::HighLatency);
-  // TODO: Check Init's return value and bail on error.  Unfortunately this
-  // causes some tests to fail due to playback failing.
+  nsresult rv = audioStream->Init(mInfo.mChannels, mInfo.mRate,
+                                  mChannel, AudioStream::HighLatency);
+  if (NS_FAILED(rv)) {
+    audioStream->Shutdown();
+    return rv;
+  }
+
   ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
   mAudioStream = audioStream;
   UpdateStreamSettings();
