@@ -52,14 +52,12 @@ static MOZ_CONSTEXPR_VAR js::jit::FloatRegister s29(29, js::jit::VFPRegister::Si
 static MOZ_CONSTEXPR_VAR js::jit::FloatRegister s30(30, js::jit::VFPRegister::Single);
 static MOZ_CONSTEXPR_VAR js::jit::FloatRegister s31(31, js::jit::VFPRegister::Single);
 
-static js::jit::JitCode *
-linkAndAllocate(JSContext *cx, js::jit::MacroAssembler *masm)
+static JitCode *
+linkAndAllocate(JSContext *cx, MacroAssembler *masm)
 {
-    using namespace js;
-    using namespace js::jit;
     AutoFlushICache afc("test");
     Linker l(*masm);
-    return l.newCode<CanGC>(cx, JSC::ION_CODE);
+    return l.newCode<CanGC>(cx, ION_CODE);
 }
 
 BEGIN_TEST(testJitMoveEmitterCycles_simple)
