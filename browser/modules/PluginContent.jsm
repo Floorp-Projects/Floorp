@@ -662,7 +662,7 @@ PluginContent.prototype = {
     // If plugin is null, that means the user has navigated back to a page with
     // plugins, and we need to collect all the plugins.
     if (plugin === null) {
-      let contentWindow = this.global.content;
+      let contentWindow = this.content;
       let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIDOMWindowUtils);
       // cwu.plugins may contain non-plugin <object>s, filter them out
@@ -679,8 +679,9 @@ PluginContent.prototype = {
 
     let pluginData = this.pluginData;
 
-    let principal = this.global.content.document.nodePrincipal;
+    let principal = this.content.document.nodePrincipal;
     let principalHost = this._getHostFromPrincipal(principal);
+    let location = this.content.document.location.href;
 
     for (let p of plugins) {
       let pluginInfo = this._getPluginInfo(p);
@@ -710,6 +711,7 @@ PluginContent.prototype = {
       plugins: [... this.pluginData.values()],
       showNow: showNow,
       host: principalHost,
+      location: location,
     }, null, principal);
   },
 
@@ -725,16 +727,13 @@ PluginContent.prototype = {
    *        to the current top-level document.
    */
   updateNotificationUI: function (document) {
-    let principal;
+    document = document || this.content.document;
 
-    if (document) {
-      // We're only interested in the top-level document, since that's
-      // the one that provides the Principal that we send back to the
-      // parent.
-      principal = document.defaultView.top.document.nodePrincipal;
-    } else {
-      principal = this.content.document.nodePrincipal;
-    }
+    // We're only interested in the top-level document, since that's
+    // the one that provides the Principal that we send back to the
+    // parent.
+    let principal = document.defaultView.top.document.nodePrincipal;
+    let location = document.location.href;
 
     // Make a copy of the actions from the last popup notification.
     let haveInsecure = false;
@@ -795,6 +794,7 @@ PluginContent.prototype = {
       haveInsecure: haveInsecure,
       actions: [... actions.values()],
       host: this._getHostFromPrincipal(principal),
+      location: location,
     }, null, principal);
   },
 
