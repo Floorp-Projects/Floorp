@@ -17,6 +17,10 @@ let gIntro = {
   _nodes: {},
 
   init: function() {
+    if (!DirectoryLinksProvider.enabled) {
+      return;
+    }
+
     for (let idSuffix of this._nodeIDSuffixes) {
       this._nodes[idSuffix] = document.getElementById("newtab-intro-" + idSuffix);
     }
