@@ -260,6 +260,7 @@ ThreadedDriver::Stop()
 
   if (mThread) {
     mThread->Shutdown();
+    mThread = nullptr;
   }
 }
 
@@ -400,19 +401,25 @@ public:
   NS_IMETHOD Run()
   {
     MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(mThread);
+
     mThread->Shutdown();
+    mThread = nullptr;
     return NS_OK;
   }
 private:
-  nsRefPtr<nsIThread> mThread;
+  nsCOMPtr<nsIThread> mThread;
 };
 
 OfflineClockDriver::~OfflineClockDriver()
 {
   // transfer the ownership of mThread to the event
-  nsCOMPtr<nsIRunnable> event = new MediaStreamGraphShutdownThreadRunnable2(mThread);
-  mThread = nullptr;
-  NS_DispatchToMainThread(event);
+  // XXX should use .forget()/etc
+  if (mThread) {
+    nsCOMPtr<nsIRunnable> event = new MediaStreamGraphShutdownThreadRunnable2(mThread);
+    mThread = nullptr;
+    NS_DispatchToMainThread(event);
+  }
 }
 
 void
@@ -741,19 +748,16 @@ AudioCallbackDriver::DeviceChangedCallback_s(void* aUser)
 }
 
 bool AudioCallbackDriver::InCallback() {
-  MonitorAutoLock mon(mGraphImpl->GetMonitor());
   return mInCallback;
 }
 
 AudioCallbackDriver::AutoInCallback::AutoInCallback(AudioCallbackDriver* aDriver)
   : mDriver(aDriver)
 {
-  MonitorAutoLock mon(mDriver->mGraphImpl->GetMonitor());
   mDriver->mInCallback = true;
 }
 
 AudioCallbackDriver::AutoInCallback::~AutoInCallback() {
-  MonitorAutoLock mon(mDriver->mGraphImpl->GetMonitor());
   mDriver->mInCallback = false;
 }
 
