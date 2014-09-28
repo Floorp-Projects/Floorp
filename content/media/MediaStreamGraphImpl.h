@@ -455,14 +455,19 @@ public:
     return mMonitor;
   }
 
-  /**
-   * Must implement here to avoid dangerous data races around CurrentDriver() -
-   * we don't want stuff off MSG thread using "graph->CurrentDriver()->EnsureNextIteration()"
-   * because CurrentDriver may change (and it's a TSAN data race)
-   */
   void EnsureNextIteration() {
-    MonitorAutoLock mon(mMonitor);
-    CurrentDriver()->EnsureNextIterationLocked();
+    mNeedAnotherIteration = true; // atomic
+    if (mGraphDriverAsleep) { // atomic
+      MonitorAutoLock mon(mMonitor);
+      CurrentDriver()->WakeUp(); // Might not be the same driver; might have woken already
+    }
+  }
+
+  void EnsureNextIterationLocked() {
+    mNeedAnotherIteration = true; // atomic
+    if (mGraphDriverAsleep) { // atomic
+      CurrentDriver()->WakeUp(); // Might not be the same driver; might have woken already
+    }
   }
 
   // Data members
@@ -504,6 +509,11 @@ public:
    */
   int32_t mPortCount;
 
+  // True if the graph needs another iteration after the current iteration.
+  Atomic<bool> mNeedAnotherIteration;
+  // GraphDriver may need a WakeUp() if something changes
+  Atomic<bool> mGraphDriverAsleep;
+
   // mMonitor guards the data below.
   // MediaStreamGraph normally does its work without holding mMonitor, so it is
   // not safe to just grab mMonitor from some thread and start monkeying with
@@ -512,7 +522,7 @@ public:
   Monitor mMonitor;
 
   // Data guarded by mMonitor (must always be accessed with mMonitor held,
-  // regardless of the value of mLifecycleState.
+  // regardless of the value of mLifecycleState).
 
   /**
    * State to copy to main thread
@@ -592,10 +602,6 @@ public:
    * at construction.
    */
   TrackRate mSampleRate;
-  /**
-   * True when another iteration of the control loop is required.
-   */
-  bool mNeedAnotherIteration;
   /**
    * True when we need to do a forced shutdown during application shutdown.
    */
