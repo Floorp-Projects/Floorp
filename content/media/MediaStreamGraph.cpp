@@ -95,7 +95,7 @@ MediaStreamGraphImpl::FinishStream(MediaStream* aStream)
   // Force at least one more iteration of the control loop, since we rely
   // on UpdateCurrentTimeForStreams to notify our listeners once the stream end
   // has been reached.
-  CurrentDriver()->EnsureNextIteration();
+  EnsureNextIteration();
 
   SetStreamOrderDirty();
 }
@@ -778,7 +778,7 @@ MediaStreamGraphImpl::RecomputeBlocking(GraphTime aEndBlockingDecisions)
 
   if (blockingDecisionsWillChange) {
     // Make sure we wake up to notify listeners about these changes.
-    CurrentDriver()->EnsureNextIteration();
+    EnsureNextIteration();
   }
 }
 
@@ -1288,7 +1288,7 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecision)
   // computed in next loop.
   if (ensureNextIteration ||
       aEndBlockingDecision == CurrentDriver()->StateComputedTime()) {
-    CurrentDriver()->EnsureNextIteration();
+    EnsureNextIteration();
   }
 
   // Figure out which streams are blocked and when.
@@ -1382,7 +1382,7 @@ MediaStreamGraphImpl::Process(GraphTime aFrom, GraphTime aTo)
   }
 
   if (!allBlockedForever) {
-    CurrentDriver()->EnsureNextIteration();
+    EnsureNextIteration();
   }
 }
 
@@ -1468,7 +1468,7 @@ MediaStreamGraphImpl::ForceShutDown()
   {
     MonitorAutoLock lock(mMonitor);
     mForceShutDown = true;
-    CurrentDriver()->EnsureNextIterationLocked();
+    EnsureNextIterationLocked();
   }
 }
 
@@ -1644,7 +1644,7 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
         block->mMessages.SwapElements(mCurrentTaskMessageQueue);
         block->mGraphUpdateIndex = mNextGraphUpdateIndex;
         ++mNextGraphUpdateIndex;
-        CurrentDriver()->EnsureNextIterationLocked();
+        EnsureNextIterationLocked();
       }
 
       // If the MediaStreamGraph has more messages going to it, try to revive
@@ -2712,6 +2712,8 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime,
                                            dom::AudioChannel aChannel)
   : mProcessingGraphUpdateIndex(0)
   , mPortCount(0)
+  , mNeedAnotherIteration(false)
+  , mGraphDriverAsleep(false)
   , mMonitor("MediaStreamGraphImpl")
   , mLifecycleState(LIFECYCLE_THREAD_NOT_STARTED)
   , mEndTime(GRAPH_TIME_MAX)
