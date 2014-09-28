@@ -767,7 +767,12 @@ AudioCallbackDriver::DataCallback(AudioDataValue* aBuffer, long aFrames)
     return aFrames;
   }
 
-  DebugOnly<AutoInCallback> aic(AutoInCallback(this));
+#ifdef DEBUG
+  // DebugOnly<> doesn't work here... it forces an initialization that will cause
+  // mInCallback to be set back to false before we exit the statement.  Do it by
+  // hand instead.
+  AutoInCallback aic(this);
+#endif
 
   if (mStateComputedTime == 0) {
     MonitorAutoLock mon(mGraphImpl->GetMonitor());
