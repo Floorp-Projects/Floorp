@@ -420,6 +420,9 @@ public:
   void PausedIndefinitly();
   void ResumedFromPaused();
 
+  /**
+   * Not safe to call off the MediaStreamGraph thread unless monitor is held!
+   */
   GraphDriver* CurrentDriver() {
 #ifdef DEBUG
     // #ifdef since we're not wrapping it all in MOZ_ASSERT()
@@ -443,6 +446,16 @@ public:
 
   Monitor& GetMonitor() {
     return mMonitor;
+  }
+
+  /**
+   * Must implement here to avoid dangerous data races around CurrentDriver() -
+   * we don't want stuff off MSG thread using "graph->CurrentDriver()->EnsureNextIteration()"
+   * because CurrentDriver may change (and it's a TSAN data race)
+   */
+  void EnsureNextIteration() {
+    MonitorAutoLock mon(mMonitor);
+    CurrentDriver()->EnsureNextIterationLocked();
   }
 
   // Data members
