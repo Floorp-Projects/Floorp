@@ -95,7 +95,7 @@ MediaStreamGraphImpl::FinishStream(MediaStream* aStream)
   // Force at least one more iteration of the control loop, since we rely
   // on UpdateCurrentTimeForStreams to notify our listeners once the stream end
   // has been reached.
-  EnsureNextIteration();
+  CurrentDriver()->EnsureNextIteration();
 
   SetStreamOrderDirty();
 }
@@ -778,7 +778,7 @@ MediaStreamGraphImpl::RecomputeBlocking(GraphTime aEndBlockingDecisions)
 
   if (blockingDecisionsWillChange) {
     // Make sure we wake up to notify listeners about these changes.
-    EnsureNextIteration();
+    CurrentDriver()->EnsureNextIteration();
   }
 }
 
@@ -1288,7 +1288,7 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecision)
   // computed in next loop.
   if (ensureNextIteration ||
       aEndBlockingDecision == CurrentDriver()->StateComputedTime()) {
-    EnsureNextIteration();
+    CurrentDriver()->EnsureNextIteration();
   }
 
   // Figure out which streams are blocked and when.
@@ -1382,7 +1382,7 @@ MediaStreamGraphImpl::Process(GraphTime aFrom, GraphTime aTo)
   }
 
   if (!allBlockedForever) {
-    EnsureNextIteration();
+    CurrentDriver()->EnsureNextIteration();
   }
 }
 
@@ -1468,7 +1468,7 @@ MediaStreamGraphImpl::ForceShutDown()
   {
     MonitorAutoLock lock(mMonitor);
     mForceShutDown = true;
-    EnsureNextIterationLocked();
+    CurrentDriver()->EnsureNextIterationLocked();
   }
 }
 
@@ -1486,18 +1486,11 @@ public:
 
     LIFECYCLE_LOG("Shutting down graph %p", mGraph.get());
 
-    // We've asserted the graph isn't running.  Use mDriver instead of CurrentDriver
-    // to avoid thread-safety checks
-#if 0 // AudioCallbackDrivers are released asynchronously anyways
-    // XXX a better test would be have setting mDetectedNotRunning make sure
-    // any current callback has finished and block future ones -- or just
-    // handle it all in Shutdown()!
-    if (mGraph->mDriver->AsAudioCallbackDriver()) {
-      MOZ_ASSERT(!mGraph->mDriver->AsAudioCallbackDriver()->InCallback());
+    if (mGraph->CurrentDriver()->AsAudioCallbackDriver()) {
+      MOZ_ASSERT(!mGraph->CurrentDriver()->AsAudioCallbackDriver()->InCallback());
     }
-#endif
 
-    mGraph->mDriver->Shutdown();
+    mGraph->CurrentDriver()->Shutdown();
 
     // mGraph's thread is not running so it's OK to do whatever here
     if (mGraph->IsEmpty()) {
@@ -1644,7 +1637,7 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
         block->mMessages.SwapElements(mCurrentTaskMessageQueue);
         block->mGraphUpdateIndex = mNextGraphUpdateIndex;
         ++mNextGraphUpdateIndex;
-        EnsureNextIterationLocked();
+        CurrentDriver()->EnsureNextIterationLocked();
       }
 
       // If the MediaStreamGraph has more messages going to it, try to revive
@@ -1658,12 +1651,11 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
         // Note that we need to put messages into its queue before reviving it,
         // or it might exit immediately.
         {
+          MonitorAutoUnlock unlock(mMonitor);
           LIFECYCLE_LOG("Reviving a graph (%p) ! %s\n",
               this, CurrentDriver()->AsAudioCallbackDriver() ? "AudioDriver" :
                                                                "SystemDriver");
-          nsRefPtr<GraphDriver> driver = CurrentDriver();
-          MonitorAutoUnlock unlock(mMonitor);
-          driver->Revive();
+          CurrentDriver()->Revive();
         }
       }
     }
@@ -1679,13 +1671,12 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
       {
         // We should exit the monitor for now, because starting a stream might
         // take locks, and we don't want to deadlock.
+        MonitorAutoUnlock unlock(mMonitor);
         LIFECYCLE_LOG("Starting a graph (%p) ! %s\n",
                       this,
                       CurrentDriver()->AsAudioCallbackDriver() ? "AudioDriver" :
                                                                  "SystemDriver");
-        nsRefPtr<GraphDriver> driver = CurrentDriver();
-        MonitorAutoUnlock unlock(mMonitor);
-        driver->Start();
+        CurrentDriver()->Start();
       }
     }
 
@@ -1726,7 +1717,6 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
     mLifecycleState >= LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN;
 #endif
 }
-
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
@@ -2268,7 +2258,7 @@ SourceMediaStream::SetPullEnabled(bool aEnabled)
   MutexAutoLock lock(mMutex);
   mPullEnabled = aEnabled;
   if (mPullEnabled && GraphImpl()) {
-    GraphImpl()->EnsureNextIteration();
+    GraphImpl()->CurrentDriver()->EnsureNextIteration();
   }
 }
 
@@ -2288,7 +2278,7 @@ SourceMediaStream::AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
   data->mData = aSegment;
   data->mHaveEnough = false;
   if (auto graph = GraphImpl()) {
-    graph->EnsureNextIteration();
+    graph->CurrentDriver()->EnsureNextIteration();
   }
 }
 
@@ -2350,7 +2340,7 @@ SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment, MediaSegme
       NotifyDirectConsumers(track, aRawSegment ? aRawSegment : aSegment);
       track->mData->AppendFrom(aSegment); // note: aSegment is now dead
       appended = true;
-      GraphImpl()->EnsureNextIteration();
+      GraphImpl()->CurrentDriver()->EnsureNextIteration();
     } else {
       aSegment->Clear();
     }
@@ -2474,7 +2464,7 @@ SourceMediaStream::EndTrack(TrackID aID)
     }
   }
   if (auto graph = GraphImpl()) {
-    graph->EnsureNextIteration();
+    graph->CurrentDriver()->EnsureNextIteration();
   }
 }
 
@@ -2485,7 +2475,7 @@ SourceMediaStream::AdvanceKnownTracksTime(StreamTime aKnownTime)
   MOZ_ASSERT(aKnownTime >= mUpdateKnownTracksTime);
   mUpdateKnownTracksTime = aKnownTime;
   if (auto graph = GraphImpl()) {
-    graph->EnsureNextIteration();
+    graph->CurrentDriver()->EnsureNextIteration();
   }
 }
 
@@ -2495,7 +2485,7 @@ SourceMediaStream::FinishWithLockHeld()
   mMutex.AssertCurrentThreadOwns();
   mUpdateFinished = true;
   if (auto graph = GraphImpl()) {
-    graph->EnsureNextIteration();
+    graph->CurrentDriver()->EnsureNextIteration();
   }
 }
 
@@ -2712,8 +2702,6 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime,
                                            dom::AudioChannel aChannel)
   : mProcessingGraphUpdateIndex(0)
   , mPortCount(0)
-  , mNeedAnotherIteration(false)
-  , mGraphDriverAsleep(false)
   , mMonitor("MediaStreamGraphImpl")
   , mLifecycleState(LIFECYCLE_THREAD_NOT_STARTED)
   , mEndTime(GRAPH_TIME_MAX)
