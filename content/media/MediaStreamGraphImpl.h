@@ -150,6 +150,12 @@ public:
   void Init();
   // The following methods run on the graph thread (or possibly the main thread if
   // mLifecycleState > LIFECYCLE_RUNNING)
+  void AssertOnGraphThreadOrNotRunning() {
+    // either we're on the right thread (and calling CurrentDriver() is safe),
+    // or we're going to assert anyways, so don't cross-check CurrentDriver
+    MOZ_ASSERT(mDriver->OnThread() ||
+               (mLifecycleState > LIFECYCLE_RUNNING && NS_IsMainThread()));
+  }
   /*
    * This does the actual iteration: Message processing, MediaStream ordering,
    * blocking computation and processing.
@@ -415,6 +421,12 @@ public:
   void ResumedFromPaused();
 
   GraphDriver* CurrentDriver() {
+#ifdef DEBUG
+    // #ifdef since we're not wrapping it all in MOZ_ASSERT()
+    if (!mDriver->OnThread()) {
+      mMonitor.AssertCurrentThreadOwns();
+    }
+#endif
     return mDriver;
   }
 
@@ -425,6 +437,7 @@ public:
    * should return and pass the control to the new driver shortly after.
    */
   void SetCurrentDriver(GraphDriver* aDriver) {
+    MOZ_ASSERT(mDriver->OnThread());
     mDriver = aDriver;
   }
 
