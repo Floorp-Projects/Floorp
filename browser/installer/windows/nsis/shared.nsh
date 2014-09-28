@@ -396,6 +396,15 @@ FunctionEnd
 !macroend
 !define ShowShortcuts "!insertmacro ShowShortcuts"
 
+!macro AddAssociationIfNoneExist FILE_TYPE
+  ClearErrors
+  EnumRegKey $7 HKCR "${FILE_TYPE}" 0
+  ${If} ${Errors}
+    WriteRegStr SHCTX "SOFTWARE\Classes\${FILE_TYPE}"  "" "FirefoxHTML"
+  ${EndIf}
+!macroend
+!define AddAssociationIfNoneExist "!insertmacro AddAssociationIfNoneExist"
+
 ; Adds the protocol and file handler registry entries for making Firefox the
 ; default handler (uses SHCTX).
 !macro SetHandlers
@@ -430,35 +439,12 @@ FunctionEnd
     WriteRegStr SHCTX "$0\.xhtml" "" "FirefoxHTML"
   ${EndIf}
 
-  ; Only add .oga if it's not present
-  ${CheckIfRegistryKeyExists} "$0" ".oga" $7
-  ${If} $7 == "false"
-    WriteRegStr SHCTX "$0\.oga"  "" "FirefoxHTML"
-  ${EndIf}
-
-  ; Only add .ogg if it's not present
-  ${CheckIfRegistryKeyExists} "$0" ".ogg" $7
-  ${If} $7 == "false"
-    WriteRegStr SHCTX "$0\.ogg"  "" "FirefoxHTML"
-  ${EndIf}
-
-  ; Only add .ogv if it's not present
-  ${CheckIfRegistryKeyExists} "$0" ".ogv" $7
-  ${If} $7 == "false"
-    WriteRegStr SHCTX "$0\.ogv"  "" "FirefoxHTML"
-  ${EndIf}
-
-  ; Only add .pdf if it's not present
-  ${CheckIfRegistryKeyExists} "$0" ".pdf" $7
-  ${If} $7 == "false"
-    WriteRegStr SHCTX "$0\.pdf"  "" "FirefoxHTML"
-  ${EndIf}
-
-  ; Only add webm if it's not present
-  ${CheckIfRegistryKeyExists} "$0" ".webm" $7
-  ${If} $7 == "false"
-    WriteRegStr SHCTX "$0\.webm"  "" "FirefoxHTML"
-  ${EndIf}
+  ${AddAssociationIfNoneExist} ".pdf"
+  ${AddAssociationIfNoneExist} ".oga"
+  ${AddAssociationIfNoneExist} ".ogg"
+  ${AddAssociationIfNoneExist} ".ogv"
+  ${AddAssociationIfNoneExist} ".pdf"
+  ${AddAssociationIfNoneExist} ".webm"
 
   ; An empty string is used for the 5th param because FirefoxHTML is not a
   ; protocol handler
