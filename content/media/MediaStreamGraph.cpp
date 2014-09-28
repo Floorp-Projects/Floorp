@@ -1651,11 +1651,12 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
         // Note that we need to put messages into its queue before reviving it,
         // or it might exit immediately.
         {
-          MonitorAutoUnlock unlock(mMonitor);
           LIFECYCLE_LOG("Reviving a graph (%p) ! %s\n",
               this, CurrentDriver()->AsAudioCallbackDriver() ? "AudioDriver" :
                                                                "SystemDriver");
-          CurrentDriver()->Revive();
+          nsRefPtr<GraphDriver> driver = CurrentDriver();
+          MonitorAutoUnlock unlock(mMonitor);
+          driver->Revive();
         }
       }
     }
@@ -1671,12 +1672,13 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
       {
         // We should exit the monitor for now, because starting a stream might
         // take locks, and we don't want to deadlock.
-        MonitorAutoUnlock unlock(mMonitor);
         LIFECYCLE_LOG("Starting a graph (%p) ! %s\n",
                       this,
                       CurrentDriver()->AsAudioCallbackDriver() ? "AudioDriver" :
                                                                  "SystemDriver");
-        CurrentDriver()->Start();
+        nsRefPtr<GraphDriver> driver = CurrentDriver();
+        MonitorAutoUnlock unlock(mMonitor);
+        driver->Start();
       }
     }
 
@@ -2258,7 +2260,7 @@ SourceMediaStream::SetPullEnabled(bool aEnabled)
   MutexAutoLock lock(mMutex);
   mPullEnabled = aEnabled;
   if (mPullEnabled && GraphImpl()) {
-    GraphImpl()->CurrentDriver()->EnsureNextIteration();
+    GraphImpl()->EnsureNextIteration();
   }
 }
 
@@ -2278,7 +2280,7 @@ SourceMediaStream::AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart,
   data->mData = aSegment;
   data->mHaveEnough = false;
   if (auto graph = GraphImpl()) {
-    graph->CurrentDriver()->EnsureNextIteration();
+    graph->EnsureNextIteration();
   }
 }
 
@@ -2340,7 +2342,7 @@ SourceMediaStream::AppendToTrack(TrackID aID, MediaSegment* aSegment, MediaSegme
       NotifyDirectConsumers(track, aRawSegment ? aRawSegment : aSegment);
       track->mData->AppendFrom(aSegment); // note: aSegment is now dead
       appended = true;
-      GraphImpl()->CurrentDriver()->EnsureNextIteration();
+      GraphImpl()->EnsureNextIteration();
     } else {
       aSegment->Clear();
     }
@@ -2464,7 +2466,7 @@ SourceMediaStream::EndTrack(TrackID aID)
     }
   }
   if (auto graph = GraphImpl()) {
-    graph->CurrentDriver()->EnsureNextIteration();
+    graph->EnsureNextIteration();
   }
 }
 
@@ -2475,7 +2477,7 @@ SourceMediaStream::AdvanceKnownTracksTime(StreamTime aKnownTime)
   MOZ_ASSERT(aKnownTime >= mUpdateKnownTracksTime);
   mUpdateKnownTracksTime = aKnownTime;
   if (auto graph = GraphImpl()) {
-    graph->CurrentDriver()->EnsureNextIteration();
+    graph->EnsureNextIteration();
   }
 }
 
@@ -2485,7 +2487,7 @@ SourceMediaStream::FinishWithLockHeld()
   mMutex.AssertCurrentThreadOwns();
   mUpdateFinished = true;
   if (auto graph = GraphImpl()) {
-    graph->CurrentDriver()->EnsureNextIteration();
+    graph->EnsureNextIteration();
   }
 }
 
