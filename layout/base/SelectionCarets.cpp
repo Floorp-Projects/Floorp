@@ -323,7 +323,7 @@ FindFirstNodeWithFrame(nsIDocument* aDocument,
   nsCOMPtr<nsIContent> startContent = do_QueryInterface(startNode);
   nsCOMPtr<nsIContent> endContent = do_QueryInterface(endNode);
   CaretAssociationHint hintStart =
-    nsFrameSelection::GetHintForPosition(startContent, offset);
+    aBackward ? CARET_ASSOCIATE_BEFORE : CARET_ASSOCIATE_AFTER;
   nsIFrame* startFrame = aFrameSelection->GetFrameForNodeOffset(startContent,
                                                                 offset,
                                                                 hintStart,
@@ -718,7 +718,7 @@ SelectionCarets::GetCaretYCenterPosition()
 
   int32_t offset;
   CaretAssociationHint hint =
-    nsFrameSelection::GetHintForPosition(node, nodeOffset);
+    mDragMode == START_FRAME ? CARET_ASSOCIATE_AFTER : CARET_ASSOCIATE_BEFORE;
   nsIFrame* theFrame =
     fs->GetFrameForNodeOffset(node, nodeOffset, hint, &offset);
 
