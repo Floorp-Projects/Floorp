@@ -225,7 +225,11 @@ ThreadedDriver::Start()
 {
   LIFECYCLE_LOG("Starting thread for a SystemClockDriver  %p\n", mGraphImpl);
   nsCOMPtr<nsIRunnable> event = new MediaStreamGraphInitThreadRunnable(this);
-  NS_NewNamedThread("MediaStreamGrph", getter_AddRefs(mThread), event);
+  // Note: mThread may be null during event->Run() if we pass to NewNamedThread!  See AudioInitTask
+  nsresult rv = NS_NewNamedThread("MediaStreamGrph", getter_AddRefs(mThread));
+  if (NS_SUCCEEDED(rv)) {
+    mThread->Dispatch(event, NS_DISPATCH_NORMAL);
+  }
 }
 
 void
@@ -237,9 +241,12 @@ ThreadedDriver::Resume()
 void
 ThreadedDriver::Revive()
 {
+  // Note: only called on MainThread, without monitor
+  // We know were weren't in a running state
   STREAM_LOG(PR_LOG_DEBUG, ("AudioCallbackDriver reviving."));
   // If we were switching, switch now. Otherwise, tell thread to run the main
   // loop again.
+  MonitorAutoLock mon(mGraphImpl->GetMonitor());
   if (mNextDriver) {
     mNextDriver->SetGraphTime(this, mIterationStart, mIterationEnd,
                                mStateComputedTime, mNextStateComputedTime);
@@ -667,16 +674,21 @@ AudioCallbackDriver::Stop()
 void
 AudioCallbackDriver::Revive()
 {
+  // Note: only called on MainThread, without monitor
+  // We know were weren't in a running state
   STREAM_LOG(PR_LOG_DEBUG, ("AudioCallbackDriver reviving."));
   // If we were switching, switch now. Otherwise, start the audio thread again.
+  MonitorAutoLock mon(mGraphImpl->GetMonitor());
   if (mNextDriver) {
     mNextDriver->SetGraphTime(this, mIterationStart, mIterationEnd,
-                               mStateComputedTime, mNextStateComputedTime);
+                              mStateComputedTime, mNextStateComputedTime);
     mGraphImpl->SetCurrentDriver(mNextDriver);
     mNextDriver->Start();
   } else {
-    Init();
-    Start();
+    STREAM_LOG(PR_LOG_DEBUG, ("Starting audio threads for MediaStreamGraph %p from a new thread.", mGraphImpl));
+    nsRefPtr<AsyncCubebTask> initEvent =
+      new AsyncCubebTask(this, AsyncCubebTask::INIT);
+    initEvent->Dispatch();
   }
 }
 
