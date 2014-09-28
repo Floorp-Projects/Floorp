@@ -1486,11 +1486,18 @@ public:
 
     LIFECYCLE_LOG("Shutting down graph %p", mGraph.get());
 
-    if (mGraph->CurrentDriver()->AsAudioCallbackDriver()) {
-      MOZ_ASSERT(!mGraph->CurrentDriver()->AsAudioCallbackDriver()->InCallback());
+    // We've asserted the graph isn't running.  Use mDriver instead of CurrentDriver
+    // to avoid thread-safety checks
+#if 0 // AudioCallbackDrivers are released asynchronously anyways
+    // XXX a better test would be have setting mDetectedNotRunning make sure
+    // any current callback has finished and block future ones -- or just
+    // handle it all in Shutdown()!
+    if (mGraph->mDriver->AsAudioCallbackDriver()) {
+      MOZ_ASSERT(!mGraph->mDriver->AsAudioCallbackDriver()->InCallback());
     }
+#endif
 
-    mGraph->CurrentDriver()->Shutdown();
+    mGraph->mDriver->Shutdown();
 
     // mGraph's thread is not running so it's OK to do whatever here
     if (mGraph->IsEmpty()) {
@@ -1719,6 +1726,7 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
     mLifecycleState >= LIFECYCLE_WAITING_FOR_THREAD_SHUTDOWN;
 #endif
 }
+
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
