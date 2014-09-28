@@ -194,9 +194,6 @@ loop.contacts = (function(_, mozL10n) {
               shownContacts.available.sort(this.sortContacts).map(viewForItem) :
               null, 
             shownContacts.blocked ?
-              React.DOM.div({className: "contact-separator"}, mozL10n.get("contacts_blocked_contacts")) :
-              null, 
-            shownContacts.blocked ?
               shownContacts.blocked.sort(this.sortContacts).map(viewForItem) :
               null
           )
