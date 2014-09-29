@@ -156,17 +156,7 @@ function loadAndSelectTestTab() {
   gBrowser.selectedTab = tab;
 
   let browser = gBrowser.getBrowserForTab(tab);
-
-  // Bug 687194 - Mochitest registers its chrome URLs after browser
-  // initialization, so the content processes don't pick them up. That
-  // means we can't load our frame script from its chrome URI, because
-  // the content process won't be able to find it.
-  //
-  // Instead, we resolve the chrome URI for the script to a file URI, which
-  // we can then pass to the content process, which it is able to find.
-  let registry = Cc['@mozilla.org/chrome/chrome-registry;1'].getService(Ci.nsIChromeRegistry);
-  let fileURI = registry.convertChromeURL(Services.io.newURI(kContentScript, null, null)).spec;
-  browser.messageManager.loadFrameScript(fileURI, false);
+  browser.messageManager.loadFrameScript(kContentScript, false);
 
   let deferred = Promise.defer();
   browser.addEventListener("DOMContentLoaded", function onBrowserLoad(aEvent) {
