@@ -67,7 +67,8 @@ public:
 
 protected:
   ProxyAccessible() :
-    mParent(nullptr), mDoc(nullptr) { MOZ_COUNT_CTOR(ProxyAccessible); }
+    mParent(nullptr), mDoc(nullptr), mWrapper(0), mID(0)
+  { MOZ_COUNT_CTOR(ProxyAccessible); }
 
 protected:
   ProxyAccessible* mParent;
