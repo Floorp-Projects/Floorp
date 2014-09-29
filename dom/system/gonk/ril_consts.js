@@ -1571,13 +1571,13 @@ this.PDU_PID_USIM_DATA_DOWNLOAD           = 0x7F;
 this.PDU_DCS_MSG_CODING_7BITS_ALPHABET  = 0x00;
 this.PDU_DCS_MSG_CODING_8BITS_ALPHABET  = 0x04;
 this.PDU_DCS_MSG_CODING_16BITS_ALPHABET = 0x08;
-this.PDU_DCS_MSG_CLASS_NORMAL           = 0xFF;
 this.PDU_DCS_MSG_CLASS_0                = 0x00;
 this.PDU_DCS_MSG_CLASS_1                = 0x01;
 this.PDU_DCS_MSG_CLASS_2                = 0x02;
 this.PDU_DCS_MSG_CLASS_3                = 0x03;
 this.PDU_DCS_MSG_CLASS_USER_1           = 0x04;
 this.PDU_DCS_MSG_CLASS_USER_2           = 0x05;
+this.PDU_DCS_MSG_CLASS_NORMAL           = 0x06;
 this.PDU_DCS_CODING_GROUP_BITS          = 0xF0;
 this.PDU_DCS_MSG_CLASS_BITS             = 0x03;
 this.PDU_DCS_MWI_ACTIVE_BITS            = 0x08;
@@ -1588,14 +1588,15 @@ this.PDU_DCS_MWI_TYPE_FAX               = 0x01;
 this.PDU_DCS_MWI_TYPE_EMAIL             = 0x02;
 this.PDU_DCS_MWI_TYPE_OTHER             = 0x03;
 
-this.GECKO_SMS_MESSAGE_CLASSES = {};
-GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_NORMAL] = "normal";
+// Set as Array instead of Object for reversed-mapping with Array.indexOf().
+this.GECKO_SMS_MESSAGE_CLASSES = [];
 GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_0]      = "class-0";
 GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_1]      = "class-1";
 GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_2]      = "class-2";
 GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_3]      = "class-3";
 GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_USER_1] = "user-1";
 GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_USER_2] = "user-2";
+GECKO_SMS_MESSAGE_CLASSES[PDU_DCS_MSG_CLASS_NORMAL] = "normal";
 
 // Because service center timestamp omit the century. Yay.
 this.PDU_TIMESTAMP_YEAR_OFFSET = 2000;

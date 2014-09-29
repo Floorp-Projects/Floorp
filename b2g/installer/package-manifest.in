@@ -160,7 +160,6 @@
 #endif
 #ifdef MOZ_B2G_RIL
 @BINPATH@/components/dom_icc.xpt
-@BINPATH@/components/dom_cellbroadcast.xpt
 @BINPATH@/components/dom_wappush.xpt
 @BINPATH@/components/dom_mobileconnection.xpt
 #endif
@@ -192,6 +191,7 @@
 @BINPATH@/components/dom_settings.xpt
 @BINPATH@/components/dom_permissionsettings.xpt
 @BINPATH@/components/dom_sidebar.xpt
+@BINPATH@/components/dom_cellbroadcast.xpt
 @BINPATH@/components/dom_mobilemessage.xpt
 @BINPATH@/components/dom_storage.xpt
 @BINPATH@/components/dom_stylesheets.xpt
@@ -437,6 +437,8 @@
 
 ; RIL
 #if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
+@BINPATH@/components/CellBroadcastService.js
+@BINPATH@/components/CellBroadcastService.manifest
 @BINPATH@/components/MmsService.js
 @BINPATH@/components/MmsService.manifest
 @BINPATH@/components/MobileConnectionService.js

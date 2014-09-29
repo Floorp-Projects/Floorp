@@ -225,6 +225,10 @@ public:
             PBrowserChild* aBrowser) MOZ_OVERRIDE;
     virtual bool DeallocPExternalHelperAppChild(PExternalHelperAppChild *aService) MOZ_OVERRIDE;
 
+    virtual PCellBroadcastChild* AllocPCellBroadcastChild() MOZ_OVERRIDE;
+    PCellBroadcastChild* SendPCellBroadcastConstructor(PCellBroadcastChild* aActor);
+    virtual bool DeallocPCellBroadcastChild(PCellBroadcastChild* aActor) MOZ_OVERRIDE;
+
     virtual PSmsChild* AllocPSmsChild() MOZ_OVERRIDE;
     virtual bool DeallocPSmsChild(PSmsChild*) MOZ_OVERRIDE;
 

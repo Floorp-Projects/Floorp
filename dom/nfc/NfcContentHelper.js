@@ -55,7 +55,7 @@ const NFC_IPC_MSG_NAMES = [
   "NFC:ConnectResponse",
   "NFC:CloseResponse",
   "NFC:CheckP2PRegistrationResponse",
-  "NFC:PeerEvent",
+  "NFC:DOMEvent",
   "NFC:NotifySendFileStatusResponse",
   "NFC:ConfigResponse"
 ];
@@ -96,7 +96,7 @@ NfcContentHelper.prototype = {
   }),
 
   _requestMap: null,
-  peerEventListener: null,
+  eventTarget: null,
 
   encodeNDEFRecords: function encodeNDEFRecords(records) {
     let encodedRecords = [];
@@ -257,8 +257,9 @@ NfcContentHelper.prototype = {
     });
   },
 
-  registerPeerEventListener: function registerPeerEventListener(listener) {
-    this.peerEventListener = listener;
+  registerEventTarget: function registerEventTarget(target) {
+    this.eventTarget = target;
+    cpmm.sendAsyncMessage("NFC:AddEventTarget");
   },
 
   registerTargetForPeerReady: function registerTargetForPeerReady(window, appId) {
@@ -412,13 +413,13 @@ NfcContentHelper.prototype = {
           this.fireRequestSuccess(atob(result.requestId), result);
         }
         break;
-      case "NFC:PeerEvent":
+      case "NFC:DOMEvent":
         switch (result.event) {
           case NFC.NFC_PEER_EVENT_READY:
-            this.peerEventListener.notifyPeerReady(result.sessionToken);
+            this.eventTarget.notifyPeerReady(result.sessionToken);
             break;
           case NFC.NFC_PEER_EVENT_LOST:
-            this.peerEventListener.notifyPeerLost(result.sessionToken);
+            this.eventTarget.notifyPeerLost(result.sessionToken);
             break;
         }
         break;
