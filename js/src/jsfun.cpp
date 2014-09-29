@@ -480,24 +480,41 @@ js::fun_resolve(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObjec
         return true;
     }
 
-    if (JSID_IS_ATOM(id, cx->names().length) || JSID_IS_ATOM(id, cx->names().name)) {
+    bool isLength = JSID_IS_ATOM(id, cx->names().length);
+    if (isLength || JSID_IS_ATOM(id, cx->names().name)) {
         MOZ_ASSERT(!IsInternalFunctionObject(obj));
 
         RootedValue v(cx);
-        if (JSID_IS_ATOM(id, cx->names().length)) {
+        uint32_t attrs;
+        if (isLength) {
+            // Since f.length is configurable, it could be resolved and then deleted:
+            //     function f(x) {}
+            //     assertEq(f.length, 1);
+            //     delete f.length;
+            // Afterwards, asking for f.length again will cause this resolve
+            // hook to run again. Defining the property again the second
+            // time through would be a bug.
+            //     assertEq(f.length, 0);  // gets Function.prototype.length!
+            // We use the RESOLVED_LENGTH flag as a hack to prevent this bug.
+            if (fun->hasResolvedLength())
+                return true;
+
             if (fun->isInterpretedLazy() && !fun->getOrCreateScript(cx))
                 return false;
             uint16_t length = fun->hasScript() ? fun->nonLazyScript()->funLength() :
                 fun->nargs() - fun->hasRest();
             v.setInt32(length);
+            attrs = JSPROP_READONLY;
         } else {
             v.setString(fun->atom() == nullptr ? cx->runtime()->emptyString : fun->atom());
+            attrs = JSPROP_READONLY | JSPROP_PERMANENT;
         }
 
-        if (!DefineNativeProperty(cx, fun, id, v, JS_PropertyStub, JS_StrictPropertyStub,
-                                  JSPROP_PERMANENT | JSPROP_READONLY)) {
+        if (!DefineNativeProperty(cx, fun, id, v, JS_PropertyStub, JS_StrictPropertyStub, attrs))
             return false;
-        }
+
+        if (isLength)
+            fun->setResolvedLength();
         objp.set(fun);
         return true;
     }
