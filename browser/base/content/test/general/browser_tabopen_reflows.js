@@ -57,7 +57,7 @@ const PREF_NEWTAB_DIRECTORYSOURCE = "browser.newtabpage.directory.source";
  */
 function test() {
   waitForExplicitFinish();
-  let DirectoryLinksProvider = Cu.import("resource://gre/modules/DirectoryLinksProvider.jsm", {}).DirectoryLinksProvider;
+  let DirectoryLinksProvider = Cu.import("resource:///modules/DirectoryLinksProvider.jsm", {}).DirectoryLinksProvider;
   let NewTabUtils = Cu.import("resource://gre/modules/NewTabUtils.jsm", {}).NewTabUtils;
   let Promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
 
