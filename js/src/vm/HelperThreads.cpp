@@ -761,6 +761,7 @@ js::GCParallelTask::joinWithLockHeld()
     while (state != Finished)
         HelperThreadState().wait(GlobalHelperThreadState::CONSUMER);
     state = NotStarted;
+    cancel_ = false;
 }
 
 void
@@ -794,6 +795,13 @@ js::GCParallelTask::runFromHelperThread()
 
     state = Finished;
     HelperThreadState().notifyAll(GlobalHelperThreadState::CONSUMER);
+}
+
+bool
+js::GCParallelTask::isRunning() const
+{
+    MOZ_ASSERT(HelperThreadState().isLocked());
+    return state == Dispatched;
 }
 
 void

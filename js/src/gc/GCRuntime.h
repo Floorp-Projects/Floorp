@@ -26,6 +26,8 @@
 
 namespace js {
 
+class AutoLockGC;
+
 namespace gc {
 
 typedef Vector<JS::Zone *, 4, SystemAllocPolicy> ZoneVector;
@@ -62,6 +64,24 @@ class ChunkPool
         ChunkPool &pool;
         Chunk **chunkp;
     };
+};
+
+// Performs extra allocation off the main thread so that when memory is
+// required on the main thread it will already be available and waiting.
+class BackgroundAllocTask : public GCParallelTask
+{
+    // Guarded by the GC lock.
+    JSRuntime *runtime;
+    ChunkPool &chunkPool_;
+
+    const bool enabled_;
+
+  public:
+    BackgroundAllocTask(JSRuntime *rt, ChunkPool &pool);
+    bool enabled() const { return enabled_; }
+
+  protected:
+    virtual void run() MOZ_OVERRIDE;
 };
 
 /*
@@ -301,8 +321,10 @@ class GCRuntime
     js::gc::State state() { return incrementalState; }
     bool isBackgroundSweeping() { return helperState.isBackgroundSweeping(); }
     void waitBackgroundSweepEnd() { helperState.waitBackgroundSweepEnd(); }
-    void waitBackgroundSweepOrAllocEnd() { helperState.waitBackgroundSweepOrAllocEnd(); }
-    void startBackgroundAllocationIfIdle() { helperState.startBackgroundAllocationIfIdle(); }
+    void waitBackgroundSweepOrAllocEnd() {
+        helperState.waitBackgroundSweepEnd();
+        allocTask.cancel(GCParallelTask::CancelAndWait);
+    }
 
 #ifdef DEBUG
 
@@ -451,7 +473,8 @@ class GCRuntime
   private:
     // For ArenaLists::allocateFromArena()
     friend class ArenaLists;
-    Chunk *pickChunk(Zone *zone, AutoMaybeStartBackgroundAllocation &maybeStartBGAlloc);
+    Chunk *pickChunk(const AutoLockGC &lock, Zone *zone,
+                     AutoMaybeStartBackgroundAllocation &maybeStartBGAlloc);
     inline void arenaAllocatedDuringGC(JS::Zone *zone, ArenaHeader *arena);
 
     template <AllowGC allowGC>
@@ -469,7 +492,10 @@ class GCRuntime
     void prepareToFreeChunk(ChunkInfo &info);
     void releaseChunk(Chunk *chunk);
 
-    inline bool wantBackgroundAllocation() const;
+    friend class BackgroundAllocTask;
+    friend class AutoMaybeStartBackgroundAllocation;
+    inline bool wantBackgroundAllocation(const AutoLockGC &lock) const;
+    void startBackgroundAllocTaskIfIdle();
 
     bool initZeal();
     void requestInterrupt(JS::gcreason::Reason reason);
@@ -840,6 +866,7 @@ class GCRuntime
     PRLock                *lock;
     mozilla::DebugOnly<PRThread *>   lockOwner;
 
+    BackgroundAllocTask allocTask;
     GCHelperState helperState;
 
     /*
