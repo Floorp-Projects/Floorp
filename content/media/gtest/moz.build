@@ -7,7 +7,8 @@
 UNIFIED_SOURCES += [
     'TestAudioCompactor.cpp',
     'TestTrackEncoder.cpp',
-    'TestVideoSegment.cpp'
+    'TestVideoSegment.cpp',
+    'TestWebMBuffered.cpp'
 ]
 
 if CONFIG['MOZ_WEBM_ENCODER']:

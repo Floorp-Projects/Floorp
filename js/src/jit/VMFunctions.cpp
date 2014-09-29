@@ -1019,7 +1019,7 @@ CreateDerivedTypedObj(JSContext *cx, HandleObject descr,
     JS_ASSERT(owner->is<TypedObject>());
     Rooted<SizedTypeDescr*> descr1(cx, &descr->as<SizedTypeDescr>());
     Rooted<TypedObject*> owner1(cx, &owner->as<TypedObject>());
-    return OwnedTypedObject::createDerived(cx, descr1, owner1, offset);
+    return OutlineTypedObject::createDerived(cx, descr1, owner1, offset);
 }
 
 JSString *

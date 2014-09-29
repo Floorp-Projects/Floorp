@@ -41,17 +41,22 @@
     objectStore.add(data).onsuccess = grabEventAndContinueHandler;
     event = yield undefined;
 
+    info("Added blob to database once");
+
     let key = event.target.result;
 
     objectStore.add(data).onsuccess = grabEventAndContinueHandler;
     event = yield undefined;
 
+    info("Added blob to database twice");
 
     info("Let's retrieve the blob again and verify the contents is the same.");
 
     objectStore = db.transaction("foo").objectStore("foo");
     objectStore.get(key).onsuccess = grabEventAndContinueHandler;
     event = yield undefined;
+
+    info("Got blob from database");
 
     let fileReader = new FileReader();
     fileReader.onload = grabEventAndContinueHandler;
@@ -67,6 +72,8 @@
     objectStore = db.transaction("foo").objectStore("foo");
     objectStore.get(key).onsuccess = grabEventAndContinueHandler;
     event = yield undefined;
+
+    info("Got blob from database");
 
     let blobURL = URL.createObjectURL(event.target.result.blob);
 
@@ -102,10 +109,12 @@
     objectStore.openCursor().onsuccess = function(event) {
       let cursor = event.target.result;
       if (cursor) {
+        info("Got item from cursor");
         cursorResults.push(cursor.value);
         cursor.continue();
       }
       else {
+        info("Finished cursor");
         continueToNextStep();
       }
     };
@@ -126,6 +135,8 @@
     index = db.transaction("foo").objectStore("foo").index("foo");
     index.get(INDEX_KEY).onsuccess = grabEventAndContinueHandler;
     event = yield undefined;
+
+    info("Got blob from database");
 
     fileReader = new FileReader();
     fileReader.onload = grabEventAndContinueHandler;
@@ -153,10 +164,12 @@
     index.openCursor().onsuccess = function(event) {
       let cursor = event.target.result;
       if (cursor) {
+        info("Got item from cursor");
         cursorResults.push(cursor.value);
         cursor.continue();
       }
       else {
+        info("Finished cursor");
         continueToNextStep();
       }
     };
@@ -226,10 +239,14 @@
     event = yield undefined;
 
     let blobFromDB = event.target.result.blob;
+    info("Got blob from database");
+
     let txn = db.transaction("foo", "readwrite");
     txn.objectStore("foo").put(event.target.result, key);
     txn.oncomplete = grabEventAndContinueHandler;
     event = yield undefined;
+
+    info("Stored blob back into database");
 
     fileReader = new FileReader();
     fileReader.onload = grabEventAndContinueHandler;

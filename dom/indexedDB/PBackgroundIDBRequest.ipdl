@@ -1,0 +1,112 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackgroundIDBTransaction;
+include protocol PBackgroundIDBVersionChangeTransaction;
+include protocol PBlob;
+
+include PBackgroundIDBSharedTypes;
+
+include "mozilla/dom/indexedDB/SerializationHelpers.h";
+
+using struct mozilla::void_t
+  from "ipc/IPCMessageUtils.h";
+
+using class mozilla::dom::indexedDB::Key
+  from "mozilla/dom/indexedDB/Key.h";
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+struct ObjectStoreAddResponse
+{
+  Key key;
+};
+
+struct ObjectStorePutResponse
+{
+  Key key;
+};
+
+struct ObjectStoreGetResponse
+{
+  SerializedStructuredCloneReadInfo cloneInfo;
+};
+
+struct ObjectStoreGetAllResponse
+{
+  SerializedStructuredCloneReadInfo[] cloneInfos;
+};
+
+struct ObjectStoreGetAllKeysResponse
+{
+  Key[] keys;
+};
+
+struct ObjectStoreDeleteResponse
+{ };
+
+struct ObjectStoreClearResponse
+{ };
+
+struct ObjectStoreCountResponse
+{
+  uint64_t count;
+};
+
+struct IndexGetResponse
+{
+  SerializedStructuredCloneReadInfo cloneInfo;
+};
+
+struct IndexGetKeyResponse
+{
+  Key key;
+};
+
+struct IndexGetAllResponse
+{
+  SerializedStructuredCloneReadInfo[] cloneInfos;
+};
+
+struct IndexGetAllKeysResponse
+{
+  Key[] keys;
+};
+
+struct IndexCountResponse
+{
+  uint64_t count;
+};
+
+union RequestResponse
+{
+  nsresult;
+  ObjectStoreGetResponse;
+  ObjectStoreAddResponse;
+  ObjectStorePutResponse;
+  ObjectStoreDeleteResponse;
+  ObjectStoreClearResponse;
+  ObjectStoreCountResponse;
+  ObjectStoreGetAllResponse;
+  ObjectStoreGetAllKeysResponse;
+  IndexGetResponse;
+  IndexGetKeyResponse;
+  IndexGetAllResponse;
+  IndexGetAllKeysResponse;
+  IndexCountResponse;
+};
+
+protocol PBackgroundIDBRequest
+{
+  manager PBackgroundIDBTransaction or PBackgroundIDBVersionChangeTransaction;
+
+child:
+  __delete__(RequestResponse response);
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

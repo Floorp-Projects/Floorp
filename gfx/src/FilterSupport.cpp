@@ -1320,7 +1320,7 @@ ResultChangeRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
 
     case PrimitiveType::DisplacementMap:
     {
-      int32_t scale = ceil(abs(atts.GetFloat(eDisplacementMapScale)));
+      int32_t scale = ceil(std::abs(atts.GetFloat(eDisplacementMapScale)));
       return aInputChangeRegions[0].Inflated(nsIntMargin(scale, scale, scale, scale));
     }
 
@@ -1549,7 +1549,7 @@ SourceNeededRegionForPrimitive(const FilterPrimitiveDescription& aDescription,
       if (aInputIndex == 1) {
         return aResultNeededRegion;
       }
-      int32_t scale = ceil(abs(atts.GetFloat(eDisplacementMapScale)));
+      int32_t scale = ceil(std::abs(atts.GetFloat(eDisplacementMapScale)));
       return aResultNeededRegion.Inflated(nsIntMargin(scale, scale, scale, scale));
     }
 
