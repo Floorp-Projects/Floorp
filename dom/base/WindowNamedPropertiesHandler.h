@@ -63,9 +63,10 @@ public:
     return &instance;
   }
 
-  // For Install, aProto is the proto of the Window we're associated with.
-  static void
-  Install(JSContext *aCx, JS::Handle<JSObject*> aProto);
+  // For Create, aProto is the parent of the interface prototype object of the
+  // Window we're associated with.
+  static JSObject*
+  Create(JSContext *aCx, JS::Handle<JSObject*> aProto);
 };
 
 } // namespace dom

@@ -48,8 +48,17 @@ nsCounterUseNode::GetCounterStyle()
 {
     if (!mCounterStyle) {
         const nsCSSValue& style = mCounterFunction->Item(mAllCounters ? 2 : 1);
-        mCounterStyle = mPresContext->CounterStyleManager()->
-            BuildCounterStyle(nsDependentString(style.GetStringBufferValue()));
+        CounterStyleManager* manager = mPresContext->CounterStyleManager();
+        if (style.GetUnit() == eCSSUnit_Ident) {
+            nsString ident;
+            style.GetStringValue(ident);
+            mCounterStyle = manager->BuildCounterStyle(ident);
+        } else if (style.GetUnit() == eCSSUnit_Symbols) {
+            mCounterStyle = manager->BuildCounterStyle(style.GetArrayValue());
+        } else {
+            NS_NOTREACHED("Unknown counter style");
+            mCounterStyle = CounterStyleManager::GetDecimalStyle();
+        }
     }
     return mCounterStyle;
 }

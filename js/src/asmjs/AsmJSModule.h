@@ -76,31 +76,9 @@ enum AsmJSSimdType
 // Set of known operations, for a given SIMD type (int32x4, float32x4,...)
 enum AsmJSSimdOperation
 {
-    AsmJSSimdOperation_add,
-    AsmJSSimdOperation_sub,
-    AsmJSSimdOperation_mul,
-    AsmJSSimdOperation_div,
-    AsmJSSimdOperation_max,
-    AsmJSSimdOperation_min,
-    AsmJSSimdOperation_lessThan,
-    AsmJSSimdOperation_lessThanOrEqual,
-    AsmJSSimdOperation_equal,
-    AsmJSSimdOperation_notEqual,
-    AsmJSSimdOperation_greaterThan,
-    AsmJSSimdOperation_greaterThanOrEqual,
-    AsmJSSimdOperation_and,
-    AsmJSSimdOperation_or,
-    AsmJSSimdOperation_xor,
-    AsmJSSimdOperation_select,
-    AsmJSSimdOperation_splat,
-    AsmJSSimdOperation_withX,
-    AsmJSSimdOperation_withY,
-    AsmJSSimdOperation_withZ,
-    AsmJSSimdOperation_withW,
-    AsmJSSimdOperation_fromInt32x4,
-    AsmJSSimdOperation_fromFloat32x4,
-    AsmJSSimdOperation_fromInt32x4Bits,
-    AsmJSSimdOperation_fromFloat32x4Bits
+#define ASMJSSIMDOPERATION(op) AsmJSSimdOperation_##op,
+    FORALL_SIMD_OP(ASMJSSIMDOPERATION)
+#undef ASMJSSIMDOPERATION
 };
 
 // These labels describe positions in the prologue/epilogue of functions while

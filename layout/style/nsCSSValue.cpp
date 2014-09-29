@@ -827,6 +827,32 @@ private:
 } // anonymous namespace
 
 void
+nsCSSValue::AppendPolygonToString(nsCSSProperty aProperty, nsAString& aResult,
+                                  Serialization aSerialization) const
+{
+  const nsCSSValue::Array* array = GetArrayValue();
+  NS_ABORT_IF_FALSE(array->Count() > 1 && array->Count() <= 3,
+                    "Polygons must have name and at least one more value.");
+  // When the array has 2 elements, the item on index 1 is the coordinate
+  // pair list.
+  // When the array has 3 elements, the item on index 1 is a fill-rule
+  // and item on index 2 is the coordinate pair list.
+  size_t index = 1;
+  if (array->Count() == 3) {
+    const nsCSSValue& fillRuleValue = array->Item(index);
+    NS_ABORT_IF_FALSE(fillRuleValue.GetUnit() == eCSSUnit_Enumerated,
+                      "Expected polygon fill rule.");
+    int32_t fillRule = fillRuleValue.GetIntValue();
+    AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(fillRule,
+                                                  nsCSSProps::kFillRuleKTable),
+                       aResult);
+    aResult.AppendLiteral(", ");
+    ++index;
+  }
+  array->Item(index).AppendToString(aProperty, aResult, aSerialization);
+}
+
+void
 nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
                            Serialization aSerialization) const
 {
@@ -853,12 +879,13 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
       nsStyleUtil::AppendEscapedCSSIdent(buffer, aResult);
     }
   }
-  else if (eCSSUnit_Array <= unit && unit <= eCSSUnit_Steps) {
+  else if (eCSSUnit_Array <= unit && unit <= eCSSUnit_Symbols) {
     switch (unit) {
       case eCSSUnit_Counter:  aResult.AppendLiteral("counter(");  break;
       case eCSSUnit_Counters: aResult.AppendLiteral("counters("); break;
       case eCSSUnit_Cubic_Bezier: aResult.AppendLiteral("cubic-bezier("); break;
       case eCSSUnit_Steps: aResult.AppendLiteral("steps("); break;
+      case eCSSUnit_Symbols: aResult.AppendLiteral("symbols("); break;
       default: break;
     }
 
@@ -866,8 +893,9 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     bool mark = false;
     for (size_t i = 0, i_end = array->Count(); i < i_end; ++i) {
       if (mark && array->Item(i).GetUnit() != eCSSUnit_Null) {
-        if (unit == eCSSUnit_Array &&
-            eCSSProperty_transition_timing_function != aProperty)
+        if ((unit == eCSSUnit_Array &&
+             eCSSProperty_transition_timing_function != aProperty) ||
+            unit == eCSSUnit_Symbols)
           aResult.Append(' ');
         else
           aResult.AppendLiteral(", ");
@@ -884,6 +912,17 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
           aResult.AppendLiteral("start");
         } else {
           aResult.AppendLiteral("end");
+        }
+        continue;
+      }
+      if (unit == eCSSUnit_Symbols && i == 0) {
+        NS_ABORT_IF_FALSE(array->Item(i).GetUnit() == eCSSUnit_Enumerated,
+                          "unexpected value");
+        int32_t system = array->Item(i).GetIntValue();
+        if (system != NS_STYLE_COUNTER_SYSTEM_SYMBOLIC) {
+          AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(
+                  system, nsCSSProps::kCounterSystemKTable), aResult);
+          mark = true;
         }
         continue;
       }
@@ -909,53 +948,61 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     NS_ABORT_IF_FALSE(array->Count() >= 1,
                       "Functions must have at least one element for the name.");
 
-    /* Append the function name. */
     const nsCSSValue& functionName = array->Item(0);
-    if (functionName.GetUnit() == eCSSUnit_Enumerated) {
-      // We assume that the first argument is always of nsCSSKeyword type.
-      const nsCSSKeyword functionId = functionName.GetKeywordValue();
-      NS_ConvertASCIItoUTF16 ident(nsCSSKeywords::GetStringValue(functionId));
-      // Bug 721136: Normalize the identifier to lowercase, except that things
-      // like scaleX should have the last character capitalized.  This matches
-      // what other browsers do.
-      switch (functionId) {
-        case eCSSKeyword_rotatex:
-        case eCSSKeyword_scalex:
-        case eCSSKeyword_skewx:
-        case eCSSKeyword_translatex:
-          ident.Replace(ident.Length() - 1, 1, char16_t('X'));
-          break;
+    NS_ABORT_IF_FALSE(functionName.GetUnit() == eCSSUnit_Enumerated,
+                      "Functions must have an enumerated name.");
 
-        case eCSSKeyword_rotatey:
-        case eCSSKeyword_scaley:
-        case eCSSKeyword_skewy:
-        case eCSSKeyword_translatey:
-          ident.Replace(ident.Length() - 1, 1, char16_t('Y'));
-          break;
+    /* Append the function name. */
+    // The first argument is always of nsCSSKeyword type.
+    const nsCSSKeyword functionId = functionName.GetKeywordValue();
+    NS_ConvertASCIItoUTF16 ident(nsCSSKeywords::GetStringValue(functionId));
+    // Bug 721136: Normalize the identifier to lowercase, except that things
+    // like scaleX should have the last character capitalized.  This matches
+    // what other browsers do.
+    switch (functionId) {
+      case eCSSKeyword_rotatex:
+      case eCSSKeyword_scalex:
+      case eCSSKeyword_skewx:
+      case eCSSKeyword_translatex:
+        ident.Replace(ident.Length() - 1, 1, char16_t('X'));
+        break;
 
-        case eCSSKeyword_rotatez:
-        case eCSSKeyword_scalez:
-        case eCSSKeyword_translatez:
-          ident.Replace(ident.Length() - 1, 1, char16_t('Z'));
-          break;
+      case eCSSKeyword_rotatey:
+      case eCSSKeyword_scaley:
+      case eCSSKeyword_skewy:
+      case eCSSKeyword_translatey:
+        ident.Replace(ident.Length() - 1, 1, char16_t('Y'));
+        break;
 
-        default:
-          break;
-      }
-      nsStyleUtil::AppendEscapedCSSIdent(ident, aResult);
-    } else {
-      MOZ_ASSERT(false, "should no longer have non-enumerated functions");
+      case eCSSKeyword_rotatez:
+      case eCSSKeyword_scalez:
+      case eCSSKeyword_translatez:
+        ident.Replace(ident.Length() - 1, 1, char16_t('Z'));
+        break;
+
+      default:
+        break;
     }
+    nsStyleUtil::AppendEscapedCSSIdent(ident, aResult);
     aResult.Append('(');
 
-    /* Now, step through the function contents, writing each of them as we go. */
-    for (size_t index = 1; index < array->Count(); ++index) {
-      array->Item(index).AppendToString(aProperty, aResult,
-                                        aSerialization);
+    switch (functionId) {
+      case eCSSKeyword_polygon:
+        AppendPolygonToString(aProperty, aResult, aSerialization);
+        break;
 
-      /* If we're not at the final element, append a comma. */
-      if (index + 1 != array->Count())
-        aResult.AppendLiteral(", ");
+      default: {
+        // Now, step through the function contents, writing each of
+        // them as we go.
+        for (size_t index = 1; index < array->Count(); ++index) {
+          array->Item(index).AppendToString(aProperty, aResult,
+                                            aSerialization);
+
+          /* If we're not at the final element, append a comma. */
+          if (index + 1 != array->Count())
+            aResult.AppendLiteral(", ");
+        }
+      }
     }
 
     /* Finally, append the closing parenthesis. */
@@ -1071,6 +1118,12 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
                                          NS_STYLE_TOUCH_ACTION_NONE,
                                          NS_STYLE_TOUCH_ACTION_MANIPULATION,
                                          aResult);
+      break;
+
+    case eCSSProperty_clip_path:
+      AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(intValue,
+                            nsCSSProps::kClipShapeSizingKTable),
+                         aResult);
       break;
 
     default:
@@ -1405,6 +1458,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     case eCSSUnit_Attr:
     case eCSSUnit_Cubic_Bezier:
     case eCSSUnit_Steps:
+    case eCSSUnit_Symbols:
     case eCSSUnit_Counter:
     case eCSSUnit_Counters:     aResult.Append(char16_t(')'));    break;
     case eCSSUnit_Local_Font:   break;
@@ -1511,6 +1565,7 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     case eCSSUnit_Counters:
     case eCSSUnit_Cubic_Bezier:
     case eCSSUnit_Steps:
+    case eCSSUnit_Symbols:
     case eCSSUnit_Function:
     case eCSSUnit_Calc:
     case eCSSUnit_Calc_Plus:
@@ -2030,7 +2085,8 @@ nsCSSValuePairList::AppendToString(nsCSSProperty aProperty,
       break;
 
     if (nsCSSProps::PropHasFlags(aProperty,
-                                 CSS_PROPERTY_VALUE_LIST_USES_COMMAS))
+                                 CSS_PROPERTY_VALUE_LIST_USES_COMMAS) ||
+        aProperty == eCSSProperty_clip_path)
       aResult.Append(char16_t(','));
     aResult.Append(char16_t(' '));
   }

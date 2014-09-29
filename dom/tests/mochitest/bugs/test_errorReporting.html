@@ -1,0 +1,73 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1070842
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1070842</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for error reporting behavior. **/
+  SimpleTest.waitForExplicitFinish();
+
+  function testErrorReportingHelper(f, rgxp, preventDefault) {
+    return new Promise(function(resolve, reject) {
+      window.addEventListener('error', function l(e) {
+        window.removeEventListener('error', l);
+        ok(rgxp.test(e.message), "Should get message matching " + rgxp + ". Got: " + e.message);
+        var expectedMessages;
+        if (preventDefault) {
+          e.preventDefault();
+          expectedMessages = [];
+        } else {
+          expectedMessages = [{message: rgxp}];
+        }
+        SimpleTest.monitorConsole(resolve, expectedMessages, /* forbidUnexpectedMsgs = */ true);
+        setTimeout(SimpleTest.endMonitorConsole.bind(SimpleTest), 0);
+      });
+
+      // Notify the test harness to avoid treating the next exception as a test failure.
+      SimpleTest.expectUncaughtException();
+
+      // Invoke the function async so that the exception doesn't get eaten by
+      // the Promise machinery.
+      setTimeout(f, 0);
+    });
+  }
+  function testErrorReporting(f, rgxp) {
+    return new Promise(function(resolve, reject) {
+        testErrorReportingHelper.bind(null, f, rgxp, false)().then(
+        testErrorReportingHelper.bind(null, f, rgxp, true)).then(
+        resolve);
+    });
+  }
+
+  function go() {
+    var otherWin = $('emptyFrame').contentWindow;
+    var clickMe = $('clickMe');
+    testErrorReporting.bind(null, () => { throw Error("Simple Error") }, /Simple Error/)().then(
+    testErrorReporting.bind(null, () => otherWin.eval('throw Error("Cross Global Error")'), /Cross Global Error/)).then(
+    testErrorReporting.bind(null, () => clickMe.dispatchEvent(new MouseEvent('click')), /thrwan/)).then(
+    testErrorReporting.bind(null, () => { clickMe.setAttribute('onclick', ' '); /* Make sure we recompile. */
+                                          clickMe.setAttribute('onclick', '?');
+                                          clickMe.onclick; }, /SyntaxError/)).then(
+    SimpleTest.finish.bind(SimpleTest));
+  }
+
+  </script>
+</head>
+<body onload="go();">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1070842">Mozilla Bug 1070842</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<button id="clickMe" onclick="thrwan.error;">Click Me</button>
+<iframe id="emptyFrame"></iframe>
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

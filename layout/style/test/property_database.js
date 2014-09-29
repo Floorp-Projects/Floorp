@@ -2354,7 +2354,7 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     /* XXX needs to be on pseudo-elements */
     initial_values: [ "normal", "none" ],
-    other_values: [ '""', "''", '"hello"', "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)", "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==')", 'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")', 'counter(foo)', 'counter(bar, upper-roman)', 'counters(foo, ".")', "counters(bar, '-', lower-greek)", "'-' counter(foo) '.'", "attr(title)", "open-quote", "close-quote", "no-open-quote", "no-close-quote", "close-quote attr(title) counters(foo, '.', upper-alpha)", "counter(foo, none)", "counters(bar, '.', none)", "attr(\\32)", "attr(\\2)", "attr(-\\2)", "attr(-\\32)", "counter(\\2)", "counters(\\32, '.')", "counter(-\\32, upper-roman)", "counters(-\\2, '-', lower-greek)", "counter(\\()", "counters(a\\+b, '.')", "counter(\\}, upper-alpha)", "-moz-alt-content" ],
+    other_values: [ '""', "''", '"hello"', "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==)", "url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==')", 'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")', 'counter(foo)', 'counter(bar, upper-roman)', 'counters(foo, ".")', "counters(bar, '-', lower-greek)", "'-' counter(foo) '.'", "attr(title)", "open-quote", "close-quote", "no-open-quote", "no-close-quote", "close-quote attr(title) counters(foo, '.', upper-alpha)", "counter(foo, none)", "counters(bar, '.', none)", "attr(\\32)", "attr(\\2)", "attr(-\\2)", "attr(-\\32)", "counter(\\2)", "counters(\\32, '.')", "counter(-\\32, upper-roman)", "counters(-\\2, '-', lower-greek)", "counter(\\()", "counters(a\\+b, '.')", "counter(\\}, upper-alpha)", "-moz-alt-content", "counter(foo, symbols('*'))", "counter(foo, symbols(numeric '0' '1'))", "counters(foo, '.', symbols('*'))", "counters(foo, '.', symbols(numeric '0' '1'))" ],
     invalid_values: [ 'counters(foo)', 'counter(foo, ".")', 'attr("title")', "attr('title')", "attr(2)", "attr(-2)", "counter(2)", "counters(-2, '.')", "-moz-alt-content 'foo'", "'foo' -moz-alt-content" ]
   },
   "counter-increment": {
@@ -2716,6 +2716,12 @@ var gCSSProperties = {
     subproperties: [ "list-style-type", "list-style-position", "list-style-image" ],
     initial_values: [ "outside", "disc", "disc outside", "outside disc", "disc none", "none disc", "none disc outside", "none outside disc", "disc none outside", "disc outside none", "outside none disc", "outside disc none" ],
     other_values: [ "inside none", "none inside", "none none inside", "square", "none", "none none", "outside none none", "none outside none", "none none outside", "none outside", "outside none", "outside outside", "outside inside", "\\32 style", "\\32 style inside",
+      "symbols(\"*\" \"\\2020\" \"\\2021\" \"\\A7\")",
+      "symbols(cyclic \"*\" \"\\2020\" \"\\2021\" \"\\A7\")",
+      "inside symbols(\"*\" \"\\2020\" \"\\2021\" \"\\A7\")",
+      "symbols(\"*\" \"\\2020\" \"\\2021\" \"\\A7\") outside",
+      "none symbols(\"*\" \"\\2020\" \"\\2021\" \"\\A7\")",
+      "inside none symbols(\"*\" \"\\2020\" \"\\2021\" \"\\A7\")",
       'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")',
       'none url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==")',
       'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAKElEQVR42u3NQQ0AAAgEoNP+nTWFDzcoQE1udQQCgUAgEAgEAsGTYAGjxAE/G/Q2tQAAAABJRU5ErkJggg==") none',
@@ -2786,7 +2792,9 @@ var gCSSProperties = {
       "-moz-ethiopic-halehame", "-moz-ethiopic-numeric",
       "-moz-ethiopic-halehame-am",
       "-moz-ethiopic-halehame-ti-er", "-moz-ethiopic-halehame-ti-et",
-      "other-style", "inside", "outside", "\\32 style"
+      "other-style", "inside", "outside", "\\32 style",
+      "symbols(\"*\" \"\\2020\" \"\\2021\" \"\\A7\")",
+      "symbols(cyclic '*' '\\2020' '\\2021' '\\A7')"
     ],
     invalid_values: []
   },
@@ -4575,6 +4583,54 @@ if (SpecialPowers.getBoolPref("svg.paint-order.enabled")) {
     invalid_values: [ "fill stroke markers fill", "fill normal" ]
   };
 }
+
+if (SpecialPowers.getBoolPref("layout.css.clip-path-shapes.enabled")) {
+  gCSSProperties["clip-path"] = {
+    domProp: "clip-path",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "none" ],
+    other_values: [
+      // SVG reference clip-path
+      "url(#my-clip-path)",
+
+      "polygon(20px 20px)",
+      "polygon(20px 20%)",
+      "polygon(20% 20%)",
+      "polygon(20rem 20em)",
+      "polygon(20cm 20mm)",
+      "polygon(20px 20px, 30px 30px)",
+      "polygon(20px 20px, 30% 30%, 30px 30px)",
+      "polygon(nonzero, 20px 20px, 30% 30%, 30px 30px)",
+      "polygon(evenodd, 20px 20px, 30% 30%, 30px 30px)",
+
+      "content-box",
+      "padding-box",
+      "border-box",
+      "margin-box",
+      "fill-box",
+      "stroke-box",
+      "view-box",
+
+      "polygon(0 0) conten-box",
+      "border-box polygon(0 0)",
+      "padding-box    polygon(   0  20px ,  30px    20% )  ",
+    ],
+    invalid_values: [
+      "url(#test) url(#tes2)",
+      "polygon (0 0)",
+      "polygon(20px, 40px)",
+      "border-box content-box",
+      "polygon(0 0) polygon(0 0)",
+      "polygon(nonzero 0 0)",
+      "polygon(evenodd 20px 20px)",
+      "polygon(20px 20px, evenodd)",
+      "polygon(20px 20px, nonzero)",
+      "polygon(30% 30%",
+    ]
+  };
+}
+
 
 if (SpecialPowers.getBoolPref("layout.css.filters.enabled")) {
   gCSSProperties["filter"] = {

@@ -505,43 +505,36 @@ class ErrorReport {
   public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ErrorReport);
 
-    ErrorReport() : mIsChrome(false)
+    ErrorReport() : mWindowID(0)
                   , mLineNumber(0)
                   , mColumn(0)
                   , mFlags(0)
+                  , mIsMuted(false)
     {}
 
     void Init(JSErrorReport *aReport, const char *aFallbackMessage,
-              nsIGlobalObject *aGlobal);
-    void InitOnWorkerThread(JSErrorReport *aReport, const char *aFallbackMessage,
-                            bool aIsChrome);
-
+              bool aIsChrome, uint64_t aWindowID);
     void LogToConsole();
 
-  private:
-    void InitInternal(JSErrorReport *aReport, const char *aFallbackMessage);
-    bool mIsChrome;
-
   public:
-    const nsCString Category() {
-        return mIsChrome ? NS_LITERAL_CSTRING("chrome javascript")
-                         : NS_LITERAL_CSTRING("content javascript");
-    }
 
+    nsCString mCategory;
     nsString mErrorMsg;
     nsString mFileName;
     nsString mSourceLine;
+    uint64_t mWindowID;
     uint32_t mLineNumber;
     uint32_t mColumn;
     uint32_t mFlags;
-
-    // These are both null for ErrorReports initialized on a worker thread.
-    nsCOMPtr<nsIGlobalObject> mGlobal;
-    nsCOMPtr<nsPIDOMWindow> mWindow;
+    bool mIsMuted;
 
   private:
     ~ErrorReport() {}
 };
+
+void
+DispatchScriptErrorEvent(nsPIDOMWindow *win, JSRuntime *rt, xpc::ErrorReport *xpcReport,
+                         JS::Handle<JS::Value> exception);
 
 } // namespace xpc
 

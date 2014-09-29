@@ -139,9 +139,14 @@ private:
 
 // Slightly horrible callback for deferring application of opacity
 struct SVGTextContextPaint : public gfxTextContextPaint {
-  already_AddRefed<gfxPattern> GetFillPattern(float aOpacity,
+protected:
+  typedef mozilla::gfx::DrawTarget DrawTarget;
+public:
+  already_AddRefed<gfxPattern> GetFillPattern(const DrawTarget* aDrawTarget,
+                                              float aOpacity,
                                               const gfxMatrix& aCTM) MOZ_OVERRIDE;
-  already_AddRefed<gfxPattern> GetStrokePattern(float aOpacity,
+  already_AddRefed<gfxPattern> GetStrokePattern(const DrawTarget* aDrawTarget,
+                                                float aOpacity,
                                                 const gfxMatrix& aCTM) MOZ_OVERRIDE;
 
   void SetFillOpacity(float aOpacity) { mFillOpacity = aOpacity; }
@@ -190,7 +195,8 @@ struct SVGTextContextPaint : public gfxTextContextPaint {
     gfxMatrix mPatternMatrix;
     nsRefPtrHashtable<nsFloatHashKey, gfxPattern> mPatternCache;
 
-    already_AddRefed<gfxPattern> GetPattern(float aOpacity,
+    already_AddRefed<gfxPattern> GetPattern(const DrawTarget* aDrawTarget,
+                                            float aOpacity,
                                             nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                                             const gfxMatrix& aCTM);
   };
@@ -252,6 +258,7 @@ class SVGTextFrame MOZ_FINAL : public SVGTextFrameBase
   friend class MutationObserver;
   friend class nsDisplaySVGText;
 
+  typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::Path Path;
   typedef mozilla::gfx::Point Point;
   typedef mozilla::SVGTextContextPaint SVGTextContextPaint;
@@ -594,7 +601,8 @@ private:
   gfxFloat GetOffsetScale(nsIFrame* aTextPathFrame);
   gfxFloat GetStartOffset(nsIFrame* aTextPathFrame);
 
-  DrawMode SetupContextPaint(const gfxMatrix& aContextMatrix,
+  DrawMode SetupContextPaint(const DrawTarget* aDrawTarget,
+                             const gfxMatrix& aContextMatrix,
                              nsIFrame* aFrame,
                              gfxTextContextPaint* aOuterContextPaint,
                              SVGTextContextPaint* aThisContextPaint);
