@@ -19,12 +19,13 @@ public class ClearOnShutdownPref implements GeckoPreferences.PrefHandler {
     public static final String PREF = GeckoPreferences.NON_PREF_PREFIX + "history.clear_on_exit";
 
     @Override
-    public void setupPref(Context context, Preference pref) {
+    public boolean setupPref(Context context, Preference pref) {
         // The pref is initialized asynchronously. Read the pref explicitly
         // here to make sure we have the data.
         final SharedPreferences prefs = GeckoSharedPrefs.forProfile(context);
         final Set<String> clearItems = PrefUtils.getStringSet(prefs, PREF, new HashSet<String>());
         ((ListCheckboxPreference) pref).setChecked(clearItems.size() > 0);
+        return true;
     }
 
     @Override
