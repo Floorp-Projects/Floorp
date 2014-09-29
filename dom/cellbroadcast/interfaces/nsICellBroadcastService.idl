@@ -1,0 +1,96 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+#include "nsISupports.idl"
+
+[scriptable, uuid(56f66190-44a0-11e4-aa32-636783cc014a)]
+interface nsICellBroadcastListener : nsISupports
+{
+  /**
+   * Called when a Cell Broadcast message has been received by the network.
+   */
+  void notifyMessageReceived(in unsigned long aServiceId,
+                             in unsigned long aGsmGeographicalScope,
+                             in unsigned short aMessageCode,
+                             in unsigned short aMessageId,
+                             in DOMString aLanguage,
+                             in DOMString aBody,
+                             in unsigned long aMessageClass,
+                             in DOMTimeStamp aTimestamp,
+                             in unsigned long aCdmaServiceCategory,
+                             in boolean aHasEtwsInfo,
+                             in unsigned long aEtwsWarningType,
+                             in boolean aEtwsEmergencyUserAlert,
+                             in boolean aEtwsPopup);
+};
+
+%{C++
+#define CELLBROADCAST_SERVICE_CID \
+  { 0xc870bdca, 0x277c, 0x11e4, { 0xac, 0xa3, 0x33, 0x73, 0xa1, 0xef, 0x48, 0xf8 } }
+#define CELLBROADCAST_SERVICE_CONTRACTID \
+  "@mozilla.org/cellbroadcast/cellbroadcastservice;1"
+%}
+
+/**
+ * XPCOM component that provides the cell broadcast information.
+ */
+[scriptable, uuid(eed283f6-44a8-11e4-b364-afb894b7a283)]
+interface nsICellBroadcastService : nsISupports
+{
+  /**
+   * Constant definitions of predefined GSM Geographic Scope
+   * See 3GPP TS 23.041 clause 9.4.1.2.1 Serial Number
+   */
+  const unsigned short GSM_GEOGRAPHICAL_SCOPE_CELL_IMMEDIATE = 0;
+  const unsigned short GSM_GEOGRAPHICAL_SCOPE_PLMN           = 1;
+  const unsigned short GSM_GEOGRAPHICAL_SCOPE_LOCATION_AREA  = 2;
+  const unsigned short GSM_GEOGRAPHICAL_SCOPE_CELL           = 3;
+  const unsigned short GSM_GEOGRAPHICAL_SCOPE_INVALID        = 4;
+
+  /**
+   * Constant definitions of predefined GSM Message Class
+   * See 3GPP TS 23.038 clause 5 CBS Data Coding Scheme
+   */
+  const unsigned short GSM_MESSAGE_CLASS_0       = 0;
+  const unsigned short GSM_MESSAGE_CLASS_1       = 1;
+  const unsigned short GSM_MESSAGE_CLASS_2       = 2;
+  const unsigned short GSM_MESSAGE_CLASS_3       = 3;
+  const unsigned short GSM_MESSAGE_CLASS_USER_1  = 4;
+  const unsigned short GSM_MESSAGE_CLASS_USER_2  = 5;
+  const unsigned short GSM_MESSAGE_CLASS_NORMAL  = 6;
+  const unsigned short GSM_MESSAGE_CLASS_INVALID = 7;
+
+  /**
+   * Constant definitions of predefined GSM ETWS Warning Types
+   * see 3GPP TS 23.041 clause 9.3.24 Warning-Type
+   */
+  const unsigned short GSM_ETWS_WARNING_EARTHQUAKE         = 0;
+  const unsigned short GSM_ETWS_WARNING_TSUNAMI            = 1;
+  const unsigned short GSM_ETWS_WARNING_EARTHQUAKE_TSUNAMI = 2;
+  const unsigned short GSM_ETWS_WARNING_TEST               = 3;
+  const unsigned short GSM_ETWS_WARNING_OTHER              = 4;
+  const unsigned short GSM_ETWS_WARNING_INVALID            = 5;
+
+  /**
+   * Attribute CdmaServiceCategory is only valid in CDMA network.
+   * Set to CDMA_SERVICE_CATEGORY_INVALID if received from GSM/UMTS network.
+   */
+  const unsigned long CDMA_SERVICE_CATEGORY_INVALID = 0xFFFFFFFF;
+
+  /**
+   * Called to register receiving cellbroadcast messages.
+   *
+   * 'cellbroadcast' permission is required for registration/unregistration.
+   */
+  void registerListener(in nsICellBroadcastListener listener);
+  void unregisterListener(in nsICellBroadcastListener listener);
+};
+
+%{C++
+template<typename T> struct already_AddRefed;
+
+already_AddRefed<nsICellBroadcastService>
+NS_CreateCellBroadcastService();
+%}
