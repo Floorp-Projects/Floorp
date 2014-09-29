@@ -464,17 +464,24 @@ let EventTargetParent = {
         continue;
       }
       let forType = setDefault(listeners, type, []);
+
+      // Make a copy in case they call removeEventListener in the listener.
+      let handlers = [];
       for (let {listener, wantsUntrusted, useCapture} of forType) {
         if ((wantsUntrusted || isTrusted) && useCapture == capturing) {
-          try {
-            if ("handleEvent" in listener) {
-              listener.handleEvent(event);
-            } else {
-              listener.call(event.target, event);
-            }
-          } catch (e) {
-            Cu.reportError(e);
+          handlers.push(listener);
+        }
+      }
+
+      for (let handler of handlers) {
+        try {
+          if ("handleEvent" in handler) {
+            handler.handleEvent(event);
+          } else {
+            handler.call(event.target, event);
           }
+        } catch (e) {
+          Cu.reportError(e);
         }
       }
     }
