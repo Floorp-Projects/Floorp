@@ -204,8 +204,6 @@ public:
   // ongoing.
   virtual void DownloadResumed(bool aForceNetworkLoading = false) MOZ_FINAL MOZ_OVERRIDE;
 
-  // Called to indicate the download is progressing.
-  virtual void DownloadProgressed() MOZ_FINAL MOZ_OVERRIDE;
   // Called by the media decoder to indicate that the download has stalled
   // (no data has arrived for a while).
   virtual void DownloadStalled() MOZ_FINAL MOZ_OVERRIDE;
@@ -644,12 +642,6 @@ protected:
    * events can be fired.
    */
   void ChangeReadyState(nsMediaReadyState aState);
-
-  /**
-   * Use this method to change the mNetworkState member, so required
-   * actions will be taken during the transition.
-   */
-  void ChangeNetworkState(nsMediaNetworkState aState);
 
   /**
    * These two methods are called by the WakeLockBoolWrapper when the wakelock

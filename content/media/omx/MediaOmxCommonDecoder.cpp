@@ -101,6 +101,7 @@ MediaOmxCommonDecoder::PauseStateMachine()
   if (!mDecoderStateMachine) {
     return;
   }
+  StopProgress();
   mDecoderStateMachine->SetDormant(true);
 }
 
