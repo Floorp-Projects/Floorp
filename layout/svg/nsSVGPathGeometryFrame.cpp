@@ -626,56 +626,28 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext,
     break;
   }
 
-  if (renderMode != SVGAutoRenderState::NORMAL) {
-    NS_ABORT_IF_FALSE(renderMode == SVGAutoRenderState::CLIP ||
-                      renderMode == SVGAutoRenderState::CLIP_MASK,
-                      "Unknown render mode");
-
-    // In the case that |renderMode == SVGAutoRenderState::CLIP| then we don't
-    // use the path we generate here until further up the call stack when
-    // nsSVGClipPathFrame::Clip calls gfxContext::Clip. That's a problem for
-    // Moz2D which emits paths in user space (unlike cairo which emits paths in
-    // device space). gfxContext has hacks to deal with code changing the
-    // transform then using the current path when it is backed by Moz2D, but
-    // Moz2D itself does not since that would fundamentally go against its API.
-    // Therefore we do not want to Save()/Restore() the gfxContext here in the
-    // SVGAutoRenderState::CLIP case since that would block us from killing off
-    // gfxContext and using Moz2D directly. Not bothering to Save()/Restore()
-    // is actually okay, since we know that doesn't matter in the
-    // SVGAutoRenderState::CLIP case (at least for the current implementation).
-    gfxContextMatrixAutoSaveRestore autoSaveRestore;
-    // For now revent back to doing the save even for CLIP to fix bug 959128.
-    // Undo in bug 987193.
-    //if (renderMode != SVGAutoRenderState::CLIP) {
-      autoSaveRestore.SetContext(gfx);
-    //}
+  if (renderMode == SVGAutoRenderState::CLIP_MASK) {
+    gfxContextMatrixAutoSaveRestore autoSaveRestore(gfx);
 
     GeneratePath(gfx, ToMatrix(aTransform));
 
-    // We used to call gfx->Restore() here, since for the
-    // SVGAutoRenderState::CLIP case it is important to leave the fill rule
-    // that we set below untouched so that the value is still set when return
-    // to gfxContext::Clip() further up the call stack. Since we no longer
-    // call gfx->Save() in the SVGAutoRenderState::CLIP case we don't need to
-    // worry that autoSaveRestore will delay the Restore() call for the
-    // CLIP_MASK case until we exit this function.
-
-    FillRule oldFillRull = gfx->CurrentFillRule();
+    FillRule oldFillRule = gfx->CurrentFillRule();
 
     if (StyleSVG()->mClipRule == NS_STYLE_FILL_RULE_EVENODD)
       gfx->SetFillRule(FillRule::FILL_EVEN_ODD);
     else
       gfx->SetFillRule(FillRule::FILL_WINDING);
 
-    if (renderMode == SVGAutoRenderState::CLIP_MASK) {
-      gfx->SetColor(gfxRGBA(1.0f, 1.0f, 1.0f, 1.0f));
-      gfx->Fill();
-      gfx->SetFillRule(oldFillRull); // restore, but only for CLIP_MASK
-      gfx->NewPath();
-    }
+    gfx->SetColor(gfxRGBA(1.0f, 1.0f, 1.0f, 1.0f));
+    gfx->Fill();
+    gfx->SetFillRule(oldFillRule);
+    gfx->NewPath();
 
     return;
   }
+
+  NS_ABORT_IF_FALSE(renderMode == SVGAutoRenderState::NORMAL,
+                    "Unknown render mode");
 
   gfxContextAutoSaveRestore autoSaveRestore(gfx);
 
