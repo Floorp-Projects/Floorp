@@ -1840,7 +1840,7 @@ public class GeckoAppShell
                                     true, // Media scanner should scan this
                                     aMimeType,
                                     f.getAbsolutePath(),
-                                    f.length(),
+                                    Math.max(0, f.length()),
                                     false); // Don't show a notification.
         } else {
             Context context = getContext();
