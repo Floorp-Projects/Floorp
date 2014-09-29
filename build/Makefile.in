@@ -98,7 +98,7 @@ libs:: $(_VALGRIND_FILES)
 	$(INSTALL) $^ $(_VALGRIND_DIR)
 endif
 
-ifdef ENABLE_TESTS
+ifneq (,$(ENABLE_TESTS)$(MOZ_DMD))
 libs:: $(topsrcdir)/tools/rb/fix_stack_using_bpsyms.py
 	$(INSTALL) $< $(DIST)/bin
 
@@ -111,7 +111,14 @@ ifeq ($(OS_ARCH),Linux)
 libs:: $(topsrcdir)/tools/rb/fix_linux_stack.py
 	$(INSTALL) $< $(DIST)/bin
 endif
+endif # ENABLE_TESTS or MOZ_DMD
 
+ifdef ENABLE_TESTS
 GARBAGE += $(srcdir)/automationutils.pyc
-
 endif # ENABLE_TESTS
+
+ifdef MOZ_DMD
+libs:: $(topsrcdir)/memory/replace/dmd/dmd.py
+	$(INSTALL) $< $(DIST)/bin
+endif
+
