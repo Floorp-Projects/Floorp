@@ -7,8 +7,6 @@
 %{C++
 
 namespace mozilla {
-// Simple C++ getter for nsIXULRuntime::browserTabsRemote
-bool BrowserTabsRemote();
 // Simple C++ getter for nsIXULRuntime::browserTabsRemoteAutostart
 // This getter is a temporary function that checks for special
 // conditions in which e10s support is not great yet, and should
@@ -25,7 +23,7 @@ bool BrowserTabsRemoteAutostart();
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(789073a0-3f4a-11e4-916c-0800200c9a66)]
+[scriptable, uuid(588831D6-7576-4CEA-B368-3AAB76CD9FCC)]
 interface nsIXULRuntime : nsISupports
 {
   /**
@@ -86,12 +84,6 @@ interface nsIXULRuntime : nsISupports
    * The system process ID of the caller's process.
    */
   readonly attribute unsigned long processID;
-
-  /**
-   * If true, browser tabs may be opened in a different process from the main
-   * browser UI.
-   */
-  readonly attribute boolean browserTabsRemote;
 
   /**
    * If true, browser tabs may be opened by default in a different process

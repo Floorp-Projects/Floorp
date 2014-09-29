@@ -6952,20 +6952,16 @@ let gRemoteTabsUI = {
       return;
     }
 
-    let remoteTabs = Services.appinfo.browserTabsRemote;
-    let autostart = Services.appinfo.browserTabsRemoteAutostart;
-
     let newRemoteWindow = document.getElementById("menu_newRemoteWindow");
     let newNonRemoteWindow = document.getElementById("menu_newNonRemoteWindow");
-
-    if (!remoteTabs) {
-      newRemoteWindow.hidden = true;
-      newNonRemoteWindow.hidden = true;
-      return;
-    }
-
+#ifdef E10S_TESTING_ONLY
+    let autostart = Services.appinfo.browserTabsRemoteAutostart;
     newRemoteWindow.hidden = autostart;
     newNonRemoteWindow.hidden = !autostart;
+#else
+    newRemoteWindow.hidden = true;
+    newNonRemoteWindow.hidden = true;
+#endif
   }
 };
 

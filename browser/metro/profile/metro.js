@@ -94,8 +94,6 @@ pref("toolkit.browser.contentViewExpire", 3000);
 pref("toolkit.defaultChromeURI", "chrome://browser/content/browser.xul");
 pref("browser.chromeURL", "chrome://browser/content/");
 
-pref("browser.tabs.remote", false);
-
 // Telemetry
 #ifdef MOZ_TELEMETRY_ON_BY_DEFAULT
 pref("toolkit.telemetry.enabledPreRelease", true);

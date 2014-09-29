@@ -1177,16 +1177,9 @@ pref("dom.ipc.plugins.enabled.x86_64", true);
 pref("dom.ipc.plugins.enabled", true);
 #endif
 
-#if defined(NIGHTLY_BUILD)
-// browser.tabs.remote is enabled on nightly. However, users won't
-// actually get remote tabs unless they enable
-// browser.tabs.remote.autostart or they use the "New OOP Window" menu
-// option.
-pref("browser.tabs.remote", true);
-#else
-pref("browser.tabs.remote", false);
-#endif
+// Start the browser in e10s mode
 pref("browser.tabs.remote.autostart", false);
+pref("browser.tabs.remote.desktopbehavior", true);
 
 #if defined(MOZ_CONTENT_SANDBOX) && defined(XP_WIN)
 // This controls whether the content process on Windows is sandboxed.
