@@ -94,3 +94,18 @@ for (var i = 0; i < 100; i++) {
     assertEq(getException(test4_4), count-1);
 }
 assertEq(count, 4500);
+
+function test5() {
+    var res = 0;
+    for (var i=0; i<40; i++) {
+	try {
+	    throw i;
+	} catch (e if e % 2) {
+	    res += e;
+	} catch (e) {
+	    res += e * 3;
+	}
+    }
+    return res;
+}
+assertEq(test5(), 1540);

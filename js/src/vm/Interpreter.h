@@ -367,6 +367,9 @@ bool
 Throw(JSContext *cx, HandleValue v);
 
 bool
+ThrowingOperation(JSContext *cx, HandleValue v);
+
+bool
 GetProperty(JSContext *cx, HandleValue value, HandlePropertyName name, MutableHandleValue vp);
 
 bool
