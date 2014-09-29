@@ -55,7 +55,7 @@ def test(src_dir, kind, options, i):
     # Convert from JSON
 
     convert = [os.path.join(src_dir, "memory", "replace", "dmd", "dmd.py")] + \
-               options + [fixed_name]
+               options + ['--no-fix-stacks', fixed_name]
     subprocess.call(convert, stdout=open(converted_name, "w"))
 
     # Filter output
