@@ -348,68 +348,31 @@ ValidateSimdOperation(JSContext *cx, AsmJSModule::Global &global, HandleValue gl
 
     Native native = nullptr;
     switch (global.simdOperationType()) {
+#define SET_NATIVE_INT32X4(op) case AsmJSSimdOperation_##op: native = simd_int32x4_##op; break;
+#define SET_NATIVE_FLOAT32X4(op) case AsmJSSimdOperation_##op: native = simd_float32x4_##op; break;
+#define FALLTHROUGH(op) case AsmJSSimdOperation_##op:
       case AsmJSSimdType_int32x4:
         switch (global.simdOperation()) {
-          case AsmJSSimdOperation_add: native = simd_int32x4_add; break;
-          case AsmJSSimdOperation_sub: native = simd_int32x4_sub; break;
-          case AsmJSSimdOperation_lessThan: native = simd_int32x4_lessThan; break;
-          case AsmJSSimdOperation_greaterThan: native = simd_int32x4_greaterThan; break;
-          case AsmJSSimdOperation_equal: native = simd_int32x4_equal; break;
-          case AsmJSSimdOperation_and: native = simd_int32x4_and; break;
-          case AsmJSSimdOperation_or: native = simd_int32x4_or; break;
-          case AsmJSSimdOperation_xor: native = simd_int32x4_xor; break;
-          case AsmJSSimdOperation_select: native = simd_int32x4_select; break;
-          case AsmJSSimdOperation_splat: native = simd_int32x4_splat; break;
-          case AsmJSSimdOperation_withX: native = simd_int32x4_withX; break;
-          case AsmJSSimdOperation_withY: native = simd_int32x4_withY; break;
-          case AsmJSSimdOperation_withZ: native = simd_int32x4_withZ; break;
-          case AsmJSSimdOperation_withW: native = simd_int32x4_withW; break;
-          case AsmJSSimdOperation_fromFloat32x4: native = simd_int32x4_fromFloat32x4; break;
-          case AsmJSSimdOperation_fromFloat32x4Bits: native = simd_int32x4_fromFloat32x4Bits; break;
-          case AsmJSSimdOperation_lessThanOrEqual:
-          case AsmJSSimdOperation_greaterThanOrEqual:
-          case AsmJSSimdOperation_notEqual:
-          case AsmJSSimdOperation_mul:
-          case AsmJSSimdOperation_div:
-          case AsmJSSimdOperation_max:
-          case AsmJSSimdOperation_min:
-          case AsmJSSimdOperation_fromInt32x4:
-          case AsmJSSimdOperation_fromInt32x4Bits:
+          FOREACH_INT32X4_SIMD_OP(SET_NATIVE_INT32X4)
+          FOREACH_COMMONX4_SIMD_OP(SET_NATIVE_INT32X4)
+          FOREACH_FLOAT32X4_SIMD_OP(FALLTHROUGH)
             MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("shouldn't have been validated in the first "
                                                     "place");
         }
         break;
       case AsmJSSimdType_float32x4:
         switch (global.simdOperation()) {
-          case AsmJSSimdOperation_add: native = simd_float32x4_add; break;
-          case AsmJSSimdOperation_sub: native = simd_float32x4_sub; break;
-          case AsmJSSimdOperation_mul: native = simd_float32x4_mul; break;
-          case AsmJSSimdOperation_div: native = simd_float32x4_div; break;
-          case AsmJSSimdOperation_max: native = simd_float32x4_max; break;
-          case AsmJSSimdOperation_min: native = simd_float32x4_min; break;
-          case AsmJSSimdOperation_lessThan: native = simd_float32x4_lessThan ; break;
-          case AsmJSSimdOperation_lessThanOrEqual: native = simd_float32x4_lessThanOrEqual; break;
-          case AsmJSSimdOperation_equal: native = simd_float32x4_equal; break;
-          case AsmJSSimdOperation_notEqual: native = simd_float32x4_notEqual ; break;
-          case AsmJSSimdOperation_greaterThan: native = simd_float32x4_greaterThan; break;
-          case AsmJSSimdOperation_greaterThanOrEqual: native = simd_float32x4_greaterThanOrEqual ; break;
-          case AsmJSSimdOperation_and: native = simd_float32x4_and; break;
-          case AsmJSSimdOperation_or: native = simd_float32x4_or; break;
-          case AsmJSSimdOperation_xor: native = simd_float32x4_xor; break;
-          case AsmJSSimdOperation_select: native = simd_float32x4_select; break;
-          case AsmJSSimdOperation_splat: native = simd_float32x4_splat; break;
-          case AsmJSSimdOperation_withX: native = simd_float32x4_withX; break;
-          case AsmJSSimdOperation_withY: native = simd_float32x4_withY; break;
-          case AsmJSSimdOperation_withZ: native = simd_float32x4_withZ; break;
-          case AsmJSSimdOperation_withW: native = simd_float32x4_withW; break;
-          case AsmJSSimdOperation_fromInt32x4: native = simd_float32x4_fromInt32x4; break;
-          case AsmJSSimdOperation_fromInt32x4Bits: native = simd_float32x4_fromInt32x4Bits; break;
-          case AsmJSSimdOperation_fromFloat32x4:
-          case AsmJSSimdOperation_fromFloat32x4Bits:
+          FOREACH_FLOAT32X4_SIMD_OP(SET_NATIVE_FLOAT32X4)
+          FOREACH_COMMONX4_SIMD_OP(SET_NATIVE_FLOAT32X4)
+          FOREACH_INT32X4_SIMD_OP(FALLTHROUGH)
              MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("shouldn't have been validated in the first "
                                                      "place");
         }
         break;
+#undef FALLTHROUGH
+#undef SET_NATIVE_FLOAT32X4
+#undef SET_NATIVE_INT32X4
+#undef SET_NATIVE
     }
     if (!native || !IsNativeFunction(v, native))
         return LinkFail(cx, "bad SIMD.type.* operation");
