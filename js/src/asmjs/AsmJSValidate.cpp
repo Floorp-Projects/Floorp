@@ -1406,35 +1406,13 @@ class MOZ_STACK_CLASS ModuleCompiler
             return false;
         }
 
-        if (!standardLibrarySimdOpNames_.init() ||
-            !addStandardLibrarySimdOpName("add", AsmJSSimdOperation_add) ||
-            !addStandardLibrarySimdOpName("sub", AsmJSSimdOperation_sub) ||
-            !addStandardLibrarySimdOpName("mul", AsmJSSimdOperation_mul) ||
-            !addStandardLibrarySimdOpName("div", AsmJSSimdOperation_div) ||
-            !addStandardLibrarySimdOpName("lessThanOrEqual", AsmJSSimdOperation_lessThanOrEqual) ||
-            !addStandardLibrarySimdOpName("lessThan", AsmJSSimdOperation_lessThan) ||
-            !addStandardLibrarySimdOpName("equal", AsmJSSimdOperation_equal) ||
-            !addStandardLibrarySimdOpName("notEqual", AsmJSSimdOperation_notEqual) ||
-            !addStandardLibrarySimdOpName("greaterThan", AsmJSSimdOperation_greaterThan) ||
-            !addStandardLibrarySimdOpName("greaterThanOrEqual", AsmJSSimdOperation_greaterThanOrEqual) ||
-            !addStandardLibrarySimdOpName("and", AsmJSSimdOperation_and) ||
-            !addStandardLibrarySimdOpName("or", AsmJSSimdOperation_or) ||
-            !addStandardLibrarySimdOpName("xor", AsmJSSimdOperation_xor) ||
-            !addStandardLibrarySimdOpName("select", AsmJSSimdOperation_select) ||
-            !addStandardLibrarySimdOpName("splat", AsmJSSimdOperation_splat) ||
-            !addStandardLibrarySimdOpName("max", AsmJSSimdOperation_max) ||
-            !addStandardLibrarySimdOpName("min", AsmJSSimdOperation_min) ||
-            !addStandardLibrarySimdOpName("withX", AsmJSSimdOperation_withX) ||
-            !addStandardLibrarySimdOpName("withY", AsmJSSimdOperation_withY) ||
-            !addStandardLibrarySimdOpName("withZ", AsmJSSimdOperation_withZ) ||
-            !addStandardLibrarySimdOpName("withW", AsmJSSimdOperation_withW) ||
-            !addStandardLibrarySimdOpName("fromFloat32x4", AsmJSSimdOperation_fromFloat32x4) ||
-            !addStandardLibrarySimdOpName("fromInt32x4", AsmJSSimdOperation_fromInt32x4) ||
-            !addStandardLibrarySimdOpName("fromFloat32x4Bits", AsmJSSimdOperation_fromFloat32x4Bits) ||
-            !addStandardLibrarySimdOpName("fromInt32x4Bits", AsmJSSimdOperation_fromInt32x4Bits))
+#define ADDSTDLIBSIMDOPNAME(op) || !addStandardLibrarySimdOpName(#op, AsmJSSimdOperation_##op)
+        if (!standardLibrarySimdOpNames_.init()
+            FORALL_SIMD_OP(ADDSTDLIBSIMDOPNAME))
         {
             return false;
         }
+#undef ADDSTDLIBSIMDOPNAME
 
         uint32_t srcStart = parser_.pc->maybeFunction->pn_body->pn_pos.begin;
         uint32_t srcBodyStart = tokenStream().currentToken().pos.end;
@@ -3589,34 +3567,14 @@ static bool
 IsSimdValidOperationType(AsmJSSimdType type, AsmJSSimdOperation op)
 {
     switch (op) {
-      case AsmJSSimdOperation_add:
-      case AsmJSSimdOperation_sub:
-      case AsmJSSimdOperation_lessThan:
-      case AsmJSSimdOperation_equal:
-      case AsmJSSimdOperation_greaterThan:
-      case AsmJSSimdOperation_and:
-      case AsmJSSimdOperation_or:
-      case AsmJSSimdOperation_xor:
-      case AsmJSSimdOperation_select:
-      case AsmJSSimdOperation_splat:
-      case AsmJSSimdOperation_withX:
-      case AsmJSSimdOperation_withY:
-      case AsmJSSimdOperation_withZ:
-      case AsmJSSimdOperation_withW:
+#define CASE(op) case AsmJSSimdOperation_##op:
+      FOREACH_COMMONX4_SIMD_OP(CASE)
         return true;
-      case AsmJSSimdOperation_fromFloat32x4:
-      case AsmJSSimdOperation_fromFloat32x4Bits:
+      FOREACH_INT32X4_SIMD_OP(CASE)
         return type == AsmJSSimdType_int32x4;
-      case AsmJSSimdOperation_mul:
-      case AsmJSSimdOperation_div:
-      case AsmJSSimdOperation_max:
-      case AsmJSSimdOperation_min:
-      case AsmJSSimdOperation_lessThanOrEqual:
-      case AsmJSSimdOperation_notEqual:
-      case AsmJSSimdOperation_greaterThanOrEqual:
-      case AsmJSSimdOperation_fromInt32x4:
-      case AsmJSSimdOperation_fromInt32x4Bits:
+      FOREACH_FLOAT32X4_SIMD_OP(CASE)
         return type == AsmJSSimdType_float32x4;
+#undef CASE
     }
     return false;
 }
