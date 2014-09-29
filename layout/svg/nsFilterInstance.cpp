@@ -14,6 +14,7 @@
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/Helpers.h"
+#include "mozilla/gfx/PatternHelpers.h"
 #include "nsISVGChildFrame.h"
 #include "nsRenderingContext.h"
 #include "nsCSSFilterInstance.h"
@@ -368,15 +369,15 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
     gfx->Multiply(mPaintTransform *
                   deviceToFilterSpace *
                   gfxMatrix::Translation(-neededRect.TopLeft()));
-    nsRefPtr<gfxPattern> pattern;
+    GeneralPattern pattern;
     if (aSource == &mFillPaint) {
-      pattern = nsSVGUtils::MakeFillPatternFor(mTargetFrame, gfx);
+      nsSVGUtils::MakeFillPatternFor(mTargetFrame, gfx, &pattern);
     } else if (aSource == &mStrokePaint) {
-      pattern = nsSVGUtils::MakeStrokePatternFor(mTargetFrame, gfx);
+      nsSVGUtils::MakeStrokePatternFor(mTargetFrame, gfx, &pattern);
     }
-    if (pattern) {
+    if (pattern.GetPattern()) {
       offscreenDT->FillRect(ToRect(FilterSpaceToUserSpace(neededRect)),
-                            *pattern->GetPattern(offscreenDT));
+                            pattern);
     }
     gfx->Restore();
   }
