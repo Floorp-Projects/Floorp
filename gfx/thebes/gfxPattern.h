@@ -41,7 +41,7 @@ public:
     // This should only be called on a cairo pattern that we want to use with
     // Azure. We will read back the color stops from cairo and try to look
     // them up in the cache.
-    void CacheColorStops(mozilla::gfx::DrawTarget *aDT);
+    void CacheColorStops(const mozilla::gfx::DrawTarget *aDT);
 
     void SetMatrix(const gfxMatrix& matrix);
     gfxMatrix GetMatrix() const;

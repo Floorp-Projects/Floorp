@@ -1257,16 +1257,18 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame *aFrame,
                                        GetOpacity(style->mFillOpacitySource,
                                                   style->mFillOpacity,
                                                   aContextPaint));
+  const DrawTarget* dt = aContext->GetDrawTarget();
+
   nsRefPtr<gfxPattern> pattern;
 
   nsSVGPaintServerFrame *ps =
     nsSVGEffects::GetPaintServer(aFrame, &style->mFill,
                                  nsSVGEffects::FillProperty());
   if (ps) {
-    pattern = ps->GetPaintServerPattern(aFrame, aContext->CurrentMatrix(),
+    pattern = ps->GetPaintServerPattern(aFrame, dt, aContext->CurrentMatrix(),
                                         &nsStyleSVG::mFill, opacity);
     if (pattern) {
-      pattern->CacheColorStops(aContext->GetDrawTarget());
+      pattern->CacheColorStops(dt);
       return pattern.forget();
     }
   }
@@ -1274,10 +1276,12 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame *aFrame,
   if (aContextPaint) {
     switch (style->mFill.mType) {
     case eStyleSVGPaintType_ContextFill:
-      pattern = aContextPaint->GetFillPattern(opacity, aContext->CurrentMatrix());
+      pattern = aContextPaint->GetFillPattern(dt, opacity,
+                                              aContext->CurrentMatrix());
       break;
     case eStyleSVGPaintType_ContextStroke:
-      pattern = aContextPaint->GetStrokePattern(opacity, aContext->CurrentMatrix());
+      pattern = aContextPaint->GetStrokePattern(dt, opacity,
+                                                aContext->CurrentMatrix());
       break;
     default:
       ;
@@ -1313,16 +1317,19 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame *aFrame,
                                        GetOpacity(style->mStrokeOpacitySource,
                                                   style->mStrokeOpacity,
                                                   aContextPaint));
+
+  const DrawTarget* dt = aContext->GetDrawTarget();
+
   nsRefPtr<gfxPattern> pattern;
 
   nsSVGPaintServerFrame *ps =
     nsSVGEffects::GetPaintServer(aFrame, &style->mStroke,
                                  nsSVGEffects::StrokeProperty());
   if (ps) {
-    pattern = ps->GetPaintServerPattern(aFrame, aContext->CurrentMatrix(),
+    pattern = ps->GetPaintServerPattern(aFrame, dt, aContext->CurrentMatrix(),
                                         &nsStyleSVG::mStroke, opacity);
     if (pattern) {
-      pattern->CacheColorStops(aContext->GetDrawTarget());
+      pattern->CacheColorStops(dt);
       return pattern.forget();
     }
   }
@@ -1330,10 +1337,12 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame *aFrame,
   if (aContextPaint) {
     switch (style->mStroke.mType) {
     case eStyleSVGPaintType_ContextFill:
-      pattern = aContextPaint->GetFillPattern(opacity, aContext->CurrentMatrix());
+      pattern = aContextPaint->GetFillPattern(dt, opacity,
+                                              aContext->CurrentMatrix());
       break;
     case eStyleSVGPaintType_ContextStroke:
-      pattern = aContextPaint->GetStrokePattern(opacity, aContext->CurrentMatrix());
+      pattern = aContextPaint->GetStrokePattern(dt, opacity,
+                                                aContext->CurrentMatrix());
       break;
     default:
       ;
