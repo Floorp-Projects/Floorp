@@ -486,8 +486,15 @@ SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 
     // Otherwise, we need to asynchronously invoke onerror before we can decide
     // whether or not to report the error to the console.
-    nsContentUtils::AddScriptRunner(new ScriptErrorEvent(win, JS_GetRuntime(cx), xpcReport, exception));
+    DispatchScriptErrorEvent(win, JS_GetRuntime(cx), xpcReport, exception);
   }
+}
+
+void
+DispatchScriptErrorEvent(nsPIDOMWindow *win, JSRuntime *rt, xpc::ErrorReport *xpcReport,
+                         JS::Handle<JS::Value> exception)
+{
+  nsContentUtils::AddScriptRunner(new ScriptErrorEvent(win, rt, xpcReport, exception));
 }
 
 } /* namespace xpc */
