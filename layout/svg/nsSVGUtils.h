@@ -61,6 +61,7 @@ class Element;
 class UserSpaceMetrics;
 } // namespace dom
 namespace gfx {
+class GeneralPattern;
 class SourceSurface;
 }
 } // namespace mozilla
@@ -200,6 +201,7 @@ class nsSVGUtils
 public:
   typedef mozilla::dom::Element Element;
   typedef mozilla::gfx::FillRule FillRule;
+  typedef mozilla::gfx::GeneralPattern GeneralPattern;
 
   static void Init();
 
@@ -501,14 +503,16 @@ public:
   static nscolor GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
                                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke);
 
-  static already_AddRefed<gfxPattern>
+  static void
   MakeFillPatternFor(nsIFrame *aFrame,
                      gfxContext* aContext,
+                     GeneralPattern* aOutPattern,
                      gfxTextContextPaint *aContextPaint = nullptr);
 
-  static already_AddRefed<gfxPattern>
+  static void
   MakeStrokePatternFor(nsIFrame* aFrame,
                        gfxContext* aContext,
+                       GeneralPattern* aOutPattern,
                        gfxTextContextPaint *aContextPaint = nullptr);
 
   static float GetOpacity(nsStyleSVGOpacitySource aOpacityType,

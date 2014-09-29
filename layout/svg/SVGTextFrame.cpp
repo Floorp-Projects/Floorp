@@ -14,6 +14,7 @@
 #include "gfxTypes.h"
 #include "LookAndFeel.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/PatternHelpers.h"
 #include "nsAlgorithm.h"
 #include "nsBlockFrame.h"
 #include "nsCaret.h"
@@ -2739,7 +2740,7 @@ private:
    * Sets the gfxContext paint to the appropriate color or pattern
    * for filling text geometry.
    */
-  already_AddRefed<gfxPattern> MakeFillPattern();
+  void MakeFillPattern(GeneralPattern* aOutPattern);
 
   /**
    * Fills and strokes a piece of text geometry, using group opacity
@@ -2825,11 +2826,12 @@ SVGTextDrawPathCallbacks::NotifySelectionBackgroundPathEmitted()
     return;
   }
 
-  nsRefPtr<gfxPattern> fillPattern = MakeFillPattern();
-  if (fillPattern) {
-    gfx->SetPattern(fillPattern);
+  GeneralPattern fillPattern;
+  MakeFillPattern(&fillPattern);
+  if (fillPattern.GetPattern()) {
     gfx->SetFillRule(nsSVGUtils::ToFillRule(mFrame->StyleSVG()->mFillRule));
-    gfx->FillWithOpacity(mColor == NS_40PERCENT_FOREGROUND_COLOR ? 0.4 : 1.0);
+    gfx->FillWithOpacity(fillPattern,
+                         mColor == NS_40PERCENT_FOREGROUND_COLOR ? 0.4 : 1.0);
   }
   gfx->Restore();
 }
@@ -2906,20 +2908,20 @@ SVGTextDrawPathCallbacks::HandleTextGeometry()
   }
 }
 
-already_AddRefed<gfxPattern>
-SVGTextDrawPathCallbacks::MakeFillPattern()
+void
+SVGTextDrawPathCallbacks::MakeFillPattern(GeneralPattern* aOutPattern)
 {
   if (mColor == NS_SAME_AS_FOREGROUND_COLOR ||
       mColor == NS_40PERCENT_FOREGROUND_COLOR) {
-    return nsSVGUtils::MakeFillPatternFor(mFrame, gfx);
+    nsSVGUtils::MakeFillPatternFor(mFrame, gfx, aOutPattern);
+    return;
   }
 
   if (mColor == NS_TRANSPARENT) {
-    return nullptr;
+    return;
   }
 
-  nsRefPtr<gfxPattern> pattern = new gfxPattern(gfxRGBA(mColor));
-  return pattern.forget();
+  aOutPattern->InitColorPattern(ToColor(gfxRGBA(mColor)));
 }
 
 void
@@ -2960,11 +2962,11 @@ SVGTextDrawPathCallbacks::FillAndStrokeGeometry()
 void
 SVGTextDrawPathCallbacks::FillGeometry()
 {
-  nsRefPtr<gfxPattern> fillPattern = MakeFillPattern();
-  if (fillPattern) {
-    gfx->SetPattern(fillPattern);
+  GeneralPattern fillPattern;
+  MakeFillPattern(&fillPattern);
+  if (fillPattern.GetPattern()) {
     gfx->SetFillRule(nsSVGUtils::ToFillRule(mFrame->StyleSVG()->mFillRule));
-    gfx->Fill();
+    gfx->Fill(fillPattern);
   }
 }
 
@@ -2975,12 +2977,11 @@ SVGTextDrawPathCallbacks::StrokeGeometry()
   if (mColor == NS_SAME_AS_FOREGROUND_COLOR ||
       mColor == NS_40PERCENT_FOREGROUND_COLOR) {
     if (nsSVGUtils::HasStroke(mFrame, /*aContextPaint*/ nullptr)) {
-      nsRefPtr<gfxPattern> strokePattern =
-        nsSVGUtils::MakeStrokePatternFor(mFrame, gfx, /*aContextPaint*/ nullptr);
-      if (strokePattern) {
+      GeneralPattern strokePattern;
+      nsSVGUtils::MakeStrokePatternFor(mFrame, gfx, &strokePattern, /*aContextPaint*/ nullptr);
+      if (strokePattern.GetPattern()) {
         nsSVGUtils::SetupCairoStrokeGeometry(mFrame, gfx, /*aContextPaint*/ nullptr);
-        gfx->SetPattern(strokePattern);
-        gfx->Stroke();
+        gfx->Stroke(strokePattern);
       }
     }
   }
