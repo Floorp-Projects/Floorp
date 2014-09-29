@@ -672,25 +672,23 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext,
     (gfxTextContextPaint*)aContext->GetDrawTarget()->GetUserData(&gfxTextContextPaint::sUserDataKey);
 
   if ((aRenderComponents & eRenderFill)) {
-    nsRefPtr<gfxPattern> fillPattern =
-      nsSVGUtils::MakeFillPatternFor(this, gfx, contextPaint);
-    if (fillPattern) {
+    GeneralPattern fillPattern;
+    nsSVGUtils::MakeFillPatternFor(this, gfx, &fillPattern, contextPaint);
+    if (fillPattern.GetPattern()) {
       gfx->SetPath(path);
-      gfx->SetPattern(fillPattern);
       gfx->SetFillRule(fillRule);
-      gfx->Fill();
+      gfx->Fill(fillPattern);
     }
   }
 
   if ((aRenderComponents & eRenderStroke) &&
       nsSVGUtils::HasStroke(this, contextPaint)) {
-    nsRefPtr<gfxPattern> strokePattern =
-      nsSVGUtils::MakeStrokePatternFor(this, gfx, contextPaint);
-    if (strokePattern) {
+    GeneralPattern strokePattern;
+    nsSVGUtils::MakeStrokePatternFor(this, gfx, &strokePattern, contextPaint);
+    if (strokePattern.GetPattern()) {
       gfx->SetPath(path);
       nsSVGUtils::SetupCairoStrokeGeometry(this, gfx, contextPaint);
-      gfx->SetPattern(strokePattern);
-      gfx->Stroke();
+      gfx->Stroke(strokePattern);
     }
   }
 

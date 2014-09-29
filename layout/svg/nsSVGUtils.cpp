@@ -16,6 +16,7 @@
 #include "gfxRect.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/PatternHelpers.h"
 #include "mozilla/Preferences.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDisplayList.h"
@@ -1243,14 +1244,15 @@ MaybeOptimizeOpacity(nsIFrame *aFrame, float aFillOrStrokeOpacity)
   return aFillOrStrokeOpacity;
 }
 
-/* static */ already_AddRefed<gfxPattern>
-nsSVGUtils::MakeFillPatternFor(nsIFrame *aFrame,
+/* static */ void
+nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
                                gfxContext* aContext,
-                               gfxTextContextPaint *aContextPaint)
+                               GeneralPattern* aOutPattern,
+                               gfxTextContextPaint* aContextPaint)
 {
   const nsStyleSVG* style = aFrame->StyleSVG();
   if (style->mFill.mType == eStyleSVGPaintType_None) {
-    return nullptr;
+    return;
   }
 
   float opacity = MaybeOptimizeOpacity(aFrame,
@@ -1259,21 +1261,22 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame *aFrame,
                                                   aContextPaint));
   const DrawTarget* dt = aContext->GetDrawTarget();
 
-  nsRefPtr<gfxPattern> pattern;
-
   nsSVGPaintServerFrame *ps =
     nsSVGEffects::GetPaintServer(aFrame, &style->mFill,
                                  nsSVGEffects::FillProperty());
   if (ps) {
-    pattern = ps->GetPaintServerPattern(aFrame, dt, aContext->CurrentMatrix(),
-                                        &nsStyleSVG::mFill, opacity);
+    nsRefPtr<gfxPattern> pattern =
+      ps->GetPaintServerPattern(aFrame, dt, aContext->CurrentMatrix(),
+                                &nsStyleSVG::mFill, opacity);
     if (pattern) {
       pattern->CacheColorStops(dt);
-      return pattern.forget();
+      aOutPattern->Init(*pattern->GetPattern(dt));
+      return;
     }
   }
 
   if (aContextPaint) {
+    nsRefPtr<gfxPattern> pattern;
     switch (style->mFill.mType) {
     case eStyleSVGPaintType_ContextFill:
       pattern = aContextPaint->GetFillPattern(dt, opacity,
@@ -1287,7 +1290,8 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame *aFrame,
       ;
     }
     if (pattern) {
-      return pattern.forget();
+      aOutPattern->Init(*pattern->GetPattern(dt));
+      return;
     }
   }
 
@@ -1296,21 +1300,21 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame *aFrame,
   // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
   nscolor color = GetFallbackOrPaintColor(aFrame->StyleContext(),
                                           &nsStyleSVG::mFill);
-  pattern = new gfxPattern(gfxRGBA(NS_GET_R(color)/255.0,
-                                   NS_GET_G(color)/255.0,
-                                   NS_GET_B(color)/255.0,
-                                   NS_GET_A(color)/255.0 * opacity));
-  return pattern.forget();
+  aOutPattern->InitColorPattern(Color(NS_GET_R(color)/255.0,
+                                      NS_GET_G(color)/255.0,
+                                      NS_GET_B(color)/255.0,
+                                      NS_GET_A(color)/255.0 * opacity));
 }
 
-/* static */ already_AddRefed<gfxPattern>
-nsSVGUtils::MakeStrokePatternFor(nsIFrame *aFrame,
+/* static */ void
+nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
                                  gfxContext* aContext,
-                                 gfxTextContextPaint *aContextPaint)
+                                 GeneralPattern* aOutPattern,
+                                 gfxTextContextPaint* aContextPaint)
 {
   const nsStyleSVG* style = aFrame->StyleSVG();
   if (style->mStroke.mType == eStyleSVGPaintType_None) {
-    return nullptr;
+    return;
   }
 
   float opacity = MaybeOptimizeOpacity(aFrame,
@@ -1320,21 +1324,22 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame *aFrame,
 
   const DrawTarget* dt = aContext->GetDrawTarget();
 
-  nsRefPtr<gfxPattern> pattern;
-
   nsSVGPaintServerFrame *ps =
     nsSVGEffects::GetPaintServer(aFrame, &style->mStroke,
                                  nsSVGEffects::StrokeProperty());
   if (ps) {
-    pattern = ps->GetPaintServerPattern(aFrame, dt, aContext->CurrentMatrix(),
-                                        &nsStyleSVG::mStroke, opacity);
+    nsRefPtr<gfxPattern> pattern =
+      ps->GetPaintServerPattern(aFrame, dt, aContext->CurrentMatrix(),
+                                &nsStyleSVG::mStroke, opacity);
     if (pattern) {
       pattern->CacheColorStops(dt);
-      return pattern.forget();
+      aOutPattern->Init(*pattern->GetPattern(dt));
+      return;
     }
   }
 
   if (aContextPaint) {
+    nsRefPtr<gfxPattern> pattern;
     switch (style->mStroke.mType) {
     case eStyleSVGPaintType_ContextFill:
       pattern = aContextPaint->GetFillPattern(dt, opacity,
@@ -1348,7 +1353,8 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame *aFrame,
       ;
     }
     if (pattern) {
-      return pattern.forget();
+      aOutPattern->Init(*pattern->GetPattern(dt));
+      return;
     }
   }
 
@@ -1357,11 +1363,10 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame *aFrame,
   // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
   nscolor color = GetFallbackOrPaintColor(aFrame->StyleContext(),
                                           &nsStyleSVG::mStroke);
-  pattern = new gfxPattern(gfxRGBA(NS_GET_R(color)/255.0,
-                                   NS_GET_G(color)/255.0,
-                                   NS_GET_B(color)/255.0,
-                                   NS_GET_A(color)/255.0 * opacity));
-  return pattern.forget();
+  aOutPattern->InitColorPattern(Color(NS_GET_R(color)/255.0,
+                                      NS_GET_G(color)/255.0,
+                                      NS_GET_B(color)/255.0,
+                                      NS_GET_A(color)/255.0 * opacity));
 }
 
 /* static */ float
