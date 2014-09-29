@@ -102,7 +102,7 @@ public class RemoteClientsDialogFragment extends DialogFragment {
                     final AlertDialog dialog = (AlertDialog) dialogInterface;
                     final SparseBooleanArray checkedItemPositions = dialog.getListView().getCheckedItemPositions();
                     final ArrayList<RemoteClient> checked = new ArrayList<RemoteClient>();
-                    for (int i = 0; i < checkedItemPositions.size(); i++) {
+                    for (int i = 0; i < clients.size(); i++) {
                         if (checkedItemPositions.get(i)) {
                             checked.add(clients.get(i));
                         }
