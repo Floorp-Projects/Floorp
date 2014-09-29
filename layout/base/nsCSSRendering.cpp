@@ -4699,6 +4699,7 @@ nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
     nsRefPtr<gfxDrawable> drawable =
       nsSVGIntegrationUtils::DrawableFromPaintServer(
         mPaintServerFrame, mForFrame, mSize, imageSize,
+        aRenderingContext.GetDrawTarget(),
         aRenderingContext.ThebesContext()->CurrentMatrix(),
         mFlags & FLAG_SYNC_DECODE_IMAGES
           ? nsSVGIntegrationUtils::FLAG_SYNC_DECODE_IMAGES

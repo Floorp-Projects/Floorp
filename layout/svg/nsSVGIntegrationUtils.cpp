@@ -695,6 +695,7 @@ nsSVGIntegrationUtils::DrawableFromPaintServer(nsIFrame*         aFrame,
                                                nsIFrame*         aTarget,
                                                const nsSize&     aPaintServerSize,
                                                const gfxIntSize& aRenderSize,
+                                               const DrawTarget* aDrawTarget,
                                                const gfxMatrix&  aContextMatrix,
                                                uint32_t          aFlags)
 {
@@ -715,8 +716,9 @@ nsSVGIntegrationUtils::DrawableFromPaintServer(nsIFrame*         aFrame,
                            aPaintServerSize.width, aPaintServerSize.height);
     overrideBounds.ScaleInverse(aFrame->PresContext()->AppUnitsPerDevPixel());
     nsRefPtr<gfxPattern> pattern =
-      server->GetPaintServerPattern(aTarget, aContextMatrix,
-                                    &nsStyleSVG::mFill, 1.0, &overrideBounds);
+    server->GetPaintServerPattern(aTarget, aDrawTarget,
+                                  aContextMatrix, &nsStyleSVG::mFill, 1.0,
+                                  &overrideBounds);
 
     if (!pattern)
       return nullptr;
