@@ -1,0 +1,27 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBrowser;
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+protocol PIndexedDBPermissionRequest
+{
+  manager PBrowser;
+
+child:
+  /**
+   * Called when the user makes a choice or the permission request times out.
+   *
+   * @param permission
+   *   The permission result (see nsIPermissionManager.idl for valid values).
+   */
+  __delete__(uint32_t permission);
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

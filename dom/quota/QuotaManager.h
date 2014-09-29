@@ -33,6 +33,12 @@ class nsIURI;
 class nsPIDOMWindow;
 class nsIRunnable;
 
+namespace mozilla {
+namespace dom {
+class ContentParent;
+}
+}
+
 BEGIN_QUOTA_NAMESPACE
 
 class AcquireListener;
@@ -60,6 +66,8 @@ class QuotaManager MOZ_FINAL : public nsIQuotaManager,
   friend class OriginInfo;
   friend class QuotaObject;
   friend class ResetOrClearRunnable;
+
+  typedef mozilla::dom::ContentParent ContentParent;
 
   enum MozBrowserPatternFlag
   {
@@ -181,6 +189,11 @@ public:
   void
   AbortCloseStoragesForWindow(nsPIDOMWindow* aWindow);
 
+  // Called when a process is being shot down. Forces any live storage objects
+  // to close themselves and aborts any running transactions.
+  void
+  AbortCloseStoragesForProcess(ContentParent* aContentParent);
+
   // Used to check if there are running transactions in a given window.
   bool
   HasOpenTransactions(nsPIDOMWindow* aWindow);
@@ -296,29 +309,32 @@ public:
                  uint32_t aAppId,
                  bool aInMozBrowser,
                  nsACString* aGroup,
-                 nsACString* aASCIIOrigin,
+                 nsACString* aOrigin,
                  StoragePrivilege* aPrivilege,
                  PersistenceType* aDefaultPersistenceType);
 
   static nsresult
   GetInfoFromPrincipal(nsIPrincipal* aPrincipal,
                        nsACString* aGroup,
-                       nsACString* aASCIIOrigin,
+                       nsACString* aOrigin,
                        StoragePrivilege* aPrivilege,
                        PersistenceType* aDefaultPersistenceType);
 
   static nsresult
   GetInfoFromWindow(nsPIDOMWindow* aWindow,
                     nsACString* aGroup,
-                    nsACString* aASCIIOrigin,
+                    nsACString* aOrigin,
                     StoragePrivilege* aPrivilege,
                     PersistenceType* aDefaultPersistenceType);
 
   static void
   GetInfoForChrome(nsACString* aGroup,
-                   nsACString* aASCIIOrigin,
+                   nsACString* aOrigin,
                    StoragePrivilege* aPrivilege,
                    PersistenceType* aDefaultPersistenceType);
+
+  static void
+  ChromeOrigin(nsACString& aOrigin);
 
   static void
   GetOriginPatternString(uint32_t aAppId, bool aBrowserOnly,
@@ -427,6 +443,10 @@ private:
       mClients[index]->ReleaseIOThreadObjects();
     }
   }
+
+  template <class OwnerClass>
+  void
+  AbortCloseStoragesFor(OwnerClass* aOwnerClass);
 
   static void
   GetOriginPatternString(uint32_t aAppId,

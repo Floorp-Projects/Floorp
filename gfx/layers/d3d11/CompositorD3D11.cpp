@@ -404,6 +404,12 @@ TemporaryRef<CompositingRenderTarget>
 CompositorD3D11::CreateRenderTarget(const gfx::IntRect& aRect,
                                     SurfaceInitMode aInit)
 {
+  MOZ_ASSERT(aRect.width != 0 && aRect.height != 0);
+
+  if (aRect.width * aRect.height == 0) {
+    return nullptr;
+  }
+
   CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, aRect.width, aRect.height, 1, 1,
                              D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
 
@@ -430,6 +436,12 @@ CompositorD3D11::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
                                               const CompositingRenderTarget* aSource,
                                               const gfx::IntPoint &aSourcePoint)
 {
+  MOZ_ASSERT(aRect.width != 0 && aRect.height != 0);
+
+  if (aRect.width * aRect.height == 0) {
+    return nullptr;
+  }
+
   CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM,
                              aRect.width, aRect.height, 1, 1,
                              D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);

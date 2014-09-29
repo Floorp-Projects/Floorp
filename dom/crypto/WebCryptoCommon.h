@@ -9,6 +9,7 @@
 
 #include "pk11pub.h"
 #include "nsString.h"
+#include "nsContentUtils.h"
 #include "mozilla/dom/CryptoBuffer.h"
 #include "js/StructuredClone.h"
 
@@ -23,7 +24,6 @@
 #define WEBCRYPTO_ALG_SHA512        "SHA-512"
 #define WEBCRYPTO_ALG_HMAC          "HMAC"
 #define WEBCRYPTO_ALG_PBKDF2        "PBKDF2"
-#define WEBCRYPTO_ALG_RSAES_PKCS1   "RSAES-PKCS1-v1_5"
 #define WEBCRYPTO_ALG_RSASSA_PKCS1  "RSASSA-PKCS1-v1_5"
 #define WEBCRYPTO_ALG_RSA_OAEP      "RSA-OAEP"
 #define WEBCRYPTO_ALG_ECDH          "ECDH"
@@ -181,8 +181,6 @@ MapAlgorithmNameToMechanism(const nsString& aName)
     mechanism = CKM_SHA512;
   } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_PBKDF2)) {
     mechanism = CKM_PKCS5_PBKD2;
-  } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_RSAES_PKCS1)) {
-    mechanism = CKM_RSA_PKCS;
   } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1)) {
     mechanism = CKM_RSA_PKCS;
   } else if (aName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
@@ -194,14 +192,45 @@ MapAlgorithmNameToMechanism(const nsString& aName)
   return mechanism;
 }
 
+#define NORMALIZED_EQUALS(aTest, aConst) \
+        nsContentUtils::EqualsIgnoreASCIICase(aTest, NS_LITERAL_STRING(aConst))
+
 inline bool
-NormalizeNamedCurveValue(const nsString& aNamedCurve, nsString& aDest)
+NormalizeToken(const nsString& aName, nsString& aDest)
 {
-  if (aNamedCurve.EqualsIgnoreCase(WEBCRYPTO_NAMED_CURVE_P256)) {
+  // Algorithm names
+  if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_AES_CBC)) {
+    aDest.AssignLiteral(WEBCRYPTO_ALG_AES_CBC);
+  } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_AES_CTR)) {
+    aDest.AssignLiteral(WEBCRYPTO_ALG_AES_CTR);
+  } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_AES_GCM)) {
+    aDest.AssignLiteral(WEBCRYPTO_ALG_AES_GCM);
+  } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_AES_KW)) {
+    aDest.AssignLiteral(WEBCRYPTO_ALG_AES_KW);
+  } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_SHA1)) {
+    aDest.AssignLiteral(WEBCRYPTO_ALG_SHA1);
+  } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_SHA256)) {
+    aDest.AssignLiteral(WEBCRYPTO_ALG_SHA256);
+  } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_SHA384)) {
+    aDest.AssignLiteral(WEBCRYPTO_ALG_SHA384);
+  } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_SHA512)) {
+    aDest.AssignLiteral(WEBCRYPTO_ALG_SHA512);
+  } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_HMAC)) {
+    aDest.AssignLiteral(WEBCRYPTO_ALG_HMAC);
+  } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_PBKDF2)) {
+    aDest.AssignLiteral(WEBCRYPTO_ALG_PBKDF2);
+  } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_RSASSA_PKCS1)) {
+    aDest.AssignLiteral(WEBCRYPTO_ALG_RSASSA_PKCS1);
+  } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_RSA_OAEP)) {
+    aDest.AssignLiteral(WEBCRYPTO_ALG_RSA_OAEP);
+  } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_ALG_ECDH)) {
+    aDest.AssignLiteral(WEBCRYPTO_ALG_ECDH);
+  // Named curve values
+  } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_NAMED_CURVE_P256)) {
     aDest.AssignLiteral(WEBCRYPTO_NAMED_CURVE_P256);
-  } else if (aNamedCurve.EqualsIgnoreCase(WEBCRYPTO_NAMED_CURVE_P384)) {
+  } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_NAMED_CURVE_P384)) {
     aDest.AssignLiteral(WEBCRYPTO_NAMED_CURVE_P384);
-  } else if (aNamedCurve.EqualsIgnoreCase(WEBCRYPTO_NAMED_CURVE_P521)) {
+  } else if (NORMALIZED_EQUALS(aName, WEBCRYPTO_NAMED_CURVE_P521)) {
     aDest.AssignLiteral(WEBCRYPTO_NAMED_CURVE_P521);
   } else {
     return false;

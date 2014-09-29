@@ -1,0 +1,90 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackgroundIDBTransaction;
+include protocol PBackgroundIDBVersionChangeTransaction;
+include protocol PBlob;
+
+include PBackgroundIDBSharedTypes;
+
+include "mozilla/dom/indexedDB/SerializationHelpers.h";
+
+using struct mozilla::void_t
+  from "ipc/IPCMessageUtils.h";
+
+using class mozilla::dom::indexedDB::Key
+  from "mozilla/dom/indexedDB/Key.h";
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+struct ContinueParams
+{
+  Key key;
+};
+
+struct AdvanceParams
+{
+  uint32_t count;
+};
+
+union CursorRequestParams
+{
+  ContinueParams;
+  AdvanceParams;
+};
+
+struct ObjectStoreCursorResponse
+{
+  Key key;
+  SerializedStructuredCloneReadInfo cloneInfo;
+};
+
+struct ObjectStoreKeyCursorResponse
+{
+  Key key;
+};
+
+struct IndexCursorResponse
+{
+  Key key;
+  Key objectKey;
+  SerializedStructuredCloneReadInfo cloneInfo;
+};
+
+struct IndexKeyCursorResponse
+{
+  Key key;
+  Key objectKey;
+};
+
+union CursorResponse
+{
+  void_t;
+  nsresult;
+  ObjectStoreCursorResponse;
+  ObjectStoreKeyCursorResponse;
+  IndexCursorResponse;
+  IndexKeyCursorResponse;
+};
+
+protocol PBackgroundIDBCursor
+{
+  manager PBackgroundIDBTransaction or PBackgroundIDBVersionChangeTransaction;
+
+parent:
+  DeleteMe();
+
+  Continue(CursorRequestParams params);
+
+child:
+  __delete__();
+
+  Response(CursorResponse response);
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

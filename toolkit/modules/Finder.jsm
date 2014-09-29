@@ -179,12 +179,21 @@ Finder.prototype = {
     return searchString;
   },
 
+  _notifyHighlightFinished: function(aHighlight) {
+    for (let l of this._listeners) {
+      try {
+        l.onHighlightFinished(aHighlight);
+      } catch (ex) {}
+    }
+  },
+
   highlight: Task.async(function* (aHighlight, aWord) {
     if (this._abortHighlight) {
       this._abortHighlight();
     }
 
     let found = yield this._highlight(aHighlight, aWord, null);
+    this._notifyHighlightFinished(aHighlight);
     if (aHighlight) {
       let result = found ? Ci.nsITypeAheadFind.FIND_FOUND
                          : Ci.nsITypeAheadFind.FIND_NOTFOUND;

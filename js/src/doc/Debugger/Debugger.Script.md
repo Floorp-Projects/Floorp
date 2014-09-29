@@ -215,9 +215,12 @@ methods of other kinds of objects.
     and in the compartment containing the handler function (typically the
     debugger's compartment).
 
-    The new breakpoint belongs to the [`Debugger`][debugger-object] instance to which this
-    script belongs; disabling the [`Debugger`][debugger-object] instance disables this
-    breakpoint.
+    The new breakpoint belongs to the [`Debugger`][debugger-object] instance to
+    which this script belongs. Disabling the [`Debugger`][debugger-object]
+    instance disables this breakpoint; and removing a global from the
+    [`Debugger`][debugger-object] instance's set of debuggees clears all the
+    breakpoints belonging to that [`Debugger`][debugger-object] instance in that
+    global's scripts.
 
 <code>getBreakpoints([<i>offset</i>])</code>
 :   Return an array containing the handler objects for all the breakpoints

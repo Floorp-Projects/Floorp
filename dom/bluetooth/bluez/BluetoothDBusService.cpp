@@ -44,6 +44,7 @@
 #include "mozilla/ipc/DBusUtils.h"
 #include "mozilla/ipc/RawDBusConnection.h"
 #include "mozilla/LazyIdleThread.h"
+#include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/NullPtr.h"
 #include "mozilla/StaticMutex.h"

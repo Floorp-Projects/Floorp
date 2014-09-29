@@ -7,39 +7,56 @@
 #include "FileSnapshot.h"
 
 #include "IDBFileHandle.h"
+#include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
-#include "nsDebug.h"
+#include "mozilla/dom/MetadataHelper.h"
+
+#ifdef DEBUG
+#include "nsXULAppAPI.h"
+#endif
 
 namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-NS_IMPL_ISUPPORTS_INHERITED0(FileImplSnapshot, DOMFileImpl)
-
 // Create as a stored file
 FileImplSnapshot::FileImplSnapshot(const nsAString& aName,
                                    const nsAString& aContentType,
-                                   uint64_t aLength, nsIFile* aFile,
+                                   MetadataParameters* aMetadataParams,
+                                   nsIFile* aFile,
                                    IDBFileHandle* aFileHandle,
                                    FileInfo* aFileInfo)
-  : DOMFileImplBase(aName, aContentType, aLength),
-    mFile(aFile), mFileHandle(aFileHandle), mWholeFile(true)
+  : DOMFileImplBase(aName,
+                    aContentType,
+                    aMetadataParams->Size(),
+                    aMetadataParams->LastModified())
+  , mFile(aFile)
+  , mFileHandle(aFileHandle)
+  , mWholeFile(true)
 {
-  MOZ_ASSERT(mFile, "Null file!");
-  MOZ_ASSERT(mFileHandle, "Null file handle!");
+  AssertSanity();
+  MOZ_ASSERT(aMetadataParams);
+  MOZ_ASSERT(aMetadataParams->Size() != UINT64_MAX);
+  MOZ_ASSERT(aMetadataParams->LastModified() != INT64_MAX);
+  MOZ_ASSERT(aFile);
+  MOZ_ASSERT(aFileHandle);
+  MOZ_ASSERT(aFileInfo);
+
   mFileInfos.AppendElement(aFileInfo);
 }
 
 // Create slice
 FileImplSnapshot::FileImplSnapshot(const FileImplSnapshot* aOther,
-                                   uint64_t aStart, uint64_t aLength,
+                                   uint64_t aStart,
+                                   uint64_t aLength,
                                    const nsAString& aContentType)
-  : DOMFileImplBase(aContentType, aOther->mStart + aStart, aLength),
-    mFile(aOther->mFile), mFileHandle(aOther->mFileHandle),
-    mWholeFile(false)
+  : DOMFileImplBase(aContentType, aOther->mStart + aStart, aLength)
+  , mFile(aOther->mFile)
+  , mFileHandle(aOther->mFileHandle)
+  , mWholeFile(false)
 {
-  MOZ_ASSERT(mFile, "Null file!");
-  MOZ_ASSERT(mFileHandle, "Null file handle!");
+  AssertSanity();
+  MOZ_ASSERT(aOther);
 
   FileInfo* fileInfo;
 
@@ -57,9 +74,25 @@ FileImplSnapshot::~FileImplSnapshot()
 {
 }
 
+#ifdef DEBUG
+
+// static
+void
+FileImplSnapshot::AssertSanity()
+{
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  MOZ_ASSERT(NS_IsMainThread());
+}
+
+#endif // DEBUG
+
+NS_IMPL_ISUPPORTS_INHERITED0(FileImplSnapshot, DOMFileImpl)
+
 void
 FileImplSnapshot::Unlink()
 {
+  AssertSanity();
+
   FileImplSnapshot* tmp = this;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFileHandle);
 }
@@ -67,41 +100,78 @@ FileImplSnapshot::Unlink()
 void
 FileImplSnapshot::Traverse(nsCycleCollectionTraversalCallback &cb)
 {
+  AssertSanity();
+
   FileImplSnapshot* tmp = this;
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFileHandle);
+}
+
+bool
+FileImplSnapshot::IsCCed() const
+{
+  AssertSanity();
+
+  return true;
 }
 
 nsresult
 FileImplSnapshot::GetInternalStream(nsIInputStream** aStream)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  AssertSanity();
 
   nsresult rv = mFileHandle->OpenInputStream(mWholeFile, mStart, mLength,
                                              aStream);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   return NS_OK;
 }
 
-already_AddRefed<nsIDOMBlob>
-FileImplSnapshot::CreateSlice(uint64_t aStart, uint64_t aLength,
+already_AddRefed<DOMFileImpl>
+FileImplSnapshot::CreateSlice(uint64_t aStart,
+                              uint64_t aLength,
                               const nsAString& aContentType)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  AssertSanity();
 
-  nsCOMPtr<nsIDOMBlob> t =
-    new DOMFile(new FileImplSnapshot(this, aStart, aLength, aContentType));
+  nsRefPtr<DOMFileImpl> impl =
+    new FileImplSnapshot(this, aStart, aLength, aContentType);
 
-  return t.forget();
+  return impl.forget();
 }
 
 nsresult
 FileImplSnapshot::GetMozFullPathInternal(nsAString& aFilename)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(mIsFile, "Should only be called on files");
+  AssertSanity();
+  MOZ_ASSERT(mIsFile);
 
   return mFile->GetPath(aFilename);
+}
+
+bool
+FileImplSnapshot::IsStoredFile() const
+{
+  AssertSanity();
+
+  return true;
+}
+
+bool
+FileImplSnapshot::IsWholeFile() const
+{
+  AssertSanity();
+
+  return mWholeFile;
+}
+
+bool
+FileImplSnapshot::IsSnapshot() const
+{
+  AssertSanity();
+
+  return true;
 }
 
 } // namespace indexedDB
