@@ -4335,12 +4335,6 @@ JS::ReadOnlyCompileOptions::copyPODOptions(const ReadOnlyCompileOptions &rhs)
     hasIntroductionInfo = rhs.hasIntroductionInfo;
 }
 
-JSPrincipals *
-JS::ReadOnlyCompileOptions::originPrincipals(ExclusiveContext *cx) const
-{
-    return NormalizeOriginPrincipals(cx->compartment()->principals, originPrincipals_);
-}
-
 JS::OwningCompileOptions::OwningCompileOptions(JSContext *cx)
     : ReadOnlyCompileOptions(),
       runtime(GetRuntime(cx)),
@@ -4352,9 +4346,6 @@ JS::OwningCompileOptions::OwningCompileOptions(JSContext *cx)
 
 JS::OwningCompileOptions::~OwningCompileOptions()
 {
-    if (originPrincipals_)
-        JS_DropPrincipals(runtime, originPrincipals_);
-
     // OwningCompileOptions always owns these, so these casts are okay.
     js_free(const_cast<char *>(filename_));
     js_free(const_cast<char16_t *>(sourceMapURL_));
@@ -4366,7 +4357,7 @@ JS::OwningCompileOptions::copy(JSContext *cx, const ReadOnlyCompileOptions &rhs)
 {
     copyPODOptions(rhs);
 
-    setOriginPrincipals(rhs.originPrincipals(cx));
+    setMutedErrors(rhs.mutedErrors());
     setElement(rhs.element());
     setElementAttributeName(rhs.elementAttributeName());
     setIntroductionScript(rhs.introductionScript());
@@ -6504,10 +6495,9 @@ JS_EncodeInterpretedFunction(JSContext *cx, HandleObject funobjArg, uint32_t *le
 }
 
 JS_PUBLIC_API(JSScript *)
-JS_DecodeScript(JSContext *cx, const void *data, uint32_t length,
-                JSPrincipals *originPrincipals)
+JS_DecodeScript(JSContext *cx, const void *data, uint32_t length)
 {
-    XDRDecoder decoder(cx, data, length, originPrincipals);
+    XDRDecoder decoder(cx, data, length);
     RootedScript script(cx);
     if (!decoder.codeScript(&script))
         return nullptr;
@@ -6515,10 +6505,9 @@ JS_DecodeScript(JSContext *cx, const void *data, uint32_t length,
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length,
-                             JSPrincipals *originPrincipals)
+JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length)
 {
-    XDRDecoder decoder(cx, data, length, originPrincipals);
+    XDRDecoder decoder(cx, data, length);
     RootedObject funobj(cx);
     if (!decoder.codeFunction(&funobj))
         return nullptr;

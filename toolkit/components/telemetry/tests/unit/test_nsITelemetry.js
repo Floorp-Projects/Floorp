@@ -151,7 +151,7 @@ function test_flag_histogram()
   var h = Telemetry.newHistogram("test::flag histogram", "never", 130, 4, 5, Telemetry.HISTOGRAM_FLAG);
   var r = h.snapshot().ranges;
   // Flag histograms ignore numeric parameters.
-  do_check_eq(uneval(r), uneval([0, 1, 2]))
+  do_check_eq(uneval(r), uneval([0, 1, 2]));
   // Should already have a 0 counted.
   var c = h.snapshot().counts;
   var s = h.snapshot().sum;
@@ -170,6 +170,23 @@ function test_flag_histogram()
   do_check_eq(uneval(c3), uneval([0, 1, 0]));
   do_check_eq(s3, 1);
   do_check_eq(h.snapshot().histogram_type, Telemetry.HISTOGRAM_FLAG);
+}
+
+function test_count_histogram()
+{
+  let h = Telemetry.newHistogram("test::count histogram", "never", 1, 2, 3, Telemetry.HISTOGRAM_COUNT);
+  let s = h.snapshot();
+  do_check_eq(uneval(s.ranges), uneval([0, 1, 2]));
+  do_check_eq(uneval(s.counts), uneval([0, 0, 0]));
+  do_check_eq(s.sum, 0);
+  h.add();
+  s = h.snapshot();
+  do_check_eq(uneval(s.counts), uneval([1, 0, 0]));
+  do_check_eq(s.sum, 1);
+  h.add();
+  s = h.snapshot();
+  do_check_eq(uneval(s.counts), uneval([2, 0, 0]));
+  do_check_eq(s.sum, 2);
 }
 
 function test_getHistogramById() {
@@ -217,7 +234,8 @@ function test_histogramFrom() {
       "CYCLE_COLLECTOR",      // EXPONENTIAL
       "GC_REASON_2",          // LINEAR
       "GC_RESET",             // BOOLEAN
-      "TELEMETRY_TEST_FLAG"   // FLAG
+      "TELEMETRY_TEST_FLAG",  // FLAG
+      "TELEMETRY_TEST_COUNT", // COUNT
   ];
 
   for each (let name in names) {
@@ -227,11 +245,16 @@ function test_histogramFrom() {
     compareHistograms(original, clone);
   }
 
-  // Additionally, set the flag on TELEMETRY_TEST_FLAG, and check it gets set on the clone.
+  // Additionally, set TELEMETRY_TEST_FLAG and TELEMETRY_TEST_COUNT
+  // and check they get set on the clone.
   let testFlag = Telemetry.getHistogramById("TELEMETRY_TEST_FLAG");
   testFlag.add(1);
+  let testCount = Telemetry.getHistogramById("TELEMETRY_TEST_COUNT");
+  testCount.add();
   let clone = Telemetry.histogramFrom("FlagClone", "TELEMETRY_TEST_FLAG");
   compareHistograms(testFlag, clone);
+  clone = Telemetry.histogramFrom("CountClone", "TELEMETRY_TEST_COUNT");
+  compareHistograms(testCount, clone);
 }
 
 function test_getSlowSQL() {
@@ -379,6 +402,7 @@ function run_test()
 
   test_boolean_histogram();
   test_flag_histogram();
+  test_count_histogram();
   test_getHistogramById();
   test_histogramFrom();
   test_getSlowSQL();

@@ -303,7 +303,7 @@ class Descriptor(DescriptorProvider):
         self.concrete = (not self.interface.isExternal() and
                          not self.interface.isCallback() and
                          desc.get('concrete', True))
-        operations = {
+        self.operations = {
             'IndexedGetter': None,
             'IndexedSetter': None,
             'IndexedCreator': None,
@@ -320,8 +320,8 @@ class Descriptor(DescriptorProvider):
             self.proxy = False
             iface = self.interface
             def addOperation(operation, m):
-                if not operations[operation]:
-                    operations[operation] = m
+                if not self.operations[operation]:
+                    self.operations[operation] = m
             # Since stringifiers go on the prototype, we only need to worry
             # about our own stringifier, not those of our ancestor interfaces.
             for m in iface.members:
@@ -345,7 +345,6 @@ class Descriptor(DescriptorProvider):
                         continue
 
                     def addIndexedOrNamedOperation(operation, m):
-                        self.proxy = True
                         if m.isIndexed():
                             operation = 'Indexed' + operation
                         else:
@@ -369,18 +368,22 @@ class Descriptor(DescriptorProvider):
                 iface.setUserData('hasConcreteDescendant', True)
                 iface = iface.parent
 
+            self.proxy = (self.supportsIndexedProperties() or
+                          (self.supportsNamedProperties() and
+                           not self.hasNamedPropertiesObject))
+
             if self.proxy:
-                if (not operations['IndexedGetter'] and
-                    (operations['IndexedSetter'] or
-                     operations['IndexedDeleter'] or
-                     operations['IndexedCreator'])):
+                if (not self.operations['IndexedGetter'] and
+                    (self.operations['IndexedSetter'] or
+                     self.operations['IndexedDeleter'] or
+                     self.operations['IndexedCreator'])):
                     raise SyntaxError("%s supports indexed properties but does "
                                       "not have an indexed getter.\n%s" %
                                       (self.interface, self.interface.location))
-                if (not operations['NamedGetter'] and
-                    (operations['NamedSetter'] or
-                     operations['NamedDeleter'] or
-                     operations['NamedCreator'])):
+                if (not self.operations['NamedGetter'] and
+                    (self.operations['NamedSetter'] or
+                     self.operations['NamedDeleter'] or
+                     self.operations['NamedCreator'])):
                     raise SyntaxError("%s supports named properties but does "
                                       "not have a named getter.\n%s" %
                                       (self.interface, self.interface.location))
@@ -388,7 +391,6 @@ class Descriptor(DescriptorProvider):
                 while iface:
                     iface.setUserData('hasProxyDescendant', True)
                     iface = iface.parent
-        self.operations = operations
 
         self.nativeOwnership = desc.get('nativeOwnership', 'refcounted')
         if not self.nativeOwnership in ('owned', 'refcounted'):
@@ -511,6 +513,16 @@ class Descriptor(DescriptorProvider):
     def binaryNameFor(self, name):
         return self._binaryNames.get(name, name)
 
+    @property
+    def prototypeNameChain(self):
+        return map(lambda p: self.getDescriptor(p).name, self.prototypeChain)
+
+    @property
+    def parentPrototypeName(self):
+        if len(self.prototypeChain) == 1:
+            return None
+        return self.getDescriptor(self.prototypeChain[-2]).name
+
     def hasInterfaceOrInterfacePrototypeObject(self):
 
         # Forward-declared interfaces don't need either interface object or
@@ -520,6 +532,13 @@ class Descriptor(DescriptorProvider):
             return False
 
         return self.interface.hasInterfaceObject() or self.interface.hasInterfacePrototypeObject()
+
+    @property
+    def hasNamedPropertiesObject(self):
+        if self.interface.isExternal():
+            return False
+
+        return self.isGlobal() and self.supportsNamedProperties()
 
     def getExtendedAttributes(self, member, getter=False, setter=False):
         def ensureValidThrowsExtendedAttribute(attr):

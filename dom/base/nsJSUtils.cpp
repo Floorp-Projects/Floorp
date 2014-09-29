@@ -28,6 +28,10 @@
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
 
+#include "mozilla/dom/ScriptSettings.h"
+
+using namespace mozilla::dom;
+
 bool
 nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
                               uint32_t* aLineno)
@@ -120,7 +124,7 @@ nsJSUtils::ReportPendingException(JSContext *aContext)
 }
 
 nsresult
-nsJSUtils::CompileFunction(JSContext* aCx,
+nsJSUtils::CompileFunction(AutoJSAPI& jsapi,
                            JS::Handle<JSObject*> aTarget,
                            JS::CompileOptions& aOptions,
                            const nsACString& aName,
@@ -129,10 +133,12 @@ nsJSUtils::CompileFunction(JSContext* aCx,
                            const nsAString& aBody,
                            JSObject** aFunctionObject)
 {
-  MOZ_ASSERT(js::GetEnterCompartmentDepth(aCx) > 0);
-  MOZ_ASSERT_IF(aTarget, js::IsObjectInContextCompartment(aTarget, aCx));
+  MOZ_ASSERT(jsapi.OwnsErrorReporting());
+  JSContext* cx = jsapi.cx();
+  MOZ_ASSERT(js::GetEnterCompartmentDepth(cx) > 0);
+  MOZ_ASSERT_IF(aTarget, js::IsObjectInContextCompartment(aTarget, cx));
   MOZ_ASSERT_IF(aOptions.versionSet, aOptions.version != JSVERSION_UNKNOWN);
-  mozilla::DebugOnly<nsIScriptContext*> ctx = GetScriptContextFromJSContext(aCx);
+  mozilla::DebugOnly<nsIScriptContext*> ctx = GetScriptContextFromJSContext(cx);
   MOZ_ASSERT_IF(ctx, ctx->IsContextInitialized());
 
   // Do the junk Gecko is supposed to do before calling into JSAPI.
@@ -141,14 +147,13 @@ nsJSUtils::CompileFunction(JSContext* aCx,
   }
 
   // Compile.
-  JS::Rooted<JSFunction*> fun(aCx);
-  if (!JS::CompileFunction(aCx, aTarget, aOptions,
+  JS::Rooted<JSFunction*> fun(cx);
+  if (!JS::CompileFunction(cx, aTarget, aOptions,
                            PromiseFlatCString(aName).get(),
                            aArgCount, aArgArray,
                            PromiseFlatString(aBody).get(),
                            aBody.Length(), &fun))
   {
-    ReportPendingException(aCx);
     return NS_ERROR_FAILURE;
   }
 

@@ -75,8 +75,24 @@ foreignObject {
   opacity: inherit;
 }
 
-/* nsDocumentViewer::CreateStyleSet doesn't load ua.css for SVG-as-an-image,
- * but SVG-as-an-image needs this rule from that file.
+/* nsDocumentViewer::CreateStyleSet doesn't load ua.css.
+ * A few styles are common to html and SVG though
+ * so we copy the rules below from that file.
+ */
+
+/* Links */
+
+*|*:-moz-any-link {
+  cursor: pointer;
+}
+
+*|*:-moz-any-link:-moz-focusring {
+  /* Don't specify the outline-color, we should always use initial value. */
+  outline: 1px dotted;
+}
+
+/*
+ * SVG-as-an-image needs this rule
  */
 *|*::-moz-viewport, *|*::-moz-viewport-scroll, *|*::-moz-canvas, *|*::-moz-scrolled-canvas {
   display: block !important;

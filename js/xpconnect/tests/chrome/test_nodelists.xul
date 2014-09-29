@@ -21,17 +21,27 @@
         var win = $('ifr').contentWindow;
         var list = win.document.getElementsByTagName('p');
         is(list.length, 3, "can get the length");
-        ok(list[0].toString().indexOf("[object HTMLParagraphElement") >= 0, "can get list[0]");
+        ok(list[0] instanceof HTMLParagraphElement, "can get list[0]");
         is(list[0], list.item(0), "list.item works");
         is(list.item, list.item, "don't recreate functions for each get");
 
         var list2 = list[2];
-        ok(list[2].toString().indexOf("[object HTMLParagraphElement") >= 0, "list[2] exists");
+        ok(list[2] instanceof HTMLParagraphElement, "list[2] exists");
         ok("2" in list, "in operator works");
 
         is(win.document.body.removeChild(win.document.body.lastChild), list2, "remove last paragraph element");
         ok(!("2" in list), "in operator doesn't see phantom element");
         is(list[2], undefined, "no node there!");
+
+        var optionList = win.document.createElement("select").options;
+        var option = win.document.createElement("option");
+        optionList[0] = option;
+        is(optionList.item(0), option, "Creators work");
+
+        option = win.document.createElement("option");
+        optionList[0] = option;
+        is(optionList.item(0), option, "Setters work");
+
         SimpleTest.finish();
       }
   ]]></script>

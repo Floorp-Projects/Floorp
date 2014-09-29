@@ -9,6 +9,7 @@ include protocol PBackground;
 include protocol PBlob;
 include protocol PBluetooth;
 include protocol PBrowser;
+include protocol PCellBroadcast;
 include protocol PCompositor;
 include protocol PContentBridge;
 include protocol PCycleCollectWithLogs;
@@ -39,6 +40,11 @@ include InputStreamParams;
 include PTabContext;
 include URIParams;
 include ProtocolTypes;
+
+// Workaround to prevent error if PContentChild.cpp & PContentBridgeParent.cpp
+// are put into different UnifiedProtocolsXX.cpp files.
+// XXX Remove this once bug 1069073 is fixed
+include "mozilla/dom/PContentBridgeParent.h";
 
 include "mozilla/dom/indexedDB/SerializationHelpers.h";
 
@@ -323,6 +329,7 @@ intr protocol PContent
     manages PBlob;
     manages PBluetooth;
     manages PBrowser;
+    manages PCellBroadcast;
     manages PCrashReporter;
     manages PCycleCollectWithLogs;
     manages PDeviceStorageRequest;
@@ -532,6 +539,8 @@ parent:
                  float systemDefaultScale,
                  bool success);
 
+    PCellBroadcast();
+
     PSms();
 
     PSpeechSynthesis();
@@ -582,11 +591,11 @@ parent:
 
     CloseAlert(nsString name, Principal principal);
 
-    PExternalHelperApp(OptionalURIParams uri, 
+    PExternalHelperApp(OptionalURIParams uri,
                        nsCString aMimeContentType,
-                       nsCString aContentDisposition, 
-                       uint32_t aContentDispositionHint, 
-                       nsString aContentDispositionFilename, 
+                       nsCString aContentDisposition,
+                       uint32_t aContentDispositionHint,
+                       nsString aContentDispositionFilename,
                        bool aForceSave,
                        int64_t aContentLength,
                        OptionalURIParams aReferrer,
@@ -599,7 +608,7 @@ parent:
     ConsoleMessage(nsString message);
     ScriptError(nsString message, nsString sourceName, nsString sourceLine,
                 uint32_t lineNumber, uint32_t colNumber, uint32_t flags,
-                nsCString category); 
+                nsCString category);
 
     // nsIPermissionManager messages
     sync ReadPermissions() returns (Permission[] permissions);

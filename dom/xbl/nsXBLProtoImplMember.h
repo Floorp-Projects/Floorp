@@ -80,7 +80,7 @@ public:
 
   virtual nsresult InstallMember(JSContext* aCx,
                                  JS::Handle<JSObject*> aTargetClassObject) = 0;
-  virtual nsresult CompileMember(const nsCString& aClassStr,
+  virtual nsresult CompileMember(mozilla::dom::AutoJSAPI& jsapi, const nsCString& aClassStr,
                                  JS::Handle<JSObject*> aClassObject) = 0;
 
   virtual void Trace(const TraceCallbacks& aCallbacks, void *aClosure) = 0;

@@ -1736,8 +1736,6 @@ random-if(Android&&AndroidVersion<15) == 776265-1a.html 776265-1-ref.html
 == 796847-1.svg 796847-1-ref.svg
 fuzzy(40,850) fuzzy-if(azureQuartz,73,542) == 797797-1.html 797797-1-ref.html # 'opacity:N' and rgba(,,,N) text don't match precisely
 fuzzy(40,850) fuzzy-if(azureQuartz,68,586) == 797797-2.html 797797-2-ref.html # 'opacity:N' and rgba(,,,N) text don't match precisely
-== 801681-1.html 801681-1-ref.html
-== 801681-2.html 801681-2-ref.html
 == 801994-1.html 801994-1-ref.html
 == 804323-1.html 804323-1-ref.html
 fuzzy-if(Android,8,608) == 811301-1.html 811301-1-ref.html
