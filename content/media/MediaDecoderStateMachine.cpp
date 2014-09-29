@@ -1154,9 +1154,9 @@ void MediaDecoderStateMachine::StartPlayback()
   SetPlayStartTime(TimeStamp::Now());
 
   NS_ASSERTION(IsPlaying(), "Should report playing by end of StartPlayback()");
-  if (NS_FAILED(StartAudioThread())) {
-    DECODER_WARN("Failed to create audio thread");
-  }
+  nsresult rv = StartAudioThread();
+  NS_ENSURE_SUCCESS_VOID(rv);
+
   mDecoder->GetReentrantMonitor().NotifyAll();
   mDecoder->UpdateStreamBlockingForStateMachinePlaying();
   DispatchDecodeTasksIfNeeded();
@@ -1791,15 +1791,12 @@ MediaDecoderStateMachine::StartAudioThread()
   mStopAudioThread = false;
   if (HasAudio() && !mAudioSink) {
     mAudioCompleted = false;
-    mAudioSink = new AudioSink(this,
-                               mAudioStartTime, mInfo.mAudio, mDecoder->GetAudioChannel());
+    mAudioSink = new AudioSink(this, mAudioStartTime,
+                               mInfo.mAudio, mDecoder->GetAudioChannel());
+    // OnAudioSinkError() will be called before Init() returns if an error
+    // occurs during initialization.
     nsresult rv = mAudioSink->Init();
-    if (NS_FAILED(rv)) {
-      DECODER_WARN("Changed state to SHUTDOWN because audio sink initialization failed");
-      SetState(DECODER_STATE_SHUTDOWN);
-      mScheduler->ScheduleAndShutdown();
-      return rv;
-    }
+    NS_ENSURE_SUCCESS(rv, rv);
 
     mAudioSink->SetVolume(mVolume);
     mAudioSink->SetPlaybackRate(mPlaybackRate);
@@ -3122,6 +3119,25 @@ void MediaDecoderStateMachine::OnAudioSinkComplete()
   UpdateReadyState();
   // Kick the decode thread; it may be sleeping waiting for this to finish.
   mDecoder->GetReentrantMonitor().NotifyAll();
+}
+
+void MediaDecoderStateMachine::OnAudioSinkError()
+{
+  AssertCurrentThreadInMonitor();
+  // AudioSink not used with captured streams, so ignore errors in this case.
+  if (mAudioCaptured) {
+    return;
+  }
+
+  mAudioCompleted = true;
+
+  // Notify media decoder/element about this error.
+  RefPtr<nsIRunnable> task(
+    NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnDecodeError));
+  nsresult rv = mDecodeTaskQueue->Dispatch(task);
+  if (NS_FAILED(rv)) {
+    DECODER_WARN("Failed to dispatch OnDecodeError");
+  }
 }
 
 } // namespace mozilla
