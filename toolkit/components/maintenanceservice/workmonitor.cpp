@@ -125,8 +125,7 @@ static bool
 IsOldCommandline(int argc, LPWSTR *argv)
 {
   return argc == 4 && !wcscmp(argv[3], L"-1") ||
-         !wcscmp(argv[3], L"0/replace") ||
-         IsDigits(argv[3]);
+         argc >= 4 && (wcsstr(argv[3], L"/replace") || IsDigits(argv[3]));
 }
 
 /**
@@ -411,7 +410,8 @@ ProcessSoftwareUpdateCommand(DWORD argc, LPWSTR *argv)
   }
 
   if (result && !updaterIsCorrect) {
-    LOG_WARN(("The updaters do not match, updater will not run."));
+    LOG_WARN(("The updaters do not match, updater will not run.\n"
+              "Path 1: %ls\nPath 2: %ls", argv[0], installDirUpdater));
     result = FALSE;
   }
 
