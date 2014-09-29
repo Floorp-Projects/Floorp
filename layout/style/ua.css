@@ -99,6 +99,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* SVG documents don't always load this file but they do have links.
+ * If you change the link rules, consider carefully whether to make
+ * the same changes to svg.css.
+ */
+
 /* Links */
 
 *|*:-moz-any-link {
