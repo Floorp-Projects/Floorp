@@ -2678,12 +2678,12 @@ int NS_main(int argc, NS_tchar **argv)
         }
       }
 
-      // If we didn't want to use the service at all, or if an update was 
-      // already happening, or launching the service command failed, then 
+      // If we didn't want to use the service at all, or if an update was
+      // already happening, or launching the service command failed, then
       // launch the elevated updater.exe as we do without the service.
       // We don't launch the elevated updater in the case that we did have
       // write access all along because in that case the only reason we're
-      // using the service is because we are testing. 
+      // using the service is because we are testing.
       if (!useService && !noServiceFallback &&
           updateLockFileHandle == INVALID_HANDLE_VALUE) {
         SHELLEXECUTEINFO sinfo;
@@ -3019,6 +3019,40 @@ int NS_main(int argc, NS_tchar **argv)
 #if defined(MOZ_WIDGET_GONK)
   } // end the extra level of scope for the GonkAutoMounter
 #endif
+
+#ifdef XP_MACOSX
+  // When the update is successful move the distribution directory from
+  // Contents/MacOS to Contents/Resources and if both exist delete the
+  // directory under Contents/MacOS (see Bug 1068439).
+  if (gSucceeded) {
+    NS_tchar oldDistDir[MAXPATHLEN];
+    NS_tsnprintf(oldDistDir, sizeof(oldDistDir)/sizeof(oldDistDir[0]),
+                 NS_T("%s/Contents/MacOS/distribution"), gInstallDirPath);
+    int rv = NS_taccess(oldDistDir, F_OK);
+    if (!rv) {
+      NS_tchar newDistDir[MAXPATHLEN];
+      NS_tsnprintf(newDistDir, sizeof(newDistDir)/sizeof(newDistDir[0]),
+                   NS_T("%s/Contents/Resources/distribution"), gInstallDirPath);
+      rv = NS_taccess(newDistDir, F_OK);
+      if (!rv) {
+        LOG(("New distribution directory already exists... removing old " \
+             "distribution directory: " LOG_S, oldDistDir));
+        rv = ensure_remove_recursive(oldDistDir);
+        if (rv) {
+          LOG(("Removing old distribution directory failed - err: %d", rv));
+        }
+      } else {
+        LOG(("Moving old distribution directory to new location. src: " LOG_S \
+             ", dst:" LOG_S, oldDistDir, newDistDir));
+        rv = rename_file(oldDistDir, newDistDir, true);
+        if (rv) {
+          LOG(("Moving old distribution directory to new location failed - " \
+               "err: %d", rv));
+        }
+      }
+    }
+  }
+#endif /* XP_MACOSX */
 
   LogFinish();
 
