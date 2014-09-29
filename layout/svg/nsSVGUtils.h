@@ -536,13 +536,6 @@ public:
   static void SetupCairoStrokeGeometry(nsIFrame* aFrame, gfxContext *aContext,
                                        gfxTextContextPaint *aContextPaint = nullptr);
 
-  /*
-   * Set up a cairo context for stroking, including setting up any stroke-related
-   * properties such as dashing and setting the current paint on the gfxContext.
-   */
-  static bool SetupCairoStroke(nsIFrame* aFrame, gfxContext *aContext,
-                               gfxTextContextPaint *aContextPaint = nullptr);
-
   /**
    * This function returns a set of bit flags indicating which parts of the
    * element (fill, stroke, bounds) should intercept pointer events. It takes
