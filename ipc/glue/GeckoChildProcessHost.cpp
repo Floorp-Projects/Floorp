@@ -550,7 +550,17 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   if (ShouldHaveDirectoryService()) {
     MOZ_ASSERT(gGREPath);
     nsCString path;
+#ifdef MOZ_WIDGET_COCOA
+    nsCOMPtr<nsIFile> grePath;
+    nsCOMPtr<nsIFile> tempPath;
+    NS_NewLocalFile(nsDependentString(gGREPath), false,
+                    getter_AddRefs(grePath));
+    grePath->GetParent(getter_AddRefs(tempPath));
+    tempPath->AppendNative(NS_LITERAL_CSTRING("MacOS"));
+    tempPath->GetNativePath(path);
+#else
     NS_CopyUnicodeToNative(nsDependentString(gGREPath), path);
+#endif
 # if defined(OS_LINUX) || defined(OS_BSD)
 #  if defined(MOZ_WIDGET_ANDROID)
     path += "/lib";
