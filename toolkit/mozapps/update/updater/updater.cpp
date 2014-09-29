@@ -2227,19 +2227,21 @@ int NS_main(int argc, NS_tchar **argv)
   InitProgressUI(&argc, &argv);
 
   // To process an update the updater command line must at a minimum have the
-  // directory path containing the updater.mar file to process as the first argument
-  // and the directory to apply the update to as the second argument. When the
-  // updater is launched by another process the PID of the parent process should be
-  // provided in the optional third argument and the updater will wait on the parent
-  // process to exit if the value is non-zero and the process is present. This is
-  // necessary due to not being able to update files that are in use on Windows. The
-  // optional fourth argument is the callback's working directory and the optional
-  // fifth argument is the callback path. The callback is the application to launch
-  // after  updating and it will be launched when these arguments are provided
-  // whether the update was successful or not. All remaining arguments are optional
-  // and are passed to the callback when it is launched.
-  if (argc < 3) {
-    fprintf(stderr, "Usage: updater update-dir apply-to-dir [wait-pid [callback-working-dir callback-path args...]]\n");
+  // directory path containing the updater.mar file to process as the first
+  // argument, the install directory as the second argument, and the directory
+  // to apply the update to as the third argument. When the updater is launched
+  // by another process the PID of the parent process should be provided in the
+  // optional fourth argument and the updater will wait on the parent process to
+  // exit if the value is non-zero and the process is present. This is necessary
+  // due to not being able to update files that are in use on Windows. The
+  // optional fifth argument is the callback's working directory and the
+  // optional sixth argument is the callback path. The callback is the
+  // application to launch after updating and it will be launched when these
+  // arguments are provided whether the update was successful or not. All
+  // remaining arguments are optional and are passed to the callback when it is
+  // launched.
+  if (argc < 4) {
+    fprintf(stderr, "Usage: updater patch-dir install-dir apply-to-dir [wait-pid [callback-working-dir callback-path args...]]\n");
     return 1;
   }
 
