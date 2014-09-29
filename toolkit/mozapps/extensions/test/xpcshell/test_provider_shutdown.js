@@ -27,7 +27,7 @@ function mockAddonProvider(aName) {
   };
   mockProvider.donePromise = new Promise((resolve, reject) => {
     mockProvider.doneResolve = resolve;
-    mockProvider.doneResject = reject;
+    mockProvider.doneReject = reject;
   });
   mockProvider.shutdownPromise = new Promise((resolve, reject) => {
     mockProvider.shutdownResolve = resolve;
@@ -81,7 +81,6 @@ add_task(function* blockRepoShutdown() {
   yield mockRepo.shutdownPromise;
   // Check the shutdown state
   status = MockAsyncShutdown.status();
-  do_print(JSON.stringify(status));
   equal(status[0].name, "AddonManager: Waiting for providers to shut down.");
   equal(status[0].state, "Complete");
   equal(status[1].name, "AddonRepository: async shutdown");
