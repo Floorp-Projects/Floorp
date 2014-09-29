@@ -1,0 +1,158 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=787070
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 787070</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=787070">Mozilla Bug 787070</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe id="t" src="http://example.org/tests/dom/bindings/test/file_dom_xrays.html"></iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1021066 **/
+
+var Cu = Components.utils;
+
+// values should contain the values that the property should have on each of
+// the objects on the prototype chain of obj. A value of undefined signals
+// that the value should not be present on that prototype.
+function checkXrayProperty(obj, name, values)
+{
+  var instance = obj;
+  do {
+    var value = values.shift();
+    if (typeof value == "undefined") {
+      ok(!obj.hasOwnProperty(name), "hasOwnProperty shouldn't see \"" + name + "\" through Xrays");
+      ise(Object.getOwnPropertyDescriptor(obj, name), undefined, "getOwnPropertyDescriptor shouldn't see \"" + name + "\" through Xrays");
+      ok(Object.keys(obj).indexOf(name) == -1, "Enumerating the Xray should not return \"" + name + "\"");
+    } else {
+      ok(obj.hasOwnProperty(name), "hasOwnProperty should see \"" + name + "\" through Xrays");
+      var pd = Object.getOwnPropertyDescriptor(obj, name);
+      ok(pd, "getOwnPropertyDescriptor should see \"" + name + "\" through Xrays");
+      if (pd && pd.get) {
+        is(pd.get.call(instance), value, "Should get the right value for \"" + name + "\" through Xrays");
+      } else {
+        is(obj[name], value, "Should get the right value for \"" + name + "\" through Xrays");
+      }
+      if (pd && pd.enumerable) {
+        ok(Object.keys(obj).indexOf("" + name) > -1, "Enumerating the Xray should return \"" + name + "\"");
+      }
+    }
+  } while ((obj = Object.getPrototypeOf(obj)));
+}
+
+function checkWindowXrayProperty(obj, name, windowValue, windowPrototypeValue, namedPropertiesValue, eventTargetValue)
+{
+  checkXrayProperty(obj, name, [ windowValue, windowPrototypeValue, namedPropertiesValue, eventTargetValue ]);
+}
+
+function test()
+{
+  // Window
+  var win = document.getElementById("t").contentWindow;
+  var doc = document.getElementById("t").contentDocument;
+
+  var winProto = Object.getPrototypeOf(win);
+  ise(winProto, win.Window.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+
+  var namedPropertiesObject = Object.getPrototypeOf(winProto);
+  ise(Cu.getClassName(namedPropertiesObject, /* unwrap = */ true), "WindowProperties", "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+
+  var eventTargetProto = Object.getPrototypeOf(namedPropertiesObject);
+  ise(eventTargetProto, win.EventTarget.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+
+  // Xrays need to filter expandos.
+  checkWindowXrayProperty(win, "expando", undefined);
+  ok(!("expando" in win), "Xrays should filter expandos");
+
+  checkWindowXrayProperty(win, "shadowedIframe", undefined, undefined, doc.getElementById("shadowedIframe").contentWindow);
+  ok("shadowedIframe" in win, "Named properties should be exposed through Xrays");
+
+  // Named properties live on the named properties object for global objects.
+  checkWindowXrayProperty(win, "iframe", undefined, undefined, doc.getElementById("iframe").contentWindow);
+  ok("iframe" in win, "Named properties should be exposed through Xrays");
+
+  // Window properties live on the instance, shadowing the properties of the named property object.
+  checkWindowXrayProperty(win, "document", doc, undefined, doc.getElementById("document").contentWindow);
+  ok("document" in win, "WebIDL properties should be exposed through Xrays");
+
+  // Unforgeable properties live on the instance, shadowing the properties of the named property object.
+  checkWindowXrayProperty(win, "self", win, undefined, doc.getElementById("self").contentWindow);
+  ok("self" in win, "WebIDL properties should be exposed through Xrays");
+
+  // Object.prototype is at the end of the prototype chain.
+  var obj = win;
+  while ((proto = Object.getPrototypeOf(obj))) {
+    obj = proto;
+  }
+  ise(obj, win.Object.prototype, "Object.prototype should be at the end of the prototype chain");
+
+  // Named properties shouldn't shadow WebIDL- or ECMAScript-defined properties.
+  checkWindowXrayProperty(win, "addEventListener", undefined, undefined, undefined, eventTargetProto.addEventListener);
+  ise(win.addEventListener, eventTargetProto.addEventListener, "Named properties shouldn't shadow WebIDL-defined properties");
+
+  ise(win.toString, win.Object.prototype.toString, "Named properties shouldn't shadow ECMAScript-defined properties");
+
+  // HTMLDocument
+  // Unforgeable properties live on the instance.
+  checkXrayProperty(doc, "location", [ document.getElementById("t").src ]);
+
+  // HTMLHtmlElement
+  var elem = doc.documentElement;
+
+  var elemProto = Object.getPrototypeOf(elem);
+  ise(elemProto, win.HTMLHtmlElement.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+
+  elemProto = Object.getPrototypeOf(elemProto);
+  ise(elemProto, win.HTMLElement.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+
+  elemProto = Object.getPrototypeOf(elemProto);
+  ise(elemProto, win.Element.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+
+  elemProto = Object.getPrototypeOf(elemProto);
+  ise(elemProto, win.Node.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+
+  elemProto = Object.getPrototypeOf(elemProto);
+  ise(elemProto, win.EventTarget.prototype, "The proto chain of the Xray should mirror the prototype chain of the Xrayed object");
+
+  // Xrays need to filter expandos.
+  ok(!("expando" in elem), "Xrays should filter expandos");
+
+  // WebIDL-defined properties live on the prototype.
+  checkXrayProperty(elem, "version", [ undefined, "" ]);
+  ise(elem.version, "", "WebIDL properties should be exposed through Xrays");
+
+  // HTMLCollection
+  var coll = doc.getElementsByTagName("iframe");
+
+  // Named properties live on the instance for non-global objects.
+  checkXrayProperty(coll, "iframe", [ doc.getElementById("iframe") ]);
+
+  // Indexed properties live on the instance.
+  checkXrayProperty(coll, 0, [ doc.getElementById("shadowedIframe") ]);
+
+  // WebIDL-defined properties live on the prototype, overriding any named properties.
+  checkXrayProperty(coll, "item", [ undefined, win.HTMLCollection.prototype.item ]);
+
+  // ECMAScript-defined properties live on the prototype, overriding any named properties.
+  checkXrayProperty(coll, "toString", [ undefined, undefined, win.Object.prototype.toString ]);
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(test);
+
+</script>
+</pre>
+</body>
+</html>

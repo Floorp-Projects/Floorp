@@ -8,11 +8,10 @@
 #include "nsUniversalDetector.h"
 
 #include "nsMBCSGroupProber.h"
-#include "nsSBCSGroupProber.h"
 #include "nsEscCharsetProber.h"
 #include "nsLatin1Prober.h"
 
-nsUniversalDetector::nsUniversalDetector(uint32_t aLanguageFilter)
+nsUniversalDetector::nsUniversalDetector()
 {
   mDone = false;
   mBestGuess = -1;   //illegal value as signal
@@ -24,7 +23,6 @@ nsUniversalDetector::nsUniversalDetector(uint32_t aLanguageFilter)
   mGotData = false;
   mInputState = ePureAscii;
   mLastChar = '\0';
-  mLanguageFilter = aLanguageFilter;
 
   uint32_t i;
   for (i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
@@ -128,15 +126,8 @@ nsresult nsUniversalDetector::HandleData(const char* aBuf, uint32_t aLen)
         //start multibyte and singlebyte charset prober
         if (nullptr == mCharSetProbers[0])
         {
-          mCharSetProbers[0] = new nsMBCSGroupProber(mLanguageFilter);
+          mCharSetProbers[0] = new nsMBCSGroupProber();
           if (nullptr == mCharSetProbers[0])
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
-        if (nullptr == mCharSetProbers[1] &&
-            (mLanguageFilter & NS_FILTER_NON_CJK))
-        {
-          mCharSetProbers[1] = new nsSBCSGroupProber;
-          if (nullptr == mCharSetProbers[1])
             return NS_ERROR_OUT_OF_MEMORY;
         }
         if (nullptr == mCharSetProbers[2])
@@ -150,10 +141,9 @@ nsresult nsUniversalDetector::HandleData(const char* aBuf, uint32_t aLen)
     else
     {
       //ok, just pure ascii so far
-      if ( ePureAscii == mInputState &&
-        (aBuf[i] == '\033' || (aBuf[i] == '{' && mLastChar == '~')) )
+      if ((ePureAscii == mInputState) && (aBuf[i] == '\033'))
       {
-        //found escape character or HZ "~{"
+        //found escape character
         mInputState = eEscAscii;
       }
       mLastChar = aBuf[i];
@@ -165,7 +155,7 @@ nsresult nsUniversalDetector::HandleData(const char* aBuf, uint32_t aLen)
   {
   case eEscAscii:
     if (nullptr == mEscCharSetProber) {
-      mEscCharSetProber = new nsEscCharSetProber(mLanguageFilter);
+      mEscCharSetProber = new nsEscCharSetProber();
       if (nullptr == mEscCharSetProber)
         return NS_ERROR_OUT_OF_MEMORY;
     }

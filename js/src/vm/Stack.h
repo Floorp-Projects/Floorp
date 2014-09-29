@@ -1638,7 +1638,7 @@ class FrameIter
     const char *scriptFilename() const;
     unsigned computeLine(uint32_t *column = nullptr) const;
     JSAtom *functionDisplayAtom() const;
-    JSPrincipals *originPrincipals() const;
+    bool mutedErrors() const;
 
     bool hasScript() const { return !isAsmJS(); }
 
