@@ -6,7 +6,7 @@
 /* General Complete MAR File Staged Patch Apply Test */
 
 function run_test() {
-  if (!shouldRunServiceTest()) {
+  if (!shouldRunServiceTest(false, true)) {
     return;
   }
 
