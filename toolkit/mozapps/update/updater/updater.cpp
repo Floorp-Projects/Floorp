@@ -2188,20 +2188,11 @@ UpdateThreadFunc(void *param)
     }
     else {
 #ifdef XP_MACOSX
-      // If the update was successful we need to update the timestamp
-      // on the top-level Mac OS X bundle directory so that Mac OS X's
-      // Launch Services picks up any major changes. Here we assume that
-      // the current working directory is the top-level bundle directory.
-      char* cwd = getcwd(nullptr, 0);
-      if (cwd) {
-        if (utimes(cwd, nullptr) != 0) {
-          LOG(("Couldn't set access/modification time on application bundle."));
-        }
-        free(cwd);
-      }
-      else {
-        LOG(("Couldn't get current working directory for setting "
-             "access/modification time on application bundle."));
+      // If the update was successful we need to update the timestamp on the
+      // top-level Mac OS X bundle directory so that Mac OS X's Launch Services
+      // picks up any major changes when the bundle is updated.
+      if (!sStagedUpdate && utimes(gInstallDirPath, nullptr) != 0) {
+        LOG(("Couldn't set access/modification time on application bundle."));
       }
 #endif
 
