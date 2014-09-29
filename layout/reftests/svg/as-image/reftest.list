@@ -54,6 +54,7 @@ skip-if(B2G) == canvas-drawImage-slice-1a.html lime100x100-ref.html
 == canvas-drawImage-slice-1b.html lime100x100-ref.html
 
 == canvas-drawImage-origin-clean-1.html lime100x100-ref.html
+== canvas-drawImage-transform-restored.html canvas-drawImage-transform-restored-ref.html
 
 # Simple <img> tests
 == img-simple-1.html  lime100x100-ref.html
