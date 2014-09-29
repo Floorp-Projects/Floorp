@@ -101,8 +101,7 @@ class XDRState {
 
   protected:
     explicit XDRState(JSContext *cx)
-      : buf(cx) {
-    }
+      : buf(cx) { }
 
   public:
     JSContext *cx() const {

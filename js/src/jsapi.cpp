@@ -4335,12 +4335,6 @@ JS::ReadOnlyCompileOptions::copyPODOptions(const ReadOnlyCompileOptions &rhs)
     hasIntroductionInfo = rhs.hasIntroductionInfo;
 }
 
-JSPrincipals *
-JS::ReadOnlyCompileOptions::originPrincipals(ExclusiveContext *cx) const
-{
-    return NormalizeOriginPrincipals(cx->compartment()->principals, originPrincipals_);
-}
-
 JS::OwningCompileOptions::OwningCompileOptions(JSContext *cx)
     : ReadOnlyCompileOptions(),
       runtime(GetRuntime(cx)),
@@ -4352,9 +4346,6 @@ JS::OwningCompileOptions::OwningCompileOptions(JSContext *cx)
 
 JS::OwningCompileOptions::~OwningCompileOptions()
 {
-    if (originPrincipals_)
-        JS_DropPrincipals(runtime, originPrincipals_);
-
     // OwningCompileOptions always owns these, so these casts are okay.
     js_free(const_cast<char *>(filename_));
     js_free(const_cast<char16_t *>(sourceMapURL_));
@@ -4366,7 +4357,7 @@ JS::OwningCompileOptions::copy(JSContext *cx, const ReadOnlyCompileOptions &rhs)
 {
     copyPODOptions(rhs);
 
-    setOriginPrincipals(rhs.originPrincipals(cx));
+    setMutedErrors(rhs.mutedErrors());
     setElement(rhs.element());
     setElementAttributeName(rhs.elementAttributeName());
     setIntroductionScript(rhs.introductionScript());
