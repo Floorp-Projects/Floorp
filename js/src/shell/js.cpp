@@ -1267,7 +1267,7 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             }
 
             if (loadBytecode) {
-                script = JS_DecodeScript(cx, loadBuffer, loadLength, options.originPrincipals(cx));
+                script = JS_DecodeScript(cx, loadBuffer, loadLength);
             } else {
                 mozilla::Range<const char16_t> chars = codeChars.twoByteRange();
                 (void) JS::Compile(cx, global, options, chars.start().get(), chars.length(), &script);

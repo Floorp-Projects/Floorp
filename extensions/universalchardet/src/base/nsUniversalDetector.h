@@ -16,22 +16,9 @@ typedef enum {
   eHighbyte  = 2
 } nsInputState;
 
-#define NS_FILTER_CHINESE_SIMPLIFIED  0x01
-#define NS_FILTER_CHINESE_TRADITIONAL 0x02
-#define NS_FILTER_JAPANESE            0x04
-#define NS_FILTER_KOREAN              0x08
-#define NS_FILTER_NON_CJK             0x10
-#define NS_FILTER_ALL                 0x1F
-#define NS_FILTER_CHINESE (NS_FILTER_CHINESE_SIMPLIFIED | \
-                           NS_FILTER_CHINESE_TRADITIONAL)
-#define NS_FILTER_CJK (NS_FILTER_CHINESE_SIMPLIFIED | \
-                       NS_FILTER_CHINESE_TRADITIONAL | \
-                       NS_FILTER_JAPANESE | \
-                       NS_FILTER_KOREAN)
-
 class nsUniversalDetector {
 public:
-   explicit nsUniversalDetector(uint32_t aLanguageFilter);
+   nsUniversalDetector();
    virtual ~nsUniversalDetector();
    virtual nsresult HandleData(const char* aBuf, uint32_t aLen);
    virtual void DataEnd(void);

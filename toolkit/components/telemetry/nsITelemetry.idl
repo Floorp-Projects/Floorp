@@ -12,7 +12,7 @@ interface nsIFetchTelemetryDataCallback : nsISupports
   void complete();
 };
 
-[scriptable, uuid(4e4bfc35-dac6-4b28-ade4-7e45760051d5)]
+[scriptable, uuid(df355bbf-437d-4332-80e6-a8a54db959f3)]
 interface nsITelemetry : nsISupports
 {
   /**
@@ -21,11 +21,13 @@ interface nsITelemetry : nsISupports
    * HISTOGRAM_LINEAR - buckets increase linearly
    * HISTOGRAM_BOOLEAN - For storing 0/1 values
    * HISTOGRAM_FLAG - For storing a single value; its count is always == 1.
+   * HISTOGRAM_COUNT - For storing counter values without bucketing.
    */
   const unsigned long HISTOGRAM_EXPONENTIAL = 0;
   const unsigned long HISTOGRAM_LINEAR = 1;
   const unsigned long HISTOGRAM_BOOLEAN = 2;
   const unsigned long HISTOGRAM_FLAG = 3;
+  const unsigned long HISTOGRAM_COUNT = 4;
 
   /*
    * An object containing a snapshot from all of the currently registered histograms.
@@ -33,7 +35,8 @@ interface nsITelemetry : nsISupports
    * where data is consists of the following properties:
    *   min - Minimal bucket size
    *   max - Maximum bucket size
-   *   histogram_type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR, or HISTOGRAM_BOOLEAN
+   *   histogram_type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR, HISTOGRAM_BOOLEAN
+   *                    or HISTOGRAM_COUNT
    *   counts - array representing contents of the buckets in the histogram
    *   ranges -  an array with calculated bucket sizes
    *   sum - sum of the bucket contents
@@ -143,7 +146,7 @@ interface nsITelemetry : nsISupports
    * @param min - Minimal bucket size
    * @param max - Maximum bucket size
    * @param bucket_count - number of buckets in the histogram.
-   * @param type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR or HISTOGRAM_BOOLEAN
+   * @param type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR, HISTOGRAM_BOOLEAN or HISTOGRAM_COUNT
    * The returned object has the following functions:
    *   add(int) - Adds an int value to the appropriate bucket
    *   snapshot() - Returns a snapshot of the histogram with the same data fields as in histogramSnapshots()
@@ -192,8 +195,8 @@ interface nsITelemetry : nsISupports
    * @param min - Minimal bucket size
    * @param max - Maximum bucket size
    * @param bucket_count - number of buckets in the histogram
-   * @param histogram_type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR, or
-   *        HISTOGRAM_BOOLEAN
+   * @param histogram_type - HISTOGRAM_EXPONENTIAL, HISTOGRAM_LINEAR,
+   *        HISTOGRAM_BOOLEAN or HISTOGRAM_COUNT
    */
   void registerAddonHistogram(in ACString addon_id, in ACString name,
                               in uint32_t min, in uint32_t max,

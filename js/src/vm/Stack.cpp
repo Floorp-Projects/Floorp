@@ -973,17 +973,17 @@ FrameIter::computeLine(uint32_t *column) const
     MOZ_CRASH("Unexpected state");
 }
 
-JSPrincipals *
-FrameIter::originPrincipals() const
+bool
+FrameIter::mutedErrors() const
 {
     switch (data_.state_) {
       case DONE:
         break;
       case INTERP:
       case JIT:
-        return script()->originPrincipals();
+        return script()->mutedErrors();
       case ASMJS:
-        return data_.activations_->asAsmJS()->module().scriptSource()->originPrincipals();
+        return data_.activations_->asAsmJS()->module().scriptSource()->mutedErrors();
     }
 
     MOZ_CRASH("Unexpected state");

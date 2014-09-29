@@ -16,6 +16,7 @@
 #include "gfxRect.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/PatternHelpers.h"
 #include "mozilla/Preferences.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDisplayList.h"
@@ -1233,20 +1234,6 @@ nsSVGUtils::GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
   return color;
 }
 
-static void
-SetupFallbackOrPaintColor(gfxContext *aContext, nsStyleContext *aStyleContext,
-                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
-                          float aOpacity)
-{
-  nscolor color =
-    nsSVGUtils::GetFallbackOrPaintColor(aStyleContext, aFillOrStroke);
-
-  aContext->SetColor(gfxRGBA(NS_GET_R(color)/255.0,
-                             NS_GET_G(color)/255.0,
-                             NS_GET_B(color)/255.0,
-                             NS_GET_A(color)/255.0 * aOpacity));
-}
-
 static float
 MaybeOptimizeOpacity(nsIFrame *aFrame, float aFillOrStrokeOpacity)
 {
@@ -1257,102 +1244,129 @@ MaybeOptimizeOpacity(nsIFrame *aFrame, float aFillOrStrokeOpacity)
   return aFillOrStrokeOpacity;
 }
 
-/* static */ bool
-nsSVGUtils::SetupContextPaint(gfxContext *aContext,
-                              gfxTextContextPaint *aContextPaint,
-                              const nsStyleSVGPaint &aPaint,
-                              float aOpacity)
-{
-  nsRefPtr<gfxPattern> pattern;
-
-  if (!aContextPaint) {
-    return false;
-  }
-
-  switch (aPaint.mType) {
-    case eStyleSVGPaintType_ContextFill:
-      pattern = aContextPaint->GetFillPattern(aOpacity, aContext->CurrentMatrix());
-      break;
-    case eStyleSVGPaintType_ContextStroke:
-      pattern = aContextPaint->GetStrokePattern(aOpacity, aContext->CurrentMatrix());
-      break;
-    default:
-      return false;
-  }
-
-  if (!pattern) {
-    return false;
-  }
-
-  aContext->SetPattern(pattern);
-
-  return true;
-}
-
-bool
-nsSVGUtils::SetupCairoFillPaint(nsIFrame *aFrame, gfxContext* aContext,
-                                gfxTextContextPaint *aContextPaint)
+/* static */ void
+nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
+                               gfxContext* aContext,
+                               GeneralPattern* aOutPattern,
+                               gfxTextContextPaint* aContextPaint)
 {
   const nsStyleSVG* style = aFrame->StyleSVG();
-  if (style->mFill.mType == eStyleSVGPaintType_None)
-    return false;
-
-  if (style->mFillRule == NS_STYLE_FILL_RULE_EVENODD)
-    aContext->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
-  else
-    aContext->SetFillRule(gfxContext::FILL_RULE_WINDING);
+  if (style->mFill.mType == eStyleSVGPaintType_None) {
+    return;
+  }
 
   float opacity = MaybeOptimizeOpacity(aFrame,
                                        GetOpacity(style->mFillOpacitySource,
                                                   style->mFillOpacity,
                                                   aContextPaint));
-  nsSVGPaintServerFrame *ps =
-    nsSVGEffects::GetPaintServer(aFrame, &style->mFill, nsSVGEffects::FillProperty());
-  if (ps && ps->SetupPaintServer(aContext, aFrame, &nsStyleSVG::mFill, opacity))
-    return true;
+  const DrawTarget* dt = aContext->GetDrawTarget();
 
-  if (SetupContextPaint(aContext, aContextPaint, style->mFill, opacity)) {
-    return true;
+  nsSVGPaintServerFrame *ps =
+    nsSVGEffects::GetPaintServer(aFrame, &style->mFill,
+                                 nsSVGEffects::FillProperty());
+  if (ps) {
+    nsRefPtr<gfxPattern> pattern =
+      ps->GetPaintServerPattern(aFrame, dt, aContext->CurrentMatrix(),
+                                &nsStyleSVG::mFill, opacity);
+    if (pattern) {
+      pattern->CacheColorStops(dt);
+      aOutPattern->Init(*pattern->GetPattern(dt));
+      return;
+    }
+  }
+
+  if (aContextPaint) {
+    nsRefPtr<gfxPattern> pattern;
+    switch (style->mFill.mType) {
+    case eStyleSVGPaintType_ContextFill:
+      pattern = aContextPaint->GetFillPattern(dt, opacity,
+                                              aContext->CurrentMatrix());
+      break;
+    case eStyleSVGPaintType_ContextStroke:
+      pattern = aContextPaint->GetStrokePattern(dt, opacity,
+                                                aContext->CurrentMatrix());
+      break;
+    default:
+      ;
+    }
+    if (pattern) {
+      aOutPattern->Init(*pattern->GetPattern(dt));
+      return;
+    }
   }
 
   // On failure, use the fallback colour in case we have an
   // objectBoundingBox where the width or height of the object is zero.
   // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
-  SetupFallbackOrPaintColor(aContext, aFrame->StyleContext(),
-                            &nsStyleSVG::mFill, opacity);
-
-  return true;
+  nscolor color = GetFallbackOrPaintColor(aFrame->StyleContext(),
+                                          &nsStyleSVG::mFill);
+  aOutPattern->InitColorPattern(Color(NS_GET_R(color)/255.0,
+                                      NS_GET_G(color)/255.0,
+                                      NS_GET_B(color)/255.0,
+                                      NS_GET_A(color)/255.0 * opacity));
 }
 
-bool
-nsSVGUtils::SetupCairoStrokePaint(nsIFrame *aFrame, gfxContext* aContext,
-                                  gfxTextContextPaint *aContextPaint)
+/* static */ void
+nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
+                                 gfxContext* aContext,
+                                 GeneralPattern* aOutPattern,
+                                 gfxTextContextPaint* aContextPaint)
 {
   const nsStyleSVG* style = aFrame->StyleSVG();
-  if (style->mStroke.mType == eStyleSVGPaintType_None)
-    return false;
+  if (style->mStroke.mType == eStyleSVGPaintType_None) {
+    return;
+  }
 
   float opacity = MaybeOptimizeOpacity(aFrame,
                                        GetOpacity(style->mStrokeOpacitySource,
                                                   style->mStrokeOpacity,
                                                   aContextPaint));
 
-  nsSVGPaintServerFrame *ps =
-    nsSVGEffects::GetPaintServer(aFrame, &style->mStroke, nsSVGEffects::StrokeProperty());
-  if (ps && ps->SetupPaintServer(aContext, aFrame, &nsStyleSVG::mStroke, opacity))
-    return true;
+  const DrawTarget* dt = aContext->GetDrawTarget();
 
-  if (SetupContextPaint(aContext, aContextPaint, style->mStroke, opacity)) {
-    return true;
+  nsSVGPaintServerFrame *ps =
+    nsSVGEffects::GetPaintServer(aFrame, &style->mStroke,
+                                 nsSVGEffects::StrokeProperty());
+  if (ps) {
+    nsRefPtr<gfxPattern> pattern =
+      ps->GetPaintServerPattern(aFrame, dt, aContext->CurrentMatrix(),
+                                &nsStyleSVG::mStroke, opacity);
+    if (pattern) {
+      pattern->CacheColorStops(dt);
+      aOutPattern->Init(*pattern->GetPattern(dt));
+      return;
+    }
+  }
+
+  if (aContextPaint) {
+    nsRefPtr<gfxPattern> pattern;
+    switch (style->mStroke.mType) {
+    case eStyleSVGPaintType_ContextFill:
+      pattern = aContextPaint->GetFillPattern(dt, opacity,
+                                              aContext->CurrentMatrix());
+      break;
+    case eStyleSVGPaintType_ContextStroke:
+      pattern = aContextPaint->GetStrokePattern(dt, opacity,
+                                                aContext->CurrentMatrix());
+      break;
+    default:
+      ;
+    }
+    if (pattern) {
+      aOutPattern->Init(*pattern->GetPattern(dt));
+      return;
+    }
   }
 
   // On failure, use the fallback colour in case we have an
   // objectBoundingBox where the width or height of the object is zero.
   // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
-  SetupFallbackOrPaintColor(aContext, aFrame->StyleContext(),
-                            &nsStyleSVG::mStroke, opacity);
-
-  return true;
+  nscolor color = GetFallbackOrPaintColor(aFrame->StyleContext(),
+                                          &nsStyleSVG::mStroke);
+  aOutPattern->InitColorPattern(Color(NS_GET_R(color)/255.0,
+                                      NS_GET_G(color)/255.0,
+                                      NS_GET_B(color)/255.0,
+                                      NS_GET_A(color)/255.0 * opacity));
 }
 
 /* static */ float
@@ -1408,51 +1422,6 @@ nsSVGUtils::GetStrokeWidth(nsIFrame* aFrame, gfxTextContextPaint *aContextPaint)
   nsSVGElement *ctx = static_cast<nsSVGElement*>(content);
 
   return SVGContentUtils::CoordToFloat(ctx, style->mStrokeWidth);
-}
-
-void
-nsSVGUtils::SetupCairoStrokeBBoxGeometry(nsIFrame* aFrame,
-                                         gfxContext *aContext,
-                                         gfxTextContextPaint *aContextPaint)
-{
-  float width = GetStrokeWidth(aFrame, aContextPaint);
-  if (width <= 0)
-    return;
-  aContext->SetLineWidth(width);
-
-  // Apply any stroke-specific transform
-  gfxMatrix strokeTransform = GetStrokeTransform(aFrame);
-  if (!strokeTransform.IsIdentity()) {
-    aContext->Multiply(strokeTransform);
-  }
-
-  const nsStyleSVG* style = aFrame->StyleSVG();
-  
-  switch (style->mStrokeLinecap) {
-  case NS_STYLE_STROKE_LINECAP_BUTT:
-    aContext->SetLineCap(gfxContext::LINE_CAP_BUTT);
-    break;
-  case NS_STYLE_STROKE_LINECAP_ROUND:
-    aContext->SetLineCap(gfxContext::LINE_CAP_ROUND);
-    break;
-  case NS_STYLE_STROKE_LINECAP_SQUARE:
-    aContext->SetLineCap(gfxContext::LINE_CAP_SQUARE);
-    break;
-  }
-
-  aContext->SetMiterLimit(style->mStrokeMiterlimit);
-
-  switch (style->mStrokeLinejoin) {
-  case NS_STYLE_STROKE_LINEJOIN_MITER:
-    aContext->SetLineJoin(gfxContext::LINE_JOIN_MITER);
-    break;
-  case NS_STYLE_STROKE_LINEJOIN_ROUND:
-    aContext->SetLineJoin(gfxContext::LINE_JOIN_ROUND);
-    break;
-  case NS_STYLE_STROKE_LINEJOIN_BEVEL:
-    aContext->SetLineJoin(gfxContext::LINE_JOIN_BEVEL);
-    break;
-  }
 }
 
 static bool
@@ -1517,10 +1486,48 @@ GetStrokeDashData(nsIFrame* aFrame,
 }
 
 void
-nsSVGUtils::SetupCairoStrokeGeometry(nsIFrame* aFrame, gfxContext* aContext,
+nsSVGUtils::SetupCairoStrokeGeometry(nsIFrame* aFrame,
+                                     gfxContext *aContext,
                                      gfxTextContextPaint *aContextPaint)
 {
-  SetupCairoStrokeBBoxGeometry(aFrame, aContext, aContextPaint);
+  float width = GetStrokeWidth(aFrame, aContextPaint);
+  if (width <= 0)
+    return;
+  aContext->SetLineWidth(width);
+
+  // Apply any stroke-specific transform
+  gfxMatrix strokeTransform = GetStrokeTransform(aFrame);
+  if (!strokeTransform.IsIdentity()) {
+    aContext->Multiply(strokeTransform);
+  }
+
+  const nsStyleSVG* style = aFrame->StyleSVG();
+  
+  switch (style->mStrokeLinecap) {
+  case NS_STYLE_STROKE_LINECAP_BUTT:
+    aContext->SetLineCap(gfxContext::LINE_CAP_BUTT);
+    break;
+  case NS_STYLE_STROKE_LINECAP_ROUND:
+    aContext->SetLineCap(gfxContext::LINE_CAP_ROUND);
+    break;
+  case NS_STYLE_STROKE_LINECAP_SQUARE:
+    aContext->SetLineCap(gfxContext::LINE_CAP_SQUARE);
+    break;
+  }
+
+  aContext->SetMiterLimit(style->mStrokeMiterlimit);
+
+  switch (style->mStrokeLinejoin) {
+  case NS_STYLE_STROKE_LINEJOIN_MITER:
+    aContext->SetLineJoin(gfxContext::LINE_JOIN_MITER);
+    break;
+  case NS_STYLE_STROKE_LINEJOIN_ROUND:
+    aContext->SetLineJoin(gfxContext::LINE_JOIN_ROUND);
+    break;
+  case NS_STYLE_STROKE_LINEJOIN_BEVEL:
+    aContext->SetLineJoin(gfxContext::LINE_JOIN_BEVEL);
+    break;
+  }
 
   AutoFallibleTArray<gfxFloat, 10> dashes;
   gfxFloat dashOffset;
@@ -1586,18 +1593,6 @@ nsSVGUtils::GetGeometryHitTestFlags(nsIFrame* aFrame)
   }
 
   return flags;
-}
-
-bool
-nsSVGUtils::SetupCairoStroke(nsIFrame* aFrame, gfxContext* aContext,
-                             gfxTextContextPaint *aContextPaint)
-{
-  if (!HasStroke(aFrame, aContextPaint)) {
-    return false;
-  }
-  SetupCairoStrokeGeometry(aFrame, aContext, aContextPaint);
-
-  return SetupCairoStrokePaint(aFrame, aContext, aContextPaint);
 }
 
 bool
