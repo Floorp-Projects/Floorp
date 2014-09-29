@@ -73,9 +73,14 @@ public class GuestSession {
 
     public static void configureWindow(Window window) {
         // In guest sessions we allow showing over the keyguard.
-        window.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
-        window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+        window.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
     }
+
+    public static void unconfigureWindow(Window window) {
+        // In guest sessions we allow showing over the keyguard.
+        window.clearFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+    }
+
     private static PendingIntent getNotificationIntent(Context context) {
         Intent intent = new Intent(NOTIFICATION_INTENT);
         intent.setClass(context, BrowserApp.class);
