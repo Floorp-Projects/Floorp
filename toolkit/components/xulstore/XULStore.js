@@ -144,7 +144,7 @@ XULStore.prototype = {
 
   readFile: function() {
     const MODE_RDONLY = 0x01;
-    const FILE_PERMS  = 0600;
+    const FILE_PERMS  = 0o600;
 
     let stream = Cc["@mozilla.org/network/file-input-stream;1"].
                  createInstance(Ci.nsIFileInputStream);
