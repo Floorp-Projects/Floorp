@@ -689,12 +689,6 @@ public:
     return mPlayState;
   }
 
-  // Called by the media element to start timer to update download progress.
-  nsresult StartProgress();
-
-  // Called by the media element to stop progress information timer.
-  nsresult StopProgress();
-
   // Fire progress events if needed according to the time and byte
   // constraints outlined in the specification. aTimer is true
   // if the method is called as a result of the progress timer rather
@@ -1171,6 +1165,12 @@ protected:
 
   // True if the stream is infinite (e.g. a webradio).
   bool mInfiniteStream;
+
+  // Start timer to update download progress information.
+  nsresult StartProgress();
+
+  // Stop progress information timer.
+  nsresult StopProgress();
 
   // Ensures our media stream has been pinned.
   void PinForSeek();

@@ -905,11 +905,8 @@ void ChannelMediaResource::Resume()
         // There is (or may be) data to read at mOffset, so start reading it.
         // Need to recreate the channel.
         CacheClientSeek(mOffset, false);
-        element->DownloadResumed();
-      } else {
-        // The channel remains dead. Do not notify DownloadResumed() which
-        // will leave the media element in NETWORK_LOADING state.
       }
+      element->DownloadResumed();
     }
   }
 }
