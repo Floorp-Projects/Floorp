@@ -2114,13 +2114,11 @@ static bool
 CanRelocateArena(ArenaHeader *arena)
 {
     /*
-     * We can't currently move global objects because their address is baked
-     * into compiled code. We therefore skip moving the contents of any arena
-     * containing a global if ion or baseline are enabled.
+     * We can't currently move global objects because their address can be baked
+     * into compiled code so we skip relocation of any area containing one.
      */
     JSRuntime *rt = arena->zone->runtimeFromMainThread();
-    return arena->getAllocKind() <= FINALIZE_OBJECT_LAST &&
-        ((!rt->options().baseline() && !rt->options().ion()) || !ArenaContainsGlobal(arena));
+    return arena->getAllocKind() <= FINALIZE_OBJECT_LAST && !ArenaContainsGlobal(arena);
 }
 
 static bool
