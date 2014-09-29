@@ -976,12 +976,12 @@ GfxInfo::GetGfxDriverInfo()
       DRIVER_LESS_THAN, GfxDriverInfo::allDriverVersions );
 
     /**
-     * Disable D2D on Intel HD 3000 for graphics drivers <= 8.15.10.2321.
-     * See bug 1018278.
+     * Disable acceleration on Intel HD 3000 for graphics drivers <= 8.15.10.2321.
+     * See bug 1018278 and bug 1060736.
      */
     APPEND_TO_DRIVER_BLOCKLIST( DRIVER_OS_ALL,
         (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorIntel), (GfxDeviceFamily*) GfxDriverInfo::GetDeviceFamily(IntelHD3000),
-      nsIGfxInfo::FEATURE_DIRECT2D, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
+      GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
       DRIVER_LESS_THAN_OR_EQUAL, V(8,15,10,2321), "8.15.10.2342" );
 
     /* Disable D2D on Win7 on Intel HD Graphics on driver <= 8.15.10.2302
