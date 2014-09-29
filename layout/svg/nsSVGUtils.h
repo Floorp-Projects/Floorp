@@ -205,6 +205,7 @@ class nsSVGUtils
 {
 public:
   typedef mozilla::dom::Element Element;
+  typedef mozilla::gfx::FillRule FillRule;
 
   static void Init();
 
@@ -544,9 +545,9 @@ public:
    */
   static uint16_t GetGeometryHitTestFlags(nsIFrame* aFrame);
 
-  static gfxContext::FillRule ThebesFillRule(uint8_t aFillRule) {
+  static FillRule ToFillRule(uint8_t aFillRule) {
     return aFillRule == NS_STYLE_FILL_RULE_EVENODD ?
-             gfxContext::FILL_RULE_EVEN_ODD : gfxContext::FILL_RULE_WINDING;
+             FillRule::FILL_EVEN_ODD : FillRule::FILL_WINDING;
   }
 
   /**

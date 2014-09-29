@@ -37,6 +37,7 @@ template <typename T> class FallibleTArray;
  * as opposed to app units.
  */
 class gfxContext MOZ_FINAL {
+    typedef mozilla::gfx::FillRule FillRule;
     typedef mozilla::gfx::Path Path;
 
     NS_INLINE_DECL_REFCOUNTING(gfxContext)
@@ -469,10 +470,6 @@ public:
      ** Fill Properties
      **/
 
-    enum FillRule {
-        FILL_RULE_WINDING,
-        FILL_RULE_EVEN_ODD
-    };
     void SetFillRule(FillRule rule);
     FillRule CurrentFillRule() const;
 

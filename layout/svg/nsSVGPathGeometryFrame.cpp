@@ -660,12 +660,12 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext,
     // worry that autoSaveRestore will delay the Restore() call for the
     // CLIP_MASK case until we exit this function.
 
-    gfxContext::FillRule oldFillRull = gfx->CurrentFillRule();
+    FillRule oldFillRull = gfx->CurrentFillRule();
 
     if (StyleSVG()->mClipRule == NS_STYLE_FILL_RULE_EVENODD)
-      gfx->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
+      gfx->SetFillRule(FillRule::FILL_EVEN_ODD);
     else
-      gfx->SetFillRule(gfxContext::FILL_RULE_WINDING);
+      gfx->SetFillRule(FillRule::FILL_WINDING);
 
     if (renderMode == SVGAutoRenderState::CLIP_MASK) {
       gfx->SetColor(gfxRGBA(1.0f, 1.0f, 1.0f, 1.0f));
@@ -689,7 +689,7 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext,
       nsSVGUtils::MakeFillPatternFor(this, gfx, contextPaint);
     if (fillPattern) {
       gfx->SetPattern(fillPattern);
-      gfx->SetFillRule(nsSVGUtils::ThebesFillRule(StyleSVG()->mFillRule));
+      gfx->SetFillRule(nsSVGUtils::ToFillRule(StyleSVG()->mFillRule));
       gfx->Fill();
     }
   }
