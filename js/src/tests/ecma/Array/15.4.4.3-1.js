@@ -30,8 +30,6 @@ writeHeaderToLog( SECTION + " Array.prototype.join()");
 var ARR_PROTOTYPE = Array.prototype;
 
 new TestCase( SECTION, "Array.prototype.join.length",           1,      Array.prototype.join.length );
-new TestCase( SECTION, "delete Array.prototype.join.length",    false,  delete Array.prototype.join.length );
-new TestCase( SECTION, "delete Array.prototype.join.length; Array.prototype.join.length",    1, eval("delete Array.prototype.join.length; Array.prototype.join.length") );
 
 // case where array length is 0
 
