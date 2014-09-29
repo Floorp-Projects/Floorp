@@ -739,7 +739,6 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
              * aren't preserved by XDR. So this can be simple.
              */
             CompileOptions options(cx);
-            options.setOriginPrincipals(xdr->originPrincipals());
             ss->initFromOptions(cx, options);
             sourceObject = ScriptSourceObject::create(cx, ss);
             if (!sourceObject ||
