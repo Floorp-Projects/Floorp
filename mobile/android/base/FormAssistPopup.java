@@ -60,6 +60,8 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
     }
     private PopupType mPopupType;
 
+    private static final int MAX_VISIBLE_ROWS = 5;
+
     private static int sAutoCompleteMinWidth;
     private static int sAutoCompleteRowHeight;
     private static int sValidationMessageHeight;
@@ -260,7 +262,7 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
 
         // Don't show the form assist popup when using fullscreen VKB
         InputMethodManager imm =
-                (InputMethodManager) GeckoAppShell.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm.isFullscreenMode())
             return;
 
@@ -307,9 +309,14 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
             }
         }
 
+        int rows = mAutoCompleteList.getAdapter().getCount();
+        if (rows > MAX_VISIBLE_ROWS) {
+            rows = MAX_VISIBLE_ROWS;
+        }
+
         int popupHeight;
         if (mPopupType == PopupType.AUTOCOMPLETE)
-            popupHeight = sAutoCompleteRowHeight * mAutoCompleteList.getAdapter().getCount();
+            popupHeight = sAutoCompleteRowHeight * rows;
         else
             popupHeight = sValidationMessageHeight;
 
