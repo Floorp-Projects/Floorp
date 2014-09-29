@@ -4934,6 +4934,19 @@ CheckSimdWith(FunctionCompiler &f, ParseNode *call, Type retType, SimdLane lane,
     return true;
 }
 
+template<class T>
+static bool
+CheckSimdCast(FunctionCompiler &f, ParseNode *call, Type fromType, Type toType, MDefinition **def,
+              Type *type)
+{
+    DefinitionVector defs;
+    if (!CheckSimdCallArgs(f, call, 1, CheckArgIsSubtypeOf(fromType), &defs))
+        return false;
+    *def = f.convertSimd<T>(defs[0], fromType.toMIRType(), toType.toMIRType());
+    *type = toType;
+    return true;
+}
+
 static bool
 CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompiler::Global *global,
                        MDefinition **def, Type *type)
@@ -4985,38 +4998,14 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
       case AsmJSSimdOperation_withW:
         return CheckSimdWith(f, call, retType, SimdLane::LaneW, def, type);
 
-      case AsmJSSimdOperation_fromInt32x4: {
-        DefinitionVector defs;
-        if (!CheckSimdCallArgs(f, call, 1, CheckArgIsSubtypeOf(Type::Int32x4), &defs))
-            return false;
-        *def = f.convertSimd<MSimdConvert>(defs[0], MIRType_Int32x4, retType.toMIRType());
-        *type = retType;
-        return true;
-      }
-      case AsmJSSimdOperation_fromInt32x4Bits: {
-        DefinitionVector defs;
-        if (!CheckSimdCallArgs(f, call, 1, CheckArgIsSubtypeOf(Type::Int32x4), &defs))
-            return false;
-        *def = f.convertSimd<MSimdReinterpretCast>(defs[0], MIRType_Int32x4, retType.toMIRType());
-        *type = retType;
-        return true;
-      }
-      case AsmJSSimdOperation_fromFloat32x4: {
-        DefinitionVector defs;
-        if (!CheckSimdCallArgs(f, call, 1, CheckArgIsSubtypeOf(Type::Float32x4), &defs))
-            return false;
-        *def = f.convertSimd<MSimdConvert>(defs[0], MIRType_Float32x4, retType.toMIRType());
-        *type = retType;
-        return true;
-      }
-      case AsmJSSimdOperation_fromFloat32x4Bits: {
-        DefinitionVector defs;
-        if (!CheckSimdCallArgs(f, call, 1, CheckArgIsSubtypeOf(Type::Float32x4), &defs))
-            return false;
-        *def = f.convertSimd<MSimdReinterpretCast>(defs[0], MIRType_Float32x4, retType.toMIRType());
-        *type = retType;
-        return true;
-      }
+      case AsmJSSimdOperation_fromInt32x4:
+        return CheckSimdCast<MSimdConvert>(f, call, Type::Int32x4, retType, def, type);
+      case AsmJSSimdOperation_fromInt32x4Bits:
+        return CheckSimdCast<MSimdReinterpretCast>(f, call, Type::Int32x4, retType, def, type);
+      case AsmJSSimdOperation_fromFloat32x4:
+        return CheckSimdCast<MSimdConvert>(f, call, Type::Float32x4, retType, def, type);
+      case AsmJSSimdOperation_fromFloat32x4Bits:
+        return CheckSimdCast<MSimdReinterpretCast>(f, call, Type::Float32x4, retType, def, type);
 
       case AsmJSSimdOperation_splat: {
         DefinitionVector defs;
