@@ -2391,6 +2391,9 @@ UpdateCellPointers(MovingTracer *trc, Cell *cell, JSGCTraceKind traceKind) {
     } else if (traceKind == JSTRACE_BASE_SHAPE) {
         BaseShape *base = static_cast<BaseShape *>(cell);
         base->fixupAfterMovingGC();
+    } else if (traceKind == JSTRACE_TYPE_OBJECT) {
+        types::TypeObject *type = static_cast<types::TypeObject *>(cell);
+        type->fixupAfterMovingGC();
     }
 
     TraceChildren(trc, cell, traceKind);
