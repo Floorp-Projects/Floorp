@@ -11,8 +11,12 @@ from __future__ import print_function, division
 import argparse
 import collections
 import json
+import os
+import platform
 import re
+import shutil
 import sys
+import tempfile
 
 # The DMD output version this script handles.
 outputVersion = 1
@@ -96,6 +100,9 @@ def parseCommandLine():
 Analyze heap data produced by DMD.
 If no files are specified, read from stdin.
 Write to stdout unless -o/--output is specified.
+Stack traces are fixed to show function names, filenames and line numbers
+unless --no-fix-stacks is specified; stack fixing modifies the original file
+and may take some time.
 '''
     p = argparse.ArgumentParser(description=description)
 
@@ -119,13 +126,50 @@ Write to stdout unless -o/--output is specified.
     p.add_argument('-b', '--show-all-block-sizes', action='store_true',
                    help='show individual block sizes for each record')
 
+    p.add_argument('--no-fix-stacks', action='store_true',
+                   help='do not fix stacks')
+
     p.add_argument('input_file', type=argparse.FileType('r'))
 
     return p.parse_args(sys.argv[1:])
 
 
+# Fix stacks if necessary: first write the output to a tempfile, then replace
+# the original file with it.
+def fixStackTraces(args):
+    # This append() call is needed to make the import statements work when this
+    # script is installed as a symlink.
+    sys.path.append(os.path.dirname(__file__))
+
+    # XXX: should incorporate fix_stack_using_bpsyms.py here as well, like in
+    #      testing/mochitests/runtests.py
+    sysname = platform.system()
+    if sysname == 'Linux':
+        import fix_linux_stack as fixModule
+        fix = lambda line: fixModule.fixSymbols(line)
+    elif sysname == 'Darwin':
+        import fix_macosx_stack as fixModule
+        fix = lambda line: fixModule.fixSymbols(line)
+    else:
+        fix = None  # there is no fix script for Windows
+
+    if fix:
+        # Fix stacks, writing output to a temporary file, and then
+        # overwrite the original file.
+        with tempfile.NamedTemporaryFile(delete=False) as tmp:
+            for line in args.input_file:
+                tmp.write(fix(line))
+            shutil.move(tmp.name, args.input_file.name)
+
+        args.input_file = open(args.input_file.name)
+
+
 def main():
     args = parseCommandLine()
+
+    # Fix stack traces unless otherwise instructed.
+    if not args.no_fix_stacks:
+        fixStackTraces(args)
 
     j = json.load(args.input_file)
 
