@@ -16,6 +16,7 @@
 #include "xpcpublic.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 
 nsXBLProtoImplProperty::nsXBLProtoImplProperty(const char16_t* aName,
                                                const char16_t* aGetter, 
@@ -157,7 +158,7 @@ nsXBLProtoImplProperty::InstallMember(JSContext *aCx,
 }
 
 nsresult
-nsXBLProtoImplProperty::CompileMember(const nsCString& aClassStr,
+nsXBLProtoImplProperty::CompileMember(AutoJSAPI& jsapi, const nsCString& aClassStr,
                                       JS::Handle<JSObject*> aClassObject)
 {
   AssertInCompilationScope();
@@ -166,6 +167,7 @@ nsXBLProtoImplProperty::CompileMember(const nsCString& aClassStr,
   NS_PRECONDITION(aClassObject,
                   "Must have class object to compile");
   MOZ_ASSERT(!mGetter.IsCompiled() && !mSetter.IsCompiled());
+  JSContext *cx = jsapi.cx();
 
   if (!mName)
     return NS_ERROR_FAILURE; // Without a valid name, we can't install the member.
@@ -187,14 +189,13 @@ nsXBLProtoImplProperty::CompileMember(const nsCString& aClassStr,
   if (getterText && getterText->GetText()) {
     nsDependentString getter(getterText->GetText());
     if (!getter.IsEmpty()) {
-      AutoJSContext cx;
       JSAutoCompartment ac(cx, aClassObject);
       JS::CompileOptions options(cx);
       options.setFileAndLine(functionUri.get(), getterText->GetLineNumber())
              .setVersion(JSVERSION_LATEST);
       nsCString name = NS_LITERAL_CSTRING("get_") + NS_ConvertUTF16toUTF8(mName);
       JS::Rooted<JSObject*> getterObject(cx);
-      rv = nsJSUtils::CompileFunction(cx, JS::NullPtr(), options, name, 0,
+      rv = nsJSUtils::CompileFunction(jsapi, JS::NullPtr(), options, name, 0,
                                       nullptr, getter, getterObject.address());
 
       delete getterText;
@@ -233,14 +234,13 @@ nsXBLProtoImplProperty::CompileMember(const nsCString& aClassStr,
   if (setterText && setterText->GetText()) {
     nsDependentString setter(setterText->GetText());
     if (!setter.IsEmpty()) {
-      AutoJSContext cx;
       JSAutoCompartment ac(cx, aClassObject);
       JS::CompileOptions options(cx);
       options.setFileAndLine(functionUri.get(), setterText->GetLineNumber())
              .setVersion(JSVERSION_LATEST);
       nsCString name = NS_LITERAL_CSTRING("set_") + NS_ConvertUTF16toUTF8(mName);
       JS::Rooted<JSObject*> setterObject(cx);
-      rv = nsJSUtils::CompileFunction(cx, JS::NullPtr(), options, name, 1,
+      rv = nsJSUtils::CompileFunction(jsapi, JS::NullPtr(), options, name, 1,
                                       gPropertyArgs, setter,
                                       setterObject.address());
 

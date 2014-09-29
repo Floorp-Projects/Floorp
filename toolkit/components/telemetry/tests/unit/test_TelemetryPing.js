@@ -80,8 +80,10 @@ function setupTestData() {
   Services.startup.interrupted = true;
   Telemetry.registerAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM, 1, 5, 6,
                                    Telemetry.HISTOGRAM_LINEAR);
-  h1 = Telemetry.getAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM);
+  let h1 = Telemetry.getAddonHistogram(ADDON_NAME, ADDON_HISTOGRAM);
   h1.add(1);
+  let h2 = Telemetry.getHistogramById("TELEMETRY_TEST_COUNT");
+  h2.add();
 }
 
 function getSavedHistogramsFile(basename) {
@@ -209,9 +211,14 @@ function checkPayload(request, reason, successfulPings) {
   const TELEMETRY_PING = "TELEMETRY_PING";
   const TELEMETRY_SUCCESS = "TELEMETRY_SUCCESS";
   const TELEMETRY_TEST_FLAG = "TELEMETRY_TEST_FLAG";
+  const TELEMETRY_TEST_COUNT = "TELEMETRY_TEST_COUNT";
   const READ_SAVED_PING_SUCCESS = "READ_SAVED_PING_SUCCESS";
+
   do_check_true(TELEMETRY_PING in payload.histograms);
   do_check_true(READ_SAVED_PING_SUCCESS in payload.histograms);
+  do_check_true(TELEMETRY_TEST_FLAG in payload.histograms);
+  do_check_true(TELEMETRY_TEST_COUNT in payload.histograms);
+
   let rh = Telemetry.registeredHistograms([]);
   for (let name of rh) {
     if (/SQLITE/.test(name) && name in payload.histograms) {
@@ -233,6 +240,19 @@ function checkPayload(request, reason, successfulPings) {
   };
   let flag = payload.histograms[TELEMETRY_TEST_FLAG];
   do_check_eq(uneval(flag), uneval(expected_flag));
+
+  // We should have a test count.
+  const expected_count = {
+    range: [1, 2],
+    bucket_count: 3,
+    histogram_type: 4,
+    values: {0:1, 1:0},
+    sum: 1,
+    sum_squares_lo: 1,
+    sum_squares_hi: 0,
+  };
+  let count = payload.histograms[TELEMETRY_TEST_COUNT];
+  do_check_eq(uneval(count), uneval(expected_count));
 
   // There should be one successful report from the previous telemetry ping.
   const expected_tc = {

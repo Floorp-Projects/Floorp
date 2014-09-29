@@ -1031,6 +1031,119 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
 }
 
 // --------------------
+// nsStyleClipPath
+//
+nsStyleClipPath::nsStyleClipPath()
+  : mType(NS_STYLE_CLIP_PATH_NONE)
+  , mURL(nullptr)
+  , mSizingBox(NS_STYLE_CLIP_SHAPE_SIZING_NOBOX)
+{
+}
+
+nsStyleClipPath::nsStyleClipPath(const nsStyleClipPath& aSource)
+  : mType(NS_STYLE_CLIP_PATH_NONE)
+  , mURL(nullptr)
+  , mSizingBox(NS_STYLE_CLIP_SHAPE_SIZING_NOBOX)
+{
+  if (aSource.mType == NS_STYLE_CLIP_PATH_URL) {
+    SetURL(aSource.mURL);
+  } else if (aSource.mType == NS_STYLE_CLIP_PATH_SHAPE) {
+    SetBasicShape(aSource.mBasicShape, aSource.mSizingBox);
+  } else if (aSource.mType == NS_STYLE_CLIP_PATH_SHAPE) {
+    SetSizingBox(aSource.mSizingBox);
+  }
+}
+
+nsStyleClipPath::~nsStyleClipPath()
+{
+  ReleaseRef();
+}
+
+nsStyleClipPath&
+nsStyleClipPath::operator=(const nsStyleClipPath& aOther)
+{
+  if (this == &aOther) {
+    return *this;
+  }
+
+  ReleaseRef();
+
+  if (aOther.mType == NS_STYLE_CLIP_PATH_URL) {
+    SetURL(aOther.mURL);
+  } else if (aOther.mType == NS_STYLE_CLIP_PATH_SHAPE) {
+    SetBasicShape(aOther.mBasicShape, aOther.mSizingBox);
+  } else if (aOther.mType == NS_STYLE_CLIP_PATH_BOX) {
+    SetSizingBox(aOther.mSizingBox);
+  } else {
+    mSizingBox = NS_STYLE_CLIP_SHAPE_SIZING_NOBOX;
+    mType = NS_STYLE_CLIP_PATH_NONE;
+  }
+  return *this;
+}
+
+
+bool
+nsStyleClipPath::operator==(const nsStyleClipPath& aOther) const
+{
+  if (mType != aOther.mType) {
+    return false;
+  }
+
+  if (mType == NS_STYLE_CLIP_PATH_URL) {
+    return EqualURIs(mURL, aOther.mURL);
+  } else if (mType == NS_STYLE_CLIP_PATH_SHAPE) {
+    return *mBasicShape == *aOther.mBasicShape &&
+           mSizingBox == aOther.mSizingBox;
+  } else if (mType == NS_STYLE_CLIP_PATH_BOX) {
+    return mSizingBox == aOther.mSizingBox;
+  }
+
+  return true;
+}
+
+void
+nsStyleClipPath::ReleaseRef()
+{
+  if (mType == NS_STYLE_CLIP_PATH_SHAPE) {
+    NS_ASSERTION(mBasicShape, "expected pointer");
+    mBasicShape->Release();
+  } else if (mType == NS_STYLE_CLIP_PATH_URL) {
+    NS_ASSERTION(mURL, "expected pointer");
+    mURL->Release();
+  }
+  mURL = nullptr;
+}
+
+void
+nsStyleClipPath::SetURL(nsIURI* aURL)
+{
+  NS_ASSERTION(aURL, "expected pointer");
+  ReleaseRef();
+  mURL = aURL;
+  mURL->AddRef();
+  mType = NS_STYLE_CLIP_PATH_URL;
+}
+
+void
+nsStyleClipPath::SetBasicShape(nsStyleBasicShape* aBasicShape, uint8_t aSizingBox)
+{
+  NS_ASSERTION(aBasicShape, "expected pointer");
+  ReleaseRef();
+  mBasicShape = aBasicShape;
+  mBasicShape->AddRef();
+  mSizingBox = aSizingBox;
+  mType = NS_STYLE_CLIP_PATH_SHAPE;
+}
+
+void
+nsStyleClipPath::SetSizingBox(uint8_t aSizingBox)
+{
+  ReleaseRef();
+  mSizingBox = aSizingBox;
+  mType = NS_STYLE_CLIP_PATH_BOX;
+}
+
+// --------------------
 // nsStyleFilter
 //
 nsStyleFilter::nsStyleFilter()
@@ -1145,7 +1258,6 @@ nsStyleSVGReset::nsStyleSVGReset()
     mStopColor               = NS_RGB(0,0,0);
     mFloodColor              = NS_RGB(0,0,0);
     mLightingColor           = NS_RGB(255,255,255);
-    mClipPath                = nullptr;
     mMask                    = nullptr;
     mStopOpacity             = 1.0f;
     mFloodOpacity            = 1.0f;
@@ -1179,7 +1291,7 @@ nsChangeHint nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aOther) cons
 {
   nsChangeHint hint = nsChangeHint(0);
 
-  if (!EqualURIs(mClipPath, aOther.mClipPath) ||
+  if (mClipPath != aOther.mClipPath ||
       !EqualURIs(mMask, aOther.mMask) ||
       mFilters != aOther.mFilters) {
     NS_UpdateHint(hint, nsChangeHint_UpdateEffects);

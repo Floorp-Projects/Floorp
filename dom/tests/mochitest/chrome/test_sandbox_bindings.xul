@@ -70,27 +70,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       }
       try {
         var xhr = Components.utils.evalInSandbox("XMLHttpRequest", sandbox);
-        xhr.prototype = false;
-      } catch (e) {
-        ok(true, "'XMLHttpRequest.prototype' should be readonly");
+        xhr.prototype = "notok";
+      } finally {
+        isnot(xhr.prototype, "notok", "'XMLHttpRequest.prototype' should be readonly");
       }
-      try {
-        var xhr = Components.utils.evalInSandbox("XMLHttpRequest", sandbox);
-        delete xhr.prototype;
-      } catch (e) {
-        ok(true, "'XMLHttpRequest.prototype' should be permanent");
-      }
+      var constructorWritable = false;
       try {
         var xhr = Components.utils.evalInSandbox("XMLHttpRequest.prototype", sandbox);
         xhr.constructor = "ok";
-      } catch (e) {
         is(xhr.constructor, "ok", "'XMLHttpRequest.prototype.constructor' should be writeable");
-      }
-      try {
-        var xhr = Components.utils.evalInSandbox("XMLHttpRequest.prototype", sandbox);
-        delete xhr.constructor;
       } catch (e) {
-        is(xhr.constructor, undefined, "'XMLHttpRequest.prototype.constructor' should be permanent");
+        ok(false, "'XMLHttpRequest.prototype.constructor' should be writeable");
       }
       try {
         var xhr = Components.utils.evalInSandbox("XMLHttpRequest", sandbox);
@@ -109,9 +99,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       }
       try {
         var xhr = Components.utils.evalInSandbox("new XMLHttpRequest()", sandbox);
-        is("" + xhr, new XMLHttpRequest() + "", "'XMLHttpRequest()' in a sandbox should create an XMLHttpRequest object");
+        is("" + xhr, new XMLHttpRequest() + "", "'new XMLHttpRequest()' in a sandbox should create an XMLHttpRequest object");
       } catch (e) {
         ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox (1)");
+      }
+      try {
+        var xhr = Components.utils.evalInSandbox("XMLHttpRequest.toString = function () { return 'Failed'; }; XMLHttpRequest;", sandbox);
+        is(xhr.toString(), XMLHttpRequest + "", "XMLHttpRequest.toString in the sandbox should not override the native toString behaviour");
+      } catch (e) {
+        ok(false, "'XMLHttpRequest' shouldn't throw in a sandbox");
       }
       try {
         var xhr = Components.utils.evalInSandbox("XMLHttpRequest.prototype.toString = function () { return 'Failed'; }; new XMLHttpRequest();", sandbox);
@@ -136,14 +132,23 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
       } catch (e) {
         ok(false, "XMLHttpRequest.prototype manipulation via an Xray shouldn't throw" + e);
       }
-
+      try {
+        Components.utils.evalInSandbox("XMLHttpRequest.prototype.a = 'expando a'", sandbox);
+        Components.utils.evalInSandbox("XMLHttpRequest.prototype.b = 'expando b'", sandbox);
+        Components.utils.evalInSandbox("XMLHttpRequest.prototype", sandbox).b = 'xrayexpando';
+        var xhr = Components.utils.evalInSandbox("new XMLHttpRequest()", sandbox);
+        is(xhr.a, undefined, "'XMLHttpRequest()' in a sandbox should not have expandos from inside the sandbox");
+        is(xhr.b, "xrayexpando", "'new XMLHttpRequest()' in a sandbox should have Xray expandos");
+      } catch (e) {
+        ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox");
+      }
       try {
         Components.utils.evalInSandbox("document.defaultView.XMLHttpRequest = function() {};", sandbox);
         var win = Components.utils.evalInSandbox("document.defaultView", sandbox);
         var xhr = new win.XMLHttpRequest();
-        is("" + xhr, new XMLHttpRequest() + "", "'XMLHttpRequest()' in a sandbox should create an XMLHttpRequest object");
+        is("" + xhr, new XMLHttpRequest() + "", "'new XMLHttpRequest()' in a sandbox should create an XMLHttpRequest object");
       } catch (e) {
-        ok(false, "'XMLHttpRequest()' shouldn't throw in a sandbox");
+        ok(false, "'new XMLHttpRequest()' shouldn't throw in a sandbox");
       }
       try {
         var canvas = Components.utils.evalInSandbox("document.createElement('canvas').getContext('2d')", sandbox);
@@ -155,7 +160,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
         var classList = Components.utils.evalInSandbox("document.body.className = 'a b'; document.body.classList", sandbox);
         is(classList.toString(), "a b", "Stringifier should be called");
       } catch (e) {
-        ok(false, "'document.createElement('canvas').getContext('2D')' shouldn't throw in a sandbox");
+        ok(false, "Stringifying shouldn't throw in a sandbox");
       }
       try {
         var ctx = Components.utils.evalInSandbox("var ctx = document.createElement('canvas').getContext('2d'); ctx.foopy = 5; ctx", sandbox);

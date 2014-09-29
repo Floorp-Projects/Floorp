@@ -764,7 +764,7 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
               if (!mGB2312Decoder) {
                 // creating a delegate converter (GB2312)
                 mGB2312Decoder =
-                  EncodingUtils::DecoderForEncoding(NS_LITERAL_CSTRING("GB2312"));
+                  EncodingUtils::DecoderForEncoding("gb18030");
               }
               if (!mGB2312Decoder) {// failed creating a delegate converter
                 goto error2;

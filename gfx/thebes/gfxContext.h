@@ -37,7 +37,9 @@ template <typename T> class FallibleTArray;
  * as opposed to app units.
  */
 class gfxContext MOZ_FINAL {
+    typedef mozilla::gfx::FillRule FillRule;
     typedef mozilla::gfx::Path Path;
+    typedef mozilla::gfx::Pattern Pattern;
 
     NS_INLINE_DECL_REFCOUNTING(gfxContext)
 
@@ -106,12 +108,14 @@ public:
      * Does not consume the current path.
      */
     void Stroke();
+    void Stroke(const Pattern& aPattern);
     /**
      * Fill the current path according to the current settings.
      *
      * Does not consume the current path.
      */
     void Fill();
+    void Fill(const Pattern& aPattern);
 
     /**
      * Fill the current path according to the current settings and
@@ -120,6 +124,7 @@ public:
      * Does not consume the current path.
      */
     void FillWithOpacity(gfxFloat aOpacity);
+    void FillWithOpacity(const Pattern& aPattern, gfxFloat aOpacity);
 
     /**
      * Forgets the current path.
@@ -469,10 +474,6 @@ public:
      ** Fill Properties
      **/
 
-    enum FillRule {
-        FILL_RULE_WINDING,
-        FILL_RULE_EVEN_ODD
-    };
     void SetFillRule(FillRule rule);
     FillRule CurrentFillRule() const;
 
@@ -671,7 +672,7 @@ public:
 private:
     ~gfxContext();
 
-  friend class GeneralPattern;
+  friend class PatternFromState;
   friend class GlyphBufferAzure;
 
   typedef mozilla::gfx::Matrix Matrix;
@@ -727,7 +728,7 @@ private:
   void EnsurePath();
   // This ensures mPathBuilder contains a valid PathBuilder (in user space!)
   void EnsurePathBuilder();
-  void FillAzure(mozilla::gfx::Float aOpacity);
+  void FillAzure(const Pattern& aPattern, mozilla::gfx::Float aOpacity);
   void PushClipsToDT(mozilla::gfx::DrawTarget *aDT);
   CompositionOp GetOp();
   void ChangeTransform(const mozilla::gfx::Matrix &aNewMatrix, bool aUpdatePatternTransform = true);

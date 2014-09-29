@@ -135,6 +135,9 @@ NS_IMETHODIMP  nsTextToSubURI::UnEscapeAndConvert(
 
 static bool statefulCharset(const char *charset)
 {
+  // HZ, UTF-7 and the CN and KR ISO-2022 variants are no longer in
+  // mozilla-central but keeping them here just in case for the benefit of
+  // comm-central.
   if (!nsCRT::strncasecmp(charset, "ISO-2022-", sizeof("ISO-2022-")-1) ||
       !nsCRT::strcasecmp(charset, "UTF-7") ||
       !nsCRT::strcasecmp(charset, "HZ-GB-2312"))

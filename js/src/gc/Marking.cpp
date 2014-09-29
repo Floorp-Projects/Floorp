@@ -218,7 +218,9 @@ CheckMarkedThing(JSTracer *trc, T **thingp)
         JS_ASSERT_IF(gcMarker->getMarkColor() == GRAY,
                      !thing->zone()->isGCMarkingBlack() || rt->isAtomsZone(thing->zone()));
 
-        JS_ASSERT(!(thing->zone()->isGCSweeping() || thing->zone()->isGCFinished()));
+        JS_ASSERT(!(thing->zone()->isGCSweeping() ||
+                    thing->zone()->isGCFinished() ||
+                    thing->zone()->isGCCompacting()));
     }
 
     /*

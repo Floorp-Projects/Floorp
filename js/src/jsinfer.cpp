@@ -2570,6 +2570,14 @@ struct types::ArrayTableKey : public DefaultHasher<types::ArrayTableKey>
     static inline bool match(const ArrayTableKey &v1, const ArrayTableKey &v2) {
         return v1.type == v2.type && v1.proto == v2.proto;
     }
+
+    bool operator==(const ArrayTableKey& other) {
+        return type == other.type && proto == other.proto;
+    }
+
+    bool operator!=(const ArrayTableKey& other) {
+        return !(*this == other);
+    }
 };
 
 void
@@ -3218,6 +3226,8 @@ TypeObject::markUnknown(ExclusiveContext *cx)
 void
 TypeObject::maybeClearNewScriptOnOOM()
 {
+    MOZ_ASSERT(zone()->isGCSweeping());
+
     if (!isMarked())
         return;
 
@@ -3234,7 +3244,7 @@ TypeObject::maybeClearNewScriptOnOOM()
 
     // This method is called during GC sweeping, so there is no write barrier
     // that needs to be triggered.
-    js_free(newScript_);
+    js_delete(newScript());
     newScript_.unsafeSet(nullptr);
 }
 
@@ -4593,7 +4603,9 @@ TypeObject::clearProperties()
 inline void
 TypeObject::sweep(FreeOp *fop, bool *oom)
 {
-    if (!isMarked()) {
+    MOZ_ASSERT(zone()->isGCSweepingOrCompacting());
+
+    if (zone()->isGCSweeping() && !isMarked()) {
         // Take care of any finalization required for this object.
         if (newScript())
             fop->delete_(newScript());
@@ -4689,27 +4701,29 @@ TypeCompartment::sweep(FreeOp *fop)
 
     if (arrayTypeTable) {
         for (ArrayTypeTable::Enum e(*arrayTypeTable); !e.empty(); e.popFront()) {
-            const ArrayTableKey &key = e.front().key();
+            ArrayTableKey key = e.front().key();
             JS_ASSERT(key.type.isUnknown() || !key.type.isSingleObject());
 
             bool remove = false;
-            TypeObject *typeObject = nullptr;
             if (!key.type.isUnknown() && key.type.isTypeObject()) {
-                typeObject = key.type.typeObjectNoBarrier();
+                TypeObject *typeObject = key.type.typeObjectNoBarrier();
                 if (IsTypeObjectAboutToBeFinalized(&typeObject))
                     remove = true;
+                else
+                    key.type = Type::ObjectType(typeObject);
+            }
+            if (key.proto && key.proto != TaggedProto::LazyProto &&
+                IsObjectAboutToBeFinalized(&key.proto))
+            {
+                remove = true;
             }
             if (IsTypeObjectAboutToBeFinalized(e.front().value().unsafeGet()))
                 remove = true;
 
-            if (remove) {
+            if (remove)
                 e.removeFront();
-            } else if (typeObject && typeObject != key.type.typeObjectNoBarrier()) {
-                ArrayTableKey newKey;
-                newKey.type = Type::ObjectType(typeObject);
-                newKey.proto = key.proto;
-                e.rekeyFront(newKey);
-            }
+            else if (key != e.front().key())
+                e.rekeyFront(key);
         }
     }
 
@@ -4788,6 +4802,7 @@ JSCompartment::sweepNewTypeObjectTable(TypeObjectWithNewScriptSet &table)
 }
 
 #ifdef JSGC_COMPACTING
+
 void
 JSCompartment::fixupNewTypeObjectTable(TypeObjectWithNewScriptSet &table)
 {
@@ -4822,7 +4837,33 @@ JSCompartment::fixupNewTypeObjectTable(TypeObjectWithNewScriptSet &table)
         }
     }
 }
-#endif
+
+void
+TypeNewScript::fixupAfterMovingGC()
+{
+    if (fun && IsForwarded(fun.get()))
+        fun = Forwarded(fun.get());
+    /* preliminaryObjects are handled by sweep(). */
+    if (templateObject_ && IsForwarded(templateObject_.get()))
+        templateObject_ = Forwarded(templateObject_.get());
+    if (initializedShape_ && IsForwarded(initializedShape_.get()))
+        initializedShape_ = Forwarded(initializedShape_.get());
+}
+
+void
+TypeObject::fixupAfterMovingGC()
+{
+    if (proto().isObject() && IsForwarded(proto_.get()))
+        proto_ = Forwarded(proto_.get());
+    if (singleton_ && !lazy() && IsForwarded(singleton_.get()))
+        singleton_ = Forwarded(singleton_.get());
+    if (newScript_)
+        newScript_->fixupAfterMovingGC();
+    if (interpretedFunction && IsForwarded(interpretedFunction.get()))
+        interpretedFunction = Forwarded(interpretedFunction.get());
+}
+
+#endif // JSGC_COMPACTING
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 

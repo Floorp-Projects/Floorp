@@ -331,13 +331,23 @@ input[type=button] {
 
 #newtab-search-logo {
   display: -moz-box;
-  width: 77px; /* 65 image width + 6 left "padding" + 6 right "padding" */
+  width: 38px;
   height: 38px; /* 26 image height + 6 top "padding" + 6 bottom "padding" */
   border: 1px solid transparent;
   -moz-margin-end: 8px;
   background-repeat: no-repeat;
   background-position: center;
+  background-image: url(chrome://global/skin/icons/autocomplete-search.svg#search-icon);
+  background-size: 26px 26px;
+}
+
+#newtab-search-logo[type="logo"] {
   background-size: 65px 26px;
+  width: 77px; /* 65 image width + 6 left "padding" + 6 right "padding" */
+}
+
+#newtab-search-logo[type="favicon"] {
+  background-size: 16px 16px;
 }
 
 #newtab-search-logo[hidden] {

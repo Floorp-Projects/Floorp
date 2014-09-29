@@ -22,6 +22,7 @@
 #include "js/CharacterEncoding.h"
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using js::GetGlobalForObjectCrossCompartment;
 using js::AssertSameCompartment;
 
@@ -210,7 +211,7 @@ nsXBLProtoImpl::InitTargetObjects(nsXBLPrototypeBinding* aBinding,
   // Make sure the interface object is created before the prototype object
   // so that XULElement is hidden from content. See bug 909340.
   bool defineOnGlobal = dom::XULElementBinding::ConstructorEnabled(cx, global);
-  dom::XULElementBinding::GetConstructorObject(cx, global, defineOnGlobal);
+  dom::XULElementBinding::GetConstructorObjectHandle(cx, global, defineOnGlobal);
 
   rv = nsContentUtils::WrapNative(cx, aBoundElement, &v,
                                   /* aAllowWrapping = */ false);
@@ -239,9 +240,12 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   // We want to pre-compile our implementation's members against a "prototype context". Then when we actually 
   // bind the prototype to a real xbl instance, we'll clone the pre-compiled JS into the real instance's 
   // context.
-  AutoSafeJSContext cx;
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(xpc::CompilationScope())))
+    return NS_ERROR_FAILURE;
+  jsapi.TakeOwnershipOfErrorReporting();
+  JSContext* cx = jsapi.cx();
   JS::Rooted<JSObject*> compilationGlobal(cx, xpc::CompilationScope());
-  JSAutoCompartment ac(cx, compilationGlobal);
 
   mPrecompiledMemberHolder = JS_NewObjectWithGivenProto(cx, nullptr, JS::NullPtr(), compilationGlobal);
   if (!mPrecompiledMemberHolder)
@@ -253,7 +257,7 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   for (nsXBLProtoImplMember* curr = mMembers;
        curr;
        curr = curr->GetNext()) {
-    nsresult rv = curr->CompileMember(mClassName, rootedHolder);
+    nsresult rv = curr->CompileMember(jsapi, mClassName, rootedHolder);
     if (NS_FAILED(rv)) {
       DestroyMembers();
       return rv;
