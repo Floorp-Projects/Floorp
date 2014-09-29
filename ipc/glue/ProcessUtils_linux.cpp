@@ -27,7 +27,10 @@
 #include "base/file_descriptor_shuffle.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/unused.h"
 #include "base/process_util.h"
+#include "base/eintr_wrapper.h"
 
 #include "prenv.h"
 
@@ -37,11 +40,12 @@
 
 int content_process_main(int argc, char *argv[]);
 
-extern bool gDisableAndroidLog;
+typedef mozilla::Vector<int> FdArray;
 
 #endif /* MOZ_B2G_LOADER */
 
 namespace mozilla {
+
 namespace ipc {
 
 void SetThisProcessName(const char *aName)
@@ -98,9 +102,18 @@ static pid_t sProcLoaderPid = 0;
 static int sProcLoaderChannelFd = -1;
 static PProcLoaderParent *sProcLoaderParent = nullptr;
 static MessageLoop *sProcLoaderLoop = nullptr;
+static mozilla::UniquePtr<FdArray> sReservedFds;
 
 static void ProcLoaderClientDeinit();
 
+/**
+ * Some file descriptors, like the child IPC channel FD, must be opened at
+ * specific numbers. To ensure this, we pre-reserve kReservedFileDescriptors FDs
+ * starting from kBeginReserveFileDescriptor so that operations like
+ * __android_log_print() won't take these magic FDs.
+ */
+static const int kReservedFileDescriptors = 5;
+static const int kBeginReserveFileDescriptor = STDERR_FILENO + 1;
 
 class ProcLoaderParent : public PProcLoaderParent
 {
@@ -137,6 +150,14 @@ ProcLoaderParent::RecvLoadComplete(const int32_t &aPid,
 {
   ProcLoaderClientDeinit();
   return true;
+}
+
+static void
+CloseFileDescriptors(FdArray& aFds)
+{
+  for (size_t i = 0; i < aFds.length(); i++) {
+    unused << HANDLE_EINTR(close(aFds[i]));
+  }
 }
 
 void
@@ -292,6 +313,7 @@ class ProcLoaderRunnerBase
 {
 public:
   virtual int DoWork() = 0;
+  virtual ~ProcLoaderRunnerBase() {}
 };
 
 
@@ -304,7 +326,6 @@ int
 ProcLoaderNoopRunner::DoWork() {
   return 0;
 }
-
 
 /**
  * The runner to load Nuwa at the current process.
@@ -336,9 +357,12 @@ ProcLoaderLoadRunner::ShuffleFds()
 {
   unsigned int i;
 
+  MOZ_ASSERT(mFdsRemap.Length() <= kReservedFileDescriptors);
+
   InjectiveMultimap fd_shuffle1, fd_shuffle2;
   fd_shuffle1.reserve(mFdsRemap.Length());
   fd_shuffle2.reserve(mFdsRemap.Length());
+
   for (i = 0; i < mFdsRemap.Length(); i++) {
     const FDRemap *map = &mFdsRemap[i];
     int fd = map->fd().PlatformHandle();
@@ -346,12 +370,28 @@ ProcLoaderLoadRunner::ShuffleFds()
 
     fd_shuffle1.push_back(InjectionArc(fd, tofd, false));
     fd_shuffle2.push_back(InjectionArc(fd, tofd, false));
+
+    // Erase from sReservedFds we will use.
+    for (int* toErase = sReservedFds->begin();
+         toErase < sReservedFds->end();
+         toErase++) {
+      if (tofd == *toErase) {
+        sReservedFds->erase(toErase);
+        break;
+      }
+    }
   }
 
   DebugOnly<bool> ok = ShuffleFileDescriptors(&fd_shuffle1);
-  MOZ_ASSERT(ok, "ShuffleFileDescriptors failed");
 
-  CloseSuperfluousFds(fd_shuffle2);
+  // Close the FDs that are reserved but not used after
+  // ShuffleFileDescriptors().
+  MOZ_ASSERT(sReservedFds);
+  CloseFileDescriptors(*sReservedFds);
+  sReservedFds = nullptr;
+
+  // Note that we don'e call ::base::CloseSuperfluousFds() here, assuming that
+  // The file descriptor inherited from the parent are also necessary for us.
 }
 
 int
@@ -482,8 +522,13 @@ public:
  */
 static int
 ProcLoaderServiceRun(pid_t aPeerPid, int aFd,
-                     int aArgc, const char *aArgv[])
+                     int aArgc, const char *aArgv[],
+                     FdArray& aReservedFds)
 {
+  // Make a copy of aReservedFds. It will be used when we dup() the magic file
+  // descriptors when ProcLoaderChild::RecvLoad() runs.
+  sReservedFds = MakeUnique<FdArray>(mozilla::Move(aReservedFds));
+
   ScopedLogging logging;
 
   char **_argv;
@@ -498,11 +543,8 @@ ProcLoaderServiceRun(pid_t aPeerPid, int aFd,
   gArgc = aArgc;
 
   {
-    gDisableAndroidLog = true;
-
     nsresult rv = XRE_InitCommandLine(aArgc, _argv);
     if (NS_FAILED(rv)) {
-      gDisableAndroidLog = false;
       MOZ_CRASH();
     }
 
@@ -530,8 +572,6 @@ ProcLoaderServiceRun(pid_t aPeerPid, int aFd,
     BackgroundHangMonitor::Allow();
 
     XRE_DeinitCommandLine();
-
-    gDisableAndroidLog = false;
   }
 
   MOZ_ASSERT(sProcLoaderDispatchedTask != nullptr);
@@ -555,16 +595,22 @@ ProcLoaderServiceRun(pid_t aPeerPid, int aFd,
 
 #ifdef MOZ_B2G_LOADER
 void
-XRE_ProcLoaderClientInit(pid_t aPeerPid, int aChannelFd)
+XRE_ProcLoaderClientInit(pid_t aPeerPid, int aChannelFd, FdArray& aReservedFds)
 {
+  // We already performed fork(). It's safe to free the "danger zone" of file
+  // descriptors .
+  mozilla::ipc::CloseFileDescriptors(aReservedFds);
+
   mozilla::ipc::ProcLoaderClientInit(aPeerPid, aChannelFd);
 }
 
 int
 XRE_ProcLoaderServiceRun(pid_t aPeerPid, int aFd,
-                         int aArgc, const char *aArgv[])
+                         int aArgc, const char *aArgv[],
+                         FdArray& aReservedFds)
 {
   return mozilla::ipc::ProcLoaderServiceRun(aPeerPid, aFd,
-                                            aArgc, aArgv);
+                                            aArgc, aArgv,
+                                            aReservedFds);
 }
 #endif /* MOZ_B2G_LOADER */
