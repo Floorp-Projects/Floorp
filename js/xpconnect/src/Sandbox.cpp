@@ -310,7 +310,7 @@ sandbox_resolve(JSContext *cx, HandleObject obj, HandleId id)
 }
 
 static void
-sandbox_finalize(js::FreeOp *fop, JSObject *obj)
+sandbox_finalize(JSFreeOp *fop, JSObject *obj)
 {
     nsIScriptObjectPrincipal *sop =
         static_cast<nsIScriptObjectPrincipal *>(xpc_GetJSPrivate(obj));
@@ -322,15 +322,6 @@ sandbox_finalize(js::FreeOp *fop, JSObject *obj)
     static_cast<SandboxPrivate *>(sop)->ForgetGlobalObject();
     NS_RELEASE(sop);
     DestroyProtoAndIfaceCache(obj);
-}
-
-static void
-sandbox_moved(JSObject *obj, const JSObject *old)
-{
-    nsIScriptObjectPrincipal *sop =
-        static_cast<nsIScriptObjectPrincipal *>(xpc_GetJSPrivate(obj));
-    MOZ_ASSERT(sop);
-    static_cast<SandboxPrivate *>(sop)->ObjectMoved(obj, old);
 }
 
 static bool
@@ -452,42 +443,22 @@ sandbox_addProperty(JSContext *cx, HandleObject obj, HandleId id, MutableHandleV
 
 #define XPCONNECT_SANDBOX_CLASS_METADATA_SLOT (XPCONNECT_GLOBAL_EXTRA_SLOT_OFFSET)
 
-static const js::Class SandboxClass = {
+static const JSClass SandboxClass = {
     "Sandbox",
     XPCONNECT_GLOBAL_FLAGS_WITH_EXTRA_SLOTS(1),
     JS_PropertyStub,   JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     sandbox_enumerate, sandbox_resolve, sandbox_convert,  sandbox_finalize,
-    nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook,
-    JS_NULL_CLASS_SPEC,
-    {
-      nullptr,      /* outerObject */
-      nullptr,      /* innerObject */
-      nullptr,      /* iteratorObject */
-      false,        /* isWrappedNative */
-      nullptr,      /* weakmapKeyDelegateOp */
-      sandbox_moved /* objectMovedOp */
-    },
-    JS_NULL_OBJECT_OPS
+    nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook
 };
 
 // Note to whomever comes here to remove addProperty hooks: billm has promised
 // to do the work for this class.
-static const js::Class SandboxWriteToProtoClass = {
+static const JSClass SandboxWriteToProtoClass = {
     "Sandbox",
     XPCONNECT_GLOBAL_FLAGS_WITH_EXTRA_SLOTS(1),
     sandbox_addProperty,   JS_DeletePropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     sandbox_enumerate, sandbox_resolve, sandbox_convert,  sandbox_finalize,
-    nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook,
-    JS_NULL_CLASS_SPEC,
-    {
-      nullptr,      /* outerObject */
-      nullptr,      /* innerObject */
-      nullptr,      /* iteratorObject */
-      false,        /* isWrappedNative */
-      nullptr,      /* weakmapKeyDelegateOp */
-      sandbox_moved /* objectMovedOp */
-    },
-    JS_NULL_OBJECT_OPS
+    nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook
 };
 
 static const JSFunctionSpec SandboxFunctions[] = {
@@ -500,7 +471,7 @@ static const JSFunctionSpec SandboxFunctions[] = {
 bool
 xpc::IsSandbox(JSObject *obj)
 {
-    const Class *clasp = GetObjectClass(obj);
+    const JSClass *clasp = GetObjectJSClass(obj);
     return clasp == &SandboxClass || clasp == &SandboxWriteToProtoClass;
 }
 
@@ -890,11 +861,11 @@ xpc::CreateSandboxObject(JSContext *cx, MutableHandleValue vp, nsISupports *prin
 
     compartmentOptions.setAddonId(addonId);
 
-    const Class *clasp = options.writeToGlobalPrototype
-                       ? &SandboxWriteToProtoClass
-                       : &SandboxClass;
+    const JSClass *clasp = options.writeToGlobalPrototype
+                         ? &SandboxWriteToProtoClass
+                         : &SandboxClass;
 
-    RootedObject sandbox(cx, xpc::CreateGlobalObject(cx, js::Jsvalify(clasp),
+    RootedObject sandbox(cx, xpc::CreateGlobalObject(cx, clasp,
                                                      principal, compartmentOptions));
     if (!sandbox)
         return NS_ERROR_FAILURE;
