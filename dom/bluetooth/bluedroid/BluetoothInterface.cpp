@@ -339,7 +339,9 @@ Convert(bt_property_type_t aIn, BluetoothPropertyType& aOut)
     return NS_OK;
   }
   if (!aIn || aIn >= MOZ_ARRAY_LENGTH(sPropertyType)) {
-    return NS_ERROR_ILLEGAL_VALUE;
+    /* Bug 1065999: working around unknown properties */
+    aOut = PROPERTY_UNKNOWN;
+    return NS_OK;
   }
   aOut = sPropertyType[aIn];
   return NS_OK;
@@ -1014,6 +1016,9 @@ Convert(const bt_property_t& aIn, BluetoothProperty& aOut)
   /* value conversion */
 
   switch (aOut.mType) {
+    case PROPERTY_UNKNOWN:
+      /* Bug 1065999: working around unknown properties */
+      break;
     case PROPERTY_BDNAME:
       /* fall through */
     case PROPERTY_REMOTE_FRIENDLY_NAME:
