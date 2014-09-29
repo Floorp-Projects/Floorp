@@ -614,7 +614,28 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext,
 {
   gfxContext *gfx = aContext->ThebesContext();
 
+  gfxMatrix newMatrix =
+    gfx->CurrentMatrix().PreMultiply(aTransform).NudgeToIntegers();
+  if (newMatrix.IsSingular()) {
+    return;
+  }
+
   uint16_t renderMode = SVGAutoRenderState::GetRenderMode(aContext);
+  FillRule fillRule =
+    nsSVGUtils::ToFillRule(renderMode == SVGAutoRenderState::CLIP_MASK ?
+                             StyleSVG()->mClipRule : StyleSVG()->mFillRule);
+
+  RefPtr<PathBuilder> builder =
+    aContext->GetDrawTarget()->CreatePathBuilder(fillRule);
+  if (!builder) {
+    return;
+  }
+
+  RefPtr<Path> path =
+    static_cast<nsSVGPathGeometryElement*>(mContent)->BuildPath(builder);
+  if (!path) {
+    return;
+  }
 
   switch (StyleSVG()->mShapeRendering) {
   case NS_STYLE_SHAPE_RENDERING_OPTIMIZESPEED:
@@ -627,36 +648,17 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext,
   }
 
   if (renderMode == SVGAutoRenderState::CLIP_MASK) {
-    FillRule newFillRule = nsSVGUtils::ToFillRule(StyleSVG()->mClipRule);
-    RefPtr<PathBuilder> builder =
-      aContext->GetDrawTarget()->CreatePathBuilder(newFillRule);
-    if (!builder) {
-      return;
-    }
-
-    RefPtr<Path> path =
-      static_cast<nsSVGPathGeometryElement*>(mContent)->BuildPath(builder);
-    if (!path) {
-      return;
-    }
-
-    gfxMatrix newMatrix =
-      gfx->CurrentMatrix().PreMultiply(aTransform).NudgeToIntegers();
-    if (newMatrix.IsSingular()) {
-      return;
-    }
-    gfxContextMatrixAutoSaveRestore autoSaveRestore(gfx);
-    gfx->SetMatrix(newMatrix);
-
     FillRule oldFillRule = gfx->CurrentFillRule();
-    gfx->SetFillRule(newFillRule);
+    gfxContextMatrixAutoSaveRestore autoSaveRestore(gfx);
 
+    gfx->SetMatrix(newMatrix);
+    gfx->SetFillRule(fillRule);
     gfx->SetColor(gfxRGBA(1.0f, 1.0f, 1.0f, 1.0f));
     gfx->SetPath(path);
     gfx->Fill();
+
     gfx->SetFillRule(oldFillRule);
     gfx->NewPath();
-
     return;
   }
 
@@ -664,8 +666,7 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext,
                     "Unknown render mode");
 
   gfxContextAutoSaveRestore autoSaveRestore(gfx);
-
-  GeneratePath(gfx, ToMatrix(aTransform));
+  gfx->SetMatrix(newMatrix);
 
   gfxTextContextPaint *contextPaint =
     (gfxTextContextPaint*)aContext->GetDrawTarget()->GetUserData(&gfxTextContextPaint::sUserDataKey);
@@ -674,8 +675,9 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext,
     nsRefPtr<gfxPattern> fillPattern =
       nsSVGUtils::MakeFillPatternFor(this, gfx, contextPaint);
     if (fillPattern) {
+      gfx->SetPath(path);
       gfx->SetPattern(fillPattern);
-      gfx->SetFillRule(nsSVGUtils::ToFillRule(StyleSVG()->mFillRule));
+      gfx->SetFillRule(fillRule);
       gfx->Fill();
     }
   }
@@ -685,6 +687,7 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext,
     nsRefPtr<gfxPattern> strokePattern =
       nsSVGUtils::MakeStrokePatternFor(this, gfx, contextPaint);
     if (strokePattern) {
+      gfx->SetPath(path);
       nsSVGUtils::SetupCairoStrokeGeometry(this, gfx, contextPaint);
       gfx->SetPattern(strokePattern);
       gfx->Stroke();
