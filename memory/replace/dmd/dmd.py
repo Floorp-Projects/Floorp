@@ -102,7 +102,8 @@ If no files are specified, read from stdin.
 Write to stdout unless -o/--output is specified.
 Stack traces are fixed to show function names, filenames and line numbers
 unless --no-fix-stacks is specified; stack fixing modifies the original file
-and may take some time.
+and may take some time. If specified, the BREAKPAD_SYMBOLS_PATH environment
+variable is used to find breakpad symbols for stack fixing.
 '''
     p = argparse.ArgumentParser(description=description)
 
@@ -128,6 +129,9 @@ and may take some time.
 
     p.add_argument('--no-fix-stacks', action='store_true',
                    help='do not fix stacks')
+
+    p.add_argument('--filter-stacks-for-testing', action='store_true',
+                   help='filter stack traces; only useful for testing purposes')
 
     p.add_argument('input_file', type=argparse.FileType('r'))
 
@@ -304,10 +308,26 @@ def main():
         print(*arguments, file=args.output, **kwargs)
 
     def printStack(traceTable, frameTable, traceKey):
+        frameKeys = traceTable[traceKey]
+        fmt = '    #{:02d}{:}'
+
+        if args.filter_stacks_for_testing:
+            # If any frame has "DMD.cpp" or "replace_malloc.c" in its
+            # description -- as should be the case for every stack trace when
+            # running DMD in test mode -- we replace the entire trace with a
+            # single, predictable frame. There is too much variation in the
+            # stack traces across different machines and platforms to do more
+            # specific matching.
+            for frameKey in frameKeys:
+                frameDesc = frameTable[frameKey]
+                if 'DMD.cpp' in frameDesc or 'replace_malloc.c' in frameDesc:
+                    out(fmt.format(1, ': ... DMD.cpp ...'))
+                    return
+
         # The frame number is always '#00' (see DMD.h for why), so we have to
         # replace that with the correct frame number.
         for n, frameKey in enumerate(traceTable[traceKey], start=1):
-            out('    #{:02d}{:}'.format(n, frameTable[frameKey][3:]))
+            out(fmt.format(n, frameTable[frameKey][3:]))
 
     def printRecords(recordKind, records, heapUsableSize):
         RecordKind = recordKind.capitalize()
