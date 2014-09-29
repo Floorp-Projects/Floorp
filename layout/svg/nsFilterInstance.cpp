@@ -375,9 +375,13 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
         gfx->SetPattern(fillPattern);
         gfx->Fill();
       }
-    } else if (aSource == &mStrokePaint &&
-               nsSVGUtils::SetupCairoStrokePaint(mTargetFrame, gfx)) {
-      gfx->Fill();
+    } else if (aSource == &mStrokePaint) {
+      nsRefPtr<gfxPattern> strokePattern =
+        nsSVGUtils::MakeStrokePatternFor(mTargetFrame, gfx);
+      if (strokePattern) {
+        gfx->SetPattern(strokePattern);
+        gfx->Fill(); // yes, filling a primitive subregion with _stroke_ paint
+      }
     }
     gfx->Restore();
   }

@@ -503,7 +503,6 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
       // though, because if pathExtents is empty, its position will not have
       // been set. Happily we can use tmpCtx->GetUserStrokeExtent() to find
       // the center point of the extents even though it gets the extents wrong.
-      nsSVGUtils::SetupCairoStrokeBBoxGeometry(this, tmpCtx);
       pathExtents.MoveTo(tmpCtx->GetUserStrokeExtent().Center());
       pathExtents.SizeTo(0, 0);
     }
