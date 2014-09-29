@@ -532,6 +532,10 @@ class ErrorReport {
     ~ErrorReport() {}
 };
 
+void
+DispatchScriptErrorEvent(nsPIDOMWindow *win, JSRuntime *rt, xpc::ErrorReport *xpcReport,
+                         JS::Handle<JS::Value> exception);
+
 } // namespace xpc
 
 namespace mozilla {
