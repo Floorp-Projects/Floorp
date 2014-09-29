@@ -669,7 +669,7 @@ MediaDecoderOwner::NextFrameStatus AudioOffloadPlayer::GetNextFrameStatus()
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mPlayState == MediaDecoder::PLAY_STATE_SEEKING) {
-    return MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING;
+    return MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING;
   } else if (mPlayState == MediaDecoder::PLAY_STATE_ENDED) {
     return MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
   } else {
