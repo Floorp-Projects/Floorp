@@ -1008,7 +1008,8 @@ a11y::ProxyCreated(ProxyAccessible* aProxy)
   if (!obj)
     return;
 
-  atk_object_initialize(obj, aProxy);
+  uintptr_t inner = reinterpret_cast<uintptr_t>(aProxy) | IS_PROXY;
+  atk_object_initialize(obj, reinterpret_cast<gpointer>(inner));
   obj->role = ATK_ROLE_INVALID;
   obj->layer = ATK_LAYER_INVALID;
   aProxy->SetWrapper(reinterpret_cast<uintptr_t>(obj) | IS_PROXY);
