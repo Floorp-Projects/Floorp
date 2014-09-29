@@ -942,7 +942,7 @@ function cleanupTestCommon() {
   }
 
   // The updates directory is located outside of the application directory on
-  // Windows and Mac so it also needs to be removed.
+  // Windows and Mac OS X so it also needs to be removed.
   if (IS_WIN || IS_MACOSX) {
     let updatesDir = getMockUpdRootD();
     // Try to remove the directory used to apply updates. Since the test has
@@ -954,6 +954,26 @@ function cleanupTestCommon() {
       } catch (e) {
         logTestInfo("non-fatal error removing directory. Path: " +
                     updatesDir.path + ", Exception: " + e);
+      }
+      if (IS_MACOSX) {
+        let updatesRootDir = gUpdatesRootDir.clone();
+        while (updatesRootDir.path != updatesDir.path) {
+          if (updatesDir.exists()) {
+            logTestInfo("attempting to remove directory. Path: " +
+                        updatesDir.path);
+            try {
+              // Try to remove the directory without the recursive flag set
+              // since the top level directory has already had its contents
+              // removed and the parent directory might still be used by a
+              // different test.
+              updatesDir.remove(false);
+            } catch (e) {
+              logTestInfo("non-fatal error removing directory. Path: " +
+                          updatesDir.path + ", Exception: " + e);
+            }
+          }
+          updatesDir = updatesDir.parent;
+        }
       }
     }
   }
@@ -1356,6 +1376,19 @@ function getMockUpdRootD() {
   return updatesDir;
 }
 #elif XP_MACOSX
+XPCOMUtils.defineLazyGetter(this, "gUpdatesRootDir",
+                            function test_gUpdatesRootDir() {
+  let dir = Services.dirsvc.get("ULibDir", AUS_Ci.nsILocalFile);
+  dir.append("Caches");
+  if (MOZ_APP_VENDOR || MOZ_APP_BASENAME) {
+    dir.append(MOZ_APP_VENDOR ? MOZ_APP_VENDOR : MOZ_APP_BASENAME);
+  } else {
+    dir.append("Mozilla");
+  }
+  dir.append(DIR_UPDATES);
+  return dir;
+});
+
 /**
  * Helper function for getting the update root directory used by the tests. This
  * returns the same directory as returned by nsXREDirProvider::GetUpdateRootDir
@@ -1363,31 +1396,15 @@ function getMockUpdRootD() {
  * when running a test that launches the application.
  */
 function getMockUpdRootD() {
-  let userLibDir = Services.dirsvc.get("ULibDir", AUS_Ci.nsILocalFile);
   let appDir = Services.dirsvc.get(XRE_EXECUTABLE_FILE, AUS_Ci.nsIFile).
                parent.parent.parent;
   let appDirPath = appDir.path;
   appDirPath = appDirPath.substr(0, appDirPath.length - 4);
 
-  let relPathUpdates = "";
-  if (MOZ_APP_VENDOR || MOZ_APP_BASENAME) {
-    relPathUpdates += (MOZ_APP_VENDOR ? MOZ_APP_VENDOR : MOZ_APP_BASENAME) +
-                      "/" + DIR_UPDATES + appDirPath;
-  }
-
-  if (!relPathUpdates) {
-    if (MOZ_APP_VENDOR && MOZ_APP_BASENAME) {
-      relPathUpdates += MOZ_APP_VENDOR + "/" + MOZ_APP_BASENAME;
-    } else {
-      relPathUpdates += MOZ_APP_BASENAME;
-    }
-    relPathUpdates += "/" + MOZ_APP_NAME;
-  }
-
+  let pathUpdates = gUpdatesRootDir.path + appDirPath;
   let updatesDir = AUS_Cc["@mozilla.org/file/local;1"].
                    createInstance(AUS_Ci.nsILocalFile);
-
-  updatesDir.initWithPath(userLibDir.path + "/Caches/" + relPathUpdates);
+  updatesDir.initWithPath(pathUpdates);
   logTestInfo("returning UpdRootD Path: " + updatesDir.path);
   return updatesDir;
 }
