@@ -35,6 +35,11 @@ check_for_forced_update() {
     return 0;
   fi
 
+  if [ "$forced_file_chk" = "Contents/Resources/precomplete" ]; then
+    ## "true" *giggle*
+    return 0;
+  fi
+
   if [ "${forced_file_chk##*.}" = "chk" ]
   then
     ## "true" *giggle*
@@ -92,9 +97,6 @@ archivefiles="updatev2.manifest updatev3.manifest"
 
 mkdir -p "$workdir"
 
-# On Mac, the precomplete file added by Bug 386760 will cause OS X to reload the
-# Info.plist so it launches the right architecture, bug 600098
-
 # Generate a list of all files in the target directory.
 pushd "$olddir"
 if test $? -ne 0 ; then
@@ -112,8 +114,10 @@ if test $? -ne 0 ; then
 fi
 
 if [ ! -f "precomplete" ]; then
-  notice "precomplete file is missing!"
-  exit 1
+  if [ ! -f "Contents/Resources/precomplete" ]; then
+    notice "precomplete file is missing!"
+    exit 1
+  fi
 fi
 
 list_dirs newdirs

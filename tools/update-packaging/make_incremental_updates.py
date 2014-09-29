@@ -336,12 +336,20 @@ def create_partial_patch(from_dir_path, to_dir_path, patch_filename, shas, patch
     # Create a hashtable of the from  and to directories
     from_dir_hash,from_file_set,from_dir_set = patch_info.build_marfile_entry_hash(from_dir_path)
     to_dir_hash,to_file_set,to_dir_set = patch_info.build_marfile_entry_hash(to_dir_path)
-    # Require that the precomplete file is included in the complete update
-    if "precomplete" not in to_file_set:
-        raise Exception, "missing precomplete file in: "+to_dir_path
     # Create a list of the forced updates 
     forced_list = forced_updates.strip().split('|')
-    forced_list.append("precomplete")
+    # Require that the precomplete file is included in the complete update
+    if "precomplete" not in to_file_set:
+        # The check with \ file separators allows tests for Mac to run on Windows
+        if "Contents/Resources/precomplete" not in to_file_set and "Contents\Resources\precomplete" not in to_file_set:
+            raise Exception, "missing precomplete file in: "+to_dir_path
+        else:
+            if "Contents/Resources/precomplete" in to_file_set:
+                forced_list.append("Contents/Resources/precomplete")
+            else:
+                forced_list.append("Contents\Resources\precomplete")
+    else:
+        forced_list.append("precomplete")
 
     # Files which exist in both sets need to be patched
     patch_filenames = list(from_file_set.intersection(to_file_set))
