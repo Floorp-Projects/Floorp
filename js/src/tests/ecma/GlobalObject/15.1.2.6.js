@@ -27,8 +27,6 @@ writeHeaderToLog( SECTION + " "+ TITLE);
 new TestCase( SECTION, "isNaN.length",      1,                  isNaN.length );
 new TestCase( SECTION, "var MYPROPS=''; for ( var p in isNaN ) { MYPROPS+= p }; MYPROPS", "", eval("var MYPROPS=''; for ( var p in isNaN ) { MYPROPS+= p }; MYPROPS") );
 new TestCase( SECTION, "isNaN.length = null; isNaN.length", 1,      eval("isNaN.length=null; isNaN.length") );
-new TestCase( SECTION, "delete isNaN.length",               false,  delete isNaN.length );
-new TestCase( SECTION, "delete isNaN.length; isNaN.length", 1,      eval("delete isNaN.length; isNaN.length") );
 
 //     new TestCase( SECTION, "isNaN.__proto__",   Function.prototype, isNaN.__proto__ );
 
