@@ -187,38 +187,13 @@ nsXPConnect::IsISupportsDescendant(nsIInterfaceInfo* info)
 }
 
 void
-xpc::ErrorReport::Init(JSErrorReport *aReport,
-                       const char *aFallbackMessage,
-                       nsIGlobalObject *aGlobal)
+xpc::ErrorReport::Init(JSErrorReport *aReport, const char *aFallbackMessage,
+                       bool aIsChrome, uint64_t aWindowID)
 {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(aGlobal);
+    mCategory = aIsChrome ? NS_LITERAL_CSTRING("chrome javascript")
+                          : NS_LITERAL_CSTRING("content javascript");
+    mWindowID = aWindowID;
 
-    mGlobal = aGlobal;
-    mWindow = do_QueryInterface(mGlobal);
-    MOZ_ASSERT_IF(mWindow, mWindow->IsInnerWindow());
-
-    nsIPrincipal *prin = mGlobal->PrincipalOrNull();
-    mIsChrome = nsContentUtils::IsSystemPrincipal(prin);
-
-    InitInternal(aReport, aFallbackMessage);
-}
-
-void
-xpc::ErrorReport::InitOnWorkerThread(JSErrorReport *aReport,
-                                     const char *aFallbackMessage,
-                                     bool aIsChrome)
-{
-    MOZ_ASSERT(!NS_IsMainThread());
-    mIsChrome = aIsChrome;
-
-    InitInternal(aReport, aFallbackMessage);
-}
-
-void
-xpc::ErrorReport::InitInternal(JSErrorReport *aReport,
-                               const char *aFallbackMessage)
-{
     const char16_t* m = static_cast<const char16_t*>(aReport->ucmessage);
     if (m) {
         JSFlatString* name = js::GetErrorTypeName(CycleCollectedJSRuntime::Get()->Runtime(), aReport->exnType);
@@ -296,8 +271,8 @@ xpc::ErrorReport::LogToConsole()
     NS_ENSURE_TRUE_VOID(consoleService && errorObject);
 
     nsresult rv = errorObject->InitWithWindowID(mErrorMsg, mFileName, mSourceLine,
-                                                mLineNumber, mColumn, mFlags, Category(),
-                                                mWindow ? mWindow->WindowID() : 0);
+                                                mLineNumber, mColumn, mFlags,
+                                                mCategory, mWindowID);
     NS_ENSURE_SUCCESS_VOID(rv);
     consoleService->LogMessage(errorObject);
 
