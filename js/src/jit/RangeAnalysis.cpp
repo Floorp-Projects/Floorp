@@ -2499,11 +2499,10 @@ ComputeRequestedTruncateKind(MDefinition *candidate)
     MDefinition::TruncateKind kind = MDefinition::Truncate;
     for (MUseIterator use(candidate->usesBegin()); use != candidate->usesEnd(); use++) {
         if (!use->consumer()->isDefinition()) {
-            // We can only skip testing resume points, if all original uses are
-            // still present, or if the value does not need conversion.
-            // Otherwise a branch removed by UCE might rely on the non-truncated
-            // value, and any bailout with a truncated value might lead an
-            // incorrect value.
+            // Truncation is a destructive optimization, as such, we need to pay
+            // attention to removed branches and prevent optimization
+            // destructive optimizations if we have no alternative. (see
+            // UseRemoved flag)
             if (candidate->isUseRemoved() && needsConversion)
                 kind = Min(kind, MDefinition::TruncateAfterBailouts);
             continue;
