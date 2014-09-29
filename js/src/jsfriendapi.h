@@ -143,8 +143,9 @@ JS_SetCompartmentPrincipals(JSCompartment *compartment, JSPrincipals *principals
 extern JS_FRIEND_API(JSPrincipals *)
 JS_GetScriptPrincipals(JSScript *script);
 
-extern JS_FRIEND_API(JSPrincipals *)
-JS_GetScriptOriginPrincipals(JSScript *script);
+extern JS_FRIEND_API(bool)
+JS_ScriptHasMutedErrors(JSScript *script);
+
 
 /* Safe to call with input obj == nullptr. Returns non-nullptr iff obj != nullptr. */
 extern JS_FRIEND_API(JSObject *)

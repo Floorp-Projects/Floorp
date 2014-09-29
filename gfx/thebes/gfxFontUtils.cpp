@@ -1308,8 +1308,8 @@ const gfxFontUtils::MacFontNameCharsetMapping gfxFontUtils::gMacFontNameCharsets
     { ENCODING_ID_MAC_DEVANAGARI,   ANY,                      "x-mac-devanagari"},
     { ENCODING_ID_MAC_GURMUKHI,     ANY,                      "x-mac-gurmukhi"  },
     { ENCODING_ID_MAC_GUJARATI,     ANY,                      "x-mac-gujarati"  },
-    { ENCODING_ID_MAC_SIMP_CHINESE, LANG_ID_MAC_SIMP_CHINESE, "GB2312"          },
-    { ENCODING_ID_MAC_SIMP_CHINESE, ANY,                      "GB2312"          }
+    { ENCODING_ID_MAC_SIMP_CHINESE, LANG_ID_MAC_SIMP_CHINESE, "gb18030"         },
+    { ENCODING_ID_MAC_SIMP_CHINESE, ANY,                      "gb18030"         }
 };
 
 const char* gfxFontUtils::gISOFontNameCharsets[] = 

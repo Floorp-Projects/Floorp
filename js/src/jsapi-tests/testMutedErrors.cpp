@@ -6,18 +6,9 @@
 #include "js/OldDebugAPI.h"
 #include "jsapi-tests/tests.h"
 
-static JSPrincipals *sOriginPrincipalsInErrorReporter = nullptr;
-static TestJSPrincipals prin1(1);
-static TestJSPrincipals prin2(1);
-
-BEGIN_TEST(testOriginPrincipals)
+static bool sErrorReportMuted = false;
+BEGIN_TEST(testMutedErrors)
 {
-    /*
-     * Currently, the only way to set a non-trivial originPrincipal is to use
-     * JS_EvaluateUCScriptForPrincipalsVersionOrigin. This does not expose the
-     * compiled script, so we can only test nested scripts.
-     */
-
     CHECK(testOuter("function f() {return 1}; f;"));
     CHECK(testOuter("function outer() { return (function () {return 2}); }; outer();"));
     CHECK(testOuter("eval('(function() {return 3})');"));
@@ -38,7 +29,7 @@ BEGIN_TEST(testOriginPrincipals)
 
     /*
      * NB: uncaught exceptions, when reported, have nothing on the stack so
-     * both the filename and originPrincipals are null. E.g., this would fail:
+     * both the filename and mutedErrors are empty. E.g., this would fail:
      *
      *   CHECK(testError("throw 3"));
      */
@@ -48,11 +39,11 @@ BEGIN_TEST(testOriginPrincipals)
 static void
 ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
-    sOriginPrincipalsInErrorReporter = report->originPrincipals;
+    sErrorReportMuted = report->isMuted;
 }
 
 bool
-eval(const char *asciiChars, JSPrincipals *principals, JSPrincipals *originPrincipals, JS::MutableHandleValue rval)
+eval(const char *asciiChars, bool mutedErrors, JS::MutableHandleValue rval)
 {
     size_t len = strlen(asciiChars);
     char16_t *chars = new char16_t[len+1];
@@ -60,14 +51,14 @@ eval(const char *asciiChars, JSPrincipals *principals, JSPrincipals *originPrinc
         chars[i] = asciiChars[i];
     chars[len] = 0;
 
-    JS::RootedObject global(cx, JS_NewGlobalObject(cx, getGlobalClass(), principals, JS::FireOnNewGlobalHook));
+    JS::RootedObject global(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook));
     CHECK(global);
     JSAutoCompartment ac(cx, global);
     CHECK(JS_InitStandardClasses(cx, global));
 
 
     JS::CompileOptions options(cx);
-    options.setOriginPrincipals(originPrincipals)
+    options.setMutedErrors(mutedErrors)
            .setFileAndLine("", 0);
 
     bool ok = JS::Evaluate(cx, global, options, chars, len, rval);
@@ -79,21 +70,20 @@ eval(const char *asciiChars, JSPrincipals *principals, JSPrincipals *originPrinc
 bool
 testOuter(const char *asciiChars)
 {
-    CHECK(testInner(asciiChars, &prin1, &prin1));
-    CHECK(testInner(asciiChars, &prin1, &prin2));
+    CHECK(testInner(asciiChars, false));
+    CHECK(testInner(asciiChars, true));
     return true;
 }
 
 bool
-testInner(const char *asciiChars, JSPrincipals *principal, JSPrincipals *originPrincipal)
+testInner(const char *asciiChars, bool mutedErrors)
 {
     JS::RootedValue rval(cx);
-    CHECK(eval(asciiChars, principal, originPrincipal, &rval));
+    CHECK(eval(asciiChars, mutedErrors, &rval));
 
     JS::RootedFunction fun(cx, &rval.toObject().as<JSFunction>());
     JSScript *script = JS_GetFunctionScript(cx, fun);
-    CHECK(JS_GetScriptPrincipals(script) == principal);
-    CHECK(JS_GetScriptOriginPrincipals(script) == originPrincipal);
+    CHECK(JS_ScriptHasMutedErrors(script) == mutedErrors);
 
     return true;
 }
@@ -102,9 +92,9 @@ bool
 testError(const char *asciiChars)
 {
     JS::RootedValue rval(cx);
-    CHECK(!eval(asciiChars, &prin1, &prin2 /* = originPrincipals */, &rval));
+    CHECK(!eval(asciiChars, true, &rval));
     CHECK(JS_ReportPendingException(cx));
-    CHECK(sOriginPrincipalsInErrorReporter == &prin2);
+    CHECK(sErrorReportMuted == true);
     return true;
 }
-END_TEST(testOriginPrincipals)
+END_TEST(testMutedErrors)

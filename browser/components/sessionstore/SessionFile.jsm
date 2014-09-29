@@ -234,6 +234,12 @@ let SessionFileInternal = {
         }
       }
     }
+
+    // All files are corrupted if files found but none could deliver a result.
+    let allCorrupt = !noFilesFound && !result;
+    Telemetry.getHistogramById("FX_SESSION_RESTORE_ALL_FILES_CORRUPT").
+      add(allCorrupt);
+
     if (!result) {
       // If everything fails, start with an empty session.
       result = {

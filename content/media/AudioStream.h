@@ -402,6 +402,9 @@ private:
   // True if there is a pending AudioInitTask. Shutdown() will wait until the
   // pending AudioInitTask is finished.
   bool mPendingAudioInitTask;
+  // The last good position returned by cubeb_stream_get_position(). Used to
+  // check if the cubeb position is going backward.
+  uint64_t mLastGoodPosition;
 };
 
 class AudioInitTask : public nsRunnable

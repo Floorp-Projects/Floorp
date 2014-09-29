@@ -10,12 +10,10 @@
 
 #define ENOUGH_DATA_THRESHOLD 1024
  
-#define MINIMUM_DATA_THRESHOLD  4
-
 class CharDistributionAnalysis
 {
 public:
-  CharDistributionAnalysis() {Reset(false);}
+  CharDistributionAnalysis() {Reset();}
 
   //feed a block of data and do distribution analysis
   void HandleData(const char* aBuf, uint32_t aLen) {}
@@ -44,12 +42,12 @@ public:
   float GetConfidence(void);
 
   //Reset analyser, clear any state 
-  void      Reset(bool aIsPreferredLanguage) 
+  void      Reset()
   {
     mDone = false;
     mTotalChars = 0;
     mFreqChars = 0;
-    mDataThreshold = aIsPreferredLanguage ? 0 : MINIMUM_DATA_THRESHOLD;
+    mDataThreshold = 0;
   }
 
   //It is not necessary to receive all data to draw conclusion. For charset detection,
