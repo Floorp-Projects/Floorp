@@ -351,17 +351,19 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
 class ScriptErrorEvent : public nsRunnable
 {
 public:
-  ScriptErrorEvent(JSRuntime* aRuntime,
+  ScriptErrorEvent(nsPIDOMWindow* aWindow,
+                   JSRuntime* aRuntime,
                    xpc::ErrorReport* aReport,
                    JS::Handle<JS::Value> aError)
-    : mReport(aReport)
+    : mWindow(aWindow)
+    , mReport(aReport)
     , mError(aRuntime, aError)
   {}
 
   NS_IMETHOD Run()
   {
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsPIDOMWindow* win = mReport->mWindow;
+    nsPIDOMWindow* win = mWindow;
     MOZ_ASSERT(win);
     // First, notify the DOM that we have a script error, but only if
     // our window is still the current inner.
@@ -407,6 +409,7 @@ public:
   }
 
 private:
+  nsCOMPtr<nsPIDOMWindow>         mWindow;
   nsRefPtr<xpc::ErrorReport>      mReport;
   JS::PersistentRootedValue       mError;
 
@@ -467,12 +470,14 @@ SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 
   if (globalObject) {
     nsRefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
-    xpcReport->Init(report, message, globalObject);
+    bool isChrome = nsContentUtils::IsSystemPrincipal(globalObject->PrincipalOrNull());
+    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(globalObject);
+    xpcReport->Init(report, message, isChrome, win ? win->WindowID() : 0);
 
     // If we can't dispatch an event to a window, report it to the console
     // directly. This includes the case where the error was an OOM, because
     // triggering a scripted event handler is likely to generate further OOMs.
-    if (!xpcReport->mWindow || JSREPORT_IS_WARNING(xpcReport->mFlags) ||
+    if (!win || JSREPORT_IS_WARNING(xpcReport->mFlags) ||
         report->errorNumber == JSMSG_OUT_OF_MEMORY)
     {
       xpcReport->LogToConsole();
@@ -481,7 +486,7 @@ SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 
     // Otherwise, we need to asynchronously invoke onerror before we can decide
     // whether or not to report the error to the console.
-    nsContentUtils::AddScriptRunner(new ScriptErrorEvent(JS_GetRuntime(cx), xpcReport, exception));
+    nsContentUtils::AddScriptRunner(new ScriptErrorEvent(win, JS_GetRuntime(cx), xpcReport, exception));
   }
 }
 
