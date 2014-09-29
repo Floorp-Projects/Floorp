@@ -2974,11 +2974,17 @@ SVGTextDrawPathCallbacks::FillGeometry()
 void
 SVGTextDrawPathCallbacks::StrokeGeometry()
 {
+  // We don't paint the stroke when we are filling with a selection color.
   if (mColor == NS_SAME_AS_FOREGROUND_COLOR ||
       mColor == NS_40PERCENT_FOREGROUND_COLOR) {
-    // Don't paint the stroke when we are filling with a selection color.
-    if (nsSVGUtils::SetupCairoStroke(mFrame, gfx)) {
-      gfx->Stroke();
+    if (nsSVGUtils::HasStroke(mFrame, /*aContextPaint*/ nullptr)) {
+      nsRefPtr<gfxPattern> strokePattern =
+        nsSVGUtils::MakeStrokePatternFor(mFrame, gfx, /*aContextPaint*/ nullptr);
+      if (strokePattern) {
+        nsSVGUtils::SetupCairoStrokeGeometry(mFrame, gfx, /*aContextPaint*/ nullptr);
+        gfx->SetPattern(strokePattern);
+        gfx->Stroke();
+      }
     }
   }
 }
