@@ -1394,6 +1394,10 @@ gfxWindowsPlatform::GetD3D11Device()
   // leak it here as well.
   d3d11Module.disown();
 
+  if (SUCCEEDED(hr)) {
+    mD3D11Device->SetExceptionMode(0);
+  }
+
   return mD3D11Device;
 }
 
