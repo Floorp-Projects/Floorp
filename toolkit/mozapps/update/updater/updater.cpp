@@ -3014,10 +3014,16 @@ int NS_main(int argc, NS_tchar **argv)
 #endif
 
 #ifdef XP_MACOSX
-  // When the update is successful move the distribution directory from
+  // When the update is successful remove the precomplete file in the root of
+  // the application bundle and move the distribution directory from
   // Contents/MacOS to Contents/Resources and if both exist delete the
   // directory under Contents/MacOS (see Bug 1068439).
-  if (gSucceeded) {
+  if (gSucceeded && !sStagedUpdate) {
+    NS_tchar oldPrecomplete[MAXPATHLEN];
+    NS_tsnprintf(oldPrecomplete, sizeof(oldPrecomplete)/sizeof(oldPrecomplete[0]),
+                 NS_T("%s/precomplete"), gInstallDirPath);
+    NS_tremove(oldPrecomplete);
+
     NS_tchar oldDistDir[MAXPATHLEN];
     NS_tsnprintf(oldDistDir, sizeof(oldDistDir)/sizeof(oldDistDir[0]),
                  NS_T("%s/Contents/MacOS/distribution"), gInstallDirPath);

@@ -81,7 +81,6 @@
 
 # Mac OS X v2 signing removals
 #ifdef XP_MACOSX
-  precomplete
   @DIR_MACOS@active-update.xml
   @DIR_MACOS@update-settings.ini
   @DIR_MACOS@updates.xml
