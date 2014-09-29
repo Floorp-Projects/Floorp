@@ -519,7 +519,7 @@ const Class UnsizedArrayTypeDescr::class_ = {
     nullptr,
     nullptr,
     nullptr,
-    OwnedTypedObject::constructUnsized,
+    OutlineTypedObject::constructUnsized,
     nullptr
 };
 
@@ -536,7 +536,7 @@ const Class SizedArrayTypeDescr::class_ = {
     nullptr,
     nullptr,
     nullptr,
-    OwnedTypedObject::constructSized,
+    OutlineTypedObject::constructSized,
     nullptr
 };
 
@@ -833,7 +833,7 @@ const Class StructTypeDescr::class_ = {
     nullptr, /* finalize */
     nullptr, /* call */
     nullptr, /* hasInstance */
-    OwnedTypedObject::constructSized,
+    OutlineTypedObject::constructSized,
     nullptr  /* trace */
 };
 
@@ -1489,7 +1489,7 @@ TypedObject::typedMem() const
 
     if (is<InlineOpaqueTypedObject>())
         return as<InlineOpaqueTypedObject>().inlineTypedMem();
-    return as<OwnedTypedObject>().outOfLineTypedMem();
+    return as<OutlineTypedObject>().outOfLineTypedMem();
 }
 
 bool
@@ -1497,9 +1497,9 @@ TypedObject::isAttached() const
 {
     if (is<InlineOpaqueTypedObject>())
         return true;
-    if (!as<OwnedTypedObject>().outOfLineTypedMem())
+    if (!as<OutlineTypedObject>().outOfLineTypedMem())
         return false;
-    JSObject &owner = as<OwnedTypedObject>().owner();
+    JSObject &owner = as<OutlineTypedObject>().owner();
     if (owner.is<ArrayBufferObject>() && owner.as<ArrayBufferObject>().isNeutered())
         return false;
     return true;
@@ -1510,9 +1510,9 @@ TypedObject::maybeForwardedIsAttached() const
 {
     if (is<InlineOpaqueTypedObject>())
         return true;
-    if (!as<OwnedTypedObject>().outOfLineTypedMem())
+    if (!as<OutlineTypedObject>().outOfLineTypedMem())
         return false;
-    JSObject &owner = *MaybeForwarded(&as<OwnedTypedObject>().owner());
+    JSObject &owner = *MaybeForwarded(&as<OutlineTypedObject>().owner());
     if (owner.is<ArrayBufferObject>() && owner.as<ArrayBufferObject>().isNeutered())
         return false;
     return true;
@@ -1535,16 +1535,16 @@ TypedObject::GetByteOffset(JSContext *cx, unsigned argc, Value *vp)
 }
 
 /******************************************************************************
- * Owned typed objects
+ * Outline typed objects
  */
 
-/*static*/ OwnedTypedObject *
-OwnedTypedObject::createUnattached(JSContext *cx,
-                                   HandleTypeDescr descr,
-                                   int32_t length)
+/*static*/ OutlineTypedObject *
+OutlineTypedObject::createUnattached(JSContext *cx,
+                                     HandleTypeDescr descr,
+                                     int32_t length)
 {
     if (descr->opaque())
-        return createUnattachedWithClass(cx, &OwnedOpaqueTypedObject::class_, descr, length);
+        return createUnattachedWithClass(cx, &OutlineOpaqueTypedObject::class_, descr, length);
     else
         return createUnattachedWithClass(cx, &TransparentTypedObject::class_, descr, length);
 }
@@ -1567,14 +1567,14 @@ PrototypeForTypeDescr(JSContext *cx, HandleTypeDescr descr)
     return &protoVal.toObject();
 }
 
-/*static*/ OwnedTypedObject *
-OwnedTypedObject::createUnattachedWithClass(JSContext *cx,
-                                            const Class *clasp,
-                                            HandleTypeDescr type,
-                                            int32_t length)
+/*static*/ OutlineTypedObject *
+OutlineTypedObject::createUnattachedWithClass(JSContext *cx,
+                                              const Class *clasp,
+                                              HandleTypeDescr type,
+                                              int32_t length)
 {
     JS_ASSERT(clasp == &TransparentTypedObject::class_ ||
-              clasp == &OwnedOpaqueTypedObject::class_);
+              clasp == &OutlineOpaqueTypedObject::class_);
 
     RootedObject proto(cx, PrototypeForTypeDescr(cx, type));
     if (!proto)
@@ -1589,11 +1589,11 @@ OwnedTypedObject::createUnattachedWithClass(JSContext *cx,
     obj->initReservedSlot(JS_BUFVIEW_SLOT_LENGTH, Int32Value(length));
     obj->initReservedSlot(JS_BUFVIEW_SLOT_OWNER, NullValue());
 
-    return &obj->as<OwnedTypedObject>();
+    return &obj->as<OutlineTypedObject>();
 }
 
 void
-OwnedTypedObject::attach(JSContext *cx, ArrayBufferObject &buffer, int32_t offset)
+OutlineTypedObject::attach(JSContext *cx, ArrayBufferObject &buffer, int32_t offset)
 {
     JS_ASSERT(offset >= 0);
     JS_ASSERT((size_t) (offset + size()) <= buffer.byteLength());
@@ -1607,13 +1607,13 @@ OwnedTypedObject::attach(JSContext *cx, ArrayBufferObject &buffer, int32_t offse
 }
 
 void
-OwnedTypedObject::attach(JSContext *cx, TypedObject &typedObj, int32_t offset)
+OutlineTypedObject::attach(JSContext *cx, TypedObject &typedObj, int32_t offset)
 {
     JS_ASSERT(typedObj.isAttached());
 
     JSObject *owner = &typedObj;
-    if (typedObj.is<OwnedTypedObject>()) {
-        owner = &typedObj.as<OwnedTypedObject>().owner();
+    if (typedObj.is<OutlineTypedObject>()) {
+        owner = &typedObj.as<OutlineTypedObject>().owner();
         offset += typedObj.offset();
     }
 
@@ -1650,9 +1650,9 @@ TypedObjLengthFromType(TypeDescr &descr)
     MOZ_CRASH("Invalid kind");
 }
 
-/*static*/ OwnedTypedObject *
-OwnedTypedObject::createDerived(JSContext *cx, HandleSizedTypeDescr type,
-                                HandleTypedObject typedObj, int32_t offset)
+/*static*/ OutlineTypedObject *
+OutlineTypedObject::createDerived(JSContext *cx, HandleSizedTypeDescr type,
+                                  HandleTypedObject typedObj, int32_t offset)
 {
     JS_ASSERT(offset <= typedObj->size());
     JS_ASSERT(offset + type->size() <= typedObj->size());
@@ -1661,8 +1661,8 @@ OwnedTypedObject::createDerived(JSContext *cx, HandleSizedTypeDescr type,
 
     const js::Class *clasp = typedObj->is<TransparentTypedObject>()
                              ? &TransparentTypedObject::class_
-                             : &OwnedOpaqueTypedObject::class_;
-    Rooted<OwnedTypedObject*> obj(cx);
+                             : &OutlineOpaqueTypedObject::class_;
+    Rooted<OutlineTypedObject*> obj(cx);
     obj = createUnattachedWithClass(cx, clasp, type, length);
     if (!obj)
         return nullptr;
@@ -1685,7 +1685,7 @@ TypedObject::createZeroed(JSContext *cx, HandleTypeDescr descr, int32_t length)
     }
 
     // Create unattached wrapper object.
-    Rooted<OwnedTypedObject*> obj(cx, OwnedTypedObject::createUnattached(cx, descr, length));
+    Rooted<OutlineTypedObject*> obj(cx, OutlineTypedObject::createUnattached(cx, descr, length));
     if (!obj)
         return nullptr;
 
@@ -1753,9 +1753,9 @@ ReportTypedObjTypeError(JSContext *cx,
 }
 
 /* static */ void
-OwnedTypedObject::obj_trace(JSTracer *trc, JSObject *object)
+OutlineTypedObject::obj_trace(JSTracer *trc, JSObject *object)
 {
-    OwnedTypedObject &typedObj = object->as<OwnedTypedObject>();
+    OutlineTypedObject &typedObj = object->as<OutlineTypedObject>();
 
     // When this is called for compacting GC, the related objects we touch here
     // may not have had their slots updated yet. Note that this does not apply
@@ -2323,17 +2323,17 @@ TypedObject::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
 }
 
 /* static */ size_t
-OwnedTypedObject::offsetOfOwnerSlot()
+OutlineTypedObject::offsetOfOwnerSlot()
 {
     return JSObject::getFixedSlotOffset(JS_BUFVIEW_SLOT_OWNER);
 }
 
 /* static */ size_t
-OwnedTypedObject::offsetOfDataSlot()
+OutlineTypedObject::offsetOfDataSlot()
 {
 #ifdef DEBUG
     // Compute offset of private data based on TransparentTypedObject;
-    // both OpaqueOwnedTypedObject and TransparentTypedObject have the same
+    // both OpaqueOutlineTypedObject and TransparentTypedObject have the same
     // number of slots, so no problem there.
     gc::AllocKind allocKind = gc::GetGCObjectKind(&TransparentTypedObject::class_);
     size_t nfixed = gc::GetGCKindSlots(allocKind);
@@ -2344,13 +2344,13 @@ OwnedTypedObject::offsetOfDataSlot()
 }
 
 /* static */ size_t
-OwnedTypedObject::offsetOfByteOffsetSlot()
+OutlineTypedObject::offsetOfByteOffsetSlot()
 {
     return JSObject::getFixedSlotOffset(JS_BUFVIEW_SLOT_BYTEOFFSET);
 }
 
 void
-OwnedTypedObject::neuter(void *newData)
+OutlineTypedObject::neuter(void *newData)
 {
     setSlot(JS_BUFVIEW_SLOT_LENGTH, Int32Value(0));
     setSlot(JS_BUFVIEW_SLOT_BYTEOFFSET, Int32Value(0));
@@ -2451,11 +2451,11 @@ InlineOpaqueTypedObject::obj_trace(JSTracer *trc, JSObject *object)
 
 DEFINE_TYPEDOBJ_CLASS(TransparentTypedObject,
                       JSCLASS_HAS_RESERVED_SLOTS(DATA_SLOT) | JSCLASS_HAS_PRIVATE,
-                      OwnedTypedObject::obj_trace);
+                      OutlineTypedObject::obj_trace);
 
-DEFINE_TYPEDOBJ_CLASS(OwnedOpaqueTypedObject,
+DEFINE_TYPEDOBJ_CLASS(OutlineOpaqueTypedObject,
                       JSCLASS_HAS_RESERVED_SLOTS(DATA_SLOT) | JSCLASS_HAS_PRIVATE,
-                      OwnedTypedObject::obj_trace);
+                      OutlineTypedObject::obj_trace);
 
 DEFINE_TYPEDOBJ_CLASS(InlineOpaqueTypedObject, 0,
                       InlineOpaqueTypedObject::obj_trace);
@@ -2571,8 +2571,8 @@ TypedObject::constructSized(JSContext *cx, unsigned int argc, Value *vp)
             return false;
         }
 
-        Rooted<OwnedTypedObject*> obj(cx);
-        obj = OwnedTypedObject::createUnattached(cx, callee, LengthForType(*callee));
+        Rooted<OutlineTypedObject*> obj(cx);
+        obj = OutlineTypedObject::createUnattached(cx, callee, LengthForType(*callee));
         if (!obj)
             return false;
 
@@ -2709,8 +2709,8 @@ TypedObject::constructUnsized(JSContext *cx, unsigned int argc, Value *vp)
             return false;
         }
 
-        Rooted<OwnedTypedObject*> obj(cx);
-        obj = OwnedTypedObject::createUnattached(cx, callee, length);
+        Rooted<OutlineTypedObject*> obj(cx);
+        obj = OutlineTypedObject::createUnattached(cx, callee, length);
         if (!obj)
             return false;
 
@@ -2771,8 +2771,8 @@ js::NewOpaqueTypedObject(JSContext *cx, unsigned argc, Value *vp)
 
     Rooted<SizedTypeDescr*> descr(cx, &args[0].toObject().as<SizedTypeDescr>());
     int32_t length = TypedObjLengthFromType(*descr);
-    Rooted<OwnedTypedObject*> obj(cx);
-    obj = OwnedTypedObject::createUnattachedWithClass(cx, &OwnedOpaqueTypedObject::class_, descr, length);
+    Rooted<OutlineTypedObject*> obj(cx);
+    obj = OutlineTypedObject::createUnattachedWithClass(cx, &OutlineOpaqueTypedObject::class_, descr, length);
     if (!obj)
         return false;
     args.rval().setObject(*obj);
@@ -2793,7 +2793,7 @@ js::NewDerivedTypedObject(JSContext *cx, unsigned argc, Value *vp)
     int32_t offset = args[2].toInt32();
 
     Rooted<TypedObject*> obj(cx);
-    obj = OwnedTypedObject::createDerived(cx, descr, typedObj, offset);
+    obj = OutlineTypedObject::createDerived(cx, descr, typedObj, offset);
     if (!obj)
         return false;
 
@@ -2808,7 +2808,7 @@ js::AttachTypedObject(ThreadSafeContext *cx, unsigned argc, Value *vp)
     JS_ASSERT(args.length() == 3);
     JS_ASSERT(args[2].isInt32());
 
-    OwnedTypedObject &handle = args[0].toObject().as<OwnedTypedObject>();
+    OutlineTypedObject &handle = args[0].toObject().as<OutlineTypedObject>();
     TypedObject &target = args[1].toObject().as<TypedObject>();
     JS_ASSERT(!handle.isAttached());
     size_t offset = args[2].toInt32();
@@ -2834,7 +2834,7 @@ js::SetTypedObjectOffset(ThreadSafeContext *, unsigned argc, Value *vp)
     JS_ASSERT(args[0].isObject() && args[0].toObject().is<TypedObject>());
     JS_ASSERT(args[1].isInt32());
 
-    OwnedTypedObject &typedObj = args[0].toObject().as<OwnedTypedObject>();
+    OutlineTypedObject &typedObj = args[0].toObject().as<OutlineTypedObject>();
     int32_t offset = args[1].toInt32();
 
     JS_ASSERT(typedObj.isAttached());

@@ -239,7 +239,7 @@ if test "$OS_TARGET" = "Android" -a -z "$gonkdir"; then
                 AC_MSG_ERROR([Couldn't find path to gnu-libstdc++ in the android ndk])
             fi
         else
-            STLPORT_CPPFLAGS="-isystem $_topsrcdir/build/stlport/stlport -isystem $android_ndk/sources/cxx-stl/system/include"
+            STLPORT_CPPFLAGS="-isystem $_topsrcdir/build/stlport/stlport -isystem $_topsrcdir/build/stlport/overrides -isystem $android_ndk/sources/cxx-stl/system/include"
             STLPORT_LIBS="$_objdir/build/stlport/libstlport_static.a -static-libstdc++"
         fi
     fi

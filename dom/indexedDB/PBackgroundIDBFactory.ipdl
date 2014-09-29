@@ -1,0 +1,63 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackground;
+include protocol PBackgroundIDBDatabase;
+include protocol PBackgroundIDBFactoryRequest;
+
+include PBackgroundIDBSharedTypes;
+include PBackgroundSharedTypes;
+
+using struct mozilla::void_t
+  from "ipc/IPCMessageUtils.h";
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+struct CommonFactoryRequestParams
+{
+  DatabaseMetadata metadata;
+  PrincipalInfo principalInfo;
+  bool privateBrowsingMode;
+};
+
+struct OpenDatabaseRequestParams
+{
+  CommonFactoryRequestParams commonParams;
+};
+
+struct DeleteDatabaseRequestParams
+{
+  CommonFactoryRequestParams commonParams;
+};
+
+union FactoryRequestParams
+{
+  OpenDatabaseRequestParams;
+  DeleteDatabaseRequestParams;
+};
+
+protocol PBackgroundIDBFactory
+{
+  manager PBackground;
+
+  manages PBackgroundIDBDatabase;
+  manages PBackgroundIDBFactoryRequest;
+
+parent:
+  DeleteMe();
+
+  PBackgroundIDBFactoryRequest(FactoryRequestParams params);
+
+child:
+  __delete__();
+
+  PBackgroundIDBDatabase(DatabaseSpec spec,
+                         PBackgroundIDBFactoryRequest request);
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

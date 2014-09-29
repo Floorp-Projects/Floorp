@@ -50,6 +50,11 @@ struct nsID
       (((uint32_t*)&m0)[3] == ((uint32_t*)&aOther.m0)[3]);
   }
 
+  inline bool operator==(const nsID& aOther) const
+  {
+    return Equals(aOther);
+  }
+
   /**
    * nsID Parsing method. Turns a {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
    * string into an nsID

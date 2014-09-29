@@ -996,7 +996,7 @@ ArrayBufferViewObject::neuter(void *newData)
     else if (is<TypedArrayObject>())
         as<TypedArrayObject>().neuter(newData);
     else
-        as<OwnedTypedObject>().neuter(newData);
+        as<OutlineTypedObject>().neuter(newData);
 }
 
 uint8_t *

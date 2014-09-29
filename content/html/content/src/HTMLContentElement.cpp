@@ -55,13 +55,15 @@ HTMLContentElement::BindToTree(nsIDocument* aDocument,
                                nsIContent* aBindingParent,
                                bool aCompileEventHandlers)
 {
+  nsRefPtr<ShadowRoot> oldContainingShadow = GetContainingShadow();
+
   nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
                                                  aBindingParent,
                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
   ShadowRoot* containingShadow = GetContainingShadow();
-  if (containingShadow) {
+  if (containingShadow && !oldContainingShadow) {
     nsINode* parentNode = nsINode::GetParentNode();
     while (parentNode && parentNode != containingShadow) {
       if (parentNode->IsElement() &&
@@ -85,23 +87,20 @@ HTMLContentElement::BindToTree(nsIDocument* aDocument,
 void
 HTMLContentElement::UnbindFromTree(bool aDeep, bool aNullParent)
 {
-  if (mIsInsertionPoint) {
-    ShadowRoot* containingShadow = GetContainingShadow();
-    // Make sure that containingShadow exists, it may have been nulled
-    // during unlinking in which case the ShadowRoot is going away.
-    if (containingShadow) {
-      containingShadow->RemoveInsertionPoint(this);
+  nsRefPtr<ShadowRoot> oldContainingShadow = GetContainingShadow();
 
-      // Remove all the matched nodes now that the
-      // insertion point is no longer an insertion point.
-      ClearMatchedNodes();
-      containingShadow->SetInsertionPointChanged();
-    }
+  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
+
+  if (oldContainingShadow && !GetContainingShadow() && mIsInsertionPoint) {
+    oldContainingShadow->RemoveInsertionPoint(this);
+
+    // Remove all the matched nodes now that the
+    // insertion point is no longer an insertion point.
+    ClearMatchedNodes();
+    oldContainingShadow->SetInsertionPointChanged();
 
     mIsInsertionPoint = false;
   }
-
-  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 void

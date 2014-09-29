@@ -834,6 +834,13 @@ Element::CreateShadowRoot(ErrorResult& aError)
   SetShadowRoot(shadowRoot);
   if (olderShadow) {
     olderShadow->SetYoungerShadow(shadowRoot);
+
+    // Unbind children of older shadow root because they
+    // are no longer in the composed tree.
+    for (nsIContent* child = olderShadow->GetFirstChild(); child;
+         child = child->GetNextSibling()) {
+      child->UnbindFromTree(true, false);
+    }
   }
 
   // xblBinding takes ownership of docInfo.
@@ -1384,6 +1391,18 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     }
   }
 
+  // Call BindToTree on shadow root children.
+  ShadowRoot* shadowRoot = GetShadowRoot();
+  if (shadowRoot) {
+    for (nsIContent* child = shadowRoot->GetFirstChild(); child;
+         child = child->GetNextSibling()) {
+      rv = child->BindToTree(nullptr, shadowRoot,
+                             shadowRoot->GetBindingParent(),
+                             aCompileEventHandlers);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
   // XXXbz script execution during binding can trigger some of these
   // postcondition asserts....  But we do want that, since things will
   // generally be quite broken when that happens.
@@ -1462,10 +1481,13 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
     SetParentIsContent(false);
   }
   ClearInDocument();
-  UnsetFlags(NODE_IS_IN_SHADOW_TREE);
 
-  // Begin keeping track of our subtree root.
-  SetSubtreeRootPointer(aNullParent ? this : mParent->SubtreeRoot());
+  if (aNullParent || !mParent->IsInShadowTree()) {
+    UnsetFlags(NODE_IS_IN_SHADOW_TREE);
+
+    // Begin keeping track of our subtree root.
+    SetSubtreeRootPointer(aNullParent ? this : mParent->SubtreeRoot());
+  }
 
   if (document) {
     // Notify XBL- & nsIAnonymousContentCreator-generated
@@ -1514,7 +1536,9 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
     if (clearBindingParent) {
       slots->mBindingParent = nullptr;
     }
-    slots->mContainingShadow = nullptr;
+    if (aNullParent || !mParent->IsInShadowTree()) {
+      slots->mContainingShadow = nullptr;
+    }
   }
 
   // This has to be here, rather than in nsGenericHTMLElement::UnbindFromTree, 
@@ -1539,6 +1563,15 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   }
 
   nsNodeUtils::ParentChainChanged(this);
+
+  // Unbind children of shadow root.
+  ShadowRoot* shadowRoot = GetShadowRoot();
+  if (shadowRoot) {
+    for (nsIContent* child = shadowRoot->GetFirstChild(); child;
+         child = child->GetNextSibling()) {
+      child->UnbindFromTree(true, false);
+    }
+  }
 }
 
 nsICSSDeclaration*

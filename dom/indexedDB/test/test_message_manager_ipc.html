@@ -1,0 +1,347 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test for sending IndexedDB Blobs through MessageManager</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  </head>
+  <body onload="setup();">
+    <script type="application/javascript;version=1.7">
+"use strict";
+
+function childFrameScript() {
+  "use strict";
+
+  const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+
+  const mmName = "test:idb-and-mm";
+
+  const dbName = "test_message_manager_ipc.html - CHILD";
+  const dbVersion = 1;
+  const objStoreName = "bar";
+  const key = 1;
+
+  const blobData = ["So", " ", "many", " ", "blobs!"];
+  const blobText = blobData.join("");
+  const blobType = "text/plain";
+
+  Cu.importGlobalProperties(["indexedDB"]);
+
+  function info(msg) {
+    sendAsyncMessage(mmName, { op: "info", msg: msg });
+  }
+
+  function ok(condition, name, diag) {
+    sendAsyncMessage(mmName,
+                     { op: "ok",
+                       condition: condition,
+                       name: name,
+                       diag: diag });
+  }
+
+  function is(a, b, name) {
+    let pass = a == b;
+    let diag = pass ? "" : "got " + a + ", expected " + b;
+    ok(pass, name, diag);
+  }
+
+  function finish(result) {
+    sendAsyncMessage(mmName, { op: "done", result: result });
+  }
+
+  function createFileReader() {
+    return Cc["@mozilla.org/files/filereader;1"]
+             .createInstance(Ci.nsIDOMFileReader);
+  }
+
+  function grabAndContinue(arg) {
+    testGenerator.send(arg);
+  }
+
+  function errorHandler(event) {
+    ok(false,
+       event.target + " received error event: '" + event.target.error.name +
+       "'");
+    finish();
+  }
+
+  function testSteps() {
+    addMessageListener(mmName, grabAndContinue);
+    let message = yield undefined;
+
+    let blob = message.data;
+
+    ok(blob instanceof Ci.nsIDOMBlob, "Message manager sent a blob");
+    is(blob.size, blobText.length, "Blob has correct length");
+    is(blob.type, blobType, "Blob has correct type");
+
+    info("Reading blob");
+
+    let reader = createFileReader();
+    reader.addEventListener("load", grabAndContinue);
+    reader.readAsText(blob);
+
+    yield undefined;
+
+    is(reader.result, blobText, "Blob has correct data");
+
+    let slice = blob.slice(0, blobData[0].length, blobType);
+
+    ok(slice instanceof Ci.nsIDOMBlob, "Slice returned a blob");
+    is(slice.size, blobData[0].length, "Slice has correct length");
+    is(slice.type, blobType, "Slice has correct type");
+
+    info("Reading slice");
+
+    reader = createFileReader();
+    reader.addEventListener("load", grabAndContinue);
+    reader.readAsText(slice);
+
+    yield undefined;
+
+    is(reader.result, blobData[0], "Slice has correct data");
+
+    info("Deleting database");
+
+    let req = indexedDB.deleteDatabase(dbName);
+    req.onerror = errorHandler;
+    req.onsuccess = grabAndContinue;
+
+    let event = yield undefined;
+    is(event.type, "success", "Got success event");
+
+    info("Opening database");
+
+    req = indexedDB.open(dbName, dbVersion);
+    req.onerror = errorHandler;
+    req.onupgradeneeded = grabAndContinue;
+    req.onsuccess = grabAndContinue;
+
+    event = yield undefined;
+    is(event.type, "upgradeneeded", "Got upgradeneeded event");
+
+    event.target.result.createObjectStore(objStoreName);
+
+    event = yield undefined;
+    is(event.type, "success", "Got success event");
+
+    let db = event.target.result;
+
+    info("Storing blob from message manager in database");
+
+    let objectStore =
+      db.transaction(objStoreName, "readwrite").objectStore(objStoreName);
+    req = objectStore.add(blob, key);
+    req.onerror = errorHandler;
+    req.onsuccess = grabAndContinue;
+
+    event = yield undefined;
+
+    info("Getting blob from database");
+
+    objectStore = db.transaction(objStoreName).objectStore(objStoreName);
+    req = objectStore.get(key);
+    req.onerror = errorHandler;
+    req.onsuccess = grabAndContinue;
+
+    event = yield undefined;
+
+    blob = event.target.result;
+
+    ok(blob instanceof Ci.nsIDOMBlob, "Database gave us a blob");
+    is(blob.size, blobText.length, "Blob has correct length");
+    is(blob.type, blobType, "Blob has correct type");
+
+    info("Reading blob");
+
+    reader = createFileReader();
+    reader.addEventListener("load", grabAndContinue);
+    reader.readAsText(blob);
+
+    yield undefined;
+
+    is(reader.result, blobText, "Blob has correct data");
+
+    info("Storing slice from message manager in database");
+
+    objectStore =
+      db.transaction(objStoreName, "readwrite").objectStore(objStoreName);
+    req = objectStore.put(slice, key);
+    req.onerror = errorHandler;
+    req.onsuccess = grabAndContinue;
+
+    event = yield undefined;
+
+    info("Getting slice from database");
+
+    objectStore = db.transaction(objStoreName).objectStore(objStoreName);
+    req = objectStore.get(key);
+    req.onerror = errorHandler;
+    req.onsuccess = grabAndContinue;
+
+    event = yield undefined;
+
+    slice = event.target.result;
+
+    ok(slice instanceof Ci.nsIDOMBlob, "Database gave us a blob");
+    is(slice.size, blobData[0].length, "Slice has correct length");
+    is(slice.type, blobType, "Slice has correct type");
+
+    info("Reading Slice");
+
+    reader = createFileReader();
+    reader.addEventListener("load", grabAndContinue);
+    reader.readAsText(slice);
+
+    yield undefined;
+
+    is(reader.result, blobData[0], "Slice has correct data");
+
+    info("Sending blob and slice from database to message manager");
+    finish([blob, slice]);
+
+    yield undefined;
+  }
+
+  let testGenerator = testSteps();
+  testGenerator.next();
+}
+
+function parentFrameScript(mm) {
+  const messageName = "test:idb-and-mm";
+  const blobData = ["So", " ", "many", " ", "blobs!"];
+  const blobText = blobData.join("");
+  const blobType = "text/plain";
+  const blob = new Blob(blobData, { type: blobType });
+
+  function grabAndContinue(arg) {
+    testGenerator.send(arg);
+  }
+
+  function testSteps() {
+    let result = yield undefined;
+
+    is(Array.isArray(result), true, "Child delivered an array of results");
+    is(result.length, 2, "Child delivered two results");
+
+    let blob = result[0];
+    is(blob instanceof Blob, true, "Child delivered a blob");
+    is(blob.size, blobText.length, "Blob has correct size");
+    is(blob.type, blobType, "Blob has correct type");
+
+    let slice = result[1];
+    is(slice instanceof Blob, true, "Child delivered a slice");
+    is(slice.size, blobData[0].length, "Slice has correct size");
+    is(slice.type, blobType, "Slice has correct type");
+
+    info("Reading blob");
+
+    let reader = new FileReader();
+    reader.onload = grabAndContinue;
+    reader.readAsText(blob);
+    yield undefined;
+
+    is(reader.result, blobText, "Blob has correct data");
+
+    info("Reading slice");
+
+    reader = new FileReader();
+    reader.onload = grabAndContinue;
+    reader.readAsText(slice);
+    yield undefined;
+
+    is(reader.result, blobData[0], "Slice has correct data");
+
+    slice = blob.slice(0, blobData[0].length, blobType);
+
+    is(slice instanceof Blob, true, "Made a new slice from blob");
+    is(slice.size, blobData[0].length, "Second slice has correct size");
+    is(slice.type, blobType, "Second slice has correct type");
+
+    info("Reading second slice");
+
+    reader = new FileReader();
+    reader.onload = grabAndContinue;
+    reader.readAsText(slice);
+    yield undefined;
+
+    is(reader.result, blobData[0], "Second slice has correct data");
+
+    SimpleTest.finish();
+    yield undefined;
+  }
+
+  let testGenerator = testSteps();
+  testGenerator.next();
+
+  mm.addMessageListener(messageName, function(message) {
+    let data = message.data;
+    switch (data.op) {
+      case "info": {
+        info(data.msg);
+        break;
+      }
+
+      case "ok": {
+        ok(data.condition, data.name, data.diag);
+        break;
+      }
+
+      case "done": {
+        testGenerator.send(data.result);
+        break;
+      }
+
+      default: {
+        ok(false, "Unknown op: " + data.op);
+        SimpleTest.finish();
+      }
+    }
+  });
+
+  mm.loadFrameScript("data:,(" + childFrameScript.toString() + ")();",
+                      false);
+
+  mm.sendAsyncMessage(messageName, blob);
+}
+
+function setup() {
+  info("Got load event");
+
+  SpecialPowers.pushPrefEnv(
+    { set: [ ["dom.ipc.browser_frames.oop_by_default", true],
+              ["dom.mozBrowserFramesEnabled", true],
+              ["browser.pagethumbnails.capturing_disabled", true] ] },
+    function() {
+      info("Prefs set");
+
+      SpecialPowers.pushPermissions(
+        [ { type: "browser", allow: true, context: document } ],
+        function() {
+          info("Permissions set");
+
+          let iframe = document.createElement("iframe");
+          SpecialPowers.wrap(iframe).mozbrowser = true;
+          iframe.id = "iframe";
+          iframe.src =
+            "data:text/html,<!DOCTYPE HTML><html><body></body></html>";
+
+          iframe.addEventListener("mozbrowserloadend", function() {
+            info("Starting tests");
+
+            let mm = SpecialPowers.getBrowserFrameMessageManager(iframe)
+            parentFrameScript(mm);
+          });
+
+          document.body.appendChild(iframe);
+        }
+      );
+    }
+  );
+}
+
+SimpleTest.waitForExplicitFinish();
+    </script>
+  </body>
+</html>
