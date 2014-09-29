@@ -39,7 +39,7 @@ ifndef _APPNAME
 _APPNAME = $(MOZ_MACBUNDLE_NAME)
 endif
 ifndef _BINPATH
-_BINPATH = /$(_APPNAME)/Contents/MacOS
+_BINPATH = /$(_APPNAME)/Contents/Resources
 endif # _BINPATH
 ifdef UNIVERSAL_BINARY
 STAGEPATH = universal/
@@ -536,8 +536,6 @@ endif
 ifdef MOZ_SIGN_PREPARED_PACKAGE_CMD
 ifeq (Darwin, $(OS_ARCH))
 MAKE_PACKAGE    = cd ./$(PKG_DMG_SOURCE) && $(MOZ_SIGN_PREPARED_PACKAGE_CMD) $(MOZ_MACBUNDLE_NAME) \
-                  && rm $(MOZ_MACBUNDLE_NAME)/Contents/CodeResources \
-                  && cp $(MOZ_MACBUNDLE_NAME)/Contents/_CodeSignature/CodeResources $(MOZ_MACBUNDLE_NAME)/Contents \
                   && cd $(PACKAGE_BASE_DIR) \
                   && $(INNER_MAKE_PACKAGE)
 else
