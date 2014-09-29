@@ -111,7 +111,7 @@ gfxPattern::GetInverseMatrix() const
 }
 
 Pattern*
-gfxPattern::GetPattern(DrawTarget *aTarget,
+gfxPattern::GetPattern(const DrawTarget *aTarget,
                        Matrix *aOriginalUserToDevice)
 {
   Matrix patternToUser = mPatternToUserSpace;

@@ -52,7 +52,7 @@ public:
      * was set. When this is nullptr it is assumed the transform is identical
      * to the current transform.
      */
-    mozilla::gfx::Pattern *GetPattern(mozilla::gfx::DrawTarget *aTarget,
+    mozilla::gfx::Pattern *GetPattern(const mozilla::gfx::DrawTarget *aTarget,
                                       mozilla::gfx::Matrix *aOriginalUserToDevice = nullptr);
     bool IsOpaque();
 
