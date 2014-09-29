@@ -1212,10 +1212,8 @@ void MediaDecoderStateMachine::ClearPositionChangeFlag()
 MediaDecoderOwner::NextFrameStatus MediaDecoderStateMachine::GetNextFrameStatus()
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  if (IsBuffering()) {
+  if (IsBuffering() || IsSeeking()) {
     return MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_BUFFERING;
-  } else if (IsSeeking()) {
-    return MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING;
   } else if (HaveNextFrameData()) {
     return MediaDecoderOwner::NEXT_FRAME_AVAILABLE;
   }
@@ -2888,10 +2886,6 @@ void MediaDecoderStateMachine::UpdateReadyState() {
   AssertCurrentThreadInMonitor();
 
   MediaDecoderOwner::NextFrameStatus nextFrameStatus = GetNextFrameStatus();
-  // FIXME: This optimization could result in inconsistent next frame status
-  // between the decoder and state machine when GetNextFrameStatus() is called
-  // by the decoder without updating mLastFrameStatus.
-  // Note not to regress bug 882027 when fixing this bug.
   if (nextFrameStatus == mLastFrameStatus) {
     return;
   }

@@ -2952,6 +2952,18 @@ void HTMLMediaElement::FirstFrameLoaded()
       mPreloadAction == HTMLMediaElement::PRELOAD_METADATA) {
     mSuspendedAfterFirstFrame = true;
     mDecoder->Suspend();
+  } else if (mDownloadSuspendedByCache &&
+             mDecoder && !mDecoder->IsEnded()) {
+    // We've already loaded the first frame, and the decoder has signalled
+    // that the download has been suspended by the media cache. So move
+    // readyState into HAVE_ENOUGH_DATA, in case there's script waiting
+    // for a "canplaythrough" event; without this forced transition, we will
+    // never fire the "canplaythrough" event if the media cache is so small
+    // that the download was suspended before the first frame was loaded.
+    // Don't force this transition if the decoder is in ended state; the
+    // readyState should remain at HAVE_CURRENT_DATA in this case.
+    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
+    return;
   }
 }
 
@@ -3046,6 +3058,7 @@ void HTMLMediaElement::SeekStarted()
   if(mPlayingThroughTheAudioChannel) {
     mPlayingThroughTheAudioChannelBeforeSeek = true;
   }
+  ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
   FireTimeUpdate(false);
 }
 
@@ -3117,11 +3130,6 @@ void HTMLMediaElement::UpdateReadyStateForData(MediaDecoderOwner::NextFrameStatu
   // changing to HAVE_METADATA when seeking into an unbuffered
   // range.
   if (aNextFrame == MediaDecoderOwner::NEXT_FRAME_WAIT_FOR_MSE_DATA) {
-    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
-    return;
-  }
-
-  if (aNextFrame == MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE_SEEKING) {
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
     return;
   }
@@ -3200,7 +3208,7 @@ void HTMLMediaElement::ChangeReadyState(nsMediaReadyState aState)
 
   // Handle raising of "waiting" event during seek (see 4.8.10.9)
   if (mPlayingBeforeSeek &&
-      mReadyState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
+      oldState < nsIDOMHTMLMediaElement::HAVE_FUTURE_DATA) {
     DispatchAsyncEvent(NS_LITERAL_STRING("waiting"));
   }
 
