@@ -627,18 +627,32 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext,
   }
 
   if (renderMode == SVGAutoRenderState::CLIP_MASK) {
-    gfxContextMatrixAutoSaveRestore autoSaveRestore(gfx);
+    FillRule newFillRule = nsSVGUtils::ToFillRule(StyleSVG()->mClipRule);
+    RefPtr<PathBuilder> builder =
+      aContext->GetDrawTarget()->CreatePathBuilder(newFillRule);
+    if (!builder) {
+      return;
+    }
 
-    GeneratePath(gfx, ToMatrix(aTransform));
+    RefPtr<Path> path =
+      static_cast<nsSVGPathGeometryElement*>(mContent)->BuildPath(builder);
+    if (!path) {
+      return;
+    }
+
+    gfxMatrix newMatrix =
+      gfx->CurrentMatrix().PreMultiply(aTransform).NudgeToIntegers();
+    if (newMatrix.IsSingular()) {
+      return;
+    }
+    gfxContextMatrixAutoSaveRestore autoSaveRestore(gfx);
+    gfx->SetMatrix(newMatrix);
 
     FillRule oldFillRule = gfx->CurrentFillRule();
-
-    if (StyleSVG()->mClipRule == NS_STYLE_FILL_RULE_EVENODD)
-      gfx->SetFillRule(FillRule::FILL_EVEN_ODD);
-    else
-      gfx->SetFillRule(FillRule::FILL_WINDING);
+    gfx->SetFillRule(newFillRule);
 
     gfx->SetColor(gfxRGBA(1.0f, 1.0f, 1.0f, 1.0f));
+    gfx->SetPath(path);
     gfx->Fill();
     gfx->SetFillRule(oldFillRule);
     gfx->NewPath();
