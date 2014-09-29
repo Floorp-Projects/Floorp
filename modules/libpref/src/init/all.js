@@ -3848,8 +3848,8 @@ pref("layers.async-video.enabled", true);
 pref("layers.async-video-oop.enabled",true);
 
 #ifdef XP_WIN
-pref("layers.offmainthreadcomposition.enabled", false);
-pref("layers.async-video.enabled", false);
+pref("layers.offmainthreadcomposition.enabled", true);
+pref("layers.async-video.enabled", true);
 pref("layers.async-video-oop.enabled", false);
 #endif
 
