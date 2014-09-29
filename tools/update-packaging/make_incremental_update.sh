@@ -144,17 +144,6 @@ num_removes=0
 for ((i=0; $i<$num_oldfiles; i=$i+1)); do
   f="${oldfiles[$i]}"
 
-  # This file is created by Talkback, so we can ignore it
-  if [ "$f" = "readme.txt" ]; then
-    continue 1
-  fi
-
-  # removed-files is excluded by make_incremental_updates.py so it is excluded
-  # here for consistency.
-  if [ `basename $f` = "removed-files" ]; then
-    continue 1
-  fi
-
   # If this file exists in the new directory as well, then check if it differs.
   if [ -f "$newdir/$f" ]; then
 
@@ -218,12 +207,6 @@ num_newfiles=${#newfiles[*]}
 
 for ((i=0; $i<$num_newfiles; i=$i+1)); do
   f="${newfiles[$i]}"
-
-  # removed-files is excluded by make_incremental_updates.py so it is excluded
-  # here for consistency.
-  if [ `basename $f` = "removed-files" ]; then
-    continue 1
-  fi
 
   # If we've already tested this file, then skip it
   for ((j=0; $j<$num_oldfiles; j=$j+1)); do
