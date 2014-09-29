@@ -19,9 +19,21 @@ class AutoSaveTransform
      mOldTransform(aTarget->GetTransform())
   {
   }
+
+  void Init(DrawTarget *aTarget)
+  {
+    MOZ_ASSERT(!mDrawTarget || aTarget == mDrawTarget);
+    if (!mDrawTarget) {
+      mDrawTarget = aTarget;
+      mOldTransform = aTarget->GetTransform();
+    }
+  }
+
   ~AutoSaveTransform()
   {
-    mDrawTarget->SetTransform(mOldTransform);
+    if (mDrawTarget) {
+      mDrawTarget->SetTransform(mOldTransform);
+    }
   }
 
  private:
