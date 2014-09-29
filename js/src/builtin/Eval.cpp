@@ -312,10 +312,10 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
         RootedScript maybeScript(cx);
         unsigned lineno;
         const char *filename;
-        JSPrincipals *originPrincipals;
+        bool mutedErrors;
         uint32_t pcOffset;
         DescribeScriptedCallerForCompilation(cx, &maybeScript, &filename, &lineno, &pcOffset,
-                                             &originPrincipals,
+                                             &mutedErrors,
                                              evalType == DIRECT_EVAL
                                              ? CALLED_FROM_JSOP_EVAL
                                              : NOT_CALLED_FROM_JSOP_EVAL);
@@ -329,7 +329,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
                .setCompileAndGo(true)
                .setForEval(true)
                .setNoScriptRval(false)
-               .setOriginPrincipals(originPrincipals)
+               .setMutedErrors(mutedErrors)
                .setIntroductionInfo(introducerFilename, "eval", lineno, maybeScript, pcOffset);
 
         AutoStableStringChars flatChars(cx);
@@ -388,10 +388,10 @@ js::DirectEvalStringFromIon(JSContext *cx,
         RootedScript maybeScript(cx);
         const char *filename;
         unsigned lineno;
-        JSPrincipals *originPrincipals;
+        bool mutedErrors;
         uint32_t pcOffset;
         DescribeScriptedCallerForCompilation(cx, &maybeScript, &filename, &lineno, &pcOffset,
-                                              &originPrincipals, CALLED_FROM_JSOP_EVAL);
+                                              &mutedErrors, CALLED_FROM_JSOP_EVAL);
 
         const char *introducerFilename = filename;
         if (maybeScript && maybeScript->scriptSource()->introducerFilename())
@@ -402,7 +402,7 @@ js::DirectEvalStringFromIon(JSContext *cx,
                .setCompileAndGo(true)
                .setForEval(true)
                .setNoScriptRval(false)
-               .setOriginPrincipals(originPrincipals)
+               .setMutedErrors(mutedErrors)
                .setIntroductionInfo(introducerFilename, "eval", lineno, maybeScript, pcOffset);
 
         AutoStableStringChars flatChars(cx);

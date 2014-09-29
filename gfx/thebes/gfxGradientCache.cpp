@@ -178,7 +178,7 @@ class GradientCache MOZ_FINAL : public nsExpirationTracker<GradientCacheData,4>
 static GradientCache* gGradientCache = nullptr;
 
 GradientStops *
-gfxGradientCache::GetGradientStops(DrawTarget *aDT, nsTArray<GradientStop>& aStops, ExtendMode aExtend)
+gfxGradientCache::GetGradientStops(const DrawTarget *aDT, nsTArray<GradientStop>& aStops, ExtendMode aExtend)
 {
   if (!gGradientCache) {
     gGradientCache = new GradientCache();
@@ -189,7 +189,7 @@ gfxGradientCache::GetGradientStops(DrawTarget *aDT, nsTArray<GradientStop>& aSto
 }
 
 GradientStops *
-gfxGradientCache::GetOrCreateGradientStops(DrawTarget *aDT, nsTArray<GradientStop>& aStops, ExtendMode aExtend)
+gfxGradientCache::GetOrCreateGradientStops(const DrawTarget *aDT, nsTArray<GradientStop>& aStops, ExtendMode aExtend)
 {
   RefPtr<GradientStops> gs = GetGradientStops(aDT, aStops, aExtend);
   if (!gs) {

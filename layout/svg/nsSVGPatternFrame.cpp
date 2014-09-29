@@ -231,7 +231,8 @@ GetTargetGeometry(gfxRect *aBBox,
 }
 
 TemporaryRef<SourceSurface>
-nsSVGPatternFrame::PaintPattern(Matrix* patternMatrix,
+nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
+                                Matrix* patternMatrix,
                                 const Matrix &aContextMatrix,
                                 nsIFrame *aSource,
                                 nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
@@ -373,8 +374,7 @@ nsSVGPatternFrame::PaintPattern(Matrix* patternMatrix,
   }
 
   RefPtr<DrawTarget> dt =
-    gfxPlatform::GetPlatform()->
-      CreateOffscreenContentDrawTarget(surfaceSize,  SurfaceFormat::B8G8R8A8);
+    aDrawTarget->CreateSimilarDrawTarget(surfaceSize, SurfaceFormat::B8G8R8A8);
   if (!dt) {
     return nullptr;
   }
@@ -707,6 +707,7 @@ nsSVGPatternFrame::ConstructCTM(const nsSVGViewBox& aViewBox,
 
 already_AddRefed<gfxPattern>
 nsSVGPatternFrame::GetPaintServerPattern(nsIFrame *aSource,
+                                         const DrawTarget* aDrawTarget,
                                          const gfxMatrix& aContextMatrix,
                                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                                          float aGraphicOpacity,
@@ -720,8 +721,8 @@ nsSVGPatternFrame::GetPaintServerPattern(nsIFrame *aSource,
   // Paint it!
   Matrix pMatrix;
   RefPtr<SourceSurface> surface =
-    PaintPattern(&pMatrix, ToMatrix(aContextMatrix), aSource, aFillOrStroke,
-                 aGraphicOpacity, aOverrideBounds);
+    PaintPattern(aDrawTarget, &pMatrix, ToMatrix(aContextMatrix), aSource,
+                 aFillOrStroke, aGraphicOpacity, aOverrideBounds);
 
   if (!surface) {
     return nullptr;

@@ -63,7 +63,7 @@ typedef any Transferable;
   // We think the indexed getter is a bug in the spec, it actually needs to live
   // on the WindowProxy
   //getter WindowProxy (unsigned long index);
-  //getter object (DOMString name);
+  getter object (DOMString name);
 
   // the user agent
   [Throws] readonly attribute Navigator navigator; 

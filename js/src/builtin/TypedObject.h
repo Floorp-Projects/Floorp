@@ -428,6 +428,12 @@ class UnsizedArrayTypeDescr : public TypeDescr
     SizedTypeDescr &elementType() const {
         return getReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE).toObject().as<SizedTypeDescr>();
     }
+
+    SizedTypeDescr &maybeForwardedElementType() const {
+        JSObject *elemType =
+            MaybeForwarded(&getReservedSlot(JS_DESCR_SLOT_ARRAY_ELEM_TYPE).toObject());
+        return elemType->as<SizedTypeDescr>();
+    }
 };
 
 /*
@@ -687,8 +693,16 @@ class OutlineTypedObject : public TypedObject
         return getReservedSlot(JS_BUFVIEW_SLOT_OWNER).toObject();
     }
 
+    JSObject *maybeOwner() const {
+        return getReservedSlot(JS_BUFVIEW_SLOT_OWNER).toObjectOrNull();
+    }
+
     uint8_t *outOfLineTypedMem() const {
         return static_cast<uint8_t *>(getPrivate(DATA_SLOT));
+    }
+
+    int32_t length() const {
+        return getReservedSlot(JS_BUFVIEW_SLOT_LENGTH).toInt32();
     }
 
     // Helper for createUnattached()

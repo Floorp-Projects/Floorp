@@ -181,13 +181,15 @@ UnwrapDOMObject(JSObject* obj)
 }
 
 inline const DOMJSClass*
+GetDOMClass(const js::Class* clasp)
+{
+  return IsDOMClass(clasp) ? DOMJSClass::FromJSClass(clasp) : nullptr;
+}
+
+inline const DOMJSClass*
 GetDOMClass(JSObject* obj)
 {
-  const js::Class* clasp = js::GetObjectClass(obj);
-  if (IsDOMClass(clasp)) {
-    return DOMJSClass::FromJSClass(clasp);
-  }
-  return nullptr;
+  return GetDOMClass(js::GetObjectClass(obj));
 }
 
 inline nsISupports*
@@ -289,13 +291,17 @@ IsConvertibleToCallbackInterface(JSContext* cx, JS::Handle<JSObject*> obj)
   return IsNotDateOrRegExp(cx, obj);
 }
 
-// The items in the protoAndIfaceCache are indexed by the prototypes::id::ID and
-// constructors::id::ID enums, in that order. The end of the prototype objects
-// should be the start of the interface objects.
+// The items in the protoAndIfaceCache are indexed by the prototypes::id::ID,
+// constructors::id::ID and namedpropertiesobjects::id::ID enums, in that order.
+// The end of the prototype objects should be the start of the interface
+// objects, and the end of the interface objects should be the start of the
+// named properties objects.
 static_assert((size_t)constructors::id::_ID_Start ==
-              (size_t)prototypes::id::_ID_Count,
+              (size_t)prototypes::id::_ID_Count &&
+              (size_t)namedpropertiesobjects::id::_ID_Start ==
+              (size_t)constructors::id::_ID_Count,
               "Overlapping or discontiguous indexes.");
-const size_t kProtoAndIfaceCacheCount = constructors::id::_ID_Count;
+const size_t kProtoAndIfaceCacheCount = namedpropertiesobjects::id::_ID_Count;
 
 class ProtoAndIfaceCache
 {
@@ -597,9 +603,9 @@ struct NamedConstructor
 void
 CreateInterfaceObjects(JSContext* cx, JS::Handle<JSObject*> global,
                        JS::Handle<JSObject*> protoProto,
-                       const JSClass* protoClass, JS::Heap<JSObject*>* protoCache,
+                       const js::Class* protoClass, JS::Heap<JSObject*>* protoCache,
                        JS::Handle<JSObject*> interfaceProto,
-                       const JSClass* constructorClass, const JSNativeHolder* constructor,
+                       const js::Class* constructorClass, const JSNativeHolder* constructor,
                        unsigned ctorNargs, const NamedConstructor* namedConstructors,
                        JS::Heap<JSObject*>* constructorCache,
                        const NativeProperties* regularProperties,
@@ -2311,7 +2317,7 @@ AddStringToIDVector(JSContext* cx, JS::AutoIdVector& vector, const char* name)
 // Implementation of the bits that XrayWrapper needs
 
 /**
- * This resolves indexed or named properties of obj.
+ * This resolves operations, attributes and constants of the interfaces for obj.
  *
  * wrapper is the Xray JS object.
  * obj is the target object of the Xray, a binding's instance object or a
@@ -2323,19 +2329,6 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                        JS::Handle<jsid> id,
                        JS::MutableHandle<JSPropertyDescriptor> desc,
                        bool& cacheOnHolder);
-
-/**
- * This resolves operations, attributes and constants of the interfaces for obj.
- *
- * wrapper is the Xray JS object.
- * obj is the target object of the Xray, a binding's instance object or a
- *     interface or interface prototype object.
- */
-bool
-XrayResolveNativeProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                          JS::Handle<JSObject*> obj,
-                          JS::Handle<jsid> id, JS::MutableHandle<JSPropertyDescriptor> desc,
-                          bool& cacheOnHolder);
 
 /**
  * Define a property on obj through an Xray wrapper.
@@ -2363,6 +2356,43 @@ bool
 XrayEnumerateProperties(JSContext* cx, JS::Handle<JSObject*> wrapper,
                         JS::Handle<JSObject*> obj,
                         unsigned flags, JS::AutoIdVector& props);
+
+/**
+ * Returns the prototype to use for an Xray for a DOM object, wrapped in cx's
+ * compartment. This always returns the prototype that would be used for a DOM
+ * object if we ignore any changes that might have been done to the prototype
+ * chain by JS, the XBL code or plugins.
+ *
+ * cx should be in the Xray's compartment.
+ * obj is the target object of the Xray, a binding's instance object or an
+ *     interface or interface prototype object.
+ */
+inline bool
+XrayGetNativeProto(JSContext* cx, JS::Handle<JSObject*> obj,
+                   JS::MutableHandle<JSObject*> protop)
+{
+  JS::Rooted<JSObject*> global(cx, js::GetGlobalForObjectCrossCompartment(obj));
+  {
+    JSAutoCompartment ac(cx, global);
+    const DOMJSClass* domClass = GetDOMClass(obj);
+    if (domClass) {
+      ProtoHandleGetter protoGetter = domClass->mGetProto;
+      if (protoGetter) {
+        protop.set(protoGetter(cx, global));
+      } else {
+        protop.set(JS_GetObjectPrototype(cx, global));
+      }
+    } else {
+      const js::Class* clasp = js::GetObjectClass(obj);
+      MOZ_ASSERT(IsDOMIfaceAndProtoClass(clasp));
+      ProtoGetter protoGetter =
+        DOMIfaceAndProtoJSClass::FromJSClass(clasp)->mGetParentProto;
+      protop.set(protoGetter(cx, global));
+    }
+  }
+
+  return JS_WrapObject(cx, protop);
+}
 
 extern NativePropertyHooks sWorkerNativePropertyHooks;
 
@@ -2420,23 +2450,6 @@ inline void
 MustInheritFromNonRefcountedDOMObject(NonRefcountedDOMObject*)
 {
 }
-
-/**
- * This creates a JSString containing the value that the toString function for
- * obj should create according to the WebIDL specification, ignoring any
- * modifications by script. The value is prefixed with pre and postfixed with
- * post, unless this is called for an object that has a stringifier. It is
- * specifically for use by Xray code.
- *
- * wrapper is the Xray JS object.
- * obj is the target object of the Xray, a binding's instance object or a
- *     interface or interface prototype object.
- * v contains the JSString for the value if the function returns true.
- */
-bool
-NativeToString(JSContext* cx, JS::Handle<JSObject*> wrapper,
-               JS::Handle<JSObject*> obj,
-               JS::MutableHandle<JS::Value> v);
 
 HAS_MEMBER(JSBindingFinalized)
 
@@ -2833,7 +2846,7 @@ struct CreateGlobalOptions<nsGlobalWindow>
 nsresult
 RegisterDOMNames();
 
-template <class T, ProtoGetter GetProto>
+template <class T, ProtoHandleGetter GetProto>
 bool
 CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
              const JSClass* aClass, JS::CompartmentOptions& aOptions,
@@ -3012,6 +3025,13 @@ StrongOrRawPtr(T* aPtr)
 template<class T, template<typename> class SmartPtr, class S>
 inline void
 StrongOrRawPtr(SmartPtr<S>&& aPtr) MOZ_DELETE;
+
+inline
+JSObject*
+GetErrorPrototype(JSContext* aCx, JS::Handle<JSObject*> aForObj)
+{
+  return JS_GetErrorPrototype(aCx);
+}
 
 } // namespace dom
 } // namespace mozilla

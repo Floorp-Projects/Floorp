@@ -970,6 +970,10 @@ class TypeNewScript
     void trace(JSTracer *trc);
     void sweep(FreeOp *fop);
 
+#ifdef JSGC_COMPACTING
+    void fixupAfterMovingGC();
+#endif
+
     void registerNewObject(JSObject *res);
     void unregisterNewObject(JSObject *res);
     bool maybeAnalyze(JSContext *cx, TypeObject *type, bool *regenerate, bool force = false);
@@ -1208,6 +1212,10 @@ struct TypeObject : public gc::TenuredCell
 
     inline void clearProperties();
     inline void sweep(FreeOp *fop, bool *oom);
+
+#ifdef JSGC_COMPACTING
+    void fixupAfterMovingGC();
+#endif
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 

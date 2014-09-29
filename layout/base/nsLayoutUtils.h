@@ -1930,6 +1930,11 @@ public:
   static bool CSSFiltersEnabled();
 
   /**
+   * Checks if we should enable parsing for CSS clip-path basic shapes.
+   */
+  static bool CSSClipPathShapesEnabled();
+
+  /**
    * Checks whether support for the CSS-wide "unset" value is enabled.
    */
   static bool UnsetValueEnabled();

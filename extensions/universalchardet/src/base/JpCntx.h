@@ -19,7 +19,7 @@ extern const uint8_t jp2CharContext[83][83];
 class JapaneseContextAnalysis
 {
 public:
-  JapaneseContextAnalysis() {Reset(false);}
+  JapaneseContextAnalysis() {Reset();}
 
   void HandleData(const char* aBuf, uint32_t aLen);
 
@@ -43,7 +43,7 @@ public:
   }
 
   float GetConfidence(void);
-  void      Reset(bool aIsPreferredLanguage);
+  void      Reset();
   bool GotEnoughData() {return mTotalRel > ENOUGH_REL_THRESHOLD;}
 
 protected:

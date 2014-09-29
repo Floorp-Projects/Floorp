@@ -16,8 +16,8 @@
 #include "nsCOMPtr.h"
 
 //---------------------------------------------------------------------
-nsXPCOMDetector:: nsXPCOMDetector(uint32_t aLanguageFilter)
- : nsUniversalDetector(aLanguageFilter)
+nsXPCOMDetector:: nsXPCOMDetector()
+ : nsUniversalDetector()
 {
 }
 //---------------------------------------------------------------------
@@ -92,8 +92,8 @@ void nsXPCOMDetector::Report(const char* aCharset)
 
 
 //---------------------------------------------------------------------
-nsXPCOMStringDetector:: nsXPCOMStringDetector(uint32_t aLanguageFilter)
-  : nsUniversalDetector(aLanguageFilter)
+nsXPCOMStringDetector:: nsXPCOMStringDetector()
+  : nsUniversalDetector()
 {
 }
 //---------------------------------------------------------------------

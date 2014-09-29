@@ -801,10 +801,14 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                             hasUseRegister = true;
                         }
                     }
+                    JS_ASSERT(!(hasUseRegister && hasUseRegisterAtStart));
 
-                    JS_ASSERT_IF(hasUnaliasedDouble() && hasFloat32Def && vregs[use].type() == LDefinition::DOUBLE,
+                    // LSRA has issues with *AtStart, see bug 1039993.
+                    JS_ASSERT_IF(forLSRA && hasUnaliasedDouble() && hasFloat32Def
+                                 && vregs[use].type() == LDefinition::DOUBLE,
                                  !use->usedAtStart());
-                    JS_ASSERT_IF(hasMultiAlias() && hasDoubleDef && vregs[use].type() == LDefinition::FLOAT32,
+                    JS_ASSERT_IF(forLSRA && hasMultiAlias() && hasDoubleDef
+                                 && vregs[use].type() == LDefinition::FLOAT32,
                                  !use->usedAtStart());
 #endif
 
