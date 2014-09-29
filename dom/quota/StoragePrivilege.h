@@ -18,7 +18,10 @@ enum StoragePrivilege {
   // Quota tracked, persistence type can be either "persistent" or "temporary".
   // The permission "defaul-persistent-storage" is used to determine the
   // default persistence type.
-  Content
+  Content,
+
+  // Only needed for IPC serialization helper, should never be used in code.
+  Invalid
 };
 
 END_QUOTA_NAMESPACE

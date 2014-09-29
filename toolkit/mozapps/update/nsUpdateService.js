@@ -2078,6 +2078,14 @@ UpdateService.prototype = {
       Services.obs.removeObserver(this, topic);
       Services.prefs.removeObserver(PREF_APP_UPDATE_LOG, this);
 
+#ifdef XP_WIN
+      // If we hold the update mutex, let it go!
+      // The OS would clean this up sometime after shutdown,
+      // but that would have no guarantee on timing.
+      if (gUpdateMutexHandle) {
+        closeHandle(gUpdateMutexHandle);
+      }
+#endif
       if (this._retryTimer) {
         this._retryTimer.cancel();
       }

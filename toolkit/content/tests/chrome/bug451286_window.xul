@@ -20,6 +20,8 @@
     const SEARCH_TEXT = "text";
     const DATAURI = "data:text/html," + SEARCH_TEXT;
 
+    let {Task} = Components.utils.import("resource://gre/modules/Task.jsm", {});
+
     var gFindBar = null;
     var gBrowser;
     var gWin;
@@ -55,7 +57,36 @@
       gBrowser.loadURI(uri);
     }
 
-    function onPageShow(aEvent) {
+    // This test is comparing snapshots. It is necessary to wait for the findbar
+    // to close before taking the snapshot so the findbar does not take up space
+    // on the new snapshot.
+    function closeFindbarAndWait() {
+      return new Promise((resolve) => {
+        gFindBar.addEventListener("transitionend", function cont(aEvent) {
+          if (aEvent.propertyName != "visibility") {
+            return;
+          }
+          gFindBar.removeEventListener("transitionend", cont);
+          resolve();
+        });
+        gFindBar.close();
+      });
+    }
+
+    function toggleHighlightAndWait(aHighlight) {
+      return new Promise((resolve) => {
+        let listener = {
+          onHighlightFinished: function() {
+            gFindBar.browser.finder.removeResultListener(listener);
+            resolve();
+          }
+        };
+        gFindBar.browser.finder.addResultListener(listener);
+        gFindBar.toggleHighlight(aHighlight);
+      });
+    }
+
+    let onPageShow = Task.async(function* (aEvent) {
       // Don't respond to pageshow events coming from the <iframes>
       if (aEvent.target != gBrowser.contentDocument)
         return;
@@ -67,6 +98,14 @@
       gWin = gBrowser.contentWindow;
       noHighlightSnapshot = snapshotWindow(gWin);
 
+      yield part1();
+      yield part2();
+      yield part3();
+
+      finish();
+    });
+
+    let part1 = Task.async(function* () {
       gFindBar.open();
       gFindBar._findField.value = SEARCH_TEXT;
       var matchCase = gFindBar.getElement("find-case-sensitive");
@@ -74,32 +113,22 @@
         matchCase.doCommand();
 
       // Turn on highlighting
-      gFindBar.toggleHighlight(true);
-      gFindBar.close();
-      gFindBar.addEventListener('transitionend', part2);
-    }
+      yield toggleHighlightAndWait(true);
+      yield closeFindbarAndWait();
+    });
 
-    function part2(aEvent) {
-      if (aEvent.propertyName != 'visibility') {
-        return;
-      }
-      gFindBar.removeEventListener('transitionend', part2);
-      // Take snapshot of highlighing
+    let part2 = Task.async(function* () {
+      // Take snapshot of highlighting
       findSnapshot = snapshotWindow(gWin);
 
       // Now, remove the highlighting, and take a snapshot to compare
       // to our original state
       gFindBar.open();
-      gFindBar.toggleHighlight(false);
-      gFindBar.close();
-      gFindBar.addEventListener('transitionend', part3);
-    }
+      yield toggleHighlightAndWait(false);
+      yield closeFindbarAndWait();
+    });
 
-    function part3(aEvent) {
-      if (aEvent.propertyName != 'visibility') {
-        return;
-      }
-      gFindBar.removeEventListener('transitionend', part3);
+    let part3 = Task.async(function* () {
       var unhighlightSnapshot = snapshotWindow(gWin);
 
       // Select the matches that should have been highlighted manually
@@ -156,9 +185,7 @@
       // Test 2: Were the matches in iframe correctly unhighlighted?
       res = compareSnapshots(noHighlightSnapshot, unhighlightSnapshot, true);
       ok(res[0], "Highlighting in iframe correctly removed");
-
-      finish();
-    }
+    });
   ]]></script>
 
   <browser type="content-primary" flex="1" id="content" src="about:blank"/>

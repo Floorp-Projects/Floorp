@@ -78,7 +78,7 @@ function main() {
 
   // Currently, changing the font-size on a parent doesn't force a resample (see
   // bug 508206) so we have to give the animation a chance to run
-  setTimeout("checkAfterChangeFontSize()",100);
+  window.requestAnimationFrame(checkAfterChangeFontSize);
 }
 
 function checkAfterChangeFontSize() {
@@ -96,7 +96,7 @@ function checkAfterChangeFontSize() {
   circle.parentNode.setAttribute('font-size', '7px');
 
   // Again, due to bug 508206 we need to give the animation a chance to resample
-  setTimeout("checkWhilstFrozen()",100);
+  window.requestAnimationFrame(checkWhilstFrozen);
 }
 
 function checkWhilstFrozen() {

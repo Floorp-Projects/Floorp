@@ -14,7 +14,6 @@ interface IDBDatabase : EventTarget {
     readonly    attribute DOMString          name;
     readonly    attribute unsigned long long version;
 
-    [Throws]
     readonly    attribute DOMStringList      objectStoreNames;
 
     [Throws]

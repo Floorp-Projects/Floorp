@@ -8,7 +8,7 @@
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
 #include "mozilla/unused.h"
-#include "mozilla/dom/ipc/Blob.h"
+#include "mozilla/dom/ipc/BlobParent.h"
 #include "ContentParent.h"
 #include "nsProxyRelease.h"
 #include "AppProcessChecker.h"
