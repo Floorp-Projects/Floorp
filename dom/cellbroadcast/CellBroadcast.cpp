@@ -3,15 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CellBroadcast.h"
+#include "mozilla/dom/CellBroadcast.h"
+#include "mozilla/dom/CellBroadcastMessage.h"
 #include "mozilla/dom/MozCellBroadcastBinding.h"
 #include "mozilla/dom/MozCellBroadcastEvent.h"
-#include "nsIDOMMozCellBroadcastMessage.h"
 #include "nsServiceManagerUtils.h"
 
-#define NS_RILCONTENTHELPER_CONTRACTID "@mozilla.org/ril/content-helper;1"
+// Service instantiation
+#include "ipc/CellBroadcastIPCService.h"
+#if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
+#include "nsIGonkCellBroadcastService.h"
+#endif
+#include "nsXULAppAPI.h" // For XRE_GetProcessType()
 
 using namespace mozilla::dom;
+using mozilla::ErrorResult;
 
 /**
  * CellBroadcast::Listener Implementation.
@@ -58,34 +64,39 @@ CellBroadcast::Create(nsPIDOMWindow* aWindow, ErrorResult& aRv)
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aWindow->IsInnerWindow());
 
-  nsCOMPtr<nsICellBroadcastProvider> provider =
-    do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
-  if (!provider) {
+  nsCOMPtr<nsICellBroadcastService> service =
+    do_GetService(CELLBROADCAST_SERVICE_CONTRACTID);
+  if (!service) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
 
-  nsRefPtr<CellBroadcast> cb = new CellBroadcast(aWindow, provider);
+  nsRefPtr<CellBroadcast> cb = new CellBroadcast(aWindow, service);
   return cb.forget();
 }
 
 CellBroadcast::CellBroadcast(nsPIDOMWindow *aWindow,
-                             nsICellBroadcastProvider *aProvider)
+                             nsICellBroadcastService *aService)
   : DOMEventTargetHelper(aWindow)
-  , mProvider(aProvider)
 {
   mListener = new Listener(this);
-  DebugOnly<nsresult> rv = mProvider->RegisterCellBroadcastMsg(mListener);
+  DebugOnly<nsresult> rv = aService->RegisterListener(mListener);
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                   "Failed registering Cell Broadcast callback with provider");
+                   "Failed registering Cell Broadcast callback");
 }
 
 CellBroadcast::~CellBroadcast()
 {
-  MOZ_ASSERT(mProvider && mListener);
+  MOZ_ASSERT(mListener);
 
   mListener->Disconnect();
-  mProvider->UnregisterCellBroadcastMsg(mListener);
+  nsCOMPtr<nsICellBroadcastService> service =
+    do_GetService(CELLBROADCAST_SERVICE_CONTRACTID);
+  if (service) {
+    service->UnregisterListener(mListener);
+  }
+
+  mListener = nullptr;
 }
 
 NS_IMPL_ISUPPORTS_INHERITED0(CellBroadcast, DOMEventTargetHelper)
@@ -99,14 +110,54 @@ CellBroadcast::WrapObject(JSContext* aCx)
 // Forwarded nsICellBroadcastListener methods
 
 NS_IMETHODIMP
-CellBroadcast::NotifyMessageReceived(nsIDOMMozCellBroadcastMessage* aMessage)
-{
+CellBroadcast::NotifyMessageReceived(uint32_t aServiceId,
+                                     uint32_t aGsmGeographicalScope,
+                                     uint16_t aMessageCode,
+                                     uint16_t aMessageId,
+                                     const nsAString& aLanguage,
+                                     const nsAString& aBody,
+                                     uint32_t aMessageClass,
+                                     DOMTimeStamp aTimestamp,
+                                     uint32_t aCdmaServiceCategory,
+                                     bool aHasEtwsInfo,
+                                     uint32_t aEtwsWarningType,
+                                     bool aEtwsEmergencyUserAlert,
+                                     bool aEtwsPopup) {
   MozCellBroadcastEventInit init;
   init.mBubbles = true;
   init.mCancelable = false;
-  init.mMessage = aMessage;
+  init.mMessage = new CellBroadcastMessage(GetOwner(),
+                                           aServiceId,
+                                           aGsmGeographicalScope,
+                                           aMessageCode,
+                                           aMessageId,
+                                           aLanguage,
+                                           aBody,
+                                           aMessageClass,
+                                           aTimestamp,
+                                           aCdmaServiceCategory,
+                                           aHasEtwsInfo,
+                                           aEtwsWarningType,
+                                           aEtwsEmergencyUserAlert,
+                                           aEtwsPopup);
 
   nsRefPtr<MozCellBroadcastEvent> event =
     MozCellBroadcastEvent::Constructor(this, NS_LITERAL_STRING("received"), init);
   return DispatchTrustedEvent(event);
+}
+
+already_AddRefed<nsICellBroadcastService>
+NS_CreateCellBroadcastService()
+{
+  nsCOMPtr<nsICellBroadcastService> service;
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    service = new mozilla::dom::cellbroadcast::CellBroadcastIPCService();
+#if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
+  } else {
+    service = do_GetService(GONK_CELLBROADCAST_SERVICE_CONTRACTID);
+#endif
+  }
+
+  return service.forget();
 }

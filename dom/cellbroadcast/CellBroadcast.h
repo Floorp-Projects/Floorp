@@ -9,7 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/ErrorResult.h"
-#include "nsICellBroadcastProvider.h"
+#include "nsICellBroadcastService.h"
 #include "js/TypeDecls.h"
 
 class nsPIDOMWindow;
@@ -23,7 +23,7 @@ class CellBroadcast MOZ_FINAL : public DOMEventTargetHelper,
   /**
    * Class CellBroadcast doesn't actually expose nsICellBroadcastListener.
    * Instead, it owns an nsICellBroadcastListener derived instance mListener
-   * and passes it to nsICellBroadcastProvider. The onreceived events are first
+   * and passes it to nsICellBroadcastService. The onreceived events are first
    * delivered to mListener and then forwarded to its owner, CellBroadcast. See
    * also bug 775997 comment #51.
    */
@@ -43,7 +43,7 @@ public:
 
   CellBroadcast() MOZ_DELETE;
   CellBroadcast(nsPIDOMWindow *aWindow,
-                nsICellBroadcastProvider* aProvider);
+                nsICellBroadcastService* aService);
 
   nsPIDOMWindow*
   GetParentObject() const { return GetOwner(); }
@@ -54,7 +54,6 @@ public:
   IMPL_EVENT_HANDLER(received)
 
 private:
-  nsCOMPtr<nsICellBroadcastProvider> mProvider;
   nsRefPtr<Listener> mListener;
 };
 

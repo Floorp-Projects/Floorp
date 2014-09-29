@@ -1,18 +1,18 @@
+/* -*- Mode: c++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 40 -*- */
+/* vim: set ts=2 et sw=2 tw=40: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "domstubs.idl"
-#include "nsISupports.idl"
+enum CellBroadcastGsmGeographicalScope {"cell-immediate", "plmn",
+                                        "location-area", "cell"};
+enum CellBroadcastMessageClass {"class-0", "class-1", "class-2",
+                                "class-3", "user-1", "user-2", "normal"};
+enum CellBroadcastEtwsWarningType {"earthquake", "tsunami",
+                                   "earthquake-tsunami", "test", "other"};
 
-interface nsIDOMMozCellBroadcastEtwsInfo;
-
-/**
- * MozCellBroadcastMessage encapsulates Cell Broadcast short message service
- * (CBS) messages.
- */
-[scriptable, uuid(dc729df4-f1d8-11e3-b00d-d3332542c557)]
-interface nsIDOMMozCellBroadcastMessage : nsISupports
+[Pref="dom.cellbroadcast.enabled"]
+interface MozCellBroadcastMessage
 {
   /**
    * The Service Id in the device where the message is received from.
@@ -25,7 +25,7 @@ interface nsIDOMMozCellBroadcastMessage : nsISupports
    *
    * Possible values are: "cell-immediate", "plmn", "location-area" and "cell".
    */
-  readonly attribute DOMString gsmGeographicalScope;
+  readonly attribute CellBroadcastGsmGeographicalScope? gsmGeographicalScope;
 
   /**
    * The Message Code differentiates between messages from the same source and
@@ -43,18 +43,18 @@ interface nsIDOMMozCellBroadcastMessage : nsISupports
   /**
    * ISO-639-1 language code for this message. Null if unspecified.
    */
-  readonly attribute DOMString language;
+  readonly attribute DOMString? language;
 
   /**
    * Text message carried by the message.
    */
-  readonly attribute DOMString body;
+  readonly attribute DOMString? body;
 
   /**
    * Possible values are "normal", "class-0", "class-1", "class-2", "class-3",
    * "user-1", and "user-2".
    */
-  readonly attribute DOMString messageClass;
+  readonly attribute CellBroadcastMessageClass? messageClass;
 
   /**
    * System time stamp at receival.
@@ -64,26 +64,22 @@ interface nsIDOMMozCellBroadcastMessage : nsISupports
   /**
    * Additional ETWS-specific info.
    */
-  readonly attribute nsIDOMMozCellBroadcastEtwsInfo etws;
+  readonly attribute MozCellBroadcastEtwsInfo? etws;
 
   /**
    * Service Category.
    */
-  readonly attribute long cdmaServiceCategory;
+  readonly attribute unsigned short? cdmaServiceCategory;
 };
 
-/**
- * ETWS (Earthquake and Tsunami Warning service) Primary Notification message
- * specific information.
- */
-[scriptable, uuid(af009d9a-f5e8-4573-a6ee-a85118465bed)]
-interface nsIDOMMozCellBroadcastEtwsInfo : nsISupports
+[Pref="dom.cellbroadcast.enabled"]
+interface MozCellBroadcastEtwsInfo
 {
   /**
    * Warning type. Possible values are "earthquake", "tsunami",
    * "earthquake-tsunami", "test" and "other".
    */
-  readonly attribute ACString warningType;
+  readonly attribute CellBroadcastEtwsWarningType? warningType;
 
   /**
    * Emergency user alert indication. It is used to command mobile terminals to
@@ -98,4 +94,3 @@ interface nsIDOMMozCellBroadcastEtwsInfo : nsISupports
    */
   readonly attribute boolean popup;
 };
-

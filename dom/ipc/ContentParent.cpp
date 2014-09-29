@@ -33,22 +33,23 @@
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "nsAccessibilityService.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/dom/asmjscache/AsmJSCache.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/dom/DataStoreService.h"
-#include "mozilla/dom/ExternalHelperAppParent.h"
-#include "mozilla/dom/PContentBridgeParent.h"
-#include "mozilla/dom/PCycleCollectWithLogsParent.h"
-#include "mozilla/dom/PMemoryReportRequestParent.h"
-#include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/DOMStorageIPC.h"
-#include "mozilla/dom/bluetooth/PBluetoothParent.h"
-#include "mozilla/dom/PFMRadioParent.h"
-#include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/ExternalHelperAppParent.h"
 #include "mozilla/dom/FileSystemRequestParent.h"
 #include "mozilla/dom/GeolocationBinding.h"
+#include "mozilla/dom/PContentBridgeParent.h"
+#include "mozilla/dom/PCycleCollectWithLogsParent.h"
+#include "mozilla/dom/PFMRadioParent.h"
+#include "mozilla/dom/PMemoryReportRequestParent.h"
+#include "mozilla/dom/asmjscache/AsmJSCache.h"
+#include "mozilla/dom/bluetooth/PBluetoothParent.h"
+#include "mozilla/dom/cellbroadcast/CellBroadcastParent.h"
+#include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
 #include "mozilla/dom/mobileconnection/MobileConnectionParent.h"
 #include "mozilla/dom/mobilemessage/SmsParent.h"
+#include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/telephony/TelephonyParent.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
@@ -192,6 +193,7 @@ static const char* sClipboardTextFlavors[] = { kUnicodeMime };
 using base::ChildPrivileges;
 using base::KillProcess;
 using namespace mozilla::dom::bluetooth;
+using namespace mozilla::dom::cellbroadcast;
 using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::indexedDB;
 using namespace mozilla::dom::power;
@@ -2894,7 +2896,7 @@ ContentParent::KillHard()
         FROM_HERE,
         NewRunnableFunction(&ProcessWatcher::EnsureProcessTerminated,
                             OtherProcess(), /*force=*/true));
-    //We do clean-up here 
+    //We do clean-up here
     MessageLoop::current()->PostDelayedTask(
         FROM_HERE,
         NewRunnableMethod(this, &ContentParent::ShutDownProcess,
@@ -3099,13 +3101,13 @@ ContentParent::AllocPExternalHelperAppParent(const OptionalURIParams& uri,
 {
     ExternalHelperAppParent *parent = new ExternalHelperAppParent(uri, aContentLength);
     parent->AddRef();
-    parent->Init(this, 
-                 aMimeContentType, 
+    parent->Init(this,
+                 aMimeContentType,
                  aContentDisposition,
                  aContentDispositionHint,
                  aContentDispositionFilename,
-                 aForceSave, 
-                 aReferrer, 
+                 aForceSave,
+                 aReferrer,
                  aBrowser);
     return parent;
 }
@@ -3116,6 +3118,31 @@ ContentParent::DeallocPExternalHelperAppParent(PExternalHelperAppParent* aServic
     ExternalHelperAppParent *parent = static_cast<ExternalHelperAppParent *>(aService);
     parent->Release();
     return true;
+}
+
+PCellBroadcastParent*
+ContentParent::AllocPCellBroadcastParent()
+{
+    if (!AssertAppProcessPermission(this, "cellbroadcast")) {
+        return nullptr;
+    }
+
+    CellBroadcastParent* actor = new CellBroadcastParent();
+    actor->AddRef();
+    return actor;
+}
+
+bool
+ContentParent::DeallocPCellBroadcastParent(PCellBroadcastParent* aActor)
+{
+    static_cast<CellBroadcastParent*>(aActor)->Release();
+    return true;
+}
+
+bool
+ContentParent::RecvPCellBroadcastConstructor(PCellBroadcastParent* aActor)
+{
+    return static_cast<CellBroadcastParent*>(aActor)->Init();
 }
 
 PSmsParent*
