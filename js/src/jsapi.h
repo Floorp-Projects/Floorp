@@ -3544,7 +3544,18 @@ class JS_FRIEND_API(ReadOnlyCompileOptions)
     friend class CompileOptions;
 
   protected:
-    JSPrincipals *originPrincipals_;
+    // The Web Platform allows scripts to be loaded from arbitrary cross-origin
+    // sources. This allows an attack by which a malicious website loads a
+    // sensitive file (say, a bank statement) cross-origin (using the user's
+    // cookies), and sniffs the generated syntax errors (via a window.onerror
+    // handler) for juicy morsels of its contents.
+    //
+    // To counter this attack, HTML5 specifies that script errors should be
+    // sanitized ("muted") when the script is not same-origin with the global
+    // for which it is loaded. Callers should set this flag for cross-origin
+    // scripts, and it will be propagated appropriately to child scripts and
+    // passed back in JSErrorReports.
+    bool mutedErrors_;
     const char *filename_;
     const char *introducerFilename_;
     const char16_t *sourceMapURL_;
@@ -3554,7 +3565,7 @@ class JS_FRIEND_API(ReadOnlyCompileOptions)
     // classes' constructors take care of that, in ways appropriate to their
     // purpose.
     ReadOnlyCompileOptions()
-      : originPrincipals_(nullptr),
+      : mutedErrors_(false),
         filename_(nullptr),
         introducerFilename_(nullptr),
         sourceMapURL_(nullptr),
@@ -3589,7 +3600,7 @@ class JS_FRIEND_API(ReadOnlyCompileOptions)
   public:
     // Read-only accessors for non-POD options. The proper way to set these
     // depends on the derived type.
-    JSPrincipals *originPrincipals(js::ExclusiveContext *cx) const;
+    bool mutedErrors() const { return mutedErrors_; }
     const char *filename() const { return filename_; }
     const char *introducerFilename() const { return introducerFilename_; }
     const char16_t *sourceMapURL() const { return sourceMapURL_; }
@@ -3684,10 +3695,8 @@ class JS_FRIEND_API(OwningCompileOptions) : public ReadOnlyCompileOptions
         introductionScriptRoot = s;
         return *this;
     }
-    OwningCompileOptions &setOriginPrincipals(JSPrincipals *p) {
-        if (p) JS_HoldPrincipals(p);
-        if (originPrincipals_) JS_DropPrincipals(runtime, originPrincipals_);
-        originPrincipals_ = p;
+    OwningCompileOptions &setMutedErrors(bool mute) {
+        mutedErrors_ = mute;
         return *this;
     }
     OwningCompileOptions &setVersion(JSVersion v) {
@@ -3743,7 +3752,7 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) : public ReadOnlyCompileOpti
     {
         copyPODOptions(rhs);
 
-        originPrincipals_ = rhs.originPrincipals_;
+        mutedErrors_ = rhs.mutedErrors_;
         filename_ = rhs.filename();
         sourceMapURL_ = rhs.sourceMapURL();
         elementRoot = rhs.element();
@@ -3770,8 +3779,8 @@ class MOZ_STACK_CLASS JS_FRIEND_API(CompileOptions) : public ReadOnlyCompileOpti
         introductionScriptRoot = s;
         return *this;
     }
-    CompileOptions &setOriginPrincipals(JSPrincipals *p) {
-        originPrincipals_ = p;
+    CompileOptions &setMutedErrors(bool mute) {
+        mutedErrors_ = mute;
         return *this;
     }
     CompileOptions &setVersion(JSVersion v) {
@@ -4638,7 +4647,7 @@ JS_ReportAllocationOverflow(JSContext *cx);
 
 struct JSErrorReport {
     const char      *filename;      /* source file name, URL, etc., or null */
-    JSPrincipals    *originPrincipals; /* see 'originPrincipals' comment above */
+    bool            isMuted;        /* See the comment in ReadOnlyCompileOptions. */
     unsigned        lineno;         /* source line number */
     const char      *linebuf;       /* offending source line without final \n */
     const char      *tokenptr;      /* pointer to error token in linebuf */

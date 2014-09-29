@@ -244,6 +244,7 @@ xpc::ErrorReport::InitInternal(JSErrorReport *aReport,
     mLineNumber = aReport->lineno;
     mColumn = aReport->column;
     mFlags = aReport->flags;
+    mIsMuted = aReport->isMuted;
 }
 
 #ifdef PR_LOGGING

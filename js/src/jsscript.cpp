@@ -1795,9 +1795,6 @@ ScriptSource::~ScriptSource()
       default:
         break;
     }
-
-    if (originPrincipals_)
-        JS_DropPrincipals(TlsPerThreadData.get()->runtimeFromMainThread(), originPrincipals_);
 }
 
 void
@@ -1993,9 +1990,7 @@ ScriptSource::initFromOptions(ExclusiveContext *cx, const ReadOnlyCompileOptions
     JS_ASSERT(!filename_);
     JS_ASSERT(!introducerFilename_);
 
-    originPrincipals_ = options.originPrincipals(cx);
-    if (originPrincipals_)
-        JS_HoldPrincipals(originPrincipals_);
+    mutedErrors_ = options.mutedErrors();
 
     introductionType_ = options.introductionType;
     setIntroductionOffset(options.introductionOffset);
@@ -2863,7 +2858,7 @@ js_GetScriptLineExtent(JSScript *script)
 void
 js::DescribeScriptedCallerForCompilation(JSContext *cx, MutableHandleScript maybeScript,
                                          const char **file, unsigned *linenop,
-                                         uint32_t *pcOffset, JSPrincipals **origin,
+                                         uint32_t *pcOffset, bool *mutedErrors,
                                          LineOption opt)
 {
     if (opt == CALLED_FROM_JSOP_EVAL) {
@@ -2876,7 +2871,7 @@ js::DescribeScriptedCallerForCompilation(JSContext *cx, MutableHandleScript mayb
         *linenop = GET_UINT16(pc + (JSOp(*pc) == JSOP_EVAL ? JSOP_EVAL_LENGTH
                                                            : JSOP_SPREADEVAL_LENGTH));
         *pcOffset = pc - maybeScript->code();
-        *origin = maybeScript->originPrincipals();
+        *mutedErrors = maybeScript->mutedErrors();
         return;
     }
 
@@ -2887,13 +2882,13 @@ js::DescribeScriptedCallerForCompilation(JSContext *cx, MutableHandleScript mayb
         *file = nullptr;
         *linenop = 0;
         *pcOffset = 0;
-        *origin = cx->compartment()->principals;
+        *mutedErrors = false;
         return;
     }
 
     *file = iter.scriptFilename();
     *linenop = iter.computeLine();
-    *origin = iter.originPrincipals();
+    *mutedErrors = iter.mutedErrors();
 
     // These values are only used for introducer fields which are debugging
     // information and can be safely left null for asm.js frames.
@@ -3037,7 +3032,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
     /* Now that all fallible allocation is complete, create the GC thing. */
 
     CompileOptions options(cx);
-    options.setOriginPrincipals(src->originPrincipals())
+    options.setMutedErrors(src->mutedErrors())
            .setCompileAndGo(src->compileAndGo())
            .setSelfHostingMode(src->selfHosted())
            .setNoScriptRval(src->noScriptRval())
