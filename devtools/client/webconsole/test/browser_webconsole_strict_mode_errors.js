@@ -55,7 +55,7 @@ add_task(function* () {
     webconsole: hud,
     messages: [
       {
-        text: "TypeError: setting a property that has only a getter",
+        text: 'TypeError: setting getter-only property "p"',
         category: CATEGORY_JS,
         severity: SEVERITY_ERROR,
       },
