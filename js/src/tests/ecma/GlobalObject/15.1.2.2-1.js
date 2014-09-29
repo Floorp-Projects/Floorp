@@ -100,21 +100,6 @@ new TestCase( SECTION,
 	      eval("var PROPS=''; for ( var p in parseInt ) { PROPS += p; }; PROPS") );
 
 new TestCase( SECTION, 
-	      "delete parseInt.length",  
-	      false, 
-	      delete parseInt.length );
-
-new TestCase( SECTION, 
-	      "delete parseInt.length; parseInt.length", 
-	      2, 
-	      eval("delete parseInt.length; parseInt.length") );
-
-new TestCase( SECTION, 
-	      "parseInt.length = null; parseInt.length", 
-	      2, 
-	      eval("parseInt.length = null; parseInt.length") );
-
-new TestCase( SECTION, 
 	      "parseInt()",      
 	      NaN,   
 	      parseInt() );
