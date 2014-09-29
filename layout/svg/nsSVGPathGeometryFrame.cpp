@@ -695,8 +695,14 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext,
   }
 
   if ((aRenderComponents & eRenderStroke) &&
-       nsSVGUtils::SetupCairoStroke(this, gfx, contextPaint)) {
-    gfx->Stroke();
+      nsSVGUtils::HasStroke(this, contextPaint)) {
+    nsRefPtr<gfxPattern> strokePattern =
+      nsSVGUtils::MakeStrokePatternFor(this, gfx, contextPaint);
+    if (strokePattern) {
+      nsSVGUtils::SetupCairoStrokeGeometry(this, gfx, contextPaint);
+      gfx->SetPattern(strokePattern);
+      gfx->Stroke();
+    }
   }
 
   gfx->NewPath();

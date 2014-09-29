@@ -1582,24 +1582,6 @@ nsSVGUtils::GetGeometryHitTestFlags(nsIFrame* aFrame)
 }
 
 bool
-nsSVGUtils::SetupCairoStroke(nsIFrame* aFrame, gfxContext* aContext,
-                             gfxTextContextPaint *aContextPaint)
-{
-  if (!HasStroke(aFrame, aContextPaint)) {
-    return false;
-  }
-  SetupCairoStrokeGeometry(aFrame, aContext, aContextPaint);
-
-  nsRefPtr<gfxPattern> pattern =
-    MakeStrokePatternFor(aFrame, aContext, aContextPaint);
-  if (pattern) {
-    aContext->SetPattern(pattern);
-    return true;
-  }
-  return false;
-}
-
-bool
 nsSVGUtils::PaintSVGGlyph(Element* aElement, gfxContext* aContext,
                           DrawMode aDrawMode,
                           gfxTextContextPaint* aContextPaint)
