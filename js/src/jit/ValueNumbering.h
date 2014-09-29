@@ -87,7 +87,7 @@ class ValueNumberer
     bool processDeadDefs();
 
     bool fixupOSROnlyLoop(MBasicBlock *block, MBasicBlock *backedge);
-    bool removePredecessorAndDoDCE(MBasicBlock *block, MBasicBlock *pred);
+    bool removePredecessorAndDoDCE(MBasicBlock *block, MBasicBlock *pred, size_t predIndex);
     bool removePredecessorAndCleanUp(MBasicBlock *block, MBasicBlock *pred);
 
     MDefinition *simplified(MDefinition *def) const;

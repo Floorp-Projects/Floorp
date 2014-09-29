@@ -180,13 +180,20 @@ MOZALLOC_EXPORT void* moz_valloc(size_t size)
 #  define MOZALLOC_EXPORT_NEW
 #endif
 
-#if defined(ANDROID) || defined(_MSC_VER)
+#if defined(ANDROID)
 /*
- * Android doesn't fully support exceptions, so its <new> header
- * has operators that don't specify throw() at all. Also include MSVC
- * to suppress build warning spam (bug 578546).
+ * It's important to always specify 'throw()' in GCC because it's used to tell
+ * GCC that 'new' may return null. That makes GCC null-check the result before
+ * potentially initializing the memory to zero.
+ * Also, the Android minimalistic headers don't include std::bad_alloc.
  */
-#define MOZALLOC_THROW_IF_HAS_EXCEPTIONS /**/
+#define MOZALLOC_THROW_IF_HAS_EXCEPTIONS throw()
+#define MOZALLOC_THROW_BAD_ALLOC_IF_HAS_EXCEPTIONS
+#elif defined(_MSC_VER)
+/*
+ * Suppress build warning spam (bug 578546).
+ */
+#define MOZALLOC_THROW_IF_HAS_EXCEPTIONS
 #define MOZALLOC_THROW_BAD_ALLOC_IF_HAS_EXCEPTIONS
 #else
 #define MOZALLOC_THROW_IF_HAS_EXCEPTIONS throw()
