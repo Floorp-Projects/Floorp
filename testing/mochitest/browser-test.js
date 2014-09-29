@@ -676,7 +676,18 @@ Tester.prototype = {
     }
     else {
       var self = this;
+      var timeoutExpires = Date.now() + gTimeoutSeconds * 1000;
+      var waitUntilAtLeast = timeoutExpires - 1000;
       this.currentTest.scope.__waitTimer = setTimeout(function timeoutFn() {
+        // We sometimes get woken up long before the gTimeoutSeconds
+        // have elapsed (when running in chaos mode for example). This
+        // code ensures that we don't wrongly time out in that case.
+        if (Date.now() < waitUntilAtLeast) {
+          self.currentTest.scope.__waitTimer =
+            setTimeout(timeoutFn, timeoutExpires - Date.now());
+          return;
+        }
+
         if (--self.currentTest.scope.__timeoutFactor > 0) {
           // We were asked to wait a bit longer.
           self.currentTest.scope.info(
