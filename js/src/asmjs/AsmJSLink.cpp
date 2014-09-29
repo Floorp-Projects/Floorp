@@ -776,7 +776,7 @@ HandleDynamicLinkFailure(JSContext *cx, CallArgs args, AsmJSModule &module, Hand
         formals.infallibleAppend(module.bufferArgumentName());
 
     CompileOptions options(cx);
-    options.setOriginPrincipals(module.scriptSource()->originPrincipals())
+    options.setMutedErrors(module.scriptSource()->mutedErrors())
            .setFile(module.scriptSource()->filename())
            .setCompileAndGo(false)
            .setNoScriptRval(false);

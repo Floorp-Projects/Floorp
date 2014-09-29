@@ -264,10 +264,10 @@ JS_GetScriptPrincipals(JSScript *script)
     return script->principals();
 }
 
-JS_FRIEND_API(JSPrincipals *)
-JS_GetScriptOriginPrincipals(JSScript *script)
+JS_FRIEND_API(bool)
+JS_ScriptHasMutedErrors(JSScript *script)
 {
-    return script->originPrincipals();
+    return script->mutedErrors();
 }
 
 JS_FRIEND_API(bool)

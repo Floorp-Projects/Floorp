@@ -353,10 +353,8 @@ class ScriptErrorEvent : public nsRunnable
 public:
   ScriptErrorEvent(JSRuntime* aRuntime,
                    xpc::ErrorReport* aReport,
-                   nsIPrincipal* aScriptOriginPrincipal,
                    JS::Handle<JS::Value> aError)
     : mReport(aReport)
-    , mOriginPrincipal(aScriptOriginPrincipal)
     , mError(aRuntime, aError)
   {}
 
@@ -380,21 +378,8 @@ public:
       init.mFilename = mReport->mFileName;
       init.mBubbles = true;
 
-      nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(win));
-      NS_ENSURE_STATE(sop);
-      nsIPrincipal* p = sop->GetPrincipal();
-      NS_ENSURE_STATE(p);
-
-      bool sameOrigin = !mOriginPrincipal;
-
-      if (p && !sameOrigin) {
-        if (NS_FAILED(p->Subsumes(mOriginPrincipal, &sameOrigin))) {
-          sameOrigin = false;
-        }
-      }
-
       NS_NAMED_LITERAL_STRING(xoriginMsg, "Script error.");
-      if (sameOrigin) {
+      if (!mReport->mIsMuted) {
         init.mMessage = mReport->mErrorMsg;
         init.mLineno = mReport->mLineNumber;
         init.mColno = mReport->mColumn;
@@ -423,7 +408,6 @@ public:
 
 private:
   nsRefPtr<xpc::ErrorReport>      mReport;
-  nsCOMPtr<nsIPrincipal>          mOriginPrincipal;
   JS::PersistentRootedValue       mError;
 
   static bool sHandlingScriptError;
@@ -497,11 +481,7 @@ SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 
     // Otherwise, we need to asynchronously invoke onerror before we can decide
     // whether or not to report the error to the console.
-    nsContentUtils::AddScriptRunner(
-      new ScriptErrorEvent(JS_GetRuntime(cx),
-                           xpcReport,
-                           nsJSPrincipals::get(report->originPrincipals),
-                           exception));
+    nsContentUtils::AddScriptRunner(new ScriptErrorEvent(JS_GetRuntime(cx), xpcReport, exception));
   }
 }
 

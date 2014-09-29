@@ -1058,7 +1058,9 @@ nsScriptLoader::FillCompileOptionsForRequest(const AutoJSAPI &jsapi,
     aOptions->setSourceMapURL(aRequest->mSourceMapURL.get());
   }
   if (aRequest->mOriginPrincipal) {
-    aOptions->setOriginPrincipals(nsJSPrincipals::get(aRequest->mOriginPrincipal));
+    nsIPrincipal* scriptPrin = nsContentUtils::ObjectPrincipal(aScopeChain);
+    bool subsumes = scriptPrin->Subsumes(aRequest->mOriginPrincipal);
+    aOptions->setMutedErrors(!subsumes);
   }
 
   JSContext* cx = jsapi.cx();

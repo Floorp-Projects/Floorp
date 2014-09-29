@@ -5175,7 +5175,7 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             // Inherit most things (principals, version, etc) from the parent.
             Rooted<JSScript*> parent(cx, bce->script);
             CompileOptions options(cx, bce->parser->options());
-            options.setOriginPrincipals(parent->originPrincipals())
+            options.setMutedErrors(parent->mutedErrors())
                    .setCompileAndGo(parent->compileAndGo())
                    .setSelfHostingMode(parent->selfHosted())
                    .setNoScriptRval(false)
