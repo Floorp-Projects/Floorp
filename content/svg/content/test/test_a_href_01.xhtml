@@ -57,6 +57,7 @@ function doNavigationTest(testNumber, initialHref, f) {
   var iframe = document.getElementById("iframe" + testNumber);
   var a = iframe.contentDocument.getElementById("a");
   ok(endsWith(iframe.contentWindow.location, initialHref), "Initial href of test " + testNumber);
+  is("pointer", window.getComputedStyle(a).getPropertyValue("cursor"), "expected pointer cursor");
   iframe.onload = function() {
     ok(endsWith(iframe.contentWindow.location, "a_href_destination.svg"), "Final href of test " + testNumber);
     if (++navigationCount == testCount) {
