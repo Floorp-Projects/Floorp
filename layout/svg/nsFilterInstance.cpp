@@ -368,10 +368,15 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
                   deviceToFilterSpace *
                   gfxMatrix::Translation(-neededRect.TopLeft()));
     gfx->Rectangle(FilterSpaceToUserSpace(neededRect));
-    if ((aSource == &mFillPaint &&
-         nsSVGUtils::SetupCairoFillPaint(mTargetFrame, gfx)) ||
-        (aSource == &mStrokePaint &&
-         nsSVGUtils::SetupCairoStrokePaint(mTargetFrame, gfx))) {
+    if (aSource == &mFillPaint) {
+      nsRefPtr<gfxPattern> fillPattern =
+        nsSVGUtils::MakeFillPatternFor(mTargetFrame, gfx);
+      if (fillPattern) {
+        gfx->SetPattern(fillPattern);
+        gfx->Fill();
+      }
+    } else if (aSource == &mStrokePaint &&
+               nsSVGUtils::SetupCairoStrokePaint(mTargetFrame, gfx)) {
       gfx->Fill();
     }
     gfx->Restore();

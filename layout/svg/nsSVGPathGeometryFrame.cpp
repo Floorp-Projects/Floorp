@@ -685,9 +685,14 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext,
   gfxTextContextPaint *contextPaint =
     (gfxTextContextPaint*)aContext->GetDrawTarget()->GetUserData(&gfxTextContextPaint::sUserDataKey);
 
-  if ((aRenderComponents & eRenderFill) &&
-      nsSVGUtils::SetupCairoFillPaint(this, gfx, contextPaint)) {
-    gfx->Fill();
+  if ((aRenderComponents & eRenderFill)) {
+    nsRefPtr<gfxPattern> fillPattern =
+      nsSVGUtils::MakeFillPatternFor(this, gfx, contextPaint);
+    if (fillPattern) {
+      gfx->SetPattern(fillPattern);
+      gfx->SetFillRule(nsSVGUtils::ThebesFillRule(StyleSVG()->mFillRule));
+      gfx->Fill();
+    }
   }
 
   if ((aRenderComponents & eRenderStroke) &&

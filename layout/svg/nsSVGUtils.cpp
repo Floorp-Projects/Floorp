@@ -1289,39 +1289,60 @@ nsSVGUtils::SetupContextPaint(gfxContext *aContext,
   return true;
 }
 
-bool
-nsSVGUtils::SetupCairoFillPaint(nsIFrame *aFrame, gfxContext* aContext,
-                                gfxTextContextPaint *aContextPaint)
+/* static */ already_AddRefed<gfxPattern>
+nsSVGUtils::MakeFillPatternFor(nsIFrame *aFrame,
+                               gfxContext* aContext,
+                               gfxTextContextPaint *aContextPaint)
 {
   const nsStyleSVG* style = aFrame->StyleSVG();
-  if (style->mFill.mType == eStyleSVGPaintType_None)
-    return false;
-
-  if (style->mFillRule == NS_STYLE_FILL_RULE_EVENODD)
-    aContext->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
-  else
-    aContext->SetFillRule(gfxContext::FILL_RULE_WINDING);
+  if (style->mFill.mType == eStyleSVGPaintType_None) {
+    return nullptr;
+  }
 
   float opacity = MaybeOptimizeOpacity(aFrame,
                                        GetOpacity(style->mFillOpacitySource,
                                                   style->mFillOpacity,
                                                   aContextPaint));
-  nsSVGPaintServerFrame *ps =
-    nsSVGEffects::GetPaintServer(aFrame, &style->mFill, nsSVGEffects::FillProperty());
-  if (ps && ps->SetupPaintServer(aContext, aFrame, &nsStyleSVG::mFill, opacity))
-    return true;
+  nsRefPtr<gfxPattern> pattern;
 
-  if (SetupContextPaint(aContext, aContextPaint, style->mFill, opacity)) {
-    return true;
+  nsSVGPaintServerFrame *ps =
+    nsSVGEffects::GetPaintServer(aFrame, &style->mFill,
+                                 nsSVGEffects::FillProperty());
+  if (ps) {
+    pattern = ps->GetPaintServerPattern(aFrame, aContext->CurrentMatrix(),
+                                        &nsStyleSVG::mFill, opacity);
+    if (pattern) {
+      pattern->CacheColorStops(aContext->GetDrawTarget());
+      return pattern.forget();
+    }
+  }
+
+  if (aContextPaint) {
+    switch (style->mFill.mType) {
+    case eStyleSVGPaintType_ContextFill:
+      pattern = aContextPaint->GetFillPattern(opacity, aContext->CurrentMatrix());
+      break;
+    case eStyleSVGPaintType_ContextStroke:
+      pattern = aContextPaint->GetStrokePattern(opacity, aContext->CurrentMatrix());
+      break;
+    default:
+      ;
+    }
+    if (pattern) {
+      return pattern.forget();
+    }
   }
 
   // On failure, use the fallback colour in case we have an
   // objectBoundingBox where the width or height of the object is zero.
   // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
-  SetupFallbackOrPaintColor(aContext, aFrame->StyleContext(),
-                            &nsStyleSVG::mFill, opacity);
-
-  return true;
+  nscolor color = GetFallbackOrPaintColor(aContext, aFrame->StyleContext(),
+                                          &nsStyleSVG::mFill);
+  pattern = new gfxPattern(gfxRGBA(NS_GET_R(color)/255.0,
+                                   NS_GET_G(color)/255.0,
+                                   NS_GET_B(color)/255.0,
+                                   NS_GET_A(color)/255.0 * opacity));
+  return pattern.forget();
 }
 
 bool

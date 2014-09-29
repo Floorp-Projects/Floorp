@@ -2727,8 +2727,6 @@ public:
   void NotifySelectionDecorationLinePathEmitted() MOZ_OVERRIDE;
 
 private:
-  void FillWithOpacity();
-
   void SetupContext();
 
   /**
@@ -2741,7 +2739,7 @@ private:
    * Sets the gfxContext paint to the appropriate color or pattern
    * for filling text geometry.
    */
-  bool SetFillColor();
+  already_AddRefed<gfxPattern> MakeFillPattern();
 
   /**
    * Fills and strokes a piece of text geometry, using group opacity
@@ -2827,8 +2825,11 @@ SVGTextDrawPathCallbacks::NotifySelectionBackgroundPathEmitted()
     return;
   }
 
-  if (SetFillColor()) {
-    FillWithOpacity();
+  nsRefPtr<gfxPattern> fillPattern = MakeFillPattern();
+  if (fillPattern) {
+    gfx->SetPattern(fillPattern);
+    gfx->SetFillRule(nsSVGUtils::ThebesFillRule(mFrame->StyleSVG()->mFillRule));
+    gfx->FillWithOpacity(mColor == NS_40PERCENT_FOREGROUND_COLOR ? 0.4 : 1.0);
   }
   gfx->Restore();
 }
@@ -2873,12 +2874,6 @@ SVGTextDrawPathCallbacks::NotifySelectionDecorationLinePathEmitted()
 }
 
 void
-SVGTextDrawPathCallbacks::FillWithOpacity()
-{
-  gfx->FillWithOpacity(mColor == NS_40PERCENT_FOREGROUND_COLOR ? 0.4 : 1.0);
-}
-
-void
 SVGTextDrawPathCallbacks::SetupContext()
 {
   gfx->Save();
@@ -2914,20 +2909,20 @@ SVGTextDrawPathCallbacks::HandleTextGeometry()
   }
 }
 
-bool
-SVGTextDrawPathCallbacks::SetFillColor()
+already_AddRefed<gfxPattern>
+SVGTextDrawPathCallbacks::MakeFillPattern()
 {
   if (mColor == NS_SAME_AS_FOREGROUND_COLOR ||
       mColor == NS_40PERCENT_FOREGROUND_COLOR) {
-    return nsSVGUtils::SetupCairoFillPaint(mFrame, gfx);
+    return nsSVGUtils::MakeFillPatternFor(mFrame, gfx);
   }
 
   if (mColor == NS_TRANSPARENT) {
-    return false;
+    return nullptr;
   }
 
-  gfx->SetColor(gfxRGBA(mColor));
-  return true;
+  nsRefPtr<gfxPattern> pattern = new gfxPattern(gfxRGBA(mColor));
+  return pattern.forget();
 }
 
 void
@@ -2968,7 +2963,10 @@ SVGTextDrawPathCallbacks::FillAndStrokeGeometry()
 void
 SVGTextDrawPathCallbacks::FillGeometry()
 {
-  if (SetFillColor()) {
+  nsRefPtr<gfxPattern> fillPattern = MakeFillPattern();
+  if (fillPattern) {
+    gfx->SetPattern(fillPattern);
+    gfx->SetFillRule(nsSVGUtils::ThebesFillRule(mFrame->StyleSVG()->mFillRule));
     gfx->Fill();
   }
 }
