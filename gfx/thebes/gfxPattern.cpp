@@ -78,7 +78,7 @@ gfxPattern::SetColorStops(GradientStops* aStops)
 }
 
 void
-gfxPattern::CacheColorStops(DrawTarget *aDT)
+gfxPattern::CacheColorStops(const DrawTarget *aDT)
 {
   mStops = gfxGradientCache::GetOrCreateGradientStops(aDT, mStopsList,
                                                       ToExtendMode(mExtend));
