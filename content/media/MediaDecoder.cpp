@@ -139,6 +139,7 @@ void MediaDecoder::SetDormantIfNecessary(bool aDormant)
 
   if(aDormant) {
     // enter dormant state
+    StopProgress();
     DestroyDecodedStream();
     mDecoderStateMachine->SetDormant(true);
 
@@ -499,8 +500,7 @@ void MediaDecoder::Shutdown()
 
   ChangeState(PLAY_STATE_SHUTDOWN);
 
-  // If we hit this assertion, there might be a bug in network state transition.
-  NS_ASSERTION(!mProgressTimer, "Progress timer should've been stopped.");
+  StopProgress();
   mOwner = nullptr;
 
   MediaShutdownManager::Instance().Unregister(this);
@@ -1517,7 +1517,6 @@ static void ProgressCallback(nsITimer* aTimer, void* aClosure)
 
 void MediaDecoder::Progress(bool aTimer)
 {
-  MOZ_ASSERT(NS_IsMainThread());
   if (!mOwner)
     return;
 
@@ -1533,7 +1532,7 @@ void MediaDecoder::Progress(bool aTimer)
        now - mProgressTime >= TimeDuration::FromMilliseconds(PROGRESS_MS)) &&
       !mDataTime.IsNull() &&
       now - mDataTime <= TimeDuration::FromMilliseconds(PROGRESS_MS)) {
-    mOwner->DownloadProgressed();
+    mOwner->DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
     mProgressTime = now;
   }
 
@@ -1547,8 +1546,8 @@ void MediaDecoder::Progress(bool aTimer)
 
 nsresult MediaDecoder::StartProgress()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  NS_ASSERTION(!mProgressTimer, "Already started progress timer.");
+  if (mProgressTimer)
+    return NS_OK;
 
   mProgressTimer = do_CreateInstance("@mozilla.org/timer;1");
   return mProgressTimer->InitWithFuncCallback(ProgressCallback,
@@ -1559,8 +1558,8 @@ nsresult MediaDecoder::StartProgress()
 
 nsresult MediaDecoder::StopProgress()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  NS_ASSERTION(mProgressTimer, "Already stopped progress timer.");
+  if (!mProgressTimer)
+    return NS_OK;
 
   nsresult rv = mProgressTimer->Cancel();
   mProgressTimer = nullptr;
