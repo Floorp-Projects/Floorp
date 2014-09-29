@@ -511,7 +511,7 @@ class TypedArrayMethods
         }
 
         if (!AnyTypedArray::ensureHasBuffer(cx, tarray))
-            return nullptr;
+            return false;
 
         Rooted<BufferType*> bufobj(cx, tarray->buffer());
         MOZ_ASSERT(bufobj);
