@@ -299,6 +299,9 @@ private:
   Maybe<JSErrorReporter> mOldErrorReporter;
 
   void InitInternal(JSObject* aGlobal, JSContext* aCx, bool aIsMainThread);
+
+  AutoJSAPI(const AutoJSAPI&) MOZ_DELETE;
+  AutoJSAPI& operator= (const AutoJSAPI&) MOZ_DELETE;
 };
 
 /*
