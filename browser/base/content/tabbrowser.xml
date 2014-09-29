@@ -2563,7 +2563,6 @@
           ]]>
         </body>
       </method>
-#endif
 
       <method name="moveTabTo">
         <parameter name="aTab"/>
