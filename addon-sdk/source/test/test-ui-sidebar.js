@@ -1050,7 +1050,7 @@ exports.testSidebarGettersAndSettersAfterDestroy = function(assert) {
   assert.equal(sidebar.id, undefined, 'sidebar after destroy has no id');
 
   assert.throws(() => sidebar.id = 'foo-tang',
-    /^setting a property that has only a getter/,
+    /^setting getter-only property/,
     'id cannot be set at runtime');
 
   assert.equal(sidebar.id, undefined, 'sidebar after destroy has no id');
