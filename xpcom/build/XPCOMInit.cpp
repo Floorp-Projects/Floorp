@@ -475,6 +475,7 @@ NS_IMPL_ISUPPORTS(NesteggReporter, nsIMemoryReporter)
 CountingAllocatorBase<NesteggReporter>::sAmount(0);
 #endif /* MOZ_WEBM */
 
+// Note that on OSX, aBinDirectory will point to .app/Contents/Resources/browser
 EXPORT_XPCOM_API(nsresult)
 NS_InitXPCOM2(nsIServiceManager** aResult,
               nsIFile* aBinDirectory,
@@ -592,6 +593,17 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
   nsAutoString path;
   xpcomLib->GetPath(path);
   gGREPath = ToNewUnicode(path);
+
+#ifdef XP_MACOSX
+  nsCOMPtr<nsIFile> parent;
+  xpcomLib->GetParent(getter_AddRefs(parent));
+  parent->AppendNative(NS_LITERAL_CSTRING("MacOS"));
+  bool pathExists = false;
+  parent->Exists(&pathExists);
+  if (pathExists) {
+      xpcomLib = parent.forget();
+  }
+#endif
 
   xpcomLib->AppendNative(nsDependentCString(XPCOM_DLL));
   nsDirectoryService::gService->Set(NS_XPCOM_LIBRARY_FILE, xpcomLib);
