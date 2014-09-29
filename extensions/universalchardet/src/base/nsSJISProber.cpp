@@ -15,8 +15,8 @@ void  nsSJISProber::Reset(void)
 {
   mCodingSM->Reset(); 
   mState = eDetecting;
-  mContextAnalyser.Reset(mIsPreferredLanguage);
-  mDistributionAnalyser.Reset(mIsPreferredLanguage);
+  mContextAnalyser.Reset();
+  mDistributionAnalyser.Reset();
 }
 
 nsProbingState nsSJISProber::HandleData(const char* aBuf, uint32_t aLen)
