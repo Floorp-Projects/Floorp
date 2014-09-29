@@ -264,6 +264,9 @@ void
 TextureClientD3D11::Unlock()
 {
   MOZ_ASSERT(mIsLocked, "Unlocked called while the texture is not locked!");
+  if (!mIsLocked) {
+    return;
+  }
 
   if (mDrawTarget) {
     // see the comment on TextureClient::BorrowDrawTarget.
