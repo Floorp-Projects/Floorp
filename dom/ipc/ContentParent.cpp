@@ -3852,9 +3852,6 @@ ContentParent::RecvKeywordToURI(const nsCString& aKeyword, OptionalInputStreamPa
 bool
 ContentParent::ShouldContinueFromReplyTimeout()
 {
-    // The only time ContentParent sends blocking messages is for CPOWs, so
-    // timeouts should only ever occur in electrolysis-enabled sessions.
-    MOZ_ASSERT(BrowserTabsRemote());
     return false;
 }
 
