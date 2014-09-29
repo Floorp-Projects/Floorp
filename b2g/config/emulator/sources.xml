@@ -19,13 +19,13 @@
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="4d663b1f7d63e4d3d69c181a58f21b38145044b2"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="77ef35f5429bc3dfe9ca192b9aacc3c0bf8857de"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="5883a99b6528ced9dafaed8d3ca2405fb285537e"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="cd88d860656c31c7da7bb310d6a160d0011b0961"/>
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="c058843242068d0df7c107e09da31b53d2e08fa6"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="562d357b72279a9e35d4af5aeecc8e1ffa2f44f1"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="0fcf2e913d737e341f7a03f6e1951a5e13bd9d59"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="0f7792c39ad26aedecf457117c21b16cc1aee879"/>
   <!-- Stock Android things -->
   <project name="platform/abi/cpp" path="abi/cpp" revision="dd924f92906085b831bf1cbbc7484d3c043d613c"/>
   <project name="platform/bionic" path="bionic" revision="c72b8f6359de7ed17c11ddc9dfdde3f615d188a9"/>
@@ -97,7 +97,7 @@
   <project name="platform/system/netd" path="system/netd" revision="3d298fde142bee3fc4f07f63f16f2d8ce42339c0"/>
   <project name="platform/system/vold" path="system/vold" revision="919829940468066a32f403980b43f6ebfee5d314"/>
   <!-- Emulator specific things -->
-  <project name="android-development" path="development" remote="b2g" revision="9abf0ab68376afae3e1c7beefa3e9cbee2fde202"/>
+  <project name="android-development" path="development" remote="b2g" revision="c99e41d49f0b98eade30814e52c1de9e818def68"/>
   <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="0d5c43228006bae775c4cb57a6d3908484d41718"/>
   <project name="platform/external/iproute2" path="external/iproute2" revision="c66c5716d5335e450f7a7b71ccc6a604fb2f41d2"/>
   <project name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="d2685281e2e54ca14d1df304867aa82c37b27162"/>

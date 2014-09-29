@@ -5,9 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsICellBroadcastProvider.idl',
-    'nsIDOMMozCellBroadcastMessage.idl',
+    'nsICellBroadcastService.idl',
 ]
 
-XPIDL_MODULE = 'dom_cellbroadcast'
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
+    XPIDL_SOURCES += [
+        'nsIGonkCellBroadcastService.idl',
+    ]
 
+XPIDL_MODULE = 'dom_cellbroadcast'
