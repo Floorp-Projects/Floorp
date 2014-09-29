@@ -63,9 +63,6 @@ JitOptions::JitOptions()
     // RangeAnalysis results.
     SET_DEFAULT(checkRangeAnalysis, false);
 
-    // Whether Ion should compile try-catch statements.
-    SET_DEFAULT(compileTryCatch, true);
-
     // Toggle whether eager scalar replacement is globally disabled.
     SET_DEFAULT(disableScalarReplacement, true); // experimental
 
