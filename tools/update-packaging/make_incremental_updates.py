@@ -304,7 +304,7 @@ def process_explicit_remove_files(dir_path, patch_info):
         list_file_path = os.path.join(dir_path, "Contents/Resources/removed-files")
 
     if (os.path.exists(list_file_path)):
-        list_file = open(list_file_path,"r") # throws if doesn't exist
+        list_file = bz2.BZ2File(list_file_path,"r") # throws if doesn't exist
 
         lines = []
         for line in list_file:
@@ -331,17 +331,25 @@ def create_partial_patch(from_dir_path, to_dir_path, patch_filename, shas, patch
     # Create a list of the forced updates
     forced_list = forced_updates.strip().split('|')
     # Require that the precomplete file is included in the complete update
-    if "precomplete" not in to_file_set:
-        # The check with \ file separators allows tests for Mac to run on Windows
-        if "Contents/Resources/precomplete" not in to_file_set and "Contents\Resources\precomplete" not in to_file_set:
-            raise Exception, "missing precomplete file in: "+to_dir_path
-        else:
-            if "Contents/Resources/precomplete" in to_file_set:
-                forced_list.append("Contents/Resources/precomplete")
-            else:
-                forced_list.append("Contents\Resources\precomplete")
-    else:
+    if "precomplete" in to_file_set:
         forced_list.append("precomplete")
+    elif "Contents/Resources/precomplete" in to_file_set:
+        forced_list.append("Contents/Resources/precomplete")
+    # The check with \ file separators allows tests for Mac to run on Windows
+    elif "Contents\Resources\precomplete" in to_file_set:
+        forced_list.append("Contents\Resources\precomplete")
+    else:
+        raise Exception, "missing precomplete file in: "+to_dir_path
+
+    if "removed-files" in to_file_set:
+        forced_list.append("removed-files")
+    elif "Contents/Resources/removed-files" in to_file_set:
+        forced_list.append("Contents/Resources/removed-files")
+    # The check with \ file separators allows tests for Mac to run on Windows
+    elif "Contents\Resources\\removed-files" in to_file_set:
+        forced_list.append("Contents\Resources\\removed-files")
+    else:
+        raise Exception, "missing removed-files file in: "+to_dir_path
 
     # Files which exist in both sets need to be patched
     patch_filenames = list(from_file_set.intersection(to_file_set))
