@@ -1086,6 +1086,10 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory,
     NS_ENSURE_SUCCESS(rv, rv);
 
 #if defined(XP_MACOSX)
+    nsCOMPtr<nsIFile> parentPath;
+    exePath->GetParent(getter_AddRefs(parentPath));
+    exePath = parentPath.forget();
+    exePath->Append(NS_LITERAL_STRING("MacOS"));
     exePath->Append(NS_LITERAL_STRING("crashreporter.app"));
     exePath->Append(NS_LITERAL_STRING("Contents"));
     exePath->Append(NS_LITERAL_STRING("MacOS"));
