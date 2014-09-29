@@ -2828,7 +2828,7 @@ SVGTextDrawPathCallbacks::NotifySelectionBackgroundPathEmitted()
   nsRefPtr<gfxPattern> fillPattern = MakeFillPattern();
   if (fillPattern) {
     gfx->SetPattern(fillPattern);
-    gfx->SetFillRule(nsSVGUtils::ThebesFillRule(mFrame->StyleSVG()->mFillRule));
+    gfx->SetFillRule(nsSVGUtils::ToFillRule(mFrame->StyleSVG()->mFillRule));
     gfx->FillWithOpacity(mColor == NS_40PERCENT_FOREGROUND_COLOR ? 0.4 : 1.0);
   }
   gfx->Restore();
@@ -2966,7 +2966,7 @@ SVGTextDrawPathCallbacks::FillGeometry()
   nsRefPtr<gfxPattern> fillPattern = MakeFillPattern();
   if (fillPattern) {
     gfx->SetPattern(fillPattern);
-    gfx->SetFillRule(nsSVGUtils::ThebesFillRule(mFrame->StyleSVG()->mFillRule));
+    gfx->SetFillRule(nsSVGUtils::ToFillRule(mFrame->StyleSVG()->mFillRule));
     gfx->Fill();
   }
 }

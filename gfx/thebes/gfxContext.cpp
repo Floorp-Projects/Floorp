@@ -723,13 +723,13 @@ gfxContext::CurrentMiterLimit() const
 void
 gfxContext::SetFillRule(FillRule rule)
 {
-  CurrentState().fillRule = rule == FILL_RULE_WINDING ? gfx::FillRule::FILL_WINDING : gfx::FillRule::FILL_EVEN_ODD;
+  CurrentState().fillRule = rule;
 }
 
-gfxContext::FillRule
+FillRule
 gfxContext::CurrentFillRule() const
 {
-  return FILL_RULE_WINDING;
+  return CurrentState().fillRule;
 }
 
 // clipping
