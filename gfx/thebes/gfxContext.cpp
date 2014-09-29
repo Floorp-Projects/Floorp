@@ -262,17 +262,23 @@ gfxContext::CurrentPoint()
 void
 gfxContext::Stroke()
 {
+  Stroke(PatternFromState(this));
+}
+
+void
+gfxContext::Stroke(const Pattern& aPattern)
+{
   AzureState &state = CurrentState();
   if (mPathIsRect) {
     MOZ_ASSERT(!mTransformChanged);
 
-    mDT->StrokeRect(mRect, PatternFromState(this),
+    mDT->StrokeRect(mRect, aPattern,
                     state.strokeOptions,
                     DrawOptions(1.0f, GetOp(), state.aaMode));
   } else {
     EnsurePath();
 
-    mDT->Stroke(mPath, PatternFromState(this), state.strokeOptions,
+    mDT->Stroke(mPath, aPattern, state.strokeOptions,
                 DrawOptions(1.0f, GetOp(), state.aaMode));
   }
 }
@@ -280,15 +286,27 @@ gfxContext::Stroke()
 void
 gfxContext::Fill()
 {
+  Fill(PatternFromState(this));
+}
+
+void
+gfxContext::Fill(const Pattern& aPattern)
+{
   PROFILER_LABEL("gfxContext", "Fill",
     js::ProfileEntry::Category::GRAPHICS);
-  FillAzure(1.0f);
+  FillAzure(aPattern, 1.0f);
 }
 
 void
 gfxContext::FillWithOpacity(gfxFloat aOpacity)
 {
-  FillAzure(Float(aOpacity));
+  FillWithOpacity(PatternFromState(this), aOpacity);
+}
+
+void
+gfxContext::FillWithOpacity(const Pattern& aPattern, gfxFloat aOpacity)
+{
+  FillAzure(aPattern, Float(aOpacity));
 }
 
 void
@@ -1385,7 +1403,7 @@ gfxContext::EnsurePathBuilder()
 }
 
 void
-gfxContext::FillAzure(Float aOpacity)
+gfxContext::FillAzure(const Pattern& aPattern, Float aOpacity)
 {
   AzureState &state = CurrentState();
 
@@ -1399,16 +1417,16 @@ gfxContext::FillAzure(Float aOpacity)
     } else if (op == CompositionOp::OP_SOURCE) {
       // Emulate cairo operator source which is bound by mask!
       mDT->ClearRect(mRect);
-      mDT->FillRect(mRect, PatternFromState(this), DrawOptions(aOpacity));
+      mDT->FillRect(mRect, aPattern, DrawOptions(aOpacity));
     } else {
-      mDT->FillRect(mRect, PatternFromState(this), DrawOptions(aOpacity, op, state.aaMode));
+      mDT->FillRect(mRect, aPattern, DrawOptions(aOpacity, op, state.aaMode));
     }
   } else {
     EnsurePath();
 
     NS_ASSERTION(!state.opIsClear, "We shouldn't be clearing complex paths!");
 
-    mDT->Fill(mPath, PatternFromState(this), DrawOptions(aOpacity, op, state.aaMode));
+    mDT->Fill(mPath, aPattern, DrawOptions(aOpacity, op, state.aaMode));
   }
 }
 
