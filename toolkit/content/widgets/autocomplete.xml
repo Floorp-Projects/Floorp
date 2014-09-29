@@ -260,6 +260,11 @@
       <field name="_disableTrim">false</field>
       <property name="value">
         <getter><![CDATA[
+          if (typeof this.onBeforeValueGet == "function") {
+            var result = this.onBeforeValueGet();
+            if (result)
+              return result.value;
+          }
           return this.inputField.value;
         ]]></getter>
         <setter><![CDATA[
