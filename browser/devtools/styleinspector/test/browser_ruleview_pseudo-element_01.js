@@ -28,10 +28,8 @@ function* testTopLeft(inspector, view) {
     elementStyle
   } = yield assertPseudoElementRulesNumbers(selector, inspector, view, {
     elementRulesNb: 4,
-    afterRulesNb: 1,
-    beforeRulesNb: 2,
-    firstLineRulesNb: 0,
-    firstLetterRulesNb: 0,
+    firstLineRulesNb: 2,
+    firstLetterRulesNb: 1,
     selectionRulesNb: 0
   });
 
@@ -50,74 +48,62 @@ function* testTopLeft(inspector, view) {
   ok (!view.element.firstChild.classList.contains("show-expandable-container"), "Pseudo Elements are collapsed by dblclicking");
 
   let defaultView = element.ownerDocument.defaultView;
+
   let elementRule = rules.elementRules[0];
   let elementRuleView = getRuleViewRuleEditor(view, 3);
 
-  let elementAfterRule = rules.afterRules[0];
-  let elementAfterRuleView = [].filter.call(view.element.children[1].children, (e) => {
-    return e._ruleEditor && e._ruleEditor.rule === elementAfterRule;
+  let elementFirstLineRule = rules.firstLineRules[0];
+  let elementFirstLineRuleView = [].filter.call(view.element.children[1].children, (e) => {
+    return e._ruleEditor && e._ruleEditor.rule === elementFirstLineRule;
   })[0]._ruleEditor;
 
   is
   (
-    convertTextPropsToString(elementAfterRule.textProps),
-    "background: none repeat scroll 0% 0% red; content: \" \"; position: absolute; " +
-    "border-radius: 50%; height: 32px; width: 32px; top: 50%; left: 50%; margin-top: -16px; margin-left: -16px",
-    "TopLeft after properties are correct"
+    convertTextPropsToString(elementFirstLineRule.textProps),
+    "color: orange",
+    "TopLeft firstLine properties are correct"
   );
 
-  let elementBeforeRule = rules.beforeRules[0];
-  let elementBeforeRuleView = [].filter.call(view.element.children[1].children, (e) => {
-    return e._ruleEditor && e._ruleEditor.rule === elementBeforeRule;
-  })[0]._ruleEditor;
+  let firstProp = elementFirstLineRuleView.addProperty("background-color", "rgb(0, 255, 0)", "");
+  let secondProp = elementFirstLineRuleView.addProperty("font-style", "italic", "");
 
-  is
-  (
-    convertTextPropsToString(elementBeforeRule.textProps),
-    "top: 0px; left: 0px",
-    "TopLeft before properties are correct"
-  );
-
-  let firstProp = elementAfterRuleView.addProperty("background-color", "rgb(0, 255, 0)", "");
-  let secondProp = elementAfterRuleView.addProperty("padding", "100px", "");
-
-  is (firstProp, elementAfterRule.textProps[elementAfterRule.textProps.length - 2],
+  is (firstProp, elementFirstLineRule.textProps[elementFirstLineRule.textProps.length - 2],
       "First added property is on back of array");
-  is (secondProp, elementAfterRule.textProps[elementAfterRule.textProps.length - 1],
+  is (secondProp, elementFirstLineRule.textProps[elementFirstLineRule.textProps.length - 1],
       "Second added property is on back of array");
 
-  yield elementAfterRule._applyingModifications;
+  yield elementFirstLineRule._applyingModifications;
 
-  is((yield getComputedStyleProperty(selector, ":after", "background-color")),
+  is((yield getComputedStyleProperty(selector, ":first-line", "background-color")),
     "rgb(0, 255, 0)", "Added property should have been used.");
-  is((yield getComputedStyleProperty(selector, ":after", "padding-top")),
-    "100px", "Added property should have been used.");
-  is((yield getComputedStyleProperty(selector, null, "padding-top")),
-    "32px", "Added property should not apply to element");
+  is((yield getComputedStyleProperty(selector, ":first-line", "font-style")),
+    "italic", "Added property should have been used.");
+  is((yield getComputedStyleProperty(selector, null, "text-decoration")),
+    "none", "Added property should not apply to element");
 
-  secondProp.setEnabled(false);
-  yield elementAfterRule._applyingModifications;
+  firstProp.setEnabled(false);
+  yield elementFirstLineRule._applyingModifications;
 
-  is((yield getComputedStyleProperty(selector, ":after", "padding-top")), "0px",
-    "Disabled property should have been used.");
-  is((yield getComputedStyleProperty(selector, null, "padding-top")), "32px",
-    "Added property should not apply to element");
+  is((yield getComputedStyleProperty(selector, ":first-line", "background-color")),
+    "rgb(255, 0, 0)", "Disabled property should now have been used.");
+  is((yield getComputedStyleProperty(selector, null, "background-color")),
+    "rgb(221, 221, 221)", "Added property should not apply to element");
 
-  secondProp.setEnabled(true);
-  yield elementAfterRule._applyingModifications;
+  firstProp.setEnabled(true);
+  yield elementFirstLineRule._applyingModifications;
 
-  is((yield getComputedStyleProperty(selector, ":after", "padding-top")), "100px",
-    "Enabled property should have been used.");
-  is((yield getComputedStyleProperty(selector, null, "padding-top")), "32px",
-    "Added property should not apply to element");
+  is((yield getComputedStyleProperty(selector, ":first-line", "background-color")),
+    "rgb(0, 255, 0)", "Added property should have been used.");
+  is((yield getComputedStyleProperty(selector, null, "text-decoration")),
+    "none", "Added property should not apply to element");
 
   firstProp = elementRuleView.addProperty("background-color", "rgb(0, 0, 255)", "");
   yield elementRule._applyingModifications;
 
-  is((yield getComputedStyleProperty(selector, null, "background-color")), "rgb(0, 0, 255)",
-    "Added property should have been used.");
-  is((yield getComputedStyleProperty(selector, ":after", "background-color")), "rgb(0, 255, 0)",
-    "Added prop does not apply to pseudo");
+  is((yield getComputedStyleProperty(selector, null, "background-color")),
+    "rgb(0, 0, 255)", "Added property should have been used.");
+  is((yield getComputedStyleProperty(selector, ":first-line", "background-color")),
+    "rgb(0, 255, 0)", "Added prop does not apply to pseudo");
 }
 
 function* testTopRight(inspector, view) {
@@ -127,10 +113,8 @@ function* testTopRight(inspector, view) {
     elementStyle
   } = yield assertPseudoElementRulesNumbers("#topright", inspector, view, {
     elementRulesNb: 4,
-    afterRulesNb: 1,
-    beforeRulesNb: 2,
-    firstLineRulesNb: 0,
-    firstLetterRulesNb: 0,
+    firstLineRulesNb: 1,
+    firstLetterRulesNb: 1,
     selectionRulesNb: 0
   });
 
@@ -146,10 +130,8 @@ function* testTopRight(inspector, view) {
 function* testBottomRight(inspector, view) {
   yield assertPseudoElementRulesNumbers("#bottomright", inspector, view, {
     elementRulesNb: 4,
-    afterRulesNb: 1,
-    beforeRulesNb: 3,
-    firstLineRulesNb: 0,
-    firstLetterRulesNb: 0,
+    firstLineRulesNb: 1,
+    firstLetterRulesNb: 1,
     selectionRulesNb: 0
   });
 }
@@ -157,10 +139,8 @@ function* testBottomRight(inspector, view) {
 function* testBottomLeft(inspector, view) {
   yield assertPseudoElementRulesNumbers("#bottomleft", inspector, view, {
     elementRulesNb: 4,
-    afterRulesNb: 1,
-    beforeRulesNb: 2,
-    firstLineRulesNb: 0,
-    firstLetterRulesNb: 0,
+    firstLineRulesNb: 1,
+    firstLetterRulesNb: 1,
     selectionRulesNb: 0
   });
 }
@@ -172,8 +152,6 @@ function* testParagraph(inspector, view) {
     elementStyle
   } = yield assertPseudoElementRulesNumbers("#bottomleft p", inspector, view, {
     elementRulesNb: 3,
-    afterRulesNb: 0,
-    beforeRulesNb: 0,
     firstLineRulesNb: 1,
     firstLetterRulesNb: 1,
     selectionRulesNb: 1
@@ -241,8 +219,6 @@ function* assertPseudoElementRulesNumbers(selector, inspector, view, ruleNbs) {
 
   let rules = {
     elementRules: elementStyle.rules.filter(rule => !rule.pseudoElement),
-    afterRules: elementStyle.rules.filter(rule => rule.pseudoElement === ":after"),
-    beforeRules: elementStyle.rules.filter(rule => rule.pseudoElement === ":before"),
     firstLineRules: elementStyle.rules.filter(rule => rule.pseudoElement === ":first-line"),
     firstLetterRules: elementStyle.rules.filter(rule => rule.pseudoElement === ":first-letter"),
     selectionRules: elementStyle.rules.filter(rule => rule.pseudoElement === ":-moz-selection")
@@ -250,10 +226,6 @@ function* assertPseudoElementRulesNumbers(selector, inspector, view, ruleNbs) {
 
   is(rules.elementRules.length, ruleNbs.elementRulesNb, selector +
     " has the correct number of non pseudo element rules");
-  is(rules.afterRules.length, ruleNbs.afterRulesNb, selector +
-    " has the correct number of :after rules");
-  is(rules.beforeRules.length, ruleNbs.beforeRulesNb, selector +
-    " has the correct number of :before rules");
   is(rules.firstLineRules.length, ruleNbs.firstLineRulesNb, selector +
     " has the correct number of :first-line rules");
   is(rules.firstLetterRules.length, ruleNbs.firstLetterRulesNb, selector +
@@ -270,5 +242,6 @@ function assertGutters(view) {
   is (gutters[0].textContent, "Pseudo-elements", "Gutter heading is correct");
   is (gutters[1].textContent, "This Element", "Gutter heading is correct");
   is (gutters[2].textContent, "Inherited from body", "Gutter heading is correct");
+
   return gutters;
 }
