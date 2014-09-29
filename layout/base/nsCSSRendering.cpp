@@ -1337,7 +1337,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
         renderContext->Rectangle(frameGfxRect);
       }
 
-      renderContext->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
+      renderContext->SetFillRule(FillRule::FILL_EVEN_ODD);
       renderContext->Clip();
 
       // Clip the shadow so that we only get the part that applies to aForFrame.
@@ -1560,7 +1560,7 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
       shadowContext->RoundedRectangle(shadowClipGfxRect, clipRectRadii, false);
     else
       shadowContext->Rectangle(shadowClipGfxRect);
-    shadowContext->SetFillRule(gfxContext::FILL_RULE_EVEN_ODD);
+    shadowContext->SetFillRule(FillRule::FILL_EVEN_ODD);
     shadowContext->Fill();
 
     blurringArea.DoPaint();
