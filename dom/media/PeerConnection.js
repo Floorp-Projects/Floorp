@@ -301,7 +301,6 @@ function RTCPeerConnection() {
 
   this._localType = null;
   this._remoteType = null;
-  this._trickleIce = false;
   this._peerIdentity = null;
 
   /**
@@ -326,7 +325,6 @@ RTCPeerConnection.prototype = {
   init: function(win) { this._win = win; },
 
   __init: function(rtcConfig) {
-    this._trickleIce = Services.prefs.getBoolPref("media.peerconnection.trickle_ice");
     if (!rtcConfig.iceServers ||
         !Services.prefs.getBoolPref("media.peerconnection.use_document_iceservers")) {
       rtcConfig.iceServers =
@@ -365,8 +363,7 @@ RTCPeerConnection.prototype = {
     this._queueOrRun({
       func: this._initialize,
       args: [rtcConfig],
-      // If not trickling, suppress start.
-      wait: !this._trickleIce
+      wait: false
     });
   },
 
