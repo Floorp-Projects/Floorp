@@ -488,9 +488,15 @@ PopupNotifications.prototype = {
    * Hides the notification popup.
    */
   _hidePanel: function PopupNotifications_hide() {
+    // We need to disable the closing animation when setting _ignoreDismissal
+    // to true, otherwise the popuphidden event will fire after we have set
+    // _ignoreDismissal back to false.
+    let transitionsEnabled = this.transitionsEnabled;
+    this.transitionsEnabled = false;
     this._ignoreDismissal = true;
     this.panel.hidePopup();
     this._ignoreDismissal = false;
+    this.transitionsEnabled = transitionsEnabled;
   },
 
   /**
