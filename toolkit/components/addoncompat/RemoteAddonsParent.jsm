@@ -581,6 +581,22 @@ let SandboxParent = {
       .QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIContentFrameMessageManager);
 
+    if (rest.length) {
+      // Do a shallow copy of the options object into the child
+      // process. This way we don't have to access it through a Chrome
+      // object wrapper, which would require __exposedProps__.
+      //
+      // The only object property here is sandboxPrototype. We assume
+      // it's a child process object (since that's what Greasemonkey
+      // does) and leave it alone.
+      let options = rest[0];
+      let optionsCopy = new chromeGlobal.Object();
+      for (let prop in options) {
+        optionsCopy[prop] = options[prop];
+      }
+      rest[0] = optionsCopy;
+    }
+
     // Make a sandbox in the child.
     let cu = chromeGlobal.Components.utils;
     let sandbox = cu.Sandbox(principal, ...rest);
