@@ -997,6 +997,36 @@ MBasicBlock::discardPhiAt(MPhiIterator &at)
     return result;
 }
 
+void
+MBasicBlock::flagOperandsOfPrunedBranches(MInstruction *ins)
+{
+    // Find the previous resume point which would be used for bailing out.
+    MResumePoint *rp = nullptr;
+    for (MInstructionReverseIterator iter = rbegin(ins); iter != rend(); iter++) {
+        rp = iter->resumePoint();
+        if (rp)
+            break;
+    }
+
+    // If none, take the entry resume point.
+    if (!rp)
+        rp = entryResumePoint();
+
+    // The only blocks which do not have any entryResumePoint in Ion, are the
+    // SplitEdge blocks.  SplitEdge blocks only have a Goto instruction before
+    // Range Analysis phase.  In adjustInputs, we are manipulating instructions
+    // which have a TypePolicy.  So, as a Goto has no operand and no type
+    // policy, the entry resume point should exists.
+    MOZ_ASSERT(rp);
+
+    // Flag all operand as being potentially used.
+    while (rp) {
+        for (size_t i = 0, end = rp->numOperands(); i < end; i++)
+            rp->getOperand(i)->setUseRemovedUnchecked();
+        rp = rp->caller();
+    }
+}
+
 bool
 MBasicBlock::addPredecessor(TempAllocator &alloc, MBasicBlock *pred)
 {
@@ -1268,6 +1298,16 @@ MBasicBlock::getSuccessorIndex(MBasicBlock *block) const
     MOZ_CRASH("Invalid successor");
 }
 
+size_t
+MBasicBlock::getPredecessorIndex(MBasicBlock *block) const
+{
+    for (size_t i = 0, e = numPredecessors(); i < e; ++i) {
+        if (getPredecessor(i) == block)
+            return i;
+    }
+    MOZ_CRASH("Invalid predecessor");
+}
+
 void
 MBasicBlock::replaceSuccessor(size_t pos, MBasicBlock *split)
 {
@@ -1309,38 +1349,38 @@ MBasicBlock::clearDominatorInfo()
 }
 
 void
-MBasicBlock::removePredecessor(MBasicBlock *pred)
+MBasicBlock::removePredecessorWithoutPhiOperands(MBasicBlock *pred, size_t predIndex)
 {
     // If we're removing the last backedge, this is no longer a loop.
     if (isLoopHeader() && hasUniqueBackedge() && backedge() == pred)
         clearLoopHeader();
 
-    for (size_t i = 0; i < numPredecessors(); i++) {
-        if (getPredecessor(i) != pred)
-            continue;
-
-        // Adjust phis.  Note that this can leave redundant phis
-        // behind.
-        if (!phisEmpty()) {
-            for (MPhiIterator iter = phisBegin(); iter != phisEnd(); iter++)
-                iter->removeOperand(i);
-            if (pred->successorWithPhis()) {
-                // Don't adjust successorWithPhis() if we haven't constructed
-                // this information yet.
-                JS_ASSERT(pred->positionInPhiSuccessor() == i);
-                pred->setSuccessorWithPhis(nullptr, 0);
-                for (size_t j = i+1; j < numPredecessors(); j++)
-                    getPredecessor(j)->setSuccessorWithPhis(this, j - 1);
-            }
-        }
-
-        // Remove from pred list.
-        MBasicBlock **ptr = predecessors_.begin() + i;
-        predecessors_.erase(ptr);
-        return;
+    // Adjust phis.  Note that this can leave redundant phis behind.
+    // Don't adjust successorWithPhis() if we haven't constructed this
+    // information yet.
+    if (pred->successorWithPhis()) {
+        JS_ASSERT(pred->positionInPhiSuccessor() == predIndex);
+        pred->setSuccessorWithPhis(nullptr, 0);
+        for (size_t j = predIndex+1; j < numPredecessors(); j++)
+            getPredecessor(j)->setSuccessorWithPhis(this, j - 1);
     }
 
-    MOZ_CRASH("predecessor was not found");
+    // Remove from pred list.
+    predecessors_.erase(predecessors_.begin() + predIndex);
+}
+
+void
+MBasicBlock::removePredecessor(MBasicBlock *pred)
+{
+    size_t predIndex = getPredecessorIndex(pred);
+
+    // Remove the phi operands.
+    for (MPhiIterator iter(phisBegin()), end(phisEnd()); iter != end; ++iter)
+        iter->removeOperand(predIndex);
+
+    // Now we can call the underlying function, which expects that phi
+    // operands have been removed.
+    removePredecessorWithoutPhiOperands(pred, predIndex);
 }
 
 void

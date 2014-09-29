@@ -1,6 +1,8 @@
 This copy of STLport was taken from the Android NDK r8e.
 Android specific changes are listed in README.android.
 The libs/ directory containing prebuilt static libraries was removed.
+The overrides/ directory contains Mozilla-specific overrides to the standard
+  C++ headers found in the NDK.
 
 The following patches are applied on top:
 - android-mozilla-config.patch: Adjusts Android-specific configuration

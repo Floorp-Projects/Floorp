@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=95530
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 95530</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 95530 **/
+  function run() {
+    is(document.compatMode, "CSS1Compat", "Ensure we are in standards mode, not quirks mode.");
+
+    var body = document.getElementsByTagName("body");
+
+    is(computedStyle(body[0],"margin-top"), "100px", "Ensure margin-top matches topmargin");
+    is(computedStyle(body[0],"margin-bottom"), "150px", "Ensure margin-bottom matches bottommargin");
+    is(computedStyle(body[0],"margin-left"), "23px", "Ensure margin-left matches leftmargin");
+    is(computedStyle(body[0],"margin-right"), "64px", "Ensure margin-right matches rightmargin");
+    SimpleTest.finish();
+  }
+  SimpleTest.waitForExplicitFinish();
+  window.addEventListener("load", run, false);
+  </script>
+</head>
+<body topmargin="100" bottommargin="150" leftmargin="23" rightmargin="64">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=95530">Mozilla Bug 95530</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

@@ -280,6 +280,9 @@ other kinds of objects.
     This method interprets <i>global</i> using the same rules that
     [`addDebuggee`][add] does.
 
+    Removing a global as a debuggee from this `Debugger` clears all breakpoints
+    that belong to that `Debugger` in that global.
+
 `removeAllDebuggees()`
 :   Remove all the global objects from this `Debugger` instance's set
     of debuggees.  Return `undefined`.

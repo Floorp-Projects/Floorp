@@ -4,12 +4,22 @@
 
 #include "BackgroundParentImpl.h"
 
+#include "FileDescriptorSetParent.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/dom/PBlobParent.h"
+#include "mozilla/dom/indexedDB/ActorsParent.h"
+#include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/ipc/PBackgroundTestParent.h"
 #include "nsThreadUtils.h"
 #include "nsTraceRefcnt.h"
 #include "nsXULAppAPI.h"
+
+#ifdef DISABLE_ASSERTS_FOR_FUZZING
+#define ASSERT_UNLESS_FUZZING(...) do { } while (0)
+#else
+#define ASSERT_UNLESS_FUZZING(...) MOZ_ASSERT(false)
+#endif
 
 using mozilla::ipc::AssertIsOnBackgroundThread;
 
@@ -75,7 +85,7 @@ BackgroundParentImpl::ActorDestroy(ActorDestroyReason aWhy)
   AssertIsOnBackgroundThread();
 }
 
-PBackgroundTestParent*
+BackgroundParentImpl::PBackgroundTestParent*
 BackgroundParentImpl::AllocPBackgroundTestParent(const nsCString& aTestArg)
 {
   AssertIsInMainProcess();
@@ -105,6 +115,93 @@ BackgroundParentImpl::DeallocPBackgroundTestParent(
   MOZ_ASSERT(aActor);
 
   delete static_cast<TestParent*>(aActor);
+  return true;
+}
+
+auto
+BackgroundParentImpl::AllocPBackgroundIDBFactoryParent(
+                                      const OptionalWindowId& aOptionalWindowId)
+  -> PBackgroundIDBFactoryParent*
+{
+  using mozilla::dom::indexedDB::AllocPBackgroundIDBFactoryParent;
+
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return AllocPBackgroundIDBFactoryParent(this, aOptionalWindowId);
+}
+
+bool
+BackgroundParentImpl::RecvPBackgroundIDBFactoryConstructor(
+                                      PBackgroundIDBFactoryParent* aActor,
+                                      const OptionalWindowId& aOptionalWindowId)
+{
+  using mozilla::dom::indexedDB::RecvPBackgroundIDBFactoryConstructor;
+
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  return RecvPBackgroundIDBFactoryConstructor(this, aActor, aOptionalWindowId);
+}
+
+bool
+BackgroundParentImpl::DeallocPBackgroundIDBFactoryParent(
+                                            PBackgroundIDBFactoryParent* aActor)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  return mozilla::dom::indexedDB::DeallocPBackgroundIDBFactoryParent(aActor);
+}
+
+auto
+BackgroundParentImpl::AllocPBlobParent(const BlobConstructorParams& aParams)
+  -> PBlobParent*
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  if (NS_WARN_IF(aParams.type() !=
+                   BlobConstructorParams::TParentBlobConstructorParams)) {
+    ASSERT_UNLESS_FUZZING();
+    return nullptr;
+  }
+
+  return mozilla::dom::BlobParent::Create(this, aParams);
+}
+
+bool
+BackgroundParentImpl::DeallocPBlobParent(PBlobParent* aActor)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  mozilla::dom::BlobParent::Destroy(aActor);
+  return true;
+}
+
+PFileDescriptorSetParent*
+BackgroundParentImpl::AllocPFileDescriptorSetParent(
+                                          const FileDescriptor& aFileDescriptor)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+
+  return new FileDescriptorSetParent(aFileDescriptor);
+}
+
+bool
+BackgroundParentImpl::DeallocPFileDescriptorSetParent(
+                                               PFileDescriptorSetParent* aActor)
+{
+  AssertIsInMainProcess();
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aActor);
+
+  delete static_cast<FileDescriptorSetParent*>(aActor);
   return true;
 }
 

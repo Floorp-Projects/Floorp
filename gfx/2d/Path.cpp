@@ -252,7 +252,7 @@ FlattenBezierCurveSegment(const BezierControlPoints &aControlPoints,
 
     Float s3 = (cp31.x * cp21.y - cp31.y * cp21.x) / hypotf(cp21.x, cp21.y);
 
-    t = 2 * Float(sqrt(aTolerance / (3. * abs(s3))));
+    t = 2 * Float(sqrt(aTolerance / (3. * std::abs(s3))));
 
     if (t >= 1.0f) {
       aSink->LineTo(aControlPoints.mCP4);
@@ -281,8 +281,8 @@ FindInflectionApproximationRange(BezierControlPoints aControlPoints,
 
       // Use the absolute value so that Min and Max will correspond with the
       // minimum and maximum of the range.
-      *aMin = aT - CubicRoot(abs(aTolerance / (cp41.x - cp41.y)));
-      *aMax = aT + CubicRoot(abs(aTolerance / (cp41.x - cp41.y)));
+      *aMin = aT - CubicRoot(std::abs(aTolerance / (cp41.x - cp41.y)));
+      *aMax = aT + CubicRoot(std::abs(aTolerance / (cp41.x - cp41.y)));
       return;
     }
 
@@ -297,7 +297,7 @@ FindInflectionApproximationRange(BezierControlPoints aControlPoints,
       return;
     }
 
-    Float tf = CubicRoot(abs(aTolerance / s3));
+    Float tf = CubicRoot(std::abs(aTolerance / s3));
 
     *aMin = aT - tf * (1 - aT);
     *aMax = aT + tf * (1 - aT);

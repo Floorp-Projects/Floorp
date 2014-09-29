@@ -20,6 +20,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
   "resource://gre/modules/ShortcutUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
   "resource://gre/modules/CharsetMenu.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "CharsetBundle", function() {
   const kCharsetBundle = "chrome://global/locale/charsetMenu.properties";
@@ -946,6 +948,98 @@ if (Services.metro && Services.metro.supported) {
 }
 #endif
 #endif
+
+if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
+  CustomizableWidgets.push({
+    id: "panic-button",
+    type: "view",
+    viewId: "PanelUI-panicView",
+    _sanitizer: null,
+    _ensureSanitizer: function() {
+      if (!this.sanitizer) {
+        let scope = {};
+        Services.scriptloader.loadSubScript("chrome://browser/content/sanitize.js",
+                                            scope);
+        this._Sanitizer = scope.Sanitizer;
+        this._sanitizer = new scope.Sanitizer();
+        this._sanitizer.ignoreTimespan = false;
+      }
+    },
+    _getSanitizeRange: function(aDocument) {
+      let group = aDocument.getElementById("PanelUI-panic-timeSpan");
+      return this._Sanitizer.getClearRange(+group.value);
+    },
+    forgetButtonCalled: function(aEvent) {
+      let doc = aEvent.target.ownerDocument;
+      this._ensureSanitizer();
+      this._sanitizer.range = this._getSanitizeRange(doc);
+      let group = doc.getElementById("PanelUI-panic-timeSpan");
+      group.selectedItem = doc.getElementById("PanelUI-panic-5min");
+      let itemsToClear = [
+        "cookies", "history", "openWindows", "formdata", "sessions", "cache", "downloads"
+      ];
+      let newWindowPrivateState = PrivateBrowsingUtils.isWindowPrivate(doc.defaultView) ?
+                                  "private" : "non-private";
+      this._sanitizer.items.openWindows.privateStateForNewWindow = newWindowPrivateState;
+      let promise = this._sanitizer.sanitize(itemsToClear);
+      promise.then(function() {
+        let otherWindow = Services.wm.getMostRecentWindow("navigator:browser");
+        if (otherWindow.closed) {
+          Cu.reportError("Got a closed window!");
+        }
+        if (otherWindow.PanicButtonNotifier) {
+          otherWindow.PanicButtonNotifier.notify();
+        } else {
+          otherWindow.PanicButtonNotifierShouldNotify = true;
+        }
+      });
+    },
+    handleEvent: function(aEvent) {
+      switch (aEvent.type) {
+        case "command":
+          this.forgetButtonCalled(aEvent);
+          break;
+        case "popupshowing":
+          let popup = aEvent.target;
+          if (popup.id == "customizationui-widget-panel" &&
+              popup.querySelector("#PanelUI-panicView")) {
+            popup.ownerDocument.removeEventListener("popupshowing", this);
+            this._updateHeights(popup, true);
+          }
+          break;
+      }
+    },
+    // Workaround bug 451997 by hardcoding heights for (potentially) wrapped items:
+    _updateHeights: function(aContainer, aSetHeights) {
+      // Make sure we don't get stuck not finding anything because of the XBL binding between
+      // the popup and the radio/label elements:
+      let view = aContainer.ownerDocument.getElementById("PanelUI-panicView");
+      let variableHeightItems = view.querySelectorAll("radio, label");
+      let win = aContainer.ownerDocument.defaultView;
+      for (let item of variableHeightItems) {
+        if (aSetHeights) {
+          item.style.height = win.getComputedStyle(item, null).getPropertyValue("height");
+        } else {
+          item.style.removeProperty("height");
+        }
+      }
+    },
+    onViewShowing: function(aEvent) {
+      let view = aEvent.target;
+      let forgetButton = view.querySelector("#PanelUI-panic-view-button");
+      forgetButton.addEventListener("command", this);
+      // When the popup starts showing, fix the label and radio heights
+      // if we're in a standalone view (can't tell from here) - see updateHeights.
+      view.ownerDocument.addEventListener("popupshowing", this);
+    },
+    onViewHiding: function(aEvent) {
+      let view = aEvent.target;
+      let forgetButton = view.querySelector("#PanelUI-panic-view-button");
+      forgetButton.removeEventListener("command", this);
+      this._updateHeights(view, false);
+    },
+  });
+}
 
 #ifdef E10S_TESTING_ONLY
 /**

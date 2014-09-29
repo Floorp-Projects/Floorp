@@ -273,6 +273,12 @@ TypeBarrierPolicy::adjustInputs(TempAllocator &alloc, MInstruction *def)
 
         MUnbox *unbox = MUnbox::New(alloc, ins->getOperand(0), outputType, MUnbox::TypeBarrier);
         ins->block()->insertBefore(ins, unbox);
+
+        // The TypeBarrier is equivalent to removing branches with unexpected
+        // types.  The unexpected types would have changed Range Analysis
+        // predictions.  As such, we need to prevent destructive optimizations.
+        ins->block()->flagOperandsOfPrunedBranches(unbox);
+
         ins->replaceOperand(0, unbox);
         return true;
     }

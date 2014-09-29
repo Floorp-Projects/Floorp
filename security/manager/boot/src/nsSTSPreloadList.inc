@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1422094025761000);
+const PRTime gPreloadListExpirationTime = INT64_C(1422698928654000);
 
 class nsSTSPreload
 {
@@ -38,6 +38,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "api.xero.com", false },
   { "apis.google.com", true },
   { "apn-einstellungen.de", true },
+  { "app.lookout.com", false },
   { "app.manilla.com", true },
   { "app.recurly.com", false },
   { "app.simpletax.ca", false },
@@ -46,7 +47,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "archlinux.de", true },
   { "arivo.com.br", true },
   { "auf-feindgebiet.de", true },
-  { "baer.im", true },
   { "bank.simple.com", false },
   { "barcodeberlin.com", true },
   { "baruch.me", true },
@@ -122,6 +122,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "detectify.com", false },
   { "developer.mydigipass.com", false },
   { "die-besten-weisheiten.de", true },
+  { "dillonkorman.com", true },
   { "dist.torproject.org", false },
   { "dl.google.com", true },
   { "dm.lookout.com", false },
@@ -129,6 +130,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "docs.google.com", true },
   { "docs.python.org", true },
   { "domains.google.com", true },
+  { "donmez.ws", false },
   { "download.jitsi.org", false },
   { "drive.google.com", true },
   { "ebanking.indovinabank.com.vn", false },
@@ -181,7 +183,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "greensolid.biz", true },
   { "grepular.com", true },
   { "groups.google.com", true },
-  { "guphi.net", true },
   { "guthabenkarten-billiger.de", true },
   { "hackerone.com", true },
   { "harvestapp.com", true },
@@ -208,7 +209,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "irische-segenswuensche.info", true },
   { "isitchristmas.com", true },
   { "it-schwerin.de", true },
-  { "itriskltd.com", true },
   { "jackyyf.com", false },
   { "janoberst.com", true },
   { "janus-engineering.de", true },
@@ -218,6 +218,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "jitsi.org", false },
   { "jonas-keidel.de", true },
   { "jonaswitmer.ch", true },
+  { "julian-kipka.de", true },
   { "k-dev.de", true },
   { "kardize24.pl", true },
   { "keeperapp.com", true },
@@ -299,7 +300,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "neilwynne.com", false },
   { "netzbit.de", true },
   { "ng-security.com", true },
-  { "npw.net", true },
   { "onedrive.com", true },
   { "onedrive.live.com", false },
   { "oplop.appspot.com", true },
@@ -332,7 +332,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "plus.sandbox.google.com", false },
   { "portal.tirol.gv.at", true },
   { "posteo.de", true },
-  { "pressfreedomfoundation.org", true },
   { "profiles.google.com", true },
   { "projektzentrisch.de", true },
   { "prowhisky.de", true },

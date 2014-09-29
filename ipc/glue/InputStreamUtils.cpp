@@ -7,9 +7,11 @@
 #include "nsIIPCSerializableInputStream.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/dom/ipc/Blob.h"
+#include "mozilla/dom/ipc/BlobChild.h"
+#include "mozilla/dom/ipc/BlobParent.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDebug.h"
+#include "nsDOMFile.h"
 #include "nsID.h"
 #include "nsIDOMFile.h"
 #include "nsIXULRuntime.h"
@@ -17,11 +19,9 @@
 #include "nsMultiplexInputStream.h"
 #include "nsNetCID.h"
 #include "nsStringStream.h"
-#include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 
-using mozilla::dom::BlobChild;
-using mozilla::dom::BlobParent;
+using namespace mozilla::dom;
 
 namespace {
 
@@ -42,7 +42,6 @@ SerializeInputStream(nsIInputStream* aInputStream,
                      InputStreamParams& aParams,
                      nsTArray<FileDescriptor>& aFileDescriptors)
 {
-  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aInputStream);
 
   nsCOMPtr<nsIIPCSerializableInputStream> serializable =
@@ -63,8 +62,6 @@ SerializeInputStream(nsIInputStream* aInputStream,
                      OptionalInputStreamParams& aParams,
                      nsTArray<FileDescriptor>& aFileDescriptors)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   if (aInputStream) {
     InputStreamParams params;
     SerializeInputStream(aInputStream, params, aFileDescriptors);
@@ -79,8 +76,7 @@ already_AddRefed<nsIInputStream>
 DeserializeInputStream(const InputStreamParams& aParams,
                        const nsTArray<FileDescriptor>& aFileDescriptors)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
+  nsCOMPtr<nsIInputStream> stream;
   nsCOMPtr<nsIIPCSerializableInputStream> serializable;
 
   switch (aParams.type()) {
@@ -111,23 +107,40 @@ DeserializeInputStream(const InputStreamParams& aParams,
     // When the input stream already exists in this process, all we need to do
     // is retrieve the original instead of sending any data over the wire.
     case InputStreamParams::TRemoteInputStreamParams: {
-      nsCOMPtr<nsIDOMBlob> domBlob;
       const RemoteInputStreamParams& params =
           aParams.get_RemoteInputStreamParams();
 
-      domBlob = params.remoteBlobParent() ?
-          static_cast<BlobParent*>(params.remoteBlobParent())->GetBlob() :
-          static_cast<BlobChild*>(params.remoteBlobChild())->GetBlob();
+      nsRefPtr<DOMFileImpl> blobImpl;
+      if (params.remoteBlobParent()) {
+        blobImpl =
+          static_cast<BlobParent*>(params.remoteBlobParent())->GetBlobImpl();
+      } else {
+        blobImpl =
+          static_cast<BlobChild*>(params.remoteBlobChild())->GetBlobImpl();
+      }
 
-      MOZ_ASSERT(domBlob, "Invalid blob contents");
+      MOZ_ASSERT(blobImpl, "Invalid blob contents");
 
       // If fetching the internal stream fails, we ignore it and return a
       // null stream.
       nsCOMPtr<nsIInputStream> stream;
-      nsresult rv = domBlob->GetInternalStream(getter_AddRefs(stream));
+      nsresult rv = blobImpl->GetInternalStream(getter_AddRefs(stream));
       if (NS_FAILED(rv) || !stream) {
         NS_WARNING("Couldn't obtain a valid stream from the blob");
       }
+      return stream.forget();
+    }
+
+    case InputStreamParams::TSameProcessInputStreamParams: {
+      MOZ_ASSERT(aFileDescriptors.IsEmpty());
+
+      const SameProcessInputStreamParams& params =
+        aParams.get_SameProcessInputStreamParams();
+
+      stream = dont_AddRef(
+        reinterpret_cast<nsIInputStream*>(params.addRefedInputStream()));
+      MOZ_ASSERT(stream);
+
       return stream.forget();
     }
 
@@ -143,7 +156,7 @@ DeserializeInputStream(const InputStreamParams& aParams,
     return nullptr;
   }
 
-  nsCOMPtr<nsIInputStream> stream = do_QueryInterface(serializable);
+  stream = do_QueryInterface(serializable);
   MOZ_ASSERT(stream);
 
   return stream.forget();
@@ -153,8 +166,6 @@ already_AddRefed<nsIInputStream>
 DeserializeInputStream(const OptionalInputStreamParams& aParams,
                        const nsTArray<FileDescriptor>& aFileDescriptors)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
   nsCOMPtr<nsIInputStream> stream;
 
   switch (aParams.type()) {
