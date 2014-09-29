@@ -1787,6 +1787,8 @@ this.XPIStates = {
 };
 
 this.XPIProvider = {
+  get name() "XPIProvider",
+
   // An array of known install locations
   installLocations: null,
   // A dictionary of known install locations by name

@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "ContentClick",
                                   "resource:///modules/ContentClick.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "DirectoryLinksProvider",
-                                  "resource://gre/modules/DirectoryLinksProvider.jsm");
+                                  "resource:///modules/DirectoryLinksProvider.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
