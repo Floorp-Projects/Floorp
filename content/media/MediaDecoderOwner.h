@@ -108,8 +108,6 @@ public:
     // The next frame of audio/video is unavailable because the decoder
     // is paused while it buffers up data
     NEXT_FRAME_UNAVAILABLE_BUFFERING,
-    // The next frame of audio/video is unavailable for the decoder is seeking.
-    NEXT_FRAME_UNAVAILABLE_SEEKING,
     // The next frame of audio/video is unavailable for some other reasons
     NEXT_FRAME_UNAVAILABLE,
     // The next frame is unavailable due to waiting for more Media Source

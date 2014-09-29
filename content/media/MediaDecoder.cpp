@@ -942,8 +942,10 @@ void MediaDecoder::UpdatePlaybackRate()
 void MediaDecoder::NotifySuspendedStatusChanged()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mResource && mOwner) {
-    bool suspended = mResource->IsSuspendedByCache();
+  if (!mResource)
+    return;
+  bool suspended = mResource->IsSuspendedByCache();
+  if (mOwner) {
     mOwner->NotifySuspendedByCache(suspended);
     UpdateReadyStateForData();
   }
@@ -956,6 +958,7 @@ void MediaDecoder::NotifyBytesDownloaded()
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
     UpdatePlaybackRate();
   }
+  UpdateReadyStateForData();
   Progress(false);
 }
 
@@ -979,10 +982,9 @@ void MediaDecoder::NotifyDownloadEnded(nsresult aStatus)
   }
 
   if (NS_SUCCEEDED(aStatus)) {
+    UpdateReadyStateForData();
     // A final progress event will be fired by the MediaResource calling
     // DownloadSuspended on the element.
-    // Also NotifySuspendedStatusChanged() will be called to update readyState
-    // if download ended with success.
   } else if (aStatus != NS_BASE_STREAM_CLOSED) {
     NetworkError();
   }
