@@ -229,7 +229,7 @@ RotatedContentBuffer::DrawTo(PaintedLayer* aLayer,
     // Bug 599189 if there is a non-integer-translation transform in aTarget,
     // we might sample pixels outside GetEffectiveVisibleRegion(), which is wrong
     // and may cause gray lines.
-    gfxUtils::ClipToRegion(aTarget, aLayer->GetEffectiveVisibleRegion());
+    gfxUtils::ClipToRegionSnapped(aTarget, aLayer->GetEffectiveVisibleRegion());
     clipped = true;
   }
 
