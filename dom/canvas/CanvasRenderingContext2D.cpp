@@ -377,7 +377,7 @@ public:
     RefPtr<SourceSurface> strokePaint =
       DoSourcePaint(mStrokePaintRect, CanvasRenderingContext2D::Style::STROKE);
 
-    AutoSaveTransform autoSaveTransform(mFinalTarget);
+    AutoRestoreTransform autoRestoreTransform(mFinalTarget);
     mFinalTarget->SetTransform(Matrix());
 
     mgfx::FilterSupport::RenderFilterDescription(
@@ -3986,7 +3986,7 @@ CanvasRenderingContext2D::DrawDirectlyToCanvas(
 
   // We're wrapping tempTarget's (our) DrawTarget here, so we need to restore
   // the matrix even though this is a temp gfxContext.
-  AutoSaveTransform autoSR(mTarget);
+  AutoRestoreTransform autoRestoreTransform(mTarget);
 
   nsRefPtr<gfxContext> context = new gfxContext(tempTarget);
   context->SetMatrix(contextMatrix.
