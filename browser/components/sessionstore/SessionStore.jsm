@@ -2202,15 +2202,23 @@ let SessionStoreInternal = {
     if (aWindow && (!aWindow.__SSi || !this._windows[aWindow.__SSi]))
       this.onLoad(aWindow);
 
+    let root;
     try {
-      var root = typeof aState == "string" ? JSON.parse(aState) : aState;
-      if (!root.windows[0]) {
-        this._sendRestoreCompletedNotifications();
-        return; // nothing to restore
-      }
+      root = (typeof aState == "string") ? JSON.parse(aState) : aState;
     }
     catch (ex) { // invalid state object - don't restore anything
       debug(ex);
+      this._sendRestoreCompletedNotifications();
+      return;
+    }
+
+    // Restore closed windows if any.
+    if (root._closedWindows) {
+      this._closedWindows = root._closedWindows;
+    }
+
+    // We're done here if there are no windows.
+    if (!root.windows || !root.windows.length) {
       this._sendRestoreCompletedNotifications();
       return;
     }
@@ -2220,9 +2228,6 @@ let SessionStoreInternal = {
     // We're not returning from this before we end up calling restoreTabs
     // for this window, so make sure we send the SSWindowStateBusy event.
     this._setWindowStateBusy(aWindow);
-
-    if (root._closedWindows)
-      this._closedWindows = root._closedWindows;
 
     var winData;
     if (!root.selectedWindow || root.selectedWindow > root.windows.length) {
