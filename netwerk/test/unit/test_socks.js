@@ -30,16 +30,10 @@ function getAvailableBytes(input)
 
 function runScriptSubprocess(script, args)
 {
-  // logic copied from ted's crashreporter unit test
   var ds = new DirectoryService();
-  var bin = ds.get("CurProcD", Ci.nsILocalFile);
-
-  bin.append("xpcshell");
+  var bin = ds.get("XREExeF", Ci.nsILocalFile);
   if (!bin.exists()) {
-    bin.leafName = "xpcshell.exe";
-    do_check_true(bin.exists());
-    if (!bin.exists())
-      do_throw("Can't find xpcshell binary");
+    do_throw("Can't find xpcshell binary");
   }
 
   var script = do_get_file(script);
