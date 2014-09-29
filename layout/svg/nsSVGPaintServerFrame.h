@@ -49,15 +49,6 @@ public:
                           float aOpacity,
                           const gfxRect *aOverrideBounds = nullptr) = 0;
 
-  /**
-   * Configure paint server prior to rendering
-   * @return false to skip rendering
-   */
-  virtual bool SetupPaintServer(gfxContext *aContext,
-                                nsIFrame *aSource,
-                                nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
-                                float aOpacity);
-
   // nsIFrame methods:
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
