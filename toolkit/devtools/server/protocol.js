@@ -1061,6 +1061,14 @@ let Front = Class({
     this.actorID = null;
   },
 
+  manage: function(front) {
+    if (!front.actorID) {
+      throw new Error("Can't manage front without an actor ID.\n" +
+                      "Ensure server supports " + front.typeName + ".");
+    }
+    return Pool.prototype.manage.call(this, front);
+  },
+
   /**
    * @returns a promise that will resolve to the actorID this front
    * represents.
