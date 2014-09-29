@@ -984,24 +984,11 @@ public:
     mDecoder(aDecoder), mStatus(aStatus) {}
   NS_IMETHOD Run() {
     mDecoder->NotifyDownloadEnded(mStatus);
-    if (NS_SUCCEEDED(mStatus)) {
-      MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
-      if (owner) {
-        dom::HTMLMediaElement* element = owner->GetMediaElement();
-        if (element) {
-          element->DownloadSuspended();
-        }
-      }
-      // NotifySuspendedStatusChanged will tell the element that download
-      // has been suspended "by the cache", which is true since we never download
-      // anything. The element can then transition to HAVE_ENOUGH_DATA.
-      mDecoder->NotifySuspendedStatusChanged();
-    }
     return NS_OK;
   }
 private:
   nsRefPtr<MediaDecoder> mDecoder;
-  nsresult               mStatus;
+  nsresult                 mStatus;
 };
 
 void
@@ -1261,8 +1248,8 @@ public:
     return std::max(aOffset, mSize);
   }
   virtual bool    IsDataCachedToEndOfResource(int64_t aOffset) { return true; }
-  virtual bool    IsSuspendedByCache() { return true; }
-  virtual bool    IsSuspended() { return true; }
+  virtual bool    IsSuspendedByCache() { return false; }
+  virtual bool    IsSuspended() { return false; }
   virtual bool    IsTransportSeekable() MOZ_OVERRIDE { return true; }
 
   nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges);

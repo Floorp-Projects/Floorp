@@ -1857,11 +1857,7 @@ MediaCacheStream::NotifyDataEnded(nsresult aStatus)
     mResourceID = gMediaCache->AllocateResourceID();
   }
 
-  // It is prudent to update channel/cache status before calling
-  // CacheClientNotifyDataEnded() which will read |mChannelEnded|.
   FlushPartialBlockInternal(true);
-  mChannelEnded = true;
-  gMediaCache->QueueUpdate();
 
   MediaCache::ResourceStreamIterator iter(mResourceID);
   while (MediaCacheStream* stream = iter.Next()) {
@@ -1875,6 +1871,9 @@ MediaCacheStream::NotifyDataEnded(nsresult aStatus)
       stream->mClient->CacheClientNotifyDataEnded(aStatus);
     }
   }
+
+  mChannelEnded = true;
+  gMediaCache->QueueUpdate();
 }
 
 void
