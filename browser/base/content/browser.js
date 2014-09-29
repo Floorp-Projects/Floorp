@@ -6792,11 +6792,11 @@ var gIdentityHandler = {
     if (gURLBar.getAttribute("pageproxystate") != "valid")
       return;
 
-    var value = content.location.href;
-    var urlString = value + "\n" + content.document.title;
-    var htmlString = "<a href=\"" + value + "\">" + value + "</a>";
+    let value = gBrowser.currentURI.spec;
+    let urlString = value + "\n" + gBrowser.contentTitle;
+    let htmlString = "<a href=\"" + value + "\">" + value + "</a>";
 
-    var dt = event.dataTransfer;
+    let dt = event.dataTransfer;
     dt.setData("text/x-moz-url", urlString);
     dt.setData("text/uri-list", value);
     dt.setData("text/plain", value);
