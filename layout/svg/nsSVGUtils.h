@@ -506,25 +506,15 @@ public:
   static nscolor GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
                                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke);
 
-  /**
-   * Set up cairo context with an object pattern
-   */
-  static bool SetupContextPaint(gfxContext *aContext,
-                                gfxTextContextPaint *aContextPaint,
-                                const nsStyleSVGPaint& aPaint,
-                                float aOpacity);
-
   static already_AddRefed<gfxPattern>
   MakeFillPatternFor(nsIFrame *aFrame,
                      gfxContext* aContext,
                      gfxTextContextPaint *aContextPaint = nullptr);
 
-  /**
-   * Sets the current paint on the specified gfxContent to be the SVG 'stroke'
-   * for the given frame.
-   */
-  static bool SetupCairoStrokePaint(nsIFrame* aFrame, gfxContext* aContext,
-                                    gfxTextContextPaint *aContextPaint = nullptr);
+  static already_AddRefed<gfxPattern>
+  MakeStrokePatternFor(nsIFrame* aFrame,
+                       gfxContext* aContext,
+                       gfxTextContextPaint *aContextPaint = nullptr);
 
   static float GetOpacity(nsStyleSVGOpacitySource aOpacityType,
                           const float& aOpacity,
@@ -538,13 +528,6 @@ public:
 
   static float GetStrokeWidth(nsIFrame* aFrame,
                               gfxTextContextPaint *aContextPaint = nullptr);
-
-  /*
-   * Set up a cairo context for measuring the bounding box of a stroked path.
-   */
-  static void SetupCairoStrokeBBoxGeometry(nsIFrame* aFrame,
-                                           gfxContext *aContext,
-                                           gfxTextContextPaint *aContextPaint = nullptr);
 
   /*
    * Set up a cairo context for a stroked path (including any dashing that
