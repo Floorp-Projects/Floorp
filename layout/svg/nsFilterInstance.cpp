@@ -10,6 +10,7 @@
 #include "mozilla/UniquePtr.h"
 
 // Keep others in (case-insensitive) order:
+#include "gfx2DGlue.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/Helpers.h"
@@ -367,25 +368,18 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
     gfx->Multiply(mPaintTransform *
                   deviceToFilterSpace *
                   gfxMatrix::Translation(-neededRect.TopLeft()));
-    gfx->Rectangle(FilterSpaceToUserSpace(neededRect));
+    nsRefPtr<gfxPattern> pattern;
     if (aSource == &mFillPaint) {
-      nsRefPtr<gfxPattern> fillPattern =
-        nsSVGUtils::MakeFillPatternFor(mTargetFrame, gfx);
-      if (fillPattern) {
-        gfx->SetPattern(fillPattern);
-        gfx->Fill();
-      }
+      pattern = nsSVGUtils::MakeFillPatternFor(mTargetFrame, gfx);
     } else if (aSource == &mStrokePaint) {
-      nsRefPtr<gfxPattern> strokePattern =
-        nsSVGUtils::MakeStrokePatternFor(mTargetFrame, gfx);
-      if (strokePattern) {
-        gfx->SetPattern(strokePattern);
-        gfx->Fill(); // yes, filling a primitive subregion with _stroke_ paint
-      }
+      pattern = nsSVGUtils::MakeStrokePatternFor(mTargetFrame, gfx);
+    }
+    if (pattern) {
+      offscreenDT->FillRect(ToRect(FilterSpaceToUserSpace(neededRect)),
+                            *pattern->GetPattern(offscreenDT));
     }
     gfx->Restore();
   }
-
 
   aSource->mSourceSurface = offscreenDT->Snapshot();
   aSource->mSurfaceRect = ToIntRect(neededRect);
