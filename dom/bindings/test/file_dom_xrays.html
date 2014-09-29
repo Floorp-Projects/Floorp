@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <script>
+    window.expando = 42;
+    window.shadowedIframe = 42;
+    Object.setPrototypeOf(window, Object.create(Window.prototype,
+      {
+        shadowedIframe: { value: 42 },
+        iframe: { value: 42 },
+        document: { value: 42 },
+        addEventListener: { value: 42 },
+        toString: { value: 42 }
+      }));
+    window.documentElement.expando = 42;
+    Object.defineProperty(window.documentElement, "version", { value: 42 });
+  </script>
+  <iframe name="shadowedIframe" id="shadowedIframe"></iframe>
+  <iframe name="iframe" id="iframe"></iframe>
+  <iframe name="document" id="document"></iframe>
+  <iframe name="self" id="self"></iframe>
+  <iframe name="addEventListener" id="addEventListener"></iframe>
+  <iframe name="toString" id="toString"></iframe>
+  <iframe name="item" id="item"></iframe>
+</html>

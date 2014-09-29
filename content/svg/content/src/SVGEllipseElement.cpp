@@ -97,10 +97,7 @@ void
 SVGEllipseElement::ConstructPath(gfxContext *aCtx)
 {
   RefPtr<DrawTarget> dt = aCtx->GetDrawTarget();
-  FillRule fillRule =
-    aCtx->CurrentFillRule() == gfxContext::FILL_RULE_WINDING ?
-      FillRule::FILL_WINDING : FillRule::FILL_EVEN_ODD;
-  RefPtr<PathBuilder> builder = dt->CreatePathBuilder(fillRule);
+  RefPtr<PathBuilder> builder = dt->CreatePathBuilder(aCtx->CurrentFillRule());
   RefPtr<Path> path = BuildPath(builder);
   if (path) {
     aCtx->SetPath(path);

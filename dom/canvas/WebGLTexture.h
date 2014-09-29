@@ -194,7 +194,9 @@ public:
 
 protected:
 
-    GLenum mMinFilter, mMagFilter, mWrapS, mWrapT;
+    TexMinFilter mMinFilter;
+    TexMagFilter mMagFilter;
+    TexWrap mWrapS, mWrapT;
 
     size_t mFacesCount, mMaxLevelWithCustomImages;
     nsTArray<ImageInfo> mImageInfos;
@@ -227,23 +229,23 @@ public:
                       GLsizei aWidth, GLsizei aHeight,
                       TexInternalFormat aFormat, TexType aType, WebGLImageDataStatus aStatus);
 
-    void SetMinFilter(GLenum aMinFilter) {
+    void SetMinFilter(TexMinFilter aMinFilter) {
         mMinFilter = aMinFilter;
         SetFakeBlackStatus(WebGLTextureFakeBlackStatus::Unknown);
     }
-    void SetMagFilter(GLenum aMagFilter) {
+    void SetMagFilter(TexMagFilter aMagFilter) {
         mMagFilter = aMagFilter;
         SetFakeBlackStatus(WebGLTextureFakeBlackStatus::Unknown);
     }
-    void SetWrapS(GLenum aWrapS) {
+    void SetWrapS(TexWrap aWrapS) {
         mWrapS = aWrapS;
         SetFakeBlackStatus(WebGLTextureFakeBlackStatus::Unknown);
     }
-    void SetWrapT(GLenum aWrapT) {
+    void SetWrapT(TexWrap aWrapT) {
         mWrapT = aWrapT;
         SetFakeBlackStatus(WebGLTextureFakeBlackStatus::Unknown);
     }
-    GLenum MinFilter() const { return mMinFilter; }
+    TexMinFilter MinFilter() const { return mMinFilter; }
 
     bool DoesMinFilterRequireMipmap() const {
         return !(mMinFilter == LOCAL_GL_NEAREST || mMinFilter == LOCAL_GL_LINEAR);

@@ -138,7 +138,7 @@ void JapaneseContextAnalysis::HandleData(const char* aBuf, uint32_t aLen)
   return;
 }
 
-void JapaneseContextAnalysis::Reset(bool aIsPreferredLanguage)
+void JapaneseContextAnalysis::Reset()
 {
   mTotalRel = 0;
   for (uint32_t i = 0; i < NUM_OF_CATEGORY; i++)
@@ -146,7 +146,7 @@ void JapaneseContextAnalysis::Reset(bool aIsPreferredLanguage)
   mNeedToSkipCharNum = 0;
   mLastCharOrder = -1;
   mDone = false;
-  mDataThreshold = aIsPreferredLanguage ? 0 : MINIMUM_DATA_THRESHOLD;
+  mDataThreshold = 0;
 }
 #define DONT_KNOW (float)-1
 

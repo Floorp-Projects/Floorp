@@ -209,11 +209,12 @@ static void GetStopInformation(nsIFrame* aStopFrame,
 }
 
 already_AddRefed<gfxPattern>
-nsSVGGradientFrame::GetPaintServerPattern(nsIFrame *aSource,
+nsSVGGradientFrame::GetPaintServerPattern(nsIFrame* aSource,
+                                          const DrawTarget* aDrawTarget,
                                           const gfxMatrix& aContextMatrix,
                                           nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                                           float aGraphicOpacity,
-                                          const gfxRect *aOverrideBounds)
+                                          const gfxRect* aOverrideBounds)
 {
   uint16_t gradientUnits = GetGradientUnits();
   MOZ_ASSERT(gradientUnits == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX ||

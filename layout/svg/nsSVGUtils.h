@@ -61,6 +61,7 @@ class Element;
 class UserSpaceMetrics;
 } // namespace dom
 namespace gfx {
+class GeneralPattern;
 class SourceSurface;
 }
 } // namespace mozilla
@@ -150,13 +151,7 @@ public:
      * Used to inform SVG frames that they should paint as normal.
      */
     NORMAL, 
-    /** 
-     * Used to inform SVG frames when they are painting as the child of a
-     * simple clipPath. In this case they should only draw their basic geometry
-     * as a path. They should not fill, stroke, or paint anything else.
-     */
-    CLIP, 
-    /** 
+    /**
      * Used to inform SVG frames when they are painting as the child of a
      * complex clipPath that requires the use of a clip mask. In this case they
      * should only draw their basic geometry as a path and then fill it using
@@ -205,6 +200,8 @@ class nsSVGUtils
 {
 public:
   typedef mozilla::dom::Element Element;
+  typedef mozilla::gfx::FillRule FillRule;
+  typedef mozilla::gfx::GeneralPattern GeneralPattern;
 
   static void Init();
 
@@ -506,27 +503,17 @@ public:
   static nscolor GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
                                          nsStyleSVGPaint nsStyleSVG::*aFillOrStroke);
 
-  /**
-   * Set up cairo context with an object pattern
-   */
-  static bool SetupContextPaint(gfxContext *aContext,
-                                gfxTextContextPaint *aContextPaint,
-                                const nsStyleSVGPaint& aPaint,
-                                float aOpacity);
+  static void
+  MakeFillPatternFor(nsIFrame *aFrame,
+                     gfxContext* aContext,
+                     GeneralPattern* aOutPattern,
+                     gfxTextContextPaint *aContextPaint = nullptr);
 
-  /**
-   * Sets the current paint on the specified gfxContent to be the SVG 'fill'
-   * for the given frame.
-   */
-  static bool SetupCairoFillPaint(nsIFrame* aFrame, gfxContext* aContext,
-                                  gfxTextContextPaint *aContextPaint = nullptr);
-
-  /**
-   * Sets the current paint on the specified gfxContent to be the SVG 'stroke'
-   * for the given frame.
-   */
-  static bool SetupCairoStrokePaint(nsIFrame* aFrame, gfxContext* aContext,
-                                    gfxTextContextPaint *aContextPaint = nullptr);
+  static void
+  MakeStrokePatternFor(nsIFrame* aFrame,
+                       gfxContext* aContext,
+                       GeneralPattern* aOutPattern,
+                       gfxTextContextPaint *aContextPaint = nullptr);
 
   static float GetOpacity(nsStyleSVGOpacitySource aOpacityType,
                           const float& aOpacity,
@@ -542,25 +529,11 @@ public:
                               gfxTextContextPaint *aContextPaint = nullptr);
 
   /*
-   * Set up a cairo context for measuring the bounding box of a stroked path.
-   */
-  static void SetupCairoStrokeBBoxGeometry(nsIFrame* aFrame,
-                                           gfxContext *aContext,
-                                           gfxTextContextPaint *aContextPaint = nullptr);
-
-  /*
    * Set up a cairo context for a stroked path (including any dashing that
    * applies).
    */
   static void SetupCairoStrokeGeometry(nsIFrame* aFrame, gfxContext *aContext,
                                        gfxTextContextPaint *aContextPaint = nullptr);
-
-  /*
-   * Set up a cairo context for stroking, including setting up any stroke-related
-   * properties such as dashing and setting the current paint on the gfxContext.
-   */
-  static bool SetupCairoStroke(nsIFrame* aFrame, gfxContext *aContext,
-                               gfxTextContextPaint *aContextPaint = nullptr);
 
   /**
    * This function returns a set of bit flags indicating which parts of the
@@ -569,6 +542,11 @@ public:
    * property on the element.
    */
   static uint16_t GetGeometryHitTestFlags(nsIFrame* aFrame);
+
+  static FillRule ToFillRule(uint8_t aFillRule) {
+    return aFillRule == NS_STYLE_FILL_RULE_EVENODD ?
+             FillRule::FILL_EVEN_ODD : FillRule::FILL_WINDING;
+  }
 
   /**
    * Render a SVG glyph.

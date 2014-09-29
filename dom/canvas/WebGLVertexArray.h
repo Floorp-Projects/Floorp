@@ -10,6 +10,7 @@
 #include "WebGLObjectModel.h"
 #include "WebGLBuffer.h"
 #include "WebGLVertexAttribData.h"
+#include "WebGLStrongTypes.h"
 
 #include "nsWrapperCache.h"
 
@@ -21,7 +22,7 @@ class WebGLVertexArrayFake;
 
 class WebGLVertexArray
     : public nsWrapperCache
-    , public WebGLBindableName<GLenum>
+    , public WebGLBindableName<VAOBinding>
     , public WebGLRefCountedObject<WebGLVertexArray>
     , public LinkedListElement<WebGLVertexArray>
     , public WebGLContextBoundObject
@@ -40,8 +41,6 @@ public:
 
     virtual void GenVertexArray() = 0;
     virtual void BindVertexArrayImpl() = 0;
-
-    GLuint GLName() const { return mGLName; }
 
     // -------------------------------------------------------------------------
     // IMPLEMENT PARENT CLASSES

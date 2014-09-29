@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WindowNamedPropertiesHandler.h"
+#include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "nsDOMClassInfo.h"
 #include "nsGlobalWindow.h"
@@ -206,33 +207,74 @@ WindowNamedPropertiesHandler::delete_(JSContext* aCx,
   return true;
 }
 
-// static
-void
-WindowNamedPropertiesHandler::Install(JSContext* aCx,
-                                      JS::Handle<JSObject*> aProto)
+static bool
+ResolveWindowNamedProperty(JSContext* aCx, JS::Handle<JSObject*> aWrapper,
+                           JS::Handle<JSObject*> aObj, JS::Handle<jsid> aId,
+                           JS::MutableHandle<JSPropertyDescriptor> aDesc)
 {
-  JS::Rooted<JSObject*> protoProto(aCx);
-  if (!::JS_GetPrototype(aCx, aProto, &protoProto)) {
-    return;
+  {
+    JSAutoCompartment ac(aCx, aObj);
+    if (!js::GetProxyHandler(aObj)->getOwnPropertyDescriptor(aCx, aObj, aId,
+                                                             aDesc)) {
+      return false;
+    }
   }
 
+  if (aDesc.object()) {
+    aDesc.object().set(aWrapper);
+
+    return JS_WrapPropertyDescriptor(aCx, aDesc);
+  }
+
+  return true;
+}
+
+static bool
+EnumerateWindowNamedProperties(JSContext* aCx, JS::Handle<JSObject*> aWrapper,
+                               JS::Handle<JSObject*> aObj,
+                               JS::AutoIdVector& aProps)
+{
+  JSAutoCompartment ac(aCx, aObj);
+  return js::GetProxyHandler(aObj)->getOwnPropertyNames(aCx, aObj, aProps);
+}
+
+const NativePropertyHooks sWindowNamedPropertiesNativePropertyHooks[] = { {
+  ResolveWindowNamedProperty,
+  EnumerateWindowNamedProperties,
+  { nullptr, nullptr },
+  prototypes::id::_ID_Count,
+  constructors::id::_ID_Count,
+  nullptr
+} };
+
+static const DOMIfaceAndProtoJSClass WindowNamedPropertiesClass = {
+  PROXY_CLASS_DEF("WindowProperties",
+                  DOM_INTERFACE_PROTO_SLOTS_BASE, /* extra slots */
+                  JSCLASS_IS_DOMIFACEANDPROTOJSCLASS),
+  eNamedPropertiesObject,
+  sWindowNamedPropertiesNativePropertyHooks,
+  "[object WindowProperties]",
+  prototypes::id::_ID_Count,
+  0,
+  EventTargetBinding::GetProtoObject
+};
+
+// static
+JSObject*
+WindowNamedPropertiesHandler::Create(JSContext* aCx,
+                                     JS::Handle<JSObject*> aProto)
+{
   // Note: since the scope polluter proxy lives on the window's prototype
   // chain, it needs a singleton type to avoid polluting type information
   // for properties on the window.
   JS::Rooted<JSObject*> gsp(aCx);
   js::ProxyOptions options;
   options.setSingleton(true);
-  gsp = js::NewProxyObject(aCx, WindowNamedPropertiesHandler::getInstance(),
-                           JS::NullHandleValue, protoProto,
-                           js::GetGlobalForObjectCrossCompartment(aProto),
-                           options);
-  if (!gsp) {
-    return;
-  }
-
-  // And then set the prototype of the interface prototype object to be the
-  // global scope polluter.
-  ::JS_SplicePrototype(aCx, aProto, gsp);
+  options.setClass(&WindowNamedPropertiesClass.mBase);
+  return js::NewProxyObject(aCx, WindowNamedPropertiesHandler::getInstance(),
+                            JS::NullHandleValue, aProto,
+                            js::GetGlobalForObjectCrossCompartment(aProto),
+                            options);
 }
 
 } // namespace dom

@@ -167,7 +167,7 @@ function test_system_dep_desc() {
       },
       tests: {
         system: [
-          [null, "extends", "fixed", "cyclic"],
+          [null, "extends", "fixed", "cyclic", "extends symbols('*')"],
           ["extends cjk-decimal", "ExTends cjk-decimal", "extends CJK-decimal"],
         ],
         symbols: [
@@ -235,13 +235,13 @@ function test_system_indep_desc() {
       [null, "0", "\"\"", "0 0", "a a", "0 a a"],
     ],
     fallback: [
-      [null, "", "-", "0", "a b"],
+      [null, "", "-", "0", "a b", "symbols('*')"],
       ["a"],
       ["A"],
       ["decimal", "Decimal"],
     ],
     speakAs: [
-      [null, "", "-", "0", "a b"],
+      [null, "", "-", "0", "a b", "symbols('*')"],
       ["auto", "AuTo"],
       ["bullets", "BULLETs"],
       ["numbers", "NumBers"],
