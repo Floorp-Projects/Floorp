@@ -223,6 +223,7 @@ enum BluetoothTypeOfDevice {
 };
 
 enum BluetoothPropertyType {
+  PROPERTY_UNKNOWN,
   PROPERTY_BDNAME,
   PROPERTY_BDADDR,
   PROPERTY_UUIDS,
