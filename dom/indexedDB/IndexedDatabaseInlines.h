@@ -11,48 +11,55 @@
 #error Must include IndexedDatabase.h first
 #endif
 
-BEGIN_INDEXEDDB_NAMESPACE
+#include "FileInfo.h"
+#include "mozilla/dom/indexedDB/PBackgroundIDBSharedTypes.h"
+#include "nsIDOMFile.h"
+#include "nsIInputStream.h"
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
 
 inline
-StructuredCloneWriteInfo::StructuredCloneWriteInfo()
-: mTransaction(nullptr),
-  mOffsetToKeyProp(0)
+StructuredCloneFile::StructuredCloneFile()
 {
+  MOZ_COUNT_CTOR(StructuredCloneFile);
 }
 
 inline
-StructuredCloneWriteInfo::StructuredCloneWriteInfo(
-                                    StructuredCloneWriteInfo&& aCloneWriteInfo)
-: mCloneBuffer(Move(aCloneWriteInfo.mCloneBuffer))
-, mTransaction(aCloneWriteInfo.mTransaction)
-, mOffsetToKeyProp(aCloneWriteInfo.mOffsetToKeyProp)
+StructuredCloneFile::~StructuredCloneFile()
 {
-  mFiles.SwapElements(aCloneWriteInfo.mFiles);
-  aCloneWriteInfo.mTransaction = nullptr;
-  aCloneWriteInfo.mOffsetToKeyProp = 0;
+  MOZ_COUNT_DTOR(StructuredCloneFile);
 }
 
 inline
 bool
-StructuredCloneWriteInfo::SetFromSerialized(
-                               const SerializedStructuredCloneWriteInfo& aOther)
+StructuredCloneFile::operator==(const StructuredCloneFile& aOther) const
 {
-  if (!aOther.dataLength) {
-    mCloneBuffer.clear();
-  }
-  else if (!mCloneBuffer.copy(aOther.data, aOther.dataLength)) {
-    return false;
-  }
-
-  mFiles.Clear();
-  mOffsetToKeyProp = aOther.offsetToKeyProp;
-  return true;
+  return this->mFile == aOther.mFile &&
+         this->mFileInfo == aOther.mFileInfo;
 }
 
 inline
 StructuredCloneReadInfo::StructuredCloneReadInfo()
-: mDatabase(nullptr)
+  : mDatabase(nullptr)
 {
+  MOZ_COUNT_CTOR(StructuredCloneReadInfo);
+}
+
+inline
+StructuredCloneReadInfo::StructuredCloneReadInfo(
+                             SerializedStructuredCloneReadInfo&& aCloneReadInfo)
+  : mData(Move(aCloneReadInfo.data()))
+  , mDatabase(nullptr)
+{
+  MOZ_COUNT_CTOR(StructuredCloneReadInfo);
+}
+
+inline
+StructuredCloneReadInfo::~StructuredCloneReadInfo()
+{
+  MOZ_COUNT_DTOR(StructuredCloneReadInfo);
 }
 
 inline StructuredCloneReadInfo&
@@ -60,6 +67,7 @@ StructuredCloneReadInfo::operator=(StructuredCloneReadInfo&& aCloneReadInfo)
 {
   MOZ_ASSERT(&aCloneReadInfo != this);
 
+  mData = Move(aCloneReadInfo.mData);
   mCloneBuffer = Move(aCloneReadInfo.mCloneBuffer);
   mFiles.Clear();
   mFiles.SwapElements(aCloneReadInfo.mFiles);
@@ -68,45 +76,8 @@ StructuredCloneReadInfo::operator=(StructuredCloneReadInfo&& aCloneReadInfo)
   return *this;
 }
 
-inline
-bool
-StructuredCloneReadInfo::SetFromSerialized(
-                                const SerializedStructuredCloneReadInfo& aOther)
-{
-  if (aOther.dataLength &&
-      !mCloneBuffer.copy(aOther.data, aOther.dataLength)) {
-    return false;
-  }
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla
 
-  mFiles.Clear();
-  return true;
-}
-
-inline
-void
-AppendConditionClause(const nsACString& aColumnName,
-                      const nsACString& aArgName,
-                      bool aLessThan,
-                      bool aEquals,
-                      nsACString& aResult)
-{
-  aResult += NS_LITERAL_CSTRING(" AND ") + aColumnName +
-             NS_LITERAL_CSTRING(" ");
-
-  if (aLessThan) {
-    aResult.Append('<');
-  }
-  else {
-    aResult.Append('>');
-  }
-
-  if (aEquals) {
-    aResult.Append('=');
-  }
-
-  aResult += NS_LITERAL_CSTRING(" :") + aArgName;
-}
-
-END_INDEXEDDB_NAMESPACE
-
-#endif
+#endif // IndexedDatabaseInlines_h

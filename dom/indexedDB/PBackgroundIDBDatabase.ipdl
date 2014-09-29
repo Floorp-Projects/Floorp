@@ -1,0 +1,66 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBackgroundIDBDatabaseFile;
+include protocol PBackgroundIDBFactory;
+include protocol PBackgroundIDBTransaction;
+include protocol PBackgroundIDBVersionChangeTransaction;
+include protocol PBlob;
+
+include InputStreamParams;
+include PBackgroundIDBSharedTypes;
+
+include "mozilla/dom/indexedDB/SerializationHelpers.h";
+
+using struct mozilla::null_t
+  from "ipc/IPCMessageUtils.h";
+
+using mozilla::dom::indexedDB::IDBTransaction::Mode
+  from "mozilla/dom/indexedDB/IDBTransaction.h";
+
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
+
+union NullableVersion
+{
+  null_t;
+  uint64_t;
+};
+
+protocol PBackgroundIDBDatabase
+{
+  manager PBackgroundIDBFactory;
+
+  manages PBackgroundIDBDatabaseFile;
+  manages PBackgroundIDBTransaction;
+  manages PBackgroundIDBVersionChangeTransaction;
+
+parent:
+  DeleteMe();
+
+  Blocked();
+
+  Close();
+
+  PBackgroundIDBDatabaseFile(PBlob blob);
+
+  PBackgroundIDBTransaction(nsString[] objectStoreNames, Mode mode);
+
+child:
+  __delete__();
+
+  VersionChange(uint64_t oldVersion, NullableVersion newVersion);
+
+  Invalidate();
+
+  PBackgroundIDBVersionChangeTransaction(uint64_t currentVersion,
+                                         uint64_t requestedVersion,
+                                         int64_t nextObjectStoreId,
+                                         int64_t nextIndexId);
+};
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla

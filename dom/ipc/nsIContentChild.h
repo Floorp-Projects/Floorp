@@ -7,15 +7,15 @@
 #ifndef mozilla_dom_nsIContentChild_h
 #define mozilla_dom_nsIContentChild_h
 
-#include "mozilla/dom/ipc/Blob.h"
-
 #include "nsISupports.h"
+#include "nsTArrayForwardDeclare.h"
 
 #define NS_ICONTENTCHILD_IID                                    \
   { 0x4eed2e73, 0x94ba, 0x48a8,                                 \
     { 0xa2, 0xd1, 0xa5, 0xed, 0x86, 0xd7, 0xbb, 0xe4 } }
 
-class PBrowserChild;
+class nsIDOMBlob;
+class nsString;
 
 namespace IPC {
 class Principal;
@@ -30,7 +30,13 @@ class CpowEntry;
 } // jsipc
 
 namespace dom {
+
+class BlobChild;
+class BlobConstructorParams;
+class ClonedMessageData;
 class IPCTabContext;
+class PBlobChild;
+class PBrowserChild;
 
 class nsIContentChild : public nsISupports
 {
@@ -39,9 +45,10 @@ public:
 
   BlobChild* GetOrCreateActorForBlob(nsIDOMBlob* aBlob);
 
-  virtual PBlobChild*
-  SendPBlobConstructor(PBlobChild* aActor,
-                       const BlobConstructorParams& params) = 0;
+  virtual PBlobChild* SendPBlobConstructor(
+    PBlobChild* aActor,
+    const BlobConstructorParams& aParams) = 0;
+
   virtual bool
   SendPBrowserConstructor(PBrowserChild* aActor,
                           const IPCTabContext& aContext,
@@ -62,7 +69,8 @@ protected:
   virtual bool DeallocPBrowserChild(PBrowserChild*);
 
   virtual PBlobChild* AllocPBlobChild(const BlobConstructorParams& aParams);
-  virtual bool DeallocPBlobChild(PBlobChild*);
+
+  virtual bool DeallocPBlobChild(PBlobChild* aActor);
 
   virtual bool RecvAsyncMessage(const nsString& aMsg,
                                 const ClonedMessageData& aData,

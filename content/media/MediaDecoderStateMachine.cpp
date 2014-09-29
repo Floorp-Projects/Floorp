@@ -1310,7 +1310,7 @@ void MediaDecoderStateMachine::UpdateEstimatedDuration(int64_t aDuration)
   AssertCurrentThreadInMonitor();
   int64_t duration = GetDuration();
   if (aDuration != duration &&
-      abs(aDuration - duration) > ESTIMATED_DURATION_FUZZ_FACTOR_USECS) {
+      std::abs(aDuration - duration) > ESTIMATED_DURATION_FUZZ_FACTOR_USECS) {
     SetDuration(aDuration);
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(mDecoder, &MediaDecoder::DurationChanged);

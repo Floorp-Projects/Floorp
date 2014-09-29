@@ -4,12 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['ipc']
 TEST_DIRS += ['test/extensions']
 
+MOCHITEST_MANIFESTS += ['test/mochitest.ini']
+
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
+
+XPCSHELL_TESTS_MANIFESTS += [
+    'test/unit/xpcshell-child-process.ini',
+    'test/unit/xpcshell-parent-process.ini'
+]
+
 EXPORTS.mozilla.dom.indexedDB += [
-    'Client.h',
-    'DatabaseInfo.h',
+    'ActorsParent.h',
     'FileInfo.h',
     'FileManager.h',
     'FileSnapshot.h',
@@ -30,60 +39,63 @@ EXPORTS.mozilla.dom.indexedDB += [
     'IndexedDatabaseManager.h',
     'Key.h',
     'KeyPath.h',
+    'SerializationHelpers.h',
 ]
 
 UNIFIED_SOURCES += [
-    'AsyncConnectionHelper.cpp',
-    'CheckPermissionsHelper.cpp',
-    'Client.cpp',
-    'DatabaseInfo.cpp',
+    'ActorsChild.cpp',
     'FileInfo.cpp',
-    'FileManager.cpp',
     'FileSnapshot.cpp',
+    'IDBCursor.cpp',
     'IDBDatabase.cpp',
     'IDBEvents.cpp',
     'IDBFactory.cpp',
     'IDBFileHandle.cpp',
     'IDBFileRequest.cpp',
+    'IDBIndex.cpp',
     'IDBKeyRange.cpp',
     'IDBMutableFile.cpp',
+    'IDBObjectStore.cpp',
     'IDBRequest.cpp',
     'IDBTransaction.cpp',
     'IDBWrapperCache.cpp',
     'IndexedDatabaseManager.cpp',
     'Key.cpp',
     'KeyPath.cpp',
-    'OpenDatabaseHelper.cpp',
+    'PermissionRequestBase.cpp',
+    'ReportInternalError.cpp',
     'TransactionThreadPool.cpp',
 ]
 
-# These files cannot be built in unified mode because of name collisions
 SOURCES += [
-    'IDBCursor.cpp',
-    'IDBIndex.cpp',
-    'IDBObjectStore.cpp',
-    'ReportInternalError.cpp',
+    'ActorsParent.cpp', # This file is huge.
 ]
 
-FAIL_ON_WARNINGS = True
+IPDL_SOURCES += [
+    'PBackgroundIDBCursor.ipdl',
+    'PBackgroundIDBDatabase.ipdl',
+    'PBackgroundIDBDatabaseFile.ipdl',
+    'PBackgroundIDBFactory.ipdl',
+    'PBackgroundIDBFactoryRequest.ipdl',
+    'PBackgroundIDBRequest.ipdl',
+    'PBackgroundIDBSharedTypes.ipdlh',
+    'PBackgroundIDBTransaction.ipdl',
+    'PBackgroundIDBVersionChangeTransaction.ipdl',
+    'PIndexedDBPermissionRequest.ipdl',
+]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+FAIL_ON_WARNINGS = True
+
 LOCAL_INCLUDES += [
-    '/caps',
     '/content/base/src',
     '/db/sqlite3/src',
     '/dom/base',
     '/dom/quota',
     '/dom/storage',
+    '/ipc/glue',
     '/xpcom/build',
 ]
-
-MOCHITEST_MANIFESTS += [
-    'test/mochitest.ini',
-    'test/unit/mochitest.ini',
-]
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
-MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
