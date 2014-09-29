@@ -156,6 +156,10 @@ HTMLBreadcrumbs.prototype = {
   prettyPrintNodeAsText: function BC_prettyPrintNodeText(aNode)
   {
     let text = aNode.tagName.toLowerCase();
+    if (aNode.isPseudoElement) {
+      text = aNode.isBeforePseudoElement ? "::before" : "::after";
+    }
+
     if (aNode.id) {
       text += "#" + aNode.id;
     }
@@ -201,6 +205,9 @@ HTMLBreadcrumbs.prototype = {
     pseudosLabel.className = "breadcrumbs-widget-item-pseudo-classes plain";
 
     let tagText = aNode.tagName.toLowerCase();
+    if (aNode.isPseudoElement) {
+      tagText = aNode.isBeforePseudoElement ? "::before" : "::after";
+    }
     let idText = aNode.id ? ("#" + aNode.id) : "";
     let classesText = "";
 

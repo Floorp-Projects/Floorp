@@ -26,7 +26,20 @@
   <div id="templates" style="display:none">
 
     <ul class="children">
-      <li id="template-container" save="${elt}" class="child collapsed">
+      <li id="template-elementcontainer" save="${elt}" class="child collapsed">
+        <div save="${tagLine}" class="tag-line"><!--
+        --><span save="${tagState}" class="tag-state"></span><!--
+        --><span save="${expander}" class="theme-twisty expander"></span><!--
+     --></div>
+        <ul save="${children}" class="children"></ul>
+      </li>
+
+      <li id="template-textcontainer" save="${elt}" class="child collapsed">
+        <div save="${tagLine}" class="tag-line"><span save="${tagState}" class="tag-state"></span></div>
+        <ul save="${children}" class="children"></ul>
+      </li>
+
+      <li id="template-readonlycontainer" save="${elt}" class="child collapsed">
         <div save="${tagLine}" class="tag-line"><!--
         --><span save="${tagState}" class="tag-state"></span><!--
         --><span save="${expander}" class="theme-twisty expander"></span><!--
@@ -41,6 +54,8 @@
       --><button href="#" onclick="${allButtonClick}">${showAll}</button>
       </li>
     </ul>
+
+    <span id="template-generic" save="${elt}" class="editor"><span save="${tag}" class="tag"></span></span>
 
     <span id="template-element" save="${elt}" class="editor"><!--
    --><span class="open">&lt;<!--

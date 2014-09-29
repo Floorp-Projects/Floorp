@@ -5,15 +5,15 @@
 "use strict";
 
 // Testing selector inplace-editor behaviors in the rule-view with pseudo
-// classes and elements
+// classes.
 
 let PAGE_CONTENT = [
   '<style type="text/css">',
   '  .testclass {',
   '    text-align: center;',
   '  }',
-  '  #testid3:after {',
-  '    content: "+"',
+  '  #testid3:first-letter {',
+  '    text-decoration: "italic"',
   '  }',
   '</style>',
   '<div id="testid">Styled Node</div>',
@@ -41,11 +41,11 @@ let test = asyncTest(function*() {
 
   info("Selecting the test element");
   yield selectNode("#testid3", inspector);
-  yield testEditSelector(view, ".testclass2:after");
+  yield testEditSelector(view, ".testclass2:first-letter");
 
   info("Selecting the modified element");
   yield selectNode(".testclass2", inspector);
-  yield checkModifiedElement(view, ".testclass2:after");
+  yield checkModifiedElement(view, ".testclass2:first-letter");
 });
 
 function* testEditSelector(view, name) {

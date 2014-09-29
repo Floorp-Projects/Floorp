@@ -131,7 +131,7 @@
   transition: background .5s;
 }
 
-.tag-line .open, .tag-line .close, .comment {
+.tag-line {
   cursor: default;
 }
 
