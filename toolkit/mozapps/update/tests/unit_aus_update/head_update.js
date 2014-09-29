@@ -654,61 +654,6 @@ var gTestFilesPartialSuccess = [
 // Concatenate the common files to the end of the array.
 gTestFilesPartialSuccess = gTestFilesPartialSuccess.concat(gTestFilesCommon);
 
-/**
- * The mar files used for the updater tests contain the following remove
- * operations.
- *
- * partial and complete test mar remove operations
- * -----------------------------------------------
- * remove "text1"
- * remove "text0"
- * rmrfdir "9/99/"
- * rmdir "9/99/"
- * rmrfdir "9/98/"
- * rmrfdir "9/97/"
- * rmrfdir "9/96/"
- * rmrfdir "9/95/"
- * rmrfdir "9/95/"
- * rmrfdir "9/94/"
- * rmdir "9/94/"
- * rmdir "9/93/"
- * rmdir "9/92/"
- * rmdir "9/91/"
- * rmdir "9/90/"
- * rmdir "9/90/"
- * rmrfdir "8/89/"
- * rmdir "8/89/"
- * rmrfdir "8/88/"
- * rmrfdir "8/87/"
- * rmrfdir "8/86/"
- * rmrfdir "8/85/"
- * rmrfdir "8/85/"
- * rmrfdir "8/84/"
- * rmdir "8/84/"
- * rmdir "8/83/"
- * rmdir "8/82/"
- * rmdir "8/81/"
- * rmdir "8/80/"
- * rmdir "8/80/"
- * rmrfdir "7/"
- * rmdir "6/"
- * remove "5/text1"
- * remove "5/text0"
- * rmrfdir "5/"
- * remove "4/text1"
- * remove "4/text0"
- * remove "4/exe0.exe"
- * rmdir "4/"
- * remove "3/text1"
- * remove "3/text0"
- *
- * partial test mar additional remove operations
- * ---------------------------------------------
- * remove "0/00/00text1"
- * remove "1/10/10text0"
- * rmdir "1/10/"
- * rmdir "1/"
- */
 var gTestDirsCommon = [
 {
   relPathDir   : DIR_RESOURCES + "3/",
@@ -1111,6 +1056,21 @@ function setTestFilesAndDirsForFailure() {
     }
   });
 }
+
+/**
+ * Helper function for updater binary tests that prevents the distribution
+ * directory files from being created.
+ */
+function preventDistributionFiles() {
+  gTestFiles = gTestFiles.filter(function(aTestFile) {
+    return aTestFile.relPathDir.indexOf("distribution/") == -1;
+  });
+
+  gTestDirs = gTestDirs.filter(function(aTestDir) {
+    return aTestDir.relPathDir.indexOf("distribution/") == -1;
+  });
+}
+
 
 /**
  * Initializes the most commonly used settings and creates an instance of the
@@ -2386,8 +2346,11 @@ function createUpdaterINI(aIsExeAsync) {
  *
  * @param   aCompareLogFile
  *          The log file to compare the update log with.
+ * @param   aExcludeDistributionDir
+ *          Removes lines containing the distribution directory from the log
+ *          file to compare the update log with.
  */
-function checkUpdateLogContents(aCompareLogFile) {
+function checkUpdateLogContents(aCompareLogFile, aExcludeDistributionDir) {
   if (IS_UNIX && !IS_MACOSX) {
     // Sorting on Linux is different so skip checking the logs for now.
     return;
@@ -2422,16 +2385,14 @@ function checkUpdateLogContents(aCompareLogFile) {
   updateLogContents = updateLogContents.replace(/WORKING DIRECTORY.*/g, "");
   // Skip lines that log failed attempts to open the callback executable.
   updateLogContents = updateLogContents.replace(/NS_main: callback app file .*/g, "");
+  if (IS_MACOSX) {
+    // Skip lines that log moving the distribution directory for Mac v2 signing.
+    updateLogContents = updateLogContents.replace(/Moving old [^\n]*\nrename_file: .*/g, "");
+    updateLogContents = updateLogContents.replace(/New distribution directory .*/g, "");
+  }
   if (gSwitchApp) {
     // Remove the lines which contain absolute paths
     updateLogContents = updateLogContents.replace(/^Begin moving.*$/mg, "");
-    if (IS_MACOSX) {
-      // Remove the entire section about moving the precomplete file as it contains
-      // absolute paths.
-      updateLogContents = updateLogContents.replace(/\n/g, "%%%EOL%%%");
-      updateLogContents = updateLogContents.replace(/Moving the precomplete file.*Finished moving the precomplete file/, "");
-      updateLogContents = updateLogContents.replace(/%%%EOL%%%/g, "\n");
-    }
   }
   updateLogContents = updateLogContents.replace(/\r/g, "");
   // Replace error codes since they are different on each platform.
@@ -2467,6 +2428,9 @@ function checkUpdateLogContents(aCompareLogFile) {
       gTestFiles[gTestFiles.length - 2].fileName == FILE_UPDATE_SETTINGS_INI &&
       !gTestFiles[gTestFiles.length - 2].originalContents) {
     compareLogContents = compareLogContents.replace(/.*update-settings.ini.*/g, "");
+  }
+  if (aExcludeDistributionDir) {
+    compareLogContents = compareLogContents.replace(/.*distribution\/.*/g, "");
   }
   // Remove leading and trailing newlines
   compareLogContents = compareLogContents.replace(/\n+/g, "\n");

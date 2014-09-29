@@ -16,6 +16,15 @@ function run_test() {
   gTestFiles[gTestFiles.length - 2].comparePerms = 0o644;
   gTestDirs = gTestDirsPartialSuccess;
   setupUpdaterTest(FILE_PARTIAL_MAR);
+  if (IS_MACOSX) {
+    // Create files in the old distribution directory location to verify that
+    // the directory and its contents are removed when there is a distribution
+    // directory in the new location.
+    let testFile = getApplyDirFile(DIR_MACOS + "distribution/testFile", true);
+    writeFile(testFile, "test\n");
+    testFile = getApplyDirFile(DIR_MACOS + "distribution/test/testFile", true);
+    writeFile(testFile, "test\n");
+  }
 
   createUpdaterINI(true);
 
@@ -57,6 +66,17 @@ function finishCheckUpdateApplied() {
     let applyToDir = getApplyDirFile();
     let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
     do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
+  }
+
+  if (IS_MACOSX) {
+    logTestInfo("testing that the distribution directory is removed from the " +
+                "old location when there is a distribution directory in the " +
+                "new location");
+    let distributionDir = getApplyDirFile(DIR_MACOS + "distribution", true);
+    logTestInfo("testing " + distributionDir.path + " shouldn't exist");
+    do_check_false(distributionDir.exists());
+
+    checkUpdateLogContains("removing old distribution directory");
   }
 
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
