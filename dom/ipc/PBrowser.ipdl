@@ -12,9 +12,9 @@ include protocol PContentBridge;
 include protocol PDocumentRenderer;
 include protocol PContentPermissionRequest;
 include protocol PFilePicker;
+include protocol PIndexedDBPermissionRequest;
 include protocol PRenderFrame;
 include protocol POfflineCacheUpdate;
-include protocol PIndexedDB;
 include DOMTypes;
 include JavaScriptTypes;
 include URIParams;
@@ -78,9 +78,9 @@ intr protocol PBrowser
     manages PDocumentRenderer;
     manages PContentPermissionRequest;
     manages PFilePicker;
+    manages PIndexedDBPermissionRequest;
     manages PRenderFrame;
     manages POfflineCacheUpdate;
-    manages PIndexedDB;
 
 both:
     AsyncMessage(nsString aMessage, ClonedMessageData aData, CpowEntry[] aCpows,
@@ -295,6 +295,19 @@ parent:
     PFilePicker(nsString aTitle, int16_t aMode);
 
     /**
+     * Initiates an asynchronous request for one of the special indexedDB
+     * permissions for the provided principal.
+     *
+     * @param principal
+     *   The principal of the request.
+     *
+     * NOTE: The principal is untrusted in the parent process. Only
+     *       principals that can live in the content process should
+     *       provided.
+     */
+    PIndexedDBPermissionRequest(Principal principal);
+
+    /**
      * Create a layout frame (encapsulating a remote layer tree) for
      * the page that is currently loaded in the <browser>.
      */
@@ -334,9 +347,6 @@ parent:
      * offline-apps.allow_by_default is set to true.
      */
     SetOfflinePermission(Principal principal);
-
-    sync PIndexedDB(nsCString group, nsCString asciiOrigin)
-        returns (bool allowed);
 
     /**
      * window.open from inside <iframe mozbrowser> is special.  When the child

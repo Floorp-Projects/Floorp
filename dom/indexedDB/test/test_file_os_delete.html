@@ -83,6 +83,13 @@
     scheduleGC();
     yield undefined;
 
+    // This isn't really necessary but in order to ensure that our files have
+    // been deleted we need to round-trip with the PBackground thread...
+    let request = indexedDB.deleteDatabase(name + "this can't exist");
+    request.onerror = errorHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    yield undefined;
+
     getUsage(grabFileUsageAndContinueHandler);
     let endUsage = yield undefined;
 

@@ -1204,7 +1204,7 @@ nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
 // ----------------------------------------------------------------------
 
 /* static */ nscolor
-nsSVGUtils::GetFallbackOrPaintColor(gfxContext *aContext, nsStyleContext *aStyleContext,
+nsSVGUtils::GetFallbackOrPaintColor(nsStyleContext *aStyleContext,
                                     nsStyleSVGPaint nsStyleSVG::*aFillOrStroke)
 {
   const nsStyleSVGPaint &paint = aStyleContext->StyleSVG()->*aFillOrStroke;
@@ -1238,8 +1238,8 @@ SetupFallbackOrPaintColor(gfxContext *aContext, nsStyleContext *aStyleContext,
                           nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                           float aOpacity)
 {
-  nscolor color = nsSVGUtils::GetFallbackOrPaintColor(
-    aContext, aStyleContext, aFillOrStroke);
+  nscolor color =
+    nsSVGUtils::GetFallbackOrPaintColor(aStyleContext, aFillOrStroke);
 
   aContext->SetColor(gfxRGBA(NS_GET_R(color)/255.0,
                              NS_GET_G(color)/255.0,

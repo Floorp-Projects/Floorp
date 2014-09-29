@@ -1,0 +1,118 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+  <head>
+    <title>Indexed Database Property Test</title>
+
+    <script type="text/javascript"
+            src="/tests/SimpleTest/SimpleTest.js">
+    </script>
+
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+    <script type="text/javascript;version=1.7">
+      function addDataTo(objectStore)
+      {
+        const dataSize = 51200;
+
+        let buffer = new ArrayBuffer(dataSize);
+        for (let view = new Uint8Array(buffer), i = 0; i < dataSize; i++) {
+          view[i] = parseInt(Math.random() * 255)
+        }
+
+        let request = objectStore.put(buffer);
+        request.onerror = function(event) {
+          is(request.error.name,
+             "QuotaExceededError",
+             "correct error set on request");
+          SimpleTest.expectUncaughtException(true);
+          event.stopPropagation();
+        };
+        request.onsuccess = function() {
+          is(request.error, null, "no error yet, adding another value");
+          addDataTo(objectStore);
+        };
+      }
+
+      function testSteps()
+      {
+        const databaseName = window.location.pathname;
+        const databaseVersion = 1;
+        const objectStoreName = "foo";
+
+        info("setting quota pref");
+
+        SpecialPowers.pushPrefEnv({ set: [["dom.indexedDB.warningQuota", 2]] },
+                                  continueToNextStep);
+        yield undefined;
+
+        info("opening database");
+
+        let request = indexedDB.open(databaseName, databaseVersion);
+        request.onerror = errorHandler;
+        request.onupgradeneeded = grabEventAndContinueHandler;
+        request.onsuccess = unexpectedSuccessHandler;
+        let event = yield undefined;
+
+        info("creating object store");
+
+        let db = event.target.result;
+        db.onerror = errorHandler;
+        db.onversionchange = function(event) {
+          is(event.oldVersion, databaseVersion, "got correct oldVersion");
+          is(event.newVersion, null, "got correct newVersion");
+          db.close();
+        };
+
+        let objectStore = db.createObjectStore(objectStoreName,
+                                               { autoIncrement: true });
+
+        request.onupgradeneeded = unexpectedSuccessHandler;
+        request.onsuccess = grabEventAndContinueHandler;
+        event = yield undefined;
+
+        info("making transaction");
+
+        let transaction = db.transaction(objectStoreName, "readwrite");
+        transaction.onabort = grabEventAndContinueHandler;
+        transaction.oncomplete = unexpectedSuccessHandler;
+
+        addDataTo(transaction.objectStore(objectStoreName));
+
+        info("adding until quota limit is reached");
+
+        event = yield undefined;
+
+        SimpleTest.expectUncaughtException(false);
+
+        is(transaction.error.name,
+           "QuotaExceededError",
+           "correct error set on transaction");
+
+        info("deleting database");
+
+        request = indexedDB.deleteDatabase(databaseName);
+        request.onerror = errorHandler;
+        request.onsuccess = grabEventAndContinueHandler;
+
+        event = yield undefined;
+
+        info("resetting quota pref");
+
+        SpecialPowers.popPrefEnv(continueToNextStep);
+        yield undefined;
+
+        finishTest();
+        yield undefined;
+      }
+    </script>
+
+    <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+  </head>
+
+  <body onload="runTest(true);"></body>
+
+</html>

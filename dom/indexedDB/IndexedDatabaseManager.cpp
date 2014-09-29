@@ -16,12 +16,16 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CondVar.h"
 #include "mozilla/ContentEvents.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ErrorEventBinding.h"
+#include "mozilla/dom/PBlobChild.h"
 #include "mozilla/dom/quota/OriginOrPatternString.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/Utilities.h"
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/storage.h"
@@ -53,12 +57,11 @@
 #define LOW_DISK_SPACE_DATA_FULL "full"
 #define LOW_DISK_SPACE_DATA_FREE "free"
 
-USING_INDEXEDDB_NAMESPACE
-using namespace mozilla;
-using namespace mozilla::dom;
-USING_QUOTA_NAMESPACE
+namespace mozilla {
+namespace dom {
+namespace indexedDB {
 
-BEGIN_INDEXEDDB_NAMESPACE
+using namespace mozilla::dom::quota;
 
 class FileManagerInfo
 {
@@ -103,14 +106,15 @@ private:
   nsTArray<nsRefPtr<FileManager> > mTemporaryStorageFileManagers;
 };
 
-END_INDEXEDDB_NAMESPACE
-
 namespace {
+
+const char kTestingPref[] = "dom.indexedDB.testing";
 
 mozilla::StaticRefPtr<IndexedDatabaseManager> gDBManager;
 
 mozilla::Atomic<bool> gInitialized(false);
 mozilla::Atomic<bool> gClosed(false);
+mozilla::Atomic<bool> gTestingMode(false);
 
 class AsyncDeleteFileRunnable MOZ_FINAL : public nsIRunnable
 {
@@ -182,6 +186,16 @@ struct MOZ_STACK_CLASS InvalidateInfo
   PersistenceType persistenceType;
   const nsACString& pattern;
 };
+
+void
+TestingPrefChangedCallback(const char* aPrefName, void* aClosure)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!strcmp(aPrefName, kTestingPref));
+  MOZ_ASSERT(!aClosure);
+
+  gTestingMode = Preferences::GetBool(aPrefName);
+}
 
 } // anonymous namespace
 
@@ -281,6 +295,9 @@ IndexedDatabaseManager::Init()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  Preferences::RegisterCallbackAndCall(TestingPrefChangedCallback,
+                                       kTestingPref);
+
   return NS_OK;
 }
 
@@ -292,6 +309,8 @@ IndexedDatabaseManager::Destroy()
   if (gInitialized && gClosed.exchange(true)) {
     NS_ERROR("Shutdown more than once?!");
   }
+
+  Preferences::UnregisterCallback(TestingPrefChangedCallback, kTestingPref);
 
   delete this;
 }
@@ -314,7 +333,7 @@ IndexedDatabaseManager::FireWindowOnError(nsPIDOMWindow* aOwner,
   nsresult rv = aVisitor.mDOMEvent->GetType(type);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!type.EqualsLiteral(ERROR_EVT_STR)) {
+  if (nsDependentString(kErrorEventType) != type) {
     return NS_OK;
   }
 
@@ -425,8 +444,9 @@ IndexedDatabaseManager::DefineIndexedDB(JSContext* aCx,
   }
 
   nsRefPtr<IDBFactory> factory;
-  if (NS_FAILED(IDBFactory::Create(aCx, aGlobal, nullptr,
-                                   getter_AddRefs(factory)))) {
+  if (NS_FAILED(IDBFactory::CreateForChromeJS(aCx,
+                                              aGlobal,
+                                              getter_AddRefs(factory)))) {
     return false;
   }
 
@@ -470,6 +490,16 @@ IndexedDatabaseManager::InLowDiskSpaceMode()
   return sLowDiskSpaceMode;
 }
 #endif
+
+// static
+bool
+IndexedDatabaseManager::InTestingMode()
+{
+  MOZ_ASSERT(gDBManager,
+             "InTestingMode() called before indexedDB has been initialized!");
+
+  return gTestingMode;
+}
 
 already_AddRefed<FileManager>
 IndexedDatabaseManager::GetFileManager(PersistenceType aPersistenceType,
@@ -626,13 +656,38 @@ IndexedDatabaseManager::BlockAndGetFileReferences(
                                                int32_t* aSliceRefCnt,
                                                bool* aResult)
 {
-  nsRefPtr<GetFileReferencesHelper> helper =
-    new GetFileReferencesHelper(aPersistenceType, aOrigin, aDatabaseName,
-                                aFileId);
+  if (NS_WARN_IF(!InTestingMode())) {
+    return NS_ERROR_UNEXPECTED;
+  }
 
-  nsresult rv = helper->DispatchAndReturnFileReferences(aRefCnt, aDBRefCnt,
-                                                        aSliceRefCnt, aResult);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (IsMainProcess()) {
+    nsRefPtr<GetFileReferencesHelper> helper =
+      new GetFileReferencesHelper(aPersistenceType, aOrigin, aDatabaseName,
+                                  aFileId);
+
+    nsresult rv =
+      helper->DispatchAndReturnFileReferences(aRefCnt, aDBRefCnt,
+                                              aSliceRefCnt, aResult);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  } else {
+    ContentChild* contentChild = ContentChild::GetSingleton();
+    if (NS_WARN_IF(!contentChild)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (!contentChild->SendGetFileReferences(aPersistenceType,
+                                             nsCString(aOrigin),
+                                             nsString(aDatabaseName),
+                                             aFileId,
+                                             aRefCnt,
+                                             aDBRefCnt,
+                                             aSliceRefCnt,
+                                             aResult)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
 
   return NS_OK;
 }
@@ -886,3 +941,7 @@ GetFileReferencesHelper::Run()
 
   return NS_OK;
 }
+
+} // namespace indexedDB
+} // namespace dom
+} // namespace mozilla
