@@ -5,6 +5,7 @@
 
 #include "CanvasRenderingContext2D.h"
 
+#include "mozilla/gfx/Helpers.h"
 #include "nsXULElement.h"
 
 #include "nsIServiceManager.h"
@@ -3982,6 +3983,10 @@ CanvasRenderingContext2D::DrawDirectlyToCanvas(
   nsIntSize scaledImageSize(std::ceil(imgSize.width * scale.width),
                             std::ceil(imgSize.height * scale.height));
   src.Scale(scale.width, scale.height);
+
+  // We're wrapping tempTarget's (our) DrawTarget here, so we need to restore
+  // the matrix even though this is a temp gfxContext.
+  AutoSaveTransform autoSR(mTarget);
 
   nsRefPtr<gfxContext> context = new gfxContext(tempTarget);
   context->SetMatrix(contextMatrix.
