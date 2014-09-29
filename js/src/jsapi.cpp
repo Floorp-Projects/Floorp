@@ -6504,10 +6504,9 @@ JS_EncodeInterpretedFunction(JSContext *cx, HandleObject funobjArg, uint32_t *le
 }
 
 JS_PUBLIC_API(JSScript *)
-JS_DecodeScript(JSContext *cx, const void *data, uint32_t length,
-                JSPrincipals *originPrincipals)
+JS_DecodeScript(JSContext *cx, const void *data, uint32_t length)
 {
-    XDRDecoder decoder(cx, data, length, originPrincipals);
+    XDRDecoder decoder(cx, data, length);
     RootedScript script(cx);
     if (!decoder.codeScript(&script))
         return nullptr;
@@ -6515,10 +6514,9 @@ JS_DecodeScript(JSContext *cx, const void *data, uint32_t length,
 }
 
 JS_PUBLIC_API(JSObject *)
-JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length,
-                             JSPrincipals *originPrincipals)
+JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length)
 {
-    XDRDecoder decoder(cx, data, length, originPrincipals);
+    XDRDecoder decoder(cx, data, length);
     RootedObject funobj(cx);
     if (!decoder.codeFunction(&funobj))
         return nullptr;

@@ -5064,11 +5064,10 @@ extern JS_PUBLIC_API(void *)
 JS_EncodeInterpretedFunction(JSContext *cx, JS::HandleObject funobj, uint32_t *lengthp);
 
 extern JS_PUBLIC_API(JSScript *)
-JS_DecodeScript(JSContext *cx, const void *data, uint32_t length, JSPrincipals *originPrincipals);
+JS_DecodeScript(JSContext *cx, const void *data, uint32_t length);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length,
-                             JSPrincipals *originPrincipals);
+JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length);
 
 namespace JS {
 
