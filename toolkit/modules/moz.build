@@ -20,7 +20,6 @@ EXTRA_JS_MODULES += [
     'DeferredTask.jsm',
     'Deprecated.jsm',
     'Dict.jsm',
-    'DirectoryLinksProvider.jsm',
     'FileUtils.jsm',
     'Finder.jsm',
     'Geometry.jsm',
