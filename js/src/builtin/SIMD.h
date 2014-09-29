@@ -113,6 +113,39 @@
   INT32X4_TERNARY_FUNCTION_LIST(V)                                                  \
   INT32X4_QUARTERNARY_FUNCTION_LIST(V)
 
+#define FOREACH_INT32X4_SIMD_OP(_)   \
+    _(fromFloat32x4)                 \
+    _(fromFloat32x4Bits)
+#define FOREACH_FLOAT32X4_SIMD_OP(_) \
+    _(fromInt32x4)                   \
+    _(fromInt32x4Bits)               \
+    _(mul)                           \
+    _(div)                           \
+    _(max)                           \
+    _(min)                           \
+    _(lessThanOrEqual)               \
+    _(notEqual)                      \
+    _(greaterThanOrEqual)
+#define FOREACH_COMMONX4_SIMD_OP(_)  \
+    _(add)                           \
+    _(sub)                           \
+    _(lessThan)                      \
+    _(equal)                         \
+    _(greaterThan)                   \
+    _(and)                           \
+    _(or)                            \
+    _(xor)                           \
+    _(select)                        \
+    _(splat)                         \
+    _(withX)                         \
+    _(withY)                         \
+    _(withZ)                         \
+    _(withW)
+#define FORALL_SIMD_OP(_)            \
+    FOREACH_INT32X4_SIMD_OP(_)       \
+    FOREACH_FLOAT32X4_SIMD_OP(_)     \
+    FOREACH_COMMONX4_SIMD_OP(_)
+
 namespace js {
 
 class SIMDObject : public JSObject

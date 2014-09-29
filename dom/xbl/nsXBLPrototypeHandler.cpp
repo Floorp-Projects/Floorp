@@ -272,9 +272,10 @@ nsXBLPrototypeHandler::ExecuteHandler(EventTarget* aTarget,
   // Initiatize an AutoJSAPI with aTarget's bound global to make sure any errors
   // are reported to the correct place.
   AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReporting(boundGlobal))) {
+  if (NS_WARN_IF(!jsapi.Init(boundGlobal))) {
     return NS_OK;
   }
+  jsapi.TakeOwnershipOfErrorReporting();
   JSContext* cx = jsapi.cx();
   JS::Rooted<JSObject*> handler(cx);
 
@@ -378,7 +379,7 @@ nsXBLPrototypeHandler::EnsureEventHandler(AutoJSAPI& jsapi, nsIAtom* aName,
          .setVersion(JSVERSION_LATEST);
 
   JS::Rooted<JSObject*> handlerFun(cx);
-  nsresult rv = nsJSUtils::CompileFunction(cx, JS::NullPtr(), options,
+  nsresult rv = nsJSUtils::CompileFunction(jsapi, JS::NullPtr(), options,
                                            nsAtomCString(aName), argCount,
                                            argNames, handlerText,
                                            handlerFun.address());

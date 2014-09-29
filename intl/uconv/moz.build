@@ -50,10 +50,7 @@ UNIFIED_SOURCES += [
 UNIFIED_SOURCES += [
     'ucvcn/nsGBKConvUtil.cpp',
     'ucvcn/nsGBKToUnicode.cpp',
-    'ucvcn/nsHZToUnicode.cpp',
-    'ucvcn/nsUnicodeToGB2312V2.cpp',
     'ucvcn/nsUnicodeToGBK.cpp',
-    'ucvcn/nsUnicodeToHZ.cpp',
 ]
 
 UNIFIED_SOURCES += [

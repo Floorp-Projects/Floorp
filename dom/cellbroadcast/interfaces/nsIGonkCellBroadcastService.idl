@@ -1,0 +1,31 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsICellBroadcastService.idl"
+
+%{C++
+#define GONK_CELLBROADCAST_SERVICE_CONTRACTID \
+        "@mozilla.org/cellbroadcast/gonkservice;1"
+%}
+
+[scriptable, uuid(7cac92aa-42f8-11e4-96f3-7f490e355277)]
+interface nsIGonkCellBroadcastService : nsICellBroadcastService
+{
+  /**
+   * Called when a cellbroadcast message has been received by the network.
+   */
+  void notifyMessageReceived(in unsigned long aServiceId,
+                             in unsigned long aGsmGeographicalScope,
+                             in unsigned short aMessageCode,
+                             in unsigned short aMessageId,
+                             in DOMString aLanguage,
+                             in DOMString aBody,
+                             in unsigned long aMessageClass,
+                             in DOMTimeStamp aTimestamp,
+                             in unsigned long aCdmaServiceCategory,
+                             in boolean aHasEtwsInfo,
+                             in unsigned long aEtwsWarningType,
+                             in boolean aEtwsEmergencyUserAlert,
+                             in boolean aEtwsPopup);
+};

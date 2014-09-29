@@ -5,7 +5,6 @@ unit/test_big5.js
 unit/test_euc-jp.js
 unit/test_euc-kr.js
 unit/test_gbk.js
-unit/test_hz-gb-2312.js
 unit/test_iso-2022-jp.js
 unit/test_iso-2022-kr.js
 unit/test_shift_jis.js

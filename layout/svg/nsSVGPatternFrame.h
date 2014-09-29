@@ -46,6 +46,7 @@ public:
   // nsSVGPaintServerFrame methods:
   virtual already_AddRefed<gfxPattern>
     GetPaintServerPattern(nsIFrame *aSource,
+                          const DrawTarget* aDrawTarget,
                           const gfxMatrix& aContextMatrix,
                           nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                           float aOpacity,
@@ -112,7 +113,8 @@ protected:
   }
 
   mozilla::TemporaryRef<SourceSurface>
-  PaintPattern(Matrix *patternMatrix,
+  PaintPattern(const DrawTarget* aDrawTarget,
+               Matrix *patternMatrix,
                const Matrix &aContextMatrix,
                nsIFrame *aSource,
                nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,

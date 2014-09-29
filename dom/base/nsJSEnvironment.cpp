@@ -351,28 +351,23 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
 class ScriptErrorEvent : public nsRunnable
 {
 public:
-  ScriptErrorEvent(JSRuntime* aRuntime,
+  ScriptErrorEvent(nsPIDOMWindow* aWindow,
+                   JSRuntime* aRuntime,
                    xpc::ErrorReport* aReport,
-                   nsIPrincipal* aScriptOriginPrincipal,
-                   JS::Handle<JS::Value> aError,
-                   bool aDispatchEvent)
-    : mReport(aReport)
-    , mOriginPrincipal(aScriptOriginPrincipal)
-    , mDispatchEvent(aDispatchEvent)
+                   JS::Handle<JS::Value> aError)
+    : mWindow(aWindow)
+    , mReport(aReport)
     , mError(aRuntime, aError)
   {}
 
   NS_IMETHOD Run()
   {
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsPIDOMWindow* win = mReport->mWindow;
+    nsPIDOMWindow* win = mWindow;
     MOZ_ASSERT(win);
     // First, notify the DOM that we have a script error, but only if
     // our window is still the current inner.
-    if (mDispatchEvent && win->IsCurrentInnerWindow() &&
-        win->GetDocShell() && !JSREPORT_IS_WARNING(mReport->mFlags) &&
-        !sHandlingScriptError)
-    {
+    if (win->IsCurrentInnerWindow() && win->GetDocShell() && !sHandlingScriptError) {
       AutoRestore<bool> recursionGuard(sHandlingScriptError);
       sHandlingScriptError = true;
 
@@ -385,21 +380,8 @@ public:
       init.mFilename = mReport->mFileName;
       init.mBubbles = true;
 
-      nsCOMPtr<nsIScriptObjectPrincipal> sop(do_QueryInterface(win));
-      NS_ENSURE_STATE(sop);
-      nsIPrincipal* p = sop->GetPrincipal();
-      NS_ENSURE_STATE(p);
-
-      bool sameOrigin = !mOriginPrincipal;
-
-      if (p && !sameOrigin) {
-        if (NS_FAILED(p->Subsumes(mOriginPrincipal, &sameOrigin))) {
-          sameOrigin = false;
-        }
-      }
-
       NS_NAMED_LITERAL_STRING(xoriginMsg, "Script error.");
-      if (sameOrigin) {
+      if (!mReport->mIsMuted) {
         init.mMessage = mReport->mErrorMsg;
         init.mLineno = mReport->mLineNumber;
         init.mColno = mReport->mColumn;
@@ -427,9 +409,8 @@ public:
   }
 
 private:
+  nsCOMPtr<nsPIDOMWindow>         mWindow;
   nsRefPtr<xpc::ErrorReport>      mReport;
-  nsCOMPtr<nsIPrincipal>          mOriginPrincipal;
-  bool                            mDispatchEvent;
   JS::PersistentRootedValue       mError;
 
   static bool sHandlingScriptError;
@@ -489,31 +470,31 @@ SystemErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 
   if (globalObject) {
     nsRefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
-    xpcReport->Init(report, message, globalObject);
+    bool isChrome = nsContentUtils::IsSystemPrincipal(globalObject->PrincipalOrNull());
+    nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(globalObject);
+    xpcReport->Init(report, message, isChrome, win ? win->WindowID() : 0);
 
-    // If there's no window to fire an event at, report it to the console
-    // directly.
-    if (!xpcReport->mWindow) {
+    // If we can't dispatch an event to a window, report it to the console
+    // directly. This includes the case where the error was an OOM, because
+    // triggering a scripted event handler is likely to generate further OOMs.
+    if (!win || JSREPORT_IS_WARNING(xpcReport->mFlags) ||
+        report->errorNumber == JSMSG_OUT_OF_MEMORY)
+    {
       xpcReport->LogToConsole();
       return;
     }
 
     // Otherwise, we need to asynchronously invoke onerror before we can decide
     // whether or not to report the error to the console.
-    nsContentUtils::AddScriptRunner(
-      new ScriptErrorEvent(JS_GetRuntime(cx),
-                           xpcReport,
-                           nsJSPrincipals::get(report->originPrincipals),
-                           exception,
-                           /* We do not try to report Out Of Memory via a dom
-                            * event because the dom event handler would
-                            * encounter an OOM exception trying to process the
-                            * event, and then we'd need to generate a new OOM
-                            * event for that new OOM instance -- this isn't
-                            * pretty.
-                            */
-                           report->errorNumber != JSMSG_OUT_OF_MEMORY));
+    DispatchScriptErrorEvent(win, JS_GetRuntime(cx), xpcReport, exception);
   }
+}
+
+void
+DispatchScriptErrorEvent(nsPIDOMWindow *win, JSRuntime *rt, xpc::ErrorReport *xpcReport,
+                         JS::Handle<JS::Value> exception)
+{
+  nsContentUtils::AddScriptRunner(new ScriptErrorEvent(win, rt, xpcReport, exception));
 }
 
 } /* namespace xpc */

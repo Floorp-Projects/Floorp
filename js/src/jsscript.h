@@ -437,7 +437,7 @@ class ScriptSource
 
     mozilla::UniquePtr<char16_t[], JS::FreePolicy> displayURL_;
     mozilla::UniquePtr<char16_t[], JS::FreePolicy> sourceMapURL_;
-    JSPrincipals *originPrincipals_;
+    bool mutedErrors_;
 
     // bytecode offset in caller script that generated this code.
     // This is present for eval-ed code, as well as "new Function(...)"-introduced
@@ -487,7 +487,7 @@ class ScriptSource
         filename_(nullptr),
         displayURL_(nullptr),
         sourceMapURL_(nullptr),
-        originPrincipals_(nullptr),
+        mutedErrors_(false),
         introductionOffset_(0),
         introducerFilename_(nullptr),
         introductionType_(nullptr),
@@ -597,7 +597,7 @@ class ScriptSource
         return sourceMapURL_.get();
     }
 
-    JSPrincipals *originPrincipals() const { return originPrincipals_; }
+    bool mutedErrors() const { return mutedErrors_; }
 
     bool hasIntroductionOffset() const { return hasIntroductionOffset_; }
     uint32_t introductionOffset() const {
@@ -1410,7 +1410,7 @@ class JSScript : public js::gc::TenuredCell
     }
     js::ScriptSourceObject &scriptSourceUnwrap() const;
     js::ScriptSource *scriptSource() const;
-    JSPrincipals *originPrincipals() const { return scriptSource()->originPrincipals(); }
+    bool mutedErrors() const { return scriptSource()->mutedErrors(); }
     const char *filename() const { return scriptSource()->filename(); }
 
   public:
@@ -1852,8 +1852,8 @@ class LazyScript : public gc::TenuredCell
     ScriptSource *scriptSource() const {
         return sourceObject()->source();
     }
-    JSPrincipals *originPrincipals() const {
-        return scriptSource()->originPrincipals();
+    bool mutedErrors() const {
+        return scriptSource()->mutedErrors();
     }
     JSVersion version() const {
         JS_STATIC_ASSERT(JSVERSION_UNKNOWN == -1);
@@ -2091,25 +2091,12 @@ enum LineOption {
 extern void
 DescribeScriptedCallerForCompilation(JSContext *cx, MutableHandleScript maybeScript,
                                      const char **file, unsigned *linenop,
-                                     uint32_t *pcOffset, JSPrincipals **origin,
+                                     uint32_t *pcOffset, bool *mutedErrors,
                                      LineOption opt = NOT_CALLED_FROM_JSOP_EVAL);
 
 bool
 CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction clone,
                     NewObjectKind newKind = GenericObject);
-
-/*
- * JSAPI clients are allowed to leave CompileOptions.originPrincipals nullptr in
- * which case the JS engine sets options.originPrincipals = origin.principals.
- * This normalization step must occur before the originPrincipals get stored in
- * the JSScript/ScriptSource.
- */
-
-static inline JSPrincipals *
-NormalizeOriginPrincipals(JSPrincipals *principals, JSPrincipals *originPrincipals)
-{
-    return originPrincipals ? originPrincipals : principals;
-}
 
 } /* namespace js */
 

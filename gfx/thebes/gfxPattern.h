@@ -11,6 +11,7 @@
 #include "gfxMatrix.h"
 #include "mozilla/Alignment.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/PatternHelpers.h"
 #include "GraphicsFilter.h"
 #include "nsISupportsImpl.h"
 #include "nsAutoPtr.h"
@@ -40,7 +41,7 @@ public:
     // This should only be called on a cairo pattern that we want to use with
     // Azure. We will read back the color stops from cairo and try to look
     // them up in the cache.
-    void CacheColorStops(mozilla::gfx::DrawTarget *aDT);
+    void CacheColorStops(const mozilla::gfx::DrawTarget *aDT);
 
     void SetMatrix(const gfxMatrix& matrix);
     gfxMatrix GetMatrix() const;
@@ -51,7 +52,7 @@ public:
      * was set. When this is nullptr it is assumed the transform is identical
      * to the current transform.
      */
-    mozilla::gfx::Pattern *GetPattern(mozilla::gfx::DrawTarget *aTarget,
+    mozilla::gfx::Pattern *GetPattern(const mozilla::gfx::DrawTarget *aTarget,
                                       mozilla::gfx::Matrix *aOriginalUserToDevice = nullptr);
     bool IsOpaque();
 
@@ -95,17 +96,9 @@ public:
 
 private:
     // Private destructor, to discourage deletion outside of Release():
-    ~gfxPattern();
+    ~gfxPattern() {}
 
-    union {
-      mozilla::AlignedStorage2<mozilla::gfx::ColorPattern> mColorPattern;
-      mozilla::AlignedStorage2<mozilla::gfx::LinearGradientPattern> mLinearGradientPattern;
-      mozilla::AlignedStorage2<mozilla::gfx::RadialGradientPattern> mRadialGradientPattern;
-      mozilla::AlignedStorage2<mozilla::gfx::SurfacePattern> mSurfacePattern;
-    };
-
-    mozilla::gfx::Pattern *mGfxPattern;
-
+    mozilla::gfx::GeneralPattern mGfxPattern;
     mozilla::RefPtr<mozilla::gfx::SourceSurface> mSourceSurface;
     mozilla::gfx::Matrix mPatternToUserSpace;
     mozilla::RefPtr<mozilla::gfx::GradientStops> mStops;

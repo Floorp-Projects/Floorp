@@ -6,6 +6,7 @@
 #define GFX_SVG_GLYPHS_WRAPPER_H
 
 #include "gfxFontUtils.h"
+#include "mozilla/gfx/2D.h"
 #include "nsString.h"
 #include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
@@ -166,6 +167,8 @@ private:
 class gfxTextContextPaint
 {
 protected:
+    typedef mozilla::gfx::DrawTarget DrawTarget;
+
     gfxTextContextPaint() { }
 
 public:
@@ -176,9 +179,11 @@ public:
      * This lets us inherit paints and paint opacities (i.e. fill/stroke and
      * fill-opacity/stroke-opacity) separately.
      */
-    virtual already_AddRefed<gfxPattern> GetFillPattern(float aOpacity,
+    virtual already_AddRefed<gfxPattern> GetFillPattern(const DrawTarget* aDrawTarget,
+                                                        float aOpacity,
                                                         const gfxMatrix& aCTM) = 0;
-    virtual already_AddRefed<gfxPattern> GetStrokePattern(float aOpacity,
+    virtual already_AddRefed<gfxPattern> GetStrokePattern(const DrawTarget* aDrawTarget,
+                                                          float aOpacity,
                                                           const gfxMatrix& aCTM) = 0;
 
     virtual float GetFillOpacity() { return 1.0f; }
@@ -199,12 +204,14 @@ public:
         return mStrokeWidth;
     }
 
-    already_AddRefed<gfxPattern> GetFillPattern(const gfxMatrix& aCTM) {
-        return GetFillPattern(GetFillOpacity(), aCTM);
+    already_AddRefed<gfxPattern> GetFillPattern(const DrawTarget* aDrawTarget,
+                                                const gfxMatrix& aCTM) {
+        return GetFillPattern(aDrawTarget, GetFillOpacity(), aCTM);
     }
 
-    already_AddRefed<gfxPattern> GetStrokePattern(const gfxMatrix& aCTM) {
-        return GetStrokePattern(GetStrokeOpacity(), aCTM);
+    already_AddRefed<gfxPattern> GetStrokePattern(const DrawTarget* aDrawTarget,
+                                                  const gfxMatrix& aCTM) {
+        return GetStrokePattern(aDrawTarget, GetStrokeOpacity(), aCTM);
     }
 
     virtual ~gfxTextContextPaint() { }
@@ -247,7 +254,8 @@ public:
         mStrokeMatrix = SetupDeviceToPatternMatrix(aStrokePattern, aCTM);
     }
 
-    already_AddRefed<gfxPattern> GetFillPattern(float aOpacity,
+    already_AddRefed<gfxPattern> GetFillPattern(const DrawTarget* aDrawTarget,
+                                                float aOpacity,
                                                 const gfxMatrix& aCTM) {
         if (mFillPattern) {
             mFillPattern->SetMatrix(aCTM * mFillMatrix);
@@ -256,7 +264,8 @@ public:
         return fillPattern.forget();
     }
 
-    already_AddRefed<gfxPattern> GetStrokePattern(float aOpacity,
+    already_AddRefed<gfxPattern> GetStrokePattern(const DrawTarget* aDrawTarget,
+                                                  float aOpacity,
                                                   const gfxMatrix& aCTM) {
         if (mStrokePattern) {
             mStrokePattern->SetMatrix(aCTM * mStrokeMatrix);

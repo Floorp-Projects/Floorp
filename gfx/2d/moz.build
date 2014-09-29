@@ -27,6 +27,7 @@ EXPORTS.mozilla.gfx += [
     'Logging.h',
     'Matrix.h',
     'PathHelpers.h',
+    'PatternHelpers.h',
     'Point.h',
     'Rect.h',
     'Scale.h',

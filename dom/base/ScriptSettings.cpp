@@ -234,7 +234,51 @@ FindJSContext(nsIGlobalObject* aGlobalObject)
 
 AutoJSAPI::AutoJSAPI()
   : mCx(nullptr)
+  , mOwnErrorReporting(false)
+  , mOldDontReportUncaught(false)
 {
+}
+
+AutoJSAPI::~AutoJSAPI()
+{
+  if (mOwnErrorReporting) {
+    MOZ_ASSERT(NS_IsMainThread(), "See corresponding assertion in TakeOwnershipOfErrorReporting()");
+    JS::ContextOptionsRef(cx()).setDontReportUncaught(mOldDontReportUncaught);
+
+    if (HasException()) {
+
+      // AutoJSAPI uses a JSAutoNullableCompartment, and may be in a null
+      // compartment when the destructor is called. However, the JS engine
+      // requires us to be in a compartment when we fetch the pending exception.
+      // In this case, we enter the privileged junk scope and don't dispatch any
+      // error events.
+      JS::Rooted<JSObject*> errorGlobal(cx(), JS::CurrentGlobalOrNull(cx()));
+      if (!errorGlobal)
+        errorGlobal = xpc::PrivilegedJunkScope();
+      JSAutoCompartment ac(cx(), errorGlobal);
+      nsCOMPtr<nsPIDOMWindow> win = xpc::WindowGlobalOrNull(errorGlobal);
+      const char *category = nsContentUtils::IsCallerChrome() ? "chrome javascript"
+                                                              : "content javascript";
+      JS::Rooted<JS::Value> exn(cx());
+      js::ErrorReport jsReport(cx());
+      if (StealException(&exn) && jsReport.init(cx(), exn)) {
+        nsRefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
+        xpcReport->Init(jsReport.report(), jsReport.message(), category,
+                        win ? win->WindowID() : 0);
+        if (win) {
+          DispatchScriptErrorEvent(win, JS_GetRuntime(cx()), xpcReport, exn);
+        } else {
+          xpcReport->LogToConsole();
+        }
+      } else {
+        NS_WARNING("OOMed while acquiring uncaught exception from JSAPI");
+      }
+    }
+  }
+
+  if (mOldErrorReporter.isSome()) {
+    JS_SetErrorReporter(JS_GetRuntime(cx()), mOldErrorReporter.value());
+  }
 }
 
 void
@@ -253,11 +297,19 @@ AutoJSAPI::InitInternal(JSObject* aGlobal, JSContext* aCx, bool aIsMainThread)
   } else {
     mAutoNullableCompartment.emplace(mCx, aGlobal);
   }
+
+  if (aIsMainThread) {
+    JSRuntime* rt = JS_GetRuntime(aCx);
+    mOldErrorReporter.emplace(JS_GetErrorReporter(rt));
+    JS_SetErrorReporter(rt, xpc::SystemErrorReporter);
+  }
 }
 
 AutoJSAPI::AutoJSAPI(nsIGlobalObject* aGlobalObject,
                      bool aIsMainThread,
                      JSContext* aCx)
+  : mOwnErrorReporting(false)
+  , mOldDontReportUncaught(false)
 {
   MOZ_ASSERT(aGlobalObject);
   MOZ_ASSERT(aGlobalObject->GetGlobalJSObject(), "Must have a JS global");
@@ -350,6 +402,49 @@ bool
 AutoJSAPI::InitWithLegacyErrorReporting(nsGlobalWindow* aWindow)
 {
   return InitWithLegacyErrorReporting(static_cast<nsIGlobalObject*>(aWindow));
+}
+
+// Even with dontReportUncaught, the JS engine still sends warning reports
+// to the JSErrorReporter as soon as they are generated. These go directly to
+// the console, so we can handle them easily here.
+//
+// Eventually, SpiderMonkey will have a special-purpose callback for warnings only.
+void
+WarningOnlyErrorReporter(JSContext* aCx, const char* aMessage, JSErrorReport* aRep)
+{
+  MOZ_ASSERT(JSREPORT_IS_WARNING(aRep->flags));
+  nsRefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
+  const char* category = nsContentUtils::IsCallerChrome() ? "chrome javascript"
+                                                          : "content javascript";
+  nsPIDOMWindow* win = xpc::WindowGlobalOrNull(JS::CurrentGlobalOrNull(aCx));
+  xpcReport->Init(aRep, aMessage, category, win ? win->WindowID() : 0);
+  xpcReport->LogToConsole();
+}
+
+void
+AutoJSAPI::TakeOwnershipOfErrorReporting()
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Can't own error reporting off-main-thread yet");
+  MOZ_ASSERT(!mOwnErrorReporting);
+  mOwnErrorReporting = true;
+
+  JSRuntime *rt = JS_GetRuntime(cx());
+  mOldDontReportUncaught = JS::ContextOptionsRef(cx()).dontReportUncaught();
+  JS::ContextOptionsRef(cx()).setDontReportUncaught(true);
+  JS_SetErrorReporter(rt, WarningOnlyErrorReporter);
+}
+
+bool
+AutoJSAPI::StealException(JS::MutableHandle<JS::Value> aVal)
+{
+    MOZ_ASSERT(CxPusherIsStackTop());
+    MOZ_ASSERT(HasException());
+    MOZ_ASSERT(js::GetContextCompartment(cx()));
+    if (!JS_GetPendingException(cx(), aVal)) {
+      return false;
+    }
+    JS_ClearPendingException(cx());
+    return true;
 }
 
 AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
