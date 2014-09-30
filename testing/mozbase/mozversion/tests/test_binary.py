@@ -83,6 +83,20 @@ SourceRepository = PlatformSourceRepo
         v = get_version(self.binary)
         self.assertTrue(isinstance(v, dict))
 
+    def test_with_exe(self):
+        """Test that we can resolve .exe files"""
+        with open(os.path.join(self.tempdir, 'application.ini'), 'w') as f:
+            f.writelines(self.application_ini)
+
+        with open(os.path.join(self.tempdir, 'platform.ini'), 'w') as f:
+            f.writelines(self.platform_ini)
+
+        exe_name_unprefixed = self.binary + '1'
+        exe_name = exe_name_unprefixed + '.exe'
+        with open(exe_name, 'w') as f:
+            f.write('foobar')
+        self._check_version(get_version(exe_name_unprefixed))
+
     def _check_version(self, version):
         self.assertEqual(version.get('application_name'), 'AppName')
         self.assertEqual(version.get('application_display_name'), 'AppCodeName')
