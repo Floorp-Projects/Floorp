@@ -1741,6 +1741,8 @@ public:
 protected:
     virtual const Metrics& GetHorizontalMetrics() = 0;
 
+    const Metrics* CreateVerticalMetrics();
+
     // Output a single glyph at *aPt, which is updated by the glyph's advance.
     // Normal glyphs are simply accumulated in aBuffer until it is full and
     // gets flushed, but SVG or color-font glyphs will instead be rendered
@@ -1977,6 +1979,9 @@ protected:
     nsAutoPtr<gfxFontShaper>   mGraphiteShaper;
 
     mozilla::RefPtr<mozilla::gfx::ScaledFont> mAzureScaledFont;
+
+    // For vertical metrics, created on demand.
+    nsAutoPtr<const Metrics> mVerticalMetrics;
 
     // Helper for subclasses that want to initialize standard metrics from the
     // tables of sfnt (TrueType/OpenType) fonts.
