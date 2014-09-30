@@ -381,11 +381,8 @@ int nestegg_sniff(unsigned char const * buffer, size_t length);
  * Set the underlying allocation function for library allocations.
  *
  * @param realloc_func The desired function.
- * @retval 0 realloc_func(p, 0) does not act as free()
- * @retval 1 realloc_func(p, 0) acts as free()
- * @retval -1 malloc failed during realloc_func test
  */
-int nestegg_set_halloc_func(void * (* realloc_func)(void *, size_t));
+void nestegg_set_halloc_func(void * (* realloc_func)(void *, size_t));
 
 #if defined(__cplusplus)
 }
