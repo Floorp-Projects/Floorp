@@ -26,6 +26,13 @@ enum ScreenRotation {
 gfx::Matrix ComputeTransformForRotation(const nsIntRect& aBounds,
                                         ScreenRotation aRotation);
 
+gfx::Matrix ComputeTransformForUnRotation(const nsIntRect& aBounds,
+                                          ScreenRotation aRotation);
+
+nsIntRect RotateRect(nsIntRect aRect,
+                     const nsIntRect& aBounds,
+                     ScreenRotation aRotation);
+
 } // namespace mozilla
 
 #endif // mozilla_WidgetUtils_h
