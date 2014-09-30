@@ -160,7 +160,8 @@ public:
   static void ReorderFrames(nsIFrame*            aFirstFrameOnLine,
                             int32_t              aNumFramesOnLine,
                             mozilla::WritingMode aLineWM,
-                            nscoord&             aLineWidth);
+                            nscoord&             aLineWidth,
+                            nscoord              aStart);
 
   /**
    * Format Unicode text, taking into account bidi capabilities
@@ -451,7 +452,8 @@ private:
   static void RepositionInlineFrames(BidiLineData* aBld,
                                      nsIFrame* aFirstChild,
                                      mozilla::WritingMode aLineWM,
-                                     nscoord& aLineWidth);
+                                     nscoord& aLineWidth,
+                                     nscoord& aStart);
   
   /**
    * Helper method for Resolve()
