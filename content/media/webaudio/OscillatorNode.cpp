@@ -373,6 +373,10 @@ public:
     MOZ_ASSERT(mPeriodicWave, "No custom waveform data");
 
     uint32_t periodicWaveSize = mPeriodicWave->periodicWaveSize();
+    // Mask to wrap wave data indices into the range [0,periodicWaveSize).
+    uint32_t indexMask = periodicWaveSize - 1;
+    MOZ_ASSERT(periodicWaveSize && (periodicWaveSize & indexMask) == 0,
+               "periodicWaveSize must be power of 2");
     float* higherWaveData = nullptr;
     float* lowerWaveData = nullptr;
     float tableInterpolationFactor;
@@ -387,14 +391,15 @@ public:
                                                      lowerWaveData,
                                                      higherWaveData,
                                                      tableInterpolationFactor);
-      mPhase = fmod(mPhase, periodicWaveSize);
       // Bilinear interpolation between adjacent samples in each table.
-      uint32_t j1 = floor(mPhase);
+      float floorPhase = floorf(mPhase);
+      uint32_t j1 = floorPhase;
+      j1 &= indexMask;
       uint32_t j2 = j1 + 1;
-      if (j2 >= periodicWaveSize) {
-        j2 -= periodicWaveSize;
-      }
-      float sampleInterpolationFactor = mPhase - j1;
+      j2 &= indexMask;
+
+      float sampleInterpolationFactor = mPhase - floorPhase;
+
       float lower = (1.0f - sampleInterpolationFactor) * lowerWaveData[j1] +
                     sampleInterpolationFactor * lowerWaveData[j2];
       float higher = (1.0f - sampleInterpolationFactor) * higherWaveData[j1] +
@@ -402,7 +407,10 @@ public:
       aOutput[i] = (1.0f - tableInterpolationFactor) * lower +
                    tableInterpolationFactor * higher;
 
-      mPhase += basePhaseIncrement * mFinalFrequency;
+      // Calculate next phase position from wrapped value j1 to avoid loss of
+      // precision at large values.
+      mPhase =
+        j1 + sampleInterpolationFactor + basePhaseIncrement * mFinalFrequency;
     }
   }
 
