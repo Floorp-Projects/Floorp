@@ -1,11 +1,13 @@
 package org.mozilla.gecko.tests;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.home.HomePager;
 
 import android.widget.ImageView;
@@ -101,6 +103,11 @@ public class testAddSearchEngine extends AboutHomeTest {
         // Verify that the number of displayed searchengines is the same as the one received through the SearchEngines:Data event.
         verifyDisplayedSearchEnginesCount(initialNumSearchEngines + 1);
         searchEngineDataEventExpector.unregisterListener();
+
+        // Verify that the search plugin XML file for the new engine ended up where we expected it to.
+        // This file name is created in nsSearchService.js based on the name of the new engine.
+        final File f = GeckoProfile.get(getActivity()).getFile("searchplugins/robocop-search-engine.xml");
+        mAsserter.ok(f.exists(), "Checking that new search plugin file exists", "");
     }
 
     /**
@@ -149,5 +156,5 @@ public class testAddSearchEngine extends AboutHomeTest {
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         waitForText(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE);
         mAsserter.ok(correctNumSearchEnginesDisplayed, expectedCount + " Search Engines should be displayed" , "The correct number of Search Engines has been displayed");
-   }
+    }
 }
