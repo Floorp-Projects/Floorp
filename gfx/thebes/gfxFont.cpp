@@ -658,7 +658,7 @@ gfxShapedText::SetMissingGlyph(uint32_t aIndex, uint32_t aChar, gfxFont *aFont)
         details->mAdvance = 0;
     } else {
         gfxFloat width =
-            std::max(aFont->GetMetrics().aveCharWidth,
+            std::max(aFont->GetMetrics(gfxFont::eHorizontal).aveCharWidth,
                      gfxFontMissingGlyphs::GetDesiredMinWidth(aChar,
                          mAppUnitsPerDevUnit));
         details->mAdvance = uint32_t(width * mAppUnitsPerDevUnit);
@@ -788,7 +788,7 @@ gfxFont::GetGlyphHAdvance(gfxContext *aCtx, uint16_t aGID)
         return GetGlyphWidth(aCtx, aGID) / 65536.0;
     }
     if (mFUnitsConvFactor == 0.0f) {
-        GetMetrics();
+        GetMetrics(eHorizontal);
     }
     NS_ASSERTION(mFUnitsConvFactor > 0.0f,
                  "missing font unit conversion factor");
@@ -1780,7 +1780,7 @@ gfxFont::DrawGlyphs(gfxShapedText            *aShapedText,
                                         ToDeviceUnits(aPt->y, aRunParams.devPerApp));
                             gfxFloat advanceDevUnits =
                                 ToDeviceUnits(advance, aRunParams.devPerApp);
-                            gfxFloat height = GetMetrics().maxAscent;
+                            gfxFloat height = GetMetrics(eHorizontal).maxAscent;
                             gfxRect glyphRect(pt.x, pt.y - height,
                                               advanceDevUnits, height);
 
@@ -2059,7 +2059,9 @@ gfxFont::Measure(gfxTextRun *aTextRun,
 
     const int32_t appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
     // Current position in appunits
-    const gfxFont::Metrics& fontMetrics = GetMetrics();
+    gfxFont::Orientation orientation =
+        aTextRun->IsVertical() ? gfxFont::eVertical : gfxFont::eHorizontal;
+    const gfxFont::Metrics& fontMetrics = GetMetrics(orientation);
 
     RunMetrics metrics;
     metrics.mAscent = fontMetrics.maxAscent*appUnitsPerDevUnit;
@@ -2103,6 +2105,7 @@ gfxFont::Measure(gfxTextRun *aTextRun,
                 } else {
                     gfxRect glyphRect;
                     if (!extents->GetTightGlyphExtentsAppUnits(this,
+                            orientation,
                             aRefContext, glyphIndex, &glyphRect)) {
                         glyphRect = gfxRect(0, metrics.mBoundingBox.Y(),
                             advance, metrics.mBoundingBox.Height());
@@ -2130,6 +2133,7 @@ gfxFont::Measure(gfxTextRun *aTextRun,
                     gfxRect glyphRect;
                     if (glyphData->IsMissing() || !extents ||
                         !extents->GetTightGlyphExtentsAppUnits(this,
+                                orientation,
                                 aRefContext, glyphIndex, &glyphRect)) {
                         // We might have failed to get glyph extents due to
                         // OOM or something
@@ -2937,7 +2941,8 @@ gfxFont::GetOrCreateGlyphExtents(int32_t aAppUnitsPerDevUnit) {
 }
 
 void
-gfxFont::SetupGlyphExtents(gfxContext *aContext, uint32_t aGlyphID, bool aNeedTight,
+gfxFont::SetupGlyphExtents(gfxContext *aContext, Orientation aOrientation, 
+                           uint32_t aGlyphID, bool aNeedTight,
                            gfxGlyphExtents *aExtents)
 {
     gfxContextMatrixAutoSaveRestore matrixRestore(aContext);
@@ -2962,7 +2967,7 @@ gfxFont::SetupGlyphExtents(gfxContext *aContext, uint32_t aGlyphID, bool aNeedTi
     cairo_text_extents_t extents;
     cairo_glyph_extents(aContext->GetCairo(), &glyph, 1, &extents);
 
-    const Metrics& fontMetrics = GetMetrics();
+    const Metrics& fontMetrics = GetMetrics(aOrientation);
     int32_t appUnitsPerDevUnit = aExtents->GetAppUnitsPerDevUnit();
     if (!aNeedTight && extents.x_bearing >= 0 &&
         extents.y_bearing >= -fontMetrics.maxAscent &&
@@ -3368,8 +3373,8 @@ gfxFont::SynthesizeSpaceWidth(uint32_t aCh)
     case 0x2004: return GetAdjustedSize() / 3;   // three-per-em space
     case 0x2005: return GetAdjustedSize() / 4;   // four-per-em space
     case 0x2006: return GetAdjustedSize() / 6;   // six-per-em space
-    case 0x2007: return GetMetrics().zeroOrAveCharWidth; // figure space
-    case 0x2008: return GetMetrics().spaceWidth; // punctuation space 
+    case 0x2007: return GetMetrics(eHorizontal).zeroOrAveCharWidth; // figure space
+    case 0x2008: return GetMetrics(eHorizontal).spaceWidth; // punctuation space
     case 0x2009: return GetAdjustedSize() / 5;   // thin space
     case 0x200a: return GetAdjustedSize() / 10;  // hair space
     case 0x202f: return GetAdjustedSize() / 5;   // narrow no-break space

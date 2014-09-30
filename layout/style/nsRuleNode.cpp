@@ -500,8 +500,9 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       nsRefPtr<nsFontMetrics> fm =
         GetMetricsFor(aPresContext, aStyleContext, styleFont,
                       aFontSize, aUseUserFontSet);
-      gfxFloat zeroWidth = (fm->GetThebesFontGroup()->GetFirstValidFont()
-                            ->GetMetrics().zeroOrAveCharWidth);
+      gfxFloat zeroWidth =
+        fm->GetThebesFontGroup()->GetFirstValidFont()->
+          GetMetrics(gfxFont::eHorizontal).zeroOrAveCharWidth; // XXX vertical?
 
       return ScaleCoordRound(aValue, ceil(aPresContext->AppUnitsPerDevPixel() *
                                           zeroWidth));

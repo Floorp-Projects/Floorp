@@ -6,13 +6,13 @@
 #ifndef GFX_GLYPHEXTENTS_H
 #define GFX_GLYPHEXTENTS_H
 
+#include "gfxFont.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
 #include "mozilla/MemoryReporting.h"
 
 class gfxContext;
-class gfxFont;
 struct gfxRect;
 
 /**
@@ -62,8 +62,9 @@ public:
     // Get glyph extents; a rectangle relative to the left baseline origin
     // Returns true on success. Can fail on OOM or when aContext is null
     // and extents were not (successfully) prefetched.
-    bool GetTightGlyphExtentsAppUnits(gfxFont *aFont, gfxContext *aContext,
-            uint32_t aGlyphID, gfxRect *aExtents);
+    bool GetTightGlyphExtentsAppUnits(gfxFont *aFont,
+            gfxFont::Orientation aOrientation,
+            gfxContext *aContext, uint32_t aGlyphID, gfxRect *aExtents);
 
     void SetContainedGlyphWidthAppUnits(uint32_t aGlyphID, uint16_t aWidth) {
         mContainedGlyphWidths.Set(aGlyphID, aWidth);
