@@ -1373,6 +1373,24 @@ nsBidiPresUtils::IsFirstOrLast(nsIFrame*             aFrame,
 
   // Reduce number of remaining frames of the continuation chain on the line.
   firstFrameState->mFrameCount--;
+
+  nsInlineFrame* testFrame = do_QueryFrame(aFrame);
+
+  if (testFrame) {
+    aFrame->AddStateBits(NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET);
+
+    if (aIsFirst) {
+      aFrame->AddStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_FIRST);
+    } else {
+      aFrame->RemoveStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_FIRST);
+    }
+
+    if (aIsLast) {
+      aFrame->AddStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_LAST);
+    } else {
+      aFrame->RemoveStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_LAST);
+    }
+  }
 }
 
 void
@@ -1380,8 +1398,8 @@ nsBidiPresUtils::RepositionFrame(nsIFrame*             aFrame,
                                  bool                  aIsEvenLevel,
                                  nscoord&              aStart,
                                  nsContinuationStates* aContinuationStates,
-                                 WritingMode           aLineWM,
-                                 nscoord&              aLineWidth)
+                                 WritingMode           aContainerWM,
+                                 nscoord&              aContainerWidth)
 {
   if (!aFrame)
     return;
@@ -1390,27 +1408,9 @@ nsBidiPresUtils::RepositionFrame(nsIFrame*             aFrame,
   WritingMode frameWM = aFrame->GetWritingMode();
   IsFirstOrLast(aFrame,
                 aContinuationStates,
-                aLineWM.IsBidiLTR() == frameWM.IsBidiLTR(),
+                aContainerWM.IsBidiLTR() == frameWM.IsBidiLTR(),
                 isFirst /* out */,
                 isLast /* out */);
-
-  nsInlineFrame* testFrame = do_QueryFrame(aFrame);
-
-  if (testFrame) {
-    aFrame->AddStateBits(NS_INLINE_FRAME_BIDI_VISUAL_STATE_IS_SET);
-
-    if (isFirst) {
-      aFrame->AddStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_FIRST);
-    } else {
-      aFrame->RemoveStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_FIRST);
-    }
-
-    if (isLast) {
-      aFrame->AddStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_LAST);
-    } else {
-      aFrame->RemoveStateBits(NS_INLINE_FRAME_BIDI_VISUAL_IS_LAST);
-    }
-  }
 
   // We only need the margin if the frame is first or last in its own
   // writing mode, but we're traversing the frames in the order of the
@@ -1432,16 +1432,12 @@ nsBidiPresUtils::RepositionFrame(nsIFrame*             aFrame,
     frameMargin.IEnd(frameWM) = 0;
     borderPadding.IEnd(frameWM) = 0;
   }
-  LogicalMargin margin = frameMargin.ConvertTo(aLineWM, frameWM);
-  aStart += margin.IStart(aLineWM);
+  LogicalMargin margin = frameMargin.ConvertTo(aContainerWM, frameWM);
+  aStart += margin.IStart(aContainerWM);
 
   nscoord start = aStart;
-  nscoord frameISize = aFrame->ISize(aLineWM);
 
-  if (!IsBidiLeaf(aFrame))
-  {
-    nscoord iCoord = borderPadding.IStart(frameWM);
-
+  if (!IsBidiLeaf(aFrame)) {
     // If the resolved direction of the container is different from the
     // direction of the frame, we need to traverse the child list in reverse
     // order, to make it O(n) we store the list locally and iterate the list
@@ -1460,13 +1456,15 @@ nsBidiPresUtils::RepositionFrame(nsIFrame*             aFrame,
 
     // Reposition the child frames
     int32_t index = 0;
+    nscoord iCoord = borderPadding.IStart(frameWM);
+
     while (frame) {
       RepositionFrame(frame,
                       aIsEvenLevel,
                       iCoord,
                       aContinuationStates,
                       frameWM,
-                      frameISize);
+                      aFrame->GetLogicalSize(aContainerWM).Width(aContainerWM));
       index++;
       frame = reverseOrder ?
                 childList[childList.Length() - index - 1] :
@@ -1475,15 +1473,16 @@ nsBidiPresUtils::RepositionFrame(nsIFrame*             aFrame,
 
     aStart += iCoord + borderPadding.IEnd(frameWM);
   } else {
-    aStart += frameISize;
+    aStart += aFrame->ISize(aContainerWM);
   }
 
-  LogicalRect logicalRect(aLineWM, aFrame->GetRect(), aLineWidth);
-  logicalRect.IStart(aLineWM) = start;
-  logicalRect.ISize(aLineWM) = aStart - start;
-  aFrame->SetRect(aLineWM, logicalRect, aLineWidth);
+  LogicalRect logicalRect = aFrame->GetLogicalRect(aContainerWM,
+                                                   aContainerWidth);
+  logicalRect.IStart(aContainerWM) = start;
+  logicalRect.ISize(aContainerWM) = aStart - start;
+  aFrame->SetRect(aContainerWM, logicalRect, aContainerWidth);
 
-  aStart += margin.IEnd(aLineWM);
+  aStart += margin.IEnd(aContainerWM);
 }
 
 void
