@@ -315,18 +315,23 @@ class NewObjectCache
     void invalidateEntriesForShape(JSContext *cx, HandleShape shape, HandleObject proto);
 
   private:
-    bool lookup(const Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryIndex *pentry) {
+    EntryIndex makeIndex(const Class *clasp, gc::Cell *key, gc::AllocKind kind) {
         uintptr_t hash = (uintptr_t(clasp) ^ uintptr_t(key)) + kind;
-        *pentry = hash % mozilla::ArrayLength(entries);
+        return hash % mozilla::ArrayLength(entries);
+    }
 
+    bool lookup(const Class *clasp, gc::Cell *key, gc::AllocKind kind, EntryIndex *pentry) {
+        *pentry = makeIndex(clasp, key, kind);
         Entry *entry = &entries[*pentry];
 
         /* N.B. Lookups with the same clasp/key but different kinds map to different entries. */
         return entry->clasp == clasp && entry->key == key;
     }
 
-    void fill(EntryIndex entry_, const Class *clasp, gc::Cell *key, gc::AllocKind kind, JSObject *obj) {
+    void fill(EntryIndex entry_, const Class *clasp, gc::Cell *key, gc::AllocKind kind,
+              JSObject *obj) {
         JS_ASSERT(unsigned(entry_) < mozilla::ArrayLength(entries));
+        JS_ASSERT(entry_ == makeIndex(clasp, key, kind));
         Entry *entry = &entries[entry_];
 
         JS_ASSERT(!obj->hasDynamicSlots() && !obj->hasDynamicElements());
