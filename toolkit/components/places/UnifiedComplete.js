@@ -629,7 +629,9 @@ Search.prototype = {
   },
 
   /**
-   * Used to cancel this search, will stop providing results.
+   * Cancels this search.
+   * After invoking this method, we won't run any more searches or heuristics,
+   * and no new matches may be added to the current result.
    */
   cancel: function () {
     if (this._sleepTimer)
@@ -980,6 +982,10 @@ Search.prototype = {
         break;
     }
     this._addMatch(match);
+    // If the search has been canceled by the user or by _addMatch reaching the
+    // maximum number of results, we can stop the underlying Sqlite query.
+    if (!this.pending)
+      throw StopIteration;
   },
 
   _maybeRestyleSearchMatch: function (match) {
@@ -1048,15 +1054,12 @@ Search.prototype = {
     if (this._result.matchCount == 6)
       TelemetryStopwatch.finish(TELEMETRY_6_FIRST_RESULTS);
 
-    if (this._result.matchCount == Prefs.maxRichResults || !this.pending) {
+    if (this._result.matchCount == Prefs.maxRichResults) {
       // We have enough results, so stop running our search.
+      // We don't need to notify results in this case, cause the main promise
+      // chain will do that for us when finishSearch is invoked.
       this.cancel();
-      // This tells Sqlite.jsm to stop providing us results and cancel the
-      // underlying query.
-      throw StopIteration;
-    }
-
-    if (notifyResults) {
+    } else if (notifyResults) {
       // Notify about results if we've gotten them.
       this.notifyResults(true);
     }
