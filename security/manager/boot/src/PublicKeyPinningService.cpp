@@ -167,6 +167,13 @@ TransportSecurityPreloadCompare(const void *key, const void *entry) {
   return strcmp(keyStr, preloadEntry->mHost);
 }
 
+bool
+PublicKeyPinningService::ChainMatchesPinset(const CERTCertList* certList,
+                                            const nsTArray<nsCString>& aSHA256keys)
+{
+  return EvalChainWithHashType(certList, SEC_OID_SHA256, nullptr, &aSHA256keys);
+}
+
 /**
  * Check PKPins on the given certlist against the specified hostname
  */

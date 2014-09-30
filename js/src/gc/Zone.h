@@ -157,7 +157,7 @@ struct Zone : public JS::shadow::Zone,
     }
     void reportAllocationOverflow() { js_ReportAllocationOverflow(nullptr); }
 
-    void sweep(js::FreeOp *fop, bool releaseTypes, bool *oom);
+    void sweepAnalysis(js::FreeOp *fop, bool releaseTypes);
 
     bool hasMarkedCompartments();
 
