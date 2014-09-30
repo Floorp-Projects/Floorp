@@ -223,14 +223,14 @@
   text-align: center;
 }
 
-/* Incoming call */
+/* General Call (incoming or outgoing). */
 
 /*
  * Height matches the height of the docked window
  * but the UI breaks when you pop out
  * Bug 1040985
  */
-.incoming-call {
+.call-window {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -238,26 +238,27 @@
   min-height: 230px;
 }
 
-.incoming-call-action-group {
+.call-action-group {
   display: flex;
   padding: 2.5em 0 0 0;
   width: 100%;
   justify-content: space-around;
 }
 
-.incoming-call-action-group > .btn {
+.call-action-group > .btn {
   margin-left: .5em;
+  height: 26px;
 }
 
-.incoming-call-action-group .btn-group-chevron,
-.incoming-call-action-group .btn-group {
+.call-action-group .btn-group-chevron,
+.call-action-group .btn-group {
   width: 100%;
 }
 
 /* XXX Once we get the incoming call avatar, bug 1047435, the H2 should
  * disappear from our markup, and we should remove this rule entirely.
  */
-.incoming-call h2 {
+.call-window h2 {
   font-size: 1.5em;
   font-weight: normal;
 
@@ -266,7 +267,7 @@
   margin: 0.83em 0;
 }
 
-.fx-embedded-incoming-call-button-spacer {
+.fx-embedded-call-button-spacer {
   display: flex;
   flex: 1;
 }

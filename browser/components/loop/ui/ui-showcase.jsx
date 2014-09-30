@@ -15,6 +15,7 @@
   var PanelView = loop.panel.PanelView;
   // 1.2. Conversation Window
   var IncomingCallView = loop.conversation.IncomingCallView;
+  var DesktopPendingConversationView = loop.conversationViews.PendingConversationView;
 
   // 2. Standalone webapp
   var HomeView = loop.webapp.HomeView;
@@ -62,6 +63,12 @@
     sdk: mockSDK
   });
   mockConversationModel.startSession = noop;
+
+  var mockWebSocket = new loop.CallConnectionWebSocket({
+    url: "fake",
+    callId: "fakeId",
+    websocketToken: "fakeToken"
+  });
 
   var notifications = new loop.shared.models.NotificationCollection();
   var errNotifications = new loop.shared.models.NotificationCollection();
@@ -223,12 +230,21 @@
           <Section name="PendingConversationView">
             <Example summary="Pending conversation view (connecting)" dashed="true">
               <div className="standalone">
-                <PendingConversationView />
+                <PendingConversationView websocket={mockWebSocket}/>
               </div>
             </Example>
             <Example summary="Pending conversation view (ringing)" dashed="true">
               <div className="standalone">
-                <PendingConversationView callState="ringing"/>
+                <PendingConversationView websocket={mockWebSocket} callState="ringing"/>
+              </div>
+            </Example>
+          </Section>
+
+          <Section name="PendingConversationView (Desktop)">
+            <Example summary="Connecting" dashed="true"
+                     style={{width: "260px", height: "265px"}}>
+              <div className="fx-embedded">
+                <DesktopPendingConversationView callState={"gather"} calleeId="Mr Smith" />
               </div>
             </Example>
           </Section>
@@ -446,6 +462,9 @@
     React.renderComponent(<App />, body);
 
     _renderComponentsInIframes();
+
+    // Put the title back, in case views changed it.
+    document.title = "Loop UI Components Showcase";
   });
 
 })();
