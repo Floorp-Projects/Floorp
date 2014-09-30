@@ -1441,7 +1441,11 @@ public:
                                       // no '0' glyph in this font,
                                       // equal to .aveCharWidth
     };
-    virtual const gfxFont::Metrics& GetMetrics() = 0;
+
+    const Metrics& GetMetrics()
+    {
+        return GetHorizontalMetrics();
+    }
 
     /**
      * We let layout specify spacing on either side of any
@@ -1735,6 +1739,8 @@ public:
     GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel);
 
 protected:
+    virtual const Metrics& GetHorizontalMetrics() = 0;
+
     // Output a single glyph at *aPt, which is updated by the glyph's advance.
     // Normal glyphs are simply accumulated in aBuffer until it is full and
     // gets flushed, but SVG or color-font glyphs will instead be rendered
@@ -1988,7 +1994,7 @@ protected:
 
     // some fonts have bad metrics, this method sanitize them.
     // if this font has bad underline offset, aIsBadUnderlineFont should be true.
-    void SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont);
+    void SanitizeMetrics(Metrics *aMetrics, bool aIsBadUnderlineFont);
 
     bool RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMode,
                         uint32_t aGlyphId, gfxTextContextPaint *aContextPaint) const;

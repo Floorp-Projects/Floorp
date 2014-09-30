@@ -106,7 +106,7 @@ gfxGDIFont::ShapeText(gfxContext     *aContext,
 }
 
 const gfxFont::Metrics&
-gfxGDIFont::GetMetrics()
+gfxGDIFont::GetHorizontalMetrics()
 {
     if (!mMetrics) {
         Initialize();

@@ -34,8 +34,6 @@ public:
     cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; }
 
     /* overrides for the pure virtual methods in gfxFont */
-    virtual const gfxFont::Metrics& GetMetrics();
-
     virtual uint32_t GetSpaceGlyph();
 
     virtual bool SetupCairoFont(gfxContext *aContext);
@@ -71,6 +69,8 @@ public:
     virtual FontType GetType() const { return FONT_TYPE_GDI; }
 
 protected:
+    virtual const Metrics& GetHorizontalMetrics();
+
     /* override to ensure the cairo font is set up properly */
     virtual bool ShapeText(gfxContext     *aContext,
                            const char16_t *aText,
