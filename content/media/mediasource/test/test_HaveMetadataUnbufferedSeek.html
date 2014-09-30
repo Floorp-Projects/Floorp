@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>MSE: seekable attribute before end of stream</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="mediasource.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+runWithMSE(function (ms, v) {
+  ms.addEventListener("sourceopen", function () {
+    var sb = ms.addSourceBuffer("video/webm");
+
+    fetchWithXHR("seek.webm", function (arrayBuffer) {
+      sb.appendBuffer(new Uint8Array(arrayBuffer, 0, 67833));
+    });
+
+    var target = 2;
+
+    v.addEventListener("canplay", function oncanplay() {
+      v.removeEventListener("canplay", oncanplay);
+      ok(v.readyState >= v.HAVE_FUTURE_DATA, "readyState is >= FUTURE_DATA");
+      v.currentTime = target;
+    });
+
+    v.addEventListener("seeking", function () {
+      is(v.readyState, v.HAVE_METADATA, "readyState is HAVE_METADATA");
+      fetchWithXHR("seek.webm", function (arrayBuffer) {
+        sb.appendBuffer(new Uint8Array(arrayBuffer, 67833));
+      });
+    });
+
+    v.addEventListener("seeked", function () {
+      ok(v.readyState >= v.HAVE_FUTURE_DATA, "readyState is >= FUTURE_DATA");
+      SimpleTest.finish();
+    });
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>
