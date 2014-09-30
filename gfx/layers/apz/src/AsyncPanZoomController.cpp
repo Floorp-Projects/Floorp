@@ -1578,7 +1578,7 @@ nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent, bool 
 
   // TODO: Handle pan events sent without pan begin / pan end events properly.
   if (mPanGestureState) {
-    ScreenPoint panDistance(fabs(panDisplacement.x), fabs(panDisplacement.y)));
+    ScreenPoint panDistance(fabs(panDisplacement.x), fabs(panDisplacement.y));
     OverscrollHandoffState handoffState(
         *mPanGestureState->GetOverscrollHandoffChain(), panDistance);
     CallDispatchScroll(aEvent.mPanStartPoint, aEvent.mPanStartPoint + aEvent.mPanDisplacement,
