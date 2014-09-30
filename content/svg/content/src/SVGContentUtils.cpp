@@ -183,9 +183,9 @@ SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
     aStrokeOptions->mLineWidth = 0;
     return;
   }
-  if (dashState == eContinuousStroke) {
-    // Prevent our caller from wasting time looking at the dash array:
-    aStrokeOptions->mDashLength = 0;
+  if (dashState == eContinuousStroke && aStrokeOptions->mDashPattern) {
+    // Prevent our caller from wasting time looking at a pattern without gaps:
+    aStrokeOptions->DiscardDashPattern();
   }
 
   aStrokeOptions->mLineWidth =
