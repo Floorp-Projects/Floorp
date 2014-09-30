@@ -395,12 +395,12 @@ public:
         j2 -= periodicWaveSize;
       }
       float sampleInterpolationFactor = mPhase - j1;
-      float lower = sampleInterpolationFactor * lowerWaveData[j1] +
-                    (1 - sampleInterpolationFactor) * lowerWaveData[j2];
-      float higher = sampleInterpolationFactor * higherWaveData[j1] +
-                    (1 - sampleInterpolationFactor) * higherWaveData[j2];
-      aOutput[i] = tableInterpolationFactor * lower +
-                   (1 - tableInterpolationFactor) * higher;
+      float lower = (1.0f - sampleInterpolationFactor) * lowerWaveData[j1] +
+                    sampleInterpolationFactor * lowerWaveData[j2];
+      float higher = (1.0f - sampleInterpolationFactor) * higherWaveData[j1] +
+                    sampleInterpolationFactor * higherWaveData[j2];
+      aOutput[i] = (1.0f - tableInterpolationFactor) * lower +
+                   tableInterpolationFactor * higher;
 
       mPhase += basePhaseIncrement * mFinalFrequency;
     }
