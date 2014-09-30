@@ -573,6 +573,13 @@ jit::MakeSingletonTypeSet(types::CompilerConstraintList *constraints, JSObject *
     return alloc->new_<types::TemporaryTypeSet>(alloc, types::Type::ObjectType(obj));
 }
 
+static types::TemporaryTypeSet *
+MakeUnknownTypeSet()
+{
+    LifoAlloc *alloc = GetIonContext()->temp->lifoAlloc();
+    return alloc->new_<types::TemporaryTypeSet>(alloc, types::Type::UnknownType());
+}
+
 MConstant::MConstant(const js::Value &vp, types::CompilerConstraintList *constraints)
   : value_(vp)
 {
@@ -581,6 +588,16 @@ MConstant::MConstant(const js::Value &vp, types::CompilerConstraintList *constra
         // Create a singleton type set for the object. This isn't necessary for
         // other types as the result type encodes all needed information.
         setResultTypeSet(MakeSingletonTypeSet(constraints, &vp.toObject()));
+    }
+    if (vp.isMagic() && vp.whyMagic() == JS_UNINITIALIZED_LEXICAL) {
+        // JS_UNINITIALIZED_LEXICAL does not escape to script and is not
+        // observed in type sets. However, it may flow around freely during
+        // Ion compilation. Give it an unknown typeset to poison any type sets
+        // it merges with.
+        //
+        // TODO We could track uninitialized lexicals more precisely by tracking
+        // them in type sets.
+        setResultTypeSet(MakeUnknownTypeSet());
     }
 
     setMovable();
