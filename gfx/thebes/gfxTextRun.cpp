@@ -1264,8 +1264,12 @@ gfxTextRun::SetSpaceGlyphIfSimple(gfxFont *aFont, gfxContext *aContext,
         return false;
     }
 
+    gfxFont::Orientation fontOrientation =
+        (aOrientation & gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT) ?
+            gfxFont::eVertical : gfxFont::eHorizontal;
     uint32_t spaceWidthAppUnits =
-        NS_lroundf(aFont->GetMetrics().spaceWidth * mAppUnitsPerDevUnit);
+        NS_lroundf(aFont->GetMetrics(fontOrientation).spaceWidth *
+                   mAppUnitsPerDevUnit);
     if (!CompressedGlyph::IsSimpleAdvance(spaceWidthAppUnits)) {
         return false;
     }
@@ -1306,6 +1310,8 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
   
         for (j = start; j < end; ++j) {
             const gfxTextRun::CompressedGlyph *glyphData = &charGlyphs[j];
+            gfxFont::Orientation orientation =
+                IsVertical() ? gfxFont::eVertical : gfxFont::eHorizontal;
             if (glyphData->IsSimpleGlyph()) {
                 // If we're in speed mode, don't set up glyph extents here; we'll
                 // just return "optimistic" glyph bounds later
@@ -1322,7 +1328,8 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
                         ++gGlyphExtentsSetupEagerSimple;
 #endif
-                        font->SetupGlyphExtents(aRefContext, glyphIndex, false, extents);
+                        font->SetupGlyphExtents(aRefContext, orientation,
+                                                glyphIndex, false, extents);
                     }
                 }
             } else if (!glyphData->IsMissing()) {
@@ -1347,7 +1354,8 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
                         ++gGlyphExtentsSetupEagerTight;
 #endif
-                        font->SetupGlyphExtents(aRefContext, glyphIndex, true, extents);
+                        font->SetupGlyphExtents(aRefContext, orientation,
+                                                glyphIndex, true, extents);
                     }
                 }
             }
@@ -2474,16 +2482,19 @@ gfxFontGroup::GetUnderlineOffset()
                 if (!font) {
                     continue;
                 }
-                gfxFloat bad = font->GetMetrics().underlineOffset;
+                gfxFloat bad = font->GetMetrics(gfxFont::eHorizontal).
+                                         underlineOffset;
                 gfxFloat first =
-                    GetFirstValidFont()->GetMetrics().underlineOffset;
+                    GetFirstValidFont()->GetMetrics(gfxFont::eHorizontal).
+                                             underlineOffset;
                 mUnderlineOffset = std::min(first, bad);
                 return mUnderlineOffset;
             }
         }
 
         // no bad underline fonts, use the first valid font's metric
-        mUnderlineOffset = GetFirstValidFont()->GetMetrics().underlineOffset;
+        mUnderlineOffset = GetFirstValidFont()->
+            GetMetrics(gfxFont::eHorizontal).underlineOffset;
     }
 
     return mUnderlineOffset;
