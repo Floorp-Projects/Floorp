@@ -78,7 +78,7 @@ var capturedSourceMapURL;
 dbg.onNewScript = function (script) {
   capturedScript = script;
   capturedDisplayURL = script.source.displayURL;
-  capturedSourceMapURL = script.sourceMapURL;
+  capturedSourceMapURL = script.source.sourceMapURL;
   dbg.onNewScript = undefined;
 };
 var fun = gw.makeDebuggeeValue(g.Function('//# sourceURL=munge.js\n//# sourceMappingURL=grunge.map\n'));
@@ -87,5 +87,5 @@ assertEq(capturedScript, fun.script);
 assertEq(capturedDisplayURL, fun.script.source.displayURL);
 assertEq(capturedDisplayURL, 'munge.js');
 
-assertEq(capturedSourceMapURL, fun.script.sourceMapURL);
+assertEq(capturedSourceMapURL, fun.script.source.sourceMapURL);
 assertEq(capturedSourceMapURL, 'grunge.map');
