@@ -257,6 +257,8 @@ class nsHtml5TreeOpExecutor MOZ_FINAL : public nsHtml5DocumentBuilder,
     void PreloadImage(const nsAString& aURL, const nsAString& aCrossOrigin);
 
     void SetSpeculationBase(const nsAString& aURL);
+    
+    void AddBase(const nsAString& aURL);
 
     static void InitializeStatics();
 
