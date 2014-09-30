@@ -98,6 +98,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetErrorHelper",
 XPCOMUtils.defineLazyModuleGetter(this, "PermissionsUtils",
                                   "resource://gre/modules/PermissionsUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "SharedPreferences",
+                                  "resource://gre/modules/SharedPreferences.jsm");
+
 // Lazily-loaded browser scripts:
 [
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
@@ -6764,12 +6767,16 @@ var SearchEngines = {
   PREF_SUGGEST_ENABLED: "browser.search.suggest.enabled",
   PREF_SUGGEST_PROMPTED: "browser.search.suggest.prompted",
 
+  // Shared preference key used for search activity default engine.
+  PREF_SEARCH_ACTIVITY_ENGINE_KEY: "search.engines.default",
+
   init: function init() {
     Services.obs.addObserver(this, "SearchEngines:Add", false);
     Services.obs.addObserver(this, "SearchEngines:GetVisible", false);
     Services.obs.addObserver(this, "SearchEngines:Remove", false);
     Services.obs.addObserver(this, "SearchEngines:RestoreDefaults", false);
     Services.obs.addObserver(this, "SearchEngines:SetDefault", false);
+    Services.obs.addObserver(this, "browser-search-engine-modified", false);
 
     let filter = {
       matches: function (aElement) {
@@ -6814,6 +6821,7 @@ var SearchEngines = {
     Services.obs.removeObserver(this, "SearchEngines:Remove");
     Services.obs.removeObserver(this, "SearchEngines:RestoreDefaults");
     Services.obs.removeObserver(this, "SearchEngines:SetDefault");
+    Services.obs.removeObserver(this, "browser-search-engine-modified");
     if (this._contextMenuId != null)
       NativeWindow.contextmenus.remove(this._contextMenuId);
   },
@@ -6894,11 +6902,47 @@ var SearchEngines = {
         Services.search.moveEngine(engine, 0);
         Services.search.defaultEngine = engine;
         break;
-
+      case "browser-search-engine-modified":
+        if (aData == "engine-default") {
+          this._setSearchActivityDefaultPref(aSubject.QueryInterface(Ci.nsISearchEngine));
+        }
+        break;
       default:
         dump("Unexpected message type observed: " + aTopic);
         break;
     }
+  },
+
+  // Updates the search activity pref when the default engine changes.
+  _setSearchActivityDefaultPref: function _setSearchActivityDefaultPref(engine) {
+    // Helper function copied from nsSearchService.js. This is the logic that is used
+    // to create file names for search plugin XML serialized to disk.
+    function sanitizeName(aName) {
+      const maxLength = 60;
+      const minLength = 1;
+      let name = aName.toLowerCase();
+      name = name.replace(/\s+/g, "-");
+      name = name.replace(/[^-a-z0-9]/g, "");
+
+      if (name.length < minLength) {
+        // Well, in this case, we're kinda screwed. In this case, the search service
+        // generates a random file name, so to do this the right way, we'd need
+        // to open up search.json and see what file name is stored.
+        Cu.reportError("Couldn't create search plugin file name from engine name: " + aName);
+        return null;
+      }
+
+      // Force max length.
+      return name.substring(0, maxLength);
+    }
+
+    let identifier = engine.identifier;
+    if (identifier === null) {
+      // The identifier will be null for non-built-in engines. In this case, we need to
+      // figure out an identifier to store from the engine name.
+      identifier = sanitizeName(engine.name);
+    }
+    SharedPreferences.forApp().setCharPref(this.PREF_SEARCH_ACTIVITY_ENGINE_KEY, identifier);
   },
 
   // Display context menu listing names of the search engines available to be added.
