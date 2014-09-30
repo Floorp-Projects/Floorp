@@ -186,7 +186,11 @@
   background-image: url("../img/icons-16x16.svg#block");
 }
 
-.contact > .dropdown-menu > .dropdown-menu-item > .icon-delete {
+.contact > .dropdown-menu > .dropdown-menu-item > .icon-unblock {
+  background-image: url("../img/icons-16x16.svg#unblock");
+}
+
+.contact > .dropdown-menu > .dropdown-menu-item > .icon-remove {
   background-image: url("../img/icons-16x16.svg#delete");
 }
 
