@@ -239,17 +239,16 @@ nsNullPrincipal::CheckMayLoad(nsIURI* aURI, bool aReport, bool aAllowIfInheritsP
     if (nsPrincipal::IsPrincipalInherited(aURI)) {
       return NS_OK;
     }
+  }
 
-    // Also allow the load if the principal of the URI being checked is exactly
-    // us ie this.
-    nsCOMPtr<nsIURIWithPrincipal> uriPrinc = do_QueryInterface(aURI);
-    if (uriPrinc) {
-      nsCOMPtr<nsIPrincipal> principal;
-      uriPrinc->GetPrincipal(getter_AddRefs(principal));
+  // Also allow the load if we are the principal of the URI being checked.
+  nsCOMPtr<nsIURIWithPrincipal> uriPrinc = do_QueryInterface(aURI);
+  if (uriPrinc) {
+    nsCOMPtr<nsIPrincipal> principal;
+    uriPrinc->GetPrincipal(getter_AddRefs(principal));
 
-      if (principal && principal == this) {
-        return NS_OK;
-      }
+    if (principal == this) {
+      return NS_OK;
     }
   }
 
