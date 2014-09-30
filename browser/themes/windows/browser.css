@@ -1394,7 +1394,8 @@ richlistitem[selected="true"][current="true"] > .ac-title-box > .ac-result-type-
 }
 
 .ac-result-type-keyword,
-.autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage) {
+.autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage),
+richlistitem[type~="action"][actiontype="searchengine"] > .ac-title-box > .ac-site-icon {
   list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg#search-icon);
   width: 16px;
   height: 16px;
@@ -1404,7 +1405,8 @@ richlistitem[selected="true"][current="true"] > .ac-title-box > .ac-result-type-
 @media not all and (-moz-windows-default-theme) {
 %endif
   .ac-result-type-keyword[selected="true"],
-  .autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage, selected) {
+  .autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage, selected),
+  richlistitem[type~="action"][actiontype="searchengine"][selected="true"] > .ac-title-box > .ac-site-icon {
     list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg#search-icon-inverted);
   }
 %ifdef WINDOWS_AERO
@@ -1459,20 +1461,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   .ac-action-text[selected="true"] {
     color: inherit !important;
   }
-%ifdef WINDOWS_AERO
-}
-%endif
-
-richlistitem[type~="action"][actiontype="searchengine"] > .ac-title-box > .ac-site-icon {
-  list-style-image: url("chrome://global/skin/icons/autocomplete-search.svg#search-icon");
-}
-
-%ifdef WINDOWS_AERO
-@media not all and (-moz-windows-default-theme) {
-%endif
-richlistitem[type~="action"][actiontype="searchengine"][selected="true"] > .ac-title-box > .ac-site-icon {
-  list-style-image: url("chrome://global/skin/icons/autocomplete-search.svg#search-icon-inverted");
-}
 %ifdef WINDOWS_AERO
 }
 %endif
