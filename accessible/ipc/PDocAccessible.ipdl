@@ -40,7 +40,7 @@ parent:
    * Notify the parent process the document in the child process is firing an
    * event.
    */
-  Event(uint32_t type);
+  Event(uint64_t aID, uint32_t type);
   ShowEvent(ShowEventData data);
   HideEvent(uint64_t aRootID);
 
