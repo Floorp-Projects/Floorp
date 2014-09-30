@@ -4674,6 +4674,7 @@ var Utils = {
       case "Mixed Content Message":
       case "CSP":
       case "Invalid HSTS Headers":
+      case "Invalid HPKP Headers":
       case "Insecure Password Field":
       case "SSL":
       case "CORS":

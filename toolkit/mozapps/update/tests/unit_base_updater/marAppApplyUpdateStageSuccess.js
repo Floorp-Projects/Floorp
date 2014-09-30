@@ -16,7 +16,7 @@ function run_test() {
   setupTestCommon();
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
-  setupUpdaterTest(FILE_COMPLETE_MAR, false, false);
+  setupUpdaterTest(FILE_COMPLETE_MAR);
 
   createUpdaterINI(false);
 
@@ -87,14 +87,10 @@ function checkUpdateApplied() {
 
   // Don't proceed until the last update log has been created.
   let log;
-  if (IS_WIN) {
+  if (IS_WIN || IS_MACOSX) {
     log = getUpdatesDir();
   } else {
-    log = getUpdatedDir();
-    if (IS_MACOSX) {
-      log.append("Contents");
-      log.append("MacOS");
-    }
+    log = getStageDirFile(null, true);
     log.append(DIR_UPDATES);
   }
   log.append(FILE_LAST_LOG);
@@ -108,32 +104,22 @@ function checkUpdateApplied() {
     return;
   }
 
-  if (IS_MACOSX || IS_WIN) {
+  if (IS_WIN || IS_MACOSX) {
     // Check that the post update process was not launched when staging an
     // update.
     do_check_false(getPostUpdateFile(".running").exists());
   }
 
-  let updatedDir = getUpdatedDir();
-  logTestInfo("testing " + updatedDir.path + " should exist");
-  do_check_true(updatedDir.exists());
+  checkFilesAfterUpdateSuccess(getStageDirFile, true, false);
 
-  // On Windows, make sure not to use the maintenance service for switching
-  // the app.
-  if (IS_WIN) {
-    writeStatusFile(STATE_APPLIED);
-    do_check_eq(readStatusState(), STATE_APPLIED);
-  }
-
-  log = getUpdatesDir();
-  log.append("0");
+  log = getUpdatesPatchDir();
   log.append(FILE_UPDATE_LOG);
   logTestInfo("testing " + log.path + " shouldn't exist");
   do_check_false(log.exists());
 
   log = getUpdatesDir();
   log.append(FILE_LAST_LOG);
-  if (IS_WIN) {
+  if (IS_WIN || IS_MACOSX) {
     logTestInfo("testing " + log.path + " should exist");
     do_check_true(log.exists());
   } else {
@@ -146,40 +132,26 @@ function checkUpdateApplied() {
   logTestInfo("testing " + log.path + " shouldn't exist");
   do_check_false(log.exists());
 
-  let updatesDir = getUpdatedDir();
-  if (IS_MACOSX) {
-    updatesDir.append("Contents");
-    updatesDir.append("MacOS");
-  }
-  updatesDir.append("updates");
-  log = updatesDir.clone();
-  log.append("0");
-  log.append(FILE_UPDATE_LOG);
+  let updatesDir = getStageDirFile(DIR_UPDATES + "/0", true);
+  logTestInfo("testing " + updatesDir.path + " shouldn't exist");
+  do_check_false(updatesDir.exists());
+
+  log = getStageDirFile(DIR_UPDATES + "/0/" + FILE_UPDATE_LOG, true);
   logTestInfo("testing " + log.path + " shouldn't exist");
   do_check_false(log.exists());
 
-  if (!IS_WIN) {
-    log = updatesDir.clone();
-    log.append(FILE_LAST_LOG);
+  log = getStageDirFile(DIR_UPDATES + "/" + FILE_LAST_LOG, true);
+  if (IS_WIN || IS_MACOSX) {
+    logTestInfo("testing " + log.path + " shouldn't exist");
+    do_check_false(log.exists());
+  } else {
     logTestInfo("testing " + log.path + " should exist");
     do_check_true(log.exists());
   }
 
-  log = updatesDir.clone();
-  log.append(FILE_BACKUP_LOG);
+  log = getStageDirFile(DIR_UPDATES + "/" + FILE_BACKUP_LOG, true);
   logTestInfo("testing " + log.path + " shouldn't exist");
   do_check_false(log.exists());
-
-  updatesDir.append("0");
-  logTestInfo("testing " + updatesDir.path + " shouldn't exist");
-  do_check_false(updatesDir.exists());
-
-  // On Windows, make sure not to use the maintenance service for switching
-  // the app.
-  if (IS_WIN) {
-    writeStatusFile(STATE_APPLIED);
-    do_check_eq(readStatusState(), STATE_APPLIED);
-  }
 
   // Switch the application to the staged application that was updated by
   // launching the application.
@@ -191,7 +163,7 @@ function checkUpdateApplied() {
  * support launching post update process.
  */
 function checkUpdateFinished() {
-  if (IS_MACOSX || IS_WIN) {
+  if (IS_WIN || IS_MACOSX) {
     gCheckFunc = finishCheckUpdateApplied;
     checkPostUpdateAppLog();
   } else {
@@ -220,7 +192,7 @@ function finishCheckUpdateApplied() {
 
   // Don't proceed until the application was switched out with the staged update
   // successfully.
-  let updatedDir = getUpdatedDir();
+  let updatedDir = getStageDirFile(null, true);
   if (updatedDir.exists()) {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
       do_throw("Exceeded while waiting for updated dir to not exist. Path: " +
@@ -259,27 +231,25 @@ function finishCheckUpdateApplied() {
     do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
   }
 
-  checkFilesAfterUpdateSuccess();
-  // Sorting on Linux is different so skip this check for now.
-  if (!IS_UNIX) {
-    gSwitchApp = true;
-    checkUpdateLogContents();
-  }
-
+  checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
+  gSwitchApp = true;
+  checkUpdateLogContents();
+  gSwitchApp = false;
   checkCallbackAppLog();
 
-  let log = getUpdatesDir();
-  log.append("0");
+  standardInit();
+
+  let update = gUpdateManager.getUpdateAt(0);
+  do_check_eq(update.state, STATE_SUCCEEDED);
+
+  let updatesDir = getUpdatesPatchDir();
+  logTestInfo("testing " + updatesDir.path + " should exist");
+  do_check_true(updatesDir.exists());
+
+  let log = getUpdatesPatchDir();
   log.append(FILE_UPDATE_LOG);
-  if (IS_WIN) {
-    // On Windows, this log file is written to the AppData directory, and will
-    // therefore exist.
-    logTestInfo("testing " + log.path + " should exist");
-    do_check_true(log.exists());
-  } else {
-    logTestInfo("testing " + log.path + " shouldn't exist");
-    do_check_false(log.exists());
-  }
+  logTestInfo("testing " + log.path + " shouldn't exist");
+  do_check_false(log.exists());
 
   log = getUpdatesDir();
   log.append(FILE_LAST_LOG);
@@ -288,13 +258,13 @@ function finishCheckUpdateApplied() {
 
   log = getUpdatesDir();
   log.append(FILE_BACKUP_LOG);
-  logTestInfo("testing " + log.path + " shouldn't exist");
-  do_check_false(log.exists());
-
-  let updatesDir = getUpdatesDir();
-  updatesDir.append("0");
-  logTestInfo("testing " + updatesDir.path + " should exist");
-  do_check_true(updatesDir.exists());
+  if (IS_WIN || IS_MACOSX) {
+    logTestInfo("testing " + log.path + " should exist");
+    do_check_true(log.exists());
+  } else {
+    logTestInfo("testing " + log.path + " shouldn't exist");
+    do_check_false(log.exists());
+  }
 
   waitForFilesInUse();
 }

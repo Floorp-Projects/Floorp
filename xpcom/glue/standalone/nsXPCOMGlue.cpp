@@ -367,8 +367,23 @@ static GetFrozenFunctionsFunc
 XPCOMGlueLoad(const char* aXPCOMFile)
 {
   char xpcomDir[MAXPATHLEN];
-#if defined(XP_WIN)
+#ifdef XP_WIN
   const char* lastSlash = ns_strrpbrk(aXPCOMFile, "/\\");
+#elif XP_MACOSX
+  // On OSX, the dependentlibs.list file lives under Contents/Resources.
+  // However, the actual libraries listed in dependentlibs.list live under
+  // Contents/MacOS. We want to read the list from Contents/Resources, then
+  // load the libraries from Contents/MacOS.
+  const char *tempSlash = strrchr(aXPCOMFile, '/');
+  size_t tempLen = size_t(tempSlash - aXPCOMFile);
+  if (tempLen > MAXPATHLEN) {
+    return nullptr;
+  }
+  char tempBuffer[MAXPATHLEN];
+  memcpy(tempBuffer, aXPCOMFile, tempLen);
+  const char *slash = strrchr(tempBuffer, '/');
+  tempLen = size_t(slash - tempBuffer);
+  const char *lastSlash = aXPCOMFile + tempLen;
 #else
   const char* lastSlash = strrchr(aXPCOMFile, '/');
 #endif
@@ -377,12 +392,20 @@ XPCOMGlueLoad(const char* aXPCOMFile)
     size_t len = size_t(lastSlash - aXPCOMFile);
 
     if (len > MAXPATHLEN - sizeof(XPCOM_FILE_PATH_SEPARATOR
+#ifdef XP_MACOSX
+                                  "Resources"
+                                  XPCOM_FILE_PATH_SEPARATOR
+#endif
                                   XPCOM_DEPENDENT_LIBS_LIST)) {
       return nullptr;
     }
     memcpy(xpcomDir, aXPCOMFile, len);
     strcpy(xpcomDir + len, XPCOM_FILE_PATH_SEPARATOR
-           XPCOM_DEPENDENT_LIBS_LIST);
+#ifdef XP_MACOSX
+                           "Resources"
+                           XPCOM_FILE_PATH_SEPARATOR
+#endif
+                           XPCOM_DEPENDENT_LIBS_LIST);
     cursor = xpcomDir + len + 1;
   } else {
     strcpy(xpcomDir, XPCOM_DEPENDENT_LIBS_LIST);
@@ -399,6 +422,14 @@ XPCOMGlueLoad(const char* aXPCOMFile)
     return nullptr;
   }
 
+#ifdef XP_MACOSX
+  tempLen = size_t(cursor - xpcomDir);
+  if (tempLen > MAXPATHLEN - sizeof("MacOS" XPCOM_FILE_PATH_SEPARATOR) - 1) {
+    return nullptr;
+  }
+  strcpy(cursor, "MacOS" XPCOM_FILE_PATH_SEPARATOR);
+  cursor += strlen(cursor);
+#endif
   *cursor = '\0';
 
   char buffer[MAXPATHLEN];

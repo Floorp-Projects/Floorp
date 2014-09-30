@@ -222,3 +222,8 @@ http://example.fi:80                privileged
 https://marketplace.firefox.com:443       privileged
 https://marketplace-dev.allizom.org:443   privileged
 https://marketplace.allizom.org:443       privileged
+
+# Host for HPKP
+https://include-subdomains.pinning-dynamic.example.com:443        privileged,cert=dynamicPinningGood
+https://bad.include-subdomains.pinning-dynamic.example.com:443    privileged,cert=dynamicPinningBad
+

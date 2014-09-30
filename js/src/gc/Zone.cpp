@@ -104,35 +104,35 @@ Zone::onTooMuchMalloc()
 }
 
 void
-Zone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
+Zone::sweepAnalysis(FreeOp *fop, bool releaseTypes)
 {
-    /*
-     * Periodically release observed types for all scripts. This is safe to
-     * do when there are no frames for the zone on the stack.
-     */
+    // Periodically release observed types for all scripts. This is safe to
+    // do when there are no frames for the zone on the stack.
     if (active)
         releaseTypes = false;
 
-    GCRuntime &gc = fop->runtime()->gc;
+    bool oom = false;
+    types.sweep(fop, releaseTypes, &oom);
 
-    {
-        gcstats::MaybeAutoPhase ap(gc.stats, !gc.isHeapCompacting(),
-                                   gcstats::PHASE_DISCARD_ANALYSIS);
-        types.sweep(fop, releaseTypes, oom);
-    }
-
-    if (!fop->runtime()->debuggerList.isEmpty()) {
-        gcstats::MaybeAutoPhase ap1(gc.stats, !gc.isHeapCompacting(),
-                                    gcstats::PHASE_SWEEP_TABLES);
-        gcstats::MaybeAutoPhase ap2(gc.stats, !gc.isHeapCompacting(),
-                                    gcstats::PHASE_SWEEP_TABLES_BREAKPOINT);
-        sweepBreakpoints(fop);
+    // If there was an OOM while sweeping types, the type information needs to
+    // be deoptimized so that it will still correct (i.e.  overapproximates the
+    // possible types in the zone), but the constraints might not have been
+    // triggered on the deoptimization or even copied over completely. In this
+    // case, destroy all JIT code and new script information in the zone, the
+    // only things whose correctness depends on the type constraints.
+    if (oom) {
+        setPreservingCode(false);
+        discardJitCode(fop);
+        types.clearAllNewScriptsOnOOM();
     }
 }
 
 void
 Zone::sweepBreakpoints(FreeOp *fop)
 {
+    if (fop->runtime()->debuggerList.isEmpty())
+        return;
+
     /*
      * Sweep all compartments in a zone at the same time, since there is no way
      * to iterate over the scripts belonging to a single compartment in a zone.

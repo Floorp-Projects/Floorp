@@ -14,7 +14,7 @@ function run_test() {
   // application return code and update.status result.
   gTestFiles = gTestFilesCommon;
   gTestDirs = [];
-  setupUpdaterTest(FILE_COMPLETE_MAR, false, false);
+  setupUpdaterTest(FILE_COMPLETE_MAR);
 
   setupAppFilesAsync();
 }
@@ -24,7 +24,7 @@ function setupAppFilesFinished() {
 }
 
 function checkUpdateFinished() {
-  checkFilesAfterUpdateSuccess();
+  checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
 
   // We need to check the service log even though this is a bootstrap
   // because the app bin could be in use by this test by the time the next

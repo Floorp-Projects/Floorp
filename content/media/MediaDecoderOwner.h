@@ -18,6 +18,8 @@ class HTMLMediaElement;
 class MediaDecoderOwner
 {
 public:
+  // Called by the media decoder to indicate that the download is progressing.
+  virtual void DownloadProgressed() = 0;
   // Called by the media decoder to indicate that the download has stalled
   // (no data has arrived for a while).
   virtual void DownloadStalled() = 0;
@@ -52,15 +54,9 @@ public:
   virtual void MetadataLoaded(const MediaInfo* aInfo,
                               const MetadataTags* aTags) = 0;
 
-  // Called by the video decoder object, on the main thread,
-  // when it has read the first frame of the video
-  // aResourceFullyLoaded should be true if the resource has been
-  // fully loaded and the caller will call ResourceLoaded next.
-  virtual void FirstFrameLoaded(bool aResourceFullyLoaded) = 0;
-
-  // Called by the video decoder object, on the main thread,
-  // when the resource has completed downloading.
-  virtual void ResourceLoaded() = 0;
+  // Called by the decoder object, on the main thread,
+  // when it has read the first frame of the video or audio.
+  virtual void FirstFrameLoaded() = 0;
 
   // Called by the video decoder object, on the main thread,
   // when the resource has a network error during loading.
@@ -114,6 +110,8 @@ public:
     // The next frame of audio/video is unavailable because the decoder
     // is paused while it buffers up data
     NEXT_FRAME_UNAVAILABLE_BUFFERING,
+    // The next frame of audio/video is unavailable for the decoder is seeking.
+    NEXT_FRAME_UNAVAILABLE_SEEKING,
     // The next frame of audio/video is unavailable for some other reasons
     NEXT_FRAME_UNAVAILABLE,
     // The next frame is unavailable due to waiting for more Media Source

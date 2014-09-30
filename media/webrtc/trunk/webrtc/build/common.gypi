@@ -188,7 +188,6 @@
       ['moz_widget_toolkit_gonk==1', {
         'defines' : [
           'WEBRTC_GONK',
-          'WEBRTC_DIRECT_TRACE',
         ],
       }],
       ['restrict_webrtc_logging==1', {

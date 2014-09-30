@@ -658,7 +658,7 @@ gfxShapedText::SetMissingGlyph(uint32_t aIndex, uint32_t aChar, gfxFont *aFont)
         details->mAdvance = 0;
     } else {
         gfxFloat width =
-            std::max(aFont->GetMetrics().aveCharWidth,
+            std::max(aFont->GetMetrics(gfxFont::eHorizontal).aveCharWidth,
                      gfxFontMissingGlyphs::GetDesiredMinWidth(aChar,
                          mAppUnitsPerDevUnit));
         details->mAdvance = uint32_t(width * mAppUnitsPerDevUnit);
@@ -788,7 +788,7 @@ gfxFont::GetGlyphHAdvance(gfxContext *aCtx, uint16_t aGID)
         return GetGlyphWidth(aCtx, aGID) / 65536.0;
     }
     if (mFUnitsConvFactor == 0.0f) {
-        GetMetrics();
+        GetMetrics(eHorizontal);
     }
     NS_ASSERTION(mFUnitsConvFactor > 0.0f,
                  "missing font unit conversion factor");
@@ -1780,7 +1780,7 @@ gfxFont::DrawGlyphs(gfxShapedText            *aShapedText,
                                         ToDeviceUnits(aPt->y, aRunParams.devPerApp));
                             gfxFloat advanceDevUnits =
                                 ToDeviceUnits(advance, aRunParams.devPerApp);
-                            gfxFloat height = GetMetrics().maxAscent;
+                            gfxFloat height = GetMetrics(eHorizontal).maxAscent;
                             gfxRect glyphRect(pt.x, pt.y - height,
                                               advanceDevUnits, height);
 
@@ -2059,7 +2059,9 @@ gfxFont::Measure(gfxTextRun *aTextRun,
 
     const int32_t appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
     // Current position in appunits
-    const gfxFont::Metrics& fontMetrics = GetMetrics();
+    gfxFont::Orientation orientation =
+        aTextRun->IsVertical() ? gfxFont::eVertical : gfxFont::eHorizontal;
+    const gfxFont::Metrics& fontMetrics = GetMetrics(orientation);
 
     RunMetrics metrics;
     metrics.mAscent = fontMetrics.maxAscent*appUnitsPerDevUnit;
@@ -2103,6 +2105,7 @@ gfxFont::Measure(gfxTextRun *aTextRun,
                 } else {
                     gfxRect glyphRect;
                     if (!extents->GetTightGlyphExtentsAppUnits(this,
+                            orientation,
                             aRefContext, glyphIndex, &glyphRect)) {
                         glyphRect = gfxRect(0, metrics.mBoundingBox.Y(),
                             advance, metrics.mBoundingBox.Height());
@@ -2130,6 +2133,7 @@ gfxFont::Measure(gfxTextRun *aTextRun,
                     gfxRect glyphRect;
                     if (glyphData->IsMissing() || !extents ||
                         !extents->GetTightGlyphExtentsAppUnits(this,
+                                orientation,
                                 aRefContext, glyphIndex, &glyphRect)) {
                         // We might have failed to get glyph extents due to
                         // OOM or something
@@ -2937,7 +2941,8 @@ gfxFont::GetOrCreateGlyphExtents(int32_t aAppUnitsPerDevUnit) {
 }
 
 void
-gfxFont::SetupGlyphExtents(gfxContext *aContext, uint32_t aGlyphID, bool aNeedTight,
+gfxFont::SetupGlyphExtents(gfxContext *aContext, Orientation aOrientation, 
+                           uint32_t aGlyphID, bool aNeedTight,
                            gfxGlyphExtents *aExtents)
 {
     gfxContextMatrixAutoSaveRestore matrixRestore(aContext);
@@ -2962,7 +2967,7 @@ gfxFont::SetupGlyphExtents(gfxContext *aContext, uint32_t aGlyphID, bool aNeedTi
     cairo_text_extents_t extents;
     cairo_glyph_extents(aContext->GetCairo(), &glyph, 1, &extents);
 
-    const Metrics& fontMetrics = GetMetrics();
+    const Metrics& fontMetrics = GetMetrics(aOrientation);
     int32_t appUnitsPerDevUnit = aExtents->GetAppUnitsPerDevUnit();
     if (!aNeedTight && extents.x_bearing >= 0 &&
         extents.y_bearing >= -fontMetrics.maxAscent &&
@@ -3079,6 +3084,9 @@ gfxFont::InitMetricsFromSfntTables(Metrics& aMetrics)
             }
         }
     }
+
+#undef SET_SIGNED
+#undef SET_UNSIGNED
 
     mIsValid = true;
 
@@ -3205,6 +3213,152 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont)
     }
 }
 
+// Create a Metrics record to be used for vertical layout. This should never
+// fail, as we've already decided this is a valid font. We do not have the
+// option of marking it invalid (as can happen if we're unable to read
+// horizontal metrics), because that could break a font that we're already
+// using for horizontal text.
+// So we will synthesize *something* usable here even if there aren't any of the
+// usual font tables (which can happen in the case of a legacy bitmap or Type1
+// font for which the platform-specific backend used platform APIs instead of
+// sfnt tables to create the horizontal metrics).
+const gfxFont::Metrics*
+gfxFont::CreateVerticalMetrics()
+{
+    const uint32_t kHheaTableTag = TRUETYPE_TAG('h','h','e','a');
+    const uint32_t kVheaTableTag = TRUETYPE_TAG('v','h','e','a');
+    const uint32_t kPostTableTag = TRUETYPE_TAG('p','o','s','t');
+    const uint32_t kOS_2TableTag = TRUETYPE_TAG('O','S','/','2');
+    uint32_t len;
+
+    Metrics* metrics = new Metrics;
+    ::memset(metrics, 0, sizeof(Metrics));
+
+    // Some basic defaults, in case the font lacks any real metrics tables.
+    // TODO: consider what rounding (if any) we should apply to these.
+    metrics->emHeight = GetAdjustedSize();
+    metrics->emAscent = metrics->emHeight / 2;
+    metrics->emDescent = metrics->emHeight - metrics->emAscent;
+
+    metrics->maxAscent = metrics->emAscent;
+    metrics->maxDescent = metrics->emDescent;
+
+    const float UNINITIALIZED_LEADING = -10000.0f;
+    metrics->externalLeading = UNINITIALIZED_LEADING;
+
+#define SET_UNSIGNED(field,src) metrics->field = uint16_t(src) * mFUnitsConvFactor
+#define SET_SIGNED(field,src)   metrics->field = int16_t(src) * mFUnitsConvFactor
+
+    gfxFontEntry::AutoTable os2Table(mFontEntry, kOS_2TableTag);
+    if (os2Table) {
+        const OS2Table *os2 =
+            reinterpret_cast<const OS2Table*>(hb_blob_get_data(os2Table, &len));
+        // These fields should always be present in any valid OS/2 table
+        if (len >= offsetof(OS2Table, sTypoLineGap) + sizeof(int16_t)) {
+            SET_SIGNED(strikeoutSize, os2->yStrikeoutSize);
+            SET_SIGNED(aveCharWidth, int16_t(os2->sTypoAscender) -
+                                     int16_t(os2->sTypoDescender));
+            metrics->maxAscent =
+                std::max(metrics->maxAscent, int16_t(os2->xAvgCharWidth) *
+                                             gfxFloat(mFUnitsConvFactor));
+            metrics->maxDescent =
+                std::max(metrics->maxDescent, int16_t(os2->xAvgCharWidth) *
+                                              gfxFloat(mFUnitsConvFactor));
+        }
+    }
+
+    // If we didn't set aveCharWidth from OS/2, try to read 'hhea' metrics
+    // and use the line height from its ascent/descent.
+    if (!metrics->aveCharWidth) {
+        gfxFontEntry::AutoTable hheaTable(mFontEntry, kHheaTableTag);
+        if (hheaTable) {
+            const HheaTable* hhea =
+                reinterpret_cast<const HheaTable*>(hb_blob_get_data(hheaTable,
+                                                                    &len));
+            if (len >= sizeof(HheaTable)) {
+                SET_SIGNED(aveCharWidth, int16_t(hhea->ascender) -
+                                         int16_t(hhea->descender));
+                metrics->maxAscent = metrics->aveCharWidth / 2;
+                metrics->maxDescent =
+                    metrics->aveCharWidth - metrics->maxAscent;
+            }
+        }
+    }
+
+    // Read real vertical metrics if available.
+    gfxFontEntry::AutoTable vheaTable(mFontEntry, kVheaTableTag);
+    if (vheaTable) {
+        const HheaTable* vhea =
+            reinterpret_cast<const HheaTable*>(hb_blob_get_data(vheaTable,
+                                                                &len));
+        if (len >= sizeof(HheaTable)) {
+            SET_UNSIGNED(maxAdvance, vhea->advanceWidthMax);
+            SET_SIGNED(maxAscent, vhea->ascender);
+            SET_SIGNED(maxDescent, -int16_t(vhea->descender));
+            SET_SIGNED(externalLeading, vhea->lineGap);
+        }
+    }
+
+    // If we didn't set aveCharWidth above, we must be dealing with a non-sfnt
+    // font of some kind (Type1, bitmap, vector, ...), so fall back to using
+    // whatever the platform backend figured out for horizontal layout.
+    // And if we haven't set externalLeading yet, then copy that from the
+    // horizontal metrics as well, to help consistency of CSS line-height.
+    if (!metrics->aveCharWidth ||
+        metrics->externalLeading == UNINITIALIZED_LEADING) {
+        const Metrics& horizMetrics = GetHorizontalMetrics();
+        if (!metrics->aveCharWidth) {
+            metrics->aveCharWidth = horizMetrics.maxAscent + horizMetrics.maxDescent;
+        }
+        if (metrics->externalLeading == UNINITIALIZED_LEADING) {
+            metrics->externalLeading = horizMetrics.externalLeading;
+        }
+    }
+
+    // Get underline thickness from the 'post' table if available.
+    gfxFontEntry::AutoTable postTable(mFontEntry, kPostTableTag);
+    if (postTable) {
+        const PostTable *post =
+            reinterpret_cast<const PostTable*>(hb_blob_get_data(postTable,
+                                                                &len));
+        if (len >= offsetof(PostTable, underlineThickness) +
+                       sizeof(uint16_t)) {
+            SET_UNSIGNED(underlineSize, post->underlineThickness);
+            // Also use for strikeout if we didn't find that in OS/2 above.
+            if (!metrics->strikeoutSize) {
+                metrics->strikeoutSize = metrics->underlineSize;
+            }
+        }
+    }
+
+#undef SET_UNSIGNED
+#undef SET_SIGNED
+
+    // If we didn't read this from a vhea table, it will still be zero.
+    // In any case, let's make sure it is not less than the value we've
+    // come up with for aveCharWidth.
+    metrics->maxAdvance = std::max(metrics->maxAdvance, metrics->aveCharWidth);
+
+    // Thickness of underline and strikeout may have been read from tables,
+    // but in case they were not present, ensure a minimum of 1 pixel.
+    // We synthesize our own positions, as font metrics don't provide these
+    // for vertical layout.
+    metrics->underlineSize = std::max(1.0, metrics->underlineSize);
+    metrics->underlineOffset = 0; // XXX to be adjusted
+
+    metrics->strikeoutSize = std::max(1.0, metrics->strikeoutSize);
+    metrics->strikeoutOffset =
+        metrics->maxDescent - 0.5 * metrics->strikeoutSize;
+
+    // Somewhat arbitrary values for now, subject to future refinement...
+    metrics->spaceWidth = metrics->aveCharWidth;
+    metrics->zeroOrAveCharWidth = metrics->aveCharWidth;
+    metrics->maxHeight = metrics->maxAscent + metrics->maxDescent;
+    metrics->xHeight = metrics->emHeight / 2;
+
+    return metrics;
+}
+
 gfxFloat
 gfxFont::SynthesizeSpaceWidth(uint32_t aCh)
 {
@@ -3219,8 +3373,8 @@ gfxFont::SynthesizeSpaceWidth(uint32_t aCh)
     case 0x2004: return GetAdjustedSize() / 3;   // three-per-em space
     case 0x2005: return GetAdjustedSize() / 4;   // four-per-em space
     case 0x2006: return GetAdjustedSize() / 6;   // six-per-em space
-    case 0x2007: return GetMetrics().zeroOrAveCharWidth; // figure space
-    case 0x2008: return GetMetrics().spaceWidth; // punctuation space 
+    case 0x2007: return GetMetrics(eHorizontal).zeroOrAveCharWidth; // figure space
+    case 0x2008: return GetMetrics(eHorizontal).spaceWidth; // punctuation space
     case 0x2009: return GetAdjustedSize() / 5;   // thin space
     case 0x200a: return GetAdjustedSize() / 10;  // hair space
     case 0x202f: return GetAdjustedSize() / 5;   // narrow no-break space

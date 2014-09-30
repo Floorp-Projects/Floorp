@@ -1441,7 +1441,22 @@ public:
                                       // no '0' glyph in this font,
                                       // equal to .aveCharWidth
     };
-    virtual const gfxFont::Metrics& GetMetrics() = 0;
+
+    enum Orientation {
+        eHorizontal,
+        eVertical
+    };
+
+    const Metrics& GetMetrics(Orientation aOrientation)
+    {
+        if (aOrientation == eHorizontal) {
+            return GetHorizontalMetrics();
+        }
+        if (!mVerticalMetrics) {
+            mVerticalMetrics = CreateVerticalMetrics();
+        }
+        return *mVerticalMetrics;
+    }
 
     /**
      * We let layout specify spacing on either side of any
@@ -1558,7 +1573,8 @@ public:
     gfxGlyphExtents *GetOrCreateGlyphExtents(int32_t aAppUnitsPerDevUnit);
 
     // You need to call SetupCairoFont on the aCR just before calling this
-    virtual void SetupGlyphExtents(gfxContext *aContext, uint32_t aGlyphID,
+    virtual void SetupGlyphExtents(gfxContext *aContext,
+                                   Orientation aOrientation, uint32_t aGlyphID,
                                    bool aNeedTight, gfxGlyphExtents *aExtents);
 
     // This is called by the default Draw() implementation above.
@@ -1735,6 +1751,10 @@ public:
     GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel);
 
 protected:
+    virtual const Metrics& GetHorizontalMetrics() = 0;
+
+    const Metrics* CreateVerticalMetrics();
+
     // Output a single glyph at *aPt, which is updated by the glyph's advance.
     // Normal glyphs are simply accumulated in aBuffer until it is full and
     // gets flushed, but SVG or color-font glyphs will instead be rendered
@@ -1972,6 +1992,9 @@ protected:
 
     mozilla::RefPtr<mozilla::gfx::ScaledFont> mAzureScaledFont;
 
+    // For vertical metrics, created on demand.
+    nsAutoPtr<const Metrics> mVerticalMetrics;
+
     // Helper for subclasses that want to initialize standard metrics from the
     // tables of sfnt (TrueType/OpenType) fonts.
     // This will use mFUnitsConvFactor if it is already set, else compute it
@@ -1988,7 +2011,7 @@ protected:
 
     // some fonts have bad metrics, this method sanitize them.
     // if this font has bad underline offset, aIsBadUnderlineFont should be true.
-    void SanitizeMetrics(gfxFont::Metrics *aMetrics, bool aIsBadUnderlineFont);
+    void SanitizeMetrics(Metrics *aMetrics, bool aIsBadUnderlineFont);
 
     bool RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMode,
                         uint32_t aGlyphId, gfxTextContextPaint *aContextPaint) const;

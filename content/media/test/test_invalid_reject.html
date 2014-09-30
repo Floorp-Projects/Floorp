@@ -31,10 +31,10 @@ function startTest(test, token) {
   });
 
   // Seeing a decoder error is a success.
-  v.addEventListener("error", function(e) {
+  v.addEventListener("error", function onerror(e) {
     is(v.error.code, v.error.MEDIA_ERR_DECODE,
       "decoder should reject " + test.name);
-    v.removeEventListener('error', arguments.callee, false);
+    v.removeEventListener('error', onerror, false);
     manager.finished(token);
   });
 

@@ -173,12 +173,17 @@ IsJapaneseLocale()
 }
 
 void
-gfxAndroidPlatform::GetCommonFallbackFonts(const uint32_t aCh,
+gfxAndroidPlatform::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
                                            int32_t aRunScript,
                                            nsTArray<const char*>& aFontList)
 {
     static const char kDroidSansJapanese[] = "Droid Sans Japanese";
     static const char kMotoyaLMaru[] = "MotoyaLMaru";
+
+    if (aNextCh == 0xfe0fu) {
+        // if char is followed by VS16, try for a color emoji glyph
+        aFontList.AppendElement("Noto Color Emoji");
+    }
 
     if (IS_IN_BMP(aCh)) {
         // try language-specific "Droid Sans *" and "Noto Sans *" fonts for

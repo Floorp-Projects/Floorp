@@ -147,7 +147,7 @@
 	<key>CFBundleGetInfoString</key>
 	<string>%MAC_APP_NAME% %APP_VERSION%</string>
 	<key>CFBundleIconFile</key>
-	<string>firefox</string>
+	<string>firefox.icns</string>
 	<key>CFBundleIdentifier</key>
 	<string>%MOZ_MACBUNDLE_ID%</string>
 	<key>CFBundleInfoDictionaryVersion</key>

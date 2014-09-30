@@ -1772,7 +1772,7 @@ LIRGenerator::visitToDouble(MToDouble *convert)
 
       case MIRType_Int32:
       {
-        LInt32ToDouble *lir = new(alloc()) LInt32ToDouble(useRegister(opd));
+        LInt32ToDouble *lir = new(alloc()) LInt32ToDouble(useRegisterAtStart(opd));
         return define(lir, convert);
       }
 
@@ -1834,13 +1834,22 @@ LIRGenerator::visitToFloat32(MToFloat32 *convert)
 
       case MIRType_Int32:
       {
-        LInt32ToFloat32 *lir = new(alloc()) LInt32ToFloat32(useRegister(opd));
+        LInt32ToFloat32 *lir = new(alloc()) LInt32ToFloat32(useRegisterAtStart(opd));
         return define(lir, convert);
       }
 
       case MIRType_Double:
       {
-        LDoubleToFloat32 *lir = new(alloc()) LDoubleToFloat32(useRegister(opd));
+        LDoubleToFloat32 *lir;
+#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
+        // Bug 1039993: workaround LSRA issues.
+        if (gen->optimizationInfo().registerAllocator() == RegisterAllocator_LSRA)
+            lir = new(alloc()) LDoubleToFloat32(useRegister(opd));
+        else
+            lir = new(alloc()) LDoubleToFloat32(useRegisterAtStart(opd));
+#else
+        lir = new(alloc()) LDoubleToFloat32(useRegisterAtStart(opd));
+#endif
         return define(lir, convert);
       }
 

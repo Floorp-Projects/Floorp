@@ -7,6 +7,12 @@
         border: 1px solid red;
         margin: 10px;
       }
+      #pseudo-container::before {
+        content: 'before';
+      }
+      #pseudo-container::after {
+        content: 'after';
+      }
     </style>
   </head>
   <body>
@@ -36,5 +42,6 @@
         </div>
       </div>
     </article>
+    <div id='pseudo-container'></div>
   </body>
 </html>

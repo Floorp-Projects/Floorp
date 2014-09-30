@@ -3846,9 +3846,6 @@ IonBuilder::jsop_try()
 {
     JS_ASSERT(JSOp(*pc) == JSOP_TRY);
 
-    if (!js_JitOptions.compileTryCatch)
-        return abort("Try-catch support disabled");
-
     // Try-finally is not yet supported.
     if (analysis().hasTryFinally())
         return abort("Has try-finally");

@@ -3910,20 +3910,7 @@ protected:
   FactoryOp(Factory* aFactory,
             already_AddRefed<ContentParent> aContentParent,
             const CommonFactoryRequestParams& aCommonParams,
-            bool aDeleting)
-    : mFactory(aFactory)
-    , mContentParent(Move(aContentParent))
-    , mCommonParams(aCommonParams)
-    , mState(State_Initial)
-    , mStoragePrivilege(mozilla::dom::quota::Content)
-    , mEnforcingQuota(true)
-    , mDeleting(aDeleting)
-    , mBlockedQuotaManager(false)
-    , mChromeWriteAccessAllowed(false)
-  {
-    AssertIsOnBackgroundThread();
-    MOZ_ASSERT(aFactory);
-  }
+            bool aDeleting);
 
   virtual
   ~FactoryOp()
@@ -5075,19 +5062,41 @@ public:
   static QuotaClient*
   GetInstance()
   {
+    MOZ_ASSERT(NS_IsMainThread());
+
     return sInstance;
   }
 
-  void
-  NoteBackgroundThread(nsIEventTarget* aBackgroundThread);
+  static bool
+  IsShuttingDownOnMainThread()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    if (sInstance) {
+      return sInstance->mShutdownRequested;
+    }
+
+    return QuotaManager::IsShuttingDown();
+  }
+
+  static bool
+  IsShuttingDownOnNonMainThread()
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    return QuotaManager::IsShuttingDown();
+  }
 
   bool
-  HasShutDown() const
+  IsShuttingDown() const
   {
     MOZ_ASSERT(NS_IsMainThread());
 
     return mShutdownRequested;
   }
+
+  void
+  NoteBackgroundThread(nsIEventTarget* aBackgroundThread);
 
   NS_INLINE_DECL_REFCOUNTING(QuotaClient)
 
@@ -5557,6 +5566,10 @@ AllocPBackgroundIDBFactoryParent(PBackgroundParent* aManager,
     }
   }
 
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonMainThread())) {
+    return nullptr;
+  }
+
   nsRefPtr<Factory> actor = Factory::Create(aOptionalWindowId);
   return actor.forget().take();
 }
@@ -5568,6 +5581,7 @@ RecvPBackgroundIDBFactoryConstructor(PBackgroundParent* /* aManager */,
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
+  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnNonMainThread());
 
   return true;
 }
@@ -5751,6 +5765,7 @@ Factory::Factory(const OptionalWindowId& aOptionalWindowId)
   , mActorDestroyed(false)
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnNonMainThread());
 }
 
 Factory::~Factory()
@@ -5763,6 +5778,7 @@ already_AddRefed<Factory>
 Factory::Create(const OptionalWindowId& aOptionalWindowId)
 {
   AssertIsOnBackgroundThread();
+  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnNonMainThread());
 
   // If this is the first instance then we need to do some initialization.
   if (!sFactoryInstanceCount) {
@@ -5872,6 +5888,10 @@ Factory::AllocPBackgroundIDBFactoryRequestParent(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != FactoryRequestParams::T__None);
 
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonMainThread())) {
+    return nullptr;
+  }
+
   const CommonFactoryRequestParams* commonParams;
 
   switch (aParams.type()) {
@@ -5933,6 +5953,7 @@ Factory::RecvPBackgroundIDBFactoryRequestConstructor(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(aParams.type() != FactoryRequestParams::T__None);
+  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnNonMainThread());
 
   auto* op = static_cast<FactoryOp*>(aActor);
 
@@ -10304,6 +10325,25 @@ AutoSetProgressHandler::Register(
   return NS_OK;
 }
 
+FactoryOp::FactoryOp(Factory* aFactory,
+                     already_AddRefed<ContentParent> aContentParent,
+                     const CommonFactoryRequestParams& aCommonParams,
+                     bool aDeleting)
+  : mFactory(aFactory)
+  , mContentParent(Move(aContentParent))
+  , mCommonParams(aCommonParams)
+  , mState(State_Initial)
+  , mStoragePrivilege(mozilla::dom::quota::Content)
+  , mEnforcingQuota(true)
+  , mDeleting(aDeleting)
+  , mBlockedQuotaManager(false)
+  , mChromeWriteAccessAllowed(false)
+{
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(aFactory);
+  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnNonMainThread());
+}
+
 nsresult
 FactoryOp::Open()
 {
@@ -10314,7 +10354,8 @@ FactoryOp::Open()
   nsRefPtr<ContentParent> contentParent;
   mContentParent.swap(contentParent);
 
-  if (!OperationMayProceed()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnMainThread()) ||
+      !OperationMayProceed()) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
@@ -10392,7 +10433,8 @@ FactoryOp::RetryCheckPermission()
   nsRefPtr<ContentParent> contentParent;
   mContentParent.swap(contentParent);
 
-  if (!OperationMayProceed()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnMainThread()) ||
+      !OperationMayProceed()) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
@@ -10428,16 +10470,14 @@ FactoryOp::SendToIOThread()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mState == State_OpenPending);
 
-  if (!OperationMayProceed()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnMainThread()) ||
+      !OperationMayProceed()) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
   QuotaManager* quotaManager = QuotaManager::Get();
-  if (NS_WARN_IF(!quotaManager)) {
-    IDB_REPORT_INTERNAL_ERR();
-    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
-  }
+  MOZ_ASSERT(quotaManager);
 
   // Must set this before dispatching otherwise we will race with the IO thread.
   mState = State_DatabaseWorkOpen;
@@ -10819,6 +10859,7 @@ FactoryOp::FinishOpen()
   MOZ_ASSERT(!mDatabaseId.IsEmpty());
   MOZ_ASSERT(!mBlockedQuotaManager);
   MOZ_ASSERT(!mContentParent);
+  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnMainThread());
 
   PersistenceType persistenceType = mCommonParams.metadata().persistenceType();
 
@@ -10830,10 +10871,8 @@ FactoryOp::FinishOpen()
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  QuotaManager* quotaManager;
-
-  if (QuotaManager::IsShuttingDown() ||
-      !(quotaManager = QuotaManager::GetOrCreate())) {
+  QuotaManager* quotaManager = QuotaManager::GetOrCreate();
+  if (NS_WARN_IF(!quotaManager)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
@@ -11002,9 +11041,8 @@ OpenDatabaseOp::QuotaManagerOpen()
   MOZ_ASSERT(!mOfflineStorage);
 
   QuotaClient* quotaClient = QuotaClient::GetInstance();
-  MOZ_ASSERT(quotaClient);
-
-  if (NS_WARN_IF(quotaClient->HasShutDown())) {
+  if (NS_WARN_IF(!quotaClient) ||
+      NS_WARN_IF(quotaClient->IsShuttingDown())) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
@@ -11051,7 +11089,8 @@ OpenDatabaseOp::DoDatabaseWork()
                  "OpenDatabaseHelper::DoDatabaseWork",
                  js::ProfileEntry::Category::STORAGE);
 
-  if (NS_WARN_IF(QuotaManager::IsShuttingDown()) || !OperationMayProceed()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonMainThread()) ||
+      !OperationMayProceed()) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
@@ -11502,7 +11541,9 @@ OpenDatabaseOp::BeginVersionChange()
   MOZ_ASSERT(!mDatabase);
   MOZ_ASSERT(!mVersionChangeTransaction);
 
-  if (IsActorDestroyed()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonMainThread()) ||
+      !OperationMayProceed() ||
+      IsActorDestroyed()) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
@@ -11658,7 +11699,9 @@ OpenDatabaseOp::SendUpgradeNeeded()
   MOZ_ASSERT(NS_SUCCEEDED(mResultCode));
   MOZ_ASSERT_IF(!IsActorDestroyed(), mDatabase);
 
-  if (IsActorDestroyed()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonMainThread()) ||
+      !OperationMayProceed() ||
+      IsActorDestroyed()) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
@@ -12066,6 +12109,12 @@ VersionChangeOp::DoDatabaseWork(TransactionBase* aTransaction)
   aTransaction->AssertIsOnTransactionThread();
   MOZ_ASSERT(mOpenDatabaseOp->mState == State_DatabaseWorkVersionChange);
 
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonMainThread()) ||
+      !OperationMayProceed()) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
   PROFILER_LABEL("IndexedDB",
                  "VersionChangeOp::DoDatabaseWork",
                  js::ProfileEntry::Category::STORAGE);
@@ -12267,7 +12316,8 @@ DeleteDatabaseOp::DoDatabaseWork()
                  "DeleteDatabaseOp::DoDatabaseWork",
                  js::ProfileEntry::Category::STORAGE);
 
-  if (!OperationMayProceed()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonMainThread()) ||
+      !OperationMayProceed()) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
@@ -12343,7 +12393,9 @@ DeleteDatabaseOp::BeginVersionChange()
   MOZ_ASSERT(mState == State_BeginVersionChange);
   MOZ_ASSERT(mMaybeBlockedDatabases.IsEmpty());
 
-  if (IsActorDestroyed()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonMainThread()) ||
+      !OperationMayProceed() ||
+      IsActorDestroyed()) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
@@ -12381,7 +12433,9 @@ DeleteDatabaseOp::DispatchToWorkThread()
   MOZ_ASSERT(mState == State_WaitingForTransactionsToComplete);
   MOZ_ASSERT(mMaybeBlockedDatabases.IsEmpty());
 
-  if (IsActorDestroyed()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonMainThread()) ||
+      !OperationMayProceed() ||
+      IsActorDestroyed()) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
@@ -12474,6 +12528,12 @@ VersionChangeOp::RunOnMainThread()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mDeleteDatabaseOp->mState == State_DatabaseWorkVersionChange);
 
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnMainThread()) ||
+      !OperationMayProceed()) {
+    IDB_REPORT_INTERNAL_ERR();
+    return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
+  }
+
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
@@ -12497,7 +12557,8 @@ VersionChangeOp::RunOnIOThread()
                  "DeleteDatabaseOp::VersionChangeOp::RunOnIOThread",
                  js::ProfileEntry::Category::STORAGE);
 
-  if (!OperationMayProceed()) {
+  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnNonMainThread()) ||
+      !OperationMayProceed()) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }

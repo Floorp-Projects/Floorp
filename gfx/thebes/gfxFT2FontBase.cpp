@@ -108,7 +108,7 @@ gfxFT2FontBase::GetGlyphExtents(uint32_t aGlyph, cairo_text_extents_t* aExtents)
 }
 
 const gfxFont::Metrics&
-gfxFT2FontBase::GetMetrics()
+gfxFT2FontBase::GetHorizontalMetrics()
 {
     if (mHasMetrics)
         return mMetrics;
@@ -146,7 +146,7 @@ gfxFT2FontBase::GetSpaceGlyph()
 {
     NS_ASSERTION(GetStyle()->size != 0,
                  "forgot to short-circuit a text run with zero-sized font?");
-    GetMetrics();
+    GetHorizontalMetrics();
     return mSpaceGlyph;
 }
 

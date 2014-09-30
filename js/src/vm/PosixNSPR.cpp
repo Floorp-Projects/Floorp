@@ -71,12 +71,12 @@ Initialize()
 
 PRThread *
 PR_CreateThread(PRThreadType type,
-		void (*start)(void *arg),
-		void *arg,
-		PRThreadPriority priority,
-		PRThreadScope scope,
-		PRThreadState state,
-		uint32_t stackSize)
+                void (*start)(void *arg),
+                void *arg,
+                PRThreadPriority priority,
+                PRThreadScope scope,
+                PRThreadState state,
+                uint32_t stackSize)
 {
     JS_ASSERT(type == PR_USER_THREAD);
     JS_ASSERT(priority == PR_PRIORITY_NORMAL);

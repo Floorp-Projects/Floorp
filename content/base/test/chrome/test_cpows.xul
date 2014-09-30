@@ -21,10 +21,7 @@
   }
 
   addLoadEvent(function() {
-    // We don't want to set browser.tabs.remote to true, but still have CPOWs enabled.
-    SpecialPowers.pushPrefEnv({"set": [["dom.ipc.cpows.force-enabled", true]]}, function() {
-      window.open("cpows_parent.xul", "", "chrome");
-    });
+    window.open("cpows_parent.xul", "", "chrome");
   });
   ]]></script>
 </window>

@@ -498,3 +498,112 @@ LayoutHelpers.prototype = {
     };
   }
 };
+
+/**
+ * Traverse getBindingParent until arriving upon the bound element
+ * responsible for the generation of the specified node.
+ * See https://developer.mozilla.org/en-US/docs/XBL/XBL_1.0_Reference/DOM_Interfaces#getBindingParent.
+ *
+ * @param {DOMNode} node
+ * @return {DOMNode}
+ *         If node is not anonymous, this will return node. Otherwise,
+ *         it will return the bound element
+ *
+ */
+LayoutHelpers.getRootBindingParent = function(node) {
+  let parent;
+  let doc = node.ownerDocument;
+  if (!doc) {
+    return node;
+  }
+  while ((parent = doc.getBindingParent(node))) {
+    node = parent;
+  }
+  return node;
+};
+
+LayoutHelpers.getBindingParent = function(node) {
+  let doc = node.ownerDocument;
+  if (!doc) {
+    return false;
+  }
+
+  // If there is no binding parent then it is not anonymous.
+  let parent = doc.getBindingParent(node);
+  if (!parent) {
+    return false;
+  }
+
+  return parent;
+}
+/**
+ * Determine whether a node is anonymous by determining if there
+ * is a bindingParent.
+ *
+ * @param {DOMNode} node
+ * @return {Boolean}
+ *
+ */
+LayoutHelpers.isAnonymous = function(node) {
+  return LayoutHelpers.getRootBindingParent(node) !== node;
+};
+
+/**
+ * Determine whether a node is native anonymous content (as opposed
+ * to XBL anonymous or shadow DOM).
+ * Native anonymous content includes elements like internals to form
+ * controls and ::before/::after.
+ *
+ * @param {DOMNode} node
+ * @return {Boolean}
+ *
+ */
+LayoutHelpers.isNativeAnonymous = function(node) {
+  if (!LayoutHelpers.getBindingParent(node)) {
+    return false;
+  }
+  return !LayoutHelpers.isXBLAnonymous(node) &&
+         !LayoutHelpers.isShadowAnonymous(node);
+};
+
+/**
+ * Determine whether a node is XBL anonymous content (as opposed
+ * to native anonymous or shadow DOM).
+ * See https://developer.mozilla.org/en-US/docs/XBL/XBL_1.0_Reference/Anonymous_Content.
+ *
+ * @param {DOMNode} node
+ * @return {Boolean}
+ *
+ */
+LayoutHelpers.isXBLAnonymous = function(node) {
+  let parent = LayoutHelpers.getBindingParent(node);
+  if (!parent) {
+    return false;
+  }
+
+  // Shadow nodes also show up in getAnonymousNodes, so return false.
+  if (parent.shadowRoot && parent.shadowRoot.contains(node)) {
+    return false;
+  }
+
+  let anonNodes = [...node.ownerDocument.getAnonymousNodes(parent) || []];
+  return anonNodes.indexOf(node) > -1;
+};
+
+/**
+ * Determine whether a node is a child of a shadow root.
+ * See https://w3c.github.io/webcomponents/spec/shadow/
+ *
+ * @param {DOMNode} node
+ * @return {Boolean}
+ */
+LayoutHelpers.isShadowAnonymous = function(node) {
+  let parent = LayoutHelpers.getBindingParent(node);
+  if (!parent) {
+    return false;
+  }
+
+  // If there is a shadowRoot and this is part of it then this
+  // is not native anonymous
+  return parent.shadowRoot && parent.shadowRoot.contains(node);
+};
