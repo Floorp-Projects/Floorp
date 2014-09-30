@@ -157,13 +157,6 @@ protected:
   // Pushes a packet to the front of the video packet queue.
   virtual void PushVideoPacket(NesteggPacketHolder* aItem);
 
-  // Returns an initialized ogg packet with data obtained from the WebM container.
-  ogg_packet InitOggPacket(unsigned char* aData,
-                           size_t aLength,
-                           bool aBOS,
-                           bool aEOS,
-                           int64_t aGranulepos);
-
 #ifdef MOZ_OPUS
   // Setup opus decoder
   bool InitOpusDecoder();
@@ -176,10 +169,10 @@ protected:
   // must be held during this call. The caller is responsible for freeing
   // aPacket.
   bool DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset);
-  bool DecodeVorbis(unsigned char* aData, size_t aLength,
+  bool DecodeVorbis(const unsigned char* aData, size_t aLength,
                     int64_t aOffset, uint64_t aTstampUsecs, int32_t* aTotalFrames);
 #ifdef MOZ_OPUS
-  bool DecodeOpus(unsigned char* aData, size_t aLength,
+  bool DecodeOpus(const unsigned char* aData, size_t aLength,
                   int64_t aOffset, uint64_t aTstampUsecs, nestegg_packet* aPacket);
 #endif
 
@@ -200,9 +193,7 @@ private:
   vorbis_comment mVorbisComment;
   vorbis_dsp_state mVorbisDsp;
   vorbis_block mVorbisBlock;
-  uint32_t mPacketCount;
-  uint32_t mChannels;
-
+  int64_t mPacketCount;
 
 #ifdef MOZ_OPUS
   // Opus decoder state
