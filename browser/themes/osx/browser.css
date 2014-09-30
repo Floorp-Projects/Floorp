@@ -161,6 +161,19 @@ toolbarseparator {
   z-index: 1;
 }
 
+/* Always draw a border on Yosemite to ensure the border is well-defined there
+ * (the default border is too light). */
+@media (-moz-mac-yosemite-theme) {
+  #main-window[tabsintitlebar] #TabsToolbar:not([collapsed="true"]) + #nav-bar:not(:-moz-lwtheme) {
+    border-top: 1px solid hsla(0,0%,0%,.2);
+    background-clip: padding-box;
+    margin-top: -@tabToolbarNavbarOverlap@;
+    /* Position the toolbar above the bottom of background tabs */
+    position: relative;
+    z-index: 1;
+  }
+}
+
 #nav-bar-customization-target {
   padding: 4px;
 }
