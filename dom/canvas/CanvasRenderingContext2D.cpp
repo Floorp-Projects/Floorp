@@ -3443,7 +3443,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   // offset pt.y based on text baseline
   processor.mFontgrp->UpdateUserFonts(); // ensure user font generation is current
   const gfxFont::Metrics& fontMetrics =
-    processor.mFontgrp->GetFirstValidFont()->GetMetrics();
+    processor.mFontgrp->GetFirstValidFont()->GetMetrics(gfxFont::eHorizontal); // XXX vertical?
 
   gfxFloat anchorY;
 
