@@ -52,7 +52,7 @@ int64_t
 WebGLTexture::ImageInfo::MemoryUsage() const {
     if (mImageDataStatus == WebGLImageDataStatus::NoImageData)
         return 0;
-    int64_t bitsPerTexel = WebGLContext::GetBitsPerTexel(mWebGLInternalFormat, mWebGLType);
+    int64_t bitsPerTexel = WebGLContext::GetBitsPerTexel(mInternalFormat, mType);
     return int64_t(mWidth) * int64_t(mHeight) * bitsPerTexel/8;
 }
 
@@ -336,7 +336,7 @@ WebGLTexture::ResolvedFakeBlackStatus() {
         }
     }
 
-    if (ImageInfoBase().mWebGLType == LOCAL_GL_FLOAT &&
+    if (ImageInfoBase().mType == LOCAL_GL_FLOAT &&
         !Context()->IsExtensionEnabled(WebGLExtensionID::OES_texture_float_linear))
     {
         if (mMinFilter == LOCAL_GL_LINEAR ||
@@ -356,7 +356,7 @@ WebGLTexture::ResolvedFakeBlackStatus() {
                                       "Try enabling the OES_texture_float_linear extension if supported.", msg_rendering_as_black);
             mFakeBlackStatus = WebGLTextureFakeBlackStatus::IncompleteTexture;
         }
-    } else if (ImageInfoBase().mWebGLType == LOCAL_GL_HALF_FLOAT_OES &&
+    } else if (ImageInfoBase().mType == LOCAL_GL_HALF_FLOAT_OES &&
                !Context()->IsExtensionEnabled(WebGLExtensionID::OES_texture_half_float_linear))
     {
         if (mMinFilter == LOCAL_GL_LINEAR ||
@@ -543,8 +543,8 @@ WebGLTexture::DoDeferredImageInitialization(TexImageTarget imageTarget, GLint le
     mContext->MakeContextCurrent();
 
     // Try to clear with glCLear.
-    TexInternalFormat internalformat = imageInfo.mWebGLInternalFormat;
-    TexType type = imageInfo.mWebGLType;
+    TexInternalFormat internalformat = imageInfo.mInternalFormat;
+    TexType type = imageInfo.mType;
     WebGLTexelFormat texelformat = GetWebGLTexelFormat(internalformat, type);
 
     bool cleared = ClearWithTempFB(mContext, GLName(),

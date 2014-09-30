@@ -67,19 +67,19 @@ public:
     {
     public:
         ImageInfo()
-            : mWebGLInternalFormat(LOCAL_GL_NONE)
-            , mWebGLType(LOCAL_GL_NONE)
+            : mInternalFormat(LOCAL_GL_NONE)
+            , mType(LOCAL_GL_NONE)
             , mImageDataStatus(WebGLImageDataStatus::NoImageData)
         {}
 
         ImageInfo(GLsizei width,
                   GLsizei height,
-                  TexInternalFormat webGLInternalFormat,
-                  TexType webGLType,
+                  TexInternalFormat internalFormat,
+                  TexType type,
                   WebGLImageDataStatus status)
             : WebGLRectangleObject(width, height)
-            , mWebGLInternalFormat(webGLInternalFormat)
-            , mWebGLType(webGLType)
+            , mInternalFormat(internalFormat)
+            , mType(type)
             , mImageDataStatus(status)
         {
             // shouldn't use this constructor to construct a null ImageInfo
@@ -90,8 +90,8 @@ public:
             return mImageDataStatus == a.mImageDataStatus &&
                    mWidth == a.mWidth &&
                    mHeight == a.mHeight &&
-                   mWebGLInternalFormat == a.mWebGLInternalFormat &&
-                   mWebGLType == a.mWebGLType;
+                   mInternalFormat == a.mInternalFormat &&
+                   mType == a.mType;
         }
         bool operator!=(const ImageInfo& a) const {
             return !(*this == a);
@@ -114,17 +114,17 @@ public:
          * It can be converted to a value to be passed to driver with
          * DriverFormatsFromFormatAndType().
          */
-        TexInternalFormat WebGLInternalFormat() const { return mWebGLInternalFormat; }
+        TexInternalFormat InternalFormat() const { return mInternalFormat; }
 
         /*! This is the type passed from JS to WebGL.
          * It can be converted to a value to be passed to driver with
          * DriverTypeFromType().
          */
-        TexType WebGLType() const { return mWebGLType; }
+        TexType Type() const { return mType; }
 
     protected:
-        TexInternalFormat mWebGLInternalFormat; //!< This is the WebGL/GLES internal format.
-        TexType mWebGLType;   //!< This is the WebGL/GLES type
+        TexInternalFormat mInternalFormat; //!< This is the WebGL/GLES internal format.
+        TexType mType;   //!< This is the WebGL/GLES type
         WebGLImageDataStatus mImageDataStatus;
 
         friend class WebGLTexture;

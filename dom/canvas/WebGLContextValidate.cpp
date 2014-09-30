@@ -1410,8 +1410,8 @@ WebGLContext::ValidateTexImage(GLuint dims, TexImageTarget texImageTarget,
         /* Require the format and type to match that of the existing
          * texture as created
          */
-        if (imageInfo.WebGLInternalFormat() != internalFormat ||
-            imageInfo.WebGLType() != type)
+        if (imageInfo.InternalFormat() != internalFormat ||
+            imageInfo.Type() != type)
         {
             ErrorInvalidOperation("%s: format or type doesn't match the existing texture",
                                   info);
