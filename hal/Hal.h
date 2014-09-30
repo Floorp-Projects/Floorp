@@ -504,26 +504,10 @@ void RegisterFMRadioObserver(hal::FMRadioObserver* aRadioObserver);
 void UnregisterFMRadioObserver(hal::FMRadioObserver* aRadioObserver);
 
 /**
- * Register an observer for the FM radio.
- */
-void RegisterFMRadioRDSObserver(hal::FMRadioRDSObserver* aRDSObserver);
-
-/**
- * Unregister the observer for the FM radio.
- */
-void UnregisterFMRadioRDSObserver(hal::FMRadioRDSObserver* aRDSObserver);
-
-/**
  * Notify observers that a call to EnableFMRadio, DisableFMRadio, or FMRadioSeek
  * has completed, and indicate what the call returned.
  */
 void NotifyFMRadioStatus(const hal::FMRadioOperationInformation& aRadioState);
-
-/**
- * Notify observers of new RDS data
- * This can be called on any thread.
- */
-void NotifyFMRadioRDSGroup(const hal::FMRadioRDSGroup& aRDSGroup);
 
 /**
  * Enable the FM radio and configure it according to the settings in aInfo.
@@ -580,16 +564,6 @@ void CancelFMRadioSeek();
  * Get FM radio band settings by country.
  */
 hal::FMRadioSettings GetFMBandSettings(hal::FMRadioCountry aCountry);
-
-/**
- * Enable RDS data reception
- */
-void EnableRDS(uint32_t aMask);
-
-/**
- * Disable RDS data reception
- */
-void DisableRDS();
 
 /**
  * Start a watchdog to compulsively shutdown the system if it hangs.

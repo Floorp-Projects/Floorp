@@ -69,13 +69,6 @@ struct FMRadioOperationInformation {
   uint32_t frequency;
 };
 
-struct FMRadioRDSGroup {
-  uint16_t blockA;
-  uint16_t blockB;
-  uint16_t blockC;
-  uint16_t blockD;
-};
-
 struct FMRadioSettings {
   FMRadioCountry country;
   uint32_t upperLimit;
