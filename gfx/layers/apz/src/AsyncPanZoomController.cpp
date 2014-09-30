@@ -2650,6 +2650,7 @@ bool AsyncPanZoomController::IsCurrentlyCheckerboarding() const {
 
   CSSPoint currentScrollOffset = mFrameMetrics.GetScrollOffset() + mTestAsyncScrollOffset;
   CSSRect painted = mLastContentPaintMetrics.mDisplayPort + mLastContentPaintMetrics.GetScrollOffset();
+  painted.Inflate(CSSMargin::FromAppUnits(nsMargin(1, 1, 1, 1)));   // fuzz for rounding error
   CSSRect visible = CSSRect(currentScrollOffset, mFrameMetrics.CalculateCompositedSizeInCssPixels());
   return !painted.Contains(visible);
 }
