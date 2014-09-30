@@ -61,6 +61,7 @@ nsHtml5Highlighter::nsHtml5Highlighter(nsAHtml5TreeOpSink* aOpSink)
  , mSlash(nullptr)
  , mHandles(new nsIContent*[NS_HTML5_HIGHLIGHTER_HANDLE_ARRAY_LENGTH])
  , mHandlesUsed(0)
+ , mSeenBase(false)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
@@ -727,6 +728,22 @@ nsHtml5Highlighter::AddViewSourceHref(const nsString& aValue)
                                  bufferCopy,
                                  aValue.Length(),
                                  CurrentNode());
+}
+
+void
+nsHtml5Highlighter::AddBase(const nsString& aValue)
+{
+  if(mSeenBase) {
+    return;
+  }
+  mSeenBase = true;
+  char16_t* bufferCopy = new char16_t[aValue.Length() + 1];
+  memcpy(bufferCopy, aValue.get(), aValue.Length() * sizeof(char16_t));
+  bufferCopy[aValue.Length()] = 0;
+
+  mOpQueue.AppendElement()->Init(eTreeOpAddViewSourceBase,
+                                 bufferCopy,
+                                 aValue.Length());
 }
 
 void
