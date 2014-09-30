@@ -240,7 +240,8 @@ static int webm_read(void* aBuffer, size_t aLength, void* aUserData)
 
   // Check the read length.
   if (aLength > ioData->data.Length()) {
-    return 0;
+    NS_ERROR("Invalid read length");
+    return -1;
   }
 
   // Check eos.
@@ -291,7 +292,7 @@ static int webm_seek(int64_t aOffset, int aWhence, void* aUserData)
     return -1;
   }
 
-  return 0;
+  return 1;
 }
 
 static int64_t webm_tell(void* aUserData)
