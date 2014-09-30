@@ -368,8 +368,10 @@ loop.conversation = (function(mozL10n) {
         websocketToken: this.props.conversation.get("websocketToken"),
         callId: this.props.conversation.get("callId"),
       });
-      this._websocket.promiseConnect().then(function() {
-        this.setState({callStatus: "incoming"});
+      this._websocket.promiseConnect().then(function(progressStatus) {
+        this.setState({
+          callStatus: progressStatus === "terminated" ? "close" : "incoming"
+        });
       }.bind(this), function() {
         this._handleSessionError();
         return;
