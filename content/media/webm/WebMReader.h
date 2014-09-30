@@ -199,7 +199,7 @@ private:
   // Opus decoder state
   nsAutoPtr<OpusParser> mOpusParser;
   OpusMSDecoder *mOpusDecoder;
-  int mSkip;        // Number of samples left to trim before playback.
+  uint16_t mSkip;        // Number of samples left to trim before playback.
   uint64_t mSeekPreroll; // Number of nanoseconds that must be discarded after seeking.
 #endif
 
@@ -244,6 +244,13 @@ private:
   // Booleans to indicate if we have audio and/or video data
   bool mHasVideo;
   bool mHasAudio;
+
+#ifdef MOZ_OPUS
+  // Opus padding should only be discarded on the final packet.  Once this
+  // is set to true, if the reader attempts to decode any further packets it
+  // will raise an error so we can indicate that the file is invalid.
+  bool mPaddingDiscarded;
+#endif
 };
 
 } // namespace mozilla
