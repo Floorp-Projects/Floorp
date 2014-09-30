@@ -222,8 +222,11 @@ public:
    * ReadLock state, so that the locks can be adopted when recreating a
    * ClientTiledLayerBuffer locally. This lock will be retained until the buffer
    * has completed uploading.
+   *
+   * Returns false if a deserialization error happened, in which case we will
+   * have to kill the child process.
    */
-  virtual void UseTiledLayerBuffer(ISurfaceAllocator* aAllocator,
+  virtual bool UseTiledLayerBuffer(ISurfaceAllocator* aAllocator,
                                    const SurfaceDescriptorTiles& aTiledDescriptor) = 0;
 
   /**
