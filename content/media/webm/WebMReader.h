@@ -176,6 +176,12 @@ protected:
   // must be held during this call. The caller is responsible for freeing
   // aPacket.
   bool DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset);
+  bool DecodeVorbis(unsigned char* aData, size_t aLength,
+                    int64_t aOffset, uint64_t aTstampUsecs, int32_t* aTotalFrames);
+#ifdef MOZ_OPUS
+  bool DecodeOpus(unsigned char* aData, size_t aLength,
+                  int64_t aOffset, uint64_t aTstampUsecs, nestegg_packet* aPacket);
+#endif
 
   // Release context and set to null. Called when an error occurs during
   // reading metadata or destruction of the reader itself.
