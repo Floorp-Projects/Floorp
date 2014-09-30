@@ -1048,6 +1048,21 @@ nsStyleContext::StructName(nsStyleStructID aSID)
       return "Unknown";
   }
 }
+
+/* static */ bool
+nsStyleContext::LookupStruct(const nsACString& aName, nsStyleStructID& aResult)
+{
+  if (false)
+    ;
+#define STYLE_STRUCT(name_, checkdata_cb_)                                    \
+  else if (aName.EqualsLiteral(#name_))                                       \
+    aResult = eStyleStruct_##name_;
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+  else
+    return false;
+  return true;
+}
 #endif
 
 bool
@@ -1162,3 +1177,96 @@ nsStyleContext::DoClearCachedInheritedStyleDataOnDescendants(uint32_t aStructs)
 
   ClearCachedInheritedStyleDataOnDescendants(aStructs);
 }
+
+#ifdef RESTYLE_LOGGING
+nsCString
+nsStyleContext::GetCachedStyleDataAsString(uint32_t aStructs)
+{
+  nsCString structs;
+  for (nsStyleStructID i = nsStyleStructID(0);
+       i < nsStyleStructID_Length;
+       i = nsStyleStructID(i + 1)) {
+    if (aStructs & nsCachedStyleData::GetBitForSID(i)) {
+      const void* data = GetCachedStyleData(i);
+      if (!structs.IsEmpty()) {
+        structs.Append(' ');
+      }
+      structs.AppendPrintf("%s=%p", StructName(i), data);
+      if (HasCachedInheritedStyleData(i)) {
+        structs.AppendLiteral("(dependent)");
+      } else {
+        structs.AppendLiteral("(owned)");
+      }
+    }
+  }
+  return structs;
+}
+
+int32_t&
+nsStyleContext::LoggingDepth()
+{
+  static int32_t depth = 0;
+  return depth;
+}
+
+void
+nsStyleContext::LogStyleContextTree(int32_t aLoggingDepth, uint32_t aStructs)
+{
+  LoggingDepth() = aLoggingDepth;
+  LogStyleContextTree(true, aStructs);
+}
+
+void
+nsStyleContext::LogStyleContextTree(bool aFirst, uint32_t aStructs)
+{
+  nsCString structs = GetCachedStyleDataAsString(aStructs);
+  if (!structs.IsEmpty()) {
+    structs.Append(' ');
+  }
+
+  nsCString pseudo;
+  if (mPseudoTag) {
+    nsAutoString pseudoTag;
+    mPseudoTag->ToString(pseudoTag);
+    AppendUTF16toUTF8(pseudoTag, pseudo);
+    pseudo.Append(' ');
+  }
+
+  nsCString flags;
+  if (IsStyleIfVisited()) {
+    flags.AppendLiteral("IS_STYLE_IF_VISITED ");
+  }
+  if (UsesGrandancestorStyle()) {
+    flags.AppendLiteral("USES_GRANDANCESTOR_STYLE ");
+  }
+  if (IsShared()) {
+    flags.AppendLiteral("IS_SHARED ");
+  }
+
+  nsCString parent;
+  if (aFirst) {
+    parent.AppendPrintf("parent=%p ", mParent);
+  }
+
+  LOG_RESTYLE("%p(%d) %s%s%s%s",
+              this, mRefCnt,
+              structs.get(), pseudo.get(), flags.get(), parent.get());
+
+  LOG_RESTYLE_INDENT();
+
+  if (nullptr != mChild) {
+    nsStyleContext* child = mChild;
+    do {
+      child->LogStyleContextTree(false, aStructs);
+      child = child->mNextSibling;
+    } while (mChild != child);
+  }
+  if (nullptr != mEmptyChild) {
+    nsStyleContext* child = mEmptyChild;
+    do {
+      child->LogStyleContextTree(false, aStructs);
+      child = child->mNextSibling;
+    } while (mEmptyChild != child);
+  }
+}
+#endif
