@@ -16,13 +16,7 @@ StaticAutoPtr<FMRadioChild> FMRadioChild::sFMRadioChild;
 
 FMRadioChild::FMRadioChild()
   : mEnabled(false)
-  , mRDSEnabled(false)
-  , mRDSGroupSet(false)
-  , mPSNameSet(false)
-  , mRadiotextSet(false)
   , mFrequency(0)
-  , mRDSGroup(0)
-  , mRDSGroupMask(0)
   , mObserverList(FMRadioEventObserverList())
 {
   MOZ_COUNT_CTOR(FMRadioChild);
@@ -50,12 +44,6 @@ FMRadioChild::IsEnabled() const
   return mEnabled;
 }
 
-bool
-FMRadioChild::IsRDSEnabled() const
-{
-  return mRDSEnabled;
-}
-
 double
 FMRadioChild::GetFrequency() const
 {
@@ -79,43 +67,6 @@ double
 FMRadioChild::GetChannelWidth() const
 {
   return mChannelWidth;
-}
-
-Nullable<unsigned short>
-FMRadioChild::GetPi() const
-{
-  return mPI;
-}
-
-Nullable<uint8_t>
-FMRadioChild::GetPty() const
-{
-  return mPTY;
-}
-
-bool
-FMRadioChild::GetPs(nsString& aPSName)
-{
-  if (mPSNameSet) {
-    aPSName = mPSName;
-  }
-  return mPSNameSet;
-}
-
-bool
-FMRadioChild::GetRt(nsString& aRadiotext)
-{
-  if (mRadiotextSet) {
-    aRadiotext = mRadiotext;
-  }
-  return mRadiotextSet;
-}
-
-bool
-FMRadioChild::GetRdsgroup(uint64_t& aRDSGroup)
-{
-  aRDSGroup = mRDSGroup;
-  return mRDSGroupSet;
 }
 
 void
@@ -150,25 +101,6 @@ FMRadioChild::CancelSeek(FMRadioReplyRunnable* aReplyRunnable)
   SendRequest(aReplyRunnable, CancelSeekRequestArgs());
 }
 
-void
-FMRadioChild::SetRDSGroupMask(uint32_t aRDSGroupMask)
-{
-  mRDSGroupMask = aRDSGroupMask;
-  SendSetRDSGroupMask(aRDSGroupMask);
-}
-
-void
-FMRadioChild::EnableRDS(FMRadioReplyRunnable* aReplyRunnable)
-{
-  SendRequest(aReplyRunnable, EnableRDSArgs());
-}
-
-void
-FMRadioChild::DisableRDS(FMRadioReplyRunnable* aReplyRunnable)
-{
-  SendRequest(aReplyRunnable, DisableRDSArgs());
-}
-
 inline void
 FMRadioChild::NotifyFMRadioEvent(FMRadioEventType aType)
 {
@@ -200,26 +132,6 @@ FMRadioChild::RecvNotifyFrequencyChanged(const double& aFrequency)
 {
   mFrequency = aFrequency;
   NotifyFMRadioEvent(FrequencyChanged);
-
-  if (!mPI.IsNull()) {
-    mPI.SetNull();
-    NotifyFMRadioEvent(PIChanged);
-  }
-  if (!mPTY.IsNull()) {
-    mPTY.SetNull();
-    NotifyFMRadioEvent(PTYChanged);
-  }
-  if (mPSNameSet) {
-    mPSNameSet = false;
-    mPSName.Truncate();
-    NotifyFMRadioEvent(PSChanged);
-  }
-  if (mRadiotextSet) {
-    mRadiotextSet = false;
-    mRadiotext.Truncate();
-    NotifyFMRadioEvent(RadiotextChanged);
-  }
-  mRDSGroupSet = false;
   return true;
 }
 
@@ -229,82 +141,7 @@ FMRadioChild::RecvNotifyEnabledChanged(const bool& aEnabled,
 {
   mEnabled = aEnabled;
   mFrequency = aFrequency;
-  if (!mEnabled) {
-    mPI.SetNull();
-    mPTY.SetNull();
-    mPSName.Truncate();
-    mRadiotext.Truncate();
-    mRDSGroupSet = false;
-    mPSNameSet = false;
-    mRadiotextSet = false;
-  }
   NotifyFMRadioEvent(EnabledChanged);
-  return true;
-}
-
-bool
-FMRadioChild::RecvNotifyRDSEnabledChanged(const bool& aEnabled)
-{
-  mRDSEnabled = aEnabled;
-  NotifyFMRadioEvent(RDSEnabledChanged);
-  return true;
-}
-
-bool
-FMRadioChild::RecvNotifyPIChanged(const bool& aValid,
-                                  const uint16_t& aCode)
-{
-  if (aValid) {
-    mPI.SetValue(aCode);
-  } else {
-    mPI.SetNull();
-  }
-  NotifyFMRadioEvent(PIChanged);
-  return true;
-}
-
-bool
-FMRadioChild::RecvNotifyPTYChanged(const bool& aValid,
-                                   const uint8_t& aPTY)
-{
-  if (aValid) {
-    mPTY.SetValue(aPTY);
-  } else {
-    mPTY.SetNull();
-  }
-  NotifyFMRadioEvent(PTYChanged);
-  return true;
-}
-
-bool
-FMRadioChild::RecvNotifyPSChanged(const nsString& aPSName)
-{
-  mPSNameSet = true;
-  mPSName = aPSName;
-  NotifyFMRadioEvent(PSChanged);
-  return true;
-}
-
-bool
-FMRadioChild::RecvNotifyRadiotextChanged(const nsString& aRadiotext)
-{
-  mRadiotextSet = true;
-  mRadiotext = aRadiotext;
-  NotifyFMRadioEvent(RadiotextChanged);
-  return true;
-}
-
-bool
-FMRadioChild::RecvNotifyNewRDSGroup(const uint64_t& aGroup)
-{
-  uint16_t grouptype = (aGroup >> 43) & 0x1F;
-  if (!(mRDSGroupMask & (1 << grouptype))) {
-    return true;
-  }
-
-  mRDSGroupSet = true;
-  mRDSGroup = aGroup;
-  NotifyFMRadioEvent(NewRDSGroup);
   return true;
 }
 

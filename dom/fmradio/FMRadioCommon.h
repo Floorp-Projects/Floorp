@@ -30,13 +30,7 @@ BEGIN_FMRADIO_NAMESPACE
 enum FMRadioEventType
 {
   FrequencyChanged,
-  EnabledChanged,
-  RDSEnabledChanged,
-  PIChanged,
-  PSChanged,
-  PTYChanged,
-  RadiotextChanged,
-  NewRDSGroup
+  EnabledChanged
 };
 
 typedef mozilla::Observer<FMRadioEventType>     FMRadioEventObserver;
