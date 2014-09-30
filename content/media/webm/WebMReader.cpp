@@ -158,24 +158,26 @@ InitOggPacket(const unsigned char* aData, size_t aLength, bool aBOS, bool aEOS,
 }
 
 WebMReader::WebMReader(AbstractMediaDecoder* aDecoder)
-  : MediaDecoderReader(aDecoder),
-  mContext(nullptr),
-  mPacketCount(0),
+  : MediaDecoderReader(aDecoder)
+  , mContext(nullptr)
+  , mPacketCount(0)
 #ifdef MOZ_OPUS
-  mOpusParser(nullptr),
-  mOpusDecoder(nullptr),
-  mSkip(0),
-  mSeekPreroll(0),
+  , mOpusDecoder(nullptr)
+  , mSkip(0)
+  , mSeekPreroll(0)
 #endif
-  mVideoTrack(0),
-  mAudioTrack(0),
-  mAudioStartUsec(-1),
-  mAudioFrames(0),
-  mLastVideoFrameTime(0),
-  mAudioCodec(-1),
-  mVideoCodec(-1),
-  mHasVideo(false),
-  mHasAudio(false)
+  , mVideoTrack(0)
+  , mAudioTrack(0)
+  , mAudioStartUsec(-1)
+  , mAudioFrames(0)
+  , mLastVideoFrameTime(0)
+  , mAudioCodec(-1)
+  , mVideoCodec(-1)
+  , mHasVideo(false)
+  , mHasAudio(false)
+#ifdef MOZ_OPUS
+  , mPaddingDiscarded(false)
+#endif
 {
   MOZ_COUNT_CTOR(WebMReader);
 #ifdef PR_LOGGING
@@ -251,6 +253,7 @@ nsresult WebMReader::ResetDecode()
       // Reset the decoder.
       opus_multistream_decoder_ctl(mOpusDecoder, OPUS_RESET_STATE);
       mSkip = mOpusParser->mPreSkip;
+      mPaddingDiscarded = false;
     }
 #endif
   }
@@ -504,6 +507,7 @@ bool WebMReader::InitOpusDecoder()
                                                  mOpusParser->mMappingTable,
                                                  &r);
   mSkip = mOpusParser->mPreSkip;
+  mPaddingDiscarded = false;
 
   return r == OPUS_OK;
 }
@@ -662,10 +666,19 @@ bool WebMReader::DecodeOpus(const unsigned char* aData, size_t aLength,
     return false;
   }
 
+  if (mPaddingDiscarded) {
+    // Discard padding should be used only on the final packet, so
+    // decoding after a padding discard is invalid.
+    LOG(PR_LOG_DEBUG, ("Opus decoder error, discard padding on interstitial packet"));
+    GetCallback()->OnDecodeError();
+    return false;
+  }
+
   // Maximum value is 63*2880, so there's no chance of overflow.
   int32_t frames_number = opus_packet_get_nb_frames(aData, aLength);
-  if (frames_number <= 0)
+  if (frames_number <= 0) {
     return false; // Invalid packet header.
+  }
 
   int32_t samples = opus_packet_get_samples_per_frame(aData,
                                                       (opus_int32) mInfo.mAudio.mRate);
@@ -694,37 +707,40 @@ bool WebMReader::DecodeOpus(const unsigned char* aData, size_t aLength,
 
   // Trim the initial frames while the decoder is settling.
   if (mSkip > 0) {
-    int32_t skipFrames = std::min(mSkip, frames);
-    if (skipFrames == frames) {
-      // discard the whole packet
-      mSkip -= frames;
-      LOG(PR_LOG_DEBUG, ("Opus decoder skipping %d frames"
-                         " (whole packet)", frames));
-      return true;
-    }
+    int32_t skipFrames = std::min<int32_t>(mSkip, frames);
     int32_t keepFrames = frames - skipFrames;
+    LOG(PR_LOG_DEBUG, ("Opus decoder skipping %d of %d frames", skipFrames, frames));
     PodMove(buffer.get(), buffer.get() + skipFrames * channels, keepFrames * channels);
     startTime = startTime + FramesToUsecs(skipFrames, mInfo.mAudio.mRate);
     frames = keepFrames;
-
     mSkip -= skipFrames;
-    LOG(PR_LOG_DEBUG, ("Opus decoder skipping %d frames", skipFrames));
   }
 
   int64_t discardPadding = 0;
   (void) nestegg_packet_discard_padding(aPacket, &discardPadding);
+  if (discardPadding < 0) {
+    // Negative discard padding is invalid.
+    LOG(PR_LOG_DEBUG, ("Opus decoder error, negative discard padding"));
+    GetCallback()->OnDecodeError();
+    return false;
+  }
   if (discardPadding > 0) {
     CheckedInt64 discardFrames = UsecsToFrames(discardPadding / NS_PER_USEC, mInfo.mAudio.mRate);
     if (!discardFrames.isValid()) {
       NS_WARNING("Int overflow in DiscardPadding");
       return false;
     }
-    if (discardFrames.value() >= frames) {
-      LOG(PR_LOG_DEBUG, ("Opus decoder discarding whole packet"
-                         " (%d frames) as padding (%lld discarded)",
-                         frames, discardFrames.value()));
-      return true;
+    if (discardFrames.value() > frames) {
+      // Discarding more than the entire packet is invalid.
+      LOG(PR_LOG_DEBUG, ("Opus decoder error, discard padding larger than packet"));
+      GetCallback()->OnDecodeError();
+      return false;
     }
+    LOG(PR_LOG_DEBUG, ("Opus decoder discarding %d of %d frames", int32_t(discardFrames.value()), frames));
+    // Padding discard is only supposed to happen on the final packet.
+    // Record the discard so we can return an error if another packet is
+    // decoded.
+    mPaddingDiscarded = true;
     int32_t keepFrames = frames - discardFrames.value();
     frames = keepFrames;
   }
