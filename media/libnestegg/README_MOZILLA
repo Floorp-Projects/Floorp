@@ -5,4 +5,4 @@ Makefile.in build files for the Mozilla build system.
 
 The nestegg git repository is: git://github.com/kinetiknz/nestegg.git
 
-The git commit ID used was 2f596487949b192fb15866c6f8ecc6b04df92cb8.
+The git commit ID used was ec23378e70030bacf3b4905c444c38ef4a37bceb.
