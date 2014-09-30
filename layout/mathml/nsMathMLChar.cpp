@@ -989,6 +989,7 @@ nsMathMLChar::SetFontFamily(nsPresContext*          aPresContext,
     aPresContext->DeviceContext()->
       GetMetricsFor(font,
                     mStyleContext->StyleFont()->mLanguage,
+                    gfxFont::eHorizontal,
                     aPresContext->GetUserFontSet(),
                     aPresContext->GetTextPerfMetrics(),
                     *getter_AddRefs(fm));
@@ -1529,6 +1530,7 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
   aPresContext->DeviceContext()->
     GetMetricsFor(font,
                   mStyleContext->StyleFont()->mLanguage,
+                  gfxFont::eHorizontal,
                   aPresContext->GetUserFontSet(),
                   aPresContext->GetTextPerfMetrics(),
                   *getter_AddRefs(fm));

@@ -12,6 +12,7 @@
 #include "nsAccUtils.h"
 #include "nsIAccessibleRelation.h"
 #include "nsIAccessibleTable.h"
+#include "ProxyAccessible.h"
 #include "RootAccessible.h"
 #include "nsIAccessibleValue.h"
 #include "nsMai.h"
@@ -20,6 +21,7 @@
 #include "nsAutoPtr.h"
 #include "prprf.h"
 #include "nsStateMap.h"
+#include "mozilla/a11y/Platform.h"
 #include "Relation.h"
 #include "RootAccessible.h"
 #include "States.h"
@@ -133,8 +135,12 @@ struct MaiAtkObject
    * The AccessibleWrap whose properties and features are exported
    * via this object instance.
    */
-  AccessibleWrap* accWrap;
+  uintptr_t accWrap;
 };
+
+// This is or'd with the pointer in MaiAtkObject::accWrap if the wrap-ee is a
+// proxy.
+static const uintptr_t IS_PROXY = 1;
 
 struct MaiAtkObjectClass
 {
@@ -248,7 +254,7 @@ AccessibleWrap::ShutdownAtkObject()
 {
     if (mAtkObject) {
         if (IS_MAI_OBJECT(mAtkObject)) {
-            MAI_ATK_OBJECT(mAtkObject)->accWrap = nullptr;
+            MAI_ATK_OBJECT(mAtkObject)->accWrap = 0;
         }
         SetMaiHyperlink(nullptr);
         g_object_unref(mAtkObject);
@@ -582,8 +588,7 @@ initializeCB(AtkObject *aAtkObj, gpointer aData)
         ATK_OBJECT_CLASS(parent_class)->initialize(aAtkObj, aData);
 
   /* initialize object */
-  MAI_ATK_OBJECT(aAtkObj)->accWrap =
-    static_cast<AccessibleWrap*>(aData);
+  MAI_ATK_OBJECT(aAtkObj)->accWrap = reinterpret_cast<uintptr_t>(aData);
 }
 
 void
@@ -591,7 +596,7 @@ finalizeCB(GObject *aObj)
 {
     if (!IS_MAI_OBJECT(aObj))
         return;
-    NS_ASSERTION(MAI_ATK_OBJECT(aObj)->accWrap == nullptr, "AccWrap NOT null");
+    NS_ASSERTION(MAI_ATK_OBJECT(aObj)->accWrap == 0, "AccWrap NOT null");
 
     // call parent finalize function
     // finalize of GObjectClass will unref the accessible parent if has
@@ -663,17 +668,25 @@ getDescriptionCB(AtkObject *aAtkObj)
 AtkRole
 getRoleCB(AtkObject *aAtkObj)
 {
-  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-  if (!accWrap)
-    return ATK_ROLE_INVALID;
-
-#ifdef DEBUG
-  NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(accWrap),
-      "Does not support nsIAccessibleText when it should");
-#endif
-
   if (aAtkObj->role != ATK_ROLE_INVALID)
     return aAtkObj->role;
+
+  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
+  a11y::role role;
+  if (!accWrap) {
+    ProxyAccessible* proxy = GetProxy(aAtkObj);
+    if (!proxy)
+      return ATK_ROLE_INVALID;
+
+    role = proxy->Role();
+  } else {
+#ifdef DEBUG
+    NS_ASSERTION(nsAccUtils::IsTextInterfaceSupportCorrect(accWrap),
+                 "Does not support nsIAccessibleText when it should");
+#endif
+
+    role = accWrap->Role();
+  }
 
 #define ROLE(geckoRole, stringRole, atkRole, macRole, \
              msaaRole, ia2Role, nameRule) \
@@ -681,7 +694,7 @@ getRoleCB(AtkObject *aAtkObj)
     aAtkObj->role = atkRole; \
     break;
 
-  switch (accWrap->Role()) {
+  switch (role) {
 #include "RoleMap.h"
     default:
       MOZ_CRASH("Unknown role.");
@@ -946,7 +959,13 @@ AccessibleWrap*
 GetAccessibleWrap(AtkObject* aAtkObj)
 {
   NS_ENSURE_TRUE(IS_MAI_OBJECT(aAtkObj), nullptr);
-  AccessibleWrap* accWrap = MAI_ATK_OBJECT(aAtkObj)->accWrap;
+
+  // Make sure its native is an AccessibleWrap not a proxy.
+  if (MAI_ATK_OBJECT(aAtkObj)->accWrap & IS_PROXY)
+    return nullptr;
+
+    AccessibleWrap* accWrap =
+      reinterpret_cast<AccessibleWrap*>(MAI_ATK_OBJECT(aAtkObj)->accWrap);
 
   // Check if the accessible was deconstructed.
   if (!accWrap)
@@ -959,6 +978,49 @@ GetAccessibleWrap(AtkObject* aAtkObj)
     return nullptr;
 
   return accWrap;
+}
+
+ProxyAccessible*
+GetProxy(AtkObject* aObj)
+{
+  if (!aObj || !(MAI_ATK_OBJECT(aObj)->accWrap & IS_PROXY))
+    return nullptr;
+
+  return reinterpret_cast<ProxyAccessible*>(MAI_ATK_OBJECT(aObj)->accWrap
+      & ~IS_PROXY);
+}
+
+static uint16_t
+GetInterfacesForProxy(ProxyAccessible* aProxy)
+{
+  return MAI_INTERFACE_COMPONENT;
+}
+
+void
+a11y::ProxyCreated(ProxyAccessible* aProxy)
+{
+  GType type = GetMaiAtkType(GetInterfacesForProxy(aProxy));
+  NS_ASSERTION(type, "why don't we have a type!");
+
+  AtkObject* obj =
+    reinterpret_cast<AtkObject *>
+    (g_object_new(type, nullptr));
+  if (!obj)
+    return;
+
+  atk_object_initialize(obj, aProxy);
+  obj->role = ATK_ROLE_INVALID;
+  obj->layer = ATK_LAYER_INVALID;
+  aProxy->SetWrapper(reinterpret_cast<uintptr_t>(obj) | IS_PROXY);
+}
+
+void
+a11y::ProxyDestroyed(ProxyAccessible* aProxy)
+{
+  auto obj = reinterpret_cast<MaiAtkObject*>(aProxy->GetWrapper() & ~IS_PROXY);
+  obj->accWrap = 0;
+  g_object_unref(obj);
+  aProxy->SetWrapper(0);
 }
 
 nsresult

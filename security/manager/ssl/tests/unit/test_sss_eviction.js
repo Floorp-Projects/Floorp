@@ -44,10 +44,11 @@ function do_state_read(aSubject, aTopic, aData) {
 
   do_check_true(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
                                         "frequentlyused.example.com", 0));
+  let sslStatus = new FakeSSLStatus();
   for (let i = 0; i < 2000; i++) {
     let uri = Services.io.newURI("http://bad" + i + ".example.com", null, null);
     gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                            "max-age=1000", 0);
+                            "max-age=1000", sslStatus, 0);
   }
   do_test_pending();
   Services.obs.addObserver(do_state_written, "data-storage-written", false);

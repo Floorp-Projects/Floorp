@@ -1056,33 +1056,31 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
 
 #ifdef E10S_TESTING_ONLY
 /**
- * The e10s button's purpose is to lower the barrier of entry
- * for our Nightly testers to use e10s windows. We'll be removing it
- * once remote tabs are enabled. This button should never ever make it
- * to production. If it does, that'd be bad, and we should all feel bad.
- */
-if (Services.prefs.getBoolPref("browser.tabs.remote")) {
-  let getCommandFunction = function(aOpenRemote) {
-    return function(aEvent) {
-      let win = aEvent.view;
-      if (win && typeof win.OpenBrowserWindow == "function") {
-        win.OpenBrowserWindow({remote: aOpenRemote});
-      }
-    };
-  }
-
-  let openRemote = !Services.appinfo.browserTabsRemoteAutostart;
-  // Like the XUL menuitem counterparts, we hard-code these strings in because
-  // this button should never roll into production.
-  let buttonLabel = openRemote ? "New e10s Window"
-                               : "New Non-e10s Window";
-
-  CustomizableWidgets.push({
-    id: "e10s-button",
-    label: buttonLabel,
-    tooltiptext: buttonLabel,
-    defaultArea: CustomizableUI.AREA_PANEL,
-    onCommand: getCommandFunction(openRemote),
-  });
+  * The e10s button's purpose is to lower the barrier of entry
+  * for our Nightly testers to use e10s windows. We'll be removing it
+  * once remote tabs are enabled. This button should never ever make it
+  * to production. If it does, that'd be bad, and we should all feel bad.
+  */
+let getCommandFunction = function(aOpenRemote) {
+  return function(aEvent) {
+    let win = aEvent.view;
+    if (win && typeof win.OpenBrowserWindow == "function") {
+      win.OpenBrowserWindow({remote: aOpenRemote});
+    }
+  };
 }
+
+let openRemote = !Services.appinfo.browserTabsRemoteAutostart;
+// Like the XUL menuitem counterparts, we hard-code these strings in because
+// this button should never roll into production.
+let buttonLabel = openRemote ? "New e10s Window"
+                              : "New Non-e10s Window";
+
+CustomizableWidgets.push({
+  id: "e10s-button",
+  label: buttonLabel,
+  tooltiptext: buttonLabel,
+  defaultArea: CustomizableUI.AREA_PANEL,
+  onCommand: getCommandFunction(openRemote),
+});
 #endif

@@ -425,7 +425,6 @@ class B2GRemoteReftest(RefTest):
         prefs["browser.firstrun.show.localepicker"] = False
         prefs["b2g.system_startup_url"] = "app://test-container.gaiamobile.org/index.html"
         prefs["b2g.system_manifest_url"] = "app://test-container.gaiamobile.org/manifest.webapp"
-        prefs["browser.tabs.remote"] = False
         prefs["dom.ipc.tabs.disabled"] = False
         prefs["dom.mozBrowserFramesEnabled"] = True
         prefs["font.size.inflation.emPerLine"] = 0
@@ -439,7 +438,6 @@ class B2GRemoteReftest(RefTest):
         prefs["toolkit.telemetry.notifiedOptOut"] = 999
 
         if options.oop:
-            prefs['browser.tabs.remote'] = True
             prefs['browser.tabs.remote.autostart'] = True
             prefs['reftest.browser.iframe.enabled'] = True
 

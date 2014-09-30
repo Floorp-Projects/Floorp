@@ -65,6 +65,16 @@ let chromeGlobal = this;
     }
   });
   addMessageListener("debug:disconnect", onDisconnect);
+
+  let onInspect = DevToolsUtils.makeInfallible(function(msg) {
+    // Store the node to be inspected in a global variable
+    // (gInspectingNode). Later we'll fetch this variable again using
+    // the findInspectingNode request over the remote debugging
+    // protocol.
+    let inspector = devtools.require("devtools/server/actors/inspector");
+    inspector.setInspectingNode(msg.objects.node);
+  });
+  addMessageListener("debug:inspect", onInspect);
 })();
 
 } catch(e) {
