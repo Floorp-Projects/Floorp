@@ -22,6 +22,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 
 do_get_profile();
 
+// Make sure enabled gets set for xpcshell tests that initialize multiple times
+DirectoryLinksProvider._testing = true;
+
 const DIRECTORY_LINKS_FILE = "directoryLinks.json";
 const DIRECTORY_FRECENCY = 1000;
 const kURLData = {"en-US": [{"url":"http://example.com","title":"LocalSource"}]};

@@ -398,7 +398,8 @@ let DirectoryLinksProvider = {
   },
 
   init: function DirectoryLinksProvider_init() {
-    this.enabled = this.locale.search(/^(en|de|es|fr|ja|pl|pt|ru)/) == 0;
+    // Allow for overriding enabled to true for testing
+    this.enabled = this._testing && this.locale.search(/^(en|de|es|fr|ja|pl|pt|ru)/) == 0;
 
     this._setDefaultEnhanced();
     this._addPrefsObserver();
