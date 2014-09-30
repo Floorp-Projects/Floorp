@@ -918,6 +918,16 @@ nsHtml5TreeOpExecutor::PreloadImage(const nsAString& aURL,
 }
 
 void
+nsHtml5TreeOpExecutor::AddBase(const nsAString& aURL)
+{
+  const nsCString& charset = mDocument->GetDocumentCharacterSet();
+  nsresult rv = NS_NewURI(getter_AddRefs(mViewSourceBaseURI), aURL,
+                                     charset.get(), GetViewSourceBaseURI());
+  if (NS_FAILED(rv)) {
+    mViewSourceBaseURI = nullptr;
+  }
+}
+void
 nsHtml5TreeOpExecutor::SetSpeculationBase(const nsAString& aURL)
 {
   if (mSpeculationBaseURI) {
