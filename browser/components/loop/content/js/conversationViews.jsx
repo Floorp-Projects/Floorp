@@ -9,6 +9,8 @@
 var loop = loop || {};
 loop.conversationViews = (function(mozL10n) {
 
+  var CALL_STATES = loop.store.CALL_STATES;
+
   /**
    * Displays details of the incoming/outgoing conversation
    * (name, link, audio/video type etc).
@@ -45,8 +47,8 @@ loop.conversationViews = (function(mozL10n) {
 
     render: function() {
       var pendingStateString;
-      if (this.props.callState === "ringing") {
-        pendingStateString = mozL10n.get("call_progress_pending_description");
+      if (this.props.callState === CALL_STATES.ALERTING) {
+        pendingStateString = mozL10n.get("call_progress_ringing_description");
       } else {
         pendingStateString = mozL10n.get("call_progress_connecting_description");
       }
@@ -70,20 +72,43 @@ loop.conversationViews = (function(mozL10n) {
   });
 
   /**
+   * Call failed view. Displayed when a call fails.
+   */
+  var CallFailedView = React.createClass({
+    render: function() {
+      return (
+        <div className="call-window">
+          <h2>{mozL10n.get("generic_failure_title")}</h2>
+        </div>
+      );
+    }
+  });
+
+  /**
    * Master View Controller for outgoing calls. This manages
    * the different views that need displaying.
    */
   var OutgoingConversationView = React.createClass({
     propTypes: {
       store: React.PropTypes.instanceOf(
-        loop.ConversationStore).isRequired
+        loop.store.ConversationStore).isRequired
     },
 
     getInitialState: function() {
       return this.props.store.attributes;
     },
 
+    componentWillMount: function() {
+      this.props.store.on("change", function() {
+        this.setState(this.props.store.attributes);
+      }, this);
+    },
+
     render: function() {
+      if (this.state.callState === CALL_STATES.TERMINATED) {
+        return (<CallFailedView />);
+      }
+
       return (<PendingConversationView
         callState={this.state.callState}
         calleeId={this.state.calleeId}
@@ -94,6 +119,7 @@ loop.conversationViews = (function(mozL10n) {
   return {
     PendingConversationView: PendingConversationView,
     ConversationDetailView: ConversationDetailView,
+    CallFailedView: CallFailedView,
     OutgoingConversationView: OutgoingConversationView
   };
 

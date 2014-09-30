@@ -41,7 +41,7 @@ describe("loop.conversation", function() {
         return "en-US";
       },
       setLoopCharPref: sinon.stub(),
-      getLoopCharPref: sinon.stub(),
+      getLoopCharPref: sinon.stub().returns(null),
       getLoopBoolPref: sinon.stub(),
       getCallData: sinon.stub(),
       releaseCallData: sinon.stub(),
@@ -75,6 +75,11 @@ describe("loop.conversation", function() {
       sandbox.stub(loop.shared.models.ConversationModel.prototype,
         "initialize");
 
+      sandbox.stub(loop.Dispatcher.prototype, "dispatch");
+
+      sandbox.stub(loop.shared.utils.Helper.prototype,
+        "locationHash").returns("#incoming/42");
+
       window.OT = {
         overrideGuidStorage: sinon.stub()
       };
@@ -102,10 +107,21 @@ describe("loop.conversation", function() {
             loop.conversation.ConversationControllerView);
       }));
     });
+
+    it("should trigger a gatherCallData action", function() {
+      loop.conversation.init();
+
+      sinon.assert.calledOnce(loop.Dispatcher.prototype.dispatch);
+      sinon.assert.calledWithExactly(loop.Dispatcher.prototype.dispatch,
+        new loop.shared.actions.GatherCallData({
+          calleeId: null,
+          callId: "42"
+        }));
+    });
   });
 
   describe("ConversationControllerView", function() {
-    var store, conversation, client, ccView, oldTitle;
+    var store, conversation, client, ccView, oldTitle, dispatcher;
 
     function mountTestComponent() {
       return TestUtils.renderIntoDocument(
@@ -124,7 +140,11 @@ describe("loop.conversation", function() {
       conversation = new loop.shared.models.ConversationModel({}, {
         sdk: {}
       });
-      store = new loop.ConversationStore();
+      dispatcher = new loop.Dispatcher();
+      store = new loop.store.ConversationStore({}, {
+        client: client,
+        dispatcher: dispatcher
+      });
     });
 
     afterEach(function() {
