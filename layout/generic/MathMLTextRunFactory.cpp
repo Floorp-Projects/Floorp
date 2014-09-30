@@ -740,6 +740,7 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     nsRefPtr<nsFontMetrics> metrics;
     pc->DeviceContext()->GetMetricsFor(font,
                                        styles[0]->StyleFont()->mLanguage,
+                                       gfxFont::eHorizontal,
                                        pc->GetUserFontSet(),
                                        pc->GetTextPerfMetrics(),
                                        *getter_AddRefs(metrics));

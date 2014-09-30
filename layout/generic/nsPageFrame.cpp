@@ -583,6 +583,7 @@ nsPageFrame::PaintHeaderFooter(nsRenderingContext& aRenderingContext,
   // Get the FontMetrics to determine width.height of strings
   nsRefPtr<nsFontMetrics> fontMet;
   pc->DeviceContext()->GetMetricsFor(mPD->mHeadFootFont, nullptr,
+                                     gfxFont::eHorizontal,
                                      pc->GetUserFontSet(),
                                      pc->GetTextPerfMetrics(),
                                      *getter_AddRefs(fontMet));

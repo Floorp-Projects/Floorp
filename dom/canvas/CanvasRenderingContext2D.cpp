@@ -2169,7 +2169,8 @@ public:
     gfxTextPerfMetrics* tp = mPresContext->GetTextPerfMetrics();
     nsRefPtr<nsFontMetrics> fontMetrics;
     nsDeviceContext* dc = mPresContext->DeviceContext();
-    dc->GetMetricsFor(mFont, mFontLanguage, nullptr, tp,
+    dc->GetMetricsFor(mFont, mFontLanguage, gfxFont::eHorizontal,
+                      nullptr, tp,
                       *getter_AddRefs(fontMetrics));
     return NSAppUnitsToFloatPixels(fontMetrics->XHeight(),
                                    nsPresContext::AppUnitsPerCSSPixel());
