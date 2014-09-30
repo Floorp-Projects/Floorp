@@ -3081,15 +3081,6 @@
     "extended_statistics_ok": true,
     "description": "PLACES: Number of tags"
   },
-  "PLACES_FOLDERS_COUNT": {
-    "alert_emails": ["places-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "200",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "PLACES: Number of folders"
-  },
   "PLACES_KEYWORDS_COUNT": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -3130,15 +3121,6 @@
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "PLACES: Time to convert and write bookmarks.html"
-  },
-  "PLACES_BACKUPS_HASHING_MS": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "low": 50,
-    "high": 2000,
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "PLACES: Time to calculate the md5 hash for a backup"
   },
   "PLACES_FAVICON_ICO_SIZES": {
     "expires_in_version" : "never",
@@ -3265,15 +3247,6 @@
     "extended_statistics_ok": true,
     "description": "PLACES: Database filesize (MB)"
   },
-  "PLACES_DATABASE_JOURNALSIZE_MB": {
-    "alert_emails": ["places-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "50",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "PLACES: Database journal size (MB)"
-  },
   "PLACES_DATABASE_PAGESIZE_B": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -3370,16 +3343,6 @@
     "extended_statistics_ok": true,
     "description": "PLACES: Number of bookmarks annotations"
   },
-  "PLACES_ANNOS_BOOKMARKS_SIZE_KB": {
-    "alert_emails": ["places-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "low": 10,
-    "high": "10000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "PLACES: Size of bookmarks annotations (KB)"
-  },
   "PLACES_ANNOS_PAGES_COUNT": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -3388,25 +3351,6 @@
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "PLACES: Number of pages annotations"
-  },
-  "PLACES_ANNOS_PAGES_SIZE_KB": {
-    "alert_emails": ["places-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "low": 10,
-    "high": "10000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "PLACES: Size of pages annotations (KB)"
-  },
-  "PLACES_FRECENCY_CALC_TIME_MS": {
-    "alert_emails": ["places-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "100",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "PLACES: Time to calculate frecency of a page (ms)"
   },
   "PLACES_MAINTENANCE_DAYSFROMLAST": {
     "expires_in_version" : "never",

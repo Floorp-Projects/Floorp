@@ -9,13 +9,10 @@ let histograms = {
   PLACES_PAGES_COUNT: function (val) do_check_eq(val, 1),
   PLACES_BOOKMARKS_COUNT: function (val) do_check_eq(val, 1),
   PLACES_TAGS_COUNT: function (val) do_check_eq(val, 1),
-  PLACES_FOLDERS_COUNT: function (val) do_check_eq(val, 1),
   PLACES_KEYWORDS_COUNT: function (val) do_check_eq(val, 1),
   PLACES_SORTED_BOOKMARKS_PERC: function (val) do_check_eq(val, 100),
   PLACES_TAGGED_BOOKMARKS_PERC: function (val) do_check_eq(val, 100),
   PLACES_DATABASE_FILESIZE_MB: function (val) do_check_true(val > 0),
-  // The journal may have been truncated.
-  PLACES_DATABASE_JOURNALSIZE_MB: function (val) do_check_true(val >= 0),
   PLACES_DATABASE_PAGESIZE_B: function (val) do_check_eq(val, 32768),
   PLACES_DATABASE_SIZE_PER_PAGE_B: function (val) do_check_true(val > 0),
   PLACES_EXPIRATION_STEPS_TO_CLEAN2: function (val) do_check_true(val > 1),
@@ -23,10 +20,7 @@ let histograms = {
   PLACES_IDLE_FRECENCY_DECAY_TIME_MS: function (val) do_check_true(val > 0),
   PLACES_IDLE_MAINTENANCE_TIME_MS: function (val) do_check_true(val > 0),
   PLACES_ANNOS_BOOKMARKS_COUNT: function (val) do_check_eq(val, 1),
-  PLACES_ANNOS_BOOKMARKS_SIZE_KB: function (val) do_check_eq(val, 1),
   PLACES_ANNOS_PAGES_COUNT: function (val) do_check_eq(val, 1),
-  PLACES_ANNOS_PAGES_SIZE_KB: function (val) do_check_eq(val, 1),
-  PLACES_FRECENCY_CALC_TIME_MS: function (val) do_check_true(val >= 0),
   PLACES_MAINTENANCE_DAYSFROMLAST: function (val) do_check_true(val >= 0),
 }
 
