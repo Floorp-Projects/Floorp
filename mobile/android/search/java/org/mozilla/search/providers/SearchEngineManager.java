@@ -12,14 +12,16 @@ import android.util.Log;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserLocaleManager;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.search.Constants;
-import org.mozilla.search.R;
-import org.mozilla.search.SearchPreferenceActivity;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -71,7 +73,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
 
     @Override
     public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
-        if (!TextUtils.equals(SearchPreferenceActivity.PREF_SEARCH_ENGINE_KEY, key)) {
+        if (!TextUtils.equals(Constants.PREF_SEARCH_ENGINE_KEY, key)) {
             return;
         }
         getEngineFromPrefs(changeCallback);
@@ -88,7 +90,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
         final AsyncTask<Void, Void, SearchEngine> task = new AsyncTask<Void, Void, SearchEngine>() {
             @Override
             protected SearchEngine doInBackground(Void... params) {
-                String identifier = GeckoSharedPrefs.forApp(context).getString(SearchPreferenceActivity.PREF_SEARCH_ENGINE_KEY, null);
+                String identifier = GeckoSharedPrefs.forApp(context).getString(Constants.PREF_SEARCH_ENGINE_KEY, null);
                 if (!TextUtils.isEmpty(identifier)) {
                     try {
                         return createEngine(identifier);
@@ -179,6 +181,10 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
     private SearchEngine createEngine(String identifier) {
         InputStream in = getInputStreamFromJar(identifier + ".xml");
 
+        if (in == null) {
+            in = getEngineFromProfile(identifier);
+        }
+
         // Fallback for standalone search activity.
         if (in == null) {
             in = getEngineFromAssets(identifier);
@@ -263,5 +269,23 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
     private String getSearchPluginsJarURL(String locale, String fileName) {
         final String path = "!/chrome/" + locale + "/locale/" + locale + "/browser/searchplugins/" + fileName;
         return "jar:jar:file://" + context.getPackageResourcePath() + "!/" + AppConstants.OMNIJAR_NAME + path;
+    }
+
+    /**
+     * Opens the search plugin XML file from the searchplugins directory in the Gecko profile.
+     *
+     * @param identifier
+     * @return InputStream for search plugin file
+     */
+    private InputStream getEngineFromProfile(String identifier) {
+        final File f = GeckoProfile.get(context).getFile("searchplugins/" + identifier + ".xml");
+        if (f.exists()) {
+            try {
+                return new FileInputStream(f);
+            } catch (FileNotFoundException e) {
+                Log.e(LOG_TAG, "Exception getting search engine from profile", e);
+            }
+        }
+        return null;
     }
 }

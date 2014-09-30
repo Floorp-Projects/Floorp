@@ -4164,6 +4164,8 @@ XREMain::XRE_mainRun()
 
 /*
  * XRE_main - A class based main entry point used by most platforms.
+ *            Note that on OSX, aAppData->xreDirectory will point to
+ *            .app/Contents/Resources.
  */
 int
 XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)

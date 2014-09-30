@@ -583,22 +583,6 @@ function getGREDir() {
 }
 
 /**
- * Get the "updated" directory inside the directory where we apply the
- * staged updates.
- * @return The active updates directory inside the updated directory, as a
- *         nsIFile object.
- */
-function getUpdatedDir() {
-  let dir = getAppBaseDir();
-#ifdef XP_MACOSX
-  dir = dir.parent.parent; // the bundle directory
-#endif
-  dir.append(DIR_UPDATED);
-  logTestInfo("updated directory path: " + dir.path);
-  return dir;
-}
-
-/**
  * Logs TEST-INFO messages.
  *
  * @param  aText

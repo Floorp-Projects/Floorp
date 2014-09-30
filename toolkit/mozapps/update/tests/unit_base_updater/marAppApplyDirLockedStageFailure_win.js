@@ -17,9 +17,13 @@ function run_test() {
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_COMPLETE_MAR, false, false);
+  setupUpdaterTest(FILE_COMPLETE_MAR);
 
   createUpdaterINI(false);
+
+  if (IS_WIN) {
+    Services.prefs.setBoolPref(PREF_APP_UPDATE_SERVICE_ENABLED, false);
+  }
 
   let channel = Services.prefs.getCharPref(PREF_APP_UPDATE_CHANNEL);
   let patches = getLocalPatchString(null, null, null, null, null, "true",
@@ -40,6 +44,16 @@ function run_test() {
 }
 
 function setupAppFilesFinished() {
+  // For Mac OS X set the last modified time for the root directory to a date in
+  // the past to test that the last modified time is updated on a successful
+  // update (bug 600098).
+  if (IS_MACOSX) {
+    let now = Date.now();
+    let yesterday = now - (1000 * 60 * 60 * 24);
+    let applyToDir = getApplyDirFile();
+    applyToDir.lastModifiedTime = yesterday;
+  }
+
   stageUpdate();
 }
 
@@ -67,12 +81,13 @@ function checkUpdateApplied() {
 }
 
 function finishTest() {
-  if (IS_MACOSX || IS_WIN) {
+  if (IS_WIN || IS_MACOSX) {
     // Check that the post update process was not launched.
     do_check_false(getPostUpdateFile(".running").exists());
   }
 
   do_check_eq(readStatusState(), STATE_PENDING);
+  checkFilesAfterUpdateFailure(getApplyDirFile, false, false);
   unlockDirectory(getAppBaseDir());
   waitForFilesInUse();
 }
