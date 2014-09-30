@@ -424,12 +424,26 @@ WifiGeoPositionProvider.prototype = {
         let network = voice && voice.network;
 
         if (network && cell && type) {
-          if (type === "gsm" || type === "gprs" || type === "edge") {
-            type = "gsm";
-          } else {
-            type = "wcdma";
-          }
-          result.push({ radio: type,
+          let radioTechFamily;
+          switch (type) {
+            case "gsm":
+            case "gprs":
+            case "edge":
+              radioTechFamily = "gsm";
+              break;
+            case "umts":
+            case "hsdpa":
+            case "hsupa":
+            case "hspa":
+            case "hspa+":
+              radioTechFamily = "wcdma";
+              break;
+            case "lte":
+              radioTechFamily = "lte";
+              break;
+            // CDMA cases to be handled in bug 1010282
+          };
+          result.push({ radio: radioTechFamily,
                       mobileCountryCode: voice.network.mcc,
                       mobileNetworkCode: voice.network.mnc,
                       locationAreaCode: cell.gsmLocationAreaCode,
