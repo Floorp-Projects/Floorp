@@ -312,6 +312,20 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
       }
       break;
 
+    case AndroidGeckoEvent::PROCESS_OBJECT: {
+      JNIEnv* const env = AndroidBridge::Bridge()->GetJNIEnv();
+      AutoLocalJNIFrame frame(env, 1);
+
+      switch (curEvent->Action()) {
+      case AndroidGeckoEvent::ACTION_OBJECT_LAYER_CLIENT:
+        // SetLayerClient expects a local reference
+        const jobject obj = env->NewLocalRef(curEvent->Object().wrappedObject());
+        AndroidBridge::Bridge()->SetLayerClient(env, obj);
+        break;
+      }
+      break;
+    }
+
     case AndroidGeckoEvent::LOCATION_EVENT: {
         if (!gLocationCallback)
             break;
