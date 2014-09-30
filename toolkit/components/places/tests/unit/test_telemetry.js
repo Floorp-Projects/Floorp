@@ -27,6 +27,7 @@ let histograms = {
   PLACES_ANNOS_PAGES_COUNT: function (val) do_check_eq(val, 1),
   PLACES_ANNOS_PAGES_SIZE_KB: function (val) do_check_eq(val, 1),
   PLACES_FRECENCY_CALC_TIME_MS: function (val) do_check_true(val >= 0),
+  PLACES_MAINTENANCE_DAYSFROMLAST: function (val) do_check_true(val >= 0),
 }
 
 function run_test()
