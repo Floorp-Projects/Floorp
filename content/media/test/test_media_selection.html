@@ -30,12 +30,12 @@ function maketest(attach_media, name, type, check_metadata) {
           manager.finished(token);
         }, false);
     } else {
-      e.addEventListener('error', function(event) {
+      e.addEventListener('error', function onerror(event) {
         is(errorRun, false, "error handler should run once only!");
         errorRun = true;
         is(e.readyState, HTMLMediaElement.HAVE_NOTHING,
            'test ' + token + ' readyState should be HAVE_NOTHING when load fails.');
-        e.removeEventListener('error', arguments.callee, true);
+        e.removeEventListener('error', onerror, true);
         removeNodeAndSource(e);
         manager.finished(token);
       }, true);
