@@ -20,6 +20,7 @@ loop.contacts = (function(_, mozL10n) {
   const ContactDropdown = React.createClass({displayName: 'ContactDropdown',
     propTypes: {
       handleAction: React.PropTypes.func.isRequired,
+      canEdit: React.PropTypes.bool
     },
 
     getInitialState: function () {
@@ -52,34 +53,36 @@ loop.contacts = (function(_, mozL10n) {
     },
 
     render: function() {
-      let dropdownMenu = React.addons.classSet({
-        "dropdown-menu": true,
-        "dropdown-menu-up": this.state.openDirUp,
-      });
+      var cx = React.addons.classSet;
 
       return (
-        React.DOM.ul({className: dropdownMenu}, 
-          React.DOM.li({className: "dropdown-menu-item disabled", 
+        React.DOM.ul({className: cx({ "dropdown-menu": true,
+                            "dropdown-menu-up": this.state.openDirUp })}, 
+          React.DOM.li({className: cx({ "dropdown-menu-item": true,
+                              "disabled": true }), 
               onClick: this.onItemClick, 'data-action': "video-call"}, 
             React.DOM.i({className: "icon icon-video-call"}), 
             mozL10n.get("video_call_menu_button")
           ), 
-          React.DOM.li({className: "dropdown-menu-item disabled", 
+          React.DOM.li({className: cx({ "dropdown-menu-item": true,
+                              "disabled": true }), 
               onClick: this.onItemClick, 'data-action': "audio-call"}, 
             React.DOM.i({className: "icon icon-audio-call"}), 
             mozL10n.get("audio_call_menu_button")
           ), 
-          React.DOM.li({className: "dropdown-menu-item", 
+          React.DOM.li({className: cx({ "dropdown-menu-item": true,
+                              "disabled": !this.props.canEdit }), 
               onClick: this.onItemClick, 'data-action': "edit"}, 
             React.DOM.i({className: "icon icon-edit"}), 
             mozL10n.get("edit_contact_menu_button")
           ), 
-          React.DOM.li({className: "dropdown-menu-item disabled", 
+          React.DOM.li({className: "dropdown-menu-item", 
               onClick: this.onItemClick, 'data-action': "block"}, 
             React.DOM.i({className: "icon icon-block"}), 
             mozL10n.get("block_contact_menu_button")
           ), 
-          React.DOM.li({className: "dropdown-menu-item disabled", 
+          React.DOM.li({className: cx({ "dropdown-menu-item": true,
+                              "disabled": !this.props.canEdit }), 
               onClick: this.onItemClick, 'data-action': "delete"}, 
             React.DOM.i({className: "icon icon-delete"}), 
             mozL10n.get("remove_contact_menu_button")
@@ -121,9 +124,8 @@ loop.contacts = (function(_, mozL10n) {
     },
 
     handleAction: function(actionName) {
-      console.error("Actions not implemented: " + actionName);
       if (this.props.handleContactAction) {
-        this.props.handleContactAction(this.props.key, actionName);
+        this.props.handleContactAction(this.props.contact, actionName);
       }
     },
 
@@ -154,6 +156,12 @@ loop.contacts = (function(_, mozL10n) {
       return email;
     },
 
+    canEdit: function() {
+      // We cannot modify imported contacts.  For the moment, the check for
+      // determining whether the contact is imported is based on its category.
+      return this.props.contact.category[0] != "google";
+    },
+
     render: function() {
       let names = this.getContactNames();
       let email = this.getPreferredEmail();
@@ -182,7 +190,8 @@ loop.contacts = (function(_, mozL10n) {
                onClick: this.showDropdownMenu})
           ), 
           this.state.showMenu
-            ? ContactDropdown({handleAction: this.handleAction})
+            ? ContactDropdown({handleAction: this.handleAction, 
+                               canEdit: this.canEdit()})
             : null
           
         )
@@ -262,6 +271,17 @@ loop.contacts = (function(_, mozL10n) {
       this.props.startForm("contacts_add");
     },
 
+    handleContactAction: function(contact, actionName) {
+      switch (actionName) {
+        case "edit":
+          this.props.startForm("contacts_edit", contact);
+          break;
+        default:
+          console.error("Unrecognized action: " + actionName);
+          break;
+      }
+    },
+
     sortContacts: function(contact1, contact2) {
       let comp = contact1.name[0].localeCompare(contact2.name[0]);
       if (comp !== 0) {
@@ -274,7 +294,8 @@ loop.contacts = (function(_, mozL10n) {
 
     render: function() {
       let viewForItem = item => {
-        return ContactDetail({key: item._guid, contact: item})
+        return ContactDetail({key: item._guid, contact: item, 
+                              handleContactAction: this.handleContactAction})
       };
 
       let shownContacts = _.groupBy(this.state.contacts, function(contact) {
@@ -327,7 +348,11 @@ loop.contacts = (function(_, mozL10n) {
 
     initForm: function(contact) {
       let state = this.getInitialState();
-      state.contact = contact || null;
+      if (contact) {
+        state.contact = contact;
+        state.name = contact.name[0];
+        state.email = contact.email[0].value;
+      }
       this.setState(state);
     },
 
@@ -348,6 +373,13 @@ loop.contacts = (function(_, mozL10n) {
 
       switch (this.props.mode) {
         case "edit":
+          this.state.contact.name[0] = this.state.name.trim();
+          this.state.contact.email[0].value = this.state.email.trim();
+          contactsAPI.update(this.state.contact, err => {
+            if (err) {
+              throw err;
+            }
+          });
           this.setState({
             contact: null,
           });
@@ -379,7 +411,9 @@ loop.contacts = (function(_, mozL10n) {
       let cx = React.addons.classSet;
       return (
         React.DOM.div({className: "content-area contact-form"}, 
-          React.DOM.header(null, mozL10n.get("add_contact_button")), 
+          React.DOM.header(null, this.props.mode == "add"
+                   ? mozL10n.get("add_contact_button")
+                   : mozL10n.get("edit_contact_title")), 
           React.DOM.label(null, mozL10n.get("edit_contact_name_label")), 
           React.DOM.input({ref: "name", required: true, pattern: "\\s*\\S.*", 
                  className: cx({pristine: this.state.pristine}), 
@@ -393,7 +427,9 @@ loop.contacts = (function(_, mozL10n) {
                     caption: mozL10n.get("cancel_button"), 
                     onClick: this.handleCancelButtonClick}), 
             Button({additionalClass: "button-accept", 
-                    caption: mozL10n.get("add_contact_button"), 
+                    caption: this.props.mode == "add"
+                             ? mozL10n.get("add_contact_button")
+                             : mozL10n.get("edit_contact_done_button"), 
                     onClick: this.handleAcceptButtonClick})
           )
         )
