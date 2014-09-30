@@ -83,28 +83,28 @@ NS_SVGNewGetBBoxEnabled()
 // we only take the address of this:
 static mozilla::gfx::UserDataKey sSVGAutoRenderStateKey;
 
-SVGAutoRenderState::SVGAutoRenderState(nsRenderingContext *aContext,
+SVGAutoRenderState::SVGAutoRenderState(DrawTarget* aDrawTarget,
                                        RenderMode aMode
                                        MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-  : mContext(aContext)
+  : mDrawTarget(aDrawTarget)
   , mOriginalRenderState(nullptr)
   , mMode(aMode)
   , mPaintingToWindow(false)
 {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   mOriginalRenderState =
-    aContext->GetDrawTarget()->RemoveUserData(&sSVGAutoRenderStateKey);
+    aDrawTarget->RemoveUserData(&sSVGAutoRenderStateKey);
   // We always remove ourselves from aContext before it dies, so
   // passing nullptr as the destroy function is okay.
-  aContext->GetDrawTarget()->AddUserData(&sSVGAutoRenderStateKey, this, nullptr);
+  aDrawTarget->AddUserData(&sSVGAutoRenderStateKey, this, nullptr);
 }
 
 SVGAutoRenderState::~SVGAutoRenderState()
 {
-  mContext->GetDrawTarget()->RemoveUserData(&sSVGAutoRenderStateKey);
+  mDrawTarget->RemoveUserData(&sSVGAutoRenderStateKey);
   if (mOriginalRenderState) {
-    mContext->GetDrawTarget()->AddUserData(&sSVGAutoRenderStateKey,
-                                           mOriginalRenderState, nullptr);
+    mDrawTarget->AddUserData(&sSVGAutoRenderStateKey,
+                             mOriginalRenderState, nullptr);
   }
 }
 
@@ -115,9 +115,9 @@ SVGAutoRenderState::SetPaintingToWindow(bool aPaintingToWindow)
 }
 
 /* static */ SVGAutoRenderState::RenderMode
-SVGAutoRenderState::GetRenderMode(nsRenderingContext *aContext)
+SVGAutoRenderState::GetRenderMode(DrawTarget* aDrawTarget)
 {
-  void *state = aContext->GetDrawTarget()->GetUserData(&sSVGAutoRenderStateKey);
+  void *state = aDrawTarget->GetUserData(&sSVGAutoRenderStateKey);
   if (state) {
     return static_cast<SVGAutoRenderState*>(state)->mMode;
   }
@@ -125,9 +125,9 @@ SVGAutoRenderState::GetRenderMode(nsRenderingContext *aContext)
 }
 
 /* static */ bool
-SVGAutoRenderState::IsPaintingToWindow(nsRenderingContext *aContext)
+SVGAutoRenderState::IsPaintingToWindow(DrawTarget* aDrawTarget)
 {
-  void *state = aContext->GetDrawTarget()->GetUserData(&sSVGAutoRenderStateKey);
+  void *state = aDrawTarget->GetUserData(&sSVGAutoRenderStateKey);
   if (state) {
     return static_cast<SVGAutoRenderState*>(state)->mPaintingToWindow;
   }
