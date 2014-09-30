@@ -712,18 +712,19 @@ Search.prototype = {
       // with an alias - which works like a keyword.
       hasFirstResult = yield this._matchSearchEngineAlias();
     }
-    let shouldAutofill = this._shouldAutofill;
-    if (this.pending && !hasFirstResult && shouldAutofill) {
-      // Or it may look like a URL we know about from search engines.
-      hasFirstResult = yield this._matchSearchEngineUrl();
-    }
 
+    let shouldAutofill = this._shouldAutofill;
     if (this.pending && !hasFirstResult && shouldAutofill) {
       // It may also look like a URL we know from the database.
       // Here we can only try to predict whether the URL autofill query is
       // likely to return a result.  If the prediction ends up being wrong,
       // later we will need to make up for the lack of a special first result.
       hasFirstResult = yield this._matchKnownUrl(conn, queries);
+    }
+
+    if (this.pending && !hasFirstResult && shouldAutofill) {
+      // Or it may look like a URL we know about from search engines.
+      hasFirstResult = yield this._matchSearchEngineUrl();
     }
 
     if (this.pending && this._enableActions && !hasFirstResult) {
