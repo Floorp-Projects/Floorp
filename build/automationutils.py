@@ -286,14 +286,9 @@ def processSingleLeakFile(leakLogFileName, processType, leakThreshold):
 
   # totalBytesLeaked was seen and is non-zero.
   if totalBytesLeaked > leakThreshold:
-    if processType == "tab":
-      # For now, ignore tab process leaks. See bug 1051230.
-      log.info("WARNING | leakcheck | ignoring leaks in tab process")
-      prefix = "WARNING"
-    else:
-      logAsWarning = True
-      # Fail the run if we're over the threshold (which defaults to 0)
-      prefix = "TEST-UNEXPECTED-FAIL"
+    logAsWarning = True
+    # Fail the run if we're over the threshold (which defaults to 0)
+    prefix = "TEST-UNEXPECTED-FAIL"
   else:
     prefix = "WARNING"
   # Create a comma delimited string of the first N leaked objects found,
