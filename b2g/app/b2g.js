@@ -827,7 +827,10 @@ pref("network.gonk.manage-offline-status", true);
 // On Firefox Mulet, we can't enable shared JSM scope
 // as it breaks most Firefox JSMs (see bug 961777)
 #ifndef MOZ_MULET
+// Break any JSMs or JS components that rely on shared scope
+#ifndef DEBUG
 pref("jsloader.reuseGlobal", true);
+#endif
 #endif
 
 // Enable font inflation for browser tab content.

@@ -17,10 +17,10 @@
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="77ef35f5429bc3dfe9ca192b9aacc3c0bf8857de"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="0e280591881d44b80f456bc27e12d9114c218868"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="5883a99b6528ced9dafaed8d3ca2405fb285537e"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="562d357b72279a9e35d4af5aeecc8e1ffa2f44f1"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="0f7792c39ad26aedecf457117c21b16cc1aee879"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="4f9042d3a705307849a6f63961eaaaa2e1d85d77"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
   <!-- Stock Android things -->
@@ -134,7 +134,7 @@
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="d259117b4976decbe2f76eeed85218bf0109190f"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="0e56e450367cd802241b27164a2979188242b95f"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="9f28c4faea3b2f01db227b2467b08aeba96d9bec"/>
-  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="2a5dc67db7c9e6651c5fff855a6f69c1f2061ca7"/>
+  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="cf9376f0f59ca72333dd24a54efe887d527da612"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="8b1365af38c9a653df97349ee53a3f5d64fd590a"/>
   <project name="darwinstreamingserver" path="system/darwinstreamingserver" remote="b2g" revision="cf85968c7f85e0ec36e72c87ceb4837a943b8af6"/>
 </manifest>
