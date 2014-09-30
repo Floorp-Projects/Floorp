@@ -1128,7 +1128,7 @@ BacktrackingAllocator::reifyAllocations()
 
                     if (*res != *alloc) {
                         LMoveGroup *group = getInputMoveGroup(inputOf(ins));
-                        if (!group->addAfter(sourceAlloc, res, reg->type()))
+                        if (!group->addAfter(sourceAlloc, res, def->type()))
                             return false;
                         *alloc = *res;
                     }
