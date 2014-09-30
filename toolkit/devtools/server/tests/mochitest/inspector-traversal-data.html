@@ -1,7 +1,31 @@
 <html>
 <head>
+  <meta charset="UTF-8">
+  <title>Inspector Traversal Test Data</title>
+  <style type="text/css">
+    #pseudo::before {
+      content: "before";
+    }
+    #pseudo::after {
+      content: "after";
+    }
+    #pseudo-empty::before {
+      content: "before an empty element";
+    }
+    #shadow::before {
+      content: "Testing ::before on a shadow host";
+    }
+  </style>
   <script type="text/javascript">
     window.onload = function() {
+
+      // Set up a basic shadow DOM
+      var host = document.querySelector('#shadow');
+      if (host.createShadowRoot) {
+        var root = host.createShadowRoot();
+        root.innerHTML = '<h3>Shadow <em>DOM</em></h3><select multiple></select>';
+      }
+
       // Put a copy of the body in an iframe to test frame traversal.
       var body = document.querySelector("body");
       var data = "data:text/html,<html>" + body.outerHTML + "<html>";
@@ -14,6 +38,7 @@
       body.appendChild(iframe);
     }
   </script>
+</head>
 <body style="background-color:white">
   <h1>Inspector Actor Tests</h1>
   <span id="longstring">longlonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglonglong</span>
@@ -51,6 +76,13 @@
     <div id="longlist-sibling-firstchild"></div>
   </div>
   <p id="edit-html"></p>
+
+  <select multiple><option>one</option><option>two</option></select>
+  <div id="pseudo"><span>middle</span></div>
+  <div id="pseudo-empty"></div>
+
+  <div id="shadow">light dom</div>
+
   <object>
       <div id="1"></div>
   </object>

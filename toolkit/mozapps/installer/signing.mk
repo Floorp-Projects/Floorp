@@ -22,7 +22,7 @@ SIGN_EXCLUDES := \
 endif # Windows
 
 ifeq (Darwin, $(OS_ARCH))
-MOZ_INTERNAL_SIGNING_FORMAT := dmg
+MOZ_INTERNAL_SIGNING_FORMAT := dmgv2
 MOZ_EXTERNAL_SIGNING_FORMAT :=
 endif # Darwin
 

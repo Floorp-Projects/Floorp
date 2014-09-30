@@ -163,7 +163,7 @@ function stringify(aThing, aAllowNewLines) {
 function debugElement(aElement) {
   return "<" + aElement.tagName +
       (aElement.id ? "#" + aElement.id : "") +
-      (aElement.className ?
+      (aElement.className && aElement.className.split ?
           "." + aElement.className.split(" ").join(" .") :
           "") +
       ">";
