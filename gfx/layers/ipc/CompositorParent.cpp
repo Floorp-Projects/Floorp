@@ -685,6 +685,8 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget, const nsIntRect* aRect)
     }
   }
 
+  mCompositionManager->ComputeRotation();
+
   TimeStamp time = mIsTesting ? mTestTime : mLastCompose;
   bool requestNextFrame = mCompositionManager->TransformShadowTree(time);
   if (requestNextFrame) {
@@ -692,8 +694,6 @@ CompositorParent::CompositeToTarget(DrawTarget* aTarget, const nsIntRect* aRect)
   }
 
   RenderTraceLayers(mLayerManager->GetRoot(), "0000");
-
-  mCompositionManager->ComputeRotation();
 
 #ifdef MOZ_DUMP_PAINTING
   static bool gDumpCompositorTree = false;
