@@ -774,25 +774,6 @@ nsSVGUtils::GetCoveredRegion(const nsFrameList &aFrames)
   return rect;
 }
 
-nsPoint
-nsSVGUtils::TransformOuterSVGPointToChildFrame(nsPoint aPoint,
-                                               const gfxMatrix& aFrameToCanvasTM,
-                                               nsPresContext* aPresContext)
-{
-  NS_ABORT_IF_FALSE(!aFrameToCanvasTM.IsSingular(),
-                    "Callers must not pass a singular matrix");
-  gfxMatrix canvasDevToFrameUserSpace = aFrameToCanvasTM;
-  canvasDevToFrameUserSpace.Invert();
-  gfxPoint cssPxPt =
-    gfxPoint(aPoint.x, aPoint.y) / aPresContext->AppUnitsPerCSSPixel();
-  gfxPoint userPt = canvasDevToFrameUserSpace.Transform(cssPxPt);
-  gfxPoint appPt = (userPt * aPresContext->AppUnitsPerCSSPixel()).Round();
-  userPt.x = clamped(appPt.x, gfxFloat(nscoord_MIN), gfxFloat(nscoord_MAX));
-  userPt.y = clamped(appPt.y, gfxFloat(nscoord_MIN), gfxFloat(nscoord_MAX));
-  // now guaranteed to be safe:
-  return nsPoint(nscoord(userPt.x), nscoord(userPt.y));
-}
-
 nsRect
 nsSVGUtils::TransformFrameRectToOuterSVG(const nsRect& aRect,
                                          const gfxMatrix& aMatrix,
