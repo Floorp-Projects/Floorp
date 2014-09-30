@@ -275,6 +275,11 @@ class JavaPanZoomController
             } else if (MESSAGE_TOUCH_LISTENER.equals(event)) {
                 int tabId = message.getInt("tabID");
                 final Tab tab = Tabs.getInstance().getTab(tabId);
+                // Make sure we still have a Tab
+                if (tab == null) {
+                    return;
+                }
+
                 tab.setHasTouchListeners(true);
                 mTarget.post(new Runnable() {
                     @Override
