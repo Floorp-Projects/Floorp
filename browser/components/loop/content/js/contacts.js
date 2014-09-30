@@ -55,6 +55,10 @@ loop.contacts = (function(_, mozL10n) {
     render: function() {
       var cx = React.addons.classSet;
 
+      let blockAction = this.props.blocked ? "unblock" : "block";
+      let blockLabel = this.props.blocked ? "unblock_contact_menu_button"
+                                          : "block_contact_menu_button";
+
       return (
         React.DOM.ul({className: cx({ "dropdown-menu": true,
                             "dropdown-menu-up": this.state.openDirUp })}, 
@@ -77,14 +81,14 @@ loop.contacts = (function(_, mozL10n) {
             mozL10n.get("edit_contact_menu_button")
           ), 
           React.DOM.li({className: "dropdown-menu-item", 
-              onClick: this.onItemClick, 'data-action': "block"}, 
-            React.DOM.i({className: "icon icon-block"}), 
-            mozL10n.get("block_contact_menu_button")
+              onClick: this.onItemClick, 'data-action': blockAction}, 
+            React.DOM.i({className: "icon icon-" + blockAction}), 
+            mozL10n.get(blockLabel)
           ), 
           React.DOM.li({className: cx({ "dropdown-menu-item": true,
                               "disabled": !this.props.canEdit }), 
-              onClick: this.onItemClick, 'data-action': "delete"}, 
-            React.DOM.i({className: "icon icon-delete"}), 
+              onClick: this.onItemClick, 'data-action': "remove"}, 
+            React.DOM.i({className: "icon icon-remove"}), 
             mozL10n.get("remove_contact_menu_button")
           )
         )
@@ -116,7 +120,11 @@ loop.contacts = (function(_, mozL10n) {
 
     hideDropdownMenu: function() {
       document.body.removeEventListener("click", this._onBodyClick);
-      this.setState({showMenu: false});
+      // Since this call may be deferred, we need to guard it, for example in
+      // case the contact was removed in the meantime.
+      if (this.isMounted()) {
+        this.setState({showMenu: false});
+      }
     },
 
     componentWillUnmount: function() {
@@ -191,7 +199,8 @@ loop.contacts = (function(_, mozL10n) {
           ), 
           this.state.showMenu
             ? ContactDropdown({handleAction: this.handleAction, 
-                               canEdit: this.canEdit()})
+                               canEdit: this.canEdit(), 
+                               blocked: this.props.contact.blocked})
             : null
           
         )
@@ -276,6 +285,16 @@ loop.contacts = (function(_, mozL10n) {
         case "edit":
           this.props.startForm("contacts_edit", contact);
           break;
+        case "remove":
+        case "block":
+        case "unblock":
+          // Invoke the API named like the action.
+          navigator.mozLoop.contacts[actionName](contact._guid, err => {
+            if (err) {
+              throw err;
+            }
+          });
+          break;
         default:
           console.error("Unrecognized action: " + actionName);
           break;
@@ -302,10 +321,9 @@ loop.contacts = (function(_, mozL10n) {
         return contact.blocked ? "blocked" : "available";
       });
 
-      // Buttons are temporarily hidden using "style".
       return (
         React.DOM.div(null, 
-          React.DOM.div({className: "content-area", style: {display: "none"}}, 
+          React.DOM.div({className: "content-area"}, 
             ButtonGroup(null, 
               Button({caption: mozL10n.get("import_contacts_button"), 
                       disabled: true, 
