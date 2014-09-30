@@ -248,8 +248,8 @@ WebGLProgram::UpdateInfo()
  * \return the corresponding \u base internal format (GL_ALPHA, GL_LUMINANCE,
  * GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA), or GL_NONE if invalid enum.
  */
-GLenum
-WebGLContext::BaseTexFormat(GLenum internalFormat) const
+TexFormat
+WebGLContext::BaseTexFormat(TexInternalFormat internalFormat) const
 {
     if (internalFormat == LOCAL_GL_ALPHA ||
         internalFormat == LOCAL_GL_LUMINANCE ||
@@ -257,56 +257,56 @@ WebGLContext::BaseTexFormat(GLenum internalFormat) const
         internalFormat == LOCAL_GL_RGB ||
         internalFormat == LOCAL_GL_RGBA)
     {
-        return internalFormat;
+        return TexFormat(internalFormat.get());
     }
 
     if (IsExtensionEnabled(WebGLExtensionID::EXT_sRGB)) {
         if (internalFormat == LOCAL_GL_SRGB)
-            return LOCAL_GL_RGB;
+            return TexFormat(LOCAL_GL_RGB);
 
         if (internalFormat == LOCAL_GL_SRGB_ALPHA)
-            return LOCAL_GL_RGBA;
+            return TexFormat(LOCAL_GL_RGBA);
     }
 
     if (IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_atc)) {
         if (internalFormat == LOCAL_GL_ATC_RGB)
-            return LOCAL_GL_RGB;
+            return TexFormat(LOCAL_GL_RGB);
 
         if (internalFormat == LOCAL_GL_ATC_RGBA_EXPLICIT_ALPHA ||
             internalFormat == LOCAL_GL_ATC_RGBA_INTERPOLATED_ALPHA)
         {
-            return LOCAL_GL_RGBA;
+            return TexFormat(LOCAL_GL_RGBA);
         }
     }
 
     if (IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_etc1)) {
         if (internalFormat == LOCAL_GL_ETC1_RGB8_OES)
-            return LOCAL_GL_RGB;
+            return TexFormat(LOCAL_GL_RGB);
     }
 
     if (IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_pvrtc)) {
         if (internalFormat == LOCAL_GL_COMPRESSED_RGB_PVRTC_2BPPV1 ||
             internalFormat == LOCAL_GL_COMPRESSED_RGB_PVRTC_4BPPV1)
         {
-            return LOCAL_GL_RGB;
+            return TexFormat(LOCAL_GL_RGB);
         }
 
         if (internalFormat == LOCAL_GL_COMPRESSED_RGBA_PVRTC_2BPPV1 ||
             internalFormat == LOCAL_GL_COMPRESSED_RGBA_PVRTC_4BPPV1)
         {
-            return LOCAL_GL_RGBA;
+            return TexFormat(LOCAL_GL_RGBA);
         }
     }
 
     if (IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_s3tc)) {
         if (internalFormat == LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT)
-            return LOCAL_GL_RGB;
+            return TexFormat(LOCAL_GL_RGB);
 
         if (internalFormat == LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT ||
             internalFormat == LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT ||
             internalFormat == LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT)
         {
-            return LOCAL_GL_RGBA;
+            return TexFormat(LOCAL_GL_RGBA);
         }
     }
 
@@ -315,13 +315,13 @@ WebGLContext::BaseTexFormat(GLenum internalFormat) const
             internalFormat == LOCAL_GL_DEPTH_COMPONENT16 ||
             internalFormat == LOCAL_GL_DEPTH_COMPONENT32)
         {
-            return LOCAL_GL_DEPTH_COMPONENT;
+            return TexFormat(LOCAL_GL_DEPTH_COMPONENT);
         }
 
         if (internalFormat == LOCAL_GL_DEPTH_STENCIL ||
             internalFormat == LOCAL_GL_DEPTH24_STENCIL8)
         {
-            return LOCAL_GL_DEPTH_STENCIL;
+            return TexFormat(LOCAL_GL_DEPTH_STENCIL);
         }
     }
 
