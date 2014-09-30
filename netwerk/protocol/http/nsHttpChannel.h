@@ -28,6 +28,7 @@ class nsDNSPrefetch;
 class nsICancelable;
 class nsIHttpChannelAuthProvider;
 class nsInputStreamPump;
+class nsISSLStatus;
 class nsPerformance;
 
 namespace mozilla { namespace net {
@@ -288,12 +289,21 @@ private:
     nsresult OpenRedirectChannel(nsresult rv);
 
     /**
-     * A function that takes care of reading STS headers and enforcing STS
-     * load rules.  After a secure channel is erected, STS requires the channel
-     * to be trusted or any STS header data on the channel is ignored.
-     * This is called from ProcessResponse.
+     * A function that takes care of reading STS and PKP headers and enforcing
+     * STS and PKP load rules. After a secure channel is erected, STS and PKP
+     * requires the channel to be trusted or any STS or PKP header data on
+     * the channel is ignored. This is called from ProcessResponse.
      */
-    nsresult ProcessSTSHeader();
+    nsresult ProcessSecurityHeaders();
+
+    /**
+     * A function to process a single security header (STS or PKP), assumes
+     * some basic sanity checks have been applied to the channel. Called
+     * from ProcessSecurityHeaders.
+     */
+    nsresult ProcessSingleSecurityHeader(uint32_t aType,
+                                         nsISSLStatus *aSSLStatus,
+                                         uint32_t aFlags);
 
     void InvalidateCacheEntryForLocation(const char *location);
     void AssembleCacheKey(const char *spec, uint32_t postID, nsACString &key);
