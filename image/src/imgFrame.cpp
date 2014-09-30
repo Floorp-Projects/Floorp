@@ -530,6 +530,13 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
   bool doTile = !imageRect.Contains(aRegion.Rect()) &&
                 !(aImageFlags & imgIContainer::FLAG_CLAMP);
   ImageRegion region(aRegion);
+  // SurfaceForDrawing changes the current transform, and we need it to still
+  // be changed when we call gfxUtils::DrawPixelSnapped. We still need to
+  // restore it before returning though.
+  // XXXjwatt In general having functions require someone further up the stack
+  // to undo transform changes that they make is bad practice. We should
+  // change how this code works.
+  gfxContextMatrixAutoSaveRestore autoSR(aContext);
   SurfaceWithFormat surfaceResult =
     SurfaceForDrawing(doPadding, doPartialDecode, doTile, aContext,
                       aPadding, imageRect, region, surf);

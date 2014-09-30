@@ -5,41 +5,6 @@
 
 /* General Complete MAR File Staged Patch Apply Test */
 
-function runHelperProcess(args) {
-  let helperBin = getTestDirFile(FILE_HELPER_BIN);
-  let process = AUS_Cc["@mozilla.org/process/util;1"].
-                createInstance(AUS_Ci.nsIProcess);
-  process.init(helperBin);
-  logTestInfo("Running " + helperBin.path + " " + args.join(" "));
-  process.run(true, args, args.length);
-  do_check_eq(process.exitValue, 0);
-}
-
-function createSymlink() {
-  let args = ["setup-symlink", "moz-foo", "moz-bar", "target",
-              getApplyDirFile().path + "/a/b/link"];
-  runHelperProcess(args);
-  getApplyDirFile("a/b/link", false).permissions = 0o666;
-  
-  args = ["setup-symlink", "moz-foo2", "moz-bar2", "target2",
-          getApplyDirFile().path + "/a/b/link2", "change-perm"];
-  runHelperProcess(args);
-}
-
-function removeSymlink() {
-  let args = ["remove-symlink", "moz-foo", "moz-bar", "target",
-              getApplyDirFile().path + "/a/b/link"];
-  runHelperProcess(args);
-  args = ["remove-symlink", "moz-foo2", "moz-bar2", "target2",
-          getApplyDirFile().path + "/a/b/link2"];
-  runHelperProcess(args);
-}
-
-function checkSymlink() {
-  let args = ["check-symlink", getApplyDirFile().path + "/a/b/link"];
-  runHelperProcess(args);
-}
-
 function run_test() {
   gStageUpdate = true;
   setupTestCommon();
@@ -48,7 +13,16 @@ function run_test() {
   gTestFiles[gTestFiles.length - 1].compareContents = "FromComplete\n";
   gTestFiles[gTestFiles.length - 1].comparePerms = 0o644;
   gTestDirs = gTestDirsCompleteSuccess;
-  setupUpdaterTest(FILE_COMPLETE_MAR, false, false);
+  setupUpdaterTest(FILE_COMPLETE_MAR);
+  if (IS_MACOSX) {
+    // Create files in the old distribution directory location to verify that
+    // the directory and its contents are removed when there is a distribution
+    // directory in the new location.
+    let testFile = getApplyDirFile(DIR_MACOS + "distribution/testFile", true);
+    writeFile(testFile, "test\n");
+    testFile = getApplyDirFile(DIR_MACOS + "distribution/test1/testFile", true);
+    writeFile(testFile, "test\n");
+  }
 
   createUpdaterINI(false);
 
@@ -62,14 +36,17 @@ function run_test() {
     applyToDir.lastModifiedTime = yesterday;
   }
 
-  if (IS_UNIX) {
+  // Don't test symlinks on Mac OS X in this test since it tends to timeout.
+  // It is tested on Mac OS X in marAppInUseStageSuccessComplete_unix.js
+  if (IS_UNIX && !IS_MACOSX) {
     removeSymlink();
     createSymlink();
     do_register_cleanup(removeSymlink);
-    gTestFiles.push({
+    gTestFiles.splice(gTestFiles.length - 3, 0,
+    {
       description      : "Readable symlink",
       fileName         : "link",
-      relPathDir       : "a/b/",
+      relPathDir       : DIR_RESOURCES,
       originalContents : "test",
       compareContents  : "test",
       originalFile     : null,
@@ -81,22 +58,10 @@ function run_test() {
 
   runUpdate(0, STATE_APPLIED, null);
 
-  if (IS_MACOSX) {
-    logTestInfo("testing last modified time on the apply to directory has " +
-                "changed after a successful update (bug 600098)");
-    let now = Date.now();
-    let applyToDir = getApplyDirFile();
-    let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
-    do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
-  }
+  checkFilesAfterUpdateSuccess(getStageDirFile, true, false);
+  checkUpdateLogContents(LOG_COMPLETE_SUCCESS);
 
-  checkFilesAfterUpdateSuccess();
-  // Sorting on Linux is different so skip this check for now.
-  if (!IS_UNIX) {
-    checkUpdateLogContents(LOG_COMPLETE_SUCCESS);
-  }
-
-  if (IS_MACOSX || IS_WIN) {
+  if (IS_WIN || IS_MACOSX) {
     // Check that the post update process was not launched when staging an
     // update.
     do_check_false(getPostUpdateFile(".running").exists());
@@ -115,7 +80,7 @@ function run_test() {
  * support launching post update process.
  */
 function checkUpdateApplied() {
-  if (IS_MACOSX || IS_WIN) {
+  if (IS_WIN || IS_MACOSX) {
     gCheckFunc = finishCheckUpdateApplied;
     checkPostUpdateAppLog();
   } else {
@@ -137,13 +102,57 @@ function finishCheckUpdateApplied() {
     do_check_true(timeDiff < MAC_MAX_TIME_DIFFERENCE);
   }
 
-  checkFilesAfterUpdateSuccess();
-  if (IS_UNIX) {
-    checkSymlink();
-  } else {
-    // Sorting on Linux is different so skip this check for now.
-    checkUpdateLogContents(LOG_COMPLETE_SUCCESS);
+  if (IS_MACOSX) {
+    logTestInfo("testing that the distribution directory is removed from the " +
+                "old location when there is a distribution directory in the " +
+                "new location");
+    let distributionDir = getApplyDirFile(DIR_MACOS + "distribution", true);
+    logTestInfo("testing " + distributionDir.path + " shouldn't exist");
+    do_check_false(distributionDir.exists());
+
+    checkUpdateLogContains("removing old distribution directory");
   }
 
+  if (IS_UNIX && !IS_MACOSX) {
+    checkSymlink();
+  }
+  checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
+  checkUpdateLogContents(LOG_COMPLETE_SUCCESS);
   checkCallbackAppLog();
+}
+
+function runHelperProcess(args) {
+  let helperBin = getTestDirFile(FILE_HELPER_BIN);
+  let process = AUS_Cc["@mozilla.org/process/util;1"].
+                createInstance(AUS_Ci.nsIProcess);
+  process.init(helperBin);
+  logTestInfo("Running " + helperBin.path + " " + args.join(" "));
+  process.run(true, args, args.length);
+  do_check_eq(process.exitValue, 0);
+}
+
+function createSymlink() {
+  let args = ["setup-symlink", "moz-foo", "moz-bar", "target",
+              getApplyDirFile().path + "/" + DIR_RESOURCES + "link"];
+  runHelperProcess(args);
+  getApplyDirFile(DIR_RESOURCES + "link", false).permissions = 0o666;
+  
+  args = ["setup-symlink", "moz-foo2", "moz-bar2", "target2",
+          getApplyDirFile().path + "/" + DIR_RESOURCES + "link2", "change-perm"];
+  runHelperProcess(args);
+}
+
+function removeSymlink() {
+  let args = ["remove-symlink", "moz-foo", "moz-bar", "target",
+              getApplyDirFile().path + "/" + DIR_RESOURCES + "link"];
+  runHelperProcess(args);
+  args = ["remove-symlink", "moz-foo2", "moz-bar2", "target2",
+          getApplyDirFile().path + "/" + DIR_RESOURCES + "link2"];
+  runHelperProcess(args);
+}
+
+function checkSymlink() {
+  let args = ["check-symlink",
+              getApplyDirFile().path + "/" + DIR_RESOURCES + "link"];
+  runHelperProcess(args);
 }

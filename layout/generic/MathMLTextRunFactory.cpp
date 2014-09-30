@@ -669,7 +669,7 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
         // character is actually available.
         uint8_t matchType;
         nsRefPtr<gfxFont> mathFont = fontGroup->
-          FindFontForChar(ch2, 0, HB_SCRIPT_COMMON, nullptr, &matchType);
+          FindFontForChar(ch2, 0, 0, HB_SCRIPT_COMMON, nullptr, &matchType);
         if (mathFont) {
           // Don't apply the CSS style if there is a math font for at least one
           // of the transformed character in this text run.
@@ -740,6 +740,7 @@ MathMLTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
     nsRefPtr<nsFontMetrics> metrics;
     pc->DeviceContext()->GetMetricsFor(font,
                                        styles[0]->StyleFont()->mLanguage,
+                                       gfxFont::eHorizontal,
                                        pc->GetUserFontSet(),
                                        pc->GetTextPerfMetrics(),
                                        *getter_AddRefs(metrics));

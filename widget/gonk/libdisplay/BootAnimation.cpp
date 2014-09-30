@@ -224,11 +224,13 @@ public:
 
 struct AnimationFrame {
     char path[256];
+    png_color_16 bgcolor;
     char *buf;
     const local_file_header *file;
     uint32_t width;
     uint32_t height;
     uint16_t bytepp;
+    bool has_bgcolor;
 
     AnimationFrame() : buf(nullptr) {}
     AnimationFrame(const AnimationFrame &frame) : buf(nullptr) {
@@ -290,8 +292,7 @@ AnimationFrame::ReadPngFrame(int outputFormat)
 {
 #ifdef PNG_HANDLE_AS_UNKNOWN_SUPPORTED
     static const png_byte unused_chunks[] =
-        { 98,  75,  71,  68, '\0',   /* bKGD */
-          99,  72,  82,  77, '\0',   /* cHRM */
+        { 99,  72,  82,  77, '\0',   /* cHRM */
          104,  73,  83,  84, '\0',   /* hIST */
          105,  67,  67,  80, '\0',   /* iCCP */
          105,  84,  88, 116, '\0',   /* iTXt */
@@ -348,8 +349,15 @@ AnimationFrame::ReadPngFrame(int outputFormat)
 
     png_read_info(pngread, pnginfo);
 
+    png_color_16p colorp;
+    has_bgcolor = (PNG_INFO_bKGD == png_get_bKGD(pngread, pnginfo, &colorp));
+    bgcolor = has_bgcolor ? *colorp : png_color_16();
     width = png_get_image_width(pngread, pnginfo);
     height = png_get_image_height(pngread, pnginfo);
+
+    LOG("Decoded %s: %d x %d frame with bgcolor? %s (%#x, %#x, %#x; gray:%#x)",
+        path, width, height, has_bgcolor ? "yes" : "no",
+        bgcolor.red, bgcolor.green, bgcolor.blue, bgcolor.gray);
 
     switch (outputFormat) {
     case HAL_PIXEL_FORMAT_BGRA_8888:
@@ -389,6 +397,54 @@ AnimationFrame::ReadPngFrame(int outputFormat)
     png_set_gray_to_rgb(pngread);
     png_read_image(pngread, (png_bytepp)&rows.front());
     png_destroy_read_struct(&pngread, &pnginfo, nullptr);
+}
+
+/**
+ * Return a wchar_t that when used to |wmemset()| an image buffer will
+ * fill it with the color defined by |color16|.  The packed wchar_t
+ * may comprise one or two pixels depending on |outputFormat|.
+ */
+static wchar_t
+AsBackgroundFill(const png_color_16& color16, int outputFormat)
+{
+    static_assert(sizeof(wchar_t) == sizeof(uint32_t),
+                  "TODO: support 2-byte wchar_t");
+    union {
+        uint32_t r8g8b8;
+        struct {
+            uint8_t b8;
+            uint8_t g8;
+            uint8_t r8;
+            uint8_t x8;
+        };
+    } color;
+    color.b8 = color16.blue;
+    color.g8 = color16.green;
+    color.r8 = color16.red;
+    color.x8 = 0xFF;
+
+    switch (outputFormat) {
+    case HAL_PIXEL_FORMAT_RGBA_8888:
+    case HAL_PIXEL_FORMAT_RGBX_8888:
+        return color.r8g8b8;
+
+    case HAL_PIXEL_FORMAT_BGRA_8888:
+        swap(color.r8, color.b8);
+        return color.r8g8b8;
+
+    case HAL_PIXEL_FORMAT_RGB_565: {
+        // NB: we could do a higher-quality downsample here, but we
+        // want the results to be a pixel-perfect match with the fast
+        // downsample in TransformTo565().
+        uint16_t color565 = ((color.r8 & 0xF8) << 8) |
+                            ((color.g8 & 0xFC) << 3) |
+                            ((color.b8       ) >> 3);
+        return (color565 << 16) | color565;
+    }
+    default:
+        LOGW("Unhandled pixel format %d; falling back on black", outputFormat);
+        return 0;
+    }
 }
 
 static void *
@@ -522,6 +578,12 @@ AnimationThread(void *)
                     LOGW("Failed to lock buffer_handle_t");
                     display->QueueBuffer(buf);
                     break;
+                }
+
+                if (frame.has_bgcolor) {
+                    wchar_t bgfill = AsBackgroundFill(frame.bgcolor, format);
+                    wmemset((wchar_t*)vaddr, bgfill,
+                            (buf->height * buf->stride * frame.bytepp) / sizeof(wchar_t));
                 }
 
                 if (buf->height == frame.height && buf->stride == frame.width) {

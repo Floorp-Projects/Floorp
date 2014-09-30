@@ -25,8 +25,12 @@ check::
 	$(MAKE) -C $(DEPTH)/toolkit/library gtestxul
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	$(MAKE) -C $(DEPTH)/browser/app repackage
-endif
+	rsync -a $(DIST)/bin/dependentlibs.list.gtest $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/Resources
+	rsync -a $(DIST)/bin/gtest $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/MacOS/
+	$(PYTHON) $(topsrcdir)/testing/gtest/rungtests.py --xre-path=$(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/Resources --symbols-path=$(DIST)/crashreporter-symbols $(DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/MacOS/$(MOZ_APP_NAME)$(BIN_SUFFIX)
+else
 	$(PYTHON) $(topsrcdir)/testing/gtest/rungtests.py --xre-path=$(DIST)/bin --symbols-path=$(DIST)/crashreporter-symbols $(DIST)/bin/$(MOZ_APP_NAME)$(BIN_SUFFIX)
+endif
 else
 check::
 	echo GTest skipped during make check

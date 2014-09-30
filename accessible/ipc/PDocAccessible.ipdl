@@ -1,0 +1,44 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+
+namespace mozilla {
+namespace a11y {
+
+struct AccessibleData
+{
+  uint64_t ID;
+  uint32_t Role;
+  uint32_t ChildrenCount;
+  nsString Name;
+};
+
+struct ShowEventData
+{
+  uint64_t ID;
+  uint32_t Idx;
+  AccessibleData[] NewTree;
+};
+
+protocol PDocAccessible
+{
+  manager PContent;
+
+parent:
+  __delete__();
+
+  /*
+   * Notify the parent process the document in the child process is firing an
+   * event.
+   */
+  Event(uint32_t type);
+  ShowEvent(ShowEventData data);
+  HideEvent(uint64_t aRootID);
+};
+
+}
+}

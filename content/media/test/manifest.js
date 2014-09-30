@@ -251,6 +251,13 @@ var gInvalidTests = [
   { name:"invalid-preskip.webm", type:"audio/webm; codecs=opus"},
 ];
 
+var gInvalidPlayTests = [
+  { name:"invalid-excess_discard.webm", type:"audio/webm; codecs=opus"},
+  { name:"invalid-excess_neg_discard.webm", type:"audio/webm; codecs=opus"},
+  { name:"invalid-neg_discard.webm", type:"audio/webm; codecs=opus"},
+  { name:"invalid-discard_on_multi_blocks.webm", type:"audio/webm; codecs=opus"},
+];
+
 // Files to check different cases of ogg skeleton information.
 // sample-fisbone-skeleton4.ogv
 // - Skeleton v4, w/ Content-Type,Role,Name,Language,Title for both theora/vorbis

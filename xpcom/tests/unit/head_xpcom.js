@@ -16,8 +16,9 @@ function set_process_running_environment()
   var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"].
     getService(Components.interfaces.nsIProperties);
   var greDir = dirSvc.get("GreD", Components.interfaces.nsIFile);
-
-  envSvc.set("DYLD_LIBRARY_PATH", greDir.path);
+  var macOSDir = greDir.parent;
+  macOSDir.append("MacOS");
+  envSvc.set("DYLD_LIBRARY_PATH", macOSDir.path);
   // For Linux
   envSvc.set("LD_LIBRARY_PATH", greDir.path);
   //XXX: handle windows

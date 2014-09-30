@@ -51,4 +51,26 @@ let test = asyncTest(function*() {
     is(labelId.textContent, "#" + id,
       "Node #" + node.nodeId + ": selection matches");
   }
+
+  yield testPseudoElements(inspector, container);
 });
+
+function *testPseudoElements(inspector, container) {
+  info ("Checking for pseudo elements");
+
+  let pseudoParent = getNodeFront(getNode("#pseudo-container"));
+  let children = yield inspector.walker.children(pseudoParent);
+  is (children.nodes.length, 2, "Pseudo children returned from walker");
+
+  let beforeElement = children.nodes[0];
+  let breadcrumbsUpdated = inspector.once("breadcrumbs-updated");
+  let nodeSelected = selectNode(beforeElement, inspector);
+  yield Promise.all([breadcrumbsUpdated, nodeSelected]);
+  is(container.childNodes[3].textContent, "::before", "::before shows up in breadcrumb");
+
+  let afterElement = children.nodes[1];
+  breadcrumbsUpdated = inspector.once("breadcrumbs-updated");
+  nodeSelected = selectNode(afterElement, inspector);
+  yield Promise.all([breadcrumbsUpdated, nodeSelected]);
+  is(container.childNodes[3].textContent, "::after", "::before shows up in breadcrumb");
+}

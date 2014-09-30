@@ -308,9 +308,6 @@ public:
   // Called in |Load| to open mResource.
   nsresult OpenResource(nsIStreamListener** aStreamListener);
 
-  // Called when the video file has completed downloading.
-  virtual void ResourceLoaded();
-
   // Called if the media file encounters a network error.
   virtual void NetworkError();
 
@@ -691,6 +688,12 @@ public:
   PlayState GetState() {
     return mPlayState;
   }
+
+  // Called by the media element to start timer to update download progress.
+  nsresult StartProgress();
+
+  // Called by the media element to stop progress information timer.
+  nsresult StopProgress();
 
   // Fire progress events if needed according to the time and byte
   // constraints outlined in the specification. aTimer is true
@@ -1159,11 +1162,6 @@ protected:
   // been requested. When a seek is started this is reset to invalid.
   SeekTarget mRequestedSeekTarget;
 
-  // True when we have fully loaded the resource and reported that
-  // to the element (i.e. reached NETWORK_LOADED state).
-  // Accessed on the main thread only.
-  bool mCalledResourceLoaded;
-
   // True when seeking or otherwise moving the play position around in
   // such a manner that progress event data is inaccurate. This is set
   // during seek and duration operations to prevent the progress indicator
@@ -1173,12 +1171,6 @@ protected:
 
   // True if the stream is infinite (e.g. a webradio).
   bool mInfiniteStream;
-
-  // Start timer to update download progress information.
-  nsresult StartProgress();
-
-  // Stop progress information timer.
-  nsresult StopProgress();
 
   // Ensures our media stream has been pinned.
   void PinForSeek();

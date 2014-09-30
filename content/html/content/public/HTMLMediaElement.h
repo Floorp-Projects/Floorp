@@ -162,15 +162,9 @@ public:
   virtual void MetadataLoaded(const MediaInfo* aInfo,
                               const MetadataTags* aTags) MOZ_FINAL MOZ_OVERRIDE;
 
-  // Called by the video decoder object, on the main thread,
-  // when it has read the first frame of the video
-  // aResourceFullyLoaded should be true if the resource has been
-  // fully loaded and the caller will call ResourceLoaded next.
-  virtual void FirstFrameLoaded(bool aResourceFullyLoaded) MOZ_FINAL MOZ_OVERRIDE;
-
-  // Called by the video decoder object, on the main thread,
-  // when the resource has completed downloading.
-  virtual void ResourceLoaded() MOZ_FINAL MOZ_OVERRIDE;
+  // Called by the decoder object, on the main thread,
+  // when it has read the first frame of the video or audio.
+  virtual void FirstFrameLoaded() MOZ_FINAL MOZ_OVERRIDE;
 
   // Called by the video decoder object, on the main thread,
   // when the resource has a network error during loading.
@@ -210,6 +204,9 @@ public:
   // ongoing.
   virtual void DownloadResumed(bool aForceNetworkLoading = false) MOZ_FINAL MOZ_OVERRIDE;
 
+  // Called to indicate the download is progressing.
+  virtual void DownloadProgressed() MOZ_FINAL MOZ_OVERRIDE;
+
   // Called by the media decoder to indicate that the download has stalled
   // (no data has arrived for a while).
   virtual void DownloadStalled() MOZ_FINAL MOZ_OVERRIDE;
@@ -237,10 +234,6 @@ public:
   // decide whether to set the ready state to HAVE_CURRENT_DATA,
   // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA.
   virtual void UpdateReadyStateForData(MediaDecoderOwner::NextFrameStatus aNextFrame) MOZ_FINAL MOZ_OVERRIDE;
-
-  // Use this method to change the mReadyState member, so required
-  // events can be fired.
-  void ChangeReadyState(nsMediaReadyState aState);
 
   // Return true if we can activate autoplay assuming enough data has arrived.
   bool CanActivateAutoplay();
@@ -540,7 +533,7 @@ public:
 
   already_AddRefed<Promise> SetMediaKeys(MediaKeys* mediaKeys,
                                          ErrorResult& aRv);
-  
+
   MediaWaitingFor WaitingFor() const;
 
   mozilla::dom::EventHandlerNonNull* GetOnencrypted();
@@ -647,6 +640,17 @@ protected:
     HTMLMediaElement* mOuter;
     nsCOMPtr<nsITimer> mTimer;
   };
+
+  /** Use this method to change the mReadyState member, so required
+   * events can be fired.
+   */
+  void ChangeReadyState(nsMediaReadyState aState);
+
+  /**
+   * Use this method to change the mNetworkState member, so required
+   * actions will be taken during the transition.
+   */
+  void ChangeNetworkState(nsMediaNetworkState aState);
 
   /**
    * These two methods are called by the WakeLockBoolWrapper when the wakelock
@@ -933,7 +937,7 @@ protected:
   // desired, and we'll seek to the sync point (keyframe and/or start of the
   // next block of audio samples) preceeding seek target.
   void Seek(double aTime, SeekTarget::Type aSeekType, ErrorResult& aRv);
-  
+
   // Update the audio channel playing state
   void UpdateAudioChannelPlayingState();
 
@@ -1104,9 +1108,8 @@ protected:
   // Set to false when completed, or not yet started.
   bool mBegun;
 
-  // True when the decoder has loaded enough data to display the
-  // first frame of the content.
-  bool mLoadedFirstFrame;
+  // True if loadeddata has been fired.
+  bool mLoadedDataFired;
 
   // Indicates whether current playback is a result of user action
   // (ie. calling of the Play method), or automatic playback due to

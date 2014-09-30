@@ -361,7 +361,9 @@ function _setupTLSServerTest(serverBinName)
   let envSvc = Cc["@mozilla.org/process/environment;1"]
                  .getService(Ci.nsIEnvironment);
   let greDir = directoryService.get("GreD", Ci.nsIFile);
-  envSvc.set("DYLD_LIBRARY_PATH", greDir.path);
+  let macOSDir = greDir.parent;
+  macOSDir.append("MacOS");
+  envSvc.set("DYLD_LIBRARY_PATH", macOSDir.path);
   envSvc.set("LD_LIBRARY_PATH", greDir.path);
   envSvc.set("MOZ_TLS_SERVER_DEBUG_LEVEL", "3");
   envSvc.set("MOZ_TLS_SERVER_CALLBACK_PORT", CALLBACK_PORT);
@@ -517,4 +519,29 @@ function startOCSPResponder(serverPort, identity, invalidIdentities,
       httpServer.stop(callback);
     }
   };
+}
+
+// A prototype for a fake, error-free sslstatus
+let FakeSSLStatus = function(certificate) {
+  this.serverCert = certificate;
+};
+
+FakeSSLStatus.prototype = {
+  serverCert: null,
+  cipherName: null,
+  keyLength: 2048,
+  isDomainMismatch: false,
+  isNotValidAtThisTime: false,
+  isUntrusted: false,
+  isExtendedValidation: false,
+  getInterface: function(aIID) {
+    return this.QueryInterface(aIID);
+  },
+  QueryInterface: function(aIID) {
+    if (aIID.equals(Ci.nsISSLStatus) ||
+        aIID.equals(Ci.nsISupports)) {
+      return this;
+    }
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
 }

@@ -7,8 +7,8 @@
           android:color="@color/text_color_primary_inverse"/>
 
     <item android:state_checked="true"
-          android:color="@color/text_color_primary"/>
+        android:color="@color/text_color_secondary"/>
 
-    <item android:color="@color/text_color_tertiary_inverse"/>
+    <item android:color="@color/text_color_secondary"/>
 
 </selector>

@@ -2776,6 +2776,21 @@ BaselineCompiler::emit_JSOP_THROW()
     return callVM(ThrowInfo);
 }
 
+typedef bool (*ThrowingFn)(JSContext *, HandleValue);
+static const VMFunction ThrowingInfo = FunctionInfo<ThrowingFn>(js::ThrowingOperation);
+
+bool
+BaselineCompiler::emit_JSOP_THROWING()
+{
+    // Keep value to throw in R0.
+    frame.popRegsAndSync(1);
+
+    prepareVMCall();
+    pushArg(R0);
+
+    return callVM(ThrowingInfo);
+}
+
 bool
 BaselineCompiler::emit_JSOP_TRY()
 {
