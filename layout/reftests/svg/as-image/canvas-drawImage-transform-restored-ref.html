@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <script type="text/javascript">
+      function go() {
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+
+        ctx.mozCurrentTransform = [2, 0, 0, 2, 0, 0];
+
+        ctx.fillStyle = "blue";
+        ctx.fillRect(20, 20, 50, 50);
+      }
+    </script>
+  </head>
+  <body onload="go()">
+    <canvas id="canvas" width="200" height="200"></canvas>
+  </body>
+</html>

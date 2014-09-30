@@ -3290,10 +3290,9 @@ END_CASE(JSOP_FINALLY)
 
 CASE(JSOP_THROWING)
 {
-    JS_ASSERT(!cx->isExceptionPending());
-    Value v;
+    RootedValue &v = rootValue0;
     POP_COPY_TO(v);
-    cx->setPendingException(v);
+    MOZ_ALWAYS_TRUE(ThrowingOperation(cx, v));
 }
 END_CASE(JSOP_THROWING)
 
@@ -3501,6 +3500,17 @@ js::Throw(JSContext *cx, HandleValue v)
     JS_ASSERT(!cx->isExceptionPending());
     cx->setPendingException(v);
     return false;
+}
+
+bool
+js::ThrowingOperation(JSContext *cx, HandleValue v)
+{
+    // Like js::Throw, but returns |true| instead of |false| to continue
+    // execution instead of calling the (JIT) exception handler.
+
+    MOZ_ASSERT(!cx->isExceptionPending());
+    cx->setPendingException(v);
+    return true;
 }
 
 bool

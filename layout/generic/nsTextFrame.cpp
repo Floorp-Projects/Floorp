@@ -1798,7 +1798,7 @@ GetFirstFontMetrics(gfxFontGroup* aFontGroup)
   gfxFont* font = aFontGroup->GetFirstValidFont();
   if (!font)
     return gfxFont::Metrics();
-  return font->GetMetrics();
+  return font->GetMetrics(gfxFont::eHorizontal); // XXX vertical
 }
 
 PR_STATIC_ASSERT(NS_STYLE_WHITESPACE_NORMAL == 0);
@@ -5672,7 +5672,8 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
   gfxFont* firstFont = aProvider.GetFontGroup()->GetFirstValidFont();
   if (!firstFont)
     return; // OOM
-  gfxFont::Metrics decorationMetrics(firstFont->GetMetrics());
+  gfxFont::Metrics
+    decorationMetrics(firstFont->GetMetrics(gfxFont::eHorizontal)); // XXX vertical?
   decorationMetrics.underlineOffset =
     aProvider.GetFontGroup()->GetUnderlineOffset();
 
@@ -6353,7 +6354,8 @@ nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
   gfxFont* firstFont = fontGroup->GetFirstValidFont();
   if (!firstFont)
     return false; // OOM
-  const gfxFont::Metrics& metrics = firstFont->GetMetrics();
+  const gfxFont::Metrics& metrics =
+    firstFont->GetMetrics(gfxFont::eHorizontal); // XXX vertical?
   gfxFloat underlineOffset = fontGroup->GetUnderlineOffset();
   gfxFloat ascent = aPresContext->AppUnitsToGfxUnits(mAscent);
   gfxFloat descentLimit =

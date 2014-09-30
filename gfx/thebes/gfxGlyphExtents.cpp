@@ -36,6 +36,7 @@ gfxGlyphExtents::~gfxGlyphExtents()
 
 bool
 gfxGlyphExtents::GetTightGlyphExtentsAppUnits(gfxFont *aFont,
+    gfxFont::Orientation aOrientation,
     gfxContext *aContext, uint32_t aGlyphID, gfxRect *aExtents)
 {
     HashEntry *entry = mTightGlyphExtents.GetEntry(aGlyphID);
@@ -49,7 +50,8 @@ gfxGlyphExtents::GetTightGlyphExtentsAppUnits(gfxFont *aFont,
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
             ++gGlyphExtentsSetupLazyTight;
 #endif
-            aFont->SetupGlyphExtents(aContext, aGlyphID, true, this);
+            aFont->SetupGlyphExtents(aContext, aOrientation, aGlyphID, true,
+                                     this);
             entry = mTightGlyphExtents.GetEntry(aGlyphID);
         }
         if (!entry) {
