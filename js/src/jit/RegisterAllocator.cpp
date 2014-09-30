@@ -407,7 +407,7 @@ AllocationIntegrityState::dump()
             if (ins->isMoveGroup()) {
                 LMoveGroup *group = ins->toMoveGroup();
                 for (int i = group->numMoves() - 1; i >= 0; i--) {
-                    // Use two printfs, as LAllocation::toString is not reentrant.
+                    // Use two printfs, as LAllocation::toString is not reentant.
                     fprintf(stderr, " [%s", group->getMove(i).from()->toString());
                     fprintf(stderr, " -> %s]", group->getMove(i).to()->toString());
                 }
