@@ -550,6 +550,8 @@ pref("privacy.sanitize.sanitizeOnShutdown", false);
 pref("privacy.sanitize.migrateFx3Prefs",    false);
 
 pref("privacy.panicButton.enabled",         true);
+pref("privacy.panicButton.useLocaleList",   true);
+pref("privacy.panicButton.enabledLocales",  "ast da de en-GB en-US es-AR es-CL es-ES es-MX fi fr fy-NL he hu it ja ja-JP-mac ko lv nb-NO nn-NO pa-IN pl pt-BR rm ru sk sl zh-TW");
 
 pref("network.proxy.share_proxy_settings",  false); // use the same proxy settings for all protocols
 
