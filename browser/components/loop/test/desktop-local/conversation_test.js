@@ -295,13 +295,24 @@ describe("loop.conversation", function() {
 
           it("should set the state to incoming on success", function(done) {
             icView = mountTestComponent();
-            resolveWebSocketConnect();
+            resolveWebSocketConnect("incoming");
 
             promise.then(function () {
               expect(icView.state.callStatus).eql("incoming");
               done();
             });
           });
+
+          it("should set the state to close on success if the progress " +
+            "state is terminated", function(done) {
+              icView = mountTestComponent();
+              resolveWebSocketConnect("terminated");
+
+              promise.then(function () {
+                expect(icView.state.callStatus).eql("close");
+                done();
+              });
+            });
 
           it("should display an error if the websocket failed to connect", function(done) {
             sandbox.stub(notifications, "errorL10n");
