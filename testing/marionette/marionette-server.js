@@ -2371,26 +2371,70 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
-   * Takes a screenshot of a web element or the current frame.
+   * Takes a screenshot of a web element, current frame, or viewport.
    *
    * The screen capture is returned as a lossless PNG image encoded as
-   * a base 64 string.  If the <code>id</code> argument is not null
-   * and refers to a present and visible web element's ID, the capture
-   * area will be limited to the bounding box of that element.
-   * Otherwise, the capture area will be the bounding box of the
-   * current frame.
+   * a base 64 string.
    *
-   * @param id an optional reference to a web element
-   * @param highlights an optional list of web elements to draw a red
-   *                   box around in the returned capture
-   * @return PNG image encoded as base 64 string
-    */
+   * If called in the content context, the <code>id</code> argument is not null
+   * and refers to a present and visible web element's ID, the capture area
+   * will be limited to the bounding box of that element. Otherwise, the
+   * capture area will be the bounding box of the current frame.
+   *
+   * If called in the chrome context, the screenshot will always represent the
+   * entire viewport.
+   *
+   * @param {string} [id] Reference to a web element.
+   * @param {string} [highlights] List of web elements to highlight.
+   * @return {string} PNG image encoded as base 64 string.
+   */
   takeScreenshot: function MDA_takeScreenshot(aRequest) {
     this.command_id = this.getCommandId();
-    this.sendAsync("takeScreenshot",
+    if (this.context == "chrome") {
+      var win = this.getCurrentWindow();
+      var canvas = win.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+      var doc;
+      if (appName == "B2G") {
+        doc = win.document.body;
+      } else {
+        doc = win.document.getElementsByTagName('window')[0];
+      }
+      var docRect = doc.getBoundingClientRect();
+      var width = docRect.width;
+      var height = docRect.height;
+
+      // Convert width and height from CSS pixels (potentially fractional)
+      // to device pixels (integer).
+      var scale = win.devicePixelRatio;
+      canvas.setAttribute("width", Math.round(width * scale));
+      canvas.setAttribute("height", Math.round(height * scale));
+
+      var context = canvas.getContext("2d");
+      var flags;
+      if (appName == "B2G") {
+        flags =
+          context.DRAWWINDOW_DRAW_CARET |
+          context.DRAWWINDOW_DRAW_VIEW |
+          context.DRAWWINDOW_USE_WIDGET_LAYERS;
+      } else {
+        // Bug 1075168 - CanvasRenderingContext2D image is distorted
+        // when using certain flags in chrome context.
+        flags =
+          context.DRAWWINDOW_DRAW_VIEW |
+          context.DRAWWINDOW_USE_WIDGET_LAYERS;
+      }
+      context.scale(scale, scale);
+      context.drawWindow(win, 0, 0, width, height, "rgb(255,255,255)", flags);
+      var dataUrl = canvas.toDataURL("image/png", "");
+      var data = dataUrl.substring(dataUrl.indexOf(",") + 1);
+      this.sendResponse(data, this.command_id);
+    }
+    else {
+      this.sendAsync("takeScreenshot",
                    {id: aRequest.parameters.id,
                     highlights: aRequest.parameters.highlights},
                    this.command_id);
+    }
   },
 
   /**
