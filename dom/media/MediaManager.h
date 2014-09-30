@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef MOZILLA_MEDIAMANAGER_H
+#define MOZILLA_MEDIAMANAGER_H
+
 #include "MediaEngine.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
@@ -574,9 +577,9 @@ public:
   void RemoveFromWindowList(uint64_t aWindowID,
     GetUserMediaCallbackMediaStreamListener *aListener);
 
-  nsresult GetUserMedia(bool aPrivileged,
+  nsresult GetUserMedia(
     nsPIDOMWindow* aWindow,
-    const dom::MediaStreamConstraints& aRawConstraints,
+    const dom::MediaStreamConstraints& aConstraints,
     nsIDOMGetUserMediaSuccessCallback* onSuccess,
     nsIDOMGetUserMediaErrorCallback* onError);
 
@@ -632,3 +635,5 @@ private:
 };
 
 } // namespace mozilla
+
+#endif // MOZILLA_MEDIAMANAGER_H
