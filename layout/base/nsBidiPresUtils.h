@@ -398,8 +398,8 @@ private:
                               bool                   aIsEvenLevel,
                               nscoord&               aStart,
                               nsContinuationStates*  aContinuationStates,
-                              mozilla::WritingMode   aLineWM,
-                              nscoord&               aLineWidth);
+                              mozilla::WritingMode   aContainerWM,
+                              nscoord&               aContainerWidth);
 
   /*
    * Initialize the continuation state(nsFrameContinuationState) to
