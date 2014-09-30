@@ -1004,15 +1004,12 @@ ProcessPriorityToString(ProcessPriority aPriority,
 }
 
 static StaticAutoPtr<ObserverList<FMRadioOperationInformation> > sFMRadioObservers;
-static StaticAutoPtr<ObserverList<FMRadioRDSGroup> > sFMRadioRDSObservers;
 
 static void
 InitializeFMRadioObserver()
 {
   if (!sFMRadioObservers) {
     sFMRadioObservers = new ObserverList<FMRadioOperationInformation>;
-    sFMRadioRDSObservers = new ObserverList<FMRadioRDSGroup>;
-    ClearOnShutdown(&sFMRadioRDSObservers);
     ClearOnShutdown(&sFMRadioObservers);
   }
 }
@@ -1035,27 +1032,6 @@ void
 NotifyFMRadioStatus(const FMRadioOperationInformation& aFMRadioState) {
   InitializeFMRadioObserver();
   sFMRadioObservers->Broadcast(aFMRadioState);
-}
-
-void
-RegisterFMRadioRDSObserver(FMRadioRDSObserver* aFMRadioRDSObserver) {
-  AssertMainThread();
-  InitializeFMRadioObserver();
-  sFMRadioRDSObservers->AddObserver(aFMRadioRDSObserver);
-}
-
-void
-UnregisterFMRadioRDSObserver(FMRadioRDSObserver* aFMRadioRDSObserver) {
-  AssertMainThread();
-  InitializeFMRadioObserver();
-  sFMRadioRDSObservers->RemoveObserver(aFMRadioRDSObserver);
-}
-
-
-void
-NotifyFMRadioRDSGroup(const FMRadioRDSGroup& aRDSGroup) {
-  InitializeFMRadioObserver();
-  sFMRadioRDSObservers->Broadcast(aRDSGroup);
 }
 
 void
@@ -1110,18 +1086,6 @@ void
 CancelFMRadioSeek() {
   AssertMainThread();
   PROXY_IF_SANDBOXED(CancelFMRadioSeek());
-}
-
-void
-EnableRDS(uint32_t aMask) {
-  AssertMainThread();
-  PROXY_IF_SANDBOXED(EnableRDS(aMask));
-}
-
-void
-DisableRDS() {
-  AssertMainThread();
-  PROXY_IF_SANDBOXED(DisableRDS());
 }
 
 FMRadioSettings
