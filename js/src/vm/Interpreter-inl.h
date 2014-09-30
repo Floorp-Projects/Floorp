@@ -254,7 +254,10 @@ FetchName(JSContext *cx, HandleObject obj, HandleObject obj2, HandlePropertyName
             return false;
         }
     }
-    return true;
+
+    // NAME operations are the slow paths already, so unconditionally check
+    // for uninitialized lets.
+    return CheckUninitializedLexical(cx, name, vp);
 }
 
 inline bool
@@ -264,7 +267,7 @@ FetchNameNoGC(JSObject *pobj, Shape *shape, MutableHandleValue vp)
         return false;
 
     vp.set(pobj->nativeGetSlot(shape->slot()));
-    return true;
+    return !IsUninitializedLexical(vp);
 }
 
 inline bool

@@ -298,17 +298,9 @@ NameOperation(JSContext *cx, InterpreterFrame *fp, jsbytecode *pc, MutableHandle
 
     /* Kludge to allow (typeof foo == "undefined") tests. */
     JSOp op2 = JSOp(pc[JSOP_NAME_LENGTH]);
-    if (op2 == JSOP_TYPEOF) {
-        if (!FetchName<true>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp))
-            return false;
-    } else {
-        if (!FetchName<false>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp))
-            return false;
-    }
-
-    // NAME operations are the slow paths already, so unconditionally check
-    // for uninitialized lets.
-    return CheckUninitializedLexical(cx, nameRoot, vp);
+    if (op2 == JSOP_TYPEOF)
+        return FetchName<true>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp);
+    return FetchName<false>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp);
 }
 
 static inline bool
