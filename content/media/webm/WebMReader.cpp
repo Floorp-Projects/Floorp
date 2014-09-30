@@ -143,11 +143,24 @@ static void webm_log(nestegg * context,
 #endif
 }
 
+ogg_packet
+InitOggPacket(const unsigned char* aData, size_t aLength, bool aBOS, bool aEOS,
+              int64_t aGranulepos, int64_t aPacketNo)
+{
+  ogg_packet packet;
+  packet.packet = const_cast<unsigned char*>(aData);
+  packet.bytes = aLength;
+  packet.b_o_s = aBOS;
+  packet.e_o_s = aEOS;
+  packet.granulepos = aGranulepos;
+  packet.packetno = aPacketNo;
+  return packet;
+}
+
 WebMReader::WebMReader(AbstractMediaDecoder* aDecoder)
   : MediaDecoderReader(aDecoder),
   mContext(nullptr),
   mPacketCount(0),
-  mChannels(0),
 #ifdef MOZ_OPUS
   mOpusParser(nullptr),
   mOpusDecoder(nullptr),
@@ -399,7 +412,7 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
             Cleanup();
             return NS_ERROR_FAILURE;
           }
-          ogg_packet opacket = InitOggPacket(data, length, header == 0, false, 0);
+          ogg_packet opacket = InitOggPacket(data, length, header == 0, false, 0, mPacketCount++);
 
           r = vorbis_synthesis_headerin(&mVorbisInfo,
                                         &mVorbisComment,
@@ -424,7 +437,6 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
 
         mInfo.mAudio.mRate = mVorbisDsp.vi->rate;
         mInfo.mAudio.mChannels = mVorbisDsp.vi->channels;
-        mChannels = mInfo.mAudio.mChannels;
 #ifdef MOZ_OPUS
       } else if (mAudioCodec == NESTEGG_CODEC_OPUS) {
         unsigned char* data = 0;
@@ -456,7 +468,6 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
         mInfo.mAudio.mRate = mOpusParser->mRate;
 
         mInfo.mAudio.mChannels = mOpusParser->mChannels;
-        mChannels = mInfo.mAudio.mChannels;
         mSeekPreroll = params.seek_preroll;
 #endif
       } else {
@@ -487,33 +498,17 @@ bool WebMReader::InitOpusDecoder()
   NS_ASSERTION(mOpusDecoder == nullptr, "leaking OpusDecoder");
 
   mOpusDecoder = opus_multistream_decoder_create(mOpusParser->mRate,
-                                             mOpusParser->mChannels,
-                                             mOpusParser->mStreams,
-                                             mOpusParser->mCoupledStreams,
-                                             mOpusParser->mMappingTable,
-                                             &r);
+                                                 mOpusParser->mChannels,
+                                                 mOpusParser->mStreams,
+                                                 mOpusParser->mCoupledStreams,
+                                                 mOpusParser->mMappingTable,
+                                                 &r);
   mSkip = mOpusParser->mPreSkip;
 
   return r == OPUS_OK;
 }
 #endif
 
-ogg_packet WebMReader::InitOggPacket(unsigned char* aData,
-                                       size_t aLength,
-                                       bool aBOS,
-                                       bool aEOS,
-                                       int64_t aGranulepos)
-{
-  ogg_packet packet;
-  packet.packet = aData;
-  packet.bytes = aLength;
-  packet.b_o_s = aBOS;
-  packet.e_o_s = aEOS;
-  packet.granulepos = aGranulepos;
-  packet.packetno = mPacketCount++;
-  return packet;
-}
- 
 bool WebMReader::DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
@@ -588,10 +583,10 @@ bool WebMReader::DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset)
   return true;
 }
 
-bool WebMReader::DecodeVorbis(unsigned char* aData, size_t aLength,
+bool WebMReader::DecodeVorbis(const unsigned char* aData, size_t aLength,
                               int64_t aOffset, uint64_t aTstampUsecs, int32_t* aTotalFrames)
 {
-  ogg_packet opacket = InitOggPacket(aData, aLength, false, false, -1);
+  ogg_packet opacket = InitOggPacket(aData, aLength, false, false, -1, mPacketCount++);
 
   if (vorbis_synthesis(&mVorbisBlock, &opacket) != 0) {
     return false;
@@ -610,14 +605,14 @@ bool WebMReader::DecodeVorbis(unsigned char* aData, size_t aLength,
   // time derived from the timecode of the first packet that produced
   // data.
   if (frames == 0 && mAudioFrames == 0) {
-    AudioQueue().Push(new AudioData(aOffset, aTstampUsecs, 0, 0, nullptr, mChannels, mInfo.mAudio.mRate));
+    AudioQueue().Push(new AudioData(aOffset, aTstampUsecs, 0, 0, nullptr, mInfo.mAudio.mChannels, mInfo.mAudio.mRate));
   }
   while (frames > 0) {
-    nsAutoArrayPtr<AudioDataValue> buffer(new AudioDataValue[frames * mChannels]);
-    for (uint32_t j = 0; j < mChannels; ++j) {
+    nsAutoArrayPtr<AudioDataValue> buffer(new AudioDataValue[frames * mInfo.mAudio.mChannels]);
+    for (uint32_t j = 0; j < mInfo.mAudio.mChannels; ++j) {
       VorbisPCMValue* channel = pcm[j];
       for (uint32_t i = 0; i < uint32_t(frames); ++i) {
-        buffer[i*mChannels + j] = MOZ_CONVERT_VORBIS_SAMPLE(channel[i]);
+        buffer[i*mInfo.mAudio.mChannels + j] = MOZ_CONVERT_VORBIS_SAMPLE(channel[i]);
       }
     }
 
@@ -644,7 +639,7 @@ bool WebMReader::DecodeVorbis(unsigned char* aData, size_t aLength,
                                     duration.value(),
                                     frames,
                                     buffer.forget(),
-                                    mChannels,
+                                    mInfo.mAudio.mChannels,
                                     mInfo.mAudio.mRate));
     mAudioFrames += frames;
     if (vorbis_synthesis_read(&mVorbisDsp, frames) != 0) {
@@ -658,23 +653,28 @@ bool WebMReader::DecodeVorbis(unsigned char* aData, size_t aLength,
 }
 
 #ifdef MOZ_OPUS
-bool WebMReader::DecodeOpus(unsigned char* aData, size_t aLength,
+bool WebMReader::DecodeOpus(const unsigned char* aData, size_t aLength,
                             int64_t aOffset, uint64_t aTstampUsecs, nestegg_packet* aPacket)
 {
   uint32_t channels = mOpusParser->mChannels;
+  // No channel mapping for more than 8 channels.
+  if (channels > 8) {
+    return false;
+  }
 
   // Maximum value is 63*2880, so there's no chance of overflow.
   int32_t frames_number = opus_packet_get_nb_frames(aData, aLength);
-
   if (frames_number <= 0)
     return false; // Invalid packet header.
+
   int32_t samples = opus_packet_get_samples_per_frame(aData,
                                                       (opus_int32) mInfo.mAudio.mRate);
-  int32_t frames = frames_number*samples;
 
-  // A valid Opus packet must be between 2.5 and 120 ms long.
+  // A valid Opus packet must be between 2.5 and 120 ms long (48kHz).
+  int32_t frames = frames_number*samples;
   if (frames < 120 || frames > 5760)
     return false;
+
   nsAutoArrayPtr<AudioDataValue> buffer(new AudioDataValue[frames * channels]);
 
   // Decode to the appropriate sample type.
@@ -703,12 +703,9 @@ bool WebMReader::DecodeOpus(unsigned char* aData, size_t aLength,
       return true;
     }
     int32_t keepFrames = frames - skipFrames;
-    int samples = keepFrames * channels;
-    nsAutoArrayPtr<AudioDataValue> trimBuffer(new AudioDataValue[samples]);
-    PodCopy(trimBuffer.get(), buffer.get() + skipFrames*channels, samples);
+    PodMove(buffer.get(), buffer.get() + skipFrames * channels, keepFrames * channels);
     startTime = startTime + FramesToUsecs(skipFrames, mInfo.mAudio.mRate);
     frames = keepFrames;
-    buffer = trimBuffer;
 
     mSkip -= skipFrames;
     LOG(PR_LOG_DEBUG, ("Opus decoder skipping %d frames", skipFrames));
@@ -729,11 +726,7 @@ bool WebMReader::DecodeOpus(unsigned char* aData, size_t aLength,
       return true;
     }
     int32_t keepFrames = frames - discardFrames.value();
-    int32_t samples = keepFrames * channels;
-    nsAutoArrayPtr<AudioDataValue> trimBuffer(new AudioDataValue[samples]);
-    PodCopy(trimBuffer.get(), buffer.get(), samples);
     frames = keepFrames;
-    buffer = trimBuffer;
   }
 
   // Apply the header gain if one was specified.
@@ -756,11 +749,6 @@ bool WebMReader::DecodeOpus(unsigned char* aData, size_t aLength,
   }
 #endif
 
-  // No channel mapping for more than 8 channels.
-  if (channels > 8) {
-    return false;
-  }
-
   CheckedInt64 duration = FramesToUsecs(frames, mInfo.mAudio.mRate);
   if (!duration.isValid()) {
     NS_WARNING("Int overflow converting WebM audio duration");
@@ -776,7 +764,7 @@ bool WebMReader::DecodeOpus(unsigned char* aData, size_t aLength,
                                   duration.value(),
                                   frames,
                                   buffer.forget(),
-                                  mChannels,
+                                  mInfo.mAudio.mChannels,
                                   mInfo.mAudio.mRate));
 
   mAudioFrames += frames;
