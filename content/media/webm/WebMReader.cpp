@@ -24,7 +24,8 @@
 using mozilla::NesteggPacketHolder;
 
 template <>
-class nsAutoRefTraits<NesteggPacketHolder> : public nsPointerRefTraits<NesteggPacketHolder>
+class nsAutoRefTraits<NesteggPacketHolder> :
+  public nsPointerRefTraits<NesteggPacketHolder>
 {
 public:
   static void Release(NesteggPacketHolder* aHolder) { delete aHolder; }
@@ -61,8 +62,9 @@ static const double NS_PER_S = 1e9;
 // decoder from which the media resource is obtained.
 static int webm_read(void *aBuffer, size_t aLength, void *aUserData)
 {
-  NS_ASSERTION(aUserData, "aUserData must point to a valid AbstractMediaDecoder");
-  AbstractMediaDecoder* decoder = reinterpret_cast<AbstractMediaDecoder*>(aUserData);
+  MOZ_ASSERT(aUserData);
+  AbstractMediaDecoder* decoder =
+    reinterpret_cast<AbstractMediaDecoder*>(aUserData);
   MediaResource* resource = decoder->GetResource();
   NS_ASSERTION(resource, "Decoder has no media resource");
 
@@ -86,8 +88,9 @@ static int webm_read(void *aBuffer, size_t aLength, void *aUserData)
 
 static int webm_seek(int64_t aOffset, int aWhence, void *aUserData)
 {
-  NS_ASSERTION(aUserData, "aUserData must point to a valid AbstractMediaDecoder");
-  AbstractMediaDecoder* decoder = reinterpret_cast<AbstractMediaDecoder*>(aUserData);
+  MOZ_ASSERT(aUserData);
+  AbstractMediaDecoder* decoder =
+    reinterpret_cast<AbstractMediaDecoder*>(aUserData);
   MediaResource* resource = decoder->GetResource();
   NS_ASSERTION(resource, "Decoder has no media resource");
   nsresult rv = resource->Seek(aWhence, aOffset);
@@ -96,8 +99,9 @@ static int webm_seek(int64_t aOffset, int aWhence, void *aUserData)
 
 static int64_t webm_tell(void *aUserData)
 {
-  NS_ASSERTION(aUserData, "aUserData must point to a valid AbstractMediaDecoder");
-  AbstractMediaDecoder* decoder = reinterpret_cast<AbstractMediaDecoder*>(aUserData);
+  MOZ_ASSERT(aUserData);
+  AbstractMediaDecoder* decoder =
+    reinterpret_cast<AbstractMediaDecoder*>(aUserData);
   MediaResource* resource = decoder->GetResource();
   NS_ASSERTION(resource, "Decoder has no media resource");
   return resource->Tell();
@@ -331,10 +335,12 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
 
       // Picture region, taking into account cropping, before scaling
       // to the display size.
+      unsigned int cropH = params.crop_right + params.crop_left;
+      unsigned int cropV = params.crop_bottom + params.crop_top;
       nsIntRect pictureRect(params.crop_left,
                             params.crop_top,
-                            params.width - (params.crop_right + params.crop_left),
-                            params.height - (params.crop_bottom + params.crop_top));
+                            params.width - cropH,
+                            params.height - cropV);
 
       // If the cropping data appears invalid then use the frame data
       if (pictureRect.width <= 0 ||
@@ -348,8 +354,8 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
         pictureRect.height = params.height;
       }
 
-      // Validate the container-reported frame and pictureRect sizes. This ensures
-      // that our video frame creation code doesn't overflow.
+      // Validate the container-reported frame and pictureRect sizes. This
+      // ensures that our video frame creation code doesn't overflow.
       nsIntSize displaySize(params.display_width, params.display_height);
       nsIntSize frameSize(params.width, params.height);
       if (!IsValidVideoRegion(frameSize, pictureRect, displaySize)) {
@@ -415,7 +421,8 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
             Cleanup();
             return NS_ERROR_FAILURE;
           }
-          ogg_packet opacket = InitOggPacket(data, length, header == 0, false, 0, mPacketCount++);
+          ogg_packet opacket = InitOggPacket(data, length, header == 0, false,
+                                             0, mPacketCount++);
 
           r = vorbis_synthesis_headerin(&mVorbisInfo,
                                         &mVorbisComment,
@@ -461,9 +468,10 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
           return NS_ERROR_FAILURE;
         }
 
-        if (static_cast<int64_t>(mCodecDelay) != FramesToUsecs(mOpusParser->mPreSkip, mOpusParser->mRate).value()) {
+        if (int64_t(mCodecDelay) != FramesToUsecs(mOpusParser->mPreSkip,
+                                                  mOpusParser->mRate).value()) {
           LOG(PR_LOG_WARNING,
-              ("Invalid Opus header: CodecDelay and pre-skip do not match!\n"));
+              ("Invalid Opus header: CodecDelay and pre-skip do not match!"));
           Cleanup();
           return NS_ERROR_FAILURE;
         }
@@ -541,7 +549,8 @@ bool WebMReader::DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset)
   // the vorbis decode doesn't use data from before the gap to help decode
   // from after the gap.
   CheckedInt64 tstamp_frames = UsecsToFrames(tstamp_usecs, mInfo.mAudio.mRate);
-  CheckedInt64 decoded_frames = UsecsToFrames(mAudioStartUsec, mInfo.mAudio.mRate);
+  CheckedInt64 decoded_frames = UsecsToFrames(mAudioStartUsec,
+                                              mInfo.mAudio.mRate);
   if (!tstamp_frames.isValid() || !decoded_frames.isValid()) {
     NS_WARNING("Int overflow converting WebM times to frames");
     return false;
@@ -553,10 +562,11 @@ bool WebMReader::DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset)
   }
   if (tstamp_frames.value() > decoded_frames.value()) {
 #ifdef DEBUG
-    CheckedInt64 usecs = FramesToUsecs(tstamp_frames.value() - decoded_frames.value(), mInfo.mAudio.mRate);
-    LOG(PR_LOG_DEBUG, ("WebMReader detected gap of %lld, %lld frames, in audio stream\n",
+    int64_t gap_frames = tstamp_frames.value() - decoded_frames.value();
+    CheckedInt64 usecs = FramesToUsecs(gap_frames, mInfo.mAudio.mRate);
+    LOG(PR_LOG_DEBUG, ("WebMReader detected gap of %lld, %lld frames, in audio",
                        usecs.isValid() ? usecs.value() : -1,
-                       tstamp_frames.value() - decoded_frames.value()));
+                       gap_frames));
 #endif
     mPacketCount++;
     mAudioStartUsec = tstamp_usecs;
@@ -588,9 +598,11 @@ bool WebMReader::DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset)
 }
 
 bool WebMReader::DecodeVorbis(const unsigned char* aData, size_t aLength,
-                              int64_t aOffset, uint64_t aTstampUsecs, int32_t* aTotalFrames)
+                              int64_t aOffset, uint64_t aTstampUsecs,
+                              int32_t* aTotalFrames)
 {
-  ogg_packet opacket = InitOggPacket(aData, aLength, false, false, -1, mPacketCount++);
+  ogg_packet opacket = InitOggPacket(aData, aLength, false, false, -1,
+                                     mPacketCount++);
 
   if (vorbis_synthesis(&mVorbisBlock, &opacket) != 0) {
     return false;
@@ -609,14 +621,17 @@ bool WebMReader::DecodeVorbis(const unsigned char* aData, size_t aLength,
   // time derived from the timecode of the first packet that produced
   // data.
   if (frames == 0 && mAudioFrames == 0) {
-    AudioQueue().Push(new AudioData(aOffset, aTstampUsecs, 0, 0, nullptr, mInfo.mAudio.mChannels, mInfo.mAudio.mRate));
+    AudioQueue().Push(new AudioData(aOffset, aTstampUsecs, 0, 0, nullptr,
+                                    mInfo.mAudio.mChannels,
+                                    mInfo.mAudio.mRate));
   }
   while (frames > 0) {
-    nsAutoArrayPtr<AudioDataValue> buffer(new AudioDataValue[frames * mInfo.mAudio.mChannels]);
-    for (uint32_t j = 0; j < mInfo.mAudio.mChannels; ++j) {
+    uint32_t channels = mInfo.mAudio.mChannels;
+    nsAutoArrayPtr<AudioDataValue> buffer(new AudioDataValue[frames*channels]);
+    for (uint32_t j = 0; j < channels; ++j) {
       VorbisPCMValue* channel = pcm[j];
       for (uint32_t i = 0; i < uint32_t(frames); ++i) {
-        buffer[i*mInfo.mAudio.mChannels + j] = MOZ_CONVERT_VORBIS_SAMPLE(channel[i]);
+        buffer[i*channels + j] = MOZ_CONVERT_VORBIS_SAMPLE(channel[i]);
       }
     }
 
@@ -625,7 +640,8 @@ bool WebMReader::DecodeVorbis(const unsigned char* aData, size_t aLength,
       NS_WARNING("Int overflow converting WebM audio duration");
       return false;
     }
-    CheckedInt64 total_duration = FramesToUsecs(*aTotalFrames, mInfo.mAudio.mRate);
+    CheckedInt64 total_duration = FramesToUsecs(*aTotalFrames,
+                                                mInfo.mAudio.mRate);
     if (!total_duration.isValid()) {
       NS_WARNING("Int overflow converting WebM audio total_duration");
       return false;
@@ -658,7 +674,8 @@ bool WebMReader::DecodeVorbis(const unsigned char* aData, size_t aLength,
 
 #ifdef MOZ_OPUS
 bool WebMReader::DecodeOpus(const unsigned char* aData, size_t aLength,
-                            int64_t aOffset, uint64_t aTstampUsecs, nestegg_packet* aPacket)
+                            int64_t aOffset, uint64_t aTstampUsecs,
+                            nestegg_packet* aPacket)
 {
   uint32_t channels = mOpusParser->mChannels;
   // No channel mapping for more than 8 channels.
@@ -669,7 +686,7 @@ bool WebMReader::DecodeOpus(const unsigned char* aData, size_t aLength,
   if (mPaddingDiscarded) {
     // Discard padding should be used only on the final packet, so
     // decoding after a padding discard is invalid.
-    LOG(PR_LOG_DEBUG, ("Opus decoder error, discard padding on interstitial packet"));
+    LOG(PR_LOG_DEBUG, ("Opus error, discard padding on interstitial packet"));
     GetCallback()->OnDecodeError();
     return false;
   }
@@ -680,8 +697,8 @@ bool WebMReader::DecodeOpus(const unsigned char* aData, size_t aLength,
     return false; // Invalid packet header.
   }
 
-  int32_t samples = opus_packet_get_samples_per_frame(aData,
-                                                      (opus_int32) mInfo.mAudio.mRate);
+  int32_t samples =
+    opus_packet_get_samples_per_frame(aData, opus_int32(mInfo.mAudio.mRate));
 
   // A valid Opus packet must be between 2.5 and 120 ms long (48kHz).
   int32_t frames = frames_number*samples;
@@ -709,8 +726,11 @@ bool WebMReader::DecodeOpus(const unsigned char* aData, size_t aLength,
   if (mSkip > 0) {
     int32_t skipFrames = std::min<int32_t>(mSkip, frames);
     int32_t keepFrames = frames - skipFrames;
-    LOG(PR_LOG_DEBUG, ("Opus decoder skipping %d of %d frames", skipFrames, frames));
-    PodMove(buffer.get(), buffer.get() + skipFrames * channels, keepFrames * channels);
+    LOG(PR_LOG_DEBUG, ("Opus decoder skipping %d of %d frames",
+                       skipFrames, frames));
+    PodMove(buffer.get(),
+            buffer.get() + skipFrames * channels,
+            keepFrames * channels);
     startTime = startTime + FramesToUsecs(skipFrames, mInfo.mAudio.mRate);
     frames = keepFrames;
     mSkip -= skipFrames;
@@ -720,23 +740,25 @@ bool WebMReader::DecodeOpus(const unsigned char* aData, size_t aLength,
   (void) nestegg_packet_discard_padding(aPacket, &discardPadding);
   if (discardPadding < 0) {
     // Negative discard padding is invalid.
-    LOG(PR_LOG_DEBUG, ("Opus decoder error, negative discard padding"));
+    LOG(PR_LOG_DEBUG, ("Opus error, negative discard padding"));
     GetCallback()->OnDecodeError();
     return false;
   }
   if (discardPadding > 0) {
-    CheckedInt64 discardFrames = UsecsToFrames(discardPadding / NS_PER_USEC, mInfo.mAudio.mRate);
+    CheckedInt64 discardFrames = UsecsToFrames(discardPadding / NS_PER_USEC,
+                                               mInfo.mAudio.mRate);
     if (!discardFrames.isValid()) {
       NS_WARNING("Int overflow in DiscardPadding");
       return false;
     }
     if (discardFrames.value() > frames) {
       // Discarding more than the entire packet is invalid.
-      LOG(PR_LOG_DEBUG, ("Opus decoder error, discard padding larger than packet"));
+      LOG(PR_LOG_DEBUG, ("Opus error, discard padding larger than packet"));
       GetCallback()->OnDecodeError();
       return false;
     }
-    LOG(PR_LOG_DEBUG, ("Opus decoder discarding %d of %d frames", int32_t(discardFrames.value()), frames));
+    LOG(PR_LOG_DEBUG, ("Opus decoder discarding %d of %d frames",
+                       int32_t(discardFrames.value()), frames));
     // Padding discard is only supposed to happen on the final packet.
     // Record the discard so we can return an error if another packet is
     // decoded.
@@ -959,9 +981,9 @@ bool WebMReader::DecodeVideoFrame(bool &aKeyframeSkip,
     vpx_image_t      *img;
 
     while ((img = vpx_codec_get_frame(&mVPX, &iter))) {
-      NS_ASSERTION(img->fmt == VPX_IMG_FMT_I420, "WebM image format is not I420");
+      NS_ASSERTION(img->fmt == VPX_IMG_FMT_I420, "WebM image format not I420");
 
-      // Chroma shifts are rounded down as per the decoding examples in the VP8 SDK
+      // Chroma shifts are rounded down as per the decoding examples in the SDK
       VideoData::YCbCrBuffer b;
       b.mPlanes[0].mData = img->planes[0];
       b.mPlanes[0].mStride = img->stride[0];
@@ -984,9 +1006,10 @@ bool WebMReader::DecodeVideoFrame(bool &aKeyframeSkip,
       IntRect picture = ToIntRect(mPicture);
       if (img->d_w != static_cast<uint32_t>(mInitialFrame.width) ||
           img->d_h != static_cast<uint32_t>(mInitialFrame.height)) {
-        // Frame size is different from what the container reports. This is legal
-        // in WebM, and we will preserve the ratio of the crop rectangle as it
-        // was reported relative to the picture size reported by the container.
+        // Frame size is different from what the container reports. This is
+        // legal in WebM, and we will preserve the ratio of the crop rectangle
+        // as it was reported relative to the picture size reported by the
+        // container.
         picture.x = (mPicture.x * img->d_w) / mInitialFrame.width;
         picture.y = (mPicture.y * img->d_h) / mInitialFrame.height;
         picture.width = (img->d_w * mPicture.width) / mInitialFrame.width;
@@ -997,7 +1020,7 @@ bool WebMReader::DecodeVideoFrame(bool &aKeyframeSkip,
                                        mDecoder->GetImageContainer(),
                                        holder->mOffset,
                                        tstamp_usecs,
-                                       (next_tstamp / NS_PER_USEC) - tstamp_usecs,
+                                       (next_tstamp / NS_PER_USEC)-tstamp_usecs,
                                        b,
                                        si.is_kf,
                                        -1,
@@ -1036,10 +1059,14 @@ nsresult WebMReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime,
   uint64_t target = aTarget * NS_PER_USEC;
 
   if (mSeekPreroll) {
-    target = std::max(static_cast<uint64_t>(aStartTime * NS_PER_USEC), target - mSeekPreroll);
+    target = std::max(uint64_t(aStartTime * NS_PER_USEC),
+                      target - mSeekPreroll);
   }
   int r = nestegg_track_seek(mContext, trackToSeek, target);
   if (r != 0) {
+    LOG(PR_LOG_DEBUG, ("Reader [%p]: track_seek for track %u failed, r=%d",
+                       this, trackToSeek, r));
+
     // Try seeking directly based on cluster information in memory.
     int64_t offset = 0;
     bool rv = mBufferedState->GetOffsetForTime(target, &offset);
@@ -1048,8 +1075,8 @@ nsresult WebMReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime,
     }
 
     r = nestegg_offset_seek(mContext, offset);
-    LOG(PR_LOG_DEBUG, ("Reader [%p]: track_seek for %u failed, offset_seek to %lld r=%d",
-                       this, trackToSeek, offset, r));
+    LOG(PR_LOG_DEBUG, ("Reader [%p]: attempted offset_seek to %lld r=%d",
+                       this, offset, r));
     if (r != 0) {
       return NS_ERROR_FAILURE;
     }
@@ -1096,7 +1123,8 @@ nsresult WebMReader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
       double endTime = (end - startOffset) / NS_PER_S;
       // If this range extends to the end of the file, the true end time
       // is the file's duration.
-      if (mContext && resource->IsDataCachedToEndOfResource(ranges[index].mStart)) {
+      if (mContext &&
+          resource->IsDataCachedToEndOfResource(ranges[index].mStart)) {
         uint64_t duration = 0;
         if (nestegg_duration(mContext, &duration) == 0) {
           endTime = duration / NS_PER_S;
@@ -1110,7 +1138,8 @@ nsresult WebMReader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
   return NS_OK;
 }
 
-void WebMReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
+void WebMReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength,
+                                   int64_t aOffset)
 {
   mBufferedState->NotifyDataArrived(aBuffer, aLength, aOffset);
 }
