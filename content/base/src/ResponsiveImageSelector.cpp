@@ -263,6 +263,19 @@ ResponsiveImageSelector::GetSelectedImageDensity()
   return mCandidates[bestIndex].Density(this);
 }
 
+bool
+ResponsiveImageSelector::SelectImage(bool aReselect)
+{
+  if (!aReselect && mBestCandidateIndex != -1) {
+    // Already have selection
+    return false;
+  }
+
+  int oldBest = mBestCandidateIndex;
+  mBestCandidateIndex = -1;
+  return GetBestCandidateIndex() != oldBest;
+}
+
 int
 ResponsiveImageSelector::GetBestCandidateIndex()
 {
