@@ -120,7 +120,17 @@ protected:
                nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
                float aGraphicOpacity,
                const gfxRect *aOverrideBounds);
-  nsIFrame*  GetPatternFirstChild();
+
+  /**
+   * A <pattern> element may reference another <pattern> element using
+   * xlink:href and, if it doesn't have any child content of its own, then it
+   * will "inherit" the children of the referenced pattern (which may itself be
+   * inheriting its children if it references another <pattern>).  This
+   * function returns this nsSVGPatternFrame or the first pattern along the
+   * reference chain (if there is one) to have children.
+   */
+  nsSVGPatternFrame* GetPatternWithChildren();
+
   gfxRect    GetPatternRect(uint16_t aPatternUnits,
                             const gfxRect &bbox,
                             const Matrix &callerCTM,
