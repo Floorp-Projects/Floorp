@@ -11,6 +11,8 @@ Cu.import("resource://gre/modules/PluralForm.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Messaging",
+                                  "resource://gre/modules/Messaging.jsm");
 
 let gStrings = Services.strings.createBundle("chrome://browser/locale/aboutDownloads.properties");
 
@@ -482,6 +484,11 @@ let Downloads = {
       }
 
       aDownload.remove();
+      Messaging.sendRequest({
+        type: "Download:Remove",
+        path: aDownload.targetFile.path,
+      });
+
     }.bind(this));
   },
 

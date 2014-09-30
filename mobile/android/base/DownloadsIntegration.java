@@ -5,10 +5,10 @@
 
 package org.mozilla.gecko;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.util.NativeEventListener;
+import org.mozilla.gecko.util.NativeJSObject;
+import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.mozglue.generatorannotations.WrapElementForJNI;
 
 import java.io.File;
@@ -22,9 +22,8 @@ import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.Uri;
 import android.text.TextUtils;
-import android.util.Log;
 
-public class DownloadsIntegration
+public class DownloadsIntegration implements NativeEventListener
 {
     private static final String LOGTAG = "GeckoDownloadsIntegration";
 
@@ -34,6 +33,60 @@ public class DownloadsIntegration
         add("application/unknown");
         add("application/octet-stream"); // Github uses this for APK files
     }};
+
+    private static final String DOWNLOAD_REMOVE = "Download:Remove";
+
+    private DownloadsIntegration() {
+        EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener)this, DOWNLOAD_REMOVE);
+    }
+
+    private static DownloadsIntegration sInstance;
+
+    private static class Download {
+        final File file;
+        final long id;
+
+        final private static int UNKNOWN_ID = -1;
+
+        public Download(final String path) {
+            this(path, UNKNOWN_ID);
+        }
+
+        public Download(final String path, final long id) {
+            file = new File(path);
+            this.id = id;
+        }
+
+        public static Download fromJSON(final NativeJSObject obj) {
+            final String path = obj.getString("path");
+            return new Download(path);
+        }
+
+        public static Download fromCursor(final Cursor c) {
+            final String path = c.getString(c.getColumnIndexOrThrow(DownloadManager.COLUMN_LOCAL_FILENAME));
+            final long id = c.getLong(c.getColumnIndexOrThrow(DownloadManager.COLUMN_ID));
+            return new Download(path, id);
+        }
+
+        public boolean equals(final Download download) {
+            return file.equals(download.file);
+        }
+    }
+
+    public static void init() {
+        if (sInstance == null) {
+            sInstance = new DownloadsIntegration();
+        }
+    }
+
+    @Override
+    public void handleMessage(final String event, final NativeJSObject message,
+                              final EventCallback callback) {
+        if (DOWNLOAD_REMOVE.equals(event)) {
+            final Download d = Download.fromJSON(message);
+            removeDownload(d);
+        }
+    }
 
     @WrapElementForJNI
     public static void scanMedia(final String aFile, String aMimeType) {
@@ -76,6 +129,34 @@ public class DownloadsIntegration
             final Context context = GeckoAppShell.getContext();
             final GeckoMediaScannerClient client = new GeckoMediaScannerClient(context, aFile, mimeType);
             client.connect();
+        }
+    }
+
+    public static void removeDownload(final Download download) {
+        if (!AppConstants.ANDROID_DOWNLOADS_INTEGRATION) {
+            return;
+        }
+
+        final DownloadManager dm = (DownloadManager) GeckoAppShell.getContext().getSystemService(Context.DOWNLOAD_SERVICE);
+
+        Cursor c = null;
+        try {
+            c = dm.query((new DownloadManager.Query()).setFilterByStatus(DownloadManager.STATUS_SUCCESSFUL));
+            if (c == null || !c.moveToFirst()) {
+                return;
+            }
+
+            do {
+                final Download d = Download.fromCursor(c);
+                // Try hard as we can to verify this download is the one we think it is
+                if (download.equals(d)) {
+                    dm.remove(d.id);
+                }
+            } while(c.moveToNext());
+        } finally {
+            if (c != null) {
+                c.close();
+            }
         }
     }
 
