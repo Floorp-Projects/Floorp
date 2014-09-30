@@ -21,7 +21,6 @@ public:
     uint32_t GetGlyph(uint32_t aCharCode);
     void GetGlyphExtents(uint32_t aGlyph,
                          cairo_text_extents_t* aExtents);
-    virtual const gfxFont::Metrics& GetMetrics();
     virtual uint32_t GetSpaceGlyph();
     virtual bool ProvidesGetGlyph() const { return true; }
     virtual uint32_t GetGlyph(uint32_t unicode, uint32_t variation_selector);
@@ -34,7 +33,10 @@ public:
     virtual FontType GetType() const { return FONT_TYPE_FT2; }
 
     mozilla::gfx::FontOptions* GetFontOptions() { return &mFontOptions; }
+
 protected:
+    virtual const Metrics& GetHorizontalMetrics();
+
     uint32_t mSpaceGlyph;
     bool mHasMetrics;
     Metrics mMetrics;

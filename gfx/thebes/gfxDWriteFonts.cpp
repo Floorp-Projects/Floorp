@@ -126,7 +126,7 @@ gfxDWriteFont::CopyWithAntialiasOption(AntialiasOption anAAOption)
 }
 
 const gfxFont::Metrics&
-gfxDWriteFont::GetMetrics()
+gfxDWriteFont::GetHorizontalMetrics()
 {
     return *mMetrics;
 }
