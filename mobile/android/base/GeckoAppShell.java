@@ -139,6 +139,8 @@ public class GeckoAppShell
     private static final Queue<GeckoEvent> PENDING_EVENTS = new ConcurrentLinkedQueue<GeckoEvent>();
     private static final Map<String, String> ALERT_COOKIES = new ConcurrentHashMap<String, String>();
 
+    private static final String DEFAULT_MIME_TYPE = "application/octet-stream";
+
     private static volatile boolean locationHighAccuracyEnabled;
 
     // Accessed by NotificationHelper. This should be encapsulated.
@@ -1808,16 +1810,22 @@ public class GeckoAppShell
             }
         }
 
-        final File f = new File(aFile);
+        // addCompletedDownload will throw if it received any null parameters. Use a default mimeType if
+        // we still don't have one.
+        if (TextUtils.isEmpty(aMimeType)) {
+            aMimeType = DEFAULT_MIME_TYPE;
+        }
+
         if (AppConstants.ANDROID_DOWNLOADS_INTEGRATION) {
+            final File f = new File(aFile);
             final DownloadManager dm = (DownloadManager) getContext().getSystemService(Context.DOWNLOAD_SERVICE);
             dm.addCompletedDownload(f.getName(),
                                     f.getName(),
-                                    !TextUtils.isEmpty(aMimeType),
+                                    true, // Media scanner should scan this
                                     aMimeType,
                                     f.getAbsolutePath(),
                                     f.length(),
-                                    false);
+                                    false); // Don't show a notification.
         } else {
             Context context = getContext();
             GeckoMediaScannerClient.startScan(context, aFile, aMimeType);
