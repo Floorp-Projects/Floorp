@@ -1124,6 +1124,7 @@ public abstract class GeckoApp
         mGeckoReadyStartupTimer = new Telemetry.UptimeTimer("FENNEC_STARTUP_TIME_GECKOREADY");
 
         final Intent intent = getIntent();
+        final String action = intent.getAction();
         final String args = intent.getStringExtra("args");
 
         earlyStartJavaSampler(intent);
@@ -1211,6 +1212,30 @@ public abstract class GeckoApp
             // without killing the entire application (see Bug 769269).
             mIsRestoringActivity = true;
             Telemetry.HistogramAdd("FENNEC_RESTORING_ACTIVITY", 1);
+
+        } else {
+            final String uri = getURIFromIntent(intent);
+
+            GeckoThread.setArgs(args);
+            GeckoThread.setAction(action);
+            GeckoThread.setUri(TextUtils.isEmpty(uri) ? null : uri);
+        }
+
+        if (!ACTION_DEBUG.equals(action) &&
+                GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching,
+                                                   GeckoThread.LaunchState.Launched)) {
+            GeckoThread.createAndStart();
+
+        } else if (ACTION_DEBUG.equals(action) &&
+                GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching,
+                                                   GeckoThread.LaunchState.WaitForDebugger)) {
+            ThreadUtils.getUiHandler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    GeckoThread.setLaunchState(GeckoThread.LaunchState.Launched);
+                    GeckoThread.createAndStart();
+                }
+            }, 1000 * 5 /* 5 seconds */);
         }
 
         Bundle stateBundle = getIntent().getBundleExtra(EXTRA_STATE_BUNDLE);
@@ -1477,25 +1502,6 @@ public abstract class GeckoApp
         }
 
         Telemetry.HistogramAdd("FENNEC_STARTUP_GECKOAPP_ACTION", startupAction.ordinal());
-
-        if (!mIsRestoringActivity) {
-            GeckoThread.setArgs(intent.getStringExtra("args"));
-            GeckoThread.setAction(intent.getAction());
-            GeckoThread.setUri(passedUri);
-        }
-        if (!ACTION_DEBUG.equals(action) &&
-            GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching, GeckoThread.LaunchState.Launched)) {
-            GeckoThread.createAndStart();
-        } else if (ACTION_DEBUG.equals(action) &&
-            GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching, GeckoThread.LaunchState.WaitForDebugger)) {
-            ThreadUtils.getUiHandler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    GeckoThread.setLaunchState(GeckoThread.LaunchState.Launching);
-                    GeckoThread.createAndStart();
-                }
-            }, 1000 * 5 /* 5 seconds */);
-        }
 
         // Check if launched from data reporting notification.
         if (ACTION_LAUNCH_SETTINGS.equals(action)) {
