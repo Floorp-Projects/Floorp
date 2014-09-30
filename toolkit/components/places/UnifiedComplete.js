@@ -1046,7 +1046,7 @@ Search.prototype = {
                                match.comment,
                                match.icon || PlacesUtils.favicons.defaultFavicon.spec,
                                match.style,
-                               match.finalCompleteValue);
+                               match.finalCompleteValue || "");
       notifyResults = true;
     }
 
