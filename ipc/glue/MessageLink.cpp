@@ -13,6 +13,7 @@
 #ifdef MOZ_NUWA_PROCESS
 #include "ipc/Nuwa.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/ContentParent.h"
 #endif
 
 #include "mozilla/Assertions.h"
@@ -70,6 +71,9 @@ ProcessLink::ProcessLink(MessageChannel *aChan)
   , mTransport(nullptr)
   , mIOLoop(nullptr)
   , mExistingListener(nullptr)
+#ifdef MOZ_NUWA_PROCESS
+  , mIsToNuwaProcess(false)
+#endif
 {
 }
 
@@ -167,6 +171,26 @@ ProcessLink::SendMessage(Message *msg)
 {
     mChan->AssertWorkerThread();
     mChan->mMonitor->AssertCurrentThreadOwns();
+
+#ifdef MOZ_NUWA_PROCESS
+    if (mIsToNuwaProcess && mozilla::dom::ContentParent::IsNuwaReady()) {
+        switch (msg->type()) {
+        case mozilla::dom::PContent::Msg_NuwaFork__ID:
+        case mozilla::dom::PContent::Reply_AddNewProcess__ID:
+        case mozilla::dom::PContent::Msg_NotifyPhoneStateChange__ID:
+        case GOODBYE_MESSAGE_TYPE:
+            break;
+        default:
+#ifdef DEBUG
+            MOZ_CRASH();
+#else
+            // In optimized build, message will be dropped.
+            printf_stderr("Sending message to frozen Nuwa");
+            return;
+#endif
+        }
+    }
+#endif
 
     mIOLoop->PostTask(
         FROM_HERE,
@@ -359,6 +383,10 @@ ProcessLink::OnChannelConnected(int32_t peer_pid)
 
     if (mExistingListener)
         mExistingListener->OnChannelConnected(peer_pid);
+
+#ifdef MOZ_NUWA_PROCESS
+    mIsToNuwaProcess = (peer_pid == mozilla::dom::ContentParent::NuwaPid());
+#endif
 
     if (notifyChannel) {
       mChan->OnChannelConnected(peer_pid);
