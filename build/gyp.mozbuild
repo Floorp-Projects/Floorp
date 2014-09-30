@@ -31,7 +31,7 @@ gyp_vars = {
     'use_openssl': 0,
 
     # saves 4MB when webrtc_trace is off
-    'enable_lazy_trace_alloc': 0,
+    'enable_lazy_trace_alloc': 1 if CONFIG['RELEASE_BUILD'] else 0,
 
     'use_x11': 1 if CONFIG['MOZ_X11'] else 0,
     'use_glib': 1 if CONFIG['GLIB_LIBS'] else 0,
