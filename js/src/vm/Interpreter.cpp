@@ -3556,7 +3556,7 @@ js::GetScopeName(JSContext *cx, HandleObject scopeChain, HandlePropertyName name
     if (!JSObject::getProperty(cx, obj, obj, name, vp))
         return false;
 
-    // See note in NameOperation.
+    // See note in FetchName.
     return CheckUninitializedLexical(cx, name, vp);
 }
 
@@ -3581,7 +3581,7 @@ js::GetScopeNameForTypeOf(JSContext *cx, HandleObject scopeChain, HandleProperty
     if (!JSObject::getProperty(cx, obj, obj, name, vp))
         return false;
 
-    // See note in NameOperation.
+    // See note in FetchName.
     return CheckUninitializedLexical(cx, name, vp);
 }
 
@@ -3864,6 +3864,13 @@ js::DeleteNameOperation(JSContext *cx, HandlePropertyName name, HandleObject sco
         // Return true for non-existent names.
         res.setBoolean(true);
         return true;
+    }
+
+    // NAME operations are the slow paths already, so unconditionally check
+    // for uninitialized lets.
+    if (pobj == scope && IsUninitializedLexicalSlot(scope, shape)) {
+        ReportUninitializedLexical(cx, name);
+        return false;
     }
 
     bool succeeded;
