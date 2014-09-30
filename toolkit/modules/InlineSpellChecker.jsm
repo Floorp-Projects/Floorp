@@ -159,6 +159,11 @@ InlineSpellChecker.prototype = {
     if (! this.mInlineSpellChecker || ! this.enabled)
       return 0;
     var spellchecker = this.mInlineSpellChecker.spellChecker;
+
+    // Cannot access the dictionary list from another process so just return 0.
+    if (Components.utils.isCrossProcessWrapper(spellchecker))
+      return 0;
+
     var o1 = {}, o2 = {};
     spellchecker.GetDictionaryList(o1, o2);
     var list = o1.value;
