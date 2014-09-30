@@ -6,9 +6,6 @@ interface FMRadio : EventTarget {
   /* Indicates if the FM radio is enabled. */
   readonly attribute boolean enabled;
 
-  /* Indicates if RDS reception is enabled */
-  readonly attribute boolean rdsEnabled;
-
   /* Indicates if the antenna is plugged and available. */
   readonly attribute boolean antennaAvailable;
 
@@ -34,57 +31,11 @@ interface FMRadio : EventTarget {
    */
   readonly attribute double channelWidth;
 
-  /**
-   * This is a mask consisting of bits corresponding to
-   * (1 << groupcode) that can be specified to receive
-   * raw RDS groups of specific group types. Note that
-   * groupcode corresponds to the upper 5 bits in block B.
-   */
-  attribute unsigned long rdsGroupMask;
-
-  /**
-   * The Program Identification (PI) code.
-   * Available if RDS is enabled on both the station and on this device.
-   * The value is null otherwise.
-   */
-  readonly attribute unsigned short? pi;
-
-  /**
-   * The Program Type (PTY) code.
-   * Available if RDS is enabled on both the station and on this device.
-   * The value is null otherwise.
-   */
-  readonly attribute octet? pty;
-
-  /**
-   * The Program Service (PS) name.
-   * Available if RDS is enabled on the station and on this device
-   */
-  readonly attribute DOMString? ps;
-
-  /**
-   * The radiotext, as provided by group 2A/2B.
-   * Available if RDS is enabled on the station and on this device
-   */
-  readonly attribute DOMString? rt;
-
-  /**
-   * The last RDS group received.
-   * Available if RDS is enabled on the station and on this device
-   */
-  readonly attribute Uint16Array? rdsgroup;
-
   /* Fired when the FM radio is enabled. */
   attribute EventHandler onenabled;
 
   /* Fired when the FM radio is disabled. */
   attribute EventHandler ondisabled;
-
-  /* Fired when the RDS is enabled. */
-  attribute EventHandler onrdsenabled;
-
-  /* Fired when the RDS is disabled. */
-  attribute EventHandler onrdsdisabled;
 
   /**
    * Fired when the antenna becomes available or unavailable, i.e., fired when
@@ -94,21 +45,6 @@ interface FMRadio : EventTarget {
 
   /* Fired when the FM radio's frequency is changed. */
   attribute EventHandler onfrequencychange;
-
-  /* Fired when the PI code changes */
-  attribute EventHandler onpichange;
-
-  /* Fired when the PTY changes */
-  attribute EventHandler onptychange;
-
-  /* Fired when the PS name changes */
-  attribute EventHandler onpschange;
-
-  /* Fired when the radiotext changes */
-  attribute EventHandler onrtchange;
-
-  /* Fired when we get a new RDS group */
-  attribute EventHandler onnewrdsgroup;
 
   /**
    * Power the FM radio off. The disabled event will be fired if this request
@@ -158,19 +94,5 @@ interface FMRadio : EventTarget {
    * error will be fired.
    */
   DOMRequest cancelSeek();
-
-  /**
-   * Enable RDS reception.
-   *
-   * If the radio is off, RDS will be enabled when the radio is turned on.
-   */
-  DOMRequest enableRDS();
-
-  /**
-   * Disable RDS reception.
-   *
-   * If the radio is off, RDS will not be enabled when the radio is turned on.
-   */
-  DOMRequest disableRDS();
 };
 
