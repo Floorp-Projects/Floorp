@@ -68,8 +68,6 @@ describe("loop.conversation", function() {
   });
 
   describe("#init", function() {
-    var oldTitle;
-
     beforeEach(function() {
       sandbox.stub(React, "renderComponent");
       sandbox.stub(document.mozL10n, "initialize");
@@ -94,17 +92,63 @@ describe("loop.conversation", function() {
         navigator.mozLoop);
     });
 
-    it("should create the IncomingConversationView", function() {
+    it("should create the ConversationControllerView", function() {
       loop.conversation.init();
 
       sinon.assert.calledOnce(React.renderComponent);
       sinon.assert.calledWith(React.renderComponent,
         sinon.match(function(value) {
           return TestUtils.isDescriptorOfType(value,
-            loop.conversation.IncomingConversationView);
+            loop.conversation.ConversationControllerView);
       }));
     });
+  });
 
+  describe("ConversationControllerView", function() {
+    var store, conversation, client, ccView, oldTitle;
+
+    function mountTestComponent() {
+      return TestUtils.renderIntoDocument(
+        loop.conversation.ConversationControllerView({
+          client: client,
+          conversation: conversation,
+          notifications: notifications,
+          sdk: {},
+          store: store
+        }));
+    }
+
+    beforeEach(function() {
+      oldTitle = document.title;
+      client = new loop.Client();
+      conversation = new loop.shared.models.ConversationModel({}, {
+        sdk: {}
+      });
+      store = new loop.ConversationStore();
+    });
+
+    afterEach(function() {
+      ccView = undefined;
+      document.title = oldTitle;
+    });
+
+    it("should display the OutgoingConversationView for outgoing calls", function() {
+      store.set({outgoing: true});
+
+      ccView = mountTestComponent();
+
+      TestUtils.findRenderedComponentWithType(ccView,
+        loop.conversationViews.OutgoingConversationView);
+    });
+
+    it("should display the IncomingConversationView for incoming calls", function() {
+      store.set({outgoing: false});
+
+      ccView = mountTestComponent();
+
+      TestUtils.findRenderedComponentWithType(ccView,
+        loop.conversation.IncomingConversationView);
+    });
   });
 
   describe("IncomingConversationView", function() {
