@@ -7,6 +7,7 @@
 
 #include "gfxQuartzSurface.h"
 #include "gfxQuartzImageSurface.h"
+#include "gfxImageSurface.h"
 #include "mozilla/gfx/2D.h"
 
 #include "gfxMacPlatformFontList.h"
@@ -75,9 +76,9 @@ gfxPlatformMac::gfxPlatformMac()
     uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO) |
                           BackendTypeBit(BackendType::SKIA) |
                           BackendTypeBit(BackendType::COREGRAPHICS);
-    uint32_t contentMask = BackendTypeBit(BackendType::COREGRAPHICS);
+    uint32_t contentMask = BackendTypeBit(BackendType::CAIRO);
     InitBackendPrefs(canvasMask, BackendType::COREGRAPHICS,
-                     contentMask, BackendType::COREGRAPHICS);
+                     contentMask, BackendType::CAIRO);
 }
 
 gfxPlatformMac::~gfxPlatformMac()
@@ -101,7 +102,7 @@ gfxPlatformMac::CreateOffscreenSurface(const IntSize& size,
                                        gfxContentType contentType)
 {
     nsRefPtr<gfxASurface> newSurface =
-      new gfxQuartzSurface(ThebesIntSize(size),
+      new gfxImageSurface(ThebesIntSize(size),
                            OptimalFormatForContent(contentType));
     return newSurface.forget();
 }
