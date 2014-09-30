@@ -134,9 +134,11 @@ public:
 
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
                                 MetadataTags** aTags);
-  virtual nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime);
+  virtual nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
+                        int64_t aCurrentTime);
   virtual nsresult GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime);
-  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
+  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength,
+                                 int64_t aOffset);
   virtual int64_t GetEvictionOffset(double aTime);
 
   virtual bool IsMediaSeekable() MOZ_OVERRIDE;
@@ -170,10 +172,12 @@ protected:
   // aPacket.
   bool DecodeAudioPacket(nestegg_packet* aPacket, int64_t aOffset);
   bool DecodeVorbis(const unsigned char* aData, size_t aLength,
-                    int64_t aOffset, uint64_t aTstampUsecs, int32_t* aTotalFrames);
+                    int64_t aOffset, uint64_t aTstampUsecs,
+                    int32_t* aTotalFrames);
 #ifdef MOZ_OPUS
   bool DecodeOpus(const unsigned char* aData, size_t aLength,
-                  int64_t aOffset, uint64_t aTstampUsecs, nestegg_packet* aPacket);
+                  int64_t aOffset, uint64_t aTstampUsecs,
+                  nestegg_packet* aPacket);
 #endif
 
   // Release context and set to null. Called when an error occurs during
@@ -199,8 +203,8 @@ private:
   // Opus decoder state
   nsAutoPtr<OpusParser> mOpusParser;
   OpusMSDecoder *mOpusDecoder;
-  uint16_t mSkip;        // Number of samples left to trim before playback.
-  uint64_t mSeekPreroll; // Number of nanoseconds that must be discarded after seeking.
+  uint16_t mSkip;        // Samples left to trim before playback.
+  uint64_t mSeekPreroll; // Nanoseconds to discard after seeking.
 #endif
 
   // Queue of video and audio packets that have been read but not decoded. These
