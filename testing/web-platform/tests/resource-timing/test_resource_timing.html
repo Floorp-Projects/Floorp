@@ -286,7 +286,8 @@
 
             pass =  (actualEntry.redirectStart == 0) &&
                     (actualEntry.redirectEnd == 0) &&
-                    (actualEntry.secureConnectionStart == undefined) &&
+                    (actualEntry.secureConnectionStart == undefined ||
+                     actualEntry.secureConnectionStart == 0) &&
                     validate_timeline(actualEntry);
 
             (pass) ? test_true(true,
