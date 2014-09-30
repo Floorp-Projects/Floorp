@@ -12,12 +12,16 @@ import android.util.Log;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserLocaleManager;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.search.Constants;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -177,6 +181,10 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
     private SearchEngine createEngine(String identifier) {
         InputStream in = getInputStreamFromJar(identifier + ".xml");
 
+        if (in == null) {
+            in = getEngineFromProfile(identifier);
+        }
+
         // Fallback for standalone search activity.
         if (in == null) {
             in = getEngineFromAssets(identifier);
@@ -261,5 +269,23 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
     private String getSearchPluginsJarURL(String locale, String fileName) {
         final String path = "!/chrome/" + locale + "/locale/" + locale + "/browser/searchplugins/" + fileName;
         return "jar:jar:file://" + context.getPackageResourcePath() + "!/" + AppConstants.OMNIJAR_NAME + path;
+    }
+
+    /**
+     * Opens the search plugin XML file from the searchplugins directory in the Gecko profile.
+     *
+     * @param identifier
+     * @return InputStream for search plugin file
+     */
+    private InputStream getEngineFromProfile(String identifier) {
+        final File f = GeckoProfile.get(context).getFile("searchplugins/" + identifier + ".xml");
+        if (f.exists()) {
+            try {
+                return new FileInputStream(f);
+            } catch (FileNotFoundException e) {
+                Log.e(LOG_TAG, "Exception getting search engine from profile", e);
+            }
+        }
+        return null;
     }
 }
