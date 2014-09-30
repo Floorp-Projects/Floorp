@@ -1307,6 +1307,16 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
     return NS_OK;
 }
 
+void
+a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType)
+{
+  AtkObject* wrapper = GetWrapperFor(aTarget);
+  if (aEventType == nsIAccessibleEvent::EVENT_FOCUS) {
+    atk_focus_tracker_notify(wrapper);
+    atk_object_notify_state_change(wrapper, ATK_STATE_FOCUSED, true);
+  }
+}
+
 nsresult
 AccessibleWrap::FireAtkStateChangeEvent(AccEvent* aEvent,
                                         AtkObject* aObject)

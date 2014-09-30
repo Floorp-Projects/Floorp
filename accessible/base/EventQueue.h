@@ -54,6 +54,11 @@ private:
                                uint32_t aThisIndex);
 
   /**
+   * Notify the parent process of events being fired by this event queue.
+   */
+  void SendIPCEvent(AccEvent* aEvent) const;
+
+  /**
    * Coalesce text change events caused by sibling hide events.
    */
   void CoalesceTextChangeEventsFor(AccHideEvent* aTailEvent,

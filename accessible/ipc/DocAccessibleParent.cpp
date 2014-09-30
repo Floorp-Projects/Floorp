@@ -112,5 +112,23 @@ DocAccessibleParent::RecvHideEvent(const uint64_t& aRootID)
 
   return true;
 }
+
+bool
+DocAccessibleParent::RecvEvent(const uint64_t& aID, const uint32_t& aEventType)
+{
+  if (!aID) {
+    ProxyEvent(this, aEventType);
+    return true;
+  }
+
+  ProxyEntry* e = mAccessibles.GetEntry(aID);
+  if (!e) {
+    NS_ERROR("no proxy for event!");
+    return true;
+  }
+
+  ProxyEvent(e->mProxy, aEventType);
+  return true;
+}
 }
 }
