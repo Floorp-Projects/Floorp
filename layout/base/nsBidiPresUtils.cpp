@@ -1224,7 +1224,8 @@ void
 nsBidiPresUtils::ReorderFrames(nsIFrame*   aFirstFrameOnLine,
                                int32_t     aNumFramesOnLine,
                                WritingMode aLineWM,
-                               nscoord&    aLineWidth)
+                               nscoord&    aLineWidth,
+                               nscoord     aStart)
 {
   // If this line consists of a line frame, reorder the line frame's children.
   if (aFirstFrameOnLine->GetType() == nsGkAtoms::lineFrame) {
@@ -1237,7 +1238,7 @@ nsBidiPresUtils::ReorderFrames(nsIFrame*   aFirstFrameOnLine,
   }
 
   BidiLineData bld(aFirstFrameOnLine, aNumFramesOnLine);
-  RepositionInlineFrames(&bld, aFirstFrameOnLine, aLineWM, aLineWidth);
+  RepositionInlineFrames(&bld, aFirstFrameOnLine, aLineWM, aLineWidth, aStart);
 }
 
 nsIFrame*
@@ -1509,20 +1510,10 @@ void
 nsBidiPresUtils::RepositionInlineFrames(BidiLineData *aBld,
                                         nsIFrame* aFirstChild,
                                         WritingMode aLineWM,
-                                        nscoord& aLineWidth)
+                                        nscoord& aLineWidth,
+                                        nscoord& aStart)
 {
-  nscoord startSpace = 0;
-
-  // This method is called from nsBlockFrame::PlaceLine via the call to
-  // bidiUtils->ReorderFrames, so this is guaranteed to be after the inlines
-  // have been reflowed, which is required for GetUsedMargin/Border/Padding
-  LogicalMargin margin(aLineWM, aFirstChild->GetUsedMargin());
-  if (!aFirstChild->GetPrevContinuation() &&
-      !aFirstChild->FrameIsNonFirstInIBSplit())
-    startSpace = margin.IStart(aLineWM);
-
-  nscoord start = LogicalRect(aLineWM, aFirstChild->GetRect(),
-                              aLineWidth).IStart(aLineWM) - startSpace;
+  nscoord start = aStart;
   nsIFrame* frame;
   int32_t count = aBld->mVisualFrames.Length();
   int32_t index;
