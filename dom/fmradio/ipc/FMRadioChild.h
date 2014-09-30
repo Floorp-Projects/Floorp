@@ -34,16 +34,10 @@ public:
 
   /* IFMRadioService */
   virtual bool IsEnabled() const MOZ_OVERRIDE;
-  virtual bool IsRDSEnabled() const MOZ_OVERRIDE;
   virtual double GetFrequency() const MOZ_OVERRIDE;
   virtual double GetFrequencyUpperBound() const MOZ_OVERRIDE;
   virtual double GetFrequencyLowerBound() const MOZ_OVERRIDE;
   virtual double GetChannelWidth() const MOZ_OVERRIDE;
-  virtual Nullable<unsigned short> GetPi() const MOZ_OVERRIDE;
-  virtual Nullable<uint8_t> GetPty() const MOZ_OVERRIDE;
-  virtual bool GetPs(nsString& aPSName) MOZ_OVERRIDE;
-  virtual bool GetRt(nsString& aRadiotext) MOZ_OVERRIDE;
-  virtual bool GetRdsgroup(uint64_t& aRDSGroup) MOZ_OVERRIDE;
 
   virtual void Enable(double aFrequency,
                       FMRadioReplyRunnable* aReplyRunnable) MOZ_OVERRIDE;
@@ -53,9 +47,6 @@ public:
   virtual void Seek(mozilla::hal::FMRadioSeekDirection aDirection,
                     FMRadioReplyRunnable* aReplyRunnable) MOZ_OVERRIDE;
   virtual void CancelSeek(FMRadioReplyRunnable* aReplyRunnable) MOZ_OVERRIDE;
-  virtual void SetRDSGroupMask(uint32_t aRDSGroupMask) MOZ_OVERRIDE;
-  virtual void EnableRDS(FMRadioReplyRunnable* aReplyRunnable) MOZ_OVERRIDE;
-  virtual void DisableRDS(FMRadioReplyRunnable* aReplyRunnable) MOZ_OVERRIDE;
 
   virtual void AddObserver(FMRadioEventObserver* aObserver) MOZ_OVERRIDE;
   virtual void RemoveObserver(FMRadioEventObserver* aObserver) MOZ_OVERRIDE;
@@ -73,26 +64,6 @@ public:
   RecvNotifyEnabledChanged(const bool& aEnabled,
                            const double& aFrequency) MOZ_OVERRIDE;
 
-  virtual bool
-  RecvNotifyRDSEnabledChanged(const bool& aEnabled) MOZ_OVERRIDE;
-
-  virtual bool
-  RecvNotifyPIChanged(const bool& aValid,
-                      const uint16_t& aCode) MOZ_OVERRIDE;
-
-  virtual bool
-  RecvNotifyPTYChanged(const bool& aValid,
-                       const uint8_t& aPTY) MOZ_OVERRIDE;
-
-  virtual bool
-  RecvNotifyPSChanged(const nsString& aPSName) MOZ_OVERRIDE;
-
-  virtual bool
-  RecvNotifyRadiotextChanged(const nsString& aRadiotext) MOZ_OVERRIDE;
-
-  virtual bool
-  RecvNotifyNewRDSGroup(const uint64_t& aGroup) MOZ_OVERRIDE;
-
   virtual PFMRadioRequestChild*
   AllocPFMRadioRequestChild(const FMRadioRequestArgs& aArgs) MOZ_OVERRIDE;
 
@@ -107,20 +78,10 @@ private:
   inline void NotifyFMRadioEvent(FMRadioEventType aType);
 
   bool mEnabled;
-  bool mRDSEnabled;
-  bool mRDSGroupSet;
-  bool mPSNameSet;
-  bool mRadiotextSet;
   double mFrequency;
   double mUpperBound;
   double mLowerBound;
   double mChannelWidth;
-  Nullable<unsigned short> mPI;
-  Nullable<uint8_t> mPTY;
-  nsAutoString mPSName;
-  nsAutoString mRadiotext;
-  uint64_t mRDSGroup;
-  uint32_t mRDSGroupMask;
 
   FMRadioEventObserverList mObserverList;
 
