@@ -76,6 +76,7 @@ const FONT_FAMILY_PREVIEW_TEXT_SIZE = 20;
 const PSEUDO_CLASSES = [":hover", ":active", ":focus"];
 const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
+const XUL_NS = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
 const IMAGE_FETCHING_TIMEOUT = 500;
 // The possible completions to a ':' with added score to give certain values
 // some preference.
@@ -125,6 +126,8 @@ loader.lazyGetter(this, "eventListenerService", function() {
   return Cc["@mozilla.org/eventlistenerservice;1"]
            .getService(Ci.nsIEventListenerService);
 });
+
+loader.lazyGetter(this, "CssLogic", () => require("devtools/styleinspector/css-logic").CssLogic);
 
 // XXX: A poor man's makeInfallible until we move it out of transport.js
 // Which should be very soon.
@@ -224,14 +227,6 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
 
     let parentNode = this.walker.parentNode(this);
 
-    // Estimate the number of children.
-    let numChildren = this.rawNode.childNodes.length;
-    if (numChildren === 0 &&
-        (this.rawNode.contentDocument || this.rawNode.getSVGDocument)) {
-      // This might be an iframe with virtual children.
-      numChildren = 1;
-    }
-
     let form = {
       actor: this.actorID,
       baseURI: this.rawNode.baseURI,
@@ -239,7 +234,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
       nodeType: this.rawNode.nodeType,
       namespaceURI: this.rawNode.namespaceURI,
       nodeName: this.rawNode.nodeName,
-      numChildren: numChildren,
+      numChildren: this.numChildren,
 
       // doctype attributes
       name: this.rawNode.name,
@@ -247,7 +242,12 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
       systemId: this.rawNode.systemId,
 
       attrs: this.writeAttrs(),
-
+      isBeforePseudoElement: this.isBeforePseudoElement,
+      isAfterPseudoElement: this.isAfterPseudoElement,
+      isAnonymous: LayoutHelpers.isAnonymous(this.rawNode),
+      isNativeAnonymous: LayoutHelpers.isNativeAnonymous(this.rawNode),
+      isXBLAnonymous: LayoutHelpers.isXBLAnonymous(this.rawNode),
+      isShadowAnonymous: LayoutHelpers.isShadowAnonymous(this.rawNode),
       pseudoClassLocks: this.writePseudoClassLocks(),
 
       isDisplayed: this.isDisplayed,
@@ -273,14 +273,50 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
     return form;
   },
 
-  get computedStyle() {
-    if (Cu.isDeadWrapper(this.rawNode) ||
-        this.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE ||
-        !this.rawNode.ownerDocument ||
-        !this.rawNode.ownerDocument.defaultView) {
-      return null;
+  get isBeforePseudoElement() {
+    return this.rawNode.nodeName === "_moz_generated_content_before"
+  },
+
+  get isAfterPseudoElement() {
+    return this.rawNode.nodeName === "_moz_generated_content_after"
+  },
+
+  // Estimate the number of children that the walker will return without making
+  // a call to children() if possible.
+  get numChildren() {
+
+    // For pseudo elements, childNodes.length returns 1, but the walker
+    // will return 0.
+    if (this.isBeforePseudoElement || this.isAfterPseudoElement) {
+      return 0;
     }
-    return this.rawNode.ownerDocument.defaultView.getComputedStyle(this.rawNode);
+
+    let numChildren = this.rawNode.childNodes.length;
+    if (numChildren === 0 &&
+        (this.rawNode.contentDocument || this.rawNode.getSVGDocument)) {
+      // This might be an iframe with virtual children.
+      numChildren = 1;
+    }
+
+    // Count any anonymous children
+    if (this.rawNode.nodeType === Ci.nsIDOMNode.ELEMENT_NODE) {
+      let anonChildren = this.rawNode.ownerDocument.getAnonymousNodes(this.rawNode);
+      if (anonChildren) {
+        numChildren += anonChildren.length;
+      }
+    }
+
+    // Normal counting misses ::before/::after, so we have to check to make sure
+    // we aren't missing anything
+    if (numChildren === 0) {
+      numChildren = this.walker.children(this).nodes.length;
+    }
+
+    return numChildren;
+  },
+
+  get computedStyle() {
+    return CssLogic.getComputedStyle(this.rawNode);
   },
 
   /**
@@ -765,8 +801,12 @@ let NodeFront = protocol.FrontClass(NodeActor, {
 
   get hasChildren() this._form.numChildren > 0,
   get numChildren() this._form.numChildren,
-
   get hasEventListeners() this._form.hasEventListeners,
+
+  get isBeforePseudoElement() this._form.isBeforePseudoElement,
+  get isAfterPseudoElement() this._form.isAfterPseudoElement,
+  get isPseudoElement() this.isBeforePseudoElement || this.isAfterPseudoElement,
+  get isAnonymous() this._form.isAnonymous,
 
   get tagName() this.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ? this.nodeName : null,
   get shortValue() this._form.shortValue,
@@ -1313,7 +1353,7 @@ var WalkerActor = protocol.ActorClass({
    *      document as the node.
    */
   parents: method(function(node, options={}) {
-    let walker = documentWalker(node.rawNode, this.rootWin);
+    let walker = DocumentWalker(node.rawNode, this.rootWin);
     let parents = [];
     let cur;
     while((cur = walker.parentNode())) {
@@ -1334,7 +1374,7 @@ var WalkerActor = protocol.ActorClass({
   }),
 
   parentNode: function(node) {
-    let walker = documentWalker(node.rawNode, this.rootWin);
+    let walker = DocumentWalker(node.rawNode, this.rootWin);
     let parent = walker.parentNode();
     if (parent) {
       return this._ref(parent);
@@ -1395,7 +1435,7 @@ var WalkerActor = protocol.ActorClass({
       this._retainedOrphans.delete(node);
     }
 
-    let walker = documentWalker(node.rawNode, this.rootWin);
+    let walker = DocumentWalker(node.rawNode, this.rootWin);
 
     let child = walker.firstChild();
     while (child) {
@@ -1422,7 +1462,7 @@ var WalkerActor = protocol.ActorClass({
     if (!node) {
       return newParents;
     }
-    let walker = documentWalker(node.rawNode, this.rootWin);
+    let walker = DocumentWalker(node.rawNode, this.rootWin);
     let cur;
     while ((cur = walker.parentNode())) {
       let parent = this._refMap.get(cur);
@@ -1472,14 +1512,14 @@ var WalkerActor = protocol.ActorClass({
 
     // We're going to create a few document walkers with the same filter,
     // make it easier.
-    let filteredWalker = (node) => {
-      return documentWalker(node, this.rootWin, options.whatToShow);
-    };
+    let getFilteredWalker = (node) => {
+      return new DocumentWalker(node, this.rootWin, options.whatToShow);
+    }
 
     // Need to know the first and last child.
     let rawNode = node.rawNode;
-    let firstChild = filteredWalker(rawNode).firstChild();
-    let lastChild = filteredWalker(rawNode).lastChild();
+    let firstChild = getFilteredWalker(rawNode).firstChild();
+    let lastChild = getFilteredWalker(rawNode).lastChild();
 
     if (!firstChild) {
       // No children, we're done.
@@ -1498,7 +1538,7 @@ var WalkerActor = protocol.ActorClass({
     let nodes = [];
 
     // Start by reading backward from the starting point if we're centering...
-    let backwardWalker = filteredWalker(start);
+    let backwardWalker = getFilteredWalker(start);
     if (start != firstChild && options.center) {
       backwardWalker.previousSibling();
       let backwardCount = Math.floor(maxNodes / 2);
@@ -1507,7 +1547,7 @@ var WalkerActor = protocol.ActorClass({
     }
 
     // Then read forward by any slack left in the max children...
-    let forwardWalker = filteredWalker(start);
+    let forwardWalker = getFilteredWalker(start);
     let forwardCount = maxNodes - nodes.length;
     nodes = nodes.concat(this._readForward(forwardWalker, forwardCount));
 
@@ -1556,7 +1596,7 @@ var WalkerActor = protocol.ActorClass({
    *    nodes: Child nodes returned by the request.
    */
   siblings: method(function(node, options={}) {
-    let parentNode = documentWalker(node.rawNode, this.rootWin).parentNode();
+    let parentNode = DocumentWalker(node.rawNode, this.rootWin).parentNode();
     if (!parentNode) {
       return {
         hasFirst: true,
@@ -1582,7 +1622,7 @@ var WalkerActor = protocol.ActorClass({
    *       https://developer.mozilla.org/en-US/docs/Web/API/NodeFilter.
    */
   nextSibling: method(function(node, options={}) {
-    let walker = documentWalker(node.rawNode, this.rootWin, options.whatToShow || Ci.nsIDOMNodeFilter.SHOW_ALL);
+    let walker = DocumentWalker(node.rawNode, this.rootWin, options.whatToShow || Ci.nsIDOMNodeFilter.SHOW_ALL);
     let sibling = walker.nextSibling();
     return sibling ? this._ref(sibling) : null;
   }, traversalMethod),
@@ -1597,7 +1637,7 @@ var WalkerActor = protocol.ActorClass({
    *       https://developer.mozilla.org/en-US/docs/Web/API/NodeFilter.
    */
   previousSibling: method(function(node, options={}) {
-    let walker = documentWalker(node.rawNode, this.rootWin, options.whatToShow || Ci.nsIDOMNodeFilter.SHOW_ALL);
+    let walker = DocumentWalker(node.rawNode, this.rootWin, options.whatToShow || Ci.nsIDOMNodeFilter.SHOW_ALL);
     let sibling = walker.previousSibling();
     return sibling ? this._ref(sibling) : null;
   }, traversalMethod),
@@ -1854,7 +1894,7 @@ var WalkerActor = protocol.ActorClass({
       return;
     }
 
-    let walker = documentWalker(node.rawNode, this.rootWin);
+    let walker = DocumentWalker(node.rawNode, this.rootWin);
     let cur;
     while ((cur = walker.parentNode())) {
       let curNode = this._ref(cur);
@@ -1935,7 +1975,7 @@ var WalkerActor = protocol.ActorClass({
       return;
     }
 
-    let walker = documentWalker(node.rawNode, this.rootWin);
+    let walker = DocumentWalker(node.rawNode, this.rootWin);
     let cur;
     while ((cur = walker.parentNode())) {
       let curNode = this._ref(cur);
@@ -2208,7 +2248,8 @@ var WalkerActor = protocol.ActorClass({
       let mutation = {
         type: change.type,
         target: targetActor.actorID,
-      }
+        numChildren: targetActor.numChildren
+      };
 
       if (mutation.type === "attributes") {
         mutation.attributeName = change.attributeName;
@@ -2251,7 +2292,7 @@ var WalkerActor = protocol.ActorClass({
           this._orphaned.delete(addedActor);
           addedActors.push(addedActor.actorID);
         }
-        mutation.numChildren = change.target.childNodes.length;
+
         mutation.removed = removedActors;
         mutation.added = addedActors;
       }
@@ -2340,7 +2381,7 @@ var WalkerActor = protocol.ActorClass({
       target: documentActor.actorID
     });
 
-    let walker = documentWalker(doc, this.rootWin);
+    let walker = DocumentWalker(doc, this.rootWin);
     let parentNode = walker.parentNode();
     if (parentNode) {
       // Send a childList mutation on the frame so that clients know
@@ -2365,7 +2406,7 @@ var WalkerActor = protocol.ActorClass({
    * document fragment
    */
   _isInDOMTree: function(rawNode) {
-    let walker = documentWalker(rawNode, this.rootWin);
+    let walker = DocumentWalker(rawNode, this.rootWin);
     let current = walker.currentNode;
 
     // Reaching the top of tree
@@ -2686,7 +2727,13 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
           // ids with front in the mutation record.
           emittedMutation.added = addedFronts;
           emittedMutation.removed = removedFronts;
-          targetFront._form.numChildren = change.numChildren;
+
+          // If this is coming from a DOM mutation, the actor's numChildren
+          // was passed in. Otherwise, it is simulated from a frame load or
+          // unload, so don't change the front's form.
+          if ('numChildren' in change) {
+            targetFront._form.numChildren = change.numChildren;
+          }
         } else if (change.type === "frameLoad") {
           // Nothing we need to do here, except verify that we don't have any
           // document children, because we should have gotten a documentUnload
@@ -3037,32 +3084,38 @@ var InspectorFront = exports.InspectorFront = protocol.FrontClass(InspectorActor
   })
 });
 
-function documentWalker(node, rootWin, whatToShow=Ci.nsIDOMNodeFilter.SHOW_ALL) {
-  return new DocumentWalker(node, rootWin, whatToShow, whitespaceTextFilter, false);
-}
-
 // Exported for test purposes.
-exports._documentWalker = documentWalker;
+exports._documentWalker = DocumentWalker;
 
 function nodeDocument(node) {
   return node.ownerDocument || (node.nodeType == Ci.nsIDOMNode.DOCUMENT_NODE ? node : null);
 }
 
 /**
- * Similar to a TreeWalker, except will dig in to iframes and it doesn't
- * implement the good methods like previousNode and nextNode.
+ * Wrapper for inDeepTreeWalker.  Adds filtering to the traversal methods.
+ * See inDeepTreeWalker for more information about the methods.
  *
- * See TreeWalker documentation for explanations of the methods.
+ * @param {DOMNode} aNode
+ * @param {Window} aRootWin
+ * @param {Int} aShow See Ci.nsIDOMNodeFilter / inIDeepTreeWalker for options.
+ * @param {Function} aFilter A custom filter function Taking in a DOMNode
+ *        and returning an Int. See nodeFilter for an example.
  */
-function DocumentWalker(aNode, aRootWin, aShow, aFilter, aExpandEntityReferences) {
+function DocumentWalker(aNode, aRootWin, aShow=Ci.nsIDOMNodeFilter.SHOW_ALL,
+                        aFilter=nodeFilter) {
+  if (!(this instanceof DocumentWalker)) {
+    return new DocumentWalker(aNode, aRootWin, aShow, aFilter);
+  }
+
   if (!aRootWin.location) {
     throw new Error("Got an invalid root window in DocumentWalker");
   }
 
-  let doc = nodeDocument(aNode);
-  this.layoutHelpers = new LayoutHelpers(aRootWin);
-  this.walker = doc.createTreeWalker(doc,
-    aShow, aFilter, aExpandEntityReferences);
+  this.walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"].createInstance(Ci.inIDeepTreeWalker);
+  this.walker.showAnonymousContent = true;
+  this.walker.showSubDocuments = true;
+  this.walker.showDocumentsAsNodes = true;
+  this.walker.init(aRootWin.document, aShow);
   this.walker.currentNode = aNode;
   this.filter = aFilter;
 }
@@ -3070,85 +3123,88 @@ function DocumentWalker(aNode, aRootWin, aShow, aFilter, aExpandEntityReferences
 DocumentWalker.prototype = {
   get node() this.walker.node,
   get whatToShow() this.walker.whatToShow,
-  get expandEntityReferences() this.walker.expandEntityReferences,
   get currentNode() this.walker.currentNode,
   set currentNode(aVal) this.walker.currentNode = aVal,
 
-  /**
-   * Called when the new node is in a different document than
-   * the current node, creates a new treewalker for the document we've
-   * run in to.
-   */
-  _reparentWalker: function(aNewNode) {
-    if (!aNewNode) {
-      return null;
-    }
-    let doc = nodeDocument(aNewNode);
-    let walker = doc.createTreeWalker(doc,
-      this.whatToShow, this.filter, this.expandEntityReferences);
-    walker.currentNode = aNewNode;
-    this.walker = walker;
-    return aNewNode;
-  },
-
   parentNode: function() {
-    let currentNode = this.walker.currentNode;
-    let parentNode = this.walker.parentNode();
-
-    if (!parentNode) {
-      if (currentNode && currentNode.nodeType == Ci.nsIDOMNode.DOCUMENT_NODE
-          && currentNode.defaultView) {
-
-        let window = currentNode.defaultView;
-        let frame = this.layoutHelpers.getFrameElement(window);
-        if (frame) {
-          return this._reparentWalker(frame);
-        }
-      }
-      return null;
-    }
-
-    return parentNode;
+    return this.walker.parentNode();
   },
 
   firstChild: function() {
     let node = this.walker.currentNode;
     if (!node)
       return null;
-    if (node.contentDocument) {
-      return this._reparentWalker(node.contentDocument);
-    } else if (node.getSVGDocument && node.getSVGDocument()) {
-      return this._reparentWalker(node.getSVGDocument());
+
+    let firstChild = this.walker.firstChild();
+    while (firstChild && this.filter(firstChild) === Ci.nsIDOMNodeFilter.FILTER_SKIP) {
+      firstChild = this.walker.nextSibling();
     }
-    return this.walker.firstChild();
+
+    return firstChild;
   },
 
   lastChild: function() {
     let node = this.walker.currentNode;
     if (!node)
       return null;
-    if (node.contentDocument) {
-      return this._reparentWalker(node.contentDocument);
-    } else if (node.getSVGDocument && node.getSVGDocument()) {
-      return this._reparentWalker(node.getSVGDocument());
+
+    let lastChild = this.walker.lastChild();
+    while (lastChild && this.filter(lastChild) === Ci.nsIDOMNodeFilter.FILTER_SKIP) {
+      lastChild = this.walker.previousSibling();
     }
-    return this.walker.lastChild();
+
+    return lastChild;
   },
 
-  previousSibling: function DW_previousSibling() this.walker.previousSibling(),
-  nextSibling: function DW_nextSibling() this.walker.nextSibling()
+  previousSibling: function() {
+    let node = this.walker.previousSibling();
+    while (node && this.filter(node) === Ci.nsIDOMNodeFilter.FILTER_SKIP) {
+      node = this.walker.previousSibling();
+    }
+    return node;
+  },
+
+  nextSibling: function() {
+    let node = this.walker.nextSibling();
+    while (node && this.filter(node) === Ci.nsIDOMNodeFilter.FILTER_SKIP) {
+      node = this.walker.nextSibling();
+    }
+    return node;
+  }
 };
+
+function isXULDocument(doc) {
+  return doc &&
+         doc.documentElement &&
+         doc.documentElement.namespaceURI === XUL_NS;
+}
 
 /**
  * A tree walker filter for avoiding empty whitespace text nodes.
  */
-function whitespaceTextFilter(aNode) {
-    if (aNode.nodeType == Ci.nsIDOMNode.TEXT_NODE &&
-        !/[^\s]/.exec(aNode.nodeValue)) {
-      return Ci.nsIDOMNodeFilter.FILTER_SKIP;
-    } else {
-      return Ci.nsIDOMNodeFilter.FILTER_ACCEPT;
-    }
+function nodeFilter(aNode) {
+  // Ignore empty whitespace text nodes.
+  if (aNode.nodeType == Ci.nsIDOMNode.TEXT_NODE &&
+      !/[^\s]/.exec(aNode.nodeValue)) {
+    return Ci.nsIDOMNodeFilter.FILTER_SKIP;
+  }
+
+  // Ignore all native anonymous content (like internals for form
+  // controls).  Except for:
+  //   1) Anonymous content in a XUL document. This is needed for all
+  //      elements within the Browser Toolbox to properly show up.
+  //   2) ::before/::after - we do want this to show in the walker so
+  //      they can be inspected.
+  if (LayoutHelpers.isNativeAnonymous(aNode) &&
+      !isXULDocument(aNode.ownerDocument) &&
+      (
+        aNode.nodeName !== "_moz_generated_content_before" &&
+        aNode.nodeName !== "_moz_generated_content_after")
+      ) {
+    return Ci.nsIDOMNodeFilter.FILTER_SKIP;
+  }
+
+  return Ci.nsIDOMNodeFilter.FILTER_ACCEPT;
 }
 
 /**

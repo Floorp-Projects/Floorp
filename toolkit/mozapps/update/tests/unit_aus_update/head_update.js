@@ -6,10 +6,7 @@ const INSTALL_LOCALE = "@AB_CD@";
 const MOZ_APP_NAME = "@MOZ_APP_NAME@";
 const BIN_SUFFIX = "@BIN_SUFFIX@";
 
-#ifdef XP_WIN
 // MOZ_APP_VENDOR is optional.
-// On Windows, if MOZ_APP_VENDOR is not defined the updates directory will be
-// located under %LOCALAPPDATA%\@MOZ_APP_BASENAME@\updates\TaskBarID
 #ifdef MOZ_APP_VENDOR
 const MOZ_APP_VENDOR = "@MOZ_APP_VENDOR@";
 #else
@@ -18,7 +15,6 @@ const MOZ_APP_VENDOR = "";
 
 // MOZ_APP_BASENAME is not optional for tests.
 const MOZ_APP_BASENAME = "@MOZ_APP_BASENAME@";
-#endif // XP_WIN
 
 const APP_INFO_NAME = "XPCShell";
 const APP_INFO_VENDOR = "Mozilla";
@@ -64,6 +60,32 @@ const IS_TOOLKIT_GONK = true;
 const IS_TOOLKIT_GONK = false;
 #endif
 
+#ifdef XP_MACOSX
+const DIR_MACOS = "Contents/MacOS/";
+const DIR_RESOURCES = "Contents/Resources/";
+const FILE_COMPLETE_MAR = "complete_mac.mar";
+const FILE_PARTIAL_MAR = "partial_mac.mar";
+const LOG_COMPLETE_SUCCESS = "complete_log_success_mac";
+const LOG_PARTIAL_SUCCESS  = "partial_log_success_mac";
+const LOG_PARTIAL_FAILURE  = "partial_log_failure_mac";
+const FILE_COMPLETE_PRECOMPLETE = "complete_precomplete_mac";
+const FILE_PARTIAL_PRECOMPLETE = "partial_precomplete_mac";
+const FILE_COMPLETE_REMOVEDFILES = "complete_removed-files_mac";
+const FILE_PARTIAL_REMOVEDFILES = "partial_removed-files_mac";
+#else
+const DIR_MACOS = "";
+const DIR_RESOURCES = "";
+const FILE_COMPLETE_MAR = "complete.mar";
+const FILE_PARTIAL_MAR = "partial.mar";
+const LOG_COMPLETE_SUCCESS = "complete_log_success";
+const LOG_PARTIAL_SUCCESS  = "partial_log_success";
+const LOG_PARTIAL_FAILURE  = "partial_log_failure";
+const FILE_COMPLETE_PRECOMPLETE = "complete_precomplete";
+const FILE_PARTIAL_PRECOMPLETE = "partial_precomplete";
+const FILE_COMPLETE_REMOVEDFILES = "complete_removed-files";
+const FILE_PARTIAL_REMOVEDFILES = "partial_removed-files";
+#endif
+
 const USE_EXECV = IS_UNIX && !IS_MACOSX;
 
 #ifdef MOZ_VERIFY_MAR_SIGNATURE
@@ -76,19 +98,13 @@ const URL_HOST = "http://localhost";
 
 const FILE_APP_BIN = MOZ_APP_NAME + APP_BIN_SUFFIX;
 const FILE_COMPLETE_EXE = "complete.exe";
-const FILE_COMPLETE_MAR = "complete.mar";
 const FILE_HELPER_BIN = "TestAUSHelper" + BIN_SUFFIX;
 const FILE_MAINTENANCE_SERVICE_BIN = "maintenanceservice.exe";
 const FILE_MAINTENANCE_SERVICE_INSTALLER_BIN = "maintenanceservice_installer.exe";
 const FILE_OLD_VERSION_MAR = "old_version.mar";
 const FILE_PARTIAL_EXE = "partial.exe";
-const FILE_PARTIAL_MAR = "partial.mar";
 const FILE_UPDATER_BIN = "updater" + BIN_SUFFIX;
 const FILE_WRONG_CHANNEL_MAR = "wrong_product_channel.mar";
-
-const LOG_COMPLETE_SUCCESS = "complete_log_success";
-const LOG_PARTIAL_SUCCESS  = "partial_log_success";
-const LOG_PARTIAL_FAILURE  = "partial_log_failure";
 
 const LOG_SWITCH_SUCCESS = "rename_file: proceeding to rename the directory\n" +
                            "rename_file: proceeding to rename the directory\n" +
@@ -209,9 +225,9 @@ var gTestFilesCommon = [
 {
   description      : "Should never change",
   fileName         : FILE_UPDATE_SETTINGS_INI,
-  relPathDir       : "a/b/",
-  originalContents : "ShouldNotBeReplaced\n",
-  compareContents  : "ShouldNotBeReplaced\n",
+  relPathDir       : DIR_RESOURCES,
+  originalContents : UPDATE_SETTINGS_CONTENTS,
+  compareContents  : UPDATE_SETTINGS_CONTENTS,
   originalFile     : null,
   compareFile      : null,
   originalPerms    : 0o767,
@@ -219,7 +235,7 @@ var gTestFilesCommon = [
 }, {
   description      : "Should never change",
   fileName         : "channel-prefs.js",
-  relPathDir       : "a/b/defaults/pref/",
+  relPathDir       : DIR_RESOURCES + "defaults/pref/",
   originalContents : "ShouldNotBeReplaced\n",
   compareContents  : "ShouldNotBeReplaced\n",
   originalFile     : null,
@@ -234,17 +250,17 @@ var gTestFilesCompleteSuccess = [
 {
   description      : "Added by update.manifest (add)",
   fileName         : "precomplete",
-  relPathDir       : "",
+  relPathDir       : DIR_RESOURCES,
   originalContents : null,
   compareContents  : null,
-  originalFile     : "partial_precomplete",
-  compareFile      : "complete_precomplete",
+  originalFile     : FILE_PARTIAL_PRECOMPLETE,
+  compareFile      : FILE_COMPLETE_PRECOMPLETE,
   originalPerms    : 0o666,
   comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "searchpluginstext0",
-  relPathDir       : "a/b/searchplugins/",
+  relPathDir       : DIR_RESOURCES + "searchplugins/",
   originalContents : "ToBeReplacedWithFromComplete\n",
   compareContents  : "FromComplete\n",
   originalFile     : null,
@@ -254,7 +270,7 @@ var gTestFilesCompleteSuccess = [
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "searchpluginspng1.png",
-  relPathDir       : "a/b/searchplugins/",
+  relPathDir       : DIR_RESOURCES + "searchplugins/",
   originalContents : null,
   compareContents  : null,
   originalFile     : null,
@@ -264,7 +280,7 @@ var gTestFilesCompleteSuccess = [
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "searchpluginspng0.png",
-  relPathDir       : "a/b/searchplugins/",
+  relPathDir       : DIR_RESOURCES + "searchplugins/",
   originalContents : null,
   compareContents  : null,
   originalFile     : "partial.png",
@@ -274,18 +290,18 @@ var gTestFilesCompleteSuccess = [
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "removed-files",
-  relPathDir       : "a/b/",
+  relPathDir       : DIR_RESOURCES,
   originalContents : null,
   compareContents  : null,
-  originalFile     : "partial_removed-files",
-  compareFile      : "complete_removed-files",
+  originalFile     : FILE_PARTIAL_REMOVEDFILES,
+  compareFile      : FILE_COMPLETE_REMOVEDFILES,
   originalPerms    : 0o666,
   comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
   fileName         : "extensions1text0",
-  relPathDir       : "a/b/distribution/extensions/extensions1/",
+  relPathDir       : DIR_RESOURCES + "distribution/extensions/extensions1/",
   originalContents : null,
   compareContents  : "FromComplete\n",
   originalFile     : null,
@@ -296,7 +312,7 @@ var gTestFilesCompleteSuccess = [
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
   fileName         : "extensions1png1.png",
-  relPathDir       : "a/b/distribution/extensions/extensions1/",
+  relPathDir       : DIR_RESOURCES + "distribution/extensions/extensions1/",
   originalContents : null,
   compareContents  : null,
   originalFile     : "partial.png",
@@ -307,7 +323,7 @@ var gTestFilesCompleteSuccess = [
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
   fileName         : "extensions1png0.png",
-  relPathDir       : "a/b/distribution/extensions/extensions1/",
+  relPathDir       : DIR_RESOURCES + "distribution/extensions/extensions1/",
   originalContents : null,
   compareContents  : null,
   originalFile     : null,
@@ -318,7 +334,7 @@ var gTestFilesCompleteSuccess = [
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
   fileName         : "extensions0text0",
-  relPathDir       : "a/b/distribution/extensions/extensions0/",
+  relPathDir       : DIR_RESOURCES + "distribution/extensions/extensions0/",
   originalContents : "ToBeReplacedWithFromComplete\n",
   compareContents  : "FromComplete\n",
   originalFile     : null,
@@ -329,7 +345,7 @@ var gTestFilesCompleteSuccess = [
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
   fileName         : "extensions0png1.png",
-  relPathDir       : "a/b/distribution/extensions/extensions0/",
+  relPathDir       : DIR_RESOURCES + "distribution/extensions/extensions0/",
   originalContents : null,
   compareContents  : null,
   originalFile     : null,
@@ -340,7 +356,7 @@ var gTestFilesCompleteSuccess = [
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
   fileName         : "extensions0png0.png",
-  relPathDir       : "a/b/distribution/extensions/extensions0/",
+  relPathDir       : DIR_RESOURCES + "distribution/extensions/extensions0/",
   originalContents : null,
   compareContents  : null,
   originalFile     : null,
@@ -350,7 +366,7 @@ var gTestFilesCompleteSuccess = [
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "exe0.exe",
-  relPathDir       : "a/b/",
+  relPathDir       : DIR_MACOS,
   originalContents : null,
   compareContents  : null,
   originalFile     : FILE_HELPER_BIN,
@@ -360,7 +376,7 @@ var gTestFilesCompleteSuccess = [
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "10text0",
-  relPathDir       : "a/b/1/10/",
+  relPathDir       : DIR_RESOURCES + "1/10/",
   originalContents : "ToBeReplacedWithFromComplete\n",
   compareContents  : "FromComplete\n",
   originalFile     : null,
@@ -370,7 +386,7 @@ var gTestFilesCompleteSuccess = [
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "0exe0.exe",
-  relPathDir       : "a/b/0/",
+  relPathDir       : DIR_RESOURCES + "0/",
   originalContents : null,
   compareContents  : null,
   originalFile     : FILE_HELPER_BIN,
@@ -380,7 +396,7 @@ var gTestFilesCompleteSuccess = [
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "00text1",
-  relPathDir       : "a/b/0/00/",
+  relPathDir       : DIR_RESOURCES + "0/00/",
   originalContents : "ToBeReplacedWithFromComplete\n",
   compareContents  : "FromComplete\n",
   originalFile     : null,
@@ -390,7 +406,7 @@ var gTestFilesCompleteSuccess = [
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "00text0",
-  relPathDir       : "a/b/0/00/",
+  relPathDir       : DIR_RESOURCES + "0/00/",
   originalContents : "ToBeReplacedWithFromComplete\n",
   compareContents  : "FromComplete\n",
   originalFile     : null,
@@ -400,7 +416,7 @@ var gTestFilesCompleteSuccess = [
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "00png0.png",
-  relPathDir       : "a/b/0/00/",
+  relPathDir       : DIR_RESOURCES + "0/00/",
   originalContents : null,
   compareContents  : null,
   originalFile     : null,
@@ -410,7 +426,7 @@ var gTestFilesCompleteSuccess = [
 }, {
   description      : "Removed by precomplete (remove)",
   fileName         : "20text0",
-  relPathDir       : "a/b/2/20/",
+  relPathDir       : DIR_RESOURCES + "2/20/",
   originalContents : "ToBeDeleted\n",
   compareContents  : null,
   originalFile     : null,
@@ -420,7 +436,7 @@ var gTestFilesCompleteSuccess = [
 }, {
   description      : "Removed by precomplete (remove)",
   fileName         : "20png0.png",
-  relPathDir       : "a/b/2/20/",
+  relPathDir       : DIR_RESOURCES + "2/20/",
   originalContents : "ToBeDeleted\n",
   compareContents  : null,
   originalFile     : null,
@@ -438,17 +454,17 @@ var gTestFilesPartialSuccess = [
 {
   description      : "Added by update.manifest (add)",
   fileName         : "precomplete",
-  relPathDir       : "",
+  relPathDir       : DIR_RESOURCES,
   originalContents : null,
   compareContents  : null,
-  originalFile     : "complete_precomplete",
-  compareFile      : "partial_precomplete",
+  originalFile     : FILE_COMPLETE_PRECOMPLETE,
+  compareFile      : FILE_PARTIAL_PRECOMPLETE,
   originalPerms    : 0o666,
   comparePerms     : 0o644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "searchpluginstext0",
-  relPathDir       : "a/b/searchplugins/",
+  relPathDir       : DIR_RESOURCES + "searchplugins/",
   originalContents : "ToBeReplacedWithFromPartial\n",
   compareContents  : "FromPartial\n",
   originalFile     : null,
@@ -459,7 +475,7 @@ var gTestFilesPartialSuccess = [
   description      : "Patched by update.manifest if the file exists " +
                      "(patch-if)",
   fileName         : "searchpluginspng1.png",
-  relPathDir       : "a/b/searchplugins/",
+  relPathDir       : DIR_RESOURCES + "searchplugins/",
   originalContents : null,
   compareContents  : null,
   originalFile     : "complete.png",
@@ -470,7 +486,7 @@ var gTestFilesPartialSuccess = [
   description      : "Patched by update.manifest if the file exists " +
                      "(patch-if)",
   fileName         : "searchpluginspng0.png",
-  relPathDir       : "a/b/searchplugins/",
+  relPathDir       : DIR_RESOURCES + "searchplugins/",
   originalContents : null,
   compareContents  : null,
   originalFile     : "complete.png",
@@ -481,7 +497,7 @@ var gTestFilesPartialSuccess = [
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
   fileName         : "extensions1text0",
-  relPathDir       : "a/b/distribution/extensions/extensions1/",
+  relPathDir       : DIR_RESOURCES + "distribution/extensions/extensions1/",
   originalContents : null,
   compareContents  : "FromPartial\n",
   originalFile     : null,
@@ -492,7 +508,7 @@ var gTestFilesPartialSuccess = [
   description      : "Patched by update.manifest if the parent directory " +
                      "exists (patch-if)",
   fileName         : "extensions1png1.png",
-  relPathDir       : "a/b/distribution/extensions/extensions1/",
+  relPathDir       : DIR_RESOURCES + "distribution/extensions/extensions1/",
   originalContents : null,
   compareContents  : null,
   originalFile     : "complete.png",
@@ -503,7 +519,7 @@ var gTestFilesPartialSuccess = [
   description      : "Patched by update.manifest if the parent directory " +
                      "exists (patch-if)",
   fileName         : "extensions1png0.png",
-  relPathDir       : "a/b/distribution/extensions/extensions1/",
+  relPathDir       : DIR_RESOURCES + "distribution/extensions/extensions1/",
   originalContents : null,
   compareContents  : null,
   originalFile     : "complete.png",
@@ -514,7 +530,7 @@ var gTestFilesPartialSuccess = [
   description      : "Added by update.manifest if the parent directory " +
                      "exists (add-if)",
   fileName         : "extensions0text0",
-  relPathDir       : "a/b/distribution/extensions/extensions0/",
+  relPathDir       : DIR_RESOURCES + "distribution/extensions/extensions0/",
   originalContents : "ToBeReplacedWithFromPartial\n",
   compareContents  : "FromPartial\n",
   originalFile     : null,
@@ -525,7 +541,7 @@ var gTestFilesPartialSuccess = [
   description      : "Patched by update.manifest if the parent directory " +
                      "exists (patch-if)",
   fileName         : "extensions0png1.png",
-  relPathDir       : "a/b/distribution/extensions/extensions0/",
+  relPathDir       : DIR_RESOURCES + "distribution/extensions/extensions0/",
   originalContents : null,
   compareContents  : null,
   originalFile     : "complete.png",
@@ -536,7 +552,7 @@ var gTestFilesPartialSuccess = [
   description      : "Patched by update.manifest if the parent directory " +
                      "exists (patch-if)",
   fileName         : "extensions0png0.png",
-  relPathDir       : "a/b/distribution/extensions/extensions0/",
+  relPathDir       : DIR_RESOURCES + "distribution/extensions/extensions0/",
   originalContents : null,
   compareContents  : null,
   originalFile     : "complete.png",
@@ -546,7 +562,7 @@ var gTestFilesPartialSuccess = [
 }, {
   description      : "Patched by update.manifest (patch)",
   fileName         : "exe0.exe",
-  relPathDir       : "a/b/",
+  relPathDir       : DIR_MACOS,
   originalContents : null,
   compareContents  : null,
   originalFile     : FILE_COMPLETE_EXE,
@@ -556,7 +572,7 @@ var gTestFilesPartialSuccess = [
 }, {
   description      : "Patched by update.manifest (patch)",
   fileName         : "0exe0.exe",
-  relPathDir       : "a/b/0/",
+  relPathDir       : DIR_RESOURCES + "0/",
   originalContents : null,
   compareContents  : null,
   originalFile     : FILE_COMPLETE_EXE,
@@ -566,7 +582,7 @@ var gTestFilesPartialSuccess = [
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "00text0",
-  relPathDir       : "a/b/0/00/",
+  relPathDir       : DIR_RESOURCES + "0/00/",
   originalContents : "ToBeReplacedWithFromPartial\n",
   compareContents  : "FromPartial\n",
   originalFile     : null,
@@ -576,7 +592,7 @@ var gTestFilesPartialSuccess = [
 }, {
   description      : "Patched by update.manifest (patch)",
   fileName         : "00png0.png",
-  relPathDir       : "a/b/0/00/",
+  relPathDir       : DIR_RESOURCES + "0/00/",
   originalContents : null,
   compareContents  : null,
   originalFile     : "complete.png",
@@ -586,7 +602,7 @@ var gTestFilesPartialSuccess = [
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "20text0",
-  relPathDir       : "a/b/2/20/",
+  relPathDir       : DIR_RESOURCES + "2/20/",
   originalContents : null,
   compareContents  : "FromPartial\n",
   originalFile     : null,
@@ -596,7 +612,7 @@ var gTestFilesPartialSuccess = [
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "20png0.png",
-  relPathDir       : "a/b/2/20/",
+  relPathDir       : DIR_RESOURCES + "2/20/",
   originalContents : null,
   compareContents  : null,
   originalFile     : null,
@@ -606,7 +622,7 @@ var gTestFilesPartialSuccess = [
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "00text2",
-  relPathDir       : "a/b/0/00/",
+  relPathDir       : DIR_RESOURCES + "0/00/",
   originalContents : null,
   compareContents  : "FromPartial\n",
   originalFile     : null,
@@ -616,7 +632,7 @@ var gTestFilesPartialSuccess = [
 }, {
   description      : "Removed by update.manifest (remove)",
   fileName         : "10text0",
-  relPathDir       : "a/b/1/10/",
+  relPathDir       : DIR_RESOURCES + "1/10/",
   originalContents : "ToBeDeleted\n",
   compareContents  : null,
   originalFile     : null,
@@ -626,7 +642,7 @@ var gTestFilesPartialSuccess = [
 }, {
   description      : "Removed by update.manifest (remove)",
   fileName         : "00text1",
-  relPathDir       : "a/b/0/00/",
+  relPathDir       : DIR_RESOURCES + "0/00/",
   originalContents : "ToBeDeleted\n",
   compareContents  : null,
   originalFile     : null,
@@ -638,158 +654,103 @@ var gTestFilesPartialSuccess = [
 // Concatenate the common files to the end of the array.
 gTestFilesPartialSuccess = gTestFilesPartialSuccess.concat(gTestFilesCommon);
 
-/**
- * The mar files used for the updater tests contain the following remove
- * operations.
- *
- * partial and complete test mar remove operations
- * -----------------------------------------------
- * remove "text1"
- * remove "text0"
- * rmrfdir "9/99/"
- * rmdir "9/99/"
- * rmrfdir "9/98/"
- * rmrfdir "9/97/"
- * rmrfdir "9/96/"
- * rmrfdir "9/95/"
- * rmrfdir "9/95/"
- * rmrfdir "9/94/"
- * rmdir "9/94/"
- * rmdir "9/93/"
- * rmdir "9/92/"
- * rmdir "9/91/"
- * rmdir "9/90/"
- * rmdir "9/90/"
- * rmrfdir "8/89/"
- * rmdir "8/89/"
- * rmrfdir "8/88/"
- * rmrfdir "8/87/"
- * rmrfdir "8/86/"
- * rmrfdir "8/85/"
- * rmrfdir "8/85/"
- * rmrfdir "8/84/"
- * rmdir "8/84/"
- * rmdir "8/83/"
- * rmdir "8/82/"
- * rmdir "8/81/"
- * rmdir "8/80/"
- * rmdir "8/80/"
- * rmrfdir "7/"
- * rmdir "6/"
- * remove "5/text1"
- * remove "5/text0"
- * rmrfdir "5/"
- * remove "4/text1"
- * remove "4/text0"
- * remove "4/exe0.exe"
- * rmdir "4/"
- * remove "3/text1"
- * remove "3/text0"
- *
- * partial test mar additional remove operations
- * ---------------------------------------------
- * remove "0/00/00text1"
- * remove "1/10/10text0"
- * rmdir "1/10/"
- * rmdir "1/"
- */
 var gTestDirsCommon = [
 {
-  relPathDir   : "a/b/3/",
+  relPathDir   : DIR_RESOURCES + "3/",
   dirRemoved   : false,
   files        : ["3text0", "3text1"],
   filesRemoved : true
 }, {
-  relPathDir   : "a/b/4/",
+  relPathDir   : DIR_RESOURCES + "4/",
   dirRemoved   : true,
   files        : ["4text0", "4text1"],
   filesRemoved : true
 }, {
-  relPathDir   : "a/b/5/",
+  relPathDir   : DIR_RESOURCES + "5/",
   dirRemoved   : true,
   files        : ["5test.exe", "5text0", "5text1"],
   filesRemoved : true
 }, {
-  relPathDir   : "a/b/6/",
+  relPathDir   : DIR_RESOURCES + "6/",
   dirRemoved   : true
 }, {
-  relPathDir   : "a/b/7/",
+  relPathDir   : DIR_RESOURCES + "7/",
   dirRemoved   : true,
   files        : ["7text0", "7text1"],
   subDirs      : ["70/", "71/"],
   subDirFiles  : ["7xtest.exe", "7xtext0", "7xtext1"]
 }, {
-  relPathDir   : "a/b/8/",
+  relPathDir   : DIR_RESOURCES + "8/",
   dirRemoved   : false
 }, {
-  relPathDir   : "a/b/8/80/",
+  relPathDir   : DIR_RESOURCES + "8/80/",
   dirRemoved   : true
 }, {
-  relPathDir   : "a/b/8/81/",
+  relPathDir   : DIR_RESOURCES + "8/81/",
   dirRemoved   : false,
   files        : ["81text0", "81text1"]
 }, {
-  relPathDir   : "a/b/8/82/",
+  relPathDir   : DIR_RESOURCES + "8/82/",
   dirRemoved   : false,
   subDirs      : ["820/", "821/"]
 }, {
-  relPathDir   : "a/b/8/83/",
+  relPathDir   : DIR_RESOURCES + "8/83/",
   dirRemoved   : true
 }, {
-  relPathDir   : "a/b/8/84/",
+  relPathDir   : DIR_RESOURCES + "8/84/",
   dirRemoved   : true
 }, {
-  relPathDir   : "a/b/8/85/",
+  relPathDir   : DIR_RESOURCES + "8/85/",
   dirRemoved   : true
 }, {
-  relPathDir   : "a/b/8/86/",
+  relPathDir   : DIR_RESOURCES + "8/86/",
   dirRemoved   : true,
   files        : ["86text0", "86text1"]
 }, {
-  relPathDir   : "a/b/8/87/",
+  relPathDir   : DIR_RESOURCES + "8/87/",
   dirRemoved   : true,
   subDirs      : ["870/", "871/"],
   subDirFiles  : ["87xtext0", "87xtext1"]
 }, {
-  relPathDir   : "a/b/8/88/",
+  relPathDir   : DIR_RESOURCES + "8/88/",
   dirRemoved   : true
 }, {
-  relPathDir   : "a/b/8/89/",
+  relPathDir   : DIR_RESOURCES + "8/89/",
   dirRemoved   : true
 }, {
-  relPathDir   : "a/b/9/90/",
+  relPathDir   : DIR_RESOURCES + "9/90/",
   dirRemoved   : true
 }, {
-  relPathDir   : "a/b/9/91/",
+  relPathDir   : DIR_RESOURCES + "9/91/",
   dirRemoved   : false,
   files        : ["91text0", "91text1"]
 }, {
-  relPathDir   : "a/b/9/92/",
+  relPathDir   : DIR_RESOURCES + "9/92/",
   dirRemoved   : false,
   subDirs      : ["920/", "921/"]
 }, {
-  relPathDir   : "a/b/9/93/",
+  relPathDir   : DIR_RESOURCES + "9/93/",
   dirRemoved   : true
 }, {
-  relPathDir   : "a/b/9/94/",
+  relPathDir   : DIR_RESOURCES + "9/94/",
   dirRemoved   : true
 }, {
-  relPathDir   : "a/b/9/95/",
+  relPathDir   : DIR_RESOURCES + "9/95/",
   dirRemoved   : true
 }, {
-  relPathDir   : "a/b/9/96/",
+  relPathDir   : DIR_RESOURCES + "9/96/",
   dirRemoved   : true,
   files        : ["96text0", "96text1"]
 }, {
-  relPathDir   : "a/b/9/97/",
+  relPathDir   : DIR_RESOURCES + "9/97/",
   dirRemoved   : true,
   subDirs      : ["970/", "971/"],
   subDirFiles  : ["97xtext0", "97xtext1"]
 }, {
-  relPathDir   : "a/b/9/98/",
+  relPathDir   : DIR_RESOURCES + "9/98/",
   dirRemoved   : true
 }, {
-  relPathDir   : "a/b/9/99/",
+  relPathDir   : DIR_RESOURCES + "9/99/",
   dirRemoved   : true
 }];
 
@@ -798,11 +759,11 @@ var gTestDirsCommon = [
 var gTestDirsCompleteSuccess = [
 {
   description  : "Removed by precomplete (rmdir)",
-  relPathDir   : "a/b/2/20/",
+  relPathDir   : DIR_RESOURCES + "2/20/",
   dirRemoved   : true
 }, {
   description  : "Removed by precomplete (rmdir)",
-  relPathDir   : "a/b/2/",
+  relPathDir   : DIR_RESOURCES + "2/",
   dirRemoved   : true
 }];
 
@@ -814,27 +775,16 @@ gTestDirsCompleteSuccess = gTestDirsCommon.concat(gTestDirsCompleteSuccess);
 var gTestDirsPartialSuccess = [
 {
   description  : "Removed by update.manifest (rmdir)",
-  relPathDir   : "a/b/1/10/",
+  relPathDir   : DIR_RESOURCES + "1/10/",
   dirRemoved   : true
 }, {
   description  : "Removed by update.manifest (rmdir)",
-  relPathDir   : "a/b/1/",
+  relPathDir   : DIR_RESOURCES + "1/",
   dirRemoved   : true
 }];
 
 // Concatenate the common files to the beginning of the array.
 gTestDirsPartialSuccess = gTestDirsCommon.concat(gTestDirsPartialSuccess);
-
-// Extra directories to check for existence for both complete and partial
-// updates. Whether they exist or not is set when calling setupUpdaterTest.
-var gTestExtraDirs = [
-{
-  relPathDir   : DIR_UPDATED,
-  dirExists    : false
-}, {
-  relPathDir   : DIR_TOBEDELETED,
-  dirExists    : false
-}];
 
 // This makes it possible to run most tests on xulrunner where the update
 // channel default preference is not set.
@@ -905,11 +855,11 @@ function setupTestCommon() {
   // it is defined as a function.
   adjustGeneralPaths();
 
-  // Remove the updates directory on Windows which is located outside of the
-  // application directory after the call to adjustGeneralPaths has set it up.
-  // Since the test hasn't ran yet and the directory shouldn't exist finished
-  // this is non-fatal for the test.
-  if (IS_WIN) {
+  // Remove the updates directory on Windows and Mac OS X which is located
+  // outside of the application directory after the call to adjustGeneralPaths
+  // has set it up. Since the test hasn't ran yet and the directory shouldn't
+  // exist this is non-fatal for the test.
+  if (IS_WIN || IS_MACOSX) {
     let updatesDir = getMockUpdRootD();
     if (updatesDir.exists())  {
       logTestInfo("attempting to remove directory. Path: " + updatesDir.path);
@@ -992,8 +942,8 @@ function cleanupTestCommon() {
   }
 
   // The updates directory is located outside of the application directory on
-  // Windows so it also needs to be removed.
-  if (IS_WIN) {
+  // Windows and Mac OS X so it also needs to be removed.
+  if (IS_WIN || IS_MACOSX) {
     let updatesDir = getMockUpdRootD();
     // Try to remove the directory used to apply updates. Since the test has
     // already finished this is non-fatal for the test.
@@ -1004,6 +954,26 @@ function cleanupTestCommon() {
       } catch (e) {
         logTestInfo("non-fatal error removing directory. Path: " +
                     updatesDir.path + ", Exception: " + e);
+      }
+      if (IS_MACOSX) {
+        let updatesRootDir = gUpdatesRootDir.clone();
+        while (updatesRootDir.path != updatesDir.path) {
+          if (updatesDir.exists()) {
+            logTestInfo("attempting to remove directory. Path: " +
+                        updatesDir.path);
+            try {
+              // Try to remove the directory without the recursive flag set
+              // since the top level directory has already had its contents
+              // removed and the parent directory might still be used by a
+              // different test.
+              updatesDir.remove(false);
+            } catch (e) {
+              logTestInfo("non-fatal error removing directory. Path: " +
+                          updatesDir.path + ", Exception: " + e);
+            }
+          }
+          updatesDir = updatesDir.parent;
+        }
       }
     }
   }
@@ -1108,6 +1078,21 @@ function setTestFilesAndDirsForFailure() {
 }
 
 /**
+ * Helper function for updater binary tests that prevents the distribution
+ * directory files from being created.
+ */
+function preventDistributionFiles() {
+  gTestFiles = gTestFiles.filter(function(aTestFile) {
+    return aTestFile.relPathDir.indexOf("distribution/") == -1;
+  });
+
+  gTestDirs = gTestDirs.filter(function(aTestDir) {
+    return aTestDir.relPathDir.indexOf("distribution/") == -1;
+  });
+}
+
+
+/**
  * Initializes the most commonly used settings and creates an instance of the
  * update service stub.
  */
@@ -1191,9 +1176,56 @@ function getApplyDirPath() {
  *          exist or the function will throw.
  * @return  The nsIFile for the file in the directory where the update will be
  *          applied.
+ * @throws  If aAllowNonexistent is not specified or is false and the file or
+ *          directory does not exist.
  */
 function getApplyDirFile(aRelPath, aAllowNonexistent) {
   let relpath = getApplyDirPath() + (aRelPath ? aRelPath : "");
+  return do_get_file(relpath, aAllowNonexistent);
+}
+
+/**
+ * Helper function for getting the nsIFile for a file in the directory where the
+ * update will be staged.
+ *
+ * The files for the update are located two directories below the stage
+ * directory since Mac OS X sets the last modified time for the root directory
+ * to the current time and if the update changes any files in the root directory
+ * then it wouldn't be possible to test (bug 600098).
+ *
+ * @param   aRelPath (optional)
+ *          The relative path to the file or directory to get from the root of
+ *          the stage directory. If not specified the stage directory will be
+ *          returned.
+ * @param   aAllowNonexistent (optional)
+ *          Whether the file must exist. If false or not specified the file must
+ *          exist or the function will throw.
+ * @return  The nsIFile for the file in the directory where the update will be
+ *          staged.
+ * @throws  If aAllowNonexistent is not specified or is false and the file or
+ *          directory does not exist.
+ */
+function getStageDirFile(aRelPath, aAllowNonexistent) {
+  if (IS_MACOSX) {
+    let file = getMockUpdRootD();
+    file.append(DIR_UPDATES);
+    file.append(DIR_PATCH);
+    file.append(DIR_UPDATED);
+    if (aRelPath) {
+      let pathParts = aRelPath.split("/");
+      for (let i = 0; i < pathParts.length; i++) {
+        if (pathParts[i]) {
+          file.append(pathParts[i]);
+        }
+      }
+    }
+    if (!aAllowNonexistent && !file.exists()) {
+      do_throw(file.path + " does not exist");
+    }
+    return file;
+  }
+
+  let relpath = getApplyDirPath() + DIR_UPDATED + "/" + (aRelPath ? aRelPath : "");
   return do_get_file(relpath, aAllowNonexistent);
 }
 
@@ -1224,16 +1256,33 @@ function getTestDirFile(aRelPath) {
   return do_get_file(relpath, false);
 }
 
-/**
- * Helper function for getting the directory that was updated. This can either
- * be the directory where the application binary is located or the directory
- * that contains the staged update.
- */
-function getUpdatedDirPath() {
-  return getApplyDirPath() + (gStageUpdate ? DIR_UPDATED +  "/" : "");
+#ifdef XP_WIN
+function getSpecialFolderDir(aCSIDL) {
+  AUS_Cu.import("resource://gre/modules/ctypes.jsm");
+  let lib = ctypes.open("shell32");
+  let SHGetSpecialFolderPath = lib.declare("SHGetSpecialFolderPathW",
+                                           ctypes.winapi_abi,
+                                           ctypes.bool, /* bool(return) */
+                                           ctypes.int32_t, /* HWND hwndOwner */
+                                           ctypes.char16_t.ptr, /* LPTSTR lpszPath */
+                                           ctypes.int32_t, /* int csidl */
+                                           ctypes.bool /* BOOL fCreate */);
+
+  let aryPath = ctypes.char16_t.array()(260);
+  let rv = SHGetSpecialFolderPath(0, aryPath, aCSIDL, false);
+  lib.close();
+
+  let path = aryPath.readString(); // Convert the c-string to js-string
+  if (!path) {
+    return null;
+  }
+  logTestInfo("SHGetSpecialFolderPath returned path: " + path);
+  let dir = AUS_Cc["@mozilla.org/file/local;1"].
+            createInstance(AUS_Ci.nsILocalFile);
+  dir.initWithPath(path);
+  return dir;
 }
 
-#ifdef XP_WIN
 XPCOMUtils.defineLazyGetter(this, "gInstallDirPathHash",
                             function test_gInstallDirPathHash() {
   // Figure out where we should check for a cached hash value
@@ -1271,51 +1320,13 @@ XPCOMUtils.defineLazyGetter(this, "gInstallDirPathHash",
 XPCOMUtils.defineLazyGetter(this, "gLocalAppDataDir",
                             function test_gLocalAppDataDir() {
   const CSIDL_LOCAL_APPDATA = 0x1c;
-
-  AUS_Cu.import("resource://gre/modules/ctypes.jsm");
-  let lib = ctypes.open("shell32");
-  let SHGetSpecialFolderPath = lib.declare("SHGetSpecialFolderPathW",
-                                           ctypes.winapi_abi,
-                                           ctypes.bool, /* bool(return) */
-                                           ctypes.int32_t, /* HWND hwndOwner */
-                                           ctypes.char16_t.ptr, /* LPTSTR lpszPath */
-                                           ctypes.int32_t, /* int csidl */
-                                           ctypes.bool /* BOOL fCreate */);
-
-  let aryPathLocalAppData = ctypes.char16_t.array()(260);
-  let rv = SHGetSpecialFolderPath(0, aryPathLocalAppData, CSIDL_LOCAL_APPDATA, false);
-  lib.close();
-
-  let pathLocalAppData = aryPathLocalAppData.readString(); // Convert the c-string to js-string
-  let updatesDir = AUS_Cc["@mozilla.org/file/local;1"].
-                   createInstance(AUS_Ci.nsILocalFile);
-  updatesDir.initWithPath(pathLocalAppData);
-  return updatesDir;
+  return getSpecialFolderDir(CSIDL_LOCAL_APPDATA);
 });
 
 XPCOMUtils.defineLazyGetter(this, "gProgFilesDir",
                             function test_gProgFilesDir() {
   const CSIDL_PROGRAM_FILES = 0x26;
-
-  AUS_Cu.import("resource://gre/modules/ctypes.jsm");
-  let lib = ctypes.open("shell32");
-  let SHGetSpecialFolderPath = lib.declare("SHGetSpecialFolderPathW",
-                                           ctypes.winapi_abi,
-                                           ctypes.bool, /* bool(return) */
-                                           ctypes.int32_t, /* HWND hwndOwner */
-                                           ctypes.char16_t.ptr, /* LPTSTR lpszPath */
-                                           ctypes.int32_t, /* int csidl */
-                                           ctypes.bool /* BOOL fCreate */);
-
-  let aryPathProgFiles = ctypes.char16_t.array()(260);
-  let rv = SHGetSpecialFolderPath(0, aryPathProgFiles, CSIDL_PROGRAM_FILES, false);
-  lib.close();
-
-  let pathProgFiles = aryPathProgFiles.readString(); // Convert the c-string to js-string
-  let progFilesDir = AUS_Cc["@mozilla.org/file/local;1"].
-                     createInstance(AUS_Ci.nsILocalFile);
-  progFilesDir.initWithPath(pathProgFiles);
-  return progFilesDir;
+  return getSpecialFolderDir(CSIDL_PROGRAM_FILES);
 });
 
 /**
@@ -1330,13 +1341,13 @@ function getMockUpdRootD() {
   let appDir = Services.dirsvc.get(XRE_EXECUTABLE_FILE, AUS_Ci.nsIFile).parent;
 
   let appDirPath = appDir.path;
-  var relPathUpdates = "";
+  let relPathUpdates = "";
   if (gInstallDirPathHash && (MOZ_APP_VENDOR || MOZ_APP_BASENAME)) {
     relPathUpdates += (MOZ_APP_VENDOR ? MOZ_APP_VENDOR : MOZ_APP_BASENAME) +
                       "\\" + DIR_UPDATES + "\\" + gInstallDirPathHash;
   }
 
-  if (!relPathUpdates) {
+  if (!relPathUpdates && progFilesDir) {
     if (appDirPath.length > progFilesDir.path.length) {
       if (appDirPath.substr(0, progFilesDir.path.length) == progFilesDir.path) {
         if (MOZ_APP_VENDOR && MOZ_APP_BASENAME) {
@@ -1358,9 +1369,42 @@ function getMockUpdRootD() {
     relPathUpdates += "\\" + MOZ_APP_NAME;
   }
 
-  var updatesDir = AUS_Cc["@mozilla.org/file/local;1"].
+  let updatesDir = AUS_Cc["@mozilla.org/file/local;1"].
                    createInstance(AUS_Ci.nsILocalFile);
   updatesDir.initWithPath(localAppDataDir.path + "\\" + relPathUpdates);
+  logTestInfo("returning UpdRootD Path: " + updatesDir.path);
+  return updatesDir;
+}
+#elif XP_MACOSX
+XPCOMUtils.defineLazyGetter(this, "gUpdatesRootDir",
+                            function test_gUpdatesRootDir() {
+  let dir = Services.dirsvc.get("ULibDir", AUS_Ci.nsILocalFile);
+  dir.append("Caches");
+  if (MOZ_APP_VENDOR || MOZ_APP_BASENAME) {
+    dir.append(MOZ_APP_VENDOR ? MOZ_APP_VENDOR : MOZ_APP_BASENAME);
+  } else {
+    dir.append("Mozilla");
+  }
+  dir.append(DIR_UPDATES);
+  return dir;
+});
+
+/**
+ * Helper function for getting the update root directory used by the tests. This
+ * returns the same directory as returned by nsXREDirProvider::GetUpdateRootDir
+ * in nsXREDirProvider.cpp so an application will be able to find the update
+ * when running a test that launches the application.
+ */
+function getMockUpdRootD() {
+  let appDir = Services.dirsvc.get(XRE_EXECUTABLE_FILE, AUS_Ci.nsIFile).
+               parent.parent.parent;
+  let appDirPath = appDir.path;
+  appDirPath = appDirPath.substr(0, appDirPath.length - 4);
+
+  let pathUpdates = gUpdatesRootDir.path + appDirPath;
+  let updatesDir = AUS_Cc["@mozilla.org/file/local;1"].
+                   createInstance(AUS_Ci.nsILocalFile);
+  updatesDir.initWithPath(pathUpdates);
   logTestInfo("returning UpdRootD Path: " + updatesDir.path);
   return updatesDir;
 }
@@ -1375,30 +1419,6 @@ function getMockUpdRootD() {
   return getApplyDirFile(DIR_BIN_REL_PATH, true);
 }
 #endif
-
-/**
- * Helper function for getting the nsIFile for the directory where the update
- * has been applied.
- *
- * This will be the same as getApplyDirFile for foreground updates, but will
- * point to a different file for the case of staged updates.
- *
- * Functions which attempt to access the files in the updated directory should
- * be using this instead of getApplyDirFile.
- *
- * @param   aRelPath (optional)
- *          The relative path to the file or directory to get from the root of
- *          the test's directory. If not specified the test's directory will be
- *          returned.
- * @param   aAllowNonexistent (optional)
- *          Whether the file must exist. If false or not specified the file must
- *          exist or the function will throw.
- * @return  The nsIFile for the directory where the update has been applied.
- */
-function getTargetDirFile(aRelPath, aAllowNonexistent) {
-  let relpath = getUpdatedDirPath() + (aRelPath ? aRelPath : "");
-  return do_get_file(relpath, aAllowNonexistent);
-}
 
 if (IS_WIN) {
   const kLockFileName = "updated.update_in_progress.lock";
@@ -1453,7 +1473,7 @@ if (IS_WIN) {
  */
 function runUpdate(aExpectedExitValue, aExpectedStatus, aCallback) {
   // Copy the updater binary to the updates directory.
-  let binDir = gGREDirOrig.clone();
+  let binDir = gAppDirOrig.clone();
   let updater = binDir.clone();
   updater.append("updater.app");
   if (!updater.exists()) {
@@ -1479,24 +1499,30 @@ function runUpdate(aExpectedExitValue, aExpectedStatus, aCallback) {
 
   let applyToDir = getApplyDirFile(null, true);
   let applyToDirPath = applyToDir.path;
-  if (gStageUpdate || gSwitchApp) {
-    applyToDirPath += "/" + DIR_UPDATED + "/";
-  }
+
+  let stageDir = getStageDirFile(null, true);
+  let stageDirPath = stageDir.path;
 
   if (IS_WIN) {
     // Convert to native path
     applyToDirPath = applyToDirPath.replace(/\//g, "\\");
+    stageDirPath = stageDirPath.replace(/\//g, "\\");
   }
 
-  let callbackApp = getApplyDirFile("a/b/" + gCallbackBinFile);
+  let callbackApp = getApplyDirFile(DIR_RESOURCES + gCallbackBinFile);
   callbackApp.permissions = PERMS_DIRECTORY;
 
-  let args = [updatesDir.path, applyToDirPath, 0];
+  let args = [updatesDir.path, applyToDirPath];
   if (gStageUpdate) {
-    args[2] = -1;
+    args[2] = stageDirPath;
+    args[3] = -1;
   } else {
     if (gSwitchApp) {
-      args[2] = "0/replace";
+      args[2] = stageDirPath;
+      args[3] = "0/replace";
+    } else {
+      args[2] = applyToDirPath;
+      args[3] = "0";
     }
     args = args.concat([callbackApp.parent.path, callbackApp.path]);
     args = args.concat(gCallbackArgs);
@@ -1570,14 +1596,15 @@ function stageUpdate() {
  *
  * @param  aFirstTest
  *         Whether this is the first test within the test.
+ * @param  aSkipTest
+ *         Whether to skip this test if the installed maintenance service
+ *         isn't the same as the build's maintenance service. This is a
+ *         temporary workaround until all build systems grant write access to
+ *         the maintenance service install directory so the tests can copy the
+ *         version of the maintenance service that should be tests.
  * @return true if the test should run and false if it shouldn't.
  */
-function shouldRunServiceTest(aFirstTest) {
-  // In case the machine is running an old maintenance service or if it
-  // is not installed, and permissions exist to install it.  Then install
-  // the newer bin that we have.
-  attemptServiceInstall();
-
+function shouldRunServiceTest(aFirstTest, aSkipTest) {
   let binDir = getGREDir();
   let updaterBin = binDir.clone();
   updaterBin.append(FILE_UPDATER_BIN);
@@ -1643,7 +1670,11 @@ function shouldRunServiceTest(aFirstTest) {
     do_throw("this test can only run on builds with signed binaries.");
   }
 #endif
-  return true;
+
+  // In case the machine is running an old maintenance service or if it
+  // is not installed, and permissions exist to install it. Then install
+  // the newer bin that we have since all of the other checks passed.
+  return attemptServiceInstall(aSkipTest);
 }
 
 /**
@@ -1692,11 +1723,11 @@ function setupAppFilesAsync() {
 
 /**
  * Helper function for setting up the application files required to launch the
- * application for the updater tests by either copying or creating symlinks for
+ * application for the updater tests by either copying or creating symlinks to
  * the files.
  */
 function setupAppFiles() {
-  logTestInfo("start - copying or creating symlinks for application files " +
+  logTestInfo("start - copying or creating symlinks to application files " +
               "for the test");
 
   let srcDir = getCurrentProcessDir();
@@ -1713,12 +1744,19 @@ function setupAppFiles() {
 
   // Required files for the application or the test that aren't listed in the
   // dependentlibs.list file.
-  let fileRelPaths = [FILE_APP_BIN, FILE_UPDATER_BIN,
-                      "application.ini", "dependentlibs.list"];
+  let fileRelPaths = [ { src: FILE_APP_BIN },
+                       { src: FILE_UPDATER_BIN} ];
+  if (IS_MACOSX) {
+    fileRelPaths.push( { src: "../Resources/application.ini", dst: "../Resources/application.ini" } );
+    fileRelPaths.push( { src: "../Resources/dependentlibs.list", dst: "../Resources/dependentlibs.list" } );
+  } else {
+    fileRelPaths.push( { src: "application.ini" } );
+    fileRelPaths.push( { src: "dependentlibs.list" } );
+  }
 
   // On Linux the updater.png must also be copied
   if (IS_UNIX && !IS_MACOSX) {
-    fileRelPaths.push("icons/updater.png");
+    fileRelPaths.push( { src: "icons/updater.png" } );
   }
 
   // Read the dependent libs file leafnames from the dependentlibs.list file
@@ -1734,16 +1772,17 @@ function setupAppFiles() {
   let line = {};
   do {
     hasMore = istream.readLine(line);
-    fileRelPaths.push(line.value);
+    fileRelPaths.push( { src: line.value } );
   } while(hasMore);
 
   istream.close();
 
   fileRelPaths.forEach(function CMAF_FLN_FE(aFileRelPath) {
-    copyFileToTestAppDir(aFileRelPath);
+    copyFileToTestAppDir(aFileRelPath.src, aFileRelPath.dst ? aFileRelPath.dst
+                                                            : null);
   });
 
-  logTestInfo("finish - copying or creating symlinks for application files " +
+  logTestInfo("finish - copying or creating symlinks to application files " +
               "for the test");
 }
 
@@ -1753,10 +1792,12 @@ function setupAppFiles() {
  *
  * @param  aFileRelPath
  *         The relative path of the file to copy.
+ * @param  aDestFileRelPath (optional)
+ *         The relative path of the destination file.
  */
-function copyFileToTestAppDir(aFileRelPath) {
+function copyFileToTestAppDir(aFileRelPath, aDestFileRelPath) {
   let fileRelPath = aFileRelPath;
-  let srcFile = gGREDirOrig.clone();
+  let srcFile = gAppDirOrig.clone();
   let pathParts = fileRelPath.split("/");
   for (let i = 0; i < pathParts.length; i++) {
     if (pathParts[i]) {
@@ -1768,7 +1809,7 @@ function copyFileToTestAppDir(aFileRelPath) {
     logTestInfo("unable to copy file since it doesn't exist! Checking if " +
                  fileRelPath + ".app exists. Path: " +
                  srcFile.path);
-    srcFile = gGREDirOrig.clone();
+    srcFile = gAppDirOrig.clone();
     for (let i = 0; i < pathParts.length; i++) {
       if (pathParts[i]) {
         srcFile.append(pathParts[i] + (pathParts.length - 1 == i ? ".app" : ""));
@@ -1787,7 +1828,9 @@ function copyFileToTestAppDir(aFileRelPath) {
   let shouldSymlink = (pathParts[pathParts.length - 1] == "XUL" ||
                        fileRelPath.substr(fileRelPath.length - 3) == ".so" ||
                        fileRelPath.substr(fileRelPath.length - 6) == ".dylib");
-  let destFile = getApplyDirFile(DIR_BIN_REL_PATH + fileRelPath, true);
+  let destFile = getApplyDirFile(DIR_BIN_REL_PATH +
+                                 (aDestFileRelPath ? aDestFileRelPath
+                                                   : fileRelPath), true);
   if (!shouldSymlink) {
     if (!destFile.exists()) {
       try {
@@ -1831,27 +1874,86 @@ function copyFileToTestAppDir(aFileRelPath) {
  * This is useful for XP where we have permission to upgrade in case an
  * older service installer exists.  Also if the user manually installed into
  * a unprivileged location.
+ *
+ * @param  aSkipTest
+ *         Whether to skip this test if the installed maintenance service
+ *         isn't the same as the build's maintenance service. This is a
+ *         temporary workaround until all build systems grant write access to
+ *         the maintenance service install directory so the tests can copy the
+ *         version of the maintenance service that should be tests.
  */
-function attemptServiceInstall() {
-  var version = AUS_Cc["@mozilla.org/system-info;1"]
-                .getService(AUS_Ci.nsIPropertyBag2)
-                .getProperty("version");
-  var isVistaOrHigher = (parseFloat(version) >= 6.0);
-  if (isVistaOrHigher) {
-    return;
+function attemptServiceInstall(aSkipTest) {
+  const CSIDL_PROGRAM_FILES = 0x26;
+  const CSIDL_PROGRAM_FILESX86 = 0x2A;
+  // This will return an empty string on our Win XP build systems.
+  let maintSvcDir = getSpecialFolderDir(CSIDL_PROGRAM_FILESX86);
+  if (maintSvcDir) {
+    maintSvcDir.append("Mozilla Maintenance Service");
+    logTestInfo("using CSIDL_PROGRAM_FILESX86 - maintenance service install " +
+                "directory path: " + maintSvcDir.path);
+  }
+  if (!maintSvcDir || !maintSvcDir.exists()) {
+    maintSvcDir = getSpecialFolderDir(CSIDL_PROGRAM_FILES);
+    if (maintSvcDir) {
+      maintSvcDir.append("Mozilla Maintenance Service");
+      logTestInfo("using CSIDL_PROGRAM_FILES - maintenance service install " +
+                  "directory path: " + maintSvcDir.path);
+    }
+  }
+  if (!maintSvcDir || !maintSvcDir.exists()) {
+    do_throw("maintenance service install directory doesn't exist!");
+  }
+  let oldMaintSvcBin = maintSvcDir.clone();
+  oldMaintSvcBin.append(FILE_MAINTENANCE_SERVICE_BIN);
+  if (!oldMaintSvcBin.exists()) {
+    do_throw("maintenance service install directory binary doesn't exist! " +
+             "Path: " + oldMaintSvcBin.path);
+  }
+  let buildMaintSvcBin = getGREDir();
+  buildMaintSvcBin.append(FILE_MAINTENANCE_SERVICE_BIN);
+  if (readFileBytes(oldMaintSvcBin) == readFileBytes(buildMaintSvcBin)) {
+    logTestInfo("installed maintenance service binary is the same as the " +
+                "build's maintenance service binary");
+    return true;
+  }
+  let backupMaintSvcBin = maintSvcDir.clone();
+  backupMaintSvcBin.append(FILE_MAINTENANCE_SERVICE_BIN + ".backup");
+  try {
+    if (backupMaintSvcBin.exists()) {
+      backupMaintSvcBin.remove(false);
+    }
+    oldMaintSvcBin.moveTo(maintSvcDir, FILE_MAINTENANCE_SERVICE_BIN + ".backup");
+    buildMaintSvcBin.copyTo(maintSvcDir, FILE_MAINTENANCE_SERVICE_BIN);
+    backupMaintSvcBin.remove(false);
+    return true;
+  } catch (e) {
+    // Restore the original file in case the moveTo was successful.
+    if (backupMaintSvcBin.exists()) {
+      oldMaintSvcBin = maintSvcDir.clone();
+      oldMaintSvcBin.append(FILE_MAINTENANCE_SERVICE_BIN);
+      if (!oldMaintSvcBin.exists()) {
+        backupMaintSvcBin.moveTo(maintSvcDir, FILE_MAINTENANCE_SERVICE_BIN);
+      }
+    }
+    logTestInfo("unable to copy new maintenance service into the " +
+                "maintenance service directory: " + maintSvcDir.path + ", " +
+                "Exception: " + e);
   }
 
-  let binDir = getGREDir();
-  let installerFile = binDir.clone();
-  installerFile.append(FILE_MAINTENANCE_SERVICE_INSTALLER_BIN);
-  if (!installerFile.exists()) {
-    do_throw(FILE_MAINTENANCE_SERVICE_INSTALLER_BIN + " not found.");
+  let version = AUS_Cc["@mozilla.org/system-info;1"].
+                getService(AUS_Ci.nsIPropertyBag2).
+                getProperty("version");
+  var isWin7OrBelow = (parseFloat(version) <= 6.1);
+  // The account running the tests on Win XP and Win 7 build systems have write
+  // access to the maintenance service directory so throw if copying the
+  // maintenance service binary fails. This should always throw after write
+  // access is provided on all Windows build slaves in bug 1067756.
+  if (isWin7OrBelow) {
+    do_throw("The account running the tests on Win 7 and below build systems " +
+             "should have write access to the maintenance service directory!");
   }
-  let installerProcess = AUS_Cc["@mozilla.org/process/util;1"].
-                         createInstance(AUS_Ci.nsIProcess);
-  installerProcess.init(installerFile);
-  logTestInfo("starting installer process...");
-  installerProcess.run(true, [], 0);
+
+  return aSkipTest ? false : true;
 }
 
 /**
@@ -1862,8 +1964,8 @@ function attemptServiceInstall() {
  *        The initial value of update.status.
  * @param aExpectedStatus
  *        The expected value of update.status when the test finishes.
- * @param aCheckSvcLog
- *        Whether the service log should be checked (optional).
+ * @param aCheckSvcLog (optional)
+ *        Whether the service log should be checked.
  */
 function runUpdateUsingService(aInitialStatus, aExpectedStatus, aCheckSvcLog) {
   // Check the service logs for a successful update
@@ -1968,7 +2070,6 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus, aCheckSvcLog) {
   gServiceLaunchedCallbackLog = appArgsLogPath.replace(/^"|"$/g, "");
 
   let updatesDir = getUpdatesPatchDir();
-  let file = updatesDir.clone();
   writeStatusFile(aInitialStatus);
 
   // sanity check
@@ -2095,7 +2196,7 @@ function waitForHelperSleep() {
   gTimeoutRuns++;
   // Give the lock file process time to lock the file before updating otherwise
   // this test can fail intermittently on Windows debug builds.
-  let output = getApplyDirFile("a/b/output", true);
+  let output = getApplyDirFile(DIR_RESOURCES + "output", true);
   if (readFile(output) != "sleeping\n") {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
       do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the helper to " +
@@ -2127,7 +2228,7 @@ function waitForHelperSleep() {
 function waitForHelperFinished() {
   // Give the lock file process time to lock the file before updating otherwise
   // this test can fail intermittently on Windows debug builds.
-  let output = getApplyDirFile("a/b/output", true);
+  let output = getApplyDirFile(DIR_RESOURCES + "output", true);
   if (readFile(output) != "finished\n") {
     do_timeout(TEST_HELPER_TIMEOUT, waitForHelperFinished);
     return;
@@ -2143,11 +2244,11 @@ function waitForHelperFinished() {
  */
 function waitForHelperFinishFileUnlock() {
   try {
-    let output = getApplyDirFile("a/b/output", true);
+    let output = getApplyDirFile(DIR_RESOURCES + "output", true);
     if (output.exists()) {
       output.remove(false);
     }
-    let input = getApplyDirFile("a/b/input", true);
+    let input = getApplyDirFile(DIR_RESOURCES + "input", true);
     if (input.exists()) {
       input.remove(false);
     }
@@ -2164,7 +2265,7 @@ function waitForHelperFinishFileUnlock() {
  * Helper function to tell the helper to finish and exit its sleep state.
  */
 function setupHelperFinish() {
-  let input = getApplyDirFile("a/b/input", true);
+  let input = getApplyDirFile(DIR_RESOURCES + "input", true);
   writeFile(input, "finish\n");
   waitForHelperFinished();
 }
@@ -2176,7 +2277,7 @@ function setupHelperFinish() {
  * @param   aMarFile
  *          The mar file for the update test.
  */
-function setupUpdaterTest(aMarFile, aUpdatedDirExists, aToBeDeletedDirExists) {
+function setupUpdaterTest(aMarFile) {
   let updatesPatchDir = getUpdatesPatchDir();
   if (!updatesPatchDir.exists()) {
     updatesPatchDir.create(AUS_Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
@@ -2185,10 +2286,8 @@ function setupUpdaterTest(aMarFile, aUpdatedDirExists, aToBeDeletedDirExists) {
   let mar = getTestDirFile(aMarFile);
   mar.copyToFollowingLinks(updatesPatchDir, FILE_UPDATE_ARCHIVE);
 
-  createUpdateSettingsINI();
-
   let helperBin = getTestDirFile(FILE_HELPER_BIN);
-  let afterApplyBinDir = getApplyDirFile("a/b/", true);
+  let afterApplyBinDir = getApplyDirFile(DIR_RESOURCES, true);
   helperBin.copyToFollowingLinks(afterApplyBinDir, gCallbackBinFile);
   helperBin.copyToFollowingLinks(afterApplyBinDir, gPostUpdateBinFile);
 
@@ -2258,9 +2357,6 @@ function setupUpdaterTest(aMarFile, aUpdatedDirExists, aToBeDeletedDirExists) {
       });
     }
   });
-
-  gTestExtraDirs[0].dirExists = aUpdatedDirExists;
-  gTestExtraDirs[1].dirExists = IS_WIN ? aToBeDeletedDirExists : false;
 }
 
 /**
@@ -2271,7 +2367,7 @@ function createUpdateSettingsINI() {
   let updateSettingsIni = getApplyDirFile(null, true);
   if (IS_MACOSX) {
     updateSettingsIni.append("Contents");
-    updateSettingsIni.append("MacOS");
+    updateSettingsIni.append("Resources");
   }
   updateSettingsIni.append(FILE_UPDATE_SETTINGS_INI);
   writeFile(updateSettingsIni, UPDATE_SETTINGS_CONTENTS);
@@ -2300,15 +2396,15 @@ function createUpdaterINI(aIsExeAsync) {
   }
 
   let updaterIniContents = "[PostUpdateMac]\n" +
-                           "ExeRelPath=a/b/" + gPostUpdateBinFile + "\n" +
+                           "ExeRelPath=" + DIR_RESOURCES + gPostUpdateBinFile + "\n" +
                            exeArg +
                            exeAsync +
                            "\n" +
                            "[PostUpdateWin]\n" +
-                           "ExeRelPath=a/b/" + gPostUpdateBinFile + "\n" +
+                           "ExeRelPath=" + gPostUpdateBinFile + "\n" +
                            exeArg +
                            exeAsync;
-  let updaterIni = getApplyDirFile((IS_MACOSX ? "Contents/MacOS/" : "") +
+  let updaterIni = getApplyDirFile((IS_MACOSX ? "Contents/Resources/" : "") +
                                     FILE_UPDATER_INI, true);
   writeFile(updaterIni, updaterIniContents);
 }
@@ -2319,8 +2415,15 @@ function createUpdaterINI(aIsExeAsync) {
  *
  * @param   aCompareLogFile
  *          The log file to compare the update log with.
+ * @param   aExcludeDistributionDir
+ *          Removes lines containing the distribution directory from the log
+ *          file to compare the update log with.
  */
-function checkUpdateLogContents(aCompareLogFile) {
+function checkUpdateLogContents(aCompareLogFile, aExcludeDistributionDir) {
+  if (IS_UNIX && !IS_MACOSX) {
+    // Sorting on Linux is different so skip checking the logs for now.
+    return;
+  }
   let updateLog = getUpdatesPatchDir();
   updateLog.append(FILE_UPDATE_LOG);
   let updateLogContents = readFileBytes(updateLog);
@@ -2328,14 +2431,14 @@ function checkUpdateLogContents(aCompareLogFile) {
   // The channel-prefs.js is defined in gTestFilesCommon which will always be
   // located to the end of gTestFiles.
   if (gTestFiles.length > 1 &&
-	  gTestFiles[gTestFiles.length - 1].fileName == "channel-prefs.js" &&
-	  !gTestFiles[gTestFiles.length - 1].originalContents) {
-    updateLogContents = updateLogContents.replace(/.* a\/b\/defaults\/.*/g, "");
+      gTestFiles[gTestFiles.length - 1].fileName == "channel-prefs.js" &&
+      !gTestFiles[gTestFiles.length - 1].originalContents) {
+    updateLogContents = updateLogContents.replace(/.*defaults\/.*/g, "");
   }
   if (gTestFiles.length > 2 &&
-	  gTestFiles[gTestFiles.length - 2].fileName == FILE_UPDATE_SETTINGS_INI &&
-	  !gTestFiles[gTestFiles.length - 2].originalContents) {
-    updateLogContents = updateLogContents.replace(/.* a\/b\/update-settings.ini.*/g, "");
+      gTestFiles[gTestFiles.length - 2].fileName == FILE_UPDATE_SETTINGS_INI &&
+      !gTestFiles[gTestFiles.length - 2].originalContents) {
+    updateLogContents = updateLogContents.replace(/.*update-settings.ini.*/g, "");
   }
   if (gStageUpdate) {
     // Skip the staged update messages
@@ -2346,20 +2449,19 @@ function checkUpdateLogContents(aCompareLogFile) {
     updateLogContents = updateLogContents.replace(/Performing a replace request/, "");
   }
   // Skip the source/destination lines since they contain absolute paths.
-  updateLogContents = updateLogContents.replace(/SOURCE DIRECTORY.*/g, "");
-  updateLogContents = updateLogContents.replace(/DESTINATION DIRECTORY.*/g, "");
+  updateLogContents = updateLogContents.replace(/PATCH DIRECTORY.*/g, "");
+  updateLogContents = updateLogContents.replace(/INSTALLATION DIRECTORY.*/g, "");
+  updateLogContents = updateLogContents.replace(/WORKING DIRECTORY.*/g, "");
   // Skip lines that log failed attempts to open the callback executable.
   updateLogContents = updateLogContents.replace(/NS_main: callback app file .*/g, "");
+  if (IS_MACOSX) {
+    // Skip lines that log moving the distribution directory for Mac v2 signing.
+    updateLogContents = updateLogContents.replace(/Moving old [^\n]*\nrename_file: .*/g, "");
+    updateLogContents = updateLogContents.replace(/New distribution directory .*/g, "");
+  }
   if (gSwitchApp) {
     // Remove the lines which contain absolute paths
     updateLogContents = updateLogContents.replace(/^Begin moving.*$/mg, "");
-    if (IS_MACOSX) {
-      // Remove the entire section about moving the precomplete file as it contains
-      // absolute paths.
-      updateLogContents = updateLogContents.replace(/\n/g, "%%%EOL%%%");
-      updateLogContents = updateLogContents.replace(/Moving the precomplete file.*Finished moving the precomplete file/, "");
-      updateLogContents = updateLogContents.replace(/%%%EOL%%%/g, "\n");
-    }
   }
   updateLogContents = updateLogContents.replace(/\r/g, "");
   // Replace error codes since they are different on each platform.
@@ -2368,7 +2470,7 @@ function checkUpdateLogContents(aCompareLogFile) {
   updateLogContents = updateLogContents.replace(/non-fatal error /g, "");
   // The FindFile results when enumerating the filesystem on Windows is not
   // determistic so the results matching the following need to be ignored.
-  updateLogContents = updateLogContents.replace(/.* a\/b\/7\/7text.*\n/g, "");
+  updateLogContents = updateLogContents.replace(/.*7\/7text.*\n/g, "");
   // Remove consecutive newlines
   updateLogContents = updateLogContents.replace(/\n+/g, "\n");
   // Remove leading and trailing newlines
@@ -2387,14 +2489,17 @@ function checkUpdateLogContents(aCompareLogFile) {
   // The channel-prefs.js is defined in gTestFilesCommon which will always be
   // located to the end of gTestFiles.
   if (gTestFiles.length > 1 &&
-	  gTestFiles[gTestFiles.length - 1].fileName == "channel-prefs.js" &&
-	  !gTestFiles[gTestFiles.length - 1].originalContents) {
-    compareLogContents = compareLogContents.replace(/.* a\/b\/defaults\/.*/g, "");
+      gTestFiles[gTestFiles.length - 1].fileName == "channel-prefs.js" &&
+      !gTestFiles[gTestFiles.length - 1].originalContents) {
+    compareLogContents = compareLogContents.replace(/.*defaults\/.*/g, "");
   }
   if (gTestFiles.length > 2 &&
-	  gTestFiles[gTestFiles.length - 2].fileName == FILE_UPDATE_SETTINGS_INI &&
-	  !gTestFiles[gTestFiles.length - 2].originalContents) {
-    compareLogContents = compareLogContents.replace(/.* a\/b\/update-settings.ini.*/g, "");
+      gTestFiles[gTestFiles.length - 2].fileName == FILE_UPDATE_SETTINGS_INI &&
+      !gTestFiles[gTestFiles.length - 2].originalContents) {
+    compareLogContents = compareLogContents.replace(/.*update-settings.ini.*/g, "");
+  }
+  if (aExcludeDistributionDir) {
+    compareLogContents = compareLogContents.replace(/.*distribution\/.*/g, "");
   }
   // Remove leading and trailing newlines
   compareLogContents = compareLogContents.replace(/\n+/g, "\n");
@@ -2435,12 +2540,23 @@ function checkUpdateLogContains(aCheckString) {
 /**
  * Helper function for updater binary tests for verifying the state of files and
  * directories after a successful update.
+ *
+ * @param  aGetFileFunc
+ *         The function used to get the files in the directory to be checked.
+ * @param  aStageDirExists
+ *         If true the staging directory will be tested for existence and if
+ *         false the staging directory will be tested for non-existence.
+ * @param  aToBeDeletedDirExists
+ *         On Windows, if true the tobedeleted directory will be tested for
+ *         existence and if false the tobedeleted directory will be tested for
+ *         non-existence. On all othere platforms it will be tested for
+ *         non-existence.
  */
-function checkFilesAfterUpdateSuccess() {
+function checkFilesAfterUpdateSuccess(aGetFileFunc, aStageDirExists,
+                                      aToBeDeletedDirExists) {
   logTestInfo("testing contents of files after a successful update");
   gTestFiles.forEach(function CFAUS_TF_FE(aTestFile) {
-    let testFile = getTargetDirFile(aTestFile.relPathDir + aTestFile.fileName,
-                                    true);
+    let testFile = aGetFileFunc(aTestFile.relPathDir + aTestFile.fileName, true);
     logTestInfo("testing file: " + testFile.path);
     if (aTestFile.compareFile || aTestFile.compareContents) {
       do_check_true(testFile.exists());
@@ -2482,7 +2598,7 @@ function checkFilesAfterUpdateSuccess() {
   logTestInfo("testing operations specified in removed-files were performed " +
               "after a successful update");
   gTestDirs.forEach(function CFAUS_TD_FE(aTestDir) {
-    let testDir = getTargetDirFile(aTestDir.relPathDir, true);
+    let testDir = aGetFileFunc(aTestDir.relPathDir, true);
     logTestInfo("testing directory: " + testDir.path);
     if (aTestDir.dirRemoved) {
       do_check_false(testDir.exists());
@@ -2491,7 +2607,7 @@ function checkFilesAfterUpdateSuccess() {
 
       if (aTestDir.files) {
         aTestDir.files.forEach(function CFAUS_TD_F_FE(aTestFile) {
-          let testFile = getTargetDirFile(aTestDir.relPathDir + aTestFile, true);
+          let testFile = aGetFileFunc(aTestDir.relPathDir + aTestFile, true);
           logTestInfo("testing directory file: " + testFile.path);
           if (aTestDir.filesRemoved) {
             do_check_false(testFile.exists());
@@ -2503,12 +2619,13 @@ function checkFilesAfterUpdateSuccess() {
 
       if (aTestDir.subDirs) {
         aTestDir.subDirs.forEach(function CFAUS_TD_SD_FE(aSubDir) {
-          let testSubDir = getTargetDirFile(aTestDir.relPathDir + aSubDir, true);
+          let testSubDir = aGetFileFunc(aTestDir.relPathDir + aSubDir, true);
           logTestInfo("testing sub-directory: " + testSubDir.path);
           do_check_true(testSubDir.exists());
           if (aTestDir.subDirFiles) {
             aTestDir.subDirFiles.forEach(function CFAUS_TD_SDF_FE(aTestFile) {
-              let testFile = getTargetDirFile(aTestDir.relPathDir + aSubDir + aTestFile, true);
+              let testFile = aGetFileFunc(aTestDir.relPathDir +
+                                          aSubDir + aTestFile, true);
               logTestInfo("testing sub-directory file: " + testFile.path);
               do_check_true(testFile.exists());
             });
@@ -2518,21 +2635,30 @@ function checkFilesAfterUpdateSuccess() {
     }
   });
 
-  checkFilesAfterUpdateCommon();
+  checkFilesAfterUpdateCommon(aGetFileFunc, aStageDirExists,
+                              aToBeDeletedDirExists);
 }
 
 /**
  * Helper function for updater binary tests for verifying the state of files and
  * directories after a failed update.
  *
- * @param aGetDirectory: the function used to get the files in the target directory.
- * Pass getApplyDirFile if you want to test the case of a failed switch request.
+ * @param aGetFileFunc
+ *        the function used to get the files in the directory to be checked.
+ * @param  aStageDirExists
+ *         If true the staging directory will be tested for existence and if
+ *         false the staging directory will be tested for non-existence.
+ * @param  aToBeDeletedDirExists
+ *         On Windows, if true the tobedeleted directory will be tested for
+ *         existence and if false the tobedeleted directory will be tested for
+ *         non-existence. On all othere platforms it will be tested for
+ *         non-existence.
  */
-function checkFilesAfterUpdateFailure(aGetDirectory) {
-  let getdir = aGetDirectory || getTargetDirFile;
+function checkFilesAfterUpdateFailure(aGetFileFunc, aStageDirExists,
+                                      aToBeDeletedDirExists) {
   logTestInfo("testing contents of files after a failed update");
   gTestFiles.forEach(function CFAUF_TF_FE(aTestFile) {
-    let testFile = getdir(aTestFile.relPathDir + aTestFile.fileName, true);
+    let testFile = aGetFileFunc(aTestFile.relPathDir + aTestFile.fileName, true);
     logTestInfo("testing file: " + testFile.path);
     if (aTestFile.compareFile || aTestFile.compareContents) {
       do_check_true(testFile.exists());
@@ -2574,13 +2700,13 @@ function checkFilesAfterUpdateFailure(aGetDirectory) {
   logTestInfo("testing operations specified in removed-files were not " +
               "performed after a failed update");
   gTestDirs.forEach(function CFAUF_TD_FE(aTestDir) {
-    let testDir = getdir(aTestDir.relPathDir, true);
+    let testDir = aGetFileFunc(aTestDir.relPathDir, true);
     logTestInfo("testing directory: " + testDir.path);
     do_check_true(testDir.exists());
 
     if (aTestDir.files) {
       aTestDir.files.forEach(function CFAUS_TD_F_FE(aTestFile) {
-        let testFile = getdir(aTestDir.relPathDir + aTestFile, true);
+        let testFile = aGetFileFunc(aTestDir.relPathDir + aTestFile, true);
         logTestInfo("testing directory file: " + testFile.path);
         do_check_true(testFile.exists());
       });
@@ -2588,13 +2714,13 @@ function checkFilesAfterUpdateFailure(aGetDirectory) {
 
     if (aTestDir.subDirs) {
       aTestDir.subDirs.forEach(function CFAUS_TD_SD_FE(aSubDir) {
-        let testSubDir = getdir(aTestDir.relPathDir + aSubDir, true);
+        let testSubDir = aGetFileFunc(aTestDir.relPathDir + aSubDir, true);
         logTestInfo("testing sub-directory: " + testSubDir.path);
         do_check_true(testSubDir.exists());
         if (aTestDir.subDirFiles) {
           aTestDir.subDirFiles.forEach(function CFAUS_TD_SDF_FE(aTestFile) {
-            let testFile = getdir(aTestDir.relPathDir + aSubDir + aTestFile,
-                                  true);
+            let testFile = aGetFileFunc(aTestDir.relPathDir +
+                                        aSubDir + aTestFile, true);
             logTestInfo("testing sub-directory file: " + testFile.path);
             do_check_true(testFile.exists());
           });
@@ -2603,42 +2729,65 @@ function checkFilesAfterUpdateFailure(aGetDirectory) {
     }
   });
 
-  checkFilesAfterUpdateCommon();
+  checkFilesAfterUpdateCommon(aGetFileFunc, aStageDirExists,
+                              aToBeDeletedDirExists);
 }
 
 /**
  * Helper function for updater binary tests for verifying the state of common
  * files and directories after a successful or failed update.
+ *
+ * @param aGetFileFunc
+ *        the function used to get the files in the directory to be checked.
+ * @param  aStageDirExists
+ *         If true the staging directory will be tested for existence and if
+ *         false the staging directory will be tested for non-existence.
+ * @param  aToBeDeletedDirExists
+ *         On Windows, if true the tobedeleted directory will be tested for
+ *         existence and if false the tobedeleted directory will be tested for
+ *         non-existence. On all othere platforms it will be tested for
+ *         non-existence.
  */
-function checkFilesAfterUpdateCommon() {
+function checkFilesAfterUpdateCommon(aGetFileFunc, aStageDirExists,
+                                     aToBeDeletedDirExists) {
   logTestInfo("testing extra directories");
-  gTestExtraDirs.forEach(function CFAUC_TED_FE(aTestExtraDir) {
-    let testDir = getTargetDirFile(aTestExtraDir.relPathDir, true);
-    logTestInfo("testing directory: " + testDir.path);
-    if (aTestExtraDir.dirExists) {
-      do_check_true(testDir.exists());
-    } else {
-      do_check_false(testDir.exists());
-    }
-  });
+
+  let stageDir = getStageDirFile(null, true);
+  logTestInfo("testing directory should " +
+              (aStageDirExists ? "" : "not ") +
+              "exist: " + stageDir.path);
+  do_check_eq(stageDir.exists(), aStageDirExists);
+
+  let toBeDeletedDirExists = IS_WIN ? aToBeDeletedDirExists : false;
+  let toBeDeletedDir = getApplyDirFile(DIR_TOBEDELETED, true);
+  logTestInfo("testing directory should " +
+              (toBeDeletedDirExists ? "" : "not ") +
+              "exist: " + toBeDeletedDir.path);
+  do_check_eq(toBeDeletedDir.exists(), toBeDeletedDirExists);
 
   logTestInfo("testing updating directory doesn't exist in the application " +
-	          "directory");
-  let updatingDir = getTargetDirFile("updating", true);
+              "directory");
+  let updatingDir = getApplyDirFile("updating", true);
   do_check_false(updatingDir.exists());
 
-  if (gStageUpdate) {
-    logTestInfo("testing updating directory doesn't exist in the updated " +
-		        "directory");
-    updatingDir = getApplyDirFile("updating", true);
-    do_check_false(updatingDir.exists());
-
-    // This should never exist since the update was applied to the updated
-	// directory and the files should never be in use.
-    logTestInfo("testing tobedeleted directory doesn't exist in the updated " +
+  if (stageDir.exists()) {
+    logTestInfo("testing updating directory doesn't exist in the staging " +
                 "directory");
-    let toBeDeletedDir = getApplyDirFile(DIR_TOBEDELETED, true);
-    do_check_false(toBeDeletedDir.exists());
+    updatingDir = stageDir.clone();
+    updatingDir.append("updating");
+    do_check_false(updatingDir.exists());
+  }
+
+  logTestInfo("testing backup files should not be left behind in the " +
+              "application directory");
+  let applyToDir = getApplyDirFile(null, true);
+  checkFilesInDirRecursive(applyToDir, checkForBackupFiles);
+
+  if (stageDir.exists()) {
+    logTestInfo("testing backup files should not be left behind in the " +
+                "staging directory");
+    let applyToDir = getApplyDirFile(null, true);
+    checkFilesInDirRecursive(stageDir, checkForBackupFiles);
   }
 
   logTestInfo("testing patch files should not be left behind");
@@ -2648,10 +2797,6 @@ function checkFilesAfterUpdateCommon() {
     let entry = entries.getNext().QueryInterface(AUS_Ci.nsIFile);
     do_check_neq(getFileExtension(entry), "patch");
   }
-
-  logTestInfo("testing backup files should not be left behind");
-  let applyToDir = getTargetDirFile(null, true);
-  checkFilesInDirRecursive(applyToDir, checkForBackupFiles);
 }
 
 /**
@@ -2660,7 +2805,7 @@ function checkFilesAfterUpdateCommon() {
  * the callback application.
  */
 function checkCallbackAppLog() {
-  let appLaunchLog = getApplyDirFile("a/b/" + gCallbackArgs[1], true);
+  let appLaunchLog = getApplyDirFile(DIR_RESOURCES + gCallbackArgs[1], true);
   if (!appLaunchLog.exists()) {
     do_timeout(TEST_HELPER_TIMEOUT, checkCallbackAppLog);
     return;
@@ -2697,7 +2842,7 @@ function checkCallbackAppLog() {
  *          The string to append to the post update test helper binary path.
  */
 function getPostUpdateFile(aSuffix) {
-  return getApplyDirFile("a/b/" + gPostUpdateBinFile + aSuffix, true);
+  return getApplyDirFile(DIR_RESOURCES + gPostUpdateBinFile + aSuffix, true);
 }
 
 /**
@@ -2708,7 +2853,7 @@ function checkPostUpdateAppLog() {
   gTimeoutRuns++;
   let postUpdateLog = getPostUpdateFile(".log");
   if (!postUpdateLog.exists()) {
-    logTestInfo("postUpdateLog does not exist");
+    logTestInfo("postUpdateLog does not exist. Path: " + postUpdateLog.path);
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
       do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the post update " +
                "process to create the post update log. Path: " +
