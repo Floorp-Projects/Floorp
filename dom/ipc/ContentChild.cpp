@@ -19,6 +19,7 @@
 #include "TabChild.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/a11y/DocAccessibleChild.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/ContentBridgeChild.h"
 #include "mozilla/dom/ContentBridgeParent.h"
@@ -705,6 +706,20 @@ ContentChild::InitXPCOM()
     sysMsgObserver->Init();
 
     InitOnContentProcessCreated();
+}
+
+a11y::PDocAccessibleChild*
+ContentChild::AllocPDocAccessibleChild(PDocAccessibleChild*, const uint64_t&)
+{
+  MOZ_ASSERT(false, "should never call this!");
+  return nullptr;
+}
+
+bool
+ContentChild::DeallocPDocAccessibleChild(a11y::PDocAccessibleChild* aChild)
+{
+  delete static_cast<mozilla::a11y::DocAccessibleChild*>(aChild);
+  return true;
 }
 
 PMemoryReportRequestChild*

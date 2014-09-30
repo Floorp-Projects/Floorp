@@ -464,17 +464,24 @@ let EventTargetParent = {
         continue;
       }
       let forType = setDefault(listeners, type, []);
+
+      // Make a copy in case they call removeEventListener in the listener.
+      let handlers = [];
       for (let {listener, wantsUntrusted, useCapture} of forType) {
         if ((wantsUntrusted || isTrusted) && useCapture == capturing) {
-          try {
-            if ("handleEvent" in listener) {
-              listener.handleEvent(event);
-            } else {
-              listener.call(event.target, event);
-            }
-          } catch (e) {
-            Cu.reportError(e);
+          handlers.push(listener);
+        }
+      }
+
+      for (let handler of handlers) {
+        try {
+          if ("handleEvent" in handler) {
+            handler.handleEvent(event);
+          } else {
+            handler.call(event.target, event);
           }
+        } catch (e) {
+          Cu.reportError(e);
         }
       }
     }
@@ -580,6 +587,22 @@ let SandboxParent = {
       .rootTreeItem
       .QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIContentFrameMessageManager);
+
+    if (rest.length) {
+      // Do a shallow copy of the options object into the child
+      // process. This way we don't have to access it through a Chrome
+      // object wrapper, which would require __exposedProps__.
+      //
+      // The only object property here is sandboxPrototype. We assume
+      // it's a child process object (since that's what Greasemonkey
+      // does) and leave it alone.
+      let options = rest[0];
+      let optionsCopy = new chromeGlobal.Object();
+      for (let prop in options) {
+        optionsCopy[prop] = options[prop];
+      }
+      rest[0] = optionsCopy;
+    }
 
     // Make a sandbox in the child.
     let cu = chromeGlobal.Components.utils;
