@@ -818,15 +818,16 @@ public:
     virtual gfxFloat GetUnderlineOffset();
 
     virtual already_AddRefed<gfxFont>
-        FindFontForChar(uint32_t ch, uint32_t prevCh, int32_t aRunScript,
-                        gfxFont *aPrevMatchedFont,
+        FindFontForChar(uint32_t ch, uint32_t prevCh, uint32_t aNextCh,
+                        int32_t aRunScript, gfxFont *aPrevMatchedFont,
                         uint8_t *aMatchType);
 
     // search through pref fonts for a character, return nullptr if no matching pref font
     virtual already_AddRefed<gfxFont> WhichPrefFontSupportsChar(uint32_t aCh);
 
-    virtual already_AddRefed<gfxFont>
-        WhichSystemFontSupportsChar(uint32_t aCh, int32_t aRunScript);
+    already_AddRefed<gfxFont>
+        WhichSystemFontSupportsChar(uint32_t aCh, uint32_t aNextCh,
+                                    int32_t aRunScript);
 
     template<typename T>
     void ComputeRanges(nsTArray<gfxTextRange>& mRanges,
