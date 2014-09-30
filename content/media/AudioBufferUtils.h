@@ -121,6 +121,11 @@ public:
     aBuffer.WriteFrames(mBuffer, framesToWrite);
 
     mPosition -= FramesToSamples(CHANNELS, framesToWrite);
+    // If we didn't empty the spill buffer for some reason, shift the remaining data down
+    if (mPosition > 0) {
+      PodMove(mBuffer, mBuffer + FramesToSamples(CHANNELS, framesToWrite),
+              mPosition);
+    }
 
     return framesToWrite;
   }
