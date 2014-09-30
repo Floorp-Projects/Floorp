@@ -262,7 +262,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       if (message.name == "child-process-shutdown") {
         this.removePeerTarget(message.target);
         this.nfc.removeTarget(message.target);
-        this.removeEventTarget(msg.target);
+        this.removeEventTarget(message.target);
         return null;
       }
 
