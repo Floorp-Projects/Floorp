@@ -1236,6 +1236,10 @@ struct TypeObject : public gc::TenuredCell
         return offsetof(TypeObject, proto_);
     }
 
+    static inline uint32_t offsetOfNewScript() {
+        return offsetof(TypeObject, newScript_);
+    }
+
   private:
     inline uint32_t basePropertyCount() const;
     inline void setBasePropertyCount(uint32_t count);
