@@ -54,6 +54,7 @@ const RX_PSEUDO = /\s*:?:([\w-]+)(\(?\)?)\s*/g;
 // on the worker thread, where Cu is not available.
 if (Cu) {
   Cu.importGlobalProperties(['CSS']);
+  Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
 }
 
 function CssLogic()
@@ -179,8 +180,7 @@ CssLogic.prototype = {
 
     this._matchedRules = null;
     this._matchedSelectors = null;
-    let win = this.viewedDocument.defaultView;
-    this._computedStyle = win.getComputedStyle(this.viewedElement, "");
+    this._computedStyle = CssLogic.getComputedStyle(this.viewedElement);
   },
 
   /**
@@ -615,14 +615,19 @@ CssLogic.prototype = {
                    CssLogic.STATUS.MATCHED : CssLogic.STATUS.PARENT_MATCH;
 
       try {
-        domRules = domUtils.getCSSStyleRules(element);
+        // Handle finding rules on pseudo by reading style rules
+        // on the parent node with proper pseudo arg to getCSSStyleRules.
+        let {bindingElement, pseudo} = CssLogic.getBindingElementAndPseudo(element);
+        domRules = domUtils.getCSSStyleRules(bindingElement, pseudo);
       } catch (ex) {
         Services.console.
           logStringMessage("CL__buildMatchedRules error: " + ex);
         continue;
       }
 
-      for (let i = 0, n = domRules.Count(); i < n; i++) {
+      // getCSSStyleRules can return null with a shadow DOM element.
+      let numDomRules = domRules ? domRules.Count() : 0;
+      for (let i = 0; i < numDomRules; i++) {
         let domRule = domRules.GetElementAt(i);
         if (domRule.type !== Ci.nsIDOMCSSRule.STYLE_RULE) {
           continue;
@@ -755,6 +760,56 @@ CssLogic.getSelectors = function CssLogic_getSelectors(aDOMRule)
 }
 
 /**
+ * Given a node, check to see if it is a ::before or ::after element.
+ * If so, return the node that is accessible from within the document
+ * (the parent of the anonymous node), along with which pseudo element
+ * it was.  Otherwise, return the node itself.
+ *
+ * @returns {Object}
+ *            - {DOMNode} node The non-anonymous node
+ *            - {string} pseudo One of ':before', ':after', or null.
+ */
+CssLogic.getBindingElementAndPseudo = function(node)
+{
+  let bindingElement = node;
+  let pseudo = null;
+  if (node.nodeName == "_moz_generated_content_before") {
+    bindingElement = node.parentNode;
+    pseudo = ":before";
+  } else if (node.nodeName == "_moz_generated_content_after") {
+    bindingElement = node.parentNode;
+    pseudo = ":after";
+  }
+  return {
+    bindingElement: bindingElement,
+    pseudo: pseudo
+  };
+};
+
+
+/**
+ * Get the computed style on a node.  Automatically handles reading
+ * computed styles on a ::before/::after element by reading on the
+ * parent node with the proper pseudo argument.
+ *
+ * @param {Node}
+ * @returns {CSSStyleDeclaration}
+ */
+CssLogic.getComputedStyle = function(node)
+{
+  if (!node ||
+      Cu.isDeadWrapper(node) ||
+      node.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE ||
+      !node.ownerDocument ||
+      !node.ownerDocument.defaultView) {
+    return null;
+  }
+
+  let {bindingElement, pseudo} = CssLogic.getBindingElementAndPseudo(node);
+  return node.ownerDocument.defaultView.getComputedStyle(bindingElement, pseudo);
+};
+
+/**
  * Memonized lookup of a l10n string from a string bundle.
  * @param {string} aName The key to lookup.
  * @returns A localized version of the given key.
@@ -860,8 +915,9 @@ function positionInNodeList(element, nodeList) {
  * and ele.ownerDocument.querySelectorAll(reply).length === 1
  */
 CssLogic.findCssSelector = function CssLogic_findCssSelector(ele) {
+  ele = LayoutHelpers.getRootBindingParent(ele);
   var document = ele.ownerDocument;
-  if (!document.contains(ele)) {
+  if (!document || !document.contains(ele)) {
     throw new Error('findCssSelector received element not inside document');
   }
 

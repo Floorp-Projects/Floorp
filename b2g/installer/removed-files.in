@@ -1,24 +1,45 @@
-README.txt
-@DLL_PREFIX@mozutils@DLL_SUFFIX@
-jssubloader/
+# Due to Apple Mac OS X packaging requirements files that are in the same
+# directory on other platforms must be located in different directories on
+# Mac OS X. The following defines allow specifying the Mac OS X bundle
+# location which also work on other platforms.
+#
+# @DIR_MACOS@
+# Equals Contents/MacOS/ on Mac OX X and is an empty string on other platforms.
+#
+# @DIR_RESOURCES@
+# Equals Contents/Resources/ on Mac OX X and is an empty string on other
+# platforms.
+
+# Mac OS X v2 signing removals
 #ifdef XP_MACOSX
-run-mozilla.sh
+  @DIR_MACOS@active-update.xml
+  @DIR_MACOS@update-settings.ini
+  @DIR_MACOS@updates.xml
+  @DIR_MACOS@defaults/*
+  @DIR_MACOS@updates/*
+#endif
+
+@DIR_MACOS@README.txt
+@DIR_MACOS@@DLL_PREFIX@mozutils@DLL_SUFFIX@
+@DIR_MACOS@jssubloader/
+#ifdef XP_MACOSX
+@DIR_MACOS@run-mozilla.sh
 #endif
 #ifdef XP_WIN
   mozcrt19.dll
   mozcpp19.dll
 #endif
-defaults/preferences/services-sync.js
-defaults/preferences/healthreport-prefs.js
-components/dom_sms.xpt
-components/dom_webspeech.xpt
+@DIR_MACOS@defaults/preferences/services-sync.js
+@DIR_MACOS@defaults/preferences/healthreport-prefs.js
+@DIR_MACOS@components/dom_sms.xpt
+@DIR_MACOS@components/dom_webspeech.xpt
 #ifdef MOZ_FOLD_LIBS
-@DLL_PREFIX@nspr4@DLL_SUFFIX@
-@DLL_PREFIX@plds4@DLL_SUFFIX@
-@DLL_PREFIX@plc4@DLL_SUFFIX@
-@DLL_PREFIX@ssl3@DLL_SUFFIX@
-@DLL_PREFIX@smime3@DLL_SUFFIX@
-@DLL_PREFIX@nssutil3@DLL_SUFFIX@
-@DLL_PREFIX@mozsqlite3@DLL_SUFFIX@
+@DIR_MACOS@@DLL_PREFIX@nspr4@DLL_SUFFIX@
+@DIR_MACOS@@DLL_PREFIX@plds4@DLL_SUFFIX@
+@DIR_MACOS@@DLL_PREFIX@plc4@DLL_SUFFIX@
+@DIR_MACOS@@DLL_PREFIX@ssl3@DLL_SUFFIX@
+@DIR_MACOS@@DLL_PREFIX@smime3@DLL_SUFFIX@
+@DIR_MACOS@@DLL_PREFIX@nssutil3@DLL_SUFFIX@
+@DIR_MACOS@@DLL_PREFIX@mozsqlite3@DLL_SUFFIX@
 #endif
-@DLL_PREFIX@xpcom@DLL_SUFFIX@
+@DIR_MACOS@@DLL_PREFIX@xpcom@DLL_SUFFIX@
