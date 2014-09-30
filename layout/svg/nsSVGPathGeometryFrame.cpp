@@ -620,7 +620,7 @@ nsSVGPathGeometryFrame::Render(nsRenderingContext *aContext,
     return;
   }
 
-  uint16_t renderMode = SVGAutoRenderState::GetRenderMode(aContext);
+  uint16_t renderMode = SVGAutoRenderState::GetRenderMode(aContext->GetDrawTarget());
   FillRule fillRule =
     nsSVGUtils::ToFillRule(renderMode == SVGAutoRenderState::CLIP_MASK ?
                              StyleSVG()->mClipRule : StyleSVG()->mFillRule);

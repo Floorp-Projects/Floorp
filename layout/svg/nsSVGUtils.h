@@ -61,6 +61,7 @@ class Element;
 class UserSpaceMetrics;
 } // namespace dom
 namespace gfx {
+class DrawTarget;
 class GeneralPattern;
 class SourceSurface;
 }
@@ -145,6 +146,8 @@ private:
 
 class MOZ_STACK_CLASS SVGAutoRenderState
 {
+  typedef mozilla::gfx::DrawTarget DrawTarget;
+
 public:
   enum RenderMode {
     /**
@@ -160,18 +163,18 @@ public:
     CLIP_MASK 
   };
 
-  SVGAutoRenderState(nsRenderingContext *aContext, RenderMode aMode
+  SVGAutoRenderState(DrawTarget* aDrawTarget, RenderMode aMode
                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
   ~SVGAutoRenderState();
 
   void SetPaintingToWindow(bool aPaintingToWindow);
 
-  static RenderMode GetRenderMode(nsRenderingContext *aContext);
-  static bool IsPaintingToWindow(nsRenderingContext *aContext);
+  static RenderMode GetRenderMode(DrawTarget* aDrawTarget);
+  static bool IsPaintingToWindow(DrawTarget* aDrawTarget);
 
 private:
-  nsRenderingContext *mContext;
-  void *mOriginalRenderState;
+  DrawTarget* mDrawTarget;
+  void* mOriginalRenderState;
   RenderMode mMode;
   bool mPaintingToWindow;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
