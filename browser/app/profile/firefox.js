@@ -1730,3 +1730,5 @@ pref("experiments.supported", true);
 
 // Enable the OpenH264 plugin support in the addon manager.
 pref("media.gmp-gmpopenh264.provider.enabled", true);
+
+pref("browser.apps.URL", "https://marketplace.firefox.com/discovery/");

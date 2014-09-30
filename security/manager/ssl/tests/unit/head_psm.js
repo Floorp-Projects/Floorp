@@ -361,7 +361,9 @@ function _setupTLSServerTest(serverBinName)
   let envSvc = Cc["@mozilla.org/process/environment;1"]
                  .getService(Ci.nsIEnvironment);
   let greDir = directoryService.get("GreD", Ci.nsIFile);
-  envSvc.set("DYLD_LIBRARY_PATH", greDir.path);
+  let macOSDir = greDir.parent;
+  macOSDir.append("MacOS");
+  envSvc.set("DYLD_LIBRARY_PATH", macOSDir.path);
   envSvc.set("LD_LIBRARY_PATH", greDir.path);
   envSvc.set("MOZ_TLS_SERVER_DEBUG_LEVEL", "3");
   envSvc.set("MOZ_TLS_SERVER_CALLBACK_PORT", CALLBACK_PORT);

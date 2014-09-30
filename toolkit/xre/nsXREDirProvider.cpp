@@ -231,7 +231,7 @@ nsXREDirProvider::GetUserProfilesLocalDir(nsIFile** aResult,
 
 NS_IMETHODIMP
 nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
-			  nsIFile** aFile)
+                          nsIFile** aFile)
 {
   nsresult rv;
 
@@ -373,9 +373,9 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
   }
   else if (!strcmp(aProperty, XRE_APP_DISTRIBUTION_DIR)) {
     bool persistent = false;
-    rv = GetFile(XRE_EXECUTABLE_FILE, &persistent, getter_AddRefs(file));
+    rv = GetFile(NS_GRE_DIR, &persistent, getter_AddRefs(file));
     if (NS_SUCCEEDED(rv))
-      rv = file->SetNativeLeafName(NS_LITERAL_CSTRING("distribution"));
+      rv = file->AppendNative(NS_LITERAL_CSTRING("distribution"));
   }
   else if (NS_SUCCEEDED(GetProfileStartupDir(getter_AddRefs(file)))) {
     // We need to allow component, xpt, and chrome registration to
@@ -1031,8 +1031,42 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
   rv = appFile->GetParent(getter_AddRefs(updRoot));
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef XP_WIN
+#ifdef XP_MACOSX
+  nsCOMPtr<nsIFile> appRootDirFile;
+  nsCOMPtr<nsIFile> localDir;
+  nsAutoString appDirPath;
+  if (NS_FAILED(appFile->GetParent(getter_AddRefs(appRootDirFile))) ||
+      NS_FAILED(appRootDirFile->GetPath(appDirPath)) ||
+      NS_FAILED(GetUserDataDirectoryHome(getter_AddRefs(localDir), true))) {
+    return NS_ERROR_FAILURE;
+  }
 
+  int32_t dotIndex = appDirPath.RFind(".app");
+  if (dotIndex == kNotFound) {
+    dotIndex = appDirPath.Length();
+  }
+  appDirPath = Substring(appDirPath, 1, dotIndex - 1);
+
+  bool hasVendor = gAppData->vendor && strlen(gAppData->vendor) != 0;
+  if (hasVendor || gAppData->name) {
+    if (NS_FAILED(localDir->AppendNative(nsDependentCString(hasVendor ?
+                                           gAppData->vendor :
+                                           gAppData->name)))) {
+      return NS_ERROR_FAILURE;
+    }
+  } else if (NS_FAILED(localDir->AppendNative(NS_LITERAL_CSTRING("Mozilla")))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NS_FAILED(localDir->Append(NS_LITERAL_STRING("updates"))) ||
+      NS_FAILED(localDir->AppendRelativePath(appDirPath))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_ADDREF(*aResult = localDir);
+  return NS_OK;
+
+#elif XP_WIN
   nsAutoString pathHash;
   bool pathHashResult = false;
   bool hasVendor = gAppData->vendor && strlen(gAppData->vendor) != 0;
@@ -1121,7 +1155,7 @@ nsXREDirProvider::GetUpdateRootDir(nsIFile* *aResult)
   rv = updRoot->AppendRelativePath(programName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-#endif
+#endif // XP_WIN
 #endif
   NS_ADDREF(*aResult = updRoot);
   return NS_OK;

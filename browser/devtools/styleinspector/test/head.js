@@ -163,19 +163,25 @@ let selectAndHighlightNode = Task.async(function*(selector, inspector) {
   yield updated;
 });
 
-/**
- * Set the inspector's current selection to a node that matches the given css
- * selector.
- * @param {String} selector
- * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+/*
+ * Set the inspector's current selection to a node or to the first match of the
+ * given css selector.
+ * @param {String|NodeFront}
+ *        data The node to select
+ * @param {InspectorPanel} inspector
+ *        The instance of InspectorPanel currently
  * loaded in the toolbox
- * @param {String} reason Defaults to "test" which instructs the inspector not
- * to highlight the node upon selection
+ * @param {String} reason
+ *        Defaults to "test" which instructs the inspector not
+ *        to highlight the node upon selection
  * @return {Promise} Resolves when the inspector is updated with the new node
  */
-let selectNode = Task.async(function*(selector, inspector, reason="test") {
-  info("Selecting the node for '" + selector + "'");
-  let nodeFront = yield getNodeFront(selector, inspector);
+let selectNode = Task.async(function*(data, inspector, reason="test") {
+  info("Selecting the node for '" + data + "'");
+  let nodeFront = data;
+  if (!data._form) {
+    nodeFront = yield getNodeFront(data, inspector);
+  }
   let updated = inspector.once("inspector-updated");
   inspector.selection.setNodeFront(nodeFront, reason);
   yield updated;

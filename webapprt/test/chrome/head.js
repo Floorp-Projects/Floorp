@@ -40,7 +40,7 @@ function loadWebapp(manifest, parameters, onLoad) {
     let { DOMApplicationRegistry } = Cu.import("resource://gre/modules/Webapps.jsm", {});
 
     return new Promise(function(resolve, reject) {
-      DOMApplicationRegistry.uninstall(url.spec, () => {
+      DOMApplicationRegistry.uninstall(url.spec).then(() => {
         // Load another page in the browser element, this is needed for tests
         // that use the same app (that have the same URL).
         gAppBrowser.setAttribute("src", "about:blank");

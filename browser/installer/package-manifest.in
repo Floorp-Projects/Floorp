@@ -23,10 +23,9 @@
 ; Mac bundle stuff
 @APPNAME@/Contents/Info.plist
 @APPNAME@/Contents/PkgInfo
-@APPNAME@/Contents/Resources/
-#ifdef MOZ_SIGNING
-@APPNAME@/Contents/_CodeSignature/CodeResources
-#endif
+@APPNAME@/Contents/Resources/firefox.icns
+@APPNAME@/Contents/Resources/document.icns
+@APPNAME@/Contents/Resources/en.lproj/*
 #endif
 
 [@AB_CD@]
@@ -55,15 +54,31 @@
 #ifdef GKMEDIAS_SHARED_LIBRARY
 @BINPATH@/@DLL_PREFIX@gkmedias@DLL_SUFFIX@
 #endif
+#ifdef XP_MACOSX
+@APPNAME@/Contents/MacOS/@DLL_PREFIX@mozalloc@DLL_SUFFIX@
+#else
 @BINPATH@/@DLL_PREFIX@mozalloc@DLL_SUFFIX@
+#endif
 #ifdef MOZ_SHARED_MOZGLUE
+#ifdef XP_MACOSX
+@APPNAME@/Contents/MacOS/@DLL_PREFIX@mozglue@DLL_SUFFIX@
+#else
 @BINPATH@/@DLL_PREFIX@mozglue@DLL_SUFFIX@
 #endif
+#endif
 #ifndef MOZ_STATIC_JS
+#ifdef XP_MACOSX
+@APPNAME@/Contents/MacOS/@DLL_PREFIX@mozjs@DLL_SUFFIX@
+#else
 @BINPATH@/@DLL_PREFIX@mozjs@DLL_SUFFIX@
 #endif
+#endif
 #ifdef MOZ_DMD
+#ifdef XP_MACOSX
+@APPNAME@/Contents/MacOS/@DLL_PREFIX@dmd@DLL_SUFFIX@
+#else
 @BINPATH@/@DLL_PREFIX@dmd@DLL_SUFFIX@
+#endif
 #endif
 #ifndef MOZ_NATIVE_NSPR
 #ifndef MOZ_FOLD_LIBS
@@ -73,13 +88,13 @@
 #endif
 #endif
 #ifdef XP_MACOSX
-@BINPATH@/XUL
+@APPNAME@/Contents/MacOS/XUL
 #else
 @BINPATH@/@DLL_PREFIX@xul@DLL_SUFFIX@
 #endif
 #ifdef XP_MACOSX
-@BINPATH@/@MOZ_CHILD_PROCESS_NAME@.app/
-@BINPATH@/@DLL_PREFIX@plugin_child_interpose@DLL_SUFFIX@
+@APPNAME@/Contents/MacOS/@MOZ_CHILD_PROCESS_NAME@.app/
+@APPNAME@/Contents/MacOS/@DLL_PREFIX@plugin_child_interpose@DLL_SUFFIX@
 #else
 @BINPATH@/@MOZ_CHILD_PROCESS_NAME@
 #endif
@@ -109,7 +124,11 @@
 #endif
 #ifdef MOZ_REPLACE_MALLOC
 #ifndef MOZ_JEMALLOC3
+#ifdef XP_MACOSX
+@APPNAME@/Contents/MacOS/@DLL_PREFIX@replace_jemalloc@DLL_SUFFIX@
+#else
 @BINPATH@/@DLL_PREFIX@replace_jemalloc@DLL_SUFFIX@
+#endif
 #endif
 #endif
 #ifdef MOZ_GTK3
@@ -121,6 +140,9 @@
 ; [Base Browser Files]
 #ifndef XP_UNIX
 @BINPATH@/@MOZ_APP_NAME@.exe
+#elif XP_MACOSX
+@APPNAME@/Contents/MacOS/@MOZ_APP_NAME@-bin
+@APPNAME@/Contents/MacOS/@MOZ_APP_NAME@
 #else
 @BINPATH@/@MOZ_APP_NAME@-bin
 @BINPATH@/@MOZ_APP_NAME@
@@ -741,18 +763,32 @@
 ; meaning their .chk files are created there directly.
 ;
 #ifndef MOZ_NATIVE_NSS
+#ifdef XP_MACOSX
+@APPNAME@/Contents/MacOS/@DLL_PREFIX@freebl3@DLL_SUFFIX@
+@APPNAME@/Contents/MacOS/@DLL_PREFIX@nss3@DLL_SUFFIX@
+@APPNAME@/Contents/MacOS/@DLL_PREFIX@nssckbi@DLL_SUFFIX@
+#else
 @BINPATH@/@DLL_PREFIX@freebl3@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@nss3@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@nssckbi@DLL_SUFFIX@
+#endif
 #ifndef NSS_DISABLE_DBM
+#ifdef XP_MACOSX
+@APPNAME@/Contents/MacOS/@DLL_PREFIX@nssdbm3@DLL_SUFFIX@
+#else
 @BINPATH@/@DLL_PREFIX@nssdbm3@DLL_SUFFIX@
+#endif
 #endif
 #ifndef MOZ_FOLD_LIBS
 @BINPATH@/@DLL_PREFIX@nssutil3@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@smime3@DLL_SUFFIX@
 @BINPATH@/@DLL_PREFIX@ssl3@DLL_SUFFIX@
 #endif
+#ifdef XP_MACOSX
+@APPNAME@/Contents/MacOS/@DLL_PREFIX@softokn3@DLL_SUFFIX@
+#else
 @BINPATH@/@DLL_PREFIX@softokn3@DLL_SUFFIX@
+#endif
 #endif
 @BINPATH@/chrome/pippki@JAREXT@
 @BINPATH@/chrome/pippki.manifest
@@ -780,7 +816,7 @@ bin/libfreebl_32int64_3.so
 ;
 #ifdef MOZ_UPDATER
 #ifdef XP_MACOSX
-@BINPATH@/updater.app/
+@APPNAME@/Contents/MacOS/updater.app/
 #else
 @BINPATH@/updater@BIN_SUFFIX@
 #endif
@@ -800,7 +836,7 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/components/CrashService.js
 @BINPATH@/components/toolkit_crashservice.xpt
 #ifdef XP_MACOSX
-@BINPATH@/crashreporter.app/
+@APPNAME@/Contents/MacOS/crashreporter.app/
 #else
 @BINPATH@/crashreporter@BIN_SUFFIX@
 @BINPATH@/crashreporter.ini
@@ -819,7 +855,11 @@ bin/libfreebl_32int64_3.so
 #ifdef XP_WIN
 @BINPATH@/webapp-uninstaller@BIN_SUFFIX@
 #endif
+#ifdef XP_MACOSX
+@APPNAME@/Contents/MacOS/webapprt-stub@BIN_SUFFIX@
+#else
 @BINPATH@/webapprt-stub@BIN_SUFFIX@
+#endif
 @BINPATH@/webapprt/webapprt.ini
 @BINPATH@/webapprt/chrome.manifest
 @BINPATH@/webapprt/chrome/webapprt@JAREXT@
