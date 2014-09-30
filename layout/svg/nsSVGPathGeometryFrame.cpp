@@ -302,18 +302,15 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const gfxPoint& aPoint)
     Point point = ToPoint(aPoint);
     SVGContentUtils::AutoStrokeOptions stroke;
     SVGContentUtils::GetStrokeOptions(&stroke, content, StyleContext(), nullptr);
-    Matrix nonScalingStrokeMatrix = ToMatrix(nsSVGUtils::GetStrokeTransform(this));
-    if (!nonScalingStrokeMatrix.IsIdentity()) {
+    gfxMatrix userToOuterSVG;
+    if (nsSVGUtils::GetNonScalingStrokeTransform(this, &userToOuterSVG)) {
       // We need to transform the path back into the appropriate ancestor
       // coordinate system in order for non-scaled stroke to be correct.
       // Naturally we also need to transform the point into the same
       // coordinate system in order to hit-test against the path.
-      if (!nonScalingStrokeMatrix.Invert()) {
-        return nullptr;
-      }
-      point = nonScalingStrokeMatrix * point;
+      point = ToMatrix(userToOuterSVG) * point;
       RefPtr<PathBuilder> builder =
-        path->TransformedCopyToBuilder(nonScalingStrokeMatrix, fillRule);
+        path->TransformedCopyToBuilder(ToMatrix(userToOuterSVG), fillRule);
       path = builder->Finish();
     }
     isHit = path->StrokeContainsPoint(stroke, point, Matrix());
@@ -677,15 +674,15 @@ nsSVGPathGeometryFrame::Render(gfxContext* aContext,
   if ((aRenderComponents & eRenderStroke) &&
       nsSVGUtils::HasStroke(this, contextPaint)) {
     // Account for vector-effect:non-scaling-stroke:
-    gfxMatrix strokeTransform = nsSVGUtils::GetStrokeTransform(this);
-    if (!strokeTransform.IsIdentity()) {
+    gfxMatrix userToOuterSVG;
+    if (nsSVGUtils::GetNonScalingStrokeTransform(this, &userToOuterSVG)) {
       // We need to transform the path back into the appropriate ancestor
       // coordinate system, and paint it it that coordinate system, in order
       // for non-scaled stroke to paint correctly.
-      aContext->Multiply(strokeTransform);
-      Matrix moz2DstrokeTransform = ToMatrix(strokeTransform); // inverse of Thebes
-      moz2DstrokeTransform.Invert();
-      builder = path->TransformedCopyToBuilder(moz2DstrokeTransform, fillRule);
+      gfxMatrix outerSVGToUser = userToOuterSVG;
+      outerSVGToUser.Invert();
+      aContext->Multiply(outerSVGToUser);
+      builder = path->TransformedCopyToBuilder(ToMatrix(userToOuterSVG), fillRule);
       path = builder->Finish();
     }
     GeneralPattern strokePattern;

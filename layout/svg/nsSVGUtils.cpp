@@ -1119,31 +1119,26 @@ nsSVGUtils::GetFirstNonAAncestorFrame(nsIFrame* aStartFrame)
   return nullptr;
 }
 
-gfxMatrix
-nsSVGUtils::GetStrokeTransform(nsIFrame *aFrame)
+bool
+nsSVGUtils::GetNonScalingStrokeTransform(nsIFrame *aFrame,
+                                         gfxMatrix* aUserToOuterSVG)
 {
   if (aFrame->GetContent()->IsNodeOfType(nsINode::eTEXT)) {
     aFrame = aFrame->GetParent();
   }
 
-  if (aFrame->StyleSVGReset()->mVectorEffect ==
-      NS_STYLE_VECTOR_EFFECT_NON_SCALING_STROKE) {
- 
-    nsIContent *content = aFrame->GetContent();
-    NS_ABORT_IF_FALSE(content->IsSVG(), "bad cast");
-
-    // a non-scaling stroke is in the screen co-ordinate
-    // space rather so we need to invert the transform
-    // to the screen co-ordinate space to get there.
-    // See http://www.w3.org/TR/SVGTiny12/painting.html#NonScalingStroke
-    gfx::Matrix transform = SVGContentUtils::GetCTM(
-                              static_cast<nsSVGElement*>(content), true);
-    if (!transform.IsSingular()) {
-      transform.Invert();
-      return ThebesMatrix(transform);
-    }
+  if (aFrame->StyleSVGReset()->mVectorEffect !=
+        NS_STYLE_VECTOR_EFFECT_NON_SCALING_STROKE) {
+    return false;
   }
-  return gfxMatrix();
+
+  nsIContent *content = aFrame->GetContent();
+  NS_ABORT_IF_FALSE(content->IsSVG(), "bad cast");
+
+  *aUserToOuterSVG = ThebesMatrix(SVGContentUtils::GetCTM(
+                       static_cast<nsSVGElement*>(content), true));
+
+  return !aUserToOuterSVG->IsIdentity();
 }
 
 // The logic here comes from _cairo_stroke_style_max_distance_from_path
@@ -1156,7 +1151,13 @@ PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
   double style_expansion =
     aStyleExpansionFactor * nsSVGUtils::GetStrokeWidth(aFrame);
 
-  gfxMatrix matrix = aMatrix * nsSVGUtils::GetStrokeTransform(aFrame);
+  gfxMatrix matrix = aMatrix;
+
+  gfxMatrix outerSVGToUser;
+  if (nsSVGUtils::GetNonScalingStrokeTransform(aFrame, &outerSVGToUser)) {
+    outerSVGToUser.Invert();
+    matrix *= outerSVGToUser;
+  }
 
   double dx = style_expansion * (fabs(matrix._11) + fabs(matrix._21));
   double dy = style_expansion * (fabs(matrix._22) + fabs(matrix._12));
@@ -1496,9 +1497,10 @@ nsSVGUtils::SetupCairoStrokeGeometry(nsIFrame* aFrame,
   aContext->SetLineWidth(width);
 
   // Apply any stroke-specific transform
-  gfxMatrix strokeTransform = GetStrokeTransform(aFrame);
-  if (!strokeTransform.IsIdentity()) {
-    aContext->Multiply(strokeTransform);
+  gfxMatrix outerSVGToUser;
+  if (GetNonScalingStrokeTransform(aFrame, &outerSVGToUser) &&
+      outerSVGToUser.Invert()) {
+    aContext->Multiply(outerSVGToUser);
   }
 
   const nsStyleSVG* style = aFrame->StyleSVG();

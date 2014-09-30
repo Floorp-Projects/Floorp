@@ -467,11 +467,18 @@ public:
   static bool OuterSVGIsCallingReflowSVG(nsIFrame *aFrame);
   static bool AnyOuterSVGIsCallingReflowSVG(nsIFrame *aFrame);
 
-  /*
-   * Get any additional transforms that apply only to stroking
-   * e.g. non-scaling-stroke
+  /**
+   * See https://svgwg.org/svg2-draft/painting.html#NonScalingStroke
+   *
+   * If the computed value of the 'vector-effect' property on aFrame is
+   * 'non-scaling-stroke', then this function will set aUserToOuterSVG to the
+   * transform from aFrame's SVG user space to the initial coordinate system
+   * established by the viewport of aFrame's outer-<svg>'s (the coordinate
+   * system in which the stroke is fixed).  If aUserToOuterSVG is set to a
+   * non-identity matrix this function returns true, else it returns false.
    */
-  static gfxMatrix GetStrokeTransform(nsIFrame *aFrame);
+  static bool GetNonScalingStrokeTransform(nsIFrame *aFrame,
+                                           gfxMatrix* aUserToOuterSVG);
 
   /**
    * Compute the maximum possible device space stroke extents of a path given
