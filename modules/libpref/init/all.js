@@ -135,7 +135,7 @@ pref("dom.serviceWorkers.enabled", false);
 pref("dom.enable_performance", true);
 
 // Whether resource timing will be gathered and returned by performance.GetEntries*
-pref("dom.enable_resource_timing", true);
+pref("dom.enable_resource_timing", false);
 
 // Whether the Gamepad API is enabled
 pref("dom.gamepad.enabled", true);
