@@ -15,8 +15,6 @@ import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.search.Constants;
-import org.mozilla.search.R;
-import org.mozilla.search.SearchPreferenceActivity;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.BufferedReader;
@@ -71,7 +69,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
 
     @Override
     public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
-        if (!TextUtils.equals(SearchPreferenceActivity.PREF_SEARCH_ENGINE_KEY, key)) {
+        if (!TextUtils.equals(Constants.PREF_SEARCH_ENGINE_KEY, key)) {
             return;
         }
         getEngineFromPrefs(changeCallback);
@@ -88,7 +86,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
         final AsyncTask<Void, Void, SearchEngine> task = new AsyncTask<Void, Void, SearchEngine>() {
             @Override
             protected SearchEngine doInBackground(Void... params) {
-                String identifier = GeckoSharedPrefs.forApp(context).getString(SearchPreferenceActivity.PREF_SEARCH_ENGINE_KEY, null);
+                String identifier = GeckoSharedPrefs.forApp(context).getString(Constants.PREF_SEARCH_ENGINE_KEY, null);
                 if (!TextUtils.isEmpty(identifier)) {
                     try {
                         return createEngine(identifier);
