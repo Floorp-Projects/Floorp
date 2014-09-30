@@ -57,7 +57,6 @@ const NFC_IPC_MSG_NAMES = [
 
 const NFC_IPC_READ_PERM_MSG_NAMES = [
   "NFC:ReadNDEF",
-  "NFC:GetDetailsNDEF",
   "NFC:Connect",
   "NFC:Close",
 ];
@@ -263,7 +262,7 @@ XPCOMUtils.defineLazyGetter(this, "gMessageManager", function () {
       if (message.name == "child-process-shutdown") {
         this.removePeerTarget(message.target);
         this.nfc.removeTarget(message.target);
-        this.removeEventTarget(msg.target);
+        this.removeEventTarget(message.target);
         return null;
       }
 
@@ -538,7 +537,6 @@ Nfc.prototype = {
         break;
       case "ConnectResponse": // Fall through.
       case "CloseResponse":
-      case "GetDetailsNDEFResponse":
       case "ReadNDEFResponse":
       case "MakeReadOnlyNDEFResponse":
       case "WriteNDEFResponse":
@@ -607,9 +605,6 @@ Nfc.prototype = {
       case "NFC:PowerOff":
         this.setConfig({powerLevel: NFC.NFC_POWER_LEVEL_DISABLED,
                         requestId: message.data.requestId});
-        break;
-      case "NFC:GetDetailsNDEF":
-        this.sendToNfcService("getDetailsNDEF", message.data);
         break;
       case "NFC:ReadNDEF":
         this.sendToNfcService("readNDEF", message.data);
