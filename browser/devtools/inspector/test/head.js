@@ -155,7 +155,7 @@ function selectAndHighlightNode(nodeOrSelector, inspector) {
 /**
  * Set the inspector's current selection to a node or to the first match of the
  * given css selector.
- * @param {String|DOMNode} nodeOrSelector
+ * @param {String|DOMNode|NodeFront} nodeOrSelector
  * @param {InspectorPanel} inspector
  *        The instance of InspectorPanel currently loaded in the toolbox
  * @param {String} reason
@@ -169,7 +169,11 @@ function selectNode(nodeOrSelector, inspector, reason="test") {
 
   let node = getNode(nodeOrSelector);
   let updated = inspector.once("inspector-updated");
-  inspector.selection.setNode(node, reason);
+  if (node._form) {
+    inspector.selection.setNodeFront(node, reason);
+  } else {
+    inspector.selection.setNode(node, reason);
+  }
   return updated;
 }
 

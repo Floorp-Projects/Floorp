@@ -156,6 +156,11 @@ toolbarpaletteitem[place="palette"] > #panic-button {
   -moz-image-region: rect(32px, 896px, 64px, 864px);
 }
 
+#web-apps-button[cui-areatype="menu-panel"],
+toolbarpaletteitem[place="palette"] > #web-apps-button {
+  -moz-image-region: rect(0, 928px, 32px, 896px);
+}
+
 toolbaritem[sdkstylewidget="true"] > toolbarbutton {
   -moz-image-region: rect(0, 832px, 32px, 800px);
 }

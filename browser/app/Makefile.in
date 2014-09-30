@@ -76,7 +76,7 @@ ifndef LIBXUL_SDK
 # channel-prefs.js is handled separate from other prefs due to bug 756325
 libs:: $(srcdir)/profile/channel-prefs.js
 	$(NSINSTALL) -D $(DIST)/bin/defaults/pref
-	$(call py_action,preprocessor,$(PREF_PPFLAGS) $(ACDEFINES) $^ -o $(DIST)/bin/defaults/pref/channel-prefs.js)
+	$(call py_action,preprocessor,-Fsubstitution $(PREF_PPFLAGS) $(ACDEFINES) $^ -o $(DIST)/bin/defaults/pref/channel-prefs.js)
 endif
 
 libs:: $(srcdir)/blocklist.xml
@@ -97,12 +97,6 @@ AB := $(firstword $(subst -, ,$(AB_CD)))
 clean clobber repackage::
 	$(RM) -r $(dist_dest)
 
-ifdef LIBXUL_SDK
-APPFILES = Resources
-else
-APPFILES = MacOS
-endif
-
 MAC_BUNDLE_VERSION = $(shell $(PYTHON) $(srcdir)/macversion.py --version=$(MOZ_APP_VERSION) --buildid=$(DEPTH)/config/buildid)
 
 .PHONY: repackage
@@ -113,7 +107,8 @@ tools repackage:: $(PROGRAM)
 	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(dist_dest)/Contents/Resources/$(AB).lproj
 	sed -e 's/%APP_VERSION%/$(MOZ_APP_VERSION)/' -e 's/%MAC_APP_NAME%/$(MAC_APP_NAME)/' -e 's/%MOZ_MACBUNDLE_ID%/$(MOZ_MACBUNDLE_ID)/' -e 's/%MAC_BUNDLE_VERSION%/$(MAC_BUNDLE_VERSION)/' $(srcdir)/macbuild/Contents/Info.plist.in > $(dist_dest)/Contents/Info.plist
 	sed -e 's/%MAC_APP_NAME%/$(MAC_APP_NAME)/' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(dist_dest)/Contents/Resources/$(AB).lproj/InfoPlist.strings
-	rsync -a $(DIST)/bin/ $(dist_dest)/Contents/$(APPFILES)
+	rsync -a --exclude-from='$(srcdir)/macbuild/Contents/MacOS-files.in' $(DIST)/bin/ $(dist_dest)/Contents/Resources
+	rsync -a --include-from='$(srcdir)/macbuild/Contents/MacOS-files.in' --exclude '*' $(DIST)/bin/ $(dist_dest)/Contents/MacOS
 	$(RM) $(dist_dest)/Contents/MacOS/$(PROGRAM)
 	rsync -aL $(PROGRAM) $(dist_dest)/Contents/MacOS
 	cp -RL $(DIST)/branding/firefox.icns $(dist_dest)/Contents/Resources/firefox.icns

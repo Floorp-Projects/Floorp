@@ -470,6 +470,10 @@
                         accesskey="&addons.accesskey;"
                         key="key_openAddons"
                         command="Tools:Addons"/>
+              <menuitem id="menu_openApps"
+                        label="&webapps.label;"
+                        accesskey="&webapps.accesskey;"
+                        oncommand="BrowserOpenApps();"/>
 #ifdef MOZ_SERVICES_SYNC
               <!-- only one of sync-setup or sync-menu will be showing at once -->
               <menuitem id="sync-setup"

@@ -8,6 +8,7 @@ import copy
 import json
 import math
 import mozdebug
+import mozinfo
 import os
 import os.path
 import random
@@ -841,6 +842,12 @@ class XPCShellTests(object):
 
         if self.xrePath is None:
             self.xrePath = os.path.dirname(self.xpcshell)
+            if mozinfo.isMac:
+                # Check if we're run from an OSX app bundle and override
+                # self.xrePath if we are.
+                appBundlePath = os.path.join(os.path.dirname(os.path.dirname(self.xpcshell)), 'Resources')
+                if os.path.exists(os.path.join(appBundlePath, 'application.ini')):
+                    self.xrePath = appBundlePath
         else:
             self.xrePath = os.path.abspath(self.xrePath)
 
@@ -880,7 +887,7 @@ class XPCShellTests(object):
             os.environ["BEGINLIBPATH"] = self.xrePath + ";" + self.env["BEGINLIBPATH"]
             os.environ["LIBPATHSTRICT"] = "T"
         elif sys.platform == 'osx' or sys.platform == "darwin":
-            self.env["DYLD_LIBRARY_PATH"] = self.xrePath
+            self.env["DYLD_LIBRARY_PATH"] = os.path.join(os.path.dirname(self.xrePath), 'MacOS')
         else: # unix or linux?
             if not "LD_LIBRARY_PATH" in self.env or self.env["LD_LIBRARY_PATH"] is None:
                 self.env["LD_LIBRARY_PATH"] = self.xrePath

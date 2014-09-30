@@ -10,7 +10,7 @@
                                          android:paddingLeft="4dip"
                                          android:background="@drawable/new_tablet_tabs_count_foreground"
                                          android:textAppearance="@style/TextAppearance.Micro"
-                                         android:textColor="#eeeeee"
+                                         android:textColor="@color/text_color_primary_inverse"
                                          android:textStyle="bold"
                                          android:duplicateParentState="true"
                                          android:gravity="center"/>
