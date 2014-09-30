@@ -1884,7 +1884,8 @@ gfxFontGroup::MakeSpaceTextRun(const Parameters *aParams, uint32_t aFlags)
             // find one that does.
             uint8_t matchType;
             nsRefPtr<gfxFont> spaceFont =
-                FindFontForChar(' ', 0, MOZ_SCRIPT_LATIN, nullptr, &matchType);
+                FindFontForChar(' ', 0, 0, MOZ_SCRIPT_LATIN, nullptr,
+                                &matchType);
             if (spaceFont) {
                 textRun->SetSpaceGlyph(spaceFont, aParams->mContext, 0,
                                        orientation);
@@ -2489,7 +2490,7 @@ gfxFontGroup::GetUnderlineOffset()
 }
 
 already_AddRefed<gfxFont>
-gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
+gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh, uint32_t aNextCh,
                               int32_t aRunScript, gfxFont *aPrevMatchedFont,
                               uint8_t *aMatchType)
 {
@@ -2649,7 +2650,7 @@ gfxFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
 
     // -- otherwise look for other stuff
     *aMatchType = gfxTextRange::kSystemFallback;
-    font = WhichSystemFontSupportsChar(aCh, aRunScript);
+    font = WhichSystemFontSupportsChar(aCh, aNextCh, aRunScript);
     return font.forget();
 }
 
@@ -2662,6 +2663,13 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
     NS_ASSERTION(aLength > 0, "don't call ComputeRanges for zero-length text");
 
     uint32_t prevCh = 0;
+    uint32_t nextCh = aString[0];
+    if (sizeof(T) == sizeof(char16_t)) {
+        if (aLength > 1 && NS_IS_HIGH_SURROGATE(nextCh) &&
+                           NS_IS_LOW_SURROGATE(aString[1])) {
+            nextCh = SURROGATE_TO_UCS4(nextCh, aString[1]);
+        }
+    }
     int32_t lastRangeIndex = -1;
 
     // initialize prevFont to the group's primary font, so that this will be
@@ -2678,15 +2686,28 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
         const uint32_t origI = i; // save off in case we increase for surrogate
 
         // set up current ch
-        uint32_t ch = aString[i];
+        uint32_t ch = nextCh;
 
-        // in 16-bit case only, check for surrogate pair
+        // Get next char (if any) so that FindFontForChar can look ahead
+        // for a possible variation selector.
+
         if (sizeof(T) == sizeof(char16_t)) {
-            if ((i + 1 < aLength) && NS_IS_HIGH_SURROGATE(ch) &&
-                                 NS_IS_LOW_SURROGATE(aString[i + 1])) {
+            // In 16-bit case only, check for surrogate pairs.
+            if (ch > 0xffffu) {
                 i++;
-                ch = SURROGATE_TO_UCS4(ch, aString[i]);
             }
+            if (i < aLength - 1) {
+                nextCh = aString[i + 1];
+                if ((i + 2 < aLength) && NS_IS_HIGH_SURROGATE(nextCh) &&
+                                         NS_IS_LOW_SURROGATE(aString[i + 2])) {
+                    nextCh = SURROGATE_TO_UCS4(nextCh, aString[i + 2]);
+                }
+            } else {
+                nextCh = 0;
+            }
+        } else {
+            // 8-bit case is trivial.
+            nextCh = i < aLength - 1 ? aString[i + 1] : 0;
         }
 
         if (ch == 0xa0) {
@@ -2695,7 +2716,8 @@ void gfxFontGroup::ComputeRanges(nsTArray<gfxTextRange>& aRanges,
 
         // find the font for this char
         nsRefPtr<gfxFont> font =
-            FindFontForChar(ch, prevCh, aRunScript, prevFont, &matchType);
+            FindFontForChar(ch, prevCh, nextCh, aRunScript, prevFont,
+                            &matchType);
 
 #ifndef RELEASE_BUILD
         if (MOZ_UNLIKELY(mTextPerf)) {
@@ -2931,11 +2953,12 @@ gfxFontGroup::WhichPrefFontSupportsChar(uint32_t aCh)
 }
 
 already_AddRefed<gfxFont>
-gfxFontGroup::WhichSystemFontSupportsChar(uint32_t aCh, int32_t aRunScript)
+gfxFontGroup::WhichSystemFontSupportsChar(uint32_t aCh, uint32_t aNextCh,
+                                          int32_t aRunScript)
 {
     gfxFontEntry *fe = 
         gfxPlatformFontList::PlatformFontList()->
-            SystemFindFontForChar(aCh, aRunScript, &mStyle);
+            SystemFindFontForChar(aCh, aNextCh, aRunScript, &mStyle);
     if (fe) {
         bool wantBold = mStyle.ComputeWeight() >= 6;
         nsRefPtr<gfxFont> font =
