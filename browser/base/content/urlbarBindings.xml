@@ -126,6 +126,19 @@
       <field name="_value">""</field>
 
       <!--
+        onBeforeValueGet is called by the base-binding's .value getter.
+        It can return an object with a "value" property, to override the
+        return value of the getter.
+      -->
+      <method name="onBeforeValueGet">
+        <body><![CDATA[
+          if (this.hasAttribute("actiontype"))
+            return {value: this._value};
+          return null;
+        ]]></body>
+      </method>
+
+      <!--
         onBeforeValueSet is called by the base-binding's .value setter.
         It should return the value that the setter should use.
       -->
@@ -715,10 +728,8 @@
         ]]></body>
       </method>
 
-      <property name="textValue">
-        <getter><![CDATA[
-          return this.inputField.value;
-        ]]></getter>
+      <property name="textValue"
+                onget="return this.value;">
         <setter>
           <![CDATA[
           try {
