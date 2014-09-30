@@ -6517,11 +6517,6 @@ JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length)
 JS_PUBLIC_API(bool)
 JS_PreventExtensions(JSContext *cx, JS::HandleObject obj)
 {
-    bool extensible;
-    if (!JSObject::isExtensible(cx, obj, &extensible))
-        return false;
-    if (!extensible)
-        return true;
     return JSObject::preventExtensions(cx, obj);
 }
 

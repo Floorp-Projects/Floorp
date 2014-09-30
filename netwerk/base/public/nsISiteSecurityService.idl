@@ -7,6 +7,7 @@
 interface nsIURI;
 interface nsIObserver;
 interface nsIHttpChannel;
+interface nsISSLStatus;
 
 %{C++
 template<class T> class nsTArray;
@@ -22,7 +23,7 @@ namespace mozilla
 [ref] native nsCStringTArrayRef(nsTArray<nsCString>);
 [ref] native mozillaPkixTime(mozilla::pkix::Time);
 
-[scriptable, uuid(35816ea0-3ab5-11e4-8613-180373d97f23)]
+[scriptable, uuid(46555f70-3ab5-11e4-8613-180373d97f23)]
 interface nsISiteSecurityService : nsISupports
 {
     const uint32_t HEADER_HSTS = 0;
@@ -31,14 +32,19 @@ interface nsISiteSecurityService : nsISupports
 
     /**
      * Parses a given HTTP header and records the results internally.
-     * Currently the only header type supported is HSTS (aka STS).
+     * Currently two header types are supported: HSTS (aka STS) and HPKP
      * The format of the HSTS header is defined by the HSTS specification:
      * https://tools.ietf.org/html/rfc6797
      * and allows a host to specify that future HTTP requests should be
      * upgraded to HTTPS.
+     * The Format of the HPKP header is currently defined by:
+     * https://tools.ietf.org/html/draft-ietf-websec-key-pinning-20
+     * and allows a host to speficy a subset of trusted anchors to be used
+     * in future HTTPS connections.
      *
      * @param aType the type of security header in question.
      * @param aSourceURI the URI of the resource with the HTTP header.
+     * @param aSSLStatus the SSLStatus of the current channel
      * @param aHeader the HTTP response header specifying security data.
      * @param aFlags  options for this request as defined in nsISocketProvider:
      *                  NO_PERMANENT_STORAGE
@@ -52,9 +58,21 @@ interface nsISiteSecurityService : nsISupports
     void processHeader(in uint32_t aType,
                        in nsIURI aSourceURI,
                        in string aHeader,
+                       in nsISSLStatus aSSLStatus,
                        in uint32_t aFlags,
                        [optional] out unsigned long long aMaxAge,
                        [optional] out boolean aIncludeSubdomains);
+
+    /**
+     * Same as processHeader but without checking for the security properties
+     * of the connection. Use ONLY for testing.
+     */
+    void unsafeProcessHeader(in uint32_t aType,
+                             in nsIURI aSourceURI,
+                             in string aHeader,
+                             in uint32_t aFlags,
+                             [optional] out unsigned long long aMaxAge,
+                             [optional] out boolean aIncludeSubdomains);
 
     /**
      * Given a header type, removes state relating to that header of a host,

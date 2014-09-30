@@ -35,8 +35,22 @@ check_for_forced_update() {
     return 0;
   fi
 
-  if [ "${forced_file_chk##*.}" = "chk" ]
-  then
+  if [ "$forced_file_chk" = "Contents/Resources/precomplete" ]; then
+    ## "true" *giggle*
+    return 0;
+  fi
+
+  if [ "$forced_file_chk" = "removed-files" ]; then
+    ## "true" *giggle*
+    return 0;
+  fi
+
+  if [ "$forced_file_chk" = "Contents/Resources/removed-files" ]; then
+    ## "true" *giggle*
+    return 0;
+  fi
+
+  if [ "${forced_file_chk##*.}" = "chk" ]; then
     ## "true" *giggle*
     return 0;
   fi
@@ -92,9 +106,6 @@ archivefiles="updatev2.manifest updatev3.manifest"
 
 mkdir -p "$workdir"
 
-# On Mac, the precomplete file added by Bug 386760 will cause OS X to reload the
-# Info.plist so it launches the right architecture, bug 600098
-
 # Generate a list of all files in the target directory.
 pushd "$olddir"
 if test $? -ne 0 ; then
@@ -112,8 +123,10 @@ if test $? -ne 0 ; then
 fi
 
 if [ ! -f "precomplete" ]; then
-  notice "precomplete file is missing!"
-  exit 1
+  if [ ! -f "Contents/Resources/precomplete" ]; then
+    notice "precomplete file is missing!"
+    exit 1
+  fi
 fi
 
 list_dirs newdirs
@@ -139,17 +152,6 @@ num_removes=0
 
 for ((i=0; $i<$num_oldfiles; i=$i+1)); do
   f="${oldfiles[$i]}"
-
-  # This file is created by Talkback, so we can ignore it
-  if [ "$f" = "readme.txt" ]; then
-    continue 1
-  fi
-
-  # removed-files is excluded by make_incremental_updates.py so it is excluded
-  # here for consistency.
-  if [ `basename $f` = "removed-files" ]; then
-    continue 1
-  fi
 
   # If this file exists in the new directory as well, then check if it differs.
   if [ -f "$newdir/$f" ]; then
@@ -214,12 +216,6 @@ num_newfiles=${#newfiles[*]}
 
 for ((i=0; $i<$num_newfiles; i=$i+1)); do
   f="${newfiles[$i]}"
-
-  # removed-files is excluded by make_incremental_updates.py so it is excluded
-  # here for consistency.
-  if [ `basename $f` = "removed-files" ]; then
-    continue 1
-  fi
 
   # If we've already tested this file, then skip it
   for ((j=0; $j<$num_oldfiles; j=$j+1)); do

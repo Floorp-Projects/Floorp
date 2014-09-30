@@ -1410,7 +1410,7 @@ gfxPangoFontGroup::GetFontSet(PangoLanguage *aLang)
 
 already_AddRefed<gfxFont>
 gfxPangoFontGroup::FindFontForChar(uint32_t aCh, uint32_t aPrevCh,
-                                   int32_t aRunScript,
+                                   uint32_t aNextCh, int32_t aRunScript,
                                    gfxFont *aPrevMatchedFont,
                                    uint8_t *aMatchType)
 {
@@ -1861,7 +1861,8 @@ gfxPangoFontGroup::GetBaseFontSet()
     if (size != 0.0 && mStyle.sizeAdjust != 0.0) {
         gfxFcFont *font = fontSet->GetFontAt(0, GetStyle());
         if (font) {
-            const gfxFont::Metrics& metrics = font->GetMetrics();
+            const gfxFont::Metrics& metrics =
+                font->GetMetrics(gfxFont::eHorizontal); // XXX vertical?
 
             // The factor of 0.1 ensures that xHeight is sane so fonts don't
             // become huge.  Strictly ">" ensures that xHeight and emHeight are

@@ -379,6 +379,12 @@ xpc::GetAddonScope(JSContext *cx, JS::HandleObject contentScope, JSAddonId *addo
 
     JSAutoCompartment ac(cx, contentScope);
     XPCWrappedNativeScope *nativeScope = CompartmentPrivate::Get(contentScope)->scope;
+    if (nativeScope->GetPrincipal() != nsXPConnect::SystemPrincipal()) {
+        // This can happen if, for example, Jetpack loads an unprivileged HTML
+        // page from the add-on. It's not clear what to do there, so we just use
+        // the normal global.
+        return js::GetGlobalForObjectCrossCompartment(contentScope);
+    }
     JSObject *scope = nativeScope->EnsureAddonScope(cx, addonId);
     NS_ENSURE_TRUE(scope, nullptr);
 

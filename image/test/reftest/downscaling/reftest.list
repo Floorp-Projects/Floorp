@@ -44,56 +44,48 @@ fuzzy(20,999) != downscale-2b.html?203,52,left about:blank
 fuzzy(20,999) != downscale-2c.html?203,52,left about:blank
 fuzzy(20,999) != downscale-2d.html?203,52,left about:blank
 fuzzy(20,999) != downscale-2e.html?203,52,left about:blank
-fuzzy(20,999) fails-if(!cocoaWidget) != downscale-2f.html?203,52,left about:blank
 
 fuzzy(20,999) != downscale-2a.html?205,53,left about:blank
 fuzzy(20,999) != downscale-2b.html?205,53,left about:blank
 fuzzy(20,999) != downscale-2c.html?205,53,left about:blank
 fuzzy(20,999) != downscale-2d.html?205,53,left about:blank
 fuzzy(20,999) != downscale-2e.html?205,53,left about:blank
-fuzzy(20,999) fails-if(!cocoaWidget) != downscale-2f.html?205,53,left about:blank
 
 fuzzy(20,999) != downscale-2a.html?203,52,right about:blank
 fuzzy(20,999) != downscale-2b.html?203,52,right about:blank
 fuzzy(20,999) != downscale-2c.html?203,52,right about:blank
 fuzzy(20,999) != downscale-2d.html?203,52,right about:blank
 fuzzy(20,999) != downscale-2e.html?203,52,right about:blank
-fuzzy(20,999) random-if(!cocoaWidget) != downscale-2f.html?203,52,right about:blank
 
 fuzzy(20,999) != downscale-2a.html?205,53,right about:blank
 fuzzy(20,999) != downscale-2b.html?205,53,right about:blank
 fuzzy(20,999) != downscale-2c.html?205,53,right about:blank
 fuzzy(20,999) != downscale-2d.html?205,53,right about:blank
 fuzzy(20,999) != downscale-2e.html?205,53,right about:blank
-fuzzy(20,999) random-if(!cocoaWidget) != downscale-2f.html?205,53,right about:blank
 
 fuzzy(20,999) != downscale-2a.html?203,52,top about:blank
 fuzzy(20,999) != downscale-2b.html?203,52,top about:blank
 fuzzy(20,999) != downscale-2c.html?203,52,top about:blank
 fuzzy(20,999) != downscale-2d.html?203,52,top about:blank
 fuzzy(20,999) != downscale-2e.html?203,52,top about:blank
-fuzzy(20,999) fails-if(!cocoaWidget) != downscale-2f.html?203,52,top about:blank
 
 fuzzy(20,999) != downscale-2a.html?205,53,top about:blank
 fuzzy(20,999) != downscale-2b.html?205,53,top about:blank
 fuzzy(20,999) != downscale-2c.html?205,53,top about:blank
 fuzzy(20,999) != downscale-2d.html?205,53,top about:blank
 fuzzy(20,999) != downscale-2e.html?205,53,top about:blank
-fuzzy(20,999) fails-if(!cocoaWidget) != downscale-2f.html?205,53,top about:blank
 
 fuzzy(20,999) != downscale-2a.html?203,52,bottom about:blank
 fuzzy(20,999) != downscale-2b.html?203,52,bottom about:blank
 fuzzy(20,999) != downscale-2c.html?203,52,bottom about:blank
 fuzzy(20,999) != downscale-2d.html?203,52,bottom about:blank
 fuzzy(20,999) != downscale-2e.html?203,52,bottom about:blank
-fuzzy(20,999) fails-if(!cocoaWidget) != downscale-2f.html?203,52,bottom about:blank
 
 fuzzy(20,999) != downscale-2a.html?205,53,bottom about:blank
 fuzzy(20,999) != downscale-2b.html?205,53,bottom about:blank
 fuzzy(20,999) != downscale-2c.html?205,53,bottom about:blank
 fuzzy(20,999) != downscale-2d.html?205,53,bottom about:blank
-fuzzy(20,999) != downscale-2e.html?205,53,bottom about:blank
-fuzzy(20,999) fails-if(!cocoaWidget) != downscale-2f.html?205,53,bottom about:blank
+fuzzy(20,999) fails-if(OSX==10.8) != downscale-2e.html?205,53,bottom about:blank
 
 # RUN TESTS WITH HIGH QUALITY DOWNSCALING ENABLED:
 # ================================================

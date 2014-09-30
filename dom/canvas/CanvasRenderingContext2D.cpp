@@ -5,6 +5,7 @@
 
 #include "CanvasRenderingContext2D.h"
 
+#include "mozilla/gfx/Helpers.h"
 #include "nsXULElement.h"
 
 #include "nsIServiceManager.h"
@@ -376,7 +377,7 @@ public:
     RefPtr<SourceSurface> strokePaint =
       DoSourcePaint(mStrokePaintRect, CanvasRenderingContext2D::Style::STROKE);
 
-    AutoSaveTransform autoSaveTransform(mFinalTarget);
+    AutoRestoreTransform autoRestoreTransform(mFinalTarget);
     mFinalTarget->SetTransform(Matrix());
 
     mgfx::FilterSupport::RenderFilterDescription(
@@ -2168,7 +2169,8 @@ public:
     gfxTextPerfMetrics* tp = mPresContext->GetTextPerfMetrics();
     nsRefPtr<nsFontMetrics> fontMetrics;
     nsDeviceContext* dc = mPresContext->DeviceContext();
-    dc->GetMetricsFor(mFont, mFontLanguage, nullptr, tp,
+    dc->GetMetricsFor(mFont, mFontLanguage, gfxFont::eHorizontal,
+                      nullptr, tp,
                       *getter_AddRefs(fontMetrics));
     return NSAppUnitsToFloatPixels(fontMetrics->XHeight(),
                                    nsPresContext::AppUnitsPerCSSPixel());
@@ -3442,7 +3444,7 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   // offset pt.y based on text baseline
   processor.mFontgrp->UpdateUserFonts(); // ensure user font generation is current
   const gfxFont::Metrics& fontMetrics =
-    processor.mFontgrp->GetFirstValidFont()->GetMetrics();
+    processor.mFontgrp->GetFirstValidFont()->GetMetrics(gfxFont::eHorizontal); // XXX vertical?
 
   gfxFloat anchorY;
 
@@ -3982,6 +3984,10 @@ CanvasRenderingContext2D::DrawDirectlyToCanvas(
   nsIntSize scaledImageSize(std::ceil(imgSize.width * scale.width),
                             std::ceil(imgSize.height * scale.height));
   src.Scale(scale.width, scale.height);
+
+  // We're wrapping tempTarget's (our) DrawTarget here, so we need to restore
+  // the matrix even though this is a temp gfxContext.
+  AutoRestoreTransform autoRestoreTransform(mTarget);
 
   nsRefPtr<gfxContext> context = new gfxContext(tempTarget);
   context->SetMatrix(contextMatrix.

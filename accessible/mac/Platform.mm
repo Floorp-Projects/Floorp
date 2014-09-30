@@ -33,6 +33,15 @@ PlatformShutdown()
 {
 }
 
+void
+ProxyCreated(ProxyAccessible*)
+{
+}
+
+void
+ProxyDestroyed(ProxyAccessible*)
+{
+}
 }
 }
 

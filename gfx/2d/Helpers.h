@@ -11,17 +11,29 @@
 namespace mozilla {
 namespace gfx {
 
-class AutoSaveTransform
+class AutoRestoreTransform
 {
  public:
-  explicit AutoSaveTransform(DrawTarget *aTarget)
+  explicit AutoRestoreTransform(DrawTarget *aTarget)
    : mDrawTarget(aTarget),
      mOldTransform(aTarget->GetTransform())
   {
   }
-  ~AutoSaveTransform()
+
+  void Init(DrawTarget *aTarget)
   {
-    mDrawTarget->SetTransform(mOldTransform);
+    MOZ_ASSERT(!mDrawTarget || aTarget == mDrawTarget);
+    if (!mDrawTarget) {
+      mDrawTarget = aTarget;
+      mOldTransform = aTarget->GetTransform();
+    }
+  }
+
+  ~AutoRestoreTransform()
+  {
+    if (mDrawTarget) {
+      mDrawTarget->SetTransform(mOldTransform);
+    }
   }
 
  private:

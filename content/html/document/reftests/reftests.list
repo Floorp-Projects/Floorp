@@ -9,4 +9,4 @@
 # (Fuzzy necessary due to pixel-wise comparison of different JPEGs.
 # The vast majority of the fuzziness comes from Linux and WinXP.)
 fuzzy(1,149) == bug917595-iframe-1.html    bug917595-1-ref.html
-fuzzy(2,640) == bug917595-exif-rotated.jpg bug917595-pixel-rotated.jpg
+fuzzy(3,640) == bug917595-exif-rotated.jpg bug917595-pixel-rotated.jpg

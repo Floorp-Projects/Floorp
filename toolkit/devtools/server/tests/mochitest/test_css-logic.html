@@ -96,6 +96,46 @@ addTest(function findCssSelector() {
   runNextTest();
 });
 
+addTest(function getComputedStyle() {
+  let node = document.querySelector("#computed-style");
+  is (CssLogic.getComputedStyle(node).getPropertyValue("width"),
+      "50px", "Computed style on a normal node works (width)");
+  is (CssLogic.getComputedStyle(node).getPropertyValue("height"),
+      "10px", "Computed style on a normal node works (height)");
+
+  let firstChild = _documentWalker(node, window).firstChild();
+  is (CssLogic.getComputedStyle(firstChild).getPropertyValue("content"),
+      "\"before\"", "Computed style on a ::before node works (content)");
+  let lastChild = _documentWalker(node, window).lastChild();
+  is (CssLogic.getComputedStyle(lastChild).getPropertyValue("content"),
+      "\"after\"", "Computed style on a ::after node works (content)");
+
+  runNextTest();
+});
+
+addTest(function getBindingElementAndPseudo() {
+  let node = document.querySelector("#computed-style");
+  var {bindingElement, pseudo} = CssLogic.getBindingElementAndPseudo(node);
+
+  is (bindingElement, node,
+      "Binding element is the node itself for a normal node");
+  ok (!pseudo, "Pseudo is null for a normal node");
+
+  let firstChild = _documentWalker(node, window).firstChild();
+  var {bindingElement, pseudo} = CssLogic.getBindingElementAndPseudo(firstChild);
+  is (bindingElement, node,
+      "Binding element is the parent for a pseudo node");
+  is (pseudo, ":before", "Pseudo is correct for a ::before node");
+
+  let lastChild = _documentWalker(node, window).lastChild();
+  var {bindingElement, pseudo} = CssLogic.getBindingElementAndPseudo(lastChild);
+  is (bindingElement, node,
+      "Binding element is the parent for a pseudo node");
+  is (pseudo, ":after", "Pseudo is correct for a ::after node");
+
+  runNextTest();
+});
+
   </script>
 </head>
 <body>
@@ -121,5 +161,11 @@ addTest(function findCssSelector() {
     <!-- Special characters -->
     <div id="!, &quot;, #, $, %, &amp;, ', (, ), *, +, ,, -, ., /, :, ;, <, =, >, ?, @, [, \, ], ^, `, {, |, }, ~"></div>
   </div>
+  <style type="text/css">
+    #computed-style { width: 50px; height: 10px; }
+    #computed-style::before { content: "before"; }
+    #computed-style::after { content: "after"; }
+  </style>
+  <div id="computed-style"></div>
 </body>
 </html>

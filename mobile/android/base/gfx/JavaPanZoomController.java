@@ -275,6 +275,11 @@ class JavaPanZoomController
             } else if (MESSAGE_TOUCH_LISTENER.equals(event)) {
                 int tabId = message.getInt("tabID");
                 final Tab tab = Tabs.getInstance().getTab(tabId);
+                // Make sure we still have a Tab
+                if (tab == null) {
+                    return;
+                }
+
                 tab.setHasTouchListeners(true);
                 mTarget.post(new Runnable() {
                     @Override
@@ -1348,13 +1353,17 @@ class JavaPanZoomController
         GeckoAppShell.sendEventToGecko(e);
     }
 
+    private boolean waitForDoubleTap() {
+        return !mMediumPress && mTarget.getZoomConstraints().getAllowDoubleTapZoom();
+    }
+
     @Override
     public boolean onSingleTapUp(MotionEvent motionEvent) {
         // When double-tapping is allowed, we have to wait to see if this is
         // going to be a double-tap.
         // However, if mMediumPress is true then we know there will be no
         // double-tap so we treat this as a click.
-        if (mMediumPress || !mTarget.getZoomConstraints().getAllowDoubleTapZoom()) {
+        if (!waitForDoubleTap()) {
             sendPointToGecko("Gesture:SingleTap", motionEvent);
         }
         // return false because we still want to get the ACTION_UP event that triggers this
@@ -1363,8 +1372,8 @@ class JavaPanZoomController
 
     @Override
     public boolean onSingleTapConfirmed(MotionEvent motionEvent) {
-        // When zooming is disabled, we handle this in onSingleTapUp.
-        if (mTarget.getZoomConstraints().getAllowDoubleTapZoom()) {
+        // In cases where we don't wait for double-tap, we handle this in onSingleTapUp.
+        if (waitForDoubleTap()) {
             sendPointToGecko("Gesture:SingleTap", motionEvent);
         }
         return true;

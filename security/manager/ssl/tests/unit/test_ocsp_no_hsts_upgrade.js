@@ -42,8 +42,9 @@ function run_test() {
   let SSService = Cc["@mozilla.org/ssservice;1"]
                     .getService(Ci.nsISiteSecurityService);
   let uri = Services.io.newURI("http://localhost", null, null);
+  let sslStatus = new FakeSSLStatus();
   SSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
-                          "max-age=10000", 0);
+                          "max-age=10000", sslStatus, 0);
   do_check_true(SSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
                                        "localhost", 0));
 

@@ -6,9 +6,9 @@
 
     <!-- Make sure the border only appears at the bottom of the background -->
     <item
-        android:top="-2dp"
-        android:right="-2dp"
-        android:left="-2dp">
+        android:top="-3dp"
+        android:right="-3dp"
+        android:left="-3dp">
         <shape>
             <!-- Padding creates vertical space between the text and the underline -->
             <padding

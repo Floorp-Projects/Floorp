@@ -8,6 +8,7 @@ let TargetFactory = devtools.TargetFactory;
 let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 let promise = devtools.require("devtools/toolkit/deprecated-sync-thenables");
 let {getInplaceEditorForSpan: inplaceEditor} = devtools.require("devtools/shared/inplace-editor");
+let clipboard = devtools.require("sdk/clipboard");
 
 // All test are asynchronous
 waitForExplicitFinish();
@@ -30,6 +31,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.inspector.activeSidebar");
   Services.prefs.clearUserPref("devtools.dump.emit");
   Services.prefs.clearUserPref("devtools.markup.pagesize");
+  Services.prefs.clearUserPref("dom.webcomponents.enabled");
 });
 
 // Auto close the toolbox and close the test tabs when the test ends
@@ -143,12 +145,15 @@ function getNode(nodeOrSelector) {
 
 /**
  * Get the NodeFront for a given css selector, via the protocol
- * @param {String} selector
+ * @param {String|NodeFront} selector
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
  * @return {Promise} Resolves to the NodeFront instance
  */
 function getNodeFront(selector, {walker}) {
+  if (selector._form) {
+    return selector;
+  }
   return walker.querySelector(walker.rootNode, selector);
 }
 
@@ -173,7 +178,7 @@ function selectAndHighlightNode(nodeOrSelector, inspector) {
 /**
  * Set the inspector's current selection to the first match of the given css
  * selector
- * @param {String} selector
+ * @param {String|NodeFront} selector
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
  * @param {String} reason Defaults to "test" which instructs the inspector not
@@ -203,7 +208,7 @@ function getContainerForNodeFront(nodeFront, {markup}) {
 /**
  * Get the MarkupContainer object instance that corresponds to the given
  * selector
- * @param {String} selector
+ * @param {String|NodeFront} selector
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
  * @return {MarkupContainer}
@@ -236,7 +241,7 @@ function waitForChildrenUpdated({markup}) {
 /**
  * Simulate a mouse-over on the markup-container (a line in the markup-view)
  * that corresponds to the selector passed.
- * @param {String} selector
+ * @param {String|NodeFront} selector
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
  * @return {Promise} Resolves when the container is hovered and the higlighter
@@ -257,7 +262,7 @@ let hoverContainer = Task.async(function*(selector, inspector) {
 /**
  * Simulate a click on the markup-container (a line in the markup-view)
  * that corresponds to the selector passed.
- * @param {String} selector
+ * @param {String|NodeFront} selector
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
  * loaded in the toolbox
  * @return {Promise} Resolves when the node has been selected.
@@ -439,6 +444,124 @@ function wait(ms) {
   content.setTimeout(def.resolve, ms);
   return def.promise;
 }
+
+/**
+ * Wait for eventName on target.
+ * @param {Object} target An observable object that either supports on/off or
+ * addEventListener/removeEventListener
+ * @param {String} eventName
+ * @param {Boolean} useCapture Optional, for addEventListener/removeEventListener
+ * @return A promise that resolves when the event has been handled
+ */
+function once(target, eventName, useCapture=false) {
+  info("Waiting for event: '" + eventName + "' on " + target + ".");
+
+  let deferred = promise.defer();
+
+  for (let [add, remove] of [
+    ["addEventListener", "removeEventListener"],
+    ["addListener", "removeListener"],
+    ["on", "off"]
+  ]) {
+    if ((add in target) && (remove in target)) {
+      target[add](eventName, function onEvent(...aArgs) {
+        info("Got event: '" + eventName + "' on " + target + ".");
+        target[remove](eventName, onEvent, useCapture);
+        deferred.resolve.apply(deferred, aArgs);
+      }, useCapture);
+      break;
+    }
+  }
+
+  return deferred.promise;
+}
+
+/**
+ * Check to see if the inspector menu items for editing are disabled.
+ * Things like Edit As HTML, Delete Node, etc.
+ * @param {NodeFront} nodeFront
+ * @param {InspectorPanel} inspector
+ * @param {Boolean} assert Should this function run assertions inline.
+ * @return A promise that resolves with a boolean indicating whether
+ *         the menu items are disabled once the menu has been checked.
+ */
+let isEditingMenuDisabled = Task.async(function*(nodeFront, inspector, assert=true) {
+  let deleteMenuItem = inspector.panelDoc.getElementById("node-menu-delete");
+  let editHTMLMenuItem = inspector.panelDoc.getElementById("node-menu-edithtml");
+  let pasteHTMLMenuItem = inspector.panelDoc.getElementById("node-menu-pasteouterhtml");
+
+  // To ensure clipboard contains something to paste.
+  clipboard.set("<p>test</p>", "html");
+
+  let menu = inspector.nodemenu;
+  yield selectNode(nodeFront, inspector);
+  yield reopenMenu(menu);
+
+  let isDeleteMenuDisabled = deleteMenuItem.hasAttribute("disabled");
+  let isEditHTMLMenuDisabled = editHTMLMenuItem.hasAttribute("disabled");
+  let isPasteHTMLMenuDisabled = pasteHTMLMenuItem.hasAttribute("disabled");
+
+  if (assert) {
+    ok(isDeleteMenuDisabled, "Delete menu item is disabled");
+    ok(isEditHTMLMenuDisabled, "Edit HTML menu item is disabled");
+    ok(isPasteHTMLMenuDisabled, "Paste HTML menu item is disabled");
+  }
+
+  return isDeleteMenuDisabled && isEditHTMLMenuDisabled && isPasteHTMLMenuDisabled;
+});
+
+/**
+ * Check to see if the inspector menu items for editing are enabled.
+ * Things like Edit As HTML, Delete Node, etc.
+ * @param {NodeFront} nodeFront
+ * @param {InspectorPanel} inspector
+ * @param {Boolean} assert Should this function run assertions inline.
+ * @return A promise that resolves with a boolean indicating whether
+ *         the menu items are enabled once the menu has been checked.
+ */
+let isEditingMenuEnabled = Task.async(function*(nodeFront, inspector, assert=true) {
+  let deleteMenuItem = inspector.panelDoc.getElementById("node-menu-delete");
+  let editHTMLMenuItem = inspector.panelDoc.getElementById("node-menu-edithtml");
+  let pasteHTMLMenuItem = inspector.panelDoc.getElementById("node-menu-pasteouterhtml");
+
+  // To ensure clipboard contains something to paste.
+  clipboard.set("<p>test</p>", "html");
+
+  let menu = inspector.nodemenu;
+  yield selectNode(nodeFront, inspector);
+  yield reopenMenu(menu);
+
+  let isDeleteMenuDisabled = deleteMenuItem.hasAttribute("disabled");
+  let isEditHTMLMenuDisabled = editHTMLMenuItem.hasAttribute("disabled");
+  let isPasteHTMLMenuDisabled = pasteHTMLMenuItem.hasAttribute("disabled");
+
+  if (assert) {
+    ok(!isDeleteMenuDisabled, "Delete menu item is enabled");
+    ok(!isEditHTMLMenuDisabled, "Edit HTML menu item is enabled");
+    ok(!isPasteHTMLMenuDisabled, "Paste HTML menu item is enabled");
+  }
+
+  return !isDeleteMenuDisabled && !isEditHTMLMenuDisabled && !isPasteHTMLMenuDisabled;
+});
+
+/**
+ * Open a menu (closing it first if necessary).
+ * @param {DOMNode} menu A menu that implements hidePopup/openPopup
+ * @return a promise that resolves once the menu is opened.
+ */
+let reopenMenu = Task.async(function*(menu) {
+  // First close it is if it is already opened.
+  if (menu.state == "closing" || menu.state == "open") {
+    let popuphidden = once(menu, "popuphidden", true);
+    menu.hidePopup();
+    yield popuphidden;
+  }
+
+  // Then open it and return once
+  let popupshown = once(menu, "popupshown", true);
+  menu.openPopup();
+  yield popupshown;
+});
 
 /**
  * Wait for all current promises to be resolved. See this as executeSoon that

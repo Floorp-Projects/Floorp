@@ -52,51 +52,75 @@
 #
 # Example: path/to/dir/*
 
-# File Removals
+# Due to Apple Mac OS X packaging requirements files that are in the same
+# directory on other platforms must be located in different directories on
+# Mac OS X. The following defines allow specifying the Mac OS X bundle
+# location which also work on other platforms.
+#
+# @DIR_MACOS@
+# Equals Contents/MacOS/ on Mac OX X and is an empty string on other platforms.
+#
+# @DIR_RESOURCES@
+# Equals Contents/Resources/ on Mac OX X and is an empty string on other
+# platforms.
+
+# Common File Removals
 # This is located under the "distribution/" directory and it was added before
 # Firefox 27
-distribution/extensions/testpilot@labs.mozilla.com.xpi
+@DIR_MACOS@distribution/extensions/testpilot@labs.mozilla.com.xpi
 
 # Some users are ending up with unpacked chrome instead of omni.ja. This
 # causes updates to break badly, see bug 1063052. Removing the toplevel
 # chrome.manifest causes us to use the updated omni.ja.
 #ifndef MOZ_GTK
-chrome.manifest
+  @DIR_MACOS@chrome.manifest
+  #ifdef XP_MACOSX
+    @DIR_RESOURCES@chrome.manifest
+  #endif
 #endif
 
-# Directory removals
-chrome/
+# Mac OS X v2 signing removals
+#ifdef XP_MACOSX
+  @DIR_MACOS@active-update.xml
+  @DIR_MACOS@update-settings.ini
+  @DIR_MACOS@updates.xml
+  @DIR_MACOS@defaults/*
+  @DIR_MACOS@updates/*
+#endif
+
+# Common Directory removals
+@DIR_MACOS@chrome/
 #ifdef XP_UNIX
   #ifndef XP_MACOSX
     chrome/icons/
     chrome/icons/default/
   #endif
 #endif
-chrome/overlayinfo/
-components/
-defaults/autoconfig/
-defaults/profile/
-defaults/profile/chrome/
-defaults/profile/US/*
-defaults/profile/extensions/
-defaults/profile/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/*
-distribution/
-distribution/extensions/
-extensions/
-extensions/inspector@mozilla.org/*
-extensions/reporter@mozilla.org/*
-extensions/talkback@mozilla.org/*
-extensions/testpilot@labs.mozilla.com/*
-extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}/*
-extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/*
-greprefs/
-jssubloader/
-modules/
+@DIR_MACOS@chrome/overlayinfo/
+@DIR_MACOS@components/
+@DIR_MACOS@defaults/autoconfig/
+@DIR_MACOS@defaults/profile/
+@DIR_MACOS@defaults/profile/chrome/
+@DIR_MACOS@defaults/profile/US/*
+@DIR_MACOS@defaults/profile/extensions/
+@DIR_MACOS@defaults/profile/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/*
+@DIR_MACOS@distribution/
+@DIR_MACOS@distribution/extensions/
+@DIR_MACOS@extensions/
+@DIR_MACOS@extensions/inspector@mozilla.org/*
+@DIR_MACOS@extensions/reporter@mozilla.org/*
+@DIR_MACOS@extensions/talkback@mozilla.org/*
+@DIR_MACOS@extensions/testpilot@labs.mozilla.com/*
+@DIR_MACOS@extensions/{641d8d09-7dda-4850-8228-ac0ab65e2ac9}/*
+@DIR_MACOS@extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/*
+@DIR_MACOS@greprefs/
+@DIR_MACOS@jssubloader/
+@DIR_MACOS@modules/
 #ifdef XP_MACOSX
-  plugins/Default Plugin.plugin/*
-  plugins/JavaEmbeddingPlugin.bundle/*
-  plugins/MRJPlugin.plugin/*
-  ../Plug-Ins/PrintPDE.plugin/*
+  @DIR_MACOS@plugins/Default Plugin.plugin/*
+  @DIR_MACOS@plugins/JavaEmbeddingPlugin.bundle/*
+  @DIR_MACOS@plugins/MRJPlugin.plugin/*
+  Contents/Plug-Ins/PrintPDE.plugin/*
 #endif
-searchplugins/*
-webapprt/components/
+@DIR_MACOS@searchplugins/*
+@DIR_MACOS@webapprt/components/

@@ -1877,15 +1877,13 @@ public:
         m_formatter.oneByteOp(OP_MOV_EvGv, src, base, index, scale, offset);
     }
 
-#ifdef JS_CODEGEN_X86
     void movw_rm(RegisterID src, const void* addr)
     {
         spew("movw       %s, %p",
              nameIReg(2, src), addr);
         m_formatter.prefix(PRE_OPERAND_SIZE);
-        m_formatter.oneByteOp(OP_MOV_EvGv, src, addr);
+        m_formatter.oneByteOp_disp32(OP_MOV_EvGv, src, addr);
     }
-#endif
 
     void movl_rm(RegisterID src, int offset, RegisterID base)
     {
@@ -1985,12 +1983,27 @@ public:
         m_formatter.immediate8(imm);
     }
 
+    void movb_i8m(int imm, const void* addr)
+    {
+        spew("movb       %d, %p", imm, addr);
+        m_formatter.oneByteOp_disp32(OP_GROUP11_EvIb, GROUP11_MOV, addr);
+        m_formatter.immediate8(imm);
+    }
+
     void movw_i16m(int imm, int offset, RegisterID base)
     {
         spew("movw       $0x%x, %s0x%x(%s)",
              imm, PRETTY_PRINT_OFFSET(offset), nameIReg(base));
         m_formatter.prefix(PRE_OPERAND_SIZE);
         m_formatter.oneByteOp(OP_GROUP11_EvIz, GROUP11_MOV, base, offset);
+        m_formatter.immediate16(imm);
+    }
+
+    void movw_i16m(int imm, const void* addr)
+    {
+        spew("movw       %d, %p", imm, addr);
+        m_formatter.prefix(PRE_OPERAND_SIZE);
+        m_formatter.oneByteOp_disp32(OP_GROUP11_EvIz, GROUP11_MOV, addr);
         m_formatter.immediate16(imm);
     }
 
@@ -2237,14 +2250,12 @@ public:
         m_formatter.oneByteOp8(OP_MOV_EbGv, src, base, index, scale, offset);
     }
 
-#ifdef JS_CODEGEN_X86
     void movb_rm(RegisterID src, const void* addr)
     {
         spew("movb       %s, %p",
              nameIReg(1, src), addr);
-        m_formatter.oneByteOp(OP_MOV_EbGv, src, addr);
+        m_formatter.oneByteOp8(OP_MOV_EbGv, src, addr);
     }
-#endif
 
     void movzbl_mr(int offset, RegisterID base, RegisterID dst)
     {
@@ -2267,14 +2278,12 @@ public:
         m_formatter.twoByteOp(OP2_MOVZX_GvEb, dst, base, index, scale, offset);
     }
 
-#ifdef JS_CODEGEN_X86
     void movzbl_mr(const void* addr, RegisterID dst)
     {
         spew("movzbl     %p, %s",
              addr, nameIReg(dst));
         m_formatter.twoByteOp(OP2_MOVZX_GvEb, dst, addr);
     }
-#endif
 
     void movsbl_mr(int offset, RegisterID base, RegisterID dst)
     {
@@ -2297,14 +2306,12 @@ public:
         m_formatter.twoByteOp(OP2_MOVSX_GvEb, dst, base, index, scale, offset);
     }
 
-#ifdef JS_CODEGEN_X86
     void movsbl_mr(const void* addr, RegisterID dst)
     {
         spew("movsbl     %p, %s",
              addr, nameIReg(4, dst));
         m_formatter.twoByteOp(OP2_MOVSX_GvEb, dst, addr);
     }
-#endif
 
     void movzwl_rr(RegisterID src, RegisterID dst)
     {
@@ -2334,14 +2341,12 @@ public:
         m_formatter.twoByteOp(OP2_MOVZX_GvEw, dst, base, index, scale, offset);
     }
 
-#ifdef JS_CODEGEN_X86
     void movzwl_mr(const void* addr, RegisterID dst)
     {
         spew("movzwl     %p, %s",
              addr, nameIReg(4, dst));
         m_formatter.twoByteOp(OP2_MOVZX_GvEw, dst, addr);
     }
-#endif
 
     void movswl_mr(int offset, RegisterID base, RegisterID dst)
     {
@@ -2364,14 +2369,12 @@ public:
         m_formatter.twoByteOp(OP2_MOVSX_GvEw, dst, base, index, scale, offset);
     }
 
-#ifdef JS_CODEGEN_X86
     void movswl_mr(const void* addr, RegisterID dst)
     {
         spew("movswl     %p, %s",
              addr, nameIReg(4, dst));
         m_formatter.twoByteOp(OP2_MOVSX_GvEw, dst, addr);
     }
-#endif
 
     void movzbl_rr(RegisterID src, RegisterID dst)
     {
@@ -3086,7 +3089,6 @@ public:
         m_formatter.twoByteOp(OP2_MOVSD_VsdWsd, (RegisterID)dst, (RegisterID)src);
     }
 
-#ifdef JS_CODEGEN_X86
     void movsd_mr(const void* address, XMMRegisterID dst)
     {
         spew("movsd      %p, %s",
@@ -3133,7 +3135,7 @@ public:
              nameFPReg(src), address);
         m_formatter.twoByteOp(OP2_MOVPS_WpsVps, (RegisterID)src, address);
     }
-#else
+#ifdef JS_CODEGEN_X64
     JmpSrc movsd_ripr(XMMRegisterID dst)
     {
         spew("movsd      ?(%%rip), %s",
@@ -3815,15 +3817,16 @@ public:
 
     // Linking & patching:
     //
-    // 'link' and 'patch' methods are for use on unprotected code - such as the code
-    // within the AssemblerBuffer, and code being patched by the patch buffer.  Once
-    // code has been finalized it is (platform support permitting) within a non-
-    // writable region of memory; to modify the code in an execute-only execuable
-    // pool the 'repatch' and 'relink' methods should be used.
+    // 'link' and 'patch' methods are for use on unprotected code - such as the
+    // code within the AssemblerBuffer, and code being patched by the patch
+    // buffer.  Once code has been finalized it is (platform support permitting)
+    // within a non- writable region of memory; to modify the code in an
+    // execute-only execuable pool the 'repatch' and 'relink' methods should be
+    // used.
 
     // Like Lua's emitter, we thread jump lists through the unpatched target
-    // field, which will get fixed up when the label (which has a pointer to
-    // the head of the jump list) is bound.
+    // field, which will get fixed up when the label (which has a pointer to the
+    // head of the jump list) is bound.
     bool nextJump(const JmpSrc& from, JmpSrc* next)
     {
         // Sanity check - if the assembler has OOM'd, it will start overwriting
@@ -3930,8 +3933,8 @@ public:
                    where);
 
 #ifdef JS_CODEGEN_X64
-        // On x86-64 pointer memory accesses require a 64-bit operand, and as such a REX prefix.
-        // Skip over the prefix byte.
+        // On x86-64 pointer memory accesses require a 64-bit operand, and as
+        // such a REX prefix.  Skip over the prefix byte.
         where = reinterpret_cast<char*>(where) + 1;
 #endif
         *reinterpret_cast<unsigned char*>(where) = static_cast<unsigned char>(OP_LEA);
@@ -3942,8 +3945,8 @@ public:
         staticSpew("##repatchLEAToLoadPtr ((where=%p))",
                    where);
 #ifdef JS_CODEGEN_X64
-        // On x86-64 pointer memory accesses require a 64-bit operand, and as such a REX prefix.
-        // Skip over the prefix byte.
+        // On x86-64 pointer memory accesses require a 64-bit operand, and as
+        // such a REX prefix.  Skip over the prefix byte.
         where = reinterpret_cast<char*>(where) + 1;
 #endif
         *reinterpret_cast<unsigned char*>(where) = static_cast<unsigned char>(OP_MOV_GvEv);
@@ -4031,17 +4034,17 @@ public:
     }
 
     // Test whether the given address will fit in an address immediate field.
-    // This is always true on x86, but on x64 it's only true for addreses
-    // which fit in the 32-bit immediate field.
+    // This is always true on x86, but on x64 it's only true for addreses which
+    // fit in the 32-bit immediate field.
     static bool isAddressImmediate(const void *address) {
         intptr_t value = reinterpret_cast<intptr_t>(address);
         int32_t immediate = static_cast<int32_t>(value);
         return value == immediate;
     }
 
-    // Convert the given address to a 32-bit immediate field value. This is
-    // a no-op on x86, but on x64 it asserts that the address is actually
-    // a valid address immediate.
+    // Convert the given address to a 32-bit immediate field value. This is a
+    // no-op on x86, but on x64 it asserts that the address is actually a valid
+    // address immediate.
     static int32_t addressImmediate(const void *address) {
 #ifdef JS_CODEGEN_X64
         // x64's 64-bit addresses don't all fit in the 32-bit immediate.
@@ -4086,10 +4089,12 @@ private:
         //   * Three argument ModRM - a register, and a register and an offset describing a memory operand.
         //   * Five argument ModRM - a register, and a base register, an index, scale, and offset describing a memory operand.
         //
-        // For 32-bit x86 targets, the address operand may also be provided as a void*.
-        // On 64-bit targets REX prefixes will be planted as necessary, where high numbered registers are used.
+        // For 32-bit x86 targets, the address operand may also be provided as a
+        // void*.  On 64-bit targets REX prefixes will be planted as necessary,
+        // where high numbered registers are used.
         //
-        // The twoByteOp methods plant two-byte Intel instructions sequences (first opcode byte 0x0F).
+        // The twoByteOp methods plant two-byte Intel instructions sequences
+        // (first opcode byte 0x0F).
 
         void oneByteOp(OneByteOpcodeID opcode)
         {
@@ -4147,13 +4152,15 @@ private:
         void oneByteOp(OneByteOpcodeID opcode, int reg, const void* address)
         {
             m_buffer.ensureSpace(maxInstructionSize);
+            emitRexIfNeeded(reg, 0, 0);
             m_buffer.putByteUnchecked(opcode);
-            memoryModRM(reg, address);
+            memoryModRM_disp32(reg, address);
         }
 
         void oneByteOp_disp32(OneByteOpcodeID opcode, int reg, const void* address)
         {
             m_buffer.ensureSpace(maxInstructionSize);
+            emitRexIfNeeded(reg, 0, 0);
             m_buffer.putByteUnchecked(opcode);
             memoryModRM_disp32(reg, address);
         }
@@ -4233,6 +4240,7 @@ private:
         void twoByteOp(TwoByteOpcodeID opcode, int reg, const void* address)
         {
             m_buffer.ensureSpace(maxInstructionSize);
+            emitRexIfNeeded(reg, 0, 0);
             m_buffer.putByteUnchecked(OP_2BYTE_ESCAPE);
             m_buffer.putByteUnchecked(opcode);
             memoryModRM(reg, address);
@@ -4261,9 +4269,9 @@ private:
 #ifdef JS_CODEGEN_X64
         // Quad-word-sized operands:
         //
-        // Used to format 64-bit operantions, planting a REX.w prefix.
-        // When planting d64 or f64 instructions, not requiring a REX.w prefix,
-        // the normal (non-'64'-postfixed) formatters should be used.
+        // Used to format 64-bit operantions, planting a REX.w prefix.  When
+        // planting d64 or f64 instructions, not requiring a REX.w prefix, the
+        // normal (non-'64'-postfixed) formatters should be used.
 
         void oneByteOp64(OneByteOpcodeID opcode)
         {
@@ -4331,16 +4339,19 @@ private:
 
         // Byte-operands:
         //
-        // These methods format byte operations.  Byte operations differ from the normal
-        // formatters in the circumstances under which they will decide to emit REX prefixes.
-        // These should be used where any register operand signifies a byte register.
+        // These methods format byte operations.  Byte operations differ from
+        // the normal formatters in the circumstances under which they will
+        // decide to emit REX prefixes.  These should be used where any register
+        // operand signifies a byte register.
         //
-        // The disctinction is due to the handling of register numbers in the range 4..7 on
-        // x86-64.  These register numbers may either represent the second byte of the first
-        // four registers (ah..bh) or the first byte of the second four registers (spl..dil).
+        // The disctinction is due to the handling of register numbers in the
+        // range 4..7 on x86-64.  These register numbers may either represent
+        // the second byte of the first four registers (ah..bh) or the first
+        // byte of the second four registers (spl..dil).
         //
-        // Address operands should still be checked using regRequiresRex(), while byteRegRequiresRex()
-        // is provided to check byte register operands.
+        // Address operands should still be checked using regRequiresRex(),
+        // while byteRegRequiresRex() is provided to check byte register
+        // operands.
 
         void oneByteOp8(OneByteOpcodeID opcode, GroupOpcodeID groupOp, RegisterID rm)
         {
@@ -4395,6 +4406,17 @@ private:
             memoryModRM(reg, base, index, scale, offset);
         }
 
+        void oneByteOp8(OneByteOpcodeID opcode, int reg, const void* address)
+        {
+#ifdef JS_CODEGEN_X86
+            MOZ_ASSERT(!byteRegRequiresRex(reg));
+#endif
+            m_buffer.ensureSpace(maxInstructionSize);
+            emitRexIf(byteRegRequiresRex(reg), reg, 0, 0);
+            m_buffer.putByteUnchecked(opcode);
+            memoryModRM_disp32(reg, address);
+        }
+
         void twoByteOp8(TwoByteOpcodeID opcode, RegisterID reg, RegisterID rm)
         {
             m_buffer.ensureSpace(maxInstructionSize);
@@ -4428,8 +4450,9 @@ private:
 
         // Immediates:
         //
-        // An immedaite should be appended where appropriate after an op has been emitted.
-        // The writes are unchecked since the opcode formatters above will have ensured space.
+        // An immedaite should be appended where appropriate after an op has
+        // been emitted.  The writes are unchecked since the opcode formatters
+        // above will have ensured space.
 
         void immediate8(int imm)
         {
@@ -4532,7 +4555,8 @@ private:
 
         // Internals; ModRm and REX formatters.
 
-        // Byte operand register spl & above require a REX prefix (to prevent the 'H' registers be accessed).
+        // Byte operand register spl & above require a REX prefix (to prevent
+        // the 'H' registers be accessed).
         inline bool byteRegRequiresRex(int reg)
         {
             return (reg >= X86Registers::esp);
@@ -4563,19 +4587,21 @@ private:
             emitRex(true, r, x, b);
         }
 
-        // Used for operations with byte operands - use byteRegRequiresRex() to check register operands,
-        // regRequiresRex() to check other registers (i.e. address base & index).
+        // Used for operations with byte operands - use byteRegRequiresRex() to
+        // check register operands, regRequiresRex() to check other registers
+        // (i.e. address base & index).
         //
-        // NB: WebKit's use of emitRexIf() is limited such that the reqRequiresRex() checks are
-        // not needed. SpiderMonkey extends oneByteOp8 functionality such that r, x, and b can
-        // all be used.
+        // NB: WebKit's use of emitRexIf() is limited such that the
+        // reqRequiresRex() checks are not needed. SpiderMonkey extends
+        // oneByteOp8 functionality such that r, x, and b can all be used.
         inline void emitRexIf(bool condition, int r, int x, int b)
         {
             if (condition || regRequiresRex(r) || regRequiresRex(x) || regRequiresRex(b))
                 emitRex(false, r, x, b);
         }
 
-        // Used for word sized operations, will plant a REX prefix if necessary (if any register is r8 or above).
+        // Used for word sized operations, will plant a REX prefix if necessary
+        // (if any register is r8 or above).
         inline void emitRexIfNeeded(int r, int x, int b)
         {
             emitRexIf(regRequiresRex(r) || regRequiresRex(x) || regRequiresRex(b), r, x, b);
@@ -4614,7 +4640,8 @@ private:
 
         void memoryModRM(int reg, RegisterID base, int offset)
         {
-            // A base of esp or r12 would be interpreted as a sib, so force a sib with no index & put the base in there.
+            // A base of esp or r12 would be interpreted as a sib, so force a
+            // sib with no index & put the base in there.
 #ifdef JS_CODEGEN_X64
             if ((base == hasSib) || (base == hasSib2))
 #else
@@ -4649,7 +4676,8 @@ private:
 
         void memoryModRM_disp32(int reg, RegisterID base, int offset)
         {
-            // A base of esp or r12 would be interpreted as a sib, so force a sib with no index & put the base in there.
+            // A base of esp or r12 would be interpreted as a sib, so force a
+            // sib with no index & put the base in there.
 #ifdef JS_CODEGEN_X64
             if ((base == hasSib) || (base == hasSib2))
 #else

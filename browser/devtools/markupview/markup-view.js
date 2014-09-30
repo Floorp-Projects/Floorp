@@ -22,6 +22,7 @@ const {HTMLEditor} = require("devtools/markupview/html-editor");
 const promise = require("devtools/toolkit/deprecated-sync-thenables");
 const {Tooltip} = require("devtools/shared/widgets/Tooltip");
 const EventEmitter = require("devtools/toolkit/event-emitter");
+const Heritage = require("sdk/core/heritage");
 
 Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
 Cu.import("resource://gre/modules/devtools/Templater.jsm");
@@ -40,6 +41,9 @@ loader.lazyGetter(this, "AutocompletePopup", () => {
  *
  * MarkupContainer - the structure that holds an editor and its
  *  immediate children in the markup panel.
+ *  - MarkupElementContainer: markup container for element nodes
+ *  - MarkupTextContainer: markup container for text / comment nodes
+ *  - MarkupReadonlyContainer: markup container for other nodes
  * Node - A content node.
  * object.elt - A UI element in the markup panel.
  */
@@ -186,7 +190,7 @@ MarkupView.prototype = {
       parentNode = parentNode.parentNode;
     }
 
-    if (container) {
+    if (container instanceof MarkupElementContainer) {
       // With the newly found container, delegate the tooltip content creation
       // and decision to show or not the tooltip
       container._buildEventTooltipContent(event.target, this.tooltip);
@@ -301,7 +305,7 @@ MarkupView.prototype = {
    * tooltip.
    * Delegates the actual decision to the corresponding MarkupContainer instance
    * if one is found.
-   * @return the promise returned by MarkupContainer._isImagePreviewTarget
+   * @return the promise returned by MarkupElementContainer._isImagePreviewTarget
    */
   _isImagePreviewTarget: function(target) {
     // From the target passed here, let's find the parent MarkupContainer
@@ -315,10 +319,10 @@ MarkupView.prototype = {
       parent = parent.parentNode;
     }
 
-    if (container) {
+    if (container instanceof MarkupElementContainer) {
       // With the newly found container, delegate the tooltip content creation
       // and decision to show or not the tooltip
-      return container._isImagePreviewTarget(target, this.tooltip);
+      return container.isImagePreviewTarget(target, this.tooltip);
     }
   },
 
@@ -507,7 +511,8 @@ MarkupView.prototype = {
    */
   deleteNode: function(aNode) {
     if (aNode.isDocumentElement ||
-        aNode.nodeType == Ci.nsIDOMNode.DOCUMENT_TYPE_NODE) {
+        aNode.nodeType == Ci.nsIDOMNode.DOCUMENT_TYPE_NODE ||
+        aNode.isAnonymous) {
       return;
     }
 
@@ -568,7 +573,7 @@ MarkupView.prototype = {
   /**
    * Make sure a node is included in the markup tool.
    *
-   * @param DOMNode aNode
+   * @param NodeFront aNode
    *        The node in the content document.
    * @param boolean aFlashNode
    *        Whether the newly imported node should be flashed
@@ -583,15 +588,23 @@ MarkupView.prototype = {
       return this.getContainer(aNode);
     }
 
+    let container;
+    let {nodeType, isPseudoElement} = aNode;
     if (aNode === this.walker.rootNode) {
-      var container = new RootContainer(this, aNode);
+      container = new RootContainer(this, aNode);
       this._elt.appendChild(container.elt);
       this._rootNode = aNode;
+    } else if (nodeType == Ci.nsIDOMNode.ELEMENT_NODE && !isPseudoElement) {
+      container = new MarkupElementContainer(this, aNode, this._inspector);
+    } else if (nodeType == Ci.nsIDOMNode.COMMENT_NODE ||
+               nodeType == Ci.nsIDOMNode.TEXT_NODE) {
+      container = new MarkupTextContainer(this, aNode, this._inspector);
     } else {
-      var container = new MarkupContainer(this, aNode, this._inspector);
-      if (aFlashNode) {
-        container.flashMutation();
-      }
+      container = new MarkupReadOnlyContainer(this, aNode, this._inspector);
+    }
+
+    if (aFlashNode) {
+      container.flashMutation();
     }
 
     this._containers.set(aNode, container);
@@ -961,7 +974,7 @@ MarkupView.prototype = {
         let parentContainer = this.getContainer(parent);
         if (parentContainer) {
           parentContainer.childrenDirty = true;
-          this._updateChildren(parentContainer, {expand: node});
+          this._updateChildren(parentContainer, {expand: true});
         }
       }
 
@@ -1306,74 +1319,69 @@ MarkupView.prototype = {
   }
 };
 
-
 /**
  * The main structure for storing a document node in the markup
  * tree.  Manages creation of the editor for the node and
  * a <ul> for placing child elements, and expansion/collapsing
  * of the element.
  *
- * @param MarkupView aMarkupView
- *        The markup view that owns this container.
- * @param DOMNode aNode
- *        The node to display.
- * @param Inspector aInspector
- *        The inspector tool container the markup-view
+ * This should not be instantiated directly, instead use one of:
+ *    MarkupReadOnlyContainer
+ *    MarkupTextContainer
+ *    MarkupElementContainer
  */
-function MarkupContainer(aMarkupView, aNode, aInspector) {
-  this.markup = aMarkupView;
-  this.doc = this.markup.doc;
-  this.undo = this.markup.undo;
-  this.node = aNode;
-  this._inspector = aInspector;
-
-  if (aNode.nodeType == Ci.nsIDOMNode.TEXT_NODE) {
-    this.editor = new TextEditor(this, aNode, "text");
-  } else if (aNode.nodeType == Ci.nsIDOMNode.COMMENT_NODE) {
-    this.editor = new TextEditor(this, aNode, "comment");
-  } else if (aNode.nodeType == Ci.nsIDOMNode.ELEMENT_NODE) {
-    this.editor = new ElementEditor(this, aNode);
-  } else if (aNode.nodeType == Ci.nsIDOMNode.DOCUMENT_TYPE_NODE) {
-    this.editor = new DoctypeEditor(this, aNode);
-  } else {
-    this.editor = new GenericEditor(this, aNode);
-  }
-
-  // The template will fill the following properties
-  this.elt = null;
-  this.expander = null;
-  this.tagState = null;
-  this.tagLine = null;
-  this.children = null;
-  this.markup.template("container", this);
-  this.elt.container = this;
-  this.children.container = this;
-
-  // Expanding/collapsing the node on dblclick of the whole tag-line element
-  this._onToggle = this._onToggle.bind(this);
-  this.elt.addEventListener("dblclick", this._onToggle, false);
-  this.expander.addEventListener("click", this._onToggle, false);
-
-  // Appending the editor element and attaching event listeners
-  this.tagLine.appendChild(this.editor.elt);
-
-  this._onMouseDown = this._onMouseDown.bind(this);
-  this.elt.addEventListener("mousedown", this._onMouseDown, false);
-
-  // Prepare the image preview tooltip data if any
-  this._prepareImagePreview();
-
-  // Marking the node as shown or hidden
-  this.isDisplayed = this.node.isDisplayed;
-}
+function MarkupContainer() { }
 
 MarkupContainer.prototype = {
+
+  /*
+   * Initialize the MarkupContainer.  Should be called while one
+   * of the other contain classes is instantiated.
+   *
+   * @param MarkupView markupView
+   *        The markup view that owns this container.
+   * @param NodeFront node
+   *        The node to display.
+   * @param string templateID
+   *        Which template to render for this container
+   */
+  initialize: function(markupView, node, templateID) {
+    this.markup = markupView;
+    this.node = node;
+    this.undo = this.markup.undo;
+
+    // The template will fill the following properties
+    this.elt = null;
+    this.expander = null;
+    this.tagState = null;
+    this.tagLine = null;
+    this.children = null;
+    this.markup.template(templateID, this);
+    this.elt.container = this;
+
+    // Binding event listeners
+    this._onMouseDown = this._onMouseDown.bind(this);
+    this.elt.addEventListener("mousedown", this._onMouseDown, false);
+
+    this._onToggle = this._onToggle.bind(this);
+
+    // Expanding/collapsing the node on dblclick of the whole tag-line element
+    this.elt.addEventListener("dblclick", this._onToggle, false);
+
+    if (this.expander) {
+      this.expander.addEventListener("click", this._onToggle, false);
+    }
+
+    // Marking the node as shown or hidden
+    this.isDisplayed = this.node.isDisplayed;
+  },
+
   toString: function() {
     return "[MarkupContainer for " + this.node + "]";
   },
 
   isPreviewable: function() {
-    if (this.node.tagName) {
+    if (this.node.tagName && !this.node.isPseudoElement) {
       let tagName = this.node.tagName.toLowerCase();
       let srcAttr = this.editor.getAttributeElement("src");
       let isImage = tagName === "img" && srcAttr;
@@ -1386,97 +1394,12 @@ MarkupContainer.prototype = {
   },
 
   /**
-   * If the node is an image or canvas (@see isPreviewable), then get the
-   * image data uri from the server so that it can then later be previewed in
-   * a tooltip if needed.
-   * Stores a promise in this.tooltipData.data that resolves when the data has
-   * been retrieved
-   */
-  _prepareImagePreview: function() {
-    if (this.isPreviewable()) {
-      // Get the image data for later so that when the user actually hovers over
-      // the element, the tooltip does contain the image
-      let def = promise.defer();
-
-      this.tooltipData = {
-        target: this.editor.getAttributeElement("src") || this.editor.tag,
-        data: def.promise
-      };
-
-      let maxDim = Services.prefs.getIntPref("devtools.inspector.imagePreviewTooltipSize");
-      this.node.getImageData(maxDim).then(data => {
-        data.data.string().then(str => {
-          let res = {data: str, size: data.size};
-          // Resolving the data promise and, to always keep tooltipData.data
-          // as a promise, create a new one that resolves immediately
-          def.resolve(res);
-          this.tooltipData.data = promise.resolve(res);
-        });
-      }, () => {
-        this.tooltipData.data = promise.reject();
-      });
-    }
-  },
-
-  /**
-   * Executed by MarkupView._isImagePreviewTarget which is itself called when the
-   * mouse hovers over a target in the markup-view.
-   * Checks if the target is indeed something we want to have an image tooltip
-   * preview over and, if so, inserts content into the tooltip.
-   * @return a promise that resolves when the content has been inserted or
-   * rejects if no preview is required. This promise is then used by Tooltip.js
-   * to decide if/when to show the tooltip
-   */
-  _isImagePreviewTarget: function(target, tooltip) {
-    if (!this.tooltipData || this.tooltipData.target !== target) {
-      return promise.reject();
-    }
-
-    return this.tooltipData.data.then(({data, size}) => {
-      tooltip.setImageContent(data, size);
-    }, () => {
-      tooltip.setBrokenImageContent();
-    });
-  },
-
-  /**
    * Show the element has displayed or not
    */
   set isDisplayed(isDisplayed) {
     this.elt.classList.remove("not-displayed");
     if (!isDisplayed) {
       this.elt.classList.add("not-displayed");
-    }
-  },
-
-  copyImageDataUri: function() {
-    // We need to send again a request to gettooltipData even if one was sent for
-    // the tooltip, because we want the full-size image
-    this.node.getImageData().then(data => {
-      data.data.string().then(str => {
-        clipboardHelper.copyString(str, this.markup.doc);
-      });
-    });
-  },
-
-  _buildEventTooltipContent: function(target, tooltip) {
-    if (target.hasAttribute("data-event")) {
-      tooltip.hide(target);
-
-      this.node.getEventListenerInfo().then(listenerInfo => {
-        tooltip.setEventContent({
-          eventListenerInfos: listenerInfo,
-          toolbox: this._inspector.toolbox
-        });
-
-        this.markup._makeTooltipPersistent(true);
-        tooltip.once("hidden", () => {
-          this.markup._makeTooltipPersistent(false);
-        });
-
-        tooltip.show(target);
-      });
-      return true;
     }
   },
 
@@ -1492,15 +1415,15 @@ MarkupContainer.prototype = {
 
   set hasChildren(aValue) {
     this._hasChildren = aValue;
+    if (!this.expander) {
+      return;
+    }
+
     if (aValue) {
       this.expander.style.visibility = "visible";
     } else {
       this.expander.style.visibility = "hidden";
     }
-  },
-
-  parentContainer: function() {
-    return this.elt.parentNode ? this.elt.parentNode.container : null;
   },
 
   /**
@@ -1511,32 +1434,35 @@ MarkupContainer.prototype = {
   },
 
   set expanded(aValue) {
+    if (!this.expander) {
+      return;
+    }
+
     if (aValue && this.elt.classList.contains("collapsed")) {
       // Expanding a node means cloning its "inline" closing tag into a new
       // tag-line that the user can interact with and showing the children.
-      if (this.editor instanceof ElementEditor) {
-        let closingTag = this.elt.querySelector(".close");
-        if (closingTag) {
-          if (!this.closeTagLine) {
-            let line = this.markup.doc.createElement("div");
-            line.classList.add("tag-line");
+      let closingTag = this.elt.querySelector(".close");
+      if (closingTag) {
+        if (!this.closeTagLine) {
+          let line = this.markup.doc.createElement("div");
+          line.classList.add("tag-line");
 
-            let tagState = this.markup.doc.createElement("div");
-            tagState.classList.add("tag-state");
-            line.appendChild(tagState);
+          let tagState = this.markup.doc.createElement("div");
+          tagState.classList.add("tag-state");
+          line.appendChild(tagState);
 
-            line.appendChild(closingTag.cloneNode(true));
+          line.appendChild(closingTag.cloneNode(true));
 
-            this.closeTagLine = line;
-          }
-          this.elt.appendChild(this.closeTagLine);
+          this.closeTagLine = line;
         }
+        this.elt.appendChild(this.closeTagLine);
       }
+
       this.elt.classList.remove("collapsed");
       this.expander.setAttribute("open", "");
       this.hovered = false;
     } else if (!aValue) {
-      if (this.editor instanceof ElementEditor && this.closeTagLine) {
+      if (this.closeTagLine) {
         this.elt.removeChild(this.closeTagLine);
       }
       this.elt.classList.add("collapsed");
@@ -1544,12 +1470,8 @@ MarkupContainer.prototype = {
     }
   },
 
-  _onToggle: function(event) {
-    this.markup.navigate(this);
-    if(this.hasChildren) {
-      this.markup.setNodeExpanded(this.node, !this.expanded, event.altKey);
-    }
-    event.stopPropagation();
+  parentContainer: function() {
+    return this.elt.parentNode ? this.elt.parentNode.container : null;
   },
 
   _onMouseDown: function(event) {
@@ -1695,11 +1617,27 @@ MarkupContainer.prototype = {
     }
   },
 
+  _onToggle: function(event) {
+    this.markup.navigate(this);
+    if (this.hasChildren) {
+      this.markup.setNodeExpanded(this.node, !this.expanded, event.altKey);
+    }
+    event.stopPropagation();
+  },
+
   /**
    * Get rid of event listeners and references, when the container is no longer
    * needed
    */
   destroy: function() {
+    // Remove event listeners
+    this.elt.removeEventListener("mousedown", this._onMouseDown, false);
+    this.elt.removeEventListener("dblclick", this._onToggle, false);
+
+    if (this.expander) {
+      this.expander.removeEventListener("click", this._onToggle, false);
+    }
+
     // Recursively destroy children containers
     let firstChild;
     while (firstChild = this.children.firstChild) {
@@ -1711,16 +1649,168 @@ MarkupContainer.prototype = {
       this.children.removeChild(firstChild);
     }
 
-    // Remove event listeners
-    this.elt.removeEventListener("dblclick", this._onToggle, false);
-    this.elt.removeEventListener("mousedown", this._onMouseDown, false);
-    this.expander.removeEventListener("click", this._onToggle, false);
-
-    // Destroy my editor
     this.editor.destroy();
   }
 };
 
+/**
+ * An implementation of MarkupContainer for Pseudo Elements,
+ * Doctype nodes, or any other type generic node that doesn't
+ * fit for other editors.
+ * Does not allow any editing, just viewing / selecting.
+ *
+ * @param MarkupView markupView
+ *        The markup view that owns this container.
+ * @param NodeFront node
+ *        The node to display.
+ */
+function MarkupReadOnlyContainer(markupView, node) {
+  MarkupContainer.prototype.initialize.call(this, markupView, node, "readonlycontainer");
+
+  this.editor = new GenericEditor(this, node);
+  this.tagLine.appendChild(this.editor.elt);
+}
+
+MarkupReadOnlyContainer.prototype = Heritage.extend(MarkupContainer.prototype, {});
+
+/**
+ * An implementation of MarkupContainer for text node and comment nodes.
+ * Allows basic text editing in a textarea.
+ *
+ * @param MarkupView aMarkupView
+ *        The markup view that owns this container.
+ * @param NodeFront aNode
+ *        The node to display.
+ * @param Inspector aInspector
+ *        The inspector tool container the markup-view
+ */
+function MarkupTextContainer(markupView, node) {
+  MarkupContainer.prototype.initialize.call(this, markupView, node, "textcontainer");
+
+  if (node.nodeType == Ci.nsIDOMNode.TEXT_NODE) {
+    this.editor = new TextEditor(this, node, "text");
+  } else if (node.nodeType == Ci.nsIDOMNode.COMMENT_NODE) {
+    this.editor = new TextEditor(this, node, "comment");
+  } else {
+    throw "Invalid node for MarkupTextContainer";
+  }
+
+  this.tagLine.appendChild(this.editor.elt);
+}
+
+MarkupTextContainer.prototype = Heritage.extend(MarkupContainer.prototype, {});
+
+/**
+ * An implementation of MarkupContainer for Elements that can contain
+ * child nodes.
+ * Allows editing of tag name, attributes, expanding / collapsing.
+ *
+ * @param MarkupView markupView
+ *        The markup view that owns this container.
+ * @param NodeFront node
+ *        The node to display.
+ */
+function MarkupElementContainer(markupView, node) {
+  MarkupContainer.prototype.initialize.call(this, markupView, node, "elementcontainer");
+
+  if (node.nodeType === Ci.nsIDOMNode.ELEMENT_NODE) {
+    this.editor = new ElementEditor(this, node);
+  } else {
+    throw "Invalid node for MarkupElementContainer";
+  }
+
+  this.tagLine.appendChild(this.editor.elt);
+
+  // Prepare the image preview tooltip data if any
+  this._prepareImagePreview();
+}
+
+MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
+
+  _buildEventTooltipContent: function(target, tooltip) {
+    if (target.hasAttribute("data-event")) {
+      tooltip.hide(target);
+
+      this.node.getEventListenerInfo().then(listenerInfo => {
+        tooltip.setEventContent({
+          eventListenerInfos: listenerInfo,
+          toolbox: this.markup._inspector.toolbox
+        });
+
+        this.markup._makeTooltipPersistent(true);
+        tooltip.once("hidden", () => {
+          this.markup._makeTooltipPersistent(false);
+        });
+        tooltip.show(target);
+      });
+      return true;
+    }
+  },
+
+  /**
+   * If the node is an image or canvas (@see isPreviewable), then get the
+   * image data uri from the server so that it can then later be previewed in
+   * a tooltip if needed.
+   * Stores a promise in this.tooltipData.data that resolves when the data has
+   * been retrieved
+   */
+  _prepareImagePreview: function() {
+    if (this.isPreviewable()) {
+      // Get the image data for later so that when the user actually hovers over
+      // the element, the tooltip does contain the image
+      let def = promise.defer();
+
+      this.tooltipData = {
+        target: this.editor.getAttributeElement("src") || this.editor.tag,
+        data: def.promise
+      };
+
+      let maxDim = Services.prefs.getIntPref("devtools.inspector.imagePreviewTooltipSize");
+      this.node.getImageData(maxDim).then(data => {
+        data.data.string().then(str => {
+          let res = {data: str, size: data.size};
+          // Resolving the data promise and, to always keep tooltipData.data
+          // as a promise, create a new one that resolves immediately
+          def.resolve(res);
+          this.tooltipData.data = promise.resolve(res);
+        });
+      }, () => {
+        this.tooltipData.data = promise.reject();
+      });
+    }
+  },
+
+  /**
+   * Executed by MarkupView._isImagePreviewTarget which is itself called when the
+   * mouse hovers over a target in the markup-view.
+   * Checks if the target is indeed something we want to have an image tooltip
+   * preview over and, if so, inserts content into the tooltip.
+   * @return a promise that resolves when the content has been inserted or
+   * rejects if no preview is required. This promise is then used by Tooltip.js
+   * to decide if/when to show the tooltip
+   */
+  isImagePreviewTarget: function(target, tooltip) {
+    if (!this.tooltipData || this.tooltipData.target !== target) {
+      return promise.reject();
+    }
+
+    return this.tooltipData.data.then(({data, size}) => {
+      tooltip.setImageContent(data, size);
+    }, () => {
+      tooltip.setBrokenImageContent();
+    });
+  },
+
+  copyImageDataUri: function() {
+    // We need to send again a request to gettooltipData even if one was sent for
+    // the tooltip, because we want the full-size image
+    this.node.getImageData().then(data => {
+      data.data.string().then(str => {
+        clipboardHelper.copyString(str, this.markup.doc);
+      });
+    });
+  }
+});
 
 /**
  * Dummy container node used for the root document element.
@@ -1742,35 +1832,33 @@ RootContainer.prototype = {
 };
 
 /**
- * Creates an editor for simple nodes.
+ * Creates an editor for non-editable nodes.
  */
 function GenericEditor(aContainer, aNode) {
-  this.elt = aContainer.doc.createElement("span");
-  this.elt.className = "editor";
-  this.elt.textContent = aNode.nodeName;
+  this.container = aContainer;
+  this.markup = this.container.markup;
+  this.template = this.markup.template.bind(this.markup);
+  this.elt = null;
+  this.template("generic", this);
+
+  if (aNode.isPseudoElement) {
+    this.tag.classList.add("theme-fg-color5");
+    this.tag.textContent = aNode.isBeforePseudoElement ? "::before" : "::after";
+  } else if (aNode.nodeType == Ci.nsIDOMNode.DOCUMENT_TYPE_NODE) {
+    this.elt.classList.add("comment");
+    this.tag.textContent = '<!DOCTYPE ' + aNode.name +
+       (aNode.publicId ? ' PUBLIC "' +  aNode.publicId + '"': '') +
+       (aNode.systemId ? ' "' + aNode.systemId + '"' : '') +
+       '>';
+  } else {
+    this.tag.textContent = aNode.nodeName;
+  }
 }
 
 GenericEditor.prototype = {
-  destroy: function() {}
-};
-
-/**
- * Creates an editor for a DOCTYPE node.
- *
- * @param MarkupContainer aContainer The container owning this editor.
- * @param DOMNode aNode The node being edited.
- */
-function DoctypeEditor(aContainer, aNode) {
-  this.elt = aContainer.doc.createElement("span");
-  this.elt.className = "editor comment";
-  this.elt.textContent = '<!DOCTYPE ' + aNode.name +
-     (aNode.publicId ? ' PUBLIC "' +  aNode.publicId + '"': '') +
-     (aNode.systemId ? ' "' + aNode.systemId + '"' : '') +
-     '>';
-}
-
-DoctypeEditor.prototype = {
-  destroy: function() {}
+  destroy: function() {
+    this.elt.remove();
+  }
 };
 
 /**
@@ -1782,10 +1870,13 @@ DoctypeEditor.prototype = {
  * @param string aTemplate The template id to use to build the editor.
  */
 function TextEditor(aContainer, aNode, aTemplate) {
+  this.container = aContainer;
+  this.markup = this.container.markup;
   this.node = aNode;
+  this.template = this.markup.template.bind(aTemplate);
   this._selected = false;
 
-  aContainer.markup.template(aTemplate, this);
+  this.markup.template(aTemplate, this);
 
   editableField({
     element: this.value,
@@ -1800,13 +1891,13 @@ function TextEditor(aContainer, aNode, aTemplate) {
         longstr.string().then(oldValue => {
           longstr.release().then(null, console.error);
 
-          aContainer.undo.do(() => {
+          this.container.undo.do(() => {
             this.node.setNodeValue(aVal).then(() => {
-              aContainer.markup.nodeChanged(this.node);
+              this.markup.nodeChanged(this.node);
             });
           }, () => {
             this.node.setNodeValue(oldValue).then(() => {
-              aContainer.markup.nodeChanged(this.node);
+              this.markup.nodeChanged(this.node);
             })
           });
         });
@@ -1859,12 +1950,11 @@ TextEditor.prototype = {
  * @param Element aNode The node being edited.
  */
 function ElementEditor(aContainer, aNode) {
-  this.doc = aContainer.doc;
-  this.undo = aContainer.undo;
-  this.template = aContainer.markup.template.bind(aContainer.markup);
   this.container = aContainer;
-  this.markup = this.container.markup;
   this.node = aNode;
+  this.markup = this.container.markup;
+  this.template = this.markup.template.bind(this.markup);
+  this.doc = this.markup.doc;
 
   this.attrs = {};
 
@@ -1911,7 +2001,7 @@ function ElementEditor(aContainer, aNode) {
         let doMods = this._startModifyingAttributes();
         let undoMods = this._startModifyingAttributes();
         this._applyAttributes(aVal, null, doMods, undoMods);
-        this.undo.do(() => {
+        this.container.undo.do(() => {
           doMods.apply();
         }, function() {
           undoMods.apply();
@@ -2039,7 +2129,7 @@ ElementEditor.prototype = {
           this._saveAttribute(aAttr.name, undoMods);
           doMods.removeAttribute(aAttr.name);
           this._applyAttributes(aVal, attr, doMods, undoMods);
-          this.undo.do(() => {
+          this.container.undo.do(() => {
             doMods.apply();
           }, () => {
             undoMods.apply();
@@ -2154,7 +2244,7 @@ ElementEditor.prototype = {
         aOld.parentNode.removeChild(aOld);
       }
 
-      this.undo.do(() => {
+      this.container.undo.do(() => {
         swapNodes(this.rawNode, newElt);
         this.markup.setNodeExpanded(newFront, this.container.expanded);
         if (this.container.selected) {

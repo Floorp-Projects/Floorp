@@ -20,4 +20,6 @@ public class Constants {
 
     // TODO: Localize this with region.properties (or a similar solution). See bug 1065306.
     public static final String DEFAULT_ENGINE_IDENTIFIER = "yahoo";
+
+    public static final String PREF_SEARCH_ENGINE_KEY = "search.engines.default";
 }

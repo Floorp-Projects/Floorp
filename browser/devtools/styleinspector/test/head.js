@@ -109,16 +109,7 @@ function addTab(url) {
   let browser = tab.linkedBrowser;
 
   info("Loading the helper frame script " + FRAME_SCRIPT_URL);
-  // Bug 687194 - Mochitest registers its chrome URLs after browser
-  // initialization, so the content processes don't pick them up. That
-  // means we can't load our frame script from its chrome URI, because
-  // the content process won't be able to find it.
-  // Instead, we resolve the chrome URI for the script to a file URI, which
-  // we can then pass to the content process, which it is able to find.
-  let registry = Cc['@mozilla.org/chrome/chrome-registry;1']
-    .getService(Ci.nsIChromeRegistry);
-  let fileURI = registry.convertChromeURL(Services.io.newURI(FRAME_SCRIPT_URL, null, null)).spec;
-  browser.messageManager.loadFrameScript(fileURI, false);
+  browser.messageManager.loadFrameScript(FRAME_SCRIPT_URL, false);
 
   browser.addEventListener("load", function onload() {
     browser.removeEventListener("load", onload, true);
@@ -172,19 +163,25 @@ let selectAndHighlightNode = Task.async(function*(selector, inspector) {
   yield updated;
 });
 
-/**
- * Set the inspector's current selection to a node that matches the given css
- * selector.
- * @param {String} selector
- * @param {InspectorPanel} inspector The instance of InspectorPanel currently
+/*
+ * Set the inspector's current selection to a node or to the first match of the
+ * given css selector.
+ * @param {String|NodeFront}
+ *        data The node to select
+ * @param {InspectorPanel} inspector
+ *        The instance of InspectorPanel currently
  * loaded in the toolbox
- * @param {String} reason Defaults to "test" which instructs the inspector not
- * to highlight the node upon selection
+ * @param {String} reason
+ *        Defaults to "test" which instructs the inspector not
+ *        to highlight the node upon selection
  * @return {Promise} Resolves when the inspector is updated with the new node
  */
-let selectNode = Task.async(function*(selector, inspector, reason="test") {
-  info("Selecting the node for '" + selector + "'");
-  let nodeFront = yield getNodeFront(selector, inspector);
+let selectNode = Task.async(function*(data, inspector, reason="test") {
+  info("Selecting the node for '" + data + "'");
+  let nodeFront = data;
+  if (!data._form) {
+    nodeFront = yield getNodeFront(data, inspector);
+  }
   let updated = inspector.once("inspector-updated");
   inspector.selection.setNodeFront(nodeFront, reason);
   yield updated;

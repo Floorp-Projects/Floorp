@@ -43,8 +43,8 @@ TestSuccess(const char* hdr, bool extraTokens,
 
   uint64_t maxAge = 0;
   bool includeSubdomains = false;
-  rv = sss->ProcessHeader(nsISiteSecurityService::HEADER_HSTS, dummyUri, hdr,
-                          0, &maxAge, &includeSubdomains);
+  rv = sss->UnsafeProcessHeader(nsISiteSecurityService::HEADER_HSTS, dummyUri,
+                                hdr, 0, &maxAge, &includeSubdomains);
   EXPECT_SUCCESS(rv, "Failed to process valid header: %s", hdr);
 
   REQUIRE_EQUAL(maxAge, expectedMaxAge, "Did not correctly parse maxAge");
@@ -68,8 +68,8 @@ bool TestFailure(const char* hdr,
   nsresult rv = NS_NewURI(getter_AddRefs(dummyUri), "https://foo.com/bar.html");
   EXPECT_SUCCESS(rv, "Failed to create URI");
 
-  rv = sss->ProcessHeader(nsISiteSecurityService::HEADER_HSTS, dummyUri, hdr,
-                          0, nullptr, nullptr);
+  rv = sss->UnsafeProcessHeader(nsISiteSecurityService::HEADER_HSTS, dummyUri,
+                                hdr, 0, nullptr, nullptr);
   EXPECT_FAILURE(rv, "Parsed invalid header: %s", hdr);
   passed(hdr);
   return true;

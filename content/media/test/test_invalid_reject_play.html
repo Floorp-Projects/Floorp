@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Test rejection of invalid files during playback</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function startTest(test, token) {
+  var v = document.createElement('video');
+  manager.started(token);
+
+  // Seeing a decoder error is a success.
+  v.addEventListener("error", function onerror(e) {
+    is(v.error.code, v.error.MEDIA_ERR_DECODE,
+       "decoder should reject " + test.name);
+    v.removeEventListener("error", onerror, false);
+    manager.finished(token);
+  });
+
+  v.addEventListener("ended", function onended(e) {
+    ok(false, "decoder should have rejected file before playback ended");
+    v.removeEventListener("ended", onended, false);
+    manager.finished(token);
+  });
+
+  document.body.appendChild(v);
+  v.src = test.name;
+  v.play();
+}
+
+manager.runTests(gInvalidPlayTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

@@ -15,6 +15,7 @@
 #include "prtime.h"
 
 class nsIURI;
+class nsISSLStatus;
 
 // {16955eee-6c48-4152-9309-c42a465138a1}
 #define NS_SITE_SECURITY_SERVICE_CID \
@@ -128,13 +129,23 @@ private:
   nsresult GetHost(nsIURI *aURI, nsACString &aResult);
   nsresult SetHSTSState(uint32_t aType, nsIURI* aSourceURI, int64_t maxage,
                         bool includeSubdomains, uint32_t flags);
-  nsresult ProcessHeaderMutating(uint32_t aType, nsIURI* aSourceURI,
-                                 char* aHeader, uint32_t flags,
-                                 uint64_t *aMaxAge, bool *aIncludeSubdomains);
+  nsresult ProcessHeaderInternal(uint32_t aType, nsIURI* aSourceURI,
+                                 const char* aHeader, nsISSLStatus* aSSLStatus,
+                                 uint32_t aFlags, uint64_t* aMaxAge,
+                                 bool* aIncludeSubdomains);
+  nsresult ProcessSTSHeader(nsIURI* aSourceURI, const char* aHeader,
+                            uint32_t flags, uint64_t* aMaxAge,
+                            bool* aIncludeSubdomains);
+  nsresult ProcessPKPHeader(nsIURI* aSourceURI, const char* aHeader,
+                            nsISSLStatus* aSSLStatus, uint32_t flags,
+                            uint64_t* aMaxAge, bool* aIncludeSubdomains);
+  nsresult SetHPKPState(const char* aHost, SiteHPKPState& entry, uint32_t flags);
+
   const nsSTSPreload *GetPreloadListEntry(const char *aHost);
 
   bool mUsePreloadList;
   int64_t mPreloadListTimeOffset;
+  bool mProcessPKPHeadersFromNonBuiltInRoots;
   nsRefPtr<mozilla::DataStorage> mSiteStateStorage;
 };
 

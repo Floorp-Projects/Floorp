@@ -82,7 +82,7 @@ inline uint32_t
 AnyTypedArrayLength(HandleObject obj)
 {
     if (obj->is<TypedArrayObject>())
-	return obj->as<TypedArrayObject>().length();
+        return obj->as<TypedArrayObject>().length();
     return obj->as<SharedTypedArrayObject>().length();
 }
 
@@ -90,7 +90,7 @@ inline uint32_t
 AnyTypedArrayLength(const JSObject *obj)
 {
     if (obj->is<TypedArrayObject>())
-	return obj->as<TypedArrayObject>().length();
+        return obj->as<TypedArrayObject>().length();
     return obj->as<SharedTypedArrayObject>().length();
 }
 
@@ -98,7 +98,7 @@ inline Scalar::Type
 AnyTypedArrayType(HandleObject obj)
 {
     if (obj->is<TypedArrayObject>())
-	return obj->as<TypedArrayObject>().type();
+        return obj->as<TypedArrayObject>().type();
     return obj->as<SharedTypedArrayObject>().type();
 }
 
@@ -106,7 +106,7 @@ inline Scalar::Type
 AnyTypedArrayType(const JSObject *obj)
 {
     if (obj->is<TypedArrayObject>())
-	return obj->as<TypedArrayObject>().type();
+        return obj->as<TypedArrayObject>().type();
     return obj->as<SharedTypedArrayObject>().type();
 }
 
@@ -114,7 +114,7 @@ inline Shape*
 AnyTypedArrayShape(HandleObject obj)
 {
     if (obj->is<TypedArrayObject>())
-	return obj->as<TypedArrayObject>().lastProperty();
+        return obj->as<TypedArrayObject>().lastProperty();
     return obj->as<SharedTypedArrayObject>().lastProperty();
 }
 
@@ -122,7 +122,7 @@ inline Shape*
 AnyTypedArrayShape(const JSObject *obj)
 {
     if (obj->is<TypedArrayObject>())
-	return obj->as<TypedArrayObject>().lastProperty();
+        return obj->as<TypedArrayObject>().lastProperty();
     return obj->as<SharedTypedArrayObject>().lastProperty();
 }
 
@@ -130,7 +130,7 @@ inline const TypedArrayLayout&
 AnyTypedArrayLayout(const JSObject *obj)
 {
     if (obj->is<TypedArrayObject>())
-	return obj->as<TypedArrayObject>().layout();
+        return obj->as<TypedArrayObject>().layout();
     return obj->as<SharedTypedArrayObject>().layout();
 }
 
@@ -138,7 +138,7 @@ inline void *
 AnyTypedArrayViewData(const JSObject *obj)
 {
     if (obj->is<TypedArrayObject>())
-	return obj->as<TypedArrayObject>().viewData();
+        return obj->as<TypedArrayObject>().viewData();
     return obj->as<SharedTypedArrayObject>().viewData();
 }
 
@@ -146,7 +146,7 @@ inline uint32_t
 AnyTypedArrayByteLength(const JSObject *obj)
 {
     if (obj->is<TypedArrayObject>())
-	return obj->as<TypedArrayObject>().byteLength();
+        return obj->as<TypedArrayObject>().byteLength();
     return obj->as<SharedTypedArrayObject>().byteLength();
 }
 
@@ -511,7 +511,7 @@ class TypedArrayMethods
         }
 
         if (!AnyTypedArray::ensureHasBuffer(cx, tarray))
-            return nullptr;
+            return false;
 
         Rooted<BufferType*> bufobj(cx, tarray->buffer());
         MOZ_ASSERT(bufobj);
