@@ -1,0 +1,24 @@
+<html>
+  <head>
+    <title>Test that drawImage() calls don't reset the canvas' transform</title>
+    <script type="text/javascript">
+      function go() {
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+
+        ctx.mozCurrentTransform = [2, 0, 0, 2, 0, 0];
+
+        // SVG image that draws nothing
+        ctx.drawImage(document.getElementById("image"), 0, 0);
+
+        // Check that ctx's transform wasn't reset by the drawImage call
+        ctx.fillStyle = "blue";
+        ctx.fillRect(20, 20, 50, 50);
+      }
+    </script>
+  </head>
+  <body onload="go()">
+    <canvas id="canvas" width="200" height="200"></canvas>
+    <img id="image" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='1' height='1'></svg>" style="display: none">
+  </body>
+</html>

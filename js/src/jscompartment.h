@@ -348,8 +348,19 @@ struct JSCompartment
     void trace(JSTracer *trc);
     void markRoots(JSTracer *trc);
     bool preserveJitCode() { return gcPreserveJitCode; }
-    void sweep(js::FreeOp *fop, bool releaseTypes);
+
+    void sweepInnerViews();
     void sweepCrossCompartmentWrappers();
+    void sweepTypeObjectTables();
+    void sweepSavedStacks();
+    void sweepGlobalObject(js::FreeOp *fop);
+    void sweepSelfHostingScriptSource();
+    void sweepJitCompartment(js::FreeOp *fop);
+    void sweepRegExps();
+    void sweepDebugScopes();
+    void sweepWeakMaps();
+    void sweepNativeIterators();
+
     void purge();
     void clearTables();
 

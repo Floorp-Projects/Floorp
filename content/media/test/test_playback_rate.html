@@ -36,7 +36,8 @@ let VERY_SLOW_RATE = 0.1,
 
 function ontimeupdate(e) {
   var t = e.target;
-  if (t.gotEnded) {
+  // Skip short files for SoundTouch doesn't work well on small number of samples.
+  if (t.gotEnded || t.duration < 2) {
     return;
   }
   t.testedForSlowdown = true;

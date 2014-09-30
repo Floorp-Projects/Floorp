@@ -229,10 +229,14 @@ static const char kFontSTIXGeneral[] = "STIXGeneral";
 static const char kFontTamilMN[] = "Tamil MN";
 
 void
-gfxPlatformMac::GetCommonFallbackFonts(const uint32_t aCh,
+gfxPlatformMac::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
                                        int32_t aRunScript,
                                        nsTArray<const char*>& aFontList)
 {
+    if (aNextCh == 0xfe0f) {
+        aFontList.AppendElement(kFontAppleColorEmoji);
+    }
+
     aFontList.AppendElement(kFontLucidaGrande);
 
     if (!IS_IN_BMP(aCh)) {

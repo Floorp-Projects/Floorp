@@ -361,6 +361,8 @@ let ObserverChild = {
 function EventTargetChild(childGlobal)
 {
   this._childGlobal = childGlobal;
+  this.capturingHandler = (event) => this.handleEvent(true, event);
+  this.nonCapturingHandler = (event) => this.handleEvent(false, event);
   NotificationTracker.watch("event", this);
 }
 
@@ -372,7 +374,7 @@ EventTargetChild.prototype = {
   track: function(path, register) {
     let eventType = path[1];
     let useCapture = path[2];
-    let listener = (event) => this.handleEvent(useCapture, event);
+    let listener = useCapture ? this.capturingHandler : this.nonCapturingHandler;
     if (register) {
       this._childGlobal.addEventListener(eventType, listener, useCapture, true);
     } else {
