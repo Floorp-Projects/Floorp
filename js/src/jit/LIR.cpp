@@ -348,6 +348,8 @@ static const char * const TypeChars[] =
     "s",            // SLOTS
     "f",            // FLOAT32
     "d",            // DOUBLE
+    "i32x4",        // INT32X4
+    "f32x4",        // FLOAT32X4
 #ifdef JS_NUNBOX32
     "t",            // TYPE
     "p"             // PAYLOAD
@@ -541,9 +543,25 @@ bool
 LMoveGroup::add(LAllocation *from, LAllocation *to, LDefinition::Type type)
 {
 #ifdef DEBUG
-    JS_ASSERT(*from != *to);
+    MOZ_ASSERT(*from != *to);
     for (size_t i = 0; i < moves_.length(); i++)
-        JS_ASSERT(*to != *moves_[i].to());
+        MOZ_ASSERT(*to != *moves_[i].to());
+
+    // Check that SIMD moves are aligned according to ABI requirements.
+    if (LDefinition(type).isSimdType()) {
+        if (from->isMemory()) {
+            if (from->isArgument())
+                MOZ_ASSERT(from->toArgument()->index() % SimdStackAlignment == 0);
+            else
+                MOZ_ASSERT(from->toStackSlot()->slot() % SimdStackAlignment == 0);
+        }
+        if (to->isMemory()) {
+            if (to->isArgument())
+                MOZ_ASSERT(to->toArgument()->index() % SimdStackAlignment == 0);
+            else
+                MOZ_ASSERT(to->toStackSlot()->slot() % SimdStackAlignment == 0);
+        }
+    }
 #endif
     return moves_.append(LMove(from, to, type));
 }
@@ -582,7 +600,7 @@ LMoveGroup::printOperands(FILE *fp)
         const LMove &move = getMove(i);
         // Use two printfs, as LAllocation::toString is not reentrant.
         fprintf(fp, " [%s", move.from()->toString());
-        fprintf(fp, " -> %s]", move.to()->toString());
+        fprintf(fp, " -> %s, %s]", move.to()->toString(), TypeChars[move.type()]);
         if (i != numMoves() - 1)
             fprintf(fp, ",");
     }
