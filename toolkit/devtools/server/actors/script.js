@@ -4977,7 +4977,7 @@ ThreadSources.prototype = {
    * of an array of source actors for those.
    */
   sourcesForScript: function (aScript) {
-    if (!this._useSourceMaps || !aScript.sourceMapURL) {
+    if (!this._useSourceMaps || !aScript.source.sourceMapURL) {
       return resolve([this._sourceForScript(aScript)].filter(isNotNull));
     }
 
@@ -5004,8 +5004,8 @@ ThreadSources.prototype = {
    * |aScript| must have a non-null sourceMapURL.
    */
   sourceMap: function (aScript) {
-    dbg_assert(aScript.sourceMapURL, "Script should have a sourceMapURL");
-    let sourceMapURL = this._normalize(aScript.sourceMapURL, aScript.url);
+    dbg_assert(aScript.source.sourceMapURL, "Script should have a sourceMapURL");
+    let sourceMapURL = this._normalize(aScript.source.sourceMapURL, aScript.url);
     let map = this._fetchSourceMap(sourceMapURL, aScript.url)
       .then(aSourceMap => this.saveSourceMap(aSourceMap, aScript.url));
     this._sourceMapsByGeneratedSource[aScript.url] = map;
