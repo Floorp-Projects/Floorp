@@ -480,6 +480,33 @@ EventQueue::CreateTextChangeEventFor(AccMutationEvent* aEvent)
                            aEvent->mIsFromUserInput ? eFromUserInput : eNoUserInput);
 }
 
+void
+EventQueue::SendIPCEvent(AccEvent* aEvent) const
+{
+  DocAccessibleChild* ipcDoc = mDocument->IPCDoc();
+  uint64_t id = aEvent->GetAccessible()->IsDoc() ? 0 :
+    reinterpret_cast<uintptr_t>(aEvent->GetAccessible());
+
+  switch(aEvent->GetEventType()) {
+    case nsIAccessibleEvent::EVENT_SHOW:
+      ipcDoc->ShowEvent(downcast_accEvent(aEvent));
+      break;
+
+    case nsIAccessibleEvent::EVENT_HIDE:
+      ipcDoc->SendHideEvent(id);
+      break;
+
+    case nsIAccessibleEvent::EVENT_REORDER:
+      // reorder events on the application acc aren't necessary to tell the parent
+      // about new top level documents.
+      if (!aEvent->GetAccessible()->IsApplication())
+        ipcDoc->SendEvent(id, aEvent->GetEventType());
+      break;
+    default:
+      ipcDoc->SendEvent(id, aEvent->GetEventType());
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // EventQueue: event queue
 
@@ -557,14 +584,7 @@ EventQueue::ProcessEventQueue()
     if (!mDocument)
       return;
 
-    if (IPCAccessibilityActive()) {
-    DocAccessibleChild* ipcDoc = mDocument->IPCDoc();
-      if (event->mEventType == nsIAccessibleEvent::EVENT_SHOW)
-        ipcDoc->ShowEvent(downcast_accEvent(event));
-      else if (event->mEventType == nsIAccessibleEvent::EVENT_HIDE)
-        ipcDoc->SendHideEvent(reinterpret_cast<uintptr_t>(event->GetAccessible()));
-      else
-        ipcDoc->SendEvent(event->GetEventType());
-    }
+    if (IPCAccessibilityActive())
+      SendIPCEvent(event);
   }
 }
