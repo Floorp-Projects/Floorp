@@ -289,7 +289,15 @@ void
 SourceBuffer::StopUpdating()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mUpdating);
+  if (!mUpdating) {
+    // The buffer append algorithm has been interrupted by abort().
+    //
+    // If the sequence appendBuffer(), abort(), appendBuffer() occurs before
+    // the first StopUpdating() runnable runs, then a second StopUpdating()
+    // runnable will be scheduled, but still only one (the first) will queue
+    // events.
+    return;
+  }
   mUpdating = false;
   QueueAsyncSimpleEvent("update");
   QueueAsyncSimpleEvent("updateend");

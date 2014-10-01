@@ -174,6 +174,8 @@ public class GeckoView extends LayerView
             BrowserDB.initialize(profile.getName());
 
             GeckoAppShell.setLayerView(this);
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createObjectEvent(
+                GeckoEvent.ACTION_OBJECT_LAYER_CLIENT, getLayerClientObject()));
             GeckoThread.createAndStart();
         } else if(GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             // If Gecko is already running, that means the Activity was
@@ -247,7 +249,6 @@ public class GeckoView extends LayerView
         if (selectedTab != null)
             Tabs.getInstance().notifyListeners(selectedTab, Tabs.TabEvents.SELECTED);
         geckoConnected();
-        GeckoAppShell.setLayerClient(getLayerClientObject());
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
     }
 

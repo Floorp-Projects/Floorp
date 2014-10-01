@@ -2016,6 +2016,12 @@ CheckSideEffects(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, bool
                 *answer = true;
             }
         }
+
+        if (pn->isHoistedLetUse()) {
+            // Hoisted uses of lexical bindings throw on access.
+            *answer = true;
+        }
+
         if (pn->isKind(PNK_DOT)) {
             /* Dotted property references in general can call getters. */
             *answer = true;
