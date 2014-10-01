@@ -255,7 +255,9 @@ CompileRegExpObject(JSContext *cx, RegExpObjectBuilder &builder, CallArgs args)
         if (!JSObject::getProperty(cx, sourceObj, sourceObj, cx->names().source, &v))
             return false;
 
-        Rooted<JSAtom*> sourceAtom(cx, &v.toString()->asAtom());
+        // For proxies like CPOWs, we can't assume the result of a property get
+        // for 'source' is atomized.
+        Rooted<JSAtom*> sourceAtom(cx, AtomizeString(cx, v.toString()));
         RegExpObject *reobj = builder.build(sourceAtom, flags);
         if (!reobj)
             return false;
