@@ -201,10 +201,6 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/URLSearchParams.h"
 
-#ifdef MOZ_TOOLKIT_SEARCH
-#include "nsIBrowserSearchService.h"
-#endif
-
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 #if defined(DEBUG_bryner) || defined(DEBUG_chb)
@@ -4587,7 +4583,6 @@ nsDocShell::LoadURIWithBase(const char16_t * aURI,
         aLoadFlags &= ~LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
     }
     
-    nsCOMPtr<nsIURIFixupInfo> fixupInfo;
     if (sURIFixup) {
         // Call the fixup object.  This will clobber the rv from NS_NewURI
         // above, but that's fine with us.  Note that we need to do this even
@@ -4601,6 +4596,7 @@ nsDocShell::LoadURIWithBase(const char16_t * aURI,
           fixupFlags |= nsIURIFixup::FIXUP_FLAG_FIX_SCHEME_TYPOS;
         }
         nsCOMPtr<nsIInputStream> fixupStream;
+        nsCOMPtr<nsIURIFixupInfo> fixupInfo;
         rv = sURIFixup->GetFixupURIInfo(uriString, fixupFlags,
                                         getter_AddRefs(fixupStream),
                                         getter_AddRefs(fixupInfo));
@@ -4611,7 +4607,7 @@ nsDocShell::LoadURIWithBase(const char16_t * aURI,
         }
 
         if (fixupStream) {
-            // GetFixupURIInfo only returns a post data stream if it succeeded
+            // CreateFixupURI only returns a post data stream if it succeeded
             // and changed the URI, in which case we should override the
             // passed-in post data.
             postStream = fixupStream;
@@ -4669,13 +4665,6 @@ nsDocShell::LoadURIWithBase(const char16_t * aURI,
     loadInfo->SetReferrer(aReferringURI);
     loadInfo->SetHeadersStream(aHeaderStream);
     loadInfo->SetBaseURI(aBaseURI);
-
-    if (fixupInfo) {
-        nsAutoString searchProvider, keyword;
-        fixupInfo->GetKeywordProviderName(searchProvider);
-        fixupInfo->GetKeywordAsSent(keyword);
-        MaybeNotifyKeywordSearchLoading(searchProvider, keyword);
-    }
 
     rv = LoadURI(uri, loadInfo, extraFlags, true);
 
@@ -7393,7 +7382,6 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
             //
             // First try keyword fixup
             //
-            nsAutoString keywordProviderName, keywordAsSent;
             if (aStatus == NS_ERROR_UNKNOWN_HOST && mAllowKeywordFixup) {
                 bool keywordsEnabled =
                     Preferences::GetBool("keyword.enabled", false);
@@ -7424,12 +7412,11 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
                 }
 
                 if (keywordsEnabled && (kNotFound == dotLoc)) {
-                    nsCOMPtr<nsIURIFixupInfo> info;
                     // only send non-qualified hosts to the keyword server
                     if (!mOriginalUriString.IsEmpty()) {
                         sURIFixup->KeywordToURI(mOriginalUriString,
                                                 getter_AddRefs(newPostData),
-                                                getter_AddRefs(info));
+                                                getter_AddRefs(newURI));
                     }
                     else {
                         //
@@ -7451,18 +7438,12 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
                             NS_SUCCEEDED(idnSrv->ConvertACEtoUTF8(host, utf8Host))) {
                             sURIFixup->KeywordToURI(utf8Host,
                                                     getter_AddRefs(newPostData),
-                                                    getter_AddRefs(info));
+                                                    getter_AddRefs(newURI));
                         } else {
                             sURIFixup->KeywordToURI(host,
                                                     getter_AddRefs(newPostData),
-                                                    getter_AddRefs(info));
+                                                    getter_AddRefs(newURI));
                         }
-                    }
-
-                    info->GetPreferredURI(getter_AddRefs(newURI));
-                    if (newURI) {
-                        info->GetKeywordAsSent(keywordAsSent);
-                        info->GetKeywordProviderName(keywordProviderName);
                     }
                 } // end keywordsEnabled
             }
@@ -7496,8 +7477,6 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
                 if (doCreateAlternate) {
                     newURI = nullptr;
                     newPostData = nullptr;
-                    keywordProviderName.Truncate();
-                    keywordAsSent.Truncate();
                     sURIFixup->CreateFixupURI(oldSpec,
                       nsIURIFixup::FIXUP_FLAGS_MAKE_ALTERNATE_URI,
                                               getter_AddRefs(newPostData),
@@ -7517,10 +7496,6 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
                     nsAutoCString newSpec;
                     newURI->GetSpec(newSpec);
                     NS_ConvertUTF8toUTF16 newSpecW(newSpec);
-
-                    // This notification is meant for Firefox Health Report so it
-                    // can increment counts from the search engine
-                    MaybeNotifyKeywordSearchLoading(keywordProviderName, keywordAsSent);
 
                     return LoadURI(newSpecW.get(),  // URI string
                                    LOAD_FLAGS_NONE, // Load flags
@@ -13532,37 +13507,4 @@ URLSearchParams*
 nsDocShell::GetURLSearchParams()
 {
   return mURLSearchParams;
-}
-
-void
-nsDocShell::MaybeNotifyKeywordSearchLoading(const nsString &aProvider,
-                                            const nsString &aKeyword) {
-
-  if (aProvider.IsEmpty()) {
-    return;
-  }
-
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    dom::ContentChild* contentChild = dom::ContentChild::GetSingleton();
-    if (contentChild) {
-      contentChild->SendNotifyKeywordSearchLoading(aProvider, aKeyword);
-    }
-    return;
-  }
-
-#ifdef MOZ_TOOLKIT_SEARCH
-  nsCOMPtr<nsIBrowserSearchService> searchSvc = do_GetService("@mozilla.org/browser/search-service;1");
-  if (searchSvc) {
-    nsCOMPtr<nsISearchEngine> searchEngine;
-    searchSvc->GetEngineByName(aProvider, getter_AddRefs(searchEngine));
-    if (searchEngine) {
-      nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
-      if (obsSvc) {
-        // Note that "keyword-search" refers to a search via the url
-        // bar, not a bookmarks keyword search.
-        obsSvc->NotifyObservers(searchEngine, "keyword-search", aKeyword.get());
-      }
-    }
-  }
-#endif
 }
