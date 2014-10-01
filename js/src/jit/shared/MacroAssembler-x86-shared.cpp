@@ -16,7 +16,7 @@ void
 MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
 {
     FloatRegisterSet doubleSet(FloatRegisterSet::Subtract(set.fpus(), simdSet));
-    JS_ASSERT_IF(simdSet.empty(), doubleSet == set.fpus());
+    MOZ_ASSERT_IF(simdSet.empty(), doubleSet == set.fpus());
     unsigned numSimd = simdSet.size();
     unsigned numDouble = doubleSet.size();
     int32_t diffF = numDouble * sizeof(double) + numSimd * Simd128DataSize;
@@ -51,7 +51,7 @@ void
 MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRegisterSet simdSet)
 {
     FloatRegisterSet doubleSet(FloatRegisterSet::Subtract(set.fpus(), simdSet));
-    JS_ASSERT_IF(simdSet.empty(), doubleSet == set.fpus());
+    MOZ_ASSERT_IF(simdSet.empty(), doubleSet == set.fpus());
     unsigned numSimd = simdSet.size();
     unsigned numDouble = doubleSet.size();
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);

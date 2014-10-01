@@ -121,7 +121,7 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
 
 #ifdef DEBUG
     JSFunction *fun = call.callee().is<JSFunction>() ? &call.callee().as<JSFunction>() : nullptr;
-    JS_ASSERT_IF(fun && fun->isInterpreted(), !fun->strict());
+    MOZ_ASSERT_IF(fun && fun->isInterpreted(), !fun->strict());
 #endif
 
     JSObject *thisObj = BoxNonStrictThis(cx, call.thisv());
@@ -462,7 +462,7 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
         if (MOZ_UNLIKELY(clasp == &js_NoSuchMethodClass))
             return NoSuchMethod(cx, args.length(), args.base());
 #endif
-        JS_ASSERT_IF(construct, !args.callee().constructHook());
+        MOZ_ASSERT_IF(construct, !args.callee().constructHook());
         JSNative call = args.callee().callHook();
         if (!call)
             return ReportIsNotFunction(cx, args.calleev(), args.length() + 1, construct);
@@ -471,7 +471,7 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
 
     /* Invoke native functions. */
     JSFunction *fun = &args.callee().as<JSFunction>();
-    JS_ASSERT_IF(construct, !fun->isNativeConstructor());
+    MOZ_ASSERT_IF(construct, !fun->isNativeConstructor());
     if (fun->isNative())
         return CallJSNative(cx, fun->native(), args);
 
@@ -494,7 +494,7 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
 
     bool ok = RunScript(cx, state);
 
-    JS_ASSERT_IF(ok && construct, args.rval().isObject());
+    MOZ_ASSERT_IF(ok && construct, args.rval().isObject());
     return ok;
 }
 
@@ -609,8 +609,8 @@ bool
 js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, const Value &thisv,
                   ExecuteType type, AbstractFramePtr evalInFrame, Value *result)
 {
-    JS_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
-    JS_ASSERT_IF(type == EXECUTE_GLOBAL, !scopeChainArg.is<ScopeObject>());
+    MOZ_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
+    MOZ_ASSERT_IF(type == EXECUTE_GLOBAL, !scopeChainArg.is<ScopeObject>());
 #ifdef DEBUG
     if (thisv.isObject()) {
         RootedObject thisObj(cx, &thisv.toObject());
@@ -649,7 +649,7 @@ js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *
     JSObject *s = scopeChain;
     do {
         assertSameCompartment(cx, s);
-        JS_ASSERT_IF(!s->enclosingScope(), s->is<GlobalObject>());
+        MOZ_ASSERT_IF(!s->enclosingScope(), s->is<GlobalObject>());
     } while ((s = s->enclosingScope()));
 #endif
 
@@ -1432,8 +1432,8 @@ Interpret(JSContext *cx, RunState &state)
 #define SANITY_CHECKS()                                                       \
     JS_BEGIN_MACRO                                                            \
         js::gc::MaybeVerifyBarriers(cx);                                      \
-        JS_ASSERT_IF(script->hasScriptCounts(),                               \
-                     activation.opMask() == EnableInterruptsPseudoOpcode);    \
+        MOZ_ASSERT_IF(script->hasScriptCounts(),                              \
+                      activation.opMask() == EnableInterruptsPseudoOpcode);   \
     JS_END_MACRO
 
     gc::MaybeVerifyBarriers(cx, true);

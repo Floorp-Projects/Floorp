@@ -257,7 +257,7 @@ JSRuntime::sweepAtoms()
         bool isDying = IsStringAboutToBeFinalized(&atom);
 
         /* Pinned or interned key cannot be finalized. */
-        JS_ASSERT_IF(hasContexts() && entry.isTagged(), !isDying);
+        MOZ_ASSERT_IF(hasContexts() && entry.isTagged(), !isDying);
 
         if (isDying)
             e.removeFront();

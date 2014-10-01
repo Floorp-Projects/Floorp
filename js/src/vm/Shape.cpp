@@ -92,9 +92,9 @@ Shape::insertIntoDictionary(HeapPtrShape *dictp)
     MOZ_ASSERT(inDictionary());
     MOZ_ASSERT(!listp);
 
-    JS_ASSERT_IF(*dictp, (*dictp)->inDictionary());
-    JS_ASSERT_IF(*dictp, (*dictp)->listp == dictp);
-    JS_ASSERT_IF(*dictp, compartment() == (*dictp)->compartment());
+    MOZ_ASSERT_IF(*dictp, (*dictp)->inDictionary());
+    MOZ_ASSERT_IF(*dictp, (*dictp)->listp == dictp);
+    MOZ_ASSERT_IF(*dictp, compartment() == (*dictp)->compartment());
 
     setParent(dictp->get());
     if (parent)
@@ -134,7 +134,7 @@ Shape::handoffTableTo(Shape *shape)
 
     BaseShape *nbase = base();
 
-    JS_ASSERT_IF(shape->hasSlot(), nbase->slotSpan() > shape->slot());
+    MOZ_ASSERT_IF(shape->hasSlot(), nbase->slotSpan() > shape->slot());
 
     this->base_ = nbase->baseUnowned();
     nbase->adoptUnowned(shape->base()->toUnowned());
@@ -410,7 +410,7 @@ JSObject::getChildProperty(ExclusiveContext *cx,
         if (!shape)
             return nullptr;
         //MOZ_ASSERT(shape->parent == parent);
-        //JS_ASSERT_IF(parent != lastProperty(), parent == lastProperty()->parent);
+        //MOZ_ASSERT_IF(parent != lastProperty(), parent == lastProperty()->parent);
         if (!JSObject::setLastProperty(cx, obj, shape))
             return nullptr;
     }
@@ -589,7 +589,7 @@ JSObject::addPropertyInternal(typename ExecutionModeTraits<mode>::ExclusiveConte
                               bool allowDictionary)
 {
     MOZ_ASSERT(cx->isThreadLocal(obj));
-    JS_ASSERT_IF(!allowDictionary, !obj->inDictionaryMode());
+    MOZ_ASSERT_IF(!allowDictionary, !obj->inDictionaryMode());
 
     AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
@@ -604,7 +604,7 @@ JSObject::addPropertyInternal(typename ExecutionModeTraits<mode>::ExclusiveConte
             (slot == SHAPE_INVALID_SLOT) ||
             obj->lastProperty()->hasMissingSlot() ||
             (slot == obj->lastProperty()->maybeSlot() + 1);
-        JS_ASSERT_IF(!allowDictionary, stableSlot);
+        MOZ_ASSERT_IF(!allowDictionary, stableSlot);
         if (allowDictionary &&
             (!stableSlot || ShouldConvertToDictionary(obj)))
         {
@@ -833,7 +833,7 @@ JSObject::putProperty(typename ExecutionModeTraits<mode>::ExclusiveContextType c
     }
 
     /* Property exists: search must have returned a valid *spp. */
-    JS_ASSERT_IF(spp, !SHAPE_IS_REMOVED(*spp));
+    MOZ_ASSERT_IF(spp, !SHAPE_IS_REMOVED(*spp));
 
     if (!CheckCanChangeAttrs(cx, obj, shape, &attrs))
         return nullptr;
@@ -880,7 +880,7 @@ JSObject::putProperty(typename ExecutionModeTraits<mode>::ExclusiveContextType c
         shape = SHAPE_FETCH(spp);
     }
 
-    JS_ASSERT_IF(shape->hasSlot() && !(attrs & JSPROP_SHARED), shape->slot() == slot);
+    MOZ_ASSERT_IF(shape->hasSlot() && !(attrs & JSPROP_SHARED), shape->slot() == slot);
 
     if (obj->inDictionaryMode()) {
         /*
@@ -907,7 +907,7 @@ JSObject::putProperty(typename ExecutionModeTraits<mode>::ExclusiveContextType c
         else
             shape->base_ = nbase;
 
-        JS_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
+        MOZ_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
 
         shape->setSlot(slot);
         shape->attrs = uint8_t(attrs);
@@ -981,7 +981,7 @@ JSObject::changeProperty(typename ExecutionModeTraits<mode>::ExclusiveContextTyp
     MOZ_ASSERT(obj->nativeContainsPure(shape));
 
     attrs |= shape->attrs & mask;
-    JS_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
+    MOZ_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
 
     /* Allow only shared (slotless) => unshared (slotful) transition. */
     MOZ_ASSERT(!((attrs ^ shape->attrs) & JSPROP_SHARED) ||
@@ -1113,7 +1113,7 @@ JSObject::removeProperty(ExclusiveContext *cx, jsid id_)
              */
             Shape *aprop = self->lastProperty();
             for (int n = 50; --n >= 0 && aprop->parent; aprop = aprop->parent)
-                JS_ASSERT_IF(aprop != shape, self->nativeContains(cx, aprop));
+                MOZ_ASSERT_IF(aprop != shape, self->nativeContains(cx, aprop));
 #endif
         }
 
@@ -1201,11 +1201,11 @@ ObjectImpl::replaceWithNewEquivalentShape(ThreadSafeContext *cx, Shape *oldShape
     MOZ_ASSERT(cx->isThreadLocal(this));
     MOZ_ASSERT(cx->isThreadLocal(oldShape));
     MOZ_ASSERT(cx->isInsideCurrentCompartment(oldShape));
-    JS_ASSERT_IF(oldShape != lastProperty(),
-                 inDictionaryMode() &&
-                 ((cx->isExclusiveContext()
-                   ? nativeLookup(cx->asExclusiveContext(), oldShape->propidRef())
-                   : nativeLookupPure(oldShape->propidRef())) == oldShape));
+    MOZ_ASSERT_IF(oldShape != lastProperty(),
+                  inDictionaryMode() &&
+                  ((cx->isExclusiveContext()
+                    ? nativeLookup(cx->asExclusiveContext(), oldShape->propidRef())
+                    : nativeLookupPure(oldShape->propidRef())) == oldShape));
 
     ObjectImpl *self = this;
 
@@ -1527,8 +1527,8 @@ BaseShape::assertConsistency()
         UnownedBaseShape *unowned = baseUnowned();
         MOZ_ASSERT(hasGetterObject() == unowned->hasGetterObject());
         MOZ_ASSERT(hasSetterObject() == unowned->hasSetterObject());
-        JS_ASSERT_IF(hasGetterObject(), getterObject() == unowned->getterObject());
-        JS_ASSERT_IF(hasSetterObject(), setterObject() == unowned->setterObject());
+        MOZ_ASSERT_IF(hasGetterObject(), getterObject() == unowned->getterObject());
+        MOZ_ASSERT_IF(hasSetterObject(), setterObject() == unowned->setterObject());
         MOZ_ASSERT(getObjectParent() == unowned->getObjectParent());
         MOZ_ASSERT(getObjectMetadata() == unowned->getObjectMetadata());
         MOZ_ASSERT(getObjectFlags() == unowned->getObjectFlags());
@@ -1715,8 +1715,8 @@ EmptyShape::getInitialShape(ExclusiveContext *cx, const Class *clasp, TaggedProt
                             JSObject *parent, JSObject *metadata,
                             size_t nfixed, uint32_t objectFlags)
 {
-    JS_ASSERT_IF(proto.isObject(), cx->isInsideCurrentCompartment(proto.toObject()));
-    JS_ASSERT_IF(parent, cx->isInsideCurrentCompartment(parent));
+    MOZ_ASSERT_IF(proto.isObject(), cx->isInsideCurrentCompartment(proto.toObject()));
+    MOZ_ASSERT_IF(parent, cx->isInsideCurrentCompartment(parent));
 
     InitialShapeSet &table = cx->compartment()->initialShapes;
 

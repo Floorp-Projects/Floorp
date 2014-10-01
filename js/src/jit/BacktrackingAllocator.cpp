@@ -723,8 +723,8 @@ BacktrackingAllocator::tryAllocateRegister(PhysicalRegister &r, LiveInterval *in
     if (!reg->isCompatibleReg(r.reg))
         return true;
 
-    JS_ASSERT_IF(interval->requirement()->kind() == Requirement::FIXED,
-                 interval->requirement()->allocation() == LAllocation(r.reg));
+    MOZ_ASSERT_IF(interval->requirement()->kind() == Requirement::FIXED,
+                  interval->requirement()->allocation() == LAllocation(r.reg));
 
     for (size_t i = 0; i < interval->numRanges(); i++) {
         AllocatedRange range(interval, interval->getRange(i)), existing;
@@ -1181,11 +1181,11 @@ BacktrackingAllocator::populateSafepoints()
             // to this safepoint.
             if (ins == reg->ins() && !reg->isTemp()) {
                 DebugOnly<LDefinition*> def = reg->def();
-                JS_ASSERT_IF(def->policy() == LDefinition::MUST_REUSE_INPUT,
-                             def->type() == LDefinition::GENERAL ||
-                             def->type() == LDefinition::INT32 ||
-                             def->type() == LDefinition::FLOAT32 ||
-                             def->type() == LDefinition::DOUBLE);
+                MOZ_ASSERT_IF(def->policy() == LDefinition::MUST_REUSE_INPUT,
+                              def->type() == LDefinition::GENERAL ||
+                              def->type() == LDefinition::INT32 ||
+                              def->type() == LDefinition::FLOAT32 ||
+                              def->type() == LDefinition::DOUBLE);
                 continue;
             }
 

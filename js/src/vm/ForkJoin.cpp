@@ -501,7 +501,7 @@ ForkJoinOperation::apply()
     //       - Re-enqueue main script and any uncompiled scripts that were called
     // - Too many bailouts: Fallback to sequential
 
-    JS_ASSERT_IF(!IsBaselineEnabled(cx_), !IsIonEnabled(cx_));
+    MOZ_ASSERT_IF(!IsBaselineEnabled(cx_), !IsIonEnabled(cx_));
     if (!IsBaselineEnabled(cx_) || !IsIonEnabled(cx_))
         return sequentialExecution(true);
 

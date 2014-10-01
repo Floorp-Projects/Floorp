@@ -96,12 +96,12 @@ EnterBaseline(JSContext *cx, EnterJitData &data)
     }
 
     MOZ_ASSERT(jit::IsBaselineEnabled(cx));
-    JS_ASSERT_IF(data.osrFrame, CheckFrame(data.osrFrame));
+    MOZ_ASSERT_IF(data.osrFrame, CheckFrame(data.osrFrame));
 
     EnterJitCode enter = cx->runtime()->jitRuntime()->enterBaseline();
 
     // Caller must construct |this| before invoking the Ion function.
-    JS_ASSERT_IF(data.constructing, data.maxArgv[0].isObject());
+    MOZ_ASSERT_IF(data.constructing, data.maxArgv[0].isObject());
 
     data.result.setInt32(data.numActualArgs);
     {
@@ -128,7 +128,7 @@ EnterBaseline(JSContext *cx, EnterJitData &data)
     // Release temporary buffer used for OSR into Ion.
     cx->runtime()->getJitRuntime(cx)->freeOsrTempData();
 
-    JS_ASSERT_IF(data.result.isMagic(), data.result.isMagic(JS_ION_ERROR));
+    MOZ_ASSERT_IF(data.result.isMagic(), data.result.isMagic(JS_ION_ERROR));
     return data.result.isMagic() ? IonExec_Error : IonExec_Ok;
 }
 
@@ -228,8 +228,8 @@ jit::BaselineCompile(JSContext *cx, JSScript *script)
 
     MethodStatus status = compiler.compile();
 
-    JS_ASSERT_IF(status == Method_Compiled, script->hasBaselineScript());
-    JS_ASSERT_IF(status != Method_Compiled, !script->hasBaselineScript());
+    MOZ_ASSERT_IF(status == Method_Compiled, script->hasBaselineScript());
+    MOZ_ASSERT_IF(status != Method_Compiled, !script->hasBaselineScript());
 
     if (status == Method_CantCompile)
         script->setBaselineScript(cx, BASELINE_DISABLED_SCRIPT);
@@ -631,7 +631,7 @@ BaselineScript::copyPCMappingIndexEntries(const PCMappingIndexEntry *entries)
 uint8_t *
 BaselineScript::nativeCodeForPC(JSScript *script, jsbytecode *pc, PCMappingSlotInfo *slotInfo)
 {
-    JS_ASSERT_IF(script->hasBaselineScript(), script->baselineScript() == this);
+    MOZ_ASSERT_IF(script->hasBaselineScript(), script->baselineScript() == this);
 
     uint32_t pcOffset = script->pcToOffset(pc);
 
@@ -714,14 +714,14 @@ BaselineScript::pcForNativeOffset(JSScript *script, uint32_t nativeOffset, bool 
     i--;
 
     PCMappingIndexEntry &entry = pcMappingIndexEntry(i);
-    JS_ASSERT_IF(isReturn, nativeOffset >= entry.nativeOffset);
+    MOZ_ASSERT_IF(isReturn, nativeOffset >= entry.nativeOffset);
 
     CompactBufferReader reader(pcMappingReader(i));
     jsbytecode *curPC = script->offsetToPC(entry.pcOffset);
     uint32_t curNativeOffset = entry.nativeOffset;
 
     MOZ_ASSERT(script->containsPC(curPC));
-    JS_ASSERT_IF(isReturn, nativeOffset >= curNativeOffset);
+    MOZ_ASSERT_IF(isReturn, nativeOffset >= curNativeOffset);
 
     // In the raw native-lookup case, the native code address can occur
     // before the start of ops.  Associate those with bytecode offset 0.

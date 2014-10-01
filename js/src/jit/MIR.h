@@ -1642,7 +1642,7 @@ class MSimdBinaryArith : public MBinaryInstruction
     MSimdBinaryArith(MDefinition *left, MDefinition *right, Operation op, MIRType type)
       : MBinaryInstruction(left, right), operation_(op)
     {
-        JS_ASSERT_IF(type == MIRType_Int32x4, op == Add || op == Sub);
+        MOZ_ASSERT_IF(type == MIRType_Int32x4, op == Add || op == Sub);
         MOZ_ASSERT(IsSimdType(type));
         MOZ_ASSERT(left->type() == right->type());
         MOZ_ASSERT(left->type() == type);
@@ -2397,7 +2397,7 @@ class MNewObject : public MUnaryInstruction
         templateObjectIsClassPrototype_(templateObjectIsClassPrototype)
     {
         JSObject *obj = templateObject();
-        JS_ASSERT_IF(templateObjectIsClassPrototype, !shouldUseVM());
+        MOZ_ASSERT_IF(templateObjectIsClassPrototype, !shouldUseVM());
         setResultType(MIRType_Object);
         if (!obj->hasSingletonType())
             setResultTypeSet(MakeSingletonTypeSet(constraints, obj));
@@ -3527,7 +3527,7 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy::Data
         // Only allow unboxing a non MIRType_Value when input and output types
         // don't match. This is often used to force a bailout. Boxing happens
         // during type analysis.
-        JS_ASSERT_IF(ins->type() != MIRType_Value, type != ins->type());
+        MOZ_ASSERT_IF(ins->type() != MIRType_Value, type != ins->type());
 
         MOZ_ASSERT(type == MIRType_Boolean ||
                    type == MIRType_Int32   ||
@@ -5297,7 +5297,7 @@ class MMul : public MBinaryArithInstruction
             setTruncateKind(Truncate);
             setCommutative();
         }
-        JS_ASSERT_IF(mode != Integer, mode == Normal);
+        MOZ_ASSERT_IF(mode != Integer, mode == Normal);
 
         if (type != MIRType_Value)
             specialization_ = type;

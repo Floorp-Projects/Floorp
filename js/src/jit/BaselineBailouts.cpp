@@ -989,7 +989,7 @@ InitFromBailout(JSContext *cx, HandleScript caller, jsbytecode *callerPC,
                 loc2 = slotInfo.nextSlotLocation();
                 JitSpew(JitSpew_BaselineBailouts, "      Popping next stack value into %d.",
                             (int) loc2);
-                JS_ASSERT_IF(loc1 != PCMappingSlotInfo::SlotIgnore, loc1 != loc2);
+                MOZ_ASSERT_IF(loc1 != PCMappingSlotInfo::SlotIgnore, loc1 != loc2);
                 builder.popValueInto(loc2);
             }
 

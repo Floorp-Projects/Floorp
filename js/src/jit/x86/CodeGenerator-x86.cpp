@@ -301,7 +301,7 @@ CodeGeneratorX86::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic 
 {
     const MLoadTypedArrayElementStatic *mir = ins->mir();
     Scalar::Type vt = mir->viewType();
-    JS_ASSERT_IF(vt == Scalar::Float32, mir->type() == MIRType_Float32);
+    MOZ_ASSERT_IF(vt == Scalar::Float32, mir->type() == MIRType_Float32);
 
     Register ptr = ToRegister(ins->ptr());
     const LDefinition *out = ins->output();

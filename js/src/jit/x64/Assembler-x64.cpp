@@ -181,7 +181,7 @@ Assembler::finish()
     // Now that we know the offset to the jump table, squirrel it into the
     // jump relocation buffer if any JitCode references exist and must be
     // tracked for GC.
-    JS_ASSERT_IF(jumpRelocations_.length(), jumpRelocations_.length() >= sizeof(uint32_t));
+    MOZ_ASSERT_IF(jumpRelocations_.length(), jumpRelocations_.length() >= sizeof(uint32_t));
     if (jumpRelocations_.length())
         *(uint32_t *)jumpRelocations_.buffer() = extendedJumpTable_;
 

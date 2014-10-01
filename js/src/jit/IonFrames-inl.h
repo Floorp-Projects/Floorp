@@ -56,7 +56,7 @@ JitFrameIterator::isFakeExitFrame() const
                 prevType() == JitFrame_Unwound_IonJS ||
                 prevType() == JitFrame_Unwound_BaselineStub ||
                 (prevType() == JitFrame_Entry && type() == JitFrame_Exit));
-    JS_ASSERT_IF(res, type() == JitFrame_Exit || type() == JitFrame_BaselineJS);
+    MOZ_ASSERT_IF(res, type() == JitFrame_Exit || type() == JitFrame_BaselineJS);
     return res;
 }
 

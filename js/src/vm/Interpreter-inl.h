@@ -31,7 +31,7 @@ namespace js {
 inline bool
 ComputeThis(JSContext *cx, AbstractFramePtr frame)
 {
-    JS_ASSERT_IF(frame.isInterpreterFrame(), !frame.asInterpreterFrame()->runningInJit());
+    MOZ_ASSERT_IF(frame.isInterpreterFrame(), !frame.asInterpreterFrame()->runningInJit());
 
     if (frame.isFunctionFrame() && frame.fun()->isArrow()) {
         /*
@@ -57,7 +57,7 @@ ComputeThis(JSContext *cx, AbstractFramePtr frame)
          * and undefined |this| values will unwrap to the same object in the function and
          * eval frames, so are not required to be wrapped.
          */
-        JS_ASSERT_IF(frame.isEvalFrame(), thisv.isUndefined() || thisv.isNull());
+        MOZ_ASSERT_IF(frame.isEvalFrame(), thisv.isUndefined() || thisv.isNull());
     }
 
     JSObject *thisObj = BoxNonStrictThis(cx, thisv);
@@ -305,7 +305,7 @@ SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject s
                  HandleValue val)
 {
     MOZ_ASSERT(*pc == JSOP_SETNAME || *pc == JSOP_SETGNAME);
-    JS_ASSERT_IF(*pc == JSOP_SETGNAME, scope == cx->global());
+    MOZ_ASSERT_IF(*pc == JSOP_SETGNAME, scope == cx->global());
 
     bool strict = script->strict();
     RootedPropertyName name(cx, script->getName(pc));

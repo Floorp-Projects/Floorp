@@ -102,7 +102,7 @@ public:
     void release(bool willDestroy = false)
     {
         MOZ_ASSERT(m_refCount != 0);
-        JS_ASSERT_IF(willDestroy, m_refCount == 1);
+        MOZ_ASSERT_IF(willDestroy, m_refCount == 1);
         if (--m_refCount == 0)
             js_delete(this);
     }
@@ -209,7 +209,7 @@ public:
             m_smallPools[i]->release(/* willDestroy = */true);
 
         // If this asserts we have a pool leak.
-        JS_ASSERT_IF(m_pools.initialized(), m_pools.empty());
+        MOZ_ASSERT_IF(m_pools.initialized(), m_pools.empty());
     }
 
     void purge() {

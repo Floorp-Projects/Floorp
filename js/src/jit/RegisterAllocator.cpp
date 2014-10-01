@@ -102,17 +102,17 @@ AllocationIntegrityState::check(bool populateSafepoints)
                 MOZ_ASSERT(!def->output()->isUse());
 
                 LDefinition oldDef = instructions[ins->id()].outputs[i];
-                JS_ASSERT_IF(oldDef.policy() == LDefinition::MUST_REUSE_INPUT,
-                             *def->output() == *ins->getOperand(oldDef.getReusedInput()));
+                MOZ_ASSERT_IF(oldDef.policy() == LDefinition::MUST_REUSE_INPUT,
+                              *def->output() == *ins->getOperand(oldDef.getReusedInput()));
             }
 
             for (size_t i = 0; i < ins->numTemps(); i++) {
                 LDefinition *temp = ins->getTemp(i);
-                JS_ASSERT_IF(!temp->isBogusTemp(), temp->output()->isRegister());
+                MOZ_ASSERT_IF(!temp->isBogusTemp(), temp->output()->isRegister());
 
                 LDefinition oldTemp = instructions[ins->id()].temps[i];
-                JS_ASSERT_IF(oldTemp.policy() == LDefinition::MUST_REUSE_INPUT,
-                             *temp->output() == *ins->getOperand(oldTemp.getReusedInput()));
+                MOZ_ASSERT_IF(oldTemp.policy() == LDefinition::MUST_REUSE_INPUT,
+                              *temp->output() == *ins->getOperand(oldTemp.getReusedInput()));
             }
         }
     }
@@ -143,9 +143,9 @@ AllocationIntegrityState::check(bool populateSafepoints)
                     if (!checkSafepointAllocation(ins, vreg, *alloc, populateSafepoints))
                         return false;
                 }
-                JS_ASSERT_IF(ins->isCall() && !populateSafepoints,
-                             safepoint->liveRegs().empty(true) &&
-                             safepoint->liveRegs().empty(false));
+                MOZ_ASSERT_IF(ins->isCall() && !populateSafepoints,
+                              safepoint->liveRegs().empty(true) &&
+                              safepoint->liveRegs().empty(false));
             }
 
             size_t inputIndex = 0;

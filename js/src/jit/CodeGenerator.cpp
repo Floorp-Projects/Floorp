@@ -162,7 +162,7 @@ CodeGenerator::CodeGenerator(MIRGenerator *gen, LIRGraph *graph, MacroAssembler 
 
 CodeGenerator::~CodeGenerator()
 {
-    JS_ASSERT_IF(!gen->compilingAsmJS(), masm.numAsmJSAbsoluteLinks() == 0);
+    MOZ_ASSERT_IF(!gen->compilingAsmJS(), masm.numAsmJSAbsoluteLinks() == 0);
     js_delete(scriptCounts_);
 }
 
@@ -2504,7 +2504,7 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     // Missing arguments must have been explicitly appended by the IonBuilder.
     MOZ_ASSERT(target->nargs() <= call->numStackArgs());
 
-    JS_ASSERT_IF(call->mir()->isConstructing(), target->isInterpretedConstructor());
+    MOZ_ASSERT_IF(call->mir()->isConstructing(), target->isInterpretedConstructor());
 
     masm.checkStackAlignment();
 
@@ -6850,7 +6850,7 @@ CodeGenerator::link(JSContext *cx, types::CompilerConstraintList *constraints)
     ExecutionMode executionMode = gen->info().executionMode();
     OptimizationLevel optimizationLevel = gen->optimizationInfo().level();
 
-    JS_ASSERT_IF(HasIonScript(script, executionMode), executionMode == SequentialExecution);
+    MOZ_ASSERT_IF(HasIonScript(script, executionMode), executionMode == SequentialExecution);
 
     // We finished the new IonScript. Invalidate the current active IonScript,
     // so we can replace it with this new (probably higher optimized) version.
@@ -8404,7 +8404,7 @@ CodeGenerator::visitInArray(LInArray *lir)
     if (lir->index()->isConstant()) {
         int32_t index = ToInt32(lir->index());
 
-        JS_ASSERT_IF(index < 0, mir->needsNegativeIntCheck());
+        MOZ_ASSERT_IF(index < 0, mir->needsNegativeIntCheck());
         if (mir->needsNegativeIntCheck()) {
             ool = oolCallVM(OperatorInIInfo, lir,
                             (ArgList(), Imm32(index), ToRegister(lir->object())),

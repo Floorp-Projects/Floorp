@@ -1690,7 +1690,7 @@ class Assembler : public AssemblerShared
         int len = high - low + 1;
         // vdtm can only transfer 16 registers at once.  If we need to transfer more,
         // then either hoops are necessary, or we need to be updating the register.
-        JS_ASSERT_IF(len > 16, dtmUpdate == WriteBack);
+        MOZ_ASSERT_IF(len > 16, dtmUpdate == WriteBack);
 
         int adjustLow = dtmLoadStore == IsStore ? 0 : 1;
         int adjustHigh = dtmLoadStore == IsStore ? -1 : 0;

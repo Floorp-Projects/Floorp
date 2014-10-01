@@ -363,13 +363,13 @@ class ExclusiveContext : public ThreadSafeContext
     // Threads with an ExclusiveContext may freely access any data in their
     // compartment and zone.
     JSCompartment *compartment() const {
-        JS_ASSERT_IF(runtime_->isAtomsCompartment(compartment_),
-                     runtime_->currentThreadHasExclusiveAccess());
+        MOZ_ASSERT_IF(runtime_->isAtomsCompartment(compartment_),
+                      runtime_->currentThreadHasExclusiveAccess());
         return compartment_;
     }
     JS::Zone *zone() const {
-        JS_ASSERT_IF(!compartment(), !zone_);
-        JS_ASSERT_IF(compartment(), js::GetCompartmentZone(compartment()) == zone_);
+        MOZ_ASSERT_IF(!compartment(), !zone_);
+        MOZ_ASSERT_IF(compartment(), js::GetCompartmentZone(compartment()) == zone_);
         return zone_;
     }
 
@@ -970,7 +970,7 @@ class AutoAssertNoException
 
     ~AutoAssertNoException()
     {
-        JS_ASSERT_IF(!hadException, !cx->isExceptionPending());
+        MOZ_ASSERT_IF(!hadException, !cx->isExceptionPending());
     }
 };
 

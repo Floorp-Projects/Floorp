@@ -1091,8 +1091,8 @@ class LabeledStatement : public ParseNode
 
     static bool test(const ParseNode &node) {
         bool match = node.isKind(PNK_LABEL);
-        JS_ASSERT_IF(match, node.isArity(PN_NAME));
-        JS_ASSERT_IF(match, node.isOp(JSOP_NOP));
+        MOZ_ASSERT_IF(match, node.isArity(PN_NAME));
+        MOZ_ASSERT_IF(match, node.isOp(JSOP_NOP));
         return match;
     }
 };
@@ -1115,8 +1115,8 @@ class LoopControlStatement : public ParseNode
 
     static bool test(const ParseNode &node) {
         bool match = node.isKind(PNK_BREAK) || node.isKind(PNK_CONTINUE);
-        JS_ASSERT_IF(match, node.isArity(PN_NULLARY));
-        JS_ASSERT_IF(match, node.isOp(JSOP_NOP));
+        MOZ_ASSERT_IF(match, node.isArity(PN_NULLARY));
+        MOZ_ASSERT_IF(match, node.isOp(JSOP_NOP));
         return match;
     }
 };
@@ -1130,8 +1130,8 @@ class BreakStatement : public LoopControlStatement
 
     static bool test(const ParseNode &node) {
         bool match = node.isKind(PNK_BREAK);
-        JS_ASSERT_IF(match, node.isArity(PN_NULLARY));
-        JS_ASSERT_IF(match, node.isOp(JSOP_NOP));
+        MOZ_ASSERT_IF(match, node.isArity(PN_NULLARY));
+        MOZ_ASSERT_IF(match, node.isOp(JSOP_NOP));
         return match;
     }
 };
@@ -1145,8 +1145,8 @@ class ContinueStatement : public LoopControlStatement
 
     static bool test(const ParseNode &node) {
         bool match = node.isKind(PNK_CONTINUE);
-        JS_ASSERT_IF(match, node.isArity(PN_NULLARY));
-        JS_ASSERT_IF(match, node.isOp(JSOP_NOP));
+        MOZ_ASSERT_IF(match, node.isArity(PN_NULLARY));
+        MOZ_ASSERT_IF(match, node.isOp(JSOP_NOP));
         return match;
     }
 };
@@ -1188,8 +1188,8 @@ class ConditionalExpression : public ParseNode
 
     static bool test(const ParseNode &node) {
         bool match = node.isKind(PNK_CONDITIONAL);
-        JS_ASSERT_IF(match, node.isArity(PN_TERNARY));
-        JS_ASSERT_IF(match, node.isOp(JSOP_NOP));
+        MOZ_ASSERT_IF(match, node.isArity(PN_TERNARY));
+        MOZ_ASSERT_IF(match, node.isOp(JSOP_NOP));
         return match;
     }
 };
@@ -1227,8 +1227,8 @@ class RegExpLiteral : public NullaryNode
 
     static bool test(const ParseNode &node) {
         bool match = node.isKind(PNK_REGEXP);
-        JS_ASSERT_IF(match, node.isArity(PN_NULLARY));
-        JS_ASSERT_IF(match, node.isOp(JSOP_REGEXP));
+        MOZ_ASSERT_IF(match, node.isArity(PN_NULLARY));
+        MOZ_ASSERT_IF(match, node.isOp(JSOP_REGEXP));
         return match;
     }
 };
@@ -1247,7 +1247,7 @@ class PropertyAccess : public ParseNode
 
     static bool test(const ParseNode &node) {
         bool match = node.isKind(PNK_DOT);
-        JS_ASSERT_IF(match, node.isArity(PN_NAME));
+        MOZ_ASSERT_IF(match, node.isArity(PN_NAME));
         return match;
     }
 

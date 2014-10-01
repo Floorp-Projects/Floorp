@@ -84,7 +84,7 @@ InterpreterFrame::initExecuteFrame(JSContext *cx, JSScript *script, AbstractFram
     prevpc_ = nullptr;
     prevsp_ = nullptr;
 
-    JS_ASSERT_IF(evalInFramePrev, isDebuggerFrame());
+    MOZ_ASSERT_IF(evalInFramePrev, isDebuggerFrame());
     evalInFramePrev_ = evalInFramePrev;
 
 #ifdef DEBUG
@@ -272,7 +272,7 @@ InterpreterFrame::epilogue(JSContext *cx)
 
     if (isEvalFrame()) {
         if (isStrictEvalFrame()) {
-            JS_ASSERT_IF(hasCallObj(), scopeChain()->as<CallObject>().isForEval());
+            MOZ_ASSERT_IF(hasCallObj(), scopeChain()->as<CallObject>().isForEval());
             if (MOZ_UNLIKELY(cx->compartment()->debugMode()))
                 DebugScopes::onPopStrictEvalScope(this);
         } else if (isDirectEvalFrame()) {
@@ -304,8 +304,8 @@ InterpreterFrame::epilogue(JSContext *cx)
     MOZ_ASSERT(isNonEvalFunctionFrame());
 
     if (fun()->isHeavyweight())
-        JS_ASSERT_IF(hasCallObj(),
-                     scopeChain()->as<CallObject>().callee().nonLazyScript() == script);
+        MOZ_ASSERT_IF(hasCallObj(),
+                      scopeChain()->as<CallObject>().callee().nonLazyScript() == script);
     else
         AssertDynamicScopeMatchesStaticScope(cx, script, scopeChain());
 

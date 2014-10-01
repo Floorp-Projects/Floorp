@@ -183,7 +183,7 @@ JitRuntime::~JitRuntime()
     js_delete(ionAlloc_);
 
     // By this point, the jitcode global table should be empty.
-    JS_ASSERT_IF(jitcodeGlobalTable_, jitcodeGlobalTable_->empty());
+    MOZ_ASSERT_IF(jitcodeGlobalTable_, jitcodeGlobalTable_->empty());
     js_delete(jitcodeGlobalTable_);
 }
 
@@ -2196,9 +2196,9 @@ Compile(JSContext *cx, HandleScript script, BaselineFrame *osrFrame, jsbytecode 
 {
     MOZ_ASSERT(jit::IsIonEnabled(cx));
     MOZ_ASSERT(jit::IsBaselineEnabled(cx));
-    JS_ASSERT_IF(osrPc != nullptr, LoopEntryCanIonOsr(osrPc));
-    JS_ASSERT_IF(executionMode == ParallelExecution, !osrFrame && !osrPc);
-    JS_ASSERT_IF(executionMode == ParallelExecution, !HasIonScript(script, executionMode));
+    MOZ_ASSERT_IF(osrPc != nullptr, LoopEntryCanIonOsr(osrPc));
+    MOZ_ASSERT_IF(executionMode == ParallelExecution, !osrFrame && !osrPc);
+    MOZ_ASSERT_IF(executionMode == ParallelExecution, !HasIonScript(script, executionMode));
 
     if (!script->hasBaselineScript())
         return Method_Skipped;
@@ -2529,7 +2529,7 @@ EnterIon(JSContext *cx, EnterJitData &data)
     EnterJitCode enter = cx->runtime()->jitRuntime()->enterIon();
 
     // Caller must construct |this| before invoking the Ion function.
-    JS_ASSERT_IF(data.constructing, data.maxArgv[0].isObject());
+    MOZ_ASSERT_IF(data.constructing, data.maxArgv[0].isObject());
 
     data.result.setInt32(data.numActualArgs);
     {
@@ -2549,7 +2549,7 @@ EnterIon(JSContext *cx, EnterJitData &data)
     // Release temporary buffer used for OSR into Ion.
     cx->runtime()->getJitRuntime(cx)->freeOsrTempData();
 
-    JS_ASSERT_IF(data.result.isMagic(), data.result.isMagic(JS_ION_ERROR));
+    MOZ_ASSERT_IF(data.result.isMagic(), data.result.isMagic(JS_ION_ERROR));
     return data.result.isMagic() ? IonExec_Error : IonExec_Ok;
 }
 
@@ -2652,7 +2652,7 @@ jit::FastInvoke(JSContext *cx, HandleFunction fun, CallArgs &args)
 
     args.rval().set(result);
 
-    JS_ASSERT_IF(result.isMagic(), result.isMagic(JS_ION_ERROR));
+    MOZ_ASSERT_IF(result.isMagic(), result.isMagic(JS_ION_ERROR));
     return result.isMagic() ? IonExec_Error : IonExec_Ok;
 }
 
@@ -2664,7 +2664,7 @@ InvalidateActivation(FreeOp *fop, uint8_t *jitTop, bool invalidateAll)
     size_t frameno = 1;
 
     for (JitFrameIterator it(jitTop, SequentialExecution); !it.done(); ++it, ++frameno) {
-        JS_ASSERT_IF(frameno == 1, it.type() == JitFrame_Exit);
+        MOZ_ASSERT_IF(frameno == 1, it.type() == JitFrame_Exit);
 
 #ifdef DEBUG
         switch (it.type()) {

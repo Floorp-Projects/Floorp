@@ -338,7 +338,7 @@ struct InternalGCMethods<Value>
             return;
         JS::shadow::Zone *shadowZone = JS::shadow::Zone::asShadowZone(zone);
         if (shadowZone->needsIncrementalBarrier()) {
-            JS_ASSERT_IF(v.isMarkable(), shadowRuntimeFromMainThread(v)->needsIncrementalBarrier());
+            MOZ_ASSERT_IF(v.isMarkable(), shadowRuntimeFromMainThread(v)->needsIncrementalBarrier());
             Value tmp(v);
             js::gc::MarkValueUnbarriered(shadowZone->barrierTracer(), &tmp, "write barrier");
             MOZ_ASSERT(tmp == v);

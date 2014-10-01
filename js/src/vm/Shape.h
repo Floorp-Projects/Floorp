@@ -456,7 +456,7 @@ class BaseShape : public gc::TenuredCell
     bool hasSetterObject() const { return !!(flags & HAS_SETTER_OBJECT); }
     JSObject *setterObject() const { MOZ_ASSERT(hasSetterObject()); return setterObj; }
 
-    bool hasTable() const { JS_ASSERT_IF(table_, isOwned()); return table_ != nullptr; }
+    bool hasTable() const { MOZ_ASSERT_IF(table_, isOwned()); return table_ != nullptr; }
     ShapeTable &table() const { MOZ_ASSERT(table_ && isOwned()); return *table_; }
     void setTable(ShapeTable *table) { MOZ_ASSERT(isOwned()); table_ = table; }
 
@@ -720,10 +720,10 @@ class Shape : public gc::TenuredCell
     void handoffTableTo(Shape *newShape);
 
     void setParent(Shape *p) {
-        JS_ASSERT_IF(p && !p->hasMissingSlot() && !inDictionary(),
-                     p->maybeSlot() <= maybeSlot());
-        JS_ASSERT_IF(p && !inDictionary(),
-                     hasSlot() == (p->maybeSlot() != maybeSlot()));
+        MOZ_ASSERT_IF(p && !p->hasMissingSlot() && !inDictionary(),
+                      p->maybeSlot() <= maybeSlot());
+        MOZ_ASSERT_IF(p && !inDictionary(),
+                      hasSlot() == (p->maybeSlot() != maybeSlot()));
         parent = p;
     }
 
@@ -926,7 +926,7 @@ class Shape : public gc::TenuredCell
     }
 
     bool isEmptyShape() const {
-        JS_ASSERT_IF(JSID_IS_EMPTY(propid_), hasMissingSlot());
+        MOZ_ASSERT_IF(JSID_IS_EMPTY(propid_), hasMissingSlot());
         return JSID_IS_EMPTY(propid_);
     }
 
@@ -1011,7 +1011,7 @@ class Shape : public gc::TenuredCell
      * the prototype property. See bug 552432.
      */
     bool shadowable() const {
-        JS_ASSERT_IF(isDataDescriptor(), writable());
+        MOZ_ASSERT_IF(isDataDescriptor(), writable());
         return hasSlot() || (attrs & JSPROP_SHADOWABLE);
     }
 
@@ -1248,7 +1248,7 @@ struct StackShape
         MOZ_ASSERT(base);
         MOZ_ASSERT(!JSID_IS_VOID(propid));
         MOZ_ASSERT(slot <= SHAPE_INVALID_SLOT);
-        JS_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
+        MOZ_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
     }
 
     explicit StackShape(Shape *shape)
@@ -1357,7 +1357,7 @@ Shape::Shape(const StackShape &other, uint32_t nfixed)
     flags(other.flags),
     parent(nullptr)
 {
-    JS_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
+    MOZ_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
     kids.setNull();
 }
 

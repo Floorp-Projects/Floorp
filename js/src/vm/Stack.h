@@ -792,7 +792,7 @@ class InterpreterFrame
 
     bool isGeneratorFrame() const {
         bool ret = flags_ & GENERATOR;
-        JS_ASSERT_IF(ret, isNonEvalFunctionFrame());
+        MOZ_ASSERT_IF(ret, isNonEvalFunctionFrame());
         return ret;
     }
 

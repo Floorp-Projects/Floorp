@@ -813,7 +813,7 @@ jit::AddPossibleCallees(JSContext *cx, MIRGraph &graph, CallTargetVector &target
 
             RootedFunction target(cx, callIns->getSingleTarget());
             if (target) {
-                JS_ASSERT_IF(!target->isInterpreted(), target->hasParallelNative());
+                MOZ_ASSERT_IF(!target->isInterpreted(), target->hasParallelNative());
 
                 if (target->isInterpreted()) {
                     RootedScript script(cx, target->getOrCreateScript(cx));

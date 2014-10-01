@@ -96,10 +96,10 @@ class MoveOperand
         // only appear in controlled circumstances in the trampoline code
         // which ensures these cases never come up.
 
-        JS_ASSERT_IF(isMemoryOrEffectiveAddress() && other.isGeneralReg(),
-                     base() != other.reg());
-        JS_ASSERT_IF(other.isMemoryOrEffectiveAddress() && isGeneralReg(),
-                     other.base() != reg());
+        MOZ_ASSERT_IF(isMemoryOrEffectiveAddress() && other.isGeneralReg(),
+                      base() != other.reg());
+        MOZ_ASSERT_IF(other.isMemoryOrEffectiveAddress() && isGeneralReg(),
+                      other.base() != reg());
 
         if (kind_ != other.kind_)
             return false;

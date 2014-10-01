@@ -521,8 +521,8 @@ js::RemapWrapper(JSContext *cx, JSObject *wobjArg, JSObject *newTargetArg)
     // If we're mapping to a different target (as opposed to just recomputing
     // for the same target), we must not have an existing wrapper for the new
     // target, otherwise this will break.
-    JS_ASSERT_IF(origTarget != newTarget,
-                 !wcompartment->lookupWrapper(ObjectValue(*newTarget)));
+    MOZ_ASSERT_IF(origTarget != newTarget,
+                  !wcompartment->lookupWrapper(ObjectValue(*newTarget)));
 
     // The old value should still be in the cross-compartment wrapper map, and
     // the lookup should return wobj.

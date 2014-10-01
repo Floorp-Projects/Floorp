@@ -3303,8 +3303,8 @@ CType::Create(JSContext* cx,
 
   // Assert a sanity check on size and alignment: size % alignment should always
   // be zero.
-  JS_ASSERT_IF(IsSizeDefined(typeObj),
-               GetSize(typeObj) % GetAlignment(typeObj) == 0);
+  MOZ_ASSERT_IF(IsSizeDefined(typeObj),
+                GetSize(typeObj) % GetAlignment(typeObj) == 0);
 
   return typeObj;
 }
@@ -5677,7 +5677,7 @@ FunctionType::Create(JSContext* cx, unsigned argc, jsval* vp)
   }
 
   // Pull out the argument types from the array, if any.
-  JS_ASSERT_IF(argTypes.length(), arrayObj);
+  MOZ_ASSERT_IF(argTypes.length(), arrayObj);
   for (uint32_t i = 0; i < argTypes.length(); ++i) {
     if (!JS_GetElement(cx, arrayObj, i, argTypes[i]))
       return false;
@@ -6350,7 +6350,7 @@ CData::Create(JSContext* cx,
   MOZ_ASSERT(CType::IsCType(typeObj));
   MOZ_ASSERT(CType::IsSizeDefined(typeObj));
   MOZ_ASSERT(ownResult || source);
-  JS_ASSERT_IF(refObj && CData::IsCData(refObj), !ownResult);
+  MOZ_ASSERT_IF(refObj && CData::IsCData(refObj), !ownResult);
 
   // Get the 'prototype' property from the type.
   jsval slot = JS_GetReservedSlot(typeObj, SLOT_PROTO);

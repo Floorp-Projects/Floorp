@@ -246,7 +246,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
 {
     MOZ_ASSERT((evalType == INDIRECT_EVAL) == !caller);
     MOZ_ASSERT((evalType == INDIRECT_EVAL) == !pc);
-    JS_ASSERT_IF(evalType == INDIRECT_EVAL, scopeobj->is<GlobalObject>());
+    MOZ_ASSERT_IF(evalType == INDIRECT_EVAL, scopeobj->is<GlobalObject>());
     AssertInnerizedScopeChain(cx, *scopeobj);
 
     Rooted<GlobalObject*> scopeObjGlobal(cx, &scopeobj->global());
@@ -274,7 +274,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
     unsigned staticLevel;
     RootedValue thisv(cx);
     if (evalType == DIRECT_EVAL) {
-        JS_ASSERT_IF(caller.isInterpreterFrame(), !caller.asInterpreterFrame()->runningInJit());
+        MOZ_ASSERT_IF(caller.isInterpreterFrame(), !caller.asInterpreterFrame()->runningInJit());
         staticLevel = caller.script()->staticLevel() + 1;
 
         // Direct calls to eval are supposed to see the caller's |this|. If we
@@ -465,8 +465,8 @@ js::DirectEval(JSContext *cx, const CallArgs &args)
     MOZ_ASSERT(caller.scopeChain()->global().valueIsEval(args.calleev()));
     MOZ_ASSERT(JSOp(*iter.pc()) == JSOP_EVAL ||
                JSOp(*iter.pc()) == JSOP_SPREADEVAL);
-    JS_ASSERT_IF(caller.isFunctionFrame(),
-                 caller.compartment() == caller.callee()->compartment());
+    MOZ_ASSERT_IF(caller.isFunctionFrame(),
+                  caller.compartment() == caller.callee()->compartment());
 
     RootedObject scopeChain(cx, caller.scopeChain());
     return EvalKernel(cx, args, DIRECT_EVAL, caller, scopeChain, iter.pc());

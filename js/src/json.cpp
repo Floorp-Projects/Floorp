@@ -328,7 +328,7 @@ JO(JSContext *cx, HandleObject obj, StringifyContext *scx)
         MOZ_ASSERT(JS_IsArrayObject(cx, scx->replacer));
         props = &scx->propertyList;
     } else {
-        JS_ASSERT_IF(scx->replacer, scx->propertyList.length() == 0);
+        MOZ_ASSERT_IF(scx->replacer, scx->propertyList.length() == 0);
         ids.emplace(cx);
         if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, ids.ptr()))
             return false;

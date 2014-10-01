@@ -818,7 +818,7 @@ Statistics::beginPhase(Phase phase)
     MOZ_ASSERT(phases[phase].index == phase);
     Phase parent = phaseNestingDepth ? phaseNesting[phaseNestingDepth - 1] : PHASE_NO_PARENT;
     MOZ_ASSERT(phaseNestingDepth < MAX_NESTING);
-    JS_ASSERT_IF(gcDepth == 1, phases[phase].parent == parent);
+    MOZ_ASSERT_IF(gcDepth == 1, phases[phase].parent == parent);
     phaseNesting[phaseNestingDepth] = phase;
     phaseNestingDepth++;
 #endif

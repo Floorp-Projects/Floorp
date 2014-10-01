@@ -171,7 +171,7 @@ class CompileInfo
         executionMode_(executionMode), scriptNeedsArgsObj_(scriptNeedsArgsObj),
         inlineScriptTree_(inlineScriptTree)
     {
-        JS_ASSERT_IF(osrPc, JSOp(*osrPc) == JSOP_LOOPENTRY);
+        MOZ_ASSERT_IF(osrPc, JSOp(*osrPc) == JSOP_LOOPENTRY);
 
         // The function here can flow in from anywhere so look up the canonical
         // function to ensure that we do not try to embed a nursery pointer in

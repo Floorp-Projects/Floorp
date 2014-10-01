@@ -1365,7 +1365,7 @@ class TypeCheckPrimitiveSetStub : public ICStub
             existingStub_(existingStub),
             flags_((existingStub ? existingStub->typeFlags() : 0) | TypeToFlag(type))
         {
-            JS_ASSERT_IF(existingStub_, flags_ != existingStub_->typeFlags());
+            MOZ_ASSERT_IF(existingStub_, flags_ != existingStub_->typeFlags());
         }
 
         TypeCheckPrimitiveSetStub *updateStub() {

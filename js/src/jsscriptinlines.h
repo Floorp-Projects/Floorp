@@ -89,7 +89,7 @@ inline JSFunction *
 JSScript::getFunction(size_t index)
 {
     JSFunction *fun = &getObject(index)->as<JSFunction>();
-    JS_ASSERT_IF(fun->isNative(), IsAsmJSModuleNative(fun->native()));
+    MOZ_ASSERT_IF(fun->isNative(), IsAsmJSModuleNative(fun->native()));
     return fun;
 }
 

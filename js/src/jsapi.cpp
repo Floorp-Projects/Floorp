@@ -202,7 +202,7 @@ AssertHeapIsIdleOrStringIsFlat(JSContext *cx, JSString *str)
      * We allow some functions to be called during a GC as long as the argument
      * is a flat string, since that will not cause allocation.
      */
-    JS_ASSERT_IF(cx->runtime()->isHeapBusy(), str->isFlat());
+    MOZ_ASSERT_IF(cx->runtime()->isHeapBusy(), str->isFlat());
 }
 
 JS_PUBLIC_API(bool)
@@ -624,7 +624,7 @@ JS_NewRuntime(uint32_t maxbytes, uint32_t maxNurseryBytes, JSRuntime *parentRunt
     // isn't required for correctness, but ensuring that the parent
     // runtime is not destroyed before this one is more easily done
     // for the main runtime in the process.
-    JS_ASSERT_IF(parentRuntime, !parentRuntime->parentRuntime);
+    MOZ_ASSERT_IF(parentRuntime, !parentRuntime->parentRuntime);
 
     JSRuntime *rt = js_new<JSRuntime>(parentRuntime);
     if (!rt)
@@ -2065,12 +2065,12 @@ JS_SetNativeStackQuota(JSRuntime *rt, size_t systemCodeStackSize,
                        size_t trustedScriptStackSize,
                        size_t untrustedScriptStackSize)
 {
-    JS_ASSERT_IF(trustedScriptStackSize,
-                 trustedScriptStackSize < systemCodeStackSize);
+    MOZ_ASSERT_IF(trustedScriptStackSize,
+                  trustedScriptStackSize < systemCodeStackSize);
     if (!trustedScriptStackSize)
         trustedScriptStackSize = systemCodeStackSize;
-    JS_ASSERT_IF(untrustedScriptStackSize,
-                 untrustedScriptStackSize < trustedScriptStackSize);
+    MOZ_ASSERT_IF(untrustedScriptStackSize,
+                  untrustedScriptStackSize < trustedScriptStackSize);
     if (!untrustedScriptStackSize)
         untrustedScriptStackSize = trustedScriptStackSize;
     SetNativeStackQuota(rt, StackForSystemCode, systemCodeStackSize);
@@ -2484,7 +2484,7 @@ JS_NewObject(JSContext *cx, const JSClass *jsclasp, HandleObject proto, HandleOb
     MOZ_ASSERT(!(clasp->flags & JSCLASS_IS_GLOBAL));
 
     JSObject *obj = NewObjectWithClassProto(cx, clasp, proto, parent);
-    JS_ASSERT_IF(obj, obj->getParent());
+    MOZ_ASSERT_IF(obj, obj->getParent());
     return obj;
 }
 
@@ -3269,7 +3269,7 @@ JS_DefineProperties(JSContext *cx, HandleObject obj, const JSPropertySpec *ps)
             // If you do not have a self-hosted getter, you should not have a
             // self-hosted setter. This is the closest approximation to that
             // assertion we can have with our setup.
-            JS_ASSERT_IF(ps->setter.propertyOp.info, ps->setter.propertyOp.op);
+            MOZ_ASSERT_IF(ps->setter.propertyOp.info, ps->setter.propertyOp.op);
 
             ok = DefineProperty(cx, obj, ps->name, JS::UndefinedHandleValue,
                                 ps->getter.propertyOp, ps->setter.propertyOp, ps->flags, 0);
@@ -5162,7 +5162,7 @@ INTERNED_STRING_TO_JSID(JSContext *cx, JSString *str)
 {
     MOZ_ASSERT(str);
     MOZ_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
-    JS_ASSERT_IF(cx, JS_StringHasBeenInterned(cx, str));
+    MOZ_ASSERT_IF(cx, JS_StringHasBeenInterned(cx, str));
     return AtomToId(&str->asAtom());
 }
 
@@ -5172,7 +5172,7 @@ JS_InternJSString(JSContext *cx, HandleString str)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     JSAtom *atom = AtomizeString(cx, str, InternAtom);
-    JS_ASSERT_IF(atom, JS_StringHasBeenInterned(cx, atom));
+    MOZ_ASSERT_IF(atom, JS_StringHasBeenInterned(cx, atom));
     return atom;
 }
 
@@ -5188,7 +5188,7 @@ JS_InternStringN(JSContext *cx, const char *s, size_t length)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     JSAtom *atom = Atomize(cx, s, length, InternAtom);
-    JS_ASSERT_IF(atom, JS_StringHasBeenInterned(cx, atom));
+    MOZ_ASSERT_IF(atom, JS_StringHasBeenInterned(cx, atom));
     return atom;
 }
 
@@ -5226,7 +5226,7 @@ JS_InternUCStringN(JSContext *cx, const char16_t *s, size_t length)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     JSAtom *atom = AtomizeChars(cx, s, length, InternAtom);
-    JS_ASSERT_IF(atom, JS_StringHasBeenInterned(cx, atom));
+    MOZ_ASSERT_IF(atom, JS_StringHasBeenInterned(cx, atom));
     return atom;
 }
 

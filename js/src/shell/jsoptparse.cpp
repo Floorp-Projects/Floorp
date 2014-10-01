@@ -615,7 +615,7 @@ OptionParser::addOptionalStringArg(const char *name, const char *help)
 bool
 OptionParser::addOptionalMultiStringArg(const char *name, const char *help)
 {
-    JS_ASSERT_IF(!arguments.empty(), !arguments.back()->isVariadic());
+    MOZ_ASSERT_IF(!arguments.empty(), !arguments.back()->isVariadic());
     if (!arguments.reserve(arguments.length() + 1))
         return false;
     MultiStringOption *mso = js_new<MultiStringOption>(1, name, help, (const char *) nullptr);

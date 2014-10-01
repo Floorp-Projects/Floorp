@@ -20,7 +20,7 @@ ScopeObject::setAliasedVar(JSContext *cx, ScopeCoordinate sc, PropertyName *name
     JS_STATIC_ASSERT(CallObject::RESERVED_SLOTS == BlockObject::RESERVED_SLOTS);
 
     // name may be null if we don't need to track side effects on the object.
-    JS_ASSERT_IF(hasSingletonType(), name);
+    MOZ_ASSERT_IF(hasSingletonType(), name);
 
     if (hasSingletonType()) {
         MOZ_ASSERT(name);
@@ -81,8 +81,8 @@ StaticScopeIter<allowGC>::operator++(int)
     } else {
         onNamedLambda = true;
     }
-    JS_ASSERT_IF(obj, obj->template is<NestedScopeObject>() || obj->template is<JSFunction>());
-    JS_ASSERT_IF(onNamedLambda, obj->template is<JSFunction>());
+    MOZ_ASSERT_IF(obj, obj->template is<NestedScopeObject>() || obj->template is<JSFunction>());
+    MOZ_ASSERT_IF(onNamedLambda, obj->template is<JSFunction>());
 }
 
 template <AllowGC allowGC>

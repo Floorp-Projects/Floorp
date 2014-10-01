@@ -525,8 +525,8 @@ LIRGenerator::visitAssertFloat32(MAssertFloat32 *assertion)
     DebugOnly<bool> checkIsFloat32 = assertion->mustBeFloat32();
 
     if (type != MIRType_Value && !js_JitOptions.eagerCompilation) {
-        JS_ASSERT_IF(checkIsFloat32, type == MIRType_Float32);
-        JS_ASSERT_IF(!checkIsFloat32, type != MIRType_Float32);
+        MOZ_ASSERT_IF(checkIsFloat32, type == MIRType_Float32);
+        MOZ_ASSERT_IF(!checkIsFloat32, type != MIRType_Float32);
     }
     return true;
 }
@@ -2924,8 +2924,8 @@ LIRGenerator::visitStoreTypedArrayElement(MStoreTypedArrayElement *ins)
     MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
 
     if (ins->isFloatArray()) {
-        JS_ASSERT_IF(ins->arrayType() == Scalar::Float32, ins->value()->type() == MIRType_Float32);
-        JS_ASSERT_IF(ins->arrayType() == Scalar::Float64, ins->value()->type() == MIRType_Double);
+        MOZ_ASSERT_IF(ins->arrayType() == Scalar::Float32, ins->value()->type() == MIRType_Float32);
+        MOZ_ASSERT_IF(ins->arrayType() == Scalar::Float64, ins->value()->type() == MIRType_Double);
     } else {
         MOZ_ASSERT(ins->value()->type() == MIRType_Int32);
     }
@@ -2950,8 +2950,8 @@ LIRGenerator::visitStoreTypedArrayElementHole(MStoreTypedArrayElementHole *ins)
     MOZ_ASSERT(ins->length()->type() == MIRType_Int32);
 
     if (ins->isFloatArray()) {
-        JS_ASSERT_IF(ins->arrayType() == Scalar::Float32, ins->value()->type() == MIRType_Float32);
-        JS_ASSERT_IF(ins->arrayType() == Scalar::Float64, ins->value()->type() == MIRType_Double);
+        MOZ_ASSERT_IF(ins->arrayType() == Scalar::Float32, ins->value()->type() == MIRType_Float32);
+        MOZ_ASSERT_IF(ins->arrayType() == Scalar::Float64, ins->value()->type() == MIRType_Double);
     } else {
         MOZ_ASSERT(ins->value()->type() == MIRType_Int32);
     }
