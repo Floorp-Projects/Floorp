@@ -174,14 +174,14 @@ ICStub::trace(JSTracer *trc)
     if (isMonitoredFallback()) {
         ICTypeMonitor_Fallback *lastMonStub = toMonitoredFallbackStub()->fallbackMonitorStub();
         for (ICStubConstIterator iter(lastMonStub->firstMonitorStub()); !iter.atEnd(); iter++) {
-            JS_ASSERT_IF(iter->next() == nullptr, *iter == lastMonStub);
+            MOZ_ASSERT_IF(iter->next() == nullptr, *iter == lastMonStub);
             iter->trace(trc);
         }
     }
 
     if (isUpdated()) {
         for (ICStubConstIterator iter(toUpdatedStub()->firstUpdateStub()); !iter.atEnd(); iter++) {
-            JS_ASSERT_IF(iter->next() == nullptr, iter->isTypeUpdate_Fallback());
+            MOZ_ASSERT_IF(iter->next() == nullptr, iter->isTypeUpdate_Fallback());
             iter->trace(trc);
         }
     }
@@ -562,9 +562,9 @@ ICMonitoredStub::ICMonitoredStub(Kind kind, JitCode *stubCode, ICStub *firstMoni
 {
     // If the first monitored stub is a ICTypeMonitor_Fallback stub, then
     // double check that _its_ firstMonitorStub is the same as this one.
-    JS_ASSERT_IF(firstMonitorStub_->isTypeMonitor_Fallback(),
-                 firstMonitorStub_->toTypeMonitor_Fallback()->firstMonitorStub() ==
-                    firstMonitorStub_);
+    MOZ_ASSERT_IF(firstMonitorStub_->isTypeMonitor_Fallback(),
+                  firstMonitorStub_->toTypeMonitor_Fallback()->firstMonitorStub() ==
+                     firstMonitorStub_);
 }
 
 bool
@@ -975,7 +975,7 @@ DoWarmUpCounterFallback(JSContext *cx, ICWarmUpCounter_Fallback *stub, BaselineF
         return false;
 
     // Jitcode should only be set here if not at loop entry.
-    JS_ASSERT_IF(!isLoopEntry, !jitcode);
+    MOZ_ASSERT_IF(!isLoopEntry, !jitcode);
     if (!jitcode)
         return true;
 
@@ -1087,9 +1087,9 @@ DoProfilerFallback(JSContext *cx, BaselineFrame *frame, ICProfiler_Fallback *stu
 
     // Unlink any existing PushFunction stub (which may hold stale 'const char *' to
     // the profile string.
-    JS_ASSERT_IF(icEntry->firstStub() != stub,
-                 icEntry->firstStub()->isProfiler_PushFunction() &&
-                 icEntry->firstStub()->next() == stub);
+    MOZ_ASSERT_IF(icEntry->firstStub() != stub,
+                  icEntry->firstStub()->isProfiler_PushFunction() &&
+                  icEntry->firstStub()->next() == stub);
     stub->unlinkStubsWithKind(cx, ICStub::Profiler_PushFunction);
     MOZ_ASSERT(icEntry->firstStub() == stub);
 
@@ -1166,7 +1166,7 @@ bool
 ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext *cx, JSScript *script, HandleValue val)
 {
     bool wasDetachedMonitorChain = lastMonitorStubPtrAddr_ == nullptr;
-    JS_ASSERT_IF(wasDetachedMonitorChain, numOptimizedMonitorStubs_ == 0);
+    MOZ_ASSERT_IF(wasDetachedMonitorChain, numOptimizedMonitorStubs_ == 0);
 
     if (numOptimizedMonitorStubs_ >= MAX_OPTIMIZED_STUBS) {
         // TODO: if the TypeSet becomes unknown or has the AnyObject type,
@@ -3372,8 +3372,8 @@ CheckHasNoSuchProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
 static bool
 IsCacheableProtoChain(JSObject *obj, JSObject *holder, bool isDOMProxy=false)
 {
-    JS_ASSERT_IF(isDOMProxy, IsCacheableDOMProxy(obj));
-    JS_ASSERT_IF(!isDOMProxy, obj->isNative());
+    MOZ_ASSERT_IF(isDOMProxy, IsCacheableDOMProxy(obj));
+    MOZ_ASSERT_IF(!isDOMProxy, obj->isNative());
 
     // Don't handle objects which require a prototype guard. This should
     // be uncommon so handling it is likely not worth the complexity.
@@ -8369,7 +8369,7 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
     if (stub->numOptimizedStubs() == 0 && IsOptimizableCallStringSplit(callee, thisv, argc, vp + 2))
         return true;
 
-    JS_ASSERT_IF(stub->hasStub(ICStub::Call_StringSplit), stub->numOptimizedStubs() == 1);
+    MOZ_ASSERT_IF(stub->hasStub(ICStub::Call_StringSplit), stub->numOptimizedStubs() == 1);
 
     stub->unlinkStubsWithKind(cx, ICStub::Call_StringSplit);
 

@@ -168,8 +168,8 @@ CodeGeneratorARM::bailoutIf(Assembler::Condition condition, LSnapshot *snapshot)
     // Though the assembler doesn't track all frame pushes, at least make sure
     // the known value makes sense. We can't use bailout tables if the stack
     // isn't properly aligned to the static frame size.
-    JS_ASSERT_IF(frameClass_ != FrameSizeClass::None(),
-                 frameClass_.frameSize() == masm.framePushed());
+    MOZ_ASSERT_IF(frameClass_ != FrameSizeClass::None(),
+                  frameClass_.frameSize() == masm.framePushed());
 
     if (assignBailoutId(snapshot)) {
         uint8_t *code = Assembler::BailoutTableStart(deoptTable_->raw()) + snapshot->bailoutId() * BAILOUT_TABLE_ENTRY_SIZE;
@@ -206,8 +206,8 @@ CodeGeneratorARM::bailoutFrom(Label *label, LSnapshot *snapshot)
     // Though the assembler doesn't track all frame pushes, at least make sure
     // the known value makes sense. We can't use bailout tables if the stack
     // isn't properly aligned to the static frame size.
-    JS_ASSERT_IF(frameClass_ != FrameSizeClass::None(),
-                 frameClass_.frameSize() == masm.framePushed());
+    MOZ_ASSERT_IF(frameClass_ != FrameSizeClass::None(),
+                  frameClass_.frameSize() == masm.framePushed());
 
     // On ARM we don't use a bailout table.
     InlineScriptTree *tree = snapshot->mir()->block()->trackedTree();
@@ -417,7 +417,7 @@ CodeGeneratorARM::visitMulI(LMulI *ins)
     const LAllocation *rhs = ins->getOperand(1);
     const LDefinition *dest = ins->getDef(0);
     MMul *mul = ins->mir();
-    JS_ASSERT_IF(mul->mode() == MMul::Integer, !mul->canBeNegativeZero() && !mul->canOverflow());
+    MOZ_ASSERT_IF(mul->mode() == MMul::Integer, !mul->canBeNegativeZero() && !mul->canOverflow());
 
     if (rhs->isConstant()) {
         // Bailout when this condition is met.
@@ -2114,8 +2114,8 @@ CodeGeneratorARM::visitSoftUDivOrMod(LSoftUDivOrMod *ins)
     MOZ_ASSERT(lhs == r0);
     MOZ_ASSERT(rhs == r1);
     MOZ_ASSERT(ins->mirRaw()->isDiv() || ins->mirRaw()->isMod());
-    JS_ASSERT_IF(ins->mirRaw()->isDiv(), output == r0);
-    JS_ASSERT_IF(ins->mirRaw()->isMod(), output == r1);
+    MOZ_ASSERT_IF(ins->mirRaw()->isDiv(), output == r0);
+    MOZ_ASSERT_IF(ins->mirRaw()->isMod(), output == r1);
 
     Label afterDiv;
 

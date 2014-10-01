@@ -149,7 +149,7 @@ CodeGeneratorShared::addOutOfLineCode(OutOfLineCode *code, const BytecodeSite &s
 {
     code->setFramePushed(masm.framePushed());
     code->setBytecodeSite(site);
-    JS_ASSERT_IF(!gen->compilingAsmJS(), code->script()->containsPC(code->pc()));
+    MOZ_ASSERT_IF(!gen->compilingAsmJS(), code->script()->containsPC(code->pc()));
     return outOfLineCode_.append(code);
 }
 
@@ -167,7 +167,7 @@ CodeGeneratorShared::addNativeToBytecodeEntry(const BytecodeSite &site)
     jsbytecode *pc = site.pc();
     uint32_t nativeOffset = masm.currentOffset();
 
-    JS_ASSERT_IF(nativeToBytecodeList_.empty(), nativeOffset == 0);
+    MOZ_ASSERT_IF(nativeToBytecodeList_.empty(), nativeOffset == 0);
 
     if (!nativeToBytecodeList_.empty()) {
         size_t lastIdx = nativeToBytecodeList_.length() - 1;
@@ -670,7 +670,7 @@ CodeGeneratorShared::verifyCompactNativeToBytecodeMap(JitCode *code)
 
         // Back-offset must point to a later area in the payload region than previous
         // back-offset.  This means that back-offsets decrease monotonically.
-        JS_ASSERT_IF(i > 0, ionTable->regionOffset(i) < ionTable->regionOffset(i - 1));
+        MOZ_ASSERT_IF(i > 0, ionTable->regionOffset(i) < ionTable->regionOffset(i - 1));
 
         JitcodeRegionEntry entry = ionTable->regionEntry(i);
 
@@ -731,8 +731,8 @@ CodeGeneratorShared::markSafepoint(LInstruction *ins)
 bool
 CodeGeneratorShared::markSafepointAt(uint32_t offset, LInstruction *ins)
 {
-    JS_ASSERT_IF(!safepointIndices_.empty(),
-                 offset - safepointIndices_.back().displacement() >= sizeof(uint32_t));
+    MOZ_ASSERT_IF(!safepointIndices_.empty(),
+                  offset - safepointIndices_.back().displacement() >= sizeof(uint32_t));
     return safepointIndices_.append(SafepointIndex(offset, ins->safepoint()));
 }
 
@@ -996,13 +996,13 @@ CodeGeneratorShared::callVM(const VMFunction &fun, LInstruction *ins, const Regi
 
     // If we're calling a function with an out parameter type of double, make
     // sure we have an FPU.
-    JS_ASSERT_IF(fun.outParam == Type_Double, GetIonContext()->runtime->jitSupportsFloatingPoint());
+    MOZ_ASSERT_IF(fun.outParam == Type_Double, GetIonContext()->runtime->jitSupportsFloatingPoint());
 
 #ifdef DEBUG
     if (ins->mirRaw()) {
         MOZ_ASSERT(ins->mirRaw()->isInstruction());
         MInstruction *mir = ins->mirRaw()->toInstruction();
-        JS_ASSERT_IF(mir->needsResumePoint(), mir->resumePoint());
+        MOZ_ASSERT_IF(mir->needsResumePoint(), mir->resumePoint());
     }
 #endif
 

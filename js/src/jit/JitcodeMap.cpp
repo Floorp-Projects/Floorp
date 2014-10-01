@@ -121,7 +121,7 @@ JitcodeGlobalEntry::compare(const JitcodeGlobalEntry &ent1, const JitcodeGlobalE
     MOZ_ASSERT(!(ent1.isQuery() && ent2.isQuery()));
 
     // Ensure no overlaps for non-query lookups.
-    JS_ASSERT_IF(!ent1.isQuery() && !ent2.isQuery(), !ent1.overlapsWith(ent2));
+    MOZ_ASSERT_IF(!ent1.isQuery() && !ent2.isQuery(), !ent1.overlapsWith(ent2));
 
     // For two non-query entries, just comapare the start addresses.
     if (!ent1.isQuery() && !ent2.isQuery())
@@ -284,7 +284,7 @@ JitcodeRegionEntry::ReadDelta(CompactBufferReader &reader,
         uint32_t encVal = firstByte;
         *nativeDelta = encVal >> ENC1_NATIVE_DELTA_SHIFT;
         *pcDelta = (encVal & ENC1_PC_DELTA_MASK) >> ENC1_PC_DELTA_SHIFT;
-        JS_ASSERT_IF(*nativeDelta == 0, *pcDelta <= 0);
+        MOZ_ASSERT_IF(*nativeDelta == 0, *pcDelta <= 0);
         return;
     }
 
@@ -295,7 +295,7 @@ JitcodeRegionEntry::ReadDelta(CompactBufferReader &reader,
         *nativeDelta = encVal >> ENC2_NATIVE_DELTA_SHIFT;
         *pcDelta = (encVal & ENC2_PC_DELTA_MASK) >> ENC2_PC_DELTA_SHIFT;
         MOZ_ASSERT(*pcDelta != 0);
-        JS_ASSERT_IF(*nativeDelta == 0, *pcDelta <= 0);
+        MOZ_ASSERT_IF(*nativeDelta == 0, *pcDelta <= 0);
         return;
     }
 
@@ -311,7 +311,7 @@ JitcodeRegionEntry::ReadDelta(CompactBufferReader &reader,
             pcDeltaU |= ~ENC3_PC_DELTA_MAX;
         *pcDelta = pcDeltaU;
         MOZ_ASSERT(*pcDelta != 0);
-        JS_ASSERT_IF(*nativeDelta == 0, *pcDelta <= 0);
+        MOZ_ASSERT_IF(*nativeDelta == 0, *pcDelta <= 0);
         return;
     }
 
@@ -328,7 +328,7 @@ JitcodeRegionEntry::ReadDelta(CompactBufferReader &reader,
     *pcDelta = pcDeltaU;
 
     MOZ_ASSERT(*pcDelta != 0);
-    JS_ASSERT_IF(*nativeDelta == 0, *pcDelta <= 0);
+    MOZ_ASSERT_IF(*nativeDelta == 0, *pcDelta <= 0);
 }
 
 /* static */ uint32_t
@@ -456,7 +456,7 @@ JitcodeRegionEntry::WriteRun(CompactBufferWriter &writer,
             WriteScriptPc(writer, scriptIdx, pcOffset);
             spewer.spewAndAdvance("      ");
 
-            JS_ASSERT_IF(i < scriptDepth - 1, curTree->hasCaller());
+            MOZ_ASSERT_IF(i < scriptDepth - 1, curTree->hasCaller());
             curPc = curTree->callerPc();
             curTree = curTree->caller();
         }

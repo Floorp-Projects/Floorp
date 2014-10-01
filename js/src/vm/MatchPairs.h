@@ -46,8 +46,8 @@ struct MatchPair
 
     inline bool check() const {
         MOZ_ASSERT(limit >= start);
-        JS_ASSERT_IF(start < 0, start == -1);
-        JS_ASSERT_IF(limit < 0, limit == -1);
+        MOZ_ASSERT_IF(start < 0, start == -1);
+        MOZ_ASSERT_IF(limit < 0, limit == -1);
         return true;
     }
 };

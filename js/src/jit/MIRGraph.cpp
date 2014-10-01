@@ -577,7 +577,7 @@ MBasicBlock::linkOsrValues(MStart *start)
                 cloneRp = def->toOsrReturnValue();
         } else if (info().hasArguments() && i == info().argsObjSlot()) {
             MOZ_ASSERT(def->isConstant() || def->isOsrArgumentsObject());
-            JS_ASSERT_IF(def->isConstant(), def->toConstant()->value() == UndefinedValue());
+            MOZ_ASSERT_IF(def->isConstant(), def->toConstant()->value() == UndefinedValue());
             if (def->isOsrArgumentsObject())
                 cloneRp = def->toOsrArgumentsObject();
         } else {
@@ -586,7 +586,7 @@ MBasicBlock::linkOsrValues(MStart *start)
 
             // A constant Undefined can show up here for an argument slot when the function uses
             // a heavyweight argsobj, but the argument in question is stored on the scope chain.
-            JS_ASSERT_IF(def->isConstant(), def->toConstant()->value() == UndefinedValue());
+            MOZ_ASSERT_IF(def->isConstant(), def->toConstant()->value() == UndefinedValue());
 
             if (def->isOsrValue())
                 cloneRp = def->toOsrValue();
@@ -1140,8 +1140,8 @@ MBasicBlock::assertUsesAreNotWithin(MUseIterator use, MUseIterator end)
 {
 #ifdef DEBUG
     for (; use != end; use++) {
-        JS_ASSERT_IF(use->consumer()->isDefinition(),
-                     use->consumer()->toDefinition()->block()->id() < id());
+        MOZ_ASSERT_IF(use->consumer()->isDefinition(),
+                      use->consumer()->toDefinition()->block()->id() < id());
     }
 #endif
 }
@@ -1315,7 +1315,7 @@ MBasicBlock::replaceSuccessor(size_t pos, MBasicBlock *split)
 
     // Note, during split-critical-edges, successors-with-phis is not yet set.
     // During PAA, this case is handled before we enter.
-    JS_ASSERT_IF(successorWithPhis_, successorWithPhis_ != getSuccessor(pos));
+    MOZ_ASSERT_IF(successorWithPhis_, successorWithPhis_ != getSuccessor(pos));
 
     lastIns()->replaceSuccessor(pos, split);
 }

@@ -2410,7 +2410,7 @@ JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
         InlineFrameIterator inlineFrames(GetJSContextFromJitCode(), this);
         for (size_t idx = 0; idx < location.length(); idx++) {
             MOZ_ASSERT(idx < location.length());
-            JS_ASSERT_IF(idx < location.length() - 1, inlineFrames.more());
+            MOZ_ASSERT_IF(idx < location.length() - 1, inlineFrames.more());
 
             JitSpew(JitSpew_Profiling, "Match %d: ION %s:%d(%d) vs N2B %s:%d(%d)",
                     (int)idx,

@@ -1086,7 +1086,7 @@ ArenaHeader::getFirstFreeSpan() const
 void
 ArenaHeader::setFirstFreeSpan(const FreeSpan *span)
 {
-    JS_ASSERT_IF(!span->isEmpty(), span->isWithinArena(arenaAddress()));
+    MOZ_ASSERT_IF(!span->isEmpty(), span->isWithinArena(arenaAddress()));
     firstFreeSpan.compact(*span);
 }
 
@@ -1356,7 +1356,7 @@ static MOZ_ALWAYS_INLINE void
 AssertValidToSkipBarrier(TenuredCell *thing)
 {
     MOZ_ASSERT(!IsInsideNursery(thing));
-    JS_ASSERT_IF(thing, MapAllocToTraceKind(thing->getAllocKind()) != JSTRACE_OBJECT);
+    MOZ_ASSERT_IF(thing, MapAllocToTraceKind(thing->getAllocKind()) != JSTRACE_OBJECT);
 }
 
 /* static */ MOZ_ALWAYS_INLINE void

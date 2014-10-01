@@ -133,7 +133,7 @@ ParseContext<FullParseHandler>::define(TokenStream &ts,
                                        HandlePropertyName name, ParseNode *pn, Definition::Kind kind)
 {
     MOZ_ASSERT(!pn->isUsed());
-    JS_ASSERT_IF(pn->isDefn(), pn->isPlaceholder());
+    MOZ_ASSERT_IF(pn->isDefn(), pn->isPlaceholder());
 
     Definition *prevDef = nullptr;
     if (kind == Definition::LET)
@@ -169,7 +169,7 @@ ParseContext<FullParseHandler>::define(TokenStream &ts,
         pn->pn_dflags |= prevDef->pn_dflags & PND_CLOSED;
     }
 
-    JS_ASSERT_IF(kind != Definition::LET, !lexdeps->lookup(name));
+    MOZ_ASSERT_IF(kind != Definition::LET, !lexdeps->lookup(name));
     pn->setDefn(true);
     pn->pn_dflags &= ~PND_PLACEHOLDER;
     if (kind == Definition::CONST)
@@ -350,7 +350,7 @@ AppendPackedBindings(const ParseContext<ParseHandler> *pc, const DeclVector &vec
          * only one binding with a given name is marked aliased. pc->decls
          * maintains the canonical definition for each name, so use that.
          */
-        JS_ASSERT_IF(dn->isClosed(), pc->decls().lookupFirst(name) == dn);
+        MOZ_ASSERT_IF(dn->isClosed(), pc->decls().lookupFirst(name) == dn);
         bool aliased = dn->isClosed() ||
                        (pc->sc->allLocalsAliased() &&
                         pc->decls().lookupFirst(name) == dn);
@@ -1166,7 +1166,7 @@ JSFunction *
 Parser<ParseHandler>::newFunction(GenericParseContext *pc, HandleAtom atom,
                                   FunctionSyntaxKind kind, JSObject *proto)
 {
-    JS_ASSERT_IF(kind == Statement, atom != nullptr);
+    MOZ_ASSERT_IF(kind == Statement, atom != nullptr);
 
     /*
      * Find the global compilation context in order to pre-set the newborn
@@ -1519,7 +1519,7 @@ Parser<ParseHandler>::functionArguments(FunctionSyntaxKind kind, Node *listp, No
             }
 
             TokenKind tt = tokenStream.getToken();
-            JS_ASSERT_IF(parenFreeArrow, tt == TOK_NAME);
+            MOZ_ASSERT_IF(parenFreeArrow, tt == TOK_NAME);
             switch (tt) {
               case TOK_LB:
               case TOK_LC:
@@ -1748,8 +1748,8 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
 
         if (bodyLevel) {
             MOZ_ASSERT(pn->functionIsHoisted());
-            JS_ASSERT_IF(pc->sc->isFunctionBox(), !pn->pn_cookie.isFree());
-            JS_ASSERT_IF(!pc->sc->isFunctionBox(), pn->pn_cookie.isFree());
+            MOZ_ASSERT_IF(pc->sc->isFunctionBox(), !pn->pn_cookie.isFree());
+            MOZ_ASSERT_IF(!pc->sc->isFunctionBox(), pn->pn_cookie.isFree());
         } else {
             /*
              * As a SpiderMonkey-specific extension, non-body-level function
@@ -2006,7 +2006,7 @@ Parser<ParseHandler>::functionDef(HandlePropertyName funName,
                                   FunctionType type, FunctionSyntaxKind kind,
                                   GeneratorKind generatorKind)
 {
-    JS_ASSERT_IF(kind == Statement, funName);
+    MOZ_ASSERT_IF(kind == Statement, funName);
 
     /* Make a TOK_FUNCTION node. */
     Node pn = handler.newFunctionDefinition();
@@ -2053,8 +2053,8 @@ Parser<ParseHandler>::functionDef(HandlePropertyName funName,
             return null();
 
         // Assignment must be monotonic to prevent reparsing iloops
-        JS_ASSERT_IF(directives.strict(), newDirectives.strict());
-        JS_ASSERT_IF(directives.asmJS(), newDirectives.asmJS());
+        MOZ_ASSERT_IF(directives.strict(), newDirectives.strict());
+        MOZ_ASSERT_IF(directives.asmJS(), newDirectives.asmJS());
         directives = newDirectives;
 
         tokenStream.seek(start);
@@ -3027,7 +3027,7 @@ Parser<ParseHandler>::bindVarOrConst(BindData<ParseHandler> *data,
     }
 
     DefinitionList::Range defs = pc->decls().lookupMulti(name);
-    JS_ASSERT_IF(stmt, !defs.empty());
+    MOZ_ASSERT_IF(stmt, !defs.empty());
 
     if (defs.empty()) {
         return pc->define(parser->tokenStream, name, pn,
@@ -3587,7 +3587,7 @@ Parser<ParseHandler>::variables(ParseNodeKind kind, bool *psimple,
      * The simple flag is set if the declaration has the form 'var x', with
      * only one variable declared and no initializer expression.
      */
-    JS_ASSERT_IF(psimple, *psimple);
+    MOZ_ASSERT_IF(psimple, *psimple);
 
     JSOp op = kind == PNK_LET ? JSOP_NOP : kind == PNK_VAR ? JSOP_DEFVAR : JSOP_DEFCONST;
 
@@ -3860,7 +3860,7 @@ Parser<FullParseHandler>::letStatement()
     ParseNode *pn;
     if (tokenStream.peekToken() == TOK_LP) {
         pn = letBlock(LetStatement);
-        JS_ASSERT_IF(pn, pn->isKind(PNK_LET) || pn->isKind(PNK_SEMI));
+        MOZ_ASSERT_IF(pn, pn->isKind(PNK_LET) || pn->isKind(PNK_SEMI));
     } else {
         pn = letDeclaration();
     }
@@ -4370,7 +4370,7 @@ Parser<FullParseHandler>::forStatement()
         }
     }
 
-    JS_ASSERT_IF(isForDecl, pn1->isArity(PN_LIST));
+    MOZ_ASSERT_IF(isForDecl, pn1->isArity(PN_LIST));
     MOZ_ASSERT(!!blockObj == (isForDecl && pn1->isOp(JSOP_NOP)));
 
     // The form 'for (let <vars>; <expr2>; <expr3>) <stmt>' generates an

@@ -344,8 +344,8 @@ class FullParseHandler
                 list->pn_xflags |= PNX_FUNCDEFS;
             } else {
                 // General deoptimization was done in Parser::functionDef.
-                JS_ASSERT_IF(pc->sc->isFunctionBox(),
-                             pc->sc->asFunctionBox()->hasExtensibleScope());
+                MOZ_ASSERT_IF(pc->sc->isFunctionBox(),
+                              pc->sc->asFunctionBox()->hasExtensibleScope());
             }
         }
 
@@ -443,7 +443,7 @@ class FullParseHandler
     }
 
     ParseNode *newReturnStatement(ParseNode *expr, const TokenPos &pos) {
-        JS_ASSERT_IF(expr, pos.encloses(expr->pn_pos));
+        MOZ_ASSERT_IF(expr, pos.encloses(expr->pn_pos));
         return new_<UnaryNode>(PNK_RETURN, JSOP_RETURN, pos, expr);
     }
 

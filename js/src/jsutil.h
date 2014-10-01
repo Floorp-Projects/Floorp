@@ -35,8 +35,8 @@ js_memcpy(void *dst_, const void *src_, size_t len)
 {
     char *dst = (char *) dst_;
     const char *src = (const char *) src_;
-    JS_ASSERT_IF(dst >= src, (size_t) (dst - src) >= len);
-    JS_ASSERT_IF(src >= dst, (size_t) (src - dst) >= len);
+    MOZ_ASSERT_IF(dst >= src, (size_t) (dst - src) >= len);
+    MOZ_ASSERT_IF(src >= dst, (size_t) (src - dst) >= len);
 
     return memcpy(dst, src, len);
 }

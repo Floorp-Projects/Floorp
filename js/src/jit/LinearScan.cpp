@@ -517,11 +517,11 @@ LinearScanAllocator::populateSafepoints()
             // to this safepoint.
             if (ins == reg->ins() && !reg->isTemp()) {
                 DebugOnly<LDefinition*> def = reg->def();
-                JS_ASSERT_IF(def->policy() == LDefinition::MUST_REUSE_INPUT,
-                             def->type() == LDefinition::GENERAL ||
-                             def->type() == LDefinition::INT32 ||
-                             def->type() == LDefinition::FLOAT32 ||
-                             def->type() == LDefinition::DOUBLE);
+                MOZ_ASSERT_IF(def->policy() == LDefinition::MUST_REUSE_INPUT,
+                              def->type() == LDefinition::GENERAL ||
+                              def->type() == LDefinition::INT32 ||
+                              def->type() == LDefinition::FLOAT32 ||
+                              def->type() == LDefinition::DOUBLE);
                 continue;
             }
 
@@ -934,8 +934,8 @@ LinearScanAllocator::freeAllocation(LiveInterval *interval, LAllocation *alloc)
         if (!mine->canonicalSpill() && !other->canonicalSpill())
             return;
 
-        JS_ASSERT_IF(mine->canonicalSpill() && other->canonicalSpill(),
-                     mine->canonicalSpill()->isStackSlot() == other->canonicalSpill()->isStackSlot());
+        MOZ_ASSERT_IF(mine->canonicalSpill() && other->canonicalSpill(),
+                      mine->canonicalSpill()->isStackSlot() == other->canonicalSpill()->isStackSlot());
 
         LinearScanVirtualRegister *candidate = mine->canonicalSpill() ? mine : other;
         if (!candidate->canonicalSpill()->isStackSlot())
@@ -959,7 +959,7 @@ LinearScanAllocator::finishInterval(LiveInterval *interval)
     LinearScanVirtualRegister *reg = &vregs[interval->vreg()];
 
     // All spills should be equal to the canonical spill location.
-    JS_ASSERT_IF(alloc->isStackSlot(), *alloc == *reg->canonicalSpill());
+    MOZ_ASSERT_IF(alloc->isStackSlot(), *alloc == *reg->canonicalSpill());
 
     bool lastInterval = interval->index() == (reg->numIntervals() - 1);
     if (lastInterval) {
@@ -1483,8 +1483,8 @@ LinearScanAllocator::UnhandledQueue::assertSorted()
     for (IntervalIterator i(begin()); i != end(); i++) {
         if (prev) {
             MOZ_ASSERT(prev->start() >= i->start());
-            JS_ASSERT_IF(prev->start() == i->start(),
-                         prev->requirement()->priority() >= i->requirement()->priority());
+            MOZ_ASSERT_IF(prev->start() == i->start(),
+                          prev->requirement()->priority() >= i->requirement()->priority());
         }
         prev = *i;
     }

@@ -888,7 +888,7 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
 
     // Shape has a getter function.
     bool callNative = IsCacheableGetPropCallNative(obj, holder, shape);
-    JS_ASSERT_IF(!callNative, IsCacheableGetPropCallPropertyOp(obj, holder, shape));
+    MOZ_ASSERT_IF(!callNative, IsCacheableGetPropCallPropertyOp(obj, holder, shape));
 
     if (callNative) {
         MOZ_ASSERT(shape->hasGetterValue() && shape->getterValue().isObject() &&
@@ -2304,7 +2304,7 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
     Register argVpReg        = regSet.takeGeneral();
 
     bool callNative = IsCacheableSetPropCallNative(obj, holder, shape);
-    JS_ASSERT_IF(!callNative, IsCacheableSetPropCallPropertyOp(obj, holder, shape));
+    MOZ_ASSERT_IF(!callNative, IsCacheableSetPropCallPropertyOp(obj, holder, shape));
 
     if (callNative) {
         MOZ_ASSERT(shape->hasSetterValue() && shape->setterObject() &&
@@ -2636,7 +2636,7 @@ SetPropertyIC::attachAddSlot(JSContext *cx, HandleScript outerScript, IonScript 
                              HandleObject obj, HandleShape oldShape, HandleTypeObject oldType,
                              bool checkTypeset)
 {
-    JS_ASSERT_IF(!needsTypeBarrier(), !checkTypeset);
+    MOZ_ASSERT_IF(!needsTypeBarrier(), !checkTypeset);
 
     MacroAssembler masm(cx, ion, outerScript, profilerLeavePc_);
     RepatchStubAppender attacher(*this);
@@ -2997,7 +2997,7 @@ bool
 SetPropertyParIC::attachAddSlot(LockedJSContext &cx, IonScript *ion, HandleObject obj,
                                 HandleShape oldShape, HandleTypeObject oldType, bool checkTypeset)
 {
-    JS_ASSERT_IF(!needsTypeBarrier(), !checkTypeset);
+    MOZ_ASSERT_IF(!needsTypeBarrier(), !checkTypeset);
 
     MacroAssembler masm(cx, ion);
     DispatchStubPrepender attacher(*this);
@@ -3792,7 +3792,7 @@ GenerateSetTypedArrayElement(JSContext *cx, MacroAssembler &masm, IonCache::Stub
     BaseIndex target(elements, index, ScaleFromElemWidth(width));
 
     if (arrayType == Scalar::Float32) {
-        JS_ASSERT_IF(hasUnaliasedDouble(), tempFloat32 != InvalidFloatReg);
+        MOZ_ASSERT_IF(hasUnaliasedDouble(), tempFloat32 != InvalidFloatReg);
         FloatRegister tempFloat = hasUnaliasedDouble() ? tempFloat32 : tempDouble;
         if (!masm.convertConstantOrRegisterToFloat(cx, value, tempFloat, &failures))
             return false;

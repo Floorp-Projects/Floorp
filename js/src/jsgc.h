@@ -312,7 +312,7 @@ struct SortedArenaListSegment
     // Appends |aheader| to this segment.
     void append(ArenaHeader *aheader) {
         MOZ_ASSERT(aheader);
-        JS_ASSERT_IF(head, head->getAllocKind() == aheader->getAllocKind());
+        MOZ_ASSERT_IF(head, head->getAllocKind() == aheader->getAllocKind());
         *tailp = aheader;
         tailp = &aheader->next;
     }
@@ -400,11 +400,11 @@ class ArenaList {
     void check() const {
 #ifdef DEBUG
         // If the list is empty, it must have this form.
-        JS_ASSERT_IF(!head_, cursorp_ == &head_);
+        MOZ_ASSERT_IF(!head_, cursorp_ == &head_);
 
         // If there's an arena following the cursor, it must not be full.
         ArenaHeader *cursor = *cursorp_;
-        JS_ASSERT_IF(cursor, cursor->hasFreeThings());
+        MOZ_ASSERT_IF(cursor, cursor->hasFreeThings());
 #endif
     }
 
@@ -1295,9 +1295,9 @@ template <typename T>
 inline void
 CheckGCThingAfterMovingGC(T *t)
 {
-    JS_ASSERT_IF(t, !IsInsideNursery(t));
+    MOZ_ASSERT_IF(t, !IsInsideNursery(t));
 #ifdef JSGC_COMPACTING
-    JS_ASSERT_IF(t, !IsForwarded(t));
+    MOZ_ASSERT_IF(t, !IsForwarded(t));
 #endif
 }
 

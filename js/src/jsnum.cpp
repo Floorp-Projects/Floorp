@@ -593,7 +593,7 @@ static T *
 BackfillInt32InBuffer(int32_t si, T *buffer, size_t size, size_t *length)
 {
     uint32_t ui = Abs(si);
-    JS_ASSERT_IF(si == INT32_MIN, ui == uint32_t(INT32_MAX) + 1);
+    MOZ_ASSERT_IF(si == INT32_MIN, ui == uint32_t(INT32_MAX) + 1);
 
     RangedPtr<T> end(buffer + size - 1, buffer, size);
     *end = '\0';
@@ -1318,10 +1318,10 @@ js_NumberToStringWithBase(ThreadSafeContext *cx, double d, int base)
             js_ReportOutOfMemory(cx);
             return nullptr;
         }
-        JS_ASSERT_IF(base == 10,
-                     !cbuf.dbuf && numStr >= cbuf.sbuf && numStr < cbuf.sbuf + cbuf.sbufSize);
-        JS_ASSERT_IF(base != 10,
-                     cbuf.dbuf && cbuf.dbuf == numStr);
+        MOZ_ASSERT_IF(base == 10,
+                      !cbuf.dbuf && numStr >= cbuf.sbuf && numStr < cbuf.sbuf + cbuf.sbufSize);
+        MOZ_ASSERT_IF(base != 10,
+                      cbuf.dbuf && cbuf.dbuf == numStr);
     }
 
     JSFlatString *s = NewStringCopyZ<allowGC>(cx, numStr);

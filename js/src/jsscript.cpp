@@ -602,7 +602,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
     uint32_t nvars = 0;
     if (mode == XDR_ENCODE) {
         script = scriptp.get();
-        JS_ASSERT_IF(enclosingScript, enclosingScript->compartment() == script->compartment());
+        MOZ_ASSERT_IF(enclosingScript, enclosingScript->compartment() == script->compartment());
 
         nargs = script->bindings.numArgs();
         nblocklocals = script->bindings.numBlockScoped();
@@ -1768,7 +1768,7 @@ SourceCompressionTask::work()
 
 ScriptSource::~ScriptSource()
 {
-    JS_ASSERT_IF(inCompressedSourceSet, dataType == DataCompressed);
+    MOZ_ASSERT_IF(inCompressedSourceSet, dataType == DataCompressed);
 
     switch (dataType) {
       case DataUncompressed:
@@ -3090,7 +3090,7 @@ js::CloneScript(JSContext *cx, HandleObject enclosingScope, HandleFunction fun, 
         HeapValue *vector = Rebase<HeapValue>(dst, src, src->consts()->vector);
         dst->consts()->vector = vector;
         for (unsigned i = 0; i < nconsts; ++i)
-            JS_ASSERT_IF(vector[i].isMarkable(), vector[i].toString()->isAtom());
+            MOZ_ASSERT_IF(vector[i].isMarkable(), vector[i].toString()->isAtom());
     }
     if (nobjects != 0) {
         HeapPtrObject *vector = Rebase<HeapPtrObject>(dst, src, src->objects()->vector);
@@ -3121,8 +3121,8 @@ js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction c
     RootedScript script(cx, clone->nonLazyScript());
     MOZ_ASSERT(script);
     MOZ_ASSERT(script->compartment() == original->compartment());
-    JS_ASSERT_IF(script->compartment() != cx->compartment(),
-                 !script->enclosingStaticScope());
+    MOZ_ASSERT_IF(script->compartment() != cx->compartment(),
+                  !script->enclosingStaticScope());
 
     RootedObject scope(cx, script->enclosingStaticScope());
 
@@ -3338,9 +3338,9 @@ JSScript::markChildren(JSTracer *trc)
     // JSScript::Create(), but not yet finished initializing it with
     // fullyInitFromEmitter() or fullyInitTrivial().
 
-    JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) &&
-                 static_cast<GCMarker *>(trc)->shouldCheckCompartments(),
-                 zone()->isCollecting());
+    MOZ_ASSERT_IF(IS_GC_MARKING_TRACER(trc) &&
+                  static_cast<GCMarker *>(trc)->shouldCheckCompartments(),
+                  zone()->isCollecting());
 
     for (uint32_t i = 0; i < natoms(); ++i) {
         if (atoms[i])
@@ -3487,7 +3487,7 @@ JSScript::setArgumentsHasVarBinding()
 void
 JSScript::setNeedsArgsObj(bool needsArgsObj)
 {
-    JS_ASSERT_IF(needsArgsObj, argumentsHasVarBinding());
+    MOZ_ASSERT_IF(needsArgsObj, argumentsHasVarBinding());
     needsArgsAnalysis_ = false;
     needsArgsObj_ = needsArgsObj;
 }
@@ -3655,7 +3655,7 @@ void
 LazyScript::setParent(JSObject *enclosingScope, ScriptSourceObject *sourceObject)
 {
     MOZ_ASSERT(!sourceObject_ && !enclosingScope_);
-    JS_ASSERT_IF(enclosingScope, function_->compartment() == enclosingScope->compartment());
+    MOZ_ASSERT_IF(enclosingScope, function_->compartment() == enclosingScope->compartment());
     MOZ_ASSERT(function_->compartment() == sourceObject->compartment());
 
     enclosingScope_ = enclosingScope;
@@ -3721,7 +3721,7 @@ LazyScript::CreateRaw(ExclusiveContext *cx, HandleFunction fun,
     p.usesArgumentsAndApply = false;
 
     LazyScript *res = LazyScript::CreateRaw(cx, fun, packedFields, begin, end, lineno, column);
-    JS_ASSERT_IF(res, res->version() == version);
+    MOZ_ASSERT_IF(res, res->version() == version);
     return res;
 }
 

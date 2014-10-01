@@ -57,7 +57,7 @@ AsmJSFrameIterator::operator++()
     MOZ_ASSERT(!done());
     DebugOnly<uint8_t*> oldfp = fp_;
     fp_ += callsite_->stackDepth();
-    JS_ASSERT_IF(module_->profilingEnabled(), fp_ == CallerFPFromFP(oldfp));
+    MOZ_ASSERT_IF(module_->profilingEnabled(), fp_ == CallerFPFromFP(oldfp));
     settle();
 }
 

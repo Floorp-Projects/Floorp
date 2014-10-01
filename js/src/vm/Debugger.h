@@ -86,7 +86,7 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
     bool relookupOrAdd(AddPtr &p, const KeyInput &k, const ValueInput &v) {
         MOZ_ASSERT(v->compartment() == Base::compartment);
         MOZ_ASSERT(!k->compartment()->options_.mergeable());
-        JS_ASSERT_IF(!InvisibleKeysOk, !k->compartment()->options_.invisibleToDebugger());
+        MOZ_ASSERT_IF(!InvisibleKeysOk, !k->compartment()->options_.invisibleToDebugger());
         MOZ_ASSERT(!Base::has(k));
         if (!incZoneCount(k->zone()))
             return false;
@@ -115,7 +115,7 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
 
     bool hasKeyInZone(JS::Zone *zone) {
         CountMap::Ptr p = zoneCounts.lookup(zone);
-        JS_ASSERT_IF(p, p->value() > 0);
+        MOZ_ASSERT_IF(p, p->value() > 0);
         return p;
     }
 
@@ -203,7 +203,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     struct AllocationSite : public mozilla::LinkedListElement<AllocationSite>
     {
         explicit AllocationSite(HandleObject frame) : frame(frame) {
-            JS_ASSERT_IF(frame, UncheckedUnwrap(frame)->is<SavedFrame>());
+            MOZ_ASSERT_IF(frame, UncheckedUnwrap(frame)->is<SavedFrame>());
         };
         RelocatablePtrObject frame;
     };
@@ -760,14 +760,14 @@ Debugger::onExceptionUnwind(JSContext *cx, MutableHandleValue vp)
 void
 Debugger::onNewScript(JSContext *cx, HandleScript script, GlobalObject *compileAndGoGlobal)
 {
-    JS_ASSERT_IF(script->compileAndGo(), compileAndGoGlobal);
-    JS_ASSERT_IF(script->compileAndGo(), compileAndGoGlobal == &script->uninlinedGlobal());
+    MOZ_ASSERT_IF(script->compileAndGo(), compileAndGoGlobal);
+    MOZ_ASSERT_IF(script->compileAndGo(), compileAndGoGlobal == &script->uninlinedGlobal());
     // We early return in slowPathOnNewScript for self-hosted scripts, so we can
     // ignore those in our assertion here.
-    JS_ASSERT_IF(!script->compartment()->options().invisibleToDebugger() &&
-                 !script->selfHosted(),
-                 script->compartment()->firedOnNewGlobalObject);
-    JS_ASSERT_IF(!script->compileAndGo(), !compileAndGoGlobal);
+    MOZ_ASSERT_IF(!script->compartment()->options().invisibleToDebugger() &&
+                  !script->selfHosted(),
+                  script->compartment()->firedOnNewGlobalObject);
+    MOZ_ASSERT_IF(!script->compileAndGo(), !compileAndGoGlobal);
     if (script->compartment()->debugMode())
         slowPathOnNewScript(cx, script, compileAndGoGlobal);
 }

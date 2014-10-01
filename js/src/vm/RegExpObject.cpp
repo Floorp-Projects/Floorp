@@ -853,7 +853,7 @@ js::CloneRegExpObject(JSContext *cx, JSObject *obj_)
     RegExpObjectBuilder builder(cx);
     Rooted<RegExpObject*> regex(cx, &obj_->as<RegExpObject>());
     JSObject *res = builder.clone(regex);
-    JS_ASSERT_IF(res, res->type() == regex->type());
+    MOZ_ASSERT_IF(res, res->type() == regex->type());
     return res;
 }
 

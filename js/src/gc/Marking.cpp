@@ -183,8 +183,8 @@ CheckMarkedThing(JSTracer *trc, T **thingp)
         return;
 
 #ifdef JSGC_COMPACTING
-    JS_ASSERT_IF(!MovingTracer::IsMovingTracer(trc) && !Nursery::IsMinorCollectionTracer(trc),
-                 !IsForwarded(*thingp));
+    MOZ_ASSERT_IF(!MovingTracer::IsMovingTracer(trc) && !Nursery::IsMinorCollectionTracer(trc),
+                  !IsForwarded(*thingp));
 #endif
 
     /*
@@ -204,7 +204,7 @@ CheckMarkedThing(JSTracer *trc, T **thingp)
 
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
-    JS_ASSERT_IF(thing->zone()->requireGCTracer(), isGcMarkingTracer);
+    MOZ_ASSERT_IF(thing->zone()->requireGCTracer(), isGcMarkingTracer);
 
     MOZ_ASSERT(thing->isAligned());
 
@@ -212,11 +212,11 @@ CheckMarkedThing(JSTracer *trc, T **thingp)
 
     if (isGcMarkingTracer) {
         GCMarker *gcMarker = static_cast<GCMarker *>(trc);
-        JS_ASSERT_IF(gcMarker->shouldCheckCompartments(),
-                     thing->zone()->isCollecting() || rt->isAtomsZone(thing->zone()));
+        MOZ_ASSERT_IF(gcMarker->shouldCheckCompartments(),
+                      thing->zone()->isCollecting() || rt->isAtomsZone(thing->zone()));
 
-        JS_ASSERT_IF(gcMarker->getMarkColor() == GRAY,
-                     !thing->zone()->isGCMarkingBlack() || rt->isAtomsZone(thing->zone()));
+        MOZ_ASSERT_IF(gcMarker->getMarkColor() == GRAY,
+                      !thing->zone()->isGCMarkingBlack() || rt->isAtomsZone(thing->zone()));
 
         MOZ_ASSERT(!(thing->zone()->isGCSweeping() ||
                      thing->zone()->isGCFinished() ||
@@ -229,8 +229,8 @@ CheckMarkedThing(JSTracer *trc, T **thingp)
      * part has not been overwritten, and that the free span list head in the
      * ArenaHeader may not be synced with the real one in ArenaLists.
      */
-    JS_ASSERT_IF(IsThingPoisoned(thing) && rt->isHeapBusy(),
-                 !InFreeList(thing->asTenured()->arenaHeader(), thing));
+    MOZ_ASSERT_IF(IsThingPoisoned(thing) && rt->isHeapBusy(),
+                  !InFreeList(thing->asTenured()->arenaHeader(), thing));
 #endif
 }
 
@@ -314,9 +314,9 @@ MarkInternal(JSTracer *trc, T **thingp)
 }
 
 #define JS_ROOT_MARKING_ASSERT(trc)                                     \
-    JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc),                             \
-                 trc->runtime()->gc.state() == NO_INCREMENTAL ||        \
-                 trc->runtime()->gc.state() == MARK_ROOTS);
+    MOZ_ASSERT_IF(IS_GC_MARKING_TRACER(trc),                            \
+                  trc->runtime()->gc.state() == NO_INCREMENTAL ||       \
+                  trc->runtime()->gc.state() == MARK_ROOTS);
 
 namespace js {
 namespace gc {
@@ -486,7 +486,7 @@ IsAboutToBeFinalized(T **thingp)
 #endif
     {
         Nursery &nursery = rt->gc.nursery;
-        JS_ASSERT_IF(!rt->isHeapMinorCollecting(), !IsInsideNursery(thing));
+        MOZ_ASSERT_IF(!rt->isHeapMinorCollecting(), !IsInsideNursery(thing));
         if (rt->isHeapMinorCollecting()) {
             if (IsInsideNursery(thing))
                 return !nursery.getForwardedPointer(thingp);
@@ -504,8 +504,8 @@ IsAboutToBeFinalized(T **thingp)
          * compartment group and during minor gc. Rather than do the extra check,
          * we just assert that it's not necessary.
          */
-        JS_ASSERT_IF(!rt->isHeapMinorCollecting(),
-                     !thing->asTenured()->arenaHeader()->allocatedDuringIncremental);
+        MOZ_ASSERT_IF(!rt->isHeapMinorCollecting(),
+                      !thing->asTenured()->arenaHeader()->allocatedDuringIncremental);
 
         return !thing->asTenured()->isMarked();
     }
@@ -665,8 +665,8 @@ gc::MarkKind(JSTracer *trc, void **thingp, JSGCTraceKind kind)
     MOZ_ASSERT(thingp);
     MOZ_ASSERT(*thingp);
     DebugOnly<Cell *> cell = static_cast<Cell *>(*thingp);
-    JS_ASSERT_IF(cell->isTenured(),
-                 kind == MapAllocToTraceKind(cell->asTenured()->getAllocKind()));
+    MOZ_ASSERT_IF(cell->isTenured(),
+                  kind == MapAllocToTraceKind(cell->asTenured()->getAllocKind()));
     switch (kind) {
       case JSTRACE_OBJECT:
         MarkInternal(trc, reinterpret_cast<JSObject **>(thingp));
@@ -1057,7 +1057,7 @@ MaybePushMarkStackBetweenSlices(GCMarker *gcmarker, JSObject *thing)
 {
     DebugOnly<JSRuntime *> rt = gcmarker->runtime();
     JS_COMPARTMENT_ASSERT(rt, thing);
-    JS_ASSERT_IF(rt->isHeapBusy(), !IsInsideNursery(thing));
+    MOZ_ASSERT_IF(rt->isHeapBusy(), !IsInsideNursery(thing));
 
     if (!IsInsideNursery(thing) && thing->asTenured()->markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushObject(thing);
@@ -1748,11 +1748,11 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
             // Global objects all have the same trace hook. That hook is safe without barriers
             // if the global has no custom trace hook of its own, or has been moved to a different
             // compartment, and so can't have one.
-            JS_ASSERT_IF(runtime()->gc.isIncrementalGCEnabled() &&
-                         !(clasp->trace == JS_GlobalObjectTraceHook &&
-                           (!obj->compartment()->options().getTrace() ||
-                            !obj->isOwnGlobal())),
-                         clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS);
+            MOZ_ASSERT_IF(runtime()->gc.isIncrementalGCEnabled() &&
+                          !(clasp->trace == JS_GlobalObjectTraceHook &&
+                            (!obj->compartment()->options().getTrace() ||
+                             !obj->isOwnGlobal())),
+                          clasp->flags & JSCLASS_IMPLEMENTS_BARRIERS);
             clasp->trace(this, obj);
         }
 

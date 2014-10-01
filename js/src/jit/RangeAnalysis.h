@@ -207,8 +207,8 @@ class Range : public TempObject {
         // When hasInt32LowerBound_ or hasInt32UpperBound_ are false, we set
         // lower_ and upper_ to these specific values as it simplifies the
         // implementation in some places.
-        JS_ASSERT_IF(!hasInt32LowerBound_, lower_ == JSVAL_INT_MIN);
-        JS_ASSERT_IF(!hasInt32UpperBound_, upper_ == JSVAL_INT_MAX);
+        MOZ_ASSERT_IF(!hasInt32LowerBound_, lower_ == JSVAL_INT_MIN);
+        MOZ_ASSERT_IF(!hasInt32UpperBound_, upper_ == JSVAL_INT_MAX);
 
         // max_exponent_ must be one of three possible things.
         MOZ_ASSERT(max_exponent_ <= MaxFiniteExponent ||
@@ -223,8 +223,8 @@ class Range : public TempObject {
         // false, however that value also has exponent 30, which is strictly
         // less than MaxInt32Exponent. For another example, 1.9 has an exponent
         // of 0 but requires upper_ to be at least 2, which has exponent 1.
-        JS_ASSERT_IF(!hasInt32LowerBound_ || !hasInt32UpperBound_,
-                     max_exponent_ + canHaveFractionalPart_ >= MaxInt32Exponent);
+        MOZ_ASSERT_IF(!hasInt32LowerBound_ || !hasInt32UpperBound_,
+                      max_exponent_ + canHaveFractionalPart_ >= MaxInt32Exponent);
         MOZ_ASSERT(max_exponent_ + canHaveFractionalPart_ >=
                    mozilla::FloorLog2(mozilla::Abs(upper_)));
         MOZ_ASSERT(max_exponent_ + canHaveFractionalPart_ >=

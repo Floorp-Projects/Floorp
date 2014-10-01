@@ -154,7 +154,7 @@ class SPSProfiler
     ProfileEntry *stack() { return stack_; }
 
     /* management of whether instrumentation is on or off */
-    bool enabled() { JS_ASSERT_IF(enabled_, installed()); return enabled_; }
+    bool enabled() { MOZ_ASSERT_IF(enabled_, installed()); return enabled_; }
     bool installed() { return stack_ != nullptr && size_ != nullptr; }
     void enable(bool enabled);
     void enableSlowAssertions(bool enabled) { slowAssertions = enabled; }
@@ -338,10 +338,10 @@ class SPSInstrumentation
     bool enterInlineFrame(jsbytecode *callerPC) {
         if (!enabled())
             return true;
-        JS_ASSERT_IF(frames.empty(), callerPC == nullptr);
+        MOZ_ASSERT_IF(frames.empty(), callerPC == nullptr);
 
-        JS_ASSERT_IF(frame != nullptr, frame->script != nullptr);
-        JS_ASSERT_IF(frame != nullptr, frame->left == 1);
+        MOZ_ASSERT_IF(frame != nullptr, frame->script != nullptr);
+        MOZ_ASSERT_IF(frame != nullptr, frame->left == 1);
         if (!frames.empty()) {
             MOZ_ASSERT(frame == &frames[frames.length() - 1]);
             frame->pc = callerPC;

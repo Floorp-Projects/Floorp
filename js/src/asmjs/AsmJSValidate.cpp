@@ -2935,7 +2935,7 @@ class FunctionCompiler
     {
         if (!joinBlock)
             return true;
-        JS_ASSERT_IF(curBlock_, thenBlocks.back() == curBlock_);
+        MOZ_ASSERT_IF(curBlock_, thenBlocks.back() == curBlock_);
         for (size_t i = 0; i < thenBlocks.length(); i++) {
             thenBlocks[i]->end(MGoto::New(alloc(), joinBlock));
             if (!joinBlock->addPredecessor(alloc(), thenBlocks[i]))
@@ -2995,7 +2995,7 @@ class FunctionCompiler
     {
         if (!loopStack_.append(pn) || !breakableStack_.append(pn))
             return false;
-        JS_ASSERT_IF(curBlock_, curBlock_->loopDepth() == loopStack_.length() - 1);
+        MOZ_ASSERT_IF(curBlock_, curBlock_->loopDepth() == loopStack_.length() - 1);
         if (inDeadCode()) {
             *loopEntry = nullptr;
             return true;
@@ -3055,7 +3055,7 @@ class FunctionCompiler
             return true;
         }
         MOZ_ASSERT(loopEntry->loopDepth() == loopStack_.length() + 1);
-        JS_ASSERT_IF(afterLoop, afterLoop->loopDepth() == loopStack_.length());
+        MOZ_ASSERT_IF(afterLoop, afterLoop->loopDepth() == loopStack_.length());
         if (curBlock_) {
             MOZ_ASSERT(curBlock_->loopDepth() == loopStack_.length() + 1);
             curBlock_->end(MGoto::New(alloc(), loopEntry));
@@ -6010,7 +6010,7 @@ CheckIfConditional(FunctionCompiler &f, ParseNode *conditional, ParseNode *thenS
 
     // Check post-conditions
     f.assertCurrentBlockIs(*thenBlock);
-    JS_ASSERT_IF(!f.inDeadCode(), *thenBlock && *elseOrJoinBlock);
+    MOZ_ASSERT_IF(!f.inDeadCode(), *thenBlock && *elseOrJoinBlock);
     return true;
 }
 
@@ -6037,7 +6037,7 @@ CheckIfCondition(FunctionCompiler &f, ParseNode *cond, ParseNode *thenStmt,
 
     // Check post-conditions
     f.assertCurrentBlockIs(*thenBlock);
-    JS_ASSERT_IF(!f.inDeadCode(), *thenBlock && *elseOrJoinBlock);
+    MOZ_ASSERT_IF(!f.inDeadCode(), *thenBlock && *elseOrJoinBlock);
     return true;
 }
 
