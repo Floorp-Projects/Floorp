@@ -390,7 +390,7 @@ DisableFMRadio()
     return;
 
   if (sRDSEnabled)
-    DisableRDS();
+    hal::DisableRDS();
 
   sRadioEnabled = false;
 
@@ -622,7 +622,7 @@ readRDSDataThread(void* data)
       if (block_bitmap != 0x0F)
         continue;
 
-      FMRadioRDSGroup group;
+      hal::FMRadioRDSGroup group;
       group.blockA() = blocks[V4L2_RDS_BLOCK_A];
       group.blockB() = blocks[V4L2_RDS_BLOCK_B];
       group.blockC() = blocks[V4L2_RDS_BLOCK_C];
