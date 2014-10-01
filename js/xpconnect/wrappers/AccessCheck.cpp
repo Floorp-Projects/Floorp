@@ -248,6 +248,14 @@ ExposedPropertiesOnly::check(JSContext *cx, HandleObject wrapper, HandleId id, W
     if (!JS_HasPropertyById(cx, wrappedObject, exposedPropsId, &found))
         return false;
 
+    // Always permit access to "length" and indexed properties of arrays.
+    if ((JS_IsArrayObject(cx, wrappedObject) ||
+         JS_IsTypedArrayObject(wrappedObject)) &&
+        ((JSID_IS_INT(id) && JSID_TO_INT(id) >= 0) ||
+         (JSID_IS_STRING(id) && JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(id), "length")))) {
+        return true; // Allow
+    }
+
     // If no __exposedProps__ existed, deny access.
     if (!found) {
         return false;

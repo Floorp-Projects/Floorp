@@ -1,16 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Emulate Promise.jsm semantics.
-Promise.defer = function() { return new Deferred(); }
-function Deferred()  {
-  this.promise = new Promise(function(resolve, reject) {
-    this.resolve = resolve;
-    this.reject = reject;
-  }.bind(this));
-  Object.freeze(this);
-}
-
+let Promise = SpecialPowers.Cu.import("resource://gre/modules/Promise.jsm").Promise;
 let telephony;
 let conference;
 

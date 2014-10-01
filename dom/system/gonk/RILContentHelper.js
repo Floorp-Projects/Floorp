@@ -799,8 +799,7 @@ RILContentHelper.prototype = {
     let window = this._windowsMap[message.requestId];
     delete this._windowsMap[message.requestId];
     let contacts = message.contacts;
-    let result = new window.Array();
-    contacts.forEach(function(c) {
+    let result = contacts.map(function(c) {
       let prop = {name: [c.alphaId], tel: [{value: c.number}]};
 
       if (c.email) {
@@ -815,7 +814,7 @@ RILContentHelper.prototype = {
 
       let contact = new window.mozContact(prop);
       contact.id = c.contactId;
-      result.push(contact);
+      return contact;
     });
 
     this.fireRequestSuccess(message.requestId, result);

@@ -3,15 +3,7 @@
 
 const {Cc: Cc, Ci: Ci, Cr: Cr, Cu: Cu} = SpecialPowers;
 
-// Emulate Promise.jsm semantics.
-Promise.defer = function() { return new Deferred(); }
-function Deferred()  {
-  this.promise = new Promise(function(resolve, reject) {
-    this.resolve = resolve;
-    this.reject = reject;
-  }.bind(this));
-  Object.freeze(this);
-}
+let Promise = Cu.import("resource://gre/modules/Promise.jsm").Promise;
 
 const PDU_DCS_CODING_GROUP_BITS          = 0xF0;
 const PDU_DCS_MSG_CODING_7BITS_ALPHABET  = 0x00;
