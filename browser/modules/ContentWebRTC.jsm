@@ -159,7 +159,7 @@ function updateIndicators() {
   };
 
   for (let i = 0; i < count; ++i) {
-    let contentWindow = contentWindowSupportsArray.GetElementAt(i);
+    let contentWindow = contentWindowSupportsArray.GetElementAt(i).top;
     let camera = {}, microphone = {}, screen = {}, window = {}, app = {};
     MediaManagerService.mediaCaptureWindowState(contentWindow, camera,
                                                 microphone, screen, window, app);
