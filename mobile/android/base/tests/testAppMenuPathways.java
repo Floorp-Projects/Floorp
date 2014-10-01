@@ -32,7 +32,7 @@ public class testAppMenuPathways extends UITest {
             message.put("baseDomain", "webmfiles.org");
             message.put("type", "Content:LocationChange");
             message.put("sameDocument", false);
-            message.put("userSearch", "");
+            message.put("userRequested", "");
             message.put("uri", getAbsoluteIpUrl("/big-buck-bunny_trailer.webm"));
             message.put("tabID", 0);
         } catch (Exception ex) {

@@ -3408,6 +3408,14 @@
     "extended_statistics_ok": true,
     "description": "PLACES: Time to calculate frecency of a page (ms)"
   },
+  "PLACES_MAINTENANCE_DAYSFROMLAST": {
+    "expires_in_version" : "never",
+    "kind": "exponential",
+    "low": 7,
+    "high": 60,
+    "n_buckets" : 10,
+    "description": "PLACES: Days from last maintenance"
+  },
   "UPDATER_BACKGROUND_CHECK_CODE_EXTERNAL": {
     "expires_in_version": "default",
     "kind": "enumerated",

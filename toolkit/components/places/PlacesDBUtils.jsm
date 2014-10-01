@@ -957,6 +957,18 @@ this.PlacesDBUtils = {
 
       { histogram: "PLACES_ANNOS_PAGES_SIZE_KB",
         query:     "SELECT SUM(LENGTH(content))/1024 FROM moz_annos" },
+
+      { histogram: "PLACES_MAINTENANCE_DAYSFROMLAST",
+        callback: function () {
+          try {
+            let lastMaintenance = Services.prefs.getIntPref("places.database.lastMaintenance");
+            let nowSeconds = parseInt(Date.now() / 1000);
+            return parseInt((nowSeconds - lastMaintenance) / 86400);
+          } catch (ex) {
+            return 60;
+          }
+        }
+      },
     ];
 
     let params = {

@@ -349,8 +349,13 @@ IsExpired(const MultiTouchInput& aTouch)
 void
 GeckoTouchDispatcher::DispatchTouchEvent(MultiTouchInput& aMultiTouch)
 {
-  if (aMultiTouch.mType == MultiTouchInput::MULTITOUCH_START &&
+  if ((aMultiTouch.mType == MultiTouchInput::MULTITOUCH_END ||
+       aMultiTouch.mType == MultiTouchInput::MULTITOUCH_CANCEL) &&
       aMultiTouch.mTouches.Length() == 1) {
+    MutexAutoLock lock(mTouchQueueLock);
+    mTouchMoveEvents.clear();
+  } else if (aMultiTouch.mType == MultiTouchInput::MULTITOUCH_START &&
+             aMultiTouch.mTouches.Length() == 1) {
     mTouchEventsFiltered = IsExpired(aMultiTouch);
   }
 

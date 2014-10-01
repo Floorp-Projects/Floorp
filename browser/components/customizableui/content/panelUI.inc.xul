@@ -186,7 +186,7 @@
           <vbox flex="1">
             <hbox id="PanelUI-panic-header">
               <image id="PanelUI-panic-timeframe-icon-small" alt=""/>
-              <description value="&panicButton.view.mainTimeframeDesc;" id="PanelUI-panic-mainDesc"/>
+              <description id="PanelUI-panic-mainDesc" flex="1">&panicButton.view.mainTimeframeDesc;</description>
             </hbox>
             <radiogroup id="PanelUI-panic-timeSpan" aria-labelledby="PanelUI-panic-mainDesc">
               <radio id="PanelUI-panic-5min" label="&panicButton.view.5min;" selected="true"
@@ -199,14 +199,14 @@
           </vbox>
         </hbox>
         <vbox id="PanelUI-panic-explanations">
-          <label id="PanelUI-panic-actionlist-main-label" value="&panicButton.view.mainActionDesc;"/>
+          <label id="PanelUI-panic-actionlist-main-label">&panicButton.view.mainActionDesc;</label>
 
           <label id="PanelUI-panic-actionlist-cookies" class="PanelUI-panic-actionlist">&panicButton.view.deleteCookies;</label>
           <label id="PanelUI-panic-actionlist-history" class="PanelUI-panic-actionlist">&panicButton.view.deleteHistory;</label>
           <label id="PanelUI-panic-actionlist-windows" class="PanelUI-panic-actionlist">&panicButton.view.deleteTabsAndWindows;</label>
           <label id="PanelUI-panic-actionlist-newwindow" class="PanelUI-panic-actionlist">&panicButton.view.openNewWindow;</label>
 
-          <label id="PanelUI-panic-warning" value="&panicButton.view.undoWarning;"/>
+          <label id="PanelUI-panic-warning">&panicButton.view.undoWarning;</label>
         </vbox>
         <button id="PanelUI-panic-view-button"
                 label="&panicButton.view.forgetButton;"/>
