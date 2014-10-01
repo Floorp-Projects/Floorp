@@ -663,15 +663,15 @@ FreeChunk(JSRuntime *rt, Chunk *p)
 inline Chunk *
 ChunkPool::get(JSRuntime *rt)
 {
-    Chunk *chunk = emptyChunkListHead;
+    Chunk *chunk = head_;
     if (!chunk) {
-        MOZ_ASSERT(!emptyCount);
+        MOZ_ASSERT(!count_);
         return nullptr;
     }
 
-    MOZ_ASSERT(emptyCount);
-    emptyChunkListHead = chunk->info.next;
-    --emptyCount;
+    MOZ_ASSERT(count_);
+    head_ = chunk->info.next;
+    --count_;
     return chunk;
 }
 
@@ -680,16 +680,16 @@ inline void
 ChunkPool::put(Chunk *chunk)
 {
     chunk->info.age = 0;
-    chunk->info.next = emptyChunkListHead;
-    emptyChunkListHead = chunk;
-    emptyCount++;
+    chunk->info.next = head_;
+    head_ = chunk;
+    count_++;
 }
 
 inline Chunk *
 ChunkPool::Enum::front()
 {
     Chunk *chunk = *chunkp;
-    MOZ_ASSERT_IF(chunk, pool.getEmptyCount() != 0);
+    MOZ_ASSERT_IF(chunk, pool.count() != 0);
     return chunk;
 }
 
@@ -705,7 +705,7 @@ ChunkPool::Enum::removeAndPopFront()
 {
     MOZ_ASSERT(!empty());
     *chunkp = front()->info.next;
-    --pool.emptyCount;
+    --pool.count_;
 }
 
 /* Must be called either during the GC or with the GC lock taken. */
@@ -739,9 +739,9 @@ GCRuntime::expireChunkPool(bool shrinkBuffers, bool releaseAll)
             e.popFront();
         }
     }
-    MOZ_ASSERT(chunkPool.getEmptyCount() <= tunables.maxEmptyChunkCount());
-    MOZ_ASSERT_IF(shrinkBuffers, chunkPool.getEmptyCount() <= tunables.minEmptyChunkCount());
-    MOZ_ASSERT_IF(releaseAll, chunkPool.getEmptyCount() == 0);
+    MOZ_ASSERT(chunkPool.count() <= tunables.maxEmptyChunkCount());
+    MOZ_ASSERT_IF(shrinkBuffers, chunkPool.count() <= tunables.minEmptyChunkCount());
+    MOZ_ASSERT_IF(releaseAll, chunkPool.count() == 0);
     return freeList;
 }
 
@@ -1049,7 +1049,7 @@ GCRuntime::wantBackgroundAllocation() const
      * of them.
      */
     return helperState.canBackgroundAllocate() &&
-           chunkPool.getEmptyCount() < tunables.minEmptyChunkCount() &&
+           chunkPool.count() < tunables.minEmptyChunkCount() &&
            chunkSet.count() >= 4;
 }
 
@@ -1512,9 +1512,9 @@ GCRuntime::getParameter(JSGCParamKey key)
       case JSGC_MODE:
         return uint32_t(mode);
       case JSGC_UNUSED_CHUNKS:
-        return uint32_t(chunkPool.getEmptyCount());
+        return uint32_t(chunkPool.count());
       case JSGC_TOTAL_CHUNKS:
-        return uint32_t(chunkSet.count() + chunkPool.getEmptyCount());
+        return uint32_t(chunkSet.count() + chunkPool.count());
       case JSGC_SLICE_TIME_BUDGET:
         return uint32_t(sliceBudget > 0 ? sliceBudget / PRMJ_USEC_PER_MSEC : 0);
       case JSGC_MARK_STACK_LIMIT:
