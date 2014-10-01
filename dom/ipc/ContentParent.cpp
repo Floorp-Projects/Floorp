@@ -187,10 +187,6 @@ using namespace mozilla::system;
 #include "mozilla/Sandbox.h"
 #endif
 
-#ifdef MOZ_TOOLKIT_SEARCH
-#include "nsIBrowserSearchService.h"
-#endif
-
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 static const char* sClipboardTextFlavors[] = { kUnicodeMime };
 
@@ -3830,9 +3826,7 @@ ContentParent::RecvSetFakeVolumeState(const nsString& fsName, const int32_t& fsS
 }
 
 bool
-ContentParent::RecvKeywordToURI(const nsCString& aKeyword,
-                                nsString* aProviderName,
-                                OptionalInputStreamParams* aPostData,
+ContentParent::RecvKeywordToURI(const nsCString& aKeyword, OptionalInputStreamParams* aPostData,
                                 OptionalURIParams* aURI)
 {
     nsCOMPtr<nsIURIFixup> fixup = do_GetService(NS_URIFIXUP_CONTRACTID);
@@ -3841,42 +3835,17 @@ ContentParent::RecvKeywordToURI(const nsCString& aKeyword,
     }
 
     nsCOMPtr<nsIInputStream> postData;
-    nsCOMPtr<nsIURIFixupInfo> info;
-
+    nsCOMPtr<nsIURI> uri;
     if (NS_FAILED(fixup->KeywordToURI(aKeyword, getter_AddRefs(postData),
-                                      getter_AddRefs(info)))) {
+                                      getter_AddRefs(uri)))) {
         return true;
     }
-    info->GetKeywordProviderName(*aProviderName);
 
     nsTArray<mozilla::ipc::FileDescriptor> fds;
     SerializeInputStream(postData, *aPostData, fds);
     MOZ_ASSERT(fds.IsEmpty());
 
-    nsCOMPtr<nsIURI> uri;
-    info->GetPreferredURI(getter_AddRefs(uri));
     SerializeURI(uri, *aURI);
-    return true;
-}
-
-bool
-ContentParent::RecvNotifyKeywordSearchLoading(const nsString &aProvider,
-                                              const nsString &aKeyword) {
-#ifdef MOZ_TOOLKIT_SEARCH
-    nsCOMPtr<nsIBrowserSearchService> searchSvc = do_GetService("@mozilla.org/browser/search-service;1");
-    if (searchSvc) {
-        nsCOMPtr<nsISearchEngine> searchEngine;
-        searchSvc->GetEngineByName(aProvider, getter_AddRefs(searchEngine));
-        if (searchEngine) {
-            nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
-            if (obsSvc) {
-                // Note that "keyword-search" refers to a search via the url
-                // bar, not a bookmarks keyword search.
-                obsSvc->NotifyObservers(searchEngine, "keyword-search", aKeyword.get());
-            }
-        }
-    }
-#endif
     return true;
 }
 
