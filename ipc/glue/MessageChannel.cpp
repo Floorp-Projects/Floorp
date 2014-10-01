@@ -731,11 +731,19 @@ MessageChannel::SendAndWait(Message* aMsg, Message* aReply)
                 return false;
         }
 
-        if (mPendingUrgentRequest && !ProcessPendingUrgentRequest())
-            return false;
+        // We need to make sure that all messages deposited in mPendingRPCCall
+        // and mPendingUrgentRequest are dispatched before we leave this
+        // function. Otherwise, there's nothing to wake us up and force us to
+        // dispatch them.
+        while (mPendingUrgentRequest) {
+            if (!ProcessPendingUrgentRequest())
+                return false;
+        }
 
-        if (mPendingRPCCall && !ProcessPendingRPCCall())
-            return false;
+        while (mPendingRPCCall) {
+            if (!ProcessPendingRPCCall())
+                return false;
+        }
 
         if (mRecvd) {
             NS_ABORT_IF_FALSE(mRecvd->is_reply(), "expected reply");
