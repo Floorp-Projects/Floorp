@@ -662,16 +662,6 @@ public class BrowserApp extends GeckoApp
         // Set the maximum bits-per-pixel the favicon system cares about.
         IconDirectoryEntry.setMaxBPP(GeckoAppShell.getScreenDepth());
 
-        Class<?> mediaManagerClass = getMediaPlayerManager();
-        if (mediaManagerClass != null) {
-            try {
-                Method init = mediaManagerClass.getMethod("init", Context.class);
-                init.invoke(null, this);
-            } catch(Exception ex) {
-                Log.e(LOGTAG, "Error initializing media manager", ex);
-            }
-        }
-
         if (getProfile().inGuestMode()) {
             GuestSession.showNotification(this);
         } else {
@@ -945,7 +935,7 @@ public class BrowserApp extends GeckoApp
         if (itemId == R.id.pasteandgo) {
             String text = Clipboard.getText();
             if (!TextUtils.isEmpty(text)) {
-                Tabs.getInstance().loadUrl(text);
+                loadUrlOrKeywordSearch(text);
                 Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.CONTEXT_MENU);
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU, "pasteandgo");
             }
@@ -1547,6 +1537,19 @@ public class BrowserApp extends GeckoApp
                     }
                 });
 
+                if (AppConstants.MOZ_MEDIA_PLAYER) {
+                    // If casting is disabled, these classes aren't built. We use reflection to initialize them.
+                    Class<?> mediaManagerClass = getMediaPlayerManager();
+                    if (mediaManagerClass != null) {
+                        try {
+                            Method init = mediaManagerClass.getMethod("init", Context.class);
+                            init.invoke(null, this);
+                        } catch(Exception ex) {
+                            Log.e(LOGTAG, "Error initializing media manager", ex);
+                        }
+                    }
+                }
+
                 if (AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED) {
                     // Start (this acts as ping if started already) the stumbler lib; if the stumbler has queued data it will upload it.
                     // Stumbler operates on its own thread, and startup impact is further minimized by delaying work (such as upload) a few seconds.
@@ -1559,6 +1562,7 @@ public class BrowserApp extends GeckoApp
                         }
                     }, oneSecondInMillis);
                 }
+
                 super.handleMessage(event, message);
             } else if (event.equals("Gecko:Ready")) {
                 // Handle this message in GeckoApp, but also enable the Settings
@@ -1934,7 +1938,10 @@ public class BrowserApp extends GeckoApp
         //
         // Expected to be fixed by bug 915825.
         hideHomePager(url);
+        loadUrlOrKeywordSearch(url);
+    }
 
+    private void loadUrlOrKeywordSearch(final String url) {
         // Don't do anything if the user entered an empty URL.
         if (TextUtils.isEmpty(url)) {
             return;
