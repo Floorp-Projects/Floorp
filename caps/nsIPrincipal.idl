@@ -113,13 +113,9 @@ interface nsIPrincipal : nsISerializable
      * located at the given URI under the same-origin policy. This means that
      * codebase principals are only allowed to load resources from the same
      * domain, the system principal is allowed to load anything, and null
-     * principals are not allowed to load anything. This is changed slightly
-     * by the optional flag allowIfInheritsPrincipal (which defaults to false)
-     * which allows the load of a data: URI (which inherits the principal of
-     * its loader) or a URI with the same principal as its loader (eg. a
-     * Blob URI).
-     * In these cases, with allowIfInheritsPrincipal set to true, the URI can
-     * be loaded by a null principal.
+     * principals can only load URIs where they are the principal. This is
+     * changed by the optional flag allowIfInheritsPrincipal (which defaults to
+     * false) which allows URIs that inherit their loader's principal.
      *
      * If the load is allowed this function does nothing. If the load is not
      * allowed the function throws NS_ERROR_DOM_BAD_URI.

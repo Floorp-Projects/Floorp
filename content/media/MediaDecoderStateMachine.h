@@ -636,9 +636,6 @@ protected:
   // and the sink is shutting down.
   void OnAudioSinkComplete();
 
-  // Called by the AudioSink to signal errors.
-  void OnAudioSinkError();
-
   // The decoder object that created this state machine. The state machine
   // holds a strong reference to the decoder to ensure that the decoder stays
   // alive once media element has started the decoder shutdown process, and has

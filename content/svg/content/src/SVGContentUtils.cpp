@@ -122,9 +122,20 @@ GetStrokeDashData(SVGContentUtils::AutoStrokeOptions* aStrokeOptions,
     }
   }
 
-  // Now that aStrokeOptions.mDashPattern is fully initialized we can safely
-  // set mDashLength:
+  // Now that aStrokeOptions.mDashPattern is fully initialized (we didn't
+  // return early above) we can safely set mDashLength:
   aStrokeOptions->mDashLength = dashArrayLength;
+
+  if ((dashArrayLength % 2) == 1) {
+    // If we have a dash pattern with an odd number of lengths the pattern
+    // repeats a second time, per the SVG spec., and as implemented by Moz2D.
+    // When deciding whether to return eNoStroke or eContinuousStroke below we
+    // need to take into account that in the repeat pattern the dashes become
+    // gaps, and the gaps become dashes.
+    Float origTotalLengthOfDashes = totalLengthOfDashes;
+    totalLengthOfDashes += totalLengthOfGaps;
+    totalLengthOfGaps += origTotalLengthOfDashes;
+  }
 
   if (totalLengthOfDashes <= 0 || totalLengthOfGaps <= 0) {
     if (totalLengthOfGaps > 0 && totalLengthOfDashes <= 0) {
@@ -172,9 +183,9 @@ SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
     aStrokeOptions->mLineWidth = 0;
     return;
   }
-  if (dashState == eContinuousStroke) {
-    // Prevent our caller from wasting time looking at the dash array:
-    aStrokeOptions->mDashLength = 0;
+  if (dashState == eContinuousStroke && aStrokeOptions->mDashPattern) {
+    // Prevent our caller from wasting time looking at a pattern without gaps:
+    aStrokeOptions->DiscardDashPattern();
   }
 
   aStrokeOptions->mLineWidth =

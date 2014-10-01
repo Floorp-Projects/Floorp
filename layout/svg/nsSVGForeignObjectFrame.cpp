@@ -266,7 +266,7 @@ nsSVGForeignObjectFrame::PaintSVG(nsRenderingContext *aContext,
   gfx->Multiply(canvasTMForChildren);
 
   uint32_t flags = nsLayoutUtils::PAINT_IN_TRANSFORM;
-  if (SVGAutoRenderState::IsPaintingToWindow(aContext)) {
+  if (SVGAutoRenderState::IsPaintingToWindow(aContext->GetDrawTarget())) {
     flags |= nsLayoutUtils::PAINT_TO_WINDOW;
   }
   nsresult rv = nsLayoutUtils::PaintFrame(aContext, kid, nsRegion(kidDirtyRect),

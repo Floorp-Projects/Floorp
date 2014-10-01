@@ -486,6 +486,7 @@ let settingsToObserve = {
     resetToPref: true
   },
   'dom.mozApps.use_reviewer_certs': false,
+  'dom.mozApps.signed_apps_installable_from': 'https://marketplace.firefox.com',
   'layers.draw-borders': false,
   'layers.draw-tile-borders': false,
   'layers.dump': false,
