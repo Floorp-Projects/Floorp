@@ -51,12 +51,10 @@
                   android:paddingLeft="6dip"
                   android:paddingRight="4dip"/>
 
-    <!-- TODO: The reload asset is too small (bug 1072466) so we have white-space above and below the menu item.
-         We add marginTop to center and compensate: remove this when the final asset is added. -->
     <LinearLayout android:id="@+id/menu_items"
                   android:layout_width="wrap_content"
                   android:layout_height="match_parent"
-                  android:layout_marginTop="2dp"
+                  android:gravity="center_vertical"
                   android:layout_marginLeft="6dp"
                   android:orientation="horizontal"
                   android:layout_toLeftOf="@id/tabs"/>
