@@ -140,7 +140,7 @@ function testReSetPrefixes() {
   checkContents(pset, secondPrefixes);
 }
 
-function testLargeSet() {
+function testLoadSaveLargeSet() {
   let N = 1000;
   let arr = [];
 
@@ -158,6 +158,20 @@ function testLargeSet() {
   doRandomLookups(pset, arr, 1000);
 
   checkContents(pset, arr);
+
+  // Now try to save, restore, and redo the lookups
+  var file = dirSvc.get('ProfLD', Ci.nsIFile);
+  file.append("testLarge.pset");
+
+  pset.storeToFile(file);
+
+  let psetLoaded = newPset();
+  psetLoaded.loadFromFile(file);
+
+  doExpectedLookups(psetLoaded, arr, 1);
+  doRandomLookups(psetLoaded, arr, 1000);
+
+  checkContents(psetLoaded, arr);
 }
 
 function testTinySet() {
@@ -176,12 +190,37 @@ function testTinySet() {
   checkContents(pset, prefixes);
 }
 
+function testLoadSaveNoDelta() {
+  let N = 100;
+  let arr = [];
+
+  for (let i = 0; i < N; i++) {
+    // construct a tree without deltas by making the distance
+    // between entries larger than 16 bits
+    arr.push(((1 << 16) + 1) * i);
+  }
+
+  let pset = newPset();
+  pset.setPrefixes(arr, arr.length);
+
+  doExpectedLookups(pset, arr, 1);
+
+  var file = dirSvc.get('ProfLD', Ci.nsIFile);
+  file.append("testNoDelta.pset");
+
+  pset.storeToFile(file);
+  pset.loadFromFile(file);
+
+  doExpectedLookups(pset, arr, 1);
+}
+
 let tests = [testBasicPset,
              testSimplePset,
              testReSetPrefixes,
-             testLargeSet,
+             testLoadSaveLargeSet,
              testDuplicates,
-             testTinySet];
+             testTinySet,
+             testLoadSaveNoDelta];
 
 function run_test() {
   // None of the tests use |executeSoon| or any sort of callbacks, so we can
