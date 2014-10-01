@@ -203,6 +203,7 @@
 #include "nsSandboxFlags.h"
 #include "TimeChangeObserver.h"
 #include "mozilla/dom/AudioContext.h"
+#include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/BrowserElementDictionariesBinding.h"
 #include "mozilla/dom/Console.h"
 #include "mozilla/dom/FunctionBinding.h"
