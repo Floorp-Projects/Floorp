@@ -48,7 +48,7 @@ MOZ_ALWAYS_INLINE bool
 bool_toSource_impl(JSContext *cx, CallArgs args)
 {
     HandleValue thisv = args.thisv();
-    JS_ASSERT(IsBoolean(thisv));
+    MOZ_ASSERT(IsBoolean(thisv));
 
     bool b = thisv.isBoolean() ? thisv.toBoolean() : thisv.toObject().as<BooleanObject>().unbox();
 
@@ -75,7 +75,7 @@ MOZ_ALWAYS_INLINE bool
 bool_toString_impl(JSContext *cx, CallArgs args)
 {
     HandleValue thisv = args.thisv();
-    JS_ASSERT(IsBoolean(thisv));
+    MOZ_ASSERT(IsBoolean(thisv));
 
     bool b = thisv.isBoolean() ? thisv.toBoolean() : thisv.toObject().as<BooleanObject>().unbox();
     args.rval().setString(js_BooleanToString(cx, b));
@@ -93,7 +93,7 @@ MOZ_ALWAYS_INLINE bool
 bool_valueOf_impl(JSContext *cx, CallArgs args)
 {
     HandleValue thisv = args.thisv();
-    JS_ASSERT(IsBoolean(thisv));
+    MOZ_ASSERT(IsBoolean(thisv));
 
     bool b = thisv.isBoolean() ? thisv.toBoolean() : thisv.toObject().as<BooleanObject>().unbox();
     args.rval().setBoolean(b);
@@ -136,7 +136,7 @@ Boolean(JSContext *cx, unsigned argc, Value *vp)
 JSObject *
 js_InitBooleanClass(JSContext *cx, HandleObject obj)
 {
-    JS_ASSERT(obj->isNative());
+    MOZ_ASSERT(obj->isNative());
 
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 
@@ -187,7 +187,7 @@ js::ToBooleanSlow(HandleValue v)
     if (v.isString())
         return v.toString()->length() != 0;
 
-    JS_ASSERT(v.isObject());
+    MOZ_ASSERT(v.isObject());
     return !EmulatesUndefined(&v.toObject());
 }
 
@@ -199,6 +199,6 @@ bool
 js::BooleanGetPrimitiveValueSlow(HandleObject wrappedBool)
 {
     JSObject *obj = wrappedBool->as<ProxyObject>().target();
-    JS_ASSERT(obj);
+    MOZ_ASSERT(obj);
     return obj->as<BooleanObject>().unbox();
 }

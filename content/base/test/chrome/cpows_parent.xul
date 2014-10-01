@@ -233,6 +233,21 @@
       results.forEach((x) => is(x.result, "PASS", x.message));
     }
 
+    function recvRegExpTest(message) {
+      let regexp = message.objects.regexp;
+
+      // These work generically.
+      is(regexp.toString(), "/myRegExp/g", "toString works right");
+      ok(regexp.test("I like myRegExp to match"), "No false positives");
+      ok(!regexp.test("asdfsdf"), "No false positives");
+
+      // These go over regexp_toShared.
+      is("filler myRegExp filler".search(regexp), 7, "String.prototype.match works right");
+      var shell = /x/;
+      shell.compile(regexp);
+      is(regexp.toString(), shell.toString(), ".compile works right");
+    }
+
     let savedWilldieObj;
     let wontDie = {f:2, __exposedProps__: {"f": "r"}};
     function recvLifetimeTest1(message) {
@@ -286,6 +301,7 @@
       mm.addMessageListener("cpows:dom_test_after_gc", recvDomTestAfterGC);
       mm.addMessageListener("cpows:xray_test", recvXrayTest);
       mm.addMessageListener("cpows:compartment_test", recvCompartmentTest);
+      mm.addMessageListener("cpows:regexp_test", recvRegExpTest);
       mm.addMessageListener("cpows:lifetime_test_1", recvLifetimeTest1);
       mm.addMessageListener("cpows:lifetime_test_2", recvLifetimeTest2);
       mm.loadFrameScript("chrome://mochitests/content/chrome/content/base/test/chrome/cpows_child.js", true);

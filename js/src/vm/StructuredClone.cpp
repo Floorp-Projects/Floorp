@@ -342,7 +342,7 @@ struct JSStructuredCloneWriter {
 JS_FRIEND_API(uint64_t)
 js_GetSCOffset(JSStructuredCloneWriter* writer)
 {
-    JS_ASSERT(writer);
+    MOZ_ASSERT(writer);
     return writer->output().count() * sizeof(uint64_t);
 }
 
@@ -383,7 +383,7 @@ ReadStructuredClone(JSContext *cx, uint64_t *data, size_t nbytes, MutableHandleV
 static void
 Discard(uint64_t *buffer, size_t nbytes, const JSStructuredCloneCallbacks *cb, void *cbClosure)
 {
-    JS_ASSERT(nbytes % sizeof(uint64_t) == 0);
+    MOZ_ASSERT(nbytes % sizeof(uint64_t) == 0);
     if (nbytes < sizeof(uint64_t))
         return; // Empty buffer
 
@@ -403,7 +403,7 @@ Discard(uint64_t *buffer, size_t nbytes, const JSStructuredCloneCallbacks *cb, v
     while (numTransferables--) {
         uint32_t ownership;
         SCInput::getPair(point++, &tag, &ownership);
-        JS_ASSERT(tag >= SCTAG_TRANSFER_MAP_PENDING_ENTRY);
+        MOZ_ASSERT(tag >= SCTAG_TRANSFER_MAP_PENDING_ENTRY);
 
         void *content;
         SCInput::getPtr(point++, &content);
@@ -459,8 +459,8 @@ SCInput::SCInput(JSContext *cx, uint64_t *data, size_t nbytes)
 {
     // On 32-bit, we sometimes construct an SCInput from an SCOutput buffer,
     // which is not guaranteed to be 8-byte aligned
-    JS_ASSERT((uintptr_t(data) & (sizeof(int) - 1)) == 0);
-    JS_ASSERT((nbytes & 7) == 0);
+    MOZ_ASSERT((uintptr_t(data) & (sizeof(int) - 1)) == 0);
+    MOZ_ASSERT((nbytes & 7) == 0);
 }
 
 bool
@@ -589,7 +589,7 @@ SCInput::readChars(Latin1Char *p, size_t nchars)
 bool
 SCInput::readChars(char16_t *p, size_t nchars)
 {
-    JS_ASSERT(sizeof(char16_t) == sizeof(uint16_t));
+    MOZ_ASSERT(sizeof(char16_t) == sizeof(uint16_t));
     return readArray((uint16_t *) p, nchars);
 }
 
@@ -687,8 +687,8 @@ template <class T>
 bool
 SCOutput::writeArray(const T *p, size_t nelems)
 {
-    JS_ASSERT(8 % sizeof(T) == 0);
-    JS_ASSERT(sizeof(uint64_t) % sizeof(T) == 0);
+    MOZ_ASSERT(8 % sizeof(T) == 0);
+    MOZ_ASSERT(sizeof(uint64_t) % sizeof(T) == 0);
 
     if (nelems == 0)
         return true;
@@ -718,7 +718,7 @@ SCOutput::writeBytes(const void *p, size_t nbytes)
 bool
 SCOutput::writeChars(const char16_t *p, size_t nchars)
 {
-    JS_ASSERT(sizeof(char16_t) == sizeof(uint16_t));
+    MOZ_ASSERT(sizeof(char16_t) == sizeof(uint16_t));
     return writeArray((const uint16_t *) p, nchars);
 }
 
@@ -834,20 +834,20 @@ JSStructuredCloneWriter::checkStack()
     const size_t MAX = 10;
 
     size_t limit = Min(counts.length(), MAX);
-    JS_ASSERT(objs.length() == counts.length());
+    MOZ_ASSERT(objs.length() == counts.length());
     size_t total = 0;
     for (size_t i = 0; i < limit; i++) {
-        JS_ASSERT(total + counts[i] >= total);
+        MOZ_ASSERT(total + counts[i] >= total);
         total += counts[i];
     }
     if (counts.length() <= MAX)
-        JS_ASSERT(total == entries.length());
+        MOZ_ASSERT(total == entries.length());
     else
-        JS_ASSERT(total <= entries.length());
+        MOZ_ASSERT(total <= entries.length());
 
     size_t j = objs.length();
     for (size_t i = 0; i < limit; i++)
-        JS_ASSERT(memory.has(&objs[--j].toObject()));
+        MOZ_ASSERT(memory.has(&objs[--j].toObject()));
 #endif
 }
 
@@ -976,7 +976,7 @@ JSStructuredCloneWriter::traverseMap(HandleObject obj)
         RootedObject unwrapped(context(), CheckedUnwrap(obj));
         MOZ_ASSERT(unwrapped);
         JSAutoCompartment ac(context(), unwrapped);
-        if (!MapObject::entries(context(), unwrapped, &newEntries))
+        if (!MapObject::getKeysAndValuesInterleaved(context(), unwrapped, &newEntries))
             return false;
     }
     if (!context()->compartment()->wrap(context(), newEntries))
@@ -1145,9 +1145,9 @@ JSStructuredCloneWriter::transferOwnership()
     // grabbing out pointers from the transferables and stuffing them into the
     // transfer map.
     uint64_t *point = out.rawBuffer();
-    JS_ASSERT(uint32_t(LittleEndian::readUint64(point) >> 32) == SCTAG_TRANSFER_MAP_HEADER);
+    MOZ_ASSERT(uint32_t(LittleEndian::readUint64(point) >> 32) == SCTAG_TRANSFER_MAP_HEADER);
     point++;
-    JS_ASSERT(LittleEndian::readUint64(point) == transferableObjects.length());
+    MOZ_ASSERT(LittleEndian::readUint64(point) == transferableObjects.length());
     point++;
 
     for (JS::AutoObjectVector::Range tr = transferableObjects.all(); !tr.empty(); tr.popFront()) {
@@ -1197,7 +1197,7 @@ JSStructuredCloneWriter::transferOwnership()
                 return reportErrorTransferable();
             if (!callbacks->writeTransfer(context(), obj, closure, &tag, &ownership, &content, &extraData))
                 return false;
-            JS_ASSERT(tag > SCTAG_TRANSFER_MAP_PENDING_ENTRY);
+            MOZ_ASSERT(tag > SCTAG_TRANSFER_MAP_PENDING_ENTRY);
         }
 
         LittleEndian::writeUint64(point++, PairToUInt64(tag, ownership));
@@ -1205,9 +1205,9 @@ JSStructuredCloneWriter::transferOwnership()
         LittleEndian::writeUint64(point++, extraData);
     }
 
-    JS_ASSERT(point <= out.rawBuffer() + out.count());
-    JS_ASSERT_IF(point < out.rawBuffer() + out.count(),
-                 uint32_t(LittleEndian::readUint64(point) >> 32) < SCTAG_TRANSFER_MAP_HEADER);
+    MOZ_ASSERT(point <= out.rawBuffer() + out.count());
+    MOZ_ASSERT_IF(point < out.rawBuffer() + out.count(),
+                  uint32_t(LittleEndian::readUint64(point) >> 32) < SCTAG_TRANSFER_MAP_HEADER);
 
     return true;
 }
@@ -1298,7 +1298,7 @@ class Chars {
     ~Chars() { js_free(p); }
 
     bool allocate(size_t len) {
-        JS_ASSERT(!p);
+        MOZ_ASSERT(!p);
         // We're going to null-terminate!
         p = cx->pod_malloc<CharT>(len + 1);
         if (p) {
@@ -1342,7 +1342,7 @@ JSStructuredCloneReader::readString(uint32_t data)
 static uint32_t
 TagToV1ArrayType(uint32_t tag)
 {
-    JS_ASSERT(tag >= SCTAG_TYPED_ARRAY_V1_MIN && tag <= SCTAG_TYPED_ARRAY_V1_MAX);
+    MOZ_ASSERT(tag >= SCTAG_TYPED_ARRAY_V1_MIN && tag <= SCTAG_TYPED_ARRAY_V1_MAX);
     return tag - SCTAG_TYPED_ARRAY_V1_MIN;
 }
 
@@ -1497,7 +1497,7 @@ JSStructuredCloneReader::readArrayBuffer(uint32_t nbytes, MutableHandleValue vp)
         return false;
     vp.setObject(*obj);
     ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
-    JS_ASSERT(buffer.byteLength() == nbytes);
+    MOZ_ASSERT(buffer.byteLength() == nbytes);
     return in.readArray(buffer.dataPointer(), nbytes);
 }
 
@@ -1509,7 +1509,7 @@ bool
 JSStructuredCloneReader::readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems,
                                            MutableHandleValue vp)
 {
-    JS_ASSERT(arrayType <= Scalar::Uint8Clamped);
+    MOZ_ASSERT(arrayType <= Scalar::Uint8Clamped);
 
     uint32_t nbytes = nelems << TypedArrayShift(static_cast<Scalar::Type>(arrayType));
     JSObject *obj = ArrayBufferObject::create(context(), nbytes);
@@ -1517,7 +1517,7 @@ JSStructuredCloneReader::readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems,
         return false;
     vp.setObject(*obj);
     ArrayBufferObject &buffer = obj->as<ArrayBufferObject>();
-    JS_ASSERT(buffer.byteLength() == nbytes);
+    MOZ_ASSERT(buffer.byteLength() == nbytes);
 
     switch (arrayType) {
       case Scalar::Int8:
@@ -1764,7 +1764,7 @@ JSStructuredCloneReader::readTransferMap()
         if (!in.readPair(&tag, &data))
             return false;
 
-        JS_ASSERT(tag != SCTAG_TRANSFER_MAP_PENDING_ENTRY);
+        MOZ_ASSERT(tag != SCTAG_TRANSFER_MAP_PENDING_ENTRY);
         RootedObject obj(cx);
 
         void *content;
@@ -1777,14 +1777,14 @@ JSStructuredCloneReader::readTransferMap()
 
         if (tag == SCTAG_TRANSFER_MAP_ARRAY_BUFFER) {
             size_t nbytes = extraData;
-            JS_ASSERT(data == JS::SCTAG_TMO_ALLOC_DATA ||
-                      data == JS::SCTAG_TMO_MAPPED_DATA);
+            MOZ_ASSERT(data == JS::SCTAG_TMO_ALLOC_DATA ||
+                       data == JS::SCTAG_TMO_MAPPED_DATA);
             if (data == JS::SCTAG_TMO_ALLOC_DATA)
                 obj = JS_NewArrayBufferWithContents(cx, nbytes, content);
             else if (data == JS::SCTAG_TMO_MAPPED_DATA)
                 obj = JS_NewMappedArrayBufferWithContents(cx, nbytes, content);
         } else if (tag == SCTAG_TRANSFER_MAP_SHARED_BUFFER) {
-            JS_ASSERT(data == JS::SCTAG_TMO_SHARED_BUFFER);
+            MOZ_ASSERT(data == JS::SCTAG_TMO_SHARED_BUFFER);
             obj = SharedArrayBufferObject::New(context(), (SharedArrayRawBuffer *)content);
         } else {
             if (!callbacks || !callbacks->readTransfer) {
@@ -1993,7 +1993,7 @@ JSAutoStructuredCloneBuffer::JSAutoStructuredCloneBuffer(JSAutoStructuredCloneBu
 JSAutoStructuredCloneBuffer&
 JSAutoStructuredCloneBuffer::operator=(JSAutoStructuredCloneBuffer &&other)
 {
-    JS_ASSERT(&other != this);
+    MOZ_ASSERT(&other != this);
     clear();
     other.steal(&data_, &nbytes_, &version_);
     return *this;
@@ -2059,8 +2059,8 @@ JSAutoStructuredCloneBuffer::read(JSContext *cx, MutableHandleValue vp,
                                   const JSStructuredCloneCallbacks *optionalCallbacks,
                                   void *closure)
 {
-    JS_ASSERT(cx);
-    JS_ASSERT(data_);
+    MOZ_ASSERT(cx);
+    MOZ_ASSERT(data_);
     return !!JS_ReadStructuredClone(cx, data_, nbytes_, version_, vp,
                                     optionalCallbacks, closure);
 }
@@ -2145,7 +2145,7 @@ JS_WriteBytes(JSStructuredCloneWriter *w, const void *p, size_t len)
 JS_PUBLIC_API(bool)
 JS_WriteTypedArray(JSStructuredCloneWriter *w, HandleValue v)
 {
-    JS_ASSERT(v.isObject());
+    MOZ_ASSERT(v.isObject());
     assertSameCompartment(w->context(), v);
     RootedObject obj(w->context(), &v.toObject());
     return w->writeTypedArray(obj);

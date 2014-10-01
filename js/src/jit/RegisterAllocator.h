@@ -161,8 +161,8 @@ class CodePosition
     { }
 
     CodePosition(uint32_t instruction, SubPosition where) {
-        JS_ASSERT(instruction < 0x80000000u);
-        JS_ASSERT(((uint32_t)where & SUBPOSITION_MASK) == (uint32_t)where);
+        MOZ_ASSERT(instruction < 0x80000000u);
+        MOZ_ASSERT(((uint32_t)where & SUBPOSITION_MASK) == (uint32_t)where);
         bits_ = (instruction << INSTRUCTION_SHIFT) | (uint32_t)where;
     }
 
@@ -203,16 +203,16 @@ class CodePosition
     }
 
     uint32_t operator -(CodePosition other) const {
-        JS_ASSERT(bits_ >= other.bits_);
+        MOZ_ASSERT(bits_ >= other.bits_);
         return bits_ - other.bits_;
     }
 
     CodePosition previous() const {
-        JS_ASSERT(*this != MIN);
+        MOZ_ASSERT(*this != MIN);
         return CodePosition(bits_ - 1);
     }
     CodePosition next() const {
-        JS_ASSERT(*this != MAX);
+        MOZ_ASSERT(*this != MAX);
         return CodePosition(bits_ + 1);
     }
 };
@@ -227,8 +227,8 @@ class InstructionData
 
   public:
     void init(LInstruction *ins, LBlock *block) {
-        JS_ASSERT(!ins_);
-        JS_ASSERT(!block_);
+        MOZ_ASSERT(!ins_);
+        MOZ_ASSERT(!block_);
         ins_ = ins;
         block_ = block;
     }

@@ -35,7 +35,7 @@ LIRGraph::LIRGraph(MIRGraph *mir)
 bool
 LIRGraph::addConstantToPool(const Value &v, uint32_t *index)
 {
-    JS_ASSERT(constantPoolMap_.initialized());
+    MOZ_ASSERT(constantPoolMap_.initialized());
 
     ConstantPoolMap::AddPtr p = constantPoolMap_.lookupForAdd(v);
     if (p) {
@@ -50,7 +50,7 @@ bool
 LIRGraph::noteNeedsSafepoint(LInstruction *ins)
 {
     // Instructions with safepoints must be in linear order.
-    JS_ASSERT_IF(!safepoints_.empty(), safepoints_.back()->id() < ins->id());
+    MOZ_ASSERT_IF(!safepoints_.empty(), safepoints_.back()->id() < ins->id());
     if (!ins->isCall() && !nonCallSafepoints_.append(ins))
         return false;
     return safepoints_.append(ins);
@@ -128,10 +128,10 @@ uint32_t
 LBlock::lastId() const
 {
     LInstruction *last = *instructions_.rbegin();
-    JS_ASSERT(last->id());
+    MOZ_ASSERT(last->id());
     // The last instruction is a control flow instruction which does not have
     // any output.
-    JS_ASSERT(last->numDefs() == 0);
+    MOZ_ASSERT(last->numDefs() == 0);
     return last->id();
 }
 
@@ -473,7 +473,7 @@ LInstruction::printOperands(FILE *fp)
 void
 LInstruction::assignSnapshot(LSnapshot *snapshot)
 {
-    JS_ASSERT(!snapshot_);
+    MOZ_ASSERT(!snapshot_);
     snapshot_ = snapshot;
 
 #ifdef DEBUG
@@ -534,9 +534,9 @@ LInstruction::dump()
 void
 LInstruction::initSafepoint(TempAllocator &alloc)
 {
-    JS_ASSERT(!safepoint_);
+    MOZ_ASSERT(!safepoint_);
     safepoint_ = new(alloc) LSafepoint(alloc);
-    JS_ASSERT(safepoint_);
+    MOZ_ASSERT(safepoint_);
 }
 
 bool

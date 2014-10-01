@@ -17,7 +17,7 @@ Latin1CharsZ
 JS::LossyTwoByteCharsToNewLatin1CharsZ(js::ThreadSafeContext *cx,
                                        const mozilla::Range<const char16_t> tbchars)
 {
-    JS_ASSERT(cx);
+    MOZ_ASSERT(cx);
     size_t len = tbchars.length();
     unsigned char *latin1 = cx->pod_malloc<unsigned char>(len + 1);
     if (!latin1)
@@ -136,7 +136,7 @@ template <typename CharT>
 UTF8CharsZ
 JS::CharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, const mozilla::Range<const CharT> chars)
 {
-    JS_ASSERT(cx);
+    MOZ_ASSERT(cx);
 
     /* Get required buffer size. */
     const CharT *str = chars.start().get();
@@ -170,22 +170,22 @@ static const uint32_t INVALID_UTF8 = UINT32_MAX;
 uint32_t
 JS::Utf8ToOneUcs4Char(const uint8_t *utf8Buffer, int utf8Length)
 {
-    JS_ASSERT(1 <= utf8Length && utf8Length <= 4);
+    MOZ_ASSERT(1 <= utf8Length && utf8Length <= 4);
 
     if (utf8Length == 1) {
-        JS_ASSERT(!(*utf8Buffer & 0x80));
+        MOZ_ASSERT(!(*utf8Buffer & 0x80));
         return *utf8Buffer;
     }
 
     /* from Unicode 3.1, non-shortest form is illegal */
     static const uint32_t minucs4Table[] = { 0x80, 0x800, 0x10000 };
 
-    JS_ASSERT((*utf8Buffer & (0x100 - (1 << (7 - utf8Length)))) ==
-              (0x100 - (1 << (8 - utf8Length))));
+    MOZ_ASSERT((*utf8Buffer & (0x100 - (1 << (7 - utf8Length)))) ==
+               (0x100 - (1 << (8 - utf8Length))));
     uint32_t ucs4Char = *utf8Buffer++ & ((1 << (7 - utf8Length)) - 1);
     uint32_t minucs4Char = minucs4Table[utf8Length - 2];
     while (--utf8Length) {
-        JS_ASSERT((*utf8Buffer & 0xC0) == 0x80);
+        MOZ_ASSERT((*utf8Buffer & 0xC0) == 0x80);
         ucs4Char = (ucs4Char << 6) | (*utf8Buffer++ & 0x3F);
     }
 
@@ -263,7 +263,7 @@ InflateUTF8StringToBuffer(JSContext *cx, const UTF8Chars src, char16_t *dst, siz
                     if (action == Copy)                                 \
                         dst[j] = char16_t(REPLACE_UTF8);                \
                     else                                                \
-                        JS_ASSERT(action == CountAndIgnoreInvalids);    \
+                        MOZ_ASSERT(action == CountAndIgnoreInvalids);   \
                     n = n2;                                             \
                     goto invalidMultiByteCodeUnit;                      \
                 }                                                       \
@@ -345,7 +345,7 @@ InflateUTF8StringHelper(JSContext *cx, const UTF8Chars src, CountAction countAct
 
     if (isAscii) {
         size_t srclen = src.length();
-        JS_ASSERT(*outlen == srclen);
+        MOZ_ASSERT(*outlen == srclen);
         for (uint32_t i = 0; i < srclen; i++)
             dst[i] = char16_t(src[i]);
 

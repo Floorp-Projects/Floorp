@@ -83,7 +83,7 @@ class AliasSetIterator
         return !!flags;
     }
     unsigned operator *() const {
-        JS_ASSERT(pos < AliasSet::NumCategories);
+        MOZ_ASSERT(pos < AliasSet::NumCategories);
         return pos;
     }
 };
@@ -239,7 +239,7 @@ AliasAnalysis::analyze()
         block->lastIns()->setId(newId++);
 
         if (block->isLoopBackedge()) {
-            JS_ASSERT(loop_->loopHeader() == block->loopHeaderOfBackedge());
+            MOZ_ASSERT(loop_->loopHeader() == block->loopHeaderOfBackedge());
             JitSpew(JitSpew_Alias, "Processing loop backedge %d (header %d)", block->id(),
                     loop_->loopHeader()->id());
             LoopAliasInfo *outerLoop = loop_->outer();
@@ -250,7 +250,7 @@ AliasAnalysis::analyze()
             for (unsigned i = 0; i < invariant.length(); i++) {
                 MDefinition *ins = invariant[i];
                 AliasSet set = ins->getAliasSet();
-                JS_ASSERT(set.isLoad());
+                MOZ_ASSERT(set.isLoad());
 
                 bool hasAlias = false;
                 for (AliasSetIterator iter(set); iter; iter++) {
@@ -290,6 +290,6 @@ AliasAnalysis::analyze()
         }
     }
 
-    JS_ASSERT(loop_ == nullptr);
+    MOZ_ASSERT(loop_ == nullptr);
     return true;
 }

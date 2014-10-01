@@ -18,14 +18,14 @@ namespace js {
 inline bool
 StringObject::init(JSContext *cx, HandleString str)
 {
-    JS_ASSERT(numFixedSlots() == 2);
+    MOZ_ASSERT(numFixedSlots() == 2);
 
     Rooted<StringObject *> self(cx, this);
 
     if (!EmptyShape::ensureInitialCustomShape<StringObject>(cx, self))
         return false;
 
-    JS_ASSERT(self->nativeLookup(cx, NameToId(cx->names().length))->slot() == LENGTH_SLOT);
+    MOZ_ASSERT(self->nativeLookup(cx, NameToId(cx->names().length))->slot() == LENGTH_SLOT);
 
     self->setStringThis(str);
 

@@ -68,9 +68,9 @@ class JSAPITest
     }
 
     virtual ~JSAPITest() {
-        JS_ASSERT(!rt);
-        JS_ASSERT(!cx);
-        JS_ASSERT(!global);
+        MOZ_ASSERT(!rt);
+        MOZ_ASSERT(!cx);
+        MOZ_ASSERT(!global);
     }
 
     virtual bool init();
@@ -290,8 +290,8 @@ class JSAPITest
     }
 
     virtual void destroyRuntime() {
-        JS_ASSERT(!cx);
-        JS_ASSERT(rt);
+        MOZ_ASSERT(!cx);
+        MOZ_ASSERT(rt);
         JS_DestroyRuntime(rt);
     }
 

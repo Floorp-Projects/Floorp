@@ -29,7 +29,7 @@ IsCustomClass(JS::Handle<JS::Value> v)
 static bool
 CustomMethodImpl(JSContext *cx, CallArgs args)
 {
-  JS_ASSERT(IsCustomClass(args.thisv()));
+  MOZ_ASSERT(IsCustomClass(args.thisv()));
   args.rval().set(JS_GetReservedSlot(&args.thisv().toObject(), CUSTOM_SLOT));
   return true;
 }

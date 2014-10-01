@@ -186,14 +186,14 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         Register indexReg = (src.kind() == Operand::MEM_SCALE) ? Register::FromCode(src.index()) : InvalidReg;
 
         if (baseReg == val.payloadReg() || indexReg == val.payloadReg()) {
-            JS_ASSERT(baseReg != val.typeReg());
-            JS_ASSERT(indexReg != val.typeReg());
+            MOZ_ASSERT(baseReg != val.typeReg());
+            MOZ_ASSERT(indexReg != val.typeReg());
 
             movl(type, val.typeReg());
             movl(payload, val.payloadReg());
         } else {
-            JS_ASSERT(baseReg != val.payloadReg());
-            JS_ASSERT(indexReg != val.payloadReg());
+            MOZ_ASSERT(baseReg != val.payloadReg());
+            MOZ_ASSERT(indexReg != val.payloadReg());
 
             movl(payload, val.payloadReg());
             movl(type, val.typeReg());
@@ -206,7 +206,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         loadValue(Operand(src), val);
     }
     void tagValue(JSValueType type, Register payload, ValueOperand dest) {
-        JS_ASSERT(dest.typeReg() != dest.payloadReg());
+        MOZ_ASSERT(dest.typeReg() != dest.payloadReg());
         if (payload != dest.payloadReg())
             movl(payload, dest.payloadReg());
         movl(ImmType(type), dest.typeReg());
@@ -270,78 +270,78 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
 
     Condition testUndefined(Condition cond, Register tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tag, ImmTag(JSVAL_TAG_UNDEFINED));
         return cond;
     }
     Condition testBoolean(Condition cond, Register tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tag, ImmTag(JSVAL_TAG_BOOLEAN));
         return cond;
     }
     Condition testInt32(Condition cond, Register tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tag, ImmTag(JSVAL_TAG_INT32));
         return cond;
     }
     Condition testDouble(Condition cond, Register tag) {
-        JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+        MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
         Condition actual = (cond == Equal) ? Below : AboveOrEqual;
         cmpl(tag, ImmTag(JSVAL_TAG_CLEAR));
         return actual;
     }
     Condition testNull(Condition cond, Register tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tag, ImmTag(JSVAL_TAG_NULL));
         return cond;
     }
     Condition testString(Condition cond, Register tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tag, ImmTag(JSVAL_TAG_STRING));
         return cond;
     }
     Condition testSymbol(Condition cond, Register tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tag, ImmTag(JSVAL_TAG_SYMBOL));
         return cond;
     }
     Condition testObject(Condition cond, Register tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tag, ImmTag(JSVAL_TAG_OBJECT));
         return cond;
     }
     Condition testNumber(Condition cond, Register tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tag, ImmTag(JSVAL_UPPER_INCL_TAG_OF_NUMBER_SET));
         return cond == Equal ? BelowOrEqual : Above;
     }
     Condition testGCThing(Condition cond, Register tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tag, ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
         return cond == Equal ? AboveOrEqual : Below;
     }
     Condition testGCThing(Condition cond, const Address &address) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tagOf(address), ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
         return cond == Equal ? AboveOrEqual : Below;
     }
     Condition testMagic(Condition cond, const Address &address) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tagOf(address), ImmTag(JSVAL_TAG_MAGIC));
         return cond;
     }
     Condition testMagic(Condition cond, Register tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tag, ImmTag(JSVAL_TAG_MAGIC));
         return cond;
     }
     Condition testMagic(Condition cond, const Operand &operand) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(ToType(operand), ImmTag(JSVAL_TAG_MAGIC));
         return cond;
     }
     Condition testPrimitive(Condition cond, Register tag) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tag, ImmTag(JSVAL_UPPER_EXCL_TAG_OF_PRIMITIVE_SET));
         return cond == Equal ? Below : AboveOrEqual;
     }
@@ -349,28 +349,28 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         return testMagic(cond, tag);
     }
     Condition testInt32(Condition cond, const Operand &operand) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(ToType(operand), ImmTag(JSVAL_TAG_INT32));
         return cond;
     }
     Condition testInt32(Condition cond, const Address &address) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         return testInt32(cond, Operand(address));
     }
     Condition testDouble(Condition cond, const Operand &operand) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         Condition actual = (cond == Equal) ? Below : AboveOrEqual;
         cmpl(ToType(operand), ImmTag(JSVAL_TAG_CLEAR));
         return actual;
     }
     Condition testDouble(Condition cond, const Address &address) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         return testDouble(cond, Operand(address));
     }
 
 
     Condition testUndefined(Condition cond, const Operand &operand) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(ToType(operand), ImmTag(JSVAL_TAG_UNDEFINED));
         return cond;
     }
@@ -421,53 +421,53 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
 
 
     Condition testUndefined(Condition cond, const BaseIndex &address) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tagOf(address), ImmTag(JSVAL_TAG_UNDEFINED));
         return cond;
     }
     Condition testNull(Condition cond, const BaseIndex &address) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tagOf(address), ImmTag(JSVAL_TAG_NULL));
         return cond;
     }
     Condition testBoolean(Condition cond, const BaseIndex &address) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tagOf(address), ImmTag(JSVAL_TAG_BOOLEAN));
         return cond;
     }
     Condition testString(Condition cond, const BaseIndex &address) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tagOf(address), ImmTag(JSVAL_TAG_STRING));
         return cond;
     }
     Condition testSymbol(Condition cond, const BaseIndex &address) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tagOf(address), ImmTag(JSVAL_TAG_SYMBOL));
         return cond;
     }
     Condition testInt32(Condition cond, const BaseIndex &address) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tagOf(address), ImmTag(JSVAL_TAG_INT32));
         return cond;
     }
     Condition testObject(Condition cond, const BaseIndex &address) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tagOf(address), ImmTag(JSVAL_TAG_OBJECT));
         return cond;
     }
     Condition testDouble(Condition cond, const BaseIndex &address) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         Condition actual = (cond == Equal) ? Below : AboveOrEqual;
         cmpl(tagOf(address), ImmTag(JSVAL_TAG_CLEAR));
         return actual;
     }
     Condition testMagic(Condition cond, const BaseIndex &address) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tagOf(address), ImmTag(JSVAL_TAG_MAGIC));
         return cond;
     }
     Condition testGCThing(Condition cond, const BaseIndex &address) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmpl(tagOf(address), ImmTag(JSVAL_LOWER_INCL_TAG_OF_GCTHING_SET));
         return cond == Equal ? AboveOrEqual : Below;
     }
@@ -478,7 +478,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void branchTestValue(Condition cond, const Address &valaddr, const ValueOperand &value,
                          Label *label)
     {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         // Check payload before tag, since payload is more likely to differ.
         if (cond == NotEqual) {
             branchPtr(NotEqual, payloadOf(valaddr), value.payloadReg(), label);
@@ -563,7 +563,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         framePushed_ += amount;
     }
     void freeStack(uint32_t amount) {
-        JS_ASSERT(amount <= framePushed_);
+        MOZ_ASSERT(amount <= framePushed_);
         if (amount)
             addl(Imm32(amount), StackPointer);
         framePushed_ -= amount;
@@ -816,7 +816,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     void branchTestMagicValue(Condition cond, const ValueOperand &val, JSWhyMagic why,
                               Label *label)
     {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         branchTestValue(cond, val, MagicValue(why), label);
     }
 
@@ -853,7 +853,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         loadDouble(Operand(src), dest);
     }
     void unboxDouble(const ValueOperand &src, FloatRegister dest) {
-        JS_ASSERT(dest != ScratchDoubleReg);
+        MOZ_ASSERT(dest != ScratchDoubleReg);
         if (Assembler::HasSSE41()) {
             movd(src.payloadReg(), dest);
             pinsrd(1, src.typeReg(), dest);
@@ -865,7 +865,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
     void unboxDouble(const Operand &payload, const Operand &type,
                      Register scratch, FloatRegister dest) {
-        JS_ASSERT(dest != ScratchDoubleReg);
+        MOZ_ASSERT(dest != ScratchDoubleReg);
         if (Assembler::HasSSE41()) {
             movl(payload, scratch);
             movd(scratch, dest);

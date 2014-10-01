@@ -20,7 +20,7 @@ using namespace js::gc;
 void
 js::TraceRuntime(JSTracer *trc)
 {
-    JS_ASSERT(!IS_GC_MARKING_TRACER(trc));
+    MOZ_ASSERT(!IS_GC_MARKING_TRACER(trc));
 
     JSRuntime *rt = trc->runtime();
     rt->gc.evictNursery();
@@ -129,7 +129,7 @@ JS_PUBLIC_API(void)
 JS_IterateCompartments(JSRuntime *rt, void *data,
                        JSIterateCompartmentCallback compartmentCallback)
 {
-    JS_ASSERT(!rt->isHeapBusy());
+    MOZ_ASSERT(!rt->isHeapBusy());
 
     AutoTraceSession session(rt);
 

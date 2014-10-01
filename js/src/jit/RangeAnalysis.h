@@ -202,18 +202,18 @@ class Range : public TempObject {
     // consistency of this range.
     void assertInvariants() const {
         // Basic sanity :).
-        JS_ASSERT(lower_ <= upper_);
+        MOZ_ASSERT(lower_ <= upper_);
 
         // When hasInt32LowerBound_ or hasInt32UpperBound_ are false, we set
         // lower_ and upper_ to these specific values as it simplifies the
         // implementation in some places.
-        JS_ASSERT_IF(!hasInt32LowerBound_, lower_ == JSVAL_INT_MIN);
-        JS_ASSERT_IF(!hasInt32UpperBound_, upper_ == JSVAL_INT_MAX);
+        MOZ_ASSERT_IF(!hasInt32LowerBound_, lower_ == JSVAL_INT_MIN);
+        MOZ_ASSERT_IF(!hasInt32UpperBound_, upper_ == JSVAL_INT_MAX);
 
         // max_exponent_ must be one of three possible things.
-        JS_ASSERT(max_exponent_ <= MaxFiniteExponent ||
-                  max_exponent_ == IncludesInfinity ||
-                  max_exponent_ == IncludesInfinityAndNaN);
+        MOZ_ASSERT(max_exponent_ <= MaxFiniteExponent ||
+                   max_exponent_ == IncludesInfinity ||
+                   max_exponent_ == IncludesInfinityAndNaN);
 
         // Forbid the max_exponent_ field from implying better bounds for
         // lower_/upper_ fields. We have to add 1 to the max_exponent_ when
@@ -223,19 +223,19 @@ class Range : public TempObject {
         // false, however that value also has exponent 30, which is strictly
         // less than MaxInt32Exponent. For another example, 1.9 has an exponent
         // of 0 but requires upper_ to be at least 2, which has exponent 1.
-        JS_ASSERT_IF(!hasInt32LowerBound_ || !hasInt32UpperBound_,
-                     max_exponent_ + canHaveFractionalPart_ >= MaxInt32Exponent);
-        JS_ASSERT(max_exponent_ + canHaveFractionalPart_ >=
-                  mozilla::FloorLog2(mozilla::Abs(upper_)));
-        JS_ASSERT(max_exponent_ + canHaveFractionalPart_ >=
-                  mozilla::FloorLog2(mozilla::Abs(lower_)));
+        MOZ_ASSERT_IF(!hasInt32LowerBound_ || !hasInt32UpperBound_,
+                      max_exponent_ + canHaveFractionalPart_ >= MaxInt32Exponent);
+        MOZ_ASSERT(max_exponent_ + canHaveFractionalPart_ >=
+                   mozilla::FloorLog2(mozilla::Abs(upper_)));
+        MOZ_ASSERT(max_exponent_ + canHaveFractionalPart_ >=
+                   mozilla::FloorLog2(mozilla::Abs(lower_)));
 
         // The following are essentially static assertions, but FloorLog2 isn't
         // trivially suitable for constexpr :(.
-        JS_ASSERT(mozilla::FloorLog2(JSVAL_INT_MIN) == MaxInt32Exponent);
-        JS_ASSERT(mozilla::FloorLog2(JSVAL_INT_MAX) == 30);
-        JS_ASSERT(mozilla::FloorLog2(UINT32_MAX) == MaxUInt32Exponent);
-        JS_ASSERT(mozilla::FloorLog2(0) == 0);
+        MOZ_ASSERT(mozilla::FloorLog2(JSVAL_INT_MIN) == MaxInt32Exponent);
+        MOZ_ASSERT(mozilla::FloorLog2(JSVAL_INT_MAX) == 30);
+        MOZ_ASSERT(mozilla::FloorLog2(UINT32_MAX) == MaxUInt32Exponent);
+        MOZ_ASSERT(mozilla::FloorLog2(0) == 0);
     }
 
     // Set the lower_ and hasInt32LowerBound_ values.
@@ -275,7 +275,7 @@ class Range : public TempObject {
          // The number of bits needed to encode |max| is the power of 2 plus one.
          uint32_t max = Max(mozilla::Abs(lower()), mozilla::Abs(upper()));
          uint16_t result = mozilla::FloorLog2(max);
-         JS_ASSERT(result == (max == 0 ? 0 : mozilla::ExponentComponent(double(max))));
+         MOZ_ASSERT(result == (max == 0 ? 0 : mozilla::ExponentComponent(double(max))));
          return result;
     }
 
@@ -494,7 +494,7 @@ class Range : public TempObject {
     }
 
     uint16_t exponent() const {
-        JS_ASSERT(!canBeInfiniteOrNaN());
+        MOZ_ASSERT(!canBeInfiniteOrNaN());
         return max_exponent_;
     }
 
@@ -504,13 +504,13 @@ class Range : public TempObject {
 
     // Return the lower bound. Asserts that the value has an int32 bound.
     int32_t lower() const {
-        JS_ASSERT(hasInt32LowerBound());
+        MOZ_ASSERT(hasInt32LowerBound());
         return lower_;
     }
 
     // Return the upper bound. Asserts that the value has an int32 bound.
     int32_t upper() const {
-        JS_ASSERT(hasInt32UpperBound());
+        MOZ_ASSERT(hasInt32UpperBound());
         return upper_;
     }
 
@@ -566,7 +566,7 @@ class Range : public TempObject {
 
     void setUnknown() {
         set(NoInt32LowerBound, NoInt32UpperBound, true, IncludesInfinityAndNaN);
-        JS_ASSERT(isUnknown());
+        MOZ_ASSERT(isUnknown());
     }
 
     void set(int64_t l, int64_t h, bool f, uint16_t e) {

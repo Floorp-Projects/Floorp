@@ -41,7 +41,7 @@ public:
   // via the constructor AutoPtr(T*).
 
   T*   get()         { return mPtr; }
-  void set(T* other) { JS_ASSERT(mPtr == nullptr); mPtr = other; }
+  void set(T* other) { MOZ_ASSERT(mPtr == nullptr); mPtr = other; }
   T*   forget()      { T* result = mPtr; mPtr = nullptr; return result; }
 
   self_type& operator=(T* rhs) { mPtr = rhs; return *this; }
@@ -94,7 +94,7 @@ template <size_t N, class AP>
 void
 AppendString(Vector<char16_t, N, AP> &v, JSString* str)
 {
-  JS_ASSERT(str);
+  MOZ_ASSERT(str);
   JSLinearString *linear = str->ensureLinear(nullptr);
   if (!linear)
     return;
@@ -109,7 +109,7 @@ template <size_t N, class AP>
 void
 AppendString(Vector<char, N, AP> &v, JSString* str)
 {
-  JS_ASSERT(str);
+  MOZ_ASSERT(str);
   size_t vlen = v.length();
   size_t alen = str->length();
   if (!v.resize(vlen + alen))
@@ -153,7 +153,7 @@ template <size_t N, class AP>
 void
 PrependString(Vector<char16_t, N, AP> &v, JSString* str)
 {
-  JS_ASSERT(str);
+  MOZ_ASSERT(str);
   size_t vlen = v.length();
   size_t alen = str->length();
   if (!v.resize(vlen + alen))
@@ -195,7 +195,7 @@ DeflateStringToUTF8Buffer(JSContext *maybecx, const CharT *src, size_t srclen,
 MOZ_ALWAYS_INLINE void
 ASSERT_OK(bool ok)
 {
-  JS_ASSERT(ok);
+  MOZ_ASSERT(ok);
 }
 
 // for JS error reporting

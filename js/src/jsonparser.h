@@ -70,12 +70,12 @@ class MOZ_STACK_CLASS JSONParserBase : private JS::AutoGCRooter
     // Stack element for an in progress array or object.
     struct StackEntry {
         ElementVector &elements() {
-            JS_ASSERT(state == FinishArrayElement);
+            MOZ_ASSERT(state == FinishArrayElement);
             return * static_cast<ElementVector *>(vector);
         }
 
         PropertyVector &properties() {
-            JS_ASSERT(state == FinishObjectMember);
+            MOZ_ASSERT(state == FinishObjectMember);
             return * static_cast<PropertyVector *>(vector);
         }
 
@@ -121,14 +121,14 @@ class MOZ_STACK_CLASS JSONParserBase : private JS::AutoGCRooter
     ~JSONParserBase();
 
     Value numberValue() const {
-        JS_ASSERT(lastToken == Number);
-        JS_ASSERT(v.isNumber());
+        MOZ_ASSERT(lastToken == Number);
+        MOZ_ASSERT(v.isNumber());
         return v;
     }
 
     Value stringValue() const {
-        JS_ASSERT(lastToken == String);
-        JS_ASSERT(v.isString());
+        MOZ_ASSERT(lastToken == String);
+        MOZ_ASSERT(v.isString());
         return v;
     }
 
@@ -138,8 +138,8 @@ class MOZ_STACK_CLASS JSONParserBase : private JS::AutoGCRooter
     }
 
     Token token(Token t) {
-        JS_ASSERT(t != String);
-        JS_ASSERT(t != Number);
+        MOZ_ASSERT(t != String);
+        MOZ_ASSERT(t != Number);
 #ifdef DEBUG
         lastToken = t;
 #endif
@@ -199,7 +199,7 @@ class MOZ_STACK_CLASS JSONParser : public JSONParserBase
         begin(current),
         end(data.end())
     {
-        JS_ASSERT(current <= end);
+        MOZ_ASSERT(current <= end);
     }
 
     /*

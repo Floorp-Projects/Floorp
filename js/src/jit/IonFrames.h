@@ -32,7 +32,7 @@ static inline CalleeTokenTag
 GetCalleeTokenTag(CalleeToken token)
 {
     CalleeTokenTag tag = CalleeTokenTag(uintptr_t(token) & 0x3);
-    JS_ASSERT(tag <= CalleeToken_Script);
+    MOZ_ASSERT(tag <= CalleeToken_Script);
     return tag;
 }
 static inline CalleeToken
@@ -66,7 +66,7 @@ CalleeTokenToFunction(CalleeToken token)
 static inline JSScript *
 CalleeTokenToScript(CalleeToken token)
 {
-    JS_ASSERT(GetCalleeTokenTag(token) == CalleeToken_Script);
+    MOZ_ASSERT(GetCalleeTokenTag(token) == CalleeToken_Script);
     return (JSScript *)(uintptr_t(token) & CalleeTokenMask);
 }
 
@@ -128,7 +128,7 @@ class SafepointIndex
     void resolve();
 
     LSafepoint *safepoint() {
-        JS_ASSERT(!resolved);
+        MOZ_ASSERT(!resolved);
         return safepoint_;
     }
     uint32_t displacement() const {
@@ -138,7 +138,7 @@ class SafepointIndex
         return safepointOffset_;
     }
     void adjustDisplacement(uint32_t offset) {
-        JS_ASSERT(offset >= displacement_);
+        MOZ_ASSERT(offset >= displacement_);
         displacement_ = offset;
     }
     inline SnapshotOffset snapshotOffset() const;
@@ -234,7 +234,7 @@ class FrameSizeClass
     uint32_t frameSize() const;
 
     uint32_t classId() const {
-        JS_ASSERT(class_ != NO_FRAME_SIZE_CLASS_ID);
+        MOZ_ASSERT(class_ != NO_FRAME_SIZE_CLASS_ID);
         return class_;
     }
 
@@ -295,19 +295,19 @@ inline JSScript *
 GetTopIonJSScript(uint8_t *jitTop, void **returnAddrOut, ExecutionMode mode)
 {
     JitFrameIterator iter(jitTop, mode);
-    JS_ASSERT(iter.type() == JitFrame_Exit);
+    MOZ_ASSERT(iter.type() == JitFrame_Exit);
     ++iter;
 
-    JS_ASSERT(iter.returnAddressToFp() != nullptr);
+    MOZ_ASSERT(iter.returnAddressToFp() != nullptr);
     if (returnAddrOut)
         *returnAddrOut = (void *) iter.returnAddressToFp();
 
     if (iter.isBaselineStub()) {
         ++iter;
-        JS_ASSERT(iter.isBaselineJS());
+        MOZ_ASSERT(iter.isBaselineJS());
     }
 
-    JS_ASSERT(iter.isScripted());
+    MOZ_ASSERT(iter.isScripted());
     return iter.script();
 }
 
@@ -504,7 +504,7 @@ class IonExitFrameLayout : public IonCommonFrameLayout
     // each wrapper are pushed before the exit frame.  This correspond exactly
     // to the value of the argBase register of the generateVMWrapper function.
     inline uint8_t *argBase() {
-        JS_ASSERT(footer()->jitCode() != nullptr);
+        MOZ_ASSERT(footer()->jitCode() != nullptr);
         return top();
     }
 

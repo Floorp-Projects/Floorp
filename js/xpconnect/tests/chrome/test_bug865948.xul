@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=865948
+-->
+<window title="Mozilla Bug 865948"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=865948"
+     target="_blank">Mozilla Bug 865948</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+
+  /** Test for Bug 865948 **/
+  SimpleTest.waitForExplicitFinish();
+  const Cu = Components.utils;
+  function go() {
+    $('ifr').onload = null;
+    var sb = Cu.Sandbox(['http://example.com', 'http://example.org']);
+    sb.iwin = $('ifr').contentWindow;
+    sb.ok = ok;
+    Cu.evalInSandbox('try { iwin.location = "about:"; ok(false, "didnt throw"); } catch (e) { ok(!!/denied/.exec(e), "threw: " + e); }', sb);
+    SimpleTest.finish();
+  }
+
+  ]]>
+  </script>
+<iframe id="ifr" type="content" onload="go();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+</window>

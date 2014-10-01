@@ -28,6 +28,22 @@ obj_construct(JSContext *cx, unsigned argc, JS::Value *vp);
 bool
 obj_valueOf(JSContext *cx, unsigned argc, JS::Value *vp);
 
+// Object methods exposed so they can be installed in the self-hosting global.
+bool
+obj_create(JSContext *cx, unsigned argc, JS::Value *vp);
+
+bool
+obj_getOwnPropertyNames(JSContext *cx, unsigned argc, JS::Value *vp);
+
+bool
+obj_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, JS::Value *vp);
+
+bool
+obj_getPrototypeOf(JSContext *cx, unsigned argc, JS::Value *vp);
+
+bool
+obj_hasOwnProperty(JSContext *cx, unsigned argc, JS::Value *vp);
+
 // Exposed so SelfHosting.cpp can use it in the OwnPropertyKeys intrinsic
 bool
 GetOwnPropertyKeys(JSContext *cx, const JS::CallArgs &args, unsigned flags);

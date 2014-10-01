@@ -296,7 +296,7 @@ class SimdConstant {
     }
 
     uint32_t length() const {
-        JS_ASSERT(defined());
+        MOZ_ASSERT(defined());
         switch(type_) {
           case Int32x4:
           case Float32x4:
@@ -308,21 +308,21 @@ class SimdConstant {
     }
 
     Type type() const {
-        JS_ASSERT(defined());
+        MOZ_ASSERT(defined());
         return type_;
     }
 
     const int32_t *asInt32x4() const {
-        JS_ASSERT(defined() && type_ == Int32x4);
+        MOZ_ASSERT(defined() && type_ == Int32x4);
         return u.i32x4;
     }
     const float *asFloat32x4() const {
-        JS_ASSERT(defined() && type_ == Float32x4);
+        MOZ_ASSERT(defined() && type_ == Float32x4);
         return u.f32x4;
     }
 
     bool operator==(const SimdConstant &rhs) const {
-        JS_ASSERT(defined() && rhs.defined());
+        MOZ_ASSERT(defined() && rhs.defined());
         if (type() != rhs.type())
             return false;
         return memcmp(&u, &rhs.u, sizeof(u)) == 0;
@@ -439,7 +439,7 @@ ValueTypeFromMIRType(MIRType type)
     case MIRType_MagicUninitializedLexical:
       return JSVAL_TYPE_MAGIC;
     default:
-      JS_ASSERT(type == MIRType_Object);
+      MOZ_ASSERT(type == MIRType_Object);
       return JSVAL_TYPE_OBJECT;
   }
 }
@@ -538,7 +538,7 @@ IsSimdType(MIRType type)
 static inline unsigned
 SimdTypeToLength(MIRType type)
 {
-    JS_ASSERT(IsSimdType(type));
+    MOZ_ASSERT(IsSimdType(type));
     switch (type) {
       case MIRType_Int32x4:
       case MIRType_Float32x4:
@@ -551,7 +551,7 @@ SimdTypeToLength(MIRType type)
 static inline MIRType
 SimdTypeToScalarType(MIRType type)
 {
-    JS_ASSERT(IsSimdType(type));
+    MOZ_ASSERT(IsSimdType(type));
     switch (type) {
       case MIRType_Int32x4:
         return MIRType_Int32;

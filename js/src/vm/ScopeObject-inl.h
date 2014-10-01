@@ -16,14 +16,14 @@ namespace js {
 inline void
 ScopeObject::setAliasedVar(JSContext *cx, ScopeCoordinate sc, PropertyName *name, const Value &v)
 {
-    JS_ASSERT(is<CallObject>() || is<ClonedBlockObject>());
+    MOZ_ASSERT(is<CallObject>() || is<ClonedBlockObject>());
     JS_STATIC_ASSERT(CallObject::RESERVED_SLOTS == BlockObject::RESERVED_SLOTS);
 
     // name may be null if we don't need to track side effects on the object.
-    JS_ASSERT_IF(hasSingletonType(), name);
+    MOZ_ASSERT_IF(hasSingletonType(), name);
 
     if (hasSingletonType()) {
-        JS_ASSERT(name);
+        MOZ_ASSERT(name);
         types::AddTypePropertyId(cx, this, NameToId(name), v);
 
         // Keep track of properties which have ever been overwritten.
@@ -39,7 +39,7 @@ ScopeObject::setAliasedVar(JSContext *cx, ScopeCoordinate sc, PropertyName *name
 inline void
 CallObject::setAliasedVar(JSContext *cx, AliasedFormalIter fi, PropertyName *name, const Value &v)
 {
-    JS_ASSERT(name == fi->name());
+    MOZ_ASSERT(name == fi->name());
     setSlot(fi.scopeSlot(), v);
     if (hasSingletonType())
         types::AddTypePropertyId(cx, this, NameToId(name), v);
@@ -81,8 +81,8 @@ StaticScopeIter<allowGC>::operator++(int)
     } else {
         onNamedLambda = true;
     }
-    JS_ASSERT_IF(obj, obj->template is<NestedScopeObject>() || obj->template is<JSFunction>());
-    JS_ASSERT_IF(onNamedLambda, obj->template is<JSFunction>());
+    MOZ_ASSERT_IF(obj, obj->template is<NestedScopeObject>() || obj->template is<JSFunction>());
+    MOZ_ASSERT_IF(onNamedLambda, obj->template is<JSFunction>());
 }
 
 template <AllowGC allowGC>
@@ -99,8 +99,8 @@ template <AllowGC allowGC>
 inline Shape *
 StaticScopeIter<allowGC>::scopeShape() const
 {
-    JS_ASSERT(hasDynamicScopeObject());
-    JS_ASSERT(type() != NAMED_LAMBDA);
+    MOZ_ASSERT(hasDynamicScopeObject());
+    MOZ_ASSERT(type() != NAMED_LAMBDA);
     if (type() == BLOCK)
         return block().lastProperty();
     return funScript()->callObjShape();
@@ -121,7 +121,7 @@ template <AllowGC allowGC>
 inline StaticBlockObject &
 StaticScopeIter<allowGC>::block() const
 {
-    JS_ASSERT(type() == BLOCK);
+    MOZ_ASSERT(type() == BLOCK);
     return obj->template as<StaticBlockObject>();
 }
 
@@ -129,7 +129,7 @@ template <AllowGC allowGC>
 inline StaticWithObject &
 StaticScopeIter<allowGC>::staticWith() const
 {
-    JS_ASSERT(type() == WITH);
+    MOZ_ASSERT(type() == WITH);
     return obj->template as<StaticWithObject>();
 }
 
@@ -137,7 +137,7 @@ template <AllowGC allowGC>
 inline JSScript *
 StaticScopeIter<allowGC>::funScript() const
 {
-    JS_ASSERT(type() == FUNCTION);
+    MOZ_ASSERT(type() == FUNCTION);
     return obj->template as<JSFunction>().nonLazyScript();
 }
 
@@ -145,7 +145,7 @@ template <AllowGC allowGC>
 inline JSFunction &
 StaticScopeIter<allowGC>::fun() const
 {
-    JS_ASSERT(type() == FUNCTION);
+    MOZ_ASSERT(type() == FUNCTION);
     return obj->template as<JSFunction>();
 }
 

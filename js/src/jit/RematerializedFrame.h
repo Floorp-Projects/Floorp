@@ -145,27 +145,27 @@ class RematerializedFrame
     }
 
     Value &unaliasedVar(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) {
-        JS_ASSERT_IF(checkAliasing, !script()->varIsAliased(i));
-        JS_ASSERT(i < script()->nfixed());
+        MOZ_ASSERT_IF(checkAliasing, !script()->varIsAliased(i));
+        MOZ_ASSERT(i < script()->nfixed());
         return locals()[i];
     }
     Value &unaliasedLocal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) {
-        JS_ASSERT(i < script()->nfixed());
+        MOZ_ASSERT(i < script()->nfixed());
 #ifdef DEBUG
         CheckLocalUnaliased(checkAliasing, script(), i);
 #endif
         return locals()[i];
     }
     Value &unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) {
-        JS_ASSERT(i < numFormalArgs());
-        JS_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals() &&
-                                    !script()->formalIsAliased(i));
+        MOZ_ASSERT(i < numFormalArgs());
+        MOZ_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals() &&
+                                     !script()->formalIsAliased(i));
         return argv()[i];
     }
     Value &unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) {
-        JS_ASSERT(i < numActualArgs());
-        JS_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals());
-        JS_ASSERT_IF(checkAliasing && i < numFormalArgs(), !script()->formalIsAliased(i));
+        MOZ_ASSERT(i < numActualArgs());
+        MOZ_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals());
+        MOZ_ASSERT_IF(checkAliasing && i < numFormalArgs(), !script()->formalIsAliased(i));
         return argv()[i];
     }
 

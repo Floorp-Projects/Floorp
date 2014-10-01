@@ -39,7 +39,7 @@ inline bool
 Shape::get(JSContext* cx, HandleObject receiver, JSObject* obj, JSObject *pobj,
            MutableHandleValue vp)
 {
-    JS_ASSERT(!hasDefaultGetter());
+    MOZ_ASSERT(!hasDefaultGetter());
 
     if (hasGetterValue()) {
         Value fval = getterValue();
@@ -72,7 +72,7 @@ Shape::searchThreadLocal(ThreadSafeContext *cx, Shape *start, jsid id,
      * allocated thread locally. In that case, we may add to the
      * table. Otherwise it is not allowed.
      */
-    JS_ASSERT_IF(adding, cx->isThreadLocal(start) && start->inDictionary());
+    MOZ_ASSERT_IF(adding, cx->isThreadLocal(start) && start->inDictionary());
 
     if (start->inDictionary()) {
         *pspp = start->table().search(id, adding);
@@ -88,7 +88,7 @@ inline bool
 Shape::set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict,
            MutableHandleValue vp)
 {
-    JS_ASSERT_IF(hasDefaultSetter(), hasGetterValue());
+    MOZ_ASSERT_IF(hasDefaultSetter(), hasGetterValue());
 
     if (attrs & JSPROP_SETTER) {
         Value fval = setterValue();
@@ -140,7 +140,7 @@ Shape::search(ExclusiveContext *cx, Shape *start, jsid id, Shape ***pspp, bool a
          * No table built -- there weren't enough entries, or OOM occurred.
          * Don't increment numLinearSearches, to keep hasTable() false.
          */
-        JS_ASSERT(!start->hasTable());
+        MOZ_ASSERT(!start->hasTable());
     } else {
         start->incrementNumLinearSearches();
     }
@@ -192,8 +192,8 @@ AutoRooterGetterSetter::Inner::Inner(ThreadSafeContext *cx, uint8_t attrs,
   : CustomAutoRooter(cx), attrs(attrs),
     pgetter(pgetter_), psetter(psetter_)
 {
-    JS_ASSERT_IF(attrs & JSPROP_GETTER, !IsPoisonedPtr(*pgetter));
-    JS_ASSERT_IF(attrs & JSPROP_SETTER, !IsPoisonedPtr(*psetter));
+    MOZ_ASSERT_IF(attrs & JSPROP_GETTER, !IsPoisonedPtr(*pgetter));
+    MOZ_ASSERT_IF(attrs & JSPROP_SETTER, !IsPoisonedPtr(*psetter));
 }
 
 inline
@@ -209,7 +209,7 @@ AutoRooterGetterSetter::AutoRooterGetterSetter(ThreadSafeContext *cx, uint8_t at
 static inline uint8_t
 GetShapeAttributes(JSObject *obj, Shape *shape)
 {
-    JS_ASSERT(obj->isNative());
+    MOZ_ASSERT(obj->isNative());
 
     if (IsImplicitDenseOrTypedArrayElement(shape)) {
         if (IsAnyTypedArray(obj))
