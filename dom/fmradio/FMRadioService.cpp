@@ -26,6 +26,8 @@
 #define MOZSETTINGS_CHANGED_ID "mozsettings-changed"
 #define SETTING_KEY_AIRPLANEMODE_ENABLED "airplaneMode.enabled"
 
+#define DOM_PARSED_RDS_GROUPS ((0x2 << 30) | (0x3 << 4) | (0x3 << 0))
+
 using namespace mozilla::hal;
 using mozilla::Preferences;
 
@@ -49,9 +51,26 @@ FMRadioService::FMRadioService()
   , mState(Disabled)
   , mHasReadAirplaneModeSetting(false)
   , mAirplaneModeEnabled(false)
+  , mRDSEnabled(false)
   , mPendingRequest(nullptr)
   , mObserverList(FMRadioEventObserverList())
+  , mRDSGroupMask(0)
+  , mLastPI(0)
+  , mPI(0)
+  , mPTY(0)
+  , mPISet(false)
+  , mPTYSet(false)
+  , mRDSLock("FMRadioService::mRDSLock")
+  , mPSNameState(0)
+  , mRadiotextAB(false)
+  , mRDSGroupSet(false)
+  , mPSNameSet(false)
+  , mRadiotextSet(false)
 {
+  memset(mPSName, 0, sizeof(mPSName));
+  memset(mRadiotext, 0, sizeof(mRadiotext));
+  memset(mTempPSName, 0, sizeof(mTempPSName));
+  memset(mTempRadiotext, 0, sizeof(mTempRadiotext));
 
   // Read power state and frequency from Hal.
   mEnabled = IsFMRadioOn();
@@ -110,10 +129,12 @@ FMRadioService::FMRadioService()
   }
 
   RegisterFMRadioObserver(this);
+  RegisterFMRadioRDSObserver(this);
 }
 
 FMRadioService::~FMRadioService()
 {
+  UnregisterFMRadioRDSObserver(this);
   UnregisterFMRadioObserver(this);
 }
 
@@ -277,6 +298,21 @@ private:
   FMRadioSeekDirection mDirection;
 };
 
+class NotifyRunnable MOZ_FINAL : public nsRunnable
+{
+public:
+  NotifyRunnable(FMRadioEventType aType) : mType(aType) { }
+
+  NS_IMETHOD Run()
+  {
+    FMRadioService::Singleton()->NotifyFMRadioEvent(mType);
+    return NS_OK;
+  }
+
+private:
+  FMRadioEventType mType;
+};
+
 void
 FMRadioService::TransitionState(const FMRadioResponseType& aResponse,
                                 FMRadioState aState)
@@ -374,6 +410,13 @@ FMRadioService::IsEnabled() const
   return IsFMRadioOn();
 }
 
+bool
+FMRadioService::IsRDSEnabled() const
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  return mRDSEnabled;
+}
+
 double
 FMRadioService::GetFrequency() const
 {
@@ -405,6 +448,54 @@ FMRadioService::GetChannelWidth() const
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
   return mChannelWidthInKHz / 1000.0;
+}
+
+Nullable<unsigned short>
+FMRadioService::GetPi() const
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  if (!mPISet) {
+    return Nullable<unsigned short>();
+  }
+  return Nullable<unsigned short>(mPI);
+}
+
+Nullable<uint8_t>
+FMRadioService::GetPty() const
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  if (!mPTYSet) {
+    return Nullable<uint8_t>();
+  }
+  return Nullable<uint8_t>(mPTY);
+}
+
+bool
+FMRadioService::GetPs(nsString& aPSName)
+{
+  MutexAutoLock lock(mRDSLock);
+  if (mPSNameSet) {
+    aPSName = nsString(mPSName);
+  }
+  return mPSNameSet;
+}
+
+bool
+FMRadioService::GetRt(nsString& aRadiotext)
+{
+  MutexAutoLock lock(mRDSLock);
+  if (mRadiotextSet) {
+    aRadiotext = nsString(mRadiotext);
+  }
+  return mRadiotextSet;
+}
+
+bool
+FMRadioService::GetRdsgroup(uint64_t& aRDSGroup)
+{
+  MutexAutoLock lock(mRDSLock);
+  aRDSGroup = mRDSGroup;
+  return mRDSGroupSet;
 }
 
 void
@@ -679,6 +770,47 @@ FMRadioService::CancelSeek(FMRadioReplyRunnable* aReplyRunnable)
   NS_DispatchToMainThread(aReplyRunnable);
 }
 
+void
+FMRadioService::SetRDSGroupMask(uint32_t aRDSGroupMask)
+{
+  mRDSGroupMask = aRDSGroupMask;
+  if (IsFMRadioOn()) {
+    hal::EnableRDS(mRDSGroupMask | DOM_PARSED_RDS_GROUPS);
+  }
+}
+
+void
+FMRadioService::EnableRDS(FMRadioReplyRunnable* aReplyRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(aReplyRunnable);
+
+  mRDSEnabled = true;
+  if (IsFMRadioOn()) {
+    hal::EnableRDS(mRDSGroupMask | DOM_PARSED_RDS_GROUPS);
+  }
+
+  aReplyRunnable->SetReply(SuccessResponse());
+  NS_DispatchToMainThread(aReplyRunnable);
+  NS_DispatchToMainThread(new NotifyRunnable(RDSEnabledChanged));
+}
+
+void
+FMRadioService::DisableRDS(FMRadioReplyRunnable* aReplyRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(aReplyRunnable);
+
+  mRDSEnabled = false;
+  if (IsFMRadioOn()) {
+    hal::DisableRDS();
+  }
+
+  aReplyRunnable->SetReply(SuccessResponse());
+  NS_DispatchToMainThread(aReplyRunnable);
+  NS_DispatchToMainThread(new NotifyRunnable(RDSEnabledChanged));
+}
+
 NS_IMETHODIMP
 FMRadioService::Observe(nsISupports* aSubject,
                         const char* aTopic,
@@ -760,10 +892,18 @@ FMRadioService::Notify(const FMRadioOperationInformation& aInfo)
       // The frequency was changed from '0' to some meaningful number, so we
       // should send the `FrequencyChanged` event manually.
       NotifyFMRadioEvent(FrequencyChanged);
+
+      if (mRDSEnabled) {
+        hal::EnableRDS(mRDSGroupMask | DOM_PARSED_RDS_GROUPS);
+      }
       break;
     case FM_RADIO_OPERATION_DISABLE:
       MOZ_ASSERT(mState == Disabling);
 
+      mPISet = false;
+      mPTYSet = false;
+      memset(mPSName, 0, sizeof(mPSName));
+      memset(mRadiotext, 0, sizeof(mRadiotext));
       TransitionState(SuccessResponse(), Disabled);
       UpdatePowerState();
       break;
@@ -785,6 +925,274 @@ FMRadioService::Notify(const FMRadioOperationInformation& aInfo)
   }
 }
 
+/* This is defined by the RDS standard */
+static const uint16_t sRDSToUnicodeMap[256] = {
+  // The lower half differs from ASCII in 0x1F, 0x24, 0x5E, 0x7E
+  // Most control characters are replaced with 0x20 (space)
+  // 0x0-
+  0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020,
+  0x0020, 0x0009, 0x000A, 0x000B, 0x0020, 0x00D0, 0x0020, 0x0020,
+
+  // 0x1-
+  0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020, 0x0020,
+  0x0020, 0x0020, 0x0020, 0x001B, 0x0020, 0x0020, 0x0020, 0x00AD,
+
+  // 0x2-
+  0x0020, 0x0021, 0x0022, 0x0023, 0x00A4, 0x0025, 0x0026, 0x0027,
+  0x0028, 0x0029, 0x002A, 0x002B, 0x002C, 0x002D, 0x002E, 0x002F,
+
+  // 0x3-
+  0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0037,
+  0x0038, 0x0039, 0x003A, 0x003B, 0x003C, 0x003D, 0x003E, 0x003F,
+
+  // 0x4-
+  0x0040, 0x0041, 0x0042, 0x0043, 0x0044, 0x0045, 0x0046, 0x0047,
+  0x0048, 0x0049, 0x004A, 0x004B, 0x004C, 0x004D, 0x004E, 0x004F,
+
+  // 0x5-
+  0x0050, 0x0051, 0x0052, 0x0053, 0x0054, 0x0055, 0x0056, 0x0057,
+  0x0058, 0x0059, 0x005A, 0x005B, 0x005C, 0x005D, 0x2015, 0x005F,
+
+  // 0x6-
+  0x2551, 0x0061, 0x0062, 0x0063, 0x0064, 0x0065, 0x0066, 0x0067,
+  0x0068, 0x0069, 0x006A, 0x006B, 0x006C, 0x006D, 0x006E, 0x006F,
+
+  // 0x7-
+  0x0070, 0x0071, 0x0072, 0x0073, 0x0074, 0x0075, 0x0076, 0x0077,
+  0x0078, 0x0079, 0x007A, 0x007B, 0x007C, 0x007D, 0x00AF, 0x007F,
+
+  // 0x8-
+  0x00E1, 0x00E0, 0x00E9, 0x00E8, 0x00ED, 0x00EC, 0x00F3, 0x00F2,
+  0x00FA, 0x00F9, 0x00D1, 0x00C7, 0x015E, 0x00DF, 0x00A1, 0x0132,
+
+  // 0x9-
+  0x00E2, 0x00E4, 0x00EA, 0x00EB, 0x00EE, 0x00EF, 0x00F4, 0x00F6,
+  0x00FB, 0x00FC, 0x00F1, 0x00E7, 0x015F, 0x011F, 0x0131, 0x0133,
+
+  // 0xA-
+  0x00AA, 0x03B1, 0x00A9, 0x2030, 0x011E, 0x011B, 0x0148, 0x0151,
+  0x03C0, 0x20AC, 0x00A3, 0x0024, 0x2190, 0x2191, 0x2192, 0x2193,
+
+  // 0xB-
+  0x00BA, 0x00B9, 0x00B2, 0x00B3, 0x00B1, 0x0130, 0x0144, 0x0171,
+  0x03BC, 0x00BF, 0x00F7, 0x00B0, 0x00BC, 0x00BD, 0x00BE, 0x00A7,
+
+  // 0xC-
+  0x00C1, 0x00C0, 0x00C9, 0x00C8, 0x00CD, 0x00CC, 0x00D3, 0x00D2,
+  0x00DA, 0x00D9, 0x0158, 0x010C, 0x0160, 0x017D, 0x00D0, 0x013F,
+
+  // 0xD-
+  0x00C2, 0x00C4, 0x00CA, 0x00CB, 0x00CE, 0x00CF, 0x00D4, 0x00D6,
+  0x00DB, 0x00DC, 0x0159, 0x010D, 0x0161, 0x017E, 0x0111, 0x0140,
+
+  // 0xE-
+  0x00C3, 0x00C5, 0x00C6, 0x0152, 0x0177, 0x00DD, 0x00D5, 0x00D8,
+  0x00DE, 0x014A, 0x0154, 0x0106, 0x015A, 0x0179, 0x0166, 0x00F0,
+
+  // 0xF-
+  0x00E3, 0x00E5, 0x00E6, 0x0153, 0x0175, 0x00FD, 0x00F5, 0x00F8,
+  0x00FE, 0x014B, 0x0155, 0x0107, 0x015B, 0x017A, 0x0167, 0x0020,
+};
+
+void
+FMRadioService::Notify(const FMRadioRDSGroup& aRDSGroup)
+{
+  uint16_t blocks[4];
+  blocks[0] = aRDSGroup.blockA();
+  blocks[1] = aRDSGroup.blockB();
+  blocks[2] = aRDSGroup.blockC();
+  blocks[3] = aRDSGroup.blockD();
+
+  /* Bit 11 in block B determines whether this is a type B group. */
+  uint16_t lastPI = blocks[1] & (1 << 11) ? blocks[2] : mLastPI;
+
+  /* Update PI if it's not set or if we get two PI with the new value. */
+  if ((mPI != blocks[0] && lastPI == blocks[0]) || !mPISet) {
+    mPI = blocks[0];
+    if (!mPISet) {
+      mPSNameState = 0;
+      mRadiotextState = 0;
+      memset(mTempPSName, 0, sizeof(mTempPSName));
+      memset(mTempRadiotext, 0, sizeof(mTempRadiotext));
+    }
+    mPISet = true;
+    NS_DispatchToMainThread(new NotifyRunnable(PIChanged));
+  }
+  mLastPI = blocks[0];
+
+  /* PTY is also updated using the same logic as PI */
+  uint16_t pty = (blocks[1] >> 5) & 0x1F;
+  if ((mPTY != pty && pty == mLastPTY) || !mPTYSet) {
+    mPTY = pty;
+    mPTYSet = true;
+    NS_DispatchToMainThread(new NotifyRunnable(PTYChanged));
+  }
+  mLastPTY = pty;
+
+  uint16_t grouptype = blocks[1] >> 11;
+  switch (grouptype) {
+    case 0: // 0a
+    case 1: // 0b
+    {
+      uint16_t segmentAddr = (blocks[1] & 0x3);
+      // mPSNameState is a bitmask that lets us ensure all segments
+      // are received before updating the PS name.
+      if (!segmentAddr) {
+        mPSNameState = 1;
+      } else {
+        mPSNameState |= 1 << segmentAddr;
+      }
+
+      uint16_t offset = segmentAddr << 1;
+      mTempPSName[offset] = sRDSToUnicodeMap[blocks[3] >> 8];
+      mTempPSName[offset + 1] = sRDSToUnicodeMap[blocks[3] & 0xFF];
+
+      if (mPSNameState != 0xF) {
+        break;
+      }
+
+      mPSNameState = 0;
+      if (memcmp(mTempPSName, mPSName, sizeof(mTempPSName))) {
+        MutexAutoLock lock(mRDSLock);
+        mPSNameSet = true;
+        memcpy(mPSName, mTempPSName, sizeof(mTempPSName));
+        NS_DispatchToMainThread(new NotifyRunnable(PSChanged));
+      }
+      break;
+    }
+    case 4: // 2a Radiotext
+    {
+      uint16_t segmentAddr = (blocks[1] & 0xF);
+      bool textAB = blocks[1] & (1 << 5);
+      if (textAB != mRadiotextAB) {
+        mRadiotextState = 0;
+        memset(mTempRadiotext, 0, sizeof(mTempRadiotext));
+        mRadiotextAB = textAB;
+        MutexAutoLock lock(mRDSLock);
+        memset(mRadiotext, 0, sizeof(mRadiotext));
+        NS_DispatchToMainThread(new NotifyRunnable(RadiotextChanged));
+      }
+
+      // mRadiotextState is a bitmask that lets us ensure all segments
+      // are received before updating the radiotext.
+      if (!segmentAddr) {
+        mRadiotextState = 1;
+      } else {
+        mRadiotextState |= 1 << segmentAddr;
+      }
+
+      uint8_t segment[4];
+      segment[0] = blocks[2] >> 8;
+      segment[1] = blocks[2] & 0xFF;
+      segment[2] = blocks[3] >> 8;
+      segment[3] = blocks[3] & 0xFF;
+
+      uint16_t offset = segmentAddr << 2;
+      bool done = false;
+      for (int i = 0; i < 4; i++) {
+        if (segment[i] == '\r') {
+          mTempRadiotext[offset++] = 0;
+          done = true;
+        } else {
+          mTempRadiotext[offset++] = sRDSToUnicodeMap[segment[i]];
+        }
+      }
+      if (offset == 64) {
+        done = true;
+      }
+
+      if (!done ||
+          (mRadiotextState + 1) != (1 << ((blocks[1] & 0xF) + 1)) ||
+          !memcmp(mTempRadiotext, mRadiotext, sizeof(mTempRadiotext))) {
+        break;
+      }
+
+      MutexAutoLock lock(mRDSLock);
+      mRadiotextSet = true;
+      memcpy(mRadiotext, mTempRadiotext, sizeof(mTempRadiotext));
+      NS_DispatchToMainThread(new NotifyRunnable(RadiotextChanged));
+      break;
+    }
+    case 5: // 2b Radiotext
+    {
+      uint16_t segmentAddr = (blocks[1] & 0xF);
+      bool textAB = blocks[1] & (1 << 5);
+      if (textAB != mRadiotextAB) {
+        mRadiotextState = 0;
+        memset(mTempRadiotext, 0, sizeof(mTempRadiotext));
+        mRadiotextAB = textAB;
+        MutexAutoLock lock(mRDSLock);
+        memset(mRadiotext, 0, sizeof(mRadiotext));
+        NS_DispatchToMainThread(new NotifyRunnable(RadiotextChanged));
+      }
+
+      if (!segmentAddr) {
+        mRadiotextState = 1;
+      } else {
+        mRadiotextState |= 1 << segmentAddr;
+      }
+      uint8_t segment[2];
+      segment[0] = blocks[3] >> 8;
+      segment[1] = blocks[3] & 0xFF;
+
+      uint16_t offset = segmentAddr << 1;
+      bool done = false;
+      for (int i = 0; i < 2; i++) {
+        if (segment[i] == '\r') {
+          mTempRadiotext[offset++] = 0;
+          done = true;
+        } else {
+          mTempRadiotext[offset++] = sRDSToUnicodeMap[segment[i]];
+        }
+      }
+      if (offset == 32) {
+        done = true;
+      }
+
+      if (!done ||
+          (mRadiotextState + 1) != (1 << ((blocks[1] & 0xF) + 1)) ||
+          !memcmp(mTempRadiotext, mRadiotext, sizeof(mTempRadiotext))) {
+        break;
+      }
+
+      MutexAutoLock lock(mRDSLock);
+      mRadiotextSet = true;
+      memcpy(mRadiotext, mTempRadiotext, sizeof(mTempRadiotext));
+      NS_DispatchToMainThread(new NotifyRunnable(RadiotextChanged));
+      break;
+    }
+    case 31: // 15b Fast Tuning and Switching
+    {
+      uint16_t secondPty = (blocks[3] >> 5) & 0x1F;
+      if (pty == mPTY || pty != secondPty) {
+        break;
+      }
+      mPTY = pty;
+      NS_DispatchToMainThread(new NotifyRunnable(PTYChanged));
+      break;
+    }
+  }
+
+  // Only notify users of raw RDS groups that they're interested in.
+  // We always receive DOM_PARSED_RDS_GROUPS when RDS is enabled.
+  if (!(mRDSGroupMask & (1 << grouptype))) {
+    return;
+  }
+
+  uint64_t newgroup = blocks[0];
+  newgroup <<= 16;
+  newgroup |= blocks[1];
+  newgroup <<= 16;
+  newgroup |= blocks[2];
+  newgroup <<= 16;
+  newgroup |= blocks[3];
+
+  MutexAutoLock lock(mRDSLock);
+  mRDSGroup = newgroup;
+  mRDSGroupSet = true;
+  NS_DispatchToMainThread(new NotifyRunnable(NewRDSGroup));
+}
+
 void
 FMRadioService::UpdatePowerState()
 {
@@ -802,6 +1210,13 @@ FMRadioService::UpdateFrequency()
   if (mPendingFrequencyInKHz != frequency) {
     mPendingFrequencyInKHz = frequency;
     NotifyFMRadioEvent(FrequencyChanged);
+    mPISet = false;
+    mPTYSet = false;
+    memset(mPSName, 0, sizeof(mPSName));
+    memset(mRadiotext, 0, sizeof(mRadiotext));
+    mRDSGroupSet = false;
+    mPSNameSet = false;
+    mRadiotextSet = false;
   }
 }
 

@@ -8,7 +8,6 @@
 #include "ApplicationAccessible.h"
 #include "ARIAMap.h"
 #include "DocAccessible-inl.h"
-#include "DocAccessibleChild.h"
 #include "nsAccessibilityService.h"
 #include "RootAccessibleWrap.h"
 
@@ -28,8 +27,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIWebProgress.h"
 #include "nsCoreUtils.h"
-#include "nsXULAppAPI.h"
-#include "mozilla/dom/ContentChild.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -421,12 +418,6 @@ DocManager::CreateDocOrRootAccessible(nsIDocument* aDocument)
     docAcc->FireDelayedEvent(nsIAccessibleEvent::EVENT_REORDER,
                              ApplicationAcc());
 
-    if (XRE_GetProcessType() != GeckoProcessType_Default) {
-      DocAccessibleChild* ipcDoc = new DocAccessibleChild(docAcc);
-      docAcc->SetIPCDoc(ipcDoc);
-    auto contentChild = dom::ContentChild::GetSingleton();
-    contentChild->SendPDocAccessibleConstructor(ipcDoc, nullptr, 0);
-    }
   } else {
     parentDocAcc->BindChildDocument(docAcc);
   }

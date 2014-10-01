@@ -55,6 +55,8 @@ public:
 
   static bool Enabled();
 
+  bool RdsEnabled();
+
   bool AntennaAvailable() const;
 
   Nullable<double> GetFrequency() const;
@@ -64,6 +66,20 @@ public:
   double FrequencyLowerBound() const;
 
   double ChannelWidth() const;
+
+  uint32_t RdsGroupMask() const;
+
+  void SetRdsGroupMask(uint32_t aRdsGroupMask);
+
+  Nullable<unsigned short> GetPi() const;
+
+  Nullable<uint8_t> GetPty() const;
+
+  void GetPs(DOMString& aPsname) const;
+
+  void GetRt(DOMString& aRadiotext) const;
+
+  void GetRdsgroup(JSContext* cx, JS::MutableHandle<JSObject*> retval);
 
   already_AddRefed<DOMRequest> Enable(double aFrequency);
 
@@ -77,10 +93,21 @@ public:
 
   already_AddRefed<DOMRequest> CancelSeek();
 
+  already_AddRefed<DOMRequest> EnableRDS();
+
+  already_AddRefed<DOMRequest> DisableRDS();
+
   IMPL_EVENT_HANDLER(enabled);
   IMPL_EVENT_HANDLER(disabled);
+  IMPL_EVENT_HANDLER(rdsenabled);
+  IMPL_EVENT_HANDLER(rdsdisabled);
   IMPL_EVENT_HANDLER(antennaavailablechange);
   IMPL_EVENT_HANDLER(frequencychange);
+  IMPL_EVENT_HANDLER(pichange);
+  IMPL_EVENT_HANDLER(ptychange);
+  IMPL_EVENT_HANDLER(pschange);
+  IMPL_EVENT_HANDLER(rtchange);
+  IMPL_EVENT_HANDLER(newrdsgroup);
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
@@ -92,6 +119,7 @@ private:
   void EnableAudioChannelAgent();
 
   hal::SwitchState mHeadphoneState;
+  uint32_t mRdsGroupMask;
   bool mAudioChannelAgentEnabled;
   bool mHasInternalAntenna;
   bool mIsShutdown;

@@ -16,6 +16,7 @@ browser.jar:
   content/browser/loop/js/otconfig.js               (content/js/otconfig.js)
   content/browser/loop/js/panel.js                  (content/js/panel.js)
   content/browser/loop/js/contacts.js               (content/js/contacts.js)
+  content/browser/loop/js/conversationViews.js      (content/js/conversationViews.js)
 
   # Shared styles
   content/browser/loop/shared/css/reset.css         (content/shared/css/reset.css)
@@ -52,11 +53,15 @@ browser.jar:
   content/browser/loop/shared/img/icons-16x16.svg               (content/shared/img/icons-16x16.svg)
 
   # Shared scripts
+  content/browser/loop/shared/js/actions.js           (content/shared/js/actions.js)
+  content/browser/loop/shared/js/conversationStore.js (content/shared/js/conversationStore.js)
+  content/browser/loop/shared/js/dispatcher.js        (content/shared/js/dispatcher.js)
   content/browser/loop/shared/js/feedbackApiClient.js (content/shared/js/feedbackApiClient.js)
   content/browser/loop/shared/js/models.js            (content/shared/js/models.js)
   content/browser/loop/shared/js/mixins.js            (content/shared/js/mixins.js)
   content/browser/loop/shared/js/views.js             (content/shared/js/views.js)
   content/browser/loop/shared/js/utils.js             (content/shared/js/utils.js)
+  content/browser/loop/shared/js/validate.js          (content/shared/js/validate.js)
   content/browser/loop/shared/js/websocket.js         (content/shared/js/websocket.js)
 
   # Shared libs

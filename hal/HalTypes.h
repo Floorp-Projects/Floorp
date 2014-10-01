@@ -225,7 +225,9 @@ enum FMRadioCountry {
   NUM_FM_RADIO_COUNTRY
 };
 
+class FMRadioRDSGroup;
 typedef Observer<FMRadioOperationInformation> FMRadioObserver;
+typedef Observer<FMRadioRDSGroup> FMRadioRDSObserver;
 } // namespace hal
 } // namespace mozilla
 

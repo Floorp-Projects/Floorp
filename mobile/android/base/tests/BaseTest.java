@@ -121,6 +121,9 @@ abstract class BaseTest extends BaseRobocopTest {
         mActions = new FennecNativeActions(mActivity, mSolo, getInstrumentation(), mAsserter);
         mDevice = new Device();
         mDatabaseHelper = new DatabaseHelper(mActivity, mAsserter);
+
+        // Ensure Robocop tests are run with Display powered on.
+        throwIfScreenNotOn();
     }
 
     protected void initializeProfile() {
