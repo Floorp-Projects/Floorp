@@ -30,8 +30,6 @@
 #include "CrashReporterParent.h"
 #include "IHistory.h"
 #include "mozIApplication.h"
-#include "mozilla/a11y/DocAccessibleParent.h"
-#include "nsAccessibilityService.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/DataStoreService.h"
 #include "mozilla/dom/DOMStorageIPC.h"
@@ -2697,34 +2695,6 @@ ContentParent::Observe(nsISupports* aSubject,
         unused << SendOnAppThemeChanged();
     }
     return NS_OK;
-}
-
-  a11y::PDocAccessibleParent*
-ContentParent::AllocPDocAccessibleParent(PDocAccessibleParent* aParent, const uint64_t&)
-{
-  return new a11y::DocAccessibleParent();
-}
-
-bool
-ContentParent::DeallocPDocAccessibleParent(PDocAccessibleParent* aParent)
-{
-  delete static_cast<a11y::DocAccessibleParent*>(aParent);
-  return true;
-}
-
-bool
-ContentParent::RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc, PDocAccessibleParent* aParentDoc, const uint64_t& aParentID)
-{
-  auto doc = static_cast<a11y::DocAccessibleParent*>(aDoc);
-  if (aParentDoc) {
-    MOZ_ASSERT(aParentID);
-    auto parentDoc = static_cast<a11y::DocAccessibleParent*>(aParentDoc);
-    return parentDoc->AddChildDoc(doc, aParentID);
-  } else {
-    MOZ_ASSERT(!aParentID);
-    GetAccService()->RemoteDocAdded(doc);
-  }
-  return true;
 }
 
 PCompositorParent*
