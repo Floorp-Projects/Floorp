@@ -1090,7 +1090,7 @@ nsXMLHttpRequest::GetResponseURL(nsAString& aUrl)
   }
 
   nsAutoCString temp;
-  responseUrl->GetSpec(temp);
+  responseUrl->GetSpecIgnoringRef(temp);
   CopyUTF8toUTF16(temp, aUrl);
 }
 

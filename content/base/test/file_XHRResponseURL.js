@@ -189,6 +189,11 @@ function testSuccessResponse() {
       skip: isInWorker(),
       reason: "cross-origin redirect request not works on Workers, see bug 882458"
     },
+    {
+      message: "request URL has fragment",
+      requestURL: "http://mochi.test:8888/tests/content/base/test/file_XHRResponseURL.text#fragment",
+      responseURL: "http://mochi.test:8888/tests/content/base/test/file_XHRResponseURL.text"
+    },
 
     // tests for non-http(s) URL
     {

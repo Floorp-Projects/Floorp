@@ -2205,7 +2205,7 @@ RuntimeService::CancelWorkersForWindow(nsPIDOMWindow* aWindow)
     for (uint32_t index = 0; index < workers.Length(); index++) {
       WorkerPrivate*& worker = workers[index];
 
-      if (worker->IsSharedWorker()) {
+      if (worker->IsSharedWorker() || worker->IsServiceWorker()) {
         worker->CloseSharedWorkersForWindow(aWindow);
       } else if (!worker->Cancel(cx)) {
         JS_ReportPendingException(cx);

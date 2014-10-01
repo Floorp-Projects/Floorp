@@ -231,8 +231,11 @@ class RemoteB2GVersion(B2GVersion):
                     self._info[desired_props[key]] = value
 
         if self._info.get('device_id', '').lower() == 'flame':
-            self._info['device_firmware_version_base'] = dm._runCmd(
-                ['shell', 'getprop', 't2m.sw.version']).output[0]
+            for prop in ['ro.boot.bootloader', 't2m.sw.version']:
+                value = dm.shellCheckOutput(['getprop', prop])
+                if value:
+                    self._info['device_firmware_version_base'] = value
+                    break
 
 
 def get_version(binary=None, sources=None, dm_type=None, host=None,

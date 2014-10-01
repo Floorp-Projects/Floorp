@@ -79,6 +79,10 @@ class ContentParent MOZ_FINAL : public PContentParent
 
 public:
 #ifdef MOZ_NUWA_PROCESS
+    static int32_t NuwaPid() {
+        return sNuwaPid;
+    }
+
     static bool IsNuwaReady() {
         return sNuwaReady;
     }
@@ -725,6 +729,7 @@ private:
 #endif
 
 #ifdef MOZ_NUWA_PROCESS
+    static int32_t sNuwaPid;
     static bool sNuwaReady;
 #endif
 };

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Test for bug 1069941 -- margins</title>
+<style type="text/css">
+ .outer {
+   display: inline-block;
+   border: 1px solid lime;
+ }
+ .inner {
+   color:transparent;
+   margin-left: 50px;
+   border: 2px solid teal;
+ }
+</style>
+</head>
+<body>
+<span class="outer"><span class="inner" dir="rtl">[12)</span></span>
+</body>
+</html>

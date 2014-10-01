@@ -133,7 +133,7 @@ abstract class BaseTest extends BaseRobocopTest {
 
         // In Robocop tests, we typically don't get initialized correctly, because
         // GeckoProfile doesn't create the profile directory.
-        profile.enqueueInitialization();
+        profile.enqueueInitialization(profile.getDir());
     }
 
     @Override
