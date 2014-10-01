@@ -2897,7 +2897,7 @@ gfxFont::InitFakeSmallCapsRun(gfxContext     *aContext,
 {
     NS_ConvertASCIItoUTF16 unicodeString(reinterpret_cast<const char*>(aText),
                                          aLength);
-    return InitFakeSmallCapsRun(aContext, aTextRun, unicodeString.get(),
+    return InitFakeSmallCapsRun(aContext, aTextRun, static_cast<const char16_t*>(unicodeString.get()),
                                 aOffset, aLength, aMatchType, aOrientation,
                                 aScript, aSyntheticLower, aSyntheticUpper);
 }
