@@ -1230,6 +1230,9 @@ protected:
   // True if the media has an audio track
   bool mHasAudio;
 
+  // True if the media has a video track
+  bool mHasVideo;
+
   // True if the media's channel's download has been suspended.
   bool mDownloadSuspendedByCache;
 
