@@ -407,22 +407,25 @@ gfxTextRun::DrawGlyphs(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
 }
 
 static void
-ClipPartialLigature(gfxTextRun *aTextRun, gfxFloat *aLeft, gfxFloat *aRight,
-                    gfxFloat aXOrigin, gfxTextRun::LigatureData *aLigature)
+ClipPartialLigature(const gfxTextRun* aTextRun,
+                    gfxFloat *aStart, gfxFloat *aEnd,
+                    gfxFloat aOrigin,
+                    gfxTextRun::LigatureData *aLigature)
 {
     if (aLigature->mClipBeforePart) {
         if (aTextRun->IsRightToLeft()) {
-            *aRight = std::min(*aRight, aXOrigin);
+            *aEnd = std::min(*aEnd, aOrigin);
         } else {
-            *aLeft = std::max(*aLeft, aXOrigin);
+            *aStart = std::max(*aStart, aOrigin);
         }
     }
     if (aLigature->mClipAfterPart) {
-        gfxFloat endEdge = aXOrigin + aTextRun->GetDirection()*aLigature->mPartWidth;
+        gfxFloat endEdge =
+            aOrigin + aTextRun->GetDirection() * aLigature->mPartWidth;
         if (aTextRun->IsRightToLeft()) {
-            *aLeft = std::max(*aLeft, endEdge);
+            *aStart = std::max(*aStart, endEdge);
         } else {
-            *aRight = std::min(*aRight, endEdge);
+            *aEnd = std::min(*aEnd, endEdge);
         }
     }    
 }
@@ -432,15 +435,23 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
                                 gfxPoint *aPt, PropertyProvider *aProvider,
                                 TextRunDrawParams& aParams, uint16_t aOrientation)
 {
-    if (aStart >= aEnd)
+    if (aStart >= aEnd) {
         return;
+    }
 
     // Draw partial ligature. We hack this by clipping the ligature.
     LigatureData data = ComputeLigatureData(aStart, aEnd, aProvider);
     gfxRect clipExtents = aParams.context->GetClipExtents();
-    gfxFloat left = clipExtents.X() * mAppUnitsPerDevUnit;
-    gfxFloat right = clipExtents.XMost() * mAppUnitsPerDevUnit;
-    ClipPartialLigature(this, &left, &right, aPt->x, &data);
+    gfxFloat start, end;
+    if (aParams.isVerticalRun) {
+        start = clipExtents.Y() * mAppUnitsPerDevUnit;
+        end = clipExtents.YMost() * mAppUnitsPerDevUnit;
+        ClipPartialLigature(this, &start, &end, aPt->y, &data);
+    } else {
+        start = clipExtents.X() * mAppUnitsPerDevUnit;
+        end = clipExtents.XMost() * mAppUnitsPerDevUnit;
+        ClipPartialLigature(this, &start, &end, aPt->x, &data);
+    }
 
     {
       // Need to preserve the path, otherwise this can break canvas text-on-path;
@@ -453,19 +464,38 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
       // Also, make sure we snap the rectangle to device pixels.
       aParams.context->Save();
       aParams.context->NewPath();
-      aParams.context->Rectangle(gfxRect(left / mAppUnitsPerDevUnit,
-                                         clipExtents.Y(),
-                                         (right - left) / mAppUnitsPerDevUnit,
-                                         clipExtents.Height()), true);
+      if (aParams.isVerticalRun) {
+          aParams.context->Rectangle(gfxRect(clipExtents.X(),
+                                             start / mAppUnitsPerDevUnit,
+                                             clipExtents.Width(),
+                                             (end - start) / mAppUnitsPerDevUnit),
+                                     true);
+      } else {
+          aParams.context->Rectangle(gfxRect(start / mAppUnitsPerDevUnit,
+                                             clipExtents.Y(),
+                                             (end - start) / mAppUnitsPerDevUnit,
+                                             clipExtents.Height()),
+                                     true);
+      }
       aParams.context->Clip();
     }
 
-    gfxPoint pt(aPt->x - aParams.direction * data.mPartAdvance, aPt->y);
+    gfxPoint pt;
+    if (aParams.isVerticalRun) {
+        pt = gfxPoint(aPt->x, aPt->y - aParams.direction * data.mPartAdvance);
+    } else {
+        pt = gfxPoint(aPt->x - aParams.direction * data.mPartAdvance, aPt->y);
+    }
+
     DrawGlyphs(aFont, data.mLigatureStart, data.mLigatureEnd, &pt,
                aProvider, aStart, aEnd, aParams, aOrientation);
     aParams.context->Restore();
 
-    aPt->x += aParams.direction * data.mPartWidth;
+    if (aParams.isVerticalRun) {
+        aPt->y += aParams.direction * data.mPartWidth;
+    } else {
+        aPt->x += aParams.direction * data.mPartWidth;
+    }
 }
 
 // returns true if a glyph run is using a font with synthetic bolding enabled, false otherwise
