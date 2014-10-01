@@ -492,9 +492,7 @@ let WebGLInstrumenter = {
         if (glBreak) return undefined;
       }
 
-      // Invoking .apply on an unxrayed content function doesn't work, because
-      // the arguments array is inaccessible to it. Get Xrays back.
-      let glResult = Cu.waiveXrays(Cu.unwaiveXrays(originalFunc).apply(this, glArgs));
+      let glResult = originalFunc.apply(this, glArgs);
 
       if (timing >= 0 && !observer.suppressHandlers) {
         let glBreak = observer[afterFuncName](glArgs, glResult, cache, proxy);
