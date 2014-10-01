@@ -34,6 +34,14 @@ struct CancelSeekRequestArgs
 {
 };
 
+struct EnableRDSArgs
+{
+};
+
+struct DisableRDSArgs
+{
+};
+
 union FMRadioRequestArgs
 {
   EnableRequestArgs;
@@ -41,6 +49,8 @@ union FMRadioRequestArgs
   SetFrequencyRequestArgs;
   SeekRequestArgs;
   CancelSeekRequestArgs;
+  EnableRDSArgs;
+  DisableRDSArgs;
 };
 
 struct StatusInfo
@@ -66,6 +76,30 @@ child:
    * Sent when the power state of FM radio HW is changed.
    */
   NotifyEnabledChanged(bool enabled, double frequency);
+  /**
+   * Sent when RDS is enabled or disabled.
+   */
+  NotifyRDSEnabledChanged(bool enabled);
+  /**
+   * Sent when we have a new PI code.
+   */
+  NotifyPIChanged(bool valid, uint16_t code);
+  /**
+   * Sent when we have a new PTY
+   */
+  NotifyPTYChanged(bool valid, uint8_t pty);
+  /**
+   * Sent when we have a new PS name.
+   */
+  NotifyPSChanged(nsString psname);
+  /**
+   * Sent when we have new radiotext.
+   */
+  NotifyRadiotextChanged(nsString radiotext);
+  /**
+   * Sent when a full RDS group is received.
+   */
+  NotifyNewRDSGroup(uint64_t data);
 
   __delete__();
 
@@ -91,6 +125,11 @@ parent:
    * Enable/Disable audio
    */
   EnableAudio(bool audioEnabled);
+
+  /**
+   * Set RDS group mask
+   */
+  SetRDSGroupMask(uint32_t groupMask);
 };
 
 } // namespace dom
