@@ -9,7 +9,7 @@ interface nsIDOMCSSStyleDeclaration;
 interface nsIDOMCSSValue;
 
 
-[uuid(7a11697a-668b-4a6e-a44a-909abffee230)]
+[uuid(6618074e-0c77-4fec-8870-a6f79aa79b07)]
 interface nsIDOMSVGElement : nsIDOMElement
 {
             // raises DOMException on setting
