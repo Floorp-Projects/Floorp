@@ -117,7 +117,7 @@ struct Statistics
     void nonincremental(const char *reason) { nonincrementalReason = reason; }
 
     void count(Stat s) {
-        JS_ASSERT(s < STAT_LIMIT);
+        MOZ_ASSERT(s < STAT_LIMIT);
         counts[s]++;
     }
 

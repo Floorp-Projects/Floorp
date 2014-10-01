@@ -49,7 +49,7 @@ class SharedArrayRawBuffer
     SharedArrayRawBuffer(uint8_t *buffer, uint32_t length)
       : refcount(1), length(length)
     {
-        JS_ASSERT(buffer == dataPointer());
+        MOZ_ASSERT(buffer == dataPointer());
     }
 
   public:

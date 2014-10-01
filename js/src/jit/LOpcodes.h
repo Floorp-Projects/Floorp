@@ -29,6 +29,7 @@
     _(SimdBinaryArithIx4)           \
     _(SimdBinaryArithFx4)           \
     _(SimdBinaryBitwiseX4)          \
+    _(SimdShift)                    \
     _(SimdSelect)                   \
     _(Value)                        \
     _(CloneLiteral)                 \

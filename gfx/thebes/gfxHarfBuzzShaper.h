@@ -31,6 +31,7 @@ public:
                            uint32_t         aOffset,
                            uint32_t         aLength,
                            int32_t          aScript,
+                           bool             aVertical,
                            gfxShapedText   *aShapedText);
 
     // get a given font table in harfbuzz blob form
@@ -44,10 +45,32 @@ public:
     hb_position_t GetGlyphHAdvance(gfxContext *aContext,
                                    hb_codepoint_t glyph) const;
 
+    hb_position_t GetGlyphVAdvance(gfxContext *aContext,
+                                   hb_codepoint_t glyph) const;
+
+    void GetGlyphVOrigin(gfxContext *aContext, hb_codepoint_t aGlyph,
+                         hb_position_t *aX, hb_position_t *aY) const;
+
     // get harfbuzz horizontal advance in 16.16 fixed point format.
     static hb_position_t
     HBGetGlyphHAdvance(hb_font_t *font, void *font_data,
                        hb_codepoint_t glyph, void *user_data);
+
+    // get harfbuzz vertical advance in 16.16 fixed point format.
+    static hb_position_t
+    HBGetGlyphVAdvance(hb_font_t *font, void *font_data,
+                       hb_codepoint_t glyph, void *user_data);
+
+    static hb_bool_t
+    HBGetGlyphHOrigin(hb_font_t *font, void *font_data,
+                      hb_codepoint_t glyph,
+                      hb_position_t *x, hb_position_t *y,
+                      void *user_data);
+    static hb_bool_t
+    HBGetGlyphVOrigin(hb_font_t *font, void *font_data,
+                      hb_codepoint_t glyph,
+                      hb_position_t *x, hb_position_t *y,
+                      void *user_data);
 
     hb_position_t GetHKerning(uint16_t aFirstGlyph,
                               uint16_t aSecondGlyph) const;
@@ -68,12 +91,13 @@ public:
     }
 
 protected:
-    nsresult SetGlyphsFromRun(gfxContext      *aContext,
-                              gfxShapedText   *aShapedText,
-                              uint32_t         aOffset,
-                              uint32_t         aLength,
+    nsresult SetGlyphsFromRun(gfxContext     *aContext,
+                              gfxShapedText  *aShapedText,
+                              uint32_t        aOffset,
+                              uint32_t        aLength,
                               const char16_t *aText,
-                              hb_buffer_t     *aBuffer);
+                              hb_buffer_t    *aBuffer,
+                              bool            aVertical);
 
     // retrieve glyph positions, applying advance adjustments and attachments
     // returns results in appUnits
@@ -81,6 +105,9 @@ protected:
                               hb_buffer_t *aBuffer,
                               nsTArray<nsPoint>& aPositions,
                               uint32_t aAppUnitsPerDevUnit);
+
+    bool InitializeVertical();
+    bool LoadHmtxTable();
 
     // harfbuzz face object: we acquire a reference from the font entry
     // on shaper creation, and release it in our destructor
@@ -99,13 +126,12 @@ protected:
     // Old-style TrueType kern table, if we're not doing GPOS kerning
     mutable hb_blob_t *mKernTable;
 
-    // Cached copy of the hmtx table and numLongMetrics field from hhea,
-    // for use when looking up glyph metrics; initialized to 0 by the
-    // constructor so we can tell it hasn't been set yet.
-    // This is a signed value so that we can use -1 to indicate
-    // an error (if the hhea table was not available).
+    // Cached copy of the hmtx table.
     mutable hb_blob_t *mHmtxTable;
-    mutable int32_t    mNumLongMetrics;
+
+    // For vertical fonts, cached vmtx and VORG table, if present.
+    mutable hb_blob_t *mVmtxTable;
+    mutable hb_blob_t *mVORGTable;
 
     // Cached pointer to cmap subtable to be used for char-to-glyph mapping.
     // This comes from GetFontTablePtr; if it is non-null, our destructor
@@ -115,6 +141,15 @@ protected:
     mutable uint32_t   mSubtableOffset;
     mutable uint32_t   mUVSTableOffset;
 
+    // Cached copy of numLongMetrics field from the hhea table,
+    // for use when looking up glyph metrics; initialized to 0 by the
+    // constructor so we can tell it hasn't been set yet.
+    // This is a signed value so that we can use -1 to indicate
+    // an error (if the hhea table was not available).
+    mutable int32_t    mNumLongHMetrics;
+    // Similarly for vhea if it's a vertical font.
+    mutable int32_t    mNumLongVMetrics;
+
     // Whether the font implements GetGlyph, or we should read tables
     // directly
     bool mUseFontGetGlyph;
@@ -123,6 +158,7 @@ protected:
     bool mUseFontGlyphWidths;
 
     bool mInitialized;
+    bool mVerticalInitialized;
 };
 
 #endif /* GFX_HARFBUZZSHAPER_H */

@@ -1210,16 +1210,16 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
     }
 
     D2D1_RECT_F samplingBounds;
+    Matrix mat = pat->mMatrix;
     if (!pat->mSamplingRect.IsEmpty()) {
       samplingBounds = D2DRect(pat->mSamplingRect);
+      mat.PreTranslate(pat->mSamplingRect.x, pat->mSamplingRect.y);
     } else {
       samplingBounds = D2D1::RectF(0, 0,
                                    Float(pat->mSurface->GetSize().width),
                                    Float(pat->mSurface->GetSize().height));
     }
 
-    Matrix mat = pat->mMatrix;
-    
     RefPtr<ID2D1ImageBrush> imageBrush;
     RefPtr<ID2D1Image> image = GetImageForSurface(pat->mSurface, mat, pat->mExtendMode);
     mDC->CreateImageBrush(image,

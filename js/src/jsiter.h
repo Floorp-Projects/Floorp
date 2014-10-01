@@ -65,7 +65,7 @@ struct NativeIterator
         return iterObj_;
     }
     HeapPtrFlatString *current() const {
-        JS_ASSERT(props_cursor < props_end);
+        MOZ_ASSERT(props_cursor < props_end);
         return props_cursor;
     }
 
@@ -85,8 +85,8 @@ struct NativeIterator
     }
     void link(NativeIterator *other) {
         /* A NativeIterator cannot appear in the enumerator list twice. */
-        JS_ASSERT(!next_ && !prev_);
-        JS_ASSERT(flags & JSITER_ENUMERATE);
+        MOZ_ASSERT(!next_ && !prev_);
+        MOZ_ASSERT(flags & JSITER_ENUMERATE);
 
         this->next_ = other;
         this->prev_ = other->prev_;
@@ -94,7 +94,7 @@ struct NativeIterator
         other->prev_ = this;
     }
     void unlink() {
-        JS_ASSERT(flags & JSITER_ENUMERATE);
+        MOZ_ASSERT(flags & JSITER_ENUMERATE);
 
         next_->prev_ = prev_;
         prev_->next_ = next_;

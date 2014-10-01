@@ -32,7 +32,7 @@ class CGConstList {
     Vector<Value> list;
   public:
     explicit CGConstList(ExclusiveContext *cx) : list(cx) {}
-    bool append(Value v) { JS_ASSERT_IF(v.isString(), v.toString()->isAtom()); return list.append(v); }
+    bool append(Value v) { MOZ_ASSERT_IF(v.isString(), v.toString()->isAtom()); return list.append(v); }
     size_t length() const { return list.length(); }
     void finish(ConstArray *array);
 };

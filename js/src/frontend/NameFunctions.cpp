@@ -160,7 +160,7 @@ class NameResolver
 
               default:
                 /* Save any other nodes we encounter on the way up. */
-                JS_ASSERT(*size < MaxParents);
+                MOZ_ASSERT(*size < MaxParents);
                 nameable[(*size)++] = cur;
                 break;
             }
@@ -175,7 +175,7 @@ class NameResolver
      * assign to the function's displayAtom field
      */
     bool resolveFun(ParseNode *pn, HandleAtom prefix, MutableHandleAtom retAtom) {
-        JS_ASSERT(pn != nullptr && pn->isKind(PNK_FUNCTION));
+        MOZ_ASSERT(pn != nullptr && pn->isKind(PNK_FUNCTION));
         RootedFunction fun(cx, pn->pn_funbox->function());
 
         StringBuffer buf(cx);
@@ -334,7 +334,7 @@ class NameResolver
                 return false;
             break;
           case PN_CODE:
-            JS_ASSERT(cur->isKind(PNK_FUNCTION));
+            MOZ_ASSERT(cur->isKind(PNK_FUNCTION));
             if (!resolve(cur->pn_body, prefix))
                 return false;
             break;

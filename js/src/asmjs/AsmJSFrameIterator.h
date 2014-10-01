@@ -116,7 +116,7 @@ namespace AsmJSExit
         return ReasonKind(uint16_t(reason));
     }
     static inline BuiltinKind ExtractBuiltinKind(Reason reason) {
-        JS_ASSERT(ExtractReasonKind(reason) == Reason_Builtin);
+        MOZ_ASSERT(ExtractReasonKind(reason) == Reason_Builtin);
         return BuiltinKind(uint16_t(reason >> 16));
     }
 }
@@ -146,7 +146,7 @@ class AsmJSProfilingFrameIterator
     void operator++();
     bool done() const { return !codeRange_; }
 
-    void *stackAddress() const { JS_ASSERT(!done()); return stackAddress_; }
+    void *stackAddress() const { MOZ_ASSERT(!done()); return stackAddress_; }
     const char *label() const;
 };
 

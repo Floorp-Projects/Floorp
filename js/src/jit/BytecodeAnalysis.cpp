@@ -31,7 +31,7 @@ struct CatchFinallyRange
     CatchFinallyRange(uint32_t start, uint32_t end)
       : start(start), end(end)
     {
-        JS_ASSERT(end > start);
+        MOZ_ASSERT(end > start);
     }
 
     bool contains(uint32_t offset) const {
@@ -69,18 +69,18 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
         unsigned stackDepth = infos_[offset].stackDepth;
 #ifdef DEBUG
         for (jsbytecode *chkpc = pc + 1; chkpc < (pc + GetBytecodeLength(pc)); chkpc++)
-            JS_ASSERT(!infos_[script_->pcToOffset(chkpc)].initialized);
+            MOZ_ASSERT(!infos_[script_->pcToOffset(chkpc)].initialized);
 #endif
 
         unsigned nuses = GetUseCount(script_, offset);
         unsigned ndefs = GetDefCount(script_, offset);
 
-        JS_ASSERT(stackDepth >= nuses);
+        MOZ_ASSERT(stackDepth >= nuses);
         stackDepth -= nuses;
         stackDepth += ndefs;
 
         // If stack depth exceeds max allowed by analysis, fail fast.
-        JS_ASSERT(stackDepth <= BytecodeInfo::MAX_STACK_DEPTH);
+        MOZ_ASSERT(stackDepth <= BytecodeInfo::MAX_STACK_DEPTH);
 
         switch (op) {
           case JSOP_TABLESWITCH: {
@@ -123,13 +123,13 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
             // Get the pc of the last instruction in the try block. It's a JSOP_GOTO to
             // jump over the catch/finally blocks.
             jssrcnote *sn = GetSrcNote(gsn, script_, pc);
-            JS_ASSERT(SN_TYPE(sn) == SRC_TRY);
+            MOZ_ASSERT(SN_TYPE(sn) == SRC_TRY);
 
             jsbytecode *endOfTry = pc + js_GetSrcNoteOffset(sn, 0);
-            JS_ASSERT(JSOp(*endOfTry) == JSOP_GOTO);
+            MOZ_ASSERT(JSOp(*endOfTry) == JSOP_GOTO);
 
             jsbytecode *afterTry = endOfTry + GET_JUMP_OFFSET(endOfTry);
-            JS_ASSERT(afterTry > endOfTry);
+            MOZ_ASSERT(afterTry > endOfTry);
 
             // Pop CatchFinallyRanges that are no longer needed.
             while (!catchFinallyRanges.empty() && catchFinallyRanges.back().end <= offset)
@@ -197,7 +197,7 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
         // Handle any fallthrough from this opcode.
         if (BytecodeFallsThrough(op)) {
             jsbytecode *fallthrough = pc + GetBytecodeLength(pc);
-            JS_ASSERT(fallthrough < end);
+            MOZ_ASSERT(fallthrough < end);
             unsigned fallthroughOffset = script_->pcToOffset(fallthrough);
 
             infos_[fallthroughOffset].init(stackDepth);

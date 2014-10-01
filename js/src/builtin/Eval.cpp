@@ -32,7 +32,7 @@ AssertInnerizedScopeChain(JSContext *cx, JSObject &scopeobj)
 #ifdef DEBUG
     RootedObject obj(cx);
     for (obj = &scopeobj; obj; obj = obj->enclosingScope())
-        JS_ASSERT(GetInnerObject(obj) == obj);
+        MOZ_ASSERT(GetInnerObject(obj) == obj);
 #endif
 }
 
@@ -63,7 +63,7 @@ EvalCacheHashPolicy::match(const EvalCacheEntry &cacheEntry, const EvalCacheLook
 {
     JSScript *script = cacheEntry.script;
 
-    JS_ASSERT(IsEvalCacheCandidate(script));
+    MOZ_ASSERT(IsEvalCacheCandidate(script));
 
     // Get the source string passed for safekeeping in the atom map
     // by the prior eval to frontend::CompileScript.
@@ -125,7 +125,7 @@ class EvalScriptGuard
 
     void setNewScript(JSScript *script) {
         // JSScript::initFromEmitter has already called js_CallNewScriptHook.
-        JS_ASSERT(!script_ && script);
+        MOZ_ASSERT(!script_ && script);
         script_ = script;
         script_->setActiveEval();
     }
@@ -135,7 +135,7 @@ class EvalScriptGuard
     }
 
     HandleScript script() {
-        JS_ASSERT(script_);
+        MOZ_ASSERT(script_);
         return script_;
     }
 };
@@ -244,9 +244,9 @@ static bool
 EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFramePtr caller,
            HandleObject scopeobj, jsbytecode *pc)
 {
-    JS_ASSERT((evalType == INDIRECT_EVAL) == !caller);
-    JS_ASSERT((evalType == INDIRECT_EVAL) == !pc);
-    JS_ASSERT_IF(evalType == INDIRECT_EVAL, scopeobj->is<GlobalObject>());
+    MOZ_ASSERT((evalType == INDIRECT_EVAL) == !caller);
+    MOZ_ASSERT((evalType == INDIRECT_EVAL) == !pc);
+    MOZ_ASSERT_IF(evalType == INDIRECT_EVAL, scopeobj->is<GlobalObject>());
     AssertInnerizedScopeChain(cx, *scopeobj);
 
     Rooted<GlobalObject*> scopeObjGlobal(cx, &scopeobj->global());
@@ -274,7 +274,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
     unsigned staticLevel;
     RootedValue thisv(cx);
     if (evalType == DIRECT_EVAL) {
-        JS_ASSERT_IF(caller.isInterpreterFrame(), !caller.asInterpreterFrame()->runningInJit());
+        MOZ_ASSERT_IF(caller.isInterpreterFrame(), !caller.asInterpreterFrame()->runningInJit());
         staticLevel = caller.script()->staticLevel() + 1;
 
         // Direct calls to eval are supposed to see the caller's |this|. If we
@@ -284,7 +284,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
             return false;
         thisv = caller.thisValue();
     } else {
-        JS_ASSERT(args.callee().global() == *scopeobj);
+        MOZ_ASSERT(args.callee().global() == *scopeobj);
         staticLevel = 0;
 
         // Use the global as 'this', modulo outerization.
@@ -425,7 +425,7 @@ js::DirectEvalStringFromIon(JSContext *cx,
 
     // Primitive 'this' values should have been filtered out by Ion. If boxed,
     // the calling frame cannot be updated to store the new object.
-    JS_ASSERT(thisValue.isObject() || thisValue.isUndefined() || thisValue.isNull());
+    MOZ_ASSERT(thisValue.isObject() || thisValue.isUndefined() || thisValue.isNull());
 
     return ExecuteKernel(cx, esg.script(), *scopeobj, thisValue, ExecuteType(DIRECT_EVAL),
                          NullFramePtr() /* evalInFrame */, vp.address());
@@ -462,11 +462,11 @@ js::DirectEval(JSContext *cx, const CallArgs &args)
     ScriptFrameIter iter(cx);
     AbstractFramePtr caller = iter.abstractFramePtr();
 
-    JS_ASSERT(caller.scopeChain()->global().valueIsEval(args.calleev()));
-    JS_ASSERT(JSOp(*iter.pc()) == JSOP_EVAL ||
-              JSOp(*iter.pc()) == JSOP_SPREADEVAL);
-    JS_ASSERT_IF(caller.isFunctionFrame(),
-                 caller.compartment() == caller.callee()->compartment());
+    MOZ_ASSERT(caller.scopeChain()->global().valueIsEval(args.calleev()));
+    MOZ_ASSERT(JSOp(*iter.pc()) == JSOP_EVAL ||
+               JSOp(*iter.pc()) == JSOP_SPREADEVAL);
+    MOZ_ASSERT_IF(caller.isFunctionFrame(),
+                  caller.compartment() == caller.callee()->compartment());
 
     RootedObject scopeChain(cx, caller.scopeChain());
     return EvalKernel(cx, args, DIRECT_EVAL, caller, scopeChain, iter.pc());

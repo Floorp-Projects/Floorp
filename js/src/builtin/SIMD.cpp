@@ -704,7 +704,7 @@ SIMDObject::initClass(JSContext *cx, Handle<GlobalObject *> global)
 JSObject *
 js_InitSIMDClass(JSContext *cx, HandleObject obj)
 {
-    JS_ASSERT(obj->is<GlobalObject>());
+    MOZ_ASSERT(obj->is<GlobalObject>());
     Rooted<GlobalObject *> global(cx, &obj->as<GlobalObject>());
     return SIMDObject::initClass(cx, global);
 }
@@ -715,7 +715,7 @@ js::CreateSimd(JSContext *cx, typename V::Elem *data)
 {
     typedef typename V::Elem Elem;
     Rooted<TypeDescr*> typeDescr(cx, &V::GetTypeDescr(*cx->global()));
-    JS_ASSERT(typeDescr);
+    MOZ_ASSERT(typeDescr);
 
     Rooted<TypedObject *> result(cx, OutlineTypedObject::createZeroed(cx, typeDescr, 0));
     if (!result)
@@ -961,7 +961,7 @@ FuncWith(JSContext *cx, unsigned argc, Value *vp)
         for (unsigned i = 0; i < V::lanes; i++)
             result[i] = OpWith<Elem>::apply(i, withAsNumber, val[i]);
     } else {
-        JS_ASSERT(args[1].isBoolean());
+        MOZ_ASSERT(args[1].isBoolean());
         bool withAsBool = args[1].toBoolean();
         for (unsigned i = 0; i < V::lanes; i++)
             result[i] = OpWith<Elem>::apply(i, withAsBool, val[i]);
@@ -984,7 +984,7 @@ FuncShuffle(JSContext *cx, unsigned argc, Value *vp)
     const uint32_t SELECT_SHIFT = FloorLog2(V::lanes);
     const uint32_t SELECT_MASK  = V::lanes - 1;
     const int32_t MAX_MASK_VALUE = int32_t(pow(double(V::lanes), double(V::lanes))) - 1;
-    JS_ASSERT(MAX_MASK_VALUE > 0);
+    MOZ_ASSERT(MAX_MASK_VALUE > 0);
 
     Elem result[V::lanes];
     if (args.length() == 2) {
@@ -1001,7 +1001,7 @@ FuncShuffle(JSContext *cx, unsigned argc, Value *vp)
         for (unsigned i = 0; i < V::lanes; i++)
             result[i] = val[(maskArg >> (i * SELECT_SHIFT)) & SELECT_MASK];
     } else {
-        JS_ASSERT(args.length() == 3);
+        MOZ_ASSERT(args.length() == 3);
         if (!IsVectorObject<V>(args[0]) || !IsVectorObject<V>(args[1]) || !args[2].isInt32())
             return ErrorBadArgs(cx);
 

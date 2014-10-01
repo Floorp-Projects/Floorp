@@ -139,7 +139,7 @@ class JitFrameIterator
     inline uint8_t *returnAddress() const;
 
     IonJSFrameLayout *jsFrame() const {
-        JS_ASSERT(isScripted());
+        MOZ_ASSERT(isScripted());
         return (IonJSFrameLayout *) fp();
     }
 
@@ -201,7 +201,7 @@ class JitFrameIterator
     // Returns the stack space used by the current frame, in bytes. This does
     // not include the size of its fixed header.
     size_t frameSize() const {
-        JS_ASSERT(type_ != JitFrame_Exit);
+        MOZ_ASSERT(type_ != JitFrame_Exit);
         return frameSize_;
     }
 
@@ -232,7 +232,7 @@ class JitFrameIterator
 
     template <class Op>
     void unaliasedForEachActual(Op op, ReadFrameArgsBehavior behavior) const {
-        JS_ASSERT(isBaselineJS());
+        MOZ_ASSERT(isBaselineJS());
 
         unsigned nactual = numActualArgs();
         unsigned start, end;
@@ -593,7 +593,7 @@ class InlineFrameIterator
         return frame_ && framesRead_ < frameCount_;
     }
     JSFunction *callee() const {
-        JS_ASSERT(callee_);
+        MOZ_ASSERT(callee_);
         return callee_;
     }
     JSFunction *maybeCallee() const {
@@ -657,7 +657,7 @@ class InlineFrameIterator
                     // Skip over all slots until we get to the last slots
                     // (= arguments slots of callee) the +3 is for [this], [returnvalue],
                     // [scopechain], and maybe +1 for [argsObj]
-                    JS_ASSERT(parent_s.numAllocations() >= nactual + 3 + argsObjAdj);
+                    MOZ_ASSERT(parent_s.numAllocations() >= nactual + 3 + argsObjAdj);
                     unsigned skip = parent_s.numAllocations() - nactual - 3 - argsObjAdj;
                     for (unsigned j = 0; j < skip; j++)
                         parent_s.skip();
@@ -719,7 +719,7 @@ class InlineFrameIterator
     }
 
     Value thisValue(MaybeReadFallback &fallback) const {
-        // JS_ASSERT(isConstructing(...));
+        // MOZ_ASSERT(isConstructing(...));
         SnapshotIterator s(si_);
 
         // scopeChain
