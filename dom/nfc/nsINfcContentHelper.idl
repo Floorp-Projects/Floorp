@@ -27,7 +27,7 @@ interface nsINfcDOMEventTarget : nsISupports
    void notifyPeerLost(in DOMString sessionToken);
 };
 
-[scriptable, uuid(7eaf4c31-e1d1-422e-aa55-181f4eb156b0)]
+[scriptable, uuid(d3f1bdc1-048f-44a8-abe2-bc386edce40b)]
 interface nsINfcContentHelper : nsISupports
 {
   const long NFC_EVENT_PEER_READY = 0x01;
@@ -35,7 +35,6 @@ interface nsINfcContentHelper : nsISupports
 
   boolean checkSessionToken(in DOMString sessionToken);
 
-  nsIDOMDOMRequest getDetailsNDEF(in nsIDOMWindow window, in DOMString sessionToken);
   nsIDOMDOMRequest readNDEF(in nsIDOMWindow window, in DOMString sessionToken);
   nsIDOMDOMRequest writeNDEF(in nsIDOMWindow window, in nsIVariant records, in DOMString sessionToken);
   nsIDOMDOMRequest makeReadOnlyNDEF(in nsIDOMWindow window, in DOMString sessionToken);
