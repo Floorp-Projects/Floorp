@@ -162,7 +162,17 @@ RestyleTracker::ProcessOneRestyle(Element* aElement,
               RestyleManager::ChangeHintToString(aChangeHint).get());
 
   nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
+
   if (aRestyleHint & ~eRestyle_LaterSiblings) {
+#ifdef RESTYLE_LOGGING
+    if (ShouldLogRestyle() && primaryFrame &&
+        RestyleManager::StructsToLog() != 0) {
+      LOG_RESTYLE("style context tree before restyle:");
+      LOG_RESTYLE_INDENT();
+      primaryFrame->StyleContext()->LogStyleContextTree(
+          LoggingDepth(), RestyleManager::StructsToLog());
+    }
+#endif
     mRestyleManager->RestyleElement(aElement, primaryFrame, aChangeHint,
                                     *this, aRestyleHint);
   } else if (aChangeHint &&

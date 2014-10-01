@@ -71,6 +71,7 @@ jfieldID AndroidGeckoEvent::jGamepadButtonPressedField = 0;
 jfieldID AndroidGeckoEvent::jGamepadButtonValueField = 0;
 jfieldID AndroidGeckoEvent::jGamepadValuesField = 0;
 jfieldID AndroidGeckoEvent::jPrefNamesField = 0;
+jfieldID AndroidGeckoEvent::jObjectField = 0;
 
 jclass AndroidGeckoEvent::jDomKeyLocationClass = 0;
 jfieldID AndroidGeckoEvent::jDomKeyLocationValueField = 0;
@@ -183,6 +184,7 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jGamepadButtonValueField = getField("mGamepadButtonValue", "F");
     jGamepadValuesField = getField("mGamepadValues", "[F");
     jPrefNamesField = getField("mPrefNames", "[Ljava/lang/String;");
+    jObjectField = getField("mObject", "Ljava/lang/Object;");
 
     // Init GeckoEvent.DomKeyLocation enum
     jDomKeyLocationClass = getClassGlobalRef("org/mozilla/gecko/GeckoEvent$DomKeyLocation");
@@ -502,6 +504,13 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
              mFlags = jenv->GetIntField(jobj, jFlagsField);
              mMetaState = jenv->GetIntField(jobj, jMetaStateField);
              break;
+
+        case PROCESS_OBJECT: {
+            const jobject obj = jenv->GetObjectField(jobj, jObjectField);
+            mObject.Init(obj, jenv);
+            jenv->DeleteLocalRef(obj);
+            break;
+        }
 
         case LOCATION_EVENT: {
             jobject location = jenv->GetObjectField(jobj, jLocationField);

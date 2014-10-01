@@ -79,6 +79,10 @@ class ContentParent MOZ_FINAL : public PContentParent
 
 public:
 #ifdef MOZ_NUWA_PROCESS
+    static int32_t NuwaPid() {
+        return sNuwaPid;
+    }
+
     static bool IsNuwaReady() {
         return sNuwaReady;
     }
@@ -666,11 +670,6 @@ private:
                           int32_t* aSliceRefCnt,
                           bool* aResult) MOZ_OVERRIDE;
 
-    virtual PDocAccessibleParent* AllocPDocAccessibleParent(PDocAccessibleParent*, const uint64_t&) MOZ_OVERRIDE;
-    virtual bool DeallocPDocAccessibleParent(PDocAccessibleParent*) MOZ_OVERRIDE;
-    virtual bool RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
-                                               PDocAccessibleParent* aParentDoc, const uint64_t& aParentID) MOZ_OVERRIDE;
-
     // If you add strong pointers to cycle collected objects here, be sure to
     // release these objects in ShutDownProcess.  See the comment there for more
     // details.
@@ -730,6 +729,7 @@ private:
 #endif
 
 #ifdef MOZ_NUWA_PROCESS
+    static int32_t sNuwaPid;
     static bool sNuwaReady;
 #endif
 };

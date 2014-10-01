@@ -8,6 +8,7 @@
 #ifndef _nsStyleContext_h_
 #define _nsStyleContext_h_
 
+#include "mozilla/RestyleLogging.h"
 #include "nsRuleNode.h"
 #include "nsCSSPseudoElements.h"
 
@@ -397,6 +398,13 @@ public:
   void List(FILE* out, int32_t aIndent);
   static void AssertStyleStructMaxDifferenceValid();
   static const char* StructName(nsStyleStructID aSID);
+  static bool LookupStruct(const nsACString& aName, nsStyleStructID& aResult);
+#endif
+
+#ifdef RESTYLE_LOGGING
+  nsCString GetCachedStyleDataAsString(uint32_t aStructs);
+  void LogStyleContextTree(int32_t aLoggingDepth, uint32_t aStructs);
+  int32_t& LoggingDepth();
 #endif
 
 private:
@@ -448,6 +456,15 @@ private:
 #ifdef DEBUG
   void AssertStructsNotUsedElsewhere(nsStyleContext* aDestroyingContext,
                                      int32_t aLevels) const;
+#endif
+
+#ifdef RESTYLE_LOGGING
+  void LogStyleContextTree(bool aFirst, uint32_t aStructs);
+
+  // This only gets called under call trees where we've already checked
+  // that PresContext()->RestyleManager()->ShouldLogRestyle() returned true.
+  // It exists here just to satisfy LOG_RESTYLE's expectations.
+  bool ShouldLogRestyle() { return true; }
 #endif
 
   nsStyleContext* mParent; // STRONG

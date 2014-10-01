@@ -537,7 +537,7 @@ PaintedLayerD3D9::DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode,
 
   context->SetMatrix(context->CurrentMatrix().Translate(-bounds.x, -bounds.y));
   LayerManagerD3D9::CallbackInfo cbInfo = mD3DManager->GetCallbackInfo();
-  cbInfo.Callback(this, context, aRegion, DrawRegionClip::CLIP_NONE, nsIntRegion(), cbInfo.CallbackData);
+  cbInfo.Callback(this, context, aRegion, DrawRegionClip::NONE, nsIntRegion(), cbInfo.CallbackData);
 
   for (uint32_t i = 0; i < aReadbackUpdates.Length(); ++i) {
     NS_ASSERTION(aMode == SurfaceMode::SURFACE_OPAQUE,

@@ -128,7 +128,7 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
         endFrame = aImportedBy->mFirstNotImported;
     }
 
-#ifdef PR_LOGGING
+#if defined(PR_LOGGING) && defined(TX_TO_STRING)
     txPattern* match = 0;
 #endif
 
@@ -149,7 +149,7 @@ txStylesheet::findTemplate(const txXPathNode& aNode,
                 if (templ.mMatch->matches(aNode, aContext)) {
                     matchTemplate = templ.mFirstInstruction;
                     *aImportFrame = frame;
-#ifdef PR_LOGGING
+#if defined(PR_LOGGING) && defined(TX_TO_STRING)
                     match = templ.mMatch;
 #endif
                 }

@@ -615,6 +615,10 @@ class MochitestOptions(optparse.OptionParser):
             "tab": 10000, # See dependencies of bug 1051230.
         }
 
+        # Bug 1051230 - Leak logging does not yet work for tab processes on desktop.
+        # Bug 1065098 - The geckomediaplugin process fails to produce a leak log for some reason.
+        options.ignoreMissingLeaks = ["tab", "geckomediaplugin"]
+
         return options
 
 
@@ -818,6 +822,12 @@ class B2GOptions(MochitestOptions):
         options.app = temp
         options.sslPort = tempSSL
         options.httpPort = tempPort
+
+        # Bug 1071866 - B2G Mochitests do not always produce a leak log.
+        options.ignoreMissingLeaks.append("default")
+
+        # Bug 1070068 - Leak logging does not work for tab processes on B2G.
+        assert "tab" in options.ignoreMissingLeaks, "Ignore failures for tab processes on B2G"
 
         return options
 
