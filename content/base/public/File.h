@@ -16,7 +16,6 @@
 #include "mozilla/dom/indexedDB/FileInfo.h"
 #include "mozilla/dom/indexedDB/FileManager.h"
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
-#include "mozilla/dom/UnionTypes.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
@@ -58,6 +57,7 @@ struct BlobPropertyBag;
 struct ChromeFilePropertyBag;
 struct FilePropertyBag;
 class FileImpl;
+class OwningArrayBufferOrArrayBufferViewOrBlobOrString;
 
 class File MOZ_FINAL : public nsIDOMFile
                      , public nsIXHRSendable

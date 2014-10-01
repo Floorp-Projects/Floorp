@@ -38,7 +38,6 @@
 #include "nsSize.h"
 #include "mozFlushType.h"
 #include "prclist.h"
-#include "mozilla/dom/RequestBinding.h"
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/dom/UnionTypes.h"
@@ -110,6 +109,8 @@ class MozSelfSupport;
 class Navigator;
 class OwningExternalOrWindowProxy;
 class Promise;
+struct RequestInit;
+class RequestOrScalarValueString;
 class Selection;
 class SpeechSynthesis;
 class WakeLock;

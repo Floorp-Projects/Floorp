@@ -98,7 +98,6 @@
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/dom/TextMetrics.h"
-#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/dom/SVGMatrix.h"
 #include "mozilla/FloatingPoint.h"
 #include "nsGlobalWindow.h"

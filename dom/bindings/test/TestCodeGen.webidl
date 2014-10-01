@@ -946,7 +946,7 @@ dictionary Dict : ParentDict {
 #ifdef DEBUG
   (EventInit or long) eventInitOrLong;
   (EventInit or long)? nullableEventInitOrLong;
-  (Node or long)? nullableNodeOrLong;
+  (HTMLElement or long)? nullableHTMLElementOrLong;
   // CustomEventInit is useful to test because it needs rooting.
   (CustomEventInit or long) eventInitOrLong2;
   (CustomEventInit or long)? nullableEventInitOrLong2;
