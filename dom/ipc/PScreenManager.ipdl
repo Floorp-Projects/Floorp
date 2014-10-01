@@ -14,7 +14,9 @@ namespace dom {
 struct ScreenDetails {
   uint32_t id;
   nsIntRect rect;
+  nsIntRect rectDisplayPix;
   nsIntRect availRect;
+  nsIntRect availRectDisplayPix;
   int32_t pixelDepth;
   int32_t colorDepth;
   double contentsScaleFactor;
