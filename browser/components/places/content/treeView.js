@@ -1674,9 +1674,9 @@ PlacesTreeView.prototype = {
     if (PlacesUtils.nodeIsSeparator(node) || PlacesUtils.isRootItem(itemId))
       return false;
 
-    let parentId = PlacesUtils.getConcreteItemId(node.parent);
+    let parentId = node.parent.itemId;
     if (parentId == PlacesUIUtils.leftPaneFolderId ||
-        parentId == PlacesUIUtils.allBookmarksFolderId) {
+        parentId == PlacesUIUtils.allBallBookmarksFolderId) {
       // Note that the for the time being this is the check that actually
       // blocks renaming places "roots", and not the isRootItem check above.
       // That's because places root are only exposed through folder shortcuts
