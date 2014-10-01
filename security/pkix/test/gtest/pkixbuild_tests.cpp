@@ -271,3 +271,112 @@ TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
                            CertPolicyId::anyPolicy,
                            nullptr/*stapledOCSPResponse*/));
 }
+
+// A TrustDomain that explicitly fails if CheckRevocation is called.
+// It is initialized with the DER encoding of a root certificate that
+// is treated as a trust anchor and is assumed to have issued all certificates
+// (i.e. FindIssuer always attempts to build the next step in the chain with
+// it).
+class ExpiredCertTrustDomain : public TrustDomain
+{
+public:
+  ExpiredCertTrustDomain(CERTCertificate* rootCert)
+    : rootCert(rootCert)
+  {
+  }
+
+  // The CertPolicyId argument is unused because we don't care about EV.
+  virtual Result GetCertTrust(EndEntityOrCA, const CertPolicyId&,
+                              const SECItem& candidateCert,
+                              /*out*/ TrustLevel* trustLevel)
+  {
+    if (SECITEM_ItemsAreEqual(&candidateCert, &rootCert->derCert)) {
+      *trustLevel = TrustLevel::TrustAnchor;
+    } else {
+      *trustLevel = TrustLevel::InheritsTrust;
+    }
+    return Success;
+  }
+
+  virtual Result FindIssuer(const SECItem& encodedIssuerName,
+                            IssuerChecker& checker, PRTime time)
+  {
+    // keepGoing is an out parameter from IssuerChecker.Check. It would tell us
+    // whether or not to continue attempting other potential issuers. We only
+    // know of one potential issuer, however, so we ignore it.
+    bool keepGoing;
+    return checker.Check(rootCert->derCert, nullptr, keepGoing);
+  }
+
+  virtual Result CheckRevocation(EndEntityOrCA, const CertID&, PRTime,
+                                 /*optional*/ const SECItem*,
+                                 /*optional*/ const SECItem*)
+  {
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
+  virtual Result IsChainValid(const DERArray&)
+  {
+    return Success;
+  }
+
+  virtual Result VerifySignedData(const SignedDataWithSignature& signedData,
+                                  const SECItem& subjectPublicKeyInfo)
+  {
+    return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
+                                             nullptr);
+  }
+
+  virtual Result DigestBuf(const SECItem&, /*out*/uint8_t*, size_t)
+  {
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
+  virtual Result CheckPublicKey(const SECItem& subjectPublicKeyInfo)
+  {
+    return ::mozilla::pkix::CheckPublicKey(subjectPublicKeyInfo);
+  }
+
+private:
+  ScopedCERTCertificate rootCert;
+};
+
+TEST_F(pkixbuild, NoRevocationCheckingForExpiredCert)
+{
+  ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  ASSERT_NE(nullptr, arena.get());
+
+  const char* rootCN = "CN=Root CA";
+  ScopedSECKEYPrivateKey rootKey;
+  ScopedCERTCertificate rootCert;
+  EXPECT_TRUE(CreateCert(arena.get(), rootCN, rootCN, EndEntityOrCA::MustBeCA,
+                         nullptr, rootKey, rootCert));
+  ExpiredCertTrustDomain expiredCertTrustDomain(rootCert.release());
+
+  const SECItem* serialNumber(CreateEncodedSerialNumber(arena.get(), 100));
+  EXPECT_NE(nullptr, serialNumber);
+  const SECItem* issuerDER(ASCIIToDERName(arena.get(), rootCN));
+  EXPECT_NE(nullptr, issuerDER);
+  const SECItem* subjectDER(ASCIIToDERName(arena.get(), "CN=Expired End-Entity Cert"));
+  EXPECT_NE(nullptr, subjectDER);
+  ScopedSECKEYPrivateKey unusedSubjectKey;
+  SECItem* certDER(CreateEncodedCertificate(
+                     arena.get(), v3,
+                     SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
+                     serialNumber, issuerDER,
+                     PR_Now() - ONE_DAY - ONE_DAY,
+                     PR_Now() - ONE_DAY,
+                     subjectDER, nullptr, rootKey.get(),
+                     SEC_OID_SHA256,
+                     unusedSubjectKey));
+  ASSERT_NE(nullptr, certDER);
+  ASSERT_EQ(Result::ERROR_EXPIRED_CERTIFICATE,
+            BuildCertChain(expiredCertTrustDomain, *certDER,
+                           PR_Now(), EndEntityOrCA::MustBeEndEntity,
+                           KeyUsage::noParticularKeyUsageRequired,
+                           KeyPurposeId::id_kp_serverAuth,
+                           CertPolicyId::anyPolicy,
+                           nullptr));
+}
