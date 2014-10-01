@@ -51,6 +51,23 @@ ScreenProxy::GetRect(int32_t *outLeft,
 }
 
 NS_IMETHODIMP
+ScreenProxy::GetRectDisplayPix(int32_t *outLeft,
+                               int32_t *outTop,
+                               int32_t *outWidth,
+                               int32_t *outHeight)
+{
+  if (!EnsureCacheIsValid()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *outLeft = mRectDisplayPix.x;
+  *outTop = mRectDisplayPix.y;
+  *outWidth = mRectDisplayPix.width;
+  *outHeight = mRectDisplayPix.height;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 ScreenProxy::GetAvailRect(int32_t *outLeft,
                           int32_t *outTop,
                           int32_t *outWidth,
@@ -64,6 +81,23 @@ ScreenProxy::GetAvailRect(int32_t *outLeft,
   *outTop = mAvailRect.y;
   *outWidth = mAvailRect.width;
   *outHeight = mAvailRect.height;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ScreenProxy::GetAvailRectDisplayPix(int32_t *outLeft,
+                                    int32_t *outTop,
+                                    int32_t *outWidth,
+                                    int32_t *outHeight)
+{
+  if (!EnsureCacheIsValid()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *outLeft = mAvailRectDisplayPix.x;
+  *outTop = mAvailRectDisplayPix.y;
+  *outWidth = mAvailRectDisplayPix.width;
+  *outHeight = mAvailRectDisplayPix.height;
   return NS_OK;
 }
 
@@ -94,7 +128,9 @@ ScreenProxy::PopulateByDetails(ScreenDetails aDetails)
 {
   mId = aDetails.id();
   mRect = nsIntRect(aDetails.rect());
+  mRectDisplayPix = nsIntRect(aDetails.rectDisplayPix());
   mAvailRect = nsIntRect(aDetails.availRect());
+  mAvailRectDisplayPix = nsIntRect(aDetails.availRectDisplayPix());
   mPixelDepth = aDetails.pixelDepth();
   mColorDepth = aDetails.colorDepth();
   mContentsScaleFactor = aDetails.contentsScaleFactor();
