@@ -29,6 +29,7 @@
 #include "Units.h"
 #include "mozilla/dom/AutocompleteInfoBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/FloatingPoint.h"
 
 #if defined(XP_WIN)
 // Undefine LoadImage to prevent naming conflict with Windows.
@@ -2351,7 +2352,7 @@ public:
   if (aIID.Equals(NS_GET_IID(_interface))) {                                  \
     foundInterface = static_cast<_interface *>(_allocator);                   \
     if (!foundInterface) {                                                    \
-      *aInstancePtr = nullptr;                                                 \
+      *aInstancePtr = nullptr;                                                \
       return NS_ERROR_OUT_OF_MEMORY;                                          \
     }                                                                         \
   } else
@@ -2362,27 +2363,27 @@ public:
  * series is not finite.
  */
 #define NS_ENSURE_FINITE(f, rv)                                               \
-  if (!NS_finite(f)) {                                                        \
+  if (!mozilla::IsFinite(f)) {                                                \
     return (rv);                                                              \
   }
 
 #define NS_ENSURE_FINITE2(f1, f2, rv)                                         \
-  if (!NS_finite((f1)+(f2))) {                                                \
+  if (!mozilla::IsFinite((f1)+(f2))) {                                        \
     return (rv);                                                              \
   }
 
 #define NS_ENSURE_FINITE4(f1, f2, f3, f4, rv)                                 \
-  if (!NS_finite((f1)+(f2)+(f3)+(f4))) {                                      \
+  if (!mozilla::IsFinite((f1)+(f2)+(f3)+(f4))) {                              \
     return (rv);                                                              \
   }
 
 #define NS_ENSURE_FINITE5(f1, f2, f3, f4, f5, rv)                             \
-  if (!NS_finite((f1)+(f2)+(f3)+(f4)+(f5))) {                                 \
+  if (!mozilla::IsFinite((f1)+(f2)+(f3)+(f4)+(f5))) {                         \
     return (rv);                                                              \
   }
 
 #define NS_ENSURE_FINITE6(f1, f2, f3, f4, f5, f6, rv)                         \
-  if (!NS_finite((f1)+(f2)+(f3)+(f4)+(f5)+(f6))) {                            \
+  if (!mozilla::IsFinite((f1)+(f2)+(f3)+(f4)+(f5)+(f6))) {                    \
     return (rv);                                                              \
   }
 

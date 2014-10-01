@@ -14,6 +14,7 @@
 #include "mozilla/dom/SVGMarkerElementBinding.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/gfx/Matrix.h"
+#include "mozilla/FloatingPoint.h"
 #include "SVGContentUtils.h"
 
 using namespace mozilla::gfx;
@@ -173,7 +174,7 @@ void
 SVGMarkerElement::SetOrientToAngle(SVGAngle& angle, ErrorResult& rv)
 {
   float f = angle.Value();
-  if (!NS_finite(f)) {
+  if (!IsFinite(f)) {
     rv.Throw(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR);
     return;
   }

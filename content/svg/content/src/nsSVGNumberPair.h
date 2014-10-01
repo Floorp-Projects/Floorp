@@ -14,6 +14,8 @@
 #include "nsSVGElement.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/SVGAnimatedNumber.h"
+#include "mozilla/FloatingPoint.h"
+
 
 class nsSMILValue;
 
@@ -93,7 +95,7 @@ public:
     }
     virtual void SetBaseVal(float aValue) MOZ_OVERRIDE
     {
-      MOZ_ASSERT(NS_finite(aValue));
+      MOZ_ASSERT(mozilla::IsFinite(aValue));
       mVal->SetBaseValue(aValue, mIndex, mSVGElement);
     }
 
