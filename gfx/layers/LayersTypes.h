@@ -64,8 +64,7 @@ MOZ_END_ENUM_CLASS(BufferMode)
 
 MOZ_BEGIN_ENUM_CLASS(DrawRegionClip, int8_t)
   DRAW,
-  DRAW_SNAPPED,
-  CLIP_NONE
+  NONE
 MOZ_END_ENUM_CLASS(DrawRegionClip)
 
 MOZ_BEGIN_ENUM_CLASS(SurfaceMode, int8_t)

@@ -695,7 +695,7 @@ RotatedContentBuffer::BeginPaint(PaintedLayer* aLayer,
   nsIntRegion invalidate;
   invalidate.Sub(aLayer->GetValidRegion(), destBufferRect);
   result.mRegionToInvalidate.Or(result.mRegionToInvalidate, invalidate);
-  result.mClip = DrawRegionClip::DRAW_SNAPPED;
+  result.mClip = DrawRegionClip::DRAW;
   result.mMode = mode;
 
   return result;
