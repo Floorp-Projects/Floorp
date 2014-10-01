@@ -26,7 +26,7 @@ bool
 js::CreateRegExpMatchResult(JSContext *cx, HandleString input, const MatchPairs &matches,
                             MutableHandleValue rval)
 {
-    JS_ASSERT(input);
+    MOZ_ASSERT(input);
 
     /*
      * Create the (slow) result array for a match.
@@ -44,7 +44,7 @@ js::CreateRegExpMatchResult(JSContext *cx, HandleString input, const MatchPairs 
         return false;
 
     size_t numPairs = matches.length();
-    JS_ASSERT(numPairs > 0);
+    MOZ_ASSERT(numPairs > 0);
 
     RootedObject arr(cx, NewDenseFullyAllocatedArrayWithTemplate(cx, numPairs, templateObject));
     if (!arr)
@@ -55,7 +55,7 @@ js::CreateRegExpMatchResult(JSContext *cx, HandleString input, const MatchPairs 
         const MatchPair &pair = matches[i];
 
         if (pair.isUndefined()) {
-            JS_ASSERT(i != 0); /* Since we had a match, first pair must be present. */
+            MOZ_ASSERT(i != 0); /* Since we had a match, first pair must be present. */
             arr->setDenseInitializedLength(i + 1);
             arr->initDenseElementWithType(cx, i, UndefinedValue());
         } else {
@@ -81,11 +81,11 @@ js::CreateRegExpMatchResult(JSContext *cx, HandleString input, const MatchPairs 
     RootedId id(cx, NameToId(cx->names().index));
     if (!baseops::GetProperty(cx, arr, id, &test))
         return false;
-    JS_ASSERT(test == arr->nativeGetSlot(0));
+    MOZ_ASSERT(test == arr->nativeGetSlot(0));
     id = NameToId(cx->names().input);
     if (!baseops::GetProperty(cx, arr, id, &test))
         return false;
-    JS_ASSERT(test == arr->nativeGetSlot(1));
+    MOZ_ASSERT(test == arr->nativeGetSlot(1));
 #endif
 
     rval.setObject(*arr);
@@ -316,7 +316,7 @@ IsRegExp(HandleValue v)
 MOZ_ALWAYS_INLINE bool
 regexp_compile_impl(JSContext *cx, CallArgs args)
 {
-    JS_ASSERT(IsRegExp(args.thisv()));
+    MOZ_ASSERT(IsRegExp(args.thisv()));
     RegExpObjectBuilder builder(cx, &args.thisv().toObject().as<RegExpObject>());
     return CompileRegExpObject(cx, builder, args);
 }
@@ -355,7 +355,7 @@ regexp_construct(JSContext *cx, unsigned argc, Value *vp)
 MOZ_ALWAYS_INLINE bool
 regexp_toString_impl(JSContext *cx, CallArgs args)
 {
-    JS_ASSERT(IsRegExp(args.thisv()));
+    MOZ_ASSERT(IsRegExp(args.thisv()));
 
     JSString *str = args.thisv().toObject().as<RegExpObject>().toString(cx);
     if (!str)
@@ -504,7 +504,7 @@ static const JSPropertySpec regexp_static_props[] = {
 JSObject *
 js_InitRegExpClass(JSContext *cx, HandleObject obj)
 {
-    JS_ASSERT(obj->isNative());
+    MOZ_ASSERT(obj->isNative());
 
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 
@@ -685,9 +685,9 @@ bool
 js::regexp_exec_no_statics(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JS_ASSERT(args.length() == 2);
-    JS_ASSERT(IsRegExp(args[0]));
-    JS_ASSERT(args[1].isString());
+    MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(IsRegExp(args[0]));
+    MOZ_ASSERT(args[1].isString());
 
     RootedObject regexp(cx, &args[0].toObject());
     RootedString string(cx, args[1].toString());
@@ -724,9 +724,9 @@ bool
 js::regexp_test_no_statics(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JS_ASSERT(args.length() == 2);
-    JS_ASSERT(IsRegExp(args[0]));
-    JS_ASSERT(args[1].isString());
+    MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(IsRegExp(args[0]));
+    MOZ_ASSERT(args[1].isString());
 
     RootedObject regexp(cx, &args[0].toObject());
     RootedString string(cx, args[1].toString());

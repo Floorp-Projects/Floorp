@@ -215,7 +215,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
                         unsigned staticLevel /* = 0 */,
                         SourceCompressionTask *extraSct /* = nullptr */)
 {
-    JS_ASSERT(srcBuf.get());
+    MOZ_ASSERT(srcBuf.get());
 
     RootedString source(cx, source_);
 
@@ -346,7 +346,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
         if (tt <= TOK_EOF) {
             if (tt == TOK_EOF)
                 break;
-            JS_ASSERT(tt == TOK_ERROR);
+            MOZ_ASSERT(tt == TOK_ERROR);
             return nullptr;
         }
 
@@ -375,12 +375,12 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
                            script->bindings.numBlockScoped());
                 if (!pc->init(parser.tokenStream))
                     return nullptr;
-                JS_ASSERT(parser.pc == pc.ptr());
+                MOZ_ASSERT(parser.pc == pc.ptr());
 
                 pn = parser.statement();
             }
             if (!pn) {
-                JS_ASSERT(!parser.hadAbortedSyntaxParse());
+                MOZ_ASSERT(!parser.hadAbortedSyntaxParse());
                 return nullptr;
             }
         }
@@ -464,7 +464,7 @@ frontend::CompileScript(ExclusiveContext *cx, LifoAlloc *alloc, HandleObject sco
 bool
 frontend::CompileLazyFunction(JSContext *cx, Handle<LazyScript*> lazy, const char16_t *chars, size_t length)
 {
-    JS_ASSERT(cx->compartment() == lazy->functionNonDelazifying()->compartment());
+    MOZ_ASSERT(cx->compartment() == lazy->functionNonDelazifying()->compartment());
 
     CompileOptions options(cx, lazy->version());
     options.setMutedErrors(lazy->mutedErrors())
@@ -485,7 +485,7 @@ frontend::CompileLazyFunction(JSContext *cx, Handle<LazyScript*> lazy, const cha
     uint32_t staticLevel = lazy->staticLevel(cx);
 
     Rooted<JSFunction*> fun(cx, lazy->functionNonDelazifying());
-    JS_ASSERT(!lazy->isLegacyGenerator());
+    MOZ_ASSERT(!lazy->isLegacyGenerator());
     ParseNode *pn = parser.standaloneLazyFunction(fun, staticLevel, lazy->strict(),
                                                   lazy->generatorKind());
     if (!pn)
@@ -496,7 +496,7 @@ frontend::CompileLazyFunction(JSContext *cx, Handle<LazyScript*> lazy, const cha
 
     RootedObject enclosingScope(cx, lazy->enclosingScope());
     RootedScriptSource sourceObject(cx, lazy->sourceObject());
-    JS_ASSERT(sourceObject);
+    MOZ_ASSERT(sourceObject);
 
     Rooted<JSScript*> script(cx, JSScript::Create(cx, enclosingScope, false,
                                                   options, staticLevel,
@@ -547,7 +547,7 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
     ScriptSource *ss = sourceObject->source();
 
     SourceCompressionTask sct(cx);
-    JS_ASSERT(!options.sourceIsLazy);
+    MOZ_ASSERT(!options.sourceIsLazy);
     if (!cx->compartment()->options().discardSource()) {
         if (!ss->setSourceCopy(cx, srcBuf, true, &sct))
             return false;
@@ -564,7 +564,7 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
                              (LazyScript *) nullptr);
     }
 
-    JS_ASSERT(!options.forEval);
+    MOZ_ASSERT(!options.forEval);
 
     Parser<FullParseHandler> parser(cx, &cx->tempLifoAlloc(),
                                     options, srcBuf.get(), srcBuf.length(),
@@ -573,8 +573,8 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
     parser.sct = &sct;
     parser.ss = ss;
 
-    JS_ASSERT(fun);
-    JS_ASSERT(fun->isTenured());
+    MOZ_ASSERT(fun);
+    MOZ_ASSERT(fun->isTenured());
 
     fun->setArgCount(formals.length());
 
@@ -622,7 +622,7 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
         return false;
 
     if (fn->pn_funbox->function()->isInterpreted()) {
-        JS_ASSERT(fun == fn->pn_funbox->function());
+        MOZ_ASSERT(fun == fn->pn_funbox->function());
 
         Rooted<JSScript*> script(cx, JSScript::Create(cx, js::NullPtr(), false, options,
                                                       /* staticLevel = */ 0, sourceObject,
@@ -651,7 +651,7 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
             return false;
     } else {
         fun.set(fn->pn_funbox->function());
-        JS_ASSERT(IsAsmJSModuleNative(fun->native()));
+        MOZ_ASSERT(IsAsmJSModuleNative(fun->native()));
     }
 
     if (!sct.complete())

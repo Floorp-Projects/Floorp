@@ -43,23 +43,23 @@ class KidsPointer {
 
     bool isShape() const { return (w & TAG) == SHAPE && !isNull(); }
     Shape *toShape() const {
-        JS_ASSERT(isShape());
+        MOZ_ASSERT(isShape());
         return reinterpret_cast<Shape *>(w & ~uintptr_t(TAG));
     }
     void setShape(Shape *shape) {
-        JS_ASSERT(shape);
-        JS_ASSERT((reinterpret_cast<uintptr_t>(static_cast<Shape *>(shape)) & TAG) == 0);
+        MOZ_ASSERT(shape);
+        MOZ_ASSERT((reinterpret_cast<uintptr_t>(static_cast<Shape *>(shape)) & TAG) == 0);
         w = reinterpret_cast<uintptr_t>(static_cast<Shape *>(shape)) | SHAPE;
     }
 
     bool isHash() const { return (w & TAG) == HASH; }
     KidsHash *toHash() const {
-        JS_ASSERT(isHash());
+        MOZ_ASSERT(isHash());
         return reinterpret_cast<KidsHash *>(w & ~uintptr_t(TAG));
     }
     void setHash(KidsHash *hash) {
-        JS_ASSERT(hash);
-        JS_ASSERT((reinterpret_cast<uintptr_t>(hash) & TAG) == 0);
+        MOZ_ASSERT(hash);
+        MOZ_ASSERT((reinterpret_cast<uintptr_t>(hash) & TAG) == 0);
         w = reinterpret_cast<uintptr_t>(hash) | HASH;
     }
 

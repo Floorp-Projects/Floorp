@@ -28,7 +28,7 @@ JSONSpewer::indent()
 {
     if (!fp_)
         return;
-    JS_ASSERT(indentLevel_ >= 0);
+    MOZ_ASSERT(indentLevel_ >= 0);
     fprintf(fp_, "\n");
     for (int i = 0; i < indentLevel_; i++)
         fprintf(fp_, "  ");
@@ -456,7 +456,7 @@ JSONSpewer::endPass()
 void
 JSONSpewer::endFunction()
 {
-    JS_ASSERT(inFunction_);
+    MOZ_ASSERT(inFunction_);
     endList();
     endObject();
     fflush(fp_);

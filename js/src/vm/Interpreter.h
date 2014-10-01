@@ -192,15 +192,15 @@ class RunState
     bool isGenerator() const { return kind_ == Generator; }
 
     ExecuteState *asExecute() const {
-        JS_ASSERT(isExecute());
+        MOZ_ASSERT(isExecute());
         return (ExecuteState *)this;
     }
     InvokeState *asInvoke() const {
-        JS_ASSERT(isInvoke());
+        MOZ_ASSERT(isInvoke());
         return (InvokeState *)this;
     }
     GeneratorState *asGenerator() const {
-        JS_ASSERT(isGenerator());
+        MOZ_ASSERT(isGenerator());
         return (GeneratorState *)this;
     }
 

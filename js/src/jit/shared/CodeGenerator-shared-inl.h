@@ -31,7 +31,7 @@ ToDouble(const LAllocation *a)
 static inline Register
 ToRegister(const LAllocation &a)
 {
-    JS_ASSERT(a.isGeneralReg());
+    MOZ_ASSERT(a.isGeneralReg());
     return a.toGeneralReg()->reg();
 }
 
@@ -70,7 +70,7 @@ ToRegisterOrInvalid(const LDefinition *a)
 static inline FloatRegister
 ToFloatRegister(const LAllocation &a)
 {
-    JS_ASSERT(a.isFloatReg());
+    MOZ_ASSERT(a.isFloatReg());
     return a.toFloatReg()->reg();
 }
 
@@ -89,7 +89,7 @@ ToFloatRegister(const LDefinition *def)
 static inline AnyRegister
 ToAnyRegister(const LAllocation &a)
 {
-    JS_ASSERT(a.isGeneralReg() || a.isFloatReg());
+    MOZ_ASSERT(a.isGeneralReg() || a.isFloatReg());
     if (a.isGeneralReg())
         return AnyRegister(ToRegister(a));
     return AnyRegister(ToFloatRegister(a));
@@ -144,7 +144,7 @@ GetTempValue(Register type, Register payload)
 void
 CodeGeneratorShared::saveLive(LInstruction *ins)
 {
-    JS_ASSERT(!ins->isCall());
+    MOZ_ASSERT(!ins->isCall());
     LSafepoint *safepoint = ins->safepoint();
     masm.PushRegsInMask(safepoint->liveRegs());
 }
@@ -152,7 +152,7 @@ CodeGeneratorShared::saveLive(LInstruction *ins)
 void
 CodeGeneratorShared::restoreLive(LInstruction *ins)
 {
-    JS_ASSERT(!ins->isCall());
+    MOZ_ASSERT(!ins->isCall());
     LSafepoint *safepoint = ins->safepoint();
     masm.PopRegsInMask(safepoint->liveRegs());
 }
@@ -160,7 +160,7 @@ CodeGeneratorShared::restoreLive(LInstruction *ins)
 void
 CodeGeneratorShared::restoreLiveIgnore(LInstruction *ins, RegisterSet ignore)
 {
-    JS_ASSERT(!ins->isCall());
+    MOZ_ASSERT(!ins->isCall());
     LSafepoint *safepoint = ins->safepoint();
     masm.PopRegsInMaskIgnore(safepoint->liveRegs(), ignore);
 }
@@ -168,7 +168,7 @@ CodeGeneratorShared::restoreLiveIgnore(LInstruction *ins, RegisterSet ignore)
 void
 CodeGeneratorShared::saveLiveVolatile(LInstruction *ins)
 {
-    JS_ASSERT(!ins->isCall());
+    MOZ_ASSERT(!ins->isCall());
     LSafepoint *safepoint = ins->safepoint();
     RegisterSet regs = RegisterSet::Intersect(safepoint->liveRegs(), RegisterSet::Volatile());
     masm.PushRegsInMask(regs);
@@ -177,7 +177,7 @@ CodeGeneratorShared::saveLiveVolatile(LInstruction *ins)
 void
 CodeGeneratorShared::restoreLiveVolatile(LInstruction *ins)
 {
-    JS_ASSERT(!ins->isCall());
+    MOZ_ASSERT(!ins->isCall());
     LSafepoint *safepoint = ins->safepoint();
     RegisterSet regs = RegisterSet::Intersect(safepoint->liveRegs(), RegisterSet::Volatile());
     masm.PopRegsInMask(regs);

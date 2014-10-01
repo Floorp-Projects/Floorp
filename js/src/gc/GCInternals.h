@@ -89,7 +89,7 @@ class IncrementalSafety
     }
 
     const char *reason() {
-        JS_ASSERT(reason_);
+        MOZ_ASSERT(reason_);
         return reason_;
     }
 };

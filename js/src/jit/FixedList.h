@@ -48,7 +48,7 @@ class FixedList
     }
 
     void shrink(size_t num) {
-        JS_ASSERT(num < length_);
+        MOZ_ASSERT(num < length_);
         length_ -= num;
     }
 
@@ -71,11 +71,11 @@ class FixedList
     }
 
     T &operator[](size_t index) {
-        JS_ASSERT(index < length_);
+        MOZ_ASSERT(index < length_);
         return list_[index];
     }
     const T &operator [](size_t index) const {
-        JS_ASSERT(index < length_);
+        MOZ_ASSERT(index < length_);
         return list_[index];
     }
 };

@@ -74,8 +74,8 @@ class ComponentFinder
     {}
 
     ~ComponentFinder() {
-        JS_ASSERT(!stack);
-        JS_ASSERT(!firstComponent);
+        MOZ_ASSERT(!stack);
+        MOZ_ASSERT(!firstComponent);
     }
 
     /* Forces all nodes to be added to a single component. */
@@ -83,7 +83,7 @@ class ComponentFinder
 
     void addNode(Node *v) {
         if (v->gcDiscoveryTime == Undefined) {
-            JS_ASSERT(v->gcLowLink == Undefined);
+            MOZ_ASSERT(v->gcLowLink == Undefined);
             processNode(v);
         }
     }
@@ -104,7 +104,7 @@ class ComponentFinder
             stackFull = false;
         }
 
-        JS_ASSERT(!stack);
+        MOZ_ASSERT(!stack);
 
         Node *result = firstComponent;
         firstComponent = nullptr;
@@ -166,7 +166,7 @@ class ComponentFinder
             Node *nextComponent = firstComponent;
             Node *w;
             do {
-                JS_ASSERT(stack);
+                MOZ_ASSERT(stack);
                 w = stack;
                 stack = w->gcNextGraphNode;
 

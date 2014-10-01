@@ -30,7 +30,7 @@ class Linker
 
     template <AllowGC allowGC>
     JitCode *newCode(JSContext *cx, ExecutableAllocator *execAlloc, CodeKind kind) {
-        JS_ASSERT(masm.numAsmJSAbsoluteLinks() == 0);
+        MOZ_ASSERT(masm.numAsmJSAbsoluteLinks() == 0);
 
         gc::AutoSuppressGC suppressGC(cx);
         if (masm.oom())
@@ -84,7 +84,7 @@ class Linker
     JitCode *newCodeForIonScript(JSContext *cx) {
         // The caller must lock the runtime against interrupt requests, as the
         // thread requesting an interrupt may use the executable allocator below.
-        JS_ASSERT(cx->runtime()->currentThreadOwnsInterruptLock());
+        MOZ_ASSERT(cx->runtime()->currentThreadOwnsInterruptLock());
 
         ExecutableAllocator *alloc = cx->runtime()->jitRuntime()->getIonAlloc(cx);
         if (!alloc)

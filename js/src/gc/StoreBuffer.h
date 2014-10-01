@@ -129,7 +129,7 @@ class StoreBuffer
 
         /* Add one item to the buffer. */
         void put(StoreBuffer *owner, const T &t) {
-            JS_ASSERT(storage_);
+            MOZ_ASSERT(storage_);
 
             T *tp = storage_->new_<T>(t);
             if (!tp)
@@ -197,7 +197,7 @@ class StoreBuffer
 
         template <typename T>
         void put(StoreBuffer *owner, const T &t) {
-            JS_ASSERT(storage_);
+            MOZ_ASSERT(storage_);
 
             /* Ensure T is derived from BufferableRef. */
             (void)static_cast<const BufferableRef*>(&t);
@@ -241,7 +241,7 @@ class StoreBuffer
         bool operator!=(const CellPtrEdge &other) const { return edge != other.edge; }
 
         bool maybeInRememberedSet(const Nursery &nursery) const {
-            JS_ASSERT(IsInsideNursery(*edge));
+            MOZ_ASSERT(IsInsideNursery(*edge));
             return !nursery.isInside(edge);
         }
 
@@ -265,7 +265,7 @@ class StoreBuffer
         Cell *deref() const { return edge->isGCThing() ? static_cast<Cell *>(edge->toGCThing()) : nullptr; }
 
         bool maybeInRememberedSet(const Nursery &nursery) const {
-            JS_ASSERT(IsInsideNursery(deref()));
+            MOZ_ASSERT(IsInsideNursery(deref()));
             return !nursery.isInside(edge);
         }
 
@@ -291,10 +291,10 @@ class StoreBuffer
         SlotsEdge(JSObject *object, int kind, int32_t start, int32_t count)
           : objectAndKind_(uintptr_t(object) | kind), start_(start), count_(count)
         {
-            JS_ASSERT((uintptr_t(object) & 1) == 0);
-            JS_ASSERT(kind <= 1);
-            JS_ASSERT(start >= 0);
-            JS_ASSERT(count > 0);
+            MOZ_ASSERT((uintptr_t(object) & 1) == 0);
+            MOZ_ASSERT(kind <= 1);
+            MOZ_ASSERT(start >= 0);
+            MOZ_ASSERT(count > 0);
         }
 
         JSObject *object() const { return reinterpret_cast<JSObject *>(objectAndKind_ & ~1); }
@@ -328,7 +328,7 @@ class StoreBuffer
         Cell *edge;
 
         explicit WholeCellEdges(Cell *cell) : edge(cell) {
-            JS_ASSERT(edge->isTenured());
+            MOZ_ASSERT(edge->isTenured());
         }
 
         bool operator==(const WholeCellEdges &other) const { return edge == other.edge; }
@@ -400,7 +400,7 @@ class StoreBuffer
     void putFromMainThread(Buffer &buffer, const Edge &edge) {
         if (!isEnabled())
             return;
-        JS_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
+        MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime_));
         mozilla::ReentrancyGuard g(*this);
         if (edge.maybeInRememberedSet(nursery_))
             buffer.put(this, edge);
@@ -446,7 +446,7 @@ class StoreBuffer
         putFromAnyThread(bufferSlot, SlotsEdge(obj, kind, start, count));
     }
     void putWholeCellFromMainThread(Cell *cell) {
-        JS_ASSERT(cell->isTenured());
+        MOZ_ASSERT(cell->isTenured());
         putFromMainThread(bufferWholeCell, WholeCellEdges(cell));
     }
 

@@ -21,7 +21,7 @@ namespace jit {
 inline void
 SafepointIndex::resolve()
 {
-    JS_ASSERT(!resolved);
+    MOZ_ASSERT(!resolved);
     safepointOffset_ = safepoint_->offset();
 #ifdef DEBUG
     resolved = true;
@@ -63,8 +63,8 @@ JitFrameIterator::isFakeExitFrame() const
 inline IonExitFrameLayout *
 JitFrameIterator::exitFrame() const
 {
-    JS_ASSERT(type() == JitFrame_Exit);
-    JS_ASSERT(!isFakeExitFrame());
+    MOZ_ASSERT(type() == JitFrame_Exit);
+    MOZ_ASSERT(!isFakeExitFrame());
     return (IonExitFrameLayout *) fp();
 }
 
@@ -72,11 +72,11 @@ inline BaselineFrame *
 GetTopBaselineFrame(JSContext *cx)
 {
     JitFrameIterator iter(cx);
-    JS_ASSERT(iter.type() == JitFrame_Exit);
+    MOZ_ASSERT(iter.type() == JitFrame_Exit);
     ++iter;
     if (iter.isBaselineStub())
         ++iter;
-    JS_ASSERT(iter.isBaselineJS());
+    MOZ_ASSERT(iter.isBaselineJS());
     return iter.baselineFrame();
 }
 

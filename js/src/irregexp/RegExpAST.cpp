@@ -71,7 +71,7 @@ ListCaptureRegisters(const RegExpTreeVector &children)
 RegExpDisjunction::RegExpDisjunction(RegExpTreeVector *alternatives)
   : alternatives_(alternatives)
 {
-    JS_ASSERT(alternatives->length() > 1);
+    MOZ_ASSERT(alternatives->length() > 1);
     RegExpTree* first_alternative = (*alternatives)[0];
     min_match_ = first_alternative->min_match();
     max_match_ = first_alternative->max_match();
@@ -125,7 +125,7 @@ RegExpAlternative::RegExpAlternative(RegExpTreeVector *nodes)
     min_match_(0),
     max_match_(0)
 {
-    JS_ASSERT(nodes->length() > 1);
+    MOZ_ASSERT(nodes->length() > 1);
     for (size_t i = 0; i < nodes->length(); i++) {
         RegExpTree* node = (*nodes)[i];
         int node_min_match = node->min_match();

@@ -315,7 +315,7 @@ static int cvt_f(SprintfState *ss, double d, const char *fmt0, const char *fmt1)
     char fout[300];
     int amount = fmt1 - fmt0;
 
-    JS_ASSERT((amount > 0) && (amount < (int)sizeof(fin)));
+    MOZ_ASSERT((amount > 0) && (amount < (int)sizeof(fin)));
     if (amount >= (int)sizeof(fin)) {
         // Totally bogus % command to sprintf. Just ignore it
         return 0;
@@ -328,7 +328,7 @@ static int cvt_f(SprintfState *ss, double d, const char *fmt0, const char *fmt1)
     {
         const char *p = fin;
         while (*p) {
-            JS_ASSERT(*p != 'L');
+            MOZ_ASSERT(*p != 'L');
             p++;
         }
     }
@@ -338,7 +338,7 @@ static int cvt_f(SprintfState *ss, double d, const char *fmt0, const char *fmt1)
     // This assert will catch overflow's of fout, when building with
     // debugging on. At least this way we can track down the evil piece
     // of calling code and fix it!
-    JS_ASSERT(strlen(fout) < sizeof(fout));
+    MOZ_ASSERT(strlen(fout) < sizeof(fout));
 
     return (*ss->stuff)(ss, fout, strlen(fout));
 }
@@ -528,7 +528,7 @@ BuildArgArray(const char *fmt, va_list ap, NumArgStateVector& nas)
         case 'E':
         case 'G':
             // XXX not supported I suppose
-            JS_ASSERT(0);
+            MOZ_ASSERT(0);
             nas[cn].type = TYPE_UNKNOWN;
             break;
 
@@ -541,7 +541,7 @@ BuildArgArray(const char *fmt, va_list ap, NumArgStateVector& nas)
             break;
 
         default:
-            JS_ASSERT(0);
+            MOZ_ASSERT(0);
             nas[cn].type = TYPE_UNKNOWN;
             break;
         }
@@ -620,7 +620,7 @@ dosprintf(SprintfState *ss, const char *fmt, va_list ap)
     NumArgStateVector nas;
     if (!BuildArgArray(fmt, ap, nas)) {
         // the fmt contains error Numbered Argument format, jliu@netscape.com
-        JS_ASSERT(0);
+        MOZ_ASSERT(0);
         return rv;
     }
 
@@ -866,7 +866,7 @@ dosprintf(SprintfState *ss, const char *fmt, va_list ap)
             } else if (sizeof(void *) == sizeof(int)) {
                 type = TYPE_UINTN;
             } else {
-                JS_ASSERT(0);
+                MOZ_ASSERT(0);
                 break;
             }
             radix = 16;
@@ -878,7 +878,7 @@ dosprintf(SprintfState *ss, const char *fmt, va_list ap)
           case 'E':
           case 'G':
             // XXX not supported I suppose
-            JS_ASSERT(0);
+            MOZ_ASSERT(0);
             break;
 #endif
 
@@ -905,7 +905,7 @@ dosprintf(SprintfState *ss, const char *fmt, va_list ap)
           default:
             // Not a % token after all... skip it
 #if 0
-            JS_ASSERT(0);
+            MOZ_ASSERT(0);
 #endif
             rv = (*ss->stuff)(ss, "%", 1);
             if (rv < 0) {
@@ -1029,7 +1029,7 @@ JS_snprintf(char *out, uint32_t outlen, const char *fmt, ...)
     va_list ap;
     int rv;
 
-    JS_ASSERT(int32_t(outlen) > 0);
+    MOZ_ASSERT(int32_t(outlen) > 0);
     if (int32_t(outlen) <= 0)
         return 0;
 
@@ -1045,7 +1045,7 @@ JS_vsnprintf(char *out, uint32_t outlen, const char *fmt, va_list ap)
     SprintfState ss;
     uint32_t n;
 
-    JS_ASSERT(int32_t(outlen) > 0);
+    MOZ_ASSERT(int32_t(outlen) > 0);
     if (int32_t(outlen) <= 0) {
         return 0;
     }

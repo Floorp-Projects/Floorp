@@ -648,7 +648,7 @@ class TypedObject : public ArrayBufferViewObject
         // 0-sized value. (In other words, we maintain the invariant
         // that `offset + size <= size()` -- this is always checked in
         // the caller's side.)
-        JS_ASSERT(offset <= (size_t) size());
+        MOZ_ASSERT(offset <= (size_t) size());
         return typedMem() + offset;
     }
 
@@ -767,10 +767,10 @@ class InlineOpaqueTypedObject : public TypedObject
 
     static gc::AllocKind allocKindForTypeDescriptor(TypeDescr *descr) {
         size_t nbytes = descr->as<SizedTypeDescr>().size();
-        JS_ASSERT(nbytes <= MaximumSize);
+        MOZ_ASSERT(nbytes <= MaximumSize);
 
         size_t dataSlots = AlignBytes(nbytes, sizeof(Value) / sizeof(Value));
-        JS_ASSERT(nbytes <= dataSlots * sizeof(Value));
+        MOZ_ASSERT(nbytes <= dataSlots * sizeof(Value));
         return gc::GetGCObjectKind(dataSlots);
     }
 

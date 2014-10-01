@@ -227,7 +227,7 @@ class GlobalSharedContext : public SharedContext
 inline GlobalSharedContext *
 SharedContext::asGlobalSharedContext()
 {
-    JS_ASSERT(isGlobalSharedContext());
+    MOZ_ASSERT(isGlobalSharedContext());
     return static_cast<GlobalSharedContext*>(this);
 }
 
@@ -271,7 +271,7 @@ class FunctionBox : public ObjectBox, public SharedContext
         // A generator kind can be set at initialization, or when "yield" is
         // first seen.  In both cases the transition can only happen from
         // NotGenerator.
-        JS_ASSERT(!isGenerator());
+        MOZ_ASSERT(!isGenerator());
         generatorKindBits_ = GeneratorKindAsBits(kind);
     }
 
@@ -285,7 +285,7 @@ class FunctionBox : public ObjectBox, public SharedContext
     void setHasExtensibleScope()           { funCxFlags.hasExtensibleScope       = true; }
     void setNeedsDeclEnvObject()           { funCxFlags.needsDeclEnvObject       = true; }
     void setArgumentsHasLocalBinding()     { funCxFlags.argumentsHasLocalBinding = true; }
-    void setDefinitelyNeedsArgsObj()       { JS_ASSERT(funCxFlags.argumentsHasLocalBinding);
+    void setDefinitelyNeedsArgsObj()       { MOZ_ASSERT(funCxFlags.argumentsHasLocalBinding);
                                              funCxFlags.definitelyNeedsArgsObj   = true; }
 
     bool hasDefaults() const {
@@ -320,7 +320,7 @@ class FunctionBox : public ObjectBox, public SharedContext
 inline FunctionBox *
 SharedContext::asFunctionBox()
 {
-    JS_ASSERT(isFunctionBox());
+    MOZ_ASSERT(isFunctionBox());
     return static_cast<FunctionBox*>(this);
 }
 
@@ -431,8 +431,8 @@ struct StmtInfoBase {
     }
 
     StaticBlockObject& staticBlock() const {
-        JS_ASSERT(isNestedScope);
-        JS_ASSERT(isBlockScope);
+        MOZ_ASSERT(isNestedScope);
+        MOZ_ASSERT(isBlockScope);
         return staticScope->as<StaticBlockObject>();
     }
 
@@ -489,7 +489,7 @@ FinishPopStatement(ContextT *ct)
     if (stmt->linksScope()) {
         ct->topScopeStmt = stmt->downScope;
         if (stmt->isNestedScope) {
-            JS_ASSERT(stmt->staticScope);
+            MOZ_ASSERT(stmt->staticScope);
             ct->staticScope = stmt->staticScope->enclosingNestedScope();
         }
     }
