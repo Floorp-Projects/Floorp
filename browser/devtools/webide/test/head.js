@@ -115,6 +115,14 @@ function waitForUpdate(win, update) {
   return deferred.promise;
 }
 
+function waitForTime(time) {
+  let deferred = promise.defer();
+  setTimeout(() => {
+    deferred.resolve();
+  }, time);
+  return deferred.promise;
+}
+
 function documentIsLoaded(doc) {
   let deferred = promise.defer();
   if (doc.readyState == "complete") {
