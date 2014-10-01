@@ -2833,6 +2833,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       break;
   }
 
+  if (hidpi) {
+    // Reset the base CTM.
+    CGContextSetBaseCTM(cgContext, CGAffineTransformIdentity);
+  }
+
   nativeDrawing.EndNativeDrawing();
 
   return NS_OK;

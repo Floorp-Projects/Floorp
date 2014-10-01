@@ -6,8 +6,10 @@
   border-top: 1px solid #ccc;
   overflow-x: hidden;
   overflow-y: auto;
-  /* Show six contacts and scroll for the rest */
-  max-height: 305px;
+  /* We need enough space to show the context menu of the first contact. */
+  min-height: 204px;
+  /* Show six contacts and scroll for the rest. */
+  max-height: 306px;
 }
 
 .contact,
@@ -44,7 +46,7 @@
 
 .contact:hover > .icons {
   display: block;
-  z-index: 1000;
+  z-index: 1;
 }
 
 .contact > .avatar {
@@ -144,6 +146,52 @@
   background-size: 10px 10px;
   width: 10px;
   height: 16px;
+}
+
+.contact > .dropdown-menu {
+  z-index: 2;
+  top: 10px;
+  bottom: auto;
+  right: 3em;
+  left: auto;
+}
+
+.contact > .dropdown-menu-up {
+  bottom: 10px;
+  top: auto;
+}
+
+.contact > .dropdown-menu > .dropdown-menu-item > .icon {
+  display: inline-block;
+  width: 20px;
+  height: 10px;
+  background-position: center left;
+  background-size: 10px 10px;
+  background-repeat: no-repeat;
+}
+
+.contact > .dropdown-menu > .dropdown-menu-item > .icon-audio-call {
+  background-image: url("../img/icons-16x16.svg#audio");
+}
+
+.contact > .dropdown-menu > .dropdown-menu-item > .icon-video-call {
+  background-image: url("../img/icons-16x16.svg#video");
+}
+
+.contact > .dropdown-menu > .dropdown-menu-item > .icon-edit {
+  background-image: url("../img/icons-16x16.svg#contacts");
+}
+
+.contact > .dropdown-menu > .dropdown-menu-item > .icon-block {
+  background-image: url("../img/icons-16x16.svg#block");
+}
+
+.contact > .dropdown-menu > .dropdown-menu-item > .icon-unblock {
+  background-image: url("../img/icons-16x16.svg#unblock");
+}
+
+.contact > .dropdown-menu > .dropdown-menu-item > .icon-remove {
+  background-image: url("../img/icons-16x16.svg#delete");
 }
 
 .contact-form > .button-group {

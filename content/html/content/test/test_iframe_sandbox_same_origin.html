@@ -28,8 +28,8 @@ function ok_wrapper(result, desc) {
     passedTests++;
   }
 
-  if (completedTests == 12) {
-    is(passedTests, 12, "There are 12 same-origin tests that should pass");
+  if (completedTests == 14) {
+    is(passedTests, completedTests, "There are " + completedTests + " same-origin tests that should pass");
 
     SimpleTest.finish();
   }

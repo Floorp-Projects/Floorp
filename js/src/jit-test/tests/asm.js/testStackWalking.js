@@ -65,7 +65,7 @@ assertEq(caught, true);
 
 var caught = false;
 try {
-    callFFI(null, {ffi:Object.preventExtensions})();
+    callFFI(null, {ffi:Object.defineProperty})();
 } catch (e) {
     caught = true;
 }

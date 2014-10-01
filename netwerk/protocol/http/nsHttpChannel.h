@@ -385,6 +385,7 @@ private:
     // state flags
     uint32_t                          mCachedContentIsValid     : 1;
     uint32_t                          mCachedContentIsPartial   : 1;
+    uint32_t                          mCacheOnlyMetadata        : 1;
     uint32_t                          mTransactionReplaced      : 1;
     uint32_t                          mAuthRetryPending         : 1;
     uint32_t                          mProxyAuthPending         : 1;

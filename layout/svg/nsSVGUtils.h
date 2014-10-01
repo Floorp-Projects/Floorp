@@ -61,6 +61,7 @@ class Element;
 class UserSpaceMetrics;
 } // namespace dom
 namespace gfx {
+class DrawTarget;
 class GeneralPattern;
 class SourceSurface;
 }
@@ -145,6 +146,8 @@ private:
 
 class MOZ_STACK_CLASS SVGAutoRenderState
 {
+  typedef mozilla::gfx::DrawTarget DrawTarget;
+
 public:
   enum RenderMode {
     /**
@@ -160,18 +163,18 @@ public:
     CLIP_MASK 
   };
 
-  SVGAutoRenderState(nsRenderingContext *aContext, RenderMode aMode
+  SVGAutoRenderState(DrawTarget* aDrawTarget, RenderMode aMode
                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
   ~SVGAutoRenderState();
 
   void SetPaintingToWindow(bool aPaintingToWindow);
 
-  static RenderMode GetRenderMode(nsRenderingContext *aContext);
-  static bool IsPaintingToWindow(nsRenderingContext *aContext);
+  static RenderMode GetRenderMode(DrawTarget* aDrawTarget);
+  static bool IsPaintingToWindow(DrawTarget* aDrawTarget);
 
 private:
-  nsRenderingContext *mContext;
-  void *mOriginalRenderState;
+  DrawTarget* mDrawTarget;
+  void* mOriginalRenderState;
   RenderMode mMode;
   bool mPaintingToWindow;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
@@ -339,15 +342,6 @@ public:
   static nsRect
   GetCoveredRegion(const nsFrameList &aFrames);
 
-  // Converts aPoint from an app unit point in outer-<svg> content rect space
-  // to an app unit point in a frame's SVG userspace. 
-  // This is a temporary helper we should no longer need after bug 614732 is
-  // fixed.
-  static nsPoint
-  TransformOuterSVGPointToChildFrame(nsPoint aPoint,
-                                     const gfxMatrix& aFrameToCanvasTM,
-                                     nsPresContext* aPresContext);
-
   static nsRect
   TransformFrameRectToOuterSVG(const nsRect& aRect,
                                const gfxMatrix& aMatrix,
@@ -464,11 +458,18 @@ public:
   static bool OuterSVGIsCallingReflowSVG(nsIFrame *aFrame);
   static bool AnyOuterSVGIsCallingReflowSVG(nsIFrame *aFrame);
 
-  /*
-   * Get any additional transforms that apply only to stroking
-   * e.g. non-scaling-stroke
+  /**
+   * See https://svgwg.org/svg2-draft/painting.html#NonScalingStroke
+   *
+   * If the computed value of the 'vector-effect' property on aFrame is
+   * 'non-scaling-stroke', then this function will set aUserToOuterSVG to the
+   * transform from aFrame's SVG user space to the initial coordinate system
+   * established by the viewport of aFrame's outer-<svg>'s (the coordinate
+   * system in which the stroke is fixed).  If aUserToOuterSVG is set to a
+   * non-identity matrix this function returns true, else it returns false.
    */
-  static gfxMatrix GetStrokeTransform(nsIFrame *aFrame);
+  static bool GetNonScalingStrokeTransform(nsIFrame *aFrame,
+                                           gfxMatrix* aUserToOuterSVG);
 
   /**
    * Compute the maximum possible device space stroke extents of a path given

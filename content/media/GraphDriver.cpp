@@ -805,52 +805,60 @@ AudioCallbackDriver::DataCallback(AudioDataValue* aBuffer, long aFrames)
   if (!mIterationDurationMS) {
     mIterationDurationMS = durationMS;
   } else {
-    mIterationDurationMS += durationMS;
-    mIterationDurationMS /= 2;
+    mIterationDurationMS = (mIterationDurationMS*3) + durationMS;
+    mIterationDurationMS /= 4;
   }
 
   mBuffer.SetBuffer(aBuffer, aFrames);
-
+  // fill part or all with leftover data from last iteration (since we
+  // align to Audio blocks)
   mScratchBuffer.Empty(mBuffer);
+  // if we totally filled the buffer (and mScratchBuffer isn't empty),
+  // we don't need to run an iteration and if we do so we may overflow.
+  if (mBuffer.Available()) {
 
-  mStateComputedTime = mNextStateComputedTime;
+    mStateComputedTime = mNextStateComputedTime;
 
-  // State computed time is decided by the audio callback's buffer length. We
-  // compute the iteration start and end from there, trying to keep the amount
-  // of buffering in the graph constant.
-  mNextStateComputedTime =
-    mGraphImpl->RoundUpToNextAudioBlock(mStateComputedTime + mBuffer.Available());
+    // State computed time is decided by the audio callback's buffer length. We
+    // compute the iteration start and end from there, trying to keep the amount
+    // of buffering in the graph constant.
+    mNextStateComputedTime =
+      mGraphImpl->RoundUpToNextAudioBlock(mStateComputedTime + mBuffer.Available());
 
-  mIterationStart = mIterationEnd;
-  // inGraph is the number of audio frames there is between the state time and
-  // the current time, i.e. the maximum theoretical length of the interval we
-  // could use as [mIterationStart; mIterationEnd].
-  GraphTime inGraph = mStateComputedTime - mIterationStart;
-  // We want the interval [mIterationStart; mIterationEnd] to be before the
-  // interval [mStateComputedTime; mNextStateComputedTime]. We also want
-  // the distance between these intervals to be roughly equivalent each time, to
-  // ensure there is no clock drift between current time and state time. Since
-  // we can't act on the state time because we have to fill the audio buffer, we
-  // reclock the current time against the state time, here.
-  mIterationEnd = mIterationStart + 0.8 * inGraph;
+    mIterationStart = mIterationEnd;
+    // inGraph is the number of audio frames there is between the state time and
+    // the current time, i.e. the maximum theoretical length of the interval we
+    // could use as [mIterationStart; mIterationEnd].
+    GraphTime inGraph = mStateComputedTime - mIterationStart;
+    // We want the interval [mIterationStart; mIterationEnd] to be before the
+    // interval [mStateComputedTime; mNextStateComputedTime]. We also want
+    // the distance between these intervals to be roughly equivalent each time, to
+    // ensure there is no clock drift between current time and state time. Since
+    // we can't act on the state time because we have to fill the audio buffer, we
+    // reclock the current time against the state time, here.
+    mIterationEnd = mIterationStart + 0.8 * inGraph;
 
-  STREAM_LOG(PR_LOG_DEBUG, ("interval[%ld; %ld] state[%ld; %ld] (frames: %ld) (durationMS: %u) (duration ticks: %ld)\n",
-             (long)mIterationStart, (long)mIterationEnd,
-             (long)mStateComputedTime, (long)mNextStateComputedTime,
-             (long)aFrames, (uint32_t)durationMS,
-             (long)(mNextStateComputedTime - mStateComputedTime)));
+    STREAM_LOG(PR_LOG_DEBUG, ("interval[%ld; %ld] state[%ld; %ld] (frames: %ld) (durationMS: %u) (duration ticks: %ld)\n",
+                              (long)mIterationStart, (long)mIterationEnd,
+                              (long)mStateComputedTime, (long)mNextStateComputedTime,
+                              (long)aFrames, (uint32_t)durationMS,
+                              (long)(mNextStateComputedTime - mStateComputedTime)));
 
-  mCurrentTimeStamp = TimeStamp::Now();
+    mCurrentTimeStamp = TimeStamp::Now();
 
-  if (mStateComputedTime < mIterationEnd) {
-    STREAM_LOG(PR_LOG_WARNING, ("Media graph global underrun detected"));
-    mIterationEnd = mStateComputedTime;
+    if (mStateComputedTime < mIterationEnd) {
+      STREAM_LOG(PR_LOG_WARNING, ("Media graph global underrun detected"));
+      mIterationEnd = mStateComputedTime;
+    }
+
+    stillProcessing = mGraphImpl->OneIteration(mIterationStart,
+                                               mIterationEnd,
+                                               mStateComputedTime,
+                                               mNextStateComputedTime);
+  } else {
+    NS_WARNING("DataCallback buffer filled entirely from scratch buffer, skipping iteration.");
+    stillProcessing = true;
   }
-
-  stillProcessing = mGraphImpl->OneIteration(mIterationStart,
-                                             mIterationEnd,
-                                             mStateComputedTime,
-                                             mNextStateComputedTime);
 
   mBuffer.BufferFilled();
 
@@ -896,7 +904,7 @@ AudioCallbackDriver::MixerCallback(AudioDataValue* aMixedBuffer,
   uint32_t toWrite = mBuffer.Available();
 
   if (!mBuffer.Available()) {
-    NS_WARNING("MediaStreamGraph SpillBuffer full, expect frame drop.");
+    NS_WARNING("DataCallback buffer full, expect frame drops.");
   }
 
   MOZ_ASSERT(mBuffer.Available() <= aFrames);
