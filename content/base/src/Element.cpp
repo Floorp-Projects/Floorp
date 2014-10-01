@@ -135,6 +135,8 @@
 #include "nsISupportsImpl.h"
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/dom/WindowBinding.h"
+#include "mozilla/dom/ElementBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -587,11 +589,21 @@ Element::GetScrollFrame(nsIFrame **aStyledFrame, bool aFlushLayout)
 void
 Element::ScrollIntoView()
 {
-  ScrollIntoView(true, ScrollOptions());
+  ScrollIntoView(ScrollIntoViewOptions());
 }
 
 void
-Element::ScrollIntoView(bool aTop, const ScrollOptions &aOptions)
+Element::ScrollIntoView(bool aTop)
+{
+  ScrollIntoViewOptions options;
+  if (!aTop) {
+    options.mBlock = ScrollLogicalPosition::End;
+  }
+  ScrollIntoView(options);
+}
+
+void
+Element::ScrollIntoView(const ScrollIntoViewOptions &aOptions)
 {
   nsIDocument *document = GetComposedDoc();
   if (!document) {
@@ -604,8 +616,9 @@ Element::ScrollIntoView(bool aTop, const ScrollOptions &aOptions)
     return;
   }
 
-  int16_t vpercent = aTop ? nsIPresShell::SCROLL_TOP :
-    nsIPresShell::SCROLL_BOTTOM;
+  int16_t vpercent = (aOptions.mBlock == ScrollLogicalPosition::Start)
+                       ? nsIPresShell::SCROLL_TOP
+                       : nsIPresShell::SCROLL_BOTTOM;
 
   uint32_t flags = nsIPresShell::SCROLL_OVERFLOW_HIDDEN;
   if (aOptions.mBehavior == ScrollBehavior::Smooth) {
@@ -621,6 +634,137 @@ Element::ScrollIntoView(bool aTop, const ScrollOptions &aOptions)
                                    nsIPresShell::ScrollAxis(),
                                    flags);
 }
+
+void
+Element::Scroll(const CSSIntPoint& aScroll, const ScrollOptions& aOptions)
+{
+  nsIScrollableFrame* sf = GetScrollFrame();
+  if (sf) {
+    nsIScrollableFrame::ScrollMode scrollMode = nsIScrollableFrame::INSTANT;
+    if (aOptions.mBehavior == ScrollBehavior::Smooth) {
+      scrollMode = nsIScrollableFrame::SMOOTH_MSD;
+    } else if (aOptions.mBehavior == ScrollBehavior::Auto) {
+      ScrollbarStyles styles = sf->GetScrollbarStyles();
+      if (styles.mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
+        scrollMode = nsIScrollableFrame::SMOOTH_MSD;
+      }
+    }
+
+    sf->ScrollToCSSPixels(aScroll, scrollMode);
+  }
+}
+
+void
+Element::Scroll(double aXScroll, double aYScroll)
+{
+  // Convert -Inf, Inf, and NaN to 0; otherwise, convert by C-style cast.
+  CSSIntPoint scrollPos(mozilla::ToZeroIfNonfinite(aXScroll),
+                        mozilla::ToZeroIfNonfinite(aYScroll));
+
+  Scroll(scrollPos, ScrollOptions());
+}
+
+void
+Element::Scroll(const ScrollToOptions& aOptions)
+{
+  nsIScrollableFrame *sf = GetScrollFrame();
+  if (sf) {
+    CSSIntPoint scrollPos = sf->GetScrollPositionCSSPixels();
+    if (aOptions.mLeft.WasPassed()) {
+      scrollPos.x = mozilla::ToZeroIfNonfinite(aOptions.mLeft.Value());
+    }
+    if (aOptions.mTop.WasPassed()) {
+      scrollPos.y = mozilla::ToZeroIfNonfinite(aOptions.mTop.Value());
+    }
+    Scroll(scrollPos, aOptions);
+  }
+}
+
+void
+Element::ScrollTo(double aXScroll, double aYScroll)
+{
+  Scroll(aXScroll, aYScroll);
+}
+
+void
+Element::ScrollTo(const ScrollToOptions& aOptions)
+{
+  Scroll(aOptions);
+}
+
+void
+Element::ScrollBy(double aXScrollDif, double aYScrollDif)
+{
+  nsIScrollableFrame *sf = GetScrollFrame();
+  if (sf) {
+    CSSIntPoint scrollPos = sf->GetScrollPositionCSSPixels();
+    scrollPos += CSSIntPoint(mozilla::ToZeroIfNonfinite(aXScrollDif),
+                             mozilla::ToZeroIfNonfinite(aYScrollDif));
+    Scroll(scrollPos, ScrollOptions());
+  }
+}
+
+void
+Element::ScrollBy(const ScrollToOptions& aOptions)
+{
+  nsIScrollableFrame *sf = GetScrollFrame();
+  if (sf) {
+    CSSIntPoint scrollPos = sf->GetScrollPositionCSSPixels();
+    if (aOptions.mLeft.WasPassed()) {
+      scrollPos.x += mozilla::ToZeroIfNonfinite(aOptions.mLeft.Value());
+    }
+    if (aOptions.mTop.WasPassed()) {
+      scrollPos.y += mozilla::ToZeroIfNonfinite(aOptions.mTop.Value());
+    }
+    Scroll(scrollPos, aOptions);
+  }
+}
+
+int32_t
+Element::ScrollTop()
+{
+  nsIScrollableFrame* sf = GetScrollFrame();
+  return sf ? sf->GetScrollPositionCSSPixels().y : 0;
+}
+
+void
+Element::SetScrollTop(int32_t aScrollTop)
+{
+  nsIScrollableFrame* sf = GetScrollFrame();
+  if (sf) {
+    nsIScrollableFrame::ScrollMode scrollMode = nsIScrollableFrame::INSTANT;
+    if (sf->GetScrollbarStyles().mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
+      scrollMode = nsIScrollableFrame::SMOOTH_MSD;
+    }
+    sf->ScrollToCSSPixels(CSSIntPoint(sf->GetScrollPositionCSSPixels().x,
+                                      aScrollTop),
+                          scrollMode);
+  }
+}
+
+int32_t
+Element::ScrollLeft()
+{
+  nsIScrollableFrame* sf = GetScrollFrame();
+  return sf ? sf->GetScrollPositionCSSPixels().x : 0;
+}
+
+void
+Element::SetScrollLeft(int32_t aScrollLeft)
+{
+  nsIScrollableFrame* sf = GetScrollFrame();
+  if (sf) {
+    nsIScrollableFrame::ScrollMode scrollMode = nsIScrollableFrame::INSTANT;
+    if (sf->GetScrollbarStyles().mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_SMOOTH) {
+      scrollMode = nsIScrollableFrame::SMOOTH_MSD;
+    }
+
+    sf->ScrollToCSSPixels(CSSIntPoint(aScrollLeft,
+                                      sf->GetScrollPositionCSSPixels().y),
+                          scrollMode);
+  }
+}
+
 
 bool
 Element::ScrollByNoFlush(int32_t aDx, int32_t aDy)

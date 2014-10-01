@@ -7131,23 +7131,46 @@ nsGlobalWindow::GetTopWindowRoot()
 }
 
 void
-nsGlobalWindow::Scroll(double aXScroll, double aYScroll,
-                       const ScrollOptions& aOptions)
+nsGlobalWindow::Scroll(double aXScroll, double aYScroll)
 {
   // Convert -Inf, Inf, and NaN to 0; otherwise, convert by C-style cast.
   CSSIntPoint scrollPos(mozilla::ToZeroIfNonfinite(aXScroll),
                         mozilla::ToZeroIfNonfinite(aYScroll));
-  ScrollTo(scrollPos, aOptions);
+  ScrollTo(scrollPos, ScrollOptions());
 }
 
 void
-nsGlobalWindow::ScrollTo(double aXScroll, double aYScroll,
-                         const ScrollOptions& aOptions)
+nsGlobalWindow::ScrollTo(double aXScroll, double aYScroll)
 {
   // Convert -Inf, Inf, and NaN to 0; otherwise, convert by C-style cast.
   CSSIntPoint scrollPos(mozilla::ToZeroIfNonfinite(aXScroll),
                         mozilla::ToZeroIfNonfinite(aYScroll));
-  ScrollTo(scrollPos, aOptions);
+  ScrollTo(scrollPos, ScrollOptions());
+}
+
+void
+nsGlobalWindow::ScrollTo(const ScrollToOptions& aOptions)
+{
+  FlushPendingNotifications(Flush_Layout);
+  nsIScrollableFrame *sf = GetScrollFrame();
+
+  if (sf) {
+    CSSIntPoint scrollPos = sf->GetScrollPositionCSSPixels();
+    if (aOptions.mLeft.WasPassed()) {
+      scrollPos.x = mozilla::ToZeroIfNonfinite(aOptions.mLeft.Value());
+    }
+    if (aOptions.mTop.WasPassed()) {
+      scrollPos.y = mozilla::ToZeroIfNonfinite(aOptions.mTop.Value());
+    }
+
+    ScrollTo(scrollPos, aOptions);
+  }
+}
+
+void
+nsGlobalWindow::Scroll(const ScrollToOptions& aOptions)
+{
+  ScrollTo(aOptions);
 }
 
 NS_IMETHODIMP
@@ -7199,14 +7222,13 @@ nsGlobalWindow::ScrollTo(const CSSIntPoint& aScroll,
 NS_IMETHODIMP
 nsGlobalWindow::ScrollBy(int32_t aXScrollDif, int32_t aYScrollDif)
 {
-  ScrollBy(aXScrollDif, aYScrollDif, ScrollOptions());
+  ScrollBy(aXScrollDif, aYScrollDif);
 
   return NS_OK;
 }
 
 void
-nsGlobalWindow::ScrollBy(double aXScrollDif, double aYScrollDif,
-                         const ScrollOptions& aOptions)
+nsGlobalWindow::ScrollBy(double aXScrollDif, double aYScrollDif)
 {
   FlushPendingNotifications(Flush_Layout);
   nsIScrollableFrame *sf = GetScrollFrame();
@@ -7218,7 +7240,26 @@ nsGlobalWindow::ScrollBy(double aXScrollDif, double aYScrollDif,
     // It seems like it would make more sense for ScrollBy to use
     // SMOOTH mode, but tests seem to depend on the synchronous behaviour.
     // Perhaps Web content does too.
-    ScrollTo(sf->GetScrollPositionCSSPixels() + scrollDif, aOptions);
+    ScrollTo(sf->GetScrollPositionCSSPixels() + scrollDif, ScrollOptions());
+  }
+}
+
+void
+nsGlobalWindow::ScrollBy(const ScrollToOptions& aOptions)
+{
+  FlushPendingNotifications(Flush_Layout);
+  nsIScrollableFrame *sf = GetScrollFrame();
+
+  if (sf) {
+    CSSIntPoint scrollPos = sf->GetScrollPositionCSSPixels();
+    if (aOptions.mLeft.WasPassed()) {
+      scrollPos.x += mozilla::ToZeroIfNonfinite(aOptions.mLeft.Value());
+    }
+    if (aOptions.mTop.WasPassed()) {
+      scrollPos.y += mozilla::ToZeroIfNonfinite(aOptions.mTop.Value());
+    }
+
+    ScrollTo(scrollPos, aOptions);
   }
 }
 
