@@ -17,7 +17,7 @@ interface nsIFile;
  *   3) Support for uniquely identifying cached data in cases when the URL
  *      is insufficient (e.g., HTTP form submission).
  */
-[scriptable, uuid(a77b664e-e707-4017-9c03-47bcedcb5b05)]
+[scriptable, uuid(3d46b469-7405-416e-ba42-84899963b403)]
 interface nsICachingChannel : nsICacheInfoChannel
 {
     /**
@@ -63,6 +63,14 @@ interface nsICachingChannel : nsICacheInfoChannel
      * is likewise valid.
      */
     attribute nsISupports cacheKey;
+
+    /**
+     * Instructs the channel to only store the metadata of the entry, and not
+     * the content. When reading an existing entry, this automatically sets
+     * LOAD_ONLY_IF_MODIFIED flag.
+     * Must be called before asyncOpen().
+     */
+    attribute boolean cacheOnlyMetadata;
 
     /**************************************************************************
      * Caching channel specific load flags:

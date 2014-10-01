@@ -1,0 +1,309 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Autocomplete Widget Test"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="runTest();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript"
+          src="chrome://global/content/globalOverlay.js"/>
+
+<textbox id="autocomplete"
+         type="autocomplete"
+         completedefaultindex="true"
+         timeout="0"
+         autocompletesearch="simple"/>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+function autoCompleteSimpleResult(aString, searchId) {
+  this.searchString = aString;
+  this.searchResult = Components.interfaces.nsIAutoCompleteResult.RESULT_SUCCESS;
+  this.matchCount = 1;
+  if (aString.startsWith('ret')) {
+    this._param = autoCompleteSimpleResult.retireCompletion;
+  } else {
+    this._param = "Result";
+  }
+  this._searchId = searchId;
+}
+autoCompleteSimpleResult.retireCompletion = "Retire";
+autoCompleteSimpleResult.prototype = {
+  _param: "",
+  searchString: null,
+  searchResult: Components.interfaces.nsIAutoCompleteResult.RESULT_FAILURE,
+  defaultIndex: 0,
+  errorDescription: null,
+  matchCount: 0,
+  getValueAt: function() { return this._param; },
+  getCommentAt: function() { return null; },
+  getStyleAt: function() { return null; },
+  getImageAt: function() { return null; },
+  getLabelAt: function() { return null; },
+  removeValueAt: function() {}
+};
+
+var searchCounter = 0;
+
+// A basic autocomplete implementation that returns one result.
+let autoCompleteSimple = {
+  classID: Components.ID("0a2afbdb-f30e-47d1-9cb1-0cd160240aca"),
+  contractID: "@mozilla.org/autocomplete/search;1?name=simple",
+  searchAsync: false,
+  pendingSearch: null,
+
+  QueryInterface: XPCOMUtils.generateQI([
+    Components.interfaces.nsIFactory,
+    Components.interfaces.nsIAutoCompleteSearch
+  ]),
+  createInstance: function (outer, iid) {
+    return this.QueryInterface(iid);
+  },
+
+  registerFactory: function () {
+    let registrar =
+      Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+    registrar.registerFactory(this.classID, "Test Simple Autocomplete",
+                              this.contractID, this);
+  },
+  unregisterFactory: function () {
+    let registrar =
+      Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
+    registrar.unregisterFactory(this.classID, this);
+  },
+
+  startSearch: function (aString, aParam, aResult, aListener) {
+    let result = new autoCompleteSimpleResult(aString);
+
+    if (this.searchAsync) {
+      // Simulate an async search by using a timeout before invoking the
+      // |onSearchResult| callback.
+      // Store the searchTimeout such that it can be canceled if stopSearch is called.
+      this.pendingSearch = setTimeout(() => {
+        this.pendingSearch = null;
+
+        aListener.onSearchResult(this, result);
+
+         // Move to the next step in the async test.
+        asyncTest.next();
+      }, 0);
+    } else {
+      aListener.onSearchResult(this, result);
+    }
+  },
+  stopSearch: function () {
+    clearTimeout(this.pendingSearch);
+  }
+};
+
+SimpleTest.waitForExplicitFinish();
+
+// XPFE AutoComplete needs to register early.
+autoCompleteSimple.registerFactory();
+
+let gACTimer;
+let gAutoComplete;
+let asyncTest;
+
+let searchCompleteTimeoutId = null;
+
+function finishTest() {
+  // Unregister the factory so that we don't get in the way of other tests
+  autoCompleteSimple.unregisterFactory();
+  SimpleTest.finish();
+}
+
+function runTest() {
+  gAutoComplete = $("autocomplete");
+  gAutoComplete.focus();
+
+  // Return the search results synchronous, which also makes the completion
+  // happen synchronous.
+  autoCompleteSimple.searchAsync = false;
+
+  synthesizeKey("r", {});
+  is(gAutoComplete.value, "result", "Value should be autocompleted immediately");
+
+  synthesizeKey("e", {});
+  is(gAutoComplete.value, "result", "Value should be autocompleted immediately");
+
+  synthesizeKey("VK_DELETE", {});
+  is(gAutoComplete.value, "re", "Deletion should not complete value");
+
+  synthesizeKey("VK_BACK_SPACE", {});
+  is(gAutoComplete.value, "r", "Backspace should not complete value");
+
+  synthesizeKey("VK_LEFT", {});
+  is(gAutoComplete.value, "r", "Value should stay same when navigating with cursor");
+
+  runAsyncTest();
+}
+
+function* asyncTestGenerator() {
+  synthesizeKey("r", {});
+  synthesizeKey("e", {});
+  is(gAutoComplete.value, "re", "Value should not be autocompleted immediately");
+
+  // Calling |yield undefined| makes this generator function wait until
+  // |asyncTest.next();| is called. This happens from within the
+  // |autoCompleteSimple.startSearch()| function once the simulated async
+  // search has finished.
+  // Therefore, the effect of the |yield undefined;| here (and the ones) below
+  // is to wait until the async search result comes back.
+  yield undefined;
+
+  is(gAutoComplete.value, "result", "Value should be autocompleted");
+
+  // Test if typing the `s` character completes directly based on the last
+  // completion
+  synthesizeKey("s", {});
+  is(gAutoComplete.value, "result", "Value should be completed immediately");
+
+  yield undefined;
+
+  is(gAutoComplete.value, "result", "Value should be autocompleted to same value");
+  synthesizeKey("VK_DELETE", {});
+  is(gAutoComplete.value, "res", "Deletion should not complete value");
+
+  // No |yield undefined| needed here as no completion is triggered by the deletion.
+
+  is(gAutoComplete.value, "res", "Still no complete value after deletion");
+
+  synthesizeKey("VK_BACK_SPACE", {});
+  is(gAutoComplete.value, "re", "Backspace should not complete value");
+
+  yield undefined;
+
+  is(gAutoComplete.value, "re", "Value after search due to backspace should stay the same"); (3)
+
+  // Typing a character that is not like the previous match. In this case, the
+  // completion cannot happen directly and therefore the value will be completed
+  // only after the search has finished.
+  synthesizeKey("t", {});
+  is(gAutoComplete.value, "ret", "Value should not be autocompleted immediately");
+
+  yield undefined;
+
+  is(gAutoComplete.value, "retire", "Value should be autocompleted");
+
+  synthesizeKey("i", {});
+  is(gAutoComplete.value, "retire", "Value should be autocompleted immediately");
+
+  yield undefined;
+
+  is(gAutoComplete.value, "retire", "Value should be autocompleted to the same value");
+
+  // Setup the scene to test how the completion behaves once the placeholder
+  // completion and the result from the search do not agree with each other.
+  gAutoComplete.value = 'r';
+  // Need to type two characters as the input was reset and the autocomplete
+  // controller things, ther user hit the backspace button, in which case
+  // no completion is performed. But as a completion is desired, another
+  // character `t` is typed afterwards.
+  synthesizeKey("e", {});
+  yield undefined;
+  synthesizeKey("t", {});
+  is(gAutoComplete.value, "ret", "Value should not be autocompleted");
+
+  yield undefined;
+
+  is(gAutoComplete.value, "retire", "Value should be autocompleted");
+
+  // The placeholder string is now set to "retire". Changing the completion
+  // string to "retirement" and see what the completion will turn out like.
+  autoCompleteSimpleResult.retireCompletion = "Retirement";
+  synthesizeKey("i", {});
+  is(gAutoComplete.value, "retire", "Value should be autocompleted based on placeholder");
+
+  yield undefined;
+
+  is(gAutoComplete.value, "retirement", "Value should be autocompleted based on search result");
+
+  // Change the search result to `Retire` again and see if the new result is
+  // complited.
+  autoCompleteSimpleResult.retireCompletion = "Retire";
+  synthesizeKey("r", {});
+  is(gAutoComplete.value, "retirement", "Value should be autocompleted based on placeholder");
+
+  yield undefined;
+
+  is(gAutoComplete.value, "retire", "Value should be autocompleted based on search result");
+
+  // Complete the value
+  gAutoComplete.value = 're';
+  synthesizeKey("t", {});
+  yield undefined;
+  synthesizeKey("i", {});
+  is(gAutoComplete.value, "reti", "Value should not be autocompleted");
+
+  yield undefined;
+
+  is(gAutoComplete.value, "retire", "Value should be autocompleted");
+
+  // Remove the selected text "re" (1) and the "et" (2). Afterwards, add it again (3).
+  // This should not cause the completion to kick in.
+  synthesizeKey("VK_DELETE", {}); // (1)
+
+  is(gAutoComplete.value, "reti", "Value should not complete after deletion");
+
+  gAutoComplete.selectionStart = 1;
+  gAutoComplete.selectionEnd = 3;
+  synthesizeKey("VK_DELETE", {}); // (2)
+
+  is(gAutoComplete.value, "ri", "Value should stay unchanged after removing character in the middle");
+
+  yield undefined;
+
+  synthesizeKey("e", {}); // (3.1)
+  is(gAutoComplete.value, "rei", "Inserting a character in the middle should not complete the value");
+
+  yield undefined;
+
+  synthesizeKey("t", {}); // (3.2)
+  is(gAutoComplete.value, "reti", "Inserting a character in the middle should not complete the value");
+
+  yield undefined;
+
+  // Adding a new character at the end should not cause the completion to happen again
+  // as the completion failed before.
+  gAutoComplete.selectionStart = 4;
+  gAutoComplete.selectionEnd = 4;
+  synthesizeKey("r", {});
+  is(gAutoComplete.value, "retir", "Value should not be autocompleted immediately");
+
+  yield undefined;
+
+  is(gAutoComplete.value, "retire", "Value should be autocompleted");
+
+  finishTest();
+  yield undefined;
+}
+
+function runAsyncTest() {
+  gAutoComplete.value = '';
+  autoCompleteSimple.searchAsync = true;
+
+  asyncTest = asyncTestGenerator();
+  asyncTest.next();
+}
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

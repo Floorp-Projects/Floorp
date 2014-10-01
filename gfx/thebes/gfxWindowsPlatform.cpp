@@ -1537,6 +1537,8 @@ gfxWindowsPlatform::InitD3D11Devices()
     return;
   }
 
+  mD3D11Device->SetExceptionMode(0);
+
 #ifdef USE_D2D1_1
   if (Factory::SupportsD2D1()) {
     hr = d3d11CreateDevice(adapter, D3D_DRIVER_TYPE_UNKNOWN, nullptr,
@@ -1548,6 +1550,8 @@ gfxWindowsPlatform::InitD3D11Devices()
       mD3D11Device = nullptr;
       return;
     }
+
+    mD3D11ContentDevice->SetExceptionMode(0);
 
     Factory::SetDirect3D11Device(mD3D11ContentDevice);
   }

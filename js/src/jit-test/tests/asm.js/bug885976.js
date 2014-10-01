@@ -8,5 +8,5 @@ function test(stdlib, foreign) {
     }
     return f;
 };
-f = test(this, {ff: Object.preventExtensions});
+f = test(this, {ff: Object.defineProperty});
 f();
