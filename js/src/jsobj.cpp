@@ -5008,7 +5008,7 @@ js::NativeSet(typename ExecutionModeTraits<mode>::ContextType cxArg,
          * or throw if we're in strict mode.
          */
         if (!shape->hasGetterValue() && shape->hasDefaultSetter())
-            return js_ReportGetterOnlyAssignment(cx, shape->propid(), strict);
+            return js_ReportGetterOnlyAssignment(cx, strict);
     }
 
     RootedValue ovp(cx, vp);
@@ -5511,7 +5511,7 @@ baseops::SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cxArg
                 if (mode == ParallelExecution)
                     return !strict;
 
-                return js_ReportGetterOnlyAssignment(cxArg->asJSContext(), id, strict);
+                return js_ReportGetterOnlyAssignment(cxArg->asJSContext(), strict);
             }
         } else {
             MOZ_ASSERT(shape->isDataDescriptor());
@@ -6172,18 +6172,14 @@ js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
 }
 
 bool
-js_ReportGetterOnlyAssignment(JSContext *cx, jsid id, bool strict)
+js_ReportGetterOnlyAssignment(JSContext *cx, bool strict)
 {
-    RootedValue val(cx, IdToValue(id));
-    return js_ReportValueErrorFlags(cx,
-                                    strict
-                                    ? JSREPORT_ERROR
-                                    : JSREPORT_WARNING | JSREPORT_STRICT,
-                                    JSMSG_GETTER_ONLY,
-                                    JSDVG_IGNORE_STACK,
-                                    val,
-                                    js::NullPtr(),
-                                    nullptr, nullptr);
+    return JS_ReportErrorFlagsAndNumber(cx,
+                                        strict
+                                        ? JSREPORT_ERROR
+                                        : JSREPORT_WARNING | JSREPORT_STRICT,
+                                        js_GetErrorMessage, nullptr,
+                                        JSMSG_GETTER_ONLY);
 }
 
 #ifdef DEBUG
