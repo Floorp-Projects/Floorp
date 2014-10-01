@@ -5,6 +5,10 @@
 
 <resources>
 
+    <style name="UrlBar.ImageButton.NewTablet">
+        <item name="android:layout_width">@dimen/new_tablet_browser_toolbar_menu_item_width</item>
+    </style>
+
     <style name="UrlBar.ImageButton.Forward">
         <item name="android:contentDescription">@string/forward</item>
         <item name="android:layout_width">45dip</item>
@@ -33,6 +37,9 @@
 
     <style name="UrlBar.ImageButton.TabCount.NewTablet">
         <item name="android:background">@drawable/new_tablet_tabs_count</item>
+
+        <!-- From UrlBar.ImageButton.NewTablet because we can't inherit directly. -->
+        <item name="android:layout_width">@dimen/new_tablet_browser_toolbar_menu_item_width</item>
     </style>
 
     <style name="UrlBar.Button.Container">
@@ -65,16 +72,25 @@
     <style name="Widget.MenuItemActionBar">
         <item name="android:layout_width">@dimen/browser_toolbar_height</item>
         <item name="android:layout_height">@dimen/browser_toolbar_height</item>
-        <item name="android:padding">@dimen/browser_toolbar_button_padding</item>
         <item name="android:background">@drawable/action_bar_button</item>
         <item name="android:scaleType">fitCenter</item>
+
+        <!-- We split up padding* because we can't override it in *.NewTablet otherwise. -->
+        <item name="android:paddingTop">@dimen/browser_toolbar_button_padding</item>
+        <item name="android:paddingBottom">@dimen/browser_toolbar_button_padding</item>
+        <item name="android:paddingLeft">@dimen/browser_toolbar_button_padding</item>
+        <item name="android:paddingRight">@dimen/browser_toolbar_button_padding</item>
     </style>
 
     <style name="Widget.MenuItemActionBar.NewTablet">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:padding">@dimen/new_tablet_browser_toolbar_menu_item_padding</item>
         <item name="android:scaleType">center</item>
+
+        <item name="android:paddingTop">@dimen/new_tablet_browser_toolbar_menu_item_padding_vertical</item>
+        <item name="android:paddingBottom">@dimen/new_tablet_browser_toolbar_menu_item_padding_vertical</item>
+        <item name="android:paddingLeft">@dimen/new_tablet_browser_toolbar_menu_item_padding_horizontal</item>
+        <item name="android:paddingRight">@dimen/new_tablet_browser_toolbar_menu_item_padding_horizontal</item>
     </style>
 
     <style name="Widget.BookmarksListView" parent="Widget.HomeListView">
