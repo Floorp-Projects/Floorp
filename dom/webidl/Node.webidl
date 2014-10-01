@@ -101,8 +101,6 @@ interface Node : EventTarget {
   [Constant]
   readonly attribute DOMString? localName;
 
-  [Pure]
-  boolean hasAttributes();
   [Throws, Func="IsChromeOrXBL"]
   any setUserData(DOMString key, any data);
   [Throws, Func="IsChromeOrXBL"]
