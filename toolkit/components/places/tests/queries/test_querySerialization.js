@@ -414,6 +414,17 @@ const queryOptionSwitches = [
       }
     ]
   },
+  // excludeReadOnlyFolders
+  {
+    property: "excludeReadOnlyFolders",
+    desc:     "nsINavHistoryQueryOptions.excludeReadOnlyFolders",
+    matches:  simplePropertyMatches,
+    runs:     [
+      function (aQuery, aQueryOptions) {
+        aQueryOptions.excludeReadOnlyFolders = true;
+      }
+    ]
+  },
   // expandQueries
   {
     property: "expandQueries",

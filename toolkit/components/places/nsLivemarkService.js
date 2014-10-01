@@ -547,6 +547,7 @@ function Livemark(aLivemarkInfo)
                                                  aLivemarkInfo.title,
                                                  aLivemarkInfo.index,
                                                  aLivemarkInfo.guid);
+    PlacesUtils.bookmarks.setFolderReadonly(this.id, true);
     this.writeFeedURI(aLivemarkInfo.feedURI);
     if (aLivemarkInfo.siteURI) {
       this.writeSiteURI(aLivemarkInfo.siteURI);
