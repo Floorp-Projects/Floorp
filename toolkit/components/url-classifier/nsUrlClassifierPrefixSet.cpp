@@ -311,11 +311,11 @@ nsUrlClassifierPrefixSet::LoadFromFd(AutoFDClose& fileFd)
     if (indexSize != 0 && indexStarts[0] != 0) {
       return NS_ERROR_FILE_CORRUPTED;
     }
-    if (deltaSize > 0) {
-      for (uint32_t i = 0; i < indexSize; i++) {
-        mIndexDeltas.AppendElement();
-        uint32_t numInDelta = i == indexSize - 1 ? deltaSize - indexStarts[i]
-                                                 : indexStarts[i + 1] - indexStarts[i];
+    for (uint32_t i = 0; i < indexSize; i++) {
+      mIndexDeltas.AppendElement();
+      uint32_t numInDelta = i == indexSize - 1 ? deltaSize - indexStarts[i]
+                               : indexStarts[i + 1] - indexStarts[i];
+      if (numInDelta > 0) {
         mIndexDeltas[i].SetLength(numInDelta);
         mTotalPrefixes += numInDelta;
         toRead = numInDelta * sizeof(uint16_t);
@@ -330,6 +330,7 @@ nsUrlClassifierPrefixSet::LoadFromFd(AutoFDClose& fileFd)
     return NS_ERROR_FILE_CORRUPTED;
   }
 
+  MOZ_ASSERT(mIndexPrefixes.Length() == mIndexDeltas.Length());
   LOG(("Loading PrefixSet successful"));
 
   return NS_OK;
