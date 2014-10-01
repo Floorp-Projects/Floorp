@@ -415,8 +415,8 @@ WifiGeoPositionProvider.prototype = {
                     .getService(Ci.nsIMobileConnectionService);
 
       let result = [];
-      for (let i = 0; i < service.length; i++) {
-        LOG("Looking for SIM in slot:" + i + " of " + service.length);
+      for (let i = 0; i < service.numItems; i++) {
+        LOG("Looking for SIM in slot:" + i + " of " + service.numItems);
         let connection = service.getItemByServiceId(i);
         let voice = connection && connection.voice;
         let cell = voice && voice.cell;
