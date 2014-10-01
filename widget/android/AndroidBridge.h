@@ -238,10 +238,6 @@ public:
     int GetDPI();
     int GetScreenDepth();
 
-    void ShowFilePickerForExtensions(nsAString& aFilePath, const nsAString& aExtensions);
-    void ShowFilePickerForMimeType(nsAString& aFilePath, const nsAString& aMimeType);
-    void ShowFilePickerAsync(const nsAString& aMimeType, nsFilePickerCallback* callback);
-
     void Vibrate(const nsTArray<uint32_t>& aPattern);
 
     void GetSystemColors(AndroidSystemColors *aColors);
