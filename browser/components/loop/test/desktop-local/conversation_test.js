@@ -41,7 +41,7 @@ describe("loop.conversation", function() {
         return "en-US";
       },
       setLoopCharPref: sinon.stub(),
-      getLoopCharPref: sinon.stub(),
+      getLoopCharPref: sinon.stub().returns(null),
       getLoopBoolPref: sinon.stub(),
       getCallData: sinon.stub(),
       releaseCallData: sinon.stub(),
@@ -68,14 +68,17 @@ describe("loop.conversation", function() {
   });
 
   describe("#init", function() {
-    var oldTitle;
-
     beforeEach(function() {
       sandbox.stub(React, "renderComponent");
       sandbox.stub(document.mozL10n, "initialize");
 
       sandbox.stub(loop.shared.models.ConversationModel.prototype,
         "initialize");
+
+      sandbox.stub(loop.Dispatcher.prototype, "dispatch");
+
+      sandbox.stub(loop.shared.utils.Helper.prototype,
+        "locationHash").returns("#incoming/42");
 
       window.OT = {
         overrideGuidStorage: sinon.stub()
@@ -94,17 +97,78 @@ describe("loop.conversation", function() {
         navigator.mozLoop);
     });
 
-    it("should create the IncomingConversationView", function() {
+    it("should create the ConversationControllerView", function() {
       loop.conversation.init();
 
       sinon.assert.calledOnce(React.renderComponent);
       sinon.assert.calledWith(React.renderComponent,
         sinon.match(function(value) {
           return TestUtils.isDescriptorOfType(value,
-            loop.conversation.IncomingConversationView);
+            loop.conversation.ConversationControllerView);
       }));
     });
 
+    it("should trigger a gatherCallData action", function() {
+      loop.conversation.init();
+
+      sinon.assert.calledOnce(loop.Dispatcher.prototype.dispatch);
+      sinon.assert.calledWithExactly(loop.Dispatcher.prototype.dispatch,
+        new loop.shared.actions.GatherCallData({
+          calleeId: null,
+          callId: "42"
+        }));
+    });
+  });
+
+  describe("ConversationControllerView", function() {
+    var store, conversation, client, ccView, oldTitle, dispatcher;
+
+    function mountTestComponent() {
+      return TestUtils.renderIntoDocument(
+        loop.conversation.ConversationControllerView({
+          client: client,
+          conversation: conversation,
+          notifications: notifications,
+          sdk: {},
+          store: store
+        }));
+    }
+
+    beforeEach(function() {
+      oldTitle = document.title;
+      client = new loop.Client();
+      conversation = new loop.shared.models.ConversationModel({}, {
+        sdk: {}
+      });
+      dispatcher = new loop.Dispatcher();
+      store = new loop.store.ConversationStore({}, {
+        client: client,
+        dispatcher: dispatcher
+      });
+    });
+
+    afterEach(function() {
+      ccView = undefined;
+      document.title = oldTitle;
+    });
+
+    it("should display the OutgoingConversationView for outgoing calls", function() {
+      store.set({outgoing: true});
+
+      ccView = mountTestComponent();
+
+      TestUtils.findRenderedComponentWithType(ccView,
+        loop.conversationViews.OutgoingConversationView);
+    });
+
+    it("should display the IncomingConversationView for incoming calls", function() {
+      store.set({outgoing: false});
+
+      ccView = mountTestComponent();
+
+      TestUtils.findRenderedComponentWithType(ccView,
+        loop.conversation.IncomingConversationView);
+    });
   });
 
   describe("IncomingConversationView", function() {
@@ -231,13 +295,24 @@ describe("loop.conversation", function() {
 
           it("should set the state to incoming on success", function(done) {
             icView = mountTestComponent();
-            resolveWebSocketConnect();
+            resolveWebSocketConnect("incoming");
 
             promise.then(function () {
               expect(icView.state.callStatus).eql("incoming");
               done();
             });
           });
+
+          it("should set the state to close on success if the progress " +
+            "state is terminated", function(done) {
+              icView = mountTestComponent();
+              resolveWebSocketConnect("terminated");
+
+              promise.then(function () {
+                expect(icView.state.callStatus).eql("close");
+                done();
+              });
+            });
 
           it("should display an error if the websocket failed to connect", function(done) {
             sandbox.stub(notifications, "errorL10n");

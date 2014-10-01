@@ -253,5 +253,70 @@ describe("loop.Client", function() {
           });
         });
     });
+
+    describe("#setupOutgoingCall", function() {
+      var calleeIds, callType;
+
+      beforeEach(function() {
+        calleeIds = [
+          "fakeemail", "fake phone"
+        ];
+        callType = "audio";
+      });
+
+      it("should make a POST call to /calls", function() {
+        client.setupOutgoingCall(calleeIds, callType);
+
+        sinon.assert.calledOnce(hawkRequestStub);
+        sinon.assert.calledWith(hawkRequestStub,
+          mozLoop.LOOP_SESSION_TYPE.FXA,
+          "/calls",
+          "POST",
+          { calleeId: calleeIds, callType: callType }
+        );
+      });
+
+      it("should call the callback if the request is successful", function() {
+        var requestData = {
+          apiKey: "fake",
+          callId: "fakeCall",
+          progressURL: "fakeurl",
+          sessionId: "12345678",
+          sessionToken: "15263748",
+          websocketToken: "13572468"
+        };
+
+        hawkRequestStub.callsArgWith(4, null, JSON.stringify(requestData));
+
+        client.setupOutgoingCall(calleeIds, callType, callback);
+
+        sinon.assert.calledOnce(callback);
+        sinon.assert.calledWithExactly(callback, null, requestData);
+      });
+
+      it("should send an error when the request fails", function() {
+        hawkRequestStub.callsArgWith(4, fakeErrorRes);
+
+        client.setupOutgoingCall(calleeIds, callType, callback);
+
+        sinon.assert.calledOnce(callback);
+        sinon.assert.calledWithExactly(callback, sinon.match(function(err) {
+          return /400.*invalid token/.test(err.message);
+        }));
+      });
+
+      it("should send an error if the data is not valid", function() {
+        // Sets up the hawkRequest stub to trigger the callback with
+        // an error
+        hawkRequestStub.callsArgWith(4, null, "{}");
+
+        client.setupOutgoingCall(calleeIds, callType, callback);
+
+        sinon.assert.calledOnce(callback);
+        sinon.assert.calledWithMatch(callback, sinon.match(function(err) {
+          return /Invalid data received/.test(err.message);
+        }));
+      });
+    });
   });
 });
