@@ -2059,6 +2059,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mMediaSecurityVerified(false),
     mCORSMode(CORS_NONE),
     mHasAudio(false),
+    mHasVideo(false),
     mDownloadSuspendedByCache(false),
     mAudioChannelFaded(false),
     mPlayingThroughTheAudioChannel(false),
@@ -2922,6 +2923,7 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
                                       const MetadataTags* aTags)
 {
   mHasAudio = aInfo->HasAudio();
+  mHasVideo = aInfo->HasVideo();
   mTags = aTags;
   mLoadedDataFired = false;
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
@@ -3328,13 +3330,15 @@ VideoFrameContainer* HTMLMediaElement::GetVideoFrameContainer()
     return nullptr;
   }
 
-  if (mVideoFrameContainer)
-    return mVideoFrameContainer;
-
   // Only video frames need an image container.
   if (!IsVideo()) {
     return nullptr;
   }
+
+  mHasVideo = true;
+
+  if (mVideoFrameContainer)
+    return mVideoFrameContainer;
 
   mVideoFrameContainer =
     new VideoFrameContainer(this, LayerManager::CreateAsynchronousImageContainer());
