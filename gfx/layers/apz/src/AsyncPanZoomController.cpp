@@ -520,7 +520,8 @@ public:
       //   is this one, then the SetState(NOTHING) in UpdateAnimation will
       //   stomp on the SetState(SNAP_BACK) it does.
       mDeferredTasks.append(NewRunnableMethod(mOverscrollHandoffChain.get(),
-                                              &OverscrollHandoffChain::SnapBackOverscrolledApzc));
+                                              &OverscrollHandoffChain::SnapBackOverscrolledApzc,
+                                              &mApzc));
       return false;
     }
 
