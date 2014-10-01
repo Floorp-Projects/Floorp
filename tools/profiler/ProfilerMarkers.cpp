@@ -169,3 +169,18 @@ TouchDataPayload::streamPayloadImpl(JSStreamWriter& b)
   b.NameValue("y", mPoint.y);
   b.EndObject();
 }
+
+VsyncPayload::VsyncPayload(mozilla::TimeStamp aVsyncTimestamp)
+  : ProfilerMarkerPayload(aVsyncTimestamp, aVsyncTimestamp, nullptr)
+  , mVsyncTimestamp(aVsyncTimestamp)
+{
+}
+
+void
+VsyncPayload::streamPayloadImpl(JSStreamWriter& b)
+{
+  b.BeginObject();
+  b.NameValue("vsync", profiler_time(mVsyncTimestamp));
+  b.NameValue("category", "VsyncTimestamp");
+  b.EndObject();
+}

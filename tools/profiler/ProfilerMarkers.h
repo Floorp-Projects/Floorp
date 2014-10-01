@@ -168,4 +168,22 @@ private:
   mozilla::ScreenIntPoint mPoint;
 };
 
+/**
+ * Tracks when a vsync occurs according to the HardwareComposer.
+ */
+class VsyncPayload : public ProfilerMarkerPayload
+{
+public:
+  explicit VsyncPayload(mozilla::TimeStamp aVsyncTimestamp);
+  virtual ~VsyncPayload() {}
+
+protected:
+  virtual void
+  streamPayload(JSStreamWriter& b) { return streamPayloadImpl(b); }
+
+private:
+  void streamPayloadImpl(JSStreamWriter& b);
+  mozilla::TimeStamp mVsyncTimestamp;
+};
+
 #endif // PROFILER_MARKERS_H
