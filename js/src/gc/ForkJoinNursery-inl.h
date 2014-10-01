@@ -68,7 +68,7 @@ ForkJoinNursery::isInsideFromspace(const void *addr)
 MOZ_ALWAYS_INLINE bool
 ForkJoinNursery::isForwarded(Cell *cell)
 {
-    JS_ASSERT(isInsideFromspace(cell));
+    MOZ_ASSERT(isInsideFromspace(cell));
     const RelocationOverlay *overlay = RelocationOverlay::fromCell(cell);
     return overlay->isForwarded();
 }
@@ -77,8 +77,8 @@ template <typename T>
 MOZ_ALWAYS_INLINE bool
 ForkJoinNursery::getForwardedPointer(T **ref)
 {
-    JS_ASSERT(ref);
-    JS_ASSERT(isInsideFromspace(*ref));
+    MOZ_ASSERT(ref);
+    MOZ_ASSERT(isInsideFromspace(*ref));
     const RelocationOverlay *overlay = RelocationOverlay::fromCell(*ref);
     if (!overlay->isForwarded())
         return false;

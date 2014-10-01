@@ -41,7 +41,7 @@ bool
 LIRGeneratorX86::useBox(LInstruction *lir, size_t n, MDefinition *mir,
                         LUse::Policy policy, bool useAtStart)
 {
-    JS_ASSERT(mir->type() == MIRType_Value);
+    MOZ_ASSERT(mir->type() == MIRType_Value);
 
     if (!ensureDefined(mir))
         return false;
@@ -54,8 +54,8 @@ bool
 LIRGeneratorX86::useBoxFixed(LInstruction *lir, size_t n, MDefinition *mir, Register reg1,
                              Register reg2)
 {
-    JS_ASSERT(mir->type() == MIRType_Value);
-    JS_ASSERT(reg1 != reg2);
+    MOZ_ASSERT(mir->type() == MIRType_Value);
+    MOZ_ASSERT(reg1 != reg2);
 
     if (!ensureDefined(mir))
         return false;
@@ -119,7 +119,7 @@ LIRGeneratorX86::visitUnbox(MUnbox *unbox)
     // a payload. Unlike most instructions conusming a box, we ask for the type
     // second, so that the result can re-use the first input.
     MDefinition *inner = unbox->getOperand(0);
-    JS_ASSERT(inner->type() == MIRType_Value);
+    MOZ_ASSERT(inner->type() == MIRType_Value);
 
     if (!ensureDefined(inner))
         return false;
@@ -153,7 +153,7 @@ bool
 LIRGeneratorX86::visitReturn(MReturn *ret)
 {
     MDefinition *opd = ret->getOperand(0);
-    JS_ASSERT(opd->type() == MIRType_Value);
+    MOZ_ASSERT(opd->type() == MIRType_Value);
 
     LReturn *ins = new(alloc()) LReturn;
     ins->setOperand(0, LUse(JSReturnReg_Type));
@@ -176,7 +176,7 @@ LIRGeneratorX86::defineUntypedPhi(MPhi *phi, size_t lirIndex)
     uint32_t payloadVreg = getVirtualRegister();
     if (payloadVreg >= MAX_VIRTUAL_REGISTERS)
         return false;
-    JS_ASSERT(typeVreg + 1 == payloadVreg);
+    MOZ_ASSERT(typeVreg + 1 == payloadVreg);
 
     type->setDef(0, LDefinition(typeVreg, LDefinition::TYPE));
     payload->setDef(0, LDefinition(payloadVreg, LDefinition::PAYLOAD));
@@ -198,7 +198,7 @@ LIRGeneratorX86::lowerUntypedPhiInput(MPhi *phi, uint32_t inputPosition, LBlock 
 bool
 LIRGeneratorX86::visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins)
 {
-    JS_ASSERT(ins->input()->type() == MIRType_Int32);
+    MOZ_ASSERT(ins->input()->type() == MIRType_Int32);
     LAsmJSUInt32ToDouble *lir = new(alloc()) LAsmJSUInt32ToDouble(useRegisterAtStart(ins->input()), temp());
     return define(lir, ins);
 }
@@ -206,7 +206,7 @@ LIRGeneratorX86::visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins)
 bool
 LIRGeneratorX86::visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32 *ins)
 {
-    JS_ASSERT(ins->input()->type() == MIRType_Int32);
+    MOZ_ASSERT(ins->input()->type() == MIRType_Int32);
     LAsmJSUInt32ToFloat32 *lir = new(alloc()) LAsmJSUInt32ToFloat32(useRegisterAtStart(ins->input()), temp());
     return define(lir, ins);
 }
@@ -216,13 +216,13 @@ LIRGeneratorX86::visitAsmJSLoadHeap(MAsmJSLoadHeap *ins)
 {
     MDefinition *ptr = ins->ptr();
     LAllocation ptrAlloc;
-    JS_ASSERT(ptr->type() == MIRType_Int32);
+    MOZ_ASSERT(ptr->type() == MIRType_Int32);
 
     // For the x86 it is best to keep the 'ptr' in a register if a bounds check is needed.
     if (ptr->isConstant() && ins->skipBoundsCheck()) {
         int32_t ptrValue = ptr->toConstant()->value().toInt32();
         // A bounds check is only skipped for a positive index.
-        JS_ASSERT(ptrValue >= 0);
+        MOZ_ASSERT(ptrValue >= 0);
         ptrAlloc = LAllocation(ptr->toConstant()->vp());
     } else {
         ptrAlloc = useRegisterAtStart(ptr);
@@ -236,11 +236,11 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
 {
     MDefinition *ptr = ins->ptr();
     LAsmJSStoreHeap *lir;
-    JS_ASSERT(ptr->type() == MIRType_Int32);
+    MOZ_ASSERT(ptr->type() == MIRType_Int32);
 
     if (ptr->isConstant() && ins->skipBoundsCheck()) {
         int32_t ptrValue = ptr->toConstant()->value().toInt32();
-        JS_ASSERT(ptrValue >= 0);
+        MOZ_ASSERT(ptrValue >= 0);
         LAllocation ptrAlloc = LAllocation(ptr->toConstant()->vp());
         switch (ins->viewType()) {
           case Scalar::Int8: case Scalar::Uint8:

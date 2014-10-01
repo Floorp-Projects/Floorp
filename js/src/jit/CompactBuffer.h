@@ -36,7 +36,7 @@ class CompactBufferReader
         uint32_t shift = 0;
         uint8_t byte;
         while (true) {
-            JS_ASSERT(shift < 32);
+            MOZ_ASSERT(shift < 32);
             byte = readByte();
             val |= (uint32_t(byte) >> 1) << shift;
             shift += 7;
@@ -52,7 +52,7 @@ class CompactBufferReader
     { }
     inline explicit CompactBufferReader(const CompactBufferWriter &writer);
     uint8_t readByte() {
-        JS_ASSERT(buffer_ < end_);
+        MOZ_ASSERT(buffer_ < end_);
         return *buffer_++;
     }
     uint32_t readFixedUint32_t() {
@@ -69,7 +69,7 @@ class CompactBufferReader
     }
     uint32_t readNativeEndianUint32_t() {
         // Must be at 4-byte boundary
-        JS_ASSERT(uintptr_t(buffer_) % sizeof(uint32_t) == 0);
+        MOZ_ASSERT(uintptr_t(buffer_) % sizeof(uint32_t) == 0);
         return *reinterpret_cast<const uint32_t *>(buffer_);
     }
     uint32_t readUnsigned() {
@@ -88,7 +88,7 @@ class CompactBufferReader
     }
 
     bool more() const {
-        JS_ASSERT(buffer_ <= end_);
+        MOZ_ASSERT(buffer_ <= end_);
         return buffer_ < end_;
     }
 
@@ -116,7 +116,7 @@ class CompactBufferWriter
     // Note: writeByte() takes uint32 to catch implicit casts with a runtime
     // assert.
     void writeByte(uint32_t byte) {
-        JS_ASSERT(byte <= 0xFF);
+        MOZ_ASSERT(byte <= 0xFF);
         enoughMemory_ &= buffer_.append(byte);
     }
     void writeUnsigned(uint32_t value) {
@@ -150,7 +150,7 @@ class CompactBufferWriter
     }
     void writeNativeEndianUint32_t(uint32_t value) {
         // Must be at 4-byte boundary
-        JS_ASSERT(length() % sizeof(uint32_t) == 0);
+        MOZ_ASSERT(length() % sizeof(uint32_t) == 0);
         writeFixedUint32_t(0);
         if (oom())
             return;

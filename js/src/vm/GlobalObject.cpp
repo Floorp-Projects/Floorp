@@ -78,7 +78,7 @@ TypedObjectModuleObject&
 js::GlobalObject::getTypedObjectModule() const {
     Value v = getConstructor(JSProto_TypedObject);
     // only gets called from contexts where TypedObject must be initialized
-    JS_ASSERT(v.isObject());
+    MOZ_ASSERT(v.isObject());
     return v.toObject().as<TypedObjectModuleObject>();
 }
 
@@ -207,13 +207,13 @@ GlobalObject::resolveConstructor(JSContext *cx, Handle<GlobalObject*> global, JS
 GlobalObject::initBuiltinConstructor(JSContext *cx, Handle<GlobalObject*> global,
                                      JSProtoKey key, HandleObject ctor, HandleObject proto)
 {
-    JS_ASSERT(!global->nativeEmpty()); // reserved slots already allocated
-    JS_ASSERT(key != JSProto_Null);
-    JS_ASSERT(ctor);
-    JS_ASSERT(proto);
+    MOZ_ASSERT(!global->nativeEmpty()); // reserved slots already allocated
+    MOZ_ASSERT(key != JSProto_Null);
+    MOZ_ASSERT(ctor);
+    MOZ_ASSERT(proto);
 
     RootedId id(cx, NameToId(ClassName(key, cx)));
-    JS_ASSERT(!global->nativeLookup(cx, id));
+    MOZ_ASSERT(!global->nativeLookup(cx, id));
 
     if (!global->addDataProperty(cx, id, constructorPropertySlot(key), 0))
         return false;
@@ -229,8 +229,8 @@ GlobalObject::initBuiltinConstructor(JSContext *cx, Handle<GlobalObject*> global
 GlobalObject *
 GlobalObject::create(JSContext *cx, const Class *clasp)
 {
-    JS_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
-    JS_ASSERT(clasp->trace == JS_GlobalObjectTraceHook);
+    MOZ_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
+    MOZ_ASSERT(clasp->trace == JS_GlobalObjectTraceHook);
 
     JSObject *obj = NewObjectWithGivenProto(cx, clasp, nullptr, nullptr, SingletonObject);
     if (!obj)
@@ -379,7 +379,7 @@ GlobalObject::createConstructor(JSContext *cx, Native ctor, JSAtom *nameArg, uns
 static JSObject *
 CreateBlankProto(JSContext *cx, const Class *clasp, JSObject &proto, GlobalObject &global)
 {
-    JS_ASSERT(clasp != &JSFunction::class_);
+    MOZ_ASSERT(clasp != &JSFunction::class_);
 
     RootedObject blankProto(cx, NewObjectWithGivenProto(cx, clasp, &proto, &global, SingletonObject));
     if (!blankProto || !blankProto->setDelegate(cx))
@@ -450,7 +450,7 @@ GlobalObject::getDebuggers()
     Value debuggers = getReservedSlot(DEBUGGERS);
     if (debuggers.isUndefined())
         return nullptr;
-    JS_ASSERT(debuggers.toObject().getClass() == &GlobalDebuggees_class);
+    MOZ_ASSERT(debuggers.toObject().getClass() == &GlobalDebuggees_class);
     return (DebuggerVector *) debuggers.toObject().getPrivate();
 }
 

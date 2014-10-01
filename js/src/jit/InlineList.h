@@ -88,7 +88,7 @@ class InlineForwardList : protected InlineForwardListNode<T>
         insertAfter(this, t);
     }
     void pushBack(Node *t) {
-        JS_ASSERT(t->next == nullptr);
+        MOZ_ASSERT(t->next == nullptr);
 #ifdef DEBUG
         modifyCount_++;
 #endif
@@ -96,17 +96,17 @@ class InlineForwardList : protected InlineForwardListNode<T>
         tail_ = t;
     }
     T *popFront() {
-        JS_ASSERT(!empty());
+        MOZ_ASSERT(!empty());
         T* result = static_cast<T *>(this->next);
         removeAfter(this, result);
         return result;
     }
     T *back() {
-        JS_ASSERT(!empty());
+        MOZ_ASSERT(!empty());
         return static_cast<T *>(tail_);
     }
     void insertAfter(Node *at, Node *item) {
-        JS_ASSERT(item->next == nullptr);
+        MOZ_ASSERT(item->next == nullptr);
 #ifdef DEBUG
         modifyCount_++;
 #endif
@@ -121,12 +121,12 @@ class InlineForwardList : protected InlineForwardListNode<T>
 #endif
         if (item == tail_)
             tail_ = at;
-        JS_ASSERT(at->next == item);
+        MOZ_ASSERT(at->next == item);
         at->next = item->next;
         item->next = nullptr;
     }
     void splitAfter(Node *at, InlineForwardList<T> *to) {
-        JS_ASSERT(to->empty());
+        MOZ_ASSERT(to->empty());
         if (!at)
             at = this;
         if (at == tail_)
@@ -170,7 +170,7 @@ private:
 
 public:
     InlineForwardListIterator<T> & operator ++() {
-        JS_ASSERT(modifyCount_ == owner_->modifyCount_);
+        MOZ_ASSERT(modifyCount_ == owner_->modifyCount_);
         prev = iter;
         iter = iter->next;
         return *this;
@@ -181,11 +181,11 @@ public:
         return old;
     }
     T * operator *() const {
-        JS_ASSERT(modifyCount_ == owner_->modifyCount_);
+        MOZ_ASSERT(modifyCount_ == owner_->modifyCount_);
         return static_cast<T *>(iter);
     }
     T * operator ->() const {
-        JS_ASSERT(modifyCount_ == owner_->modifyCount_);
+        MOZ_ASSERT(modifyCount_ == owner_->modifyCount_);
         return static_cast<T *>(iter);
     }
     bool operator !=(const InlineForwardListIterator<T> &where) const {
@@ -289,13 +289,13 @@ class InlineList : protected InlineListNode<T>
         insertBeforeUnchecked(this, t);
     }
     T *popFront() {
-        JS_ASSERT(!empty());
+        MOZ_ASSERT(!empty());
         T *t = static_cast<T *>(this->next);
         remove(t);
         return t;
     }
     T *popBack() {
-        JS_ASSERT(!empty());
+        MOZ_ASSERT(!empty());
         T *t = static_cast<T *>(this->prev);
         remove(t);
         return t;
@@ -306,8 +306,8 @@ class InlineList : protected InlineListNode<T>
         return *iter;
     }
     void insertBefore(Node *at, Node *item) {
-        JS_ASSERT(item->prev == nullptr);
-        JS_ASSERT(item->next == nullptr);
+        MOZ_ASSERT(item->prev == nullptr);
+        MOZ_ASSERT(item->next == nullptr);
         insertBeforeUnchecked(at, item);
     }
     void insertBeforeUnchecked(Node *at, Node *item) {
@@ -318,8 +318,8 @@ class InlineList : protected InlineListNode<T>
         at->prev = item;
     }
     void insertAfter(Node *at, Node *item) {
-        JS_ASSERT(item->prev == nullptr);
-        JS_ASSERT(item->next == nullptr);
+        MOZ_ASSERT(item->prev == nullptr);
+        MOZ_ASSERT(item->next == nullptr);
         insertAfterUnchecked(at, item);
     }
     void insertAfterUnchecked(Node *at, Node *item) {
@@ -481,10 +481,10 @@ class InlineConcatList
 
     void append(InlineConcatList<T> *adding)
     {
-        JS_ASSERT(tail);
-        JS_ASSERT(!tail->next);
-        JS_ASSERT(adding->tail);
-        JS_ASSERT(!adding->tail->next);
+        MOZ_ASSERT(tail);
+        MOZ_ASSERT(!tail->next);
+        MOZ_ASSERT(adding->tail);
+        MOZ_ASSERT(!adding->tail->next);
 
         tail->next = adding;
         tail = adding->tail;

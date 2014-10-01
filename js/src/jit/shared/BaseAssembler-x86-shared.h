@@ -155,7 +155,7 @@ namespace X86Registers {
     }
 
     inline RegisterID getSubregH(RegisterID reg) {
-        JS_ASSERT(hasSubregH(reg));
+        MOZ_ASSERT(hasSubregH(reg));
         return RegisterID(reg + 4);
     }
 
@@ -2879,7 +2879,7 @@ public:
 
     void pshufd_irr(uint32_t mask, XMMRegisterID src, XMMRegisterID dst)
     {
-        JS_ASSERT(mask < 256);
+        MOZ_ASSERT(mask < 256);
         spew("pshufd      0x%x, %s, %s",
              mask, nameFPReg(src), nameFPReg(dst));
         m_formatter.prefix(PRE_SSE_66);
@@ -2889,7 +2889,7 @@ public:
 
     void shufps_irr(uint32_t mask, XMMRegisterID src, XMMRegisterID dst)
     {
-        JS_ASSERT(mask < 256);
+        MOZ_ASSERT(mask < 256);
         spew("shufps     0x%x, %s, %s",
              mask, nameFPReg(src), nameFPReg(dst));
         m_formatter.twoByteOp(OP2_SHUFPS_VpsWpsIb, (RegisterID)dst, (RegisterID)src);

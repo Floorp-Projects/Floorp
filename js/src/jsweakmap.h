@@ -161,7 +161,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
         if (gc::IsMarked(x))
             return false;
         gc::Mark(trc, x, "WeakMap entry value");
-        JS_ASSERT(gc::IsMarked(x));
+        MOZ_ASSERT(gc::IsMarked(x));
         return true;
     }
 
@@ -271,9 +271,9 @@ protected:
 #if DEBUG
         for (Range r = Base::all(); !r.empty(); r.popFront()) {
             Key k(r.front().key());
-            JS_ASSERT(!gc::IsAboutToBeFinalized(&k));
-            JS_ASSERT(!gc::IsAboutToBeFinalized(&r.front().value()));
-            JS_ASSERT(k == r.front().key());
+            MOZ_ASSERT(!gc::IsAboutToBeFinalized(&k));
+            MOZ_ASSERT(!gc::IsAboutToBeFinalized(&r.front().value()));
+            MOZ_ASSERT(k == r.front().key());
         }
 #endif
     }

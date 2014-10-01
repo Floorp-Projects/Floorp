@@ -224,21 +224,21 @@ class ObjectElements
         flags |= CONVERT_DOUBLE_ELEMENTS;
     }
     void clearShouldConvertDoubleElements() {
-        JS_ASSERT(!isCopyOnWrite());
+        MOZ_ASSERT(!isCopyOnWrite());
         flags &= ~CONVERT_DOUBLE_ELEMENTS;
     }
     bool hasNonwritableArrayLength() const {
         return flags & NONWRITABLE_ARRAY_LENGTH;
     }
     void setNonwritableArrayLength() {
-        JS_ASSERT(!isCopyOnWrite());
+        MOZ_ASSERT(!isCopyOnWrite());
         flags |= NONWRITABLE_ARRAY_LENGTH;
     }
     bool isCopyOnWrite() const {
         return flags & COPY_ON_WRITE;
     }
     void clearCopyOnWrite() {
-        JS_ASSERT(isCopyOnWrite());
+        MOZ_ASSERT(isCopyOnWrite());
         flags &= ~COPY_ON_WRITE;
     }
 
@@ -258,7 +258,7 @@ class ObjectElements
     }
 
     HeapPtrObject &ownerObject() const {
-        JS_ASSERT(isCopyOnWrite());
+        MOZ_ASSERT(isCopyOnWrite());
         return *(HeapPtrObject *)(&elements()[initializedLength]);
     }
 
@@ -431,29 +431,29 @@ class ObjectImpl : public gc::Cell
     preventExtensions(JSContext *cx, Handle<ObjectImpl*> obj);
 
     HeapSlotArray getDenseElements() {
-        JS_ASSERT(isNative());
+        MOZ_ASSERT(isNative());
         return HeapSlotArray(elements, !getElementsHeader()->isCopyOnWrite());
     }
     HeapSlotArray getDenseElementsAllowCopyOnWrite() {
         // Backdoor allowing direct access to copy on write elements.
-        JS_ASSERT(isNative());
+        MOZ_ASSERT(isNative());
         return HeapSlotArray(elements, true);
     }
     const Value &getDenseElement(uint32_t idx) {
-        JS_ASSERT(isNative());
+        MOZ_ASSERT(isNative());
         MOZ_ASSERT(idx < getDenseInitializedLength());
         return elements[idx];
     }
     bool containsDenseElement(uint32_t idx) {
-        JS_ASSERT(isNative());
+        MOZ_ASSERT(isNative());
         return idx < getDenseInitializedLength() && !elements[idx].isMagic(JS_ELEMENTS_HOLE);
     }
     uint32_t getDenseInitializedLength() {
-        JS_ASSERT(getClass()->isNative());
+        MOZ_ASSERT(getClass()->isNative());
         return getElementsHeader()->initializedLength;
     }
     uint32_t getDenseCapacity() {
-        JS_ASSERT(getClass()->isNative());
+        MOZ_ASSERT(getClass()->isNative());
         return getElementsHeader()->capacity;
     }
 
@@ -755,11 +755,11 @@ class ObjectImpl : public gc::Cell
     }
 
     HeapSlot &nativeGetSlotRef(uint32_t slot) {
-        JS_ASSERT(isNative() && slot < slotSpan());
+        MOZ_ASSERT(isNative() && slot < slotSpan());
         return getSlotRef(slot);
     }
     const Value &nativeGetSlot(uint32_t slot) const {
-        JS_ASSERT(isNative() && slot < slotSpan());
+        MOZ_ASSERT(isNative() && slot < slotSpan());
         return getSlot(slot);
     }
 
@@ -845,7 +845,7 @@ class ObjectImpl : public gc::Cell
 #endif
 
     void setFixedElements() {
-        JS_ASSERT(canHaveNonEmptyElements());
+        MOZ_ASSERT(canHaveNonEmptyElements());
         this->elements = fixedElements();
     }
 
@@ -883,8 +883,8 @@ class ObjectImpl : public gc::Cell
     void privateWriteBarrierPost(void **pprivate) {
 #ifdef JSGC_GENERATIONAL
         js::gc::Cell **cellp = reinterpret_cast<js::gc::Cell **>(pprivate);
-        JS_ASSERT(cellp);
-        JS_ASSERT(*cellp);
+        MOZ_ASSERT(cellp);
+        MOZ_ASSERT(*cellp);
         js::gc::StoreBuffer *storeBuffer = (*cellp)->storeBuffer();
         if (storeBuffer)
             storeBuffer->putCellFromAnyThread(cellp);
@@ -997,11 +997,11 @@ ObjectImpl::writeBarrierPre(ObjectImpl *obj)
 /* static */ MOZ_ALWAYS_INLINE void
 ObjectImpl::writeBarrierPost(ObjectImpl *obj, void *cellp)
 {
-    JS_ASSERT(cellp);
+    MOZ_ASSERT(cellp);
 #ifdef JSGC_GENERATIONAL
     if (IsNullTaggedPointer(obj))
         return;
-    JS_ASSERT(obj == *static_cast<ObjectImpl **>(cellp));
+    MOZ_ASSERT(obj == *static_cast<ObjectImpl **>(cellp));
     gc::StoreBuffer *storeBuffer = obj->storeBuffer();
     if (storeBuffer)
         storeBuffer->putCellFromAnyThread(static_cast<gc::Cell **>(cellp));
@@ -1011,9 +1011,9 @@ ObjectImpl::writeBarrierPost(ObjectImpl *obj, void *cellp)
 /* static */ MOZ_ALWAYS_INLINE void
 ObjectImpl::writeBarrierPostRelocate(ObjectImpl *obj, void *cellp)
 {
-    JS_ASSERT(cellp);
-    JS_ASSERT(obj);
-    JS_ASSERT(obj == *static_cast<ObjectImpl **>(cellp));
+    MOZ_ASSERT(cellp);
+    MOZ_ASSERT(obj);
+    MOZ_ASSERT(obj == *static_cast<ObjectImpl **>(cellp));
 #ifdef JSGC_GENERATIONAL
     gc::StoreBuffer *storeBuffer = obj->storeBuffer();
     if (storeBuffer)
@@ -1024,9 +1024,9 @@ ObjectImpl::writeBarrierPostRelocate(ObjectImpl *obj, void *cellp)
 /* static */ MOZ_ALWAYS_INLINE void
 ObjectImpl::writeBarrierPostRemove(ObjectImpl *obj, void *cellp)
 {
-    JS_ASSERT(cellp);
-    JS_ASSERT(obj);
-    JS_ASSERT(obj == *static_cast<ObjectImpl **>(cellp));
+    MOZ_ASSERT(cellp);
+    MOZ_ASSERT(obj);
+    MOZ_ASSERT(obj == *static_cast<ObjectImpl **>(cellp));
 #ifdef JSGC_GENERATIONAL
     obj->shadowRuntimeFromAnyThread()->gcStoreBufferPtr()->removeRelocatableCellFromAnyThread(
         static_cast<gc::Cell **>(cellp));

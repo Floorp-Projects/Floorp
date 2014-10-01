@@ -28,7 +28,7 @@ MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
         diffG -= sizeof(intptr_t);
         Push(*iter);
     }
-    JS_ASSERT(diffG == 0);
+    MOZ_ASSERT(diffG == 0);
 
     reserveStack(diffF);
     for (FloatRegisterBackwardIterator iter(doubleSet); iter.more(); iter++) {
@@ -36,15 +36,15 @@ MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
         numDouble -= 1;
         storeDouble(*iter, Address(StackPointer, diffF));
     }
-    JS_ASSERT(numDouble == 0);
+    MOZ_ASSERT(numDouble == 0);
     for (FloatRegisterBackwardIterator iter(simdSet); iter.more(); iter++) {
         diffF -= Simd128DataSize;
         numSimd -= 1;
         // XXX how to choose the right move type?
         storeUnalignedInt32x4(*iter, Address(StackPointer, diffF));
     }
-    JS_ASSERT(numSimd == 0);
-    JS_ASSERT(diffF == 0);
+    MOZ_ASSERT(numSimd == 0);
+    MOZ_ASSERT(diffF == 0);
 }
 
 void
@@ -66,7 +66,7 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRe
             // XXX how to choose the right move type?
             loadUnalignedInt32x4(Address(StackPointer, diffF), *iter);
     }
-    JS_ASSERT(numSimd == 0);
+    MOZ_ASSERT(numSimd == 0);
     for (FloatRegisterBackwardIterator iter(doubleSet); iter.more(); iter++) {
         diffF -= sizeof(double);
         numDouble -= 1;
@@ -74,8 +74,8 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRe
             loadDouble(Address(StackPointer, diffF), *iter);
     }
     freeStack(reservedF);
-    JS_ASSERT(numDouble == 0);
-    JS_ASSERT(diffF == 0);
+    MOZ_ASSERT(numDouble == 0);
+    MOZ_ASSERT(diffF == 0);
 
     // On x86, use pop to pop the integer registers, if we're not going to
     // ignore any slots, as it's fast on modern hardware and it's a small
@@ -93,14 +93,14 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRe
         }
         freeStack(reservedG);
     }
-    JS_ASSERT(diffG == 0);
+    MOZ_ASSERT(diffG == 0);
 }
 
 // Note: this function clobbers the input register.
 void
 MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 {
-    JS_ASSERT(input != ScratchDoubleReg);
+    MOZ_ASSERT(input != ScratchDoubleReg);
     Label positive, done;
 
     // <= 0 or NaN --> 0
@@ -161,7 +161,7 @@ MacroAssemblerX86Shared::buildFakeExitFrame(Register scratch, uint32_t *offset)
     bind(cl.src());
     *offset = currentOffset();
 
-    JS_ASSERT(framePushed() == initialDepth + IonExitFrameLayout::Size());
+    MOZ_ASSERT(framePushed() == initialDepth + IonExitFrameLayout::Size());
     return addCodeLabel(cl);
 }
 

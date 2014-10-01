@@ -35,7 +35,7 @@ class MOZ_STACK_CLASS WrapperOptions : public ProxyOptions {
 
     inline JSObject *proto() const;
     WrapperOptions &setProto(JSObject *protoArg) {
-        JS_ASSERT(proto_);
+        MOZ_ASSERT(proto_);
         *proto_ = protoArg;
         return *this;
     }

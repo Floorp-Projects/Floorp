@@ -89,8 +89,8 @@ js_CopyErrorObject(JSContext *cx, JS::Handle<js::ErrorObject*> errobj);
 static inline JSProtoKey
 GetExceptionProtoKey(JSExnType exn)
 {
-    JS_ASSERT(JSEXN_ERR <= exn);
-    JS_ASSERT(exn < JSEXN_LIMIT);
+    MOZ_ASSERT(JSEXN_ERR <= exn);
+    MOZ_ASSERT(exn < JSEXN_LIMIT);
     return JSProtoKey(JSProto_Error + int(exn));
 }
 
@@ -98,8 +98,8 @@ static inline JSExnType
 ExnTypeFromProtoKey(JSProtoKey key)
 {
     JSExnType type = static_cast<JSExnType>(key - JSProto_Error);
-    JS_ASSERT(type >= JSEXN_ERR);
-    JS_ASSERT(type < JSEXN_LIMIT);
+    MOZ_ASSERT(type >= JSEXN_ERR);
+    MOZ_ASSERT(type < JSEXN_LIMIT);
     return type;
 }
 

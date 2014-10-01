@@ -77,7 +77,7 @@ js::ScriptDebugEpilogue(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc, b
 JSTrapStatus
 js::DebugExceptionUnwind(JSContext *cx, AbstractFramePtr frame, jsbytecode *pc)
 {
-    JS_ASSERT(cx->compartment()->debugMode());
+    MOZ_ASSERT(cx->compartment()->debugMode());
 
     /* Call debugger throw hook if set. */
     RootedValue rval(cx);
@@ -136,7 +136,7 @@ JS_PUBLIC_API(const char16_t *)
 JS_GetScriptSourceMap(JSContext *cx, JSScript *script)
 {
     ScriptSource *source = script->scriptSource();
-    JS_ASSERT(source);
+    MOZ_ASSERT(source);
     return source->hasSourceMapURL() ? source->sourceMapURL() : nullptr;
 }
 

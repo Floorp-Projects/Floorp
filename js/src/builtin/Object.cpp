@@ -874,7 +874,7 @@ obj_keys(JSContext *cx, unsigned argc, Value *vp)
     }
 
     // Step 11.
-    JS_ASSERT(props.length() <= UINT32_MAX);
+    MOZ_ASSERT(props.length() <= UINT32_MAX);
     JSObject *aobj = NewDenseCopiedArray(cx, uint32_t(namelist.length()), namelist.begin());
     if (!aobj)
         return false;

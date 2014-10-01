@@ -33,8 +33,8 @@ class ArrayObject : public JSObject
 
     // Variant of setLength for use on arrays where the length cannot overflow int32_t.
     void setLengthInt32(uint32_t length) {
-        JS_ASSERT(lengthIsWritable());
-        JS_ASSERT(length <= INT32_MAX);
+        MOZ_ASSERT(lengthIsWritable());
+        MOZ_ASSERT(length <= INT32_MAX);
         getElementsHeader()->length = length;
     }
 };

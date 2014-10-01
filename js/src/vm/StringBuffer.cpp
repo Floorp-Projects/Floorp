@@ -26,7 +26,7 @@ ExtractWellSized(ExclusiveContext *cx, Buffer &cb)
         return nullptr;
 
     /* For medium/big buffers, avoid wasting more than 1/4 of the memory. */
-    JS_ASSERT(capacity >= length);
+    MOZ_ASSERT(capacity >= length);
     if (length > Buffer::sMaxInlineStorage && capacity - length > length / 4) {
         CharT *tmp = cx->zone()->pod_realloc<CharT>(buf, capacity, length + 1);
         if (!tmp) {
@@ -164,6 +164,6 @@ js::ValueToStringBufferSlow(JSContext *cx, const Value &arg, StringBuffer &sb)
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SYMBOL_TO_STRING);
         return false;
     }
-    JS_ASSERT(v.isUndefined());
+    MOZ_ASSERT(v.isUndefined());
     return sb.append(cx->names().undefined);
 }

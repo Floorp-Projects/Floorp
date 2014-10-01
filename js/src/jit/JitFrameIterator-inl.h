@@ -19,7 +19,7 @@ namespace jit {
 inline BaselineFrame *
 JitFrameIterator::baselineFrame() const
 {
-    JS_ASSERT(isBaselineJS());
+    MOZ_ASSERT(isBaselineJS());
     return (BaselineFrame *)(fp() - BaselineFrame::FramePointerOffset - BaselineFrame::Size());
 }
 

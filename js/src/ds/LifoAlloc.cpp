@@ -19,7 +19,7 @@ namespace detail {
 BumpChunk *
 BumpChunk::new_(size_t chunkSize)
 {
-    JS_ASSERT(RoundUpPow2(chunkSize) == chunkSize);
+    MOZ_ASSERT(RoundUpPow2(chunkSize) == chunkSize);
     void *mem = js_malloc(chunkSize);
     if (!mem)
         return nullptr;
@@ -28,7 +28,7 @@ BumpChunk::new_(size_t chunkSize)
     // We assume that the alignment of sAlign is less than that of
     // the underlying memory allocator -- creating a new BumpChunk should
     // always satisfy the sAlign alignment constraint.
-    JS_ASSERT(AlignPtr(result->bump) == result->bump);
+    MOZ_ASSERT(AlignPtr(result->bump) == result->bump);
     return result;
 }
 
@@ -69,7 +69,7 @@ LifoAlloc::freeAll()
 
     // Nb: maintaining curSize_ correctly isn't easy.  Fortunately, this is an
     // excellent sanity check.
-    JS_ASSERT(curSize_ == 0);
+    MOZ_ASSERT(curSize_ == 0);
 }
 
 LifoAlloc::BumpChunk *
@@ -108,13 +108,13 @@ LifoAlloc::getOrCreateChunk(size_t n)
     if (!first) {
         latest = first = last = newChunk;
     } else {
-        JS_ASSERT(latest && !latest->next());
+        MOZ_ASSERT(latest && !latest->next());
         latest->setNext(newChunk);
         latest = last = newChunk;
     }
 
     size_t computedChunkSize = newChunk->computedSizeOfIncludingThis();
-    JS_ASSERT(computedChunkSize == chunkSize);
+    MOZ_ASSERT(computedChunkSize == chunkSize);
     incrementCurSize(computedChunkSize);
 
     return newChunk;
@@ -123,8 +123,8 @@ LifoAlloc::getOrCreateChunk(size_t n)
 void
 LifoAlloc::transferFrom(LifoAlloc *other)
 {
-    JS_ASSERT(!markCount);
-    JS_ASSERT(!other->markCount);
+    MOZ_ASSERT(!markCount);
+    MOZ_ASSERT(!other->markCount);
 
     if (!other->first)
         return;
@@ -141,8 +141,8 @@ LifoAlloc::transferFrom(LifoAlloc *other)
 void
 LifoAlloc::transferUnusedFrom(LifoAlloc *other)
 {
-    JS_ASSERT(!markCount);
-    JS_ASSERT(latest == first);
+    MOZ_ASSERT(!markCount);
+    MOZ_ASSERT(latest == first);
 
     if (other->markCount || !other->first)
         return;
