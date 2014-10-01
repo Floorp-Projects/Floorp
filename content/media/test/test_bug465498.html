@@ -42,7 +42,7 @@ function seekEnded(e) {
      v.currentTime  + " for " + v._name);
   ok(!v.ended, "Checking ended is false for " + v._name);
   v._finished = true;
-  v.parentNode.removeChild(v);
+  removeNodeAndSource(v);
   manager.finished(v.token);
 }
 
