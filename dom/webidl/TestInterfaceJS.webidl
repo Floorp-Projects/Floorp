@@ -42,4 +42,10 @@ interface TestInterfaceJS {
   readonly attribute short cachedAttr;
   void setCachedAttr(short n);
   void clearCachedAttrCache();
+
+  // Test for sequence overloading and union behavior
+  void testSequenceOverload(sequence<DOMString> arg);
+  void testSequenceOverload(DOMString arg);
+
+  void testSequenceUnion((sequence<DOMString> or DOMString) arg);
 };

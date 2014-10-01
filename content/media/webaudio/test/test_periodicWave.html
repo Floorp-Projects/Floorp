@@ -11,11 +11,26 @@
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
+
+// real and imag are used in separate PeriodicWaves to make their peak values
+// easy to determine.
+const realMax = 99;
+var real = new Float32Array(realMax + 1);
+real[1] = 2.0; // fundamental
+real[realMax] = 3.0;
+const realPeak = real[1] + real[realMax];
+const realFundamental = 19.0;
+var imag = new Float32Array(4);
+imag[0] = 6.0; // should be ignored.
+imag[3] = 0.5;
+const imagPeak = imag[3];
+const imagFundamental = 551.0;
+
+const testLength = 4096;
+
 addLoadEvent(function() {
   var ac = new AudioContext();
-  var real = new Float32Array(4096);
-  var imag = new Float32Array(4096);
-  var table = ac.createPeriodicWave(real, imag);
+  ac.createPeriodicWave(new Float32Array(4096), new Float32Array(4096));
   expectException(function() {
     ac.createPeriodicWave(new Float32Array(512), imag);
   }, DOMException.NOT_SUPPORTED_ERR);
@@ -25,8 +40,53 @@ addLoadEvent(function() {
   expectException(function() {
     ac.createPeriodicWave(new Float32Array(4097), new Float32Array(4097));
   }, DOMException.NOT_SUPPORTED_ERR);
-  SimpleTest.finish();
+
+  runTest();
 });
+
+var gTest = {
+  createGraph: function(context) {
+    var merger = context.createChannelMerger();
+
+    var osc0 = context.createOscillator();
+    var osc1 = context.createOscillator();
+
+    osc0.setPeriodicWave(context.
+                         createPeriodicWave(real,
+                                            new Float32Array(real.length)));
+    osc1.setPeriodicWave(context.
+                         createPeriodicWave(new Float32Array(imag.length),
+                                            imag));
+
+    osc0.frequency.value = realFundamental;
+    osc1.frequency.value = imagFundamental;
+
+    osc0.start();
+    osc1.start();
+
+    osc0.connect(merger, 0, 0);
+    osc1.connect(merger, 0, 1);
+
+    return merger;
+  },
+  createExpectedBuffers: function(context) {
+    var buffer = context.createBuffer(2, testLength, context.sampleRate);
+
+    for (var i = 0; i < buffer.length; ++i) {
+
+      buffer.getChannelData(0)[i] = 1.0 / realPeak *
+        (real[1] * Math.cos(2 * Math.PI * realFundamental * i /
+                            context.sampleRate) +
+         real[realMax] * Math.cos(2 * Math.PI * realMax * realFundamental * i /
+                            context.sampleRate));
+
+      buffer.getChannelData(1)[i] = 1.0 / imagPeak *
+         imag[3] * Math.sin(2 * Math.PI * 3 * imagFundamental * i /
+                            context.sampleRate);
+    }
+    return buffer;
+  },
+};
 
 </script>
 </pre>

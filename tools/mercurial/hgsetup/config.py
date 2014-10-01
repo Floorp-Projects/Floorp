@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 
 from configobj import ConfigObj
+import codecs
 import re
 import os
 
@@ -43,7 +44,7 @@ class MercurialConfig(object):
         # other files, this is not supported by ConfigObj, so throw a useful
         # error saying this.
         if os.path.exists(infile):
-            with open(infile, 'r') as f:
+            with codecs.open(infile, 'r', encoding='utf-8') as f:
                 for line in f:
                     if line.startswith('%include'):
                         raise HgIncludeException(

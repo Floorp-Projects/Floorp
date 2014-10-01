@@ -205,8 +205,6 @@ public class GeckoAppShell
     public static native void nativeInit();
 
     // helper methods
-    //    public static native void setSurfaceView(GeckoSurfaceView sv);
-    public static native void setLayerClient(Object client);
     public static native void onResume();
     public static void callObserver(String observerKey, String topic, String data) {
         sendEventToGecko(GeckoEvent.createCallObserverEvent(observerKey, topic, data));
@@ -341,9 +339,6 @@ public class GeckoAppShell
 
         // run gecko -- it will spawn its own thread
         GeckoAppShell.nativeInit();
-
-        if (sLayerView != null)
-            GeckoAppShell.setLayerClient(sLayerView.getLayerClientObject());
 
         // First argument is the .apk path
         String combinedArgs = apkPath + " -greomni " + apkPath;
