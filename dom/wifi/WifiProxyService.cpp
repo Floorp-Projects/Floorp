@@ -89,36 +89,10 @@ class WifiResultDispatcher : public nsRunnable
 {
 public:
   WifiResultDispatcher(WifiResultOptions& aResult, const nsACString& aInterface)
-    : mInterface(aInterface)
+    : mResult(aResult)
+    , mInterface(aInterface)
   {
     MOZ_ASSERT(!NS_IsMainThread());
-
-    // XXX: is there a better way to copy webidl dictionnaries?
-    // the copy constructor is private.
-#define COPY_FIELD(prop) mResult.prop = aResult.prop;
-
-    COPY_FIELD(mId)
-    COPY_FIELD(mStatus)
-    COPY_FIELD(mReply)
-    COPY_FIELD(mRoute)
-    COPY_FIELD(mError)
-    COPY_FIELD(mValue)
-    COPY_FIELD(mIpaddr_str)
-    COPY_FIELD(mGateway_str)
-    COPY_FIELD(mDns1_str)
-    COPY_FIELD(mDns2_str)
-    COPY_FIELD(mMask_str)
-    COPY_FIELD(mServer_str)
-    COPY_FIELD(mVendor_str)
-    COPY_FIELD(mLease)
-    COPY_FIELD(mMask)
-    COPY_FIELD(mIpaddr)
-    COPY_FIELD(mGateway)
-    COPY_FIELD(mDns1)
-    COPY_FIELD(mDns2)
-    COPY_FIELD(mServer)
-
-#undef COPY_FIELD
   }
 
   NS_IMETHOD Run()
