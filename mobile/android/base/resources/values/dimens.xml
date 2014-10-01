@@ -22,7 +22,11 @@
     <dimen name="new_tablet_tab_strip_item_margin">-30dp</dimen>
     <dimen name="new_tablet_tab_strip_favicon_size">16dp</dimen>
     <dimen name="new_tablet_forward_default_offset">-6dp</dimen>
-    <dimen name="new_tablet_browser_toolbar_menu_item_padding">19dp</dimen>
+    <dimen name="new_tablet_browser_toolbar_height">60dp</dimen>
+    <dimen name="new_tablet_browser_toolbar_menu_item_width">56dp</dimen>
+    <!-- Padding combines with an 18dp image to form the menu item width and height. -->
+    <dimen name="new_tablet_browser_toolbar_menu_item_padding_horizontal">19dp</dimen>
+    <dimen name="new_tablet_browser_toolbar_menu_item_padding_vertical">21dp</dimen>
     <dimen name="forward_default_offset">-13dip</dimen>
 
     <!-- Dimensions used by Favicons and FaviconView -->
