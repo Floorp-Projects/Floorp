@@ -11,6 +11,7 @@
 #include "nsStringStream.h"
 
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/dom/FetchBinding.h"
 #include "mozilla/dom/URLSearchParams.h"
 
 namespace mozilla {

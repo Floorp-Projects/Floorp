@@ -17,7 +17,6 @@
 #include "nsRefPtrHashtable.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/MediaKeysBinding.h"
-#include "mozilla/dom/UnionTypes.h"
 #include "mozIGeckoMediaPluginService.h"
 
 namespace mozilla {
@@ -26,6 +25,7 @@ class CDMProxy;
 
 namespace dom {
 
+class ArrayBufferViewOrArrayBuffer;
 class MediaKeySession;
 class HTMLMediaElement;
 

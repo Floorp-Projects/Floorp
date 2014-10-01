@@ -11,7 +11,6 @@
 #include "mozilla/dom/Date.h"
 #include "mozilla/dom/MozMap.h"
 #include "mozilla/dom/TypedArray.h"
-#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCOMPtr.h"
 #include "nsGenericHTMLElement.h"

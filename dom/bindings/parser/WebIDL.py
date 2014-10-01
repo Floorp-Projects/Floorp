@@ -2058,6 +2058,10 @@ class IDLUnionType(IDLType):
     def __eq__(self, other):
         return isinstance(other, IDLUnionType) and self.memberTypes == other.memberTypes
 
+    def __hash__(self):
+        assert self.isComplete()
+        return self.name.__hash__()
+
     def isVoid(self):
         return False
 
