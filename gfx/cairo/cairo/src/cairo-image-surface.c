@@ -1085,6 +1085,12 @@ UNLOCK:
     return image;
 }
 
+static double
+clamp (double val, double min, double max)
+{
+    return val < min ? min : (val > max ? max : val);
+}
+
 static pixman_image_t *
 _pixman_image_for_gradient (const cairo_gradient_pattern_t *pattern,
 			    const cairo_rectangle_int_t *extents,
@@ -1146,6 +1152,7 @@ _pixman_image_for_gradient (const cairo_gradient_pattern_t *pattern,
 	    p2.x = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p2.x) * sf);
 	    p2.y = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p2.y) * sf);
 
+	    /* cairo_matrix_scale does a pre-scale, we want a post-scale */
 	    cairo_matrix_init_scale (&scale, sf, sf);
 	    cairo_matrix_multiply (&matrix, &matrix, &scale);
 	}
@@ -1210,9 +1217,9 @@ _pixman_image_for_gradient (const cairo_gradient_pattern_t *pattern,
 	    y = _cairo_lround (inv.y0 / 2);
 
 	    max_x = PIXMAN_MAX_INT - 1 - fabs (extents->x + extents->width);
-	    x = x > max_x ? max_x : (x < -max_x ? -max_x : x);
+	    x = clamp(x, -max_x, max_x);
 	    max_y = PIXMAN_MAX_INT - 1 - fabs (extents->y + extents->height);
-	    y = y > max_y ? max_y : (y < -max_y ? -max_y : y);
+	    y = clamp(y, -max_y, max_y);
 
 	    tx = -x;
 	    ty = -y;

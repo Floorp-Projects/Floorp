@@ -1525,8 +1525,10 @@ js::NewObjectWithGivenProto(ExclusiveContext *cxArg, const js::Class *clasp,
         allocKind = GetBackgroundAllocKind(allocKind);
 
     NewObjectCache::EntryIndex entry = -1;
+    uint64_t gcNumber = 0;
     if (JSContext *cx = cxArg->maybeJSContext()) {
-        NewObjectCache &cache = cx->runtime()->newObjectCache;
+        JSRuntime *rt = cx->runtime();
+        NewObjectCache &cache = rt->newObjectCache;
         if (protoArg.isObject() &&
             newKind == GenericObject &&
             !cx->compartment()->hasObjectMetadataCallback() &&
@@ -1547,6 +1549,7 @@ js::NewObjectWithGivenProto(ExclusiveContext *cxArg, const js::Class *clasp,
                 }
             }
         }
+        gcNumber = rt->gc.gcNumber();
     }
 
     Rooted<TaggedProto> proto(cxArg, protoArg);
@@ -1567,7 +1570,9 @@ js::NewObjectWithGivenProto(ExclusiveContext *cxArg, const js::Class *clasp,
     if (!obj)
         return nullptr;
 
-    if (entry != -1 && !obj->hasDynamicSlots()) {
+    if (entry != -1 && !obj->hasDynamicSlots() &&
+        cxArg->asJSContext()->runtime()->gc.gcNumber() == gcNumber)
+    {
         cxArg->asJSContext()->runtime()->newObjectCache.fillProto(entry, clasp,
                                                                   proto, allocKind, obj);
     }

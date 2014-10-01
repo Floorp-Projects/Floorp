@@ -50,7 +50,6 @@ const NFCCONTENTHELPER_CID =
 const NFC_IPC_MSG_NAMES = [
   "NFC:ReadNDEFResponse",
   "NFC:WriteNDEFResponse",
-  "NFC:GetDetailsNDEFResponse",
   "NFC:MakeReadOnlyNDEFResponse",
   "NFC:ConnectResponse",
   "NFC:CloseResponse",
@@ -63,17 +62,6 @@ const NFC_IPC_MSG_NAMES = [
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsISyncMessageSender");
-
-function GetDetailsNDEFResponse(details) {
-  this.canBeMadeReadOnly = details.canBeMadeReadOnly;
-  this.isReadOnly = details.isReadOnly;
-  this.maxSupportedLength = details.maxSupportedLength;
-}
-GetDetailsNDEFResponse.prototype = {
-  __exposedProps__ : {canBeMadeReadOnly: 'r',
-                      isReadOnly: 'r',
-                      maxSupportedLength: 'r'}
-};
 
 function NfcContentHelper() {
   this.initDOMRequestHelper(/* aWindow */ null, NFC_IPC_MSG_NAMES);
@@ -127,22 +115,6 @@ NfcContentHelper.prototype = {
   },
 
   // NFCTag interface
-  getDetailsNDEF: function getDetailsNDEF(window, sessionToken) {
-    if (window == null) {
-      throw Components.Exception("Can't get window object",
-                                  Cr.NS_ERROR_UNEXPECTED);
-    }
-    let request = Services.DOMRequest.createRequest(window);
-    let requestId = btoa(this.getRequestId(request));
-    this._requestMap[requestId] = window;
-
-    cpmm.sendAsyncMessage("NFC:GetDetailsNDEF", {
-      requestId: requestId,
-      sessionToken: sessionToken
-    });
-    return request;
-  },
-
   readNDEF: function readNDEF(window, sessionToken) {
     if (window == null) {
       throw Components.Exception("Can't get window object",
@@ -395,9 +367,6 @@ NfcContentHelper.prototype = {
       case "NFC:ReadNDEFResponse":
         this.handleReadNDEFResponse(result);
         break;
-      case "NFC:GetDetailsNDEFResponse":
-        this.handleGetDetailsNDEFResponse(result);
-        break;
       case "NFC:CheckP2PRegistrationResponse":
         this.handleCheckP2PRegistrationResponse(result);
         break;
@@ -450,16 +419,6 @@ NfcContentHelper.prototype = {
                                                 payload: record.payload}));
     }
     this.fireRequestSuccess(requestId, ndefMsg);
-  },
-
-  handleGetDetailsNDEFResponse: function handleGetDetailsNDEFResponse(result) {
-    if (result.errorMsg) {
-      this.fireRequestError(atob(result.requestId), result.errorMsg);
-      return;
-    }
-
-    let requestId = atob(result.requestId);
-    this.fireRequestSuccess(requestId, new GetDetailsNDEFResponse(result));
   },
 
   handleCheckP2PRegistrationResponse: function handleCheckP2PRegistrationResponse(result) {

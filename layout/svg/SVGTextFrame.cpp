@@ -2709,7 +2709,7 @@ public:
                            bool aShouldPaintSVGGlyphs)
     : DrawPathCallbacks(aShouldPaintSVGGlyphs),
       gfx(aContext->ThebesContext()),
-      mRenderMode(SVGAutoRenderState::GetRenderMode(aContext)),
+      mRenderMode(SVGAutoRenderState::GetRenderMode(aContext->GetDrawTarget())),
       mFrame(aFrame),
       mCanvasTM(aCanvasTM)
   {
@@ -5117,7 +5117,8 @@ SVGTextFrame::ShouldRenderAsPath(nsRenderingContext* aContext,
                                  bool& aShouldPaintSVGGlyphs)
 {
   // Rendering to a clip path.
-  if (SVGAutoRenderState::GetRenderMode(aContext) != SVGAutoRenderState::NORMAL) {
+  if (SVGAutoRenderState::GetRenderMode(aContext->GetDrawTarget()) !=
+        SVGAutoRenderState::NORMAL) {
     aShouldPaintSVGGlyphs = false;
     return true;
   }
