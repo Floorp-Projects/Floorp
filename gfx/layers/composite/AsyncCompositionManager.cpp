@@ -586,11 +586,10 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer)
     hasAsyncTransform = true;
 
     ViewTransform asyncTransformWithoutOverscroll;
-    Matrix4x4 overscrollTransform;
     ScreenPoint scrollOffset;
     controller->SampleContentTransformForFrame(&asyncTransformWithoutOverscroll,
-                                               scrollOffset,
-                                               &overscrollTransform);
+                                               scrollOffset);
+    Matrix4x4 overscrollTransform = controller->GetOverscrollTransform();
 
     if (!aLayer->IsScrollInfoLayer()) {
       controller->MarkAsyncTransformAppliedToContent();
