@@ -56,6 +56,9 @@ TestInterfaceJS.prototype = {
   get cachedAttr() { return this._cachedAttr; },
   setCachedAttr: function(n) { this._cachedAttr = n; },
   clearCachedAttrCache: function () { this.__DOM_IMPL__._clearCachedCachedAttrValue(); },
+
+  testSequenceOverload: function(arg) {},
+  testSequenceUnion: function(arg) {},
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([TestInterfaceJS])
