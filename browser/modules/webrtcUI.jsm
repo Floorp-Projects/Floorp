@@ -16,16 +16,13 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "MediaManagerService",
-                                   "@mozilla.org/mediaManagerService;1",
-                                   "nsIMediaManagerService");
-
 this.webrtcUI = {
   init: function () {
     Services.obs.addObserver(maybeAddMenuIndicator, "browser-delayed-startup-finished", false);
 
     let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
                  .getService(Ci.nsIMessageBroadcaster);
+    ppmm.addMessageListener("webrtc:UpdatingIndicators", this);
     ppmm.addMessageListener("webrtc:UpdateGlobalIndicators", this);
 
     let mm = Cc["@mozilla.org/globalmessagemanager;1"]
@@ -39,6 +36,7 @@ this.webrtcUI = {
 
     let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
                  .getService(Ci.nsIMessageBroadcaster);
+    ppmm.removeMessageListener("webrtc:UpdatingIndicators", this);
     ppmm.removeMessageListener("webrtc:UpdateGlobalIndicators", this);
 
     let mm = Cc["@mozilla.org/globalmessagemanager;1"]
@@ -52,42 +50,24 @@ this.webrtcUI = {
   showMicrophoneIndicator: false,
   showScreenSharingIndicator: "", // either "Application", "Screen" or "Window"
 
+  _streams: [],
   // The boolean parameters indicate which streams should be included in the result.
   getActiveStreams: function(aCamera, aMicrophone, aScreen) {
-    let contentWindowSupportsArray = MediaManagerService.activeMediaCaptureWindows;
-    let count = contentWindowSupportsArray.Count();
-    let activeStreams = [];
-    for (let i = 0; i < count; i++) {
-      let contentWindow = contentWindowSupportsArray.GetElementAt(i);
-
-      let info = {
-        Camera: {},
-        Microphone: {},
-        Window: {},
-        Screen: {},
-        Application: {}
-      };
-      MediaManagerService.mediaCaptureWindowState(contentWindow, info.Camera,
-                                                  info.Microphone, info.Screen,
-                                                  info.Window, info.Application);
-      if (!(aCamera && info.Camera.value ||
-            aMicrophone && info.Microphone.value ||
-            aScreen && (info.Screen.value || info.Window.value ||
-                        info.Application.value)))
-        continue;
-
-      let browser = getBrowserForWindow(contentWindow);
+    return webrtcUI._streams.filter(aStream => {
+      let state = aStream.state;
+      return aCamera && state.camera ||
+             aMicrophone && state.microphone ||
+             aScreen && state.screen;
+    }).map(aStream => {
+      let state = aStream.state;
+      let types = {camera: state.camera, microphone: state.microphone,
+                   screen: state.screen};
+      let browser = aStream.browser;
       let browserWindow = browser.ownerDocument.defaultView;
       let tab = browserWindow.gBrowser &&
-                browserWindow.gBrowser._getTabForContentWindow(contentWindow.top);
-      activeStreams.push({
-        uri: contentWindow.location.href,
-        tab: tab,
-        browser: browser,
-        types: info
-      });
-    }
-    return activeStreams;
+                browserWindow.gBrowser._getTabForBrowser(browser);
+      return {uri: state.documentURI, tab: tab, browser: browser, types: types};
+    });
   },
 
   showSharingDoorhanger: function(aActiveStream, aType) {
@@ -138,10 +118,14 @@ this.webrtcUI = {
       case "webrtc:Request":
         prompt(aMessage.target, aMessage.data);
         break;
+      case "webrtc:UpdatingIndicators":
+        webrtcUI._streams = [];
+        break;
       case "webrtc:UpdateGlobalIndicators":
         updateIndicators(aMessage.data)
         break;
       case "webrtc:UpdateBrowserIndicators":
+        webrtcUI._streams.push({browser: aMessage.target, state: aMessage.data});
         updateBrowserSpecificIndicator(aMessage.target, aMessage.data);
         break;
     }
@@ -562,16 +546,12 @@ function onTabSharingMenuPopupShowing(e) {
   for (let streamInfo of streams) {
     let stringName = "getUserMedia.sharingMenu";
     let types = streamInfo.types;
-    if (types.Camera.value)
+    if (types.camera)
       stringName += "Camera";
-    if (types.Microphone.value)
+    if (types.microphone)
       stringName += "Microphone";
-    if (types.Screen.value)
-      stringName += "Screen";
-    else if (types.Application.value)
-      stringName += "Application";
-    else if (types.Window.value)
-      stringName += "Window";
+    if (types.screen)
+      stringName += types.screen;
 
     let doc = e.target.ownerDocument;
     let bundle = doc.defaultView.gNavigatorBundle;
