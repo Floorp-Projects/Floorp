@@ -1629,7 +1629,7 @@ var BrowserApp = {
         // This event refers to a search via the URL bar, not a bookmarks
         // keyword search. Note that this code assumes that the user can only
         // perform a keyword search on the selected tab.
-        this.isSearch = true;
+        this.selectedTab.isSearch = true;
 
         // Don't store queries in private browsing mode.
         let isPrivate = PrivateBrowsingUtils.isBrowserPrivate(this.selectedTab.browser);
