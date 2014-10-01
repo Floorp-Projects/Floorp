@@ -23,6 +23,7 @@ public:
                            uint32_t         aOffset,
                            uint32_t         aLength,
                            int32_t          aScript,
+                           bool             aVertical,
                            gfxShapedText   *aShapedText);
 
     // clean up static objects that may have been cached
