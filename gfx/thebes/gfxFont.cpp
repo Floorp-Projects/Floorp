@@ -1692,16 +1692,28 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, double aAdvance, gfxPoint *aPt,
     const TextRunDrawParams& runParams(aBuffer.mRunParams);
     const FontDrawParams& fontParams(aBuffer.mFontParams);
 
-    double glyphX;
-    if (runParams.isRTL) {
-        aPt->x -= aAdvance;
+    double glyphX, glyphY;
+    if (fontParams.isVerticalFont) {
         glyphX = aPt->x;
+        if (runParams.isRTL) {
+            aPt->y -= aAdvance;
+            glyphY = aPt->y;
+        } else {
+            glyphY = aPt->y;
+            aPt->y += aAdvance;
+        }
     } else {
-        glyphX = aPt->x;
-        aPt->x += aAdvance;
+        glyphY = aPt->y;
+        if (runParams.isRTL) {
+            aPt->x -= aAdvance;
+            glyphX = aPt->x;
+        } else {
+            glyphX = aPt->x;
+            aPt->x += aAdvance;
+        }
     }
     gfxPoint devPt(ToDeviceUnits(glyphX, runParams.devPerApp),
-                   ToDeviceUnits(aPt->y, runParams.devPerApp));
+                   ToDeviceUnits(glyphY, runParams.devPerApp));
 
     if (fontParams.haveSVGGlyphs) {
         if (!runParams.paintSVGGlyphs) {
@@ -1727,7 +1739,11 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, double aAdvance, gfxPoint *aPt,
 
     // Synthetic bolding (if required) by multi-striking.
     for (int32_t i = 0; i < fontParams.extraStrikes; ++i) {
-        devPt.x += fontParams.synBoldOnePixelOffset;
+        if (fontParams.isVerticalFont) {
+            devPt.y += fontParams.synBoldOnePixelOffset;
+        } else {
+            devPt.x += fontParams.synBoldOnePixelOffset;
+        }
         aBuffer.OutputGlyph(aGlyphID, devPt);
     }
 
@@ -1747,8 +1763,10 @@ gfxFont::DrawGlyphs(gfxShapedText            *aShapedText,
     bool emittedGlyphs = false;
     GlyphBufferAzure buffer(aRunParams, aFontParams);
 
+    gfxFloat& inlineCoord = aFontParams.isVerticalFont ? aPt->y : aPt->x;
+
     if (aRunParams.spacing) {
-        aPt->x += aRunParams.direction * aRunParams.spacing[0].mBefore;
+        inlineCoord += aRunParams.direction * aRunParams.spacing[0].mBefore;
     }
 
     const gfxShapedText::CompressedGlyph *glyphData =
@@ -1767,22 +1785,31 @@ gfxFont::DrawGlyphs(gfxShapedText            *aShapedText,
                 NS_ASSERTION(details, "detailedGlyph should not be missing!");
                 for (uint32_t j = 0; j < glyphCount; ++j, ++details) {
                     double advance = details->mAdvance;
+
                     if (glyphData->IsMissing()) {
                         // Default-ignorable chars will have zero advance width;
                         // we don't have to draw the hexbox for them.
                         if (aRunParams.drawMode != DrawMode::GLYPH_PATH &&
                             advance > 0) {
                             double glyphX = aPt->x;
+                            double glyphY = aPt->y;
                             if (aRunParams.isRTL) {
-                                glyphX -= advance;
+                                if (aFontParams.isVerticalFont) {
+                                    glyphY -= advance;
+                                } else {
+                                    glyphX -= advance;
+                                }
                             }
                             gfxPoint pt(ToDeviceUnits(glyphX, aRunParams.devPerApp),
-                                        ToDeviceUnits(aPt->y, aRunParams.devPerApp));
+                                        ToDeviceUnits(glyphY, aRunParams.devPerApp));
                             gfxFloat advanceDevUnits =
                                 ToDeviceUnits(advance, aRunParams.devPerApp);
                             gfxFloat height = GetMetrics(eHorizontal).maxAscent;
-                            gfxRect glyphRect(pt.x, pt.y - height,
-                                              advanceDevUnits, height);
+                            gfxRect glyphRect = aFontParams.isVerticalFont ?
+                                gfxRect(pt.x - height / 2, pt.y,
+                                        height, advanceDevUnits) :
+                                gfxRect(pt.x, pt.y - height,
+                                        advanceDevUnits, height);
 
                             // If there's a fake-italic skew in effect as part
                             // of the drawTarget's transform, we need to remove
@@ -1806,12 +1833,18 @@ gfxFont::DrawGlyphs(gfxShapedText            *aShapedText,
                         }
                     } else {
                         gfxPoint glyphXY(*aPt);
-                        glyphXY.x += details->mXOffset;
-                        glyphXY.y += details->mYOffset;
+                        if (aFontParams.isVerticalFont) {
+                            glyphXY.x += details->mYOffset;
+                            glyphXY.y += details->mXOffset;
+                        } else {
+                            glyphXY.x += details->mXOffset;
+                            glyphXY.y += details->mYOffset;
+                        }
                         DrawOneGlyph(details->mGlyphID, advance, &glyphXY,
                                      buffer, &emittedGlyphs);
                     }
-                    aPt->x += aRunParams.direction * advance;
+
+                    inlineCoord += aRunParams.direction * advance;
                 }
             }
         }
@@ -1821,7 +1854,7 @@ gfxFont::DrawGlyphs(gfxShapedText            *aShapedText,
             if (i + 1 < aCount) {
                 space += aRunParams.spacing[i + 1].mBefore;
             }
-            aPt->x += aRunParams.direction * space;
+            inlineCoord += aRunParams.direction * space;
         }
     }
 
@@ -1830,7 +1863,8 @@ gfxFont::DrawGlyphs(gfxShapedText            *aShapedText,
 
 void
 gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
-              gfxPoint *aPt, const TextRunDrawParams& aRunParams)
+              gfxPoint *aPt, const TextRunDrawParams& aRunParams,
+              uint16_t aOrientation)
 {
     NS_ASSERTION(aRunParams.drawMode == DrawMode::GLYPH_PATH ||
                  !(int(aRunParams.drawMode) & int(DrawMode::GLYPH_PATH)),
@@ -1850,6 +1884,8 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
     fontParams.haveSVGGlyphs = GetFontEntry()->TryGetSVGData(this);
     fontParams.haveColorGlyphs = GetFontEntry()->TryGetColorGlyphs();
     fontParams.contextPaint = aRunParams.runContextPaint;
+    fontParams.isVerticalFont =
+        aOrientation == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT;
 
     nsAutoPtr<gfxTextContextPaint> contextPaint;
     if (fontParams.haveSVGGlyphs && !fontParams.contextPaint) {
@@ -1920,16 +1956,18 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
         }
     }
 
-    double origY = aPt->y;
+    gfxFloat& baseline = fontParams.isVerticalFont ? aPt->x : aPt->y;
+    gfxFloat origBaseline = baseline;
     if (mStyle.baselineOffset != 0.0) {
-        aPt->y += mStyle.baselineOffset * aTextRun->GetAppUnitsPerDevUnit();
+        baseline +=
+            mStyle.baselineOffset * aTextRun->GetAppUnitsPerDevUnit();
     }
 
     bool emittedGlyphs =
         DrawGlyphs(aTextRun, aStart, aEnd - aStart, aPt,
                    aRunParams, fontParams);
 
-    aPt->y = origY;
+    baseline = origBaseline;
 
     if (aRunParams.callbacks && emittedGlyphs) {
         aRunParams.callbacks->NotifyGlyphPathEmitted();
