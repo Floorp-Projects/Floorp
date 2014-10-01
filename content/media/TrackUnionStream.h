@@ -248,11 +248,10 @@ protected:
       MediaInputPort::InputInterval interval = map->mInputPort->GetNextInputInterval(t);
       interval.mEnd = std::min(interval.mEnd, aTo);
       StreamTime inputEnd = source->GraphTimeToStreamTime(interval.mEnd);
-      TrackTicks inputTrackEndPoint = TRACK_TICKS_MAX;
+      TrackTicks inputTrackEndPoint = aInputTrack->GetEnd();
 
       if (aInputTrack->IsEnded() &&
           aInputTrack->GetEndTimeRoundDown() <= inputEnd) {
-        inputTrackEndPoint = aInputTrack->GetEnd();
         *aOutputTrackFinished = true;
       }
 
@@ -325,6 +324,10 @@ protected:
         //   <= rate*aInputTrack->GetSegment()->GetDuration()/rate
         //   = aInputTrack->GetSegment()->GetDuration()
         // as required.
+        // Note that while the above proof appears to be generally right, if we are suffering
+        // from a lot of underrun, then in rare cases inputStartTicks >> inputTrackEndPoint.
+        // As such, we still need to verify the sanity of property #2 and use null data as
+        // appropriate.
 
         if (inputStartTicks < 0) {
           // Data before the start of the track is just null.
@@ -337,13 +340,20 @@ protected:
           inputStartTicks = 0;
         }
         if (inputEndTicks > inputStartTicks) {
-          segment->AppendSlice(*aInputTrack->GetSegment(),
-                               std::min(inputTrackEndPoint, inputStartTicks),
-                               std::min(inputTrackEndPoint, inputEndTicks));
+          if (inputEndTicks <= inputTrackEndPoint) {
+            segment->AppendSlice(*aInputTrack->GetSegment(), inputStartTicks, inputEndTicks);
+            STREAM_LOG(PR_LOG_DEBUG+1, ("TrackUnionStream %p appending %lld ticks of input data to track %d",
+                       this, ticks, outputTrack->GetID()));
+          } else {
+            if (inputStartTicks < inputTrackEndPoint) {
+              segment->AppendSlice(*aInputTrack->GetSegment(), inputStartTicks, inputTrackEndPoint);
+              ticks -= inputTrackEndPoint - inputStartTicks;
+            }
+            segment->AppendNullData(ticks);
+            STREAM_LOG(PR_LOG_DEBUG+1, ("TrackUnionStream %p appending %lld ticks of input data and %lld of null data to track %d",
+                       this, inputTrackEndPoint - inputStartTicks, ticks, outputTrack->GetID()));
+          }
         }
-        STREAM_LOG(PR_LOG_DEBUG+1, ("TrackUnionStream %p appending %lld ticks of input data to track %d",
-                   this, (long long)(std::min(inputTrackEndPoint, inputEndTicks) - std::min(inputTrackEndPoint, inputStartTicks)),
-                   outputTrack->GetID()));
       }
       ApplyTrackDisabling(outputTrack->GetID(), segment);
       for (uint32_t j = 0; j < mListeners.Length(); ++j) {
