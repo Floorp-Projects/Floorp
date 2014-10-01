@@ -973,3 +973,9 @@ js::CloneScriptRegExpObject(JSContext *cx, RegExpObject &reobj)
     RootedAtom source(cx, reobj.getSource());
     return RegExpObject::createNoStatics(cx, source, reobj.getFlags(), nullptr, cx->tempLifoAlloc());
 }
+
+JS_FRIEND_API(bool)
+js::RegExpToSharedNonInline(JSContext *cx, HandleObject obj, js::RegExpGuard *g)
+{
+    return RegExpToShared(cx, obj, g);
+}
