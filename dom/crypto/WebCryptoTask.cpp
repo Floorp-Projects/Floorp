@@ -773,7 +773,10 @@ private:
               mPrivKey.get(), mResult.Elements(),
               &outLen, mResult.Length(),
               mData.Elements(), mData.Length()));
-      mResult.SetLength(outLen);
+
+      if (NS_SUCCEEDED(rv)) {
+        mResult.SetLength(outLen);
+      }
     }
 
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
@@ -900,7 +903,7 @@ private:
     param.data = (unsigned char*) &oaepParams;
     param.len = sizeof(oaepParams);
 
-    uint32_t outLen;
+    uint32_t outLen = 0;
     if (mEncrypt) {
       // PK11_PubEncrypt() checks the plaintext's length and fails if it is too
       // long to encrypt, i.e. if it is longer than (k - 2hLen - 2) with 'k'
@@ -917,9 +920,9 @@ private:
              mResult.Elements(), &outLen, mResult.Length(),
              mData.Elements(), mData.Length()));
     }
-    mResult.SetLength(outLen);
-
     NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
+
+    mResult.SetLength(outLen);
     return NS_OK;
   }
 };
