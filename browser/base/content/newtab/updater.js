@@ -20,24 +20,22 @@ let gUpdater = {
     // Find all sites that remain in the grid.
     let sites = this._findRemainingSites(links);
 
-    let self = this;
-
     // Remove sites that are no longer in the grid.
-    this._removeLegacySites(sites, function () {
+    this._removeLegacySites(sites, () => {
       // Freeze all site positions so that we can move their DOM nodes around
       // without any visual impact.
-      self._freezeSitePositions(sites);
+      this._freezeSitePositions(sites);
 
       // Move the sites' DOM nodes to their new position in the DOM. This will
       // have no visual effect as all the sites have been frozen and will
       // remain in their current position.
-      self._moveSiteNodes(sites);
+      this._moveSiteNodes(sites);
 
       // Now it's time to animate the sites actually moving to their new
       // positions.
-      self._rearrangeSites(sites, function () {
+      this._rearrangeSites(sites, () => {
         // Try to fill empty cells and finish.
-        self._fillEmptyCells(links, aCallback);
+        this._fillEmptyCells(links, aCallback);
 
         // Update other pages that might be open to keep them synced.
         gAllPages.update(gPage);

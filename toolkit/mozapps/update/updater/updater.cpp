@@ -1991,6 +1991,14 @@ ProcessReplaceRequest()
   LOG(("Begin moving newDir (" LOG_S ") to destDir (" LOG_S ")",
        newDir, destDir));
   rv = rename_file(newDir, destDir, true);
+#ifdef XP_MACOSX
+  if (rv) {
+    LOG(("Moving failed. Begin copying newDir (" LOG_S ") to destDir (" LOG_S ")",
+         newDir, destDir));
+    copy_recursive_skiplist<0> skiplist;
+    rv = ensure_copy_recursive(newDir, destDir, skiplist);
+  }
+#endif
   if (rv) {
     LOG(("Moving newDir to destDir failed, err: %d", rv));
     LOG(("Now, try to move tmpDir back to destDir"));
@@ -2177,8 +2185,7 @@ UpdateThreadFunc(void *param)
     // staged directory as it won't be useful any more.
     ensure_remove_recursive(gWorkingDirPath);
     WriteStatusFile(sUsingService ? "pending-service" : "pending");
-    char processUpdates[] = "MOZ_PROCESS_UPDATES=";
-    putenv(processUpdates); // We need to use -process-updates again in the tests
+    putenv(const_cast<char*>("MOZ_PROCESS_UPDATES=")); // We need to use -process-updates again in the tests
     reportRealResults = false; // pretend success
   }
 

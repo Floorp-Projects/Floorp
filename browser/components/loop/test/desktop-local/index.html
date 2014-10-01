@@ -34,11 +34,16 @@
   <!-- App scripts -->
   <script src="../../content/shared/js/utils.js"></script>
   <script src="../../content/shared/js/feedbackApiClient.js"></script>
+  <script src="../../content/shared/js/conversationStore.js"></script>
   <script src="../../content/shared/js/models.js"></script>
   <script src="../../content/shared/js/mixins.js"></script>
   <script src="../../content/shared/js/views.js"></script>
   <script src="../../content/shared/js/websocket.js"></script>
+  <script src="../../content/shared/js/actions.js"></script>
+  <script src="../../content/shared/js/validate.js"></script>
+  <script src="../../content/shared/js/dispatcher.js"></script>
   <script src="../../content/js/client.js"></script>
+  <script src="../../content/js/conversationViews.js"></script>
   <script src="../../content/js/conversation.js"></script>
   <script type="text/javascript;version=1.8" src="../../content/js/contacts.js"></script>
   <script src="../../content/js/panel.js"></script>
@@ -47,6 +52,7 @@
   <script src="client_test.js"></script>
   <script src="conversation_test.js"></script>
   <script src="panel_test.js"></script>
+  <script src="conversationViews_test.js"></script>
   <script>
     // Stop the default init functions running to avoid conflicts in tests
     document.removeEventListener('DOMContentLoaded', loop.panel.init);

@@ -13,12 +13,6 @@
 
 #include "AccessibleWrap.h"
 
-namespace mozilla {
-namespace a11y {
-class ProxyAccessible;
-}
-}
-
 #define MAI_TYPE_ATK_OBJECT             (mai_atk_object_get_type ())
 #define MAI_ATK_OBJECT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
                                          MAI_TYPE_ATK_OBJECT, MaiAtkObject))
@@ -35,7 +29,6 @@ class ProxyAccessible;
 GType mai_atk_object_get_type(void);
 GType mai_util_get_type();
 mozilla::a11y::AccessibleWrap* GetAccessibleWrap(AtkObject* aAtkObj);
-mozilla::a11y::ProxyAccessible* GetProxy(AtkObject* aAtkObj);
 
 extern int atkMajorVersion, atkMinorVersion;
 

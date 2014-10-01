@@ -70,6 +70,13 @@
         <item name="android:scaleType">fitCenter</item>
     </style>
 
+    <style name="Widget.MenuItemActionBar.NewTablet">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:padding">@dimen/new_tablet_browser_toolbar_menu_item_padding</item>
+        <item name="android:scaleType">center</item>
+    </style>
+
     <style name="Widget.BookmarksListView" parent="Widget.HomeListView">
         <item name="android:scrollbarStyle">outsideOverlay</item>
     </style>

@@ -25,6 +25,7 @@
 #include <linux/videodev2.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/epoll.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -42,6 +43,23 @@
 #define V4L2_CID_RDS_RECEPTION    (V4L2_CID_FM_RX_CLASS_BASE + 2)
 #endif
 
+#ifndef V4L2_RDS_BLOCK_MSK
+struct v4l2_rds_data {
+  uint8_t lsb;
+  uint8_t msb;
+  uint8_t block;
+} __attribute__ ((packed));
+#define V4L2_RDS_BLOCK_MSK 0x7
+#define V4L2_RDS_BLOCK_A 0
+#define V4L2_RDS_BLOCK_B 1
+#define V4L2_RDS_BLOCK_C 2
+#define V4L2_RDS_BLOCK_D 3
+#define V4L2_RDS_BLOCK_C_ALT 4
+#define V4L2_RDS_BLOCK_INVALID 7
+#define V4L2_RDS_BLOCK_CORRECTED 0x40
+#define V4L2_RDS_BLOCK_ERROR 0x80
+#endif
+
 namespace mozilla {
 namespace hal_impl {
 
@@ -49,10 +67,13 @@ uint32_t GetFMRadioFrequency();
 
 static int sRadioFD;
 static bool sRadioEnabled;
+static bool sRDSEnabled;
 static pthread_t sRadioThread;
+static pthread_t sRDSThread;
 static hal::FMRadioSettings sRadioSettings;
 static int sMsmFMVersion;
 static bool sMsmFMMode;
+static bool sRDSSupported;
 
 static int
 setControl(uint32_t id, int32_t value)
@@ -311,6 +332,8 @@ EnableFMRadio(const hal::FMRadioSettings& aInfo)
     hal::NotifyFMRadioStatus(info);
     return;
   }
+
+  sRDSSupported = cap.capabilities & V4L2_CAP_RDS_CAPTURE;
   sRadioSettings = aInfo;
 
   if (sMsmFMMode) {
@@ -365,6 +388,9 @@ DisableFMRadio()
 {
   if (!sRadioEnabled)
     return;
+
+  if (sRDSEnabled)
+    hal::DisableRDS();
 
   sRadioEnabled = false;
 
@@ -493,6 +519,187 @@ GetFMRadioSignalStrength()
 void
 CancelFMRadioSeek()
 {}
+
+/* Runs on the rds thread */
+static void*
+readRDSDataThread(void* data)
+{
+  v4l2_rds_data rdsblocks[16];
+  uint16_t blocks[4];
+
+  ScopedClose pipefd((int)data);
+
+  ScopedClose epollfd(epoll_create(2));
+  if (epollfd < 0) {
+    HAL_LOG("Could not create epoll FD for RDS thread (%d)", errno);
+    return nullptr;
+  }
+
+  epoll_event event = {
+    EPOLLIN,
+    { 0 }
+  };
+
+  event.data.fd = pipefd;
+  if (epoll_ctl(epollfd, EPOLL_CTL_ADD, pipefd, &event) < 0) {
+    HAL_LOG("Could not set up epoll FD for RDS thread (%d)", errno);
+    return nullptr;
+  }
+
+  event.data.fd = sRadioFD;
+  if (epoll_ctl(epollfd, EPOLL_CTL_ADD, sRadioFD, &event) < 0) {
+    HAL_LOG("Could not set up epoll FD for RDS thread (%d)", errno);
+    return nullptr;
+  }
+
+  epoll_event events[2] = {{ 0 }};
+  int event_count;
+  uint32_t block_bitmap = 0;
+  while ((event_count = epoll_wait(epollfd, events, 2, -1)) > 0 ||
+         errno == EINTR) {
+    bool RDSDataAvailable = false;
+    for (int i = 0; i < event_count; i++) {
+      if (events[i].data.fd == pipefd) {
+        if (!sRDSEnabled)
+          return nullptr;
+        char tmp[32];
+        TEMP_FAILURE_RETRY(read(pipefd, tmp, sizeof(tmp)));
+      } else if (events[i].data.fd == sRadioFD) {
+        RDSDataAvailable = true;
+      }
+    }
+
+    if (!RDSDataAvailable)
+      continue;
+
+    ssize_t len =
+      TEMP_FAILURE_RETRY(read(sRadioFD, rdsblocks, sizeof(rdsblocks)));
+    if (len < 0) {
+      HAL_LOG("Unexpected error while reading RDS data %d", errno);
+      return nullptr;
+    }
+
+    int blockcount = len / sizeof(rdsblocks[0]);
+    int lastblock = -1;
+    for (int i = 0; i < blockcount; i++) {
+      if ((rdsblocks[i].block & V4L2_RDS_BLOCK_MSK) == V4L2_RDS_BLOCK_INVALID ||
+           rdsblocks[i].block & V4L2_RDS_BLOCK_ERROR) {
+        block_bitmap |= 1 << V4L2_RDS_BLOCK_INVALID;
+        continue;
+      }
+
+      int blocknum = rdsblocks[i].block & V4L2_RDS_BLOCK_MSK;
+      // In some cases, the full set of bits in an RDS group isn't
+      // needed, in which case version B RDS groups can be sent.
+      // Version B groups replace block C with block C' (V4L2_RDS_BLOCK_C_ALT).
+      // Block C' always stores the PI code, so receivers can find the PI
+      // code more quickly/reliably.
+      // However, we only process whole RDS groups, so it doesn't matter here.
+      if (blocknum == V4L2_RDS_BLOCK_C_ALT)
+        blocknum = V4L2_RDS_BLOCK_C;
+      if (blocknum > V4L2_RDS_BLOCK_D) {
+        HAL_LOG("Unexpected RDS block number %d. This is a driver bug.",
+                blocknum);
+        continue;
+      }
+
+      if (blocknum == V4L2_RDS_BLOCK_A)
+        block_bitmap = 0;
+
+      // Skip the group if we skipped a block.
+      // This stops us from processing blocks sent out of order.
+      if (block_bitmap != ((1 << blocknum) - 1)) {
+        block_bitmap |= 1 << V4L2_RDS_BLOCK_INVALID;
+        continue;
+      }
+
+      block_bitmap |= 1 << blocknum;
+
+      lastblock = blocknum;
+      blocks[blocknum] = (rdsblocks[i].msb << 8) | rdsblocks[i].lsb;
+
+      // Make sure we have all 4 blocks and that they're valid
+      if (block_bitmap != 0x0F)
+        continue;
+
+      hal::FMRadioRDSGroup group;
+      group.blockA() = blocks[V4L2_RDS_BLOCK_A];
+      group.blockB() = blocks[V4L2_RDS_BLOCK_B];
+      group.blockC() = blocks[V4L2_RDS_BLOCK_C];
+      group.blockD() = blocks[V4L2_RDS_BLOCK_D];
+      NotifyFMRadioRDSGroup(group);
+    }
+  }
+
+  return nullptr;
+}
+
+static int sRDSPipeFD;
+
+void
+EnableRDS(uint32_t aMask)
+{
+  if (!sRadioEnabled || !sRDSSupported)
+    return;
+
+  if (sMsmFMMode)
+    setControl(V4L2_CID_PRIVATE_TAVARUA_RDSGROUP_MASK, aMask);
+
+  if (sRDSEnabled)
+    return;
+
+  int pipefd[2];
+  int rc = pipe2(pipefd, O_NONBLOCK);
+  if (rc < 0) {
+    HAL_LOG("Could not create RDS thread signaling pipes (%d)", rc);
+    return;
+  }
+
+  ScopedClose writefd(pipefd[1]);
+  ScopedClose readfd(pipefd[0]);
+
+  rc = setControl(V4L2_CID_RDS_RECEPTION, true);
+  if (rc < 0) {
+    HAL_LOG("Could not enable RDS reception (%d)", rc);
+    return;
+  }
+
+  sRDSPipeFD = writefd;
+
+  sRDSEnabled = true;
+
+  rc = pthread_create(&sRDSThread, nullptr,
+                      readRDSDataThread, (void*)pipefd[0]);
+  if (rc) {
+    HAL_LOG("Could not start RDS reception thread (%d)", rc);
+    setControl(V4L2_CID_RDS_RECEPTION, false);
+    sRDSEnabled = false;
+    return;
+  }
+
+  readfd.forget();
+  writefd.forget();
+}
+
+void
+DisableRDS()
+{
+  if (!sRadioEnabled || !sRDSEnabled)
+    return;
+
+  int rc = setControl(V4L2_CID_RDS_RECEPTION, false);
+  if (rc < 0) {
+    HAL_LOG("Could not disable RDS reception (%d)", rc);
+  }
+
+  sRDSEnabled = false;
+
+  write(sRDSPipeFD, "x", 1);
+
+  pthread_join(sRDSThread, nullptr);
+
+  close(sRDSPipeFD);
+}
 
 } // hal_impl
 } // namespace mozilla
