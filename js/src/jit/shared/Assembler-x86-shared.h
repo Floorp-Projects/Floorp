@@ -1447,6 +1447,30 @@ class AssemblerX86Shared : public AssemblerShared
         JS_ASSERT(HasSSE2());
         masm.psrlq_ir(shift.value, dest.code());
     }
+    void pslld(FloatRegister src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.pslld_rr(src.code(), dest.code());
+    }
+    void pslld(Imm32 count, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.pslld_ir(count.value, dest.code());
+    }
+    void psrad(FloatRegister src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.psrad_rr(src.code(), dest.code());
+    }
+    void psrad(Imm32 count, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.psrad_ir(count.value, dest.code());
+    }
+    void psrld(FloatRegister src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.psrld_rr(src.code(), dest.code());
+    }
+    void psrld(Imm32 count, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.psrld_ir(count.value, dest.code());
+    }
 
     void cvtsi2sd(const Operand &src, FloatRegister dest) {
         JS_ASSERT(HasSSE2());

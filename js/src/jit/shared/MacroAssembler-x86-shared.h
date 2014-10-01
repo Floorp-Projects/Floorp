@@ -525,6 +525,25 @@ class MacroAssemblerX86Shared : public Assembler
         psubd(src, dest);
     }
 
+    void packedLeftShiftByScalar(FloatRegister src, FloatRegister dest) {
+        pslld(src, dest);
+    }
+    void packedLeftShiftByScalar(Imm32 count, FloatRegister dest) {
+        pslld(count, dest);
+    }
+    void packedRightShiftByScalar(FloatRegister src, FloatRegister dest) {
+        psrad(src, dest);
+    }
+    void packedRightShiftByScalar(Imm32 count, FloatRegister dest) {
+        psrad(count, dest);
+    }
+    void packedUnsignedRightShiftByScalar(FloatRegister src, FloatRegister dest) {
+        psrld(src, dest);
+    }
+    void packedUnsignedRightShiftByScalar(Imm32 count, FloatRegister dest) {
+        psrld(count, dest);
+    }
+
     void loadAlignedFloat32x4(const Address &src, FloatRegister dest) {
         movaps(Operand(src), dest);
     }
