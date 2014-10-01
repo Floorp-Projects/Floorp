@@ -36,18 +36,13 @@ class AutoTraceSession;
 
 class ChunkPool
 {
-    Chunk   *emptyChunkListHead;
-    size_t  emptyCount;
+    Chunk *head_;
+    size_t count_;
 
   public:
-    ChunkPool()
-      : emptyChunkListHead(nullptr),
-        emptyCount(0)
-    {}
+    ChunkPool() : head_(nullptr), count_(0) {}
 
-    size_t getEmptyCount() const {
-        return emptyCount;
-    }
+    size_t count() const { return count_; }
 
     /* Must be called with the GC lock taken. */
     inline Chunk *get(JSRuntime *rt);
@@ -57,7 +52,7 @@ class ChunkPool
 
     class Enum {
       public:
-        explicit Enum(ChunkPool &pool) : pool(pool), chunkp(&pool.emptyChunkListHead) {}
+        explicit Enum(ChunkPool &pool) : pool(pool), chunkp(&pool.head_) {}
         bool empty() { return !*chunkp; }
         Chunk *front();
         inline void popFront();
