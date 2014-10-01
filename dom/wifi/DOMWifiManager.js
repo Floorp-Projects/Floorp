@@ -160,7 +160,7 @@ DOMWifiManager.prototype = {
   },
 
   _convertWifiNetworks: function(aNetworks) {
-    let networks = new this._window.Array();
+    let networks = [];
     for (let i in aNetworks) {
       networks.push(this._convertWifiNetwork(aNetworks[i]));
     }
