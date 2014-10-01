@@ -300,3 +300,121 @@ TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
                              nullptr/*stapledOCSPResponse*/));
   }
 }
+
+// A TrustDomain that explicitly fails if CheckRevocation is called.
+// It is initialized with the DER encoding of a root certificate that
+// is treated as a trust anchor and is assumed to have issued all certificates
+// (i.e. FindIssuer always attempts to build the next step in the chain with
+// it).
+class ExpiredCertTrustDomain : public TrustDomain
+{
+public:
+  ExpiredCertTrustDomain(ByteString rootDER)
+    : rootDER(rootDER)
+  {
+  }
+
+  // The CertPolicyId argument is unused because we don't care about EV.
+  virtual Result GetCertTrust(EndEntityOrCA endEntityOrCA, const CertPolicyId&,
+                              Input candidateCert,
+                              /*out*/ TrustLevel& trustLevel)
+  {
+    Input rootCert;
+    Result rv = rootCert.Init(rootDER.data(), rootDER.length());
+    if (rv != Success) {
+      return rv;
+    }
+    if (InputsAreEqual(candidateCert, rootCert)) {
+      trustLevel = TrustLevel::TrustAnchor;
+    } else {
+      trustLevel = TrustLevel::InheritsTrust;
+    }
+    return Success;
+  }
+
+  virtual Result FindIssuer(Input encodedIssuerName,
+                            IssuerChecker& checker, Time time)
+  {
+    // keepGoing is an out parameter from IssuerChecker.Check. It would tell us
+    // whether or not to continue attempting other potential issuers. We only
+    // know of one potential issuer, however, so we ignore it.
+    bool keepGoing;
+    Input rootCert;
+    Result rv = rootCert.Init(rootDER.data(), rootDER.length());
+    if (rv != Success) {
+      return rv;
+    }
+    return checker.Check(rootCert, nullptr, keepGoing);
+  }
+
+  virtual Result CheckRevocation(EndEntityOrCA, const CertID&, Time,
+                                 /*optional*/ const Input*,
+                                 /*optional*/ const Input*)
+  {
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
+  virtual Result IsChainValid(const DERArray&, Time)
+  {
+    return Success;
+  }
+
+  virtual Result VerifySignedData(const SignedDataWithSignature& signedData,
+                                  Input subjectPublicKeyInfo)
+  {
+    return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
+                                             nullptr);
+  }
+
+  virtual Result DigestBuf(Input, /*out*/uint8_t*, size_t)
+  {
+    ADD_FAILURE();
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+
+  virtual Result CheckPublicKey(Input subjectPublicKeyInfo)
+  {
+    return TestCheckPublicKey(subjectPublicKeyInfo);
+  }
+
+private:
+  ByteString rootDER;
+};
+
+TEST_F(pkixbuild, NoRevocationCheckingForExpiredCert)
+{
+  const char* rootCN = "Root CA";
+  ScopedTestKeyPair rootKey;
+  ByteString rootDER(CreateCert(rootCN, rootCN, EndEntityOrCA::MustBeCA,
+                                nullptr, rootKey, nullptr));
+  EXPECT_NE(ENCODING_FAILED, rootDER);
+  ExpiredCertTrustDomain expiredCertTrustDomain(rootDER);
+
+  ByteString serialNumber(CreateEncodedSerialNumber(100));
+  EXPECT_NE(ENCODING_FAILED, serialNumber);
+  ByteString issuerDER(CNToDERName(rootCN));
+  EXPECT_NE(ENCODING_FAILED, issuerDER);
+  ByteString subjectDER(CNToDERName("Expired End-Entity Cert"));
+  EXPECT_NE(ENCODING_FAILED, subjectDER);
+  ScopedTestKeyPair unusedSubjectKey;
+  ByteString certDER(CreateEncodedCertificate(
+                       v3, sha256WithRSAEncryption,
+                       serialNumber, issuerDER,
+                       oneDayBeforeNow - Time::ONE_DAY_IN_SECONDS,
+                       oneDayBeforeNow,
+                       subjectDER, nullptr, rootKey.get(),
+                       SignatureAlgorithm::rsa_pkcs1_with_sha256,
+                       unusedSubjectKey));
+  EXPECT_NE(ENCODING_FAILED, certDER);
+
+  Input cert;
+  ASSERT_EQ(Success, cert.Init(certDER.data(), certDER.length()));
+  ASSERT_EQ(Result::ERROR_EXPIRED_CERTIFICATE,
+            BuildCertChain(expiredCertTrustDomain, cert, Now(),
+                           EndEntityOrCA::MustBeEndEntity,
+                           KeyUsage::noParticularKeyUsageRequired,
+                           KeyPurposeId::id_kp_serverAuth,
+                           CertPolicyId::anyPolicy,
+                           nullptr));
+}
