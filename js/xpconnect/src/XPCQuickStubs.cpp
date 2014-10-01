@@ -394,7 +394,7 @@ xpc_qsGetterOnlyNativeStub(JSContext *cx, unsigned argc, jsval *vp)
                                         JSREPORT_WARNING | JSREPORT_STRICT |
                                         JSREPORT_STRICT_MODE_ERROR,
                                         js_GetErrorMessage, nullptr,
-                                        JSMSG_GETTER_ONLY, "");
+                                        JSMSG_GETTER_ONLY);
 }
 
 xpc_qsDOMString::xpc_qsDOMString(JSContext *cx, HandleValue v,

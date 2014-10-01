@@ -1598,7 +1598,7 @@ extern void
 js_GetObjectSlotName(JSTracer *trc, char *buf, size_t bufsize);
 
 extern bool
-js_ReportGetterOnlyAssignment(JSContext *cx, jsid id, bool strict);
+js_ReportGetterOnlyAssignment(JSContext *cx, bool strict);
 
 
 namespace js {
