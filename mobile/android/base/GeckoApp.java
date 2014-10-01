@@ -1124,6 +1124,7 @@ public abstract class GeckoApp
         mGeckoReadyStartupTimer = new Telemetry.UptimeTimer("FENNEC_STARTUP_TIME_GECKOREADY");
 
         final Intent intent = getIntent();
+        final String action = intent.getAction();
         final String args = intent.getStringExtra("args");
 
         earlyStartJavaSampler(intent);
@@ -1163,7 +1164,13 @@ public abstract class GeckoApp
             }
         }
 
-        BrowserDB.initialize(getProfile().getName());
+        // Speculatively pre-fetch the profile in the background.
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                getProfile();
+            }
+        });
 
         // Workaround for <http://code.google.com/p/android/issues/detail?id=20915>.
         try {
@@ -1205,6 +1212,30 @@ public abstract class GeckoApp
             // without killing the entire application (see Bug 769269).
             mIsRestoringActivity = true;
             Telemetry.HistogramAdd("FENNEC_RESTORING_ACTIVITY", 1);
+
+        } else {
+            final String uri = getURIFromIntent(intent);
+
+            GeckoThread.setArgs(args);
+            GeckoThread.setAction(action);
+            GeckoThread.setUri(TextUtils.isEmpty(uri) ? null : uri);
+        }
+
+        if (!ACTION_DEBUG.equals(action) &&
+                GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching,
+                                                   GeckoThread.LaunchState.Launched)) {
+            GeckoThread.createAndStart();
+
+        } else if (ACTION_DEBUG.equals(action) &&
+                GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching,
+                                                   GeckoThread.LaunchState.WaitForDebugger)) {
+            ThreadUtils.getUiHandler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    GeckoThread.setLaunchState(GeckoThread.LaunchState.Launched);
+                    GeckoThread.createAndStart();
+                }
+            }, 1000 * 5 /* 5 seconds */);
         }
 
         Bundle stateBundle = getIntent().getBundleExtra(EXTRA_STATE_BUNDLE);
@@ -1368,6 +1399,9 @@ public abstract class GeckoApp
             layerView.initializeView(EventDispatcher.getInstance());
             mLayerView = layerView;
             GeckoAppShell.setLayerView(layerView);
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createObjectEvent(
+                GeckoEvent.ACTION_OBJECT_LAYER_CLIENT, layerView.getLayerClientObject()));
+
             // bind the GeckoEditable instance to the new LayerView
             GeckoAppShell.notifyIMEContext(GeckoEditableListener.IME_STATE_DISABLED, "", "", "");
         }
@@ -1425,6 +1459,8 @@ public abstract class GeckoApp
 
         initializeChrome();
 
+        BrowserDB.initialize(getProfile().getName());
+
         // If we are doing a restore, read the session data and send it to Gecko
         if (!mIsRestoringActivity) {
             String restoreMessage = null;
@@ -1466,25 +1502,6 @@ public abstract class GeckoApp
         }
 
         Telemetry.HistogramAdd("FENNEC_STARTUP_GECKOAPP_ACTION", startupAction.ordinal());
-
-        if (!mIsRestoringActivity) {
-            GeckoThread.setArgs(intent.getStringExtra("args"));
-            GeckoThread.setAction(intent.getAction());
-            GeckoThread.setUri(passedUri);
-        }
-        if (!ACTION_DEBUG.equals(action) &&
-            GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching, GeckoThread.LaunchState.Launched)) {
-            GeckoThread.createAndStart();
-        } else if (ACTION_DEBUG.equals(action) &&
-            GeckoThread.checkAndSetLaunchState(GeckoThread.LaunchState.Launching, GeckoThread.LaunchState.WaitForDebugger)) {
-            ThreadUtils.getUiHandler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    GeckoThread.setLaunchState(GeckoThread.LaunchState.Launching);
-                    GeckoThread.createAndStart();
-                }
-            }, 1000 * 5 /* 5 seconds */);
-        }
 
         // Check if launched from data reporting notification.
         if (ACTION_LAUNCH_SETTINGS.equals(action)) {
@@ -1580,7 +1597,6 @@ public abstract class GeckoApp
             if (selectedTab != null)
                 Tabs.getInstance().notifyListeners(selectedTab, Tabs.TabEvents.SELECTED);
             geckoConnected();
-            GeckoAppShell.setLayerClient(mLayerView.getLayerClientObject());
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
         }
 
@@ -1647,7 +1663,7 @@ public abstract class GeckoApp
         }
     }
 
-    public GeckoProfile getProfile() {
+    public synchronized GeckoProfile getProfile() {
         // fall back to default profile if we didn't load a specific one
         if (mProfile == null) {
             mProfile = GeckoProfile.get(this);

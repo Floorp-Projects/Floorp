@@ -783,9 +783,7 @@ enum Role {
   /**
    * Represent a keyboard or keypad key (ARIA role "key").
    */
-  KEY = 129,
-
-  LAST_ROLE = KEY
+  KEY = 129
 };
 
 } // namespace role

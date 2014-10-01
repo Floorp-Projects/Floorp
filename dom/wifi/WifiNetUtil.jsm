@@ -30,23 +30,8 @@ this.WifiNetUtil = function(controlMessage) {
 
   var util = {};
 
-  util.configureInterface = function(cfg, callback) {
-    let message = { cmd:     "ifc_configure",
-                    ifname:  cfg.ifname,
-                    ipaddr:  cfg.ipaddr,
-                    mask:    cfg.mask,
-                    gateway: cfg.gateway,
-                    dns1:    cfg.dns1,
-                    dns2:    cfg.dns2 };
-
-    controlMessage(message, function(data) {
-      callback(!data.status);
-    });
-  };
-
   util.runDhcp = function (ifname, callback) {
-    controlMessage({ cmd: "dhcp_do_request", ifname: ifname }, function(data) {
-      var dhcpInfo = data.status ? null : data;
+    gNetworkService.dhcpRequest(ifname, function(success, dhcpInfo) {
       util.runIpConfig(ifname, dhcpInfo, callback);
     });
   };
@@ -62,18 +47,6 @@ this.WifiNetUtil = function(controlMessage) {
     stopProcess(dhcpService, processName, callback);
   };
 
-  util.enableInterface = function (ifname, callback) {
-    controlMessage({ cmd: "ifc_enable", ifname: ifname }, function (data) {
-      callback(!data.status);
-    });
-  };
-
-  util.disableInterface = function (ifname, callback) {
-    controlMessage({ cmd: "ifc_disable", ifname: ifname }, function (data) {
-      callback(!data.status);
-    });
-  };
-
   util.startDhcpServer = function (config, callback) {
     gNetworkService.setDhcpServer(true, config, function (error) {
       callback(!error);
@@ -83,60 +56,6 @@ this.WifiNetUtil = function(controlMessage) {
   util.stopDhcpServer = function (callback) {
     gNetworkService.setDhcpServer(false, null, function (error) {
       callback(!error);
-    });
-  };
-
-  util.addHostRoute = function (ifname, route, callback) {
-    controlMessage({ cmd: "ifc_add_host_route", ifname: ifname, route: route }, function(data) {
-      callback(!data.status);
-    });
-  };
-
-  util.removeHostRoutes = function (ifname, callback) {
-    controlMessage({ cmd: "ifc_remove_host_routes", ifname: ifname }, function(data) {
-      callback(!data.status);
-    });
-  };
-
-  util.setDefaultRoute = function (ifname, route, callback) {
-    controlMessage({ cmd: "ifc_set_default_route", ifname: ifname, route: route }, function(data) {
-      callback(!data.status);
-    });
-  };
-
-  util.getDefaultRoute = function (ifname, callback) {
-    controlMessage({ cmd: "ifc_get_default_route", ifname: ifname }, function(data) {
-      callback(!data.route);
-    });
-  };
-
-  util.removeDefaultRoute = function (ifname, callback) {
-    controlMessage({ cmd: "ifc_remove_default_route", ifname: ifname }, function(data) {
-      callback(!data.status);
-    });
-  };
-
-  util.resetConnections = function (ifname, callback) {
-    controlMessage({ cmd: "ifc_reset_connections", ifname: ifname }, function(data) {
-      callback(!data.status);
-    });
-  };
-
-  util.releaseDhcpLease = function (ifname, callback) {
-    controlMessage({ cmd: "dhcp_release_lease", ifname: ifname }, function(data) {
-      callback(!data.status);
-    });
-  };
-
-  util.getDhcpError = function (callback) {
-    controlMessage({ cmd: "dhcp_get_errmsg" }, function(data) {
-      callback(data.error);
-    });
-  };
-
-  util.runDhcpRenew = function (ifname, callback) {
-    controlMessage({ cmd: "dhcp_do_request", ifname: ifname }, function(data) {
-      callback(data.status ? null : data);
     });
   };
 
