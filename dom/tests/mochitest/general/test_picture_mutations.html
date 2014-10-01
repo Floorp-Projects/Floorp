@@ -1,0 +1,310 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Image srcset mutations</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript">
+    "use strict";
+
+    // Tests the relevant mutations part of the spec for <img> inside <picture> tags
+    // https://html.spec.whatwg.org/#relevant-mutations
+    SimpleTest.waitForExplicitFinish();
+
+    // 50x50 png
+    var testPNG50 = new URL("image_50.png", location).href;
+    // 100x100 png
+    var testPNG100 = new URL("image_100.png", location).href;
+    // 200x200 png
+    var testPNG200 = new URL("image_200.png", location).href;
+
+    var tests = [];
+    var img;
+    var picture;
+    var source1;
+    var source2;
+    var source3;
+    var expectingErrors = 0;
+    var expectingLoads = 0;
+    var afterExpectCallback;
+
+    function onImgLoad() {
+      ok(expectingLoads > 0, "expected load");
+      if (expectingLoads > 0) {
+        expectingLoads--;
+      }
+      if (!expectingLoads && !expectingErrors) {
+        setTimeout(afterExpectCallback, 0);
+      }
+    }
+    function onImgError() {
+      ok(expectingErrors > 0, "expected error");
+      if (expectingErrors > 0) {
+        expectingErrors--;
+      }
+      if (!expectingLoads && !expectingErrors) {
+        setTimeout(afterExpectCallback, 0);
+      }
+    }
+    function expectEvents(loads, errors, callback) {
+      if (!loads && !errors) {
+        setTimeout(callback, 0);
+      } else {
+        expectingLoads += loads;
+        expectingErrors += errors;
+        info("Waiting for " + expectingLoads + " load and " + expectingErrors + " error events");
+        afterExpectCallback = callback;
+      }
+    }
+
+    // Setup image outside the tree dom, make sure it loads
+    tests.push(function() {
+      info("test 1");
+      img.srcset = testPNG100;
+      img.src = testPNG50;
+      is(img.currentSrc, null, "Should not have synchronously selected source");
+
+      // No events should have fired synchronously, now we should get just one load (and no 404 error)
+      expectEvents(1, 0, nextTest);
+    });
+
+    // Binding to an empty picture should trigger an event, even if source doesn't change
+    tests.push(function() {
+      info("test 2");
+      is(img.currentSrc, testPNG100, "Should have loaded testPNG100");
+      document.body.appendChild(picture);
+      picture.appendChild(img);
+      is(img.currentSrc, testPNG100, "Should still have testPNG100");
+
+      expectEvents(1, 0, nextTest);
+    });
+
+    // inserting and removing an empty source before the image should both trigger a no-op reload
+    tests.push(function() {
+      info("test 3");
+      is(img.currentSrc, testPNG100, "Should still have testPNG100");
+      picture.insertBefore(source1, img);
+      is(img.currentSrc, testPNG100, "Should still have testPNG100");
+
+      // should fire one event, not change source
+      expectEvents(1, 0, function() {
+        is(img.currentSrc, testPNG100, "Should still have testPNG100");
+        picture.removeChild(source1);
+        is(img.currentSrc, testPNG100, "Should still have testPNG100");
+
+        // Should also no-op fire
+        expectEvents(1, 0, nextTest);
+      });
+    });
+
+    // insert and remove valid source before
+    tests.push(function() {
+      info("test 4");
+      is(img.currentSrc, testPNG100, "Should still have testPNG100");
+
+      // Insert source1 before img with valid candidate
+      source1.srcset = testPNG50;
+      picture.insertBefore(source1, img);
+      is(img.currentSrc, testPNG100, "Should still have testPNG100");
+
+      // should fire one event, change to the source
+      expectEvents(1, 0, function() {
+        is(img.currentSrc, testPNG50, "Should have switched to testPNG50");
+        picture.removeChild(source1);
+        is(img.currentSrc, testPNG50, "Should still have testPNG50");
+
+        // Should also no-op fire
+        expectEvents(1, 0, function() {
+          is(img.currentSrc, testPNG100, "Should have returned to testPNG100");
+          nextTest();
+        });
+      });
+    });
+
+    // insert and remove valid source after
+    tests.push(function() {
+      info("test 5");
+      is(img.currentSrc, testPNG100, "Should still have testPNG100");
+
+      // Insert source1 before img with valid candidate
+      source1.srcset = testPNG50;
+      picture.appendChild(source1);
+      is(img.currentSrc, testPNG100, "Should still have testPNG100");
+
+      // should fire nothing, no action
+      expectEvents(0, 0, function() {
+        is(img.currentSrc, testPNG100, "Should still have testPNG100");
+
+        // Same with removing
+        picture.removeChild(source1);
+        expectEvents(0, 0, function() {
+          is(img.currentSrc, testPNG100, "Should still have testPNG100");
+          nextTest();
+        });
+      });
+    });
+
+    // Should re-consider earlier sources when a load event occurs.
+    tests.push(function() {
+      info("test 6");
+
+      // Insert two valid sources, with MQ causing us to select the second
+      source1.srcset = testPNG50 + " 1x";
+      source1.media = "(min-resolution: 2dppx)"; // Wont match, test starts at 1x
+      source2.srcset = testPNG200;
+      picture.insertBefore(source1, img);
+      picture.insertBefore(source2, img);
+      is(img.currentSrc, testPNG100, "Should still have testPNG100");
+
+      // should get one load, selecting source2
+      expectEvents(1, 0, function() {
+        is(img.currentSrc, testPNG200, "Should have selected testPNG200");
+
+        // Switch DPI to match the first source, then add a source
+        // *also* wanting that DPI *just before* the selected
+        // source. Properly re-running the algorithm should
+        // re-consider all sources and thus go back to the first
+        // source, not just the valid source just inserted before us.
+        SpecialPowers.pushPrefEnv({'set': [ ["layout.css.devPixelsPerPx", "2.0"] ] },
+                                  function() {
+          // When we add dynamic reaction to MQs, this test will need to be updated.
+          is(img.currentSrc, testPNG200, "Should still have testPNG200");
+          source3.media = source1.media;
+          source3.srcset = testPNG100;
+          picture.insertBefore(source3, source2);
+          // This should trigger a reload, but we should re-consider
+          // source1 and select that, not just the newly added source2
+          expectEvents(1, 0, function() {
+            is(img.currentSrc, testPNG50, "Should have selected testPNG50");
+            expectEvents(0, 0, nextTest);
+          });
+        });
+      });
+    });
+
+    // insert and remove valid source after our current source should
+    // trigger a reload, but not switch source
+    tests.push(function() {
+      info("test 7");
+      // Should be using source1 from last test
+      is(img.currentSrc, testPNG50, "Should still have testPNG50");
+
+      // Remove source2, should trigger an event even though we would
+      // not switch
+
+      picture.removeChild(source2);
+      expectEvents(1, 0, function() {
+        is(img.currentSrc, testPNG50, "Should still have testPNG50");
+
+        // Same with re-adding
+        picture.insertBefore(source2, img);
+        expectEvents(1, 0, function() {
+          is(img.currentSrc, testPNG50, "Should still have testPNG50");
+          expectEvents(0, 0, nextTest);
+        });
+      });
+    });
+
+    // Changing source attributes should trigger updates
+    tests.push(function() {
+      info("test 8");
+      // Should be using source1 from last test
+      is(img.currentSrc, testPNG50, "Should still have testPNG50");
+
+      // Reconfigure source1 to have empty srcset. Should switch to
+      // next source due to becoming invalid.
+      source1.srcset = "";
+      is(img.currentSrc, testPNG50, "Should still have testPNG50");
+
+      expectEvents(1, 0, function() {
+        is(img.currentSrc, testPNG100, "Should have switched to testPNG100");
+
+        // Give source1 valid sizes. Should trigger an event but not switch anywhere.
+        source1.sizes = "100vw";
+
+        expectEvents(1, 0, function() {
+          is(img.currentSrc, testPNG100, "Should still have testPNG100");
+
+          // And a valid MQ
+          source1.media = "(min-resolution: 3dppx)";
+          expectEvents(1, 0, function() {
+            // And a valid type...
+            source1.type = "image/png";
+            // TODO Will not trigger a load event until bug 1045532 lands.
+            // expectEvents(1, 0, function() {
+            expectEvents(0, 0, function() {
+              // Finally restore srcset, should trigger load and re-consider source1 which is valid again
+              source1.srcset = testPNG50;
+              expectEvents(1, 0, function() {
+                is(img.currentSrc, testPNG50, "Should have selected testPNG50");
+                expectEvents(0, 0, nextTest);
+              });
+            });
+          });
+        });
+      });
+    });
+
+    // Inserting a source after <img> and touching its attributes should all be no-ops
+    tests.push(function() {
+      info("test 9");
+      // Setup: source2
+      picture.removeChild(source2);
+
+      expectEvents(1, 0, function() {
+        is(img.currentSrc, testPNG50, "Should still have testPNG50");
+
+        source2.srcset = testPNG200;
+        source2.media = "";
+        source2.sizes = "100vw";
+        source2.type = "image/png";
+        // Append valid source
+        picture.appendChild(source2);
+        // Touch all the things (but keep it valid)
+        source2.srcset = testPNG100;
+        source2.media = "(min-resolution: 2dppx)";
+        source2.sizes = "50vw";
+        source2.type = "image/png";
+
+        // No event should fire. Source should not change.
+        expectEvents(0, 0, function() {
+          is(img.currentSrc, testPNG50, "Should still have testPNG50");
+          expectEvents(0, 0, nextTest);
+        });
+      });
+    });
+
+    function nextTest() {
+      if (tests.length) {
+        // Spin event loop to make sure no unexpected image events are
+        // pending (unexpected events will assert in the handlers)
+        setTimeout(function() {
+          (tests.shift())();
+        }, 0);
+      } else {
+        SimpleTest.finish();
+      }
+    }
+
+    addEventListener("load", function() {
+      SpecialPowers.pushPrefEnv({'set': [ ["layout.css.devPixelsPerPx", "1.0" ],
+                                          [ "dom.image.srcset.enabled",  true ],
+                                          [ "dom.image.picture.enabled", true ]] },
+                                function() {
+        // Create these after the pref is set, as it is guarding webIDL attributes
+        img = document.createElement("img");
+        img.addEventListener("load", onImgLoad);
+        img.addEventListener("error", onImgError);
+        picture = document.createElement("picture");
+        source1 = document.createElement("source");
+        source2 = document.createElement("source");
+        source3 = document.createElement("source");
+        setTimeout(nextTest, 0);
+      });
+    });
+  </script>
+</body>
+</html>
