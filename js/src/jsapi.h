@@ -4759,11 +4759,11 @@ JS_ClearDateCaches(JSContext *cx);
 #define JSREG_STICKY    0x08u   /* only match starting at lastIndex */
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewRegExpObject(JSContext *cx, JS::HandleObject obj, char *bytes, size_t length,
+JS_NewRegExpObject(JSContext *cx, JS::HandleObject obj, const char *bytes, size_t length,
                    unsigned flags);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewUCRegExpObject(JSContext *cx, JS::HandleObject obj, char16_t *chars, size_t length,
+JS_NewUCRegExpObject(JSContext *cx, JS::HandleObject obj, const char16_t *chars, size_t length,
                      unsigned flags);
 
 extern JS_PUBLIC_API(bool)
