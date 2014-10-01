@@ -49,7 +49,7 @@ let librecovery = (function() {
   };
 })();
 
-const gFactoryResetFile = "/persist/__post_reset_cmd__";
+const gFactoryResetFile = "__post_reset_cmd__";
 
 #endif
 
@@ -95,12 +95,19 @@ RecoveryService.prototype = {
       }
 
       Cu.import("resource://gre/modules/osfile.jsm");
+      let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+      dir.initWithPath("/persist");
+      var postResetFile = dir.exists() ?
+                          OS.Path.join("/persist", gFactoryResetFile):
+                          OS.Path.join("/cache", gFactoryResetFile);
       let encoder = new TextEncoder();
       let array = encoder.encode(text);
-      let promise = OS.File.writeAtomic(gFactoryResetFile, array,
-                                        { tmpPath: gFactoryResetFile + ".tmp" });
+      let promise = OS.File.writeAtomic(postResetFile, array,
+                                        { tmpPath: postResetFile + ".tmp" });
 
-      promise.then(doReset);
+      promise.then(doReset, function onError(error) {
+        log("Error: " + error);
+      });
     } else {
       doReset();
     }
