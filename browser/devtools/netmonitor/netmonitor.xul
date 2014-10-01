@@ -307,6 +307,9 @@
                     <button id="headers-summary-resend"
                             class="devtools-toolbarbutton"
                             label="&netmonitorUI.summary.editAndResend;"/>
+                    <button id="toggle-raw-headers"
+                            class="devtools-toolbarbutton"
+                            label="&netmonitorUI.summary.rawHeaders;"/>
                   </hbox>
                   <hbox id="headers-summary-version"
                         class="tabpanel-summary-container"
@@ -317,6 +320,25 @@
                            class="plain tabpanel-summary-value devtools-monospace"
                            crop="end"
                            flex="1"/>
+                  </hbox>
+                  <hbox id="raw-headers"
+                        class="tabpanel-summary-container"
+                        align="center"
+                        hidden="true">
+                    <vbox id="raw-request-headers-textarea-box" flex="1" hidden="false">
+                      <label class="plain tabpanel-summary-label"
+                        value="&netmonitorUI.summary.rawHeaders.requestHeaders;"/>
+                      <textbox id="raw-request-headers-textarea"
+                        class="raw-response-textarea"
+                        flex="1" multiline="true" readonly="true"/>
+                    </vbox>
+                    <vbox id="raw-response-headers-textarea-box" flex="1" hidden="false">
+                      <label class="plain tabpanel-summary-label"
+                        value="&netmonitorUI.summary.rawHeaders.responseHeaders;"/>
+                      <textbox id="raw-response-headers-textarea"
+                        class="raw-response-textarea"
+                        flex="1" multiline="true" readonly="true"/>
+                    </vbox>
                   </hbox>
                   <vbox id="all-headers" flex="1"/>
                 </vbox>
