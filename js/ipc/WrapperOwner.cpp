@@ -897,7 +897,7 @@ bool
 WrapperOwner::toObjectVariant(JSContext *cx, JSObject *objArg, ObjectVariant *objVarp)
 {
     RootedObject obj(cx, objArg);
-    JS_ASSERT(obj);
+    MOZ_ASSERT(obj);
 
     // We always save objects unwrapped in the CPOW table. If we stored
     // wrappers, then the wrapper might be GCed while the target remained alive.

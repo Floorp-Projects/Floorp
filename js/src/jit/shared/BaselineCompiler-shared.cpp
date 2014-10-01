@@ -40,7 +40,7 @@ BaselineCompilerShared::callVM(const VMFunction &fun, CallVMPhase phase)
 
 #ifdef DEBUG
     // Assert prepareVMCall() has been called.
-    JS_ASSERT(inCall_);
+    MOZ_ASSERT(inCall_);
     inCall_ = false;
 #endif
 
@@ -49,7 +49,7 @@ BaselineCompilerShared::callVM(const VMFunction &fun, CallVMPhase phase)
     uint32_t argSize = fun.explicitStackSlots() * sizeof(void *) + sizeof(void *);
 
     // Assert all arguments were pushed.
-    JS_ASSERT(masm.framePushed() - pushedBeforeCall_ == argSize);
+    MOZ_ASSERT(masm.framePushed() - pushedBeforeCall_ == argSize);
 
     Address frameSizeAddress(BaselineFrameReg, BaselineFrame::reverseOffsetOfFrameSize());
     uint32_t frameVals = frame.nlocals() + frame.stackDepth();
@@ -66,7 +66,7 @@ BaselineCompilerShared::callVM(const VMFunction &fun, CallVMPhase phase)
         masm.push(Imm32(descriptor));
 
     } else {
-        JS_ASSERT(phase == CHECK_OVER_RECURSED);
+        MOZ_ASSERT(phase == CHECK_OVER_RECURSED);
         Label afterWrite;
         Label writePostInitialize;
 

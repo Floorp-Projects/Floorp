@@ -219,8 +219,8 @@ class Nursery
     static_assert(sizeof(NurseryChunkLayout) == gc::ChunkSize,
                   "Nursery chunk size must match gc::Chunk size.");
     NurseryChunkLayout &chunk(int index) const {
-        JS_ASSERT(index < numNurseryChunks_);
-        JS_ASSERT(start());
+        MOZ_ASSERT(index < numNurseryChunks_);
+        MOZ_ASSERT(start());
         return reinterpret_cast<NurseryChunkLayout *>(start())[index];
     }
 
@@ -232,8 +232,8 @@ class Nursery
     }
 
     MOZ_ALWAYS_INLINE void setCurrentChunk(int chunkno) {
-        JS_ASSERT(chunkno < numNurseryChunks_);
-        JS_ASSERT(chunkno < numActiveChunks_);
+        MOZ_ASSERT(chunkno < numNurseryChunks_);
+        MOZ_ASSERT(chunkno < numActiveChunks_);
         currentChunk_ = chunkno;
         position_ = chunk(chunkno).start();
         currentEnd_ = chunk(chunkno).end();
@@ -243,17 +243,17 @@ class Nursery
     void updateDecommittedRegion();
 
     MOZ_ALWAYS_INLINE uintptr_t allocationEnd() const {
-        JS_ASSERT(numActiveChunks_ > 0);
+        MOZ_ASSERT(numActiveChunks_ > 0);
         return chunk(numActiveChunks_ - 1).end();
     }
 
     MOZ_ALWAYS_INLINE uintptr_t currentEnd() const {
-        JS_ASSERT(runtime_);
-        JS_ASSERT(currentEnd_ == chunk(currentChunk_).end());
+        MOZ_ASSERT(runtime_);
+        MOZ_ASSERT(currentEnd_ == chunk(currentChunk_).end());
         return currentEnd_;
     }
     void *addressOfCurrentEnd() const {
-        JS_ASSERT(runtime_);
+        MOZ_ASSERT(runtime_);
         return (void *)&currentEnd_;
     }
 

@@ -339,43 +339,43 @@ const uint32_t PROXY_MINIMUM_SLOTS  = 4;
 inline const BaseProxyHandler *
 GetProxyHandler(JSObject *obj)
 {
-    JS_ASSERT(IsProxy(obj));
+    MOZ_ASSERT(IsProxy(obj));
     return (const BaseProxyHandler *) GetReservedSlot(obj, PROXY_HANDLER_SLOT).toPrivate();
 }
 
 inline const Value &
 GetProxyPrivate(JSObject *obj)
 {
-    JS_ASSERT(IsProxy(obj));
+    MOZ_ASSERT(IsProxy(obj));
     return GetReservedSlot(obj, PROXY_PRIVATE_SLOT);
 }
 
 inline JSObject *
 GetProxyTargetObject(JSObject *obj)
 {
-    JS_ASSERT(IsProxy(obj));
+    MOZ_ASSERT(IsProxy(obj));
     return GetProxyPrivate(obj).toObjectOrNull();
 }
 
 inline const Value &
 GetProxyExtra(JSObject *obj, size_t n)
 {
-    JS_ASSERT(IsProxy(obj));
+    MOZ_ASSERT(IsProxy(obj));
     return GetReservedSlot(obj, PROXY_EXTRA_SLOT + n);
 }
 
 inline void
 SetProxyHandler(JSObject *obj, BaseProxyHandler *handler)
 {
-    JS_ASSERT(IsProxy(obj));
+    MOZ_ASSERT(IsProxy(obj));
     SetReservedSlot(obj, PROXY_HANDLER_SLOT, PrivateValue(handler));
 }
 
 inline void
 SetProxyExtra(JSObject *obj, size_t n, const Value &extra)
 {
-    JS_ASSERT(IsProxy(obj));
-    JS_ASSERT(n <= 1);
+    MOZ_ASSERT(IsProxy(obj));
+    MOZ_ASSERT(n <= 1);
     SetReservedSlot(obj, PROXY_EXTRA_SLOT + n, extra);
 }
 
@@ -448,7 +448,7 @@ class JS_FRIEND_API(AutoEnterPolicy)
 
     virtual ~AutoEnterPolicy() { recordLeave(); }
     inline bool allowed() { return allow; }
-    inline bool returnValue() { JS_ASSERT(!allowed()); return rv; }
+    inline bool returnValue() { MOZ_ASSERT(!allowed()); return rv; }
 
   protected:
     // no-op constructor for subclass

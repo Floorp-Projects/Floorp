@@ -52,13 +52,13 @@ class PCMappingSlotInfo
     inline static PCMappingSlotInfo MakeSlotInfo() { return PCMappingSlotInfo(0); }
 
     inline static PCMappingSlotInfo MakeSlotInfo(SlotLocation topSlotLoc) {
-        JS_ASSERT(ValidSlotLocation(topSlotLoc));
+        MOZ_ASSERT(ValidSlotLocation(topSlotLoc));
         return PCMappingSlotInfo(1 | (topSlotLoc << 2));
     }
 
     inline static PCMappingSlotInfo MakeSlotInfo(SlotLocation topSlotLoc, SlotLocation nextSlotLoc) {
-        JS_ASSERT(ValidSlotLocation(topSlotLoc));
-        JS_ASSERT(ValidSlotLocation(nextSlotLoc));
+        MOZ_ASSERT(ValidSlotLocation(topSlotLoc));
+        MOZ_ASSERT(ValidSlotLocation(nextSlotLoc));
         return PCMappingSlotInfo(2 | (topSlotLoc << 2) | (nextSlotLoc) << 4);
     }
 
@@ -282,7 +282,7 @@ struct BaselineScript
         return method_;
     }
     void setMethod(JitCode *code) {
-        JS_ASSERT(!method_);
+        MOZ_ASSERT(!method_);
         method_ = code;
     }
 
@@ -290,7 +290,7 @@ struct BaselineScript
         return templateScope_;
     }
     void setTemplateScope(JSObject *templateScope) {
-        JS_ASSERT(!templateScope_);
+        MOZ_ASSERT(!templateScope_);
         templateScope_ = templateScope;
     }
 
@@ -358,7 +358,7 @@ struct BaselineScript
     static void writeBarrierPre(Zone *zone, BaselineScript *script);
 
     uint32_t *bytecodeTypeMap() {
-        JS_ASSERT(bytecodeTypeMapOffset_);
+        MOZ_ASSERT(bytecodeTypeMapOffset_);
         return reinterpret_cast<uint32_t *>(reinterpret_cast<uint8_t *>(this) + bytecodeTypeMapOffset_);
     }
 };

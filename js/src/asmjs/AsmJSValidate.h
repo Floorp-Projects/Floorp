@@ -75,7 +75,7 @@ RoundUpToNextValidAsmJSHeapLength(uint32_t length)
     if (length <= 16 * 1024 * 1024)
         return mozilla::RoundUpPow2(length);
 
-    JS_ASSERT(length <= 0xff000000);
+    MOZ_ASSERT(length <= 0xff000000);
     return (length + 0x00ffffff) & ~0x00ffffff;
 }
 

@@ -84,10 +84,10 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
 
     template<typename KeyInput, typename ValueInput>
     bool relookupOrAdd(AddPtr &p, const KeyInput &k, const ValueInput &v) {
-        JS_ASSERT(v->compartment() == Base::compartment);
-        JS_ASSERT(!k->compartment()->options_.mergeable());
+        MOZ_ASSERT(v->compartment() == Base::compartment);
+        MOZ_ASSERT(!k->compartment()->options_.mergeable());
         JS_ASSERT_IF(!InvisibleKeysOk, !k->compartment()->options_.invisibleToDebugger());
-        JS_ASSERT(!Base::has(k));
+        MOZ_ASSERT(!Base::has(k));
         if (!incZoneCount(k->zone()))
             return false;
         bool ok = Base::relookupOrAdd(p, k, v);
@@ -97,7 +97,7 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
     }
 
     void remove(const Lookup &l) {
-        JS_ASSERT(Base::has(l));
+        MOZ_ASSERT(Base::has(l));
         Base::remove(l);
         decZoneCount(l->zone());
     }
@@ -129,7 +129,7 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
                 decZoneCount(k->zone());
             } else {
                 // markKeys() should have done any necessary relocation.
-                JS_ASSERT(k == e.front().key());
+                MOZ_ASSERT(k == e.front().key());
             }
         }
         Base::assertEntriesNotAboutToBeFinalized();
@@ -145,8 +145,8 @@ class DebuggerWeakMap : private WeakMap<Key, Value, DefaultHasher<Key> >
 
     void decZoneCount(JS::Zone *zone) {
         CountMap::Ptr p = zoneCounts.lookup(zone);
-        JS_ASSERT(p);
-        JS_ASSERT(p->value() > 0);
+        MOZ_ASSERT(p);
+        MOZ_ASSERT(p->value() > 0);
         --p->value();
         if (p->value() == 0)
             zoneCounts.remove(zone);
@@ -698,14 +698,14 @@ Debugger::fromOnNewGlobalObjectWatchersLink(JSCList *link) {
 const js::HeapPtrObject &
 Debugger::toJSObject() const
 {
-    JS_ASSERT(object);
+    MOZ_ASSERT(object);
     return object;
 }
 
 js::HeapPtrObject &
 Debugger::toJSObjectRef()
 {
-    JS_ASSERT(object);
+    MOZ_ASSERT(object);
     return object;
 }
 
@@ -775,7 +775,7 @@ Debugger::onNewScript(JSContext *cx, HandleScript script, GlobalObject *compileA
 void
 Debugger::onNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global)
 {
-    JS_ASSERT(!global->compartment()->firedOnNewGlobalObject);
+    MOZ_ASSERT(!global->compartment()->firedOnNewGlobalObject);
 #ifdef DEBUG
     global->compartment()->firedOnNewGlobalObject = true;
 #endif

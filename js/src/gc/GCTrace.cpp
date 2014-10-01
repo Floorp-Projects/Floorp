@@ -37,8 +37,8 @@ WriteWord(uint64_t data)
 static inline void
 TraceEvent(GCTraceEvent event, uint64_t payload = 0, uint8_t extra = 0)
 {
-    JS_ASSERT(event < GCTraceEventCount);
-    JS_ASSERT((payload >> TracePayloadBits) == 0);
+    MOZ_ASSERT(event < GCTraceEventCount);
+    MOZ_ASSERT((payload >> TracePayloadBits) == 0);
     WriteWord((uint64_t(event) << TraceEventShift) |
                (uint64_t(extra) << TraceExtraShift) | payload);
 }
@@ -174,7 +174,7 @@ js::gc::TraceTypeNewScript(TypeObject *type)
 {
     const size_t bufLength = 128;
     static char buffer[bufLength];
-    JS_ASSERT(type->hasNewScript());
+    MOZ_ASSERT(type->hasNewScript());
     JSAtom *funName = type->newScript()->fun->displayAtom();
     if (!funName)
         return;

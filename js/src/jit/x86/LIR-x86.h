@@ -41,7 +41,7 @@ class LBoxFloatingPoint : public LInstructionHelper<2, 1, 1>
     LBoxFloatingPoint(const LAllocation &in, const LDefinition &temp, MIRType type)
       : type_(type)
     {
-        JS_ASSERT(IsFloatingPointType(type));
+        MOZ_ASSERT(IsFloatingPointType(type));
         setOperand(0, in);
         setTemp(0, temp);
     }

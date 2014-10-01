@@ -74,7 +74,7 @@ RegExpStack::init()
 void
 RegExpStack::reset()
 {
-    JS_ASSERT(size >= kMinimumStackSize);
+    MOZ_ASSERT(size >= kMinimumStackSize);
 
     if (size != kMinimumStackSize) {
         base_ = js_realloc(base_, kMinimumStackSize);

@@ -127,8 +127,8 @@ SYMBOL_TO_JSID(JS::Symbol *sym)
     jsid id;
     MOZ_ASSERT(sym != nullptr);
     MOZ_ASSERT((size_t(sym) & JSID_TYPE_MASK) == 0);
-    JS_ASSERT(!js::gc::IsInsideNursery(JS::AsCell(sym)));
-    JS_ASSERT(!JS::IsPoisonedPtr(sym));
+    MOZ_ASSERT(!js::gc::IsInsideNursery(JS::AsCell(sym)));
+    MOZ_ASSERT(!JS::IsPoisonedPtr(sym));
     JSID_BITS(id) = (size_t(sym) | JSID_TYPE_SYMBOL);
     return id;
 }

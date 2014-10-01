@@ -34,7 +34,7 @@ struct LabelBase
         return bound_;
     }
     int32_t offset() const {
-        JS_ASSERT(bound() || used());
+        MOZ_ASSERT(bound() || used());
         return offset_;
     }
     // Returns whether the label is not bound, but has incoming uses.
@@ -43,10 +43,10 @@ struct LabelBase
     }
     // Binds the label, fixing its final position in the code stream.
     void bind(int32_t offset) {
-        JS_ASSERT(!bound());
+        MOZ_ASSERT(!bound());
         offset_ = offset;
         bound_ = true;
-        JS_ASSERT(offset_ == offset);
+        MOZ_ASSERT(offset_ == offset);
     }
     // Marks the label as neither bound nor used.
     void reset() {
@@ -56,11 +56,11 @@ struct LabelBase
     // Sets the label's latest used position, returning the old use position in
     // the process.
     int32_t use(int32_t offset) {
-        JS_ASSERT(!bound());
+        MOZ_ASSERT(!bound());
 
         int32_t old = offset_;
         offset_ = offset;
-        JS_ASSERT(offset_ == offset);
+        MOZ_ASSERT(offset_ == offset);
 
         return old;
     }

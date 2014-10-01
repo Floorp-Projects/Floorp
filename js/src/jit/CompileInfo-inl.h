@@ -47,7 +47,7 @@ InlineScriptTree *
 InlineScriptTree::addCallee(TempAllocator *allocator, jsbytecode *callerPc,
                             JSScript *calleeScript)
 {
-    JS_ASSERT(script_ && script_->containsPC(callerPc));
+    MOZ_ASSERT(script_ && script_->containsPC(callerPc));
     InlineScriptTree *calleeTree = New(allocator, this, callerPc, calleeScript);
     if (!calleeTree)
         return nullptr;

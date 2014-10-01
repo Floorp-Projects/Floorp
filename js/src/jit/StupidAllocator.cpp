@@ -80,7 +80,7 @@ StupidAllocator::init()
         while (!remainingRegisters.empty(/* float = */ true))
             registers[registerCount++].reg = AnyRegister(remainingRegisters.takeFloat());
 
-        JS_ASSERT(registerCount <= MAX_REGISTERS);
+        MOZ_ASSERT(registerCount <= MAX_REGISTERS);
     }
 
     return true;
@@ -149,10 +149,10 @@ StupidAllocator::allocateRegister(LInstruction *ins, uint32_t vreg)
     // Pick a register for vreg, evicting an existing register if necessary.
     // Spill code will be placed before ins, and no existing allocated input
     // for ins will be touched.
-    JS_ASSERT(ins);
+    MOZ_ASSERT(ins);
 
     LDefinition *def = virtualRegisters[vreg];
-    JS_ASSERT(def);
+    MOZ_ASSERT(def);
 
     RegisterIndex best = UINT32_MAX;
 
@@ -257,7 +257,7 @@ StupidAllocator::go()
 
     for (size_t blockIndex = 0; blockIndex < graph.numBlocks(); blockIndex++) {
         LBlock *block = graph.getBlock(blockIndex);
-        JS_ASSERT(block->mir()->id() == blockIndex);
+        MOZ_ASSERT(block->mir()->id() == blockIndex);
 
         for (size_t i = 0; i < registerCount; i++)
             registers[i].set(MISSING_ALLOCATION);
@@ -378,7 +378,7 @@ StupidAllocator::allocateForInstruction(LInstruction *ins)
             continue;
         LUse *use = alloc->toUse();
         uint32_t vreg = use->virtualRegister();
-        JS_ASSERT(use->policy() != LUse::REGISTER && use->policy() != LUse::FIXED);
+        MOZ_ASSERT(use->policy() != LUse::REGISTER && use->policy() != LUse::FIXED);
 
         RegisterIndex index = findExistingRegister(vreg);
         if (index == UINT32_MAX) {

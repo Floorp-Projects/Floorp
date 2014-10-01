@@ -39,8 +39,8 @@ JS::Zone::Zone(JSRuntime *rt)
     jitUsingBarriers_(false)
 {
     /* Ensure that there are no vtables to mess us up here. */
-    JS_ASSERT(reinterpret_cast<JS::shadow::Zone *>(this) ==
-              static_cast<JS::shadow::Zone *>(this));
+    MOZ_ASSERT(reinterpret_cast<JS::shadow::Zone *>(this) ==
+               static_cast<JS::shadow::Zone *>(this));
 
     threshold.updateAfterGC(8192, GC_NORMAL, rt->gc.tunables, rt->gc.schedulingState);
     setGCMaxMallocBytes(rt->gc.maxMallocBytesAllocated() * 0.9);
@@ -70,7 +70,7 @@ Zone::setNeedsIncrementalBarrier(bool needs, ShouldUpdateJit updateJit)
     }
 
     if (needs && runtimeFromMainThread()->isAtomsZone(this))
-        JS_ASSERT(!runtimeFromMainThread()->exclusiveThreadsPresent());
+        MOZ_ASSERT(!runtimeFromMainThread()->exclusiveThreadsPresent());
 
     JS_ASSERT_IF(needs, canCollect());
     needsIncrementalBarrier_ = needs;
@@ -138,7 +138,7 @@ Zone::sweepBreakpoints(FreeOp *fop)
      * to iterate over the scripts belonging to a single compartment in a zone.
      */
 
-    JS_ASSERT(isGCSweepingOrCompacting());
+    MOZ_ASSERT(isGCSweepingOrCompacting());
     for (ZoneCellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
         JSScript *script = i.get<JSScript>();
         JS_ASSERT_IF(isGCSweeping(), script->zone()->isGCSweeping());
@@ -146,7 +146,7 @@ Zone::sweepBreakpoints(FreeOp *fop)
             continue;
 
         bool scriptGone = IsScriptAboutToBeFinalized(&script);
-        JS_ASSERT(script == i.get<JSScript>());
+        MOZ_ASSERT(script == i.get<JSScript>());
         for (unsigned i = 0; i < script->length(); i++) {
             BreakpointSite *site = script->getBreakpointSite(script->offsetToPC(i));
             if (!site)
@@ -265,7 +265,7 @@ Zone::canCollect()
 JS::Zone *
 js::ZoneOfValue(const JS::Value &value)
 {
-    JS_ASSERT(value.isMarkable());
+    MOZ_ASSERT(value.isMarkable());
     if (value.isObject())
         return value.toObject().zone();
     return js::gc::TenuredCell::fromPointer(value.toGCThing())->zone();

@@ -16,8 +16,8 @@
 inline void
 JSCompartment::initGlobal(js::GlobalObject &global)
 {
-    JS_ASSERT(global.compartment() == this);
-    JS_ASSERT(!global_);
+    MOZ_ASSERT(global.compartment() == this);
+    MOZ_ASSERT(!global_);
     global_.set(&global);
 }
 
@@ -78,7 +78,7 @@ JSCompartment::wrap(JSContext *cx, JS::MutableHandleValue vp, JS::HandleObject e
         return true;
     }
 
-    JS_ASSERT(vp.isObject());
+    MOZ_ASSERT(vp.isObject());
 
     /*
      * All that's left are objects.
