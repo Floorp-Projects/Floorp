@@ -6304,15 +6304,17 @@ nsTextFrame::GetCharacterOffsetAtFramePointInternal(nsPoint aPoint,
                                                     bool aForInsertionPoint)
 {
   ContentOffsets offsets;
-  
+
   gfxSkipCharsIterator iter = EnsureTextRun(nsTextFrame::eInflated);
   if (!mTextRun)
     return offsets;
-  
+
   PropertyProvider provider(this, iter, nsTextFrame::eInflated);
   // Trim leading but not trailing whitespace if possible
   provider.InitializeForDisplay(false);
-  gfxFloat width = mTextRun->IsRightToLeft() ? mRect.width - aPoint.x : aPoint.x;
+  gfxFloat width = mTextRun->IsVertical() ?
+    (mTextRun->IsRightToLeft() ? mRect.height - aPoint.y : aPoint.y) :
+    (mTextRun->IsRightToLeft() ? mRect.width - aPoint.x : aPoint.x);
   gfxFloat fitWidth;
   uint32_t skippedLength = ComputeTransformedLength(provider);
 
