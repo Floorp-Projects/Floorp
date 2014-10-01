@@ -38,7 +38,7 @@ function generateSessionTypeVerificationStub(desiredSessionType) {
   return hawkRequestStub;
 }
 
-const origHawkRequest = MozLoopService.oldHawkRequest;
+const origHawkRequest = MozLoopService.hawkRequest;
 do_register_cleanup(function() {
   MozLoopService.hawkRequest = origHawkRequest;
 });
