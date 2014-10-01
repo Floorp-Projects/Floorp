@@ -5729,6 +5729,20 @@
     "n_buckets": "50",
     "description": "The total number of distinct attempts by third-party sites to place cookies which have been rejected.  Measures are normalized per 24h."
   },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_GET_EXECUTABLE_LINES_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'getExecutableLines' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_GET_EXECUTABLE_LINES_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "1000",
+    "description": "The time (in milliseconds) that it took a 'getExecutableLines' request to go round trip."
+  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_BLACKBOX_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
