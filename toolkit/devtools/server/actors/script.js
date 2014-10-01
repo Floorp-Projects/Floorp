@@ -2643,6 +2643,66 @@ SourceActor.prototype = {
   },
 
   /**
+   * Get all executable lines from the current source
+   * @return Array - Executable lines of the current script
+   **/
+  getExecutableLines: function () {
+    // Check if the original source is source mapped
+    let packet = {
+      from: this.actorID
+    };
+
+    let lines;
+
+    if (this._sourceMap) {
+      lines = new Set();
+
+      // Position of executable lines in the generated source
+      let offsets = this.getExecutableOffsets(this._generatedSource, false);
+      for (let offset of offsets) {
+        let {line, source} = this._sourceMap.originalPositionFor({
+          line: offset.lineNumber,
+          column: offset.columnNumber
+        });
+
+        if (source === this._url) {
+          lines.add(line);
+        }
+      }
+    } else {
+      // Converting the set given by getExecutableOffsets to an array
+      lines = this.getExecutableOffsets(this._url, true);
+    }
+
+    // Converting the Set into an array
+    packet.lines = [line for (line of lines)];
+    packet.lines.sort((a, b) => {
+      return a - b;
+    });
+
+    return packet;
+  },
+
+  /**
+   * Extract all executable offsets from the given script
+   * @param String url - extract offsets of the script with this url
+   * @param Boolean onlyLine - will return only the line number
+   * @return Set - Executable offsets/lines of the script
+   **/
+  getExecutableOffsets: function (url, onlyLine) {
+    let offsets = new Set();
+    for (let s of this.threadActor.dbg.findScripts(this.threadActor.global)) {
+      if (s.url === url) {
+        for (let offset of s.getAllColumnOffsets()) {
+          offsets.add(onlyLine ? offset.lineNumber : offset);
+        }
+      }
+    }
+
+    return offsets;
+  },
+
+  /**
    * Handler for the "source" packet.
    */
   onSource: function () {
@@ -2858,7 +2918,8 @@ SourceActor.prototype.requestTypes = {
   "blackbox": SourceActor.prototype.onBlackBox,
   "unblackbox": SourceActor.prototype.onUnblackBox,
   "prettyPrint": SourceActor.prototype.onPrettyPrint,
-  "disablePrettyPrint": SourceActor.prototype.onDisablePrettyPrint
+  "disablePrettyPrint": SourceActor.prototype.onDisablePrettyPrint,
+  "getExecutableLines": SourceActor.prototype.getExecutableLines
 };
 
 
