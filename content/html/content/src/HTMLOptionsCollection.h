@@ -11,7 +11,6 @@
 #include "nsWrapperCache.h"
 
 #include "mozilla/dom/HTMLOptionElement.h"
-#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/ErrorResult.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
@@ -23,6 +22,8 @@ class nsIDOMHTMLOptionElement;
 namespace mozilla {
 namespace dom {
 
+class HTMLElementOrLong;
+class HTMLOptionElementOrHTMLOptGroupElement;
 class HTMLSelectElement;
 
 /**
