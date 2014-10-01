@@ -18,6 +18,9 @@
 #include "nsIObserverService.h"
 #include "GMPTimerParent.h"
 #include "runnable_utils.h"
+#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+#include "mozilla/Sandbox.h"
+#endif
 
 #include "mozilla/dom/CrashReporterParent.h"
 using mozilla::dom::CrashReporterParent;
@@ -851,6 +854,17 @@ GMPParent::ReadGMPMetaData()
         }
       }
     }
+
+#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+    if (cap->mAPIName.EqualsLiteral("eme-decrypt") &&
+        !mozilla::CanSandboxMediaPlugin()) {
+      printf_stderr("GMPParent::ReadGMPMetaData: Plugin \"%s\" is an EME CDM"
+                    " but this system can't sandbox it; not loading.\n",
+                    mDisplayName.get());
+      delete cap;
+      return NS_ERROR_FAILURE;
+    }
+#endif
 
     mCapabilities.AppendElement(cap);
   }
