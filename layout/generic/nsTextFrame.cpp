@@ -6529,18 +6529,25 @@ nsTextFrame::GetPointFromOffset(int32_t inOffset,
     FindClusterStart(mTextRun, trimmedOffset, &iter);
   }
 
-  gfxFloat advanceWidth =
+  gfxFloat advance =
     mTextRun->GetAdvanceWidth(properties.GetStart().GetSkippedOffset(),
                               GetSkippedDistance(properties.GetStart(), iter),
                               &properties);
-  nscoord width = NSToCoordCeilClamped(advanceWidth);
+  nscoord iSize = NSToCoordCeilClamped(advance);
 
-  if (mTextRun->IsRightToLeft()) {
-    outPoint->x = mRect.width - width;
+  if (mTextRun->IsVertical()) {
+    if (mTextRun->IsRightToLeft()) {
+      outPoint->y = mRect.height - iSize;
+    } else {
+      outPoint->y = iSize;
+    }
   } else {
-    outPoint->x = width;
+    if (mTextRun->IsRightToLeft()) {
+      outPoint->x = mRect.width - iSize;
+    } else {
+      outPoint->x = iSize;
+    }
   }
-  outPoint->y = 0;
 
   return NS_OK;
 }
