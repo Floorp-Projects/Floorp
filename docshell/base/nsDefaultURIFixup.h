@@ -33,9 +33,6 @@ private:
     void KeywordURIFixup(const nsACString &aStringURI,
                          nsDefaultURIFixupInfo* aFixupInfo,
                          nsIInputStream** aPostData);
-    nsresult TryKeywordFixupForURIInfo(const nsACString &aStringURI,
-                                       nsDefaultURIFixupInfo* aFixupInfo,
-                                       nsIInputStream** aPostData);
     bool PossiblyByteExpandedFileName(const nsAString& aIn);
     bool PossiblyHostPortUrl(const nsACString& aUrl);
     bool MakeAlternateURI(nsIURI *aURI);
@@ -61,10 +58,9 @@ private:
     nsCOMPtr<nsISupports> mConsumer;
     nsCOMPtr<nsIURI> mPreferredURI;
     nsCOMPtr<nsIURI> mFixedURI;
+    bool mFixupUsedKeyword;
     bool mFixupChangedProtocol;
     bool mFixupCreatedAlternateURI;
-    nsString mKeywordProviderName;
-    nsString mKeywordAsSent;
     nsAutoCString mOriginalInput;
 };
 #endif
