@@ -27,6 +27,7 @@
 #include "nsRadioInterfaceLayer.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
+#include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/SettingChangeNotificationBinding.h"
 
 #define MOZSETTINGS_CHANGED_ID               "mozsettings-changed"

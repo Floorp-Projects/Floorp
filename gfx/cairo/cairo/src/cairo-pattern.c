@@ -1399,6 +1399,7 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
 	    p2.x = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p2.x) * sf);
 	    p2.y = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p2.y) * sf);
 
+	    /* cairo_matrix_scale does a pre-scale, we want a post-scale */
 	    cairo_matrix_init_scale (&scale, sf, sf);
 	    cairo_matrix_multiply (&matrix, &matrix, &scale);
 	}

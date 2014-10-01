@@ -208,6 +208,7 @@ nsHttpChannel::nsHttpChannel()
     , mOfflineCacheLastModifiedTime(0)
     , mCachedContentIsValid(false)
     , mCachedContentIsPartial(false)
+    , mCacheOnlyMetadata(false)
     , mTransactionReplaced(false)
     , mAuthRetryPending(false)
     , mProxyAuthPending(false)
@@ -2826,8 +2827,16 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
             if (mCachedContentIsPartial) {
                 rv = OpenCacheInputStream(entry, false, !!appCache);
                 *aResult = ENTRY_NEEDS_REVALIDATION;
+                return rv;
+            } else if (size == 0 && mCacheOnlyMetadata) {
+                // Don't break cache entry load when the entry's data size
+                // is 0 and mCacheOnlyMetadata flag is set. In that case we
+                // want to proceed since the LOAD_ONLY_IF_MODIFIED flag is
+                // also set.
+                MOZ_ASSERT(mLoadFlags & LOAD_ONLY_IF_MODIFIED);
+            } else {
+                return rv;
             }
-            return rv;
         }
     }
 
@@ -4003,13 +4012,23 @@ nsHttpChannel::InstallCacheListener(int64_t offset)
     nsCOMPtr<nsIOutputStream> out;
     rv = mCacheEntry->OpenOutputStream(offset, getter_AddRefs(out));
     if (rv == NS_ERROR_NOT_AVAILABLE) {
-      LOG(("  entry doomed, not writing it [channel=%p]", this));
-      // Entry is already doomed.
-      // This may happen when expiration time is set to past and the entry
-      // has been removed by the background eviction logic.
-      return NS_OK;
+        LOG(("  entry doomed, not writing it [channel=%p]", this));
+        // Entry is already doomed.
+        // This may happen when expiration time is set to past and the entry
+        // has been removed by the background eviction logic.
+        return NS_OK;
     }
     if (NS_FAILED(rv)) return rv;
+
+    if (mCacheOnlyMetadata) {
+        LOG(("Not storing content, cacheOnlyMetadata set"));
+        // We must open and then close the output stream of the cache entry.
+        // This way we indicate the content has been written (despite with zero
+        // length) and the entry is now in the ready state with "having data".
+
+        out->Close();
+        return NS_OK;
+    }
 
     // XXX disk cache does not support overlapped i/o yet
 #if 0
@@ -5713,6 +5732,30 @@ nsHttpChannel::SetCacheKey(nsISupports *key)
         rv = container->GetData(&mPostID);
         if (NS_FAILED(rv)) return rv;
     }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetCacheOnlyMetadata(bool *aOnlyMetadata)
+{
+    NS_ENSURE_ARG(aOnlyMetadata);
+    *aOnlyMetadata = mCacheOnlyMetadata;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetCacheOnlyMetadata(bool aOnlyMetadata)
+{
+    LOG(("nsHttpChannel::SetCacheOnlyMetadata [this=%p only-metadata=%d]\n",
+        this, aOnlyMetadata));
+
+    ENSURE_CALLED_BEFORE_ASYNC_OPEN();
+
+    mCacheOnlyMetadata = aOnlyMetadata;
+    if (aOnlyMetadata) {
+        mLoadFlags |= LOAD_ONLY_IF_MODIFIED;
+    }
+
     return NS_OK;
 }
 

@@ -17,12 +17,12 @@
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="77ef35f5429bc3dfe9ca192b9aacc3c0bf8857de"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="0e280591881d44b80f456bc27e12d9114c218868"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="5883a99b6528ced9dafaed8d3ca2405fb285537e"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="562d357b72279a9e35d4af5aeecc8e1ffa2f44f1"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="0f7792c39ad26aedecf457117c21b16cc1aee879"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="4f9042d3a705307849a6f63961eaaaa2e1d85d77"/>
   <!-- Stock Android things -->
   <project name="platform/abi/cpp" path="abi/cpp" revision="6426040f1be4a844082c9769171ce7f5341a5528"/>
   <project name="platform/bionic" path="bionic" revision="d2eb6c7b6e1bc7643c17df2d9d9bcb1704d0b9ab"/>

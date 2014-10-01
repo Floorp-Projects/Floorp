@@ -2430,10 +2430,10 @@ WorkerPrivateParent<Derived>::Suspend(JSContext* aCx, nsPIDOMWindow* aWindow)
   MOZ_ASSERT(aCx);
 
   // Shared workers are only suspended if all of their owning documents are
-  // suspended.
-  if (IsSharedWorker() || IsServiceWorker()) {
+  // suspended. It can happen that mSharedWorkers is empty but this thread has
+  // not been unregistered yet.
+  if ((IsSharedWorker() || IsServiceWorker()) && mSharedWorkers.Count()) {
     AssertIsOnMainThread();
-    MOZ_ASSERT(mSharedWorkers.Count());
 
     struct Closure
     {
@@ -2515,9 +2515,10 @@ WorkerPrivateParent<Derived>::Resume(JSContext* aCx, nsPIDOMWindow* aWindow)
   MOZ_ASSERT_IF(IsDedicatedWorker(), mParentSuspended);
 
   // Shared workers are resumed if any of their owning documents are resumed.
-  if (IsSharedWorker() || IsServiceWorker()) {
+  // It can happen that mSharedWorkers is empty but this thread has not been
+  // unregistered yet.
+  if ((IsSharedWorker() || IsServiceWorker()) && mSharedWorkers.Count()) {
     AssertIsOnMainThread();
-    MOZ_ASSERT(mSharedWorkers.Count());
 
     struct Closure
     {
