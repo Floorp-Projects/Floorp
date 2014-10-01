@@ -73,7 +73,7 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     jitCompartment_(nullptr)
 {
     runtime_->numCompartments++;
-    JS_ASSERT_IF(options.mergeable(), options.invisibleToDebugger());
+    MOZ_ASSERT_IF(options.mergeable(), options.invisibleToDebugger());
 }
 
 JSCompartment::~JSCompartment()
@@ -243,8 +243,8 @@ JSCompartment::putWrapper(JSContext *cx, const CrossCompartmentKey &wrapped, con
     MOZ_ASSERT(!IsPoisonedPtr(wrapped.wrapped));
     MOZ_ASSERT(!IsPoisonedPtr(wrapped.debugger));
     MOZ_ASSERT(!IsPoisonedPtr(wrapper.toGCThing()));
-    JS_ASSERT_IF(wrapped.kind == CrossCompartmentKey::StringWrapper, wrapper.isString());
-    JS_ASSERT_IF(wrapped.kind != CrossCompartmentKey::StringWrapper, wrapper.isObject());
+    MOZ_ASSERT_IF(wrapped.kind == CrossCompartmentKey::StringWrapper, wrapper.isString());
+    MOZ_ASSERT_IF(wrapped.kind != CrossCompartmentKey::StringWrapper, wrapper.isObject());
     bool success = crossCompartmentWrappers.put(wrapped, ReadBarriered<Value>(wrapper));
 
 #ifdef JSGC_GENERATIONAL
@@ -348,8 +348,8 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
 {
     MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(this));
     MOZ_ASSERT(cx->compartment() == this);
-    JS_ASSERT_IF(existingArg, existingArg->compartment() == cx->compartment());
-    JS_ASSERT_IF(existingArg, IsDeadProxyObject(existingArg));
+    MOZ_ASSERT_IF(existingArg, existingArg->compartment() == cx->compartment());
+    MOZ_ASSERT_IF(existingArg, IsDeadProxyObject(existingArg));
 
     if (!obj)
         return true;
@@ -720,7 +720,7 @@ JSCompartment::clearTables()
     // merging a compartment that has been used off thread into another
     // compartment and zone.
     MOZ_ASSERT(crossCompartmentWrappers.empty());
-    JS_ASSERT_IF(callsiteClones.initialized(), callsiteClones.empty());
+    MOZ_ASSERT_IF(callsiteClones.initialized(), callsiteClones.empty());
     MOZ_ASSERT(!jitCompartment_);
     MOZ_ASSERT(!debugScopes);
     MOZ_ASSERT(!gcWeakMapList);

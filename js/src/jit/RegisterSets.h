@@ -77,7 +77,7 @@ struct AnyRegister {
             gpr().aliased(aliasIdx, &gret);
             ret = AnyRegister(gret);
         }
-        JS_ASSERT_IF(aliasIdx == 0, ret == *this);
+        MOZ_ASSERT_IF(aliasIdx == 0, ret == *this);
         return ret;
     }
     uint32_t numAliased() const {

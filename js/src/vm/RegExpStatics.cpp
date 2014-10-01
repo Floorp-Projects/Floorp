@@ -74,7 +74,7 @@ RegExpStatics::markFlagsSet(JSContext *cx)
     // type changes on RegExp.prototype, so mark a state change to trigger
     // recompilation of all such code (when recompiling, a stub call will
     // always be performed).
-    JS_ASSERT_IF(cx->global()->hasRegExpStatics(), this == cx->global()->getRegExpStatics(cx));
+    MOZ_ASSERT_IF(cx->global()->hasRegExpStatics(), this == cx->global()->getRegExpStatics(cx));
 
     types::MarkTypeObjectFlags(cx, cx->global(), types::OBJECT_FLAG_REGEXP_FLAGS_SET);
 }

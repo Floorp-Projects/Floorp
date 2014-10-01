@@ -56,7 +56,7 @@ void
 SPSProfiler::setProfilingStack(ProfileEntry *stack, uint32_t *size, uint32_t max)
 {
     AutoSPSLock lock(lock_);
-    JS_ASSERT_IF(size_ && *size_ != 0, !enabled());
+    MOZ_ASSERT_IF(size_ && *size_ != 0, !enabled());
     if (!strings.initialized())
         strings.init();
     stack_ = stack;
@@ -218,8 +218,8 @@ SPSProfiler::enterAsmJS(const char *string, void *sp)
 void
 SPSProfiler::push(const char *string, void *sp, JSScript *script, jsbytecode *pc, bool copy)
 {
-    JS_ASSERT_IF(sp != nullptr, script == nullptr && pc == nullptr);
-    JS_ASSERT_IF(sp == nullptr, script != nullptr && pc != nullptr);
+    MOZ_ASSERT_IF(sp != nullptr, script == nullptr && pc == nullptr);
+    MOZ_ASSERT_IF(sp == nullptr, script != nullptr && pc != nullptr);
 
     /* these operations cannot be re-ordered, so volatile-ize operations */
     volatile ProfileEntry *stack = stack_;

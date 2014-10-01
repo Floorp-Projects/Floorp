@@ -347,7 +347,7 @@ AsmJSModule::finish(ExclusiveContext *cx, TokenStream &tokenStream, MacroAssembl
     }
     for (size_t i = 0; i < codeRanges_.length(); i++) {
         codeRanges_[i].updateOffsets(masm);
-        JS_ASSERT_IF(i > 0, codeRanges_[i - 1].end() <= codeRanges_[i].begin());
+        MOZ_ASSERT_IF(i > 0, codeRanges_[i - 1].end() <= codeRanges_[i].begin());
     }
     for (size_t i = 0; i < builtinThunkOffsets_.length(); i++)
         builtinThunkOffsets_[i] = masm.actualOffset(builtinThunkOffsets_[i]);
@@ -928,7 +928,7 @@ AsmJSModule::Name::serializedSize() const
 static uint8_t *
 SerializeName(uint8_t *cursor, PropertyName *name)
 {
-    JS_ASSERT_IF(name, !name->empty());
+    MOZ_ASSERT_IF(name, !name->empty());
     if (name) {
         static_assert(JSString::MAX_LENGTH <= INT32_MAX, "String length must fit in 31 bits");
         uint32_t length = name->length();
@@ -1623,8 +1623,8 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext *cx)
 
         uint8_t *profilingEntry = code_ + codeRange->begin();
         uint8_t *entry = code_ + codeRange->entry();
-        JS_ASSERT_IF(profilingEnabled_, callee == profilingEntry);
-        JS_ASSERT_IF(!profilingEnabled_, callee == entry);
+        MOZ_ASSERT_IF(profilingEnabled_, callee == profilingEntry);
+        MOZ_ASSERT_IF(!profilingEnabled_, callee == entry);
         uint8_t *newCallee = enabled ? profilingEntry : entry;
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
@@ -1652,8 +1652,8 @@ AsmJSModule::setProfilingEnabled(bool enabled, JSContext *cx)
             const CodeRange *codeRange = lookupCodeRange(callee);
             uint8_t *profilingEntry = code_ + codeRange->begin();
             uint8_t *entry = code_ + codeRange->entry();
-            JS_ASSERT_IF(profilingEnabled_, callee == profilingEntry);
-            JS_ASSERT_IF(!profilingEnabled_, callee == entry);
+            MOZ_ASSERT_IF(profilingEnabled_, callee == profilingEntry);
+            MOZ_ASSERT_IF(!profilingEnabled_, callee == entry);
             if (enabled)
                 array[j] = profilingEntry;
             else

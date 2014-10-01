@@ -1126,7 +1126,7 @@ class JSObject : public js::ObjectImpl
             ok = js::DefaultValue(cx, obj, hint, vp);
         else
             ok = op(cx, obj, hint, vp);
-        JS_ASSERT_IF(ok, vp.isPrimitive());
+        MOZ_ASSERT_IF(ok, vp.isPrimitive());
         return ok;
     }
 

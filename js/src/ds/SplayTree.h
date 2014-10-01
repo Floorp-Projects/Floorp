@@ -272,8 +272,8 @@ class SplayTree
             MOZ_ASSERT(!root);
             return nullptr;
         }
-        JS_ASSERT_IF(!node->parent, node == root);
-        JS_ASSERT_IF(minimum, C::compare(minimum->item, node->item) < 0);
+        MOZ_ASSERT_IF(!node->parent, node == root);
+        MOZ_ASSERT_IF(minimum, C::compare(minimum->item, node->item) < 0);
         if (node->left) {
             MOZ_ASSERT(node->left->parent == node);
             Node *leftMaximum = checkCoherency(node->left, minimum);

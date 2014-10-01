@@ -184,7 +184,7 @@ DaysInFebruary(double year)
 static inline double
 DayWithinYear(double t, double year)
 {
-    JS_ASSERT_IF(IsFinite(t), YearFromTime(t) == year);
+    MOZ_ASSERT_IF(IsFinite(t), YearFromTime(t) == year);
     return Day(t) - DayFromYear(year);
 }
 

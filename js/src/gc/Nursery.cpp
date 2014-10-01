@@ -139,7 +139,7 @@ js::Nursery::isEmpty() const
     MOZ_ASSERT(runtime_);
     if (!isEnabled())
         return true;
-    JS_ASSERT_IF(runtime_->gcZeal() != ZealGenerationalGCValue, currentStart_ == start());
+    MOZ_ASSERT_IF(runtime_->gcZeal() != ZealGenerationalGCValue, currentStart_ == start());
     return position() == currentStart_;
 }
 
@@ -622,7 +622,7 @@ js::Nursery::forwardTypedArrayPointers(JSObject *dst, JSObject *src)
      * the start of the data.
      */
     TypedArrayObject &typedArray = src->as<TypedArrayObject>();
-    JS_ASSERT_IF(typedArray.buffer(), !isInside(src->getPrivate()));
+    MOZ_ASSERT_IF(typedArray.buffer(), !isInside(src->getPrivate()));
     if (typedArray.buffer())
         return;
 

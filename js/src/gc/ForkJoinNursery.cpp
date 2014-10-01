@@ -252,7 +252,7 @@ ForkJoinNursery::pjsCollection(int op)
 
     sweepHugeSlots();
     MOZ_ASSERT(hugeSlots[hugeSlotsFrom].empty());
-    JS_ASSERT_IF(isEvacuating_, hugeSlots[hugeSlotsNew].empty());
+    MOZ_ASSERT_IF(isEvacuating_, hugeSlots[hugeSlotsNew].empty());
 
     isEvacuating_ = false;
     evacuationZone_ = nullptr;
@@ -575,7 +575,7 @@ ForkJoinNursery::reallocateSlots(JSObject *obj, HeapSlot *oldSlots,
         return nullptr;
 
     if (!isInsideNewspace(obj)) {
-        JS_ASSERT_IF(oldSlots, !isInsideNewspace(oldSlots));
+        MOZ_ASSERT_IF(oldSlots, !isInsideNewspace(oldSlots));
         return obj->zone()->pod_realloc<HeapSlot>(oldSlots, oldCount, newCount);
     }
 

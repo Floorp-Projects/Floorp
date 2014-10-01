@@ -180,7 +180,7 @@ struct Zone : public JS::shadow::Zone,
     };
     void setGCState(GCState state) {
         MOZ_ASSERT(runtimeFromMainThread()->isHeapBusy());
-        JS_ASSERT_IF(state != NoGC, canCollect());
+        MOZ_ASSERT_IF(state != NoGC, canCollect());
         gcState_ = state;
     }
 

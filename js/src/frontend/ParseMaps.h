@@ -292,7 +292,7 @@ class DefinitionList
         }
 
         bool empty() const {
-            JS_ASSERT_IF(!bits, !node);
+            MOZ_ASSERT_IF(!bits, !node);
             return !bits;
         }
     };

@@ -142,8 +142,8 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter *parent,
     hasGlobalScope(hasGlobalScope),
     emitterMode(emitterMode)
 {
-    JS_ASSERT_IF(evalCaller, insideEval);
-    JS_ASSERT_IF(emitterMode == LazyFunction, lazyScript);
+    MOZ_ASSERT_IF(evalCaller, insideEval);
+    MOZ_ASSERT_IF(emitterMode == LazyFunction, lazyScript);
 }
 
 bool
@@ -450,7 +450,7 @@ EmitLoopHead(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *nextpn)
          * instruction. nextpn is often a block, in which case the next
          * instruction typically comes from the first statement inside.
          */
-        JS_ASSERT_IF(nextpn->isKind(PNK_STATEMENTLIST), nextpn->isArity(PN_LIST));
+        MOZ_ASSERT_IF(nextpn->isKind(PNK_STATEMENTLIST), nextpn->isArity(PN_LIST));
         if (nextpn->isKind(PNK_STATEMENTLIST) && nextpn->pn_head)
             nextpn = nextpn->pn_head;
         if (!UpdateSourceCoordNotes(cx, bce, nextpn->pn_pos.begin))
@@ -465,7 +465,7 @@ EmitLoopEntry(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *nextpn)
 {
     if (nextpn) {
         /* Update the line number, as for LOOPHEAD. */
-        JS_ASSERT_IF(nextpn->isKind(PNK_STATEMENTLIST), nextpn->isArity(PN_LIST));
+        MOZ_ASSERT_IF(nextpn->isKind(PNK_STATEMENTLIST), nextpn->isArity(PN_LIST));
         if (nextpn->isKind(PNK_STATEMENTLIST) && nextpn->pn_head)
             nextpn = nextpn->pn_head;
         if (!UpdateSourceCoordNotes(cx, bce, nextpn->pn_pos.begin))
@@ -787,7 +787,7 @@ ComputeAliasedSlots(ExclusiveContext *cx, BytecodeEmitter *bce, Handle<StaticBlo
         blockObj->setAliased(i, bce->isAliasedName(dn));
     }
 
-    JS_ASSERT_IF(bce->sc->allLocalsAliased(), AllLocalsAliased(*blockObj));
+    MOZ_ASSERT_IF(bce->sc->allLocalsAliased(), AllLocalsAliased(*blockObj));
 
     return true;
 }
@@ -950,7 +950,7 @@ LeaveNestedScope(ExclusiveContext *cx, BytecodeEmitter *bce, StmtInfoBCE *stmt)
     NestedScopeObject *staticScope = &blockObjBox->object->as<NestedScopeObject>();
     MOZ_ASSERT(stmt->staticScope == staticScope);
     MOZ_ASSERT(staticScope == bce->staticScope);
-    JS_ASSERT_IF(!stmt->isBlockScope, staticScope->is<StaticWithObject>());
+    MOZ_ASSERT_IF(!stmt->isBlockScope, staticScope->is<StaticWithObject>());
 #endif
 
     if (!PopStatementBCE(cx, bce))
@@ -1288,7 +1288,7 @@ EmitAliasedVarOp(ExclusiveContext *cx, JSOp op, ParseNode *pn, BytecodeEmitter *
                 return false;
             JS_ALWAYS_TRUE(LookupAliasedNameSlot(bceOfDef, bceOfDef->script, pn->name(), &sc));
         } else {
-            JS_ASSERT_IF(bce->sc->isFunctionBox(), local <= bceOfDef->script->bindings.numLocals());
+            MOZ_ASSERT_IF(bce->sc->isFunctionBox(), local <= bceOfDef->script->bindings.numLocals());
             MOZ_ASSERT(bceOfDef->staticScope->is<StaticBlockObject>());
             Rooted<StaticBlockObject*> b(cx, &bceOfDef->staticScope->as<StaticBlockObject>());
             while (local < b->localOffset()) {
@@ -1318,12 +1318,12 @@ EmitVarOp(ExclusiveContext *cx, ParseNode *pn, JSOp op, BytecodeEmitter *bce)
         return EmitAliasedVarOp(cx, op, sc, NodeNeedsCheckLexical(pn), bce);
     }
 
-    JS_ASSERT_IF(pn->isKind(PNK_NAME), IsArgOp(op) || IsLocalOp(op));
+    MOZ_ASSERT_IF(pn->isKind(PNK_NAME), IsArgOp(op) || IsLocalOp(op));
 
     if (!bce->isAliasedName(pn)) {
         MOZ_ASSERT(pn->isUsed() || pn->isDefn());
-        JS_ASSERT_IF(pn->isUsed(), pn->pn_cookie.level() == 0);
-        JS_ASSERT_IF(pn->isDefn(), pn->pn_cookie.level() == bce->script->staticLevel());
+        MOZ_ASSERT_IF(pn->isUsed(), pn->pn_cookie.level() == 0);
+        MOZ_ASSERT_IF(pn->isDefn(), pn->pn_cookie.level() == bce->script->staticLevel());
         return EmitUnaliasedVarOp(cx, op, pn->pn_cookie.slot(), NodeNeedsCheckLexical(pn), bce);
     }
 
@@ -1426,7 +1426,7 @@ BytecodeEmitter::isAliasedName(ParseNode *pn)
         return script->formalIsAliased(pn->pn_cookie.slot());
       case Definition::VAR:
       case Definition::CONST:
-        JS_ASSERT_IF(sc->allLocalsAliased(), script->varIsAliased(pn->pn_cookie.slot()));
+        MOZ_ASSERT_IF(sc->allLocalsAliased(), script->varIsAliased(pn->pn_cookie.slot()));
         return script->varIsAliased(pn->pn_cookie.slot());
       case Definition::PLACEHOLDER:
       case Definition::NAMED_LAMBDA:
@@ -1593,7 +1593,7 @@ BindNameToSlotHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     MOZ_ASSERT(pn->isKind(PNK_NAME));
 
-    JS_ASSERT_IF(pn->isKind(PNK_FUNCTION), pn->isBound());
+    MOZ_ASSERT_IF(pn->isKind(PNK_FUNCTION), pn->isBound());
 
     /* Don't attempt if 'pn' is already bound or deoptimized or a function. */
     if (pn->isBound() || pn->isDeoptimized())
@@ -1789,7 +1789,7 @@ BindNameToSlotHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * scope and dn's scope.
      */
     unsigned skip = bce->script->staticLevel() - dn->pn_cookie.level();
-    JS_ASSERT_IF(skip, dn->isClosed());
+    MOZ_ASSERT_IF(skip, dn->isClosed());
 
     /*
      * Explicitly disallow accessing var/let bindings in global scope from
@@ -3797,7 +3797,7 @@ EmitVariables(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, VarEmit
             break;
         }
 
-        JS_ASSERT_IF(pn2->isDefn(), pn3 == pn2->pn_expr);
+        MOZ_ASSERT_IF(pn2->isDefn(), pn3 == pn2->pn_expr);
         if (!pn2->pn_cookie.isFree()) {
             if (!EmitVarOp(cx, pn2, op, bce))
                 return false;
@@ -4719,8 +4719,8 @@ static bool
 EmitForOf(ExclusiveContext *cx, BytecodeEmitter *bce, StmtType type, ParseNode *pn, ptrdiff_t top)
 {
     MOZ_ASSERT(type == STMT_FOR_OF_LOOP || type == STMT_SPREAD);
-    JS_ASSERT_IF(type == STMT_FOR_OF_LOOP, pn && pn->pn_left->isKind(PNK_FOROF));
-    JS_ASSERT_IF(type == STMT_SPREAD, !pn);
+    MOZ_ASSERT_IF(type == STMT_FOR_OF_LOOP, pn && pn->pn_left->isKind(PNK_FOROF));
+    MOZ_ASSERT_IF(type == STMT_SPREAD, !pn);
 
     ParseNode *forHead = pn ? pn->pn_left : nullptr;
     ParseNode *forBody = pn ? pn->pn_right : nullptr;
@@ -5130,7 +5130,7 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
     FunctionBox *funbox = pn->pn_funbox;
     RootedFunction fun(cx, funbox->function());
-    JS_ASSERT_IF(fun->isInterpretedLazy(), fun->lazyScript());
+    MOZ_ASSERT_IF(fun->isInterpretedLazy(), fun->lazyScript());
 
     /*
      * Set the EMITTEDFUNCTION flag in function definitions once they have been
@@ -5138,7 +5138,7 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * function will be seen by EmitFunc in two places.
      */
     if (pn->pn_dflags & PND_EMITTEDFUNCTION) {
-        JS_ASSERT_IF(fun->hasScript(), fun->nonLazyScript());
+        MOZ_ASSERT_IF(fun->hasScript(), fun->nonLazyScript());
         MOZ_ASSERT(pn->functionIsHoisted());
         MOZ_ASSERT(bce->sc->isFunctionBox());
         return true;
@@ -5176,7 +5176,7 @@ EmitFunc(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
             if (outersc->isFunctionBox() && outersc->asFunctionBox()->mightAliasLocals())
                 funbox->setMightAliasLocals();      // inherit mightAliasLocals from parent
-            JS_ASSERT_IF(outersc->strict, funbox->strict);
+            MOZ_ASSERT_IF(outersc->strict, funbox->strict);
 
             // Inherit most things (principals, version, etc) from the parent.
             Rooted<JSScript*> parent(cx, bce->script);
@@ -5703,7 +5703,7 @@ EmitStatement(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     if (useful) {
         JSOp op = wantval ? JSOP_SETRVAL : JSOP_POP;
-        JS_ASSERT_IF(pn2->isKind(PNK_ASSIGN), pn2->isOp(JSOP_NOP));
+        MOZ_ASSERT_IF(pn2->isKind(PNK_ASSIGN), pn2->isOp(JSOP_NOP));
         if (!EmitTree(cx, bce, pn2))
             return false;
         if (Emit1(cx, bce, op) < 0)
@@ -5787,7 +5787,7 @@ EmitDelete(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
             return false;
 
         if (useful) {
-            JS_ASSERT_IF(pn2->isKind(PNK_CALL), !(pn2->pn_xflags & PNX_SETCALL));
+            MOZ_ASSERT_IF(pn2->isKind(PNK_CALL), !(pn2->pn_xflags & PNX_SETCALL));
             if (!EmitTree(cx, bce, pn2))
                 return false;
             if (Emit1(cx, bce, JSOP_POP) < 0)

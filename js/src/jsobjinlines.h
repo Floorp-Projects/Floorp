@@ -374,7 +374,7 @@ JSObject::initDenseElementsUnbarriered(uint32_t dstStart, const js::Value *src, 
 /* static */ inline bool
 JSObject::setSingletonType(js::ExclusiveContext *cx, js::HandleObject obj)
 {
-    JS_ASSERT_IF(cx->isJSContext(), !IsInsideNursery(obj));
+    MOZ_ASSERT_IF(cx->isJSContext(), !IsInsideNursery(obj));
 
     js::types::TypeObject *type = cx->getSingletonType(obj->getClass(), obj->getTaggedProto());
     if (!type)
@@ -519,10 +519,10 @@ JSObject::create(js::ExclusiveContext *cx, js::gc::AllocKind kind, js::gc::Initi
     MOZ_ASSERT(shape && type);
     MOZ_ASSERT(type->clasp() == shape->getObjectClass());
     MOZ_ASSERT(type->clasp() != &js::ArrayObject::class_);
-    JS_ASSERT_IF(!ClassCanHaveFixedData(type->clasp()),
-                 js::gc::GetGCKindSlots(kind, type->clasp()) == shape->numFixedSlots());
-    JS_ASSERT_IF(type->clasp()->flags & JSCLASS_BACKGROUND_FINALIZE, IsBackgroundFinalized(kind));
-    JS_ASSERT_IF(type->clasp()->finalize, heap == js::gc::TenuredHeap);
+    MOZ_ASSERT_IF(!ClassCanHaveFixedData(type->clasp()),
+                  js::gc::GetGCKindSlots(kind, type->clasp()) == shape->numFixedSlots());
+    MOZ_ASSERT_IF(type->clasp()->flags & JSCLASS_BACKGROUND_FINALIZE, IsBackgroundFinalized(kind));
+    MOZ_ASSERT_IF(type->clasp()->finalize, heap == js::gc::TenuredHeap);
 
     const js::Class *clasp = type->clasp();
     size_t nDynamicSlots = dynamicSlotsCount(shape->numFixedSlots(), shape->slotSpan(), clasp);
@@ -589,7 +589,7 @@ JSObject::createArrayInternal(js::ExclusiveContext *cx, js::gc::AllocKind kind, 
     MOZ_ASSERT(shape && type);
     MOZ_ASSERT(type->clasp() == shape->getObjectClass());
     MOZ_ASSERT(type->clasp() == &js::ArrayObject::class_);
-    JS_ASSERT_IF(type->clasp()->finalize, heap == js::gc::TenuredHeap);
+    MOZ_ASSERT_IF(type->clasp()->finalize, heap == js::gc::TenuredHeap);
 
     // Arrays can use their fixed slots to store elements, so can't have shapes
     // which allow named properties to be stored in the fixed slots.
@@ -1099,7 +1099,7 @@ CopyInitializerObject(JSContext *cx, HandleObject baseobj, NewObjectKind newKind
 
     gc::AllocKind allocKind = gc::GetGCObjectFixedSlotsKind(baseobj->numFixedSlots());
     allocKind = gc::GetBackgroundAllocKind(allocKind);
-    JS_ASSERT_IF(baseobj->isTenured(), allocKind == baseobj->asTenured()->getAllocKind());
+    MOZ_ASSERT_IF(baseobj->isTenured(), allocKind == baseobj->asTenured()->getAllocKind());
     RootedObject obj(cx);
     obj = NewBuiltinClassInstance(cx, &JSObject::class_, allocKind, newKind);
     if (!obj)

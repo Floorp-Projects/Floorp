@@ -239,8 +239,8 @@ struct VMFunction
         extraValuesToPop(extraValuesToPop)
     {
         // Check for valid failure/return type.
-        JS_ASSERT_IF(outParam != Type_Void && executionMode == SequentialExecution,
-                     returnType == Type_Bool);
+        MOZ_ASSERT_IF(outParam != Type_Void && executionMode == SequentialExecution,
+                      returnType == Type_Bool);
         MOZ_ASSERT(returnType == Type_Bool ||
                    returnType == Type_Object);
     }

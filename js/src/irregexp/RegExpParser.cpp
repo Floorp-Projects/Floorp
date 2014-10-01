@@ -669,7 +669,7 @@ RegExpTree *
 RegExpParser<CharT>::ParsePattern()
 {
     RegExpTree* result = ParseDisjunction();
-    JS_ASSERT_IF(result, !has_more());
+    MOZ_ASSERT_IF(result, !has_more());
     return result;
 }
 

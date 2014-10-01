@@ -28,7 +28,7 @@ WeakMapBase::WeakMapBase(JSObject *memOf, JSCompartment *c)
     next(WeakMapNotInList),
     marked(false)
 {
-    JS_ASSERT_IF(memberOf, memberOf->compartment() == c);
+    MOZ_ASSERT_IF(memberOf, memberOf->compartment() == c);
 }
 
 WeakMapBase::~WeakMapBase()
@@ -400,7 +400,7 @@ SetWeakMapEntryInternal(JSContext *cx, Handle<WeakMapObject*> mapObj,
     }
 
     MOZ_ASSERT(key->compartment() == mapObj->compartment());
-    JS_ASSERT_IF(value.isObject(), value.toObject().compartment() == mapObj->compartment());
+    MOZ_ASSERT_IF(value.isObject(), value.toObject().compartment() == mapObj->compartment());
     if (!map->put(key, value)) {
         JS_ReportOutOfMemory(cx);
         return false;

@@ -20,7 +20,7 @@ class Shape;
 inline Allocator *
 ThreadSafeContext::allocator() const
 {
-    JS_ASSERT_IF(isJSContext(), &asJSContext()->zone()->allocator == allocator_);
+    MOZ_ASSERT_IF(isJSContext(), &asJSContext()->zone()->allocator == allocator_);
     return allocator_;
 }
 
@@ -501,11 +501,11 @@ CheckAllocatorState(ThreadSafeContext *cx, AllocKind kind)
     JSContext *ncx = cx->asJSContext();
     JSRuntime *rt = ncx->runtime();
 #if defined(JS_GC_ZEAL) || defined(DEBUG)
-    JS_ASSERT_IF(rt->isAtomsCompartment(ncx->compartment()),
-                 kind == FINALIZE_STRING ||
-                 kind == FINALIZE_FAT_INLINE_STRING ||
-                 kind == FINALIZE_SYMBOL ||
-                 kind == FINALIZE_JITCODE);
+    MOZ_ASSERT_IF(rt->isAtomsCompartment(ncx->compartment()),
+                  kind == FINALIZE_STRING ||
+                  kind == FINALIZE_FAT_INLINE_STRING ||
+                  kind == FINALIZE_SYMBOL ||
+                  kind == FINALIZE_JITCODE);
     MOZ_ASSERT(!rt->isHeapBusy());
     MOZ_ASSERT(rt->gc.isAllocAllowed());
 #endif
@@ -545,8 +545,8 @@ CheckIncrementalZoneState(ThreadSafeContext *cx, T *t)
         return;
 
     Zone *zone = cx->asJSContext()->zone();
-    JS_ASSERT_IF(t && zone->wasGCStarted() && (zone->isGCMarking() || zone->isGCSweeping()),
-                 t->asTenured()->arenaHeader()->allocatedDuringIncremental);
+    MOZ_ASSERT_IF(t && zone->wasGCStarted() && (zone->isGCMarking() || zone->isGCSweeping()),
+                  t->asTenured()->arenaHeader()->allocatedDuringIncremental);
 #endif
 }
 

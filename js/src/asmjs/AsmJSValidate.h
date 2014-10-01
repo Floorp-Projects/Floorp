@@ -86,8 +86,8 @@ IsValidAsmJSHeapLength(uint32_t length)
                  (IsPowerOfTwo(length) ||
                   (length & 0x00ffffff) == 0);
 
-    JS_ASSERT_IF(valid, length % AsmJSPageSize == 0);
-    JS_ASSERT_IF(valid, length == RoundUpToNextValidAsmJSHeapLength(length));
+    MOZ_ASSERT_IF(valid, length % AsmJSPageSize == 0);
+    MOZ_ASSERT_IF(valid, length == RoundUpToNextValidAsmJSHeapLength(length));
 
     return valid;
 }

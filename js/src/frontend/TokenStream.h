@@ -672,13 +672,13 @@ class MOZ_STACK_CLASS TokenStream
         }
 
         const char16_t *addressOfNextRawChar(bool allowPoisoned = false) const {
-            JS_ASSERT_IF(!allowPoisoned, ptr);     // make sure it hasn't been poisoned
+            MOZ_ASSERT_IF(!allowPoisoned, ptr);     // make sure it hasn't been poisoned
             return ptr;
         }
 
         // Use this with caution!
         void setAddressOfNextRawChar(const char16_t *a, bool allowPoisoned = false) {
-            JS_ASSERT_IF(!allowPoisoned, a);
+            MOZ_ASSERT_IF(!allowPoisoned, a);
             ptr = a;
         }
 

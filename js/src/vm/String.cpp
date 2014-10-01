@@ -467,8 +467,8 @@ js::ConcatStrings(ThreadSafeContext *cx,
                   typename MaybeRooted<JSString*, allowGC>::HandleType left,
                   typename MaybeRooted<JSString*, allowGC>::HandleType right)
 {
-    JS_ASSERT_IF(!left->isAtom(), cx->isInsideCurrentZone(left));
-    JS_ASSERT_IF(!right->isAtom(), cx->isInsideCurrentZone(right));
+    MOZ_ASSERT_IF(!left->isAtom(), cx->isInsideCurrentZone(left));
+    MOZ_ASSERT_IF(!right->isAtom(), cx->isInsideCurrentZone(right));
 
     size_t leftLen = left->length();
     if (leftLen == 0)

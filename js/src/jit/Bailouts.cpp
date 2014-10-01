@@ -100,7 +100,7 @@ jit::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
     MOZ_ASSERT(retval == BAILOUT_RETURN_OK ||
                retval == BAILOUT_RETURN_FATAL_ERROR ||
                retval == BAILOUT_RETURN_OVERRECURSED);
-    JS_ASSERT_IF(retval == BAILOUT_RETURN_OK, *bailoutInfo != nullptr);
+    MOZ_ASSERT_IF(retval == BAILOUT_RETURN_OK, *bailoutInfo != nullptr);
 
     if (retval != BAILOUT_RETURN_OK) {
         // If the bailout failed, then bailout trampoline will pop the
@@ -156,7 +156,7 @@ jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
     MOZ_ASSERT(retval == BAILOUT_RETURN_OK ||
                retval == BAILOUT_RETURN_FATAL_ERROR ||
                retval == BAILOUT_RETURN_OVERRECURSED);
-    JS_ASSERT_IF(retval == BAILOUT_RETURN_OK, *bailoutInfo != nullptr);
+    MOZ_ASSERT_IF(retval == BAILOUT_RETURN_OK, *bailoutInfo != nullptr);
 
     if (retval != BAILOUT_RETURN_OK) {
         // If the bailout failed, then bailout trampoline will pop the

@@ -148,7 +148,7 @@ bool
 CheckOverRecursedWithExtra(JSContext *cx, BaselineFrame *frame,
                            uint32_t extra, uint32_t earlyCheck)
 {
-    JS_ASSERT_IF(earlyCheck, !frame->overRecursed());
+    MOZ_ASSERT_IF(earlyCheck, !frame->overRecursed());
 
     // See |CheckOverRecursed| above.  This is a variant of that function which
     // accepts an argument holding the extra stack space needed for the Baseline
@@ -815,10 +815,10 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool ok)
     ok = ScriptDebugEpilogue(cx, frame, pc, ok);
 
     if (frame->isNonEvalFunctionFrame()) {
-        JS_ASSERT_IF(ok, frame->hasReturnValue());
+        MOZ_ASSERT_IF(ok, frame->hasReturnValue());
         DebugScopes::onPopCall(frame, cx);
     } else if (frame->isStrictEvalFrame()) {
-        JS_ASSERT_IF(frame->hasCallObj(), frame->scopeChain()->as<CallObject>().isForEval());
+        MOZ_ASSERT_IF(frame->hasCallObj(), frame->scopeChain()->as<CallObject>().isForEval());
         DebugScopes::onPopStrictEvalScope(frame);
     }
 
@@ -1127,8 +1127,8 @@ AssertValidObjectPtr(JSContext *cx, JSObject *obj)
     MOZ_ASSERT(obj->compartment() == cx->compartment());
     MOZ_ASSERT(obj->runtimeFromMainThread() == cx->runtime());
 
-    JS_ASSERT_IF(!obj->hasLazyType(),
-                 obj->type()->clasp() == obj->lastProperty()->getObjectClass());
+    MOZ_ASSERT_IF(!obj->hasLazyType(),
+                  obj->type()->clasp() == obj->lastProperty()->getObjectClass());
 
     if (obj->isTenured()) {
         MOZ_ASSERT(obj->isAligned());

@@ -170,21 +170,21 @@ class BaselineFrame
 
     Value &unaliasedVar(uint32_t i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) const {
         MOZ_ASSERT(i < script()->nfixedvars());
-        JS_ASSERT_IF(checkAliasing, !script()->varIsAliased(i));
+        MOZ_ASSERT_IF(checkAliasing, !script()->varIsAliased(i));
         return *valueSlot(i);
     }
 
     Value &unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) const {
         MOZ_ASSERT(i < numFormalArgs());
-        JS_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals() &&
-                                    !script()->formalIsAliased(i));
+        MOZ_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals() &&
+                                     !script()->formalIsAliased(i));
         return argv()[i];
     }
 
     Value &unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) const {
         MOZ_ASSERT(i < numActualArgs());
-        JS_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals());
-        JS_ASSERT_IF(checkAliasing && i < numFormalArgs(), !script()->formalIsAliased(i));
+        MOZ_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals());
+        MOZ_ASSERT_IF(checkAliasing && i < numFormalArgs(), !script()->formalIsAliased(i));
         return argv()[i];
     }
 

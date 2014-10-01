@@ -1167,7 +1167,7 @@ inline TypeObject::TypeObject(const Class *clasp, TaggedProto proto, TypeObjectF
     mozilla::PodZero(this);
 
     /* Inner objects may not appear on prototype chains. */
-    JS_ASSERT_IF(proto.isObject(), !proto.toObject()->getClass()->ext.outerObject);
+    MOZ_ASSERT_IF(proto.isObject(), !proto.toObject()->getClass()->ext.outerObject);
 
     this->clasp_ = clasp;
     this->proto_ = proto.raw();
@@ -1197,7 +1197,7 @@ TypeObject::getProperty(ExclusiveContext *cx, jsid id)
     MOZ_ASSERT(cx->compartment()->activeAnalysis);
 
     MOZ_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id) || JSID_IS_SYMBOL(id));
-    JS_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
+    MOZ_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
     MOZ_ASSERT(!unknownProperties());
 
     if (HeapTypeSet *types = maybeGetProperty(id))
@@ -1238,7 +1238,7 @@ inline HeapTypeSet *
 TypeObject::maybeGetProperty(jsid id)
 {
     MOZ_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id) || JSID_IS_SYMBOL(id));
-    JS_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
+    MOZ_ASSERT_IF(!JSID_IS_EMPTY(id), id == IdToTypeId(id));
     MOZ_ASSERT(!unknownProperties());
 
     Property *prop = HashSetLookup<jsid,Property,Property>

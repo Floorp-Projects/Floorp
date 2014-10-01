@@ -349,10 +349,10 @@ public:
     void advanceTo(ptrdiff_t relpc) {
         // Must always advance! If the same or an earlier PC is erroneously
         // passed in, we will already be past the relevant src notes
-        JS_ASSERT_IF(offset > 0, relpc > offset);
+        MOZ_ASSERT_IF(offset > 0, relpc > offset);
 
         // Next src note should be for after the current offset
-        JS_ASSERT_IF(offset > 0, SN_IS_TERMINATOR(sn) || SN_DELTA(sn) > 0);
+        MOZ_ASSERT_IF(offset > 0, SN_IS_TERMINATOR(sn) || SN_DELTA(sn) > 0);
 
         // The first PC requested is always considered to be a line header
         lineHeader = (offset == 0);

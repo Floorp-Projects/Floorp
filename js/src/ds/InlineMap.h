@@ -323,12 +323,12 @@ class InlineMap
 
         bool checkInlineRangeInvariants() const {
             MOZ_ASSERT(uintptr_t(cur) <= uintptr_t(end));
-            JS_ASSERT_IF(cur != end, cur->key != nullptr);
+            MOZ_ASSERT_IF(cur != end, cur->key != nullptr);
             return true;
         }
 
         bool isInlineRange() const {
-            JS_ASSERT_IF(isInline, checkInlineRangeInvariants());
+            MOZ_ASSERT_IF(isInline, checkInlineRangeInvariants());
             return isInline;
         }
 

@@ -334,7 +334,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     makeInstance(JSContext *cx, Handle<ArrayBufferObject *> buffer, uint32_t byteOffset, uint32_t len,
                  HandleObject proto)
     {
-        JS_ASSERT_IF(!buffer, byteOffset == 0);
+        MOZ_ASSERT_IF(!buffer, byteOffset == 0);
 
         gc::AllocKind allocKind = buffer
                                   ? GetGCObjectKind(instanceClass())
@@ -366,7 +366,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             uint32_t arrayByteLength = obj->byteLength();
             uint32_t arrayByteOffset = obj->byteOffset();
             uint32_t bufferByteLength = buffer->byteLength();
-            JS_ASSERT_IF(!buffer->isNeutered(), buffer->dataPointer() <= obj->viewData());
+            MOZ_ASSERT_IF(!buffer->isNeutered(), buffer->dataPointer() <= obj->viewData());
             MOZ_ASSERT(bufferByteLength - arrayByteOffset >= arrayByteLength);
             MOZ_ASSERT(arrayByteOffset <= bufferByteLength);
         }

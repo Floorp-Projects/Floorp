@@ -238,14 +238,14 @@ class AsmJSModule
         Global(Which which, PropertyName *name) {
             pod.which_ = which;
             name_ = name;
-            JS_ASSERT_IF(name_, name_->isTenured());
+            MOZ_ASSERT_IF(name_, name_->isTenured());
         }
 
         void trace(JSTracer *trc) {
             if (name_)
                 MarkStringUnbarriered(trc, &name_, "asm.js global name");
-            JS_ASSERT_IF(pod.which_ == Variable && pod.u.var.initKind_ == InitConstant,
-                         !pod.u.var.u.numLit_.scalarValue().isMarkable());
+            MOZ_ASSERT_IF(pod.which_ == Variable && pod.u.var.initKind_ == InitConstant,
+                          !pod.u.var.u.numLit_.scalarValue().isMarkable());
         }
 
       public:
@@ -430,7 +430,7 @@ class AsmJSModule
             pod.codeOffset_ = UINT32_MAX;
             pod.startOffsetInModule_ = startOffsetInModule;
             pod.endOffsetInModule_ = endOffsetInModule;
-            JS_ASSERT_IF(maybeFieldName_, name_->isTenured());
+            MOZ_ASSERT_IF(maybeFieldName_, name_->isTenured());
         }
 
         void trace(JSTracer *trc) {
@@ -872,17 +872,17 @@ class AsmJSModule
 
     void initGlobalArgumentName(PropertyName *n) {
         MOZ_ASSERT(!isFinishedWithModulePrologue());
-        JS_ASSERT_IF(n, n->isTenured());
+        MOZ_ASSERT_IF(n, n->isTenured());
         globalArgumentName_ = n;
     }
     void initImportArgumentName(PropertyName *n) {
         MOZ_ASSERT(!isFinishedWithModulePrologue());
-        JS_ASSERT_IF(n, n->isTenured());
+        MOZ_ASSERT_IF(n, n->isTenured());
         importArgumentName_ = n;
     }
     void initBufferArgumentName(PropertyName *n) {
         MOZ_ASSERT(!isFinishedWithModulePrologue());
-        JS_ASSERT_IF(n, n->isTenured());
+        MOZ_ASSERT_IF(n, n->isTenured());
         bufferArgumentName_ = n;
     }
     PropertyName *globalArgumentName() const {

@@ -689,10 +689,10 @@ Range::or_(TempAllocator &alloc, const Range *lhs, const Range *rhs)
 
     // The code below uses CountLeadingZeroes32, which has undefined behavior
     // if its operand is 0. We rely on the code above to protect it.
-    JS_ASSERT_IF(lhs->lower() >= 0, lhs->upper() != 0);
-    JS_ASSERT_IF(rhs->lower() >= 0, rhs->upper() != 0);
-    JS_ASSERT_IF(lhs->upper() < 0, lhs->lower() != -1);
-    JS_ASSERT_IF(rhs->upper() < 0, rhs->lower() != -1);
+    MOZ_ASSERT_IF(lhs->lower() >= 0, lhs->upper() != 0);
+    MOZ_ASSERT_IF(rhs->lower() >= 0, rhs->upper() != 0);
+    MOZ_ASSERT_IF(lhs->upper() < 0, lhs->lower() != -1);
+    MOZ_ASSERT_IF(rhs->upper() < 0, rhs->lower() != -1);
 
     int32_t lower = INT32_MIN;
     int32_t upper = INT32_MAX;
@@ -1711,7 +1711,7 @@ RangeAnalysis::analyzeLoopIterationCount(MBasicBlock *header,
         lessEqual = !lessEqual;
     }
 
-    JS_ASSERT_IF(rhs, !rhs->block()->isMarked());
+    MOZ_ASSERT_IF(rhs, !rhs->block()->isMarked());
 
     // Ensure the lhs is a phi node from the start of the loop body.
     if (!lhs.term || !lhs.term->isPhi() || lhs.term->block() != header)
@@ -2446,7 +2446,7 @@ MCompare::operandTruncateKind(size_t index) const
 {
     // If we're doing an int32 comparison on operands which were previously
     // floating-point, convert them!
-    JS_ASSERT_IF(truncateOperands_, isInt32Comparison());
+    MOZ_ASSERT_IF(truncateOperands_, isInt32Comparison());
     return truncateOperands_ ? TruncateAfterBailouts : NoTruncate;
 }
 

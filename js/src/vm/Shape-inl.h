@@ -72,7 +72,7 @@ Shape::searchThreadLocal(ThreadSafeContext *cx, Shape *start, jsid id,
      * allocated thread locally. In that case, we may add to the
      * table. Otherwise it is not allowed.
      */
-    JS_ASSERT_IF(adding, cx->isThreadLocal(start) && start->inDictionary());
+    MOZ_ASSERT_IF(adding, cx->isThreadLocal(start) && start->inDictionary());
 
     if (start->inDictionary()) {
         *pspp = start->table().search(id, adding);
@@ -88,7 +88,7 @@ inline bool
 Shape::set(JSContext* cx, HandleObject obj, HandleObject receiver, bool strict,
            MutableHandleValue vp)
 {
-    JS_ASSERT_IF(hasDefaultSetter(), hasGetterValue());
+    MOZ_ASSERT_IF(hasDefaultSetter(), hasGetterValue());
 
     if (attrs & JSPROP_SETTER) {
         Value fval = setterValue();
@@ -192,8 +192,8 @@ AutoRooterGetterSetter::Inner::Inner(ThreadSafeContext *cx, uint8_t attrs,
   : CustomAutoRooter(cx), attrs(attrs),
     pgetter(pgetter_), psetter(psetter_)
 {
-    JS_ASSERT_IF(attrs & JSPROP_GETTER, !IsPoisonedPtr(*pgetter));
-    JS_ASSERT_IF(attrs & JSPROP_SETTER, !IsPoisonedPtr(*psetter));
+    MOZ_ASSERT_IF(attrs & JSPROP_GETTER, !IsPoisonedPtr(*pgetter));
+    MOZ_ASSERT_IF(attrs & JSPROP_SETTER, !IsPoisonedPtr(*psetter));
 }
 
 inline

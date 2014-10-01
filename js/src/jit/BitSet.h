@@ -140,7 +140,7 @@ class BitSet::Iterator
         index_ += numZeros;
         value_ >>= numZeros;
 
-        JS_ASSERT_IF(index_ < set_.numBits_, set_.contains(index_));
+        MOZ_ASSERT_IF(index_ < set_.numBits_, set_.contains(index_));
     }
 
   public:

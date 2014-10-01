@@ -1206,8 +1206,8 @@ JSStructuredCloneWriter::transferOwnership()
     }
 
     MOZ_ASSERT(point <= out.rawBuffer() + out.count());
-    JS_ASSERT_IF(point < out.rawBuffer() + out.count(),
-                 uint32_t(LittleEndian::readUint64(point) >> 32) < SCTAG_TRANSFER_MAP_HEADER);
+    MOZ_ASSERT_IF(point < out.rawBuffer() + out.count(),
+                  uint32_t(LittleEndian::readUint64(point) >> 32) < SCTAG_TRANSFER_MAP_HEADER);
 
     return true;
 }

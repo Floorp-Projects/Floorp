@@ -403,8 +403,8 @@ RegExpStatics::copyTo(RegExpStatics &dst)
     dst.flags = flags;
     dst.pendingLazyEvaluation = pendingLazyEvaluation;
 
-    JS_ASSERT_IF(pendingLazyEvaluation, lazySource);
-    JS_ASSERT_IF(pendingLazyEvaluation, matchesInput);
+    MOZ_ASSERT_IF(pendingLazyEvaluation, lazySource);
+    MOZ_ASSERT_IF(pendingLazyEvaluation, matchesInput);
 }
 
 inline void

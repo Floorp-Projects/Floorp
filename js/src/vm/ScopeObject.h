@@ -67,16 +67,16 @@ class StaticScopeIter
       : obj(cx, obj), onNamedLambda(false)
     {
         JS_STATIC_ASSERT(allowGC == CanGC);
-        JS_ASSERT_IF(obj, obj->is<StaticBlockObject>() || obj->is<StaticWithObject>() ||
-                     obj->is<JSFunction>());
+        MOZ_ASSERT_IF(obj, obj->is<StaticBlockObject>() || obj->is<StaticWithObject>() ||
+                      obj->is<JSFunction>());
     }
 
     explicit StaticScopeIter(JSObject *obj)
       : obj((ExclusiveContext *) nullptr, obj), onNamedLambda(false)
     {
         JS_STATIC_ASSERT(allowGC == NoGC);
-        JS_ASSERT_IF(obj, obj->is<StaticBlockObject>() || obj->is<StaticWithObject>() ||
-                     obj->is<JSFunction>());
+        MOZ_ASSERT_IF(obj, obj->is<StaticBlockObject>() || obj->is<StaticWithObject>() ||
+                      obj->is<JSFunction>());
     }
 
     bool done() const;
@@ -271,8 +271,8 @@ class CallObject : public ScopeObject
     /* True if this is for a strict mode eval frame. */
     bool isForEval() const {
         MOZ_ASSERT(getFixedSlot(CALLEE_SLOT).isObjectOrNull());
-        JS_ASSERT_IF(getFixedSlot(CALLEE_SLOT).isObject(),
-                     getFixedSlot(CALLEE_SLOT).toObject().is<JSFunction>());
+        MOZ_ASSERT_IF(getFixedSlot(CALLEE_SLOT).isObject(),
+                      getFixedSlot(CALLEE_SLOT).toObject().is<JSFunction>());
         return getFixedSlot(CALLEE_SLOT).isNull();
     }
 
@@ -532,7 +532,7 @@ class StaticBlockObject : public BlockObject
 
     /* Initialization functions for above fields. */
     void setAliased(unsigned i, bool aliased) {
-        JS_ASSERT_IF(i > 0, slotValue(i-1).isBoolean());
+        MOZ_ASSERT_IF(i > 0, slotValue(i-1).isBoolean());
         setSlotValue(i, BooleanValue(aliased));
         if (aliased && !needsClone()) {
             setSlotValue(0, MagicValue(JS_BLOCK_NEEDS_CLONE));
@@ -584,12 +584,12 @@ class ClonedBlockObject : public BlockObject
 
     /* Assuming 'put' has been called, return the value of the ith let var. */
     const Value &var(unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) {
-        JS_ASSERT_IF(checkAliasing, staticBlock().isAliased(i));
+        MOZ_ASSERT_IF(checkAliasing, staticBlock().isAliased(i));
         return slotValue(i);
     }
 
     void setVar(unsigned i, const Value &v, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) {
-        JS_ASSERT_IF(checkAliasing, staticBlock().isAliased(i));
+        MOZ_ASSERT_IF(checkAliasing, staticBlock().isAliased(i));
         setSlotValue(i, v);
     }
 

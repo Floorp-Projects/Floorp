@@ -97,8 +97,8 @@ Compressor::compressMore()
         MOZ_ASSERT(zs.avail_out == 0);
         return MOREOUTPUT;
     }
-    JS_ASSERT_IF(!done, ret == Z_OK);
-    JS_ASSERT_IF(done, ret == Z_STREAM_END);
+    MOZ_ASSERT_IF(!done, ret == Z_OK);
+    MOZ_ASSERT_IF(done, ret == Z_STREAM_END);
     return done ? DONE : CONTINUE;
 }
 

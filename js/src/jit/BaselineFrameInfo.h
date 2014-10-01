@@ -308,7 +308,7 @@ class FrameInfo
     void popRegsAndSync(uint32_t uses);
 
     inline void assertSyncedStack() const {
-        JS_ASSERT_IF(stackDepth() > 0, peek(-1)->kind() == StackValue::Stack);
+        MOZ_ASSERT_IF(stackDepth() > 0, peek(-1)->kind() == StackValue::Stack);
     }
 
 #ifdef DEBUG

@@ -443,7 +443,7 @@ RunFile(JSContext *cx, Handle<JSObject*> obj, const char *filename, FILE *file, 
 
         gGotError = false;
         (void) JS::Compile(cx, obj, options, file, &script);
-        JS_ASSERT_IF(!script, gGotError);
+        MOZ_ASSERT_IF(!script, gGotError);
     }
 
     #ifdef DEBUG

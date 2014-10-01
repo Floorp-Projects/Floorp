@@ -740,7 +740,7 @@ class JitcodeRegionEntry
             MOZ_ASSERT(cur_ <= end_);
 
             idx_++;
-            JS_ASSERT_IF(idx_ == count_, cur_ == end_);
+            MOZ_ASSERT_IF(idx_ == count_, cur_ == end_);
         }
 
         void reset() {

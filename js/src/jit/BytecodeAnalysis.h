@@ -27,7 +27,7 @@ struct BytecodeInfo
 
     void init(unsigned depth) {
         MOZ_ASSERT(depth <= MAX_STACK_DEPTH);
-        JS_ASSERT_IF(initialized, stackDepth == depth);
+        MOZ_ASSERT_IF(initialized, stackDepth == depth);
         initialized = true;
         stackDepth = depth;
     }

@@ -33,14 +33,14 @@ IsCacheableNonGlobalScope(JSObject *obj)
 {
     bool cacheable = (obj->is<CallObject>() || obj->is<BlockObject>() || obj->is<DeclEnvObject>());
 
-    JS_ASSERT_IF(cacheable, !obj->getOps()->lookupProperty);
+    MOZ_ASSERT_IF(cacheable, !obj->getOps()->lookupProperty);
     return cacheable;
 }
 
 inline HandleObject
 InterpreterFrame::scopeChain() const
 {
-    JS_ASSERT_IF(!(flags_ & HAS_SCOPECHAIN), isFunctionFrame());
+    MOZ_ASSERT_IF(!(flags_ & HAS_SCOPECHAIN), isFunctionFrame());
     if (!(flags_ & HAS_SCOPECHAIN)) {
         scopeChain_ = callee().environment();
         flags_ |= HAS_SCOPECHAIN;
@@ -111,7 +111,7 @@ InterpreterFrame::initLocals()
 inline Value &
 InterpreterFrame::unaliasedVar(uint32_t i, MaybeCheckAliasing checkAliasing)
 {
-    JS_ASSERT_IF(checkAliasing, !script()->varIsAliased(i));
+    MOZ_ASSERT_IF(checkAliasing, !script()->varIsAliased(i));
     MOZ_ASSERT(i < script()->nfixedvars());
     return slots()[i];
 }
@@ -130,8 +130,8 @@ inline Value &
 InterpreterFrame::unaliasedFormal(unsigned i, MaybeCheckAliasing checkAliasing)
 {
     MOZ_ASSERT(i < numFormalArgs());
-    JS_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals());
-    JS_ASSERT_IF(checkAliasing, !script()->formalIsAliased(i));
+    MOZ_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals());
+    MOZ_ASSERT_IF(checkAliasing, !script()->formalIsAliased(i));
     return argv()[i];
 }
 
@@ -139,8 +139,8 @@ inline Value &
 InterpreterFrame::unaliasedActual(unsigned i, MaybeCheckAliasing checkAliasing)
 {
     MOZ_ASSERT(i < numActualArgs());
-    JS_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals());
-    JS_ASSERT_IF(checkAliasing && i < numFormalArgs(), !script()->formalIsAliased(i));
+    MOZ_ASSERT_IF(checkAliasing, !script()->argsObjAliasesFormals());
+    MOZ_ASSERT_IF(checkAliasing && i < numFormalArgs(), !script()->formalIsAliased(i));
     return argv()[i];
 }
 
@@ -760,7 +760,7 @@ Activation::Activation(ThreadSafeContext *cx, Kind kind)
 
 Activation::~Activation()
 {
-    JS_ASSERT_IF(isProfiling(), this != cx_->perThreadData->profilingActivation_);
+    MOZ_ASSERT_IF(isProfiling(), this != cx_->perThreadData->profilingActivation_);
     MOZ_ASSERT(cx_->perThreadData->activation_ == this);
     MOZ_ASSERT(hideScriptedCallerCount_ == 0);
     cx_->perThreadData->activation_ = prev_;
@@ -807,7 +807,7 @@ InterpreterActivation::InterpreterActivation(RunState &state, JSContext *cx,
         regs_ = state.asGenerator()->gen()->regs;
     }
 
-    JS_ASSERT_IF(entryFrame_->isEvalFrame(), state_.script()->isActiveEval());
+    MOZ_ASSERT_IF(entryFrame_->isEvalFrame(), state_.script()->isActiveEval());
 }
 
 InterpreterActivation::~InterpreterActivation()
@@ -818,7 +818,7 @@ InterpreterActivation::~InterpreterActivation()
 
     JSContext *cx = cx_->asJSContext();
     MOZ_ASSERT(oldFrameCount_ == cx->runtime()->interpreterStack().frameCount_);
-    JS_ASSERT_IF(oldFrameCount_ == 0, cx->runtime()->interpreterStack().allocator_.used() == 0);
+    MOZ_ASSERT_IF(oldFrameCount_ == 0, cx->runtime()->interpreterStack().allocator_.used() == 0);
 
     if (state_.isGenerator()) {
         JSGenerator *gen = state_.asGenerator()->gen();

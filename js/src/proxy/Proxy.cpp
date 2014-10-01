@@ -861,7 +861,7 @@ js::NewProxyObject(JSContext *cx, const BaseProxyHandler *handler, HandleValue p
 void
 ProxyObject::renew(JSContext *cx, const BaseProxyHandler *handler, Value priv)
 {
-    JS_ASSERT_IF(IsCrossCompartmentWrapper(this), IsDeadProxyObject(this));
+    MOZ_ASSERT_IF(IsCrossCompartmentWrapper(this), IsDeadProxyObject(this));
     MOZ_ASSERT(getParent() == cx->global());
     MOZ_ASSERT(getClass() == &ProxyObject::class_);
     MOZ_ASSERT(!getClass()->ext.innerObject);
