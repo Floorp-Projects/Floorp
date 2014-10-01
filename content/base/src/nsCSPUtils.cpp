@@ -298,21 +298,15 @@ nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected
   }
 #endif
 
-  // If the host is defined as a "*", and:
-  //  a) no scheme, and
-  //  b) no port is defined, allow the load.
-  // http://www.w3.org/TR/CSP11/#matching
-  if (mHost.EqualsASCII("*") &&
-      mScheme.IsEmpty() &&
-      mPort.IsEmpty()) {
-    return true;
-  }
+  // we are following the enforcement rules from the spec, see:
+  // http://www.w3.org/TR/CSP11/#match-source-expression
 
-  // Check if the scheme matches.
+  // 4.3) scheme matching: Check if the scheme matches.
   nsAutoCString scheme;
   nsresult rv = aUri->GetScheme(scheme);
   NS_ENSURE_SUCCESS(rv, false);
-  if (!mScheme.EqualsASCII(scheme.get())) {
+  if (!mScheme.IsEmpty() &&
+      !mScheme.EqualsASCII(scheme.get())) {
     return false;
   }
 
@@ -320,30 +314,36 @@ nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected
   // just a specific scheme, the parser should generate a nsCSPSchemeSource.
   NS_ASSERTION((!mHost.IsEmpty()), "host can not be the empty string");
 
-  // Extract the host part from aUri.
+  // 2) host matching: Enforce a single *
+  if (mHost.EqualsASCII("*")) {
+    return true;
+  }
+
+  // Before we can check if the host matches, we have to
+  // extract the host part from aUri.
   nsAutoCString uriHost;
   rv = aUri->GetHost(uriHost);
   NS_ENSURE_SUCCESS(rv, false);
 
-  // Check it the allowed host starts with a wilcard.
+  // 4.5) host matching: Check if the allowed host starts with a wilcard.
   if (mHost.First() == '*') {
     NS_ASSERTION(mHost[1] == '.', "Second character needs to be '.' whenever host starts with '*'");
 
     // Eliminate leading "*", but keeping the FULL STOP (.) thereafter before checking
-    // if the remaining characters match: see http://www.w3.org/TR/CSP11/#matching
+    // if the remaining characters match
     nsString wildCardHost = mHost;
     wildCardHost = Substring(wildCardHost, 1, wildCardHost.Length() - 1);
     if (!StringEndsWith(NS_ConvertUTF8toUTF16(uriHost), wildCardHost)) {
       return false;
     }
   }
-  // Check if hosts match.
+  // 4.6) host matching: Check if hosts match.
   else if (!mHost.Equals(NS_ConvertUTF8toUTF16(uriHost))) {
     return false;
   }
 
-  // If there is a path, we have to enforce path-level matching,
-  // unless the channel got redirected, see:
+  // 4.9) Path matching: If there is a path, we have to enforce
+  // path-level matching, unless the channel got redirected, see:
   // http://www.w3.org/TR/CSP11/#source-list-paths-and-redirects
   if (!aWasRedirected && !mPath.IsEmpty()) {
     // cloning uri so we can ignore the ref
@@ -370,25 +370,26 @@ nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce, bool aWasRedirected
     }
   }
 
-  // If port uses wildcard, allow the load.
+  // 4.8) Port matching: If port uses wildcard, allow the load.
   if (mPort.EqualsASCII("*")) {
     return true;
   }
 
-  // Check if ports match
+  // Before we can check if the port matches, we have to
+  // query the port from aUri.
   int32_t uriPort;
   rv = aUri->GetPort(&uriPort);
   NS_ENSURE_SUCCESS(rv, false);
   uriPort = (uriPort > 0) ? uriPort : NS_GetDefaultPort(scheme.get());
 
-  // If mPort is empty, we have to compare default ports.
+  // 4.7) Default port matching: If mPort is empty, we have to compare default ports.
   if (mPort.IsEmpty()) {
     int32_t port = NS_GetDefaultPort(NS_ConvertUTF16toUTF8(mScheme).get());
     if (port != uriPort) {
       return false;
     }
   }
-  // Otherwise compare the ports
+  // 4.7) Port matching: Compare the ports.
   else {
     nsString portStr;
     portStr.AppendInt(uriPort);
