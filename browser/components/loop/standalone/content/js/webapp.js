@@ -14,9 +14,10 @@ loop.webapp = (function($, _, OT, mozL10n) {
   loop.config = loop.config || {};
   loop.config.serverUrl = loop.config.serverUrl || "http://localhost:5000";
 
-  var sharedModels = loop.shared.models,
-      sharedViews = loop.shared.views,
-      sharedUtils = loop.shared.utils;
+  var sharedMixins = loop.shared.mixins;
+  var sharedModels = loop.shared.models;
+  var sharedViews = loop.shared.views;
+  var sharedUtils = loop.shared.utils;
 
   /**
    * Homepage view.
@@ -116,7 +117,8 @@ loop.webapp = (function($, _, OT, mozL10n) {
     render: function() {
       return (
         React.DOM.h1({className: "standalone-header-title"}, 
-          React.DOM.strong(null, mozL10n.get("brandShortname")), " ", mozL10n.get("clientShortname")
+          React.DOM.strong(null, mozL10n.get("brandShortname")), 
+          mozL10n.get("clientShortname")
         )
       );
     }
@@ -305,53 +307,105 @@ loop.webapp = (function($, _, OT, mozL10n) {
               React.DOM.div({className: "flex-padding-1"})
             )
           ), 
-
           ConversationFooter(null)
         )
       );
     }
   });
 
-  /**
-   * Conversation launcher view. A ConversationModel is associated and attached
-   * as a `model` property.
-   *
-   * Required properties:
-   * - {loop.shared.models.ConversationModel}    model    Conversation model.
-   * - {loop.shared.models.NotificationCollection} notifications
-   */
-  var StartConversationView = React.createClass({displayName: 'StartConversationView',
+  var InitiateCallButton = React.createClass({displayName: 'InitiateCallButton',
+    mixins: [sharedMixins.DropdownMenuMixin],
+
     propTypes: {
-      model: React.PropTypes.oneOfType([
-               React.PropTypes.instanceOf(sharedModels.ConversationModel),
-               React.PropTypes.instanceOf(FxOSConversationModel)
-             ]).isRequired,
-      // XXX Check more tightly here when we start injecting window.loop.*
-      notifications: React.PropTypes.object.isRequired,
-      client: React.PropTypes.object.isRequired
+      caption: React.PropTypes.string.isRequired,
+      startCall: React.PropTypes.func.isRequired,
+      disabled: React.PropTypes.bool
     },
 
     getDefaultProps: function() {
-      return {showCallOptionsMenu: false};
+      return {disabled: false};
+    },
+
+    render: function() {
+      var dropdownMenuClasses = React.addons.classSet({
+        "native-dropdown-large-parent": true,
+        "standalone-dropdown-menu": true,
+        "visually-hidden": !this.state.showMenu
+      });
+      var chevronClasses = React.addons.classSet({
+        "btn-chevron": true,
+        "disabled": this.props.disabled
+      });
+      return (
+        React.DOM.div({className: "standalone-btn-chevron-menu-group"}, 
+          React.DOM.div({className: "btn-group-chevron"}, 
+            React.DOM.div({className: "btn-group"}, 
+              React.DOM.button({className: "btn btn-large btn-accept", 
+                      onClick: this.props.startCall("audio-video"), 
+                      disabled: this.props.disabled, 
+                      title: mozL10n.get("initiate_audio_video_call_tooltip2")}, 
+                React.DOM.span({className: "standalone-call-btn-text"}, 
+                  this.props.caption
+                ), 
+                React.DOM.span({className: "standalone-call-btn-video-icon"})
+              ), 
+              React.DOM.div({className: chevronClasses, 
+                   onClick: this.toggleDropdownMenu}
+              )
+            ), 
+            React.DOM.ul({className: dropdownMenuClasses}, 
+              React.DOM.li(null, 
+                React.DOM.button({className: "start-audio-only-call", 
+                        onClick: this.props.startCall("audio"), 
+                        disabled: this.props.disabled}, 
+                  mozL10n.get("initiate_audio_call_button2")
+                )
+              )
+            )
+          )
+        )
+      );
+    }
+  });
+
+  /**
+   * Initiate conversation view.
+   */
+  var InitiateConversationView = React.createClass({displayName: 'InitiateConversationView',
+    mixins: [Backbone.Events],
+
+    propTypes: {
+      conversation: React.PropTypes.oneOfType([
+                      React.PropTypes.instanceOf(sharedModels.ConversationModel),
+                      React.PropTypes.instanceOf(FxOSConversationModel)
+                    ]).isRequired,
+      // XXX Check more tightly here when we start injecting window.loop.*
+      notifications: React.PropTypes.object.isRequired,
+      client: React.PropTypes.object.isRequired,
+      title: React.PropTypes.string.isRequired,
+      callButtonLabel: React.PropTypes.string.isRequired
     },
 
     getInitialState: function() {
       return {
         urlCreationDateString: '',
-        disableCallButton: false,
-        showCallOptionsMenu: this.props.showCallOptionsMenu
+        disableCallButton: false
       };
     },
 
     componentDidMount: function() {
-      // Listen for events & hide dropdown menu if user clicks away
-      window.addEventListener("click", this.clickHandler);
-      this.props.model.listenTo(this.props.model, "session:error",
-                                this._onSessionError);
-      this.props.model.listenTo(this.props.model, "fxos:app-needed",
-                                this._onFxOSAppNeeded);
-      this.props.client.requestCallUrlInfo(this.props.model.get("loopToken"),
-                                           this._setConversationTimestamp);
+      this.listenTo(this.props.conversation,
+                    "session:error", this._onSessionError);
+      this.listenTo(this.props.conversation,
+                    "fxos:app-needed", this._onFxOSAppNeeded);
+      this.props.client.requestCallUrlInfo(
+        this.props.conversation.get("loopToken"),
+        this._setConversationTimestamp);
+    },
+
+    componentWillUnmount: function() {
+      this.stopListening(this.props.conversation);
+      localStorage.setItem("has-seen-tos", "true");
     },
 
     _onSessionError: function(error, l10nProps) {
@@ -362,11 +416,9 @@ loop.webapp = (function($, _, OT, mozL10n) {
 
     _onFxOSAppNeeded: function() {
       this.setState({
-        marketplaceSrc: loop.config.marketplaceUrl
-      });
-      this.setState({
-        onMarketplaceMessage: this.props.model.onMarketplaceMessage.bind(
-          this.props.model
+        marketplaceSrc: loop.config.marketplaceUrl,
+        onMarketplaceMessage: this.props.conversation.onMarketplaceMessage.bind(
+          this.props.conversation
         )
       });
      },
@@ -379,11 +431,10 @@ loop.webapp = (function($, _, OT, mozL10n) {
      *
      * @param {string} User call type choice "audio" or "audio-video"
      */
-    _initiateOutgoingCall: function(callType) {
+    startCall: function(callType) {
       return function() {
-        this.props.model.set("selectedCallType", callType);
+        this.props.conversation.setupOutgoingCall(callType);
         this.setState({disableCallButton: true});
-        this.props.model.setupOutgoingCall();
       }.bind(this);
     },
 
@@ -398,46 +449,20 @@ loop.webapp = (function($, _, OT, mozL10n) {
       }
     },
 
-    componentWillUnmount: function() {
-      window.removeEventListener("click", this.clickHandler);
-      localStorage.setItem("has-seen-tos", "true");
-    },
-
-    clickHandler: function(e) {
-      if (!e.target.classList.contains('btn-chevron') &&
-          this.state.showCallOptionsMenu) {
-            this._toggleCallOptionsMenu();
-      }
-    },
-
-    _toggleCallOptionsMenu: function() {
-      var state = this.state.showCallOptionsMenu;
-      this.setState({showCallOptionsMenu: !state});
-    },
-
     render: function() {
-      var tos_link_name = mozL10n.get("terms_of_use_link_text");
-      var privacy_notice_name = mozL10n.get("privacy_notice_link_text");
+      var tosLinkName = mozL10n.get("terms_of_use_link_text");
+      var privacyNoticeName = mozL10n.get("privacy_notice_link_text");
 
       var tosHTML = mozL10n.get("legal_text_and_links", {
         "terms_of_use_url": "<a target=_blank href='/legal/terms/'>" +
-          tos_link_name + "</a>",
+          tosLinkName + "</a>",
         "privacy_notice_url": "<a target=_blank href='" +
-          "https://www.mozilla.org/privacy/'>" + privacy_notice_name + "</a>"
+          "https://www.mozilla.org/privacy/'>" + privacyNoticeName + "</a>"
       });
 
-      var dropdownMenuClasses = React.addons.classSet({
-        "native-dropdown-large-parent": true,
-        "standalone-dropdown-menu": true,
-        "visually-hidden": !this.state.showCallOptionsMenu
-      });
       var tosClasses = React.addons.classSet({
         "terms-service": true,
         hide: (localStorage.getItem("has-seen-tos") === "true")
-      });
-      var chevronClasses = React.addons.classSet({
-        "btn-chevron": true,
-        "disabled": this.state.disableCallButton
       });
 
       return (
@@ -448,47 +473,17 @@ loop.webapp = (function($, _, OT, mozL10n) {
               urlCreationDateString: this.state.urlCreationDateString}), 
 
             React.DOM.p({className: "standalone-btn-label"}, 
-              mozL10n.get("initiate_call_button_label2")
+              this.props.title
             ), 
 
             React.DOM.div({id: "messages"}), 
 
             React.DOM.div({className: "btn-group"}, 
               React.DOM.div({className: "flex-padding-1"}), 
-              React.DOM.div({className: "standalone-btn-chevron-menu-group"}, 
-                React.DOM.div({className: "btn-group-chevron"}, 
-                  React.DOM.div({className: "btn-group"}, 
-
-                    React.DOM.button({className: "btn btn-large btn-accept", 
-                            onClick: this._initiateOutgoingCall("audio-video"), 
-                            disabled: this.state.disableCallButton, 
-                            title: mozL10n.get("initiate_audio_video_call_tooltip2")}, 
-                      React.DOM.span({className: "standalone-call-btn-text"}, 
-                        mozL10n.get("initiate_audio_video_call_button2")
-                      ), 
-                      React.DOM.span({className: "standalone-call-btn-video-icon"})
-                    ), 
-
-                    React.DOM.div({className: chevronClasses, 
-                         onClick: this._toggleCallOptionsMenu}
-                    )
-
-                  ), 
-
-                  React.DOM.ul({className: dropdownMenuClasses}, 
-                    React.DOM.li(null, 
-                      /*
-                       Button required for disabled state.
-                       */
-                      React.DOM.button({className: "start-audio-only-call", 
-                              onClick: this._initiateOutgoingCall("audio"), 
-                              disabled: this.state.disableCallButton}, 
-                        mozL10n.get("initiate_audio_call_button2")
-                      )
-                    )
-                  )
-
-                )
+              InitiateCallButton({
+                caption: this.props.callButtonLabel, 
+                disabled: this.state.disableCallButton, 
+                startCall: this.startCall}
               ), 
               React.DOM.div({className: "flex-padding-1"})
             ), 
@@ -534,6 +529,26 @@ loop.webapp = (function($, _, OT, mozL10n) {
             video: {enabled: false, visible: false}}
           )
         )
+      );
+    }
+  });
+
+  var StartConversationView = React.createClass({displayName: 'StartConversationView',
+    render: function() {
+      return this.transferPropsTo(
+        InitiateConversationView({
+          title: mozL10n.get("initiate_call_button_label2"), 
+          callButtonLabel: mozL10n.get("initiate_audio_video_call_button2")})
+      );
+    }
+  });
+
+  var FailedConversationView = React.createClass({displayName: 'FailedConversationView',
+    render: function() {
+      return this.transferPropsTo(
+        InitiateConversationView({
+          title: mozL10n.get("call_failed_title"), 
+          callButtonLabel: mozL10n.get("retry_call_button")})
       );
     }
   });
@@ -595,11 +610,19 @@ loop.webapp = (function($, _, OT, mozL10n) {
      */
     render: function() {
       switch (this.state.callStatus) {
-        case "failure":
         case "start": {
           return (
             StartConversationView({
-              model: this.props.conversation, 
+              conversation: this.props.conversation, 
+              notifications: this.props.notifications, 
+              client: this.props.client}
+            )
+          );
+        }
+        case "failure": {
+          return (
+            FailedConversationView({
+              conversation: this.props.conversation, 
               notifications: this.props.notifications, 
               client: this.props.client}
             )
@@ -775,18 +798,17 @@ loop.webapp = (function($, _, OT, mozL10n) {
     /**
      * Handles call rejection.
      *
-     * @param {String} reason The reason the call was terminated.
+     * @param {String} reason The reason the call was terminated (reject, busy,
+     *                        timeout, cancel, media-fail, user-unknown, closed)
      */
     _handleCallTerminated: function(reason) {
-      if (reason !== "cancel") {
-        // XXX This should really display the call failed view - bug 1046959
-        // will implement this.
-        this.props.notifications.errorL10n("call_timeout_notification_text");
+      if (reason === "cancel") {
+        this.setState({callStatus: "start"});
+        return;
       }
-      // redirects the user to the call start view
-      // XXX should switch callStatus to failed for specific reasons when we
-      // get the call failed view; for now, switch back to start.
-      this.setState({callStatus: "start"});
+      // XXX later, we'll want to display more meaningfull messages (needs UX)
+      this.props.notifications.errorL10n("call_timeout_notification_text");
+      this.setState({callStatus: "failure"});
     },
 
     /**
@@ -893,6 +915,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
     CallUrlExpiredView: CallUrlExpiredView,
     PendingConversationView: PendingConversationView,
     StartConversationView: StartConversationView,
+    FailedConversationView: FailedConversationView,
     OutgoingConversationView: OutgoingConversationView,
     EndedConversationView: EndedConversationView,
     HomeView: HomeView,

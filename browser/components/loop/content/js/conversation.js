@@ -68,15 +68,6 @@ loop.conversation = (function(mozL10n) {
       return false;
     },
 
-    _toggleDeclineMenu: function() {
-      var currentState = this.state.showDeclineMenu;
-      this.setState({showDeclineMenu: !currentState});
-    },
-
-    _hideDeclineMenu: function() {
-      this.setState({showDeclineMenu: false});
-    },
-
     /*
      * Generate props for <AcceptCallButton> component based on
      * incoming call type. An incoming video call will render a video
