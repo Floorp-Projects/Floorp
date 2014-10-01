@@ -665,11 +665,45 @@ CheckF4(ANDF32, 'var x=f4(42, 13.37,-1.42, 23.10); var y=f4(19.89, 2.4, 8.15, 16
 CheckF4(ORF32,  'var x=f4(42, 13.37,-1.42, 23.10); var y=f4(19.89, 2.4, 8.15, 16.36); x=orr(x,y)',  bitwise.or( [42, 13.37, -1.42, 23.10], [19.89, 2.4, 8.15, 16.36]));
 CheckF4(XORF32, 'var x=f4(42, 13.37,-1.42, 23.10); var y=f4(19.89, 2.4, 8.15, 16.36); x=xorr(x,y)', bitwise.xor([42, 13.37, -1.42, 23.10], [19.89, 2.4, 8.15, 16.36]));
 
+// Logical ops
+const LSHI = 'var lsh=i4.shiftLeft;'
+const RSHI = 'var rsh=i4.shiftRight;'
+const URSHI = 'var ursh=i4.shiftRightLogical;'
+
+assertAsmTypeFail('glob', USE_ASM + I32 + F32 + FROUND + LSHI + "function f() {var x=f4(1,2,3,4); return i4(lsh(x,f32(42)));} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + F32 + FROUND + LSHI + "function f() {var x=f4(1,2,3,4); return i4(lsh(x,42));} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + FROUND + LSHI + "function f() {var x=i4(1,2,3,4); return i4(lsh(x,42.0));} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + FROUND + LSHI + "function f() {var x=i4(1,2,3,4); return i4(lsh(x,f32(42)));} return f");
+
+var input = 'i4(0, 1, ' + INT32_MIN + ', ' + INT32_MAX + ')';
+var vinput = [0, 1, INT32_MIN, INT32_MAX];
+
+// TODO: What to do for masks > 31? Should we keep only the five low bits of
+// the mask (JS) or not (x86)?
+// Behave as x86 for now, fix when more broadly specified. See also bug 1068028
+function Lsh(i) {  if (i > 31) return () => 0; return function(x) { return (x << i) | 0 } }
+function Rsh(i) {  if (i > 31) return (x) => (x<0)?-1:0; return function(x) { return (x >> i) | 0 } }
+function Ursh(i) { if (i > 31) return () => 0; return function(x) { return (x >>> i) | 0 } }
+
+var asmLsh = asmLink(asmCompile('glob', USE_ASM + I32 + LSHI + 'function f(x, y){x=x|0;y=y|0; var v=' + input + ';return i4(lsh(v, x+y))} return f;'), this)
+var asmRsh = asmLink(asmCompile('glob', USE_ASM + I32 + RSHI + 'function f(x, y){x=x|0;y=y|0; var v=' + input + ';return i4(rsh(v, x+y))} return f;'), this)
+var asmUrsh = asmLink(asmCompile('glob', USE_ASM + I32 + URSHI + 'function f(x, y){x=x|0;y=y|0; var v=' + input + ';return i4(ursh(v, x+y))} return f;'), this)
+
+for (var i = 1; i < 64; i++) {
+    CheckI4(LSHI,  'var x=' + input + '; x=lsh(x, ' + i + ')',   vinput.map(Lsh(i)));
+    CheckI4(RSHI,  'var x=' + input + '; x=rsh(x, ' + i + ')',   vinput.map(Rsh(i)));
+    CheckI4(URSHI, 'var x=' + input + '; x=ursh(x, ' + i + ')',  vinput.map(Ursh(i)));
+
+    assertEqX4(asmLsh(i, 3),  vinput.map(Lsh(i + 3)));
+    assertEqX4(asmRsh(i, 3),  vinput.map(Rsh(i + 3)));
+    assertEqX4(asmUrsh(i, 3), vinput.map(Ursh(i + 3)));
+}
+
 // Select
 const I32SEL = 'var i4sel = i4.select;'
 const F32SEL = 'var f4sel = f4.select;'
 
-assertAsmTypeFail('glob', USE_ASM + F32 + I32SEL + "function f() {var m=f4(1,2,3,4); return i4(i4sel(x,x,x));} return f");
+assertAsmTypeFail('glob', USE_ASM + F32 + I32SEL + "function f() {var x=f4(1,2,3,4); return i4(i4sel(x,x,x));} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + F32 + I32SEL + "function f() {var m=f4(1,2,3,4); var x=i4(1,2,3,4); return i4(i4sel(m,x,x));} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + F32 + I32SEL + "function f() {var m=f4(1,2,3,4); var x=f4(1,2,3,4); return i4(i4sel(m,x,x));} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + F32 + I32SEL + "function f() {var m=i4(1,2,3,4); var x=f4(1,2,3,4); return i4(i4sel(m,x,x));} return f");

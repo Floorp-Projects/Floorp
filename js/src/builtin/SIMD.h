@@ -115,7 +115,10 @@
 
 #define FOREACH_INT32X4_SIMD_OP(_)   \
     _(fromFloat32x4)                 \
-    _(fromFloat32x4Bits)
+    _(fromFloat32x4Bits)             \
+    _(shiftLeft)                     \
+    _(shiftRight)                    \
+    _(shiftRightLogical)
 #define FOREACH_FLOAT32X4_SIMD_OP(_) \
     _(fromInt32x4)                   \
     _(fromInt32x4Bits)               \

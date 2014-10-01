@@ -2453,13 +2453,13 @@ class FunctionCompiler
         return ins;
     }
 
-    MDefinition *binarySimd(MDefinition *lhs, MDefinition *rhs, MSimdBinaryComp::Operation op)
+    template<class T>
+    MDefinition *binarySimd(MDefinition *lhs, MDefinition *rhs, typename T::Operation op)
     {
         if (inDeadCode())
             return nullptr;
 
-        JS_ASSERT(IsSimdType(lhs->type()) && rhs->type() == lhs->type());
-        MSimdBinaryComp *ins = MSimdBinaryComp::NewAsmJS(alloc(), lhs, rhs, op);
+        T *ins = T::NewAsmJS(alloc(), lhs, rhs, op);
         curBlock_->add(ins);
         return ins;
     }
@@ -4875,7 +4875,20 @@ CheckSimdBinary<MSimdBinaryComp::Operation>(FunctionCompiler &f, ParseNode *call
     DefinitionVector argDefs;
     if (!CheckSimdCallArgs(f, call, 2, CheckArgIsSubtypeOf(retType), &argDefs))
         return false;
-    *def = f.binarySimd(argDefs[0], argDefs[1], op);
+    *def = f.binarySimd<MSimdBinaryComp>(argDefs[0], argDefs[1], op);
+    *type = Type::Int32x4;
+    return true;
+}
+
+template<>
+inline bool
+CheckSimdBinary<MSimdShift::Operation>(FunctionCompiler &f, ParseNode *call, Type retType,
+                                       MSimdShift::Operation op, MDefinition **def, Type *type)
+{
+    DefinitionVector argDefs;
+    if (!CheckSimdCallArgs(f, call, 2, CheckSimdVectorScalarArgs(retType), &argDefs))
+        return false;
+    *def = f.binarySimd<MSimdShift>(argDefs[0], argDefs[1], op);
     *type = Type::Int32x4;
     return true;
 }
@@ -4964,6 +4977,13 @@ CheckSimdOperationCall(FunctionCompiler &f, ParseNode *call, const ModuleCompile
         return CheckSimdCast<MSimdConvert>(f, call, Type::Float32x4, retType, def, type);
       case AsmJSSimdOperation_fromFloat32x4Bits:
         return CheckSimdCast<MSimdReinterpretCast>(f, call, Type::Float32x4, retType, def, type);
+
+      case AsmJSSimdOperation_shiftLeft:
+        return CheckSimdBinary(f, call, Type::Int32x4, MSimdShift::lsh, def, type);
+      case AsmJSSimdOperation_shiftRight:
+        return CheckSimdBinary(f, call, Type::Int32x4, MSimdShift::rsh, def, type);
+      case AsmJSSimdOperation_shiftRightLogical:
+        return CheckSimdBinary(f, call, Type::Int32x4, MSimdShift::ursh, def, type);
 
       case AsmJSSimdOperation_splat: {
         DefinitionVector defs;
