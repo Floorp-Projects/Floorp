@@ -1528,7 +1528,8 @@ public:
      * -- all glyphs use this font
      */
     void Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
-              gfxPoint *aPt, const TextRunDrawParams& aRunParams);
+              gfxPoint *aPt, const TextRunDrawParams& aRunParams,
+              uint16_t aOrientation);
 
     /**
      * Measure a run of characters. See gfxTextRun::Metrics.
@@ -2060,6 +2061,7 @@ struct TextRunDrawParams {
     gfxFloat                 direction;
     double                   devPerApp;
     DrawMode                 drawMode;
+    bool                     isVerticalRun;
     bool                     isRTL;
     bool                     paintSVGGlyphs;
 };
@@ -2073,6 +2075,7 @@ struct FontDrawParams {
     double                    synBoldOnePixelOffset;
     int32_t                   extraStrikes;
     mozilla::gfx::DrawOptions drawOptions;
+    bool                      isVerticalFont;
     bool                      haveSVGGlyphs;
     bool                      haveColorGlyphs;
 };

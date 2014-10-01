@@ -397,13 +397,13 @@ void
 gfxTextRun::DrawGlyphs(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
                        gfxPoint *aPt, PropertyProvider *aProvider,
                        uint32_t aSpacingStart, uint32_t aSpacingEnd,
-                       TextRunDrawParams& aParams)
+                       TextRunDrawParams& aParams, uint16_t aOrientation)
 {
     nsAutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
     bool haveSpacing = GetAdjustedSpacingArray(aStart, aEnd, aProvider,
         aSpacingStart, aSpacingEnd, &spacingBuffer);
     aParams.spacing = haveSpacing ? spacingBuffer.Elements() : nullptr;
-    aFont->Draw(this, aStart, aEnd, aPt, aParams);
+    aFont->Draw(this, aStart, aEnd, aPt, aParams, aOrientation);
 }
 
 static void
@@ -430,7 +430,7 @@ ClipPartialLigature(gfxTextRun *aTextRun, gfxFloat *aLeft, gfxFloat *aRight,
 void
 gfxTextRun::DrawPartialLigature(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
                                 gfxPoint *aPt, PropertyProvider *aProvider,
-                                TextRunDrawParams& aParams)
+                                TextRunDrawParams& aParams, uint16_t aOrientation)
 {
     if (aStart >= aEnd)
         return;
@@ -462,7 +462,7 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
 
     gfxPoint pt(aPt->x - aParams.direction * data.mPartAdvance, aPt->y);
     DrawGlyphs(aFont, data.mLigatureStart, data.mLigatureEnd, &pt,
-               aProvider, aStart, aEnd, aParams);
+               aProvider, aStart, aEnd, aParams, aOrientation);
     aParams.context->Restore();
 
     aPt->x += aParams.direction * data.mPartWidth;
@@ -577,6 +577,7 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
     TextRunDrawParams params;
     params.context = aContext;
     params.devPerApp = 1.0 / double(GetAppUnitsPerDevUnit());
+    params.isVerticalRun = IsVertical();
     params.isRTL = IsRightToLeft();
     params.direction = direction;
     params.drawMode = aDrawMode;
@@ -620,15 +621,18 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
 
         if (drawPartial) {
             DrawPartialLigature(font, start, ligatureRunStart, &pt,
-                                aProvider, params);
+                                aProvider, params,
+                                iter.GetGlyphRun()->mOrientation);
         }
 
         DrawGlyphs(font, ligatureRunStart, ligatureRunEnd, &pt,
-                   aProvider, ligatureRunStart, ligatureRunEnd, params);
+                   aProvider, ligatureRunStart, ligatureRunEnd, params,
+                   iter.GetGlyphRun()->mOrientation);
 
         if (drawPartial) {
             DrawPartialLigature(font, ligatureRunEnd, end, &pt,
-                                aProvider, params);
+                                aProvider, params,
+                                iter.GetGlyphRun()->mOrientation);
         }
     }
 
@@ -638,7 +642,11 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
     }
 
     if (aAdvanceWidth) {
-        *aAdvanceWidth = (pt.x - aPt.x)*direction;
+        if (params.isVerticalRun) {
+            *aAdvanceWidth = (pt.y - aPt.y) * params.direction;
+        } else {
+            *aAdvanceWidth = (pt.x - aPt.x) * params.direction;
+        }
     }
 }
 
