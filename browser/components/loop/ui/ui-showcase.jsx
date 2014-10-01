@@ -19,12 +19,13 @@
 
   // 2. Standalone webapp
   var HomeView = loop.webapp.HomeView;
-  var UnsupportedBrowserView = loop.webapp.UnsupportedBrowserView;
-  var UnsupportedDeviceView = loop.webapp.UnsupportedDeviceView;
-  var CallUrlExpiredView    = loop.webapp.CallUrlExpiredView;
+  var UnsupportedBrowserView  = loop.webapp.UnsupportedBrowserView;
+  var UnsupportedDeviceView   = loop.webapp.UnsupportedDeviceView;
+  var CallUrlExpiredView      = loop.webapp.CallUrlExpiredView;
   var PendingConversationView = loop.webapp.PendingConversationView;
-  var StartConversationView = loop.webapp.StartConversationView;
-  var EndedConversationView = loop.webapp.EndedConversationView;
+  var StartConversationView   = loop.webapp.StartConversationView;
+  var FailedConversationView  = loop.webapp.FailedConversationView;
+  var EndedConversationView   = loop.webapp.EndedConversationView;
 
   // 3. Shared components
   var ConversationToolbar = loop.shared.views.ConversationToolbar;
@@ -175,8 +176,7 @@
             <Example summary="Default" dashed="true" style={{width: "260px", height: "254px"}}>
               <div className="fx-embedded" >
                 <IncomingCallView  model={mockConversationModel}
-                                   showDeclineMenu={true}
-                                   video={true} />
+                                   showMenu={true} />
               </div>
             </Example>
           </Section>
@@ -252,10 +252,19 @@
           <Section name="StartConversationView">
             <Example summary="Start conversation view" dashed="true">
               <div className="standalone">
-                <StartConversationView model={mockConversationModel}
+                <StartConversationView conversation={mockConversationModel}
                                        client={mockClient}
-                                       notifications={notifications}
-                                       showCallOptionsMenu={true} />
+                                       notifications={notifications} />
+              </div>
+            </Example>
+          </Section>
+
+          <Section name="FailedConversationView">
+            <Example summary="Failed conversation view" dashed="true">
+              <div className="standalone">
+                <FailedConversationView conversation={mockConversationModel}
+                                        client={mockClient}
+                                        notifications={notifications} />
               </div>
             </Example>
           </Section>
