@@ -590,7 +590,7 @@ class GCRuntime
      */
     js::gc::Chunk         *systemAvailableChunkListHead;
     js::gc::Chunk         *userAvailableChunkListHead;
-    js::gc::ChunkPool     chunkPool;
+    js::gc::ChunkPool     emptyChunks;
 
     js::RootedValueMap    rootsHash;
 
