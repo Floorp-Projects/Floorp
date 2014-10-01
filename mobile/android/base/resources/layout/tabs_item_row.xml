@@ -3,16 +3,16 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<org.mozilla.gecko.widget.TabRow xmlns:android="http://schemas.android.com/apk/res/android"
-                                 style="@style/TabsItem"
-                                 android:focusable="true"
-                                 android:id="@+id/info"
-                                 android:layout_width="match_parent"
-                                 android:layout_height="wrap_content"
-                                 android:paddingLeft="12dip"
-                                 android:paddingTop="6dip"
-                                 android:paddingBottom="6dip"
-                                 android:background="@drawable/tab_row">
+<org.mozilla.gecko.tabs.TabsLayoutItemView xmlns:android="http://schemas.android.com/apk/res/android"
+                                           style="@style/TabsItem"
+                                           android:focusable="true"
+                                           android:id="@+id/info"
+                                           android:layout_width="match_parent"
+                                           android:layout_height="wrap_content"
+                                           android:paddingLeft="12dip"
+                                           android:paddingTop="6dip"
+                                           android:paddingBottom="6dip"
+                                           android:background="@drawable/tab_row">
 
     <org.mozilla.gecko.widget.TabThumbnailWrapper 
                   android:id="@+id/wrapper"
@@ -52,4 +52,4 @@
                  android:contentDescription="@string/close_tab"
                  android:src="@drawable/tab_close"/>
 
-</org.mozilla.gecko.widget.TabRow>
+</org.mozilla.gecko.tabs.TabsLayoutItemView>
