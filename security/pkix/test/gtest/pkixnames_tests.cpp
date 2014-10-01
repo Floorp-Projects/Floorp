@@ -30,6 +30,10 @@
 
 namespace mozilla { namespace pkix {
 
+bool PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID,
+                                         Input referenceDNSID,
+                                         bool referenceDNSIDWasVerifiedAsValid);
+
 bool IsValidDNSName(Input hostname);
 bool ParseIPv4Address(Input hostname, /*out*/ uint8_t (&out)[4]);
 bool ParseIPv6Address(Input hostname, /*out*/ uint8_t (&out)[16]);
@@ -38,6 +42,236 @@ bool ParseIPv6Address(Input hostname, /*out*/ uint8_t (&out)[16]);
 
 using namespace mozilla::pkix;
 using namespace mozilla::pkix::test;
+
+struct PresentedMatchesReference
+{
+  ByteString presentedDNSID;
+  ByteString referenceDNSID;
+  bool matches;
+};
+
+#define DNS_ID_MATCH(a, b) \
+  { \
+    ByteString(reinterpret_cast<const uint8_t*>(a), sizeof(a) - 1), \
+    ByteString(reinterpret_cast<const uint8_t*>(b), sizeof(b) - 1), \
+    true \
+  }
+
+#define DNS_ID_MISMATCH(a, b) \
+  { \
+    ByteString(reinterpret_cast<const uint8_t*>(a), sizeof(a) - 1), \
+    ByteString(reinterpret_cast<const uint8_t*>(b), sizeof(b) - 1), \
+    false \
+  }
+
+static const PresentedMatchesReference DNSID_MATCH_PARAMS[] =
+{
+  DNS_ID_MISMATCH("", "a"),
+
+  DNS_ID_MATCH("a", "a"),
+  DNS_ID_MISMATCH("b", "a"),
+
+  DNS_ID_MATCH("*.b.a", "c.b.a"),
+  DNS_ID_MISMATCH("*.b.a", "b.a"),
+  DNS_ID_MISMATCH("*.b.a", "b.a."),
+
+  // Wildcard not in leftmost label
+  DNS_ID_MATCH("d.c.b.a", "d.c.b.a"),
+  DNS_ID_MISMATCH("d.*.b.a", "d.c.b.a"),
+  DNS_ID_MISMATCH("d.c*.b.a", "d.c.b.a"),
+  DNS_ID_MISMATCH("d.c*.b.a", "d.cc.b.a"),
+
+  // case sensitivity
+  DNS_ID_MATCH("abcdefghijklmnopqrstuvwxyz", "ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+  DNS_ID_MATCH("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"),
+  DNS_ID_MATCH("aBc", "Abc"),
+
+  // digits
+  DNS_ID_MATCH("a1", "a1"),
+
+  // A trailing dot indicates an absolute name, and absolute names can match
+  // relative names, and vice-versa.
+  DNS_ID_MATCH("example", "example"),
+  DNS_ID_MATCH("example.", "example."),
+  DNS_ID_MATCH("example", "example."),
+  DNS_ID_MATCH("example.", "example"),
+  DNS_ID_MATCH("example.com", "example.com"),
+  DNS_ID_MATCH("example.com.", "example.com."),
+  DNS_ID_MATCH("example.com", "example.com."),
+  DNS_ID_MATCH("example.com.", "example.com"),
+  DNS_ID_MISMATCH("example.com..", "example.com."),
+  DNS_ID_MISMATCH("example.com..", "example.com"),
+  DNS_ID_MISMATCH("example.com...", "example.com."),
+
+  // xn-- IDN prefix
+  DNS_ID_MATCH("x*.b.a", "xa.b.a"),
+  DNS_ID_MATCH("x*.b.a", "xna.b.a"),
+  DNS_ID_MATCH("x*.b.a", "xn-a.b.a"),
+  DNS_ID_MISMATCH("x*.b.a", "xn--a.b.a"),
+  DNS_ID_MISMATCH("xn*.b.a", "xn--a.b.a"),
+  DNS_ID_MISMATCH("xn-*.b.a", "xn--a.b.a"),
+  DNS_ID_MISMATCH("xn--*.b.a", "xn--a.b.a"),
+  DNS_ID_MISMATCH("xn*.b.a", "xn--a.b.a"),
+  DNS_ID_MISMATCH("xn-*.b.a", "xn--a.b.a"),
+  DNS_ID_MISMATCH("xn--*.b.a", "xn--a.b.a"),
+  DNS_ID_MISMATCH("xn---*.b.a", "xn--a.b.a"),
+
+  // "*" cannot expand to nothing.
+  DNS_ID_MISMATCH("c*.b.a", "c.b.a"),
+
+  // --------------------------------------------------------------------------
+  // The rest of these are test cases adapted from Chromium's
+  // x509_certificate_unittest.cc. The parameter order is the opposite in
+  // Chromium's tests. Also, they some tests were modified to fit into this
+  // framework or due to intentional differences between mozilla::pkix and
+  // Chromium.
+
+  DNS_ID_MATCH("foo.com", "foo.com"),
+  DNS_ID_MATCH("f", "f"),
+  DNS_ID_MISMATCH("i", "h"),
+  DNS_ID_MATCH("*.foo.com", "bar.foo.com"),
+  DNS_ID_MATCH("*.test.fr", "www.test.fr"),
+  DNS_ID_MATCH("*.test.FR", "wwW.tESt.fr"),
+  DNS_ID_MISMATCH(".uk", "f.uk"),
+  DNS_ID_MISMATCH("?.bar.foo.com", "w.bar.foo.com"),
+  DNS_ID_MISMATCH("(www|ftp).foo.com", "www.foo.com"), // regex!
+  DNS_ID_MISMATCH("www.foo.com\0", "www.foo.com"),
+  DNS_ID_MISMATCH("www.foo.com\0*.foo.com", "www.foo.com"),
+  DNS_ID_MISMATCH("ww.house.example", "www.house.example"),
+  DNS_ID_MISMATCH("www.test.org", "test.org"),
+  DNS_ID_MISMATCH("*.test.org", "test.org"),
+  DNS_ID_MISMATCH("*.org", "test.org"),
+  DNS_ID_MISMATCH("w*.bar.foo.com", "w.bar.foo.com"),
+  DNS_ID_MISMATCH("ww*ww.bar.foo.com", "www.bar.foo.com"),
+  DNS_ID_MISMATCH("ww*ww.bar.foo.com", "wwww.bar.foo.com"),
+
+  // Different than Chromium, matches NSS.
+  DNS_ID_MISMATCH("w*w.bar.foo.com", "wwww.bar.foo.com"),
+
+  DNS_ID_MISMATCH("w*w.bar.foo.c0m", "wwww.bar.foo.com"),
+
+  DNS_ID_MATCH("wa*.bar.foo.com", "WALLY.bar.foo.com"),
+
+  // We require "*" to be the last character in a wildcard label, but
+  // Chromium does not.
+  DNS_ID_MISMATCH("*Ly.bar.foo.com", "wally.bar.foo.com"),
+
+  // Chromium does URL decoding of the reference ID, but we don't, and we also
+  // require that the reference ID is valid, so we can't test these two.
+  // DNS_ID_MATCH("www.foo.com", "ww%57.foo.com"),
+  // DNS_ID_MATCH("www&.foo.com", "www%26.foo.com"),
+
+  DNS_ID_MISMATCH("*.test.de", "www.test.co.jp"),
+  DNS_ID_MISMATCH("*.jp", "www.test.co.jp"),
+  DNS_ID_MISMATCH("www.test.co.uk", "www.test.co.jp"),
+  DNS_ID_MISMATCH("www.*.co.jp", "www.test.co.jp"),
+  DNS_ID_MATCH("www.bar.foo.com", "www.bar.foo.com"),
+  DNS_ID_MISMATCH("*.foo.com", "www.bar.foo.com"),
+  DNS_ID_MISMATCH("*.*.foo.com", "www.bar.foo.com"),
+  DNS_ID_MISMATCH("*.*.foo.com", "www.bar.foo.com"),
+
+  // Our matcher requires the reference ID to be a valid DNS name, so we cannot
+  // test this case.
+  // DNS_ID_MISMATCH("*.*.bar.foo.com", "*..bar.foo.com"),
+
+  DNS_ID_MATCH("www.bath.org", "www.bath.org"),
+
+  // Our matcher requires the reference ID to be a valid DNS name, so we cannot
+  // test these cases.
+  // DNS_ID_MISMATCH("www.bath.org", ""),
+  // DNS_ID_MISMATCH("www.bath.org", "20.30.40.50"),
+  // DNS_ID_MISMATCH("www.bath.org", "66.77.88.99"),
+
+  // IDN tests
+  DNS_ID_MATCH("xn--poema-9qae5a.com.br", "xn--poema-9qae5a.com.br"),
+  DNS_ID_MATCH("*.xn--poema-9qae5a.com.br", "www.xn--poema-9qae5a.com.br"),
+  DNS_ID_MISMATCH("*.xn--poema-9qae5a.com.br", "xn--poema-9qae5a.com.br"),
+  DNS_ID_MISMATCH("xn--poema-*.com.br", "xn--poema-9qae5a.com.br"),
+  DNS_ID_MISMATCH("xn--*-9qae5a.com.br", "xn--poema-9qae5a.com.br"),
+  DNS_ID_MISMATCH("*--poema-9qae5a.com.br", "xn--poema-9qae5a.com.br"),
+
+  // The following are adapted from the examples quoted from
+  //   http://tools.ietf.org/html/rfc6125#section-6.4.3
+  // (e.g., *.example.com would match foo.example.com but
+  // not bar.foo.example.com or example.com).
+  DNS_ID_MATCH("*.example.com", "foo.example.com"),
+  DNS_ID_MISMATCH("*.example.com", "bar.foo.example.com"),
+  DNS_ID_MISMATCH("*.example.com", "example.com"),
+  // (e.g., baz*.example.net and *baz.example.net and b*z.example.net would
+  // be taken to match baz1.example.net and foobaz.example.net and
+  // buzz.example.net, respectively
+  DNS_ID_MATCH("baz*.example.net", "baz1.example.net"),
+
+  // Both of these are different from Chromium, but match NSS, becaues the
+  // wildcard character "*" is not the last character of the label.
+  DNS_ID_MISMATCH("*baz.example.net", "foobaz.example.net"),
+  DNS_ID_MISMATCH("b*z.example.net", "buzz.example.net"),
+
+  // Wildcards should not be valid for public registry controlled domains,
+  // and unknown/unrecognized domains, at least three domain components must
+  // be present. For mozilla::pkix and NSS, there must always be at least two
+  // labels after the wildcard label.
+  DNS_ID_MATCH("*.test.example", "www.test.example"),
+  DNS_ID_MATCH("*.example.co.uk", "test.example.co.uk"),
+  DNS_ID_MISMATCH("*.exmaple", "test.example"),
+
+  // The result is different than Chromium, because Chromium takes into account
+  // the additional knowledge it has that "co.uk" is a TLD. mozilla::pkix does
+  // not know that.
+  DNS_ID_MATCH("*.co.uk", "example.co.uk"),
+
+  DNS_ID_MISMATCH("*.com", "foo.com"),
+  DNS_ID_MISMATCH("*.us", "foo.us"),
+  DNS_ID_MISMATCH("*", "foo"),
+
+  // IDN variants of wildcards and registry controlled domains.
+  DNS_ID_MATCH("*.xn--poema-9qae5a.com.br", "www.xn--poema-9qae5a.com.br"),
+  DNS_ID_MATCH("*.example.xn--mgbaam7a8h", "test.example.xn--mgbaam7a8h"),
+
+  // RFC6126 allows this, and NSS accepts it, but Chromium disallows it.
+  // TODO: File bug against Chromium.
+  DNS_ID_MATCH("*.com.br", "xn--poema-9qae5a.com.br"),
+
+  DNS_ID_MISMATCH("*.xn--mgbaam7a8h", "example.xn--mgbaam7a8h"),
+  // Wildcards should be permissible for 'private' registry-controlled
+  // domains. (In mozilla::pkix, we do not know if it is a private registry-
+  // controlled domain or not.)
+  DNS_ID_MATCH("*.appspot.com", "www.appspot.com"),
+  DNS_ID_MATCH("*.s3.amazonaws.com", "foo.s3.amazonaws.com"),
+
+  // Multiple wildcards are not valid.
+  DNS_ID_MISMATCH("*.*.com", "foo.example.com"),
+  DNS_ID_MISMATCH("*.bar.*.com", "foo.bar.example.com"),
+
+  // Absolute vs relative DNS name tests. Although not explicitly specified
+  // in RFC 6125, absolute reference names (those ending in a .) should
+  // match either absolute or relative presented names.
+  // TODO: File errata against RFC 6125 about this.
+  DNS_ID_MATCH("foo.com.", "foo.com"),
+  DNS_ID_MATCH("foo.com", "foo.com."),
+  DNS_ID_MATCH("foo.com.", "foo.com."),
+  DNS_ID_MATCH("f.", "f"),
+  DNS_ID_MATCH("f", "f."),
+  DNS_ID_MATCH("f.", "f."),
+  DNS_ID_MATCH("*.bar.foo.com.", "www-3.bar.foo.com"),
+  DNS_ID_MATCH("*.bar.foo.com", "www-3.bar.foo.com."),
+  DNS_ID_MATCH("*.bar.foo.com.", "www-3.bar.foo.com."),
+
+  // We require the reference ID to be a valid DNS name, so we cannot test this
+  // case.
+  // DNS_ID_MISMATCH(".", "."),
+
+  DNS_ID_MISMATCH("*.com.", "example.com"),
+  DNS_ID_MISMATCH("*.com", "example.com."),
+  DNS_ID_MISMATCH("*.com.", "example.com."),
+  DNS_ID_MISMATCH("*.", "foo."),
+  DNS_ID_MISMATCH("*.", "foo"),
+
+  // The result is different than Chromium because we don't know that co.uk is
+  // a TLD.
+  DNS_ID_MATCH("*.co.uk.", "foo.co.uk"),
+  DNS_ID_MATCH("*.co.uk.", "foo.co.uk."),
+};
 
 struct InputValidity
 {
@@ -63,8 +297,8 @@ static const InputValidity DNSNAMES_VALIDITY[] =
   I("", false),
   I(".", false),
   I("a", true),
-  I(".a", false),
-  I(".a.b", false),
+  I(".a", false), // PresentedDNSIDMatchesReferenceDNSID depends on this
+  I(".a.b", false), // PresentedDNSIDMatchesReferenceDNSID depends on this
   I("..a", false),
   I("a..b", false),
   I("a...b", false),
@@ -238,6 +472,11 @@ static const InputValidity DNSNAMES_VALIDITY_TURKISH_I[] =
   I("xn--\0xC4\0xB0", false), // latin capital letter i with dot above, mashup
   I("xn--\0xC4\0xB1", false), // latin small letter dotless i, mashup
 };
+
+static const uint8_t LOWERCASE_I_VALUE[1] = { 'i' };
+static const uint8_t UPPERCASE_I_VALUE[1] = { 'I' };
+static const Input LOWERCASE_I(LOWERCASE_I_VALUE);
+static const Input UPPERCASE_I(UPPERCASE_I_VALUE);
 
 template <unsigned int L>
 struct IPAddressParams
@@ -572,6 +811,63 @@ static const IPAddressParams<16> IPV6_ADDRESSES[] =
   IPV6_INVALID("::1.2.3.4\0"),
   IPV6_INVALID("::1.2\02.3.4"),
 };
+
+class pkixnames_PresentedDNSIDMatchesReferenceDNSID
+  : public ::testing::Test
+  , public ::testing::WithParamInterface<PresentedMatchesReference>
+{
+};
+
+TEST_P(pkixnames_PresentedDNSIDMatchesReferenceDNSID,
+       PresentedDNSIDMatchesReferenceDNSID)
+{
+  const PresentedMatchesReference& param(GetParam());
+  SCOPED_TRACE(param.presentedDNSID.c_str());
+  SCOPED_TRACE(param.referenceDNSID.c_str());
+  Input presented;
+  ASSERT_EQ(Success, presented.Init(param.presentedDNSID.data(),
+                                    param.presentedDNSID.length()));
+  Input reference;
+  ASSERT_EQ(Success, reference.Init(param.referenceDNSID.data(),
+                                    param.referenceDNSID.length()));
+  bool referenceIsValidDNSName = IsValidDNSName(reference);
+  ASSERT_TRUE(referenceIsValidDNSName); // sanity check that test makes sense
+  ASSERT_EQ(param.matches,
+            PresentedDNSIDMatchesReferenceDNSID(presented, reference,
+                                                referenceIsValidDNSName));
+}
+
+INSTANTIATE_TEST_CASE_P(pkixnames_PresentedDNSIDMatchesReferenceDNSID,
+                        pkixnames_PresentedDNSIDMatchesReferenceDNSID,
+                        testing::ValuesIn(DNSID_MATCH_PARAMS));
+
+class pkixnames_Turkish_I_Comparison
+  : public ::testing::Test
+  , public ::testing::WithParamInterface<InputValidity>
+{
+};
+
+TEST_P(pkixnames_Turkish_I_Comparison, PresentedDNSIDMatchesReferenceDNSID)
+{
+  // Make sure we don't have the similar problems that strcasecmp and others
+  // have with the other kinds of "i" and "I" commonly used in Turkish locales.
+
+  const InputValidity& inputValidity(GetParam());
+  SCOPED_TRACE(inputValidity.input.c_str());
+  Input input;
+  ASSERT_EQ(Success, input.Init(inputValidity.input.data(),
+                                inputValidity.input.length()));
+  bool isASCII = InputsAreEqual(LOWERCASE_I, input) ||
+                 InputsAreEqual(UPPERCASE_I, input);
+  ASSERT_EQ(isASCII, PresentedDNSIDMatchesReferenceDNSID(input, LOWERCASE_I,
+                                                         true));
+  ASSERT_EQ(isASCII, PresentedDNSIDMatchesReferenceDNSID(input, UPPERCASE_I,
+                                                         true));
+}
+
+INSTANTIATE_TEST_CASE_P(pkixnames_Turkish_I_Comparison,
+                        pkixnames_Turkish_I_Comparison,
+                        testing::ValuesIn(DNSNAMES_VALIDITY_TURKISH_I));
 
 class pkixnames_IsValidDNSName
   : public ::testing::Test

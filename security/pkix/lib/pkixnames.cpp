@@ -22,10 +22,14 @@
  * limitations under the License.
  */
 
-// This code attempts to implement RFC6125 name matching. It also attempts to
-// give the same results as the Chromium implementation
-// (X509Certificate::VerifyHostname) when both are given clean input (no
-// leading whitespace, etc.)
+// This code attempts to implement RFC6125 name matching.
+//
+// In this code, identifiers are classified as either "presented" or
+// "reference" identifiers are defined in
+// http://tools.ietf.org/html/rfc6125#section-1.8. A "presented identifier" is
+// one in the subjectAltName of the certificate, or sometimes within a CN of
+// the certificate's subject. The "reference identifier" is the one we are
+// being asked to match the certificate against.
 //
 // On Windows and maybe other platforms, OS-provided IP address parsing
 // functions might fail if the protocol (IPv4 or IPv6) has been disabled, so we
@@ -37,6 +41,189 @@
 namespace mozilla { namespace pkix {
 
 namespace {
+
+uint8_t LocaleInsensitveToLower(uint8_t a);
+bool StartsWithIDNALabel(Input id);
+
+} // unnamed namespace
+
+// We do not distinguish between a syntactically-invalid presentedDNSID and one
+// that is syntactically valid but does not match referenceDNSID; in both
+// cases, the result is false.
+//
+// We assume that both presentedDNSID and referenceDNSID are encoded in such a
+// way that US-ASCII (7-bit) characters are encoded in one byte and no encoding
+// of a non-US-ASCII character contains a code point in the range 0-127. For
+// example, UTF-8 is OK but UTF-16 is not.
+//
+// The referenceDNSIDWasVerifiedAsValid parameter must be the result of calling
+// IsValidDNSName.
+//
+// RFC6125 says that a wildcard label may be of the form <x>*<y>.<DNSID>, where
+// <x> and/or <y> may be empty. However, NSS requires <y> to be empty, and we
+// follow NSS's stricter policy by accepting wildcards only of the form
+// <x>*.<DNSID>, where <x> may be empty.
+bool
+PresentedDNSIDMatchesReferenceDNSID(Input presentedDNSID,
+                                    Input referenceDNSID,
+                                    bool referenceDNSIDWasVerifiedAsValid)
+{
+  assert(referenceDNSIDWasVerifiedAsValid);
+  if (!referenceDNSIDWasVerifiedAsValid) {
+    return false;
+  }
+
+  Reader presented(presentedDNSID);
+  Reader reference(referenceDNSID);
+
+  size_t currentLabel = 0;
+  bool hasWildcardLabel = false;
+  bool lastPresentedByteWasDot = false;
+  bool firstPresentedByteIsWildcard = presented.Peek('*');
+
+  do {
+    uint8_t presentedByte;
+    if (presented.Read(presentedByte) != Success) {
+      return false; // Reject completely empty input.
+    }
+    if (presentedByte == '*' && currentLabel == 0) {
+      hasWildcardLabel = true;
+
+      // Like NSS, be stricter than RFC6125 requires by insisting that the
+      // "*" must be the last character in the label. This also prevents
+      // multiple "*" in the label.
+      if (!presented.Peek('.')) {
+        return false;
+      }
+
+      // RFC6125 says that we shouldn't accept wildcards within an IDN A-Label.
+      //
+      // We also don't allow a non-IDN presented ID label to match an IDN
+      // reference ID label, except when the entire presented ID label is "*".
+      // This avoids confusion when matching a presented ID like
+      // "xn-*.example.org" against "xn--www.example.org" (which attempts to
+      // abuse the punycode syntax) or "www-*.example.org" against
+      // "xn--www--ep4c4a2kpf" (which makes sense to match, semantically, but
+      // no implementations actually do).
+      //
+      // XXX: The consequence of this is that we effectively discriminate
+      // against users of languages that cannot be encoded with ASCII.
+      if (!firstPresentedByteIsWildcard) {
+        if (StartsWithIDNALabel(presentedDNSID)) {
+          return false;
+        }
+        if (StartsWithIDNALabel(referenceDNSID)) {
+          return false;
+        }
+      }
+
+      // RFC 6125 is unclear about whether "www*.example.org" matches
+      // "www.example.org". The Chromium test suite has this test:
+      //
+      //    { false, "w.bar.foo.com", "w*.bar.foo.com" },
+      //
+      // We agree with Chromium by forbidding "*" from expanding to the empty
+      // string.
+      uint8_t referenceByte;
+      if (reference.Read(referenceByte) != Success) {
+        return false;
+      }
+      if (referenceByte == '.') {
+        return false;
+      }
+      while (!reference.Peek('.')) {
+        if (reference.Read(referenceByte) != Success) {
+          return false;
+        }
+      }
+    } else {
+      if (presentedByte == '.') {
+        // This check is needed to prevent ".." at the end of the presented ID
+        // from being accepted.
+        if (lastPresentedByteWasDot) {
+          return false;
+        }
+        lastPresentedByteWasDot = true;
+
+        if (!presented.AtEnd()) {
+          ++currentLabel;
+        }
+      } else {
+        lastPresentedByteWasDot = false;
+      }
+
+      // The presented ID may have a terminating dot '.' to mark it as
+      // absolute, and it still matches a reference ID without that
+      // terminating dot.
+      if (presentedByte != '.' || !presented.AtEnd() || !reference.AtEnd()) {
+        uint8_t referenceByte;
+        if (reference.Read(referenceByte) != Success) {
+          return false;
+        }
+        if (LocaleInsensitveToLower(presentedByte) !=
+            LocaleInsensitveToLower(referenceByte)) {
+          return false;
+        }
+      }
+    }
+  } while (!presented.AtEnd());
+
+  // The reference ID may have a terminating dot '.' to mark it as absolute,
+  // and a presented ID without that terminating dot still matches it.
+  static const uint8_t DOT[1] = { '.' };
+  if (!reference.AtEnd() && !reference.MatchRest(DOT)) {
+    return false;
+  }
+
+  if (hasWildcardLabel) {
+    // Like NSS, we require at least two labels after the wildcard.
+    if (currentLabel < 2) {
+      return false;
+    }
+
+    // TODO(bug XXXXXXX): Allow the TrustDomain to control this on a
+    // per-eTLD+1 basis, similar to Chromium. Even then, it might be better to
+    // still enforce that there are at least two labels after the wildcard.
+
+    // TODO(bug XXXXXXX): Wildcards are not allowed for EV certificates.
+    // Provide an option to indicate whether wildcards should be matched, for
+    // the purpose of helping the application enforce this.
+  }
+
+  return true;
+}
+
+namespace {
+
+// We avoid isdigit because it is locale-sensitive. See
+// http://pubs.opengroup.org/onlinepubs/009695399/functions/tolower.html.
+inline uint8_t
+LocaleInsensitveToLower(uint8_t a)
+{
+  if (a >= 'A' && a <= 'Z') { // unlikely
+    return static_cast<uint8_t>(
+             static_cast<uint8_t>(a - static_cast<uint8_t>('A')) +
+             static_cast<uint8_t>('a'));
+  }
+  return a;
+}
+
+bool
+StartsWithIDNALabel(Input id)
+{
+  static const uint8_t IDN_ALABEL_PREFIX[4] = { 'x', 'n', '-', '-' };
+  Reader input(id);
+  for (size_t i = 0; i < sizeof(IDN_ALABEL_PREFIX); ++i) {
+    uint8_t b;
+    if (input.Read(b) != Success) {
+      return false;
+    }
+    if (b != IDN_ALABEL_PREFIX[i]) {
+      return false;
+    }
+  }
+  return true;
+}
 
 bool
 ReadIPv4AddressComponent(Reader& input, bool lastComponent,
