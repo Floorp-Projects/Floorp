@@ -127,7 +127,7 @@ class MediaPlayerManager implements NativeEventListener,
                     }
                 } catch(Exception ex) {
                     // This may happen if the device isn't a real Chromecast,
-                    // for example Firefly casting devices.
+                    // for example Matchstick casting devices.
                     Log.e(LOGTAG, "Couldn't create JSON for display", ex);
                 }
             }
