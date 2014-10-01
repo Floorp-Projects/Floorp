@@ -7911,13 +7911,28 @@ ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler &masm)
     masm.loadPtr(Address(BaselineStubReg, ICSetProp_NativeAdd::offsetOfNewShape()), scratch);
     masm.storePtr(scratch, shapeAddr);
 
-    // Change the object's type if required.
+    // Try to change the object's type.
     Label noTypeChange;
+
+    // Check if the cache has a new type to change to.
     masm.loadPtr(Address(BaselineStubReg, ICSetProp_NativeAdd::offsetOfNewType()), scratch);
     masm.branchTestPtr(Assembler::Zero, scratch, scratch, &noTypeChange);
+
+    // Check if the old type still has a newScript.
+    masm.loadPtr(Address(objReg, JSObject::offsetOfType()), scratch);
+    masm.branchPtr(Assembler::Equal,
+                   Address(scratch, types::TypeObject::offsetOfNewScript()),
+                   ImmWord(0),
+                   &noTypeChange);
+
+    // Reload the new type from the cache.
+    masm.loadPtr(Address(BaselineStubReg, ICSetProp_NativeAdd::offsetOfNewType()), scratch);
+
+    // Change the object's type.
     Address typeAddr(objReg, JSObject::offsetOfType());
     EmitPreBarrier(masm, typeAddr, MIRType_TypeObject);
     masm.storePtr(scratch, typeAddr);
+
     masm.bind(&noTypeChange);
 
     Register holderReg;

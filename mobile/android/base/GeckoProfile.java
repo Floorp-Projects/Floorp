@@ -17,7 +17,7 @@ import java.util.Hashtable;
 
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.GeckoProfileDirectories.NoSuchProfileException;
-import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.LocalBrowserDB;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.INIParser;
@@ -209,7 +209,7 @@ public final class GeckoProfile {
              * Now do the things that createProfileDirectory normally does --
              * right now that's kicking off DB init.
              */
-            profile.enqueueInitialization();
+            profile.enqueueInitialization(profile.getDir());
 
             return profile;
         } catch (Exception ex) {
@@ -650,7 +650,7 @@ public final class GeckoProfile {
 
         // Trigger init for non-webapp profiles.
         if (!mIsWebAppProfile) {
-            enqueueInitialization();
+            enqueueInitialization(profileDir);
         }
 
         // Write out profile creation time, mirroring the logic in nsToolkitProfileService.
@@ -684,7 +684,7 @@ public final class GeckoProfile {
      * This is public for use *from tests only*!
      */
     @RobocopTarget
-    public void enqueueInitialization() {
+    public void enqueueInitialization(final File profileDir) {
         Log.i(LOGTAG, "Enqueuing profile init.");
         final Context context = mApplicationContext;
 
@@ -697,13 +697,24 @@ public final class GeckoProfile {
 
                 final ContentResolver cr = context.getContentResolver();
 
-                // We pass the number of added bookmarks to ensure that the
-                // indices of the distribution and default bookmarks are
-                // contiguous. Because there are always at least as many
-                // bookmarks as there are favicons, we can also guarantee that
-                // the favicon IDs won't overlap.
-                final int offset = BrowserDB.addDistributionBookmarks(cr, distribution, 0);
-                BrowserDB.addDefaultBookmarks(context, cr, offset);
+                // Because we are running in the background, we want to synchronize on the
+                // GeckoProfile instance so that we don't race with main thread operations
+                // such as locking/unlocking/removing the profile.
+                synchronized (GeckoProfile.this) {
+                    // Skip initialization if the profile directory has been removed.
+                    if (!profileDir.exists()) {
+                        return;
+                    }
+
+                    // We pass the number of added bookmarks to ensure that the
+                    // indices of the distribution and default bookmarks are
+                    // contiguous. Because there are always at least as many
+                    // bookmarks as there are favicons, we can also guarantee that
+                    // the favicon IDs won't overlap.
+                    final LocalBrowserDB db = new LocalBrowserDB(getName());
+                    final int offset = db.addDistributionBookmarks(cr, distribution, 0);
+                    db.addDefaultBookmarks(context, cr, offset);
+                }
             }
         });
     }
