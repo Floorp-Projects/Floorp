@@ -116,6 +116,7 @@ nsAutoCompleteController::SetInput(nsIAutoCompleteInput *aInput)
 
   // Reset all search state members to default values
   mSearchString = newValue;
+  mPlaceholderCompletionString.Truncate();
   mDefaultIndexCompleted = false;
   mBackspaced = false;
   mSearchStatus = nsIAutoCompleteController::STATUS_NONE;
@@ -230,8 +231,10 @@ nsAutoCompleteController::HandleText()
     // We need to throw away previous results so we don't try to search through them again
     ClearResults();
     mBackspaced = true;
-  } else
+    mPlaceholderCompletionString.Truncate();
+  } else {
     mBackspaced = false;
+  }
 
   mSearchString = newValue;
 
@@ -1111,6 +1114,46 @@ nsAutoCompleteController::StopSearch()
   return NS_OK;
 }
 
+void
+nsAutoCompleteController::MaybeCompletePlaceholder()
+{
+  MOZ_ASSERT(mInput);
+
+  if (!mInput) { // or mInput depending on what you choose
+    MOZ_ASSERT_UNREACHABLE("Input should always be valid at this point");
+    return;
+  }
+
+  int32_t selectionStart;
+  mInput->GetSelectionStart(&selectionStart);
+  int32_t selectionEnd;
+  mInput->GetSelectionEnd(&selectionEnd);
+
+  // Check if the current input should be completed with the placeholder string
+  // from the last completion until the actual search results come back.
+  // The new input string needs to be compatible with the last completed string.
+  // E.g. if the new value is "fob", but the last completion was "foobar",
+  // then the last completion is incompatible.
+  // If the search string is the same as the last completion value, then don't
+  // complete the value again (this prevents completion to happen e.g. if the
+  // cursor is moved and StartSeaches() is invoked).
+  // In addition, the selection must be at the end of the current input to
+  // trigger the placeholder completion.
+  bool usePlaceholderCompletion =
+    !mPlaceholderCompletionString.IsEmpty() &&
+    mPlaceholderCompletionString.Length() > mSearchString.Length() &&
+    selectionEnd == selectionStart &&
+    selectionEnd == (int32_t)mSearchString.Length() &&
+    StringBeginsWith(mPlaceholderCompletionString, mSearchString,
+                    nsCaseInsensitiveStringComparator());
+
+  if (usePlaceholderCompletion) {
+    CompleteValue(mPlaceholderCompletionString);
+  } else {
+    mPlaceholderCompletionString.Truncate();
+  }
+}
+
 nsresult
 nsAutoCompleteController::StartSearches()
 {
@@ -1119,6 +1162,10 @@ nsAutoCompleteController::StartSearches()
   // and may crash when it fires (bug 236659).
   if (mTimer || !mInput)
     return NS_OK;
+
+  // Check if the current input should be completed with the placeholder string
+  // from the last completion until the actual search results come back.
+  MaybeCompletePlaceholder();
 
   nsCOMPtr<nsIAutoCompleteInput> input(mInput);
 
@@ -1457,10 +1504,18 @@ nsAutoCompleteController::CompleteDefaultIndex(int32_t aResultIndex)
   int32_t selectionEnd;
   input->GetSelectionEnd(&selectionEnd);
 
+  bool isPlaceholderSelected =
+      selectionEnd == (int32_t)mPlaceholderCompletionString.Length() &&
+      selectionStart == (int32_t)mSearchString.Length() &&
+      StringBeginsWith(mPlaceholderCompletionString,
+        mSearchString, nsCaseInsensitiveStringComparator());
+
   // Don't try to automatically complete to the first result if there's already
-  // a selection or the cursor isn't at the end of the input
-  if (selectionEnd != selectionStart ||
-      selectionEnd != (int32_t)mSearchString.Length())
+  // a selection or the cursor isn't at the end of the input. In case the
+  // selection is from the current placeholder completion value, then still
+  // automatically complete.
+  if (!isPlaceholderSelected && (selectionEnd != selectionStart ||
+        selectionEnd != (int32_t)mSearchString.Length()))
     return NS_OK;
 
   bool shouldComplete;
@@ -1603,6 +1658,7 @@ nsAutoCompleteController::CompleteValue(nsString &aValue)
     // aValue is empty (we were asked to clear mInput), or mSearchString
     // matches the beginning of aValue.  In either case we can simply
     // autocomplete to aValue.
+    mPlaceholderCompletionString = aValue;
     input->SetTextValue(aValue);
   } else {
     nsresult rv;
@@ -1623,9 +1679,9 @@ nsAutoCompleteController::CompleteValue(nsString &aValue)
         return NS_OK;
       }
 
-      input->SetTextValue(mSearchString +
-                          Substring(aValue, mSearchStringLength + findIndex,
-                                    endSelect));
+      mPlaceholderCompletionString = mSearchString +
+        Substring(aValue, mSearchStringLength + findIndex, endSelect);
+      input->SetTextValue(mPlaceholderCompletionString);
 
       endSelect -= findIndex; // We're skipping this many characters of aValue.
     } else {
@@ -1635,6 +1691,9 @@ nsAutoCompleteController::CompleteValue(nsString &aValue)
       input->SetTextValue(mSearchString + NS_LITERAL_STRING(" >> ") + aValue);
 
       endSelect = mSearchString.Length() + 4 + aValue.Length();
+
+      // Reset the last search completion.
+      mPlaceholderCompletionString.Truncate();
     }
   }
 
