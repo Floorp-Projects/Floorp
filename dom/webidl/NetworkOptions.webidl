@@ -22,7 +22,6 @@ dictionary NetworkCommandOptions
   sequence<DOMString> gateways;       // for "setDefaultRouteAndDNS", "removeDefaultRoute".
   DOMString mode;                     // for "setWifiOperationMode".
   boolean report;                     // for "setWifiOperationMode".
-  boolean isAsync;                    // for "setWifiOperationMode".
   boolean enabled;                    // for "setDhcpServer".
   DOMString wifictrlinterfacename;    // for "setWifiTethering".
   DOMString internalIfname;           // for "setWifiTethering".
@@ -50,6 +49,12 @@ dictionary NetworkCommandOptions
   DOMString preExternalIfname;        // for "updateUpStream".
   DOMString curInternalIfname;        // for "updateUpStream".
   DOMString curExternalIfname;        // for "updateUpStream".
+
+  long ipaddr;                        // for "ifc_configure".
+  long mask;                          // for "ifc_configure".
+  long gateway_long;                  // for "ifc_configure".
+  long dns1_long;                     // for "ifc_configure".
+  long dns2_long;                     // for "ifc_configure".
 };
 
 /**
@@ -73,4 +78,22 @@ dictionary NetworkResultOptions
   boolean success = false;            // for "setDhcpServer".
   DOMString curExternalIfname = "";   // for "updateUpStream".
   DOMString curInternalIfname = "";   // for "updateUpStream".
+
+  DOMString reply = "";               // for "command".
+  DOMString route = "";               // for "ifc_get_default_route".
+  DOMString ipaddr_str = "";          // The following are for the result of
+                                      // dhcp_do_request.
+  DOMString gateway_str = "";
+  DOMString dns1_str = "";
+  DOMString dns2_str = "";
+  DOMString mask_str = "";
+  DOMString server_str = "";
+  DOMString vendor_str = "";
+  long      lease = 0;
+  long      mask = 0;
+  long      ipaddr = 0;
+  long      gateway = 0;
+  long      dns1 = 0;
+  long      dns2 = 0;
+  long      server = 0;
 };

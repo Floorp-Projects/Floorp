@@ -97,7 +97,7 @@ private:
 
   static EAvailableAtkSignals gAvailableAtkSignals;
 
-  uint16_t CreateMaiInterfaces();
+  uint16_t CreateMaiInterfaces(void);
 };
 
 } // namespace a11y

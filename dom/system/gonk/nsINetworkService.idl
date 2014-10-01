@@ -101,10 +101,65 @@ interface nsIUpdateUpStreamCallback : nsISupports
   void updateUpStreamResult(in boolean success, in DOMString externalIfname);
 };
 
+[scriptable, function, uuid(eedca6c0-1310-11e4-9191-0800200c9a66)]
+interface nsISetDnsCallback : nsISupports
+{
+  /**
+   * Callback function used to report the result of setting DNS server.
+   *
+   * @param error
+   *        An error message if the operation wasn't successful,
+   *        or `null` if it was.
+   */
+  void setDnsResult(in jsval error);
+};
+
+[scriptable, function, uuid(5d0e1a60-1187-11e4-9191-0800200c9a66)]
+interface nsINativeCommandCallback : nsISupports
+{
+  /**
+   * Callback function used to report the result of a network native command.
+   *
+   * @param success
+   *        Boolean to indicate the operation is successful or not.
+   */
+  void nativeCommandResult(in boolean success);
+};
+
+[scriptable, function, uuid(694abb80-1187-11e4-9191-0800200c9a66)]
+interface nsIDhcpRequestCallback : nsISupports
+{
+  /**
+   * Callback function used to report the result of DHCP client request.
+   *
+   * @param success
+   *        Boolean to indicate the operation is successful or not.
+   *
+   * @param dhcpInfo
+   *        An object to represent the successful DHCP request:
+   *
+   *          - gateway_str: string
+   *          - dns1_str:    string
+   *          - dns2_str:    string
+   *          - mask_str:    string
+   *          - server_str:  string
+   *          - vendor_str:  string
+   *          - lease:       long
+   *          - mask:        long
+   *          - ipaddr:      long
+   *          - gateway:     long
+   *          - dns1:        long
+   *          - dns2:        long
+   *          - server:      long
+   */
+  void dhcpRequestResult(in boolean success, in jsval dhcpInfo);
+};
+
+
 /**
  * Provide network services.
  */
-[scriptable, uuid(ddb38428-0cf2-4c6a-a3c9-5e2f00fc54db)]
+[scriptable, uuid(9f1d78e0-1314-11e4-9191-0800200c9a66)]
 interface nsINetworkService : nsISupports
 {
   /**
@@ -229,19 +284,26 @@ interface nsINetworkService : nsISupports
    *
    * @param networkInterface
    *        The network interface which contains the DNS we want to set.
+   *
+   * @param callback
+   *        Callback to notify the result of setting DNS server.
    */
-  void setDNS(in nsINetworkInterface networkInterface);
+  void setDNS(in nsINetworkInterface networkInterface,
+              in nsISetDnsCallback callback);
 
   /**
-   * Set default route and DNS.
+   * Set default route.
    *
    * @param networkInterface
-   *        The network interface we want to set to the default route and dns.
+   *        The network interface we want to set to the default route.
    * @param oldInterface
    *        The previous network interface.
+   * @param callback
+   *        Callback to notify the result of setting default route.
    */
-  void setDefaultRouteAndDNS(in nsINetworkInterface networkInterface,
-                             in nsINetworkInterface oldInterface);
+  void setDefaultRoute(in nsINetworkInterface networkInterface,
+                       in nsINetworkInterface oldInterface,
+                       in nsINativeCommandCallback callback);
 
   /**
    * Remove default route.
@@ -341,4 +403,71 @@ interface nsINetworkService : nsISupports
   void updateUpStream(in jsval previous,
                       in jsval current,
                       in nsIUpdateUpStreamCallback callback);
+
+  /**
+   * Configure a network interface.
+   *
+   * @param config
+   *        An object containing the detail that we want to configure the interface:
+   *
+   *          - ifname:  string
+   *          - ipaddr:  long
+   *          - mask:    long
+   *          - gateway: long
+   *          - dns1:    long
+   *          - dns2:    long
+   *
+   * @param callback
+   *        Callback to notify the result of configurating network interface.
+   */
+  void configureInterface(in jsval config,
+                          in nsINativeCommandCallback callback);
+
+  /**
+   * Issue a DHCP client request.
+   *
+   * @param networkInterface
+   *        The network interface which we wnat to do the DHCP request on.
+   *
+   * @param callback
+   *        Callback to notify the result of the DHCP request.
+   */
+  void dhcpRequest(in DOMString interfaceName,
+                   in nsIDhcpRequestCallback callback);
+
+  /**
+   * Enable a network interface.
+   *
+   * @param networkInterface
+   *        The network interface name which we want to enable.
+   *
+   * @param callback
+   *        Callback to notify the result of disabling network interface.
+   */
+  void enableInterface(in DOMString interfaceName,
+                       in nsINativeCommandCallback callback);
+
+  /**
+   * Disable a network interface.
+   *
+   * @param networkInterface
+   *        The network interface name which we want to disable.
+   *
+   * @param callback
+   *        Callback to notify the result of disabling network interface.
+   */
+  void disableInterface(in DOMString interfaceName,
+                        in nsINativeCommandCallback callback);
+
+  /**
+   * Reset all connections
+   *
+   * @param networkInterface
+   *        The network interface name which we want to reset.
+   *
+   * @param callback
+   *        Callback to notify the result of resetting connections.
+   */
+  void resetConnections(in DOMString interfaceName,
+                        in nsINativeCommandCallback callback);
 };
