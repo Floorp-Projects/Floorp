@@ -934,7 +934,7 @@ ClientTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
     PROFILER_LABEL("ClientTiledLayerBuffer", "PaintThebesSingleBufferDraw",
       js::ProfileEntry::Category::GRAPHICS);
 
-    mCallback(mPaintedLayer, ctxt, aPaintRegion, DrawRegionClip::CLIP_NONE, nsIntRegion(), mCallbackData);
+    mCallback(mPaintedLayer, ctxt, aPaintRegion, DrawRegionClip::NONE, nsIntRegion(), mCallbackData);
   }
 
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
@@ -1304,7 +1304,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
                             Scale(mResolution, mResolution));
     mCallback(mPaintedLayer, ctxt,
               tileRegion.GetBounds(),
-              DrawRegionClip::CLIP_NONE,
+              DrawRegionClip::NONE,
               nsIntRegion(), mCallbackData);
 
   }

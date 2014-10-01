@@ -19,7 +19,11 @@
         "{workdir}/flash.sh",
         "{workdir}/load-config.sh",
         "{workdir}/.config",
-        "{workdir}/sources.xml"
+        "{workdir}/sources.xml",
+        "{workdir}/profile.sh",
+        ["{workdir}/gecko/tools/profiler/merge-profiles.py", "gecko/tools/profiler/"],
+        ["{workdir}/scripts/profile-symbolicate.py", "scripts/"],
+        ["{workdir}/gecko/tools/rb/fix_stack_using_bpsyms.py", "gecko/tools/rb/"]
     ],
     "env": {
         "VARIANT": "user",

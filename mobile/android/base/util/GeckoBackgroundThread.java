@@ -12,44 +12,65 @@ import java.util.concurrent.SynchronousQueue;
 final class GeckoBackgroundThread extends Thread {
     private static final String LOOPER_NAME = "GeckoBackgroundThread";
 
-    // Guarded by 'this'.
-    private static Handler sHandler;
-    private SynchronousQueue<Handler> mHandlerQueue = new SynchronousQueue<Handler>();
+    // Guarded by 'GeckoBackgroundThread.class'.
+    private static Handler handler;
+    private static Thread thread;
+
+    // The initial Runnable to run on the new thread. Its purpose
+    // is to avoid us having to wait for the new thread to start.
+    private Runnable initialRunnable;
 
     // Singleton, so private constructor.
-    private GeckoBackgroundThread() {
-        super();
+    private GeckoBackgroundThread(final Runnable initialRunnable) {
+        this.initialRunnable = initialRunnable;
     }
 
     @Override
     public void run() {
         setName(LOOPER_NAME);
         Looper.prepare();
-        try {
-            mHandlerQueue.put(new Handler());
-        } catch (InterruptedException ie) {}
+
+        synchronized (GeckoBackgroundThread.class) {
+            handler = new Handler();
+            GeckoBackgroundThread.class.notify();
+        }
+
+        if (initialRunnable != null) {
+            initialRunnable.run();
+            initialRunnable = null;
+        }
 
         Looper.loop();
     }
 
-    // Get a Handler for a looper thread, or create one if it doesn't yet exist.
-    /*package*/ static synchronized Handler getHandler() {
-        if (sHandler == null) {
-            GeckoBackgroundThread lt = new GeckoBackgroundThread();
-            ThreadUtils.setBackgroundThread(lt);
-            lt.start();
-            try {
-                sHandler = lt.mHandlerQueue.take();
-            } catch (InterruptedException ie) {}
-        }
-        return sHandler;
+    private static void startThread(final Runnable initialRunnable) {
+        thread = new GeckoBackgroundThread(initialRunnable);
+        ThreadUtils.setBackgroundThread(thread);
+
+        thread.setDaemon(true);
+        thread.start();
     }
 
-    /*package*/ static void post(Runnable runnable) {
-        Handler handler = getHandler();
-        if (handler == null) {
-            throw new IllegalStateException("No handler! Must have been interrupted. Not posting.");
+    // Get a Handler for a looper thread, or create one if it doesn't yet exist.
+    /*package*/ static synchronized Handler getHandler() {
+        if (thread == null) {
+            startThread(null);
         }
-        handler.post(runnable);
+
+        while (handler == null) {
+            try {
+                GeckoBackgroundThread.class.wait();
+            } catch (final InterruptedException e) {
+            }
+        }
+        return handler;
+    }
+
+    /*package*/ static synchronized void post(final Runnable runnable) {
+        if (thread == null) {
+            startThread(runnable);
+            return;
+        }
+        getHandler().post(runnable);
     }
 }

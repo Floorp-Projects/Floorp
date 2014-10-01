@@ -33,24 +33,9 @@ class NetworkResultDispatcher : public nsRunnable
 {
 public:
   NetworkResultDispatcher(const NetworkResultOptions& aResult)
+    : mResult(aResult)
   {
     MOZ_ASSERT(!NS_IsMainThread());
-
-#define COPY_FIELD(prop) mResult.prop = aResult.prop;
-    COPY_FIELD(mId)
-    COPY_FIELD(mRet)
-    COPY_FIELD(mBroadcast)
-    COPY_FIELD(mTopic)
-    COPY_FIELD(mReason)
-    COPY_FIELD(mResultCode)
-    COPY_FIELD(mResultReason)
-    COPY_FIELD(mError)
-    COPY_FIELD(mEnable)
-    COPY_FIELD(mResult)
-    COPY_FIELD(mSuccess)
-    COPY_FIELD(mCurExternalIfname)
-    COPY_FIELD(mCurInternalIfname)
-#undef COPY_FIELD
   }
 
   NS_IMETHOD Run()

@@ -7,7 +7,7 @@ cp $1/halloc/src/halloc.c src
 cp $1/halloc/src/hlist.h src
 cp $1/halloc/src/macros.h src
 cp $1/LICENSE .
-cp $1/README .
+cp $1/README.md .
 cp $1/AUTHORS .
 if [ -d $1/.git ]; then
   rev=$(cd $1 && git rev-parse --verify HEAD)

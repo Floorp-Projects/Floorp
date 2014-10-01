@@ -435,6 +435,14 @@ GeckoMediaPluginService::GetGMPDecryptor(nsTArray<nsCString>* aTags,
                                          const nsAString& aOrigin,
                                          GMPDecryptorProxy** aDecryptor)
 {
+#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
+  if (!mozilla::CanSandboxMediaPlugin()) {
+    NS_WARNING("GeckoMediaPluginService::GetGMPDecryptor: "
+               "EME decryption not available without sandboxing support.");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+#endif
+
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
   NS_ENSURE_ARG(aTags && aTags->Length() > 0);
   NS_ENSURE_ARG(aDecryptor);
@@ -625,11 +633,6 @@ NS_IMETHODIMP
 GeckoMediaPluginService::AddPluginDirectory(const nsAString& aDirectory)
 {
   MOZ_ASSERT(NS_IsMainThread());
-#if defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
-  if (!mozilla::CanSandboxMediaPlugin()) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-#endif
   nsCOMPtr<nsIThread> thread;
   nsresult rv = GetThread(getter_AddRefs(thread));
   if (NS_FAILED(rv)) {

@@ -28,48 +28,6 @@ public:
   NetworkParams() {
   }
 
-  NetworkParams(const NetworkParams& aOther) {
-    mIp = aOther.mIp;
-    mCmd = aOther.mCmd;
-    mDomain = aOther.mDomain;
-    mGateway = aOther.mGateway;
-    mGateways = aOther.mGateways;
-    mId = aOther.mId;
-    mIfname = aOther.mIfname;
-    mPrefixLength = aOther.mPrefixLength;
-    mOldIfname = aOther.mOldIfname;
-    mMode = aOther.mMode;
-    mReport = aOther.mReport;
-    mIsAsync = aOther.mIsAsync;
-    mEnabled = aOther.mEnabled;
-    mWifictrlinterfacename = aOther.mWifictrlinterfacename;
-    mInternalIfname = aOther.mInternalIfname;
-    mExternalIfname = aOther.mExternalIfname;
-    mEnable = aOther.mEnable;
-    mSsid = aOther.mSsid;
-    mSecurity = aOther.mSecurity;
-    mKey = aOther.mKey;
-    mPrefix = aOther.mPrefix;
-    mLink = aOther.mLink;
-    mInterfaceList = aOther.mInterfaceList;
-    mWifiStartIp = aOther.mWifiStartIp;
-    mWifiEndIp = aOther.mWifiEndIp;
-    mUsbStartIp = aOther.mUsbStartIp;
-    mUsbEndIp = aOther.mUsbEndIp;
-    mDns1 = aOther.mDns1;
-    mDns2 = aOther.mDns2;
-    mDnses = aOther.mDnses;
-    mStartIp = aOther.mStartIp;
-    mEndIp = aOther.mEndIp;
-    mServerIp = aOther.mServerIp;
-    mMaskLength = aOther.mMaskLength;
-    mPreInternalIfname = aOther.mPreInternalIfname;
-    mPreExternalIfname = aOther.mPreExternalIfname;
-    mCurInternalIfname = aOther.mCurInternalIfname;
-    mCurExternalIfname = aOther.mCurExternalIfname;
-    mThreshold = aOther.mThreshold;
-  }
-
   NetworkParams(const mozilla::dom::NetworkCommandOptions& aOther) {
 
 #define COPY_SEQUENCE_FIELD(prop, type)                                                      \
@@ -112,7 +70,6 @@ public:
     COPY_OPT_STRING_FIELD(mOldIfname, EmptyString())
     COPY_OPT_STRING_FIELD(mMode, EmptyString())
     COPY_OPT_FIELD(mReport, false)
-    COPY_OPT_FIELD(mIsAsync, false)
     COPY_OPT_FIELD(mEnabled, false)
     COPY_OPT_STRING_FIELD(mWifictrlinterfacename, EmptyString())
     COPY_OPT_STRING_FIELD(mInternalIfname, EmptyString())
@@ -140,6 +97,11 @@ public:
     COPY_OPT_STRING_FIELD(mCurInternalIfname, EmptyString())
     COPY_OPT_STRING_FIELD(mCurExternalIfname, EmptyString())
     COPY_OPT_FIELD(mThreshold, -1)
+    COPY_OPT_FIELD(mIpaddr, 0)
+    COPY_OPT_FIELD(mMask, 0)
+    COPY_OPT_FIELD(mGateway_long, 0)
+    COPY_OPT_FIELD(mDns1_long, 0)
+    COPY_OPT_FIELD(mDns2_long, 0)
 
 #undef COPY_SEQUENCE_FIELD
 #undef COPY_OPT_STRING_FIELD
@@ -158,7 +120,6 @@ public:
   nsString mOldIfname;
   nsString mMode;
   bool mReport;
-  bool mIsAsync;
   bool mEnabled;
   nsString mWifictrlinterfacename;
   nsString mInternalIfname;
@@ -186,6 +147,11 @@ public:
   nsString mCurInternalIfname;
   nsString mCurExternalIfname;
   long mThreshold;
+  long mIpaddr;
+  long mMask;
+  long mGateway_long;
+  long mDns1_long;
+  long mDns2_long;
 };
 
 // CommandChain store the necessary information to execute command one by one.
@@ -235,6 +201,25 @@ private:
   ErrorCallback mError;
 };
 
+// A helper class to easily construct a resolved
+// or a pending result for command execution.
+class CommandResult
+{
+public:
+  struct Pending {};
+
+public:
+  CommandResult(int32_t aResultCode);
+  CommandResult(const mozilla::dom::NetworkResultOptions& aResult);
+  CommandResult(const Pending&);
+  bool isPending() const;
+
+  mozilla::dom::NetworkResultOptions mResult;
+
+private:
+  bool mIsPending;
+};
+
 class NetworkUtils MOZ_FINAL
 {
 public:
@@ -250,24 +235,29 @@ private:
   /**
    * Commands supported by NetworkUtils.
    */
-  int32_t setDNS(NetworkParams& aOptions);
-  int32_t setDefaultRouteAndDNS(NetworkParams& aOptions);
-  int32_t addHostRoute(NetworkParams& aOptions);
-  int32_t removeDefaultRoute(NetworkParams& aOptions);
-  int32_t removeHostRoute(NetworkParams& aOptions);
-  int32_t removeHostRoutes(NetworkParams& aOptions);
-  int32_t removeNetworkRoute(NetworkParams& aOptions);
-  int32_t addSecondaryRoute(NetworkParams& aOptions);
-  int32_t removeSecondaryRoute(NetworkParams& aOptions);
-  int32_t setNetworkInterfaceAlarm(NetworkParams& aOptions);
-  int32_t enableNetworkInterfaceAlarm(NetworkParams& aOptions);
-  int32_t disableNetworkInterfaceAlarm(NetworkParams& aOptions);
-  int32_t setWifiOperationMode(NetworkParams& aOptions);
-  int32_t setDhcpServer(NetworkParams& aOptions);
-  int32_t setWifiTethering(NetworkParams& aOptions);
-  int32_t setUSBTethering(NetworkParams& aOptions);
-  int32_t enableUsbRndis(NetworkParams& aOptions);
-  int32_t updateUpStream(NetworkParams& aOptions);
+  CommandResult configureInterface(NetworkParams& aOptions);
+  CommandResult dhcpRequest(NetworkParams& aOptions);
+  CommandResult enableInterface(NetworkParams& aOptions);
+  CommandResult disableInterface(NetworkParams& aOptions);
+  CommandResult resetConnections(NetworkParams& aOptions);
+  CommandResult setDefaultRoute(NetworkParams& aOptions);
+  CommandResult addHostRoute(NetworkParams& aOptions);
+  CommandResult removeDefaultRoute(NetworkParams& aOptions);
+  CommandResult removeHostRoute(NetworkParams& aOptions);
+  CommandResult removeHostRoutes(NetworkParams& aOptions);
+  CommandResult removeNetworkRoute(NetworkParams& aOptions);
+  CommandResult setDNS(NetworkParams& aOptions);
+  CommandResult addSecondaryRoute(NetworkParams& aOptions);
+  CommandResult removeSecondaryRoute(NetworkParams& aOptions);
+  CommandResult setNetworkInterfaceAlarm(NetworkParams& aOptions);
+  CommandResult enableNetworkInterfaceAlarm(NetworkParams& aOptions);
+  CommandResult disableNetworkInterfaceAlarm(NetworkParams& aOptions);
+  CommandResult setWifiOperationMode(NetworkParams& aOptions);
+  CommandResult setDhcpServer(NetworkParams& aOptions);
+  CommandResult setWifiTethering(NetworkParams& aOptions);
+  CommandResult setUSBTethering(NetworkParams& aOptions);
+  CommandResult enableUsbRndis(NetworkParams& aOptions);
+  CommandResult updateUpStream(NetworkParams& aOptions);
 
   /**
    * function pointer array holds all netd commands should be executed
@@ -360,7 +350,7 @@ private:
   /**
    * Utility functions.
    */
-  void checkUsbRndisState(NetworkParams& aOptions);
+  CommandResult checkUsbRndisState(NetworkParams& aOptions);
   void dumpParams(NetworkParams& aOptions, const char* aType);
 
   static void escapeQuote(nsCString& aString);
