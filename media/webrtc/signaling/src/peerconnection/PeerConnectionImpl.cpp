@@ -1974,6 +1974,7 @@ PeerConnectionImpl::onCallEvent(const OnCallEventArgs& args)
   switch (event) {
     case SETLOCALDESCSUCCESS:
     case UPDATELOCALDESC:
+    case FOUNDICECANDIDATE:
       mLocalSDP = aInfo->getSDP();
       break;
 
