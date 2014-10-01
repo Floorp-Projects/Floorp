@@ -561,12 +561,12 @@ this.SocialService = {
     let requestingWindow = aDOMDocument.defaultView.top;
     let chromeWin = this._getChromeWindow(requestingWindow).wrappedJSObject;
     let browser = chromeWin.gBrowser.getBrowserForDocument(aDOMDocument);
-    let requestingURI =  Services.io.newURI(aDOMDocument.location.href, null, null);
+    let requestingURI =  Services.io.newURI(aAddonInstaller.addon.manifest.origin, null, null);
 
     let productName = brandBundle.GetStringFromName("brandShortName");
 
     let message = browserBundle.formatStringFromName("service.install.description",
-                                                     [aAddonInstaller.addon.manifest.name, productName], 2);
+                                                     [requestingURI.host, productName], 2);
 
     let action = {
       label: browserBundle.GetStringFromName("service.install.ok.label"),
