@@ -57,6 +57,36 @@ GetSpeechRecognitionLog()
 #define SR_LOG(...)
 #endif
 
+already_AddRefed<nsISpeechRecognitionService>
+GetSpeechRecognitionService()
+{
+  nsAutoCString speechRecognitionServiceCID;
+
+  nsAdoptingCString prefValue =
+  Preferences::GetCString(PREFERENCE_DEFAULT_RECOGNITION_SERVICE);
+  nsAutoCString speechRecognitionService;
+
+  if (!prefValue.get() || prefValue.IsEmpty()) {
+    speechRecognitionService = DEFAULT_RECOGNITION_SERVICE;
+  } else {
+    speechRecognitionService = prefValue;
+  }
+
+  if (!SpeechRecognition::mTestConfig.mFakeRecognitionService){
+    speechRecognitionServiceCID =
+      NS_LITERAL_CSTRING(NS_SPEECH_RECOGNITION_SERVICE_CONTRACTID_PREFIX) +
+      speechRecognitionService;
+  } else {
+    speechRecognitionServiceCID =
+      NS_SPEECH_RECOGNITION_SERVICE_CONTRACTID_PREFIX "fake";
+  }
+
+  nsresult aRv;
+  nsCOMPtr<nsISpeechRecognitionService> recognitionService;
+  recognitionService = do_GetService(speechRecognitionServiceCID.get(), &aRv);
+  return recognitionService.forget();
+}
+
 NS_INTERFACE_MAP_BEGIN(SpeechRecognition)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
@@ -326,33 +356,6 @@ SpeechRecognition::ProcessAudioSegment(AudioSegment* aSegment, TrackRate aTrackR
 
   mRecognitionService->ProcessAudioSegment(aSegment, aTrackRate);
   return samples;
-}
-
-void
-SpeechRecognition::GetRecognitionServiceCID(nsACString& aResultCID)
-{
-  if (mTestConfig.mFakeRecognitionService) {
-    aResultCID =
-      NS_SPEECH_RECOGNITION_SERVICE_CONTRACTID_PREFIX "fake";
-
-    return;
-  }
-
-  nsAdoptingCString prefValue =
-    Preferences::GetCString(PREFERENCE_DEFAULT_RECOGNITION_SERVICE);
-
-  nsAutoCString speechRecognitionService;
-  if (!prefValue.get() || prefValue.IsEmpty()) {
-    speechRecognitionService = DEFAULT_RECOGNITION_SERVICE;
-  } else {
-    speechRecognitionService = prefValue;
-  }
-
-  aResultCID =
-    NS_LITERAL_CSTRING(NS_SPEECH_RECOGNITION_SERVICE_CONTRACTID_PREFIX) +
-    speechRecognitionService;
-
-  return;
 }
 
 /****************************************************************************
@@ -691,13 +694,10 @@ SpeechRecognition::Start(const Optional<NonNull<DOMMediaStream>>& aStream, Error
     return;
   }
 
-  nsAutoCString speechRecognitionServiceCID;
-  GetRecognitionServiceCID(speechRecognitionServiceCID);
+  mRecognitionService = GetSpeechRecognitionService();
+  NS_ENSURE_TRUE_VOID(mRecognitionService);
 
   nsresult rv;
-  mRecognitionService = do_GetService(speechRecognitionServiceCID.get(), &rv);
-  NS_ENSURE_SUCCESS_VOID(rv);
-
   rv = mRecognitionService->Initialize(this);
   NS_ENSURE_SUCCESS_VOID(rv);
 
