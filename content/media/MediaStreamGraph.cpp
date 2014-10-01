@@ -63,7 +63,7 @@ PRLogModuleInfo* gMediaStreamGraphLog;
 /**
  * The singleton graph instance.
  */
-static nsDataHashtable<nsUint32HashKey, MediaStreamGraphImpl*> gGraphs;
+static MediaStreamGraphImpl* gGraph;
 
 MediaStreamGraphImpl::~MediaStreamGraphImpl()
 {
@@ -1633,10 +1633,9 @@ MediaStreamGraphImpl::RunInStableState(bool aSourceIsMSG)
         NS_DispatchToMainThread(event);
 
         LIFECYCLE_LOG("Disconnecting MediaStreamGraph %p", this);
-        MediaStreamGraphImpl* graph;
-        if (gGraphs.Get(mAudioChannel, &graph) && graph == this) {
+        if (this == gGraph) {
           // null out gGraph if that's the graph being shut down
-          gGraphs.Remove(mAudioChannel);
+          gGraph = nullptr;
         }
       }
     } else {
@@ -1787,12 +1786,9 @@ MediaStreamGraphImpl::AppendMessage(ControlMessage* aMessage)
     delete aMessage;
     if (IsEmpty() &&
         mLifecycleState >= LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION) {
-
-      MediaStreamGraphImpl* graph;
-      if (gGraphs.Get(mAudioChannel, &graph) && graph == this) {
-        gGraphs.Remove(mAudioChannel);
+      if (gGraph == this) {
+        gGraph = nullptr;
       }
-
       Destroy();
     }
     return;
@@ -2740,7 +2736,6 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime,
 #ifdef DEBUG
   , mCanRunMessagesSynchronously(false)
 #endif
-  , mAudioChannel(static_cast<uint32_t>(aChannel))
 {
 #ifdef PR_LOGGING
   if (!gMediaStreamGraphLog) {
@@ -2779,26 +2774,15 @@ NS_IMPL_ISUPPORTS(MediaStreamGraphShutdownObserver, nsIObserver)
 
 static bool gShutdownObserverRegistered = false;
 
-namespace {
-
-PLDHashOperator
-ForceShutdownEnumerator(const uint32_t& /* aAudioChannel */,
-                        MediaStreamGraphImpl* aGraph,
-                        void* /* aUnused */)
-{
-  aGraph->ForceShutDown();
-  return PL_DHASH_NEXT;
-}
-
-} // anonymous namespace
-
 NS_IMETHODIMP
 MediaStreamGraphShutdownObserver::Observe(nsISupports *aSubject,
                                           const char *aTopic,
                                           const char16_t *aData)
 {
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
-    gGraphs.EnumerateRead(ForceShutdownEnumerator, nullptr);
+    if (gGraph) {
+      gGraph->ForceShutDown();
+    }
     nsContentUtils::UnregisterShutdownObserver(this);
     gShutdownObserverRegistered = false;
   }
@@ -2810,10 +2794,7 @@ MediaStreamGraph::GetInstance(DOMMediaStream::TrackTypeHints aHint, dom::AudioCh
 {
   NS_ASSERTION(NS_IsMainThread(), "Main thread only");
 
-  uint32_t channel = static_cast<uint32_t>(aChannel);
-  MediaStreamGraphImpl* graph = nullptr;
-
-  if (!gGraphs.Get(channel, &graph)) {
+  if (!gGraph) {
     if (!gShutdownObserverRegistered) {
       gShutdownObserverRegistered = true;
       nsContentUtils::RegisterShutdownObserver(new MediaStreamGraphShutdownObserver());
@@ -2821,13 +2802,12 @@ MediaStreamGraph::GetInstance(DOMMediaStream::TrackTypeHints aHint, dom::AudioCh
 
     CubebUtils::InitPreferredSampleRate();
 
-    graph = new MediaStreamGraphImpl(true, CubebUtils::PreferredSampleRate(), aHint, aChannel);
-    gGraphs.Put(channel, graph);
+    gGraph = new MediaStreamGraphImpl(true, CubebUtils::PreferredSampleRate(), aHint, aChannel);
 
-    STREAM_LOG(PR_LOG_DEBUG, ("Starting up MediaStreamGraph %p", graph));
+    STREAM_LOG(PR_LOG_DEBUG, ("Starting up MediaStreamGraph %p", gGraph));
   }
 
-  return graph;
+  return gGraph;
 }
 
 MediaStreamGraph*
@@ -2998,10 +2978,7 @@ MediaStreamGraph::CreateAudioNodeStream(AudioNodeEngine* aEngine,
 bool
 MediaStreamGraph::IsNonRealtime() const
 {
-  const MediaStreamGraphImpl* impl = static_cast<const MediaStreamGraphImpl*>(this);
-  MediaStreamGraphImpl* graph;
-
-  return !gGraphs.Get(impl->AudioChannel(), &graph) || graph != impl;
+  return this != gGraph;
 }
 
 void
