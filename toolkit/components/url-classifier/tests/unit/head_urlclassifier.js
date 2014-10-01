@@ -57,6 +57,8 @@ function cleanUp() {
   delFile("safebrowsing/test-malware-simple.cache");
   delFile("safebrowsing/test-phish-simple.pset");
   delFile("safebrowsing/test-malware-simple.pset");
+  delFile("testLarge.pset");
+  delFile("testNoDelta.pset");
 }
 
 var allTables = "test-phish-simple,test-malware-simple";
