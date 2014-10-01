@@ -8,7 +8,6 @@
 
 #include "mozilla/dom/HTMLAllCollectionBinding.h"
 #include "mozilla/dom/Nullable.h"
-#include "mozilla/dom/UnionTypes.h"
 #include "nsHTMLDocument.h"
 
 namespace mozilla {
