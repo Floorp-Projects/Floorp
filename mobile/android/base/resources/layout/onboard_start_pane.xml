@@ -10,7 +10,8 @@
               android:background="@color/onboard_start"
               android:windowIsFloating="true">
 
-    <ScrollView android:layout_width="match_parent"
+    <ScrollView android:id="@+id/onboard_content"
+                android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:fillViewport="true" >
