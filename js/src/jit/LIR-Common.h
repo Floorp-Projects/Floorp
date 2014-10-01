@@ -326,6 +326,28 @@ class LSimdBinaryBitwiseX4 : public LInstructionHelper<1, 2, 0>
     }
 };
 
+class LSimdShift : public LInstructionHelper<1, 2, 0>
+{
+  public:
+    LIR_HEADER(SimdShift)
+    LSimdShift(const LAllocation &vec, const LAllocation &val) {
+        setOperand(0, vec);
+        setOperand(1, val);
+    }
+    const LAllocation *vector() {
+        return getOperand(0);
+    }
+    const LAllocation *value() {
+        return getOperand(1);
+    }
+    MSimdShift::Operation operation() const {
+        return mir_->toSimdShift()->operation();
+    }
+    MSimdShift *mir() const {
+        return mir_->toSimdShift();
+    }
+};
+
 // SIMD selection of lanes from two int32x4 or float32x4 arguments based on a
 // int32x4 argument.
 class LSimdSelect : public LInstructionHelper<1, 3, 0>

@@ -2531,6 +2531,54 @@ CodeGeneratorX86Shared::visitSimdBinaryBitwiseX4(LSimdBinaryBitwiseX4 *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitSimdShift(LSimdShift *ins)
+{
+    FloatRegister vec = ToFloatRegister(ins->vector());
+    FloatRegister out = ToFloatRegister(ins->output());
+    MOZ_ASSERT(vec == out); // defineReuseInput(0);
+
+    // TODO: If the shift count is greater than 31, this will just zero all
+    // lanes by default for lsh and ursh, and set the count to 32 for rsh
+    // (which will just extend the sign bit to all bits). Plain JS doesn't do
+    // this: instead it only keeps the five low bits of the mask. Spec isn't
+    // clear about that topic so this might need to be fixed. See also bug
+    // 1068028.
+    const LAllocation *val = ins->value();
+    if (val->isConstant()) {
+        Imm32 count(ToInt32(val));
+        switch (ins->operation()) {
+          case MSimdShift::lsh:
+            masm.packedLeftShiftByScalar(count, out);
+            return true;
+          case MSimdShift::rsh:
+            masm.packedRightShiftByScalar(count, out);
+            return true;
+          case MSimdShift::ursh:
+            masm.packedUnsignedRightShiftByScalar(count, out);
+            return true;
+        }
+        MOZ_CRASH("unexpected SIMD bitwise op");
+    }
+
+    MOZ_ASSERT(val->isRegister());
+    FloatRegister tmp = ScratchFloat32Reg;
+    masm.movd(ToRegister(val), tmp);
+
+    switch (ins->operation()) {
+      case MSimdShift::lsh:
+        masm.packedLeftShiftByScalar(tmp, out);
+        return true;
+      case MSimdShift::rsh:
+        masm.packedRightShiftByScalar(tmp, out);
+        return true;
+      case MSimdShift::ursh:
+        masm.packedUnsignedRightShiftByScalar(tmp, out);
+        return true;
+    }
+    MOZ_CRASH("unexpected SIMD bitwise op");
+}
+
+bool
 CodeGeneratorX86Shared::visitSimdSelect(LSimdSelect *ins)
 {
     FloatRegister mask = ToFloatRegister(ins->mask());

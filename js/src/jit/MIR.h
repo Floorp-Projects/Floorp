@@ -1721,6 +1721,49 @@ class MSimdBinaryBitwise : public MBinaryInstruction
     ALLOW_CLONE(MSimdBinaryBitwise)
 };
 
+class MSimdShift : public MBinaryInstruction
+{
+  public:
+    enum Operation {
+        lsh,
+        rsh,
+        ursh
+    };
+
+  private:
+    Operation operation_;
+
+    MSimdShift(MDefinition *left, MDefinition *right, Operation op)
+      : MBinaryInstruction(left, right), operation_(op)
+    {
+        MOZ_ASSERT(left->type() == MIRType_Int32x4 && right->type() == MIRType_Int32);
+        setResultType(MIRType_Int32x4);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(SimdShift);
+    static MSimdShift *NewAsmJS(TempAllocator &alloc, MDefinition *left,
+                                MDefinition *right, Operation op)
+    {
+        return new(alloc) MSimdShift(left, right, op);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+
+    Operation operation() const { return operation_; }
+
+    bool congruentTo(const MDefinition *ins) const {
+        if (!binaryCongruentTo(ins))
+            return false;
+        return operation_ == ins->toSimdShift()->operation();
+    }
+
+    ALLOW_CLONE(MSimdShift)
+};
+
 class MSimdTernaryBitwise : public MTernaryInstruction
 {
   public:
