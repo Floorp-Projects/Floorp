@@ -203,7 +203,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
                                    const mozilla::TimeStamp& aTransactionStart,
                                    InfallibleTArray<EditReply>* reply)
 {
-  profiler_tracing("Paint", "Composite", TRACING_INTERVAL_START);
+  profiler_tracing("Paint", "LayerTransaction", TRACING_INTERVAL_START);
   PROFILER_LABEL("LayerTransactionParent", "RecvUpdate",
     js::ProfileEntry::Category::GRAPHICS);
 
@@ -581,6 +581,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
     mLayerManager->VisualFrameWarning(severity);
   }
 
+  profiler_tracing("Paint", "LayerTransaction", TRACING_INTERVAL_END);
   return true;
 }
 
