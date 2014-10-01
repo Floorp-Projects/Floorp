@@ -11,7 +11,6 @@
 
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/ResponseBinding.h"
-#include "mozilla/dom/UnionTypes.h"
 
 #include "InternalResponse.h"
 
@@ -20,6 +19,7 @@ class nsPIDOMWindow;
 namespace mozilla {
 namespace dom {
 
+class ArrayBufferOrArrayBufferViewOrScalarValueStringOrURLSearchParams;
 class Headers;
 class InternalHeaders;
 class Promise;
