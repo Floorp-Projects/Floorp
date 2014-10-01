@@ -15,7 +15,7 @@ elif toolkit == 'cocoa':
 else:
     DIRS += ['other']
 
-DIRS += ['base', 'generic', 'html', 'interfaces', 'ipc', 'jsat', 'xpcom']
+DIRS += ['base', 'generic', 'html', 'interfaces', 'jsat', 'xpcom']
 
 if CONFIG['MOZ_XUL']:
     DIRS += ['xul']
