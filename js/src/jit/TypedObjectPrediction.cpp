@@ -45,7 +45,7 @@ TypedObjectPrediction::markAsCommonPrefix(const StructTypeDescr &descrA,
             break;
         if (&descrA.fieldDescr(i) != &descrB.fieldDescr(i))
             break;
-        JS_ASSERT(descrA.fieldOffset(i) == descrB.fieldOffset(i));
+        MOZ_ASSERT(descrA.fieldOffset(i) == descrB.fieldOffset(i));
     }
 
     if (i == 0) {
@@ -226,7 +226,7 @@ template<typename T>
 typename T::Type
 TypedObjectPrediction::extractType() const
 {
-    JS_ASSERT(kind() == T::Kind);
+    MOZ_ASSERT(kind() == T::Kind);
     switch (predictionKind()) {
       case TypedObjectPrediction::Empty:
       case TypedObjectPrediction::Inconsistent:
@@ -266,7 +266,7 @@ TypedObjectPrediction::simdType() const
 bool
 TypedObjectPrediction::hasKnownArrayLength(int32_t *length) const
 {
-    JS_ASSERT(ofArrayKind());
+    MOZ_ASSERT(ofArrayKind());
     switch (predictionKind()) {
       case TypedObjectPrediction::Empty:
       case TypedObjectPrediction::Inconsistent:
@@ -301,7 +301,7 @@ DescrArrayElementType(const TypeDescr &descr) {
 TypedObjectPrediction
 TypedObjectPrediction::arrayElementType() const
 {
-    JS_ASSERT(ofArrayKind());
+    MOZ_ASSERT(ofArrayKind());
     switch (predictionKind()) {
       case TypedObjectPrediction::Empty:
       case TypedObjectPrediction::Inconsistent:
@@ -347,7 +347,7 @@ TypedObjectPrediction::hasFieldNamed(jsid id,
                                      TypedObjectPrediction *fieldType,
                                      size_t *fieldIndex) const
 {
-    JS_ASSERT(kind() == type::Struct);
+    MOZ_ASSERT(kind() == type::Struct);
 
     switch (predictionKind()) {
       case TypedObjectPrediction::Empty:

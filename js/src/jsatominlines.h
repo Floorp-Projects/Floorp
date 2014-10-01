@@ -20,7 +20,7 @@
 inline JSAtom *
 js::AtomStateEntry::asPtr() const
 {
-    JS_ASSERT(bits != 0);
+    MOZ_ASSERT(bits != 0);
     JSAtom *atom = reinterpret_cast<JSAtom *>(bits & NO_TAG_MASK);
     JSString::readBarrier(atom);
     return atom;
@@ -183,7 +183,7 @@ AtomHasher::match(const AtomStateEntry &entry, const Lookup &lookup)
 inline Handle<PropertyName*>
 TypeName(JSType type, const JSAtomState &names)
 {
-    JS_ASSERT(type < JSTYPE_LIMIT);
+    MOZ_ASSERT(type < JSTYPE_LIMIT);
     JS_STATIC_ASSERT(offsetof(JSAtomState, undefined) +
                      JSTYPE_LIMIT * sizeof(ImmutablePropertyNamePtr) <=
                      sizeof(JSAtomState));
@@ -194,7 +194,7 @@ TypeName(JSType type, const JSAtomState &names)
 inline Handle<PropertyName*>
 ClassName(JSProtoKey key, JSAtomState &atomState)
 {
-    JS_ASSERT(key < JSProto_LIMIT);
+    MOZ_ASSERT(key < JSProto_LIMIT);
     JS_STATIC_ASSERT(offsetof(JSAtomState, Null) +
                      JSProto_LIMIT * sizeof(ImmutablePropertyNamePtr) <=
                      sizeof(JSAtomState));

@@ -148,7 +148,7 @@ js::GetNativeStackBaseImpl()
 # endif
     if (rc)
         MOZ_CRASH();
-    JS_ASSERT(stackBase);
+    MOZ_ASSERT(stackBase);
     pthread_attr_destroy(&sattr);
 
 #  if JS_STACK_GROWTH_DIRECTION > 0

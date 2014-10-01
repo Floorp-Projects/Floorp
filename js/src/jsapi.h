@@ -98,11 +98,11 @@ class AutoValueArray : public AutoGCRooter
     Value *begin() { return elements_; }
 
     HandleValue operator[](unsigned i) const {
-        JS_ASSERT(i < N);
+        MOZ_ASSERT(i < N);
         return HandleValue::fromMarkedLocation(&elements_[i]);
     }
     MutableHandleValue operator[](unsigned i) {
-        JS_ASSERT(i < N);
+        MOZ_ASSERT(i < N);
         return MutableHandleValue::fromMarkedLocation(&elements_[i]);
     }
 
@@ -596,7 +596,7 @@ class HandleValueArray
     }
 
     static HandleValueArray subarray(const HandleValueArray& values, size_t startIndex, size_t len) {
-        JS_ASSERT(startIndex + len <= values.length());
+        MOZ_ASSERT(startIndex + len <= values.length());
         return HandleValueArray(len, values.begin() + startIndex);
     }
 
@@ -608,7 +608,7 @@ class HandleValueArray
     const Value *begin() const { return elements_; }
 
     HandleValue operator[](size_t i) const {
-        JS_ASSERT(i < length_);
+        MOZ_ASSERT(i < length_);
         return HandleValue::fromMarkedLocation(&elements_[i]);
     }
 };
@@ -879,7 +879,7 @@ class MOZ_STACK_CLASS SourceBufferHolder MOZ_FINAL
     // the buffer.  Taking and then free'ing an unowned buffer will have dire
     // consequences.
     char16_t *take() {
-        JS_ASSERT(ownsChars_);
+        MOZ_ASSERT(ownsChars_);
         ownsChars_ = false;
         return const_cast<char16_t *>(data_);
     }
@@ -1353,14 +1353,14 @@ class JSAutoCheckRequest
     {
 #ifdef JS_DEBUG
         mContext = cx;
-        JS_ASSERT(JS_IsInRequest(JS_GetRuntime(cx)));
+        MOZ_ASSERT(JS_IsInRequest(JS_GetRuntime(cx)));
 #endif
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
     ~JSAutoCheckRequest() {
 #ifdef JS_DEBUG
-        JS_ASSERT(JS_IsInRequest(JS_GetRuntime(mContext)));
+        MOZ_ASSERT(JS_IsInRequest(JS_GetRuntime(mContext)));
 #endif
     }
 
@@ -2252,7 +2252,7 @@ class AutoIdArray : private AutoGCRooter
         return !idArray;
     }
     jsid operator[](size_t i) const {
-        JS_ASSERT(idArray);
+        MOZ_ASSERT(idArray);
         return JS_IdArrayGet(context, idArray, unsigned(i));
     }
     size_t length() const {
@@ -2633,7 +2633,7 @@ class JS_PUBLIC_API(CompartmentOptions)
     Override &extraWarningsOverride() { return extraWarningsOverride_; }
 
     void *zonePointer() const {
-        JS_ASSERT(uintptr_t(zone_.pointer) > uintptr_t(JS::SystemZone));
+        MOZ_ASSERT(uintptr_t(zone_.pointer) > uintptr_t(JS::SystemZone));
         return zone_.pointer;
     }
     ZoneSpecifier zoneSpecifier() const { return zone_.spec; }
@@ -4050,7 +4050,7 @@ static inline bool
 Call(JSContext *cx, JS::HandleValue thisv, JS::HandleObject funObj, const JS::HandleValueArray& args,
      MutableHandleValue rval)
 {
-    JS_ASSERT(funObj);
+    MOZ_ASSERT(funObj);
     JS::RootedValue fun(cx, JS::ObjectValue(*funObj));
     return Call(cx, thisv, fun, args, rval);
 }
@@ -4197,12 +4197,12 @@ JS_FileEscapedString(FILE *fp, JSString *str, char quote);
  *   JSFlatString *fstr = JS_FlattenString(cx, str);
  *   if (!fstr)
  *     return false;
- *   JS_ASSERT(fstr == JS_ASSERT_STRING_IS_FLAT(str));
+ *   MOZ_ASSERT(fstr == JS_ASSERT_STRING_IS_FLAT(str));
  *
  *   // in an infallible context, for the same 'str'
  *   AutoCheckCannotGC nogc;
  *   const char16_t *chars = JS_GetTwoByteFlatStringChars(nogc, fstr)
- *   JS_ASSERT(chars);
+ *   MOZ_ASSERT(chars);
  *
  * Flat strings and interned strings are always null-terminated, so
  * JS_FlattenString can be used to get a null-terminated string.
@@ -4262,14 +4262,14 @@ JS_GetTwoByteFlatStringChars(const JS::AutoCheckCannotGC &nogc, JSFlatString *st
 static MOZ_ALWAYS_INLINE JSFlatString *
 JSID_TO_FLAT_STRING(jsid id)
 {
-    JS_ASSERT(JSID_IS_STRING(id));
+    MOZ_ASSERT(JSID_IS_STRING(id));
     return (JSFlatString *)(JSID_BITS(id));
 }
 
 static MOZ_ALWAYS_INLINE JSFlatString *
 JS_ASSERT_STRING_IS_FLAT(JSString *str)
 {
-    JS_ASSERT(JS_StringIsFlat(str));
+    MOZ_ASSERT(JS_StringIsFlat(str));
     return (JSFlatString *)str;
 }
 
@@ -4361,7 +4361,7 @@ class JSAutoByteString
                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mBytes(JS_EncodeString(cx, str))
     {
-        JS_ASSERT(cx);
+        MOZ_ASSERT(cx);
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
@@ -4377,13 +4377,13 @@ class JSAutoByteString
 
     /* Take ownership of the given byte array. */
     void initBytes(char *bytes) {
-        JS_ASSERT(!mBytes);
+        MOZ_ASSERT(!mBytes);
         mBytes = bytes;
     }
 
     char *encodeLatin1(JSContext *cx, JSString *str) {
-        JS_ASSERT(!mBytes);
-        JS_ASSERT(cx);
+        MOZ_ASSERT(!mBytes);
+        MOZ_ASSERT(cx);
         mBytes = JS_EncodeString(cx, str);
         return mBytes;
     }
@@ -4391,8 +4391,8 @@ class JSAutoByteString
     char *encodeLatin1(js::ExclusiveContext *cx, JSString *str);
 
     char *encodeUtf8(JSContext *cx, JS::HandleString str) {
-        JS_ASSERT(!mBytes);
-        JS_ASSERT(cx);
+        MOZ_ASSERT(!mBytes);
+        MOZ_ASSERT(cx);
         mBytes = JS_EncodeStringToUTF8(cx, str);
         return mBytes;
     }
@@ -4759,11 +4759,11 @@ JS_ClearDateCaches(JSContext *cx);
 #define JSREG_STICKY    0x08u   /* only match starting at lastIndex */
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewRegExpObject(JSContext *cx, JS::HandleObject obj, char *bytes, size_t length,
+JS_NewRegExpObject(JSContext *cx, JS::HandleObject obj, const char *bytes, size_t length,
                    unsigned flags);
 
 extern JS_PUBLIC_API(JSObject *)
-JS_NewUCRegExpObject(JSContext *cx, JS::HandleObject obj, char16_t *chars, size_t length,
+JS_NewUCRegExpObject(JSContext *cx, JS::HandleObject obj, const char16_t *chars, size_t length,
                      unsigned flags);
 
 extern JS_PUBLIC_API(bool)

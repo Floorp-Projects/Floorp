@@ -870,6 +870,11 @@ cleanup:
 
 /*
 ** Checks the signature on the given digest using the key provided.
+**
+** The key argument must represent a valid EC public key (a point on
+** the relevant curve).  If it is not a valid point, then the behavior
+** of this function is undefined.  In cases where a public key might
+** not be valid, use EC_ValidatePublicKey to check.
 */
 SECStatus 
 ECDSA_VerifyDigest(ECPublicKey *key, const SECItem *signature, 

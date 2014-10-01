@@ -41,7 +41,7 @@ CodeGeneratorX86Shared::CodeGeneratorX86Shared(MIRGenerator *gen, LIRGraph *grap
 bool
 CodeGeneratorX86Shared::generatePrologue()
 {
-    JS_ASSERT(!gen->compilingAsmJS());
+    MOZ_ASSERT(!gen->compilingAsmJS());
 
     // Note that this automatically sets MacroAssembler::framePushed().
     masm.reserveStack(frameSize());
@@ -52,7 +52,7 @@ CodeGeneratorX86Shared::generatePrologue()
 bool
 CodeGeneratorX86Shared::generateEpilogue()
 {
-    JS_ASSERT(!gen->compilingAsmJS());
+    MOZ_ASSERT(!gen->compilingAsmJS());
 
     masm.bind(&returnLabel_);
 
@@ -67,7 +67,7 @@ CodeGeneratorX86Shared::generateEpilogue()
 
     // Pop the stack we allocated at the start of the function.
     masm.freeStack(frameSize());
-    JS_ASSERT(masm.framePushed() == 0);
+    MOZ_ASSERT(masm.framePushed() == 0);
 
     masm.ret();
     return true;
@@ -420,8 +420,8 @@ CodeGeneratorX86Shared::bailout(const T &binder, LSnapshot *snapshot)
     // Though the assembler doesn't track all frame pushes, at least make sure
     // the known value makes sense. We can't use bailout tables if the stack
     // isn't properly aligned to the static frame size.
-    JS_ASSERT_IF(frameClass_ != FrameSizeClass::None() && deoptTable_,
-                 frameClass_.frameSize() == masm.framePushed());
+    MOZ_ASSERT_IF(frameClass_ != FrameSizeClass::None() && deoptTable_,
+                  frameClass_.frameSize() == masm.framePushed());
 
 #ifdef JS_CODEGEN_X86
     // On x64, bailout tables are pointless, because 16 extra bytes are
@@ -457,14 +457,14 @@ CodeGeneratorX86Shared::bailoutIf(Assembler::Condition condition, LSnapshot *sna
 bool
 CodeGeneratorX86Shared::bailoutIf(Assembler::DoubleCondition condition, LSnapshot *snapshot)
 {
-    JS_ASSERT(Assembler::NaNCondFromDoubleCondition(condition) == Assembler::NaN_HandledByCond);
+    MOZ_ASSERT(Assembler::NaNCondFromDoubleCondition(condition) == Assembler::NaN_HandledByCond);
     return bailoutIf(Assembler::ConditionFromDoubleCondition(condition), snapshot);
 }
 
 bool
 CodeGeneratorX86Shared::bailoutFrom(Label *label, LSnapshot *snapshot)
 {
-    JS_ASSERT(label->used() && !label->bound());
+    MOZ_ASSERT(label->used() && !label->bound());
     return bailout(BailoutLabel(label), snapshot);
 }
 
@@ -491,7 +491,7 @@ CodeGeneratorX86Shared::visitMinMaxD(LMinMaxD *ins)
     FloatRegister second = ToFloatRegister(ins->second());
 #ifdef DEBUG
     FloatRegister output = ToFloatRegister(ins->output());
-    JS_ASSERT(first == output);
+    MOZ_ASSERT(first == output);
 #endif
 
     Label done, nan, minMaxInst;
@@ -543,7 +543,7 @@ CodeGeneratorX86Shared::visitMinMaxF(LMinMaxF *ins)
     FloatRegister second = ToFloatRegister(ins->second());
 #ifdef DEBUG
     FloatRegister output = ToFloatRegister(ins->output());
-    JS_ASSERT(first == output);
+    MOZ_ASSERT(first == output);
 #endif
 
     Label done, nan, minMaxInst;
@@ -592,7 +592,7 @@ bool
 CodeGeneratorX86Shared::visitAbsD(LAbsD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
-    JS_ASSERT(input == ToFloatRegister(ins->output()));
+    MOZ_ASSERT(input == ToFloatRegister(ins->output()));
     // Load a value which is all ones except for the sign bit.
     masm.loadConstantDouble(SpecificNaN<double>(0, FloatingPoint<double>::kSignificandBits),
                             ScratchDoubleReg);
@@ -604,7 +604,7 @@ bool
 CodeGeneratorX86Shared::visitAbsF(LAbsF *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
-    JS_ASSERT(input == ToFloatRegister(ins->output()));
+    MOZ_ASSERT(input == ToFloatRegister(ins->output()));
     // Same trick as visitAbsD above.
     masm.loadConstantFloat32(SpecificNaN<float>(0, FloatingPoint<float>::kSignificandBits),
                              ScratchFloat32Reg);
@@ -656,7 +656,7 @@ bool
 CodeGeneratorX86Shared::visitPowHalfD(LPowHalfD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
-    JS_ASSERT(input == ToFloatRegister(ins->output()));
+    MOZ_ASSERT(input == ToFloatRegister(ins->output()));
 
     Label done, sqrt;
 
@@ -759,8 +759,8 @@ CodeGeneratorX86Shared::visitOutOfLineUndoALUOperation(OutOfLineUndoALUOperation
     mozilla::DebugOnly<LAllocation *> lhs = ins->getOperand(0);
     LAllocation *rhs = ins->getOperand(1);
 
-    JS_ASSERT(reg == ToRegister(lhs));
-    JS_ASSERT_IF(rhs->isGeneralReg(), reg != ToRegister(rhs));
+    MOZ_ASSERT(reg == ToRegister(lhs));
+    MOZ_ASSERT_IF(rhs->isGeneralReg(), reg != ToRegister(rhs));
 
     // Undo the effect of the ALU operation, which was performed on the output
     // register and overflowed. Writing to the output register clobbered an
@@ -807,7 +807,7 @@ CodeGeneratorX86Shared::visitMulI(LMulI *ins)
     const LAllocation *lhs = ins->lhs();
     const LAllocation *rhs = ins->rhs();
     MMul *mul = ins->mir();
-    JS_ASSERT_IF(mul->mode() == MMul::Integer, !mul->canBeNegativeZero() && !mul->canOverflow());
+    MOZ_ASSERT_IF(mul->mode() == MMul::Integer, !mul->canBeNegativeZero() && !mul->canOverflow());
 
     if (rhs->isConstant()) {
         // Bailout on -0.0
@@ -901,9 +901,9 @@ CodeGeneratorX86Shared::visitUDivOrMod(LUDivOrMod *ins)
     Register rhs = ToRegister(ins->rhs());
     Register output = ToRegister(ins->output());
 
-    JS_ASSERT_IF(lhs != rhs, rhs != eax);
-    JS_ASSERT(rhs != edx);
-    JS_ASSERT_IF(output == eax, ToRegister(ins->remainder()) == edx);
+    MOZ_ASSERT_IF(lhs != rhs, rhs != eax);
+    MOZ_ASSERT(rhs != edx);
+    MOZ_ASSERT_IF(output == eax, ToRegister(ins->remainder()) == edx);
 
     ReturnZero *ool = nullptr;
 
@@ -960,7 +960,7 @@ CodeGeneratorX86Shared::visitMulNegativeZeroCheck(MulNegativeZeroCheck *ool)
     Register result = ToRegister(ins->output());
     Operand lhsCopy = ToOperand(ins->lhsCopy());
     Operand rhs = ToOperand(ins->rhs());
-    JS_ASSERT_IF(lhsCopy.kind() == Operand::REG, lhsCopy.reg() != result.code());
+    MOZ_ASSERT_IF(lhsCopy.kind() == Operand::REG, lhsCopy.reg() != result.code());
 
     // Result is -0 if lhs or rhs is negative.
     masm.movl(lhsCopy, result);
@@ -985,7 +985,7 @@ CodeGeneratorX86Shared::visitDivPowTwoI(LDivPowTwoI *ins)
 
     // We use defineReuseInput so these should always be the same, which is
     // convenient since all of our instructions here are two-address.
-    JS_ASSERT(lhs == output);
+    MOZ_ASSERT(lhs == output);
 
     if (!mir->isTruncated() && negativeDivisor) {
         // 0 divided by a negative number must return a double.
@@ -1007,7 +1007,7 @@ CodeGeneratorX86Shared::visitDivPowTwoI(LDivPowTwoI *ins)
         // Power of 2" in Henry S. Warren, Jr.'s Hacker's Delight.
         if (mir->canBeNegativeDividend()) {
             Register lhsCopy = ToRegister(ins->numeratorCopy());
-            JS_ASSERT(lhsCopy != lhs);
+            MOZ_ASSERT(lhsCopy != lhs);
             if (shift > 1)
                 masm.sarl(Imm32(31), lhs);
             masm.shrl(Imm32(32 - shift), lhs);
@@ -1034,13 +1034,13 @@ CodeGeneratorX86Shared::visitDivOrModConstantI(LDivOrModConstantI *ins) {
     int32_t d = ins->denominator();
 
     // This emits the division answer into edx or the modulus answer into eax.
-    JS_ASSERT(output == eax || output == edx);
-    JS_ASSERT(lhs != eax && lhs != edx);
+    MOZ_ASSERT(output == eax || output == edx);
+    MOZ_ASSERT(lhs != eax && lhs != edx);
     bool isDiv = (output == edx);
 
     // The absolute value of the denominator isn't a power of 2 (see LDivPowTwoI
     // and LModPowTwoI).
-    JS_ASSERT((Abs(d) & (Abs(d) - 1)) != 0);
+    MOZ_ASSERT((Abs(d) & (Abs(d) - 1)) != 0);
 
     // We will first divide by Abs(d), and negate the answer if d is negative.
     // If desired, this can be avoided by generalizing computeDivisionConstants.
@@ -1119,10 +1119,10 @@ CodeGeneratorX86Shared::visitDivI(LDivI *ins)
 
     MDiv *mir = ins->mir();
 
-    JS_ASSERT_IF(lhs != rhs, rhs != eax);
-    JS_ASSERT(rhs != edx);
-    JS_ASSERT(remainder == edx);
-    JS_ASSERT(output == eax);
+    MOZ_ASSERT_IF(lhs != rhs, rhs != eax);
+    MOZ_ASSERT(rhs != edx);
+    MOZ_ASSERT(remainder == edx);
+    MOZ_ASSERT(output == eax);
 
     Label done;
     ReturnZero *ool = nullptr;
@@ -1141,7 +1141,7 @@ CodeGeneratorX86Shared::visitDivI(LDivI *ins)
                 ool = new(alloc()) ReturnZero(output);
             masm.j(Assembler::Zero, ool->entry());
         } else {
-            JS_ASSERT(mir->fallible());
+            MOZ_ASSERT(mir->fallible());
             if (!bailoutIf(Assembler::Zero, ins->snapshot()))
                 return false;
         }
@@ -1158,7 +1158,7 @@ CodeGeneratorX86Shared::visitDivI(LDivI *ins)
             // output register (lhs == eax).
             masm.j(Assembler::Equal, &done);
         } else {
-            JS_ASSERT(mir->fallible());
+            MOZ_ASSERT(mir->fallible());
             if (!bailoutIf(Assembler::Equal, ins->snapshot()))
                 return false;
         }
@@ -1292,10 +1292,10 @@ CodeGeneratorX86Shared::visitModI(LModI *ins)
     Register rhs = ToRegister(ins->rhs());
 
     // Required to use idiv.
-    JS_ASSERT_IF(lhs != rhs, rhs != eax);
-    JS_ASSERT(rhs != edx);
-    JS_ASSERT(remainder == edx);
-    JS_ASSERT(ToRegister(ins->getTemp(0)) == eax);
+    MOZ_ASSERT_IF(lhs != rhs, rhs != eax);
+    MOZ_ASSERT(rhs != edx);
+    MOZ_ASSERT(remainder == edx);
+    MOZ_ASSERT(ToRegister(ins->getTemp(0)) == eax);
 
     Label done;
     ReturnZero *ool = nullptr;
@@ -1328,7 +1328,7 @@ CodeGeneratorX86Shared::visitModI(LModI *ins)
     {
         // Check if rhs is a power-of-two.
         if (ins->mir()->canBePowerOfTwoDivisor()) {
-            JS_ASSERT(rhs != remainder);
+            MOZ_ASSERT(rhs != remainder);
 
             // Rhs y is a power-of-two if (y & (y-1)) == 0. Note that if
             // y is any negative number other than INT32_MIN, both y and
@@ -1396,7 +1396,7 @@ bool
 CodeGeneratorX86Shared::visitBitNotI(LBitNotI *ins)
 {
     const LAllocation *input = ins->getOperand(0);
-    JS_ASSERT(!input->isConstant());
+    MOZ_ASSERT(!input->isConstant());
 
     masm.notl(ToOperand(input));
     return true;
@@ -1465,7 +1465,7 @@ CodeGeneratorX86Shared::visitShiftI(LShiftI *ins)
             MOZ_CRASH("Unexpected shift op");
         }
     } else {
-        JS_ASSERT(ToRegister(rhs) == ecx);
+        MOZ_ASSERT(ToRegister(rhs) == ecx);
         switch (ins->bitop()) {
           case JSOP_LSH:
             masm.shll_cl(lhs);
@@ -1494,7 +1494,7 @@ bool
 CodeGeneratorX86Shared::visitUrshD(LUrshD *ins)
 {
     Register lhs = ToRegister(ins->lhs());
-    JS_ASSERT(ToRegister(ins->temp()) == lhs);
+    MOZ_ASSERT(ToRegister(ins->temp()) == lhs);
 
     const LAllocation *rhs = ins->rhs();
     FloatRegister out = ToFloatRegister(ins->output());
@@ -1504,7 +1504,7 @@ CodeGeneratorX86Shared::visitUrshD(LUrshD *ins)
         if (shift)
             masm.shrl(Imm32(shift), lhs);
     } else {
-        JS_ASSERT(ToRegister(rhs) == ecx);
+        MOZ_ASSERT(ToRegister(rhs) == ecx);
         masm.shrl_cl(lhs);
     }
 
@@ -1609,7 +1609,7 @@ CodeGeneratorX86Shared::visitMathD(LMathD *math)
     FloatRegister lhs = ToFloatRegister(math->lhs());
     Operand rhs = ToOperand(math->rhs());
 
-    JS_ASSERT(ToFloatRegister(math->output()) == lhs);
+    MOZ_ASSERT(ToFloatRegister(math->output()) == lhs);
 
     switch (math->jsop()) {
       case JSOP_ADD:
@@ -1636,7 +1636,7 @@ CodeGeneratorX86Shared::visitMathF(LMathF *math)
     FloatRegister lhs = ToFloatRegister(math->lhs());
     Operand rhs = ToOperand(math->rhs());
 
-    JS_ASSERT(ToFloatRegister(math->output()) == lhs);
+    MOZ_ASSERT(ToFloatRegister(math->output()) == lhs);
 
     switch (math->jsop()) {
       case JSOP_ADD:
@@ -2128,7 +2128,7 @@ bool
 CodeGeneratorX86Shared::visitNegI(LNegI *ins)
 {
     Register input = ToRegister(ins->input());
-    JS_ASSERT(input == ToRegister(ins->output()));
+    MOZ_ASSERT(input == ToRegister(ins->output()));
 
     masm.neg32(input);
     return true;
@@ -2138,7 +2138,7 @@ bool
 CodeGeneratorX86Shared::visitNegD(LNegD *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
-    JS_ASSERT(input == ToFloatRegister(ins->output()));
+    MOZ_ASSERT(input == ToFloatRegister(ins->output()));
 
     masm.negateDouble(input);
     return true;
@@ -2148,7 +2148,7 @@ bool
 CodeGeneratorX86Shared::visitNegF(LNegF *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
-    JS_ASSERT(input == ToFloatRegister(ins->output()));
+    MOZ_ASSERT(input == ToFloatRegister(ins->output()));
 
     masm.negateFloat(input);
     return true;
@@ -2442,7 +2442,7 @@ CodeGeneratorX86Shared::visitSimdBinaryArithIx4(LSimdBinaryArithIx4 *ins)
 {
     FloatRegister lhs = ToFloatRegister(ins->lhs());
     Operand rhs = ToOperand(ins->rhs());
-    JS_ASSERT(ToFloatRegister(ins->output()) == lhs);
+    MOZ_ASSERT(ToFloatRegister(ins->output()) == lhs);
 
     MSimdBinaryArith::Operation op = ins->operation();
     switch (op) {
@@ -2475,7 +2475,7 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *ins)
 {
     FloatRegister lhs = ToFloatRegister(ins->lhs());
     Operand rhs = ToOperand(ins->rhs());
-    JS_ASSERT(ToFloatRegister(ins->output()) == lhs);
+    MOZ_ASSERT(ToFloatRegister(ins->output()) == lhs);
 
     MSimdBinaryArith::Operation op = ins->operation();
     switch (op) {
@@ -2525,6 +2525,54 @@ CodeGeneratorX86Shared::visitSimdBinaryBitwiseX4(LSimdBinaryBitwiseX4 *ins)
         return true;
       case MSimdBinaryBitwise::xor_:
         masm.bitwiseXorX4(rhs, lhs);
+        return true;
+    }
+    MOZ_CRASH("unexpected SIMD bitwise op");
+}
+
+bool
+CodeGeneratorX86Shared::visitSimdShift(LSimdShift *ins)
+{
+    FloatRegister vec = ToFloatRegister(ins->vector());
+    FloatRegister out = ToFloatRegister(ins->output());
+    MOZ_ASSERT(vec == out); // defineReuseInput(0);
+
+    // TODO: If the shift count is greater than 31, this will just zero all
+    // lanes by default for lsh and ursh, and set the count to 32 for rsh
+    // (which will just extend the sign bit to all bits). Plain JS doesn't do
+    // this: instead it only keeps the five low bits of the mask. Spec isn't
+    // clear about that topic so this might need to be fixed. See also bug
+    // 1068028.
+    const LAllocation *val = ins->value();
+    if (val->isConstant()) {
+        Imm32 count(ToInt32(val));
+        switch (ins->operation()) {
+          case MSimdShift::lsh:
+            masm.packedLeftShiftByScalar(count, out);
+            return true;
+          case MSimdShift::rsh:
+            masm.packedRightShiftByScalar(count, out);
+            return true;
+          case MSimdShift::ursh:
+            masm.packedUnsignedRightShiftByScalar(count, out);
+            return true;
+        }
+        MOZ_CRASH("unexpected SIMD bitwise op");
+    }
+
+    MOZ_ASSERT(val->isRegister());
+    FloatRegister tmp = ScratchFloat32Reg;
+    masm.movd(ToRegister(val), tmp);
+
+    switch (ins->operation()) {
+      case MSimdShift::lsh:
+        masm.packedLeftShiftByScalar(tmp, out);
+        return true;
+      case MSimdShift::rsh:
+        masm.packedRightShiftByScalar(tmp, out);
+        return true;
+      case MSimdShift::ursh:
+        masm.packedUnsignedRightShiftByScalar(tmp, out);
         return true;
     }
     MOZ_CRASH("unexpected SIMD bitwise op");

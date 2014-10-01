@@ -29,7 +29,7 @@ SPSProfiler::SPSProfiler(JSRuntime *rt)
     lock_(nullptr),
     eventMarker_(nullptr)
 {
-    JS_ASSERT(rt != nullptr);
+    MOZ_ASSERT(rt != nullptr);
 }
 
 bool
@@ -56,7 +56,7 @@ void
 SPSProfiler::setProfilingStack(ProfileEntry *stack, uint32_t *size, uint32_t max)
 {
     AutoSPSLock lock(lock_);
-    JS_ASSERT_IF(size_ && *size_ != 0, !enabled());
+    MOZ_ASSERT_IF(size_ && *size_ != 0, !enabled());
     if (!strings.initialized())
         strings.init();
     stack_ = stack;
@@ -73,7 +73,7 @@ SPSProfiler::setEventMarker(void (*fn)(const char *))
 void
 SPSProfiler::enable(bool enabled)
 {
-    JS_ASSERT(installed());
+    MOZ_ASSERT(installed());
 
     if (enabled_ == enabled)
         return;
@@ -99,7 +99,7 @@ const char*
 SPSProfiler::profileString(JSScript *script, JSFunction *maybeFun)
 {
     AutoSPSLock lock(lock_);
-    JS_ASSERT(strings.initialized());
+    MOZ_ASSERT(strings.initialized());
     ProfileStringMap::AddPtr s = strings.lookupForAdd(script);
     if (s)
         return s->value();
@@ -136,7 +136,7 @@ SPSProfiler::onScriptFinalized(JSScript *script)
 void
 SPSProfiler::markEvent(const char *event)
 {
-    JS_ASSERT(enabled());
+    MOZ_ASSERT(enabled());
     if (eventMarker_) {
         JS::AutoSuppressGCAnalysis nogc;
         eventMarker_(event);
@@ -175,7 +175,7 @@ SPSProfiler::exit(JSScript *script, JSFunction *maybeFun)
     if (*size_ < max_) {
         const char *str = profileString(script, maybeFun);
         /* Can't fail lookup because we should already be in the set */
-        JS_ASSERT(str != nullptr);
+        MOZ_ASSERT(str != nullptr);
 
         // Bug 822041
         if (!stack_[*size_].isJs()) {
@@ -189,9 +189,9 @@ SPSProfiler::exit(JSScript *script, JSFunction *maybeFun)
             }
         }
 
-        JS_ASSERT(stack_[*size_].isJs());
-        JS_ASSERT(stack_[*size_].script() == script);
-        JS_ASSERT(strcmp((const char*) stack_[*size_].label(), str) == 0);
+        MOZ_ASSERT(stack_[*size_].isJs());
+        MOZ_ASSERT(stack_[*size_].script() == script);
+        MOZ_ASSERT(strcmp((const char*) stack_[*size_].label(), str) == 0);
         stack_[*size_].setLabel(nullptr);
         stack_[*size_].setPC(nullptr);
     }
@@ -206,7 +206,7 @@ SPSProfiler::enterAsmJS(const char *string, void *sp)
     volatile uint32_t *size = size_;
     uint32_t current = *size;
 
-    JS_ASSERT(enabled());
+    MOZ_ASSERT(enabled());
     if (current < max_) {
         stack[current].setLabel(string);
         stack[current].setCppFrame(sp, 0);
@@ -218,26 +218,26 @@ SPSProfiler::enterAsmJS(const char *string, void *sp)
 void
 SPSProfiler::push(const char *string, void *sp, JSScript *script, jsbytecode *pc, bool copy)
 {
-    JS_ASSERT_IF(sp != nullptr, script == nullptr && pc == nullptr);
-    JS_ASSERT_IF(sp == nullptr, script != nullptr && pc != nullptr);
+    MOZ_ASSERT_IF(sp != nullptr, script == nullptr && pc == nullptr);
+    MOZ_ASSERT_IF(sp == nullptr, script != nullptr && pc != nullptr);
 
     /* these operations cannot be re-ordered, so volatile-ize operations */
     volatile ProfileEntry *stack = stack_;
     volatile uint32_t *size = size_;
     uint32_t current = *size;
 
-    JS_ASSERT(installed());
+    MOZ_ASSERT(installed());
     if (current < max_) {
         volatile ProfileEntry &entry = stack[current];
         entry.setLabel(string);
 
         if (sp != nullptr) {
             entry.setCppFrame(sp, 0);
-            JS_ASSERT(entry.flags() == js::ProfileEntry::IS_CPP_ENTRY);
+            MOZ_ASSERT(entry.flags() == js::ProfileEntry::IS_CPP_ENTRY);
         }
         else {
             entry.setJsFrame(script, pc);
-            JS_ASSERT(entry.flags() == 0);
+            MOZ_ASSERT(entry.flags() == 0);
         }
 
         // Track if mLabel needs a copy.
@@ -252,9 +252,9 @@ SPSProfiler::push(const char *string, void *sp, JSScript *script, jsbytecode *pc
 void
 SPSProfiler::pop()
 {
-    JS_ASSERT(installed());
+    MOZ_ASSERT(installed());
     (*size_)--;
-    JS_ASSERT(*(int*)size_ >= 0);
+    MOZ_ASSERT(*(int*)size_ >= 0);
 }
 
 /*
@@ -332,7 +332,7 @@ SPSEntryMarker::~SPSEntryMarker()
     if (profiler != nullptr) {
         profiler->pop();
         profiler->pop();
-        JS_ASSERT(size_before == *profiler->size_);
+        MOZ_ASSERT(size_before == *profiler->size_);
     }
 }
 
@@ -365,7 +365,7 @@ js::EnableRuntimeProfilingStack(JSRuntime *rt, bool enabled)
 JS_FRIEND_API(void)
 js::RegisterRuntimeProfilingEventMarker(JSRuntime *rt, void (*fn)(const char *))
 {
-    JS_ASSERT(rt->spsProfiler.enabled());
+    MOZ_ASSERT(rt->spsProfiler.enabled());
     rt->spsProfiler.setEventMarker(fn);
 }
 

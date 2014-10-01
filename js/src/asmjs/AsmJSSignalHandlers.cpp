@@ -185,13 +185,13 @@ class AutoSetHandlingSignal
     explicit AutoSetHandlingSignal(JSRuntime *rt)
       : rt(rt)
     {
-        JS_ASSERT(!rt->handlingSignal);
+        MOZ_ASSERT(!rt->handlingSignal);
         rt->handlingSignal = true;
     }
 
     ~AutoSetHandlingSignal()
     {
-        JS_ASSERT(rt->handlingSignal);
+        MOZ_ASSERT(rt->handlingSignal);
         rt->handlingSignal = false;
     }
 };
@@ -439,7 +439,7 @@ HandleException(PEXCEPTION_POINTERS exception)
 
     uint8_t **ppc = ContextToPC(context);
     uint8_t *pc = *ppc;
-    JS_ASSERT(pc == record->ExceptionAddress);
+    MOZ_ASSERT(pc == record->ExceptionAddress);
 
     if (record->NumberParameters < 2)
         return false;
@@ -825,7 +825,7 @@ AsmJSMachExceptionHandler::uninstall()
     }
     if (port_ != MACH_PORT_NULL) {
         DebugOnly<kern_return_t> kret = mach_port_destroy(mach_task_self(), port_);
-        JS_ASSERT(kret == KERN_SUCCESS);
+        MOZ_ASSERT(kret == KERN_SUCCESS);
         port_ = MACH_PORT_NULL;
     }
 }
@@ -833,7 +833,7 @@ AsmJSMachExceptionHandler::uninstall()
 bool
 AsmJSMachExceptionHandler::install(JSRuntime *rt)
 {
-    JS_ASSERT(!installed());
+    MOZ_ASSERT(!installed());
     kern_return_t kret;
     mach_port_t thread;
 
@@ -1056,7 +1056,7 @@ js::RequestInterruptForAsmJSCode(JSRuntime *rt, int interruptModeRaw)
     if (!activation)
         return;
 
-    JS_ASSERT(rt->currentThreadOwnsInterruptLock());
+    MOZ_ASSERT(rt->currentThreadOwnsInterruptLock());
     activation->module().protectCode(rt);
 }
 

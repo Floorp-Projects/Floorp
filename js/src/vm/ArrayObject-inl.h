@@ -18,7 +18,7 @@ namespace js {
 inline void
 ArrayObject::setLength(ExclusiveContext *cx, uint32_t length)
 {
-    JS_ASSERT(lengthIsWritable());
+    MOZ_ASSERT(lengthIsWritable());
 
     if (length > INT32_MAX) {
         /* Track objects with overflowing lengths in type information. */

@@ -40,7 +40,7 @@ int
 irregexp::CaseInsensitiveCompareStrings(const CharT *substring1, const CharT *substring2,
 					size_t byteLength)
 {
-    JS_ASSERT(byteLength % sizeof(CharT) == 0);
+    MOZ_ASSERT(byteLength % sizeof(CharT) == 0);
     size_t length = byteLength / sizeof(CharT);
 
     for (size_t i = 0; i < length; i++) {
@@ -102,8 +102,8 @@ InterpretedRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
 void
 InterpretedRegExpMacroAssembler::AdvanceCurrentPosition(int by)
 {
-    JS_ASSERT(by >= kMinCPOffset);
-    JS_ASSERT(by <= kMaxCPOffset);
+    MOZ_ASSERT(by >= kMinCPOffset);
+    MOZ_ASSERT(by <= kMaxCPOffset);
     advance_current_start_ = pc_;
     advance_current_offset_ = by;
     Emit(BC_ADVANCE_CP, by);
@@ -128,7 +128,7 @@ void
 InterpretedRegExpMacroAssembler::Bind(jit::Label* label)
 {
     advance_current_end_ = kInvalidPC;
-    JS_ASSERT(!label->bound());
+    MOZ_ASSERT(!label->bound());
     if (label->used()) {
         int pos = label->offset();
         while (pos != jit::Label::INVALID_OFFSET) {
@@ -203,8 +203,8 @@ InterpretedRegExpMacroAssembler::CheckNotAtStart(jit::Label* on_not_at_start)
 void
 InterpretedRegExpMacroAssembler::CheckNotBackReference(int start_reg, jit::Label* on_no_match)
 {
-    JS_ASSERT(start_reg >= 0);
-    JS_ASSERT(start_reg <= kMaxRegister);
+    MOZ_ASSERT(start_reg >= 0);
+    MOZ_ASSERT(start_reg <= kMaxRegister);
     Emit(BC_CHECK_NOT_BACK_REF, start_reg);
     EmitOrLink(on_no_match);
 }
@@ -212,8 +212,8 @@ InterpretedRegExpMacroAssembler::CheckNotBackReference(int start_reg, jit::Label
 void
 InterpretedRegExpMacroAssembler::CheckNotBackReferenceIgnoreCase(int start_reg, jit::Label* on_no_match)
 {
-    JS_ASSERT(start_reg >= 0);
-    JS_ASSERT(start_reg <= kMaxRegister);
+    MOZ_ASSERT(start_reg >= 0);
+    MOZ_ASSERT(start_reg <= kMaxRegister);
     Emit(BC_CHECK_NOT_BACK_REF_NO_CASE, start_reg);
     EmitOrLink(on_no_match);
 }
@@ -343,8 +343,8 @@ void
 InterpretedRegExpMacroAssembler::LoadCurrentCharacter(int cp_offset, jit::Label* on_end_of_input,
                                                       bool check_bounds, int characters)
 {
-    JS_ASSERT(cp_offset >= kMinCPOffset);
-    JS_ASSERT(cp_offset <= kMaxCPOffset);
+    MOZ_ASSERT(cp_offset >= kMinCPOffset);
+    MOZ_ASSERT(cp_offset <= kMaxCPOffset);
     int bytecode;
     if (check_bounds) {
         if (characters == 4) {
@@ -352,7 +352,7 @@ InterpretedRegExpMacroAssembler::LoadCurrentCharacter(int cp_offset, jit::Label*
         } else if (characters == 2) {
             bytecode = BC_LOAD_2_CURRENT_CHARS;
         } else {
-            JS_ASSERT(characters == 1);
+            MOZ_ASSERT(characters == 1);
             bytecode = BC_LOAD_CURRENT_CHAR;
         }
     } else {
@@ -361,7 +361,7 @@ InterpretedRegExpMacroAssembler::LoadCurrentCharacter(int cp_offset, jit::Label*
         } else if (characters == 2) {
             bytecode = BC_LOAD_2_CURRENT_CHARS_UNCHECKED;
         } else {
-            JS_ASSERT(characters == 1);
+            MOZ_ASSERT(characters == 1);
             bytecode = BC_LOAD_CURRENT_CHAR_UNCHECKED;
         }
     }
@@ -413,7 +413,7 @@ InterpretedRegExpMacroAssembler::ReadBacktrackStackPointerFromRegister(int reg)
 void
 InterpretedRegExpMacroAssembler::SetCurrentPositionFromEnd(int by)
 {
-    JS_ASSERT(by >= 0 && by < (1 << 24));
+    MOZ_ASSERT(by >= 0 && by < (1 << 24));
     Emit(BC_SET_CURRENT_POSITION_FROM_END, by);
 }
 
@@ -445,7 +445,7 @@ InterpretedRegExpMacroAssembler::WriteCurrentPositionToRegister(int reg, int cp_
 void
 InterpretedRegExpMacroAssembler::ClearRegisters(int reg_from, int reg_to)
 {
-    JS_ASSERT(reg_from <= reg_to);
+    MOZ_ASSERT(reg_from <= reg_to);
     for (int reg = reg_from; reg <= reg_to; reg++)
         SetRegister(reg, -1);
 }
@@ -493,7 +493,7 @@ InterpretedRegExpMacroAssembler::Emit(uint32_t byte, uint32_t twenty_four_bits)
 void
 InterpretedRegExpMacroAssembler::Emit32(uint32_t word)
 {
-    JS_ASSERT(pc_ <= length_);
+    MOZ_ASSERT(pc_ <= length_);
     if (pc_  + 3 >= length_)
         Expand();
     *reinterpret_cast<uint32_t*>(buffer_ + pc_) = word;
@@ -503,7 +503,7 @@ InterpretedRegExpMacroAssembler::Emit32(uint32_t word)
 void
 InterpretedRegExpMacroAssembler::Emit16(uint32_t word)
 {
-    JS_ASSERT(pc_ <= length_);
+    MOZ_ASSERT(pc_ <= length_);
     if (pc_ + 1 >= length_)
         Expand();
     *reinterpret_cast<uint16_t*>(buffer_ + pc_) = word;
@@ -513,7 +513,7 @@ InterpretedRegExpMacroAssembler::Emit16(uint32_t word)
 void
 InterpretedRegExpMacroAssembler::Emit8(uint32_t word)
 {
-    JS_ASSERT(pc_ <= length_);
+    MOZ_ASSERT(pc_ <= length_);
     if (pc_ == length_)
         Expand();
     *reinterpret_cast<unsigned char*>(buffer_ + pc_) = word;

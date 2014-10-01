@@ -110,8 +110,8 @@ template <JSONParserBase::StringType ST>
 JSONParserBase::Token
 JSONParser<CharT>::readString()
 {
-    JS_ASSERT(current < end);
-    JS_ASSERT(*current == '"');
+    MOZ_ASSERT(current < end);
+    MOZ_ASSERT(*current == '"');
 
     /*
      * JSONString:
@@ -244,8 +244,8 @@ template <typename CharT>
 JSONParserBase::Token
 JSONParser<CharT>::readNumber()
 {
-    JS_ASSERT(current < end);
-    JS_ASSERT(JS7_ISDEC(*current) || *current == '-');
+    MOZ_ASSERT(current < end);
+    MOZ_ASSERT(JS7_ISDEC(*current) || *current == '-');
 
     /*
      * JSONNumber:
@@ -290,7 +290,7 @@ JSONParser<CharT>::readNumber()
         const CharT *dummy;
         if (!GetPrefixInteger(cx, digitStart.get(), current.get(), 10, &dummy, &d))
             return token(OOM);
-        JS_ASSERT(current == dummy);
+        MOZ_ASSERT(current == dummy);
         return numberToken(negative ? -d : d);
     }
 
@@ -336,7 +336,7 @@ JSONParser<CharT>::readNumber()
     const CharT *finish;
     if (!js_strtod(cx, digitStart.get(), current.get(), &finish, &d))
         return token(OOM);
-    JS_ASSERT(current == finish);
+    MOZ_ASSERT(current == finish);
     return numberToken(negative ? -d : d);
 }
 
@@ -432,7 +432,7 @@ template <typename CharT>
 JSONParserBase::Token
 JSONParser<CharT>::advanceAfterObjectOpen()
 {
-    JS_ASSERT(current[-1] == '{');
+    MOZ_ASSERT(current[-1] == '{');
 
     while (current < end && IsJSONWhitespace(*current))
         current++;
@@ -462,23 +462,23 @@ AssertPastValue(const RangedPtr<const CharT> current)
      * *somewhat* constrained, even if this assertion is pretty broad.  Don't
      * knock it till you tried it: this assertion *did* catch a bug once.
      */
-    JS_ASSERT((current[-1] == 'l' &&
-               current[-2] == 'l' &&
-               current[-3] == 'u' &&
-               current[-4] == 'n') ||
-              (current[-1] == 'e' &&
-               current[-2] == 'u' &&
-               current[-3] == 'r' &&
-               current[-4] == 't') ||
-              (current[-1] == 'e' &&
-               current[-2] == 's' &&
-               current[-3] == 'l' &&
-               current[-4] == 'a' &&
-               current[-5] == 'f') ||
-              current[-1] == '}' ||
-              current[-1] == ']' ||
-              current[-1] == '"' ||
-              JS7_ISDEC(current[-1]));
+    MOZ_ASSERT((current[-1] == 'l' &&
+                current[-2] == 'l' &&
+                current[-3] == 'u' &&
+                current[-4] == 'n') ||
+               (current[-1] == 'e' &&
+                current[-2] == 'u' &&
+                current[-3] == 'r' &&
+                current[-4] == 't') ||
+               (current[-1] == 'e' &&
+                current[-2] == 's' &&
+                current[-3] == 'l' &&
+                current[-4] == 'a' &&
+                current[-5] == 'f') ||
+               current[-1] == '}' ||
+               current[-1] == ']' ||
+               current[-1] == '"' ||
+               JS7_ISDEC(current[-1]));
 }
 
 template <typename CharT>
@@ -512,7 +512,7 @@ template <typename CharT>
 JSONParserBase::Token
 JSONParser<CharT>::advancePropertyName()
 {
-    JS_ASSERT(current[-1] == ',');
+    MOZ_ASSERT(current[-1] == ',');
 
     while (current < end && IsJSONWhitespace(*current))
         current++;
@@ -532,7 +532,7 @@ template <typename CharT>
 JSONParserBase::Token
 JSONParser<CharT>::advancePropertyColon()
 {
-    JS_ASSERT(current[-1] == '"');
+    MOZ_ASSERT(current[-1] == '"');
 
     while (current < end && IsJSONWhitespace(*current))
         current++;
@@ -625,7 +625,7 @@ JSONParserBase::createFinishedObject(PropertyVector &properties)
 inline bool
 JSONParserBase::finishObject(MutableHandleValue vp, PropertyVector &properties)
 {
-    JS_ASSERT(&properties == &stack.back().properties());
+    MOZ_ASSERT(&properties == &stack.back().properties());
 
     JSObject *obj = createFinishedObject(properties);
     if (!obj)
@@ -641,7 +641,7 @@ JSONParserBase::finishObject(MutableHandleValue vp, PropertyVector &properties)
 inline bool
 JSONParserBase::finishArray(MutableHandleValue vp, ElementVector &elements)
 {
-    JS_ASSERT(&elements == &stack.back().elements());
+    MOZ_ASSERT(&elements == &stack.back().elements());
 
     JSObject *obj = NewDenseCopiedArray(cx, elements.length(), elements.begin());
     if (!obj)
@@ -662,7 +662,7 @@ bool
 JSONParser<CharT>::parse(MutableHandleValue vp)
 {
     RootedValue value(cx);
-    JS_ASSERT(stack.empty());
+    MOZ_ASSERT(stack.empty());
 
     vp.setUndefined();
 
@@ -699,7 +699,7 @@ JSONParser<CharT>::parse(MutableHandleValue vp)
                     return false;
                 token = advancePropertyColon();
                 if (token != Colon) {
-                    JS_ASSERT(token == Error);
+                    MOZ_ASSERT(token == Error);
                     return errorReturn();
                 }
                 goto JSONValue;
@@ -722,7 +722,7 @@ JSONParser<CharT>::parse(MutableHandleValue vp)
                     return false;
                 break;
             }
-            JS_ASSERT(token == Error);
+            MOZ_ASSERT(token == Error);
             return errorReturn();
           }
 
@@ -822,8 +822,8 @@ JSONParser<CharT>::parse(MutableHandleValue vp)
         }
     }
 
-    JS_ASSERT(end == current);
-    JS_ASSERT(stack.empty());
+    MOZ_ASSERT(end == current);
+    MOZ_ASSERT(stack.empty());
 
     vp.set(value);
     return true;

@@ -13,7 +13,7 @@ BEGIN_TEST(testOOM)
     char16_t ch;
     if (!JS_GetStringCharAt(cx, jsstr, 0, &ch))
         return false;
-    JS_ASSERT(ch == '9');
+    MOZ_ASSERT(ch == '9');
     return true;
 }
 

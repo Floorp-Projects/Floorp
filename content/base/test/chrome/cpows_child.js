@@ -13,6 +13,7 @@ var is_remote;
     dom_test();
     xray_test();
     compartment_test();
+    regexp_test();
     sync_test();
     async_test();
     rpc_test();
@@ -141,6 +142,11 @@ function compartment_test()
   }
   sendSyncMessage("cpows:compartment_test", {}, { getUnprivilegedObject: sb.getUnprivilegedObject,
                                                   testParentObject: testParentObject });
+}
+
+function regexp_test()
+{
+  sendSyncMessage("cpows:regexp_test", {}, { regexp: /myRegExp/g });
 }
 
 function sync_test()

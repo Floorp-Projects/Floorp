@@ -55,7 +55,7 @@ FrameInfo::sync(StackValue *val)
 void
 FrameInfo::syncStack(uint32_t uses)
 {
-    JS_ASSERT(uses <= stackDepth());
+    MOZ_ASSERT(uses <= stackDepth());
 
     uint32_t depth = stackDepth() - uses;
 
@@ -115,9 +115,9 @@ FrameInfo::popRegsAndSync(uint32_t uses)
     // x86 has only 3 Value registers. Only support 2 regs here for now,
     // so that there's always a scratch Value register for reg -> reg
     // moves.
-    JS_ASSERT(uses > 0);
-    JS_ASSERT(uses <= 2);
-    JS_ASSERT(uses <= stackDepth());
+    MOZ_ASSERT(uses > 0);
+    MOZ_ASSERT(uses <= 2);
+    MOZ_ASSERT(uses <= stackDepth());
 
     syncStack(uses);
 
@@ -147,7 +147,7 @@ void
 FrameInfo::assertValidState(const BytecodeInfo &info)
 {
     // Check stack depth.
-    JS_ASSERT(stackDepth() == info.stackDepth);
+    MOZ_ASSERT(stackDepth() == info.stackDepth);
 
     // Start at the bottom, find the first value that's not synced.
     uint32_t i = 0;
@@ -158,7 +158,7 @@ FrameInfo::assertValidState(const BytecodeInfo &info)
 
     // Assert all values on top of it are also not synced.
     for (; i < stackDepth(); i++)
-        JS_ASSERT(stack[i].kind() != StackValue::Stack);
+        MOZ_ASSERT(stack[i].kind() != StackValue::Stack);
 
     // Assert every Value register is used by at most one StackValue.
     // R2 is used as scratch register by the compiler and FrameInfo,
@@ -169,10 +169,10 @@ FrameInfo::assertValidState(const BytecodeInfo &info)
         if (stack[i].kind() == StackValue::Register) {
             ValueOperand reg = stack[i].reg();
             if (reg == R0) {
-                JS_ASSERT(!usedR0);
+                MOZ_ASSERT(!usedR0);
                 usedR0 = true;
             } else if (reg == R1) {
-                JS_ASSERT(!usedR1);
+                MOZ_ASSERT(!usedR1);
                 usedR1 = true;
             } else {
                 MOZ_CRASH("Invalid register");

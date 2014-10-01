@@ -53,7 +53,7 @@ IsShiftInScaleRange(int i)
 static inline Scale
 ShiftToScale(int i)
 {
-    JS_ASSERT(IsShiftInScaleRange(i));
+    MOZ_ASSERT(IsShiftInScaleRange(i));
     return Scale(i);
 }
 
@@ -144,42 +144,42 @@ struct ImmPtr
     {
         // To make code serialization-safe, asm.js compilation should only
         // compile pointer immediates using AsmJSImmPtr.
-        JS_ASSERT(CanUsePointerImmediates());
+        MOZ_ASSERT(CanUsePointerImmediates());
     }
 
     template <class R>
     explicit ImmPtr(R (*pf)())
       : value(JS_FUNC_TO_DATA_PTR(void *, pf))
     {
-        JS_ASSERT(CanUsePointerImmediates());
+        MOZ_ASSERT(CanUsePointerImmediates());
     }
 
     template <class R, class A1>
     explicit ImmPtr(R (*pf)(A1))
       : value(JS_FUNC_TO_DATA_PTR(void *, pf))
     {
-        JS_ASSERT(CanUsePointerImmediates());
+        MOZ_ASSERT(CanUsePointerImmediates());
     }
 
     template <class R, class A1, class A2>
     explicit ImmPtr(R (*pf)(A1, A2))
       : value(JS_FUNC_TO_DATA_PTR(void *, pf))
     {
-        JS_ASSERT(CanUsePointerImmediates());
+        MOZ_ASSERT(CanUsePointerImmediates());
     }
 
     template <class R, class A1, class A2, class A3>
     explicit ImmPtr(R (*pf)(A1, A2, A3))
       : value(JS_FUNC_TO_DATA_PTR(void *, pf))
     {
-        JS_ASSERT(CanUsePointerImmediates());
+        MOZ_ASSERT(CanUsePointerImmediates());
     }
 
     template <class R, class A1, class A2, class A3, class A4>
     explicit ImmPtr(R (*pf)(A1, A2, A3, A4))
       : value(JS_FUNC_TO_DATA_PTR(void *, pf))
     {
-        JS_ASSERT(CanUsePointerImmediates());
+        MOZ_ASSERT(CanUsePointerImmediates());
     }
 
 };
@@ -205,11 +205,11 @@ struct ImmGCPtr
 
     explicit ImmGCPtr(const gc::Cell *ptr) : value(ptr)
     {
-        JS_ASSERT(!IsPoisonedPtr(ptr));
-        JS_ASSERT_IF(ptr, ptr->isTenured());
+        MOZ_ASSERT(!IsPoisonedPtr(ptr));
+        MOZ_ASSERT_IF(ptr, ptr->isTenured());
 
         // asm.js shouldn't be creating GC things
-        JS_ASSERT(!IsCompilingAsmJS());
+        MOZ_ASSERT(!IsCompilingAsmJS());
     }
 
   protected:
@@ -222,10 +222,10 @@ struct ImmMaybeNurseryPtr : public ImmGCPtr
     explicit ImmMaybeNurseryPtr(gc::Cell *ptr)
     {
         this->value = ptr;
-        JS_ASSERT(!IsPoisonedPtr(ptr));
+        MOZ_ASSERT(!IsPoisonedPtr(ptr));
 
         // asm.js shouldn't be creating GC things
-        JS_ASSERT(!IsCompilingAsmJS());
+        MOZ_ASSERT(!IsCompilingAsmJS());
     }
 };
 
@@ -238,7 +238,7 @@ struct AbsoluteAddress
     explicit AbsoluteAddress(const void *addr)
       : addr(const_cast<void*>(addr))
     {
-        JS_ASSERT(CanUsePointerImmediates());
+        MOZ_ASSERT(CanUsePointerImmediates());
     }
 
     AbsoluteAddress offset(ptrdiff_t delta) {
@@ -313,27 +313,27 @@ class RepatchLabel
     RepatchLabel() : offset_(INVALID_OFFSET), bound_(0) {}
 
     void use(uint32_t newOffset) {
-        JS_ASSERT(offset_ == INVALID_OFFSET);
-        JS_ASSERT(newOffset != (uint32_t)INVALID_OFFSET);
+        MOZ_ASSERT(offset_ == INVALID_OFFSET);
+        MOZ_ASSERT(newOffset != (uint32_t)INVALID_OFFSET);
         offset_ = newOffset;
     }
     bool bound() const {
         return bound_;
     }
     void bind(int32_t dest) {
-        JS_ASSERT(!bound_);
-        JS_ASSERT(dest != INVALID_OFFSET);
+        MOZ_ASSERT(!bound_);
+        MOZ_ASSERT(dest != INVALID_OFFSET);
         offset_ = dest;
         bound_ = true;
     }
     int32_t target() {
-        JS_ASSERT(bound());
+        MOZ_ASSERT(bound());
         int32_t ret = offset_;
         offset_ = INVALID_OFFSET;
         return ret;
     }
     int32_t offset() {
-        JS_ASSERT(!bound());
+        MOZ_ASSERT(!bound());
         return offset_;
     }
     bool used() const {
@@ -352,7 +352,7 @@ struct AbsoluteLabel : public LabelBase
     AbsoluteLabel(const AbsoluteLabel &label) : LabelBase(label)
     { }
     int32_t prev() const {
-        JS_ASSERT(!bound());
+        MOZ_ASSERT(!bound());
         if (!used())
             return INVALID_OFFSET;
         return offset();
@@ -499,17 +499,17 @@ class CodeLocationJump
     void repoint(JitCode *code, MacroAssembler* masm = nullptr);
 
     uint8_t *raw() const {
-        JS_ASSERT(state_ == Absolute);
+        MOZ_ASSERT(state_ == Absolute);
         return raw_;
     }
     uint8_t *offset() const {
-        JS_ASSERT(state_ == Relative);
+        MOZ_ASSERT(state_ == Relative);
         return raw_;
     }
 
 #ifdef JS_SMALL_BRANCH
     uint8_t *jumpTableEntry() const {
-        JS_ASSERT(state_ == Absolute);
+        MOZ_ASSERT(state_ == Absolute);
         return jumpTableEntry_;
     }
 #endif
@@ -574,11 +574,11 @@ class CodeLocationLabel
 #endif
 
     uint8_t *raw() const {
-        JS_ASSERT(state_ == Absolute);
+        MOZ_ASSERT(state_ == Absolute);
         return raw_;
     }
     uint8_t *offset() const {
-        JS_ASSERT(state_ == Relative);
+        MOZ_ASSERT(state_ == Relative);
         return raw_;
     }
 };
@@ -604,7 +604,7 @@ class CallSiteDesc
     CallSiteDesc(uint32_t line, uint32_t column, Kind kind)
       : line_(line), column_(column), kind_(kind)
     {
-        JS_ASSERT(column <= INT32_MAX);
+        MOZ_ASSERT(column <= INT32_MAX);
     }
     uint32_t line() const { return line_; }
     uint32_t column() const { return column_; }
@@ -797,7 +797,7 @@ class AsmJSImmPtr
   public:
     AsmJSImmKind kind() const { return kind_; }
     // This needs to be MOZ_IMPLICIT in order to make MacroAssember::CallWithABINoProfiling compile.
-    MOZ_IMPLICIT AsmJSImmPtr(AsmJSImmKind kind) : kind_(kind) { JS_ASSERT(IsCompilingAsmJS()); }
+    MOZ_IMPLICIT AsmJSImmPtr(AsmJSImmKind kind) : kind_(kind) { MOZ_ASSERT(IsCompilingAsmJS()); }
     AsmJSImmPtr() {}
 };
 
@@ -808,7 +808,7 @@ class AsmJSAbsoluteAddress
     AsmJSImmKind kind_;
   public:
     AsmJSImmKind kind() const { return kind_; }
-    explicit AsmJSAbsoluteAddress(AsmJSImmKind kind) : kind_(kind) { JS_ASSERT(IsCompilingAsmJS()); }
+    explicit AsmJSAbsoluteAddress(AsmJSImmKind kind) : kind_(kind) { MOZ_ASSERT(IsCompilingAsmJS()); }
     AsmJSAbsoluteAddress() {}
 };
 
