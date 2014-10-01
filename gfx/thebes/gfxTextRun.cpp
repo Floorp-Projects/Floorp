@@ -616,8 +616,6 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
     params.paintSVGGlyphs = !aCallbacks || aCallbacks->mShouldPaintSVGGlyphs;
     params.dt = aContext->GetDrawTarget();
 
-    gfxPoint pt = aPt;
-
     // synthetic bolding draws glyphs twice ==> colors with opacity won't draw
     // correctly unless first drawn without alpha
     BufferAlphaColor syntheticBoldBuffer(aContext);
@@ -638,6 +636,8 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
     }
 
     GlyphRunIterator iter(this, aStart, aLength);
+    gfxFloat advance = 0.0;
+
     while (iter.NextRun()) {
         gfxFont *font = iter.GetGlyphRun()->mFont;
         uint32_t start = iter.GetStringStart();
@@ -648,21 +648,28 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
 
         bool drawPartial = aDrawMode == DrawMode::GLYPH_FILL ||
                            (aDrawMode == DrawMode::GLYPH_PATH && aCallbacks);
+        gfxPoint origPt = aPt;
 
         if (drawPartial) {
-            DrawPartialLigature(font, start, ligatureRunStart, &pt,
+            DrawPartialLigature(font, start, ligatureRunStart, &aPt,
                                 aProvider, params,
                                 iter.GetGlyphRun()->mOrientation);
         }
 
-        DrawGlyphs(font, ligatureRunStart, ligatureRunEnd, &pt,
+        DrawGlyphs(font, ligatureRunStart, ligatureRunEnd, &aPt,
                    aProvider, ligatureRunStart, ligatureRunEnd, params,
                    iter.GetGlyphRun()->mOrientation);
 
         if (drawPartial) {
-            DrawPartialLigature(font, ligatureRunEnd, end, &pt,
+            DrawPartialLigature(font, ligatureRunEnd, end, &aPt,
                                 aProvider, params,
                                 iter.GetGlyphRun()->mOrientation);
+        }
+
+        if (params.isVerticalRun) {
+            advance += (aPt.y - origPt.y) * params.direction;
+        } else {
+            advance += (aPt.x - origPt.x) * params.direction;
         }
     }
 
@@ -672,11 +679,7 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
     }
 
     if (aAdvanceWidth) {
-        if (params.isVerticalRun) {
-            *aAdvanceWidth = (pt.y - aPt.y) * params.direction;
-        } else {
-            *aAdvanceWidth = (pt.x - aPt.x) * params.direction;
-        }
+        *aAdvanceWidth = advance;
     }
 }
 

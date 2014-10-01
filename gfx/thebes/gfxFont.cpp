@@ -1887,6 +1887,32 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
     fontParams.isVerticalFont =
         aOrientation == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT;
 
+    bool sideways = false;
+    gfxPoint origPt = *aPt;
+    if (aRunParams.isVerticalRun && !fontParams.isVerticalFont) {
+        sideways = true;
+        aRunParams.context->Save();
+        gfxPoint p(aPt->x * aRunParams.devPerApp,
+                   aPt->y * aRunParams.devPerApp);
+        const Metrics& metrics = GetMetrics(eHorizontal);
+        // Adjust the matrix to draw the (horizontally-shaped) textrun with
+        // 90-degree CW rotation, and adjust position so that the rotated
+        // horizontal text (which uses a standard alphabetic baseline) will
+        // look OK when juxtaposed with upright glyphs (rendered on a centered
+        // vertical baseline). The adjustment here is somewhat ad hoc; we
+        // should eventually look for baseline tables[1] in the fonts and use
+        // those if available.
+        // [1] http://www.microsoft.com/typography/otspec/base.htm
+        aRunParams.context->SetMatrix(aRunParams.context->CurrentMatrix().
+            Translate(p).       // translate origin for rotation
+            Rotate(M_PI / 2.0). // turn 90deg clockwise
+            Translate(-p).      // undo the translation
+            Translate(gfxPoint(0, metrics.emAscent - metrics.emDescent) / 2));
+                                // and offset the (alphabetic) baseline of the
+                                // horizontally-shaped text from the (centered)
+                                // default baseline used for vertical
+    }
+
     nsAutoPtr<gfxTextContextPaint> contextPaint;
     if (fontParams.haveSVGGlyphs && !fontParams.contextPaint) {
         // If no pattern is specified for fill, use the current pattern
@@ -1975,6 +2001,11 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
 
     aRunParams.dt->SetTransform(oldMat);
     aRunParams.dt->SetPermitSubpixelAA(oldSubpixelAA);
+
+    if (sideways) {
+        aRunParams.context->Restore();
+        *aPt = gfxPoint(origPt.x, origPt.y + (aPt->x - origPt.x));
+    }
 }
 
 bool
