@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+    <script type="application/javascript;version=1.8" src="head.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <body>
+
+    <script type="application/javascript;version=1.8">
+      const Telemetry = require("devtools/shared/telemetry");
+      const { USBRuntime, WiFiRuntime, SimulatorRuntime, gRemoteRuntime,
+              gLocalRuntime } = require("devtools/webide/runtimes");
+
+      // Because we need to gather stats for the period of time that a tool has
+      // been opened we make use of setTimeout() to create tool active times.
+      const TOOL_DELAY = 200;
+
+      function patchTelemetry() {
+        Telemetry.prototype.telemetryInfo = {};
+        Telemetry.prototype._oldlog = Telemetry.prototype.log;
+        Telemetry.prototype.log = function(histogramId, value) {
+          if (histogramId) {
+            if (!this.telemetryInfo[histogramId]) {
+              this.telemetryInfo[histogramId] = [];
+            }
+            this.telemetryInfo[histogramId].push(value);
+          }
+        }
+      }
+
+      function resetTelemetry() {
+        Telemetry.prototype.log = Telemetry.prototype._oldlog;
+        delete Telemetry.prototype._oldlog;
+        delete Telemetry.prototype.telemetryInfo;
+      }
+
+      function cycleWebIDE() {
+        return Task.spawn(function*() {
+          let win = yield openWebIDE();
+          // Wait a bit, so we're open for a non-zero time
+          yield waitForTime(TOOL_DELAY);
+          yield closeWebIDE(win);
+        });
+      }
+
+      function addFakeRuntimes(win) {
+        // We use the real runtimes here (and switch out some functionality)
+        // so we can ensure that logging happens as it would in real use.
+
+        let usb = new USBRuntime("fakeUSB");
+        // Use local pipe instead
+        usb.connect = function(connection) {
+          ok(connection, win.AppManager.connection, "connection is valid");
+          connection.host = null; // force connectPipe
+          connection.connect();
+          return promise.resolve();
+        };
+        win.AppManager.runtimeList.usb.push(usb);
+
+        let wifi = new WiFiRuntime("fakeWiFi");
+        // Use local pipe instead
+        wifi.connect = function(connection) {
+          ok(connection, win.AppManager.connection, "connection is valid");
+          connection.host = null; // force connectPipe
+          connection.connect();
+          return promise.resolve();
+        };
+        win.AppManager.runtimeList.wifi.push(wifi);
+
+        let sim = new SimulatorRuntime("fakeSimulator");
+        // Use local pipe instead
+        sim.connect = function(connection) {
+          ok(connection, win.AppManager.connection, "connection is valid");
+          connection.host = null; // force connectPipe
+          connection.connect();
+          return promise.resolve();
+        };
+        sim.getName = function() {
+          return this.version;
+        };
+        win.AppManager.runtimeList.simulator.push(sim);
+
+        let remote = gRemoteRuntime;
+        // Use local pipe instead
+        remote.connect = function(connection) {
+          ok(connection, win.AppManager.connection, "connection is valid");
+          connection.host = null; // force connectPipe
+          connection.connect();
+          return promise.resolve();
+        };
+        let local = gLocalRuntime;
+        win.AppManager.runtimeList.custom = [gRemoteRuntime, gLocalRuntime];
+
+        win.AppManager.update("runtimelist");
+      }
+
+      function addTestApp(win) {
+        return Task.spawn(function*() {
+          let packagedAppLocation = getTestFilePath("app");
+          yield win.Cmds.importPackagedApp(packagedAppLocation);
+        });
+      }
+
+      function startConnection(win, type, index) {
+        let panelNode = win.document.querySelector("#runtime-panel");
+        let items = panelNode.querySelectorAll(".runtime-panel-item-" + type);
+        if (index === undefined) {
+          is(items.length, 1, "Found one runtime button");
+        }
+
+        let deferred = promise.defer();
+        win.AppManager.connection.once(
+            win.Connection.Events.CONNECTED,
+            () => deferred.resolve());
+
+        items[index || 0].click();
+
+        return deferred.promise;
+      }
+
+      function waitUntilConnected(win) {
+        return Task.spawn(function*() {
+          ok(win.document.querySelector("window").className, "busy", "UI is busy");
+          yield win.UI._busyPromise;
+          is(Object.keys(DebuggerServer._connections).length, 1, "Connected");
+        });
+      }
+
+      function connectToRuntime(win, type, index) {
+        return Task.spawn(function*() {
+          yield startConnection(win, type, index);
+          yield waitUntilConnected(win);
+        });
+      }
+
+      function checkResults() {
+        let result = Telemetry.prototype.telemetryInfo;
+        for (let [histId, value] of Iterator(result)) {
+          if (histId.endsWith("OPENED_PER_USER_FLAG")) {
+            ok(value.length === 1 && !!value[0],
+               "Per user value " + histId + " has a single value of true");
+          } else if (histId.endsWith("OPENED_BOOLEAN")) {
+            ok(value.length > 1, histId + " has more than one entry");
+
+            let okay = value.every(function(element) {
+              return !!element;
+            });
+
+            ok(okay, "All " + histId + " entries are true");
+          } else if (histId.endsWith("TIME_ACTIVE_SECONDS")) {
+            ok(value.length > 1, histId + " has more than one entry");
+
+            let okay = value.every(function(element) {
+              return element > 0;
+            });
+
+            ok(okay, "All " + histId + " entries have time > 0");
+          } else if (histId === "DEVTOOLS_WEBIDE_CONNECTION_RESULT") {
+            ok(value.length === 5, histId + " has 5 connection results");
+
+            let okay = value.every(function(element) {
+              return !!element;
+            });
+
+            ok(okay, "All " + histId + " connections succeeded");
+          } else if (histId.endsWith("CONNECTION_RESULT")) {
+            ok(value.length === 1 && !!value[0],
+               histId + " has 1 successful connection");
+          } else if (histId === "DEVTOOLS_WEBIDE_CONNECTION_TIME_SECONDS") {
+            ok(value.length === 5, histId + " has 5 connection results");
+
+            let okay = value.every(function(element) {
+              return element > 0;
+            });
+
+            ok(okay, "All " + histId + " connections have time > 0");
+          } else if (histId.endsWith("USED")) {
+            ok(value.length === 5, histId + " has 5 connection actions");
+
+            let okay = value.every(function(element) {
+              return !element;
+            });
+
+            ok(okay, "All " + histId + " actions were skipped");
+          } else {
+            ok(false, "Unexpected " + histId + " was logged");
+          }
+        }
+      }
+
+      window.onload = function() {
+        SimpleTest.waitForExplicitFinish();
+
+        let win;
+
+        SimpleTest.registerCleanupFunction(() => {
+          Task.spawn(function*() {
+            if (win) {
+              yield closeWebIDE(win);
+            }
+            DebuggerServer.destroy();
+            yield removeAllProjects();
+            resetTelemetry();
+          });
+        });
+
+        Task.spawn(function*() {
+          Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+
+          if (!DebuggerServer.initialized) {
+            DebuggerServer.init(function () { return true; });
+            DebuggerServer.addBrowserActors();
+          }
+
+          patchTelemetry();
+
+          // Cycle once, so we can test for multiple opens
+          yield cycleWebIDE();
+
+          win = yield openWebIDE();
+          // Wait a bit, so we're open for a non-zero time
+          yield waitForTime(TOOL_DELAY);
+          addFakeRuntimes(win);
+          yield addTestApp(win);
+
+          // Each one should log a connection result and non-zero connection
+          // time
+          yield connectToRuntime(win, "usb");
+          yield waitForTime(TOOL_DELAY);
+          yield connectToRuntime(win, "wifi");
+          yield waitForTime(TOOL_DELAY);
+          yield connectToRuntime(win, "simulator");
+          yield waitForTime(TOOL_DELAY);
+          yield connectToRuntime(win, "custom", 0 /* remote */);
+          yield waitForTime(TOOL_DELAY);
+          yield connectToRuntime(win, "custom", 1 /* local */);
+          yield waitForTime(TOOL_DELAY);
+          yield closeWebIDE(win);
+
+          checkResults();
+
+          SimpleTest.finish();
+        });
+      }
+    </script>
+  </body>
+</html>
