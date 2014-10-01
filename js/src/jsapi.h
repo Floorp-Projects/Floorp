@@ -5191,10 +5191,10 @@ class MOZ_STACK_CLASS JS_PUBLIC_API(ForOfIterator) {
     };
 
     /*
-     * Initialize the iterator.  If AllowNonIterable is passed then if iterable
-     * does not have a callable @@iterator init() will just return true instead
-     * of throwing.  Callers should then check valueIsIterable() before
-     * continuing with the iteration.
+     * Initialize the iterator.  If AllowNonIterable is passed then if getting
+     * the @@iterator property from iterable returns undefined init() will just
+     * return true instead of throwing.  Callers must then check
+     * valueIsIterable() before continuing with the iteration.
      */
     bool init(JS::HandleValue iterable,
               NonIterableBehavior nonIterableBehavior = ThrowOnNonIterable);

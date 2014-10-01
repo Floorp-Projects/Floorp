@@ -7,16 +7,18 @@ The tests in this directory exercise the JSAPI.
 
 If you built JS, you already built the tests.
 
-If you did `make check` in your JS objdir, you already ran them.
-
 The tests are built by default when you build JS. All the tests are compiled
 into a single binary named jsapi-tests. They all run in a single process.
 
+To run the tests:
+
+    cd $OBJDIR/dist/bin
+    ./jsapi-tests
+
 To run the tests in a debugger:
 
-    cd $OBJDIR/jsapi-tests
+    cd $OBJDIR/dist/bin
     gdb ./jsapi-tests
-
 
 --- Creating new tests
 
