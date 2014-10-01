@@ -281,6 +281,11 @@ public:
         mTxValue = aValue;
     }
 
+    friend void ImplCycleCollectionUnlink(txVariable& aVariable);
+    friend void ImplCycleCollectionTraverse(
+        nsCycleCollectionTraversalCallback& aCallback, txVariable& aVariable,
+        const char* aName, uint32_t aFlags);
+
 private:
     static nsresult Convert(nsIVariant *aValue, txAExprResult** aResult);
 
@@ -288,25 +293,41 @@ private:
     nsRefPtr<txAExprResult> mTxValue;
 };
 
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            txVariable& aVariable, const char* aName,
+                            uint32_t aFlags)
+{
+    ImplCycleCollectionTraverse(aCallback, aVariable.mValue, aName, aFlags);
+}
+
+inline void
+ImplCycleCollectionUnlink(txOwningExpandedNameMap<txIGlobalParameter>& aMap)
+{
+    aMap.clear();
+}
+
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            txOwningExpandedNameMap<txIGlobalParameter>& aMap,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+    aFlags |= CycleCollectionEdgeNameArrayFlag;
+    txOwningExpandedNameMap<txIGlobalParameter>::iterator iter(aMap);
+    while (iter.next()) {
+        ImplCycleCollectionTraverse(aCallback,
+                                    *static_cast<txVariable*>(iter.value()),
+                                    aName, aFlags);
+    }
+}
+
 /**
  * txMozillaXSLTProcessor
  */
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(txMozillaXSLTProcessor)
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(txMozillaXSLTProcessor)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mEmbeddedStylesheetRoot)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mSource)
-    tmp->mVariables.clear();
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(txMozillaXSLTProcessor)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEmbeddedStylesheetRoot)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSource)
-    txOwningExpandedNameMap<txIGlobalParameter>::iterator iter(tmp->mVariables);
-    while (iter.next()) {
-        cb.NoteXPCOMChild(static_cast<txVariable*>(iter.value())->getValue());
-    }
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION(txMozillaXSLTProcessor, mEmbeddedStylesheetRoot,
+                         mSource, mVariables)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(txMozillaXSLTProcessor)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(txMozillaXSLTProcessor)
