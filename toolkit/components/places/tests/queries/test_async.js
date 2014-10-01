@@ -313,7 +313,6 @@ let DataHelper = {
       case "folder":
         return {
           isFolder: true,
-          readOnly: false,
           parentFolder: dat.parent,
           index: PlacesUtils.bookmarks.DEFAULT_INDEX,
           title: dat.title,
