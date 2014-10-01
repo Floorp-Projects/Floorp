@@ -181,9 +181,7 @@ loop.contacts = (function(_, mozL10n) {
 
       return (
         React.DOM.li({className: contactCSSClass, onMouseLeave: this.hideDropdownMenu}, 
-          React.DOM.div({className: "avatar"}, 
-            React.DOM.img({src: navigator.mozLoop.getUserAvatar(email.value)})
-          ), 
+          React.DOM.div({className: "avatar"}), 
           React.DOM.div({className: "details"}, 
             React.DOM.div({className: "username"}, React.DOM.strong(null, names.firstName), " ", names.lastName, 
               React.DOM.i({className: cx({"icon icon-google": this.props.contact.category[0] == "google"})}), 
