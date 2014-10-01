@@ -15,7 +15,7 @@ interface nsIDOMMozNamedAttrMap;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html#interface-element
  */
 
-[uuid(ea94c5e2-5d5d-4afe-b3ab-431903797f31)]
+[uuid(59eb63f9-c8c0-41d2-bf73-739de43b17f9)]
 interface nsIDOMElement : nsIDOMNode
 {
   readonly attribute DOMString        tagName;
@@ -42,6 +42,7 @@ interface nsIDOMElement : nsIDOMNode
   boolean            hasAttribute(in DOMString name);
   boolean            hasAttributeNS(in DOMString namespaceURI, 
                                     in DOMString localName);
+  boolean            hasAttributes();
 
   // Obsolete methods.
   nsIDOMAttr         getAttributeNode(in DOMString name);
