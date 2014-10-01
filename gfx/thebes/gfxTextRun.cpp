@@ -1240,10 +1240,13 @@ gfxTextRun::SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext,
                      gfxTextRunFactory::TEXT_IS_ASCII |
                      gfxTextRunFactory::TEXT_IS_PERSISTENT |
                      aOrientation;
+    bool vertical =
+        (GetFlags() & gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT) != 0;
     gfxShapedWord *sw = aFont->GetShapedWord(aContext,
                                              &space, 1,
                                              gfxShapedWord::HashMix(0, ' '), 
                                              MOZ_SCRIPT_LATIN,
+                                             vertical,
                                              mAppUnitsPerDevUnit,
                                              flags,
                                              nullptr);
@@ -2224,7 +2227,8 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
         const gfxTextRange& range = fontRanges[r];
         uint32_t matchedLength = range.Length();
         gfxFont *matchedFont = range.font;
-
+        bool vertical =
+            range.orientation == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT;
         // create the glyph run for this range
         if (matchedFont && mStyle.noFallbackVariantFeatures) {
             // common case - just do glyph layout and record the
@@ -2236,7 +2240,8 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
                                                   aString + runStart,
                                                   aOffset + runStart,
                                                   matchedLength,
-                                                  aRunScript)) {
+                                                  aRunScript,
+                                                  vertical)) {
                 // glyph layout failed! treat as missing glyphs
                 matchedFont = nullptr;
             }
@@ -2275,7 +2280,8 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
                                                        aString + runStart,
                                                        aOffset + runStart,
                                                        matchedLength,
-                                                       aRunScript)) {
+                                                       aRunScript,
+                                                       vertical)) {
                     // glyph layout failed! treat as missing glyphs
                     matchedFont = nullptr;
                 }
@@ -2319,7 +2325,8 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
                                                       aString + runStart,
                                                       aOffset + runStart,
                                                       matchedLength,
-                                                      aRunScript)) {
+                                                      aRunScript,
+                                                      vertical)) {
                     // glyph layout failed! treat as missing glyphs
                     matchedFont = nullptr;
                 }
