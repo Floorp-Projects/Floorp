@@ -11,22 +11,49 @@
   }
 
   function testXHR() {
-  var xhr = new XMLHttpRequest();
-
-  xhr.open("GET", "file_iframe_sandbox_b_if1.html");
-
-  xhr.onreadystatechange = function (oEvent) {
-    var result = false;
-    if (xhr.readyState == 4) {
-      if (xhr.status == 0) {
-        result = true;
+    // Standard URL should be blocked as we have a unique origin.
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "file_iframe_sandbox_b_if1.html");
+    xhr.onreadystatechange = function (oEvent) {
+      var result = false;
+      if (xhr.readyState == 4) {
+        if (xhr.status == 0) {
+          result = true;
+        }
+        ok(result, "XHR should be blocked in an iframe sandboxed WITHOUT 'allow-same-origin'");
       }
-      ok(result, "XHR should be blocked in an iframe sandboxed WITHOUT 'allow-same-origin'");
+    }
+    xhr.send(null);
+
+    // Blob URL should work as it will have our unique origin.
+    var blobXhr = new XMLHttpRequest();
+    var blobUrl = URL.createObjectURL(new Blob(["wibble"], {type: "text/plain"}));
+    blobXhr.open("GET", blobUrl);
+    blobXhr.onreadystatechange = function () {
+      if (this.readyState == 4) {
+        ok(this.status == 200 && this.response == "wibble", "XHR for a blob URL created in this document should NOT be blocked in an iframe sandboxed WITHOUT 'allow-same-origin'");
+      }
+    }
+    try {
+      blobXhr.send();
+    } catch(e) {
+      ok(false, "failed to send XHR for blob URL: error: " + e);
+    }
+
+    // Data URL should work as it inherits the loader's origin.
+    var dataXhr = new XMLHttpRequest();
+    dataXhr.open("GET", "data:text/html,wibble");
+    dataXhr.onreadystatechange = function () {
+      if (this.readyState == 4) {
+        ok(this.status == 200 && this.response == "wibble", "XHR for a data URL should NOT be blocked in an iframe sandboxed WITHOUT 'allow-same-origin'");
+      }
+    }
+    try {
+      dataXhr.send();
+    } catch(e) {
+      ok(false, "failed to send XHR for data URL: error: " + e);
     }
   }
-
-  xhr.send(null);
-}
 
   function doStuff() {
     try {
@@ -56,7 +83,7 @@
       ok(true, "a document sandboxed without allow-same-origin should NOT be able to access sessionStorage");
     }
 
-  testXHR();
+    testXHR();
   }
 </script>
 <body onLoad="doStuff()">

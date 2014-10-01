@@ -416,6 +416,7 @@ class LDefinition
         MUST_REUSE_INPUT
     };
 
+    // This should be kept in sync with LIR.cpp's TypeChars.
     enum Type {
         GENERAL,    // Generic, integer or pointer-width data (GPR).
         INT32,      // int32 data (GPR).

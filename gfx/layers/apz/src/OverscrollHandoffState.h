@@ -131,6 +131,7 @@ struct OverscrollHandoffState {
   // The total distance since touch-start of the pan that triggered the
   // handoff. This is const to indicate that it does not change over the
   // course of handoff.
+  // The x/y components of this are non-negative.
   const ScreenPoint mPanDistance;
 };
 // Don't pollute other files with this macro for now.

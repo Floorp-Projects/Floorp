@@ -94,7 +94,8 @@ nsSVGClipPathFrame::ApplyClipOrPaintClipMask(nsRenderingContext* aContext,
   // Seems like this is a non-trivial clipPath, so we need to use a clip mask.
 
   // Notify our children that they're painting into a clip mask:
-  SVGAutoRenderState mode(aContext, SVGAutoRenderState::CLIP_MASK);
+  SVGAutoRenderState mode(aContext->GetDrawTarget(),
+                          SVGAutoRenderState::CLIP_MASK);
 
   // Check if this clipPath is itself clipped by another clipPath:
   nsSVGClipPathFrame *clipPathFrame =

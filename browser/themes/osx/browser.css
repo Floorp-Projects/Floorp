@@ -161,6 +161,19 @@ toolbarseparator {
   z-index: 1;
 }
 
+/* Always draw a border on Yosemite to ensure the border is well-defined there
+ * (the default border is too light). */
+@media (-moz-mac-yosemite-theme) {
+  #main-window[tabsintitlebar] #TabsToolbar:not([collapsed="true"]) + #nav-bar:not(:-moz-lwtheme) {
+    border-top: 1px solid hsla(0,0%,0%,.2);
+    background-clip: padding-box;
+    margin-top: -@tabToolbarNavbarOverlap@;
+    /* Position the toolbar above the bottom of background tabs */
+    position: relative;
+    z-index: 1;
+  }
+}
+
 #nav-bar-customization-target {
   padding: 4px;
 }
@@ -2212,14 +2225,16 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 }
 
 .ac-result-type-keyword,
-.autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage) {
+.autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage),
+richlistitem[type~="action"][actiontype="searchengine"] > .ac-title-box > .ac-site-icon {
   list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg#search-icon);
   width: 16px;
   height: 16px;
 }
 
 .ac-result-type-keyword[selected="true"],
-.autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage, selected) {
+.autocomplete-treebody::-moz-tree-image(keyword, treecolAutoCompleteImage, selected),
+richlistitem[type~="action"][actiontype="searchengine"][selected="true"] > .ac-title-box > .ac-site-icon {
   list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg#search-icon-inverted);
 }
 
@@ -2254,14 +2269,6 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 richlistitem[type~="action"][actiontype="switchtab"][selected="true"] > .ac-url-box > .ac-action-icon {
   -moz-image-region: rect(11px, 16px, 22px, 0);
-}
-
-richlistitem[type~="action"][actiontype="searchengine"] > .ac-title-box > .ac-site-icon {
-  list-style-image: url("chrome://global/skin/icons/autocomplete-search.svg#search-icon");
-}
-
-richlistitem[type~="action"][actiontype="searchengine"][selected="true"] > .ac-title-box > .ac-site-icon {
-  list-style-image: url("chrome://global/skin/icons/autocomplete-search.svg#search-icon-inverted");
 }
 
 @media (min-resolution: 2dppx) {

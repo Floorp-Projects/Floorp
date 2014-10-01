@@ -6814,6 +6814,12 @@ TransactionBase::VerifyRequestParams(const RequestParams& aParams) const
     }
 
     case RequestParams::TObjectStoreDeleteParams: {
+      if (NS_WARN_IF(mMode != IDBTransaction::READ_WRITE &&
+                     mMode != IDBTransaction::VERSION_CHANGE)) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+
       const ObjectStoreDeleteParams& params =
         aParams.get_ObjectStoreDeleteParams();
       const nsRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
@@ -6830,6 +6836,12 @@ TransactionBase::VerifyRequestParams(const RequestParams& aParams) const
     }
 
     case RequestParams::TObjectStoreClearParams: {
+      if (NS_WARN_IF(mMode != IDBTransaction::READ_WRITE &&
+                     mMode != IDBTransaction::VERSION_CHANGE)) {
+        ASSERT_UNLESS_FUZZING();
+        return false;
+      }
+
       const ObjectStoreClearParams& params =
         aParams.get_ObjectStoreClearParams();
       const nsRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
