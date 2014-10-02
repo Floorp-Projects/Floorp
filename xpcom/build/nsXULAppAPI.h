@@ -16,7 +16,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/Vector.h"
 
 /**
  * A directory service key which provides the platform-correct "application
@@ -471,11 +470,9 @@ XRE_API(WindowsEnvironmentType,
 
 #ifdef MOZ_B2G_LOADER
 XRE_API(int,
-        XRE_ProcLoaderServiceRun, (pid_t, int, int argc, const char* argv[],
-                                   mozilla::Vector<int>& aReservedFds));
+        XRE_ProcLoaderServiceRun, (pid_t, int, int argc, const char* argv[]));
 XRE_API(void,
-        XRE_ProcLoaderClientInit, (pid_t, int,
-                                   mozilla::Vector<int>& aReservedFds));
+        XRE_ProcLoaderClientInit, (pid_t, int));
 XRE_API(void,
         XRE_ProcLoaderPreload, (const char* aProgramDir,
                                 const nsXREAppData* aAppData));
