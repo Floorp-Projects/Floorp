@@ -88,17 +88,16 @@ class TabsGridLayout extends GridView
         }
 
         @Override
-        View newView(int position, ViewGroup parent) {
-            final TabsLayoutItemView item = (TabsLayoutItemView) super.newView(position, parent);
+        TabsLayoutItemView newView(int position, ViewGroup parent) {
+            final TabsLayoutItemView item = super.newView(position, parent);
             item.setOnClickListener(mSelectClickListener);
             item.setCloseOnClickListener(mCloseClickListener);
             return item;
         }
 
         @Override
-        public void bindView(View view, Tab tab) {
+        public void bindView(TabsLayoutItemView view, Tab tab) {
             super.bindView(view, tab);
-            ((TabsLayoutItemView) view).close.setVisibility(View.VISIBLE);
 
             // If we're recycling this view, there's a chance it was transformed during
             // the close animation. Remove any of those properties.
