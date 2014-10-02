@@ -113,22 +113,6 @@ public:
 
   void SetMACAlgorithmUsed(int16_t mac) { mMACAlgorithmUsed = mac; }
 
-  inline bool GetBypassAuthentication()
-  {
-    bool result = false;
-    mozilla::DebugOnly<nsresult> rv = GetBypassAuthentication(&result);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    return result;
-  }
-
-  inline int32_t GetAuthenticationPort()
-  {
-    int32_t result = -1;
-    mozilla::DebugOnly<nsresult> rv = GetAuthenticationPort(&result);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    return result;
-  }
-
 protected:
   virtual ~nsNSSSocketInfo();
 
@@ -155,7 +139,6 @@ private:
   bool      mJoined;
   bool      mSentClientCert;
   bool      mNotedTimeUntilReady;
-  bool      mFailedVerification;
 
   // mKEA* are used in false start and http/2 detetermination
   // Values are from nsISSLSocketControl
@@ -164,7 +147,6 @@ private:
   uint32_t mKEAKeyBits;
   int16_t mSSLVersionUsed;
   int16_t mMACAlgorithmUsed;
-  bool    mBypassAuthentication;
 
   uint32_t mProviderFlags;
   mozilla::TimeStamp mSocketCreationTimestamp;

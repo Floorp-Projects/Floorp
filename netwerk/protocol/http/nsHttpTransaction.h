@@ -264,7 +264,6 @@ private:
     bool                            mDispatchedAsBlocking;
     bool                            mResponseTimeoutEnabled;
     bool                            mDontRouteViaWildCard;
-    bool                            mForceRestart;
 
     // mClosed           := transaction has been explicitly closed
     // mTransactionDone  := transaction ran to completion or was interrupted

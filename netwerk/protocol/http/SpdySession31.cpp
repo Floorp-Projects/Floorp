@@ -389,8 +389,7 @@ SpdySession31::AddStream(nsAHttpTransaction *aHttpTransaction,
     mQueuedStreams.Push(stream);
   }
 
-  if (!(aHttpTransaction->Caps() & NS_HTTP_ALLOW_KEEPALIVE) &&
-      !aHttpTransaction->IsNullTransaction()) {
+  if (!(aHttpTransaction->Caps() & NS_HTTP_ALLOW_KEEPALIVE)) {
     LOG3(("SpdySession31::AddStream %p transaction %p forces keep-alive off.\n",
           this, aHttpTransaction));
     DontReuse();
@@ -406,15 +405,12 @@ SpdySession31::ActivateStream(SpdyStream31 *stream)
   MOZ_ASSERT(!stream->StreamID() || (stream->StreamID() & 1),
              "Do not activate pushed streams");
 
-  if (!(stream->Transaction() && stream->Transaction()->IsNullTransaction())) {
-    ++mConcurrent;
-    if (mConcurrent > mConcurrentHighWater) {
-      mConcurrentHighWater = mConcurrent;
-    }
-    LOG3(("SpdySession31::AddStream %p activating stream %p Currently %d "
-          "streams in session, high water mark is %d",
-          this, stream, mConcurrent, mConcurrentHighWater));
-  }
+  ++mConcurrent;
+  if (mConcurrent > mConcurrentHighWater)
+    mConcurrentHighWater = mConcurrent;
+  LOG3(("SpdySession31::AddStream %p activating stream %p Currently %d "
+        "streams in session, high water mark is %d",
+        this, stream, mConcurrent, mConcurrentHighWater));
 
   mReadyForWrite.Push(stream);
   SetWriteCallbacks();
@@ -1831,17 +1827,10 @@ SpdySession31::ReadSegments(nsAHttpSegmentReader *reader,
   }
 
   if (NS_FAILED(rv)) {
-    LOG3(("SpdySession31::ReadSegments %p may return FAIL code %X",
+    LOG3(("SpdySession31::ReadSegments %p returning FAIL code %X",
           this, rv));
-    if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-      return rv;
-    }
-
-    CleanupStream(stream, rv, RST_CANCEL);
-    if (SoftStreamError(rv)) {
-      LOG3(("SpdySession31::ReadSegments %p soft error override\n", this));
-      rv = NS_OK;
-    }
+    if (rv != NS_BASE_STREAM_WOULD_BLOCK)
+      CleanupStream(stream, rv, RST_CANCEL);
     return rv;
   }
 

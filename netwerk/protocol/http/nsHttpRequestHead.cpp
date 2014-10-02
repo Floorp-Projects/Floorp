@@ -51,18 +51,6 @@ nsHttpRequestHead::SetMethod(const nsACString &method)
     }
 }
 
-void
-nsHttpRequestHead::SetOrigin(const nsACString &scheme, const nsACString &host, int32_t port)
-{
-    mOrigin.Assign(scheme);
-    mOrigin.Append(NS_LITERAL_CSTRING("://"));
-    mOrigin.Append(host);
-    if (port >= 0) {
-        mOrigin.Append(NS_LITERAL_CSTRING(":"));
-        mOrigin.AppendInt(port);
-    }
-}
-
 bool
 nsHttpRequestHead::IsSafeMethod() const
 {
