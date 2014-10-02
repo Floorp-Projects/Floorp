@@ -208,9 +208,14 @@ FontFaceSet::DestroyUserFontSet()
   mPresContext = nullptr;
   mLoaders.EnumerateEntries(DestroyIterator, nullptr);
   for (size_t i = 0; i < mConnectedFaces.Length(); i++) {
+    mConnectedFaces[i].mFontFace->DisconnectFromRule();
     mConnectedFaces[i].mFontFace->SetUserFontEntry(nullptr);
   }
+  for (size_t i = 0; i < mUnavailableFaces.Length(); i++) {
+    mUnavailableFaces[i]->SetUserFontEntry(nullptr);
+  }
   mConnectedFaces.Clear();
+  mUnavailableFaces.Clear();
   mReady = nullptr;
   mUserFontSet = nullptr;
 }
@@ -401,8 +406,8 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
     // it when the FontFace is GCed, if we can detect that.
     size_t count = oldRecords.Length();
     for (size_t i = 0; i < count; ++i) {
-      gfxUserFontEntry* userFontEntry =
-        oldRecords[i].mFontFace->GetUserFontEntry();
+      nsRefPtr<FontFace> f = oldRecords[i].mFontFace;
+      gfxUserFontEntry* userFontEntry = f->GetUserFontEntry();
       if (userFontEntry) {
         nsFontFaceLoader* loader = userFontEntry->GetLoader();
         if (loader) {
@@ -410,6 +415,13 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
           RemoveLoader(loader);
         }
       }
+
+      // Any left over FontFace objects should also cease being CSS-connected.
+      MOZ_ASSERT(!mUnavailableFaces.Contains(f),
+                 "FontFace should not occur in mUnavailableFaces twice");
+
+      mUnavailableFaces.AppendElement(f);
+      f->DisconnectFromRule();
     }
   }
 
@@ -455,6 +467,9 @@ FontFaceSet::InsertConnectedFontFace(
     return;
   }
 
+  bool remove = false;
+  size_t removeIndex;
+
   // This is a CSS-connected FontFace.  First, we check in aOldRecords; if
   // the FontFace for the rule exists there, just move it to the new record
   // list, and put the entry into the appropriate family.
@@ -471,6 +486,10 @@ FontFaceSet::InsertConnectedFontFace(
         aFontFace->GetDesc(eCSSFontDesc_Src, val);
         nsCSSUnit unit = val.GetUnit();
         if (unit == eCSSUnit_Array && HasLocalSrc(val.GetArrayValue())) {
+          // Remove the old record, but wait to see if we successfully create a
+          // new user font entry below.
+          remove = true;
+          removeIndex = i;
           break;
         }
       }
@@ -500,6 +519,16 @@ FontFaceSet::InsertConnectedFontFace(
 
   if (!entry) {
     return;
+  }
+
+  if (remove) {
+    // Although we broke out of the aOldRecords loop above, since we found
+    // src local usage, and we're not using the old user font entry, we still
+    // are adding a record to mConnectedFaces with the same FontFace object.
+    // Remove the old record so that we don't have the same FontFace listed
+    // in both mConnectedFaces and oldRecords, which would cause us to call
+    // DisconnectFromRule on a FontFace that should still be connected.
+    aOldRecords.RemoveElementAt(removeIndex);
   }
 
   FontFaceRecord rec;
@@ -1015,6 +1044,29 @@ FontFaceSet::FontFaceForRule(nsCSSFontFaceRule* aRule)
     FontFace::CreateForRule(GetParentObject(), mPresContext, aRule, entry);
   aRule->SetFontFace(newFontFace);
   return newFontFace;
+}
+
+void
+FontFaceSet::AddUnavailableFontFace(FontFace* aFontFace)
+{
+  MOZ_ASSERT(!aFontFace->IsInFontFaceSet());
+  MOZ_ASSERT(!mUnavailableFaces.Contains(aFontFace));
+
+  mUnavailableFaces.AppendElement(aFontFace);
+}
+
+void
+FontFaceSet::RemoveUnavailableFontFace(FontFace* aFontFace)
+{
+  MOZ_ASSERT(!aFontFace->IsConnected());
+  MOZ_ASSERT(!aFontFace->IsInFontFaceSet());
+
+  // We might not actually find the FontFace in mUnavailableFaces, since we
+  // might be shutting down the document and had DestroyUserFontSet called
+  // on us, which clears out mUnavailableFaces.
+  mUnavailableFaces.RemoveElement(aFontFace);
+
+  MOZ_ASSERT(!mUnavailableFaces.Contains(aFontFace));
 }
 
 // -- FontFaceSet::UserFontSet ------------------------------------------------
