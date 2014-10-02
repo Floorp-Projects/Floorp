@@ -145,13 +145,10 @@ private:
   };
 
   FontFace* FontFaceForRule(nsCSSFontFaceRule* aRule);
-  void InsertRule(nsCSSFontFaceRule* aRule, uint8_t aSheetType,
-                  nsTArray<FontFaceRecord>& aOldRecords,
-                  bool& aFontSetModified);
 
-  already_AddRefed<gfxUserFontEntry> FindOrCreateUserFontEntryFromRule(
+  already_AddRefed<gfxUserFontEntry> FindOrCreateUserFontEntryFromFontFace(
                                                    const nsAString& aFamilyName,
-                                                   nsCSSFontFaceRule* aRule,
+                                                   FontFace* aFontFace,
                                                    uint8_t aSheetType);
 
   // search for @font-face rule that matches a userfont font entry
@@ -175,6 +172,14 @@ private:
                       uint32_t aFlags,
                       nsresult aStatus);
   void DoRebuildUserFontSet();
+
+  void InsertConnectedFontFace(FontFace* aFontFace, uint8_t aSheetType,
+                               nsTArray<FontFaceRecord>& aOldRecords,
+                               bool& aFontSetModified);
+
+#ifdef DEBUG
+  bool HasConnectedFontFace(FontFace* aFontFace);
+#endif
 
   nsRefPtr<UserFontSet> mUserFontSet;
   nsPresContext* mPresContext;

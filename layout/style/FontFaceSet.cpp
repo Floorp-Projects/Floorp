@@ -137,6 +137,19 @@ FontFaceSet::Status()
   return FontFaceSetLoadStatus::Loaded;
 }
 
+#ifdef DEBUG
+bool
+FontFaceSet::HasConnectedFontFace(FontFace* aFontFace)
+{
+  for (size_t i = 0; i < mConnectedFaces.Length(); i++) {
+    if (mConnectedFaces[i].mFontFace == aFontFace) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif
+
 FontFaceSet*
 FontFaceSet::Add(FontFace& aFontFace, ErrorResult& aRv)
 {
@@ -348,12 +361,24 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
   // unicode-range coverage.)
   mUserFontSet->mFontFamilies.Enumerate(DetachFontEntries, nullptr);
 
-  for (uint32_t i = 0, i_end = aRules.Length(); i < i_end; ++i) {
+  // Sometimes aRules has duplicate @font-face rules in it; we should make
+  // that not happen, but in the meantime, don't try to insert the same
+  // FontFace object more than once into mConnectedFaces.  We track which
+  // ones we've handled in this table.
+  nsTHashtable<nsPtrHashKey<nsCSSFontFaceRule>> handledRules;
+
+  for (size_t i = 0, i_end = aRules.Length(); i < i_end; ++i) {
     // Insert each FontFace objects for each rule into our list, migrating old
     // font entries if possible rather than creating new ones; set  modified  to
     // true if we detect that rule ordering has changed, or if a new entry is
     // created.
-    InsertRule(aRules[i].mRule, aRules[i].mSheetType, oldRecords, modified);
+    if (handledRules.Contains(aRules[i].mRule)) {
+      continue;
+    }
+    InsertConnectedFontFace(FontFaceForRule(aRules[i].mRule),
+                            aRules[i].mSheetType, oldRecords,
+                            modified);
+    handledRules.PutEntry(aRules[i].mRule);
   }
 
   // Remove any residual families that have no font entries (i.e., they were
@@ -418,45 +443,33 @@ FontFaceSet::IncrementGeneration(bool aIsRebuild)
 }
 
 void
-FontFaceSet::InsertRule(nsCSSFontFaceRule* aRule, uint8_t aSheetType,
-                        nsTArray<FontFaceRecord>& aOldRecords,
-                        bool& aFontSetModified)
+FontFaceSet::InsertConnectedFontFace(
+                             FontFace* aFontFace, uint8_t aSheetType,
+                             nsTArray<FontFaceRecord>& aOldRecords,
+                             bool& aFontSetModified)
 {
-  FontFace* face = FontFaceForRule(aRule);
-
-  // set up family name
   nsAutoString fontfamily;
-  nsCSSValue val;
-  uint32_t unit;
-
-  face->GetDesc(eCSSFontDesc_Family, val);
-  unit = val.GetUnit();
-  if (unit == eCSSUnit_String) {
-    val.GetStringValue(fontfamily);
-  } else {
-    NS_ASSERTION(unit == eCSSUnit_Null,
-                 "@font-face family name has unexpected unit");
-  }
-  if (fontfamily.IsEmpty()) {
+  if (!aFontFace->GetFamilyName(fontfamily)) {
     // If there is no family name, this rule cannot contribute a
     // usable font, so there is no point in processing it further.
     return;
   }
 
-  // first, we check in aOldRecords; if the FontFace for the rule exists
-  // there, just move it to the new record list, and put the entry into the
-  // appropriate family
-  for (uint32_t i = 0; i < aOldRecords.Length(); ++i) {
-    const FontFaceRecord& rec = aOldRecords[i];
+  // This is a CSS-connected FontFace.  First, we check in aOldRecords; if
+  // the FontFace for the rule exists there, just move it to the new record
+  // list, and put the entry into the appropriate family.
+  for (size_t i = 0; i < aOldRecords.Length(); ++i) {
+    FontFaceRecord& rec = aOldRecords[i];
 
-    if (rec.mFontFace == face &&
+    if (rec.mFontFace == aFontFace &&
         rec.mSheetType == aSheetType) {
 
       // if local rules were used, don't use the old font entry
       // for rules containing src local usage
       if (mUserFontSet->mLocalRulesUsed) {
-        face->GetDesc(eCSSFontDesc_Src, val);
-        unit = val.GetUnit();
+        nsCSSValue val;
+        aFontFace->GetDesc(eCSSFontDesc_Src, val);
+        nsCSSUnit unit = val.GetUnit();
         if (unit == eCSSUnit_Array && HasLocalSrc(val.GetArrayValue())) {
           break;
         }
@@ -464,7 +477,12 @@ FontFaceSet::InsertRule(nsCSSFontFaceRule* aRule, uint8_t aSheetType,
 
       gfxUserFontEntry* entry = rec.mFontFace->GetUserFontEntry();
       MOZ_ASSERT(entry, "FontFace should have a gfxUserFontEntry by now");
+
       mUserFontSet->AddUserFontEntry(fontfamily, entry);
+
+      MOZ_ASSERT(!HasConnectedFontFace(rec.mFontFace),
+                 "FontFace should not occur in mConnectedFaces twice");
+
       mConnectedFaces.AppendElement(rec);
       aOldRecords.RemoveElementAt(i);
       // note the set has been modified if an old rule was skipped to find
@@ -478,35 +496,38 @@ FontFaceSet::InsertRule(nsCSSFontFaceRule* aRule, uint8_t aSheetType,
 
   // this is a new rule:
   nsRefPtr<gfxUserFontEntry> entry =
-    FindOrCreateUserFontEntryFromRule(fontfamily, aRule, aSheetType);
+    FindOrCreateUserFontEntryFromFontFace(fontfamily, aFontFace, aSheetType);
 
   if (!entry) {
     return;
   }
 
   FontFaceRecord rec;
-  rec.mFontFace = face;
+  rec.mFontFace = aFontFace;
   rec.mSheetType = aSheetType;
 
-  face->SetUserFontEntry(entry);
+  aFontFace->SetUserFontEntry(entry);
 
-  // Add the entry to the end of the list.  If an existing userfont entry was
-  // returned by FindOrCreateUserFontEntryFromRule that was already stored on
-  // the family, gfxUserFontFamily::AddFontEntry(), which AddUserFontEntry
-  // calls, will automatically remove the earlier occurrence of the same
-  // userfont entry.
-  mUserFontSet->AddUserFontEntry(fontfamily, entry);
+  MOZ_ASSERT(!HasConnectedFontFace(aFontFace),
+             "FontFace should not occur in mConnectedFaces twice");
 
   mConnectedFaces.AppendElement(rec);
 
   // this was a new rule and font entry, so note that the set was modified
   aFontSetModified = true;
+
+  // Add the entry to the end of the list.  If an existing userfont entry was
+  // returned by FindOrCreateUserFontEntryFromFontFace that was already stored
+  // on the family, gfxUserFontFamily::AddFontEntry(), which AddUserFontEntry
+  // calls, will automatically remove the earlier occurrence of the same
+  // userfont entry.
+  mUserFontSet->AddUserFontEntry(fontfamily, entry);
 }
 
 already_AddRefed<gfxUserFontEntry>
-FontFaceSet::FindOrCreateUserFontEntryFromRule(const nsAString& aFamilyName,
-                                               nsCSSFontFaceRule* aRule,
-                                               uint8_t aSheetType)
+FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
+                                                   FontFace* aFontFace,
+                                                   uint8_t aSheetType)
 {
   nsCSSValue val;
   uint32_t unit;
@@ -517,7 +538,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromRule(const nsAString& aFamilyName,
   uint32_t languageOverride = NO_FONT_LANGUAGE_OVERRIDE;
 
   // set up weight
-  aRule->GetDesc(eCSSFontDesc_Weight, val);
+  aFontFace->GetDesc(eCSSFontDesc_Weight, val);
   unit = val.GetUnit();
   if (unit == eCSSUnit_Integer || unit == eCSSUnit_Enumerated) {
     weight = val.GetIntValue();
@@ -532,7 +553,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromRule(const nsAString& aFamilyName,
   }
 
   // set up stretch
-  aRule->GetDesc(eCSSFontDesc_Stretch, val);
+  aFontFace->GetDesc(eCSSFontDesc_Stretch, val);
   unit = val.GetUnit();
   if (unit == eCSSUnit_Enumerated) {
     stretch = val.GetIntValue();
@@ -544,7 +565,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromRule(const nsAString& aFamilyName,
   }
 
   // set up font style
-  aRule->GetDesc(eCSSFontDesc_Style, val);
+  aFontFace->GetDesc(eCSSFontDesc_Style, val);
   unit = val.GetUnit();
   if (unit == eCSSUnit_Enumerated) {
     italicStyle = val.GetIntValue();
@@ -557,7 +578,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromRule(const nsAString& aFamilyName,
 
   // set up font features
   nsTArray<gfxFontFeature> featureSettings;
-  aRule->GetDesc(eCSSFontDesc_FontFeatureSettings, val);
+  aFontFace->GetDesc(eCSSFontDesc_FontFeatureSettings, val);
   unit = val.GetUnit();
   if (unit == eCSSUnit_Normal) {
     // empty list of features
@@ -569,7 +590,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromRule(const nsAString& aFamilyName,
   }
 
   // set up font language override
-  aRule->GetDesc(eCSSFontDesc_FontLanguageOverride, val);
+  aFontFace->GetDesc(eCSSFontDesc_FontLanguageOverride, val);
   unit = val.GetUnit();
   if (unit == eCSSUnit_Normal) {
     // empty feature string
@@ -585,7 +606,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromRule(const nsAString& aFamilyName,
   // set up src array
   nsTArray<gfxFontFaceSrc> srcArray;
 
-  aRule->GetDesc(eCSSFontDesc_Src, val);
+  aFontFace->GetDesc(eCSSFontDesc_Src, val);
   unit = val.GetUnit();
   if (unit == eCSSUnit_Array) {
     nsCSSValue::Array* srcArr = val.GetArrayValue();
