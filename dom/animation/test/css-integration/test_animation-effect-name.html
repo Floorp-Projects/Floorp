@@ -20,8 +20,6 @@ function addDiv() {
 test(function() {
   var div = addDiv();
   div.style.animation = 'xyz 100s';
-  window.getComputedStyle(div).animationName;
-
   assert_equals(div.getAnimationPlayers()[0].source.effect.name, 'xyz',
                 'Animation effect name matches keyframes rule name');
   div.remove();
@@ -30,8 +28,6 @@ test(function() {
 test(function() {
   var div = addDiv();
   div.style.animation = 'x\\yz 100s';
-  dump(window.getComputedStyle(div).animationName + "\n");
-
   assert_equals(div.getAnimationPlayers()[0].source.effect.name, 'xyz',
                 'Escaped animation effect name matches keyframes rule name');
   div.remove();
@@ -40,8 +36,6 @@ test(function() {
 test(function() {
   var div = addDiv();
   div.style.animation = 'x\\79 z 100s';
-  window.getComputedStyle(div).animationName;
-
   assert_equals(div.getAnimationPlayers()[0].source.effect.name, 'xyz',
                 'Hex-escaped animation effect name matches keyframes rule'
                 + ' name');
@@ -56,7 +50,6 @@ test(function() {
   window.getComputedStyle(div).transitionProperty;
   div.style.transition = 'all 100s';
   div.style.left = '100px';
-  window.getComputedStyle(div).left;
 
   assert_equals(div.getAnimationPlayers()[0].source.effect.name, '',
                 'Animation effects for transitions have an empty name');
