@@ -7,6 +7,7 @@
 #define mozilla_dom_FontFaceSet_h
 
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/FontFace.h"
 #include "mozilla/dom/FontFaceSetBinding.h"
 #include "gfxUserFontSet.h"
 #include "nsCSSRules.h"
@@ -136,14 +137,14 @@ private:
   ~FontFaceSet();
 
   // The font-set keeps track of the collection of rules, and their
-  // corresponding font entries (whether proxies or real entries),
-  // so that we can update the set without having to throw away
-  // all the existing fonts.
+  // corresponding user font entries so that we can update the set without
+  // having to throw away all the existing fonts.
   struct FontFaceRuleRecord {
     nsRefPtr<gfxUserFontEntry>   mUserFontEntry;
     nsFontFaceRuleContainer      mContainer;
   };
 
+  FontFace* FontFaceForRule(nsCSSFontFaceRule* aRule);
   void InsertRule(nsCSSFontFaceRule* aRule, uint8_t aSheetType,
                   nsTArray<FontFaceRuleRecord>& oldRules,
                   bool& aFontSetModified);
@@ -182,7 +183,8 @@ private:
   // us before it dies (unless we die first).
   nsTHashtable< nsPtrHashKey<nsFontFaceLoader> > mLoaders;
 
-  nsTArray<FontFaceRuleRecord>   mRules;
+  // The @font-face rules and their corresponding user font entries.
+  nsTArray<FontFaceRuleRecord> mRules;
 };
 
 } // namespace dom
