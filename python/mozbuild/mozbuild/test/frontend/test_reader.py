@@ -68,13 +68,6 @@ class TestBuildReader(unittest.TestCase):
         contexts = list(reader.read_topsrcdir())
         self.assertEqual(len(contexts), 3)
 
-    def test_tier_subdir(self):
-        # add_tier_dir() should fail when not in the top directory.
-        reader = self.reader('traversal-tier-fails-in-subdir')
-
-        with self.assertRaises(Exception):
-            list(reader.read_topsrcdir())
-
     def test_relative_dirs(self):
         # Ensure relative directories are traversed.
         reader = self.reader('traversal-relative-dirs')

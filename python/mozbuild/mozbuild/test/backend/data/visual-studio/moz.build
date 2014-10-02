@@ -2,6 +2,6 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-add_tier_dir('libs', ['dir1'])
+DIRS += ['dir1']
 
 Library('test')

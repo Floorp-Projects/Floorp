@@ -250,25 +250,6 @@ class MozbuildSandbox(Sandbox):
         data.is_library = True
         return data
 
-    def _add_tier_directory(self, tier, reldir, external=False):
-        """Register a tier directory with the build."""
-        if isinstance(reldir, text_type):
-            reldir = [reldir]
-
-        if not tier in self['TIERS']:
-            self['TIERS'][tier] = {
-                'regular': [],
-                'external': [],
-            }
-
-        key = 'external' if external else 'regular'
-        for path in reldir:
-            if path in self['TIERS'][tier][key]:
-                raise Exception('Directory has already been registered with '
-                    'tier: %s' % path)
-
-            self['TIERS'][tier][key].append(path)
-
     def _export(self, varname):
         """Export the variable to all subdirectories of the current path."""
 
@@ -974,28 +955,7 @@ class BuildReader(object):
                     sandbox.recompute_exports()
                     recurse_info[d]['exports'] = dict(sandbox.metadata['exports'])
 
-        # We also have tiers whose members are directories.
-        if 'TIERS' in context:
-            if not read_tiers:
-                raise SandboxValidationError(
-                    'TIERS defined but it should not be', context)
-
-            for tier, values in context['TIERS'].items():
-                # We don't descend into external directories because external by
-                # definition is external to the build system.
-                for d in values['regular']:
-                    if d in recurse_info:
-                        raise SandboxValidationError(
-                            'Tier directory (%s) registered multiple '
-                            'times in %s' % (d, tier), context)
-                    recurse_info[d] = {'check_external': True}
-                    if 'templates' in sandbox.metadata:
-                        recurse_info[d]['templates'] = dict(
-                            sandbox.metadata['templates'])
-
         for relpath, child_metadata in recurse_info.items():
-            if 'check_external' in child_metadata:
-                relpath = '/' + relpath
             child_path = sandbox.normalize_path(mozpath.join(relpath,
                 'moz.build'), srcdir=curdir)
 

@@ -10,47 +10,59 @@ CONFIGURE_SUBST_FILES += [
 ]
 
 if CONFIG['ENABLE_CLANG_PLUGIN']:
-    add_tier_dir('base', 'build/clang-plugin')
+    DIRS += ['build/clang-plugin']
 
-add_tier_dir('base', ['config', 'python'])
+DIRS += [
+    'config',
+    'python',
+]
+
 if not CONFIG['JS_STANDALONE']:
     CONFIGURE_SUBST_FILES += [
         'mozilla-config.h',
         'tools/update-packaging/Makefile',
     ]
 
-    add_tier_dir('base', ['build', 'probes'])
+    DIRS += [
+        'build',
+        'probes',
+    ]
 
 if not CONFIG['LIBXUL_SDK']:
-    add_tier_dir('base', ['mfbt'])
-
-    add_tier_dir('base', ['config/external/zlib'])
+    DIRS += [
+        'mfbt',
+        'config/external/zlib',
+    ]
 
     if not CONFIG['JS_STANDALONE']:
         if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-            add_tier_dir('base', ['other-licenses/android'])
+            DIRS += ['other-licenses/android']
 
         if CONFIG['MOZ_MEMORY']:
-            add_tier_dir('base', ['memory'])
+            DIRS += ['memory']
 
-        add_tier_dir('base', ['mozglue', 'memory/mozalloc'])
-
+        DIRS += [
+            'mozglue',
+            'memory/mozalloc',
+        ]
 
 if not CONFIG['JS_STANDALONE']:
-    add_tier_dir('precompile', 'xpcom/xpidl')
+    DIRS += ['xpcom/xpidl']
 
 if CONFIG['COMPILE_ENVIRONMENT'] and not CONFIG['LIBXUL_SDK']:
-    add_tier_dir('nspr', 'config/external/nspr')
+    DIRS += ['config/external/nspr']
 
     if not CONFIG['JS_STANDALONE']:
-        add_tier_dir('external', 'config/external')
-        add_tier_dir('nss', 'config/external/nss')
+        DIRS += [
+            'config/external',
+            'config/external/nss',
+        ]
 
     if CONFIG['BUILD_CTYPES']:
-        add_tier_dir('js', ['config/external/ffi'])
+        DIRS += ['config/external/ffi']
     if CONFIG['ENABLE_INTL_API']:
-        add_tier_dir('js', ['config/external/icu'])
-    add_tier_dir('js', ['js/src'])
+        DIRS += ['config/external/icu']
+    DIRS += ['js/src']
 
 if not CONFIG['JS_STANDALONE']:
     # Bring in the configuration for the configured application.
