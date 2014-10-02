@@ -1773,7 +1773,6 @@ private:
 
   CSPErrorQueue mCSPWebConsoleErrorQueue;
 
-  nsCOMPtr<nsIDocument> mMasterDocument;
   nsRefPtr<mozilla::dom::ImportManager> mImportManager;
   nsTArray<nsCOMPtr<nsINode> > mSubImportLinks;
 
