@@ -1327,6 +1327,22 @@ protected:
 
     uint64_t mLastUseIndex;
 
+    bool mNeedsFakeNoAlpha;
+
+    struct ScopedMaskWorkaround {
+        WebGLContext& mWebGL;
+        const bool mNeedsChange;
+
+        static bool NeedsChange(WebGLContext& webgl) {
+            return webgl.mNeedsFakeNoAlpha &&
+                   webgl.mColorWriteMask[3] != false;
+        }
+
+        ScopedMaskWorkaround(WebGLContext& webgl);
+
+        ~ScopedMaskWorkaround();
+    };
+
     void LoseOldestWebGLContextIfLimitExceeded();
     void UpdateLastUseIndex();
 

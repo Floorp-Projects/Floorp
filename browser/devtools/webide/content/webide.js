@@ -21,6 +21,7 @@ const {Devices} = Cu.import("resource://gre/modules/devtools/Devices.jsm");
 const {GetAvailableAddons} = require("devtools/webide/addons");
 const {GetTemplatesJSON, GetAddonsJSON} = require("devtools/webide/remote-resources");
 const utils = require("devtools/webide/utils");
+const Telemetry = require("devtools/shared/telemetry");
 
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 
@@ -47,6 +48,9 @@ window.addEventListener("unload", function onUnload() {
 
 let UI = {
   init: function() {
+    this._telemetry = new Telemetry();
+    this._telemetry.toolOpened("webide");
+
     AppManager.init();
 
     this.onMessage = this.onMessage.bind(this);
@@ -85,6 +89,8 @@ let UI = {
     AppManager.off("app-manager-update", this.appManagerUpdate);
     AppManager.uninit();
     window.removeEventListener("message", this.onMessage);
+    this.updateConnectionTelemetry();
+    this._telemetry.toolClosed("webide");
   },
 
   canWindowClose: function() {
@@ -117,6 +123,7 @@ let UI = {
       case "connection":
         this.updateRuntimeButton();
         this.updateCommands();
+        this.updateConnectionTelemetry();
         break;
       case "project":
         this._updatePromise = Task.spawn(function() {
@@ -225,12 +232,13 @@ let UI = {
   },
 
   busyWithProgressUntil: function(promise, operationDescription) {
-    this.busyUntil(promise, operationDescription);
+    let busy = this.busyUntil(promise, operationDescription);
     let win = document.querySelector("window");
     let progress = document.querySelector("#action-busy-determined");
     progress.mode = "undetermined";
     win.classList.add("busy-determined");
     win.classList.remove("busy-undetermined");
+    return busy;
   },
 
   busyUntil: function(promise, operationDescription) {
@@ -372,6 +380,7 @@ let UI = {
   connectToRuntime: function(runtime) {
     let name = runtime.getName();
     let promise = AppManager.connectToRuntime(runtime);
+    promise.then(() => this.initConnectionTelemetry());
     return this.busyUntil(promise, "connecting to runtime");
   },
 
@@ -394,6 +403,47 @@ let UI = {
     }
     Services.prefs.setCharPref("devtools.webide.lastConnectedRuntime",
                                this.lastConnectedRuntime);
+  },
+
+  _actionsToLog: new Set(),
+
+  /**
+   * For each new connection, track whether play and debug were ever used.  Only
+   * one value is collected for each button, even if they are used multiple
+   * times during a connection.
+   */
+  initConnectionTelemetry: function() {
+    this._actionsToLog.add("play");
+    this._actionsToLog.add("debug");
+  },
+
+  /**
+   * Action occurred.  Log that it happened, and remove it from the loggable
+   * set.
+   */
+  onAction: function(action) {
+    if (!this._actionsToLog.has(action)) {
+      return;
+    }
+    this.logActionState(action, true);
+    this._actionsToLog.delete(action);
+  },
+
+  /**
+   * Connection status changed or we are shutting down.  Record any loggable
+   * actions as having not occurred.
+   */
+  updateConnectionTelemetry: function() {
+    for (let action of this._actionsToLog.values()) {
+      this.logActionState(action, false);
+    }
+    this._actionsToLog.clear();
+  },
+
+  logActionState: function(action, state) {
+    let histogramId = "DEVTOOLS_WEBIDE_CONNECTION_" +
+                      action.toUpperCase() + "_USED";
+    this._telemetry.log(histogramId, state);
   },
 
   /********** PROJECTS **********/
@@ -837,8 +887,7 @@ let UI = {
     splitter.setAttribute("hidden", "true");
     document.querySelector("#action-button-debug").removeAttribute("active");
   },
-}
-
+};
 
 let Cmds = {
   quit: function() {
@@ -1108,17 +1157,28 @@ let Cmds = {
   },
 
   play: function() {
+    let busy;
     switch(AppManager.selectedProject.type) {
       case "packaged":
-        return UI.busyWithProgressUntil(AppManager.installAndRunProject(), "installing and running app");
+        busy = UI.busyWithProgressUntil(AppManager.installAndRunProject(),
+                                        "installing and running app");
+        break;
       case "hosted":
-        return UI.busyUntil(AppManager.installAndRunProject(), "installing and running app");
+        busy = UI.busyUntil(AppManager.installAndRunProject(),
+                            "installing and running app");
+        break;
       case "runtimeApp":
-        return UI.busyUntil(AppManager.launchOrReloadRuntimeApp(), "launching / reloading app");
+        busy = UI.busyUntil(AppManager.launchOrReloadRuntimeApp(), "launching / reloading app");
+        break;
       case "tab":
-        return UI.busyUntil(AppManager.reloadTab(), "reloading tab");
+        busy = UI.busyUntil(AppManager.reloadTab(), "reloading tab");
+        break;
     }
-    return promise.reject();
+    if (!busy) {
+      return promise.reject();
+    }
+    UI.onAction("play");
+    return busy;
   },
 
   stop: function() {
@@ -1126,6 +1186,7 @@ let Cmds = {
   },
 
   toggleToolbox: function() {
+    UI.onAction("debug");
     if (UI.toolboxIframe) {
       UI.destroyToolbox();
       return promise.resolve();

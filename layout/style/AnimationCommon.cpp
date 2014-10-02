@@ -719,10 +719,24 @@ AnimationPlayerCollection::UpdateAnimationGeneration(
 }
 
 bool
-AnimationPlayerCollection::HasCurrentAnimations()
+AnimationPlayerCollection::HasCurrentAnimations() const
 {
   for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-    if (mPlayers[playerIdx]->IsCurrent()) {
+    if (mPlayers[playerIdx]->HasCurrentSource()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool
+AnimationPlayerCollection::HasCurrentAnimationsForProperty(nsCSSProperty
+                                                             aProperty) const
+{
+  for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
+    const Animation* anim = mPlayers[playerIdx]->GetSource();
+    if (anim && anim->IsCurrent() && anim->HasAnimationOfProperty(aProperty)) {
       return true;
     }
   }

@@ -7,14 +7,14 @@ if not CONFIG['LIBXUL_SDK']:
     include('/toolkit/toolkit.mozbuild')
 
 if CONFIG['MOZ_EXTENSIONS']:
-    add_tier_dir('app', 'extensions')
+    DIRS += ['/extensions']
 
-add_tier_dir('app', [CONFIG['MOZ_BRANDING_DIRECTORY']])
+DIRS += ['/%s' % CONFIG['MOZ_BRANDING_DIRECTORY']]
 
 if CONFIG['MOZ_WEBAPP_RUNTIME']:
-    add_tier_dir('app', 'webapprt')
+    DIRS += ['/webapprt']
 
-# Never add tier dirs after browser because they apparently won't get
+# Never add dirs after browser because they apparently won't get
 # packaged properly on Mac.
-add_tier_dir('app', 'browser')
+DIRS += ['/browser']
 

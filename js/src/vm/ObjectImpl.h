@@ -824,7 +824,7 @@ class ObjectImpl : public gc::Cell
     /* Memory usage functions. */
     size_t tenuredSizeOfThis() const {
         MOZ_ASSERT(isTenured());
-        return js::gc::Arena::thingSize(asTenured()->getAllocKind());
+        return js::gc::Arena::thingSize(asTenured().getAllocKind());
     }
 
     /* Elements accessors. */
@@ -984,14 +984,14 @@ class ObjectImpl : public gc::Cell
 ObjectImpl::readBarrier(ObjectImpl *obj)
 {
     if (!isNullLike(obj) && obj->isTenured())
-        obj->asTenured()->readBarrier(obj->asTenured());
+        obj->asTenured().readBarrier(&obj->asTenured());
 }
 
 /* static */ MOZ_ALWAYS_INLINE void
 ObjectImpl::writeBarrierPre(ObjectImpl *obj)
 {
     if (!isNullLike(obj) && obj->isTenured())
-        obj->asTenured()->writeBarrierPre(obj->asTenured());
+        obj->asTenured().writeBarrierPre(&obj->asTenured());
 }
 
 /* static */ MOZ_ALWAYS_INLINE void

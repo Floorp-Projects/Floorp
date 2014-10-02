@@ -60,7 +60,7 @@
 #include "gfxPrefs.h"
 #include "nsIDOMChromeWindow.h"
 #include "nsFrameLoader.h"
-
+#include "mozilla/dom/FontFaceSet.h"
 #include "nsContentUtils.h"
 #include "nsPIWindowRoot.h"
 #include "mozilla/Preferences.h"
@@ -237,8 +237,7 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
     mNeverAnimate = false;
   }
   NS_ASSERTION(mDocument, "Null document");
-  mUserFontSet = nullptr;
-  mUserFontSetDirty = true;
+  mFontFaceSetDirty = true;
 
   mCounterStylesDirty = true;
 
@@ -1094,10 +1093,10 @@ nsPresContext::Init(nsDeviceContext* aDeviceContext)
 void
 nsPresContext::SetShell(nsIPresShell* aShell)
 {
-  if (mUserFontSet) {
+  if (mFontFaceSet) {
     // Clear out user font set if we have one
-    mUserFontSet->Destroy();
-    NS_RELEASE(mUserFontSet);
+    mFontFaceSet->DestroyUserFontSet();
+    mFontFaceSet = nullptr;
   }
 
   if (mShell) {
@@ -2068,7 +2067,7 @@ nsPresContext::GetUserFontSetInternal()
   // Set mGetUserFontSetCalled up front, so that FlushUserFontSet will actually
   // flush.
   mGetUserFontSetCalled = true;
-  if (mUserFontSetDirty) {
+  if (mFontFaceSetDirty) {
     // If this assertion fails, and there have actually been changes to
     // @font-face rules, then we will call StyleChangeReflow in
     // FlushUserFontSet.  If we're in the middle of reflow,
@@ -2080,7 +2079,11 @@ nsPresContext::GetUserFontSetInternal()
     FlushUserFontSet();
   }
 
-  return mUserFontSet;
+  if (!mFontFaceSet) {
+    return nullptr;
+  }
+
+  return mFontFaceSet->GetUserFontSet();
 }
 
 gfxUserFontSet*
@@ -2098,36 +2101,22 @@ nsPresContext::FlushUserFontSet()
 
   if (!mGetUserFontSetCalled) {
     return; // No one cares about this font set yet, but we want to be careful
-            // to not unset our mUserFontSetDirty bit, so when someone really
+            // to not unset our mFontFaceSetDirty bit, so when someone really
             // does we'll create it.
   }
 
-  if (mUserFontSetDirty) {
+  if (mFontFaceSetDirty) {
     if (gfxPlatform::GetPlatform()->DownloadableFontsEnabled()) {
       nsTArray<nsFontFaceRuleContainer> rules;
       if (!mShell->StyleSet()->AppendFontFaceRules(this, rules)) {
-        if (mUserFontSet) {
-          mUserFontSet->Destroy();
-          NS_RELEASE(mUserFontSet);
-        }
         return;
       }
 
-      bool changed = false;
-
-      if (rules.Length() == 0) {
-        if (mUserFontSet) {
-          mUserFontSet->Destroy();
-          NS_RELEASE(mUserFontSet);
-          changed = true;
-        }
-      } else {
-        if (!mUserFontSet) {
-          mUserFontSet = new nsUserFontSet(this);
-          NS_ADDREF(mUserFontSet);
-        }
-        changed = mUserFontSet->UpdateRules(rules);
+      if (!mFontFaceSet) {
+        mFontFaceSet = new FontFaceSet(mDocument->GetInnerWindow(), this);
       }
+      mFontFaceSet->EnsureUserFontSet(this);
+      bool changed = mFontFaceSet->UpdateRules(rules);
 
       // We need to enqueue a style change reflow (for later) to
       // reflect that we're modifying @font-face rules.  (However,
@@ -2138,7 +2127,7 @@ nsPresContext::FlushUserFontSet()
       }
     }
 
-    mUserFontSetDirty = false;
+    mFontFaceSetDirty = false;
   }
 }
 
@@ -2152,7 +2141,7 @@ nsPresContext::RebuildUserFontSet()
     return;
   }
 
-  mUserFontSetDirty = true;
+  mFontFaceSetDirty = true;
   mDocument->SetNeedStyleFlush();
 
   // Somebody has already asked for the user font set, so we need to
@@ -2190,6 +2179,16 @@ nsPresContext::UserFontSetUpdated()
   //      reuse of cached data even when no style rules have changed.
 
   PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW);
+}
+
+FontFaceSet*
+nsPresContext::Fonts()
+{
+  if (!mFontFaceSet) {
+    mFontFaceSet = new FontFaceSet(mDocument->GetInnerWindow(), this);
+    GetUserFontSet();  // this will cause the user font set to be created/updated
+  }
+  return mFontFaceSet;
 }
 
 void
@@ -2645,6 +2644,21 @@ nsPresContext::HavePendingInputEvent()
       return false;
     }
   }
+}
+
+void
+nsPresContext::NotifyFontFaceSetOnRefresh()
+{
+  if (mFontFaceSet) {
+    mFontFaceSet->DidRefresh();
+  }
+}
+
+bool
+nsPresContext::HasPendingRestyleOrReflow()
+{
+  return (mRestyleManager && mRestyleManager->HasPendingRestyles()) ||
+         PresShell()->HasPendingReflow();
 }
 
 void

@@ -2069,7 +2069,7 @@ ByteSize(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     mozilla::MallocSizeOf mallocSizeOf = cx->runtime()->debuggerMallocSizeOf;
-    JS::ubi::Node node(args.get(0));
+    JS::ubi::Node node = args.get(0);
     if (node)
         args.rval().set(NumberValue(node.size(mallocSizeOf)));
     else

@@ -512,7 +512,7 @@ TileClient::TileClient(const TileClient& o)
   mFrontBufferOnWhite = o.mFrontBufferOnWhite;
   mBackLock = o.mBackLock;
   mFrontLock = o.mFrontLock;
-  mCompositableClient = o.mCompositableClient;
+  mCompositableClient = nullptr;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
   mLastUpdate = o.mLastUpdate;
 #endif
@@ -531,7 +531,7 @@ TileClient::operator=(const TileClient& o)
   mFrontBufferOnWhite = o.mFrontBufferOnWhite;
   mBackLock = o.mBackLock;
   mFrontLock = o.mFrontLock;
-  mCompositableClient = o.mCompositableClient;
+  mCompositableClient = nullptr;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
   mLastUpdate = o.mLastUpdate;
 #endif
