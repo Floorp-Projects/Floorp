@@ -96,13 +96,13 @@ public:
    * FontFaceSet when Add, Remove, etc. are called.
    */
   void SetIsInFontFaceSet(bool aInFontFaceSet) {
-    MOZ_ASSERT(!(!aInFontFaceSet && IsConnected()),
+    MOZ_ASSERT(!(!aInFontFaceSet && HasRule()),
                "use DisconnectFromRule instead");
     mInFontFaceSet = aInFontFaceSet;
   }
 
   /**
-   * Returns whether this FontFace is initialized.  A CSS-connected
+   * Returns whether this FontFace is initialized.  A rule backed
    * FontFace is considered initialized at construction time.  For
    * FontFace objects created using the FontFace JS constructor, it
    * is once all the descriptors have been parsed.
@@ -122,7 +122,7 @@ public:
    * Returns whether this object is CSS-connected, i.e. reflecting an
    * @font-face rule.
    */
-  bool IsConnected() const { return mRule; }
+  bool HasRule() const { return mRule; }
 
   /**
    * Breaks the connection between this FontFace and its @font-face rule.
@@ -236,7 +236,7 @@ private:
   nsRefPtr<mozilla::dom::Promise> mLoaded;
 
   // The @font-face rule this FontFace object is reflecting, if it is a
-  // CSS-connected FontFace.
+  // rule backed FontFace.
   nsRefPtr<nsCSSFontFaceRule> mRule;
 
   // The FontFace object's user font entry.  This is initially null, but is set
@@ -265,7 +265,7 @@ private:
   uint32_t mSourceBufferLength;
 
   // The values corresponding to the font face descriptors, if we are not
-  // a CSS-connected FontFace object.  For CSS-connected objects, we use
+  // a rule backed FontFace object.  For rule backed objects, we use
   // the descriptors stored in mRule.
   nsAutoPtr<mozilla::CSSFontFaceDescriptors> mDescriptors;
 
