@@ -20,8 +20,11 @@
 
         Task.spawn(function* () {
           Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
-          DebuggerServer.init(function () { return true; });
-          DebuggerServer.addBrowserActors();
+
+          if (!DebuggerServer.initialized) {
+            DebuggerServer.init(function () { return true; });
+            DebuggerServer.addBrowserActors();
+          }
 
           let win = yield openWebIDE();
 

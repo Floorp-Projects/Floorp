@@ -597,6 +597,7 @@
 
     <style name="Widget.RemoteTabsListView" parent="Widget.HomeListView">
         <item name="android:childDivider">#E7ECF0</item>
+        <item name="android:drawSelectorOnTop">true</item>
     </style>
 
     <!-- TabsTray Row -->

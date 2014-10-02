@@ -2118,6 +2118,12 @@ pref("layout.css.scroll-behavior.spring-constant", "250.0");
 // at the greatest speed without overshooting.
 pref("layout.css.scroll-behavior.damping-ratio", "1.0");
 
+// Is support for document.fonts enabled?
+//
+// Don't enable the pref for the CSS Font Loading API until bug 1072101 is
+// fixed, as we don't want to expose more indexed properties on the Web.
+pref("layout.css.font-loading-api.enabled", false);
+
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction
 // 1 = end-side in document/content direction

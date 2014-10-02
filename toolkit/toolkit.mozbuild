@@ -7,186 +7,199 @@ if CONFIG['LIBXUL_SDK']:
     error('toolkit.mozbuild is not compatible with --enable-libxul-sdk=')
 
 if CONFIG['MOZ_SANDBOX']:
-    add_tier_dir('sandbox', 'security/sandbox')
+    DIRS += ['/security/sandbox']
 
-# Depends on NSS and NSPR, and must be built after sandbox or else B2G emulator
-# builds fail.
-add_tier_dir('platform', 'security/certverifier')
-
-# Depends on certverifier
-add_tier_dir('platform', 'security/apps')
+DIRS += [
+    # Depends on NSS and NSPR, and must be built after sandbox or else B2G emulator
+    # builds fail.
+    '/security/certverifier',
+    # Depends on certverifier
+    '/security/apps',
+]
 
 # the signing related bits of libmar depend on nss
 if CONFIG['MOZ_UPDATER']:
-    add_tier_dir('platform', 'modules/libmar')
+    DIRS += ['/modules/libmar']
 
 if CONFIG['NS_TRACE_MALLOC']:
-    add_tier_dir('platform', 'tools/trace-malloc/lib')
+    DIRS += ['/tools/trace-malloc/lib']
 
 if CONFIG['MOZ_DMD']:
-    add_tier_dir('platform', 'memory/replace/dmd')
+    DIRS += ['/memory/replace/dmd']
 
-add_tier_dir('platform', 'config/external/freetype2')
-
-add_tier_dir('platform', 'xpcom')
-
-add_tier_dir('platform', [
-    'modules/libpref',
-    'intl',
-    'netwerk',
-])
+DIRS += [
+    '/config/external/freetype2',
+    '/xpcom',
+    '/modules/libpref',
+    '/intl',
+    '/netwerk',
+]
 
 if CONFIG['MOZ_AUTH_EXTENSION']:
-    add_tier_dir('platform', 'extensions/auth')
+    DIRS += ['/extensions/auth']
 
 if CONFIG['MOZ_UPDATER']:
-    add_tier_dir('platform', 'other-licenses/bsdiff')
+    DIRS += ['/other-licenses/bsdiff']
 
 # Gecko/Core components.
 
-add_tier_dir('platform', ['ipc', 'js/ipc'])
-
-add_tier_dir('platform', ['hal', 'js/xpconnect', 'intl/chardet'])
-
-add_tier_dir('platform', 'media/libyuv')
-
-add_tier_dir('platform', ['modules/libjar', 'storage'])
+DIRS += [
+    '/ipc',
+    '/js/ipc',
+    '/hal',
+    '/js/xpconnect',
+    '/intl/chardet',
+    '/media/libyuv',
+    '/modules/libjar',
+    '/storage',
+]
 
 if CONFIG['MOZ_PERMISSIONS']:
-    add_tier_dir('platform', ['extensions/cookie', 'extensions/permissions'])
+    DIRS += [
+        '/extensions/cookie',
+        '/extensions/permissions',
+    ]
 
-add_tier_dir('platform', 'rdf')
+DIRS += [
+    '/rdf',
+]
 
 if CONFIG['MOZ_WEBRTC']:
-    add_tier_dir('platform', [
-        'media/webrtc',
-        'media/mtransport/third_party',
-        'media/mtransport/build',
-        'media/mtransport/standalone',
-    ])
+    DIRS += [
+        '/media/webrtc',
+        '/media/mtransport/third_party',
+        '/media/mtransport/build',
+        '/media/mtransport/standalone',
+    ]
 
 if CONFIG['MOZ_OMX_PLUGIN']:
-    add_tier_dir('platform', [
-        'media/omx-plugin/lib/ics/libutils',
-        'media/omx-plugin/lib/ics/libstagefright',
-        'media/omx-plugin/lib/ics/libvideoeditorplayer',
-        'media/omx-plugin/lib/gb/libutils',
-        'media/omx-plugin/lib/gb/libstagefright',
-        'media/omx-plugin/lib/gb/libstagefright_color_conversion',
-        'media/omx-plugin/lib/gb235/libstagefright',
-        'media/omx-plugin',
-        'media/omx-plugin/gb',
-        'media/omx-plugin/gb235',
-        'media/omx-plugin/lib/hc/libstagefright',
-        'media/omx-plugin/hc',
-        'media/omx-plugin/kk',
-    ])
+    DIRS += [
+        '/media/omx-plugin/lib/ics/libutils',
+        '/media/omx-plugin/lib/ics/libstagefright',
+        '/media/omx-plugin/lib/ics/libvideoeditorplayer',
+        '/media/omx-plugin/lib/gb/libutils',
+        '/media/omx-plugin/lib/gb/libstagefright',
+        '/media/omx-plugin/lib/gb/libstagefright_color_conversion',
+        '/media/omx-plugin/lib/gb235/libstagefright',
+        '/media/omx-plugin',
+        '/media/omx-plugin/gb',
+        '/media/omx-plugin/gb235',
+        '/media/omx-plugin/lib/hc/libstagefright',
+        '/media/omx-plugin/hc',
+        '/media/omx-plugin/kk',
+    ]
 
 if CONFIG['ENABLE_TESTS']:
-    add_tier_dir('platform', 'testing/specialpowers')
+    DIRS += ['/testing/specialpowers']
 
-add_tier_dir('platform', 'testing/gtest')
-
-add_tier_dir('platform', [
-    'uriloader',
-    'caps',
-    'parser',
-    'gfx',
-    'image',
-    'dom',
-    'view',
-    'widget',
-    'content',
-    'editor',
-    'layout',
-    'docshell',
-    'embedding',
-    'xpfe/appshell'
-])
+DIRS += [
+    '/testing/gtest',
+    '/uriloader',
+    '/caps',
+    '/parser',
+    '/gfx',
+    '/image',
+    '/dom',
+    '/view',
+    '/widget',
+    '/content',
+    '/editor',
+    '/layout',
+    '/docshell',
+    '/embedding',
+    '/xpfe/appshell'
+]
 
 # This needs to be built after the gfx/ directory
 # to ensure all dependencies for skia (e.g. mozalloc, xpcom)
 # have been built
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    add_tier_dir('platform', 'other-licenses/skia-npapi')
+    DIRS += ['/other-licenses/skia-npapi']
 
 if CONFIG['MOZ_UNIVERSALCHARDET']:
-    add_tier_dir('platform', 'extensions/universalchardet')
+    DIRS += ['/extensions/universalchardet']
 
 if CONFIG['ACCESSIBILITY']:
-    add_tier_dir('platform', 'accessible')
+    DIRS += ['/accessible']
 
 # toolkit
 
-add_tier_dir('platform', 'profile')
+DIRS += ['/profile']
 
 # This must precede xpfe.
 if CONFIG['MOZ_JPROF']:
-    add_tier_dir('platform', 'tools/jprof')
+    DIRS += ['/tools/jprof']
 
-add_tier_dir('platform', 'tools/profiler')
-
-add_tier_dir('platform', 'xpfe/components')
+DIRS += [
+    '/tools/profiler',
+    '/xpfe/components',
+]
 
 if CONFIG['MOZ_ENABLE_XREMOTE']:
-    add_tier_dir('platform', 'widget/xremoteclient')
+    DIRS += ['/widget/xremoteclient']
 
 if CONFIG['MOZ_SPELLCHECK']:
-    add_tier_dir('platform', 'extensions/spellcheck')
+    DIRS += ['/extensions/spellcheck']
 
-add_tier_dir('platform', 'security/manager')
-
-add_tier_dir('platform', 'toolkit')
+DIRS += [
+    '/security/manager',
+    '/toolkit',
+]
 
 if CONFIG['MOZ_PREF_EXTENSIONS']:
-    add_tier_dir('platform', 'extensions/pref')
+    DIRS += ['/extensions/pref']
 
-add_tier_dir('platform', 'services')
-add_tier_dir('platform', 'startupcache')
-add_tier_dir('platform', 'js/ductwork/debugger')
-add_tier_dir('platform', 'other-licenses/snappy')
+DIRS += [
+    '/services',
+    '/startupcache',
+    '/js/ductwork/debugger',
+    '/other-licenses/snappy',
+]
 
 if CONFIG['MOZ_GIO_COMPONENT']:
-    add_tier_dir('platform', 'extensions/gio')
+    DIRS += ['/extensions/gio']
 
-add_tier_dir('platform', 'toolkit/library/StaticXULComponentsEnd')
-add_tier_dir('platform', 'toolkit/library')
+DIRS += [
+    '/toolkit/library/StaticXULComponentsEnd',
+    '/toolkit/library',
+]
 
 if CONFIG['MOZ_REPLACE_MALLOC']:
-    add_tier_dir('platform', 'memory/replace')
+    DIRS += ['/memory/replace']
 
 if CONFIG['NS_TRACE_MALLOC']:
-    add_tier_dir('platform', 'tools/trace-malloc')
+    DIRS += ['/tools/trace-malloc']
 
 if CONFIG['MOZ_ENABLE_GNOME_COMPONENT']:
-    add_tier_dir('platform', 'toolkit/system/gnome')
+    DIRS += ['/toolkit/system/gnome']
 
 # if QtNetwork is present, it will do its own network monitoring
 if not CONFIG['MOZ_ENABLE_QTNETWORK'] and CONFIG['MOZ_ENABLE_DBUS']:
-    add_tier_dir('platform', 'toolkit/system/dbus')
+    DIRS += ['/toolkit/system/dbus']
 
-add_tier_dir('platform', 'addon-sdk')
+DIRS += ['/addon-sdk']
 
 if CONFIG['ENABLE_MARIONETTE'] or CONFIG['MOZ_WIDGET_TOOLKIT'] not in ('gonk', 'android'):
-    add_tier_dir('platform', 'testing/marionette')
+    DIRS += ['/testing/marionette']
 
-add_tier_dir('platform', 'tools/quitter')
-
-add_tier_dir('platform', 'media/gmp-clearkey/0.1')
+DIRS += [
+    '/tools/quitter',
+    '/media/gmp-clearkey/0.1',
+]
 
 if CONFIG['ENABLE_TESTS']:
-    add_tier_dir('platform', [
-        'testing/mochitest',
-        'testing/xpcshell',
-        'testing/tools/screenshot',
-        'testing/profiles',
-        'testing/mozbase',
-        'testing/modules',
-        'testing/web-platform',
-    ])
+    DIRS += [
+        '/testing/mochitest',
+        '/testing/xpcshell',
+        '/testing/tools/screenshot',
+        '/testing/profiles',
+        '/testing/mozbase',
+        '/testing/modules',
+        '/testing/web-platform',
+    ]
 
     if CONFIG['MOZ_WEBRTC'] and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
-            add_tier_dir('platform', [
-                'media/webrtc/signaling/test',
-                'media/mtransport/test',
-            ])
+            DIRS += [
+                '/media/webrtc/signaling/test',
+                '/media/mtransport/test',
+            ]

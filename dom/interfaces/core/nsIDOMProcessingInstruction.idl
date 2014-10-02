@@ -15,7 +15,7 @@
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[uuid(ca632936-4c6b-48b4-9920-fbe1e3710802)]
+[uuid(d0163f44-8f5b-4234-b3aa-43cab64e2039)]
 interface nsIDOMProcessingInstruction : nsIDOMCharacterData
 {
   readonly attribute DOMString        target;

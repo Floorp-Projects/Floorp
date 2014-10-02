@@ -29,6 +29,7 @@ from mozbuild.frontend.context import (
 )
 
 from mozbuild.test.common import MockConfig
+from types import StringTypes
 
 import mozpack.path as mozpath
 
@@ -38,7 +39,9 @@ test_data_path = mozpath.join(test_data_path, 'data')
 
 class TestSandbox(unittest.TestCase):
     def sandbox(self):
-        return Sandbox(Context(VARIABLES))
+        return Sandbox(Context({
+            'DIRS': (list, list, None, None),
+        }))
 
     def test_exec_source_success(self):
         sandbox = self.sandbox()
@@ -119,6 +122,24 @@ class TestSandbox(unittest.TestCase):
         self.assertEqual(e.args[0], 'Cannot reassign builtins')
 
 
+class TestedSandbox(MozbuildSandbox):
+    '''Version of MozbuildSandbox with a little more convenience for testing.
+
+    It automatically normalizes paths given to exec_file and exec_source. This
+    helps simplify the test code.
+    '''
+    def normalize_path(self, path):
+        return mozpath.normpath(
+            mozpath.join(self._context.config.topsrcdir, path))
+
+    def exec_file(self, path):
+        super(TestedSandbox, self).exec_file(self.normalize_path(path))
+
+    def exec_source(self, source, path=''):
+        super(TestedSandbox, self).exec_source(source,
+            self.normalize_path(path) if path else '')
+
+
 class TestMozbuildSandbox(unittest.TestCase):
     def sandbox(self, data_path=None, metadata={}):
         config = None
@@ -128,7 +149,7 @@ class TestMozbuildSandbox(unittest.TestCase):
         else:
             config = MockConfig()
 
-        return MozbuildSandbox(Context(VARIABLES, config), metadata)
+        return TestedSandbox(Context(VARIABLES, config), metadata)
 
     def test_default_state(self):
         sandbox = self.sandbox()
@@ -212,59 +233,15 @@ class TestMozbuildSandbox(unittest.TestCase):
         self.assertEqual(e.args[1], 'reassign')
         self.assertEqual(e.args[2], 'DIST_SUBDIR')
 
-    def test_add_tier_dir_regular_str(self):
-        sandbox = self.sandbox()
-
-        sandbox.exec_source('add_tier_dir("t1", "foo")')
-
-        self.assertEqual(sandbox['TIERS']['t1'],
-            {'regular': ['foo'], 'external': []})
-
-    def test_add_tier_dir_regular_list(self):
-        sandbox = self.sandbox()
-
-        sandbox.exec_source('add_tier_dir("t1", ["foo", "bar"])')
-
-        self.assertEqual(sandbox['TIERS']['t1'],
-            {'regular': ['foo', 'bar'], 'external': []})
-
-    def test_add_tier_dir_external(self):
-        sandbox = self.sandbox()
-
-        sandbox.exec_source('add_tier_dir("t1", "foo", external=True)')
-
-        self.assertEqual(sandbox['TIERS']['t1'],
-            {'regular': [], 'external': ['foo']})
-
-    def test_tier_order(self):
-        sandbox = self.sandbox()
-
-        source = '''
-add_tier_dir('t1', 'foo')
-add_tier_dir('t1', 'bar')
-add_tier_dir('t2', 'baz')
-add_tier_dir('t3', 'biz')
-add_tier_dir('t1', 'bat')
-'''
-
-        sandbox.exec_source(source)
-
-        self.assertEqual([k for k in sandbox['TIERS'].keys()], ['t1', 't2', 't3'])
-
-    def test_tier_multiple_registration(self):
-        sandbox = self.sandbox()
-
-        sandbox.exec_source('add_tier_dir("t1", "foo")')
-
-        with self.assertRaises(SandboxExecutionError):
-            sandbox.exec_source('add_tier_dir("t1", "foo")')
-
     def test_include_basic(self):
         sandbox = self.sandbox(data_path='include-basic')
 
         sandbox.exec_file('moz.build')
 
-        self.assertEqual(sandbox['DIRS'], ['foo', 'bar'])
+        self.assertEqual(sandbox['DIRS'], [
+            sandbox.normalize_path('foo'),
+            sandbox.normalize_path('bar'),
+        ])
         self.assertEqual(sandbox._context.main_path,
             sandbox.normalize_path('moz.build'))
         self.assertEqual(len(sandbox._context.all_paths), 2)
@@ -275,7 +252,8 @@ add_tier_dir('t1', 'bat')
         with self.assertRaises(SandboxLoadError) as se:
             sandbox.exec_file('relative.build')
 
-        self.assertEqual(se.exception.illegal_path, '../moz.build')
+        self.assertEqual(se.exception.illegal_path,
+            sandbox.normalize_path('../moz.build'))
 
     def test_include_error_stack(self):
         # Ensure the path stack is reported properly in exceptions.
@@ -310,11 +288,11 @@ add_tier_dir('t1', 'bat')
         # child directory.
         sandbox = self.sandbox(data_path='include-relative-from-child')
         sandbox.exec_file('child/child.build')
-        self.assertEqual(sandbox['DIRS'], ['foo'])
+        self.assertEqual(sandbox['DIRS'], [sandbox.normalize_path('foo')])
 
         sandbox = self.sandbox(data_path='include-relative-from-child')
         sandbox.exec_file('child/child2.build')
-        self.assertEqual(sandbox['DIRS'], ['foo'])
+        self.assertEqual(sandbox['DIRS'], [sandbox.normalize_path('foo')])
 
     def test_include_topsrcdir_relative(self):
         # An absolute path for include() is relative to topsrcdir.
@@ -322,7 +300,7 @@ add_tier_dir('t1', 'bat')
         sandbox = self.sandbox(data_path='include-topsrcdir-relative')
         sandbox.exec_file('moz.build')
 
-        self.assertEqual(sandbox['DIRS'], ['foo'])
+        self.assertEqual(sandbox['DIRS'], [sandbox.normalize_path('foo')])
 
     def test_error(self):
         sandbox = self.sandbox()
@@ -371,7 +349,7 @@ Template([
     'foo.cpp',
 ])
 '''
-        sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+        sandbox2.exec_source(source, 'foo.mozbuild')
 
         self.assertEqual(sandbox2._context, {
             'SOURCES': ['foo.cpp'],
@@ -389,20 +367,21 @@ Template([
 ])
 SOURCES += ['hoge.cpp']
 '''
-        sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+        sandbox2.exec_source(source, 'foo.mozbuild')
 
         self.assertEqual(sandbox2._context, {
             'SOURCES': ['qux.cpp', 'bar.cpp', 'foo.cpp', 'hoge.cpp'],
-            'DIRS': ['foo'],
+            'DIRS': [sandbox.normalize_path('foo')],
         })
 
+        sandbox2 = self.sandbox(metadata={'templates': sandbox.templates})
         source = '''
 TemplateError([
     'foo.cpp',
 ])
 '''
         with self.assertRaises(SandboxExecutionError) as se:
-            sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+            sandbox2.exec_source(source, 'foo.mozbuild')
 
         e = se.exception
         self.assertIsInstance(e.exc_value, KeyError)
@@ -413,12 +392,13 @@ TemplateError([
 
         # TemplateGlobalVariable tries to access 'illegal' but that is expected
         # to throw.
+        sandbox2 = self.sandbox(metadata={'templates': sandbox.templates})
         source = '''
 illegal = True
 TemplateGlobalVariable()
 '''
         with self.assertRaises(SandboxExecutionError) as se:
-            sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+            sandbox2.exec_source(source, 'foo.mozbuild')
 
         e = se.exception
         self.assertIsInstance(e.exc_value, NameError)
@@ -431,10 +411,10 @@ TemplateGlobalVariable()
 DIRS += ['foo']
 TemplateGlobalUPPERVariable()
 '''
-        sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+        sandbox2.exec_source(source, 'foo.mozbuild')
         self.assertEqual(sandbox2._context, {
             'SOURCES': [],
-            'DIRS': ['foo'],
+            'DIRS': [sandbox2.normalize_path('foo')],
         })
 
         # However, the result of the template is mixed with the global
@@ -448,7 +428,7 @@ TemplateInherit([
 ])
 SOURCES += ['hoge.cpp']
 '''
-        sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+        sandbox2.exec_source(source, 'foo.mozbuild')
 
         self.assertEqual(sandbox2._context, {
             'SOURCES': ['qux.cpp', 'bar.cpp', 'foo.cpp', 'hoge.cpp'],
@@ -458,6 +438,7 @@ SOURCES += ['hoge.cpp']
 
         # Template names must be CamelCase. Here, we can define the template
         # inline because the error happens before inspect.getsourcelines.
+        sandbox2 = self.sandbox(metadata={'templates': sandbox.templates})
         source = '''
 @template
 def foo():
@@ -465,7 +446,7 @@ def foo():
 '''
 
         with self.assertRaises(SandboxExecutionError) as se:
-            sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+            sandbox2.exec_source(source, 'foo.mozbuild')
 
         e = se.exception
         self.assertIsInstance(e.exc_value, NameError)
@@ -475,13 +456,14 @@ def foo():
             'Template function names must be CamelCase.')
 
         # Template names must not already be registered.
+        sandbox2 = self.sandbox(metadata={'templates': sandbox.templates})
         source = '''
 @template
 def Template():
     pass
 '''
         with self.assertRaises(SandboxExecutionError) as se:
-            sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+            sandbox2.exec_source(source, 'foo.mozbuild')
 
         e = se.exception
         self.assertIsInstance(e.exc_value, KeyError)
@@ -490,6 +472,43 @@ def Template():
         self.assertEqual(e.message,
             'A template named "Template" was already declared in %s.' %
             sandbox.normalize_path('templates.mozbuild'))
+
+    def test_function_args(self):
+        class Foo(int): pass
+
+        def foo(a, b):
+            return type(a), type(b)
+
+        FUNCTIONS.update({
+            'foo': (lambda self: foo, (Foo, int), ''),
+        })
+
+        try:
+            sandbox = self.sandbox()
+            source = 'foo("a", "b")'
+
+            with self.assertRaises(SandboxExecutionError) as se:
+                sandbox.exec_source(source, 'foo.mozbuild')
+
+            e = se.exception
+            self.assertIsInstance(e.exc_value, ValueError)
+
+            sandbox = self.sandbox()
+            source = 'foo(1, "b")'
+
+            with self.assertRaises(SandboxExecutionError) as se:
+                sandbox.exec_source(source, 'foo.mozbuild')
+
+            e = se.exception
+            self.assertIsInstance(e.exc_value, ValueError)
+
+            sandbox = self.sandbox()
+            source = 'a = foo(1, 2)'
+            sandbox.exec_source(source, 'foo.mozbuild')
+
+            self.assertEquals(sandbox['a'], (Foo, int))
+        finally:
+            del FUNCTIONS['foo']
 
 
 if __name__ == '__main__':

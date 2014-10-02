@@ -653,6 +653,10 @@ class GTestCommands(MachCommandBase):
         self._run_make(directory="testing/gtest", target='gtest', ensure_exit_code=True)
 
         app_path = self.get_binary_path('app')
+        cwd = os.path.join(self.topobjdir, '_tests', 'gtest')
+
+        if not os.path.isdir(cwd):
+            os.makedirs(cwd)
 
         # Use GTest environment variable to control test execution
         # For details see:
@@ -670,6 +674,7 @@ class GTestCommands(MachCommandBase):
         if jobs == 1:
             return self.run_process([app_path, "-unittest"],
                                     append_env=gtest_env,
+                                    cwd=cwd,
                                     ensure_exit_code=False,
                                     pass_thru=True)
 
@@ -685,6 +690,7 @@ class GTestCommands(MachCommandBase):
         for i in range(0, jobs):
             gtest_env["GTEST_SHARD_INDEX"] = str(i)
             processes[i] = ProcessHandlerMixin([app_path, "-unittest"],
+                             cwd=cwd,
                              env=gtest_env,
                              processOutputLine=[functools.partial(handle_line, i)],
                              universal_newlines=True)

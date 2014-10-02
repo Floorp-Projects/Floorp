@@ -98,15 +98,6 @@ const injectObjectAPI = function(api, targetWindow) {
 };
 
 /**
- * Get the two-digit hexadecimal code for a byte
- *
- * @param {byte} charCode
- */
-const toHexString = function(charCode) {
-  return ("0" + charCode.toString(16)).slice(-2);
-};
-
-/**
  * Inject the loop API into the given window.  The caller must be sure the
  * window is a loop content window (eg, a panel, chatwindow, or similar).
  *
@@ -209,6 +200,25 @@ function injectLoopAPI(targetWindow) {
           return contactsAPI;
         }
         return contactsAPI = injectObjectAPI(LoopContacts, targetWindow);
+      }
+    },
+
+    /**
+     * Import a list of (new) contacts from an external data source.
+     *
+     * @param {Object}   options  Property bag of options for the importer
+     * @param {Function} callback Function that will be invoked once the operation
+     *                            finished. The first argument passed will be an
+     *                            `Error` object or `null`. The second argument will
+     *                            be the result of the operation, if successfull.
+     */
+    startImport: {
+      enumerable: true,
+      writable: true,
+      value: function(options, callback) {
+        LoopContacts.startImport(options, getChromeWindow(targetWindow), function(...results) {
+          callback(...[cloneValueInto(r, targetWindow) for (r of results)]);
+        });
       }
     },
 
@@ -551,42 +561,6 @@ function injectLoopAPI(targetWindow) {
       writable: true,
       value: function() {
         return MozLoopService.generateUUID();
-      }
-    },
-
-    /**
-     * Compose a URL pointing to the location of an avatar by email address.
-     * At the moment we use the Gravatar service to match email addresses with
-     * avatars. This might change in the future as avatars might come from another
-     * source.
-     *
-     * @param {String} emailAddress Users' email address
-     * @param {Number} size         Size of the avatar image to return in pixels.
-     *                              Optional. Default value: 40.
-     * @return the URL pointing to an avatar matching the provided email address.
-     */
-    getUserAvatar: {
-      enumerable: true,
-      writable: true,
-      value: function(emailAddress, size = 40) {
-        if (!emailAddress) {
-          return "";
-        }
-
-        // Do the MD5 dance.
-        let hasher = Cc["@mozilla.org/security/hash;1"]
-                       .createInstance(Ci.nsICryptoHash);
-        hasher.init(Ci.nsICryptoHash.MD5);
-        let stringStream = Cc["@mozilla.org/io/string-input-stream;1"]
-                             .createInstance(Ci.nsIStringInputStream);
-        stringStream.data = emailAddress.trim().toLowerCase();
-        hasher.updateFromStream(stringStream, -1);
-        let hash = hasher.finish(false);
-        // Convert the binary hash data to a hex string.
-        let md5Email = [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
-
-        // Compose the Gravatar URL.
-        return "http://www.gravatar.com/avatar/" + md5Email + ".jpg?default=blank&s=" + size;
       }
     },
   };
