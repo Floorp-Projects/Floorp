@@ -198,7 +198,7 @@ class Range : public TempObject {
     const SymbolicBound *symbolicLower_;
     const SymbolicBound *symbolicUpper_;
 
-    // This function simply makes several JS_ASSERTs to verify the internal
+    // This function simply makes several MOZ_ASSERTs to verify the internal
     // consistency of this range.
     void assertInvariants() const {
         // Basic sanity :).
