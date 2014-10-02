@@ -481,7 +481,8 @@ loop.conversation = (function(mozL10n) {
       sdk: React.PropTypes.object.isRequired,
 
       // XXX New types for OutgoingConversationView
-      store: React.PropTypes.instanceOf(loop.store.ConversationStore).isRequired
+      store: React.PropTypes.instanceOf(loop.store.ConversationStore).isRequired,
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
     },
 
     getInitialState: function() {
@@ -503,6 +504,7 @@ loop.conversation = (function(mozL10n) {
       if (this.state.outgoing) {
         return (<OutgoingConversationView
           store={this.props.store}
+          dispatcher={this.props.dispatcher}
         />);
       }
 
@@ -515,7 +517,7 @@ loop.conversation = (function(mozL10n) {
   });
 
   /**
-   * Panel initialisation.
+   * Conversation initialisation.
    */
   function init() {
     // Do the initial L10n setup, we do this before anything
@@ -572,6 +574,7 @@ loop.conversation = (function(mozL10n) {
       store={conversationStore}
       client={client}
       conversation={conversation}
+      dispatcher={dispatcher}
       sdk={window.OT}
     />, document.querySelector('#main'));
 
