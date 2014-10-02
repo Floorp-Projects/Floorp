@@ -332,7 +332,7 @@ IsInvisibleBreak(nsINode *aNode) {
   }
 
   // Grab the editor associated with the document
-  nsIDocument *doc = aNode->GetCurrentDoc();
+  nsIDocument *doc = aNode->GetComposedDoc();
   if (doc) {
     nsPIDOMWindow *window = doc->GetWindow();
     if (window) {
