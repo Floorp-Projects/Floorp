@@ -1030,6 +1030,17 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
 
   uint32_t reason;
   switch (err) {
+    case SSL_ERROR_INAPPROPRIATE_FALLBACK_ALERT:
+      // This is a clear signal that we've fallen back too many versions.  Treat
+      // this as a hard failure now, but also mark the next higher version as
+      // being tolerant so that later attempts don't use this version (i.e.,
+      // range.max), which makes the error unrecoverable without a full restart.
+      socketInfo->SharedState().IOLayerHelpers()
+        .rememberTolerantAtVersion(socketInfo->GetHostName(),
+                                   socketInfo->GetPort(),
+                                   range.max + 1);
+      return false;
+
     case SSL_ERROR_BAD_MAC_ALERT: reason = 1; break;
     case SSL_ERROR_BAD_MAC_READ: reason = 2; break;
     case SSL_ERROR_HANDSHAKE_FAILURE_ALERT: reason = 3; break;
