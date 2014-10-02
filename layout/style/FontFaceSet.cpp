@@ -102,6 +102,17 @@ FontFaceSet::EnsureUserFontSet(nsPresContext* aPresContext)
   return mUserFontSet;
 }
 
+FontFace*
+FontFaceSet::FindFontFaceForEntry(gfxUserFontEntry* aUserFontEntry)
+{
+  for (size_t i = 0; i < mRules.Length(); i++) {
+    if (mRules[i].mUserFontEntry == aUserFontEntry) {
+      return mRules[i].mContainer.mRule->GetFontFace();
+    }
+  }
+  return nullptr;
+}
+
 already_AddRefed<Promise>
 FontFaceSet::Load(const nsAString& aFont,
                   const nsAString& aText,
@@ -679,6 +690,17 @@ FontFaceSet::FindRuleForUserFontEntry(gfxUserFontEntry* aUserFontEntry)
   return nullptr;
 }
 
+gfxUserFontEntry*
+FontFaceSet::FindUserFontEntryForRule(nsCSSFontFaceRule* aRule)
+{
+  for (size_t i = 0; i < mRules.Length(); i++) {
+    if (mRules[i].mContainer.mRule == aRule) {
+      return mRules[i].mUserFontEntry;
+    }
+  }
+  return nullptr;
+}
+
 nsresult
 FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
                         const char* aMessage,
@@ -956,8 +978,9 @@ FontFaceSet::FontFaceForRule(nsCSSFontFaceRule* aRule)
     return f;
   }
 
+  gfxUserFontEntry* entry = FindUserFontEntryForRule(aRule);
   nsRefPtr<FontFace> newFontFace =
-    FontFace::CreateForRule(GetParentObject(), aRule);
+    FontFace::CreateForRule(GetParentObject(), mPresContext, aRule, entry);
   aRule->SetFontFace(newFontFace);
   return newFontFace;
 }

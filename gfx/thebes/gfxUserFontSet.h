@@ -543,7 +543,7 @@ protected:
     void LoadNextSrc();
 
     // change the load state
-    void SetLoadState(UserFontLoadState aLoadState);
+    virtual void SetLoadState(UserFontLoadState aLoadState);
 
     // when download has been completed, pass back data here
     // aDownloadStatus == NS_OK ==> download succeeded, error otherwise

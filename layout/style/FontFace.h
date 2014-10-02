@@ -11,6 +11,7 @@
 #include "nsWrapperCache.h"
 
 class nsCSSFontFaceRule;
+class nsPresContext;
 
 namespace mozilla {
 namespace dom {
@@ -26,6 +27,8 @@ namespace dom {
 class FontFace MOZ_FINAL : public nsISupports,
                            public nsWrapperCache
 {
+  friend class Entry;
+
 public:
   class Entry MOZ_FINAL : public gfxUserFontEntry {
   public:
@@ -40,6 +43,13 @@ public:
       : gfxUserFontEntry(aFontSet, aFontFaceSrcList, aWeight, aStretch,
                          aItalicStyle, aFeatureSettings, aLanguageOverride,
                          aUnicodeRanges) {}
+
+    virtual void SetLoadState(UserFontLoadState aLoadState) MOZ_OVERRIDE;
+
+  protected:
+    // Look up this user font entry's corresponding FontFace object on the
+    // FontFaceSet.  Can return null.
+    FontFace* GetFontFace();
   };
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -48,8 +58,11 @@ public:
   nsISupports* GetParentObject() const { return mParent; }
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
-  static already_AddRefed<FontFace> CreateForRule(nsISupports* aGlobal,
-                                                  nsCSSFontFaceRule* aRule);
+  static already_AddRefed<FontFace> CreateForRule(
+                                              nsISupports* aGlobal,
+                                              nsPresContext* aPresContext,
+                                              nsCSSFontFaceRule* aRule,
+                                              gfxUserFontEntry* aUserFontEntry);
 
   // Web IDL
   static already_AddRefed<FontFace>
@@ -79,16 +92,28 @@ public:
   mozilla::dom::Promise* Loaded();
 
 private:
-  FontFace(nsISupports* aParent);
+  FontFace(nsISupports* aParent, nsPresContext* aPresContext);
   ~FontFace();
 
+  /**
+   * Sets the current loading status.
+   */
+  void SetStatus(mozilla::dom::FontFaceLoadStatus aStatus);
+
   nsCOMPtr<nsISupports> mParent;
+  nsPresContext* mPresContext;
 
   nsRefPtr<mozilla::dom::Promise> mLoaded;
 
   // The @font-face rule this FontFace object is reflecting, if it is a
   // CSS-connected FontFace.
   nsRefPtr<nsCSSFontFaceRule> mRule;
+
+  // The current load status of the font represented by this FontFace.
+  // Note that we can't just reflect the value of the gfxUserFontEntry's
+  // status, since the spec sometimes requires us to go through the event
+  // loop before updating the status, rather than doing it immediately.
+  mozilla::dom::FontFaceLoadStatus mStatus;
 };
 
 } // namespace dom

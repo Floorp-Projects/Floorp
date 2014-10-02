@@ -6,8 +6,10 @@
 #include "mozilla/dom/FontFace.h"
 
 #include "mozilla/dom/FontFaceBinding.h"
+#include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/Promise.h"
 #include "nsCSSRules.h"
+#include "nsIDocument.h"
 
 using namespace mozilla::dom;
 
@@ -21,10 +23,14 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(FontFace)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(FontFace)
 
-FontFace::FontFace(nsISupports* aParent)
+FontFace::FontFace(nsISupports* aParent, nsPresContext* aPresContext)
   : mParent(aParent)
+  , mPresContext(aPresContext)
+  , mStatus(FontFaceLoadStatus::Unloaded)
 {
   MOZ_COUNT_CTOR(FontFace);
+
+  MOZ_ASSERT(mPresContext);
 
   SetIsDOMBinding();
 }
@@ -40,11 +46,32 @@ FontFace::WrapObject(JSContext* aCx)
   return FontFaceBinding::Wrap(aCx, this);
 }
 
-already_AddRefed<FontFace>
-FontFace::CreateForRule(nsISupports* aGlobal, nsCSSFontFaceRule* aRule)
+static FontFaceLoadStatus
+LoadStateToStatus(gfxUserFontEntry::UserFontLoadState aLoadState)
 {
-  nsRefPtr<FontFace> obj = new FontFace(aGlobal);
+  switch (aLoadState) {
+    case gfxUserFontEntry::UserFontLoadState::STATUS_NOT_LOADED:
+      return FontFaceLoadStatus::Unloaded;
+    case gfxUserFontEntry::UserFontLoadState::STATUS_LOADING:
+      return FontFaceLoadStatus::Loading;
+    case gfxUserFontEntry::UserFontLoadState::STATUS_LOADED:
+      return FontFaceLoadStatus::Loaded;
+    case gfxUserFontEntry::UserFontLoadState::STATUS_FAILED:
+      return FontFaceLoadStatus::Error;
+  }
+  NS_NOTREACHED("invalid aLoadState value");
+  return FontFaceLoadStatus::Error;
+}
+
+already_AddRefed<FontFace>
+FontFace::CreateForRule(nsISupports* aGlobal,
+                        nsPresContext* aPresContext,
+                        nsCSSFontFaceRule* aRule,
+                        gfxUserFontEntry* aUserFontEntry)
+{
+  nsRefPtr<FontFace> obj = new FontFace(aGlobal, aPresContext);
   obj->mRule = aRule;
+  obj->mStatus = LoadStateToStatus(aUserFontEntry->LoadState());
   return obj.forget();
 }
 
@@ -53,9 +80,29 @@ FontFace::Constructor(const GlobalObject& aGlobal,
                       const nsAString& aFamily,
                       const StringOrArrayBufferOrArrayBufferView& aSource,
                       const FontFaceDescriptors& aDescriptors,
-                      ErrorResult& aRV)
+                      ErrorResult& aRv)
 {
-  nsRefPtr<FontFace> obj = new FontFace(aGlobal.GetAsSupports());
+  nsISupports* global = aGlobal.GetAsSupports();
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(global);
+  nsIDocument* doc = window->GetDoc();
+  if (!doc) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsIPresShell* shell = doc->GetShell();
+  if (!shell) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsPresContext* presContext = shell->GetPresContext();
+  if (!presContext) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<FontFace> obj = new FontFace(global, presContext);
   return obj.forget();
 }
 
@@ -132,7 +179,7 @@ FontFace::SetFeatureSettings(const nsAString& aValue, ErrorResult& aRv)
 FontFaceLoadStatus
 FontFace::Status()
 {
-  return FontFaceLoadStatus::Unloaded;
+  return mStatus;
 }
 
 Promise*
@@ -145,4 +192,35 @@ Promise*
 FontFace::Loaded()
 {
   return nullptr;
+}
+
+void
+FontFace::SetStatus(FontFaceLoadStatus aStatus)
+{
+  mStatus = aStatus;
+}
+
+// -- FontFace::Entry --------------------------------------------------------
+
+/* virtual */ void
+FontFace::Entry::SetLoadState(UserFontLoadState aLoadState)
+{
+  gfxUserFontEntry::SetLoadState(aLoadState);
+
+  FontFace* face = GetFontFace();
+  if (face) {
+    face->SetStatus(LoadStateToStatus(aLoadState));
+  }
+}
+
+FontFace*
+FontFace::Entry::GetFontFace()
+{
+  FontFaceSet* fontFaceSet =
+    static_cast<FontFaceSet::UserFontSet*>(mFontSet)->GetFontFaceSet();
+  if (!fontFaceSet) {
+    return nullptr;
+  }
+
+  return fontFaceSet->FindFontFaceForEntry(this);
 }
