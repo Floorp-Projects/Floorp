@@ -868,6 +868,11 @@ static size_t get_tile(const uint8_t *const data_end,
 
     size = read_be32(*data);
     *data += 4;
+
+    if (size > data_end - *data) {
+      vpx_internal_error(error_info, VPX_CODEC_CORRUPT_FRAME,
+          "Truncated packet or corrupt tile size");
+    }
   } else {
     size = data_end - *data;
   }
