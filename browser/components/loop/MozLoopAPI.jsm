@@ -204,6 +204,25 @@ function injectLoopAPI(targetWindow) {
     },
 
     /**
+     * Import a list of (new) contacts from an external data source.
+     *
+     * @param {Object}   options  Property bag of options for the importer
+     * @param {Function} callback Function that will be invoked once the operation
+     *                            finished. The first argument passed will be an
+     *                            `Error` object or `null`. The second argument will
+     *                            be the result of the operation, if successfull.
+     */
+    startImport: {
+      enumerable: true,
+      writable: true,
+      value: function(options, callback) {
+        LoopContacts.startImport(options, getChromeWindow(targetWindow), function(...results) {
+          callback(...[cloneValueInto(r, targetWindow) for (r of results)]);
+        });
+      }
+    },
+
+    /**
      * Returns translated strings associated with an element. Designed
      * for use with l10n.js
      *
