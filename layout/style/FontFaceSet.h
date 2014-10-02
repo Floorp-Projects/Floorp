@@ -112,6 +112,18 @@ public:
 
   void IncrementGeneration(bool aIsRebuild = false);
 
+  /**
+   * Adds the specified FontFace to the mUnavailableFaces array.  This is called
+   * when a new FontFace object has just been created in JS by the author.
+   */
+  void AddUnavailableFontFace(FontFace* aFontFace);
+
+  /**
+   * Removes the specified FontFace from the mUnavailableFaces array.  This
+   * is called when a FontFace object is about be destroyed.
+   */
+  void RemoveUnavailableFontFace(FontFace* aFontFace);
+
   // -- Web IDL --------------------------------------------------------------
 
   IMPL_EVENT_HANDLER(loading)
@@ -193,6 +205,10 @@ private:
 
   // The CSS-connected FontFace objects in the FontFaceSet.
   nsTArray<FontFaceRecord> mConnectedFaces;
+
+  // The unconnected FontFace objects that have not been added to
+  // this FontFaceSet.
+  nsTArray<FontFace*> mUnavailableFaces;
 };
 
 } // namespace dom

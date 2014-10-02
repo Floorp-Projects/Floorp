@@ -280,6 +280,9 @@ public:
   mozilla::dom::FontFace* GetFontFace() const { return mFontFace; }
   void SetFontFace(mozilla::dom::FontFace* aFontFace) { mFontFace = aFontFace; }
 
+  void GetDescriptors(mozilla::CSSFontFaceDescriptors& aDescriptors) const
+    { aDescriptors = mDecl.mDescriptors; }
+
 protected:
   ~nsCSSFontFaceRule() {}
 
