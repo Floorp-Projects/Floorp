@@ -541,6 +541,10 @@ FontFace::SetStatus(FontFaceLoadStatus aStatus)
 
   mStatus = aStatus;
 
+  if (mInFontFaceSet) {
+    mFontFaceSet->OnFontFaceStatusChanged(this);
+  }
+
   if (!mLoaded) {
     return;
   }
