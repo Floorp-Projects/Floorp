@@ -1884,8 +1884,7 @@ public:
    * including paused animations.
    */
   static bool HasCurrentAnimations(nsIContent* aContent,
-                                   nsIAtom* aAnimationProperty,
-                                   nsPresContext* aPresContext);
+                                   nsIAtom* aAnimationProperty);
 
   /**
    * Checks if off-main-thread animations are enabled.

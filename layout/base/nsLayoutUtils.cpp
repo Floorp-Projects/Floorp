@@ -394,8 +394,7 @@ nsLayoutUtils::HasAnimations(nsIContent* aContent,
 
 bool
 nsLayoutUtils::HasCurrentAnimations(nsIContent* aContent,
-                                    nsIAtom* aAnimationProperty,
-                                    nsPresContext* aPresContext)
+                                    nsIAtom* aAnimationProperty)
 {
   if (!aContent->MayHaveAnimations())
     return false;
