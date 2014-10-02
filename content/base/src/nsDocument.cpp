@@ -12419,6 +12419,17 @@ nsAutoSyncOperation::~nsAutoSyncOperation()
 FontFaceSet*
 nsIDocument::GetFonts(ErrorResult& aRv)
 {
-  aRv.Throw(NS_ERROR_FAILURE);
-  return nullptr;
+  nsIPresShell* shell = GetShell();
+  if (!shell) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsPresContext* presContext = shell->GetPresContext();
+  if (!presContext) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  return presContext->Fonts();
 }
