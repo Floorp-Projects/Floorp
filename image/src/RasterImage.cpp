@@ -371,15 +371,6 @@ RasterImage::~RasterImage()
     ReentrantMonitorAutoEnter lock(mDecodingMonitor);
     DecodePool::StopDecoding(this);
     mDecoder = nullptr;
-
-    // Unlock the last frame (if we have any). Our invariant is that, while we
-    // have a decoder open, the last frame is always locked.
-    // This would be done in ShutdownDecoder, but since mDecoder is non-null,
-    // we didn't call ShutdownDecoder and we need to do it manually.
-    if (GetNumFrames() > 0) {
-      nsRefPtr<imgFrame> curframe = mFrameBlender.RawGetFrame(GetNumFrames() - 1);
-      curframe->UnlockImageData();
-    }
   }
 
   // Release any HQ scaled frames from the surface cache.
@@ -1048,18 +1039,20 @@ RasterImage::InternalAddFrameHelper(uint32_t framenum, imgFrame *aFrame,
   if (framenum > GetNumFrames())
     return NS_ERROR_INVALID_ARG;
 
-  nsRefPtr<imgFrame> frame(aFrame);
-
-  // We are in the middle of decoding. This will be unlocked when we finish
-  // decoding or switch to another frame.
-  frame->LockImageData();
+  nsRefPtr<imgFrame> frame = aFrame;
+  RawAccessFrameRef ref = frame->RawAccessRef();
+  if (!ref) {
+    // Probably the OS discarded the frame. Exceedingly unlikely since we just
+    // created it, but it could happen.
+    return NS_ERROR_FAILURE;
+  }
 
   if (paletteData && paletteLength)
     frame->GetPaletteData(paletteData, paletteLength);
 
   frame->GetImageData(imageData, imageLength);
 
-  mFrameBlender.InsertFrame(framenum, frame);
+  mFrameBlender.InsertFrame(framenum, Move(ref));
 
   frame.forget(aRetFrame);
   return NS_OK;
@@ -1095,13 +1088,6 @@ RasterImage::InternalAddFrame(uint32_t framenum,
   if (!NS_SUCCEEDED(rv))
     NS_WARNING("imgFrame::Init should succeed");
   NS_ENSURE_SUCCESS(rv, rv);
-
-  // We know we are in a decoder. Therefore, we must unlock the previous frame
-  // when we move on to decoding into the next frame.
-  if (GetNumFrames() > 0) {
-    nsRefPtr<imgFrame> prevframe = mFrameBlender.RawGetFrame(GetNumFrames() - 1);
-    prevframe->UnlockImageData();
-  }
 
   if (GetNumFrames() == 0) {
     return InternalAddFrameHelper(framenum, frame, imageData, imageLength,
@@ -1266,11 +1252,6 @@ RasterImage::EnsureFrame(uint32_t aFrameNum, int32_t aX, int32_t aY,
   }
 
   // Not reusable, so replace the frame directly.
-
-  // We know this frame is already locked, because it's the one we're currently
-  // writing to.
-  frame->UnlockImageData();
-
   mFrameBlender.RemoveFrame(aFrameNum);
   nsRefPtr<imgFrame> newFrame(new imgFrame());
   nsIntRect frameRect(aX, aY, aWidth, aHeight);
@@ -1354,8 +1335,7 @@ RasterImage::DecodingComplete()
   // into the first frame again immediately and this produces severe tearing.
   if (mMultipart) {
     if (GetNumFrames() == 1) {
-      mMultipartDecodedFrame = mFrameBlender.SwapFrame(GetCurrentFrameIndex(),
-                                                       mMultipartDecodedFrame);
+      mMultipartDecodedFrame = mFrameBlender.GetFrame(GetCurrentFrameIndex());
     } else {
       // Don't double buffer for animated multipart images. It entails more
       // complexity and it's not really needed since we already are smart about
@@ -1977,14 +1957,6 @@ RasterImage::InitDecoder(bool aDoSizeDecode)
       NS_ABORT_IF_FALSE(0, "Shouldn't get here!");
   }
 
-  // If we already have frames, we're probably in the multipart/x-mixed-replace
-  // case. Regardless, we need to lock the last frame. Our invariant is that,
-  // while we have a decoder open, the last frame is always locked.
-  if (GetNumFrames() > 0) {
-    nsRefPtr<imgFrame> curframe = mFrameBlender.RawGetFrame(GetNumFrames() - 1);
-    curframe->LockImageData();
-  }
-
   // Initialize the decoder
   if (!mDecodeRequest) {
     mDecodeRequest = new DecodeRequest(this);
@@ -2059,13 +2031,6 @@ RasterImage::ShutdownDecoder(eShutdownIntent aIntent)
   decoder->Finish(aIntent);
   mInDecoder = false;
   mFinishing = false;
-
-  // Unlock the last frame (if we have any). Our invariant is that, while we
-  // have a decoder open, the last frame is always locked.
-  if (GetNumFrames() > 0) {
-    nsRefPtr<imgFrame> curframe = mFrameBlender.RawGetFrame(GetNumFrames() - 1);
-    curframe->UnlockImageData();
-  }
 
   // Kill off our decode request, if it's pending.  (If not, this call is
   // harmless.)
