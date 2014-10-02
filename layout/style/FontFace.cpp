@@ -7,10 +7,11 @@
 
 #include "mozilla/dom/FontFaceBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "nsCSSRules.h"
 
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FontFace, mParent, mLoaded)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FontFace, mParent, mLoaded, mRule)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FontFace)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -37,6 +38,14 @@ JSObject*
 FontFace::WrapObject(JSContext* aCx)
 {
   return FontFaceBinding::Wrap(aCx, this);
+}
+
+already_AddRefed<FontFace>
+FontFace::CreateForRule(nsISupports* aGlobal, nsCSSFontFaceRule* aRule)
+{
+  nsRefPtr<FontFace> obj = new FontFace(aGlobal);
+  obj->mRule = aRule;
+  return obj.forget();
 }
 
 already_AddRefed<FontFace>

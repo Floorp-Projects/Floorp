@@ -10,6 +10,8 @@
 #include "gfxUserFontSet.h"
 #include "nsWrapperCache.h"
 
+class nsCSSFontFaceRule;
+
 namespace mozilla {
 namespace dom {
 struct FontFaceDescriptors;
@@ -46,6 +48,9 @@ public:
   nsISupports* GetParentObject() const { return mParent; }
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
+  static already_AddRefed<FontFace> CreateForRule(nsISupports* aGlobal,
+                                                  nsCSSFontFaceRule* aRule);
+
   // Web IDL
   static already_AddRefed<FontFace>
   Constructor(const GlobalObject& aGlobal,
@@ -78,7 +83,12 @@ private:
   ~FontFace();
 
   nsCOMPtr<nsISupports> mParent;
+
   nsRefPtr<mozilla::dom::Promise> mLoaded;
+
+  // The @font-face rule this FontFace object is reflecting, if it is a
+  // CSS-connected FontFace.
+  nsRefPtr<nsCSSFontFaceRule> mRule;
 };
 
 } // namespace dom

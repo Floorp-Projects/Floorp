@@ -11,7 +11,6 @@
 #endif /* MOZ_LOGGING */
 #include "prlog.h"
 
-#include "mozilla/dom/FontFace.h"
 #include "mozilla/dom/FontFaceSetBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "nsCrossSiteListenerProxy.h"
@@ -49,12 +48,25 @@ GetFontFaceSetLog()
 #define LOG(args) PR_LOG(GetFontFaceSetLog(), PR_LOG_DEBUG, args)
 #define LOG_ENABLED() PR_LOG_TEST(GetFontFaceSetLog(), PR_LOG_DEBUG)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(FontFaceSet,
-                                   DOMEventTargetHelper,
-                                   mReady)
+NS_IMPL_CYCLE_COLLECTION_CLASS(FontFaceSet)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FontFaceSet, DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReady);
+  for (size_t i = 0; i < tmp->mRules.Length(); i++) {
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRules[i].mContainer.mRule);
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(FontFaceSet, DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mReady);
+  for (size_t i = 0; i < tmp->mRules.Length(); i++) {
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mRules[i].mContainer.mRule);
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ADDREF_INHERITED(FontFaceSet, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(FontFaceSet, DOMEventTargetHelper)
+
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FontFaceSet)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
@@ -174,6 +186,7 @@ FontFaceSet::DestroyUserFontSet()
   mPresContext = nullptr;
   mLoaders.EnumerateEntries(DestroyIterator, nullptr);
   mRules.Clear();
+  mReady = nullptr;
   mUserFontSet = nullptr;
 }
 
@@ -924,6 +937,20 @@ FontFaceSet::DoRebuildUserFontSet()
   }
 
   mPresContext->RebuildUserFontSet();
+}
+
+FontFace*
+FontFaceSet::FontFaceForRule(nsCSSFontFaceRule* aRule)
+{
+  FontFace* f = aRule->GetFontFace();
+  if (f) {
+    return f;
+  }
+
+  nsRefPtr<FontFace> newFontFace =
+    FontFace::CreateForRule(GetParentObject(), aRule);
+  aRule->SetFontFace(newFontFace);
+  return newFontFace;
 }
 
 // -- FontFaceSet::UserFontSet ------------------------------------------------
