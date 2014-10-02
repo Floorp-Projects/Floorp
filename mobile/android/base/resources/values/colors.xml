@@ -106,6 +106,10 @@
 
   <color name="home_button_bar_bg">#FFF5F7F9</color>
 
+  <!-- Colour used for share overlay button labels -->
+  <color name="home_text_color">@color/text_color_primary</color>
+  <color name="home_text_color_disabled">#AFB1B3</color>
+
   <color name="panel_image_item_background">#D1D9E1</color>
 
   <!-- Swipe to refresh colors for dynamic panel -->

@@ -880,11 +880,6 @@ this.PlacesDBUtils = {
         query:     `SELECT count(*) FROM moz_bookmarks
                     WHERE parent = :tags_folder` },
 
-      { histogram: "PLACES_FOLDERS_COUNT",
-        query:     `SELECT count(*) FROM moz_bookmarks
-                    WHERE TYPE = :type_folder
-                    AND parent NOT IN (0, :places_root, :tags_folder)` },
-
       { histogram: "PLACES_KEYWORDS_COUNT",
         query:     "SELECT count(*) FROM moz_keywords" },
 
@@ -921,14 +916,6 @@ this.PlacesDBUtils = {
         }
       },
 
-      { histogram: "PLACES_DATABASE_JOURNALSIZE_MB",
-        callback: function () {
-          let DBFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
-          DBFile.append("places.sqlite-wal");
-          return parseInt(DBFile.fileSize / BYTES_PER_MEBIBYTE);
-        }
-      },
-
       { histogram: "PLACES_DATABASE_PAGESIZE_B",
         query:     "PRAGMA page_size /* PlacesDBUtils.jsm PAGESIZE_B */" },
 
@@ -946,17 +933,8 @@ this.PlacesDBUtils = {
       { histogram: "PLACES_ANNOS_BOOKMARKS_COUNT",
         query:     "SELECT count(*) FROM moz_items_annos" },
 
-      // LENGTH is not a perfect measure, since it returns the number of bytes
-      // only for BLOBs, the number of chars for anything else.  Though it's
-      // the best approximation we have.
-      { histogram: "PLACES_ANNOS_BOOKMARKS_SIZE_KB",
-        query:     "SELECT SUM(LENGTH(content))/1024 FROM moz_items_annos" },
-
       { histogram: "PLACES_ANNOS_PAGES_COUNT",
         query:     "SELECT count(*) FROM moz_annos" },
-
-      { histogram: "PLACES_ANNOS_PAGES_SIZE_KB",
-        query:     "SELECT SUM(LENGTH(content))/1024 FROM moz_annos" },
 
       { histogram: "PLACES_MAINTENANCE_DAYSFROMLAST",
         callback: function () {

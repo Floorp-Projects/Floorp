@@ -18,6 +18,18 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
+        let win;
+
+        SimpleTest.registerCleanupFunction(() => {
+          Task.spawn(function*() {
+            if (win) {
+              yield closeWebIDE(win);
+            }
+            DebuggerServer.destroy();
+            yield removeAllProjects();
+          });
+        });
+
         Task.spawn(function* () {
 
           function isPlayActive() {
@@ -29,10 +41,13 @@
           }
 
           Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
-          DebuggerServer.init(function () { return true; });
-          DebuggerServer.addBrowserActors();
 
-          let win = yield openWebIDE();
+          if (!DebuggerServer.initialized) {
+            DebuggerServer.init(function () { return true; });
+            DebuggerServer.addBrowserActors();
+          }
+
+          win = yield openWebIDE();
 
           win.AppManager.runtimeList.usb.push({
             connect: function(connection) {
@@ -118,12 +133,6 @@
           ok(win.UI.toolboxIframe, "Toolbox iframe exists");
 
           yield win.Cmds.disconnectRuntime();
-
-          yield closeWebIDE(win);
-
-          DebuggerServer.destroy();
-
-          yield removeAllProjects();
 
           SimpleTest.finish();
 
