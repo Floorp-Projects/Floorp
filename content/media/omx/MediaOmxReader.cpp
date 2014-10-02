@@ -98,6 +98,9 @@ public:
 private:
   void NotifyDataArrived()
   {
+    if (mOmxReader->IsShutdown()) {
+      return;
+    }
     const char* buffer = mBuffer.get();
 
     while (mLength) {
@@ -118,15 +121,23 @@ private:
     }
   }
 
-  nsRefPtr<MediaOmxReader> mOmxReader;
+  nsRefPtr<MediaOmxReader>         mOmxReader;
   nsAutoArrayPtr<const char>       mBuffer;
   uint64_t                         mLength;
   int64_t                          mOffset;
   uint64_t                         mFullLength;
 };
 
+void MediaOmxReader::CancelProcessCachedData()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MutexAutoLock lock(mMutex);
+  mIsShutdown = true;
+}
+
 MediaOmxReader::MediaOmxReader(AbstractMediaDecoder *aDecoder)
   : MediaOmxCommonReader(aDecoder)
+  , mMutex("MediaOmxReader.Data")
   , mMP3FrameParser(-1)
   , mHasVideo(false)
   , mHasAudio(false)
@@ -135,6 +146,7 @@ MediaOmxReader::MediaOmxReader(AbstractMediaDecoder *aDecoder)
   , mSkipCount(0)
   , mUseParserDuration(false)
   , mLastParserDuration(-1)
+  , mIsShutdown(false)
 {
 #ifdef PR_LOGGING
   if (!gMediaDecoderLog) {
@@ -164,6 +176,10 @@ void MediaOmxReader::ReleaseDecoder()
 
 void MediaOmxReader::Shutdown()
 {
+  nsCOMPtr<nsIRunnable> cancelEvent =
+    NS_NewRunnableMethod(this, &MediaOmxReader::CancelProcessCachedData);
+  NS_DispatchToMainThread(cancelEvent);
+
   ReleaseMediaResources();
   nsCOMPtr<nsIRunnable> event =
     NS_NewRunnableMethod(this, &MediaOmxReader::ReleaseDecoder);
@@ -449,7 +465,9 @@ bool MediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,
 void MediaOmxReader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
+  if (IsShutdown()) {
+    return;
+  }
   if (HasVideo()) {
     return;
   }
@@ -547,6 +565,10 @@ void MediaOmxReader::EnsureActive() {
 
 int64_t MediaOmxReader::ProcessCachedData(int64_t aOffset, bool aWaitForCompletion)
 {
+  // Could run on decoder thread or IO thread.
+  if (IsShutdown()) {
+    return -1;
+  }
   // We read data in chunks of 32 KiB. We can reduce this
   // value if media, such as sdcards, is too slow.
   // Because of SD card's slowness, need to keep sReadSize to small size.
