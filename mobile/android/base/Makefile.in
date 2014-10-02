@@ -48,6 +48,7 @@ GARBAGE += \
   classes.dex  \
   gecko.ap_  \
   res/values/strings.xml \
+  res/raw/browsersearch.json \
   res/raw/suggestedsites.json \
   .aapt.deps \
   fennec_ids.txt \
@@ -259,11 +260,12 @@ $(ANDROID_GENERATED_RESFILES): $(call mkdir_deps,$(sort $(dir $(ANDROID_GENERATE
 
 
 # This .deps pattern saves an invocation of the sub-Make: the single
-# invocation generates both strings.xml and suggestedsites.json. The
-# trailing semi-colon defines an empty recipe: defining no recipe at
-# all causes Make to treat the target differently, in a way that
-# defeats our dependencies.
+# invocation generates strings.xml, browsersearch.json, and
+# suggestedsites.json. The trailing semi-colon defines an empty
+# recipe: defining no recipe at all causes Make to treat the target
+# differently, in a way that defeats our dependencies.
 res/values/strings.xml: .locales.deps ;
+res/raw/browsersearch.json: .locales.deps ;
 res/raw/suggestedsites.json: .locales.deps ;
 
 all_resources = \
