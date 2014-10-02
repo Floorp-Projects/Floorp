@@ -228,10 +228,6 @@ GMPVideoDecoderParent::RecvDecoded(const GMPVideoi420FrameData& aDecodedFrame)
     return false;
   }
 
-  if (!CheckFrameData(aDecodedFrame)) {
-    LOGE(("%s: Decoded frame corrupt, ignoring", __FUNCTION__));
-    return false;
-  }
   auto f = new GMPVideoi420FrameImpl(aDecodedFrame, &mVideoHost);
 
   // Ignore any return code. It is OK for this to fail without killing the process.
