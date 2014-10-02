@@ -64,7 +64,10 @@ public:
   }
 
   bool IsRunning() const;
-  bool IsCurrent() const;
+
+  bool HasCurrentSource() const {
+    return GetSource() && GetSource()->IsCurrent();
+  }
 
   // Return the duration since the start time of the player, taking into
   // account the pause state.  May be negative or null.
