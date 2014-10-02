@@ -24,6 +24,8 @@ public:
   GMPVideoi420FrameImpl(const GMPVideoi420FrameData& aFrameData, GMPVideoHostImpl* aHost);
   virtual ~GMPVideoi420FrameImpl();
 
+  static bool CheckFrameData(const GMPVideoi420FrameData& aFrameData);
+
   bool InitFrameData(GMPVideoi420FrameData& aFrameData);
   const GMPPlaneImpl* GetPlane(GMPPlaneType aType) const;
   GMPPlaneImpl* GetPlane(GMPPlaneType aType);
