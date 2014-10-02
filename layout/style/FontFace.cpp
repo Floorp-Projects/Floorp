@@ -10,6 +10,7 @@
 #include "mozilla/dom/Promise.h"
 #include "nsCSSRules.h"
 #include "nsIDocument.h"
+#include "nsStyleUtil.h"
 
 using namespace mozilla::dom;
 
@@ -109,6 +110,15 @@ FontFace::Constructor(const GlobalObject& aGlobal,
 void
 FontFace::GetFamily(nsString& aResult)
 {
+  mPresContext->FlushUserFontSet();
+
+  // Serialize the same way as in nsCSSFontFaceStyleDecl::GetPropertyValue.
+  nsCSSValue value;
+  GetDesc(eCSSFontDesc_Family, value);
+
+  aResult.Truncate();
+  nsDependentString family(value.GetStringBufferValue());
+  nsStyleUtil::AppendEscapedCSSString(family, aResult);
 }
 
 void
@@ -119,6 +129,8 @@ FontFace::SetFamily(const nsAString& aValue, ErrorResult& aRv)
 void
 FontFace::GetStyle(nsString& aResult)
 {
+  mPresContext->FlushUserFontSet();
+  GetDesc(eCSSFontDesc_Style, eCSSProperty_font_style, aResult);
 }
 
 void
@@ -129,6 +141,8 @@ FontFace::SetStyle(const nsAString& aValue, ErrorResult& aRv)
 void
 FontFace::GetWeight(nsString& aResult)
 {
+  mPresContext->FlushUserFontSet();
+  GetDesc(eCSSFontDesc_Weight, eCSSProperty_font_weight, aResult);
 }
 
 void
@@ -139,6 +153,8 @@ FontFace::SetWeight(const nsAString& aValue, ErrorResult& aRv)
 void
 FontFace::GetStretch(nsString& aResult)
 {
+  mPresContext->FlushUserFontSet();
+  GetDesc(eCSSFontDesc_Stretch, eCSSProperty_font_stretch, aResult);
 }
 
 void
@@ -149,6 +165,13 @@ FontFace::SetStretch(const nsAString& aValue, ErrorResult& aRv)
 void
 FontFace::GetUnicodeRange(nsString& aResult)
 {
+  mPresContext->FlushUserFontSet();
+
+  nsCSSValue value;
+  GetDesc(eCSSFontDesc_UnicodeRange, value);
+
+  aResult.Truncate();
+  nsStyleUtil::AppendUnicodeRange(value, aResult);
 }
 
 void
@@ -159,6 +182,11 @@ FontFace::SetUnicodeRange(const nsAString& aValue, ErrorResult& aRv)
 void
 FontFace::GetVariant(nsString& aResult)
 {
+  mPresContext->FlushUserFontSet();
+
+  // XXX Just expose the font-variant descriptor as "normal" until we
+  // support it properly (bug 1055385).
+  aResult.AssignLiteral("normal");
 }
 
 void
@@ -169,6 +197,13 @@ FontFace::SetVariant(const nsAString& aValue, ErrorResult& aRv)
 void
 FontFace::GetFeatureSettings(nsString& aResult)
 {
+  mPresContext->FlushUserFontSet();
+
+  nsCSSValue value;
+  GetDesc(eCSSFontDesc_FontFeatureSettings, value);
+
+  aResult.Truncate();
+  nsStyleUtil::AppendFontFeatureSettings(value, aResult);
 }
 
 void
@@ -198,6 +233,40 @@ void
 FontFace::SetStatus(FontFaceLoadStatus aStatus)
 {
   mStatus = aStatus;
+}
+
+void
+FontFace::GetDesc(nsCSSFontDesc aDescID, nsCSSValue& aResult) const
+{
+  if (mRule) {
+    MOZ_ASSERT(!mDescriptors);
+    mRule->GetDesc(aDescID, aResult);
+  } else {
+    aResult = mDescriptors->Get(aDescID);
+  }
+}
+
+void
+FontFace::GetDesc(nsCSSFontDesc aDescID,
+                  nsCSSProperty aPropID,
+                  nsString& aResult) const
+{
+  nsCSSValue value;
+  GetDesc(aDescID, value);
+
+  aResult.Truncate();
+
+  // Fill in a default value for missing descriptors.
+  if (value.GetUnit() == eCSSUnit_Null) {
+    if (aDescID == eCSSFontDesc_UnicodeRange) {
+      aResult.AssignLiteral("U+0-10FFFF");
+    } else if (aDescID != eCSSFontDesc_Family &&
+               aDescID != eCSSFontDesc_Src) {
+      aResult.AssignLiteral("normal");
+    }
+  } else {
+    value.AppendToString(aPropID, aResult, nsCSSValue::eNormalized);
+  }
 }
 
 // -- FontFace::Entry --------------------------------------------------------
