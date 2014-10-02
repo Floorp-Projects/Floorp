@@ -1,0 +1,94 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed gd:etag="W/&quot;DUQNRHc8cCt7I2A9XRdSF04.&quot;" xmlns="http://www.w3.org/2005/Atom" xmlns:batch="http://schemas.google.com/gdata/batch" xmlns:gContact="http://schemas.google.com/contact/2008" xmlns:gd="http://schemas.google.com/g/2005" xmlns:openSearch="http://a9.com/-/spec/opensearch/1.1/">
+  <id>tester@mochi.com</id>
+  <updated>2014-09-26T13:16:35.978Z</updated>
+  <category scheme="http://schemas.google.com/g/2005#kind" term="http://schemas.google.com/contact/2008#contact"/>
+  <title>Mochi Tester's Contacts</title>
+  <link href="http://www.google.com/" rel="alternate" type="text/html"/>
+  <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full" rel="http://schemas.google.com/g/2005#feed" type="application/atom+xml"/>
+  <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full" rel="http://schemas.google.com/g/2005#post" type="application/atom+xml"/>
+  <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/batch" rel="http://schemas.google.com/g/2005#batch" type="application/atom+xml"/>
+  <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full?max-results=25" rel="self" type="application/atom+xml"/>
+  <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full?start-index=26&amp;max-results=25" rel="next" type="application/atom+xml"/>
+  <author>
+    <name>Mochi Tester</name>
+    <email>tester@mochi.com</email>
+  </author>
+  <generator uri="http://www.google.com/m8/feeds" version="1.0">Contacts</generator>
+  <openSearch:totalResults>25</openSearch:totalResults>
+  <openSearch:startIndex>1</openSearch:startIndex>
+  <openSearch:itemsPerPage>10000000</openSearch:itemsPerPage>
+  <entry gd:etag="&quot;R3YyejRVLit7I2A9WhJWEkkNQwc.&quot;">
+    <id>http://www.google.com/m8/feeds/contacts/tester%40mochi.com/base/0</id>
+    <updated>2012-08-17T23:50:36.892Z</updated>
+    <app:edited xmlns:app="http://www.w3.org/2007/app">2012-08-17T23:50:36.892Z</app:edited>
+    <category scheme="http://schemas.google.com/g/2005#kind" term="http://schemas.google.com/contact/2008#contact"/>
+    <title>John Smith</title>
+    <link gd:etag="&quot;Ug92D34SfCt7I2BmLHJTRgVzTlgrJXEAU08.&quot;" href="https://www.google.com/m8/feeds/photos/media/tester%40mochi.com/0" rel="http://schemas.google.com/contacts/2008/rel#photo" type="image/*"/>
+    <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/0" rel="self" type="application/atom+xml"/>
+    <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/0" rel="edit" type="application/atom+xml"/>
+    <gd:name>
+      <gd:fullName>John Smith</gd:fullName>
+      <gd:givenName>John</gd:givenName>
+      <gd:familyName>Smith</gd:familyName>
+    </gd:name>
+    <gd:email address="john.smith@example.com" primary="true" rel="http://schemas.google.com/g/2005#other"/>
+    <gContact:website href="http://www.google.com/profiles/109576547678240773721" rel="profile"/>
+  </entry>
+  <entry gd:etag="&quot;R3YyejRVLit7I2A9WhJWEkkNQwc.&quot;">
+    <id>http://www.google.com/m8/feeds/contacts/tester%40mochi.com/base/1</id>
+    <updated>2012-08-17T23:50:36.892Z</updated>
+    <app:edited xmlns:app="http://www.w3.org/2007/app">2012-08-17T23:50:36.892Z</app:edited>
+    <category scheme="http://schemas.google.com/g/2005#kind" term="http://schemas.google.com/contact/2008#contact"/>
+    <title>Jane Smith</title>
+    <link gd:etag="&quot;WA9BY1xFWit7I2BhLEkieCxLHEYTGCYuNxo.&quot;" href="https://www.google.com/m8/feeds/photos/media/tester%40mochi.com/1" rel="http://schemas.google.com/contacts/2008/rel#photo" type="image/*"/>
+    <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/1" rel="self" type="application/atom+xml"/>
+    <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/1" rel="edit" type="application/atom+xml"/>
+    <gd:name>
+      <gd:fullName>Jane Smith</gd:fullName>
+      <gd:givenName>Jane</gd:givenName>
+      <gd:familyName>Smith</gd:familyName>
+    </gd:name>
+    <gd:email address="jane.smith@example.com" primary="true" rel="http://schemas.google.com/g/2005#other"/>
+    <gContact:website href="http://www.google.com/profiles/112886528199784431028" rel="profile"/>
+  </entry>
+  <entry gd:etag="&quot;R3YyejRVLit7I2A9WhJWEkkNQwc.&quot;">
+    <id>http://www.google.com/m8/feeds/contacts/tester%40mochi.com/base/2</id>
+    <updated>2012-08-17T23:50:36.892Z</updated>
+    <app:edited xmlns:app="http://www.w3.org/2007/app">2012-08-17T23:50:36.892Z</app:edited>
+    <category scheme="http://schemas.google.com/g/2005#kind" term="http://schemas.google.com/contact/2008#contact"/>
+    <title>Davy Randall Jones</title>
+    <link gd:etag="&quot;KiV2PkYRfCt7I2BuD1AzEBFxD1VcGjwBUyA.&quot;" href="https://www.google.com/m8/feeds/photos/media/tester%40mochi.com/2" rel="http://schemas.google.com/contacts/2008/rel#photo" type="image/*"/>
+    <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/2" rel="self" type="application/atom+xml"/>
+    <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/2" rel="edit" type="application/atom+xml"/>
+    <gd:name>
+      <gd:fullName>Davy Randall Jones</gd:fullName>
+      <gd:givenName>Davy Randall</gd:givenName>
+      <gd:familyName>Jones</gd:familyName>
+    </gd:name>
+    <gd:email address="davy.jones@example.com" primary="true" rel="http://schemas.google.com/g/2005#other"/>
+    <gContact:website href="http://www.google.com/profiles/109710625881478599011" rel="profile"/>
+  </entry>
+  <entry gd:etag="&quot;Q3w7ezVSLit7I2A9WB5WGUkNRgE.&quot;">
+    <id>http://www.google.com/m8/feeds/contacts/tester%40mochi.com/base/3</id>
+    <updated>2007-08-01T05:45:52.203Z</updated>
+    <app:edited xmlns:app="http://www.w3.org/2007/app">2007-08-01T05:45:52.203Z</app:edited>
+    <category scheme="http://schemas.google.com/g/2005#kind" term="http://schemas.google.com/contact/2008#contact"/>
+    <title/>
+    <link href="https://www.google.com/m8/feeds/photos/media/tester%40mochi.com/3" rel="http://schemas.google.com/contacts/2008/rel#photo" type="image/*"/>
+    <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/3" rel="self" type="application/atom+xml"/>
+    <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/3" rel="edit" type="application/atom+xml"/>
+    <gd:email address="noname@example.com" primary="true" rel="http://schemas.google.com/g/2005#other"/>
+  </entry>
+  <entry gd:etag="&quot;Q3w7ezVSLit7I2A9WB5WGUkNRgE.&quot;">
+    <id>http://www.google.com/m8/feeds/contacts/tester%40mochi.com/base/7</id>
+    <updated>2007-08-01T05:45:52.203Z</updated>
+    <app:edited xmlns:app="http://www.w3.org/2007/app">2007-08-01T05:45:52.203Z</app:edited>
+    <category scheme="http://schemas.google.com/g/2005#kind" term="http://schemas.google.com/contact/2008#contact"/>
+    <title/>
+    <link href="https://www.google.com/m8/feeds/photos/media/tester%40mochi.com/7" rel="http://schemas.google.com/contacts/2008/rel#photo" type="image/*"/>
+    <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/7" rel="self" type="application/atom+xml"/>
+    <link href="https://www.google.com/m8/feeds/contacts/tester%40mochi.com/full/7" rel="edit" type="application/atom+xml"/>
+    <gd:email address="lycnix" primary="true" rel="http://schemas.google.com/g/2005#other"/>
+  </entry>
+</feed>
