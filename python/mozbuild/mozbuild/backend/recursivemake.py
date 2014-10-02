@@ -791,23 +791,6 @@ class RecursiveMakeBackend(CommonBackend):
             return [mozpath.normpath(mozpath.join(backend_file.relobjdir, d))
                 for d in dirs]
 
-        for tier, dirs in obj.tier_dirs.iteritems():
-            fh.write('TIERS += %s\n' % tier)
-            # For pseudo derecursification, subtiers are treated as pseudo
-            # directories, with a special hierarchy:
-            # - subtier1 + dirA - dirAA
-            # |          |      + dirAB
-            # |          ...
-            # |          + dirB
-            # + subtier2 ...
-            if dirs:
-                fh.write('tier_%s_dirs += %s\n' % (tier, ' '.join(dirs)))
-                fh.write('DIRS += $(tier_%s_dirs)\n' % tier)
-                self._traversal.add('subtiers/%s' % tier,
-                                    dirs=relativize(dirs))
-
-            self._traversal.add('', dirs=['subtiers/%s' % tier])
-
         if obj.dirs:
             fh.write('DIRS := %s\n' % ' '.join(obj.dirs))
             self._traversal.add(backend_file.relobjdir, dirs=relativize(obj.dirs))

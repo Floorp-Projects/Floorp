@@ -212,53 +212,6 @@ class TestMozbuildSandbox(unittest.TestCase):
         self.assertEqual(e.args[1], 'reassign')
         self.assertEqual(e.args[2], 'DIST_SUBDIR')
 
-    def test_add_tier_dir_regular_str(self):
-        sandbox = self.sandbox()
-
-        sandbox.exec_source('add_tier_dir("t1", "foo")')
-
-        self.assertEqual(sandbox['TIERS']['t1'],
-            {'regular': ['foo'], 'external': []})
-
-    def test_add_tier_dir_regular_list(self):
-        sandbox = self.sandbox()
-
-        sandbox.exec_source('add_tier_dir("t1", ["foo", "bar"])')
-
-        self.assertEqual(sandbox['TIERS']['t1'],
-            {'regular': ['foo', 'bar'], 'external': []})
-
-    def test_add_tier_dir_external(self):
-        sandbox = self.sandbox()
-
-        sandbox.exec_source('add_tier_dir("t1", "foo", external=True)')
-
-        self.assertEqual(sandbox['TIERS']['t1'],
-            {'regular': [], 'external': ['foo']})
-
-    def test_tier_order(self):
-        sandbox = self.sandbox()
-
-        source = '''
-add_tier_dir('t1', 'foo')
-add_tier_dir('t1', 'bar')
-add_tier_dir('t2', 'baz')
-add_tier_dir('t3', 'biz')
-add_tier_dir('t1', 'bat')
-'''
-
-        sandbox.exec_source(source)
-
-        self.assertEqual([k for k in sandbox['TIERS'].keys()], ['t1', 't2', 't3'])
-
-    def test_tier_multiple_registration(self):
-        sandbox = self.sandbox()
-
-        sandbox.exec_source('add_tier_dir("t1", "foo")')
-
-        with self.assertRaises(SandboxExecutionError):
-            sandbox.exec_source('add_tier_dir("t1", "foo")')
-
     def test_include_basic(self):
         sandbox = self.sandbox(data_path='include-basic')
 

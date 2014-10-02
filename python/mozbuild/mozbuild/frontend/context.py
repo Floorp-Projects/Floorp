@@ -646,24 +646,6 @@ VARIABLES = {
         complete.
         """, None),
 
-    'TIERS': (OrderedDict, dict,
-        """Defines directories constituting the tier traversal mechanism.
-
-        The recursive make backend iteration is organized into tiers. There are
-        major tiers (keys in this dict) that correspond roughly to applications
-        or libraries being built. e.g. base, nspr, js, platform, app. Within
-        each tier are phases like export, libs, and tools. The recursive make
-        backend iterates over each phase in the first tier then proceeds to the
-        next tier until all tiers are exhausted.
-
-        Tiers are a way of working around deficiencies in recursive make. These
-        will probably disappear once we no longer rely on recursive make for
-        the build backend. They will likely be replaced by ``DIRS``.
-
-        This variable is typically not populated directly. Instead, it is
-        populated by calling add_tier_dir().
-        """, None),
-
     'CONFIGURE_SUBST_FILES': (StrictOrderingOnAppendList, list,
         """Output files that will be generated using configure-like substitution.
 
@@ -1113,43 +1095,6 @@ FUNCTIONS = {
 
         This returns a rich Android Eclipse project type, described at
         :py:class:`mozbuild.frontend.data.AndroidEclipseProjectData`.
-        """),
-
-    'add_tier_dir': (
-        lambda self: self._add_tier_directory,
-        (str, [str, list], bool, bool, str),
-        """Register a directory for tier traversal.
-
-        This is the preferred way to populate the TIERS variable.
-
-        Tiers are how the build system is organized. The build process is
-        divided into major phases called tiers. The most important tiers are
-        "platform" and "apps." The platform tier builds the Gecko platform
-        (typically outputting libxul). The apps tier builds the configured
-        application (browser, mobile/android, b2g, etc).
-
-        This function is typically only called by the main moz.build file or a
-        file directly included by the main moz.build file. An error will be
-        raised if it is called when it shouldn't be.
-
-        An error will also occur if you attempt to add the same directory to
-        the same tier multiple times.
-
-        Example usage
-        ^^^^^^^^^^^^^
-
-        Register a single directory with the 'platform' tier::
-
-           add_tier_dir('platform', 'xul')
-
-        Register multiple directories with the 'app' tier.::
-
-           add_tier_dir('app', ['components', 'base'])
-
-        Register a directory as having external content (no dependencies,
-        and traversed with export, libs, and tools subtiers::
-
-           add_tier_dir('base', 'bar', external=True)
         """),
 
     'export': (lambda self: self._export, (str,),
