@@ -288,7 +288,7 @@ ChooseConfig(GLContext* gl, GLLibraryEGL* egl, const SurfaceCaps& caps)
     // for 0 bits of alpha, we might still get 8 bits.
     EGLConfig config = EGL_NO_CONFIG;
     for (int i = 0; i < foundConfigs; i++) {
-        EGLConfig cur = configs[0];
+        EGLConfig cur = configs[i];
         if (DoesAttribBitsMatchCapBool(egl, cur, LOCAL_EGL_ALPHA_SIZE,
                                        caps.alpha) &&
             DoesAttribBitsMatchCapBool(egl, cur, LOCAL_EGL_DEPTH_SIZE,
