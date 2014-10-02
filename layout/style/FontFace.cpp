@@ -47,6 +47,8 @@ FontFace::FontFace(nsISupports* aParent, nsPresContext* aPresContext)
 FontFace::~FontFace()
 {
   MOZ_COUNT_DTOR(FontFace);
+
+  SetUserFontEntry(nullptr);
 }
 
 JSObject*
@@ -82,14 +84,7 @@ FontFace::CreateForRule(nsISupports* aGlobal,
 
   nsRefPtr<FontFace> obj = new FontFace(aGlobal, aPresContext);
   obj->mRule = aRule;
-  if (aUserFontEntry) {
-    // If aUserFontEntry is null, it means that we are creating a FontFace
-    // object for an @font-face rule that we are just about to create a
-    // user font entry for.  In this case, the newly created user font
-    // entry will be STATUS_NOT_LOADED, so it is safe to skip this
-    // SetStatus call.
-    obj->SetStatus(LoadStateToStatus(aUserFontEntry->LoadState()));
-  }
+  obj->SetUserFontEntry(aUserFontEntry);
   return obj.forget();
 }
 
@@ -266,11 +261,7 @@ FontFace::Load(ErrorResult& aRv)
 
   SetStatus(FontFaceLoadStatus::Loading);
 
-  gfxUserFontEntry* entry =
-    mPresContext->Fonts()->FindUserFontEntryForFontFace(this);
-  if (entry) {
-    entry->Load();
-  }
+  mUserFontEntry->Load();
   return mLoaded;
 }
 
@@ -291,6 +282,15 @@ void
 FontFace::SetStatus(FontFaceLoadStatus aStatus)
 {
   if (mStatus == aStatus) {
+    return;
+  }
+
+  if (aStatus < mStatus) {
+    // We're being asked to go backwards in status!  Normally, this shouldn't
+    // happen.  But it can if the FontFace had a user font entry that had
+    // loaded, but then was given a new one by FontFaceSet::InsertRuleFontFace
+    // if we used a local() rule.  For now, just ignore the request to
+    // go backwards in status.
     return;
   }
 
@@ -389,6 +389,35 @@ FontFace::GetDesc(nsCSSFontDesc aDescID,
   }
 }
 
+void
+FontFace::SetUserFontEntry(gfxUserFontEntry* aEntry)
+{
+  if (mUserFontEntry) {
+    mUserFontEntry->mFontFaces.RemoveElement(this);
+  }
+
+  mUserFontEntry = static_cast<Entry*>(aEntry);
+  if (mUserFontEntry) {
+    mUserFontEntry->mFontFaces.AppendElement(this);
+
+    // Our newly assigned user font entry might be in the process of or
+    // finished loading, so set our status accordingly.  But only do so
+    // if we're not going "backwards" in status, which could otherwise
+    // happen in this case:
+    //
+    //   new FontFace("ABC", "url(x)").load();
+    //
+    // where the SetUserFontEntry call (from the after-initialization
+    // FontFaceSet::LoadFontFace call) comes after the author's call to
+    // load(), which set mStatus to Loading.
+    FontFaceLoadStatus newStatus =
+      LoadStateToStatus(mUserFontEntry->LoadState());
+    if (newStatus > mStatus) {
+      SetStatus(newStatus);
+    }
+  }
+}
+
 // -- FontFace::Entry --------------------------------------------------------
 
 /* virtual */ void
@@ -396,20 +425,7 @@ FontFace::Entry::SetLoadState(UserFontLoadState aLoadState)
 {
   gfxUserFontEntry::SetLoadState(aLoadState);
 
-  FontFace* face = GetFontFace();
-  if (face) {
-    face->SetStatus(LoadStateToStatus(aLoadState));
+  for (size_t i = 0; i < mFontFaces.Length(); i++) {
+    mFontFaces[i]->SetStatus(LoadStateToStatus(aLoadState));
   }
-}
-
-FontFace*
-FontFace::Entry::GetFontFace()
-{
-  FontFaceSet* fontFaceSet =
-    static_cast<FontFaceSet::UserFontSet*>(mFontSet)->GetFontFaceSet();
-  if (!fontFaceSet) {
-    return nullptr;
-  }
-
-  return fontFaceSet->FindFontFaceForEntry(this);
 }

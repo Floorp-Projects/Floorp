@@ -34,6 +34,8 @@ class FontFace MOZ_FINAL : public nsISupports,
 
 public:
   class Entry MOZ_FINAL : public gfxUserFontEntry {
+    friend class FontFace;
+
   public:
     Entry(gfxUserFontSet* aFontSet,
           const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
@@ -50,9 +52,11 @@ public:
     virtual void SetLoadState(UserFontLoadState aLoadState) MOZ_OVERRIDE;
 
   protected:
-    // Look up this user font entry's corresponding FontFace object on the
-    // FontFaceSet.  Can return null.
-    FontFace* GetFontFace();
+    // The FontFace objects that use this user font entry.  We need to store
+    // an array of these, not just a single pointer, since the user font
+    // cache can return the same entry for different FontFaces that have
+    // the same descriptor values and come from the same origin.
+    nsAutoTArray<FontFace*,1> mFontFaces;
   };
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -70,6 +74,9 @@ public:
   nsCSSFontFaceRule* GetRule() { return mRule; }
 
   void GetDesc(nsCSSFontDesc aDescID, nsCSSValue& aResult) const;
+
+  gfxUserFontEntry* GetUserFontEntry() const { return mUserFontEntry; }
+  void SetUserFontEntry(gfxUserFontEntry* aEntry);
 
   // Web IDL
   static already_AddRefed<FontFace>
@@ -133,6 +140,10 @@ private:
   // The @font-face rule this FontFace object is reflecting, if it is a
   // CSS-connected FontFace.
   nsRefPtr<nsCSSFontFaceRule> mRule;
+
+  // The FontFace object's user font entry.  This is initially null, but is set
+  // during FontFaceSet::UpdateRules and when a FontFace is explicitly loaded.
+  nsRefPtr<Entry> mUserFontEntry;
 
   // The current load status of the font represented by this FontFace.
   // Note that we can't just reflect the value of the gfxUserFontEntry's
