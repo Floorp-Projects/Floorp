@@ -152,45 +152,7 @@ class MozbuildSandbox(Sandbox):
             return
         Sandbox.__setitem__(self, key, value)
 
-    def normalize_path(self, path, filesystem_absolute=False, srcdir=None):
-        """Normalizes paths.
-
-        If the path is absolute, behavior is governed by filesystem_absolute.
-        If filesystem_absolute is True, the path is interpreted as absolute on
-        the actual filesystem. If it is false, the path is treated as absolute
-        within the current topsrcdir.
-
-        If the path is not absolute, it will be treated as relative to the
-        currently executing file. If there is no currently executing file, it
-        will be treated as relative to topsrcdir.
-        """
-        if os.path.isabs(path):
-            if filesystem_absolute:
-                return path
-            roots = [self._context.config.topsrcdir]
-            if self._context.config.external_source_dir:
-                roots.append(self._context.config.external_source_dir)
-            for root in roots:
-                # mozpath.join would ignore the self._context.config.topsrcdir
-                # argument if we passed in the absolute path, so omit the
-                # leading /
-                p = mozpath.normpath(mozpath.join(root, path[1:]))
-                if os.path.exists(p):
-                    return p
-            # mozpath.join would ignore the self.condig.topsrcdir argument if
-            # we passed in the absolute path, so omit the leading /
-            return mozpath.normpath(
-                mozpath.join(self._context.config.topsrcdir, path[1:]))
-        elif srcdir:
-            return mozpath.normpath(mozpath.join(srcdir, path))
-        elif self._context.current_path:
-            return mozpath.normpath(mozpath.join(
-                mozpath.dirname(self._context.current_path), path))
-        else:
-            return mozpath.normpath(
-                mozpath.join(self._context.config.topsrcdir, path))
-
-    def exec_file(self, path, filesystem_absolute=False):
+    def exec_file(self, path):
         """Override exec_file to normalize paths and restrict file loading.
 
         Paths will be rejected if they do not fall under topsrcdir or one of
@@ -199,13 +161,11 @@ class MozbuildSandbox(Sandbox):
 
         # realpath() is needed for true security. But, this isn't for security
         # protection, so it is omitted.
-        normalized_path = self.normalize_path(path,
-            filesystem_absolute=filesystem_absolute)
-        if not is_read_allowed(normalized_path, self._context.config):
+        if not is_read_allowed(path, self._context.config):
             raise SandboxLoadError(self._context.source_stack,
                 sys.exc_info()[2], illegal_path=path)
 
-        Sandbox.exec_file(self, normalized_path)
+        Sandbox.exec_file(self, path)
 
     def _add_java_jar(self, name):
         """Add a Java JAR build target."""
@@ -279,7 +239,7 @@ class MozbuildSandbox(Sandbox):
         """Include and exec another file within the context of this one."""
 
         # path is a SourcePath, and needs to be coerced to unicode.
-        self.exec_file(unicode(path), filesystem_absolute=True)
+        self.exec_file(unicode(path))
 
     def _warning(self, message):
         # FUTURE consider capturing warnings in a variable instead of printing.
@@ -774,8 +734,7 @@ class BuildReader(object):
         read, a new Context is created and emitted.
         """
         path = mozpath.join(self.config.topsrcdir, 'moz.build')
-        return self.read_mozbuild(path, self.config, read_tiers=True,
-            filesystem_absolute=True)
+        return self.read_mozbuild(path, self.config, read_tiers=True)
 
     def walk_topsrcdir(self):
         """Read all moz.build files in the source tree.
@@ -803,11 +762,11 @@ class BuildReader(object):
         for path, f in finder.find('**/moz.build'):
             path = os.path.join(self.config.topsrcdir, path)
             for s in self.read_mozbuild(path, self.config, descend=False,
-                filesystem_absolute=True, read_tiers=True):
+                read_tiers=True):
                 yield s
 
-    def read_mozbuild(self, path, config, read_tiers=False,
-            filesystem_absolute=False, descend=True, metadata={}):
+    def read_mozbuild(self, path, config, read_tiers=False, descend=True,
+            metadata={}):
         """Read and process a mozbuild file, descending into children.
 
         This starts with a single mozbuild file, executes it, and descends into
@@ -835,7 +794,6 @@ class BuildReader(object):
         self._execution_stack.append(path)
         try:
             for s in self._read_mozbuild(path, config, read_tiers=read_tiers,
-                filesystem_absolute=filesystem_absolute,
                 descend=descend, metadata=metadata):
                 yield s
 
@@ -862,8 +820,7 @@ class BuildReader(object):
             raise BuildReaderError(list(self._execution_stack),
                 sys.exc_info()[2], other_error=e)
 
-    def _read_mozbuild(self, path, config, read_tiers, filesystem_absolute,
-            descend, metadata):
+    def _read_mozbuild(self, path, config, read_tiers, descend, metadata):
         path = mozpath.normpath(path)
         log(self._log, logging.DEBUG, 'read_mozbuild', {'path': path},
             'Reading file: {path}')
@@ -899,7 +856,7 @@ class BuildReader(object):
 
         context = Context(VARIABLES, config)
         sandbox = MozbuildSandbox(context, metadata=metadata)
-        sandbox.exec_file(path, filesystem_absolute=filesystem_absolute)
+        sandbox.exec_file(path)
         context.execution_time = time.time() - time_start
 
         if self._sandbox_post_eval_cb:
@@ -993,8 +950,7 @@ class BuildReader(object):
                 continue
 
             for res in self.read_mozbuild(child_path, context.config,
-                read_tiers=False, filesystem_absolute=True,
-                metadata=child_metadata):
+                read_tiers=False, metadata=child_metadata):
                 yield res
 
         self._execution_stack.pop()

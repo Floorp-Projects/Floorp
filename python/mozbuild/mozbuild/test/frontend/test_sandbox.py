@@ -29,6 +29,7 @@ from mozbuild.frontend.context import (
 )
 
 from mozbuild.test.common import MockConfig
+from types import StringTypes
 
 import mozpack.path as mozpath
 
@@ -121,6 +122,24 @@ class TestSandbox(unittest.TestCase):
         self.assertEqual(e.args[0], 'Cannot reassign builtins')
 
 
+class TestedSandbox(MozbuildSandbox):
+    '''Version of MozbuildSandbox with a little more convenience for testing.
+
+    It automatically normalizes paths given to exec_file and exec_source. This
+    helps simplify the test code.
+    '''
+    def normalize_path(self, path):
+        return mozpath.normpath(
+            mozpath.join(self._context.config.topsrcdir, path))
+
+    def exec_file(self, path):
+        super(TestedSandbox, self).exec_file(self.normalize_path(path))
+
+    def exec_source(self, source, path=''):
+        super(TestedSandbox, self).exec_source(source,
+            self.normalize_path(path) if path else '')
+
+
 class TestMozbuildSandbox(unittest.TestCase):
     def sandbox(self, data_path=None, metadata={}):
         config = None
@@ -130,7 +149,7 @@ class TestMozbuildSandbox(unittest.TestCase):
         else:
             config = MockConfig()
 
-        return MozbuildSandbox(Context(VARIABLES, config), metadata)
+        return TestedSandbox(Context(VARIABLES, config), metadata)
 
     def test_default_state(self):
         sandbox = self.sandbox()
@@ -330,7 +349,7 @@ Template([
     'foo.cpp',
 ])
 '''
-        sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+        sandbox2.exec_source(source, 'foo.mozbuild')
 
         self.assertEqual(sandbox2._context, {
             'SOURCES': ['foo.cpp'],
@@ -348,7 +367,7 @@ Template([
 ])
 SOURCES += ['hoge.cpp']
 '''
-        sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+        sandbox2.exec_source(source, 'foo.mozbuild')
 
         self.assertEqual(sandbox2._context, {
             'SOURCES': ['qux.cpp', 'bar.cpp', 'foo.cpp', 'hoge.cpp'],
@@ -362,7 +381,7 @@ TemplateError([
 ])
 '''
         with self.assertRaises(SandboxExecutionError) as se:
-            sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+            sandbox2.exec_source(source, 'foo.mozbuild')
 
         e = se.exception
         self.assertIsInstance(e.exc_value, KeyError)
@@ -379,7 +398,7 @@ illegal = True
 TemplateGlobalVariable()
 '''
         with self.assertRaises(SandboxExecutionError) as se:
-            sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+            sandbox2.exec_source(source, 'foo.mozbuild')
 
         e = se.exception
         self.assertIsInstance(e.exc_value, NameError)
@@ -392,10 +411,10 @@ TemplateGlobalVariable()
 DIRS += ['foo']
 TemplateGlobalUPPERVariable()
 '''
-        sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+        sandbox2.exec_source(source, 'foo.mozbuild')
         self.assertEqual(sandbox2._context, {
             'SOURCES': [],
-            'DIRS': [sandbox.normalize_path('foo')],
+            'DIRS': [sandbox2.normalize_path('foo')],
         })
 
         # However, the result of the template is mixed with the global
@@ -409,7 +428,7 @@ TemplateInherit([
 ])
 SOURCES += ['hoge.cpp']
 '''
-        sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+        sandbox2.exec_source(source, 'foo.mozbuild')
 
         self.assertEqual(sandbox2._context, {
             'SOURCES': ['qux.cpp', 'bar.cpp', 'foo.cpp', 'hoge.cpp'],
@@ -427,7 +446,7 @@ def foo():
 '''
 
         with self.assertRaises(SandboxExecutionError) as se:
-            sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+            sandbox2.exec_source(source, 'foo.mozbuild')
 
         e = se.exception
         self.assertIsInstance(e.exc_value, NameError)
@@ -444,7 +463,7 @@ def Template():
     pass
 '''
         with self.assertRaises(SandboxExecutionError) as se:
-            sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+            sandbox2.exec_source(source, 'foo.mozbuild')
 
         e = se.exception
         self.assertIsInstance(e.exc_value, KeyError)
@@ -469,8 +488,7 @@ def Template():
             source = 'foo("a", "b")'
 
             with self.assertRaises(SandboxExecutionError) as se:
-                sandbox.exec_source(source,
-                    sandbox.normalize_path('foo.mozbuild'))
+                sandbox.exec_source(source, 'foo.mozbuild')
 
             e = se.exception
             self.assertIsInstance(e.exc_value, ValueError)
@@ -479,15 +497,14 @@ def Template():
             source = 'foo(1, "b")'
 
             with self.assertRaises(SandboxExecutionError) as se:
-                sandbox.exec_source(source,
-                    sandbox.normalize_path('foo.mozbuild'))
+                sandbox.exec_source(source, 'foo.mozbuild')
 
             e = se.exception
             self.assertIsInstance(e.exc_value, ValueError)
 
             sandbox = self.sandbox()
             source = 'a = foo(1, 2)'
-            sandbox.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+            sandbox.exec_source(source, 'foo.mozbuild')
 
             self.assertEquals(sandbox['a'], (Foo, int))
         finally:

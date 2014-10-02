@@ -58,7 +58,7 @@ class TestBuildReader(unittest.TestCase):
         self.assertTrue(os.path.exists(path))
 
         contexts = list(reader.read_mozbuild(path, reader.config,
-            filesystem_absolute=True, descend=False))
+            descend=False))
 
         self.assertEqual(len(contexts), 1)
 
