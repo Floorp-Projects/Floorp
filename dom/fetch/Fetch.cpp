@@ -318,8 +318,8 @@ FetchBody<Derived>::SetMimeType(ErrorResult& aRv)
 {
   // Extract mime type.
   nsTArray<nsCString> contentTypeValues;
-  MOZ_ASSERT(DerivedClass()->Headers_());
-  DerivedClass()->Headers_()->GetAll(NS_LITERAL_CSTRING("Content-Type"), contentTypeValues, aRv);
+  MOZ_ASSERT(DerivedClass()->GetInternalHeaders());
+  DerivedClass()->GetInternalHeaders()->GetAll(NS_LITERAL_CSTRING("Content-Type"), contentTypeValues, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

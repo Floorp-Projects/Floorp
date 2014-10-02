@@ -6,12 +6,15 @@
 #ifndef mozilla_dom_InternalResponse_h
 #define mozilla_dom_InternalResponse_h
 
+#include "nsIInputStream.h"
 #include "nsISupportsImpl.h"
 
 #include "mozilla/dom/ResponseBinding.h"
 
 namespace mozilla {
 namespace dom {
+
+class InternalHeaders;
 
 class InternalResponse MOZ_FINAL
 {
@@ -63,8 +66,8 @@ public:
     return mStatusText;
   }
 
-  Headers*
-  Headers_()
+  InternalHeaders*
+  Headers()
   {
     return mHeaders;
   }
@@ -91,7 +94,7 @@ private:
   nsCString mURL;
   const uint16_t mStatus;
   const nsCString mStatusText;
-  nsRefPtr<Headers> mHeaders;
+  nsRefPtr<InternalHeaders> mHeaders;
   nsCOMPtr<nsIInputStream> mBody;
   nsCString mContentType;
 };
