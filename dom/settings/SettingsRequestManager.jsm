@@ -683,7 +683,11 @@ let SettingsRequestManager = {
         if (DEBUG) debug("Cannot find principal for message manager to check permissions");
       }
       else if (SettingsPermissions.hasReadPermission(principal, aContent.key)) {
-        msgMgr.sendAsyncMessage(aMsgName, aContent);
+        try {
+          msgMgr.sendAsyncMessage(aMsgName, aContent);
+        } catch (e) {
+          if (DEBUG) debug("Failed sending message: " + aMsgName);
+        }
       }
     }.bind(this));
     if (DEBUG) debug("Finished Broadcasting");

@@ -648,15 +648,8 @@ clean clobber realclean clobber_all::
 	-$(RM) $(ALL_TRASH)
 	-$(RM) -r $(ALL_TRASH_DIRS)
 
-ifdef TIERS
-clean clobber realclean clobber_all distclean::
-	$(foreach dir, \
-		$(foreach tier, $(TIERS), $(tier_$(tier)_dirs)), \
-		-$(call SUBMAKE,$@,$(dir)))
-else
 clean clobber realclean clobber_all distclean::
 	$(foreach dir,$(DIRS),-$(call SUBMAKE,$@,$(dir)))
-endif
 
 distclean::
 	-$(RM) -r $(ALL_TRASH_DIRS)
@@ -1636,7 +1629,6 @@ FREEZE_VARIABLES = \
   DIRS \
   LIBRARY \
   MODULE \
-  TIERS \
   EXTRA_COMPONENTS \
   EXTRA_PP_COMPONENTS \
   $(NULL)

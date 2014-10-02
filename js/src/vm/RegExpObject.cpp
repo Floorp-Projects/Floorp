@@ -252,7 +252,7 @@ RegExpObject::trace(JSTracer *trc, JSObject *obj)
     //      isHeapBusy() will be false.
     if (trc->runtime()->isHeapBusy() &&
         IS_GC_MARKING_TRACER(trc) &&
-        !obj->asTenured()->zone()->isPreservingCode())
+        !obj->asTenured().zone()->isPreservingCode())
     {
         obj->setPrivate(nullptr);
     } else {

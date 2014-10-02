@@ -28,6 +28,7 @@ from mozbuild.util import (
     HierarchicalStringListWithFlagsFactory,
     StrictOrderingOnAppendList,
     StrictOrderingOnAppendListWithFlagsFactory,
+    TypedList,
     UnsortedError,
 )
 
@@ -536,6 +537,129 @@ class TestMemoize(unittest.TestCase):
         self.assertEqual(instance._count, 1)
         self.assertEqual(instance.wrapped, 42)
         self.assertEqual(instance._count, 1)
+
+
+class TestTypedList(unittest.TestCase):
+    def test_init(self):
+        cls = TypedList(int)
+        l = cls()
+        self.assertEqual(len(l), 0)
+
+        l = cls([1, 2, 3])
+        self.assertEqual(len(l), 3)
+
+        with self.assertRaises(ValueError):
+            cls([1, 2, 'c'])
+
+    def test_extend(self):
+        cls = TypedList(int)
+        l = cls()
+        l.extend([1, 2])
+        self.assertEqual(len(l), 2)
+        self.assertIsInstance(l, cls)
+
+        with self.assertRaises(ValueError):
+            l.extend([3, 'c'])
+
+        self.assertEqual(len(l), 2)
+
+    def test_slicing(self):
+        cls = TypedList(int)
+        l = cls()
+        l[:] = [1, 2]
+        self.assertEqual(len(l), 2)
+        self.assertIsInstance(l, cls)
+
+        with self.assertRaises(ValueError):
+            l[:] = [3, 'c']
+
+        self.assertEqual(len(l), 2)
+
+    def test_add(self):
+        cls = TypedList(int)
+        l = cls()
+        l2 = l + [1, 2]
+        self.assertEqual(len(l), 0)
+        self.assertEqual(len(l2), 2)
+        self.assertIsInstance(l2, cls)
+
+        with self.assertRaises(ValueError):
+            l2 = l + [3, 'c']
+
+        self.assertEqual(len(l), 0)
+
+    def test_iadd(self):
+        cls = TypedList(int)
+        l = cls()
+        l += [1, 2]
+        self.assertEqual(len(l), 2)
+        self.assertIsInstance(l, cls)
+
+        with self.assertRaises(ValueError):
+            l += [3, 'c']
+
+        self.assertEqual(len(l), 2)
+
+    def test_add_coercion(self):
+        objs = []
+
+        class Foo(object):
+            def __init__(self, obj):
+                objs.append(obj)
+
+        cls = TypedList(Foo)
+        l = cls()
+        l += [1, 2]
+        self.assertEqual(len(objs), 2)
+        self.assertEqual(type(l[0]), Foo)
+        self.assertEqual(type(l[1]), Foo)
+
+        # Adding a TypedList to a TypedList shouldn't trigger coercion again
+        l2 = cls()
+        l2 += l
+        self.assertEqual(len(objs), 2)
+        self.assertEqual(type(l2[0]), Foo)
+        self.assertEqual(type(l2[1]), Foo)
+
+        # Adding a TypedList to a TypedList shouldn't even trigger the code
+        # that does coercion at all.
+        l2 = cls()
+        list.__setslice__(l, 0, -1, [1, 2])
+        l2 += l
+        self.assertEqual(len(objs), 2)
+        self.assertEqual(type(l2[0]), int)
+        self.assertEqual(type(l2[1]), int)
+
+    def test_memoized(self):
+        cls = TypedList(int)
+        cls2 = TypedList(str)
+        self.assertEqual(TypedList(int), cls)
+        self.assertNotEqual(cls, cls2)
+
+
+class TypedTestStrictOrderingOnAppendList(unittest.TestCase):
+    def test_init(self):
+        class Unicode(unicode):
+            def __init__(self, other):
+                if not isinstance(other, unicode):
+                    raise ValueError()
+                super(Unicode, self).__init__(other)
+
+        cls = TypedList(Unicode, StrictOrderingOnAppendList)
+        l = cls()
+        self.assertEqual(len(l), 0)
+
+        l = cls(['a', 'b', 'c'])
+        self.assertEqual(len(l), 3)
+
+        with self.assertRaises(UnsortedError):
+            cls(['c', 'b', 'a'])
+
+        with self.assertRaises(ValueError):
+            cls(['a', 'b', 3])
+
+        self.assertEqual(len(l), 3)
+
 
 if __name__ == '__main__':
     main()

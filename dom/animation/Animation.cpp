@@ -58,7 +58,7 @@ const double ComputedTiming::kNullTimeFraction = PositiveInfinity<double>();
 
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Animation, mDocument)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Animation, mDocument, mTarget)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(Animation, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(Animation, Release)
@@ -225,6 +225,29 @@ Animation::ActiveDuration(const AnimationTiming& aTiming)
   }
   return StickyTimeDuration(
     aTiming.mIterationDuration.MultDouble(aTiming.mIterationCount));
+}
+
+bool
+Animation::IsCurrent() const
+{
+  if (IsFinishedTransition()) {
+    return false;
+  }
+
+  ComputedTiming computedTiming = GetComputedTiming();
+  return computedTiming.mPhase == ComputedTiming::AnimationPhase_Before ||
+         computedTiming.mPhase == ComputedTiming::AnimationPhase_Active;
+}
+
+bool
+Animation::IsInEffect() const
+{
+  if (IsFinishedTransition()) {
+    return false;
+  }
+
+  ComputedTiming computedTiming = GetComputedTiming();
+  return computedTiming.mTimeFraction != ComputedTiming::kNullTimeFraction;
 }
 
 bool

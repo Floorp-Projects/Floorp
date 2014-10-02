@@ -1241,6 +1241,13 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
           mStyleFlushObservers.RemoveElement(shell);
           shell->GetPresContext()->RestyleManager()->mObservingRefreshDriver = false;
           shell->FlushPendingNotifications(ChangesToFlush(Flush_Style, false));
+          // Inform the FontFaceSet that we ticked, so that it can resolve its
+          // ready promise if it needs to (though it might still be waiting on
+          // a layout flush).
+          nsPresContext* presContext = shell->GetPresContext();
+          if (presContext) {
+            presContext->NotifyFontFaceSetOnRefresh();
+          }
           NS_RELEASE(shell);
 
           if (docShell) {
@@ -1282,6 +1289,12 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
           shell->mSuppressInterruptibleReflows = false;
           shell->FlushPendingNotifications(ChangesToFlush(Flush_InterruptibleLayout,
                                                           false));
+          // Inform the FontFaceSet that we ticked, so that it can resolve its
+          // ready promise if it needs to.
+          nsPresContext* presContext = shell->GetPresContext();
+          if (presContext) {
+            presContext->NotifyFontFaceSetOnRefresh();
+          }
           NS_RELEASE(shell);
         }
 

@@ -587,7 +587,7 @@ GCMarker::checkZone(void *p)
 {
     MOZ_ASSERT(started);
     DebugOnly<Cell *> cell = static_cast<Cell *>(p);
-    MOZ_ASSERT_IF(cell->isTenured(), cell->asTenured()->zone()->isCollecting());
+    MOZ_ASSERT_IF(cell->isTenured(), cell->asTenured().zone()->isCollecting());
 }
 #endif
 

@@ -24,6 +24,7 @@ SimpleTest.waitForExplicitFinish();
 
 var policies = [
   ["allowed", "*"],
+  ["allowed", "http://*"], // test for bug 1075230, enforcing scheme and wildcard
   ["allowed", "test1.example.com"],
   ["allowed", "test1.example.com/"],
   ["allowed", "test1.example.com/tests/content/base/test/csp/"],

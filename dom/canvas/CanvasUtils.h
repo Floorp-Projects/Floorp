@@ -9,6 +9,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "jsapi.h"
+#include "mozilla/FloatingPoint.h"
 
 class nsIPrincipal;
 
@@ -53,7 +54,7 @@ void DoDrawImageSecurityCheck(dom::HTMLCanvasElement *aCanvasElement,
 bool CoerceDouble(JS::Value v, double* d);
 
     /* Float validation stuff */
-#define VALIDATE(_f)  if (!NS_finite(_f)) return false
+#define VALIDATE(_f)  if (!IsFinite(_f)) return false
 
 inline bool FloatValidate (double f1) {
     VALIDATE(f1);

@@ -30,12 +30,6 @@ ifeq (.,$(DEPTH))
 
 include root.mk
 
-# Disable build status for mach in top directories without TIERS.
-# In practice this disables it when recursing under js/src, which confuses mach.
-ifndef TIERS
-BUILDSTATUS =
-endif
-
 # Main rules (export, compile, libs and tools) call recurse_* rules.
 # This wrapping is only really useful for build status.
 compile libs export tools::
@@ -70,9 +64,7 @@ export NO_RECURSE_MAKELEVEL=$(word $(MAKELEVEL),2 3 4 5 6 7 8 9 10 11 12 13 14 1
 endif
 endif
 
-# Get all directories traversed for all subtiers in the current tier, or use
-# directly the $(*_dirs) variables available in root.mk when there is no
-# TIERS (like for js/src).
+# Use the $(*_dirs) variables available in root.mk
 CURRENT_DIRS := $($(CURRENT_TIER)_dirs)
 
 # Need a list of compile targets because we can't use pattern rules:
@@ -123,16 +115,6 @@ else
 # Tier traversal handling
 #########################
 
-ifdef TIERS
-
-libs export tools::
-	$(call BUILDSTATUS,TIER_START $@)
-	$(foreach tier,$(TIERS), $(if $(filter-out libs_precompile tools_precompile,$@_$(tier)), \
-		$(foreach dir, $(tier_$(tier)_dirs), $(call TIER_DIR_SUBMAKE,$@,$(tier),$(dir),$@))))
-	$(call BUILDSTATUS,TIER_FINISH $@)
-
-else
-
 define CREATE_SUBTIER_TRAVERSAL_RULE
 .PHONY: $(1)
 
@@ -146,8 +128,6 @@ $(foreach subtier,export libs tools,$(eval $(call CREATE_SUBTIER_TRAVERSAL_RULE,
 ifndef TOPLEVEL_BUILD
 libs:: target host
 endif
-
-endif # ifdef TIERS
 
 endif # ifeq ($(NO_RECURSE_MAKELEVEL),$(MAKELEVEL))
 

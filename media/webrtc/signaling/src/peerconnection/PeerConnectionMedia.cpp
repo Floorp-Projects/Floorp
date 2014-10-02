@@ -240,10 +240,10 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
   }
   mIceCtx->SignalGatheringStateChange.connect(
       this,
-      &PeerConnectionMedia::IceGatheringStateChange);
+      &PeerConnectionMedia::IceGatheringStateChange_s);
   mIceCtx->SignalConnectionStateChange.connect(
       this,
-      &PeerConnectionMedia::IceConnectionStateChange);
+      &PeerConnectionMedia::IceConnectionStateChange_s);
 
   // Create three streams to start with.
   // One each for audio, video and DataChannel
@@ -283,7 +283,7 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
     mIceStreams[i]->SignalReady.connect(this, &PeerConnectionMedia::IceStreamReady);
     mIceStreams[i]->SignalCandidate.connect(
         this,
-        &PeerConnectionMedia::OnCandidateFound);
+        &PeerConnectionMedia::OnCandidateFound_s);
   }
 
   // TODO(ekr@rtfm.com): When we have a generic error reporting mechanism,
@@ -591,16 +591,73 @@ PeerConnectionMedia::AddRemoteStreamHint(int aIndex, bool aIsVideo)
 
 
 void
-PeerConnectionMedia::IceGatheringStateChange(NrIceCtx* ctx,
-                                             NrIceCtx::GatheringState state)
+PeerConnectionMedia::IceGatheringStateChange_s(NrIceCtx* ctx,
+                                               NrIceCtx::GatheringState state)
 {
+  ASSERT_ON_THREAD(mSTSThread);
+  // ShutdownMediaTransport_s has not run yet because it unhooks this function
+  // from its signal, which means that SelfDestruct_m has not been dispatched
+  // yet either, so this PCMedia will still be around when this dispatch reaches
+  // main.
+  GetMainThread()->Dispatch(
+    WrapRunnable(this,
+                 &PeerConnectionMedia::IceGatheringStateChange_m,
+                 ctx,
+                 state),
+    NS_DISPATCH_NORMAL);
+}
+
+void
+PeerConnectionMedia::IceConnectionStateChange_s(NrIceCtx* ctx,
+                                                NrIceCtx::ConnectionState state)
+{
+  ASSERT_ON_THREAD(mSTSThread);
+  // ShutdownMediaTransport_s has not run yet because it unhooks this function
+  // from its signal, which means that SelfDestruct_m has not been dispatched
+  // yet either, so this PCMedia will still be around when this dispatch reaches
+  // main.
+  GetMainThread()->Dispatch(
+    WrapRunnable(this,
+                 &PeerConnectionMedia::IceConnectionStateChange_m,
+                 ctx,
+                 state),
+    NS_DISPATCH_NORMAL);
+}
+
+void
+PeerConnectionMedia::OnCandidateFound_s(NrIceMediaStream *aStream,
+                                        const std::string &candidate)
+{
+  ASSERT_ON_THREAD(mSTSThread);
+  MOZ_ASSERT(aStream);
+
+  CSFLogDebug(logTag, "%s: %s", __FUNCTION__, aStream->name().c_str());
+
+  // ShutdownMediaTransport_s has not run yet because it unhooks this function
+  // from its signal, which means that SelfDestruct_m has not been dispatched
+  // yet either, so this PCMedia will still be around when this dispatch reaches
+  // main.
+  GetMainThread()->Dispatch(
+    WrapRunnable(this,
+                 &PeerConnectionMedia::OnCandidateFound_m,
+                 candidate,
+                 aStream->GetLevel()),
+    NS_DISPATCH_NORMAL);
+}
+
+void
+PeerConnectionMedia::IceGatheringStateChange_m(NrIceCtx* ctx,
+                                               NrIceCtx::GatheringState state)
+{
+  ASSERT_ON_THREAD(mMainThread);
   SignalIceGatheringStateChange(ctx, state);
 }
 
 void
-PeerConnectionMedia::IceConnectionStateChange(NrIceCtx* ctx,
-                                              NrIceCtx::ConnectionState state)
+PeerConnectionMedia::IceConnectionStateChange_m(NrIceCtx* ctx,
+                                                NrIceCtx::ConnectionState state)
 {
+  ASSERT_ON_THREAD(mMainThread);
   SignalIceConnectionStateChange(ctx, state);
 }
 
@@ -613,14 +670,11 @@ PeerConnectionMedia::IceStreamReady(NrIceMediaStream *aStream)
 }
 
 void
-PeerConnectionMedia::OnCandidateFound(NrIceMediaStream *aStream,
-                                      const std::string &candidate)
+PeerConnectionMedia::OnCandidateFound_m(const std::string &candidate,
+                                        uint16_t level)
 {
-  MOZ_ASSERT(aStream);
-
-  CSFLogDebug(logTag, "%s: %s", __FUNCTION__, aStream->name().c_str());
-
-  SignalCandidate(candidate, aStream->GetLevel());
+  ASSERT_ON_THREAD(mMainThread);
+  SignalCandidate(candidate, level);
 }
 
 

@@ -304,9 +304,11 @@ struct AnimationPlayerCollection : public PRCList
   // Update mAnimationGeneration to nsCSSFrameConstructor's count
   void UpdateAnimationGeneration(nsPresContext* aPresContext);
 
-  // Returns true if there is an animation in the before or active phase
-  // at the current time.
-  bool HasCurrentAnimations();
+  // Returns true if there is an animation that has yet to finish.
+  bool HasCurrentAnimations() const;
+  // Returns true if there is an animation of the specified property that
+  // has yet to finish.
+  bool HasCurrentAnimationsForProperty(nsCSSProperty aProperty) const;
 
   // The refresh time associated with mStyleRule.
   TimeStamp mStyleRuleRefreshTime;

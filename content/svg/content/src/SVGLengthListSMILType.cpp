@@ -7,6 +7,7 @@
 #include "nsSMILValue.h"
 #include "SVGLengthList.h"
 #include "nsMathUtils.h"
+#include "mozilla/FloatingPoint.h"
 #include <math.h>
 #include <algorithm>
 
@@ -216,7 +217,7 @@ SVGLengthListSMILType::ComputeDistance(const nsSMILValue& aFrom,
   }
 
   float distance = sqrt(total);
-  if (!NS_finite(distance)) {
+  if (!IsFinite(distance)) {
     return NS_ERROR_FAILURE;
   }
   aDistance = distance;

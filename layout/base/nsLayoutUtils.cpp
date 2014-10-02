@@ -394,8 +394,7 @@ nsLayoutUtils::HasAnimations(nsIContent* aContent,
 
 bool
 nsLayoutUtils::HasCurrentAnimations(nsIContent* aContent,
-                                    nsIAtom* aAnimationProperty,
-                                    nsPresContext* aPresContext)
+                                    nsIAtom* aAnimationProperty)
 {
   if (!aContent->MayHaveAnimations())
     return false;
@@ -404,6 +403,26 @@ nsLayoutUtils::HasCurrentAnimations(nsIContent* aContent,
     static_cast<AnimationPlayerCollection*>(
       aContent->GetProperty(aAnimationProperty));
   return (collection && collection->HasCurrentAnimations());
+}
+
+bool
+nsLayoutUtils::HasCurrentAnimationsForProperty(nsIContent* aContent,
+                                               nsCSSProperty aProperty)
+{
+  if (!aContent->MayHaveAnimations())
+    return false;
+
+  static nsIAtom* const sAnimProps[] = { nsGkAtoms::transitionsProperty,
+                                         nsGkAtoms::animationsProperty,
+                                         nullptr };
+  for (nsIAtom* const* animProp = sAnimProps; *animProp; animProp++) {
+    AnimationPlayerCollection* collection =
+      static_cast<AnimationPlayerCollection*>(aContent->GetProperty(*animProp));
+    if (collection && collection->HasCurrentAnimationsForProperty(aProperty))
+      return true;
+  }
+
+  return false;
 }
 
 static gfxSize

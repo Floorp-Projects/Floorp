@@ -40,6 +40,8 @@ GMPSharedMemManager::MgrAllocShmem(GMPSharedMem::GMPMemoryClasses aClass, size_t
   size_t pagesize = ipc::SharedMemory::SystemPageSize();
   aSize = (aSize + (pagesize-1)) & ~(pagesize-1); // round up to page size
   bool retval = Alloc(aSize, aType, aMem);
+  // The allocator (or NeedsShmem call) should never return less than we ask for...
+  MOZ_ASSERT(aMem->Size<uint8_t>() >= aSize);
   if (retval) {
     mData->mGmpAllocated[aClass]++;
   }
@@ -53,6 +55,18 @@ GMPSharedMemManager::MgrDeallocShmem(GMPSharedMem::GMPMemoryClasses aClass, ipc:
 
   size_t size = aMem.Size<uint8_t>();
   size_t total = 0;
+
+  // XXX Bug NNNNNNN Until we put better guards on ipc::shmem, verify we
+  // weren't fed an shmem we already had.
+  for (uint32_t i = 0; i < GetGmpFreelist(aClass).Length(); i++) {
+    if (NS_WARN_IF(aMem == GetGmpFreelist(aClass)[i])) {
+      // Safest to crash in this case; should never happen in normal
+      // operation.
+      MOZ_CRASH("Deallocating Shmem we already have in our cache!");
+      //return true;
+    }
+  }
+
   // XXX This works; there are better pool algorithms.  We need to avoid
   // "falling off a cliff" with too low a number
   if (GetGmpFreelist(aClass).Length() > 10) {
