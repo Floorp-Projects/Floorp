@@ -879,7 +879,7 @@ nsSSLIOLayerHelpers::rememberIntolerantAtVersion(const nsACString& hostName,
 
   MutexAutoLock lock(mutex);
 
-  if (intolerant <= minVersion) {
+  if (intolerant <= minVersion || intolerant <= mVersionFallbackLimit) {
     // We can't fall back any further. Assume that intolerance isn't the issue.
     IntoleranceEntry entry;
     if (mTLSIntoleranceInfo.Get(key, &entry)) {
@@ -1380,6 +1380,7 @@ nsSSLIOLayerHelpers::nsSSLIOLayerHelpers()
   , mTLSIntoleranceInfo()
   , mFalseStartRequireNPN(true)
   , mFalseStartRequireForwardSecrecy(false)
+  , mVersionFallbackLimit(SSL_LIBRARY_VERSION_TLS_1_0)
   , mutex("nsSSLIOLayerHelpers.mutex")
 {
 }
@@ -1596,6 +1597,8 @@ PrefObserver::Observe(nsISupports* aSubject, const char* aTopic,
       mOwner->mFalseStartRequireForwardSecrecy =
         Preferences::GetBool("security.ssl.false_start.require-forward-secrecy",
                              FALSE_START_REQUIRE_FORWARD_SECRECY_DEFAULT);
+    } else if (prefName.EqualsLiteral("security.tls.version.fallback-limit")) {
+      mOwner->loadVersionFallbackLimit();
     }
   }
   return NS_OK;
@@ -1704,6 +1707,7 @@ nsSSLIOLayerHelpers::Init()
   mFalseStartRequireForwardSecrecy =
     Preferences::GetBool("security.ssl.false_start.require-forward-secrecy",
                          FALSE_START_REQUIRE_FORWARD_SECRECY_DEFAULT);
+  loadVersionFallbackLimit();
 
   mPrefObserver = new PrefObserver(this);
   Preferences::AddStrongObserver(mPrefObserver,
@@ -1716,7 +1720,22 @@ nsSSLIOLayerHelpers::Init()
                                  "security.ssl.false_start.require-npn");
   Preferences::AddStrongObserver(mPrefObserver,
                                  "security.ssl.false_start.require-forward-secrecy");
+  Preferences::AddStrongObserver(mPrefObserver,
+                                 "security.tls.version.fallback-limit");
   return NS_OK;
+}
+
+void
+nsSSLIOLayerHelpers::loadVersionFallbackLimit()
+{
+  // see nsNSSComponent::setEnabledTLSVersions for pref handling rules
+  int32_t limit = 1;   // 1 = TLS 1.0
+  Preferences::GetInt("security.tls.version.fallback-limit", &limit);
+  limit += SSL_LIBRARY_VERSION_3_0;
+  mVersionFallbackLimit = (uint16_t)limit;
+  if (limit != (int32_t)mVersionFallbackLimit) { // overflow check
+    mVersionFallbackLimit = SSL_LIBRARY_VERSION_TLS_1_0;
+  }
 }
 
 void
