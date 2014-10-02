@@ -21,7 +21,7 @@
     var gFindBar = null;
     var gBrowser;
 
-    var imports = ["SimpleTest", "ok", "is"];
+    var imports = ["SimpleTest", "ok"];
     for each (var name in imports) {
       window[name] = window.opener.wrappedJSObject[name];
     }
@@ -71,28 +71,21 @@
     function checkSelection(done) {
       SimpleTest.executeSoon(function() {
         var selected = gBrowser.contentWindow.getSelection();
-        is(selected, "", "No text is selected");
+        ok(selected == "", "No text is selected");
 
         var controller = gFindBar.browser.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsISelectionDisplay)
                                  .QueryInterface(Ci.nsISelectionController);
         var selection = controller.getSelection(controller.SELECTION_FIND);
-        is(selection.rangeCount, 0, "No text is highlighted");
+        ok(selection.rangeCount == 0, "No text is highlighted");
         done();
       });
     }
 
-    function once(node, eventName, callback) {
-      node.addEventListener(eventName, function clb(e) {
-        node.removeEventListener(eventName, clb);
-        callback(e);
-      })
-    }
-
     function testFind(done) {
-      var eventTriggered = false;
+      var findTriggered = false;
       var query = "t";
-      once(gFindBar, "find", function(e) {
+      gFindBar.addEventListener("find", function(e) {
         eventTriggered = true;
         ok(e.detail.query === query, "find event query should match '" + query + "'");
         e.preventDefault();
@@ -110,7 +103,7 @@
 
     function testFindAgain(done) {
       var eventTriggered = false;
-      once(gFindBar, "findagain", function(e) {
+      gFindBar.addEventListener("findagain", function(e) {
         eventTriggered = true;
         e.preventDefault();
         // Since we're preventing the default make sure nothing was selected.
@@ -123,7 +116,7 @@
 
     function testCaseSensitivity() {
       var eventTriggered = false;
-      once(gFindBar, "findcasesensitivitychange", function(e) {
+      gFindBar.addEventListener("findcasesensitivitychange", function(e) {
         eventTriggered = true;
         ok(e.detail.caseSensitive, "find should be case sensitive");
       });
@@ -131,17 +124,13 @@
       var matchCaseCheckbox = gFindBar.getElement("find-case-sensitive");
       matchCaseCheckbox.click();
       ok(eventTriggered, "findcasesensitivitychange should be triggered");
-
-      // Changing case sensitivity does the search so clear the selected text
-      // before the next test.
-      gBrowser.contentWindow.getSelection().removeAllRanges();
     }
 
     function testHighlight(done) {
       // Update the find state so the highlight button is clickable.
       gFindBar.updateControlState(Ci.nsITypeAheadFind.FIND_FOUND, false);
       var eventTriggered = false;
-      once(gFindBar, "findhighlightallchange", function(e) {
+      gFindBar.addEventListener("findhighlightallchange", function(e) {
         eventTriggered = true;
         ok(e.detail.highlightAll, "find event should have highlight all set");
         e.preventDefault();
