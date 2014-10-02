@@ -1317,7 +1317,6 @@ public abstract class GeckoApp
                 final String profilePath = getProfile().getDir().getAbsolutePath();
                 final EventDispatcher dispatcher = EventDispatcher.getInstance();
 
-                // Both of these are Java-format locale strings: "en_US", not "en-US".
                 final String osLocale = Locale.getDefault().toString();
                 String appLocale = localeManager.getAndApplyPersistedLocale(GeckoApp.this);
                 Log.d(LOGTAG, "OS locale is " + osLocale + ", app locale is " + appLocale);
