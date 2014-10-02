@@ -7,199 +7,199 @@ if CONFIG['LIBXUL_SDK']:
     error('toolkit.mozbuild is not compatible with --enable-libxul-sdk=')
 
 if CONFIG['MOZ_SANDBOX']:
-    DIRS += ['security/sandbox']
+    DIRS += ['/security/sandbox']
 
 DIRS += [
     # Depends on NSS and NSPR, and must be built after sandbox or else B2G emulator
     # builds fail.
-    'security/certverifier',
+    '/security/certverifier',
     # Depends on certverifier
-    'security/apps',
+    '/security/apps',
 ]
 
 # the signing related bits of libmar depend on nss
 if CONFIG['MOZ_UPDATER']:
-    DIRS += ['modules/libmar']
+    DIRS += ['/modules/libmar']
 
 if CONFIG['NS_TRACE_MALLOC']:
-    DIRS += ['tools/trace-malloc/lib']
+    DIRS += ['/tools/trace-malloc/lib']
 
 if CONFIG['MOZ_DMD']:
-    DIRS += ['memory/replace/dmd']
+    DIRS += ['/memory/replace/dmd']
 
 DIRS += [
-    'config/external/freetype2',
-    'xpcom',
-    'modules/libpref',
-    'intl',
-    'netwerk',
+    '/config/external/freetype2',
+    '/xpcom',
+    '/modules/libpref',
+    '/intl',
+    '/netwerk',
 ]
 
 if CONFIG['MOZ_AUTH_EXTENSION']:
-    DIRS += ['extensions/auth']
+    DIRS += ['/extensions/auth']
 
 if CONFIG['MOZ_UPDATER']:
-    DIRS += ['other-licenses/bsdiff']
+    DIRS += ['/other-licenses/bsdiff']
 
 # Gecko/Core components.
 
 DIRS += [
-    'ipc',
-    'js/ipc',
-    'hal',
-    'js/xpconnect',
-    'intl/chardet',
-    'media/libyuv',
-    'modules/libjar',
-    'storage',
+    '/ipc',
+    '/js/ipc',
+    '/hal',
+    '/js/xpconnect',
+    '/intl/chardet',
+    '/media/libyuv',
+    '/modules/libjar',
+    '/storage',
 ]
 
 if CONFIG['MOZ_PERMISSIONS']:
     DIRS += [
-        'extensions/cookie',
-        'extensions/permissions',
+        '/extensions/cookie',
+        '/extensions/permissions',
     ]
 
 DIRS += [
-    'rdf',
+    '/rdf',
 ]
 
 if CONFIG['MOZ_WEBRTC']:
     DIRS += [
-        'media/webrtc',
-        'media/mtransport/third_party',
-        'media/mtransport/build',
-        'media/mtransport/standalone',
+        '/media/webrtc',
+        '/media/mtransport/third_party',
+        '/media/mtransport/build',
+        '/media/mtransport/standalone',
     ]
 
 if CONFIG['MOZ_OMX_PLUGIN']:
     DIRS += [
-        'media/omx-plugin/lib/ics/libutils',
-        'media/omx-plugin/lib/ics/libstagefright',
-        'media/omx-plugin/lib/ics/libvideoeditorplayer',
-        'media/omx-plugin/lib/gb/libutils',
-        'media/omx-plugin/lib/gb/libstagefright',
-        'media/omx-plugin/lib/gb/libstagefright_color_conversion',
-        'media/omx-plugin/lib/gb235/libstagefright',
-        'media/omx-plugin',
-        'media/omx-plugin/gb',
-        'media/omx-plugin/gb235',
-        'media/omx-plugin/lib/hc/libstagefright',
-        'media/omx-plugin/hc',
-        'media/omx-plugin/kk',
+        '/media/omx-plugin/lib/ics/libutils',
+        '/media/omx-plugin/lib/ics/libstagefright',
+        '/media/omx-plugin/lib/ics/libvideoeditorplayer',
+        '/media/omx-plugin/lib/gb/libutils',
+        '/media/omx-plugin/lib/gb/libstagefright',
+        '/media/omx-plugin/lib/gb/libstagefright_color_conversion',
+        '/media/omx-plugin/lib/gb235/libstagefright',
+        '/media/omx-plugin',
+        '/media/omx-plugin/gb',
+        '/media/omx-plugin/gb235',
+        '/media/omx-plugin/lib/hc/libstagefright',
+        '/media/omx-plugin/hc',
+        '/media/omx-plugin/kk',
     ]
 
 if CONFIG['ENABLE_TESTS']:
-    DIRS += ['testing/specialpowers']
+    DIRS += ['/testing/specialpowers']
 
 DIRS += [
-    'testing/gtest',
-    'uriloader',
-    'caps',
-    'parser',
-    'gfx',
-    'image',
-    'dom',
-    'view',
-    'widget',
-    'content',
-    'editor',
-    'layout',
-    'docshell',
-    'embedding',
-    'xpfe/appshell'
+    '/testing/gtest',
+    '/uriloader',
+    '/caps',
+    '/parser',
+    '/gfx',
+    '/image',
+    '/dom',
+    '/view',
+    '/widget',
+    '/content',
+    '/editor',
+    '/layout',
+    '/docshell',
+    '/embedding',
+    '/xpfe/appshell'
 ]
 
 # This needs to be built after the gfx/ directory
 # to ensure all dependencies for skia (e.g. mozalloc, xpcom)
 # have been built
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    DIRS += ['other-licenses/skia-npapi']
+    DIRS += ['/other-licenses/skia-npapi']
 
 if CONFIG['MOZ_UNIVERSALCHARDET']:
-    DIRS += ['extensions/universalchardet']
+    DIRS += ['/extensions/universalchardet']
 
 if CONFIG['ACCESSIBILITY']:
-    DIRS += ['accessible']
+    DIRS += ['/accessible']
 
 # toolkit
 
-DIRS += ['profile']
+DIRS += ['/profile']
 
 # This must precede xpfe.
 if CONFIG['MOZ_JPROF']:
-    DIRS += ['tools/jprof']
+    DIRS += ['/tools/jprof']
 
 DIRS += [
-    'tools/profiler',
-    'xpfe/components',
+    '/tools/profiler',
+    '/xpfe/components',
 ]
 
 if CONFIG['MOZ_ENABLE_XREMOTE']:
-    DIRS += ['widget/xremoteclient']
+    DIRS += ['/widget/xremoteclient']
 
 if CONFIG['MOZ_SPELLCHECK']:
-    DIRS += ['extensions/spellcheck']
+    DIRS += ['/extensions/spellcheck']
 
 DIRS += [
-    'security/manager',
-    'toolkit',
+    '/security/manager',
+    '/toolkit',
 ]
 
 if CONFIG['MOZ_PREF_EXTENSIONS']:
-    DIRS += ['extensions/pref']
+    DIRS += ['/extensions/pref']
 
 DIRS += [
-    'services',
-    'startupcache',
-    'js/ductwork/debugger',
-    'other-licenses/snappy',
+    '/services',
+    '/startupcache',
+    '/js/ductwork/debugger',
+    '/other-licenses/snappy',
 ]
 
 if CONFIG['MOZ_GIO_COMPONENT']:
-    DIRS += ['extensions/gio']
+    DIRS += ['/extensions/gio']
 
 DIRS += [
-    'toolkit/library/StaticXULComponentsEnd',
-    'toolkit/library',
+    '/toolkit/library/StaticXULComponentsEnd',
+    '/toolkit/library',
 ]
 
 if CONFIG['MOZ_REPLACE_MALLOC']:
-    DIRS += ['memory/replace']
+    DIRS += ['/memory/replace']
 
 if CONFIG['NS_TRACE_MALLOC']:
-    DIRS += ['tools/trace-malloc']
+    DIRS += ['/tools/trace-malloc']
 
 if CONFIG['MOZ_ENABLE_GNOME_COMPONENT']:
-    DIRS += ['toolkit/system/gnome']
+    DIRS += ['/toolkit/system/gnome']
 
 # if QtNetwork is present, it will do its own network monitoring
 if not CONFIG['MOZ_ENABLE_QTNETWORK'] and CONFIG['MOZ_ENABLE_DBUS']:
-    DIRS += ['toolkit/system/dbus']
+    DIRS += ['/toolkit/system/dbus']
 
-DIRS += ['addon-sdk']
+DIRS += ['/addon-sdk']
 
 if CONFIG['ENABLE_MARIONETTE'] or CONFIG['MOZ_WIDGET_TOOLKIT'] not in ('gonk', 'android'):
-    DIRS += ['testing/marionette']
+    DIRS += ['/testing/marionette']
 
 DIRS += [
-    'tools/quitter',
-    'media/gmp-clearkey/0.1',
+    '/tools/quitter',
+    '/media/gmp-clearkey/0.1',
 ]
 
 if CONFIG['ENABLE_TESTS']:
     DIRS += [
-        'testing/mochitest',
-        'testing/xpcshell',
-        'testing/tools/screenshot',
-        'testing/profiles',
-        'testing/mozbase',
-        'testing/modules',
-        'testing/web-platform',
+        '/testing/mochitest',
+        '/testing/xpcshell',
+        '/testing/tools/screenshot',
+        '/testing/profiles',
+        '/testing/mozbase',
+        '/testing/modules',
+        '/testing/web-platform',
     ]
 
     if CONFIG['MOZ_WEBRTC'] and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
             DIRS += [
-                'media/webrtc/signaling/test',
-                'media/mtransport/test',
+                '/media/webrtc/signaling/test',
+                '/media/mtransport/test',
             ]

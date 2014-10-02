@@ -6,10 +6,10 @@
 include('/toolkit/toolkit.mozbuild')
 
 if CONFIG['MOZ_EXTENSIONS']:
-    DIRS += ['extensions']
+    DIRS += ['/extensions']
 
 if CONFIG['OS_ARCH'] == 'WINNT' and (CONFIG['ENABLE_TESTS'] or
         CONFIG['MOZILLA_OFFICIAL']):
-    DIRS += ['embedding/tests/winEmbed']
+    DIRS += ['/embedding/tests/winEmbed']
 
-DIRS += ['xulrunner']
+DIRS += ['/xulrunner']

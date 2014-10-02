@@ -14,6 +14,8 @@ from mozbuild.frontend.context import (
     VARIABLES,
 )
 
+from mozpack import path as mozpath
+
 
 class TestContext(unittest.TestCase):
     def test_defaults(self):
@@ -199,6 +201,27 @@ class TestContext(unittest.TestCase):
         self.assertEqual(test.current_path, foo)
         self.assertEqual(test.all_paths, set([bar, foo]))
         self.assertEqual(test.source_stack, [foo, bar, bar, foo])
+
+    def test_dirs(self):
+        class Config(object): pass
+        config = Config()
+        config.topsrcdir = mozpath.abspath(os.curdir)
+        config.topobjdir = mozpath.abspath('obj')
+        test = Context(config=config)
+        foo = mozpath.abspath('foo')
+        test.push_source(foo)
+
+        self.assertEqual(test.srcdir, config.topsrcdir)
+        self.assertEqual(test.relsrcdir, '')
+        self.assertEqual(test.objdir, config.topobjdir)
+        self.assertEqual(test.relobjdir, '')
+
+        foobar = os.path.abspath('foo/bar')
+        test.push_source(foobar)
+        self.assertEqual(test.srcdir, mozpath.join(config.topsrcdir, 'foo'))
+        self.assertEqual(test.relsrcdir, 'foo')
+        self.assertEqual(test.objdir, config.topobjdir)
+        self.assertEqual(test.relobjdir, '')
 
 
 class TestSymbols(unittest.TestCase):
