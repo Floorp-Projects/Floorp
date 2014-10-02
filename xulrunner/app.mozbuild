@@ -6,10 +6,10 @@
 include('/toolkit/toolkit.mozbuild')
 
 if CONFIG['MOZ_EXTENSIONS']:
-    add_tier_dir('app', 'extensions')
+    DIRS += ['/extensions']
 
 if CONFIG['OS_ARCH'] == 'WINNT' and (CONFIG['ENABLE_TESTS'] or
         CONFIG['MOZILLA_OFFICIAL']):
-    add_tier_dir('app', 'embedding/tests/winEmbed')
+    DIRS += ['/embedding/tests/winEmbed']
 
-add_tier_dir('app', 'xulrunner')
+DIRS += ['/xulrunner']

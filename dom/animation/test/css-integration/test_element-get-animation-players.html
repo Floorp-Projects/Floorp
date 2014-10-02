@@ -37,7 +37,6 @@ async_test(function(t) {
 
   // Add an animation
   div.style.animation = 'anim1 100s';
-  window.getComputedStyle(div).animationName;
   var players = div.getAnimationPlayers();
   assert_equals(players.length, 1,
     'getAnimationPlayers returns a player running CSS Animations');
@@ -51,7 +50,6 @@ async_test(function(t) {
   // the animations differ.
   window.requestAnimationFrame(t.step_func(function() {
     div.style.animation = 'anim1 100s, anim2 100s';
-    window.getComputedStyle(div).animationName;
     players = div.getAnimationPlayers();
     assert_equals(players.length, 2,
       'getAnimationPlayers returns one player for each value of'
@@ -69,7 +67,6 @@ test(function() {
 
   // Add an animation that targets multiple properties
   div.style.animation = 'multiPropAnim 100s';
-  window.getComputedStyle(div).animationName;
   assert_equals(div.getAnimationPlayers().length, 1,
     'getAnimationPlayers returns only one player for a CSS Animation'
     + ' that targets multiple properties');
@@ -83,10 +80,10 @@ async_test(function(t) {
   div.style.left = '0px';
   div.style.top = '0px';
   window.getComputedStyle(div).transitionProperty;
+
   div.style.transition = 'all 100s';
   div.style.left = '100px';
   div.style.top = '100px';
-  window.getComputedStyle(div).left;
 
   var players = div.getAnimationPlayers();
   assert_equals(players.length, 2,
@@ -100,7 +97,6 @@ async_test(function(t) {
   // Wait a moment then add a third transition
   window.requestAnimationFrame(t.step_func(function() {
     div.style.backgroundColor = 'green';
-    window.getComputedStyle(div).backgroundColor;
     players = div.getAnimationPlayers();
     assert_equals(players.length, 3,
       'getAnimationPlayers returns players for all running CSS Transitions');
@@ -124,7 +120,6 @@ async_test(function(t) {
   window.requestAnimationFrame(t.step_func(function() {
     div.style.transition = 'all 100s';
     div.style.backgroundColor = 'green';
-    window.getComputedStyle(div).backgroundColor;
 
     var players = div.getAnimationPlayers();
     assert_equals(players.length, 2,
@@ -152,8 +147,24 @@ async_test(function(t) {
 
   // Add a very short animation
   div.style.animation = 'anim1 0.01s';
-  window.getComputedStyle(div).animationName;
 }, 'getAnimationPlayers for CSS Animations that have finished');
+
+async_test(function(t) {
+  var div = addDiv();
+
+  // Set up event listener
+  div.addEventListener('animationend', t.step_func(function() {
+    assert_equals(div.getAnimationPlayers().length, 1,
+      'getAnimationPlayers returns players for CSS Animations that have'
+      + ' finished but are filling forwards');
+    div.remove();
+    t.done();
+  }));
+
+  // Add a very short animation
+  div.style.animation = 'anim1 0.01s forwards';
+}, 'getAnimationPlayers for CSS Animations that have finished but are'
+   + ' forwards filling');
 
 async_test(function(t) {
   var div = addDiv();
@@ -169,6 +180,7 @@ async_test(function(t) {
   // Add a very short transition
   div.style.left = '0px';
   window.getComputedStyle(div).left;
+
   div.style.transition = 'all 0.01s';
   div.style.left = '100px';
   window.getComputedStyle(div).left;
@@ -177,7 +189,6 @@ async_test(function(t) {
 test(function() {
   var div = addDiv();
   div.style.animation = 'none 100s';
-  window.getComputedStyle(div).animationName;
 
   var players = div.getAnimationPlayers();
   assert_equals(players.length, 0,
@@ -185,7 +196,6 @@ test(function() {
     + ' with animation-name: none');
 
   div.style.animation = 'none 100s, anim1 100s';
-  window.getComputedStyle(div).animationName;
   players = div.getAnimationPlayers();
   assert_equals(players.length, 1,
     'getAnimationPlayers returns players only for those CSS Animations whose'
@@ -197,15 +207,12 @@ test(function() {
 test(function() {
   var div = addDiv();
   div.style.animation = 'missing 100s';
-  window.getComputedStyle(div).animationName;
-
   var players = div.getAnimationPlayers();
   assert_equals(players.length, 0,
     'getAnimationPlayers returns an empty sequence for an element'
     + ' with animation-name: missing');
 
   div.style.animation = 'anim1 100s, missing 100s';
-  window.getComputedStyle(div).animationName;
   players = div.getAnimationPlayers();
   assert_equals(players.length, 1,
     'getAnimationPlayers returns players only for those CSS Animations whose'
@@ -217,8 +224,6 @@ test(function() {
 async_test(function(t) {
   var div = addDiv();
   div.style.animation = 'anim1 100s, notyet 100s';
-  window.getComputedStyle(div).animationName;
-
   var players = div.getAnimationPlayers();
   assert_equals(players.length, 1,
     'getAnimationPlayers initally only returns players for CSS Animations whose'
@@ -227,8 +232,6 @@ async_test(function(t) {
   window.requestAnimationFrame(t.step_func(function() {
     var keyframes = '@keyframes notyet { to { left: 100px; } }';
     document.styleSheets[0].insertRule(keyframes, 0);
-    window.getComputedStyle(div).animationName;
-
     players = div.getAnimationPlayers();
     assert_equals(players.length, 2,
       'getAnimationPlayers includes player when @keyframes rule is added'
@@ -245,8 +248,6 @@ async_test(function(t) {
 test(function() {
   var div = addDiv();
   div.style.animation = 'anim1 100s, anim1 100s';
-  window.getComputedStyle(div).animationName;
-
   assert_equals(div.getAnimationPlayers().length, 2,
     'getAnimationPlayers returns one player for each CSS animation-name'
     + ' even if the names are duplicated');
@@ -256,8 +257,6 @@ test(function() {
 test(function() {
   var div = addDiv();
   div.style.animation = 'empty 100s';
-  window.getComputedStyle(div).animationName;
-
   assert_equals(div.getAnimationPlayers().length, 1,
     'getAnimationPlayers returns players for CSS animations with an'
     + ' empty keyframes rule');
@@ -267,8 +266,6 @@ test(function() {
 test(function() {
   var div = addDiv();
   div.style.animation = 'anim1 100s 100s';
-  window.getComputedStyle(div).animationName;
-
   var players = div.getAnimationPlayers();
   assert_equals(players.length, 1,
     'getAnimationPlayers returns animations for CSS animations whose'
@@ -282,8 +279,6 @@ test(function() {
 test(function() {
   var div = addDiv();
   div.style.animation = 'anim1 0s 100s';
-  window.getComputedStyle(div).animationName;
-
   assert_equals(div.getAnimationPlayers().length, 1,
     'getAnimationPlayers returns animations for CSS animations whose'
     + ' duration is zero');
@@ -296,9 +291,9 @@ test(function() {
   // Try to transition non-animatable property animation-duration
   div.style.animationDuration = '10s';
   window.getComputedStyle(div).animationDuration;
+
   div.style.transition = 'all 100s';
   div.style.animationDuration = '100s';
-  window.getComputedStyle(div).left;
 
   assert_equals(div.getAnimationPlayers().length, 0,
     'getAnimationPlayers returns an empty sequence for a transition'
@@ -313,7 +308,6 @@ test(function() {
   window.getComputedStyle(div).transitionProperty;
   div.style.transition = 'all 100s';
   div.style.setProperty('-vendor-unsupported', '100px', '');
-  window.getComputedStyle(div).getPropertyValue('-vendor-unsupported');
 
   assert_equals(div.getAnimationPlayers().length, 0,
     'getAnimationPlayers returns an empty sequence for a transition'
@@ -324,13 +318,10 @@ test(function() {
 test(function() {
   var div = addDiv();
   div.style.animation = 'anim1 100s';
-  window.getComputedStyle(div).animationName;
-
   var originalPlayer = div.getAnimationPlayers()[0];
 
   // Update pause state (an AnimationPlayer change)
   div.style.animationPlayState = 'paused';
-  window.getComputedStyle(div).animationPlayState;
   var pausedPlayer = div.getAnimationPlayers()[0];
   // FIXME: Check pausedPlayer.playState has changed once the API is available
   // (bug 1037321)
@@ -340,7 +331,6 @@ test(function() {
 
   // Update duration (an Animation change)
   div.style.animationDuration = '200s';
-  window.getComputedStyle(div).animationDuration
   var extendedPlayer = div.getAnimationPlayers()[0];
   // FIXME: Check extendedPlayer.source.timing.duration has changed once the
   // API is available

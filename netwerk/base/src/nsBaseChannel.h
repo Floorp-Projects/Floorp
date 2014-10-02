@@ -72,7 +72,7 @@ protected:
   // -----------------------------------------------
   // Methods to be implemented by the derived class:
 
-  virtual ~nsBaseChannel() {}
+  virtual ~nsBaseChannel();
 
 private:
   // Implemented by subclass to supply data stream.  The parameter, async, is

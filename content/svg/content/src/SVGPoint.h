@@ -9,6 +9,7 @@
 #include "nsDebug.h"
 #include "gfxPoint.h"
 #include "mozilla/gfx/Point.h"
+#include "mozilla/FloatingPoint.h"
 
 namespace mozilla {
 
@@ -66,7 +67,7 @@ public:
 
 #ifdef DEBUG
   bool IsValid() const {
-    return NS_finite(mX) && NS_finite(mY);
+    return IsFinite(mX) && IsFinite(mY);
   }
 #endif
 
