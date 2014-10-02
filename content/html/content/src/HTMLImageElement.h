@@ -201,8 +201,21 @@ public:
 protected:
   virtual ~HTMLImageElement();
 
-  // Queues a task to run LoadSelectedImage pending stable state
+  // Queues a task to run LoadSelectedImage pending stable state.
+  //
+  // Pending Bug 1076583 this is only used by the responsive image
+  // algorithm (InResponsiveMode()) -- synchronous actions when just
+  // using img.src will bypass this, and update source and kick off
+  // image load synchronously.
   void QueueImageLoadTask();
+
+  // True if we have a srcset attribute or a <picture> parent, regardless of if
+  // any valid responsive sources were parsed from either.
+  bool HaveSrcsetOrInPicture();
+
+  // True if we are using the newer image loading algorithm. This will be the
+  // only mode after Bug 1076583
+  bool InResponsiveMode();
 
   // Resolve and load the current mResponsiveSelector (responsive mode) or src
   // attr image.
