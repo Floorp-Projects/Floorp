@@ -101,8 +101,27 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
 
         final RemoteClient client = clients.get(groupPosition);
 
+        // UI elements whose state depends on isExpanded, roughly from left to
+        // right: device type icon; client name text color; expanded state
+        // indicator.
+        final int deviceTypeResId;
+        final int textColorResId;
+        final int deviceExpandedResId;
+
+        if (isExpanded && !client.tabs.isEmpty()) {
+            deviceTypeResId = "desktop".equals(client.deviceType) ? R.drawable.sync_desktop : R.drawable.sync_mobile;
+            textColorResId = R.color.home_text_color;
+            deviceExpandedResId = R.drawable.home_group_expanded;
+        } else {
+            deviceTypeResId = "desktop".equals(client.deviceType) ? R.drawable.sync_desktop_inactive : R.drawable.sync_mobile_inactive;
+            textColorResId = R.color.home_text_color_disabled;
+            deviceExpandedResId = R.drawable.home_group_collapsed;
+        }
+
+        // Now update the UI.
         final TextView nameView = (TextView) view.findViewById(R.id.client);
         nameView.setText(client.name);
+        nameView.setTextColor(context.getResources().getColor(textColorResId));
 
         final TextView lastModifiedView = (TextView) view.findViewById(R.id.last_synced);
         final long now = System.currentTimeMillis();
@@ -113,22 +132,13 @@ public class RemoteTabsExpandableListAdapter extends BaseExpandableListAdapter {
         // Therefore, we must handle null.
         final ImageView deviceTypeView = (ImageView) view.findViewById(R.id.device_type);
         if (deviceTypeView != null) {
-            if ("desktop".equals(client.deviceType)) {
-                deviceTypeView.setBackgroundResource(R.drawable.sync_desktop);
-            } else {
-                deviceTypeView.setBackgroundResource(R.drawable.sync_mobile);
-            }
+            deviceTypeView.setImageResource(deviceTypeResId);
         }
 
         final ImageView deviceExpandedView = (ImageView) view.findViewById(R.id.device_expanded);
         if (deviceExpandedView != null) {
             // If there are no tabs to display, don't show an indicator at all.
-            if (client.tabs.isEmpty()) {
-                deviceExpandedView.setBackgroundResource(0);
-            } else {
-                final int resourceId = isExpanded ? R.drawable.home_group_expanded : R.drawable.home_group_collapsed;
-                deviceExpandedView.setBackgroundResource(resourceId);
-            }
+            deviceExpandedView.setImageResource(client.tabs.isEmpty() ? 0 : deviceExpandedResId);
         }
 
         return view;

@@ -60,6 +60,26 @@ add_task(function* test_rejected_promise_args() {
   }
 });
 
+add_task(function* test_transfer_args() {
+  let array = new Uint8Array(4);
+  for (let i = 0; i < 4; ++i) {
+    array[i] = i;
+  }
+  Assert.equal(array.buffer.byteLength, 4, "The buffer is not neutered yet");
+
+  let result = (yield worker.post("bounce", [array.buffer], [], [array.buffer]))[0];
+
+  // Check that the buffer has been sent
+  Assert.equal(array.buffer.byteLength, 0, "The buffer has been neutered");
+
+  // Check that the result is correct
+  Assert.equal(result.byteLength, 4, "The result has the right size");
+  let array2 = new Uint8Array(result);
+  for (let i = 0; i < 4; ++i) {
+    Assert.equal(array2[i], i);
+  }
+});
+
 function run_test() {
   run_next_test();
 }

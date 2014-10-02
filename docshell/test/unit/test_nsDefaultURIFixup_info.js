@@ -530,7 +530,7 @@ function run_test() {
 
       // Check booleans on input:
       let couldDoKeywordLookup = flags & urifixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
-      do_check_eq(info.fixupUsedKeyword, couldDoKeywordLookup && expectKeywordLookup);
+      do_check_eq(!!info.keywordProviderName, couldDoKeywordLookup && expectKeywordLookup);
       do_check_eq(info.fixupChangedProtocol, expectProtocolChange);
       do_check_eq(info.fixupCreatedAlternateURI, makeAlternativeURI && alternativeURI != null);
 

@@ -12,7 +12,6 @@ function run_test()
   addDebuggerToGlobal(this);
 
   test_has_breakpoint();
-  test_bug_754251();
   test_add_breakpoint();
   test_remove_breakpoint();
   test_find_breakpoints();
@@ -54,16 +53,6 @@ function test_has_breakpoint() {
   bpStore.removeBreakpoint(columnLocation);
   do_check_eq(null, bpStore.hasBreakpoint(columnLocation),
               "Breakpoint with column removed but still exists in Breakpoint Store.");
-}
-
-// Note: Removing this test will regress bug 754251. See comment above
-// ThreadActor.breakpointStore.
-function test_bug_754251() {
-  let instance1 = new ThreadActor();
-  let instance2 = new ThreadActor();
-  do_check_true(instance1.breakpointStore instanceof BreakpointStore);
-  do_check_eq(instance1.breakpointStore, ThreadActor.breakpointStore);
-  do_check_eq(instance2.breakpointStore, ThreadActor.breakpointStore);
 }
 
 function test_add_breakpoint() {

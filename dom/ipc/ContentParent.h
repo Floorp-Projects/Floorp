@@ -631,8 +631,13 @@ private:
 
     virtual bool RecvSetFakeVolumeState(const nsString& fsName, const int32_t& fsState) MOZ_OVERRIDE;
 
-    virtual bool RecvKeywordToURI(const nsCString& aKeyword, OptionalInputStreamParams* aPostData,
+    virtual bool RecvKeywordToURI(const nsCString& aKeyword,
+                                  nsString* aProviderName,
+                                  OptionalInputStreamParams* aPostData,
                                   OptionalURIParams* aURI) MOZ_OVERRIDE;
+
+    virtual bool RecvNotifyKeywordSearchLoading(const nsString &aProvider,
+                                                const nsString &aKeyword) MOZ_OVERRIDE; 
 
     virtual void ProcessingError(Result what) MOZ_OVERRIDE;
 
