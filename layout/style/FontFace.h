@@ -78,6 +78,13 @@ public:
   gfxUserFontEntry* GetUserFontEntry() const { return mUserFontEntry; }
   void SetUserFontEntry(gfxUserFontEntry* aEntry);
 
+  /**
+   * Gets the family name of the FontFace as a raw string (such as 'Times', as
+   * opposed to GetFamily, which returns a CSS-escaped string, such as
+   * '"Times"').  Returns whether a valid family name was available.
+   */
+  bool GetFamilyName(nsString& aResult);
+
   // Web IDL
   static already_AddRefed<FontFace>
   Constructor(const GlobalObject& aGlobal,

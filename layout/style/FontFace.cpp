@@ -418,6 +418,21 @@ FontFace::SetUserFontEntry(gfxUserFontEntry* aEntry)
   }
 }
 
+bool
+FontFace::GetFamilyName(nsString& aResult)
+{
+  nsCSSValue value;
+  GetDesc(eCSSFontDesc_Family, value);
+
+  if (value.GetUnit() == eCSSUnit_String) {
+    nsString familyname;
+    value.GetStringValue(familyname);
+    aResult.Append(familyname);
+  }
+
+  return !aResult.IsEmpty();
+}
+
 // -- FontFace::Entry --------------------------------------------------------
 
 /* virtual */ void
