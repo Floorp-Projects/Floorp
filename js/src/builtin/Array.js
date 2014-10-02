@@ -581,54 +581,6 @@ function ArrayFill(value, start = 0, end = undefined) {
     return O;
 }
 
-// Proposed for ES7:
-// https://github.com/domenic/Array.prototype.contains/blob/master/spec.md
-function ArrayContains(searchElement, fromIndex = 0) {
-    // Steps 1-2.
-    var O = ToObject(this);
-
-    // Steps 3-4.
-    var len = ToLength(O.length);
-
-    // Step 5.
-    if (len === 0)
-        return false;
-
-    // Steps 6-7.
-    var n = ToInteger(fromIndex);
-
-    // Step 8.
-    if (n >= len)
-        return false;
-
-    // Step 9.
-    var k;
-    if (n >= 0) {
-        k = n;
-    }
-    // Step 10.
-    else {
-        // Step a.
-        k = len + n;
-        // Step b.
-        if (k < 0)
-            k = 0;
-    }
-
-    // Step 11.
-    while (k < len) {
-        // Steps a-c.
-        if (SameValueZero(searchElement, O[k]))
-            return true;
-
-        // Step d.
-        k++;
-    }
-
-    // Step 12.
-    return false;
-}
-
 #define ARRAY_ITERATOR_SLOT_ITERATED_OBJECT 0
 #define ARRAY_ITERATOR_SLOT_NEXT_INDEX 1
 #define ARRAY_ITERATOR_SLOT_ITEM_KIND 2
