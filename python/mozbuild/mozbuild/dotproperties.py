@@ -8,6 +8,7 @@
 
 from __future__ import unicode_literals
 
+import codecs
 import re
 import os
 import sys
@@ -31,7 +32,7 @@ class DotProperties:
         Ignores empty lines and comment lines.'''
 
         if isinstance(file, str_type):
-            f = open(file, 'rt')
+            f = codecs.open(file, 'r', 'utf-8')
         else:
             f = file
 
