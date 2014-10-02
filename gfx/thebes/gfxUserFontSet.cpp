@@ -264,6 +264,24 @@ gfxUserFontEntry::StoreUserFontData(gfxFontEntry* aFontEntry,
     }
 }
 
+void
+gfxUserFontEntry::GetFamilyNameAndURIForLogging(nsACString& aFamilyName,
+                                                nsACString& aURI)
+{
+  aFamilyName.Assign(NS_ConvertUTF16toUTF8(mFamilyName));
+
+  aURI.Truncate();
+  if (mSrcIndex == mSrcList.Length()) {
+    aURI.AppendLiteral("(end of source list)");
+  } else {
+    if (mSrcList[mSrcIndex].mURI) {
+      mSrcList[mSrcIndex].mURI->GetSpec(aURI);
+    } else {
+      aURI.AppendLiteral("(invalid URI)");
+    }
+  }
+}
+
 struct WOFFHeader {
     AutoSwap_PRUint32 signature;
     AutoSwap_PRUint32 flavor;

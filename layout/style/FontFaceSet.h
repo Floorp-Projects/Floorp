@@ -8,8 +8,14 @@
 
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/FontFaceSetBinding.h"
+#include "gfxUserFontSet.h"
+#include "nsCSSRules.h"
 #include "nsPIDOMWindow.h"
 
+struct gfxFontFaceSrc;
+class gfxUserFontEntry;
+class nsFontFaceLoader;
+class nsIPrincipal;
 class nsPIDOMWindow;
 
 namespace mozilla {
@@ -24,15 +30,81 @@ namespace dom {
 
 class FontFaceSet MOZ_FINAL : public DOMEventTargetHelper
 {
+  friend class UserFontSet;
+
 public:
+  /**
+   * A gfxUserFontSet that integrates with the layout and style systems to
+   * manage @font-face rules and handle network requests for font loading.
+   *
+   * We would combine this class and FontFaceSet into the one class if it were
+   * possible; it's not because FontFaceSet is cycle collected and
+   * gfxUserFontSet isn't (and can't be, as gfx classes don't use the cycle
+   * collector).  So UserFontSet exists just to override the needed virtual
+   * methods from gfxUserFontSet and to forward them on FontFaceSet.
+   */
+  class UserFontSet MOZ_FINAL : public gfxUserFontSet
+  {
+    friend class FontFaceSet;
+
+  public:
+    UserFontSet(FontFaceSet* aFontFaceSet)
+      : mFontFaceSet(aFontFaceSet)
+    {
+    }
+
+    FontFaceSet* GetFontFaceSet() { return mFontFaceSet; }
+
+    virtual nsresult CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
+                                   nsIPrincipal** aPrincipal,
+                                   bool* aBypassCache) MOZ_OVERRIDE;
+    virtual nsresult StartLoad(gfxUserFontEntry* aUserFontEntry,
+                               const gfxFontFaceSrc* aFontFaceSrc) MOZ_OVERRIDE;
+
+  protected:
+    virtual bool GetPrivateBrowsing() MOZ_OVERRIDE;
+    virtual nsresult SyncLoadFontData(gfxUserFontEntry* aFontToLoad,
+                                      const gfxFontFaceSrc* aFontFaceSrc,
+                                      uint8_t*& aBuffer,
+                                      uint32_t& aBufferLength) MOZ_OVERRIDE;
+    virtual nsresult LogMessage(gfxUserFontEntry* aUserFontEntry,
+                                const char* aMessage,
+                                uint32_t aFlags = nsIScriptError::errorFlag,
+                                nsresult aStatus = NS_OK) MOZ_OVERRIDE;
+    virtual void DoRebuildUserFontSet() MOZ_OVERRIDE;
+
+  private:
+    nsRefPtr<FontFaceSet> mFontFaceSet;
+  };
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FontFaceSet, DOMEventTargetHelper)
 
-  FontFaceSet(nsPIDOMWindow* aWindow);
+  FontFaceSet(nsPIDOMWindow* aWindow, nsPresContext* aPresContext);
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
-  // Web IDL
+  UserFontSet* EnsureUserFontSet(nsPresContext* aPresContext);
+  UserFontSet* GetUserFontSet() { return mUserFontSet; }
+
+  // Called when this font set is no longer associated with a presentation.
+  void DestroyUserFontSet();
+
+  // Called by nsFontFaceLoader when the loader has completed normally.
+  // It's removed from the mLoaders set.
+  void RemoveLoader(nsFontFaceLoader* aLoader);
+
+  bool UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules);
+
+  nsPresContext* GetPresContext() { return mPresContext; }
+
+  // search for @font-face rule that matches a platform font entry
+  nsCSSFontFaceRule* FindRuleForEntry(gfxFontEntry* aFontEntry);
+
+  void IncrementGeneration(bool aIsRebuild = false);
+
+  // -- Web IDL --------------------------------------------------------------
+
   IMPL_EVENT_HANDLER(loading)
   IMPL_EVENT_HANDLER(loadingdone)
   IMPL_EVENT_HANDLER(loadingerror)
@@ -55,7 +127,54 @@ public:
 private:
   ~FontFaceSet();
 
+  // The font-set keeps track of the collection of rules, and their
+  // corresponding font entries (whether proxies or real entries),
+  // so that we can update the set without having to throw away
+  // all the existing fonts.
+  struct FontFaceRuleRecord {
+    nsRefPtr<gfxUserFontEntry>   mUserFontEntry;
+    nsFontFaceRuleContainer      mContainer;
+  };
+
+  void InsertRule(nsCSSFontFaceRule* aRule, uint8_t aSheetType,
+                  nsTArray<FontFaceRuleRecord>& oldRules,
+                  bool& aFontSetModified);
+
+  already_AddRefed<gfxUserFontEntry> FindOrCreateFontFaceFromRule(
+                                                   const nsAString& aFamilyName,
+                                                   nsCSSFontFaceRule* aRule,
+                                                   uint8_t aSheetType);
+
+  // search for @font-face rule that matches a userfont font entry
+  nsCSSFontFaceRule* FindRuleForUserFontEntry(gfxUserFontEntry* aUserFontEntry);
+
+  nsresult StartLoad(gfxUserFontEntry* aUserFontEntry,
+                     const gfxFontFaceSrc* aFontFaceSrc);
+  nsresult CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
+                         nsIPrincipal** aPrincipal,
+                         bool* aBypassCache);
+  bool GetPrivateBrowsing();
+  nsresult SyncLoadFontData(gfxUserFontEntry* aFontToLoad,
+                            const gfxFontFaceSrc* aFontFaceSrc,
+                            uint8_t*& aBuffer,
+                            uint32_t& aBufferLength);
+  nsresult LogMessage(gfxUserFontEntry* aUserFontEntry,
+                      const char* aMessage,
+                      uint32_t aFlags,
+                      nsresult aStatus);
+  void DoRebuildUserFontSet();
+
+  nsRefPtr<UserFontSet> mUserFontSet;
+  nsPresContext* mPresContext;
+
   nsRefPtr<mozilla::dom::Promise> mReady;
+
+  // Set of all loaders pointing to us. These are not strong pointers,
+  // but that's OK because nsFontFaceLoader always calls RemoveLoader on
+  // us before it dies (unless we die first).
+  nsTHashtable< nsPtrHashKey<nsFontFaceLoader> > mLoaders;
+
+  nsTArray<FontFaceRuleRecord>   mRules;
 };
 
 } // namespace dom
