@@ -83,6 +83,16 @@ abstract class BaseTest extends BaseRobocopTest {
     protected int mScreenMidHeight;
     private final HashSet<Integer> mKnownTabIDs = new HashSet<Integer>();
 
+    protected void blockForDelayedStartup() {
+        try {
+            Actions.EventExpecter delayedStartupExpector = mActions.expectGeckoEvent("Gecko:DelayedStartup");
+            delayedStartupExpector.blockForEvent(GECKO_READY_WAIT_MS, true);
+            delayedStartupExpector.unregisterListener();
+        } catch (Exception e) {
+            mAsserter.dumpLog("Exception in blockForDelayedStartup", e);
+        }
+    }
+
     protected void blockForGeckoReady() {
         try {
             Actions.EventExpecter geckoReadyExpector = mActions.expectGeckoEvent("Gecko:Ready");
@@ -128,13 +138,16 @@ abstract class BaseTest extends BaseRobocopTest {
         throwIfScreenNotOn();
     }
 
-    protected void initializeProfile() {
-        final GeckoProfile profile;
+    protected GeckoProfile getTestProfile() {
         if (mProfile.startsWith("/")) {
-            profile = GeckoProfile.get(getActivity(), "default", mProfile);
-        } else {
-            profile = GeckoProfile.get(getActivity(), mProfile);
+            return GeckoProfile.get(getActivity(), "default", mProfile);
         }
+
+        return GeckoProfile.get(getActivity(), mProfile);
+    }
+
+    protected void initializeProfile() {
+        final GeckoProfile profile = getTestProfile();
 
         // In Robocop tests, we typically don't get initialized correctly, because
         // GeckoProfile doesn't create the profile directory.
