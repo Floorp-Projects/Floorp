@@ -10,6 +10,9 @@ var loop = loop || {};
 loop.conversationViews = (function(mozL10n) {
 
   var CALL_STATES = loop.store.CALL_STATES;
+  var CALL_TYPES = loop.shared.utils.CALL_TYPES;
+  var sharedActions = loop.shared.actions;
+  var sharedViews = loop.shared.views;
 
   /**
    * Displays details of the incoming/outgoing conversation
@@ -41,17 +44,36 @@ loop.conversationViews = (function(mozL10n) {
    */
   var PendingConversationView = React.createClass({
     propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       callState: React.PropTypes.string,
       calleeId: React.PropTypes.string,
+      enableCancelButton: React.PropTypes.bool
+    },
+
+    getDefaultProps: function() {
+      return {
+        enableCancelButton: false
+      };
+    },
+
+    cancelCall: function() {
+      this.props.dispatcher.dispatch(new sharedActions.CancelCall());
     },
 
     render: function() {
+      var cx = React.addons.classSet;
       var pendingStateString;
       if (this.props.callState === CALL_STATES.ALERTING) {
         pendingStateString = mozL10n.get("call_progress_ringing_description");
       } else {
         pendingStateString = mozL10n.get("call_progress_connecting_description");
       }
+
+      var btnCancelStyles = cx({
+        "btn": true,
+        "btn-cancel": true,
+        "disabled": !this.props.enableCancelButton
+      });
 
       return (
         <ConversationDetailView calleeId={this.props.calleeId}>
@@ -60,7 +82,8 @@ loop.conversationViews = (function(mozL10n) {
 
           <div className="btn-group call-action-group">
             <div className="fx-embedded-call-button-spacer"></div>
-              <button className="btn btn-cancel">
+              <button className={btnCancelStyles}
+                      onClick={this.cancelCall}>
                 {mozL10n.get("initiate_call_cancel_button")}
               </button>
             <div className="fx-embedded-call-button-spacer"></div>
@@ -75,10 +98,115 @@ loop.conversationViews = (function(mozL10n) {
    * Call failed view. Displayed when a call fails.
    */
   var CallFailedView = React.createClass({
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
+    },
+
+    retryCall: function() {
+      this.props.dispatcher.dispatch(new sharedActions.RetryCall());
+    },
+
+    cancelCall: function() {
+      this.props.dispatcher.dispatch(new sharedActions.CancelCall());
+    },
+
     render: function() {
       return (
         <div className="call-window">
           <h2>{mozL10n.get("generic_failure_title")}</h2>
+
+          <p className="btn-label">{mozL10n.get("generic_failure_no_reason2")}</p>
+
+          <div className="btn-group call-action-group">
+            <div className="fx-embedded-call-button-spacer"></div>
+              <button className="btn btn-accept btn-retry"
+                      onClick={this.retryCall}>
+                {mozL10n.get("retry_call_button")}
+              </button>
+            <div className="fx-embedded-call-button-spacer"></div>
+              <button className="btn btn-cancel"
+                      onClick={this.cancelCall}>
+                {mozL10n.get("cancel_button")}
+              </button>
+            <div className="fx-embedded-call-button-spacer"></div>
+          </div>
+        </div>
+      );
+    }
+  });
+
+  var OngoingConversationView = React.createClass({
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      video: React.PropTypes.object,
+      audio: React.PropTypes.object
+    },
+
+    getDefaultProps: function() {
+      return {
+        video: {enabled: true, visible: true},
+        audio: {enabled: true, visible: true}
+      };
+    },
+
+    componentDidMount: function() {
+      /**
+       * OT inserts inline styles into the markup. Using a listener for
+       * resize events helps us trigger a full width/height on the element
+       * so that they update to the correct dimensions.
+       * XXX: this should be factored as a mixin.
+       */
+      window.addEventListener('orientationchange', this.updateVideoContainer);
+      window.addEventListener('resize', this.updateVideoContainer);
+    },
+
+    componentWillUnmount: function() {
+      window.removeEventListener('orientationchange', this.updateVideoContainer);
+      window.removeEventListener('resize', this.updateVideoContainer);
+    },
+
+    updateVideoContainer: function() {
+      var localStreamParent = document.querySelector('.local .OT_publisher');
+      var remoteStreamParent = document.querySelector('.remote .OT_subscriber');
+      if (localStreamParent) {
+        localStreamParent.style.width = "100%";
+      }
+      if (remoteStreamParent) {
+        remoteStreamParent.style.height = "100%";
+      }
+    },
+
+    hangup: function() {
+      this.props.dispatcher.dispatch(
+        new sharedActions.HangupCall());
+    },
+
+    publishStream: function(type, enabled) {
+      // XXX Add this as part of bug 972017.
+    },
+
+    render: function() {
+      var localStreamClasses = React.addons.classSet({
+        local: true,
+        "local-stream": true,
+        "local-stream-audio": !this.props.video.enabled
+      });
+
+      return (
+        <div className="video-layout-wrapper">
+          <div className="conversation">
+            <div className="media nested">
+              <div className="video_wrapper remote_wrapper">
+                <div className="video_inner remote"></div>
+              </div>
+              <div className={localStreamClasses}></div>
+            </div>
+            <loop.shared.views.ConversationToolbar
+              video={this.props.video}
+              audio={this.props.audio}
+              publishStream={this.publishStream}
+              hangup={this.hangup} />
+          </div>
         </div>
       );
     }
@@ -90,6 +218,7 @@ loop.conversationViews = (function(mozL10n) {
    */
   var OutgoingConversationView = React.createClass({
     propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       store: React.PropTypes.instanceOf(
         loop.store.ConversationStore).isRequired
     },
@@ -104,22 +233,83 @@ loop.conversationViews = (function(mozL10n) {
       }, this);
     },
 
-    render: function() {
-      if (this.state.callState === CALL_STATES.TERMINATED) {
-        return (<CallFailedView />);
-      }
+    _closeWindow: function() {
+      window.close();
+    },
 
-      return (<PendingConversationView
-        callState={this.state.callState}
-        calleeId={this.state.calleeId}
-      />)
-    }
+    /**
+     * Returns true if the call is in a cancellable state, during call setup.
+     */
+    _isCancellable: function() {
+      return this.state.callState !== CALL_STATES.INIT &&
+             this.state.callState !== CALL_STATES.GATHER;
+    },
+
+    /**
+     * Used to setup and render the feedback view.
+     */
+    _renderFeedbackView: function() {
+      document.title = mozL10n.get("conversation_has_ended");
+
+      // XXX Bug 1076754 Feedback view should be redone in the Flux style.
+      var feebackAPIBaseUrl = navigator.mozLoop.getLoopCharPref(
+        "feedback.baseUrl");
+
+      var appVersionInfo = navigator.mozLoop.appVersionInfo;
+
+      var feedbackClient = new loop.FeedbackAPIClient(feebackAPIBaseUrl, {
+        product: navigator.mozLoop.getLoopCharPref("feedback.product"),
+        platform: appVersionInfo.OS,
+        channel: appVersionInfo.channel,
+        version: appVersionInfo.version
+      });
+
+      return (
+        <sharedViews.FeedbackView
+          feedbackApiClient={feedbackClient}
+          onAfterFeedbackReceived={this._closeWindow.bind(this)}
+        />
+      );
+    },
+
+    render: function() {
+      switch (this.state.callState) {
+        case CALL_STATES.CLOSE: {
+          this._closeWindow();
+          return null;
+        }
+        case CALL_STATES.TERMINATED: {
+          return (<CallFailedView
+            dispatcher={this.props.dispatcher}
+          />);
+        }
+        case CALL_STATES.ONGOING: {
+          return (<OngoingConversationView
+            dispatcher={this.props.dispatcher}
+            video={{enabled: this.state.callType === CALL_TYPES.AUDIO_VIDEO}}
+            />
+          );
+        }
+        case CALL_STATES.FINISHED: {
+          return this._renderFeedbackView();
+        }
+        default: {
+          return (<PendingConversationView
+            dispatcher={this.props.dispatcher}
+            callState={this.state.callState}
+            calleeId={this.state.calleeId}
+            enableCancelButton={this._isCancellable()}
+          />)
+        }
+      }
+    },
   });
 
   return {
     PendingConversationView: PendingConversationView,
     ConversationDetailView: ConversationDetailView,
     CallFailedView: CallFailedView,
+    OngoingConversationView: OngoingConversationView,
     OutgoingConversationView: OutgoingConversationView
   };
 
