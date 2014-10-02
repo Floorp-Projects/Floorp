@@ -478,11 +478,7 @@ FontFace::Load(ErrorResult& aRv)
   SetStatus(FontFaceLoadStatus::Loading);
 
   if (mInitialized) {
-    // XXX For FontFace objects not in the FontFaceSet, we will need a
-    // way to create a user font entry.
-    if (mUserFontEntry) {
-      mUserFontEntry->Load();
-    }
+    DoLoad();
   } else {
     // We can only load an initialized font; this will cause the font to be
     // loaded once it has been initialized.
@@ -490,6 +486,28 @@ FontFace::Load(ErrorResult& aRv)
   }
 
   return mLoaded;
+}
+
+void
+FontFace::DoLoad()
+{
+  MOZ_ASSERT(mInitialized);
+
+  if (!mUserFontEntry) {
+    MOZ_ASSERT(!IsConnected(),
+               "CSS-connected FontFace objects should already have a user font "
+               "entry by the time Load() can be called on them");
+
+    nsRefPtr<gfxUserFontEntry> newEntry =
+      mFontFaceSet->FindOrCreateUserFontEntryFromFontFace(this);
+    if (!newEntry) {
+      return;
+    }
+
+    SetUserFontEntry(newEntry);
+  }
+
+  mUserFontEntry->Load();
 }
 
 Promise*
@@ -637,6 +655,13 @@ FontFace::OnInitialized()
 
   mInitialized = true;
 
+  // For a FontFace that was created and immediately had Load() called on
+  // it, before it had a chance to be initialized, we kick off its load now.
+  if (mLoadWhenInitialized) {
+    mLoadWhenInitialized = false;
+    DoLoad();
+  }
+
   if (mInFontFaceSet) {
     mFontFaceSet->OnFontFaceInitialized(this);
   }
@@ -696,8 +721,8 @@ FontFace::SetUserFontEntry(gfxUserFontEntry* aEntry)
     //   new FontFace("ABC", "url(x)").load();
     //
     // where the SetUserFontEntry call (from the after-initialization
-    // FontFaceSet::LoadFontFace call) comes after the author's call to
-    // load(), which set mStatus to Loading.
+    // DoLoad call) comes after the author's call to load(), which set mStatus
+    // to Loading.
     FontFaceLoadStatus newStatus =
       LoadStateToStatus(mUserFontEntry->LoadState());
     if (newStatus > mStatus) {

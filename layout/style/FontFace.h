@@ -155,6 +155,9 @@ private:
    */
   void Initialize(FontFaceInitializer* aInitializer);
 
+  // Helper function for Load.
+  void DoLoad();
+
   /**
    * Parses a @font-face descriptor value, storing the result in aResult.
    * Returns whether the parsing was successful.
