@@ -7,6 +7,7 @@ describe("loop.ConversationStore", function () {
   "use strict";
 
   var CALL_STATES = loop.store.CALL_STATES;
+  var WS_STATES = loop.store.WS_STATES;
   var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
   var sandbox, dispatcher, client, store, fakeSessionData;
@@ -86,34 +87,67 @@ describe("loop.ConversationStore", function () {
   });
 
   describe("#connectionProgress", function() {
-    describe("progress: connecting", function() {
+    describe("progress: init", function() {
       it("should change the state from 'gather' to 'connecting'", function() {
         store.set({callState: CALL_STATES.GATHER});
 
         dispatcher.dispatch(
-          new sharedActions.ConnectionProgress({state: "connecting"}));
+          new sharedActions.ConnectionProgress({wsState: WS_STATES.INIT}));
 
         expect(store.get("callState")).eql(CALL_STATES.CONNECTING);
       });
     });
 
     describe("progress: alerting", function() {
-      it("should set the state from 'gather' to 'alerting'", function() {
+      it("should change the state from 'gather' to 'alerting'", function() {
         store.set({callState: CALL_STATES.GATHER});
 
         dispatcher.dispatch(
-          new sharedActions.ConnectionProgress({state: "alerting"}));
+          new sharedActions.ConnectionProgress({wsState: WS_STATES.ALERTING}));
 
         expect(store.get("callState")).eql(CALL_STATES.ALERTING);
       });
 
-      it("should set the state from 'connecting' to 'alerting'", function() {
-        store.set({callState: CALL_STATES.CONNECTING});
+      it("should change the state from 'init' to 'alerting'", function() {
+        store.set({callState: CALL_STATES.INIT});
 
         dispatcher.dispatch(
-          new sharedActions.ConnectionProgress({state: "alerting"}));
+          new sharedActions.ConnectionProgress({wsState: WS_STATES.ALERTING}));
 
         expect(store.get("callState")).eql(CALL_STATES.ALERTING);
+      });
+    });
+
+    describe("progress: connecting", function() {
+      it("should change the state to 'ongoing'", function() {
+        store.set({callState: CALL_STATES.ALERTING});
+
+        dispatcher.dispatch(
+          new sharedActions.ConnectionProgress({wsState: WS_STATES.CONNECTING}));
+
+        expect(store.get("callState")).eql(CALL_STATES.ONGOING);
+      });
+    });
+
+    describe("progress: half-connected", function() {
+      it("should change the state to 'ongoing'", function() {
+        store.set({callState: CALL_STATES.ALERTING});
+
+        dispatcher.dispatch(
+          new sharedActions.ConnectionProgress({wsState: WS_STATES.HALF_CONNECTED}));
+
+        expect(store.get("callState")).eql(CALL_STATES.ONGOING);
+      });
+    });
+
+    describe("progress: connecting", function() {
+      it("should change the state to 'ongoing'", function() {
+        store.set({callState: CALL_STATES.ALERTING});
+
+        dispatcher.dispatch(
+          new sharedActions.ConnectionProgress({wsState: WS_STATES.CONNECTED}));
+
+        expect(store.get("callState")).eql(CALL_STATES.ONGOING);
       });
     });
   });
@@ -250,7 +284,7 @@ describe("loop.ConversationStore", function () {
       });
 
       it("should dispatch a connection progress action on success", function(done) {
-        resolveConnectPromise();
+        resolveConnectPromise(WS_STATES.INIT);
 
         connectPromise.then(function() {
           checkFailures(done, function() {
@@ -259,7 +293,7 @@ describe("loop.ConversationStore", function () {
             sinon.assert.calledWithMatch(dispatcher.dispatch,
               sinon.match.hasOwn("name", "connectionProgress"));
             sinon.assert.calledWithMatch(dispatcher.dispatch,
-              sinon.match.hasOwn("state", "connecting"));
+              sinon.match.hasOwn("wsState", WS_STATES.INIT));
           });
         }, function() {
           done(new Error("Promise should have been resolve, not rejected"));
@@ -282,7 +316,105 @@ describe("loop.ConversationStore", function () {
            });
         });
       });
+    });
+  });
 
+  describe("#hangupCall", function() {
+    var wsMediaFailSpy, wsCloseSpy;
+    beforeEach(function() {
+      wsMediaFailSpy = sinon.spy();
+      wsCloseSpy = sinon.spy();
+
+      store._websocket = {
+        mediaFail: wsMediaFailSpy,
+        close: wsCloseSpy
+      };
+      store.set({callState: CALL_STATES.ONGOING});
+    });
+
+    it("should send a media-fail message to the websocket if it is open", function() {
+      dispatcher.dispatch(new sharedActions.HangupCall());
+
+      sinon.assert.calledOnce(wsMediaFailSpy);
+    });
+
+    it("should ensure the websocket is closed", function() {
+      dispatcher.dispatch(new sharedActions.HangupCall());
+
+      sinon.assert.calledOnce(wsCloseSpy);
+    });
+
+    it("should set the callState to finished", function() {
+      dispatcher.dispatch(new sharedActions.HangupCall());
+
+      expect(store.get("callState")).eql(CALL_STATES.FINISHED);
+    });
+  });
+
+  describe("#cancelCall", function() {
+    it("should set the state to close if the call has terminated already", function() {
+      store.set({callState: CALL_STATES.TERMINATED});
+
+      dispatcher.dispatch(new sharedActions.CancelCall());
+
+      expect(store.get("callState")).eql(CALL_STATES.CLOSE);
+    });
+
+    describe("whilst connecting", function() {
+      var wsCancelSpy, wsCloseSpy;
+      beforeEach(function() {
+        wsCancelSpy = sinon.spy();
+        wsCloseSpy = sinon.spy();
+
+        store._websocket = {
+          cancel: wsCancelSpy,
+          close: wsCloseSpy
+        };
+        store.set({callState: CALL_STATES.CONNECTING});
+      });
+
+      it("should send a cancel message to the websocket if it is open", function() {
+        dispatcher.dispatch(new sharedActions.CancelCall());
+
+        sinon.assert.calledOnce(wsCancelSpy);
+      });
+
+      it("should ensure the websocket is closed", function() {
+        dispatcher.dispatch(new sharedActions.CancelCall());
+
+        sinon.assert.calledOnce(wsCloseSpy);
+      });
+
+      it("should set the state to close if the call is connecting", function() {
+        dispatcher.dispatch(new sharedActions.CancelCall());
+
+        expect(store.get("callState")).eql(CALL_STATES.CLOSE);
+      });
+    });
+  });
+
+  describe("#retryCall", function() {
+    it("should set the state to gather", function() {
+      store.set({callState: CALL_STATES.TERMINATED});
+
+      dispatcher.dispatch(new sharedActions.RetryCall());
+
+      expect(store.get("callState")).eql(CALL_STATES.GATHER);
+    });
+
+    it("should request the outgoing call data", function() {
+      store.set({
+        callState: CALL_STATES.TERMINATED,
+        outgoing: true,
+        callType: sharedUtils.CALL_TYPES.AUDIO_VIDEO,
+        calleeId: "fake"
+      });
+
+      dispatcher.dispatch(new sharedActions.RetryCall());
+
+      sinon.assert.calledOnce(client.setupOutgoingCall);
+      sinon.assert.calledWith(client.setupOutgoingCall,
+        ["fake"], sharedUtils.CALL_TYPES.AUDIO_VIDEO);
     });
   });
 
@@ -296,7 +428,10 @@ describe("loop.ConversationStore", function () {
       });
 
       it("should dispatch a connection failure action on 'terminate'", function() {
-        store._websocket.trigger("progress", {state: "terminated", reason: "reject"});
+        store._websocket.trigger("progress", {
+          state: WS_STATES.TERMINATED,
+          reason: "reject"
+        });
 
         sinon.assert.calledOnce(dispatcher.dispatch);
         // Can't use instanceof here, as that matches any action
@@ -307,14 +442,14 @@ describe("loop.ConversationStore", function () {
       });
 
       it("should dispatch a connection progress action on 'alerting'", function() {
-        store._websocket.trigger("progress", {state: "alerting"});
+        store._websocket.trigger("progress", {state: WS_STATES.ALERTING});
 
         sinon.assert.calledOnce(dispatcher.dispatch);
         // Can't use instanceof here, as that matches any action
         sinon.assert.calledWithMatch(dispatcher.dispatch,
           sinon.match.hasOwn("name", "connectionProgress"));
         sinon.assert.calledWithMatch(dispatcher.dispatch,
-          sinon.match.hasOwn("state", "alerting"));
+          sinon.match.hasOwn("wsState", WS_STATES.ALERTING));
       });
     });
   });

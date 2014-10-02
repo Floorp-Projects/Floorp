@@ -10,12 +10,17 @@
 (function() {
   "use strict";
 
+  // Stop the default init functions running to avoid conflicts.
+  document.removeEventListener('DOMContentLoaded', loop.panel.init);
+  document.removeEventListener('DOMContentLoaded', loop.conversation.init);
+
   // 1. Desktop components
   // 1.1 Panel
   var PanelView = loop.panel.PanelView;
   // 1.2. Conversation Window
   var IncomingCallView = loop.conversation.IncomingCallView;
   var DesktopPendingConversationView = loop.conversationViews.PendingConversationView;
+  var CallFailedView = loop.conversationViews.CallFailedView;
 
   // 2. Standalone webapp
   var HomeView = loop.webapp.HomeView;
@@ -245,6 +250,15 @@
                      style={{width: "260px", height: "265px"}}>
               <div className="fx-embedded">
                 <DesktopPendingConversationView callState={"gather"} calleeId="Mr Smith" />
+              </div>
+            </Example>
+          </Section>
+
+          <Section name="CallFailedView">
+            <Example summary="Call Failed" dashed="true"
+                     style={{width: "260px", height: "265px"}}>
+              <div className="fx-embedded">
+                <CallFailedView />
               </div>
             </Example>
           </Section>

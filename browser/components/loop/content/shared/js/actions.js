@@ -48,6 +48,12 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Used to retry a failed call.
+     */
+    RetryCall: Action.define("retryCall", {
+    }),
+
+    /**
      * Used to initiate connecting of a call with the relevant
      * sessionData.
      */
@@ -58,13 +64,19 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Used for hanging up the call at the end of a successful call.
+     */
+    HangupCall: Action.define("hangupCall", {
+    }),
+
+    /**
      * Used for notifying of connection progress state changes.
      * The connection refers to the overall connection flow as indicated
      * on the websocket.
      */
     ConnectionProgress: Action.define("connectionProgress", {
-      // The new connection state
-      state: String
+      // The connection state from the websocket.
+      wsState: String
     }),
 
     /**
