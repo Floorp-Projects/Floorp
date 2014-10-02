@@ -9,9 +9,9 @@ const { Loader } = require("sdk/test/loader");
 const options = require("sdk/test/options");
 
 const loader = Loader(module);
-const httpd = loader.require("sdk/test/httpd");
+const httpd = loader.require("./lib/httpd");
 if (options.parseable || options.verbose)
-  loader.sandbox("sdk/test/httpd").DEBUG = true;
+  loader.sandbox("./lib/httpd").DEBUG = true;
 
 exports.testBasicHTTPServer = function(assert, done) {
   // Use the profile directory for the temporary file as that will be deleted

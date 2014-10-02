@@ -11,7 +11,7 @@ const { getWindowTitle } = require('./utils');
 const unload = require('../system/unload');
 const { EventTarget } = require('../event/target');
 const { isPrivate } = require('../private-browsing/utils');
-const { isWindowPrivate } = require('../window/utils');
+const { isWindowPrivate, isFocused } = require('../window/utils');
 const { viewFor } = require('../view/core');
 
 const ERR_FENNEC_MSG = 'This method is not yet supported by Fennec, consider using require("sdk/tabs") instead';
@@ -43,5 +43,6 @@ exports.BrowserWindow = BrowserWindow;
 
 const getWindowView = window => windowNS(window).window;
 
-isPrivate.define(BrowserWindow, window => isWindowPrivate(windowNS(this).window));
 viewFor.define(BrowserWindow, getWindowView);
+isPrivate.define(BrowserWindow, (window) => isWindowPrivate(viewFor(window).window));
+isFocused.define(BrowserWindow, (window) => isFocused(viewFor(window).window));

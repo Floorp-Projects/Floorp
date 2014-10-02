@@ -63,6 +63,10 @@ exports.exit = function exit(code) {
 
   let resultsFile = 'resultFile' in options && options.resultFile;
   function unloader() {
+    if (!options.resultFile) {
+      return;
+    }
+
     // This is used by 'cfx' to find out exit code.
     let mode = PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE;
     let stream = openFile(options.resultFile, mode);
@@ -70,6 +74,7 @@ exports.exit = function exit(code) {
     stream.write(status, status.length);
     stream.flush();
     stream.close();
+    return;
   }
 
   if (code == 0) {
@@ -78,10 +83,7 @@ exports.exit = function exit(code) {
 
   // Bug 856999: Prevent automatic kill of Firefox when running tests
   if (options.noQuit) {
-    if (resultsFile) {
-      unload(unloader);
-    }
-    return;
+    return unload(unloader);
   }
 
   unloader();

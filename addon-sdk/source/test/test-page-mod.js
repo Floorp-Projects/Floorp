@@ -584,6 +584,34 @@ exports.testExistingOnlyFrameMatchesInclude = function(assert, done) {
   });
 };
 
+exports.testAttachOnlyOncePerDocument = function(assert, done) {
+  let iframeURL = 'data:text/html;charset=utf-8,testAttachOnlyOncePerDocument';
+  let iframe = '<iframe src="' + iframeURL + '" />';
+  let url = 'data:text/html;charset=utf-8,' + encodeURIComponent(iframe);
+  let count = 0;
+
+  tabs.open({
+    url: url,
+    onReady: function onReady(tab) {
+      let pagemod = new PageMod({
+        include: iframeURL,
+        attachTo: ['existing', 'frame'],
+        onAttach: (worker) => {
+          count++;
+          assert.equal(iframeURL, worker.url,
+            "PageMod attached to existing iframe");
+          assert.equal(count, 1, "PageMod attached only once");
+          setTimeout(_ => {
+            assert.equal(count, 1, "PageMod attached only once");
+            pagemod.destroy();
+            tab.close(done);
+          }, 1);
+        }
+      });
+    }
+  });
+}
+
 exports.testContentScriptWhenDefault = function(assert) {
   let pagemod = PageMod({include: '*'});
 
