@@ -339,6 +339,16 @@ class SourcePath(ContextDerivedValue, UserString):
             ret = mozpath.join(self.context.objdir, self.value)
         return mozpath.normpath(ret)
 
+    def join(self, *p):
+        """Lazy mozpath.join(self, *p), returning a new SourcePath instance.
+
+        In an ideal world, this wouldn't be required, but with the
+        external_source_dir business, and the fact that comm-central and
+        mozilla-central have directories in common, resolving a SourcePath
+        before doing mozpath.join doesn't work out properly.
+        """
+        return SourcePath(self.context, mozpath.join(self.value, *p))
+
 
 @memoize
 def ContextDerivedTypedList(type, base_class=List):
@@ -1157,7 +1167,7 @@ for name in TEMPLATE_VARIABLES:
 # The first element is an attribute on Sandbox that should be a function type.
 #
 FUNCTIONS = {
-    'include': (lambda self: self._include, (str,),
+    'include': (lambda self: self._include, (SourcePath,),
         """Include another mozbuild file in the context of this one.
 
         This is similar to a ``#include`` in C languages. The filename passed to

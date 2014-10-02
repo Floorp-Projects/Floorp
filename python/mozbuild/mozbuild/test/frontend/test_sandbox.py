@@ -233,7 +233,8 @@ class TestMozbuildSandbox(unittest.TestCase):
         with self.assertRaises(SandboxLoadError) as se:
             sandbox.exec_file('relative.build')
 
-        self.assertEqual(se.exception.illegal_path, '../moz.build')
+        self.assertEqual(se.exception.illegal_path,
+            sandbox.normalize_path('../moz.build'))
 
     def test_include_error_stack(self):
         # Ensure the path stack is reported properly in exceptions.
