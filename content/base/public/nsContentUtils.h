@@ -187,6 +187,7 @@ public:
 
   /**
    * Returns the parent node of aChild crossing document boundaries.
+   * Uses the parent node in the composed document.
    */
   static nsINode* GetCrossDocParentNode(nsINode* aChild);
 
@@ -217,7 +218,8 @@ public:
 
   /**
    * Similar to ContentIsDescendantOf except it crosses document boundaries,
-   * also crosses ShadowRoot boundaries from ShadowRoot to its host.
+   * this function uses ancestor/descendant relations in the composed document
+   * (see shadow DOM spec).
    */
   static bool ContentIsCrossDocDescendantOf(nsINode* aPossibleDescendant,
                                               nsINode* aPossibleAncestor);

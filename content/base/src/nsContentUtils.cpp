@@ -2025,6 +2025,10 @@ nsContentUtils::GetCrossDocParentNode(nsINode* aChild)
   NS_PRECONDITION(aChild, "The child is null!");
 
   nsINode* parent = aChild->GetParentNode();
+  if (parent && parent->IsContent() && aChild->IsContent()) {
+    parent = aChild->AsContent()->GetFlattenedTreeParent();
+  }
+
   if (parent || !aChild->IsNodeOfType(nsINode::eDOCUMENT))
     return parent;
 
@@ -2082,12 +2086,6 @@ nsContentUtils::ContentIsCrossDocDescendantOf(nsINode* aPossibleDescendant,
   do {
     if (aPossibleDescendant == aPossibleAncestor)
       return true;
-
-    // Step over shadow root to the host node.
-    ShadowRoot* shadowRoot = ShadowRoot::FromNode(aPossibleDescendant);
-    if (shadowRoot) {
-      aPossibleDescendant = shadowRoot->GetHost();
-    }
 
     aPossibleDescendant = GetCrossDocParentNode(aPossibleDescendant);
   } while (aPossibleDescendant);
