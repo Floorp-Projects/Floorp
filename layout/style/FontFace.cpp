@@ -246,11 +246,24 @@ FontFace::Status()
 Promise*
 FontFace::Load(ErrorResult& aRv)
 {
+  mPresContext->FlushUserFontSet();
+
   if (!mLoaded) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
+  if (mStatus != FontFaceLoadStatus::Unloaded) {
+    return mLoaded;
+  }
+
+  SetStatus(FontFaceLoadStatus::Loading);
+
+  gfxUserFontEntry* entry =
+    mPresContext->Fonts()->FindUserFontEntryForFontFace(this);
+  if (entry) {
+    entry->Load();
+  }
   return mLoaded;
 }
 

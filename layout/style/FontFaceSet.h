@@ -118,6 +118,12 @@ public:
    */
   FontFace* FindFontFaceForEntry(gfxUserFontEntry* aUserFontEntry);
 
+  /**
+   * Looks up the corresponding user font entry for the given FontFace object.
+   * Returns null if there was none.
+   */
+  gfxUserFontEntry* FindUserFontEntryForFontFace(FontFace* aFontFace);
+
   // -- Web IDL --------------------------------------------------------------
 
   IMPL_EVENT_HANDLER(loading)
