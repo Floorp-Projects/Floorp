@@ -2243,8 +2243,7 @@ public:
   void SetDir(const nsAString& aDirection);
   nsIDOMWindow* GetDefaultView() const
   {
-    // For Imports the defaultView is always null.
-    return mMasterDocument ? nullptr : GetWindow();
+    return GetWindow();
   }
   Element* GetActiveElement();
   bool HasFocus(mozilla::ErrorResult& rv) const;
@@ -2739,8 +2738,6 @@ protected:
 
   uint32_t mBlockDOMContentLoaded;
   bool mDidFireDOMContentLoaded:1;
-
-  nsCOMPtr<nsIDocument> mMasterDocument;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)
