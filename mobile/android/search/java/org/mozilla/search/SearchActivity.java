@@ -247,6 +247,11 @@ public class SearchActivity extends LocaleAware.LocaleAwareFragmentActivity
         }
     }
 
+    @Override
+    public void onQueryChange(String query) {
+        searchBar.setText(query);
+    }
+
     private void startSearch(final String query) {
         if (engine != null) {
             postSearchFragment.startSearch(engine, query);
