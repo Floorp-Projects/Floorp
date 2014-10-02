@@ -3144,7 +3144,7 @@ IonBuilder::replaceTypeSet(MDefinition *subject, types::TemporaryTypeSet *type, 
     if (type->unknown())
         return true;
 
-    MFilterTypeSet *replace = nullptr;
+    MInstruction *replace = nullptr;
     MDefinition *ins;
 
     for (uint32_t i = 0; i < current->stackDepth(); i++) {
@@ -3161,27 +3161,32 @@ IonBuilder::replaceTypeSet(MDefinition *subject, types::TemporaryTypeSet *type, 
 
             ins->toFilterTypeSet()->setResultType(intersect->getKnownMIRType());
             ins->toFilterTypeSet()->setResultTypeSet(intersect);
+
+            if (ins->type() == MIRType_Undefined)
+                current->setSlot(i, constant(UndefinedValue()));
+            if (ins->type() == MIRType_Null)
+                current->setSlot(i, constant(NullValue()));
             continue;
         }
 
         if (ins == subject) {
             if (!replace) {
                 replace = MFilterTypeSet::New(alloc(), subject, type);
-
                 if (!replace)
                     return false;
-                if (replace == subject)
-                    break;
 
                 current->add(replace);
 
-                if (replace != subject) {
-                    // Make sure we don't hoist it above the MTest, we can use the
-                    // 'dependency' of an MInstruction. This is normally used by
-                    // Alias Analysis, but won't get overwritten, since this
-                    // instruction doesn't have an AliasSet.
-                    replace->setDependency(test);
-                }
+                // Make sure we don't hoist it above the MTest, we can use the
+                // 'dependency' of an MInstruction. This is normally used by
+                // Alias Analysis, but won't get overwritten, since this
+                // instruction doesn't have an AliasSet.
+                replace->setDependency(test);
+
+                if (replace->type() == MIRType_Undefined)
+                    replace = constant(UndefinedValue());
+                if (replace->type() == MIRType_Null)
+                    replace = constant(NullValue());
             }
             current->setSlot(i, replace);
         }
@@ -3312,7 +3317,7 @@ IonBuilder::improveTypesAtTest(MDefinition *ins, bool trueBranch, MTest *test)
     if (!ins)
         return true;
 
-    switch(ins->op()) {
+    switch (ins->op()) {
       case MDefinition::Op_Not:
         return improveTypesAtTest(ins->toNot()->getOperand(0), !trueBranch, test);
       case MDefinition::Op_IsObject: {
@@ -4245,7 +4250,12 @@ IonBuilder::inlineScriptedCall(CallInfo &callInfo, JSFunction *target)
                 return oom();
             MTypeBarrier *barrier = MTypeBarrier::New(alloc(), callInfo.thisArg(), clonedTypes);
             current->add(barrier);
-            callInfo.setThis(barrier);
+            if (barrier->type() == MIRType_Undefined)
+                callInfo.setThis(constant(UndefinedValue()));
+            else if (barrier->type() == MIRType_Null)
+                callInfo.setThis(constant(NullValue()));
+            else
+                callInfo.setThis(barrier);
         }
     }
 
