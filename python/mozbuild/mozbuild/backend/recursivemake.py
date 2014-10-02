@@ -787,19 +787,21 @@ class RecursiveMakeBackend(CommonBackend):
         """Process a data.DirectoryTraversal instance."""
         fh = backend_file.fh
 
-        def relativize(dirs):
-            return [mozpath.normpath(mozpath.join(backend_file.relobjdir, d))
-                for d in dirs]
+        def relativize(base, dirs):
+            return (mozpath.relpath(d.translated, base) for d in dirs)
 
         if obj.dirs:
-            fh.write('DIRS := %s\n' % ' '.join(obj.dirs))
-            self._traversal.add(backend_file.relobjdir, dirs=relativize(obj.dirs))
+            fh.write('DIRS := %s\n' % ' '.join(
+                relativize(backend_file.objdir, obj.dirs)))
+            self._traversal.add(backend_file.relobjdir,
+                dirs=relativize(self.environment.topobjdir, obj.dirs))
 
         if obj.test_dirs:
-            fh.write('TEST_DIRS := %s\n' % ' '.join(obj.test_dirs))
+            fh.write('TEST_DIRS := %s\n' % ' '.join(
+                relativize(backend_file.objdir, obj.test_dirs)))
             if self.environment.substs.get('ENABLE_TESTS', False):
                 self._traversal.add(backend_file.relobjdir,
-                                    tests=relativize(obj.test_dirs))
+                    dirs=relativize(self.environment.topobjdir, obj.test_dirs))
 
         # The directory needs to be registered whether subdirectories have been
         # registered or not.

@@ -9,7 +9,12 @@ CONFIGURE_SUBST_FILES += ['installer/Makefile']
 DIRS += [
     '../locales',
     'locales',
-    'stumbler',
+]
+
+if CONFIG['MOZ_ANDROID_MLS_STUMBLER']:
+    DIRS += ['stumbler']
+
+DIRS += [
     'base',
     'chrome',
     'components',
@@ -20,9 +25,6 @@ DIRS += [
     'geckoview_library',
     'extensions',
 ]
-
-if not CONFIG['MOZ_ANDROID_MLS_STUMBLER']:
-    DIRS.remove('stumbler')
 
 if not CONFIG['LIBXUL_SDK']:
     DIRS += ['../../xulrunner/tools/redit']
