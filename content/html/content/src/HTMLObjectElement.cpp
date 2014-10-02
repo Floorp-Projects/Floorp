@@ -200,7 +200,7 @@ HTMLObjectElement::UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
 bool
 HTMLObjectElement::IsFocusableForTabIndex()
 {
-  nsIDocument* doc = GetCurrentDoc();
+  nsIDocument* doc = GetComposedDoc();
   if (!doc || doc->HasFlag(NODE_IS_EDITABLE)) {
     return false;
   }
@@ -216,7 +216,7 @@ HTMLObjectElement::IsHTMLFocusable(bool aWithMouse,
 {
   // TODO: this should probably be managed directly by IsHTMLFocusable.
   // See bug 597242.
-  nsIDocument *doc = GetCurrentDoc();
+  nsIDocument *doc = GetComposedDoc();
   if (!doc || doc->HasFlag(NODE_IS_EDITABLE)) {
     if (aTabIndex) {
       GetTabIndex(aTabIndex);
