@@ -90,7 +90,7 @@ class MacroAssemblerX86Shared : public Assembler
         j(ConditionFromDoubleCondition(cond), label);
     }
 
-    void branchNegativeZero(FloatRegister reg, Register scratch, Label *label);
+    void branchNegativeZero(FloatRegister reg, Register scratch, Label *label, bool  maybeNonZero = true);
     void branchNegativeZeroFloat32(FloatRegister reg, Register scratch, Label *label);
 
     void move32(Imm32 imm, Register dest) {
