@@ -7,15 +7,15 @@ if not CONFIG['LIBXUL_SDK']:
     include('/toolkit/toolkit.mozbuild')
 
 elif CONFIG['ENABLE_TESTS']:
-    DIRS += ['testing/mochitest']
+    DIRS += ['/testing/mochitest']
 
 if CONFIG['ENABLE_TESTS']:
-    DIRS += ['testing/instrumentation']
+    DIRS += ['/testing/instrumentation']
 
 if CONFIG['MOZ_EXTENSIONS']:
-    DIRS += ['extensions']
+    DIRS += ['/extensions']
 
 DIRS += [
-    CONFIG['MOZ_BRANDING_DIRECTORY'],
-    'mobile/android',
+    '/%s' % CONFIG['MOZ_BRANDING_DIRECTORY'],
+    '/mobile/android',
 ]

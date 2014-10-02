@@ -268,11 +268,11 @@ class TestMozbuildSandbox(unittest.TestCase):
         # child directory.
         sandbox = self.sandbox(data_path='include-relative-from-child')
         sandbox.exec_file('child/child.build')
-        self.assertEqual(sandbox['DIRS'], [sandbox.normalize_path('child/foo')])
+        self.assertEqual(sandbox['DIRS'], [sandbox.normalize_path('foo')])
 
         sandbox = self.sandbox(data_path='include-relative-from-child')
         sandbox.exec_file('child/child2.build')
-        self.assertEqual(sandbox['DIRS'], [sandbox.normalize_path('child/foo')])
+        self.assertEqual(sandbox['DIRS'], [sandbox.normalize_path('foo')])
 
     def test_include_topsrcdir_relative(self):
         # An absolute path for include() is relative to topsrcdir.

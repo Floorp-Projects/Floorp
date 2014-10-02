@@ -7,19 +7,19 @@ if not CONFIG['LIBXUL_SDK']:
     include('/toolkit/toolkit.mozbuild')
 
 if CONFIG['MOZ_EXTENSIONS']:
-    DIRS += ['extensions']
+    DIRS += ['/extensions']
 
-DIRS += [CONFIG['MOZ_BRANDING_DIRECTORY']]
+DIRS += ['/%s' % CONFIG['MOZ_BRANDING_DIRECTORY']]
 
 if CONFIG['MOZ_WEBAPP_RUNTIME']:
-    DIRS += ['webapprt']
+    DIRS += ['/webapprt']
 
 DIRS += [
-    'b2g/chrome',
-    'b2g/components',
-    'b2g/dev/app',
+    '/b2g/chrome',
+    '/b2g/components',
+    '/b2g/dev/app',
 
     # Never add dirs after browser because they apparently won't get
     # packaged properly on Mac.
-    'browser',
+    '/browser',
 ]
