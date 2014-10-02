@@ -58,10 +58,10 @@
 # location which also work on other platforms.
 #
 # @DIR_MACOS@
-# Equals Contents/MacOS/ on Mac OX X and is an empty string on other platforms.
+# Equals Contents/MacOS/ on Mac OS X and is an empty string on other platforms.
 #
 # @DIR_RESOURCES@
-# Equals Contents/Resources/ on Mac OX X and is an empty string on other
+# Equals Contents/Resources/ on Mac OS X and is an empty string on other
 # platforms.
 
 # Common File Removals
