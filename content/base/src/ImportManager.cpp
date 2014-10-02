@@ -742,19 +742,6 @@ nsRefPtr<ImportLoader> ImportManager::GetNearestPredecessor(nsINode* aNode)
   nsIDocument* doc = aNode->OwnerDoc();
   int32_t idx = doc->IndexOfSubImportLink(aNode);
   MOZ_ASSERT(idx != -1, "aNode must be a sub import link of its owner document");
-
-  for (; idx > 0; idx--) {
-    HTMLLinkElement* link =
-      static_cast<HTMLLinkElement*>(doc->GetSubImportLink(idx - 1));
-    nsCOMPtr<nsIURI> uri = link->GetHrefURI();
-    nsRefPtr<ImportLoader> ret;
-    mImports.Get(uri, getter_AddRefs(ret));
-    // Only main referrer links are interesting.
-    if (ret->GetMainReferrer() == link) {
-      return ret;
-    }
-  }
-
   if (idx == 0) {
     if (doc->IsMasterDocument()) {
       // If there is no previous one, and it was the master document, then
@@ -768,8 +755,13 @@ nsRefPtr<ImportLoader> ImportManager::GetNearestPredecessor(nsINode* aNode)
     nsCOMPtr<nsINode> mainReferrer = owner->GetMainReferrer();
     return GetNearestPredecessor(mainReferrer);
   }
-
-  return nullptr;
+  MOZ_ASSERT(idx > 0);
+  HTMLLinkElement* link =
+    static_cast<HTMLLinkElement*>(doc->GetSubImportLink(idx - 1));
+  nsCOMPtr<nsIURI> uri = link->GetHrefURI();
+  nsRefPtr<ImportLoader> ret;
+  mImports.Get(uri, getter_AddRefs(ret));
+  return ret;
 }
 
 } // namespace dom
