@@ -27,9 +27,9 @@ runWithMSE(function (ms, v) {
     var target;
 
     v.addEventListener("loadedmetadata", function () {
-      is(v.currentTime, 0, "currentTime has incorrect initial value");
-      is(v.videoWidth, 320, "videoWidth has incorrect initial value");
-      is(v.videoHeight, 240, "videoHeight has incorrect initial value");
+      is(v.currentTime, 0, "currentTime has correct initial value");
+      is(v.videoWidth, 320, "videoWidth has correct initial value");
+      is(v.videoHeight, 240, "videoHeight has correct initial value");
 
       fetchWithXHR("seek_lowres.webm", function (arrayBuffer) {
         // Append initialization segment.
@@ -50,10 +50,10 @@ runWithMSE(function (ms, v) {
     });
 
     v.addEventListener("seeked", function () {
-      is(v.currentTime, target.currentTime, "Video currentTime not at target");
+      is(v.currentTime, target.currentTime, "Video currentTime at target");
 
-      is(v.videoWidth, target.videoWidth, "videoWidth has incorrect final value");
-      is(v.videoHeight, target.videoHeight, "videoHeight has incorrect final value");
+      is(v.videoWidth, target.videoWidth, "videoWidth has correct final value");
+      is(v.videoHeight, target.videoHeight, "videoHeight has correct final value");
 
       target = targets.shift();
       if (target) {
