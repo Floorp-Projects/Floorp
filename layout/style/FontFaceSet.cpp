@@ -853,80 +853,89 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
   // set up src array
   nsTArray<gfxFontFaceSrc> srcArray;
 
-  aFontFace->GetDesc(eCSSFontDesc_Src, val);
-  unit = val.GetUnit();
-  if (unit == eCSSUnit_Array) {
-    nsCSSValue::Array* srcArr = val.GetArrayValue();
-    size_t numSrc = srcArr->Count();
+  if (aFontFace->HasFontData()) {
+    gfxFontFaceSrc* face = srcArray.AppendElement();
+    if (!face)
+      return nullptr;
 
-    for (size_t i = 0; i < numSrc; i++) {
-      val = srcArr->Item(i);
-      unit = val.GetUnit();
-      gfxFontFaceSrc* face = srcArray.AppendElements(1);
-      if (!face)
-        return nullptr;
-
-      switch (unit) {
-
-      case eCSSUnit_Local_Font:
-        val.GetStringValue(face->mLocalName);
-        face->mIsLocal = true;
-        face->mURI = nullptr;
-        face->mFormatFlags = 0;
-        break;
-      case eCSSUnit_URL:
-        face->mIsLocal = false;
-        face->mURI = val.GetURLValue();
-        face->mReferrer = val.GetURLStructValue()->mReferrer;
-        face->mOriginPrincipal = val.GetURLStructValue()->mOriginPrincipal;
-        NS_ASSERTION(face->mOriginPrincipal, "null origin principal in @font-face rule");
-
-        // agent and user stylesheets are treated slightly differently,
-        // the same-site origin check and access control headers are
-        // enforced against the sheet principal rather than the document
-        // principal to allow user stylesheets to include @font-face rules
-        face->mUseOriginPrincipal = (aSheetType == nsStyleSet::eUserSheet ||
-                                     aSheetType == nsStyleSet::eAgentSheet);
-
-        face->mLocalName.Truncate();
-        face->mFormatFlags = 0;
-        while (i + 1 < numSrc && (val = srcArr->Item(i+1),
-                 val.GetUnit() == eCSSUnit_Font_Format)) {
-          nsDependentString valueString(val.GetStringBufferValue());
-          if (valueString.LowerCaseEqualsASCII("woff")) {
-            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_WOFF;
-          } else if (valueString.LowerCaseEqualsASCII("opentype")) {
-            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_OPENTYPE;
-          } else if (valueString.LowerCaseEqualsASCII("truetype")) {
-            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE;
-          } else if (valueString.LowerCaseEqualsASCII("truetype-aat")) {
-            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE_AAT;
-          } else if (valueString.LowerCaseEqualsASCII("embedded-opentype")) {
-            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_EOT;
-          } else if (valueString.LowerCaseEqualsASCII("svg")) {
-            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_SVG;
-          } else {
-            // unknown format specified, mark to distinguish from the
-            // case where no format hints are specified
-            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_UNKNOWN;
-          }
-          i++;
-        }
-        if (!face->mURI) {
-          // if URI not valid, omit from src array
-          srcArray.RemoveElementAt(srcArray.Length() - 1);
-          NS_WARNING("null url in @font-face rule");
-          continue;
-        }
-        break;
-      default:
-        NS_ASSERTION(unit == eCSSUnit_Local_Font || unit == eCSSUnit_URL,
-                     "strange unit type in font-face src array");
-        break;
-      }
-     }
+    face->mSourceType = gfxFontFaceSrc::eSourceType_Buffer;
+    face->mBuffer = aFontFace->CreateBufferSource();
   } else {
-    NS_ASSERTION(unit == eCSSUnit_Null, "@font-face src has unexpected unit");
+    aFontFace->GetDesc(eCSSFontDesc_Src, val);
+    unit = val.GetUnit();
+    if (unit == eCSSUnit_Array) {
+      nsCSSValue::Array* srcArr = val.GetArrayValue();
+      size_t numSrc = srcArr->Count();
+
+      for (size_t i = 0; i < numSrc; i++) {
+        val = srcArr->Item(i);
+        unit = val.GetUnit();
+        gfxFontFaceSrc* face = srcArray.AppendElements(1);
+        if (!face)
+          return nullptr;
+
+        switch (unit) {
+
+        case eCSSUnit_Local_Font:
+          val.GetStringValue(face->mLocalName);
+          face->mSourceType = gfxFontFaceSrc::eSourceType_Local;
+          face->mURI = nullptr;
+          face->mFormatFlags = 0;
+          break;
+        case eCSSUnit_URL:
+          face->mSourceType = gfxFontFaceSrc::eSourceType_URL;
+          face->mURI = val.GetURLValue();
+          face->mReferrer = val.GetURLStructValue()->mReferrer;
+          face->mOriginPrincipal = val.GetURLStructValue()->mOriginPrincipal;
+          NS_ASSERTION(face->mOriginPrincipal, "null origin principal in @font-face rule");
+
+          // agent and user stylesheets are treated slightly differently,
+          // the same-site origin check and access control headers are
+          // enforced against the sheet principal rather than the document
+          // principal to allow user stylesheets to include @font-face rules
+          face->mUseOriginPrincipal = (aSheetType == nsStyleSet::eUserSheet ||
+                                       aSheetType == nsStyleSet::eAgentSheet);
+
+          face->mLocalName.Truncate();
+          face->mFormatFlags = 0;
+          while (i + 1 < numSrc && (val = srcArr->Item(i+1),
+                   val.GetUnit() == eCSSUnit_Font_Format)) {
+            nsDependentString valueString(val.GetStringBufferValue());
+            if (valueString.LowerCaseEqualsASCII("woff")) {
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_WOFF;
+            } else if (valueString.LowerCaseEqualsASCII("opentype")) {
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_OPENTYPE;
+            } else if (valueString.LowerCaseEqualsASCII("truetype")) {
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE;
+            } else if (valueString.LowerCaseEqualsASCII("truetype-aat")) {
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE_AAT;
+            } else if (valueString.LowerCaseEqualsASCII("embedded-opentype")) {
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_EOT;
+            } else if (valueString.LowerCaseEqualsASCII("svg")) {
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_SVG;
+            } else {
+              // unknown format specified, mark to distinguish from the
+              // case where no format hints are specified
+              face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_UNKNOWN;
+            }
+            i++;
+          }
+          if (!face->mURI) {
+            // if URI not valid, omit from src array
+            srcArray.RemoveElementAt(srcArray.Length() - 1);
+            NS_WARNING("null url in @font-face rule");
+            continue;
+          }
+          break;
+        default:
+          NS_ASSERTION(unit == eCSSUnit_Local_Font || unit == eCSSUnit_URL,
+                       "strange unit type in font-face src array");
+          break;
+        }
+       }
+    } else {
+      NS_ASSERTION(unit == eCSSUnit_Null, "@font-face src has unexpected unit");
+    }
   }
 
   if (srcArray.IsEmpty()) {
@@ -1092,7 +1101,8 @@ FontFaceSet::CheckFontLoad(const gfxFontFaceSrc* aFontFaceSrc,
   if (!ps)
     return NS_ERROR_FAILURE;
 
-  NS_ASSERTION(aFontFaceSrc && !aFontFaceSrc->mIsLocal,
+  NS_ASSERTION(aFontFaceSrc &&
+               aFontFaceSrc->mSourceType == gfxFontFaceSrc::eSourceType_URL,
                "bad font face url passed to fontloader");
   NS_ASSERTION(aFontFaceSrc->mURI, "null font uri");
   if (!aFontFaceSrc->mURI)
