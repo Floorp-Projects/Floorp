@@ -23,6 +23,7 @@
 #include "nsStyleSet.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsThreadUtils.h"
+#include "mozilla/FloatingPoint.h"
 
 #ifdef ACCESSIBILITY
 #include "mozilla/a11y/AccTypes.h"
@@ -772,7 +773,7 @@ nsNumberControlFrame::GetValueOfAnonTextControl(nsAString& aValue)
   // serialization.
   ICUUtils::LanguageTagIterForContent langTagIter(mContent);
   double value = ICUUtils::ParseNumber(aValue, langTagIter);
-  if (NS_finite(value) &&
+  if (IsFinite(value) &&
       value != HTMLInputElement::StringToDecimal(aValue).toDouble()) {
     aValue.Truncate();
     aValue.AppendFloat(value);

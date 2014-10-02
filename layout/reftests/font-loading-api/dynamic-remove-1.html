@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+body { font-family: One; }
+</style>
+<script>
+var f1 = new FontFace("One", "url(../fonts/markA.ttf)");
+var f2 = new FontFace("One", "url(../fonts/mark2A.ttf)");
+
+f1.load();
+f2.load();
+
+Promise.all([f1.load(), f2.load()])
+  .then(function() {
+    document.fonts.add(f1);
+    document.fonts.add(f2);
+  })
+  .then(document.fonts.ready)
+  .then(function() {
+    document.fonts.delete(f2);
+    document.documentElement.className = "";
+  });
+</script>
+<p>ABC</p>

@@ -40,8 +40,10 @@ WebGLContext::Clear(GLbitfield mask)
     }
 
     // Ok, we're clearing the default framebuffer/screen.
-
-    gl->fClear(mask);
+    {
+        ScopedMaskWorkaround autoMask(*this);
+        gl->fClear(mask);
+    }
 
     Invalidate();
     mShouldPresent = true;

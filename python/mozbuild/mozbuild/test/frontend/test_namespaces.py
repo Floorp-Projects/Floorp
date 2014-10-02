@@ -10,9 +10,42 @@ from mozunit import main
 
 from mozbuild.frontend.context import (
     Context,
-    VARIABLES,
+    ContextDerivedValue,
+    ContextDerivedTypedList,
 )
 
+from mozbuild.util import (
+    StrictOrderingOnAppendList,
+    UnsortedError,
+)
+
+
+class Fuga(object):
+    def __init__(self, value):
+        self.value = value
+
+
+class Piyo(ContextDerivedValue):
+    def __init__(self, context, value):
+        if not isinstance(value, unicode):
+            raise ValueError
+        self.context = context
+        self.value = value
+
+    def lower(self):
+        return self.value.lower()
+
+    def __str__(self):
+        return self.value
+
+
+VARIABLES = {
+    'HOGE': (unicode, unicode, None, None),
+    'FUGA': (Fuga, unicode, None, None),
+    'PIYO': (Piyo, unicode, None, None),
+    'HOGERA': (ContextDerivedTypedList(Piyo, StrictOrderingOnAppendList),
+        list, None, None),
+}
 
 class TestContext(unittest.TestCase):
     def test_key_rejection(self):
@@ -39,35 +72,101 @@ class TestContext(unittest.TestCase):
         self.assertTrue(e[3])
 
     def test_allowed_set(self):
-        self.assertIn('DIRS', VARIABLES)
+        self.assertIn('HOGE', VARIABLES)
 
         ns = Context(allowed_variables=VARIABLES)
 
-        ns['DIRS'] = ['foo']
-        self.assertEqual(ns['DIRS'], ['foo'])
+        ns['HOGE'] = 'foo'
+        self.assertEqual(ns['HOGE'], 'foo')
 
     def test_value_checking(self):
         ns = Context(allowed_variables=VARIABLES)
 
         # Setting to a non-allowed type should not work.
         with self.assertRaises(ValueError) as ve:
-            ns['DIRS'] = True
+            ns['HOGE'] = True
 
         e = ve.exception.args
         self.assertEqual(e[0], 'global_ns')
         self.assertEqual(e[1], 'set_type')
-        self.assertEqual(e[2], 'DIRS')
-        self.assertTrue(e[3])
-        self.assertEqual(e[4], list)
+        self.assertEqual(e[2], 'HOGE')
+        self.assertEqual(e[3], True)
+        self.assertEqual(e[4], unicode)
 
     def test_key_checking(self):
         # Checking for existence of a key should not populate the key if it
         # doesn't exist.
         g = Context(allowed_variables=VARIABLES)
 
-        self.assertFalse('DIRS' in g)
-        self.assertFalse('DIRS' in g)
+        self.assertFalse('HOGE' in g)
+        self.assertFalse('HOGE' in g)
 
+    def test_coercion(self):
+        ns = Context(allowed_variables=VARIABLES)
+
+        # Setting to a type different from the allowed input type should not
+        # work.
+        with self.assertRaises(ValueError) as ve:
+            ns['FUGA'] = False
+
+        e = ve.exception.args
+        self.assertEqual(e[0], 'global_ns')
+        self.assertEqual(e[1], 'set_type')
+        self.assertEqual(e[2], 'FUGA')
+        self.assertEqual(e[3], False)
+        self.assertEqual(e[4], unicode)
+
+        ns['FUGA'] = 'fuga'
+        self.assertIsInstance(ns['FUGA'], Fuga)
+        self.assertEqual(ns['FUGA'].value, 'fuga')
+
+        ns['FUGA'] = Fuga('hoge')
+        self.assertIsInstance(ns['FUGA'], Fuga)
+        self.assertEqual(ns['FUGA'].value, 'hoge')
+
+    def test_context_derived_coercion(self):
+        ns = Context(allowed_variables=VARIABLES)
+
+        # Setting to a type different from the allowed input type should not
+        # work.
+        with self.assertRaises(ValueError) as ve:
+            ns['PIYO'] = False
+
+        e = ve.exception.args
+        self.assertEqual(e[0], 'global_ns')
+        self.assertEqual(e[1], 'set_type')
+        self.assertEqual(e[2], 'PIYO')
+        self.assertEqual(e[3], False)
+        self.assertEqual(e[4], unicode)
+
+        ns['PIYO'] = 'piyo'
+        self.assertIsInstance(ns['PIYO'], Piyo)
+        self.assertEqual(ns['PIYO'].value, 'piyo')
+        self.assertEqual(ns['PIYO'].context, ns)
+
+        ns['PIYO'] = Piyo(ns, 'fuga')
+        self.assertIsInstance(ns['PIYO'], Piyo)
+        self.assertEqual(ns['PIYO'].value, 'fuga')
+        self.assertEqual(ns['PIYO'].context, ns)
+
+    def test_context_derived_typed_list(self):
+        ns = Context(allowed_variables=VARIABLES)
+
+        # Setting to a type that's rejected by coercion should not work.
+        with self.assertRaises(ValueError):
+            ns['HOGERA'] = [False]
+
+        ns['HOGERA'] += ['a', 'b', 'c']
+
+        self.assertIsInstance(ns['HOGERA'],
+            ContextDerivedTypedList(Piyo, StrictOrderingOnAppendList))
+        for n in range(0, 3):
+            self.assertIsInstance(ns['HOGERA'][n], Piyo)
+            self.assertEqual(ns['HOGERA'][n].value, ['a', 'b', 'c'][n])
+            self.assertEqual(ns['HOGERA'][n].context, ns)
+
+        with self.assertRaises(UnsortedError):
+            ns['HOGERA'] += ['f', 'e', 'd']
 
 if __name__ == '__main__':
     main()

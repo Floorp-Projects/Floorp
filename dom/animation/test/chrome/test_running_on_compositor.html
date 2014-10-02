@@ -42,7 +42,6 @@ var omtaEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote &&
 // FIXME: When we implement Element.animate, use that here instead of CSS
 // so that we remove any dependency on the CSS mapping.
 div.style.animation = 'anim 100s';
-window.getComputedStyle(div).animationName;
 var player = div.getAnimationPlayers()[0];
 
 // Wait so that animation can be set up.

@@ -230,7 +230,7 @@ CheckMarkedThing(JSTracer *trc, T **thingp)
      * ArenaHeader may not be synced with the real one in ArenaLists.
      */
     MOZ_ASSERT_IF(IsThingPoisoned(thing) && rt->isHeapBusy(),
-                  !InFreeList(thing->asTenured()->arenaHeader(), thing));
+                  !InFreeList(thing->asTenured().arenaHeader(), thing));
 #endif
 }
 
@@ -450,14 +450,14 @@ IsMarked(T **thingp)
         }
     }
 #endif  // JSGC_GENERATIONAL
-    Zone *zone = (*thingp)->asTenured()->zone();
+    Zone *zone = (*thingp)->asTenured().zone();
     if (!zone->isCollecting() || zone->isGCFinished())
         return true;
 #ifdef JSGC_COMPACTING
     if (zone->isGCCompacting() && IsForwarded(*thingp))
         *thingp = Forwarded(*thingp);
 #endif
-    return (*thingp)->asTenured()->isMarked();
+    return (*thingp)->asTenured().isMarked();
 }
 
 template <typename T>
@@ -495,7 +495,7 @@ IsAboutToBeFinalized(T **thingp)
     }
 #endif  // JSGC_GENERATIONAL
 
-    Zone *zone = thing->asTenured()->zone();
+    Zone *zone = thing->asTenured().zone();
     if (zone->isGCSweeping()) {
         /*
          * We should return false for things that have been allocated during
@@ -505,9 +505,9 @@ IsAboutToBeFinalized(T **thingp)
          * we just assert that it's not necessary.
          */
         MOZ_ASSERT_IF(!rt->isHeapMinorCollecting(),
-                      !thing->asTenured()->arenaHeader()->allocatedDuringIncremental);
+                      !thing->asTenured().arenaHeader()->allocatedDuringIncremental);
 
-        return !thing->asTenured()->isMarked();
+        return !thing->asTenured().isMarked();
     }
 #ifdef JSGC_COMPACTING
     else if (zone->isGCCompacting() && IsForwarded(thing)) {
@@ -666,7 +666,7 @@ gc::MarkKind(JSTracer *trc, void **thingp, JSGCTraceKind kind)
     MOZ_ASSERT(*thingp);
     DebugOnly<Cell *> cell = static_cast<Cell *>(*thingp);
     MOZ_ASSERT_IF(cell->isTenured(),
-                  kind == MapAllocToTraceKind(cell->asTenured()->getAllocKind()));
+                  kind == MapAllocToTraceKind(cell->asTenured().getAllocKind()));
     switch (kind) {
       case JSTRACE_OBJECT:
         MarkInternal(trc, reinterpret_cast<JSObject **>(thingp));
@@ -948,9 +948,9 @@ ShouldMarkCrossCompartment(JSTracer *trc, JSObject *src, Cell *cell)
         MOZ_ASSERT(color == BLACK);
         return false;
     }
-    TenuredCell *tenured = cell->asTenured();
+    TenuredCell &tenured = cell->asTenured();
 
-    JS::Zone *zone = tenured->zone();
+    JS::Zone *zone = tenured.zone();
     if (color == BLACK) {
         /*
          * Having black->gray edges violates our promise to the cycle
@@ -959,7 +959,7 @@ ShouldMarkCrossCompartment(JSTracer *trc, JSObject *src, Cell *cell)
          * source and destination of the cross-compartment edge should be gray,
          * but the source was marked black by the conservative scanner.
          */
-        if (tenured->isMarked(GRAY)) {
+        if (tenured.isMarked(GRAY)) {
             MOZ_ASSERT(!zone->isCollecting());
             trc->runtime()->gc.setFoundBlackGrayEdges();
         }
@@ -971,7 +971,7 @@ ShouldMarkCrossCompartment(JSTracer *trc, JSObject *src, Cell *cell)
              * but it will be later, so record the cell so it can be marked gray
              * at the appropriate time.
              */
-            if (!tenured->isMarked())
+            if (!tenured.isMarked())
                 DelayCrossCompartmentGrayMarking(src);
             return false;
         }
@@ -1041,7 +1041,7 @@ PushMarkStack(GCMarker *gcmarker, ObjectImpl *thing)
     JS_COMPARTMENT_ASSERT(gcmarker->runtime(), thing);
     MOZ_ASSERT(!IsInsideNursery(thing));
 
-    if (thing->asTenured()->markIfUnmarked(gcmarker->getMarkColor()))
+    if (thing->asTenured().markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushObject(thing);
 }
 
@@ -1059,7 +1059,7 @@ MaybePushMarkStackBetweenSlices(GCMarker *gcmarker, JSObject *thing)
     JS_COMPARTMENT_ASSERT(rt, thing);
     MOZ_ASSERT_IF(rt->isHeapBusy(), !IsInsideNursery(thing));
 
-    if (!IsInsideNursery(thing) && thing->asTenured()->markIfUnmarked(gcmarker->getMarkColor()))
+    if (!IsInsideNursery(thing) && thing->asTenured().markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushObject(thing);
 }
 
@@ -1069,7 +1069,7 @@ PushMarkStack(GCMarker *gcmarker, JSFunction *thing)
     JS_COMPARTMENT_ASSERT(gcmarker->runtime(), thing);
     MOZ_ASSERT(!IsInsideNursery(thing));
 
-    if (thing->asTenured()->markIfUnmarked(gcmarker->getMarkColor()))
+    if (thing->asTenured().markIfUnmarked(gcmarker->getMarkColor()))
         gcmarker->pushObject(thing);
 }
 
@@ -1709,7 +1709,7 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
             JSObject *obj2 = &v.toObject();
             JS_COMPARTMENT_ASSERT(runtime(), obj2);
             MOZ_ASSERT(obj->compartment() == obj2->compartment());
-            if (obj2->asTenured()->markIfUnmarked(getMarkColor())) {
+            if (obj2->asTenured().markIfUnmarked(getMarkColor())) {
                 pushValueArray(obj, vp, end);
                 obj = obj2;
                 goto scan_obj;
