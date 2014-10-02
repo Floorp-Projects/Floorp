@@ -151,14 +151,22 @@ private:
   // The font-set keeps track of the collection of rules, and their
   // corresponding user font entries so that we can update the set without
   // having to throw away all the existing fonts.
-  struct FontFaceRuleRecord {
-    nsRefPtr<gfxUserFontEntry>   mUserFontEntry;
-    nsFontFaceRuleContainer      mContainer;
+  //
+  // Note: if you add new cycle collected objects to FontFaceRecord or
+  // the other record structs, make sure to update FontFaceSet's
+  // cycle collection macros accordingly.
+  struct FontFaceRecord {
+    nsRefPtr<gfxUserFontEntry> mUserFontEntry;
+    nsRefPtr<FontFace> mFontFace;
+  };
+
+  struct ConnectedFontFaceRecord : public FontFaceRecord {
+    uint8_t mSheetType;
   };
 
   FontFace* FontFaceForRule(nsCSSFontFaceRule* aRule);
   void InsertRule(nsCSSFontFaceRule* aRule, uint8_t aSheetType,
-                  nsTArray<FontFaceRuleRecord>& oldRules,
+                  nsTArray<ConnectedFontFaceRecord>& aOldRecords,
                   bool& aFontSetModified);
 
   already_AddRefed<gfxUserFontEntry> FindOrCreateUserFontEntryFromRule(
@@ -198,8 +206,9 @@ private:
   // us before it dies (unless we die first).
   nsTHashtable< nsPtrHashKey<nsFontFaceLoader> > mLoaders;
 
-  // The @font-face rules and their corresponding user font entries.
-  nsTArray<FontFaceRuleRecord> mRules;
+  // The CSS-connected FontFace objects and their corresponding user
+  // font entries.
+  nsTArray<ConnectedFontFaceRecord> mConnectedFaces;
 };
 
 } // namespace dom

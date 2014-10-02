@@ -82,7 +82,14 @@ FontFace::CreateForRule(nsISupports* aGlobal,
 
   nsRefPtr<FontFace> obj = new FontFace(aGlobal, aPresContext);
   obj->mRule = aRule;
-  obj->SetStatus(LoadStateToStatus(aUserFontEntry->LoadState()));
+  if (aUserFontEntry) {
+    // If aUserFontEntry is null, it means that we are creating a FontFace
+    // object for an @font-face rule that we are just about to create a
+    // user font entry for.  In this case, the newly created user font
+    // entry will be STATUS_NOT_LOADED, so it is safe to skip this
+    // SetStatus call.
+    obj->SetStatus(LoadStateToStatus(aUserFontEntry->LoadState()));
+  }
   return obj.forget();
 }
 
