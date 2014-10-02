@@ -384,25 +384,30 @@ VectorImage::HeapSizeOfDecodedWithComputedFallback(MallocSizeOf aMallocSizeOf) c
   // If implementing this, we'll need to restructure our callers to make sure
   // any amount we return is attributed to the vector images measure (i.e.
   // "explicit/images/{content,chrome}/vector/{used,unused}/...")
-  return 0;
+  // XXX(seth): Same goes for the other *SizeOfDecoded() methods. We'll do this
+  // in bug 921300 or one of its blockers. For now it seems worthwhile to get
+  // this memory accounted for, even if it gets listed under 'raster'. It does
+  // make some perverse sense, since we are after all reporting on raster data
+  // here - it just happens to be computed from a vector document.
+  return SurfaceCache::SizeOfSurfaces(ImageKey(this),
+                                      gfxMemoryLocation::IN_PROCESS_HEAP,
+                                      aMallocSizeOf);
 }
 
 size_t
 VectorImage::NonHeapSizeOfDecoded() const
 {
-  // If implementing this, we'll need to restructure our callers to make sure
-  // any amount we return is attributed to the vector images measure (i.e.
-  // "explicit/images/{content,chrome}/vector/{used,unused}/...")
-  return 0;
+  return SurfaceCache::SizeOfSurfaces(ImageKey(this),
+                                      gfxMemoryLocation::IN_PROCESS_NONHEAP,
+                                      nullptr);
 }
 
 size_t
 VectorImage::OutOfProcessSizeOfDecoded() const
 {
-  // If implementing this, we'll need to restructure our callers to make sure
-  // any amount we return is attributed to the vector images measure (i.e.
-  // "explicit/images/{content,chrome}/vector/{used,unused}/...")
-  return 0;
+  return SurfaceCache::SizeOfSurfaces(ImageKey(this),
+                                      gfxMemoryLocation::OUT_OF_PROCESS,
+                                      nullptr);
 }
 
 MOZ_DEFINE_MALLOC_SIZE_OF(WindowsMallocSizeOf);
