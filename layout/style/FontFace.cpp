@@ -35,6 +35,13 @@ FontFace::FontFace(nsISupports* aParent, nsPresContext* aPresContext)
   MOZ_ASSERT(mPresContext);
 
   SetIsDOMBinding();
+
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aParent);
+
+  if (global) {
+    ErrorResult rv;
+    mLoaded = Promise::Create(global, rv);
+  }
 }
 
 FontFace::~FontFace()
@@ -71,9 +78,11 @@ FontFace::CreateForRule(nsISupports* aGlobal,
                         nsCSSFontFaceRule* aRule,
                         gfxUserFontEntry* aUserFontEntry)
 {
+  nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(aGlobal);
+
   nsRefPtr<FontFace> obj = new FontFace(aGlobal, aPresContext);
   obj->mRule = aRule;
-  obj->mStatus = LoadStateToStatus(aUserFontEntry->LoadState());
+  obj->SetStatus(LoadStateToStatus(aUserFontEntry->LoadState()));
   return obj.forget();
 }
 
@@ -235,21 +244,48 @@ FontFace::Status()
 }
 
 Promise*
-FontFace::Load()
+FontFace::Load(ErrorResult& aRv)
 {
-  return Loaded();
+  if (!mLoaded) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  return mLoaded;
 }
 
 Promise*
-FontFace::Loaded()
+FontFace::GetLoaded(ErrorResult& aRv)
 {
-  return nullptr;
+  mPresContext->FlushUserFontSet();
+
+  if (!mLoaded) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  return mLoaded;
 }
 
 void
 FontFace::SetStatus(FontFaceLoadStatus aStatus)
 {
+  if (mStatus == aStatus) {
+    return;
+  }
+
   mStatus = aStatus;
+
+  if (!mLoaded) {
+    return;
+  }
+
+  if (mStatus == FontFaceLoadStatus::Loaded) {
+    mLoaded->MaybeResolve(this);
+  } else if (mStatus == FontFaceLoadStatus::Error) {
+    // XXX Use NS_ERROR_DOM_SYNTAX_ERR for array buffer backed FontFaces.
+    mLoaded->MaybeReject(NS_ERROR_DOM_NETWORK_ERR);
+  }
 }
 
 bool
