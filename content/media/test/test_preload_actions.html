@@ -386,34 +386,6 @@ var tests = [
 
     name: "test11",
   },
-  /*{
-    // 12. Change preload value from auto to metadata after load started,
-    // should still do full load, should not halt after metadata only.
-    // disable this test since the spec is no longer found in the document
-    // http://dev.w3.org/html5/spec-preview/media-elements.html
-    canplaythrough:
-    function(e) {
-      var v = e.target;
-      is(v._gotLoadedMetaData, true, "(12) Must get loadedmetadata.");
-      is(v._gotLoadStart, true, "(12) Must get loadstart.");
-      maybeFinish(v, 12);
-    },
-
-    setup:
-    function(v) {
-      v._gotLoadStart = false;
-      v._gotLoadedMetaData = false;
-      v.preload = "auto";
-      v.addEventListener("loadstart", function(e){v._gotLoadStart = true;}, false);
-      v.addEventListener("loadedmetadata", function(e){v._gotLoadedMetaData = true;}, false);
-      v.addEventListener("canplaythrough", this.canplaythrough, false);
-      v.src = test.name; // Causes implicit load.
-      document.body.appendChild(v);
-      v.preload = "metadata";
-    },
-
-    name: "test12",
-  },*/
   {
     // 13. Change preload value from auto to none after specifying a src
     // should load according to preload none, no buffering should have taken place
