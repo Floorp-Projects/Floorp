@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<!-- modeled on ../font-face/ex-unit-1.html -->
+<html class="reftest-wait">
+<title>ex unit with Ahem font</title>
+<style>
+html { background: white; }
+body { font-family: Ahhhem; font-size: 50px; height: 2ex; width: 2ex; background: blue;  }
+</style>
+<script>
+document.fonts.add(new FontFace("Ahhhem", "url(../fonts/Ahem.ttf)"));
+document.fonts.ready.then(function() { document.documentElement.className = ""; });
+</script>
