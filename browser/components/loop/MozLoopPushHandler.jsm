@@ -167,7 +167,7 @@ let MozLoopPushHandler = {
     switch (msg.status) {
       case 200:
         this._retryEnd(); // reset retry mechanism
-	this.registered = true;
+        this.registered = true;
         if (this.pushUrl !== msg.pushEndpoint) {
           this.pushUrl = msg.pushEndpoint;
           this._registerCallback(null, this.pushUrl);
@@ -181,11 +181,11 @@ let MozLoopPushHandler = {
 
       case 409:
         this._registerCallback("error: PushServer ChannelID already in use");
-	break;
+        break;
 
       default:
         this._registerCallback("error: PushServer registration failure, status = " + msg.status);
-	break;
+        break;
     }
   },
 
