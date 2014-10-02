@@ -673,7 +673,7 @@ gfxUserFontSet::~gfxUserFontSet()
 }
 
 already_AddRefed<gfxUserFontEntry>
-gfxUserFontSet::FindOrCreateFontFace(
+gfxUserFontSet::FindOrCreateUserFontEntry(
                                const nsAString& aFamilyName,
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                                uint32_t aWeight,
@@ -700,9 +700,9 @@ gfxUserFontSet::FindOrCreateFontFace(
     }
 
     if (!entry) {
-      entry = CreateFontFace(aFontFaceSrcList, aWeight, aStretch,
-                             aItalicStyle, aFeatureSettings, aLanguageOverride,
-                             aUnicodeRanges);
+      entry = CreateUserFontEntry(aFontFaceSrcList, aWeight, aStretch,
+                                  aItalicStyle, aFeatureSettings,
+                                  aLanguageOverride, aUnicodeRanges);
       entry->mFamilyName = aFamilyName;
 
 #ifdef PR_LOGGING
@@ -721,7 +721,8 @@ gfxUserFontSet::FindOrCreateFontFace(
 }
 
 already_AddRefed<gfxUserFontEntry>
-gfxUserFontSet::CreateFontFace(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
+gfxUserFontSet::CreateUserFontEntry(
+                               const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                                uint32_t aWeight,
                                int32_t aStretch,
                                uint32_t aItalicStyle,
@@ -774,8 +775,8 @@ gfxUserFontSet::FindExistingUserFontEntry(
 }
 
 void
-gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
-                            gfxUserFontEntry* aUserFontEntry)
+gfxUserFontSet::AddUserFontEntry(const nsAString& aFamilyName,
+                                 gfxUserFontEntry* aUserFontEntry)
 {
     gfxUserFontFamily* family = GetFamily(aFamilyName);
     family->AddFontEntry(aUserFontEntry);
