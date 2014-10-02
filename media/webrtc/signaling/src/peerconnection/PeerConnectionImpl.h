@@ -203,6 +203,12 @@ class RTCStatsQuery {
       nsresult res = CheckApiState(assert_ice_ready);             \
       if (NS_FAILED(res)) return res; \
     } while(0)
+#define PC_AUTO_ENTER_API_CALL_VOID_RETURN(assert_ice_ready) \
+    do { \
+      /* do/while prevents res from conflicting with locals */    \
+      nsresult res = CheckApiState(assert_ice_ready);             \
+      if (NS_FAILED(res)) return; \
+    } while(0)
 #define PC_AUTO_ENTER_API_CALL_NO_CHECK() CheckThread()
 
 class PeerConnectionImpl MOZ_FINAL : public nsISupports,
@@ -626,14 +632,7 @@ private:
   // Shut down media - called on main thread only
   void ShutdownMedia();
 
-  // ICE callbacks run on the right thread.
-  nsresult IceConnectionStateChange_m(
-      mozilla::dom::PCImplIceConnectionState aState);
-  nsresult IceGatheringStateChange_m(
-      mozilla::dom::PCImplIceGatheringState aState);
-
-  void CandidateReady_s(const std::string& candidate, uint16_t level);
-  nsresult CandidateReady_m(const std::string& candidate, uint16_t level);
+  void CandidateReady(const std::string& candidate, uint16_t level);
   void SendEndOfCandidates();
 
   NS_IMETHOD FingerprintSplitHelper(
