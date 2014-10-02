@@ -58,7 +58,7 @@ const double ComputedTiming::kNullTimeFraction = PositiveInfinity<double>();
 
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Animation, mDocument)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Animation, mDocument, mTarget)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(Animation, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(Animation, Release)
