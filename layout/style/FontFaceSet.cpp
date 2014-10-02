@@ -163,14 +163,23 @@ FontFaceSet::Has(FontFace& aFontFace)
 FontFace*
 FontFaceSet::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
-  aFound = false;
-  return nullptr;
+  mPresContext->FlushUserFontSet();
+
+  if (aIndex >= mRules.Length()) {
+    aFound = false;
+    return nullptr;
+  }
+
+  aFound = true;
+  return FontFaceForRule(mRules[aIndex].mContainer.mRule);
 }
 
 uint32_t
 FontFaceSet::Length()
 {
-  return 0;
+  mPresContext->FlushUserFontSet();
+
+  return mRules.Length();
 }
 
 static PLDHashOperator DestroyIterator(nsPtrHashKey<nsFontFaceLoader>* aKey,
