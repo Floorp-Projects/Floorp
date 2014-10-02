@@ -154,7 +154,7 @@ public:
     // italic style = constants in gfxFontConstants.h, e.g. NS_FONT_STYLE_NORMAL
     // language override = result of calling gfxFontStyle::ParseFontLanguageOverride
     // TODO: support for unicode ranges not yet implemented
-    virtual already_AddRefed<gfxUserFontEntry> CreateFontFace(
+    virtual already_AddRefed<gfxUserFontEntry> CreateUserFontEntry(
                               const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                               uint32_t aWeight,
                               int32_t aStretch,
@@ -165,7 +165,7 @@ public:
 
     // creates a font face for the specified family, or returns an existing
     // matching entry on the family if there is one
-    already_AddRefed<gfxUserFontEntry> FindOrCreateFontFace(
+    already_AddRefed<gfxUserFontEntry> FindOrCreateUserFontEntry(
                                const nsAString& aFamilyName,
                                const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                                uint32_t aWeight,
@@ -176,8 +176,8 @@ public:
                                gfxSparseBitSet* aUnicodeRanges);
 
     // add in a font face for which we have the gfxUserFontEntry already
-    void AddFontFace(const nsAString& aFamilyName,
-                     gfxUserFontEntry* aUserFontEntry);
+    void AddUserFontEntry(const nsAString& aFamilyName,
+                          gfxUserFontEntry* aUserFontEntry);
 
     // Whether there is a face with this family name
     bool HasFamily(const nsAString& aFamilyName) const
@@ -443,7 +443,7 @@ protected:
     // helper method for performing the actual userfont set rebuild
     virtual void DoRebuildUserFontSet() = 0;
 
-    // helper method for FindOrCreateFontFace
+    // helper method for FindOrCreateUserFontEntry
     gfxUserFontEntry* FindExistingUserFontEntry(
                                    gfxUserFontFamily* aFamily,
                                    const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
