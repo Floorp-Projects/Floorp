@@ -28,7 +28,7 @@ JS_STATIC_ASSERT(pn_offsetof(pn_link) == pn_offsetof(dn_uses));
 void
 ParseNode::checkListConsistency()
 {
-    JS_ASSERT(isArity(PN_LIST));
+    MOZ_ASSERT(isArity(PN_LIST));
     ParseNode **tail;
     uint32_t count = 0;
     if (pn_head) {
@@ -39,8 +39,8 @@ ParseNode::checkListConsistency()
     } else {
         tail = &pn_head;
     }
-    JS_ASSERT(pn_tail == tail);
-    JS_ASSERT(pn_count == count);
+    MOZ_ASSERT(pn_tail == tail);
+    MOZ_ASSERT(pn_count == count);
 }
 #endif
 
@@ -49,7 +49,7 @@ void
 ParseNodeAllocator::freeNode(ParseNode *pn)
 {
     /* Catch back-to-back dup recycles. */
-    JS_ASSERT(pn != freelist);
+    MOZ_ASSERT(pn != freelist);
 
     /*
      * It's too hard to clear these nodes from the AtomDefnMaps, etc. that
@@ -57,8 +57,8 @@ ParseNodeAllocator::freeNode(ParseNode *pn)
      * recognize and process these, since their children do need to be dealt
      * with.
      */
-    JS_ASSERT(!pn->isUsed());
-    JS_ASSERT(!pn->isDefn());
+    MOZ_ASSERT(!pn->isUsed());
+    MOZ_ASSERT(!pn->isDefn());
 
 #ifdef DEBUG
     /* Poison the node, to catch attempts to use it without initializing it. */
@@ -96,7 +96,7 @@ class NodeStack {
         top = pn->pn_head;
     }
     ParseNode *pop() {
-        JS_ASSERT(!empty());
+        MOZ_ASSERT(!empty());
         ParseNode *hold = top; /* my kingdom for a prog1 */
         top = top->pn_next;
         return hold;
@@ -269,7 +269,7 @@ ParseNode::append(ParseNodeKind kind, JSOp op, ParseNode *left, ParseNode *right
     if (!left || !right)
         return nullptr;
 
-    JS_ASSERT(left->isKind(kind) && left->isOp(op) && (js_CodeSpec[op].format & JOF_LEFTASSOC));
+    MOZ_ASSERT(left->isKind(kind) && left->isOp(op) && (js_CodeSpec[op].format & JOF_LEFTASSOC));
 
     ListNode *list;
     if (left->pn_arity == PN_LIST) {
@@ -320,7 +320,7 @@ Definition::kindString(Kind kind)
         "", js_var_str, js_const_str, js_let_str, js_function_str, "argument", "unknown"
     };
 
-    JS_ASSERT(unsigned(kind) <= unsigned(ARG));
+    MOZ_ASSERT(unsigned(kind) <= unsigned(ARG));
     return table[kind];
 }
 
@@ -455,7 +455,7 @@ Parser<FullParseHandler>::cloneLeftHandSide(ParseNode *opn)
     pn->setUsed(opn->isUsed());
 
     if (opn->isArity(PN_LIST)) {
-        JS_ASSERT(opn->isKind(PNK_ARRAY) || opn->isKind(PNK_OBJECT));
+        MOZ_ASSERT(opn->isKind(PNK_ARRAY) || opn->isKind(PNK_OBJECT));
         pn->makeEmpty();
         for (ParseNode *opn2 = opn->pn_head; opn2; opn2 = opn2->pn_next) {
             ParseNode *pn2;
@@ -466,8 +466,8 @@ Parser<FullParseHandler>::cloneLeftHandSide(ParseNode *opn)
                         return nullptr;
                     pn2 = handler.new_<UnaryNode>(PNK_MUTATEPROTO, JSOP_NOP, opn2->pn_pos, target);
                 } else {
-                    JS_ASSERT(opn2->isArity(PN_BINARY));
-                    JS_ASSERT(opn2->isKind(PNK_COLON) || opn2->isKind(PNK_SHORTHAND));
+                    MOZ_ASSERT(opn2->isArity(PN_BINARY));
+                    MOZ_ASSERT(opn2->isKind(PNK_COLON) || opn2->isKind(PNK_SHORTHAND));
 
                     ParseNode *tag = cloneParseTree(opn2->pn_left);
                     if (!tag)
@@ -479,7 +479,7 @@ Parser<FullParseHandler>::cloneLeftHandSide(ParseNode *opn)
                     pn2 = handler.new_<BinaryNode>(opn2->getKind(), JSOP_INITPROP, opn2->pn_pos, tag, target);
                 }
             } else if (opn2->isArity(PN_NULLARY)) {
-                JS_ASSERT(opn2->isKind(PNK_ELISION));
+                MOZ_ASSERT(opn2->isKind(PNK_ELISION));
                 pn2 = cloneParseTree(opn2);
             } else if (opn2->isKind(PNK_SPREAD)) {
                 ParseNode *target = cloneLeftHandSide(opn2->pn_kid);
@@ -498,8 +498,8 @@ Parser<FullParseHandler>::cloneLeftHandSide(ParseNode *opn)
         return pn;
     }
 
-    JS_ASSERT(opn->isArity(PN_NAME));
-    JS_ASSERT(opn->isKind(PNK_NAME));
+    MOZ_ASSERT(opn->isArity(PN_NAME));
+    MOZ_ASSERT(opn->isKind(PNK_NAME));
 
     /* If opn is a definition or use, make pn a use. */
     pn->pn_u.name = opn->pn_u.name;
@@ -741,7 +741,7 @@ NameNode::dump(int indent)
         return;
     }
 
-    JS_ASSERT(!isUsed());
+    MOZ_ASSERT(!isUsed());
     const char *name = parseNodeNames[getKind()];
     if (isUsed())
         fprintf(stderr, "(%s)", name);
@@ -759,7 +759,7 @@ ObjectBox::ObjectBox(JSObject *object, ObjectBox* traceLink)
     traceLink(traceLink),
     emitLink(nullptr)
 {
-    JS_ASSERT(!object->is<JSFunction>());
+    MOZ_ASSERT(!object->is<JSFunction>());
 }
 
 ObjectBox::ObjectBox(JSFunction *function, ObjectBox* traceLink)
@@ -767,14 +767,14 @@ ObjectBox::ObjectBox(JSFunction *function, ObjectBox* traceLink)
     traceLink(traceLink),
     emitLink(nullptr)
 {
-    JS_ASSERT(object->is<JSFunction>());
-    JS_ASSERT(asFunctionBox()->function() == function);
+    MOZ_ASSERT(object->is<JSFunction>());
+    MOZ_ASSERT(asFunctionBox()->function() == function);
 }
 
 FunctionBox *
 ObjectBox::asFunctionBox()
 {
-    JS_ASSERT(isFunctionBox());
+    MOZ_ASSERT(isFunctionBox());
     return static_cast<FunctionBox *>(this);
 }
 

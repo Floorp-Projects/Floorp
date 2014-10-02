@@ -101,10 +101,10 @@ Quote(StringBuffer &sb, JSLinearString *str)
            if (!sb.append('\\') || !sb.append(abbrev))
                return false;
         } else {
-            JS_ASSERT(c < ' ');
+            MOZ_ASSERT(c < ' ');
             if (!sb.append("\\u00"))
                 return false;
-            JS_ASSERT((c >> 4) < 10);
+            MOZ_ASSERT((c >> 4) < 10);
             uint8_t x = c >> 4, y = c % 16;
             if (!sb.append(Latin1Char('0' + x)) ||
                 !sb.append(Latin1Char(y < 10 ? '0' + y : 'a' + (y - 10))))
@@ -325,10 +325,10 @@ JO(JSContext *cx, HandleObject obj, StringifyContext *scx)
     Maybe<AutoIdVector> ids;
     const AutoIdVector *props;
     if (scx->replacer && !scx->replacer->isCallable()) {
-        JS_ASSERT(JS_IsArrayObject(cx, scx->replacer));
+        MOZ_ASSERT(JS_IsArrayObject(cx, scx->replacer));
         props = &scx->propertyList;
     } else {
-        JS_ASSERT_IF(scx->replacer, scx->propertyList.length() == 0);
+        MOZ_ASSERT_IF(scx->replacer, scx->propertyList.length() == 0);
         ids.emplace(cx);
         if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, ids.ptr()))
             return false;
@@ -465,7 +465,7 @@ static bool
 Str(JSContext *cx, const Value &v, StringifyContext *scx)
 {
     /* Step 11 must be handled by the caller. */
-    JS_ASSERT(!IsFilteredValue(v));
+    MOZ_ASSERT(!IsFilteredValue(v));
 
     JS_CHECK_RECURSION(cx, return false);
 
@@ -505,7 +505,7 @@ Str(JSContext *cx, const Value &v, StringifyContext *scx)
     }
 
     /* Step 10. */
-    JS_ASSERT(v.isObject());
+    MOZ_ASSERT(v.isObject());
     RootedObject obj(cx, &v.toObject());
 
     scx->depth++;
@@ -658,7 +658,7 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
             return false;
     } else {
         /* Step 8. */
-        JS_ASSERT(gap.empty());
+        MOZ_ASSERT(gap.empty());
     }
 
     /* Step 9. */

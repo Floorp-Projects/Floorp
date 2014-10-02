@@ -692,6 +692,19 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
       continue; // don't return yet, there may be more URIs
     }
 
+    // log a warning to console if scheme is not http or https
+    bool isHttpScheme =
+      (NS_SUCCEEDED(reportURI->SchemeIs("http", &isHttpScheme)) && isHttpScheme) ||
+      (NS_SUCCEEDED(reportURI->SchemeIs("https", &isHttpScheme)) && isHttpScheme);
+
+    if (!isHttpScheme) {
+      const char16_t* params[] = { reportURIs[r].get() };
+      CSP_LogLocalizedStr(NS_LITERAL_STRING("reportURInotHttpsOrHttp2").get(),
+                          params, ArrayLength(params),
+                          aSourceFile, aScriptSample, aLineNum, 0,
+                          nsIScriptError::errorFlag, "CSP", mInnerWindowID);
+    }
+
     // make sure this is an anonymous request (no cookies) so in case the
     // policy URI is injected, it can't be abused for CSRF.
     nsLoadFlags flags;

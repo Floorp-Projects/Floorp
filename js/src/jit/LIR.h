@@ -85,12 +85,12 @@ class LAllocation : public TempObject
         return uint32_t(bits_) >> DATA_SHIFT;
     }
     void setData(uint32_t data) {
-        JS_ASSERT(data <= DATA_MASK);
+        MOZ_ASSERT(data <= DATA_MASK);
         bits_ &= ~(DATA_MASK << DATA_SHIFT);
         bits_ |= (data << DATA_SHIFT);
     }
     void setKindAndData(Kind kind, uint32_t data) {
-        JS_ASSERT(data <= DATA_MASK);
+        MOZ_ASSERT(data <= DATA_MASK);
         bits_ = (uint32_t(kind) << KIND_SHIFT) | data << DATA_SHIFT;
     }
 
@@ -104,7 +104,7 @@ class LAllocation : public TempObject
   public:
     LAllocation() : bits_(0)
     {
-        JS_ASSERT(isBogus());
+        MOZ_ASSERT(isBogus());
     }
 
     static LAllocation *New(TempAllocator &alloc) {
@@ -117,9 +117,9 @@ class LAllocation : public TempObject
 
     // The value pointer must be rooted in MIR and have its low bits cleared.
     explicit LAllocation(const Value *vp) {
-        JS_ASSERT(vp);
+        MOZ_ASSERT(vp);
         bits_ = uintptr_t(vp);
-        JS_ASSERT((bits_ & (KIND_MASK << KIND_SHIFT)) == 0);
+        MOZ_ASSERT((bits_ & (KIND_MASK << KIND_SHIFT)) == 0);
         bits_ |= CONSTANT_VALUE << KIND_SHIFT;
     }
     inline explicit LAllocation(AnyRegister reg);
@@ -174,7 +174,7 @@ class LAllocation : public TempObject
     inline AnyRegister toRegister() const;
 
     const Value *toConstant() const {
-        JS_ASSERT(isConstantValue());
+        MOZ_ASSERT(isConstantValue());
         return reinterpret_cast<const Value *>(bits_ & ~(KIND_MASK << KIND_SHIFT));
     }
 
@@ -273,7 +273,7 @@ class LUse : public LAllocation
     }
 
     void setVirtualRegister(uint32_t index) {
-        JS_ASSERT(index < VREG_MASK);
+        MOZ_ASSERT(index < VREG_MASK);
 
         uint32_t old = data() & ~(VREG_MASK << VREG_SHIFT);
         setData(old | (index << VREG_SHIFT));
@@ -285,11 +285,11 @@ class LUse : public LAllocation
     }
     uint32_t virtualRegister() const {
         uint32_t index = (data() >> VREG_SHIFT) & VREG_MASK;
-        JS_ASSERT(index != 0);
+        MOZ_ASSERT(index != 0);
         return index;
     }
     uint32_t registerCode() const {
-        JS_ASSERT(policy() == FIXED);
+        MOZ_ASSERT(policy() == FIXED);
         return (data() >> REG_SHIFT) & REG_MASK;
     }
     bool isFixedRegister() const {
@@ -439,7 +439,7 @@ class LDefinition
     void set(uint32_t index, Type type, Policy policy) {
         JS_STATIC_ASSERT(MAX_VIRTUAL_REGISTERS <= VREG_MASK);
         bits_ = (index << VREG_SHIFT) | (policy << POLICY_SHIFT) | (type << TYPE_SHIFT);
-        JS_ASSERT_IF(!SupportsSimd, !isSimdType());
+        MOZ_ASSERT_IF(!SupportsSimd, !isSimdType());
     }
 
   public:
@@ -465,7 +465,7 @@ class LDefinition
 
     LDefinition() : bits_(0)
     {
-        JS_ASSERT(isBogusTemp());
+        MOZ_ASSERT(isBogusTemp());
     }
 
     static LDefinition BogusTemp() {
@@ -508,7 +508,7 @@ class LDefinition
     }
     uint32_t virtualRegister() const {
         uint32_t index = (bits_ >> VREG_SHIFT) & VREG_MASK;
-        //JS_ASSERT(index != 0);
+        //MOZ_ASSERT(index != 0);
         return index;
     }
     LAllocation *output() {
@@ -524,7 +524,7 @@ class LDefinition
         return isFixed() && output()->isBogus();
     }
     void setVirtualRegister(uint32_t index) {
-        JS_ASSERT(index < VREG_MASK);
+        MOZ_ASSERT(index < VREG_MASK);
         bits_ &= ~(VREG_MASK << VREG_SHIFT);
         bits_ |= index << VREG_SHIFT;
     }
@@ -539,7 +539,7 @@ class LDefinition
         output_ = LConstantIndex::FromIndex(operand);
     }
     uint32_t getReusedInput() const {
-        JS_ASSERT(policy() == LDefinition::MUST_REUSE_INPUT);
+        MOZ_ASSERT(policy() == LDefinition::MUST_REUSE_INPUT);
         return output_.toConstantIndex()->index();
     }
 
@@ -680,8 +680,8 @@ class LInstruction
         return id_;
     }
     void setId(uint32_t id) {
-        JS_ASSERT(!id_);
-        JS_ASSERT(id);
+        MOZ_ASSERT(!id_);
+        MOZ_ASSERT(id);
         id_ = id;
     }
     LSnapshot *snapshot() const {
@@ -820,7 +820,7 @@ class LBlock : public TempObject
         instructions_.insertAfter(at, ins);
     }
     void insertBefore(LInstruction *at, LInstruction *ins) {
-        JS_ASSERT(!at->isLabel());
+        MOZ_ASSERT(!at->isLabel());
         instructions_.insertBefore(at, ins);
     }
     uint32_t firstId() const;
@@ -828,7 +828,7 @@ class LBlock : public TempObject
 
     // Return the label to branch to when branching to this block.
     Label *label() {
-        JS_ASSERT(!isTrivial());
+        MOZ_ASSERT(!isTrivial());
         return &label_;
     }
 
@@ -889,20 +889,20 @@ class LInstructionHelper : public LInstruction
         return 0;
     }
     MBasicBlock *getSuccessor(size_t i) const {
-        JS_ASSERT(false);
+        MOZ_ASSERT(false);
         return nullptr;
     }
     void setSuccessor(size_t i, MBasicBlock *successor) {
-        JS_ASSERT(false);
+        MOZ_ASSERT(false);
     }
 
     // Default accessors, assuming a single input and output, respectively.
     const LAllocation *input() {
-        JS_ASSERT(numOperands() == 1);
+        MOZ_ASSERT(numOperands() == 1);
         return getOperand(0);
     }
     const LDefinition *output() {
-        JS_ASSERT(numDefs() == 1);
+        MOZ_ASSERT(numDefs() == 1);
         return getDef(0);
     }
 
@@ -952,7 +952,7 @@ class LRecoverInfo : public TempObject
         return recoverOffset_;
     }
     void setRecoverOffset(RecoverOffset offset) {
-        JS_ASSERT(recoverOffset_ == INVALID_RECOVER_OFFSET);
+        MOZ_ASSERT(recoverOffset_ == INVALID_RECOVER_OFFSET);
         recoverOffset_ = offset;
     }
 
@@ -1044,23 +1044,23 @@ class LSnapshot : public TempObject
         return numSlots_ / BOX_PIECES;
     }
     LAllocation *payloadOfSlot(size_t i) {
-        JS_ASSERT(i < numSlots());
+        MOZ_ASSERT(i < numSlots());
         size_t entryIndex = (i * BOX_PIECES) + (BOX_PIECES - 1);
         return getEntry(entryIndex);
     }
 #ifdef JS_NUNBOX32
     LAllocation *typeOfSlot(size_t i) {
-        JS_ASSERT(i < numSlots());
+        MOZ_ASSERT(i < numSlots());
         size_t entryIndex = (i * BOX_PIECES) + (BOX_PIECES - 2);
         return getEntry(entryIndex);
     }
 #endif
     LAllocation *getEntry(size_t i) {
-        JS_ASSERT(i < numSlots_);
+        MOZ_ASSERT(i < numSlots_);
         return &slots_[i];
     }
     void setEntry(size_t i, const LAllocation &alloc) {
-        JS_ASSERT(i < numSlots_);
+        MOZ_ASSERT(i < numSlots_);
         slots_[i] = alloc;
     }
     LRecoverInfo *recoverInfo() const {
@@ -1076,11 +1076,11 @@ class LSnapshot : public TempObject
         return bailoutId_;
     }
     void setSnapshotOffset(SnapshotOffset offset) {
-        JS_ASSERT(snapshotOffset_ == INVALID_SNAPSHOT_OFFSET);
+        MOZ_ASSERT(snapshotOffset_ == INVALID_SNAPSHOT_OFFSET);
         snapshotOffset_ = offset;
     }
     void setBailoutId(BailoutId id) {
-        JS_ASSERT(bailoutId_ == INVALID_BAILOUT_ID);
+        MOZ_ASSERT(bailoutId_ == INVALID_BAILOUT_ID);
         bailoutId_ = id;
     }
     BailoutKind bailoutKind() const {
@@ -1169,9 +1169,9 @@ class LSafepoint : public TempObject
     void assertInvariants() {
         // Every register in valueRegs and gcRegs should also be in liveRegs.
 #ifndef JS_NUNBOX32
-        JS_ASSERT((valueRegs().bits() & ~liveRegs().gprs().bits()) == 0);
+        MOZ_ASSERT((valueRegs().bits() & ~liveRegs().gprs().bits()) == 0);
 #endif
-        JS_ASSERT((gcRegs().bits() & ~liveRegs().gprs().bits()) == 0);
+        MOZ_ASSERT((gcRegs().bits() & ~liveRegs().gprs().bits()) == 0);
     }
 
     explicit LSafepoint(TempAllocator &alloc)
@@ -1239,7 +1239,7 @@ class LSafepoint : public TempObject
     bool addSlotsOrElementsPointer(LAllocation alloc) {
         if (alloc.isStackSlot())
             return addSlotsOrElementsSlot(alloc.toStackSlot()->slot());
-        JS_ASSERT(alloc.isRegister());
+        MOZ_ASSERT(alloc.isRegister());
         addSlotsOrElementsRegister(alloc.toRegister().gpr());
         assertInvariants();
         return true;
@@ -1276,7 +1276,7 @@ class LSafepoint : public TempObject
             }
             return false;
         }
-        JS_ASSERT(alloc.isArgument());
+        MOZ_ASSERT(alloc.isArgument());
         return true;
     }
 
@@ -1404,7 +1404,7 @@ class LSafepoint : public TempObject
             }
             return addValueSlot(slot);
         }
-        JS_ASSERT(alloc.isArgument());
+        MOZ_ASSERT(alloc.isArgument());
         return true;
     }
 
@@ -1413,7 +1413,7 @@ class LSafepoint : public TempObject
             return valueRegs().has(alloc.toRegister().gpr());
         if (alloc.isStackSlot())
             return hasValueSlot(alloc.toStackSlot()->slot());
-        JS_ASSERT(alloc.isArgument());
+        MOZ_ASSERT(alloc.isArgument());
         return true;
     }
 
@@ -1423,7 +1423,7 @@ class LSafepoint : public TempObject
         return safepointOffset_ != INVALID_SAFEPOINT_OFFSET;
     }
     uint32_t offset() const {
-        JS_ASSERT(encoded());
+        MOZ_ASSERT(encoded());
         return safepointOffset_;
     }
     void setOffset(uint32_t offset) {
@@ -1439,7 +1439,7 @@ class LSafepoint : public TempObject
         return osiCallPointOffset_;
     }
     void setOsiCallPointOffset(uint32_t osiCallPointOffset) {
-        JS_ASSERT(!osiCallPointOffset_);
+        MOZ_ASSERT(!osiCallPointOffset_);
         osiCallPointOffset_ = osiCallPointOffset;
     }
     void fixupOffset(MacroAssembler *masm) {
@@ -1486,7 +1486,7 @@ public:
     }
 
     void next() {
-        JS_ASSERT(more());
+        MOZ_ASSERT(more());
         idx_++;
         handleOperandsEnd();
     }
@@ -1616,13 +1616,13 @@ class LIRGraph
         return &constantPool_[0];
     }
     void setEntrySnapshot(LSnapshot *snapshot) {
-        JS_ASSERT(!entrySnapshot_);
-        JS_ASSERT(snapshot->bailoutKind() == Bailout_InitialState);
+        MOZ_ASSERT(!entrySnapshot_);
+        MOZ_ASSERT(snapshot->bailoutKind() == Bailout_InitialState);
         snapshot->setBailoutKind(Bailout_ArgumentCheck);
         entrySnapshot_ = snapshot;
     }
     LSnapshot *entrySnapshot() const {
-        JS_ASSERT(entrySnapshot_);
+        MOZ_ASSERT(entrySnapshot_);
         return entrySnapshot_;
     }
     bool noteNeedsSafepoint(LInstruction *ins);
@@ -1654,7 +1654,7 @@ LAllocation::LAllocation(AnyRegister reg)
 AnyRegister
 LAllocation::toRegister() const
 {
-    JS_ASSERT(isRegister());
+    MOZ_ASSERT(isRegister());
     if (isFloatReg())
         return AnyRegister(toFloatReg()->reg());
     return AnyRegister(toGeneralReg()->reg());
@@ -1698,7 +1698,7 @@ namespace jit {
 #define LIROP(name)                                                         \
     L##name *LInstruction::to##name()                                       \
     {                                                                       \
-        JS_ASSERT(is##name());                                              \
+        MOZ_ASSERT(is##name());                                             \
         return static_cast<L##name *>(this);                                \
     }
     LIR_OPCODE_LIST(LIROP)
@@ -1706,12 +1706,12 @@ namespace jit {
 
 #define LALLOC_CAST(type)                                                   \
     L##type *LAllocation::to##type() {                                      \
-        JS_ASSERT(is##type());                                              \
+        MOZ_ASSERT(is##type());                                             \
         return static_cast<L##type *>(this);                                \
     }
 #define LALLOC_CONST_CAST(type)                                             \
     const L##type *LAllocation::to##type() const {                          \
-        JS_ASSERT(is##type());                                              \
+        MOZ_ASSERT(is##type());                                             \
         return static_cast<const L##type *>(this);                          \
     }
 
@@ -1729,7 +1729,7 @@ LALLOC_CONST_CAST(ConstantIndex)
 static inline signed
 OffsetToOtherHalfOfNunbox(LDefinition::Type type)
 {
-    JS_ASSERT(type == LDefinition::TYPE || type == LDefinition::PAYLOAD);
+    MOZ_ASSERT(type == LDefinition::TYPE || type == LDefinition::PAYLOAD);
     signed offset = (type == LDefinition::TYPE)
                     ? PAYLOAD_INDEX - TYPE_INDEX
                     : TYPE_INDEX - PAYLOAD_INDEX;
@@ -1739,8 +1739,8 @@ OffsetToOtherHalfOfNunbox(LDefinition::Type type)
 static inline void
 AssertTypesFormANunbox(LDefinition::Type type1, LDefinition::Type type2)
 {
-    JS_ASSERT((type1 == LDefinition::TYPE && type2 == LDefinition::PAYLOAD) ||
-              (type2 == LDefinition::TYPE && type1 == LDefinition::PAYLOAD));
+    MOZ_ASSERT((type1 == LDefinition::TYPE && type2 == LDefinition::PAYLOAD) ||
+               (type2 == LDefinition::TYPE && type1 == LDefinition::PAYLOAD));
 }
 
 static inline unsigned

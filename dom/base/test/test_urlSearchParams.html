@@ -248,6 +248,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     runTest();
   }
 
+  function testOrdering() {
+    var a = new URLSearchParams("a=1&a=2&b=3&c=4&c=5&a=6");
+    is(a.toString(), "a=1&a=2&b=3&c=4&c=5&a=6", "Order is correct");
+    is(a.getAll('a').length, 3, "Correct length of getAll()");
+
+    var b = new URLSearchParams();
+    b.append('a', '1');
+    b.append('b', '2');
+    b.append('a', '3');
+    is(b.toString(), "a=1&b=2&a=3", "Order is correct");
+    is(b.getAll('a').length, 2, "Correct length of getAll()");
+
+    runTest();
+  }
+
+  function testDelete() {
+    var a = new URLSearchParams("a=1&a=2&b=3&c=4&c=5&a=6");
+    is(a.toString(), "a=1&a=2&b=3&c=4&c=5&a=6", "Order is correct");
+    is(a.getAll('a').length, 3, "Correct length of getAll()");
+
+    a.delete('a');
+    is(a.getAll('a').length, 0, "Correct length of getAll()");
+    is(a.toString(), "b=3&c=4&c=5", "Order is correct");
+
+    runTest();
+  }
+
   var tests = [
     testSimpleURLSearchParams,
     testCopyURLSearchParams,
@@ -256,7 +283,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     function() { testElement(document.getElementById('anchor')) },
     function() { testElement(document.getElementById('area')) },
     testEncoding,
-    testMultiURL
+    testMultiURL,
+    testOrdering,
+    testDelete
   ];
 
   function runTest() {

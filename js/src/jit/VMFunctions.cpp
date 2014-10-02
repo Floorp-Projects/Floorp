@@ -148,7 +148,7 @@ bool
 CheckOverRecursedWithExtra(JSContext *cx, BaselineFrame *frame,
                            uint32_t extra, uint32_t earlyCheck)
 {
-    JS_ASSERT_IF(earlyCheck, !frame->overRecursed());
+    MOZ_ASSERT_IF(earlyCheck, !frame->overRecursed());
 
     // See |CheckOverRecursed| above.  This is a variant of that function which
     // accepts an argument holding the extra stack space needed for the Baseline
@@ -313,8 +313,8 @@ NewInitObject(JSContext *cx, HandleObject templateObject)
 JSObject *
 NewInitObjectWithClassPrototype(JSContext *cx, HandleObject templateObject)
 {
-    JS_ASSERT(!templateObject->hasSingletonType());
-    JS_ASSERT(!templateObject->hasLazyType());
+    MOZ_ASSERT(!templateObject->hasSingletonType());
+    MOZ_ASSERT(!templateObject->hasLazyType());
 
     NewObjectKind newKind = templateObject->type()->shouldPreTenure()
                             ? TenuredObject
@@ -347,7 +347,7 @@ ArraySpliceDense(JSContext *cx, HandleObject obj, uint32_t start, uint32_t delet
 bool
 ArrayPopDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 {
-    JS_ASSERT(obj->is<ArrayObject>());
+    MOZ_ASSERT(obj->is<ArrayObject>());
 
     AutoDetectInvalidation adi(cx, rval);
 
@@ -368,7 +368,7 @@ ArrayPopDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 bool
 ArrayPushDense(JSContext *cx, HandleObject obj, HandleValue v, uint32_t *length)
 {
-    JS_ASSERT(obj->is<ArrayObject>());
+    MOZ_ASSERT(obj->is<ArrayObject>());
 
     if (MOZ_LIKELY(obj->as<ArrayObject>().lengthIsWritable())) {
         uint32_t idx = obj->as<ArrayObject>().length();
@@ -399,7 +399,7 @@ ArrayPushDense(JSContext *cx, HandleObject obj, HandleValue v, uint32_t *length)
 bool
 ArrayShiftDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 {
-    JS_ASSERT(obj->is<ArrayObject>());
+    MOZ_ASSERT(obj->is<ArrayObject>());
 
     AutoDetectInvalidation adi(cx, rval);
 
@@ -512,7 +512,7 @@ SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValu
         // Aliased var assigns ignore readonly attributes on the property, as
         // required for initializing 'const' closure variables.
         Shape *shape = obj->nativeLookup(cx, name);
-        JS_ASSERT(shape && shape->hasSlot());
+        MOZ_ASSERT(shape && shape->hasSlot());
         obj->nativeSetSlotWithType(cx, shape, value);
         return true;
     }
@@ -726,14 +726,14 @@ FilterArgumentsOrEval(JSContext *cx, JSString *str)
 void
 PostWriteBarrier(JSRuntime *rt, JSObject *obj)
 {
-    JS_ASSERT(!IsInsideNursery(obj));
+    MOZ_ASSERT(!IsInsideNursery(obj));
     rt->gc.storeBuffer.putWholeCellFromMainThread(obj);
 }
 
 void
 PostGlobalWriteBarrier(JSRuntime *rt, JSObject *obj)
 {
-    JS_ASSERT(obj->is<GlobalObject>());
+    MOZ_ASSERT(obj->is<GlobalObject>());
     if (!obj->compartment()->globalWriteBarriered) {
         PostWriteBarrier(rt, obj);
         obj->compartment()->globalWriteBarriered = true;
@@ -772,7 +772,7 @@ DebugPrologue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *mustRet
       case JSTRAP_RETURN:
         // The script is going to return immediately, so we have to call the
         // debug epilogue handler as well.
-        JS_ASSERT(frame->hasReturnValue());
+        MOZ_ASSERT(frame->hasReturnValue());
         *mustReturn = true;
         return jit::DebugEpilogue(cx, frame, pc, true);
 
@@ -815,10 +815,10 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool ok)
     ok = ScriptDebugEpilogue(cx, frame, pc, ok);
 
     if (frame->isNonEvalFunctionFrame()) {
-        JS_ASSERT_IF(ok, frame->hasReturnValue());
+        MOZ_ASSERT_IF(ok, frame->hasReturnValue());
         DebugScopes::onPopCall(frame, cx);
     } else if (frame->isStrictEvalFrame()) {
-        JS_ASSERT_IF(frame->hasCallObj(), frame->scopeChain()->as<CallObject>().isForEval());
+        MOZ_ASSERT_IF(frame->hasCallObj(), frame->scopeChain()->as<CallObject>().isForEval());
         DebugScopes::onPopStrictEvalScope(frame);
     }
 
@@ -872,8 +872,8 @@ InitRestParameter(JSContext *cx, uint32_t length, Value *rest, HandleObject temp
     if (objRes) {
         Rooted<ArrayObject*> arrRes(cx, &objRes->as<ArrayObject>());
 
-        JS_ASSERT(!arrRes->getDenseInitializedLength());
-        JS_ASSERT(arrRes->type() == templateObj->type());
+        MOZ_ASSERT(!arrRes->getDenseInitializedLength());
+        MOZ_ASSERT(arrRes->type() == templateObj->type());
 
         // Fast path: we managed to allocate the array inline; initialize the
         // slots.
@@ -904,8 +904,8 @@ HandleDebugTrap(JSContext *cx, BaselineFrame *frame, uint8_t *retAddr, bool *mus
     RootedScript script(cx, frame->script());
     jsbytecode *pc = script->baselineScript()->icEntryFromReturnAddress(retAddr).pc(script);
 
-    JS_ASSERT(cx->compartment()->debugMode());
-    JS_ASSERT(script->stepModeEnabled() || script->hasBreakpointsAt(pc));
+    MOZ_ASSERT(cx->compartment()->debugMode());
+    MOZ_ASSERT(script->stepModeEnabled() || script->hasBreakpointsAt(pc));
 
     RootedValue rval(cx);
     JSTrapStatus status = JSTRAP_CONTINUE;
@@ -984,7 +984,7 @@ PopBlockScope(JSContext *cx, BaselineFrame *frame)
 bool
 DebugLeaveBlock(JSContext *cx, BaselineFrame *frame, jsbytecode *pc)
 {
-    JS_ASSERT(frame->script()->baselineScript()->debugMode());
+    MOZ_ASSERT(frame->script()->baselineScript()->debugMode());
 
     DebugScopes::onPopBlock(cx, frame, pc);
 
@@ -1015,8 +1015,8 @@ JSObject *
 CreateDerivedTypedObj(JSContext *cx, HandleObject descr,
                       HandleObject owner, int32_t offset)
 {
-    JS_ASSERT(descr->is<SizedTypeDescr>());
-    JS_ASSERT(owner->is<TypedObject>());
+    MOZ_ASSERT(descr->is<SizedTypeDescr>());
+    MOZ_ASSERT(owner->is<TypedObject>());
     Rooted<SizedTypeDescr*> descr1(cx, &descr->as<SizedTypeDescr>());
     Rooted<TypedObject*> owner1(cx, &owner->as<TypedObject>());
     return OutlineTypedObject::createDerived(cx, descr1, owner1, offset);
@@ -1025,8 +1025,8 @@ CreateDerivedTypedObj(JSContext *cx, HandleObject descr,
 JSString *
 RegExpReplace(JSContext *cx, HandleString string, HandleObject regexp, HandleString repl)
 {
-    JS_ASSERT(string);
-    JS_ASSERT(repl);
+    MOZ_ASSERT(string);
+    MOZ_ASSERT(repl);
 
     RootedValue rval(cx);
     if (!str_replace_regexp_raw(cx, string, regexp, repl, &rval))
@@ -1038,9 +1038,9 @@ RegExpReplace(JSContext *cx, HandleString string, HandleObject regexp, HandleStr
 JSString *
 StringReplace(JSContext *cx, HandleString string, HandleString pattern, HandleString repl)
 {
-    JS_ASSERT(string);
-    JS_ASSERT(pattern);
-    JS_ASSERT(repl);
+    MOZ_ASSERT(string);
+    MOZ_ASSERT(pattern);
+    MOZ_ASSERT(repl);
 
     RootedValue rval(cx);
     if (!str_replace_string_raw(cx, string, pattern, repl, &rval))
@@ -1052,16 +1052,16 @@ StringReplace(JSContext *cx, HandleString string, HandleString pattern, HandleSt
 bool
 Recompile(JSContext *cx)
 {
-    JS_ASSERT(cx->currentlyRunningInJit());
+    MOZ_ASSERT(cx->currentlyRunningInJit());
     JitActivationIterator activations(cx->runtime());
     JitFrameIterator iter(activations);
 
-    JS_ASSERT(iter.type() == JitFrame_Exit);
+    MOZ_ASSERT(iter.type() == JitFrame_Exit);
     ++iter;
 
     bool isConstructing = iter.isConstructing();
     RootedScript script(cx, iter.script());
-    JS_ASSERT(script->hasIonScript());
+    MOZ_ASSERT(script->hasIonScript());
 
     if (!IsIonEnabled(cx))
         return true;
@@ -1124,17 +1124,17 @@ AssertValidObjectPtr(JSContext *cx, JSObject *obj)
 {
     // Check what we can, so that we'll hopefully assert/crash if we get a
     // bogus object (pointer).
-    JS_ASSERT(obj->compartment() == cx->compartment());
-    JS_ASSERT(obj->runtimeFromMainThread() == cx->runtime());
+    MOZ_ASSERT(obj->compartment() == cx->compartment());
+    MOZ_ASSERT(obj->runtimeFromMainThread() == cx->runtime());
 
-    JS_ASSERT_IF(!obj->hasLazyType(),
-                 obj->type()->clasp() == obj->lastProperty()->getObjectClass());
+    MOZ_ASSERT_IF(!obj->hasLazyType(),
+                  obj->type()->clasp() == obj->lastProperty()->getObjectClass());
 
     if (obj->isTenured()) {
-        JS_ASSERT(obj->isAligned());
+        MOZ_ASSERT(obj->isAligned());
         gc::AllocKind kind = obj->asTenured()->getAllocKind();
-        JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
-        JS_ASSERT(obj->asTenured()->zone() == cx->zone());
+        MOZ_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
+        MOZ_ASSERT(obj->asTenured()->zone() == cx->zone());
     }
 }
 
@@ -1143,28 +1143,28 @@ AssertValidStringPtr(JSContext *cx, JSString *str)
 {
     // We can't closely inspect strings from another runtime.
     if (str->runtimeFromAnyThread() != cx->runtime()) {
-        JS_ASSERT(str->isPermanentAtom());
+        MOZ_ASSERT(str->isPermanentAtom());
         return;
     }
 
     if (str->isAtom())
-        JS_ASSERT(cx->runtime()->isAtomsZone(str->zone()));
+        MOZ_ASSERT(cx->runtime()->isAtomsZone(str->zone()));
     else
-        JS_ASSERT(str->zone() == cx->zone());
+        MOZ_ASSERT(str->zone() == cx->zone());
 
-    JS_ASSERT(str->runtimeFromMainThread() == cx->runtime());
-    JS_ASSERT(str->isAligned());
-    JS_ASSERT(str->length() <= JSString::MAX_LENGTH);
+    MOZ_ASSERT(str->runtimeFromMainThread() == cx->runtime());
+    MOZ_ASSERT(str->isAligned());
+    MOZ_ASSERT(str->length() <= JSString::MAX_LENGTH);
 
     gc::AllocKind kind = str->getAllocKind();
     if (str->isFatInline())
-        JS_ASSERT(kind == gc::FINALIZE_FAT_INLINE_STRING);
+        MOZ_ASSERT(kind == gc::FINALIZE_FAT_INLINE_STRING);
     else if (str->isExternal())
-        JS_ASSERT(kind == gc::FINALIZE_EXTERNAL_STRING);
+        MOZ_ASSERT(kind == gc::FINALIZE_EXTERNAL_STRING);
     else if (str->isAtom() || str->isFlat())
-        JS_ASSERT(kind == gc::FINALIZE_STRING || kind == gc::FINALIZE_FAT_INLINE_STRING);
+        MOZ_ASSERT(kind == gc::FINALIZE_STRING || kind == gc::FINALIZE_FAT_INLINE_STRING);
     else
-        JS_ASSERT(kind == gc::FINALIZE_STRING);
+        MOZ_ASSERT(kind == gc::FINALIZE_STRING);
 }
 
 void
@@ -1174,16 +1174,16 @@ AssertValidSymbolPtr(JSContext *cx, JS::Symbol *sym)
     if (sym->runtimeFromAnyThread() != cx->runtime())
         return;
 
-    JS_ASSERT(cx->runtime()->isAtomsZone(sym->zone()));
+    MOZ_ASSERT(cx->runtime()->isAtomsZone(sym->zone()));
 
-    JS_ASSERT(sym->runtimeFromMainThread() == cx->runtime());
-    JS_ASSERT(sym->isAligned());
+    MOZ_ASSERT(sym->runtimeFromMainThread() == cx->runtime());
+    MOZ_ASSERT(sym->isAligned());
     if (JSString *desc = sym->description()) {
-        JS_ASSERT(desc->isAtom());
+        MOZ_ASSERT(desc->isAtom());
         AssertValidStringPtr(cx, desc);
     }
 
-    JS_ASSERT(sym->getAllocKind() == gc::FINALIZE_SYMBOL);
+    MOZ_ASSERT(sym->getAllocKind() == gc::FINALIZE_SYMBOL);
 }
 
 void
@@ -1202,7 +1202,7 @@ AssertValidValue(JSContext *cx, Value *v)
 JSObject *
 TypedObjectProto(JSObject *obj)
 {
-    JS_ASSERT(obj->is<TypedObject>());
+    MOZ_ASSERT(obj->is<TypedObject>());
     TypedObject &typedObj = obj->as<TypedObject>();
     return &typedObj.typedProto();
 }

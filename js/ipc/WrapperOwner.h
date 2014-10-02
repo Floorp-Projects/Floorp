@@ -11,6 +11,7 @@
 #include "JavaScriptShared.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "js/Class.h"
+#include "jsproxy.h"
 
 #ifdef XP_WIN
 #undef GetClassName
@@ -55,6 +56,7 @@ class WrapperOwner : public virtual JavaScriptShared
 
     // SpiderMonkey Extensions.
     bool isExtensible(JSContext *cx, JS::HandleObject proxy, bool *extensible);
+    bool regexp_toShared(JSContext *cx, JS::HandleObject proxy, js::RegExpGuard *g);
     bool callOrConstruct(JSContext *cx, JS::HandleObject proxy, const JS::CallArgs &args,
                          bool construct);
     bool hasInstance(JSContext *cx, JS::HandleObject proxy, JS::MutableHandleValue v, bool *bp);
@@ -140,6 +142,8 @@ class WrapperOwner : public virtual JavaScriptShared
     virtual bool CallObjectClassIs(const ObjectId &objId, const uint32_t &classValue,
                                    bool *result) = 0;
     virtual bool CallClassName(const ObjectId &objId, nsString *result) = 0;
+    virtual bool CallRegExpToShared(const ObjectId &objId, ReturnStatus *rs, nsString *source,
+                                    uint32_t *flags) = 0;
 
     virtual bool CallGetPropertyNames(const ObjectId &objId, const uint32_t &flags,
                                       ReturnStatus *rs, nsTArray<nsString> *names) = 0;

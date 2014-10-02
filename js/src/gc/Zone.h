@@ -161,7 +161,7 @@ struct Zone : public JS::shadow::Zone,
 
     bool hasMarkedCompartments();
 
-    void scheduleGC() { JS_ASSERT(!runtimeFromMainThread()->isHeapBusy()); gcScheduled_ = true; }
+    void scheduleGC() { MOZ_ASSERT(!runtimeFromMainThread()->isHeapBusy()); gcScheduled_ = true; }
     void unscheduleGC() { gcScheduled_ = false; }
     bool isGCScheduled() { return gcScheduled_ && canCollect(); }
 
@@ -179,8 +179,8 @@ struct Zone : public JS::shadow::Zone,
         Compact
     };
     void setGCState(GCState state) {
-        JS_ASSERT(runtimeFromMainThread()->isHeapBusy());
-        JS_ASSERT_IF(state != NoGC, canCollect());
+        MOZ_ASSERT(runtimeFromMainThread()->isHeapBusy());
+        MOZ_ASSERT_IF(state != NoGC, canCollect());
         gcState_ = state;
     }
 
@@ -340,14 +340,14 @@ class ZonesIter
     bool done() const { return it == end; }
 
     void next() {
-        JS_ASSERT(!done());
+        MOZ_ASSERT(!done());
         do {
             it++;
         } while (!done() && (*it)->usedByExclusiveThread);
     }
 
     JS::Zone *get() const {
-        JS_ASSERT(!done());
+        MOZ_ASSERT(!done());
         return *it;
     }
 
@@ -363,16 +363,16 @@ struct CompartmentsInZoneIter
     }
 
     bool done() const {
-        JS_ASSERT(it);
+        MOZ_ASSERT(it);
         return it == end;
     }
     void next() {
-        JS_ASSERT(!done());
+        MOZ_ASSERT(!done());
         it++;
     }
 
     JSCompartment *get() const {
-        JS_ASSERT(it);
+        MOZ_ASSERT(it);
         return *it;
     }
 
@@ -420,8 +420,8 @@ class CompartmentsIterT
     bool done() const { return zone.done(); }
 
     void next() {
-        JS_ASSERT(!done());
-        JS_ASSERT(!comp.ref().done());
+        MOZ_ASSERT(!done());
+        MOZ_ASSERT(!comp.ref().done());
         comp->next();
         if (comp->done()) {
             comp.reset();
@@ -432,7 +432,7 @@ class CompartmentsIterT
     }
 
     JSCompartment *get() const {
-        JS_ASSERT(!done());
+        MOZ_ASSERT(!done());
         return *comp;
     }
 

@@ -51,7 +51,7 @@ class BaselineInspector
     explicit BaselineInspector(JSScript *script)
       : script(script), prevLookedUpEntry(nullptr)
     {
-        JS_ASSERT(script);
+        MOZ_ASSERT(script);
     }
 
     bool hasBaselineScript() const {
@@ -70,10 +70,10 @@ class BaselineInspector
 #endif
 
     ICEntry &icEntryFromPC(jsbytecode *pc) {
-        JS_ASSERT(hasBaselineScript());
-        JS_ASSERT(isValidPC(pc));
+        MOZ_ASSERT(hasBaselineScript());
+        MOZ_ASSERT(isValidPC(pc));
         ICEntry &ent = baselineScript()->icEntryFromPCOffset(script->pcToOffset(pc), prevLookedUpEntry);
-        JS_ASSERT(ent.isForOp());
+        MOZ_ASSERT(ent.isForOp());
         prevLookedUpEntry = &ent;
         return ent;
     }
@@ -83,7 +83,7 @@ class BaselineInspector
         ICEntry *ent = nullptr;
         if (hasBaselineScript()) {
             ent = &icEntryFromPC(pc);
-            JS_ASSERT(ent->fallbackStub()->kind() == expectedFallbackKind);
+            MOZ_ASSERT(ent->fallbackStub()->kind() == expectedFallbackKind);
         }
         return ICInspectorType(this, pc, ent);
     }

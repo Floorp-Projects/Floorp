@@ -61,7 +61,7 @@ openPerfMap(const char *dir)
     if (snprintf(filenameBuffer, bufferSize, "%sperf-%d.map", dir, getpid()) >= bufferSize)
         return false;
 
-    JS_ASSERT(!PerfFilePtr);
+    MOZ_ASSERT(!PerfFilePtr);
     PerfFilePtr = fopen(filenameBuffer, "a");
 
     if (!PerfFilePtr)
@@ -118,13 +118,13 @@ js::jit::CheckPerf() {
 
 bool
 js::jit::PerfBlockEnabled() {
-    JS_ASSERT(PerfMode);
+    MOZ_ASSERT(PerfMode);
     return PerfMode == PERF_MODE_BLOCK;
 }
 
 bool
 js::jit::PerfFuncEnabled() {
-    JS_ASSERT(PerfMode);
+    MOZ_ASSERT(PerfMode);
     return PerfMode == PERF_MODE_FUNC;
 }
 
@@ -136,14 +136,14 @@ lockPerfMap(void)
 
     PR_Lock(PerfMutex);
 
-    JS_ASSERT(PerfFilePtr);
+    MOZ_ASSERT(PerfFilePtr);
     return true;
 }
 
 static void
 unlockPerfMap()
 {
-    JS_ASSERT(PerfFilePtr);
+    MOZ_ASSERT(PerfFilePtr);
     fflush(PerfFilePtr);
     PR_Unlock(PerfMutex);
 }
@@ -240,7 +240,7 @@ PerfSpewer::writeProfile(JSScript *script,
             uintptr_t blockStart = funcStart + masm.actualOffset(r.start.offset());
             uintptr_t blockEnd = funcStart + masm.actualOffset(r.end.offset());
 
-            JS_ASSERT(cur <= blockStart);
+            MOZ_ASSERT(cur <= blockStart);
             if (cur < blockStart) {
                 fprintf(PerfFilePtr, "%zx %zx %s:%zu: Func%02d-Block?\n",
                         static_cast<uintptr_t>(cur),
@@ -260,7 +260,7 @@ PerfSpewer::writeProfile(JSScript *script,
             }
         }
 
-        JS_ASSERT(cur <= funcEndInlineCode);
+        MOZ_ASSERT(cur <= funcEndInlineCode);
         if (cur < funcEndInlineCode) {
             fprintf(PerfFilePtr, "%zx %zx %s:%zu: Func%02d-Epilogue\n",
                     cur, funcEndInlineCode - cur,
@@ -268,7 +268,7 @@ PerfSpewer::writeProfile(JSScript *script,
                     thisFunctionIndex);
         }
 
-        JS_ASSERT(funcEndInlineCode <= funcEnd);
+        MOZ_ASSERT(funcEndInlineCode <= funcEnd);
         if (funcEndInlineCode < funcEnd) {
             fprintf(PerfFilePtr, "%zx %zx %s:%zu: Func%02d-OOL\n",
                     funcEndInlineCode, funcEnd - funcEndInlineCode,
@@ -388,7 +388,7 @@ js::jit::writePerfSpewerAsmJSBlocksMap(uintptr_t baseAddress, size_t funcStartOf
         size_t blockStart = baseAddress + r.startOffset;
         size_t blockEnd = baseAddress + r.endOffset;
 
-        JS_ASSERT(cur <= blockStart);
+        MOZ_ASSERT(cur <= blockStart);
         if (cur < blockStart) {
             fprintf(PerfFilePtr, "%zx %zx %s: Function %s - unknown block\n",
                     cur, blockStart - cur,
@@ -406,12 +406,12 @@ js::jit::writePerfSpewerAsmJSBlocksMap(uintptr_t baseAddress, size_t funcStartOf
         }
     }
 
-    JS_ASSERT(cur <= funcEndInlineCode);
+    MOZ_ASSERT(cur <= funcEndInlineCode);
     if (cur < funcEndInlineCode)
         fprintf(PerfFilePtr, "%zx %zx %s: Function %s - Epilogue\n",
                 cur, funcEndInlineCode - cur, filename, funcName);
 
-    JS_ASSERT(funcEndInlineCode <= funcEnd);
+    MOZ_ASSERT(funcEndInlineCode <= funcEnd);
     if (funcEndInlineCode < funcEnd) {
         fprintf(PerfFilePtr, "%zx %zx %s: Function %s - OOL\n",
                 funcEndInlineCode, funcEnd - funcEndInlineCode, filename, funcName);

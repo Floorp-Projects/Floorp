@@ -73,7 +73,7 @@ template <> struct MapTypeToFinalizeKind<jit::JitCode>      { static const Alloc
 static inline bool
 IsNurseryAllocable(AllocKind kind)
 {
-    JS_ASSERT(kind >= 0 && unsigned(kind) < FINALIZE_LIMIT);
+    MOZ_ASSERT(kind >= 0 && unsigned(kind) < FINALIZE_LIMIT);
     static const bool map[] = {
         false,     /* FINALIZE_OBJECT0 */
         true,      /* FINALIZE_OBJECT0_BACKGROUND */
@@ -110,7 +110,7 @@ IsNurseryAllocable(AllocKind kind)
 static inline bool
 IsFJNurseryAllocable(AllocKind kind)
 {
-    JS_ASSERT(kind >= 0 && unsigned(kind) < FINALIZE_LIMIT);
+    MOZ_ASSERT(kind >= 0 && unsigned(kind) < FINALIZE_LIMIT);
     static const bool map[] = {
         false,     /* FINALIZE_OBJECT0 */
         true,      /* FINALIZE_OBJECT0_BACKGROUND */
@@ -143,7 +143,7 @@ IsFJNurseryAllocable(AllocKind kind)
 static inline bool
 IsBackgroundFinalized(AllocKind kind)
 {
-    JS_ASSERT(kind >= 0 && unsigned(kind) < FINALIZE_LIMIT);
+    MOZ_ASSERT(kind >= 0 && unsigned(kind) < FINALIZE_LIMIT);
     static const bool map[] = {
         false,     /* FINALIZE_OBJECT0 */
         true,      /* FINALIZE_OBJECT0_BACKGROUND */
@@ -175,7 +175,7 @@ IsBackgroundFinalized(AllocKind kind)
 static inline bool
 CanBeFinalizedInBackground(gc::AllocKind kind, const Class *clasp)
 {
-    JS_ASSERT(kind <= gc::FINALIZE_OBJECT_LAST);
+    MOZ_ASSERT(kind <= gc::FINALIZE_OBJECT_LAST);
     /* If the class has no finalizer or a finalizer that is safe to call on
      * a different thread, we change the finalize kind. For example,
      * FINALIZE_OBJECT0 calls the finalizer on the main thread,
@@ -223,15 +223,15 @@ GetGCArrayKind(size_t numSlots)
 static inline AllocKind
 GetGCObjectFixedSlotsKind(size_t numFixedSlots)
 {
-    JS_ASSERT(numFixedSlots < SLOTS_TO_THING_KIND_LIMIT);
+    MOZ_ASSERT(numFixedSlots < SLOTS_TO_THING_KIND_LIMIT);
     return slotsToThingKind[numFixedSlots];
 }
 
 static inline AllocKind
 GetBackgroundAllocKind(AllocKind kind)
 {
-    JS_ASSERT(!IsBackgroundFinalized(kind));
-    JS_ASSERT(kind <= FINALIZE_OBJECT_LAST);
+    MOZ_ASSERT(!IsBackgroundFinalized(kind));
+    MOZ_ASSERT(kind <= FINALIZE_OBJECT_LAST);
     return (AllocKind) (kind + 1);
 }
 
@@ -271,7 +271,7 @@ GetGCKindSlots(AllocKind thingKind, const Class *clasp)
 
     /* An object's private data uses the space taken by its last fixed slot. */
     if (clasp->flags & JSCLASS_HAS_PRIVATE) {
-        JS_ASSERT(nslots > 0);
+        MOZ_ASSERT(nslots > 0);
         nslots--;
     }
 
@@ -311,8 +311,8 @@ struct SortedArenaListSegment
 
     // Appends |aheader| to this segment.
     void append(ArenaHeader *aheader) {
-        JS_ASSERT(aheader);
-        JS_ASSERT_IF(head, head->getAllocKind() == aheader->getAllocKind());
+        MOZ_ASSERT(aheader);
+        MOZ_ASSERT_IF(head, head->getAllocKind() == aheader->getAllocKind());
         *tailp = aheader;
         tailp = &aheader->next;
     }
@@ -400,11 +400,11 @@ class ArenaList {
     void check() const {
 #ifdef DEBUG
         // If the list is empty, it must have this form.
-        JS_ASSERT_IF(!head_, cursorp_ == &head_);
+        MOZ_ASSERT_IF(!head_, cursorp_ == &head_);
 
         // If there's an arena following the cursor, it must not be full.
         ArenaHeader *cursor = *cursorp_;
-        JS_ASSERT_IF(cursor, cursor->hasFreeThings());
+        MOZ_ASSERT_IF(cursor, cursor->hasFreeThings());
 #endif
     }
 
@@ -468,7 +468,7 @@ class ArenaList {
     ArenaList &insertListWithCursorAtEnd(const ArenaList &other) {
         check();
         other.check();
-        JS_ASSERT(other.isCursorAtEnd());
+        MOZ_ASSERT(other.isCursorAtEnd());
         if (other.isCursorAtHead())
             return *this;
         // Insert the full arenas of |other| after those of |this|.
@@ -519,7 +519,7 @@ class SortedArenaList
     }
 
     void setThingsPerArena(size_t thingsPerArena) {
-        JS_ASSERT(thingsPerArena && thingsPerArena <= MaxThingsPerArena);
+        MOZ_ASSERT(thingsPerArena && thingsPerArena <= MaxThingsPerArena);
         thingsPerArena_ = thingsPerArena;
     }
 
@@ -533,7 +533,7 @@ class SortedArenaList
 
     // Inserts a header, which has room for |nfree| more things, in its segment.
     void insertAt(ArenaHeader *aheader, size_t nfree) {
-        JS_ASSERT(nfree <= thingsPerArena_);
+        MOZ_ASSERT(nfree <= thingsPerArena_);
         segments[nfree].append(aheader);
     }
 
@@ -633,7 +633,7 @@ class ArenaLists
              * We can only call this during the shutdown after the last GC when
              * the background finalization is disabled.
              */
-            JS_ASSERT(backgroundFinalizeState[i] == BFS_DONE);
+            MOZ_ASSERT(backgroundFinalizeState[i] == BFS_DONE);
             ArenaHeader *next;
             for (ArenaHeader *aheader = arenaLists[i].head(); aheader; aheader = next) {
                 // Copy aheader->next before releasing.
@@ -693,8 +693,8 @@ class ArenaLists
     void unmarkAll() {
         for (size_t i = 0; i != FINALIZE_LIMIT; ++i) {
             /* The background finalization must have stopped at this point. */
-            JS_ASSERT(backgroundFinalizeState[i] == BFS_DONE ||
-                      backgroundFinalizeState[i] == BFS_JUST_FINISHED);
+            MOZ_ASSERT(backgroundFinalizeState[i] == BFS_DONE ||
+                       backgroundFinalizeState[i] == BFS_JUST_FINISHED);
             for (ArenaHeader *aheader = arenaLists[i].head(); aheader; aheader = aheader->next)
                 aheader->unmarkAll();
         }
@@ -743,7 +743,7 @@ class ArenaLists
         FreeList *freeList = &freeLists[thingKind];
         if (!freeList->isEmpty()) {
             ArenaHeader *aheader = freeList->arenaHeader();
-            JS_ASSERT(!aheader->hasFreeThings());
+            MOZ_ASSERT(!aheader->hasFreeThings());
             aheader->setFirstFreeSpan(freeList->getHead());
         }
     }
@@ -761,7 +761,7 @@ class ArenaLists
         FreeList *freeList = &freeLists[kind];
         if (!freeList->isEmpty()) {
             ArenaHeader *aheader = freeList->arenaHeader();
-            JS_ASSERT(freeList->isSameNonEmptySpan(aheader->getFirstFreeSpan()));
+            MOZ_ASSERT(freeList->isSameNonEmptySpan(aheader->getFirstFreeSpan()));
             aheader->setAsFullyUsed();
         }
     }
@@ -780,7 +780,7 @@ class ArenaLists
              * If the arena has a free list, it must be the same as one in
              * lists.
              */
-            JS_ASSERT(freeList->isSameNonEmptySpan(aheader->getFirstFreeSpan()));
+            MOZ_ASSERT(freeList->isSameNonEmptySpan(aheader->getFirstFreeSpan()));
             return true;
         }
         return false;
@@ -788,7 +788,7 @@ class ArenaLists
 
     /* Check if |aheader|'s arena is in use. */
     bool arenaIsInUse(ArenaHeader *aheader, AllocKind kind) const {
-        JS_ASSERT(aheader);
+        MOZ_ASSERT(aheader);
         const FreeList &freeList = freeLists[kind];
         if (freeList.isEmpty())
             return false;
@@ -819,12 +819,12 @@ class ArenaLists
     void checkEmptyFreeLists() {
 #ifdef DEBUG
         for (size_t i = 0; i < mozilla::ArrayLength(freeLists); ++i)
-            JS_ASSERT(freeLists[i].isEmpty());
+            MOZ_ASSERT(freeLists[i].isEmpty());
 #endif
     }
 
     void checkEmptyFreeList(AllocKind kind) {
-        JS_ASSERT(freeLists[kind].isEmpty());
+        MOZ_ASSERT(freeLists[kind].isEmpty());
     }
 
 #ifdef JSGC_COMPACTING
@@ -1005,7 +1005,7 @@ class GCHelperState
     friend class js::gc::ArenaLists;
 
     static void freeElementsAndArray(void **array, void **end) {
-        JS_ASSERT(array <= end);
+        MOZ_ASSERT(array <= end);
         for (void **p = array; p != end; ++p)
             js_free(*p);
         js_free(array);
@@ -1064,7 +1064,7 @@ class GCHelperState
     }
 
     bool shouldShrink() const {
-        JS_ASSERT(isBackgroundSweeping());
+        MOZ_ASSERT(isBackgroundSweeping());
         return shrinkFlag;
     }
 };
@@ -1077,13 +1077,13 @@ struct GCChunkHasher {
      * ratio.
      */
     static HashNumber hash(gc::Chunk *chunk) {
-        JS_ASSERT(!(uintptr_t(chunk) & gc::ChunkMask));
+        MOZ_ASSERT(!(uintptr_t(chunk) & gc::ChunkMask));
         return HashNumber(uintptr_t(chunk) >> gc::ChunkShift);
     }
 
     static bool match(gc::Chunk *k, gc::Chunk *l) {
-        JS_ASSERT(!(uintptr_t(k) & gc::ChunkMask));
-        JS_ASSERT(!(uintptr_t(l) & gc::ChunkMask));
+        MOZ_ASSERT(!(uintptr_t(k) & gc::ChunkMask));
+        MOZ_ASSERT(!(uintptr_t(l) & gc::ChunkMask));
         return k == l;
     }
 };
@@ -1208,7 +1208,7 @@ class RelocationOverlay
     }
 
     Cell *forwardingAddress() const {
-        JS_ASSERT(isForwarded());
+        MOZ_ASSERT(isForwarded());
         return newLocation_;
     }
 
@@ -1247,7 +1247,7 @@ IsForwarded(const JS::Value &value)
     if (value.isSymbol())
         return IsForwarded(value.toSymbol());
 
-    JS_ASSERT(!value.isGCThing());
+    MOZ_ASSERT(!value.isGCThing());
     return false;
 }
 
@@ -1270,7 +1270,7 @@ Forwarded(const JS::Value &value)
     else if (value.isSymbol())
         return SymbolValue(Forwarded(value.toSymbol()));
 
-    JS_ASSERT(!value.isGCThing());
+    MOZ_ASSERT(!value.isGCThing());
     return value;
 }
 
@@ -1295,9 +1295,9 @@ template <typename T>
 inline void
 CheckGCThingAfterMovingGC(T *t)
 {
-    JS_ASSERT_IF(t, !IsInsideNursery(t));
+    MOZ_ASSERT_IF(t, !IsInsideNursery(t));
 #ifdef JSGC_COMPACTING
-    JS_ASSERT_IF(t, !IsForwarded(t));
+    MOZ_ASSERT_IF(t, !IsForwarded(t));
 #endif
 }
 

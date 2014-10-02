@@ -73,7 +73,7 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     jitCompartment_(nullptr)
 {
     runtime_->numCompartments++;
-    JS_ASSERT_IF(options.mergeable(), options.invisibleToDebugger());
+    MOZ_ASSERT_IF(options.mergeable(), options.invisibleToDebugger());
 }
 
 JSCompartment::~JSCompartment()
@@ -130,7 +130,7 @@ JSRuntime::createJitRuntime(JSContext *cx)
     // interrupt.
     AutoLockForInterrupt lock(this);
 
-    JS_ASSERT(!jitRuntime_);
+    MOZ_ASSERT(!jitRuntime_);
 
     jitRuntime_ = cx->new_<jit::JitRuntime>();
 
@@ -229,7 +229,7 @@ JSCompartment::checkWrapperMapAfterMovingGC()
         CheckGCThingAfterMovingGC(static_cast<Cell *>(e.front().value().get().toGCThing()));
 
         WrapperMap::Ptr ptr = crossCompartmentWrappers.lookup(key);
-        JS_ASSERT(ptr.found() && &*ptr == &e.front());
+        MOZ_ASSERT(ptr.found() && &*ptr == &e.front());
     }
 }
 #endif
@@ -239,17 +239,17 @@ JSCompartment::checkWrapperMapAfterMovingGC()
 bool
 JSCompartment::putWrapper(JSContext *cx, const CrossCompartmentKey &wrapped, const js::Value &wrapper)
 {
-    JS_ASSERT(wrapped.wrapped);
-    JS_ASSERT(!IsPoisonedPtr(wrapped.wrapped));
-    JS_ASSERT(!IsPoisonedPtr(wrapped.debugger));
-    JS_ASSERT(!IsPoisonedPtr(wrapper.toGCThing()));
-    JS_ASSERT_IF(wrapped.kind == CrossCompartmentKey::StringWrapper, wrapper.isString());
-    JS_ASSERT_IF(wrapped.kind != CrossCompartmentKey::StringWrapper, wrapper.isObject());
+    MOZ_ASSERT(wrapped.wrapped);
+    MOZ_ASSERT(!IsPoisonedPtr(wrapped.wrapped));
+    MOZ_ASSERT(!IsPoisonedPtr(wrapped.debugger));
+    MOZ_ASSERT(!IsPoisonedPtr(wrapper.toGCThing()));
+    MOZ_ASSERT_IF(wrapped.kind == CrossCompartmentKey::StringWrapper, wrapper.isString());
+    MOZ_ASSERT_IF(wrapped.kind != CrossCompartmentKey::StringWrapper, wrapper.isObject());
     bool success = crossCompartmentWrappers.put(wrapped, ReadBarriered<Value>(wrapper));
 
 #ifdef JSGC_GENERATIONAL
     /* There's no point allocating wrappers in the nursery since we will tenure them anyway. */
-    JS_ASSERT(!IsInsideNursery(static_cast<gc::Cell *>(wrapper.toGCThing())));
+    MOZ_ASSERT(!IsInsideNursery(static_cast<gc::Cell *>(wrapper.toGCThing())));
 
     if (success && (IsInsideNursery(wrapped.wrapped) || IsInsideNursery(wrapped.debugger))) {
         WrapperMapRef ref(&crossCompartmentWrappers, wrapped);
@@ -310,8 +310,8 @@ CopyStringPure(JSContext *cx, JSString *str)
 bool
 JSCompartment::wrap(JSContext *cx, MutableHandleString strp)
 {
-    JS_ASSERT(!cx->runtime()->isAtomsCompartment(this));
-    JS_ASSERT(cx->compartment() == this);
+    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(this));
+    MOZ_ASSERT(cx->compartment() == this);
 
     /* If the string is already in this compartment, we are done. */
     JSString *str = strp;
@@ -320,8 +320,8 @@ JSCompartment::wrap(JSContext *cx, MutableHandleString strp)
 
     /* If the string is an atom, we don't have to copy. */
     if (str->isAtom()) {
-        JS_ASSERT(str->isPermanentAtom() ||
-                  cx->runtime()->isAtomsZone(str->zone()));
+        MOZ_ASSERT(str->isPermanentAtom() ||
+                   cx->runtime()->isAtomsZone(str->zone()));
         return true;
     }
 
@@ -346,10 +346,10 @@ JSCompartment::wrap(JSContext *cx, MutableHandleString strp)
 bool
 JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existingArg)
 {
-    JS_ASSERT(!cx->runtime()->isAtomsCompartment(this));
-    JS_ASSERT(cx->compartment() == this);
-    JS_ASSERT_IF(existingArg, existingArg->compartment() == cx->compartment());
-    JS_ASSERT_IF(existingArg, IsDeadProxyObject(existingArg));
+    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(this));
+    MOZ_ASSERT(cx->compartment() == this);
+    MOZ_ASSERT_IF(existingArg, existingArg->compartment() == cx->compartment());
+    MOZ_ASSERT_IF(existingArg, IsDeadProxyObject(existingArg));
 
     if (!obj)
         return true;
@@ -362,8 +362,8 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
     // This loses us some transparency, and is generally very cheesy.
     HandleObject global = cx->global();
     RootedObject objGlobal(cx, &obj->global());
-    JS_ASSERT(global);
-    JS_ASSERT(objGlobal);
+    MOZ_ASSERT(global);
+    MOZ_ASSERT(objGlobal);
 
     const JSWrapObjectCallbacks *cb = cx->runtime()->wrapObjectCallbacks;
 
@@ -376,8 +376,8 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
     // associated with the self-hosting global. We don't want to create
     // wrappers for objects in other runtimes, which may be the case for the
     // self-hosting global.
-    JS_ASSERT(!cx->runtime()->isSelfHostingGlobal(global) &&
-              !cx->runtime()->isSelfHostingGlobal(objGlobal));
+    MOZ_ASSERT(!cx->runtime()->isSelfHostingGlobal(global) &&
+               !cx->runtime()->isSelfHostingGlobal(objGlobal));
 
     // Unwrap the object, but don't unwrap outer windows.
     RootedObject objectPassedToWrap(cx, obj);
@@ -417,8 +417,8 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
     RootedValue key(cx, ObjectValue(*obj));
     if (WrapperMap::Ptr p = crossCompartmentWrappers.lookup(CrossCompartmentKey(key))) {
         obj.set(&p->value().get().toObject());
-        JS_ASSERT(obj->is<CrossCompartmentWrapperObject>());
-        JS_ASSERT(obj->getParent() == global);
+        MOZ_ASSERT(obj->is<CrossCompartmentWrapperObject>());
+        MOZ_ASSERT(obj->getParent() == global);
         return true;
     }
 
@@ -441,7 +441,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandleObject obj, HandleObject existin
 
     // We maintain the invariant that the key in the cross-compartment wrapper
     // map is always directly wrapped by the value.
-    JS_ASSERT(Wrapper::wrappedObject(obj) == &key.get().toObject());
+    MOZ_ASSERT(Wrapper::wrappedObject(obj) == &key.get().toObject());
 
     return putWrapper(cx, CrossCompartmentKey(key), ObjectValue(*obj));
 }
@@ -501,7 +501,7 @@ JSCompartment::wrap(JSContext *cx, MutableHandle<PropDesc> desc)
 void
 JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
 {
-    JS_ASSERT(!zone()->isCollecting());
+    MOZ_ASSERT(!zone()->isCollecting());
 
     for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
         Value v = e.front().value();
@@ -514,7 +514,7 @@ JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
              */
             Value referent = wrapper->private_();
             MarkValueRoot(trc, &referent, "cross-compartment wrapper");
-            JS_ASSERT(referent == wrapper->private_());
+            MOZ_ASSERT(referent == wrapper->private_());
         }
     }
 }
@@ -528,7 +528,7 @@ JSCompartment::trace(JSTracer *trc)
 void
 JSCompartment::markRoots(JSTracer *trc)
 {
-    JS_ASSERT(!trc->runtime()->isHeapMinorCollecting());
+    MOZ_ASSERT(!trc->runtime()->isHeapMinorCollecting());
 
     if (jitCompartment_)
         jitCompartment_->mark(trc, this);
@@ -642,7 +642,7 @@ JSCompartment::sweepCrossCompartmentWrappers()
         bool valDying = IsValueAboutToBeFinalized(e.front().value().unsafeGet());
         bool dbgDying = key.debugger && IsObjectAboutToBeFinalized(&key.debugger);
         if (keyDying || valDying || dbgDying) {
-            JS_ASSERT(key.kind != CrossCompartmentKey::StringWrapper);
+            MOZ_ASSERT(key.kind != CrossCompartmentKey::StringWrapper);
             e.removeFront();
         } else if (key.wrapped != e.front().key().wrapped ||
                    key.debugger != e.front().key().debugger)
@@ -719,13 +719,13 @@ JSCompartment::clearTables()
     // No scripts should have run in this compartment. This is used when
     // merging a compartment that has been used off thread into another
     // compartment and zone.
-    JS_ASSERT(crossCompartmentWrappers.empty());
-    JS_ASSERT_IF(callsiteClones.initialized(), callsiteClones.empty());
-    JS_ASSERT(!jitCompartment_);
-    JS_ASSERT(!debugScopes);
-    JS_ASSERT(!gcWeakMapList);
-    JS_ASSERT(enumerators->next() == enumerators);
-    JS_ASSERT(regExps.empty());
+    MOZ_ASSERT(crossCompartmentWrappers.empty());
+    MOZ_ASSERT_IF(callsiteClones.initialized(), callsiteClones.empty());
+    MOZ_ASSERT(!jitCompartment_);
+    MOZ_ASSERT(!debugScopes);
+    MOZ_ASSERT(!gcWeakMapList);
+    MOZ_ASSERT(enumerators->next() == enumerators);
+    MOZ_ASSERT(regExps.empty());
 
     types.clearTables();
     if (baseShapes.initialized())

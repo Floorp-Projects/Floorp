@@ -122,17 +122,17 @@ class MIRGenerator
     }
 
     uint32_t maxAsmJSStackArgBytes() const {
-        JS_ASSERT(compilingAsmJS());
+        MOZ_ASSERT(compilingAsmJS());
         return maxAsmJSStackArgBytes_;
     }
     uint32_t resetAsmJSMaxStackArgBytes() {
-        JS_ASSERT(compilingAsmJS());
+        MOZ_ASSERT(compilingAsmJS());
         uint32_t old = maxAsmJSStackArgBytes_;
         maxAsmJSStackArgBytes_ = 0;
         return old;
     }
     void setAsmJSMaxStackArgBytes(uint32_t n) {
-        JS_ASSERT(compilingAsmJS());
+        MOZ_ASSERT(compilingAsmJS());
         maxAsmJSStackArgBytes_ = n;
     }
     void setPerformsCall() {
@@ -145,7 +145,7 @@ class MIRGenerator
     // the value is cached, so don't worry about calling it several times.
     bool usesSimd();
     void initMinAsmJSHeapLength(uint32_t len) {
-        JS_ASSERT(minAsmJSHeapLength_ == 0);
+        MOZ_ASSERT(minAsmJSHeapLength_ == 0);
         minAsmJSHeapLength_ = len;
     }
     uint32_t minAsmJSHeapLength() const {

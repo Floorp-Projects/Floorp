@@ -34,11 +34,11 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
     static const unsigned StorageSpace = 6 * sizeof(void*);
     mozilla::AlignedStorage<StorageSpace> storage_;
     js::AsmJSProfilingFrameIterator &asmJSIter() {
-        JS_ASSERT(!done());
+        MOZ_ASSERT(!done());
         return *reinterpret_cast<js::AsmJSProfilingFrameIterator*>(storage_.addr());
     }
     const js::AsmJSProfilingFrameIterator &asmJSIter() const {
-        JS_ASSERT(!done());
+        MOZ_ASSERT(!done());
         return *reinterpret_cast<const js::AsmJSProfilingFrameIterator*>(storage_.addr());
     }
 

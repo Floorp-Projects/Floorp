@@ -711,7 +711,7 @@ IsCallObject(JSObject *obj);
 inline JSObject *
 GetObjectParent(JSObject *obj)
 {
-    JS_ASSERT(!IsScopeObject(obj));
+    MOZ_ASSERT(!IsScopeObject(obj));
     return reinterpret_cast<shadow::Object*>(obj)->shape->base->parent;
 }
 
@@ -800,7 +800,7 @@ GetObjectPrivate(JSObject *obj)
 inline const JS::Value &
 GetReservedSlot(JSObject *obj, size_t slot)
 {
-    JS_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
+    MOZ_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
     return reinterpret_cast<const shadow::Object *>(obj)->slotRef(slot);
 }
 
@@ -810,7 +810,7 @@ SetReservedSlotWithBarrier(JSObject *obj, size_t slot, const JS::Value &value);
 inline void
 SetReservedSlot(JSObject *obj, size_t slot, const JS::Value &value)
 {
-    JS_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
+    MOZ_ASSERT(slot < JSCLASS_RESERVED_SLOTS(GetObjectClass(obj)));
     shadow::Object *sobj = reinterpret_cast<shadow::Object *>(obj);
     if (sobj->slotRef(slot).isMarkable()
 #ifdef JSGC_GENERATIONAL
@@ -830,7 +830,7 @@ GetObjectSlotSpan(JSObject *obj);
 inline const JS::Value &
 GetObjectSlot(JSObject *obj, size_t slot)
 {
-    JS_ASSERT(slot < GetObjectSlotSpan(obj));
+    MOZ_ASSERT(slot < GetObjectSlotSpan(obj));
     return reinterpret_cast<const shadow::Object *>(obj)->slotRef(slot);
 }
 
@@ -1156,6 +1156,10 @@ GetErrorTypeName(JSRuntime *rt, int16_t exnType);
 extern JS_FRIEND_API(unsigned)
 GetEnterCompartmentDepth(JSContext* cx);
 #endif
+
+class RegExpGuard;
+extern JS_FRIEND_API(bool)
+RegExpToSharedNonInline(JSContext *cx, JS::HandleObject regexp, RegExpGuard *shared);
 
 /* Implemented in jswrapper.cpp. */
 typedef enum NukeReferencesToWindow {
@@ -1781,7 +1785,7 @@ const size_t TypedArrayLengthSlot = 1;
 inline void \
 Get ## Type ## ArrayLengthAndData(JSObject *obj, uint32_t *length, type **data) \
 { \
-    JS_ASSERT(GetObjectClass(obj) == detail::Type ## ArrayClassPtr); \
+    MOZ_ASSERT(GetObjectClass(obj) == detail::Type ## ArrayClassPtr); \
     const JS::Value &slot = GetReservedSlot(obj, detail::TypedArrayLengthSlot); \
     *length = mozilla::AssertedCast<uint32_t>(slot.toInt32()); \
     *data = static_cast<type*>(GetObjectPrivate(obj)); \
@@ -2407,7 +2411,7 @@ inline int CheckIsParallelNative(JSParallelNative parallelNative);
 static MOZ_ALWAYS_INLINE const JSJitInfo *
 FUNCTION_VALUE_TO_JITINFO(const JS::Value& v)
 {
-    JS_ASSERT(js::GetObjectClass(&v.toObject()) == js::FunctionClassPtr);
+    MOZ_ASSERT(js::GetObjectClass(&v.toObject()) == js::FunctionClassPtr);
     return reinterpret_cast<js::shadow::Function *>(&v.toObject())->jitinfo;
 }
 
@@ -2418,7 +2422,7 @@ static MOZ_ALWAYS_INLINE void
 SET_JITINFO(JSFunction * func, const JSJitInfo *info)
 {
     js::shadow::Function *fun = reinterpret_cast<js::shadow::Function *>(func);
-    JS_ASSERT(!(fun->flags & JS_FUNCTION_INTERPRETED_BIT));
+    MOZ_ASSERT(!(fun->flags & JS_FUNCTION_INTERPRETED_BIT));
     fun->jitinfo = info;
 }
 
@@ -2465,9 +2469,9 @@ bool IdMatchesAtom(jsid id, JSAtom *atom);
 static MOZ_ALWAYS_INLINE jsid
 NON_INTEGER_ATOM_TO_JSID(JSAtom *atom)
 {
-    JS_ASSERT(((size_t)atom & 0x7) == 0);
+    MOZ_ASSERT(((size_t)atom & 0x7) == 0);
     jsid id = JSID_FROM_BITS((size_t)atom);
-    JS_ASSERT(js::detail::IdMatchesAtom(id, atom));
+    MOZ_ASSERT(js::detail::IdMatchesAtom(id, atom));
     return id;
 }
 
@@ -2503,7 +2507,7 @@ IdToValue(jsid id)
         return JS::Int32Value(JSID_TO_INT(id));
     if (JSID_IS_SYMBOL(id))
         return JS::SymbolValue(JSID_TO_SYMBOL(id));
-    JS_ASSERT(JSID_IS_VOID(id));
+    MOZ_ASSERT(JSID_IS_VOID(id));
     return JS::UndefinedValue();
 }
 

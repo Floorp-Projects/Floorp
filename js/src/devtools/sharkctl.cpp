@@ -86,8 +86,8 @@ Connect(mach_port_t shark_port)
     msg.unk1 = 1;
     msg.pid = getpid();
 
-    JS_ASSERT(RECV_SIZEOF(struct chud_client_acquire_msg) == 0x24);
-    JS_ASSERT(sizeof(msg) == 0x2c);
+    MOZ_ASSERT(RECV_SIZEOF(struct chud_client_acquire_msg) == 0x24);
+    MOZ_ASSERT(sizeof(msg) == 0x2c);
     mach_msg_return_t result = mach_msg(&msg.hdr, MACH_SEND_MSG | MACH_RCV_MSG,
                                         RECV_SIZEOF(struct chud_client_acquire_msg),
                                         sizeof(msg), reply_port, 0, 0);
@@ -118,7 +118,7 @@ Start(mach_port_t shark_port, uint32_t name)
     msg.unk6 = 1;
     msg.name1 = name;
 
-    JS_ASSERT(sizeof(msg) == 0x34);
+    MOZ_ASSERT(sizeof(msg) == 0x34);
     mach_msg_return_t result = mach_msg(&msg.hdr, MACH_SEND_MSG | MACH_RCV_MSG,
                                         sizeof(msg), 0x30, reply_port, 0, 0);
     mig_dealloc_reply_port(reply_port);
@@ -138,8 +138,8 @@ Stop(mach_port_t shark_port)
     msg.hdr.msgh_reserved = 0;
     msg.hdr.msgh_id = SHARK_MSG_STOP;
 
-    JS_ASSERT(RECV_SIZEOF(struct chud_client_stop_msg) == 0x18);
-    JS_ASSERT(sizeof(msg) == 0x2c);
+    MOZ_ASSERT(RECV_SIZEOF(struct chud_client_stop_msg) == 0x18);
+    MOZ_ASSERT(sizeof(msg) == 0x2c);
     mach_msg_return_t result = mach_msg(&msg.hdr, MACH_SEND_MSG | MACH_RCV_MSG,
                                         RECV_SIZEOF(struct chud_client_stop_msg),
                                         sizeof(msg), reply_port, 0, 0);
@@ -163,8 +163,8 @@ Disconnect(mach_port_t shark_port)
     msg.unk1 = 1;
     msg.pid = getpid();
 
-    JS_ASSERT(RECV_SIZEOF(struct chud_client_release_msg) == 0x24);
-    JS_ASSERT(sizeof(msg) == 0x2c);
+    MOZ_ASSERT(RECV_SIZEOF(struct chud_client_release_msg) == 0x24);
+    MOZ_ASSERT(sizeof(msg) == 0x2c);
     mach_msg_return_t result = mach_msg(&msg.hdr, MACH_SEND_MSG | MACH_RCV_MSG,
                                         RECV_SIZEOF(struct chud_client_release_msg),
                                         sizeof(msg), reply_port, 0, 0);
