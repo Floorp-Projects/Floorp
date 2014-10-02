@@ -2038,11 +2038,6 @@ InvalidateOldStyle(const nsSubstring& aKey,
         static_cast<CustomCounterStyle*>(aStyle.get());
       if (style->GetRule() != newRule) {
         toBeRemoved = true;
-        // Since |style| is being removed from mCacheTable, it won't be visited
-        // by our post-removal InvalidateDependentData() traversal. So, we have
-        // to give it a manual ResetDependentData() call. (This only really
-        // matters if something else is holding a reference & keeping it alive.)
-        style->ResetDependentData();
       } else if (style->GetRuleGeneration() != newRule->GetGeneration()) {
         toBeUpdated = true;
         style->ResetCachedData();
@@ -2052,6 +2047,13 @@ InvalidateOldStyle(const nsSubstring& aKey,
   data->mChanged = data->mChanged || toBeUpdated || toBeRemoved;
   if (toBeRemoved) {
     if (aStyle->IsDependentStyle()) {
+      if (aStyle->IsCustomStyle()) {
+        // Since |aStyle| is being removed from mCacheTable, it won't be visited
+        // by our post-removal InvalidateDependentData() traversal. So, we have
+        // to give it a manual ResetDependentData() call. (This only really
+        // matters if something else is holding a reference & keeping it alive.)
+        static_cast<CustomCounterStyle*>(aStyle.get())->ResetDependentData();
+      }
       // The object has to be held here so that it will not be released
       // before all pointers that refer to it are reset. It will be
       // released when the MarkAndCleanData goes out of scope at the end
