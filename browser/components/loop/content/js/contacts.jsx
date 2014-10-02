@@ -209,7 +209,8 @@ loop.contacts = (function(_, mozL10n) {
   const ContactsList = React.createClass({
     getInitialState: function() {
       return {
-        contacts: {}
+        contacts: {},
+        importBusy: false
       };
     },
 
@@ -272,6 +273,16 @@ loop.contacts = (function(_, mozL10n) {
     },
 
     handleImportButtonClick: function() {
+      this.setState({ importBusy: true });
+      navigator.mozLoop.startImport({
+        service: "google"
+      }, (err, stats) => {
+        this.setState({ importBusy: false });
+        // TODO: bug 1076764 - proper error and success reporting.
+        if (err) {
+          throw err;
+        }
+      });
     },
 
     handleAddContactButtonClick: function() {
@@ -319,12 +330,15 @@ loop.contacts = (function(_, mozL10n) {
         return contact.blocked ? "blocked" : "available";
       });
 
+      // TODO: bug 1076767 - add a spinner whilst importing contacts.
       return (
         <div>
           <div className="content-area">
             <ButtonGroup>
-              <Button caption={mozL10n.get("import_contacts_button")}
-                      disabled
+              <Button caption={this.state.importBusy
+                               ? mozL10n.get("importing_contacts_progress_button")
+                               : mozL10n.get("import_contacts_button")}
+                      disabled={this.state.importBusy}
                       onClick={this.handleImportButtonClick} />
               <Button caption={mozL10n.get("new_contact_button")}
                       onClick={this.handleAddContactButtonClick} />
