@@ -153,16 +153,7 @@ this.BookmarkJSONUtils = Object.freeze({
         Components.utils.reportError("Unable to report telemetry.");
       }
 
-      startTime = Date.now();
       let hash = generateHash(jsonString);
-      // Report the time taken to generate the hash.
-      try {
-        Services.telemetry
-                .getHistogramById("PLACES_BACKUPS_HASHING_MS")
-                .add(Date.now() - startTime);
-      } catch (ex) {
-        Components.utils.reportError("Unable to report telemetry.");
-      }
 
       if (hash === aOptions.failIfHashIs) {
         let e = new Error("Hash conflict");

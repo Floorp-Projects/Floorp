@@ -26,6 +26,7 @@ const {USBRuntime, WiFiRuntime, SimulatorRuntime,
        gLocalRuntime, gRemoteRuntime} = require("devtools/webide/runtimes");
 const discovery = require("devtools/toolkit/discovery/discovery");
 const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+const Telemetry = require("devtools/shared/telemetry");
 
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 
@@ -68,6 +69,8 @@ exports.AppManager = AppManager = {
 
     this.observe = this.observe.bind(this);
     Services.prefs.addObserver(WIFI_SCANNING_PREF, this, false);
+
+    this._telemetry = new Telemetry();
   },
 
   uninit: function() {
@@ -371,6 +374,25 @@ exports.AppManager = AppManager = {
         deferred.reject();
       }
     }, deferred.reject);
+
+    // Record connection result in telemetry
+    let logResult = result => {
+      this._telemetry.log("DEVTOOLS_WEBIDE_CONNECTION_RESULT", result);
+      if (runtime.type) {
+        this._telemetry.log("DEVTOOLS_WEBIDE_" + runtime.type +
+                            "_CONNECTION_RESULT", result);
+      }
+    };
+    deferred.promise.then(() => logResult(true), () => logResult(false));
+
+    // If successful, record connection time in telemetry
+    deferred.promise.then(() => {
+      const timerId = "DEVTOOLS_WEBIDE_CONNECTION_TIME_SECONDS";
+      this._telemetry.startTimer(timerId);
+      this.connection.once(Connection.Events.STATUS_CHANGED, () => {
+        this._telemetry.stopTimer(timerId);
+      });
+    });
 
     return deferred.promise;
   },
