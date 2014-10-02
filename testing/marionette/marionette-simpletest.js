@@ -170,18 +170,19 @@ Marionette.prototype = {
   waitFor: function test_waitFor(callback, test, timeout) {
       this.heartbeatCallback();
       if (test()) {
-          callback();
-          return;
+        callback();
+        return;
       }
-      var now = Date.now();
-      var deadline = now + (typeof(timeout) == "undefined" ? this.timeout : timeout);
+      var now = new Date();
+      var deadline = (timeout instanceof Date) ? timeout :
+                     new Date(now.valueOf + (typeof(timeout) == "undefined" ? this.timeout : timeout))
       if (deadline <= now) {
         dump("waitFor timeout: " + test.toString() + "\n");
         // the script will timeout here, so no need to raise a separate
         // timeout exception
         return;
       }
-      this.window.setTimeout(this.waitFor.bind(this), 100, callback, test, deadline - now);
+      this.window.setTimeout(this.waitFor.bind(this), 100, callback, test, deadline);
   },
 
   runEmulatorCmd: function runEmulatorCmd(cmd, callback) {
