@@ -3520,6 +3520,10 @@ nsDocument::SetDocumentCharacterSet(const nsACString& aCharSetID)
   // but before we figure out what to do about non-Encoding Standard
   // encodings in the charset menu and in mailnews, assertions are futile.
   if (!mCharacterSet.Equals(aCharSetID)) {
+    if (mMasterDocument && !aCharSetID.EqualsLiteral("UTF-8")) {
+      // Imports are always UTF-8
+      return;
+    }
     mCharacterSet = aCharSetID;
 
     int32_t n = mCharSetObservers.Length();
