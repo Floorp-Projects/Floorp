@@ -1,0 +1,5 @@
+<!DOCTYPE html>
+<html>
+<head><title>Success code=test-code</title></head>
+<body>Le Code.</body>
+</html>
