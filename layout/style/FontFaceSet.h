@@ -124,6 +124,15 @@ public:
    */
   void RemoveUnavailableFontFace(FontFace* aFontFace);
 
+  /**
+   * Notification method called by a FontFace once it has been initialized.
+   *
+   * This is needed for the FontFaceSet to handle a FontFace that was created
+   * and inserted into the set immediately, before the event loop has spun and
+   * the FontFace's initialization tasks have run.
+   */
+  void OnFontFaceInitialized(FontFace* aFontFace);
+
   // -- Web IDL --------------------------------------------------------------
 
   IMPL_EVENT_HANDLER(loading)
@@ -147,6 +156,11 @@ public:
 
 private:
   ~FontFaceSet();
+
+  /**
+   * Returns whether the given FontFace is currently "in" the FontFaceSet.
+   */
+  bool HasAvailableFontFace(FontFace* aFontFace);
 
   // Note: if you add new cycle collected objects to FontFaceRecord,
   // make sure to update FontFaceSet's cycle collection macros
