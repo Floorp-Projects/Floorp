@@ -52,6 +52,7 @@ gfxCoreTextShaper::ShapeText(gfxContext      *aContext,
                              uint32_t         aOffset,
                              uint32_t         aLength,
                              int32_t          aScript,
+                             bool             aVertical,
                              gfxShapedText   *aShapedText)
 {
     // Create a CFAttributedString with text and style info, so we can use CoreText to lay it out.

@@ -167,7 +167,7 @@ js::CopyErrorReport(JSContext *cx, JSErrorReport *report)
                 argsCopySize += JS_CHARS_SIZE(report->messageArgs[i]);
 
             /* Non-null messageArgs should have at least one non-null arg. */
-            JS_ASSERT(i != 0);
+            MOZ_ASSERT(i != 0);
             argsArraySize = (i + 1) * sizeof(const char16_t *);
         }
     }
@@ -196,7 +196,7 @@ js::CopyErrorReport(JSContext *cx, JSErrorReport *report)
             cursor += argSize;
         }
         copy->messageArgs[i] = nullptr;
-        JS_ASSERT(cursor == (uint8_t *)copy->messageArgs[0] + argsCopySize);
+        MOZ_ASSERT(cursor == (uint8_t *)copy->messageArgs[0] + argsCopySize);
     }
 
     if (report->ucmessage) {
@@ -229,7 +229,7 @@ js::CopyErrorReport(JSContext *cx, JSErrorReport *report)
         copy->filename = (const char *)cursor;
         js_memcpy(cursor, report->filename, filenameSize);
     }
-    JS_ASSERT(cursor + filenameSize == (uint8_t *)copy + mallocSize);
+    MOZ_ASSERT(cursor + filenameSize == (uint8_t *)copy + mallocSize);
 
     /* Copy non-pointer members. */
     copy->isMuted = report->isMuted;
@@ -554,7 +554,7 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
                     JSErrorCallback callback, void *userRef)
 {
     // Tell our caller to report immediately if this report is just a warning.
-    JS_ASSERT(reportp);
+    MOZ_ASSERT(reportp);
     if (JSREPORT_IS_WARNING(reportp->flags))
         return false;
 

@@ -78,8 +78,8 @@ interface AudioContext : EventTarget {
 // Mozilla extensions
 partial interface AudioContext {
   // Read AudioChannel.webidl for more information about this attribute.
-  [Pref="media.useAudioChannelService"]
-  readonly attribute AudioChannel mozAudioChannelType;
+  [Pref="media.useAudioChannelService", SetterThrows]
+  attribute AudioChannel mozAudioChannelType;
 
   // These 2 events are dispatched when the AudioContext object is muted by
   // the AudioChannelService. It's call 'interrupt' because when this event is

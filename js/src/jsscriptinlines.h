@@ -73,7 +73,7 @@ JSScript::functionDelazifying() const
 inline void
 JSScript::setFunction(JSFunction *fun)
 {
-    JS_ASSERT(fun->isTenured());
+    MOZ_ASSERT(fun->isTenured());
     function_ = fun;
 }
 
@@ -89,14 +89,14 @@ inline JSFunction *
 JSScript::getFunction(size_t index)
 {
     JSFunction *fun = &getObject(index)->as<JSFunction>();
-    JS_ASSERT_IF(fun->isNative(), IsAsmJSModuleNative(fun->native()));
+    MOZ_ASSERT_IF(fun->isNative(), IsAsmJSModuleNative(fun->native()));
     return fun;
 }
 
 inline JSFunction *
 JSScript::getCallerFunction()
 {
-    JS_ASSERT(savedCallerFun());
+    MOZ_ASSERT(savedCallerFun());
     return getFunction(0);
 }
 
@@ -114,16 +114,16 @@ inline js::RegExpObject *
 JSScript::getRegExp(size_t index)
 {
     js::ObjectArray *arr = regexps();
-    JS_ASSERT(uint32_t(index) < arr->length);
+    MOZ_ASSERT(uint32_t(index) < arr->length);
     JSObject *obj = arr->vector[index];
-    JS_ASSERT(obj->is<js::RegExpObject>());
+    MOZ_ASSERT(obj->is<js::RegExpObject>());
     return (js::RegExpObject *) obj;
 }
 
 inline js::RegExpObject *
 JSScript::getRegExp(jsbytecode *pc)
 {
-    JS_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
+    MOZ_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
     return getRegExp(GET_UINT32_INDEX(pc));
 }
 
@@ -154,11 +154,11 @@ JSScript::donorFunction() const
 inline void
 JSScript::setIsCallsiteClone(JSObject *fun)
 {
-    JS_ASSERT(shouldCloneAtCallsite());
+    MOZ_ASSERT(shouldCloneAtCallsite());
     shouldCloneAtCallsite_ = false;
     isCallsiteClone_ = true;
-    JS_ASSERT(isCallsiteClone());
-    JS_ASSERT(fun->is<JSFunction>());
+    MOZ_ASSERT(isCallsiteClone());
+    MOZ_ASSERT(fun->is<JSFunction>());
     enclosingScopeOrOriginalFunction_ = fun;
 }
 

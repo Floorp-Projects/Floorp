@@ -27,7 +27,7 @@ namespace jit {
 IonBuilder::InliningStatus
 IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
 {
-    JS_ASSERT(target->isNative());
+    MOZ_ASSERT(target->isNative());
     JSNative native = target->native();
 
     if (!optimizationInfo().inlineNative())
@@ -223,14 +223,14 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
 IonBuilder::InliningStatus
 IonBuilder::inlineNativeGetter(CallInfo &callInfo, JSFunction *target)
 {
-    JS_ASSERT(target->isNative());
+    MOZ_ASSERT(target->isNative());
     JSNative native = target->native();
 
     if (!optimizationInfo().inlineNative())
         return InliningStatus_NotInlined;
 
     types::TemporaryTypeSet *thisTypes = callInfo.thisArg()->resultTypeSet();
-    JS_ASSERT(callInfo.argc() == 0);
+    MOZ_ASSERT(callInfo.argc() == 0);
 
     // Try to optimize typed array lengths. There is one getter on
     // %TypedArray%.prototype for typed arrays and one getter on
@@ -304,7 +304,7 @@ IonBuilder::inlineArray(CallInfo &callInfo)
     JSObject *templateObject = inspector->getTemplateObjectForNative(pc, js_Array);
     if (!templateObject)
         return InliningStatus_NotInlined;
-    JS_ASSERT(templateObject->is<ArrayObject>());
+    MOZ_ASSERT(templateObject->is<ArrayObject>());
 
     // Multiple arguments imply array initialization, not just construction.
     if (callInfo.argc() >= 2) {
@@ -540,7 +540,7 @@ IonBuilder::inlineArrayPush(CallInfo &callInfo)
     {
         return InliningStatus_NotInlined;
     }
-    JS_ASSERT(obj == callInfo.thisArg() && value == callInfo.getArg(0));
+    MOZ_ASSERT(obj == callInfo.thisArg() && value == callInfo.getArg(0));
 
     if (getInlineReturnType() != MIRType_Int32)
         return InliningStatus_NotInlined;
@@ -675,7 +675,7 @@ IonBuilder::inlineArrayConcat(CallInfo &callInfo)
     JSObject *templateObj = inspector->getTemplateObjectForNative(pc, js::array_concat);
     if (!templateObj || templateObj->type() != baseThisType)
         return InliningStatus_NotInlined;
-    JS_ASSERT(templateObj->is<ArrayObject>());
+    MOZ_ASSERT(templateObj->is<ArrayObject>());
 
     callInfo.setImplicitlyUsedUnchecked();
 
@@ -1191,7 +1191,7 @@ IonBuilder::inlineStringObject(CallInfo &callInfo)
     JSObject *templateObj = inspector->getTemplateObjectForNative(pc, js_String);
     if (!templateObj)
         return InliningStatus_NotInlined;
-    JS_ASSERT(templateObj->is<StringObject>());
+    MOZ_ASSERT(templateObj->is<StringObject>());
 
     callInfo.setImplicitlyUsedUnchecked();
 
@@ -1218,7 +1218,7 @@ IonBuilder::inlineStringSplit(CallInfo &callInfo)
     JSObject *templateObject = inspector->getTemplateObjectForNative(pc, js::str_split);
     if (!templateObject)
         return InliningStatus_NotInlined;
-    JS_ASSERT(templateObject->is<ArrayObject>());
+    MOZ_ASSERT(templateObject->is<ArrayObject>());
 
     types::TypeObjectKey *retType = types::TypeObjectKey::get(templateObject);
     if (retType->unknownProperties())
@@ -1575,7 +1575,7 @@ IonBuilder::elementAccessIsTypedObjectArrayOfScalarType(MDefinition* obj, MDefin
     if (elemPrediction.isUseless() || elemPrediction.kind() != type::Scalar)
         return false;
 
-    JS_ASSERT(type::isSized(elemPrediction.kind()));
+    MOZ_ASSERT(type::isSized(elemPrediction.kind()));
     *arrayType = elemPrediction.scalarType();
     return true;
 }
@@ -2117,8 +2117,8 @@ IonBuilder::inlineAssertFloat32(CallInfo &callInfo)
 
     MDefinition *secondArg = callInfo.getArg(1);
 
-    JS_ASSERT(secondArg->type() == MIRType_Boolean);
-    JS_ASSERT(secondArg->isConstant());
+    MOZ_ASSERT(secondArg->type() == MIRType_Boolean);
+    MOZ_ASSERT(secondArg->isConstant());
 
     bool mustBeFloat32 = secondArg->toConstant()->value().toBoolean();
     current->add(MAssertFloat32::New(alloc(), callInfo.getArg(0), mustBeFloat32));

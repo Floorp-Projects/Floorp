@@ -21,16 +21,16 @@ var rokuDevice = {
   extensions: ["mp4"]
 };
 
-var fireflyDevice = {
-  id: "firefly:dial",
+var matchstickDevice = {
+  id: "matchstick:dial",
   target: "urn:dial-multiscreen-org:service:dial:1",
   filters: {
     server: null,
     modelName: "Eureka Dongle"
   },
   factory: function(aService) {
-    Cu.import("resource://gre/modules/FireflyApp.jsm");
-    return new FireflyApp(aService);
+    Cu.import("resource://gre/modules/MatchstickApp.jsm");
+    return new MatchstickApp(aService);
   },
   types: ["video/mp4", "video/webm"],
   extensions: ["mp4", "webm"]
@@ -59,7 +59,7 @@ var CastingApps = {
 
     // Register targets
     SimpleServiceDiscovery.registerDevice(rokuDevice);
-    SimpleServiceDiscovery.registerDevice(fireflyDevice);
+    SimpleServiceDiscovery.registerDevice(matchstickDevice);
     SimpleServiceDiscovery.registerDevice(mediaPlayerDevice);
 
     // Search for devices continuously every 120 seconds

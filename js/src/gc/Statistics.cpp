@@ -645,7 +645,7 @@ Statistics::Statistics(JSRuntime *rt)
         fullFormat = true;
 
         fp = fopen(env, "a");
-        JS_ASSERT(fp);
+        MOZ_ASSERT(fp);
     }
 }
 
@@ -812,13 +812,13 @@ void
 Statistics::beginPhase(Phase phase)
 {
     /* Guard against re-entry */
-    JS_ASSERT(!phaseStartTimes[phase]);
+    MOZ_ASSERT(!phaseStartTimes[phase]);
 
 #ifdef DEBUG
-    JS_ASSERT(phases[phase].index == phase);
+    MOZ_ASSERT(phases[phase].index == phase);
     Phase parent = phaseNestingDepth ? phaseNesting[phaseNestingDepth - 1] : PHASE_NO_PARENT;
-    JS_ASSERT(phaseNestingDepth < MAX_NESTING);
-    JS_ASSERT_IF(gcDepth == 1, phases[phase].parent == parent);
+    MOZ_ASSERT(phaseNestingDepth < MAX_NESTING);
+    MOZ_ASSERT_IF(gcDepth == 1, phases[phase].parent == parent);
     phaseNesting[phaseNestingDepth] = phase;
     phaseNestingDepth++;
 #endif
@@ -864,7 +864,7 @@ Statistics::endSCC(unsigned scc, int64_t start)
 double
 Statistics::computeMMU(int64_t window)
 {
-    JS_ASSERT(!slices.empty());
+    MOZ_ASSERT(!slices.empty());
 
     int64_t gc = slices[0].end - slices[0].start;
     int64_t gcMax = gc;

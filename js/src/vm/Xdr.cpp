@@ -27,7 +27,7 @@ XDRBuffer::freeBuffer()
 bool
 XDRBuffer::grow(size_t n)
 {
-    JS_ASSERT(n > size_t(limit - cursor));
+    MOZ_ASSERT(n > size_t(limit - cursor));
 
     const size_t MEM_BLOCK = 8192;
     size_t offset = cursor - base;

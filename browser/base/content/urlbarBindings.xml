@@ -185,24 +185,10 @@
       </method>
 
       <field name="_formattingEnabled">true</field>
-      <field name="_searchServiceInitialized">false</field>
       <method name="formatValue">
         <body><![CDATA[
           if (!this._formattingEnabled || this.focused)
             return;
-
-          // Initialize the search service asynchronously if that hasn't
-          // happened yet. We will need it to highlight search terms later.
-          if (!this._searchServiceInitialized) {
-            Services.search.init(() => {
-              if (this.formatValue) {
-                this._searchServiceInitialized = true;
-                this.formatValue();
-              }
-            });
-
-            return;
-          }
 
           let controller = this.editor.selectionController;
           let selection = controller.getSelection(controller.SELECTION_URLSECONDARY);
@@ -238,29 +224,20 @@
             subDomain = domain.slice(0, -baseDomain.length);
           }
 
-          function addSelectionRange(start, end) {
+          let rangeLength = preDomain.length + subDomain.length;
+          if (rangeLength) {
             let range = document.createRange();
-            range.setStart(textNode, start);
-            range.setEnd(textNode, end);
+            range.setStart(textNode, 0);
+            range.setEnd(textNode, rangeLength);
             selection.addRange(range);
           }
 
-          let rangeLength = preDomain.length + subDomain.length;
-          if (rangeLength) {
-            addSelectionRange(0, rangeLength);
-          }
-
-          let result = Services.search.parseSubmissionURL(value);
           let startRest = preDomain.length + domain.length;
-
-          // Format search terms in the URL, if any.
-          if (result.termsOffset > -1 && result.termsLength) {
-            addSelectionRange(startRest, result.termsOffset);
-            startRest = result.termsOffset + result.termsLength;
-          }
-
           if (startRest < value.length) {
-            addSelectionRange(startRest, value.length);
+            let range = document.createRange();
+            range.setStart(textNode, startRest);
+            range.setEnd(textNode, value.length);
+            selection.addRange(range);
           }
         ]]></body>
       </method>
@@ -650,7 +627,6 @@
                 this.timeout = this._prefs.getIntPref(aData);
                 break;
               case "formatting.enabled":
-                this._clearFormatting();
                 this._formattingEnabled = this._prefs.getBoolPref(aData);
                 break;
               case "trimURLs":

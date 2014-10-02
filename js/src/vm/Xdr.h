@@ -40,7 +40,7 @@ class XDRBuffer {
     }
 
     void *getData(uint32_t *lengthp) const {
-        JS_ASSERT(size_t(cursor - base) <= size_t(UINT32_MAX));
+        MOZ_ASSERT(size_t(cursor - base) <= size_t(UINT32_MAX));
         *lengthp = uint32_t(cursor - base);
         return base;
     }
@@ -52,7 +52,7 @@ class XDRBuffer {
     }
 
     const uint8_t *read(size_t n) {
-        JS_ASSERT(n <= size_t(limit - cursor));
+        MOZ_ASSERT(n <= size_t(limit - cursor));
         uint8_t *ptr = cursor;
         cursor += n;
         return ptr;
@@ -61,8 +61,8 @@ class XDRBuffer {
     const char *readCString() {
         char *ptr = reinterpret_cast<char *>(cursor);
         cursor = reinterpret_cast<uint8_t *>(strchr(ptr, '\0')) + 1;
-        JS_ASSERT(base < cursor);
-        JS_ASSERT(cursor <= limit);
+        MOZ_ASSERT(base < cursor);
+        MOZ_ASSERT(cursor <= limit);
         return ptr;
     }
 

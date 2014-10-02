@@ -27,12 +27,12 @@ static bool
 GetDerivedTrap(JSContext *cx, HandleObject handler, HandlePropertyName name,
                MutableHandleValue fvalp)
 {
-    JS_ASSERT(name == cx->names().has ||
-              name == cx->names().hasOwn ||
-              name == cx->names().get ||
-              name == cx->names().set ||
-              name == cx->names().keys ||
-              name == cx->names().iterate);
+    MOZ_ASSERT(name == cx->names().has ||
+               name == cx->names().hasOwn ||
+               name == cx->names().get ||
+               name == cx->names().set ||
+               name == cx->names().keys ||
+               name == cx->names().iterate);
 
     return JSObject::getProperty(cx, handler, handler, name, fvalp);
 }
@@ -82,7 +82,7 @@ ValueToBool(HandleValue v, bool *bp)
 static bool
 ArrayToIdVector(JSContext *cx, const Value &array, AutoIdVector &props)
 {
-    JS_ASSERT(props.length() == 0);
+    MOZ_ASSERT(props.length() == 0);
 
     if (array.isPrimitive())
         return true;
@@ -357,9 +357,9 @@ CallableScriptedIndirectProxyHandler::call(JSContext *cx, HandleObject proxy, co
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, CALL);
     RootedObject ccHolder(cx, &proxy->as<ProxyObject>().extra(0).toObject());
-    JS_ASSERT(ccHolder->getClass() == &CallConstructHolder);
+    MOZ_ASSERT(ccHolder->getClass() == &CallConstructHolder);
     RootedValue call(cx, ccHolder->getReservedSlot(0));
-    JS_ASSERT(call.isObject() && call.toObject().isCallable());
+    MOZ_ASSERT(call.isObject() && call.toObject().isCallable());
     return Invoke(cx, args.thisv(), call, args.length(), args.array(), args.rval());
 }
 
@@ -368,9 +368,9 @@ CallableScriptedIndirectProxyHandler::construct(JSContext *cx, HandleObject prox
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, CALL);
     RootedObject ccHolder(cx, &proxy->as<ProxyObject>().extra(0).toObject());
-    JS_ASSERT(ccHolder->getClass() == &CallConstructHolder);
+    MOZ_ASSERT(ccHolder->getClass() == &CallConstructHolder);
     RootedValue construct(cx, ccHolder->getReservedSlot(1));
-    JS_ASSERT(construct.isObject() && construct.toObject().isCallable());
+    MOZ_ASSERT(construct.isObject() && construct.toObject().isCallable());
     return InvokeConstructor(cx, construct, args.length(), args.array(), args.rval());
 }
 
@@ -393,7 +393,7 @@ js::proxy_create(JSContext *cx, unsigned argc, Value *vp)
         proto = &args[1].toObject();
         parent = proto->getParent();
     } else {
-        JS_ASSERT(IsFunctionObject(&args.callee()));
+        MOZ_ASSERT(IsFunctionObject(&args.callee()));
         proto = nullptr;
     }
     if (!parent)

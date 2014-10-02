@@ -158,8 +158,19 @@ function updateIndicators() {
     showScreenSharingIndicator: ""
   };
 
+  let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
+               .getService(Ci.nsIMessageSender);
+  cpmm.sendAsyncMessage("webrtc:UpdatingIndicators");
+
+  // If several iframes in the same page use media streams, it's possible to
+  // have the same top level window several times. We use a Set to avoid
+  // sending duplicate notifications.
+  let contentWindows = new Set();
   for (let i = 0; i < count; ++i) {
-    let contentWindow = contentWindowSupportsArray.GetElementAt(i);
+    contentWindows.add(contentWindowSupportsArray.GetElementAt(i).top);
+  }
+
+  for (let contentWindow of contentWindows) {
     let camera = {}, microphone = {}, screen = {}, window = {}, app = {};
     MediaManagerService.mediaCaptureWindowState(contentWindow, camera,
                                                 microphone, screen, window, app);
@@ -189,8 +200,6 @@ function updateIndicators() {
     mm.sendAsyncMessage("webrtc:UpdateBrowserIndicators", tabState);
   }
 
-  let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
-               .getService(Ci.nsIMessageSender);
   cpmm.sendAsyncMessage("webrtc:UpdateGlobalIndicators", state);
 }
 

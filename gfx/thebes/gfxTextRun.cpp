@@ -397,32 +397,35 @@ void
 gfxTextRun::DrawGlyphs(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
                        gfxPoint *aPt, PropertyProvider *aProvider,
                        uint32_t aSpacingStart, uint32_t aSpacingEnd,
-                       TextRunDrawParams& aParams)
+                       TextRunDrawParams& aParams, uint16_t aOrientation)
 {
     nsAutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
     bool haveSpacing = GetAdjustedSpacingArray(aStart, aEnd, aProvider,
         aSpacingStart, aSpacingEnd, &spacingBuffer);
     aParams.spacing = haveSpacing ? spacingBuffer.Elements() : nullptr;
-    aFont->Draw(this, aStart, aEnd, aPt, aParams);
+    aFont->Draw(this, aStart, aEnd, aPt, aParams, aOrientation);
 }
 
 static void
-ClipPartialLigature(gfxTextRun *aTextRun, gfxFloat *aLeft, gfxFloat *aRight,
-                    gfxFloat aXOrigin, gfxTextRun::LigatureData *aLigature)
+ClipPartialLigature(const gfxTextRun* aTextRun,
+                    gfxFloat *aStart, gfxFloat *aEnd,
+                    gfxFloat aOrigin,
+                    gfxTextRun::LigatureData *aLigature)
 {
     if (aLigature->mClipBeforePart) {
         if (aTextRun->IsRightToLeft()) {
-            *aRight = std::min(*aRight, aXOrigin);
+            *aEnd = std::min(*aEnd, aOrigin);
         } else {
-            *aLeft = std::max(*aLeft, aXOrigin);
+            *aStart = std::max(*aStart, aOrigin);
         }
     }
     if (aLigature->mClipAfterPart) {
-        gfxFloat endEdge = aXOrigin + aTextRun->GetDirection()*aLigature->mPartWidth;
+        gfxFloat endEdge =
+            aOrigin + aTextRun->GetDirection() * aLigature->mPartWidth;
         if (aTextRun->IsRightToLeft()) {
-            *aLeft = std::max(*aLeft, endEdge);
+            *aStart = std::max(*aStart, endEdge);
         } else {
-            *aRight = std::min(*aRight, endEdge);
+            *aEnd = std::min(*aEnd, endEdge);
         }
     }    
 }
@@ -430,17 +433,25 @@ ClipPartialLigature(gfxTextRun *aTextRun, gfxFloat *aLeft, gfxFloat *aRight,
 void
 gfxTextRun::DrawPartialLigature(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
                                 gfxPoint *aPt, PropertyProvider *aProvider,
-                                TextRunDrawParams& aParams)
+                                TextRunDrawParams& aParams, uint16_t aOrientation)
 {
-    if (aStart >= aEnd)
+    if (aStart >= aEnd) {
         return;
+    }
 
     // Draw partial ligature. We hack this by clipping the ligature.
     LigatureData data = ComputeLigatureData(aStart, aEnd, aProvider);
     gfxRect clipExtents = aParams.context->GetClipExtents();
-    gfxFloat left = clipExtents.X() * mAppUnitsPerDevUnit;
-    gfxFloat right = clipExtents.XMost() * mAppUnitsPerDevUnit;
-    ClipPartialLigature(this, &left, &right, aPt->x, &data);
+    gfxFloat start, end;
+    if (aParams.isVerticalRun) {
+        start = clipExtents.Y() * mAppUnitsPerDevUnit;
+        end = clipExtents.YMost() * mAppUnitsPerDevUnit;
+        ClipPartialLigature(this, &start, &end, aPt->y, &data);
+    } else {
+        start = clipExtents.X() * mAppUnitsPerDevUnit;
+        end = clipExtents.XMost() * mAppUnitsPerDevUnit;
+        ClipPartialLigature(this, &start, &end, aPt->x, &data);
+    }
 
     {
       // Need to preserve the path, otherwise this can break canvas text-on-path;
@@ -453,19 +464,38 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
       // Also, make sure we snap the rectangle to device pixels.
       aParams.context->Save();
       aParams.context->NewPath();
-      aParams.context->Rectangle(gfxRect(left / mAppUnitsPerDevUnit,
-                                         clipExtents.Y(),
-                                         (right - left) / mAppUnitsPerDevUnit,
-                                         clipExtents.Height()), true);
+      if (aParams.isVerticalRun) {
+          aParams.context->Rectangle(gfxRect(clipExtents.X(),
+                                             start / mAppUnitsPerDevUnit,
+                                             clipExtents.Width(),
+                                             (end - start) / mAppUnitsPerDevUnit),
+                                     true);
+      } else {
+          aParams.context->Rectangle(gfxRect(start / mAppUnitsPerDevUnit,
+                                             clipExtents.Y(),
+                                             (end - start) / mAppUnitsPerDevUnit,
+                                             clipExtents.Height()),
+                                     true);
+      }
       aParams.context->Clip();
     }
 
-    gfxPoint pt(aPt->x - aParams.direction * data.mPartAdvance, aPt->y);
+    gfxPoint pt;
+    if (aParams.isVerticalRun) {
+        pt = gfxPoint(aPt->x, aPt->y - aParams.direction * data.mPartAdvance);
+    } else {
+        pt = gfxPoint(aPt->x - aParams.direction * data.mPartAdvance, aPt->y);
+    }
+
     DrawGlyphs(aFont, data.mLigatureStart, data.mLigatureEnd, &pt,
-               aProvider, aStart, aEnd, aParams);
+               aProvider, aStart, aEnd, aParams, aOrientation);
     aParams.context->Restore();
 
-    aPt->x += aParams.direction * data.mPartWidth;
+    if (aParams.isVerticalRun) {
+        aPt->y += aParams.direction * data.mPartWidth;
+    } else {
+        aPt->x += aParams.direction * data.mPartWidth;
+    }
 }
 
 // returns true if a glyph run is using a font with synthetic bolding enabled, false otherwise
@@ -577,6 +607,7 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
     TextRunDrawParams params;
     params.context = aContext;
     params.devPerApp = 1.0 / double(GetAppUnitsPerDevUnit());
+    params.isVerticalRun = IsVertical();
     params.isRTL = IsRightToLeft();
     params.direction = direction;
     params.drawMode = aDrawMode;
@@ -584,8 +615,6 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
     params.runContextPaint = aContextPaint;
     params.paintSVGGlyphs = !aCallbacks || aCallbacks->mShouldPaintSVGGlyphs;
     params.dt = aContext->GetDrawTarget();
-
-    gfxPoint pt = aPt;
 
     // synthetic bolding draws glyphs twice ==> colors with opacity won't draw
     // correctly unless first drawn without alpha
@@ -607,6 +636,8 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
     }
 
     GlyphRunIterator iter(this, aStart, aLength);
+    gfxFloat advance = 0.0;
+
     while (iter.NextRun()) {
         gfxFont *font = iter.GetGlyphRun()->mFont;
         uint32_t start = iter.GetStringStart();
@@ -617,18 +648,28 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
 
         bool drawPartial = aDrawMode == DrawMode::GLYPH_FILL ||
                            (aDrawMode == DrawMode::GLYPH_PATH && aCallbacks);
+        gfxPoint origPt = aPt;
 
         if (drawPartial) {
-            DrawPartialLigature(font, start, ligatureRunStart, &pt,
-                                aProvider, params);
+            DrawPartialLigature(font, start, ligatureRunStart, &aPt,
+                                aProvider, params,
+                                iter.GetGlyphRun()->mOrientation);
         }
 
-        DrawGlyphs(font, ligatureRunStart, ligatureRunEnd, &pt,
-                   aProvider, ligatureRunStart, ligatureRunEnd, params);
+        DrawGlyphs(font, ligatureRunStart, ligatureRunEnd, &aPt,
+                   aProvider, ligatureRunStart, ligatureRunEnd, params,
+                   iter.GetGlyphRun()->mOrientation);
 
         if (drawPartial) {
-            DrawPartialLigature(font, ligatureRunEnd, end, &pt,
-                                aProvider, params);
+            DrawPartialLigature(font, ligatureRunEnd, end, &aPt,
+                                aProvider, params,
+                                iter.GetGlyphRun()->mOrientation);
+        }
+
+        if (params.isVerticalRun) {
+            advance += (aPt.y - origPt.y) * params.direction;
+        } else {
+            advance += (aPt.x - origPt.x) * params.direction;
         }
     }
 
@@ -638,7 +679,7 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
     }
 
     if (aAdvanceWidth) {
-        *aAdvanceWidth = (pt.x - aPt.x)*direction;
+        *aAdvanceWidth = advance;
     }
 }
 
@@ -1240,10 +1281,13 @@ gfxTextRun::SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext,
                      gfxTextRunFactory::TEXT_IS_ASCII |
                      gfxTextRunFactory::TEXT_IS_PERSISTENT |
                      aOrientation;
+    bool vertical =
+        (GetFlags() & gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT) != 0;
     gfxShapedWord *sw = aFont->GetShapedWord(aContext,
                                              &space, 1,
                                              gfxShapedWord::HashMix(0, ' '), 
                                              MOZ_SCRIPT_LATIN,
+                                             vertical,
                                              mAppUnitsPerDevUnit,
                                              flags,
                                              nullptr);
@@ -2224,7 +2268,8 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
         const gfxTextRange& range = fontRanges[r];
         uint32_t matchedLength = range.Length();
         gfxFont *matchedFont = range.font;
-
+        bool vertical =
+            range.orientation == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT;
         // create the glyph run for this range
         if (matchedFont && mStyle.noFallbackVariantFeatures) {
             // common case - just do glyph layout and record the
@@ -2236,7 +2281,8 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
                                                   aString + runStart,
                                                   aOffset + runStart,
                                                   matchedLength,
-                                                  aRunScript)) {
+                                                  aRunScript,
+                                                  vertical)) {
                 // glyph layout failed! treat as missing glyphs
                 matchedFont = nullptr;
             }
@@ -2275,7 +2321,8 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
                                                        aString + runStart,
                                                        aOffset + runStart,
                                                        matchedLength,
-                                                       aRunScript)) {
+                                                       aRunScript,
+                                                       vertical)) {
                     // glyph layout failed! treat as missing glyphs
                     matchedFont = nullptr;
                 }
@@ -2319,7 +2366,8 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
                                                       aString + runStart,
                                                       aOffset + runStart,
                                                       matchedLength,
-                                                      aRunScript)) {
+                                                      aRunScript,
+                                                      vertical)) {
                     // glyph layout failed! treat as missing glyphs
                     matchedFont = nullptr;
                 }

@@ -88,28 +88,28 @@ const Register ABIArgGenerator::NonReturn_VolatileReg1 = r3;
 uint32_t
 js::jit::RT(Register r)
 {
-    JS_ASSERT((r.code() & ~0xf) == 0);
+    MOZ_ASSERT((r.code() & ~0xf) == 0);
     return r.code() << 12;
 }
 
 uint32_t
 js::jit::RN(Register r)
 {
-    JS_ASSERT((r.code() & ~0xf) == 0);
+    MOZ_ASSERT((r.code() & ~0xf) == 0);
     return r.code() << 16;
 }
 
 uint32_t
 js::jit::RD(Register r)
 {
-    JS_ASSERT((r.code() & ~0xf) == 0);
+    MOZ_ASSERT((r.code() & ~0xf) == 0);
     return r.code() << 12;
 }
 
 uint32_t
 js::jit::RM(Register r)
 {
-    JS_ASSERT((r.code() & ~0xf) == 0);
+    MOZ_ASSERT((r.code() & ~0xf) == 0);
     return r.code() << 8;
 }
 
@@ -122,7 +122,7 @@ js::jit::maybeRT(Register r)
     if (r == InvalidReg)
         return 0;
 
-    JS_ASSERT((r.code() & ~0xf) == 0);
+    MOZ_ASSERT((r.code() & ~0xf) == 0);
     return r.code() << 12;
 }
 
@@ -132,7 +132,7 @@ js::jit::maybeRN(Register r)
     if (r == InvalidReg)
         return 0;
 
-    JS_ASSERT((r.code() & ~0xf) == 0);
+    MOZ_ASSERT((r.code() & ~0xf) == 0);
     return r.code() << 16;
 }
 
@@ -142,7 +142,7 @@ js::jit::maybeRD(Register r)
     if (r == InvalidReg)
         return 0;
 
-    JS_ASSERT((r.code() & ~0xf) == 0);
+    MOZ_ASSERT((r.code() & ~0xf) == 0);
     return r.code() << 12;
 }
 
@@ -203,7 +203,7 @@ js::jit::VM(VFPRegister vr)
 VFPRegister::VFPRegIndexSplit
 jit::VFPRegister::encode()
 {
-    JS_ASSERT(!_isInvalid);
+    MOZ_ASSERT(!_isInvalid);
 
     switch (kind) {
       case Double:
@@ -521,7 +521,7 @@ Imm16::Imm16(uint32_t imm)
     upper((imm >> 12) & 0xf),
     invalid(0)
 {
-    JS_ASSERT(decode() == imm);
+    MOZ_ASSERT(decode() == imm);
 }
 
 Imm16::Imm16()
@@ -538,7 +538,7 @@ jit::PatchJump(CodeLocationJump &jump_, CodeLocationLabel label)
     // jumpWithPatch() returns the offset of the jump and never a pool or nop.
     Assembler::Condition c;
     jump->extractCond(&c);
-    JS_ASSERT(jump->is<InstBranchImm>() || jump->is<InstLDR>());
+    MOZ_ASSERT(jump->is<InstBranchImm>() || jump->is<InstLDR>());
 
     int jumpOffset = label.raw() - jump_.raw();
     if (BOffImm::IsInRange(jumpOffset)) {
@@ -556,7 +556,7 @@ void
 Assembler::finish()
 {
     flush();
-    JS_ASSERT(!isFinished);
+    MOZ_ASSERT(!isFinished);
     isFinished = true;
 
     for (unsigned int i = 0; i < tmpDataRelocations_.length(); i++) {
@@ -581,7 +581,7 @@ Assembler::finish()
 void
 Assembler::executableCopy(uint8_t *buffer)
 {
-    JS_ASSERT(isFinished);
+    MOZ_ASSERT(isFinished);
     m_buffer.executableCopy(buffer);
     AutoFlushICache::setRange(uintptr_t(buffer), m_buffer.size());
 }
@@ -678,7 +678,7 @@ Assembler::GetCF32Target(Iter *iter)
         top->extractImm(&targ_top);
 
         // Make sure they are being loaded into the same register.
-        JS_ASSERT(top->checkDest(temp));
+        MOZ_ASSERT(top->checkDest(temp));
 
         // Make sure we're branching to the same register.
 #ifdef DEBUG
@@ -687,7 +687,7 @@ Assembler::GetCF32Target(Iter *iter)
         if (!inst3->is<InstNOP>()) {
             InstBranchReg *realBranch = inst3->is<InstBranchReg>() ? inst3->as<InstBranchReg>()
                                                                    : inst4->as<InstBranchReg>();
-            JS_ASSERT(realBranch->checkDest(temp));
+            MOZ_ASSERT(realBranch->checkDest(temp));
         }
 #endif
 
@@ -747,7 +747,7 @@ Assembler::GetPtr32Target(Iter *start, Register *dest, RelocStyle *style)
         top->extractImm(&targ_top);
 
         // Make sure they are being loaded into the same register.
-        JS_ASSERT(top->checkDest(temp));
+        MOZ_ASSERT(top->checkDest(temp));
 
         if (dest)
             *dest = temp;
@@ -875,7 +875,7 @@ Assembler::trace(JSTracer *trc)
         if (rp.kind == Relocation::JITCODE) {
             JitCode *code = JitCode::FromExecutable((uint8_t*)rp.target);
             MarkJitCodeUnbarriered(trc, &code, "masmrel32");
-            JS_ASSERT(code == JitCode::FromExecutable((uint8_t*)rp.target));
+            MOZ_ASSERT(code == JitCode::FromExecutable((uint8_t*)rp.target));
         }
     }
 
@@ -896,7 +896,7 @@ Assembler::processCodeLabels(uint8_t *rawCode)
 
 void
 Assembler::writeCodePointer(AbsoluteLabel *absoluteLabel) {
-    JS_ASSERT(!absoluteLabel->bound());
+    MOZ_ASSERT(!absoluteLabel->bound());
     BufferOffset off = writeInst(LabelBase::INVALID_OFFSET);
 
     // The x86/x64 makes general use of AbsoluteLabel and weaves a linked list
@@ -965,11 +965,11 @@ Imm8::EncodeTwoImms(uint32_t imm)
             imm2 = no_n1;
         } else {
             imm2 = ((imm >> (32 - imm2shift)) | (imm << imm2shift)) & 0xff;
-            JS_ASSERT( ((no_n1 >> (32 - imm2shift)) | (no_n1 << imm2shift)) ==
-                       imm2);
+            MOZ_ASSERT( ((no_n1 >> (32 - imm2shift)) | (no_n1 << imm2shift)) ==
+                        imm2);
         }
-        JS_ASSERT((imm1shift & 0x1) == 0);
-        JS_ASSERT((imm2shift & 0x1) == 0);
+        MOZ_ASSERT((imm1shift & 0x1) == 0);
+        MOZ_ASSERT((imm2shift & 0x1) == 0);
         return TwoImm8mData(datastore::Imm8mData(imm1, imm1shift >> 1),
                             datastore::Imm8mData(imm2, imm2shift >> 1));
     }
@@ -1004,15 +1004,15 @@ Imm8::EncodeTwoImms(uint32_t imm)
     // a rotate right from the lower 8 bits.
     int imm1shift = 8 - right;
     imm1 = 0xff & ((imm << imm1shift) | (imm >> (32 - imm1shift)));
-    JS_ASSERT ((imm1shift & ~0x1e) == 0);
+    MOZ_ASSERT((imm1shift & ~0x1e) == 0);
     // left + 8 + mid is the position of the leftmost bit of n_2.
     // We needed to rotate 0x000000ab right by 8 in order to get 0xab000000,
     // then shift again by the leftmost bit in order to get the constant that we
     // care about.
     int imm2shift =  mid + 8;
     imm2 = ((imm >> (32 - imm2shift)) | (imm << imm2shift)) & 0xff;
-    JS_ASSERT((imm1shift & 0x1) == 0);
-    JS_ASSERT((imm2shift & 0x1) == 0);
+    MOZ_ASSERT((imm1shift & 0x1) == 0);
+    MOZ_ASSERT((imm2shift & 0x1) == 0);
     return TwoImm8mData(datastore::Imm8mData(imm1, imm1shift >> 1),
                         datastore::Imm8mData(imm2, imm2shift >> 1));
 }
@@ -1048,7 +1048,7 @@ jit::ALUNeg(ALUOp op, Register dest, Imm32 *imm, Register *negDest)
         *imm = Imm32(-imm->value);
         return OpCmp;
       case OpTst:
-        JS_ASSERT(dest == InvalidReg);
+        MOZ_ASSERT(dest == InvalidReg);
         *imm = Imm32(~imm->value);
         *negDest = ScratchRegister;
         return OpBic;
@@ -1134,34 +1134,34 @@ jit::O2Reg(Register r) {
 O2RegImmShift
 jit::lsl(Register r, int amt)
 {
-    JS_ASSERT(0 <= amt && amt <= 31);
+    MOZ_ASSERT(0 <= amt && amt <= 31);
     return O2RegImmShift(r, LSL, amt);
 }
 
 O2RegImmShift
 jit::lsr(Register r, int amt)
 {
-    JS_ASSERT(1 <= amt && amt <= 32);
+    MOZ_ASSERT(1 <= amt && amt <= 32);
     return O2RegImmShift(r, LSR, amt);
 }
 
 O2RegImmShift
 jit::ror(Register r, int amt)
 {
-    JS_ASSERT(1 <= amt && amt <= 31);
+    MOZ_ASSERT(1 <= amt && amt <= 31);
     return O2RegImmShift(r, ROR, amt);
 }
 O2RegImmShift
 jit::rol(Register r, int amt)
 {
-    JS_ASSERT(1 <= amt && amt <= 31);
+    MOZ_ASSERT(1 <= amt && amt <= 31);
     return O2RegImmShift(r, ROR, 32 - amt);
 }
 
 O2RegImmShift
 jit::asr (Register r, int amt)
 {
-    JS_ASSERT(1 <= amt && amt <= 32);
+    MOZ_ASSERT(1 <= amt && amt <= 32);
     return O2RegImmShift(r, ASR, amt);
 }
 
@@ -1220,8 +1220,8 @@ BOffImm::getDest(Instruction *src)
 VFPRegister
 VFPRegister::doubleOverlay(unsigned int which) const
 {
-    JS_ASSERT(!_isInvalid);
-    JS_ASSERT(which == 0);
+    MOZ_ASSERT(!_isInvalid);
+    MOZ_ASSERT(which == 0);
     if (kind != Double)
         return VFPRegister(code_ >> 1, Double);
     return *this;
@@ -1229,41 +1229,41 @@ VFPRegister::doubleOverlay(unsigned int which) const
 VFPRegister
 VFPRegister::singleOverlay(unsigned int which) const
 {
-    JS_ASSERT(!_isInvalid);
+    MOZ_ASSERT(!_isInvalid);
     if (kind == Double) {
         // There are no corresponding float registers for d16-d31.
-        JS_ASSERT(code_ < 16);
-        JS_ASSERT(which < 2);
+        MOZ_ASSERT(code_ < 16);
+        MOZ_ASSERT(which < 2);
         return VFPRegister((code_ << 1) + which, Single);
     }
-    JS_ASSERT(which == 0);
+    MOZ_ASSERT(which == 0);
     return VFPRegister(code_, Single);
 }
 
 VFPRegister
 VFPRegister::sintOverlay(unsigned int which) const
 {
-    JS_ASSERT(!_isInvalid);
+    MOZ_ASSERT(!_isInvalid);
     if (kind == Double) {
         // There are no corresponding float registers for d16-d31.
-        JS_ASSERT(code_ < 16);
-        JS_ASSERT(which < 2);
+        MOZ_ASSERT(code_ < 16);
+        MOZ_ASSERT(which < 2);
         return VFPRegister((code_ << 1) + which, Int);
     }
-    JS_ASSERT(which == 0);
+    MOZ_ASSERT(which == 0);
     return VFPRegister(code_, Int);
 }
 VFPRegister
 VFPRegister::uintOverlay(unsigned int which) const
 {
-    JS_ASSERT(!_isInvalid);
+    MOZ_ASSERT(!_isInvalid);
     if (kind == Double) {
         // There are no corresponding float registers for d16-d31.
-        JS_ASSERT(code_ < 16);
-        JS_ASSERT(which < 2);
+        MOZ_ASSERT(code_ < 16);
+        MOZ_ASSERT(which < 2);
         return VFPRegister((code_ << 1) + which, UInt);
     }
-    JS_ASSERT(which == 0);
+    MOZ_ASSERT(which == 0);
     return VFPRegister(code_, UInt);
 }
 
@@ -1276,7 +1276,7 @@ VFPRegister::isInvalid() const
 bool
 VFPRegister::isMissing() const
 {
-    JS_ASSERT(!_isInvalid);
+    MOZ_ASSERT(!_isInvalid);
     return _isMissing;
 }
 
@@ -1351,7 +1351,7 @@ Assembler::writeBranchInst(uint32_t x)
 void
 Assembler::WriteInstStatic(uint32_t x, uint32_t *dest)
 {
-    JS_ASSERT(dest != nullptr);
+    MOZ_ASSERT(dest != nullptr);
     *dest = x;
 }
 
@@ -1502,13 +1502,13 @@ Assembler::as_uxth(Register dest, Register src, int rotate, Condition c)
 BufferOffset
 Assembler::as_movw(Register dest, Imm16 imm, Condition c, Instruction *pos)
 {
-    JS_ASSERT(HasMOVWT());
+    MOZ_ASSERT(HasMOVWT());
     return writeInst(0x03000000 | c | imm.encode() | RD(dest), (uint32_t*)pos);
 }
 BufferOffset
 Assembler::as_movt(Register dest, Imm16 imm, Condition c, Instruction *pos)
 {
-    JS_ASSERT(HasMOVWT());
+    MOZ_ASSERT(HasMOVWT());
     return writeInst(0x03400000 | c | imm.encode() | RD(dest), (uint32_t*)pos);
 }
 
@@ -1596,8 +1596,8 @@ BufferOffset
 Assembler::as_dtr(LoadStore ls, int size, Index mode,
                   Register rt, DTRAddr addr, Condition c, uint32_t *dest)
 {
-    JS_ASSERT (mode == Offset ||  (rt != addr.getBase() && pc != addr.getBase()));
-    JS_ASSERT(size == 32 || size == 8);
+    MOZ_ASSERT(mode == Offset ||  (rt != addr.getBase() && pc != addr.getBase()));
+    MOZ_ASSERT(size == 32 || size == 8);
     return writeInst( 0x04000000 | ls | (size == 8 ? 0x00400000 : 0) | mode | c |
                       RT(rt) | addr.encode(), dest);
 
@@ -1626,20 +1626,20 @@ class PoolHintData {
   public:
     void init(uint32_t index, Assembler::Condition cond, LoadType lt, Register destReg) {
         index_ = index;
-        JS_ASSERT(index_ == index);
+        MOZ_ASSERT(index_ == index);
         cond_ = cond >> 28;
-        JS_ASSERT(cond_ == cond >> 28);
+        MOZ_ASSERT(cond_ == cond >> 28);
         loadType_ = lt;
         ONES = ExpectedOnes;
         destReg_ = destReg.code();
         destType_ = 0;
     }
     void init(uint32_t index, Assembler::Condition cond, LoadType lt, const VFPRegister &destReg) {
-        JS_ASSERT(destReg.isFloat());
+        MOZ_ASSERT(destReg.isFloat());
         index_ = index;
-        JS_ASSERT(index_ == index);
+        MOZ_ASSERT(index_ == index);
         cond_ = cond >> 28;
-        JS_ASSERT(cond_ == cond >> 28);
+        MOZ_ASSERT(cond_ == cond >> 28);
         loadType_ = lt;
         ONES = ExpectedOnes;
         destReg_ = destReg.id();
@@ -1661,9 +1661,9 @@ class PoolHintData {
         return index_;
     }
     void setIndex(uint32_t index) {
-        JS_ASSERT(ONES == ExpectedOnes && loadType_ != PoolBOGUS);
+        MOZ_ASSERT(ONES == ExpectedOnes && loadType_ != PoolBOGUS);
         index_ = index;
-        JS_ASSERT(index_ == index);
+        MOZ_ASSERT(index_ == index);
     }
 
     LoadType getLoadType() {
@@ -1700,8 +1700,8 @@ Assembler::as_extdtr(LoadStore ls, int size, bool IsSigned, Index mode,
     int extra_bits1 = 0;
     switch(size) {
       case 8:
-        JS_ASSERT(IsSigned);
-        JS_ASSERT(ls != IsStore);
+        MOZ_ASSERT(IsSigned);
+        MOZ_ASSERT(ls != IsStore);
         extra_bits1 = 0x1;
         extra_bits2 = 0x2;
         break;
@@ -1711,7 +1711,7 @@ Assembler::as_extdtr(LoadStore ls, int size, bool IsSigned, Index mode,
         extra_bits2 = 0x01;
         extra_bits1 = (ls == IsStore) ? 0 : 1;
         if (IsSigned) {
-            JS_ASSERT(ls != IsStore);
+            MOZ_ASSERT(ls != IsStore);
             extra_bits2 |= 0x2;
         }
         break;
@@ -1745,7 +1745,7 @@ Assembler::as_Imm32Pool(Register dest, uint32_t value, Condition c)
 void
 Assembler::as_WritePoolEntry(Instruction *addr, Condition c, uint32_t data)
 {
-    JS_ASSERT(addr->is<InstLDR>());
+    MOZ_ASSERT(addr->is<InstLDR>());
     int32_t offset = addr->encode() & 0xfff;
     if ((addr->encode() & IsUp) != IsUp)
         offset = -offset;
@@ -1754,7 +1754,7 @@ Assembler::as_WritePoolEntry(Instruction *addr, Condition c, uint32_t data)
     *dest = data;
     Condition orig_cond;
     addr->extractCond(&orig_cond);
-    JS_ASSERT(orig_cond == c);
+    MOZ_ASSERT(orig_cond == c);
 }
 
 BufferOffset
@@ -1778,7 +1778,7 @@ Assembler::as_BranchPool(uint32_t value, RepatchLabel *label, ARMBuffer::PoolEnt
 BufferOffset
 Assembler::as_FImm64Pool(VFPRegister dest, double value, Condition c)
 {
-    JS_ASSERT(dest.isDouble());
+    MOZ_ASSERT(dest.isDouble());
     PoolHintPun php;
     php.phd.init(0, c, PoolHintData::PoolVDTR, dest);
     return m_buffer.allocEntry(1, 2, (uint8_t*)&php.raw, (uint8_t*)&value);
@@ -1790,7 +1790,7 @@ Assembler::as_FImm32Pool(VFPRegister dest, float value, Condition c)
     // Insert floats into the double pool as they have the same limitations on
     // immediate offset. This wastes 4 bytes padding per float. An alternative
     // would be to have a separate pool for floats.
-    JS_ASSERT(dest.isSingle());
+    MOZ_ASSERT(dest.isSingle());
     PoolHintPun php;
     php.phd.init(0, c, PoolHintData::PoolVDTR, dest);
     return m_buffer.allocEntry(1, 1, (uint8_t*)&php.raw, (uint8_t*)&value);
@@ -1840,7 +1840,7 @@ Assembler::PatchConstantPoolLoad(void* loadAddr, void* constPoolAddr)
       case PoolHintData::PoolVDTR: {
         VFPRegister dest = data.getVFPReg();
         int32_t imm = offset + (data.getIndex() * 4) - 8;
-        JS_ASSERT(-1024 < imm && imm < 1024);
+        MOZ_ASSERT(-1024 < imm && imm < 1024);
         Dummy->as_vdtr(IsLoad, dest, VFPAddr(pc, VFPOffImm(imm)), data.getCond(), instAddr);
         break;
       }
@@ -1988,7 +1988,7 @@ Assembler::as_b(Label *l, Condition c)
         ret = as_b(inv, c);
     }
     DebugOnly<int32_t> check = l->use(ret.getOffset());
-    JS_ASSERT(check == old);
+    MOZ_ASSERT(check == old);
     return ret;
 }
 BufferOffset
@@ -2050,7 +2050,7 @@ Assembler::as_bl(Label *l, Condition c)
         ret = as_bl(inv, c);
     }
     DebugOnly<int32_t> check = l->use(ret.getOffset());
-    JS_ASSERT(check == old);
+    MOZ_ASSERT(check == old);
     return ret;
 }
 BufferOffset
@@ -2071,7 +2071,7 @@ Assembler::as_msr(Register r, Condition c)
 {
     // Hardcode the 'mask' field to 0b11 for now. It is bits 18 and 19, which
     // are the two high bits of the 'c' in this constant.
-    JS_ASSERT((r.code() & ~0xf) == 0);
+    MOZ_ASSERT((r.code() & ~0xf) == 0);
     return writeInst(0x012cf000 | int(c) | r.code());
 }
 
@@ -2083,8 +2083,8 @@ enum vfp_tags {
 BufferOffset
 Assembler::writeVFPInst(vfp_size sz, uint32_t blob, uint32_t *dest)
 {
-    JS_ASSERT((sz & blob) == 0);
-    JS_ASSERT((VfpTag & blob) == 0);
+    MOZ_ASSERT((sz & blob) == 0);
+    MOZ_ASSERT((VfpTag & blob) == 0);
     return writeInst(VfpTag | sz | blob, dest);
 }
 
@@ -2095,8 +2095,8 @@ Assembler::as_vfp_float(VFPRegister vd, VFPRegister vn, VFPRegister vm,
                   VFPOp op, Condition c)
 {
     // Make sure we believe that all of our operands are the same kind.
-    JS_ASSERT_IF(!vn.isMissing(), vd.equiv(vn));
-    JS_ASSERT_IF(!vm.isMissing(), vd.equiv(vm));
+    MOZ_ASSERT_IF(!vn.isMissing(), vd.equiv(vn));
+    MOZ_ASSERT_IF(!vm.isMissing(), vd.equiv(vm));
     vfp_size sz = vd.isDouble() ? IsDouble : IsSingle;
     return writeVFPInst(sz, VD(vd) | VN(vn) | VM(vm) | op | VfpArith | c);
 }
@@ -2207,14 +2207,14 @@ Assembler::as_vxfer(Register vt1, Register vt2, VFPRegister vm, FloatToCore_ f2c
         // registers, and 32 double registers so there is no way to encode the
         // last 16 double registers.
         sz = IsDouble;
-        JS_ASSERT(idx == 0 || idx == 1);
+        MOZ_ASSERT(idx == 0 || idx == 1);
         // If we are transferring a single half of the double then it must be
         // moving a VFP reg to a core reg.
         if (vt2 == InvalidReg)
-            JS_ASSERT(f2c == FloatToCore);
+            MOZ_ASSERT(f2c == FloatToCore);
         idx = idx << 21;
     } else {
-        JS_ASSERT(idx == 0);
+        MOZ_ASSERT(idx == 0);
     }
 
     if (vt2 == InvalidReg) {
@@ -2248,7 +2248,7 @@ Assembler::as_vcvt(VFPRegister vd, VFPRegister vm, bool useFPSCR,
                    Condition c)
 {
     // Unlike other cases, the source and dest types cannot be the same.
-    JS_ASSERT(!vd.equiv(vm));
+    MOZ_ASSERT(!vd.equiv(vm));
     vfp_size sz = IsDouble;
     if (vd.isFloat() && vm.isFloat()) {
         // Doing a float -> float conversion.
@@ -2261,7 +2261,7 @@ Assembler::as_vcvt(VFPRegister vd, VFPRegister vm, bool useFPSCR,
     vcvt_destFloatness destFloat;
     vcvt_Signedness opSign;
     vcvt_toZero doToZero = VcvtToFPSCR;
-    JS_ASSERT(vd.isFloat() || vm.isFloat());
+    MOZ_ASSERT(vd.isFloat() || vm.isFloat());
     if (vd.isSingle() || vm.isSingle()) {
         sz = IsSingle;
     }
@@ -2279,12 +2279,12 @@ Assembler::as_vcvt(VFPRegister vd, VFPRegister vm, bool useFPSCR,
 BufferOffset
 Assembler::as_vcvtFixed(VFPRegister vd, bool isSigned, uint32_t fixedPoint, bool toFixed, Condition c)
 {
-    JS_ASSERT(vd.isFloat());
+    MOZ_ASSERT(vd.isFloat());
     uint32_t sx = 0x1;
     vfp_size sf = vd.isDouble() ? IsDouble : IsSingle;
     int32_t imm5 = fixedPoint;
     imm5 = (sx ? 32 : 16) - imm5;
-    JS_ASSERT(imm5 >= 0);
+    MOZ_ASSERT(imm5 >= 0);
     imm5 = imm5 >> 1 | (imm5 & 1) << 5;
     return writeVFPInst(sf, 0x02BA0040 | VD(vd) | toFixed << 18 | sx << 7 |
                         (!isSigned) << 16 | imm5 | c);
@@ -2307,7 +2307,7 @@ BufferOffset
 Assembler::as_vdtm(LoadStore st, Register rn, VFPRegister vd, int length,
                    /* also has update conditions */ Condition c)
 {
-    JS_ASSERT(length <= 16 && length >= 0);
+    MOZ_ASSERT(length <= 16 && length >= 0);
     vfp_size sz = vd.isDouble() ? IsDouble : IsSingle;
 
     if (vd.isDouble())
@@ -2320,7 +2320,7 @@ Assembler::as_vdtm(LoadStore st, Register rn, VFPRegister vd, int length,
 BufferOffset
 Assembler::as_vimm(VFPRegister vd, VFPImm imm, Condition c)
 {
-    JS_ASSERT(imm.isValid());
+    MOZ_ASSERT(imm.isValid());
     vfp_size sz = vd.isDouble() ? IsDouble : IsSingle;
     return writeVFPInst(sz,  c | imm.encode() | VD(vd) | 0x02B00000);
 
@@ -2341,7 +2341,7 @@ bool
 Assembler::nextLink(BufferOffset b, BufferOffset *next)
 {
     Instruction branch = *editSrc(b);
-    JS_ASSERT(branch.is<InstBranchImm>());
+    MOZ_ASSERT(branch.is<InstBranchImm>());
 
     BOffImm destOff;
     branch.as<InstBranchImm>()->extractImm(&destOff);
@@ -2436,7 +2436,7 @@ Assembler::retarget(Label *label, Label *target)
             // The target is unbound and unused. We can just take the head of
             // the list hanging off of label, and dump that into target.
             DebugOnly<uint32_t> prev = target->use(label->offset());
-            JS_ASSERT((int32_t)prev == Label::INVALID_OFFSET);
+            MOZ_ASSERT((int32_t)prev == Label::INVALID_OFFSET);
         }
     }
     label->reset();
@@ -2492,7 +2492,7 @@ Assembler::leaveNoPool()
 ptrdiff_t
 Assembler::GetBranchOffset(const Instruction *i_)
 {
-    JS_ASSERT(i_->is<InstBranchImm>());
+    MOZ_ASSERT(i_->is<InstBranchImm>());
     InstBranchImm *i = i_->as<InstBranchImm>();
     BOffImm dest;
     i->extractImm(&dest);
@@ -2510,7 +2510,7 @@ void
 Assembler::RetargetNearBranch(Instruction *i, int offset, Condition cond, bool final)
 {
     // Retargeting calls is totally unsupported!
-    JS_ASSERT_IF(i->is<InstBranchImm>(), i->is<InstBImm>() || i->is<InstBLImm>());
+    MOZ_ASSERT_IF(i->is<InstBranchImm>(), i->is<InstBImm>() || i->is<InstBLImm>());
     if (i->is<InstBLImm>())
         new (i) InstBLImm(BOffImm(offset), cond);
     else
@@ -2551,7 +2551,7 @@ struct PoolHeader : Instruction {
         Header(const Instruction *i) {
             JS_STATIC_ASSERT(sizeof(Header) == sizeof(uint32_t));
             memcpy(this, i, sizeof(Header));
-            JS_ASSERT(ONES == 0xffff);
+            MOZ_ASSERT(ONES == 0xffff);
         }
 
         uint32_t raw() const {
@@ -2593,9 +2593,9 @@ Assembler::WritePoolHeader(uint8_t *start, Pool *p, bool isNatural)
     // Go through the usual rigmarole to get the size of the pool.
     pool += p->getPoolSize();
     uint32_t size = pool - start;
-    JS_ASSERT((size & 3) == 0);
+    MOZ_ASSERT((size & 3) == 0);
     size = size >> 2;
-    JS_ASSERT(size < (1 << 15));
+    MOZ_ASSERT(size < (1 << 15));
     PoolHeader header(size, isNatural);
     *(PoolHeader*)start = header;
 }
@@ -2630,7 +2630,7 @@ Assembler::PatchDataWithValueCheck(CodeLocationLabel label, PatchedImmPtr newVal
     Register dest;
     Assembler::RelocStyle rs;
     DebugOnly<const uint32_t *> val = GetPtr32Target(&iter, &dest, &rs);
-    JS_ASSERT((uint32_t)(const uint32_t *)val == uint32_t(expectedValue.value));
+    MOZ_ASSERT((uint32_t)(const uint32_t *)val == uint32_t(expectedValue.value));
     reinterpret_cast<MacroAssemblerARM*>(Dummy)->ma_movPatchable(Imm32(int32_t(newValue.value)),
                                                                  dest, Always, rs, ptr);
     // L_LDR won't cause any instructions to be updated.
@@ -2780,7 +2780,7 @@ Assembler::ToggleToJmp(CodeLocationLabel inst_)
     uint32_t *ptr = (uint32_t *)inst_.raw();
 
     DebugOnly<Instruction *> inst = (Instruction *)inst_.raw();
-    JS_ASSERT(inst->is<InstCMP>());
+    MOZ_ASSERT(inst->is<InstCMP>());
 
     // Zero bits 20-27, then set 24-27 to be correct for a branch.
     // 20-23 will be party of the B's immediate, and should be 0.
@@ -2794,16 +2794,16 @@ Assembler::ToggleToCmp(CodeLocationLabel inst_)
     uint32_t *ptr = (uint32_t *)inst_.raw();
 
     DebugOnly<Instruction *> inst = (Instruction *)inst_.raw();
-    JS_ASSERT(inst->is<InstBImm>());
+    MOZ_ASSERT(inst->is<InstBImm>());
 
     // Ensure that this masking operation doesn't affect the offset of the
     // branch instruction when it gets toggled back.
-    JS_ASSERT((*ptr & (0xf << 20)) == 0);
+    MOZ_ASSERT((*ptr & (0xf << 20)) == 0);
 
     // Also make sure that the CMP is valid. Part of having a valid CMP is that
     // all of the bits describing the destination in most ALU instructions are
     // all unset (looks like it is encoding r0).
-    JS_ASSERT(toRD(*inst) == r0);
+    MOZ_ASSERT(toRD(*inst) == r0);
 
     // Zero out bits 20-27, then set them to be correct for a compare.
     *ptr = (*ptr & ~(0xff << 20)) | (0x35 << 20);
@@ -2817,17 +2817,17 @@ Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled)
     Instruction *inst = (Instruction *)inst_.raw();
     // Skip a pool with an artificial guard.
     inst = inst->skipPool();
-    JS_ASSERT(inst->is<InstMovW>() || inst->is<InstLDR>());
+    MOZ_ASSERT(inst->is<InstMovW>() || inst->is<InstLDR>());
 
     if (inst->is<InstMovW>()) {
         // If it looks like the start of a movw/movt sequence, then make sure we
         // have all of it (and advance the iterator past the full sequence).
         inst = inst->next();
-        JS_ASSERT(inst->is<InstMovT>());
+        MOZ_ASSERT(inst->is<InstMovT>());
     }
 
     inst = inst->next();
-    JS_ASSERT(inst->is<InstNOP>() || inst->is<InstBLXReg>());
+    MOZ_ASSERT(inst->is<InstNOP>() || inst->is<InstBLXReg>());
 
     if (enabled == inst->is<InstBLXReg>()) {
         // Nothing to do.
@@ -2848,17 +2848,17 @@ Assembler::ToggledCallSize(uint8_t *code)
     Instruction *inst = (Instruction *)code;
     // Skip a pool with an artificial guard.
     inst = inst->skipPool();
-    JS_ASSERT(inst->is<InstMovW>() || inst->is<InstLDR>());
+    MOZ_ASSERT(inst->is<InstMovW>() || inst->is<InstLDR>());
 
     if (inst->is<InstMovW>()) {
         // If it looks like the start of a movw/movt sequence, then make sure we
         // have all of it (and advance the iterator past the full sequence).
         inst = inst->next();
-        JS_ASSERT(inst->is<InstMovT>());
+        MOZ_ASSERT(inst->is<InstMovT>());
     }
 
     inst = inst->next();
-    JS_ASSERT(inst->is<InstNOP>() || inst->is<InstBLXReg>());
+    MOZ_ASSERT(inst->is<InstNOP>() || inst->is<InstBLXReg>());
     return uintptr_t(inst) + 4 - uintptr_t(code);
 }
 
@@ -2868,23 +2868,23 @@ Assembler::BailoutTableStart(uint8_t *code)
     Instruction *inst = (Instruction *)code;
     // Skip a pool with an artificial guard or NOP fill.
     inst = inst->skipPool();
-    JS_ASSERT(inst->is<InstBLImm>());
+    MOZ_ASSERT(inst->is<InstBLImm>());
     return (uint8_t *) inst;
 }
 
 void Assembler::UpdateBoundsCheck(uint32_t heapSize, Instruction *inst)
 {
-    JS_ASSERT(inst->is<InstCMP>());
+    MOZ_ASSERT(inst->is<InstCMP>());
     InstCMP *cmp = inst->as<InstCMP>();
 
     Register index;
     cmp->extractOp1(&index);
 
     Operand2 op = cmp->extractOp2();
-    JS_ASSERT(op.isImm8());
+    MOZ_ASSERT(op.isImm8());
 
     Imm8 imm8 = Imm8(heapSize);
-    JS_ASSERT(!imm8.invalid);
+    MOZ_ASSERT(!imm8.invalid);
 
     *inst = InstALU(InvalidReg, index, imm8, OpCmp, SetCond, Always);
     // NOTE: we don't update the Auto Flush Cache!  this function is currently

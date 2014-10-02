@@ -35,7 +35,7 @@ struct MatchPair
       : start(start), limit(limit)
     { }
 
-    size_t length()      const { JS_ASSERT(!isUndefined()); return limit - start; }
+    size_t length()      const { MOZ_ASSERT(!isUndefined()); return limit - start; }
     bool isEmpty()       const { return length() == 0; }
     bool isUndefined()   const { return start < 0; }
 
@@ -45,9 +45,9 @@ struct MatchPair
     }
 
     inline bool check() const {
-        JS_ASSERT(limit >= start);
-        JS_ASSERT_IF(start < 0, start == -1);
-        JS_ASSERT_IF(limit < 0, limit == -1);
+        MOZ_ASSERT(limit >= start);
+        MOZ_ASSERT_IF(start < 0, start == -1);
+        MOZ_ASSERT_IF(limit < 0, limit == -1);
         return true;
     }
 };
@@ -85,10 +85,10 @@ class MatchPairs
 #ifdef DEBUG
         for (size_t i = 0; i < pairCount_; i++) {
             const MatchPair &p = (*this)[i];
-            JS_ASSERT(p.check());
+            MOZ_ASSERT(p.check());
             if (p.isUndefined())
                 continue;
-            JS_ASSERT(size_t(p.limit) <= inputLength);
+            MOZ_ASSERT(size_t(p.limit) <= inputLength);
         }
 #endif
     }
@@ -96,7 +96,7 @@ class MatchPairs
   public:
     /* Querying functions in the style of RegExpStatics. */
     bool   empty() const           { return pairCount_ == 0; }
-    size_t pairCount() const       { JS_ASSERT(pairCount_ > 0); return pairCount_; }
+    size_t pairCount() const       { MOZ_ASSERT(pairCount_ > 0); return pairCount_; }
     size_t parenCount() const      { return pairCount_ - 1; }
 
     static size_t offsetOfPairs() { return offsetof(MatchPairs, pairs_); }
@@ -108,11 +108,11 @@ class MatchPairs
     size_t length() const { return pairCount_; }
 
     const MatchPair &operator[](size_t i) const {
-        JS_ASSERT(i < pairCount_);
+        MOZ_ASSERT(i < pairCount_);
         return pairs_[i];
     }
     MatchPair &operator[](size_t i) {
-        JS_ASSERT(i < pairCount_);
+        MOZ_ASSERT(i < pairCount_);
         return pairs_[i];
     }
 };

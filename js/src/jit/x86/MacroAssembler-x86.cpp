@@ -38,7 +38,7 @@ MacroAssemblerX86::getDouble(double d)
             return nullptr;
     }
     Double &dbl = doubles_[doubleIndex];
-    JS_ASSERT(!dbl.uses.bound());
+    MOZ_ASSERT(!dbl.uses.bound());
     return &dbl;
 }
 
@@ -84,7 +84,7 @@ MacroAssemblerX86::getFloat(float f)
             return nullptr;
     }
     Float &flt = floats_[floatIndex];
-    JS_ASSERT(!flt.uses.bound());
+    MOZ_ASSERT(!flt.uses.bound());
     return &flt;
 }
 
@@ -130,20 +130,20 @@ MacroAssemblerX86::getSimdData(const SimdConstant &v)
             return nullptr;
     }
     SimdData &simd = simds_[index];
-    JS_ASSERT(!simd.uses.bound());
+    MOZ_ASSERT(!simd.uses.bound());
     return &simd;
 }
 
 void
 MacroAssemblerX86::loadConstantInt32x4(const SimdConstant &v, FloatRegister dest)
 {
-    JS_ASSERT(v.type() == SimdConstant::Int32x4);
+    MOZ_ASSERT(v.type() == SimdConstant::Int32x4);
     if (maybeInlineInt32x4(v, dest))
         return;
     SimdData *i4 = getSimdData(v);
     if (!i4)
         return;
-    JS_ASSERT(i4->type() == SimdConstant::Int32x4);
+    MOZ_ASSERT(i4->type() == SimdConstant::Int32x4);
     masm.movdqa_mr(reinterpret_cast<const void *>(i4->uses.prev()), dest.code());
     i4->uses.setPrev(masm.size());
 }
@@ -151,13 +151,13 @@ MacroAssemblerX86::loadConstantInt32x4(const SimdConstant &v, FloatRegister dest
 void
 MacroAssemblerX86::loadConstantFloat32x4(const SimdConstant &v, FloatRegister dest)
 {
-    JS_ASSERT(v.type() == SimdConstant::Float32x4);
+    MOZ_ASSERT(v.type() == SimdConstant::Float32x4);
     if (maybeInlineFloat32x4(v, dest))
         return;
     SimdData *f4 = getSimdData(v);
     if (!f4)
         return;
-    JS_ASSERT(f4->type() == SimdConstant::Float32x4);
+    MOZ_ASSERT(f4->type() == SimdConstant::Float32x4);
     masm.movaps_mr(reinterpret_cast<const void *>(f4->uses.prev()), dest.code());
     f4->uses.setPrev(masm.size());
 }
@@ -205,7 +205,7 @@ MacroAssemblerX86::finish()
 void
 MacroAssemblerX86::setupABICall(uint32_t args)
 {
-    JS_ASSERT(!inCall_);
+    MOZ_ASSERT(!inCall_);
     inCall_ = true;
 
     args_ = args;
@@ -261,8 +261,8 @@ MacroAssemblerX86::passABIArg(FloatRegister reg, MoveOp::Type type)
 void
 MacroAssemblerX86::callWithABIPre(uint32_t *stackAdjust)
 {
-    JS_ASSERT(inCall_);
-    JS_ASSERT(args_ == passedArgs_);
+    MOZ_ASSERT(inCall_);
+    MOZ_ASSERT(args_ == passedArgs_);
 
     if (dynamicAlignment_) {
         *stackAdjust = stackForCall_
@@ -317,7 +317,7 @@ MacroAssemblerX86::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result)
     if (dynamicAlignment_)
         pop(esp);
 
-    JS_ASSERT(inCall_);
+    MOZ_ASSERT(inCall_);
     inCall_ = false;
 }
 
@@ -447,7 +447,7 @@ MacroAssemblerX86::branchTestValue(Condition cond, const ValueOperand &value, co
         }
         bind(&done);
     } else {
-        JS_ASSERT(cond == NotEqual);
+        MOZ_ASSERT(cond == NotEqual);
         j(NotEqual, label);
 
         cmpl(value.typeReg(), Imm32(jv.s.tag));
@@ -490,9 +490,9 @@ void
 MacroAssemblerX86::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
                                            Label *label)
 {
-    JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    JS_ASSERT(ptr != temp);
-    JS_ASSERT(temp != InvalidReg);  // A temp register is required for x86.
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    MOZ_ASSERT(ptr != temp);
+    MOZ_ASSERT(temp != InvalidReg);  // A temp register is required for x86.
 
     const Nursery &nursery = GetIonContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), temp);
@@ -505,7 +505,7 @@ void
 MacroAssemblerX86::branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
                                               Label *label)
 {
-    JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
 
     Label done;
 

@@ -673,7 +673,7 @@ private:
                                          PropertyProvider *aProvider);
     void DrawPartialLigature(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
                              gfxPoint *aPt, PropertyProvider *aProvider,
-                             TextRunDrawParams& aParams);
+                             TextRunDrawParams& aParams, uint16_t aOrientation);
     // Advance aStart to the start of the nearest ligature; back up aEnd
     // to the nearest ligature end; may result in *aStart == *aEnd
     void ShrinkToLigatureBoundaries(uint32_t *aStart, uint32_t *aEnd);
@@ -698,7 +698,7 @@ private:
     void DrawGlyphs(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
                     gfxPoint *aPt, PropertyProvider *aProvider,
                     uint32_t aSpacingStart, uint32_t aSpacingEnd,
-                    TextRunDrawParams& aParams);
+                    TextRunDrawParams& aParams, uint16_t aOrientation);
 
     // XXX this should be changed to a GlyphRun plus a maybe-null GlyphRun*,
     // for smaller size especially in the super-common one-glyphrun case

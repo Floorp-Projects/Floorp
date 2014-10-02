@@ -22,9 +22,9 @@ using namespace js::gc;
 static void
 CopyStackFrameArguments(const AbstractFramePtr frame, HeapValue *dst, unsigned totalArgs)
 {
-    JS_ASSERT_IF(frame.isInterpreterFrame(), !frame.asInterpreterFrame()->runningInJit());
+    MOZ_ASSERT_IF(frame.isInterpreterFrame(), !frame.asInterpreterFrame()->runningInJit());
 
-    JS_ASSERT(Max(frame.numActualArgs(), frame.numFormalArgs()) == totalArgs);
+    MOZ_ASSERT(Max(frame.numActualArgs(), frame.numFormalArgs()) == totalArgs);
 
     /* Copy arguments. */
     Value *src = frame.argv();
@@ -52,7 +52,7 @@ ArgumentsObject::MaybeForwardToCallObject(jit::IonJSFrameLayout *frame, HandleOb
     JSFunction *callee = jit::CalleeTokenToFunction(frame->calleeToken());
     JSScript *script = callee->nonLazyScript();
     if (callee->isHeavyweight() && script->argsObjAliasesFormals()) {
-        JS_ASSERT(callObj && callObj->is<CallObject>());
+        MOZ_ASSERT(callObj && callObj->is<CallObject>());
         obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(*callObj.get()));
         for (AliasedFormalIter fi(script); fi; fi++)
             data->args[fi.frameIndex()] = JS::MagicValueUint32(fi.scopeSlot());
@@ -92,9 +92,9 @@ struct CopyIonJSFrameArgs
     void copyArgs(JSContext *, HeapValue *dstBase, unsigned totalArgs) const {
         unsigned numActuals = frame_->numActualArgs();
         unsigned numFormals = jit::CalleeTokenToFunction(frame_->calleeToken())->nargs();
-        JS_ASSERT(numActuals <= totalArgs);
-        JS_ASSERT(numFormals <= totalArgs);
-        JS_ASSERT(Max(numActuals, numFormals) == totalArgs);
+        MOZ_ASSERT(numActuals <= totalArgs);
+        MOZ_ASSERT(numFormals <= totalArgs);
+        MOZ_ASSERT(Max(numActuals, numFormals) == totalArgs);
 
         /* Copy all arguments. */
         Value *src = frame_->argv() + 1;  /* +1 to skip this. */
@@ -134,9 +134,9 @@ struct CopyScriptFrameIterArgs
         /* Define formals which are not part of the actuals. */
         unsigned numActuals = iter_.numActualArgs();
         unsigned numFormals = iter_.callee()->nargs();
-        JS_ASSERT(numActuals <= totalArgs);
-        JS_ASSERT(numFormals <= totalArgs);
-        JS_ASSERT(Max(numActuals, numFormals) == totalArgs);
+        MOZ_ASSERT(numActuals <= totalArgs);
+        MOZ_ASSERT(numFormals <= totalArgs);
+        MOZ_ASSERT(Max(numActuals, numFormals) == totalArgs);
 
         if (numActuals < numFormals) {
             HeapValue *dst = dstBase + numActuals, *dstEnd = dstBase + totalArgs;
@@ -223,15 +223,15 @@ ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction calle
     copy.maybeForwardToCallObject(obj, data);
 
     ArgumentsObject &argsobj = obj->as<ArgumentsObject>();
-    JS_ASSERT(argsobj.initialLength() == numActuals);
-    JS_ASSERT(!argsobj.hasOverriddenLength());
+    MOZ_ASSERT(argsobj.initialLength() == numActuals);
+    MOZ_ASSERT(!argsobj.hasOverriddenLength());
     return &argsobj;
 }
 
 ArgumentsObject *
 ArgumentsObject::createExpected(JSContext *cx, AbstractFramePtr frame)
 {
-    JS_ASSERT(frame.script()->needsArgsObj());
+    MOZ_ASSERT(frame.script()->needsArgsObj());
     RootedScript script(cx, frame.script());
     RootedFunction callee(cx, frame.callee());
     CopyFrameArgs copy(frame);
@@ -265,7 +265,7 @@ ArgumentsObject *
 ArgumentsObject::createForIon(JSContext *cx, jit::IonJSFrameLayout *frame, HandleObject scopeChain)
 {
     jit::CalleeToken token = frame->calleeToken();
-    JS_ASSERT(jit::CalleeTokenIsFunction(token));
+    MOZ_ASSERT(jit::CalleeTokenIsFunction(token));
     RootedScript script(cx, jit::ScriptFromCalleeToken(token));
     RootedFunction callee(cx, jit::CalleeTokenToFunction(token));
     RootedObject callObj(cx, scopeChain->is<CallObject>() ? scopeChain.get() : nullptr);
@@ -309,7 +309,7 @@ ArgGetter(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue vp)
         if (!argsobj.hasOverriddenLength())
             vp.setInt32(argsobj.initialLength());
     } else {
-        JS_ASSERT(JSID_IS_ATOM(id, cx->names().callee));
+        MOZ_ASSERT(JSID_IS_ATOM(id, cx->names().callee));
         if (!argsobj.callee().isMagic(JS_OVERWRITTEN_CALLEE))
             vp.set(argsobj.callee());
     }
@@ -325,7 +325,7 @@ ArgSetter(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHand
     unsigned attrs;
     if (!baseops::GetAttributes(cx, obj, id, &attrs))
         return false;
-    JS_ASSERT(!(attrs & JSPROP_READONLY));
+    MOZ_ASSERT(!(attrs & JSPROP_READONLY));
     attrs &= (JSPROP_ENUMERATE | JSPROP_PERMANENT); /* only valid attributes */
 
     NormalArgumentsObject &argsobj = obj->as<NormalArgumentsObject>();
@@ -340,7 +340,7 @@ ArgSetter(JSContext *cx, HandleObject obj, HandleId id, bool strict, MutableHand
             return true;
         }
     } else {
-        JS_ASSERT(JSID_IS_ATOM(id, cx->names().length) || JSID_IS_ATOM(id, cx->names().callee));
+        MOZ_ASSERT(JSID_IS_ATOM(id, cx->names().length) || JSID_IS_ATOM(id, cx->names().callee));
     }
 
     /*
@@ -431,7 +431,7 @@ StrictArgGetter(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue
         if (arg < argsobj.initialLength() && !argsobj.isElementDeleted(arg))
             vp.set(argsobj.element(arg));
     } else {
-        JS_ASSERT(JSID_IS_ATOM(id, cx->names().length));
+        MOZ_ASSERT(JSID_IS_ATOM(id, cx->names().length));
         if (!argsobj.hasOverriddenLength())
             vp.setInt32(argsobj.initialLength());
     }
@@ -447,7 +447,7 @@ StrictArgSetter(JSContext *cx, HandleObject obj, HandleId id, bool strict, Mutab
     unsigned attrs;
     if (!baseops::GetAttributes(cx, obj, id, &attrs))
         return false;
-    JS_ASSERT(!(attrs & JSPROP_READONLY));
+    MOZ_ASSERT(!(attrs & JSPROP_READONLY));
     attrs &= (JSPROP_ENUMERATE | JSPROP_PERMANENT); /* only valid attributes */
 
     Rooted<StrictArgumentsObject*> argsobj(cx, &obj->as<StrictArgumentsObject>());
@@ -459,7 +459,7 @@ StrictArgSetter(JSContext *cx, HandleObject obj, HandleId id, bool strict, Mutab
             return true;
         }
     } else {
-        JS_ASSERT(JSID_IS_ATOM(id, cx->names().length));
+        MOZ_ASSERT(JSID_IS_ATOM(id, cx->names().length));
     }
 
     /*

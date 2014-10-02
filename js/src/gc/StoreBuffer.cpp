@@ -53,7 +53,7 @@ StoreBuffer::SlotsEdge::mark(JSTracer *trc)
 void
 StoreBuffer::WholeCellEdges::mark(JSTracer *trc)
 {
-    JS_ASSERT(edge->isTenured());
+    MOZ_ASSERT(edge->isTenured());
     JSGCTraceKind kind = GetGCThingTraceKind(edge);
     if (kind <= JSTRACE_OBJECT) {
         JSObject *object = static_cast<JSObject *>(edge);
@@ -62,7 +62,7 @@ StoreBuffer::WholeCellEdges::mark(JSTracer *trc)
         MarkChildren(trc, object);
         return;
     }
-    JS_ASSERT(kind == JSTRACE_JITCODE);
+    MOZ_ASSERT(kind == JSTRACE_JITCODE);
     static_cast<jit::JitCode *>(edge)->trace(trc);
 }
 
@@ -72,7 +72,7 @@ StoreBuffer::CellPtrEdge::mark(JSTracer *trc)
     if (!*edge)
         return;
 
-    JS_ASSERT(GetGCThingTraceKind(*edge) == JSTRACE_OBJECT);
+    MOZ_ASSERT(GetGCThingTraceKind(*edge) == JSTRACE_OBJECT);
     MarkObjectRoot(trc, reinterpret_cast<JSObject**>(edge), "store buffer edge");
 }
 
@@ -139,7 +139,7 @@ template <typename T>
 void
 StoreBuffer::MonoTypeBuffer<T>::compact(StoreBuffer *owner)
 {
-    JS_ASSERT(storage_);
+    MOZ_ASSERT(storage_);
     compactRemoveDuplicates(owner);
     usedAtLastCompact_ = storage_->used();
 }
@@ -148,7 +148,7 @@ template <typename T>
 void
 StoreBuffer::MonoTypeBuffer<T>::maybeCompact(StoreBuffer *owner)
 {
-    JS_ASSERT(storage_);
+    MOZ_ASSERT(storage_);
     if (storage_->used() != usedAtLastCompact_)
         compact(owner);
 }
@@ -157,7 +157,7 @@ template <typename T>
 void
 StoreBuffer::MonoTypeBuffer<T>::mark(StoreBuffer *owner, JSTracer *trc)
 {
-    JS_ASSERT(owner->isEnabled());
+    MOZ_ASSERT(owner->isEnabled());
     ReentrancyGuard g(*owner);
     if (!storage_)
         return;
@@ -206,7 +206,7 @@ StoreBuffer::RelocatableMonoTypeBuffer<T>::compactMoved(StoreBuffer *owner)
 
 #ifdef DEBUG
     for (LifoAlloc::Enum e(storage); !e.empty(); e.popFront<T>())
-        JS_ASSERT(!e.get<T>()->isTagged());
+        MOZ_ASSERT(!e.get<T>()->isTagged());
 #endif
 }
 
@@ -223,7 +223,7 @@ StoreBuffer::RelocatableMonoTypeBuffer<T>::compact(StoreBuffer *owner)
 void
 StoreBuffer::GenericBuffer::mark(StoreBuffer *owner, JSTracer *trc)
 {
-    JS_ASSERT(owner->isEnabled());
+    MOZ_ASSERT(owner->isEnabled());
     ReentrancyGuard g(*owner);
     if (!storage_)
         return;
@@ -331,8 +331,8 @@ StoreBuffer::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::GCSi
 JS_PUBLIC_API(void)
 JS::HeapCellPostBarrier(js::gc::Cell **cellp)
 {
-    JS_ASSERT(cellp);
-    JS_ASSERT(*cellp);
+    MOZ_ASSERT(cellp);
+    MOZ_ASSERT(*cellp);
     StoreBuffer *storeBuffer = (*cellp)->storeBuffer();
     if (storeBuffer)
         storeBuffer->putRelocatableCellFromAnyThread(cellp);
@@ -342,8 +342,8 @@ JS_PUBLIC_API(void)
 JS::HeapCellRelocate(js::gc::Cell **cellp)
 {
     /* Called with old contents of *cellp before overwriting. */
-    JS_ASSERT(cellp);
-    JS_ASSERT(*cellp);
+    MOZ_ASSERT(cellp);
+    MOZ_ASSERT(*cellp);
     JSRuntime *runtime = (*cellp)->runtimeFromMainThread();
     runtime->gc.storeBuffer.removeRelocatableCellFromAnyThread(cellp);
 }
@@ -351,8 +351,8 @@ JS::HeapCellRelocate(js::gc::Cell **cellp)
 JS_PUBLIC_API(void)
 JS::HeapValuePostBarrier(JS::Value *valuep)
 {
-    JS_ASSERT(valuep);
-    JS_ASSERT(valuep->isMarkable());
+    MOZ_ASSERT(valuep);
+    MOZ_ASSERT(valuep->isMarkable());
     if (valuep->isObject()) {
         StoreBuffer *storeBuffer = valuep->toObject().storeBuffer();
         if (storeBuffer)
@@ -364,8 +364,8 @@ JS_PUBLIC_API(void)
 JS::HeapValueRelocate(JS::Value *valuep)
 {
     /* Called with old contents of *valuep before overwriting. */
-    JS_ASSERT(valuep);
-    JS_ASSERT(valuep->isMarkable());
+    MOZ_ASSERT(valuep);
+    MOZ_ASSERT(valuep->isMarkable());
     if (valuep->isString() && valuep->toString()->isPermanentAtom())
         return;
     JSRuntime *runtime = static_cast<js::gc::Cell *>(valuep->toGCThing())->runtimeFromMainThread();

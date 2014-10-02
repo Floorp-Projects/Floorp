@@ -31,7 +31,7 @@ namespace js {
 inline bool
 ComputeThis(JSContext *cx, AbstractFramePtr frame)
 {
-    JS_ASSERT_IF(frame.isInterpreterFrame(), !frame.asInterpreterFrame()->runningInJit());
+    MOZ_ASSERT_IF(frame.isInterpreterFrame(), !frame.asInterpreterFrame()->runningInJit());
 
     if (frame.isFunctionFrame() && frame.fun()->isArrow()) {
         /*
@@ -57,7 +57,7 @@ ComputeThis(JSContext *cx, AbstractFramePtr frame)
          * and undefined |this| values will unwrap to the same object in the function and
          * eval frames, so are not required to be wrapped.
          */
-        JS_ASSERT_IF(frame.isEvalFrame(), thisv.isUndefined() || thisv.isNull());
+        MOZ_ASSERT_IF(frame.isEvalFrame(), thisv.isUndefined() || thisv.isNull());
     }
 
     JSObject *thisObj = BoxNonStrictThis(cx, thisv);
@@ -188,7 +188,7 @@ ValuePropertyBearer(JSContext *cx, InterpreterFrame *fp, HandleValue v, int spin
     if (v.isBoolean())
         return GlobalObject::getOrCreateBooleanPrototype(cx, global);
 
-    JS_ASSERT(v.isNull() || v.isUndefined());
+    MOZ_ASSERT(v.isNull() || v.isUndefined());
     js_ReportIsNullOrUndefined(cx, spindex, v, NullPtr());
     return nullptr;
 }
@@ -212,7 +212,7 @@ GetLengthProperty(const Value &lval, MutableHandleValue vp)
             ArgumentsObject *argsobj = &obj->as<ArgumentsObject>();
             if (!argsobj->hasOverriddenLength()) {
                 uint32_t length = argsobj->initialLength();
-                JS_ASSERT(length < INT32_MAX);
+                MOZ_ASSERT(length < INT32_MAX);
                 vp.setInt32(int32_t(length));
                 return true;
             }
@@ -248,7 +248,7 @@ FetchName(JSContext *cx, HandleObject obj, HandleObject obj2, HandlePropertyName
             normalized = &normalized->as<DynamicWithObject>().object();
         if (shape->isDataDescriptor() && shape->hasDefaultGetter()) {
             /* Fast path for Object instance properties. */
-            JS_ASSERT(shape->hasSlot());
+            MOZ_ASSERT(shape->hasSlot());
             vp.set(obj2->nativeGetSlot(shape->slot()));
         } else if (!NativeGet(cx, normalized, obj2, shape, vp)) {
             return false;
@@ -304,8 +304,8 @@ inline bool
 SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject scope,
                  HandleValue val)
 {
-    JS_ASSERT(*pc == JSOP_SETNAME || *pc == JSOP_SETGNAME);
-    JS_ASSERT_IF(*pc == JSOP_SETGNAME, scope == cx->global());
+    MOZ_ASSERT(*pc == JSOP_SETNAME || *pc == JSOP_SETGNAME);
+    MOZ_ASSERT_IF(*pc == JSOP_SETGNAME, scope == cx->global());
 
     bool strict = script->strict();
     RootedPropertyName name(cx, script->getName(pc));
@@ -317,7 +317,7 @@ SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject s
      * directly and pass Unqualified.
      */
     if (scope->isUnqualifiedVarObj()) {
-        JS_ASSERT(!scope->getOps()->setProperty);
+        MOZ_ASSERT(!scope->getOps()->setProperty);
         RootedId id(cx, NameToId(name));
         return baseops::SetPropertyHelper<SequentialExecution>(cx, scope, scope, id,
                                                                baseops::Unqualified, &valCopy,
@@ -330,7 +330,7 @@ SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject s
 inline bool
 DefVarOrConstOperation(JSContext *cx, HandleObject varobj, HandlePropertyName dn, unsigned attrs)
 {
-    JS_ASSERT(varobj->isQualifiedVarObj());
+    MOZ_ASSERT(varobj->isQualifiedVarObj());
 
     RootedShape prop(cx);
     RootedObject obj2(cx);
@@ -416,7 +416,7 @@ static MOZ_ALWAYS_INLINE bool
 GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObject,
                           HandleValue rref, MutableHandleValue res)
 {
-    JS_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);
+    MOZ_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);
 
     do {
         uint32_t index;
@@ -485,7 +485,7 @@ static MOZ_ALWAYS_INLINE bool
 GetElemOptimizedArguments(JSContext *cx, AbstractFramePtr frame, MutableHandleValue lref,
                           HandleValue rref, MutableHandleValue res, bool *done)
 {
-    JS_ASSERT(!*done);
+    MOZ_ASSERT(!*done);
 
     if (IsOptimizedArguments(frame, lref)) {
         if (rref.isInt32()) {
@@ -511,7 +511,7 @@ static MOZ_ALWAYS_INLINE bool
 GetElementOperation(JSContext *cx, JSOp op, MutableHandleValue lref, HandleValue rref,
                     MutableHandleValue res)
 {
-    JS_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);
+    MOZ_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);
 
     uint32_t index;
     if (lref.isString() && IsDefinitelyIndex(rref, &index)) {
@@ -549,7 +549,7 @@ TypeOfObjectOperation(JSObject *obj, JSRuntime *rt)
 static MOZ_ALWAYS_INLINE bool
 InitElemOperation(JSContext *cx, HandleObject obj, HandleValue idval, HandleValue val)
 {
-    JS_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
+    MOZ_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
 
     RootedId id(cx);
     if (!ValueToId<CanGC>(cx, idval, &id))
@@ -562,9 +562,9 @@ static MOZ_ALWAYS_INLINE bool
 InitArrayElemOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, uint32_t index, HandleValue val)
 {
     JSOp op = JSOp(*pc);
-    JS_ASSERT(op == JSOP_INITELEM_ARRAY || op == JSOP_INITELEM_INC);
+    MOZ_ASSERT(op == JSOP_INITELEM_ARRAY || op == JSOP_INITELEM_INC);
 
-    JS_ASSERT(obj->is<ArrayObject>());
+    MOZ_ASSERT(obj->is<ArrayObject>());
 
     /*
      * If val is a hole, do not call JSObject::defineElement. In this case,
@@ -771,7 +771,7 @@ class FastInvokeGuard
       , script_(cx)
       , useIon_(jit::IsIonEnabled(cx))
     {
-        JS_ASSERT(!InParallelSection());
+        MOZ_ASSERT(!InParallelSection());
         initFunction(fval);
     }
 
@@ -794,7 +794,7 @@ class FastInvokeGuard
                 if (!script_)
                     return false;
             }
-            JS_ASSERT(fun_->nonLazyScript() == script_);
+            MOZ_ASSERT(fun_->nonLazyScript() == script_);
 
             jit::MethodStatus status = jit::CanEnterUsingFastInvoke(cx, script_, args_.length());
             if (status == jit::Method_Error)
@@ -804,11 +804,11 @@ class FastInvokeGuard
                 if (IsErrorStatus(result))
                     return false;
 
-                JS_ASSERT(result == jit::IonExec_Ok);
+                MOZ_ASSERT(result == jit::IonExec_Ok);
                 return true;
             }
 
-            JS_ASSERT(status == jit::Method_Skipped);
+            MOZ_ASSERT(status == jit::Method_Skipped);
 
             if (script_->canIonCompile()) {
                 // This script is not yet hot. Since calling into Ion is much

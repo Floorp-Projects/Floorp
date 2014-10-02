@@ -103,7 +103,7 @@ RematerializedFrame::MarkInVector(JSTracer *trc, Vector<RematerializedFrame *> &
 CallObject &
 RematerializedFrame::callObj() const
 {
-    JS_ASSERT(hasCallObj());
+    MOZ_ASSERT(hasCallObj());
 
     JSObject *scope = scopeChain();
     while (!scope->is<CallObject>())

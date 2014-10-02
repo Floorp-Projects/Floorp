@@ -81,7 +81,7 @@ class ParallelSafetyVisitor : public MDefinitionVisitor
     // markUnsafe()".  Sets the unsafe flag and returns true (since
     // this does not indicate an unrecoverable compilation failure).
     bool markUnsafe() {
-        JS_ASSERT(!unsafe_);
+        MOZ_ASSERT(!unsafe_);
         unsafe_ = true;
         return true;
     }
@@ -122,6 +122,7 @@ class ParallelSafetyVisitor : public MDefinitionVisitor
     SAFE_OP(SimdBinaryComp)
     SAFE_OP(SimdBinaryArith)
     SAFE_OP(SimdBinaryBitwise)
+    SAFE_OP(SimdShift)
     SAFE_OP(SimdTernaryBitwise)
     UNSAFE_OP(CloneLiteral)
     SAFE_OP(Parameter)
@@ -449,8 +450,8 @@ ParallelSafetyVisitor::convertToBailout(MInstructionIterator &iter)
     // We expect iter to be settled on the unsafe instruction.
     MInstruction *ins = *iter;
     MBasicBlock *block = ins->block();
-    JS_ASSERT(unsafe()); // `block` must have contained unsafe items
-    JS_ASSERT(block->isMarked()); // `block` must have been reachable to get here
+    MOZ_ASSERT(unsafe()); // `block` must have contained unsafe items
+    MOZ_ASSERT(block->isMarked()); // `block` must have been reachable to get here
 
     clearUnsafe();
 
@@ -609,7 +610,7 @@ ParallelSafetyVisitor::replace(MInstruction *oldInstruction,
     {
         replacementInstruction->trySpecializeFloat32(alloc());
     }
-    JS_ASSERT(oldInstruction->type() == replacementInstruction->type());
+    MOZ_ASSERT(oldInstruction->type() == replacementInstruction->type());
 
     return true;
 }
@@ -778,7 +779,7 @@ bool
 ParallelSafetyVisitor::visitThrow(MThrow *thr)
 {
     MBasicBlock *block = thr->block();
-    JS_ASSERT(block->lastIns() == thr);
+    MOZ_ASSERT(block->lastIns() == thr);
     MBail *bail = MBail::New(alloc(), Bailout_ParallelUnsafe);
     TransplantResumePoint(thr, bail);
     block->discardLastIns();
@@ -812,7 +813,7 @@ jit::AddPossibleCallees(JSContext *cx, MIRGraph &graph, CallTargetVector &target
 
             RootedFunction target(cx, callIns->getSingleTarget());
             if (target) {
-                JS_ASSERT_IF(!target->isInterpreted(), target->hasParallelNative());
+                MOZ_ASSERT_IF(!target->isInterpreted(), target->hasParallelNative());
 
                 if (target->isInterpreted()) {
                     RootedScript script(cx, target->getOrCreateScript(cx));

@@ -428,7 +428,7 @@ ReferenceFinder::visit(void *cell, Path *path)
         return addReferrer(JSVAL_NULL, path);
 
     HeapReverser::Map::Ptr p = reverser.map.lookup(cell);
-    JS_ASSERT(p);
+    MOZ_ASSERT(p);
     HeapReverser::Node *node = &p->value();
 
     /* Is |cell| a representable cell, reached via a non-empty path? */
@@ -487,7 +487,7 @@ ReferenceFinder::Path::computeName(JSContext *cx)
             next += 2;
         }
     }
-    JS_ASSERT(next + 1 == path + size);
+    MOZ_ASSERT(next + 1 == path + size);
 
     return path;
 }
@@ -520,7 +520,7 @@ ReferenceFinder::addReferrer(jsval referrerArg, Path *path)
 
     /* The property's value had better be an array. */
     RootedObject array(context, &v.toObject());
-    JS_ASSERT(JS_IsArrayObject(context, array));
+    MOZ_ASSERT(JS_IsArrayObject(context, array));
 
     /* Append our referrer to this array. */
     uint32_t length;
