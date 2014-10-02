@@ -329,9 +329,6 @@ public class BrowserLocaleManager implements LocaleManager {
         return GeckoSharedPrefs.forApp(context);
     }
 
-    /**
-     * @return the persisted locale in Java format: "en_US".
-     */
     private String getPersistedLocale(Context context) {
         final SharedPreferences settings = getSharedPreferences(context);
         final String locale = settings.getString(PREF_LOCALE, "");
@@ -366,9 +363,6 @@ public class BrowserLocaleManager implements LocaleManager {
      * Returns the persisted locale if it differed.
      *
      * Does not notify Gecko.
-     *
-     * @param localeCode a locale string in Java format: "en_US".
-     * @return if it differed, a locale string in Java format: "en_US".
      */
     private String updateLocale(Context context, String localeCode) {
         // Fast path.
@@ -382,9 +376,6 @@ public class BrowserLocaleManager implements LocaleManager {
         return updateLocale(context, locale);
     }
 
-    /**
-     * @return the Java locale string: e.g., "en_US".
-     */
     private String updateLocale(Context context, final Locale locale) {
         // Fast path.
         if (Locale.getDefault().equals(locale)) {
