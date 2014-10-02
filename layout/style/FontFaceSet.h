@@ -258,13 +258,13 @@ private:
                       nsresult aStatus);
   void DoRebuildUserFontSet();
 
-  void InsertConnectedFontFace(FontFace* aFontFace, uint8_t aSheetType,
-                               nsTArray<FontFaceRecord>& aOldRecords,
-                               bool& aFontSetModified);
-  void InsertUnconnectedFontFace(FontFace* aFontFace, bool& aFontSetModified);
+  void InsertRuleFontFace(FontFace* aFontFace, uint8_t aSheetType,
+                          nsTArray<FontFaceRecord>& aOldRecords,
+                          bool& aFontSetModified);
+  void InsertNonRuleFontFace(FontFace* aFontFace, bool& aFontSetModified);
 
 #ifdef DEBUG
-  bool HasConnectedFontFace(FontFace* aFontFace);
+  bool HasRuleFontFace(FontFace* aFontFace);
 #endif
 
   /**
@@ -282,11 +282,11 @@ private:
   nsCOMPtr<nsIDocument> mDocument;
 
   // A Promise that is fulfilled once all of the FontFace objects
-  // in mConnectedFaces and mOtherFaces that started or were loading at the
+  // in mRuleFaces and mNonRuleFaces that started or were loading at the
   // time the Promise was created have finished loading.  It is rejected if
   // any of those fonts failed to load.  mReady is replaced with
   // a new Promise object whenever mReady is settled and another
-  // FontFace in mConnectedFaces or mOtherFaces starts to load.
+  // FontFace in mRuleFaces or mNonRuleFaces starts to load.
   nsRefPtr<mozilla::dom::Promise> mReady;
 
   // Set of all loaders pointing to us. These are not strong pointers,
@@ -294,22 +294,22 @@ private:
   // us before it dies (unless we die first).
   nsTHashtable< nsPtrHashKey<nsFontFaceLoader> > mLoaders;
 
-  // The CSS-connected FontFace objects in the FontFaceSet.
-  nsTArray<FontFaceRecord> mConnectedFaces;
+  // The @font-face rule backed FontFace objects in the FontFaceSet.
+  nsTArray<FontFaceRecord> mRuleFaces;
 
-  // The unconnected FontFace objects that have been added to this
+  // The non rule backed FontFace objects that have been added to this
   // FontFaceSet and their corresponding user font entries.
-  nsTArray<nsRefPtr<FontFace>> mOtherFaces;
+  nsTArray<nsRefPtr<FontFace>> mNonRuleFaces;
 
-  // The unconnected FontFace objects that have not been added to
+  // The non rule backed FontFace objects that have not been added to
   // this FontFaceSet.
   nsTArray<FontFace*> mUnavailableFaces;
 
   // The overall status of the loading or loaded fonts in the FontFaceSet.
   mozilla::dom::FontFaceSetLoadStatus mStatus;
 
-  // Whether mOtherFaces has changed since last time UpdateRules ran.
-  bool mOtherFacesDirty;
+  // Whether mNonRuleFaces has changed since last time UpdateRules ran.
+  bool mNonRuleFacesDirty;
 
   // Whether we have called MaybeResolve() on mReady.
   bool mReadyIsResolved;
@@ -318,7 +318,7 @@ private:
   // of loading FontFaces.
   bool mDispatchedLoadingEvent;
 
-  // Whether any FontFace objects in mConnectedFaces or mOtherFaces are
+  // Whether any FontFace objects in mRuleFaces or mNonRuleFaces are
   // loading.  Only valid when mHasLoadingFontFacesIsDirty is false.  Don't use
   // this variable directly; call the HasLoadingFontFaces method instead.
   bool mHasLoadingFontFaces;

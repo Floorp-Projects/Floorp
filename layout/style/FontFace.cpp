@@ -341,7 +341,7 @@ FontFace::Constructor(const GlobalObject& aGlobal,
 void
 FontFace::Initialize(FontFaceInitializer* aInitializer)
 {
-  MOZ_ASSERT(!IsConnected());
+  MOZ_ASSERT(!HasRule());
   MOZ_ASSERT(mSourceType == SourceType(0));
 
   if (aInitializer->mSourceType == eSourceType_URLs) {
@@ -562,8 +562,8 @@ FontFace::DoLoad()
   MOZ_ASSERT(mInitialized);
 
   if (!mUserFontEntry) {
-    MOZ_ASSERT(!IsConnected(),
-               "CSS-connected FontFace objects should already have a user font "
+    MOZ_ASSERT(!HasRule(),
+               "Rule backed FontFace objects should already have a user font "
                "entry by the time Load() can be called on them");
 
     nsRefPtr<gfxUserFontEntry> newEntry =
@@ -658,9 +658,9 @@ FontFace::SetDescriptor(nsCSSFontDesc aFontDesc,
                         const nsAString& aValue,
                         ErrorResult& aRv)
 {
-  NS_ASSERTION(!IsConnected(),
-               "we don't handle rule-connected FontFace objects yet");
-  if (IsConnected()) {
+  NS_ASSERTION(!HasRule(),
+               "we don't handle rule backed FontFace objects yet");
+  if (HasRule()) {
     return;
   }
 
@@ -680,7 +680,7 @@ bool
 FontFace::SetDescriptors(const nsAString& aFamily,
                          const FontFaceDescriptors& aDescriptors)
 {
-  MOZ_ASSERT(!IsConnected());
+  MOZ_ASSERT(!HasRule());
   MOZ_ASSERT(!mDescriptors);
 
   mDescriptors = new CSSFontFaceDescriptors;
@@ -745,7 +745,7 @@ FontFace::OnInitialized()
 void
 FontFace::GetDesc(nsCSSFontDesc aDescID, nsCSSValue& aResult) const
 {
-  if (IsConnected()) {
+  if (HasRule()) {
     MOZ_ASSERT(mRule);
     MOZ_ASSERT(!mDescriptors);
     mRule->GetDesc(aDescID, aResult);
@@ -824,7 +824,7 @@ FontFace::GetFamilyName(nsString& aResult)
 void
 FontFace::DisconnectFromRule()
 {
-  MOZ_ASSERT(IsConnected());
+  MOZ_ASSERT(HasRule());
 
   // Make a copy of the descriptors.
   mDescriptors = new CSSFontFaceDescriptors;
