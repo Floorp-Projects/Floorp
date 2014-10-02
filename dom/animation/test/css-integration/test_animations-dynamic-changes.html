@@ -21,7 +21,6 @@ function addDiv() {
 async_test(function(t) {
   var div = addDiv();
   div.style.animation = 'anim1 100s';
-  window.getComputedStyle(div).animationName;
 
   var originalPlayer = div.getAnimationPlayers()[0];
   var originalStartTime = originalPlayer.startTime;
@@ -31,7 +30,6 @@ async_test(function(t) {
   // simply reflect the current time).
   window.requestAnimationFrame(t.step_func(function() {
     div.style.animationDuration = '200s';
-    window.getComputedStyle(div).animationDuration;
     var player = div.getAnimationPlayers()[0];
     assert_equals(player, originalPlayer,
                   'The same AnimationPlayer is returned after updating'
@@ -51,7 +49,6 @@ async_test(function(t) {
 test(function() {
   var div = addDiv();
   div.style.animation = 'anim1 100s, anim1 100s';
-  window.getComputedStyle(div).animationName;
 
   // Store original state
   var players = div.getAnimationPlayers();
@@ -60,7 +57,6 @@ test(function() {
 
   // Update first in list
   div.style.animationDuration = '200s, 100s';
-  window.getComputedStyle(div).animationDuration;
   players = div.getAnimationPlayers();
   assert_equals(players[0], player1,
                 'First player is in same position after update');
@@ -71,7 +67,6 @@ test(function() {
 async_test(function(t) {
   var div = addDiv();
   div.style.animation = 'anim1 200s, anim1 100s';
-  window.getComputedStyle(div).animationName;
 
   // Store original state
   var players = div.getAnimationPlayers();
@@ -83,7 +78,6 @@ async_test(function(t) {
     // Swap duration of first and second in list and prepend animation at the
     // same time
     div.style.animation = 'anim1 100s, anim1 100s, anim1 200s';
-    window.getComputedStyle(div).animationName;
     players = div.getAnimationPlayers();
     assert_true(players[0] !== player1 && players[0] !== player2,
                 'New player is prepended to start of list');
@@ -103,15 +97,12 @@ async_test(function(t) {
 async_test(function(t) {
   var div = addDiv();
   div.style.animation = 'anim1 100s, anim1 100s';
-  window.getComputedStyle(div).animationName;
-
   var secondPlayer = div.getAnimationPlayers()[1];
 
   // Wait before continuing so we can compare start times
   window.requestAnimationFrame(t.step_func(function() {
     // Trim list of animations
     div.style.animationName = 'anim1';
-    window.getComputedStyle(div).animationName;
     var players = div.getAnimationPlayers();
     assert_equals(players.length, 1, 'List of players was trimmed');
     assert_equals(players[0], secondPlayer,
@@ -127,19 +118,16 @@ async_test(function(t) {
 async_test(function(t) {
   var div = addDiv();
   div.style.animation = 'anim1 100s';
-  window.getComputedStyle(div).animationName;
   var firstAddedPlayer = div.getAnimationPlayers()[0];
 
   // Wait and add second player
   window.requestAnimationFrame(t.step_func(function() {
     div.style.animation = 'anim1 100s, anim1 100s';
-    window.getComputedStyle(div).animationName;
     var secondAddedPlayer = div.getAnimationPlayers()[0];
 
     // Wait again and add another player
     window.requestAnimationFrame(t.step_func(function() {
       div.style.animation = 'anim1 100s, anim2 100s, anim1 100s';
-      window.getComputedStyle(div).animationName;
       var players = div.getAnimationPlayers();
       assert_not_equals(firstAddedPlayer, secondAddedPlayer,
                         'New players are added to start of the list');

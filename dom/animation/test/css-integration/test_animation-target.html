@@ -1,0 +1,41 @@
+<!doctype html>
+<meta charset=utf-8>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="log"></div>
+<style>
+@keyframes anim { }
+</style>
+<script>
+'use strict';
+
+function addDiv() {
+  var div = document.createElement('div');
+  document.body.appendChild(div);
+  return div;
+}
+
+test(function() {
+  var div = addDiv();
+  div.style.animation = 'anim 100s';
+  var players = div.getAnimationPlayers();
+  assert_equals(players[0].source.target, div,
+    'Animation.target is the animatable div');
+  div.remove();
+}, 'Returned CSS animations have the correct Animation.target');
+
+test(function() {
+  var div = addDiv();
+
+  div.style.left = '0px';
+  window.getComputedStyle(div).transitionProperty;
+  div.style.transition = 'left 100s';
+  div.style.left = '100px';
+
+  var players = div.getAnimationPlayers();
+  assert_equals(players[0].source.target, div,
+    'Animation.target is the animatable div');
+  div.remove();
+}, 'Returned CSS transitions have the correct Animation.target');
+
+</script>

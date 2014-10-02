@@ -32,8 +32,11 @@ namespace mozilla {
 struct ElementPropertyTransition : public dom::Animation
 {
   ElementPropertyTransition(nsIDocument* aDocument,
+                            dom::Element* aTarget,
+                            nsCSSPseudoElements::Type aPseudoType,
                             const AnimationTiming &aTiming)
-    : dom::Animation(aDocument, aTiming, EmptyString()) { }
+    : dom::Animation(aDocument, aTarget, aPseudoType, aTiming, EmptyString())
+  { }
 
   virtual ElementPropertyTransition* AsTransition() { return this; }
   virtual const ElementPropertyTransition* AsTransition() const { return this; }

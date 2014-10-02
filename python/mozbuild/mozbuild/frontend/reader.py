@@ -56,6 +56,7 @@ from .sandbox import (
 
 from .context import (
     Context,
+    ContextDerivedValue,
     FUNCTIONS,
     VARIABLES,
     DEPRECATION_HINTS,
@@ -137,7 +138,7 @@ class MozbuildSandbox(Sandbox):
         if key in SPECIAL_VARIABLES:
             return SPECIAL_VARIABLES[key][0](self._context)
         if key in FUNCTIONS:
-            return FUNCTIONS[key][0](self)
+            return self._create_function(FUNCTIONS[key])
         if key in self.templates:
             return self._create_template_function(self.templates[key])
         return Sandbox.__getitem__(self, key)
@@ -151,45 +152,7 @@ class MozbuildSandbox(Sandbox):
             return
         Sandbox.__setitem__(self, key, value)
 
-    def normalize_path(self, path, filesystem_absolute=False, srcdir=None):
-        """Normalizes paths.
-
-        If the path is absolute, behavior is governed by filesystem_absolute.
-        If filesystem_absolute is True, the path is interpreted as absolute on
-        the actual filesystem. If it is false, the path is treated as absolute
-        within the current topsrcdir.
-
-        If the path is not absolute, it will be treated as relative to the
-        currently executing file. If there is no currently executing file, it
-        will be treated as relative to topsrcdir.
-        """
-        if os.path.isabs(path):
-            if filesystem_absolute:
-                return path
-            roots = [self._context.config.topsrcdir]
-            if self._context.config.external_source_dir:
-                roots.append(self._context.config.external_source_dir)
-            for root in roots:
-                # mozpath.join would ignore the self._context.config.topsrcdir
-                # argument if we passed in the absolute path, so omit the
-                # leading /
-                p = mozpath.normpath(mozpath.join(root, path[1:]))
-                if os.path.exists(p):
-                    return p
-            # mozpath.join would ignore the self.condig.topsrcdir argument if
-            # we passed in the absolute path, so omit the leading /
-            return mozpath.normpath(
-                mozpath.join(self._context.config.topsrcdir, path[1:]))
-        elif srcdir:
-            return mozpath.normpath(mozpath.join(srcdir, path))
-        elif len(self._execution_stack):
-            return mozpath.normpath(mozpath.join(
-                mozpath.dirname(self._execution_stack[-1]), path))
-        else:
-            return mozpath.normpath(
-                mozpath.join(self._context.config.topsrcdir, path))
-
-    def exec_file(self, path, filesystem_absolute=False):
+    def exec_file(self, path):
         """Override exec_file to normalize paths and restrict file loading.
 
         Paths will be rejected if they do not fall under topsrcdir or one of
@@ -198,13 +161,11 @@ class MozbuildSandbox(Sandbox):
 
         # realpath() is needed for true security. But, this isn't for security
         # protection, so it is omitted.
-        normalized_path = self.normalize_path(path,
-            filesystem_absolute=filesystem_absolute)
-        if not is_read_allowed(normalized_path, self._context.config):
-            raise SandboxLoadError(list(self._execution_stack),
+        if not is_read_allowed(path, self._context.config):
+            raise SandboxLoadError(self._context.source_stack,
                 sys.exc_info()[2], illegal_path=path)
 
-        Sandbox.exec_file(self, normalized_path)
+        Sandbox.exec_file(self, path)
 
     def _add_java_jar(self, name):
         """Add a Java JAR build target."""
@@ -250,25 +211,6 @@ class MozbuildSandbox(Sandbox):
         data.is_library = True
         return data
 
-    def _add_tier_directory(self, tier, reldir, external=False):
-        """Register a tier directory with the build."""
-        if isinstance(reldir, text_type):
-            reldir = [reldir]
-
-        if not tier in self['TIERS']:
-            self['TIERS'][tier] = {
-                'regular': [],
-                'external': [],
-            }
-
-        key = 'external' if external else 'regular'
-        for path in reldir:
-            if path in self['TIERS'][tier][key]:
-                raise Exception('Directory has already been registered with '
-                    'tier: %s' % path)
-
-            self['TIERS'][tier][key].append(path)
-
     def _export(self, varname):
         """Export the variable to all subdirectories of the current path."""
 
@@ -296,15 +238,15 @@ class MozbuildSandbox(Sandbox):
     def _include(self, path):
         """Include and exec another file within the context of this one."""
 
-        # exec_file() handles normalization and verification of the path.
-        self.exec_file(path)
+        # path is a SourcePath, and needs to be coerced to unicode.
+        self.exec_file(unicode(path))
 
     def _warning(self, message):
         # FUTURE consider capturing warnings in a variable instead of printing.
         print('WARNING: %s' % message, file=sys.stderr)
 
     def _error(self, message):
-        raise SandboxCalledError(self._execution_stack, message)
+        raise SandboxCalledError(self._context.source_stack, message)
 
     def _template_decorator(self, func):
         """Registers template as expected by _create_template_function.
@@ -365,7 +307,28 @@ class MozbuildSandbox(Sandbox):
         code = '\n' * (firstlineno + begin[0] - 3) + 'if True:\n'
         code += ''.join(lines[begin[0] - 1:])
 
-        self.templates[name] = func, code, self._execution_stack[-1]
+        self.templates[name] = func, code, self._context.current_path
+
+    @memoize
+    def _create_function(self, function_def):
+        """Returns a function object for use within the sandbox for the given
+        function definition.
+
+        The wrapper function does type coercion on the function arguments
+        """
+        func, args_def, doc = function_def
+        def function(*args):
+            def coerce(arg, type):
+                if not isinstance(arg, type):
+                    if issubclass(type, ContextDerivedValue):
+                        arg = type(self._context, arg)
+                    else:
+                        arg = type(arg)
+                return arg
+            args = [coerce(arg, type) for arg, type in zip(args, args_def)]
+            return func(self)(*args)
+
+        return function
 
     @memoize
     def _create_template_function(self, template):
@@ -382,7 +345,7 @@ class MozbuildSandbox(Sandbox):
 
         def template_function(*args, **kwargs):
             context = TemplateContext(VARIABLES, self._context.config)
-            context.add_source(self._execution_stack[-1])
+            context.add_source(self._context.current_path)
             for p in self._context.all_paths:
                 context.add_source(p)
 
@@ -771,8 +734,7 @@ class BuildReader(object):
         read, a new Context is created and emitted.
         """
         path = mozpath.join(self.config.topsrcdir, 'moz.build')
-        return self.read_mozbuild(path, self.config, read_tiers=True,
-            filesystem_absolute=True)
+        return self.read_mozbuild(path, self.config, read_tiers=True)
 
     def walk_topsrcdir(self):
         """Read all moz.build files in the source tree.
@@ -800,11 +762,11 @@ class BuildReader(object):
         for path, f in finder.find('**/moz.build'):
             path = os.path.join(self.config.topsrcdir, path)
             for s in self.read_mozbuild(path, self.config, descend=False,
-                filesystem_absolute=True, read_tiers=True):
+                read_tiers=True):
                 yield s
 
-    def read_mozbuild(self, path, config, read_tiers=False,
-            filesystem_absolute=False, descend=True, metadata={}):
+    def read_mozbuild(self, path, config, read_tiers=False, descend=True,
+            metadata={}):
         """Read and process a mozbuild file, descending into children.
 
         This starts with a single mozbuild file, executes it, and descends into
@@ -832,7 +794,6 @@ class BuildReader(object):
         self._execution_stack.append(path)
         try:
             for s in self._read_mozbuild(path, config, read_tiers=read_tiers,
-                filesystem_absolute=filesystem_absolute,
                 descend=descend, metadata=metadata):
                 yield s
 
@@ -859,8 +820,7 @@ class BuildReader(object):
             raise BuildReaderError(list(self._execution_stack),
                 sys.exc_info()[2], other_error=e)
 
-    def _read_mozbuild(self, path, config, read_tiers, filesystem_absolute,
-            descend, metadata):
+    def _read_mozbuild(self, path, config, read_tiers, descend, metadata):
         path = mozpath.normpath(path)
         log(self._log, logging.DEBUG, 'read_mozbuild', {'path': path},
             'Reading file: {path}')
@@ -896,7 +856,7 @@ class BuildReader(object):
 
         context = Context(VARIABLES, config)
         sandbox = MozbuildSandbox(context, metadata=metadata)
-        sandbox.exec_file(path, filesystem_absolute=filesystem_absolute)
+        sandbox.exec_file(path)
         context.execution_time = time.time() - time_start
 
         if self._sandbox_post_eval_cb:
@@ -964,7 +924,7 @@ class BuildReader(object):
                 if d in recurse_info:
                     raise SandboxValidationError(
                         'Directory (%s) registered multiple times in %s' % (
-                            d, var), context)
+                            mozpath.relpath(d, context.srcdir), var), context)
 
                 recurse_info[d] = {}
                 if 'templates' in sandbox.metadata:
@@ -974,30 +934,8 @@ class BuildReader(object):
                     sandbox.recompute_exports()
                     recurse_info[d]['exports'] = dict(sandbox.metadata['exports'])
 
-        # We also have tiers whose members are directories.
-        if 'TIERS' in context:
-            if not read_tiers:
-                raise SandboxValidationError(
-                    'TIERS defined but it should not be', context)
-
-            for tier, values in context['TIERS'].items():
-                # We don't descend into external directories because external by
-                # definition is external to the build system.
-                for d in values['regular']:
-                    if d in recurse_info:
-                        raise SandboxValidationError(
-                            'Tier directory (%s) registered multiple '
-                            'times in %s' % (d, tier), context)
-                    recurse_info[d] = {'check_external': True}
-                    if 'templates' in sandbox.metadata:
-                        recurse_info[d]['templates'] = dict(
-                            sandbox.metadata['templates'])
-
-        for relpath, child_metadata in recurse_info.items():
-            if 'check_external' in child_metadata:
-                relpath = '/' + relpath
-            child_path = sandbox.normalize_path(mozpath.join(relpath,
-                'moz.build'), srcdir=curdir)
+        for path, child_metadata in recurse_info.items():
+            child_path = path.join('moz.build')
 
             # Ensure we don't break out of the topsrcdir. We don't do realpath
             # because it isn't necessary. If there are symlinks in the srcdir,
@@ -1012,8 +950,7 @@ class BuildReader(object):
                 continue
 
             for res in self.read_mozbuild(child_path, context.config,
-                read_tiers=False, filesystem_absolute=True,
-                metadata=child_metadata):
+                read_tiers=False, metadata=child_metadata):
                 yield res
 
         self._execution_stack.pop()

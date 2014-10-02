@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test for the CSS Font Loading API</title>
+<script src=/tests/SimpleTest/SimpleTest.js></script>
+<link rel=stylesheet type=text/css href=/tests/SimpleTest/test.css>
+
+<script src=descriptor_database.js></script>
+
+<script>
+// Map of FontFace descriptor attribute names to @font-face rule descriptor
+// names.
+var descriptorNames = {
+  style: "font-style",
+  weight: "font-weight",
+  stretch: "font-stretch",
+  unicodeRange: "unicode-range",
+  variant: "font-variant",
+  featureSettings: "font-feature-settings"
+};
+
+// Default values for the FontFace descriptor attributes other than family, as
+// Gecko currently serializes them.
+var defaultValues = {
+  style: "normal",
+  weight: "normal",
+  stretch: "normal",
+  unicodeRange: "U+0000-10FFFF",
+  variant: "normal",
+  featureSettings: "normal"
+};
+
+// Non-default values for the FontFace descriptor attributes other than family
+// along with how Gecko currently serializes them.  Each value is chosen to be
+// differeny from the default value and also has a different serialized form.
+var nonDefaultValues = {
+  style: ["Italic", "italic"],
+  weight: ["Bold", "bold"],
+  stretch: ["Ultra-Condensed", "ultra-condensed"],
+  unicodeRange: ["U+3??", "U+0300-03FF"],
+  variant: ["Small-Caps", "small-caps"],
+  featureSettings: ["'dlig' on", "\"dlig\""]
+};
+
+// Invalid values for the FontFace descriptor attributes other than family.
+var invalidValues = {
+  style: "initial",
+  weight: "bolder",
+  stretch: "wider",
+  unicodeRange: "U+1????-2????",
+  variant: "inherit",
+  featureSettings: "dlig"
+};
+
+// Invalid font family names.
+var invalidFontFamilyNames = [
+  "", "\"\"", "sans-serif", "A, B", "inherit"
+];
+
+// Will hold an ArrayBuffer containing a valid font.
+var fontData;
+
+var queue = Promise.resolve();
+
+function is_resolved_with(aPromise, aExpectedValue, aDescription, aTestID) {
+  // This assumes that all Promise tasks come from the task source.
+  var handled = false;
+  return new Promise(function(aResolve, aReject) {
+    aPromise.then(function(aValue) {
+      if (!handled) {
+        handled = true;
+        is(aValue, aExpectedValue, aDescription + " should be resolved with the expected value " + aTestID);
+        aResolve();
+      }
+    }, function(aError) {
+      if (!handled) {
+        handled = true;
+        ok(false, aDescription + " should be resolved; instead it was rejected with " + aError + " " + aTestID);
+        aResolve();
+      }
+    });
+    Promise.resolve().then(function() {
+      if (!handled) {
+        handled = true;
+        ok(false, aDescription + " should be resolved; instead it is pending " + aTestID);
+        aResolve();
+      }
+    });
+  });
+}
+
+function is_pending(aPromise, aDescription, aTestID) {
+  // This assumes that all Promise tasks come from the task source.
+  var handled = false;
+  return new Promise(function(aResolve, aReject) {
+    aPromise.then(function(aValue) {
+      if (!handled) {
+        handled = true;
+        ok(false, aDescription + " should be pending; instead it was resolved with " + aValue + " " + aTestID);
+        aResolve();
+      }
+    }, function(aError) {
+      if (!handled) {
+        handled = true;
+        ok(false, aDescription + " should be pending; instead it was rejected with " + aError + " " + aTestID);
+        aResolve();
+      }
+    });
+    Promise.resolve().then(function() {
+      if (!handled) {
+        handled = true;
+        ok(true, aDescription + " should be pending " + aTestID);
+        aResolve();
+      }
+    });
+  });
+}
+
+function fetchAsArrayBuffer(aURL) {
+  var xhr;
+  return new Promise(function(aResolve, aReject) {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", aURL);
+    xhr.responseType = "arraybuffer";
+    xhr.onreadystatechange = function(evt) {
+      if (xhr.readyState == 4) {
+        if (xhr.status >= 200 && xhr.status <= 299) {
+          aResolve(xhr.response);
+        } else {
+          aReject(new Error("Error fetching file " + aURL + ", status " + xhr.status));
+        }
+      }
+    };
+    xhr.send();
+  });
+}
+
+function setTimeoutZero() {
+  return new Promise(function(aResolve, aReject) {
+    setTimeout(aResolve, 0);
+  });
+}
+
+function awaitRefresh() {
+  function awaitOneRefresh() {
+    return new Promise(function(aResolve, aReject) {
+      requestAnimationFrame(aResolve);
+    });
+  }
+
+  return awaitOneRefresh().then(awaitOneRefresh);
+}
+
+function runTest() {
+  SimpleTest.waitForExplicitFinish();
+
+  queue = queue.then(function() {
+
+    // First, initialize fontData.
+    return fetchAsArrayBuffer("BitPattern.woff")
+             .then(function(aResult) { fontData = aResult; });
+
+  }).then(function() {
+
+    // (TEST 1) Some miscellaneous tests for FontFaceSet and FontFace.
+    ok(window.FontFaceSet, "FontFaceSet interface object should be present (TEST 1)");
+    is(Object.getPrototypeOf(FontFaceSet.prototype), EventTarget.prototype, "FontFaceSet should inherit from EventTarget (TEST 1)");
+    ok(document.fonts instanceof FontFaceSet, "document.fonts should be a a FontFaceSet (TEST 1)");
+    ok(window.FontFace, "FontFace interface object should be present (TEST 1)");
+    is(Object.getPrototypeOf(FontFace.prototype), Object.prototype, "FontFace should inherit from Object (TEST 1)");
+
+    // (TEST 2) Some miscellaneous tests for CSSFontFaceLoadEvent.
+    ok(window.CSSFontFaceLoadEvent, "CSSFontFaceLoadEvent interface object should be present (TEST 2)");
+    is(Object.getPrototypeOf(CSSFontFaceLoadEvent.prototype), Event.prototype, "CSSFontFaceLoadEvent should inherit from Event (TEST 2)");
+
+  }).then(function() {
+
+    // (TEST 3) Test that document.fonts.ready starts out resolved with the
+    // FontFaceSet.
+    return is_resolved_with(document.fonts.ready, document.fonts, "initial value of document.fonts", "(TEST 3)");
+
+  }).then(function() {
+
+    // (TEST 4) Test that document.fonts in this test document starts out with no
+    // FontFace objects in it.
+    is(Array.from(document.fonts).length, 0, "initial number of FontFace objects in document.fonts (TEST 4)");
+
+    // (TEST 5) Test that document.fonts.status starts off as loaded.
+    is(document.fonts.status, "loaded", "initial value of document.fonts.status (TEST 5)");
+
+    // (TEST 6) Test initial value of FontFace.status when a url() source is
+    // used.
+    is(new FontFace("test", "url(x)").status, "unloaded", "initial value of FontFace.status when a url() source is used (TEST 6)");
+
+    // (TEST 7) Test initial value of FontFace.status when an invalid
+    // ArrayBuffer source is used.
+    is(new FontFace("test", new ArrayBuffer(0)).status, "unloaded", "initial value of FontFace.status when an invalid ArrayBuffer source is used (TEST 7)");
+
+    // (TEST 8) Test initial value of FontFace.status when a valid ArrayBuffer
+    // source is used.
+    is(new FontFace("test", fontData).status, "unloaded", "initial value of FontFace.status when a valid ArrayBuffer source is used (TEST 8)");
+
+    // (TEST 9) Test initial value of FontFace.loaded when an invalid url()
+    // source is used.
+    return is_pending(new FontFace("test", "").loaded, "initial value of FontFace.loaded when an invalid url() source is used", "(TEST 9)");
+
+  }).then(function() {
+
+    // (TEST 10) Test initial value of FontFace.loaded when a valid url()
+    // source is used.
+    return is_pending(new FontFace("test", "url(x)").loaded, "initial value of FontFace.loaded when a valid url() source is used", "(TEST 10)");
+
+  }).then(function() {
+
+    // (TEST 11) Test initial value of FontFace.loaded when an invalid
+    // ArrayBuffer source is used.
+    return is_pending(new FontFace("test", new ArrayBuffer(0)).loaded, "initial value of FontFace.loaded when an invalid ArrayBuffer source is used", "(TEST 11)");
+
+  }).then(function() {
+
+    // (TEST 12) Test initial value of FontFace.loaded when a valid ArrayBuffer
+    // source is used.
+    return is_pending(new FontFace("test", fontData).loaded, "initial value of FontFace.loaded when a valid ArrayBuffer source is used", "(TEST 12)");
+
+  }).then(function() {
+
+    // (TEST 13) Test initial values of the descriptor attributes on FontFace
+    // objects.
+    var face = new FontFace("test", fontData);
+    // XXX Spec issue: what values do the descriptor attributes have before the
+    // constructor's dictionary argument is parsed?
+    for (var desc in defaultValues) {
+      is(face[desc], defaultValues[desc], "initial value of FontFace." + desc + " (TEST 13)");
+    }
+
+    // (TEST 14) Test default values of the FontFaceDescriptors dictionary.
+    return face.loaded.then(function() {
+      for (var desc in defaultValues) {
+        is(face[desc], defaultValues[desc], "default value of FontFace." + desc + " (TEST 14)");
+      }
+    }, function(aError) {
+      ok(false, "FontFace should have loaded succesfully (TEST 14)");
+    });
+
+  }).then(function() {
+
+    // (TEST 15) Test passing non-default descriptor values to the FontFace
+    // constructor.
+    var descriptorTests = Promise.resolve();
+    Object.keys(nonDefaultValues).forEach(function(aDesc) {
+      descriptorTests = descriptorTests.then(function() {
+        var init = {};
+        init[aDesc] = nonDefaultValues[aDesc][0];
+        var face = new FontFace("test", fontData, init);
+        var ok_todo = aDesc == "variant" ? todo : ok;
+        ok_todo(face[aDesc] == nonDefaultValues[aDesc][1], "specified valid non-default value of FontFace." + aDesc + " immediately after construction (TEST 15)");
+        return face.loaded.then(function() {
+          ok_todo(face[aDesc] == nonDefaultValues[aDesc][1], "specified valid non-default value of FontFace." + aDesc + " (TEST 15)");
+        }, function(aError) {
+          ok(false, "FontFace should have loaded succesfully (TEST 15)");
+        });
+      });
+    });
+    return descriptorTests;
+
+  }).then(function() {
+
+    // (TEST 16) Test passing invalid descriptor values to the FontFace
+    // constructor.
+    var descriptorTests = Promise.resolve();
+    Object.keys(invalidValues).forEach(function(aDesc) {
+      descriptorTests = descriptorTests.then(function() {
+        var init = {};
+        init[aDesc] = invalidValues[aDesc];
+        var face = new FontFace("test", fontData, init);
+        var ok_todo = aDesc == "variant" ? todo : ok;
+        ok_todo(face.status == "error", "FontFace should be error immediately after construction with invalid value of FontFace." + aDesc + " (TEST 16)");
+        return face.loaded.then(function() {
+          ok_todo(false, "FontFace should not load after invalid value of FontFace." + aDesc + " specified (TEST 16)");
+        }, function(aError) {
+          ok(true, "FontFace should not load after invalid value of FontFace." + aDesc + " specified (TEST 16)");
+          is(aError.name, "SyntaxError", "FontFace.loaded with invalid value of FontFace." + aDesc + " should be rejected with a SyntaxError (TEST 16)");
+        });
+      });
+    });
+    return descriptorTests;
+
+  }).then(function() {
+
+    // (TEST 17) Test passing an invalid font family name to the FontFace
+    // constructor.
+    var familyTests = Promise.resolve();
+    invalidFontFamilyNames.forEach(function(aFamilyName) {
+      familyTests = familyTests.then(function() {
+        var face = new FontFace(aFamilyName, fontData);
+        is(face.status, "error", "FontFace should be error immediately after construction with invalid family name " + aFamilyName + " (TEST 17)");
+        return face.loaded.then(function() {
+          ok(false, "FontFace should not load after invalid family name " + aFamilyName + " specified (TEST 17)");
+        }, function(aError) {
+          ok(true, "FontFace should not load after invalid family name " + aFamilyName + " specified (TEST 17)");
+          is(aError.name, "SyntaxError", "FontFace.loaded with invalid family name " + aFamilyName + " should be rejected with a SyntaxError (TEST 17)");
+        });
+      });
+    });
+    return familyTests;
+
+  }).then(function() {
+
+    // (TEST 18) Test passing valid url() source strings to the FontFace
+    // constructor.
+    var srcTests = Promise.resolve();
+    gCSSFontFaceDescriptors.src.values.forEach(function(aSrc) {
+      srcTests = srcTests.then(function() {
+        var face = new FontFace("test", aSrc);
+        return face.load().then(function() {
+          ok(true, "FontFace should load with valid url() src " + aSrc + " (TEST 18)");
+        }, function(aError) {
+          is(aError.name, "NetworkError", "FontFace had NetworkError when loading with valid url() src " + aSrc + " (TEST 18)");
+        });
+      });
+    });
+    return srcTests;
+
+  }).then(function() {
+
+    // (TEST 19) Test passing invalid url() source strings to the FontFace
+    // constructor.
+    var srcTests = Promise.resolve();
+    gCSSFontFaceDescriptors.src.invalid_values.forEach(function(aSrc) {
+      srcTests = srcTests.then(function() {
+        var face = new FontFace("test", aSrc);
+        return face.load().then(function() {
+          ok(false, "FontFace should not load with invalid url() src " + aSrc + " (TEST 19)");
+        }, function(aError) {
+          is(aError.name, "SyntaxError", "FontFace.ready should have been rejected with a SyntaxError when loaded with an invalid url() src " + aSrc + " (TEST 19)");
+        });
+      });
+    });
+    return srcTests;
+
+  }).then(function() {
+
+    // (TEST 20) Test that the status of a FontFace constructed with a valid
+    // ArrayBuffer source eventually becomes "loaded".
+    var face = new FontFace("test", fontData);
+    return face.loaded.then(function() {
+      is(face.status, "loaded", "status of FontFace constructed with a valid ArrayBuffer source should eventually be \"loaded\" (TEST 20)");
+    }, function(aError) {
+      ok(false, "FontFace constructed with a valid ArrayBuffer should eventually load (TEST 20)");
+    });
+
+  }).then(function() {
+
+    // (TEST 21) Test that the status of a FontFace constructed with an invalid
+    // ArrayBuffer source eventually becomes "error".
+    var face = new FontFace("test", new ArrayBuffer(0));
+    return face.loaded.then(function() {
+      ok(false, "FontFace constructed with an invalid ArrayBuffer should not load (TEST 21)");
+    }, function(aError) {
+      is(aError.name, "SyntaxError", "loaded of FontFace constructed with an invalid ArrayBuffer source should be rejected with TypeError (TEST 21)");
+      is(face.status, "error", "status of FontFace constructed with an invalid ArrayBuffer source should eventually be \"error\" (TEST 21)");
+    });
+
+  }).then(function() {
+
+    // (TEST 22) Test assigning non-default descriptor values on the FontFace.
+    var descriptorTests = Promise.resolve();
+    Object.keys(nonDefaultValues).forEach(function(aDesc) {
+      descriptorTests = descriptorTests.then(function() {
+        var face = new FontFace("test", fontData);
+        return face.loaded.then(function() {
+          var ok_todo = aDesc == "variant" ? todo : ok;
+          face[aDesc] = nonDefaultValues[aDesc][0];
+          ok_todo(face[aDesc] == nonDefaultValues[aDesc][1], "assigned valid non-default value to FontFace." + aDesc + " (TEST 22) ");
+        }, function(aError) {
+          ok(false, "FontFace should have loaded succesfully (TEST 22)");
+        });
+      });
+    });
+    return descriptorTests;
+
+  }).then(function() {
+
+    // (TEST 23) Test assigning invalid descriptor values on the FontFace.
+    var descriptorTests = Promise.resolve();
+    Object.keys(invalidValues).forEach(function(aDesc) {
+      descriptorTests = descriptorTests.then(function() {
+        var face = new FontFace("test", fontData);
+        return face.loaded.then(function() {
+          var ok_todo = aDesc == "variant" ? todo : ok;
+          var exceptionName = "";
+          try {
+            face[aDesc] = invalidValues[aDesc];
+          } catch (ex) {
+            exceptionName = ex.name;
+          }
+          ok_todo(exceptionName == "SyntaxError", "assigning invalid value to FontFace." + aDesc + " should throw a SyntaxError (TEST 23)");
+        }, function(aError) {
+          ok(false, "FontFace should have loaded succesfully (TEST 23)");
+        });
+      });
+    });
+    return descriptorTests;
+
+  }).then(function() {
+
+    // (TEST 24) Test that the status of a FontFace with a non-existing url()
+    // source is set to "loading" right after load() is called, that its .loaded
+    // Promise is returned, and that the Promise is eventually rejected with a
+    // NetworkError and its status is set to "error".
+    var face = new FontFace("test", "url(x)");
+    var result = face.load();
+    is(face.status, "loading", "FontFace.status should be \"loading\" right after load() is called (TEST 24)");
+    is(result, face.loaded, "FontFace.load() should return the .loaded Promise (TEST 24)");
+
+    return result.then(function() {
+      ok(false, "FontFace with a non-existing url() source should not load (TEST 24)");
+    }, function(aError) {
+      is(aError.name, "NetworkError", "FontFace with a non-existing url() source should result in its .loaded Promise being rejected with a NetworkError (TEST 24)");
+      is(face.status, "error", "FontFace with a non-existing url() source should result in its .status being set to \"error\" (TEST 24)");
+    });
+
+  }).then(function() {
+
+    // (TEST 25) Test simple manipulation of the FontFaceSet.
+    var face, face2, all;
+    face = new FontFace("test", "url(x)");
+    face2 = new FontFace("test2", "url(x)");
+    ok(!document.fonts.has(face), "newly created FontFace should not be in document.fonts (TEST 25)");
+    document.fonts.add(face);
+    ok(document.fonts.has(face), "should be able to add a FontFace to document.fonts (TEST 25)");
+    document.fonts.add(face);
+    ok(document.fonts.has(face), "should be able to repeatedly add a FontFace to document.fonts (TEST 25)");
+    ok(document.fonts.delete(face), "FontFaceSet.delete should return true when it succeeds (TEST 25)");
+    ok(!document.fonts.has(face), "FontFace should be gone from document.fonts after delete is called (TEST 25)");
+    ok(!document.fonts.delete(face), "FontFaceSet.delete should return false when it fails (TEST 25)");
+    document.fonts.add(face);
+    document.fonts.add(face2);
+    ok(document.fonts.has(face2), "should be able to add a second FontFace to document.fonts (TEST 25)");
+    document.fonts.clear();
+    ok(!document.fonts.has(face) && !document.fonts.has(face2), "FontFaces should be gone from document.fonts after clear is called (TEST 25)");
+    document.fonts.add(face);
+    document.fonts.add(face2);
+    all = Array.from(document.fonts);
+    is(all[0], face, "FontFaces should be returned in the same order as insertion (TEST 25)");
+    is(all[1], face2, "FontFaces should be returned in the same order as insertion (TEST 25)");
+    document.fonts.add(face);
+    all = Array.from(document.fonts);
+    is(all[0], face, "FontFaces should be not be reordered when a duplicate entry is added (TEST 25)");
+    is(all[1], face2, "FontFaces should be not be reordered when a duplicate entry is added (TEST 25)");
+    document.fonts.clear();
+    return document.fonts.read;
+
+  }).then(function() {
+
+    // (TEST 26) Test that FontFaceSet.ready is replaced, .status is set to
+    // "loading", and a loading event is dispatched when a loading FontFace is
+    // added to it.
+    var awaitEvents = new Promise(function(aResolve, aReject) {
+
+      var onloadingTriggered = false, loadingDispatched = false;
+
+      function check() {
+        if (onloadingTriggered && loadingDispatched) {
+          document.fonts.onloading = null;
+          document.fonts.removeEventListener("loading", listener);
+          aResolve();
+        }
+      }
+
+      var listener = function(aEvent) {
+        is(Object.getPrototypeOf(aEvent), Event.prototype, "loading event should be a plain Event object (TEST 26)");
+        loadingDispatched = true;
+        check();
+      };
+      document.fonts.addEventListener("loading", listener);
+      document.fonts.onloading = function(aEvent) {
+        is(Object.getPrototypeOf(aEvent), Event.prototype, "loading event should be a plain Event object (TEST 26)");
+        onloadingTriggered = true;
+        check();
+      };
+    });
+
+    is(document.fonts.status, "loaded", "FontFaceSet.status initially (TEST 26)");
+
+    var oldReady = document.fonts.ready;
+    var face = new FontFace("test", "url(neverending_font_load.sjs)");
+    face.load();
+    document.fonts.add(face);
+
+    var newReady = document.fonts.ready;
+    isnot(newReady, oldReady, "FontFaceSet.ready should be replaced when a loading FontFace is added to it (TEST 26)");
+    is(document.fonts.status, "loading", "FontFaceSet.status should be set to \"loading\" when a loading FontFace is added to it (TEST 26)");
+
+    return awaitEvents
+        .then(is_pending(newReady, "FontFaceSet.ready should be replaced with a fresh pending Promise when a loading FontFace is added to it", "(TEST 26)"))
+        .then(function() {
+          document.fonts.clear();
+          return document.fonts.ready;
+        });
+
+  }).then(function() {
+
+    // (TEST 27) Test that FontFaceSet.ready is resolved, .status is set to
+    // "loaded", and a loadingdone event (but no loadingerror event) is
+    // dispatched when the only loading FontFace in it is removed.
+    var awaitEvents = new Promise(function(aResolve, aReject) {
+
+      var onloadingdoneTriggered = false, loadingdoneDispatched = false;
+      var onloadingerrorTriggered = false, loadingerrorDispatched = false;
+
+      function check() {
+        document.fonts.onloadingdone = null;
+        document.fonts.onloadingerror = null;
+        document.fonts.removeEventListener("loadingdone", doneListener);
+        document.fonts.removeEventListener("loadingerror", errorListener);
+        aResolve();
+      }
+
+      var doneListener = function(aEvent) {
+        is(Object.getPrototypeOf(aEvent), CSSFontFaceLoadEvent.prototype, "loadingdone event should be a CSSFontFaceLoadEvent object (TEST 27)");
+        is(aEvent.fontfaces.length, 0, "the CSSFontFaceLoadEvent should have an empty fontfaces array (TEST 27)");
+        loadingdoneDispatched = true;
+        check();
+      };
+      document.fonts.addEventListener("loadingdone", doneListener);
+      document.fonts.onloadingdone = function(aEvent) {
+        is(Object.getPrototypeOf(aEvent), CSSFontFaceLoadEvent.prototype, "loadingdone event should be a CSSFontFaceLoadEvent object (TEST 27)");
+        is(aEvent.fontfaces.length, 0, "the CSSFontFaceLoadEvent should have an empty fontfaces array (TEST 27)");
+        onloadingdoneTriggered = true;
+        check();
+      };
+      var errorListener = function(aEvent) {
+        loadingerrorDispatched = true;
+        check();
+      }
+      document.fonts.addEventListener("loadingerror", errorListener);
+      document.fonts.onloadingerror = function(aEvent) {
+        onloadingdoneTriggered = true;
+        check();
+      };
+    });
+
+    is(document.fonts.status, "loaded", "FontFaceSet.status should be \"loaded\" initially (TEST 27)");
+
+    var f = new FontFace("test", "url(neverending_font_load.sjs)");
+    f.load();
+    document.fonts.add(f);
+
+    is(document.fonts.status, "loading", "FontFaceSet.status should be \"loading\" when a loading FontFace is in it (TEST 27)");
+
+    document.fonts.clear();
+
+    return awaitEvents
+        .then(is_resolved_with(document.fonts.ready, document.fonts, "FontFaceSet.ready when the FontFaceSet is cleared", "(TEST 27)"))
+        .then(function() {
+          is(document.fonts.status, "loaded", "FontFaceSet.status should be set to \"loaded\" when it is cleared (TEST 27)");
+          return document.fonts.ready;
+        });
+
+  }).then(function() {
+
+    // (TEST 28) Test that FontFaceSet.ready is replaced, .status is set to
+    // "loading", and a loading event is dispatched when a FontFace in it
+    // starts loading.
+    var awaitEvents = new Promise(function(aResolve, aReject) {
+
+      var onloadingTriggered = false, loadingDispatched = false;
+
+      function check() {
+        if (onloadingTriggered && loadingDispatched) {
+          document.fonts.onloading = null;
+          document.fonts.removeEventListener("loading", listener);
+          aResolve();
+        }
+      }
+
+      var listener = function(aEvent) {
+        is(Object.getPrototypeOf(aEvent), Event.prototype, "loading event should be a plain Event object (TEST 28)");
+        loadingDispatched = true;
+        check();
+      };
+      document.fonts.addEventListener("loading", listener);
+      document.fonts.onloading = function(aEvent) {
+        is(Object.getPrototypeOf(aEvent), Event.prototype, "loading event should be a plain Event object (TEST 28)");
+        onloadingTriggered = true;
+        check();
+      };
+    });
+
+    var oldReady = document.fonts.ready;
+    var face = new FontFace("test", "url(neverending_font_load.sjs)");
+    document.fonts.add(face);
+    face.load();
+
+    var newReady = document.fonts.ready;
+    isnot(newReady, oldReady, "FontFaceSet.ready should be replaced when its only FontFace starts loading (TEST 28)");
+    is(document.fonts.status, "loading", "FontFaceSet.status should be set to \"loading\" when its only FontFace starts loading (TEST 28)");
+
+    return awaitEvents
+        .then(is_pending(newReady, "FontFaceSet.ready when the FontFaceSet's only FontFace starts loading", "(TEST 28)"))
+        .then(function() {
+          document.fonts.clear();
+          return document.fonts.ready;
+        });
+
+  }).then(function() {
+
+    // (TEST 29) Test that a loadingdone and a loadingerror event is dispatched
+    // when a FontFace with status "error" is added to the FontFaceSet.
+    var face;
+    var awaitEvents = new Promise(function(aResolve, aReject) {
+
+      var onloadingdoneTriggered = false, loadingdoneDispatched = false;
+      var onloadingerrorTriggered = false, loadingerrorDispatched = false;
+
+      function check() {
+        if (onloadingdoneTriggered && loadingdoneDispatched &&
+            onloadingerrorTriggered && loadingerrorDispatched) {
+          document.fonts.onloadingdone = null;
+          document.fonts.onloadingerror = null;
+          document.fonts.removeEventListener("loadingdone", doneListener);
+          document.fonts.removeEventListener("loadingerror", errorListener);
+          aResolve();
+        }
+      }
+
+      var doneListener = function(aEvent) {
+        loadingdoneDispatched = true;
+        check();
+      };
+      document.fonts.addEventListener("loadingdone", doneListener);
+      document.fonts.onloadingdone = function(aEvent) {
+        is(Object.getPrototypeOf(aEvent), CSSFontFaceLoadEvent.prototype, "loadingdone event should be a CSSFontFaceLoadEvent object (TEST 29)");
+        is(aEvent.fontfaces.length, 0, "the CSSFontFaceLoadEvent should have an empty fontfaces array (TEST 29)");
+        onloadingdoneTriggered = true;
+        check();
+      };
+      var errorListener = function(aEvent) {
+        is(Object.getPrototypeOf(aEvent), CSSFontFaceLoadEvent.prototype, "loadingerror event should be a CSSFontFaceLoadEvent object (TEST 29)");
+        is(aEvent.fontfaces[0], face, "the CSSFontFaceLoadEvent should have a fontfaces array with the FontFace in it (TEST 29)");
+        loadingerrorDispatched = true;
+        check();
+      }
+      document.fonts.addEventListener("loadingerror", errorListener);
+      document.fonts.onloadingerror = function(aEvent) {
+        onloadingerrorTriggered = true;
+        check();
+      };
+    });
+
+    face = new FontFace("test", new ArrayBuffer(0));
+
+    return face.loaded
+      .then(function() {
+        ok(false, "the FontFace should not load (TEST 29)");
+      }, function(aError) {
+        is(face.status, "error", "FontFace should have status \"error\" (TEST 29)");
+        document.fonts.add(face);
+      })
+      .then(awaitEvents)
+      .then(function() {
+        document.fonts.clear();
+        return document.fonts.ready;
+      });
+
+  }).then(function() {
+
+    // (TEST 30) Test that a loadingdone event is dispatched when a FontFace
+    // with status "loaded" is added to the FontFaceSet.
+    var face;
+    var awaitEvents = new Promise(function(aResolve, aReject) {
+
+      var onloadingdoneTriggered = false, loadingdoneDispatched = false;
+
+      function check() {
+        if (onloadingdoneTriggered && loadingdoneDispatched) {
+          document.fonts.onloadingdone = null;
+          document.fonts.removeEventListener("loadingdone", doneListener);
+          aResolve();
+        }
+      }
+
+      var doneListener = function(aEvent) {
+        loadingdoneDispatched = true;
+        check();
+      };
+      document.fonts.addEventListener("loadingdone", doneListener);
+      document.fonts.onloadingdone = function(aEvent) {
+        is(aEvent.fontfaces[0], face, "the CSSFontFaceLoadEvent should have a fontfaces array with the FontFace in it (TEST 30)");
+        onloadingdoneTriggered = true;
+        check();
+      };
+    });
+
+    face = new FontFace("test", fontData);
+
+    return face.loaded
+      .then(function() {
+        is(face.status, "loaded", "FontFace should have status \"loaded\" (TEST 30)");
+        document.fonts.add(face);
+      })
+      .then(awaitEvents)
+      .then(function() {
+        document.fonts.clear();
+      });
+
+  }).then(function() {
+
+    // (TEST 31) Test that a loadingdone event is dispatched when a FontFace
+    // with status "unloaded" is added to the FontFaceSet and load() is called
+    // on it.
+    var face;
+    var awaitEvents = new Promise(function(aResolve, aReject) {
+
+      var onloadingdoneTriggered = false, loadingdoneDispatched = false;
+
+      function check() {
+        if (loadingdoneDispatched && loadingdoneDispatched) {
+          document.fonts.onloadingdone = null;
+          document.fonts.removeEventListener("loadingdone", doneListener);
+          aResolve();
+        }
+      }
+
+      var doneListener = function(aEvent) {
+        loadingdoneDispatched = true;
+        check();
+      };
+      document.fonts.addEventListener("loadingdone", doneListener);
+      document.fonts.onloadingdone = function(aEvent) {
+        is(aEvent.fontfaces[0], face, "the CSSFontFaceLoadEvent should have a fontfaces array with the FontFace in it (TEST 31)");
+        onloadingdoneTriggered = true;
+        check();
+      };
+    });
+
+    face = new FontFace("test", "url(BitPattern.woff)");
+
+    return face.load()
+        .then(function() {
+          is(face.status, "loaded", "FontFace should have status \"loaded\" (TEST 31)");
+          document.fonts.add(face);
+        })
+        .then(awaitEvents)
+        .then(function() {
+          document.fonts.clear();
+          return document.fonts.ready;
+        });
+  }).then(function() {
+
+    // (TEST 32) Test that pending restyles prevent document.fonts.status
+    // from becoming loaded.
+    var face = new FontFace("test", "url(neverending_font_load.sjs)");
+    face.load();
+    document.fonts.add(face);
+
+    is(document.fonts.status, "loading", "FontFaceSet.status after adding a loading FontFace (TEST 32)");
+
+    document.fonts.clear();
+
+    is(document.fonts.status, "loaded", "FontFaceSet.status after clearing (TEST 32)");
+
+    document.fonts.add(face);
+
+    is(document.fonts.status, "loading", "FontFaceSet.status after adding a loading FontFace again (TEST 32)");
+
+    var div = document.querySelector("div");
+    div.style.color = "blue";
+
+    document.fonts.clear();
+    is(document.fonts.status, "loading", "FontFaceSet.status after clearing but when there is a pending restyle (TEST 32)");
+
+    return awaitRefresh()  // wait for a refresh driver tick
+        .then(function() {
+          is(document.fonts.status, "loaded", "FontFaceSet.status after clearing and the restyle has been flushed (TEST 32)");
+          return document.fonts.ready;
+        });
+
+  }).then(function() {
+
+    // (TEST 33) Test that CSS-connected FontFace objects are created
+    // for @font-face rules in the document.
+    var style = document.querySelector("style");
+    var ruleText = "@font-face { font-family: something; src: url(x); ";
+    Object.keys(nonDefaultValues).forEach(function(aDesc) {
+      ruleText += descriptorNames[aDesc] + ": " + nonDefaultValues[aDesc][0] + "; ";
+    });
+    ruleText += "}";
+
+    style.textContent = ruleText;
+    document.body.offsetTop;
+
+    var rule = style.sheet.cssRules[0];
+
+    var all = Array.from(document.fonts);
+    is(all.length, 1, "document.fonts should contain one FontFace (TEST 34)");
+
+    var face = all[0];
+    is(face.family, "\"something\"", "FontFace should have correct family value (TEST 34)");
+    Object.keys(nonDefaultValues).forEach(function(aDesc) {
+      var ok_todo = aDesc == "variant" ? todo : ok;
+      ok_todo(face[aDesc] == nonDefaultValues[aDesc][1], "FontFace should have correct " + aDesc + " value (TEST 34)");
+    });
+
+    document.fonts.clear();
+    ok(document.fonts.has(face), "CSS-connected FontFace should not be removed from document.fonts when clear is called (TEST 34)");
+
+    var exceptionName = "";
+    try {
+      document.fonts.delete(face);
+    } catch (ex) {
+      exceptionName = ex.name;
+    }
+    ok(exceptionName == "InvalidModificationError", "attempting to remove CSS-connected FontFace from document.fonts should throw an InvalidModificationError (TEST 34)");
+    ok(document.fonts.has(face), "CSS-connected FontFace should not be removed from document.fonts when delete is called (TEST 34)");
+
+    style.textContent = "";
+    document.body.offsetTop;
+
+    ok(!document.fonts.has(face), "CSS-connected FontFace should be removed from document.fonts once the rule has been removed (TEST 34)");
+
+    document.fonts.add(face);
+    ok(document.fonts.has(face), "previously CSS-connected FontFace should be able to be added to document.fonts (TEST 34)");
+
+    document.fonts.delete(face);
+    ok(!document.fonts.has(face), "previously CSS-connected FontFace should be able to be removed from document.fonts (TEST 34)");
+
+  }).then(function() {
+
+    // (TEST 34) Test that a pending style sheet load prevents
+    // document.fonts.status from being set to "loaded".
+
+    // First, add a FontFace to document.fonts that will load soon.
+    var face = new FontFace("test", "url(BitPattern.woff)");
+    face.load();
+    document.fonts.add(face);
+
+    // Next, add a style sheet reference.
+    var link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "neverending_stylesheet_load.sjs";
+    link.type = "text/css";
+    document.head.appendChild(link);
+
+    return setTimeoutZero()  // wait for the style sheet to start loading
+        .then(function() {
+          document.fonts.clear();
+          is(document.fonts.status, "loading", "FontFaceSet.status when the FontFaceSet has been cleared of loading FontFaces but there is a pending style sheet load (TEST 33)");
+          document.head.removeChild(link);
+          // XXX Removing the <link> element won't cancel the load of the
+          // style sheet, so we can't do that to test that
+          // document.fonts.ready is resolved once there are no more
+          // loading style sheets.
+        });
+
+    // NOTE: It is important that this style sheet test comes last in the file,
+    // as the neverending style sheet load will interfere with subsequent
+    // sub-tests.
+
+  }).then(function() {
+
+    // End of the tests.
+    SimpleTest.finish();
+
+  }, function(aError) {
+
+    // Something failed.
+    ok(false, "Something failed: " + aError);
+    SimpleTest.finish();
+
+  });
+}
+
+if (SpecialPowers.getBoolPref("layout.css.font-loading-api.enabled")) {
+  runTest();
+} else {
+  ok(true, "CSS Font Loading API is not enabled.");
+}
+</script>
+
+<style></style>
+<div></div>

@@ -708,8 +708,7 @@ SpeechRecognition::Start(const Optional<NonNull<DOMMediaStream>>& aStream, Error
     StartRecording(&aStream.Value());
   } else {
     MediaManager* manager = MediaManager::Get();
-    manager->GetUserMedia(false,
-                          GetOwner(),
+    manager->GetUserMedia(GetOwner(),
                           constraints,
                           new GetUserMediaSuccessCallback(this),
                           new GetUserMediaErrorCallback(this));

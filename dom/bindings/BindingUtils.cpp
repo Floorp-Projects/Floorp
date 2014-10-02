@@ -2063,10 +2063,11 @@ ConstructJSImplementation(JSContext* aCx, const char* aContractId,
     AutoNoJSAPI nojsapi;
 
     // Get the XPCOM component containing the JS implementation.
-    nsCOMPtr<nsISupports> implISupports = do_CreateInstance(aContractId);
+    nsresult rv;
+    nsCOMPtr<nsISupports> implISupports = do_CreateInstance(aContractId, &rv);
     if (!implISupports) {
       NS_WARNING("Failed to get JS implementation for contract");
-      aRv.Throw(NS_ERROR_FAILURE);
+      aRv.Throw(rv);
       return;
     }
     // Initialize the object, if it implements nsIDOMGlobalPropertyInitializer.
@@ -2074,7 +2075,7 @@ ConstructJSImplementation(JSContext* aCx, const char* aContractId,
       do_QueryInterface(implISupports);
     if (gpi) {
       JS::Rooted<JS::Value> initReturn(aCx);
-      nsresult rv = gpi->Init(aWindow, &initReturn);
+      rv = gpi->Init(aWindow, &initReturn);
       if (NS_FAILED(rv)) {
         aRv.Throw(rv);
         return;
@@ -2089,10 +2090,10 @@ ConstructJSImplementation(JSContext* aCx, const char* aContractId,
     }
     // Extract the JS implementation from the XPCOM object.
     nsCOMPtr<nsIXPConnectWrappedJS> implWrapped =
-      do_QueryInterface(implISupports);
+      do_QueryInterface(implISupports, &rv);
     MOZ_ASSERT(implWrapped, "Failed to get wrapped JS from XPCOM component.");
     if (!implWrapped) {
-      aRv.Throw(NS_ERROR_FAILURE);
+      aRv.Throw(rv);
       return;
     }
     aObject.set(implWrapped->GetJSObject());

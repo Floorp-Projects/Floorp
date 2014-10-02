@@ -100,7 +100,6 @@ select[size="1"] xul|scrollbarbutton {
 }
 
 /* Override inverse OS themes */
-select,
 textarea,
 button,
 xul|button,
@@ -149,6 +148,7 @@ input[type="radio"] {
 select {
   border-width: 1px;
   padding: 1px;
+  border-radius: @form_border_radius@;
 }
 
 select:not([size]):not([multiple]),

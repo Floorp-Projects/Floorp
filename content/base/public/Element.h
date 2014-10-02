@@ -646,6 +646,10 @@ public:
   }
   bool HasAttributeNS(const nsAString& aNamespaceURI,
                       const nsAString& aLocalName) const;
+  bool HasAttributes() const
+  {
+    return HasAttrs();
+  }
   Element* Closest(const nsAString& aSelector,
                    ErrorResult& aResult);
   bool Matches(const nsAString& aSelector,
@@ -1349,11 +1353,6 @@ inline const mozilla::dom::Element* nsINode::AsElement() const
   return static_cast<const mozilla::dom::Element*>(this);
 }
 
-inline bool nsINode::HasAttributes() const
-{
-  return IsElement() && AsElement()->HasAttrs();
-}
-
 /**
  * Macros to implement Clone(). _elementName is the class for which to implement
  * Clone.
@@ -1535,6 +1534,11 @@ NS_IMETHOD HasAttributeNS(const nsAString& namespaceURI,                      \
                           bool* _retval) MOZ_FINAL                            \
 {                                                                             \
   *_retval = Element::HasAttributeNS(namespaceURI, localName);                \
+  return NS_OK;                                                               \
+}                                                                             \
+NS_IMETHOD HasAttributes(bool* _retval) MOZ_FINAL                             \
+{                                                                             \
+  *_retval = Element::HasAttributes();                                        \
   return NS_OK;                                                               \
 }                                                                             \
 NS_IMETHOD GetAttributeNode(const nsAString& name,                            \

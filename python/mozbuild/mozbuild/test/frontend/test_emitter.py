@@ -91,7 +91,6 @@ class TestEmitterBasic(unittest.TestCase):
         for o in objs:
             self.assertIsInstance(o, DirectoryTraversal)
             self.assertEqual(o.test_dirs, [])
-            self.assertEqual(len(o.tier_dirs), 0)
             self.assertTrue(os.path.isabs(o.context_main_path))
             self.assertEqual(len(o.context_all_paths), 1)
 
@@ -99,7 +98,13 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertEqual(reldirs, ['', 'foo', 'foo/biz', 'bar'])
 
         dirs = [o.dirs for o in objs]
-        self.assertEqual(dirs, [['foo', 'bar'], ['biz'], [], []])
+        self.assertEqual(dirs, [
+            [
+                mozpath.join(reader.config.topsrcdir, 'foo'),
+                mozpath.join(reader.config.topsrcdir, 'bar')
+            ], [
+                mozpath.join(reader.config.topsrcdir, 'foo', 'biz')
+            ], [], []])
 
     def test_traversal_all_vars(self):
         reader = self.reader('traversal-all-vars')
@@ -116,17 +121,10 @@ class TestEmitterBasic(unittest.TestCase):
             reldir = o.relativedir
 
             if reldir == '':
-                self.assertEqual(o.dirs, ['regular'])
-                self.assertEqual(o.test_dirs, ['test'])
-
-    def test_tier_simple(self):
-        reader = self.reader('traversal-tier-simple')
-        objs = self.read_topsrcdir(reader, filter_common=False)
-        self.assertEqual(len(objs), 6)
-
-        reldirs = [o.relativedir for o in objs]
-        self.assertEqual(reldirs, ['', 'foo', 'foo/biz', 'foo_static', 'bar',
-            'baz'])
+                self.assertEqual(o.dirs, [
+                    mozpath.join(reader.config.topsrcdir, 'regular')])
+                self.assertEqual(o.test_dirs, [
+                    mozpath.join(reader.config.topsrcdir, 'test')])
 
     def test_config_file_substitution(self):
         reader = self.reader('config-file-substitution')

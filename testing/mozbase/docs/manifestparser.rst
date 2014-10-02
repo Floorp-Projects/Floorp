@@ -124,6 +124,13 @@ You can also include other manifests:
 
     [include:subdir/anothermanifest.ini]
 
+And reference parent manifests to inherit keys and values from the DEFAULT
+section, without adding possible included tests.
+
+.. code-block:: text
+
+    [parent:../manifest.ini]
+
 Manifests are included relative to the directory of the manifest with
 the `[include:]` directive unless they are absolute paths.
 
@@ -139,6 +146,22 @@ must start on a new line, inline comments are not supported.
 
 In the example above, the 'color' property will have the value 'red #
 not a valid comment'.
+
+Special variable server-root
+````````````````````````````
+There is a special variable called `server-root` used for paths on the system.
+This variable is deemed a path and will be expanded into its absolute form.
+
+Because of the inheritant nature of the key/value pairs, if one requires a
+system path, it must be absolute for it to be of any use in any included file.
+
+.. code-block:: text
+
+    [DEFAULTS]
+    server-root = ../data
+
+    [test1.js]
+    server-root = test1/data
 
 Manifest Conditional Expressions
 ````````````````````````````````

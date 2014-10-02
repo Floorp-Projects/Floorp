@@ -122,12 +122,14 @@ protected:
 
 // Iterates over the flattened children of a node, which accounts for anonymous
 // children and nodes moved by insertion points. If a node has anonymous
-// children, those are iterated over.
+// children, those are iterated over.  The iterator can be initialized to start
+// at the end by providing false for aStartAtBeginning in order to start
+// iterating in reverse from the last child.
 class FlattenedChildIterator : public ExplicitChildIterator
 {
 public:
-  explicit FlattenedChildIterator(nsIContent* aParent)
-    : ExplicitChildIterator(aParent), mXBLInvolved(false)
+  explicit FlattenedChildIterator(nsIContent* aParent, bool aStartAtBeginning = true)
+    : ExplicitChildIterator(aParent, aStartAtBeginning), mXBLInvolved(false)
   {
     Init(false);
   }
@@ -145,10 +147,11 @@ protected:
    * This constructor is a hack to help AllChildrenIterator which sometimes
    * doesn't want to consider XBL.
    */
-  FlattenedChildIterator(nsIContent* aParent, bool aIgnoreXBL)
-    : ExplicitChildIterator(aParent), mXBLInvolved(false)
+  FlattenedChildIterator(nsIContent* aParent, uint32_t aFlags, bool aStartAtBeginning = true)
+    : ExplicitChildIterator(aParent, aStartAtBeginning), mXBLInvolved(false)
   {
-    Init(aIgnoreXBL);
+    bool ignoreXBL = aFlags & nsIContent::eAllButXBL;
+    Init(ignoreXBL);
   }
 
   void Init(bool aIgnoreXBL);
@@ -162,13 +165,15 @@ protected:
  * AllChildrenIterator returns the children of a element including before /
  * after content and optionally XBL children.  It assumes that no mutation of
  * the DOM or frame tree takes place during iteration, and will break horribly
- * if that is not true.
+ * if that is not true.  The iterator can be initialized to start at the end by
+ * providing false for aStartAtBeginning in order to start iterating in reverse
+ * from the last child.
  */
 class AllChildrenIterator : private FlattenedChildIterator
 {
 public:
-  AllChildrenIterator(nsIContent* aNode, uint32_t aFlags) :
-    FlattenedChildIterator(aNode, (aFlags & nsIContent::eAllButXBL)),
+  AllChildrenIterator(nsIContent* aNode, uint32_t aFlags, bool aStartAtBeginning = true) :
+    FlattenedChildIterator(aNode, aFlags, aStartAtBeginning),
     mOriginalContent(aNode), mFlags(aFlags),
     mPhase(eNeedBeforeKid) {}
 
