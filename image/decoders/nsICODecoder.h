@@ -9,6 +9,7 @@
 
 #include "nsAutoPtr.h"
 #include "Decoder.h"
+#include "imgFrame.h"
 #include "nsBMPDecoder.h"
 #include "nsPNGDecoder.h"
 #include "ICOFileHeaders.h"
@@ -80,6 +81,7 @@ private:
   uint32_t mRowBytes; // How many bytes of the row were already received
   int32_t mOldLine;   // Previous index of the line 
   nsRefPtr<Decoder> mContainedDecoder; // Contains either a BMP or PNG resource
+  RawAccessFrameRef mRefForContainedDecoder; // Avoid locking off-main-thread
 
   char mDirEntryArray[ICODIRENTRYSIZE]; // Holds the current dir entry buffer
   IconDirEntry mDirEntry; // Holds a decoded dir entry
