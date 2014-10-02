@@ -1055,6 +1055,8 @@ FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
   nsString href;
   nsString text;
   nsresult rv;
+  uint32_t line = 0;
+  uint32_t column = 0;
   if (rule) {
     rv = rule->GetCssText(text);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -1069,6 +1071,8 @@ FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
       NS_WARNING("null parent stylesheet for @font-face rule");
       href.AssignLiteral("unknown");
     }
+    line = rule->GetLineNumber();
+    column = rule->GetColumnNumber();
   }
 
   nsCOMPtr<nsIScriptError> scriptError =
@@ -1079,8 +1083,8 @@ FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
   rv = scriptError->InitWithWindowID(NS_ConvertUTF8toUTF16(message),
                                      href,         // file
                                      text,         // src line
-                                     rule->GetLineNumber(),
-                                     rule->GetColumnNumber(),
+                                     line,
+                                     column,
                                      aFlags,       // flags
                                      "CSS Loader", // category (make separate?)
                                      innerWindowID);
