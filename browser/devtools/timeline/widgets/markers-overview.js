@@ -4,9 +4,9 @@
 "use strict";
 
 /**
- * This file contains the "overview" graph, which is a minimap of all the
- * timeline data. Regions inside it may be selected, determining which markers
- * are visible in the "waterfall".
+ * This file contains the "markers overview" graph, which is a minimap of all
+ * the timeline data. Regions inside it may be selected, determining which
+ * markers are visible in the "waterfall".
  */
 
 const {Cc, Ci, Cu, Cr} = require("chrome");
@@ -21,8 +21,8 @@ loader.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 
-const OVERVIEW_HEADER_HEIGHT = 20; // px
-const OVERVIEW_BODY_HEIGHT = 50; // px
+const OVERVIEW_HEADER_HEIGHT = 14; // px
+const OVERVIEW_BODY_HEIGHT = 55; // 11px * 5 groups
 
 const OVERVIEW_BACKGROUND_COLOR = "#fff";
 const OVERVIEW_CLIPHEAD_LINE_COLOR = "#666";
@@ -33,36 +33,36 @@ const OVERVIEW_SELECTION_STRIPES_COLOR = "rgba(255,255,255,0.1)";
 const OVERVIEW_HEADER_TICKS_MULTIPLE = 100; // ms
 const OVERVIEW_HEADER_TICKS_SPACING_MIN = 75; // px
 const OVERVIEW_HEADER_SAFE_BOUNDS = 50; // px
-const OVERVIEW_HEADER_BACKGROUND = "#ebeced";
+const OVERVIEW_HEADER_BACKGROUND = "#fff";
 const OVERVIEW_HEADER_TEXT_COLOR = "#18191a";
 const OVERVIEW_HEADER_TEXT_FONT_SIZE = 9; // px
 const OVERVIEW_HEADER_TEXT_FONT_FAMILY = "sans-serif";
-const OVERVIEW_HEADER_TEXT_PADDING = 6; // px
-const OVERVIEW_TIMELINE_STROKES = "#aaa";
+const OVERVIEW_HEADER_TEXT_PADDING_LEFT = 6; // px
+const OVERVIEW_HEADER_TEXT_PADDING_TOP = 1; // px
+const OVERVIEW_TIMELINE_STROKES = "#ccc";
 const OVERVIEW_MARKERS_COLOR_STOPS = [0, 0.1, 0.75, 1];
 const OVERVIEW_MARKER_DURATION_MIN = 4; // ms
-const OVERVIEW_GROUP_VERTICAL_PADDING = 6; // px
+const OVERVIEW_GROUP_VERTICAL_PADDING = 5; // px
 const OVERVIEW_GROUP_ALTERNATING_BACKGROUND = "rgba(0,0,0,0.05)";
 
 /**
- * An overview for the timeline data.
+ * An overview for the markers data.
  *
  * @param nsIDOMNode parent
  *        The parent node holding the overview.
  */
-function Overview(parent, ...args) {
-  AbstractCanvasGraph.apply(this, [parent, "timeline-overview", ...args]);
+function MarkersOverview(parent, ...args) {
+  AbstractCanvasGraph.apply(this, [parent, "markers-overview", ...args]);
   this.once("ready", () => {
+    // Set the list of names, properties and colors used to paint this overview.
     this.setBlueprint(TIMELINE_BLUEPRINT);
 
-    var preview = [];
-    preview.startTime = 0;
-    preview.endTime = 1000;
-    this.setData(preview);
+    // Populate this overview with some dummy initial data.
+    this.setData({ interval: { startTime: 0, endTime: 1000 }, markers: [] });
   });
 }
 
-Overview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
+MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   fixedHeight: OVERVIEW_HEADER_HEIGHT + OVERVIEW_BODY_HEIGHT,
   clipheadLineColor: OVERVIEW_CLIPHEAD_LINE_COLOR,
   selectionLineColor: OVERVIEW_SELECTION_LINE_COLOR,
@@ -84,10 +84,22 @@ Overview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   },
 
   /**
+   * Disables selection and empties this graph.
+   */
+  clearView: function() {
+    this.selectionEnabled = false;
+    this.dropSelection();
+    this.setData({ interval: { startTime: 0, endTime: 0 }, markers: [] });
+  },
+
+  /**
    * Renders the graph's data source.
    * @see AbstractCanvasGraph.prototype.buildGraphImage
    */
   buildGraphImage: function() {
+    let { interval, markers } = this._data;
+    let { startTime, endTime } = interval;
+
     let { canvas, ctx } = this._getNamedCanvas("overview-data");
     let canvasWidth = this._width;
     let canvasHeight = this._height;
@@ -97,7 +109,7 @@ Overview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     // Group markers into separate paint batches. This is necessary to
     // draw all markers sharing the same style at once.
 
-    for (let marker of this._data) {
+    for (let marker of markers) {
       this._paintBatches.get(marker.name).batch.push(marker);
     }
 
@@ -108,7 +120,7 @@ Overview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     let groupHeight = OVERVIEW_BODY_HEIGHT * this._pixelRatio / totalGroups;
     let groupPadding = OVERVIEW_GROUP_VERTICAL_PADDING * this._pixelRatio;
 
-    let totalTime = (this._data.endTime - this._data.startTime) || 0;
+    let totalTime = (endTime - startTime) || 0;
     let dataScale = this.dataScaleX = availableWidth / totalTime;
 
     // Draw the header and overview background.
@@ -124,7 +136,7 @@ Overview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     ctx.fillStyle = OVERVIEW_GROUP_ALTERNATING_BACKGROUND;
     ctx.beginPath();
 
-    for (let i = 1; i < totalGroups; i += 2) {
+    for (let i = 0; i < totalGroups; i += 2) {
       let top = headerHeight + i * groupHeight;
       ctx.rect(0, top, canvasWidth, groupHeight);
     }
@@ -133,22 +145,23 @@ Overview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
 
     // Draw the timeline header ticks.
 
-    ctx.textBaseline = "middle";
     let fontSize = OVERVIEW_HEADER_TEXT_FONT_SIZE * this._pixelRatio;
     let fontFamily = OVERVIEW_HEADER_TEXT_FONT_FAMILY;
+    let textPaddingLeft = OVERVIEW_HEADER_TEXT_PADDING_LEFT * this._pixelRatio;
+    let textPaddingTop = OVERVIEW_HEADER_TEXT_PADDING_TOP * this._pixelRatio;
+    let tickInterval = this._findOptimalTickInterval(dataScale);
+
+    ctx.textBaseline = "middle";
     ctx.font = fontSize + "px " + fontFamily;
     ctx.fillStyle = OVERVIEW_HEADER_TEXT_COLOR;
     ctx.strokeStyle = OVERVIEW_TIMELINE_STROKES;
     ctx.beginPath();
 
-    let tickInterval = this._findOptimalTickInterval(dataScale);
-    let headerTextPadding = OVERVIEW_HEADER_TEXT_PADDING * this._pixelRatio;
-
     for (let x = 0; x < availableWidth; x += tickInterval) {
-      let left = x + headerTextPadding;
+      let left = x + textPaddingLeft;
       let time = Math.round(x / dataScale);
       let label = L10N.getFormatStr("timeline.tick", time);
-      ctx.fillText(label, left, headerHeight / 2 + 1);
+      ctx.fillText(label, left, headerHeight / 2 + textPaddingTop);
       ctx.moveTo(x, 0);
       ctx.lineTo(x, canvasHeight);
     }
@@ -170,8 +183,8 @@ Overview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
       ctx.beginPath();
 
       for (let { start, end } of batch) {
-        start -= this._data.startTime;
-        end -= this._data.startTime;
+        start -= interval.startTime;
+        end -= interval.startTime;
 
         let left = start * dataScale;
         let duration = Math.max(end - start, OVERVIEW_MARKER_DURATION_MIN);
@@ -208,4 +221,4 @@ Overview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   }
 });
 
-exports.Overview = Overview;
+exports.MarkersOverview = MarkersOverview;
