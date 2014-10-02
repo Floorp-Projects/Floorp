@@ -73,7 +73,7 @@ public:
                                 uint32_t aFlags = nsIScriptError::errorFlag,
                                 nsresult aStatus = NS_OK) MOZ_OVERRIDE;
     virtual void DoRebuildUserFontSet() MOZ_OVERRIDE;
-    virtual already_AddRefed<gfxUserFontEntry> CreateFontFace(
+    virtual already_AddRefed<gfxUserFontEntry> CreateUserFontEntry(
                                    const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                                    uint32_t aWeight,
                                    int32_t aStretch,
@@ -161,7 +161,7 @@ private:
                   nsTArray<FontFaceRuleRecord>& oldRules,
                   bool& aFontSetModified);
 
-  already_AddRefed<gfxUserFontEntry> FindOrCreateFontFaceFromRule(
+  already_AddRefed<gfxUserFontEntry> FindOrCreateUserFontEntryFromRule(
                                                    const nsAString& aFamilyName,
                                                    nsCSSFontFaceRule* aRule,
                                                    uint8_t aSheetType);
