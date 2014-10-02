@@ -125,6 +125,13 @@ public:
   void RemoveUnavailableFontFace(FontFace* aFontFace);
 
   /**
+   * Finds an existing entry in the user font cache or creates a new user
+   * font entry for the given FontFace object.
+   */
+  already_AddRefed<gfxUserFontEntry>
+    FindOrCreateUserFontEntryFromFontFace(FontFace* aFontFace);
+
+  /**
    * Notification method called by a FontFace once it has been initialized.
    *
    * This is needed for the FontFaceSet to handle a FontFace that was created
