@@ -249,7 +249,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     // build the animations list
     dom::AnimationTimeline* timeline = aElement->OwnerDoc()->Timeline();
     AnimationPlayerPtrArray newPlayers;
-    BuildAnimations(aStyleContext, timeline, newPlayers);
+    BuildAnimations(aStyleContext, aElement, timeline, newPlayers);
 
     if (newPlayers.IsEmpty()) {
       if (collection) {
@@ -413,6 +413,7 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
 
 void
 nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
+                                    dom::Element* aTarget,
                                     dom::AnimationTimeline* aTimeline,
                                     AnimationPlayerPtrArray& aPlayers)
 {
@@ -453,7 +454,8 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     timing.mFillMode = src.GetFillMode();
 
     nsRefPtr<Animation> destAnim =
-      new Animation(mPresContext->Document(), timing, src.GetName());
+      new Animation(mPresContext->Document(), aTarget,
+                    aStyleContext->GetPseudoType(), timing, src.GetName());
     dest->SetSource(destAnim);
 
     dest->mStartTime = now;
