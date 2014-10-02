@@ -923,6 +923,17 @@ public:
   }
 
   /**
+   * Returns whether there are any pending restyles or reflows.
+   */
+  bool HasPendingRestyleOrReflow();
+
+  /**
+   * Informs the document's FontFaceSet that the refresh driver ticked,
+   * flushing style and layout.
+   */
+  void NotifyFontFaceSetOnRefresh();
+
+  /**
    * Notify the prescontext that the presshell is about to reflow a reflow root.
    * The single argument indicates whether this reflow should be interruptible.
    * If aInterruptible is false then CheckForInterrupt and HasPendingInterrupt

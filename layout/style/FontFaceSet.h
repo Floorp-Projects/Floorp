@@ -6,11 +6,12 @@
 #ifndef mozilla_dom_FontFaceSet_h
 #define mozilla_dom_FontFaceSet_h
 
-#include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/FontFace.h"
 #include "mozilla/dom/FontFaceSetBinding.h"
+#include "mozilla/DOMEventTargetHelper.h"
 #include "gfxUserFontSet.h"
 #include "nsCSSRules.h"
+#include "nsICSSLoaderObserver.h"
 #include "nsPIDOMWindow.h"
 
 struct gfxFontFaceSrc;
@@ -30,6 +31,8 @@ namespace mozilla {
 namespace dom {
 
 class FontFaceSet MOZ_FINAL : public DOMEventTargetHelper
+                            , public nsIDOMEventListener
+                            , public nsICSSLoaderObserver
 {
   friend class UserFontSet;
 
@@ -88,6 +91,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FontFaceSet, DOMEventTargetHelper)
+  NS_DECL_NSIDOMEVENTLISTENER
 
   FontFaceSet(nsPIDOMWindow* aWindow, nsPresContext* aPresContext);
 
@@ -140,6 +144,24 @@ public:
    */
   void OnFontFaceInitialized(FontFace* aFontFace);
 
+  /**
+   * Notification method called by a FontFace to indicate that its loading
+   * status has changed.
+   */
+  void OnFontFaceStatusChanged(FontFace* aFontFace);
+
+  /**
+   * Notification method called by the nsPresContext to indicate that the
+   * refresh driver ticked and flushed style and layout.
+   * were just flushed.
+   */
+  void DidRefresh();
+
+  // nsICSSLoaderObserver
+  NS_IMETHOD StyleSheetLoaded(mozilla::CSSStyleSheet* aSheet,
+                              bool aWasAlternate,
+                              nsresult aStatus);
+
   // -- Web IDL --------------------------------------------------------------
 
   IMPL_EVENT_HANDLER(loading)
@@ -168,6 +190,36 @@ private:
    * Returns whether the given FontFace is currently "in" the FontFaceSet.
    */
   bool HasAvailableFontFace(FontFace* aFontFace);
+
+  /**
+   * Removes any listeners and observers.
+   */
+  void Disconnect();
+
+  /**
+   * Returns whether there might be any pending font loads, which should cause
+   * the mReady Promise not to be resolved yet.
+   */
+  bool MightHavePendingFontLoads();
+
+  /**
+   * Checks to see whether it is time to replace mReady and dispatch a
+   * "loading" event.
+   */
+  void CheckLoadingStarted();
+
+  /**
+   * Checks to see whether it is time to resolve mReady and dispatch any
+   * "loadingdone" and "loadingerror" events.
+   */
+  void CheckLoadingFinished();
+
+  /**
+   * Dispatches a CSSFontFaceLoadEvent to this object.
+   */
+  void DispatchLoadingFinishedEvent(
+                                const nsAString& aType,
+                                const nsTArray<FontFace*>& aFontFaces);
 
   // Note: if you add new cycle collected objects to FontFaceRecord,
   // make sure to update FontFaceSet's cycle collection macros
@@ -215,9 +267,26 @@ private:
   bool HasConnectedFontFace(FontFace* aFontFace);
 #endif
 
+  /**
+   * Returns whether we have any loading FontFace objects in the FontFaceSet.
+   */
+  bool HasLoadingFontFaces();
+
+  // Helper function for HasLoadingFontFaces.
+  void UpdateHasLoadingFontFaces();
+
   nsRefPtr<UserFontSet> mUserFontSet;
   nsPresContext* mPresContext;
 
+  // The document this is a FontFaceSet for.
+  nsCOMPtr<nsIDocument> mDocument;
+
+  // A Promise that is fulfilled once all of the FontFace objects
+  // in mConnectedFaces and mOtherFaces that started or were loading at the
+  // time the Promise was created have finished loading.  It is rejected if
+  // any of those fonts failed to load.  mReady is replaced with
+  // a new Promise object whenever mReady is settled and another
+  // FontFace in mConnectedFaces or mOtherFaces starts to load.
   nsRefPtr<mozilla::dom::Promise> mReady;
 
   // Set of all loaders pointing to us. These are not strong pointers,
@@ -236,8 +305,26 @@ private:
   // this FontFaceSet.
   nsTArray<FontFace*> mUnavailableFaces;
 
+  // The overall status of the loading or loaded fonts in the FontFaceSet.
+  mozilla::dom::FontFaceSetLoadStatus mStatus;
+
   // Whether mOtherFaces has changed since last time UpdateRules ran.
   bool mOtherFacesDirty;
+
+  // Whether we have called MaybeResolve() on mReady.
+  bool mReadyIsResolved;
+
+  // Whether we have already dispatched loading events for the current set
+  // of loading FontFaces.
+  bool mDispatchedLoadingEvent;
+
+  // Whether any FontFace objects in mConnectedFaces or mOtherFaces are
+  // loading.  Only valid when mHasLoadingFontFacesIsDirty is false.  Don't use
+  // this variable directly; call the HasLoadingFontFaces method instead.
+  bool mHasLoadingFontFaces;
+
+  // This variable is only valid when mLoadingDirty is false.
+  bool mHasLoadingFontFacesIsDirty;
 };
 
 } // namespace dom
