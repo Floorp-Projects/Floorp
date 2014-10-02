@@ -235,6 +235,7 @@ WEBIDL_FILES = [
     'InterAppConnection.webidl',
     'InterAppConnectionRequest.webidl',
     'InterAppMessagePort.webidl',
+    'KeyAlgorithm.webidl',
     'KeyboardEvent.webidl',
     'KeyEvent.webidl',
     'LegacyQueryInterface.webidl',

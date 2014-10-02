@@ -120,12 +120,13 @@ TestArray.addTest(
     var privKey, pubKey;
     function setKey(x) { pubKey = x.publicKey; privKey = x.privateKey; }
     function doEncrypt(n) {
+      console.log("entered encrypt("+ n +")");
       return function () {
         return crypto.subtle.encrypt(alg, pubKey, new Uint8Array(n));
       }
     }
 
-    crypto.subtle.generateKey(alg, false, ['encrypt'])
+    crypto.subtle.generateKey(alg, false, ['encrypt', 'decrypt'])
       .then(setKey, error(that))
       .then(doEncrypt(214), error(that))
       .then(doEncrypt(215), error(that))
