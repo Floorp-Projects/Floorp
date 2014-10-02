@@ -10,6 +10,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "nsCSSParser.h"
 #include "nsCSSRules.h"
 #include "nsIDocument.h"
@@ -18,7 +19,47 @@
 namespace mozilla {
 namespace dom {
 
+// -- FontFaceBufferSource ---------------------------------------------------
+
+/**
+ * An object that wraps a FontFace object and exposes its ArrayBuffer
+ * or ArrayBufferView data in a form the user font set can consume.
+ */
+class FontFaceBufferSource : public gfxFontFaceBufferSource
+{
+public:
+  FontFaceBufferSource(FontFace* aFontFace)
+    : mFontFace(aFontFace) {}
+  virtual void TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength);
+
+private:
+  nsRefPtr<FontFace> mFontFace;
+};
+
+void
+FontFaceBufferSource::TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength)
+{
+  mFontFace->TakeBuffer(aBuffer, aLength);
+}
+
 // -- FontFaceInitializer ----------------------------------------------------
+
+template<typename T>
+static void
+GetDataFrom(const T& aObject, uint8_t*& aBuffer, uint32_t& aLength)
+{
+  MOZ_ASSERT(!aBuffer);
+  aObject.ComputeLengthAndData();
+  // We use moz_malloc here rather than a FallibleTArray or fallible
+  // operator new[] since the gfxUserFontEntry will be calling moz_free
+  // on it.
+  aBuffer = (uint8_t*) moz_malloc(aObject.Length());
+  if (!aBuffer) {
+    return;
+  }
+  memcpy((void*) aBuffer, aObject.Data(), aObject.Length());
+  aLength = aObject.Length();
+}
 
 /**
  * A task that is dispatched to the event queue to call Initialize() on a
@@ -40,6 +81,7 @@ public:
   void SetSource(const ArrayBufferView& aArrayBufferView);
 
   NS_IMETHOD Run();
+  void TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength);
 
   nsRefPtr<FontFace> mFontFace;
   FontFace::SourceType mSourceType;
@@ -71,14 +113,14 @@ void
 FontFaceInitializer::SetSource(const ArrayBuffer& aArrayBuffer)
 {
   mSourceType = FontFace::eSourceType_Buffer;
-  // XXX Do something with the array buffer data.
+  GetDataFrom(aArrayBuffer, mSourceBuffer, mSourceBufferLength);
 }
 
 void
 FontFaceInitializer::SetSource(const ArrayBufferView& aArrayBufferView)
 {
   mSourceType = FontFace::eSourceType_Buffer;
-  // XXX Do something with the array buffer data.
+  GetDataFrom(aArrayBufferView, mSourceBuffer, mSourceBufferLength);
 }
 
 NS_IMETHODIMP
@@ -86,6 +128,16 @@ FontFaceInitializer::Run()
 {
   mFontFace->Initialize(this);
   return NS_OK;
+}
+
+void
+FontFaceInitializer::TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength)
+{
+  aBuffer = mSourceBuffer;
+  aLength = mSourceBufferLength;
+
+  mSourceBuffer = nullptr;
+  mSourceBufferLength = 0;
 }
 
 // -- FontFaceStatusSetter ---------------------------------------------------
@@ -321,7 +373,23 @@ FontFace::Initialize(FontFaceInitializer* aInitializer)
   // We've been given an ArrayBuffer or ArrayBufferView as the source.
   MOZ_ASSERT(aInitializer->mSourceType == eSourceType_Buffer);
 
-  // XXX Handle array buffers.
+  mSourceType = aInitializer->mSourceType;
+  aInitializer->TakeBuffer(mSourceBuffer, mSourceBufferLength);
+
+  // Queue a task to set the status to "loading".
+  nsCOMPtr<nsIRunnable> statusSetterTask =
+    new FontFaceStatusSetter(this, FontFaceLoadStatus::Loading);
+  NS_DispatchToMainThread(statusSetterTask);
+
+  // We are initialized.
+  OnInitialized();
+
+  // ArrayBuffer(View)-backed FontFace objects are loaded on construction,
+  // but we need to do this after going through the event loop so that the
+  // FontFaceStatusSetter runs before us.
+  nsCOMPtr<nsIRunnable> loaderTask =
+    NS_NewRunnableMethod(this, &FontFace::DoLoad);
+  NS_DispatchToMainThread(loaderTask);
 }
 
 void
@@ -552,8 +620,11 @@ FontFace::SetStatus(FontFaceLoadStatus aStatus)
   if (mStatus == FontFaceLoadStatus::Loaded) {
     mLoaded->MaybeResolve(this);
   } else if (mStatus == FontFaceLoadStatus::Error) {
-    // XXX Use NS_ERROR_DOM_SYNTAX_ERR for array buffer backed FontFaces.
-    mLoaded->MaybeReject(NS_ERROR_DOM_NETWORK_ERR);
+    if (mSourceType == eSourceType_Buffer) {
+      mLoaded->MaybeReject(NS_ERROR_DOM_SYNTAX_ERR);
+    } else {
+      mLoaded->MaybeReject(NS_ERROR_DOM_NETWORK_ERR);
+    }
   }
 }
 
@@ -762,6 +833,31 @@ FontFace::DisconnectFromRule()
   mRule->SetFontFace(nullptr);
   mRule = nullptr;
   mInFontFaceSet = false;
+}
+
+bool
+FontFace::HasFontData() const
+{
+  return mSourceType == eSourceType_Buffer && mSourceBuffer;
+}
+
+void
+FontFace::TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength)
+{
+  MOZ_ASSERT(HasFontData());
+
+  aBuffer = mSourceBuffer;
+  aLength = mSourceBufferLength;
+
+  mSourceBuffer = nullptr;
+  mSourceBufferLength = 0;
+}
+
+already_AddRefed<gfxFontFaceBufferSource>
+FontFace::CreateBufferSource()
+{
+  nsRefPtr<FontFaceBufferSource> bufferSource = new FontFaceBufferSource(this);
+  return bufferSource.forget();
 }
 
 // -- FontFace::Entry --------------------------------------------------------
