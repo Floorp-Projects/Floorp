@@ -121,7 +121,7 @@ ProfilerConnection.prototype = {
     // Older Gecko versions don't have an existing implementation, in which case
     // all the methods we need can be easily mocked.
     if (this._target.form && this._target.form.framerateActor) {
-    this._framerate = new FramerateFront(this._target.client, this._target.form);
+      this._framerate = new FramerateFront(this._target.client, this._target.form);
     } else {
       this._framerate = {
         startRecording: () => {},
