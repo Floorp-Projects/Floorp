@@ -1120,7 +1120,7 @@ RCreateThisWithTemplate::recover(JSContext *cx, SnapshotIterator &iter) const
     types::AutoEnterAnalysis enter(cx);
 
     // See CodeGenerator::visitCreateThisWithTemplate
-    gc::AllocKind allocKind = templateObject->asTenured()->getAllocKind();
+    gc::AllocKind allocKind = templateObject->asTenured().getAllocKind();
     gc::InitialHeap initialHeap = tenuredHeap_ ? gc::TenuredHeap : gc::DefaultHeap;
     JSObject *resultObject = JSObject::copy(cx, allocKind, initialHeap, templateObject);
     if (!resultObject)

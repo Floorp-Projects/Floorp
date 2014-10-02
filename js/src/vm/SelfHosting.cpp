@@ -1289,7 +1289,7 @@ CloneObject(JSContext *cx, HandleObject selfHostedObject)
     } else {
         MOZ_ASSERT(selfHostedObject->isNative());
         clone = NewObjectWithGivenProto(cx, selfHostedObject->getClass(), TaggedProto(nullptr), cx->global(),
-                                        selfHostedObject->asTenured()->getAllocKind(),
+                                        selfHostedObject->asTenured().getAllocKind(),
                                         SingletonObject);
     }
     if (!clone)

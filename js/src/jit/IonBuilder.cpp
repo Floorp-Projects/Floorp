@@ -6777,7 +6777,7 @@ NumFixedSlots(JSObject *object)
     // shape and can race with the main thread if we are building off thread.
     // The allocation kind and object class (which goes through the type) can
     // be read freely, however.
-    gc::AllocKind kind = object->asTenured()->getAllocKind();
+    gc::AllocKind kind = object->asTenured().getAllocKind();
     return gc::GetGCKindSlots(kind, object->getClass());
 }
 
