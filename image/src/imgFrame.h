@@ -64,8 +64,9 @@ public:
    * This is appropriate to use when drawing content into an imgFrame, as it
    * uses the same graphics backend as normal content drawing. The downside is
    * that the underlying surface may not be stored in a volatile buffer on all
-   * platforms, and raw access to the surface (using RawAccessRef()) may be much
-   * more expensive than in the InitForDecoder() case.
+   * platforms, and raw access to the surface (using RawAccessRef() or
+   * LockImageData()) may be much more expensive than in the InitForDecoder()
+   * case.
    */
   nsresult InitWithDrawable(gfxDrawable* aDrawable,
                             const nsIntSize& aSize,
@@ -96,7 +97,6 @@ public:
   uint8_t* GetImageData() const;
   void GetPaletteData(uint32_t **aPalette, uint32_t *length) const;
   uint32_t* GetPaletteData() const;
-  uint8_t* GetRawData() const;
 
   int32_t GetRawTimeout() const;
   void SetRawTimeout(int32_t aTimeout);
@@ -113,6 +113,10 @@ public:
   bool GetCompositingFailed() const;
   void SetCompositingFailed(bool val);
 
+  nsresult LockImageData();
+  nsresult UnlockImageData();
+
+  void SetDiscardable();
   void SetOptimizable();
 
   TemporaryRef<SourceSurface> GetSurface();
@@ -147,8 +151,6 @@ private: // methods
 
   ~imgFrame();
 
-  nsresult LockImageData();
-  nsresult UnlockImageData();
   nsresult Optimize();
 
   struct SurfaceWithFormat {
@@ -205,6 +207,7 @@ private: // data
   bool mCompositingFailed;
   bool mHasNoAlpha;
   bool mNonPremult;
+  bool mDiscardable;
   bool mOptimizable;
 
   /** Have we called DiscardTracker::InformAllocation()? */
