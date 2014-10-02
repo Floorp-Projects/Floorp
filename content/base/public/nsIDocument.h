@@ -2394,6 +2394,8 @@ public:
   // FontFaceSource
   mozilla::dom::FontFaceSet* GetFonts(mozilla::ErrorResult& aRv);
 
+  bool DidFireDOMContentLoaded() const { return mDidFireDOMContentLoaded; }
+
 private:
   uint64_t mWarnedAbout;
   SelectorCache mSelectorCache;
