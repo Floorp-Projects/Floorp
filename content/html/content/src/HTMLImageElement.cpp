@@ -55,6 +55,7 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Image)
 
+#ifdef DEBUG
 // Is aSubject a previous sibling of aNode.
 static bool IsPreviousSibling(nsINode *aSubject, nsINode *aNode)
 {
@@ -69,6 +70,7 @@ static bool IsPreviousSibling(nsINode *aSubject, nsINode *aNode)
 
   return false;
 }
+#endif
 
 namespace mozilla {
 namespace dom {
@@ -402,7 +404,7 @@ HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       !aValue) {
     // SetAttr handles setting src since it needs to catch img.src =
     // img.src, so we only need to handle the unset case
-    if (mResponsiveSelector) {
+    if (InResponsiveMode()) {
       if (mResponsiveSelector->Content() == this) {
         mResponsiveSelector->SetDefaultSource(nullptr);
       }
@@ -423,7 +425,7 @@ HTMLImageElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
              aNameSpaceID == kNameSpaceID_None &&
              aNotify) {
     // Force a new load of the image with the new cross origin policy.
-    if (mResponsiveSelector) {
+    if (InResponsiveMode()) {
       // per spec, full selection runs when this changes, even though
       // it doesn't directly affect the source selection
       QueueImageLoadTask();
@@ -525,7 +527,7 @@ HTMLImageElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
       return NS_OK;
     }
 
-    if (mResponsiveSelector || mPendingImageLoadTask) {
+    if (InResponsiveMode()) {
       if (mResponsiveSelector &&
           mResponsiveSelector->Content() == this) {
         mResponsiveSelector->SetDefaultSource(aValue);
@@ -577,7 +579,7 @@ HTMLImageElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                         HTMLPictureElement::IsPictureEnabled();
   if (addedToPicture) {
     QueueImageLoadTask();
-  } else if (!mResponsiveSelector &&
+  } else if (!InResponsiveMode() &&
              HasAttr(kNameSpaceID_None, nsGkAtoms::src)) {
     // We skip loading when our attributes were set from parser land,
     // so trigger a aForce=false load now to check if things changed.
@@ -862,6 +864,32 @@ HTMLImageElement::QueueImageLoadTask()
   } else {
     MOZ_ASSERT(false, "expect appshell for HTMLImageElement");
   }
+}
+
+bool
+HTMLImageElement::HaveSrcsetOrInPicture()
+{
+  if (IsSrcsetEnabled() && HasAttr(kNameSpaceID_None, nsGkAtoms::srcset)) {
+    return true;
+  }
+
+  if (!HTMLPictureElement::IsPictureEnabled()) {
+    return false;
+  }
+
+  nsINode *parent = nsINode::GetParentNode();
+  return (parent && parent->Tag() == nsGkAtoms::picture);
+}
+
+bool
+HTMLImageElement::InResponsiveMode()
+{
+  // When we lose srcset or leave a <picture> element, the fallback to img.src
+  // will happen from the microtask, and we should behave responsively in the
+  // interim
+  return mResponsiveSelector ||
+         mPendingImageLoadTask ||
+         HaveSrcsetOrInPicture();
 }
 
 nsresult
