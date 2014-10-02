@@ -37,9 +37,9 @@ public:
    *
    * Notifications Sent: TODO
    */
-  void InitSharedDecoder(uint8_t* imageData, uint32_t imageDataLength,
-                         uint32_t* colormap, uint32_t colormapSize,
-                         imgFrame* currentFrame);
+  void InitSharedDecoder(uint8_t* aImageData, uint32_t aImageDataLength,
+                         uint32_t* aColormap, uint32_t aColormapSize,
+                         RawAccessFrameRef&& aFrameRef);
 
   /**
    * Writes data to the decoder.
@@ -160,10 +160,15 @@ public:
   // status code from that attempt. Clears mNewFrameData.
   virtual nsresult AllocateFrame();
 
-  already_AddRefed<imgFrame> GetCurrentFrame() const
+  already_AddRefed<imgFrame> GetCurrentFrame()
   {
-    nsRefPtr<imgFrame> frame = mCurrentFrame;
+    nsRefPtr<imgFrame> frame = mCurrentFrame.get();
     return frame.forget();
+  }
+
+  RawAccessFrameRef GetCurrentFrameRef()
+  {
+    return mCurrentFrame->RawAccessRef();
   }
 
 protected:
@@ -224,7 +229,7 @@ protected:
    *
    */
   RasterImage &mImage;
-  nsRefPtr<imgFrame> mCurrentFrame;
+  RawAccessFrameRef mCurrentFrame;
   RefPtr<imgDecoderObserver> mObserver;
   ImageMetadata mImageMetadata;
 
@@ -246,28 +251,22 @@ private:
 
   struct NewFrameData
   {
-    NewFrameData()
-    {}
+    NewFrameData() { }
 
-    NewFrameData(uint32_t num, uint32_t offsetx, uint32_t offsety,
-                 uint32_t width, uint32_t height,
-                 gfx::SurfaceFormat format, uint8_t paletteDepth)
-      : mFrameNum(num)
-      , mOffsetX(offsetx)
-      , mOffsetY(offsety)
-      , mWidth(width)
-      , mHeight(height)
-      , mFormat(format)
-      , mPaletteDepth(paletteDepth)
-    {}
+    NewFrameData(uint32_t aFrameNum, const nsIntRect& aFrameRect,
+                 gfx::SurfaceFormat aFormat, uint8_t aPaletteDepth)
+      : mFrameNum(aFrameNum)
+      , mFrameRect(aFrameRect)
+      , mFormat(aFormat)
+      , mPaletteDepth(aPaletteDepth)
+    { }
+
     uint32_t mFrameNum;
-    uint32_t mOffsetX;
-    uint32_t mOffsetY;
-    uint32_t mWidth;
-    uint32_t mHeight;
+    nsIntRect mFrameRect;
     gfx::SurfaceFormat mFormat;
     uint8_t mPaletteDepth;
   };
+
   NewFrameData mNewFrameData;
   bool mNeedsNewFrame;
   bool mInitialized;

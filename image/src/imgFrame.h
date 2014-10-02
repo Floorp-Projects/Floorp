@@ -113,7 +113,6 @@ public:
   bool GetCompositingFailed() const;
   void SetCompositingFailed(bool val);
 
-  void SetDiscardable();
   void SetOptimizable();
 
   TemporaryRef<SourceSurface> GetSurface();
@@ -206,7 +205,6 @@ private: // data
   bool mCompositingFailed;
   bool mHasNoAlpha;
   bool mNonPremult;
-  bool mDiscardable;
   bool mOptimizable;
 
   /** Have we called DiscardTracker::InformAllocation()? */
