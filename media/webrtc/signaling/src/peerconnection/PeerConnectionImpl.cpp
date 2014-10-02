@@ -1952,36 +1952,6 @@ toDomIceGatheringState(NrIceCtx::GatheringState state) {
   MOZ_CRASH();
 }
 
-// This is called from the STS thread and so we need to thunk
-// to the main thread.
-void PeerConnectionImpl::IceConnectionStateChange(
-    NrIceCtx* ctx,
-    NrIceCtx::ConnectionState state) {
-  (void)ctx;
-  // Do an async call here to unwind the stack. refptr keeps the PC alive.
-  nsRefPtr<PeerConnectionImpl> pc(this);
-  RUN_ON_THREAD(mThread,
-                WrapRunnable(pc,
-                             &PeerConnectionImpl::IceConnectionStateChange_m,
-                             toDomIceConnectionState(state)),
-                NS_DISPATCH_NORMAL);
-}
-
-void
-PeerConnectionImpl::IceGatheringStateChange(
-    NrIceCtx* ctx,
-    NrIceCtx::GatheringState state)
-{
-  (void)ctx;
-  // Do an async call here to unwind the stack. refptr keeps the PC alive.
-  nsRefPtr<PeerConnectionImpl> pc(this);
-  RUN_ON_THREAD(mThread,
-                WrapRunnable(pc,
-                             &PeerConnectionImpl::IceGatheringStateChange_m,
-                             toDomIceGatheringState(state)),
-                NS_DISPATCH_NORMAL);
-}
-
 #ifdef MOZILLA_INTERNAL_API
 static bool isDone(PCImplIceConnectionState state) {
   return state != PCImplIceConnectionState::Checking &&
@@ -1999,33 +1969,35 @@ static bool isFailed(PCImplIceConnectionState state) {
 }
 #endif
 
-nsresult
-PeerConnectionImpl::IceConnectionStateChange_m(PCImplIceConnectionState aState)
-{
-  PC_AUTO_ENTER_API_CALL(false);
+void PeerConnectionImpl::IceConnectionStateChange(
+    NrIceCtx* ctx,
+    NrIceCtx::ConnectionState state) {
+  PC_AUTO_ENTER_API_CALL_VOID_RETURN(false);
 
   CSFLogDebug(logTag, "%s", __FUNCTION__);
 
+  auto domState = toDomIceConnectionState(state);
+
 #ifdef MOZILLA_INTERNAL_API
-  if (!isDone(mIceConnectionState) && isDone(aState)) {
+  if (!isDone(mIceConnectionState) && isDone(domState)) {
     // mIceStartTime can be null if going directly from New to Closed, in which
     // case we don't count it as a success or a failure.
     if (!mIceStartTime.IsNull()){
       TimeDuration timeDelta = TimeStamp::Now() - mIceStartTime;
-      if (isSucceeded(aState)) {
+      if (isSucceeded(domState)) {
         Telemetry::Accumulate(Telemetry::WEBRTC_ICE_SUCCESS_TIME,
                               timeDelta.ToMilliseconds());
-      } else if (isFailed(aState)) {
+      } else if (isFailed(domState)) {
         Telemetry::Accumulate(Telemetry::WEBRTC_ICE_FAILURE_TIME,
                               timeDelta.ToMilliseconds());
       }
     }
 
-    if (isSucceeded(aState)) {
+    if (isSucceeded(domState)) {
       Telemetry::Accumulate(
           Telemetry::WEBRTC_ICE_ADD_CANDIDATE_ERRORS_GIVEN_SUCCESS,
           mAddCandidateErrorCount);
-    } else if (isFailed(aState)) {
+    } else if (isFailed(domState)) {
       Telemetry::Accumulate(
           Telemetry::WEBRTC_ICE_ADD_CANDIDATE_ERRORS_GIVEN_FAILURE,
           mAddCandidateErrorCount);
@@ -2033,7 +2005,7 @@ PeerConnectionImpl::IceConnectionStateChange_m(PCImplIceConnectionState aState)
   }
 #endif
 
-  mIceConnectionState = aState;
+  mIceConnectionState = domState;
 
   // Would be nice if we had a means of converting one of these dom enums
   // to a string that wasn't almost as much text as this switch statement...
@@ -2069,7 +2041,7 @@ PeerConnectionImpl::IceConnectionStateChange_m(PCImplIceConnectionState aState)
 
   nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
   if (!pco) {
-    return NS_OK;
+    return;
   }
   WrappableJSErrorResult rv;
   RUN_ON_THREAD(mThread,
@@ -2078,17 +2050,18 @@ PeerConnectionImpl::IceConnectionStateChange_m(PCImplIceConnectionState aState)
                              PCObserverStateType::IceConnectionState,
                              rv, static_cast<JSCompartment*>(nullptr)),
                 NS_DISPATCH_NORMAL);
-  return NS_OK;
 }
 
-nsresult
-PeerConnectionImpl::IceGatheringStateChange_m(PCImplIceGatheringState aState)
+void
+PeerConnectionImpl::IceGatheringStateChange(
+    NrIceCtx* ctx,
+    NrIceCtx::GatheringState state)
 {
-  PC_AUTO_ENTER_API_CALL(false);
+  PC_AUTO_ENTER_API_CALL_VOID_RETURN(false);
 
   CSFLogDebug(logTag, "%s", __FUNCTION__);
 
-  mIceGatheringState = aState;
+  mIceGatheringState = toDomIceGatheringState(state);
 
   // Would be nice if we had a means of converting one of these dom enums
   // to a string that wasn't almost as much text as this switch statement...
@@ -2108,7 +2081,7 @@ PeerConnectionImpl::IceGatheringStateChange_m(PCImplIceGatheringState aState)
 
   nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
   if (!pco) {
-    return NS_OK;
+    return;
   }
   WrappableJSErrorResult rv;
   RUN_ON_THREAD(mThread,
@@ -2117,7 +2090,6 @@ PeerConnectionImpl::IceGatheringStateChange_m(PCImplIceGatheringState aState)
                              PCObserverStateType::IceGatheringState,
                              rv, static_cast<JSCompartment*>(nullptr)),
                 NS_DISPATCH_NORMAL);
-  return NS_OK;
 }
 
 #ifdef MOZILLA_INTERNAL_API
