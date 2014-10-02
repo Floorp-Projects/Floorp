@@ -538,8 +538,6 @@
         <body><![CDATA[
           this._typeAheadCaseSensitive = aCaseSensitivity;
           this._updateCaseSensitivity();
-          this._findFailedString = null;
-          this._find();
           if (this.getElement("highlight").checked)
             this._setHighlightTimeout();
 
