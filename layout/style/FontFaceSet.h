@@ -112,18 +112,6 @@ public:
 
   void IncrementGeneration(bool aIsRebuild = false);
 
-  /**
-   * Looks up the corresponding FontFace object for the given user font entry.
-   * Returns null if there was none.
-   */
-  FontFace* FindFontFaceForEntry(gfxUserFontEntry* aUserFontEntry);
-
-  /**
-   * Looks up the corresponding user font entry for the given FontFace object.
-   * Returns null if there was none.
-   */
-  gfxUserFontEntry* FindUserFontEntryForFontFace(FontFace* aFontFace);
-
   // -- Web IDL --------------------------------------------------------------
 
   IMPL_EVENT_HANDLER(loading)
@@ -148,25 +136,17 @@ public:
 private:
   ~FontFaceSet();
 
-  // The font-set keeps track of the collection of rules, and their
-  // corresponding user font entries so that we can update the set without
-  // having to throw away all the existing fonts.
-  //
-  // Note: if you add new cycle collected objects to FontFaceRecord or
-  // the other record structs, make sure to update FontFaceSet's
-  // cycle collection macros accordingly.
+  // Note: if you add new cycle collected objects to FontFaceRecord,
+  // make sure to update FontFaceSet's cycle collection macros
+  // accordingly.
   struct FontFaceRecord {
-    nsRefPtr<gfxUserFontEntry> mUserFontEntry;
     nsRefPtr<FontFace> mFontFace;
-  };
-
-  struct ConnectedFontFaceRecord : public FontFaceRecord {
     uint8_t mSheetType;
   };
 
   FontFace* FontFaceForRule(nsCSSFontFaceRule* aRule);
   void InsertRule(nsCSSFontFaceRule* aRule, uint8_t aSheetType,
-                  nsTArray<ConnectedFontFaceRecord>& aOldRecords,
+                  nsTArray<FontFaceRecord>& aOldRecords,
                   bool& aFontSetModified);
 
   already_AddRefed<gfxUserFontEntry> FindOrCreateUserFontEntryFromRule(
@@ -206,9 +186,8 @@ private:
   // us before it dies (unless we die first).
   nsTHashtable< nsPtrHashKey<nsFontFaceLoader> > mLoaders;
 
-  // The CSS-connected FontFace objects and their corresponding user
-  // font entries.
-  nsTArray<ConnectedFontFaceRecord> mConnectedFaces;
+  // The CSS-connected FontFace objects in the FontFaceSet.
+  nsTArray<FontFaceRecord> mConnectedFaces;
 };
 
 } // namespace dom
