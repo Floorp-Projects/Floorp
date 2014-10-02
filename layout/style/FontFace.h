@@ -20,6 +20,8 @@ struct CSSFontFaceDescriptors;
 namespace dom {
 struct FontFaceDescriptors;
 class FontFaceSet;
+class FontFaceInitializer;
+class FontFaceStatusSetter;
 class Promise;
 class StringOrArrayBufferOrArrayBufferView;
 }
@@ -31,6 +33,8 @@ namespace dom {
 class FontFace MOZ_FINAL : public nsISupports,
                            public nsWrapperCache
 {
+  friend class mozilla::dom::FontFaceInitializer;
+  friend class mozilla::dom::FontFaceStatusSetter;
   friend class Entry;
 
 public:
@@ -79,7 +83,20 @@ public:
   gfxUserFontEntry* GetUserFontEntry() const { return mUserFontEntry; }
   void SetUserFontEntry(gfxUserFontEntry* aEntry);
 
+  /**
+   * Returns whether this object is in a FontFaceSet.
+   */
   bool IsInFontFaceSet() { return mInFontFaceSet; }
+
+  /**
+   * Returns whether this FontFace is initialized.  A CSS-connected
+   * FontFace is considered initialized at construction time.  For
+   * FontFace objects created using the FontFace JS constructor, it
+   * is once all the descriptors have been parsed.
+   */
+  bool IsInitialized() const { return mInitialized; }
+
+  FontFaceSet* GetFontFaceSet() const { return mFontFaceSet; }
 
   /**
    * Gets the family name of the FontFace as a raw string (such as 'Times', as
@@ -131,6 +148,14 @@ private:
   ~FontFace();
 
   /**
+   * Initializes the source and descriptors on this object based on values that
+   * were passed in to the JS constructor.  If the source was specified as
+   * an ArrayBuffer or ArrayBufferView, parsing of the font data in there
+   * will be started.
+   */
+  void Initialize(FontFaceInitializer* aInitializer);
+
+  /**
    * Parses a @font-face descriptor value, storing the result in aResult.
    * Returns whether the parsing was successful.
    */
@@ -141,6 +166,19 @@ private:
   void SetDescriptor(nsCSSFontDesc aFontDesc,
                      const nsAString& aValue,
                      mozilla::ErrorResult& aRv);
+
+  /**
+   * Sets all of the descriptor values in mDescriptors using values passed
+   * to the JS constructor.
+   */
+  bool SetDescriptors(const nsAString& aFamily,
+                      const FontFaceDescriptors& aDescriptors);
+
+  /**
+   * Marks the FontFace as initialized and informs the FontFaceSet it is in,
+   * if any.
+   */
+  void OnInitialized();
 
   /**
    * Sets the current loading status.
@@ -172,6 +210,21 @@ private:
   // loop before updating the status, rather than doing it immediately.
   mozilla::dom::FontFaceLoadStatus mStatus;
 
+  // Represents where a FontFace's data is coming from.
+  enum SourceType {
+    eSourceType_FontFaceRule = 1,
+    eSourceType_URLs,
+    eSourceType_Buffer
+  };
+
+  // Where the font data for this FontFace is coming from.
+  SourceType mSourceType;
+
+  // If the FontFace was constructed with an ArrayBuffer(View), this is a
+  // copy of the data from it.
+  uint8_t* mSourceBuffer;
+  uint32_t mSourceBufferLength;
+
   // The values corresponding to the font face descriptors, if we are not
   // a CSS-connected FontFace object.  For CSS-connected objects, we use
   // the descriptors stored in mRule.
@@ -183,6 +236,16 @@ private:
 
   // Whether this FontFace appears in the FontFaceSet.
   bool mInFontFaceSet;
+
+  // Whether the FontFace has been fully initialized.  This takes at least one
+  // run around the event loop, as the parsing of the src descriptor is done
+  // off an event queue task.
+  bool mInitialized;
+
+  // Records whether Load() was called on this FontFace before it was
+  // initialized.  When the FontFace eventually does become initialized,
+  // mLoadPending is checked and Load() is called if needed.
+  bool mLoadWhenInitialized;
 };
 
 } // namespace dom
