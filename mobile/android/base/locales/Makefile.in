@@ -28,16 +28,16 @@ strings-xml-in := $(srcdir)/../strings.xml.in
 
 GARBAGE += $(strings-xml)
 
-dir-res-raw         := ../res/raw
-suggestedsites-json := $(dir-res-raw)/suggestedsites.json
+dir-res-raw := ../res/raw
+suggestedsites := $(dir-res-raw)/suggestedsites.json
 
 GARBAGE += \
-  $(suggestedsites-json) \
+  $(suggestedsites) \
   $(NULL)
 
 libs realchrome:: \
   $(strings-xml) \
-  $(suggestedsites-json) \
+  $(suggestedsites) \
   $(NULL)
 
 chrome-%:: AB_CD=$*
@@ -98,11 +98,11 @@ suggestedsites-srcdir := $(if $(filter en-US,$(AB_CD)),,$(or $(realpath $(L10NBA
 
 # Determine the ../res/raw[-*] path.  This can be ../res/raw when no
 # locale is explicitly specified.
-suggestedsites-json-bypath = $(filter %/suggestedsites.json,$(MAKECMDGOALS))
-ifeq (,$(strip $(suggestedsites-json-bypath)))
-  suggestedsites-json-bypath = $(suggestedsites-json)
+suggestedsites-bypath = $(filter %/suggestedsites.json,$(MAKECMDGOALS))
+ifeq (,$(strip $(suggestedsites-bypath)))
+  suggestedsites-bypath = $(suggestedsites)
 endif
-suggestedsites-dstdir-raw = $(patsubst %/,%,$(dir $(suggestedsites-json-bypath)))
+suggestedsites-dstdir-raw = $(patsubst %/,%,$(dir $(suggestedsites-bypath)))
 
 $(suggestedsites-dstdir-raw)/suggestedsites.json: FORCE
 	$(call py_action,generate_suggestedsites, \
