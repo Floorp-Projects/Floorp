@@ -823,32 +823,12 @@ var BrowserApp = {
     Services.obs.notifyObservers(null, "FormHistory:Init", "");
     Services.obs.notifyObservers(null, "Passwords:Init", "");
 
-    // Migrate the UI if necessary.
-    const UI_VERSION = 1;
-
-    let currentUIVersion = 0;
-    try {
-      currentUIVersion = Services.prefs.getIntPref("browser.migration.version");
-    } catch(ex) {}
-
-    if (currentUIVersion >= UI_VERSION) {
-      return;
+    // Migrate user-set "plugins.click_to_play" pref. See bug 884694.
+    // Because the default value is true, a user-set pref means that the pref was set to false.
+    if (Services.prefs.prefHasUserValue("plugins.click_to_play")) {
+      Services.prefs.setIntPref("plugin.default.state", Ci.nsIPluginTag.STATE_ENABLED);
+      Services.prefs.clearUserPref("plugins.click_to_play");
     }
-
-    if (currentUIVersion < 1) {
-      // Migrate user-set "plugins.click_to_play" pref. See bug 884694.
-      // Because the default value is true, a user-set pref means that the pref was set to false.
-      if (Services.prefs.prefHasUserValue("plugins.click_to_play")) {
-        Services.prefs.setIntPref("plugin.default.state", Ci.nsIPluginTag.STATE_ENABLED);
-        Services.prefs.clearUserPref("plugins.click_to_play");
-      }
-
-      // Set the default search engine for the search activity.
-      SearchEngines.migrateSearchActivityDefaultPref();
-    }
-
-    // Update the migration version.
-    Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
   },
 
   shutdown: function shutdown() {
@@ -6927,10 +6907,6 @@ var SearchEngines = {
         dump("Unexpected message type observed: " + aTopic);
         break;
     }
-  },
-
-  migrateSearchActivityDefaultPref: function migrateSearchActivityDefaultPref() {
-    Services.search.init(() => this._setSearchActivityDefaultPref(Services.search.defaultEngine));
   },
 
   // Updates the search activity pref when the default engine changes.
