@@ -722,7 +722,7 @@ bool
 AnimationPlayerCollection::HasCurrentAnimations()
 {
   for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-    if (mPlayers[playerIdx]->IsCurrent()) {
+    if (mPlayers[playerIdx]->HasCurrentSource()) {
       return true;
     }
   }

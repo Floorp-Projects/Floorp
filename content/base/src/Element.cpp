@@ -2958,7 +2958,7 @@ Element::GetAnimationPlayers(nsTArray<nsRefPtr<AnimationPlayer> >& aPlayers)
          playerIdx < collection->mPlayers.Length();
          playerIdx++) {
       AnimationPlayer* player = collection->mPlayers[playerIdx];
-      if (player->IsCurrent()) {
+      if (player->HasCurrentSource()) {
         aPlayers.AppendElement(player);
       }
     }
