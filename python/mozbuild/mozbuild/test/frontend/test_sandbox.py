@@ -354,6 +354,7 @@ SOURCES += ['hoge.cpp']
             'DIRS': [sandbox.normalize_path('foo')],
         })
 
+        sandbox2 = self.sandbox(metadata={'templates': sandbox.templates})
         source = '''
 TemplateError([
     'foo.cpp',
@@ -371,6 +372,7 @@ TemplateError([
 
         # TemplateGlobalVariable tries to access 'illegal' but that is expected
         # to throw.
+        sandbox2 = self.sandbox(metadata={'templates': sandbox.templates})
         source = '''
 illegal = True
 TemplateGlobalVariable()
@@ -416,6 +418,7 @@ SOURCES += ['hoge.cpp']
 
         # Template names must be CamelCase. Here, we can define the template
         # inline because the error happens before inspect.getsourcelines.
+        sandbox2 = self.sandbox(metadata={'templates': sandbox.templates})
         source = '''
 @template
 def foo():
@@ -433,6 +436,7 @@ def foo():
             'Template function names must be CamelCase.')
 
         # Template names must not already be registered.
+        sandbox2 = self.sandbox(metadata={'templates': sandbox.templates})
         source = '''
 @template
 def Template():
