@@ -89,6 +89,7 @@ gfxGraphiteShaper::ShapeText(gfxContext      *aContext,
                              uint32_t         aOffset,
                              uint32_t         aLength,
                              int32_t          aScript,
+                             bool             aVertical,
                              gfxShapedText   *aShapedText)
 {
     // some font back-ends require this in order to get proper hinted metrics

@@ -93,7 +93,7 @@ LiveInterval::Range::contains(const Range *other) const
 void
 LiveInterval::Range::intersect(const Range *other, Range *pre, Range *inside, Range *post) const
 {
-    JS_ASSERT(pre->empty() && inside->empty() && post->empty());
+    MOZ_ASSERT(pre->empty() && inside->empty() && post->empty());
 
     CodePosition innerFrom = from;
     if (from < other->from) {
@@ -149,8 +149,8 @@ LiveInterval::Range::dump() const
 bool
 LiveInterval::addRangeAtHead(CodePosition from, CodePosition to)
 {
-    JS_ASSERT(from < to);
-    JS_ASSERT(ranges_.empty() || from <= ranges_.back().from);
+    MOZ_ASSERT(from < to);
+    MOZ_ASSERT(ranges_.empty() || from <= ranges_.back().from);
 
     Range newRange(from, to);
 
@@ -166,8 +166,8 @@ LiveInterval::addRangeAtHead(CodePosition from, CodePosition to)
         return true;
     }
 
-    JS_ASSERT(from < first.to);
-    JS_ASSERT(to > first.from);
+    MOZ_ASSERT(from < first.to);
+    MOZ_ASSERT(to > first.from);
     if (from < first.from)
         first.from = from;
     if (to > first.to)
@@ -179,7 +179,7 @@ LiveInterval::addRangeAtHead(CodePosition from, CodePosition to)
 bool
 LiveInterval::addRange(CodePosition from, CodePosition to)
 {
-    JS_ASSERT(from < to);
+    MOZ_ASSERT(from < to);
 
     Range newRange(from, to);
 
@@ -309,8 +309,8 @@ LiveInterval::intersect(LiveInterval *other)
 bool
 LiveInterval::splitFrom(CodePosition pos, LiveInterval *after)
 {
-    JS_ASSERT(pos >= start() && pos < end());
-    JS_ASSERT(after->ranges_.empty());
+    MOZ_ASSERT(pos >= start() && pos < end());
+    MOZ_ASSERT(after->ranges_.empty());
 
     // Move all intervals over to the target
     size_t bufferLength = ranges_.length();
@@ -372,7 +372,7 @@ LiveInterval::addUse(UsePosition *use)
 void
 LiveInterval::addUseAtEnd(UsePosition *use)
 {
-    JS_ASSERT(uses_.empty() || use->pos >= uses_.back()->pos);
+    MOZ_ASSERT(uses_.empty() || use->pos >= uses_.back()->pos);
     uses_.pushBack(use);
 }
 
@@ -382,7 +382,7 @@ LiveInterval::nextUseAfter(CodePosition after)
     for (UsePositionIterator usePos(usesBegin()); usePos != usesEnd(); usePos++) {
         if (usePos->pos >= after) {
             LUse::Policy policy = usePos->use->policy();
-            JS_ASSERT(policy != LUse::RECOVERED_INPUT);
+            MOZ_ASSERT(policy != LUse::RECOVERED_INPUT);
             if (policy != LUse::KEEPALIVE)
                 return *usePos;
         }
@@ -441,7 +441,7 @@ VirtualRegister::intervalFor(CodePosition pos)
 LiveInterval *
 VirtualRegister::getFirstInterval()
 {
-    JS_ASSERT(!intervals_.empty());
+    MOZ_ASSERT(!intervals_.empty());
     return intervals_[0];
 }
 
@@ -555,11 +555,11 @@ AddRegisterToSafepoint(LSafepoint *safepoint, AnyRegister reg, const LDefinition
 {
     safepoint->addLiveRegister(reg);
 
-    JS_ASSERT(def.type() == LDefinition::GENERAL ||
-              def.type() == LDefinition::INT32 ||
-              def.type() == LDefinition::DOUBLE ||
-              def.type() == LDefinition::FLOAT32 ||
-              def.type() == LDefinition::OBJECT);
+    MOZ_ASSERT(def.type() == LDefinition::GENERAL ||
+               def.type() == LDefinition::INT32 ||
+               def.type() == LDefinition::DOUBLE ||
+               def.type() == LDefinition::FLOAT32 ||
+               def.type() == LDefinition::OBJECT);
 
     if (def.type() == LDefinition::OBJECT)
         safepoint->addGcRegister(reg.gpr());
@@ -685,7 +685,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                     // special handling for this, assert the next instruction
                     // has no fixed uses. defineFixed guarantees this by inserting
                     // an LNop.
-                    JS_ASSERT(!NextInstructionHasFixedUses(block, *ins));
+                    MOZ_ASSERT(!NextInstructionHasFixedUses(block, *ins));
                     AnyRegister reg = def->output()->toRegister();
                     if (!addFixedRangeAtHead(reg, inputOf(*ins), outputOf(*ins).next()))
                         return false;
@@ -701,8 +701,8 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                     // LUse::ANY policy to avoid allocating a register for the
                     // input.
                     LUse *inputUse = ins->getOperand(def->getReusedInput())->toUse();
-                    JS_ASSERT(inputUse->policy() == LUse::REGISTER);
-                    JS_ASSERT(inputUse->usedAtStart());
+                    MOZ_ASSERT(inputUse->policy() == LUse::REGISTER);
+                    MOZ_ASSERT(inputUse->usedAtStart());
                     *inputUse = LUse(inputUse->virtualRegister(), LUse::ANY, /* usedAtStart = */ true);
                 }
 
@@ -736,7 +736,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                         if (LSafepoint *safepoint = ins->safepoint())
                             AddRegisterToSafepoint(safepoint, reg, *temp);
                     } else {
-                        JS_ASSERT(!ins->isCall());
+                        MOZ_ASSERT(!ins->isCall());
                         if (!vregs[temp].getInterval(0)->addRangeAtHead(inputOf(*ins), outputOf(*ins)))
                             return false;
                     }
@@ -775,19 +775,19 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                     LUse *use = inputAlloc->toUse();
 
                     // The first instruction, LLabel, has no uses.
-                    JS_ASSERT_IF(forLSRA, inputOf(*ins) > outputOf(block->firstId()));
+                    MOZ_ASSERT_IF(forLSRA, inputOf(*ins) > outputOf(block->firstId()));
 
                     // Call uses should always be at-start or fixed, since the fixed intervals
                     // use all registers.
-                    JS_ASSERT_IF(ins->isCall() && !inputAlloc.isSnapshotInput(),
-                                 use->isFixedRegister() || use->usedAtStart());
+                    MOZ_ASSERT_IF(ins->isCall() && !inputAlloc.isSnapshotInput(),
+                                  use->isFixedRegister() || use->usedAtStart());
 
 #ifdef DEBUG
                     // Don't allow at-start call uses if there are temps of the same kind,
                     // so that we don't assign the same register.
                     if (ins->isCall() && use->usedAtStart()) {
                         for (size_t i = 0; i < ins->numTemps(); i++)
-                            JS_ASSERT(vregs[ins->getTemp(i)].isFloatReg() != vregs[use].isFloatReg());
+                            MOZ_ASSERT(vregs[ins->getTemp(i)].isFloatReg() != vregs[use].isFloatReg());
                     }
 
                     // If there are both useRegisterAtStart(x) and useRegister(y)
@@ -801,15 +801,15 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                             hasUseRegister = true;
                         }
                     }
-                    JS_ASSERT(!(hasUseRegister && hasUseRegisterAtStart));
+                    MOZ_ASSERT(!(hasUseRegister && hasUseRegisterAtStart));
 
                     // LSRA has issues with *AtStart, see bug 1039993.
-                    JS_ASSERT_IF(forLSRA && hasUnaliasedDouble() && hasFloat32Def
-                                 && vregs[use].type() == LDefinition::DOUBLE,
-                                 !use->usedAtStart());
-                    JS_ASSERT_IF(forLSRA && hasMultiAlias() && hasDoubleDef
-                                 && vregs[use].type() == LDefinition::FLOAT32,
-                                 !use->usedAtStart());
+                    MOZ_ASSERT_IF(forLSRA && hasUnaliasedDouble() && hasFloat32Def
+                                  && vregs[use].type() == LDefinition::DOUBLE,
+                                  !use->usedAtStart());
+                    MOZ_ASSERT_IF(forLSRA && hasMultiAlias() && hasDoubleDef
+                                  && vregs[use].type() == LDefinition::FLOAT32,
+                                  !use->usedAtStart());
 #endif
 
                     // Don't treat RECOVERED_INPUT uses as keeping the vreg alive.
@@ -884,7 +884,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
             MBasicBlock *loopBlock = mblock->backedge();
             while (true) {
                 // Blocks must already have been visited to have a liveIn set.
-                JS_ASSERT(loopBlock->id() >= mblock->id());
+                MOZ_ASSERT(loopBlock->id() >= mblock->id());
 
                 // Add an interval for this entire loop block
                 CodePosition from = entryOf(loopBlock->lir());
@@ -928,7 +928,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
 
                 // If end is reached without finding a non-OSR block, then no more work items were found.
                 if (loopBlock == osrBlock) {
-                    JS_ASSERT(loopWorkList.empty());
+                    MOZ_ASSERT(loopWorkList.empty());
                     break;
                 }
             }
@@ -937,7 +937,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
             loopDone->clear();
         }
 
-        JS_ASSERT_IF(!mblock->numPredecessors(), live->empty());
+        MOZ_ASSERT_IF(!mblock->numPredecessors(), live->empty());
     }
 
     validateVirtualRegisters();
@@ -971,7 +971,7 @@ LiveRangeAllocator<VREG, forLSRA>::dumpVregs()
 {
 #ifdef DEBUG
     // Virtual register number 0 is unused.
-    JS_ASSERT(vregs[0u].numIntervals() == 0);
+    MOZ_ASSERT(vregs[0u].numIntervals() == 0);
     for (uint32_t i = 1; i < graph.numVirtualRegisters(); i++) {
         fprintf(stderr, "  ");
         VirtualRegister &vreg = vregs[i];
@@ -997,8 +997,8 @@ LiveInterval::validateRanges()
     for (size_t i = ranges_.length() - 1; i < ranges_.length(); i--) {
         Range *range = &ranges_[i];
 
-        JS_ASSERT(range->from < range->to);
-        JS_ASSERT_IF(prev, prev->to <= range->from);
+        MOZ_ASSERT(range->from < range->to);
+        MOZ_ASSERT_IF(prev, prev->to <= range->from);
         prev = range;
     }
 }

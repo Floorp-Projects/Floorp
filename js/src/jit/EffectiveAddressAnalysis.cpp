@@ -18,7 +18,7 @@ AnalyzeLsh(TempAllocator &alloc, MLsh *lsh)
         return;
 
     MDefinition *index = lsh->lhs();
-    JS_ASSERT(index->type() == MIRType_Int32);
+    MOZ_ASSERT(index->type() == MIRType_Int32);
 
     MDefinition *shift = lsh->rhs();
     if (!shift->isConstant())

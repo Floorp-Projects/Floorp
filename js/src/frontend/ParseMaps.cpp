@@ -117,7 +117,7 @@ frontend::InitAtomMap(frontend::AtomIndexMap *indices, HeapPtrAtom *atoms)
         for (WordMap::Range r = wm.all(); !r.empty(); r.popFront()) {
             JSAtom *atom = r.front().key();
             jsatomid index = r.front().value();
-            JS_ASSERT(index < indices->count());
+            MOZ_ASSERT(index < indices->count());
             atoms[index].init(atom);
         }
     } else {
@@ -126,7 +126,7 @@ frontend::InitAtomMap(frontend::AtomIndexMap *indices, HeapPtrAtom *atoms)
             JSAtom *atom = it->key;
             if (!atom)
                 continue;
-            JS_ASSERT(it->value < indices->count());
+            MOZ_ASSERT(it->value < indices->count());
             atoms[it->value].init(atom);
         }
     }

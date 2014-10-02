@@ -75,7 +75,7 @@ uint32_t
 jit::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
 {
     JSContext *cx = GetJSContextFromJitCode();
-    JS_ASSERT(bailoutInfo);
+    MOZ_ASSERT(bailoutInfo);
 
     // We don't have an exit frame.
     MOZ_ASSERT(IsInRange(FAKE_JIT_TOP_FOR_BAILOUT, 0, 0x1000) &&
@@ -93,14 +93,14 @@ jit::Bailout(BailoutStack *sp, BaselineBailoutInfo **bailoutInfo)
 
     JitSpew(JitSpew_IonBailouts, "Took bailout! Snapshot offset: %d", iter.snapshotOffset());
 
-    JS_ASSERT(IsBaselineEnabled(cx));
+    MOZ_ASSERT(IsBaselineEnabled(cx));
 
     *bailoutInfo = nullptr;
     uint32_t retval = BailoutIonToBaseline(cx, activation, iter, false, bailoutInfo);
-    JS_ASSERT(retval == BAILOUT_RETURN_OK ||
-              retval == BAILOUT_RETURN_FATAL_ERROR ||
-              retval == BAILOUT_RETURN_OVERRECURSED);
-    JS_ASSERT_IF(retval == BAILOUT_RETURN_OK, *bailoutInfo != nullptr);
+    MOZ_ASSERT(retval == BAILOUT_RETURN_OK ||
+               retval == BAILOUT_RETURN_FATAL_ERROR ||
+               retval == BAILOUT_RETURN_OVERRECURSED);
+    MOZ_ASSERT_IF(retval == BAILOUT_RETURN_OK, *bailoutInfo != nullptr);
 
     if (retval != BAILOUT_RETURN_OK) {
         // If the bailout failed, then bailout trampoline will pop the
@@ -149,14 +149,14 @@ jit::InvalidationBailout(InvalidationBailoutStack *sp, size_t *frameSizeOut,
     // Note: the frame size must be computed before we return from this function.
     *frameSizeOut = iter.topFrameSize();
 
-    JS_ASSERT(IsBaselineEnabled(cx));
+    MOZ_ASSERT(IsBaselineEnabled(cx));
 
     *bailoutInfo = nullptr;
     uint32_t retval = BailoutIonToBaseline(cx, activation, iter, true, bailoutInfo);
-    JS_ASSERT(retval == BAILOUT_RETURN_OK ||
-              retval == BAILOUT_RETURN_FATAL_ERROR ||
-              retval == BAILOUT_RETURN_OVERRECURSED);
-    JS_ASSERT_IF(retval == BAILOUT_RETURN_OK, *bailoutInfo != nullptr);
+    MOZ_ASSERT(retval == BAILOUT_RETURN_OK ||
+               retval == BAILOUT_RETURN_FATAL_ERROR ||
+               retval == BAILOUT_RETURN_OVERRECURSED);
+    MOZ_ASSERT_IF(retval == BAILOUT_RETURN_OK, *bailoutInfo != nullptr);
 
     if (retval != BAILOUT_RETURN_OK) {
         // If the bailout failed, then bailout trampoline will pop the

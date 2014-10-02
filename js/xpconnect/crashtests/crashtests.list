@@ -49,6 +49,7 @@ asserts(0-1) load 786142.html # We may hit bug 645229 here.
 load 797583.html
 load 806751.html
 load 833856.html
+load 851418.html
 load 854604.html
 load 854139.html
 pref(dom.use_xbl_scopes_for_remote_xul,true) load 898939.html

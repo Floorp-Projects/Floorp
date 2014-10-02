@@ -39,12 +39,13 @@
 #ifndef mozilla_dom_ImportManager_h__
 #define mozilla_dom_ImportManager_h__
 
-#include "nsCOMArray.h"
+#include "nsTArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDOMEventListener.h"
 #include "nsIStreamListener.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsRefPtrHashtable.h"
+#include "nsScriptLoader.h"
 #include "nsURIHashKey.h"
 
 class nsIDocument;
@@ -58,11 +59,70 @@ namespace dom {
 
 class ImportManager;
 
+typedef nsTHashtable<nsPtrHashKey<nsINode>> NodeTable;
+
 class ImportLoader MOZ_FINAL : public nsIStreamListener
                              , public nsIDOMEventListener
 {
+
+  // A helper inner class to decouple the logic of updating the import graph
+  // after a new import link has been found by one of the parsers.
+  class Updater {
+
+  public:
+    Updater(ImportLoader* aLoader) : mLoader(aLoader)
+    {}
+
+    // After a new link is added that refers to this import, we
+    // have to update the spanning tree, since given this new link the
+    // priority of this import might be higher in the scripts
+    // execution order than before. It updates mMainReferrer, mImportParent,
+    // the corresponding pending ScriptRunners, etc.
+    // It also handles updating additional dependant loaders via the
+    // UpdateDependants calls.
+    // (NOTE: See GetMainReferrer about spanning tree.)
+    void UpdateSpanningTree(nsINode* aNode);
+
+  private:
+    // Returns an array of links that forms a referring chain from
+    // the master document to this import. Each link in the array
+    // is marked as main referrer in the list.
+    void GetReferrerChain(nsINode* aNode, nsTArray<nsINode*>& aResult);
+
+    // Once we find a new referrer path to our import, we have to see if
+    // it changes the load order hence we have to do an update on the graph.
+    bool ShouldUpdate(nsTArray<nsINode*>& aNewPath);
+    void UpdateMainReferrer(uint32_t newIdx);
+
+    // It's a depth first graph traversal algorithm, for UpdateDependants. The
+    // nodes in the graph are the import link elements, and there is a directed
+    // edge from link1 to link2 if link2 is a subimport in the import document
+    // of link1.
+    // If the ImportLoader that aCurrentLink points to didn't need to be updated
+    // the algorithm skips its "children" (subimports). Note, that this graph can
+    // also contain cycles, aVisistedLinks is used to track the already visited
+    // links to avoid an infinite loop.
+    // aPath - (in/out) the referrer link chain of aCurrentLink when called, and
+    //                  of the next link when the function returns
+    // aVisitedLinks - (in/out) list of links that the traversal already visited
+    //                          (to handle cycles in the graph)
+    // aSkipChildren - when aCurrentLink points to an import that did not need
+    //                 to be updated, we can skip its sub-imports ('children')
+    nsINode* NextDependant(nsINode* aCurrentLink,
+                           nsTArray<nsINode*>& aPath,
+                           NodeTable& aVisitedLinks, bool aSkipChildren);
+
+    // When we find a new link that changes the load order of the known imports,
+    // we also have to check all the subimports of it, to see if they need an
+    // update too. (see test_imports_nested_2.html)
+    void UpdateDependants(nsINode* aNode, nsTArray<nsINode*>& aPath);
+
+    ImportLoader* mLoader;
+  };
+
   friend class ::AutoError;
   friend class ImportManager;
+  friend class Updater;
 
 public:
   ImportLoader(nsIURI* aURI, nsIDocument* aOriginDocument);
@@ -83,10 +143,45 @@ public:
   bool IsReady() { return mReady; }
   bool IsStopped() { return mStopped; }
   bool IsBlocking() { return mBlockingScripts; }
-  already_AddRefed<nsIDocument> GetImport()
-  {
-    return mReady ? nsCOMPtr<nsIDocument>(mDocument).forget() : nullptr;
+
+  ImportManager* Manager() {
+    MOZ_ASSERT(mDocument || mImportParent, "One of them should be always set");
+    return (mDocument ? mDocument : mImportParent)->ImportManager();
   }
+
+  // Simply getter for the import document. Can return a partially parsed
+  // document if called too early.
+  nsIDocument* GetDocument()
+  {
+    return mDocument;
+  }
+
+  // Getter for the import document that is used in the spec. Returns
+  // nullptr if the import is not yet ready.
+  nsIDocument* GetImport()
+  {
+    return mReady ? mDocument : nullptr;
+  }
+
+  // There is only one referring link that is marked as primary link per
+  // imports. This is the one that has to be taken into account when
+  // scrip execution order is determined. Links marked as primary link form
+  // a spanning tree in the import graph. (Eliminating the cycles and
+  // multiple parents.) This spanning tree is recalculated every time
+  // a new import link is added to the manager.
+  nsINode* GetMainReferrer()
+  {
+    return mLinks.IsEmpty() ? nullptr : mLinks[mMainReferrer];
+  }
+
+  // An import is not only blocked by its import children, but also
+  // by its predecessors. It's enough to find the closest predecessor
+  // and wait for that to run its scripts. We keep track of all the
+  // ScriptRunners that are waiting for this import. NOTE: updating
+  // the main referrer might change this list.
+  void AddBlockedScriptLoader(nsScriptLoader* aScriptLoader);
+  bool RemoveBlockedScriptLoader(nsScriptLoader* aScriptLoader);
+  void SetBlockingPredecessor(ImportLoader* aLoader);
 
 private:
   ~ImportLoader() {}
@@ -122,12 +217,25 @@ private:
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIStreamListener> mParserStreamListener;
   nsCOMPtr<nsIDocument> mImportParent;
+  ImportLoader* mBlockingPredecessor;
+
   // List of the LinkElements that are referring to this import
   // we need to keep track of them so we can fire event on them.
-  nsCOMArray<nsINode> mLinks;
+  nsTArray<nsCOMPtr<nsINode>> mLinks;
+
+  // List of pending ScriptLoaders that are waiting for this import
+  // to finish.
+  nsTArray<nsRefPtr<nsScriptLoader>> mBlockedScriptLoaders;
+
+  // There is always exactly one referrer link that is flagged as
+  // the main referrer the primary link. This is the one that is
+  // used in the script execution order calculation.
+  // ("Branch" according to the spec.)
+  uint32_t mMainReferrer;
   bool mReady;
   bool mStopped;
   bool mBlockingScripts;
+  Updater mUpdater;
 };
 
 class ImportManager MOZ_FINAL : public nsISupports
@@ -142,8 +250,23 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(ImportManager)
 
+  // Finds the ImportLoader that belongs to aImport in the map.
+  ImportLoader* Find(nsIDocument* aImport);
+
+  // Find the ImportLoader aLink refers to.
+  ImportLoader* Find(nsINode* aLink);
+
+  void AddLoaderWithNewURI(ImportLoader* aLoader, nsIURI* aNewURI);
+
+  // When a new import link is added, this getter either creates
+  // a new ImportLoader for it, or returns an existing one if
+  // it was already created and in the import map.
   already_AddRefed<ImportLoader> Get(nsIURI* aURI, nsINode* aNode,
                                      nsIDocument* aOriginDocument);
+
+  // It finds the predecessor for an import link node that runs its
+  // scripts the latest among its predecessors.
+  nsRefPtr<ImportLoader> GetNearestPredecessor(nsINode* aNode);
 
 private:
   ImportMap mImports;

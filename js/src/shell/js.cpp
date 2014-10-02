@@ -350,7 +350,7 @@ GetContextData(JSContext *cx)
 {
     JSShellContextData *data = (JSShellContextData *) JS_GetContextPrivate(cx);
 
-    JS_ASSERT(data);
+    MOZ_ASSERT(data);
     return data;
 }
 
@@ -443,7 +443,7 @@ RunFile(JSContext *cx, Handle<JSObject*> obj, const char *filename, FILE *file, 
 
         gGotError = false;
         (void) JS::Compile(cx, obj, options, file, &script);
-        JS_ASSERT_IF(!script, gGotError);
+        MOZ_ASSERT_IF(!script, gGotError);
     }
 
     #ifdef DEBUG
@@ -963,7 +963,7 @@ class AutoNewContext
     AutoNewContext() : oldcx(nullptr), newcx(nullptr) {}
 
     bool enter(JSContext *cx) {
-        JS_ASSERT(!JS_IsExceptionPending(cx));
+        MOZ_ASSERT(!JS_IsExceptionPending(cx));
         oldcx = cx;
         newcx = NewContext(JS_GetRuntime(cx));
         if (!newcx)
@@ -1041,7 +1041,7 @@ CacheEntry_isCacheEntry(JSObject *cache)
 static JSString *
 CacheEntry_getSource(HandleObject cache)
 {
-    JS_ASSERT(CacheEntry_isCacheEntry(cache));
+    MOZ_ASSERT(CacheEntry_isCacheEntry(cache));
     Value v = JS_GetReservedSlot(cache, CacheEntry_SOURCE);
     if (!v.isString())
         return nullptr;
@@ -1052,7 +1052,7 @@ CacheEntry_getSource(HandleObject cache)
 static uint8_t *
 CacheEntry_getBytecode(HandleObject cache, uint32_t *length)
 {
-    JS_ASSERT(CacheEntry_isCacheEntry(cache));
+    MOZ_ASSERT(CacheEntry_isCacheEntry(cache));
     Value v = JS_GetReservedSlot(cache, CacheEntry_BYTECODE);
     if (!v.isObject() || !v.toObject().is<ArrayBufferObject>())
         return nullptr;
@@ -1065,7 +1065,7 @@ CacheEntry_getBytecode(HandleObject cache, uint32_t *length)
 static bool
 CacheEntry_setBytecode(JSContext *cx, HandleObject cache, uint8_t *buffer, uint32_t length)
 {
-    JS_ASSERT(CacheEntry_isCacheEntry(cache));
+    MOZ_ASSERT(CacheEntry_isCacheEntry(cache));
     ArrayBufferObject::BufferContents contents =
         ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN_BUFFER>(buffer);
     Rooted<ArrayBufferObject*> arrayBuffer(cx, ArrayBufferObject::create(cx, length, contents));
@@ -1838,7 +1838,7 @@ UpdateSwitchTableBounds(JSContext *cx, HandleScript script, unsigned offset,
 
       default:
         /* [condswitch] switch does not have any jump or lookup tables. */
-        JS_ASSERT(op == JSOP_CONDSWITCH);
+        MOZ_ASSERT(op == JSOP_CONDSWITCH);
         return;
     }
 
@@ -1915,7 +1915,7 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
 
           case SRC_TABLESWITCH: {
             JSOp op = JSOp(script->code()[offset]);
-            JS_ASSERT(op == JSOP_TABLESWITCH);
+            MOZ_ASSERT(op == JSOP_TABLESWITCH);
             Sprint(sp, " length %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
             UpdateSwitchTableBounds(cx, script, offset,
                                     &switchTableStart, &switchTableEnd);
@@ -1923,7 +1923,7 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
           }
           case SRC_CONDSWITCH: {
             JSOp op = JSOp(script->code()[offset]);
-            JS_ASSERT(op == JSOP_CONDSWITCH);
+            MOZ_ASSERT(op == JSOP_CONDSWITCH);
             Sprint(sp, " length %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
             unsigned caseOff = (unsigned) js_GetSrcNoteOffset(sn, 1);
             if (caseOff)
@@ -1934,12 +1934,12 @@ SrcNotes(JSContext *cx, HandleScript script, Sprinter *sp)
           }
 
           case SRC_TRY:
-            JS_ASSERT(JSOp(script->code()[offset]) == JSOP_TRY);
+            MOZ_ASSERT(JSOp(script->code()[offset]) == JSOP_TRY);
             Sprint(sp, " offset to jump %u", unsigned(js_GetSrcNoteOffset(sn, 0)));
             break;
 
           default:
-            JS_ASSERT(0);
+            MOZ_ASSERT(0);
             break;
         }
         Sprint(sp, "\n");
@@ -1987,7 +1987,7 @@ TryNotes(JSContext *cx, HandleScript script, Sprinter *sp)
     tnlimit = tn + script->trynotes()->length;
     Sprint(sp, "\nException table:\nkind      stack    start      end\n");
     do {
-        JS_ASSERT(tn->kind < ArrayLength(TryNoteNames));
+        MOZ_ASSERT(tn->kind < ArrayLength(TryNoteNames));
         Sprint(sp, " %-7s %6u %8u %8u\n",
                TryNoteNames[tn->kind], tn->stackDepth,
                tn->start, tn->start + tn->length);
@@ -2974,7 +2974,7 @@ Sleep_fn(JSContext *cx, unsigned argc, Value *vp)
 static bool
 InitWatchdog(JSRuntime *rt)
 {
-    JS_ASSERT(!gWatchdogThread);
+    MOZ_ASSERT(!gWatchdogThread);
     gWatchdogLock = PR_NewLock();
     if (gWatchdogLock) {
         gWatchdogWakeup = PR_NewCondVar(gWatchdogLock);
@@ -3048,7 +3048,7 @@ WatchdogMain(void *arg)
                 sleepDuration = PR_TicksPerSecond() / 10;
             mozilla::DebugOnly<PRStatus> status =
               PR_WaitCondVar(gWatchdogWakeup, sleepDuration);
-            JS_ASSERT(status == PR_SUCCESS);
+            MOZ_ASSERT(status == PR_SUCCESS);
         }
     }
     PR_Unlock(gWatchdogLock);
@@ -3068,7 +3068,7 @@ ScheduleWatchdog(JSRuntime *rt, double t)
     int64_t timeout = PRMJ_Now() + interval;
     PR_Lock(gWatchdogLock);
     if (!gWatchdogThread) {
-        JS_ASSERT(!gWatchdogHasTimeout);
+        MOZ_ASSERT(!gWatchdogHasTimeout);
         gWatchdogThread = PR_CreateThread(PR_USER_THREAD,
                                           WatchdogMain,
                                           rt,
@@ -3411,7 +3411,7 @@ SyntaxParse(JSContext *cx, unsigned argc, jsval *vp)
     if (!succeeded && !parser.hadAbortedSyntaxParse()) {
         // If no exception is posted, either there was an OOM or a language
         // feature unhandled by the syntax parser was encountered.
-        JS_ASSERT(cx->runtime()->hadOutOfMemory);
+        MOZ_ASSERT(cx->runtime()->hadOutOfMemory);
         return false;
     }
 
@@ -3435,7 +3435,7 @@ class OffThreadState {
         if (state != IDLE)
             return false;
 
-        JS_ASSERT(!token);
+        MOZ_ASSERT(!token);
 
         source = newSource.forget();
 
@@ -3445,9 +3445,9 @@ class OffThreadState {
 
     void abandon(JSContext *cx) {
         AutoLockMonitor alm(monitor);
-        JS_ASSERT(state == COMPILING);
-        JS_ASSERT(!token);
-        JS_ASSERT(source);
+        MOZ_ASSERT(state == COMPILING);
+        MOZ_ASSERT(!token);
+        MOZ_ASSERT(source);
 
         js_free(source);
         source = nullptr;
@@ -3457,10 +3457,10 @@ class OffThreadState {
 
     void markDone(void *newToken) {
         AutoLockMonitor alm(monitor);
-        JS_ASSERT(state == COMPILING);
-        JS_ASSERT(!token);
-        JS_ASSERT(source);
-        JS_ASSERT(newToken);
+        MOZ_ASSERT(state == COMPILING);
+        MOZ_ASSERT(!token);
+        MOZ_ASSERT(source);
+        MOZ_ASSERT(newToken);
 
         token = newToken;
         state = DONE;
@@ -3477,11 +3477,11 @@ class OffThreadState {
                 alm.wait();
         }
 
-        JS_ASSERT(source);
+        MOZ_ASSERT(source);
         js_free(source);
         source = nullptr;
 
-        JS_ASSERT(token);
+        MOZ_ASSERT(token);
         void *holdToken = token;
         token = nullptr;
         state = IDLE;
@@ -3625,7 +3625,7 @@ struct FreeOnReturn
     }
 
     void init(const char *ptr) {
-        JS_ASSERT(!this->ptr);
+        MOZ_ASSERT(!this->ptr);
         this->ptr = ptr;
     }
 
@@ -3838,7 +3838,7 @@ EscapeForShell(AutoCStringVector &argv)
         }
         *dst++ = '\"';
         *dst++ = '\0';
-        JS_ASSERT(escaped + newLen == dst);
+        MOZ_ASSERT(escaped + newLen == dst);
 
         argv.replace(i, escaped);
     }
@@ -4263,8 +4263,8 @@ SingleStepCallback(void *arg, jit::Simulator *sim, void *pc)
     DebugOnly<void*> lastStackAddress = nullptr;
     StackChars stack;
     for (JS::ProfilingFrameIterator i(rt, state); !i.done(); ++i) {
-        JS_ASSERT(i.stackAddress() != nullptr);
-        JS_ASSERT(lastStackAddress <= i.stackAddress());
+        MOZ_ASSERT(i.stackAddress() != nullptr);
+        MOZ_ASSERT(lastStackAddress <= i.stackAddress());
         lastStackAddress = i.stackAddress();
         const char *label = i.label();
         stack.append(label, strlen(label));
@@ -4979,8 +4979,8 @@ static const JSClass *GetDomClass();
 static bool
 dom_get_x(JSContext* cx, HandleObject obj, void *self, JSJitGetterCallArgs args)
 {
-    JS_ASSERT(JS_GetClass(obj) == GetDomClass());
-    JS_ASSERT(self == (void *)0x1234);
+    MOZ_ASSERT(JS_GetClass(obj) == GetDomClass());
+    MOZ_ASSERT(self == (void *)0x1234);
     args.rval().set(JS_NumberValue(double(3.14)));
     return true;
 }
@@ -4988,16 +4988,16 @@ dom_get_x(JSContext* cx, HandleObject obj, void *self, JSJitGetterCallArgs args)
 static bool
 dom_set_x(JSContext* cx, HandleObject obj, void *self, JSJitSetterCallArgs args)
 {
-    JS_ASSERT(JS_GetClass(obj) == GetDomClass());
-    JS_ASSERT(self == (void *)0x1234);
+    MOZ_ASSERT(JS_GetClass(obj) == GetDomClass());
+    MOZ_ASSERT(self == (void *)0x1234);
     return true;
 }
 
 static bool
 dom_doFoo(JSContext* cx, HandleObject obj, void *self, const JSJitMethodCallArgs& args)
 {
-    JS_ASSERT(JS_GetClass(obj) == GetDomClass());
-    JS_ASSERT(self == (void *)0x1234);
+    MOZ_ASSERT(JS_GetClass(obj) == GetDomClass());
+    MOZ_ASSERT(self == (void *)0x1234);
 
     /* Just return args.length(). */
     args.rval().setInt32(args.length());
@@ -5115,7 +5115,7 @@ dom_genericSetter(JSContext* cx, unsigned argc, JS::Value* vp)
     if (!obj)
         return false;
 
-    JS_ASSERT(args.length() == 1);
+    MOZ_ASSERT(args.length() == 1);
 
     if (JS_GetClass(obj) != &dom_class) {
         args.rval().set(UndefinedValue());
@@ -5213,7 +5213,7 @@ class ScopedFileDesc
     ~ScopedFileDesc() {
         if (fd_ == -1)
             return;
-        JS_ASSERT(jsCacheOpened == true);
+        MOZ_ASSERT(jsCacheOpened == true);
         jsCacheOpened = false;
         close(fd_);
     }
@@ -5299,7 +5299,7 @@ ShellCloseAsmJSCacheEntryForRead(size_t serializedSize, const uint8_t *memory, i
     munmap(const_cast<uint8_t*>(memory), serializedSize);
 #endif
 
-    JS_ASSERT(jsCacheOpened == true);
+    MOZ_ASSERT(jsCacheOpened == true);
     jsCacheOpened = false;
     close(handle);
 }
@@ -5367,7 +5367,7 @@ ShellOpenAsmJSCacheEntryForWrite(HandleObject global, bool installed,
 
     // The embedding added the cookie so strip it off of the buffer returned to
     // the JS engine. The asmJSCacheCookie will be written on close, below.
-    JS_ASSERT(*(uint32_t *)memory == 0);
+    MOZ_ASSERT(*(uint32_t *)memory == 0);
     *memoryOut = (uint8_t *)memory + sizeof(uint32_t);
     *handleOut = fd.forget();
     return true;
@@ -5388,7 +5388,7 @@ ShellCloseAsmJSCacheEntryForWrite(size_t serializedSize, uint8_t *memory, intptr
     msync(memory, serializedSize, MS_SYNC);
 #endif
 
-    JS_ASSERT(*(uint32_t *)memory == 0);
+    MOZ_ASSERT(*(uint32_t *)memory == 0);
     *(uint32_t *)memory = asmJSCacheCookie;
 
     // Free the memory mapping and file.
@@ -5398,7 +5398,7 @@ ShellCloseAsmJSCacheEntryForWrite(size_t serializedSize, uint8_t *memory, intptr
     munmap(memory, serializedSize);
 #endif
 
-    JS_ASSERT(jsCacheOpened == true);
+    MOZ_ASSERT(jsCacheOpened == true);
     jsCacheOpened = false;
     close(handle);
 }

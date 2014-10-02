@@ -34,14 +34,14 @@ static PRLogModuleInfo *gGetAddrInfoLog = PR_NewLogModule("GetAddrInfo");
 #endif
 
 #if DNSQUERY_AVAILABLE
-// There is a bug in Windns.h where the type of parameter ppQueryResultsSet for
+// There is a bug in windns.h where the type of parameter ppQueryResultsSet for
 // DnsQuery_A is dependent on UNICODE being set. It should *always* be
 // PDNS_RECORDA, but if UNICODE is set it is PDNS_RECORDW. To get around this
 // we make sure that UNICODE is unset.
 #undef UNICODE
 #include <ws2tcpip.h>
 #undef GetAddrInfo
-#include <Windns.h>
+#include <windns.h>
 #endif
 
 namespace mozilla {

@@ -418,7 +418,7 @@ JavaScriptShared::fromDescriptor(JSContext *cx, Handle<JSPropertyDescriptor> des
     if (!toVariant(cx, desc.value(), &out->value()))
         return false;
 
-    JS_ASSERT(desc.object());
+    MOZ_ASSERT(desc.object());
     if (!toObjectVariant(cx, desc.object(), &out->obj()))
         return false;
 

@@ -2393,7 +2393,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       break;
 
     case NS_THEME_TOOLTIP:
-      CGContextSetRGBFillColor(cgContext, 0.996, 1.000, 0.792, 0.950);
+      if (nsCocoaFeatures::OnYosemiteOrLater()) {
+        CGContextSetRGBFillColor(cgContext, 0.945, 0.942, 0.945, 0.950);
+      } else {
+        CGContextSetRGBFillColor(cgContext, 0.996, 1.000, 0.792, 0.950);
+      }
       CGContextFillRect(cgContext, macRect);
       break;
 

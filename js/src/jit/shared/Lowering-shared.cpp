@@ -32,7 +32,7 @@ LIRGeneratorShared::visitConstant(MConstant *ins)
       default:
         // Constants of special types (undefined, null) should never flow into
         // here directly. Operations blindly consuming them require a Box.
-        JS_ASSERT(!"unexpected constant type");
+        MOZ_ASSERT(!"unexpected constant type");
         return false;
     }
 }
@@ -203,7 +203,7 @@ LIRGeneratorShared::assignSnapshot(LInstruction *ins, BailoutKind kind)
 {
     // assignSnapshot must be called before define/add, since
     // it may add new instructions for emitted-at-use operands.
-    JS_ASSERT(ins->id() == 0);
+    MOZ_ASSERT(ins->id() == 0);
 
     LSnapshot *snapshot = buildSnapshot(ins, lastResumePoint_, kind);
     if (!snapshot)
@@ -216,8 +216,8 @@ LIRGeneratorShared::assignSnapshot(LInstruction *ins, BailoutKind kind)
 bool
 LIRGeneratorShared::assignSafepoint(LInstruction *ins, MInstruction *mir, BailoutKind kind)
 {
-    JS_ASSERT(!osiPoint_);
-    JS_ASSERT(!ins->safepoint());
+    MOZ_ASSERT(!osiPoint_);
+    MOZ_ASSERT(!ins->safepoint());
 
     ins->initSafepoint(alloc());
 

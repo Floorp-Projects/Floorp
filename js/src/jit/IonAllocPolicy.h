@@ -133,7 +133,7 @@ class AutoIonContextAlloc
     }
 
     ~AutoIonContextAlloc() {
-        JS_ASSERT(icx_->temp == &tempAlloc_);
+        MOZ_ASSERT(icx_->temp == &tempAlloc_);
         icx_->temp = prevAlloc_;
     }
 };
@@ -162,11 +162,11 @@ class TempObjectPool
       : alloc_(nullptr)
     {}
     void setAllocator(TempAllocator &alloc) {
-        JS_ASSERT(freed_.empty());
+        MOZ_ASSERT(freed_.empty());
         alloc_ = &alloc;
     }
     T *allocate() {
-        JS_ASSERT(alloc_);
+        MOZ_ASSERT(alloc_);
         if (freed_.empty())
             return new(*alloc_) T();
         return freed_.popFront();

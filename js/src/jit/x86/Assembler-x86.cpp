@@ -98,7 +98,7 @@ Assembler::TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReade
     while (iter.read()) {
         JitCode *child = CodeFromJump(code->raw() + iter.offset());
         MarkJitCodeUnbarriered(trc, &child, "rel32");
-        JS_ASSERT(child == CodeFromJump(code->raw() + iter.offset()));
+        MOZ_ASSERT(child == CodeFromJump(code->raw() + iter.offset()));
     }
 }
 

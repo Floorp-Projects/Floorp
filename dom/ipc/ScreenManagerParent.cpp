@@ -161,11 +161,25 @@ ScreenManagerParent::ExtractScreenDetails(nsIScreen* aScreen, ScreenDetails &aDe
   NS_ENSURE_SUCCESS(rv, false);
   aDetails.rect() = rect;
 
+  nsIntRect rectDisplayPix;
+  rv = aScreen->GetRectDisplayPix(&rectDisplayPix.x, &rectDisplayPix.y,
+                                  &rectDisplayPix.width, &rectDisplayPix.height);
+  NS_ENSURE_SUCCESS(rv, false);
+  aDetails.rectDisplayPix() = rectDisplayPix;
+
   nsIntRect availRect;
   rv = aScreen->GetAvailRect(&availRect.x, &availRect.y, &availRect.width,
                              &availRect.height);
   NS_ENSURE_SUCCESS(rv, false);
   aDetails.availRect() = availRect;
+
+  nsIntRect availRectDisplayPix;
+  rv = aScreen->GetAvailRectDisplayPix(&availRectDisplayPix.x,
+                                       &availRectDisplayPix.y,
+                                       &availRectDisplayPix.width,
+                                       &availRectDisplayPix.height);
+  NS_ENSURE_SUCCESS(rv, false);
+  aDetails.availRectDisplayPix() = availRectDisplayPix;
 
   int32_t pixelDepth = 0;
   rv = aScreen->GetPixelDepth(&pixelDepth);

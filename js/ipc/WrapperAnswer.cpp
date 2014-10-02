@@ -553,6 +553,31 @@ WrapperAnswer::AnswerClassName(const ObjectId &objId, nsString *name)
 }
 
 bool
+WrapperAnswer::AnswerRegExpToShared(const ObjectId &objId, ReturnStatus *rs,
+                                    nsString *source, uint32_t *flags)
+{
+    AutoSafeJSContext cx;
+    RootedObject obj(cx, findObjectById(cx, objId));
+    if (!obj)
+        return fail(cx, rs);
+
+    JSAutoCompartment ac(cx, obj);
+    MOZ_RELEASE_ASSERT(JS_ObjectIsRegExp(cx, obj));
+
+    RootedString sourceJSStr(cx, JS_GetRegExpSource(cx, obj));
+    if (!sourceJSStr)
+        return fail(cx, rs);
+    nsAutoJSString sourceStr;
+    if (!sourceStr.init(cx, sourceJSStr))
+        return fail(cx, rs);
+    source->Assign(sourceStr);
+
+    *flags = JS_GetRegExpFlags(cx, obj);
+
+    return ok(rs);
+}
+
+bool
 WrapperAnswer::AnswerGetPropertyNames(const ObjectId &objId, const uint32_t &flags,
 				      ReturnStatus *rs, nsTArray<nsString> *names)
 {
