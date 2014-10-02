@@ -3081,15 +3081,6 @@
     "extended_statistics_ok": true,
     "description": "PLACES: Number of tags"
   },
-  "PLACES_FOLDERS_COUNT": {
-    "alert_emails": ["places-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "200",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "PLACES: Number of folders"
-  },
   "PLACES_KEYWORDS_COUNT": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -3130,15 +3121,6 @@
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "PLACES: Time to convert and write bookmarks.html"
-  },
-  "PLACES_BACKUPS_HASHING_MS": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "low": 50,
-    "high": 2000,
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "PLACES: Time to calculate the md5 hash for a backup"
   },
   "PLACES_FAVICON_ICO_SIZES": {
     "expires_in_version" : "never",
@@ -3265,15 +3247,6 @@
     "extended_statistics_ok": true,
     "description": "PLACES: Database filesize (MB)"
   },
-  "PLACES_DATABASE_JOURNALSIZE_MB": {
-    "alert_emails": ["places-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "50",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "PLACES: Database journal size (MB)"
-  },
   "PLACES_DATABASE_PAGESIZE_B": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -3370,16 +3343,6 @@
     "extended_statistics_ok": true,
     "description": "PLACES: Number of bookmarks annotations"
   },
-  "PLACES_ANNOS_BOOKMARKS_SIZE_KB": {
-    "alert_emails": ["places-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "low": 10,
-    "high": "10000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "PLACES: Size of bookmarks annotations (KB)"
-  },
   "PLACES_ANNOS_PAGES_COUNT": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -3388,25 +3351,6 @@
     "n_buckets": 10,
     "extended_statistics_ok": true,
     "description": "PLACES: Number of pages annotations"
-  },
-  "PLACES_ANNOS_PAGES_SIZE_KB": {
-    "alert_emails": ["places-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "low": 10,
-    "high": "10000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "PLACES: Size of pages annotations (KB)"
-  },
-  "PLACES_FRECENCY_CALC_TIME_MS": {
-    "alert_emails": ["places-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": "100",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "PLACES: Time to calculate frecency of a page (ms)"
   },
   "PLACES_MAINTENANCE_DAYSFROMLAST": {
     "expires_in_version" : "never",
@@ -5923,6 +5867,11 @@
     "kind": "boolean",
     "description": "How many times has the devtool's Developer Toolbar been opened via the toolbox button?"
   },
+  "DEVTOOLS_WEBIDE_OPENED_BOOLEAN": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "How many times has the DevTools WebIDE been opened?"
+  },
   "DEVTOOLS_CUSTOM_OPENED_BOOLEAN": {
     "expires_in_version": "never",
     "kind": "boolean",
@@ -6037,6 +5986,11 @@
     "expires_in_version": "never",
     "kind": "flag",
     "description": "How many users have opened the devtool's Developer Toolbar been opened via the toolbox button?"
+  },
+  "DEVTOOLS_WEBIDE_OPENED_PER_USER_FLAG": {
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "How many users have opened the DevTools WebIDE?"
   },
   "DEVTOOLS_CUSTOM_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
@@ -6197,12 +6151,66 @@
     "n_buckets": 100,
     "description": "How long has the developer toolbar been active (seconds)"
   },
+  "DEVTOOLS_WEBIDE_TIME_ACTIVE_SECONDS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has WebIDE been active (seconds)"
+  },
   "DEVTOOLS_CUSTOM_TIME_ACTIVE_SECONDS": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "10000000",
     "n_buckets": 100,
     "description": "How long has a custom developer tool been active (seconds)"
+  },
+  "DEVTOOLS_WEBIDE_CONNECTION_RESULT": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Did WebIDE runtime connection succeed?"
+  },
+  "DEVTOOLS_WEBIDE_USB_CONNECTION_RESULT": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Did WebIDE USB runtime connection succeed?"
+  },
+  "DEVTOOLS_WEBIDE_WIFI_CONNECTION_RESULT": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Did WebIDE WiFi runtime connection succeed?"
+  },
+  "DEVTOOLS_WEBIDE_SIMULATOR_CONNECTION_RESULT": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Did WebIDE simulator runtime connection succeed?"
+  },
+  "DEVTOOLS_WEBIDE_REMOTE_CONNECTION_RESULT": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Did WebIDE remote runtime connection succeed?"
+  },
+  "DEVTOOLS_WEBIDE_LOCAL_CONNECTION_RESULT": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Did WebIDE local runtime connection succeed?"
+  },
+  "DEVTOOLS_WEBIDE_CONNECTION_TIME_SECONDS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long was WebIDE connected to a runtime (seconds)?"
+  },
+  "DEVTOOLS_WEBIDE_CONNECTION_PLAY_USED": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Was WebIDE's play button used during this runtime connection?"
+  },
+  "DEVTOOLS_WEBIDE_CONNECTION_DEBUG_USED": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Was WebIDE's debug button used during this runtime connection?"
   },
   "BROWSER_IS_USER_DEFAULT": {
     "expires_in_version": "never",

@@ -3,46 +3,6 @@
 
 const {CardDavImporter} = Cu.import("resource:///modules/loop/CardDavImporter.jsm", {});
 
-const mockDb = {
-  _store: { },
-  _next_guid: 1,
-
-  add: function(details, callback) {
-    if (!("id" in details)) {
-      callback(new Error("No 'id' field present"));
-      return;
-    }
-    details._guid = this._next_guid++;
-    this._store[details._guid] = details;
-    callback(null, details);
-  },
-  remove: function(guid, callback) {
-    if (!guid in this._store) {
-      callback(new Error("Could not find _guid '" + guid + "' in database"));
-      return;
-    }
-    delete this._store[guid];
-    callback(null);
-  },
-  get: function(guid, callback) {
-    callback(null, this._store[guid]);
-  },
-  getByServiceId: function(serviceId, callback) {
-    for (let guid in this._store) {
-      if (serviceId === this._store[guid].id) {
-        callback(null, this._store[guid]);
-        return;
-      }
-    }
-    callback(null, null);
-  },
-  removeAll: function(callback) {
-    this._store = {};
-    this._next_guid = 1;
-    callback(null);
-  }
-};
-
 const kAuth = {
   "method": "basic",
   "user": "username",
