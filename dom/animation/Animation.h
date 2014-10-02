@@ -224,15 +224,8 @@ public:
     mIsFinishedTransition = true;
   }
 
-  bool IsCurrent() const {
-    if (IsFinishedTransition()) {
-      return false;
-    }
-
-    ComputedTiming computedTiming = GetComputedTiming();
-    return computedTiming.mPhase == ComputedTiming::AnimationPhase_Before ||
-           computedTiming.mPhase == ComputedTiming::AnimationPhase_Active;
-  }
+  bool IsCurrent() const;
+  bool IsInEffect() const;
 
   enum {
     LAST_NOTIFICATION_NONE = uint64_t(-1),

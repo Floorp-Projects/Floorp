@@ -228,6 +228,29 @@ Animation::ActiveDuration(const AnimationTiming& aTiming)
 }
 
 bool
+Animation::IsCurrent() const
+{
+  if (IsFinishedTransition()) {
+    return false;
+  }
+
+  ComputedTiming computedTiming = GetComputedTiming();
+  return computedTiming.mPhase == ComputedTiming::AnimationPhase_Before ||
+         computedTiming.mPhase == ComputedTiming::AnimationPhase_Active;
+}
+
+bool
+Animation::IsInEffect() const
+{
+  if (IsFinishedTransition()) {
+    return false;
+  }
+
+  ComputedTiming computedTiming = GetComputedTiming();
+  return computedTiming.mTimeFraction != ComputedTiming::kNullTimeFraction;
+}
+
+bool
 Animation::HasAnimationOfProperty(nsCSSProperty aProperty) const
 {
   for (size_t propIdx = 0, propEnd = mProperties.Length();
