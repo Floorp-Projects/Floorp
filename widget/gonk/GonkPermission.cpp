@@ -120,7 +120,7 @@ GonkPermissionService::checkPermission(const String16& permission, int32_t pid,
   String8 perm8(permission);
 
   // Some ril implementations need android.permission.MODIFY_AUDIO_SETTINGS
-  if (uid == AID_RADIO &&
+  if ((uid == AID_RADIO || uid == AID_BLUETOOTH) &&
       perm8 == "android.permission.MODIFY_AUDIO_SETTINGS") {
     return true;
   }
