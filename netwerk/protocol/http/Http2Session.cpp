@@ -258,8 +258,7 @@ static Http2ControlFx sControlFunctions[] = {
   Http2Session::RecvPing,
   Http2Session::RecvGoAway,
   Http2Session::RecvWindowUpdate,
-  Http2Session::RecvContinuation,
-  Http2Session::RecvAltSvc // extension for type 0x0A
+  Http2Session::RecvContinuation
 };
 
 bool
@@ -443,8 +442,7 @@ Http2Session::AddStream(nsAHttpTransaction *aHttpTransaction,
     mQueuedStreams.Push(stream);
   }
 
-  if (!(aHttpTransaction->Caps() & NS_HTTP_ALLOW_KEEPALIVE) &&
-      !aHttpTransaction->IsNullTransaction()) {
+  if (!(aHttpTransaction->Caps() & NS_HTTP_ALLOW_KEEPALIVE)) {
     LOG3(("Http2Session::AddStream %p transaction %p forces keep-alive off.\n",
           this, aHttpTransaction));
     DontReuse();
@@ -1860,208 +1858,6 @@ Http2Session::RecvContinuation(Http2Session *self)
   return RecvPushPromise(self);
 }
 
-class UpdateAltSvcEvent : public nsRunnable
-{
-public:
-  UpdateAltSvcEvent(const nsCString &host, const uint16_t port,
-                    const nsCString &npnToken, const uint32_t expires,
-                    const nsCString &aOrigin,
-                    nsHttpConnectionInfo *aCI,
-                    nsIInterfaceRequestor *callbacks)
-    : mHost(host)
-    , mPort(port)
-    , mNPNToken(npnToken)
-    , mExpires(expires)
-    , mOrigin(aOrigin)
-    , mCI(aCI)
-    , mCallbacks(callbacks)
-  {
-  }
-
-  NS_IMETHOD Run() MOZ_OVERRIDE
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    nsCString originScheme;
-    nsCString originHost;
-    int32_t originPort = -1;
-
-    nsCOMPtr<nsIURI> uri;
-    if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), mOrigin))) {
-      LOG(("UpdateAltSvcEvent origin does not parse %s\n",
-           mOrigin.get()));
-      return NS_OK;
-    }
-    uri->GetScheme(originScheme);
-    uri->GetHost(originHost);
-    uri->GetPort(&originPort);
-
-    const char *username = mCI->Username();
-    const bool privateBrowsing = mCI->GetPrivate();
-
-    LOG(("UpdateAltSvcEvent location=%s:%u protocol=%s expires=%u "
-         "origin=%s://%s:%u user=%s private=%d", mHost.get(), mPort,
-         mNPNToken.get(), mExpires, originScheme.get(), originHost.get(),
-         originPort, username, privateBrowsing));
-    nsRefPtr<AltSvcMapping> mapping = new AltSvcMapping(
-      nsDependentCString(originScheme.get()),
-      nsDependentCString(originHost.get()),
-      originPort, nsDependentCString(username), privateBrowsing, mExpires,
-      mHost, mPort, mNPNToken);
-
-    nsProxyInfo *proxyInfo = mCI->ProxyInfo();
-    gHttpHandler->UpdateAltServiceMapping(mapping, proxyInfo, mCallbacks, 0);
-    return NS_OK;
-  }
-
-private:
-  nsCString mHost;
-  uint16_t mPort;
-  nsCString mNPNToken;
-  uint32_t mExpires;
-  nsCString mOrigin;
-  nsRefPtr<nsHttpConnectionInfo> mCI;
-  nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
-};
-
-// defined as an http2 extension - alt-svc
-// defines receipt of frame type 0x0A.. See AlternateSevices.h
-nsresult
-Http2Session::RecvAltSvc(Http2Session *self)
-{
-  MOZ_ASSERT(self->mInputFrameType == FRAME_TYPE_ALTSVC);
-  LOG3(("Http2Session::RecvAltSvc %p Flags 0x%X id 0x%X\n", self,
-        self->mInputFrameFlags, self->mInputFrameID));
-
-  if (self->mInputFrameDataSize < 8) {
-    LOG3(("Http2Session::RecvAltSvc %p frame too small", self));
-    RETURN_SESSION_ERROR(self, FRAME_SIZE_ERROR);
-  }
-
-  uint32_t maxAge =
-    PR_ntohl(*reinterpret_cast<uint32_t *>(self->mInputFrameBuffer.get() + kFrameHeaderBytes));
-  uint16_t portRoute =
-    PR_ntohs(*reinterpret_cast<uint16_t *>(self->mInputFrameBuffer.get() + kFrameHeaderBytes + 4));
-  uint8_t protoLen = self->mInputFrameBuffer.get()[kFrameHeaderBytes + 6];
-  LOG3(("Http2Session::RecvAltSvc %p maxAge=%d port=%d protoLen=%d", self,
-        maxAge, portRoute, protoLen));
-
-  if (self->mInputFrameDataSize < (8U + protoLen)) {
-    LOG3(("Http2Session::RecvAltSvc %p frame too small for protocol", self));
-    RETURN_SESSION_ERROR(self, FRAME_SIZE_ERROR);
-  }
-  nsAutoCString protocol;
-  protocol.Assign(self->mInputFrameBuffer.get() + kFrameHeaderBytes + 7, protoLen);
-
-  uint32_t spdyIndex;
-  SpdyInformation *spdyInfo = gHttpHandler->SpdyInfo();
-  if (!(NS_SUCCEEDED(spdyInfo->GetNPNIndex(protocol, &spdyIndex)) &&
-        spdyInfo->ProtocolEnabled(spdyIndex))) {
-    LOG3(("Http2Session::RecvAltSvc %p unknown protocol %s, ignoring", self,
-          protocol.BeginReading()));
-    self->ResetDownstreamState();
-    return NS_OK;
-  }
-
-  uint8_t hostLen = self->mInputFrameBuffer.get()[kFrameHeaderBytes + 7 + protoLen];
-  if (self->mInputFrameDataSize < (8U + protoLen + hostLen)) {
-    LOG3(("Http2Session::RecvAltSvc %p frame too small for host", self));
-    RETURN_SESSION_ERROR(self, FRAME_SIZE_ERROR);
-  }
-
-  nsRefPtr<nsHttpConnectionInfo> ci(self->ConnectionInfo());
-  if (!self->mConnection || !ci) {
-    LOG3(("Http2Session::RecvAltSvc %p no connection or conninfo for %d", self,
-          self->mInputFrameID));
-    self->ResetDownstreamState();
-    return NS_OK;
-  }
-
-  nsAutoCString hostRoute;
-  hostRoute.Assign(self->mInputFrameBuffer.get() + kFrameHeaderBytes + 8 + protoLen, hostLen);
-
-  uint32_t originLen = self->mInputFrameDataSize - 8 - protoLen - hostLen;
-  nsAutoCString specifiedOrigin;
-  if (originLen) {
-    if (self->mInputFrameID) {
-      LOG3(("Http2Session::RecvAltSvc %p got frame w/origin on non zero stream", self));
-      self->ResetDownstreamState();
-      return NS_OK;
-    }
-    specifiedOrigin.Assign(
-      self->mInputFrameBuffer.get() + kFrameHeaderBytes + 8 + protoLen + hostLen,
-      originLen);
-
-    bool okToReroute = true;
-    nsCOMPtr<nsISupports> securityInfo;
-    self->mConnection->GetSecurityInfo(getter_AddRefs(securityInfo));
-    nsCOMPtr<nsISSLSocketControl> ssl = do_QueryInterface(securityInfo);
-    if (!ssl) {
-      okToReroute = false;
-    }
-
-    // a little off main thread origin parser. This is a non critical function because
-    // any alternate route created has to be verified anyhow
-    nsAutoCString specifiedOriginHost;
-    if (specifiedOrigin.EqualsIgnoreCase("https://", 8)) {
-      specifiedOriginHost.Assign(specifiedOrigin.get() + 8,
-                                 specifiedOrigin.Length() - 8);
-      if (ci->GetRelaxed()) {
-        // technically this is ok because it will still be confirmed before being used
-        // but let's not support it.
-        okToReroute = false;
-      }
-    } else if (specifiedOrigin.EqualsIgnoreCase("http://", 7)) {
-      specifiedOriginHost.Assign(specifiedOrigin.get() + 7,
-                                 specifiedOrigin.Length() - 7);
-    }
-
-    int32_t colonOffset = specifiedOriginHost.FindCharInSet(":", 0);
-    if (colonOffset != kNotFound) {
-      specifiedOriginHost.Truncate(colonOffset);
-    }
-
-    if (okToReroute) {
-      ssl->IsAcceptableForHost(specifiedOriginHost, &okToReroute);
-    }
-    if (!okToReroute) {
-      LOG3(("Http2Session::RecvAltSvc %p can't reroute non-authoritative origin %s",
-            self, specifiedOrigin.BeginReading()));
-      self->ResetDownstreamState();
-      return NS_OK;
-    }
-  } else {
-    // no origin specified in frame. We need to have an active pull stream to match
-    // this up to as if it were a response header.
-    if (!(self->mInputFrameID & 0x1) ||
-        NS_FAILED(self->SetInputFrameDataStream(self->mInputFrameID)) ||
-        !self->mInputFrameDataStream->Transaction() ||
-        !self->mInputFrameDataStream->Transaction()->RequestHead()) {
-      LOG3(("Http2Session::RecvAltSvc %p got frame w/o origin on invalid stream", self));
-      self->ResetDownstreamState();
-      return NS_OK;
-    }
-
-    specifiedOrigin.Assign(
-      self->mInputFrameDataStream->Transaction()->RequestHead()->Origin());
-  }
-
-  nsCOMPtr<nsISupports> callbacks;
-  self->mConnection->GetSecurityInfo(getter_AddRefs(callbacks));
-  nsCOMPtr<nsIInterfaceRequestor> irCallbacks = do_QueryInterface(callbacks);
-
-  nsRefPtr<UpdateAltSvcEvent> event = new UpdateAltSvcEvent(
-    hostRoute, portRoute, protocol, NowInSeconds() + maxAge,
-    specifiedOrigin, ci, irCallbacks);
-  NS_DispatchToMainThread(event);
-
-  LOG3(("Http2Session::RecvAltSvc %p processed location=%s:%u protocol=%s "
-        "maxAge=%u origin=%s", self, hostRoute.get(), portRoute,
-        protocol.get(), maxAge, specifiedOrigin.get()));
-  self->ResetDownstreamState();
-  return NS_OK;
-}
-
 //-----------------------------------------------------------------------------
 // nsAHttpTransaction. It is expected that nsHttpConnection is the caller
 // of these methods
@@ -2187,17 +1983,10 @@ Http2Session::ReadSegments(nsAHttpSegmentReader *reader,
   }
 
   if (NS_FAILED(rv)) {
-    LOG3(("Http2Session::ReadSegments %p may return FAIL code %X",
+    LOG3(("Http2Session::ReadSegments %p returning FAIL code %X",
           this, rv));
-    if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-      return rv;
-    }
-
-    CleanupStream(stream, rv, CANCEL_ERROR);
-    if (SoftStreamError(rv)) {
-      LOG3(("Http2Session::ReadSegments %p soft error override\n", this));
-      rv = NS_OK;
-    }
+    if (rv != NS_BASE_STREAM_WOULD_BLOCK)
+      CleanupStream(stream, rv, CANCEL_ERROR);
     return rv;
   }
 

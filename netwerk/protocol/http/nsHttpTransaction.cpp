@@ -91,6 +91,7 @@ nsHttpTransaction::nsHttpTransaction()
     : mLock("transaction lock")
     , mRequestSize(0)
     , mConnection(nullptr)
+    , mConnInfo(nullptr)
     , mRequestHead(nullptr)
     , mResponseHead(nullptr)
     , mContentLength(-1)
@@ -123,7 +124,6 @@ nsHttpTransaction::nsHttpTransaction()
     , mDispatchedAsBlocking(false)
     , mResponseTimeoutEnabled(true)
     , mDontRouteViaWildCard(false)
-    , mForceRestart(false)
     , mReportedStart(false)
     , mReportedResponseHeader(false)
     , mForTakeResponseHead(nullptr)
@@ -848,11 +848,6 @@ nsHttpTransaction::Close(nsresult reason)
     //
     if (reason == NS_ERROR_NET_RESET || reason == NS_OK) {
 
-        if (mForceRestart && NS_SUCCEEDED(Restart())) {
-            LOG(("transaction force restarted\n"));
-            return;
-        }
-
         // reallySentData is meant to separate the instances where data has
         // been sent by this transaction but buffered at a higher level while
         // a TLS session (perhaps via a tunnel) is setup.
@@ -1114,17 +1109,6 @@ nsHttpTransaction::Restart()
     // was the problem here.
     mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
     SetPipelinePosition(0);
-
-    if (!mConnInfo->GetAuthenticationHost().IsEmpty()) {
-        MutexAutoLock lock(*nsHttp::GetLock());
-        nsRefPtr<nsHttpConnectionInfo> ci;
-         mConnInfo->CloneAsDirectRoute(getter_AddRefs(ci));
-         mConnInfo = ci;
-        if (mRequestHead) {
-            mRequestHead->SetHeader(nsHttp::Alternate_Service_Used, NS_LITERAL_CSTRING("0"));
-        }
-    }
-    mForceRestart = false;
 
     return gHttpHandler->InitiateTransaction(this, mPriority);
 }
@@ -1397,11 +1381,11 @@ nsHttpTransaction::ParseHead(char *buf,
     return NS_OK;
 }
 
+// called on the socket thread
 nsresult
 nsHttpTransaction::HandleContentStart()
 {
     LOG(("nsHttpTransaction::HandleContentStart [this=%p]\n", this));
-    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
     if (mResponseHead) {
 #if defined(PR_LOGGING)
@@ -1444,14 +1428,6 @@ nsHttpTransaction::HandleContentStart()
         case 304:
             mNoContent = true;
             LOG(("this response should not contain a body.\n"));
-            break;
-        case 421:
-            if (!mConnInfo->GetAuthenticationHost().IsEmpty()) {
-                LOG(("Not Authoritative.\n"));
-                gHttpHandler->ConnMgr()->
-                    ClearHostMapping(mConnInfo->GetHost(), mConnInfo->Port());
-                mForceRestart = true;
-            }
             break;
         }
 
