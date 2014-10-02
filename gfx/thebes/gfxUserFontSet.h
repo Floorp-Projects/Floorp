@@ -154,14 +154,14 @@ public:
     // italic style = constants in gfxFontConstants.h, e.g. NS_FONT_STYLE_NORMAL
     // language override = result of calling gfxFontStyle::ParseFontLanguageOverride
     // TODO: support for unicode ranges not yet implemented
-    already_AddRefed<gfxUserFontEntry> CreateFontFace(
+    virtual already_AddRefed<gfxUserFontEntry> CreateFontFace(
                               const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                               uint32_t aWeight,
                               int32_t aStretch,
                               uint32_t aItalicStyle,
                               const nsTArray<gfxFontFeature>& aFeatureSettings,
                               uint32_t aLanguageOverride,
-                              gfxSparseBitSet* aUnicodeRanges);
+                              gfxSparseBitSet* aUnicodeRanges) = 0;
 
     // creates a font face for the specified family, or returns an existing
     // matching entry on the family if there is one

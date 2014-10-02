@@ -6,8 +6,9 @@
 #ifndef mozilla_dom_FontFace_h
 #define mozilla_dom_FontFace_h
 
-#include "nsWrapperCache.h"
 #include "mozilla/dom/FontFaceBinding.h"
+#include "gfxUserFontSet.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla {
 namespace dom {
@@ -24,6 +25,21 @@ class FontFace MOZ_FINAL : public nsISupports,
                            public nsWrapperCache
 {
 public:
+  class Entry MOZ_FINAL : public gfxUserFontEntry {
+  public:
+    Entry(gfxUserFontSet* aFontSet,
+          const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
+          uint32_t aWeight,
+          int32_t aStretch,
+          uint32_t aItalicStyle,
+          const nsTArray<gfxFontFeature>& aFeatureSettings,
+          uint32_t aLanguageOverride,
+          gfxSparseBitSet* aUnicodeRanges)
+      : gfxUserFontEntry(aFontSet, aFontFaceSrcList, aWeight, aStretch,
+                         aItalicStyle, aFeatureSettings, aLanguageOverride,
+                         aUnicodeRanges) {}
+  };
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(FontFace)
 
