@@ -95,8 +95,18 @@ public class PostSearchFragment extends Fragment {
 
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            // We keep URLs in the webview that are either about:blank or a search engine result page.
-            if (TextUtils.equals(url, Constants.ABOUT_BLANK) || engine.isSearchResultsPage(url)) {
+            // Ignore about:blank URL loads.
+            if (TextUtils.equals(url, Constants.ABOUT_BLANK)) {
+                return false;
+            }
+
+            // If the URL is a results page, don't override the URL load, but
+            // do update the query in the search bar if possible.
+            if (engine.isSearchResultsPage(url)) {
+                final String query = engine.queryForResultsUrl(url);
+                if (!TextUtils.isEmpty(query)) {
+                    ((AcceptsSearchQuery) getActivity()).onQueryChange(query);
+                }
                 return false;
             }
 
