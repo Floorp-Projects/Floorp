@@ -41,7 +41,7 @@ ThreadSafeContext::isThreadLocal(T thing) const
     MOZ_ASSERT(!IsInsideNursery(thing));
 
     // The thing is not in the nursery, but is it in the private tenured area?
-    if (allocator_->arenas.containsArena(runtime_, thing->asTenured()->arenaHeader()))
+    if (allocator_->arenas.containsArena(runtime_, thing->asTenured().arenaHeader()))
     {
         // GC should be suppressed in preparation for mutating thread local
         // objects, as we don't want to trip any barriers.
@@ -92,7 +92,7 @@ GetGCThingTraceKind(const void *thing)
     if (IsInsideNursery(cell))
         return JSTRACE_OBJECT;
 #endif
-    return MapAllocToTraceKind(cell->asTenured()->getAllocKind());
+    return MapAllocToTraceKind(cell->asTenured().getAllocKind());
 }
 
 inline void
@@ -546,7 +546,7 @@ CheckIncrementalZoneState(ThreadSafeContext *cx, T *t)
 
     Zone *zone = cx->asJSContext()->zone();
     MOZ_ASSERT_IF(t && zone->wasGCStarted() && (zone->isGCMarking() || zone->isGCSweeping()),
-                  t->asTenured()->arenaHeader()->allocatedDuringIncremental);
+                  t->asTenured().arenaHeader()->allocatedDuringIncremental);
 #endif
 }
 
