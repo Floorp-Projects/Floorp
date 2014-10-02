@@ -10,6 +10,7 @@ module.metadata = {
 const { Cc, Ci } = require('chrome');
 const array = require('../util/array');
 const { defer } = require('sdk/core/promise');
+const { dispatcher } = require("../util/dispatcher");
 
 const windowWatcher = Cc['@mozilla.org/embedcomp/window-watcher;1'].
                        getService(Ci.nsIWindowWatcher);
@@ -216,7 +217,8 @@ function onFocus(window) {
 }
 exports.onFocus = onFocus;
 
-function isFocused(window) {
+let isFocused = dispatcher("window-isFocused");
+isFocused.when(x => x instanceof Ci.nsIDOMWindow, (window) => {
   const FM = Cc["@mozilla.org/focus-manager;1"].
                 getService(Ci.nsIFocusManager);
 
@@ -231,7 +233,7 @@ function isFocused(window) {
   }
 
   return (focusedChildWindow === childTargetWindow);
-}
+});
 exports.isFocused = isFocused;
 
 /**

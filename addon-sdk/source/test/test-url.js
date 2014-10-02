@@ -17,7 +17,7 @@ const file = require('sdk/io/file');
 const tabs = require('sdk/tabs');
 const { decode } = require('sdk/base64');
 
-const httpd = require('sdk/test/httpd');
+const httpd = require('./lib/httpd');
 const port = 8099;
 
 const defaultLocation = '{\'scheme\':\'about\',\'userPass\':null,\'host\':null,\'hostname\':null,\'port\':null,\'path\':\'addons\',\'pathname\':\'addons\',\'hash\':\'\',\'href\':\'about:addons\',\'origin\':\'about:\',\'protocol\':\'about:\',\'search\':\'\'}'.replace(/'/g, '"');
@@ -220,8 +220,12 @@ exports.testStringInterface = function(assert) {
     'enumerable key list check for URL.');
   assert.equal(
       JSON.stringify(a),
-      defaultLocation,
-      'JSON.stringify should return a object with correct props and vals.');
+      JSON.stringify(EM),
+      'JSON.stringify on url should return the url as a flat string');
+      // JSON.parse(JSON.stringify(url)) wont work like an url object
+      // (missing methods). this makes it easier to re-create an url
+      // instance from the whole string, and every place that
+      // accepts an url also works with a flat string.
 
   // make sure that the String interface exists and works as expected
   assert.equal(a.indexOf(':'), EM.indexOf(':'), 'indexOf on URL works');

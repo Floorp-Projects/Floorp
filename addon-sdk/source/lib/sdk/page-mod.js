@@ -142,6 +142,7 @@ const PageMod = Class({
     }
 
     pagemods.add(this);
+    model.seenDocuments = new WeakMap();
 
     // `applyOnExistingDocuments` has to be called after `pagemods.add()`
     // otherwise its calls to `onContent` method won't do anything.
@@ -231,6 +232,12 @@ function onContent (mod, window) {
   // Is a frame document and `frame` is not set, ignore
   if (!isTopDocument && !has(mod.attachTo, "frame"))
     return;
+
+  // ensure we attach only once per document
+  let seen = modelFor(mod).seenDocuments;
+  if (seen.has(window.document))
+    return;
+  seen.set(window.document, true);
 
   let style = styleFor(mod);
   if (style)
