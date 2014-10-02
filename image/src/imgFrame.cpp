@@ -123,7 +123,6 @@ imgFrame::imgFrame() :
   mCompositingFailed(false),
   mHasNoAlpha(false),
   mNonPremult(false),
-  mDiscardable(false),
   mOptimizable(false),
   mInformedDiscardTracker(false)
 {
@@ -415,9 +414,7 @@ nsresult imgFrame::Optimize()
   // allows the operating system to free our volatile buffer.
   // XXX(seth): We'd eventually like to do this on all platforms, but right now
   // converting raw memory to a SourceSurface is expensive on some backends.
-  if (mDiscardable) {
-    mImageSurface = nullptr;
-  }
+  mImageSurface = nullptr;
 #endif
 
   return NS_OK;
@@ -792,13 +789,6 @@ nsresult imgFrame::UnlockImageData()
   mLockCount--;
 
   return NS_OK;
-}
-
-void
-imgFrame::SetDiscardable()
-{
-  MOZ_ASSERT(mLockCount, "Expected to be locked when SetDiscardable is called");
-  mDiscardable = true;
 }
 
 void
