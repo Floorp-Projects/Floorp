@@ -63,9 +63,10 @@ HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   // responsive parameter changes
   nsINode *parent = nsINode::GetParentNode();
   if (aNameSpaceID == kNameSpaceID_None &&
-      (aName == nsGkAtoms::srcset || aName == nsGkAtoms::sizes) &&
-      parent && parent->Tag() == nsGkAtoms::picture && MatchesCurrentMedia()) {
-
+      (aName == nsGkAtoms::srcset ||
+       aName == nsGkAtoms::sizes ||
+       aName == nsGkAtoms::media) &&
+      parent && parent->Tag() == nsGkAtoms::picture) {
     nsString strVal = aValue ? aValue->GetStringValue() : EmptyString();
     // Find all img siblings after this <source> and notify them of the change
     nsCOMPtr<nsINode> sibling = AsContent();
@@ -76,6 +77,8 @@ HTMLSourceElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
           img->PictureSourceSrcsetChanged(AsContent(), strVal, aNotify);
         } else if (aName == nsGkAtoms::sizes) {
           img->PictureSourceSizesChanged(AsContent(), strVal, aNotify);
+        } else if (aName == nsGkAtoms::media) {
+          img->PictureSourceMediaChanged(AsContent(), strVal, aNotify);
         }
       }
     }
@@ -135,24 +138,6 @@ HTMLSourceElement::BindToTree(nsIDocument *aDocument,
   }
 
   return NS_OK;
-}
-
-void
-HTMLSourceElement::UnbindFromTree(bool aDeep, bool aNullParent)
-{
-  nsINode *parent = nsINode::GetParentNode();
-  if (parent && parent->Tag() == nsGkAtoms::picture) {
-    // Find all img siblings after this <source> and notify them of our demise
-    nsCOMPtr<nsINode> sibling = AsContent();
-    while ( (sibling = sibling->GetNextSibling()) ) {
-      if (sibling->Tag() == nsGkAtoms::img) {
-        HTMLImageElement *img = static_cast<HTMLImageElement*>(sibling.get());
-        img->PictureSourceRemoved(AsContent());
-      }
-    }
-  }
-
-  nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
 JSObject*
