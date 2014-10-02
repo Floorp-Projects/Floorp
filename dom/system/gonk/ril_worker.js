@@ -10002,6 +10002,7 @@ CdmaPDUHelperObject.prototype = {
          * Every type is encaped by ril, except extended display
          */
         case PDU_CDMA_INFO_REC_TYPE_DISPLAY:
+        case PDU_CDMA_INFO_REC_TYPE_EXTENDED_DISPLAY:
           record.display = Buf.readString();
           break;
         case PDU_CDMA_INFO_REC_TYPE_CALLED_PARTY_NUMBER:
@@ -10030,7 +10031,10 @@ CdmaPDUHelperObject.prototype = {
           break;
         case PDU_CDMA_INFO_REC_TYPE_SIGNAL:
           record.signal = {};
-          record.signal.present = Buf.readInt32();
+          if (!Buf.readInt32()) { // Non-zero if signal is present.
+            Buf.seekIncoming(3 * Buf.UINT32_SIZE);
+            continue;
+          }
           record.signal.type = Buf.readInt32();
           record.signal.alertPitch = Buf.readInt32();
           record.signal.signal = Buf.readInt32();
@@ -10050,35 +10054,6 @@ CdmaPDUHelperObject.prototype = {
           record.lineControl.toggle = Buf.readInt32();
           record.lineControl.recerse = Buf.readInt32();
           record.lineControl.powerDenial = Buf.readInt32();
-          break;
-        case PDU_CDMA_INFO_REC_TYPE_EXTENDED_DISPLAY:
-          let length = Buf.readInt32();
-          /*
-           * Extended display is still in format defined in
-           * C.S0005-F v1.0, 3.7.5.16
-           */
-          record.extendedDisplay = {};
-
-          let headerByte = Buf.readInt32();
-          length--;
-          // Based on spec, headerByte must be 0x80 now
-          record.extendedDisplay.indicator = (headerByte >> 7);
-          record.extendedDisplay.type = (headerByte & 0x7F);
-          record.extendedDisplay.records = [];
-
-          while (length > 0) {
-            let display = {};
-
-            display.tag = Buf.readInt32();
-            length--;
-            if (display.tag !== INFO_REC_EXTENDED_DISPLAY_BLANK &&
-                display.tag !== INFO_REC_EXTENDED_DISPLAY_SKIP) {
-              display.content = Buf.readString();
-              length -= (display.content.length + 1);
-            }
-
-            record.extendedDisplay.records.push(display);
-          }
           break;
         case PDU_CDMA_INFO_REC_TYPE_T53_CLIR:
           record.cause = Buf.readInt32();
