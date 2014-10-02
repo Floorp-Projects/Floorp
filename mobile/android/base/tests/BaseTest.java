@@ -82,16 +82,6 @@ abstract class BaseTest extends BaseRobocopTest {
     protected int mScreenMidHeight;
     private final HashSet<Integer> mKnownTabIDs = new HashSet<Integer>();
 
-    protected void blockForDelayedStartup() {
-        try {
-            Actions.EventExpecter delayedStartupExpector = mActions.expectGeckoEvent("Gecko:DelayedStartup");
-            delayedStartupExpector.blockForEvent(GECKO_READY_WAIT_MS, true);
-            delayedStartupExpector.unregisterListener();
-        } catch (Exception e) {
-            mAsserter.dumpLog("Exception in blockForDelayedStartup", e);
-        }
-    }
-
     protected void blockForGeckoReady() {
         try {
             Actions.EventExpecter geckoReadyExpector = mActions.expectGeckoEvent("Gecko:Ready");

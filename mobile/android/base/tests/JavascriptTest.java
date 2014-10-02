@@ -21,14 +21,11 @@ public class JavascriptTest extends BaseTest {
     public void testJavascript() throws Exception {
         blockForGeckoReady();
 
-        doTestJavascript();
-    }
-
-    protected void doTestJavascript() throws Exception {
         // We want to be waiting for Robocop messages before the page is loaded
         // because the test harness runs each test in the suite (and possibly
         // completes testing) before the page load event is fired.
-        final Actions.EventExpecter expecter = mActions.expectGeckoEvent(EVENT_TYPE);
+        final Actions.EventExpecter expecter =
+            mActions.expectGeckoEvent(EVENT_TYPE);
         mAsserter.dumpLog("Registered listener for " + EVENT_TYPE);
 
         final String url = getAbsoluteUrl(StringHelper.getHarnessUrlForJavascript(javascriptUrl));
