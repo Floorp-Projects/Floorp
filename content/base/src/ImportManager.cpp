@@ -91,10 +91,6 @@ ImportLoader::Updater::GetReferrerChain(nsINode* aNode,
 bool
 ImportLoader::Updater::ShouldUpdate(nsTArray<nsINode*>& aNewPath)
 {
-  if (mLoader->Manager()->GetNearestPredecessor(mLoader->GetMainReferrer()) !=
-      mLoader->mBlockingPredecessor) {
-    return true;
-  }
   // Let's walk down on the main referrer chains of both the current main and
   // the new link, and find the last pair of links that are from the same
   // document. This is the junction point between the two referrer chain. Their
