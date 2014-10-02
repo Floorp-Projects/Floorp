@@ -9,7 +9,6 @@
 #include <stdlib.h>
 
 #include "mozilla/Endian.h"
-#include "mozilla/Move.h"
 #include "nsICODecoder.h"
 
 #include "RasterImage.h"
@@ -337,7 +336,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount, DecodeStrategy
       mContainedDecoder->SetSizeDecode(IsSizeDecode());
       mContainedDecoder->InitSharedDecoder(mImageData, mImageDataLength,
                                            mColormap, mColormapSize,
-                                           Move(mRefForContainedDecoder));
+                                           mCurrentFrame);
       if (!WriteToContainedDecoder(mSignature, PNGSIGNATURESIZE, aStrategy)) {
         return;
       }
@@ -414,7 +413,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount, DecodeStrategy
     mContainedDecoder->SetSizeDecode(IsSizeDecode());
     mContainedDecoder->InitSharedDecoder(mImageData, mImageDataLength,
                                          mColormap, mColormapSize,
-                                         Move(mRefForContainedDecoder));
+                                         mCurrentFrame);
 
     // The ICO format when containing a BMP does not include the 14 byte
     // bitmap file header. To use the code of the BMP decoder we need to 
@@ -614,19 +613,13 @@ nsICODecoder::NeedsNewFrame() const
 nsresult
 nsICODecoder::AllocateFrame()
 {
-  nsresult rv;
-
   if (mContainedDecoder) {
-    rv = mContainedDecoder->AllocateFrame();
-    mCurrentFrame = mContainedDecoder->GetCurrentFrameRef();
+    nsresult rv = mContainedDecoder->AllocateFrame();
+    mCurrentFrame = mContainedDecoder->GetCurrentFrame();
     return rv;
   }
 
-  // Grab a strong ref that we'll later hand over to the contained decoder. This
-  // lets us avoid creating a RawAccessFrameRef off-main-thread.
-  rv = Decoder::AllocateFrame();
-  mRefForContainedDecoder = GetCurrentFrameRef();
-  return rv;
+  return Decoder::AllocateFrame();
 }
 
 } // namespace image
