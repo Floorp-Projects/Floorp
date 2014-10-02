@@ -10,7 +10,7 @@ const { Cc, Ci, Cr } = require('chrome'),
       { WindowTabs, WindowTabTracker } = require('./tabs-firefox'),
       { WindowDom } = require('./dom'),
       { WindowLoader } = require('./loader'),
-      { isBrowser, getWindowDocShell,
+      { isBrowser, getWindowDocShell, isFocused,
         windows: windowIterator, isWindowPrivate } = require('../window/utils'),
       { Options } = require('../tabs/common'),
       apiUtils = require('../deprecated/api-utils'),
@@ -79,9 +79,7 @@ const BrowserWindowTrait = Trait.compose(
       this._load();
 
       windowNS(this._public).window = this._window;
-
-      isPrivate.implement(this._public, window => isWindowPrivate(getChromeWindow(window)));
-      viewFor.implement(this._public, getChromeWindow);
+      viewFor.implement(this._public, (w) => windowNS(w).window);
 
       return this;
     },
@@ -265,8 +263,8 @@ const browserWindows = Trait.resolve({ toString: null }).compose(
   }).resolve({ toString: null })
 )();
 
-function getChromeWindow(window) {
-  return windowNS(window).window;
-}
+const isBrowserWindow = (x) => x instanceof BrowserWindow;
+isPrivate.when(isBrowserWindow, (w) => isWindowPrivate(viewFor(w)));
+isFocused.when(isBrowserWindow, (w) => isFocused(viewFor(w)));
 
 exports.browserWindows = browserWindows;

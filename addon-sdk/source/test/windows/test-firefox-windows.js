@@ -6,7 +6,7 @@
 const { Cc, Ci } = require('chrome');
 const { setTimeout } = require('sdk/timers');
 const { Loader } = require('sdk/test/loader');
-const { onFocus, getMostRecentWindow, windows, isBrowser, getWindowTitle } = require('sdk/window/utils');
+const { onFocus, getMostRecentWindow, windows, isBrowser, getWindowTitle, isFocused } = require('sdk/window/utils');
 const { open, close, focus } = require('sdk/window/helpers');
 const { browserWindows } = require("sdk/windows");
 const tabs = require("sdk/tabs");
@@ -41,6 +41,22 @@ exports.testOpenAndCloseWindow = function(assert, done) {
     }
   });
 };
+
+exports.testNeWindowIsFocused = function(assert, done) {
+  let mainWindow = browserWindows.activeWindow;
+
+  browserWindows.open({
+    url: "about:blank",
+    onOpen: function(window) {
+      focus(viewFor(window)).then((window) => {
+        assert.ok(isFocused(window), 'the new window is focused');
+        assert.ok(isFocused(browserWindows.activeWindow), 'the active window is focused');
+        assert.ok(!isFocused(mainWindow), 'the main window is not focused');
+        close(window).then(done).catch(assert.fail);
+      })
+    }
+  });
+}
 
 exports.testOpenRelativePathWindow = function(assert, done) {
   assert.equal(browserWindows.length, 1, "Only one window open");

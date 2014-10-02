@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
+'use strict';
 
 const { id } = require("sdk/self");
 const { getAddonByID } = require("sdk/addon/manager");
@@ -11,4 +11,4 @@ exports["test getAddonByID"] = function*(assert) {
   assert.equal(addon.id, id, "getAddonByID works");
 }
 
-require("sdk/test").run(exports);
+require('sdk/test/runner').runTestsFromModule(module);

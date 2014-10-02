@@ -5,7 +5,7 @@
 
 const { PageMod } = require("sdk/page-mod");
 const tabs = require("sdk/tabs");
-const { startServerAsync } = require("sdk/test/httpd");
+const { startServerAsync } = require("./httpd");
 
 const serverPort = 8099;
 const TEST_TAB_URL = "about:mozilla";

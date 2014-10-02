@@ -184,7 +184,6 @@ EXTRA_JS_MODULES.commonjs.node += [
 ]
 
 EXTRA_JS_MODULES.commonjs.sdk += [
-    'source/lib/sdk/addon-page.js',
     'source/lib/sdk/base64.js',
     'source/lib/sdk/clipboard.js',
     'source/lib/sdk/context-menu.js',

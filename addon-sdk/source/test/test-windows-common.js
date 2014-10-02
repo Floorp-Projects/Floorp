@@ -5,6 +5,7 @@
 
 const { Loader } = require('sdk/test/loader');
 const { browserWindows } = require('sdk/windows');
+const { isFocused } = require('sdk/window/utils');
 const { viewFor } = require('sdk/view/core');
 const { modelFor } = require('sdk/model/core');
 const { Ci } = require("chrome");
@@ -31,6 +32,9 @@ exports.testBrowserWindowsIterator = function(assert) {
   }
 };
 
+exports.testActiveWindowIsFocused = function(assert) {
+  assert.ok(isFocused(browserWindows.activeWindow), 'the active window is focused');
+}
 
 exports.testWindowTabsObject_alt = function(assert, done) {
   let window = browserWindows.activeWindow;
