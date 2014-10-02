@@ -8,12 +8,122 @@
 #include "mozilla/dom/FontFaceBinding.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/TypedArray.h"
+#include "mozilla/dom/UnionTypes.h"
 #include "nsCSSParser.h"
 #include "nsCSSRules.h"
 #include "nsIDocument.h"
 #include "nsStyleUtil.h"
 
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
+
+// -- FontFaceInitializer ----------------------------------------------------
+
+/**
+ * A task that is dispatched to the event queue to call Initialize() on a
+ * FontFace object with the source information that was passed to the JS
+ * constructor.
+ */
+class FontFaceInitializer : public nsIRunnable
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  FontFaceInitializer(FontFace* aFontFace)
+    : mFontFace(aFontFace)
+    , mSourceBuffer(nullptr)
+    , mSourceBufferLength(0) {}
+
+  void SetSource(const nsAString& aString);
+  void SetSource(const ArrayBuffer& aArrayBuffer);
+  void SetSource(const ArrayBufferView& aArrayBufferView);
+
+  NS_IMETHOD Run();
+
+  nsRefPtr<FontFace> mFontFace;
+  FontFace::SourceType mSourceType;
+  nsString mSourceString;
+  uint8_t* mSourceBuffer;  // allocated with NS_Alloc
+  uint32_t mSourceBufferLength;
+
+protected:
+  virtual ~FontFaceInitializer();
+};
+
+NS_IMPL_ISUPPORTS(FontFaceInitializer, nsIRunnable)
+
+FontFaceInitializer::~FontFaceInitializer()
+{
+  if (mSourceBuffer) {
+    NS_Free(mSourceBuffer);
+  }
+}
+
+void
+FontFaceInitializer::SetSource(const nsAString& aString)
+{
+  mSourceType = FontFace::eSourceType_URLs;
+  mSourceString = aString;
+}
+
+void
+FontFaceInitializer::SetSource(const ArrayBuffer& aArrayBuffer)
+{
+  mSourceType = FontFace::eSourceType_Buffer;
+  // XXX Do something with the array buffer data.
+}
+
+void
+FontFaceInitializer::SetSource(const ArrayBufferView& aArrayBufferView)
+{
+  mSourceType = FontFace::eSourceType_Buffer;
+  // XXX Do something with the array buffer data.
+}
+
+NS_IMETHODIMP
+FontFaceInitializer::Run()
+{
+  mFontFace->Initialize(this);
+  return NS_OK;
+}
+
+// -- FontFaceStatusSetter ---------------------------------------------------
+
+/**
+ * A task that is dispatched to the event queue to asynchronously call
+ * SetStatus() on a FontFace object.
+ */
+class FontFaceStatusSetter : public nsIRunnable
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  FontFaceStatusSetter(FontFace* aFontFace,
+                       FontFaceLoadStatus aStatus)
+    : mFontFace(aFontFace)
+    , mStatus(aStatus) {}
+
+  NS_IMETHOD Run();
+
+protected:
+  virtual ~FontFaceStatusSetter() {}
+
+private:
+  nsRefPtr<FontFace> mFontFace;
+  FontFaceLoadStatus mStatus;
+};
+
+NS_IMPL_ISUPPORTS(FontFaceStatusSetter, nsIRunnable)
+
+NS_IMETHODIMP
+FontFaceStatusSetter::Run()
+{
+  mFontFace->SetStatus(mStatus);
+  return NS_OK;
+}
+
+// -- FontFace ---------------------------------------------------------------
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(FontFace)
 
@@ -52,8 +162,13 @@ FontFace::FontFace(nsISupports* aParent, nsPresContext* aPresContext)
   : mParent(aParent)
   , mPresContext(aPresContext)
   , mStatus(FontFaceLoadStatus::Unloaded)
+  , mSourceType(SourceType(0))
+  , mSourceBuffer(nullptr)
+  , mSourceBufferLength(0)
   , mFontFaceSet(aPresContext->Fonts())
   , mInFontFaceSet(false)
+  , mInitialized(false)
+  , mLoadWhenInitialized(false)
 {
   MOZ_COUNT_CTOR(FontFace);
 
@@ -75,6 +190,10 @@ FontFace::~FontFace()
 
   if (mFontFaceSet && !IsInFontFaceSet()) {
     mFontFaceSet->RemoveUnavailableFontFace(this);
+  }
+
+  if (mSourceBuffer) {
+    NS_Free(mSourceBuffer);
   }
 }
 
@@ -110,7 +229,9 @@ FontFace::CreateForRule(nsISupports* aGlobal,
   nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(aGlobal);
 
   nsRefPtr<FontFace> obj = new FontFace(aGlobal, aPresContext);
+  obj->mInitialized = true;
   obj->mRule = aRule;
+  obj->mSourceType = eSourceType_FontFaceRule;
   obj->mInFontFaceSet = true;
   obj->SetUserFontEntry(aUserFontEntry);
   return obj.forget();
@@ -145,7 +266,62 @@ FontFace::Constructor(const GlobalObject& aGlobal,
 
   nsRefPtr<FontFace> obj = new FontFace(global, presContext);
   obj->mFontFaceSet->AddUnavailableFontFace(obj);
+  if (!obj->SetDescriptors(aFamily, aDescriptors)) {
+    return obj.forget();
+  }
+
+  nsRefPtr<FontFaceInitializer> task = new FontFaceInitializer(obj);
+
+  if (aSource.IsArrayBuffer()) {
+    task->SetSource(aSource.GetAsArrayBuffer());
+  } else if (aSource.IsArrayBufferView()) {
+    task->SetSource(aSource.GetAsArrayBufferView());
+  } else {
+    MOZ_ASSERT(aSource.IsString());
+    task->SetSource(aSource.GetAsString());
+  }
+
+  NS_DispatchToMainThread(task);
+
   return obj.forget();
+}
+
+void
+FontFace::Initialize(FontFaceInitializer* aInitializer)
+{
+  MOZ_ASSERT(!IsConnected());
+  MOZ_ASSERT(mSourceType == SourceType(0));
+
+  if (aInitializer->mSourceType == eSourceType_URLs) {
+    if (!ParseDescriptor(eCSSFontDesc_Src,
+                         aInitializer->mSourceString,
+                         mDescriptors->mSrc)) {
+      if (mLoaded) {
+        // The asynchronous SetStatus call we are about to do assumes that for
+        // FontFace objects with sources other than ArrayBuffer(View)s, that the
+        // mLoaded Promise is rejected with a network error.  We get
+        // in here beforehand to set it to the required syntax error.
+        mLoaded->MaybeReject(NS_ERROR_DOM_SYNTAX_ERR);
+      }
+
+      // Queue a task to set the status to "error".
+      nsCOMPtr<nsIRunnable> statusSetterTask =
+        new FontFaceStatusSetter(this, FontFaceLoadStatus::Error);
+      NS_DispatchToMainThread(statusSetterTask);
+      return;
+    }
+
+    mSourceType = eSourceType_URLs;
+
+    // Now that we have parsed the src descriptor, we are initialized.
+    OnInitialized();
+    return;
+  }
+
+  // We've been given an ArrayBuffer or ArrayBufferView as the source.
+  MOZ_ASSERT(aInitializer->mSourceType == eSourceType_Buffer);
+
+  // XXX Handle array buffers.
 }
 
 void
@@ -159,7 +335,11 @@ FontFace::GetFamily(nsString& aResult)
 
   aResult.Truncate();
   nsDependentString family(value.GetStringBufferValue());
-  nsStyleUtil::AppendEscapedCSSString(family, aResult);
+  if (!family.IsEmpty()) {
+    // The string length can be zero when the author passed an invalid
+    // family name or an invalid descriptor to the JS FontFace constructor.
+    nsStyleUtil::AppendEscapedCSSString(family, aResult);
+  }
 }
 
 void
@@ -284,13 +464,31 @@ FontFace::Load(ErrorResult& aRv)
     return nullptr;
   }
 
-  if (mStatus != FontFaceLoadStatus::Unloaded) {
+  // Calling Load on a FontFace constructed with an ArrayBuffer data source,
+  // or on one that is already loading (or has finished loading), has no
+  // effect.
+  if (mSourceType == eSourceType_Buffer ||
+      mStatus != FontFaceLoadStatus::Unloaded) {
     return mLoaded;
   }
 
+  // Calling the user font entry's Load method will end up setting our
+  // status to Loading, but the spec requires us to set it to Loading
+  // here.
   SetStatus(FontFaceLoadStatus::Loading);
 
-  mUserFontEntry->Load();
+  if (mInitialized) {
+    // XXX For FontFace objects not in the FontFaceSet, we will need a
+    // way to create a user font entry.
+    if (mUserFontEntry) {
+      mUserFontEntry->Load();
+    }
+  } else {
+    // We can only load an initialized font; this will cause the font to be
+    // loaded once it has been initialized.
+    mLoadWhenInitialized = true;
+  }
+
   return mLoaded;
 }
 
@@ -367,8 +565,9 @@ FontFace::SetDescriptor(nsCSSFontDesc aFontDesc,
                         const nsAString& aValue,
                         ErrorResult& aRv)
 {
-  NS_ASSERTION(!mRule, "we don't handle rule-connected FontFace objects yet");
-  if (mRule) {
+  NS_ASSERTION(!IsConnected(),
+               "we don't handle rule-connected FontFace objects yet");
+  if (IsConnected()) {
     return;
   }
 
@@ -384,10 +583,70 @@ FontFace::SetDescriptor(nsCSSFontDesc aFontDesc,
   // objects that have started loading or have already been loaded.
 }
 
+bool
+FontFace::SetDescriptors(const nsAString& aFamily,
+                         const FontFaceDescriptors& aDescriptors)
+{
+  MOZ_ASSERT(!IsConnected());
+  MOZ_ASSERT(!mDescriptors);
+
+  mDescriptors = new CSSFontFaceDescriptors;
+
+  // Parse all of the mDescriptors in aInitializer, which are the values
+  // we got from the JS constructor.
+  if (!ParseDescriptor(eCSSFontDesc_Family,
+                       aFamily,
+                       mDescriptors->mFamily) ||
+      *mDescriptors->mFamily.GetStringBufferValue() == 0 ||
+      !ParseDescriptor(eCSSFontDesc_Style,
+                       aDescriptors.mStyle,
+                       mDescriptors->mStyle) ||
+      !ParseDescriptor(eCSSFontDesc_Weight,
+                       aDescriptors.mWeight,
+                       mDescriptors->mWeight) ||
+      !ParseDescriptor(eCSSFontDesc_Stretch,
+                       aDescriptors.mStretch,
+                       mDescriptors->mStretch) ||
+      !ParseDescriptor(eCSSFontDesc_UnicodeRange,
+                       aDescriptors.mUnicodeRange,
+                       mDescriptors->mUnicodeRange) ||
+      !ParseDescriptor(eCSSFontDesc_FontFeatureSettings,
+                       aDescriptors.mFeatureSettings,
+                       mDescriptors->mFontFeatureSettings)) {
+    // XXX Handle font-variant once we support it (bug 1055385).
+
+    // If any of the descriptors failed to parse, none of them should be set
+    // on the FontFace.
+    mDescriptors = new CSSFontFaceDescriptors;
+
+    if (mLoaded) {
+      mLoaded->MaybeReject(NS_ERROR_DOM_SYNTAX_ERR);
+    }
+
+    SetStatus(FontFaceLoadStatus::Error);
+    return false;
+  }
+
+  return true;
+}
+
+void
+FontFace::OnInitialized()
+{
+  MOZ_ASSERT(!mInitialized);
+
+  mInitialized = true;
+
+  if (mInFontFaceSet) {
+    mFontFaceSet->OnFontFaceInitialized(this);
+  }
+}
+
 void
 FontFace::GetDesc(nsCSSFontDesc aDescID, nsCSSValue& aResult) const
 {
-  if (mRule) {
+  if (IsConnected()) {
+    MOZ_ASSERT(mRule);
     MOZ_ASSERT(!mDescriptors);
     mRule->GetDesc(aDescID, aResult);
   } else {
@@ -487,3 +746,6 @@ FontFace::Entry::SetLoadState(UserFontLoadState aLoadState)
     mFontFaces[i]->SetStatus(LoadStateToStatus(aLoadState));
   }
 }
+
+} // namespace dom
+} // namespace mozilla

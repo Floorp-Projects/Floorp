@@ -171,6 +171,13 @@ FontFaceSet::Delete(FontFace& aFontFace, ErrorResult& aRv)
 }
 
 bool
+FontFaceSet::HasAvailableFontFace(FontFace* aFontFace)
+{
+  return aFontFace->GetFontFaceSet() == this &&
+         aFontFace->IsInFontFaceSet();
+}
+
+bool
 FontFaceSet::Has(FontFace& aFontFace)
 {
   return false;
@@ -482,6 +489,14 @@ void
 FontFaceSet::InsertUnconnectedFontFace(FontFace* aFontFace,
                                        bool& aFontSetModified)
 {
+  if (!aFontFace->IsInitialized()) {
+    // The FontFace is still waiting to be initialized, so don't create a
+    // user font entry for it yet.  Once it has been initialized, it will
+    // call OnFontFaceInitialized on us, which will end rebuild the user
+    // font set and end up back in here.
+    return;
+  }
+
   nsAutoString fontfamily;
   if (!aFontFace->GetFamilyName(fontfamily)) {
     // If there is no family name, this rule cannot contribute a
@@ -1101,6 +1116,7 @@ FontFaceSet::FontFaceForRule(nsCSSFontFaceRule* aRule)
 void
 FontFaceSet::AddUnavailableFontFace(FontFace* aFontFace)
 {
+  MOZ_ASSERT(!aFontFace->IsConnected());
   MOZ_ASSERT(!aFontFace->IsInFontFaceSet());
   MOZ_ASSERT(!mUnavailableFaces.Contains(aFontFace));
 
@@ -1119,6 +1135,16 @@ FontFaceSet::RemoveUnavailableFontFace(FontFace* aFontFace)
   mUnavailableFaces.RemoveElement(aFontFace);
 
   MOZ_ASSERT(!mUnavailableFaces.Contains(aFontFace));
+}
+
+void
+FontFaceSet::OnFontFaceInitialized(FontFace* aFontFace)
+{
+  MOZ_ASSERT(HasAvailableFontFace(aFontFace));
+  MOZ_ASSERT(!aFontFace->IsConnected());
+  MOZ_ASSERT(aFontFace->IsInitialized());
+
+  mPresContext->RebuildUserFontSet();
 }
 
 // -- FontFaceSet::UserFontSet ------------------------------------------------
