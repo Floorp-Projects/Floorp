@@ -670,7 +670,9 @@ parent:
     async SetFakeVolumeState(nsString fsName, int32_t fsState);
 
     sync KeywordToURI(nsCString keyword)
-        returns (OptionalInputStreamParams postData, OptionalURIParams uri);
+        returns (nsString providerName, OptionalInputStreamParams postData, OptionalURIParams uri);
+
+    sync NotifyKeywordSearchLoading(nsString providerName, nsString keyword);
 
     // Tell the compositor to allocate a layer tree id for nested remote mozbrowsers.
     sync AllocateLayerTreeId()

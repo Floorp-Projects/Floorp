@@ -81,6 +81,27 @@ public class HomePager extends ViewPager {
         public void onUrlOpen(String url, EnumSet<Flags> flags);
     }
 
+    /**
+     * Interface for requesting a new tab be opened in the background.
+     * <p>
+     * This is the <code>HomeFragment</code> equivalent of opening a new tab by
+     * long clicking a link and selecting the "Open new [private] tab" context
+     * menu option.
+     */
+    public interface OnUrlOpenInBackgroundListener {
+        public enum Flags {
+            PRIVATE,
+        }
+
+        /**
+         * Open a new tab with the given URL
+         *
+         * @param url to open.
+         * @param flags to open new tab with.
+         */
+        public void onUrlOpenInBackground(String url, EnumSet<Flags> flags);
+    }
+
     public interface OnNewTabsListener {
         public void onNewTabs(List<String> urls);
     }

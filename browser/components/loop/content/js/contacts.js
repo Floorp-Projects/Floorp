@@ -131,6 +131,16 @@ loop.contacts = (function(_, mozL10n) {
       document.body.removeEventListener("click", this._onBodyClick);
     },
 
+    componentShouldUpdate: function(nextProps, nextState) {
+      let currContact = this.props.contact;
+      let nextContact = nextProps.contact;
+      return (
+        currContact.name[0] !== nextContact.name[0] ||
+        currContact.blocked !== nextContact.blocked ||
+        this.getPreferredEmail(currContact).value !== this.getPreferredEmail(nextContact).value
+      );
+    },
+
     handleAction: function(actionName) {
       if (this.props.handleContactAction) {
         this.props.handleContactAction(this.props.contact, actionName);
@@ -149,19 +159,20 @@ loop.contacts = (function(_, mozL10n) {
       };
     },
 
-    getPreferredEmail: function() {
-      // The model currently does not enforce a name to be present, but we're
-      // going to assume it is awaiting more advanced validation of required fields
-      // by the model. (See bug 1069918)
-      let email = this.props.contact.email[0];
-      this.props.contact.email.some(function(address) {
-        if (address.pref) {
-          email = address;
-          return true;
-        }
-        return false;
-      });
-      return email;
+    getPreferredEmail: function(contact = this.props.contact) {
+      let email;
+      // A contact may not contain email addresses, but only a phone number instead.
+      if (contact.email) {
+        email = contact.email[0];
+        contact.email.some(function(address) {
+          if (address.pref) {
+            email = address;
+            return true;
+          }
+          return false;
+        });
+      }
+      return email || { value: "" };
     },
 
     canEdit: function() {
@@ -181,9 +192,7 @@ loop.contacts = (function(_, mozL10n) {
 
       return (
         React.DOM.li({className: contactCSSClass, onMouseLeave: this.hideDropdownMenu}, 
-          React.DOM.div({className: "avatar"}, 
-            React.DOM.img({src: navigator.mozLoop.getUserAvatar(email.value)})
-          ), 
+          React.DOM.div({className: "avatar"}), 
           React.DOM.div({className: "details"}, 
             React.DOM.div({className: "username"}, React.DOM.strong(null, names.firstName), " ", names.lastName, 
               React.DOM.i({className: cx({"icon icon-google": this.props.contact.category[0] == "google"})}), 
@@ -211,7 +220,8 @@ loop.contacts = (function(_, mozL10n) {
   const ContactsList = React.createClass({displayName: 'ContactsList',
     getInitialState: function() {
       return {
-        contacts: {}
+        contacts: {},
+        importBusy: false
       };
     },
 
@@ -227,11 +237,12 @@ loop.contacts = (function(_, mozL10n) {
         // circumvent blocking the main event loop.
         let addContactsInChunks = () => {
           contacts.splice(0, CONTACTS_CHUNK_SIZE).forEach(contact => {
-            this.handleContactAddOrUpdate(contact);
+            this.handleContactAddOrUpdate(contact, false);
           });
           if (contacts.length) {
             setTimeout(addContactsInChunks, 0);
           }
+          this.forceUpdate();
         };
 
         addContactsInChunks(contacts);
@@ -252,11 +263,13 @@ loop.contacts = (function(_, mozL10n) {
       });
     },
 
-    handleContactAddOrUpdate: function(contact) {
+    handleContactAddOrUpdate: function(contact, render = true) {
       let contacts = this.state.contacts;
       let guid = String(contact._guid);
       contacts[guid] = contact;
-      this.setState({});
+      if (render) {
+        this.forceUpdate();
+      }
     },
 
     handleContactRemove: function(contact) {
@@ -266,7 +279,7 @@ loop.contacts = (function(_, mozL10n) {
         return;
       }
       delete contacts[guid];
-      this.setState({});
+      this.forceUpdate();
     },
 
     handleContactRemoveAll: function() {
@@ -274,6 +287,16 @@ loop.contacts = (function(_, mozL10n) {
     },
 
     handleImportButtonClick: function() {
+      this.setState({ importBusy: true });
+      navigator.mozLoop.startImport({
+        service: "google"
+      }, (err, stats) => {
+        this.setState({ importBusy: false });
+        // TODO: bug 1076764 - proper error and success reporting.
+        if (err) {
+          throw err;
+        }
+      });
     },
 
     handleAddContactButtonClick: function() {
@@ -321,12 +344,15 @@ loop.contacts = (function(_, mozL10n) {
         return contact.blocked ? "blocked" : "available";
       });
 
+      // TODO: bug 1076767 - add a spinner whilst importing contacts.
       return (
         React.DOM.div(null, 
           React.DOM.div({className: "content-area"}, 
             ButtonGroup(null, 
-              Button({caption: mozL10n.get("import_contacts_button"), 
-                      disabled: true, 
+              Button({caption: this.state.importBusy
+                               ? mozL10n.get("importing_contacts_progress_button")
+                               : mozL10n.get("import_contacts_button"), 
+                      disabled: this.state.importBusy, 
                       onClick: this.handleImportButtonClick}), 
               Button({caption: mozL10n.get("new_contact_button"), 
                       onClick: this.handleAddContactButtonClick})
