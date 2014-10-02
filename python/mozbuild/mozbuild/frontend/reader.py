@@ -278,8 +278,8 @@ class MozbuildSandbox(Sandbox):
     def _include(self, path):
         """Include and exec another file within the context of this one."""
 
-        # exec_file() handles normalization and verification of the path.
-        self.exec_file(path)
+        # path is a SourcePath, and needs to be coerced to unicode.
+        self.exec_file(unicode(path), filesystem_absolute=True)
 
     def _warning(self, message):
         # FUTURE consider capturing warnings in a variable instead of printing.
@@ -978,7 +978,7 @@ class BuildReader(object):
                     recurse_info[d]['exports'] = dict(sandbox.metadata['exports'])
 
         for path, child_metadata in recurse_info.items():
-            child_path = mozpath.join(path, 'moz.build')
+            child_path = path.join('moz.build')
 
             # Ensure we don't break out of the topsrcdir. We don't do realpath
             # because it isn't necessary. If there are symlinks in the srcdir,
