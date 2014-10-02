@@ -400,11 +400,16 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   void SelfDestruct_m();
 
   // ICE events
-  void IceGatheringStateChange(mozilla::NrIceCtx* ctx,
-                               mozilla::NrIceCtx::GatheringState state);
-  void IceConnectionStateChange(mozilla::NrIceCtx* ctx,
-                                mozilla::NrIceCtx::ConnectionState state);
+  void IceGatheringStateChange_s(mozilla::NrIceCtx* ctx,
+                                 mozilla::NrIceCtx::GatheringState state);
+  void IceConnectionStateChange_s(mozilla::NrIceCtx* ctx,
+                                  mozilla::NrIceCtx::ConnectionState state);
   void IceStreamReady(mozilla::NrIceMediaStream *aStream);
+
+  void IceGatheringStateChange_m(mozilla::NrIceCtx* ctx,
+                                 mozilla::NrIceCtx::GatheringState state);
+  void IceConnectionStateChange_m(mozilla::NrIceCtx* ctx,
+                                  mozilla::NrIceCtx::ConnectionState state);
 
   // The parent PC
   PeerConnectionImpl *mParent;
