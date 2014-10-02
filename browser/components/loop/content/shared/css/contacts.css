@@ -49,6 +49,20 @@
   z-index: 1;
 }
 
+.contact > .details {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contact:hover > .details {
+  /* Hovering the contact shows the icons/ buttons, which takes up horizontal
+   * space. This causes the fixed-size avatar to resize horizontally, so we assign
+   * a flex value equivalent to the maximum pixel value to avoid the resizing
+   * to happen. Consider this a hack. */
+  flex: 190;
+}
+
 .contact > .avatar {
   width: 40px;
   height: 40px;
