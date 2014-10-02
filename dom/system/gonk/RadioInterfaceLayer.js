@@ -2092,7 +2092,9 @@ RadioInterface.prototype = {
         break;
       case "cdma-info-rec-received":
         if (DEBUG) this.debug("cdma-info-rec-received: " + JSON.stringify(message));
-        gSystemMessenger.broadcastMessage("cdma-info-rec-received", message);
+        message.records.forEach(function(aRecord) {
+          gSystemMessenger.broadcastMessage("cdma-info-rec-received", aRecord);
+        });
         break;
       default:
         throw new Error("Don't know about this message type: " +

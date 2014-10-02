@@ -6920,9 +6920,10 @@ RilObject.prototype[UNSOLICITED_CDMA_OTA_PROVISION_STATUS] = function UNSOLICITE
                           status: status});
 };
 RilObject.prototype[UNSOLICITED_CDMA_INFO_REC] = function UNSOLICITED_CDMA_INFO_REC(length) {
-  let record = this.context.CdmaPDUHelper.decodeInformationRecord();
-  record.rilMessageType = "cdma-info-rec-received";
-  this.sendChromeMessage(record);
+  this.sendChromeMessage({
+    rilMessageType: "cdma-info-rec-received",
+    records: this.context.CdmaPDUHelper.decodeInformationRecord()
+  });
 };
 RilObject.prototype[UNSOLICITED_OEM_HOOK_RAW] = null;
 RilObject.prototype[UNSOLICITED_RINGBACK_TONE] = null;
@@ -9987,11 +9988,13 @@ CdmaPDUHelperObject.prototype = {
    */
   decodeInformationRecord: function() {
     let Buf = this.context.Buf;
-    let record = {};
+    let records = [];
     let numOfRecords = Buf.readInt32();
 
     let type;
+    let record;
     for (let i = 0; i < numOfRecords; i++) {
+      record = {};
       type = Buf.readInt32();
 
       switch (type) {
@@ -10088,11 +10091,13 @@ CdmaPDUHelperObject.prototype = {
         case PDU_CDMA_INFO_REC_TYPE_T53_RELEASE:
           // Fall through
         default:
-          throw new Error("UNSOLICITED_CDMA_INFO_REC(), Unsupported information record type " + record.type + "\n");
+          throw new Error("UNSOLICITED_CDMA_INFO_REC(), Unsupported information record type " + type + "\n");
       }
+
+      records.push(record);
     }
 
-    return record;
+    return records;
   }
 };
 
