@@ -104,8 +104,8 @@ class TabsListLayout extends TwoWayView
         }
 
         @Override
-        public View newView(int position, ViewGroup parent) {
-            TabsLayoutItemView item = (TabsLayoutItemView) super.newView(position, parent);
+        public TabsLayoutItemView newView(int position, ViewGroup parent) {
+            TabsLayoutItemView item = super.newView(position, parent);
 
             item.setCloseOnClickListener(mCloseOnClickListener);
 
@@ -113,7 +113,7 @@ class TabsListLayout extends TwoWayView
         }
 
         @Override
-        public void bindView(View view, Tab tab) {
+        public void bindView(TabsLayoutItemView view, Tab tab) {
             super.bindView(view, tab);
 
             // If we're recycling this view, there's a chance it was transformed during
