@@ -249,6 +249,37 @@ public class BrowserLocaleManager implements LocaleManager {
         return changed;
     }
 
+    /**
+     * Gecko needs to know the OS locale to compute a useful Accept-Language
+     * header. If it changed since last time, send a message to Gecko and
+     * persist the new value. If unchanged, returns immediately.
+     *
+     * @param prefs the SharedPreferences instance to use. Cannot be null.
+     * @param osLocale the new locale instance. Safe if null.
+     */
+    public static void storeAndNotifyOSLocale(final SharedPreferences prefs,
+                                              final Locale osLocale) {
+        if (osLocale == null) {
+            return;
+        }
+
+        final String lastOSLocale = prefs.getString("osLocale", null);
+        final String osLocaleString = osLocale.toString();
+
+        if (osLocaleString.equals(lastOSLocale)) {
+            return;
+        }
+
+        // Store the Java-native form.
+        prefs.edit().putString("osLocale", osLocaleString).apply();
+
+        // The value we send to Gecko should be a language tag, not
+        // a Java locale string.
+        final String osLanguageTag = BrowserLocaleManager.getLanguageTag(osLocale);
+        final GeckoEvent localeOSEvent = GeckoEvent.createBroadcastEvent("Locale:OS", osLanguageTag);
+        GeckoAppShell.sendEventToGecko(localeOSEvent);
+    }
+
     @Override
     public String getAndApplyPersistedLocale(Context context) {
         initialize(context);
