@@ -56,14 +56,15 @@ static const int kClientChannelFd = 3;
 
 extern "C" {
 
-static void PrintStackFrame(void *aPC, void *aSP, void *aClosure)
+static void PrintStackFrame(uint32_t aFrameNumber, void *aPC, void *aSP,
+                            void *aClosure)
 {
   char buf[1024];
   nsCodeAddressDetails details;
 
   NS_DescribeCodeAddress(aPC, &details);
-  NS_FormatCodeAddressDetails(aPC, &details, buf, sizeof(buf));
-  fputs(buf, stdout);
+  NS_FormatCodeAddressDetails(buf, sizeof(buf), aFrameNumber, aPC, &details);
+  fprintf(stdout, "%s\n", buf);
 }
 
 }
