@@ -876,6 +876,8 @@ pref("general.useragent.updates.enabled", true);
 pref("general.useragent.updates.url", "https://dynamicua.cdn.mozilla.net/0/%APP_ID%");
 pref("general.useragent.updates.interval", 604800); // 1 week
 pref("general.useragent.updates.retry", 86400); // 1 day
+// Device ID can be composed of letter, numbers, hyphen ("-") and dot (".")
+pref("general.useragent.device_id", "");
 
 // Make <audio> and <video> talk to the AudioChannelService.
 pref("media.useAudioChannelService", true);
