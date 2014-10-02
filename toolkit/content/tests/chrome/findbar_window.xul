@@ -22,6 +22,9 @@
     const Ci = Components.interfaces;
     const Cc = Components.classes;
     const Cr = Components.results;
+    const Cu = Components.utils;
+    const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
+    var { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 
     const SAMPLE_URL = "http://www.mozilla.org/";
     const SAMPLE_TEXT = "Some text in a text field.";
@@ -55,6 +58,9 @@
     function ok(condition, message) {
       window.opener.wrappedJSObject.SimpleTest.ok(condition, message);
     }
+    function is(a, b, message) {
+      window.opener.wrappedJSObject.SimpleTest.is(a, b, message);
+    }
     function finish() {
       window.close();
       window.opener.wrappedJSObject.SimpleTest.finish();
@@ -83,7 +89,7 @@
       setTimeout(onPageShow, 0);
     }
 
-    function onPageShow() {
+    let onPageShow = Task.async(function* () {
       testNormalFind();
       gFindBar.close();
       ok(gFindBar.hidden, "Failed to close findbar after testNormalFind");
@@ -100,19 +106,19 @@
       testFindbarSelection();
       testDrop();
       testQuickFindLink();
-      if (gHasFindClipboard)
-        testStatusText(afterStatusText);
-      else
-        afterStatusText();
-
-      function afterStatusText() {
-        testFindCountUI(function() {
-          gFindBar.close();
-          ok(gFindBar.hidden, "Failed to close findbar after testFindCountUI");
-          testQuickFindClose();
-        });
+      if (gHasFindClipboard) {
+        yield testStatusText();
       }
-    }
+      yield testFindCountUI();
+      gFindBar.close();
+      ok(gFindBar.hidden, "Failed to close findbar after testFindCountUI");
+      yield testFindAfterCaseChanged();
+      gFindBar.close();
+      yield testFailedStringReset();
+      gFindBar.close();
+      yield testQuickFindClose();
+      finish();
+    });
 
     function testFindbarSelection() {
       function checkFindbarState(aTestName, aExpSelection) {
@@ -158,26 +164,30 @@
       // use an dummy image to start the drag so it doesn't get interrupted by a selection
       var img = gBrowser.contentDocument.getElementById("img");
       synthesizeDrop(img, gFindBar._findField, [[ {type: "text/plain", data: "Rabbits" } ]], "copy", window);
-      window.opener.wrappedJSObject.SimpleTest.is(gFindBar._findField.inputField.value, "Rabbits", "drop on findbar");
+      is(gFindBar._findField.inputField.value, "Rabbits", "drop on findbar");
       gFindBar.close();
     }
 
     function testQuickFindClose() {
+      let deferred = Promise.defer();
       var _isClosedCallback = function() {
         ok(gFindBar.hidden,
            "_isClosedCallback: Failed to auto-close quick find bar after " +
            gFindBar._quickFindTimeoutLength + "ms");
-        finish();
+        deferred.resolve();
       };
       setTimeout(_isClosedCallback, gFindBar._quickFindTimeoutLength + 100);
+      return deferred.promise;
     }
 
-    function testStatusText(aCallback) {
+    function testStatusText() {
+      let deferred = Promise.defer();
       var _delayedCheckStatusText = function() {
         ok(gStatusText == SAMPLE_URL, "testStatusText: Failed to set status text of found link");
-        aCallback();
+        deferred.resolve();
       };
       setTimeout(_delayedCheckStatusText, 100);
+      return deferred.promise;
     }
 
     function enterStringIntoFindField(aString) {
@@ -392,6 +402,8 @@
     }
 
     function testFindCountUI(callback) {
+      let deferred = Promise.defer();
+
       clearFocus();
       document.getElementById("cmd_find").doCommand();
 
@@ -425,9 +437,9 @@
       let timeout = gFindBar._matchesCountTimeoutLength + 20;
 
       function assertMatches(aTest, aMatches) {
-        window.opener.wrappedJSObject.SimpleTest.is(aMatches[1], aTest.current,
+        is(aMatches[1], aTest.current,
           "Currently highlighted match should be at " + aTest.current);
-        window.opener.wrappedJSObject.SimpleTest.is(aMatches[2], aTest.total,
+        is(aMatches[2], aTest.total,
           "Total amount of matches should be " + aTest.total);
       }
 
@@ -454,7 +466,7 @@
             }
           }
         }
-        callback();
+        deferred.resolve();
       }
       let test = generatorTest();
       let resultListener = {
@@ -464,6 +476,54 @@
       };
       gFindBar.browser.finder.addResultListener(resultListener);
       test.next();
+      return deferred.promise;
+    }
+
+    // See bug 1051187.
+    function testFindAfterCaseChanged() {
+      let deferred = Promise.defer();
+      document.getElementById("cmd_find").doCommand();
+
+      // Search to set focus on "Text Test" so that searching for "t" selects first
+      // (upper case!) "T".
+      enterStringIntoFindField(SEARCH_TEXT);
+      gFindBar.clear();
+
+      let prefsvc = Cc["@mozilla.org/preferences-service;1"]
+                      .getService(Ci.nsIPrefBranch);
+      prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 0);
+
+      enterStringIntoFindField("t");
+      is(gBrowser.contentWindow.getSelection(), "T", "First T should be selected.");
+
+      prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 1);
+      setTimeout(function() {
+        is(gBrowser.contentWindow.getSelection(), "t", "First t should be selected.");
+        deferred.resolve();
+      }, 0);
+      return deferred.promise;
+    }
+
+    // Make sure that _findFailedString is cleared:
+    // 1. Do a search that fails with case sensitivity but matches with no case sensitivity.
+    // 2. Uncheck case sensitivity button to match the string.
+    function testFailedStringReset(aCallback) {
+      let deferred = Promise.defer();
+      document.getElementById("cmd_find").doCommand();
+
+      var prefsvc = Cc["@mozilla.org/preferences-service;1"].
+                    getService(Components.interfaces.nsIPrefBranch);
+      prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 1);
+
+      enterStringIntoFindField(SEARCH_TEXT.toUpperCase());
+      is(gBrowser.contentWindow.getSelection(), "", "Not found.");
+
+      prefsvc.setIntPref("accessibility.typeaheadfind.casesensitive", 0);
+      setTimeout(function() {
+        is(gBrowser.contentWindow.getSelection(), SEARCH_TEXT, "Search text should be selected.");
+        deferred.resolve();
+      }, 0);
+      return deferred.resolve();
     }
 
     function testClipboardSearchString(aExpected) {
