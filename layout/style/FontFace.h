@@ -89,6 +89,16 @@ public:
   bool IsInFontFaceSet() { return mInFontFaceSet; }
 
   /**
+   * Sets whether this object is in a FontFaceSet.  This is called by the
+   * FontFaceSet when Add, Remove, etc. are called.
+   */
+  void SetIsInFontFaceSet(bool aInFontFaceSet) {
+    MOZ_ASSERT(!(!aInFontFaceSet && IsConnected()),
+               "use DisconnectFromRule instead");
+    mInFontFaceSet = aInFontFaceSet;
+  }
+
+  /**
    * Returns whether this FontFace is initialized.  A CSS-connected
    * FontFace is considered initialized at construction time.  For
    * FontFace objects created using the FontFace JS constructor, it

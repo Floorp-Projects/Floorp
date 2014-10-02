@@ -156,18 +156,93 @@ FontFaceSet::HasConnectedFontFace(FontFace* aFontFace)
 FontFaceSet*
 FontFaceSet::Add(FontFace& aFontFace, ErrorResult& aRv)
 {
+  mPresContext->FlushUserFontSet();
+
+  // We currently only support FontFace objects being in a single FontFaceSet,
+  // and we also restrict the FontFaceSet to contain only FontFaces created
+  // in the same window.
+
+  if (aFontFace.GetFontFaceSet() != this) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
+  if (aFontFace.IsConnected()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_MODIFICATION_ERR);
+    return nullptr;
+  }
+
+  if (aFontFace.IsInFontFaceSet()) {
+    return this;
+  }
+
+  bool removed = mUnavailableFaces.RemoveElement(&aFontFace);
+  if (!removed) {
+    MOZ_ASSERT(false, "should have found aFontFace in mUnavailableFaces");
+    return this;
+  }
+
+  aFontFace.SetIsInFontFaceSet(true);
+
+  MOZ_ASSERT(!mOtherFaces.Contains(&aFontFace),
+             "FontFace should not occur in mOtherFaces twice");
+
+  mOtherFaces.AppendElement(&aFontFace);
+
+  mOtherFacesDirty = true;
+  mPresContext->RebuildUserFontSet();
   return this;
 }
 
 void
 FontFaceSet::Clear()
 {
+  mPresContext->FlushUserFontSet();
+
+  if (mOtherFaces.IsEmpty()) {
+    return;
+  }
+
+  for (size_t i = 0; i < mOtherFaces.Length(); i++) {
+    FontFace* f = mOtherFaces[i];
+    f->SetIsInFontFaceSet(false);
+
+    MOZ_ASSERT(!mUnavailableFaces.Contains(f),
+               "FontFace should not occur in mUnavailableFaces twice");
+
+    mUnavailableFaces.AppendElement(f);
+  }
+
+  mOtherFaces.Clear();
+
+  mOtherFacesDirty = true;
+  mPresContext->RebuildUserFontSet();
 }
 
 bool
 FontFaceSet::Delete(FontFace& aFontFace, ErrorResult& aRv)
 {
-  return false;
+  mPresContext->FlushUserFontSet();
+
+  if (aFontFace.IsConnected()) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_MODIFICATION_ERR);
+    return nullptr;
+  }
+
+  if (!mOtherFaces.RemoveElement(&aFontFace)) {
+    return false;
+  }
+
+  aFontFace.SetIsInFontFaceSet(false);
+
+  MOZ_ASSERT(!mUnavailableFaces.Contains(&aFontFace),
+             "FontFace should not occur in mUnavailableFaces twice");
+
+  mUnavailableFaces.AppendElement(&aFontFace);
+
+  mOtherFacesDirty = true;
+  mPresContext->RebuildUserFontSet();
+  return true;
 }
 
 bool
@@ -180,7 +255,9 @@ FontFaceSet::HasAvailableFontFace(FontFace* aFontFace)
 bool
 FontFaceSet::Has(FontFace& aFontFace)
 {
-  return false;
+  mPresContext->FlushUserFontSet();
+
+  return HasAvailableFontFace(&aFontFace);
 }
 
 FontFace*
