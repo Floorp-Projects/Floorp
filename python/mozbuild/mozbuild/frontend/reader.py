@@ -182,9 +182,9 @@ class MozbuildSandbox(Sandbox):
                 mozpath.join(self._context.config.topsrcdir, path[1:]))
         elif srcdir:
             return mozpath.normpath(mozpath.join(srcdir, path))
-        elif len(self._execution_stack):
+        elif self._context.current_path:
             return mozpath.normpath(mozpath.join(
-                mozpath.dirname(self._execution_stack[-1]), path))
+                mozpath.dirname(self._context.current_path), path))
         else:
             return mozpath.normpath(
                 mozpath.join(self._context.config.topsrcdir, path))
@@ -201,7 +201,7 @@ class MozbuildSandbox(Sandbox):
         normalized_path = self.normalize_path(path,
             filesystem_absolute=filesystem_absolute)
         if not is_read_allowed(normalized_path, self._context.config):
-            raise SandboxLoadError(list(self._execution_stack),
+            raise SandboxLoadError(self._context.source_stack,
                 sys.exc_info()[2], illegal_path=path)
 
         Sandbox.exec_file(self, normalized_path)
@@ -285,7 +285,7 @@ class MozbuildSandbox(Sandbox):
         print('WARNING: %s' % message, file=sys.stderr)
 
     def _error(self, message):
-        raise SandboxCalledError(self._execution_stack, message)
+        raise SandboxCalledError(self._context.source_stack, message)
 
     def _template_decorator(self, func):
         """Registers template as expected by _create_template_function.
@@ -346,7 +346,7 @@ class MozbuildSandbox(Sandbox):
         code = '\n' * (firstlineno + begin[0] - 3) + 'if True:\n'
         code += ''.join(lines[begin[0] - 1:])
 
-        self.templates[name] = func, code, self._execution_stack[-1]
+        self.templates[name] = func, code, self._context.current_path
 
     @memoize
     def _create_template_function(self, template):
@@ -363,7 +363,7 @@ class MozbuildSandbox(Sandbox):
 
         def template_function(*args, **kwargs):
             context = TemplateContext(VARIABLES, self._context.config)
-            context.add_source(self._execution_stack[-1])
+            context.add_source(self._context.current_path)
             for p in self._context.all_paths:
                 context.add_source(p)
 
