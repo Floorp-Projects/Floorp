@@ -974,6 +974,8 @@ uint32_t
 MediaEngineWebRTCVideoSource::ConvertPixelFormatToFOURCC(int aFormat)
 {
   switch (aFormat) {
+  case HAL_PIXEL_FORMAT_RGBA_8888:
+    return libyuv::FOURCC_BGRA;
   case HAL_PIXEL_FORMAT_YCrCb_420_SP:
     return libyuv::FOURCC_NV21;
   case HAL_PIXEL_FORMAT_YV12:
