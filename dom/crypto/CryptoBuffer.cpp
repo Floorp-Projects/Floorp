@@ -161,6 +161,13 @@ CryptoBuffer::ToSECItem() const
   return item;
 }
 
+JSObject*
+CryptoBuffer::ToUint8Array(JSContext* aCx) const
+{
+  return Uint8Array::Create(aCx, Length(), Elements());
+}
+
+
 // "BigInt" comes from the WebCrypto spec
 // ("unsigned long" isn't very "big", of course)
 // Likewise, the spec calls for big-endian ints
