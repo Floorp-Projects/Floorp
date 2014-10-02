@@ -22,7 +22,7 @@ namespace dom {
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Request)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Request)
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Request, mOwner)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Request, mOwner, mHeaders)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Request)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -155,24 +155,24 @@ Request::Constructor(const GlobalObject& aGlobal,
     request->SetMethod(method);
   }
 
-  nsRefPtr<Request> domRequest = new Request(global, request);
-  nsRefPtr<Headers> domRequestHeaders = domRequest->Headers_();
+  nsRefPtr<InternalHeaders> requestHeaders = request->Headers();
 
-  nsRefPtr<Headers> headers;
+  nsRefPtr<InternalHeaders> headers;
   if (aInit.mHeaders.WasPassed()) {
-    headers = Headers::Constructor(aGlobal, aInit.mHeaders.Value(), aRv);
+    nsRefPtr<Headers> h = Headers::Constructor(aGlobal, aInit.mHeaders.Value(), aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
+    headers = h->GetInternalHeaders();
   } else {
-    headers = new Headers(*domRequestHeaders);
+    headers = new InternalHeaders(*requestHeaders);
   }
 
-  domRequestHeaders->Clear();
+  requestHeaders->Clear();
 
-  if (domRequest->Mode() == RequestMode::No_cors) {
+  if (request->Mode() == RequestMode::No_cors) {
     nsCString method;
-    domRequest->GetMethod(method);
+    request->GetMethod(method);
     ToLowerCase(method);
     if (!method.EqualsASCII("get") &&
         !method.EqualsASCII("head") &&
@@ -182,13 +182,13 @@ Request::Constructor(const GlobalObject& aGlobal,
       return nullptr;
     }
 
-    domRequestHeaders->SetGuard(HeadersGuardEnum::Request_no_cors, aRv);
+    requestHeaders->SetGuard(HeadersGuardEnum::Request_no_cors, aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
   }
 
-  domRequestHeaders->Fill(*headers, aRv);
+  requestHeaders->Fill(*headers, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
@@ -205,9 +205,9 @@ Request::Constructor(const GlobalObject& aGlobal,
     request->SetBody(stream);
 
     if (!contentType.IsVoid() &&
-        !domRequestHeaders->Has(NS_LITERAL_CSTRING("Content-Type"), aRv)) {
-      domRequestHeaders->Append(NS_LITERAL_CSTRING("Content-Type"),
-                                contentType, aRv);
+        !requestHeaders->Has(NS_LITERAL_CSTRING("Content-Type"), aRv)) {
+      requestHeaders->Append(NS_LITERAL_CSTRING("Content-Type"),
+                             contentType, aRv);
     }
 
     if (aRv.Failed()) {
@@ -215,6 +215,7 @@ Request::Constructor(const GlobalObject& aGlobal,
     }
   }
 
+  nsRefPtr<Request> domRequest = new Request(global, request);
   domRequest->SetMimeType(aRv);
   return domRequest.forget();
 }
@@ -228,5 +229,16 @@ Request::Clone() const
                                           new InternalRequest(*mRequest));
   return request.forget();
 }
+
+Headers*
+Request::Headers_()
+{
+  if (!mHeaders) {
+    mHeaders = new Headers(mOwner, mRequest->Headers());
+  }
+
+  return mHeaders;
+}
+
 } // namespace dom
 } // namespace mozilla

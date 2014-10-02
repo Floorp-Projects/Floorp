@@ -21,6 +21,7 @@ namespace mozilla {
 namespace dom {
 
 class Headers;
+class InternalHeaders;
 class Promise;
 
 class Response MOZ_FINAL : public nsISupports
@@ -65,8 +66,13 @@ public:
     aStatusText = mInternalResponse->GetStatusText();
   }
 
-  Headers*
-  Headers_() const { return mInternalResponse->Headers_(); }
+  InternalHeaders*
+  GetInternalHeaders() const
+  {
+    return mInternalResponse->Headers();
+  }
+
+  Headers* Headers_();
 
   void
   GetBody(nsIInputStream** aStream) { return mInternalResponse->GetBody(aStream); }
@@ -97,6 +103,8 @@ private:
 
   nsCOMPtr<nsIGlobalObject> mOwner;
   nsRefPtr<InternalResponse> mInternalResponse;
+  // Lazily created
+  nsRefPtr<Headers> mHeaders;
 };
 
 } // namespace dom

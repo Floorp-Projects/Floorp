@@ -7,7 +7,7 @@
 
 #include "nsIDOMFile.h"
 
-#include "mozilla/dom/Headers.h"
+#include "mozilla/dom/InternalHeaders.h"
 
 namespace mozilla {
 namespace dom {
@@ -16,7 +16,7 @@ InternalResponse::InternalResponse(uint16_t aStatus, const nsACString& aStatusTe
   : mType(ResponseType::Default)
   , mStatus(aStatus)
   , mStatusText(aStatusText)
-  , mHeaders(new Headers(nullptr, HeadersGuardEnum::Response))
+  , mHeaders(new InternalHeaders(HeadersGuardEnum::Response))
 {
 }
 
