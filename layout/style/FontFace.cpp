@@ -15,7 +15,30 @@
 
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(FontFace, mParent, mLoaded, mRule)
+NS_IMPL_CYCLE_COLLECTION_CLASS(FontFace)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(FontFace)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLoaded)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRule)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFontFaceSet)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FontFace)
+  if (!tmp->IsInFontFaceSet()) {
+    tmp->mFontFaceSet->RemoveUnavailableFontFace(tmp);
+  }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mLoaded)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mRule)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFontFaceSet)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(FontFace)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FontFace)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -29,10 +52,10 @@ FontFace::FontFace(nsISupports* aParent, nsPresContext* aPresContext)
   : mParent(aParent)
   , mPresContext(aPresContext)
   , mStatus(FontFaceLoadStatus::Unloaded)
+  , mFontFaceSet(aPresContext->Fonts())
+  , mInFontFaceSet(false)
 {
   MOZ_COUNT_CTOR(FontFace);
-
-  MOZ_ASSERT(mPresContext);
 
   SetIsDOMBinding();
 
@@ -49,6 +72,10 @@ FontFace::~FontFace()
   MOZ_COUNT_DTOR(FontFace);
 
   SetUserFontEntry(nullptr);
+
+  if (mFontFaceSet && !IsInFontFaceSet()) {
+    mFontFaceSet->RemoveUnavailableFontFace(this);
+  }
 }
 
 JSObject*
@@ -84,6 +111,7 @@ FontFace::CreateForRule(nsISupports* aGlobal,
 
   nsRefPtr<FontFace> obj = new FontFace(aGlobal, aPresContext);
   obj->mRule = aRule;
+  obj->mInFontFaceSet = true;
   obj->SetUserFontEntry(aUserFontEntry);
   return obj.forget();
 }
@@ -116,6 +144,7 @@ FontFace::Constructor(const GlobalObject& aGlobal,
   }
 
   nsRefPtr<FontFace> obj = new FontFace(global, presContext);
+  obj->mFontFaceSet->AddUnavailableFontFace(obj);
   return obj.forget();
 }
 
@@ -431,6 +460,20 @@ FontFace::GetFamilyName(nsString& aResult)
   }
 
   return !aResult.IsEmpty();
+}
+
+void
+FontFace::DisconnectFromRule()
+{
+  MOZ_ASSERT(IsConnected());
+
+  // Make a copy of the descriptors.
+  mDescriptors = new CSSFontFaceDescriptors;
+  mRule->GetDescriptors(*mDescriptors);
+
+  mRule->SetFontFace(nullptr);
+  mRule = nullptr;
+  mInFontFaceSet = false;
 }
 
 // -- FontFace::Entry --------------------------------------------------------

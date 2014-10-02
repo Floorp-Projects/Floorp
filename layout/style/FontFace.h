@@ -19,6 +19,7 @@ namespace mozilla {
 struct CSSFontFaceDescriptors;
 namespace dom {
 struct FontFaceDescriptors;
+class FontFaceSet;
 class Promise;
 class StringOrArrayBufferOrArrayBufferView;
 }
@@ -78,12 +79,25 @@ public:
   gfxUserFontEntry* GetUserFontEntry() const { return mUserFontEntry; }
   void SetUserFontEntry(gfxUserFontEntry* aEntry);
 
+  bool IsInFontFaceSet() { return mInFontFaceSet; }
+
   /**
    * Gets the family name of the FontFace as a raw string (such as 'Times', as
    * opposed to GetFamily, which returns a CSS-escaped string, such as
    * '"Times"').  Returns whether a valid family name was available.
    */
   bool GetFamilyName(nsString& aResult);
+
+  /**
+   * Returns whether this object is CSS-connected, i.e. reflecting an
+   * @font-face rule.
+   */
+  bool IsConnected() const { return mRule; }
+
+  /**
+   * Breaks the connection between this FontFace and its @font-face rule.
+   */
+  void DisconnectFromRule();
 
   // Web IDL
   static already_AddRefed<FontFace>
@@ -162,6 +176,13 @@ private:
   // a CSS-connected FontFace object.  For CSS-connected objects, we use
   // the descriptors stored in mRule.
   nsAutoPtr<mozilla::CSSFontFaceDescriptors> mDescriptors;
+
+  // The FontFaceSet this FontFace is associated with, regardless of whether
+  // it is currently "in" the set.
+  nsRefPtr<FontFaceSet> mFontFaceSet;
+
+  // Whether this FontFace appears in the FontFaceSet.
+  bool mInFontFaceSet;
 };
 
 } // namespace dom
