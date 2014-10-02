@@ -67,6 +67,10 @@ public:
                                               nsCSSFontFaceRule* aRule,
                                               gfxUserFontEntry* aUserFontEntry);
 
+  nsCSSFontFaceRule* GetRule() { return mRule; }
+
+  void GetDesc(nsCSSFontDesc aDescID, nsCSSValue& aResult) const;
+
   // Web IDL
   static already_AddRefed<FontFace>
   Constructor(const GlobalObject& aGlobal,
@@ -115,7 +119,6 @@ private:
    */
   void SetStatus(mozilla::dom::FontFaceLoadStatus aStatus);
 
-  void GetDesc(nsCSSFontDesc aDescID, nsCSSValue& aResult) const;
   void GetDesc(nsCSSFontDesc aDescID,
                nsCSSProperty aPropID,
                nsString& aResult) const;
