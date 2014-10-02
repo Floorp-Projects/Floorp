@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<!-- modeled after ../font-face/name-collision.html -->
+<html class="reftest-wait">
+<!--
+  Font family names in @font-face rules take precedence over locally-available font families,
+  so none of the names of commonly used platform fonts should match against locally available
+  fonts.
+-->
+<style>
+body { margin: 50px; font-family: fallback; }
+table { font-family: Sample; margin-left: 3em; }
+.sample { font-family: Sample, fallback; }
+table td { font-size: 24pt; }
+
+/* Windows */
+
+.arial { font-family: Arial, fallback; }
+.timesnewroman { font-family: Times New Roman, fallback; }
+.couriernew { font-family: Courier New, fallback; }
+
+/* Mac OS X */
+
+.futura { font-family: Futura, fallback; }
+.helvetica { font-family: Helvetica, fallback; }
+.times { font-family: Times, fallback; }
+.courier { font-family: Courier, fallback; }
+
+/* Linux */
+
+.bitstreamverasans { font-family: Bitstream Vera Sans, fallback; }
+.dejavusans { font-family: DejaVu Sans, fallback; }
+.freesans { font-family: FreeSans, fallback; }
+</style>
+<script>
+function addTestFont(aFamily) {
+  document.fonts.add(new FontFace(aFamily, "url(../fonts/mplus/mplus-1p-black.ttf)", { weight: 900 }));
+}
+
+document.fonts.add(new FontFace("fallback", "url(../fonts/mplus/mplus-1p-regular.ttf)"));
+
+addTestFont("Sample");
+
+/* Windows */
+
+addTestFont("Arial");
+addTestFont("Times New Roman");
+addTestFont("Courier New");
+
+/* Mac OS X */
+
+addTestFont("Futura");
+addTestFont("Helvetica");
+addTestFont("Times");
+addTestFont("Courier");
+
+/* Linux */
+
+addTestFont("Bitstream Vera Sans");
+addTestFont("DejaVu Sans");
+addTestFont("FreeSans");
+
+document.fonts.ready.then(function() { document.documentElement.className = ""; });
+</script>
+
+<p>All text below should appear in the same extra bold font face:</p>
+
+<table>
+<tr class="sample"><td>Sample</td></tr>
+<tr class="arial"><td>Arial</td></tr>
+<tr class="timesnewroman"><td>Times New Roman</td></tr>
+<tr class="couriernew"><td>Courier New</td></tr>
+<tr class="futura"><td>Futura</td></tr>
+<tr class="helvetica"><td>Helvetica</td></tr>
+<tr class="times"><td>Times</td></tr>
+<tr class="courier"><td>Courier</td></tr>
+<tr class="bitstreamverasans"><td>Bitstream Vera Sans</td></tr>
+<tr class="dejavusans"><td>DejaVu Sans</td></tr>
+<tr class="freesans"><td>FreeSans</td></tr>
+</table>

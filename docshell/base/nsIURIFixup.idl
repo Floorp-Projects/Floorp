@@ -12,7 +12,7 @@ interface nsIInputStream;
 /**
  * Interface indicating what we found/corrected when fixing up a URI
  */
-[scriptable, uuid(62aac1e0-3da8-4920-bd1b-a54fc2e2eb24)]
+[scriptable, uuid(4819f183-b532-4932-ac09-b309cd853be7)]
 interface nsIURIFixupInfo : nsISupports
 {
   /**
@@ -36,9 +36,16 @@ interface nsIURIFixupInfo : nsISupports
   readonly attribute nsIURI fixedURI;
 
   /**
-   * Whether the preferred option ended up using a keyword search.
+   * The name of the keyword search provider used to provide a keyword search;
+   * empty string if no keyword search was done.
    */
-  readonly attribute boolean fixupUsedKeyword;
+  readonly attribute AString keywordProviderName;
+
+  /**
+   * The keyword as used for the search (post trimming etc.)
+   * empty string if no keyword search was done.
+   */
+  readonly attribute AString keywordAsSent;
 
   /**
    * Whether we changed the protocol instead of using one from the input as-is.
@@ -63,7 +70,7 @@ interface nsIURIFixupInfo : nsISupports
 /**
  * Interface implemented by objects capable of fixing up strings into URIs
  */
-[scriptable, uuid(49298f2b-3630-4874-aecc-522300a7fead)]
+[scriptable, uuid(d2a78abe-e678-4103-9bcc-dd1377460c44)]
 interface nsIURIFixup : nsISupports
 {
     /** No fixup flags. */
@@ -146,7 +153,7 @@ interface nsIURIFixup : nsISupports
      * @throws NS_ERROR_FAILURE if the resulting URI requires submission of POST
      *         data and aPostData is null.
      */
-    nsIURI keywordToURI(in AUTF8String aKeyword,
-                        [optional] out nsIInputStream aPostData);
+    nsIURIFixupInfo keywordToURI(in AUTF8String aKeyword,
+                                 [optional] out nsIInputStream aPostData);
 };
 

@@ -1132,9 +1132,9 @@ AssertValidObjectPtr(JSContext *cx, JSObject *obj)
 
     if (obj->isTenured()) {
         MOZ_ASSERT(obj->isAligned());
-        gc::AllocKind kind = obj->asTenured()->getAllocKind();
+        gc::AllocKind kind = obj->asTenured().getAllocKind();
         MOZ_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
-        MOZ_ASSERT(obj->asTenured()->zone() == cx->zone());
+        MOZ_ASSERT(obj->asTenured().zone() == cx->zone());
     }
 }
 

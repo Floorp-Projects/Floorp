@@ -17,7 +17,7 @@ fails-if(!nativeThemePref) != textarea-native.html textarea-nonnative.html
 == textarea-nonnative-when-styled.html textarea-nonnative-when-styled-ref.html
 fails-if(!nativeThemePref) != button-native.html button-nonnative.html
 == button-nonnative-when-styled.html button-nonnative-when-styled-ref.html
-fails-if(!nativeThemePref) != combobox-native.html combobox-nonnative.html
+fails-if(!nativeThemePref&&!Android) != combobox-native.html combobox-nonnative.html
 == combobox-nonnative-when-styled.html combobox-nonnative-when-styled-ref.html
 fails-if(!nativeThemePref) needs-focus != listbox-native.html listbox-nonnative.html
 needs-focus == listbox-nonnative-when-styled.html listbox-nonnative-when-styled-ref.html
