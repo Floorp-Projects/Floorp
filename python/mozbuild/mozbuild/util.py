@@ -233,24 +233,24 @@ def resolve_target_to_make(topobjdir, target):
         reldir = os.path.dirname(reldir)
 
 
-class List(list):
-    """A list specialized for moz.build environments.
+class ListMixin(object):
+    def __init__(self, iterable=[]):
+        if not isinstance(iterable, list):
+            raise ValueError('List can only be created from other list instances.')
 
-    We overload the assignment and append operations to require that the
-    appended thing is a list. This avoids bad surprises coming from appending
-    a string to a list, which would just add each letter of the string.
-    """
+        return super(ListMixin, self).__init__(iterable)
+
     def extend(self, l):
         if not isinstance(l, list):
             raise ValueError('List can only be extended with other list instances.')
 
-        return list.extend(self, l)
+        return super(ListMixin, self).extend(l)
 
     def __setslice__(self, i, j, sequence):
         if not isinstance(sequence, list):
             raise ValueError('List can only be sliced with other list instances.')
 
-        return list.__setslice__(self, i, j, sequence)
+        return super(ListMixin, self).__setslice__(i, j, sequence)
 
     def __add__(self, other):
         # Allow None is a special case because it makes undefined variable
@@ -259,16 +259,25 @@ class List(list):
         if not isinstance(other, list):
             raise ValueError('Only lists can be appended to lists.')
 
-        return List(list.__add__(self, other))
+        new_list = self.__class__(self)
+        new_list.extend(other)
+        return new_list
 
     def __iadd__(self, other):
         other = [] if other is None else other
         if not isinstance(other, list):
             raise ValueError('Only lists can be appended to lists.')
 
-        list.__iadd__(self, other)
+        return super(ListMixin, self).__iadd__(other)
 
-        return self
+
+class List(ListMixin, list):
+    """A list specialized for moz.build environments.
+
+    We overload the assignment and append operations to require that the
+    appended thing is a list. This avoids bad surprises coming from appending
+    a string to a list, which would just add each letter of the string.
+    """
 
 
 class UnsortedError(Exception):
@@ -297,12 +306,7 @@ class UnsortedError(Exception):
         return s.getvalue()
 
 
-class StrictOrderingOnAppendList(list):
-    """A list specialized for moz.build environments.
-
-    We overload the assignment and append operations to require that incoming
-    elements be ordered. This enforces cleaner style in moz.build files.
-    """
+class StrictOrderingOnAppendListMixin(object):
     @staticmethod
     def ensure_sorted(l):
         if isinstance(l, StrictOrderingOnAppendList):
@@ -314,46 +318,39 @@ class StrictOrderingOnAppendList(list):
             raise UnsortedError(srtd, l)
 
     def __init__(self, iterable=[]):
-        StrictOrderingOnAppendList.ensure_sorted(iterable)
+        StrictOrderingOnAppendListMixin.ensure_sorted(iterable)
 
-        list.__init__(self, iterable)
+        super(StrictOrderingOnAppendListMixin, self).__init__(iterable)
 
     def extend(self, l):
-        if not isinstance(l, list):
-            raise ValueError('List can only be extended with other list instances.')
+        StrictOrderingOnAppendListMixin.ensure_sorted(l)
 
-        StrictOrderingOnAppendList.ensure_sorted(l)
-
-        return list.extend(self, l)
+        return super(StrictOrderingOnAppendListMixin, self).extend(l)
 
     def __setslice__(self, i, j, sequence):
-        if not isinstance(sequence, list):
-            raise ValueError('List can only be sliced with other list instances.')
+        StrictOrderingOnAppendListMixin.ensure_sorted(sequence)
 
-        StrictOrderingOnAppendList.ensure_sorted(sequence)
-
-        return list.__setslice__(self, i, j, sequence)
+        return super(StrictOrderingOnAppendListMixin, self).__setslice__(i, j,
+            sequence)
 
     def __add__(self, other):
-        if not isinstance(other, list):
-            raise ValueError('Only lists can be appended to lists.')
+        StrictOrderingOnAppendListMixin.ensure_sorted(other)
 
-        new_list = StrictOrderingOnAppendList()
-        # Can't extend with self because it may already be the result of
-        # several extensions and not be ordered.
-        list.extend(new_list, self)
-        new_list.extend(other)
-        return new_list
+        return super(StrictOrderingOnAppendListMixin, self).__add__(other)
 
     def __iadd__(self, other):
-        if not isinstance(other, list):
-            raise ValueError('Only lists can be appended to lists.')
+        StrictOrderingOnAppendListMixin.ensure_sorted(other)
 
-        StrictOrderingOnAppendList.ensure_sorted(other)
+        return super(StrictOrderingOnAppendListMixin, self).__iadd__(other)
 
-        list.__iadd__(self, other)
 
-        return self
+class StrictOrderingOnAppendList(ListMixin, StrictOrderingOnAppendListMixin,
+        list):
+    """A list specialized for moz.build environments.
+
+    We overload the assignment and append operations to require that incoming
+    elements be ordered. This enforces cleaner style in moz.build files.
+    """
 
 
 class MozbuildDeletionError(Exception):
@@ -817,3 +814,64 @@ class memoized_property(object):
         if not hasattr(instance, name):
             setattr(instance, name, self.func(instance))
         return getattr(instance, name)
+
+
+class TypedListMixin(object):
+    '''Mixin for a list with type coercion. See TypedList.'''
+
+    def _ensure_type(self, l):
+        if isinstance(l, self.__class__):
+            return l
+
+        def normalize(e):
+            if not isinstance(e, self.TYPE):
+                e = self.TYPE(e)
+            return e
+
+        return [normalize(e) for e in l]
+
+    def __init__(self, iterable=[]):
+        iterable = self._ensure_type(iterable)
+
+        super(TypedListMixin, self).__init__(iterable)
+
+    def extend(self, l):
+        l = self._ensure_type(l)
+
+        return super(TypedListMixin, self).extend(l)
+
+    def __setslice__(self, i, j, sequence):
+        sequence = self._ensure_type(sequence)
+
+        return super(TypedListMixin, self).__setslice__(i, j,
+            sequence)
+
+    def __add__(self, other):
+        other = self._ensure_type(other)
+
+        return super(TypedListMixin, self).__add__(other)
+
+    def __iadd__(self, other):
+        other = self._ensure_type(other)
+
+        return super(TypedListMixin, self).__iadd__(other)
+
+    def append(self, other):
+        self += [other]
+
+
+@memoize
+def TypedList(type, base_class=List):
+    '''A list with type coercion.
+
+    The given ``type`` is what list elements are being coerced to. It may do
+    strict validation, throwing ValueError exceptions.
+
+    A ``base_class`` type can be given for more specific uses than a List. For
+    example, a Typed StrictOrderingOnAppendList can be created with:
+
+       TypedList(unicode, StrictOrderingOnAppendList)
+    '''
+    class _TypedList(TypedListMixin, base_class):
+        TYPE = type
+    return _TypedList

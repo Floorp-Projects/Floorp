@@ -9,6 +9,7 @@ var NotificationTest = (function () {
     SimpleTest.waitForExplicitFinish();
     // turn on testing pref (used by notification.cpp, and mock the alerts
     SpecialPowers.setBoolPref("notification.prompt.testing", true);
+    SpecialPowers.setAllAppsLaunchable(true);
   }
 
   function teardown_testing_env() {

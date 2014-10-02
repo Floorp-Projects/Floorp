@@ -25,6 +25,7 @@
 #include "nsIURI.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/unused.h"
+#include "nsProxyRelease.h"
 
 typedef mozilla::net::LoadContextInfo LoadContextInfo;
 
@@ -105,6 +106,14 @@ nsWyciwygChannel::nsWyciwygChannel()
 
 nsWyciwygChannel::~nsWyciwygChannel() 
 {
+  if (mLoadInfo) {
+    nsCOMPtr<nsIThread> mainThread;
+    NS_GetMainThread(getter_AddRefs(mainThread));
+
+    nsILoadInfo *forgetableLoadInfo;
+    mLoadInfo.forget(&forgetableLoadInfo);
+    NS_ProxyRelease(mainThread, forgetableLoadInfo, false);
+  }
 }
 
 NS_IMPL_ISUPPORTS(nsWyciwygChannel,

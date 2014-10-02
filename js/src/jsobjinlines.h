@@ -84,7 +84,7 @@ JSObject::finalize(js::FreeOp *fop)
 
 #ifdef DEBUG
     MOZ_ASSERT(isTenured());
-    if (!IsBackgroundFinalized(asTenured()->getAllocKind())) {
+    if (!IsBackgroundFinalized(asTenured().getAllocKind())) {
         /* Assert we're on the main thread. */
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(fop->runtime()));
     }
@@ -1099,7 +1099,7 @@ CopyInitializerObject(JSContext *cx, HandleObject baseobj, NewObjectKind newKind
 
     gc::AllocKind allocKind = gc::GetGCObjectFixedSlotsKind(baseobj->numFixedSlots());
     allocKind = gc::GetBackgroundAllocKind(allocKind);
-    MOZ_ASSERT_IF(baseobj->isTenured(), allocKind == baseobj->asTenured()->getAllocKind());
+    MOZ_ASSERT_IF(baseobj->isTenured(), allocKind == baseobj->asTenured().getAllocKind());
     RootedObject obj(cx);
     obj = NewBuiltinClassInstance(cx, &JSObject::class_, allocKind, newKind);
     if (!obj)

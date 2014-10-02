@@ -117,7 +117,6 @@ class Sandbox(dict):
         assert isinstance(context, Context)
 
         self._context = context
-        self._execution_stack = []
 
         # We need to record this because it gets swallowed as part of
         # evaluation.
@@ -136,7 +135,7 @@ class Sandbox(dict):
             with open(path, 'rt') as fd:
                 source = fd.read()
         except Exception as e:
-            raise SandboxLoadError(list(self._execution_stack),
+            raise SandboxLoadError(self._context.source_stack,
                 sys.exc_info()[2], read_error=path)
 
         self.exec_source(source, path)
@@ -151,10 +150,8 @@ class Sandbox(dict):
         does not perform extra path normalization. This can cause relative
         paths to behave weirdly.
         """
-        self._execution_stack.append(path)
-
         if path:
-            self._context.add_source(path)
+            self._context.push_source(path)
 
         # We don't have to worry about bytecode generation here because we are
         # too low-level for that. However, we could add bytecode generation via
@@ -183,17 +180,18 @@ class Sandbox(dict):
             if self._last_name_error is not None:
                 actual = self._last_name_error
 
-            raise SandboxExecutionError(list(self._execution_stack),
+            raise SandboxExecutionError(self._context.source_stack,
                 type(actual), actual, sys.exc_info()[2])
 
         except Exception as e:
             # Need to copy the stack otherwise we get a reference and that is
             # mutated during the finally.
             exc = sys.exc_info()
-            raise SandboxExecutionError(list(self._execution_stack), exc[0],
+            raise SandboxExecutionError(self._context.source_stack, exc[0],
                 exc[1], exc[2])
         finally:
-            self._execution_stack.pop()
+            if path:
+                self._context.pop_source()
 
     def __getitem__(self, key):
         if key.isupper():

@@ -13,6 +13,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsChannelClassifier.h"
 #include "nsAsyncRedirectVerifyHelper.h"
+#include "nsProxyRelease.h"
 
 static PLDHashOperator
 CopyProperties(const nsAString &key, nsIVariant *data, void *closure)
@@ -62,6 +63,18 @@ nsBaseChannel::nsBaseChannel()
   , mContentLength(-1)
 {
   mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
+}
+
+nsBaseChannel::~nsBaseChannel()
+{
+  if (mLoadInfo) {
+    nsCOMPtr<nsIThread> mainThread;
+    NS_GetMainThread(getter_AddRefs(mainThread));
+    
+    nsILoadInfo *forgetableLoadInfo;
+    mLoadInfo.forget(&forgetableLoadInfo);
+    NS_ProxyRelease(mainThread, forgetableLoadInfo, false);
+  }
 }
 
 nsresult

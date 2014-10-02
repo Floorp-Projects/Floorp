@@ -5288,6 +5288,16 @@ DebuggerObject_getEnvironment(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static bool
+DebuggerObject_getIsArrowFunction(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get isArrowFunction", args, refobj);
+
+    args.rval().setBoolean(refobj->is<JSFunction>()
+                           && refobj->as<JSFunction>().isArrow());
+    return true;
+}
+
+static bool
 DebuggerObject_getIsBoundFunction(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get isBoundFunction", args, refobj);
@@ -5867,6 +5877,7 @@ static const JSPropertySpec DebuggerObject_properties[] = {
     JS_PSG("parameterNames", DebuggerObject_getParameterNames, 0),
     JS_PSG("script", DebuggerObject_getScript, 0),
     JS_PSG("environment", DebuggerObject_getEnvironment, 0),
+    JS_PSG("isArrowFunction", DebuggerObject_getIsArrowFunction, 0),
     JS_PSG("isBoundFunction", DebuggerObject_getIsBoundFunction, 0),
     JS_PSG("boundTargetFunction", DebuggerObject_getBoundTargetFunction, 0),
     JS_PSG("boundThis", DebuggerObject_getBoundThis, 0),

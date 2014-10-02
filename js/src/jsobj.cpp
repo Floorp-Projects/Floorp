@@ -2055,7 +2055,7 @@ js::DeepCloneObjectLiteral(JSContext *cx, HandleObject obj, NewObjectKind newKin
     } else {
         // Object literals are tenured by default as holded by the JSScript.
         MOZ_ASSERT(obj->isTenured());
-        AllocKind kind = obj->asTenured()->getAllocKind();
+        AllocKind kind = obj->asTenured().getAllocKind();
         Rooted<TypeObject*> typeObj(cx, obj->getType(cx));
         if (!typeObj)
             return nullptr;
@@ -2163,7 +2163,7 @@ js::XDRObjectLiteral(XDRState<mode> *xdr, MutableHandleObject obj)
             if (mode == XDR_ENCODE) {
                 MOZ_ASSERT(obj->getClass() == &JSObject::class_);
                 MOZ_ASSERT(obj->isTenured());
-                kind = obj->asTenured()->getAllocKind();
+                kind = obj->asTenured().getAllocKind();
             }
 
             if (!xdr->codeEnum32(&kind))
@@ -2361,7 +2361,7 @@ js::CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj)
 {
     if (srcObj->getClass() == &JSObject::class_) {
         AllocKind kind = GetBackgroundAllocKind(GuessObjectGCKind(srcObj->numFixedSlots()));
-        MOZ_ASSERT_IF(srcObj->isTenured(), kind == srcObj->asTenured()->getAllocKind());
+        MOZ_ASSERT_IF(srcObj->isTenured(), kind == srcObj->asTenured().getAllocKind());
 
         JSObject *proto = cx->global()->getOrCreateObjectPrototype(cx);
         if (!proto)
@@ -2391,7 +2391,7 @@ js::CloneObjectLiteral(JSContext *cx, HandleObject parent, HandleObject srcObj)
         value = srcObj->getDenseElement(i);
         MOZ_ASSERT_IF(value.isMarkable(),
                       value.toGCThing()->isTenured() &&
-                      cx->runtime()->isAtomsZone(value.toGCThing()->asTenured()->zone()));
+                      cx->runtime()->isAtomsZone(value.toGCThing()->asTenured().zone()));
 
         id = INT_TO_JSID(i);
         if (!JSObject::defineGeneric(cx, res, id, value, nullptr, nullptr, JSPROP_ENUMERATE))
@@ -2476,7 +2476,7 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
             MOZ_CRASH();
     } else {
         reserved.newbshape = EmptyShape::getInitialShape(cx, aClass, aProto, a->getParent(), a->getMetadata(),
-                                                         b->asTenured()->getAllocKind());
+                                                         b->asTenured().getAllocKind());
         if (!reserved.newbshape)
             MOZ_CRASH();
     }
@@ -2485,7 +2485,7 @@ JSObject::ReserveForTradeGuts(JSContext *cx, JSObject *aArg, JSObject *bArg,
             MOZ_CRASH();
     } else {
         reserved.newashape = EmptyShape::getInitialShape(cx, bClass, bProto, b->getParent(), b->getMetadata(),
-                                                         a->asTenured()->getAllocKind());
+                                                         a->asTenured().getAllocKind());
         if (!reserved.newashape)
             MOZ_CRASH();
     }
@@ -2685,8 +2685,8 @@ bool
 JSObject::swap(JSContext *cx, HandleObject a, HandleObject b)
 {
     // Ensure swap doesn't cause a finalizer to not be run.
-    MOZ_ASSERT(IsBackgroundFinalized(a->asTenured()->getAllocKind()) ==
-               IsBackgroundFinalized(b->asTenured()->getAllocKind()));
+    MOZ_ASSERT(IsBackgroundFinalized(a->asTenured().getAllocKind()) ==
+               IsBackgroundFinalized(b->asTenured().getAllocKind()));
     MOZ_ASSERT(a->compartment() == b->compartment());
 
     unsigned r = NotifyGCPreSwap(a, b);

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style>
+body { font-family: One; }
+</style>
+<script>
+window.addEventListener("MozReftestInvalidate", function() {
+  var face = new FontFace("One", "url(../fonts/markA.ttf)");
+  face.load().then(function() {
+    document.fonts.add(face);
+    document.documentElement.className = "";
+  });
+});
+</script>
+<p>ABC</p>

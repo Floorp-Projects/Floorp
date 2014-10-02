@@ -13,6 +13,10 @@
 
 #include "nsStackWalk.h"
 
+#ifdef XP_WIN
+#define snprintf _snprintf
+#endif
+
 using namespace mozilla;
 
 // The presence of this address is the stack must stop the stack walk. If
@@ -54,7 +58,7 @@ malloc_logger_t(uint32_t aType,
 extern malloc_logger_t* malloc_logger;
 
 static void
-stack_callback(void* aPc, void* aSp, void* aClosure)
+stack_callback(uint32_t aFrameNumber, void* aPc, void* aSp, void* aClosure)
 {
   const char* name = static_cast<char*>(aClosure);
   Dl_info info;
@@ -612,7 +616,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
   ::CloseHandle(myThread);
 
   for (uint32_t i = 0; i < data.pc_count; ++i) {
-    (*aCallback)(data.pcs[i], data.sps[i], aClosure);
+    (*aCallback)(i + 1, data.pcs[i], data.sps[i], aClosure);
   }
 
   return data.pc_count == 0 ? NS_ERROR_FAILURE : NS_OK;
@@ -827,38 +831,6 @@ NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails)
   return NS_OK;
 }
 
-EXPORT_XPCOM_API(nsresult)
-NS_FormatCodeAddressDetails(void* aPC, const nsCodeAddressDetails* aDetails,
-                            char* aBuffer, uint32_t aBufferSize)
-{
-  if (aDetails->function[0]) {
-    _snprintf(aBuffer, aBufferSize, "%s+0x%08lX [%s +0x%016lX]",
-              aDetails->function, aDetails->foffset,
-              aDetails->library, aDetails->loffset);
-  } else if (aDetails->library[0]) {
-    _snprintf(aBuffer, aBufferSize, "UNKNOWN [%s +0x%016lX]",
-              aDetails->library, aDetails->loffset);
-  } else {
-    _snprintf(aBuffer, aBufferSize, "UNKNOWN 0x%016lX", aPC);
-  }
-
-  aBuffer[aBufferSize - 1] = '\0';
-
-  uint32_t len = strlen(aBuffer);
-  if (aDetails->filename[0]) {
-    _snprintf(aBuffer + len, aBufferSize - len, " (%s, line %d)\n",
-              aDetails->filename, aDetails->lineno);
-  } else {
-    aBuffer[len] = '\n';
-    if (++len != aBufferSize) {
-      aBuffer[len] = '\0';
-    }
-  }
-  aBuffer[aBufferSize - 2] = '\n';
-  aBuffer[aBufferSize - 1] = '\0';
-  return NS_OK;
-}
-
 // i386 or PPC Linux stackwalking code
 #elif HAVE_DLADDR && (HAVE__UNWIND_BACKTRACE || NSSTACKWALK_SUPPORTS_LINUX || NSSTACKWALK_SUPPORTS_MACOSX)
 
@@ -947,8 +919,8 @@ FramePointerStackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
       // it called. We can't know the exact location of the SP
       // but this should be sufficient for our use the SP
       // to order elements on the stack.
-      (*aCallback)(pc, bp, aClosure);
       numFrames++;
+      (*aCallback)(numFrames, pc, bp, aClosure);
       if (aMaxFrames != 0 && numFrames == aMaxFrames) {
         break;
       }
@@ -991,7 +963,6 @@ NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
 #endif
   return FramePointerStackWalk(aCallback, aSkipFrames, aMaxFrames,
                                aClosure, bp, stackEnd);
-
 }
 
 #elif defined(HAVE__UNWIND_BACKTRACE)
@@ -1023,8 +994,8 @@ unwind_callback(struct _Unwind_Context* context, void* closure)
     return _URC_FOREIGN_EXCEPTION_CAUGHT;
   }
   if (--info->skip < 0) {
-    (*info->callback)(pc, nullptr, info->closure);
     info->numFrames++;
+    (*info->callback)(info->numFrames, pc, nullptr, info->closure);
     if (info->maxFrames != 0 && info->numFrames == info->maxFrames) {
       // Again, any error code that stops the walk will do.
       return _URC_FOREIGN_EXCEPTION_CAUGHT;
@@ -1102,24 +1073,6 @@ NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails)
   return NS_OK;
 }
 
-EXPORT_XPCOM_API(nsresult)
-NS_FormatCodeAddressDetails(void* aPC, const nsCodeAddressDetails* aDetails,
-                            char* aBuffer, uint32_t aBufferSize)
-{
-  if (!aDetails->library[0]) {
-    snprintf(aBuffer, aBufferSize, "UNKNOWN %p\n", aPC);
-  } else if (!aDetails->function[0]) {
-    snprintf(aBuffer, aBufferSize, "UNKNOWN [%s +0x%08" PRIXPTR "]\n",
-             aDetails->library, aDetails->loffset);
-  } else {
-    snprintf(aBuffer, aBufferSize, "%s+0x%08" PRIXPTR
-             " [%s +0x%08" PRIXPTR "]\n",
-             aDetails->function, aDetails->foffset,
-             aDetails->library, aDetails->loffset);
-  }
-  return NS_OK;
-}
-
 #else // unsupported platform.
 
 EXPORT_XPCOM_API(nsresult)
@@ -1153,12 +1106,44 @@ NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-EXPORT_XPCOM_API(nsresult)
-NS_FormatCodeAddressDetails(void* aPC, const nsCodeAddressDetails* aDetails,
-                            char* aBuffer, uint32_t aBufferSize)
+#endif
+
+EXPORT_XPCOM_API(void)
+NS_FormatCodeAddressDetails(char* aBuffer, uint32_t aBufferSize,
+                            uint32_t aFrameNumber, void* aPC,
+                            const nsCodeAddressDetails* aDetails)
 {
-  aBuffer[0] = '\0';
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_FormatCodeAddress(aBuffer, aBufferSize,
+                       aFrameNumber, aPC, aDetails->function,
+                       aDetails->library, aDetails->loffset,
+                       aDetails->filename, aDetails->lineno);
 }
 
-#endif
+EXPORT_XPCOM_API(void)
+NS_FormatCodeAddress(char* aBuffer, uint32_t aBufferSize, uint32_t aFrameNumber,
+                     const void* aPC, const char* aFunction,
+                     const char* aLibrary, ptrdiff_t aLOffset,
+                     const char* aFileName, uint32_t aLineNo)
+{
+  const char* function = aFunction && aFunction[0] ? aFunction : "???";
+  if (aFileName && aFileName[0]) {
+    // We have a filename and (presumably) a line number. Use them.
+    snprintf(aBuffer, aBufferSize,
+             "#%02u: %s (%s:%u)",
+             aFrameNumber, function, aFileName, aLineNo);
+  } else if (aLibrary && aLibrary[0]) {
+    // We have no filename, but we do have a library name. Use it and the
+    // library offset, and print them in a way that scripts like
+    // fix_{linux,macosx}_stacks.py can easily post-process.
+    snprintf(aBuffer, aBufferSize,
+             "#%02u: %s[%s +0x%" PRIxPTR "]",
+             aFrameNumber, function, aLibrary, aLOffset);
+  } else {
+    // We have nothing useful to go on. (The format string is split because
+    // '??)' is a trigraph and causes a warning, sigh.)
+    snprintf(aBuffer, aBufferSize,
+             "#%02u: ??? (???:???" ")",
+             aFrameNumber);
+  }
+}
+

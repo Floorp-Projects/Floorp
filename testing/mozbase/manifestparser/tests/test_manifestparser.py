@@ -106,6 +106,83 @@ class TestManifestParser(unittest.TestCase):
         self.assertEqual(buffer.getvalue().strip(),
                          '[DEFAULT]\nfoo = bar\n\n[fleem]\nsubsuite = \n\n[include/flowers]\nblue = ocean\nred = roses\nsubsuite = \nyellow = submarine')
 
+    def test_invalid_path(self):
+        """
+        Test invalid path should not throw when not strict
+        """
+        manifest = os.path.join(here, 'include-invalid.ini')
+        parser = ManifestParser(manifests=(manifest,), strict=False)
+
+    def test_parent_inheritance(self):
+        """
+        Test parent manifest variable inheritance
+        Specifically tests that inherited variables from parent includes
+        properly propagate downstream
+        """
+        parent_example = os.path.join(here, 'parent', 'level_1', 'level_2',
+                                      'level_3', 'level_3.ini')
+        parser = ManifestParser(manifests=(parent_example,))
+
+        # Parent manifest test should not be included
+        self.assertEqual(parser.get('name'),
+                         ['test_3'])
+        self.assertEqual([(test['name'], os.path.basename(test['manifest'])) for test in parser.tests],
+                         [('test_3', 'level_3.ini')])
+
+        # DEFAULT values should be the ones from level 1
+        self.assertEqual(parser.get('name', x='level_1'),
+                         ['test_3'])
+
+        # Write the output to a manifest:
+        buffer = StringIO()
+        parser.write(fp=buffer, global_kwargs={'x': 'level_1'})
+        self.assertEqual(buffer.getvalue().strip(),
+                         '[DEFAULT]\nx = level_1\n\n[test_3]\nsubsuite =')
+
+    def test_parent_defaults(self):
+        """
+        Test downstream variables should overwrite upstream variables
+        """
+        parent_example = os.path.join(here, 'parent', 'level_1', 'level_2',
+                                      'level_3', 'level_3_default.ini')
+        parser = ManifestParser(manifests=(parent_example,))
+
+        # Parent manifest test should not be included
+        self.assertEqual(parser.get('name'),
+                         ['test_3'])
+        self.assertEqual([(test['name'], os.path.basename(test['manifest'])) for test in parser.tests],
+                         [('test_3', 'level_3_default.ini')])
+
+        # DEFAULT values should be the ones from level 3
+        self.assertEqual(parser.get('name', x='level_3'),
+                         ['test_3'])
+
+        # Write the output to a manifest:
+        buffer = StringIO()
+        parser.write(fp=buffer, global_kwargs={'x': 'level_3'})
+        self.assertEqual(buffer.getvalue().strip(),
+                         '[DEFAULT]\nx = level_3\n\n[test_3]\nsubsuite =')
+
+    def test_server_root(self):
+        """
+        Test server_root properly expands as an absolute path
+        """
+        server_example = os.path.join(here, 'parent', 'level_1', 'level_2',
+                                      'level_3', 'level_3_server-root.ini')
+        parser = ManifestParser(manifests=(server_example,))
+
+        # A regular variable will inherit its value directly
+        self.assertEqual(parser.get('name', **{'other-root': '../root'}),
+                                    ['test_3'])
+
+        # server-root will expand its value as an absolute path
+        # we will not find anything for the original value
+        self.assertEqual(parser.get('name', **{'server-root': '../root'}), [])
+
+        # check that the path has expanded
+        self.assertEqual(parser.get('server-root')[0],
+                         os.path.join(here, 'parent', 'root'))
+
     def test_copy(self):
         """Test our ability to copy a set of manifests"""
 

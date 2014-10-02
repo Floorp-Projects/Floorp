@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<!-- modeled on ../font-face/src-list-2.html -->
+<html class="reftest-wait">
+<style>
+body { font-family: "One"; }
+</style>
+<script>
+document.fonts.add(new FontFace("One", "url(../fonts/markA.ttf), url(../fonts/markB.ttf)"));
+document.fonts.ready.then(function() { document.documentElement.className = ""; });
+</script>
+<p>ABC</p>
