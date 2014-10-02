@@ -239,10 +239,10 @@ struct VMFunction
         extraValuesToPop(extraValuesToPop)
     {
         // Check for valid failure/return type.
-        JS_ASSERT_IF(outParam != Type_Void && executionMode == SequentialExecution,
-                     returnType == Type_Bool);
-        JS_ASSERT(returnType == Type_Bool ||
-                  returnType == Type_Object);
+        MOZ_ASSERT_IF(outParam != Type_Void && executionMode == SequentialExecution,
+                      returnType == Type_Bool);
+        MOZ_ASSERT(returnType == Type_Bool ||
+                   returnType == Type_Object);
     }
 
     VMFunction(const VMFunction &o) {
@@ -250,7 +250,7 @@ struct VMFunction
     }
 
     void init(const VMFunction &o) {
-        JS_ASSERT(!wrapped);
+        MOZ_ASSERT(!wrapped);
         *this = o;
         addToFunctions();
     }
@@ -272,13 +272,13 @@ struct VMFunctionsModal
     }
 
     inline const VMFunction &operator[](ExecutionMode mode) const {
-        JS_ASSERT((unsigned)mode < NumExecutionModes);
+        MOZ_ASSERT((unsigned)mode < NumExecutionModes);
         return funs_[mode];
     }
 
   private:
     void add(const VMFunction &info) {
-        JS_ASSERT((unsigned)info.executionMode < NumExecutionModes);
+        MOZ_ASSERT((unsigned)info.executionMode < NumExecutionModes);
         funs_[info.executionMode].init(info);
     }
 
@@ -596,7 +596,7 @@ class AutoDetectInvalidation
     AutoDetectInvalidation(JSContext *cx, MutableHandleValue rval, IonScript *ionScript = nullptr);
 
     void disable() {
-        JS_ASSERT(!disabled_);
+        MOZ_ASSERT(!disabled_);
         disabled_ = true;
     }
 

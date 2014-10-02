@@ -97,6 +97,9 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     bool AnswerClassName(const uint64_t &objId, nsString *result) {
         return Answer::AnswerClassName(ObjectId::deserialize(objId), result);
     }
+    bool AnswerRegExpToShared(const uint64_t &objId, ReturnStatus *rs, nsString *source, uint32_t *flags) {
+        return Answer::AnswerRegExpToShared(ObjectId::deserialize(objId), rs, source, flags);
+    }
 
     bool AnswerGetPropertyNames(const uint64_t &objId, const uint32_t &flags,
                                 ReturnStatus *rs, nsTArray<nsString> *names) {
@@ -189,6 +192,11 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
     }
     bool CallClassName(const ObjectId &objId, nsString *result) {
         return Base::CallClassName(objId.serialize(), result);
+    }
+
+    bool CallRegExpToShared(const ObjectId &objId, ReturnStatus *rs,
+                            nsString *source, uint32_t *flags) {
+        return Base::CallRegExpToShared(objId.serialize(), rs, source, flags);
     }
 
     bool CallGetPropertyNames(const ObjectId &objId, const uint32_t &flags,

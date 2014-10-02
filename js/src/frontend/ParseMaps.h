@@ -56,7 +56,7 @@ class ParseMapPool
     void checkInvariants();
 
     void recycle(void *map) {
-        JS_ASSERT(map);
+        MOZ_ASSERT(map);
 #ifdef DEBUG
         bool ok = false;
         /* Make sure the map is in |all| but not already in |recyclable|. */
@@ -66,11 +66,11 @@ class ParseMapPool
                 break;
             }
         }
-        JS_ASSERT(ok);
+        MOZ_ASSERT(ok);
         for (void **it = recyclable.begin(), **end = recyclable.end(); it != end; ++it)
-            JS_ASSERT(*it != map);
+            MOZ_ASSERT(*it != map);
 #endif
-        JS_ASSERT(recyclable.length() < all.length());
+        MOZ_ASSERT(recyclable.length() < all.length());
         recyclable.infallibleAppend(map); /* Reserved in allocateFresh. */
     }
 
@@ -139,7 +139,7 @@ struct AtomThingMapPtr
 
     bool hasMap() const { return map_; }
     Map *getMap() { return map_; }
-    void setMap(Map *newMap) { JS_ASSERT(!map_); map_ = newMap; }
+    void setMap(Map *newMap) { MOZ_ASSERT(!map_); map_ = newMap; }
     void clearMap() { map_ = nullptr; }
 
     Map *operator->() { return map_; }
@@ -246,7 +246,7 @@ class DefinitionList
     } u;
 
     Node *firstNode() const {
-        JS_ASSERT(isMultiple());
+        MOZ_ASSERT(isMultiple());
         return (Node *) (u.bits & ~0x1);
     }
 
@@ -276,7 +276,7 @@ class DefinitionList
         Range() : node(nullptr), bits(0) {}
 
         void popFront() {
-            JS_ASSERT(!empty());
+            MOZ_ASSERT(!empty());
             if (!node) {
                 bits = 0;
                 return;
@@ -287,12 +287,12 @@ class DefinitionList
 
         template <typename ParseHandler>
         typename ParseHandler::DefinitionNode front() {
-            JS_ASSERT(!empty());
+            MOZ_ASSERT(!empty());
             return ParseHandler::definitionFromBits(bits);
         }
 
         bool empty() const {
-            JS_ASSERT_IF(!bits, !node);
+            MOZ_ASSERT_IF(!bits, !node);
             return !bits;
         }
     };
@@ -303,13 +303,13 @@ class DefinitionList
 
     explicit DefinitionList(uintptr_t bits) {
         u.bits = bits;
-        JS_ASSERT(!isMultiple());
+        MOZ_ASSERT(!isMultiple());
     }
 
     explicit DefinitionList(Node *node) {
         u.head = node;
         u.bits |= 0x1;
-        JS_ASSERT(isMultiple());
+        MOZ_ASSERT(isMultiple());
     }
 
     bool isMultiple() const { return (u.bits & 0x1) != 0; }
@@ -434,7 +434,7 @@ class AtomDecls
 
     /* Return the definition at the head of the chain for |atom|. */
     DefinitionNode lookupFirst(JSAtom *atom) const {
-        JS_ASSERT(map);
+        MOZ_ASSERT(map);
         AtomDefnListPtr p = map->lookup(atom);
         if (!p)
             return ParseHandler::nullDefinition();
@@ -443,7 +443,7 @@ class AtomDecls
 
     /* Perform a lookup that can iterate over the definitions associated with |atom|. */
     DefinitionList::Range lookupMulti(JSAtom *atom) const {
-        JS_ASSERT(map);
+        MOZ_ASSERT(map);
         if (AtomDefnListPtr p = map->lookup(atom))
             return p.value().all();
         return DefinitionList::Range();
@@ -451,11 +451,11 @@ class AtomDecls
 
     /* Add-or-update a known-unique definition for |atom|. */
     bool addUnique(JSAtom *atom, DefinitionNode defn) {
-        JS_ASSERT(map);
+        MOZ_ASSERT(map);
         AtomDefnListAddPtr p = map->lookupForAdd(atom);
         if (!p)
             return map->add(p, atom, DefinitionList(ParseHandler::definitionToBits(defn)));
-        JS_ASSERT(!p.value().isMultiple());
+        MOZ_ASSERT(!p.value().isMultiple());
         p.value() = DefinitionList(ParseHandler::definitionToBits(defn));
         return true;
     }
@@ -464,15 +464,15 @@ class AtomDecls
 
     /* Updating the definition for an entry that is known to exist is infallible. */
     void updateFirst(JSAtom *atom, DefinitionNode defn) {
-        JS_ASSERT(map);
+        MOZ_ASSERT(map);
         AtomDefnListMap::Ptr p = map->lookup(atom);
-        JS_ASSERT(p);
+        MOZ_ASSERT(p);
         p.value().setFront<ParseHandler>(defn);
     }
 
     /* Remove the node at the head of the chain for |atom|. */
     void remove(JSAtom *atom) {
-        JS_ASSERT(map);
+        MOZ_ASSERT(map);
         AtomDefnListMap::Ptr p = map->lookup(atom);
         if (!p)
             return;
@@ -485,7 +485,7 @@ class AtomDecls
     }
 
     AtomDefnListMap::Range all() const {
-        JS_ASSERT(map);
+        MOZ_ASSERT(map);
         return map->all();
     }
 

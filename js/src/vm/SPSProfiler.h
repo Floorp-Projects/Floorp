@@ -154,7 +154,7 @@ class SPSProfiler
     ProfileEntry *stack() { return stack_; }
 
     /* management of whether instrumentation is on or off */
-    bool enabled() { JS_ASSERT_IF(enabled_, installed()); return enabled_; }
+    bool enabled() { MOZ_ASSERT_IF(enabled_, installed()); return enabled_; }
     bool installed() { return stack_ != nullptr && size_ != nullptr; }
     void enable(bool enabled);
     void enableSlowAssertions(bool enabled) { slowAssertions = enabled; }
@@ -173,8 +173,8 @@ class SPSProfiler
     void exit(JSScript *script, JSFunction *maybeFun);
     void updatePC(JSScript *script, jsbytecode *pc) {
         if (enabled() && *size_ - 1 < max_) {
-            JS_ASSERT(*size_ > 0);
-            JS_ASSERT(stack_[*size_ - 1].script() == script);
+            MOZ_ASSERT(*size_ > 0);
+            MOZ_ASSERT(stack_[*size_ - 1].script() == script);
             stack_[*size_ - 1].setPC(pc);
         }
     }
@@ -320,17 +320,17 @@ class SPSInstrumentation
 
     /* Small proxies around SPSProfiler */
     bool enabled() { return profiler_ && profiler_->enabled(); }
-    SPSProfiler *profiler() { JS_ASSERT(enabled()); return profiler_; }
+    SPSProfiler *profiler() { MOZ_ASSERT(enabled()); return profiler_; }
     void disable() { profiler_ = nullptr; }
 
     /* Signals an inline function returned, reverting to the previous state */
     void leaveInlineFrame() {
         if (!enabled())
             return;
-        JS_ASSERT(frame->left == 0);
-        JS_ASSERT(frame->script != nullptr);
+        MOZ_ASSERT(frame->left == 0);
+        MOZ_ASSERT(frame->script != nullptr);
         frames.shrinkBy(1);
-        JS_ASSERT(frames.length() > 0);
+        MOZ_ASSERT(frames.length() > 0);
         frame = &frames[frames.length() - 1];
     }
 
@@ -338,12 +338,12 @@ class SPSInstrumentation
     bool enterInlineFrame(jsbytecode *callerPC) {
         if (!enabled())
             return true;
-        JS_ASSERT_IF(frames.empty(), callerPC == nullptr);
+        MOZ_ASSERT_IF(frames.empty(), callerPC == nullptr);
 
-        JS_ASSERT_IF(frame != nullptr, frame->script != nullptr);
-        JS_ASSERT_IF(frame != nullptr, frame->left == 1);
+        MOZ_ASSERT_IF(frame != nullptr, frame->script != nullptr);
+        MOZ_ASSERT_IF(frame != nullptr, frame->left == 1);
         if (!frames.empty()) {
-            JS_ASSERT(frame == &frames[frames.length() - 1]);
+            MOZ_ASSERT(frame == &frames[frames.length() - 1]);
             frame->pc = callerPC;
         }
         if (!frames.growBy(1))
@@ -363,7 +363,7 @@ class SPSInstrumentation
     bool prepareForOOL() {
         if (!enabled())
             return true;
-        JS_ASSERT(!frames.empty());
+        MOZ_ASSERT(!frames.empty());
         if (frames.length() >= 2) {
             frames.shrinkBy(frames.length() - 2);
 
@@ -379,7 +379,7 @@ class SPSInstrumentation
     void finishOOL() {
         if (!enabled())
             return;
-        JS_ASSERT(!frames.empty());
+        MOZ_ASSERT(!frames.empty());
         frames.shrinkBy(frames.length() - 1);
     }
 
@@ -400,8 +400,8 @@ class SPSInstrumentation
         /* If we've left the frame, the reenter will be skipped anyway */
         if (!enabled() || frame->left != 0)
             return;
-        JS_ASSERT(frame->script);
-        JS_ASSERT(!frame->skipNext);
+        MOZ_ASSERT(frame->script);
+        MOZ_ASSERT(!frame->skipNext);
         frame->skipNext = true;
     }
 
@@ -413,7 +413,7 @@ class SPSInstrumentation
     void setPushed(JSScript *script) {
         if (!enabled())
             return;
-        JS_ASSERT(frame->left == 0);
+        MOZ_ASSERT(frame->left == 0);
         frame->script = script;
     }
 
@@ -472,7 +472,7 @@ class SPSInstrumentation
                 // We may be leaving an inlined frame for entry into a C++ frame.
                 // Use the top script's pc offset instead of the innermost script's.
                 if (inliningDepth() > 0) {
-                    JS_ASSERT(frames[0].pc);
+                    MOZ_ASSERT(frames[0].pc);
                     updatePC = frames[0].pc;
                     script = frames[0].script;
                 }
@@ -505,8 +505,8 @@ class SPSInstrumentation
      */
     void pop(Assembler &masm, Register scratch, bool inlinedFunction = false) {
         if (enabled()) {
-            JS_ASSERT(frame->left == 0);
-            JS_ASSERT(frame->script);
+            MOZ_ASSERT(frame->left == 0);
+            MOZ_ASSERT(frame->script);
             if (!inlinedFunction)
                 masm.spsPopFrame(profiler_, scratch);
         }

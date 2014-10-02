@@ -612,8 +612,8 @@ SnapshotWriter::startSnapshot(RecoverOffset recoverOffset, BailoutKind kind)
     JitSpew(JitSpew_IonSnapshots, "starting snapshot with recover offset %u, bailout kind %u",
             recoverOffset, kind);
 
-    JS_ASSERT(uint32_t(kind) < (1 << SNAPSHOT_BAILOUTKIND_BITS));
-    JS_ASSERT(recoverOffset < (1 << SNAPSHOT_ROFFSET_BITS));
+    MOZ_ASSERT(uint32_t(kind) < (1 << SNAPSHOT_BAILOUTKIND_BITS));
+    MOZ_ASSERT(recoverOffset < (1 << SNAPSHOT_ROFFSET_BITS));
     uint32_t bits =
         (uint32_t(kind) << SNAPSHOT_BAILOUTKIND_SHIFT) |
         (recoverOffset << SNAPSHOT_ROFFSET_SHIFT);

@@ -105,13 +105,13 @@ AllTheNonBasicVanillaNewAllocations()
 static uint32_t
 BinToVal(unsigned logscale, unsigned bin)
 {
-    JS_ASSERT(bin <= 10);
+    MOZ_ASSERT(bin <= 10);
     if (bin <= 1 || logscale == 0)
         return bin;
     --bin;
     if (logscale == 2)
         return JS_BIT(bin);
-    JS_ASSERT(logscale == 10);
+    MOZ_ASSERT(logscale == 10);
     return uint32_t(pow(10.0, (double) bin));
 }
 

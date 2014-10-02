@@ -111,10 +111,10 @@ class TypedArrayObject : public ArrayBufferViewObject
     static gc::AllocKind
     AllocKindForLazyBuffer(size_t nbytes)
     {
-        JS_ASSERT(nbytes <= INLINE_BUFFER_LIMIT);
+        MOZ_ASSERT(nbytes <= INLINE_BUFFER_LIMIT);
         /* For GGC we need at least one slot in which to store a forwarding pointer. */
         size_t dataSlots = Max(size_t(1), AlignBytes(nbytes, sizeof(Value)) / sizeof(Value));
-        JS_ASSERT(nbytes <= dataSlots * sizeof(Value));
+        MOZ_ASSERT(nbytes <= dataSlots * sizeof(Value));
         return gc::GetGCObjectKind(FIXED_DATA_START + dataSlots);
     }
 
@@ -232,7 +232,7 @@ IsTypedArrayConstructor(HandleValue v, uint32_t type);
 inline Scalar::Type
 TypedArrayObject::type() const
 {
-    JS_ASSERT(IsTypedArrayClass(getClass()));
+    MOZ_ASSERT(IsTypedArrayClass(getClass()));
     return static_cast<Scalar::Type>(getClass() - &classes[0]);
 }
 
@@ -254,7 +254,7 @@ IsTypedArrayIndex(jsid id, uint64_t *indexp)
 {
     if (JSID_IS_INT(id)) {
         int32_t i = JSID_TO_INT(id);
-        JS_ASSERT(i >= 0);
+        MOZ_ASSERT(i >= 0);
         *indexp = (double)i;
         return true;
     }
@@ -334,13 +334,13 @@ class DataViewObject : public ArrayBufferViewObject
 
     static Value byteOffsetValue(DataViewObject *view) {
         Value v = view->getReservedSlot(TypedArrayLayout::BYTEOFFSET_SLOT);
-        JS_ASSERT(v.toInt32() >= 0);
+        MOZ_ASSERT(v.toInt32() >= 0);
         return v;
     }
 
     static Value byteLengthValue(DataViewObject *view) {
         Value v = view->getReservedSlot(TypedArrayLayout::LENGTH_SLOT);
-        JS_ASSERT(v.toInt32() >= 0);
+        MOZ_ASSERT(v.toInt32() >= 0);
         return v;
     }
 

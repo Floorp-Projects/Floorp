@@ -260,7 +260,7 @@ IsInsideNursery(const js::gc::Cell *cell)
     addr &= ~js::gc::ChunkMask;
     addr |= js::gc::ChunkLocationOffset;
     uint32_t location = *reinterpret_cast<uint32_t *>(addr);
-    JS_ASSERT(location != 0);
+    MOZ_ASSERT(location != 0);
     return location & ChunkLocationAnyNursery;
 #else
     return false;
@@ -278,7 +278,7 @@ GetTenuredGCThingZone(void *thing)
 {
     MOZ_ASSERT(thing);
 #ifdef JSGC_GENERATIONAL
-    JS_ASSERT(!js::gc::IsInsideNursery((js::gc::Cell *)thing));
+    MOZ_ASSERT(!js::gc::IsInsideNursery((js::gc::Cell *)thing));
 #endif
     return js::gc::GetGCThingArena(thing)->zone;
 }

@@ -47,7 +47,7 @@ class BaselineCompilerShared
         void fixupNativeOffset(MacroAssembler &masm) {
             CodeOffsetLabel offset(nativeOffset);
             offset.fixup(&masm);
-            JS_ASSERT(offset.offset() <= UINT32_MAX);
+            MOZ_ASSERT(offset.offset() <= UINT32_MAX);
             nativeOffset = (uint32_t) offset.offset();
         }
     };
@@ -88,7 +88,7 @@ class BaselineCompilerShared
     }
 
     bool addICLoadLabel(CodeOffsetLabel label) {
-        JS_ASSERT(!icEntries_.empty());
+        MOZ_ASSERT(!icEntries_.empty());
         ICLoadLabel loadLabel;
         loadLabel.label = label;
         loadLabel.icEntry = icEntries_.length() - 1;
@@ -102,7 +102,7 @@ class BaselineCompilerShared
     }
 
     PCMappingSlotInfo getStackTopSlotInfo() {
-        JS_ASSERT(frame.numUnsyncedSlots() <= 2);
+        MOZ_ASSERT(frame.numUnsyncedSlots() <= 2);
         switch (frame.numUnsyncedSlots()) {
           case 0:
             return PCMappingSlotInfo::MakeSlotInfo();

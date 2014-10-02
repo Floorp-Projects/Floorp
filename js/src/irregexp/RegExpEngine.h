@@ -149,7 +149,7 @@ class CharacterRange
         return CharacterRange(value, value);
     }
     static inline CharacterRange Range(char16_t from, char16_t to) {
-        JS_ASSERT(from <= to);
+        MOZ_ASSERT(from <= to);
         return CharacterRange(from, to);
     }
     static inline CharacterRange Everything() {
@@ -295,12 +295,12 @@ class TextElement
     RegExpTree* tree() const { return tree_; }
 
     RegExpAtom* atom() const {
-        JS_ASSERT(text_type() == ATOM);
+        MOZ_ASSERT(text_type() == ATOM);
         return reinterpret_cast<RegExpAtom*>(tree());
     }
 
     RegExpCharacterClass* char_class() const {
-        JS_ASSERT(text_type() == CHAR_CLASS);
+        MOZ_ASSERT(text_type() == CHAR_CLASS);
         return reinterpret_cast<RegExpCharacterClass*>(tree());
     }
 
@@ -428,8 +428,8 @@ class QuickCheckDetails
     };
 
     Position* positions(int index) {
-        JS_ASSERT(index >= 0);
-        JS_ASSERT(index < characters_);
+        MOZ_ASSERT(index >= 0);
+        MOZ_ASSERT(index < characters_);
         return positions_ + index;
     }
 
@@ -520,7 +520,7 @@ class RegExpNode
 
     // Helper for FilterASCII.
     RegExpNode* replacement() {
-        JS_ASSERT(info()->replacement_calculated);
+        MOZ_ASSERT(info()->replacement_calculated);
         return replacement_;
     }
     RegExpNode* set_replacement(RegExpNode* replacement) {
@@ -1392,7 +1392,7 @@ class Trace
     // These set methods and AdvanceCurrentPositionInTrace should be used only on
     // new traces - the intention is that traces are immutable after creation.
     void add_action(DeferredAction* new_action) {
-        JS_ASSERT(new_action->next_ == nullptr);
+        MOZ_ASSERT(new_action->next_ == nullptr);
         new_action->next_ = actions_;
         actions_ = new_action;
     }
@@ -1476,7 +1476,7 @@ class Analysis : public NodeVisitor
 
     bool has_failed() { return error_message_ != nullptr; }
     const char* errorMessage() {
-        JS_ASSERT(error_message_ != nullptr);
+        MOZ_ASSERT(error_message_ != nullptr);
         return error_message_;
     }
     void fail(const char* error_message) {

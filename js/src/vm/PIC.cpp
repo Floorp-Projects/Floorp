@@ -21,7 +21,7 @@ using namespace js::gc;
 bool
 js::ForOfPIC::Chain::initialize(JSContext *cx)
 {
-    JS_ASSERT(!initialized_);
+    MOZ_ASSERT(!initialized_);
 
     // Get the canonical Array.prototype
     RootedObject arrayProto(cx, GlobalObject::getOrCreateArrayPrototype(cx, cx->global()));
@@ -101,8 +101,8 @@ js::ForOfPIC::Chain::isArrayOptimized(ArrayObject *obj)
 bool
 js::ForOfPIC::Chain::tryOptimizeArray(JSContext *cx, HandleObject array, bool *optimized)
 {
-    JS_ASSERT(array->is<ArrayObject>());
-    JS_ASSERT(optimized);
+    MOZ_ASSERT(array->is<ArrayObject>());
+    MOZ_ASSERT(optimized);
 
     *optimized = false;
 
@@ -118,14 +118,14 @@ js::ForOfPIC::Chain::tryOptimizeArray(JSContext *cx, HandleObject array, bool *o
         if (!initialize(cx))
             return false;
     }
-    JS_ASSERT(initialized_);
+    MOZ_ASSERT(initialized_);
 
     // If PIC is disabled, don't bother trying to optimize.
     if (disabled_)
         return true;
 
     // By the time we get here, we should have a sane array state to work with.
-    JS_ASSERT(isArrayStateStillSane());
+    MOZ_ASSERT(isArrayStateStillSane());
 
     // Check if stub already exists.
     ForOfPIC::Stub *stub = isArrayOptimized(&array->as<ArrayObject>());
@@ -180,7 +180,7 @@ js::ForOfPIC::Chain::getMatchingStub(JSObject *obj)
 bool
 js::ForOfPIC::Chain::isOptimizableArray(JSObject *obj)
 {
-    JS_ASSERT(obj->is<ArrayObject>());
+    MOZ_ASSERT(obj->is<ArrayObject>());
 
     // Ensure object's prototype is the actual Array.prototype
     if (!obj->getTaggedProto().isObject())
@@ -211,7 +211,7 @@ void
 js::ForOfPIC::Chain::reset(JSContext *cx)
 {
     // Should never reset a disabled_ stub.
-    JS_ASSERT(!disabled_);
+    MOZ_ASSERT(!disabled_);
 
     // Erase the chain.
     eraseChain();
@@ -234,7 +234,7 @@ void
 js::ForOfPIC::Chain::eraseChain()
 {
     // Should never need to clear the chain of a disabled stub.
-    JS_ASSERT(!disabled_);
+    MOZ_ASSERT(!disabled_);
 
     // Free all stubs.
     Stub *stub = stubs_;
@@ -321,7 +321,7 @@ js::ForOfPIC::createForOfPICObject(JSContext *cx, Handle<GlobalObject*> global)
 /* static */ js::ForOfPIC::Chain *
 js::ForOfPIC::create(JSContext *cx)
 {
-    JS_ASSERT(!cx->global()->getForOfPICObject());
+    MOZ_ASSERT(!cx->global()->getForOfPICObject());
     Rooted<GlobalObject *> global(cx, cx->global());
     JSObject *obj = GlobalObject::getOrCreateForOfPICObject(cx, global);
     if (!obj)

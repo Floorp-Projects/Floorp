@@ -204,30 +204,30 @@ TraceLogger::enable(JSContext *cx)
 
             JitFrameIterator it(rt->mainThread.jitTop, SequentialExecution);
 
-            JS_ASSERT(it.type() == JitFrame_Exit);
+            MOZ_ASSERT(it.type() == JitFrame_Exit);
             ++it;
 
             if (it.type() == JitFrame_Rectifier ||
                 it.type() == JitFrame_Unwound_Rectifier)
             {
                 ++it;
-                JS_ASSERT(it.type() == JitFrame_BaselineStub ||
-                          it.type() == JitFrame_BaselineJS ||
-                          it.type() == JitFrame_IonJS);
+                MOZ_ASSERT(it.type() == JitFrame_BaselineStub ||
+                           it.type() == JitFrame_BaselineJS ||
+                           it.type() == JitFrame_IonJS);
             }
             if (it.type() == JitFrame_BaselineStub ||
                 it.type() == JitFrame_Unwound_BaselineStub)
             {
                 ++it;
-                JS_ASSERT(it.type() == JitFrame_BaselineJS);
+                MOZ_ASSERT(it.type() == JitFrame_BaselineJS);
             }
 
             script = it.script();
             engine = it.isIonJS() ? IonMonkey : Baseline;
         } else {
-            JS_ASSERT(act->isInterpreter());
+            MOZ_ASSERT(act->isInterpreter());
             InterpreterFrame *fp = act->asInterpreter()->current();
-            JS_ASSERT(!fp->runningInJit());
+            MOZ_ASSERT(!fp->runningInJit());
 
             script = fp->script();
             engine = Interpreter;
@@ -259,7 +259,7 @@ TraceLogger::disable()
         return true;
     }
 
-    JS_ASSERT(enabled == 1);
+    MOZ_ASSERT(enabled == 1);
     while (stack.size() > 1)
         stopEvent();
 

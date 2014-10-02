@@ -134,7 +134,7 @@ class AsmJSNumLit
         AsmJSNumLit lit;
         lit.which_ = w;
         lit.value.scalar_ = v;
-        JS_ASSERT(!lit.isSimd());
+        MOZ_ASSERT(!lit.isSimd());
         return lit;
     }
 
@@ -142,7 +142,7 @@ class AsmJSNumLit
         AsmJSNumLit lit;
         lit.which_ = w;
         lit.value.simd_ = c;
-        JS_ASSERT(lit.isSimd());
+        MOZ_ASSERT(lit.isSimd());
         return lit;
     }
 
@@ -151,22 +151,22 @@ class AsmJSNumLit
     }
 
     int32_t toInt32() const {
-        JS_ASSERT(which_ == Fixnum || which_ == NegativeInt || which_ == BigUnsigned);
+        MOZ_ASSERT(which_ == Fixnum || which_ == NegativeInt || which_ == BigUnsigned);
         return value.scalar_.toInt32();
     }
 
     double toDouble() const {
-        JS_ASSERT(which_ == Double);
+        MOZ_ASSERT(which_ == Double);
         return value.scalar_.toDouble();
     }
 
     float toFloat() const {
-        JS_ASSERT(which_ == Float);
+        MOZ_ASSERT(which_ == Float);
         return float(value.scalar_.toDouble());
     }
 
     Value scalarValue() const {
-        JS_ASSERT(which_ != OutOfRangeInt);
+        MOZ_ASSERT(which_ != OutOfRangeInt);
         return value.scalar_;
     }
 
@@ -175,7 +175,7 @@ class AsmJSNumLit
     }
 
     const jit::SimdConstant &simdValue() const {
-        JS_ASSERT(isSimd());
+        MOZ_ASSERT(isSimd());
         return value.simd_;
     }
 
@@ -238,14 +238,14 @@ class AsmJSModule
         Global(Which which, PropertyName *name) {
             pod.which_ = which;
             name_ = name;
-            JS_ASSERT_IF(name_, name_->isTenured());
+            MOZ_ASSERT_IF(name_, name_->isTenured());
         }
 
         void trace(JSTracer *trc) {
             if (name_)
                 MarkStringUnbarriered(trc, &name_, "asm.js global name");
-            JS_ASSERT_IF(pod.which_ == Variable && pod.u.var.initKind_ == InitConstant,
-                         !pod.u.var.u.numLit_.scalarValue().isMarkable());
+            MOZ_ASSERT_IF(pod.which_ == Variable && pod.u.var.initKind_ == InitConstant,
+                          !pod.u.var.u.numLit_.scalarValue().isMarkable());
         }
 
       public:
@@ -254,82 +254,82 @@ class AsmJSModule
             return pod.which_;
         }
         uint32_t varIndex() const {
-            JS_ASSERT(pod.which_ == Variable);
+            MOZ_ASSERT(pod.which_ == Variable);
             return pod.u.var.index_;
         }
         VarInitKind varInitKind() const {
-            JS_ASSERT(pod.which_ == Variable);
+            MOZ_ASSERT(pod.which_ == Variable);
             return pod.u.var.initKind_;
         }
         const AsmJSNumLit &varInitNumLit() const {
-            JS_ASSERT(pod.which_ == Variable);
-            JS_ASSERT(pod.u.var.initKind_ == InitConstant);
+            MOZ_ASSERT(pod.which_ == Variable);
+            MOZ_ASSERT(pod.u.var.initKind_ == InitConstant);
             return pod.u.var.u.numLit_;
         }
         AsmJSCoercion varInitCoercion() const {
-            JS_ASSERT(pod.which_ == Variable);
-            JS_ASSERT(pod.u.var.initKind_ == InitImport);
+            MOZ_ASSERT(pod.which_ == Variable);
+            MOZ_ASSERT(pod.u.var.initKind_ == InitImport);
             return pod.u.var.u.coercion_;
         }
         PropertyName *varImportField() const {
-            JS_ASSERT(pod.which_ == Variable);
-            JS_ASSERT(pod.u.var.initKind_ == InitImport);
+            MOZ_ASSERT(pod.which_ == Variable);
+            MOZ_ASSERT(pod.u.var.initKind_ == InitImport);
             return name_;
         }
         PropertyName *ffiField() const {
-            JS_ASSERT(pod.which_ == FFI);
+            MOZ_ASSERT(pod.which_ == FFI);
             return name_;
         }
         uint32_t ffiIndex() const {
-            JS_ASSERT(pod.which_ == FFI);
+            MOZ_ASSERT(pod.which_ == FFI);
             return pod.u.ffiIndex_;
         }
         PropertyName *viewName() const {
-            JS_ASSERT(pod.which_ == ArrayView);
+            MOZ_ASSERT(pod.which_ == ArrayView);
             return name_;
         }
         Scalar::Type viewType() const {
-            JS_ASSERT(pod.which_ == ArrayView);
+            MOZ_ASSERT(pod.which_ == ArrayView);
             return pod.u.viewType_;
         }
         PropertyName *mathName() const {
-            JS_ASSERT(pod.which_ == MathBuiltinFunction);
+            MOZ_ASSERT(pod.which_ == MathBuiltinFunction);
             return name_;
         }
         AsmJSMathBuiltinFunction mathBuiltinFunction() const {
-            JS_ASSERT(pod.which_ == MathBuiltinFunction);
+            MOZ_ASSERT(pod.which_ == MathBuiltinFunction);
             return pod.u.mathBuiltinFunc_;
         }
         AsmJSSimdType simdCtorType() const {
-            JS_ASSERT(pod.which_ == SimdCtor);
+            MOZ_ASSERT(pod.which_ == SimdCtor);
             return pod.u.simdCtorType_;
         }
         PropertyName *simdCtorName() const {
-            JS_ASSERT(pod.which_ == SimdCtor);
+            MOZ_ASSERT(pod.which_ == SimdCtor);
             return name_;
         }
         PropertyName *simdOperationName() const {
-            JS_ASSERT(pod.which_ == SimdOperation);
+            MOZ_ASSERT(pod.which_ == SimdOperation);
             return name_;
         }
         AsmJSSimdOperation simdOperation() const {
-            JS_ASSERT(pod.which_ == SimdOperation);
+            MOZ_ASSERT(pod.which_ == SimdOperation);
             return pod.u.simdOp.which_;
         }
         AsmJSSimdType simdOperationType() const {
-            JS_ASSERT(pod.which_ == SimdOperation);
+            MOZ_ASSERT(pod.which_ == SimdOperation);
             return pod.u.simdOp.type_;
         }
         PropertyName *constantName() const {
-            JS_ASSERT(pod.which_ == Constant);
+            MOZ_ASSERT(pod.which_ == Constant);
             return name_;
         }
         ConstantKind constantKind() const {
-            JS_ASSERT(pod.which_ == Constant);
+            MOZ_ASSERT(pod.which_ == Constant);
             return pod.u.constant.kind_;
         }
         double constantValue() const {
-            JS_ASSERT(pod.which_ == Constant);
+            MOZ_ASSERT(pod.which_ == Constant);
             return pod.u.constant.value_;
         }
 
@@ -361,11 +361,11 @@ class AsmJSModule
             return globalDataOffset_;
         }
         void initInterpOffset(unsigned off) {
-            JS_ASSERT(!interpCodeOffset_);
+            MOZ_ASSERT(!interpCodeOffset_);
             interpCodeOffset_ = off;
         }
         void initIonOffset(unsigned off) {
-            JS_ASSERT(!ionCodeOffset_);
+            MOZ_ASSERT(!ionCodeOffset_);
             ionCodeOffset_ = off;
         }
         void updateOffsets(jit::MacroAssembler &masm) {
@@ -430,7 +430,7 @@ class AsmJSModule
             pod.codeOffset_ = UINT32_MAX;
             pod.startOffsetInModule_ = startOffsetInModule;
             pod.endOffsetInModule_ = endOffsetInModule;
-            JS_ASSERT_IF(maybeFieldName_, name_->isTenured());
+            MOZ_ASSERT_IF(maybeFieldName_, name_->isTenured());
         }
 
         void trace(JSTracer *trc) {
@@ -449,7 +449,7 @@ class AsmJSModule
         }
 
         void initCodeOffset(unsigned off) {
-            JS_ASSERT(pod.codeOffset_ == UINT32_MAX);
+            MOZ_ASSERT(pod.codeOffset_ == UINT32_MAX);
             pod.codeOffset_ = off;
         }
         void updateCodeOffset(jit::MacroAssembler &masm) {
@@ -529,42 +529,42 @@ class AsmJSModule
             return begin_;
         }
         uint32_t entry() const {
-            JS_ASSERT(isFunction());
+            MOZ_ASSERT(isFunction());
             return begin_ + u.func.beginToEntry_;
         }
         uint32_t end() const {
             return end_;
         }
         uint32_t profilingJump() const {
-            JS_ASSERT(isFunction());
+            MOZ_ASSERT(isFunction());
             return profilingReturn_ - u.func.profilingJumpToProfilingReturn_;
         }
         uint32_t profilingEpilogue() const {
-            JS_ASSERT(isFunction());
+            MOZ_ASSERT(isFunction());
             return profilingReturn_ - u.func.profilingEpilogueToProfilingReturn_;
         }
         uint32_t profilingReturn() const {
-            JS_ASSERT(isFunction() || isFFI() || isInterrupt() || isThunk());
+            MOZ_ASSERT(isFunction() || isFFI() || isInterrupt() || isThunk());
             return profilingReturn_;
         }
         uint32_t functionNameIndex() const {
-            JS_ASSERT(isFunction());
+            MOZ_ASSERT(isFunction());
             return nameIndex_;
         }
         PropertyName *functionName(const AsmJSModule &module) const {
-            JS_ASSERT(isFunction());
+            MOZ_ASSERT(isFunction());
             return module.names_[nameIndex_].name();
         }
         const char *functionProfilingLabel(const AsmJSModule &module) const {
-            JS_ASSERT(isFunction());
+            MOZ_ASSERT(isFunction());
             return module.profilingLabels_[nameIndex_].get();
         }
         uint32_t functionLineNumber() const {
-            JS_ASSERT(isFunction());
+            MOZ_ASSERT(isFunction());
             return lineNumber_;
         }
         AsmJSExit::BuiltinKind thunkTarget() const {
-            JS_ASSERT(isThunk());
+            MOZ_ASSERT(isThunk());
             return AsmJSExit::BuiltinKind(u.thunk.target_);
         }
     };
@@ -618,7 +618,7 @@ class AsmJSModule
                          unsigned line = 0, unsigned column = 0)
           : name(name)
         {
-            JS_ASSERT(name->isTenured());
+            MOZ_ASSERT(name->isTenured());
 
             pod.startCodeOffset = start;
             pod.endCodeOffset = end;
@@ -648,7 +648,7 @@ class AsmJSModule
           : ProfiledFunction(name, start, end), endInlineCodeOffset(endInline),
             blocks(mozilla::Move(blocksVector))
         {
-            JS_ASSERT(name->isTenured());
+            MOZ_ASSERT(name->isTenured());
         }
 
         ProfiledBlocksFunction(ProfiledBlocksFunction &&copy)
@@ -677,7 +677,7 @@ class AsmJSModule
 #elif defined(JS_CODEGEN_ARM)
             // On ARM, CodeLabels are only used to label raw pointers, so in
             // all cases on ARM, a RelativePatch means patching a raw pointer.
-            JS_ASSERT(kind == CodeLabel || kind == RawPointer);
+            MOZ_ASSERT(kind == CodeLabel || kind == RawPointer);
 #endif
             // On X64 and X86, all RelativePatch-es are patched as raw pointers.
         }
@@ -707,11 +707,11 @@ class AsmJSModule
 
       public:
         OffsetVector &operator[](size_t i) {
-            JS_ASSERT(i < jit::AsmJSImm_Limit);
+            MOZ_ASSERT(i < jit::AsmJSImm_Limit);
             return array_[i];
         }
         const OffsetVector &operator[](size_t i) const {
-            JS_ASSERT(i < jit::AsmJSImm_Limit);
+            MOZ_ASSERT(i < jit::AsmJSImm_Limit);
             return array_[i];
         }
 
@@ -815,7 +815,7 @@ class AsmJSModule
     // These functions may be used as soon as the module is constructed:
 
     ScriptSource *scriptSource() const {
-        JS_ASSERT(scriptSource_);
+        MOZ_ASSERT(scriptSource_);
         return scriptSource_;
     }
     bool strict() const {
@@ -871,18 +871,18 @@ class AsmJSModule
     // module prologue (before the function bodies):
 
     void initGlobalArgumentName(PropertyName *n) {
-        JS_ASSERT(!isFinishedWithModulePrologue());
-        JS_ASSERT_IF(n, n->isTenured());
+        MOZ_ASSERT(!isFinishedWithModulePrologue());
+        MOZ_ASSERT_IF(n, n->isTenured());
         globalArgumentName_ = n;
     }
     void initImportArgumentName(PropertyName *n) {
-        JS_ASSERT(!isFinishedWithModulePrologue());
-        JS_ASSERT_IF(n, n->isTenured());
+        MOZ_ASSERT(!isFinishedWithModulePrologue());
+        MOZ_ASSERT_IF(n, n->isTenured());
         importArgumentName_ = n;
     }
     void initBufferArgumentName(PropertyName *n) {
-        JS_ASSERT(!isFinishedWithModulePrologue());
-        JS_ASSERT_IF(n, n->isTenured());
+        MOZ_ASSERT(!isFinishedWithModulePrologue());
+        MOZ_ASSERT_IF(n, n->isTenured());
         bufferArgumentName_ = n;
     }
     PropertyName *globalArgumentName() const {
@@ -895,7 +895,7 @@ class AsmJSModule
         return bufferArgumentName_;
     }
     bool addGlobalVarInit(const AsmJSNumLit &lit, uint32_t *globalIndex) {
-        JS_ASSERT(!isFinishedWithModulePrologue());
+        MOZ_ASSERT(!isFinishedWithModulePrologue());
         Global g(Global::Variable, nullptr);
         g.pod.u.var.initKind_ = Global::InitConstant;
         g.pod.u.var.u.numLit_ = lit;
@@ -926,7 +926,7 @@ class AsmJSModule
         MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected AsmJSCoercion");
     }
     bool addGlobalVarImport(PropertyName *name, AsmJSCoercion coercion, uint32_t *globalIndex) {
-        JS_ASSERT(!isFinishedWithModulePrologue());
+        MOZ_ASSERT(!isFinishedWithModulePrologue());
         Global g(Global::Variable, name);
         g.pod.u.var.initKind_ = Global::InitImport;
         g.pod.u.var.u.coercion_ = coercion;
@@ -936,7 +936,7 @@ class AsmJSModule
         return globals_.append(g);
     }
     bool addFFI(PropertyName *field, uint32_t *ffiIndex) {
-        JS_ASSERT(!isFinishedWithModulePrologue());
+        MOZ_ASSERT(!isFinishedWithModulePrologue());
         if (pod.numFFIs_ == UINT32_MAX)
             return false;
         Global g(Global::FFI, field);
@@ -944,20 +944,20 @@ class AsmJSModule
         return globals_.append(g);
     }
     bool addArrayView(Scalar::Type vt, PropertyName *field) {
-        JS_ASSERT(!isFinishedWithModulePrologue());
+        MOZ_ASSERT(!isFinishedWithModulePrologue());
         pod.hasArrayView_ = true;
         Global g(Global::ArrayView, field);
         g.pod.u.viewType_ = vt;
         return globals_.append(g);
     }
     bool addMathBuiltinFunction(AsmJSMathBuiltinFunction func, PropertyName *field) {
-        JS_ASSERT(!isFinishedWithModulePrologue());
+        MOZ_ASSERT(!isFinishedWithModulePrologue());
         Global g(Global::MathBuiltinFunction, field);
         g.pod.u.mathBuiltinFunc_ = func;
         return globals_.append(g);
     }
     bool addMathBuiltinConstant(double value, PropertyName *field) {
-        JS_ASSERT(!isFinishedWithModulePrologue());
+        MOZ_ASSERT(!isFinishedWithModulePrologue());
         Global g(Global::Constant, field);
         g.pod.u.constant.value_ = value;
         g.pod.u.constant.kind_ = Global::MathConstant;
@@ -975,7 +975,7 @@ class AsmJSModule
         return globals_.append(g);
     }
     bool addGlobalConstant(double value, PropertyName *name) {
-        JS_ASSERT(!isFinishedWithModulePrologue());
+        MOZ_ASSERT(!isFinishedWithModulePrologue());
         Global g(Global::Constant, name);
         g.pod.u.constant.value_ = value;
         g.pod.u.constant.kind_ = Global::GlobalConstant;
@@ -991,16 +991,16 @@ class AsmJSModule
     /*************************************************************************/
 
     void startFunctionBodies() {
-        JS_ASSERT(!isFinishedWithModulePrologue());
+        MOZ_ASSERT(!isFinishedWithModulePrologue());
         pod.funcPtrTableAndExitBytes_ = 0;
-        JS_ASSERT(isFinishedWithModulePrologue());
+        MOZ_ASSERT(isFinishedWithModulePrologue());
     }
 
     /*************************************************************************/
     // These functions are called while parsing/compiling function bodies:
 
     void requireHeapLengthToBeAtLeast(uint32_t len) {
-        JS_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
+        MOZ_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
         len = RoundUpToNextValidAsmJSHeapLength(len);
         if (len > pod.minHeapLength_)
             pod.minHeapLength_ = len;
@@ -1014,8 +1014,8 @@ class AsmJSModule
     bool addFunctionCodeRange(PropertyName *name, uint32_t lineNumber,
                               const AsmJSFunctionLabels &labels)
     {
-        JS_ASSERT(!isFinished());
-        JS_ASSERT(name->isTenured());
+        MOZ_ASSERT(!isFinished());
+        MOZ_ASSERT(name->isTenured());
         if (names_.length() >= UINT32_MAX)
             return false;
         uint32_t nameIndex = names_.length();
@@ -1028,7 +1028,7 @@ class AsmJSModule
                codeRanges_.append(CodeRange(builtin, begin, profilingReturn, end));
     }
     bool addExit(unsigned ffiIndex, unsigned *exitIndex) {
-        JS_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
+        MOZ_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
         if (SIZE_MAX - pod.funcPtrTableAndExitBytes_ < sizeof(ExitDatum))
             return false;
         uint32_t globalDataOffset = globalDataBytes();
@@ -1038,20 +1038,20 @@ class AsmJSModule
         return exits_.append(Exit(ffiIndex, globalDataOffset));
     }
     unsigned numExits() const {
-        JS_ASSERT(isFinishedWithModulePrologue());
+        MOZ_ASSERT(isFinishedWithModulePrologue());
         return exits_.length();
     }
     Exit &exit(unsigned i) {
-        JS_ASSERT(isFinishedWithModulePrologue());
+        MOZ_ASSERT(isFinishedWithModulePrologue());
         return exits_[i];
     }
     const Exit &exit(unsigned i) const {
-        JS_ASSERT(isFinishedWithModulePrologue());
+        MOZ_ASSERT(isFinishedWithModulePrologue());
         return exits_[i];
     }
     bool addFuncPtrTable(unsigned numElems, uint32_t *globalDataOffset) {
-        JS_ASSERT(isFinishedWithModulePrologue() && !isFinished());
-        JS_ASSERT(IsPowerOfTwo(numElems));
+        MOZ_ASSERT(isFinishedWithModulePrologue() && !isFinished());
+        MOZ_ASSERT(IsPowerOfTwo(numElems));
         if (SIZE_MAX - pod.funcPtrTableAndExitBytes_ < numElems * sizeof(void*))
             return false;
         *globalDataOffset = globalDataBytes();
@@ -1061,23 +1061,23 @@ class AsmJSModule
         return true;
     }
     bool addFunctionCounts(jit::IonScriptCounts *counts) {
-        JS_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
+        MOZ_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
         return functionCounts_.append(counts);
     }
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
     bool addProfiledFunction(PropertyName *name, unsigned codeStart, unsigned codeEnd,
                              unsigned line, unsigned column)
     {
-        JS_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
+        MOZ_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
         ProfiledFunction func(name, codeStart, codeEnd, line, column);
         return profiledFunctions_.append(func);
     }
     unsigned numProfiledFunctions() const {
-        JS_ASSERT(isFinishedWithModulePrologue());
+        MOZ_ASSERT(isFinishedWithModulePrologue());
         return profiledFunctions_.length();
     }
     ProfiledFunction &profiledFunction(unsigned i) {
-        JS_ASSERT(isFinishedWithModulePrologue());
+        MOZ_ASSERT(isFinishedWithModulePrologue());
         return profiledFunctions_[i];
     }
 #endif
@@ -1085,16 +1085,16 @@ class AsmJSModule
     bool addProfiledBlocks(PropertyName *name, unsigned codeBegin, unsigned inlineEnd,
                            unsigned codeEnd, jit::BasicBlocksVector &basicBlocks)
     {
-        JS_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
+        MOZ_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
         ProfiledBlocksFunction func(name, codeBegin, inlineEnd, codeEnd, basicBlocks);
         return perfProfiledBlocksFunctions_.append(mozilla::Move(func));
     }
     unsigned numPerfBlocksFunctions() const {
-        JS_ASSERT(isFinishedWithModulePrologue());
+        MOZ_ASSERT(isFinishedWithModulePrologue());
         return perfProfiledBlocksFunctions_.length();
     }
     ProfiledBlocksFunction &perfProfiledBlocksFunction(unsigned i) {
-        JS_ASSERT(isFinishedWithModulePrologue());
+        MOZ_ASSERT(isFinishedWithModulePrologue());
         return perfProfiledBlocksFunctions_[i];
     }
 #endif
@@ -1104,9 +1104,9 @@ class AsmJSModule
     // This function is called after compiling the function bodies (before
     // compiling entries/exits) to record the extent of compiled function code.
     void finishFunctionBodies(size_t functionBytes) {
-        JS_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
+        MOZ_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
         pod.functionBytes_ = functionBytes;
-        JS_ASSERT(isFinishedWithFunctionBodies());
+        MOZ_ASSERT(isFinishedWithFunctionBodies());
     }
 
     /*************************************************************************/
@@ -1124,23 +1124,23 @@ class AsmJSModule
         // NB: funcSrcBegin/funcSrcEnd are given relative to the ScriptSource
         // (the entire file) and ExportedFunctions store offsets relative to
         // the beginning of the module (so that they are caching-invariant).
-        JS_ASSERT(isFinishedWithFunctionBodies() && !isFinished());
-        JS_ASSERT(srcStart_ < funcSrcBegin);
-        JS_ASSERT(funcSrcBegin < funcSrcEnd);
+        MOZ_ASSERT(isFinishedWithFunctionBodies() && !isFinished());
+        MOZ_ASSERT(srcStart_ < funcSrcBegin);
+        MOZ_ASSERT(funcSrcBegin < funcSrcEnd);
         ExportedFunction func(name, funcSrcBegin - srcStart_, funcSrcEnd - srcStart_,
                               maybeFieldName, mozilla::Move(argCoercions), returnType);
         return exports_.length() < UINT32_MAX && exports_.append(mozilla::Move(func));
     }
     unsigned numExportedFunctions() const {
-        JS_ASSERT(isFinishedWithFunctionBodies());
+        MOZ_ASSERT(isFinishedWithFunctionBodies());
         return exports_.length();
     }
     const ExportedFunction &exportedFunction(unsigned i) const {
-        JS_ASSERT(isFinishedWithFunctionBodies());
+        MOZ_ASSERT(isFinishedWithFunctionBodies());
         return exports_[i];
     }
     ExportedFunction &exportedFunction(unsigned i) {
-        JS_ASSERT(isFinishedWithFunctionBodies());
+        MOZ_ASSERT(isFinishedWithFunctionBodies());
         return exports_[i];
     }
 
@@ -1159,50 +1159,50 @@ class AsmJSModule
     // These accessor functions can be used after finish():
 
     bool hasArrayView() const {
-        JS_ASSERT(isFinished());
+        MOZ_ASSERT(isFinished());
         return pod.hasArrayView_;
     }
     unsigned numFFIs() const {
-        JS_ASSERT(isFinished());
+        MOZ_ASSERT(isFinished());
         return pod.numFFIs_;
     }
     uint32_t srcEndBeforeCurly() const {
-        JS_ASSERT(isFinished());
+        MOZ_ASSERT(isFinished());
         return srcStart_ + pod.srcLength_;
     }
     uint32_t srcEndAfterCurly() const {
-        JS_ASSERT(isFinished());
+        MOZ_ASSERT(isFinished());
         return srcStart_ + pod.srcLengthWithRightBrace_;
     }
     uint8_t *codeBase() const {
-        JS_ASSERT(isFinished());
-        JS_ASSERT(uintptr_t(code_) % AsmJSPageSize == 0);
+        MOZ_ASSERT(isFinished());
+        MOZ_ASSERT(uintptr_t(code_) % AsmJSPageSize == 0);
         return code_;
     }
     size_t functionBytes() const {
-        JS_ASSERT(isFinished());
+        MOZ_ASSERT(isFinished());
         return pod.functionBytes_;
     }
     size_t codeBytes() const {
-        JS_ASSERT(isFinished());
+        MOZ_ASSERT(isFinished());
         return pod.codeBytes_;
     }
     bool containsFunctionPC(void *pc) const {
-        JS_ASSERT(isFinished());
+        MOZ_ASSERT(isFinished());
         return pc >= code_ && pc < (code_ + functionBytes());
     }
     bool containsCodePC(void *pc) const {
-        JS_ASSERT(isFinished());
+        MOZ_ASSERT(isFinished());
         return pc >= code_ && pc < (code_ + codeBytes());
     }
     uint8_t *interpExitTrampoline(const Exit &exit) const {
-        JS_ASSERT(isFinished());
-        JS_ASSERT(exit.interpCodeOffset_);
+        MOZ_ASSERT(isFinished());
+        MOZ_ASSERT(exit.interpCodeOffset_);
         return code_ + exit.interpCodeOffset_;
     }
     uint8_t *ionExitTrampoline(const Exit &exit) const {
-        JS_ASSERT(isFinished());
-        JS_ASSERT(exit.ionCodeOffset_);
+        MOZ_ASSERT(isFinished());
+        MOZ_ASSERT(exit.ionCodeOffset_);
         return code_ + exit.ionCodeOffset_;
     }
 
@@ -1231,11 +1231,11 @@ class AsmJSModule
     //      while type checking function bodies (as exits and uses of
     //      function-pointer tables are encountered).
     size_t offsetOfGlobalData() const {
-        JS_ASSERT(isFinished());
+        MOZ_ASSERT(isFinished());
         return pod.codeBytes_;
     }
     uint8_t *globalData() const {
-        JS_ASSERT(isFinished());
+        MOZ_ASSERT(isFinished());
         return code_ + offsetOfGlobalData();
     }
     size_t globalSimdVarsOffset() const {
@@ -1265,7 +1265,7 @@ class AsmJSModule
         return sizeof(void*);
     }
     uint8_t *&heapDatum() const {
-        JS_ASSERT(isFinished());
+        MOZ_ASSERT(isFinished());
         return *(uint8_t**)(globalData() + heapGlobalDataOffset());
     }
     static unsigned nan64GlobalDataOffset() {
@@ -1285,24 +1285,24 @@ class AsmJSModule
         *(float *)(globalData() + nan32GlobalDataOffset()) = GenericNaN();
     }
     unsigned globalSimdVarIndexToGlobalDataOffset(unsigned i) const {
-        JS_ASSERT(isFinishedWithModulePrologue());
-        JS_ASSERT(i < pod.numGlobalSimdVars_);
+        MOZ_ASSERT(isFinishedWithModulePrologue());
+        MOZ_ASSERT(i < pod.numGlobalSimdVars_);
         return globalSimdVarsOffset() +
                i * jit::Simd128DataSize;
     }
     unsigned globalScalarVarIndexToGlobalDataOffset(unsigned i) const {
-        JS_ASSERT(isFinishedWithModulePrologue());
-        JS_ASSERT(i < pod.numGlobalScalarVars_);
+        MOZ_ASSERT(isFinishedWithModulePrologue());
+        MOZ_ASSERT(i < pod.numGlobalScalarVars_);
         return globalSimdVarsOffset() +
                pod.numGlobalSimdVars_ * jit::Simd128DataSize +
                i * sizeof(uint64_t);
     }
     void *globalScalarVarIndexToGlobalDatum(unsigned i) const {
-        JS_ASSERT(isFinished());
+        MOZ_ASSERT(isFinished());
         return (void *)(globalData() + globalScalarVarIndexToGlobalDataOffset(i));
     }
     void *globalSimdVarIndexToGlobalDatum(unsigned i) const {
-        JS_ASSERT(isFinished());
+        MOZ_ASSERT(isFinished());
         return (void *)(globalData() + globalSimdVarIndexToGlobalDataOffset(i));
     }
     void *globalVarToGlobalDatum(const Global &g) const {
@@ -1313,26 +1313,26 @@ class AsmJSModule
                    : globalScalarVarIndexToGlobalDatum(index);
         }
 
-        JS_ASSERT(g.varInitKind() == Global::VarInitKind::InitImport);
+        MOZ_ASSERT(g.varInitKind() == Global::VarInitKind::InitImport);
         return IsSimdCoercion(g.varInitCoercion())
                ? globalSimdVarIndexToGlobalDatum(index)
                : globalScalarVarIndexToGlobalDatum(index);
     }
     uint8_t **globalDataOffsetToFuncPtrTable(unsigned globalDataOffset) const {
-        JS_ASSERT(isFinished());
-        JS_ASSERT(globalDataOffset < globalDataBytes());
+        MOZ_ASSERT(isFinished());
+        MOZ_ASSERT(globalDataOffset < globalDataBytes());
         return (uint8_t **)(globalData() + globalDataOffset);
     }
     unsigned exitIndexToGlobalDataOffset(unsigned exitIndex) const {
-        JS_ASSERT(isFinishedWithModulePrologue());
+        MOZ_ASSERT(isFinishedWithModulePrologue());
         return exits_[exitIndex].globalDataOffset();
     }
     ExitDatum &exitIndexToGlobalDatum(unsigned exitIndex) const {
-        JS_ASSERT(isFinished());
+        MOZ_ASSERT(isFinished());
         return *(ExitDatum *)(globalData() + exitIndexToGlobalDataOffset(exitIndex));
     }
     void detachIonCompilation(size_t exitIndex) const {
-        JS_ASSERT(isFinished());
+        MOZ_ASSERT(isFinished());
         ExitDatum &exitDatum = exitIndexToGlobalDatum(exitIndex);
         exitDatum.exit = interpExitTrampoline(exit(exitIndex));
         exitDatum.ionScript = nullptr;
@@ -1342,7 +1342,7 @@ class AsmJSModule
     // These functions are called after finish() but before staticallyLink():
 
     bool addRelativeLink(RelativeLink link) {
-        JS_ASSERT(isFinished() && !isStaticallyLinked());
+        MOZ_ASSERT(isFinished() && !isStaticallyLinked());
         return staticLinkData_.relativeLinks.append(link);
     }
 
@@ -1371,9 +1371,9 @@ class AsmJSModule
     // variables. A given asm.js module cannot be dynamically linked more than
     // once so, if JS tries, the module is cloned.
     void setIsDynamicallyLinked() {
-        JS_ASSERT(!isDynamicallyLinked());
+        MOZ_ASSERT(!isDynamicallyLinked());
         dynamicallyLinked_ = true;
-        JS_ASSERT(isDynamicallyLinked());
+        MOZ_ASSERT(isDynamicallyLinked());
     }
     void initHeap(Handle<ArrayBufferObjectMaybeShared*> heap, JSContext *cx);
     bool clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) const;
@@ -1385,27 +1385,27 @@ class AsmJSModule
     // Functions that can be called after dynamic linking succeeds:
 
     CodePtr entryTrampoline(const ExportedFunction &func) const {
-        JS_ASSERT(isDynamicallyLinked());
+        MOZ_ASSERT(isDynamicallyLinked());
         return JS_DATA_TO_FUNC_PTR(CodePtr, code_ + func.pod.codeOffset_);
     }
     uint8_t *interruptExit() const {
-        JS_ASSERT(isDynamicallyLinked());
+        MOZ_ASSERT(isDynamicallyLinked());
         return interruptExit_;
     }
     uint8_t *maybeHeap() const {
-        JS_ASSERT(isDynamicallyLinked());
+        MOZ_ASSERT(isDynamicallyLinked());
         return heapDatum();
     }
     ArrayBufferObjectMaybeShared *maybeHeapBufferObject() const {
-        JS_ASSERT(isDynamicallyLinked());
+        MOZ_ASSERT(isDynamicallyLinked());
         return maybeHeap_;
     }
     size_t heapLength() const {
-        JS_ASSERT(isDynamicallyLinked());
+        MOZ_ASSERT(isDynamicallyLinked());
         return maybeHeap_ ? maybeHeap_->byteLength() : 0;
     }
     bool profilingEnabled() const {
-        JS_ASSERT(isDynamicallyLinked());
+        MOZ_ASSERT(isDynamicallyLinked());
         return profilingEnabled_;
     }
     void setProfilingEnabled(bool enabled, JSContext *cx);

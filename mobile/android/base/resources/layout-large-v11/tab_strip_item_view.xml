@@ -3,7 +3,8 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<merge xmlns:android="http://schemas.android.com/apk/res/android">
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+       xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
    <ImageView
         android:id="@+id/favicon"
@@ -13,7 +14,7 @@
         android:scaleType="centerInside"
         android:duplicateParentState="true"/>
 
-    <org.mozilla.gecko.widget.ThemedTextView
+    <org.mozilla.gecko.widget.FadedTextView
         android:id="@+id/title"
         android:layout_width="0dip"
         android:layout_height="match_parent"
@@ -24,6 +25,7 @@
         android:ellipsize="end"
         android:textColor="@color/new_tablet_tab_strip_item_title"
         android:maxLines="1"
+        gecko:fadeWidth="30dip"
         android:duplicateParentState="true"/>
 
     <org.mozilla.gecko.widget.ThemedImageButton

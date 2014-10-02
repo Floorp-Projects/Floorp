@@ -68,7 +68,7 @@ ArithPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
     if (specialization == MIRType_None)
         return BoxInputsPolicy::adjustInputs(alloc, ins);
 
-    JS_ASSERT(ins->type() == MIRType_Double || ins->type() == MIRType_Int32 || ins->type() == MIRType_Float32);
+    MOZ_ASSERT(ins->type() == MIRType_Double || ins->type() == MIRType_Int32 || ins->type() == MIRType_Float32);
 
     for (size_t i = 0, e = ins->numOperands(); i < e; i++) {
         MDefinition *in = ins->getOperand(i);
@@ -97,7 +97,7 @@ ArithPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 bool
 ComparePolicy::adjustInputs(TempAllocator &alloc, MInstruction *def)
 {
-    JS_ASSERT(def->isCompare());
+    MOZ_ASSERT(def->isCompare());
     MCompare *compare = def->toCompare();
 
     // Convert Float32 operands to doubles
@@ -140,8 +140,8 @@ ComparePolicy::adjustInputs(TempAllocator &alloc, MInstruction *def)
                 return false;
         }
 
-        JS_ASSERT(def->getOperand(0)->type() != MIRType_Boolean);
-        JS_ASSERT(def->getOperand(1)->type() == MIRType_Boolean);
+        MOZ_ASSERT(def->getOperand(0)->type() != MIRType_Boolean);
+        MOZ_ASSERT(def->getOperand(1)->type() == MIRType_Boolean);
         return true;
     }
 
@@ -166,8 +166,8 @@ ComparePolicy::adjustInputs(TempAllocator &alloc, MInstruction *def)
                 return false;
         }
 
-        JS_ASSERT(def->getOperand(0)->type() != MIRType_String);
-        JS_ASSERT(def->getOperand(1)->type() == MIRType_String);
+        MOZ_ASSERT(def->getOperand(0)->type() != MIRType_String);
+        MOZ_ASSERT(def->getOperand(1)->type() == MIRType_String);
         return true;
     }
 
@@ -180,8 +180,8 @@ ComparePolicy::adjustInputs(TempAllocator &alloc, MInstruction *def)
 
     // Convert all inputs to the right input type
     MIRType type = compare->inputType();
-    JS_ASSERT(type == MIRType_Int32 || type == MIRType_Double ||
-              type == MIRType_Object || type == MIRType_String || type == MIRType_Float32);
+    MOZ_ASSERT(type == MIRType_Int32 || type == MIRType_Double ||
+               type == MIRType_Object || type == MIRType_String || type == MIRType_Float32);
     for (size_t i = 0; i < 2; i++) {
         MDefinition *in = def->getOperand(i);
         if (in->type() == type)
@@ -254,19 +254,19 @@ TypeBarrierPolicy::adjustInputs(TempAllocator &alloc, MInstruction *def)
     if (outputType == MIRType_Value) {
         // XXX: Possible optimization: decrease resultTypeSet to only include
         // the inputType. This will remove the need for boxing.
-        JS_ASSERT(inputType != MIRType_Value);
+        MOZ_ASSERT(inputType != MIRType_Value);
         ins->replaceOperand(0, boxAt(alloc, ins, ins->getOperand(0)));
         return true;
     }
 
     // Input is a value. Unbox the input to the requested type.
     if (inputType == MIRType_Value) {
-        JS_ASSERT(outputType != MIRType_Value);
+        MOZ_ASSERT(outputType != MIRType_Value);
 
         // We can't unbox a value to null/undefined/lazyargs. So keep output
         // also a value.
         if (IsNullOrUndefined(outputType) || outputType == MIRType_MagicOptimizedArguments) {
-            JS_ASSERT(!ins->hasDefUses());
+            MOZ_ASSERT(!ins->hasDefUses());
             ins->setResultType(MIRType_Value);
             return true;
         }
@@ -285,7 +285,7 @@ TypeBarrierPolicy::adjustInputs(TempAllocator &alloc, MInstruction *def)
 
     // In the remaining cases we will alway bail. OutputType doesn't matter.
     // Take inputType so we can use redefine during lowering.
-    JS_ASSERT(ins->alwaysBails());
+    MOZ_ASSERT(ins->alwaysBails());
     ins->setResultType(inputType);
 
     return true;
@@ -353,7 +353,7 @@ bool
 PowPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 {
     MIRType specialization = ins->typePolicySpecialization();
-    JS_ASSERT(specialization == MIRType_Int32 || specialization == MIRType_Double);
+    MOZ_ASSERT(specialization == MIRType_Int32 || specialization == MIRType_Double);
 
     // Input must be a double.
     if (!DoublePolicy<0>::staticAdjustInputs(alloc, ins))
@@ -539,7 +539,7 @@ template bool BoxExceptPolicy<2, MIRType_String>::staticAdjustInputs(TempAllocat
 bool
 ToDoublePolicy::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
 {
-    JS_ASSERT(ins->isToDouble() || ins->isToFloat32());
+    MOZ_ASSERT(ins->isToDouble() || ins->isToFloat32());
 
     MDefinition *in = ins->getOperand(0);
     MToFPInstruction::ConversionKind conversion;
@@ -585,7 +585,7 @@ ToDoublePolicy::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
 bool
 ToInt32Policy::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
 {
-    JS_ASSERT(ins->isToInt32() || ins->isTruncateToInt32());
+    MOZ_ASSERT(ins->isToInt32() || ins->isTruncateToInt32());
 
     MacroAssembler::IntConversionInputKind conversion = MacroAssembler::IntConversion_Any;
     if (ins->isToInt32())
@@ -633,7 +633,7 @@ ToInt32Policy::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
 bool
 ToStringPolicy::staticAdjustInputs(TempAllocator &alloc, MInstruction *ins)
 {
-    JS_ASSERT(ins->isToString());
+    MOZ_ASSERT(ins->isToString());
 
     MIRType type = ins->getOperand(0)->type();
     if (type == MIRType_Object || type == MIRType_Symbol) {
@@ -755,11 +755,11 @@ StoreTypedArrayPolicy::adjustValueInput(TempAllocator &alloc, MInstruction *ins,
         curValue = value;
     }
 
-    JS_ASSERT(value->type() == MIRType_Int32 ||
-              value->type() == MIRType_Boolean ||
-              value->type() == MIRType_Double ||
-              value->type() == MIRType_Float32 ||
-              value->type() == MIRType_Value);
+    MOZ_ASSERT(value->type() == MIRType_Int32 ||
+               value->type() == MIRType_Boolean ||
+               value->type() == MIRType_Double ||
+               value->type() == MIRType_Float32 ||
+               value->type() == MIRType_Value);
 
     switch (arrayType) {
       case Scalar::Int8:
@@ -775,7 +775,7 @@ StoreTypedArrayPolicy::adjustValueInput(TempAllocator &alloc, MInstruction *ins,
         break;
       case Scalar::Uint8Clamped:
         // IonBuilder should have inserted ClampToUint8.
-        JS_ASSERT(value->type() == MIRType_Int32);
+        MOZ_ASSERT(value->type() == MIRType_Int32);
         break;
       case Scalar::Float32:
         if (value->type() != MIRType_Float32) {
@@ -803,8 +803,8 @@ bool
 StoreTypedArrayPolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 {
     MStoreTypedArrayElement *store = ins->toStoreTypedArrayElement();
-    JS_ASSERT(store->elements()->type() == MIRType_Elements);
-    JS_ASSERT(store->index()->type() == MIRType_Int32);
+    MOZ_ASSERT(store->elements()->type() == MIRType_Elements);
+    MOZ_ASSERT(store->index()->type() == MIRType_Int32);
 
     return adjustValueInput(alloc, ins, store->arrayType(), store->value(), 2);
 }
@@ -813,9 +813,9 @@ bool
 StoreTypedArrayHolePolicy::adjustInputs(TempAllocator &alloc, MInstruction *ins)
 {
     MStoreTypedArrayElementHole *store = ins->toStoreTypedArrayElementHole();
-    JS_ASSERT(store->elements()->type() == MIRType_Elements);
-    JS_ASSERT(store->index()->type() == MIRType_Int32);
-    JS_ASSERT(store->length()->type() == MIRType_Int32);
+    MOZ_ASSERT(store->elements()->type() == MIRType_Elements);
+    MOZ_ASSERT(store->index()->type() == MIRType_Int32);
+    MOZ_ASSERT(store->length()->type() == MIRType_Int32);
 
     return adjustValueInput(alloc, ins, store->arrayType(), store->value(), 3);
 }

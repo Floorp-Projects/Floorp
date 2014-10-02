@@ -95,11 +95,11 @@ fuzzy-if(Android,17,13320) == radial-shape-farthest-side-1c.html radial-shape-fa
 == repeating-linear-1a.html repeating-linear-1-ref.html
 == repeating-linear-1b.html repeating-linear-1-ref.html
 == repeating-linear-2a.html repeating-linear-2-ref.html
-fuzzy-if(d2d,124,2612) == repeating-radial-1a.html repeating-radial-1-ref.html
+fuzzy-if(d2d,127,2612) == repeating-radial-1a.html repeating-radial-1-ref.html
 == repeating-radial-1b.html repeating-radial-1-ref.html
-fuzzy-if(d2d,124,2612) == repeating-radial-1c.html repeating-radial-1-ref.html
+fuzzy-if(d2d,127,2612) == repeating-radial-1c.html repeating-radial-1-ref.html
 == repeating-radial-1d.html repeating-radial-1-ref.html
-fuzzy-if(d2d,124,2612) == repeating-radial-1e.html repeating-radial-1-ref.html
+fuzzy-if(d2d,127,2612) == repeating-radial-1e.html repeating-radial-1-ref.html
 == repeating-radial-1f.html repeating-radial-1-ref.html
 == repeating-radial-2a.html repeating-radial-2-ref.html
 == repeating-radial-2b.html repeating-radial-2-ref.html

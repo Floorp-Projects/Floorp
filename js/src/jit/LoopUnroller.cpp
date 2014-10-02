@@ -63,7 +63,7 @@ LoopUnroller::getReplacementDefinition(MDefinition *def)
         // After phi analysis (TypeAnalyzer::replaceRedundantPhi) the resume
         // point at the start of a block can contain definitions from within
         // the block itself.
-        JS_ASSERT(def->isConstant());
+        MOZ_ASSERT(def->isConstant());
 
         MConstant *constant = MConstant::New(alloc, def->toConstant()->value());
         oldPreheader->insertBefore(*oldPreheader->begin(), constant);
@@ -132,7 +132,7 @@ LoopUnroller::go(LoopIterationBound *bound)
     backedge = header->backedge();
     oldPreheader = header->loopPredecessor();
 
-    JS_ASSERT(oldPreheader->numSuccessors() == 1);
+    MOZ_ASSERT(oldPreheader->numSuccessors() == 1);
 
     // Only unroll loops with two blocks: an initial one ending with the
     // bound's test, and the body ending with the backedge.
@@ -150,7 +150,7 @@ LoopUnroller::go(LoopIterationBound *bound)
     }
     if (backedge->numPredecessors() != 1 || backedge->numSuccessors() != 1)
         return;
-    JS_ASSERT(backedge->phisEmpty());
+    MOZ_ASSERT(backedge->phisEmpty());
 
     MBasicBlock *bodyBlocks[] = { header, backedge };
 
@@ -229,10 +229,10 @@ LoopUnroller::go(LoopIterationBound *bound)
 
     // Add phis to the unrolled loop header which correspond to the phis in the
     // original loop header.
-    JS_ASSERT(header->getPredecessor(0) == oldPreheader);
+    MOZ_ASSERT(header->getPredecessor(0) == oldPreheader);
     for (MPhiIterator iter(header->phisBegin()); iter != header->phisEnd(); iter++) {
         MPhi *old = *iter;
-        JS_ASSERT(old->numOperands() == 2);
+        MOZ_ASSERT(old->numOperands() == 2);
         MPhi *phi = MPhi::New(alloc);
         phi->setResultType(old->type());
         phi->setResultTypeSet(old->resultTypeSet());
@@ -291,7 +291,7 @@ LoopUnroller::go(LoopIterationBound *bound)
     }
 
     // Generate the unrolled code.
-    JS_ASSERT(UnrollCount > 1);
+    MOZ_ASSERT(UnrollCount > 1);
     size_t unrollIndex = 0;
     while (true) {
         // Clone the contents of the original loop into the unrolled loop body.
@@ -303,7 +303,7 @@ LoopUnroller::go(LoopIterationBound *bound)
                     makeReplacementInstruction(*iter);
                 } else {
                     // Control instructions are handled separately.
-                    JS_ASSERT(ins->isTest() || ins->isGoto() || ins->isInterruptCheck());
+                    MOZ_ASSERT(ins->isTest() || ins->isGoto() || ins->isInterruptCheck());
                 }
             }
         }
@@ -311,7 +311,7 @@ LoopUnroller::go(LoopIterationBound *bound)
         // Compute the value of each loop header phi after the execution of
         // this unrolled iteration.
         MDefinitionVector phiValues(alloc);
-        JS_ASSERT(header->getPredecessor(1) == backedge);
+        MOZ_ASSERT(header->getPredecessor(1) == backedge);
         for (MPhiIterator iter(header->phisBegin()); iter != header->phisEnd(); iter++) {
             MPhi *old = *iter;
             MDefinition *oldInput = old->getOperand(1);
@@ -329,7 +329,7 @@ LoopUnroller::go(LoopIterationBound *bound)
                 MPhi *phi = *iter;
                 phi->addInput(phiValues[phiIndex++]);
             }
-            JS_ASSERT(phiIndex == phiValues.length());
+            MOZ_ASSERT(phiIndex == phiValues.length());
             break;
         }
 
@@ -340,7 +340,7 @@ LoopUnroller::go(LoopIterationBound *bound)
             if (!unrolledDefinitions.putNew(old, phiValues[phiIndex++]))
                 CrashAtUnhandlableOOM("LoopUnroller::go");
         }
-        JS_ASSERT(phiIndex == phiValues.length());
+        MOZ_ASSERT(phiIndex == phiValues.length());
 
         unrollIndex++;
     }
@@ -349,7 +349,7 @@ LoopUnroller::go(LoopIterationBound *bound)
     unrolledBackedge->end(backedgeJump);
 
     // Place the old preheader before the unrolled loop.
-    JS_ASSERT(oldPreheader->lastIns()->isGoto());
+    MOZ_ASSERT(oldPreheader->lastIns()->isGoto());
     oldPreheader->discardLastIns();
     oldPreheader->end(MGoto::New(alloc, unrolledHeader));
 

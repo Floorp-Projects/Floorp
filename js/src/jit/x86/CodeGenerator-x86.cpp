@@ -54,8 +54,8 @@ FrameSizeClass::ClassLimit()
 uint32_t
 FrameSizeClass::frameSize() const
 {
-    JS_ASSERT(class_ != NO_FRAME_SIZE_CLASS_ID);
-    JS_ASSERT(class_ < JS_ARRAY_LENGTH(FrameSizes));
+    MOZ_ASSERT(class_ != NO_FRAME_SIZE_CLASS_ID);
+    MOZ_ASSERT(class_ < JS_ARRAY_LENGTH(FrameSizes));
 
     return FrameSizes[class_];
 }
@@ -98,7 +98,7 @@ CodeGeneratorX86::visitBox(LBox *box)
     const LDefinition *type = box->getDef(TYPE_INDEX);
 
     DebugOnly<const LAllocation *> a = box->getOperand(0);
-    JS_ASSERT(!a->isConstant());
+    MOZ_ASSERT(!a->isConstant());
 
     // On x86, the input operand and the output payload have the same
     // virtual register. All that needs to be written is the type tag for
@@ -146,7 +146,7 @@ CodeGeneratorX86::visitCompareB(LCompareB *lir)
     const LAllocation *rhs = lir->rhs();
     const Register output = ToRegister(lir->output());
 
-    JS_ASSERT(mir->jsop() == JSOP_STRICTEQ || mir->jsop() == JSOP_STRICTNE);
+    MOZ_ASSERT(mir->jsop() == JSOP_STRICTEQ || mir->jsop() == JSOP_STRICTNE);
 
     Label notBoolean, done;
     masm.branchTestBoolean(Assembler::NotEqual, lhs, &notBoolean);
@@ -174,7 +174,7 @@ CodeGeneratorX86::visitCompareBAndBranch(LCompareBAndBranch *lir)
     const ValueOperand lhs = ToValue(lir, LCompareBAndBranch::Lhs);
     const LAllocation *rhs = lir->rhs();
 
-    JS_ASSERT(mir->jsop() == JSOP_STRICTEQ || mir->jsop() == JSOP_STRICTNE);
+    MOZ_ASSERT(mir->jsop() == JSOP_STRICTEQ || mir->jsop() == JSOP_STRICTNE);
 
     Assembler::Condition cond = masm.testBoolean(Assembler::NotEqual, lhs);
     jumpToBlock((mir->jsop() == JSOP_STRICTEQ) ? lir->ifFalse() : lir->ifTrue(), cond);
@@ -196,7 +196,7 @@ CodeGeneratorX86::visitCompareV(LCompareV *lir)
     const ValueOperand rhs = ToValue(lir, LCompareV::RhsInput);
     const Register output = ToRegister(lir->output());
 
-    JS_ASSERT(IsEqualityOp(mir->jsop()));
+    MOZ_ASSERT(IsEqualityOp(mir->jsop()));
 
     Label notEqual, done;
     masm.cmp32(lhs.typeReg(), rhs.typeReg());
@@ -223,8 +223,8 @@ CodeGeneratorX86::visitCompareVAndBranch(LCompareVAndBranch *lir)
     const ValueOperand lhs = ToValue(lir, LCompareVAndBranch::LhsInput);
     const ValueOperand rhs = ToValue(lir, LCompareVAndBranch::RhsInput);
 
-    JS_ASSERT(mir->jsop() == JSOP_EQ || mir->jsop() == JSOP_STRICTEQ ||
-              mir->jsop() == JSOP_NE || mir->jsop() == JSOP_STRICTNE);
+    MOZ_ASSERT(mir->jsop() == JSOP_EQ || mir->jsop() == JSOP_STRICTEQ ||
+               mir->jsop() == JSOP_NE || mir->jsop() == JSOP_STRICTNE);
 
     MBasicBlock *notEqual = (cond == Assembler::Equal) ? lir->ifFalse() : lir->ifTrue();
 
@@ -301,7 +301,7 @@ CodeGeneratorX86::visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic 
 {
     const MLoadTypedArrayElementStatic *mir = ins->mir();
     Scalar::Type vt = mir->viewType();
-    JS_ASSERT_IF(vt == Scalar::Float32, mir->type() == MIRType_Float32);
+    MOZ_ASSERT_IF(vt == Scalar::Float32, mir->type() == MIRType_Float32);
 
     Register ptr = ToRegister(ins->ptr());
     const LDefinition *out = ins->output();
@@ -346,7 +346,7 @@ CodeGeneratorX86::visitAsmJSCall(LAsmJSCall *ins)
             masm.loadFloat32(op, ReturnFloat32Reg);
             masm.freeStack(sizeof(float));
         } else {
-            JS_ASSERT(mir->type() == MIRType_Double);
+            MOZ_ASSERT(mir->type() == MIRType_Double);
             masm.reserveStack(sizeof(double));
             Operand op(esp, 0);
             masm.fstp(op);
@@ -489,7 +489,7 @@ CodeGeneratorX86::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins)
 {
     MAsmJSLoadGlobalVar *mir = ins->mir();
     MIRType type = mir->type();
-    JS_ASSERT(IsNumberType(type) || IsSimdType(type));
+    MOZ_ASSERT(IsNumberType(type) || IsSimdType(type));
 
     CodeOffsetLabel label;
     switch (type) {
@@ -523,7 +523,7 @@ CodeGeneratorX86::visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins)
     MAsmJSStoreGlobalVar *mir = ins->mir();
 
     MIRType type = mir->value()->type();
-    JS_ASSERT(IsNumberType(type) || IsSimdType(type));
+    MOZ_ASSERT(IsNumberType(type) || IsSimdType(type));
 
     CodeOffsetLabel label;
     switch (type) {
@@ -587,7 +587,7 @@ GetPropertyParIC::initializeAddCacheState(LInstruction *ins, AddCacheState *addS
 {
     // We don't have a scratch register, but only use the temp if we needed
     // one, it's BogusTemp otherwise.
-    JS_ASSERT(ins->isGetPropertyCacheV() || ins->isGetPropertyCacheT());
+    MOZ_ASSERT(ins->isGetPropertyCacheV() || ins->isGetPropertyCacheT());
     if (ins->isGetPropertyCacheV() || ins->toGetPropertyCacheT()->temp()->isBogusTemp())
         addState->dispatchScratch = output_.scratchReg().gpr();
     else
@@ -599,7 +599,7 @@ GetElementParIC::initializeAddCacheState(LInstruction *ins, AddCacheState *addSt
 {
     // We don't have a scratch register, but only use the temp if we needed
     // one, it's BogusTemp otherwise.
-    JS_ASSERT(ins->isGetElementCacheV() || ins->isGetElementCacheT());
+    MOZ_ASSERT(ins->isGetElementCacheV() || ins->isGetElementCacheT());
     if (ins->isGetElementCacheV() || ins->toGetElementCacheT()->temp()->isBogusTemp())
         addState->dispatchScratch = output_.scratchReg().gpr();
     else
@@ -610,7 +610,7 @@ void
 SetPropertyParIC::initializeAddCacheState(LInstruction *ins, AddCacheState *addState)
 {
     // We don't have an output register to reuse, so we always need a temp.
-    JS_ASSERT(ins->isSetPropertyCacheV() || ins->isSetPropertyCacheT());
+    MOZ_ASSERT(ins->isSetPropertyCacheV() || ins->isSetPropertyCacheT());
     if (ins->isSetPropertyCacheV())
         addState->dispatchScratch = ToRegister(ins->toSetPropertyCacheV()->tempForDispatchCache());
     else
@@ -622,7 +622,7 @@ SetElementParIC::initializeAddCacheState(LInstruction *ins, AddCacheState *addSt
 {
     // We don't have an output register to reuse, but luckily SetElementCache
     // already needs a temp.
-    JS_ASSERT(ins->isSetElementCacheV() || ins->isSetElementCacheT());
+    MOZ_ASSERT(ins->isSetElementCacheV() || ins->isSetElementCacheT());
     if (ins->isSetElementCacheV())
         addState->dispatchScratch = ToRegister(ins->toSetElementCacheV()->temp());
     else

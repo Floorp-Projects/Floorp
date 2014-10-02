@@ -5,7 +5,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["FireflyApp"];
+this.EXPORTED_SYMBOLS = ["MatchstickApp"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
@@ -106,12 +106,12 @@ const PLAYER_STATUS_STOP = 4;
 const PLAYER_STATUS_IDLE = 5;
 const PLAYER_STATUS_BUFFERING = 6;
 
-function FireflyApp(service) {
+function MatchstickApp(service) {
   let uri = Services.io.newURI(service.location, null, null);
   this._ip = uri.host;
 };
 
-FireflyApp.prototype = {
+MatchstickApp.prototype = {
   _ip: null,
   _port: 8888,
   _cmd_socket: null,

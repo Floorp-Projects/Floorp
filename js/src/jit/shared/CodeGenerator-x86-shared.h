@@ -224,6 +224,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     bool visitSimdBinaryArithIx4(LSimdBinaryArithIx4 *lir);
     bool visitSimdBinaryArithFx4(LSimdBinaryArithFx4 *lir);
     bool visitSimdBinaryBitwiseX4(LSimdBinaryBitwiseX4 *lir);
+    bool visitSimdShift(LSimdShift *lir);
     bool visitSimdSelect(LSimdSelect *ins);
 
     // Out of line visitors.

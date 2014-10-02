@@ -242,7 +242,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
     masm.bind(&start_regexp);
 
     // Initialize on-stack registers.
-    JS_ASSERT(num_saved_registers_ > 0);
+    MOZ_ASSERT(num_saved_registers_ > 0);
 
     // Fill saved registers with initial value = start offset - 1
     // Fill in stack push order, to avoid accessing across an unwritten
@@ -269,7 +269,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
 
     // Exit code:
     if (success_label_.used()) {
-        JS_ASSERT(num_saved_registers_ > 0);
+        MOZ_ASSERT(num_saved_registers_ > 0);
 
         Address outputRegistersAddress(StackPointer, offsetof(FrameData, outputRegisters));
 
@@ -452,7 +452,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
 
     for (size_t i = 0; i < labelPatches.length(); i++) {
         LabelPatch &v = labelPatches[i];
-        JS_ASSERT(!v.label);
+        MOZ_ASSERT(!v.label);
         v.patchOffset.fixup(&masm);
         uintptr_t offset = masm.actualOffset(v.labelOffset);
         Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, v.patchOffset),
@@ -488,8 +488,8 @@ NativeRegExpMacroAssembler::AdvanceRegister(int reg, int by)
 {
     JitSpew(SPEW_PREFIX "AdvanceRegister(%d, %d)", reg, by);
 
-    JS_ASSERT(reg >= 0);
-    JS_ASSERT(reg < num_registers_);
+    MOZ_ASSERT(reg >= 0);
+    MOZ_ASSERT(reg < num_registers_);
     if (by != 0)
         masm.addPtr(Imm32(by), register_location(reg));
 }
@@ -671,7 +671,7 @@ NativeRegExpMacroAssembler::CheckNotBackReference(int start_reg, Label* on_no_ma
         masm.load8ZeroExtend(Address(current_character, 0), temp0);
         masm.load8ZeroExtend(Address(temp1, 0), temp2);
     } else {
-        JS_ASSERT(mode_ == CHAR16);
+        MOZ_ASSERT(mode_ == CHAR16);
         masm.load16ZeroExtend(Address(current_character, 0), temp0);
         masm.load16ZeroExtend(Address(temp1, 0), temp2);
     }
@@ -793,7 +793,7 @@ NativeRegExpMacroAssembler::CheckNotBackReferenceIgnoreCase(int start_reg, Label
         // Compute new value of character position after the matched part.
         masm.subPtr(input_end_pointer, current_position);
     } else {
-        JS_ASSERT(mode_ == CHAR16);
+        MOZ_ASSERT(mode_ == CHAR16);
 
         // Note: temp1 needs to be saved/restored if it is volatile, as it is used after the call.
         GeneralRegisterSet volatileRegs = GeneralRegisterSet::Volatile();
@@ -929,8 +929,8 @@ NativeRegExpMacroAssembler::LoadCurrentCharacter(int cp_offset, Label* on_end_of
 {
     JitSpew(SPEW_PREFIX "LoadCurrentCharacter(%d, %d)", cp_offset, characters);
 
-    JS_ASSERT(cp_offset >= -1);      // ^ and \b can look behind one character.
-    JS_ASSERT(cp_offset < (1<<30));  // Be sane! (And ensure negation works)
+    MOZ_ASSERT(cp_offset >= -1);      // ^ and \b can look behind one character.
+    MOZ_ASSERT(cp_offset < (1<<30));  // Be sane! (And ensure negation works)
     if (check_bounds)
         CheckPosition(cp_offset + characters - 1, on_end_of_input);
     LoadCurrentCharacterUnchecked(cp_offset, characters);
@@ -948,12 +948,12 @@ NativeRegExpMacroAssembler::LoadCurrentCharacterUnchecked(int cp_offset, int cha
         } else if (characters == 2) {
             masm.load16ZeroExtend(address, current_character);
         } else {
-            JS_ASSERT(characters = 1);
+            MOZ_ASSERT(characters = 1);
             masm.load8ZeroExtend(address, current_character);
         }
     } else {
-        JS_ASSERT(mode_ == CHAR16);
-        JS_ASSERT(characters <= 2);
+        MOZ_ASSERT(mode_ == CHAR16);
+        MOZ_ASSERT(characters <= 2);
         BaseIndex address(input_end_pointer, current_position, TimesOne, cp_offset * sizeof(char16_t));
         if (characters == 2)
             masm.load32(address, current_character);
@@ -986,7 +986,7 @@ NativeRegExpMacroAssembler::PushBacktrack(Label *label)
 
     CodeOffsetLabel patchOffset = masm.movWithPatch(ImmPtr(nullptr), temp0);
 
-    JS_ASSERT(!label->bound());
+    MOZ_ASSERT(!label->bound());
     if (!labelPatches.append(LabelPatch(label, patchOffset)))
         CrashAtUnhandlableOOM("NativeRegExpMacroAssembler::PushBacktrack");
 
@@ -1016,7 +1016,7 @@ NativeRegExpMacroAssembler::PushBacktrack(Register source)
 {
     JitSpew(SPEW_PREFIX "PushBacktrack");
 
-    JS_ASSERT(source != backtrack_stack_pointer);
+    MOZ_ASSERT(source != backtrack_stack_pointer);
 
     // Notice: This updates flags, unlike normal Push.
     masm.storePtr(source, Address(backtrack_stack_pointer, 0));
@@ -1038,7 +1038,7 @@ NativeRegExpMacroAssembler::PopBacktrack(Register target)
 {
     JitSpew(SPEW_PREFIX "PopBacktrack");
 
-    JS_ASSERT(target != backtrack_stack_pointer);
+    MOZ_ASSERT(target != backtrack_stack_pointer);
 
     // Notice: This updates flags, unlike normal Pop.
     masm.subPtr(Imm32(sizeof(void *)), backtrack_stack_pointer);
@@ -1147,7 +1147,7 @@ NativeRegExpMacroAssembler::SetRegister(int register_index, int to)
 {
     JitSpew(SPEW_PREFIX "SetRegister(%d, %d)", register_index, to);
 
-    JS_ASSERT(register_index >= num_saved_registers_);  // Reserved for positions!
+    MOZ_ASSERT(register_index >= num_saved_registers_);  // Reserved for positions!
     masm.storePtr(ImmWord(to), register_location(register_index));
 }
 
@@ -1165,7 +1165,7 @@ NativeRegExpMacroAssembler::ClearRegisters(int reg_from, int reg_to)
 {
     JitSpew(SPEW_PREFIX "ClearRegisters(%d, %d)", reg_from, reg_to);
 
-    JS_ASSERT(reg_from <= reg_to);
+    MOZ_ASSERT(reg_from <= reg_to);
     masm.loadPtr(Address(StackPointer, offsetof(FrameData, inputStartMinusOne)), temp0);
     for (int reg = reg_from; reg <= reg_to; reg++)
         masm.storePtr(temp0, register_location(reg));
@@ -1261,7 +1261,7 @@ NativeRegExpMacroAssembler::CheckSpecialCharacterClass(char16_t type, Label* on_
             // Table is 128 entries, so all ASCII characters can be tested.
             masm.branch32(Assembler::Above, current_character, Imm32('z'), branch);
         }
-        JS_ASSERT(0 == word_character_map[0]);  // Character '\0' is not a word char.
+        MOZ_ASSERT(0 == word_character_map[0]);  // Character '\0' is not a word char.
         masm.movePtr(ImmPtr(word_character_map), temp0);
         masm.load8ZeroExtend(BaseIndex(temp0, current_character, TimesOne), temp0);
         masm.branchTest32(Assembler::Zero, temp0, temp0, branch);
@@ -1273,7 +1273,7 @@ NativeRegExpMacroAssembler::CheckSpecialCharacterClass(char16_t type, Label* on_
             // Table is 128 entries, so all ASCII characters can be tested.
             masm.branch32(Assembler::Above, current_character, Imm32('z'), &done);
         }
-        JS_ASSERT(0 == word_character_map[0]);  // Character '\0' is not a word char.
+        MOZ_ASSERT(0 == word_character_map[0]);  // Character '\0' is not a word char.
         masm.movePtr(ImmPtr(word_character_map), temp0);
         masm.load8ZeroExtend(BaseIndex(temp0, current_character, TimesOne), temp0);
         masm.branchTest32(Assembler::NonZero, temp0, temp0, branch);
@@ -1299,7 +1299,7 @@ NativeRegExpMacroAssembler::CheckSpecialCharacterClass(char16_t type, Label* on_
         } else {
             Label done;
             masm.branch32(Assembler::BelowOrEqual, temp0, Imm32(0x0c - 0x0b), &done);
-            JS_ASSERT(CHAR16 == mode_);
+            MOZ_ASSERT(CHAR16 == mode_);
 
             // Compare original value to 0x2028 and 0x2029, using the already
             // computed (current_char ^ 0x01 - 0x0b). I.e., check for

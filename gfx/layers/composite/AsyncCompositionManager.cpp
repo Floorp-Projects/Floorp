@@ -308,8 +308,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
   if (newCumulativeTransform.IsSingular()) {
     return;
   }
-  Matrix newCumulativeTransformInverse = newCumulativeTransform;
-  newCumulativeTransformInverse.Invert();
+  Matrix newCumulativeTransformInverse = newCumulativeTransform.Inverse();
 
   // Now work out the translation necessary to make sure the layer doesn't
   // move given the new sub-tree root transform.
@@ -699,9 +698,7 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
 
   Matrix4x4 asyncTransform = apzc->GetCurrentAsyncTransform();
   Matrix4x4 nontransientTransform = apzc->GetNontransientAsyncTransform();
-  Matrix4x4 nontransientUntransform = nontransientTransform;
-  nontransientUntransform.Invert();
-  Matrix4x4 transientTransform = asyncTransform * nontransientUntransform;
+  Matrix4x4 transientTransform = asyncTransform * nontransientTransform.Inverse();
 
   // |transientTransform| represents the amount by which we have scrolled and
   // zoomed since the last paint. Because the scrollbar was sized and positioned based
@@ -736,15 +733,15 @@ ApplyAsyncTransformToScrollbarForContent(Layer* aScrollbar,
     // the content. This is needed because otherwise that transient async transform is
     // part of the effective transform of this scrollbar, and the scrollbar will jitter
     // as the content scrolls.
-    transientTransform.Invert();
-    transform = transform * transientTransform;
+    Matrix4x4 transientUntransform = transientTransform.Inverse();
+    transform = transform * transientUntransform;
 
     // We also need to make a corresponding change on the clip rect of all the
     // layers on the ancestor chain from the scrollbar layer up to but not
     // including the layer with the async transform. Otherwise the scrollbar
     // shifts but gets clipped and so appears to flicker.
     for (Layer* ancestor = aScrollbar; ancestor != aContent.GetLayer(); ancestor = ancestor->GetParent()) {
-      TransformClipRect(ancestor, transientTransform);
+      TransformClipRect(ancestor, transientUntransform);
     }
   }
 

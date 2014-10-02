@@ -23,6 +23,7 @@ namespace jit {
     _(SimdBinaryComp)                                                       \
     _(SimdBinaryArith)                                                      \
     _(SimdBinaryBitwise)                                                    \
+    _(SimdShift)                                                            \
     _(SimdTernaryBitwise)                                                   \
     _(CloneLiteral)                                                         \
     _(Parameter)                                                            \

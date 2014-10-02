@@ -469,7 +469,6 @@ gbjar.sources += [
     'widget/IconTabWidget.java',
     'widget/SquaredImageView.java',
     'widget/SwipeDismissListViewTouchListener.java',
-    'widget/TabRow.java',
     'widget/TabThumbnailWrapper.java',
     'widget/ThumbnailView.java',
     'widget/TwoWayView.java',

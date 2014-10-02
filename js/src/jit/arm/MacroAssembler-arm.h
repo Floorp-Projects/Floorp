@@ -57,7 +57,7 @@ class MacroAssemblerARM : public Assembler
     { }
 
     void setSecondScratchReg(Register reg) {
-        JS_ASSERT(reg != ScratchRegister);
+        MOZ_ASSERT(reg != ScratchRegister);
         secondScratchReg_ = reg;
     }
 
@@ -436,7 +436,7 @@ private:
     transferMultipleByRunsImpl(FloatRegisterSet set, LoadStore ls,
                                Register rm, DTMMode mode, int32_t sign)
     {
-        JS_ASSERT(sign == 1 || sign == -1);
+        MOZ_ASSERT(sign == 1 || sign == -1);
 
         int32_t delta = sign * sizeof(float);
         int32_t offset = 0;
@@ -944,7 +944,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void branchTestMagicValue(Condition cond, const ValueOperand &val, JSWhyMagic why,
                               Label *label) {
-        JS_ASSERT(cond == Equal || cond == NotEqual);
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
         branchTestValue(cond, val, MagicValue(why), label);
     }
     void branchTestInt32Truthy(bool truthy, const ValueOperand &operand, Label *label) {
@@ -964,7 +964,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_b(label, c);
     }
     void branchTest32(Condition cond, Register lhs, Register rhs, Label *label) {
-        JS_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+        MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
         // x86 likes test foo, foo rather than cmp foo, #0.
         // Convert the former into the latter.
         if (lhs == rhs && (cond == Zero || cond == NonZero))
@@ -974,7 +974,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_b(label, cond);
     }
     void branchTest32(Condition cond, Register lhs, Imm32 imm, Label *label) {
-        JS_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+        MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
         ma_tst(lhs, imm);
         ma_b(label, cond);
     }
@@ -1101,8 +1101,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         if (s1 == d0) {
             if (s0 == d1) {
                 // If both are, this is just a swap of two registers.
-                JS_ASSERT(d1 != ScratchRegister);
-                JS_ASSERT(d0 != ScratchRegister);
+                MOZ_ASSERT(d1 != ScratchRegister);
+                MOZ_ASSERT(d0 != ScratchRegister);
                 ma_mov(d1, ScratchRegister);
                 ma_mov(d0, d1);
                 ma_mov(ScratchRegister, d0);
@@ -1123,7 +1123,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void storeValue(ValueOperand val, const BaseIndex &dest);
     void storeValue(JSValueType type, Register reg, BaseIndex dest) {
         // Harder cases not handled yet.
-        JS_ASSERT(dest.offset == 0);
+        MOZ_ASSERT(dest.offset == 0);
         ma_alu(dest.base, lsl(dest.index, dest.scale), ScratchRegister, OpAdd);
         storeValue(type, reg, Address(ScratchRegister, 0));
     }
@@ -1147,7 +1147,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void storeValue(const Value &val, BaseIndex dest) {
         // Harder cases not handled yet.
-        JS_ASSERT(dest.offset == 0);
+        MOZ_ASSERT(dest.offset == 0);
         ma_alu(dest.base, lsl(dest.index, dest.scale), ScratchRegister, OpAdd);
         storeValue(val, Address(ScratchRegister, 0));
     }
@@ -1249,7 +1249,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         adjustFrame(-sizeof(intptr_t));
     }
     void implicitPop(uint32_t args) {
-        JS_ASSERT(args % sizeof(intptr_t) == 0);
+        MOZ_ASSERT(args % sizeof(intptr_t) == 0);
         adjustFrame(-args);
     }
     uint32_t framePushed() const {
@@ -1389,7 +1389,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void storeDouble(FloatRegister src, BaseIndex addr) {
         // Harder cases not handled yet.
-        JS_ASSERT(addr.offset == 0);
+        MOZ_ASSERT(addr.offset == 0);
         uint32_t scale = Imm32::ShiftOf(addr.scale).value;
         ma_vstr(src, addr.base, addr.index, scale);
     }
@@ -1402,7 +1402,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     }
     void storeFloat32(FloatRegister src, BaseIndex addr) {
         // Harder cases not handled yet.
-        JS_ASSERT(addr.offset == 0);
+        MOZ_ASSERT(addr.offset == 0);
         uint32_t scale = Imm32::ShiftOf(addr.scale).value;
         ma_vstr(VFPRegister(src).singleOverlay(), addr.base, addr.index, scale);
     }

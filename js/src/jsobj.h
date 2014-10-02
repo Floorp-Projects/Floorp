@@ -389,7 +389,7 @@ class JSObject : public js::ObjectImpl
 
     /* Index into the dynamic slots array to use for a dynamic slot. */
     size_t dynamicSlotIndex(size_t slot) {
-        JS_ASSERT(slot >= numFixedSlots());
+        MOZ_ASSERT(slot >= numFixedSlots());
         return slot - numFixedSlots();
     }
 
@@ -420,8 +420,8 @@ class JSObject : public js::ObjectImpl
     }
 
     void prepareElementRangeForOverwrite(size_t start, size_t end) {
-        JS_ASSERT(end <= getDenseInitializedLength());
-        JS_ASSERT(!denseElementsAreCopyOnWrite());
+        MOZ_ASSERT(end <= getDenseInitializedLength());
+        MOZ_ASSERT(!denseElementsAreCopyOnWrite());
         for (size_t i = start; i < end; i++)
             elements[i].js::HeapSlot::~HeapSlot();
     }
@@ -430,8 +430,8 @@ class JSObject : public js::ObjectImpl
                                    uint32_t slotSpan);
 
     void nativeSetSlot(uint32_t slot, const js::Value &value) {
-        JS_ASSERT(isNative());
-        JS_ASSERT(slot < slotSpan());
+        MOZ_ASSERT(isNative());
+        MOZ_ASSERT(slot < slotSpan());
         return setSlot(slot, value);
     }
 
@@ -441,27 +441,27 @@ class JSObject : public js::ObjectImpl
                                       const js::Value &value, bool overwriting = true);
 
     inline const js::Value &getReservedSlot(uint32_t index) const {
-        JS_ASSERT(index < JSSLOT_FREE(getClass()));
+        MOZ_ASSERT(index < JSSLOT_FREE(getClass()));
         return getSlot(index);
     }
 
     const js::HeapSlot &getReservedSlotRef(uint32_t index) const {
-        JS_ASSERT(index < JSSLOT_FREE(getClass()));
+        MOZ_ASSERT(index < JSSLOT_FREE(getClass()));
         return getSlotRef(index);
     }
 
     js::HeapSlot &getReservedSlotRef(uint32_t index) {
-        JS_ASSERT(index < JSSLOT_FREE(getClass()));
+        MOZ_ASSERT(index < JSSLOT_FREE(getClass()));
         return getSlotRef(index);
     }
 
     void initReservedSlot(uint32_t index, const js::Value &v) {
-        JS_ASSERT(index < JSSLOT_FREE(getClass()));
+        MOZ_ASSERT(index < JSSLOT_FREE(getClass()));
         initSlot(index, v);
     }
 
     void setReservedSlot(uint32_t index, const js::Value &v) {
-        JS_ASSERT(index < JSSLOT_FREE(getClass()));
+        MOZ_ASSERT(index < JSSLOT_FREE(getClass()));
         setSlot(index, v);
     }
 
@@ -494,7 +494,7 @@ class JSObject : public js::ObjectImpl
      */
     bool uninlinedIsProxy() const;
     JSObject *getProto() const {
-        JS_ASSERT(!uninlinedIsProxy());
+        MOZ_ASSERT(!uninlinedIsProxy());
         return getTaggedProto().toObjectOrNull();
     }
     static inline bool getProto(JSContext *cx, js::HandleObject obj,
@@ -630,7 +630,7 @@ class JSObject : public js::ObjectImpl
 
     /* Accessors for elements. */
     bool ensureElements(js::ThreadSafeContext *cx, uint32_t capacity) {
-        JS_ASSERT(!denseElementsAreCopyOnWrite());
+        MOZ_ASSERT(!denseElementsAreCopyOnWrite());
         if (capacity > getDenseCapacity())
             return growElements(cx, capacity);
         return true;
@@ -640,14 +640,14 @@ class JSObject : public js::ObjectImpl
     bool growElements(js::ThreadSafeContext *cx, uint32_t newcap);
     void shrinkElements(js::ThreadSafeContext *cx, uint32_t cap);
     void setDynamicElements(js::ObjectElements *header) {
-        JS_ASSERT(!hasDynamicElements());
+        MOZ_ASSERT(!hasDynamicElements());
         elements = header->elements();
-        JS_ASSERT(hasDynamicElements());
+        MOZ_ASSERT(hasDynamicElements());
     }
 
     uint32_t getDenseCapacity() {
-        JS_ASSERT(isNative());
-        JS_ASSERT(getElementsHeader()->capacity >= getElementsHeader()->initializedLength);
+        MOZ_ASSERT(isNative());
+        MOZ_ASSERT(getElementsHeader()->capacity >= getElementsHeader()->initializedLength);
         return getElementsHeader()->capacity;
     }
 
@@ -665,9 +665,9 @@ class JSObject : public js::ObjectImpl
 
   public:
     void setDenseInitializedLength(uint32_t length) {
-        JS_ASSERT(isNative());
-        JS_ASSERT(length <= getDenseCapacity());
-        JS_ASSERT(!denseElementsAreCopyOnWrite());
+        MOZ_ASSERT(isNative());
+        MOZ_ASSERT(length <= getDenseCapacity());
+        MOZ_ASSERT(!denseElementsAreCopyOnWrite());
         prepareElementRangeForOverwrite(length, getElementsHeader()->initializedLength);
         getElementsHeader()->initializedLength = length;
     }
@@ -677,14 +677,14 @@ class JSObject : public js::ObjectImpl
     inline void ensureDenseInitializedLengthPreservePackedFlag(js::ThreadSafeContext *cx,
                                                                uint32_t index, uint32_t extra);
     void setDenseElement(uint32_t index, const js::Value &val) {
-        JS_ASSERT(isNative() && index < getDenseInitializedLength());
-        JS_ASSERT(!denseElementsAreCopyOnWrite());
+        MOZ_ASSERT(isNative() && index < getDenseInitializedLength());
+        MOZ_ASSERT(!denseElementsAreCopyOnWrite());
         elements[index].set(this, js::HeapSlot::Element, index, val);
     }
 
     void initDenseElement(uint32_t index, const js::Value &val) {
-        JS_ASSERT(isNative() && index < getDenseInitializedLength());
-        JS_ASSERT(!denseElementsAreCopyOnWrite());
+        MOZ_ASSERT(isNative() && index < getDenseInitializedLength());
+        MOZ_ASSERT(!denseElementsAreCopyOnWrite());
         elements[index].init(this, js::HeapSlot::Element, index, val);
     }
 
@@ -707,8 +707,8 @@ class JSObject : public js::ObjectImpl
     inline js::Value getDenseOrTypedArrayElement(uint32_t idx);
 
     void copyDenseElements(uint32_t dstStart, const js::Value *src, uint32_t count) {
-        JS_ASSERT(dstStart + count <= getDenseCapacity());
-        JS_ASSERT(!denseElementsAreCopyOnWrite());
+        MOZ_ASSERT(dstStart + count <= getDenseCapacity());
+        MOZ_ASSERT(!denseElementsAreCopyOnWrite());
         JSRuntime *rt = runtimeFromMainThread();
         if (JS::IsIncrementalBarrierNeeded(rt)) {
             JS::Zone *zone = this->zone();
@@ -721,8 +721,8 @@ class JSObject : public js::ObjectImpl
     }
 
     void initDenseElements(uint32_t dstStart, const js::Value *src, uint32_t count) {
-        JS_ASSERT(dstStart + count <= getDenseCapacity());
-        JS_ASSERT(!denseElementsAreCopyOnWrite());
+        MOZ_ASSERT(dstStart + count <= getDenseCapacity());
+        MOZ_ASSERT(!denseElementsAreCopyOnWrite());
         memcpy(&elements[dstStart], src, count * sizeof(js::HeapSlot));
         DenseRangeWriteBarrierPost(runtimeFromMainThread(), this, dstStart, count);
     }
@@ -730,9 +730,9 @@ class JSObject : public js::ObjectImpl
     void initDenseElementsUnbarriered(uint32_t dstStart, const js::Value *src, uint32_t count);
 
     void moveDenseElements(uint32_t dstStart, uint32_t srcStart, uint32_t count) {
-        JS_ASSERT(dstStart + count <= getDenseCapacity());
-        JS_ASSERT(srcStart + count <= getDenseInitializedLength());
-        JS_ASSERT(!denseElementsAreCopyOnWrite());
+        MOZ_ASSERT(dstStart + count <= getDenseCapacity());
+        MOZ_ASSERT(srcStart + count <= getDenseInitializedLength());
+        MOZ_ASSERT(!denseElementsAreCopyOnWrite());
 
         /*
          * Using memmove here would skip write barriers. Also, we need to consider
@@ -767,18 +767,18 @@ class JSObject : public js::ObjectImpl
     }
 
     void moveDenseElementsNoPreBarrier(uint32_t dstStart, uint32_t srcStart, uint32_t count) {
-        JS_ASSERT(!shadowZone()->needsIncrementalBarrier());
+        MOZ_ASSERT(!shadowZone()->needsIncrementalBarrier());
 
-        JS_ASSERT(dstStart + count <= getDenseCapacity());
-        JS_ASSERT(srcStart + count <= getDenseCapacity());
-        JS_ASSERT(!denseElementsAreCopyOnWrite());
+        MOZ_ASSERT(dstStart + count <= getDenseCapacity());
+        MOZ_ASSERT(srcStart + count <= getDenseCapacity());
+        MOZ_ASSERT(!denseElementsAreCopyOnWrite());
 
         memmove(elements + dstStart, elements + srcStart, count * sizeof(js::Value));
         DenseRangeWriteBarrierPost(runtimeFromMainThread(), this, dstStart, count);
     }
 
     bool shouldConvertDoubleElements() {
-        JS_ASSERT(getClass()->isNative());
+        MOZ_ASSERT(getClass()->isNative());
         return getElementsHeader()->shouldConvertDoubleElements();
     }
 
@@ -786,7 +786,7 @@ class JSObject : public js::ObjectImpl
     inline void clearShouldConvertDoubleElements();
 
     bool denseElementsAreCopyOnWrite() {
-        JS_ASSERT(isNative());
+        MOZ_ASSERT(isNative());
         return getElementsHeader()->isCopyOnWrite();
     }
 
@@ -1022,7 +1022,7 @@ class JSObject : public js::ObjectImpl
     static bool getGeneric(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
                            js::HandleId id, js::MutableHandleValue vp)
     {
-        JS_ASSERT(!!obj->getOps()->getGeneric == !!obj->getOps()->getProperty);
+        MOZ_ASSERT(!!obj->getOps()->getGeneric == !!obj->getOps()->getProperty);
         js::GenericIdOp op = obj->getOps()->getGeneric;
         if (op) {
             if (!op(cx, obj, receiver, id, vp))
@@ -1126,7 +1126,7 @@ class JSObject : public js::ObjectImpl
             ok = js::DefaultValue(cx, obj, hint, vp);
         else
             ok = op(cx, obj, hint, vp);
-        JS_ASSERT_IF(ok, vp.isPrimitive());
+        MOZ_ASSERT_IF(ok, vp.isPrimitive());
         return ok;
     }
 
@@ -1171,13 +1171,13 @@ class JSObject : public js::ObjectImpl
 
     template <class T>
     T &as() {
-        JS_ASSERT(this->is<T>());
+        MOZ_ASSERT(this->is<T>());
         return *static_cast<T *>(this);
     }
 
     template <class T>
     const T &as() const {
-        JS_ASSERT(this->is<T>());
+        MOZ_ASSERT(this->is<T>());
         return *static_cast<const T *>(this);
     }
 
@@ -1210,7 +1210,7 @@ MOZ_ALWAYS_INLINE JS::Handle<U*>
 js::RootedBase<JSObject*>::as() const
 {
     const JS::Rooted<JSObject*> &self = *static_cast<const JS::Rooted<JSObject*>*>(this);
-    JS_ASSERT(self->is<U>());
+    MOZ_ASSERT(self->is<U>());
     return Handle<U*>::fromMarkedLocation(reinterpret_cast<U* const*>(self.address()));
 }
 

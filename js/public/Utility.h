@@ -51,9 +51,6 @@ namespace js {}
 #define JS_SWEPT_FRAME_PATTERN 0x5b
 #define JS_POISONED_FORKJOIN_CHUNK 0xBD
 
-#define JS_ASSERT(expr)           MOZ_ASSERT(expr)
-#define JS_ASSERT_IF(cond, expr)  MOZ_ASSERT_IF(cond, expr)
-
 #define JS_STATIC_ASSERT(cond)           static_assert(cond, "JS_STATIC_ASSERT")
 #define JS_STATIC_ASSERT_IF(cond, expr)  MOZ_STATIC_ASSERT_IF(cond, expr, "JS_STATIC_ASSERT_IF")
 

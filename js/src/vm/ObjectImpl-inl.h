@@ -49,8 +49,8 @@ ClassCanHaveFixedData(const Class *clasp)
 inline uint8_t *
 ObjectImpl::fixedData(size_t nslots) const
 {
-    JS_ASSERT(ClassCanHaveFixedData(getClass()));
-    JS_ASSERT(nslots == numFixedSlots() + (hasPrivate() ? 1 : 0));
+    MOZ_ASSERT(ClassCanHaveFixedData(getClass()));
+    MOZ_ASSERT(nslots == numFixedSlots() + (hasPrivate() ? 1 : 0));
     return reinterpret_cast<uint8_t *>(&fixedSlots()[nslots]);
 }
 
