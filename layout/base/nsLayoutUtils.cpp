@@ -405,6 +405,26 @@ nsLayoutUtils::HasCurrentAnimations(nsIContent* aContent,
   return (collection && collection->HasCurrentAnimations());
 }
 
+bool
+nsLayoutUtils::HasCurrentAnimationsForProperty(nsIContent* aContent,
+                                               nsCSSProperty aProperty)
+{
+  if (!aContent->MayHaveAnimations())
+    return false;
+
+  static nsIAtom* const sAnimProps[] = { nsGkAtoms::transitionsProperty,
+                                         nsGkAtoms::animationsProperty,
+                                         nullptr };
+  for (nsIAtom* const* animProp = sAnimProps; *animProp; animProp++) {
+    AnimationPlayerCollection* collection =
+      static_cast<AnimationPlayerCollection*>(aContent->GetProperty(*animProp));
+    if (collection && collection->HasCurrentAnimationsForProperty(aProperty))
+      return true;
+  }
+
+  return false;
+}
+
 static gfxSize
 GetScaleForValue(const StyleAnimationValue& aValue, nsIFrame* aFrame)
 {
