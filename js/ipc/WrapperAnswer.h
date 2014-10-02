@@ -52,6 +52,7 @@ class WrapperAnswer : public virtual JavaScriptShared
     bool AnswerObjectClassIs(const ObjectId &objId, const uint32_t &classValue,
                              bool *result);
     bool AnswerClassName(const ObjectId &objId, nsString *result);
+    bool AnswerRegExpToShared(const ObjectId &objId, ReturnStatus *rs, nsString *source, uint32_t *flags);
 
     bool AnswerGetPropertyNames(const ObjectId &objId, const uint32_t &flags,
                                 ReturnStatus *rs, nsTArray<nsString> *names);

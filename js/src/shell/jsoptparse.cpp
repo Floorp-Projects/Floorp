@@ -26,7 +26,7 @@ const char OptionParser::prognameMeta[] = "{progname}";
     __cls##Option * \
     Option::as##__cls##Option() \
     { \
-        JS_ASSERT(is##__cls##Option()); \
+        MOZ_ASSERT(is##__cls##Option()); \
         return static_cast<__cls##Option *>(this); \
     } \
     const __cls##Option * \
@@ -38,7 +38,7 @@ const char OptionParser::prognameMeta[] = "{progname}";
 ValuedOption *
 Option::asValued()
 {
-    JS_ASSERT(isValued());
+    MOZ_ASSERT(isValued());
     return static_cast<ValuedOption *>(this);
 }
 
@@ -90,7 +90,7 @@ PrintParagraph(const char *text, unsigned startColno, const unsigned limitColno,
         printf("%*s", startColno, "");
 
     while (*it != '\0') {
-        JS_ASSERT(!isspace(*it));
+        MOZ_ASSERT(!isspace(*it));
 
         /* Delimit the current token. */
         const char *limit = it;
@@ -101,9 +101,9 @@ PrintParagraph(const char *text, unsigned startColno, const unsigned limitColno,
          * If the current token is longer than the available number of columns,
          * then make a line break before printing the token.
          */
-        JS_ASSERT(limit - it > 0);
+        MOZ_ASSERT(limit - it > 0);
         size_t tokLen = limit - it;
-        JS_ASSERT(tokLen);
+        MOZ_ASSERT(tokLen);
         if (tokLen + colno >= limitColno) {
             printf("\n%*s%.*s", startColno, "", int(tokLen), it);
             colno = startColno + tokLen;
@@ -249,7 +249,7 @@ OptionParser::printHelp(const char *progname)
 OptionParser::Result
 OptionParser::extractValue(size_t argc, char **argv, size_t *i, char **value)
 {
-    JS_ASSERT(*i < argc);
+    MOZ_ASSERT(*i < argc);
     char *eq = strchr(argv[*i], '=');
     if (eq) {
         *value = eq + 1;
@@ -343,7 +343,7 @@ OptionParser::handleArg(size_t argc, char **argv, size_t *i, bool *optionsAllowe
 OptionParser::Result
 OptionParser::parseArgs(int inputArgc, char **argv)
 {
-    JS_ASSERT(inputArgc >= 0);
+    MOZ_ASSERT(inputArgc >= 0);
     size_t argc = inputArgc;
     /* Permit a "no more options" capability, like |--| offers in many shell interfaces. */
     bool optionsAllowed = true;
@@ -615,7 +615,7 @@ OptionParser::addOptionalStringArg(const char *name, const char *help)
 bool
 OptionParser::addOptionalMultiStringArg(const char *name, const char *help)
 {
-    JS_ASSERT_IF(!arguments.empty(), !arguments.back()->isVariadic());
+    MOZ_ASSERT_IF(!arguments.empty(), !arguments.back()->isVariadic());
     if (!arguments.reserve(arguments.length() + 1))
         return false;
     MultiStringOption *mso = js_new<MultiStringOption>(1, name, help, (const char *) nullptr);

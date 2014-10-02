@@ -1205,7 +1205,7 @@ class Redirection
         SimulatorRuntime *srt = pt->simulatorRuntime();
         AutoLockSimulatorRuntime alsr(srt);
 
-        JS_ASSERT_IF(pt->simulator(), pt->simulator()->srt_ == srt);
+        MOZ_ASSERT_IF(pt->simulator(), pt->simulator()->srt_ == srt);
 
         Redirection *current = srt->redirection();
         for (; current != nullptr; current = current->next_) {

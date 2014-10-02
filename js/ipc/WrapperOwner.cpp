@@ -91,6 +91,7 @@ class CPOWProxyHandler : public BaseProxyHandler
     virtual bool objectClassIs(HandleObject obj, js::ESClassValue classValue,
                                JSContext *cx) const MOZ_OVERRIDE;
     virtual const char* className(JSContext *cx, HandleObject proxy) const MOZ_OVERRIDE;
+    virtual bool regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g) const MOZ_OVERRIDE;
     virtual void finalize(JSFreeOp *fop, JSObject *proxy) const MOZ_OVERRIDE;
     virtual void objectMoved(JSObject *proxy, const JSObject *old) const MOZ_OVERRIDE;
     virtual bool isCallable(JSObject *obj) const MOZ_OVERRIDE;
@@ -651,6 +652,37 @@ WrapperOwner::className(JSContext *cx, HandleObject proxy)
     return ToNewCString(name);
 }
 
+bool
+CPOWProxyHandler::regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g) const
+{
+    FORWARD(regexp_toShared, (cx, proxy, g));
+}
+
+bool
+WrapperOwner::regexp_toShared(JSContext *cx, HandleObject proxy, RegExpGuard *g)
+{
+    ObjectId objId = idOf(proxy);
+
+    ReturnStatus status;
+    nsString source;
+    unsigned flags = 0;
+    if (!CallRegExpToShared(objId, &status, &source, &flags))
+        return ipcfail(cx);
+
+    LOG_STACK();
+
+    if (!ok(cx, status))
+        return false;
+
+    RootedObject regexp(cx);
+    RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
+    regexp = JS_NewUCRegExpObject(cx, global, source.get(), source.Length(), flags);
+    if (!regexp)
+        return false;
+
+    return js::RegExpToSharedNonInline(cx, regexp, g);
+}
+
 void
 CPOWProxyHandler::finalize(JSFreeOp *fop, JSObject *proxy) const
 {
@@ -865,7 +897,7 @@ bool
 WrapperOwner::toObjectVariant(JSContext *cx, JSObject *objArg, ObjectVariant *objVarp)
 {
     RootedObject obj(cx, objArg);
-    JS_ASSERT(obj);
+    MOZ_ASSERT(obj);
 
     // We always save objects unwrapped in the CPOW table. If we stored
     // wrappers, then the wrapper might be GCed while the target remained alive.

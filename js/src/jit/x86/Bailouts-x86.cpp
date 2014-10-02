@@ -36,7 +36,7 @@ class BailoutStack
         return FrameSizeClass::FromClass(frameClassId_);
     }
     uintptr_t tableOffset() const {
-        JS_ASSERT(frameClass() != FrameSizeClass::None());
+        MOZ_ASSERT(frameClass() != FrameSizeClass::None());
         return tableOffset_;
     }
     uint32_t frameSize() const {
@@ -48,7 +48,7 @@ class BailoutStack
         return MachineState::FromBailout(regs_, fpregs_);
     }
     SnapshotOffset snapshotOffset() const {
-        JS_ASSERT(frameClass() == FrameSizeClass::None());
+        MOZ_ASSERT(frameClass() == FrameSizeClass::None());
         return snapshotOffset_;
     }
     uint8_t *parentStackPointer() const {
@@ -95,12 +95,12 @@ IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &activations,
     uintptr_t tableOffset = bailout->tableOffset();
     uintptr_t tableStart = reinterpret_cast<uintptr_t>(code->raw());
 
-    JS_ASSERT(tableOffset >= tableStart &&
-              tableOffset < tableStart + code->instructionsSize());
-    JS_ASSERT((tableOffset - tableStart) % BAILOUT_TABLE_ENTRY_SIZE == 0);
+    MOZ_ASSERT(tableOffset >= tableStart &&
+               tableOffset < tableStart + code->instructionsSize());
+    MOZ_ASSERT((tableOffset - tableStart) % BAILOUT_TABLE_ENTRY_SIZE == 0);
 
     uint32_t bailoutId = ((tableOffset - tableStart) / BAILOUT_TABLE_ENTRY_SIZE) - 1;
-    JS_ASSERT(bailoutId < BAILOUT_TABLE_SIZE);
+    MOZ_ASSERT(bailoutId < BAILOUT_TABLE_SIZE);
 
     snapshotOffset_ = topIonScript_->bailoutToSnapshot(bailoutId);
 }

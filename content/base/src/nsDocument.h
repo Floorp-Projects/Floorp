@@ -1290,10 +1290,10 @@ public:
                                                     mozilla::ErrorResult& rv) MOZ_OVERRIDE;
   virtual void UseRegistryFromDocument(nsIDocument* aDocument) MOZ_OVERRIDE;
 
-  virtual already_AddRefed<nsIDocument> MasterDocument()
+  virtual nsIDocument* MasterDocument()
   {
-    return mMasterDocument ? (nsCOMPtr<nsIDocument>(mMasterDocument)).forget()
-                           : (nsCOMPtr<nsIDocument>(this)).forget();
+    return mMasterDocument ? mMasterDocument.get()
+                           : this;
   }
 
   virtual void SetMasterDocument(nsIDocument* master)
@@ -1306,11 +1306,11 @@ public:
     return !mMasterDocument;
   }
 
-  virtual already_AddRefed<mozilla::dom::ImportManager> ImportManager()
+  virtual mozilla::dom::ImportManager* ImportManager()
   {
     if (mImportManager) {
       MOZ_ASSERT(!mMasterDocument, "Only the master document has ImportManager set");
-      return nsRefPtr<mozilla::dom::ImportManager>(mImportManager).forget();
+      return mImportManager.get();
     }
 
     if (mMasterDocument) {
@@ -1322,7 +1322,28 @@ public:
     // master document and this is the first import in it.
     // Let's create a new manager.
     mImportManager = new mozilla::dom::ImportManager();
-    return nsRefPtr<mozilla::dom::ImportManager>(mImportManager).forget();
+    return mImportManager.get();
+  }
+
+  virtual bool HasSubImportLink(nsINode* aLink)
+  {
+    return mSubImportLinks.Contains(aLink);
+  }
+
+  virtual uint32_t IndexOfSubImportLink(nsINode* aLink)
+  {
+    return mSubImportLinks.IndexOf(aLink);
+  }
+
+  virtual void AddSubImportLink(nsINode* aLink)
+  {
+    mSubImportLinks.AppendElement(aLink);
+  }
+
+  virtual nsINode* GetSubImportLink(uint32_t aIdx)
+  {
+    return aIdx < mSubImportLinks.Length() ? mSubImportLinks[aIdx].get()
+                                           : nullptr;
   }
 
   virtual void UnblockDOMContentLoaded() MOZ_OVERRIDE;
@@ -1754,6 +1775,7 @@ private:
 
   nsCOMPtr<nsIDocument> mMasterDocument;
   nsRefPtr<mozilla::dom::ImportManager> mImportManager;
+  nsTArray<nsCOMPtr<nsINode> > mSubImportLinks;
 
   // Set to true when the document is possibly controlled by the ServiceWorker.
   // Used to prevent multiple requests to ServiceWorkerManager.

@@ -249,6 +249,10 @@ public:
   nsresult ProcessOffThreadRequest(nsScriptLoadRequest *aRequest,
                                    void **aOffThreadToken);
 
+  bool AddPendingChildLoader(nsScriptLoader* aChild) {
+    return mPendingChildLoaders.AppendElement(aChild) != nullptr;
+  }
+
 private:
   virtual ~nsScriptLoader();
 
@@ -300,10 +304,6 @@ private:
   bool SelfReadyToExecuteScripts()
   {
     return mEnabled && !mBlockerCount;
-  }
-
-  bool AddPendingChildLoader(nsScriptLoader* aChild) {
-    return mPendingChildLoaders.AppendElement(aChild) != nullptr;
   }
 
   nsresult AttemptAsyncScriptParse(nsScriptLoadRequest* aRequest);

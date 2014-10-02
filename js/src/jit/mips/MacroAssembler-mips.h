@@ -839,8 +839,8 @@ public:
         if (s1 == d0) {
             if (s0 == d1) {
                 // If both are, this is just a swap of two registers.
-                JS_ASSERT(d1 != ScratchRegister);
-                JS_ASSERT(d0 != ScratchRegister);
+                MOZ_ASSERT(d1 != ScratchRegister);
+                MOZ_ASSERT(d0 != ScratchRegister);
                 move32(d1, ScratchRegister);
                 move32(d0, d1);
                 move32(ScratchRegister, d0);

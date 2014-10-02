@@ -147,7 +147,7 @@ class MUse : public TempObject, public InlineListNode<MUse>
     explicit MUse(const MUse &other)
       : producer_(other.producer_), consumer_(other.consumer_)
     {
-        JS_ASSERT(!other.next && !other.prev);
+        MOZ_ASSERT(!other.next && !other.prev);
     }
 
     // Set this use, which was previously clear.
@@ -162,14 +162,14 @@ class MUse : public TempObject, public InlineListNode<MUse>
     inline void releaseProducer();
 
     MDefinition *producer() const {
-        JS_ASSERT(producer_ != nullptr);
+        MOZ_ASSERT(producer_ != nullptr);
         return producer_;
     }
     bool hasProducer() const {
         return producer_ != nullptr;
     }
     MNode *consumer() const {
-        JS_ASSERT(consumer_ != nullptr);
+        MOZ_ASSERT(consumer_ != nullptr);
         return consumer_;
     }
 
@@ -310,11 +310,11 @@ class AliasSet {
         return AliasSet(None_);
     }
     static AliasSet Load(uint32_t flags) {
-        JS_ASSERT(flags && !(flags & Store_));
+        MOZ_ASSERT(flags && !(flags & Store_));
         return AliasSet(flags);
     }
     static AliasSet Store(uint32_t flags) {
-        JS_ASSERT(flags && !(flags & Store_));
+        MOZ_ASSERT(flags && !(flags & Store_));
         return AliasSet(flags | Store_);
     }
 };
@@ -463,11 +463,11 @@ class MDefinition : public MNode
     // errors. Instead, one should define the collectRangeInfoPreTrunc() to set
     // the right set of flags which are dependent on the range of the inputs.
     Range *range() const {
-        JS_ASSERT(type() != MIRType_None);
+        MOZ_ASSERT(type() != MIRType_None);
         return range_;
     }
     void setRange(Range *range) {
-        JS_ASSERT(type() != MIRType_None);
+        MOZ_ASSERT(type() != MIRType_None);
         range_ = range;
     }
 
@@ -532,7 +532,7 @@ class MDefinition : public MNode
     }
 
     uint32_t id() const {
-        JS_ASSERT(block_);
+        MOZ_ASSERT(block_);
         return id_;
     }
     void setId(uint32_t id) {
@@ -544,11 +544,11 @@ class MDefinition : public MNode
         return hasFlags(1 << flag);\
     }\
     void set##flag() {\
-        JS_ASSERT(!hasFlags(1 << flag));\
+        MOZ_ASSERT(!hasFlags(1 << flag));\
         setFlags(1 << flag);\
     }\
     void setNot##flag() {\
-        JS_ASSERT(hasFlags(1 << flag));\
+        MOZ_ASSERT(hasFlags(1 << flag));\
         removeFlags(1 << flag);\
     }\
     void set##flag##Unchecked() {\
@@ -678,7 +678,7 @@ class MDefinition : public MNode
 #endif
     }
     uint32_t virtualRegister() const {
-        JS_ASSERT(isLowered());
+        MOZ_ASSERT(isLowered());
         return virtualRegister_;
     }
 
@@ -688,11 +688,11 @@ class MDefinition : public MNode
         return op() == MIRType::classOpcode;
     }
     template<typename MIRType> MIRType *to() {
-        JS_ASSERT(this->is<MIRType>());
+        MOZ_ASSERT(this->is<MIRType>());
         return static_cast<MIRType *>(this);
     }
     template<typename MIRType> const MIRType *to() const {
-        JS_ASSERT(this->is<MIRType>());
+        MOZ_ASSERT(this->is<MIRType>());
         return static_cast<const MIRType *>(this);
     }
 #   define OPCODE_CASTS(opcode)           \
@@ -749,8 +749,8 @@ class MDefinition : public MNode
         // Return whether this load may depend on the specified store, given
         // that the alias sets intersect. This may be refined to exclude
         // possible aliasing in cases where alias set flags are too imprecise.
-        JS_ASSERT(!isEffectful() && store->isEffectful());
-        JS_ASSERT(getAliasSet().flags() & store->getAliasSet().flags());
+        MOZ_ASSERT(!isEffectful() && store->isEffectful());
+        MOZ_ASSERT(getAliasSet().flags() & store->getAliasSet().flags());
         return true;
     }
 
@@ -786,7 +786,7 @@ class MUseDefIterator
         return current_ != def_->usesEnd();
     }
     MUseDefIterator operator ++() {
-        JS_ASSERT(current_ != def_->usesEnd());
+        MOZ_ASSERT(current_ != def_->usesEnd());
         ++current_;
         current_ = search(current_);
         return *this;
@@ -1266,12 +1266,12 @@ class MSimdValueX4 : public MQuaternaryInstruction
     MSimdValueX4(MIRType type, MDefinition *x, MDefinition *y, MDefinition *z, MDefinition *w)
       : MQuaternaryInstruction(x, y, z, w)
     {
-        JS_ASSERT(IsSimdType(type));
+        MOZ_ASSERT(IsSimdType(type));
         mozilla::DebugOnly<MIRType> scalarType = SimdTypeToScalarType(type);
-        JS_ASSERT(scalarType == x->type());
-        JS_ASSERT(scalarType == y->type());
-        JS_ASSERT(scalarType == z->type());
-        JS_ASSERT(scalarType == w->type());
+        MOZ_ASSERT(scalarType == x->type());
+        MOZ_ASSERT(scalarType == y->type());
+        MOZ_ASSERT(scalarType == z->type());
+        MOZ_ASSERT(scalarType == w->type());
 
         setMovable();
         setResultType(type);
@@ -1306,9 +1306,9 @@ class MSimdSplatX4 : public MUnaryInstruction
     MSimdSplatX4(MIRType type, MDefinition *v)
       : MUnaryInstruction(v)
     {
-        JS_ASSERT(IsSimdType(type));
+        MOZ_ASSERT(IsSimdType(type));
         mozilla::DebugOnly<MIRType> scalarType = SimdTypeToScalarType(type);
-        JS_ASSERT(scalarType == v->type());
+        MOZ_ASSERT(scalarType == v->type());
 
         setMovable();
         setResultType(type);
@@ -1342,7 +1342,7 @@ class MSimdConstant : public MNullaryInstruction
 
   protected:
     MSimdConstant(const SimdConstant &v, MIRType type) : value_(v) {
-        JS_ASSERT(IsSimdType(type));
+        MOZ_ASSERT(IsSimdType(type));
         setResultType(type);
         setMovable();
     }
@@ -1435,10 +1435,10 @@ class MSimdExtractElement : public MUnaryInstruction
     MSimdExtractElement(MDefinition *obj, MIRType type, SimdLane lane)
       : MUnaryInstruction(obj), lane_(lane)
     {
-        JS_ASSERT(IsSimdType(obj->type()));
-        JS_ASSERT(uint32_t(lane) < SimdTypeToLength(obj->type()));
-        JS_ASSERT(!IsSimdType(type));
-        JS_ASSERT(SimdTypeToScalarType(obj->type()) == type);
+        MOZ_ASSERT(IsSimdType(obj->type()));
+        MOZ_ASSERT(uint32_t(lane) < SimdTypeToLength(obj->type()));
+        MOZ_ASSERT(!IsSimdType(type));
+        MOZ_ASSERT(SimdTypeToScalarType(obj->type()) == type);
         setResultType(type);
     }
 
@@ -1642,10 +1642,10 @@ class MSimdBinaryArith : public MBinaryInstruction
     MSimdBinaryArith(MDefinition *left, MDefinition *right, Operation op, MIRType type)
       : MBinaryInstruction(left, right), operation_(op)
     {
-        JS_ASSERT_IF(type == MIRType_Int32x4, op == Add || op == Sub);
-        JS_ASSERT(IsSimdType(type));
-        JS_ASSERT(left->type() == right->type());
-        JS_ASSERT(left->type() == type);
+        MOZ_ASSERT_IF(type == MIRType_Int32x4, op == Add || op == Sub);
+        MOZ_ASSERT(IsSimdType(type));
+        MOZ_ASSERT(left->type() == right->type());
+        MOZ_ASSERT(left->type() == type);
         setResultType(type);
         setMovable();
         if (op == Add || op == Mul || op == Min || op == Max)
@@ -1719,6 +1719,49 @@ class MSimdBinaryBitwise : public MBinaryInstruction
     }
 
     ALLOW_CLONE(MSimdBinaryBitwise)
+};
+
+class MSimdShift : public MBinaryInstruction
+{
+  public:
+    enum Operation {
+        lsh,
+        rsh,
+        ursh
+    };
+
+  private:
+    Operation operation_;
+
+    MSimdShift(MDefinition *left, MDefinition *right, Operation op)
+      : MBinaryInstruction(left, right), operation_(op)
+    {
+        MOZ_ASSERT(left->type() == MIRType_Int32x4 && right->type() == MIRType_Int32);
+        setResultType(MIRType_Int32x4);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(SimdShift);
+    static MSimdShift *NewAsmJS(TempAllocator &alloc, MDefinition *left,
+                                MDefinition *right, Operation op)
+    {
+        return new(alloc) MSimdShift(left, right, op);
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+
+    Operation operation() const { return operation_; }
+
+    bool congruentTo(const MDefinition *ins) const {
+        if (!binaryCongruentTo(ins))
+            return false;
+        return operation_ == ins->toSimdShift()->operation();
+    }
+
+    ALLOW_CLONE(MSimdShift)
 };
 
 class MSimdTernaryBitwise : public MTernaryInstruction
@@ -1884,7 +1927,7 @@ class MTableSwitch MOZ_FINAL
     int32_t high_;
 
     void initOperand(size_t index, MDefinition *operand) {
-        JS_ASSERT(index == 0);
+        MOZ_ASSERT(index == 0);
         operand_.init(operand, this);
     }
 
@@ -1901,12 +1944,12 @@ class MTableSwitch MOZ_FINAL
 
   protected:
     MUse *getUseFor(size_t index) {
-        JS_ASSERT(index == 0);
+        MOZ_ASSERT(index == 0);
         return &operand_;
     }
 
     const MUse *getUseFor(size_t index) const {
-        JS_ASSERT(index == 0);
+        MOZ_ASSERT(index == 0);
         return &operand_;
     }
 
@@ -1919,19 +1962,19 @@ class MTableSwitch MOZ_FINAL
     }
 
     size_t addSuccessor(MBasicBlock *successor) {
-        JS_ASSERT(successors_.length() < (size_t)(high_ - low_ + 2));
-        JS_ASSERT(!successors_.empty());
+        MOZ_ASSERT(successors_.length() < (size_t)(high_ - low_ + 2));
+        MOZ_ASSERT(!successors_.empty());
         successors_.append(successor);
         return successors_.length() - 1;
     }
 
     MBasicBlock *getSuccessor(size_t i) const {
-        JS_ASSERT(i < numSuccessors());
+        MOZ_ASSERT(i < numSuccessors());
         return successors_[i];
     }
 
     void replaceSuccessor(size_t i, MBasicBlock *successor) {
-        JS_ASSERT(i < numSuccessors());
+        MOZ_ASSERT(i < numSuccessors());
         successors_[i] = successor;
     }
 
@@ -1964,7 +2007,7 @@ class MTableSwitch MOZ_FINAL
     }
 
     size_t addDefault(MBasicBlock *block) {
-        JS_ASSERT(successors_.empty());
+        MOZ_ASSERT(successors_.empty());
         successors_.append(block);
         return 0;
     }
@@ -1974,7 +2017,7 @@ class MTableSwitch MOZ_FINAL
     }
 
     MBasicBlock *getBlock(size_t i) const {
-        JS_ASSERT(i < numBlocks());
+        MOZ_ASSERT(i < numBlocks());
         return blocks_[i];
     }
 
@@ -1983,7 +2026,7 @@ class MTableSwitch MOZ_FINAL
     }
 
     MDefinition *getOperand(size_t index) const {
-        JS_ASSERT(index == 0);
+        MOZ_ASSERT(index == 0);
         return operand_.producer();
     }
 
@@ -1997,7 +2040,7 @@ class MTableSwitch MOZ_FINAL
     }
 
     void replaceOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
-        JS_ASSERT(index == 0);
+        MOZ_ASSERT(index == 0);
         operand_.replaceProducer(operand);
     }
 
@@ -2313,7 +2356,7 @@ class MNewArrayCopyOnWrite : public MNullaryInstruction
       : templateObject_(templateObject),
         initialHeap_(initialHeap)
     {
-        JS_ASSERT(!templateObject->hasSingletonType());
+        MOZ_ASSERT(!templateObject->hasSingletonType());
         setResultType(MIRType_Object);
         setResultTypeSet(MakeSingletonTypeSet(constraints, templateObject));
     }
@@ -2354,7 +2397,7 @@ class MNewObject : public MUnaryInstruction
         templateObjectIsClassPrototype_(templateObjectIsClassPrototype)
     {
         JSObject *obj = templateObject();
-        JS_ASSERT_IF(templateObjectIsClassPrototype, !shouldUseVM());
+        MOZ_ASSERT_IF(templateObjectIsClassPrototype, !shouldUseVM());
         setResultType(MIRType_Object);
         if (!obj->hasSingletonType())
             setResultTypeSet(MakeSingletonTypeSet(constraints, obj));
@@ -3383,7 +3426,7 @@ class MCompare
             return AliasSet::None();
         if (compareType_ == Compare_Unknown)
             return AliasSet::Store(AliasSet::Any);
-        JS_ASSERT(compareType_ <= Compare_Value);
+        MOZ_ASSERT(compareType_ <= Compare_Value);
         return AliasSet::None();
     }
 
@@ -3436,7 +3479,7 @@ class MBox : public MUnaryInstruction
     static MBox *New(TempAllocator &alloc, MDefinition *ins)
     {
         // Cannot box a box.
-        JS_ASSERT(ins->type() != MIRType_Value);
+        MOZ_ASSERT(ins->type() != MIRType_Value);
 
         return new(alloc) MBox(alloc, ins);
     }
@@ -3484,14 +3527,14 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy::Data
         // Only allow unboxing a non MIRType_Value when input and output types
         // don't match. This is often used to force a bailout. Boxing happens
         // during type analysis.
-        JS_ASSERT_IF(ins->type() != MIRType_Value, type != ins->type());
+        MOZ_ASSERT_IF(ins->type() != MIRType_Value, type != ins->type());
 
-        JS_ASSERT(type == MIRType_Boolean ||
-                  type == MIRType_Int32   ||
-                  type == MIRType_Double  ||
-                  type == MIRType_String  ||
-                  type == MIRType_Symbol  ||
-                  type == MIRType_Object);
+        MOZ_ASSERT(type == MIRType_Boolean ||
+                   type == MIRType_Int32   ||
+                   type == MIRType_Double  ||
+                   type == MIRType_String  ||
+                   type == MIRType_Symbol  ||
+                   type == MIRType_Object);
 
         setResultType(type);
         setResultTypeSet(ins->resultTypeSet());
@@ -3546,7 +3589,7 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy::Data
     }
     BailoutKind bailoutKind() const {
         // If infallible, no bailout should be generated.
-        JS_ASSERT(fallible());
+        MOZ_ASSERT(fallible());
         return bailoutKind_;
     }
     bool fallible() const {
@@ -3563,7 +3606,7 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy::Data
     void printOpcode(FILE *fp) const;
     void makeInfallible() {
         // Should only be called if we're already Infallible or TypeBarrier
-        JS_ASSERT(mode() != Fallible);
+        MOZ_ASSERT(mode() != Fallible);
         mode_ = Infallible;
     }
 
@@ -4664,7 +4707,7 @@ class MMinMax
       : MBinaryInstruction(left, right),
         isMax_(isMax)
     {
-        JS_ASSERT(IsNumberType(type));
+        MOZ_ASSERT(IsNumberType(type));
         setResultType(type);
         setMovable();
         specialization_ = type;
@@ -4715,7 +4758,7 @@ class MAbs
       : MUnaryInstruction(num),
         implicitTruncate_(false)
     {
-        JS_ASSERT(IsNumberType(type));
+        MOZ_ASSERT(IsNumberType(type));
         setResultType(type);
         setMovable();
         specialization_ = type;
@@ -4762,7 +4805,7 @@ class MClz
       : MUnaryInstruction(num),
         operandIsNeverZero_(false)
     {
-        JS_ASSERT(IsNumberType(num->type()));
+        MOZ_ASSERT(IsNumberType(num->type()));
         specialization_ = MIRType_Int32;
         setResultType(MIRType_Int32);
         setMovable();
@@ -4815,7 +4858,7 @@ class MSqrt
         return new(alloc) MSqrt(num, MIRType_Double);
     }
     static MSqrt *NewAsmJS(TempAllocator &alloc, MDefinition *num, MIRType type) {
-        JS_ASSERT(IsFloatingPointType(type));
+        MOZ_ASSERT(IsFloatingPointType(type));
         return new(alloc) MSqrt(num, type);
     }
     bool congruentTo(const MDefinition *ins) const {
@@ -4943,7 +4986,7 @@ class MPow
     static MPow *New(TempAllocator &alloc, MDefinition *input, MDefinition *power,
                      MIRType powerType)
     {
-        JS_ASSERT(powerType == MIRType_Double || powerType == MIRType_Int32);
+        MOZ_ASSERT(powerType == MIRType_Double || powerType == MIRType_Int32);
         return new(alloc) MPow(input, power, powerType);
     }
 
@@ -5254,7 +5297,7 @@ class MMul : public MBinaryArithInstruction
             setTruncateKind(Truncate);
             setCommutative();
         }
-        JS_ASSERT_IF(mode != Integer, mode == Normal);
+        MOZ_ASSERT_IF(mode != Integer, mode == Normal);
 
         if (type != MIRType_Value)
             specialization_ = type;
@@ -5474,17 +5517,17 @@ class MMod : public MBinaryArithInstruction
     }
 
     bool canBeNegativeDividend() const {
-        JS_ASSERT(specialization_ == MIRType_Int32);
+        MOZ_ASSERT(specialization_ == MIRType_Int32);
         return canBeNegativeDividend_;
     }
 
     bool canBeDivideByZero() const {
-        JS_ASSERT(specialization_ == MIRType_Int32);
+        MOZ_ASSERT(specialization_ == MIRType_Int32);
         return canBeDivideByZero_;
     }
 
     bool canBePowerOfTwoDivisor() const {
-        JS_ASSERT(specialization_ == MIRType_Int32);
+        MOZ_ASSERT(specialization_ == MIRType_Int32);
         return canBePowerOfTwoDivisor_;
     }
 
@@ -5517,7 +5560,7 @@ class MConcat
       : MBinaryInstruction(left, right)
     {
         // At least one input should be definitely string
-        JS_ASSERT(left->type() == MIRType_String || right->type() == MIRType_String);
+        MOZ_ASSERT(left->type() == MIRType_String || right->type() == MIRType_String);
 
         setMovable();
         setResultType(MIRType_String);
@@ -5552,7 +5595,7 @@ class MConcatPar
     {
         // Type analysis has already run, before replacing with the parallel
         // variant.
-        JS_ASSERT(left->type() == MIRType_String && right->type() == MIRType_String);
+        MOZ_ASSERT(left->type() == MIRType_String && right->type() == MIRType_String);
 
         setMovable();
         setResultType(MIRType_String);
@@ -5779,7 +5822,7 @@ class MPhi MOZ_FINAL : public MDefinition, public InlineListNode<MPhi>
         // operands such that they do not include the type sets of their
         // operands. This can arise during e.g. value numbering, where
         // definitions producing the same value may have different type sets.
-        JS_ASSERT(index < numOperands());
+        MOZ_ASSERT(index < numOperands());
         return &inputs_[index];
     }
     const MUse *getUseFor(size_t index) const {
@@ -6575,8 +6618,8 @@ class MLambdaPar
                types::TemporaryTypeSet *resultTypes, const LambdaFunctionInfo &info)
       : MBinaryInstruction(cx, scopeChain), info_(info)
     {
-        JS_ASSERT(!info_.singletonType);
-        JS_ASSERT(!info_.useNewTypeForClone);
+        MOZ_ASSERT(!info_.singletonType);
+        MOZ_ASSERT(!info_.useNewTypeForClone);
         setResultType(MIRType_Object);
         setResultTypeSet(resultTypes);
     }
@@ -6752,7 +6795,7 @@ class MMaybeToDoubleElement
     MMaybeToDoubleElement(MDefinition *elements, MDefinition *value)
       : MBinaryInstruction(elements, value)
     {
-        JS_ASSERT(elements->type() == MIRType_Elements);
+        MOZ_ASSERT(elements->type() == MIRType_Elements);
         setMovable();
         setResultType(MIRType_Value);
     }
@@ -7017,7 +7060,7 @@ class MNeuterCheck
     explicit MNeuterCheck(MDefinition *object)
       : MUnaryInstruction(object)
     {
-        JS_ASSERT(object->type() == MIRType_Object);
+        MOZ_ASSERT(object->type() == MIRType_Object);
         setResultType(MIRType_Object);
         setResultTypeSet(object->resultTypeSet());
         setGuard();
@@ -7085,8 +7128,8 @@ class MSetTypedObjectOffset
     MSetTypedObjectOffset(MDefinition *object, MDefinition *offset)
       : MBinaryInstruction(object, offset)
     {
-        JS_ASSERT(object->type() == MIRType_Object);
-        JS_ASSERT(offset->type() == MIRType_Int32);
+        MOZ_ASSERT(object->type() == MIRType_Object);
+        MOZ_ASSERT(offset->type() == MIRType_Int32);
         setResultType(MIRType_None);
     }
 
@@ -7193,8 +7236,8 @@ class MBoundsCheck
     {
         setGuard();
         setMovable();
-        JS_ASSERT(index->type() == MIRType_Int32);
-        JS_ASSERT(length->type() == MIRType_Int32);
+        MOZ_ASSERT(index->type() == MIRType_Int32);
+        MOZ_ASSERT(length->type() == MIRType_Int32);
 
         // Returns the checked index.
         setResultType(MIRType_Int32);
@@ -7253,7 +7296,7 @@ class MBoundsCheckLower
     {
         setGuard();
         setMovable();
-        JS_ASSERT(index->type() == MIRType_Int32);
+        MOZ_ASSERT(index->type() == MIRType_Int32);
     }
 
   public:
@@ -7303,8 +7346,8 @@ class MLoadElement
         }
         setResultType(MIRType_Value);
         setMovable();
-        JS_ASSERT(elements->type() == MIRType_Elements);
-        JS_ASSERT(index->type() == MIRType_Int32);
+        MOZ_ASSERT(elements->type() == MIRType_Elements);
+        MOZ_ASSERT(index->type() == MIRType_Int32);
     }
 
   public:
@@ -7365,9 +7408,9 @@ class MLoadElementHole
     {
         setResultType(MIRType_Value);
         setMovable();
-        JS_ASSERT(elements->type() == MIRType_Elements);
-        JS_ASSERT(index->type() == MIRType_Int32);
-        JS_ASSERT(initLength->type() == MIRType_Int32);
+        MOZ_ASSERT(elements->type() == MIRType_Elements);
+        MOZ_ASSERT(index->type() == MIRType_Int32);
+        MOZ_ASSERT(initLength->type() == MIRType_Int32);
     }
 
   public:
@@ -7429,7 +7472,7 @@ class MStoreElementCommon
         return elementType_;
     }
     void setElementType(MIRType elementType) {
-        JS_ASSERT(elementType != MIRType_None);
+        MOZ_ASSERT(elementType != MIRType_None);
         elementType_ = elementType;
     }
     bool needsBarrier() const {
@@ -7459,8 +7502,8 @@ class MStoreElement
         initOperand(1, index);
         initOperand(2, value);
         needsHoleCheck_ = needsHoleCheck;
-        JS_ASSERT(elements->type() == MIRType_Elements);
-        JS_ASSERT(index->type() == MIRType_Int32);
+        MOZ_ASSERT(elements->type() == MIRType_Elements);
+        MOZ_ASSERT(index->type() == MIRType_Int32);
     }
 
   public:
@@ -7507,8 +7550,8 @@ class MStoreElementHole
         initOperand(1, elements);
         initOperand(2, index);
         initOperand(3, value);
-        JS_ASSERT(elements->type() == MIRType_Elements);
-        JS_ASSERT(index->type() == MIRType_Int32);
+        MOZ_ASSERT(elements->type() == MIRType_Elements);
+        MOZ_ASSERT(index->type() == MIRType_Int32);
     }
 
   public:
@@ -7706,9 +7749,9 @@ class MLoadTypedArrayElement
     {
         setResultType(MIRType_Value);
         setMovable();
-        JS_ASSERT(elements->type() == MIRType_Elements);
-        JS_ASSERT(index->type() == MIRType_Int32);
-        JS_ASSERT(arrayType >= 0 && arrayType < Scalar::TypeMax);
+        MOZ_ASSERT(elements->type() == MIRType_Elements);
+        MOZ_ASSERT(index->type() == MIRType_Int32);
+        MOZ_ASSERT(arrayType >= 0 && arrayType < Scalar::TypeMax);
     }
 
   public:
@@ -7768,8 +7811,8 @@ class MLoadTypedArrayElementHole
     {
         setResultType(MIRType_Value);
         setMovable();
-        JS_ASSERT(index->type() == MIRType_Int32);
-        JS_ASSERT(arrayType >= 0 && arrayType < Scalar::TypeMax);
+        MOZ_ASSERT(index->type() == MIRType_Int32);
+        MOZ_ASSERT(arrayType >= 0 && arrayType < Scalar::TypeMax);
     }
 
   public:
@@ -7881,9 +7924,9 @@ class MStoreTypedArrayElement
       : MTernaryInstruction(elements, index, value), arrayType_(arrayType), racy_(false)
     {
         setMovable();
-        JS_ASSERT(elements->type() == MIRType_Elements);
-        JS_ASSERT(index->type() == MIRType_Int32);
-        JS_ASSERT(arrayType >= 0 && arrayType < Scalar::TypeMax);
+        MOZ_ASSERT(elements->type() == MIRType_Elements);
+        MOZ_ASSERT(index->type() == MIRType_Int32);
+        MOZ_ASSERT(arrayType >= 0 && arrayType < Scalar::TypeMax);
     }
 
   public:
@@ -7949,10 +7992,10 @@ class MStoreTypedArrayElementHole
         initOperand(2, index);
         initOperand(3, value);
         setMovable();
-        JS_ASSERT(elements->type() == MIRType_Elements);
-        JS_ASSERT(length->type() == MIRType_Int32);
-        JS_ASSERT(index->type() == MIRType_Int32);
-        JS_ASSERT(arrayType >= 0 && arrayType < Scalar::TypeMax);
+        MOZ_ASSERT(elements->type() == MIRType_Elements);
+        MOZ_ASSERT(length->type() == MIRType_Int32);
+        MOZ_ASSERT(index->type() == MIRType_Int32);
+        MOZ_ASSERT(arrayType >= 0 && arrayType < Scalar::TypeMax);
     }
 
   public:
@@ -8051,8 +8094,8 @@ class MEffectiveAddress : public MBinaryInstruction
     MEffectiveAddress(MDefinition *base, MDefinition *index, Scale scale, int32_t displacement)
       : MBinaryInstruction(base, index), scale_(scale), displacement_(displacement)
     {
-        JS_ASSERT(base->type() == MIRType_Int32);
-        JS_ASSERT(index->type() == MIRType_Int32);
+        MOZ_ASSERT(base->type() == MIRType_Int32);
+        MOZ_ASSERT(index->type() == MIRType_Int32);
         setMovable();
         setResultType(MIRType_Int32);
     }
@@ -8236,7 +8279,7 @@ class InlinePropertyTable : public TempObject
     { }
 
     void setPriorResumePoint(MResumePoint *resumePoint) {
-        JS_ASSERT(priorResumePoint_ == nullptr);
+        MOZ_ASSERT(priorResumePoint_ == nullptr);
         priorResumePoint_ = resumePoint;
     }
     MResumePoint *takePriorResumePoint() {
@@ -8258,12 +8301,12 @@ class InlinePropertyTable : public TempObject
     }
 
     types::TypeObject *getTypeObject(size_t i) const {
-        JS_ASSERT(i < numEntries());
+        MOZ_ASSERT(i < numEntries());
         return entries_[i]->typeObj;
     }
 
     JSFunction *getFunction(size_t i) const {
-        JS_ASSERT(i < numEntries());
+        MOZ_ASSERT(i < numEntries());
         return entries_[i]->func;
     }
 
@@ -8326,7 +8369,7 @@ class MGetPropertyCache
     }
 
     InlinePropertyTable *initInlinePropertyTable(TempAllocator &alloc, jsbytecode *pc) {
-        JS_ASSERT(inlinePropertyTable_ == nullptr);
+        MOZ_ASSERT(inlinePropertyTable_ == nullptr);
         inlinePropertyTable_ = new(alloc) InlinePropertyTable(alloc, pc);
         return inlinePropertyTable_;
     }
@@ -8536,7 +8579,7 @@ class MDispatchInstruction
     MUse operand_;
 
     void initOperand(size_t index, MDefinition *operand) {
-        JS_ASSERT(index == 0);
+        MOZ_ASSERT(index == 0);
         operand_.init(operand, this);
     }
 
@@ -8549,32 +8592,32 @@ class MDispatchInstruction
 
   protected:
     MUse *getUseFor(size_t index) MOZ_FINAL MOZ_OVERRIDE {
-        JS_ASSERT(index == 0);
+        MOZ_ASSERT(index == 0);
         return &operand_;
     }
     const MUse *getUseFor(size_t index) const MOZ_FINAL MOZ_OVERRIDE {
-        JS_ASSERT(index == 0);
+        MOZ_ASSERT(index == 0);
         return &operand_;
     }
     MDefinition *getOperand(size_t index) const MOZ_FINAL MOZ_OVERRIDE {
-        JS_ASSERT(index == 0);
+        MOZ_ASSERT(index == 0);
         return operand_.producer();
     }
     size_t numOperands() const MOZ_FINAL MOZ_OVERRIDE {
         return 1;
     }
     size_t indexOf(const MUse *u) const MOZ_FINAL MOZ_OVERRIDE {
-        JS_ASSERT(u == getUseFor(0));
+        MOZ_ASSERT(u == getUseFor(0));
         return 0;
     }
     void replaceOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
-        JS_ASSERT(index == 0);
+        MOZ_ASSERT(index == 0);
         operand_.replaceProducer(operand);
     }
 
   public:
     void setSuccessor(size_t i, MBasicBlock *successor) {
-        JS_ASSERT(i < numSuccessors());
+        MOZ_ASSERT(i < numSuccessors());
         if (i == map_.length())
             fallback_ = successor;
         else
@@ -8587,7 +8630,7 @@ class MDispatchInstruction
         setSuccessor(i, successor);
     }
     MBasicBlock *getSuccessor(size_t i) const MOZ_FINAL MOZ_OVERRIDE {
-        JS_ASSERT(i < numSuccessors());
+        MOZ_ASSERT(i < numSuccessors());
         if (i == map_.length())
             return fallback_;
         return map_[i].block;
@@ -8611,11 +8654,11 @@ class MDispatchInstruction
         return bool(fallback_);
     }
     void addFallback(MBasicBlock *block) {
-        JS_ASSERT(!hasFallback());
+        MOZ_ASSERT(!hasFallback());
         fallback_ = block;
     }
     MBasicBlock *getFallback() const {
-        JS_ASSERT(hasFallback());
+        MOZ_ASSERT(hasFallback());
         return fallback_;
     }
 
@@ -8986,7 +9029,7 @@ class MLoadSlot
     {
         setResultType(MIRType_Value);
         setMovable();
-        JS_ASSERT(slots->type() == MIRType_Slots);
+        MOZ_ASSERT(slots->type() == MIRType_Slots);
     }
 
   public:
@@ -9015,7 +9058,7 @@ class MLoadSlot
     MDefinition *foldsTo(TempAllocator &alloc);
 
     AliasSet getAliasSet() const {
-        JS_ASSERT(slots()->type() == MIRType_Slots);
+        MOZ_ASSERT(slots()->type() == MIRType_Slots);
         return AliasSet::Load(AliasSet::DynamicSlot);
     }
     bool mightAlias(const MDefinition *store) const;
@@ -9125,7 +9168,7 @@ class MStoreSlot
           slotType_(MIRType_Value),
           needsBarrier_(barrier)
     {
-        JS_ASSERT(slots->type() == MIRType_Slots);
+        MOZ_ASSERT(slots->type() == MIRType_Slots);
     }
 
   public:
@@ -9155,7 +9198,7 @@ class MStoreSlot
         return slotType_;
     }
     void setSlotType(MIRType slotType) {
-        JS_ASSERT(slotType != MIRType_None);
+        MOZ_ASSERT(slotType != MIRType_None);
         slotType_ = slotType;
     }
     bool needsBarrier() const {
@@ -9649,8 +9692,8 @@ class MGetDOMProperty
     MGetDOMProperty(const JSJitInfo *jitinfo, MDefinition *obj, MDefinition *guard)
       : info_(jitinfo)
     {
-        JS_ASSERT(jitinfo);
-        JS_ASSERT(jitinfo->type() == JSJitInfo::Getter);
+        MOZ_ASSERT(jitinfo);
+        MOZ_ASSERT(jitinfo->type() == JSJitInfo::Getter);
 
         initOperand(0, obj);
 
@@ -9659,7 +9702,7 @@ class MGetDOMProperty
 
         // We are movable iff the jitinfo says we can be.
         if (isDomMovable()) {
-            JS_ASSERT(jitinfo->aliasSet() != JSJitInfo::AliasEverything);
+            MOZ_ASSERT(jitinfo->aliasSet() != JSJitInfo::AliasEverything);
             setMovable();
         } else {
             // If we're not movable, that means we shouldn't be DCEd either,
@@ -9727,7 +9770,7 @@ class MGetDOMProperty
             return AliasSet::None();
         if (aliasSet == JSJitInfo::AliasDOMSets)
             return AliasSet::Load(AliasSet::DOMProperty);
-        JS_ASSERT(aliasSet == JSJitInfo::AliasEverything);
+        MOZ_ASSERT(aliasSet == JSJitInfo::AliasEverything);
         return AliasSet::Store(AliasSet::Any);
     }
 
@@ -10060,9 +10103,9 @@ class MInArray
     {
         setResultType(MIRType_Boolean);
         setMovable();
-        JS_ASSERT(elements->type() == MIRType_Elements);
-        JS_ASSERT(index->type() == MIRType_Int32);
-        JS_ASSERT(initLength->type() == MIRType_Int32);
+        MOZ_ASSERT(elements->type() == MIRType_Elements);
+        MOZ_ASSERT(index->type() == MIRType_Int32);
+        MOZ_ASSERT(initLength->type() == MIRType_Int32);
     }
 
   public:
@@ -10713,7 +10756,7 @@ class MProfilerStackOp : public MNullaryInstruction
     MProfilerStackOp(JSScript *script, Type type)
       : script_(script), type_(type)
     {
-        JS_ASSERT(script);
+        MOZ_ASSERT(script);
         setGuard();
     }
 
@@ -10768,7 +10811,7 @@ class MNewDenseArrayPar : public MBinaryInstruction
       : MBinaryInstruction(cx, length),
         templateObject_(templateObject)
     {
-        JS_ASSERT(length->type() == MIRType_Int32);
+        MOZ_ASSERT(length->type() == MIRType_Int32);
         setResultType(MIRType_Object);
     }
 
@@ -11013,7 +11056,7 @@ class MHasClass
       : MUnaryInstruction(object)
       , class_(clasp)
     {
-        JS_ASSERT(object->type() == MIRType_Object);
+        MOZ_ASSERT(object->type() == MIRType_Object);
         setResultType(MIRType_Boolean);
         setMovable();
     }
@@ -11167,7 +11210,7 @@ class MAsmJSLoadGlobalVar : public MNullaryInstruction
     MAsmJSLoadGlobalVar(MIRType type, unsigned globalDataOffset, bool isConstant)
       : globalDataOffset_(globalDataOffset), isConstant_(isConstant)
     {
-        JS_ASSERT(IsNumberType(type) || IsSimdType(type));
+        MOZ_ASSERT(IsNumberType(type) || IsSimdType(type));
         setResultType(type);
         setMovable();
     }
@@ -11356,9 +11399,9 @@ class MAsmJSCall MOZ_FINAL : public MVariadicInstruction
         explicit Callee(MDefinition *callee) : which_(Dynamic) { u.dynamic_ = callee; }
         explicit Callee(AsmJSImmKind callee) : which_(Builtin) { u.builtin_ = callee; }
         Which which() const { return which_; }
-        Label *internal() const { JS_ASSERT(which_ == Internal); return u.internal_; }
-        MDefinition *dynamic() const { JS_ASSERT(which_ == Dynamic); return u.dynamic_; }
-        AsmJSImmKind builtin() const { JS_ASSERT(which_ == Builtin); return u.builtin_; }
+        Label *internal() const { MOZ_ASSERT(which_ == Internal); return u.internal_; }
+        MDefinition *dynamic() const { MOZ_ASSERT(which_ == Dynamic); return u.dynamic_; }
+        AsmJSImmKind builtin() const { MOZ_ASSERT(which_ == Builtin); return u.builtin_; }
     };
 
   private:
@@ -11388,7 +11431,7 @@ class MAsmJSCall MOZ_FINAL : public MVariadicInstruction
         return argRegs_.length();
     }
     AnyRegister registerForArg(size_t index) const {
-        JS_ASSERT(index < numArgs());
+        MOZ_ASSERT(index < numArgs());
         return argRegs_[index];
     }
     const CallSiteDesc &desc() const {
@@ -11398,8 +11441,8 @@ class MAsmJSCall MOZ_FINAL : public MVariadicInstruction
         return callee_;
     }
     size_t dynamicCalleeOperandIndex() const {
-        JS_ASSERT(callee_.which() == Callee::Dynamic);
-        JS_ASSERT(numArgs() == numOperands() - 1);
+        MOZ_ASSERT(callee_.which() == Callee::Dynamic);
+        MOZ_ASSERT(numArgs() == numOperands() - 1);
         return numArgs();
     }
     size_t spIncrement() const {
@@ -11469,30 +11512,30 @@ void MUse::releaseProducer()
 
 MDefinition *MNode::toDefinition()
 {
-    JS_ASSERT(isDefinition());
+    MOZ_ASSERT(isDefinition());
     return (MDefinition *)this;
 }
 
 MResumePoint *MNode::toResumePoint()
 {
-    JS_ASSERT(isResumePoint());
+    MOZ_ASSERT(isResumePoint());
     return (MResumePoint *)this;
 }
 
 MInstruction *MDefinition::toInstruction()
 {
-    JS_ASSERT(!isPhi());
+    MOZ_ASSERT(!isPhi());
     return (MInstruction *)this;
 }
 
 const MInstruction *MDefinition::toInstruction() const
 {
-    JS_ASSERT(!isPhi());
+    MOZ_ASSERT(!isPhi());
     return (const MInstruction *)this;
 }
 
 MControlInstruction *MDefinition::toControlInstruction() {
-    JS_ASSERT(isControlInstruction());
+    MOZ_ASSERT(isControlInstruction());
     return (MControlInstruction *)this;
 }
 

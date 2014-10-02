@@ -174,7 +174,7 @@ class RegExpShared
     /* Accessors */
 
     size_t getParenCount() const {
-        JS_ASSERT(isCompiled() || canStringMatch);
+        MOZ_ASSERT(isCompiled() || canStringMatch);
         return parenCount;
     }
 
@@ -232,7 +232,7 @@ class RegExpGuard : public JS::CustomAutoRooter
 
   public:
     void init(RegExpShared &re) {
-        JS_ASSERT(!initialized());
+        MOZ_ASSERT(!initialized());
         re_ = &re;
     }
 
@@ -246,7 +246,7 @@ class RegExpGuard : public JS::CustomAutoRooter
     }
 
     bool initialized() const { return !!re_; }
-    RegExpShared *re() const { JS_ASSERT(initialized()); return re_; }
+    RegExpShared *re() const { MOZ_ASSERT(initialized()); return re_; }
     RegExpShared *operator->() { return re(); }
     RegExpShared &operator*() { return *re(); }
 };
@@ -406,7 +406,7 @@ class RegExpObject : public JSObject
     bool getShared(JSContext *cx, RegExpGuard *g);
 
     void setShared(RegExpShared &shared) {
-        JS_ASSERT(!maybeShared());
+        MOZ_ASSERT(!maybeShared());
         JSObject::setPrivate(&shared);
     }
 

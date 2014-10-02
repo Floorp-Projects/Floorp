@@ -124,6 +124,7 @@ gfxMacFont::ShapeText(gfxContext     *aContext,
                       uint32_t        aOffset,
                       uint32_t        aLength,
                       int32_t         aScript,
+                      bool            aVertical,
                       gfxShapedText  *aShapedText)
 {
     if (!mIsValid) {
@@ -131,19 +132,22 @@ gfxMacFont::ShapeText(gfxContext     *aContext,
         return false;
     }
 
-    if (static_cast<MacOSFontEntry*>(GetFontEntry())->RequiresAATLayout()) {
+    // Currently, we don't support vertical shaping via CoreText,
+    // so we ignore RequiresAATLayout if vertical is requested.
+    if (static_cast<MacOSFontEntry*>(GetFontEntry())->RequiresAATLayout() &&
+        !aVertical) {
         if (!mCoreTextShaper) {
             mCoreTextShaper = new gfxCoreTextShaper(this);
         }
         if (mCoreTextShaper->ShapeText(aContext, aText, aOffset, aLength,
-                                       aScript, aShapedText)) {
+                                       aScript, aVertical, aShapedText)) {
             PostShapingFixup(aContext, aText, aOffset, aLength, aShapedText);
             return true;
         }
     }
 
     return gfxFont::ShapeText(aContext, aText, aOffset, aLength, aScript,
-                              aShapedText);
+                              aVertical, aShapedText);
 }
 
 bool

@@ -42,7 +42,7 @@ struct SavedFrame::Lookup {
         parent(parent),
         principals(principals)
     {
-        JS_ASSERT(source);
+        MOZ_ASSERT(source);
     }
 
     JSAtom       *source;
@@ -212,8 +212,8 @@ SavedFrame::getPrincipals()
 void
 SavedFrame::initFromLookup(SavedFrame::HandleLookup lookup)
 {
-    JS_ASSERT(lookup->source);
-    JS_ASSERT(getReservedSlot(JSSLOT_SOURCE).isUndefined());
+    MOZ_ASSERT(lookup->source);
+    MOZ_ASSERT(getReservedSlot(JSSLOT_SOURCE).isUndefined());
     setReservedSlot(JSSLOT_SOURCE, StringValue(lookup->source));
 
     setReservedSlot(JSSLOT_LINE, NumberValue(lookup->line));
@@ -225,7 +225,7 @@ SavedFrame::initFromLookup(SavedFrame::HandleLookup lookup)
     setReservedSlot(JSSLOT_PARENT, ObjectOrNullValue(lookup->parent));
     setReservedSlot(JSSLOT_PRIVATE_PARENT, PrivateValue(lookup->parent));
 
-    JS_ASSERT(getReservedSlot(JSSLOT_PRINCIPALS).isUndefined());
+    MOZ_ASSERT(getReservedSlot(JSSLOT_PRINCIPALS).isUndefined());
     if (lookup->principals)
         JS_HoldPrincipals(lookup->principals);
     setReservedSlot(JSSLOT_PRINCIPALS, PrivateValue(lookup->principals));
@@ -418,7 +418,7 @@ SavedStacks::init()
 bool
 SavedStacks::saveCurrentStack(JSContext *cx, MutableHandleSavedFrame frame, unsigned maxFrameCount)
 {
-    JS_ASSERT(initialized());
+    MOZ_ASSERT(initialized());
     assertSameCompartment(cx, this);
 
     FrameIter iter(cx, FrameIter::ALL_CONTEXTS, FrameIter::GO_THROUGH_SAVED);
@@ -479,7 +479,7 @@ SavedStacks::trace(JSTracer *trc)
 uint32_t
 SavedStacks::count()
 {
-    JS_ASSERT(initialized());
+    MOZ_ASSERT(initialized());
     return frames.count();
 }
 
@@ -719,7 +719,7 @@ SavedStacks::chooseSamplingProbability(JSContext *cx)
     for (Debugger **dbgp = dbgs->begin(); dbgp < dbgs->end(); dbgp++) {
         // The set of debuggers had better not change while we're iterating,
         // such that the vector gets reallocated.
-        JS_ASSERT(dbgs->begin() == begin);
+        MOZ_ASSERT(dbgs->begin() == begin);
 
         if ((*dbgp)->trackingAllocationSites && (*dbgp)->enabled)
             allocationTrackingDbg = *dbgp;

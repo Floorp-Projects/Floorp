@@ -64,7 +64,7 @@ ConsoleMessage.prototype = {
   toString: function() { return this.msg; }
 };
 
-const gFactoryResetFile = "/persist/__post_reset_cmd__";
+const gFactoryResetFile = "__post_reset_cmd__";
 
 function ProcessGlobal() {}
 ProcessGlobal.prototype = {
@@ -104,20 +104,28 @@ ProcessGlobal.prototype = {
   cleanupAfterFactoryReset: function() {
     log("cleanupAfterWipe start");
 
+    Cu.import("resource://gre/modules/osfile.jsm");
+    let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+    dir.initWithPath("/persist");
+    var postResetFile = dir.exists() ?
+                        OS.Path.join("/persist", gFactoryResetFile):
+                        OS.Path.join("/cache", gFactoryResetFile);
     let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-    file.initWithPath(gFactoryResetFile);
+    file.initWithPath(postResetFile);
     if (!file.exists()) {
       debug("Nothing to wipe.")
       return;
     }
 
-    Cu.import("resource://gre/modules/osfile.jsm");
-    let promise = OS.File.read(gFactoryResetFile);
+    let promise = OS.File.read(postResetFile);
     promise.then(
       (array) => {
         file.remove(false);
         let decoder = new TextDecoder();
         this.processWipeFile(decoder.decode(array));
+      },
+      function onError(error) {
+        debug("Error: " + error);
       }
     );
 

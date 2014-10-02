@@ -9,7 +9,7 @@ types like js::Rooted and JS::Handle. For example:
         receiver=(JSObject * const) 0x7ffff150b060 [object global] delegate,
         id=$jsid("x"), defineHow=4, vp=$jsval(1), strict=0)
         at /home/jimb/moz/archer/js/src/jsobj.cpp:4495
-    4495	    JS_ASSERT((defineHow & ~(DNP_CACHE_RESULT | DNP_UNQUALIFIED)) == 0);
+    4495	    MOZ_ASSERT((defineHow & ~(DNP_CACHE_RESULT | DNP_UNQUALIFIED)) == 0);
     (gdb)
 
 Things to note here:

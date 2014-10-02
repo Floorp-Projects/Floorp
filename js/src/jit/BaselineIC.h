@@ -258,14 +258,14 @@ class ICEntry
     }
 
     void setReturnOffset(CodeOffsetLabel offset) {
-        JS_ASSERT(offset.offset() <= (size_t) UINT32_MAX);
+        MOZ_ASSERT(offset.offset() <= (size_t) UINT32_MAX);
         returnOffset_ = (uint32_t) offset.offset();
     }
 
     void fixupReturnOffset(MacroAssembler &masm) {
         CodeOffsetLabel offset = returnOffset();
         offset.fixup(&masm);
-        JS_ASSERT(offset.offset() <= UINT32_MAX);
+        MOZ_ASSERT(offset.offset() <= UINT32_MAX);
         returnOffset_ = (uint32_t) offset.offset();
     }
 
@@ -298,7 +298,7 @@ class ICEntry
         return firstStub_ != nullptr;
     }
     ICStub *firstStub() const {
-        JS_ASSERT(hasStub());
+        MOZ_ASSERT(hasStub());
         return firstStub_;
     }
 
@@ -500,12 +500,12 @@ class ICStubConstIterator
     }
 
     ICStub *operator *() const {
-        JS_ASSERT(currentStub_);
+        MOZ_ASSERT(currentStub_);
         return currentStub_;
     }
 
     ICStub *operator ->() const {
-        JS_ASSERT(currentStub_);
+        MOZ_ASSERT(currentStub_);
         return currentStub_;
     }
 
@@ -541,8 +541,8 @@ class ICStubIterator
 
     bool operator ==(const ICStubIterator &other) const {
         // == should only ever be called on stubs from the same chain.
-        JS_ASSERT(icEntry_ == other.icEntry_);
-        JS_ASSERT(fallbackStub_ == other.fallbackStub_);
+        MOZ_ASSERT(icEntry_ == other.icEntry_);
+        MOZ_ASSERT(fallbackStub_ == other.fallbackStub_);
         return currentStub_ == other.currentStub_;
     }
     bool operator !=(const ICStubIterator &other) const {
@@ -638,7 +638,7 @@ class ICStub
         trait_(Regular),
         kind_(kind)
     {
-        JS_ASSERT(stubCode != nullptr);
+        MOZ_ASSERT(stubCode != nullptr);
     }
 
     inline ICStub(Kind kind, Trait trait, JitCode *stubCode)
@@ -648,7 +648,7 @@ class ICStub
         trait_(trait),
         kind_(kind)
     {
-        JS_ASSERT(stubCode != nullptr);
+        MOZ_ASSERT(stubCode != nullptr);
     }
 
     inline Trait trait() const {
@@ -679,53 +679,53 @@ class ICStub
     }
 
     inline const ICFallbackStub *toFallbackStub() const {
-        JS_ASSERT(isFallback());
+        MOZ_ASSERT(isFallback());
         return reinterpret_cast<const ICFallbackStub *>(this);
     }
 
     inline ICFallbackStub *toFallbackStub() {
-        JS_ASSERT(isFallback());
+        MOZ_ASSERT(isFallback());
         return reinterpret_cast<ICFallbackStub *>(this);
     }
 
     inline const ICMonitoredStub *toMonitoredStub() const {
-        JS_ASSERT(isMonitored());
+        MOZ_ASSERT(isMonitored());
         return reinterpret_cast<const ICMonitoredStub *>(this);
     }
 
     inline ICMonitoredStub *toMonitoredStub() {
-        JS_ASSERT(isMonitored());
+        MOZ_ASSERT(isMonitored());
         return reinterpret_cast<ICMonitoredStub *>(this);
     }
 
     inline const ICMonitoredFallbackStub *toMonitoredFallbackStub() const {
-        JS_ASSERT(isMonitoredFallback());
+        MOZ_ASSERT(isMonitoredFallback());
         return reinterpret_cast<const ICMonitoredFallbackStub *>(this);
     }
 
     inline ICMonitoredFallbackStub *toMonitoredFallbackStub() {
-        JS_ASSERT(isMonitoredFallback());
+        MOZ_ASSERT(isMonitoredFallback());
         return reinterpret_cast<ICMonitoredFallbackStub *>(this);
     }
 
     inline const ICUpdatedStub *toUpdatedStub() const {
-        JS_ASSERT(isUpdated());
+        MOZ_ASSERT(isUpdated());
         return reinterpret_cast<const ICUpdatedStub *>(this);
     }
 
     inline ICUpdatedStub *toUpdatedStub() {
-        JS_ASSERT(isUpdated());
+        MOZ_ASSERT(isUpdated());
         return reinterpret_cast<ICUpdatedStub *>(this);
     }
 
 #define KIND_METHODS(kindName)   \
     inline bool is##kindName() const { return kind() == kindName; } \
     inline const IC##kindName *to##kindName() const { \
-        JS_ASSERT(is##kindName()); \
+        MOZ_ASSERT(is##kindName()); \
         return reinterpret_cast<const IC##kindName *>(this); \
     } \
     inline IC##kindName *to##kindName() { \
-        JS_ASSERT(is##kindName()); \
+        MOZ_ASSERT(is##kindName()); \
         return reinterpret_cast<IC##kindName *>(this); \
     }
     IC_STUB_KIND_LIST(KIND_METHODS)
@@ -762,7 +762,7 @@ class ICStub
         ICStub *lastStub = this;
         while (lastStub->next_)
             lastStub = lastStub->next_;
-        JS_ASSERT(lastStub->isFallback());
+        MOZ_ASSERT(lastStub->isFallback());
         return lastStub->toFallbackStub();
     }
 
@@ -783,7 +783,7 @@ class ICStub
     }
 
     static bool CanMakeCalls(ICStub::Kind kind) {
-        JS_ASSERT(IsValidKind(kind));
+        MOZ_ASSERT(IsValidKind(kind));
         switch (kind) {
           case Call_Fallback:
           case Call_Scripted:
@@ -830,7 +830,7 @@ class ICStub
     // that these do not get purged, all stubs that can make calls are allocated
     // in the fallback stub space.
     bool allocatedInFallbackSpace() const {
-        JS_ASSERT(next());
+        MOZ_ASSERT(next());
         return CanMakeCalls(kind());
     }
 };
@@ -867,8 +867,8 @@ class ICFallbackStub : public ICStub
         numOptimizedStubs_(0),
         lastStubPtrAddr_(nullptr)
     {
-        JS_ASSERT(trait == ICStub::Fallback ||
-                  trait == ICStub::MonitoredFallback);
+        MOZ_ASSERT(trait == ICStub::Fallback ||
+                   trait == ICStub::MonitoredFallback);
     }
 
   public:
@@ -885,16 +885,16 @@ class ICFallbackStub : public ICStub
     // address until after compile when the BaselineScript is created.  This method
     // allows these fields to be fixed up at that point.
     void fixupICEntry(ICEntry *icEntry) {
-        JS_ASSERT(icEntry_ == nullptr);
-        JS_ASSERT(lastStubPtrAddr_ == nullptr);
+        MOZ_ASSERT(icEntry_ == nullptr);
+        MOZ_ASSERT(lastStubPtrAddr_ == nullptr);
         icEntry_ = icEntry;
         lastStubPtrAddr_ = icEntry_->addressOfFirstStub();
     }
 
     // Add a new stub to the IC chain terminated by this fallback stub.
     void addNewStub(ICStub *stub) {
-        JS_ASSERT(*lastStubPtrAddr_ == this);
-        JS_ASSERT(stub->next() == nullptr);
+        MOZ_ASSERT(*lastStubPtrAddr_ == this);
+        MOZ_ASSERT(stub->next() == nullptr);
         stub->setNext(this);
         *lastStubPtrAddr_ = stub;
         lastStubPtrAddr_ = stub->addressOfNext();
@@ -944,11 +944,11 @@ class ICMonitoredStub : public ICStub
     inline void updateFirstMonitorStub(ICStub *monitorStub) {
         // This should only be called once: when the first optimized monitor stub
         // is added to the type monitor IC chain.
-        JS_ASSERT(firstMonitorStub_ && firstMonitorStub_->isTypeMonitor_Fallback());
+        MOZ_ASSERT(firstMonitorStub_ && firstMonitorStub_->isTypeMonitor_Fallback());
         firstMonitorStub_ = monitorStub;
     }
     inline void resetFirstMonitorStub(ICStub *monitorFallback) {
-        JS_ASSERT(monitorFallback->isTypeMonitor_Fallback());
+        MOZ_ASSERT(monitorFallback->isTypeMonitor_Fallback());
         firstMonitorStub_ = monitorFallback;
     }
     inline ICStub *firstMonitorStub() const {
@@ -1013,10 +1013,10 @@ class ICUpdatedStub : public ICStub
             firstUpdateStub_ = stub;
         } else {
             ICStub *iter = firstUpdateStub_;
-            JS_ASSERT(iter->next() != nullptr);
+            MOZ_ASSERT(iter->next() != nullptr);
             while (!iter->next()->isTypeUpdate_Fallback())
                 iter = iter->next();
-            JS_ASSERT(iter->next()->next() == nullptr);
+            MOZ_ASSERT(iter->next()->next() == nullptr);
             stub->setNext(iter->next());
             iter->setNext(stub);
         }
@@ -1109,13 +1109,13 @@ class ICStubCompiler
 
     inline GeneralRegisterSet availableGeneralRegs(size_t numInputs) const {
         GeneralRegisterSet regs(GeneralRegisterSet::All());
-        JS_ASSERT(!regs.has(BaselineStackReg));
+        MOZ_ASSERT(!regs.has(BaselineStackReg));
 #if defined(JS_CODEGEN_ARM)
-        JS_ASSERT(!regs.has(BaselineTailCallReg));
+        MOZ_ASSERT(!regs.has(BaselineTailCallReg));
         regs.take(BaselineSecondScratchReg);
 #elif defined(JS_CODEGEN_MIPS)
-        JS_ASSERT(!regs.has(BaselineTailCallReg));
-        JS_ASSERT(!regs.has(BaselineSecondScratchReg));
+        MOZ_ASSERT(!regs.has(BaselineTailCallReg));
+        MOZ_ASSERT(!regs.has(BaselineSecondScratchReg));
 #endif
         regs.take(BaselineFrameReg);
         regs.take(BaselineStubReg);
@@ -1316,13 +1316,13 @@ class TypeCheckPrimitiveSetStub : public ICStub
     TypeCheckPrimitiveSetStub(Kind kind, JitCode *stubCode, uint16_t flags)
         : ICStub(kind, stubCode)
     {
-        JS_ASSERT(kind == TypeMonitor_PrimitiveSet || kind == TypeUpdate_PrimitiveSet);
-        JS_ASSERT(flags && !(flags & ~ValidFlags()));
+        MOZ_ASSERT(kind == TypeMonitor_PrimitiveSet || kind == TypeUpdate_PrimitiveSet);
+        MOZ_ASSERT(flags && !(flags & ~ValidFlags()));
         extra_ = flags;
     }
 
     TypeCheckPrimitiveSetStub *updateTypesAndCode(uint16_t flags, JitCode *code) {
-        JS_ASSERT(flags && !(flags & ~ValidFlags()));
+        MOZ_ASSERT(flags && !(flags & ~ValidFlags()));
         if (!code)
             return nullptr;
         extra_ = flags;
@@ -1336,8 +1336,8 @@ class TypeCheckPrimitiveSetStub : public ICStub
     }
 
     bool containsType(JSValueType type) const {
-        JS_ASSERT(type <= JSVAL_TYPE_OBJECT);
-        JS_ASSERT(type != JSVAL_TYPE_MAGIC);
+        MOZ_ASSERT(type <= JSVAL_TYPE_OBJECT);
+        MOZ_ASSERT(type != JSVAL_TYPE_MAGIC);
         return extra_ & TypeToFlag(type);
     }
 
@@ -1365,11 +1365,11 @@ class TypeCheckPrimitiveSetStub : public ICStub
             existingStub_(existingStub),
             flags_((existingStub ? existingStub->typeFlags() : 0) | TypeToFlag(type))
         {
-            JS_ASSERT_IF(existingStub_, flags_ != existingStub_->typeFlags());
+            MOZ_ASSERT_IF(existingStub_, flags_ != existingStub_->typeFlags());
         }
 
         TypeCheckPrimitiveSetStub *updateStub() {
-            JS_ASSERT(existingStub_);
+            MOZ_ASSERT(existingStub_);
             return existingStub_->updateTypesAndCode(flags_, getStubCode());
         }
     };
@@ -1434,17 +1434,17 @@ class ICTypeMonitor_Fallback : public ICStub
     void addOptimizedMonitorStub(ICStub *stub) {
         stub->setNext(this);
 
-        JS_ASSERT((lastMonitorStubPtrAddr_ != nullptr) ==
-                  (numOptimizedMonitorStubs_ || !hasFallbackStub_));
+        MOZ_ASSERT((lastMonitorStubPtrAddr_ != nullptr) ==
+                   (numOptimizedMonitorStubs_ || !hasFallbackStub_));
 
         if (lastMonitorStubPtrAddr_)
             *lastMonitorStubPtrAddr_ = stub;
 
         if (numOptimizedMonitorStubs_ == 0) {
-            JS_ASSERT(firstMonitorStub_ == this);
+            MOZ_ASSERT(firstMonitorStub_ == this);
             firstMonitorStub_ = stub;
         } else {
-            JS_ASSERT(firstMonitorStub_ != nullptr);
+            MOZ_ASSERT(firstMonitorStub_ != nullptr);
         }
 
         lastMonitorStubPtrAddr_ = stub->addressOfNext();
@@ -1474,7 +1474,7 @@ class ICTypeMonitor_Fallback : public ICStub
     }
 
     inline ICFallbackStub *mainFallbackStub() const {
-        JS_ASSERT(hasFallbackStub_);
+        MOZ_ASSERT(hasFallbackStub_);
         return mainFallbackStub_;
     }
 
@@ -1512,9 +1512,9 @@ class ICTypeMonitor_Fallback : public ICStub
 
     // Fixup the IC entry as for a normal fallback stub, for this/arguments.
     void fixupICEntry(ICEntry *icEntry) {
-        JS_ASSERT(!hasFallbackStub_);
-        JS_ASSERT(icEntry_ == nullptr);
-        JS_ASSERT(lastMonitorStubPtrAddr_ == nullptr);
+        MOZ_ASSERT(!hasFallbackStub_);
+        MOZ_ASSERT(icEntry_ == nullptr);
+        MOZ_ASSERT(lastMonitorStubPtrAddr_ == nullptr);
         icEntry_ = icEntry;
         lastMonitorStubPtrAddr_ = icEntry_->addressOfFirstStub();
     }
@@ -1588,7 +1588,7 @@ class ICTypeMonitor_PrimitiveSet : public TypeCheckPrimitiveSetStub
         }
 
         ICTypeMonitor_PrimitiveSet *getStub(ICStubSpace *space) {
-            JS_ASSERT(!existingStub_);
+            MOZ_ASSERT(!existingStub_);
             return ICTypeMonitor_PrimitiveSet::New(space, getStubCode(), flags_);
         }
     };
@@ -1750,7 +1750,7 @@ class ICTypeUpdate_PrimitiveSet : public TypeCheckPrimitiveSetStub
         }
 
         ICTypeUpdate_PrimitiveSet *getStub(ICStubSpace *space) {
-            JS_ASSERT(!existingStub_);
+            MOZ_ASSERT(!existingStub_);
             return ICTypeUpdate_PrimitiveSet::New(space, getStubCode(), flags_);
         }
     };
@@ -2698,7 +2698,7 @@ class ICBinaryArith_BooleanWithInt32 : public ICStub
     ICBinaryArith_BooleanWithInt32(JitCode *stubCode, bool lhsIsBool, bool rhsIsBool)
       : ICStub(BinaryArith_BooleanWithInt32, stubCode)
     {
-        JS_ASSERT(lhsIsBool || rhsIsBool);
+        MOZ_ASSERT(lhsIsBool || rhsIsBool);
         extra_ = 0;
         if (lhsIsBool)
             extra_ |= 1;
@@ -2740,9 +2740,9 @@ class ICBinaryArith_BooleanWithInt32 : public ICStub
           : ICStubCompiler(cx, ICStub::BinaryArith_BooleanWithInt32),
             op_(op), lhsIsBool_(lhsIsBool), rhsIsBool_(rhsIsBool)
         {
-            JS_ASSERT(op_ == JSOP_ADD || op_ == JSOP_SUB || op_ == JSOP_BITOR ||
-                      op_ == JSOP_BITAND || op_ == JSOP_BITXOR);
-            JS_ASSERT(lhsIsBool_ || rhsIsBool_);
+            MOZ_ASSERT(op_ == JSOP_ADD || op_ == JSOP_SUB || op_ == JSOP_BITOR ||
+                       op_ == JSOP_BITAND || op_ == JSOP_BITXOR);
+            MOZ_ASSERT(lhsIsBool_ || rhsIsBool_);
         }
 
         ICStub *getStub(ICStubSpace *space) {
@@ -3016,8 +3016,8 @@ class ICGetElemNativeSlotStub : public ICGetElemNativeStub
       : ICGetElemNativeStub(kind, stubCode, firstMonitorStub, shape, name, acctype, needsAtomize),
         offset_(offset)
     {
-        JS_ASSERT(kind == GetElem_NativeSlot || kind == GetElem_NativePrototypeSlot);
-        JS_ASSERT(acctype == FixedSlot || acctype == DynamicSlot);
+        MOZ_ASSERT(kind == GetElem_NativeSlot || kind == GetElem_NativePrototypeSlot);
+        MOZ_ASSERT(acctype == FixedSlot || acctype == DynamicSlot);
     }
 
   public:
@@ -3284,13 +3284,13 @@ class ICGetElemNativeCompiler : public ICStubCompiler
     ICStub *getStub(ICStubSpace *space) {
         RootedShape shape(cx, obj_->lastProperty());
         if (kind == ICStub::GetElem_NativeSlot) {
-            JS_ASSERT(obj_ == holder_);
+            MOZ_ASSERT(obj_ == holder_);
             return ICGetElem_NativeSlot::New(
                     space, getStubCode(), firstMonitorStub_, shape, name_, acctype_, needsAtomize_,
                     offset_);
         }
 
-        JS_ASSERT(obj_ != holder_);
+        MOZ_ASSERT(obj_ != holder_);
         RootedShape holderShape(cx, holder_->lastProperty());
         if (kind == ICStub::GetElem_NativePrototypeSlot) {
             return ICGetElem_NativePrototypeSlot::New(
@@ -3304,7 +3304,7 @@ class ICGetElemNativeCompiler : public ICStubCompiler
                     getter_, pcOffset_, holder_, holderShape);
         }
 
-        JS_ASSERT(kind == ICStub::GetElem_NativePrototypeCallScripted);
+        MOZ_ASSERT(kind == ICStub::GetElem_NativePrototypeCallScripted);
         if (kind == ICStub::GetElem_NativePrototypeCallScripted) {
             return ICGetElem_NativePrototypeCallScripted::New(
                     space, getStubCode(), firstMonitorStub_, shape, name_, acctype_, needsAtomize_,
@@ -3648,7 +3648,7 @@ class ICSetElem_DenseAdd : public ICUpdatedStub
 
     template <size_t ProtoChainDepth>
     ICSetElem_DenseAddImpl<ProtoChainDepth> *toImpl() {
-        JS_ASSERT(ProtoChainDepth == protoChainDepth());
+        MOZ_ASSERT(ProtoChainDepth == protoChainDepth());
         return toImplUnchecked<ProtoChainDepth>();
     }
 };
@@ -3665,7 +3665,7 @@ class ICSetElem_DenseAddImpl : public ICSetElem_DenseAdd
                            const AutoShapeVector *shapes)
       : ICSetElem_DenseAdd(stubCode, type, ProtoChainDepth)
     {
-        JS_ASSERT(shapes->length() == NumShapes);
+        MOZ_ASSERT(shapes->length() == NumShapes);
         for (size_t i = 0; i < NumShapes; i++)
             shapes_[i].init((*shapes)[i]);
     }
@@ -3685,7 +3685,7 @@ class ICSetElem_DenseAddImpl : public ICSetElem_DenseAdd
             MarkShape(trc, &shapes_[i], "baseline-setelem-denseadd-stub-shape");
     }
     Shape *shape(size_t i) const {
-        JS_ASSERT(i < NumShapes);
+        MOZ_ASSERT(i < NumShapes);
         return shapes_[i];
     }
     static size_t offsetOfShape(size_t idx) {
@@ -3939,7 +3939,7 @@ class ICGetName_Scope : public ICMonitoredStub
     }
 
     static size_t offsetOfShape(size_t index) {
-        JS_ASSERT(index <= NumHops);
+        MOZ_ASSERT(index <= NumHops);
         return offsetof(ICGetName_Scope, shapes_) + (index * sizeof(HeapPtrShape));
     }
     static size_t offsetOfOffset() {
@@ -4451,12 +4451,12 @@ class ICGetPropNativeCompiler : public ICStubCompiler
     ICGetPropNativeStub *getStub(ICStubSpace *space) {
         RootedShape shape(cx, obj_->lastProperty());
         if (kind == ICStub::GetProp_Native) {
-            JS_ASSERT(obj_ == holder_);
+            MOZ_ASSERT(obj_ == holder_);
             return ICGetProp_Native::New(space, getStubCode(), firstMonitorStub_, shape, offset_);
         }
 
-        JS_ASSERT(obj_ != holder_);
-        JS_ASSERT(kind == ICStub::GetProp_NativePrototype);
+        MOZ_ASSERT(obj_ != holder_);
+        MOZ_ASSERT(kind == ICStub::GetProp_NativePrototype);
         RootedShape holderShape(cx, holder_->lastProperty());
         return ICGetProp_NativePrototype::New(space, getStubCode(), firstMonitorStub_, shape,
                                               offset_, holder_, holderShape);
@@ -4621,9 +4621,9 @@ class ICGetPropCallGetter : public ICMonitoredStub
             getter_(cx, getter),
             pcOffset_(pcOffset)
         {
-            JS_ASSERT(kind == ICStub::GetProp_CallScripted ||
-                      kind == ICStub::GetProp_CallNative ||
-                      kind == ICStub::GetProp_CallNativePrototype);
+            MOZ_ASSERT(kind == ICStub::GetProp_CallScripted ||
+                       kind == ICStub::GetProp_CallNative ||
+                       kind == ICStub::GetProp_CallNativePrototype);
         }
     };
 };
@@ -4662,8 +4662,8 @@ class ICGetPropCallPrototypeGetter : public ICGetPropCallGetter
           : ICGetPropCallGetter::Compiler(cx, kind, firstMonitorStub, holder, getter, pcOffset),
             receiver_(cx, obj)
         {
-            JS_ASSERT(kind == ICStub::GetProp_CallScripted ||
-                      kind == ICStub::GetProp_CallNativePrototype);
+            MOZ_ASSERT(kind == ICStub::GetProp_CallScripted ||
+                       kind == ICStub::GetProp_CallNativePrototype);
         }
     };
 };
@@ -5299,7 +5299,7 @@ class ICSetProp_NativeAdd : public ICUpdatedStub
 
     template <size_t ProtoChainDepth>
     ICSetProp_NativeAddImpl<ProtoChainDepth> *toImpl() {
-        JS_ASSERT(ProtoChainDepth == protoChainDepth());
+        MOZ_ASSERT(ProtoChainDepth == protoChainDepth());
         return static_cast<ICSetProp_NativeAddImpl<ProtoChainDepth> *>(this);
     }
 
@@ -5463,7 +5463,7 @@ class ICSetPropCallSetter : public ICStub
             setter_(cx, setter),
             pcOffset_(pcOffset)
         {
-            JS_ASSERT(kind == ICStub::SetProp_CallScripted || kind == ICStub::SetProp_CallNative);
+            MOZ_ASSERT(kind == ICStub::SetProp_CallScripted || kind == ICStub::SetProp_CallNative);
         }
     };
 };
@@ -6381,7 +6381,7 @@ class ICTypeOf_Typed : public ICFallbackStub
       : ICFallbackStub(ICStub::TypeOf_Typed, stubCode)
     {
         extra_ = uint16_t(type);
-        JS_ASSERT(JSType(extra_) == type);
+        MOZ_ASSERT(JSType(extra_) == type);
     }
 
   public:

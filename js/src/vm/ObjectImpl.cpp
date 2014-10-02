@@ -93,10 +93,10 @@ ObjectElements::ConvertElementsToDoubles(JSContext *cx, uintptr_t elementsPtr)
      * elements converted to doubles, and arrays never have empty elements.
      */
     HeapSlot *elementsHeapPtr = (HeapSlot *) elementsPtr;
-    JS_ASSERT(elementsHeapPtr != emptyObjectElements);
+    MOZ_ASSERT(elementsHeapPtr != emptyObjectElements);
 
     ObjectElements *header = ObjectElements::fromElements(elementsHeapPtr);
-    JS_ASSERT(!header->shouldConvertDoubleElements());
+    MOZ_ASSERT(!header->shouldConvertDoubleElements());
 
     // Note: the elements can be mutated in place even for copy on write
     // arrays. See comment on ObjectElements.
@@ -123,7 +123,7 @@ ObjectElements::MakeElementsCopyOnWrite(ExclusiveContext *cx, JSObject *obj)
 
     // Note: this method doesn't update type information to indicate that the
     // elements might be copy on write. Handling this is left to the caller.
-    JS_ASSERT(!header->isCopyOnWrite());
+    MOZ_ASSERT(!header->isCopyOnWrite());
     header->flags |= COPY_ON_WRITE;
 
     header->ownerObject().init(obj);

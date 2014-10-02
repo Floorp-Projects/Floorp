@@ -35,7 +35,7 @@ BitSet::init(TempAllocator &alloc)
 bool
 BitSet::empty() const
 {
-    JS_ASSERT(bits_);
+    MOZ_ASSERT(bits_);
     const uint32_t *bits = bits_;
     for (unsigned int i = 0, e = numWords(); i < e; i++) {
         if (bits[i])
@@ -47,9 +47,9 @@ BitSet::empty() const
 void
 BitSet::insertAll(const BitSet *other)
 {
-    JS_ASSERT(bits_);
-    JS_ASSERT(other->numBits_ == numBits_);
-    JS_ASSERT(other->bits_);
+    MOZ_ASSERT(bits_);
+    MOZ_ASSERT(other->numBits_ == numBits_);
+    MOZ_ASSERT(other->bits_);
 
     uint32_t *bits = bits_;
     const uint32_t *otherBits = other->bits_;
@@ -60,9 +60,9 @@ BitSet::insertAll(const BitSet *other)
 void
 BitSet::removeAll(const BitSet *other)
 {
-    JS_ASSERT(bits_);
-    JS_ASSERT(other->numBits_ == numBits_);
-    JS_ASSERT(other->bits_);
+    MOZ_ASSERT(bits_);
+    MOZ_ASSERT(other->numBits_ == numBits_);
+    MOZ_ASSERT(other->bits_);
 
     uint32_t *bits = bits_;
     const uint32_t *otherBits = other->bits_;
@@ -73,9 +73,9 @@ BitSet::removeAll(const BitSet *other)
 void
 BitSet::intersect(const BitSet *other)
 {
-    JS_ASSERT(bits_);
-    JS_ASSERT(other->numBits_ == numBits_);
-    JS_ASSERT(other->bits_);
+    MOZ_ASSERT(bits_);
+    MOZ_ASSERT(other->numBits_ == numBits_);
+    MOZ_ASSERT(other->bits_);
 
     uint32_t *bits = bits_;
     const uint32_t *otherBits = other->bits_;
@@ -87,9 +87,9 @@ BitSet::intersect(const BitSet *other)
 bool
 BitSet::fixedPointIntersect(const BitSet *other)
 {
-    JS_ASSERT(bits_);
-    JS_ASSERT(other->numBits_ == numBits_);
-    JS_ASSERT(other->bits_);
+    MOZ_ASSERT(bits_);
+    MOZ_ASSERT(other->numBits_ == numBits_);
+    MOZ_ASSERT(other->bits_);
 
     bool changed = false;
 
@@ -108,7 +108,7 @@ BitSet::fixedPointIntersect(const BitSet *other)
 void
 BitSet::complement()
 {
-    JS_ASSERT(bits_);
+    MOZ_ASSERT(bits_);
     uint32_t *bits = bits_;
     for (unsigned int i = 0, e = numWords(); i < e; i++)
         bits[i] = ~bits[i];
@@ -117,7 +117,7 @@ BitSet::complement()
 void
 BitSet::clear()
 {
-    JS_ASSERT(bits_);
+    MOZ_ASSERT(bits_);
     uint32_t *bits = bits_;
     for (unsigned int i = 0, e = numWords(); i < e; i++)
         bits[i] = 0;

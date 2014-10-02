@@ -149,27 +149,27 @@ class AbstractFramePtr
         return (ptr_ & TagMask) == Tag_InterpreterFrame;
     }
     InterpreterFrame *asInterpreterFrame() const {
-        JS_ASSERT(isInterpreterFrame());
+        MOZ_ASSERT(isInterpreterFrame());
         InterpreterFrame *res = (InterpreterFrame *)(ptr_ & ~TagMask);
-        JS_ASSERT(res);
+        MOZ_ASSERT(res);
         return res;
     }
     bool isBaselineFrame() const {
         return (ptr_ & TagMask) == Tag_BaselineFrame;
     }
     jit::BaselineFrame *asBaselineFrame() const {
-        JS_ASSERT(isBaselineFrame());
+        MOZ_ASSERT(isBaselineFrame());
         jit::BaselineFrame *res = (jit::BaselineFrame *)(ptr_ & ~TagMask);
-        JS_ASSERT(res);
+        MOZ_ASSERT(res);
         return res;
     }
     bool isRematerializedFrame() const {
         return (ptr_ & TagMask) == Tag_RematerializedFrame;
     }
     jit::RematerializedFrame *asRematerializedFrame() const {
-        JS_ASSERT(isRematerializedFrame());
+        MOZ_ASSERT(isRematerializedFrame());
         jit::RematerializedFrame *res = (jit::RematerializedFrame *)(ptr_ & ~TagMask);
-        JS_ASSERT(res);
+        MOZ_ASSERT(res);
         return res;
     }
 
@@ -507,7 +507,7 @@ class InterpreterFrame
     }
 
     AbstractFramePtr evalInFramePrev() const {
-        JS_ASSERT(isEvalFrame());
+        MOZ_ASSERT(isEvalFrame());
         return evalInFramePrev_;
     }
 
@@ -539,8 +539,8 @@ class InterpreterFrame
 
     bool copyRawFrameSlots(AutoValueVector *v);
 
-    unsigned numFormalArgs() const { JS_ASSERT(hasArgs()); return fun()->nargs(); }
-    unsigned numActualArgs() const { JS_ASSERT(hasArgs()); return u.nactual; }
+    unsigned numFormalArgs() const { MOZ_ASSERT(hasArgs()); return fun()->nargs(); }
+    unsigned numActualArgs() const { MOZ_ASSERT(hasArgs()); return u.nactual; }
 
     /* Watch out, this exposes a pointer to the unaliased formal arg array. */
     Value *argv() const { return argv_; }
@@ -632,13 +632,13 @@ class InterpreterFrame
 
     /* Return the previous frame's pc. */
     jsbytecode *prevpc() {
-        JS_ASSERT(prev_);
+        MOZ_ASSERT(prev_);
         return prevpc_;
     }
 
     /* Return the previous frame's sp. */
     Value *prevsp() {
-        JS_ASSERT(prev_);
+        MOZ_ASSERT(prev_);
         return prevsp_;
     }
 
@@ -652,7 +652,7 @@ class InterpreterFrame
      */
 
     JSFunction* fun() const {
-        JS_ASSERT(isFunctionFrame());
+        MOZ_ASSERT(isFunctionFrame());
         return exec.fun;
     }
 
@@ -674,14 +674,14 @@ class InterpreterFrame
      */
 
     Value &functionThis() const {
-        JS_ASSERT(isFunctionFrame());
+        MOZ_ASSERT(isFunctionFrame());
         if (isEvalFrame())
             return ((Value *)this)[-1];
         return argv()[-1];
     }
 
     JSObject &constructorThis() const {
-        JS_ASSERT(hasArgs());
+        MOZ_ASSERT(hasArgs());
         return argv()[-1].toObject();
     }
 
@@ -701,12 +701,12 @@ class InterpreterFrame
      */
 
     JSFunction &callee() const {
-        JS_ASSERT(isFunctionFrame());
+        MOZ_ASSERT(isFunctionFrame());
         return calleev().toObject().as<JSFunction>();
     }
 
     const Value &calleev() const {
-        JS_ASSERT(isFunctionFrame());
+        MOZ_ASSERT(isFunctionFrame());
         return mutableCalleev();
     }
 
@@ -714,12 +714,12 @@ class InterpreterFrame
         Value &calleev = flags_ & (EVAL | GLOBAL)
                          ? ((Value *)this)[-2]
                          : argv()[-2];
-        JS_ASSERT(calleev.isObjectOrNull());
+        MOZ_ASSERT(calleev.isObjectOrNull());
         return calleev;
     }
 
     Value &mutableCalleev() const {
-        JS_ASSERT(isFunctionFrame());
+        MOZ_ASSERT(isFunctionFrame());
         if (isEvalFrame())
             return ((Value *)this)[-2];
         return argv()[-2];
@@ -792,28 +792,28 @@ class InterpreterFrame
 
     bool isGeneratorFrame() const {
         bool ret = flags_ & GENERATOR;
-        JS_ASSERT_IF(ret, isNonEvalFunctionFrame());
+        MOZ_ASSERT_IF(ret, isNonEvalFunctionFrame());
         return ret;
     }
 
     void initGeneratorFrame() const {
-        JS_ASSERT(!isGeneratorFrame());
-        JS_ASSERT(isNonEvalFunctionFrame());
+        MOZ_ASSERT(!isGeneratorFrame());
+        MOZ_ASSERT(isNonEvalFunctionFrame());
         flags_ |= GENERATOR;
     }
 
     Value *generatorArgsSnapshotBegin() const {
-        JS_ASSERT(isGeneratorFrame());
+        MOZ_ASSERT(isGeneratorFrame());
         return argv() - 2;
     }
 
     Value *generatorArgsSnapshotEnd() const {
-        JS_ASSERT(isGeneratorFrame());
+        MOZ_ASSERT(isGeneratorFrame());
         return argv() + js::Max(numActualArgs(), numFormalArgs());
     }
 
     Value *generatorSlotsSnapshotBegin() const {
-        JS_ASSERT(isGeneratorFrame());
+        MOZ_ASSERT(isGeneratorFrame());
         return (Value *)(this + 1);
     }
 
@@ -833,7 +833,7 @@ class InterpreterFrame
         JS_STATIC_ASSERT((int)INITIAL_NONE == 0);
         JS_STATIC_ASSERT((int)INITIAL_CONSTRUCT == (int)CONSTRUCTING);
         uint32_t mask = CONSTRUCTING;
-        JS_ASSERT((flags_ & mask) != mask);
+        MOZ_ASSERT((flags_ & mask) != mask);
         return InitialFrameFlags(flags_ & mask);
     }
 
@@ -860,16 +860,16 @@ class InterpreterFrame
     }
 
     bool hasArgsObj() const {
-        JS_ASSERT(script()->needsArgsObj());
+        MOZ_ASSERT(script()->needsArgsObj());
         return flags_ & HAS_ARGS_OBJ;
     }
 
     void setUseNewType() {
-        JS_ASSERT(isConstructing());
+        MOZ_ASSERT(isConstructing());
         flags_ |= USE_NEW_TYPE;
     }
     bool useNewType() const {
-        JS_ASSERT(isConstructing());
+        MOZ_ASSERT(isConstructing());
         return flags_ & USE_NEW_TYPE;
     }
 
@@ -898,17 +898,17 @@ class InterpreterFrame
     }
 
     bool isSuspended() const {
-        JS_ASSERT(isGeneratorFrame());
+        MOZ_ASSERT(isGeneratorFrame());
         return flags_ & SUSPENDED;
     }
 
     void setSuspended() {
-        JS_ASSERT(isGeneratorFrame());
+        MOZ_ASSERT(isGeneratorFrame());
         flags_ |= SUSPENDED;
     }
 
     void clearSuspended() {
-        JS_ASSERT(isGeneratorFrame());
+        MOZ_ASSERT(isGeneratorFrame());
         flags_ &= ~SUSPENDED;
     }
 
@@ -962,12 +962,12 @@ class InterpreterRegs
     InterpreterFrame *fp() const { return fp_; }
 
     unsigned stackDepth() const {
-        JS_ASSERT(sp >= fp_->base());
+        MOZ_ASSERT(sp >= fp_->base());
         return sp - fp_->base();
     }
 
     Value *spForStackDepth(unsigned depth) const {
-        JS_ASSERT(fp_->script()->nfixed() + depth <= fp_->script()->nslots());
+        MOZ_ASSERT(fp_->script()->nfixed() + depth <= fp_->script()->nslots());
         return fp_->base() + depth;
     }
 
@@ -976,14 +976,14 @@ class InterpreterRegs
         fp_ = &to;
         sp = to.slots() + (from.sp - from.fp_->slots());
         pc = from.pc;
-        JS_ASSERT(fp_);
+        MOZ_ASSERT(fp_);
     }
 
     void popInlineFrame() {
         pc = fp_->prevpc();
         sp = fp_->prevsp() - fp_->numActualArgs() - 1;
         fp_ = fp_->prev();
-        JS_ASSERT(fp_);
+        MOZ_ASSERT(fp_);
     }
     void prepareToRun(InterpreterFrame &fp, JSScript *script) {
         pc = script->code();
@@ -1034,7 +1034,7 @@ class InterpreterStack
     { }
 
     ~InterpreterStack() {
-        JS_ASSERT(frameCount_ == 0);
+        MOZ_ASSERT(frameCount_ == 0);
     }
 
     // For execution of eval or global code.
@@ -1160,19 +1160,19 @@ class Activation
     void unregisterProfiling();
 
     InterpreterActivation *asInterpreter() const {
-        JS_ASSERT(isInterpreter());
+        MOZ_ASSERT(isInterpreter());
         return (InterpreterActivation *)this;
     }
     jit::JitActivation *asJit() const {
-        JS_ASSERT(isJit());
+        MOZ_ASSERT(isJit());
         return (jit::JitActivation *)this;
     }
     ForkJoinActivation *asForkJoin() const {
-        JS_ASSERT(isForkJoin());
+        MOZ_ASSERT(isForkJoin());
         return (ForkJoinActivation *)this;
     }
     AsmJSActivation *asAsmJS() const {
-        JS_ASSERT(isAsmJS());
+        MOZ_ASSERT(isAsmJS());
         return (AsmJSActivation *)this;
     }
 
@@ -1180,7 +1180,7 @@ class Activation
         savedFrameChain_++;
     }
     void restoreFrameChain() {
-        JS_ASSERT(savedFrameChain_ > 0);
+        MOZ_ASSERT(savedFrameChain_ > 0);
         savedFrameChain_--;
     }
     bool hasSavedFrameChain() const {
@@ -1191,7 +1191,7 @@ class Activation
         hideScriptedCallerCount_++;
     }
     void unhideScriptedCaller() {
-        JS_ASSERT(hideScriptedCallerCount_ > 0);
+        MOZ_ASSERT(hideScriptedCallerCount_ > 0);
         hideScriptedCallerCount_--;
     }
     bool scriptedCallerIsHidden() const {
@@ -1292,7 +1292,7 @@ class ActivationIterator
         return activation_;
     }
     uint8_t *jitTop() const {
-        JS_ASSERT(activation_->isJit());
+        MOZ_ASSERT(activation_->isJit());
         return jitTop_;
     }
     bool done() const {
@@ -1362,7 +1362,7 @@ class JitActivation : public Activation
         return offsetof(JitActivation, prevJitJSContext_);
     }
     static size_t offsetOfActiveUint8() {
-        JS_ASSERT(sizeof(bool) == 1);
+        MOZ_ASSERT(sizeof(bool) == 1);
         return offsetof(JitActivation, active_);
     }
 
@@ -1474,15 +1474,15 @@ class InterpreterFrameIterator
     }
 
     InterpreterFrame *frame() const {
-        JS_ASSERT(!done());
+        MOZ_ASSERT(!done());
         return fp_;
     }
     jsbytecode *pc() const {
-        JS_ASSERT(!done());
+        MOZ_ASSERT(!done());
         return pc_;
     }
     Value *sp() const {
-        JS_ASSERT(!done());
+        MOZ_ASSERT(!done());
         return sp_;
     }
 
@@ -1617,9 +1617,9 @@ class FrameIter
     JSCompartment *compartment() const;
     Activation *activation() const { return data_.activations_.activation(); }
 
-    bool isInterp() const { JS_ASSERT(!done()); return data_.state_ == INTERP;  }
-    bool isJit() const { JS_ASSERT(!done()); return data_.state_ == JIT; }
-    bool isAsmJS() const { JS_ASSERT(!done()); return data_.state_ == ASMJS; }
+    bool isInterp() const { MOZ_ASSERT(!done()); return data_.state_ == INTERP;  }
+    bool isJit() const { MOZ_ASSERT(!done()); return data_.state_ == JIT; }
+    bool isAsmJS() const { MOZ_ASSERT(!done()); return data_.state_ == ASMJS; }
     inline bool isIon() const;
     inline bool isBaseline() const;
 
@@ -1649,7 +1649,7 @@ class FrameIter
     inline JSScript *script() const;
 
     bool        isConstructing() const;
-    jsbytecode *pc() const { JS_ASSERT(!done()); return data_.pc_; }
+    jsbytecode *pc() const { MOZ_ASSERT(!done()); return data_.pc_; }
     void        updatePcQuadratic();
     JSFunction *callee() const;
     Value       calleev() const;
@@ -1871,10 +1871,10 @@ class AllFramesIter : public ScriptFrameIter
 inline JSScript *
 FrameIter::script() const
 {
-    JS_ASSERT(!done());
+    MOZ_ASSERT(!done());
     if (data_.state_ == INTERP)
         return interpFrame()->script();
-    JS_ASSERT(data_.state_ == JIT);
+    MOZ_ASSERT(data_.state_ == JIT);
     if (data_.jitFrames_.isIonJS())
         return ionInlineFrames_.script();
     return data_.jitFrames_.script();
@@ -1895,7 +1895,7 @@ FrameIter::isBaseline() const
 inline InterpreterFrame *
 FrameIter::interpFrame() const
 {
-    JS_ASSERT(data_.state_ == INTERP);
+    MOZ_ASSERT(data_.state_ == INTERP);
     return data_.interpFrames_.frame();
 }
 

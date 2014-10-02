@@ -77,6 +77,7 @@ protected:
                            uint32_t         aOffset,
                            uint32_t         aLength,
                            int32_t          aScript,
+                           bool             aVertical,
                            gfxShapedText   *aShapedText);
 
     void FillGlyphDataForChar(uint32_t ch, CachedGlyphData *gd);

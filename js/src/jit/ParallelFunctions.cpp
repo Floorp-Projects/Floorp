@@ -39,7 +39,7 @@ jit::ForkJoinContextPar()
 JSObject *
 jit::NewGCThingPar(ForkJoinContext *cx, gc::AllocKind allocKind)
 {
-    JS_ASSERT(ForkJoinContext::current() == cx);
+    MOZ_ASSERT(ForkJoinContext::current() == cx);
 #ifdef JSGC_FJGENERATIONAL
     return js::NewGCObject<CanGC>(cx, allocKind, 0, gc::DefaultHeap);
 #else
@@ -89,7 +89,7 @@ jit::ParallelWriteGuard(ForkJoinContext *cx, JSObject *object)
     //    (which is a span of bytes within the output buffer) and not
     //    just the output buffer itself.
 
-    JS_ASSERT(ForkJoinContext::current() == cx);
+    MOZ_ASSERT(ForkJoinContext::current() == cx);
 
     if (object->is<TypedObject>()) {
         TypedObject &typedObj = object->as<TypedObject>();
@@ -122,7 +122,7 @@ jit::ParallelWriteGuard(ForkJoinContext *cx, JSObject *object)
 bool
 jit::IsInTargetRegion(ForkJoinContext *cx, TypedObject *typedObj)
 {
-    JS_ASSERT(typedObj->is<TypedObject>()); // in case JIT supplies something bogus
+    MOZ_ASSERT(typedObj->is<TypedObject>()); // in case JIT supplies something bogus
     uint8_t *typedMem = typedObj->typedMem();
     return typedMem >= cx->targetRegionStart &&
            typedMem <  cx->targetRegionEnd;
@@ -131,7 +131,7 @@ jit::IsInTargetRegion(ForkJoinContext *cx, TypedObject *typedObj)
 bool
 jit::CheckOverRecursedPar(ForkJoinContext *cx)
 {
-    JS_ASSERT(ForkJoinContext::current() == cx);
+    MOZ_ASSERT(ForkJoinContext::current() == cx);
     int stackDummy_;
 
     // In PJS, unlike sequential execution, we don't overwrite the stack limit
@@ -156,7 +156,7 @@ jit::CheckOverRecursedPar(ForkJoinContext *cx)
 bool
 jit::InterruptCheckPar(ForkJoinContext *cx)
 {
-    JS_ASSERT(ForkJoinContext::current() == cx);
+    MOZ_ASSERT(ForkJoinContext::current() == cx);
     bool result = cx->check();
     if (!result) {
         cx->bailoutRecord->joinCause(ParallelBailoutInterrupt);
@@ -179,12 +179,12 @@ bool
 jit::SetPropertyPar(ForkJoinContext *cx, HandleObject obj, HandlePropertyName name,
                     HandleValue value, bool strict, jsbytecode *pc)
 {
-    JS_ASSERT(cx->isThreadLocal(obj));
+    MOZ_ASSERT(cx->isThreadLocal(obj));
 
     if (*pc == JSOP_SETALIASEDVAR) {
         // See comment in jit::SetProperty.
         Shape *shape = obj->nativeLookupPure(name);
-        JS_ASSERT(shape && shape->hasSlot());
+        MOZ_ASSERT(shape && shape->hasSlot());
         return obj->nativeSetSlotIfHasType(shape, value);
     }
 
@@ -246,7 +246,7 @@ JSString *
 jit::PrimitiveToStringPar(ForkJoinContext *cx, HandleValue input)
 {
     // All other cases are handled in assembly.
-    JS_ASSERT(input.isDouble() || input.isInt32());
+    MOZ_ASSERT(input.isDouble() || input.isInt32());
 
     if (input.isInt32())
         return Int32ToString<NoGC>(cx, input.toInt32());
@@ -579,7 +579,7 @@ jit::CallToUncompiledScriptPar(ForkJoinContext *cx, JSObject *obj)
             Spew(SpewBailouts, "Call to bound function (excessive depth: %d)", depth);
         }
     } else {
-        JS_ASSERT(func->isNative());
+        MOZ_ASSERT(func->isNative());
         Spew(SpewBailouts, "Call to native function");
     }
 #endif
@@ -594,10 +594,10 @@ jit::InitRestParameterPar(ForkJoinContext *cx, uint32_t length, Value *rest,
     // In parallel execution, we should always have succeeded in allocation
     // before this point. We can do the allocation here like in the sequential
     // path, but duplicating the initGCThing logic is too tedious.
-    JS_ASSERT(res);
-    JS_ASSERT(res->is<ArrayObject>());
-    JS_ASSERT(!res->getDenseInitializedLength());
-    JS_ASSERT(res->type() == templateObj->type());
+    MOZ_ASSERT(res);
+    MOZ_ASSERT(res->is<ArrayObject>());
+    MOZ_ASSERT(!res->getDenseInitializedLength());
+    MOZ_ASSERT(res->type() == templateObj->type());
 
     if (length > 0) {
         JSObject::EnsureDenseResult edr =
