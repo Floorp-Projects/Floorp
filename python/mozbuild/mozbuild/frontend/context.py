@@ -140,19 +140,29 @@ class Context(KeyedDefaultDict):
     def objdir(self):
         return mozpath.join(self.config.topobjdir, self.relobjdir).rstrip('/')
 
-    @memoized_property
-    def srcdir(self):
-        return mozpath.join(self.config.topsrcdir, self.relsrcdir).rstrip('/')
+    @memoize
+    def _srcdir(self, path):
+        return mozpath.join(self.config.topsrcdir,
+            self._relsrcdir(path)).rstrip('/')
 
-    @memoized_property
+    @property
+    def srcdir(self):
+        return self._srcdir(self.current_path or self.main_path)
+
+    @memoize
+    def _relsrcdir(self, path):
+        return mozpath.relpath(mozpath.dirname(path), self.config.topsrcdir)
+
+    @property
     def relsrcdir(self):
         assert self.main_path
-        return mozpath.relpath(mozpath.dirname(self.main_path),
-            self.config.topsrcdir)
+        return self._relsrcdir(self.current_path or self.main_path)
 
     @memoized_property
     def relobjdir(self):
-        return self.relsrcdir
+        assert self.main_path
+        return mozpath.relpath(mozpath.dirname(self.main_path),
+            self.config.topsrcdir)
 
     def _factory(self, key):
         """Function called when requesting a missing key."""
@@ -290,6 +300,7 @@ class SourcePath(ContextDerivedValue, UserString):
 
     def __init__(self, context, value=None):
         self.context = context
+        self.srcdir = context.srcdir
         self.value = value
 
     @memoized_property
@@ -306,7 +317,7 @@ class SourcePath(ContextDerivedValue, UserString):
                 ret = mozpath.join(self.context.config.topsrcdir,
                     self.value[1:])
         else:
-            ret = mozpath.join(self.context.srcdir, self.value)
+            ret = mozpath.join(self.srcdir, self.value)
         return mozpath.normpath(ret)
 
     def __unicode__(self):

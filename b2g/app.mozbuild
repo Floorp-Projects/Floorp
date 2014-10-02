@@ -6,12 +6,12 @@
 if not CONFIG['LIBXUL_SDK']:
     include('/toolkit/toolkit.mozbuild')
 elif CONFIG['ENABLE_TESTS']:
-    DIRS += ['testing/mochitest']
+    DIRS += ['/testing/mochitest']
 
 if CONFIG['MOZ_EXTENSIONS']:
-    DIRS += ['extensions']
+    DIRS += ['/extensions']
 
 DIRS += [
-    CONFIG['MOZ_BRANDING_DIRECTORY'],
-    'b2g',
+    '/%s' % CONFIG['MOZ_BRANDING_DIRECTORY'],
+    '/b2g',
 ]
