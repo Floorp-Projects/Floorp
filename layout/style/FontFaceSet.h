@@ -188,6 +188,7 @@ private:
   void InsertConnectedFontFace(FontFace* aFontFace, uint8_t aSheetType,
                                nsTArray<FontFaceRecord>& aOldRecords,
                                bool& aFontSetModified);
+  void InsertUnconnectedFontFace(FontFace* aFontFace, bool& aFontSetModified);
 
 #ifdef DEBUG
   bool HasConnectedFontFace(FontFace* aFontFace);
@@ -206,9 +207,16 @@ private:
   // The CSS-connected FontFace objects in the FontFaceSet.
   nsTArray<FontFaceRecord> mConnectedFaces;
 
+  // The unconnected FontFace objects that have been added to this
+  // FontFaceSet and their corresponding user font entries.
+  nsTArray<nsRefPtr<FontFace>> mOtherFaces;
+
   // The unconnected FontFace objects that have not been added to
   // this FontFaceSet.
   nsTArray<FontFace*> mUnavailableFaces;
+
+  // Whether mOtherFaces has changed since last time UpdateRules ran.
+  bool mOtherFacesDirty;
 };
 
 } // namespace dom
