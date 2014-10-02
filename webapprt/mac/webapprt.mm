@@ -114,7 +114,8 @@ main(int argc, char **argv)
     firefoxPath = PathToWebRT(alternateBinaryID);
     NSLog(@"USING FIREFOX : %@", firefoxPath);
 
-    NSString *myWebRTPath = [myBundle pathForAuxiliaryExecutable: @"webapprt"];
+    NSString* myWebRTPath = [myBundle pathForResource:@"webapprt"
+                                               ofType:nil];
     if (!myWebRTPath) {
       @throw MakeException(@"Missing Web Runtime Files", @"Cannot locate binary for this App");
     }
