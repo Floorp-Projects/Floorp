@@ -12,12 +12,14 @@
 #include "nsCSSValue.h"
 #include "nsWrapperCache.h"
 
+class gfxFontFaceBufferSource;
 class nsCSSFontFaceRule;
 class nsPresContext;
 
 namespace mozilla {
 struct CSSFontFaceDescriptors;
 namespace dom {
+class FontFaceBufferSource;
 struct FontFaceDescriptors;
 class FontFaceSet;
 class FontFaceInitializer;
@@ -33,6 +35,7 @@ namespace dom {
 class FontFace MOZ_FINAL : public nsISupports,
                            public nsWrapperCache
 {
+  friend class mozilla::dom::FontFaceBufferSource;
   friend class mozilla::dom::FontFaceInitializer;
   friend class mozilla::dom::FontFaceStatusSetter;
   friend class Entry;
@@ -126,6 +129,24 @@ public:
    */
   void DisconnectFromRule();
 
+  /**
+   * Returns whether there is an ArrayBuffer or ArrayBufferView of font
+   * data.
+   */
+  bool HasFontData() const;
+
+  /**
+   * Creates a gfxFontFaceBufferSource to represent the font data
+   * in this object.
+   */
+  already_AddRefed<gfxFontFaceBufferSource> CreateBufferSource();
+
+  /**
+   * Gets a pointer to and the length of the font data stored in the
+   * ArrayBuffer or ArrayBufferView.
+   */
+  bool GetData(uint8_t*& aBuffer, uint32_t& aLength);
+
   // Web IDL
   static already_AddRefed<FontFace>
   Constructor(const GlobalObject& aGlobal,
@@ -201,6 +222,11 @@ private:
   void GetDesc(nsCSSFontDesc aDescID,
                nsCSSProperty aPropID,
                nsString& aResult) const;
+
+  /**
+   * Returns and takes ownership of the buffer storing the font data.
+   */
+  void TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength);
 
   nsCOMPtr<nsISupports> mParent;
   nsPresContext* mPresContext;
