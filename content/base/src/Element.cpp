@@ -2939,6 +2939,11 @@ Element::MozRequestPointerLock()
 void
 Element::GetAnimationPlayers(nsTArray<nsRefPtr<AnimationPlayer> >& aPlayers)
 {
+  nsIDocument* doc = GetComposedDoc();
+  if (doc) {
+    doc->FlushPendingNotifications(Flush_Style);
+  }
+
   nsIAtom* properties[] = { nsGkAtoms::transitionsProperty,
                             nsGkAtoms::animationsProperty };
   for (size_t propIdx = 0; propIdx < MOZ_ARRAY_LENGTH(properties);
