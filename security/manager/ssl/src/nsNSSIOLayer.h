@@ -202,9 +202,11 @@ public:
   void setRenegoUnrestrictedSites(const nsCString& str);
   bool isRenegoUnrestrictedSite(const nsCString& str);
   void clearStoredData();
+  void loadVersionFallbackLimit();
 
   bool mFalseStartRequireNPN;
   bool mFalseStartRequireForwardSecrecy;
+  uint16_t mVersionFallbackLimit;
 private:
   mozilla::Mutex mutex;
   nsCOMPtr<nsIObserver> mPrefObserver;
