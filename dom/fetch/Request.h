@@ -22,6 +22,7 @@ namespace mozilla {
 namespace dom {
 
 class Headers;
+class InternalHeaders;
 class Promise;
 
 class Request MOZ_FINAL : public nsISupports
@@ -76,7 +77,13 @@ public:
     aReferrer.AsAString() = NS_ConvertUTF8toUTF16(mRequest->mReferrerURL);
   }
 
-  Headers* Headers_() const { return mRequest->Headers_(); }
+  InternalHeaders*
+  GetInternalHeaders() const
+  {
+    return mRequest->Headers();
+  }
+
+  Headers* Headers_();
 
   void
   GetBody(nsIInputStream** aStream) { return mRequest->GetBody(aStream); }
@@ -100,6 +107,8 @@ private:
 
   nsCOMPtr<nsIGlobalObject> mOwner;
   nsRefPtr<InternalRequest> mRequest;
+  // Lazily created.
+  nsRefPtr<Headers> mHeaders;
 };
 
 } // namespace dom
