@@ -153,6 +153,23 @@ async_test(function(t) {
   var div = addDiv();
 
   // Set up event listener
+  div.addEventListener('animationend', t.step_func(function() {
+    assert_equals(div.getAnimationPlayers().length, 1,
+      'getAnimationPlayers returns players for CSS Animations that have'
+      + ' finished but are filling forwards');
+    div.remove();
+    t.done();
+  }));
+
+  // Add a very short animation
+  div.style.animation = 'anim1 0.01s forwards';
+}, 'getAnimationPlayers for CSS Animations that have finished but are'
+   + ' forwards filling');
+
+async_test(function(t) {
+  var div = addDiv();
+
+  // Set up event listener
   div.addEventListener('transitionend', t.step_func(function() {
     assert_equals(div.getAnimationPlayers().length, 0,
       'getAnimationPlayers does not return finished CSS Transitions');
