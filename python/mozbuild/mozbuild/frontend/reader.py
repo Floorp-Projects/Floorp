@@ -945,7 +945,7 @@ class BuildReader(object):
                 if d in recurse_info:
                     raise SandboxValidationError(
                         'Directory (%s) registered multiple times in %s' % (
-                            d, var), context)
+                            mozpath.relpath(d, context.srcdir), var), context)
 
                 recurse_info[d] = {}
                 if 'templates' in sandbox.metadata:
@@ -955,9 +955,8 @@ class BuildReader(object):
                     sandbox.recompute_exports()
                     recurse_info[d]['exports'] = dict(sandbox.metadata['exports'])
 
-        for relpath, child_metadata in recurse_info.items():
-            child_path = sandbox.normalize_path(mozpath.join(relpath,
-                'moz.build'), srcdir=curdir)
+        for path, child_metadata in recurse_info.items():
+            child_path = mozpath.join(path, 'moz.build')
 
             # Ensure we don't break out of the topsrcdir. We don't do realpath
             # because it isn't necessary. If there are symlinks in the srcdir,
