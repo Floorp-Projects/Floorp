@@ -1,14 +1,13 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
 
 import os
-import sys
 import unittest
 
 from StringIO import StringIO
+
+import mozpack.path as mozpath
 
 from mozbuild.dotproperties import (
     DotProperties,
@@ -18,10 +17,8 @@ from mozunit import (
     main,
 )
 
-if sys.version_info[0] == 3:
-    str_type = 'str'
-else:
-    str_type = 'unicode'
+test_data_path = mozpath.abspath(mozpath.dirname(__file__))
+test_data_path = mozpath.join(test_data_path, 'data')
 
 
 class TestDotProperties(unittest.TestCase):
@@ -83,6 +80,35 @@ B.url=url B
             p.get_dict('A', required_keys=['title', 'url'])
         with self.assertRaises(ValueError):
             p.get_dict('missing', required_keys=['key'])
+
+    def test_unicode(self):
+        contents = StringIO('''
+# Danish.
+# ####  ~~ Søren Munk Skrøder, sskroeder - 2009-05-30 @ #mozmae
+
+# Korean.
+A.title=한메일
+
+# Russian.
+list.0 = test
+list.1 = Яндекс
+''')
+        p = DotProperties(contents)
+        self.assertEqual(p.get_dict('A'), {'title': '한메일'})
+        self.assertEqual(p.get_list('list'), ['test', 'Яндекс'])
+
+    def test_valid_unicode_from_file(self):
+        # The contents of valid.properties is identical to the contents of the
+        # test above.  This specifically exercises reading from a file.
+        p = DotProperties(os.path.join(test_data_path, 'valid.properties'))
+        self.assertEqual(p.get_dict('A'), {'title': '한메일'})
+        self.assertEqual(p.get_list('list'), ['test', 'Яндекс'])
+
+    def test_bad_unicode_from_file(self):
+        # The contents of bad.properties is not valid Unicode; see the comments
+        # in the file itself for details.
+        with self.assertRaises(UnicodeDecodeError):
+            DotProperties(os.path.join(test_data_path, 'bad.properties'))
 
 
 if __name__ == '__main__':
