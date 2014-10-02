@@ -10,19 +10,46 @@ loop.store = (function() {
   var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
 
+  /**
+   * Websocket states taken from:
+   * https://docs.services.mozilla.com/loop/apis.html#call-progress-state-change-progress
+   */
+  var WS_STATES = {
+    // The call is starting, and the remote party is not yet being alerted.
+    INIT: "init",
+    // The called party is being alerted.
+    ALERTING: "alerting",
+    // The call is no longer being set up and has been aborted for some reason.
+    TERMINATED: "terminated",
+    // The called party has indicated that he has answered the call,
+    // but the media is not yet confirmed.
+    CONNECTING: "connecting",
+    // One of the two parties has indicated successful media set up,
+    // but the other has not yet.
+    HALF_CONNECTED: "half-connected",
+    // Both endpoints have reported successfully establishing media.
+    CONNECTED: "connected"
+  };
+
   var CALL_STATES = {
     // The initial state of the view.
-    INIT: "init",
+    INIT: "cs-init",
     // The store is gathering the call data from the server.
-    GATHER: "gather",
-    // The websocket has connected to the server and is waiting
-    // for the other peer to connect to the websocket.
-    CONNECTING: "connecting",
+    GATHER: "cs-gather",
+    // The initial data has been gathered, the websocket is connecting, or has
+    // connected, and waiting for the other side to connect to the server.
+    CONNECTING: "cs-connecting",
     // The websocket has received information that we're now alerting
     // the peer.
-    ALERTING: "alerting",
+    ALERTING: "cs-alerting",
+    // The call is ongoing.
+    ONGOING: "cs-ongoing",
+    // The call ended successfully.
+    FINISHED: "cs-finished",
+    // The user has finished with the window.
+    CLOSE: "cs-close",
     // The call was terminated due to an issue during connection.
-    TERMINATED: "terminated"
+    TERMINATED: "cs-terminated"
   };
 
 
@@ -85,7 +112,10 @@ loop.store = (function() {
         "connectionFailure",
         "connectionProgress",
         "gatherCallData",
-        "connectCall"
+        "connectCall",
+        "hangupCall",
+        "cancelCall",
+        "retryCall"
       ]);
     },
 
@@ -109,19 +139,29 @@ loop.store = (function() {
      * @param {sharedActions.ConnectionProgress} actionData The action data.
      */
     connectionProgress: function(actionData) {
-      // XXX Turn this into a state machine?
-      if (actionData.state === "alerting" &&
-          (this.get("callState") === CALL_STATES.CONNECTING ||
-           this.get("callState") === CALL_STATES.GATHER)) {
-        this.set({
-          callState: CALL_STATES.ALERTING
-        });
-      }
-      if (actionData.state === "connecting" &&
-          this.get("callState") === CALL_STATES.GATHER) {
-        this.set({
-          callState: CALL_STATES.CONNECTING
-        });
+      var callState = this.get("callState");
+
+      switch(actionData.wsState) {
+        case WS_STATES.INIT: {
+          if (callState === CALL_STATES.GATHER) {
+            this.set({callState: CALL_STATES.CONNECTING});
+          }
+          break;
+        }
+        case WS_STATES.ALERTING: {
+          this.set({callState: CALL_STATES.ALERTING});
+          break;
+        }
+        case WS_STATES.CONNECTING:
+        case WS_STATES.HALF_CONNECTED:
+        case WS_STATES.CONNECTED: {
+          this.set({callState: CALL_STATES.ONGOING});
+          break;
+        }
+        default: {
+          console.error("Unexpected websocket state passed to connectionProgress:",
+            actionData.wsState);
+        }
       }
     },
 
@@ -154,6 +194,63 @@ loop.store = (function() {
     connectCall: function(actionData) {
       this.set(actionData.sessionData);
       this._connectWebSocket();
+    },
+
+    /**
+     * Hangs up an ongoing call.
+     */
+    hangupCall: function() {
+      // XXX Stop the SDK once we add it.
+
+      // Ensure the websocket has been disconnected.
+      if (this._websocket) {
+        // Let the server know the user has hung up.
+        this._websocket.mediaFail();
+        this._ensureWebSocketDisconnected();
+      }
+
+      this.set({callState: CALL_STATES.FINISHED});
+    },
+
+    /**
+     * Cancels a call
+     */
+    cancelCall: function() {
+      var callState = this.get("callState");
+      if (callState === CALL_STATES.TERMINATED) {
+        // All we need to do is close the window.
+        this.set({callState: CALL_STATES.CLOSE});
+        return;
+      }
+
+      if (callState === CALL_STATES.CONNECTING ||
+          callState === CALL_STATES.ALERTING) {
+        if (this._websocket) {
+          // Let the server know the user has hung up.
+          this._websocket.cancel();
+          this._ensureWebSocketDisconnected();
+        }
+        this.set({callState: CALL_STATES.CLOSE});
+        return;
+      }
+
+      console.log("Unsupported cancel in state", callState);
+    },
+
+    /**
+     * Retries a call
+     */
+    retryCall: function() {
+      var callState = this.get("callState");
+      if (callState !== CALL_STATES.TERMINATED) {
+        console.error("Unexpected retry in state", callState);
+        return;
+      }
+
+      this.set({callState: CALL_STATES.GATHER});
+      if (this.get("outgoing")) {
+        this._setupOutgoingCall();
+      }
     },
 
     /**
@@ -192,11 +289,11 @@ loop.store = (function() {
       });
 
       this._websocket.promiseConnect().then(
-        function() {
+        function(progressState) {
           this.dispatcher.dispatch(new sharedActions.ConnectionProgress({
             // This is the websocket call state, i.e. waiting for the
             // other end to connect to the server.
-            state: "connecting"
+            wsState: progressState
           }));
         }.bind(this),
         function(error) {
@@ -207,7 +304,18 @@ loop.store = (function() {
         }.bind(this)
       );
 
-      this._websocket.on("progress", this._handleWebSocketProgress, this);
+      this.listenTo(this._websocket, "progress", this._handleWebSocketProgress);
+    },
+
+    /**
+     * Ensures the websocket gets disconnected.
+     */
+    _ensureWebSocketDisconnected: function() {
+     this.stopListening(this._websocket);
+
+      // Now close the websocket.
+      this._websocket.close();
+      delete this._websocket;
     },
 
     /**
@@ -218,19 +326,18 @@ loop.store = (function() {
       var action;
 
       switch(progressData.state) {
-        case "terminated":
+        case WS_STATES.TERMINATED: {
           action = new sharedActions.ConnectionFailure({
             reason: progressData.reason
           });
           break;
-        case "alerting":
+        }
+        default: {
           action = new sharedActions.ConnectionProgress({
-            state: progressData.state
+            wsState: progressData.state
           });
           break;
-        default:
-          console.warn("Received unexpected state in _handleWebSocketProgress", progressData.state);
-          return;
+        }
       }
 
       this.dispatcher.dispatch(action);
@@ -239,6 +346,7 @@ loop.store = (function() {
 
   return {
     CALL_STATES: CALL_STATES,
-    ConversationStore: ConversationStore
+    ConversationStore: ConversationStore,
+    WS_STATES: WS_STATES
   };
 })();

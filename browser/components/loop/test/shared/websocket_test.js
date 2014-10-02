@@ -206,6 +206,22 @@ describe("loop.CallConnectionWebSocket", function() {
         });
     });
 
+    describe("#mediaFail", function() {
+      it("should send a terminate message to the server with a reason of media-fail",
+        function() {
+          callWebSocket.promiseConnect();
+
+          callWebSocket.mediaFail();
+
+          sinon.assert.calledOnce(dummySocket.send);
+          sinon.assert.calledWithExactly(dummySocket.send, JSON.stringify({
+            messageType: "action",
+            event: "terminate",
+            reason: "media-fail"
+          }));
+        });
+    });
+
     describe("Events", function() {
       beforeEach(function() {
         sandbox.stub(callWebSocket, "trigger");
