@@ -211,7 +211,8 @@ public:
     // Insert the new surface into the cache immediately. We need to do this so
     // that we won't start multiple scaling jobs for the same size.
     SurfaceCache::Insert(mDstRef.get(), ImageKey(mImage.get()),
-                         RasterSurfaceKey(mDstSize.ToIntSize(), mImageFlags));
+                         RasterSurfaceKey(mDstSize.ToIntSize(), mImageFlags),
+                         Lifetime::Transient);
 
     return true;
   }
@@ -265,9 +266,9 @@ public:
       NS_WARNING("HQ scaling failed");
 
       // Remove the frame from the cache since we know we don't need it.
-      SurfaceCache::RemoveIfPresent(ImageKey(mImage.get()),
-                                    RasterSurfaceKey(mDstSize.ToIntSize(),
-                                                     mImageFlags));
+      SurfaceCache::RemoveSurface(ImageKey(mImage.get()),
+                                  RasterSurfaceKey(mDstSize.ToIntSize(),
+                                                   mImageFlags));
 
       // Release everything we're holding, too.
       mSrcRef.reset();
@@ -374,7 +375,7 @@ RasterImage::~RasterImage()
   }
 
   // Release any HQ scaled frames from the surface cache.
-  SurfaceCache::Discard(this);
+  SurfaceCache::RemoveImage(ImageKey(this));
 
   mAnim = nullptr;
 
