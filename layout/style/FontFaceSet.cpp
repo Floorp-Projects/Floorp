@@ -11,6 +11,7 @@
 #endif /* MOZ_LOGGING */
 #include "prlog.h"
 
+#include "mozilla/dom/FontFace.h"
 #include "mozilla/dom/FontFaceSetBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "nsCrossSiteListenerProxy.h"
@@ -986,4 +987,20 @@ FontFaceSet::UserFontSet::DoRebuildUserFontSet()
     return;
   }
   mFontFaceSet->DoRebuildUserFontSet();
+}
+
+/* virtual */ already_AddRefed<gfxUserFontEntry>
+FontFaceSet::UserFontSet::CreateFontFace(
+                               const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
+                               uint32_t aWeight,
+                               int32_t aStretch,
+                               uint32_t aItalicStyle,
+                               const nsTArray<gfxFontFeature>& aFeatureSettings,
+                               uint32_t aLanguageOverride,
+                               gfxSparseBitSet* aUnicodeRanges)
+{
+  nsRefPtr<gfxUserFontEntry> entry =
+    new FontFace::Entry(this, aFontFaceSrcList, aWeight, aStretch, aItalicStyle,
+                        aFeatureSettings, aLanguageOverride, aUnicodeRanges);
+  return entry.forget();
 }
