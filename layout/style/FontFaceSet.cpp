@@ -701,6 +701,17 @@ FontFaceSet::FindUserFontEntryForRule(nsCSSFontFaceRule* aRule)
   return nullptr;
 }
 
+gfxUserFontEntry*
+FontFaceSet::FindUserFontEntryForFontFace(FontFace* aFontFace)
+{
+  for (size_t i = 0; i < mRules.Length(); i++) {
+    if (mRules[i].mContainer.mRule->GetFontFace() == aFontFace) {
+      return mRules[i].mUserFontEntry;
+    }
+  }
+  return nullptr;
+}
+
 nsresult
 FontFaceSet::LogMessage(gfxUserFontEntry* aUserFontEntry,
                         const char* aMessage,
