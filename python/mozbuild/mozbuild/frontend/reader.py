@@ -56,6 +56,7 @@ from .sandbox import (
 
 from .context import (
     Context,
+    ContextDerivedValue,
     FUNCTIONS,
     VARIABLES,
     DEPRECATION_HINTS,
@@ -137,7 +138,7 @@ class MozbuildSandbox(Sandbox):
         if key in SPECIAL_VARIABLES:
             return SPECIAL_VARIABLES[key][0](self._context)
         if key in FUNCTIONS:
-            return FUNCTIONS[key][0](self)
+            return self._create_function(FUNCTIONS[key])
         if key in self.templates:
             return self._create_template_function(self.templates[key])
         return Sandbox.__getitem__(self, key)
@@ -347,6 +348,27 @@ class MozbuildSandbox(Sandbox):
         code += ''.join(lines[begin[0] - 1:])
 
         self.templates[name] = func, code, self._context.current_path
+
+    @memoize
+    def _create_function(self, function_def):
+        """Returns a function object for use within the sandbox for the given
+        function definition.
+
+        The wrapper function does type coercion on the function arguments
+        """
+        func, args_def, doc = function_def
+        def function(*args):
+            def coerce(arg, type):
+                if not isinstance(arg, type):
+                    if issubclass(type, ContextDerivedValue):
+                        arg = type(self._context, arg)
+                    else:
+                        arg = type(arg)
+                return arg
+            args = [coerce(arg, type) for arg, type in zip(args, args_def)]
+            return func(self)(*args)
+
+        return function
 
     @memoize
     def _create_template_function(self, template):
