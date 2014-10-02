@@ -99,6 +99,18 @@ private:
   ~FontFace();
 
   /**
+   * Parses a @font-face descriptor value, storing the result in aResult.
+   * Returns whether the parsing was successful.
+   */
+  bool ParseDescriptor(nsCSSFontDesc aDescID, const nsAString& aString,
+                       nsCSSValue& aResult);
+
+  // Helper function for the descriptor setter methods.
+  void SetDescriptor(nsCSSFontDesc aFontDesc,
+                     const nsAString& aValue,
+                     mozilla::ErrorResult& aRv);
+
+  /**
    * Sets the current loading status.
    */
   void SetStatus(mozilla::dom::FontFaceLoadStatus aStatus);
