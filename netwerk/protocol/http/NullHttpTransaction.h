@@ -49,22 +49,18 @@ protected:
 
 private:
   nsresult mStatus;
-protected:
   uint32_t mCaps;
-private:
   // mCapsToClear holds flags that should be cleared in mCaps, e.g. unset
   // NS_HTTP_REFRESH_DNS when DNS refresh request has completed to avoid
   // redundant requests on the network. To deal with raciness, only unsetting
   // bitfields should be allowed: 'lost races' will thus err on the
   // conservative side, e.g. by going ahead with a 2nd DNS refresh.
   uint32_t mCapsToClear;
-  nsHttpRequestHead *mRequestHead;
-  bool mIsDone;
-
-protected:
   nsRefPtr<nsAHttpConnection> mConnection;
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsRefPtr<nsHttpConnectionInfo> mConnectionInfo;
+  nsHttpRequestHead *mRequestHead;
+  bool mIsDone;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(NullHttpTransaction, NS_NULLHTTPTRANSACTION_IID)

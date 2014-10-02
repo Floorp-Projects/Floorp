@@ -75,18 +75,17 @@ public:
 */
 
   enum frameType {
-    FRAME_TYPE_DATA          = 0x0,
-    FRAME_TYPE_HEADERS       = 0x1,
-    FRAME_TYPE_PRIORITY      = 0x2,
-    FRAME_TYPE_RST_STREAM    = 0x3,
-    FRAME_TYPE_SETTINGS      = 0x4,
-    FRAME_TYPE_PUSH_PROMISE  = 0x5,
-    FRAME_TYPE_PING          = 0x6,
-    FRAME_TYPE_GOAWAY        = 0x7,
-    FRAME_TYPE_WINDOW_UPDATE = 0x8,
-    FRAME_TYPE_CONTINUATION  = 0x9,
-    FRAME_TYPE_ALTSVC        = 0xA,
-    FRAME_TYPE_LAST          = 0xB
+    FRAME_TYPE_DATA = 0,
+    FRAME_TYPE_HEADERS = 1,
+    FRAME_TYPE_PRIORITY = 2,
+    FRAME_TYPE_RST_STREAM = 3,
+    FRAME_TYPE_SETTINGS = 4,
+    FRAME_TYPE_PUSH_PROMISE = 5,
+    FRAME_TYPE_PING = 6,
+    FRAME_TYPE_GOAWAY = 7,
+    FRAME_TYPE_WINDOW_UPDATE = 8,
+    FRAME_TYPE_CONTINUATION = 9,
+    FRAME_TYPE_LAST = 10
   };
 
   // NO_ERROR is a macro defined on windows, so we'll name the HTTP2 goaway
@@ -169,7 +168,6 @@ public:
   static nsresult RecvGoAway(Http2Session *);
   static nsresult RecvWindowUpdate(Http2Session *);
   static nsresult RecvContinuation(Http2Session *);
-  static nsresult RecvAltSvc(Http2Session *);
 
   char       *EnsureOutputBuffer(uint32_t needed);
 
