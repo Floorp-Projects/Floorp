@@ -3569,16 +3569,21 @@ status_t MPEG4Source::fragmentedRead(
             // move to next fragment
             off64_t nextMoof = mNextMoofOffset; // lastSample.offset + lastSample.size;
 
-            // If we're pointing to a sidx box then we skip it.
+            // If we're pointing to a segment type or sidx box then we skip them.
             uint32_t hdr[2];
-            if (mDataSource->readAt(nextMoof, hdr, 8) < 8) {
-                return ERROR_END_OF_STREAM;
-            }
-            uint64_t chunk_size = ntohl(hdr[0]);
-            uint32_t chunk_type = ntohl(hdr[1]);
-            if (chunk_type == FOURCC('s', 'i', 'd', 'x')) {
+            do {
+                if (mDataSource->readAt(nextMoof, hdr, 8) < 8) {
+                    return ERROR_END_OF_STREAM;
+                }
+                uint64_t chunk_size = ntohl(hdr[0]);
+                uint32_t chunk_type = ntohl(hdr[1]);
+
+                if (chunk_type != FOURCC('s', 't', 'y', 'p') &&
+                    chunk_type != FOURCC('s', 'i', 'd', 'x')) {
+                    break;
+                }
                 nextMoof += chunk_size;
-            }
+            } while(true);
 
             mCurrentMoofOffset = nextMoof;
             mCurrentSamples.clear();
