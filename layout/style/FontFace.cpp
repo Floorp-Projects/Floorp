@@ -8,6 +8,7 @@
 #include "mozilla/dom/FontFaceBinding.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/Promise.h"
+#include "nsCSSParser.h"
 #include "nsCSSRules.h"
 #include "nsIDocument.h"
 #include "nsStyleUtil.h"
@@ -124,6 +125,8 @@ FontFace::GetFamily(nsString& aResult)
 void
 FontFace::SetFamily(const nsAString& aValue, ErrorResult& aRv)
 {
+  mPresContext->FlushUserFontSet();
+  SetDescriptor(eCSSFontDesc_Family, aValue, aRv);
 }
 
 void
@@ -136,6 +139,8 @@ FontFace::GetStyle(nsString& aResult)
 void
 FontFace::SetStyle(const nsAString& aValue, ErrorResult& aRv)
 {
+  mPresContext->FlushUserFontSet();
+  SetDescriptor(eCSSFontDesc_Style, aValue, aRv);
 }
 
 void
@@ -148,6 +153,8 @@ FontFace::GetWeight(nsString& aResult)
 void
 FontFace::SetWeight(const nsAString& aValue, ErrorResult& aRv)
 {
+  mPresContext->FlushUserFontSet();
+  SetDescriptor(eCSSFontDesc_Weight, aValue, aRv);
 }
 
 void
@@ -160,6 +167,8 @@ FontFace::GetStretch(nsString& aResult)
 void
 FontFace::SetStretch(const nsAString& aValue, ErrorResult& aRv)
 {
+  mPresContext->FlushUserFontSet();
+  SetDescriptor(eCSSFontDesc_Stretch, aValue, aRv);
 }
 
 void
@@ -177,6 +186,8 @@ FontFace::GetUnicodeRange(nsString& aResult)
 void
 FontFace::SetUnicodeRange(const nsAString& aValue, ErrorResult& aRv)
 {
+  mPresContext->FlushUserFontSet();
+  SetDescriptor(eCSSFontDesc_UnicodeRange, aValue, aRv);
 }
 
 void
@@ -192,6 +203,10 @@ FontFace::GetVariant(nsString& aResult)
 void
 FontFace::SetVariant(const nsAString& aValue, ErrorResult& aRv)
 {
+  mPresContext->FlushUserFontSet();
+
+  // XXX Ignore assignments to variant until we support font-variant
+  // descriptors (bug 1055385).
 }
 
 void
@@ -209,6 +224,8 @@ FontFace::GetFeatureSettings(nsString& aResult)
 void
 FontFace::SetFeatureSettings(const nsAString& aValue, ErrorResult& aRv)
 {
+  mPresContext->FlushUserFontSet();
+  SetDescriptor(eCSSFontDesc_FontFeatureSettings, aValue, aRv);
 }
 
 FontFaceLoadStatus
@@ -233,6 +250,53 @@ void
 FontFace::SetStatus(FontFaceLoadStatus aStatus)
 {
   mStatus = aStatus;
+}
+
+bool
+FontFace::ParseDescriptor(nsCSSFontDesc aDescID,
+                          const nsAString& aString,
+                          nsCSSValue& aResult)
+{
+  nsCSSParser parser;
+
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mParent);
+  nsCOMPtr<nsIPrincipal> principal = global->PrincipalOrNull();
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(mParent);
+  nsCOMPtr<nsIURI> base = window->GetDocBaseURI();
+
+  if (!parser.ParseFontFaceDescriptor(aDescID, aString,
+                                      nullptr, // aSheetURL
+                                      base,
+                                      principal,
+                                      aResult)) {
+    aResult.Reset();
+    return false;
+  }
+
+  return true;
+}
+
+void
+FontFace::SetDescriptor(nsCSSFontDesc aFontDesc,
+                        const nsAString& aValue,
+                        ErrorResult& aRv)
+{
+  NS_ASSERTION(!mRule, "we don't handle rule-connected FontFace objects yet");
+  if (mRule) {
+    return;
+  }
+
+  nsCSSValue parsedValue;
+  if (!ParseDescriptor(aFontDesc, aValue, parsedValue)) {
+    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    return;
+  }
+
+  mDescriptors->Get(aFontDesc) = parsedValue;
+
+  // XXX Setting descriptors doesn't actually have any effect on FontFace
+  // objects that have started loading or have already been loaded.
 }
 
 void
