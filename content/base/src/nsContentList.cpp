@@ -431,10 +431,10 @@ nsContentList::nsContentList(nsINode* aRootNode,
 
   // We only need to flush if we're in an non-HTML document, since the
   // HTML5 parser doesn't need flushing.  Further, if we're not in a
-  // document at all right now (in the GetCurrentDoc() sense), we're
+  // document at all right now (in the GetUncomposedDoc() sense), we're
   // not parser-created and don't need to be flushing stuff under us
   // to get our kids right.
-  nsIDocument* doc = mRootNode->GetCurrentDoc();
+  nsIDocument* doc = mRootNode->GetUncomposedDoc();
   mFlushesNeeded = doc && !doc->IsHTML();
 }
 
@@ -464,10 +464,10 @@ nsContentList::nsContentList(nsINode* aRootNode,
 
   // We only need to flush if we're in an non-HTML document, since the
   // HTML5 parser doesn't need flushing.  Further, if we're not in a
-  // document at all right now (in the GetCurrentDoc() sense), we're
+  // document at all right now (in the GetUncomposedDoc() sense), we're
   // not parser-created and don't need to be flushing stuff under us
   // to get our kids right.
-  nsIDocument* doc = mRootNode->GetCurrentDoc();
+  nsIDocument* doc = mRootNode->GetUncomposedDoc();
   mFlushesNeeded = doc && !doc->IsHTML();
 }
 
@@ -507,7 +507,7 @@ nsContentList::Item(uint32_t aIndex, bool aDoFlush)
 {
   if (mRootNode && aDoFlush && mFlushesNeeded) {
     // XXX sXBL/XBL2 issue
-    nsIDocument* doc = mRootNode->GetCurrentDoc();
+    nsIDocument* doc = mRootNode->GetUncomposedDoc();
     if (doc) {
       // Flush pending content changes Bug 4891.
       doc->FlushPendingNotifications(Flush_ContentAndNotify);
@@ -1004,7 +1004,7 @@ nsContentList::BringSelfUpToDate(bool aDoFlush)
 {
   if (mRootNode && aDoFlush && mFlushesNeeded) {
     // XXX sXBL/XBL2 issue
-    nsIDocument* doc = mRootNode->GetCurrentDoc();
+    nsIDocument* doc = mRootNode->GetUncomposedDoc();
     if (doc) {
       // Flush pending content changes Bug 4891.
       doc->FlushPendingNotifications(Flush_ContentAndNotify);
