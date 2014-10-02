@@ -33,7 +33,7 @@ from mozbuild.util import (
     TypedList,
 )
 import mozpack.path as mozpath
-from types import StringTypes
+from types import FunctionType
 from UserString import UserString
 
 import itertools
@@ -1267,7 +1267,7 @@ FUNCTIONS = {
         If this function is called, processing is aborted immediately.
         """),
 
-    'template': (lambda self: self._template_decorator, (),
+    'template': (lambda self: self._template_decorator, (FunctionType,),
         """Decorator for template declarations.
 
         Templates are a special kind of functions that can be declared in

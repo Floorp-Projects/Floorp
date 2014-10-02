@@ -453,6 +453,45 @@ def Template():
             'A template named "Template" was already declared in %s.' %
             sandbox.normalize_path('templates.mozbuild'))
 
+    def test_function_args(self):
+        class Foo(int): pass
+
+        def foo(a, b):
+            return type(a), type(b)
+
+        FUNCTIONS.update({
+            'foo': (lambda self: foo, (Foo, int), ''),
+        })
+
+        try:
+            sandbox = self.sandbox()
+            source = 'foo("a", "b")'
+
+            with self.assertRaises(SandboxExecutionError) as se:
+                sandbox.exec_source(source,
+                    sandbox.normalize_path('foo.mozbuild'))
+
+            e = se.exception
+            self.assertIsInstance(e.exc_value, ValueError)
+
+            sandbox = self.sandbox()
+            source = 'foo(1, "b")'
+
+            with self.assertRaises(SandboxExecutionError) as se:
+                sandbox.exec_source(source,
+                    sandbox.normalize_path('foo.mozbuild'))
+
+            e = se.exception
+            self.assertIsInstance(e.exc_value, ValueError)
+
+            sandbox = self.sandbox()
+            source = 'a = foo(1, 2)'
+            sandbox.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
+
+            self.assertEquals(sandbox['a'], (Foo, int))
+        finally:
+            del FUNCTIONS['foo']
+
 
 if __name__ == '__main__':
     main()
