@@ -53,9 +53,9 @@ add_test(function test_display() {
                 0x6F, 0x00]);
   let context = worker.ContextPool._contexts[0];
   let helper = context.CdmaPDUHelper;
-  let record = helper.decodeInformationRecord();
+  let records = helper.decodeInformationRecord();
 
-  do_check_eq(record.display, "Test Info");
+  do_check_eq(records[0].display, "Test Info");
 
   run_next_test();
 });
@@ -76,18 +76,19 @@ add_test(function test_extended_display() {
                 0x66, 0x6F, 0x00]);
   let context = worker.ContextPool._contexts[0];
   let helper = context.CdmaPDUHelper;
-  let record = helper.decodeInformationRecord();
+  let records = helper.decodeInformationRecord();
 
-  do_check_eq(record.extendedDisplay.indicator, 1);
-  do_check_eq(record.extendedDisplay.type, 0);
-  do_check_eq(record.extendedDisplay.records.length, 3);
-  do_check_eq(record.extendedDisplay.records[0].tag, 0x80);
-  do_check_eq(record.extendedDisplay.records[1].tag, 0x81);
-  do_check_eq(record.extendedDisplay.records[2].tag, 0x9B);
-  do_check_eq(record.extendedDisplay.records[2].content, "Test Info");
+  do_check_eq(records[0].extendedDisplay.indicator, 1);
+  do_check_eq(records[0].extendedDisplay.type, 0);
+  do_check_eq(records[0].extendedDisplay.records.length, 3);
+  do_check_eq(records[0].extendedDisplay.records[0].tag, 0x80);
+  do_check_eq(records[0].extendedDisplay.records[1].tag, 0x81);
+  do_check_eq(records[0].extendedDisplay.records[2].tag, 0x9B);
+  do_check_eq(records[0].extendedDisplay.records[2].content, "Test Info");
 
   run_next_test();
 });
+
 /**
  * Verify decoder for mixed type
  */
@@ -108,16 +109,40 @@ add_test(function test_mixed() {
                 0x66, 0x6F, 0x00]);
   let context = worker.ContextPool._contexts[0];
   let helper = context.CdmaPDUHelper;
-  let record = helper.decodeInformationRecord();
+  let records = helper.decodeInformationRecord();
 
-  do_check_eq(record.display, "Test Info");
-  do_check_eq(record.extendedDisplay.indicator, 1);
-  do_check_eq(record.extendedDisplay.type, 0);
-  do_check_eq(record.extendedDisplay.records.length, 3);
-  do_check_eq(record.extendedDisplay.records[0].tag, 0x80);
-  do_check_eq(record.extendedDisplay.records[1].tag, 0x81);
-  do_check_eq(record.extendedDisplay.records[2].tag, 0x9B);
-  do_check_eq(record.extendedDisplay.records[2].content, "Test Info");
+  do_check_eq(records[0].display, "Test Info");
+  do_check_eq(records[1].extendedDisplay.indicator, 1);
+  do_check_eq(records[1].extendedDisplay.type, 0);
+  do_check_eq(records[1].extendedDisplay.records.length, 3);
+  do_check_eq(records[1].extendedDisplay.records[0].tag, 0x80);
+  do_check_eq(records[1].extendedDisplay.records[1].tag, 0x81);
+  do_check_eq(records[1].extendedDisplay.records[2].tag, 0x9B);
+  do_check_eq(records[1].extendedDisplay.records[2].content, "Test Info");
+
+  run_next_test();
+});
+
+/**
+ * Verify decoder for multiple types
+ */
+add_test(function test_multiple() {
+  let worker = newWorkerWithParcel([
+                0x02, // two inforemation record
+                0x00, // type: display
+                0x0B, // length: 11
+                0x54, 0x65, 0x73, 0x74, 0x20, 0x49, 0x6E, 0x66,
+                0x6F, 0x20, 0x31, 0x00,
+                0x00, // type: display
+                0x0B, // length: 11
+                0x54, 0x65, 0x73, 0x74, 0x20, 0x49, 0x6E, 0x66,
+                0x6F, 0x20, 0x32, 0x00]);
+  let context = worker.ContextPool._contexts[0];
+  let helper = context.CdmaPDUHelper;
+  let records = helper.decodeInformationRecord();
+
+  do_check_eq(records[0].display, "Test Info 1");
+  do_check_eq(records[1].display, "Test Info 2");
 
   run_next_test();
 });
