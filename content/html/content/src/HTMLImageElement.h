@@ -26,6 +26,8 @@ class HTMLImageElement MOZ_FINAL : public nsGenericHTMLElement,
                                    public nsIDOMHTMLImageElement
 {
   friend class HTMLSourceElement;
+  friend class HTMLPictureElement;
+  friend class ImageLoadTask;
 public:
   explicit HTMLImageElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
@@ -42,6 +44,8 @@ public:
 
   // nsIDOMHTMLImageElement
   NS_DECL_NSIDOMHTMLIMAGEELEMENT
+
+  NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLImageElement, img)
 
   // override from nsImageLoadingContent
   CORSMode GetCORSMode();
@@ -197,6 +201,9 @@ public:
 protected:
   virtual ~HTMLImageElement();
 
+  // Queues a task to run LoadSelectedImage pending stable state
+  void QueueImageLoadTask();
+
   // Resolve and load the current mResponsiveSelector (responsive mode) or src
   // attr image.
   nsresult LoadSelectedImage(bool aForce, bool aNotify);
@@ -206,13 +213,25 @@ protected:
                                   const nsAString& aNewValue, bool aNotify);
   void PictureSourceSizesChanged(nsIContent *aSourceNode,
                                  const nsAString& aNewValue, bool aNotify);
+  void PictureSourceMediaChanged(nsIContent *aSourceNode,
+                                 const nsAString& aNewValue, bool aNotify);
 
   void PictureSourceAdded(nsIContent *aSourceNode);
   // This should be called prior to the unbind, such that nextsibling works
   void PictureSourceRemoved(nsIContent *aSourceNode);
 
-  bool MaybeUpdateResponsiveSelector(nsIContent *aCurrentSource = nullptr,
-                                     bool aSourceRemoved = false);
+  // Re-evaluates all source nodes (picture <source>,<img>) and finds
+  // the best source set for mResponsiveSelector. If a better source
+  // is found, creates a new selector and feeds the source to it. If
+  // the current ResponsiveSelector is not changed, runs
+  // SelectImage(true) to re-evaluate its candidates.
+  //
+  // Because keeping the existing selector is the common case (and we
+  // often do no-op reselections), this does not re-parse values for
+  // the existing mResponsiveSelector, meaning you need to update its
+  // parameters as appropriate before calling (or null it out to force
+  // recreation)
+  void UpdateResponsiveSource();
 
   // Given a <source> node that is a previous sibling *or* ourselves, try to
   // create a ResponsiveSelector.
@@ -247,6 +266,8 @@ protected:
 private:
   static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                     nsRuleData* aData);
+
+  nsCOMPtr<nsIRunnable> mPendingImageLoadTask;
 };
 
 } // namespace dom
