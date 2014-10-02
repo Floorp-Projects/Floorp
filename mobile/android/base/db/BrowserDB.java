@@ -270,4 +270,8 @@ public class BrowserDB {
 
         return 0;
     }
+
+    public static int getTrackingIdForUrl(String url) {
+        return sSuggestedSites.getTrackingIdForUrl(url);
+    }
 }
