@@ -98,7 +98,13 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertEqual(reldirs, ['', 'foo', 'foo/biz', 'bar'])
 
         dirs = [o.dirs for o in objs]
-        self.assertEqual(dirs, [['foo', 'bar'], ['biz'], [], []])
+        self.assertEqual(dirs, [
+            [
+                mozpath.join(reader.config.topsrcdir, 'foo'),
+                mozpath.join(reader.config.topsrcdir, 'bar')
+            ], [
+                mozpath.join(reader.config.topsrcdir, 'foo', 'biz')
+            ], [], []])
 
     def test_traversal_all_vars(self):
         reader = self.reader('traversal-all-vars')
@@ -115,8 +121,10 @@ class TestEmitterBasic(unittest.TestCase):
             reldir = o.relativedir
 
             if reldir == '':
-                self.assertEqual(o.dirs, ['regular'])
-                self.assertEqual(o.test_dirs, ['test'])
+                self.assertEqual(o.dirs, [
+                    mozpath.join(reader.config.topsrcdir, 'regular')])
+                self.assertEqual(o.test_dirs, [
+                    mozpath.join(reader.config.topsrcdir, 'test')])
 
     def test_config_file_substitution(self):
         reader = self.reader('config-file-substitution')

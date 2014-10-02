@@ -38,7 +38,9 @@ test_data_path = mozpath.join(test_data_path, 'data')
 
 class TestSandbox(unittest.TestCase):
     def sandbox(self):
-        return Sandbox(Context(VARIABLES))
+        return Sandbox(Context({
+            'DIRS': (list, list, None, None),
+        }))
 
     def test_exec_source_success(self):
         sandbox = self.sandbox()
@@ -217,7 +219,10 @@ class TestMozbuildSandbox(unittest.TestCase):
 
         sandbox.exec_file('moz.build')
 
-        self.assertEqual(sandbox['DIRS'], ['foo', 'bar'])
+        self.assertEqual(sandbox['DIRS'], [
+            sandbox.normalize_path('foo'),
+            sandbox.normalize_path('bar'),
+        ])
         self.assertEqual(sandbox._context.main_path,
             sandbox.normalize_path('moz.build'))
         self.assertEqual(len(sandbox._context.all_paths), 2)
@@ -263,11 +268,11 @@ class TestMozbuildSandbox(unittest.TestCase):
         # child directory.
         sandbox = self.sandbox(data_path='include-relative-from-child')
         sandbox.exec_file('child/child.build')
-        self.assertEqual(sandbox['DIRS'], ['foo'])
+        self.assertEqual(sandbox['DIRS'], [sandbox.normalize_path('child/foo')])
 
         sandbox = self.sandbox(data_path='include-relative-from-child')
         sandbox.exec_file('child/child2.build')
-        self.assertEqual(sandbox['DIRS'], ['foo'])
+        self.assertEqual(sandbox['DIRS'], [sandbox.normalize_path('child/foo')])
 
     def test_include_topsrcdir_relative(self):
         # An absolute path for include() is relative to topsrcdir.
@@ -275,7 +280,7 @@ class TestMozbuildSandbox(unittest.TestCase):
         sandbox = self.sandbox(data_path='include-topsrcdir-relative')
         sandbox.exec_file('moz.build')
 
-        self.assertEqual(sandbox['DIRS'], ['foo'])
+        self.assertEqual(sandbox['DIRS'], [sandbox.normalize_path('foo')])
 
     def test_error(self):
         sandbox = self.sandbox()
@@ -346,7 +351,7 @@ SOURCES += ['hoge.cpp']
 
         self.assertEqual(sandbox2._context, {
             'SOURCES': ['qux.cpp', 'bar.cpp', 'foo.cpp', 'hoge.cpp'],
-            'DIRS': ['foo'],
+            'DIRS': [sandbox.normalize_path('foo')],
         })
 
         source = '''
@@ -387,7 +392,7 @@ TemplateGlobalUPPERVariable()
         sandbox2.exec_source(source, sandbox.normalize_path('foo.mozbuild'))
         self.assertEqual(sandbox2._context, {
             'SOURCES': [],
-            'DIRS': ['foo'],
+            'DIRS': [sandbox.normalize_path('foo')],
         })
 
         # However, the result of the template is mixed with the global

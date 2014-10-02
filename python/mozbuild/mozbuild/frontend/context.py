@@ -25,13 +25,16 @@ from mozbuild.util import (
     HierarchicalStringListWithFlagsFactory,
     KeyedDefaultDict,
     List,
+    memoize,
     memoized_property,
     ReadOnlyKeyedDefaultDict,
     StrictOrderingOnAppendList,
     StrictOrderingOnAppendListWithFlagsFactory,
+    TypedList,
 )
 import mozpack.path as mozpath
 from types import StringTypes
+from UserString import UserString
 
 import itertools
 
@@ -227,6 +230,76 @@ class FinalTargetValue(ContextDerivedValue, unicode):
         return unicode.__new__(cls, value)
 
 
+class SourcePath(ContextDerivedValue, UserString):
+    """Stores and resolves a source path relative to a given context
+
+    This class is used as a backing type for some of the sandbox variables.
+    It expresses paths relative to a context. Paths starting with a '/'
+    are considered relative to the topsrcdir, and other paths relative
+    to the current source directory for the associated context.
+    """
+    def __new__(cls, context, value=None):
+        if not isinstance(context, Context) and value is None:
+            return unicode(context)
+        return super(SourcePath, cls).__new__(cls)
+
+    def __init__(self, context, value=None):
+        self.context = context
+        self.value = value
+
+    @memoized_property
+    def data(self):
+        """Serializes the path for UserString."""
+        if self.value.startswith('/'):
+            ret = None
+            # If the path starts with a '/' and is actually relative to an
+            # external source dir, use that as base instead of topsrcdir.
+            if self.context.config.external_source_dir:
+                ret = mozpath.join(self.context.config.external_source_dir,
+                    self.value[1:])
+            if not ret or not os.path.exists(ret):
+                ret = mozpath.join(self.context.config.topsrcdir,
+                    self.value[1:])
+        else:
+            ret = mozpath.join(self.context.srcdir, self.value)
+        return mozpath.normpath(ret)
+
+    def __unicode__(self):
+        # UserString doesn't implement a __unicode__ function at all, so add
+        # ours.
+        return self.data
+
+    @memoized_property
+    def translated(self):
+        """Returns the corresponding path in the objdir.
+
+        Ideally, we wouldn't need this function, but the fact that both source
+        path under topsrcdir and the external source dir end up mixed in the
+        objdir (aka pseudo-rework), this is needed.
+        """
+        if self.value.startswith('/'):
+            ret = mozpath.join(self.context.config.topobjdir, self.value[1:])
+        else:
+            ret = mozpath.join(self.context.objdir, self.value)
+        return mozpath.normpath(ret)
+
+
+@memoize
+def ContextDerivedTypedList(type, base_class=List):
+    """Specialized TypedList for use with ContextDerivedValue types.
+    """
+    assert issubclass(type, ContextDerivedValue)
+    class _TypedList(ContextDerivedValue, TypedList(type, base_class)):
+        def __init__(self, context, iterable=[]):
+            class _Type(type):
+                def __new__(cls, obj):
+                    return type(context, obj)
+            self.TYPE = _Type
+            super(_TypedList, self).__init__(iterable)
+
+    return _TypedList
+
+
 # This defines the set of mutable global variables.
 #
 # Each variable is a tuple of:
@@ -346,7 +419,7 @@ VARIABLES = {
         should load lazily.  This only has an effect when building with MSVC.
         """, None),
 
-    'DIRS': (List, list,
+    'DIRS': (ContextDerivedTypedList(SourcePath), list,
         """Child directories to descend into looking for build frontend files.
 
         This works similarly to the ``DIRS`` variable in make files. Each str
@@ -637,7 +710,7 @@ VARIABLES = {
         ``HOST_BIN_SUFFIX``, the name will remain unchanged.
         """, None),
 
-    'TEST_DIRS': (List, list,
+    'TEST_DIRS': (ContextDerivedTypedList(SourcePath), list,
         """Like DIRS but only for directories that contain test-only code.
 
         If tests are not enabled, this variable will be ignored.
