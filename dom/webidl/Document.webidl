@@ -361,3 +361,4 @@ Document implements TouchEventHandlers;
 Document implements ParentNode;
 Document implements OnErrorEventHandlerForNodes;
 Document implements GeometryUtils;
+Document implements FontFaceSource;

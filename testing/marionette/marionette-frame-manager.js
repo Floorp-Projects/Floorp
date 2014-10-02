@@ -13,6 +13,12 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 let logger = Log.repository.getLogger("Marionette");
 
+let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
+               .getService(Ci.mozIJSSubScriptLoader);
+let specialpowers = {};
+loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.js",
+                     specialpowers);
+
 //list of OOP frames that has the frame script loaded
 let remoteFrames = [];
 
@@ -121,6 +127,11 @@ FrameManager.prototype = {
       if (frameMessageManager == mm) {
         this.currentRemoteFrame = frame;
         this.addMessageManagerListeners(mm);
+        if (!frame.specialPowersObserver) {
+          frame.specialPowersObserver = new specialpowers.SpecialPowersObserver();
+          frame.specialPowersObserver.init(mm);
+        }
+
         mm.sendAsyncMessage("Marionette:restart", {});
         return;
       }
@@ -135,6 +146,9 @@ FrameManager.prototype = {
     aFrame.messageManager = Cu.getWeakReference(mm);
     remoteFrames.push(aFrame);
     this.currentRemoteFrame = aFrame;
+
+    aFrame.specialPowersObserver = new specialpowers.SpecialPowersObserver();
+    aFrame.specialPowersObserver.init(mm);
   },
 
   /*
@@ -148,6 +162,20 @@ FrameManager.prototype = {
       this.addMessageManagerListeners(this.currentRemoteFrame.messageManager.get());
     }
     this.handledModal = false;
+  },
+
+  /**
+   * This function removes any SpecialPowersObservers from OOP frames.
+   */
+  removeSpecialPowers: function FM_removeSpecialPowers() {
+    for (let i = 0; i < remoteFrames.length; i++) {
+      let frame = remoteFrames[i];
+
+      if (frame.specialPowersObserver) {
+        frame.specialPowersObserver.uninit();
+        frame.specialPowersObserver = null;
+      }
+    }
   },
 
   /**

@@ -181,6 +181,9 @@ include font-features/reftest.list
 # mobile font size inflation
 skip-if(B2G&&browserIsRemote) include font-inflation/reftest.list # Bug 972697
 
+# CSS Font Loading API
+include font-loading-api/reftest.list
+
 # font matching
 include font-matching/reftest.list
 

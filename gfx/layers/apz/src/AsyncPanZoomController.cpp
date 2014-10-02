@@ -1289,6 +1289,10 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
   case TOUCHING:
   case CROSS_SLIDING_X:
   case CROSS_SLIDING_Y:
+    // We may have some velocity stored on the axis from move events
+    // that were not big enough to trigger scrolling. Clear that out.
+    mX.SetVelocity(0);
+    mY.SetVelocity(0);
     SetState(NOTHING);
     return nsEventStatus_eIgnore;
 
@@ -2449,7 +2453,11 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
   return false;
 }
 
-void AsyncPanZoomController::GetOverscrollTransform(Matrix4x4* aTransform) const {
+Matrix4x4 AsyncPanZoomController::GetOverscrollTransform() const {
+  if (!IsOverscrolled()) {
+    return Matrix4x4();
+  }
+
   // The overscroll effect is a uniform stretch along the overscrolled axis,
   // with the edge of the content where we have reached the end of the
   // scrollable area pinned into place.
@@ -2484,8 +2492,8 @@ void AsyncPanZoomController::GetOverscrollTransform(Matrix4x4* aTransform) const
   }
 
   // Combine the transformations into a matrix.
-  *aTransform = Matrix4x4().Scale(scaleX, scaleY, 1)
-                           .PostTranslate(translation.x, translation.y, 0);
+  return Matrix4x4().Scale(scaleX, scaleY, 1)
+                    .PostTranslate(translation.x, translation.y, 0);
 }
 
 bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)
@@ -2561,19 +2569,12 @@ bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)
 }
 
 void AsyncPanZoomController::SampleContentTransformForFrame(ViewTransform* aOutTransform,
-                                                            ScreenPoint& aScrollOffset,
-                                                            Matrix4x4* aOutOverscrollTransform)
+                                                            ScreenPoint& aScrollOffset)
 {
   ReentrantMonitorAutoEnter lock(mMonitor);
 
   aScrollOffset = mFrameMetrics.GetScrollOffset() * mFrameMetrics.GetZoom();
   *aOutTransform = GetCurrentAsyncTransform();
-
-  // If we are overscrolled, we would like the compositor to apply an
-  // additional transform that produces an overscroll effect.
-  if (aOutOverscrollTransform && IsOverscrolled()) {
-    GetOverscrollTransform(aOutOverscrollTransform);
-  }
 }
 
 ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() const {

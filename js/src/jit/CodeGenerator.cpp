@@ -4011,7 +4011,7 @@ CodeGenerator::emitAllocateGCThingPar(LInstruction *lir, Register objReg, Regist
     MOZ_ASSERT(lir->mirRaw());
     MOZ_ASSERT(lir->mirRaw()->isInstruction());
 
-    gc::AllocKind allocKind = templateObj->asTenured()->getAllocKind();
+    gc::AllocKind allocKind = templateObj->asTenured().getAllocKind();
 #ifdef JSGC_FJGENERATIONAL
     OutOfLineCode *ool = oolCallVM(NewGCThingParInfo, lir,
                                    (ArgList(), Imm32(allocKind)), StoreRegisterTo(objReg));
@@ -4193,7 +4193,7 @@ bool
 CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate *lir)
 {
     JSObject *templateObject = lir->mir()->templateObject();
-    gc::AllocKind allocKind = templateObject->asTenured()->getAllocKind();
+    gc::AllocKind allocKind = templateObject->asTenured().getAllocKind();
     gc::InitialHeap initialHeap = lir->mir()->initialHeap();
     Register objReg = ToRegister(lir->output());
     Register tempReg = ToRegister(lir->temp());

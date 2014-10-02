@@ -102,6 +102,10 @@ const kEventConstructors = {
                                                          return e;
                                                        },
                                              },
+  CSSFontFaceLoadEvent:                      { create: function (aName, aProps) {
+                                                         return new CSSFontFaceLoadEvent(aName, aProps);
+                                                       },
+                                             },
   CustomEvent:                               { create: function (aName, aProps) {
                                                          return new CustomEvent(aName, aProps);
                                                        },

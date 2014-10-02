@@ -652,7 +652,7 @@ js::VisitGrayWrapperTargets(Zone *zone, GCThingCallback callback, void *closure)
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
         for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
             gc::Cell *thing = e.front().key().wrapped;
-            if (thing->isTenured() && thing->asTenured()->isMarked(gc::GRAY))
+            if (thing->isTenured() && thing->asTenured().isMarked(gc::GRAY))
                 callback(closure, thing);
         }
     }
@@ -1189,7 +1189,7 @@ JS::IncrementalReferenceBarrier(void *ptr, JSGCTraceKind kind)
 #ifdef DEBUG
     Zone *zone = kind == JSTRACE_OBJECT
                  ? static_cast<JSObject *>(cell)->zone()
-                 : cell->asTenured()->zone();
+                 : cell->asTenured().zone();
     MOZ_ASSERT(!zone->runtimeFromMainThread()->isHeapMajorCollecting());
 #endif
 

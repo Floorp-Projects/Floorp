@@ -50,25 +50,7 @@ SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
         break;
 
       case "chrome-document-global-created":
-        if (!this._isFrameScriptLoaded) {
-          // Register for any messages our API needs us to handle
-          this._messageManager.addMessageListener("SPPrefService", this);
-          this._messageManager.addMessageListener("SPProcessCrashService", this);
-          this._messageManager.addMessageListener("SPPingService", this);
-          this._messageManager.addMessageListener("SpecialPowers.Quit", this);
-          this._messageManager.addMessageListener("SpecialPowers.Focus", this);
-          this._messageManager.addMessageListener("SPPermissionManager", this);
-          this._messageManager.addMessageListener("SPWebAppService", this);
-          this._messageManager.addMessageListener("SPObserverService", this);
-          this._messageManager.addMessageListener("SPLoadChromeScript", this);
-          this._messageManager.addMessageListener("SPChromeScriptMessage", this);
-          this._messageManager.addMessageListener("SPQuotaManager", this);
-
-          this._messageManager.loadFrameScript(CHILD_LOGGER_SCRIPT, true);
-          this._messageManager.loadFrameScript(CHILD_SCRIPT_API, true);
-          this._messageManager.loadFrameScript(CHILD_SCRIPT, true);
-          this._isFrameScriptLoaded = true;
-        }
+        this._loadFrameScript();
         break;
 
       case "http-on-modify-request":
@@ -85,6 +67,29 @@ SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
       default:
         this._observe(aSubject, aTopic, aData);
         break;
+    }
+  };
+
+  SpecialPowersObserver.prototype._loadFrameScript = function()
+  {
+    if (!this._isFrameScriptLoaded) {
+      // Register for any messages our API needs us to handle
+      this._messageManager.addMessageListener("SPPrefService", this);
+      this._messageManager.addMessageListener("SPProcessCrashService", this);
+      this._messageManager.addMessageListener("SPPingService", this);
+      this._messageManager.addMessageListener("SpecialPowers.Quit", this);
+      this._messageManager.addMessageListener("SpecialPowers.Focus", this);
+      this._messageManager.addMessageListener("SPPermissionManager", this);
+      this._messageManager.addMessageListener("SPWebAppService", this);
+      this._messageManager.addMessageListener("SPObserverService", this);
+      this._messageManager.addMessageListener("SPLoadChromeScript", this);
+      this._messageManager.addMessageListener("SPChromeScriptMessage", this);
+      this._messageManager.addMessageListener("SPQuotaManager", this);
+
+      this._messageManager.loadFrameScript(CHILD_LOGGER_SCRIPT, true);
+      this._messageManager.loadFrameScript(CHILD_SCRIPT_API, true);
+      this._messageManager.loadFrameScript(CHILD_SCRIPT, true);
+      this._isFrameScriptLoaded = true;
     }
   };
 
@@ -112,6 +117,8 @@ SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
     if (messageManager) {
       this._messageManager = messageManager;
       this._mmIsGlobal = false;
+
+      this._loadFrameScript();
     }
   };
 

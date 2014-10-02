@@ -461,7 +461,7 @@ class JSFunction : public JSObject
   public:
     inline bool isExtended() const {
         JS_STATIC_ASSERT(FinalizeKind != ExtendedFinalizeKind);
-        MOZ_ASSERT_IF(isTenured(), !!(flags() & EXTENDED) == (asTenured()->getAllocKind() == ExtendedFinalizeKind));
+        MOZ_ASSERT_IF(isTenured(), !!(flags() & EXTENDED) == (asTenured().getAllocKind() == ExtendedFinalizeKind));
         return !!(flags() & EXTENDED);
     }
 
@@ -484,7 +484,7 @@ class JSFunction : public JSObject
         js::gc::AllocKind kind = FinalizeKind;
         if (isExtended())
             kind = ExtendedFinalizeKind;
-        MOZ_ASSERT_IF(isTenured(), kind == asTenured()->getAllocKind());
+        MOZ_ASSERT_IF(isTenured(), kind == asTenured().getAllocKind());
         return kind;
     }
 };

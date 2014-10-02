@@ -16,7 +16,7 @@ interface nsIVariant;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[uuid(3eef1ab9-2f87-4eda-9bb9-469c37294f72)]
+[uuid(238222a9-7aa5-4804-9f86-484853ce4b15)]
 interface nsIDOMNode : nsISupports
 {
   const unsigned short      ELEMENT_NODE       = 1;
@@ -68,8 +68,6 @@ interface nsIDOMNode : nsISupports
 
   // Introduced in DOM Level 2:
   readonly attribute DOMString        localName;
-  // Introduced in DOM Level 2:
-  boolean            hasAttributes();
 
   // Introduced in DOM Level 3:
   // This uses a binaryname to avoid warnings due to name collision with
