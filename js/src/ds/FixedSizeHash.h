@@ -50,7 +50,7 @@ class FixedSizeHashSet
       : entries(), lastOperations(), numOperations(0)
     {
         JS_STATIC_ASSERT(Capacity > 0);
-        JS_ASSERT(HashPolicy::isCleared(entries[0]));
+        MOZ_ASSERT(HashPolicy::isCleared(entries[0]));
     }
 
     bool lookup(const Lookup &lookup, T *pentry)

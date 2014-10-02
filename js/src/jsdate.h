@@ -60,4 +60,15 @@ js_DateGetSeconds(JSObject *obj);
 bool
 js_Date(JSContext *cx, unsigned argc, JS::Value *vp);
 
+namespace js {
+
+/* Date methods exposed so they can be installed in the self-hosting global. */
+bool
+date_now(JSContext *cx, unsigned argc, JS::Value *vp);
+
+bool
+date_valueOf(JSContext *cx, unsigned argc, JS::Value *vp);
+
+} /* namespace js */
+
 #endif /* jsdate_h */

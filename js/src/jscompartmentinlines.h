@@ -16,15 +16,15 @@
 inline void
 JSCompartment::initGlobal(js::GlobalObject &global)
 {
-    JS_ASSERT(global.compartment() == this);
-    JS_ASSERT(!global_);
+    MOZ_ASSERT(global.compartment() == this);
+    MOZ_ASSERT(!global_);
     global_.set(&global);
 }
 
 js::GlobalObject *
 JSCompartment::maybeGlobal() const
 {
-    JS_ASSERT_IF(global_, global_->compartment() == this);
+    MOZ_ASSERT_IF(global_, global_->compartment() == this);
     return global_;
 }
 
@@ -56,7 +56,7 @@ js::AutoCompartment::~AutoCompartment()
 inline bool
 JSCompartment::wrap(JSContext *cx, JS::MutableHandleValue vp, JS::HandleObject existing)
 {
-    JS_ASSERT_IF(existing, vp.isObject());
+    MOZ_ASSERT_IF(existing, vp.isObject());
 
     /* Only GC things have to be wrapped or copied. */
     if (!vp.isMarkable())
@@ -78,7 +78,7 @@ JSCompartment::wrap(JSContext *cx, JS::MutableHandleValue vp, JS::HandleObject e
         return true;
     }
 
-    JS_ASSERT(vp.isObject());
+    MOZ_ASSERT(vp.isObject());
 
     /*
      * All that's left are objects.
@@ -117,7 +117,7 @@ JSCompartment::wrap(JSContext *cx, JS::MutableHandleValue vp, JS::HandleObject e
     if (!wrap(cx, &obj, existing))
         return false;
     vp.setObject(*obj);
-    JS_ASSERT_IF(cacheResult, obj == cacheResult);
+    MOZ_ASSERT_IF(cacheResult, obj == cacheResult);
     return true;
 }
 

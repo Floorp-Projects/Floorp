@@ -38,7 +38,7 @@ AlignPtr(void *orig)
                   "LIFO_ALLOC_ALIGN must be a power of two");
 
     char *result = (char *) ((uintptr_t(orig) + (LIFO_ALLOC_ALIGN - 1)) & (~LIFO_ALLOC_ALIGN + 1));
-    JS_ASSERT(uintptr_t(result) % LIFO_ALLOC_ALIGN == 0);
+    MOZ_ASSERT(uintptr_t(result) % LIFO_ALLOC_ALIGN == 0);
     return result;
 }
 
@@ -58,18 +58,18 @@ class BumpChunk
         limit(bump + bumpSpaceSize),
         next_(nullptr), bumpSpaceSize(bumpSpaceSize)
     {
-        JS_ASSERT(bump == AlignPtr(bump));
+        MOZ_ASSERT(bump == AlignPtr(bump));
     }
 
     void setBump(void *ptr) {
-        JS_ASSERT(bumpBase() <= ptr);
-        JS_ASSERT(ptr <= limit);
+        MOZ_ASSERT(bumpBase() <= ptr);
+        MOZ_ASSERT(ptr <= limit);
 #if defined(DEBUG) || defined(MOZ_HAVE_MEM_CHECKS)
         char* prevBump = bump;
 #endif
         bump = static_cast<char *>(ptr);
 #ifdef DEBUG
-        JS_ASSERT(contains(prevBump));
+        MOZ_ASSERT(contains(prevBump));
 
         // Clobber the now-free space.
         if (prevBump > bump)
@@ -109,8 +109,8 @@ class BumpChunk
     void *mark() const { return bump; }
 
     void release(void *mark) {
-        JS_ASSERT(contains(mark));
-        JS_ASSERT(mark <= bump);
+        MOZ_ASSERT(contains(mark));
+        MOZ_ASSERT(mark <= bump);
         setBump(mark);
     }
 
@@ -137,7 +137,7 @@ class BumpChunk
         if (MOZ_UNLIKELY(newBump < bump))
             return nullptr;
 
-        JS_ASSERT(canAlloc(n)); // Ensure consistency between "can" and "try".
+        MOZ_ASSERT(canAlloc(n)); // Ensure consistency between "can" and "try".
         setBump(newBump);
         return aligned;
     }
@@ -178,7 +178,7 @@ class LifoAlloc
     BumpChunk *getOrCreateChunk(size_t n);
 
     void reset(size_t defaultChunkSize) {
-        JS_ASSERT(mozilla::RoundUpPow2(defaultChunkSize) == defaultChunkSize);
+        MOZ_ASSERT(mozilla::RoundUpPow2(defaultChunkSize) == defaultChunkSize);
         first = latest = last = nullptr;
         defaultChunkSize_ = defaultChunkSize;
         markCount = 0;
@@ -187,7 +187,7 @@ class LifoAlloc
 
     // Append unused chunks to the end of this LifoAlloc.
     void appendUnused(BumpChunk *start, BumpChunk *end) {
-        JS_ASSERT(start && end);
+        MOZ_ASSERT(start && end);
         if (last)
             last->setNext(start);
         else
@@ -198,7 +198,7 @@ class LifoAlloc
     // Append used chunks to the end of this LifoAlloc. We act as if all the
     // chunks in |this| are used, even if they're not, so memory may be wasted.
     void appendUsed(BumpChunk *start, BumpChunk *latest, BumpChunk *end) {
-        JS_ASSERT(start && latest &&  end);
+        MOZ_ASSERT(start && latest &&  end);
         if (last)
             last->setNext(start);
         else
@@ -213,7 +213,7 @@ class LifoAlloc
             peakSize_ = curSize_;
     }
     void decrementCurSize(size_t size) {
-        JS_ASSERT(curSize_ >= size);
+        MOZ_ASSERT(curSize_ >= size);
         curSize_ -= size;
     }
 
@@ -226,7 +226,7 @@ class LifoAlloc
 
     // Steal allocated chunks from |other|.
     void steal(LifoAlloc *other) {
-        JS_ASSERT(!other->markCount);
+        MOZ_ASSERT(!other->markCount);
 
         // Copy everything from |other| to |this| except for |peakSize_|, which
         // requires some care.
@@ -342,7 +342,7 @@ class LifoAlloc
     }
 
     void releaseAll() {
-        JS_ASSERT(!markCount);
+        MOZ_ASSERT(!markCount);
         latest = first;
         if (latest)
             latest->resetBump();
@@ -412,7 +412,7 @@ class LifoAlloc
         // If there is not enough room in the remaining block for |size|,
         // advance to the next block and update the position.
         void ensureSpaceAndAlignment(size_t size) {
-            JS_ASSERT(!empty());
+            MOZ_ASSERT(!empty());
             char *aligned = detail::AlignPtr(position_);
             if (aligned + size > chunk_->end()) {
                 chunk_ = chunk_->next();
@@ -420,7 +420,7 @@ class LifoAlloc
             } else {
                 position_ = aligned;
             }
-            JS_ASSERT(uintptr_t(position_) + size <= uintptr_t(chunk_->end()));
+            MOZ_ASSERT(uintptr_t(position_) + size <= uintptr_t(chunk_->end()));
         }
 
       public:
@@ -497,7 +497,7 @@ class LifoAllocScope
     }
 
     void releaseEarly() {
-        JS_ASSERT(shouldRelease);
+        MOZ_ASSERT(shouldRelease);
         lifoAlloc->release(mark);
         shouldRelease = false;
     }
@@ -538,7 +538,7 @@ class LifoAllocPolicy
         T *n = pod_malloc<T>(newSize);
         if (fb == Fallible && !n)
             return nullptr;
-        JS_ASSERT(!(oldSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value));
+        MOZ_ASSERT(!(oldSize & mozilla::tl::MulOverflowMask<sizeof(T)>::value));
         memcpy(n, p, Min(oldSize * sizeof(T), newSize * sizeof(T)));
         return n;
     }

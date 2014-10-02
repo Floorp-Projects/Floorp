@@ -59,7 +59,7 @@ class MacroAssemblerX86Shared : public Assembler
             return;
         }
 
-        JS_ASSERT(!(cond & DoubleConditionBitSpecial));
+        MOZ_ASSERT(!(cond & DoubleConditionBitSpecial));
         j(ConditionFromDoubleCondition(cond), label);
     }
 
@@ -86,7 +86,7 @@ class MacroAssemblerX86Shared : public Assembler
             return;
         }
 
-        JS_ASSERT(!(cond & DoubleConditionBitSpecial));
+        MOZ_ASSERT(!(cond & DoubleConditionBitSpecial));
         j(ConditionFromDoubleCondition(cond), label);
     }
 
@@ -232,17 +232,17 @@ class MacroAssemblerX86Shared : public Assembler
         j(cond, label);
     }
     void branchTest32(Condition cond, Register lhs, Register rhs, Label *label) {
-        JS_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+        MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
         testl(lhs, rhs);
         j(cond, label);
     }
     void branchTest32(Condition cond, Register lhs, Imm32 imm, Label *label) {
-        JS_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+        MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
         testl(lhs, imm);
         j(cond, label);
     }
     void branchTest32(Condition cond, const Address &address, Imm32 imm, Label *label) {
-        JS_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
+        MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
         testl(Operand(address), imm);
         j(cond, label);
     }
@@ -275,7 +275,7 @@ class MacroAssemblerX86Shared : public Assembler
         framePushed_ -= sizeof(double);
     }
     void implicitPop(uint32_t args) {
-        JS_ASSERT(args % sizeof(intptr_t) == 0);
+        MOZ_ASSERT(args % sizeof(intptr_t) == 0);
         framePushed_ -= args;
     }
     uint32_t framePushed() const {
@@ -525,6 +525,25 @@ class MacroAssemblerX86Shared : public Assembler
         psubd(src, dest);
     }
 
+    void packedLeftShiftByScalar(FloatRegister src, FloatRegister dest) {
+        pslld(src, dest);
+    }
+    void packedLeftShiftByScalar(Imm32 count, FloatRegister dest) {
+        pslld(count, dest);
+    }
+    void packedRightShiftByScalar(FloatRegister src, FloatRegister dest) {
+        psrad(src, dest);
+    }
+    void packedRightShiftByScalar(Imm32 count, FloatRegister dest) {
+        psrad(count, dest);
+    }
+    void packedUnsignedRightShiftByScalar(FloatRegister src, FloatRegister dest) {
+        psrld(src, dest);
+    }
+    void packedUnsignedRightShiftByScalar(Imm32 count, FloatRegister dest) {
+        psrld(count, dest);
+    }
+
     void loadAlignedFloat32x4(const Address &src, FloatRegister dest) {
         movaps(Operand(src), dest);
     }
@@ -562,7 +581,7 @@ class MacroAssemblerX86Shared : public Assembler
                      (uint32_t(z) << 4) |
                      (uint32_t(y) << 2) |
                      uint32_t(x);
-        JS_ASSERT(r < 256);
+        MOZ_ASSERT(r < 256);
         return r;
     }
 

@@ -78,12 +78,12 @@ class BufferedVector
     }
 
     T* last() {
-        JS_ASSERT(last_ != nullptr);
+        MOZ_ASSERT(last_ != nullptr);
         return last_;
     }
 
     T* RemoveLast() {
-        JS_ASSERT(last_ != nullptr);
+        MOZ_ASSERT(last_ != nullptr);
         T* result = last_;
         if ((list_ != nullptr) && (list_->length() > 0))
             last_ = list_->popCopy();
@@ -93,13 +93,13 @@ class BufferedVector
     }
 
     T* Get(int i) {
-        JS_ASSERT((0 <= i) && (i < length()));
+        MOZ_ASSERT((0 <= i) && (i < length()));
         if (list_ == nullptr) {
-            JS_ASSERT(0 == i);
+            MOZ_ASSERT(0 == i);
             return last_;
         } else {
             if (size_t(i) == list_->length()) {
-                JS_ASSERT(last_ != nullptr);
+                MOZ_ASSERT(last_ != nullptr);
                 return last_;
             } else {
                 return (*list_)[i];

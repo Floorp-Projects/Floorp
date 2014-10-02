@@ -59,11 +59,11 @@ class WeakCache : public HashMap<Key, Value, HashPolicy, AllocPolicy> {
         for (Range r = Base::all(); !r.empty(); r.popFront()) {
             Key k(r.front().key);
 
-            JS_ASSERT(!gc::IsAboutToBeFinalized(&k));
-            JS_ASSERT(!gc::IsAboutToBeFinalized(r.front().value));
+            MOZ_ASSERT(!gc::IsAboutToBeFinalized(&k));
+            MOZ_ASSERT(!gc::IsAboutToBeFinalized(r.front().value));
 
             // Assert that IsMarked() did not perform relocation.
-            JS_ASSERT(k == r.front().key);
+            MOZ_ASSERT(k == r.front().key);
         }
 #endif
     }
@@ -97,7 +97,7 @@ class WeakValueCache : public HashMap<Key, Value, HashPolicy, AllocPolicy>
         // Once we've swept, all remaining edges should stay within the
         // known-live part of the graph.
         for (Range r = Base::all(); !r.empty(); r.popFront())
-            JS_ASSERT(!gc::IsAboutToBeFinalized(r.front().value()));
+            MOZ_ASSERT(!gc::IsAboutToBeFinalized(r.front().value()));
 #endif
     }
 };

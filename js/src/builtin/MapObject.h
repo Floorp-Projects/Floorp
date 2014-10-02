@@ -92,9 +92,11 @@ class MapObject : public JSObject {
     static JSObject *initClass(JSContext *cx, JSObject *obj);
     static const Class class_;
 
-    // Entries is every key followed by value.
-    static bool entries(JSContext *cx, HandleObject obj, JS::AutoValueVector *entries);
+    static bool getKeysAndValuesInterleaved(JSContext *cx, HandleObject obj,
+                                            JS::AutoValueVector *entries);
+    static bool entries(JSContext *cx, unsigned argc, Value *vp);
     static bool set(JSContext *cx, HandleObject obj, HandleValue key, HandleValue value);
+    static bool has(JSContext *cx, unsigned argc, Value *vp);
     static MapObject* create(JSContext *cx);
 
   private:
@@ -115,7 +117,6 @@ class MapObject : public JSObject {
     static bool get_impl(JSContext *cx, CallArgs args);
     static bool get(JSContext *cx, unsigned argc, Value *vp);
     static bool has_impl(JSContext *cx, CallArgs args);
-    static bool has(JSContext *cx, unsigned argc, Value *vp);
     static bool set_impl(JSContext *cx, CallArgs args);
     static bool set(JSContext *cx, unsigned argc, Value *vp);
     static bool delete_impl(JSContext *cx, CallArgs args);
@@ -125,7 +126,6 @@ class MapObject : public JSObject {
     static bool values_impl(JSContext *cx, CallArgs args);
     static bool values(JSContext *cx, unsigned argc, Value *vp);
     static bool entries_impl(JSContext *cx, CallArgs args);
-    static bool entries(JSContext *cx, unsigned argc, Value *vp);
     static bool clear_impl(JSContext *cx, CallArgs args);
     static bool clear(JSContext *cx, unsigned argc, Value *vp);
 };
@@ -137,7 +137,9 @@ class SetObject : public JSObject {
     static const Class class_;
 
     static bool keys(JSContext *cx, HandleObject obj, JS::AutoValueVector *keys);
+    static bool values(JSContext *cx, unsigned argc, Value *vp);
     static bool add(JSContext *cx, HandleObject obj, HandleValue key);
+    static bool has(JSContext *cx, unsigned argc, Value *vp);
     static SetObject* create(JSContext *cx);
 
   private:
@@ -156,18 +158,19 @@ class SetObject : public JSObject {
     static bool size_impl(JSContext *cx, CallArgs args);
     static bool size(JSContext *cx, unsigned argc, Value *vp);
     static bool has_impl(JSContext *cx, CallArgs args);
-    static bool has(JSContext *cx, unsigned argc, Value *vp);
     static bool add_impl(JSContext *cx, CallArgs args);
     static bool add(JSContext *cx, unsigned argc, Value *vp);
     static bool delete_impl(JSContext *cx, CallArgs args);
     static bool delete_(JSContext *cx, unsigned argc, Value *vp);
     static bool values_impl(JSContext *cx, CallArgs args);
-    static bool values(JSContext *cx, unsigned argc, Value *vp);
     static bool entries_impl(JSContext *cx, CallArgs args);
     static bool entries(JSContext *cx, unsigned argc, Value *vp);
     static bool clear_impl(JSContext *cx, CallArgs args);
     static bool clear(JSContext *cx, unsigned argc, Value *vp);
 };
+
+extern bool
+InitSelfHostingCollectionIteratorFunctions(JSContext *cx, js::HandleObject obj);
 
 } /* namespace js */
 

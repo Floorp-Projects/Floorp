@@ -81,7 +81,7 @@ JS_SetGrayGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 JS_FRIEND_API(JSString *)
 JS_GetAnonymousString(JSRuntime *rt)
 {
-    JS_ASSERT(rt->hasContexts());
+    MOZ_ASSERT(rt->hasContexts());
     return rt->commonNames->anonymous;
 }
 
@@ -245,7 +245,7 @@ JS_SetCompartmentPrincipals(JSCompartment *compartment, JSPrincipals *principals
         // with the old one, but JSPrincipals doesn't give us a way to do that.
         // But we can at least assert that we're not switching between system
         // and non-system.
-        JS_ASSERT(compartment->isSystem == isSystem);
+        MOZ_ASSERT(compartment->isSystem == isSystem);
     }
 
     // Set up the new principals.
@@ -295,7 +295,7 @@ DefineHelpProperty(JSContext *cx, HandleObject obj, const char *prop, const char
 JS_FRIEND_API(bool)
 JS_DefineFunctionsWithHelp(JSContext *cx, HandleObject obj, const JSFunctionSpecWithHelp *fs)
 {
-    JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
@@ -400,8 +400,8 @@ js::GetGlobalForObjectCrossCompartment(JSObject *obj)
 JS_FRIEND_API(JSObject *)
 js::GetPrototypeNoProxy(JSObject *obj)
 {
-    JS_ASSERT(!obj->is<js::ProxyObject>());
-    JS_ASSERT(!obj->getTaggedProto().isLazy());
+    MOZ_ASSERT(!obj->is<js::ProxyObject>());
+    MOZ_ASSERT(!obj->getTaggedProto().isLazy());
     return obj->getTaggedProto().toObjectOrNull();
 }
 
@@ -421,7 +421,7 @@ js::AssertSameCompartment(JSContext *cx, JSObject *obj)
 JS_FRIEND_API(void)
 js::AssertSameCompartment(JSObject *objA, JSObject *objB)
 {
-    JS_ASSERT(objA->compartment() == objB->compartment());
+    MOZ_ASSERT(objA->compartment() == objB->compartment());
 }
 #endif
 
@@ -472,7 +472,7 @@ js::DefineFunctionWithReserved(JSContext *cx, JSObject *objArg, const char *name
                                unsigned nargs, unsigned attrs)
 {
     RootedObject obj(cx, objArg);
-    JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
     JSAtom *atom = Atomize(cx, name, strlen(name));
@@ -487,7 +487,7 @@ js::NewFunctionWithReserved(JSContext *cx, JSNative native, unsigned nargs, unsi
                             JSObject *parentArg, const char *name)
 {
     RootedObject parent(cx, parentArg);
-    JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);
@@ -509,8 +509,8 @@ js::NewFunctionByIdWithReserved(JSContext *cx, JSNative native, unsigned nargs, 
                                 jsid id)
 {
     RootedObject parent(cx, parentArg);
-    JS_ASSERT(JSID_IS_STRING(id));
-    JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    MOZ_ASSERT(JSID_IS_STRING(id));
+    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);
 
@@ -523,14 +523,14 @@ js::NewFunctionByIdWithReserved(JSContext *cx, JSNative native, unsigned nargs, 
 JS_FRIEND_API(const Value &)
 js::GetFunctionNativeReserved(JSObject *fun, size_t which)
 {
-    JS_ASSERT(fun->as<JSFunction>().isNative());
+    MOZ_ASSERT(fun->as<JSFunction>().isNative());
     return fun->as<JSFunction>().getExtendedSlot(which);
 }
 
 JS_FRIEND_API(void)
 js::SetFunctionNativeReserved(JSObject *fun, size_t which, const Value &val)
 {
-    JS_ASSERT(fun->as<JSFunction>().isNative());
+    MOZ_ASSERT(fun->as<JSFunction>().isNative());
     MOZ_ASSERT_IF(val.isObject(), val.toObject().compartment() == fun->compartment());
     fun->as<JSFunction>().setExtendedSlot(which, val);
 }
@@ -642,7 +642,7 @@ js::ZoneGlobalsAreAllGray(JS::Zone *zone)
 JS_FRIEND_API(JSGCTraceKind)
 js::GCThingTraceKind(void *thing)
 {
-    JS_ASSERT(thing);
+    MOZ_ASSERT(thing);
     return gc::GetGCThingTraceKind(thing);
 }
 
@@ -751,7 +751,7 @@ static char *
 FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int num,
             bool showArgs, bool showLocals, bool showThisProps)
 {
-    JS_ASSERT(!cx->isExceptionPending());
+    MOZ_ASSERT(!cx->isExceptionPending());
     RootedScript script(cx, iter.script());
     jsbytecode* pc = iter.pc();
 
@@ -911,7 +911,7 @@ FormatFrame(JSContext *cx, const NonBuiltinScriptFrameIter &iter, char *buf, int
         }
     }
 
-    JS_ASSERT(!cx->isExceptionPending());
+    MOZ_ASSERT(!cx->isExceptionPending());
     return buf;
 }
 
@@ -1140,7 +1140,7 @@ JS::AutoDisableGenerationalGC::~AutoDisableGenerationalGC()
     gc->enableGenerationalGC();
 #if defined(JSGC_GENERATIONAL) && defined(JS_GC_ZEAL)
     if (restartVerifier) {
-        JS_ASSERT(gc->isGenerationalGCEnabled());
+        MOZ_ASSERT(gc->isGenerationalGCEnabled());
         gc->startVerifyPostBarriers();
     }
 #endif
@@ -1170,7 +1170,7 @@ JS::IncrementalObjectBarrier(JSObject *obj)
     if (!obj)
         return;
 
-    JS_ASSERT(!obj->zone()->runtimeFromMainThread()->isHeapMajorCollecting());
+    MOZ_ASSERT(!obj->zone()->runtimeFromMainThread()->isHeapMajorCollecting());
 
     JSObject::writeBarrierPre(obj);
 }
@@ -1190,7 +1190,7 @@ JS::IncrementalReferenceBarrier(void *ptr, JSGCTraceKind kind)
     Zone *zone = kind == JSTRACE_OBJECT
                  ? static_cast<JSObject *>(cell)->zone()
                  : cell->asTenured()->zone();
-    JS_ASSERT(!zone->runtimeFromMainThread()->isHeapMajorCollecting());
+    MOZ_ASSERT(!zone->runtimeFromMainThread()->isHeapMajorCollecting());
 #endif
 
     if (kind == JSTRACE_OBJECT)
@@ -1231,7 +1231,7 @@ JS_FRIEND_API(JSCompartment *)
 js::GetAnyCompartmentInZone(JS::Zone *zone)
 {
     CompartmentsInZoneIter comp(zone);
-    JS_ASSERT(!comp.done());
+    MOZ_ASSERT(!comp.done());
     return comp.get();
 }
 
@@ -1323,10 +1323,10 @@ js::DefaultJSContext(JSRuntime *rt)
 {
     if (rt->defaultJSContextCallback) {
         JSContext *cx = rt->defaultJSContextCallback(rt);
-        JS_ASSERT(cx);
+        MOZ_ASSERT(cx);
         return cx;
     }
-    JS_ASSERT(rt->contextList.getFirst() == rt->contextList.getLast());
+    MOZ_ASSERT(rt->contextList.getFirst() == rt->contextList.getLast());
     return rt->contextList.getFirst();
 }
 
@@ -1383,8 +1383,8 @@ js::GetObjectMetadata(JSObject *obj)
 JS_FRIEND_API(void)
 js::UnsafeDefineElement(JSContext *cx, JS::HandleObject obj, uint32_t index, JS::HandleValue value)
 {
-    JS_ASSERT(obj->isNative());
-    JS_ASSERT(index < obj->getDenseInitializedLength());
+    MOZ_ASSERT(obj->isNative());
+    MOZ_ASSERT(index < obj->getDenseInitializedLength());
     obj->setDenseElementWithType(cx, index, value);
 }
 

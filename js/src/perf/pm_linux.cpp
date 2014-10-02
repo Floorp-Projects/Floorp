@@ -134,7 +134,7 @@ Impl::~Impl()
 EventMask
 Impl::init(EventMask toMeasure)
 {
-    JS_ASSERT(group_leader == -1);
+    MOZ_ASSERT(group_leader == -1);
     if (!toMeasure)
         return EventMask(0);
 

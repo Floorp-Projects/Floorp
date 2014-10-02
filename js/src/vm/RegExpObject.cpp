@@ -64,8 +64,8 @@ RegExpObjectBuilder::getOrCreate()
 bool
 RegExpObjectBuilder::getOrCreateClone(HandleTypeObject type)
 {
-    JS_ASSERT(!reobj_);
-    JS_ASSERT(type->clasp() == &RegExpObject::class_);
+    MOZ_ASSERT(!reobj_);
+    MOZ_ASSERT(type->clasp() == &RegExpObject::class_);
 
     JSObject *parent = type->proto().toObject()->getParent();
 
@@ -139,7 +139,7 @@ RegExpObjectBuilder::clone(Handle<RegExpObject *> other)
 bool
 MatchPairs::initArray(size_t pairCount)
 {
-    JS_ASSERT(pairCount > 0);
+    MOZ_ASSERT(pairCount > 0);
 
     /* Guarantee adequate space in buffer. */
     if (!allocOrExpandArray(pairCount))
@@ -157,7 +157,7 @@ MatchPairs::initArray(size_t pairCount)
 bool
 MatchPairs::initArrayFrom(MatchPairs &copyFrom)
 {
-    JS_ASSERT(copyFrom.pairCount() > 0);
+    MOZ_ASSERT(copyFrom.pairCount() > 0);
 
     if (!allocOrExpandArray(copyFrom.pairCount()))
         return false;
@@ -174,7 +174,7 @@ MatchPairs::displace(size_t disp)
         return;
 
     for (size_t i = 0; i < pairCount_; i++) {
-        JS_ASSERT(pairs_[i].check());
+        MOZ_ASSERT(pairs_[i].check());
         pairs_[i].start += (pairs_[i].start < 0) ? 0 : disp;
         pairs_[i].limit += (pairs_[i].limit < 0) ? 0 : disp;
     }
@@ -185,12 +185,12 @@ ScopedMatchPairs::allocOrExpandArray(size_t pairCount)
 {
     /* Array expansion is forbidden, but array reuse is acceptable. */
     if (pairCount_) {
-        JS_ASSERT(pairs_);
-        JS_ASSERT(pairCount_ == pairCount);
+        MOZ_ASSERT(pairs_);
+        MOZ_ASSERT(pairCount_ == pairCount);
         return true;
     }
 
-    JS_ASSERT(!pairs_);
+    MOZ_ASSERT(!pairs_);
     pairs_ = (MatchPair *)lifoScope_.alloc().alloc(sizeof(MatchPair) * pairCount);
     if (!pairs_)
         return false;
@@ -324,7 +324,7 @@ RegExpObject::createShared(JSContext *cx, RegExpGuard *g)
 {
     Rooted<RegExpObject*> self(cx, this);
 
-    JS_ASSERT(!maybeShared());
+    MOZ_ASSERT(!maybeShared());
     if (!cx->compartment()->regExps.get(cx, getSource(), getFlags(), g))
         return false;
 
@@ -335,7 +335,7 @@ RegExpObject::createShared(JSContext *cx, RegExpGuard *g)
 Shape *
 RegExpObject::assignInitialShape(ExclusiveContext *cx, Handle<RegExpObject*> self)
 {
-    JS_ASSERT(self->nativeEmpty());
+    MOZ_ASSERT(self->nativeEmpty());
 
     JS_STATIC_ASSERT(LAST_INDEX_SLOT == 0);
     JS_STATIC_ASSERT(SOURCE_SLOT == LAST_INDEX_SLOT + 1);
@@ -369,18 +369,18 @@ RegExpObject::init(ExclusiveContext *cx, HandleAtom source, RegExpFlag flags)
     if (!EmptyShape::ensureInitialCustomShape<RegExpObject>(cx, self))
         return false;
 
-    JS_ASSERT(self->nativeLookup(cx, NameToId(cx->names().lastIndex))->slot() ==
-              LAST_INDEX_SLOT);
-    JS_ASSERT(self->nativeLookup(cx, NameToId(cx->names().source))->slot() ==
-              SOURCE_SLOT);
-    JS_ASSERT(self->nativeLookup(cx, NameToId(cx->names().global))->slot() ==
-              GLOBAL_FLAG_SLOT);
-    JS_ASSERT(self->nativeLookup(cx, NameToId(cx->names().ignoreCase))->slot() ==
-              IGNORE_CASE_FLAG_SLOT);
-    JS_ASSERT(self->nativeLookup(cx, NameToId(cx->names().multiline))->slot() ==
-              MULTILINE_FLAG_SLOT);
-    JS_ASSERT(self->nativeLookup(cx, NameToId(cx->names().sticky))->slot() ==
-              STICKY_FLAG_SLOT);
+    MOZ_ASSERT(self->nativeLookup(cx, NameToId(cx->names().lastIndex))->slot() ==
+               LAST_INDEX_SLOT);
+    MOZ_ASSERT(self->nativeLookup(cx, NameToId(cx->names().source))->slot() ==
+               SOURCE_SLOT);
+    MOZ_ASSERT(self->nativeLookup(cx, NameToId(cx->names().global))->slot() ==
+               GLOBAL_FLAG_SLOT);
+    MOZ_ASSERT(self->nativeLookup(cx, NameToId(cx->names().ignoreCase))->slot() ==
+               IGNORE_CASE_FLAG_SLOT);
+    MOZ_ASSERT(self->nativeLookup(cx, NameToId(cx->names().multiline))->slot() ==
+               MULTILINE_FLAG_SLOT);
+    MOZ_ASSERT(self->nativeLookup(cx, NameToId(cx->names().sticky))->slot() ==
+               STICKY_FLAG_SLOT);
 
     /*
      * If this is a re-initialization with an existing RegExpShared, 'flags'
@@ -520,7 +520,7 @@ RegExpShared::compile(JSContext *cx, HandleAtom pattern, HandleLinearString inpu
     if (code.empty())
         return false;
 
-    JS_ASSERT(!code.jitCode || !code.byteCode);
+    MOZ_ASSERT(!code.jitCode || !code.byteCode);
 
     RegExpCompilation &compilation = this->compilation(mode, input->hasLatin1Chars());
     compilation.jitCode = code.jitCode;
@@ -576,7 +576,7 @@ RegExpShared::execute(JSContext *cx, HandleLinearString input, size_t start,
     irregexp::RegExpStackScope stackScope(cx->runtime());
 
     if (canStringMatch) {
-        JS_ASSERT(pairCount() == 1);
+        MOZ_ASSERT(pairCount() == 1);
         int res = StringFindPattern(input, source, start + charsOffset);
         if (res == -1)
             return RegExpRunStatus_Success_NotFound;
@@ -651,7 +651,7 @@ RegExpShared::execute(JSContext *cx, HandleLinearString input, size_t start,
         if (result == RegExpRunStatus_Success_NotFound)
             return RegExpRunStatus_Success_NotFound;
 
-        JS_ASSERT(result == RegExpRunStatus_Success);
+        MOZ_ASSERT(result == RegExpRunStatus_Success);
         break;
     }
 
@@ -701,7 +701,7 @@ RegExpCompartment::~RegExpCompartment()
 JSObject *
 RegExpCompartment::createMatchResultTemplateObject(JSContext *cx)
 {
-    JS_ASSERT(!matchResultTemplateObject_);
+    MOZ_ASSERT(!matchResultTemplateObject_);
 
     /* Create template array object */
     RootedObject templateObject(cx, NewDenseUnallocatedArray(cx, 0, nullptr, TenuredObject));
@@ -728,10 +728,10 @@ RegExpCompartment::createMatchResultTemplateObject(JSContext *cx)
 
     // Make sure that the properties are in the right slots.
     DebugOnly<Shape *> shape = templateObject->lastProperty();
-    JS_ASSERT(shape->previous()->slot() == 0 &&
-              shape->previous()->propidRef() == NameToId(cx->names().index));
-    JS_ASSERT(shape->slot() == 1 &&
-              shape->propidRef() == NameToId(cx->names().input));
+    MOZ_ASSERT(shape->previous()->slot() == 0 &&
+               shape->previous()->propidRef() == NameToId(cx->names().index));
+    MOZ_ASSERT(shape->slot() == 1 &&
+               shape->propidRef() == NameToId(cx->names().input));
 
     // Make sure type information reflects the indexed properties which might
     // be added.
@@ -853,7 +853,7 @@ js::CloneRegExpObject(JSContext *cx, JSObject *obj_)
     RegExpObjectBuilder builder(cx);
     Rooted<RegExpObject*> regex(cx, &obj_->as<RegExpObject>());
     JSObject *res = builder.clone(regex);
-    JS_ASSERT_IF(res, res->type() == regex->type());
+    MOZ_ASSERT_IF(res, res->type() == regex->type());
     return res;
 }
 
@@ -940,7 +940,7 @@ js::XDRScriptRegExpObject(XDRState<mode> *xdr, HeapPtrObject *objp)
     uint32_t flagsword = 0;
 
     if (mode == XDR_ENCODE) {
-        JS_ASSERT(objp);
+        MOZ_ASSERT(objp);
         RegExpObject &reobj = (*objp)->as<RegExpObject>();
         source = reobj.getSource();
         flagsword = reobj.getFlags();
@@ -972,4 +972,10 @@ js::CloneScriptRegExpObject(JSContext *cx, RegExpObject &reobj)
 
     RootedAtom source(cx, reobj.getSource());
     return RegExpObject::createNoStatics(cx, source, reobj.getFlags(), nullptr, cx->tempLifoAlloc());
+}
+
+JS_FRIEND_API(bool)
+js::RegExpToSharedNonInline(JSContext *cx, HandleObject obj, js::RegExpGuard *g)
+{
+    return RegExpToShared(cx, obj, g);
 }

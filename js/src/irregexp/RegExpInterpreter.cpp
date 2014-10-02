@@ -61,12 +61,12 @@ class MOZ_STACK_CLASS RegExpStackCursor
     }
 
     int32_t pop() {
-        JS_ASSERT(cursor > base());
+        MOZ_ASSERT(cursor > base());
         return *--cursor;
     }
 
     int32_t peek() {
-        JS_ASSERT(cursor > base());
+        MOZ_ASSERT(cursor > base());
         return *(cursor - 1);
     }
 
@@ -76,7 +76,7 @@ class MOZ_STACK_CLASS RegExpStackCursor
 
     void setPosition(int32_t position) {
         cursor = base() + position;
-        JS_ASSERT(cursor < stack().limit());
+        MOZ_ASSERT(cursor < stack().limit());
     }
 
   private:
@@ -91,14 +91,14 @@ class MOZ_STACK_CLASS RegExpStackCursor
 static int32_t
 Load32Aligned(const uint8_t* pc)
 {
-    JS_ASSERT((reinterpret_cast<uintptr_t>(pc) & 3) == 0);
+    MOZ_ASSERT((reinterpret_cast<uintptr_t>(pc) & 3) == 0);
     return *reinterpret_cast<const int32_t *>(pc);
 }
 
 static int32_t
 Load16Aligned(const uint8_t* pc)
 {
-    JS_ASSERT((reinterpret_cast<uintptr_t>(pc) & 1) == 0);
+    MOZ_ASSERT((reinterpret_cast<uintptr_t>(pc) & 1) == 0);
     return *reinterpret_cast<const uint16_t *>(pc);
 }
 

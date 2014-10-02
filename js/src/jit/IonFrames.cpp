@@ -157,7 +157,7 @@ JitFrameIterator::checkInvalidation(IonScript **ionScriptOut) const
     int32_t invalidationDataOffset = ((int32_t *) returnAddr)[-1];
     uint8_t *ionScriptDataOffset = returnAddr + invalidationDataOffset;
     IonScript *ionScript = (IonScript *) Assembler::GetPointer(ionScriptDataOffset);
-    JS_ASSERT(ionScript->containsReturnAddress(returnAddr));
+    MOZ_ASSERT(ionScript->containsReturnAddress(returnAddr));
     *ionScriptOut = ionScript;
     return true;
 }
@@ -171,8 +171,8 @@ JitFrameIterator::calleeToken() const
 JSFunction *
 JitFrameIterator::callee() const
 {
-    JS_ASSERT(isScripted());
-    JS_ASSERT(isFunctionFrame());
+    MOZ_ASSERT(isScripted());
+    MOZ_ASSERT(isFunctionFrame());
     return CalleeTokenToFunction(calleeToken());
 }
 
@@ -201,11 +201,11 @@ JitFrameIterator::isFunctionFrame() const
 JSScript *
 JitFrameIterator::script() const
 {
-    JS_ASSERT(isScripted());
+    MOZ_ASSERT(isScripted());
     if (isBaselineJS())
         return baselineFrame()->script();
     JSScript *script = ScriptFromCalleeToken(calleeToken());
-    JS_ASSERT(script);
+    MOZ_ASSERT(script);
     return script;
 }
 
@@ -222,7 +222,7 @@ JitFrameIterator::resumeAddressToFp() const
 void
 JitFrameIterator::baselineScriptAndPc(JSScript **scriptRes, jsbytecode **pcRes) const
 {
-    JS_ASSERT(isBaselineJS());
+    MOZ_ASSERT(isBaselineJS());
     JSScript *script = this->script();
     if (scriptRes)
         *scriptRes = script;
@@ -296,8 +296,8 @@ JitFrameIterator::prevFp() const
     // needed because the descriptor size of JS-to-JS frame which is just after
     // a Rectifier frame should not change. (cf EnsureExitFrame function)
     if (isFakeExitFrame()) {
-        JS_ASSERT(SizeOfFramePrefix(JitFrame_BaselineJS) ==
-                  SizeOfFramePrefix(JitFrame_IonJS));
+        MOZ_ASSERT(SizeOfFramePrefix(JitFrame_BaselineJS) ==
+                   SizeOfFramePrefix(JitFrame_IonJS));
         currentSize = SizeOfFramePrefix(JitFrame_IonJS);
     }
     currentSize += current()->prevFrameLocalSize();
@@ -307,7 +307,7 @@ JitFrameIterator::prevFp() const
 JitFrameIterator &
 JitFrameIterator::operator++()
 {
-    JS_ASSERT(type_ != JitFrame_Entry);
+    MOZ_ASSERT(type_ != JitFrame_Entry);
 
     frameSize_ = prevFrameLocalSize();
     cachedSafepointIndex_ = nullptr;
@@ -436,8 +436,8 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
 
         switch (tn->kind) {
           case JSTRY_ITER: {
-            JS_ASSERT(JSOp(*(script->main() + tn->start + tn->length)) == JSOP_ENDITER);
-            JS_ASSERT(tn->stackDepth > 0);
+            MOZ_ASSERT(JSOp(*(script->main() + tn->start + tn->length)) == JSOP_ENDITER);
+            MOZ_ASSERT(tn->stackDepth > 0);
 
             uint32_t localSlot = tn->stackDepth;
             CloseLiveIterator(cx, frame, localSlot);
@@ -494,8 +494,8 @@ static void
 HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFromException *rfe,
                         jsbytecode **unwoundScopeToPc, bool *calledDebugEpilogue)
 {
-    JS_ASSERT(frame.isBaselineJS());
-    JS_ASSERT(!*calledDebugEpilogue);
+    MOZ_ASSERT(frame.isBaselineJS());
+    MOZ_ASSERT(!*calledDebugEpilogue);
 
     RootedScript script(cx);
     jsbytecode *pc;
@@ -515,12 +515,12 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
         switch (status) {
           case JSTRAP_ERROR:
             // Uncatchable exception.
-            JS_ASSERT(!cx->isExceptionPending());
+            MOZ_ASSERT(!cx->isExceptionPending());
             break;
 
           case JSTRAP_CONTINUE:
           case JSTRAP_THROW:
-            JS_ASSERT(cx->isExceptionPending());
+            MOZ_ASSERT(cx->isExceptionPending());
             break;
 
           case JSTRAP_RETURN:
@@ -548,7 +548,7 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
 
         // Skip if the try note's stack depth exceeds the frame's stack depth.
         // See the big comment in TryNoteIter::settle for more info.
-        JS_ASSERT(frame.baselineFrame()->numValueSlots() >= script->nfixed());
+        MOZ_ASSERT(frame.baselineFrame()->numValueSlots() >= script->nfixed());
         size_t stackDepth = frame.baselineFrame()->numValueSlots() - script->nfixed();
         if (tn->stackDepth > stackDepth)
             continue;
@@ -658,7 +658,7 @@ HandleException(ResumeFromException *rfe)
                     return;
                 }
 
-                JS_ASSERT(rfe->kind == ResumeFromException::RESUME_ENTRY_FRAME);
+                MOZ_ASSERT(rfe->kind == ResumeFromException::RESUME_ENTRY_FRAME);
 
                 // Figure out whether SPS frame was pushed for this frame or not.
                 // Even if profiler is enabled, the frame being popped might have
@@ -736,7 +736,7 @@ HandleException(ResumeFromException *rfe)
                 jsbytecode *pc;
                 iter.baselineScriptAndPc(script.address(), &pc);
                 if (jit::DebugEpilogue(cx, frame, pc, false)) {
-                    JS_ASSERT(frame->hasReturnValue());
+                    MOZ_ASSERT(frame->hasReturnValue());
                     rfe->kind = ResumeFromException::RESUME_FORCED_RETURN;
                     rfe->framePointer = iter.fp() - BaselineFrame::FramePointerOffset;
                     rfe->stackPointer = reinterpret_cast<uint8_t *>(frame);
@@ -821,7 +821,7 @@ EnsureExitFrame(IonCommonFrameLayout *frame)
         return;
     }
 
-    JS_ASSERT(frame->prevType() == JitFrame_IonJS);
+    MOZ_ASSERT(frame->prevType() == JitFrame_IonJS);
     frame->changePrevType(JitFrame_Unwound_IonJS);
 }
 
@@ -869,7 +869,7 @@ static void
 MarkActualArguments(JSTracer *trc, const JitFrameIterator &frame)
 {
     IonJSFrameLayout *layout = frame.jsFrame();
-    JS_ASSERT(CalleeTokenIsFunction(layout->calleeToken()));
+    MOZ_ASSERT(CalleeTokenIsFunction(layout->calleeToken()));
 
     size_t nargs = frame.numActualArgs();
 
@@ -1024,11 +1024,11 @@ MarkBaselineStubFrame(JSTracer *trc, const JitFrameIterator &frame)
     // Mark the ICStub pointer stored in the stub frame. This is necessary
     // so that we don't destroy the stub code after unlinking the stub.
 
-    JS_ASSERT(frame.type() == JitFrame_BaselineStub);
+    MOZ_ASSERT(frame.type() == JitFrame_BaselineStub);
     IonBaselineStubFrameLayout *layout = (IonBaselineStubFrameLayout *)frame.fp();
 
     if (ICStub *stub = layout->maybeStubPtr()) {
-        JS_ASSERT(ICStub::CanMakeCalls(stub->kind()));
+        MOZ_ASSERT(ICStub::CanMakeCalls(stub->kind()));
         stub->trace(trc);
     }
 }
@@ -1095,7 +1095,7 @@ MarkJitExitFrameCopiedArguments(JSTracer *trc, const VMFunction *f, IonExitFoote
             if (f->argRootType(explicitArg) == VMFunction::RootValue)
                 gc::MarkValueRoot(trc, reinterpret_cast<Value*>(doubleArgs), "ion-vm-args");
             else
-                JS_ASSERT(f->argRootType(explicitArg) == VMFunction::RootNone);
+                MOZ_ASSERT(f->argRootType(explicitArg) == VMFunction::RootNone);
             doubleArgs += sizeof(double);
         }
     }
@@ -1122,7 +1122,7 @@ MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
     // invalidation and relocation data are no longer reliable.  So the VM
     // wrapper or the invalidation code may be GC if no JitCode keep reference
     // on them.
-    JS_ASSERT(uintptr_t(footer->jitCode()) != uintptr_t(-1));
+    MOZ_ASSERT(uintptr_t(footer->jitCode()) != uintptr_t(-1));
 
     // This correspond to the case where we have build a fake exit frame in
     // CodeGenerator.cpp which handle the case of a native function call. We
@@ -1337,9 +1337,9 @@ template <typename T>
 void UpdateJitActivationsForMinorGC(PerThreadData *ptd, JSTracer *trc)
 {
 #ifdef JSGC_FJGENERATIONAL
-    JS_ASSERT(trc->runtime()->isHeapMinorCollecting() || trc->runtime()->isFJMinorCollecting());
+    MOZ_ASSERT(trc->runtime()->isHeapMinorCollecting() || trc->runtime()->isFJMinorCollecting());
 #else
-    JS_ASSERT(trc->runtime()->isHeapMinorCollecting());
+    MOZ_ASSERT(trc->runtime()->isHeapMinorCollecting());
 #endif
     for (JitActivationIterator activations(ptd); !activations.done(); ++activations) {
         for (JitFrameIterator frames(activations); !frames.done(); ++frames) {
@@ -1373,9 +1373,9 @@ GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
     // skip past it.
     if (it.prevType() == JitFrame_Rectifier || it.prevType() == JitFrame_Unwound_Rectifier) {
         ++it;
-        JS_ASSERT(it.prevType() == JitFrame_BaselineStub ||
-                  it.prevType() == JitFrame_BaselineJS ||
-                  it.prevType() == JitFrame_IonJS);
+        MOZ_ASSERT(it.prevType() == JitFrame_BaselineStub ||
+                   it.prevType() == JitFrame_BaselineJS ||
+                   it.prevType() == JitFrame_IonJS);
     }
 
     // If the previous frame is a stub frame, skip the exit frame so that
@@ -1383,12 +1383,12 @@ GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
     // frame.
     if (it.prevType() == JitFrame_BaselineStub || it.prevType() == JitFrame_Unwound_BaselineStub) {
         ++it;
-        JS_ASSERT(it.prevType() == JitFrame_BaselineJS);
+        MOZ_ASSERT(it.prevType() == JitFrame_BaselineJS);
     }
 
     uint8_t *retAddr = it.returnAddress();
     uint32_t hash = PcScriptCache::Hash(retAddr);
-    JS_ASSERT(retAddr != nullptr);
+    MOZ_ASSERT(retAddr != nullptr);
 
     // Lazily initialize the cache. The allocation may safely fail and will not GC.
     if (MOZ_UNLIKELY(rt->ionPcScriptCache == nullptr)) {
@@ -1410,7 +1410,7 @@ GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
         *scriptRes = ifi.script();
         pc = ifi.pc();
     } else {
-        JS_ASSERT(it.isBaselineJS());
+        MOZ_ASSERT(it.isBaselineJS());
         it.baselineScriptAndPc(scriptRes, &pc);
     }
 
@@ -1524,7 +1524,7 @@ SnapshotIterator::SnapshotIterator(IonScript *ionScript, SnapshotOffset snapshot
     ionScript_(ionScript),
     instructionResults_(nullptr)
 {
-    JS_ASSERT(snapshotOffset < ionScript->snapshotsListSize());
+    MOZ_ASSERT(snapshotOffset < ionScript->snapshotsListSize());
 }
 
 SnapshotIterator::SnapshotIterator(const JitFrameIterator &iter)
@@ -1896,7 +1896,7 @@ Value
 SnapshotIterator::maybeReadAllocByIndex(size_t index)
 {
     while (index--) {
-        JS_ASSERT(moreAllocations());
+        MOZ_ASSERT(moreAllocations());
         skip();
     }
 
@@ -1917,7 +1917,7 @@ SnapshotIterator::maybeReadAllocByIndex(size_t index)
 IonScript *
 JitFrameIterator::ionScript() const
 {
-    JS_ASSERT(type() == JitFrame_IonJS);
+    MOZ_ASSERT(type() == JitFrame_IonJS);
 
     IonScript *ionScript = nullptr;
     if (checkInvalidation(&ionScript))
@@ -1928,8 +1928,8 @@ JitFrameIterator::ionScript() const
 IonScript *
 JitFrameIterator::ionScriptFromCalleeToken() const
 {
-    JS_ASSERT(type() == JitFrame_IonJS);
-    JS_ASSERT(!checkInvalidation());
+    MOZ_ASSERT(type() == JitFrame_IonJS);
+    MOZ_ASSERT(!checkInvalidation());
 
     switch (mode_) {
       case SequentialExecution:
@@ -2019,7 +2019,7 @@ InlineFrameIterator::resetOn(const JitFrameIterator *iter)
 void
 InlineFrameIterator::findNextFrame()
 {
-    JS_ASSERT(more());
+    MOZ_ASSERT(more());
 
     si_ = start_;
 
@@ -2046,13 +2046,13 @@ InlineFrameIterator::findNextFrame()
 
     size_t i = 1;
     for (; i <= remaining && si_.moreFrames(); i++) {
-        JS_ASSERT(IsIonInlinablePC(pc_));
+        MOZ_ASSERT(IsIonInlinablePC(pc_));
 
         // Recover the number of actual arguments from the script.
         if (JSOp(*pc_) != JSOP_FUNAPPLY)
             numActualArgs_ = GET_ARGC(pc_);
         if (JSOp(*pc_) == JSOP_FUNCALL) {
-            JS_ASSERT(GET_ARGC(pc_) > 0);
+            MOZ_ASSERT(GET_ARGC(pc_) > 0);
             numActualArgs_ = GET_ARGC(pc_) - 1;
         } else if (IsGetPropPC(pc_)) {
             numActualArgs_ = 0;
@@ -2167,7 +2167,7 @@ InlineFrameIterator::isConstructing() const
             return false;
 
         // In the case of a JS frame, look up the pc from the snapshot.
-        JS_ASSERT(IsCallPC(parent.pc()));
+        MOZ_ASSERT(IsCallPC(parent.pc()));
 
         return (JSOp)*parent.pc() == JSOP_NEW;
     }
@@ -2187,7 +2187,7 @@ JitFrameIterator::numActualArgs() const
     if (isScripted())
         return jsFrame()->numActualArgs();
 
-    JS_ASSERT(isExitFrameLayout<IonNativeExitFrameLayout>());
+    MOZ_ASSERT(isExitFrameLayout<IonNativeExitFrameLayout>());
     return exitFrame()->as<IonNativeExitFrameLayout>()->argc();
 }
 
@@ -2215,7 +2215,7 @@ struct DumpOp {
 void
 JitFrameIterator::dumpBaseline() const
 {
-    JS_ASSERT(isBaselineJS());
+    MOZ_ASSERT(isBaselineJS());
 
     fprintf(stderr, " JS Baseline frame\n");
     if (isFunctionFrame()) {
@@ -2362,7 +2362,7 @@ JitFrameIterator::dump() const
 bool
 JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
 {
-    JS_ASSERT(returnAddressToFp_ != nullptr);
+    MOZ_ASSERT(returnAddressToFp_ != nullptr);
 
     // Only handle Ion frames for now.
     if (type_ != JitFrame_IonJS && type_ != JitFrame_BaselineJS)
@@ -2395,8 +2395,8 @@ JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
     uint32_t depth = UINT32_MAX;
     if (!entry.callStackAtAddr(rt, returnAddressToFp_, location, &depth))
         return false;
-    JS_ASSERT(depth > 0 && depth != UINT32_MAX);
-    JS_ASSERT(location.length() == depth);
+    MOZ_ASSERT(depth > 0 && depth != UINT32_MAX);
+    MOZ_ASSERT(location.length() == depth);
 
     JitSpew(JitSpew_Profiling, "Found bytecode location of depth %d:", depth);
     for (size_t i = 0; i < location.length(); i++) {
@@ -2409,8 +2409,8 @@ JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
         // Create an InlineFrameIterator here and verify the mapped info against the iterator info.
         InlineFrameIterator inlineFrames(GetJSContextFromJitCode(), this);
         for (size_t idx = 0; idx < location.length(); idx++) {
-            JS_ASSERT(idx < location.length());
-            JS_ASSERT_IF(idx < location.length() - 1, inlineFrames.more());
+            MOZ_ASSERT(idx < location.length());
+            MOZ_ASSERT_IF(idx < location.length() - 1, inlineFrames.more());
 
             JitSpew(JitSpew_Profiling, "Match %d: ION %s:%d(%d) vs N2B %s:%d(%d)",
                     (int)idx,
@@ -2421,7 +2421,7 @@ JitFrameIterator::verifyReturnAddressUsingNativeToBytecodeMap()
                     location[idx].script->lineno(),
                     location[idx].pc - location[idx].script->code());
 
-            JS_ASSERT(inlineFrames.script() == location[idx].script);
+            MOZ_ASSERT(inlineFrames.script() == location[idx].script);
 
             if (inlineFrames.more())
                 ++inlineFrames;
@@ -2444,12 +2444,12 @@ InvalidationBailoutStack::checkInvariants() const
 #ifdef DEBUG
     IonJSFrameLayout *frame = fp();
     CalleeToken token = frame->calleeToken();
-    JS_ASSERT(token);
+    MOZ_ASSERT(token);
 
     uint8_t *rawBase = ionScript()->method()->raw();
     uint8_t *rawLimit = rawBase + ionScript()->method()->instructionsSize();
     uint8_t *osiPoint = osiPointReturnAddress();
-    JS_ASSERT(rawBase <= osiPoint && osiPoint <= rawLimit);
+    MOZ_ASSERT(rawBase <= osiPoint && osiPoint <= rawLimit);
 #endif
 }
 

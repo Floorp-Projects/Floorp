@@ -85,12 +85,12 @@ BaselineInspector::maybeShapesForPropertyOp(jsbytecode *pc, ShapeVector &shapes)
     // Return a list of shapes seen by the baseline IC for the current op.
     // An empty list indicates no shapes are known, or there was an uncacheable
     // access.
-    JS_ASSERT(shapes.empty());
+    MOZ_ASSERT(shapes.empty());
 
     if (!hasBaselineScript())
         return true;
 
-    JS_ASSERT(isValidPC(pc));
+    MOZ_ASSERT(isValidPC(pc));
     const ICEntry &entry = icEntryFromPC(pc);
 
     ICStub *stub = entry.firstStub();
@@ -227,7 +227,7 @@ BaselineInspector::expectedCompareType(jsbytecode *pc)
         return MCompare::Compare_Unknown;
 
     if (ICStub *fallback = second ? second->next() : first->next()) {
-        JS_ASSERT(fallback->isFallback());
+        MOZ_ASSERT(fallback->isFallback());
         if (fallback->toCompare_Fallback()->hadUnoptimizableAccess())
             return MCompare::Compare_Unknown;
     }
@@ -302,7 +302,7 @@ TryToSpecializeBinaryArithOp(ICStub **stubs,
         return true;
     }
 
-    JS_ASSERT(sawInt32);
+    MOZ_ASSERT(sawInt32);
     *result = MIRType_Int32;
     return true;
 }
@@ -383,7 +383,7 @@ BaselineInspector::hasSeenAccessedGetter(jsbytecode *pc)
 bool
 BaselineInspector::hasSeenNonStringIterMore(jsbytecode *pc)
 {
-    JS_ASSERT(JSOp(*pc) == JSOP_MOREITER);
+    MOZ_ASSERT(JSOp(*pc) == JSOP_MOREITER);
 
     if (!hasBaselineScript())
         return false;
@@ -403,7 +403,7 @@ BaselineInspector::hasSeenDoubleResult(jsbytecode *pc)
     const ICEntry &entry = icEntryFromPC(pc);
     ICStub *stub = entry.fallbackStub();
 
-    JS_ASSERT(stub->isUnaryArith_Fallback() || stub->isBinaryArith_Fallback());
+    MOZ_ASSERT(stub->isUnaryArith_Fallback() || stub->isBinaryArith_Fallback());
 
     if (stub->isUnaryArith_Fallback())
         return stub->toUnaryArith_Fallback()->sawDoubleResult();
@@ -462,7 +462,7 @@ BaselineInspector::templateDeclEnvObject()
         return nullptr;
 
     JSObject *res = &templateCallObject()->as<ScopeObject>().enclosingScope();
-    JS_ASSERT(res);
+    MOZ_ASSERT(res);
 
     return &res->as<DeclEnvObject>();
 }
@@ -474,7 +474,7 @@ BaselineInspector::templateCallObject()
         return nullptr;
 
     JSObject *res = baselineScript()->templateScope();
-    JS_ASSERT(res);
+    MOZ_ASSERT(res);
 
     return &res->as<CallObject>();
 }

@@ -22,7 +22,7 @@ js_IdIsIndex(jsid id, uint32_t *indexp)
 {
     if (JSID_IS_INT(id)) {
         int32_t i = JSID_TO_INT(id);
-        JS_ASSERT(i >= 0);
+        MOZ_ASSERT(i >= 0);
         *indexp = (uint32_t)i;
         return true;
     }
@@ -178,6 +178,12 @@ ArrayShiftMoveElements(JSObject *obj);
 
 extern bool
 array_shift(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern bool
+array_unshift(JSContext *cx, unsigned argc, js::Value *vp);
+
+extern bool
+array_slice(JSContext *cx, unsigned argc, js::Value *vp);
 
 /*
  * Append the given (non-hole) value to the end of an array.  The array must be

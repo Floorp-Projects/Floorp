@@ -101,8 +101,8 @@ private:
 public:
     void release(bool willDestroy = false)
     {
-        JS_ASSERT(m_refCount != 0);
-        JS_ASSERT_IF(willDestroy, m_refCount == 1);
+        MOZ_ASSERT(m_refCount != 0);
+        MOZ_ASSERT_IF(willDestroy, m_refCount == 1);
         if (--m_refCount == 0)
             js_delete(this);
     }
@@ -146,13 +146,13 @@ private:
     // of generated code, and they only hold 16KB or so of code.
     void addRef()
     {
-        JS_ASSERT(m_refCount);
+        MOZ_ASSERT(m_refCount);
         ++m_refCount;
     }
 
     void* alloc(size_t n, CodeKind kind)
     {
-        JS_ASSERT(n <= available());
+        MOZ_ASSERT(n <= available());
         void *result = m_freePtr;
         m_freePtr += n;
 
@@ -167,7 +167,7 @@ private:
     }
 
     size_t available() const {
-        JS_ASSERT(m_end >= m_freePtr);
+        MOZ_ASSERT(m_end >= m_freePtr);
         return m_end - m_freePtr;
     }
 
@@ -200,7 +200,7 @@ public:
             largeAllocSize = pageSize * 16;
         }
 
-        JS_ASSERT(m_smallPools.empty());
+        MOZ_ASSERT(m_smallPools.empty());
     }
 
     ~ExecutableAllocator()
@@ -209,7 +209,7 @@ public:
             m_smallPools[i]->release(/* willDestroy = */true);
 
         // If this asserts we have a pool leak.
-        JS_ASSERT_IF(m_pools.initialized(), m_pools.empty());
+        MOZ_ASSERT_IF(m_pools.initialized(), m_pools.empty());
     }
 
     void purge() {
@@ -227,7 +227,7 @@ public:
         // Caller must ensure 'n' is word-size aligned. If all allocations are
         // of word sized quantities, then all subsequent allocations will be
         // aligned.
-        JS_ASSERT(roundUpAllocationSize(n, sizeof(void*)) == n);
+        MOZ_ASSERT(roundUpAllocationSize(n, sizeof(void*)) == n);
 
         if (n == OVERSIZE_ALLOCATION) {
             *poolp = NULL;
@@ -241,16 +241,16 @@ public:
         // This alloc is infallible because poolForSize() just obtained
         // (found, or created if necessary) a pool that had enough space.
         void *result = (*poolp)->alloc(n, type);
-        JS_ASSERT(result);
+        MOZ_ASSERT(result);
         return result;
     }
 
     void releasePoolPages(ExecutablePool *pool) {
-        JS_ASSERT(pool->m_allocation.pages);
+        MOZ_ASSERT(pool->m_allocation.pages);
         if (destroyCallback)
             destroyCallback(pool->m_allocation.pages, pool->m_allocation.size);
         systemRelease(pool->m_allocation);
-        JS_ASSERT(m_pools.initialized());
+        MOZ_ASSERT(m_pools.initialized());
         m_pools.remove(m_pools.lookup(pool));   // this asserts if |pool| is not in m_pools
     }
 
@@ -285,7 +285,7 @@ private:
         // Round up to next page boundary
         size_t size = request + (granularity - 1);
         size = size & ~(granularity - 1);
-        JS_ASSERT(size >= request);
+        MOZ_ASSERT(size >= request);
         return size;
     }
 

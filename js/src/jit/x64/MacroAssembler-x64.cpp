@@ -37,7 +37,7 @@ MacroAssemblerX64::loadConstantDouble(double d, FloatRegister dest)
             return;
     }
     Double &dbl = doubles_[doubleIndex];
-    JS_ASSERT(!dbl.uses.bound());
+    MOZ_ASSERT(!dbl.uses.bound());
 
     // The constants will be stored in a pool appended to the text (see
     // finish()), so they will always be a fixed distance from the
@@ -71,7 +71,7 @@ MacroAssemblerX64::loadConstantFloat32(float f, FloatRegister dest)
             return;
     }
     Float &flt = floats_[floatIndex];
-    JS_ASSERT(!flt.uses.bound());
+    MOZ_ASSERT(!flt.uses.bound());
 
     // See comment in loadConstantDouble
     JmpSrc j = masm.movss_ripr(dest.code());
@@ -104,7 +104,7 @@ MacroAssemblerX64::getSimdData(const SimdConstant &v)
 void
 MacroAssemblerX64::loadConstantInt32x4(const SimdConstant &v, FloatRegister dest)
 {
-    JS_ASSERT(v.type() == SimdConstant::Int32x4);
+    MOZ_ASSERT(v.type() == SimdConstant::Int32x4);
     if (maybeInlineInt32x4(v, dest))
         return;
 
@@ -112,8 +112,8 @@ MacroAssemblerX64::loadConstantInt32x4(const SimdConstant &v, FloatRegister dest
     if (!val)
         return;
 
-    JS_ASSERT(!val->uses.bound());
-    JS_ASSERT(val->type() == SimdConstant::Int32x4);
+    MOZ_ASSERT(!val->uses.bound());
+    MOZ_ASSERT(val->type() == SimdConstant::Int32x4);
 
     JmpSrc j = masm.movdqa_ripr(dest.code());
     JmpSrc prev = JmpSrc(val->uses.use(j.offset()));
@@ -123,7 +123,7 @@ MacroAssemblerX64::loadConstantInt32x4(const SimdConstant &v, FloatRegister dest
 void
 MacroAssemblerX64::loadConstantFloat32x4(const SimdConstant&v, FloatRegister dest)
 {
-    JS_ASSERT(v.type() == SimdConstant::Float32x4);
+    MOZ_ASSERT(v.type() == SimdConstant::Float32x4);
     if (maybeInlineFloat32x4(v, dest))
         return;
 
@@ -131,8 +131,8 @@ MacroAssemblerX64::loadConstantFloat32x4(const SimdConstant&v, FloatRegister des
     if (!val)
         return;
 
-    JS_ASSERT(!val->uses.bound());
-    JS_ASSERT(val->type() == SimdConstant::Float32x4);
+    MOZ_ASSERT(!val->uses.bound());
+    MOZ_ASSERT(val->type() == SimdConstant::Float32x4);
 
     JmpSrc j = masm.movaps_ripr(dest.code());
     JmpSrc prev = JmpSrc(val->uses.use(j.offset()));
@@ -177,7 +177,7 @@ MacroAssemblerX64::finish()
 void
 MacroAssemblerX64::setupABICall(uint32_t args)
 {
-    JS_ASSERT(!inCall_);
+    MOZ_ASSERT(!inCall_);
     inCall_ = true;
 
     args_ = args;
@@ -264,8 +264,8 @@ MacroAssemblerX64::passABIArg(FloatRegister reg, MoveOp::Type type)
 void
 MacroAssemblerX64::callWithABIPre(uint32_t *stackAdjust)
 {
-    JS_ASSERT(inCall_);
-    JS_ASSERT(args_ == passedIntArgs_ + passedFloatArgs_);
+    MOZ_ASSERT(inCall_);
+    MOZ_ASSERT(args_ == passedIntArgs_ + passedFloatArgs_);
 
     if (dynamicAlignment_) {
         *stackAdjust = stackForCall_
@@ -308,7 +308,7 @@ MacroAssemblerX64::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result)
     if (dynamicAlignment_)
         pop(rsp);
 
-    JS_ASSERT(inCall_);
+    MOZ_ASSERT(inCall_);
     inCall_ = false;
 }
 
@@ -351,7 +351,7 @@ MacroAssemblerX64::callWithABI(Address fun, MoveOp::Type result)
         fun.base = r10;
     }
 
-    JS_ASSERT(!IsIntArgReg(fun.base));
+    MOZ_ASSERT(!IsIntArgReg(fun.base));
 
     uint32_t stackAdjust;
     callWithABIPre(&stackAdjust);
@@ -484,9 +484,9 @@ MacroAssemblerX64::storeUnboxedValue(ConstantOrRegister value, MIRType valueType
 void
 MacroAssemblerX64::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label *label)
 {
-    JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
-    JS_ASSERT(ptr != temp);
-    JS_ASSERT(ptr != ScratchReg);
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    MOZ_ASSERT(ptr != temp);
+    MOZ_ASSERT(ptr != ScratchReg);
 
     const Nursery &nursery = GetIonContext()->runtime->gcNursery();
     movePtr(ImmWord(-ptrdiff_t(nursery.start())), ScratchReg);
@@ -499,7 +499,7 @@ void
 MacroAssemblerX64::branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
                                               Label *label)
 {
-    JS_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+    MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
 
     // 'Value' representing the start of the nursery tagged as a JSObject
     const Nursery &nursery = GetIonContext()->runtime->gcNursery();

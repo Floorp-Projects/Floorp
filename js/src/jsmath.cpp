@@ -65,9 +65,9 @@ MathCache::MathCache() {
     memset(table, 0, sizeof(table));
 
     /* See comments in lookup(). */
-    JS_ASSERT(IsNegativeZero(-0.0));
-    JS_ASSERT(!IsNegativeZero(+0.0));
-    JS_ASSERT(hash(-0.0, MathCache::Sin) != hash(+0.0, MathCache::Sin));
+    MOZ_ASSERT(IsNegativeZero(-0.0));
+    MOZ_ASSERT(!IsNegativeZero(+0.0));
+    MOZ_ASSERT(hash(-0.0, MathCache::Sin) != hash(+0.0, MathCache::Sin));
 }
 
 size_t

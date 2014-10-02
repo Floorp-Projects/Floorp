@@ -33,13 +33,13 @@ JSString::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
     if (isRope())
         return 0;
 
-    JS_ASSERT(isLinear());
+    MOZ_ASSERT(isLinear());
 
     // JSDependentString: do nothing, we'll count the chars when we hit the base string.
     if (isDependent())
         return 0;
 
-    JS_ASSERT(isFlat());
+    MOZ_ASSERT(isFlat());
 
     // JSExtensibleString: count the full capacity, not just the used space.
     if (isExtensible()) {
@@ -237,7 +237,7 @@ JSRope::copyCharsInternal(ThreadSafeContext *cx, ScopedJSFreePtr<CharT> &out,
         }
     }
 
-    JS_ASSERT(pos == out + n);
+    MOZ_ASSERT(pos == out + n);
 
     if (nullTerminate)
         out[n] = 0;
@@ -349,14 +349,14 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
              * Simulate a left-most traversal from the root to leftMost->leftChild()
              * via first_visit_node
              */
-            JS_ASSERT(str->isRope());
+            MOZ_ASSERT(str->isRope());
             while (str != leftMostRope) {
                 if (b == WithIncrementalBarrier) {
                     JSString::writeBarrierPre(str->d.s.u2.left);
                     JSString::writeBarrierPre(str->d.s.u3.right);
                 }
                 JSString *child = str->d.s.u2.left;
-                JS_ASSERT(child->isRope());
+                MOZ_ASSERT(child->isRope());
                 str->setNonInlineChars(left.nonInlineChars<CharT>(nogc));
                 child->d.u1.flattenData = uintptr_t(str) | Tag_VisitRightChild;
                 str = child;
@@ -413,7 +413,7 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
     }
     finish_node: {
         if (str == this) {
-            JS_ASSERT(pos == wholeChars + wholeLength);
+            MOZ_ASSERT(pos == wholeChars + wholeLength);
             *pos = '\0';
             str->d.u1.length = wholeLength;
             if (IsSame<CharT, char16_t>::value)
@@ -437,7 +437,7 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
         str = (JSString *)(flattenData & ~Tag_Mask);
         if ((flattenData & Tag_Mask) == Tag_VisitRightChild)
             goto visit_right_child;
-        JS_ASSERT((flattenData & Tag_Mask) == Tag_FinishNode);
+        MOZ_ASSERT((flattenData & Tag_Mask) == Tag_FinishNode);
         goto finish_node;
     }
 }
@@ -467,8 +467,8 @@ js::ConcatStrings(ThreadSafeContext *cx,
                   typename MaybeRooted<JSString*, allowGC>::HandleType left,
                   typename MaybeRooted<JSString*, allowGC>::HandleType right)
 {
-    JS_ASSERT_IF(!left->isAtom(), cx->isInsideCurrentZone(left));
-    JS_ASSERT_IF(!right->isAtom(), cx->isInsideCurrentZone(right));
+    MOZ_ASSERT_IF(!left->isAtom(), cx->isInsideCurrentZone(left));
+    MOZ_ASSERT_IF(!right->isAtom(), cx->isInsideCurrentZone(right));
 
     size_t leftLen = left->length();
     if (leftLen == 0)
@@ -563,7 +563,7 @@ JSDependentString::undependInternal(ExclusiveContext *cx)
 JSFlatString *
 JSDependentString::undepend(ExclusiveContext *cx)
 {
-    JS_ASSERT(JSString::isDependent());
+    MOZ_ASSERT(JSString::isDependent());
     return hasLatin1Chars()
            ? undependInternal<Latin1Char>(cx)
            : undependInternal<char16_t>(cx);

@@ -78,8 +78,8 @@ PR_CreateThread(PRThreadType type,
                 PRThreadState state,
                 uint32_t stackSize)
 {
-    JS_ASSERT(type == PR_USER_THREAD);
-    JS_ASSERT(priority == PR_PRIORITY_NORMAL);
+    MOZ_ASSERT(type == PR_USER_THREAD);
+    MOZ_ASSERT(priority == PR_PRIORITY_NORMAL);
 
     if (!gInitialized) {
         /*
@@ -174,13 +174,13 @@ PR_NewThreadPrivateIndex(unsigned *newIndex, PRThreadPrivateDTOR destructor)
      * We only call PR_NewThreadPrivateIndex from the main thread, so there's no
      * need to lock the table of TLS keys.
      */
-    JS_ASSERT(PR_GetCurrentThread() == &gMainThread);
+    MOZ_ASSERT(PR_GetCurrentThread() == &gMainThread);
 
     pthread_key_t key;
     if (pthread_key_create(&key, destructor))
         return PR_FAILURE;
 
-    JS_ASSERT(gTLSKeyCount + 1 < MaxTLSKeyCount);
+    MOZ_ASSERT(gTLSKeyCount + 1 < MaxTLSKeyCount);
 
     gTLSKeys[gTLSKeyCount] = key;
     *newIndex = gTLSKeyCount;

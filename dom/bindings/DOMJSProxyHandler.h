@@ -19,6 +19,25 @@ namespace mozilla {
 namespace dom {
 
 enum {
+  /**
+   * DOM proxies have an extra slot for the expando object at index
+   * JSPROXYSLOT_EXPANDO.
+   *
+   * The expando object is a plain JSObject whose properties correspond to
+   * "expandos" (custom properties set by the script author).
+   *
+   * The exact value stored in the JSPROXYSLOT_EXPANDO slot depends on whether
+   * the interface is annotated with the [OverrideBuiltins] extended attribute.
+   *
+   * If it is, the proxy is initialized with a PrivateValue, which contains a
+   * pointer to a js::ExpandoAndGeneration object; this contains a pointer to
+   * the actual expando object as well as the "generation" of the object.
+   *
+   * If it is not, the proxy is initialized with an UndefinedValue. In
+   * EnsureExpandoObject, it is set to an ObjectValue that points to the
+   * expando object directly. (It is set back to an UndefinedValue only when
+   * the object is about to die.)
+   */
   JSPROXYSLOT_EXPANDO = 0
 };
 

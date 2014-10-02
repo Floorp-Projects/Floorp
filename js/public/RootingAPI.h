@@ -670,7 +670,7 @@ struct GCMethods<JSObject *>
     static gc::Cell *asGCThingOrNull(JSObject *v) {
         if (!v)
             return nullptr;
-        JS_ASSERT(uintptr_t(v) > 32);
+        MOZ_ASSERT(uintptr_t(v) > 32);
         return reinterpret_cast<gc::Cell *>(v);
     }
     static bool needsPostBarrier(JSObject *v) {

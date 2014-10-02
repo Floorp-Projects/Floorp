@@ -66,9 +66,9 @@ class JitcodeGlobalEntry
         }
 
         void init(Kind kind, void *nativeStartAddr, void *nativeEndAddr) {
-            JS_ASSERT(nativeStartAddr);
-            JS_ASSERT(nativeEndAddr);
-            JS_ASSERT(kind > INVALID && kind < LIMIT);
+            MOZ_ASSERT(nativeStartAddr);
+            MOZ_ASSERT(nativeEndAddr);
+            MOZ_ASSERT(kind > INVALID && kind < LIMIT);
             nativeStartAddr_ = nativeStartAddr;
             nativeEndAddr_ = nativeEndAddr;
             kind_ = kind;
@@ -130,9 +130,9 @@ class JitcodeGlobalEntry
         void init(void *nativeStartAddr, void *nativeEndAddr,
                   JSScript *script, JitcodeIonTable *regionTable)
         {
-            JS_ASSERT((uintptr_t(script) & LowMask) == 0);
-            JS_ASSERT(script);
-            JS_ASSERT(regionTable);
+            MOZ_ASSERT((uintptr_t(script) & LowMask) == 0);
+            MOZ_ASSERT(script);
+            MOZ_ASSERT(regionTable);
             BaseEntry::init(Ion, nativeStartAddr, nativeEndAddr);
             scriptList_ = uintptr_t(script);
             regionTable_ = regionTable;
@@ -141,11 +141,11 @@ class JitcodeGlobalEntry
         void init(void *nativeStartAddr, void *nativeEndAddr,
                   unsigned numScripts, JSScript **scripts, JitcodeIonTable *regionTable)
         {
-            JS_ASSERT((uintptr_t(scripts) & LowMask) == 0);
-            JS_ASSERT(numScripts >= 1);
-            JS_ASSERT(numScripts <= 6);
-            JS_ASSERT(scripts);
-            JS_ASSERT(regionTable);
+            MOZ_ASSERT((uintptr_t(scripts) & LowMask) == 0);
+            MOZ_ASSERT(numScripts >= 1);
+            MOZ_ASSERT(numScripts <= 6);
+            MOZ_ASSERT(scripts);
+            MOZ_ASSERT(regionTable);
             BaseEntry::init(Ion, nativeStartAddr, nativeEndAddr);
             scriptList_ = uintptr_t(scripts) | numScripts;
             regionTable_ = regionTable;
@@ -154,10 +154,10 @@ class JitcodeGlobalEntry
         void init(void *nativeStartAddr, void *nativeEndAddr,
                   SizedScriptList *scripts, JitcodeIonTable *regionTable)
         {
-            JS_ASSERT((uintptr_t(scripts) & LowMask) == 0);
-            JS_ASSERT(scripts->size > 6);
-            JS_ASSERT(scripts);
-            JS_ASSERT(regionTable);
+            MOZ_ASSERT((uintptr_t(scripts) & LowMask) == 0);
+            MOZ_ASSERT(scripts->size > 6);
+            MOZ_ASSERT(scripts);
+            MOZ_ASSERT(regionTable);
 
             BaseEntry::init(Ion, nativeStartAddr, nativeEndAddr);
             scriptList_ = uintptr_t(scripts) | uintptr_t(Multi);
@@ -172,15 +172,15 @@ class JitcodeGlobalEntry
         }
 
         JSScript *singleScript() const {
-            JS_ASSERT(scriptListTag() == Single);
+            MOZ_ASSERT(scriptListTag() == Single);
             return reinterpret_cast<JSScript *>(scriptListPointer());
         }
         JSScript **rawScriptArray() const {
-            JS_ASSERT(scriptListTag() < Multi);
+            MOZ_ASSERT(scriptListTag() < Multi);
             return reinterpret_cast<JSScript **>(scriptListPointer());
         }
         SizedScriptList *sizedScriptList() const {
-            JS_ASSERT(scriptListTag() == Multi);
+            MOZ_ASSERT(scriptListTag() == Multi);
             return reinterpret_cast<SizedScriptList *>(scriptListPointer());
         }
 
@@ -190,7 +190,7 @@ class JitcodeGlobalEntry
                 return 1;
 
             if (tag < Multi) {
-                JS_ASSERT(int(tag) >= 2);
+                MOZ_ASSERT(int(tag) >= 2);
                 return static_cast<unsigned>(tag);
             }
 
@@ -198,7 +198,7 @@ class JitcodeGlobalEntry
         }
 
         JSScript *getScript(unsigned idx) const {
-            JS_ASSERT(idx < numScripts());
+            MOZ_ASSERT(idx < numScripts());
 
             ScriptListTag tag = scriptListTag();
 
@@ -206,7 +206,7 @@ class JitcodeGlobalEntry
                 return singleScript();
 
             if (tag < Multi) {
-                JS_ASSERT(int(tag) >= 2);
+                MOZ_ASSERT(int(tag) >= 2);
                 return rawScriptArray()[idx];
             }
 
@@ -238,7 +238,7 @@ class JitcodeGlobalEntry
 
         void init(void *nativeStartAddr, void *nativeEndAddr, JSScript *script)
         {
-            JS_ASSERT(script != nullptr);
+            MOZ_ASSERT(script != nullptr);
             BaseEntry::init(Baseline, nativeStartAddr, nativeEndAddr);
             script_ = script;
         }
@@ -259,7 +259,7 @@ class JitcodeGlobalEntry
 
         void init(void *nativeStartAddr, void *nativeEndAddr, void *rejoinAddr)
         {
-            JS_ASSERT(rejoinAddr != nullptr);
+            MOZ_ASSERT(rejoinAddr != nullptr);
             BaseEntry::init(IonCache, nativeStartAddr, nativeEndAddr);
             rejoinAddr_ = rejoinAddr;
         }
@@ -402,36 +402,36 @@ class JitcodeGlobalEntry
     }
 
     IonEntry &ionEntry() {
-        JS_ASSERT(isIon());
+        MOZ_ASSERT(isIon());
         return ion_;
     }
     BaselineEntry &baselineEntry() {
-        JS_ASSERT(isBaseline());
+        MOZ_ASSERT(isBaseline());
         return baseline_;
     }
     IonCacheEntry &ionCacheEntry() {
-        JS_ASSERT(isIonCache());
+        MOZ_ASSERT(isIonCache());
         return ionCache_;
     }
     QueryEntry &queryEntry() {
-        JS_ASSERT(isQuery());
+        MOZ_ASSERT(isQuery());
         return query_;
     }
 
     const IonEntry &ionEntry() const {
-        JS_ASSERT(isIon());
+        MOZ_ASSERT(isIon());
         return ion_;
     }
     const BaselineEntry &baselineEntry() const {
-        JS_ASSERT(isBaseline());
+        MOZ_ASSERT(isBaseline());
         return baseline_;
     }
     const IonCacheEntry &ionCacheEntry() const {
-        JS_ASSERT(isIonCache());
+        MOZ_ASSERT(isIonCache());
         return ionCache_;
     }
     const QueryEntry &queryEntry() const {
-        JS_ASSERT(isQuery());
+        MOZ_ASSERT(isQuery());
         return query_;
     }
 
@@ -692,10 +692,10 @@ class JitcodeRegionEntry
         nativeOffset_(0), scriptDepth_(0),
         scriptPcStack_(nullptr), deltaRun_(nullptr)
     {
-        JS_ASSERT(data_ < end_);
+        MOZ_ASSERT(data_ < end_);
         unpack();
-        JS_ASSERT(scriptPcStack_ < end_);
-        JS_ASSERT(deltaRun_ <= end_);
+        MOZ_ASSERT(scriptPcStack_ < end_);
+        MOZ_ASSERT(deltaRun_ <= end_);
     }
 
     uint32_t nativeOffset() const {
@@ -722,25 +722,25 @@ class JitcodeRegionEntry
 
         bool hasMore() const
         {
-            JS_ASSERT((idx_ == count_) == (cur_ == end_));
-            JS_ASSERT((idx_ < count_) == (cur_ < end_));
+            MOZ_ASSERT((idx_ == count_) == (cur_ == end_));
+            MOZ_ASSERT((idx_ < count_) == (cur_ < end_));
             return cur_ < end_;
         }
 
         void readNext(uint32_t *scriptIdxOut, uint32_t *pcOffsetOut)
         {
-            JS_ASSERT(scriptIdxOut);
-            JS_ASSERT(pcOffsetOut);
-            JS_ASSERT(hasMore());
+            MOZ_ASSERT(scriptIdxOut);
+            MOZ_ASSERT(pcOffsetOut);
+            MOZ_ASSERT(hasMore());
 
             CompactBufferReader reader(cur_, end_);
             ReadScriptPc(reader, scriptIdxOut, pcOffsetOut);
 
             cur_ = reader.currentPosition();
-            JS_ASSERT(cur_ <= end_);
+            MOZ_ASSERT(cur_ <= end_);
 
             idx_++;
-            JS_ASSERT_IF(idx_ == count_, cur_ == end_);
+            MOZ_ASSERT_IF(idx_ == count_, cur_ == end_);
         }
 
         void reset() {
@@ -767,22 +767,22 @@ class JitcodeRegionEntry
 
         bool hasMore() const
         {
-            JS_ASSERT(cur_ <= end_);
+            MOZ_ASSERT(cur_ <= end_);
             return cur_ < end_;
         }
 
         void readNext(uint32_t *nativeDeltaOut, int32_t *pcDeltaOut)
         {
-            JS_ASSERT(nativeDeltaOut != nullptr);
-            JS_ASSERT(pcDeltaOut != nullptr);
+            MOZ_ASSERT(nativeDeltaOut != nullptr);
+            MOZ_ASSERT(pcDeltaOut != nullptr);
 
-            JS_ASSERT(hasMore());
+            MOZ_ASSERT(hasMore());
 
             CompactBufferReader reader(cur_, end_);
             ReadDelta(reader, nativeDeltaOut, pcDeltaOut);
 
             cur_ = reader.currentPosition();
-            JS_ASSERT(cur_ <= end_);
+            MOZ_ASSERT(cur_ <= end_);
         }
 
         void reset() {
@@ -823,7 +823,7 @@ class JitcodeIonTable
     }
 
     uint32_t regionOffset(uint32_t regionIndex) const {
-        JS_ASSERT(regionIndex < numRegions());
+        MOZ_ASSERT(regionIndex < numRegions());
         return regionOffsets_[regionIndex];
     }
 
@@ -836,7 +836,7 @@ class JitcodeIonTable
     }
 
     bool regionContainsOffset(uint32_t regionIndex, uint32_t nativeOffset) {
-        JS_ASSERT(regionIndex < numRegions());
+        MOZ_ASSERT(regionIndex < numRegions());
 
         JitcodeRegionEntry ent = regionEntry(regionIndex);
         if (nativeOffset < ent.nativeOffset())

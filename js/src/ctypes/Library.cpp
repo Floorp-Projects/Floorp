@@ -175,7 +175,7 @@ Library::IsLibrary(JSObject* obj)
 PRLibrary*
 Library::GetLibrary(JSObject* obj)
 {
-  JS_ASSERT(IsLibrary(obj));
+  MOZ_ASSERT(IsLibrary(obj));
 
   jsval slot = JS_GetReservedSlot(obj, SLOT_LIBRARY);
   return static_cast<PRLibrary*>(slot.toPrivate());
