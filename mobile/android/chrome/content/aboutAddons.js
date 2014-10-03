@@ -93,6 +93,7 @@ function init() {
   showList();
   ContextMenus.init();
 
+  document.getElementById("header-button").addEventListener("click", openLink, false);
 }
 
 
