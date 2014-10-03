@@ -158,6 +158,15 @@ loop.conversationViews = (function(mozL10n) {
        */
       window.addEventListener('orientationchange', this.updateVideoContainer);
       window.addEventListener('resize', this.updateVideoContainer);
+
+      // The SDK needs to know about the configuration and the elements to use
+      // for display. So the best way seems to pass the information here - ideally
+      // the sdk wouldn't need to know this, but we can't change that.
+      this.props.dispatcher.dispatch(new sharedActions.SetupStreamElements({
+        publisherConfig: this._getPublisherConfig(),
+        getLocalElementFunc: this._getElement.bind(this, ".local"),
+        getRemoteElementFunc: this._getElement.bind(this, ".remote")
+      }));
     },
 
     componentWillUnmount: function() {
@@ -165,9 +174,41 @@ loop.conversationViews = (function(mozL10n) {
       window.removeEventListener('resize', this.updateVideoContainer);
     },
 
+    /**
+     * Returns either the required DOMNode
+     *
+     * @param {String} className The name of the class to get the element for.
+     */
+    _getElement: function(className) {
+      return this.getDOMNode().querySelector(className);
+    },
+
+    /**
+     * Returns the required configuration for publishing video on the sdk.
+     */
+    _getPublisherConfig: function() {
+      // height set to 100%" to fix video layout on Google Chrome
+      // @see https://bugzilla.mozilla.org/show_bug.cgi?id=1020445
+      return {
+        insertMode: "append",
+        width: "100%",
+        height: "100%",
+        publishVideo: this.props.video.enabled,
+        style: {
+          bugDisplayMode: "off",
+          buttonDisplayMode: "off",
+          nameDisplayMode: "off"
+        }
+      }
+    },
+
+    /**
+     * Used to update the video container whenever the orientation or size of the
+     * display area changes.
+     */
     updateVideoContainer: function() {
-      var localStreamParent = document.querySelector('.local .OT_publisher');
-      var remoteStreamParent = document.querySelector('.remote .OT_subscriber');
+      var localStreamParent = this._getElement('.local .OT_publisher');
+      var remoteStreamParent = this._getElement('.remote .OT_subscriber');
       if (localStreamParent) {
         localStreamParent.style.width = "100%";
       }
@@ -176,13 +217,26 @@ loop.conversationViews = (function(mozL10n) {
       }
     },
 
+    /**
+     * Hangs up the call.
+     */
     hangup: function() {
       this.props.dispatcher.dispatch(
         new sharedActions.HangupCall());
     },
 
+    /**
+     * Used to control publishing a stream - i.e. to mute a stream
+     *
+     * @param {String} type The type of stream, e.g. "audio" or "video".
+     * @param {Boolean} enabled True to enable the stream, false otherwise.
+     */
     publishStream: function(type, enabled) {
-      // XXX Add this as part of bug 972017.
+      this.props.dispatcher.dispatch(
+        new sharedActions.SetMute({
+          type: type,
+          enabled: enabled
+        }));
     },
 
     render: function() {
@@ -286,7 +340,8 @@ loop.conversationViews = (function(mozL10n) {
         case CALL_STATES.ONGOING: {
           return (OngoingConversationView({
             dispatcher: this.props.dispatcher, 
-            video: {enabled: this.state.callType === CALL_TYPES.AUDIO_VIDEO}}
+            video: {enabled: this.state.videoMuted}, 
+            audio: {enabled: this.state.audioMuted}}
             )
           );
         }
