@@ -2,14 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+.content-area input.contact-filter {
+  margin-top: 14px;
+  border-radius: 10000px;
+}
+
 .contact-list {
   border-top: 1px solid #ccc;
   overflow-x: hidden;
   overflow-y: auto;
-  /* We need enough space to show the context menu of the first contact. */
-  min-height: 204px;
-  /* Show six contacts and scroll for the rest. */
-  max-height: 306px;
+  /* Space for six contacts, not affected by filtering.  This is enough space
+     to show the dropdown menu when there is only one contact. */
+  height: 306px;
 }
 
 .contact,
