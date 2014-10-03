@@ -612,7 +612,7 @@ WebappsApplication.prototype = {
       case "Webapps:Connect:Return:OK":
         this.removeMessageListeners(["Webapps:Connect:Return:OK",
                                      "Webapps:Connect:Return:KO"]);
-        let messagePorts = [];
+        let messagePorts = new this._window.Array();
         msg.messagePortIDs.forEach((aPortID) => {
           let port = new this._window.MozInterAppMessagePort(aPortID);
           messagePorts.push(port);
@@ -626,7 +626,7 @@ WebappsApplication.prototype = {
         break;
       case "Webapps:GetConnections:Return:OK":
         this.removeMessageListeners(aMessage.name);
-        let connections = [];
+        let connections = new this._window.Array();
         msg.connections.forEach((aConnection) => {
           let connection =
             new this._window.MozInterAppConnection(aConnection.keyword,
