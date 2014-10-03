@@ -829,6 +829,8 @@ ValueNumberer::visitControlInstruction(MBasicBlock *block, const MBasicBlock *do
         return false;
     block->discardIgnoreOperands(control);
     block->end(newControl);
+    if (block->entryResumePoint() && newNumSuccs != oldNumSuccs)
+        block->flagOperandsOfPrunedBranches(newControl);
     return processDeadDefs();
 }
 
