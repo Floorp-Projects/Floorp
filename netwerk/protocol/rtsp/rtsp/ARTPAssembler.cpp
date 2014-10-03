@@ -16,6 +16,8 @@
 
 #include "ARTPAssembler.h"
 
+#include "RtspPrlog.h"
+
 #include <media/stagefright/foundation/ABuffer.h>
 #include <media/stagefright/foundation/ADebug.h>
 #include <media/stagefright/foundation/AMessage.h>
@@ -64,14 +66,19 @@ void ARTPAssembler::onPacketReceived(const sp<ARTPSource> &source) {
 }
 
 // static
-void ARTPAssembler::CopyTimes(const sp<ABuffer> &to, const sp<ABuffer> &from) {
+bool ARTPAssembler::CopyTimes(const sp<ABuffer> &to, const sp<ABuffer> &from) {
     uint32_t rtpTime;
-    CHECK(from->meta()->findInt32("rtp-time", (int32_t *)&rtpTime));
+    if (!from->meta()->findInt32("rtp-time", (int32_t *)&rtpTime)) {
+        LOGW("CopyTimes: Cannot find rtp-time");
+
+        return false;
+    }
 
     to->meta()->setInt32("rtp-time", rtpTime);
 
     // Copy the seq number.
     to->setInt32Data(from->int32Data());
+    return true;
 }
 
 }  // namespace android
