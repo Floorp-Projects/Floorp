@@ -17,6 +17,7 @@
 
 #include "jsscriptinlines.h"
 
+#include "vm/ObjectImpl-inl.h"
 #include "vm/StringObject-inl.h"
 
 using mozilla::ArrayLength;
@@ -301,7 +302,7 @@ IonBuilder::inlineArray(CallInfo &callInfo)
     uint32_t initLength = 0;
     AllocatingBehaviour allocating = NewArray_Unallocating;
 
-    JSObject *templateObject = inspector->getTemplateObjectForNative(pc, js_Array);
+    NativeObject *templateObject = inspector->getTemplateObjectForNative(pc, js_Array);
     if (!templateObject)
         return InliningStatus_NotInlined;
     MOZ_ASSERT(templateObject->is<ArrayObject>());
@@ -335,7 +336,7 @@ IonBuilder::inlineArray(CallInfo &callInfo)
 
         // Negative lengths generate a RangeError, unhandled by the inline path.
         initLength = arg->toConstant()->value().toInt32();
-        if (initLength >= JSObject::NELEMENTS_LIMIT)
+        if (initLength >= NativeObject::NELEMENTS_LIMIT)
             return InliningStatus_NotInlined;
 
         // Make sure initLength matches the template object's length. This is
@@ -672,7 +673,7 @@ IonBuilder::inlineArrayConcat(CallInfo &callInfo)
     }
 
     // Inline the call.
-    JSObject *templateObj = inspector->getTemplateObjectForNative(pc, js::array_concat);
+    NativeObject *templateObj = inspector->getTemplateObjectForNative(pc, js::array_concat);
     if (!templateObj || templateObj->type() != baseThisType)
         return InliningStatus_NotInlined;
     MOZ_ASSERT(templateObj->is<ArrayObject>());
@@ -680,7 +681,8 @@ IonBuilder::inlineArrayConcat(CallInfo &callInfo)
     callInfo.setImplicitlyUsedUnchecked();
 
     MArrayConcat *ins = MArrayConcat::New(alloc(), constraints(), callInfo.thisArg(), callInfo.getArg(0),
-                                          templateObj, templateObj->type()->initialHeap(constraints()));
+                                          &templateObj->as<ArrayObject>(),
+                                          templateObj->type()->initialHeap(constraints()));
     current->add(ins);
     current->push(ins);
 
@@ -1748,7 +1750,7 @@ IonBuilder::inlineNewDenseArrayForParallelExecution(CallInfo &callInfo)
         return InliningStatus_NotInlined;
     types::TypeObject *typeObject = returnTypes->getTypeObject(0);
 
-    JSObject *templateObject = inspector->getTemplateObjectForNative(pc, intrinsic_NewDenseArray);
+    NativeObject *templateObject = inspector->getTemplateObjectForNative(pc, intrinsic_NewDenseArray);
     if (!templateObject || templateObject->type() != typeObject)
         return InliningStatus_NotInlined;
 
@@ -1757,7 +1759,7 @@ IonBuilder::inlineNewDenseArrayForParallelExecution(CallInfo &callInfo)
     MNewDenseArrayPar *newObject = MNewDenseArrayPar::New(alloc(),
                                                           graph().forkJoinContext(),
                                                           callInfo.getArg(0),
-                                                          templateObject);
+                                                          &templateObject->as<ArrayObject>());
     current->add(newObject);
     current->push(newObject);
 

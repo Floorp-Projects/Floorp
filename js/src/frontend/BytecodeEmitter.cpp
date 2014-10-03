@@ -39,6 +39,7 @@
 
 #include "frontend/ParseMaps-inl.h"
 #include "frontend/ParseNode-inl.h"
+#include "vm/ObjectImpl-inl.h"
 #include "vm/ScopeObject-inl.h"
 
 using namespace js;
@@ -2166,9 +2167,9 @@ IteratorResultShape(ExclusiveContext *cx, BytecodeEmitter *bce, unsigned *shape)
 {
     MOZ_ASSERT(bce->script->compileAndGo());
 
-    RootedObject obj(cx);
+    RootedNativeObject obj(cx);
     gc::AllocKind kind = GuessObjectGCKind(2);
-    obj = NewBuiltinClassInstance(cx, &JSObject::class_, kind);
+    obj = NewNativeBuiltinClassInstance(cx, &JSObject::class_, kind);
     if (!obj)
         return false;
 
@@ -4065,7 +4066,7 @@ ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObje
             pn = pn_head;
         }
 
-        RootedObject obj(cx, NewDenseFullyAllocatedArray(cx, count, nullptr, MaybeSingletonObject));
+        RootedArrayObject obj(cx, NewDenseFullyAllocatedArray(cx, count, nullptr, MaybeSingletonObject));
         if (!obj)
             return false;
 
@@ -4094,7 +4095,8 @@ ParseNode::getConstantValue(ExclusiveContext *cx, AllowConstantObjects allowObje
             allowObjects = DontAllowObjects;
 
         gc::AllocKind kind = GuessObjectGCKind(pn_count);
-        RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_, kind, MaybeSingletonObject));
+        RootedNativeObject obj(cx, NewNativeBuiltinClassInstance(cx, &JSObject::class_,
+                                                                 kind, MaybeSingletonObject));
         if (!obj)
             return false;
 
@@ -4157,7 +4159,7 @@ EmitSingletonInitialiser(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *
     if (!pn->getConstantValue(cx, ParseNode::AllowObjects, &value))
         return false;
 
-    RootedObject obj(cx, &value.toObject());
+    RootedNativeObject obj(cx, &value.toObject().as<NativeObject>());
     if (!obj->is<ArrayObject>() && !JSObject::setSingletonType(cx, obj))
         return false;
 
@@ -4177,7 +4179,7 @@ EmitCallSiteObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     MOZ_ASSERT(value.isObject());
 
-    ObjectBox *objbox1 = bce->parser->newObjectBox(&value.toObject());
+    ObjectBox *objbox1 = bce->parser->newObjectBox(&value.toObject().as<NativeObject>());
     if (!objbox1)
         return false;
 
@@ -4186,7 +4188,7 @@ EmitCallSiteObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 
     MOZ_ASSERT(value.isObject());
 
-    ObjectBox *objbox2 = bce->parser->newObjectBox(&value.toObject());
+    ObjectBox *objbox2 = bce->parser->newObjectBox(&value.toObject().as<NativeObject>());
     if (!objbox2)
         return false;
 
@@ -6219,10 +6221,10 @@ EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
      * Try to construct the shape of the object as we go, so we can emit a
      * JSOP_NEWOBJECT with the final shape instead.
      */
-    RootedObject obj(cx);
+    RootedNativeObject obj(cx);
     if (bce->script->compileAndGo()) {
         gc::AllocKind kind = GuessObjectGCKind(pn->pn_count);
-        obj = NewBuiltinClassInstance(cx, &JSObject::class_, kind, TenuredObject);
+        obj = NewNativeBuiltinClassInstance(cx, &JSObject::class_, kind, TenuredObject);
         if (!obj)
             return false;
     }
@@ -6904,7 +6906,7 @@ frontend::EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
                 // for the template is accurate. We don't do this here as we
                 // want to use types::InitObject, which requires a finished
                 // script.
-                JSObject *obj = &value.toObject();
+                NativeObject *obj = &value.toObject().as<NativeObject>();
                 if (!ObjectElements::MakeElementsCopyOnWrite(cx, obj))
                     return false;
 
@@ -7278,7 +7280,7 @@ CGObjectList::finish(ObjectArray *array)
     MOZ_ASSERT(length <= INDEX_LIMIT);
     MOZ_ASSERT(length == array->length);
 
-    js::HeapPtrObject *cursor = array->vector + array->length;
+    js::HeapPtrNativeObject *cursor = array->vector + array->length;
     ObjectBox *objbox = lastbox;
     do {
         --cursor;

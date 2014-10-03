@@ -478,7 +478,7 @@ PostVerifierVisitEdge(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
     /*
      * Values will be unpacked to the stack before getting here. However, the
      * only things that enter this callback are marked by the JS_TraceChildren
-     * below. Since ObjectImpl::markChildren handles this, the real trace
+     * below. Since JSObject::markChildren handles this, the real trace
      * location will be set correctly in these cases.
      */
     void **loc = trc->tracingLocation(thingp);

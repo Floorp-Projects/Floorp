@@ -2233,14 +2233,14 @@ JS_PUBLIC_API(void *)
 JS_GetPrivate(JSObject *obj)
 {
     /* This function can be called by a finalizer. */
-    return obj->getPrivate();
+    return obj->fakeNativeGetPrivate();
 }
 
 JS_PUBLIC_API(void)
 JS_SetPrivate(JSObject *obj, void *data)
 {
     /* This function can be called by a finalizer. */
-    obj->setPrivate(data);
+    obj->fakeNativeSetPrivate(data);
 }
 
 JS_PUBLIC_API(void *)
@@ -2248,7 +2248,7 @@ JS_GetInstancePrivate(JSContext *cx, HandleObject obj, const JSClass *clasp, Cal
 {
     if (!JS_InstanceOf(cx, obj, clasp, args))
         return nullptr;
-    return obj->getPrivate();
+    return obj->fakeNativeGetPrivate();
 }
 
 JS_PUBLIC_API(bool)
@@ -2566,8 +2566,8 @@ JS_DeepFreezeObject(JSContext *cx, HandleObject obj)
         return false;
 
     /* Walk slots in obj and if any value is a non-null object, seal it. */
-    for (uint32_t i = 0, n = obj->slotSpan(); i < n; ++i) {
-        const Value &v = obj->getSlot(i);
+    for (uint32_t i = 0, n = obj->fakeNativeSlotSpan(); i < n; ++i) {
+        const Value &v = obj->fakeNativeGetSlot(i);
         if (v.isPrimitive())
             continue;
         RootedObject obj(cx, &v.toObject());
@@ -2612,12 +2612,12 @@ LookupResult(JSContext *cx, HandleObject obj, HandleObject obj2, HandleId id,
             }
         }
     } else if (IsImplicitDenseOrTypedArrayElement(shape)) {
-        vp.set(obj2->getDenseOrTypedArrayElement(JSID_TO_INT(id)));
+        vp.set(obj2->as<NativeObject>().getDenseOrTypedArrayElement(JSID_TO_INT(id)));
         return true;
     } else {
         /* Peek at the native property's slot value, without doing a Get. */
         if (shape->hasSlot()) {
-            vp.set(obj2->nativeGetSlot(shape->slot()));
+            vp.set(obj2->as<NativeObject>().getSlot(shape->slot()));
             return true;
         }
     }
@@ -2735,7 +2735,7 @@ JS_AlreadyHasOwnPropertyById(JSContext *cx, HandleObject obj, HandleId id, bool 
     if (JSID_IS_INT(id)) {
         uint32_t index = JSID_TO_INT(id);
 
-        if (obj->containsDenseElement(index)) {
+        if (obj->as<NativeObject>().containsDenseElement(index)) {
             *foundp = true;
             return true;
         }
@@ -2746,7 +2746,7 @@ JS_AlreadyHasOwnPropertyById(JSContext *cx, HandleObject obj, HandleId id, bool 
         }
     }
 
-    *foundp = obj->nativeContains(cx, id);
+    *foundp = obj->as<NativeObject>().contains(cx, id);
     return true;
 }
 
@@ -3321,14 +3321,14 @@ GetPropertyDescriptorById(JSContext *cx, HandleObject obj, HandleId id,
     if (obj2->isNative()) {
         if (IsImplicitDenseOrTypedArrayElement(shape)) {
             desc.setEnumerable();
-            desc.value().set(obj2->getDenseOrTypedArrayElement(JSID_TO_INT(id)));
+            desc.value().set(obj2->as<NativeObject>().getDenseOrTypedArrayElement(JSID_TO_INT(id)));
         } else {
             desc.setAttributes(shape->attributes());
             desc.setGetter(shape->getter());
             desc.setSetter(shape->setter());
             MOZ_ASSERT(desc.value().isUndefined());
             if (shape->hasSlot())
-                desc.value().set(obj2->nativeGetSlot(shape->slot()));
+                desc.value().set(obj2->as<NativeObject>().getSlot(shape->slot()));
         }
     } else {
         if (obj2->is<ProxyObject>())
@@ -3602,9 +3602,9 @@ JS_SetAllNonReservedSlotsToUndefined(JSContext *cx, JSObject *objArg)
 
     const Class *clasp = obj->getClass();
     unsigned numReserved = JSCLASS_RESERVED_SLOTS(clasp);
-    unsigned numSlots = obj->slotSpan();
+    unsigned numSlots = obj->as<NativeObject>().slotSpan();
     for (unsigned i = numReserved; i < numSlots; i++)
-        obj->setSlot(i, UndefinedValue());
+        obj->as<NativeObject>().setSlot(i, UndefinedValue());
 }
 
 JS_PUBLIC_API(JSIdArray *)
@@ -3633,11 +3633,11 @@ static const uint32_t JSSLOT_ITER_INDEX = 0;
 static void
 prop_iter_finalize(FreeOp *fop, JSObject *obj)
 {
-    void *pdata = obj->getPrivate();
+    void *pdata = obj->as<NativeObject>().getPrivate();
     if (!pdata)
         return;
 
-    if (obj->getSlot(JSSLOT_ITER_INDEX).toInt32() >= 0) {
+    if (obj->as<NativeObject>().getSlot(JSSLOT_ITER_INDEX).toInt32() >= 0) {
         /* Non-native case: destroy the ida enumerated when obj was created. */
         JSIdArray *ida = (JSIdArray *) pdata;
         fop->free_(ida);
@@ -3647,11 +3647,11 @@ prop_iter_finalize(FreeOp *fop, JSObject *obj)
 static void
 prop_iter_trace(JSTracer *trc, JSObject *obj)
 {
-    void *pdata = obj->getPrivate();
+    void *pdata = obj->as<NativeObject>().getPrivate();
     if (!pdata)
         return;
 
-    if (obj->getSlot(JSSLOT_ITER_INDEX).toInt32() < 0) {
+    if (obj->as<NativeObject>().getSlot(JSSLOT_ITER_INDEX).toInt32() < 0) {
         /*
          * Native case: just mark the next property to visit. We don't need a
          * barrier here because the pointer is updated via setPrivate, which
@@ -3659,7 +3659,7 @@ prop_iter_trace(JSTracer *trc, JSObject *obj)
          */
         Shape *tmp = static_cast<Shape *>(pdata);
         MarkShapeUnbarriered(trc, &tmp, "prop iter shape");
-        obj->setPrivateUnbarriered(tmp);
+        obj->as<NativeObject>().setPrivateUnbarriered(tmp);
     } else {
         /* Non-native case: mark each id in the JSIdArray private. */
         JSIdArray *ida = (JSIdArray *) pdata;
@@ -3691,7 +3691,7 @@ JS_NewPropertyIterator(JSContext *cx, HandleObject obj)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
 
-    RootedObject iterobj(cx, NewObjectWithClassProto(cx, &prop_iter_class, nullptr, obj));
+    NativeObject *iterobj = NewNativeObjectWithClassProto(cx, &prop_iter_class, nullptr, obj);
     if (!iterobj)
         return nullptr;
 
@@ -3720,11 +3720,11 @@ JS_NextProperty(JSContext *cx, HandleObject iterobj, MutableHandleId idp)
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, iterobj);
-    int32_t i = iterobj->getSlot(JSSLOT_ITER_INDEX).toInt32();
+    int32_t i = iterobj->as<NativeObject>().getSlot(JSSLOT_ITER_INDEX).toInt32();
     if (i < 0) {
         /* Native case: private data is a property tree node pointer. */
         MOZ_ASSERT(iterobj->getParent()->isNative());
-        Shape *shape = static_cast<Shape *>(iterobj->getPrivate());
+        Shape *shape = static_cast<Shape *>(iterobj->as<NativeObject>().getPrivate());
 
         while (shape->previous() && !shape->enumerable())
             shape = shape->previous();
@@ -3733,19 +3733,19 @@ JS_NextProperty(JSContext *cx, HandleObject iterobj, MutableHandleId idp)
             MOZ_ASSERT(shape->isEmptyShape());
             idp.set(JSID_VOID);
         } else {
-            iterobj->setPrivateGCThing(const_cast<Shape *>(shape->previous().get()));
+            iterobj->as<NativeObject>().setPrivateGCThing(const_cast<Shape *>(shape->previous().get()));
             idp.set(shape->propid());
         }
     } else {
         /* Non-native case: use the ida enumerated when iterobj was created. */
-        JSIdArray *ida = (JSIdArray *) iterobj->getPrivate();
+        JSIdArray *ida = (JSIdArray *) iterobj->as<NativeObject>().getPrivate();
         MOZ_ASSERT(i <= ida->length);
         STATIC_ASSUME(i <= ida->length);
         if (i == 0) {
             idp.set(JSID_VOID);
         } else {
             idp.set(ida->vector[--i]);
-            iterobj->setSlot(JSSLOT_ITER_INDEX, Int32Value(i));
+            iterobj->as<NativeObject>().setSlot(JSSLOT_ITER_INDEX, Int32Value(i));
         }
     }
     return true;
@@ -3754,13 +3754,13 @@ JS_NextProperty(JSContext *cx, HandleObject iterobj, MutableHandleId idp)
 JS_PUBLIC_API(jsval)
 JS_GetReservedSlot(JSObject *obj, uint32_t index)
 {
-    return obj->getReservedSlot(index);
+    return obj->fakeNativeGetReservedSlot(index);
 }
 
 JS_PUBLIC_API(void)
 JS_SetReservedSlot(JSObject *obj, uint32_t index, Value value)
 {
-    obj->setReservedSlot(index, value);
+    obj->fakeNativeSetReservedSlot(index, value);
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -6476,7 +6476,7 @@ JS_PUBLIC_API(void *)
 JS_EncodeInterpretedFunction(JSContext *cx, HandleObject funobjArg, uint32_t *lengthp)
 {
     XDREncoder encoder(cx);
-    RootedObject funobj(cx, funobjArg);
+    RootedFunction funobj(cx, &funobjArg->as<JSFunction>());
     if (!encoder.codeFunction(&funobj))
         return nullptr;
     return encoder.forgetData(lengthp);
@@ -6496,7 +6496,7 @@ JS_PUBLIC_API(JSObject *)
 JS_DecodeInterpretedFunction(JSContext *cx, const void *data, uint32_t length)
 {
     XDRDecoder decoder(cx, data, length);
-    RootedObject funobj(cx);
+    RootedFunction funobj(cx);
     if (!decoder.codeFunction(&funobj))
         return nullptr;
     return funobj;

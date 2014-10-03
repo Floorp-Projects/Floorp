@@ -451,8 +451,8 @@ NewObjectCache::clearNurseryObjects(JSRuntime *rt)
         Entry &e = entries[i];
         JSObject *obj = reinterpret_cast<JSObject *>(&e.templateObject);
         if (IsInsideNursery(e.key) ||
-            rt->gc.nursery.isInside(obj->slots) ||
-            rt->gc.nursery.isInside(obj->elements))
+            rt->gc.nursery.isInside(obj->fakeNativeSlots()) ||
+            rt->gc.nursery.isInside(obj->fakeNativeElements()))
         {
             PodZero(&e);
         }

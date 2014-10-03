@@ -11,7 +11,7 @@
 
 namespace js {
 
-class NumberObject : public JSObject
+class NumberObject : public NativeObject
 {
     /* Stores this Number object's [[PrimitiveValue]]. */
     static const unsigned PRIMITIVE_VALUE_SLOT = 0;

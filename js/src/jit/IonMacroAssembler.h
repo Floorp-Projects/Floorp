@@ -364,7 +364,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void loadObjPrivate(Register obj, uint32_t nfixed, Register dest) {
-        loadPtr(Address(obj, JSObject::getPrivateDataOffset(nfixed)), dest);
+        loadPtr(Address(obj, NativeObject::getPrivateDataOffset(nfixed)), dest);
     }
 
     void loadObjProto(Register obj, Register dest) {
@@ -811,20 +811,20 @@ class MacroAssembler : public MacroAssemblerSpecific
     void allocateObject(Register result, Register slots, gc::AllocKind allocKind,
                         uint32_t nDynamicSlots, gc::InitialHeap initialHeap, Label *fail);
     void allocateNonObject(Register result, Register temp, gc::AllocKind allocKind, Label *fail);
-    void copySlotsFromTemplate(Register obj, const JSObject *templateObj,
+    void copySlotsFromTemplate(Register obj, const NativeObject *templateObj,
                                uint32_t start, uint32_t end);
     void fillSlotsWithUndefined(Address addr, Register temp, uint32_t start, uint32_t end);
-    void initGCSlots(Register obj, Register temp, JSObject *templateObj, bool initFixedSlots);
+    void initGCSlots(Register obj, Register temp, NativeObject *templateObj, bool initFixedSlots);
 
   public:
     void callMallocStub(size_t nbytes, Register result, Label *fail);
     void callFreeStub(Register slots);
-    void createGCObject(Register result, Register temp, JSObject *templateObj,
+    void createGCObject(Register result, Register temp, NativeObject *templateObj,
                         gc::InitialHeap initialHeap, Label *fail, bool initFixedSlots = true);
 
-    void newGCThing(Register result, Register temp, JSObject *templateObj,
+    void newGCThing(Register result, Register temp, NativeObject *templateObj,
                      gc::InitialHeap initialHeap, Label *fail);
-    void initGCThing(Register obj, Register temp, JSObject *templateObj,
+    void initGCThing(Register obj, Register temp, NativeObject *templateObj,
                      bool initFixedSlots = true);
 
     void newGCString(Register result, Register temp, Label *fail);
@@ -839,7 +839,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void newGCTenuredThingPar(Register result, Register cx, Register tempReg1, Register tempReg2,
                               gc::AllocKind allocKind, Label *fail);
     void newGCThingPar(Register result, Register cx, Register tempReg1, Register tempReg2,
-                       JSObject *templateObject, Label *fail);
+                       NativeObject *templateObject, Label *fail);
     void newGCStringPar(Register result, Register cx, Register tempReg1, Register tempReg2,
                         Label *fail);
     void newGCFatInlineStringPar(Register result, Register cx, Register tempReg1, Register tempReg2,

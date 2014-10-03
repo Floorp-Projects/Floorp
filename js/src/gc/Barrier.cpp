@@ -34,16 +34,16 @@ bool
 HeapSlot::preconditionForSet(JSObject *owner, Kind kind, uint32_t slot)
 {
     return kind == Slot
-         ? &owner->getSlotRef(slot) == this
-         : &owner->getDenseElement(slot) == (const Value *)this;
+         ? &owner->fakeNativeGetSlotRef(slot) == this
+         : &owner->fakeNativeGetDenseElement(slot) == (const Value *)this;
 }
 
 bool
 HeapSlot::preconditionForSet(Zone *zone, JSObject *owner, Kind kind, uint32_t slot)
 {
     bool ok = kind == Slot
-            ? &owner->getSlotRef(slot) == this
-            : &owner->getDenseElement(slot) == (const Value *)this;
+            ? &owner->fakeNativeGetSlotRef(slot) == this
+            : &owner->fakeNativeGetDenseElement(slot) == (const Value *)this;
     return ok && owner->zone() == zone;
 }
 
@@ -51,8 +51,8 @@ bool
 HeapSlot::preconditionForWriteBarrierPost(JSObject *obj, Kind kind, uint32_t slot, Value target) const
 {
     return kind == Slot
-         ? obj->getSlotAddressUnchecked(slot)->get() == target
-         : static_cast<HeapSlot *>(obj->getDenseElements() + slot)->get() == target;
+         ? obj->fakeNativeGetSlotAddressUnchecked(slot)->get() == target
+         : static_cast<HeapSlot *>(obj->fakeNativeGetDenseElements() + slot)->get() == target;
 }
 
 bool

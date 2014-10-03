@@ -14,6 +14,7 @@
 
 #include "jsfriendapi.h"
 #include "jsinfer.h"
+#include "jsobj.h"
 #include "NamespaceImports.h"
 
 #include "gc/Barrier.h"
@@ -26,7 +27,6 @@
 
 namespace js {
 
-class ObjectImpl;
 class Nursery;
 class Shape;
 
@@ -98,7 +98,7 @@ ArraySetLength(typename ExecutionModeTraits<mode>::ContextType cx,
                unsigned attrs, HandleValue value, bool setterIsStrict);
 
 /*
- * Elements header used for all objects. The elements component of such objects
+ * Elements header used for native objects. The elements component of such objects
  * offers an efficient representation for all or some of the indexed properties
  * of the object, using a flat array of Values rather than a shape hierarchy
  * stored in the object's slots. This structure is immediately followed by an
@@ -188,7 +188,7 @@ class ObjectElements
 
   private:
     friend class ::JSObject;
-    friend class ObjectImpl;
+    friend class NativeObject;
     friend class ArrayObject;
     friend class Nursery;
     friend class gc::ForkJoinNursery;
@@ -257,9 +257,9 @@ class ObjectElements
         return reinterpret_cast<ObjectElements*>(uintptr_t(elems) - sizeof(ObjectElements));
     }
 
-    HeapPtrObject &ownerObject() const {
+    HeapPtrNativeObject &ownerObject() const {
         MOZ_ASSERT(isCopyOnWrite());
-        return *(HeapPtrObject *)(&elements()[initializedLength]);
+        return *(HeapPtrNativeObject *)(&elements()[initializedLength]);
     }
 
     static int offsetOfFlags() {
@@ -276,7 +276,7 @@ class ObjectElements
     }
 
     static bool ConvertElementsToDoubles(JSContext *cx, uintptr_t elements);
-    static bool MakeElementsCopyOnWrite(ExclusiveContext *cx, JSObject *obj);
+    static bool MakeElementsCopyOnWrite(ExclusiveContext *cx, NativeObject *obj);
 
     // This is enough slots to store an object of this class. See the static
     // assertion below.
@@ -297,26 +297,17 @@ class Shape;
 class NewObjectCache;
 class TaggedProto;
 
-inline Value
-ObjectValue(ObjectImpl &obj);
-
 #ifdef DEBUG
 static inline bool
-IsObjectValueInCompartment(js::Value v, JSCompartment *comp);
+IsObjectValueInCompartment(Value v, JSCompartment *comp);
 #endif
 
 /*
- * ObjectImpl specifies the internal implementation of an object.  (In contrast
- * JSObject specifies an "external" interface, at the conceptual level of that
- * exposed in ECMAScript.)
+ * NativeObject specifies the internal implementation of a native object.
  *
- * The |shape_| member stores the shape of the object, which includes the
- * object's class and the layout of all its properties.
+ * Native objects extend the base implementation of an object with storage
+ * for the object's named properties and indexed elements.
  *
- * The |type_| member stores the type of the object, which contains its
- * prototype object and the possible types of its properties.
- *
- * The rest of the object stores its named properties and indexed elements.
  * These are stored separately from one another. Objects are followed by a
  * variable-sized array of values for inline storage, which may be used by
  * either properties of native objects (fixed slots), by elements (fixed
@@ -337,125 +328,75 @@ IsObjectValueInCompartment(js::Value v, JSCompartment *comp);
  * (the address of the third value, to leave room for a ObjectElements header;
  * in this case numFixedSlots() is zero) or to a dynamically allocated array.
  *
- * Only certain combinations of slots and elements storage are possible.
- *
- * - For native objects, slots and elements may both be non-empty. The
- *   slots may be either names or indexes; no indexed property will be in both
- *   the slots and elements.
- *
- * - For non-native objects, slots and elements are both empty.
- *
- * The members of this class are currently protected; in the long run this will
- * will change so that some members are private, and only certain methods that
- * act upon them will be protected.
+ * Slots and elements may both be non-empty. The slots may be either names or
+ * indexes; no indexed property will be in both the slots and elements.
  */
-class ObjectImpl : public gc::Cell
+class NativeObject : public JSObject
 {
   protected:
-    /*
-     * Shape of the object, encodes the layout of the object's properties and
-     * all other information about its structure. See vm/Shape.h.
-     */
-    HeapPtrShape shape_;
-
-    /*
-     * The object's type and prototype. For objects with the LAZY_TYPE flag
-     * set, this is the prototype's default 'new' type and can only be used
-     * to get that prototype.
-     */
-    HeapPtrTypeObject type_;
-
-    HeapSlot *slots;     /* Slots for object properties. */
-    HeapSlot *elements;  /* Slots for object elements. */
-
     friend bool
     ArraySetLength(JSContext *cx, Handle<ArrayObject*> obj, HandleId id, unsigned attrs,
                    HandleValue value, bool setterIsStrict);
 
+    // FIXME Bug 1073842: this is temporary until non-native objects can
+    // access non-slot storage.
+    friend class ::JSObject;
+
   private:
     static void staticAsserts() {
-        static_assert(sizeof(ObjectImpl) == sizeof(shadow::Object),
+        static_assert(sizeof(NativeObject) == sizeof(shadow::Object),
                       "shadow interface must match actual implementation");
-        static_assert(sizeof(ObjectImpl) % sizeof(Value) == 0,
+        static_assert(sizeof(NativeObject) % sizeof(Value) == 0,
                       "fixed slots after an object must be aligned");
 
-        static_assert(offsetof(ObjectImpl, shape_) == offsetof(shadow::Object, shape),
+        static_assert(offsetof(NativeObject, shape_) == offsetof(shadow::Object, shape),
                       "shadow shape must match actual shape");
-        static_assert(offsetof(ObjectImpl, type_) == offsetof(shadow::Object, type),
+        static_assert(offsetof(NativeObject, type_) == offsetof(shadow::Object, type),
                       "shadow type must match actual type");
-        static_assert(offsetof(ObjectImpl, slots) == offsetof(shadow::Object, slots),
+        static_assert(offsetof(NativeObject, slots) == offsetof(shadow::Object, slots),
                       "shadow slots must match actual slots");
-        static_assert(offsetof(ObjectImpl, elements) == offsetof(shadow::Object, _1),
+        static_assert(offsetof(NativeObject, elements) == offsetof(shadow::Object, _1),
                       "shadow placeholder must match actual elements");
+
+        static_assert(js::shadow::Object::MAX_FIXED_SLOTS == MAX_FIXED_SLOTS,
+                      "We shouldn't be confused about our actual maximum "
+                      "number of fixed slots");
     }
-
-    JSObject * asObjectPtr() { return reinterpret_cast<JSObject *>(this); }
-    const JSObject * asObjectPtr() const { return reinterpret_cast<const JSObject *>(this); }
-
-    friend inline Value ObjectValue(ObjectImpl &obj);
-
-    /* These functions are public, and they should remain public. */
 
   public:
-    TaggedProto getTaggedProto() const {
-        return type_->proto();
-    }
-
-    bool hasTenuredProto() const;
-
-    const Class *getClass() const {
-        return type_->clasp();
-    }
-
-    static inline bool
-    isExtensible(ExclusiveContext *cx, Handle<ObjectImpl*> obj, bool *extensible);
-
-    // Indicates whether a non-proxy is extensible.  Don't call on proxies!
-    // This method really shouldn't exist -- but there are a few internal
-    // places that want it (JITs and the like), and it'd be a pain to mark them
-    // all as friends.
-    bool nonProxyIsExtensible() const {
-        MOZ_ASSERT(!isProxy());
-
-        // [[Extensible]] for ordinary non-proxy objects is an object flag.
-        return !lastProperty()->hasObjectFlag(BaseShape::NOT_EXTENSIBLE);
-    }
-
-#ifdef DEBUG
-    bool isProxy() const;
-#endif
-
-    // Attempt to change the [[Extensible]] bit on |obj| to false.  Callers
-    // must ensure that |obj| is currently extensible before calling this!
-    static bool
-    preventExtensions(JSContext *cx, Handle<ObjectImpl*> obj);
-
     HeapSlotArray getDenseElements() {
-        MOZ_ASSERT(isNative());
         return HeapSlotArray(elements, !getElementsHeader()->isCopyOnWrite());
     }
     HeapSlotArray getDenseElementsAllowCopyOnWrite() {
         // Backdoor allowing direct access to copy on write elements.
-        MOZ_ASSERT(isNative());
         return HeapSlotArray(elements, true);
     }
     const Value &getDenseElement(uint32_t idx) {
-        MOZ_ASSERT(isNative());
         MOZ_ASSERT(idx < getDenseInitializedLength());
         return elements[idx];
     }
     bool containsDenseElement(uint32_t idx) {
-        MOZ_ASSERT(isNative());
         return idx < getDenseInitializedLength() && !elements[idx].isMagic(JS_ELEMENTS_HOLE);
     }
     uint32_t getDenseInitializedLength() {
-        MOZ_ASSERT(getClass()->isNative());
         return getElementsHeader()->initializedLength;
     }
     uint32_t getDenseCapacity() {
-        MOZ_ASSERT(getClass()->isNative());
         return getElementsHeader()->capacity;
     }
+
+    /*
+     * Update the last property, keeping the number of allocated slots in sync
+     * with the object's new slot span.
+     */
+    static bool setLastProperty(ThreadSafeContext *cx,
+                                HandleNativeObject obj, HandleShape shape);
+
+    // As for setLastProperty(), but allows the number of fixed slots to
+    // change. This can only be used when fixed slots are being erased from the
+    // object, and only when the object will not require dynamic slots to cover
+    // the new properties.
+    void setLastPropertyShrinkFixedSlots(Shape *shape);
 
   protected:
 #ifdef DEBUG
@@ -468,14 +409,19 @@ class ObjectImpl : public gc::Cell
     replaceWithNewEquivalentShape(ThreadSafeContext *cx,
                                   Shape *existingShape, Shape *newShape = nullptr);
 
-    enum GenerateShape {
-        GENERATE_NONE,
-        GENERATE_SHAPE
-    };
+    /*
+     * Remove the last property of an object, provided that it is safe to do so
+     * (the shape and previous shape do not carry conflicting information about
+     * the object itself).
+     */
+    inline void removeLastProperty(ExclusiveContext *cx);
+    inline bool canRemoveLastProperty();
 
-    bool setFlag(ExclusiveContext *cx, /*BaseShape::Flag*/ uint32_t flag,
-                 GenerateShape generateShape = GENERATE_NONE);
-    bool clearFlag(ExclusiveContext *cx, /*BaseShape::Flag*/ uint32_t flag);
+    /*
+     * Update the slot span directly for a dictionary object, and allocate
+     * slots to cover the new span if necessary.
+     */
+    static bool setSlotSpan(ThreadSafeContext *cx, HandleNativeObject obj, uint32_t span);
 
     bool toDictionaryMode(ThreadSafeContext *cx);
 
@@ -570,40 +516,16 @@ class ObjectImpl : public gc::Cell
     static const uint32_t SLOT_CAPACITY_MIN = 8;
 
     HeapSlot *fixedSlots() const {
-        return reinterpret_cast<HeapSlot *>(uintptr_t(this) + sizeof(ObjectImpl));
+        return reinterpret_cast<HeapSlot *>(uintptr_t(this) + sizeof(NativeObject));
     }
-
-    /*
-     * These functions are currently public for simplicity; in the long run
-     * it may make sense to make at least some of them private.
-     */
 
   public:
-    Shape * lastProperty() const {
-        MOZ_ASSERT(shape_);
-        return shape_;
-    }
-
-    bool generateOwnShape(ThreadSafeContext *cx, js::Shape *newShape = nullptr) {
+    bool generateOwnShape(ThreadSafeContext *cx, Shape *newShape = nullptr) {
         return replaceWithNewEquivalentShape(cx, lastProperty(), newShape);
     }
 
-    JSCompartment *compartment() const {
-        return lastProperty()->base()->compartment();
-    }
-
-    bool isNative() const {
-        return lastProperty()->isNative();
-    }
-
-    types::TypeObject *type() const {
-        MOZ_ASSERT(!hasLazyType());
-        return typeRaw();
-    }
-
-    types::TypeObject *typeRaw() const {
-        return type_;
-    }
+    bool shadowingShapeChange(ExclusiveContext *cx, const Shape &shape);
+    bool clearFlag(ExclusiveContext *cx, BaseShape::Flag flag);
 
     uint32_t numFixedSlots() const {
         return reinterpret_cast<const shadow::Object *>(this)->numFixedSlots();
@@ -613,93 +535,172 @@ class ObjectImpl : public gc::Cell
         return Min(nslots, numFixedSlots());
     }
 
-    /*
-     * Whether this is the only object which has its specified type. This
-     * object will have its type constructed lazily as needed by analysis.
-     */
-    bool hasSingletonType() const {
-        return !!type_->singleton();
-    }
-
-    /*
-     * Whether the object's type has not been constructed yet. If an object
-     * might have a lazy type, use getType() below, otherwise type().
-     */
-    bool hasLazyType() const {
-        return type_->lazy();
-    }
-
     uint32_t slotSpan() const {
         if (inDictionaryMode())
             return lastProperty()->base()->slotSpan();
         return lastProperty()->slotSpan();
     }
 
+    /* Whether a slot is at a fixed offset from this object. */
+    bool isFixedSlot(size_t slot) {
+        return slot < numFixedSlots();
+    }
+
+    /* Index into the dynamic slots array to use for a dynamic slot. */
+    size_t dynamicSlotIndex(size_t slot) {
+        MOZ_ASSERT(slot >= numFixedSlots());
+        return slot - numFixedSlots();
+    }
+
+    /*
+     * Grow or shrink slots immediately before changing the slot span.
+     * The number of allocated slots is not stored explicitly, and changes to
+     * the slots must track changes in the slot span.
+     */
+    static bool growSlots(ThreadSafeContext *cx, HandleNativeObject obj, uint32_t oldCount,
+                          uint32_t newCount);
+    static void shrinkSlots(ThreadSafeContext *cx, HandleNativeObject obj, uint32_t oldCount,
+                            uint32_t newCount);
+
+    bool hasDynamicSlots() const { return !!slots; }
+
     /* Compute dynamicSlotsCount() for this object. */
     uint32_t numDynamicSlots() const {
         return dynamicSlotsCount(numFixedSlots(), slotSpan(), getClass());
     }
 
-
-    Shape *nativeLookup(ExclusiveContext *cx, jsid id);
-    Shape *nativeLookup(ExclusiveContext *cx, PropertyName *name) {
-        return nativeLookup(cx, NameToId(name));
+    bool empty() const {
+        return lastProperty()->isEmptyShape();
     }
 
-    bool nativeContains(ExclusiveContext *cx, jsid id) {
-        return nativeLookup(cx, id) != nullptr;
+    Shape *lookup(ExclusiveContext *cx, jsid id);
+    Shape *lookup(ExclusiveContext *cx, PropertyName *name) {
+        return lookup(cx, NameToId(name));
     }
-    bool nativeContains(ExclusiveContext *cx, PropertyName* name) {
-        return nativeLookup(cx, name) != nullptr;
+
+    bool contains(ExclusiveContext *cx, jsid id) {
+        return lookup(cx, id) != nullptr;
     }
-    bool nativeContains(ExclusiveContext *cx, Shape* shape) {
-        return nativeLookup(cx, shape->propid()) == shape;
+    bool contains(ExclusiveContext *cx, PropertyName* name) {
+        return lookup(cx, name) != nullptr;
+    }
+    bool contains(ExclusiveContext *cx, Shape* shape) {
+        return lookup(cx, shape->propid()) == shape;
     }
 
     /* Contextless; can be called from parallel code. */
-    Shape *nativeLookupPure(jsid id);
-    Shape *nativeLookupPure(PropertyName *name) {
-        return nativeLookupPure(NameToId(name));
+    Shape *lookupPure(jsid id);
+    Shape *lookupPure(PropertyName *name) {
+        return lookupPure(NameToId(name));
     }
 
-    bool nativeContainsPure(jsid id) {
-        return nativeLookupPure(id) != nullptr;
+    bool containsPure(jsid id) {
+        return lookupPure(id) != nullptr;
     }
-    bool nativeContainsPure(PropertyName* name) {
-        return nativeContainsPure(NameToId(name));
+    bool containsPure(PropertyName* name) {
+        return containsPure(NameToId(name));
     }
-    bool nativeContainsPure(Shape* shape) {
-        return nativeLookupPure(shape->propid()) == shape;
-    }
-
-    const JSClass *getJSClass() const {
-        return Jsvalify(getClass());
-    }
-    bool hasClass(const Class *c) const {
-        return getClass() == c;
-    }
-    const ObjectOps *getOps() const {
-        return &getClass()->ops;
+    bool containsPure(Shape* shape) {
+        return lookupPure(shape->propid()) == shape;
     }
 
     /*
-     * An object is a delegate if it is on another object's prototype or scope
-     * chain, and therefore the delegate might be asked implicitly to get or
-     * set a property on behalf of another object. Delegates may be accessed
-     * directly too, as may any object, but only those objects linked after the
-     * head of any prototype or scope chain are flagged as delegates. This
-     * definition helps to optimize shape-based property cache invalidation
-     * (see Purge{Scope,Proto}Chain in jsobj.cpp).
+     * Allocate and free an object slot.
+     *
+     * FIXME: bug 593129 -- slot allocation should be done by object methods
+     * after calling object-parameter-free shape methods, avoiding coupling
+     * logic across the object vs. shape module wall.
      */
-    bool isDelegate() const {
-        return lastProperty()->hasObjectFlag(BaseShape::DELEGATE);
+    static bool allocSlot(ThreadSafeContext *cx, HandleNativeObject obj, uint32_t *slotp);
+    void freeSlot(uint32_t slot);
+
+  private:
+    static Shape *getChildPropertyOnDictionary(ThreadSafeContext *cx, HandleNativeObject obj,
+                                               HandleShape parent, StackShape &child);
+    static Shape *getChildProperty(ExclusiveContext *cx, HandleNativeObject obj,
+                                   HandleShape parent, StackShape &child);
+    template <ExecutionMode mode>
+    static inline Shape *
+    getOrLookupChildProperty(typename ExecutionModeTraits<mode>::ExclusiveContextType cx,
+                             HandleNativeObject obj, HandleShape parent, StackShape &child)
+    {
+        if (mode == ParallelExecution)
+            return lookupChildProperty(cx, obj, parent, child);
+        return getChildProperty(cx->asExclusiveContext(), obj, parent, child);
     }
 
+  public:
     /*
-     * Return true if this object is a native one that has been converted from
-     * shared-immutable prototype-rooted shape storage to dictionary-shapes in
-     * a doubly-linked list.
+     * XXX: This should be private, but is public because it needs to be a
+     * friend of ThreadSafeContext to get to the propertyTree on cx->compartment_.
      */
+    static Shape *lookupChildProperty(ThreadSafeContext *cx, HandleNativeObject obj,
+                                      HandleShape parent, StackShape &child);
+
+    /* Add a property whose id is not yet in this scope. */
+    static Shape *addProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId id,
+                              JSPropertyOp getter, JSStrictPropertyOp setter,
+                              uint32_t slot, unsigned attrs, unsigned flags,
+                              bool allowDictionary = true);
+
+    /* Add a data property whose id is not yet in this scope. */
+    Shape *addDataProperty(ExclusiveContext *cx,
+                           jsid id_, uint32_t slot, unsigned attrs);
+    Shape *addDataProperty(ExclusiveContext *cx, HandlePropertyName name,
+                           uint32_t slot, unsigned attrs);
+
+    /* Add or overwrite a property for id in this scope. */
+    template <ExecutionMode mode>
+    static Shape *
+    putProperty(typename ExecutionModeTraits<mode>::ExclusiveContextType cx,
+                HandleNativeObject obj, HandleId id,
+                JSPropertyOp getter, JSStrictPropertyOp setter,
+                uint32_t slot, unsigned attrs,
+                unsigned flags);
+    template <ExecutionMode mode>
+    static inline Shape *
+    putProperty(typename ExecutionModeTraits<mode>::ExclusiveContextType cx,
+                HandleObject obj, PropertyName *name,
+                JSPropertyOp getter, JSStrictPropertyOp setter,
+                uint32_t slot, unsigned attrs,
+                unsigned flags);
+
+    /* Change the given property into a sibling with the same id in this scope. */
+    template <ExecutionMode mode>
+    static Shape *
+    changeProperty(typename ExecutionModeTraits<mode>::ExclusiveContextType cx,
+                   HandleNativeObject obj, HandleShape shape, unsigned attrs, unsigned mask,
+                   JSPropertyOp getter, JSStrictPropertyOp setter);
+
+    static inline bool changePropertyAttributes(JSContext *cx, HandleNativeObject obj,
+                                                HandleShape shape, unsigned attrs);
+
+    /* Remove the property named by id from this object. */
+    bool removeProperty(ExclusiveContext *cx, jsid id);
+
+    /* Clear the scope, making it empty. */
+    static void clear(JSContext *cx, HandleNativeObject obj);
+
+  protected:
+    /*
+     * Internal helper that adds a shape not yet mapped by this object.
+     *
+     * Notes:
+     * 1. getter and setter must be normalized based on flags (see jsscope.cpp).
+     * 2. Checks for non-extensibility must be done by callers.
+     */
+    template <ExecutionMode mode>
+    static Shape *
+    addPropertyInternal(typename ExecutionModeTraits<mode>::ExclusiveContextType cx,
+                        HandleNativeObject obj, HandleId id,
+                        JSPropertyOp getter, JSStrictPropertyOp setter,
+                        uint32_t slot, unsigned attrs, unsigned flags, Shape **spp,
+                        bool allowDictionary);
+
+  public:
+    // Return true if this object has been converted from shared-immutable
+    // prototype-rooted shape storage to dictionary-shapes in a doubly-linked
+    // list.
     bool inDictionaryMode() const {
         return lastProperty()->inDictionary();
     }
@@ -720,8 +721,10 @@ class ObjectImpl : public gc::Cell
     }
 
     HeapSlot *getSlotAddressUnchecked(uint32_t slot) {
-        const ObjectImpl *obj = static_cast<const ObjectImpl*>(this);
-        return const_cast<HeapSlot*>(obj->getSlotAddressUnchecked(slot));
+        uint32_t fixed = numFixedSlots();
+        if (slot < fixed)
+            return fixedSlots() + slot;
+        return slots + (slot - fixed);
     }
 
     HeapSlot *getSlotAddress(uint32_t slot) {
@@ -754,24 +757,15 @@ class ObjectImpl : public gc::Cell
         return *getSlotAddress(slot);
     }
 
-    HeapSlot &nativeGetSlotRef(uint32_t slot) {
-        MOZ_ASSERT(isNative() && slot < slotSpan());
-        return getSlotRef(slot);
-    }
-    const Value &nativeGetSlot(uint32_t slot) const {
-        MOZ_ASSERT(isNative() && slot < slotSpan());
-        return getSlot(slot);
-    }
-
     void setSlot(uint32_t slot, const Value &value) {
         MOZ_ASSERT(slotInRange(slot));
         MOZ_ASSERT(IsObjectValueInCompartment(value, compartment()));
-        getSlotRef(slot).set(this->asObjectPtr(), HeapSlot::Slot, slot, value);
+        getSlotRef(slot).set(this, HeapSlot::Slot, slot, value);
     }
 
     MOZ_ALWAYS_INLINE void setCrossCompartmentSlot(uint32_t slot, const Value &value) {
         MOZ_ASSERT(slotInRange(slot));
-        getSlotRef(slot).set(this->asObjectPtr(), HeapSlot::Slot, slot, value);
+        getSlotRef(slot).set(this, HeapSlot::Slot, slot, value);
     }
 
     void initSlot(uint32_t slot, const Value &value) {
@@ -788,7 +782,65 @@ class ObjectImpl : public gc::Cell
     }
 
     void initSlotUnchecked(uint32_t slot, const Value &value) {
-        getSlotAddressUnchecked(slot)->init(this->asObjectPtr(), HeapSlot::Slot, slot, value);
+        getSlotAddressUnchecked(slot)->init(this, HeapSlot::Slot, slot, value);
+    }
+
+    // MAX_FIXED_SLOTS is the biggest number of fixed slots our GC
+    // size classes will give an object.
+    static const uint32_t MAX_FIXED_SLOTS = 16;
+
+  protected:
+    static inline bool updateSlotsForSpan(ThreadSafeContext *cx,
+                                          HandleNativeObject obj, size_t oldSpan, size_t newSpan);
+
+  public:
+    /*
+     * Trigger the write barrier on a range of slots that will no longer be
+     * reachable.
+     */
+    void prepareSlotRangeForOverwrite(size_t start, size_t end) {
+        for (size_t i = start; i < end; i++)
+            getSlotAddressUnchecked(i)->HeapSlot::~HeapSlot();
+    }
+
+    void prepareElementRangeForOverwrite(size_t start, size_t end) {
+        MOZ_ASSERT(end <= getDenseInitializedLength());
+        MOZ_ASSERT(!denseElementsAreCopyOnWrite());
+        for (size_t i = start; i < end; i++)
+            elements[i].HeapSlot::~HeapSlot();
+    }
+
+    static bool rollbackProperties(ExclusiveContext *cx, HandleNativeObject obj,
+                                   uint32_t slotSpan);
+
+    inline bool setSlotIfHasType(Shape *shape, const Value &value,
+                                 bool overwriting = true);
+    inline void setSlotWithType(ExclusiveContext *cx, Shape *shape,
+                                const Value &value, bool overwriting = true);
+
+    inline const Value &getReservedSlot(uint32_t index) const {
+        MOZ_ASSERT(index < JSSLOT_FREE(getClass()));
+        return getSlot(index);
+    }
+
+    const HeapSlot &getReservedSlotRef(uint32_t index) const {
+        MOZ_ASSERT(index < JSSLOT_FREE(getClass()));
+        return getSlotRef(index);
+    }
+
+    HeapSlot &getReservedSlotRef(uint32_t index) {
+        MOZ_ASSERT(index < JSSLOT_FREE(getClass()));
+        return getSlotRef(index);
+    }
+
+    void initReservedSlot(uint32_t index, const Value &v) {
+        MOZ_ASSERT(index < JSSLOT_FREE(getClass()));
+        initSlot(index, v);
+    }
+
+    void setReservedSlot(uint32_t index, const Value &v) {
+        MOZ_ASSERT(index < JSSLOT_FREE(getClass()));
+        setSlot(index, v);
     }
 
     /* For slots which are known to always be fixed, due to the way they are allocated. */
@@ -805,12 +857,12 @@ class ObjectImpl : public gc::Cell
 
     void setFixedSlot(uint32_t slot, const Value &value) {
         MOZ_ASSERT(slot < numFixedSlots());
-        fixedSlots()[slot].set(this->asObjectPtr(), HeapSlot::Slot, slot, value);
+        fixedSlots()[slot].set(this, HeapSlot::Slot, slot, value);
     }
 
     void initFixedSlot(uint32_t slot, const Value &value) {
         MOZ_ASSERT(slot < numFixedSlots());
-        fixedSlots()[slot].init(this->asObjectPtr(), HeapSlot::Slot, slot, value);
+        fixedSlots()[slot].init(this, HeapSlot::Slot, slot, value);
     }
 
     /*
@@ -821,17 +873,222 @@ class ObjectImpl : public gc::Cell
      */
     static uint32_t dynamicSlotsCount(uint32_t nfixed, uint32_t span, const Class *clasp);
 
-    /* Memory usage functions. */
-    size_t tenuredSizeOfThis() const {
-        MOZ_ASSERT(isTenured());
-        return js::gc::Arena::thingSize(asTenured().getAllocKind());
-    }
-
     /* Elements accessors. */
+
+    /* Upper bound on the number of elements in an object. */
+    static const uint32_t NELEMENTS_LIMIT = JS_BIT(28);
 
     ObjectElements * getElementsHeader() const {
         return ObjectElements::fromElements(elements);
     }
+
+    /* Accessors for elements. */
+    bool ensureElements(ThreadSafeContext *cx, uint32_t capacity) {
+        MOZ_ASSERT(!denseElementsAreCopyOnWrite());
+        if (capacity > getDenseCapacity())
+            return growElements(cx, capacity);
+        return true;
+    }
+
+    static uint32_t goodAllocated(uint32_t n, uint32_t length);
+    bool growElements(ThreadSafeContext *cx, uint32_t newcap);
+    void shrinkElements(ThreadSafeContext *cx, uint32_t cap);
+    void setDynamicElements(ObjectElements *header) {
+        MOZ_ASSERT(!hasDynamicElements());
+        elements = header->elements();
+        MOZ_ASSERT(hasDynamicElements());
+    }
+
+    static bool CopyElementsForWrite(ThreadSafeContext *cx, NativeObject *obj);
+
+    bool maybeCopyElementsForWrite(ThreadSafeContext *cx) {
+        if (denseElementsAreCopyOnWrite())
+            return CopyElementsForWrite(cx, this);
+        return true;
+    }
+
+  private:
+    inline void ensureDenseInitializedLengthNoPackedCheck(ThreadSafeContext *cx,
+                                                          uint32_t index, uint32_t extra);
+
+  public:
+    void setDenseInitializedLength(uint32_t length) {
+        MOZ_ASSERT(length <= getDenseCapacity());
+        MOZ_ASSERT(!denseElementsAreCopyOnWrite());
+        prepareElementRangeForOverwrite(length, getElementsHeader()->initializedLength);
+        getElementsHeader()->initializedLength = length;
+    }
+
+    inline void ensureDenseInitializedLength(ExclusiveContext *cx,
+                                             uint32_t index, uint32_t extra);
+    inline void ensureDenseInitializedLengthPreservePackedFlag(ThreadSafeContext *cx,
+                                                               uint32_t index, uint32_t extra);
+    void setDenseElement(uint32_t index, const Value &val) {
+        MOZ_ASSERT(index < getDenseInitializedLength());
+        MOZ_ASSERT(!denseElementsAreCopyOnWrite());
+        elements[index].set(this, HeapSlot::Element, index, val);
+    }
+
+    void initDenseElement(uint32_t index, const Value &val) {
+        MOZ_ASSERT(index < getDenseInitializedLength());
+        MOZ_ASSERT(!denseElementsAreCopyOnWrite());
+        elements[index].init(this, HeapSlot::Element, index, val);
+    }
+
+    void setDenseElementMaybeConvertDouble(uint32_t index, const Value &val) {
+        if (val.isInt32() && shouldConvertDoubleElements())
+            setDenseElement(index, DoubleValue(val.toInt32()));
+        else
+            setDenseElement(index, val);
+    }
+
+    inline bool setDenseElementIfHasType(uint32_t index, const Value &val);
+    inline void setDenseElementWithType(ExclusiveContext *cx, uint32_t index,
+                                        const Value &val);
+    inline void initDenseElementWithType(ExclusiveContext *cx, uint32_t index,
+                                         const Value &val);
+    inline void setDenseElementHole(ExclusiveContext *cx, uint32_t index);
+    static inline void removeDenseElementForSparseIndex(ExclusiveContext *cx,
+                                                        HandleNativeObject obj, uint32_t index);
+
+    inline Value getDenseOrTypedArrayElement(uint32_t idx);
+
+    void copyDenseElements(uint32_t dstStart, const Value *src, uint32_t count) {
+        MOZ_ASSERT(dstStart + count <= getDenseCapacity());
+        MOZ_ASSERT(!denseElementsAreCopyOnWrite());
+        JSRuntime *rt = runtimeFromMainThread();
+        if (JS::IsIncrementalBarrierNeeded(rt)) {
+            Zone *zone = this->zone();
+            for (uint32_t i = 0; i < count; ++i)
+                elements[dstStart + i].set(zone, this, HeapSlot::Element, dstStart + i, src[i]);
+        } else {
+            memcpy(&elements[dstStart], src, count * sizeof(HeapSlot));
+            DenseRangeWriteBarrierPost(rt, this, dstStart, count);
+        }
+    }
+
+    void initDenseElements(uint32_t dstStart, const Value *src, uint32_t count) {
+        MOZ_ASSERT(dstStart + count <= getDenseCapacity());
+        MOZ_ASSERT(!denseElementsAreCopyOnWrite());
+        memcpy(&elements[dstStart], src, count * sizeof(HeapSlot));
+        DenseRangeWriteBarrierPost(runtimeFromMainThread(), this, dstStart, count);
+    }
+
+    void initDenseElementsUnbarriered(uint32_t dstStart, const Value *src, uint32_t count);
+
+    void moveDenseElements(uint32_t dstStart, uint32_t srcStart, uint32_t count) {
+        MOZ_ASSERT(dstStart + count <= getDenseCapacity());
+        MOZ_ASSERT(srcStart + count <= getDenseInitializedLength());
+        MOZ_ASSERT(!denseElementsAreCopyOnWrite());
+
+        /*
+         * Using memmove here would skip write barriers. Also, we need to consider
+         * an array containing [A, B, C], in the following situation:
+         *
+         * 1. Incremental GC marks slot 0 of array (i.e., A), then returns to JS code.
+         * 2. JS code moves slots 1..2 into slots 0..1, so it contains [B, C, C].
+         * 3. Incremental GC finishes by marking slots 1 and 2 (i.e., C).
+         *
+         * Since normal marking never happens on B, it is very important that the
+         * write barrier is invoked here on B, despite the fact that it exists in
+         * the array before and after the move.
+        */
+        Zone *zone = this->zone();
+        JS::shadow::Zone *shadowZone = JS::shadow::Zone::asShadowZone(zone);
+        if (shadowZone->needsIncrementalBarrier()) {
+            if (dstStart < srcStart) {
+                HeapSlot *dst = elements + dstStart;
+                HeapSlot *src = elements + srcStart;
+                for (uint32_t i = 0; i < count; i++, dst++, src++)
+                    dst->set(zone, this, HeapSlot::Element, dst - elements, *src);
+            } else {
+                HeapSlot *dst = elements + dstStart + count - 1;
+                HeapSlot *src = elements + srcStart + count - 1;
+                for (uint32_t i = 0; i < count; i++, dst--, src--)
+                    dst->set(zone, this, HeapSlot::Element, dst - elements, *src);
+            }
+        } else {
+            memmove(elements + dstStart, elements + srcStart, count * sizeof(HeapSlot));
+            DenseRangeWriteBarrierPost(runtimeFromMainThread(), this, dstStart, count);
+        }
+    }
+
+    void moveDenseElementsNoPreBarrier(uint32_t dstStart, uint32_t srcStart, uint32_t count) {
+        MOZ_ASSERT(!shadowZone()->needsIncrementalBarrier());
+
+        MOZ_ASSERT(dstStart + count <= getDenseCapacity());
+        MOZ_ASSERT(srcStart + count <= getDenseCapacity());
+        MOZ_ASSERT(!denseElementsAreCopyOnWrite());
+
+        memmove(elements + dstStart, elements + srcStart, count * sizeof(Value));
+        DenseRangeWriteBarrierPost(runtimeFromMainThread(), this, dstStart, count);
+    }
+
+    bool shouldConvertDoubleElements() {
+        return getElementsHeader()->shouldConvertDoubleElements();
+    }
+
+    inline void setShouldConvertDoubleElements();
+    inline void clearShouldConvertDoubleElements();
+
+    bool denseElementsAreCopyOnWrite() {
+        return getElementsHeader()->isCopyOnWrite();
+    }
+
+    /* Packed information for this object's elements. */
+    inline bool writeToIndexWouldMarkNotPacked(uint32_t index);
+    inline void markDenseElementsNotPacked(ExclusiveContext *cx);
+
+    /*
+     * ensureDenseElements ensures that the object can hold at least
+     * index + extra elements. It returns ED_OK on success, ED_FAILED on
+     * failure to grow the array, ED_SPARSE when the object is too sparse to
+     * grow (this includes the case of index + extra overflow). In the last
+     * two cases the object is kept intact.
+     */
+    enum EnsureDenseResult { ED_OK, ED_FAILED, ED_SPARSE };
+
+  private:
+    inline EnsureDenseResult ensureDenseElementsNoPackedCheck(ThreadSafeContext *cx,
+                                                              uint32_t index, uint32_t extra);
+
+  public:
+    inline EnsureDenseResult ensureDenseElements(ExclusiveContext *cx,
+                                                 uint32_t index, uint32_t extra);
+    inline EnsureDenseResult ensureDenseElementsPreservePackedFlag(ThreadSafeContext *cx,
+                                                                   uint32_t index, uint32_t extra);
+
+    inline EnsureDenseResult extendDenseElements(ThreadSafeContext *cx,
+                                                 uint32_t requiredCapacity, uint32_t extra);
+
+    /* Convert a single dense element to a sparse property. */
+    static bool sparsifyDenseElement(ExclusiveContext *cx,
+                                     HandleNativeObject obj, uint32_t index);
+
+    /* Convert all dense elements to sparse properties. */
+    static bool sparsifyDenseElements(ExclusiveContext *cx, HandleNativeObject obj);
+
+    /* Small objects are dense, no matter what. */
+    static const uint32_t MIN_SPARSE_INDEX = 1000;
+
+    /*
+     * Element storage for an object will be sparse if fewer than 1/8 indexes
+     * are filled in.
+     */
+    static const unsigned SPARSE_DENSITY_RATIO = 8;
+
+    /*
+     * Check if after growing the object's elements will be too sparse.
+     * newElementsHint is an estimated number of elements to be added.
+     */
+    bool willBeSparseElements(uint32_t requiredCapacity, uint32_t newElementsHint);
+
+    /*
+     * After adding a sparse index to obj, see if it should be converted to use
+     * dense elements.
+     */
+    static EnsureDenseResult maybeDensifySparseElements(ExclusiveContext *cx,
+                                                        HandleNativeObject obj);
 
     inline HeapSlot *fixedElements() const {
         static_assert(2 * sizeof(Value) == sizeof(ObjectElements),
@@ -875,23 +1132,18 @@ class ObjectImpl : public gc::Cell
      */
     inline uint8_t *fixedData(size_t nslots) const;
 
-    /* GC support. */
-    static ThingRootKind rootKind() { return THING_ROOT_OBJECT; }
-
     inline void privateWriteBarrierPre(void **oldval);
 
     void privateWriteBarrierPost(void **pprivate) {
 #ifdef JSGC_GENERATIONAL
-        js::gc::Cell **cellp = reinterpret_cast<js::gc::Cell **>(pprivate);
+        gc::Cell **cellp = reinterpret_cast<gc::Cell **>(pprivate);
         MOZ_ASSERT(cellp);
         MOZ_ASSERT(*cellp);
-        js::gc::StoreBuffer *storeBuffer = (*cellp)->storeBuffer();
+        gc::StoreBuffer *storeBuffer = (*cellp)->storeBuffer();
         if (storeBuffer)
             storeBuffer->putCellFromAnyThread(cellp);
 #endif
     }
-
-    void markChildren(JSTracer *trc);
 
     /* Private data accessors. */
 
@@ -939,136 +1191,421 @@ class ObjectImpl : public gc::Cell
         return privateRef(nfixed);
     }
 
-    /* GC Accessors */
-    static const size_t MaxTagBits = 3;
     void setInitialSlots(HeapSlot *newSlots) { slots = newSlots; }
-    static bool isNullLike(const ObjectImpl *obj) { return uintptr_t(obj) < (1 << MaxTagBits); }
-    MOZ_ALWAYS_INLINE JS::Zone *zone() const {
-        return shape_->zone();
-    }
-    MOZ_ALWAYS_INLINE JS::shadow::Zone *shadowZone() const {
-        return JS::shadow::Zone::asShadowZone(zone());
-    }
-    MOZ_ALWAYS_INLINE JS::Zone *zoneFromAnyThread() const {
-        return shape_->zoneFromAnyThread();
-    }
-    MOZ_ALWAYS_INLINE JS::shadow::Zone *shadowZoneFromAnyThread() const {
-        return JS::shadow::Zone::asShadowZone(zoneFromAnyThread());
-    }
-    static MOZ_ALWAYS_INLINE void readBarrier(ObjectImpl *obj);
-    static MOZ_ALWAYS_INLINE void writeBarrierPre(ObjectImpl *obj);
-    static MOZ_ALWAYS_INLINE void writeBarrierPost(ObjectImpl *obj, void *cellp);
-    static MOZ_ALWAYS_INLINE void writeBarrierPostRelocate(ObjectImpl *obj, void *cellp);
-    static MOZ_ALWAYS_INLINE void writeBarrierPostRemove(ObjectImpl *obj, void *cellp);
+
+    static inline NativeObject *
+    copy(ExclusiveContext *cx, gc::AllocKind kind, gc::InitialHeap heap,
+         HandleNativeObject templateObject);
 
     /* JIT Accessors */
-    static size_t offsetOfShape() { return offsetof(ObjectImpl, shape_); }
-    HeapPtrShape *addressOfShape() { return &shape_; }
-
-    static size_t offsetOfType() { return offsetof(ObjectImpl, type_); }
-    HeapPtrTypeObject *addressOfType() { return &type_; }
-
-    static size_t offsetOfElements() { return offsetof(ObjectImpl, elements); }
+    static size_t offsetOfElements() { return offsetof(NativeObject, elements); }
     static size_t offsetOfFixedElements() {
-        return sizeof(ObjectImpl) + sizeof(ObjectElements);
+        return sizeof(NativeObject) + sizeof(ObjectElements);
     }
 
     static size_t getFixedSlotOffset(size_t slot) {
-        return sizeof(ObjectImpl) + slot * sizeof(Value);
+        return sizeof(NativeObject) + slot * sizeof(Value);
     }
     static size_t getPrivateDataOffset(size_t nfixed) { return getFixedSlotOffset(nfixed); }
-    static size_t offsetOfSlots() { return offsetof(ObjectImpl, slots); }
+    static size_t offsetOfSlots() { return offsetof(NativeObject, slots); }
 };
 
-/* static */ MOZ_ALWAYS_INLINE void
-ObjectImpl::readBarrier(ObjectImpl *obj)
-{
-    if (!isNullLike(obj) && obj->isTenured())
-        obj->asTenured().readBarrier(&obj->asTenured());
-}
-
-/* static */ MOZ_ALWAYS_INLINE void
-ObjectImpl::writeBarrierPre(ObjectImpl *obj)
-{
-    if (!isNullLike(obj) && obj->isTenured())
-        obj->asTenured().writeBarrierPre(&obj->asTenured());
-}
-
-/* static */ MOZ_ALWAYS_INLINE void
-ObjectImpl::writeBarrierPost(ObjectImpl *obj, void *cellp)
-{
-    MOZ_ASSERT(cellp);
-#ifdef JSGC_GENERATIONAL
-    if (IsNullTaggedPointer(obj))
-        return;
-    MOZ_ASSERT(obj == *static_cast<ObjectImpl **>(cellp));
-    gc::StoreBuffer *storeBuffer = obj->storeBuffer();
-    if (storeBuffer)
-        storeBuffer->putCellFromAnyThread(static_cast<gc::Cell **>(cellp));
-#endif
-}
-
-/* static */ MOZ_ALWAYS_INLINE void
-ObjectImpl::writeBarrierPostRelocate(ObjectImpl *obj, void *cellp)
-{
-    MOZ_ASSERT(cellp);
-    MOZ_ASSERT(obj);
-    MOZ_ASSERT(obj == *static_cast<ObjectImpl **>(cellp));
-#ifdef JSGC_GENERATIONAL
-    gc::StoreBuffer *storeBuffer = obj->storeBuffer();
-    if (storeBuffer)
-        storeBuffer->putRelocatableCellFromAnyThread(static_cast<gc::Cell **>(cellp));
-#endif
-}
-
-/* static */ MOZ_ALWAYS_INLINE void
-ObjectImpl::writeBarrierPostRemove(ObjectImpl *obj, void *cellp)
-{
-    MOZ_ASSERT(cellp);
-    MOZ_ASSERT(obj);
-    MOZ_ASSERT(obj == *static_cast<ObjectImpl **>(cellp));
-#ifdef JSGC_GENERATIONAL
-    obj->shadowRuntimeFromAnyThread()->gcStoreBufferPtr()->removeRelocatableCellFromAnyThread(
-        static_cast<gc::Cell **>(cellp));
-#endif
-}
-
 inline void
-ObjectImpl::privateWriteBarrierPre(void **oldval)
+NativeObject::privateWriteBarrierPre(void **oldval)
 {
 #ifdef JSGC_INCREMENTAL
     JS::shadow::Zone *shadowZone = this->shadowZoneFromAnyThread();
     if (shadowZone->needsIncrementalBarrier()) {
         if (*oldval && getClass()->trace)
-            getClass()->trace(shadowZone->barrierTracer(), this->asObjectPtr());
+            getClass()->trace(shadowZone->barrierTracer(), this);
     }
 #endif
 }
 
-inline Value
-ObjectValue(ObjectImpl &obj)
-{
-    Value v;
-    v.setObject(*obj.asObjectPtr());
-    return v;
-}
-
-inline Handle<JSObject*>
-Downcast(Handle<ObjectImpl*> obj)
-{
-    return Handle<JSObject*>::fromMarkedLocation(reinterpret_cast<JSObject* const*>(obj.address()));
-}
-
 #ifdef DEBUG
 static inline bool
-IsObjectValueInCompartment(js::Value v, JSCompartment *comp)
+IsObjectValueInCompartment(Value v, JSCompartment *comp)
 {
     if (!v.isObject())
         return true;
-    return reinterpret_cast<ObjectImpl*>(&v.toObject())->compartment() == comp;
+    return v.toObject().compartment() == comp;
 }
 #endif
 
+/*
+ * The baseops namespace encapsulates the default behavior when performing
+ * various operations on an object, irrespective of hooks installed in the
+ * object's class. In general, instance methods on the object itself should be
+ * called instead of calling these methods directly.
+ */
+namespace baseops {
+
+/*
+ * On success, and if id was found, return true with *objp non-null and with a
+ * property of *objp stored in *propp. If successful but id was not found,
+ * return true with both *objp and *propp null.
+ */
+template <AllowGC allowGC>
+extern bool
+LookupProperty(ExclusiveContext *cx,
+               typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
+               typename MaybeRooted<jsid, allowGC>::HandleType id,
+               typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
+               typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp);
+
+extern bool
+LookupElement(JSContext *cx, HandleNativeObject obj, uint32_t index,
+              MutableHandleObject objp, MutableHandleShape propp);
+
+extern bool
+DefineGeneric(ExclusiveContext *cx, HandleNativeObject obj, HandleId id, HandleValue value,
+              JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs);
+
+extern bool
+DefineElement(ExclusiveContext *cx, HandleNativeObject obj, uint32_t index, HandleValue value,
+              JSPropertyOp getter, JSStrictPropertyOp setter, unsigned attrs);
+
+extern bool
+GetProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiver, HandleId id, MutableHandleValue vp);
+
+extern bool
+GetPropertyNoGC(JSContext *cx, NativeObject *obj, JSObject *receiver, jsid id, Value *vp);
+
+extern bool
+GetElement(JSContext *cx, HandleNativeObject obj, HandleObject receiver,
+           uint32_t index, MutableHandleValue vp);
+
+inline bool
+GetProperty(JSContext *cx, HandleNativeObject obj, HandleId id, MutableHandleValue vp)
+{
+    return GetProperty(cx, obj, obj, id, vp);
+}
+
+inline bool
+GetElement(JSContext *cx, HandleNativeObject obj, uint32_t index, MutableHandleValue vp)
+{
+    return GetElement(cx, obj, obj, index, vp);
+}
+
+/*
+ * Indicates whether an assignment operation is qualified (`x.y = 0`) or
+ * unqualified (`y = 0`). In strict mode, the latter is an error if no such
+ * variable already exists.
+ *
+ * Used as an argument to baseops::SetPropertyHelper.
+ */
+enum QualifiedBool {
+    Unqualified = 0,
+    Qualified = 1
+};
+
+template <ExecutionMode mode>
+extern bool
+SetPropertyHelper(typename ExecutionModeTraits<mode>::ContextType cx,
+                  HandleNativeObject obj,
+                  HandleObject receiver, HandleId id, QualifiedBool qualified,
+                  MutableHandleValue vp, bool strict);
+
+extern bool
+SetElementHelper(JSContext *cx, HandleNativeObject obj, HandleObject Receiver, uint32_t index,
+                 MutableHandleValue vp, bool strict);
+
+extern bool
+GetAttributes(JSContext *cx, HandleNativeObject obj, HandleId id, unsigned *attrsp);
+
+extern bool
+SetAttributes(JSContext *cx, HandleNativeObject obj, HandleId id, unsigned *attrsp);
+
+extern bool
+DeleteGeneric(JSContext *cx, HandleNativeObject obj, HandleId id, bool *succeeded);
+
+extern bool
+Watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable);
+
+extern bool
+Unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
+
+} /* namespace js::baseops */
+
 } /* namespace js */
+
+inline void *
+JSObject::fakeNativeGetPrivate() const
+{
+    return static_cast<const js::NativeObject*>(this)->getPrivate();
+}
+
+inline void *
+JSObject::fakeNativeGetPrivate(uint32_t nfixed) const
+{
+    return static_cast<const js::NativeObject*>(this)->getPrivate(nfixed);
+}
+
+inline void
+JSObject::fakeNativeSetPrivate(void *data)
+{
+    static_cast<js::NativeObject*>(this)->setPrivate(data);
+}
+
+inline bool
+JSObject::fakeNativeHasPrivate() const
+{
+    return static_cast<const js::NativeObject*>(this)->hasPrivate();
+}
+
+inline void
+JSObject::fakeNativeInitPrivate(void *data)
+{
+    static_cast<js::NativeObject*>(this)->initPrivate(data);
+}
+
+inline void *&
+JSObject::fakeNativePrivateRef(uint32_t nfixed) const
+{
+    return static_cast<const js::NativeObject*>(this)->privateRef(nfixed);
+}
+
+inline uint32_t
+JSObject::fakeNativeSlotSpan()
+{
+    return static_cast<js::NativeObject*>(this)->slotSpan();
+}
+
+inline const js::Value &
+JSObject::fakeNativeGetSlot(uint32_t slot)
+{
+    return static_cast<js::NativeObject*>(this)->getSlot(slot);
+}
+
+inline void
+JSObject::fakeNativeSetSlot(uint32_t slot, const js::Value &value)
+{
+    static_cast<js::NativeObject*>(this)->setSlot(slot, value);
+}
+
+inline js::HeapSlot &
+JSObject::fakeNativeGetSlotRef(uint32_t slot)
+{
+    return static_cast<js::NativeObject*>(this)->getSlotRef(slot);
+}
+
+inline const js::Value &
+JSObject::fakeNativeGetReservedSlot(uint32_t slot) const
+{
+    return static_cast<const js::NativeObject*>(this)->getReservedSlot(slot);
+}
+
+inline js::HeapSlot &
+JSObject::fakeNativeGetReservedSlotRef(uint32_t slot)
+{
+    return static_cast<js::NativeObject*>(this)->getReservedSlotRef(slot);
+}
+
+inline void
+JSObject::fakeNativeSetReservedSlot(uint32_t slot, const js::Value &value)
+{
+    static_cast<js::NativeObject*>(this)->setReservedSlot(slot, value);
+}
+
+inline void
+JSObject::fakeNativeInitReservedSlot(uint32_t slot, const js::Value &value)
+{
+    static_cast<js::NativeObject*>(this)->initReservedSlot(slot, value);
+}
+
+inline void
+JSObject::fakeNativeSetCrossCompartmentSlot(uint32_t slot, const js::Value &value)
+{
+    static_cast<js::NativeObject*>(this)->setCrossCompartmentSlot(slot, value);
+}
+
+inline void
+JSObject::fakeNativeInitCrossCompartmentSlot(uint32_t slot, const js::Value &value)
+{
+    static_cast<js::NativeObject*>(this)->initCrossCompartmentSlot(slot, value);
+}
+
+inline void
+JSObject::fakeNativeSetInitialSlots(js::HeapSlot *newSlots)
+{
+    static_cast<js::NativeObject*>(this)->setInitialSlots(newSlots);
+}
+
+inline bool
+JSObject::fakeNativeHasDynamicSlots() const
+{
+    return static_cast<const js::NativeObject*>(this)->hasDynamicSlots();
+}
+
+inline uint32_t
+JSObject::fakeNativeNumFixedSlots() const
+{
+    return static_cast<const js::NativeObject*>(this)->numFixedSlots();
+}
+
+inline uint32_t
+JSObject::fakeNativeNumDynamicSlots() const
+{
+    return static_cast<const js::NativeObject*>(this)->numDynamicSlots();
+}
+
+inline js::HeapSlot *&
+JSObject::fakeNativeSlots()
+{
+    return slots;
+}
+
+inline void
+JSObject::fakeNativeInitSlot(uint32_t slot, const js::Value &value)
+{
+    static_cast<js::NativeObject*>(this)->initSlot(slot, value);
+}
+
+inline void
+JSObject::fakeNativeInitSlotRange(uint32_t start, const js::Value *vector, uint32_t length)
+{
+    static_cast<js::NativeObject*>(this)->initSlotRange(start, vector, length);
+}
+
+inline void
+JSObject::fakeNativeInitializeSlotRange(uint32_t start, uint32_t count)
+{
+    static_cast<js::NativeObject*>(this)->initializeSlotRange(start, count);
+}
+
+inline bool
+JSObject::fakeNativeHasDynamicElements() const
+{
+    return static_cast<const js::NativeObject*>(this)->hasDynamicElements();
+}
+
+inline bool
+JSObject::fakeNativeHasEmptyElements() const
+{
+    return static_cast<const js::NativeObject*>(this)->hasEmptyElements();
+}
+
+inline js::HeapSlotArray
+JSObject::fakeNativeGetDenseElements()
+{
+    return static_cast<js::NativeObject*>(this)->getDenseElements();
+}
+
+inline bool
+JSObject::fakeNativeDenseElementsAreCopyOnWrite()
+{
+    return static_cast<js::NativeObject*>(this)->denseElementsAreCopyOnWrite();
+}
+
+inline js::ObjectElements *
+JSObject::fakeNativeGetElementsHeader() const
+{
+    return static_cast<const js::NativeObject*>(this)->getElementsHeader();
+}
+
+inline js::HeapSlot *&
+JSObject::fakeNativeElements()
+{
+    return elements;
+}
+
+inline const js::Value &
+JSObject::fakeNativeGetDenseElement(uint32_t idx)
+{
+    return static_cast<js::NativeObject*>(this)->getDenseElement(idx);
+}
+
+inline uint32_t
+JSObject::fakeNativeGetDenseInitializedLength()
+{
+    return static_cast<js::NativeObject*>(this)->getDenseInitializedLength();
+}
+
+inline const js::HeapSlot *
+JSObject::fakeNativeGetSlotAddressUnchecked(uint32_t slot) const
+{
+    return static_cast<const js::NativeObject*>(this)->getSlotAddressUnchecked(slot);
+}
+
+template <>
+inline bool
+JSObject::is<js::NativeObject>() const { return isNative(); }
+
+/* static */ inline bool
+JSObject::lookupElement(JSContext *cx, js::HandleObject obj, uint32_t index,
+                        js::MutableHandleObject objp, js::MutableHandleShape propp)
+{
+    js::LookupElementOp op = obj->getOps()->lookupElement;
+    if (op)
+        return op(cx, obj, index, objp, propp);
+    return js::baseops::LookupElement(cx, obj.as<js::NativeObject>(), index, objp, propp);
+}
+
+/* static */ inline bool
+JSObject::getGeneric(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
+                     js::HandleId id, js::MutableHandleValue vp)
+{
+    MOZ_ASSERT(!!obj->getOps()->getGeneric == !!obj->getOps()->getProperty);
+    js::GenericIdOp op = obj->getOps()->getGeneric;
+    if (op) {
+        if (!op(cx, obj, receiver, id, vp))
+            return false;
+    } else {
+        if (!js::baseops::GetProperty(cx, obj.as<js::NativeObject>(), receiver, id, vp))
+            return false;
+    }
+    return true;
+}
+
+/* static */ inline bool
+JSObject::getGenericNoGC(JSContext *cx, JSObject *obj, JSObject *receiver,
+                         jsid id, js::Value *vp)
+{
+    js::GenericIdOp op = obj->getOps()->getGeneric;
+    if (op)
+        return false;
+    return js::baseops::GetPropertyNoGC(cx, &obj->as<js::NativeObject>(), receiver, id, vp);
+}
+
+/* static */ inline bool
+JSObject::setGeneric(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
+                     js::HandleId id, js::MutableHandleValue vp, bool strict)
+{
+    if (obj->getOps()->setGeneric)
+        return nonNativeSetProperty(cx, obj, id, vp, strict);
+    return js::baseops::SetPropertyHelper<js::SequentialExecution>(
+        cx, obj.as<js::NativeObject>(), receiver, id, js::baseops::Qualified, vp, strict);
+}
+
+/* static */ inline bool
+JSObject::setElement(JSContext *cx, js::HandleObject obj, js::HandleObject receiver,
+                     uint32_t index, js::MutableHandleValue vp, bool strict)
+{
+    if (obj->getOps()->setElement)
+        return nonNativeSetElement(cx, obj, index, vp, strict);
+    return js::baseops::SetElementHelper(cx, obj.as<js::NativeObject>(),
+                                         receiver, index, vp, strict);
+}
+
+/* static */ inline bool
+JSObject::getGenericAttributes(JSContext *cx, js::HandleObject obj,
+                               js::HandleId id, unsigned *attrsp)
+{
+    js::GenericAttributesOp op = obj->getOps()->getGenericAttributes;
+    if (op)
+        return op(cx, obj, id, attrsp);
+    return js::baseops::GetAttributes(cx, obj.as<js::NativeObject>(), id, attrsp);
+}
+
+namespace js {
+
+// Alternate to JSObject::as<NativeObject>() that tolerates null pointers.
+inline NativeObject *
+MaybeNativeObject(JSObject *obj)
+{
+    return obj ? &obj->as<NativeObject>() : nullptr;
+}
+
+} // namespace js
 
 #endif /* vm_ObjectImpl_h */

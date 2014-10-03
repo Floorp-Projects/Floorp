@@ -19,6 +19,8 @@
 
 #include "jsobjinlines.h"
 
+#include "vm/ObjectImpl-inl.h"
+
 using namespace js;
 
 using mozilla::ArrayLength;
@@ -840,7 +842,7 @@ HashableValue::mark(JSTracer *trc) const
 
 namespace {
 
-class MapIteratorObject : public JSObject
+class MapIteratorObject : public NativeObject
 {
   public:
     static const Class class_;
@@ -901,8 +903,8 @@ GlobalObject::initMapIteratorProto(JSContext *cx, Handle<GlobalObject *> global)
     JSObject *base = GlobalObject::getOrCreateIteratorPrototype(cx, global);
     if (!base)
         return false;
-    Rooted<JSObject*> proto(cx,
-        NewObjectWithGivenProto(cx, &MapIteratorObject::class_, base, global));
+    RootedNativeObject proto(cx,
+        NewNativeObjectWithGivenProto(cx, &MapIteratorObject::class_, base, global));
     if (!proto)
         return false;
     proto->setSlot(MapIteratorObject::RangeSlot, PrivateValue(nullptr));
@@ -925,7 +927,7 @@ MapIteratorObject::create(JSContext *cx, HandleObject mapobj, ValueMap *data,
     if (!range)
         return nullptr;
 
-    JSObject *iterobj = NewObjectWithGivenProto(cx, &class_, proto, global);
+    NativeObject *iterobj = NewNativeObjectWithGivenProto(cx, &class_, proto, global);
     if (!iterobj) {
         js_delete(range);
         return nullptr;
@@ -1044,7 +1046,7 @@ static JSObject *
 InitClass(JSContext *cx, Handle<GlobalObject*> global, const Class *clasp, JSProtoKey key, Native construct,
           const JSPropertySpec *properties, const JSFunctionSpec *methods)
 {
-    Rooted<JSObject*> proto(cx, global->createBlankPrototype(cx, clasp));
+    RootedNativeObject proto(cx, global->createBlankPrototype(cx, clasp));
     if (!proto)
         return nullptr;
     proto->setPrivate(nullptr);
@@ -1198,7 +1200,7 @@ MapObject::set(JSContext *cx, HandleObject obj, HandleValue k, HandleValue v)
 MapObject*
 MapObject::create(JSContext *cx)
 {
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &class_));
+    RootedNativeObject obj(cx, NewNativeBuiltinClassInstance(cx, &class_));
     if (!obj)
         return nullptr;
 
@@ -1278,7 +1280,7 @@ MapObject::construct(JSContext *cx, unsigned argc, Value *vp)
 bool
 MapObject::is(HandleValue v)
 {
-    return v.isObject() && v.toObject().hasClass(&class_) && v.toObject().getPrivate();
+    return v.isObject() && v.toObject().hasClass(&class_) && v.toObject().as<MapObject>().getPrivate();
 }
 
 #define ARG0_KEY(cx, args, key)                                               \
@@ -1489,7 +1491,7 @@ js_InitMapClass(JSContext *cx, HandleObject obj)
 
 namespace {
 
-class SetIteratorObject : public JSObject
+class SetIteratorObject : public NativeObject
 {
   public:
     static const Class class_;
@@ -1550,7 +1552,8 @@ GlobalObject::initSetIteratorProto(JSContext *cx, Handle<GlobalObject*> global)
     JSObject *base = GlobalObject::getOrCreateIteratorPrototype(cx, global);
     if (!base)
         return false;
-    RootedObject proto(cx, NewObjectWithGivenProto(cx, &SetIteratorObject::class_, base, global));
+    RootedNativeObject proto(cx, NewNativeObjectWithGivenProto(cx, &SetIteratorObject::class_,
+                                                               base, global));
     if (!proto)
         return false;
     proto->setSlot(SetIteratorObject::RangeSlot, PrivateValue(nullptr));
@@ -1573,7 +1576,7 @@ SetIteratorObject::create(JSContext *cx, HandleObject setobj, ValueSet *data,
     if (!range)
         return nullptr;
 
-    JSObject *iterobj = NewObjectWithGivenProto(cx, &class_, proto, global);
+    NativeObject *iterobj = NewNativeObjectWithGivenProto(cx, &class_, proto, global);
     if (!iterobj) {
         js_delete(range);
         return nullptr;
@@ -1742,7 +1745,7 @@ SetObject::add(JSContext *cx, HandleObject obj, HandleValue k)
 SetObject*
 SetObject::create(JSContext *cx)
 {
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &class_));
+    RootedNativeObject obj(cx, NewNativeBuiltinClassInstance(cx, &class_));
     if (!obj)
         return nullptr;
 
@@ -1812,7 +1815,7 @@ SetObject::construct(JSContext *cx, unsigned argc, Value *vp)
 bool
 SetObject::is(HandleValue v)
 {
-    return v.isObject() && v.toObject().hasClass(&class_) && v.toObject().getPrivate();
+    return v.isObject() && v.toObject().hasClass(&class_) && v.toObject().as<SetObject>().getPrivate();
 }
 
 ValueSet &
