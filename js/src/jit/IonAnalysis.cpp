@@ -1512,6 +1512,12 @@ jit::RemoveUnmarkedBlocks(MIRGenerator *mir, MIRGraph &graph, uint32_t numMarked
                 continue;
             }
 
+            // The block is unreachable. Clear out the loop header flag, as
+            // we're doing the sweep of a mark-and-sweep here, so we no longer
+            // need to worry about whether an unmarked block is a loop or not.
+            if (block->isLoopHeader())
+                block->clearLoopHeader();
+
             for (size_t i = 0, e = block->numSuccessors(); i != e; ++i)
                 block->getSuccessor(i)->removePredecessor(block);
             graph.removeBlockIncludingPhis(block);
