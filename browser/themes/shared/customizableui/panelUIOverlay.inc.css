@@ -101,12 +101,10 @@
 
 .panel-subviews {
   padding: 4px;
-  background-color: hsla(0,0%,100%,.97);
   background-clip: padding-box;
   border-left: 1px solid hsla(210,4%,10%,.3);
   box-shadow: 0 3px 5px hsla(210,4%,10%,.1),
               0 0 7px hsla(210,4%,10%,.1);
-  color: hsl(0,0%,15%);
   -moz-margin-start: @exitSubviewGutterWidth@;
 }
 
