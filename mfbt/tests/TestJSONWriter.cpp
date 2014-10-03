@@ -70,9 +70,6 @@ void TestBasicProperties()
  \"string2\": \"1234\",\n\
  \"string3\": \"hello\",\n\
  \"string4\": \"\\\" \\\\ \\u0007 \\b \\t \\n \\u000b \\f \\r\",\n\
- \"ptr1\": \"0x0\",\n\
- \"ptr2\": \"0xdeadbeef\",\n\
- \"ptr3\": \"0xfacade\",\n\
  \"len 0 array, multi-line\": [\n\
  ],\n\
  \"len 0 array, single-line\": [],\n\
@@ -126,10 +123,6 @@ void TestBasicProperties()
     w.StringProperty("string2", "1234");
     w.StringProperty("string3", "hello");
     w.StringProperty("string4", "\" \\ \a \b \t \n \v \f \r");
-
-    w.PointerProperty("ptr1", (void*)0x0);
-    w.PointerProperty("ptr2", (void*)0xdeadbeef);
-    w.PointerProperty("ptr3", (void*)0xFaCaDe);
 
     w.StartArrayProperty("len 0 array, multi-line", w.MultiLineStyle);
     w.EndArray();
@@ -235,9 +228,6 @@ void TestBasicElements()
   \"1234\",\n\
   \"hello\",\n\
   \"\\\" \\\\ \\u0007 \\b \\t \\n \\u000b \\f \\r\",\n\
-  \"0x0\",\n\
-  \"0xdeadbeef\",\n\
-  \"0xfacade\",\n\
   [\n\
   ],\n\
   [],\n\
@@ -293,10 +283,6 @@ void TestBasicElements()
     w.StringElement("1234");
     w.StringElement("hello");
     w.StringElement("\" \\ \a \b \t \n \v \f \r");
-
-    w.PointerElement((void*)0x0);
-    w.PointerElement((void*)0xdeadbeef);
-    w.PointerElement((void*)0xFaCaDe);
 
     w.StartArrayElement();
     w.EndArray();
@@ -436,7 +422,7 @@ void TestStringEscaping()
  \"\xD5\xA2\xD5\xA1\xD6\x80\xD5\xA5\xD6\x82 \xD5\xB9\xD5\xAF\xD5\xA1\": -123,\n\
  \"\xE4\xBD\xA0\xE5\xA5\xBD\": 1.234,\n\
  \"\xCE\xB3\xCE\xB5\xCE\xB9\xCE\xB1 \xCE\xB5\xCE\xBA\xCE\xB5\xCE\xAF\": \"\xD8\xB3\xD9\x84\xD8\xA7\xD9\x85\",\n\
- \"hall\xC3\xB3 \xC3\xBE" "arna\": \"0x1234\",\n\
+ \"hall\xC3\xB3 \xC3\xBE" "arna\": 4660,\n\
  \"\xE3\x81\x93\xE3\x82\x93\xE3\x81\xAB\xE3\x81\xA1\xE3\x81\xAF\": {\n\
   \"\xD0\xBF\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82\": [\n\
   ]\n\
@@ -462,7 +448,7 @@ void TestStringEscaping()
     w.IntProperty("\xD5\xA2\xD5\xA1\xD6\x80\xD5\xA5\xD6\x82 \xD5\xB9\xD5\xAF\xD5\xA1", -123);
     w.DoubleProperty("\xE4\xBD\xA0\xE5\xA5\xBD", 1.234);
     w.StringProperty("\xCE\xB3\xCE\xB5\xCE\xB9\xCE\xB1 \xCE\xB5\xCE\xBA\xCE\xB5\xCE\xAF", "\xD8\xB3\xD9\x84\xD8\xA7\xD9\x85");
-    w.PointerProperty("hall\xC3\xB3 \xC3\xBE" "arna", (void*)0x1234);
+    w.IntProperty("hall\xC3\xB3 \xC3\xBE" "arna", 0x1234);
     w.StartObjectProperty("\xE3\x81\x93\xE3\x82\x93\xE3\x81\xAB\xE3\x81\xA1\xE3\x81\xAF");
     {
       w.StartArrayProperty("\xD0\xBF\xD1\x80\xD0\xB8\xD0\xB2\xD0\xB5\xD1\x82");
