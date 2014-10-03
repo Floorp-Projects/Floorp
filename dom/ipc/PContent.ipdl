@@ -433,6 +433,8 @@ child:
 
     GeolocationUpdate(GeoPosition somewhere);
 
+    UpdateDictionaryList(nsString[] dictionaries);
+
     // nsIPermissionManager messages
     AddPermission(Permission permission);
 
@@ -442,7 +444,7 @@ child:
 
     GarbageCollect();
     CycleCollect();
-    
+
     /**
      * Start accessibility engine in content process.
      */
@@ -504,7 +506,7 @@ parent:
     sync GetProcessAttributes()
         returns (uint64_t id, bool isForApp, bool isForBrowser);
     sync GetXPCOMProcessAttributes()
-        returns (bool isOffline);
+        returns (bool isOffline, nsString[] dictionaries);
 
     sync CreateChildProcess(IPCTabContext context,
                             ProcessPriority priority)
