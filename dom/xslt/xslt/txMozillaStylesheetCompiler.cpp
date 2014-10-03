@@ -700,7 +700,6 @@ void txSyncCompileObserver::onDoneCompiling(txStylesheetCompiler* aCompiler,
 
 nsresult
 TX_CompileStylesheet(nsINode* aNode, txMozillaXSLTProcessor* aProcessor,
-                     nsIPrincipal* aCallerPrincipal,
                      txStylesheet** aStylesheet)
 {
     // If we move GetBaseURI to nsINode this can be simplified.
