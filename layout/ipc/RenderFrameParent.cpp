@@ -86,12 +86,11 @@ public:
 
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) MOZ_OVERRIDE
   {
-    // We always need to post requests into the "UI thread" otherwise the
-    // requests may get processed out of order.
-    mUILoop->PostTask(
-      FROM_HERE,
-      NewRunnableMethod(this, &RemoteContentController::DoRequestContentRepaint,
-                        aFrameMetrics));
+    MOZ_ASSERT(NS_IsMainThread());
+    if (mRenderFrame) {
+      TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
+      browser->UpdateFrame(aFrameMetrics);
+    }
   }
 
   virtual void AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
@@ -261,14 +260,6 @@ public:
     mTouchSensitiveRegion = aRegion;
   }
 private:
-  void DoRequestContentRepaint(const FrameMetrics& aFrameMetrics)
-  {
-    if (mRenderFrame) {
-      TabParent* browser = static_cast<TabParent*>(mRenderFrame->Manager());
-      browser->UpdateFrame(aFrameMetrics);
-    }
-  }
-
   MessageLoop* mUILoop;
   RenderFrameParent* mRenderFrame;
 
