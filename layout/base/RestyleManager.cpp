@@ -74,6 +74,9 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
                      ELEMENT_IS_POTENTIAL_RESTYLE_ROOT)
   , mPendingAnimationRestyles(ELEMENT_HAS_PENDING_ANIMATION_RESTYLE |
                               ELEMENT_IS_POTENTIAL_ANIMATION_RESTYLE_ROOT)
+#ifdef DEBUG
+  , mIsProcessingRestyles(false)
+#endif
 #ifdef RESTYLE_LOGGING
   , mLoggingDepth(0)
 #endif
@@ -1430,6 +1433,10 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint)
 
   nsAutoScriptBlocker scriptBlocker;
 
+  MOZ_ASSERT(!mIsProcessingRestyles, "Nesting calls to processing restyles");
+#ifdef DEBUG
+  mIsProcessingRestyles = true;
+#endif
   mPresContext->SetProcessingRestyles(true);
 
   // FIXME (bug 1047928): Many of the callers probably don't need
@@ -1442,6 +1449,9 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint)
                         nsRestyleHint(eRestyle_Subtree |
                                       eRestyle_ForceDescendants));
 
+#ifdef DEBUG
+  mIsProcessingRestyles = false;
+#endif
   mPresContext->SetProcessingRestyles(false);
 
   // Make sure that we process any pending animation restyles from the
@@ -1511,8 +1521,11 @@ RestyleManager::ProcessPendingRestyles()
   mPresContext->FrameConstructor()->CreateNeededFrames();
 
   // Process non-animation restyles...
-  NS_ABORT_IF_FALSE(!mPresContext->IsProcessingRestyles(),
+  NS_ABORT_IF_FALSE(!mIsProcessingRestyles,
                     "Nesting calls to ProcessPendingRestyles?");
+#ifdef DEBUG
+  mIsProcessingRestyles = true;
+#endif
   mPresContext->SetProcessingRestyles(true);
 
   // Before we process any restyles, we need to ensure that style
@@ -1545,6 +1558,9 @@ RestyleManager::ProcessPendingRestyles()
   mPresContext->SetProcessingAnimationStyleChange(false);
 
   mPresContext->SetProcessingRestyles(false);
+#ifdef DEBUG
+  mIsProcessingRestyles = false;
+#endif
   NS_POSTCONDITION(mPendingRestyles.Count() == oldPendingRestyleCount,
                    "We should not have posted new non-animation restyles while "
                    "processing animation restyles");

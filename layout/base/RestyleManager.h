@@ -443,6 +443,10 @@ private:
   RestyleTracker mPendingRestyles;
   RestyleTracker mPendingAnimationRestyles;
 
+#ifdef DEBUG
+  bool mIsProcessingRestyles;
+#endif
+
 #ifdef RESTYLE_LOGGING
   int32_t mLoggingDepth;
 #endif
