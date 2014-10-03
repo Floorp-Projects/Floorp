@@ -359,18 +359,18 @@ SVGPathData::BuildPath(PathBuilder* builder,
 
     case PATHSEG_LINETO_ABS:
       segEnd = Point(mData[i], mData[i+1]);
-      builder->LineTo(segEnd);
-      if (!subpathHasLength) {
-        subpathHasLength = (segEnd != segStart);
+      if (segEnd != segStart) {
+        subpathHasLength = true;
+        builder->LineTo(segEnd);
       }
       subpathContainsNonArc = true;
       break;
 
     case PATHSEG_LINETO_REL:
       segEnd = segStart + Point(mData[i], mData[i+1]);
-      builder->LineTo(segEnd);
-      if (!subpathHasLength) {
-        subpathHasLength = (segEnd != segStart);
+      if (segEnd != segStart) {
+        subpathHasLength = true;
+        builder->LineTo(segEnd);
       }
       subpathContainsNonArc = true;
       break;
@@ -379,9 +379,9 @@ SVGPathData::BuildPath(PathBuilder* builder,
       cp1 = Point(mData[i], mData[i+1]);
       cp2 = Point(mData[i+2], mData[i+3]);
       segEnd = Point(mData[i+4], mData[i+5]);
-      builder->BezierTo(cp1, cp2, segEnd);
-      if (!subpathHasLength) {
-        subpathHasLength = (segEnd != segStart || segEnd != cp1 || segEnd != cp2);
+      if (segEnd != segStart || segEnd != cp1 || segEnd != cp2) {
+        subpathHasLength = true;
+        builder->BezierTo(cp1, cp2, segEnd);
       }
       subpathContainsNonArc = true;
       break;
@@ -390,9 +390,9 @@ SVGPathData::BuildPath(PathBuilder* builder,
       cp1 = segStart + Point(mData[i], mData[i+1]);
       cp2 = segStart + Point(mData[i+2], mData[i+3]);
       segEnd = segStart + Point(mData[i+4], mData[i+5]);
-      builder->BezierTo(cp1, cp2, segEnd);
-      if (!subpathHasLength) {
-        subpathHasLength = (segEnd != segStart || segEnd != cp1 || segEnd != cp2);
+      if (segEnd != segStart || segEnd != cp1 || segEnd != cp2) {
+        subpathHasLength = true;
+        builder->BezierTo(cp1, cp2, segEnd);
       }
       subpathContainsNonArc = true;
       break;
@@ -403,9 +403,9 @@ SVGPathData::BuildPath(PathBuilder* builder,
       tcp1 = segStart + (cp1 - segStart) * 2 / 3;
       segEnd = Point(mData[i+2], mData[i+3]); // set before setting tcp2!
       tcp2 = cp1 + (segEnd - cp1) / 3;
-      builder->BezierTo(tcp1, tcp2, segEnd);
-      if (!subpathHasLength) {
-        subpathHasLength = (segEnd != segStart || segEnd != cp1);
+      if (segEnd != segStart || segEnd != cp1) {
+        subpathHasLength = true;
+        builder->BezierTo(tcp1, tcp2, segEnd);
       }
       subpathContainsNonArc = true;
       break;
@@ -416,9 +416,9 @@ SVGPathData::BuildPath(PathBuilder* builder,
       tcp1 = segStart + (cp1 - segStart) * 2 / 3;
       segEnd = segStart + Point(mData[i+2], mData[i+3]); // set before setting tcp2!
       tcp2 = cp1 + (segEnd - cp1) / 3;
-      builder->BezierTo(tcp1, tcp2, segEnd);
-      if (!subpathHasLength) {
-        subpathHasLength = (segEnd != segStart || segEnd != cp1);
+      if (segEnd != segStart || segEnd != cp1) {
+        subpathHasLength = true;
+        builder->BezierTo(tcp1, tcp2, segEnd);
       }
       subpathContainsNonArc = true;
       break;
@@ -432,6 +432,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
         segEnd += segStart;
       }
       if (segEnd != segStart) {
+        subpathHasLength = true;
         if (radii.x == 0.0f || radii.y == 0.0f) {
           builder->LineTo(segEnd);
         } else {
@@ -442,44 +443,41 @@ SVGPathData::BuildPath(PathBuilder* builder,
           }
         }
       }
-      if (!subpathHasLength) {
-        subpathHasLength = (segEnd != segStart);
-      }
       break;
     }
 
     case PATHSEG_LINETO_HORIZONTAL_ABS:
       segEnd = Point(mData[i], segStart.y);
-      builder->LineTo(segEnd);
-      if (!subpathHasLength) {
-        subpathHasLength = (segEnd != segStart);
+      if (segEnd != segStart) {
+        subpathHasLength = true;
+        builder->LineTo(segEnd);
       }
       subpathContainsNonArc = true;
       break;
 
     case PATHSEG_LINETO_HORIZONTAL_REL:
       segEnd = segStart + Point(mData[i], 0.0f);
-      builder->LineTo(segEnd);
-      if (!subpathHasLength) {
-        subpathHasLength = (segEnd != segStart);
+      if (segEnd != segStart) {
+        subpathHasLength = true;
+        builder->LineTo(segEnd);
       }
       subpathContainsNonArc = true;
       break;
 
     case PATHSEG_LINETO_VERTICAL_ABS:
       segEnd = Point(segStart.x, mData[i]);
-      builder->LineTo(segEnd);
-      if (!subpathHasLength) {
-        subpathHasLength = (segEnd != segStart);
+      if (segEnd != segStart) {
+        subpathHasLength = true;
+        builder->LineTo(segEnd);
       }
       subpathContainsNonArc = true;
       break;
 
     case PATHSEG_LINETO_VERTICAL_REL:
       segEnd = segStart + Point(0.0f, mData[i]);
-      builder->LineTo(segEnd);
-      if (!subpathHasLength) {
-        subpathHasLength = (segEnd != segStart);
+      if (segEnd != segStart) {
+        subpathHasLength = true;
+        builder->LineTo(segEnd);
       }
       subpathContainsNonArc = true;
       break;
@@ -488,9 +486,9 @@ SVGPathData::BuildPath(PathBuilder* builder,
       cp1 = SVGPathSegUtils::IsCubicType(prevSegType) ? segStart * 2 - cp2 : segStart;
       cp2 = Point(mData[i],   mData[i+1]);
       segEnd = Point(mData[i+2], mData[i+3]);
-      builder->BezierTo(cp1, cp2, segEnd);
-      if (!subpathHasLength) {
-        subpathHasLength = (segEnd != segStart || segEnd != cp1 || segEnd != cp2);
+      if (segEnd != segStart || segEnd != cp1 || segEnd != cp2) {
+        subpathHasLength = true;
+        builder->BezierTo(cp1, cp2, segEnd);
       }
       subpathContainsNonArc = true;
       break;
@@ -499,9 +497,9 @@ SVGPathData::BuildPath(PathBuilder* builder,
       cp1 = SVGPathSegUtils::IsCubicType(prevSegType) ? segStart * 2 - cp2 : segStart;
       cp2 = segStart + Point(mData[i], mData[i+1]);
       segEnd = segStart + Point(mData[i+2], mData[i+3]);
-      builder->BezierTo(cp1, cp2, segEnd);
-      if (!subpathHasLength) {
-        subpathHasLength = (segEnd != segStart || segEnd != cp1 || segEnd != cp2);
+      if (segEnd != segStart || segEnd != cp1 || segEnd != cp2) {
+        subpathHasLength = true;
+        builder->BezierTo(cp1, cp2, segEnd);
       }
       subpathContainsNonArc = true;
       break;
@@ -512,9 +510,9 @@ SVGPathData::BuildPath(PathBuilder* builder,
       tcp1 = segStart + (cp1 - segStart) * 2 / 3;
       segEnd = Point(mData[i], mData[i+1]); // set before setting tcp2!
       tcp2 = cp1 + (segEnd - cp1) / 3;
-      builder->BezierTo(tcp1, tcp2, segEnd);
-      if (!subpathHasLength) {
-        subpathHasLength = (segEnd != segStart || segEnd != cp1);
+      if (segEnd != segStart || segEnd != cp1) {
+        subpathHasLength = true;
+        builder->BezierTo(tcp1, tcp2, segEnd);
       }
       subpathContainsNonArc = true;
       break;
@@ -525,9 +523,9 @@ SVGPathData::BuildPath(PathBuilder* builder,
       tcp1 = segStart + (cp1 - segStart) * 2 / 3;
       segEnd = segStart + Point(mData[i], mData[i+1]); // changed before setting tcp2!
       tcp2 = cp1 + (segEnd - cp1) / 3;
-      builder->BezierTo(tcp1, tcp2, segEnd);
-      if (!subpathHasLength) {
-        subpathHasLength = (segEnd != segStart || segEnd != cp1);
+      if (segEnd != segStart || segEnd != cp1) {
+        subpathHasLength = true;
+        builder->BezierTo(tcp1, tcp2, segEnd);
       }
       subpathContainsNonArc = true;
       break;
