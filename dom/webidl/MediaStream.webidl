@@ -21,7 +21,7 @@ dictionary MediaStreamConstraints {
     DOMString? peerIdentity = null;
 };
 
-interface MediaStream {
+interface MediaStream : EventTarget {
     // readonly attribute DOMString    id;
     sequence<AudioStreamTrack> getAudioTracks();
     sequence<VideoStreamTrack> getVideoTracks();
