@@ -64,6 +64,8 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
   , mRebuildAllStyleData(false)
   , mObservingRefreshDriver(false)
   , mInStyleRefresh(false)
+  , mSkipAnimationRules(false)
+  , mPostAnimationRestyles(false)
   , mHoverGeneration(0)
   , mRebuildAllExtraHint(nsChangeHint(0))
   , mLastUpdateForThrottledAnimations(aPresContext->RefreshDriver()->
@@ -1439,6 +1441,13 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint)
 #endif
   mPresContext->SetProcessingRestyles(true);
 
+  // Until we get rid of these phases in bug 960465, we need to skip
+  // animation restyles during the non-animation phase, and post
+  // animation restyles so that we restyle those elements again in the
+  // animation phase.
+  mSkipAnimationRules = true;
+  mPostAnimationRestyles = true;
+
   // FIXME (bug 1047928): Many of the callers probably don't need
   // eRestyle_Subtree because they're changing things that affect data
   // computation rather than selector matching; we could have a restyle
@@ -1449,6 +1458,8 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint)
                         nsRestyleHint(eRestyle_Subtree |
                                       eRestyle_ForceDescendants));
 
+  mPostAnimationRestyles = false;
+  mSkipAnimationRules = false;
 #ifdef DEBUG
   mIsProcessingRestyles = false;
 #endif
@@ -1539,7 +1550,17 @@ RestyleManager::ProcessPendingRestyles()
     UpdateOnlyAnimationStyles();
   }
 
+  // Until we get rid of these phases in bug 960465, we need to skip
+  // animation restyles during the non-animation phase, and post
+  // animation restyles so that we restyle those elements again in the
+  // animation phase.
+  mSkipAnimationRules = true;
+  mPostAnimationRestyles = true;
+
   mPendingRestyles.ProcessRestyles();
+
+  mPostAnimationRestyles = false;
+  mSkipAnimationRules = false;
 
 #ifdef DEBUG
   uint32_t oldPendingRestyleCount = mPendingRestyles.Count();
