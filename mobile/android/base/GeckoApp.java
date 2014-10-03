@@ -190,7 +190,6 @@ public abstract class GeckoApp
     private Telemetry.Timer mGeckoReadyStartupTimer;
 
     private String mPrivateBrowsingSession;
-    private volatile boolean mIsPaused = true;
 
     private volatile HealthRecorder mHealthRecorder;
     private volatile Locale mLastLocale;
@@ -246,13 +245,7 @@ public abstract class GeckoApp
     }
 
     public void addAppStateListener(GeckoAppShell.AppStateListener listener) {
-        ThreadUtils.assertOnUiThread();
         mAppStateListeners.add(listener);
-
-        // If we're already resumed, make sure the listener gets a notification.
-        if (!mIsPaused) {
-            listener.onResume();
-        }
     }
 
     public void removeAppStateListener(GeckoAppShell.AppStateListener listener) {
@@ -1951,8 +1944,6 @@ public abstract class GeckoApp
                 listener.onResume();
             }
         }
-        // Setting this state will force any listeners added after this to have their onResume() method called
-        mIsPaused = false;
 
         // We use two times: a pseudo-unique wall-clock time to identify the
         // current session across power cycles, and the elapsed realtime to
@@ -2029,9 +2020,6 @@ public abstract class GeckoApp
             }
         });
 
-        // Setting this state will keep any listeners registered after this from having their onResume
-        // method called.
-        mIsPaused = true;
         if (mAppStateListeners != null) {
             for(GeckoAppShell.AppStateListener listener: mAppStateListeners) {
                 listener.onPause();
