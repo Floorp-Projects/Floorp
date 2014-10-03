@@ -173,3 +173,62 @@ add_test(function test_signal_not_present() {
 
   run_next_test();
 });
+
+/**
+ * Verify decoder for Line Control
+ */
+add_test(function test_line_control() {
+  let worker = newWorkerWithParcel([
+                0x01,   // one inforemation record
+                0x06,   // type: line control
+                0x01,   // polarity included
+                0x00,   // not toggled
+                0x01,   // reversed
+                0xFF]); // Power denial timeout: 255 * 5 ms
+  let context = worker.ContextPool._contexts[0];
+  let helper = context.CdmaPDUHelper;
+  let records = helper.decodeInformationRecord();
+
+  do_check_eq(records[0].lineControl.polarityIncluded, 1);
+  do_check_eq(records[0].lineControl.toggle, 0);
+  do_check_eq(records[0].lineControl.reverse, 1);
+  do_check_eq(records[0].lineControl.powerDenial, 255);
+
+  run_next_test();
+});
+
+/**
+ * Verify decoder for CLIR Cause
+ */
+add_test(function test_clir() {
+  let worker = newWorkerWithParcel([
+                0x01,   // one inforemation record
+                0x08,   // type: clir
+                0x01]); // cause: Rejected by user
+  let context = worker.ContextPool._contexts[0];
+  let helper = context.CdmaPDUHelper;
+  let records = helper.decodeInformationRecord();
+
+  do_check_eq(records[0].clirCause, 1);
+
+  run_next_test();
+});
+
+/**
+ * Verify decoder for Audio Control
+ */
+add_test(function test_clir() {
+  let worker = newWorkerWithParcel([
+                0x01,   // one inforemation record
+                0x0A,   // type: audio control
+                0x01,   // uplink
+                0xFF]); // downlink
+  let context = worker.ContextPool._contexts[0];
+  let helper = context.CdmaPDUHelper;
+  let records = helper.decodeInformationRecord();
+
+  do_check_eq(records[0].audioControl.upLink, 1);
+  do_check_eq(records[0].audioControl.downLink, 255);
+
+  run_next_test();
+});
