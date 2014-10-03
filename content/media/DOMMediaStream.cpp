@@ -19,34 +19,20 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMMediaStream)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMediaStream)
-NS_INTERFACE_MAP_END
+NS_IMPL_CYCLE_COLLECTION_INHERITED(DOMMediaStream,
+                                   DOMEventTargetHelper,
+                                   mWindow,
+                                   mTracks,
+                                   mConsumersToKeepAlive);
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(DOMMediaStream)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(DOMMediaStream)
+NS_IMPL_ADDREF_INHERITED(DOMMediaStream, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(DOMMediaStream, DOMEventTargetHelper)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(DOMMediaStream)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DOMMediaStream)
+  NS_INTERFACE_MAP_ENTRY(DOMMediaStream)
+NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DOMMediaStream)
-  tmp->Destroy();
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTracks)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mConsumersToKeepAlive)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DOMMediaStream)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTracks)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsumersToKeepAlive)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(DOMMediaStream)
-
-NS_IMPL_ISUPPORTS_INHERITED(DOMLocalMediaStream, DOMMediaStream,
-                            nsIDOMLocalMediaStream)
+NS_IMPL_ISUPPORTS_INHERITED0(DOMLocalMediaStream, DOMMediaStream)
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(DOMAudioNodeMediaStream, DOMMediaStream,
                                    mStreamNode)
@@ -93,8 +79,12 @@ public:
         track = stream->GetDOMTrackFor(mID);
       }
       if (mEvents & MediaStreamListener::TRACK_EVENT_ENDED) {
-        track->NotifyEnded();
-        stream->NotifyMediaStreamTrackEnded(track);
+        if (track) {
+          track->NotifyEnded();
+          stream->NotifyMediaStreamTrackEnded(track);
+        } else {
+          NS_ERROR("track ended but not found");
+        }
       }
       return NS_OK;
     }
