@@ -1440,7 +1440,6 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint)
 #ifdef DEBUG
   mIsProcessingRestyles = true;
 #endif
-  mPresContext->SetProcessingRestyles(true);
 
   // Until we get rid of these phases in bug 960465, we need to skip
   // animation restyles during the non-animation phase, and post
@@ -1464,7 +1463,6 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint)
 #ifdef DEBUG
   mIsProcessingRestyles = false;
 #endif
-  mPresContext->SetProcessingRestyles(false);
 
   // Make sure that we process any pending animation restyles from the
   // above style change.  Note that we can *almost* implement the above
@@ -1538,7 +1536,6 @@ RestyleManager::ProcessPendingRestyles()
 #ifdef DEBUG
   mIsProcessingRestyles = true;
 #endif
-  mPresContext->SetProcessingRestyles(true);
 
   // Before we process any restyles, we need to ensure that style
   // resulting from any throttled animations (animations that we're
@@ -1575,15 +1572,12 @@ RestyleManager::ProcessPendingRestyles()
   // mid-transition (since processing the non-animation restyle ignores
   // the running transition so it can check for a new change on the same
   // property, and then posts an immediate animation style change).
-  mPresContext->SetProcessingAnimationStyleChange(true);
   MOZ_ASSERT(!mIsProcessingAnimationStyleChange, "nesting forbidden");
   mIsProcessingAnimationStyleChange = true;
   mPendingAnimationRestyles.ProcessRestyles();
   MOZ_ASSERT(mIsProcessingAnimationStyleChange, "nesting forbidden");
   mIsProcessingAnimationStyleChange = false;
-  mPresContext->SetProcessingAnimationStyleChange(false);
 
-  mPresContext->SetProcessingRestyles(false);
 #ifdef DEBUG
   mIsProcessingRestyles = false;
 #endif
