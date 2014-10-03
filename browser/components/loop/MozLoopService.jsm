@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 // Invalid auth token as per
 // https://github.com/mozilla-services/loop-server/blob/45787d34108e2f0d87d74d4ddf4ff0dbab23501c/loop/errno.json#L6
@@ -330,11 +330,60 @@ let MozLoopServiceInternal = {
   },
 
   /**
+   * Record an error and notify interested UI with the relevant user-facing strings attached.
+   *
    * @param {String} errorType a key to identify the type of error. Only one
-   *                           error of a type will be saved at a time.
+   *                           error of a type will be saved at a time. This value may be used to
+   *                           determine user-facing (aka. friendly) strings.
    * @param {Object} error     an object describing the error in the format from Hawk errors
    */
   setError: function(errorType, error) {
+    let messageString, detailsString, detailsButtonLabelString;
+    const NETWORK_ERRORS = [
+      Cr.NS_ERROR_CONNECTION_REFUSED,
+      Cr.NS_ERROR_NET_INTERRUPT,
+      Cr.NS_ERROR_NET_RESET,
+      Cr.NS_ERROR_NET_TIMEOUT,
+      Cr.NS_ERROR_OFFLINE,
+      Cr.NS_ERROR_PROXY_CONNECTION_REFUSED,
+      Cr.NS_ERROR_UNKNOWN_HOST,
+      Cr.NS_ERROR_UNKNOWN_PROXY_HOST,
+    ];
+
+    if (error.code === null && error.errno === null &&
+        error.error instanceof Ci.nsIException &&
+        NETWORK_ERRORS.indexOf(error.error.result) != -1) {
+      // Network error. Override errorType so we can easily clear it on the next succesful request.
+      errorType = "network";
+      messageString = "could_not_connect";
+      detailsString = "check_internet_connection";
+      detailsButtonLabelString = "retry_button";
+    } else if (errorType == "profile" && error.code >= 500 && error.code < 600) {
+      messageString = "problem_accessing_account";
+    } else if (error.code == 401) {
+      if (errorType == "login") {
+        messageString = "could_not_authenticate"; // XXX: Bug 1076377
+        detailsString = "password_changed_question";
+        detailsButtonLabelString = "retry_button";
+      } else {
+        messageString = "session_expired_error_description";
+      }
+    } else if (error.code >= 500 && error.code < 600) {
+      messageString = "service_not_available";
+      detailsString = "try_again_later";
+      detailsButtonLabelString = "retry_button";
+    } else {
+      messageString = "generic_failure_title";
+    }
+
+    error.friendlyMessage = this.localizedStrings[messageString].textContent;
+    error.friendlyDetails = detailsString ?
+                              this.localizedStrings[detailsString].textContent :
+                              null;
+    error.friendlyDetailsButtonLabel = detailsButtonLabelString ?
+                                         this.localizedStrings[detailsButtonLabelString].textContent :
+                                         null;
+
     gErrors.set(errorType, error);
     this.notifyStatusChanged();
   },
@@ -411,7 +460,30 @@ let MozLoopServiceInternal = {
                                           2 * 32, true);
     }
 
-    return gHawkClient.request(path, method, credentials, payloadObj);
+    return gHawkClient.request(path, method, credentials, payloadObj).then((result) => {
+      this.clearError("network");
+      return result;
+    }, (error) => {
+      if (error.code == 401) {
+        this.clearSessionToken(sessionType);
+
+        if (sessionType == LOOP_SESSION_TYPE.FXA) {
+          MozLoopService.logOutFromFxA().then(() => {
+            // Set a user-visible error after logOutFromFxA clears existing ones.
+            this.setError("login", error);
+          });
+        } else {
+          if (!this.urlExpiryTimeIsInFuture()) {
+            // If there are no Guest URLs in the future, don't use setError to notify the user since
+            // there isn't a need for a Guest registration at this time.
+            throw error;
+          }
+
+          this.setError("registration", error);
+        }
+      }
+      throw error;
+    });
   },
 
   /**
@@ -534,21 +606,13 @@ let MozLoopServiceInternal = {
       }, (error) => {
         // There's other errors than invalid auth token, but we should only do the reset
         // as a last resort.
-        if (error.code === 401 && error.errno === INVALID_AUTH_TOKEN) {
-          if (this.urlExpiryTimeIsInFuture()) {
-            // XXX Should this be reported to the user is a visible manner?
-            Cu.reportError("Loop session token is invalid, all previously "
-                           + "generated urls will no longer work.");
-          }
-
+        if (error.code === 401) {
           // Authorization failed, invalid token, we need to try again with a new token.
-          this.clearSessionToken(sessionType);
           if (retry) {
             return this.registerWithLoopServer(sessionType, pushUrl, false);
           }
         }
 
-        // XXX Bubble the precise details up to the UI somehow (bug 1013248).
         log.error("Failed to register with the loop server. Error: ", error);
         this.setError("registration", error);
         throw error;
@@ -568,6 +632,11 @@ let MozLoopServiceInternal = {
    * @return {Promise} resolving when the unregistration request finishes
    */
   unregisterFromLoopServer: function(sessionType, pushURL) {
+    let prefType = Services.prefs.getPrefType(this.getSessionTokenPrefName(sessionType));
+    if (prefType == Services.prefs.PREF_INVALID) {
+      return Promise.resolve("already unregistered");
+    }
+
     let unregisterURL = "/registration?simplePushURL=" + encodeURIComponent(pushURL);
     return this.hawkRequest(sessionType, unregisterURL, "DELETE")
       .then(() => {
@@ -577,7 +646,7 @@ let MozLoopServiceInternal = {
       error => {
         // Always clear the registration token regardless of whether the server acknowledges the logout.
         MozLoopServiceInternal.clearSessionToken(sessionType);
-        if (error.code === 401 && error.errno === INVALID_AUTH_TOKEN) {
+        if (error.code === 401) {
           // Authorization failed, invalid token. This is fine since it may mean we already logged out.
           return;
         }
@@ -1117,6 +1186,7 @@ this.MozLoopService = {
    *          rejected with an error code or string.
    */
   register: function(mockPushHandler, mockWebSocket) {
+    log.debug("registering");
     // Don't do anything if loop is not enabled.
     if (!Services.prefs.getBoolPref("loop.enabled")) {
       throw new Error("Loop is not enabled");
@@ -1194,6 +1264,10 @@ this.MozLoopService = {
 
   get errors() {
     return MozLoopServiceInternal.errors;
+  },
+
+  get log() {
+    return log;
   },
 
   /**
@@ -1331,6 +1405,8 @@ this.MozLoopService = {
         } else {
           throw new Error("No pushUrl for FxA registration");
         }
+        MozLoopServiceInternal.clearError("login");
+        MozLoopServiceInternal.clearError("profile");
         return gFxAOAuthTokenData;
       }));
     }).then(tokenData => {
@@ -1343,6 +1419,7 @@ this.MozLoopService = {
         MozLoopServiceInternal.notifyStatusChanged("login");
       }, error => {
         log.error("Failed to retrieve profile", error);
+        this.setError("profile", error);
         gFxAOAuthProfile = null;
         MozLoopServiceInternal.notifyStatusChanged();
       });
@@ -1350,6 +1427,10 @@ this.MozLoopService = {
     }).catch(error => {
       gFxAOAuthTokenData = null;
       gFxAOAuthProfile = null;
+      throw error;
+    }).catch((error) => {
+      MozLoopServiceInternal.setError("login", error);
+      // Re-throw for testing
       throw error;
     });
   },
@@ -1363,8 +1444,12 @@ this.MozLoopService = {
    */
   logOutFromFxA: Task.async(function*() {
     log.debug("logOutFromFxA");
-    yield MozLoopServiceInternal.unregisterFromLoopServer(LOOP_SESSION_TYPE.FXA,
-                                                          gPushHandler.pushUrl);
+    if (gPushHandler && gPushHandler.pushUrl) {
+      yield MozLoopServiceInternal.unregisterFromLoopServer(LOOP_SESSION_TYPE.FXA,
+                                                            gPushHandler.pushUrl);
+    } else {
+      MozLoopServiceInternal.clearSessionToken(LOOP_SESSION_TYPE.FXA);
+    }
 
     gFxAOAuthTokenData = null;
     gFxAOAuthProfile = null;
@@ -1377,6 +1462,8 @@ this.MozLoopService = {
     // clearError calls notifyStatusChanged so should be done last when the
     // state is clean.
     MozLoopServiceInternal.clearError("registration");
+    MozLoopServiceInternal.clearError("login");
+    MozLoopServiceInternal.clearError("profile");
   }),
 
   openFxASettings: function() {

@@ -332,6 +332,8 @@ loop.shared.models = (function(l10n) {
    */
   var NotificationModel = Backbone.Model.extend({
     defaults: {
+      details: "",
+      detailsButtonLabel: "",
       level: "info",
       message: ""
     }
