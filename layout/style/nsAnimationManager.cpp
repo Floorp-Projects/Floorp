@@ -667,12 +667,12 @@ nsAnimationManager::GetAnimationRule(mozilla::dom::Element* aElement,
     return nullptr;
   }
 
-  if (mPresContext->IsProcessingRestyles() &&
-      !mPresContext->IsProcessingAnimationStyleChange()) {
+  RestyleManager* restyleManager = mPresContext->RestyleManager();
+  if (restyleManager->SkipAnimationRules()) {
     // During the non-animation part of processing restyles, we don't
     // add the animation rule.
 
-    if (collection->mStyleRule) {
+    if (collection->mStyleRule && restyleManager->PostAnimationRestyles()) {
       collection->PostRestyleForAnimation(mPresContext);
     }
 
