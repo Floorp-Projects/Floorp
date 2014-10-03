@@ -793,10 +793,12 @@ nsSSLIOLayerHelpers::rememberTolerantAtVersion(const nsACString& hostName,
     entry.tolerant = std::max(entry.tolerant, tolerant);
     if (entry.intolerant != 0 && entry.intolerant <= entry.tolerant) {
       entry.intolerant = entry.tolerant + 1;
+      entry.intoleranceReason = 0; // lose the reason
     }
   } else {
     entry.tolerant = tolerant;
     entry.intolerant = 0;
+    entry.intoleranceReason = 0;
   }
 
   entry.AssertInvariant();
@@ -809,7 +811,8 @@ bool
 nsSSLIOLayerHelpers::rememberIntolerantAtVersion(const nsACString& hostName,
                                                  int16_t port,
                                                  uint16_t minVersion,
-                                                 uint16_t intolerant)
+                                                 uint16_t intolerant,
+                                                 PRErrorCode intoleranceReason)
 {
   nsCString key;
   getSiteKey(hostName, port, key);
@@ -822,6 +825,7 @@ nsSSLIOLayerHelpers::rememberIntolerantAtVersion(const nsACString& hostName,
     if (mTLSIntoleranceInfo.Get(key, &entry)) {
       entry.AssertInvariant();
       entry.intolerant = 0;
+      entry.intoleranceReason = 0;
       entry.AssertInvariant();
       mTLSIntoleranceInfo.Put(key, entry);
     }
@@ -845,6 +849,7 @@ nsSSLIOLayerHelpers::rememberIntolerantAtVersion(const nsACString& hostName,
   }
 
   entry.intolerant = intolerant;
+  entry.intoleranceReason = intoleranceReason;
   entry.AssertInvariant();
   mTLSIntoleranceInfo.Put(key, entry);
 
@@ -877,6 +882,26 @@ nsSSLIOLayerHelpers::adjustForTLSIntolerance(const nsACString& hostName,
       range.max = entry.intolerant - 1;
     }
   }
+}
+
+PRErrorCode
+nsSSLIOLayerHelpers::getIntoleranceReason(const nsACString& hostName,
+                                          int16_t port)
+{
+  IntoleranceEntry entry;
+
+  {
+    nsCString key;
+    getSiteKey(hostName, port, key);
+
+    MutexAutoLock lock(mutex);
+    if (!mTLSIntoleranceInfo.Get(key, &entry)) {
+      return 0;
+    }
+  }
+
+  entry.AssertInvariant();
+  return entry.intoleranceReason;
 }
 
 bool nsSSLIOLayerHelpers::nsSSLIOLayerInitialized = false;
@@ -1115,7 +1140,7 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
   if (!socketInfo->SharedState().IOLayerHelpers()
                  .rememberIntolerantAtVersion(socketInfo->GetHostName(),
                                               socketInfo->GetPort(),
-                                              range.min, range.max)) {
+                                              range.min, range.max, err)) {
     return false;
   }
 
