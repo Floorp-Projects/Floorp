@@ -176,7 +176,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
       "forEach", "map", "reduce", "reduceRight", "filter", "some", "every", "find",
       "findIndex", "copyWithin", "fill", "@@iterator", "entries", "keys", "constructor"];
   if (isNightlyBuild) {
-    gPrototypeProperties['Array'].push('contains');
     let pjsMethods = ['mapPar', 'reducePar', 'scanPar', 'scatterPar', 'filterPar'];
     gPrototypeProperties['Array'] = gPrototypeProperties['Array'].concat(pjsMethods);
   }

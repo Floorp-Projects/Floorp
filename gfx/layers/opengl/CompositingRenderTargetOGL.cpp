@@ -92,6 +92,8 @@ CompositingRenderTargetOGL::InitializeImpl()
     NS_ERROR(msg.get());
   }
 
+  mInitParams.mStatus = InitParams::INITIALIZED;
+
   mCompositor->PrepareViewport(mInitParams.mSize);
   mGL->fScissor(0, 0, mInitParams.mSize.width, mInitParams.mSize.height);
   if (mInitParams.mInit == INIT_MODE_CLEAR) {
@@ -99,7 +101,6 @@ CompositingRenderTargetOGL::InitializeImpl()
     mGL->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
   }
 
-  mInitParams.mStatus = InitParams::INITIALIZED;
 }
 
 }

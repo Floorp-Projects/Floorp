@@ -512,9 +512,7 @@ JSCompartment::markCrossCompartmentWrappers(JSTracer *trc)
              * We have a cross-compartment wrapper. Its private pointer may
              * point into the compartment being collected, so we should mark it.
              */
-            Value referent = wrapper->private_();
-            MarkValueRoot(trc, &referent, "cross-compartment wrapper");
-            MOZ_ASSERT(referent == wrapper->private_());
+            MarkSlot(trc, wrapper->slotOfPrivate(), "cross-compartment wrapper");
         }
     }
 }
@@ -653,39 +651,6 @@ JSCompartment::sweepCrossCompartmentWrappers()
 }
 
 #ifdef JSGC_COMPACTING
-
-/*
- * Fixup wrappers with moved keys or values.
- */
-void
-JSCompartment::fixupCrossCompartmentWrappers(JSTracer *trc)
-{
-    for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        Value val = e.front().value();
-        if (IsForwarded(val)) {
-            val = Forwarded(val);
-            e.front().value().set(val);
-        }
-
-        // CrossCompartmentKey's hash does not depend on the debugger object,
-        // so update it but do not rekey if it changes
-        CrossCompartmentKey key = e.front().key();
-        if (key.debugger)
-            key.debugger = MaybeForwarded(key.debugger);
-        if (key.wrapped && IsForwarded(key.wrapped)) {
-            key.wrapped = Forwarded(key.wrapped);
-            e.rekeyFront(key, key);
-        }
-
-        if (!zone()->isCollecting() && val.isObject()) {
-            // Call the trace hook to update any pointers to relocated things.
-            JSObject *obj = &val.toObject();
-            const Class *clasp = obj->getClass();
-            if (clasp->trace)
-                clasp->trace(trc, obj);
-        }
-    }
-}
 
 void JSCompartment::fixupAfterMovingGC()
 {

@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1065185
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1065185</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1065185 **/
+  SimpleTest.waitForExplicitFinish();
+
+  function doMonitor(rgxps) {
+    var messages = rgxps.map((x) => ({ errorMessage: x, isWarning: true }));
+    info("Expecting console messages: " + messages.toSource());
+    SimpleTest.monitorConsole(() => SimpleTest.executeSoon(() => window[0].location.reload()), messages, /* forbidUnexpected = */ true);
+  }
+  function endMonitor() {
+    SimpleTest.executeSoon(SimpleTest.endMonitorConsole.bind(SimpleTest));
+  }
+
+  var gLoadCount = 0;
+  function loaded() {
+    switch(++gLoadCount) {
+      case 0:
+        doMonitor([]);
+        window[0].wrappedJSObject.probe = { a: 2, __exposedProps__: { 'a': 'r' } };
+        is(window[0].eval('probe.a'), 2, "Accessed exposed prop");
+        endMonitor();
+        break;
+      case 1:
+        doMonitor([/access to property a/i]);
+        window[0].wrappedJSObject.probe = { a: 2 };
+        is(window[0].eval('probe.a'), undefined, "Non-exposed prop undefined");
+        is(window[0].eval('probe.a'), undefined, "Non-exposed prop undefined again");
+        endMonitor();
+        break;
+      case 2:
+        doMonitor([/access to property 0/i]);
+        window[0].wrappedJSObject.probe = [42];
+        is(window[0].eval('probe[0]'), undefined, "Element undefined");
+        is(window[0].eval('probe.length'), undefined, "Length undefined");
+        endMonitor();
+        break;
+      case 3:
+        doMonitor([/access to property length/i]);
+        window[0].wrappedJSObject.probe = { a: 'verboten', b: [42], __exposedProps__: { 'b' : 'r' }};
+        is(window[0].eval('probe.b.length'), undefined, "Length undefined");
+        is(window[0].eval('probe.a'), undefined, "property undefined");
+        endMonitor();
+        break;
+      case 4:
+        SimpleTest.finish();
+        break;
+      default:
+        ok(false, "Unexpected load");
+        SimpleTest.finish();
+        break;
+    }
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1065185">Mozilla Bug 1065185</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<iframe onload="loaded();" src="http://example.org/tests/js/xpconnect/tests/mochitest/file_empty.html" />
+</body>
+</html>

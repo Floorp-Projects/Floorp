@@ -80,7 +80,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=760109
   const Cu = Components.utils;
   var sb = new Cu.Sandbox('http://www.example.org');
   sb.chromeArray = ['a', 'b', 'z'];
-  sb.chromeArray.__exposedProps__ = {};
+  sb.chromeArray.__exposedProps__ = { length: 'rw' };
+  for (var i = 0; i < 10; ++i) {
+    sb.chromeArray.__exposedProps__[i] = 'rw';
+  }
+
   sb.chromeObject = new SomeConstructor();
   sb.ok = ok;
   sb.is = is;

@@ -33,7 +33,7 @@ function promiseObserverCalled(aTopic, aAction) {
     ok(true, "got " + aTopic + " notification");
     Services.obs.removeObserver(observer, aTopic);
 
-    if (kObservedTopics.contains(aTopic)) {
+    if (kObservedTopics.indexOf(aTopic) != -1) {
       if (!(aTopic in gObservedTopics))
         gObservedTopics[aTopic] = -1;
       else
@@ -827,7 +827,7 @@ let gTests = [
       if (node.localName == "menuitem")
         labels.push(node.getAttribute("label"));
     }
-    ok(!labels.contains(alwaysLabel), "The 'Always Allow' item isn't shown");
+    is(labels.indexOf(alwaysLabel), -1, "The 'Always Allow' item isn't shown");
 
     // Cleanup.
     yield closeStream(true);

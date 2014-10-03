@@ -66,8 +66,10 @@ path.coverer {
   </g>
 
   <g transform="translate(25,125)">
-    <path class="squares-not-expected" d="M0,0 A0,10 0 0 0 0,0  M20,20 L30,30  M50,50 A0,10 0 0 0 50,50  M70,70 L80,80  M100,100 A0,10 0 0 0 100,100"/>
-    <path class="coverer" d="M20,20 L30,30 M70,70 L80,80"/>
+    <rect x="-9" y="-9" width="18" height="18"/>
+    <rect x="41" y="41" width="18" height="18"/>
+    <rect x="91" y="91" width="18" height="18"/>
+    <path class="squares-expected" d="M0,0 A0,10 0 0 0 0,0  M20,20 L30,30  M50,50 A0,10 0 0 0 50,50  M70,70 L80,80  M100,100 A0,10 0 0 0 100,100"/>
   </g>
 
   <g transform="translate(25,175)">
@@ -95,8 +97,10 @@ path.coverer {
   </g>
 
   <g transform="translate(175,125)">
-    <path class="squares-not-expected" d="M0,0 A0,10 0 0 0 0,0 A0,10 0 0 0 0,0  M20,20 L30,30  M50,50 A0,10 0 0 0 50,50 A0,10 0 0 0 50,50  M70,70 L80,80  M100,100 A0,10 0 0 0 100,100 A0,10 0 0 0 100,100"/>
-    <path class="coverer" d="M20,20 L30,30 M70,70 L80,80"/>
+    <rect x="-9" y="-9" width="18" height="18"/>
+    <rect x="41" y="41" width="18" height="18"/>
+    <rect x="91" y="91" width="18" height="18"/>
+    <path class="squares-expected" d="M0,0 A0,10 0 0 0 0,0 A0,10 0 0 0 0,0  M20,20 L30,30  M50,50 A0,10 0 0 0 50,50 A0,10 0 0 0 50,50  M70,70 L80,80  M100,100 A0,10 0 0 0 100,100 A0,10 0 0 0 100,100"/>
   </g>
 
   <g transform="translate(175,175)">
@@ -133,7 +137,7 @@ path.coverer {
   </g>
 
 
-  <!-- Column 4: test loan movetos -->
+  <!-- Column 4: test lone movetos -->
 
   <g transform="translate(425,25)">
     <path class="squares-not-expected" d="M0,0 M0,0  M20,20 L30,30  M50,50 M50,50  M70,70 L80,80  M100,100 M100,100"/>

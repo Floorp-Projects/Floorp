@@ -18,7 +18,6 @@ TEST_FILES = \
   ecma_3_1/ \
   ecma_5/ \
   ecma_6/ \
-  ecma_7/ \
   Intl/ \
   js1_1/ \
   js1_2/ \

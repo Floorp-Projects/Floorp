@@ -21,7 +21,7 @@ class ObjectValueMap : public WeakMap<PreBarrieredObject, RelocatableValue>
     virtual bool findZoneEdges();
 };
 
-class WeakMapObject : public JSObject
+class WeakMapObject : public NativeObject
 {
   public:
     static const Class class_;

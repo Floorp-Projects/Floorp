@@ -1,0 +1,147 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg xmlns="http://www.w3.org/2000/svg">
+  
+  <title>Test 'stroke-linecap: round' with zero length path segments</title>
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=1075399 -->
+
+  <style>
+
+path {
+  stroke-width: 20px;
+  stroke-linecap: round;
+}
+
+circle {
+  fill: red;
+}
+
+/* expect lime circles to cover red circles */
+path.circles-expected {
+  stroke: lime;
+}
+
+path.circles-not-expected {
+  stroke: red;
+}
+
+/* thicker stroke to cover circles-not-expected paths */
+path.coverer {
+  stroke: lime;
+  stroke-width: 24px;
+}
+
+/* to show edges of shapes to help in debugging:
+g > circle {
+  stroke: red;
+  stroke-width: 5px;
+}
+path.coverer {
+  stroke: lime;
+  stroke-width: 18px;
+}
+*/
+
+  </style>
+
+  <rect width="100%" height="100%" style="fill:lime"/>
+
+  <!-- Column 1: test single segment zero-length subpaths: -->
+
+  <g transform="translate(25,25)">
+    <circle cx="0" cy="0" r="8"/>
+    <circle cx="50" cy="50" r="8"/>
+    <circle cx="100" cy="100" r="8"/>
+    <path class="circles-expected" d="M0,0 L0,0  M20,20 L30,30  M50,50 L50,50  M70,70 L80,80  M100,100 L100,100"/>
+  </g>
+
+  <g transform="translate(25,75)">
+    <circle cx="0" cy="0" r="8"/>
+    <circle cx="50" cy="50" r="8"/>
+    <circle cx="100" cy="100" r="8"/>
+    <path class="circles-expected" d="M0,0 C0,0 0,0 0,0  M20,20 L30,30  M50,50 C50,50 50,50 50,50  M70,70 L80,80  M100,100 C100,100 100,100 100,100"/>
+  </g>
+
+  <g transform="translate(25,125)">
+    <circle cx="0" cy="0" r="8"/>
+    <circle cx="50" cy="50" r="8"/>
+    <circle cx="100" cy="100" r="8"/>
+    <path class="circles-expected" d="M0,0 A0,10 0 0 0 0,0  M20,20 L30,30  M50,50 A0,10 0 0 0 50,50  M70,70 L80,80  M100,100 A0,10 0 0 0 100,100"/>
+  </g>
+
+  <g transform="translate(25,175)">
+    <circle cx="0" cy="0" r="8"/>
+    <circle cx="50" cy="50" r="8"/>
+    <circle cx="100" cy="100" r="8"/>
+    <path class="circles-expected" d="M0,0 Z  M20,20 L30,30  M50,50 Z  M70,70 L80,80  M100,100 Z"/>
+  </g>
+
+
+  <!-- Column 2: test multi-segment zero-length subpaths: -->
+
+  <g transform="translate(175,25)">
+    <circle cx="0" cy="0" r="8"/>
+    <circle cx="50" cy="50" r="8"/>
+    <circle cx="100" cy="100" r="8"/>
+    <path class="circles-expected" d="M0,0 L0,0 M0,0 L0,0  M20,20 L30,30  M50,50 L50,50 L50,50  M70,70 L80,80  M100,100 L100,100 L100,100"/>
+  </g>
+
+  <g transform="translate(177,75)">
+    <circle cx="0" cy="0" r="8"/>
+    <circle cx="50" cy="50" r="8"/>
+    <circle cx="100" cy="100" r="8"/>
+    <path class="circles-expected" d="M0,0 C0,0 0,0 0,0 C0,0 0,0 0,0  M20,20 L30,30  M50,50 C50,50 50,50 50,50 C50,50 50,50 50,50  M70,70 L80,80  M100,100 C100,100 100,100 100,100 C100,100 100,100 100,100"/>
+  </g>
+
+  <g transform="translate(175,125)">
+    <circle cx="0" cy="0" r="8"/>
+    <circle cx="50" cy="50" r="8"/>
+    <circle cx="100" cy="100" r="8"/>
+    <path class="circles-expected" d="M0,0 A0,10 0 0 0 0,0 A0,10 0 0 0 0,0  M20,20 L30,30  M50,50 A0,10 0 0 0 50,50 A0,10 0 0 0 50,50  M70,70 L80,80  M100,100 A0,10 0 0 0 100,100 A0,10 0 0 0 100,100"/>
+  </g>
+
+  <g transform="translate(175,175)">
+    <circle cx="0" cy="0" r="8"/>
+    <circle cx="50" cy="50" r="8"/>
+    <circle cx="100" cy="100" r="8"/>
+    <path class="circles-expected" d="M0,0 Z Z  M20,20 L30,30  M50,50 Z Z  M70,70 L80,80  M100,100 Z Z"/>
+  </g>
+
+
+  <!-- Column 3: test non-zero-length subpaths that begin, end and contain
+       zero length segments: -->
+
+  <g transform="translate(325,25)">
+    <path class="circles-not-expected" d="M20,20 L20,20 L30,30 L30,30 L40,40 L40,40"/>
+    <path class="coverer" d="M20,20 L40,40"/>
+  </g>
+
+  <g transform="translate(325,75)">
+    <path class="circles-not-expected" d="M20,20 C20,20 20,20 20,20 C20,20 30,30 30,30 C30,30 30,30 30,30 C30,30 40,40 40,40 C40,40 40,40 40,40"/>
+    <path class="coverer" d="M20,20 L40,40"/>
+  </g>
+
+  <g transform="translate(325,125)">
+    <path class="circles-not-expected" d="M20,20 A0,10 0 0 0 20,20 A0,10 0 0 0 30,30 A0,10 0 0 0 30,30 A0,10 0 0 0 40,40 A0,10 0 0 0 40,40"/>
+    <path class="coverer" d="M20,20 L40,40"/>
+  </g>
+
+  <!-- this one is shorter because the Z's mean we only have path end points
+       at 20,20 -->
+  <g transform="translate(325,175)">
+    <circle cx="20" cy="20" r="8"/>
+    <path class="circles-expected" d="M20,20 Z L30,30 Z L40,40 Z"/>
+  </g>
+
+
+  <!-- Column 4: test lone movetos -->
+
+  <g transform="translate(425,25)">
+    <path class="circles-not-expected" d="M0,0 M0,0  M20,20 L30,30  M50,50 M50,50  M70,70 L80,80  M100,100 M100,100"/>
+    <path class="coverer" d="M20,20 L30,30 M70,70 L80,80"/>
+  </g>
+
+</svg>

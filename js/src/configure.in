@@ -202,7 +202,7 @@ if test -n "$gonkdir" ; then
     STRIP="$gonk_toolchain_prefix"strip
     OBJCOPY="$gonk_toolchain_prefix"objcopy
 
-    STLPORT_CPPFLAGS="-I$gonkdir/external/stlport/stlport"
+    STLPORT_CPPFLAGS="-I$_topsrcdir/build/stlport/stlport -I$gonkdir/ndk/sources/cxx-stl/system/include"
     STLPORT_LIBS="-lstlport"
 
     case "$target_cpu" in
