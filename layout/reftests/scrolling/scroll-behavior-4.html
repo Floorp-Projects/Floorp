@@ -78,7 +78,7 @@
       window.location.hash = "test_anchor_3";
 
       // Scroll_4 is expected to scroll smoothly
-      document.getElementById("box4b").scrollIntoView(false, {behavior: "smooth"});
+      document.getElementById("box4b").scrollIntoView({block: "end", behavior: "smooth"});
 
       // Interrupt any smooth scrolling
       for (var i=1; i <= 4; i++) {
@@ -89,7 +89,7 @@
       }
     } else {
       for (var i=1; i <= 3; i++) {
-        document.getElementById("box" + i + "b").scrollIntoView(false, {behavior: "instant"});
+        document.getElementById("box" + i + "b").scrollIntoView({block: "end", behavior: "instant"});
       }
     }
     document.documentElement.removeAttribute("class");
@@ -97,7 +97,7 @@
 
   for (var i=1; i <= 4; i++) {
     document.getElementById("box" + i + "a")
-      .scrollIntoView(true, {behavior: "instant"});
+      .scrollIntoView({block: "start", behavior: "instant"});
   }
 
   window.addEventListener("MozReftestInvalidate", doTest, false);

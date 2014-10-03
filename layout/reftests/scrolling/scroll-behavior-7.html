@@ -43,8 +43,8 @@
 <script>
   function doTest() {
     if (document.location.search != '?ref') {
-      window.scrollTo({left: 500, top: 500});
-      window.scrollTo({left: window.scrollX, top: window.scrollY});
+      window.scrollTo(500, 500);
+      window.scrollTo(window.scrollX, window.scrollY);
     }
     document.documentElement.removeAttribute("class");
   }

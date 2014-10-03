@@ -37,15 +37,15 @@
             overflow: scroll;
         }
 
-        #scroll_2 {
+        #scroll_2, #scroll_5 {
             scroll-behavior: auto;
         }
 
-        #scroll_3 {
+        #scroll_3, #scroll_6 {
             scroll-behavior: instant;
         }
 
-        #scroll_4 {
+        #scroll_7, #scroll_8 {
             scroll-behavior: smooth;
         }
 
@@ -68,40 +68,53 @@
     <div id="box4a" class="a_box"></div>
     <div id="box4b" class="another_box"></div>
   </div>
+  <div id="scroll_5" class="scroll_box">
+    <div id="box5a" class="a_box"></div>
+    <div id="box5b" class="another_box"></div>
+  </div>
+  <div id="scroll_6" class="scroll_box">
+    <div id="box6a" class="a_box"></div>
+    <div id="box6b" class="another_box"></div>
+  </div>
+  <div id="scroll_7" class="scroll_box">
+    <div id="box7a" class="a_box"></div>
+    <div id="box7b" class="another_box"></div>
+  </div>
+  <div id="scroll_8" class="scroll_box">
+    <div id="box8a" class="a_box"></div>
+   <div id="box8b" class="another_box"></div>
+  </div>
 <script>
   function doTest() {
     if (document.location.search != '?ref') {
       // Expect instantaneous scroll:
-      document.getElementById("scroll_1").scrollLeft = 0;
-      document.getElementById("scroll_1").scrollTop = 0;
-      document.getElementById("scroll_2").scrollLeft = 0;
-      document.getElementById("scroll_2").scrollTop = 0;
-      document.getElementById("scroll_3").scrollLeft = 0;
-      document.getElementById("scroll_3").scrollTop = 0;
+      document.getElementById("scroll_1").scrollTo({left: 0, top: 0});
+      document.getElementById("scroll_2").scrollTo({left: 0, top: 0});
+      document.getElementById("scroll_3").scrollTo({left: 0, top: 0});
+      document.getElementById("scroll_4").scrollTo(0, 0);
+      document.getElementById("scroll_5").scrollTo(0, 0);
+      document.getElementById("scroll_6").scrollTo(0, 0);
 
       // Expect smooth scroll:
-      document.getElementById("scroll_4").scrollLeft = 0;
-      document.getElementById("scroll_4").scrollTop = 0;
+      document.getElementById("scroll_7").scrollTo({left: 0, top: 0});
+      document.getElementById("scroll_8").scrollTo(0, 0);
 
       // Interrupt any smooth scrolling
-      for (var i=1; i <= 4; i++) {
-        document.getElementById("scroll_" + i).scrollLeft
-          = document.getElementById("scroll_" + i).scrollLeft;
-        document.getElementById("scroll_" + i).scrollTop
-          = document.getElementById("scroll_" + i).scrollTop;
+      for (var i=1; i <= 8; i++) {
+        document.getElementById("scroll_" + i).scrollTo();
       }
     } else {
-      // Scroll all boxes except for box4a
-      for (var i=1; i <= 3; i++) {
-        document.getElementById("box" + i + "a").scrollIntoView(false, {behavior: "instant"});
+      // Scroll all boxes except for box7a and box8a
+      for (var i=1; i <= 6; i++) {
+        document.getElementById("box" + i + "a").scrollIntoView({block: "end", behavior: "instant"});
       }
     }
     document.documentElement.removeAttribute("class");
   }
 
-  for (var i=1; i <= 4; i++) {
+  for (var i=1; i <= 8; i++) {
     document.getElementById("box" + i + "b")
-      .scrollIntoView(true, {behavior: "instant"});
+      .scrollIntoView({block: "start", behavior: "instant"});
   }
 
   window.addEventListener("MozReftestInvalidate", doTest, false);
