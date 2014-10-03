@@ -78,7 +78,12 @@
 
   var notifications = new loop.shared.models.NotificationCollection();
   var errNotifications = new loop.shared.models.NotificationCollection();
-  errNotifications.error("Error!");
+  errNotifications.add({
+    level: "error",
+    message: "Could Not Authenticate",
+    details: "Did you change your password?",
+    detailsButtonLabel: "Retry",
+  });
 
   var Example = React.createClass({displayName: 'Example',
     render: function() {
