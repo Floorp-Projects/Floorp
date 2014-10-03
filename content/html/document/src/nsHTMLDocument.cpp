@@ -1516,6 +1516,7 @@ nsHTMLDocument::Open(JSContext* cx,
                      callerDoc,
                      nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL,
                      nsIContentPolicy::TYPE_OTHER,
+                     nullptr,   // aChannelPolicy
                      group);
 
   if (rv.Failed()) {

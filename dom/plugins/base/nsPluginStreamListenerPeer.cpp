@@ -662,6 +662,7 @@ nsPluginStreamListenerPeer::RequestRead(NPByteRange* rangeList)
                              principal,
                              nsILoadInfo::SEC_NORMAL,
                              nsIContentPolicy::TYPE_OTHER,
+                             nullptr,   // aChannelPolicy
                              loadGroup,
                              callbacks);
 
