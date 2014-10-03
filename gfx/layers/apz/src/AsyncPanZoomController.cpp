@@ -2201,6 +2201,7 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
 }
 
 Matrix4x4 AsyncPanZoomController::GetOverscrollTransform() const {
+  ReentrantMonitorAutoEnter lock(mMonitor);
   if (!IsOverscrolled()) {
     return Matrix4x4();
   }
