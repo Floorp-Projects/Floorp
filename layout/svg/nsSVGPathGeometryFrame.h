@@ -111,7 +111,6 @@ protected:
                                       uint32_t aFlags) MOZ_OVERRIDE;
   virtual bool IsDisplayContainer() MOZ_OVERRIDE { return false; }
 
-  void GeneratePath(gfxContext *aContext, const Matrix &aTransform);
   /**
    * This function returns a set of bit flags indicating which parts of the
    * element (fill, stroke, bounds) should intercept pointer events. It takes

@@ -756,30 +756,6 @@ nsSVGPathGeometryFrame::Render(gfxContext* aContext,
 }
 
 void
-nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext,
-                                     const Matrix &aTransform)
-{
-  if (aTransform.IsSingular()) {
-    aContext->SetMatrix(gfxMatrix());
-    aContext->NewPath();
-    return;
-  }
-
-  aContext->SetMatrix(
-    aContext->CurrentMatrix().PreMultiply(ThebesMatrix(aTransform)).
-                              NudgeToIntegers());
-
-  // Hack to let SVGPathData::ConstructPath know if we have square caps:
-  const nsStyleSVG* style = StyleSVG();
-  if (style->mStrokeLinecap == NS_STYLE_STROKE_LINECAP_SQUARE) {
-    aContext->SetLineCap(gfxContext::LINE_CAP_SQUARE);
-  }
-
-  aContext->NewPath();
-  static_cast<nsSVGPathGeometryElement*>(mContent)->ConstructPath(aContext);
-}
-
-void
 nsSVGPathGeometryFrame::PaintMarkers(nsRenderingContext* aContext,
                                      const gfxMatrix& aTransform)
 {

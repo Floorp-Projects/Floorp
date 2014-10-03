@@ -114,9 +114,9 @@ nsSVGTransform::SetRotate(float aAngle, float aCx, float aCy)
 {
   mType    = SVG_TRANSFORM_ROTATE;
   mMatrix.Reset();
-  mMatrix.Translate(gfxPoint(aCx, aCy));
+  mMatrix.Translate(aCx, aCy);
   mMatrix.Rotate(aAngle*kRadPerDegree);
-  mMatrix.Translate(gfxPoint(-aCx, -aCy));
+  mMatrix.Translate(-aCx, -aCy);
   mAngle   = aAngle;
   mOriginX = aCx;
   mOriginY = aCy;
