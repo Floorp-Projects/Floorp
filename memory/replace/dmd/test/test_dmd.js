@@ -102,8 +102,9 @@ function run_test() {
   test(jsonFile, "script-max-frames-1", ["-r", "--max-frames=1"]);
 
   // This test has three records that are shown in a different order for each
-  // of the different sort values.
-  jsonFile = FileUtils.getFile("CurWorkD", ["script-sort-by.json"]);
+  // of the different sort values. It also tests the handling of gzipped JSON
+  // files.
+  jsonFile = FileUtils.getFile("CurWorkD", ["script-sort-by.json.gz"]);
   test(jsonFile, "script-sort-by-usable", ["-r", "--sort-by=usable"]);
   test(jsonFile, "script-sort-by-req",    ["-r", "--sort-by=req",
                                            "--no-fix-stacks"]);
