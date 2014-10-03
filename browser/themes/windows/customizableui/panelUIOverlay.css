@@ -4,6 +4,10 @@
 
 %include ../../shared/customizableui/panelUIOverlay.inc.css
 
+.panel-subviews {
+  background-color: -moz-field;
+}
+
 #PanelUI-contents #zoom-out-btn {
   padding-left: 12px;
   padding-right: 12px;

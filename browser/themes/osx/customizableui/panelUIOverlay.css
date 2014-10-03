@@ -4,6 +4,10 @@
 
 %include ../../shared/customizableui/panelUIOverlay.inc.css
 
+.panel-subviews {
+  background-color: hsla(0,0%,100%,.97);
+}
+
 @media (min-resolution: 2dppx) {
   #PanelUI-help[panel-multiview-anchor="true"]::after,
   toolbarbutton[panel-multiview-anchor="true"] {
