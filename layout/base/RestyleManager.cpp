@@ -64,6 +64,9 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
   , mRebuildAllStyleData(false)
   , mObservingRefreshDriver(false)
   , mInStyleRefresh(false)
+  , mSkipAnimationRules(false)
+  , mPostAnimationRestyles(false)
+  , mIsProcessingAnimationStyleChange(false)
   , mHoverGeneration(0)
   , mRebuildAllExtraHint(nsChangeHint(0))
   , mLastUpdateForThrottledAnimations(aPresContext->RefreshDriver()->
@@ -74,6 +77,9 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
                      ELEMENT_IS_POTENTIAL_RESTYLE_ROOT)
   , mPendingAnimationRestyles(ELEMENT_HAS_PENDING_ANIMATION_RESTYLE |
                               ELEMENT_IS_POTENTIAL_ANIMATION_RESTYLE_ROOT)
+#ifdef DEBUG
+  , mIsProcessingRestyles(false)
+#endif
 #ifdef RESTYLE_LOGGING
   , mLoggingDepth(0)
 #endif
@@ -1430,7 +1436,17 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint)
 
   nsAutoScriptBlocker scriptBlocker;
 
-  mPresContext->SetProcessingRestyles(true);
+  MOZ_ASSERT(!mIsProcessingRestyles, "Nesting calls to processing restyles");
+#ifdef DEBUG
+  mIsProcessingRestyles = true;
+#endif
+
+  // Until we get rid of these phases in bug 960465, we need to skip
+  // animation restyles during the non-animation phase, and post
+  // animation restyles so that we restyle those elements again in the
+  // animation phase.
+  mSkipAnimationRules = true;
+  mPostAnimationRestyles = true;
 
   // FIXME (bug 1047928): Many of the callers probably don't need
   // eRestyle_Subtree because they're changing things that affect data
@@ -1442,7 +1458,11 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint)
                         nsRestyleHint(eRestyle_Subtree |
                                       eRestyle_ForceDescendants));
 
-  mPresContext->SetProcessingRestyles(false);
+  mPostAnimationRestyles = false;
+  mSkipAnimationRules = false;
+#ifdef DEBUG
+  mIsProcessingRestyles = false;
+#endif
 
   // Make sure that we process any pending animation restyles from the
   // above style change.  Note that we can *almost* implement the above
@@ -1511,9 +1531,11 @@ RestyleManager::ProcessPendingRestyles()
   mPresContext->FrameConstructor()->CreateNeededFrames();
 
   // Process non-animation restyles...
-  NS_ABORT_IF_FALSE(!mPresContext->IsProcessingRestyles(),
+  NS_ABORT_IF_FALSE(!mIsProcessingRestyles,
                     "Nesting calls to ProcessPendingRestyles?");
-  mPresContext->SetProcessingRestyles(true);
+#ifdef DEBUG
+  mIsProcessingRestyles = true;
+#endif
 
   // Before we process any restyles, we need to ensure that style
   // resulting from any throttled animations (animations that we're
@@ -1526,7 +1548,17 @@ RestyleManager::ProcessPendingRestyles()
     UpdateOnlyAnimationStyles();
   }
 
+  // Until we get rid of these phases in bug 960465, we need to skip
+  // animation restyles during the non-animation phase, and post
+  // animation restyles so that we restyle those elements again in the
+  // animation phase.
+  mSkipAnimationRules = true;
+  mPostAnimationRestyles = true;
+
   mPendingRestyles.ProcessRestyles();
+
+  mPostAnimationRestyles = false;
+  mSkipAnimationRules = false;
 
 #ifdef DEBUG
   uint32_t oldPendingRestyleCount = mPendingRestyles.Count();
@@ -1540,11 +1572,15 @@ RestyleManager::ProcessPendingRestyles()
   // mid-transition (since processing the non-animation restyle ignores
   // the running transition so it can check for a new change on the same
   // property, and then posts an immediate animation style change).
-  mPresContext->SetProcessingAnimationStyleChange(true);
+  MOZ_ASSERT(!mIsProcessingAnimationStyleChange, "nesting forbidden");
+  mIsProcessingAnimationStyleChange = true;
   mPendingAnimationRestyles.ProcessRestyles();
-  mPresContext->SetProcessingAnimationStyleChange(false);
+  MOZ_ASSERT(mIsProcessingAnimationStyleChange, "nesting forbidden");
+  mIsProcessingAnimationStyleChange = false;
 
-  mPresContext->SetProcessingRestyles(false);
+#ifdef DEBUG
+  mIsProcessingRestyles = false;
+#endif
   NS_POSTCONDITION(mPendingRestyles.Count() == oldPendingRestyleCount,
                    "We should not have posted new non-animation restyles while "
                    "processing animation restyles");
@@ -2746,9 +2782,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
 
   RestyleResult result;
 
-  if (aRestyleHint & eRestyle_ForceDescendants) {
-    result = eRestyleResult_ContinueAndForceDescendants;
-  } else if (aRestyleHint) {
+  if (aRestyleHint) {
     result = eRestyleResult_Continue;
   } else {
     result = ComputeRestyleResultFromFrame(aSelf);
@@ -3156,6 +3190,10 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
         LOG_RESTYLE("not setting new extra style context, since we'll reframe");
       }
     }
+  }
+
+  if (aRestyleHint & eRestyle_ForceDescendants) {
+    result = eRestyleResult_ContinueAndForceDescendants;
   }
 
   LOG_RESTYLE("returning %s", RestyleResultToString(result).get());

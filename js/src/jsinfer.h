@@ -904,13 +904,13 @@ class TypeNewScript
     // analyses are performed and this array is cleared. The pointers in this
     // array are weak.
     static const uint32_t PRELIMINARY_OBJECT_COUNT = 20;
-    JSObject **preliminaryObjects;
+    NativeObject **preliminaryObjects;
 
     // After the new script properties analyses have been performed, a template
     // object to use for newly constructed objects. The shape of this object
     // reflects all definite properties the object will have, and the
     // allocation kind to use.
-    HeapPtrObject templateObject_;
+    HeapPtrNativeObject templateObject_;
 
     // Order in which definite properties become initialized. We need this in
     // case the definite properties are invalidated (such as by adding a setter
@@ -955,7 +955,7 @@ class TypeNewScript
         return true;
     }
 
-    JSObject *templateObject() const {
+    NativeObject *templateObject() const {
         return templateObject_;
     }
 
@@ -974,8 +974,8 @@ class TypeNewScript
     void fixupAfterMovingGC();
 #endif
 
-    void registerNewObject(JSObject *res);
-    void unregisterNewObject(JSObject *res);
+    void registerNewObject(NativeObject *res);
+    void unregisterNewObject(NativeObject *res);
     bool maybeAnalyze(JSContext *cx, TypeObject *type, bool *regenerate, bool force = false);
 
     void rollbackPartiallyInitializedObjects(JSContext *cx, TypeObject *type);
@@ -1402,10 +1402,10 @@ class TypeScript
 void
 FillBytecodeTypeMap(JSScript *script, uint32_t *bytecodeMap);
 
-JSObject *
+ArrayObject *
 GetOrFixupCopyOnWriteObject(JSContext *cx, HandleScript script, jsbytecode *pc);
 
-JSObject *
+ArrayObject *
 GetCopyOnWriteObject(JSScript *script, jsbytecode *pc);
 
 class RecompileInfo;
@@ -1629,9 +1629,9 @@ struct TypeCompartment
     void setTypeToHomogenousArray(ExclusiveContext *cx, JSObject *obj, Type type);
 
   public:
-    void fixArrayType(ExclusiveContext *cx, JSObject *obj);
-    void fixObjectType(ExclusiveContext *cx, JSObject *obj);
-    void fixRestArgumentsType(ExclusiveContext *cx, JSObject *obj);
+    void fixArrayType(ExclusiveContext *cx, ArrayObject *obj);
+    void fixObjectType(ExclusiveContext *cx, NativeObject *obj);
+    void fixRestArgumentsType(ExclusiveContext *cx, ArrayObject *obj);
 
     JSObject *newTypedObject(JSContext *cx, IdValuePair *properties, size_t nproperties);
 
@@ -1668,7 +1668,7 @@ struct TypeCompartment
                                 size_t *objectTypeTables);
 };
 
-void FixRestArgumentsType(ExclusiveContext *cxArg, JSObject *obj);
+void FixRestArgumentsType(ExclusiveContext *cxArg, ArrayObject *obj);
 
 struct TypeZone
 {

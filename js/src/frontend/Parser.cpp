@@ -537,7 +537,7 @@ Parser<ParseHandler>::~Parser()
 
 template <typename ParseHandler>
 ObjectBox *
-Parser<ParseHandler>::newObjectBox(JSObject *obj)
+Parser<ParseHandler>::newObjectBox(NativeObject *obj)
 {
     MOZ_ASSERT(obj && !IsPoisonedPtr(obj));
 
@@ -2961,7 +2961,7 @@ LexicalLookup(ContextT *ct, HandleAtom atom, int *slotp, typename ContextT::Stmt
             continue;
 
         StaticBlockObject &blockObj = stmt->staticBlock();
-        Shape *shape = blockObj.nativeLookup(ct->sc->context, id);
+        Shape *shape = blockObj.lookup(ct->sc->context, id);
         if (shape) {
             if (slotp)
                 *slotp = blockObj.shapeToIndex(*shape);
@@ -7219,7 +7219,7 @@ Parser<ParseHandler>::arrayInitializer()
         bool spread = false, missingTrailingComma = false;
         uint32_t index = 0;
         for (; ; index++) {
-            if (index == JSObject::NELEMENTS_LIMIT) {
+            if (index == NativeObject::NELEMENTS_LIMIT) {
                 report(ParseError, false, null(), JSMSG_ARRAY_INIT_TOO_BIG);
                 return null();
             }

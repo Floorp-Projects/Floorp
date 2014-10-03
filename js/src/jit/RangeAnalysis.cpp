@@ -1507,7 +1507,7 @@ MArrayLength::computeRange(TempAllocator &alloc)
 void
 MInitializedLength::computeRange(TempAllocator &alloc)
 {
-    setRange(Range::NewUInt32Range(alloc, 0, JSObject::NELEMENTS_LIMIT));
+    setRange(Range::NewUInt32Range(alloc, 0, NativeObject::NELEMENTS_LIMIT));
 }
 
 void

@@ -22,6 +22,7 @@
 #include "jit/MOpcodes.h"
 #include "jit/TypedObjectPrediction.h"
 #include "jit/TypePolicy.h"
+#include "vm/ArrayObject.h"
 #include "vm/ScopeObject.h"
 #include "vm/TypedArrayCommon.h"
 
@@ -2269,6 +2270,7 @@ class AlwaysTenured
 };
 
 typedef AlwaysTenured<JSObject*> AlwaysTenuredObject;
+typedef AlwaysTenured<NativeObject*> AlwaysTenuredNativeObject;
 typedef AlwaysTenured<JSFunction*> AlwaysTenuredFunction;
 typedef AlwaysTenured<JSScript*> AlwaysTenuredScript;
 typedef AlwaysTenured<PropertyName*> AlwaysTenuredPropertyName;
@@ -2292,7 +2294,7 @@ class MNewArray : public MUnaryInstruction
         initialHeap_(initialHeap),
         allocating_(allocating)
     {
-        JSObject *obj = templateObject();
+        ArrayObject *obj = templateObject();
         setResultType(MIRType_Object);
         if (!obj->hasSingletonType())
             setResultTypeSet(MakeSingletonTypeSet(constraints, obj));
@@ -2312,8 +2314,8 @@ class MNewArray : public MUnaryInstruction
         return count_;
     }
 
-    JSObject *templateObject() const {
-        return &getOperand(0)->toConstant()->value().toObject();
+    ArrayObject *templateObject() const {
+        return &getOperand(0)->toConstant()->value().toObject().as<ArrayObject>();
     }
 
     gc::InitialHeap initialHeap() const {
@@ -2348,10 +2350,10 @@ class MNewArray : public MUnaryInstruction
 
 class MNewArrayCopyOnWrite : public MNullaryInstruction
 {
-    AlwaysTenuredObject templateObject_;
+    AlwaysTenured<ArrayObject*> templateObject_;
     gc::InitialHeap initialHeap_;
 
-    MNewArrayCopyOnWrite(types::CompilerConstraintList *constraints, JSObject *templateObject,
+    MNewArrayCopyOnWrite(types::CompilerConstraintList *constraints, ArrayObject *templateObject,
               gc::InitialHeap initialHeap)
       : templateObject_(templateObject),
         initialHeap_(initialHeap)
@@ -2366,13 +2368,13 @@ class MNewArrayCopyOnWrite : public MNullaryInstruction
 
     static MNewArrayCopyOnWrite *New(TempAllocator &alloc,
                                      types::CompilerConstraintList *constraints,
-                                     JSObject *templateObject,
+                                     ArrayObject *templateObject,
                                      gc::InitialHeap initialHeap)
     {
         return new(alloc) MNewArrayCopyOnWrite(constraints, templateObject, initialHeap);
     }
 
-    JSObject *templateObject() const {
+    ArrayObject *templateObject() const {
         return templateObject_;
     }
 
@@ -2429,8 +2431,8 @@ class MNewObject : public MUnaryInstruction
         return templateObjectIsClassPrototype_;
     }
 
-    JSObject *templateObject() const {
-        return &getOperand(0)->toConstant()->value().toObject();
+    NativeObject *templateObject() const {
+        return &getOperand(0)->toConstant()->value().toObject().as<NativeObject>();
     }
 
     gc::InitialHeap initialHeap() const {
@@ -2448,9 +2450,9 @@ class MNewObject : public MUnaryInstruction
 // Could be allocating either a new array or a new object.
 class MNewPar : public MUnaryInstruction
 {
-    AlwaysTenuredObject templateObject_;
+    AlwaysTenuredNativeObject templateObject_;
 
-    MNewPar(MDefinition *cx, JSObject *templateObject)
+    MNewPar(MDefinition *cx, NativeObject *templateObject)
       : MUnaryInstruction(cx),
         templateObject_(templateObject)
     {
@@ -2460,7 +2462,7 @@ class MNewPar : public MUnaryInstruction
   public:
     INSTRUCTION_HEADER(NewPar);
 
-    static MNewPar *New(TempAllocator &alloc, MDefinition *cx, JSObject *templateObject) {
+    static MNewPar *New(TempAllocator &alloc, MDefinition *cx, NativeObject *templateObject) {
         return new(alloc) MNewPar(cx, templateObject);
     }
 
@@ -2468,7 +2470,7 @@ class MNewPar : public MUnaryInstruction
         return getOperand(0);
     }
 
-    JSObject *templateObject() const {
+    NativeObject *templateObject() const {
         return templateObject_;
     }
 
@@ -3717,8 +3719,8 @@ class MCreateThisWithTemplate
     }
 
     // Template for |this|, provided by TI.
-    JSObject *templateObject() const {
-        return &getOperand(0)->toConstant()->value().toObject();
+    NativeObject *templateObject() const {
+        return &getOperand(0)->toConstant()->value().toObject().as<NativeObject>();
     }
 
     gc::InitialHeap initialHeap() const {
@@ -7669,11 +7671,11 @@ class MArrayConcat
   : public MBinaryInstruction,
     public MixPolicy<ObjectPolicy<0>, ObjectPolicy<1> >::Data
 {
-    AlwaysTenuredObject templateObj_;
+    AlwaysTenured<ArrayObject*> templateObj_;
     gc::InitialHeap initialHeap_;
 
     MArrayConcat(types::CompilerConstraintList *constraints, MDefinition *lhs, MDefinition *rhs,
-                 JSObject *templateObj, gc::InitialHeap initialHeap)
+                 ArrayObject *templateObj, gc::InitialHeap initialHeap)
       : MBinaryInstruction(lhs, rhs),
         templateObj_(templateObj),
         initialHeap_(initialHeap)
@@ -7687,12 +7689,12 @@ class MArrayConcat
 
     static MArrayConcat *New(TempAllocator &alloc, types::CompilerConstraintList *constraints,
                              MDefinition *lhs, MDefinition *rhs,
-                             JSObject *templateObj, gc::InitialHeap initialHeap)
+                             ArrayObject *templateObj, gc::InitialHeap initialHeap)
     {
         return new(alloc) MArrayConcat(constraints, lhs, rhs, templateObj, initialHeap);
     }
 
-    JSObject *templateObj() const {
+    ArrayObject *templateObj() const {
         return templateObj_;
     }
 
@@ -10308,10 +10310,10 @@ class MSetFrameArgument
 class MRestCommon
 {
     unsigned numFormals_;
-    AlwaysTenuredObject templateObject_;
+    AlwaysTenured<ArrayObject*> templateObject_;
 
   protected:
-    MRestCommon(unsigned numFormals, JSObject *templateObject)
+    MRestCommon(unsigned numFormals, ArrayObject *templateObject)
       : numFormals_(numFormals),
         templateObject_(templateObject)
    { }
@@ -10320,7 +10322,7 @@ class MRestCommon
     unsigned numFormals() const {
         return numFormals_;
     }
-    JSObject *templateObject() const {
+    ArrayObject *templateObject() const {
         return templateObject_;
     }
 };
@@ -10331,7 +10333,7 @@ class MRest
     public IntPolicy<0>::Data
 {
     MRest(types::CompilerConstraintList *constraints, MDefinition *numActuals, unsigned numFormals,
-          JSObject *templateObject)
+          ArrayObject *templateObject)
       : MUnaryInstruction(numActuals),
         MRestCommon(numFormals, templateObject)
     {
@@ -10344,7 +10346,7 @@ class MRest
 
     static MRest *New(TempAllocator &alloc, types::CompilerConstraintList *constraints,
                       MDefinition *numActuals, unsigned numFormals,
-                      JSObject *templateObject)
+                      ArrayObject *templateObject)
     {
         return new(alloc) MRest(constraints, numActuals, numFormals, templateObject);
     }
@@ -10367,7 +10369,7 @@ class MRestPar
     public IntPolicy<1>::Data
 {
     MRestPar(MDefinition *cx, MDefinition *numActuals, unsigned numFormals,
-             JSObject *templateObject, types::TemporaryTypeSet *resultTypes)
+             ArrayObject *templateObject, types::TemporaryTypeSet *resultTypes)
       : MBinaryInstruction(cx, numActuals),
         MRestCommon(numFormals, templateObject)
     {
@@ -10607,9 +10609,9 @@ class MPostWriteBarrier : public MBinaryInstruction, public ObjectPolicy<0>::Dat
 
 class MNewDeclEnvObject : public MNullaryInstruction
 {
-    AlwaysTenuredObject templateObj_;
+    AlwaysTenuredNativeObject templateObj_;
 
-    explicit MNewDeclEnvObject(JSObject *templateObj)
+    explicit MNewDeclEnvObject(NativeObject *templateObj)
       : MNullaryInstruction(),
         templateObj_(templateObj)
     {
@@ -10619,11 +10621,11 @@ class MNewDeclEnvObject : public MNullaryInstruction
   public:
     INSTRUCTION_HEADER(NewDeclEnvObject);
 
-    static MNewDeclEnvObject *New(TempAllocator &alloc, JSObject *templateObj) {
+    static MNewDeclEnvObject *New(TempAllocator &alloc, NativeObject *templateObj) {
         return new(alloc) MNewDeclEnvObject(templateObj);
     }
 
-    JSObject *templateObj() {
+    NativeObject *templateObj() {
         return templateObj_;
     }
     AliasSet getAliasSet() const {
@@ -10633,10 +10635,10 @@ class MNewDeclEnvObject : public MNullaryInstruction
 
 class MNewCallObjectBase : public MNullaryInstruction
 {
-    AlwaysTenuredObject templateObj_;
+    AlwaysTenuredNativeObject templateObj_;
 
   protected:
-    explicit MNewCallObjectBase(JSObject *templateObj)
+    explicit MNewCallObjectBase(NativeObject *templateObj)
       : MNullaryInstruction(),
         templateObj_(templateObj)
     {
@@ -10644,7 +10646,7 @@ class MNewCallObjectBase : public MNullaryInstruction
     }
 
   public:
-    JSObject *templateObject() {
+    NativeObject *templateObject() {
         return templateObj_;
     }
     AliasSet getAliasSet() const {
@@ -10657,12 +10659,12 @@ class MNewCallObject : public MNewCallObjectBase
   public:
     INSTRUCTION_HEADER(NewCallObject)
 
-    explicit MNewCallObject(JSObject *templateObj)
+    explicit MNewCallObject(NativeObject *templateObj)
       : MNewCallObjectBase(templateObj)
     {}
 
     static MNewCallObject *
-    New(TempAllocator &alloc, JSObject *templateObj)
+    New(TempAllocator &alloc, NativeObject *templateObj)
     {
         return new(alloc) MNewCallObject(templateObj);
     }
@@ -10673,12 +10675,12 @@ class MNewRunOnceCallObject : public MNewCallObjectBase
   public:
     INSTRUCTION_HEADER(NewRunOnceCallObject)
 
-    explicit MNewRunOnceCallObject(JSObject *templateObj)
+    explicit MNewRunOnceCallObject(NativeObject *templateObj)
       : MNewCallObjectBase(templateObj)
     {}
 
     static MNewRunOnceCallObject *
-    New(TempAllocator &alloc, JSObject *templateObj)
+    New(TempAllocator &alloc, NativeObject *templateObj)
     {
         return new(alloc) MNewRunOnceCallObject(templateObj);
     }
@@ -10686,9 +10688,9 @@ class MNewRunOnceCallObject : public MNewCallObjectBase
 
 class MNewCallObjectPar : public MUnaryInstruction
 {
-    AlwaysTenuredObject templateObj_;
+    AlwaysTenuredNativeObject templateObj_;
 
-    MNewCallObjectPar(MDefinition *cx, JSObject *templateObj)
+    MNewCallObjectPar(MDefinition *cx, NativeObject *templateObj)
         : MUnaryInstruction(cx),
           templateObj_(templateObj)
     {
@@ -10706,7 +10708,7 @@ class MNewCallObjectPar : public MUnaryInstruction
         return getOperand(0);
     }
 
-    JSObject *templateObj() const {
+    NativeObject *templateObj() const {
         return templateObj_;
     }
 
@@ -10805,9 +10807,9 @@ class MEnclosingScope : public MLoadFixedSlot
 // Note: the template object should be an *empty* dense array!
 class MNewDenseArrayPar : public MBinaryInstruction
 {
-    AlwaysTenuredObject templateObject_;
+    AlwaysTenured<ArrayObject*> templateObject_;
 
-    MNewDenseArrayPar(MDefinition *cx, MDefinition *length, JSObject *templateObject)
+    MNewDenseArrayPar(MDefinition *cx, MDefinition *length, ArrayObject *templateObject)
       : MBinaryInstruction(cx, length),
         templateObject_(templateObject)
     {
@@ -10819,7 +10821,7 @@ class MNewDenseArrayPar : public MBinaryInstruction
     INSTRUCTION_HEADER(NewDenseArrayPar);
 
     static MNewDenseArrayPar *New(TempAllocator &alloc, MDefinition *cx, MDefinition *length,
-                                  JSObject *templateObject)
+                                  ArrayObject *templateObject)
     {
         return new(alloc) MNewDenseArrayPar(cx, length, templateObject);
     }
@@ -10832,7 +10834,7 @@ class MNewDenseArrayPar : public MBinaryInstruction
         return getOperand(1);
     }
 
-    JSObject *templateObject() const {
+    ArrayObject *templateObject() const {
         return templateObject_;
     }
 

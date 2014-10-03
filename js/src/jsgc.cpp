@@ -2117,7 +2117,6 @@ CanRelocateArena(ArenaHeader *arena)
      * We can't currently move global objects because their address can be baked
      * into compiled code so we skip relocation of any area containing one.
      */
-    JSRuntime *rt = arena->zone->runtimeFromMainThread();
     return arena->getAllocKind() <= FINALIZE_OBJECT_LAST && !ArenaContainsGlobal(arena);
 }
 
@@ -2343,38 +2342,30 @@ MovingTracer::Visit(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 }
 
 void
-MovingTracer::Sweep(JSTracer *jstrc)
+GCRuntime::sweepZoneAfterCompacting(Zone *zone)
 {
-    JSRuntime *rt = jstrc->runtime();
+    MOZ_ASSERT(zone->isCollecting());
     FreeOp *fop = rt->defaultFreeOp();
+    zone->discardJitCode(fop);
+    zone->sweepAnalysis(fop, rt->gc.releaseObservedTypes && !zone->isPreservingCode());
+    zone->sweepBreakpoints(fop);
 
-    WatchpointMap::sweepAll(rt);
-
-    Debugger::sweepAll(fop);
-
-    for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-        if (zone->isCollecting()) {
-            bool oom = false;
-            zone->sweep(fop, false, &oom);
-            MOZ_ASSERT(!oom);
-
-            for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
-                c->sweep(fop, false);
-            }
-        } else {
-            /* Update cross compartment wrappers into moved zones. */
-            for (CompartmentsInZoneIter c(zone); !c.done(); c.next())
-                c->sweepCrossCompartmentWrappers();
-        }
+    for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
+        c->sweepInnerViews();
+        c->sweepCrossCompartmentWrappers();
+        c->sweepBaseShapeTable();
+        c->sweepInitialShapeTable();
+        c->sweepTypeObjectTables();
+        c->sweepRegExps();
+        c->sweepCallsiteClones();
+        c->sweepSavedStacks();
+        c->sweepGlobalObject(fop);
+        c->sweepSelfHostingScriptSource();
+        c->sweepDebugScopes();
+        c->sweepJitCompartment(fop);
+        c->sweepWeakMaps();
+        c->sweepNativeIterators();
     }
-
-    /* Type inference may put more blocks here to free. */
-    rt->freeLifoAlloc.freeAll();
-
-    /* Clear runtime caches that can contain cell pointers. */
-    // TODO: Should possibly just call PurgeRuntime() here.
-    rt->newObjectCache.purge();
-    rt->nativeIterCache.purge();
 }
 
 /*
@@ -2421,7 +2412,7 @@ GCRuntime::updatePointersToRelocatedCells()
 
     // Fixup cross compartment wrappers as we assert the existence of wrappers in the map.
     for (CompartmentsIter comp(rt, SkipAtoms); !comp.done(); comp.next())
-        comp->fixupCrossCompartmentWrappers(&trc);
+        comp->sweepCrossCompartmentWrappers();
 
     // Fixup generators as these are not normally traced.
     for (ContextIter i(rt); !i.done(); i.next()) {
@@ -2459,7 +2450,21 @@ GCRuntime::updatePointersToRelocatedCells()
     if (JSTraceDataOp op = grayRootTracer.op)
         (*op)(&trc, grayRootTracer.data);
 
-    MovingTracer::Sweep(&trc);
+    // Sweep everything to fix up weak pointers
+    WatchpointMap::sweepAll(rt);
+    Debugger::sweepAll(rt->defaultFreeOp());
+    for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+        if (!rt->isAtomsZone(zone))
+            rt->gc.sweepZoneAfterCompacting(zone);
+    }
+
+    // Type inference may put more blocks here to free.
+    rt->freeLifoAlloc.freeAll();
+
+    // Clear runtime caches that can contain cell pointers.
+    // TODO: Should possibly just call PurgeRuntime() here.
+    rt->newObjectCache.purge();
+    rt->nativeIterCache.purge();
 
     // Call callbacks to get the rest of the system to fixup other untraced pointers.
     callWeakPointerCallbacks();
@@ -4379,7 +4384,7 @@ static void
 AssertNotOnGrayList(JSObject *obj)
 {
     MOZ_ASSERT_IF(IsGrayListObject(obj),
-                  obj->getReservedSlot(ProxyObject::grayLinkSlot(obj)).isUndefined());
+                  obj->fakeNativeGetReservedSlot(ProxyObject::grayLinkSlot(obj)).isUndefined());
 }
 #endif
 
@@ -4394,11 +4399,11 @@ static JSObject *
 NextIncomingCrossCompartmentPointer(JSObject *prev, bool unlink)
 {
     unsigned slot = ProxyObject::grayLinkSlot(prev);
-    JSObject *next = prev->getReservedSlot(slot).toObjectOrNull();
+    JSObject *next = prev->fakeNativeGetReservedSlot(slot).toObjectOrNull();
     MOZ_ASSERT_IF(next, IsGrayListObject(next));
 
     if (unlink)
-        prev->setSlot(slot, UndefinedValue());
+        prev->fakeNativeSetSlot(slot, UndefinedValue());
 
     return next;
 }
@@ -4413,11 +4418,11 @@ js::DelayCrossCompartmentGrayMarking(JSObject *src)
     JSObject *dest = CrossCompartmentPointerReferent(src);
     JSCompartment *comp = dest->compartment();
 
-    if (src->getReservedSlot(slot).isUndefined()) {
-        src->setCrossCompartmentSlot(slot, ObjectOrNullValue(comp->gcIncomingGrayPointers));
+    if (src->fakeNativeGetReservedSlot(slot).isUndefined()) {
+        src->fakeNativeSetCrossCompartmentSlot(slot, ObjectOrNullValue(comp->gcIncomingGrayPointers));
         comp->gcIncomingGrayPointers = src;
     } else {
-        MOZ_ASSERT(src->getReservedSlot(slot).isObjectOrNull());
+        MOZ_ASSERT(src->fakeNativeGetReservedSlot(slot).isObjectOrNull());
     }
 
 #ifdef DEBUG
@@ -4487,11 +4492,11 @@ RemoveFromGrayList(JSObject *wrapper)
         return false;
 
     unsigned slot = ProxyObject::grayLinkSlot(wrapper);
-    if (wrapper->getReservedSlot(slot).isUndefined())
+    if (wrapper->fakeNativeGetReservedSlot(slot).isUndefined())
         return false;  /* Not on our list. */
 
-    JSObject *tail = wrapper->getReservedSlot(slot).toObjectOrNull();
-    wrapper->setReservedSlot(slot, UndefinedValue());
+    JSObject *tail = wrapper->fakeNativeGetReservedSlot(slot).toObjectOrNull();
+    wrapper->fakeNativeSetReservedSlot(slot, UndefinedValue());
 
     JSCompartment *comp = CrossCompartmentPointerReferent(wrapper)->compartment();
     JSObject *obj = comp->gcIncomingGrayPointers;
@@ -4502,9 +4507,9 @@ RemoveFromGrayList(JSObject *wrapper)
 
     while (obj) {
         unsigned slot = ProxyObject::grayLinkSlot(obj);
-        JSObject *next = obj->getReservedSlot(slot).toObjectOrNull();
+        JSObject *next = obj->fakeNativeGetReservedSlot(slot).toObjectOrNull();
         if (next == wrapper) {
-            obj->setCrossCompartmentSlot(slot, ObjectOrNullValue(tail));
+            obj->fakeNativeSetCrossCompartmentSlot(slot, ObjectOrNullValue(tail));
             return true;
         }
         obj = next;

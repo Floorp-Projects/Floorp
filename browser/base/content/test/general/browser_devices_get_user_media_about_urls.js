@@ -38,7 +38,7 @@ function promiseObserverCalled(aTopic, aAction) {
     info("Message: " + aData);
     Services.obs.removeObserver(observer, aTopic);
 
-    if (kObservedTopics.contains(aTopic)) {
+    if (kObservedTopics.indexOf(aTopic) != -1) {
       if (!(aTopic in gObservedTopics))
         gObservedTopics[aTopic] = -1;
       else

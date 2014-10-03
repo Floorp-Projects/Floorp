@@ -2722,25 +2722,7 @@ IMEInputHandler::DispatchTextEvent(const nsString& aText,
   if (!aDoCommit) {
     textEvent.mRanges = CreateTextRangeArray(aAttrString, aSelectedRange);
   }
-
-  if (textEvent.theText != mLastDispatchedCompositionString) {
-    WidgetCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
-                                             mWidget);
-    compositionUpdate.time = textEvent.time;
-    compositionUpdate.data = textEvent.theText;
-    mLastDispatchedCompositionString = textEvent.theText;
-    DispatchEvent(compositionUpdate);
-    if (mIsInFocusProcessing || Destroyed()) {
-      PR_LOG(gLog, PR_LOG_ALWAYS,
-        ("%p IMEInputHandler::DispatchTextEvent, compositionupdate causes "
-         "aborting the composition, mIsInFocusProcessing=%s, Destryoed()=%s",
-         this, TrueOrFalse(mIsInFocusProcessing), TrueOrFalse(Destroyed())));
-      if (Destroyed()) {
-        return true;
-      }
-    }
-  }
-
+  mLastDispatchedCompositionString = textEvent.theText;
   return DispatchEvent(textEvent);
 }
 

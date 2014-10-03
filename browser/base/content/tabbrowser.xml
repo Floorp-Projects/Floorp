@@ -1668,7 +1668,7 @@
             if (!docShellsSwapped && !uriIsAboutBlank) {
               // pretend the user typed this so it'll be available till
               // the document successfully loads
-              if (aURI && !gInitialPages.contains(aURI))
+              if (aURI && gInitialPages.indexOf(aURI) == -1)
                 b.userTypedValue = aURI;
 
               let flags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
@@ -2167,14 +2167,14 @@
             var tab = aTab;
             do {
               tab = tab.nextSibling;
-            } while (tab && !remainingTabs.contains(tab));
+            } while (tab && remainingTabs.indexOf(tab) == -1);
 
             if (!tab) {
               tab = aTab;
 
               do {
                 tab = tab.previousSibling;
-              } while (tab && !remainingTabs.contains(tab));
+              } while (tab && remainingTabs.indexOf(tab) == -1);
             }
 
             this.selectedTab = tab;
@@ -2422,10 +2422,10 @@
         <body>
         <![CDATA[
           Array.forEach(this.tabs, function(tab) {
-            if (aTabs.contains(tab))
-              this.showTab(tab);
-            else
+            if (aTabs.indexOf(tab) == -1)
               this.hideTab(tab);
+            else
+              this.showTab(tab);
           }, this);
 
           this.tabContainer._handleTabSelect(false);

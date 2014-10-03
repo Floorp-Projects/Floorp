@@ -8,7 +8,6 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/RefPtr.h"
-#include "gfxContext.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Ellipse)
 
@@ -92,17 +91,6 @@ SVGEllipseElement::GetLengthInfo()
 
 //----------------------------------------------------------------------
 // nsSVGPathGeometryElement methods
-
-void
-SVGEllipseElement::ConstructPath(gfxContext *aCtx)
-{
-  RefPtr<DrawTarget> dt = aCtx->GetDrawTarget();
-  RefPtr<PathBuilder> builder = dt->CreatePathBuilder(aCtx->CurrentFillRule());
-  RefPtr<Path> path = BuildPath(builder);
-  if (path) {
-    aCtx->SetPath(path);
-  }
-}
 
 TemporaryRef<Path>
 SVGEllipseElement::BuildPath(PathBuilder* aBuilder)

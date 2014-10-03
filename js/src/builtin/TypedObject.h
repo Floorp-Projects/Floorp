@@ -144,7 +144,7 @@ class SizedTypedProto;
  * type descriptor. Eventually will carry most of the type information
  * we want.
  */
-class TypedProto : public JSObject
+class TypedProto : public NativeObject
 {
   public:
     static const Class class_;
@@ -162,7 +162,7 @@ class TypedProto : public JSObject
     inline type::Kind kind() const;
 };
 
-class TypeDescr : public JSObject
+class TypeDescr : public NativeObject
 {
   public:
     // This is *intentionally* not defined so as to produce link
@@ -509,6 +509,15 @@ class StructTypeDescr : public ComplexTypeDescr
     // Return the offset of the field at index `index`.
     size_t fieldOffset(size_t index) const;
     size_t maybeForwardedFieldOffset(size_t index) const;
+
+  private:
+    NativeObject &fieldInfoObject(size_t slot) const {
+        return getReservedSlot(slot).toObject().as<NativeObject>();
+    }
+
+    NativeObject &maybeForwardedFieldInfoObject(size_t slot) const {
+        return *MaybeForwarded(&fieldInfoObject(slot));
+    }
 };
 
 typedef Handle<StructTypeDescr*> HandleStructTypeDescr;
@@ -518,7 +527,7 @@ typedef Handle<StructTypeDescr*> HandleStructTypeDescr;
  * somewhat, rather than sticking them all into the global object.
  * Eventually it will go away and become a module.
  */
-class TypedObjectModuleObject : public JSObject {
+class TypedObjectModuleObject : public NativeObject {
   public:
     enum Slot {
         ArrayTypePrototype,
@@ -530,7 +539,7 @@ class TypedObjectModuleObject : public JSObject {
 };
 
 /* Base type for transparent and opaque typed objects. */
-class TypedObject : public ArrayBufferViewObject
+class TypedObject : public JSObject
 {
   private:
     static const bool IsTypedObjectClass = true;
@@ -690,19 +699,19 @@ class OutlineTypedObject : public TypedObject
     static size_t offsetOfByteOffsetSlot();
 
     JSObject &owner() const {
-        return getReservedSlot(JS_BUFVIEW_SLOT_OWNER).toObject();
+        return fakeNativeGetReservedSlot(JS_BUFVIEW_SLOT_OWNER).toObject();
     }
 
     JSObject *maybeOwner() const {
-        return getReservedSlot(JS_BUFVIEW_SLOT_OWNER).toObjectOrNull();
+        return fakeNativeGetReservedSlot(JS_BUFVIEW_SLOT_OWNER).toObjectOrNull();
     }
 
     uint8_t *outOfLineTypedMem() const {
-        return static_cast<uint8_t *>(getPrivate(DATA_SLOT));
+        return static_cast<uint8_t *>(fakeNativeGetPrivate(DATA_SLOT));
     }
 
     int32_t length() const {
-        return getReservedSlot(JS_BUFVIEW_SLOT_LENGTH).toInt32();
+        return fakeNativeGetReservedSlot(JS_BUFVIEW_SLOT_LENGTH).toInt32();
     }
 
     // Helper for createUnattached()
@@ -763,7 +772,7 @@ class InlineOpaqueTypedObject : public TypedObject
   public:
     static const Class class_;
 
-    static const size_t MaximumSize = JSObject::MAX_FIXED_SLOTS * sizeof(Value);
+    static const size_t MaximumSize = NativeObject::MAX_FIXED_SLOTS * sizeof(Value);
 
     static gc::AllocKind allocKindForTypeDescriptor(TypeDescr *descr) {
         size_t nbytes = descr->as<SizedTypeDescr>().size();

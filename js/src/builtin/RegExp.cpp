@@ -16,6 +16,8 @@
 
 #include "jsobjinlines.h"
 
+#include "vm/ObjectImpl-inl.h"
+
 using namespace js;
 using namespace js::types;
 
@@ -46,7 +48,7 @@ js::CreateRegExpMatchResult(JSContext *cx, HandleString input, const MatchPairs 
     size_t numPairs = matches.length();
     MOZ_ASSERT(numPairs > 0);
 
-    RootedObject arr(cx, NewDenseFullyAllocatedArrayWithTemplate(cx, numPairs, templateObject));
+    RootedArrayObject arr(cx, NewDenseFullyAllocatedArrayWithTemplate(cx, numPairs, templateObject));
     if (!arr)
         return false;
 
@@ -71,21 +73,21 @@ js::CreateRegExpMatchResult(JSContext *cx, HandleString input, const MatchPairs 
     }
 
     /* Set the |index| property. (TemplateObject positions it in slot 0) */
-    arr->nativeSetSlot(0, Int32Value(matches[0].start));
+    arr->setSlot(0, Int32Value(matches[0].start));
 
     /* Set the |input| property. (TemplateObject positions it in slot 1) */
-    arr->nativeSetSlot(1, StringValue(input));
+    arr->setSlot(1, StringValue(input));
 
 #ifdef DEBUG
     RootedValue test(cx);
     RootedId id(cx, NameToId(cx->names().index));
     if (!baseops::GetProperty(cx, arr, id, &test))
         return false;
-    MOZ_ASSERT(test == arr->nativeGetSlot(0));
+    MOZ_ASSERT(test == arr->getSlot(0));
     id = NameToId(cx->names().input);
     if (!baseops::GetProperty(cx, arr, id, &test))
         return false;
-    MOZ_ASSERT(test == arr->nativeGetSlot(1));
+    MOZ_ASSERT(test == arr->getSlot(1));
 #endif
 
     rval.setObject(*arr);
@@ -508,7 +510,7 @@ js_InitRegExpClass(JSContext *cx, HandleObject obj)
 
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 
-    RootedObject proto(cx, global->createBlankPrototype(cx, &RegExpObject::class_));
+    RootedNativeObject proto(cx, global->createBlankPrototype(cx, &RegExpObject::class_));
     if (!proto)
         return nullptr;
     proto->setPrivate(nullptr);

@@ -606,7 +606,7 @@ AllocateObject(ThreadSafeContext *cx, AllocKind kind, size_t nDynamicSlots, Init
         obj = static_cast<JSObject *>(js::gc::ArenaLists::refillFreeList<allowGC>(cx, kind));
 
     if (obj)
-        obj->setInitialSlots(slots);
+        obj->fakeNativeSetInitialSlots(slots);
     else
         js_free(slots);
 

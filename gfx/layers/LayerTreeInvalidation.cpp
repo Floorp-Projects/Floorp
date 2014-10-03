@@ -114,7 +114,7 @@ struct LayerPropertiesBase : public LayerProperties
     if (mUseClipRect) {
       mClipRect = *aLayer->GetClipRect();
     }
-    mTransform = aLayer->GetTransform();
+    mTransform = aLayer->GetLocalTransform();
   }
   LayerPropertiesBase()
     : mLayer(nullptr)
@@ -136,7 +136,7 @@ struct LayerPropertiesBase : public LayerProperties
   nsIntRegion ComputeChange(NotifySubDocInvalidationFunc aCallback,
                             bool& aGeometryChanged)
   {
-    bool transformChanged = !mTransform.FuzzyEqual(mLayer->GetTransform()) ||
+    bool transformChanged = !mTransform.FuzzyEqual(mLayer->GetLocalTransform()) ||
                             mLayer->GetPostXScale() != mPostXScale ||
                             mLayer->GetPostYScale() != mPostYScale;
     Layer* otherMask = mLayer->GetMaskLayer();
@@ -183,7 +183,7 @@ struct LayerPropertiesBase : public LayerProperties
 
   nsIntRect NewTransformedBounds()
   {
-    return TransformRect(mLayer->GetVisibleRegion().GetBounds(), mLayer->GetTransform());
+    return TransformRect(mLayer->GetVisibleRegion().GetBounds(), mLayer->GetLocalTransform());
   }
 
   nsIntRect OldTransformedBounds()
@@ -290,7 +290,7 @@ struct ContainerLayerProperties : public LayerPropertiesBase
       }
       if (invalidateChildsCurrentArea) {
         aGeometryChanged = true;
-        AddTransformedRegion(result, child->GetVisibleRegion(), child->GetTransform());
+        AddTransformedRegion(result, child->GetVisibleRegion(), child->GetLocalTransform());
         if (aCallback) {
           NotifySubdocumentInvalidationRecursive(child, aCallback);
         } else {
@@ -309,7 +309,7 @@ struct ContainerLayerProperties : public LayerPropertiesBase
       aCallback(container, result);
     }
 
-    result.Transform(gfx::To3DMatrix(mLayer->GetTransform()));
+    result.Transform(gfx::To3DMatrix(mLayer->GetLocalTransform()));
     return result;
   }
 
@@ -448,7 +448,7 @@ LayerPropertiesBase::ComputeDifferences(Layer* aRoot, NotifySubDocInvalidationFu
       ClearInvalidations(aRoot);
     }
     nsIntRect result = TransformRect(aRoot->GetVisibleRegion().GetBounds(),
-                                     aRoot->GetTransform());
+                                     aRoot->GetLocalTransform());
     result = result.Union(OldTransformedBounds());
     if (aGeometryChanged != nullptr) {
       *aGeometryChanged = true;
