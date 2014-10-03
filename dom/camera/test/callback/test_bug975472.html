@@ -1,0 +1,223 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for bug 975472</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="../camera_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<video id="viewfinder" width="200" height="200" autoplay></video>
+<img src="#" alt="This image is going to load" id="testimage"/>
+<script class="testbody" type="text/javascript;version=1.7">
+
+var whichCamera = navigator.mozCameras.getListOfCameras()[0];
+var config = {
+  mode: 'picture',
+  recorderProfile: 'cif',
+  previewSize: {
+    width: 352,
+    height: 288
+  }
+};
+var options = {
+  rotation: 0,
+  position: {
+    latitude: 43.645687,
+    longitude: -79.393661
+  },
+  dateTime: Date.now()
+};
+
+function onError(e) {
+  ok(false, "Error" + JSON.stringify(e));
+}
+function next() {
+  Camera.nextTest();
+}
+
+// The array of tests
+var tests = [
+  {
+    key: "release-after-release",
+    func: function testAutoFocus(camera) {
+      function onSuccess(success) {
+        ok(true, "release() succeeded");
+        next();
+      }
+      function onError(error) {
+        ok(false, "release() failed with: " + error);
+      }
+      camera.release(onSuccess, onError);
+    }
+  },
+  {
+    key: "set-picture-size-after-release",
+    func: function testSetPictureSize(camera) {
+      camera.setPictureSize({ width: 0, height: 0 });
+      next();
+    }
+  },
+  {
+    key: "set-thumbnail-size-after-release",
+    func: function testSetThumbnailSize(camera) {
+      camera.setThumbnailSize({ width: 0, height: 0 });
+      next();
+    }
+  },
+  {
+    key: "get-sensor-angle-after-release",
+    func: function testGetSensorAngle(camera) {
+      ok(camera.sensorAngle == 0, "camera.sensorAngle = " + camera.sensorAngle);
+      next();
+    }
+  },
+  {
+    key: "resume-preview-after-release",
+    func: function testResumePreview(camera) {
+      camera.resumePreview();
+      next();
+    }
+  },
+  {
+    key: "auto-focus-after-release",
+    func: function testAutoFocus(camera) {
+      function onSuccess(success) {
+        ok(false, "autoFocus() succeeded incorrectly");
+      }
+      function onError(error) {
+        ok(error === "HardwareClosed", "autoFocus() failed with: " + error);
+        next();
+      }
+      camera.autoFocus(onSuccess, onError);
+    }
+  },
+  {
+    key: "take-picture-after-release",
+    func: function testTakePicture(camera) {
+      function onSuccess(picture) {
+        ok(false, "takePicture() succeeded incorrectly");
+      }
+      function onError(error) {
+        ok(error === "HardwareClosed", "takePicture() failed with: " + error);
+        next();
+      }
+      camera.takePicture(null, onSuccess, onError);
+    }
+  },
+  {
+    key: "start-recording-after-release",
+    func: function testStartRecording(camera) {
+      function onSuccess(picture) {
+        ok(false, "startRecording() process succeeded incorrectly");
+      }
+      function onError(error) {
+        ok(error === "GeneralFailure", "startRecording() failed with: " + error);
+        next();
+      }
+      var recordingOptions = {
+        profile: 'cif',
+        rotation: 0
+      };
+      camera.startRecording(recordingOptions,
+                            navigator.getDeviceStorage('videos'),
+                            'bug975472.mp4',
+                            onSuccess, onError);
+    }
+  },
+  {
+    key: "stop-recording-after-release",
+    func: function testStopRecording(camera) {
+      camera.stopRecording();
+      next();
+    }
+  },
+  {
+    key: "set-configuration-after-release",
+    func: function testSetConfiguration(camera) {
+      function onSuccess(picture) {
+        ok(false, "setConfiguration() process succeeded incorrectly");
+      }
+      function onError(error) {
+        ok(error === "HardwareClosed", "setConfiguration() failed with: " + error);
+        next();
+      }
+      camera.setConfiguration(config, onSuccess, onError);
+    }
+  },
+];
+
+var testGenerator = function() {
+  for (var i = 0; i < tests.length; ++i ) {
+    yield tests[i];
+  }
+}();
+
+var Camera = {
+  cameraObj: null,
+  _otherPictureSize: null,
+  get viewfinder() {
+    return document.getElementById('viewfinder');
+  },
+  onCameraReady: function () {
+    Camera.nextTest = function() {
+      try {
+        var t = testGenerator.next();
+        info("test: " + t.key);
+        t.func(Camera.cameraObj);
+      } catch(e) {
+        if (e instanceof StopIteration) {
+          CameraTest.end();
+        } else {
+          throw e;
+        }
+      }
+    };
+    // Release the camera hardware, and call all of the asynchronous methods
+    // to make sure they properly handle being in this state.
+    Camera.cameraObj.release();
+    next();
+  },
+  release: function release() {
+    cameraObj = null;
+  },
+  start: function run_test() {
+    function onSuccess(camera, config) {
+      Camera.cameraObj = camera;
+      Camera.viewfinder.mozSrcObject = camera;
+      Camera.viewfinder.play();
+      ok(camera.capabilities.pictureSizes.length > 0,
+        "capabilities.pictureSizes.length = " +
+        camera.capabilities.pictureSizes.length);
+      Camera._otherPictureSize = camera.capabilities.pictureSizes.slice(-1)[0];
+      camera.setPictureSize(camera.capabilities.pictureSizes[0]);
+      options.pictureSize = Camera._otherPictureSize;
+      options.fileFormat = camera.capabilities.fileFormats[0];
+      info("getCamera callback, setting pictureSize = " + options.pictureSize.toSource());
+      Camera.cameraObj.onPreviewStateChange = function(state) {
+        if (state === 'started') {
+          info("viewfinder is ready and playing");
+          Camera.cameraObj.onPreviewStateChange = null;
+          Camera.onCameraReady();
+        }
+      };
+    };
+    navigator.mozCameras.getCamera(whichCamera, config, onSuccess, onError);
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+window.addEventListener('beforeunload', function() {
+  Camera.viewfinder.mozSrcObject = null;
+  Camera.cameraObj.release();
+  Camera.cameraObj = null;
+});
+
+Camera.start();
+
+</script>
+</body>
+
+</html>

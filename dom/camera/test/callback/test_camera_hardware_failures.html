@@ -1,0 +1,145 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=940424
+-->
+<head>
+  <title>Bug 940424 - Test camera hardware API failure handling</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="../camera_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=940424">Mozilla Bug 940424</a>
+  <video id="viewfinder" width = "200" height = "200" autoplay></video>
+  <img src="#" alt="This image is going to load" id="testimage"/>
+
+<script class="testbody" type="text/javascript;version=1.7">
+
+var whichCamera = navigator.mozCameras.getListOfCameras()[0];
+var initialConfig = {
+  mode: 'picture',
+  recorderProfile: 'cif',
+  previewSize: {
+    width: 352,
+    height: 288
+  }
+};
+
+var cameraObj;
+
+// Shorthand functions
+function end() {
+  CameraTest.end();
+}
+function next() {
+  CameraTest.next();
+}
+
+// The array of tests
+var tests = [
+  {
+    key: "auto-focus-failure",
+    func: function testAutoFocusApiFailure(camera) {
+      function onSuccess(success) {
+        ok(false, "autoFocus() succeeded incorrectly");
+        end();
+      }
+      function onError(error) {
+        ok(true, "autoFocus() failed correctly with: " + error);
+        next();
+      }
+      camera.autoFocus(onSuccess, onError);
+    }
+  },
+  {
+    key: "auto-focus-process-failure",
+    func: function testAutoFocusProcessFailure(camera) {
+      function onSuccess(success) {
+        if (success) {
+          ok(false, "autoFocus() process succeeded incorrectly");
+          end();
+        } else {
+          ok(true, "autoFocus() process failed correctly");
+          next();
+        }
+      }
+      function onError(error) {
+        ok(false, "autoFocus() process failed incorrectly with: " + error);
+        end();
+      }
+      camera.autoFocus(onSuccess, onError);
+    }
+  },
+  {
+    key: "take-picture-failure",
+    func: function testTakePictureApiFailure(camera) {
+      function onSuccess(picture) {
+        ok(false, "takePicture() succeeded incorrectly");
+        end();
+      }
+      function onError(error) {
+        ok(true, "takePicture() failed correctly with: " + error);
+        next();
+      }
+      camera.takePicture(null, onSuccess, onError);
+    }
+  },
+  {
+    key: "take-picture-process-failure",
+    func: function testTakePictureProcessFailure(camera) {
+      function onSuccess(picture) {
+        ok(false, "takePicture() process succeeded incorrectly");
+        end();
+      }
+      function onError(error) {
+        ok(true, "takePicture() process failed correctly with: " + error);
+        next();
+      }
+      camera.takePicture(null, onSuccess, onError);
+    }
+  },
+];
+
+var testGenerator = function() {
+  for (var i = 0; i < tests.length; ++i ) {
+    yield tests[i];
+  }
+}();
+
+window.addEventListener('beforeunload', function() {
+  document.getElementById('viewfinder').mozSrcObject = null;
+  cameraObj.release();
+  cameraObj = null;
+});
+
+CameraTest.begin("hardware", function(test) {
+  function onSuccess(camera, config) {
+    document.getElementById('viewfinder').mozSrcObject = camera;
+    cameraObj = camera;
+    CameraTest.next = function() {
+      try {
+        var t = testGenerator.next();
+        test.set(t.key, t.func.bind(undefined, camera));
+      } catch(e) {
+        if (e instanceof StopIteration) {
+          end();
+        } else {
+          throw e;
+        }
+      }
+    };
+    next();
+  }
+  function onError(error) {
+    ok(false, "getCamera() failed with: " + error);
+    end();
+  }
+  navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError);
+});
+
+</script>
+</body>
+
+</html>

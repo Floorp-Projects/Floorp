@@ -17,6 +17,7 @@ using namespace js::jit;
 
 using mozilla::Abs;
 using mozilla::FloorLog2;
+using mozilla::Swap;
 
 LTableSwitch *
 LIRGeneratorX86Shared::newLTableSwitch(const LAllocation &in, const LDefinition &inputCopy,
@@ -105,6 +106,31 @@ LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition
     ins->setOperand(0, useRegisterAtStart(lhs));
     ins->setOperand(1, lhs != rhs ? use(rhs) : useAtStart(rhs));
     return defineReuseInput(ins, mir, 0);
+}
+
+bool
+LIRGeneratorX86Shared::lowerForCompIx4(LSimdBinaryCompIx4 *ins, MSimdBinaryComp *mir, MDefinition *lhs, MDefinition *rhs)
+{
+    return lowerForALU(ins, mir, lhs, rhs);
+}
+
+bool
+LIRGeneratorX86Shared::lowerForCompFx4(LSimdBinaryCompFx4 *ins, MSimdBinaryComp *mir, MDefinition *lhs, MDefinition *rhs)
+{
+    // Swap the operands around to fit the instructions that x86 actually has.
+    // We do this here, before register allocation, so that we don't need
+    // temporaries and copying afterwards.
+    switch (mir->operation()) {
+      case MSimdBinaryComp::greaterThan:
+      case MSimdBinaryComp::greaterThanOrEqual:
+        mir->reverse();
+        Swap(lhs, rhs);
+        break;
+      default:
+        break;
+    }
+
+    return lowerForFPU(ins, mir, lhs, rhs);
 }
 
 bool
