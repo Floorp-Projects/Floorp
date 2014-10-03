@@ -221,7 +221,7 @@ SVGAnimationElement::BindToTree(nsIDocument* aDocument,
       href->ToString(hrefStr);
 
       // Pass in |aParent| instead of |this| -- first argument is only used
-      // for a call to GetCurrentDoc(), and |this| might not have a current
+      // for a call to GetComposedDoc(), and |this| might not have a current
       // document yet.
       UpdateHrefTarget(aParent, hrefStr);
     }
