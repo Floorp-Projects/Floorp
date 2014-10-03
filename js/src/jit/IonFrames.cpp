@@ -1437,17 +1437,19 @@ OsiIndex::returnPointDisplacement() const
     return callPointDisplacement_ + Assembler::PatchWrite_NearCallSize();
 }
 
-RInstructionResults::RInstructionResults()
+RInstructionResults::RInstructionResults(IonJSFrameLayout *fp)
   : results_(nullptr),
-    fp_(nullptr)
+    fp_(fp),
+    initialized_(false)
 {
 }
 
 RInstructionResults::RInstructionResults(RInstructionResults&& src)
   : results_(mozilla::Move(src.results_)),
-    fp_(src.fp_)
+    fp_(src.fp_),
+    initialized_(src.initialized_)
 {
-    src.fp_ = nullptr;
+    src.initialized_ = false;
 }
 
 RInstructionResults&
@@ -1465,7 +1467,7 @@ RInstructionResults::~RInstructionResults()
 }
 
 bool
-RInstructionResults::init(JSContext *cx, uint32_t numResults, IonJSFrameLayout *fp)
+RInstructionResults::init(JSContext *cx, uint32_t numResults)
 {
     if (numResults) {
         results_ = cx->make_unique<Values>();
@@ -1477,21 +1479,20 @@ RInstructionResults::init(JSContext *cx, uint32_t numResults, IonJSFrameLayout *
             (*results_)[i].init(guard);
     }
 
-    fp_ = fp;
+    initialized_ = true;
     return true;
 }
 
 bool
 RInstructionResults::isInitialized() const
 {
-    MOZ_ASSERT_IF(results_, fp_);
-    return fp_;
+    return initialized_;
 }
 
 IonJSFrameLayout *
 RInstructionResults::frame() const
 {
-    MOZ_ASSERT(isInitialized());
+    MOZ_ASSERT(fp_);
     return fp_;
 }
 
@@ -1798,9 +1799,8 @@ SnapshotIterator::initInstructionResults(MaybeReadFallback &fallback)
         // before we initialize the list such as if any recover instruction
         // cause a GC, we can ensure that the results are properly traced by the
         // activation.
-        RInstructionResults tmp;
-        if (!fallback.activation->registerIonFrameRecovery(fallback.frame->jsFrame(),
-                                                           mozilla::Move(tmp)))
+        RInstructionResults tmp(fallback.frame->jsFrame());
+        if (!fallback.activation->registerIonFrameRecovery(mozilla::Move(tmp)))
             return false;
 
         results = fallback.activation->maybeIonFrameRecovery(fp);
@@ -1832,7 +1832,7 @@ SnapshotIterator::computeInstructionResults(JSContext *cx, RInstructionResults *
     // The last instruction will always be a resume point.
     size_t numResults = recover_.numInstructions() - 1;
     if (!results->isInitialized()) {
-        if (!results->init(cx, numResults, fp_))
+        if (!results->init(cx, numResults))
             return false;
 
         // No need to iterate over the only resume point.
