@@ -8,7 +8,7 @@
 
    <ImageView
         android:id="@+id/favicon"
-        android:layout_width="@dimen/tab_strip_favicon_size"
+        android:layout_width="@dimen/new_tablet_tab_strip_favicon_size"
         android:layout_height="match_parent"
         android:layout_marginRight="9dp"
         android:scaleType="centerInside"
