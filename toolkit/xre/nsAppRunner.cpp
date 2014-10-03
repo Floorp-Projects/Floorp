@@ -4438,13 +4438,19 @@ mozilla::BrowserTabsRemote()
 bool
 mozilla::BrowserTabsRemoteAutostart()
 {
-#if !defined(NIGHTLY_BUILD)
-  return false;
-#endif
   if (!gBrowserTabsRemoteAutostartInitialized) {
+    gBrowserTabsRemoteAutostartInitialized = true;
+#if !defined(NIGHTLY_BUILD)
+    // When running tests with 'layers.offmainthreadcomposition.testing.enabled' and autostart
+    // set to true, return enabled.  These tests must be allowed to run remotely.
+    if (Preferences::GetBool("layers.offmainthreadcomposition.testing.enabled", false) &&
+        Preferences::GetBool("browser.tabs.remote.autostart", false)) {
+      gBrowserTabsRemoteAutostart = true;
+    }
+#else
     gBrowserTabsRemoteAutostart = !gSafeMode &&
                                   Preferences::GetBool("browser.tabs.remote.autostart", false);
-    gBrowserTabsRemoteAutostartInitialized = true;
+#endif
   }
 
   return gBrowserTabsRemoteAutostart;
