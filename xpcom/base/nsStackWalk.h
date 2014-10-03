@@ -118,50 +118,21 @@ NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails);
  * these are not available, library and offset should be reported, if
  * possible.
  *
- * Note that this output is parsed by several scripts including the fix*.py and
- * make-tree.pl scripts in tools/rb/. It should only be change with care, and
- * in conjunction with those scripts.
- *
- * @param aBuffer      A string to be filled in with the description.
- *                     The string will always be null-terminated.
- * @param aBufferSize  The size, in bytes, of aBuffer, including
- *                     room for the terminating null.  If the information
- *                     to be printed would be larger than aBuffer, it
- *                     will be truncated so that aBuffer[aBufferSize-1]
- *                     is the terminating null.
- * @param aFrameNumber The frame number.
- * @param aPC          The code address.
- * @param aFunction    The function name. Possibly null or the empty string.
- * @param aLibrary     The library name. Possibly null or the empty string.
- * @param aLOffset     The library offset.
- * @param aFileName    The filename. Possibly null or the empty string.
- * @param aLineNo      The line number. Possibly zero.
- */
-XPCOM_API(void)
-NS_FormatCodeAddress(char* aBuffer, uint32_t aBufferSize, uint32_t aFrameNumber,
-                     const void* aPC, const char* aFunction,
-                     const char* aLibrary, ptrdiff_t aLOffset,
-                     const char* aFileName, uint32_t aLineNo);
-
-/**
- * Format the information about a code address in the same fashion as
- * NS_FormatCodeAddress.
- *
- * @param aBuffer      A string to be filled in with the description.
- *                     The string will always be null-terminated.
- * @param aBufferSize  The size, in bytes, of aBuffer, including
- *                     room for the terminating null.  If the information
- *                     to be printed would be larger than aBuffer, it
- *                     will be truncated so that aBuffer[aBufferSize-1]
- *                     is the terminating null.
- * @param aFrameNumber The frame number.
+ * @param aFrameNumber The frame number (starts at 1, not 0).
  * @param aPC          The code address.
  * @param aDetails     The value filled in by NS_DescribeCodeAddress(aPC).
+ * @param aBuffer      A string to be filled in with the description.
+ *                     The string will always be null-terminated.
+ * @param aBufferSize  The size, in bytes, of aBuffer, including
+ *                     room for the terminating null.  If the information
+ *                     to be printed would be larger than aBuffer, it
+ *                     will be truncated so that aBuffer[aBufferSize-1]
+ *                     is the terminating null.
  */
-XPCOM_API(void)
-NS_FormatCodeAddressDetails(char* aBuffer, uint32_t aBufferSize,
-                            uint32_t aFrameNumber, void* aPC,
-                            const nsCodeAddressDetails* aDetails);
+XPCOM_API(nsresult)
+NS_FormatCodeAddressDetails(uint32_t aFrameNumber, void* aPC,
+                            const nsCodeAddressDetails* aDetails,
+                            char* aBuffer, uint32_t aBufferSize);
 
 #ifdef __cplusplus
 }
