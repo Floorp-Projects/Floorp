@@ -233,10 +233,6 @@ nsStyleSet::EndReconstruct()
   mInReconstruct = false;
 #ifdef DEBUG
   for (int32_t i = mRoots.Length() - 1; i >= 0; --i) {
-    nsRuleNode *n = mRoots[i]->RuleNode();
-    while (n->GetParent()) {
-      n = n->GetParent();
-    }
     // Since nsStyleContext's mParent and mRuleNode are immutable, and
     // style contexts own their parents, and nsStyleContext asserts in
     // its constructor that the style context and its parent are in the
@@ -244,7 +240,8 @@ nsStyleSet::EndReconstruct()
     // mRoots; we only need to check the rule nodes of mRoots
     // themselves.
 
-    NS_ASSERTION(n == mRuleTree, "style context has old rule node");
+    NS_ASSERTION(mRoots[i]->RuleNode()->RuleTree() == mRuleTree,
+                 "style context has old rule node");
   }
 #endif
   // This *should* destroy the only element of mOldRuleTrees, but in
