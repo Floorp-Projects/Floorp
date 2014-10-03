@@ -320,7 +320,7 @@ public:
   {
     if (mPresContext) {
       PostRestyleEventCommon(aElement, aRestyleHint, aMinChangeHint,
-                             mPresContext->IsProcessingAnimationStyleChange());
+                             IsProcessingAnimationStyleChange());
     }
   }
 
@@ -397,7 +397,8 @@ public:
    */
   static bool ShouldLogRestyle(nsPresContext* aPresContext) {
     return aPresContext->RestyleLoggingEnabled() &&
-           (!aPresContext->IsProcessingAnimationStyleChange() ||
+           (!aPresContext->RestyleManager()->
+               IsProcessingAnimationStyleChange() ||
             AnimationRestyleLoggingEnabled());
   }
 

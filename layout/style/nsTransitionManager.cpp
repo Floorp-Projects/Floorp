@@ -175,7 +175,9 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   }
 
 
-  if (aNewStyleContext->PresContext()->IsProcessingAnimationStyleChange()) {
+  // FIXME (bug 960465): This test should go away.
+  if (aNewStyleContext->PresContext()->RestyleManager()->
+        IsProcessingAnimationStyleChange()) {
     return nullptr;
   }
 
