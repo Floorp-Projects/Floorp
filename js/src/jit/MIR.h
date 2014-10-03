@@ -1611,6 +1611,21 @@ class MSimdBinaryComp : public MBinaryInstruction
     Operation operation() const { return operation_; }
     CompareType compareType() const { return compareType_; }
 
+    // Swap the operands and reverse the comparison predicate.
+    void reverse() {
+        switch (operation()) {
+          case greaterThan:        operation_ = lessThan; break;
+          case greaterThanOrEqual: operation_ = lessThanOrEqual; break;
+          case lessThan:           operation_ = greaterThan; break;
+          case lessThanOrEqual:    operation_ = greaterThanOrEqual; break;
+          case equal:
+          case notEqual:
+            break;
+          default: MOZ_CRASH("Unexpected compare operation");
+        }
+        swapOperands();
+    }
+
     bool congruentTo(const MDefinition *ins) const {
         if (!binaryCongruentTo(ins))
             return false;
