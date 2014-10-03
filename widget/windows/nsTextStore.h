@@ -327,10 +327,6 @@ protected:
     // inconsistencies/artifacts.
     nsString mString;
 
-    // The latest composition string which was dispatched by composition update
-    // event.
-    nsString mLastData;
-
     // The start of the current active composition, in ACP offsets
     LONG mStart;
 
