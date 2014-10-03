@@ -241,7 +241,7 @@ fuzzy-if(Android&&AndroidVersion>=15,8,200) random-if(B2G&&browserIsRemote) == o
 pref(svg.paint-order.enabled,true) == paint-order-01.svg paint-order-01-ref.svg
 pref(svg.paint-order.enabled,true) == paint-order-02.svg paint-order-02-ref.svg
 pref(svg.paint-order.enabled,true) == paint-order-03.svg paint-order-03-ref.svg
-fuzzy-if(azureQuartz,6,47) == path-01.svg path-01-ref.svg
+fuzzy(23,60) fails-if(d2d) == path-01.svg path-01-ref.svg
 == path-02.svg pass.svg
 == path-03.svg pass.svg
 == path-04.svg pass.svg
