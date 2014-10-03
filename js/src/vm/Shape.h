@@ -703,7 +703,8 @@ class Shape : public gc::TenuredCell
         this->flags |= IN_DICTIONARY;
 
         this->listp = nullptr;
-        insertIntoDictionary(dictp);
+        if (dictp)
+            insertIntoDictionary(dictp);
     }
 
     /* Replace the base shape of the last shape in a non-dictionary lineage with base. */
