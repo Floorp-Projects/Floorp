@@ -10052,11 +10052,11 @@ CdmaPDUHelperObject.prototype = {
           record.lineControl = {};
           record.lineControl.polarityIncluded = Buf.readInt32();
           record.lineControl.toggle = Buf.readInt32();
-          record.lineControl.recerse = Buf.readInt32();
+          record.lineControl.reverse = Buf.readInt32();
           record.lineControl.powerDenial = Buf.readInt32();
           break;
         case PDU_CDMA_INFO_REC_TYPE_T53_CLIR:
-          record.cause = Buf.readInt32();
+          record.clirCause = Buf.readInt32();
           break;
         case PDU_CDMA_INFO_REC_TYPE_T53_AUDIO_CONTROL:
           record.audioControl = {};
