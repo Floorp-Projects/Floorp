@@ -133,7 +133,7 @@ path.coverer {
   </g>
 
 
-  <!-- Column 4: test loan movetos -->
+  <!-- Column 4: test lone movetos -->
 
   <g transform="translate(425,25)">
     <path class="squares-not-expected" d="M0,0 M0,0  M20,20 L30,30  M50,50 M50,50  M70,70 L80,80  M100,100 M100,100"/>
