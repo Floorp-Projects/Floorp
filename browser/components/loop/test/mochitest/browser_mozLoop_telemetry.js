@@ -13,6 +13,7 @@ add_task(loadLoopPanel);
 add_task(function* test_mozLoop_telemetryAdd_boolean() {
   for (let histogramId of [
     "LOOP_CLIENT_CALL_URL_REQUESTS_SUCCESS",
+    "LOOP_CLIENT_CALL_URL_SHARED",
   ]) {
     let snapshot = Services.telemetry.getHistogramById(histogramId).snapshot();
 
