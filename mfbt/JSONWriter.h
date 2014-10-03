@@ -301,8 +301,8 @@ private:
   {
     // If these tiny allocations OOM we might as well just crash because we
     // must be in serious memory trouble.
-    MOZ_RELEASE_ASSERT(mNeedComma.growByUninitialized(1));
-    MOZ_RELEASE_ASSERT(mNeedNewlines.growByUninitialized(1));
+    MOZ_RELEASE_ASSERT(mNeedComma.resizeUninitialized(mDepth + 1));
+    MOZ_RELEASE_ASSERT(mNeedNewlines.resizeUninitialized(mDepth + 1));
     mNeedComma[mDepth] = false;
     mNeedNewlines[mDepth] = true;
   }
