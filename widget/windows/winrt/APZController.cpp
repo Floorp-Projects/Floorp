@@ -79,70 +79,6 @@ GetDOMTargets(uint64_t aScrollId,
   return true;
 }
 
-class RequestContentRepaintEvent : public nsRunnable
-{
-  typedef mozilla::layers::FrameMetrics FrameMetrics;
-
-public:
-  RequestContentRepaintEvent(const FrameMetrics& aFrameMetrics) :
-    mFrameMetrics(aFrameMetrics)
-  {
-  }
-
-  NS_IMETHOD Run() {
-    // This must be on the gecko thread since we access the dom
-    MOZ_ASSERT(NS_IsMainThread());
-
-#ifdef DEBUG_CONTROLLER
-    WinUtils::Log("APZController: mScrollOffset: %f %f", mFrameMetrics.mScrollOffset.x,
-      mFrameMetrics.mScrollOffset.y);
-#endif
-
-    nsCOMPtr<nsIDocument> subDocument;
-    nsCOMPtr<nsIContent> targetContent;
-    if (!GetDOMTargets(mFrameMetrics.GetScrollId(),
-                       subDocument, targetContent)) {
-      return NS_OK;
-    }
-
-    // If we're dealing with a sub frame or content editable element,
-    // call UpdateSubFrame.
-    if (targetContent) {
-#ifdef DEBUG_CONTROLLER
-      WinUtils::Log("APZController: detected subframe or content editable");
-#endif
-      mozilla::layers::APZCCallbackHelper::UpdateSubFrame(targetContent, mFrameMetrics);
-      return NS_OK;
-    }
-
-#ifdef DEBUG_CONTROLLER
-    WinUtils::Log("APZController: detected tab");
-#endif
-
-    // We're dealing with a tab, call UpdateRootFrame.
-    nsCOMPtr<nsIDOMWindowUtils> utils;
-    nsCOMPtr<nsIDOMWindow> window = subDocument->GetDefaultView();
-    if (window) {
-      utils = do_GetInterface(window);
-      if (utils) {
-        mozilla::layers::APZCCallbackHelper::UpdateRootFrame(utils, mFrameMetrics);
-
-#ifdef DEBUG_CONTROLLER
-        WinUtils::Log("APZController: %I64d mDisplayPortMargins: %0.2f %0.2f %0.2f %0.2f",
-          mFrameMetrics.GetScrollId(),
-          mFrameMetrics.GetDisplayPortMargins().left,
-          mFrameMetrics.GetDisplayPortMargins().top,
-          mFrameMetrics.GetDisplayPortMargins().right,
-          mFrameMetrics.GetDisplayPortMargins().bottom);
-#endif
-      }
-    }
-    return NS_OK;
-  }
-protected:
-  FrameMetrics mFrameMetrics;
-};
-
 void
 APZController::SetPendingResponseFlusher(APZPendingResponseFlusher* aFlusher)
 {
@@ -198,11 +134,55 @@ APZController::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
   WinUtils::Log("APZController::RequestContentRepaint scrollid=%I64d",
     aFrameMetrics.GetScrollId());
 #endif
-  nsCOMPtr<nsIRunnable> r1 = new RequestContentRepaintEvent(aFrameMetrics);
-  if (!NS_IsMainThread()) {
-    NS_DispatchToMainThread(r1);
-  } else {
-    r1->Run();
+
+  // This must be on the gecko thread since we access the dom
+  MOZ_ASSERT(NS_IsMainThread());
+
+#ifdef DEBUG_CONTROLLER
+  WinUtils::Log("APZController: mScrollOffset: %f %f", aFrameMetrics.mScrollOffset.x,
+    aFrameMetrics.mScrollOffset.y);
+#endif
+
+  nsCOMPtr<nsIDocument> subDocument;
+  nsCOMPtr<nsIContent> targetContent;
+  if (!GetDOMTargets(aFrameMetrics.GetScrollId(),
+                     subDocument, targetContent)) {
+    return NS_OK;
+  }
+
+  // If we're dealing with a sub frame or content editable element,
+  // call UpdateSubFrame.
+  if (targetContent) {
+#ifdef DEBUG_CONTROLLER
+    WinUtils::Log("APZController: detected subframe or content editable");
+#endif
+    FrameMetrics metrics = aFrameMetrics;
+    mozilla::layers::APZCCallbackHelper::UpdateSubFrame(targetContent, metrics);
+    return NS_OK;
+  }
+
+#ifdef DEBUG_CONTROLLER
+  WinUtils::Log("APZController: detected tab");
+#endif
+
+  // We're dealing with a tab, call UpdateRootFrame.
+  nsCOMPtr<nsIDOMWindowUtils> utils;
+  nsCOMPtr<nsIDOMWindow> window = subDocument->GetDefaultView();
+  if (window) {
+    utils = do_GetInterface(window);
+    if (utils) {
+      FrameMetrics metrics = aFrameMetrics;
+      mozilla::layers::APZCCallbackHelper::UpdateRootFrame(utils, metrics);
+
+#ifdef DEBUG_CONTROLLER
+      WinUtils::Log("APZController: %I64d mDisplayPortMargins: %0.2f %0.2f %0.2f %0.2f",
+        metrics.GetScrollId(),
+        metrics.GetDisplayPortMargins().left,
+        metrics.GetDisplayPortMargins().top,
+        metrics.GetDisplayPortMargins().right,
+        metrics.GetDisplayPortMargins().bottom);
+#endif
+    }
   }
 }
 

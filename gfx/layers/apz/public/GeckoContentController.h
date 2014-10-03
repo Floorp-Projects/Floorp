@@ -25,6 +25,7 @@ public:
   /**
    * Requests a paint of the given FrameMetrics |aFrameMetrics| from Gecko.
    * Implementations per-platform are responsible for actually handling this.
+   * This method will always be called on the Gecko main thread.
    */
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) = 0;
 
