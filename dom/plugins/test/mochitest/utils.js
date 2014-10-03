@@ -69,7 +69,7 @@ function crashAndGetCrashServiceRecord(crashMethodName, callback) {
     // the new record.
     function tryGetCrash() {
       info("Waiting for getCrashes");
-      crashMan.getCrashes().then(function (crashes) {
+      crashMan.getCrashes().then(SpecialPowers.wrapCallback(function (crashes) {
         if (crashes.length) {
           is(crashes.length, 1, "There should be only one record");
           var crash = SpecialPowers.wrap(crashes[0]);
@@ -86,7 +86,7 @@ function crashAndGetCrashServiceRecord(crashMethodName, callback) {
         else {
           setTimeout(tryGetCrash, 1000);
         }
-      }, function (err) {
+      }), function (err) {
         ok(false, "Error getting crashes: " + err);
         SimpleTest.finish();
       });
