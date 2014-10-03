@@ -81,6 +81,12 @@ else
   MOZ_ANDROID_SEARCH_ACTIVITY=
 fi
 
+# Enable the new tablet UI in pre-release builds
+# if the max Android sdk is undefined or at least 11.
+if test ! "$RELEASE_BUILD"; then
+  MOZ_ANDROID_NEW_TABLET_UI=1
+fi
+
 # Enable the share handler in pre-release builds.
 if test ! "$RELEASE_BUILD"; then
   MOZ_ANDROID_SHARE_OVERLAY=1
