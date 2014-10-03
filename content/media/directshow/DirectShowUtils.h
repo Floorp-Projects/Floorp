@@ -8,6 +8,14 @@
 
 #include <stdint.h>
 #include "dshow.h"
+
+// XXXbz windowsx.h defines GetFirstChild, GetNextSibling,
+// GetPrevSibling are macros, apparently... Eeevil.  We have functions
+// called that on some classes, so undef them.
+#undef GetFirstChild
+#undef GetNextSibling
+#undef GetPrevSibling
+
 #include "DShowTools.h"
 #include "prlog.h"
 

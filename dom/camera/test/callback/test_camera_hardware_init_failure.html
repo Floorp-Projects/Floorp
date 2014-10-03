@@ -7,7 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=940424
   <title>Bug 940424 - Test camera hardware init failure handling</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="camera_common.js"></script>
+  <script type="text/javascript" src="../camera_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -34,9 +34,9 @@ var tests = [
     name: "init-failure",
     key: "init-failure",
     func: function testInitFailure(test) {
-      function onSuccess(d) {
+      function onSuccess(camera, config) {
         ok(false, "onSuccess called incorrectly");
-        d.camera.release();
+        camera.release();
         test.next();
       }
       function onError(error) {
@@ -44,7 +44,7 @@ var tests = [
         test.next();
       }
       info("Running test: init-failure");
-      navigator.mozCameras.getCamera(whichCamera, initialConfig).then(onSuccess, onError);
+      navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError);
     }
   },
   /* This test case (init-success) *must* follow the preceeding test case
@@ -53,9 +53,9 @@ var tests = [
     name: "init-success",
     key: "",
     func: function(test) {
-      function onSuccess(d) {
+      function onSuccess(camera, config) {
         ok(true, "onSuccess called correctly");
-        d.camera.release();
+        camera.release();
         test.next();
       }
       function onError(error) {
@@ -63,7 +63,7 @@ var tests = [
         test.next();
       }
       info("Running test: init-success");
-      navigator.mozCameras.getCamera(whichCamera, initialConfig).then(onSuccess, onError)
+      navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError)
     }
   }
 ];
