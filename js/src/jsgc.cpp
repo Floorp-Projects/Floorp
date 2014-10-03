@@ -2117,7 +2117,6 @@ CanRelocateArena(ArenaHeader *arena)
      * We can't currently move global objects because their address can be baked
      * into compiled code so we skip relocation of any area containing one.
      */
-    JSRuntime *rt = arena->zone->runtimeFromMainThread();
     return arena->getAllocKind() <= FINALIZE_OBJECT_LAST && !ArenaContainsGlobal(arena);
 }
 
@@ -2343,38 +2342,35 @@ MovingTracer::Visit(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
 }
 
 void
-MovingTracer::Sweep(JSTracer *jstrc)
+GCRuntime::sweepZoneAfterCompacting(Zone *zone)
 {
-    JSRuntime *rt = jstrc->runtime();
     FreeOp *fop = rt->defaultFreeOp();
+    if (zone->isCollecting()) {
+        zone->discardJitCode(fop);
+        zone->sweepAnalysis(fop, rt->gc.releaseObservedTypes && !zone->isPreservingCode());
+        zone->sweepBreakpoints(fop);
 
-    WatchpointMap::sweepAll(rt);
-
-    Debugger::sweepAll(fop);
-
-    for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-        if (zone->isCollecting()) {
-            bool oom = false;
-            zone->sweep(fop, false, &oom);
-            MOZ_ASSERT(!oom);
-
-            for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
-                c->sweep(fop, false);
-            }
-        } else {
-            /* Update cross compartment wrappers into moved zones. */
-            for (CompartmentsInZoneIter c(zone); !c.done(); c.next())
-                c->sweepCrossCompartmentWrappers();
+        for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
+            c->sweepInnerViews();
+            c->sweepCrossCompartmentWrappers();
+            c->sweepBaseShapeTable();
+            c->sweepInitialShapeTable();
+            c->sweepTypeObjectTables();
+            c->sweepRegExps();
+            c->sweepCallsiteClones();
+            c->sweepSavedStacks();
+            c->sweepGlobalObject(fop);
+            c->sweepSelfHostingScriptSource();
+            c->sweepDebugScopes();
+            c->sweepJitCompartment(fop);
+            c->sweepWeakMaps();
+            c->sweepNativeIterators();
         }
+    } else {
+        /* Update cross compartment wrappers into moved zones. */
+        for (CompartmentsInZoneIter c(zone); !c.done(); c.next())
+            c->sweepCrossCompartmentWrappers();
     }
-
-    /* Type inference may put more blocks here to free. */
-    rt->freeLifoAlloc.freeAll();
-
-    /* Clear runtime caches that can contain cell pointers. */
-    // TODO: Should possibly just call PurgeRuntime() here.
-    rt->newObjectCache.purge();
-    rt->nativeIterCache.purge();
 }
 
 /*
@@ -2459,7 +2455,20 @@ GCRuntime::updatePointersToRelocatedCells()
     if (JSTraceDataOp op = grayRootTracer.op)
         (*op)(&trc, grayRootTracer.data);
 
-    MovingTracer::Sweep(&trc);
+    // Sweep everything to fix up weak pointers
+    WatchpointMap::sweepAll(rt);
+    Debugger::sweepAll(rt->defaultFreeOp());
+
+    for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next())
+        rt->gc.sweepZoneAfterCompacting(zone);
+
+    // Type inference may put more blocks here to free.
+    rt->freeLifoAlloc.freeAll();
+
+    // Clear runtime caches that can contain cell pointers.
+    // TODO: Should possibly just call PurgeRuntime() here.
+    rt->newObjectCache.purge();
+    rt->nativeIterCache.purge();
 
     // Call callbacks to get the rest of the system to fixup other untraced pointers.
     callWeakPointerCallbacks();

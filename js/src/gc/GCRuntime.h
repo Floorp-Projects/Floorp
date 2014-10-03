@@ -532,6 +532,7 @@ class GCRuntime
     void assertBackgroundSweepingFinished();
     bool shouldCompact();
 #ifdef JSGC_COMPACTING
+    void sweepZoneAfterCompacting(Zone *zone);
     void compactPhase();
     ArenaHeader *relocateArenas();
     void updatePointersToRelocatedCells();
