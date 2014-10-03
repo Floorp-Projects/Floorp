@@ -1,18 +1,17 @@
+/* vim: set ts=2 sw=2 sts=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RemoteSpellCheckEngineParent.h"
-#include "mozISpellCheckingEngine.h"
+#include "nsISpellChecker.h"
 #include "nsServiceManagerUtils.h"
-
-#define DEFAULT_SPELL_CHECKER "@mozilla.org/spellchecker/engine;1"
 
 namespace mozilla {
 
 RemoteSpellcheckEngineParent::RemoteSpellcheckEngineParent()
 {
-  mEngine = do_GetService(DEFAULT_SPELL_CHECKER);
+  mSpellChecker = do_CreateInstance(NS_SPELLCHECKER_CONTRACTID);
 }
 
 RemoteSpellcheckEngineParent::~RemoteSpellcheckEngineParent()
@@ -20,43 +19,38 @@ RemoteSpellcheckEngineParent::~RemoteSpellcheckEngineParent()
 }
 
 bool
-RemoteSpellcheckEngineParent::AnswerSetDictionary(
+RemoteSpellcheckEngineParent::RecvSetDictionary(
   const nsString& aDictionary,
   bool* success)
 {
-  nsresult rv = mEngine->SetDictionary(aDictionary.get());
+  nsresult rv = mSpellChecker->SetCurrentDictionary(aDictionary);
   *success = NS_SUCCEEDED(rv);
   return true;
 }
 
 bool
-RemoteSpellcheckEngineParent::AnswerCheck(
+RemoteSpellcheckEngineParent::RecvCheck(
   const nsString& aWord,
   bool* aIsMisspelled)
 {
-  bool isCorrect = true;
-  mEngine->Check(aWord.get(), &isCorrect);
-  *aIsMisspelled = !isCorrect;
+  nsresult rv = mSpellChecker->CheckWord(aWord, aIsMisspelled, nullptr);
+
+  // If CheckWord failed, we can't tell whether the word is correctly spelled.
+  if (NS_FAILED(rv))
+    *aIsMisspelled = false;
   return true;
 }
 
 bool
-RemoteSpellcheckEngineParent::AnswerCheckAndSuggest(
+RemoteSpellcheckEngineParent::RecvCheckAndSuggest(
   const nsString& aWord,
   bool* aIsMisspelled,
   InfallibleTArray<nsString>* aSuggestions)
 {
-  bool isCorrect = true;
-  mEngine->Check(aWord.get(), &isCorrect);
-  *aIsMisspelled = !isCorrect;
-  if (!isCorrect) {
-    char16_t **suggestions;
-    uint32_t count = 0;
-    mEngine->Suggest(aWord.get(), &suggestions, &count);
-
-    for (uint32_t i=0; i<count; i++) {
-      aSuggestions->AppendElement(nsDependentString(suggestions[i]));
-    }
+  nsresult rv = mSpellChecker->CheckWord(aWord, aIsMisspelled, aSuggestions);
+  if (NS_FAILED(rv)) {
+    aSuggestions->Clear();
+    *aIsMisspelled = false;
   }
   return true;
 }
@@ -67,4 +61,3 @@ RemoteSpellcheckEngineParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 } // namespace mozilla
-

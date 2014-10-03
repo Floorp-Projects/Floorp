@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for multiple calls to mozCameras.getCamera()</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<video id="viewfinder" width="200" height="200" autoplay></video>
+<img src="#" alt="This image is going to load" id="testimage"/>
+<script class="testbody" type="text/javascript;version=1.7">
+
+var whichCamera = navigator.mozCameras.getListOfCameras()[0];
+var options = {
+  mode: 'picture',
+  recorderProfile: 'cif',
+  previewSize: {
+    width: 352,
+    height: 288
+  }
+};
+
+function onError(e) {
+  ok(false, "Error" + JSON.stringify(e));
+}
+
+var Camera = {
+  cameraObj: null,
+  get viewfinder() {
+    return document.getElementById('viewfinder');
+  },
+  onReady: function take_two() {
+    function onSuccess(camera, config) {
+      ok(false, "Unexpectedly got second camera instance: " + config.toSource);
+    }
+    function onFailure(error) {
+      ok(true, "Correctly failed to get camera again");
+      SimpleTest.finish();
+    }
+    navigator.mozCameras.getCamera(whichCamera, options, onSuccess, onFailure);
+  },
+  release: function release() {
+    cameraObj = null;
+  },
+  start: function run_test() {
+    function onSuccess(camera, config) {
+      Camera.cameraObj = camera;
+      Camera.viewfinder.mozSrcObject = camera;
+      Camera.viewfinder.play();
+      Camera.cameraObj.onPreviewStateChange = function(state) {
+        if (state === 'started') {
+          ok(true, "viewfinder is ready and playing");
+          Camera.cameraObj.onPreviewStateChange = null;
+          Camera.onReady();
+        }
+      };
+    };
+    navigator.mozCameras.getCamera(whichCamera, options, onSuccess, onError);
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+
+window.addEventListener('beforeunload', function() {
+  Camera.viewfinder.mozSrcObject = null;
+  Camera.cameraObj.release();
+  Camera.cameraObj = null;
+});
+
+Camera.start();
+
+</script>
+</body>
+
+</html>

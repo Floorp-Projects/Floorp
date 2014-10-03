@@ -3,11 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "dshow.h"
+#include "DirectShowUtils.h"
 #include "dmodshow.h"
 #include "wmcodecdsp.h"
 #include "dmoreg.h"
-#include "DirectShowUtils.h"
 #include "nsAutoPtr.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/RefPtr.h"

@@ -1,8 +1,10 @@
+/* vim: set ts=2 sw=2 sts=2 et tw=80: */
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 Components.utils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+Components.utils.import("resource://gre/modules/InlineSpellChecker.jsm");
 
 var gContextMenuContentData = null;
 
@@ -518,11 +520,13 @@ nsContextMenu.prototype = {
   setTarget: function (aNode, aRangeParent, aRangeOffset) {
     // If gContextMenuContentData is not null, this event was forwarded from a
     // child process, so use that information instead.
+    let editFlags;
     if (gContextMenuContentData) {
       this.isRemote = true;
       aNode = gContextMenuContentData.event.target;
       aRangeParent = gContextMenuContentData.event.rangeParent;
       aRangeOffset = gContextMenuContentData.event.rangeOffset;
+      editFlags = gContextMenuContentData.editFlags;
     } else {
       this.isRemote = false;
     }
@@ -578,6 +582,7 @@ nsContextMenu.prototype = {
     if (this.isRemote) {
       this.browser = gContextMenuContentData.browser;
     } else {
+      editFlags = SpellCheckHelper.isEditable(this.target, window);
       this.browser = this.target.ownerDocument.defaultView
                                   .QueryInterface(Ci.nsIInterfaceRequestor)
                                   .getInterface(Ci.nsIWebNavigation)
@@ -628,24 +633,19 @@ nsContextMenu.prototype = {
         this.onAudio = true;
         this.mediaURL = this.target.currentSrc || this.target.src;
       }
-      else if (this.target instanceof HTMLInputElement ) {
-        this.onTextInput = this.isTargetATextBox(this.target);
-        // Allow spellchecking UI on all text and search inputs.
-        if (this.onTextInput && ! this.target.readOnly &&
-            (this.target.type == "text" || this.target.type == "search")) {
-          this.onEditableArea = true;
-          InlineSpellCheckerUI.init(this.target.QueryInterface(Ci.nsIDOMNSEditableElement).editor);
-          InlineSpellCheckerUI.initFromEvent(aRangeParent, aRangeOffset);
+      else if (editFlags & (SpellCheckHelper.INPUT | SpellCheckHelper.TEXTAREA)) {
+        this.onTextInput = (editFlags & SpellCheckHelper.TEXTINPUT) !== 0;
+        this.onEditableArea = (editFlags & SpellCheckHelper.EDITABLE) !== 0;
+        if (this.onEditableArea) {
+          if (gContextMenuContentData) {
+            InlineSpellCheckerUI.initFromRemote(gContextMenuContentData.spellInfo);
+          }
+          else {
+            InlineSpellCheckerUI.init(this.target.QueryInterface(Ci.nsIDOMNSEditableElement).editor);
+            InlineSpellCheckerUI.initFromEvent(aRangeParent, aRangeOffset);
+          }
         }
-        this.onKeywordField = this.isTargetAKeywordField(this.target);
-      }
-      else if (this.target instanceof HTMLTextAreaElement) {
-        this.onTextInput = true;
-        if (!this.target.readOnly) {
-          this.onEditableArea = true;
-          InlineSpellCheckerUI.init(this.target.QueryInterface(Ci.nsIDOMNSEditableElement).editor);
-          InlineSpellCheckerUI.initFromEvent(aRangeParent, aRangeOffset);
-        }
+        this.onKeywordField = (editFlags & SpellCheckHelper.KEYWORD);
       }
       else if (this.target instanceof HTMLHtmlElement) {
         var bodyElt = this.target.ownerDocument.body;
@@ -748,41 +748,35 @@ nsContextMenu.prototype = {
 
     // if the document is editable, show context menu like in text inputs
     if (!this.onEditableArea) {
-      win = this.target.ownerDocument.defaultView;
-      if (win) {
-        var isEditable = false;
-        try {
-          var editingSession = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                                  .getInterface(Ci.nsIWebNavigation)
-                                  .QueryInterface(Ci.nsIInterfaceRequestor)
-                                  .getInterface(Ci.nsIEditingSession);
-          if (editingSession.windowIsEditable(win) &&
-              this.getComputedStyle(this.target, "-moz-user-modify") == "read-write") {
-            isEditable = true;
-          }
+      if (editFlags & SpellCheckHelper.CONTENTEDITABLE) {
+        // If this.onEditableArea is false but editFlags is CONTENTEDITABLE, then
+        // the document itself must be editable.
+        this.onTextInput       = true;
+        this.onKeywordField    = false;
+        this.onImage           = false;
+        this.onLoadedImage     = false;
+        this.onCompletedImage  = false;
+        this.onMathML          = false;
+        this.inFrame           = false;
+        this.inSrcdocFrame     = false;
+        this.hasBGImage        = false;
+        this.isDesignMode      = true;
+        this.onEditableArea = true;
+        if (gContextMenuContentData) {
+          InlineSpellCheckerUI.initFromRemote(gContextMenuContentData.spellInfo);
         }
-        catch(ex) {
-          // If someone built with composer disabled, we can't get an editing session.
-        }
-
-        if (isEditable) {
-          this.onTextInput       = true;
-          this.onKeywordField    = false;
-          this.onImage           = false;
-          this.onLoadedImage     = false;
-          this.onCompletedImage  = false;
-          this.onMathML          = false;
-          this.inFrame           = false;
-          this.inSrcdocFrame     = false;
-          this.hasBGImage        = false;
-          this.isDesignMode      = true;
-          this.onEditableArea = true;
-          InlineSpellCheckerUI.init(editingSession.getEditorForWindow(win));
-          var canSpell = InlineSpellCheckerUI.canSpellCheck && this.canSpellCheck;
+        else {
+          var targetWin = this.target.ownerDocument.defaultView;
+          var editingSession = targetWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                                        .getInterface(Ci.nsIWebNavigation)
+                                        .QueryInterface(Ci.nsIInterfaceRequestor)
+                                        .getInterface(Ci.nsIEditingSession);
+          InlineSpellCheckerUI.init(editingSession.getEditorForWindow(targetWin));
           InlineSpellCheckerUI.initFromEvent(aRangeParent, aRangeOffset);
-          this.showItem("spell-check-enabled", canSpell);
-          this.showItem("spell-separator", canSpell);
         }
+        var canSpell = InlineSpellCheckerUI.canSpellCheck && this.canSpellCheck;
+        this.showItem("spell-check-enabled", canSpell);
+        this.showItem("spell-separator", canSpell);
       }
     }
   },
@@ -1500,30 +1494,6 @@ nsContextMenu.prototype = {
       return node.mozIsTextField(false);
 
     return (node instanceof HTMLTextAreaElement);
-  },
-
-  isTargetAKeywordField: function(aNode) {
-    if (!(aNode instanceof HTMLInputElement))
-      return false;
-
-    var form = aNode.form;
-    if (!form || aNode.type == "password")
-      return false;
-
-    var method = form.method.toUpperCase();
-
-    // These are the following types of forms we can create keywords for:
-    //
-    // method   encoding type       can create keyword
-    // GET      *                                 YES
-    //          *                                 YES
-    // POST                                       YES
-    // POST     application/x-www-form-urlencoded YES
-    // POST     text/plain                        NO (a little tricky to do)
-    // POST     multipart/form-data               NO
-    // POST     everything else                   YES
-    return (method == "GET" || method == "") ||
-           (form.enctype != "text/plain") && (form.enctype != "multipart/form-data");
   },
 
   // Determines whether or not the separator with the specified ID should be
