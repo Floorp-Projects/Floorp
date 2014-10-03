@@ -3808,12 +3808,12 @@ LIRGenerator::visitSimdBinaryComp(MSimdBinaryComp *ins)
 
     if (ins->compareType() == MSimdBinaryComp::CompareInt32x4) {
         LSimdBinaryCompIx4 *add = new(alloc()) LSimdBinaryCompIx4();
-        return lowerForFPU(add, ins, ins->lhs(), ins->rhs());
+        return lowerForCompIx4(add, ins, ins->lhs(), ins->rhs());
     }
 
     if (ins->compareType() == MSimdBinaryComp::CompareFloat32x4) {
         LSimdBinaryCompFx4 *add = new(alloc()) LSimdBinaryCompFx4();
-        return lowerForFPU(add, ins, ins->lhs(), ins->rhs());
+        return lowerForCompFx4(add, ins, ins->lhs(), ins->rhs());
     }
 
     MOZ_CRASH("Unknown compare type when comparing values");
