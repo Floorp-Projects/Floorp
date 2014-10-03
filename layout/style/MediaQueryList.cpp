@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set shiftwidth=2 tabstop=8 autoindent cindent expandtab: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,9 +14,9 @@
 namespace mozilla {
 namespace dom {
 
-MediaQueryList::MediaQueryList(nsIDocument *aDocument,
+MediaQueryList::MediaQueryList(nsPresContext *aPresContext,
                                const nsAString &aMediaQueryList)
-  : mDocument(aDocument),
+  : mPresContext(aPresContext),
     mMediaList(new nsMediaList),
     mMatchesValid(false)
 {
@@ -31,7 +30,7 @@ MediaQueryList::MediaQueryList(nsIDocument *aDocument,
 
 MediaQueryList::~MediaQueryList()
 {
-  if (mDocument) {
+  if (mPresContext) {
     PR_REMOVE_LINK(this);
   }
 }
@@ -39,15 +38,15 @@ MediaQueryList::~MediaQueryList()
 NS_IMPL_CYCLE_COLLECTION_CLASS(MediaQueryList)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(MediaQueryList)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPresContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCallbacks)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(MediaQueryList)
-  if (tmp->mDocument) {
+  if (tmp->mPresContext) {
     PR_REMOVE_LINK(tmp);
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mPresContext)
   }
   tmp->RemoveAllListeners();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
@@ -141,33 +140,11 @@ MediaQueryList::RemoveAllListeners()
 void
 MediaQueryList::RecomputeMatches()
 {
-  if (!mDocument) {
+  if (!mPresContext) {
     return;
   }
 
-  if (mDocument->GetParentDocument()) {
-    // Flush frames on the parent so our prescontext will get
-    // recreated as needed.
-    mDocument->GetParentDocument()->FlushPendingNotifications(Flush_Frames);
-    // That might have killed our document, so recheck that.
-    if (!mDocument) {
-      return;
-    }
-  }
-
-  nsIPresShell* shell = mDocument->GetShell();
-  if (!shell) {
-    // XXXbz What's the right behavior here?  Spec doesn't say.
-    return;
-  }
-
-  nsPresContext* presContext = shell->GetPresContext();
-  if (!presContext) {
-    // XXXbz What's the right behavior here?  Spec doesn't say.
-    return;
-  }
-
-  mMatches = mMediaList->Matches(presContext, nullptr);
+  mMatches = mMediaList->Matches(mPresContext, nullptr);
   mMatchesValid = true;
 }
 
@@ -194,7 +171,10 @@ MediaQueryList::MediumFeaturesChanged(NotifyList &aListenersToNotify)
 nsISupports*
 MediaQueryList::GetParentObject() const
 {
-  return mDocument;
+  if (!mPresContext) {
+    return nullptr;
+  }
+  return mPresContext->Document();
 }
 
 JSObject*

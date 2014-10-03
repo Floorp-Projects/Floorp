@@ -25,7 +25,6 @@
 #include "Units.h"
 #include "nsExpirationTracker.h"
 #include "nsClassHashtable.h"
-#include "prclist.h"
 
 class imgIRequest;
 class nsAString;
@@ -114,7 +113,6 @@ class OverfillCallback;
 class HTMLBodyElement;
 struct LifecycleCallbackArgs;
 class Link;
-class MediaQueryList;
 class GlobalObject;
 class NodeFilter;
 class NodeIterator;
@@ -1507,17 +1505,6 @@ public:
                     mozilla::ErrorResult& aRv) = 0;
 
   /**
-   * Support for window.matchMedia()
-   */
-
-  already_AddRefed<mozilla::dom::MediaQueryList>
-    MatchMedia(const nsAString& aMediaQueryList);
-
-  const PRCList* MediaQueryLists() const {
-    return &mDOMMediaQueryLists;
-  }
-
-  /**
    * Get the compatibility mode for this document
    */
   nsCompatibility GetCompatibilityMode() const {
@@ -2751,9 +2738,6 @@ protected:
 
   uint32_t mBlockDOMContentLoaded;
   bool mDidFireDOMContentLoaded:1;
-
-  // Our live MediaQueryLists
-  PRCList mDOMMediaQueryLists;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocument, NS_IDOCUMENT_IID)
