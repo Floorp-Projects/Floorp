@@ -16,6 +16,7 @@ interface nsIStreamListener;
 interface nsIURI;
 
 interface nsISimpleEnumerator;
+interface nsIChannelPolicy;
 
 #include "nsIRequest.idl" // for nsLoadFlags
 
@@ -61,7 +62,8 @@ interface imgILoader : nsISupports
                              in imgINotificationObserver aObserver,
                              in nsISupports aCX,
                              in nsLoadFlags aLoadFlags,
-                             in nsISupports cacheKey);
+                             in nsISupports cacheKey,
+                             in nsIChannelPolicy channelPolicy);
 
   /**
    * Start the load and decode of an image.

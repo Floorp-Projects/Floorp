@@ -60,6 +60,7 @@
 #include "nsAttrValueInlines.h"
 #include "nsBindingManager.h"
 #include "nsCCUncollectableMarker.h"
+#include "nsChannelPolicy.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsCOMPtr.h"
 #include "nsContentCreatorFunctions.h"
@@ -88,6 +89,7 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsICategoryManager.h"
 #include "nsIChannelEventSink.h"
+#include "nsIChannelPolicy.h"
 #include "nsIChromeRegistry.h"
 #include "nsIConsoleService.h"
 #include "nsIContent.h"
@@ -3004,6 +3006,20 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
   NS_ASSERTION(loadGroup || IsFontTableURI(documentURI),
                "Could not get loadgroup; onload may fire too early");
 
+  // check for a Content Security Policy to pass down to the channel that
+  // will get created to load the image
+  nsCOMPtr<nsIChannelPolicy> channelPolicy;
+  nsCOMPtr<nsIContentSecurityPolicy> csp;
+  if (aLoadingPrincipal) {
+    nsresult rv = aLoadingPrincipal->GetCsp(getter_AddRefs(csp));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (csp) {
+      channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
+      channelPolicy->SetContentSecurityPolicy(csp);
+      channelPolicy->SetLoadType(nsIContentPolicy::TYPE_IMAGE);
+    }
+  }
+    
   // Make the URI immutable so people won't change it under us
   NS_TryToSetImmutable(aURI);
 
@@ -3018,6 +3034,7 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
                               aLoadingDocument,     /* uniquification key */
                               aLoadFlags,           /* load flags */
                               nullptr,               /* cache key */
+                              channelPolicy,        /* CSP info */
                               initiatorType,        /* the load initiator */
                               aRequest);
 }

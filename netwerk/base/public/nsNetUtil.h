@@ -32,6 +32,7 @@
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIChannel.h"
+#include "nsChannelProperties.h"
 #include "nsIInputStreamChannel.h"
 #include "nsITransport.h"
 #include "nsIStreamTransportService.h"
@@ -68,6 +69,7 @@
 #include "nsIWritablePropertyBag2.h"
 #include "nsIIDNService.h"
 #include "nsIChannelEventSink.h"
+#include "nsIChannelPolicy.h"
 #include "nsISocketProviderService.h"
 #include "nsISocketProvider.h"
 #include "nsIRedirectChannelRegistrar.h"
@@ -200,6 +202,7 @@ inline nsresult
 NS_NewChannelInternal(nsIChannel**           outChannel,
                       nsIURI*                aUri,
                       nsILoadInfo*           aLoadInfo,
+                      nsIChannelPolicy*      aChannelPolicy = nullptr,
                       nsILoadGroup*          aLoadGroup = nullptr,
                       nsIInterfaceRequestor* aCallbacks = nullptr,
                       nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
@@ -233,6 +236,14 @@ NS_NewChannelInternal(nsIChannel**           outChannel,
     rv = channel->SetLoadFlags(aLoadFlags | (normalLoadFlags & nsIChannel::LOAD_REPLACE));
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  if (aChannelPolicy) {
+    nsCOMPtr<nsIWritablePropertyBag2> props = do_QueryInterface(channel);
+    if (props) {
+      props->SetPropertyAsInterface(NS_CHANNEL_PROP_CHANNEL_POLICY, aChannelPolicy);
+    }
+  }
+
   channel->SetLoadInfo(aLoadInfo);
 
   // If we're sandboxed, make sure to clear any owner the channel
@@ -252,6 +263,7 @@ NS_NewChannelInternal(nsIChannel**           outChannel,
                       nsIPrincipal*          aRequestingPrincipal,
                       nsSecurityFlags        aSecurityFlags,
                       nsContentPolicyType    aContentPolicyType,
+                      nsIChannelPolicy*      aChannelPolicy = nullptr,
                       nsILoadGroup*          aLoadGroup = nullptr,
                       nsIInterfaceRequestor* aCallbacks = nullptr,
                       nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
@@ -270,6 +282,7 @@ NS_NewChannelInternal(nsIChannel**           outChannel,
   return NS_NewChannelInternal(outChannel,
                                aUri,
                                loadInfo,
+                               aChannelPolicy,
                                aLoadGroup,
                                aCallbacks,
                                aLoadFlags,
@@ -282,6 +295,7 @@ NS_NewChannel(nsIChannel**           outChannel,
               nsINode*               aRequestingNode,
               nsSecurityFlags        aSecurityFlags,
               nsContentPolicyType    aContentPolicyType,
+              nsIChannelPolicy*      aChannelPolicy = nullptr,
               nsILoadGroup*          aLoadGroup = nullptr,
               nsIInterfaceRequestor* aCallbacks = nullptr,
               nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
@@ -294,6 +308,7 @@ NS_NewChannel(nsIChannel**           outChannel,
                                aRequestingNode->NodePrincipal(),
                                aSecurityFlags,
                                aContentPolicyType,
+                               aChannelPolicy,
                                aLoadGroup,
                                aCallbacks,
                                aLoadFlags,
@@ -306,6 +321,7 @@ NS_NewChannel(nsIChannel**           outChannel,
               nsIPrincipal*          aRequestingPrincipal,
               nsSecurityFlags        aSecurityFlags,
               nsContentPolicyType    aContentPolicyType,
+              nsIChannelPolicy*      aChannelPolicy = nullptr,
               nsILoadGroup*          aLoadGroup = nullptr,
               nsIInterfaceRequestor* aCallbacks = nullptr,
               nsLoadFlags            aLoadFlags = nsIRequest::LOAD_NORMAL,
@@ -317,6 +333,7 @@ NS_NewChannel(nsIChannel**           outChannel,
                                aRequestingPrincipal,
                                aSecurityFlags,
                                aContentPolicyType,
+                               aChannelPolicy,
                                aLoadGroup,
                                aCallbacks,
                                aLoadFlags,
@@ -349,6 +366,7 @@ NS_OpenURIInternal(nsIInputStream**       outStream,
                                       aRequestingPrincipal,
                                       aSecurityFlags,
                                       aContentPolicyType,
+                                      nullptr,   // aChannelPolicy,
                                       aLoadGroup,
                                       aCallbacks,
                                       aLoadFlags,
@@ -405,6 +423,7 @@ NS_OpenURIInternal(nsIStreamListener*     aListener,
   nsresult rv = NS_NewChannelInternal(getter_AddRefs(channel),
                                       aUri,
                                       aLoadInfo,
+                                      nullptr,    // aChannelPolicy
                                       aLoadGroup,
                                       aCallbacks,
                                       aLoadFlags,
@@ -815,6 +834,7 @@ NS_NewStreamLoaderInternal(nsIStreamLoader**        outStream,
                                        aRequestingPrincipal,
                                        aSecurityFlags,
                                        aContentPolicyType,
+                                       nullptr,  // aChannelPolicy
                                        aLoadGroup,
                                        aCallbacks,
                                        aLoadFlags);
