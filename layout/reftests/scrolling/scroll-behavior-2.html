@@ -37,7 +37,7 @@
             overflow: scroll;
         }
 
-        #scroll_1, #scroll_2, #scroll_3 {
+        #scroll_1, #scroll_2, #scroll_3, #scroll_7 {
             scroll-behavior: smooth;
         }
 
@@ -76,18 +76,23 @@
     <div id="box6a" class="a_box"></div>
     <div id="box6b" class="another_box"></div>
   </div>
+  <div id="scroll_7" class="scroll_box">
+    <div id="box7a" class="a_box"></div>
+    <div id="box7b" class="another_box"></div>
+  </div>
 <script>
   function doTest() {
     if (document.location.search != '?ref') {
-      document.getElementById("box1b").scrollIntoView(false);
-      document.getElementById("box2b").scrollIntoView(false, {behavior: "auto"});
-      document.getElementById("box3b").scrollIntoView(false, {behavior: "smooth"});
-      document.getElementById("box4b").scrollIntoView(false, {behavior: "smooth"});
-      document.getElementById("box5b").scrollIntoView(false, {behavior: "smooth"});
-      document.getElementById("box6b").scrollIntoView(false, {behavior: "smooth"});
+      document.getElementById("box1b").scrollIntoView({block: "end"});
+      document.getElementById("box2b").scrollIntoView({block: "end", behavior: "auto"});
+      document.getElementById("box3b").scrollIntoView({block: "end", behavior: "smooth"});
+      document.getElementById("box4b").scrollIntoView({block: "end", behavior: "smooth"});
+      document.getElementById("box5b").scrollIntoView({block: "end", behavior: "smooth"});
+      document.getElementById("box6b").scrollIntoView({block: "end", behavior: "smooth"});
+      document.getElementById("box7b").scrollIntoView(false);
 
       // Interrupt any smooth scrolling
-      for (var i=1; i <= 6; i++) {
+      for (var i=1; i <= 7; i++) {
         document.getElementById("scroll_" + i).scrollLeft
           = document.getElementById("scroll_" + i).scrollLeft;
         document.getElementById("scroll_" + i).scrollTop
@@ -96,9 +101,9 @@
     }
     document.documentElement.removeAttribute("class");
   }
-  for (var i=1; i <= 6; i++) {
+  for (var i=1; i <= 7; i++) {
     document.getElementById("box" + i + "a")
-      .scrollIntoView(true, {behavior: "instant"});
+      .scrollIntoView({block: "start", behavior: "instant"});
   }
   window.addEventListener("MozReftestInvalidate", doTest, false);
 </script>
