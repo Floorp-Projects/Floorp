@@ -176,7 +176,6 @@ const kTests = [
       document.getElementById(this.targetID).focus();
       synthesizeKey("a", { type: "keydown" });
       synthesizeComposition({ type: "compositionstart" });
-      synthesizeComposition({ type: "compositionupdate", data: "\u306D" });
       synthesizeText({ "composition":
         { "string": "\u306D",
           "clauses":
@@ -187,7 +186,6 @@ const kTests = [
         "caret": { "start": 1, "length": 0 }
       });
       synthesizeKey("a", { type: "keyup" });
-      synthesizeComposition({ type: "compositionupdate", data: "\u306D" });
       synthesizeText({ "composition":
         { "string": "\u306D",
           "clauses":
@@ -210,7 +208,6 @@ const kTests = [
       document.getElementById(this.targetID).value = "";
       document.getElementById(this.targetID).focus();
       synthesizeComposition({ type: "compositionstart" });
-      synthesizeComposition({ type: "compositionupdate", data: "\u306D" });
       synthesizeText({ "composition":
         { "string": "\u306D",
           "clauses":
@@ -221,7 +218,6 @@ const kTests = [
         "caret": { "start": 1, "length": 0 }
       });
       synthesizeKey("VK_RETURN", { type: "keydown" });
-      synthesizeComposition({ type: "compositionupdate", data: "\u306D" });
       synthesizeText({ "composition":
         { "string": "\u306D",
           "clauses":
@@ -292,7 +288,6 @@ const kTests = [
       document.getElementById(this.targetID).value = "";
       document.getElementById(this.targetID).focus();
       synthesizeComposition({ type: "compositionstart" });
-      synthesizeComposition({ type: "compositionupdate", data: "\u306D" });
       synthesizeText({ "composition":
         { "string": "\u306D",
           "clauses":
@@ -315,7 +310,6 @@ const kTests = [
       document.getElementById(this.targetID).value = "";
       document.getElementById(this.targetID).focus();
       synthesizeComposition({ type: "compositionstart" });
-      synthesizeComposition({ type: "compositionupdate", data: "\u30E9\u30FC\u30E1\u30F3" });
       synthesizeText({ "composition":
         { "string": "\u30E9\u30FC\u30E1\u30F3",
           "clauses":
@@ -351,7 +345,6 @@ const kTests = [
       document.getElementById(this.targetID).value = "";
       document.getElementById(this.targetID).focus();
       synthesizeComposition({ type: "compositionstart" });
-      synthesizeComposition({ type: "compositionupdate", data: "\u30E9\u30FC\u30E1\u30F3" });
       synthesizeText({ "composition":
         { "string": "\u30E9\u30FC\u30E1\u30F3",
           "clauses":
