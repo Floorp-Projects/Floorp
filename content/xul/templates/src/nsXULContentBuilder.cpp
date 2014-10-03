@@ -1057,7 +1057,7 @@ nsXULContentBuilder::CreateContainerContents(nsIContent* aElement,
     }
 
     if (aNotifyAtEnd && container) {
-        MOZ_AUTO_DOC_UPDATE(container->GetCurrentDoc(), UPDATE_CONTENT_MODEL,
+        MOZ_AUTO_DOC_UPDATE(container->GetUncomposedDoc(), UPDATE_CONTENT_MODEL,
                             true);
         nsNodeUtils::ContentAppended(container,
                                      container->GetChildAt(newIndexInContainer),
