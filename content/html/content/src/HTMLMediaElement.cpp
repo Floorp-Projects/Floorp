@@ -509,14 +509,6 @@ HTMLMediaElement::GetMozSrcObject() const
   return stream.forget();
 }
 
-NS_IMETHODIMP
-HTMLMediaElement::GetMozSrcObject(nsIDOMMediaStream** aStream)
-{
-  nsRefPtr<DOMMediaStream> stream = GetMozSrcObject();
-  stream.forget(aStream);
-  return NS_OK;
-}
-
 void
 HTMLMediaElement::SetMozSrcObject(DOMMediaStream& aValue)
 {
@@ -524,12 +516,10 @@ HTMLMediaElement::SetMozSrcObject(DOMMediaStream& aValue)
   Load();
 }
 
-NS_IMETHODIMP
-HTMLMediaElement::SetMozSrcObject(nsIDOMMediaStream* aStream)
+void
+HTMLMediaElement::SetMozSrcObject(DOMMediaStream* aValue)
 {
-  DOMMediaStream* stream = static_cast<DOMMediaStream*>(aStream);
-  SetMozSrcObject(*stream);
-  return NS_OK;
+  SetMozSrcObject(*aValue);
 }
 
 /* readonly attribute nsIDOMHTMLMediaElement mozAutoplayEnabled; */
@@ -1148,7 +1138,7 @@ nsresult HTMLMediaElement::LoadResource()
   }
 
   if (IsMediaStreamURI(mLoadingSrc)) {
-    nsCOMPtr<nsIDOMMediaStream> stream;
+    nsRefPtr<DOMMediaStream> stream;
     rv = NS_GetStreamForMediaStreamURI(mLoadingSrc, getter_AddRefs(stream));
     if (NS_FAILED(rv)) {
       nsCString specUTF8;
@@ -1158,7 +1148,7 @@ nsresult HTMLMediaElement::LoadResource()
       ReportLoadError("MediaLoadInvalidURI", params, ArrayLength(params));
       return rv;
     }
-    SetupSrcMediaStreamPlayback(static_cast<DOMMediaStream*>(stream.get()));
+    SetupSrcMediaStreamPlayback(stream);
     return NS_OK;
   }
 
@@ -1877,13 +1867,6 @@ HTMLMediaElement::MozCaptureStream(ErrorResult& aRv)
   return stream.forget();
 }
 
-NS_IMETHODIMP HTMLMediaElement::MozCaptureStream(nsIDOMMediaStream** aStream)
-{
-  ErrorResult rv;
-  *aStream = MozCaptureStream(rv).take();
-  return rv.ErrorCode();
-}
-
 already_AddRefed<DOMMediaStream>
 HTMLMediaElement::MozCaptureStreamUntilEnded(ErrorResult& aRv)
 {
@@ -1894,13 +1877,6 @@ HTMLMediaElement::MozCaptureStreamUntilEnded(ErrorResult& aRv)
   }
 
   return stream.forget();
-}
-
-NS_IMETHODIMP HTMLMediaElement::MozCaptureStreamUntilEnded(nsIDOMMediaStream** aStream)
-{
-  ErrorResult rv;
-  *aStream = MozCaptureStreamUntilEnded(rv).take();
-  return rv.ErrorCode();
 }
 
 NS_IMETHODIMP HTMLMediaElement::GetMozAudioCaptured(bool* aCaptured)
