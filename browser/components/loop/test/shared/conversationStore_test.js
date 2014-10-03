@@ -10,8 +10,9 @@ describe("loop.ConversationStore", function () {
   var WS_STATES = loop.store.WS_STATES;
   var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
-  var sandbox, dispatcher, client, store, fakeSessionData;
+  var sandbox, dispatcher, client, store, fakeSessionData, sdkDriver;
   var connectPromise, resolveConnectPromise, rejectConnectPromise;
+  var wsCancelSpy, wsCloseSpy, wsMediaUpSpy, fakeWebsocket;
 
   function checkFailures(done, f) {
     try {
@@ -29,9 +30,25 @@ describe("loop.ConversationStore", function () {
     client = {
       setupOutgoingCall: sinon.stub()
     };
+    sdkDriver = {
+      connectSession: sinon.stub(),
+      disconnectSession: sinon.stub()
+    };
+
+    wsCancelSpy = sinon.spy();
+    wsCloseSpy = sinon.spy();
+    wsMediaUpSpy = sinon.spy();
+
+    fakeWebsocket = {
+      cancel: wsCancelSpy,
+      close: wsCloseSpy,
+      mediaUp: wsMediaUpSpy
+    };
+
     store = new loop.store.ConversationStore({}, {
       client: client,
-      dispatcher: dispatcher
+      dispatcher: dispatcher,
+      sdkDriver: sdkDriver
     });
     fakeSessionData = {
       apiKey: "fakeKey",
@@ -63,18 +80,51 @@ describe("loop.ConversationStore", function () {
   describe("#initialize", function() {
     it("should throw an error if the dispatcher is missing", function() {
       expect(function() {
-        new loop.store.ConversationStore({}, {client: client});
+        new loop.store.ConversationStore({}, {
+          client: client,
+          sdkDriver: sdkDriver
+        });
       }).to.Throw(/dispatcher/);
     });
 
     it("should throw an error if the client is missing", function() {
       expect(function() {
-        new loop.store.ConversationStore({}, {dispatcher: dispatcher});
+        new loop.store.ConversationStore({}, {
+          dispatcher: dispatcher,
+          sdkDriver: sdkDriver
+        });
       }).to.Throw(/client/);
+    });
+
+    it("should throw an error if the sdkDriver is missing", function() {
+      expect(function() {
+        new loop.store.ConversationStore({}, {
+          client: client,
+          dispatcher: dispatcher
+        });
+      }).to.Throw(/sdkDriver/);
     });
   });
 
   describe("#connectionFailure", function() {
+    beforeEach(function() {
+      store._websocket = fakeWebsocket;
+    });
+
+    it("should disconnect the session", function() {
+      dispatcher.dispatch(
+        new sharedActions.ConnectionFailure({reason: "fake"}));
+
+      sinon.assert.calledOnce(sdkDriver.disconnectSession);
+    });
+
+    it("should ensure the websocket is closed", function() {
+      dispatcher.dispatch(
+        new sharedActions.ConnectionFailure({reason: "fake"}));
+
+      sinon.assert.calledOnce(wsCloseSpy);
+    });
+
     it("should set the state to 'terminated'", function() {
       store.set({callState: CALL_STATES.ALERTING});
 
@@ -119,35 +169,29 @@ describe("loop.ConversationStore", function () {
     });
 
     describe("progress: connecting", function() {
-      it("should change the state to 'ongoing'", function() {
+      beforeEach(function() {
         store.set({callState: CALL_STATES.ALERTING});
+      });
 
+      it("should change the state to 'ongoing'", function() {
         dispatcher.dispatch(
           new sharedActions.ConnectionProgress({wsState: WS_STATES.CONNECTING}));
 
         expect(store.get("callState")).eql(CALL_STATES.ONGOING);
       });
-    });
 
-    describe("progress: half-connected", function() {
-      it("should change the state to 'ongoing'", function() {
-        store.set({callState: CALL_STATES.ALERTING});
+      it("should connect the session", function() {
+        store.set(fakeSessionData);
 
         dispatcher.dispatch(
-          new sharedActions.ConnectionProgress({wsState: WS_STATES.HALF_CONNECTED}));
+          new sharedActions.ConnectionProgress({wsState: WS_STATES.CONNECTING}));
 
-        expect(store.get("callState")).eql(CALL_STATES.ONGOING);
-      });
-    });
-
-    describe("progress: connecting", function() {
-      it("should change the state to 'ongoing'", function() {
-        store.set({callState: CALL_STATES.ALERTING});
-
-        dispatcher.dispatch(
-          new sharedActions.ConnectionProgress({wsState: WS_STATES.CONNECTED}));
-
-        expect(store.get("callState")).eql(CALL_STATES.ONGOING);
+        sinon.assert.calledOnce(sdkDriver.connectSession);
+        sinon.assert.calledWithExactly(sdkDriver.connectSession, {
+          apiKey: "fakeKey",
+          sessionId: "321456",
+          sessionToken: "341256"
+        });
       });
     });
   });
@@ -332,6 +376,12 @@ describe("loop.ConversationStore", function () {
       store.set({callState: CALL_STATES.ONGOING});
     });
 
+    it("should disconnect the session", function() {
+      dispatcher.dispatch(new sharedActions.HangupCall());
+
+      sinon.assert.calledOnce(sdkDriver.disconnectSession);
+    });
+
     it("should send a media-fail message to the websocket if it is open", function() {
       dispatcher.dispatch(new sharedActions.HangupCall());
 
@@ -351,7 +401,69 @@ describe("loop.ConversationStore", function () {
     });
   });
 
+  describe("#peerHungupCall", function() {
+    var wsMediaFailSpy, wsCloseSpy;
+    beforeEach(function() {
+      wsMediaFailSpy = sinon.spy();
+      wsCloseSpy = sinon.spy();
+
+      store._websocket = {
+        mediaFail: wsMediaFailSpy,
+        close: wsCloseSpy
+      };
+      store.set({callState: CALL_STATES.ONGOING});
+    });
+
+    it("should disconnect the session", function() {
+      dispatcher.dispatch(new sharedActions.PeerHungupCall());
+
+      sinon.assert.calledOnce(sdkDriver.disconnectSession);
+    });
+
+    it("should ensure the websocket is closed", function() {
+      dispatcher.dispatch(new sharedActions.PeerHungupCall());
+
+      sinon.assert.calledOnce(wsCloseSpy);
+    });
+
+    it("should set the callState to finished", function() {
+      dispatcher.dispatch(new sharedActions.PeerHungupCall());
+
+      expect(store.get("callState")).eql(CALL_STATES.FINISHED);
+    });
+  });
+
   describe("#cancelCall", function() {
+    beforeEach(function() {
+      store._websocket = fakeWebsocket;
+
+      store.set({callState: CALL_STATES.CONNECTING});
+    });
+
+    it("should disconnect the session", function() {
+      dispatcher.dispatch(new sharedActions.CancelCall());
+
+      sinon.assert.calledOnce(sdkDriver.disconnectSession);
+    });
+
+    it("should send a cancel message to the websocket if it is open", function() {
+      dispatcher.dispatch(new sharedActions.CancelCall());
+
+      sinon.assert.calledOnce(wsCancelSpy);
+    });
+
+    it("should ensure the websocket is closed", function() {
+      dispatcher.dispatch(new sharedActions.CancelCall());
+
+      sinon.assert.calledOnce(wsCloseSpy);
+    });
+
+    it("should set the state to close if the call is connecting", function() {
+      dispatcher.dispatch(new sharedActions.CancelCall());
+
+      expect(store.get("callState")).eql(CALL_STATES.CLOSE);
+    });
+
     it("should set the state to close if the call has terminated already", function() {
       store.set({callState: CALL_STATES.TERMINATED});
 
@@ -360,37 +472,6 @@ describe("loop.ConversationStore", function () {
       expect(store.get("callState")).eql(CALL_STATES.CLOSE);
     });
 
-    describe("whilst connecting", function() {
-      var wsCancelSpy, wsCloseSpy;
-      beforeEach(function() {
-        wsCancelSpy = sinon.spy();
-        wsCloseSpy = sinon.spy();
-
-        store._websocket = {
-          cancel: wsCancelSpy,
-          close: wsCloseSpy
-        };
-        store.set({callState: CALL_STATES.CONNECTING});
-      });
-
-      it("should send a cancel message to the websocket if it is open", function() {
-        dispatcher.dispatch(new sharedActions.CancelCall());
-
-        sinon.assert.calledOnce(wsCancelSpy);
-      });
-
-      it("should ensure the websocket is closed", function() {
-        dispatcher.dispatch(new sharedActions.CancelCall());
-
-        sinon.assert.calledOnce(wsCloseSpy);
-      });
-
-      it("should set the state to close if the call is connecting", function() {
-        dispatcher.dispatch(new sharedActions.CancelCall());
-
-        expect(store.get("callState")).eql(CALL_STATES.CLOSE);
-      });
-    });
   });
 
   describe("#retryCall", function() {
@@ -415,6 +496,40 @@ describe("loop.ConversationStore", function () {
       sinon.assert.calledOnce(client.setupOutgoingCall);
       sinon.assert.calledWith(client.setupOutgoingCall,
         ["fake"], sharedUtils.CALL_TYPES.AUDIO_VIDEO);
+    });
+  });
+
+  describe("#mediaConnected", function() {
+    it("should send mediaUp via the websocket", function() {
+      store._websocket = fakeWebsocket;
+
+      dispatcher.dispatch(new sharedActions.MediaConnected());
+
+      sinon.assert.calledOnce(wsMediaUpSpy);
+    });
+  });
+
+  describe("#setMute", function() {
+    it("should save the mute state for the audio stream", function() {
+      store.set({"audioMuted": false});
+
+      dispatcher.dispatch(new sharedActions.SetMute({
+        type: "audio",
+        enabled: true
+      }));
+
+      expect(store.get("audioMuted")).eql(true);
+    });
+
+    it("should save the mute state for the video stream", function() {
+      store.set({"videoMuted": true});
+
+      dispatcher.dispatch(new sharedActions.SetMute({
+        type: "video",
+        enabled: false
+      }));
+
+      expect(store.get("videoMuted")).eql(false);
     });
   });
 
