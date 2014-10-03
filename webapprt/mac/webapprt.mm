@@ -117,7 +117,13 @@ main(int argc, char **argv)
     NSString* myWebRTPath = [myBundle pathForResource:@"webapprt"
                                                ofType:nil];
     if (!myWebRTPath) {
-      @throw MakeException(@"Missing Web Runtime Files", @"Cannot locate binary for this App");
+      myWebRTPath = [myBundlePath stringByAppendingPathComponent:@"Contents"];
+      myWebRTPath = [myWebRTPath stringByAppendingPathComponent:@"MacOS"];
+      myWebRTPath = [myWebRTPath stringByAppendingPathComponent:@"webapprt"];
+      if ([[NSFileManager defaultManager] fileExistsAtPath:myWebRTPath] == NO) {
+        @throw MakeException(@"Missing Web Runtime Files",
+                             @"Cannot locate binary for this App");
+      }
     }
 
     //GET FIREFOX BUILD ID

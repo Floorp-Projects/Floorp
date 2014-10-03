@@ -18,9 +18,13 @@ __BEGIN_DECLS
 #endif
 
 #ifdef CPR_USE_OS_STRCASECMP
-/* Use standard library types */
+/* Use standard library types, but use the OS's name for the functions */
+#ifndef cpr_strcasecmp
 #define cpr_strcasecmp  strcasecmp
+#endif
+#ifndef cpr_strncasecmp
 #define cpr_strncasecmp strncasecmp
+#endif
 #else
 /* Prototypes */
 /**
