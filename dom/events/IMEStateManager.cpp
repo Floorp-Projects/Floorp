@@ -908,6 +908,11 @@ IMEStateManager::DispatchCompositionEvent(nsINode* aEventTargetNode,
     return;
   }
 
+  // Temporarily, let's ignore compositionupdate event from widget.
+  if (aEvent->message == NS_COMPOSITION_UPDATE) {
+    return;
+  }
+
   EnsureTextCompositionArray();
 
   WidgetGUIEvent* GUIEvent = aEvent->AsGUIEvent();
