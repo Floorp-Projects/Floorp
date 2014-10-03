@@ -1493,8 +1493,13 @@ Simulator::readW(int32_t addr, SimInstruction *instr)
 {
     // The regexp engine emits unaligned loads, so we don't check for them here
     // like most of the other methods do.
-    intptr_t *ptr = reinterpret_cast<intptr_t*>(addr);
-    return *ptr;
+    if ((addr & 3) == 0 || !HasAlignmentFault()) {
+        intptr_t *ptr = reinterpret_cast<intptr_t*>(addr);
+        return *ptr;
+    } else {
+        printf("Unaligned write at 0x%08x, pc=%p\n", addr, instr);
+        MOZ_CRASH();
+    }
 }
 
 void
@@ -1514,8 +1519,13 @@ Simulator::readHU(int32_t addr, SimInstruction *instr)
 {
     // The regexp engine emits unaligned loads, so we don't check for them here
     // like most of the other methods do.
-    uint16_t *ptr = reinterpret_cast<uint16_t*>(addr);
-    return *ptr;
+    if ((addr & 1) == 0 || !HasAlignmentFault()) {
+       uint16_t *ptr = reinterpret_cast<uint16_t*>(addr);
+       return *ptr;
+    }
+    printf("Unaligned unsigned halfword read at 0x%08x, pc=%p\n", addr, instr);
+    MOZ_CRASH();
+    return 0;
 }
 
 int16_t

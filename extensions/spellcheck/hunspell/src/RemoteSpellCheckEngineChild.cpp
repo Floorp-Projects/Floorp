@@ -5,8 +5,9 @@
 #include "RemoteSpellCheckEngineChild.h"
 
 namespace mozilla {
+
 RemoteSpellcheckEngineChild::RemoteSpellcheckEngineChild(mozSpellChecker *aOwner)
-  :mOwner(aOwner)
+  : mOwner(aOwner)
 {
 }
 
@@ -15,7 +16,6 @@ RemoteSpellcheckEngineChild::~RemoteSpellcheckEngineChild()
   // null out the owner's SpellcheckEngineChild to prevent state corruption
   // during shutdown
   mOwner->DeleteRemoteEngine();
-
 }
 
 } //namespace mozilla

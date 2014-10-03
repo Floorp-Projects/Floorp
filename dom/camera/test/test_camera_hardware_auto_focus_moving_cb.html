@@ -53,23 +53,14 @@ var tests = [
   {
     key: "autofocus-moving-true",
     func: function testAutoFocusMovingIsTrue(camera) {
-      camera.onAutoFocusMoving = function(aIsMoving) {
-        ok(aIsMoving == true,"onAutoFocusMoving callback received true correctly");
+      var handler = function(evt) {
+        camera.removeEventListener("focus", handler);
+        ok(evt.newState == "focusing", "autofocus event state focusing == " + evt.newState);
         camera.focusMode = 'auto';
         next();
       }
+      camera.addEventListener("focus", handler);
       camera.focusMode = 'continuous-picture';
-    }
-  },
-  {
-    key: "autofocus-moving-false",
-    func: function testAutoFocusMovingIsFalse(camera) {
-      camera.onAutoFocusMoving = function(aIsMoving) {
-        ok(aIsMoving == false, "onAutoFocusMoving callback received false correctly");
-        camera.focusMode = 'auto';
-        end();
-      }
-      camera.focusMode = 'continuous-video';
     }
   },
 ];
@@ -100,13 +91,13 @@ CameraTest.begin("hardware", function(test) {
     } catch(e) { }
     ok(enabled, PREF_AUTOFOCUSCALLBACK_ENABLED + " is " + enabled);
 
-    function onSuccess(camera, config) {
-      document.getElementById('viewfinder').mozSrcObject = camera;
-      cameraObj = camera;
+    function onSuccess(d) {
+      document.getElementById('viewfinder').mozSrcObject = d.camera;
+      cameraObj = d.camera;
       CameraTest.next = function() {
         try {
           var t = testGenerator.next();
-          test.set(t.key, t.func.bind(undefined, camera));
+          test.set(t.key, t.func.bind(undefined, d.camera));
         } catch(e) {
           if (e instanceof StopIteration) {
             end();
@@ -121,7 +112,7 @@ CameraTest.begin("hardware", function(test) {
       ok(false, "getCamera() failed with: " + error);
       end();
     }
-    navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError);
+    navigator.mozCameras.getCamera(whichCamera, initialConfig).then(onSuccess, onError);
   })
 });
 

@@ -199,12 +199,12 @@ static void ProcessDelayedAudioRoute(SwitchState aState)
   sSwitchDone = true;
 }
 
-static void ProcessDelayedA2dpRoute(audio_policy_dev_state_t aState, const char *aAddress)
+static void ProcessDelayedA2dpRoute(audio_policy_dev_state_t aState, const nsCString aAddress)
 {
   if (sA2dpSwitchDone)
     return;
   AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_BLUETOOTH_A2DP,
-                                        aState, aAddress);
+                                        aState, aAddress.get());
   String8 cmd("bluetooth_enabled=false");
   AudioSystem::setParameters(0, cmd);
   cmd.setTo("A2dpSuspended=true");
@@ -280,7 +280,7 @@ AudioManager::HandleBluetoothStatusChanged(nsISupports* aSubject,
   } else if (!strcmp(aTopic, BLUETOOTH_A2DP_STATUS_CHANGED_ID)) {
     if (audioState == AUDIO_POLICY_DEVICE_STATE_UNAVAILABLE && sA2dpSwitchDone) {
       MessageLoop::current()->PostDelayedTask(
-        FROM_HERE, NewRunnableFunction(&ProcessDelayedA2dpRoute, audioState, aAddress.get()), 1000);
+        FROM_HERE, NewRunnableFunction(&ProcessDelayedA2dpRoute, audioState, aAddress), 1000);
       sA2dpSwitchDone = false;
     } else {
       AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_BLUETOOTH_A2DP,

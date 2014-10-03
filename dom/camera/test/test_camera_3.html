@@ -22,7 +22,7 @@ var options = {
 };
 
 function onError(e) {
-  ok(false, "Error" + JSON.stringify(e));
+  ok(false, "Error " + e);
 }
 
 var Camera = {
@@ -31,32 +31,33 @@ var Camera = {
     return document.getElementById('viewfinder');
   },
   onReady: function take_two() {
-    function onSuccess(camera, config) {
-      ok(false, "Unexpectedly got second camera instance: " + config.toSource);
+    function onSuccess(d) {
+      ok(false, "Unexpectedly got second camera instance: " + d.config.toSource);
     }
     function onFailure(error) {
       ok(true, "Correctly failed to get camera again");
       SimpleTest.finish();
     }
-    navigator.mozCameras.getCamera(whichCamera, options, onSuccess, onFailure);
+    navigator.mozCameras.getCamera(whichCamera, options).then(onSuccess, onFailure);
+  },
+  onPreviewStateChange: function onPreviewStateChange(e) {
+    if (e.newState === 'started') {
+      ok(true, "viewfinder is ready and playing");
+      Camera.cameraObj.removeEventListener('previewstatechange', Camera.onPreviewStateChange);
+      Camera.onReady();
+    }
   },
   release: function release() {
     cameraObj = null;
   },
   start: function run_test() {
-    function onSuccess(camera, config) {
-      Camera.cameraObj = camera;
-      Camera.viewfinder.mozSrcObject = camera;
+    function onSuccess(d) {
+      Camera.cameraObj = d.camera;
+      Camera.cameraObj.addEventListener('previewstatechange', Camera.onPreviewStateChange);
+      Camera.viewfinder.mozSrcObject = d.camera;
       Camera.viewfinder.play();
-      Camera.cameraObj.onPreviewStateChange = function(state) {
-        if (state === 'started') {
-          ok(true, "viewfinder is ready and playing");
-          Camera.cameraObj.onPreviewStateChange = null;
-          Camera.onReady();
-        }
-      };
     };
-    navigator.mozCameras.getCamera(whichCamera, options, onSuccess, onError);
+    navigator.mozCameras.getCamera(whichCamera, options).then(onSuccess, onError);
   }
 }
 

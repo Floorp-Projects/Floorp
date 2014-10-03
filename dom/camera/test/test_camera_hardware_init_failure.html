@@ -34,9 +34,9 @@ var tests = [
     name: "init-failure",
     key: "init-failure",
     func: function testInitFailure(test) {
-      function onSuccess(camera, config) {
+      function onSuccess(d) {
         ok(false, "onSuccess called incorrectly");
-        camera.release();
+        d.camera.release();
         test.next();
       }
       function onError(error) {
@@ -44,7 +44,7 @@ var tests = [
         test.next();
       }
       info("Running test: init-failure");
-      navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError);
+      navigator.mozCameras.getCamera(whichCamera, initialConfig).then(onSuccess, onError);
     }
   },
   /* This test case (init-success) *must* follow the preceeding test case
@@ -53,9 +53,9 @@ var tests = [
     name: "init-success",
     key: "",
     func: function(test) {
-      function onSuccess(camera, config) {
+      function onSuccess(d) {
         ok(true, "onSuccess called correctly");
-        camera.release();
+        d.camera.release();
         test.next();
       }
       function onError(error) {
@@ -63,7 +63,7 @@ var tests = [
         test.next();
       }
       info("Running test: init-success");
-      navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError)
+      navigator.mozCameras.getCamera(whichCamera, initialConfig).then(onSuccess, onError)
     }
   }
 ];

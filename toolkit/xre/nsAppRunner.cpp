@@ -4571,30 +4571,38 @@ LogE10sBlockedReason(const char *reason) {
 bool
 mozilla::BrowserTabsRemoteAutostart()
 {
+  if (gBrowserTabsRemoteAutostartInitialized) {
+    return gBrowserTabsRemoteAutostart;
+  }
+  gBrowserTabsRemoteAutostartInitialized = true;
+  bool optInPref = Preferences::GetBool("browser.tabs.remote.autostart", false);
+  bool trialPref = Preferences::GetBool("browser.tabs.remote.autostart.1", false);
+  bool testPref = Preferences::GetBool("layers.offmainthreadcomposition.testing.enabled", false);
 #if !defined(NIGHTLY_BUILD)
-  return false;
-#endif
-  if (!gBrowserTabsRemoteAutostartInitialized) {
-    bool optInPref = Preferences::GetBool("browser.tabs.remote.autostart", false);
-    bool trialPref = Preferences::GetBool("browser.tabs.remote.autostart.1", false);
-    bool prefEnabled = optInPref || trialPref;
+  // When running tests with 'layers.offmainthreadcomposition.testing.enabled' and autostart
+  // set to true, return enabled.  These tests must be allowed to run remotely.
+  if (testPref && optInPref) {
+    gBrowserTabsRemoteAutostart = true;
+  }
+#else
+  bool prefEnabled = optInPref || trialPref;
 
-    bool disabledForA11y = Preferences::GetBool("browser.tabs.remote.autostart.disabled-because-using-a11y", false);
-    // Only disable for IME for the automatic pref, not the opt-in one.
-    bool disabledForIME = trialPref && KeyboardMayHaveIME();
+  bool disabledForA11y = Preferences::GetBool("browser.tabs.remote.autostart.disabled-because-using-a11y", false);
+  // Only disable for IME for the automatic pref, not the opt-in one.
+  bool disabledForIME = trialPref && KeyboardMayHaveIME();
 
-    if (prefEnabled) {
-      if (gSafeMode) {
-        LogE10sBlockedReason("Firefox is in safe mode.");
-      } else if (disabledForA11y) {
-        LogE10sBlockedReason("An accessibility tool is active.");
-      } else if (disabledForIME) {
-        LogE10sBlockedReason("The keyboard being used has activated IME.");
-      } else {
-        gBrowserTabsRemoteAutostart = true;
-      }
+  if (prefEnabled) {
+    if (gSafeMode) {
+      LogE10sBlockedReason("Firefox is in safe mode.");
+    } else if (disabledForA11y) {
+      LogE10sBlockedReason("An accessibility tool is active.");
+    } else if (disabledForIME) {
+      LogE10sBlockedReason("The keyboard being used has activated IME.");
+    } else {
+      gBrowserTabsRemoteAutostart = true;
     }
-
+  }
+#endif
 
 #if defined(XP_WIN) || defined(XP_MACOSX)
   // If for any reason we suspect acceleration will be disabled, disabled
@@ -4651,19 +4659,15 @@ mozilla::BrowserTabsRemoteAutostart()
   }
 #endif
 
-    gBrowserTabsRemoteAutostartInitialized = true;
-
-    mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_AUTOSTART, gBrowserTabsRemoteAutostart);
-    if (Preferences::GetBool("browser.enabledE10SFromPrompt", false)) {
-      mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_STILL_ACCEPTED_FROM_PROMPT,
-                                     gBrowserTabsRemoteAutostart);
-    }
-    if (prefEnabled) {
-      mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_BLOCKED_FROM_RUNNING,
-                                     !gBrowserTabsRemoteAutostart);
-    }
+  mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_AUTOSTART, gBrowserTabsRemoteAutostart);
+  if (Preferences::GetBool("browser.enabledE10SFromPrompt", false)) {
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_STILL_ACCEPTED_FROM_PROMPT,
+                                    gBrowserTabsRemoteAutostart);
   }
-
+  if (prefEnabled) {
+    mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_BLOCKED_FROM_RUNNING,
+                                    !gBrowserTabsRemoteAutostart);
+  }
   return gBrowserTabsRemoteAutostart;
 }
 

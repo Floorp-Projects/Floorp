@@ -46,7 +46,9 @@ var Camera = {
       SimpleTest.finish();
     }
 
-    function getCamera_onSuccess(camera, cfg) {
+    function getCamera_onSuccess(d) {
+      var camera = d.camera;
+      var cfg = d.configuration;
       Camera.cameraObj = camera;
       Camera.viewfinder.mozSrcObject = camera;
       Camera.viewfinder.play();
@@ -59,10 +61,10 @@ var Camera = {
          "Initial recorder profile = '" + cfg.recorderProfile + "'");
 
       // Apply our specific configuration
-      camera.setConfiguration(config, setConfig_onSuccess, onError);
+      camera.setConfiguration(config).then(setConfig_onSuccess, onError);
     }
 
-    navigator.mozCameras.getCamera(whichCamera, {}, getCamera_onSuccess, onError);
+    navigator.mozCameras.getCamera(whichCamera, {}).then(getCamera_onSuccess, onError);
   }
 }
 

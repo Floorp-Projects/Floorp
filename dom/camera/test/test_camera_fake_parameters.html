@@ -28,7 +28,7 @@ var cameraObj = null;
 
 // Shorthand functions
 function onError(e) {
-  ok(false, "Error" + JSON.stringify(e));
+  ok(false, "Error " + e);
 }
 
 function end() {
@@ -427,20 +427,19 @@ CameraTest.begin("hardware", function(test) {
     try {
       var t = testGenerator.next();
       info("test: " + t.key);
-      function onSuccess(camera, config) {
-        cameraObj = camera;
-        document.getElementById('viewfinder').mozSrcObject = camera;
-        camera.onPreviewStateChange = function (state) {
-          if (state === "started") {
-            t.test(camera, camera.capabilities);
-          } else {
-            ok(false, "preview started (state = '" + state + "')");
+      function onSuccess(d) {
+        cameraObj = d.camera;
+        document.getElementById('viewfinder').mozSrcObject = d.camera;
+        var onPreviewStateChange = function (evt) {
+          if (evt.newState === "started") {
+            cameraObj.removeEventListener('previewstatechange', onPreviewStateChange);
+            t.test(cameraObj, cameraObj.capabilities);
           }
-          camera.onPreviewStateChange = null;
         };
+        cameraObj.addEventListener('previewstatechange', onPreviewStateChange);
       }
       CameraTest.run = function() {
-        navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError);
+        navigator.mozCameras.getCamera(whichCamera, initialConfig).then(onSuccess, onError);
       };
       t.prep(test);
     } catch(e) {
