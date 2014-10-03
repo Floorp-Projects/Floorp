@@ -4,9 +4,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This script uses addr2line (part of binutils) to post-process the entries
-# produced by NS_FormatCodeAddress(), which on Linux often lack a function
-# name, a file name and a line number.
+# This script uses addr2line (part of binutils) to process the output of
+# nsTraceRefcnt's Linux stack walking code.  This is useful for two
+# things:
+#  (1) Getting line number information out of
+#      |nsTraceRefcnt::WalkTheStack|'s output in debug builds.
+#  (2) Getting function names out of |nsTraceRefcnt::WalkTheStack|'s
+#      output on optimized builds (where it mostly prints UNKNOWN
+#      because only a handful of symbols are exported from component
+#      libraries).
+#
+# Use the script by piping output containing stacks (such as raw stacks
+# or make-tree.pl balance trees) through this script.
 
 import subprocess
 import sys
@@ -287,20 +296,25 @@ def addressToSymbol(file, address):
     cache[address] = result
     return result
 
-# Matches lines produced by NS_FormatCodeAddress().
-line_re = re.compile("^(.*#\d+: )(.+)\[(.+) \+(0x.+)\](.*)$")
+line_re = re.compile("^(.*) ?\[([^ ]*) \+(0x[0-9A-F]{1,8})\](.*)$")
+balance_tree_re = re.compile("^([ \|0-9-]*)(.*)$")
 
 def fixSymbols(line):
     result = line_re.match(line)
     if result is not None:
-        (before, fn, file, address, after) = result.groups()
+        # before allows preservation of balance trees
+        # after allows preservation of counts
+        (before, file, address, after) = result.groups()
 
         if os.path.exists(file) and os.path.isfile(file):
+            # throw away the bad symbol, but keep balance tree structure
+            (before, badsymbol) = balance_tree_re.match(before).groups()
+
             (name, fileline) = addressToSymbol(file, address)
 
             # If addr2line gave us something useless, keep what we had before.
             if name == "??":
-                name = fn
+                name = badsymbol
             if fileline == "??:0" or fileline == "??:?":
                 fileline = file
 

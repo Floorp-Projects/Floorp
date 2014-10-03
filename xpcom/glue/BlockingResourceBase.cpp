@@ -185,7 +185,7 @@ BlockingResourceBase::Print(nsACString& aOut) const
   WalkTheStackCodeAddressService addressService;
 
   for (uint32_t i = 0; i < state.Length(); i++) {
-    const size_t kMaxLength = 1024;
+    const size_t kMaxLength = 4096;
     char buffer[kMaxLength];
     addressService.GetLocation(state[i], buffer, kMaxLength);
     const char* fmt = "    %s\n";

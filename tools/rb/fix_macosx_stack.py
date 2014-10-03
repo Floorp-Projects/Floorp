@@ -4,9 +4,16 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This script uses |atos| to post-process the entries produced by
-# NS_FormatCodeAddress(), which on Mac often lack a file name and a line
-# number.
+# This script uses atos to process the output of nsTraceRefcnt's Mac OS
+# X stack walking code.  This is useful for two things:
+#  (1) Getting line number information out of
+#      |nsTraceRefcnt::WalkTheStack|'s output in debug builds.
+#  (2) Getting function names out of |nsTraceRefcnt::WalkTheStack|'s
+#      output on all builds (where it mostly prints UNKNOWN because only
+#      a handful of symbols are exported from component libraries).
+#
+# Use the script by piping output containing stacks (such as raw stacks
+# or make-tree.pl balance trees) through this script.
 
 import subprocess
 import sys
@@ -92,14 +99,16 @@ def cxxfilt(sym):
     cxxfilt_proc.stdin.write(sym + "\n")
     return cxxfilt_proc.stdout.readline().rstrip("\n")
 
-# Matches lines produced by NS_FormatCodeAddress().
-line_re = re.compile("^(.*#\d+: )(.+)\[(.+) \+(0x.+)\](.*)$")
+line_re = re.compile("^(.*) ?\[([^ ]*) \+(0x[0-9a-fA-F]{1,8})\](.*)$")
+balance_tree_re = re.compile("^([ \|0-9-]*)")
 atos_name_re = re.compile("^(.+) \(in ([^)]+)\) \((.+)\)$")
 
 def fixSymbols(line):
     result = line_re.match(line)
     if result is not None:
-        (before, fn, file, address, after) = result.groups()
+        # before allows preservation of balance trees
+        # after allows preservation of counts
+        (before, file, address, after) = result.groups()
         address = int(address, 16)
 
         if os.path.exists(file) and os.path.isfile(file):
@@ -119,6 +128,9 @@ def fixSymbols(line):
                 if (name.startswith("_Z")):
                     name = cxxfilt(name)
                 info = "%s (%s, in %s)" % (name, fileline, library)
+
+            # throw away the bad symbol, but keep balance tree structure
+            before = balance_tree_re.match(before).groups()[0]
 
             nl = '\n' if line[-1] == '\n' else ''
             return before + info + after + nl

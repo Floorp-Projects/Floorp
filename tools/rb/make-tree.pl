@@ -97,16 +97,11 @@ sub read_data($$$) {
      
           my $cnt = shift(@fields);
      
-          # Collect the remaining lines to create a stack trace. We need to
-          # filter out the frame numbers so that frames that differ only in
-          # their frame number are considered equivalent. However, we need to
-          # keep a frame number on each line so that the fix*.py scripts can
-          # parse the output. So we set the frame number to 0 for every frame.
+          # Collect the remaining lines to create a stack trace.
           my @stack;
           CALLSITE: while (<$INFILE>) {
               chomp;
               last CALLSITE if (/^$/);
-              $_ =~ s/#\d+: /#00: /;    # replace frame number with 0
               $stack[++$#stack] = $_;
           }
      
