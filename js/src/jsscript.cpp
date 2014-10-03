@@ -1176,6 +1176,11 @@ JSScript::scriptSource() const {
     return scriptSourceUnwrap().source();
 }
 
+js::ScriptSource *
+JSScript::maybeForwardedScriptSource() const {
+    return UncheckedUnwrap(MaybeForwarded(sourceObject()))->as<ScriptSourceObject>().source();
+}
+
 bool
 JSScript::initScriptCounts(JSContext *cx)
 {
