@@ -55,9 +55,7 @@ loop.panel = (function(_, mozL10n) {
       }, this);
       return (
         React.DOM.div({className: "tab-view-container"}, 
-          !this.props.buttonsHidden
-            ? React.DOM.ul({className: "tab-view"}, tabButtons)
-            : null, 
+          React.DOM.ul({className: "tab-view"}, tabButtons), 
           tabs
         )
       );
@@ -481,12 +479,7 @@ loop.panel = (function(_, mozL10n) {
     },
 
     _onStatusChanged: function() {
-      var profile = navigator.mozLoop.userProfile;
-      if (profile != this.state.userProfile) {
-        // On profile change (login, logout), switch back to the default tab.
-        this.selectTab("call");
-      }
-      this.setState({userProfile: profile});
+      this.setState({userProfile: navigator.mozLoop.userProfile});
       this.updateServiceErrors();
     },
 
@@ -519,7 +512,7 @@ loop.panel = (function(_, mozL10n) {
         React.DOM.div(null, 
           NotificationListView({notifications: this.props.notifications, 
                                 clearOnDocumentHidden: true}), 
-          TabView({ref: "tabView", buttonsHidden: !this.state.userProfile}, 
+          TabView({ref: "tabView"}, 
             Tab({name: "call"}, 
               React.DOM.div({className: "content-area"}, 
                 CallUrlResult({client: this.props.client, 
