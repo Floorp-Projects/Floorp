@@ -58,6 +58,18 @@ class LIRGeneratorMIPS : public LIRGeneratorShared
                      MDefinition *src);
     bool lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir,
                      MDefinition *lhs, MDefinition *rhs);
+
+    bool lowerForCompIx4(LSimdBinaryCompIx4 *ins, MSimdBinaryComp *mir,
+                         MDefinition *lhs, MDefinition *rhs)
+    {
+        return lowerForFPU(ins, mir, lhs, rhs);
+    }
+    bool lowerForCompFx4(LSimdBinaryCompFx4 *ins, MSimdBinaryComp *mir,
+                         MDefinition *lhs, MDefinition *rhs)
+    {
+        return lowerForFPU(ins, mir, lhs, rhs);
+    }
+
     bool lowerForBitAndAndBranch(LBitAndAndBranch *baab, MInstruction *mir,
                                  MDefinition *lhs, MDefinition *rhs);
     bool lowerConstantDouble(double d, MInstruction *ins);

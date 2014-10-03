@@ -1552,14 +1552,10 @@ jit::JitActivation::markRematerializedFrames(JSTracer *trc)
 }
 
 bool
-jit::JitActivation::registerIonFrameRecovery(IonJSFrameLayout *fp, RInstructionResults&& results)
+jit::JitActivation::registerIonFrameRecovery(RInstructionResults&& results)
 {
-#ifdef DEBUG
     // Check that there is no entry in the vector yet.
-    RInstructionResults *tmp = maybeIonFrameRecovery(fp);
-    MOZ_ASSERT_IF(tmp, tmp->isInitialized());
-#endif
-
+    MOZ_ASSERT(!maybeIonFrameRecovery(results.frame()));
     if (!ionRecovery_.append(mozilla::Move(results)))
         return false;
 

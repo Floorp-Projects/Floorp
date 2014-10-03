@@ -22,9 +22,9 @@ function test() {
   is(container.childNodes[0].className, "call-tree-item",
     "The root node in the tree has the correct class name.");
 
-  is(container.childNodes[0].childNodes.length, 4,
+  is(container.childNodes[0].childNodes.length, 6,
     "The root node in the tree has the correct number of children.");
-  is(container.childNodes[0].querySelectorAll(".call-tree-cell").length, 4,
+  is(container.childNodes[0].querySelectorAll(".call-tree-cell").length, 6,
     "The root node in the tree has only 'call-tree-cell' children.");
 
   is(container.childNodes[0].childNodes[0].getAttribute("type"), "duration",
@@ -32,19 +32,29 @@ function test() {
   is(container.childNodes[0].childNodes[0].getAttribute("value"), "18",
     "The root node in the tree has the correct duration cell value.");
 
-  is(container.childNodes[0].childNodes[1].getAttribute("type"), "percentage",
+  is(container.childNodes[0].childNodes[1].getAttribute("type"), "self-duration",
+    "The root node in the tree has a self-duration cell.");
+  is(container.childNodes[0].childNodes[1].getAttribute("value"), "0",
+    "The root node in the tree has the correct self-duration cell value.");
+
+  is(container.childNodes[0].childNodes[2].getAttribute("type"), "percentage",
     "The root node in the tree has a percentage cell.");
-  is(container.childNodes[0].childNodes[1].getAttribute("value"), "100%",
+  is(container.childNodes[0].childNodes[2].getAttribute("value"), "100%",
     "The root node in the tree has the correct percentage cell value.");
 
-  is(container.childNodes[0].childNodes[2].getAttribute("type"), "samples",
+  is(container.childNodes[0].childNodes[3].getAttribute("type"), "self-percentage",
+    "The root node in the tree has a self-percentage cell.");
+  is(container.childNodes[0].childNodes[3].getAttribute("value"), "0%",
+    "The root node in the tree has the correct self-percentage cell value.");
+
+  is(container.childNodes[0].childNodes[4].getAttribute("type"), "samples",
     "The root node in the tree has an samples cell.");
-  is(container.childNodes[0].childNodes[2].getAttribute("value"), "3",
+  is(container.childNodes[0].childNodes[4].getAttribute("value"), "3",
     "The root node in the tree has the correct samples cell value.");
 
-  is(container.childNodes[0].childNodes[3].getAttribute("type"), "function",
+  is(container.childNodes[0].childNodes[5].getAttribute("type"), "function",
     "The root node in the tree has a function cell.");
-  is(container.childNodes[0].childNodes[3].style.MozMarginStart, "0px",
+  is(container.childNodes[0].childNodes[5].style.MozMarginStart, "0px",
     "The root node in the tree has the correct indentation.");
 
   finish();
