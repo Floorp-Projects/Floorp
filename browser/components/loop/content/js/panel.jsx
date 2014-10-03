@@ -354,7 +354,11 @@ loop.panel = (function(_, mozL10n) {
     },
 
     handleLinkExfiltration: function(event) {
-      // TODO Bug 1015988 -- Increase link exfiltration telemetry count
+      try {
+        navigator.mozLoop.telemetryAdd("LOOP_CLIENT_CALL_URL_SHARED", true);
+      } catch (err) {
+        console.error("Error recording telemetry", err);
+      }
       if (this.state.callUrlExpiry) {
         navigator.mozLoop.noteCallUrlExpiry(this.state.callUrlExpiry);
       }
