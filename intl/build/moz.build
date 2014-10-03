@@ -10,8 +10,6 @@ SOURCES += [
 
 FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
-    '../icu/source/common',
-    '../icu/source/i18n',
     '../locale',
     '../lwbrk',
     '../strres',
