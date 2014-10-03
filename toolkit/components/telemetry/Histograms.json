@@ -6747,11 +6747,6 @@
     "kind": "boolean",
     "description": "Stores 1 if generating a call URL succeeded, and 0 if it failed."
   },
-  "LOOP_CLIENT_CALL_URL_SHARED": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Stores 1 every time the URL is copied or shared."
-  },
   "E10S_AUTOSTART": {
     "expires_in_version": "never",
     "kind": "boolean",
