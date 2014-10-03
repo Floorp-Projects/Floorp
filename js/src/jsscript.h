@@ -1410,8 +1410,10 @@ class JSScript : public js::gc::TenuredCell
     }
     js::ScriptSourceObject &scriptSourceUnwrap() const;
     js::ScriptSource *scriptSource() const;
+    js::ScriptSource *maybeForwardedScriptSource() const;
     bool mutedErrors() const { return scriptSource()->mutedErrors(); }
     const char *filename() const { return scriptSource()->filename(); }
+    const char *maybeForwardedFilename() const { return maybeForwardedScriptSource()->filename(); }
 
   public:
 
