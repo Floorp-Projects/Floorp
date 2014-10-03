@@ -38,11 +38,11 @@ CreateCert(const char* subjectCN,
   static long serialNumberValue = 0;
   ++serialNumberValue;
   ByteString serialNumber(CreateEncodedSerialNumber(serialNumberValue));
-  EXPECT_NE(ENCODING_FAILED, serialNumber);
+  EXPECT_FALSE(ENCODING_FAILED(serialNumber));
   ByteString issuerDER(CNToDERName(subjectCN));
-  EXPECT_NE(ENCODING_FAILED, issuerDER);
+  EXPECT_FALSE(ENCODING_FAILED(issuerDER));
   ByteString subjectDER(CNToDERName(subjectCN));
-  EXPECT_NE(ENCODING_FAILED, subjectDER);
+  EXPECT_FALSE(ENCODING_FAILED(subjectDER));
   return CreateEncodedCertificate(v3, sha256WithRSAEncryption,
                                   serialNumber, issuerDER,
                                   oneDayBeforeNow, oneDayAfterNow,
@@ -138,7 +138,7 @@ TEST_F(pkixcert_extension, UnknownCriticalExtension)
   const char* certCN = "Cert With Unknown Critical Extension";
   ScopedTestKeyPair key;
   ByteString cert(CreateCert(certCN, unknownCriticalExtension, key));
-  ASSERT_NE(ENCODING_FAILED, cert);
+  ASSERT_FALSE(ENCODING_FAILED(cert));
   Input certInput;
   ASSERT_EQ(Success, certInput.Init(cert.data(), cert.length()));
   ASSERT_EQ(Result::ERROR_UNKNOWN_CRITICAL_EXTENSION,
@@ -168,7 +168,7 @@ TEST_F(pkixcert_extension, UnknownNonCriticalExtension)
   const char* certCN = "Cert With Unknown NonCritical Extension";
   ScopedTestKeyPair key;
   ByteString cert(CreateCert(certCN, unknownNonCriticalExtension, key));
-  ASSERT_NE(ENCODING_FAILED, cert);
+  ASSERT_FALSE(ENCODING_FAILED(cert));
   Input certInput;
   ASSERT_EQ(Success, certInput.Init(cert.data(), cert.length()));
   ASSERT_EQ(Success,
@@ -199,7 +199,7 @@ TEST_F(pkixcert_extension, WrongOIDCriticalExtension)
   const char* certCN = "Cert With Critical Wrong OID Extension";
   ScopedTestKeyPair key;
   ByteString cert(CreateCert(certCN, wrongOIDCriticalExtension, key));
-  ASSERT_NE(ENCODING_FAILED, cert);
+  ASSERT_FALSE(ENCODING_FAILED(cert));
   Input certInput;
   ASSERT_EQ(Success, certInput.Init(cert.data(), cert.length()));
   ASSERT_EQ(Result::ERROR_UNKNOWN_CRITICAL_EXTENSION,
@@ -232,7 +232,7 @@ TEST_F(pkixcert_extension, CriticalAIAExtension)
   const char* certCN = "Cert With Critical AIA Extension";
   ScopedTestKeyPair key;
   ByteString cert(CreateCert(certCN, criticalAIAExtension, key));
-  ASSERT_NE(ENCODING_FAILED, cert);
+  ASSERT_FALSE(ENCODING_FAILED(cert));
   Input certInput;
   ASSERT_EQ(Success, certInput.Init(cert.data(), cert.length()));
   ASSERT_EQ(Success,
@@ -262,7 +262,7 @@ TEST_F(pkixcert_extension, UnknownCriticalCEExtension)
   const char* certCN = "Cert With Unknown Critical id-ce Extension";
   ScopedTestKeyPair key;
   ByteString cert(CreateCert(certCN, unknownCriticalCEExtension, key));
-  ASSERT_NE(ENCODING_FAILED, cert);
+  ASSERT_FALSE(ENCODING_FAILED(cert));
   Input certInput;
   ASSERT_EQ(Success, certInput.Init(cert.data(), cert.length()));
   ASSERT_EQ(Result::ERROR_UNKNOWN_CRITICAL_EXTENSION,
@@ -292,7 +292,7 @@ TEST_F(pkixcert_extension, KnownCriticalCEExtension)
   const char* certCN = "Cert With Known Critical id-ce Extension";
   ScopedTestKeyPair key;
   ByteString cert(CreateCert(certCN, criticalCEExtension, key));
-  ASSERT_NE(ENCODING_FAILED, cert);
+  ASSERT_FALSE(ENCODING_FAILED(cert));
   Input certInput;
   ASSERT_EQ(Success, certInput.Init(cert.data(), cert.length()));
   ASSERT_EQ(Success,
@@ -321,7 +321,7 @@ TEST_F(pkixcert_extension, DuplicateSubjectAltName)
   static const char* certCN = "Cert With Duplicate subjectAltName";
   ScopedTestKeyPair key;
   ByteString cert(CreateCert(certCN, extensions, key));
-  ASSERT_NE(ENCODING_FAILED, cert);
+  ASSERT_FALSE(ENCODING_FAILED(cert));
   Input certInput;
   ASSERT_EQ(Success, certInput.Init(cert.data(), cert.length()));
   ASSERT_EQ(Result::ERROR_EXTENSION_VALUE_INVALID,
