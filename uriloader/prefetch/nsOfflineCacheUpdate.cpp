@@ -185,7 +185,6 @@ nsManifestCheck::Begin()
                        nsContentUtils::GetSystemPrincipal(),
                        nsILoadInfo::SEC_NORMAL,
                        nsIContentPolicy::TYPE_OTHER,
-                       nullptr,   // aChannelPolicy
                        nullptr,   // loadGroup
                        nullptr,   // aCallbacks
                        nsIRequest::LOAD_BYPASS_CACHE);
@@ -383,7 +382,6 @@ nsOfflineCacheUpdateItem::OpenChannel(nsOfflineCacheUpdate *aUpdate)
                        nsContentUtils::GetSystemPrincipal(),
                        nsILoadInfo::SEC_NORMAL,
                        nsIContentPolicy::TYPE_OTHER,
-                       nullptr,  // aChannelPolicy
                        nullptr,  // aLoadGroup
                        this,     // aCallbacks
                        flags);

@@ -99,8 +99,6 @@ static PRLogModuleInfo* gMediaElementEventsLog;
 #endif
 
 #include "nsIContentSecurityPolicy.h"
-#include "nsIChannelPolicy.h"
-#include "nsChannelPolicy.h"
 
 #include "mozilla/Preferences.h"
 
@@ -1186,25 +1184,12 @@ nsresult HTMLMediaElement::LoadResource()
   }
 
   nsCOMPtr<nsILoadGroup> loadGroup = GetDocumentLoadGroup();
-
-  // check for a Content Security Policy to pass down to the channel
-  // created to load the media content
-  nsCOMPtr<nsIChannelPolicy> channelPolicy;
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  rv = NodePrincipal()->GetCsp(getter_AddRefs(csp));
-  NS_ENSURE_SUCCESS(rv,rv);
-  if (csp) {
-    channelPolicy = do_CreateInstance("@mozilla.org/nschannelpolicy;1");
-    channelPolicy->SetContentSecurityPolicy(csp);
-    channelPolicy->SetLoadType(nsIContentPolicy::TYPE_MEDIA);
-  }
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel),
                      mLoadingSrc,
                      static_cast<Element*>(this),
                      nsILoadInfo::SEC_NORMAL,
                      nsIContentPolicy::TYPE_MEDIA,
-                     channelPolicy,
                      loadGroup,
                      nullptr,   // aCallbacks
                      nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY |
