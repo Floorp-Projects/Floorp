@@ -235,19 +235,47 @@ interface CameraControl : MediaStream
      a shutter sound and/or a visual shutter indicator. */
   attribute CameraShutterCallback? onShutter;
 
+  /* the event dispatched on the camera's shutter event, to trigger
+     a shutter sound and/or a visual shutter indicator.
+
+     contains no event-specific data. */
+  attribute EventHandler onshutter;
+
   /* the function to call when the camera hardware is closed
      by the underlying framework, e.g. when another app makes a more
      recent call to get the camera. */
   attribute CameraClosedCallback? onClosed;
+
+  /* the event dispatched when the camera hardware is closed
+     by the underlying framework, e.g. when another app makes a more
+     recent call to get the camera.
+
+     contains no event-specific data. */
+  attribute EventHandler onclose;
 
   /* the function to call when the recorder changes state, either because
      the recording process encountered an error, or because one of the
      recording limits (see CameraStartRecordingOptions) was reached. */
   attribute CameraRecorderStateChange? onRecorderStateChange;
 
+  /* the event dispatched when the recorder changes state, either because
+     the recording process encountered an error, or because one of the
+     recording limits (see CameraStartRecordingOptions) was reached.
+
+     event type is CameraStateChangeEvent where:
+         'newState' is the new recorder state */
+  attribute EventHandler onrecorderstatechange;
+
   /* the function to call when the viewfinder stops or starts,
      useful for synchronizing other UI elements. */
   attribute CameraPreviewStateChange? onPreviewStateChange;
+
+  /* the event dispatched when the viewfinder stops or starts,
+     useful for synchronizing other UI elements.
+
+     event type is CameraStateChangeEvent where:
+         'newState' is the new preview state */
+  attribute EventHandler onpreviewstatechange;
 
   /* the size of the picture to be returned by a call to takePicture();
      an object with 'height' and 'width' properties that corresponds to
@@ -287,7 +315,25 @@ interface CameraControl : MediaStream
 
   /* tell the camera to attempt to focus the image */
   [Throws]
-  void autoFocus(CameraAutoFocusCallback onSuccess, optional CameraErrorCallback onError);
+  Promise<boolean> autoFocus(optional CameraAutoFocusCallback onSuccess,
+                             optional CameraErrorCallback onError);
+
+  /* the event dispatched whenever the focus state changes due to calling
+     autoFocus or due to continuous autofocus.
+
+     if continuous autofocus is supported and focusMode is set to enable it,
+     then this event is dispatched whenever the camera decides to start and
+     stop moving the focus position; it can be used to update a UI element to
+     indicate that the camera is still trying to focus, or has finished. Some
+     platforms do not support this event, in which case the callback is never
+     invoked.
+
+     event type is CameraStateChangeEvent where:
+         'newState' is one of the following states:
+             'focused' if the focus is now set
+             'focusing' if the focus is moving
+             'unfocused' if last attempt to focus failed */
+  attribute EventHandler onfocus;
 
   /* if continuous autofocus is supported and focusMode is set to enable it,
      then this function is called whenever the camera decides to start and
@@ -309,18 +355,23 @@ interface CameraControl : MediaStream
      invoking this function will stop the preview stream, which must be
      manually restarted (e.g. by calling .play() on it). */
   [Throws]
-  void takePicture(CameraPictureOptions aOptions,
-                   CameraTakePictureCallback onSuccess,
-                   optional CameraErrorCallback onError);
+  Promise<Blob> takePicture(optional CameraPictureOptions aOptions,
+                            optional CameraTakePictureCallback onSuccess,
+                            optional CameraErrorCallback onError);
 
-  /* start recording video; 'aOptions' is a
-     CameraStartRecordingOptions object. */
+  /* the event dispatched when a picture is successfully taken; it is of the
+     type BlobEvent, where the data attribute contains the picture. */
+  attribute EventHandler onpicture;
+
+  /* start recording video; 'aOptions' is a CameraStartRecordingOptions object.
+     If the success/error callbacks are not used, one may determine success by
+     waiting for the recorderstatechange event. */
   [Throws]
-  void startRecording(CameraStartRecordingOptions aOptions,
-                      DeviceStorage storageArea,
-                      DOMString filename,
-                      CameraStartRecordingCallback onSuccess,
-                      optional CameraErrorCallback onError);
+  Promise<void> startRecording(CameraStartRecordingOptions aOptions,
+                               DeviceStorage storageArea,
+                               DOMString filename,
+                               optional CameraStartRecordingCallback onSuccess,
+                               optional CameraErrorCallback onError);
 
   /* stop precording video. */
   [Throws]
@@ -341,8 +392,8 @@ interface CameraControl : MediaStream
      once this is called, the camera control object is to be considered
      defunct; a new instance will need to be created to access the camera. */
   [Throws]
-  void release(optional CameraReleaseCallback onSuccess,
-               optional CameraErrorCallback onError);
+  Promise<void> release(optional CameraReleaseCallback onSuccess,
+                        optional CameraErrorCallback onError);
 
   /* changes the camera configuration on the fly;
      'configuration' is of type CameraConfiguration.
@@ -353,9 +404,18 @@ interface CameraControl : MediaStream
      a required argument must be optional"
   */
   [Throws]
-  void setConfiguration(optional CameraConfiguration configuration,
-                        optional CameraSetConfigurationCallback onSuccess,
-                        optional CameraErrorCallback onError);
+  Promise<CameraConfiguration> setConfiguration(optional CameraConfiguration configuration,
+                                                optional CameraSetConfigurationCallback onSuccess,
+                                                optional CameraErrorCallback onError);
+
+  /* the event dispatched when the camera is successfully configured.
+
+     event type is CameraConfigurationEvent where:
+         'mode' is the selected camera mode
+         'recorderProfile' is the selected profile
+         'width' contains the preview width
+         'height' contains the preview height */
+  attribute EventHandler onconfigurationchange;
 
   /* if focusMode is set to either 'continuous-picture' or 'continuous-video',
      then calling autoFocus() will trigger its onSuccess callback immediately
@@ -457,4 +517,8 @@ partial interface CameraControl
      detected, the callback is invoked with an empty sequence. */
   [Pref="camera.control.face_detection.enabled"]
   attribute CameraFaceDetectionCallback? onFacesDetected;
+
+  /* CameraFacesDetectedEvent */
+  [Pref="camera.control.face_detection.enabled"]
+  attribute EventHandler onfacesdetected;
 };

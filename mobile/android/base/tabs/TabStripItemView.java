@@ -69,7 +69,7 @@ public class TabStripItemView extends ThemedLinearLayout
         tabPaint.setStrokeWidth(0.0f);
         tabPaint.setXfermode(new PorterDuffXfermode(Mode.DST_IN));
 
-        faviconSize = getResources().getDimensionPixelSize(R.dimen.tab_strip_favicon_size);
+        faviconSize = getResources().getDimensionPixelSize(R.dimen.new_tablet_tab_strip_favicon_size);
 
         LayoutInflater.from(context).inflate(R.layout.tab_strip_item_view, this);
         setOnClickListener(new View.OnClickListener() {

@@ -138,6 +138,14 @@ toolbarbutton[type="menu-button"] {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu-button");
 }
 
+toolbarbutton.badged-button {
+  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-badged");
+}
+
+toolbarbutton.badged-button .toolbarbutton-badge[badge]:not([badge=""])::after {
+  content: attr(badge);
+}
+
 toolbar[mode="icons"] .toolbarbutton-text,
 toolbar[mode="icons"] .toolbarbutton-multiline-text,
 toolbar[mode="text"] .toolbarbutton-icon {

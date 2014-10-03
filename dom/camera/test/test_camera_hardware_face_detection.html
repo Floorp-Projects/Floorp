@@ -150,12 +150,16 @@ var tests = [
           }
         } ]
       };
-      camera.onFacesDetected = function(aFaces) {
-        ok(compareFaces(aFaces, expected),
-          "onFaceDetected received the detected faces correctly");
+
+      var handler = function(evt) {
+        ok(compareFaces(evt.faces, expected),
+          "facedetected event received the detected faces correctly");
         camera.stopFaceDetection();
+        camera.removeEventListener('facesdetected', handler);
         next();
-      }
+      };
+
+      camera.addEventListener('facesdetected', handler);
       camera.startFaceDetection();
     }
   },
@@ -208,12 +212,16 @@ var tests = [
           }
         } ]
       };
-      camera.onFacesDetected = function(aFaces) {
-        ok(compareFaces(aFaces, expected),
-          "onFaceDetected received the detected faces correctly");
+
+      var handler = function(evt) {
+        ok(compareFaces(evt.faces, expected),
+          "facedetected event received the detected faces correctly");
         camera.stopFaceDetection();
+        camera.removeEventListener('facesdetected', handler);
         next();
-      }
+      };
+
+      camera.addEventListener('facesdetected', handler);
       camera.startFaceDetection();
     }
   },
@@ -235,12 +243,16 @@ var tests = [
           mouth:    null
         } ]
       };
-      camera.onFacesDetected = function(aFaces) {
-        ok(compareFaces(aFaces, expected),
-          "onFaceDetected received the detected faces correctly");
+
+      var handler = function(evt) {
+        ok(compareFaces(evt.faces, expected),
+          "facedetected event received the detected faces correctly");
         camera.stopFaceDetection();
+        camera.removeEventListener('facesdetected', handler);
         next();
-      }
+      };
+
+      camera.addEventListener('facesdetected', handler);
       camera.startFaceDetection();
     }
   },
@@ -250,12 +262,16 @@ var tests = [
       var expected = {
         faces: []
       };
-      camera.onFacesDetected = function(aFaces) {
-        ok(compareFaces(aFaces, expected),
-          "onFaceDetected received the detected faces correctly");
+
+      var handler = function(evt) {
+        ok(compareFaces(evt.faces, expected),
+          "facedetected event received the detected faces correctly");
         camera.stopFaceDetection();
+        camera.removeEventListener('facesdetected', handler);
         next();
-      }
+      };
+
+      camera.addEventListener('facesdetected', handler);
       camera.startFaceDetection();
     }
   },
@@ -289,13 +305,13 @@ CameraTest.begin("hardware", function(test) {
     } catch(e) { }
     ok(enabled, PREF_FACEDETECTION_ENABLED + " is " + enabled);
 
-    function onSuccess(camera, config) {
-      document.getElementById('viewfinder').mozSrcObject = camera;
-      cameraObj = camera;
+    function onSuccess(d) {
+      cameraObj = d.camera;
+      document.getElementById('viewfinder').mozSrcObject = cameraObj;
       CameraTest.next = function() {
         try {
           var t = testGenerator.next();
-          test.set(t.key, t.func.bind(undefined, camera));
+          test.set(t.key, t.func.bind(undefined, cameraObj));
         } catch(e) {
           if (e instanceof StopIteration) {
             end();
@@ -310,7 +326,7 @@ CameraTest.begin("hardware", function(test) {
       ok(false, "getCamera() failed with: " + error);
       end();
     }
-    navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError);
+    navigator.mozCameras.getCamera(whichCamera, initialConfig).then(onSuccess, onError);
   })
 });
 

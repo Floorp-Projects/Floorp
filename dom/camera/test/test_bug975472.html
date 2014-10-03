@@ -31,7 +31,7 @@ var options = {
 };
 
 function onError(e) {
-  ok(false, "Error" + JSON.stringify(e));
+  ok(false, "Error " + e);
 }
 function next() {
   Camera.nextTest();
@@ -49,7 +49,7 @@ var tests = [
       function onError(error) {
         ok(false, "release() failed with: " + error);
       }
-      camera.release(onSuccess, onError);
+      camera.release().then(onSuccess, onError);
     }
   },
   {
@@ -87,10 +87,10 @@ var tests = [
         ok(false, "autoFocus() succeeded incorrectly");
       }
       function onError(error) {
-        ok(error === "HardwareClosed", "autoFocus() failed with: " + error);
+        ok(error.name === "NS_ERROR_NOT_INITIALIZED", "autoFocus() failed with: " + error);
         next();
       }
-      camera.autoFocus(onSuccess, onError);
+      camera.autoFocus().then(onSuccess, onError);
     }
   },
   {
@@ -100,10 +100,10 @@ var tests = [
         ok(false, "takePicture() succeeded incorrectly");
       }
       function onError(error) {
-        ok(error === "HardwareClosed", "takePicture() failed with: " + error);
+        ok(error.name === "NS_ERROR_NOT_INITIALIZED", "takePicture() failed with: " + error);
         next();
       }
-      camera.takePicture(null, onSuccess, onError);
+      camera.takePicture(null).then(onSuccess, onError);
     }
   },
   {
@@ -113,7 +113,7 @@ var tests = [
         ok(false, "startRecording() process succeeded incorrectly");
       }
       function onError(error) {
-        ok(error === "GeneralFailure", "startRecording() failed with: " + error);
+        ok(error.name === "NS_ERROR_FAILURE", "startRecording() failed with: " + error);
         next();
       }
       var recordingOptions = {
@@ -122,8 +122,7 @@ var tests = [
       };
       camera.startRecording(recordingOptions,
                             navigator.getDeviceStorage('videos'),
-                            'bug975472.mp4',
-                            onSuccess, onError);
+                            'bug975472.mp4').then(onSuccess, onError);
     }
   },
   {
@@ -140,10 +139,10 @@ var tests = [
         ok(false, "setConfiguration() process succeeded incorrectly");
       }
       function onError(error) {
-        ok(error === "HardwareClosed", "setConfiguration() failed with: " + error);
+        ok(error.name === "NS_ERROR_NOT_INITIALIZED", "setConfiguration() failed with: " + error);
         next();
       }
-      camera.setConfiguration(config, onSuccess, onError);
+      camera.setConfiguration(config).then(onSuccess, onError);
     }
   },
 ];
@@ -183,8 +182,17 @@ var Camera = {
     cameraObj = null;
   },
   start: function run_test() {
-    function onSuccess(camera, config) {
+    function onSuccess(d) {
+      var camera = d.camera;
       Camera.cameraObj = camera;
+      var onPreviewStateChange = function(e) {
+        if (e.newState === 'started') {
+          info("viewfinder is ready and playing");
+          Camera.cameraObj.removeEventListener('previewstatechange', onPreviewStateChange);
+          Camera.onCameraReady();
+        }
+      };
+      camera.addEventListener('previewstatechange', onPreviewStateChange);
       Camera.viewfinder.mozSrcObject = camera;
       Camera.viewfinder.play();
       ok(camera.capabilities.pictureSizes.length > 0,
@@ -195,15 +203,8 @@ var Camera = {
       options.pictureSize = Camera._otherPictureSize;
       options.fileFormat = camera.capabilities.fileFormats[0];
       info("getCamera callback, setting pictureSize = " + options.pictureSize.toSource());
-      Camera.cameraObj.onPreviewStateChange = function(state) {
-        if (state === 'started') {
-          info("viewfinder is ready and playing");
-          Camera.cameraObj.onPreviewStateChange = null;
-          Camera.onCameraReady();
-        }
-      };
     };
-    navigator.mozCameras.getCamera(whichCamera, config, onSuccess, onError);
+    navigator.mozCameras.getCamera(whichCamera, config).then(onSuccess, onError);
   }
 }
 

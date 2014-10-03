@@ -122,6 +122,7 @@ var CameraTest = (function() {
         callback();
       }
     }
+
     function cleanUpTestEnabled() {
       var next = allCleanedUp;
       if (oldTestEnabled) {

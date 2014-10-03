@@ -7,5 +7,6 @@
 
     <item type="id" name="guestNotification"/>
     <item type="id" name="original_height"/>
+    <item type="id" name="menu_items"/>
 
 </resources>

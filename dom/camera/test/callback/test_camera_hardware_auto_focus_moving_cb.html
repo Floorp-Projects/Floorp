@@ -1,0 +1,131 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=965421
+-->
+<head>
+  <title>Bug 965421 - Test camera hardware API for Auto focus moving Callback</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="../camera_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=965421">Mozilla Bug 965421</a>
+  <video id="viewfinder" width = "200" height = "200" autoplay></video>
+  <img src="#" alt="This image is going to load" id="testimage"/>
+
+<script class="testbody" type="text/javascript;version=1.7">
+
+var whichCamera = navigator.mozCameras.getListOfCameras()[0];
+var initialConfig = {
+  mode: 'picture',
+  recorderProfile: 'cif',
+  previewSize: {
+    width: 352,
+    height: 288
+  }
+};
+
+const PREF_AUTOFOCUSCALLBACK_ENABLED = "camera.control.autofocus_moving_callback.enabled";
+
+var cameraObj;
+var oldPref;
+
+// Shorthand functions
+function end() {
+  function reallyEnd() {
+    CameraTest.end();
+  }
+  if (oldPref) {
+    SpecialPowers.pushPrefEnv(
+      {'set': [[PREF_AUTOFOCUSCALLBACK_ENABLED, oldPref]]}, reallyEnd);
+  } else {
+    SpecialPowers.pushPrefEnv(
+      {'clear': [[PREF_AUTOFOCUSCALLBACK_ENABLED]]}, reallyEnd);
+  }
+}
+function next() {
+  CameraTest.next();
+}
+
+var tests = [
+  {
+    key: "autofocus-moving-true",
+    func: function testAutoFocusMovingIsTrue(camera) {
+      camera.onAutoFocusMoving = function(aIsMoving) {
+        ok(aIsMoving == true,"onAutoFocusMoving callback received true correctly");
+        camera.focusMode = 'auto';
+        next();
+      }
+      camera.focusMode = 'continuous-picture';
+    }
+  },
+  {
+    key: "autofocus-moving-false",
+    func: function testAutoFocusMovingIsFalse(camera) {
+      camera.onAutoFocusMoving = function(aIsMoving) {
+        ok(aIsMoving == false, "onAutoFocusMoving callback received false correctly");
+        camera.focusMode = 'auto';
+        end();
+      }
+      camera.focusMode = 'continuous-video';
+    }
+  },
+];
+
+var testGenerator = function() {
+  for (var i = 0; i < tests.length; ++i ) {
+    yield tests[i];
+  }
+}();
+
+window.addEventListener('beforeunload', function() {
+  document.getElementById('viewfinder').mozSrcObject = null;
+  cameraObj.release();
+  cameraObj = null;
+});
+
+// Must call CameraTest.begin() before any other async methods.
+CameraTest.begin("hardware", function(test) {
+  // If the pref doesn't exist, this get will fail; catch it and continue.
+  try {
+    oldPref = SpecialPowers.getBoolPref(PREF_AUTOFOCUSCALLBACK_ENABLED);
+  } catch(e) { }
+
+  SpecialPowers.pushPrefEnv({'set': [[PREF_AUTOFOCUSCALLBACK_ENABLED, true]]}, function() {
+    var enabled;
+    try {
+      enabled = SpecialPowers.getBoolPref(PREF_AUTOFOCUSCALLBACK_ENABLED);
+    } catch(e) { }
+    ok(enabled, PREF_AUTOFOCUSCALLBACK_ENABLED + " is " + enabled);
+
+    function onSuccess(camera, config) {
+      document.getElementById('viewfinder').mozSrcObject = camera;
+      cameraObj = camera;
+      CameraTest.next = function() {
+        try {
+          var t = testGenerator.next();
+          test.set(t.key, t.func.bind(undefined, camera));
+        } catch(e) {
+          if (e instanceof StopIteration) {
+            end();
+          } else {
+            throw e;
+          }
+        }
+      };
+      next();
+    }
+    function onError(error) {
+      ok(false, "getCamera() failed with: " + error);
+      end();
+    }
+    navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError);
+  })
+});
+
+</script>
+</body>
+
+</html>

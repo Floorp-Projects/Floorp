@@ -36,6 +36,8 @@ PasswordEngine.prototype = {
   _recordObj: LoginRec,
   applyIncomingBatchSize: PASSWORDS_STORE_BATCH_SIZE,
 
+  syncPriority: 2,
+
   _syncFinish: function _syncFinish() {
     SyncEngine.prototype._syncFinish.call(this);
 

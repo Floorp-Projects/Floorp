@@ -2699,59 +2699,6 @@ toolbarpaletteitem[place="palette"] > #switch-to-metro-button {
   list-style-image: url(chrome://browser/skin/Metro_Glyph-menuPanel.png);
 }
 
-.toolbarbutton-badge-container {
-  margin: 0;
-  padding: 0;
-  position: relative;
-}
-
-#nav-bar .toolbarbutton-1 > .toolbarbutton-badge-container {
-  padding: 2px 5px;
-}
-
-.toolbarbutton-1 > .toolbarbutton-badge-container > .toolbar-icon {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-}
-
-.toolbarbutton-badge-container > .toolbarbutton-icon[label]:not([label=""]) {
-  -moz-margin-end: 0;
-}
-
-.toolbarbutton-badge[badge=""] {
-  display: none;
-}
-.toolbarbutton-badge[badge]:not([badge=""])::after {
-  /* The |content| property is set in the content stylesheet. */
-  font-size: 9px;
-  font-weight: bold;
-  padding: 0 1px;
-  color: #fff;
-  background-color: rgb(240,61,37);
-  border: 1px solid rgb(216,55,34);
-  border-radius: 2px;
-  box-shadow: 0 1px 0 rgba(0,39,121,0.77);
-  position: absolute;
-  top: 0;
-  right: 0;
-}
-
-#nav-bar .toolbarbutton-badge[badge]:not([badge=""])::after {
-  top: 1px;
-  right: 1px;
-}
-
-.toolbarbutton-badge[badge]:not([badge=""]):-moz-locale-dir(rtl)::after {
-  left: 0;
-  right: auto;
-}
-
-#nav-bar .toolbarbutton-badge[badge]:not([badge=""]):-moz-locale-dir(rtl)::after {
-  left: 1px;
-  right: auto;
-}
-
 .popup-notification-icon[popupid="servicesInstall"] {
   list-style-image: url(chrome://browser/skin/social/services-64.png);
 }

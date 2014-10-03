@@ -75,6 +75,23 @@ add_test(function test_basics() {
   engines = manager.getEnabled();
   do_check_eq(engines.length, 3);
 
+  _("getEnabled() returns enabled engines in sorted order");
+  petrol.syncPriority = 1;
+  dummy.syncPriority = 2;
+  diesel.syncPriority = 3;
+
+  engines = manager.getEnabled();
+
+  do_check_array_eq(engines, [petrol, dummy, diesel]);
+
+  _("Changing the priorities should change the order in getEnabled()");
+
+  dummy.syncPriority = 4;
+
+  engines = manager.getEnabled();
+
+  do_check_array_eq(engines, [petrol, diesel, dummy]);
+
   _("Unregister an engine by name");
   manager.unregister('dummy');
   do_check_eq(manager.get('dummy'), undefined);

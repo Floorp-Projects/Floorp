@@ -370,12 +370,14 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this._onContextCopyUrlCommand = this.copyUrl.bind(this);
     this._onContextCopyImageAsDataUriCommand = this.copyImageAsDataUri.bind(this);
     this._onContextResendCommand = this.cloneSelectedRequest.bind(this);
+    this._onContextToggleRawHeadersCommand = this.toggleRawHeaders.bind(this);
     this._onContextPerfCommand = () => NetMonitorView.toggleFrontendMode();
     this._onReloadCommand = () => NetMonitorView.reloadPage();
 
     this.sendCustomRequestEvent = this.sendCustomRequest.bind(this);
     this.closeCustomRequestEvent = this.closeCustomRequest.bind(this);
     this.cloneSelectedRequestEvent = this.cloneSelectedRequest.bind(this);
+    this.toggleRawHeadersEvent = this.toggleRawHeaders.bind(this);
 
     $("#toolbar-labels").addEventListener("click", this.requestsMenuSortEvent, false);
     $("#requests-menu-footer").addEventListener("click", this.requestsMenuFilterEvent, false);
@@ -384,6 +386,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     $("#request-menu-context-newtab").addEventListener("command", this._onContextNewTabCommand, false);
     $("#request-menu-context-copy-url").addEventListener("command", this._onContextCopyUrlCommand, false);
     $("#request-menu-context-copy-image-as-data-uri").addEventListener("command", this._onContextCopyImageAsDataUriCommand, false);
+    $("#toggle-raw-headers").addEventListener("click", this.toggleRawHeadersEvent, false);
 
     window.once("connected", this._onConnect.bind(this));
   },
@@ -447,6 +450,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     $("#custom-request-send-button").removeEventListener("click", this.sendCustomRequestEvent, false);
     $("#custom-request-close-button").removeEventListener("click", this.closeCustomRequestEvent, false);
     $("#headers-summary-resend").removeEventListener("click", this.cloneSelectedRequestEvent, false);
+    $("#toggle-raw-headers").removeEventListener("click", this.toggleRawHeadersEvent, false);
   },
 
   /**
@@ -636,6 +640,28 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   closeCustomRequest: function() {
     this.remove(this.selectedItem);
     NetMonitorView.Sidebar.toggle(false);
+  },
+
+  /**
+   * Shows raw request/response headers in textboxes.
+   */
+  toggleRawHeaders: function() {
+    let requestTextarea = $("#raw-request-headers-textarea");
+    let responseTextare = $("#raw-response-headers-textarea");
+    let rawHeadersHidden = $("#raw-headers").getAttribute("hidden");
+
+    if (rawHeadersHidden) {
+      let selected = this.selectedItem.attachment;
+      let selectedRequestHeaders = selected.requestHeaders.headers;
+      let selectedResponseHeaders = selected.responseHeaders.headers;
+      requestTextarea.value = writeHeaderText(selectedRequestHeaders);
+      responseTextare.value = writeHeaderText(selectedResponseHeaders);
+      $("#raw-headers").hidden = false;
+    } else {
+      requestTextarea.value = null;
+      responseTextare.value = null;
+      $("#raw-headers").hidden = true;
+    }
   },
 
   /**
@@ -2013,6 +2039,7 @@ NetworkDetailsView.prototype = {
     $("#response-content-info-header").hidden = true;
     $("#response-content-json-box").hidden = true;
     $("#response-content-textarea-box").hidden = true;
+    $("#raw-headers").hidden = true;
     $("#response-content-image-box").hidden = true;
 
     let isHtml = RequestsMenuView.prototype.isHtml({ attachment: aData });

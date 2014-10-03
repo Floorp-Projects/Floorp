@@ -400,10 +400,6 @@ gbjar.sources += [
     'tabs/TabsLayoutItemView.java',
     'tabs/TabsListLayout.java',
     'tabs/TabsPanel.java',
-    'tabs/TabStrip.java',
-    'tabs/TabStripAdapter.java',
-    'tabs/TabStripItemView.java',
-    'tabs/TabStripView.java',
     'TabsAccessor.java',
     'Telemetry.java',
     'TelemetryContract.java',
@@ -513,6 +509,20 @@ if CONFIG['MOZ_ANDROID_SHARE_OVERLAY']:
         'overlays/ui/ShareDialog.java',
     ]
 
+if (CONFIG['MOZ_ANDROID_MAX_SDK_VERSION']):
+    max_sdk_version = int(CONFIG['MOZ_ANDROID_MAX_SDK_VERSION'])
+else:
+    max_sdk_version = 999
+
+if CONFIG['MOZ_ANDROID_NEW_TABLET_UI'] and max_sdk_version >= 11:
+    gbjar.sources += [
+        'tabs/TabStrip.java',
+        'tabs/TabStripAdapter.java',
+        'tabs/TabStripItemView.java',
+        'tabs/TabStripView.java'
+    ]
+    ANDROID_RES_DIRS += [ SRCDIR + '/newtablet/res' ]
+
 gbjar.sources += sync_java_files
 gbjar.generated_sources += sync_generated_java_files
 gbjar.extra_jars = [
@@ -619,7 +629,8 @@ ANDROID_GENERATED_RESFILES += [
 
 for var in ('MOZ_ANDROID_ANR_REPORTER', 'MOZ_LINKER_EXTRACT', 'MOZILLA_OFFICIAL', 'MOZ_DEBUG',
             'MOZ_ANDROID_SEARCH_ACTIVITY', 'MOZ_NATIVE_DEVICES', 'MOZ_ANDROID_MLS_STUMBLER',
-            'MOZ_ANDROID_SHARE_OVERLAY', 'MOZ_ANDROID_DOWNLOADS_INTEGRATION'):
+            'MOZ_ANDROID_SHARE_OVERLAY', 'MOZ_ANDROID_DOWNLOADS_INTEGRATION',
+            'MOZ_ANDROID_NEW_TABLET_UI'):
     if CONFIG[var]:
         DEFINES[var] = 1
 
