@@ -333,7 +333,8 @@ ObjectMemoryView::mergeIntoSuccessorState(MBasicBlock *curr, MBasicBlock *succ,
         *pSuccState = succState;
     }
 
-    if (succ->numPredecessors() > 1 && succState->numSlots()) {
+    MOZ_ASSERT_IF(succ == startBlock_, startBlock_->isLoopHeader());
+    if (succ->numPredecessors() > 1 && succState->numSlots() && succ != startBlock_) {
         // We need to re-compute successorWithPhis as the previous EliminatePhis
         // phase might have removed all the Phis from the successor block.
         size_t currIndex;
@@ -787,7 +788,8 @@ ArrayMemoryView::mergeIntoSuccessorState(MBasicBlock *curr, MBasicBlock *succ,
         *pSuccState = succState;
     }
 
-    if (succ->numPredecessors() > 1 && succState->numElements()) {
+    MOZ_ASSERT_IF(succ == startBlock_, startBlock_->isLoopHeader());
+    if (succ->numPredecessors() > 1 && succState->numElements() && succ != startBlock_) {
         // We need to re-compute successorWithPhis as the previous EliminatePhis
         // phase might have removed all the Phis from the successor block.
         size_t currIndex;
