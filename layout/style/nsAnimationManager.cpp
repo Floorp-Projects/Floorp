@@ -226,7 +226,8 @@ nsIStyleRule*
 nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
                                        mozilla::dom::Element* aElement)
 {
-  if (!mPresContext->IsProcessingAnimationStyleChange()) {
+  // FIXME (bug 960465): This test should go away.
+  if (!mPresContext->RestyleManager()->IsProcessingAnimationStyleChange()) {
     if (!mPresContext->IsDynamic()) {
       // For print or print preview, ignore animations.
       return nullptr;
