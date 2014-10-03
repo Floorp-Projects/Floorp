@@ -4,34 +4,34 @@
 #ifndef RemoteSpellcheckEngineParent_h_
 #define RemoteSpellcheckEngineParent_h_
 
-#include "mozISpellCheckingEngine.h"
 #include "mozilla/PRemoteSpellcheckEngineParent.h"
 #include "nsCOMPtr.h"
 
+class nsISpellChecker;
+
 namespace mozilla {
 
-class RemoteSpellcheckEngineParent : public mozilla::PRemoteSpellcheckEngineParent {
-
+class RemoteSpellcheckEngineParent : public PRemoteSpellcheckEngineParent
+{
 public:
   RemoteSpellcheckEngineParent();
 
-  ~RemoteSpellcheckEngineParent();
+  virtual ~RemoteSpellcheckEngineParent();
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy);
+  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
 
-  bool AnswerSetDictionary(const nsString& aDictionary, bool* success);
+  virtual bool RecvSetDictionary(const nsString& aDictionary,
+                                   bool* success) MOZ_OVERRIDE;
 
-  bool AnswerCheck( const nsString& aWord, bool* aIsMisspelled);
+  virtual bool RecvCheck(const nsString& aWord, bool* aIsMisspelled) MOZ_OVERRIDE;
 
-  bool AnswerCheckAndSuggest(
-            const nsString& aWord,
-            bool* aIsMisspelled,
-            InfallibleTArray<nsString>* aSuggestions);
-
-
+  virtual bool RecvCheckAndSuggest(const nsString& aWord,
+                                     bool* aIsMisspelled,
+                                     InfallibleTArray<nsString>* aSuggestions)
+      MOZ_OVERRIDE;
 
 private:
-  nsCOMPtr<mozISpellCheckingEngine> mEngine;
+  nsCOMPtr<nsISpellChecker> mSpellChecker;
 };
 
 }

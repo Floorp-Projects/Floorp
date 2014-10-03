@@ -2581,20 +2581,4 @@
       </method>
     </implementation>
   </binding>
-
-  <binding id="toolbarbutton-badged" display="xul:button"
-           extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
-    <content>
-      <children includes="observes|template|menupopup|panel|tooltip"/>
-      <xul:hbox class="toolbarbutton-badge-container" align="start" pack="end">
-        <xul:hbox class="toolbarbutton-badge" xbl:inherits="badge"/>
-        <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label"/>
-      </xul:hbox>
-      <xul:label class="toolbarbutton-text" crop="right" flex="1"
-                 xbl:inherits="value=label,accesskey,crop,wrap"/>
-      <xul:label class="toolbarbutton-multiline-text" flex="1"
-                 xbl:inherits="xbl:text=label,accesskey,wrap"/>
-    </content>
-  </binding>
-
 </bindings>

@@ -96,7 +96,7 @@
   </div>
 
   <xul:script type="text/javascript;version=1.8"
-              src="chrome://browser/content/newtab/newTab.js"/>
-  <xul:script type="text/javascript;version=1.8"
               src="chrome://browser/content/searchSuggestionUI.js"/>
+  <xul:script type="text/javascript;version=1.8"
+              src="chrome://browser/content/newtab/newTab.js"/>
 </xul:window>

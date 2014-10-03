@@ -192,3 +192,11 @@ function mockGetWindowEnumerator(url, numWindows, numTabs) {
     },
   };
 }
+
+// Helper that allows checking array equality.
+function do_check_array_eq(a1, a2) {
+  do_check_eq(a1.length, a2.length);
+  for (let i = 0; i < a1.length; ++i) {
+    do_check_eq(a1[i], a2[i]);
+  }
+}

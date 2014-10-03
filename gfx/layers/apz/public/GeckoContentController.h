@@ -87,6 +87,7 @@ public:
   /**
    * Schedules a runnable to run on the controller/UI thread at some time
    * in the future.
+   * This method must always be called on the controller thread.
    */
   virtual void PostDelayedTask(Task* aTask, int aDelayMs) = 0;
 

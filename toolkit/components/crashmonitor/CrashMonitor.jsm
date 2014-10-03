@@ -118,6 +118,12 @@ let CrashMonitorInternal = {
         return null;
       }
 
+      // If `notifications` isn't an object, then the monitor data isn't valid.
+      if (Object(notifications) !== notifications) {
+        Cu.reportError("Error while parsing crash monitor data: invalid monitor data");
+        return null;
+      }
+
       return Object.freeze(notifications);
     });
 
