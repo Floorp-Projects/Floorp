@@ -22,7 +22,6 @@
 #include "nsTArray.h"
 #include "nsIRunnable.h"
 #include "nsISupportsImpl.h"
-#include "nsIDOMMediaStream.h"
 
 class nsIDOMWindow;
 
@@ -232,7 +231,7 @@ private:
   const bool mIsVideo;
 };
 
-class Fake_DOMMediaStream : public nsIDOMMediaStream
+class Fake_DOMMediaStream : public nsISupports
 {
 protected:
   virtual ~Fake_DOMMediaStream() {
