@@ -246,9 +246,9 @@ class HTMLReportingTestResultMixin(object):
     def gather_debug(self):
         debug = {}
         try:
-            # TODO make screenshot consistant size by using full viewport
-            # Bug 883294 - Add ability to take full viewport screenshots
+            self.marionette.switch_context(self.marionette.CONTEXT_CHROME)
             debug['screenshot'] = self.marionette.screenshot()
+            self.marionette.switch_context(self.marionette.CONTEXT_CONTENT)
             debug['source'] = self.marionette.page_source
             self.marionette.switch_to_frame()
             debug['settings'] = json.dumps(self.marionette.execute_async_script("""

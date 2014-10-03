@@ -752,6 +752,7 @@ let UI = {
     let playCmd = document.querySelector("#cmd_play");
     let stopCmd = document.querySelector("#cmd_stop");
     let debugCmd = document.querySelector("#cmd_toggleToolbox");
+    let playButton = document.querySelector('#action-button-play');
 
     if (!AppManager.selectedProject || AppManager.connection.status != Connection.Status.CONNECTED) {
       playCmd.setAttribute("disabled", "true");
@@ -760,9 +761,11 @@ let UI = {
     } else {
       let isProjectRunning = AppManager.isProjectRunning();
       if (isProjectRunning) {
+        playButton.classList.add("reload");
         stopCmd.removeAttribute("disabled");
         debugCmd.removeAttribute("disabled");
       } else {
+        playButton.classList.remove("reload");
         stopCmd.setAttribute("disabled", "true");
         debugCmd.setAttribute("disabled", "true");
       }

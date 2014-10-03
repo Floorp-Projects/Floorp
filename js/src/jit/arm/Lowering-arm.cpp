@@ -172,7 +172,7 @@ LIRGeneratorARM::visitReturn(MReturn *ret)
 bool
 LIRGeneratorARM::lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir, MDefinition *input)
 {
-    ins->setOperand(0, useRegister(input));
+    ins->setOperand(0, ins->snapshot() ? useRegister(input) : useRegisterAtStart(input));
     return define(ins, mir,
                   LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
 }
@@ -181,8 +181,11 @@ LIRGeneratorARM::lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir,
 bool
 LIRGeneratorARM::lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
-    ins->setOperand(0, useRegister(lhs));
-    ins->setOperand(1, useRegisterOrConstant(rhs));
+    // Some operations depend on checking inputs after writing the result, e.g.
+    // MulI, but only for bail out paths so useAtStart when no bailouts.
+    ins->setOperand(0, ins->snapshot() ? useRegister(lhs) : useRegisterAtStart(lhs));
+    ins->setOperand(1, ins->snapshot() ? useRegisterOrConstant(rhs) :
+                                         useRegisterOrConstantAtStart(rhs));
     return define(ins, mir,
                   LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
 }
@@ -190,7 +193,7 @@ LIRGeneratorARM::lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir,
 bool
 LIRGeneratorARM::lowerForFPU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir, MDefinition *input)
 {
-    ins->setOperand(0, useRegister(input));
+    ins->setOperand(0, useRegisterAtStart(input));
     return define(ins, mir,
                   LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
 
@@ -199,8 +202,8 @@ LIRGeneratorARM::lowerForFPU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir,
 bool
 LIRGeneratorARM::lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
-    ins->setOperand(0, useRegister(lhs));
-    ins->setOperand(1, useRegister(rhs));
+    ins->setOperand(0, useRegisterAtStart(lhs));
+    ins->setOperand(1, useRegisterAtStart(rhs));
     return define(ins, mir,
                   LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
 }
