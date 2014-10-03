@@ -521,7 +521,31 @@ bool HasVFPv3();
 bool HasVFP();
 bool Has32DP();
 bool HasIDIV();
-bool HasAlignmentFault();
+
+extern volatile uint32_t armHwCapFlags;
+
+// Not part of the HWCAP flag, but we need to know these and these bits are not
+// used. Define these here so that their use can be inlined by the simulator.
+
+// A bit to flag when the flags are uninitialized, so they can be atomically set.
+#define HWCAP_UNINITIALIZED (1 << 25)
+
+// A bit to flag when alignment faults are enabled and signal.
+#define HWCAP_ALIGNMENT_FAULT (1 << 26)
+
+// A bit to flag the use of the hardfp ABI.
+#define HWCAP_USE_HARDFP_ABI (1 << 27)
+
+// A bit to flag the use of the ARMv7 arch, otherwise ARMv6.
+#define HWCAP_ARMv7 (1 << 28)
+
+// Returns true when cpu alignment faults are enabled and signaled, and thus we
+// should ensure loads and stores are aligned.
+inline bool HasAlignmentFault()
+{
+    MOZ_ASSERT(armHwCapFlags != HWCAP_UNINITIALIZED);
+    return armHwCapFlags & HWCAP_ALIGNMENT_FAULT;
+}
 
 // Arm/D32 has double registers that can NOT be treated as float32 and this
 // requires some dances in lowering.

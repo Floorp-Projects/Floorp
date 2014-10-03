@@ -2149,17 +2149,28 @@ Range::wrapAroundToBoolean()
 }
 
 bool
-MDefinition::truncate(TruncateKind kind)
+MDefinition::needTruncation(TruncateKind kind)
 {
     // No procedure defined for truncating this instruction.
     return false;
 }
 
-bool
-MConstant::truncate(TruncateKind kind)
+void
+MDefinition::truncate()
 {
-    if (!value_.isDouble())
-        return false;
+    MOZ_CRASH("No procedure defined for truncating this instruction.");
+}
+
+bool
+MConstant::needTruncation(TruncateKind kind)
+{
+    return value_.isDouble();
+}
+
+void
+MConstant::truncate()
+{
+    MOZ_ASSERT(needTruncation(Truncate));
 
     // Truncate the double to int, since all uses truncates it.
     int32_t res = ToInt32(value_.toDouble());
@@ -2167,153 +2178,202 @@ MConstant::truncate(TruncateKind kind)
     setResultType(MIRType_Int32);
     if (range())
         range()->setInt32(res, res);
-    return true;
 }
 
 bool
-MPhi::truncate(TruncateKind kind)
+MPhi::needTruncation(TruncateKind kind)
 {
     if (type() == MIRType_Double || type() == MIRType_Int32) {
         truncateKind_ = kind;
-        setResultType(MIRType_Int32);
-        if (kind >= IndirectTruncate && range())
-            range()->wrapAroundToInt32();
         return true;
     }
 
     return false;
 }
 
+void
+MPhi::truncate()
+{
+    setResultType(MIRType_Int32);
+    if (truncateKind_ >= IndirectTruncate && range())
+        range()->wrapAroundToInt32();
+}
+
 bool
-MAdd::truncate(TruncateKind kind)
+MAdd::needTruncation(TruncateKind kind)
 {
     // Remember analysis, needed for fallible checks.
     setTruncateKind(kind);
 
-    if (type() == MIRType_Double || type() == MIRType_Int32) {
-        specialization_ = MIRType_Int32;
-        setResultType(MIRType_Int32);
-        if (kind >= IndirectTruncate && range())
-            range()->wrapAroundToInt32();
-        return true;
-    }
+    return type() == MIRType_Double || type() == MIRType_Int32;
+}
 
-    return false;
+void
+MAdd::truncate()
+{
+    MOZ_ASSERT(needTruncation(truncateKind()));
+    specialization_ = MIRType_Int32;
+    setResultType(MIRType_Int32);
+    if (truncateKind() >= IndirectTruncate && range())
+        range()->wrapAroundToInt32();
 }
 
 bool
-MSub::truncate(TruncateKind kind)
+MSub::needTruncation(TruncateKind kind)
 {
     // Remember analysis, needed for fallible checks.
     setTruncateKind(kind);
 
-    if (type() == MIRType_Double || type() == MIRType_Int32) {
-        specialization_ = MIRType_Int32;
-        setResultType(MIRType_Int32);
-        if (kind >= IndirectTruncate && range())
+    return type() == MIRType_Double || type() == MIRType_Int32;
+}
+
+void
+MSub::truncate()
+{
+    MOZ_ASSERT(needTruncation(truncateKind()));
+    specialization_ = MIRType_Int32;
+    setResultType(MIRType_Int32);
+    if (truncateKind() >= IndirectTruncate && range())
+        range()->wrapAroundToInt32();
+}
+
+bool
+MMul::needTruncation(TruncateKind kind)
+{
+    // Remember analysis, needed for fallible checks.
+    setTruncateKind(kind);
+
+    return type() == MIRType_Double || type() == MIRType_Int32;
+}
+
+void
+MMul::truncate()
+{
+    MOZ_ASSERT(needTruncation(truncateKind()));
+    specialization_ = MIRType_Int32;
+    setResultType(MIRType_Int32);
+    if (truncateKind() >= IndirectTruncate) {
+        setCanBeNegativeZero(false);
+        if (range())
             range()->wrapAroundToInt32();
-        return true;
     }
-
-    return false;
 }
 
 bool
-MMul::truncate(TruncateKind kind)
+MDiv::needTruncation(TruncateKind kind)
 {
-    // Remember analysis, needed to remove negative zero checks.
+    // Remember analysis, needed for fallible checks.
     setTruncateKind(kind);
 
-    if (type() == MIRType_Double || type() == MIRType_Int32) {
-        specialization_ = MIRType_Int32;
-        setResultType(MIRType_Int32);
-        if (kind >= IndirectTruncate) {
-            setCanBeNegativeZero(false);
-            if (range())
-                range()->wrapAroundToInt32();
-        }
-        return true;
-    }
+    return type() == MIRType_Double || type() == MIRType_Int32;
+}
 
-    return false;
+void
+MDiv::truncate()
+{
+    MOZ_ASSERT(needTruncation(truncateKind()));
+    specialization_ = MIRType_Int32;
+    setResultType(MIRType_Int32);
+
+    // Divisions where the lhs and rhs are unsigned and the result is
+    // truncated can be lowered more efficiently.
+    if (tryUseUnsignedOperands())
+        unsigned_ = true;
 }
 
 bool
-MDiv::truncate(TruncateKind kind)
+MMod::needTruncation(TruncateKind kind)
 {
+    // Remember analysis, needed for fallible checks.
     setTruncateKind(kind);
 
-    if (type() == MIRType_Double || type() == MIRType_Int32) {
-        specialization_ = MIRType_Int32;
-        setResultType(MIRType_Int32);
-
-        // Divisions where the lhs and rhs are unsigned and the result is
-        // truncated can be lowered more efficiently.
-        if (tryUseUnsignedOperands())
-            unsigned_ = true;
-
-        return true;
-    }
-
-    // No modifications.
-    return false;
+    return type() == MIRType_Double || type() == MIRType_Int32;
 }
 
-bool
-MMod::truncate(TruncateKind kind)
+void
+MMod::truncate()
 {
-    // Remember analysis, needed to remove negative zero checks.
-    setTruncateKind(kind);
-
     // As for division, handle unsigned modulus with a truncated result.
-    if (type() == MIRType_Double || type() == MIRType_Int32) {
-        specialization_ = MIRType_Int32;
-        setResultType(MIRType_Int32);
+    MOZ_ASSERT(needTruncation(truncateKind()));
+    specialization_ = MIRType_Int32;
+    setResultType(MIRType_Int32);
 
-        if (tryUseUnsignedOperands())
-            unsigned_ = true;
-
-        return true;
-    }
-
-    // No modifications.
-    return false;
+    if (tryUseUnsignedOperands())
+        unsigned_ = true;
 }
 
 bool
-MToDouble::truncate(TruncateKind kind)
+MToDouble::needTruncation(TruncateKind kind)
 {
     MOZ_ASSERT(type() == MIRType_Double);
-
     setTruncateKind(kind);
+
+    return true;
+}
+
+void
+MToDouble::truncate()
+{
+    MOZ_ASSERT(needTruncation(truncateKind()));
 
     // We use the return type to flag that this MToDouble should be replaced by
     // a MTruncateToInt32 when modifying the graph.
     setResultType(MIRType_Int32);
-    if (kind >= IndirectTruncate) {
+    if (truncateKind() >= IndirectTruncate) {
         if (range())
             range()->wrapAroundToInt32();
     }
-
-    return true;
 }
 
 bool
-MLoadTypedArrayElementStatic::truncate(TruncateKind kind)
+MLoadTypedArrayElementStatic::needTruncation(TruncateKind kind)
 {
     if (kind >= IndirectTruncate)
         setInfallible();
+
     return false;
 }
 
 bool
-MLimitedTruncate::truncate(TruncateKind kind)
+MLimitedTruncate::needTruncation(TruncateKind kind)
 {
     setTruncateKind(kind);
     setResultType(MIRType_Int32);
     if (kind >= IndirectTruncate && range())
         range()->wrapAroundToInt32();
     return false;
+}
+
+bool
+MCompare::needTruncation(TruncateKind kind)
+{
+    // If we're compiling AsmJS, don't try to optimize the comparison type, as
+    // the code presumably is already using the type it wants. Also, AsmJS
+    // doesn't support bailouts, so we woudn't be able to rely on
+    // TruncateAfterBailouts to convert our inputs.
+    if (block()->info().compilingAsmJS())
+       return false;
+
+    if (!isDoubleComparison())
+        return false;
+
+    // If both operands are naturally in the int32 range, we can convert from
+    // a double comparison to being an int32 comparison.
+    if (!Range(lhs()).isInt32() || !Range(rhs()).isInt32())
+        return false;
+
+    return true;
+}
+
+void
+MCompare::truncate()
+{
+    compareType_ = Compare_Int32;
+
+    // Truncating the operands won't change their value because we don't force a
+    // truncation, but it will change their type, which we need because we
+    // now expect integer inputs.
+    truncateOperands_ = true;
 }
 
 MDefinition::TruncateKind
@@ -2413,34 +2473,6 @@ MMod::operandTruncateKind(size_t index) const
     return Min(truncateKind(), TruncateAfterBailouts);
 }
 
-bool
-MCompare::truncate(TruncateKind kind)
-{
-    // If we're compiling AsmJS, don't try to optimize the comparison type, as
-    // the code presumably is already using the type it wants. Also, AsmJS
-    // doesn't support bailouts, so we woudn't be able to rely on
-    // TruncateAfterBailouts to convert our inputs.
-    if (block()->info().compilingAsmJS())
-       return false;
-
-    if (!isDoubleComparison())
-        return false;
-
-    // If both operands are naturally in the int32 range, we can convert from
-    // a double comparison to being an int32 comparison.
-    if (!Range(lhs()).isInt32() || !Range(rhs()).isInt32())
-        return false;
-
-    compareType_ = Compare_Int32;
-
-    // Truncating the operands won't change their value because we don't force a
-    // truncation, but it will change their type, which we need because we
-    // now expect integer inputs.
-    truncateOperands_ = true;
-
-    return true;
-}
-
 MDefinition::TruncateKind
 MCompare::operandTruncateKind(size_t index) const
 {
@@ -2486,40 +2518,133 @@ TruncateTest(TempAllocator &alloc, MTest *test)
     phi->setResultType(MIRType_Int32);
 }
 
+// Truncating instruction result is an optimization which implies
+// knowing all uses of an instruction.  This implies that if one of
+// the uses got removed, then Range Analysis is not be allowed to do
+// any modification which can change the result, especially if the
+// result can be observed.
+//
+// This corner can easily be understood with UCE examples, but it
+// might also happen with type inference assumptions.  Note: Type
+// inference is implicitly branches where other types might be
+// flowing into.
+static bool
+CloneForDeadBranches(TempAllocator &alloc, MInstruction *candidate)
+{
+    // Compare returns a boolean so it doesn't have to be recovered on bailout
+    // because the output would remain correct.
+    if (candidate->isCompare())
+        return true;
+
+    MOZ_ASSERT(candidate->canClone());
+
+    MDefinitionVector operands(alloc);
+    size_t end = candidate->numOperands();
+    for (size_t i = 0; i < end; i++) {
+        if (!operands.append(candidate->getOperand(i)))
+            return false;
+    }
+
+    MInstruction *clone = candidate->clone(alloc, operands);
+    clone->setRange(nullptr);
+
+    // Set UseRemoved flag on the cloned instruction in order to chain recover
+    // instruction for the bailout path.
+    clone->setUseRemovedUnchecked();
+
+    candidate->block()->insertBefore(candidate, clone);
+
+    if (!candidate->isConstant()) {
+        MOZ_ASSERT(clone->canRecoverOnBailout());
+        clone->setRecoveredOnBailout();
+    }
+
+    // Replace the candidate by its recovered on bailout clone within recovered
+    // instructions and resume points operands.
+    for (MUseIterator i(candidate->usesBegin()); i != candidate->usesEnd(); ) {
+        MUse *use = *i++;
+        MNode *ins = use->consumer();
+        if (ins->isDefinition() && !ins->toDefinition()->isRecoveredOnBailout())
+            continue;
+
+        use->replaceProducer(clone);
+    }
+
+    return true;
+}
+
 // Examine all the users of |candidate| and determine the most aggressive
 // truncate kind that satisfies all of them.
 static MDefinition::TruncateKind
-ComputeRequestedTruncateKind(MDefinition *candidate)
+ComputeRequestedTruncateKind(MDefinition *candidate, bool *shouldClone)
 {
-    // If the value naturally produces an int32 value (before bailout checks)
-    // that needs no conversion, we don't have to worry about resume points
-    // seeing truncated values.
-    bool needsConversion = !candidate->range() || !candidate->range()->isInt32();
+    bool isCapturedResult = false;
+    bool isObservableResult = false;
+    bool hasUseRemoved = candidate->isUseRemoved();
 
     MDefinition::TruncateKind kind = MDefinition::Truncate;
     for (MUseIterator use(candidate->usesBegin()); use != candidate->usesEnd(); use++) {
-        if (!use->consumer()->isDefinition()) {
+        if (use->consumer()->isResumePoint()) {
             // Truncation is a destructive optimization, as such, we need to pay
             // attention to removed branches and prevent optimization
             // destructive optimizations if we have no alternative. (see
             // UseRemoved flag)
-            if (candidate->isUseRemoved() && needsConversion)
-                kind = Min(kind, MDefinition::TruncateAfterBailouts);
+            isCapturedResult = true;
+            isObservableResult = isObservableResult ||
+                use->consumer()->toResumePoint()->isObservableOperand(*use);
             continue;
         }
 
         MDefinition *consumer = use->consumer()->toDefinition();
+        if (consumer->isRecoveredOnBailout()) {
+            isCapturedResult = true;
+            hasUseRemoved = hasUseRemoved || consumer->isUseRemoved();
+            continue;
+        }
+
         MDefinition::TruncateKind consumerKind = consumer->operandTruncateKind(consumer->indexOf(*use));
         kind = Min(kind, consumerKind);
         if (kind == MDefinition::NoTruncate)
             break;
     }
 
+    // If the value naturally produces an int32 value (before bailout checks)
+    // that needs no conversion, we don't have to worry about resume points
+    // seeing truncated values.
+    bool needsConversion = !candidate->range() || !candidate->range()->isInt32();
+
+    // If the candidate instruction appears as operand of a resume point or a
+    // recover instruction, and we have to truncate its result, then we might
+    // have to either recover the result during the bailout, or avoid the
+    // truncation.
+    if (isCapturedResult && needsConversion) {
+
+        // 1. Recover instructions are useless if there is no removed uses.  Not
+        // having removed uses means that we know everything about where this
+        // results flows into.
+        //
+        // 2. If the result is observable, then we cannot recover it.
+        //
+        // 3. The cloned instruction is expected to be used as a recover
+        // instruction.
+        if (hasUseRemoved && !isObservableResult && candidate->canRecoverOnBailout())
+            *shouldClone = true;
+
+        // 1. If uses are removed, then we need to keep the expected result for
+        // dead branches.
+        //
+        // 2. If the result is observable, then the result might be read while
+        // the frame is on the stack.
+        else if (hasUseRemoved || isObservableResult)
+            kind = Min(kind, MDefinition::TruncateAfterBailouts);
+
+    }
+
     return kind;
 }
 
 static MDefinition::TruncateKind
-ComputeTruncateKind(MDefinition *candidate)
+ComputeTruncateKind(MDefinition *candidate, bool *shouldClone)
 {
     // Compare operations might coerce its inputs to int32 if the ranges are
     // correct.  So we do not need to check if all uses are coerced.
@@ -2542,7 +2667,7 @@ ComputeTruncateKind(MDefinition *candidate)
         return MDefinition::NoTruncate;
 
     // Ensure all observable uses are truncated.
-    return ComputeRequestedTruncateKind(candidate);
+    return ComputeRequestedTruncateKind(candidate, shouldClone);
 }
 
 static void
@@ -2630,6 +2755,9 @@ RangeAnalysis::truncate()
 
     for (PostorderIterator block(graph_.poBegin()); block != graph_.poEnd(); block++) {
         for (MInstructionReverseIterator iter(block->rbegin()); iter != block->rend(); iter++) {
+            if (iter->isRecoveredOnBailout())
+                continue;
+
             if (iter->type() == MIRType_None) {
                 if (iter->isTest())
                     TruncateTest(alloc(), iter->toTest());
@@ -2649,13 +2777,22 @@ RangeAnalysis::truncate()
               default:;
             }
 
-            MDefinition::TruncateKind kind = ComputeTruncateKind(*iter);
+            bool shouldClone = false;
+            MDefinition::TruncateKind kind = ComputeTruncateKind(*iter, &shouldClone);
             if (kind == MDefinition::NoTruncate)
                 continue;
 
             // Truncate this instruction if possible.
-            if (!iter->truncate(kind))
+            if (!iter->needTruncation(kind))
                 continue;
+
+            // If needed, clone the current instruction for keeping it for the
+            // bailout path.  This give us the ability to truncate instructions
+            // even after the removal of branches.
+            if (shouldClone && !CloneForDeadBranches(alloc(), *iter))
+                return false;
+
+            iter->truncate();
 
             // Delay updates of inputs/outputs to avoid creating node which
             // would be removed by the truncation of the next operations.
@@ -2664,13 +2801,15 @@ RangeAnalysis::truncate()
                 return false;
         }
         for (MPhiIterator iter(block->phisBegin()), end(block->phisEnd()); iter != end; ++iter) {
-            MDefinition::TruncateKind kind = ComputeTruncateKind(*iter);
+            bool shouldClone = false;
+            MDefinition::TruncateKind kind = ComputeTruncateKind(*iter, &shouldClone);
             if (kind == MDefinition::NoTruncate)
                 continue;
 
             // Truncate this phi if possible.
-            if (!iter->truncate(kind))
+            if (shouldClone || !iter->needTruncation(kind))
                 continue;
+            iter->truncate();
 
             // Delay updates of inputs/outputs to avoid creating node which
             // would be removed by the truncation of the next operations.

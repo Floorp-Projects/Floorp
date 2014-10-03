@@ -1405,7 +1405,7 @@ class JitActivation : public Activation
 
 
     // Register the results of on Ion frame recovery.
-    bool registerIonFrameRecovery(IonJSFrameLayout *fp, RInstructionResults&& results);
+    bool registerIonFrameRecovery(RInstructionResults&& results);
 
     // Return the pointer to the Ion frame recovery, if it is already registered.
     RInstructionResults *maybeIonFrameRecovery(IonJSFrameLayout *fp);

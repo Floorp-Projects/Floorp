@@ -4217,9 +4217,10 @@ nsresult
 nsTextFrame::GetCursor(const nsPoint& aPoint,
                        nsIFrame::Cursor& aCursor)
 {
-  FillCursorInformationFromStyle(StyleUserInterface(), aCursor);  
+  FillCursorInformationFromStyle(StyleUserInterface(), aCursor);
   if (NS_STYLE_CURSOR_AUTO == aCursor.mCursor) {
-    aCursor.mCursor = NS_STYLE_CURSOR_TEXT;
+    aCursor.mCursor = GetWritingMode().IsVertical()
+                      ? NS_STYLE_CURSOR_VERTICAL_TEXT : NS_STYLE_CURSOR_TEXT;
     // If this is editable, we should ignore tabindex value.
     if (mContent->IsEditable()) {
       return NS_OK;
