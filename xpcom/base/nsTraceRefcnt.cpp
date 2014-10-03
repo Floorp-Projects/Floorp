@@ -929,25 +929,24 @@ extern "C" {
 
 #ifdef MOZ_STACKWALKING
 static void
-PrintStackFrame(uint32_t aFrameNumber, void* aPC, void* aSP, void* aClosure)
+PrintStackFrame(void* aPC, void* aSP, void* aClosure)
 {
   FILE* stream = (FILE*)aClosure;
   nsCodeAddressDetails details;
   char buf[1024];
 
   NS_DescribeCodeAddress(aPC, &details);
-  NS_FormatCodeAddressDetails(aFrameNumber, aPC, &details, buf, sizeof(buf));
+  NS_FormatCodeAddressDetails(aPC, &details, buf, sizeof(buf));
   fputs(buf, stream);
 }
 
 static void
-PrintStackFrameCached(uint32_t aFrameNumber, void* aPC, void* aSP,
-                      void* aClosure)
+PrintStackFrameCached(void* aPC, void* aSP, void* aClosure)
 {
   auto stream = static_cast<FILE*>(aClosure);
   static const size_t buflen = 1024;
   char buf[buflen];
-  gCodeAddressService->GetLocation(aFrameNumber, aPC, buf, buflen);
+  gCodeAddressService->GetLocation(aPC, buf, buflen);
   fprintf(stream, "    %s\n", buf);
 }
 #endif

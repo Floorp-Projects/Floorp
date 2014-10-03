@@ -18,20 +18,11 @@
 extern "C" {
 #endif
 
-/**
- * The callback for NS_StackWalk.
- *
- * @param aFrameNumber  The frame number (starts at 1, not 0).
- * @param aPC           The program counter value.
- * @param aSP           The best approximation possible of what the stack
- *                      pointer will be pointing to when the execution returns
- *                      to executing that at aPC. If no approximation can
- *                      be made it will be nullptr.
- * @param aClosure      Extra data passed in via NS_StackWalk().
- */
+// aSP will be the best approximation possible of what the stack pointer will be
+// pointing to when the execution returns to executing that at that PC.
+// If no approximation can be made it will be nullptr.
 typedef void
-(*NS_WalkStackCallback)(uint32_t aFrameNumber, void* aPC, void* aSP,
-                        void* aClosure);
+(*NS_WalkStackCallback)(void* aPC, void* aSP, void* aClosure);
 
 /**
  * Call aCallback for the C/C++ stack frames on the current thread, from
@@ -118,20 +109,18 @@ NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails);
  * these are not available, library and offset should be reported, if
  * possible.
  *
- * @param aFrameNumber The frame number (starts at 1, not 0).
- * @param aPC          The code address.
- * @param aDetails     The value filled in by NS_DescribeCodeAddress(aPC).
- * @param aBuffer      A string to be filled in with the description.
- *                     The string will always be null-terminated.
- * @param aBufferSize  The size, in bytes, of aBuffer, including
- *                     room for the terminating null.  If the information
- *                     to be printed would be larger than aBuffer, it
- *                     will be truncated so that aBuffer[aBufferSize-1]
- *                     is the terminating null.
+ * @param aPC         The code address.
+ * @param aDetails    The value filled in by NS_DescribeCodeAddress(aPC).
+ * @param aBuffer     A string to be filled in with the description.
+ *                    The string will always be null-terminated.
+ * @param aBufferSize The size, in bytes, of aBuffer, including
+ *                    room for the terminating null.  If the information
+ *                    to be printed would be larger than aBuffer, it
+ *                    will be truncated so that aBuffer[aBufferSize-1]
+ *                    is the terminating null.
  */
 XPCOM_API(nsresult)
-NS_FormatCodeAddressDetails(uint32_t aFrameNumber, void* aPC,
-                            const nsCodeAddressDetails* aDetails,
+NS_FormatCodeAddressDetails(void* aPC, const nsCodeAddressDetails* aDetails,
                             char* aBuffer, uint32_t aBufferSize);
 
 #ifdef __cplusplus

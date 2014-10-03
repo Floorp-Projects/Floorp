@@ -132,8 +132,7 @@ public:
   {
   }
 
-  void GetLocation(uint32_t aFrameNumber, const void* aPc, char* aBuf,
-                   size_t aBufLen)
+  void GetLocation(const void* aPc, char* aBuf, size_t aBufLen)
   {
     MOZ_ASSERT(DescribeCodeAddressLock::IsLocked());
 
