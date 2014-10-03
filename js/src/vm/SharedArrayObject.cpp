@@ -326,7 +326,7 @@ js_InitSharedArrayBufferClass(JSContext *cx, HandleObject obj)
 {
     MOZ_ASSERT(obj->isNative());
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
-    RootedObject proto(cx, global->createBlankPrototype(cx, &SharedArrayBufferObject::protoClass));
+    RootedNativeObject proto(cx, global->createBlankPrototype(cx, &SharedArrayBufferObject::protoClass));
     if (!proto)
         return nullptr;
 

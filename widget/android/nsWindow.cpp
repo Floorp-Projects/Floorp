@@ -1845,12 +1845,6 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             }
 
             {
-                WidgetCompositionEvent event(true, NS_COMPOSITION_UPDATE, this);
-                InitEvent(event, nullptr);
-                event.data = ae->Characters();
-                DispatchEvent(&event);
-            }
-            {
                 WidgetTextEvent event(true, NS_TEXT_TEXT, this);
                 InitEvent(event, nullptr);
                 event.theText = ae->Characters();
@@ -2010,15 +2004,6 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 event.theText = mIMEComposingText;
             }
 
-            {
-                WidgetCompositionEvent compositionUpdate(true,
-                                                         NS_COMPOSITION_UPDATE,
-                                                         this);
-                InitEvent(compositionUpdate, nullptr);
-                compositionUpdate.data = event.theText;
-                DispatchEvent(&compositionUpdate);
-            }
-
 #ifdef DEBUG_ANDROID_IME
             const NS_ConvertUTF16toUTF8 theText8(event.theText);
             const char* text = theText8.get();
@@ -2100,11 +2085,6 @@ nsWindow::NotifyIME(const IMENotification& aIMENotification)
             // Cancel composition on Gecko side
             if (mIMEComposing) {
                 nsRefPtr<nsWindow> kungFuDeathGrip(this);
-
-                WidgetCompositionEvent updateEvent(true, NS_COMPOSITION_UPDATE,
-                                                   this);
-                InitEvent(updateEvent, nullptr);
-                DispatchEvent(&updateEvent);
 
                 WidgetTextEvent textEvent(true, NS_TEXT_TEXT, this);
                 InitEvent(textEvent, nullptr);

@@ -7,6 +7,7 @@ function setupChromeSandbox() {
                                           get: function() { return _b; },
                                           set: function(val) { _b = val; } });
   this.chromeArr = [4, 2, 1];
+  this.chromeArr["__exposedProps__"] = { "1": "rw" };
 }
 
 function checkDefineThrows(sb, obj, prop, desc) {

@@ -75,7 +75,7 @@ class TypedArrayLayout
                   "bad inlined constant in jsfriendapi.h");
 };
 
-class TypedArrayObject : public ArrayBufferViewObject
+class TypedArrayObject : public NativeObject
 {
   public:
     typedef TypedArrayObject AnyTypedArray;
@@ -106,7 +106,7 @@ class TypedArrayObject : public ArrayBufferViewObject
     // For typed arrays which can store their data inline, the array buffer
     // object is created lazily.
     static const uint32_t INLINE_BUFFER_LIMIT =
-        (JSObject::MAX_FIXED_SLOTS - FIXED_DATA_START) * sizeof(Value);
+        (NativeObject::MAX_FIXED_SLOTS - FIXED_DATA_START) * sizeof(Value);
 
     static gc::AllocKind
     AllocKindForLazyBuffer(size_t nbytes)
@@ -301,7 +301,7 @@ TypedArrayShift(Scalar::Type viewType)
     MOZ_CRASH("Unexpected array type");
 }
 
-class DataViewObject : public ArrayBufferViewObject
+class DataViewObject : public NativeObject
 {
     static const size_t RESERVED_SLOTS = JS_DATAVIEW_SLOTS;
     static const size_t DATA_SLOT      = JS_DATAVIEW_SLOT_DATA;
@@ -327,7 +327,7 @@ class DataViewObject : public ArrayBufferViewObject
 
     template<Value ValueGetter(DataViewObject *view)>
     static bool
-    defineGetter(JSContext *cx, PropertyName *name, HandleObject proto);
+    defineGetter(JSContext *cx, PropertyName *name, HandleNativeObject proto);
 
   public:
     static const Class class_;

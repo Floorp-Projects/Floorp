@@ -178,8 +178,8 @@ struct ForOfPIC
     {
       private:
         // Pointer to canonical Array.prototype and ArrayIterator.prototype
-        HeapPtrObject arrayProto_;
-        HeapPtrObject arrayIteratorProto_;
+        HeapPtrNativeObject arrayProto_;
+        HeapPtrNativeObject arrayIteratorProto_;
 
         // Shape of matching Array.prototype object, and slot containing
         // the '@@iterator' for it, and the canonical value.
@@ -223,7 +223,7 @@ struct ForOfPIC
         Stub *isArrayOptimized(ArrayObject *obj);
 
         // Try to optimize this chain for an object.
-        bool tryOptimizeArray(JSContext *cx, HandleObject array, bool *optimized);
+        bool tryOptimizeArray(JSContext *cx, HandleArrayObject array, bool *optimized);
 
         // Check if the global array-related objects have not been messed with
         // in a way that would disable this PIC.
@@ -255,14 +255,14 @@ struct ForOfPIC
     // Class for object that holds ForOfPIC chain.
     static const Class jsclass;
 
-    static JSObject *createForOfPICObject(JSContext *cx, Handle<GlobalObject *> global);
+    static NativeObject *createForOfPICObject(JSContext *cx, Handle<GlobalObject *> global);
 
-    static inline Chain *fromJSObject(JSObject *obj) {
+    static inline Chain *fromJSObject(NativeObject *obj) {
         MOZ_ASSERT(js::GetObjectClass(obj) == &ForOfPIC::jsclass);
         return (ForOfPIC::Chain *) obj->getPrivate();
     }
     static inline Chain *getOrCreate(JSContext *cx) {
-        JSObject *obj = cx->global()->getForOfPICObject();
+        NativeObject *obj = cx->global()->getForOfPICObject();
         if (obj)
             return fromJSObject(obj);
         return create(cx);

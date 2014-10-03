@@ -183,7 +183,7 @@ class TenuredCell : public Cell
     MOZ_ALWAYS_INLINE void unmark(uint32_t color) const;
     MOZ_ALWAYS_INLINE void copyMarkBitsFrom(const TenuredCell *src);
 
-    // Note: this is in TenuredCell because ObjectImpl subclasses are sometimes
+    // Note: this is in TenuredCell because JSObject subclasses are sometimes
     // used tagged.
     static MOZ_ALWAYS_INLINE bool isNullLike(const Cell *thing) { return !thing; }
 

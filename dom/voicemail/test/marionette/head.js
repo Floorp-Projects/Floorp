@@ -5,10 +5,18 @@
 
 const {Cc: Cc, Ci: Ci, Cr: Cr, Cu: Cu} = SpecialPowers;
 
-let RIL = {};
-Cu.import("resource://gre/modules/ril_consts.js", RIL);
+let RIL = SpecialPowers.wrap(SpecialPowers.createBlankObject());
+SpecialPowers.Cu.import("resource://gre/modules/ril_consts.js", RIL);
 
-let Promise = Cu.import("resource://gre/modules/Promise.jsm").Promise;
+// Emulate Promise.jsm semantics.
+Promise.defer = function() { return new Deferred(); }
+function Deferred()  {
+  this.promise = new Promise(function(resolve, reject) {
+    this.resolve = resolve;
+    this.reject = reject;
+  }.bind(this));
+  Object.freeze(this);
+}
 
 const MWI_PDU_PREFIX = "0000";
 const MWI_PDU_UDH_PREFIX = "0040";

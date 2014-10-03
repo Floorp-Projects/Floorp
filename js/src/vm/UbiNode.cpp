@@ -87,7 +87,7 @@ Node::exposeToJS() const
         JSObject &obj = *as<JSObject>();
         if (obj.is<js::ScopeObject>()) {
             v.setUndefined();
-        } else if (obj.is<JSFunction>() && IsInternalFunctionObject(&obj)) {
+        } else if (obj.is<JSFunction>() && js::IsInternalFunctionObject(&obj)) {
             v.setUndefined();
         } else {
             v.setObject(obj);

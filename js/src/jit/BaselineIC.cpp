@@ -1748,7 +1748,7 @@ DoNewObject(JSContext *cx, ICNewObject_Fallback *stub, MutableHandleValue res)
 {
     FallbackICSpew(cx, stub, "NewObject");
 
-    RootedObject templateObject(cx, stub->templateObject());
+    RootedNativeObject templateObject(cx, stub->templateObject());
     JSObject *obj = NewInitObject(cx, templateObject);
     if (!obj)
         return false;
@@ -3189,13 +3189,13 @@ ICUnaryArith_Double::Compiler::generateStubCode(MacroAssembler &masm)
 // GetElem_Fallback
 //
 
-static void GetFixedOrDynamicSlotOffset(HandleObject obj, uint32_t slot,
+static void GetFixedOrDynamicSlotOffset(NativeObject *obj, uint32_t slot,
                                         bool *isFixed, uint32_t *offset)
 {
     MOZ_ASSERT(isFixed);
     MOZ_ASSERT(offset);
     *isFixed = obj->isFixedSlot(slot);
-    *offset = *isFixed ? JSObject::getFixedSlotOffset(slot)
+    *offset = *isFixed ? NativeObject::getFixedSlotOffset(slot)
                        : obj->dynamicSlotIndex(slot) * sizeof(Value);
 }
 
@@ -3221,7 +3221,7 @@ GenerateDOMProxyChecks(JSContext *cx, MacroAssembler &masm, Register object,
     //      2. The object does not have expando properties, or has an expando
     //          which is known to not have the desired property.
     Address handlerAddr(object, ProxyObject::offsetOfHandler());
-    Address expandoAddr(object, JSObject::getFixedSlotOffset(GetDOMProxyExpandoSlot()));
+    Address expandoAddr(object, NativeObject::getFixedSlotOffset(GetDOMProxyExpandoSlot()));
 
     // Check that object is a DOMProxy.
     masm.loadPtr(checkProxyHandlerAddr, scratch);
@@ -3333,7 +3333,7 @@ EffectlesslyLookupProperty(JSContext *cx, HandleObject obj, HandlePropertyName n
         if (!JSObject::lookupProperty(cx, checkObj, name, holder, shape))
             return false;
     } else if (checkObj->isNative()) {
-        shape.set(checkObj->nativeLookup(cx, NameToId(name)));
+        shape.set(checkObj->as<NativeObject>().lookup(cx, NameToId(name)));
         if (shape)
             holder.set(checkObj);
     }
@@ -3352,7 +3352,7 @@ CheckHasNoSuchProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
         if (!curObj->isNative())
             return false;
 
-        Shape *shape = curObj->nativeLookup(cx, NameToId(name));
+        Shape *shape = curObj->as<NativeObject>().lookup(cx, NameToId(name));
         if (shape)
             return false;
 
@@ -3510,7 +3510,7 @@ IsCacheableSetPropAddSlot(JSContext *cx, HandleObject obj, HandleShape oldShape,
             return false;
 
         // if prototype defines this property in a non-plain way, don't optimize
-        Shape *protoShape = proto->nativeLookup(cx, id);
+        Shape *protoShape = proto->as<NativeObject>().lookup(cx, id);
         if (protoShape && !protoShape->hasDefaultSetter())
             return false;
 
@@ -3523,7 +3523,7 @@ IsCacheableSetPropAddSlot(JSContext *cx, HandleObject obj, HandleShape oldShape,
     // Only add a IC entry if the dynamic slots didn't change when the shapes
     // changed.  Need to ensure that a shape change for a subsequent object
     // won't involve reallocating the slot array.
-    if (obj->numDynamicSlots() != oldSlots)
+    if (obj->as<NativeObject>().numDynamicSlots() != oldSlots)
         return false;
 
     *protoChainDepth = chainDepth;
@@ -3782,7 +3782,8 @@ static bool TryAttachNativeGetElemStub(JSContext *cx, HandleScript script, jsbyt
 
         bool isFixedSlot;
         uint32_t offset;
-        GetFixedOrDynamicSlotOffset(holder, shape->slot(), &isFixedSlot, &offset);
+        GetFixedOrDynamicSlotOffset(&holder->as<NativeObject>(),
+                                    shape->slot(), &isFixedSlot, &offset);
 
         ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
         ICStub::Kind kind = (obj == holder) ? ICStub::GetElem_NativeSlot
@@ -4326,7 +4327,7 @@ ICGetElemNativeCompiler::generateStubCode(MacroAssembler &masm)
 
         // Load from object.
         if (acctype_ == ICGetElemNativeStub::DynamicSlot)
-            masm.addPtr(Address(holderReg, JSObject::offsetOfSlots()), scratchReg);
+            masm.addPtr(Address(holderReg, NativeObject::offsetOfSlots()), scratchReg);
         else
             masm.addPtr(holderReg, scratchReg);
 
@@ -4501,7 +4502,7 @@ ICGetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branchTestObjShape(Assembler::NotEqual, obj, scratchReg, &failure);
 
     // Load obj->elements.
-    masm.loadPtr(Address(obj, JSObject::offsetOfElements()), scratchReg);
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratchReg);
 
     // Unbox key.
     Register key = masm.extractInt32(R1, ExtractTemp1);
@@ -4902,8 +4903,8 @@ RemoveExistingTypedArraySetElemStub(JSContext *cx, ICSetElem_Fallback *stub, Han
 }
 
 static bool
-CanOptimizeDenseSetElem(JSContext *cx, HandleObject obj, uint32_t index,
-                        HandleShape oldShape, uint32_t oldCapacity, uint32_t oldInitLength,
+CanOptimizeDenseSetElem(NativeObject *obj, uint32_t index,
+                        Shape *oldShape, uint32_t oldCapacity, uint32_t oldInitLength,
                         bool *isAddingCaseOut, size_t *protoDepthOut)
 {
     uint32_t initLength = obj->getDenseInitializedLength();
@@ -4916,7 +4917,7 @@ CanOptimizeDenseSetElem(JSContext *cx, HandleObject obj, uint32_t index,
     if (initLength < oldInitLength || capacity < oldCapacity)
         return false;
 
-    RootedShape shape(cx, obj->lastProperty());
+    Shape *shape = obj->lastProperty();
 
     // Cannot optimize if the shape changed.
     if (oldShape != shape)
@@ -4950,7 +4951,7 @@ CanOptimizeDenseSetElem(JSContext *cx, HandleObject obj, uint32_t index,
     // either directly, or via a prototype, or via the target object for a prototype
     // which is a proxy, that handles a particular integer write.
     // Scan the prototype and shape chain to make sure that this is not the case.
-    RootedObject curObj(cx, obj);
+    JSObject *curObj = obj;
     while (curObj) {
         // Ensure object is native.
         if (!curObj->isNative())
@@ -5000,8 +5001,8 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub_
     uint32_t oldCapacity = 0;
     uint32_t oldInitLength = 0;
     if (obj->isNative() && index.isInt32() && index.toInt32() >= 0) {
-        oldCapacity = obj->getDenseCapacity();
-        oldInitLength = obj->getDenseInitializedLength();
+        oldCapacity = obj->as<NativeObject>().getDenseCapacity();
+        oldInitLength = obj->as<NativeObject>().getDenseInitializedLength();
     }
 
     if (op == JSOP_INITELEM) {
@@ -5042,7 +5043,8 @@ DoSetElemFallback(JSContext *cx, BaselineFrame *frame, ICSetElem_Fallback *stub_
         bool addingCase;
         size_t protoDepth;
 
-        if (CanOptimizeDenseSetElem(cx, obj, index.toInt32(), oldShape, oldCapacity, oldInitLength,
+        if (CanOptimizeDenseSetElem(&obj->as<NativeObject>(), index.toInt32(),
+                                    oldShape, oldCapacity, oldInitLength,
                                     &addingCase, &protoDepth))
         {
             RootedShape shape(cx, obj->lastProperty());
@@ -5229,7 +5231,7 @@ ICSetElem_Dense::Compiler::generateStubCode(MacroAssembler &masm)
     Register key = masm.extractInt32(R1, ExtractTemp1);
 
     // Load obj->elements in scratchReg.
-    masm.loadPtr(Address(obj, JSObject::offsetOfElements()), scratchReg);
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratchReg);
 
     // Bounds check.
     Address initLength(scratchReg, ObjectElements::offsetOfInitializedLength());
@@ -5412,7 +5414,7 @@ ICSetElemDenseAddCompiler::generateStubCode(MacroAssembler &masm)
     Register key = masm.extractInt32(R1, ExtractTemp1);
 
     // Load obj->elements in scratchReg.
-    masm.loadPtr(Address(obj, JSObject::offsetOfElements()), scratchReg);
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratchReg);
 
     // Bounds check (key == initLength)
     Address initLength(scratchReg, ObjectElements::offsetOfInitializedLength());
@@ -5669,7 +5671,7 @@ ICIn_Fallback::Compiler::generateStubCode(MacroAssembler &masm)
 // Attach an optimized stub for a GETGNAME/CALLGNAME op.
 static bool
 TryAttachGlobalNameStub(JSContext *cx, HandleScript script, jsbytecode *pc,
-                        ICGetName_Fallback *stub, HandleObject global,
+                        ICGetName_Fallback *stub, Handle<GlobalObject*> global,
                         HandlePropertyName name)
 {
     MOZ_ASSERT(global->is<GlobalObject>());
@@ -5681,7 +5683,7 @@ TryAttachGlobalNameStub(JSContext *cx, HandleScript script, jsbytecode *pc,
         types::EnsureTrackPropertyTypes(cx, global, NameToId(name));
 
     // The property must be found, and it must be found as a normal data property.
-    RootedShape shape(cx, global->nativeLookup(cx, id));
+    RootedShape shape(cx, global->lookup(cx, id));
     if (!shape)
         return true;
 
@@ -5740,7 +5742,7 @@ TryAttachScopeNameStub(JSContext *cx, HandleScript script, ICGetName_Fallback *s
             return false;
 
         if (scopeChain->is<GlobalObject>()) {
-            shape = scopeChain->nativeLookup(cx, id);
+            shape = scopeChain->as<GlobalObject>().lookup(cx, id);
             if (shape)
                 break;
             return true;
@@ -5752,7 +5754,7 @@ TryAttachScopeNameStub(JSContext *cx, HandleScript script, ICGetName_Fallback *s
         // Check for an 'own' property on the scope. There is no need to
         // check the prototype as non-with scopes do not inherit properties
         // from any prototype.
-        shape = scopeChain->nativeLookup(cx, id);
+        shape = scopeChain->as<NativeObject>().lookup(cx, id);
         if (shape)
             break;
 
@@ -5768,7 +5770,8 @@ TryAttachScopeNameStub(JSContext *cx, HandleScript script, ICGetName_Fallback *s
 
     bool isFixedSlot;
     uint32_t offset;
-    GetFixedOrDynamicSlotOffset(scopeChain, shape->slot(), &isFixedSlot, &offset);
+    GetFixedOrDynamicSlotOffset(&scopeChain->as<NativeObject>(),
+                                shape->slot(), &isFixedSlot, &offset);
 
     ICStub *monitorStub = stub->fallbackMonitorStub()->firstMonitorStub();
     ICStub *newStub;
@@ -5861,7 +5864,7 @@ DoGetNameFallback(JSContext *cx, BaselineFrame *frame, ICGetName_Fallback *stub_
     }
 
     if (js_CodeSpec[*pc].format & JOF_GNAME) {
-        if (!TryAttachGlobalNameStub(cx, script, pc, stub, scopeChain, name))
+        if (!TryAttachGlobalNameStub(cx, script, pc, stub, scopeChain.as<GlobalObject>(), name))
             return false;
     } else {
         if (!TryAttachScopeNameStub(cx, script, stub, scopeChain, name))
@@ -5901,7 +5904,7 @@ ICGetName_Global::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branchTestObjShape(Assembler::NotEqual, obj, scratch, &failure);
 
     // Load dynamic slot.
-    masm.loadPtr(Address(obj, JSObject::offsetOfSlots()), obj);
+    masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), obj);
     masm.load32(Address(BaselineStubReg, ICGetName_Global::offsetOfSlot()), scratch);
     masm.loadValue(BaseIndex(obj, scratch, TimesEight), R0);
 
@@ -5941,7 +5944,7 @@ ICGetName_Scope<NumHops>::Compiler::generateStubCode(MacroAssembler &masm)
     Register scope = NumHops ? walker : obj;
 
     if (!isFixedSlot_) {
-        masm.loadPtr(Address(scope, JSObject::offsetOfSlots()), walker);
+        masm.loadPtr(Address(scope, NativeObject::offsetOfSlots()), walker);
         scope = walker;
     }
 
@@ -6185,7 +6188,7 @@ static bool
 UpdateExistingGenerationalDOMProxyStub(ICGetProp_Fallback *stub,
                                        HandleObject obj)
 {
-    Value expandoSlot = obj->getFixedSlot(GetDOMProxyExpandoSlot());
+    Value expandoSlot = obj->fakeNativeGetReservedSlot(GetDOMProxyExpandoSlot());
     MOZ_ASSERT(!expandoSlot.isObject() && !expandoSlot.isUndefined());
     ExpandoAndGeneration *expandoAndGeneration = (ExpandoAndGeneration*)expandoSlot.toPrivate();
     for (ICStubConstIterator iter = stub->beginChainConst(); !iter.atEnd(); iter++) {
@@ -6272,7 +6275,7 @@ TryAttachNativeGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc,
     if (!isDOMProxy && IsCacheableGetPropReadSlot(obj, holder, shape)) {
         bool isFixedSlot;
         uint32_t offset;
-        GetFixedOrDynamicSlotOffset(holder, shape->slot(), &isFixedSlot, &offset);
+        GetFixedOrDynamicSlotOffset(&holder->as<NativeObject>(), shape->slot(), &isFixedSlot, &offset);
 
         // Instantiate this property for singleton holders, for use during Ion compilation.
         if (IsIonEnabled(cx))
@@ -6417,7 +6420,7 @@ TryAttachPrimitiveGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc
     MOZ_ASSERT(!*attached);
 
     JSValueType primitiveType;
-    RootedObject proto(cx);
+    RootedNativeObject proto(cx);
     Rooted<GlobalObject*> global(cx, &script->global());
     if (val.isString()) {
         primitiveType = JSVAL_TYPE_STRING;
@@ -6442,7 +6445,7 @@ TryAttachPrimitiveGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc
         types::EnsureTrackPropertyTypes(cx, proto, id);
 
     // For now, only look for properties directly set on the prototype.
-    RootedShape shape(cx, proto->nativeLookup(cx, id));
+    RootedShape shape(cx, proto->lookup(cx, id));
     if (!shape || !shape->hasSlot() || !shape->hasDefaultGetter())
         return true;
 
@@ -6693,7 +6696,7 @@ ICGetProp_ArrayLength::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branchTestObjClass(Assembler::NotEqual, obj, scratch, &ArrayObject::class_, &failure);
 
     // Load obj->elements->length.
-    masm.loadPtr(Address(obj, JSObject::offsetOfElements()), scratch);
+    masm.loadPtr(Address(obj, NativeObject::offsetOfElements()), scratch);
     masm.load32(Address(scratch, ObjectElements::offsetOfLength()), scratch);
 
     // Guard length fits in an int32.
@@ -6760,7 +6763,7 @@ ICGetProp_Primitive::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branchPtr(Assembler::NotEqual, shapeAddr, scratchReg, &failure);
 
     if (!isFixedSlot_)
-        masm.loadPtr(Address(holderReg, JSObject::offsetOfSlots()), holderReg);
+        masm.loadPtr(Address(holderReg, NativeObject::offsetOfSlots()), holderReg);
 
     masm.load32(Address(BaselineStubReg, ICGetPropNativeStub::offsetOfOffset()), scratchReg);
     masm.loadValue(BaseIndex(holderReg, scratchReg, TimesOne), R0);
@@ -6807,7 +6810,7 @@ ICGetPropNativeCompiler::generateStubCode(MacroAssembler &masm)
         // Don't overwrite actual holderReg if we need to load a dynamic slots object.
         // May need to preserve object for noSuchMethod check later.
         Register nextHolder = regs.takeAny();
-        masm.loadPtr(Address(holderReg, JSObject::offsetOfSlots()), nextHolder);
+        masm.loadPtr(Address(holderReg, NativeObject::offsetOfSlots()), nextHolder);
         holderReg = nextHolder;
     }
 
@@ -7241,7 +7244,7 @@ ICGetPropCallDOMProxyNativeCompiler::getStub(ICStubSpace *space)
     RootedShape shape(cx, proxy_->lastProperty());
     RootedShape holderShape(cx, holder_->lastProperty());
 
-    Value expandoSlot = proxy_->getFixedSlot(GetDOMProxyExpandoSlot());
+    Value expandoSlot = proxy_->fakeNativeGetReservedSlot(GetDOMProxyExpandoSlot());
     RootedShape expandoShape(cx, nullptr);
     ExpandoAndGeneration *expandoAndGeneration;
     int32_t generation;
@@ -7528,7 +7531,7 @@ TryAttachSetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICSetPr
 
         bool isFixedSlot;
         uint32_t offset;
-        GetFixedOrDynamicSlotOffset(obj, shape->slot(), &isFixedSlot, &offset);
+        GetFixedOrDynamicSlotOffset(&obj->as<NativeObject>(), shape->slot(), &isFixedSlot, &offset);
 
         JitSpew(JitSpew_BaselineIC, "  Generating SetProp(NativeObject.ADD) stub");
         ICSetPropNativeAddCompiler compiler(cx, obj, oldShape, oldType,
@@ -7557,7 +7560,7 @@ TryAttachSetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc, ICSetPr
 
         bool isFixedSlot;
         uint32_t offset;
-        GetFixedOrDynamicSlotOffset(obj, shape->slot(), &isFixedSlot, &offset);
+        GetFixedOrDynamicSlotOffset(&obj->as<NativeObject>(), shape->slot(), &isFixedSlot, &offset);
 
         JitSpew(JitSpew_BaselineIC, "  Generating SetProp(NativeObject.PROP) stub");
         ICSetProp_Native::Compiler compiler(cx, obj, isFixedSlot, offset);
@@ -7654,12 +7657,15 @@ DoSetPropFallback(JSContext *cx, BaselineFrame *frame, ICSetProp_Fallback *stub_
     RootedTypeObject oldType(cx, obj->getType(cx));
     if (!oldType)
         return false;
-    uint32_t oldSlots = obj->numDynamicSlots();
+    uint32_t oldSlots = obj->fakeNativeNumDynamicSlots();
 
     if (op == JSOP_INITPROP) {
         MOZ_ASSERT(obj->is<JSObject>());
-        if (!DefineNativeProperty(cx, obj, id, rhs, nullptr, nullptr, JSPROP_ENUMERATE))
+        if (!DefineNativeProperty(cx, obj.as<NativeObject>(), id, rhs,
+                                  nullptr, nullptr, JSPROP_ENUMERATE))
+        {
             return false;
+        }
     } else if (op == JSOP_SETNAME || op == JSOP_SETGNAME) {
         if (!SetNameOperation(cx, script, pc, obj, rhs))
             return false;
@@ -7798,7 +7804,7 @@ ICSetProp_Native::Compiler::generateStubCode(MacroAssembler &masm)
         holderReg = objReg;
     } else {
         holderReg = regs.takeAny();
-        masm.loadPtr(Address(objReg, JSObject::offsetOfSlots()), holderReg);
+        masm.loadPtr(Address(objReg, NativeObject::offsetOfSlots()), holderReg);
     }
 
     // Perform the store.
@@ -7942,7 +7948,7 @@ ICSetPropNativeAddCompiler::generateStubCode(MacroAssembler &masm)
         holderReg = objReg;
     } else {
         holderReg = regs.takeAny();
-        masm.loadPtr(Address(objReg, JSObject::offsetOfSlots()), holderReg);
+        masm.loadPtr(Address(objReg, NativeObject::offsetOfSlots()), holderReg);
     }
 
     // Perform the store.  No write barrier required since this is a new
@@ -8256,7 +8262,7 @@ TryAttachFunCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, 
 
 static bool
 GetTemplateObjectForNative(JSContext *cx, HandleScript script, jsbytecode *pc,
-                           Native native, const CallArgs &args, MutableHandleObject res)
+                           Native native, const CallArgs &args, MutableHandleNativeObject res)
 {
     // Check for natives to which template objects can be attached. This is
     // done to provide templates to Ion for inlining these natives later on.
@@ -8431,7 +8437,7 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
 
         // Remember the template object associated with any script being called
         // as a constructor, for later use during Ion compilation.
-        RootedObject templateObject(cx);
+        RootedNativeObject templateObject(cx);
         if (constructing) {
             templateObject = CreateThisForFunction(cx, fun, MaybeSingletonObject);
             if (!templateObject)
@@ -8496,7 +8502,7 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
             return true;
         }
 
-        RootedObject templateObject(cx);
+        RootedNativeObject templateObject(cx);
         if (MOZ_LIKELY(!isSpread)) {
             CallArgs args = CallArgsFromVp(argc, vp);
             if (!GetTemplateObjectForNative(cx, script, pc, fun->native(), args, &templateObject))
@@ -8520,7 +8526,7 @@ TryAttachCallStub(JSContext *cx, ICCall_Fallback *stub, HandleScript script, jsb
 }
 
 static bool
-CopyArray(JSContext *cx, HandleObject obj, MutableHandleValue result)
+CopyArray(JSContext *cx, HandleArrayObject obj, MutableHandleValue result)
 {
     MOZ_ASSERT(obj->is<ArrayObject>());
     uint32_t length = obj->as<ArrayObject>().length();
@@ -8530,7 +8536,7 @@ CopyArray(JSContext *cx, HandleObject obj, MutableHandleValue result)
     if (!type)
         return false;
 
-    RootedObject newObj(cx, NewDenseArray(cx, length, type, NewArray_FullyAllocating));
+    RootedArrayObject newObj(cx, NewDenseArray(cx, length, type, NewArray_FullyAllocating));
     if (!newObj)
         return false;
 
@@ -8554,13 +8560,12 @@ TryAttachStringSplit(JSContext *cx, ICCall_Fallback *stub, HandleScript script,
     if (!IsOptimizableCallStringSplit(callee, thisv, argc, args))
         return true;
 
-    MOZ_ASSERT(res.toObject().is<ArrayObject>());
     MOZ_ASSERT(callee.isObject());
     MOZ_ASSERT(callee.toObject().is<JSFunction>());
 
     RootedString thisString(cx, thisv.toString());
     RootedString argString(cx, args[0].toString());
-    RootedObject obj(cx, &res.toObject());
+    RootedArrayObject obj(cx, &res.toObject().as<ArrayObject>());
     RootedValue arr(cx);
 
     // Copy the array before storing in stub.
@@ -8765,7 +8770,7 @@ void
 ICCallStubCompiler::guardSpreadCall(MacroAssembler &masm, Register argcReg, Label *failure)
 {
     masm.unboxObject(Address(BaselineStackReg, ICStackValueOffset), argcReg);
-    masm.loadPtr(Address(argcReg, JSObject::offsetOfElements()), argcReg);
+    masm.loadPtr(Address(argcReg, NativeObject::offsetOfElements()), argcReg);
     masm.load32(Address(argcReg, ObjectElements::offsetOfLength()), argcReg);
 
     // Limit actual argc to something reasonable (huge number of arguments can
@@ -8784,7 +8789,7 @@ ICCallStubCompiler::pushSpreadCallArguments(MacroAssembler &masm, GeneralRegiste
     Register startReg = regs.takeAny();
     Register endReg = regs.takeAny();
     masm.unboxObject(Address(BaselineStackReg, STUB_FRAME_SIZE), startReg);
-    masm.loadPtr(Address(startReg, JSObject::offsetOfElements()), startReg);
+    masm.loadPtr(Address(startReg, NativeObject::offsetOfElements()), startReg);
     masm.mov(argcReg, endReg);
     static_assert(sizeof(Value) == 8, "Value must be 8 bytes");
     masm.lshiftPtr(Imm32(3), endReg);
@@ -8847,7 +8852,7 @@ ICCallStubCompiler::guardFunApply(MacroAssembler &masm, GeneralRegisterSet regs,
                                 &ArrayObject::class_, failure);
 
         // Get the array elements and ensure that initializedLength == length
-        masm.loadPtr(Address(secondArgObj, JSObject::offsetOfElements()), secondArgObj);
+        masm.loadPtr(Address(secondArgObj, NativeObject::offsetOfElements()), secondArgObj);
 
         Register lenReg = regsx.takeAny();
         masm.load32(Address(secondArgObj, ObjectElements::offsetOfLength()), lenReg);
@@ -8957,7 +8962,7 @@ ICCallStubCompiler::pushArrayArguments(MacroAssembler &masm, Address arrayVal,
     Register startReg = regs.takeAny();
     Register endReg = regs.takeAny();
     masm.extractObject(arrayVal, startReg);
-    masm.loadPtr(Address(startReg, JSObject::offsetOfElements()), startReg);
+    masm.loadPtr(Address(startReg, NativeObject::offsetOfElements()), startReg);
     masm.load32(Address(startReg, ObjectElements::offsetOfInitializedLength()), endReg);
     JS_STATIC_ASSERT(sizeof(Value) == 8);
     masm.lshiftPtr(Imm32(3), endReg);
@@ -9355,7 +9360,7 @@ ICCallScriptedCompiler::generateStubCode(MacroAssembler &masm)
     return true;
 }
 
-typedef bool (*CopyArrayFn)(JSContext *, HandleObject, MutableHandleValue);
+typedef bool (*CopyArrayFn)(JSContext *, HandleArrayObject, MutableHandleValue);
 static const VMFunction CopyArrayInfo = FunctionInfo<CopyArrayFn>(CopyArray);
 
 bool
@@ -9617,7 +9622,7 @@ ICCall_ScriptedApplyArray::Compiler::generateStubCode(MacroAssembler &masm)
 
     // Reload argc from length of array.
     masm.extractObject(arrayVal, argcReg);
-    masm.loadPtr(Address(argcReg, JSObject::offsetOfElements()), argcReg);
+    masm.loadPtr(Address(argcReg, NativeObject::offsetOfElements()), argcReg);
     masm.load32(Address(argcReg, ObjectElements::offsetOfInitializedLength()), argcReg);
 
     masm.Push(argcReg);
@@ -10852,7 +10857,7 @@ ICSetProp_CallNative::Clone(JSContext *cx, ICStubSpace *space, ICStub *,
 }
 
 ICCall_Scripted::ICCall_Scripted(JitCode *stubCode, ICStub *firstMonitorStub,
-                                 HandleScript calleeScript, HandleObject templateObject,
+                                 HandleScript calleeScript, HandleNativeObject templateObject,
                                  uint32_t pcOffset)
   : ICMonitoredStub(ICStub::Call_Scripted, stubCode, firstMonitorStub),
     calleeScript_(calleeScript),
@@ -10865,7 +10870,7 @@ ICCall_Scripted::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorSt
                        ICCall_Scripted &other)
 {
     RootedScript calleeScript(cx, other.calleeScript_);
-    RootedObject templateObject(cx, other.templateObject_);
+    RootedNativeObject templateObject(cx, other.templateObject_);
     return New(space, other.jitCode(), firstMonitorStub, calleeScript, templateObject,
                other.pcOffset_);
 }
@@ -10878,7 +10883,7 @@ ICCall_AnyScripted::Clone(JSContext *, ICStubSpace *space, ICStub *firstMonitorS
 }
 
 ICCall_Native::ICCall_Native(JitCode *stubCode, ICStub *firstMonitorStub,
-                             HandleFunction callee, HandleObject templateObject,
+                             HandleFunction callee, HandleNativeObject templateObject,
                              uint32_t pcOffset)
   : ICMonitoredStub(ICStub::Call_Native, stubCode, firstMonitorStub),
     callee_(callee),
@@ -10899,7 +10904,7 @@ ICCall_Native::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorStub
                      ICCall_Native &other)
 {
     RootedFunction callee(cx, other.callee_);
-    RootedObject templateObject(cx, other.templateObject_);
+    RootedNativeObject templateObject(cx, other.templateObject_);
     return New(space, other.jitCode(), firstMonitorStub, callee, templateObject,
                other.pcOffset_);
 }
@@ -11027,7 +11032,7 @@ static bool DoRestFallback(JSContext *cx, ICRest_Fallback *stub,
     unsigned numRest = numActuals > numFormals ? numActuals - numFormals : 0;
     Value *rest = frame->argv() + numFormals;
 
-    JSObject *obj = NewDenseCopiedArray(cx, numRest, rest, nullptr);
+    ArrayObject *obj = NewDenseCopiedArray(cx, numRest, rest, nullptr);
     if (!obj)
         return false;
     types::FixRestArgumentsType(cx, obj);

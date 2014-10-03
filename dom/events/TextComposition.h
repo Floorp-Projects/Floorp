@@ -314,7 +314,7 @@ private:
    *
    * @param aEventMessage       Must be one of composition event or text event.
    * @param aData               Used for data value if aEventMessage is
-   *                            NS_COMPOSITION_UPDATE or NS_COMPOSITION_END.
+   *                            NS_COMPOSITION_END.
    *                            Used for theText value if aEventMessage is
    *                            NS_TEXT_TEXT.
    * @param aIsSynthesizingCommit   true if this is called for synthesizing

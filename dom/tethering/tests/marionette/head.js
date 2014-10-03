@@ -25,8 +25,15 @@ const TETHERING_SETTING_KEY = "1234567890";
 
 const SETTINGS_RIL_DATA_ENABLED = 'ril.data.enabled';
 
-let Promise =
-  SpecialPowers.Cu.import("resource://gre/modules/Promise.jsm").Promise;
+// Emulate Promise.jsm semantics.
+Promise.defer = function() { return new Deferred(); }
+function Deferred()  {
+  this.promise = new Promise(function(resolve, reject) {
+    this.resolve = resolve;
+    this.reject = reject;
+  }.bind(this));
+  Object.freeze(this);
+}
 
 let gTestSuite = (function() {
   let suite = {};

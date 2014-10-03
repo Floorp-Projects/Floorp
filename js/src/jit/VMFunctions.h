@@ -288,6 +288,7 @@ struct VMFunctionsModal
 template <class> struct TypeToDataType { /* Unexpected return type for a VMFunction. */ };
 template <> struct TypeToDataType<bool> { static const DataType result = Type_Bool; };
 template <> struct TypeToDataType<JSObject *> { static const DataType result = Type_Object; };
+template <> struct TypeToDataType<NativeObject *> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<DeclEnvObject *> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<ArrayObject *> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<JSString *> { static const DataType result = Type_Object; };
@@ -296,6 +297,8 @@ template <> struct TypeToDataType<HandleObject> { static const DataType result =
 template <> struct TypeToDataType<HandleString> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandlePropertyName> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandleFunction> { static const DataType result = Type_Handle; };
+template <> struct TypeToDataType<Handle<NativeObject *> > { static const DataType result = Type_Handle; };
+template <> struct TypeToDataType<Handle<ArrayObject *> > { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<Handle<StaticWithObject *> > { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<Handle<StaticBlockObject *> > { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandleScript> { static const DataType result = Type_Handle; };
@@ -321,6 +324,12 @@ template <> struct TypeToArgProperties<HandlePropertyName> {
 };
 template <> struct TypeToArgProperties<HandleFunction> {
     static const uint32_t result = TypeToArgProperties<JSFunction *>::result | VMFunction::ByRef;
+};
+template <> struct TypeToArgProperties<Handle<NativeObject *> > {
+    static const uint32_t result = TypeToArgProperties<NativeObject *>::result | VMFunction::ByRef;
+};
+template <> struct TypeToArgProperties<Handle<ArrayObject *> > {
+    static const uint32_t result = TypeToArgProperties<ArrayObject *>::result | VMFunction::ByRef;
 };
 template <> struct TypeToArgProperties<Handle<StaticWithObject *> > {
     static const uint32_t result = TypeToArgProperties<StaticWithObject *>::result | VMFunction::ByRef;
@@ -383,6 +392,12 @@ template <> struct TypeToRootType<HandleTypeObject> {
 };
 template <> struct TypeToRootType<HandleScript> {
     static const uint32_t result = VMFunction::RootCell;
+};
+template <> struct TypeToRootType<Handle<NativeObject *> > {
+    static const uint32_t result = VMFunction::RootObject;
+};
+template <> struct TypeToRootType<Handle<ArrayObject *> > {
+    static const uint32_t result = VMFunction::RootObject;
 };
 template <> struct TypeToRootType<Handle<StaticBlockObject *> > {
     static const uint32_t result = VMFunction::RootObject;
@@ -616,7 +631,7 @@ bool CheckOverRecursedWithExtra(JSContext *cx, BaselineFrame *frame,
 bool DefVarOrConst(JSContext *cx, HandlePropertyName dn, unsigned attrs, HandleObject scopeChain);
 bool SetConst(JSContext *cx, HandlePropertyName name, HandleObject scopeChain, HandleValue rval);
 bool MutatePrototype(JSContext *cx, HandleObject obj, HandleValue value);
-bool InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value);
+bool InitProp(JSContext *cx, HandleNativeObject obj, HandlePropertyName name, HandleValue value);
 
 template<bool Equal>
 bool LooselyEqual(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, bool *res);
@@ -634,11 +649,11 @@ bool StringsEqual(JSContext *cx, HandleString left, HandleString right, bool *re
 
 // Allocation functions for JSOP_NEWARRAY and JSOP_NEWOBJECT and parallel array inlining
 JSObject *NewInitParallelArray(JSContext *cx, HandleObject templateObj);
-JSObject *NewInitObject(JSContext *cx, HandleObject templateObject);
+JSObject *NewInitObject(JSContext *cx, HandleNativeObject templateObject);
 JSObject *NewInitObjectWithClassPrototype(JSContext *cx, HandleObject templateObject);
 
 bool ArrayPopDense(JSContext *cx, HandleObject obj, MutableHandleValue rval);
-bool ArrayPushDense(JSContext *cx, HandleObject obj, HandleValue v, uint32_t *length);
+bool ArrayPushDense(JSContext *cx, HandleArrayObject obj, HandleValue v, uint32_t *length);
 bool ArrayShiftDense(JSContext *cx, HandleObject obj, MutableHandleValue rval);
 JSObject *ArrayConcatDense(JSContext *cx, HandleObject obj1, HandleObject obj2, HandleObject res);
 JSString *ArrayJoin(JSContext *cx, HandleObject array, HandleString sep);
@@ -714,7 +729,7 @@ JSString *RegExpReplace(JSContext *cx, HandleString string, HandleObject regexp,
 JSString *StringReplace(JSContext *cx, HandleString string, HandleString pattern,
                         HandleString repl);
 
-bool SetDenseElement(JSContext *cx, HandleObject obj, int32_t index, HandleValue value,
+bool SetDenseElement(JSContext *cx, HandleNativeObject obj, int32_t index, HandleValue value,
                      bool strict);
 
 #ifdef DEBUG

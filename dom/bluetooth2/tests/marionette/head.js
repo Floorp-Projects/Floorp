@@ -36,8 +36,15 @@ const BDADDR_LOCAL = "ff:ff:ff:00:00:00";
 // A user friendly name for remote BT device.
 const REMOTE_DEVICE_NAME = "Remote_BT_Device";
 
-let Promise =
-  SpecialPowers.Cu.import("resource://gre/modules/Promise.jsm").Promise;
+// Emulate Promise.jsm semantics.
+Promise.defer = function() { return new Deferred(); }
+function Deferred()  {
+  this.promise = new Promise(function(resolve, reject) {
+    this.resolve = resolve;
+    this.reject = reject;
+  }.bind(this));
+  Object.freeze(this);
+}
 
 let bluetoothManager;
 

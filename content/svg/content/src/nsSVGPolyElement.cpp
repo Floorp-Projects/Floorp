@@ -5,7 +5,6 @@
 
 #include "nsSVGPolyElement.h"
 #include "DOMSVGPointList.h"
-#include "gfxContext.h"
 #include "mozilla/gfx/2D.h"
 #include "SVGContentUtils.h"
 
@@ -119,20 +118,6 @@ nsSVGPolyElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 
   aMarks->LastElement().angle = prevAngle;
   aMarks->LastElement().type = nsSVGMark::eEnd;
-}
-
-void
-nsSVGPolyElement::ConstructPath(gfxContext *aCtx)
-{
-  const SVGPointList &points = mPoints.GetAnimValue();
-
-  if (!points.Length())
-    return;
-
-  aCtx->MoveTo(points[0]);
-  for (uint32_t i = 1; i < points.Length(); ++i) {
-    aCtx->LineTo(points[i]);
-  }
 }
 
 TemporaryRef<Path>

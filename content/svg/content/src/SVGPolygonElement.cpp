@@ -5,7 +5,6 @@
 
 #include "mozilla/dom/SVGPolygonElement.h"
 #include "mozilla/dom/SVGPolygonElementBinding.h"
-#include "gfxContext.h"
 #include "SVGContentUtils.h"
 
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Polygon)
@@ -56,15 +55,6 @@ SVGPolygonElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
   // doesn't return
   aMarks->AppendElement(nsSVGMark(startMark->x, startMark->y, startMark->angle,
                                   nsSVGMark::eEnd));
-}
-
-void
-SVGPolygonElement::ConstructPath(gfxContext *aCtx)
-{
-  SVGPolygonElementBase::ConstructPath(aCtx);
-  // the difference between a polyline and a polygon is that the
-  // polygon is closed:
-  aCtx->ClosePath();
 }
 
 } // namespace dom

@@ -28,6 +28,7 @@ struct Zone;
 
 namespace js {
 
+class TypedArrayObject;
 class ObjectElements;
 class HeapSlot;
 void SetGCZeal(JSRuntime *, uint8_t, uint32_t);
@@ -286,7 +287,7 @@ class Nursery
     size_t moveObjectToTenured(JSObject *dst, JSObject *src, gc::AllocKind dstKind);
     size_t moveElementsToTenured(JSObject *dst, JSObject *src, gc::AllocKind dstKind);
     size_t moveSlotsToTenured(JSObject *dst, JSObject *src, gc::AllocKind dstKind);
-    void forwardTypedArrayPointers(JSObject *dst, JSObject *src);
+    void forwardTypedArrayPointers(TypedArrayObject *dst, TypedArrayObject *src);
 
     /* Handle relocation of slots/elements pointers stored in Ion frames. */
     void setSlotsForwardingPointer(HeapSlot *oldSlots, HeapSlot *newSlots, uint32_t nslots);

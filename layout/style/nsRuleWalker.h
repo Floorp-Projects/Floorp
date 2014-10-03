@@ -23,6 +23,8 @@ public:
     mCurrent = aNode;
   }
 
+  nsPresContext* PresContext() const { return mRoot->PresContext(); }
+
 protected:
   void DoForward(nsIStyleRule* aRule) {
     mCurrent = mCurrent->Transition(aRule, mLevel, mImportance);

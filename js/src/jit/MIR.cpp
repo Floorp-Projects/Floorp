@@ -3180,7 +3180,7 @@ MBeta::printOpcode(FILE *fp) const
 bool
 MNewObject::shouldUseVM() const
 {
-    JSObject *obj = templateObject();
+    NativeObject *obj = templateObject();
     return obj->hasSingletonType() || obj->hasDynamicSlots();
 }
 
@@ -3197,7 +3197,7 @@ MObjectState::MObjectState(MDefinition *obj)
     // This instruction is only used as a summary for bailout paths.
     setResultType(MIRType_Object);
     setRecoveredOnBailout();
-    JSObject *templateObject = nullptr;
+    NativeObject *templateObject = nullptr;
     if (obj->isNewObject())
         templateObject = obj->toNewObject()->templateObject();
     else
@@ -3241,7 +3241,7 @@ MObjectState::Copy(TempAllocator &alloc, MObjectState *state)
 bool
 MNewArray::shouldUseVM() const
 {
-    MOZ_ASSERT(count() < JSObject::NELEMENTS_LIMIT);
+    MOZ_ASSERT(count() < NativeObject::NELEMENTS_LIMIT);
 
     size_t arraySlots =
         gc::GetGCKindSlots(templateObject()->asTenured().getAllocKind()) - ObjectElements::VALUES_PER_HEADER;
