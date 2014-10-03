@@ -2,6 +2,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+#ifdef MOZ_SERVICES_CLOUDSYNC
+XPCOMUtils.defineLazyModuleGetter(this, "CloudSync",
+                                  "resource://gre/modules/CloudSync.jsm");
+#else
+let CloudSync = null;
+#endif
+
 // gSyncUI handles updating the tools menu and displaying notifications.
 let gSyncUI = {
   DEFAULT_EOL_URL: "https://www.mozilla.org/firefox/?utm_source=synceol",
@@ -122,7 +131,9 @@ let gSyncUI = {
     document.getElementById("sync-setup-state").hidden = true;
     document.getElementById("sync-syncnow-state").hidden = true;
 
-    if (loginFailed) {
+    if (CloudSync && CloudSync.ready && CloudSync().adapters.count) {
+      document.getElementById("sync-syncnow-state").hidden = false;
+    } else if (loginFailed) {
       document.getElementById("sync-reauth-state").hidden = false;
     } else if (needsSetup) {
       document.getElementById("sync-setup-state").hidden = false;
@@ -275,7 +286,14 @@ let gSyncUI = {
 
   // Commands
   doSync: function SUI_doSync() {
-    setTimeout(function() Weave.Service.errorHandler.syncAndReportErrors(), 0);
+    let needsSetup = this._needsSetup();
+    let loginFailed = this._loginFailed();
+
+    if (!(loginFailed || needsSetup)) {
+      setTimeout(function () Weave.Service.errorHandler.syncAndReportErrors(), 0);
+    }
+
+    Services.obs.notifyObservers(null, "cloudsync:user-sync", null);
   },
 
   handleToolbarButton: function SUI_handleStatusbarButton() {
