@@ -137,6 +137,48 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
   -moz-box-orient: vertical;
 }
 
+/* ::::: toolbarbutton badged ::::: */
+
+.toolbarbutton-badge-container > .toolbarbutton-icon[label]:not([label=""]) {
+  -moz-margin-end: 0;
+}
+
+.toolbarbutton-badge[badge=""] {
+  display: none;
+}
+
+.toolbarbutton-badge {
+  background-color: #d90000;
+}
+
+.toolbarbutton-badge::after {
+  /* The |content| property is set in the content stylesheet. */
+  font-size: 10px;
+  font-weight: bold;
+  padding: 1px 2px 2px;
+  color: #fff;
+  background-color: inherit;
+  border-radius: 2px;
+  box-shadow: 0 1px 0 hsla(0, 100%, 100%, .2) inset,
+              0 -1px 0 hsla(0, 0%, 0%, .1) inset,
+              0 1px 0 hsla(206, 50%, 10%, .2);
+  position: absolute;
+  top: -4px;
+  right: -2px;
+  min-width: 10px;
+  line-height: 10px;
+  text-align: center;
+}
+
+.toolbarbutton-badge:-moz-locale-dir(rtl)::after {
+  left: -2px;
+  right: auto;
+}
+
+.toolbarbutton-badge-container {
+  position: relative;
+}
+
 /* .......... dropmarker .......... */
 
 .toolbarbutton-menubutton-dropmarker {

@@ -409,7 +409,7 @@ public class Favicons {
 
         // TODO: Remove this branch when old tablet is removed.
         final int defaultFaviconSizeDimenID =
-                isNewTabletEnabled ? R.dimen.tab_strip_favicon_size : R.dimen.favicon_bg;
+                isNewTabletEnabled ? R.dimen.new_tablet_tab_strip_favicon_size : R.dimen.favicon_bg;
         defaultFaviconSize = res.getDimensionPixelSize(defaultFaviconSizeDimenID);
 
         // Screen-density-adjusted upper limit on favicon size. Favicons larger than this are
