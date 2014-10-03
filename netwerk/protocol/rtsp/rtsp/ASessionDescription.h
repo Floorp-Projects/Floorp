@@ -51,7 +51,7 @@ struct ASessionDescription : public RefBase {
 
     bool getDurationUs(int64_t *durationUs) const;
 
-    static void ParseFormatDesc(
+    static bool ParseFormatDesc(
             const char *desc, int32_t *timescale, int32_t *numChannels);
 
     bool findAttribute(size_t index, const char *key, AString *value) const;

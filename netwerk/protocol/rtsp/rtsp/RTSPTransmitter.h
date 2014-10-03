@@ -266,28 +266,37 @@ struct MyTransmitter : public AHandler {
         }
     }
 
-    void authenticate(const sp<ARTSPResponse> &response) {
+    bool authenticate(const sp<ARTSPResponse> &response) {
         ssize_t i = response->mHeaders.indexOfKey("www-authenticate");
-        CHECK_GE(i, 0);
+        if (i < 0) {
+            return false;
+        }
 
         AString value = response->mHeaders.valueAt(i);
 
         if (!strncmp(value.c_str(), "Basic", 5)) {
             mAuthType = BASIC;
         } else {
-            CHECK(!strncmp(value.c_str(), "Digest", 6));
+            if (strncmp(value.c_str(), "Digest", 6)) {
+                return false;
+            }
+
             mAuthType = DIGEST;
 
             i = value.find("nonce=");
-            CHECK_GE(i, 0);
-            CHECK_EQ(value.c_str()[i + 6], '\"');
+            if (i < 0 || value.c_str()[i + 6] != '\"') {
+                return false;
+            }
             ssize_t j = value.find("\"", i + 7);
-            CHECK_GE(j, 0);
+            if (j < 0) {
+                return false;
+            }
 
             mNonce.setTo(value, i + 7, j - i - 7);
         }
 
         issueAnnounce();
+        return true;
     }
 
     void addAuthentication(
@@ -383,13 +392,11 @@ struct MyTransmitter : public AHandler {
                     CHECK(response != NULL);
 
                     if (response->mStatusCode == 401) {
-                        if (mAuthType != NONE) {
+                        if (mAuthType != NONE || !authenticate(response)) {
                             LOG(INFO) << "FAILED to authenticate";
                             (new AMessage(kWhatQuit, id()))->post();
                             break;
                         }
-
-                        authenticate(response);
                         break;
                     }
                 }
@@ -462,14 +469,24 @@ struct MyTransmitter : public AHandler {
 
                 sp<RefBase> obj;
                 CHECK(msg->findObject("response", &obj));
+                if (!obj.get()) {
+                    LOGE("No response to SETUP");
+                    (new AMessage(kWhatQuit, id()))->post();
+                    break;
+                }
                 sp<ARTSPResponse> response;
 
                 if (result == OK) {
                     response = static_cast<ARTSPResponse *>(obj.get());
-                    CHECK(response != NULL);
+                    if (!response.get()) {
+                        LOGE("No response to SETUP");
+                        (new AMessage(kWhatQuit, id()))->post();
+                        break;
+                    }
                 }
 
                 if (result != OK || response->mStatusCode != 200) {
+                    LOGE("SETUP error")
                     (new AMessage(kWhatQuit, id()))->post();
                     break;
                 }
