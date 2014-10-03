@@ -1092,21 +1092,6 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
     nsEventStatus status;
     nsRefPtr<nsWindow> lastFocusedWindow = mLastFocusedWindow;
 
-    if (aCompositionString != mDispatchedCompositionString) {
-      WidgetCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
-                                               mLastFocusedWindow);
-      InitEvent(compositionUpdate);
-      compositionUpdate.data = aCompositionString;
-      mDispatchedCompositionString = aCompositionString;
-      mLastFocusedWindow->DispatchEvent(&compositionUpdate, status);
-      if (lastFocusedWindow->IsDestroyed() ||
-          lastFocusedWindow != mLastFocusedWindow) {
-          PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-              ("    NOTE, the focused widget was destroyed/changed by compositionupdate"));
-          return false;
-      }
-    }
-
     // Store the selected string which will be removed by following text event.
     if (mCompositionState == eCompositionState_CompositionStartDispatched) {
         // XXX We should assume, for now, any web applications don't change
@@ -1126,14 +1111,14 @@ nsGtkIMModule::DispatchTextEvent(const nsAString &aCompositionString,
 
     uint32_t targetOffset = mCompositionStart;
 
+    textEvent.theText = mDispatchedCompositionString = aCompositionString;
+
     if (!aIsCommit) {
         // NOTE: SetTextRangeList() assumes that mDispatchedCompositionString
         //       has been updated already.
         textEvent.mRanges = CreateTextRangeArray();
         targetOffset += textEvent.mRanges->TargetClauseOffset();
     }
-
-    textEvent.theText = mDispatchedCompositionString.get();
 
     mCompositionState = aIsCommit ?
         eCompositionState_CommitTextEventDispatched :
