@@ -47,19 +47,17 @@ CreateCert(const char* issuerCN,
   static long serialNumberValue = 0;
   ++serialNumberValue;
   ByteString serialNumber(CreateEncodedSerialNumber(serialNumberValue));
-  EXPECT_NE(ENCODING_FAILED, serialNumber);
+  EXPECT_FALSE(ENCODING_FAILED(serialNumber));
 
   ByteString issuerDER(CNToDERName(issuerCN));
-  EXPECT_NE(ENCODING_FAILED, issuerDER);
   ByteString subjectDER(CNToDERName(subjectCN));
-  EXPECT_NE(ENCODING_FAILED, subjectDER);
 
   ByteString extensions[2];
   if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
     extensions[0] =
       CreateEncodedBasicConstraints(true, nullptr,
                                     ExtensionCriticality::Critical);
-    EXPECT_NE(ENCODING_FAILED, extensions[0]);
+    EXPECT_FALSE(ENCODING_FAILED(extensions[0]));
   }
 
   ByteString certDER(CreateEncodedCertificate(
@@ -69,7 +67,7 @@ CreateCert(const char* issuerCN,
                        subjectDER, extensions, issuerKey,
                        SignatureAlgorithm::rsa_pkcs1_with_sha256,
                        subjectKey));
-  EXPECT_NE(ENCODING_FAILED, certDER);
+  EXPECT_FALSE(ENCODING_FAILED(certDER));
   if (subjectCert) {
     SECItem certDERItem = {
       siBuffer,
@@ -245,7 +243,7 @@ TEST_F(pkixbuild, MaxAcceptableCertChainLength)
     ByteString certDER(CreateCert("CA7", "Direct End-Entity",
                                   EndEntityOrCA::MustBeEndEntity,
                                   trustDomain.leafCAKey.get(), unusedKeyPair));
-    ASSERT_NE(ENCODING_FAILED, certDER);
+    ASSERT_FALSE(ENCODING_FAILED(certDER));
     Input certDERInput;
     ASSERT_EQ(Success, certDERInput.Init(certDER.data(), certDER.length()));
     ASSERT_EQ(Success,
@@ -271,7 +269,7 @@ TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
     ByteString certDER(CreateCert("CA7", caCertName, EndEntityOrCA::MustBeCA,
                                   trustDomain.leafCAKey.get(), caKeyPair,
                                   &caCert));
-    ASSERT_NE(ENCODING_FAILED, certDER);
+    ASSERT_FALSE(ENCODING_FAILED(certDER));
     Input certDERInput;
     ASSERT_EQ(Success, certDERInput.Init(certDER.data(), certDER.length()));
     ASSERT_EQ(Result::ERROR_UNKNOWN_ISSUER,
@@ -288,7 +286,7 @@ TEST_F(pkixbuild, BeyondMaxAcceptableCertChainLength)
     ByteString certDER(CreateCert(caCertName, "End-Entity Too Far",
                                   EndEntityOrCA::MustBeEndEntity,
                                   caKeyPair.get(), unusedKeyPair));
-    ASSERT_NE(ENCODING_FAILED, certDER);
+    ASSERT_FALSE(ENCODING_FAILED(certDER));
     Input certDERInput;
     ASSERT_EQ(Success, certDERInput.Init(certDER.data(), certDER.length()));
     ASSERT_EQ(Result::ERROR_UNKNOWN_ISSUER,
@@ -388,15 +386,13 @@ TEST_F(pkixbuild, NoRevocationCheckingForExpiredCert)
   ScopedTestKeyPair rootKey;
   ByteString rootDER(CreateCert(rootCN, rootCN, EndEntityOrCA::MustBeCA,
                                 nullptr, rootKey, nullptr));
-  EXPECT_NE(ENCODING_FAILED, rootDER);
+  EXPECT_FALSE(ENCODING_FAILED(rootDER));
   ExpiredCertTrustDomain expiredCertTrustDomain(rootDER);
 
   ByteString serialNumber(CreateEncodedSerialNumber(100));
-  EXPECT_NE(ENCODING_FAILED, serialNumber);
+  EXPECT_FALSE(ENCODING_FAILED(serialNumber));
   ByteString issuerDER(CNToDERName(rootCN));
-  EXPECT_NE(ENCODING_FAILED, issuerDER);
   ByteString subjectDER(CNToDERName("Expired End-Entity Cert"));
-  EXPECT_NE(ENCODING_FAILED, subjectDER);
   ScopedTestKeyPair unusedSubjectKey;
   ByteString certDER(CreateEncodedCertificate(
                        v3, sha256WithRSAEncryption,
@@ -406,7 +402,7 @@ TEST_F(pkixbuild, NoRevocationCheckingForExpiredCert)
                        subjectDER, nullptr, rootKey.get(),
                        SignatureAlgorithm::rsa_pkcs1_with_sha256,
                        unusedSubjectKey));
-  EXPECT_NE(ENCODING_FAILED, certDER);
+  EXPECT_FALSE(ENCODING_FAILED(certDER));
 
   Input cert;
   ASSERT_EQ(Success, cert.Init(certDER.data(), certDER.length()));
