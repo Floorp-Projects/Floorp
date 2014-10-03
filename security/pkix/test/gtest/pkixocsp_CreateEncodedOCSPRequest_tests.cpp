@@ -87,7 +87,7 @@ protected:
                                   /*out*/ ByteString& issuerSPKI)
   {
     issuerDER = CNToDERName(issuerASCII);
-    ASSERT_NE(ENCODING_FAILED, issuerDER);
+    ASSERT_FALSE(ENCODING_FAILED(issuerDER));
 
     ScopedTestKeyPair keyPair(GenerateKeyPair());
     ASSERT_TRUE(keyPair);
