@@ -2518,40 +2518,133 @@ TruncateTest(TempAllocator &alloc, MTest *test)
     phi->setResultType(MIRType_Int32);
 }
 
+// Truncating instruction result is an optimization which implies
+// knowing all uses of an instruction.  This implies that if one of
+// the uses got removed, then Range Analysis is not be allowed to do
+// any modification which can change the result, especially if the
+// result can be observed.
+//
+// This corner can easily be understood with UCE examples, but it
+// might also happen with type inference assumptions.  Note: Type
+// inference is implicitly branches where other types might be
+// flowing into.
+static bool
+CloneForDeadBranches(TempAllocator &alloc, MInstruction *candidate)
+{
+    // Compare returns a boolean so it doesn't have to be recovered on bailout
+    // because the output would remain correct.
+    if (candidate->isCompare())
+        return true;
+
+    MOZ_ASSERT(candidate->canClone());
+
+    MDefinitionVector operands(alloc);
+    size_t end = candidate->numOperands();
+    for (size_t i = 0; i < end; i++) {
+        if (!operands.append(candidate->getOperand(i)))
+            return false;
+    }
+
+    MInstruction *clone = candidate->clone(alloc, operands);
+    clone->setRange(nullptr);
+
+    // Set UseRemoved flag on the cloned instruction in order to chain recover
+    // instruction for the bailout path.
+    clone->setUseRemovedUnchecked();
+
+    candidate->block()->insertBefore(candidate, clone);
+
+    if (!candidate->isConstant()) {
+        MOZ_ASSERT(clone->canRecoverOnBailout());
+        clone->setRecoveredOnBailout();
+    }
+
+    // Replace the candidate by its recovered on bailout clone within recovered
+    // instructions and resume points operands.
+    for (MUseIterator i(candidate->usesBegin()); i != candidate->usesEnd(); ) {
+        MUse *use = *i++;
+        MNode *ins = use->consumer();
+        if (ins->isDefinition() && !ins->toDefinition()->isRecoveredOnBailout())
+            continue;
+
+        use->replaceProducer(clone);
+    }
+
+    return true;
+}
+
 // Examine all the users of |candidate| and determine the most aggressive
 // truncate kind that satisfies all of them.
 static MDefinition::TruncateKind
-ComputeRequestedTruncateKind(MDefinition *candidate)
+ComputeRequestedTruncateKind(MDefinition *candidate, bool *shouldClone)
 {
-    // If the value naturally produces an int32 value (before bailout checks)
-    // that needs no conversion, we don't have to worry about resume points
-    // seeing truncated values.
-    bool needsConversion = !candidate->range() || !candidate->range()->isInt32();
+    bool isCapturedResult = false;
+    bool isObservableResult = false;
+    bool hasUseRemoved = candidate->isUseRemoved();
 
     MDefinition::TruncateKind kind = MDefinition::Truncate;
     for (MUseIterator use(candidate->usesBegin()); use != candidate->usesEnd(); use++) {
-        if (!use->consumer()->isDefinition()) {
+        if (use->consumer()->isResumePoint()) {
             // Truncation is a destructive optimization, as such, we need to pay
             // attention to removed branches and prevent optimization
             // destructive optimizations if we have no alternative. (see
             // UseRemoved flag)
-            if (candidate->isUseRemoved() && needsConversion)
-                kind = Min(kind, MDefinition::TruncateAfterBailouts);
+            isCapturedResult = true;
+            isObservableResult = isObservableResult ||
+                use->consumer()->toResumePoint()->isObservableOperand(*use);
             continue;
         }
 
         MDefinition *consumer = use->consumer()->toDefinition();
+        if (consumer->isRecoveredOnBailout()) {
+            isCapturedResult = true;
+            hasUseRemoved = hasUseRemoved || consumer->isUseRemoved();
+            continue;
+        }
+
         MDefinition::TruncateKind consumerKind = consumer->operandTruncateKind(consumer->indexOf(*use));
         kind = Min(kind, consumerKind);
         if (kind == MDefinition::NoTruncate)
             break;
     }
 
+    // If the value naturally produces an int32 value (before bailout checks)
+    // that needs no conversion, we don't have to worry about resume points
+    // seeing truncated values.
+    bool needsConversion = !candidate->range() || !candidate->range()->isInt32();
+
+    // If the candidate instruction appears as operand of a resume point or a
+    // recover instruction, and we have to truncate its result, then we might
+    // have to either recover the result during the bailout, or avoid the
+    // truncation.
+    if (isCapturedResult && needsConversion) {
+
+        // 1. Recover instructions are useless if there is no removed uses.  Not
+        // having removed uses means that we know everything about where this
+        // results flows into.
+        //
+        // 2. If the result is observable, then we cannot recover it.
+        //
+        // 3. The cloned instruction is expected to be used as a recover
+        // instruction.
+        if (hasUseRemoved && !isObservableResult && candidate->canRecoverOnBailout())
+            *shouldClone = true;
+
+        // 1. If uses are removed, then we need to keep the expected result for
+        // dead branches.
+        //
+        // 2. If the result is observable, then the result might be read while
+        // the frame is on the stack.
+        else if (hasUseRemoved || isObservableResult)
+            kind = Min(kind, MDefinition::TruncateAfterBailouts);
+
+    }
+
     return kind;
 }
 
 static MDefinition::TruncateKind
-ComputeTruncateKind(MDefinition *candidate)
+ComputeTruncateKind(MDefinition *candidate, bool *shouldClone)
 {
     // Compare operations might coerce its inputs to int32 if the ranges are
     // correct.  So we do not need to check if all uses are coerced.
@@ -2574,7 +2667,7 @@ ComputeTruncateKind(MDefinition *candidate)
         return MDefinition::NoTruncate;
 
     // Ensure all observable uses are truncated.
-    return ComputeRequestedTruncateKind(candidate);
+    return ComputeRequestedTruncateKind(candidate, shouldClone);
 }
 
 static void
@@ -2662,6 +2755,9 @@ RangeAnalysis::truncate()
 
     for (PostorderIterator block(graph_.poBegin()); block != graph_.poEnd(); block++) {
         for (MInstructionReverseIterator iter(block->rbegin()); iter != block->rend(); iter++) {
+            if (iter->isRecoveredOnBailout())
+                continue;
+
             if (iter->type() == MIRType_None) {
                 if (iter->isTest())
                     TruncateTest(alloc(), iter->toTest());
@@ -2681,13 +2777,21 @@ RangeAnalysis::truncate()
               default:;
             }
 
-            MDefinition::TruncateKind kind = ComputeTruncateKind(*iter);
+            bool shouldClone = false;
+            MDefinition::TruncateKind kind = ComputeTruncateKind(*iter, &shouldClone);
             if (kind == MDefinition::NoTruncate)
                 continue;
 
             // Truncate this instruction if possible.
             if (!iter->needTruncation(kind))
                 continue;
+
+            // If needed, clone the current instruction for keeping it for the
+            // bailout path.  This give us the ability to truncate instructions
+            // even after the removal of branches.
+            if (shouldClone && !CloneForDeadBranches(alloc(), *iter))
+                return false;
+
             iter->truncate();
 
             // Delay updates of inputs/outputs to avoid creating node which
