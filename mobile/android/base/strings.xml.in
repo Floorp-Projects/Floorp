@@ -261,7 +261,7 @@
   <string name="datareporting_crashreporter_title_short">&datareporting_crashreporter_title_short;</string>
   <string name="datareporting_crashreporter_summary">&datareporting_crashreporter_summary;</string>
   <string name="datareporting_wifi_title">&datareporting_wifi_title2;</string>
-  <string name="datareporting_wifi_geolocation_summary">&datareporting_wifi_geolocation_summary;</string>
+  <string name="datareporting_wifi_geolocation_summary">&datareporting_wifi_geolocation_summary2;</string>
 
   <string name="go">&go;</string>
   <string name="search">&search;</string>
