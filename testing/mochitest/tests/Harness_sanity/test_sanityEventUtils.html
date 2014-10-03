@@ -124,7 +124,7 @@ function starttest() {
       check = false;
       window.addEventListener("compositionupdate", function() { check = true; }, false);
       synthesizeComposition({ type: "compositionupdate", data: "a" });
-      is(check, true, 'synthesizeComposition() should dispatch compositionupdate');
+      is(check, false, 'synthesizeComposition() should not dispatch compositionupdate without error');
 
       check = false;
       window.addEventListener("text", function() { check = true; }, false);

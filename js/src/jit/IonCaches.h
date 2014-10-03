@@ -738,14 +738,14 @@ class SetPropertyIC : public RepatchIonCache
     };
 
     bool attachSetSlot(JSContext *cx, HandleScript outerScript, IonScript *ion,
-                       HandleObject obj, HandleShape shape, bool checkTypeset);
+                       HandleNativeObject obj, HandleShape shape, bool checkTypeset);
 
     bool attachCallSetter(JSContext *cx, HandleScript outerScript, IonScript *ion,
                           HandleObject obj, HandleObject holder, HandleShape shape,
                           void *returnAddr);
 
     bool attachAddSlot(JSContext *cx, HandleScript outerScript, IonScript *ion,
-                       HandleObject obj, HandleShape oldShape, HandleTypeObject oldType,
+                       HandleNativeObject obj, HandleShape oldShape, HandleTypeObject oldType,
                        bool checkTypeset);
 
     bool attachGenericProxy(JSContext *cx, HandleScript outerScript, IonScript *ion,
@@ -1029,7 +1029,7 @@ class NameIC : public RepatchIonCache
 
     bool attachReadSlot(JSContext *cx, HandleScript outerScript, IonScript *ion,
                         HandleObject scopeChain, HandleObject holderBase,
-                        HandleObject holder, HandleShape shape);
+                        HandleNativeObject holder, HandleShape shape);
 
     bool attachCallGetter(JSContext *cx, HandleScript outerScript, IonScript *ion,
                           HandleObject scopeChain, HandleObject obj, HandleObject holder,
@@ -1156,7 +1156,8 @@ class GetPropertyParIC : public ParallelIonCache
     bool allowGetters() const { return false; }
     bool allowArrayLength(Context, HandleObject) const { return true; }
 
-    bool attachReadSlot(LockedJSContext &cx, IonScript *ion, HandleObject obj, HandleObject holder,
+    bool attachReadSlot(LockedJSContext &cx, IonScript *ion,
+                        HandleObject obj, HandleNativeObject holder,
                         HandleShape shape);
     bool attachArrayLength(LockedJSContext &cx, IonScript *ion, HandleObject obj);
     bool attachTypedArrayLength(LockedJSContext &cx, IonScript *ion, HandleObject obj);
@@ -1217,7 +1218,7 @@ class GetElementParIC : public ParallelIonCache
     bool allowArrayLength(Context, HandleObject) const { return false; }
 
     bool attachReadSlot(LockedJSContext &cx, IonScript *ion, HandleObject obj, const Value &idval,
-                        HandlePropertyName name, HandleObject holder, HandleShape shape);
+                        HandlePropertyName name, HandleNativeObject holder, HandleShape shape);
     bool attachDenseElement(LockedJSContext &cx, IonScript *ion, HandleObject obj,
                             const Value &idval);
     bool attachTypedArrayElement(LockedJSContext &cx, IonScript *ion, HandleObject tarr,
@@ -1272,9 +1273,9 @@ class SetPropertyParIC : public ParallelIonCache
         return needsTypeBarrier_;
     }
 
-    bool attachSetSlot(LockedJSContext &cx, IonScript *ion, HandleObject obj, HandleShape shape,
+    bool attachSetSlot(LockedJSContext &cx, IonScript *ion, HandleNativeObject obj, HandleShape shape,
                        bool checkTypeset);
-    bool attachAddSlot(LockedJSContext &cx, IonScript *ion, HandleObject obj,
+    bool attachAddSlot(LockedJSContext &cx, IonScript *ion, HandleNativeObject obj,
                        HandleShape oldShape, HandleTypeObject oldType, bool checkTypeset);
 
     static bool update(ForkJoinContext *cx, size_t cacheIndex, HandleObject obj,

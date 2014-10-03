@@ -1437,7 +1437,7 @@ LookupAsmJSModuleInCache(ExclusiveContext *cx,
 // directly to user script) which manages the lifetime of an AsmJSModule. A
 // JSObject is necessary since we want LinkAsmJS/CallAsmJS JSFunctions to be
 // able to point to their module via their extended slots.
-class AsmJSModuleObject : public JSObject
+class AsmJSModuleObject : public NativeObject
 {
     static const unsigned MODULE_SLOT = 0;
 

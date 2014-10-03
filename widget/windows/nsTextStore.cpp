@@ -1578,8 +1578,6 @@ nsTextStore::FlushPendingActions()
                 "mSelectionLength=%d }",
                 this, action.mSelectionStart, action.mSelectionLength));
 
-        MOZ_ASSERT(mComposition.mLastData.IsEmpty());
-
         if (action.mAdjustSelection) {
           // Select composition range so the new composition replaces the range
           WidgetSelectionEvent selectionSet(true, NS_SELECTION_SET, mWidget);
@@ -1649,29 +1647,12 @@ nsTextStore::FlushPendingActions()
         action.mData.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
                                       NS_LITERAL_STRING("\n"));
 
-        if (action.mData != mComposition.mLastData) {
-          PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-                 ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
-                  "dispatching compositionupdate event...", this));
-          WidgetCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
-                                                   mWidget);
-          mWidget->InitEvent(compositionUpdate);
-          compositionUpdate.data = action.mData;
-          mComposition.mLastData = compositionUpdate.data;
-          mWidget->DispatchWindowEvent(&compositionUpdate);
-          if (!mWidget || mWidget->Destroyed()) {
-            break;
-          }
-        }
-
-        MOZ_ASSERT(action.mData == mComposition.mLastData);
-
         PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
                ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
                 "dispatching text event...", this));
         WidgetTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
         mWidget->InitEvent(textEvent);
-        textEvent.theText = mComposition.mLastData;
+        textEvent.theText = action.mData;
         if (action.mRanges->IsEmpty()) {
           TextRange wholeRange;
           wholeRange.mStartOffset = 0;
@@ -1692,29 +1673,13 @@ nsTextStore::FlushPendingActions()
 
         action.mData.ReplaceSubstring(NS_LITERAL_STRING("\r\n"),
                                       NS_LITERAL_STRING("\n"));
-        if (action.mData != mComposition.mLastData) {
-          PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
-                 ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
-                  "dispatching compositionupdate event...", this));
-          WidgetCompositionEvent compositionUpdate(true, NS_COMPOSITION_UPDATE,
-                                                   mWidget);
-          mWidget->InitEvent(compositionUpdate);
-          compositionUpdate.data = action.mData;
-          mComposition.mLastData = compositionUpdate.data;
-          mWidget->DispatchWindowEvent(&compositionUpdate);
-          if (!mWidget || mWidget->Destroyed()) {
-            break;
-          }
-        }
-
-        MOZ_ASSERT(action.mData == mComposition.mLastData);
 
         PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
                ("TSF: 0x%p   nsTextStore::FlushPendingActions(), "
                 "dispatching text event...", this));
         WidgetTextEvent textEvent(true, NS_TEXT_TEXT, mWidget);
         mWidget->InitEvent(textEvent);
-        textEvent.theText = mComposition.mLastData;
+        textEvent.theText = action.mData;
         mWidget->DispatchWindowEvent(&textEvent);
         if (!mWidget || mWidget->Destroyed()) {
           break;
@@ -1725,13 +1690,12 @@ nsTextStore::FlushPendingActions()
                 "dispatching compositionend event...", this));
         WidgetCompositionEvent compositionEnd(true, NS_COMPOSITION_END,
                                               mWidget);
-        compositionEnd.data = mComposition.mLastData;
+        compositionEnd.data = textEvent.theText;
         mWidget->InitEvent(compositionEnd);
         mWidget->DispatchWindowEvent(&compositionEnd);
         if (!mWidget || mWidget->Destroyed()) {
           break;
         }
-        mComposition.mLastData.Truncate();
         break;
       }
       case PendingAction::SELECTION_SET: {

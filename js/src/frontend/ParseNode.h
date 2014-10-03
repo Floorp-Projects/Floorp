@@ -1498,9 +1498,9 @@ ParseNode::isConstant()
 class ObjectBox
 {
   public:
-    JSObject *object;
+    NativeObject *object;
 
-    ObjectBox(JSObject *object, ObjectBox *traceLink);
+    ObjectBox(NativeObject *object, ObjectBox *traceLink);
     bool isFunctionBox() { return object->is<JSFunction>(); }
     FunctionBox *asFunctionBox();
     void trace(JSTracer *trc);

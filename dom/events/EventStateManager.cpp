@@ -820,7 +820,6 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       compositionEvent->data = selectedText.mReply.mString;
     }
     // through to compositionend handling
-  case NS_COMPOSITION_UPDATE:
   case NS_COMPOSITION_END:
     {
       WidgetCompositionEvent* compositionEvent = aEvent->AsCompositionEvent();

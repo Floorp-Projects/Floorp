@@ -69,23 +69,17 @@ let successfulPinningPageListener = {
 // The browser should load about:neterror, when this happens, proceed
 // to load the pinning domain again, this time removing the pinning information
 let certErrorProgressListener = {
-  buttonClicked: false,
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-      let self = this;
-      // Can't directly call button.click() in onStateChange
-      executeSoon(function() {
-        let button =   content.document.getElementById("errorTryAgain");
-        // If about:neterror hasn't fully loaded, the button won't be present.
-        // It will eventually be there, however.
-        if (button && !self.buttonClicked) {
-          gBrowser.removeProgressListener(self);
-          gBrowser.selectedBrowser.addEventListener("load",
-                                                    successfulPinningRemovalPageListener,
-                                                    true);
-          gBrowser.selectedBrowser.loadURI("https://" + kPinningDomain + kURLPath + "zeromaxagevalid");
-        }
-      });
+      let textElement = content.document.getElementById("errorShortDescText");
+      let text = textElement.innerHTML;
+      ok(text.indexOf("mozilla_pkix_error_key_pinning_failure") > 0,
+         "Got a pinning error page");
+      gBrowser.removeProgressListener(this);
+      gBrowser.selectedBrowser.addEventListener("load",
+                                                successfulPinningRemovalPageListener,
+                                                true);
+      gBrowser.selectedBrowser.loadURI("https://" + kPinningDomain + kURLPath + "zeromaxagevalid");
     }
   }
 };

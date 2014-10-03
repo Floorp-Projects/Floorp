@@ -23,6 +23,7 @@
 #include "jit/BaselineFrame-inl.h"
 #include "jit/IonFrames-inl.h"
 #include "vm/Interpreter-inl.h"
+#include "vm/ObjectImpl-inl.h"
 #include "vm/StringObject-inl.h"
 
 using namespace js;
@@ -221,7 +222,7 @@ MutatePrototype(JSContext *cx, HandleObject obj, HandleValue value)
 }
 
 bool
-InitProp(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValue value)
+InitProp(JSContext *cx, HandleNativeObject obj, HandlePropertyName name, HandleValue value)
 {
     RootedId id(cx, NameToId(name));
     return DefineNativeProperty(cx, obj, id, value, nullptr, nullptr, JSPROP_ENUMERATE);
@@ -294,7 +295,7 @@ template bool StringsEqual<true>(JSContext *cx, HandleString lhs, HandleString r
 template bool StringsEqual<false>(JSContext *cx, HandleString lhs, HandleString rhs, bool *res);
 
 JSObject*
-NewInitObject(JSContext *cx, HandleObject templateObject)
+NewInitObject(JSContext *cx, HandleNativeObject templateObject)
 {
     NewObjectKind newKind = templateObject->hasSingletonType() ? SingletonObject : GenericObject;
     if (!templateObject->hasLazyType() && templateObject->type()->shouldPreTenure())
@@ -366,21 +367,19 @@ ArrayPopDense(JSContext *cx, HandleObject obj, MutableHandleValue rval)
 }
 
 bool
-ArrayPushDense(JSContext *cx, HandleObject obj, HandleValue v, uint32_t *length)
+ArrayPushDense(JSContext *cx, HandleArrayObject obj, HandleValue v, uint32_t *length)
 {
-    MOZ_ASSERT(obj->is<ArrayObject>());
-
-    if (MOZ_LIKELY(obj->as<ArrayObject>().lengthIsWritable())) {
-        uint32_t idx = obj->as<ArrayObject>().length();
-        JSObject::EnsureDenseResult result = obj->ensureDenseElements(cx, idx, 1);
-        if (result == JSObject::ED_FAILED)
+    if (MOZ_LIKELY(obj->lengthIsWritable())) {
+        uint32_t idx = obj->length();
+        NativeObject::EnsureDenseResult result = obj->ensureDenseElements(cx, idx, 1);
+        if (result == NativeObject::ED_FAILED)
             return false;
 
-        if (result == JSObject::ED_OK) {
+        if (result == NativeObject::ED_OK) {
             obj->setDenseElement(idx, v);
             MOZ_ASSERT(idx < INT32_MAX);
             *length = idx + 1;
-            obj->as<ArrayObject>().setLengthInt32(*length);
+            obj->setLengthInt32(*length);
             return true;
         }
     }
@@ -511,15 +510,15 @@ SetProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, HandleValu
     if (op == JSOP_SETALIASEDVAR) {
         // Aliased var assigns ignore readonly attributes on the property, as
         // required for initializing 'const' closure variables.
-        Shape *shape = obj->nativeLookup(cx, name);
+        Shape *shape = obj->as<NativeObject>().lookup(cx, name);
         MOZ_ASSERT(shape && shape->hasSlot());
-        obj->nativeSetSlotWithType(cx, shape, value);
+        obj->as<NativeObject>().setSlotWithType(cx, shape, value);
         return true;
     }
 
     if (MOZ_LIKELY(!obj->getOps()->setProperty)) {
         return baseops::SetPropertyHelper<SequentialExecution>(
-            cx, obj, obj, id,
+            cx, obj.as<NativeObject>(), obj.as<NativeObject>(), id,
             (op == JSOP_SETNAME || op == JSOP_SETGNAME)
             ? baseops::Unqualified
             : baseops::Qualified,
@@ -1074,17 +1073,15 @@ Recompile(JSContext *cx)
 }
 
 bool
-SetDenseElement(JSContext *cx, HandleObject obj, int32_t index, HandleValue value,
+SetDenseElement(JSContext *cx, HandleNativeObject obj, int32_t index, HandleValue value,
                 bool strict)
 {
     // This function is called from Ion code for StoreElementHole's OOL path.
     // In this case we know the object is native, has no indexed properties
     // and we can use setDenseElement instead of setDenseElementWithType.
-
-    MOZ_ASSERT(obj->isNative());
     MOZ_ASSERT(!obj->isIndexed());
 
-    JSObject::EnsureDenseResult result = JSObject::ED_SPARSE;
+    NativeObject::EnsureDenseResult result = NativeObject::ED_SPARSE;
     do {
         if (index < 0)
             break;
@@ -1093,7 +1090,7 @@ SetDenseElement(JSContext *cx, HandleObject obj, int32_t index, HandleValue valu
             break;
         uint32_t idx = uint32_t(index);
         result = obj->ensureDenseElements(cx, idx, 1);
-        if (result != JSObject::ED_OK)
+        if (result != NativeObject::ED_OK)
             break;
         if (isArray) {
             ArrayObject &arr = obj->as<ArrayObject>();
@@ -1104,9 +1101,9 @@ SetDenseElement(JSContext *cx, HandleObject obj, int32_t index, HandleValue valu
         return true;
     } while (false);
 
-    if (result == JSObject::ED_FAILED)
+    if (result == NativeObject::ED_FAILED)
         return false;
-    MOZ_ASSERT(result == JSObject::ED_SPARSE);
+    MOZ_ASSERT(result == NativeObject::ED_SPARSE);
 
     RootedValue indexVal(cx, Int32Value(index));
     return SetObjectElement(cx, obj, indexVal, value, strict);

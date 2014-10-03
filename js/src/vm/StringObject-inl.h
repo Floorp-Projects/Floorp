@@ -25,7 +25,7 @@ StringObject::init(JSContext *cx, HandleString str)
     if (!EmptyShape::ensureInitialCustomShape<StringObject>(cx, self))
         return false;
 
-    MOZ_ASSERT(self->nativeLookup(cx, NameToId(cx->names().length))->slot() == LENGTH_SLOT);
+    MOZ_ASSERT(self->lookup(cx, NameToId(cx->names().length))->slot() == LENGTH_SLOT);
 
     self->setStringThis(str);
 

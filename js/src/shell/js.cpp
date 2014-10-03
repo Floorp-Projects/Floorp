@@ -2802,7 +2802,7 @@ ShapeOf(JSContext *cx, unsigned argc, JS::Value *vp)
  * non-native referent may be simplified to data properties.
  */
 static bool
-CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id,
+CopyProperty(JSContext *cx, HandleNativeObject obj, HandleObject referent, HandleId id,
              MutableHandleObject objp)
 {
     RootedShape shape(cx);
@@ -2811,13 +2811,13 @@ CopyProperty(JSContext *cx, HandleObject obj, HandleObject referent, HandleId id
 
     objp.set(nullptr);
     if (referent->isNative()) {
-        if (!LookupNativeProperty(cx, referent, id, &obj2, &shape))
+        if (!LookupNativeProperty(cx, referent.as<NativeObject>(), id, &obj2, &shape))
             return false;
         if (obj2 != referent)
             return true;
 
         if (shape->hasSlot()) {
-            desc.value().set(referent->nativeGetSlot(shape->slot()));
+            desc.value().set(referent->as<NativeObject>().getSlot(shape->slot()));
         } else {
             desc.value().setUndefined();
         }
@@ -2861,7 +2861,7 @@ resolver_resolve(JSContext *cx, HandleObject obj, HandleId id, MutableHandleObje
 {
     jsval v = JS_GetReservedSlot(obj, 0);
     Rooted<JSObject*> vobj(cx, &v.toObject());
-    return CopyProperty(cx, obj, vobj, id, objp);
+    return CopyProperty(cx, obj.as<NativeObject>(), vobj, id, objp);
 }
 
 static bool
@@ -2875,7 +2875,7 @@ resolver_enumerate(JSContext *cx, HandleObject obj)
     RootedObject ignore(cx);
     for (size_t i = 0; ok && i < ida.length(); i++) {
         Rooted<jsid> id(cx, ida[i]);
-        ok = CopyProperty(cx, obj, referent, id, &ignore);
+        ok = CopyProperty(cx, obj.as<NativeObject>(), referent, id, &ignore);
     }
     return ok;
 }

@@ -55,10 +55,10 @@ SpecialPowers.pushPrefEnv({'set':[
     // Finally, poll for the new crash record.
     function tryGetCrash() {
       info("Waiting for getCrashes");
-      crashMan.getCrashes().then(function (crashes) {
+      crashMan.getCrashes().then(SpecialPowers.wrapCallback(function (crashes) {
         if (crashes.length) {
           is(crashes.length, 1, "There should be only one record");
-          var crash = SpecialPowers.wrap(crashes[0]);
+          var crash = crashes[0];
           ok(crash.isOfType(crashMan.PROCESS_TYPE_CONTENT,
                             crashMan.CRASH_TYPE_CRASH),
              "Record should be a content crash");
@@ -75,7 +75,7 @@ SpecialPowers.pushPrefEnv({'set':[
         else {
           setTimeout(tryGetCrash, 1000);
         }
-      }, function (err) {
+      }), function (err) {
         ok(false, "Error getting crashes: " + err);
         SimpleTest.finish();
       });

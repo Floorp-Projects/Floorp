@@ -868,9 +868,9 @@ ProxyObject::renew(JSContext *cx, const BaseProxyHandler *handler, Value priv)
     MOZ_ASSERT(getTaggedProto().isLazy());
 
     setHandler(handler);
-    setCrossCompartmentSlot(PRIVATE_SLOT, priv);
-    setSlot(EXTRA_SLOT + 0, UndefinedValue());
-    setSlot(EXTRA_SLOT + 1, UndefinedValue());
+    fakeNativeSetCrossCompartmentSlot(PRIVATE_SLOT, priv);
+    fakeNativeSetSlot(EXTRA_SLOT + 0, UndefinedValue());
+    fakeNativeSetSlot(EXTRA_SLOT + 1, UndefinedValue());
 }
 
 JS_FRIEND_API(JSObject *)

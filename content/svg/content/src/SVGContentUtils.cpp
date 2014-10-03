@@ -159,7 +159,8 @@ void
 SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
                                   nsSVGElement* aElement,
                                   nsStyleContext* aStyleContext,
-                                  gfxTextContextPaint *aContextPaint)
+                                  gfxTextContextPaint *aContextPaint,
+                                  StrokeOptionFlags aFlags)
 {
   nsRefPtr<nsStyleContext> styleContext;
   if (aStyleContext) {
@@ -176,17 +177,19 @@ SVGContentUtils::GetStrokeOptions(AutoStrokeOptions* aStrokeOptions,
 
   const nsStyleSVG* styleSVG = styleContext->StyleSVG();
 
-  DashState dashState =
-    GetStrokeDashData(aStrokeOptions, aElement, styleSVG, aContextPaint);
+  if (aFlags != eIgnoreStrokeDashing) {
+    DashState dashState =
+      GetStrokeDashData(aStrokeOptions, aElement, styleSVG, aContextPaint);
 
-  if (dashState == eNoStroke) {
-    // Hopefully this will shortcircuit any stroke operations:
-    aStrokeOptions->mLineWidth = 0;
-    return;
-  }
-  if (dashState == eContinuousStroke && aStrokeOptions->mDashPattern) {
-    // Prevent our caller from wasting time looking at a pattern without gaps:
-    aStrokeOptions->DiscardDashPattern();
+    if (dashState == eNoStroke) {
+      // Hopefully this will shortcircuit any stroke operations:
+      aStrokeOptions->mLineWidth = 0;
+      return;
+    }
+    if (dashState == eContinuousStroke && aStrokeOptions->mDashPattern) {
+      // Prevent our caller from wasting time looking at a pattern without gaps:
+      aStrokeOptions->DiscardDashPattern();
+    }
   }
 
   aStrokeOptions->mLineWidth =

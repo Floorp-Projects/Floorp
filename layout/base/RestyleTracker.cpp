@@ -195,7 +195,7 @@ RestyleTracker::DoProcessRestyles()
 
   LOG_RESTYLE("Processing %d pending %srestyles with %d restyle roots for %s",
               mPendingRestyles.Count(),
-              mRestyleManager->PresContext()->IsProcessingAnimationStyleChange()
+              mRestyleManager->IsProcessingAnimationStyleChange()
                 ? (const char*) "animation " : (const char*) "",
               static_cast<int>(mRestyleRoots.Length()),
               GetDocumentURI(Document()).get());

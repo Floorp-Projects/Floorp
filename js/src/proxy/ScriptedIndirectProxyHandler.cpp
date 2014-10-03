@@ -346,7 +346,7 @@ ScriptedIndirectProxyHandler::fun_toString(JSContext *cx, HandleObject proxy, un
                              "object");
         return nullptr;
     }
-    RootedObject obj(cx, &proxy->as<ProxyObject>().extra(0).toObject().getReservedSlot(0).toObject());
+    RootedObject obj(cx, &proxy->as<ProxyObject>().extra(0).toObject().as<NativeObject>().getReservedSlot(0).toObject());
     return fun_toStringHelper(cx, obj, indent);
 }
 
@@ -358,7 +358,7 @@ CallableScriptedIndirectProxyHandler::call(JSContext *cx, HandleObject proxy, co
     assertEnteredPolicy(cx, proxy, JSID_VOID, CALL);
     RootedObject ccHolder(cx, &proxy->as<ProxyObject>().extra(0).toObject());
     MOZ_ASSERT(ccHolder->getClass() == &CallConstructHolder);
-    RootedValue call(cx, ccHolder->getReservedSlot(0));
+    RootedValue call(cx, ccHolder->as<NativeObject>().getReservedSlot(0));
     MOZ_ASSERT(call.isObject() && call.toObject().isCallable());
     return Invoke(cx, args.thisv(), call, args.length(), args.array(), args.rval());
 }
@@ -369,7 +369,7 @@ CallableScriptedIndirectProxyHandler::construct(JSContext *cx, HandleObject prox
     assertEnteredPolicy(cx, proxy, JSID_VOID, CALL);
     RootedObject ccHolder(cx, &proxy->as<ProxyObject>().extra(0).toObject());
     MOZ_ASSERT(ccHolder->getClass() == &CallConstructHolder);
-    RootedValue construct(cx, ccHolder->getReservedSlot(1));
+    RootedValue construct(cx, ccHolder->as<NativeObject>().getReservedSlot(1));
     MOZ_ASSERT(construct.isObject() && construct.toObject().isCallable());
     return InvokeConstructor(cx, construct, args.length(), args.array(), args.rval());
 }
@@ -445,8 +445,8 @@ js::proxy_createFunction(JSContext *cx, unsigned argc, Value *vp)
                                                          js::NullPtr(), cx->global()));
     if (!ccHolder)
         return false;
-    ccHolder->setReservedSlot(0, ObjectValue(*call));
-    ccHolder->setReservedSlot(1, ObjectValue(*construct));
+    ccHolder->as<NativeObject>().setReservedSlot(0, ObjectValue(*call));
+    ccHolder->as<NativeObject>().setReservedSlot(1, ObjectValue(*construct));
 
     RootedValue priv(cx, ObjectValue(*handler));
     JSObject *proxy =

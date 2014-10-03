@@ -36,6 +36,7 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
+#include "vm/ObjectImpl-inl.h"
 #include "vm/Stack-inl.h"
 #include "vm/String-inl.h"
 
@@ -131,7 +132,7 @@ Enumerate(JSContext *cx, HandleObject pobj, jsid id,
 }
 
 static bool
-EnumerateNativeProperties(JSContext *cx, HandleObject pobj, unsigned flags, IdSet &ht,
+EnumerateNativeProperties(JSContext *cx, HandleNativeObject pobj, unsigned flags, IdSet &ht,
                           AutoIdVector *props)
 {
     bool enumerateSymbols;
@@ -284,9 +285,9 @@ Snapshot(JSContext *cx, JSObject *pobj_, unsigned flags, AutoIdVector *props)
             !pobj->getOps()->enumerate &&
             !(clasp->flags & JSCLASS_NEW_ENUMERATE))
         {
-            if (!clasp->enumerate(cx, pobj))
+            if (!clasp->enumerate(cx, pobj.as<NativeObject>()))
                 return false;
-            if (!EnumerateNativeProperties(cx, pobj, flags, ht, props))
+            if (!EnumerateNativeProperties(cx, pobj.as<NativeObject>(), flags, ht, props))
                 return false;
         } else {
             if (pobj->is<ProxyObject>()) {
@@ -322,7 +323,7 @@ Snapshot(JSContext *cx, JSObject *pobj_, unsigned flags, AutoIdVector *props)
             if (!JSObject::enumerate(cx, pobj, op, &state, &id))
                 return false;
             if (state.isMagic(JS_NATIVE_ENUMERATE)) {
-                if (!EnumerateNativeProperties(cx, pobj, flags, ht, props))
+                if (!EnumerateNativeProperties(cx, pobj.as<NativeObject>(), flags, ht, props))
                     return false;
             } else {
                 while (true) {
@@ -480,8 +481,9 @@ NewPropertyIteratorObject(JSContext *cx, unsigned flags)
         if (!shape)
             return nullptr;
 
-        JSObject *obj = JSObject::create(cx, ITERATOR_FINALIZE_KIND,
-                                         GetInitialHeap(GenericObject, clasp), shape, type);
+        NativeObject *obj =
+            MaybeNativeObject(JSObject::create(cx, ITERATOR_FINALIZE_KIND,
+                                               GetInitialHeap(GenericObject, clasp), shape, type));
         if (!obj)
             return nullptr;
 
@@ -684,12 +686,12 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
                 NativeIterator *lastni = last->getNativeIterator();
                 if (!(lastni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
                     obj->isNative() &&
-                    obj->hasEmptyElements() &&
+                    obj->as<NativeObject>().hasEmptyElements() &&
                     obj->lastProperty() == lastni->shapes_array[0])
                 {
                     JSObject *proto = obj->getProto();
                     if (proto->isNative() &&
-                        proto->hasEmptyElements() &&
+                        proto->as<NativeObject>().hasEmptyElements() &&
                         proto->lastProperty() == lastni->shapes_array[1] &&
                         !proto->getProto())
                     {
@@ -711,12 +713,12 @@ js::GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleVa
                 JSObject *pobj = obj;
                 do {
                     if (!pobj->isNative() ||
-                        !pobj->hasEmptyElements() ||
+                        !pobj->as<NativeObject>().hasEmptyElements() ||
                         IsAnyTypedArray(pobj) ||
                         pobj->hasUncacheableProto() ||
                         pobj->getOps()->enumerate ||
                         pobj->getClass()->enumerate != JS_EnumerateStub ||
-                        pobj->nativeContainsPure(cx->names().iteratorIntrinsic))
+                        pobj->as<NativeObject>().containsPure(cx->names().iteratorIntrinsic))
                     {
                         shapes.clear();
                         goto miss;
@@ -1343,7 +1345,7 @@ ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavio
             return false;
 
         bool optimized;
-        if (!stubChain->tryOptimizeArray(cx, iterableObj, &optimized))
+        if (!stubChain->tryOptimizeArray(cx, iterableObj.as<ArrayObject>(), &optimized))
             return false;
 
         if (optimized) {
@@ -1412,10 +1414,9 @@ ForOfIterator::nextFromOptimizedArray(MutableHandleValue vp, bool *done)
     if (!CheckForInterrupt(cx_))
         return false;
 
-    MOZ_ASSERT(iterator->isNative());
-    MOZ_ASSERT(iterator->is<ArrayObject>());
+    ArrayObject *arr = &iterator->as<ArrayObject>();
 
-    if (index >= iterator->as<ArrayObject>().length()) {
+    if (index >= arr->length()) {
         vp.setUndefined();
         *done = true;
         return true;
@@ -1423,8 +1424,8 @@ ForOfIterator::nextFromOptimizedArray(MutableHandleValue vp, bool *done)
     *done = false;
 
     // Try to get array element via direct access.
-    if (index < iterator->getDenseInitializedLength()) {
-        vp.set(iterator->getDenseElement(index));
+    if (index < arr->getDenseInitializedLength()) {
+        vp.set(arr->getDenseElement(index));
         if (!vp.isMagic(JS_ELEMENTS_HOLE)) {
             ++index;
             return true;
@@ -1704,7 +1705,7 @@ js_NewGenerator(JSContext *cx, const InterpreterRegs &stackRegs)
     MOZ_ASSERT(stackfp->script()->isGenerator());
 
     Rooted<GlobalObject*> global(cx, &stackfp->global());
-    RootedObject obj(cx);
+    RootedNativeObject obj(cx);
     if (stackfp->script()->isStarGenerator()) {
         RootedValue pval(cx);
         RootedObject fun(cx, stackfp->fun());
@@ -1718,13 +1719,13 @@ js_NewGenerator(JSContext *cx, const InterpreterRegs &stackRegs)
             if (!proto)
                 return nullptr;
         }
-        obj = NewObjectWithGivenProto(cx, &StarGeneratorObject::class_, proto, global);
+        obj = NewNativeObjectWithGivenProto(cx, &StarGeneratorObject::class_, proto, global);
     } else {
         MOZ_ASSERT(stackfp->script()->isLegacyGenerator());
         JSObject *proto = GlobalObject::getOrCreateLegacyGeneratorObjectPrototype(cx, global);
         if (!proto)
             return nullptr;
-        obj = NewObjectWithGivenProto(cx, &LegacyGeneratorObject::class_, proto, global);
+        obj = NewNativeObjectWithGivenProto(cx, &LegacyGeneratorObject::class_, proto, global);
     }
     if (!obj)
         return nullptr;

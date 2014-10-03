@@ -7,5 +7,5 @@
 
   <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=510177 -->
 
-  <circle cx="100" cy="100" r="0.00001" stroke="black" stroke-width="20" stroke-linecap="round"/>
+  <circle cx="100" cy="100" r="10" fill="black"/>
 </svg>

@@ -92,7 +92,7 @@ function CheckObjectCoercible(v) {
         ThrowError(JSMSG_CANT_CONVERT_TO, ToString(v), "object");
 }
 
-// Spec: ECMAScript Draft, 6th edition May 22, 2014, 7.1.15.
+/* Spec: ECMAScript Draft, 6 edition May 22, 2014, 7.1.15 */
 function ToLength(v) {
     v = ToInteger(v);
 
@@ -101,11 +101,6 @@ function ToLength(v) {
 
     // Math.pow(2, 53) - 1 = 0x1fffffffffffff
     return v < 0x1fffffffffffff ? v : 0x1fffffffffffff;
-}
-
-// Spec: ECMAScript Draft, 6th edition Aug 24, 2014, 7.2.4.
-function SameValueZero(x, y) {
-    return x === y || (x !== x && y !== y);
 }
 
 /********** Testing code **********/
