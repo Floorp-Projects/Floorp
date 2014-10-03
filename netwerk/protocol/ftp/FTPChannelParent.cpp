@@ -132,7 +132,6 @@ FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
                      requestingPrincipal,
                      aSecurityFlags,
                      aContentPolicyType,
-                     nullptr, // aChannelPolicy
                      nullptr, // aLoadGroup
                      nullptr, // aCallbacks
                      nsIRequest::LOAD_NORMAL,

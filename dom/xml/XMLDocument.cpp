@@ -449,7 +449,6 @@ XMLDocument::Load(const nsAString& aUrl, ErrorResult& aRv)
                                   static_cast<nsIDocument*>(this),
                      nsILoadInfo::SEC_NORMAL,
                      nsIContentPolicy::TYPE_XMLHTTPREQUEST,
-                     nullptr,   // aChannelPolicy
                      loadGroup,
                      req,
                      nsIRequest::LOAD_BACKGROUND);
