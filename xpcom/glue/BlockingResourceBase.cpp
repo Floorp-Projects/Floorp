@@ -48,8 +48,7 @@ BlockingResourceBase::DDT* BlockingResourceBase::sDeadlockDetector;
 
 
 void
-BlockingResourceBase::StackWalkCallback(uint32_t aFrameNumber, void* aPc,
-                                        void* aSp, void* aClosure)
+BlockingResourceBase::StackWalkCallback(void* aPc, void* aSp, void* aClosure)
 {
 #ifndef MOZ_CALLSTACK_DISABLED
   AcquisitionState* state = (AcquisitionState*)aClosure;
@@ -68,7 +67,8 @@ BlockingResourceBase::GetStackTrace(AcquisitionState& aState)
 
   // NB: Ignore the return value, there's nothing useful we can do if this
   //     this fails.
-  NS_StackWalk(StackWalkCallback, kSkipFrames, 24, &aState, 0, nullptr);
+  NS_StackWalk(StackWalkCallback, kSkipFrames,
+               24, &aState, 0, nullptr);
 #endif
 }
 
