@@ -465,4 +465,3 @@ interface ChromeWindow {
 };
 
 Window implements ChromeWindow;
-Window implements GlobalFetch;
