@@ -9,5 +9,7 @@ exports.register = function(handle) {
 }
 
 exports.unregister = function(handle) {
+  handle.removeTabActor(Actor);
+  handle.removeGlobalActor(Actor);
 }
 
