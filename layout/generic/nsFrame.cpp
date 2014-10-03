@@ -3788,10 +3788,11 @@ nsFrame::GetCursor(const nsPoint& aPoint,
   if (NS_STYLE_CURSOR_AUTO == aCursor.mCursor) {
     // If this is editable, I-beam cursor is better for most elements.
     aCursor.mCursor =
-      (mContent && mContent->IsEditable()) ? NS_STYLE_CURSOR_TEXT :
-                                             NS_STYLE_CURSOR_DEFAULT;
+      (mContent && mContent->IsEditable())
+      ? GetWritingMode().IsVertical()
+        ? NS_STYLE_CURSOR_VERTICAL_TEXT : NS_STYLE_CURSOR_TEXT
+      : NS_STYLE_CURSOR_DEFAULT;
   }
-
 
   return NS_OK;
 }
