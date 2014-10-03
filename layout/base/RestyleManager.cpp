@@ -2746,9 +2746,7 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
 
   RestyleResult result;
 
-  if (aRestyleHint & eRestyle_ForceDescendants) {
-    result = eRestyleResult_ContinueAndForceDescendants;
-  } else if (aRestyleHint) {
+  if (aRestyleHint) {
     result = eRestyleResult_Continue;
   } else {
     result = ComputeRestyleResultFromFrame(aSelf);
@@ -3156,6 +3154,10 @@ ElementRestyler::RestyleSelf(nsIFrame* aSelf,
         LOG_RESTYLE("not setting new extra style context, since we'll reframe");
       }
     }
+  }
+
+  if (aRestyleHint & eRestyle_ForceDescendants) {
+    result = eRestyleResult_ContinueAndForceDescendants;
   }
 
   LOG_RESTYLE("returning %s", RestyleResultToString(result).get());
