@@ -29,7 +29,7 @@ var config = {
 };
 
 function onError(e) {
-  ok(false, "Error" + JSON.stringify(e));
+  ok(false, "Error " + e);
 }
 
 var capabilities = [ 'previewSizes', 'pictureSizes', 'fileFormats', 'maxFocusAreas', 'minExposureCompensation',
@@ -113,10 +113,18 @@ var Camera = {
   },
   shutter: function onShutter () {
     Camera._shutter++;
-    
+
     ok(Camera._shutter == (Camera._testsCompleted + 1), "on Shutter has been called " +
                            Camera._shutter + " times");
 
+  },
+  onPreviewStateChange: function onPreviewStateChange(e) {
+      ok(true, "viewfinder state change " + e);
+    if (e.newState === 'started') {
+      ok(true, "viewfinder is ready and playing");
+      Camera.cameraObj.removeEventListener('previewstatechange', Camera.onPreviewStateChange);
+      Camera.onReady();
+    }
   },
   onReady: function onReady() {
     var camcap = Camera.cameraObj.capabilities;
@@ -125,7 +133,7 @@ var Camera = {
       prop = capabilities[prop];
       ok(camcap[prop] || isFinite(camcap[prop]) || camcap[prop] == null, "Camera Capability: " +
                     prop + " is exposed, value = " + JSON.stringify(camcap[prop]));
-    } 
+    }
     for (var prop in camcap) {
       if(camcap[prop] && camcap[prop].length > 1)  {
         tests[prop] = camcap[prop];
@@ -157,30 +165,25 @@ var Camera = {
     config.fileFormat = test.fileFormat;
     config.pictureSize = test.pictureSize;
     ok(true, "testing picture size " + JSON.stringify(config.pictureSize));
-    Camera.cameraObj.takePicture(config, this.takePictureSuccess.bind(this), onError);
+    Camera.cameraObj.takePicture(config).then(this.takePictureSuccess.bind(this), onError);
   },
   setUp: function setup_tests() {
-    function onSuccess(camera, config) {
+    function onSuccess(d) {
+      var config = d.configuration;
       ok(true, "Camera Control object has been successfully initialized");
       ok(config.mode === options.mode, "configuration mode = " + config.mode);
       ok(config.recorderProfile === options.recorderProfile, "recorder profile = " + config.recorderProfile);
       ok(config.previewSize.width === options.previewSize.width &&
         config.previewSize.height === options.previewSize.height,
         "preview size (w x h) = " + config.previewSize.width + " x " + config.previewSize.height);
-      Camera.cameraObj = camera;
-      Camera.viewfinder.mozSrcObject = camera;
+      Camera.cameraObj = d.camera;
+      Camera.cameraObj.addEventListener('previewstatechange', Camera.onPreviewStateChange);
+      Camera.cameraObj.addEventListener('shutter', Camera.shutter);
+      Camera.viewfinder.mozSrcObject = d.camera;
       Camera.viewfinder.play();
-      Camera.cameraObj.onPreviewStateChange = function(state) {
-        if (state === 'started') {
-          ok(true, "viewfinder is ready and playing");
-          Camera.cameraObj.onPreviewStateChange = null;
-          Camera.onReady();
-        }
-      };
       SimpleTest.expectAssertions(0);
-      Camera.cameraObj.onShutter = Camera.shutter;
     };
-    navigator.mozCameras.getCamera(whichCamera, options, onSuccess, onError);
+    navigator.mozCameras.getCamera(whichCamera, options).then(onSuccess, onError);
   }
 }
 

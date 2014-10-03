@@ -76,6 +76,18 @@ const kEventConstructors = {
                                                           return new CallGroupErrorEvent(aName, aProps);
                                                        },
                                              },
+  CameraConfigurationEvent:                  { create: function (aName, aProps) {
+                                                          return new CameraConfigurationEvent(aName, aProps);
+                                                       },
+                                             },
+  CameraFacesDetectedEvent:                  { create: function (aName, aProps) {
+                                                          return new CameraFacesDetectedEvent(aName, aProps);
+                                                       },
+                                             },
+  CameraStateChangeEvent:                    { create: function (aName, aProps) {
+                                                          return new CameraStateChangeEvent(aName, aProps);
+                                                       },
+                                             },
   CFStateChangeEvent:                        { create: function (aName, aProps) {
                                                           return new CFStateChangeEvent(aName, aProps);
                                                        },

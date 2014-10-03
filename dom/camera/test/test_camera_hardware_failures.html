@@ -50,7 +50,7 @@ var tests = [
         ok(true, "autoFocus() failed correctly with: " + error);
         next();
       }
-      camera.autoFocus(onSuccess, onError);
+      camera.autoFocus().then(onSuccess, onError);
     }
   },
   {
@@ -69,7 +69,7 @@ var tests = [
         ok(false, "autoFocus() process failed incorrectly with: " + error);
         end();
       }
-      camera.autoFocus(onSuccess, onError);
+      camera.autoFocus().then(onSuccess, onError);
     }
   },
   {
@@ -83,7 +83,7 @@ var tests = [
         ok(true, "takePicture() failed correctly with: " + error);
         next();
       }
-      camera.takePicture(null, onSuccess, onError);
+      camera.takePicture(null).then(onSuccess, onError);
     }
   },
   {
@@ -97,7 +97,7 @@ var tests = [
         ok(true, "takePicture() process failed correctly with: " + error);
         next();
       }
-      camera.takePicture(null, onSuccess, onError);
+      camera.takePicture(null).then(onSuccess, onError);
     }
   },
 ];
@@ -115,13 +115,13 @@ window.addEventListener('beforeunload', function() {
 });
 
 CameraTest.begin("hardware", function(test) {
-  function onSuccess(camera, config) {
-    document.getElementById('viewfinder').mozSrcObject = camera;
-    cameraObj = camera;
+  function onSuccess(d) {
+    cameraObj = d.camera;
+    document.getElementById('viewfinder').mozSrcObject = cameraObj;
     CameraTest.next = function() {
       try {
         var t = testGenerator.next();
-        test.set(t.key, t.func.bind(undefined, camera));
+        test.set(t.key, t.func.bind(undefined, cameraObj));
       } catch(e) {
         if (e instanceof StopIteration) {
           end();
@@ -136,7 +136,7 @@ CameraTest.begin("hardware", function(test) {
     ok(false, "getCamera() failed with: " + error);
     end();
   }
-  navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError);
+  navigator.mozCameras.getCamera(whichCamera, initialConfig).then(onSuccess, onError);
 });
 
 </script>

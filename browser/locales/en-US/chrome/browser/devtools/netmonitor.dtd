@@ -231,6 +231,19 @@
   -  for the "Edit and Resend" menu item displayed in the context menu for a request -->
 <!ENTITY netmonitorUI.summary.editAndResend.accesskey "R">
 
+<!-- LOCALIZATION NOTE (debuggerUI.summary.rawHeaders): This is the label displayed
+  -  on the button in the headers tab that toggle view for raw request/response headers
+     from the currently displayed request -->
+<!ENTITY netmonitorUI.summary.rawHeaders "Raw headers">
+
+<!-- LOCALIZATION NOTE (debuggerUI.summary.rawHeaders.requestHeaders): This is the label displayed
+  -  in the network details headers tab identifying the raw request headers textarea -->
+<!ENTITY netmonitorUI.summary.rawHeaders.requestHeaders "Request headers:">
+
+<!-- LOCALIZATION NOTE (debuggerUI.summary.rawHeaders.responseHeaders): This is the label displayed
+  -  in the network details headers tab identifying the raw response headers textarea -->
+<!ENTITY netmonitorUI.summary.rawHeaders.responseHeaders "Response headers:">
+
 <!-- LOCALIZATION NOTE (netmonitorUI.context.newTab):  This is the label
   -  for the Open in New Tab menu item displayed in the context menu of the
   -  network container  -->

@@ -140,14 +140,17 @@
         iframe.setAttribute("src", "file_ignoreuserfocus.html");
       }
       addEventListener("load", function() {
-        SpecialPowers.addPermission("browser", true, document);
-        SpecialPowers.pushPrefEnv({
-          "set": [
-            ["dom.mozBrowserFramesEnabled", true]
-          ]
-        }, function() {
-          SimpleTest.waitForFocus(runTest);
-        });
+        SpecialPowers.pushPermissions(
+          [{'type': 'browser', 'allow': true, 'context': document}],
+          function() {
+            SpecialPowers.pushPrefEnv({
+              "set": [
+                ["dom.mozBrowserFramesEnabled", true]
+              ]
+            }, function() {
+              SimpleTest.waitForFocus(runTest);
+            });
+          });
       });
     </script>
   </body>

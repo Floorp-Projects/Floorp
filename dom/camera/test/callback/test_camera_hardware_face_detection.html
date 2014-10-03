@@ -1,0 +1,320 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=965420
+-->
+<head>
+  <title>Bug 965420 - Test camera hardware API for face detection</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="../camera_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=965420">Mozilla Bug 965420</a>
+  <video id="viewfinder" width = "200" height = "200" autoplay></video>
+  <img src="#" alt="This image is going to load" id="testimage"/>
+
+<script class="testbody" type="text/javascript;version=1.7">
+
+var whichCamera = navigator.mozCameras.getListOfCameras()[0];
+var initialConfig = {
+  mode: 'picture',
+  recorderProfile: 'cif',
+  previewSize: {
+    width: 352,
+    height: 288
+  }
+};
+
+const PREF_FACEDETECTION_ENABLED = "camera.control.face_detection.enabled";
+
+var cameraObj;
+var oldPref;
+
+// Shorthand functions
+function end() {
+  function reallyEnd() {
+    CameraTest.end();
+  }
+  if (oldPref) {
+    SpecialPowers.pushPrefEnv(
+      {'set': [[PREF_FACEDETECTION_ENABLED, oldPref]]}, reallyEnd);
+  } else {
+    SpecialPowers.pushPrefEnv(
+      {'clear': [[PREF_FACEDETECTION_ENABLED]]}, reallyEnd);
+  }
+}
+function next() {
+  CameraTest.next();
+}
+
+function compareFaces(aFaces, expected)
+{
+  ok(aFaces, "have detected faces object");
+  ok(aFaces.length == expected.faces.length,
+    "expected=" + expected.faces.length + ", got=" + aFaces.length);
+  aFaces.forEach(function (face, index) {
+    let result = compareFace(face, expected.faces[index]);
+    ok(result === "ok", "face check: " + result);
+    if (result !== "ok") {
+      return false;
+    }
+  });
+  return true;
+}
+
+function compareFace(aFace, expected)
+{
+  if (aFace.id != expected.id) {
+    return "expected face.id=" + expected.id + ", got=" + aFace.id;
+  }
+  if (aFace.score != expected.score) {
+    return "expected face.score=" + expected.score + ", got=" + aFace.score;
+  }
+  if (!aFace.bounds) {
+    return "face.bounds is missing";
+  }
+  if (aFace.bounds.left != expected.bounds.left ||
+      aFace.bounds.top != expected.bounds.top ||
+      aFace.bounds.right != expected.bounds.right ||
+      aFace.bounds.bottom != expected.bounds.bottom) {
+    return "expected face.bounds=" + expected.bounds.toSource() +
+      ", got=({left:" + aFace.bounds.left + ", top:" + aFace.bounds.top + ", right:" + aFace.bounds.right + ", bottom:" + aFace.bounds.bottom + "})";
+  }
+
+  if (aFace.leftEye && !expected.leftEye) {
+    return "expected null face.leftEye, got=({x:" + aFace.leftEye.x + ", y:" + aFace.leftEye.y + "})";
+  }
+  if (!aFace.leftEye && expected.leftEye) {
+    return "expected face.leftEye=" + expected.leftEye.toSource() + ", got null leftEye";
+  }
+  if (aFace.leftEye && expected.leftEye &&
+      (aFace.leftEye.x != expected.leftEye.x || aFace.leftEye.y != expected.leftEye.y)) {
+    return "expected face.leftEye=" + expected.leftEye.toSource() +
+      ", got=({x:" + aFace.leftEye.x + ", y:" + aFace.leftEye.y + "})";
+  }
+
+  if (aFace.rightEye && !expected.rightEye) {
+    return "expected null face.rightEye, got=({x:" + aFace.rightEye.x + ", y:" + aFace.rightEye.y + "})";
+  }
+  if (!aFace.rightEye && expected.rightEye) {
+    return "expected face.rightEye=" + expected.rightEye.toSource() + ", got null rightEye";
+  }
+  if (aFace.rightEye && expected.rightEye &&
+      (aFace.rightEye.x != expected.rightEye.x || aFace.rightEye.y != expected.rightEye.y)) {
+    return "expected face.rightEye=" + expected.rightEye.toSource() +
+      ", got=({x:" + aFace.rightEye.x + ", y:" + aFace.rightEye.y + "})";
+  }
+
+  if (aFace.mouth && !expected.mouth) {
+    return "expected null face.mouth, got=({x:" + aFace.mouth.x + ", y:" + aFace.mouth.y + "})";
+  }
+  if (!aFace.mouth && expected.mouth) {
+    return "expected face.mouth=" + expected.mouth.toSource() + ", got null mouth";
+  }
+  if (aFace.mouth && expected.mouth &&
+      (aFace.mouth.x != expected.mouth.x || aFace.mouth.y != expected.mouth.y)) {
+    return "expected face.mouth=" + expected.mouth.toSource() +
+      ", got=({x:" + aFace.mouth.x + ", y:" + aFace.mouth.y + "})";
+  }
+
+  return "ok";
+}
+
+var tests = [
+  {
+    key: "face-detection-detected-one-face",
+    func: function testFaceDetectionFoundOneFace(camera) {
+      var expected = {
+        faces: [ {
+          id:       1,
+          score:    2,
+          bounds: {
+            left:   3,
+            top:    4,
+            right:  5,
+            bottom: 6
+          },
+          leftEye: {
+            x:      7,
+            y:      8
+          },
+          rightEye: {
+            x:      9,
+            y:      10
+          },
+          mouth: {
+            x:      11,
+            y:      12
+          }
+        } ]
+      };
+      camera.onFacesDetected = function(aFaces) {
+        ok(compareFaces(aFaces, expected),
+          "onFaceDetected received the detected faces correctly");
+        camera.stopFaceDetection();
+        next();
+      }
+      camera.startFaceDetection();
+    }
+  },
+  {
+    key: "face-detection-detected-two-faces",
+    func: function testFaceDetectionFoundTwoFace(camera) {
+      var expected = {
+        faces: [ {
+          id:       1,
+          score:    2,
+          bounds: {
+            left:   3,
+            top:    4,
+            right:  5,
+            bottom: 6
+          },
+          leftEye: {
+            x:      7,
+            y:      8
+          },
+          rightEye: {
+            x:      9,
+            y:      10
+          },
+          mouth: {
+            x:      11,
+            y:      12
+          }
+        },
+        {
+          id:       13,
+          score:    14,
+          bounds: {
+            left:   15,
+            top:    16,
+            right:  17,
+            bottom: 18
+          },
+          leftEye: {
+            x:      19,
+            y:      20
+          },
+          rightEye: {
+            x:      21,
+            y:      22
+          },
+          mouth: {
+            x:      23,
+            y:      24
+          }
+        } ]
+      };
+      camera.onFacesDetected = function(aFaces) {
+        ok(compareFaces(aFaces, expected),
+          "onFaceDetected received the detected faces correctly");
+        camera.stopFaceDetection();
+        next();
+      }
+      camera.startFaceDetection();
+    }
+  },
+  {
+    key: "face-detection-detected-one-face-no-features",
+    func: function (camera) {
+      var expected = {
+        faces: [ {
+          id:       1,
+          score:    100,
+          bounds: {
+            left:   3,
+            top:    4,
+            right:  5,
+            bottom: 6
+          },
+          leftEye:  null,
+          rightEye: null,
+          mouth:    null
+        } ]
+      };
+      camera.onFacesDetected = function(aFaces) {
+        ok(compareFaces(aFaces, expected),
+          "onFaceDetected received the detected faces correctly");
+        camera.stopFaceDetection();
+        next();
+      }
+      camera.startFaceDetection();
+    }
+  },
+  {
+    key: "face-detection-no-faces-detected",
+    func: function (camera) {
+      var expected = {
+        faces: []
+      };
+      camera.onFacesDetected = function(aFaces) {
+        ok(compareFaces(aFaces, expected),
+          "onFaceDetected received the detected faces correctly");
+        camera.stopFaceDetection();
+        next();
+      }
+      camera.startFaceDetection();
+    }
+  },
+];
+
+var testGenerator = function() {
+  for (var i = 0; i < tests.length; ++i ) {
+    yield tests[i];
+  }
+}();
+
+window.addEventListener('beforeunload', function() {
+  document.getElementById('viewfinder').mozSrcObject = null;
+  if (cameraObj) {
+    cameraObj.release();
+    cameraObj = null;
+  }
+});
+
+// Must call CameraTest.begin() before any other async methods.
+CameraTest.begin("hardware", function(test) {
+  // If the pref doesn't exist, this get will fail; catch it and continue.
+  try {
+    oldPref = SpecialPowers.getBoolPref(PREF_FACEDETECTION_ENABLED);
+  } catch(e) { }
+
+  SpecialPowers.pushPrefEnv({'set': [[PREF_FACEDETECTION_ENABLED, true]]}, function() {
+    var enabled;
+    try {
+      enabled = SpecialPowers.getBoolPref(PREF_FACEDETECTION_ENABLED);
+    } catch(e) { }
+    ok(enabled, PREF_FACEDETECTION_ENABLED + " is " + enabled);
+
+    function onSuccess(camera, config) {
+      document.getElementById('viewfinder').mozSrcObject = camera;
+      cameraObj = camera;
+      CameraTest.next = function() {
+        try {
+          var t = testGenerator.next();
+          test.set(t.key, t.func.bind(undefined, camera));
+        } catch(e) {
+          if (e instanceof StopIteration) {
+            end();
+          } else {
+            throw e;
+          }
+        }
+      };
+      next();
+    }
+    function onError(error) {
+      ok(false, "getCamera() failed with: " + error);
+      end();
+    }
+    navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError);
+  })
+});
+
+</script>
+</body>
+
+</html>
