@@ -51,13 +51,12 @@
 //     w.NullProperty("null");
 //     w.BoolProperty("bool", true);
 //     w.IntProperty("int", 1);
-//     w.StringProperty("string", "hello");
 //     w.StartArrayProperty("array");
 //     {
-//       w.DoubleElement(3.4);
+//       w.StringElement("string");
 //       w.StartObjectElement();
 //       {
-//         w.PointerProperty("ptr", (void*)0x12345678);
+//         w.DoubleProperty("double", 3.4);
 //         w.StartArrayProperty("single-line array", w.SingleLineStyle);
 //         {
 //           w.IntElement(1);
@@ -78,11 +77,10 @@
 //   "null": null,
 //   "bool": true,
 //   "int": 1,
-//   "string": "hello",
 //   "array": [
-//    3.4,
+//    "string",
 //    {
-//     "ptr": "0x12345678",
+//     "double": 3.4,
 //     "single-line array": [1, {}]
 //    }
 //   ]
@@ -421,19 +419,6 @@ public:
 
   // Prints: "<aStr>"
   void StringElement(const char* aStr) { StringProperty(nullptr, aStr); }
-
-  // Prints: "<aName>": "<aPtr>"
-  // The pointer is printed as a hexadecimal integer with a leading '0x'.
-  void PointerProperty(const char* aName, const void* aPtr)
-  {
-    char buf[32];
-    sprintf(buf, "0x%" PRIxPTR, uintptr_t(aPtr));
-    QuotedScalar(aName, buf);
-  }
-
-  // Prints: "<aPtr>"
-  // The pointer is printed as a hexadecimal integer with a leading '0x'.
-  void PointerElement(const void* aPtr) { PointerProperty(nullptr, aPtr); }
 
   // Prints: "<aName>": [
   void StartArrayProperty(const char* aName,
