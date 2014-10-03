@@ -26,7 +26,7 @@ bool InterruptCheckPar(ForkJoinContext *cx);
 // Extends the given array with `length` new holes.  Returns nullptr on
 // failure or else `array`, which is convenient during code
 // generation.
-JSObject *ExtendArrayPar(ForkJoinContext *cx, JSObject *array, uint32_t length);
+ArrayObject *ExtendArrayPar(ForkJoinContext *cx, ArrayObject *array, uint32_t length);
 
 // Set properties and elements on thread local objects.
 bool SetPropertyPar(ForkJoinContext *cx, HandleObject obj, HandlePropertyName name,
@@ -69,7 +69,7 @@ bool UrshValuesPar(ForkJoinContext *cx, HandleValue lhs, HandleValue rhs, Mutabl
 
 // Make a new rest parameter in parallel.
 JSObject *InitRestParameterPar(ForkJoinContext *cx, uint32_t length, Value *rest,
-                               HandleObject templateObj, HandleObject res);
+                               HandleObject templateObj, HandleArrayObject res);
 
 // Abort and debug tracing functions.
 void BailoutPar(BailoutStack *sp, uint8_t **entryFramePointer);

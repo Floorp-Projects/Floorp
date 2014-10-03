@@ -161,9 +161,9 @@ struct ThreadSafeContext : ContextFriendFields,
     friend class Activation;
     friend UnownedBaseShape *BaseShape::lookupUnowned(ThreadSafeContext *cx,
                                                       const StackBaseShape &base);
-    friend Shape *JSObject::lookupChildProperty(ThreadSafeContext *cx,
-                                                JS::HandleObject obj, js::HandleShape parent,
-                                                js::StackShape &child);
+    friend Shape *NativeObject::lookupChildProperty(ThreadSafeContext *cx,
+                                                    HandleNativeObject obj, HandleShape parent,
+                                                    StackShape &child);
 
   public:
     enum ContextKind {

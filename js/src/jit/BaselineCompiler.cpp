@@ -23,6 +23,7 @@
 #include "jsscriptinlines.h"
 
 #include "vm/Interpreter-inl.h"
+#include "vm/ObjectImpl-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -1258,7 +1259,7 @@ BaselineCompiler::emit_JSOP_STRING()
     return true;
 }
 
-typedef JSObject *(*DeepCloneObjectLiteralFn)(JSContext *, HandleObject, NewObjectKind);
+typedef NativeObject *(*DeepCloneObjectLiteralFn)(JSContext *, HandleNativeObject, NewObjectKind);
 static const VMFunction DeepCloneObjectLiteralInfo =
     FunctionInfo<DeepCloneObjectLiteralFn>(DeepCloneObjectLiteral);
 
@@ -1646,7 +1647,7 @@ BaselineCompiler::emit_JSOP_NEWARRAY()
     masm.move32(Imm32(length), R0.scratchReg());
     masm.movePtr(ImmGCPtr(type), R1.scratchReg());
 
-    JSObject *templateObject = NewDenseUnallocatedArray(cx, length, nullptr, TenuredObject);
+    ArrayObject *templateObject = NewDenseUnallocatedArray(cx, length, nullptr, TenuredObject);
     if (!templateObject)
         return false;
     templateObject->setType(type);
@@ -1659,7 +1660,7 @@ BaselineCompiler::emit_JSOP_NEWARRAY()
     return true;
 }
 
-typedef JSObject *(*NewArrayCopyOnWriteFn)(JSContext *, HandleObject, gc::InitialHeap);
+typedef JSObject *(*NewArrayCopyOnWriteFn)(JSContext *, HandleNativeObject, gc::InitialHeap);
 const VMFunction jit::NewArrayCopyOnWriteInfo =
     FunctionInfo<NewArrayCopyOnWriteFn>(js::NewDenseCopyOnWriteArray);
 
@@ -1717,8 +1718,8 @@ BaselineCompiler::emit_JSOP_NEWOBJECT()
             return false;
     }
 
-    RootedObject baseObject(cx, script->getObject(pc));
-    RootedObject templateObject(cx, CopyInitializerObject(cx, baseObject, TenuredObject));
+    RootedNativeObject baseObject(cx, script->getObject(pc));
+    RootedNativeObject templateObject(cx, CopyInitializerObject(cx, baseObject, TenuredObject));
     if (!templateObject)
         return false;
 
@@ -1755,7 +1756,7 @@ BaselineCompiler::emit_JSOP_NEWINIT()
         masm.move32(Imm32(0), R0.scratchReg());
         masm.movePtr(ImmGCPtr(type), R1.scratchReg());
 
-        JSObject *templateObject = NewDenseUnallocatedArray(cx, 0, nullptr, TenuredObject);
+        ArrayObject *templateObject = NewDenseUnallocatedArray(cx, 0, nullptr, TenuredObject);
         if (!templateObject)
             return false;
         templateObject->setType(type);
@@ -1766,8 +1767,8 @@ BaselineCompiler::emit_JSOP_NEWINIT()
     } else {
         MOZ_ASSERT(key == JSProto_Object);
 
-        RootedObject templateObject(cx);
-        templateObject = NewBuiltinClassInstance(cx, &JSObject::class_, TenuredObject);
+        RootedNativeObject templateObject(cx);
+        templateObject = NewNativeBuiltinClassInstance(cx, &JSObject::class_, TenuredObject);
         if (!templateObject)
             return false;
 
@@ -2103,11 +2104,11 @@ BaselineCompiler::getScopeCoordinateAddressFromObject(Register objReg, Register 
 
     Address addr;
     if (shape->numFixedSlots() <= sc.slot()) {
-        masm.loadPtr(Address(objReg, JSObject::offsetOfSlots()), reg);
+        masm.loadPtr(Address(objReg, NativeObject::offsetOfSlots()), reg);
         return Address(reg, (sc.slot() - shape->numFixedSlots()) * sizeof(Value));
     }
 
-    return Address(objReg, JSObject::getFixedSlotOffset(sc.slot()));
+    return Address(objReg, NativeObject::getFixedSlotOffset(sc.slot()));
 }
 
 Address
@@ -3217,7 +3218,7 @@ BaselineCompiler::emit_JSOP_REST()
 {
     frame.syncStack(0);
 
-    JSObject *templateObject = NewDenseUnallocatedArray(cx, 0, nullptr, TenuredObject);
+    ArrayObject *templateObject = NewDenseUnallocatedArray(cx, 0, nullptr, TenuredObject);
     if (!templateObject)
         return false;
     types::FixRestArgumentsType(cx, templateObject);

@@ -37,14 +37,14 @@ StoreBuffer::SlotsEdge::mark(JSTracer *trc)
     }
 
     if (kind() == ElementKind) {
-        int32_t initLen = obj->getDenseInitializedLength();
+        int32_t initLen = obj->fakeNativeGetDenseInitializedLength();
         int32_t clampedStart = Min(start_, initLen);
         int32_t clampedEnd = Min(start_ + count_, initLen);
         gc::MarkArraySlots(trc, clampedEnd - clampedStart,
-                           obj->getDenseElements() + clampedStart, "element");
+                           obj->fakeNativeGetDenseElements() + clampedStart, "element");
     } else {
-        int32_t start = Min(uint32_t(start_), obj->slotSpan());
-        int32_t end = Min(uint32_t(start_) + count_, obj->slotSpan());
+        int32_t start = Min(uint32_t(start_), obj->fakeNativeSlotSpan());
+        int32_t end = Min(uint32_t(start_) + count_, obj->fakeNativeSlotSpan());
         MOZ_ASSERT(end >= start);
         MarkObjectSlots(trc, obj, start, end - start);
     }

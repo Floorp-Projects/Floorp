@@ -194,7 +194,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
         JSSLOT_DEBUG_COUNT
     };
   private:
-    HeapPtrObject object;               /* The Debugger object. Strong reference. */
+    HeapPtrNativeObject object;         /* The Debugger object. Strong reference. */
     GlobalObjectSet debuggees;          /* Debuggee globals. Cross-compartment weak references. */
     js::HeapPtrObject uncaughtExceptionHook; /* Strong reference. */
     bool enabled;
@@ -240,7 +240,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * has to be different.
      */
     typedef HashMap<AbstractFramePtr,
-                    RelocatablePtrObject,
+                    RelocatablePtrNativeObject,
                     DefaultHasher<AbstractFramePtr>,
                     RuntimeAllocPolicy> FrameMap;
     FrameMap frames;
@@ -417,12 +417,12 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
                                  ScriptFrameIter &iter);
 
   public:
-    Debugger(JSContext *cx, JSObject *dbg);
+    Debugger(JSContext *cx, NativeObject *dbg);
     ~Debugger();
 
     bool init(JSContext *cx);
-    inline const js::HeapPtrObject &toJSObject() const;
-    inline js::HeapPtrObject &toJSObjectRef();
+    inline const js::HeapPtrNativeObject &toJSObject() const;
+    inline js::HeapPtrNativeObject &toJSObjectRef();
     static inline Debugger *fromJSObject(JSObject *obj);
     static Debugger *fromChildJSObject(JSObject *obj);
 
@@ -695,14 +695,14 @@ Debugger::fromOnNewGlobalObjectWatchersLink(JSCList *link) {
     return reinterpret_cast<Debugger *>(p - offsetof(Debugger, onNewGlobalObjectWatchersLink));
 }
 
-const js::HeapPtrObject &
+const js::HeapPtrNativeObject &
 Debugger::toJSObject() const
 {
     MOZ_ASSERT(object);
     return object;
 }
 
-js::HeapPtrObject &
+js::HeapPtrNativeObject &
 Debugger::toJSObjectRef()
 {
     MOZ_ASSERT(object);

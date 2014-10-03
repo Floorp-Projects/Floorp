@@ -13,6 +13,7 @@
 #include "jit/IonCode.h"
 #include "js/SliceBudget.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/ArrayObject.h"
 #include "vm/ScopeObject.h"
 #include "vm/Shape.h"
 #include "vm/Symbol.h"
@@ -68,7 +69,7 @@ JS_PUBLIC_DATA(void * const) JS::NullPtr::constNullValue = nullptr;
  */
 
 static inline void
-PushMarkStack(GCMarker *gcmarker, ObjectImpl *thing);
+PushMarkStack(GCMarker *gcmarker, JSObject *thing);
 
 static inline void
 PushMarkStack(GCMarker *gcmarker, JSFunction *thing);
@@ -250,6 +251,13 @@ SetMaybeAliveFlag(T *thing)
 template<>
 void
 SetMaybeAliveFlag(JSObject *thing)
+{
+    thing->compartment()->maybeAlive = true;
+}
+
+template<>
+void
+SetMaybeAliveFlag(NativeObject *thing)
 {
     thing->compartment()->maybeAlive = true;
 }
@@ -629,6 +637,8 @@ Update##base##IfRelocated(JSRuntime *rt, type **thingp)                         
 DeclMarkerImpl(BaseShape, BaseShape)
 DeclMarkerImpl(BaseShape, UnownedBaseShape)
 DeclMarkerImpl(JitCode, jit::JitCode)
+DeclMarkerImpl(Object, NativeObject)
+DeclMarkerImpl(Object, ArrayObject)
 DeclMarkerImpl(Object, ArgumentsObject)
 DeclMarkerImpl(Object, ArrayBufferObject)
 DeclMarkerImpl(Object, ArrayBufferObjectMaybeShared)
@@ -638,7 +648,6 @@ DeclMarkerImpl(Object, GlobalObject)
 DeclMarkerImpl(Object, JSObject)
 DeclMarkerImpl(Object, JSFunction)
 DeclMarkerImpl(Object, NestedScopeObject)
-DeclMarkerImpl(Object, ObjectImpl)
 DeclMarkerImpl(Object, SavedFrame)
 DeclMarkerImpl(Object, ScopeObject)
 DeclMarkerImpl(Object, SharedArrayBufferObject)
@@ -931,7 +940,7 @@ gc::MarkObjectSlots(JSTracer *trc, JSObject *obj, uint32_t start, uint32_t nslot
     MOZ_ASSERT(obj->isNative());
     for (uint32_t i = start; i < (start + nslots); ++i) {
         trc->setTracingDetails(js_GetObjectSlotName, obj, i);
-        MarkValueInternal(trc, obj->nativeGetSlotRef(i).unsafeGet());
+        MarkValueInternal(trc, obj->fakeNativeGetSlotRef(i).unsafeGet());
     }
 }
 
@@ -1036,7 +1045,7 @@ gc::IsCellAboutToBeFinalized(Cell **thingp)
     JS_COMPARTMENT_ASSERT_STR(rt, sym)
 
 static void
-PushMarkStack(GCMarker *gcmarker, ObjectImpl *thing)
+PushMarkStack(GCMarker *gcmarker, JSObject *thing)
 {
     JS_COMPARTMENT_ASSERT(gcmarker->runtime(), thing);
     MOZ_ASSERT(!IsInsideNursery(thing));
@@ -1541,7 +1550,7 @@ struct SlotArrayLayout
         HeapSlot *start;
         uintptr_t index;
     };
-    JSObject *obj;
+    NativeObject *obj;
 
     static void staticAsserts() {
         /* This should have the same layout as three mark stack items. */
@@ -1566,7 +1575,7 @@ GCMarker::saveValueRanges()
             *p &= ~StackTagMask;
             p -= 2;
             SlotArrayLayout *arr = reinterpret_cast<SlotArrayLayout *>(p);
-            JSObject *obj = arr->obj;
+            NativeObject *obj = arr->obj;
             MOZ_ASSERT(obj->isNative());
 
             HeapSlot *vp = obj->getDenseElements();
@@ -1597,7 +1606,7 @@ GCMarker::saveValueRanges()
 }
 
 bool
-GCMarker::restoreValueArray(JSObject *obj, void **vpp, void **endp)
+GCMarker::restoreValueArray(NativeObject *obj, void **vpp, void **endp)
 {
     uintptr_t start = stack.pop();
     HeapSlot::Kind kind = (HeapSlot::Kind) stack.pop();
@@ -1645,7 +1654,7 @@ GCMarker::processMarkStackOther(uintptr_t tag, uintptr_t addr)
         ScanTypeObject(this, reinterpret_cast<types::TypeObject *>(addr));
     } else if (tag == SavedValueArrayTag) {
         MOZ_ASSERT(!(addr & CellMask));
-        JSObject *obj = reinterpret_cast<JSObject *>(addr);
+        NativeObject *obj = reinterpret_cast<NativeObject *>(addr);
         HeapValue *vp, *end;
         if (restoreValueArray(obj, (void **)&vp, (void **)&end))
             pushValueArray(obj, vp, end);
@@ -1759,38 +1768,39 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
         if (!shape->isNative())
             return;
 
-        unsigned nslots = obj->slotSpan();
+        NativeObject *nobj = &obj->as<NativeObject>();
+        unsigned nslots = nobj->slotSpan();
 
         do {
-            if (obj->hasEmptyElements())
+            if (nobj->hasEmptyElements())
                 break;
 
-            if (obj->denseElementsAreCopyOnWrite()) {
-                JSObject *owner = obj->getElementsHeader()->ownerObject();
-                if (owner != obj) {
+            if (nobj->denseElementsAreCopyOnWrite()) {
+                JSObject *owner = nobj->getElementsHeader()->ownerObject();
+                if (owner != nobj) {
                     PushMarkStack(this, owner);
                     break;
                 }
             }
 
-            vp = obj->getDenseElementsAllowCopyOnWrite();
-            end = vp + obj->getDenseInitializedLength();
+            vp = nobj->getDenseElementsAllowCopyOnWrite();
+            end = vp + nobj->getDenseInitializedLength();
             if (!nslots)
                 goto scan_value_array;
-            pushValueArray(obj, vp, end);
+            pushValueArray(nobj, vp, end);
         } while (false);
 
-        vp = obj->fixedSlots();
-        if (obj->slots) {
-            unsigned nfixed = obj->numFixedSlots();
+        vp = nobj->fixedSlots();
+        if (nobj->slots) {
+            unsigned nfixed = nobj->numFixedSlots();
             if (nslots > nfixed) {
-                pushValueArray(obj, vp, vp + nfixed);
-                vp = obj->slots;
+                pushValueArray(nobj, vp, vp + nfixed);
+                vp = nobj->slots;
                 end = vp + (nslots - nfixed);
                 goto scan_value_array;
             }
         }
-        MOZ_ASSERT(nslots <= obj->numFixedSlots());
+        MOZ_ASSERT(nslots <= nobj->numFixedSlots());
         end = vp + nslots;
         goto scan_value_array;
     }

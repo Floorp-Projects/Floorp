@@ -633,7 +633,7 @@ Collator(JSContext *cx, CallArgs args, bool construct)
         if (!obj)
             return false;
 
-        obj->setReservedSlot(UCOLLATOR_SLOT, PrivateValue(nullptr));
+        obj->as<NativeObject>().setReservedSlot(UCOLLATOR_SLOT, PrivateValue(nullptr));
     }
 
     // 10.1.2.1 steps 1 and 2; 10.1.3.1 steps 1 and 2
@@ -669,7 +669,7 @@ js::intl_Collator(JSContext *cx, unsigned argc, Value *vp)
 static void
 collator_finalize(FreeOp *fop, JSObject *obj)
 {
-    UCollator *coll = static_cast<UCollator*>(obj->getReservedSlot(UCOLLATOR_SLOT).toPrivate());
+    UCollator *coll = static_cast<UCollator*>(obj->as<NativeObject>().getReservedSlot(UCOLLATOR_SLOT).toPrivate());
     if (coll)
         ucol_close(coll);
 }
@@ -732,7 +732,7 @@ InitCollatorClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> global
 bool
 GlobalObject::initCollatorProto(JSContext *cx, Handle<GlobalObject*> global)
 {
-    RootedObject proto(cx, global->createBlankPrototype(cx, &CollatorClass));
+    RootedNativeObject proto(cx, global->createBlankPrototype(cx, &CollatorClass));
     if (!proto)
         return false;
     proto->setReservedSlot(UCOLLATOR_SLOT, PrivateValue(nullptr));
@@ -1006,12 +1006,12 @@ js::intl_CompareStrings(JSContext *cx, unsigned argc, Value *vp)
     bool isCollatorInstance = collator->getClass() == &CollatorClass;
     UCollator *coll;
     if (isCollatorInstance) {
-        coll = static_cast<UCollator *>(collator->getReservedSlot(UCOLLATOR_SLOT).toPrivate());
+        coll = static_cast<UCollator *>(collator->as<NativeObject>().getReservedSlot(UCOLLATOR_SLOT).toPrivate());
         if (!coll) {
             coll = NewUCollator(cx, collator);
             if (!coll)
                 return false;
-            collator->setReservedSlot(UCOLLATOR_SLOT, PrivateValue(coll));
+            collator->as<NativeObject>().setReservedSlot(UCOLLATOR_SLOT, PrivateValue(coll));
         }
     } else {
         // There's no good place to cache the ICU collator for an object
@@ -1122,7 +1122,7 @@ NumberFormat(JSContext *cx, CallArgs args, bool construct)
         if (!obj)
             return false;
 
-        obj->setReservedSlot(UNUMBER_FORMAT_SLOT, PrivateValue(nullptr));
+        obj->as<NativeObject>().setReservedSlot(UNUMBER_FORMAT_SLOT, PrivateValue(nullptr));
     }
 
     // 11.1.2.1 steps 1 and 2; 11.1.3.1 steps 1 and 2
@@ -1160,7 +1160,7 @@ static void
 numberFormat_finalize(FreeOp *fop, JSObject *obj)
 {
     UNumberFormat *nf =
-        static_cast<UNumberFormat*>(obj->getReservedSlot(UNUMBER_FORMAT_SLOT).toPrivate());
+        static_cast<UNumberFormat*>(obj->as<NativeObject>().getReservedSlot(UNUMBER_FORMAT_SLOT).toPrivate());
     if (nf)
         unum_close(nf);
 }
@@ -1223,7 +1223,7 @@ InitNumberFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> gl
 bool
 GlobalObject::initNumberFormatProto(JSContext *cx, Handle<GlobalObject*> global)
 {
-    RootedObject proto(cx, global->createBlankPrototype(cx, &NumberFormatClass));
+    RootedNativeObject proto(cx, global->createBlankPrototype(cx, &NumberFormatClass));
     if (!proto)
         return false;
     proto->setReservedSlot(UNUMBER_FORMAT_SLOT, PrivateValue(nullptr));
@@ -1465,12 +1465,12 @@ js::intl_FormatNumber(JSContext *cx, unsigned argc, Value *vp)
     bool isNumberFormatInstance = numberFormat->getClass() == &NumberFormatClass;
     UNumberFormat *nf;
     if (isNumberFormatInstance) {
-        nf = static_cast<UNumberFormat*>(numberFormat->getReservedSlot(UNUMBER_FORMAT_SLOT).toPrivate());
+        nf = static_cast<UNumberFormat*>(numberFormat->as<NativeObject>().getReservedSlot(UNUMBER_FORMAT_SLOT).toPrivate());
         if (!nf) {
             nf = NewUNumberFormat(cx, numberFormat);
             if (!nf)
                 return false;
-            numberFormat->setReservedSlot(UNUMBER_FORMAT_SLOT, PrivateValue(nf));
+            numberFormat->as<NativeObject>().setReservedSlot(UNUMBER_FORMAT_SLOT, PrivateValue(nf));
         }
     } else {
         // There's no good place to cache the ICU number format for an object
@@ -1579,7 +1579,7 @@ DateTimeFormat(JSContext *cx, CallArgs args, bool construct)
         if (!obj)
             return false;
 
-        obj->setReservedSlot(UDATE_FORMAT_SLOT, PrivateValue(nullptr));
+        obj->as<NativeObject>().setReservedSlot(UDATE_FORMAT_SLOT, PrivateValue(nullptr));
     }
 
     // 12.1.2.1 steps 1 and 2; 12.1.3.1 steps 1 and 2
@@ -1616,7 +1616,7 @@ js::intl_DateTimeFormat(JSContext *cx, unsigned argc, Value *vp)
 static void
 dateTimeFormat_finalize(FreeOp *fop, JSObject *obj)
 {
-    UDateFormat *df = static_cast<UDateFormat*>(obj->getReservedSlot(UDATE_FORMAT_SLOT).toPrivate());
+    UDateFormat *df = static_cast<UDateFormat*>(obj->as<NativeObject>().getReservedSlot(UDATE_FORMAT_SLOT).toPrivate());
     if (df)
         udat_close(df);
 }
@@ -1679,7 +1679,7 @@ InitDateTimeFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> 
 bool
 GlobalObject::initDateTimeFormatProto(JSContext *cx, Handle<GlobalObject*> global)
 {
-    RootedObject proto(cx, global->createBlankPrototype(cx, &DateTimeFormatClass));
+    RootedNativeObject proto(cx, global->createBlankPrototype(cx, &DateTimeFormatClass));
     if (!proto)
         return false;
     proto->setReservedSlot(UDATE_FORMAT_SLOT, PrivateValue(nullptr));
@@ -1966,12 +1966,12 @@ js::intl_FormatDateTime(JSContext *cx, unsigned argc, Value *vp)
     bool isDateTimeFormatInstance = dateTimeFormat->getClass() == &DateTimeFormatClass;
     UDateFormat *df;
     if (isDateTimeFormatInstance) {
-        df = static_cast<UDateFormat*>(dateTimeFormat->getReservedSlot(UDATE_FORMAT_SLOT).toPrivate());
+        df = static_cast<UDateFormat*>(dateTimeFormat->as<NativeObject>().getReservedSlot(UDATE_FORMAT_SLOT).toPrivate());
         if (!df) {
             df = NewUDateFormat(cx, dateTimeFormat);
             if (!df)
                 return false;
-            dateTimeFormat->setReservedSlot(UDATE_FORMAT_SLOT, PrivateValue(df));
+            dateTimeFormat->as<NativeObject>().setReservedSlot(UDATE_FORMAT_SLOT, PrivateValue(df));
         }
     } else {
         // There's no good place to cache the ICU date-time format for an object

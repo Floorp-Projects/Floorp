@@ -868,9 +868,10 @@ AsmJSModuleObject::create(ExclusiveContext *cx, ScopedJSDeletePtr<AsmJSModule> *
     JSObject *obj = NewObjectWithGivenProto(cx, &AsmJSModuleObject::class_, nullptr, nullptr);
     if (!obj)
         return nullptr;
+    AsmJSModuleObject *nobj = &obj->as<AsmJSModuleObject>();
 
-    obj->setReservedSlot(MODULE_SLOT, PrivateValue(module->forget()));
-    return &obj->as<AsmJSModuleObject>();
+    nobj->setReservedSlot(MODULE_SLOT, PrivateValue(module->forget()));
+    return nobj;
 }
 
 AsmJSModule &

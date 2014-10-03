@@ -140,7 +140,7 @@ js_InitBooleanClass(JSContext *cx, HandleObject obj)
 
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
 
-    RootedObject booleanProto (cx, global->createBlankPrototype(cx, &BooleanObject::class_));
+    RootedNativeObject booleanProto(cx, global->createBlankPrototype(cx, &BooleanObject::class_));
     if (!booleanProto)
         return nullptr;
     booleanProto->setFixedSlot(BooleanObject::PRIMITIVE_VALUE_SLOT, BooleanValue(false));
