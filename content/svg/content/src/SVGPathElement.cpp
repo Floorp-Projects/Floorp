@@ -22,8 +22,6 @@
 #include "nsStyleStruct.h"
 #include "SVGContentUtils.h"
 
-class gfxContext;
-
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Path)
 
 using namespace mozilla::gfx;
@@ -332,12 +330,6 @@ void
 SVGPathElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 {
   mD.GetAnimValue().GetMarkerPositioningData(aMarks);
-}
-
-void
-SVGPathElement::ConstructPath(gfxContext *aCtx)
-{
-  mD.GetAnimValue().ConstructPath(aCtx);
 }
 
 float

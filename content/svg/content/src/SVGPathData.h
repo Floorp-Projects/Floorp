@@ -20,7 +20,6 @@
 
 #include <string.h>
 
-class gfxContext;
 class nsSVGPathDataParser; // IWYU pragma: keep
 
 struct nsSVGMark;
@@ -166,7 +165,6 @@ public:
    */
   TemporaryRef<Path> ToPathForLengthOrPositionMeasuring() const;
 
-  void ConstructPath(gfxContext *aCtx) const;
   TemporaryRef<Path> BuildPath(PathBuilder* aBuilder,
                                uint8_t aCapStyle,
                                Float aStrokeWidth) const;
