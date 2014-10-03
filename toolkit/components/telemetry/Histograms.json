@@ -6217,6 +6217,11 @@
     "kind": "boolean",
     "description": "The result of the startup default desktop browser check."
   },
+  "BROWSER_IS_ASSIST_DEFAULT": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "The result of the default browser check for assist intent."
+  },
   "MIXED_CONTENT_PAGE_LOAD": {
     "expires_in_version": "never",
     "kind": "enumerated",
