@@ -20,7 +20,7 @@
     <dimen name="new_tablet_tab_strip_height">48dp</dimen>
     <dimen name="new_tablet_tab_strip_item_width">250dp</dimen>
     <dimen name="new_tablet_tab_strip_item_margin">-30dp</dimen>
-    <dimen name="new_tablet_tab_strip_favicon_size">-30dp</dimen>
+    <dimen name="new_tablet_tab_strip_favicon_size">16dp</dimen>
     <dimen name="new_tablet_forward_default_offset">-6dp</dimen>
     <dimen name="new_tablet_browser_toolbar_menu_item_padding">19dp</dimen>
     <dimen name="forward_default_offset">-13dip</dimen>
