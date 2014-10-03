@@ -4,9 +4,5 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <resources>
-
-    <item type="id" name="guestNotification"/>
-    <item type="id" name="original_height"/>
-    <item type="id" name="menu_items"/>
-
+    <item type="layout" name="tabs_panel">@layout/tabs_panel_sidebar</item>
 </resources>

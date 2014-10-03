@@ -915,7 +915,7 @@ const CustomizableWidgets = [
       node.setAttribute("id", this.id);
       node.classList.add("toolbarbutton-1");
       node.classList.add("chromeclass-toolbar-additional");
-      node.setAttribute("type", "badged");
+      node.classList.add("badged-button");
       node.setAttribute("label", CustomizableUI.getLocalizedProperty(this, "label"));
       node.setAttribute("tooltiptext", CustomizableUI.getLocalizedProperty(this, "tooltiptext"));
       node.setAttribute("removable", "true");
