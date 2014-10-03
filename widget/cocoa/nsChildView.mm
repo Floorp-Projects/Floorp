@@ -402,38 +402,16 @@ class APZCTMController : public mozilla::layers::GeckoContentController
   typedef mozilla::layers::FrameMetrics FrameMetrics;
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
 
-  class RequestContentRepaintEvent : public nsRunnable
-  {
-  public:
-    explicit RequestContentRepaintEvent(const FrameMetrics& aFrameMetrics)
-      : mFrameMetrics(aFrameMetrics)
-    {
-    }
-
-    NS_IMETHOD Run()
-    {
-      MOZ_ASSERT(NS_IsMainThread());
-
-      nsCOMPtr<nsIContent> targetContent = nsLayoutUtils::FindContentFor(mFrameMetrics.GetScrollId());
-      if (targetContent) {
-        APZCCallbackHelper::UpdateSubFrame(targetContent, mFrameMetrics);
-      }
-
-      return NS_OK;
-    }
-  protected:
-    FrameMetrics mFrameMetrics;
-  };
-
 public:
   // GeckoContentController interface
   virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics)
   {
-    nsCOMPtr<nsIRunnable> r1 = new RequestContentRepaintEvent(aFrameMetrics);
-    if (!NS_IsMainThread()) {
-      NS_DispatchToMainThread(r1);
-    } else {
-      r1->Run();
+    MOZ_ASSERT(NS_IsMainThread());
+
+    nsCOMPtr<nsIContent> targetContent = nsLayoutUtils::FindContentFor(aFrameMetrics.GetScrollId());
+    if (targetContent) {
+      FrameMetrics metrics = aFrameMetrics;
+      APZCCallbackHelper::UpdateSubFrame(targetContent, metrics);
     }
   }
 
