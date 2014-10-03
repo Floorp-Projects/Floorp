@@ -3286,14 +3286,14 @@ void HTMLMediaElement::ChangeNetworkState(nsMediaNetworkState aState)
 
 bool HTMLMediaElement::CanActivateAutoplay()
 {
-  // For stream inputs, we activate autoplay on HAVE_CURRENT_DATA because
+  // For stream inputs, we activate autoplay on HAVE_METADATA because
   // this element itself might be blocking the stream from making progress by
   // being paused.
   return !mPausedForInactiveDocumentOrChannel &&
          mAutoplaying &&
          mPaused &&
          ((mDecoder && mReadyState >= nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA) ||
-          (mSrcStream && mReadyState >= nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA)) &&
+          (mSrcStream && mReadyState >= nsIDOMHTMLMediaElement::HAVE_METADATA)) &&
          HasAttr(kNameSpaceID_None, nsGkAtoms::autoplay) &&
          mAutoplayEnabled &&
          !IsEditable();
