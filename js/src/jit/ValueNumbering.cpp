@@ -153,6 +153,7 @@ ReplaceAllUsesWith(MDefinition *from, MDefinition *to)
 {
     MOZ_ASSERT(from != to, "GVN shouldn't try to replace a value with itself");
     MOZ_ASSERT(from->type() == to->type(), "Def replacement has different type");
+    MOZ_ASSERT(!to->isDiscarded(), "GVN replaces an instruction by a removed instruction");
 
     // We don't need the extra setting of UseRemoved flags that the regular
     // replaceAllUsesWith does because we do it ourselves.
@@ -639,7 +640,7 @@ ValueNumberer::leader(MDefinition *def)
         VisibleValues::AddPtr p = values_.findLeaderForAdd(def);
         if (p) {
             MDefinition *rep = *p;
-            if (rep->block()->dominates(def->block())) {
+            if (!rep->isDiscarded() && rep->block()->dominates(def->block())) {
                 // We found a dominating congruent value.
                 return rep;
             }
@@ -829,6 +830,8 @@ ValueNumberer::visitControlInstruction(MBasicBlock *block, const MBasicBlock *do
         return false;
     block->discardIgnoreOperands(control);
     block->end(newControl);
+    if (block->entryResumePoint() && newNumSuccs != oldNumSuccs)
+        block->flagOperandsOfPrunedBranches(newControl);
     return processDeadDefs();
 }
 

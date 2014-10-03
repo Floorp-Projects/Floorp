@@ -30,6 +30,8 @@ class AbstractMediaDecoder;
 
 class MediaOmxReader : public MediaOmxCommonReader
 {
+  // This flag protect the mIsShutdown variable, that may access by decoder / main / IO thread.
+  Mutex mMutex;
   nsCString mType;
   bool mHasVideo;
   bool mHasAudio;
@@ -40,6 +42,7 @@ class MediaOmxReader : public MediaOmxCommonReader
   int64_t mLastParserDuration;
   int32_t mSkipCount;
   bool mUseParserDuration;
+  bool mIsShutdown;
 protected:
   android::sp<android::OmxDecoder> mOmxDecoder;
   android::sp<android::MediaExtractor> mExtractor;
@@ -91,9 +94,16 @@ public:
 
   virtual void Shutdown() MOZ_OVERRIDE;
 
+  bool IsShutdown() {
+    MutexAutoLock lock(mMutex);
+    return mIsShutdown;
+  }
+
   void ReleaseDecoder();
 
   int64_t ProcessCachedData(int64_t aOffset, bool aWaitForCompletion);
+
+  void CancelProcessCachedData();
 
   android::sp<android::MediaSource> GetAudioOffloadTrack();
 };

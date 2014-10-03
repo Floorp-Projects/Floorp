@@ -53,6 +53,7 @@
 
 #include "mozilla/unused.h"
 
+#include "mozInlineSpellChecker.h"
 #include "nsIConsoleListener.h"
 #include "nsICycleCollectorListener.h"
 #include "nsIIPCBackgroundChildCreateCallback.h"
@@ -77,6 +78,7 @@
 #include "nsIJSRuntimeService.h"
 #include "nsThreadManager.h"
 #include "nsAnonymousTemporaryFile.h"
+#include "nsISpellChecker.h"
 
 #include "IHistory.h"
 #include "nsNetUtil.h"
@@ -693,7 +695,7 @@ ContentChild::InitXPCOM()
         NS_WARNING("Couldn't register console listener for child process");
 
     bool isOffline;
-    SendGetXPCOMProcessAttributes(&isOffline);
+    SendGetXPCOMProcessAttributes(&isOffline, &mAvailableDictionaries);
     RecvSetOffline(isOffline);
 
     DebugOnly<FileUpdateDispatcher*> observer = FileUpdateDispatcher::GetSingleton();
@@ -1125,6 +1127,12 @@ ContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
     return true;
 }
 
+void
+ContentChild::GetAvailableDictionaries(InfallibleTArray<nsString>& aDictionaries)
+{
+    aDictionaries = mAvailableDictionaries;
+}
+
 PFileDescriptorSetChild*
 ContentChild::AllocPFileDescriptorSetChild(const FileDescriptor& aFD)
 {
@@ -1153,7 +1161,7 @@ ContentChild::AllocPBlobChild(const BlobConstructorParams& aParams)
 mozilla::PRemoteSpellcheckEngineChild *
 ContentChild::AllocPRemoteSpellcheckEngineChild()
 {
-    NS_NOTREACHED("Default Constructor for PRemoteSpellcheckEngineChilf should never be called");
+    NS_NOTREACHED("Default Constructor for PRemoteSpellcheckEngineChild should never be called");
     return nullptr;
 }
 
@@ -1739,6 +1747,14 @@ ContentChild::RecvGeolocationUpdate(const GeoPosition& somewhere)
     }
     nsCOMPtr<nsIDOMGeoPosition> position = somewhere;
     gs->Update(position);
+    return true;
+}
+
+bool
+ContentChild::RecvUpdateDictionaryList(const InfallibleTArray<nsString>& aDictionaries)
+{
+    mAvailableDictionaries = aDictionaries;
+    mozInlineSpellChecker::UpdateCanEnableInlineSpellChecking();
     return true;
 }
 
