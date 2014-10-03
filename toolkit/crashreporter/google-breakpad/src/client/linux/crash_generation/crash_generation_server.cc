@@ -275,14 +275,7 @@ CrashGenerationServer::ClientEvent(short revents)
   }
 
   // Send the done signal to the process: it can exit now.
-  memset(&msg, 0, sizeof(msg));
-  struct iovec done_iov;
-  done_iov.iov_base = const_cast<char*>("\x42");
-  done_iov.iov_len = 1;
-  msg.msg_iov = &done_iov;
-  msg.msg_iovlen = 1;
-
-  HANDLE_EINTR(sendmsg(signal_fd, &msg, MSG_DONTWAIT | MSG_NOSIGNAL));
+  // (Closing this will make the child's sys_read unblock and return 0.)
   HANDLE_EINTR(close(signal_fd));
 
   return true;
