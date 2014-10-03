@@ -15,7 +15,31 @@
               android:layout_height="match_parent"
               android:background="@color/background_tabs">
 
-            <include layout="@layout/tabs_panel_header"/>
+            <org.mozilla.gecko.widget.IconTabWidget android:id="@+id/tab_widget"
+                                                    android:layout_width="wrap_content"
+                                                    android:layout_height="match_parent"
+                                                    android:tabStripEnabled="false"
+                                                    android:divider="@drawable/tab_indicator_divider"
+                                                    android:layout="@layout/tabs_panel_indicator"/>
+
+            <View android:layout_width="0dip"
+                  android:layout_height="match_parent"
+                  android:layout_weight="1.0"/>
+
+            <ImageButton android:id="@+id/add_tab"
+                         style="@style/UrlBar.ImageButton"
+                         android:padding="@dimen/browser_toolbar_button_padding"
+                         android:src="@drawable/tab_new_level"
+                         android:contentDescription="@string/new_tab"
+                         android:background="@drawable/action_bar_button_inverse"/>
+
+            <ImageButton android:id="@+id/menu"
+                         style="@style/UrlBar.ImageButton"
+                         android:padding="@dimen/browser_toolbar_button_padding"
+                         android:src="@drawable/menu_tabs"
+                         android:contentDescription="@string/menu"
+                         android:background="@drawable/action_bar_button_inverse"
+                         android:visibility="gone"/>
 
         </view>
 
