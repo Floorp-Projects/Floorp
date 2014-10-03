@@ -12,11 +12,6 @@
     <dimen name="back_button_width">42dp</dimen>
     <dimen name="back_button_width_half">21dp</dimen>
 
-    <dimen name="forward_default_offset">-13dip</dimen>
-    <dimen name="new_tablet_forward_default_offset">-6dp</dimen>
-
-    <dimen name="new_tablet_browser_toolbar_menu_item_padding">19dp</dimen>
-
     <dimen name="tabs_counter_size">26sp</dimen>
     <dimen name="panel_grid_view_column_width">200dp</dimen>
 

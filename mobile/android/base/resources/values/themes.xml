@@ -93,7 +93,6 @@
         <item name="geckoMenuListViewStyle">@style/Widget.GeckoMenuListView</item>
         <item name="homeListViewStyle">@style/Widget.HomeListView</item>
         <item name="menuItemActionBarStyle">@style/Widget.MenuItemActionBar</item>
-        <item name="menuItemActionBarStyleNewTablet">@style/Widget.MenuItemActionBar.NewTablet</item>
         <item name="menuItemActionModeStyle">@style/GeckoActionBar.Button</item>
         <item name="menuItemShareActionButtonStyle">@style/Widget.MenuItemSecondaryActionBar</item>
         <item name="panelGridViewStyle">@style/Widget.PanelGridView</item>
