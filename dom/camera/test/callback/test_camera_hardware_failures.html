@@ -7,7 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=940424
   <title>Bug 940424 - Test camera hardware API failure handling</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="camera_common.js"></script>
+  <script type="text/javascript" src="../camera_common.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
@@ -50,7 +50,7 @@ var tests = [
         ok(true, "autoFocus() failed correctly with: " + error);
         next();
       }
-      camera.autoFocus().then(onSuccess, onError);
+      camera.autoFocus(onSuccess, onError);
     }
   },
   {
@@ -69,7 +69,7 @@ var tests = [
         ok(false, "autoFocus() process failed incorrectly with: " + error);
         end();
       }
-      camera.autoFocus().then(onSuccess, onError);
+      camera.autoFocus(onSuccess, onError);
     }
   },
   {
@@ -83,7 +83,7 @@ var tests = [
         ok(true, "takePicture() failed correctly with: " + error);
         next();
       }
-      camera.takePicture(null).then(onSuccess, onError);
+      camera.takePicture(null, onSuccess, onError);
     }
   },
   {
@@ -97,7 +97,7 @@ var tests = [
         ok(true, "takePicture() process failed correctly with: " + error);
         next();
       }
-      camera.takePicture(null).then(onSuccess, onError);
+      camera.takePicture(null, onSuccess, onError);
     }
   },
 ];
@@ -115,13 +115,13 @@ window.addEventListener('beforeunload', function() {
 });
 
 CameraTest.begin("hardware", function(test) {
-  function onSuccess(d) {
-    cameraObj = d.camera;
-    document.getElementById('viewfinder').mozSrcObject = cameraObj;
+  function onSuccess(camera, config) {
+    document.getElementById('viewfinder').mozSrcObject = camera;
+    cameraObj = camera;
     CameraTest.next = function() {
       try {
         var t = testGenerator.next();
-        test.set(t.key, t.func.bind(undefined, cameraObj));
+        test.set(t.key, t.func.bind(undefined, camera));
       } catch(e) {
         if (e instanceof StopIteration) {
           end();
@@ -136,7 +136,7 @@ CameraTest.begin("hardware", function(test) {
     ok(false, "getCamera() failed with: " + error);
     end();
   }
-  navigator.mozCameras.getCamera(whichCamera, initialConfig).then(onSuccess, onError);
+  navigator.mozCameras.getCamera(whichCamera, initialConfig, onSuccess, onError);
 });
 
 </script>

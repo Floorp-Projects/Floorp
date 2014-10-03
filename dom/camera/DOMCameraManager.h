@@ -8,6 +8,7 @@
 #define DOM_CAMERA_DOMCAMERAMANAGER_H
 
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/Promise.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsIObserver.h"
@@ -32,7 +33,9 @@ namespace mozilla {
 
 typedef nsTArray<nsRefPtr<mozilla::nsDOMCameraControl> > CameraControls;
 typedef nsClassHashtable<nsUint64HashKey, CameraControls> WindowTable;
-typedef mozilla::dom::Optional<mozilla::dom::OwningNonNull<mozilla::dom::CameraErrorCallback>>
+typedef mozilla::dom::Optional<mozilla::dom::OwningNonNull<mozilla::dom::GetCameraCallback> >
+          OptionalNonNullGetCameraCallback;
+typedef mozilla::dom::Optional<mozilla::dom::OwningNonNull<mozilla::dom::CameraErrorCallback> >
           OptionalNonNullCameraErrorCallback;
 
 class nsDOMCameraManager MOZ_FINAL
@@ -64,19 +67,22 @@ public:
   void PermissionAllowed(uint32_t aCameraId,
                          const mozilla::dom::CameraConfiguration& aOptions,
                          mozilla::dom::GetCameraCallback* aOnSuccess,
-                         mozilla::dom::CameraErrorCallback* aOnError);
+                         mozilla::dom::CameraErrorCallback* aOnError,
+                         mozilla::dom::Promise* aPromise);
 
   void PermissionCancelled(uint32_t aCameraId,
                            const mozilla::dom::CameraConfiguration& aOptions,
                            mozilla::dom::GetCameraCallback* aOnSuccess,
-                           mozilla::dom::CameraErrorCallback* aOnError);
+                           mozilla::dom::CameraErrorCallback* aOnError,
+                           mozilla::dom::Promise* aPromise);
 
   // WebIDL
-  void GetCamera(const nsAString& aCamera,
-                 const mozilla::dom::CameraConfiguration& aOptions,
-                 mozilla::dom::GetCameraCallback& aOnSuccess,
-                 const OptionalNonNullCameraErrorCallback& aOnError,
-                 mozilla::ErrorResult& aRv);
+  already_AddRefed<mozilla::dom::Promise>
+  GetCamera(const nsAString& aCamera,
+            const mozilla::dom::CameraConfiguration& aOptions,
+            const OptionalNonNullGetCameraCallback& aOnSuccess,
+            const OptionalNonNullCameraErrorCallback& aOnError,
+            mozilla::ErrorResult& aRv);
   void GetListOfCameras(nsTArray<nsString>& aList, mozilla::ErrorResult& aRv);
 
   nsPIDOMWindow* GetParentObject() const { return mWindow; }
