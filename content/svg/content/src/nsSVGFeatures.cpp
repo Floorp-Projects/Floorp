@@ -25,7 +25,7 @@ nsSVGFeatures::HasFeature(nsISupports* aObject, const nsAString& aFeature)
   if (aFeature.EqualsLiteral("http://www.w3.org/TR/SVG11/feature#Script")) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(aObject));
     if (content) {
-      nsIDocument *doc = content->GetCurrentDoc();
+      nsIDocument* doc = content->GetUncomposedDoc();
       if (doc && doc->IsResourceDoc()) {
         // no scripting in SVG images or external resource documents
         return false;

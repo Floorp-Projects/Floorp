@@ -134,8 +134,9 @@ SVGAElement::BindToTree(nsIDocument *aDocument, nsIContent *aParent,
                                             aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aDocument) {
-    aDocument->RegisterPendingLinkUpdate(this);
+  nsIDocument* doc = GetComposedDoc();
+  if (doc) {
+    doc->RegisterPendingLinkUpdate(this);
   }
 
   return NS_OK;
@@ -148,7 +149,9 @@ SVGAElement::UnbindFromTree(bool aDeep, bool aNullParent)
   // be under a different xml:base, so forget the cached state now.
   Link::ResetLinkState(false, Link::ElementHasHref());
 
-  nsIDocument* doc = GetCurrentDoc();
+  // Note, we need to use OwnerDoc() here since GetComposedDoc() may
+  // return null already at this point.
+  nsIDocument* doc = OwnerDoc();
   if (doc) {
     doc->UnregisterPendingLinkUpdate(this);
   }

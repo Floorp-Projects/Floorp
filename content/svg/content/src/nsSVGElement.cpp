@@ -2705,7 +2705,7 @@ nsSVGElement::GetAnimatedAttr(int32_t aNamespaceID, nsIAtom* aName)
 void
 nsSVGElement::AnimationNeedsResample()
 {
-  nsIDocument* doc = GetCurrentDoc();
+  nsIDocument* doc = GetComposedDoc();
   if (doc && doc->HasAnimationController()) {
     doc->GetAnimationController()->SetResampleNeeded();
   }
@@ -2714,7 +2714,7 @@ nsSVGElement::AnimationNeedsResample()
 void
 nsSVGElement::FlushAnimations()
 {
-  nsIDocument* doc = GetCurrentDoc();
+  nsIDocument* doc = GetComposedDoc();
   if (doc && doc->HasAnimationController()) {
     doc->GetAnimationController()->FlushResampleRequests();
   }
