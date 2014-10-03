@@ -66,8 +66,10 @@ path.coverer {
   </g>
 
   <g transform="translate(25,125)">
-    <path class="circles-not-expected" d="M0,0 A0,10 0 0 0 0,0  M20,20 L30,30  M50,50 A0,10 0 0 0 50,50  M70,70 L80,80  M100,100 A0,10 0 0 0 100,100"/>
-    <path class="coverer" d="M20,20 L30,30 M70,70 L80,80"/>
+    <circle cx="0" cy="0" r="8"/>
+    <circle cx="50" cy="50" r="8"/>
+    <circle cx="100" cy="100" r="8"/>
+    <path class="circles-expected" d="M0,0 A0,10 0 0 0 0,0  M20,20 L30,30  M50,50 A0,10 0 0 0 50,50  M70,70 L80,80  M100,100 A0,10 0 0 0 100,100"/>
   </g>
 
   <g transform="translate(25,175)">
@@ -95,8 +97,10 @@ path.coverer {
   </g>
 
   <g transform="translate(175,125)">
-    <path class="circles-not-expected" d="M0,0 A0,10 0 0 0 0,0 A0,10 0 0 0 0,0  M20,20 L30,30  M50,50 A0,10 0 0 0 50,50 A0,10 0 0 0 50,50  M70,70 L80,80  M100,100 A0,10 0 0 0 100,100 A0,10 0 0 0 100,100"/>
-    <path class="coverer" d="M20,20 L30,30 M70,70 L80,80"/>
+    <circle cx="0" cy="0" r="8"/>
+    <circle cx="50" cy="50" r="8"/>
+    <circle cx="100" cy="100" r="8"/>
+    <path class="circles-expected" d="M0,0 A0,10 0 0 0 0,0 A0,10 0 0 0 0,0  M20,20 L30,30  M50,50 A0,10 0 0 0 50,50 A0,10 0 0 0 50,50  M70,70 L80,80  M100,100 A0,10 0 0 0 100,100 A0,10 0 0 0 100,100"/>
   </g>
 
   <g transform="translate(175,175)">

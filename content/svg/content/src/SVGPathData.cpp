@@ -262,7 +262,6 @@ ApproximateZeroLengthSubpathSquareCaps(PathBuilder* aPB,
 
   Float tinyLength = aStrokeWidth / 512;
 
-  aPB->MoveTo(aPoint);
   aPB->LineTo(aPoint + Point(tinyLength, 0));
   aPB->MoveTo(aPoint);
 }
@@ -285,7 +284,8 @@ ApproximateZeroLengthSubpathSquareCaps(const gfxPoint &aPoint, gfxContext *aCtx)
 #define MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT               \
   do {                                                                        \
     if (!subpathHasLength && hasLineCaps && aStrokeWidth > 0 &&               \
-        subpathContainsNonArc && SVGPathSegUtils::IsValidType(prevSegType) && \
+        subpathContainsNonMoveTo &&                                           \
+        SVGPathSegUtils::IsValidType(prevSegType) &&                          \
         (!IsMoveto(prevSegType) || segType == PATHSEG_CLOSEPATH)) {           \
       ApproximateZeroLengthSubpathSquareCaps(builder, segStart, aStrokeWidth);\
     }                                                                         \
@@ -312,7 +312,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
 
   bool hasLineCaps = aStrokeLineCap != NS_STYLE_STROKE_LINECAP_BUTT;
   bool subpathHasLength = false;  // visual length
-  bool subpathContainsNonArc = false;
+  bool subpathContainsNonMoveTo = false;
 
   uint32_t segType     = PATHSEG_UNKNOWN;
   uint32_t prevSegType = PATHSEG_UNKNOWN;
@@ -335,7 +335,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
     {
     case PATHSEG_CLOSEPATH:
       // set this early to allow drawing of square caps for "M{x},{y} Z":
-      subpathContainsNonArc = true;
+      subpathContainsNonMoveTo = true;
       MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT;
       segEnd = pathStart;
       builder->Close();
@@ -346,7 +346,6 @@ SVGPathData::BuildPath(PathBuilder* builder,
       pathStart = segEnd = Point(mData[i], mData[i+1]);
       builder->MoveTo(segEnd);
       subpathHasLength = false;
-      subpathContainsNonArc = false;
       break;
 
     case PATHSEG_MOVETO_REL:
@@ -354,7 +353,6 @@ SVGPathData::BuildPath(PathBuilder* builder,
       pathStart = segEnd = segStart + Point(mData[i], mData[i+1]);
       builder->MoveTo(segEnd);
       subpathHasLength = false;
-      subpathContainsNonArc = false;
       break;
 
     case PATHSEG_LINETO_ABS:
@@ -363,7 +361,6 @@ SVGPathData::BuildPath(PathBuilder* builder,
         subpathHasLength = true;
         builder->LineTo(segEnd);
       }
-      subpathContainsNonArc = true;
       break;
 
     case PATHSEG_LINETO_REL:
@@ -372,7 +369,6 @@ SVGPathData::BuildPath(PathBuilder* builder,
         subpathHasLength = true;
         builder->LineTo(segEnd);
       }
-      subpathContainsNonArc = true;
       break;
 
     case PATHSEG_CURVETO_CUBIC_ABS:
@@ -383,7 +379,6 @@ SVGPathData::BuildPath(PathBuilder* builder,
         subpathHasLength = true;
         builder->BezierTo(cp1, cp2, segEnd);
       }
-      subpathContainsNonArc = true;
       break;
 
     case PATHSEG_CURVETO_CUBIC_REL:
@@ -394,7 +389,6 @@ SVGPathData::BuildPath(PathBuilder* builder,
         subpathHasLength = true;
         builder->BezierTo(cp1, cp2, segEnd);
       }
-      subpathContainsNonArc = true;
       break;
 
     case PATHSEG_CURVETO_QUADRATIC_ABS:
@@ -407,7 +401,6 @@ SVGPathData::BuildPath(PathBuilder* builder,
         subpathHasLength = true;
         builder->BezierTo(tcp1, tcp2, segEnd);
       }
-      subpathContainsNonArc = true;
       break;
 
     case PATHSEG_CURVETO_QUADRATIC_REL:
@@ -420,7 +413,6 @@ SVGPathData::BuildPath(PathBuilder* builder,
         subpathHasLength = true;
         builder->BezierTo(tcp1, tcp2, segEnd);
       }
-      subpathContainsNonArc = true;
       break;
 
     case PATHSEG_ARC_ABS:
@@ -452,7 +444,6 @@ SVGPathData::BuildPath(PathBuilder* builder,
         subpathHasLength = true;
         builder->LineTo(segEnd);
       }
-      subpathContainsNonArc = true;
       break;
 
     case PATHSEG_LINETO_HORIZONTAL_REL:
@@ -461,7 +452,6 @@ SVGPathData::BuildPath(PathBuilder* builder,
         subpathHasLength = true;
         builder->LineTo(segEnd);
       }
-      subpathContainsNonArc = true;
       break;
 
     case PATHSEG_LINETO_VERTICAL_ABS:
@@ -470,7 +460,6 @@ SVGPathData::BuildPath(PathBuilder* builder,
         subpathHasLength = true;
         builder->LineTo(segEnd);
       }
-      subpathContainsNonArc = true;
       break;
 
     case PATHSEG_LINETO_VERTICAL_REL:
@@ -479,7 +468,6 @@ SVGPathData::BuildPath(PathBuilder* builder,
         subpathHasLength = true;
         builder->LineTo(segEnd);
       }
-      subpathContainsNonArc = true;
       break;
 
     case PATHSEG_CURVETO_CUBIC_SMOOTH_ABS:
@@ -490,7 +478,6 @@ SVGPathData::BuildPath(PathBuilder* builder,
         subpathHasLength = true;
         builder->BezierTo(cp1, cp2, segEnd);
       }
-      subpathContainsNonArc = true;
       break;
 
     case PATHSEG_CURVETO_CUBIC_SMOOTH_REL:
@@ -501,7 +488,6 @@ SVGPathData::BuildPath(PathBuilder* builder,
         subpathHasLength = true;
         builder->BezierTo(cp1, cp2, segEnd);
       }
-      subpathContainsNonArc = true;
       break;
 
     case PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS:
@@ -514,7 +500,6 @@ SVGPathData::BuildPath(PathBuilder* builder,
         subpathHasLength = true;
         builder->BezierTo(tcp1, tcp2, segEnd);
       }
-      subpathContainsNonArc = true;
       break;
 
     case PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL:
@@ -527,13 +512,15 @@ SVGPathData::BuildPath(PathBuilder* builder,
         subpathHasLength = true;
         builder->BezierTo(tcp1, tcp2, segEnd);
       }
-      subpathContainsNonArc = true;
       break;
 
     default:
       NS_NOTREACHED("Bad path segment type");
       return nullptr; // according to spec we'd use everything up to the bad seg anyway
     }
+
+    subpathContainsNonMoveTo = segType != PATHSEG_MOVETO_ABS &&
+                               segType != PATHSEG_MOVETO_REL;
     i += argCount;
     prevSegType = segType;
     segStart = segEnd;
