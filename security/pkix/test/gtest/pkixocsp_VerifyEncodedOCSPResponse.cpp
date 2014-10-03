@@ -110,7 +110,7 @@ public:
   void SetUp()
   {
     rootNameDER = CNToDERName(rootName);
-    if (rootNameDER == ENCODING_FAILED) {
+    if (ENCODING_FAILED(rootNameDER)) {
       abort();
     }
     Input rootNameDERInput;
@@ -120,7 +120,7 @@ public:
     }
 
     serialNumberDER = CreateEncodedSerialNumber(++rootIssuedCount);
-    if (serialNumberDER == ENCODING_FAILED) {
+    if (ENCODING_FAILED(serialNumberDER)) {
       abort();
     }
     Input serialNumberDERInput;
@@ -248,7 +248,7 @@ public:
     OCSPResponseContext context(certID, producedAt);
     if (signerName) {
       context.signerNameDER = CNToDERName(signerName);
-      EXPECT_NE(ENCODING_FAILED, context.signerNameDER);
+      EXPECT_FALSE(ENCODING_FAILED(context.signerNameDER));
     }
     context.signerKeyPair = signerKeyPair.Clone();
     EXPECT_TRUE(context.signerKeyPair);
@@ -398,7 +398,7 @@ protected:
                            oneDayBeforeNow, oneDayAfterNow, certSubjectName,
                            signerEKUDER ? extensions : nullptr,
                            rootKeyPair.get(), signerKeyPair));
-    EXPECT_NE(ENCODING_FAILED, signerDER);
+    EXPECT_FALSE(ENCODING_FAILED(signerDER));
     if (signerDEROut) {
       *signerDEROut = signerDER;
     }
@@ -406,7 +406,7 @@ protected:
     ByteString signerNameDER;
     if (signerName) {
       signerNameDER = CNToDERName(signerName);
-      EXPECT_NE(ENCODING_FAILED, signerNameDER);
+      EXPECT_FALSE(ENCODING_FAILED(signerNameDER));
     }
     ByteString certs[] = { signerDER, ByteString() };
     return CreateEncodedOCSPSuccessfulResponse(certStatus, *endEntityCertID,
@@ -426,16 +426,16 @@ protected:
                                      /*out*/ ScopedTestKeyPair& keyPair)
   {
     ByteString serialNumberDER(CreateEncodedSerialNumber(serialNumber));
-    if (serialNumberDER == ENCODING_FAILED) {
-      return ENCODING_FAILED;
+    if (ENCODING_FAILED(serialNumberDER)) {
+      return ByteString();
     }
     ByteString issuerDER(CNToDERName(issuer));
-    if (issuerDER == ENCODING_FAILED) {
-      return ENCODING_FAILED;
+    if (ENCODING_FAILED(issuerDER)) {
+      return ByteString();
     }
     ByteString subjectDER(CNToDERName(subject));
-    if (subjectDER == ENCODING_FAILED) {
-      return ENCODING_FAILED;
+    if (ENCODING_FAILED(subjectDER)) {
+      return ByteString();
     }
     return ::mozilla::pkix::test::CreateEncodedCertificate(
                                     v3,
@@ -547,7 +547,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_expired)
                           now - (2 * Time::ONE_DAY_IN_SECONDS),
                           signerName, extensions, rootKeyPair.get(),
                           signerKeyPair));
-  ASSERT_NE(ENCODING_FAILED, signerDER);
+  ASSERT_FALSE(ENCODING_FAILED(signerDER));
 
   ByteString certs[] = { signerDER, ByteString() };
   ByteString responseString(
@@ -582,7 +582,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_future)
                          now + (10 * Time::ONE_DAY_IN_SECONDS),
                          signerName, extensions, rootKeyPair.get(),
                          signerKeyPair));
-  ASSERT_NE(ENCODING_FAILED, signerDER);
+  ASSERT_FALSE(ENCODING_FAILED(signerDER));
 
   ByteString certs[] = { signerDER, ByteString() };
   ByteString responseString(
@@ -682,7 +682,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder, good_unknown_issuer)
                          1, subCAName, oneDayBeforeNow, oneDayAfterNow,
                          signerName, extensions, unknownKeyPair.get(),
                          signerKeyPair));
-  ASSERT_NE(ENCODING_FAILED, signerDER);
+  ASSERT_FALSE(ENCODING_FAILED(signerDER));
 
   // OCSP response signed by that delegated responder
   ByteString certs[] = { signerDER, ByteString() };
@@ -722,7 +722,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
                         oneDayBeforeNow, oneDayAfterNow,
                         subCAName, subCAExtensions, rootKeyPair.get(),
                         subCAKeyPair));
-  ASSERT_NE(ENCODING_FAILED, subCADER);
+  ASSERT_FALSE(ENCODING_FAILED(subCADER));
 
   // Delegated responder cert signed by that sub-CA
   const ByteString extensions[] = {
@@ -735,7 +735,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
                          1, subCAName, oneDayBeforeNow, oneDayAfterNow,
                          signerName, extensions, subCAKeyPair.get(),
                          signerKeyPair));
-  ASSERT_NE(ENCODING_FAILED, signerDER);
+  ASSERT_FALSE(ENCODING_FAILED(signerDER));
 
   // OCSP response signed by the delegated responder issued by the sub-CA
   // that is trying to impersonate the root.
@@ -776,7 +776,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
                                                subCAName, subCAExtensions,
                                                rootKeyPair.get(),
                                                subCAKeyPair));
-  ASSERT_NE(ENCODING_FAILED, subCADER);
+  ASSERT_FALSE(ENCODING_FAILED(subCADER));
 
   // Delegated responder cert signed by that sub-CA
   const ByteString extensions[] = {
@@ -789,7 +789,7 @@ TEST_F(pkixocsp_VerifyEncodedResponse_DelegatedResponder,
                          1, subCAName, oneDayBeforeNow, oneDayAfterNow,
                          signerName, extensions, subCAKeyPair.get(),
                          signerKeyPair));
-  ASSERT_NE(ENCODING_FAILED, signerDER);
+  ASSERT_FALSE(ENCODING_FAILED(signerDER));
 
   // OCSP response signed by the delegated responder issued by the sub-CA
   // that is trying to impersonate the root.
@@ -821,7 +821,7 @@ public:
         CreateEncodedIndirectOCSPSuccessfulResponse(
           "OCSPGetCertTrustTest Signer", OCSPResponseContext::good,
           byKey, &OCSPSigningEKUDER, &signerCertDER);
-    if (responseString == ENCODING_FAILED) {
+    if (ENCODING_FAILED(responseString)) {
       abort();
     }
     if (response.Init(responseString.data(), responseString.length())
