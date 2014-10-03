@@ -617,9 +617,19 @@ loop.shared.views = (function(_, OT, l10n) {
     render: function() {
       var notification = this.props.notification;
       return (
-        React.DOM.div({key: this.props.key, 
-             className: "alert alert-" + notification.get("level")}, 
-          React.DOM.span({className: "message"}, notification.get("message"))
+        React.DOM.div({className: "notificationContainer"}, 
+          React.DOM.div({key: this.props.key, 
+               className: "alert alert-" + notification.get("level")}, 
+            React.DOM.span({className: "message"}, notification.get("message"))
+          ), 
+          React.DOM.div({className: "detailsBar details-" + notification.get("level"), 
+               hidden: !notification.get("details")}, 
+            React.DOM.button({className: "detailsButton btn-info", 
+                    hidden: true || !notification.get("detailsButtonLabel")}, 
+              notification.get("detailsButtonLabel")
+            ), 
+            React.DOM.span({className: "details"}, notification.get("details"))
+          )
         )
       );
     }

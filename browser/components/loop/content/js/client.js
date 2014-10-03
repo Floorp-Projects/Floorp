@@ -78,7 +78,7 @@ loop.Client = (function($) {
     _failureHandler: function(cb, error) {
       var message = "HTTP " + error.code + " " + error.error + "; " + error.message;
       console.error(message);
-      cb(new Error(message));
+      cb(error);
     },
 
     /**

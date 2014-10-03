@@ -98,6 +98,7 @@ p {
 .btn-info {
   background-color: #0096dd;
   border: 1px solid #0095dd;
+  color: #fff;
 }
 
   .btn-info:hover {
@@ -229,12 +230,20 @@ p {
   border-top-right-radius: 0;
 }
 
-/* Alerts */
+/* Alerts/Notifications */
+.notificationContainer {
+  border-bottom: 2px solid #E9E9E9;
+  margin-bottom: 1em;
+}
+
+.messages > .notificationContainer > .alert {
+  text-align: center;
+}
+
+.notificationContainer > .detailsBar,
 .alert {
   background: #eee;
   padding: .4em 1em;
-  margin-bottom: 1em;
-  border-bottom: 2px solid #E9E9E9;
 }
 
 .alert p.message {
@@ -250,6 +259,11 @@ p {
 .alert-warning {
   background: #fcf8e3;
   border: 1px solid #fbeed5;
+}
+
+.notificationContainer > .details-error {
+  background: #fbebeb;
+  color: #d74345
 }
 
 .alert .close {
