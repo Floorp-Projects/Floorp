@@ -197,7 +197,7 @@ class Debugger::FrameRange
         return nextDebugger >= debuggerCount;
     }
 
-    JSObject *frontFrame() const {
+    NativeObject *frontFrame() const {
         MOZ_ASSERT(!empty());
         return entry->value();
     }
@@ -342,7 +342,7 @@ Breakpoint::nextInSite()
 
 /*** Debugger hook dispatch **********************************************************************/
 
-Debugger::Debugger(JSContext *cx, JSObject *dbg)
+Debugger::Debugger(JSContext *cx, NativeObject *dbg)
   : object(dbg),
     uncaughtExceptionHook(nullptr),
     enabled(true),
@@ -405,7 +405,7 @@ Debugger::fromChildJSObject(JSObject *obj)
                obj->getClass() == &DebuggerSource_class ||
                obj->getClass() == &DebuggerObject_class ||
                obj->getClass() == &DebuggerEnv_class);
-    JSObject *dbgobj = &obj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER).toObject();
+    JSObject *dbgobj = &obj->as<NativeObject>().getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER).toObject();
     return fromJSObject(dbgobj);
 }
 
@@ -432,8 +432,8 @@ Debugger::getScriptFrameWithIter(JSContext *cx, AbstractFramePtr frame,
     if (!p) {
         /* Create and populate the Debugger.Frame object. */
         JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject();
-        JSObject *frameobj =
-            NewObjectWithGivenProto(cx, &DebuggerFrame_class, proto, nullptr);
+        NativeObject *frameobj =
+            NewNativeObjectWithGivenProto(cx, &DebuggerFrame_class, proto, nullptr);
         if (!frameobj)
             return false;
 
@@ -488,7 +488,7 @@ Debugger::hasAnyLiveHooks() const
     }
 
     for (FrameMap::Range r = frames.all(); !r.empty(); r.popFront()) {
-        JSObject *frameObj = r.front().value();
+        NativeObject *frameObj = r.front().value();
         if (!frameObj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined() ||
             !frameObj->getReservedSlot(JSSLOT_DEBUGFRAME_ONPOP_HANDLER).isUndefined())
             return true;
@@ -530,7 +530,7 @@ Debugger::slowPathOnEnterFrame(JSContext *cx, AbstractFramePtr frame, MutableHan
 
 static void
 DebuggerFrame_maybeDecrementFrameScriptStepModeCount(FreeOp *fop, AbstractFramePtr frame,
-                                                     JSObject *frameobj);
+                                                     NativeObject *frameobj);
 
 static void
 DebuggerFrame_freeScriptFrameIterData(FreeOp *fop, JSObject *obj);
@@ -561,7 +561,7 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool frame
 
     /* For each Debugger.Frame, fire its onPop handler, if any. */
     for (JSObject **p = frames.begin(); p != frames.end(); p++) {
-        RootedObject frameobj(cx, *p);
+        RootedNativeObject frameobj(cx, &(*p)->as<NativeObject>());
         Debugger *dbg = Debugger::fromChildJSObject(frameobj);
 
         if (dbg->enabled &&
@@ -605,7 +605,7 @@ Debugger::slowPathOnLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool frame
      * own Debugger.Frame instance.
      */
     for (FrameRange r(frame, global); !r.empty(); r.popFront()) {
-        RootedObject frameobj(cx, r.frontFrame());
+        RootedNativeObject frameobj(cx, r.frontFrame());
         Debugger *dbg = r.frontDebugger();
         MOZ_ASSERT(dbg == Debugger::fromChildJSObject(frameobj));
 
@@ -658,14 +658,14 @@ Debugger::wrapEnvironment(JSContext *cx, Handle<Env*> env, MutableHandleValue rv
      */
     MOZ_ASSERT(!env->is<ScopeObject>());
 
-    JSObject *envobj;
+    NativeObject *envobj;
     DependentAddPtr<ObjectWeakMap> p(cx, environments, env);
     if (p) {
-        envobj = p->value();
+        envobj = &p->value()->as<NativeObject>();
     } else {
         /* Create a new Debugger.Environment for env. */
         JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_ENV_PROTO).toObject();
-        envobj = NewObjectWithGivenProto(cx, &DebuggerEnv_class, proto, nullptr, TenuredObject);
+        envobj = NewNativeObjectWithGivenProto(cx, &DebuggerEnv_class, proto, nullptr, TenuredObject);
         if (!envobj)
             return false;
         envobj->setPrivateGCThing(env);
@@ -706,8 +706,8 @@ Debugger::wrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
         } else {
             /* Create a new Debugger.Object for obj. */
             JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_OBJECT_PROTO).toObject();
-            JSObject *dobj =
-                NewObjectWithGivenProto(cx, &DebuggerObject_class, proto, nullptr, TenuredObject);
+            NativeObject *dobj =
+                NewNativeObjectWithGivenProto(cx, &DebuggerObject_class, proto, nullptr, TenuredObject);
             if (!dobj)
                 return false;
             dobj->setPrivateGCThing(obj);
@@ -771,8 +771,9 @@ Debugger::unwrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
                                  "Debugger", "Debugger.Object", dobj->getClass()->name);
             return false;
         }
+        NativeObject *ndobj = &dobj->as<NativeObject>();
 
-        Value owner = dobj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER);
+        Value owner = ndobj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER);
         if (owner.isUndefined() || &owner.toObject() != object) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                                  owner.isUndefined()
@@ -781,7 +782,7 @@ Debugger::unwrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
             return false;
         }
 
-        vp.setObject(*static_cast<JSObject*>(dobj->getPrivate()));
+        vp.setObject(*static_cast<JSObject*>(ndobj->getPrivate()));
     }
     return true;
 }
@@ -932,7 +933,7 @@ Debugger::newCompletionValue(JSContext *cx, JSTrapStatus status, Value value_,
     }
 
     /* Common tail for JSTRAP_RETURN and JSTRAP_THROW. */
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
+    RootedNativeObject obj(cx, NewNativeBuiltinClassInstance(cx, &JSObject::class_));
     if (!obj ||
         !wrapDebuggeeValue(cx, &value) ||
         !DefineNativeProperty(cx, obj, key, value, JS_PropertyStub, JS_StrictPropertyStub,
@@ -998,8 +999,10 @@ Debugger::parseResumptionValue(Maybe<AutoCompartment> &ac, bool ok, const Value 
         return handleUncaughtException(ac, vp, callHook);
     }
 
+    HandleNativeObject nobj = obj.as<NativeObject>();
+
     RootedValue v(cx, vp.get());
-    if (!NativeGet(cx, obj, obj, shape, &v) || !unwrapDebuggeeValue(cx, &v))
+    if (!NativeGet(cx, obj, nobj, shape, &v) || !unwrapDebuggeeValue(cx, &v))
         return handleUncaughtException(ac, &v, callHook);
 
     ac.reset();
@@ -1306,7 +1309,7 @@ Debugger::onSingleStep(JSContext *cx, MutableHandleValue vp)
      */
     AutoObjectVector frames(cx);
     for (FrameRange r(iter.abstractFramePtr()); !r.empty(); r.popFront()) {
-        JSObject *frame = r.frontFrame();
+        NativeObject *frame = r.frontFrame();
         if (!frame->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined() &&
             !frames.append(frame))
         {
@@ -1333,7 +1336,7 @@ Debugger::onSingleStep(JSContext *cx, MutableHandleValue vp)
                 Debugger *dbg = *p;
                 for (FrameMap::Range r = dbg->frames.all(); !r.empty(); r.popFront()) {
                     AbstractFramePtr frame = r.front().key();
-                    JSObject *frameobj = r.front().value();
+                    NativeObject *frameobj = r.front().value();
                     if (frame.script() == trappingScript &&
                         !frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined())
                     {
@@ -1351,7 +1354,7 @@ Debugger::onSingleStep(JSContext *cx, MutableHandleValue vp)
 
     /* Call all the onStep handlers we found. */
     for (JSObject **p = frames.begin(); p != frames.end(); p++) {
-        RootedObject frame(cx, *p);
+        RootedNativeObject frame(cx, &(*p)->as<NativeObject>());
         Debugger *dbg = Debugger::fromChildJSObject(frame);
 
         Maybe<AutoCompartment> ac;
@@ -1607,7 +1610,7 @@ Debugger::markAllIteratively(GCMarker *trc)
                  *   - it isn't already marked
                  *   - it actually has hooks that might be called
                  */
-                HeapPtrObject &dbgobj = dbg->toJSObjectRef();
+                HeapPtrNativeObject &dbgobj = dbg->toJSObjectRef();
                 if (!dbgobj->zone()->isGCMarking())
                     continue;
 
@@ -1662,7 +1665,7 @@ Debugger::markAll(JSTracer *trc)
                 e.rekeyFront(global);
         }
 
-        HeapPtrObject &dbgobj = dbg->toJSObjectRef();
+        HeapPtrNativeObject &dbgobj = dbg->toJSObjectRef();
         MarkObject(trc, &dbgobj, "Debugger Object");
 
         dbg->scripts.trace(trc);
@@ -1699,7 +1702,7 @@ Debugger::trace(JSTracer *trc)
      * frames.)
      */
     for (FrameMap::Range r = frames.all(); !r.empty(); r.popFront()) {
-        RelocatablePtrObject &frameobj = r.front().value();
+        RelocatablePtrNativeObject &frameobj = r.front().value();
         MOZ_ASSERT(MaybeForwarded(frameobj.get())->getPrivate());
         MarkObject(trc, &frameobj, "live Debugger.Frame");
     }
@@ -2173,7 +2176,7 @@ bool
 Debugger::getDebuggees(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGGER(cx, argc, vp, "getDebuggees", args, dbg);
-    RootedObject arrobj(cx, NewDenseFullyAllocatedArray(cx, dbg->debuggees.count()));
+    RootedArrayObject arrobj(cx, NewDenseFullyAllocatedArray(cx, dbg->debuggees.count()));
     if (!arrobj)
         return false;
     arrobj->ensureDenseInitializedLength(cx, 0, dbg->debuggees.count());
@@ -2244,14 +2247,14 @@ Debugger::construct(JSContext *cx, unsigned argc, Value *vp)
     RootedObject callee(cx, &args.callee());
     if (!JSObject::getProperty(cx, callee, callee, cx->names().prototype, &v))
         return false;
-    RootedObject proto(cx, &v.toObject());
+    RootedNativeObject proto(cx, &v.toObject().as<NativeObject>());
     MOZ_ASSERT(proto->getClass() == &Debugger::jsclass);
     /*
      * Make the new Debugger object. Each one has a reference to
      * Debugger.{Frame,Object,Script,Memory}.prototype in reserved slots. The
      * rest of the reserved slots are for hooks; they default to undefined.
      */
-    RootedObject obj(cx, NewObjectWithGivenProto(cx, &Debugger::jsclass, proto, nullptr));
+    RootedNativeObject obj(cx, NewNativeObjectWithGivenProto(cx, &Debugger::jsclass, proto, nullptr));
     if (!obj)
         return false;
     for (unsigned slot = JSSLOT_DEBUG_PROTO_START; slot < JSSLOT_DEBUG_PROTO_STOP; slot++)
@@ -2405,7 +2408,7 @@ Debugger::cleanupDebuggeeGlobalBeforeRemoval(FreeOp *fop, GlobalObject *global,
      */
     for (FrameMap::Enum e(frames); !e.empty(); e.popFront()) {
         AbstractFramePtr frame = e.front().key();
-        JSObject *frameobj = e.front().value();
+        NativeObject *frameobj = e.front().value();
         if (&frame.script()->global() == global) {
             DebuggerFrame_freeScriptFrameIterData(fop, frameobj);
             DebuggerFrame_maybeDecrementFrameScriptStepModeCount(fop, frame, frameobj);
@@ -2909,7 +2912,7 @@ Debugger::findScripts(JSContext *cx, unsigned argc, Value *vp)
     if (!query.findScripts(&scripts))
         return false;
 
-    RootedObject result(cx, NewDenseFullyAllocatedArray(cx, scripts.length()));
+    RootedArrayObject result(cx, NewDenseFullyAllocatedArray(cx, scripts.length()));
     if (!result)
         return false;
 
@@ -3017,7 +3020,7 @@ static inline JSScript *
 GetScriptReferent(JSObject *obj)
 {
     MOZ_ASSERT(obj->getClass() == &DebuggerScript_class);
-    return static_cast<JSScript *>(obj->getPrivate());
+    return static_cast<JSScript *>(obj->as<NativeObject>().getPrivate());
 }
 
 static void
@@ -3026,7 +3029,7 @@ DebuggerScript_trace(JSTracer *trc, JSObject *obj)
     /* This comes from a private pointer, so no barrier needed. */
     if (JSScript *script = GetScriptReferent(obj)) {
         MarkCrossCompartmentScriptUnbarriered(trc, obj, &script, "Debugger.Script referent");
-        obj->setPrivateUnbarriered(script);
+        obj->as<NativeObject>().setPrivateUnbarriered(script);
     }
 }
 
@@ -3049,7 +3052,8 @@ Debugger::newDebuggerScript(JSContext *cx, HandleScript script)
 
     JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_SCRIPT_PROTO).toObject();
     MOZ_ASSERT(proto);
-    JSObject *scriptobj = NewObjectWithGivenProto(cx, &DebuggerScript_class, proto, nullptr, TenuredObject);
+    NativeObject *scriptobj = NewNativeObjectWithGivenProto(cx, &DebuggerScript_class,
+                                                            proto, nullptr, TenuredObject);
     if (!scriptobj)
         return nullptr;
     scriptobj->setReservedSlot(JSSLOT_DEBUGSCRIPT_OWNER, ObjectValue(*object));
@@ -3739,7 +3743,7 @@ Debugger::replaceFrameGuts(JSContext *cx, AbstractFramePtr from, AbstractFramePt
                            ScriptFrameIter &iter)
 {
     for (Debugger::FrameRange r(from); !r.empty(); r.popFront()) {
-        RootedObject frameobj(cx, r.frontFrame());
+        RootedNativeObject frameobj(cx, r.frontFrame());
         Debugger *dbg = r.frontDebugger();
         MOZ_ASSERT(dbg == Debugger::fromChildJSObject(frameobj));
 
@@ -3980,7 +3984,7 @@ static inline ScriptSourceObject *
 GetSourceReferent(JSObject *obj)
 {
     MOZ_ASSERT(obj->getClass() == &DebuggerSource_class);
-    return static_cast<ScriptSourceObject *>(obj->getPrivate());
+    return static_cast<ScriptSourceObject *>(obj->as<NativeObject>().getPrivate());
 }
 
 static void
@@ -3992,7 +3996,7 @@ DebuggerSource_trace(JSTracer *trc, JSObject *obj)
      */
     if (JSObject *referent = GetSourceReferent(obj)) {
         MarkCrossCompartmentObjectUnbarriered(trc, obj, &referent, "Debugger.Source referent");
-        obj->setPrivateUnbarriered(referent);
+        obj->as<NativeObject>().setPrivateUnbarriered(referent);
     }
 }
 
@@ -4015,7 +4019,8 @@ Debugger::newDebuggerSource(JSContext *cx, HandleScriptSource source)
 
     JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_SOURCE_PROTO).toObject();
     MOZ_ASSERT(proto);
-    JSObject *sourceobj = NewObjectWithGivenProto(cx, &DebuggerSource_class, proto, nullptr, TenuredObject);
+    NativeObject *sourceobj = NewNativeObjectWithGivenProto(cx, &DebuggerSource_class,
+                                                            proto, nullptr, TenuredObject);
     if (!sourceobj)
         return nullptr;
     sourceobj->setReservedSlot(JSSLOT_DEBUGSOURCE_OWNER, ObjectValue(*object));
@@ -4281,15 +4286,15 @@ UpdateFrameIterPc(FrameIter &iter)
 static void
 DebuggerFrame_freeScriptFrameIterData(FreeOp *fop, JSObject *obj)
 {
-    AbstractFramePtr frame = AbstractFramePtr::FromRaw(obj->getPrivate());
+    AbstractFramePtr frame = AbstractFramePtr::FromRaw(obj->as<NativeObject>().getPrivate());
     if (frame.isScriptFrameIterData())
         fop->delete_((ScriptFrameIter::Data *) frame.raw());
-    obj->setPrivate(nullptr);
+    obj->as<NativeObject>().setPrivate(nullptr);
 }
 
 static void
 DebuggerFrame_maybeDecrementFrameScriptStepModeCount(FreeOp *fop, AbstractFramePtr frame,
-                                                     JSObject *frameobj)
+                                                     NativeObject *frameobj)
 {
     /* If this frame has an onStep handler, decrement the script's count. */
     if (!frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_ONSTEP_HANDLER).isUndefined())
@@ -4308,7 +4313,7 @@ const Class DebuggerFrame_class = {
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, DebuggerFrame_finalize
 };
 
-static JSObject *
+static NativeObject *
 CheckThisFrame(JSContext *cx, const CallArgs &args, const char *fnname, bool checkLive)
 {
     if (!args.thisv().isObject()) {
@@ -4322,14 +4327,16 @@ CheckThisFrame(JSContext *cx, const CallArgs &args, const char *fnname, bool che
         return nullptr;
     }
 
+    NativeObject *nthisobj = &thisobj->as<NativeObject>();
+
     /*
      * Forbid Debugger.Frame.prototype, which is of class DebuggerFrame_class
      * but isn't really a working Debugger.Frame object. The prototype object
      * is distinguished by having a nullptr private value. Also, forbid popped
      * frames.
      */
-    if (!thisobj->getPrivate()) {
-        if (thisobj->getReservedSlot(JSSLOT_DEBUGFRAME_OWNER).isUndefined()) {
+    if (!nthisobj->getPrivate()) {
+        if (nthisobj->getReservedSlot(JSSLOT_DEBUGFRAME_OWNER).isUndefined()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                                  "Debugger.Frame", fnname, "prototype object");
             return nullptr;
@@ -4340,7 +4347,7 @@ CheckThisFrame(JSContext *cx, const CallArgs &args, const char *fnname, bool che
             return nullptr;
         }
     }
-    return thisobj;
+    return nthisobj;
 }
 
 /*
@@ -4362,7 +4369,7 @@ CheckThisFrame(JSContext *cx, const CallArgs &args, const char *fnname, bool che
 
 #define THIS_FRAME_THISOBJ(cx, argc, vp, fnname, args, thisobj)                \
     CallArgs args = CallArgsFromVp(argc, vp);                                  \
-    RootedObject thisobj(cx, CheckThisFrame(cx, args, fnname, true));          \
+    RootedNativeObject thisobj(cx, CheckThisFrame(cx, args, fnname, true));    \
     if (!thisobj)                                                              \
         return false
 
@@ -4548,7 +4555,7 @@ DebuggerArguments_getArg(JSContext *cx, unsigned argc, Value *vp)
      * Put the Debugger.Frame into the this-value slot, then use THIS_FRAME
      * to check that it is still live and get the fp.
      */
-    args.setThis(argsobj->getReservedSlot(JSSLOT_DEBUGARGUMENTS_FRAME));
+    args.setThis(argsobj->as<NativeObject>().getReservedSlot(JSSLOT_DEBUGARGUMENTS_FRAME));
     THIS_FRAME(cx, argc, vp, "get argument", ca2, thisobj, frame);
 
     /*
@@ -4593,14 +4600,14 @@ DebuggerFrame_getArguments(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    RootedObject argsobj(cx);
+    RootedNativeObject argsobj(cx);
     if (frame.hasArgs()) {
         /* Create an arguments object. */
         Rooted<GlobalObject*> global(cx, &args.callee().global());
         JSObject *proto = GlobalObject::getOrCreateArrayPrototype(cx, global);
         if (!proto)
             return false;
-        argsobj = NewObjectWithGivenProto(cx, &DebuggerArguments_class, proto, global);
+        argsobj = NewNativeObjectWithGivenProto(cx, &DebuggerArguments_class, proto, global);
         if (!argsobj)
             return false;
         SetReservedSlot(argsobj, JSSLOT_DEBUGARGUMENTS_FRAME, ObjectValue(*thisobj));
@@ -4686,7 +4693,7 @@ static bool
 DebuggerFrame_getLive(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSObject *thisobj = CheckThisFrame(cx, args, "get live", false);
+    NativeObject *thisobj = CheckThisFrame(cx, args, "get live", false);
     if (!thisobj)
         return false;
     bool hasFrame = !!thisobj->getPrivate();
@@ -4922,19 +4929,21 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
     /* If evalWithBindings, create the inner environment. */
     if (evalWithBindings) {
         /* TODO - This should probably be a Call object, like ES5 strict eval. */
-        env = NewObjectWithGivenProto(cx, &JSObject::class_, nullptr, env);
-        if (!env)
+        RootedNativeObject nenv(cx, NewNativeObjectWithGivenProto(cx, &JSObject::class_,
+                                                                  nullptr, env));
+        if (!nenv)
             return false;
         RootedId id(cx);
         for (size_t i = 0; i < keys.length(); i++) {
             id = keys[i];
             MutableHandleValue val = values[i];
             if (!cx->compartment()->wrap(cx, val) ||
-                !DefineNativeProperty(cx, env, id, val, nullptr, nullptr, 0))
+                !DefineNativeProperty(cx, nenv, id, val, nullptr, nullptr, 0))
             {
                 return false;
             }
         }
+        env = nenv;
     }
 
     /* Run the code and produce the completion value. */
@@ -5008,7 +5017,6 @@ static const JSFunctionSpec DebuggerFrame_methods[] = {
     JS_FS_END
 };
 
-
 /*** Debugger.Object *****************************************************************************/
 
 static void
@@ -5018,9 +5026,9 @@ DebuggerObject_trace(JSTracer *trc, JSObject *obj)
      * There is a barrier on private pointers, so the Unbarriered marking
      * is okay.
      */
-    if (JSObject *referent = (JSObject *) obj->getPrivate()) {
+    if (JSObject *referent = (JSObject *) obj->as<NativeObject>().getPrivate()) {
         MarkCrossCompartmentObjectUnbarriered(trc, obj, &referent, "Debugger.Object referent");
-        obj->setPrivateUnbarriered(referent);
+        obj->as<NativeObject>().setPrivateUnbarriered(referent);
     }
 }
 
@@ -5036,7 +5044,7 @@ const Class DebuggerObject_class = {
     DebuggerObject_trace
 };
 
-static JSObject *
+static NativeObject *
 DebuggerObject_checkThis(JSContext *cx, const CallArgs &args, const char *fnname)
 {
     if (!args.thisv().isObject()) {
@@ -5055,12 +5063,13 @@ DebuggerObject_checkThis(JSContext *cx, const CallArgs &args, const char *fnname
      * but isn't a real working Debugger.Object. The prototype object is
      * distinguished by having no referent.
      */
-    if (!thisobj->getPrivate()) {
+    NativeObject *nthisobj = &thisobj->as<NativeObject>();
+    if (!nthisobj->getPrivate()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                              "Debugger.Object", fnname, "prototype object");
         return nullptr;
     }
-    return thisobj;
+    return nthisobj;
 }
 
 #define THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, fnname, args, obj)            \
@@ -5068,16 +5077,16 @@ DebuggerObject_checkThis(JSContext *cx, const CallArgs &args, const char *fnname
     RootedObject obj(cx, DebuggerObject_checkThis(cx, args, fnname));         \
     if (!obj)                                                                 \
         return false;                                                         \
-    obj = (JSObject *) obj->getPrivate();                                     \
+    obj = (JSObject *) obj->as<NativeObject>().getPrivate();                  \
     MOZ_ASSERT(obj)
 
 #define THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, fnname, args, dbg, obj) \
-    CallArgs args = CallArgsFromVp(argc, vp);                                 \
+   CallArgs args = CallArgsFromVp(argc, vp);                                  \
    RootedObject obj(cx, DebuggerObject_checkThis(cx, args, fnname));          \
    if (!obj)                                                                  \
        return false;                                                          \
    Debugger *dbg = Debugger::fromChildJSObject(obj);                          \
-   obj = (JSObject *) obj->getPrivate();                                      \
+   obj = (JSObject *) obj->as<NativeObject>().getPrivate();                   \
    MOZ_ASSERT(obj)
 
 static bool
@@ -5190,7 +5199,7 @@ DebuggerObject_getParameterNames(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    RootedObject result(cx, NewDenseFullyAllocatedArray(cx, fun->nargs()));
+    RootedArrayObject result(cx, NewDenseFullyAllocatedArray(cx, fun->nargs()));
     if (!result)
         return false;
     result->ensureDenseInitializedLength(cx, 0, fun->nargs());
@@ -5919,9 +5928,9 @@ DebuggerEnv_trace(JSTracer *trc, JSObject *obj)
      * There is a barrier on private pointers, so the Unbarriered marking
      * is okay.
      */
-    if (Env *referent = (JSObject *) obj->getPrivate()) {
+    if (Env *referent = (JSObject *) obj->as<NativeObject>().getPrivate()) {
         MarkCrossCompartmentObjectUnbarriered(trc, obj, &referent, "Debugger.Environment referent");
-        obj->setPrivateUnbarriered(referent);
+        obj->as<NativeObject>().setPrivateUnbarriered(referent);
     }
 }
 
@@ -5937,7 +5946,7 @@ const Class DebuggerEnv_class = {
     DebuggerEnv_trace
 };
 
-static JSObject *
+static NativeObject *
 DebuggerEnv_checkThis(JSContext *cx, const CallArgs &args, const char *fnname,
                       bool requireDebuggee = true)
 {
@@ -5957,7 +5966,8 @@ DebuggerEnv_checkThis(JSContext *cx, const CallArgs &args, const char *fnname,
      * but isn't a real working Debugger.Environment. The prototype object is
      * distinguished by having no referent.
      */
-    if (!thisobj->getPrivate()) {
+    NativeObject *nthisobj = &thisobj->as<NativeObject>();
+    if (!nthisobj->getPrivate()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                              "Debugger.Environment", fnname, "prototype object");
         return nullptr;
@@ -5968,20 +5978,20 @@ DebuggerEnv_checkThis(JSContext *cx, const CallArgs &args, const char *fnname,
      * environments.
      */
     if (requireDebuggee) {
-        Rooted<Env*> env(cx, static_cast<Env *>(thisobj->getPrivate()));
-        if (!Debugger::fromChildJSObject(thisobj)->observesGlobal(&env->global())) {
+        Rooted<Env*> env(cx, static_cast<Env *>(nthisobj->getPrivate()));
+        if (!Debugger::fromChildJSObject(nthisobj)->observesGlobal(&env->global())) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_NOT_DEBUGGEE,
                                  "Debugger.Environment", "environment");
             return nullptr;
         }
     }
 
-    return thisobj;
+    return nthisobj;
 }
 
 #define THIS_DEBUGENV(cx, argc, vp, fnname, args, envobj, env)                \
     CallArgs args = CallArgsFromVp(argc, vp);                                 \
-    JSObject *envobj = DebuggerEnv_checkThis(cx, args, fnname);               \
+    NativeObject *envobj = DebuggerEnv_checkThis(cx, args, fnname);           \
     if (!envobj)                                                              \
         return false;                                                         \
     Rooted<Env*> env(cx, static_cast<Env *>(envobj->getPrivate()));           \
@@ -6100,7 +6110,7 @@ static bool
 DebuggerEnv_getInspectable(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSObject *envobj = DebuggerEnv_checkThis(cx, args, "get inspectable", false);
+    NativeObject *envobj = DebuggerEnv_checkThis(cx, args, "get inspectable", false);
     if (!envobj)
         return false;
     Rooted<Env*> env(cx, static_cast<Env *>(envobj->getPrivate()));
@@ -6351,7 +6361,7 @@ Builder::newObject(JSContext *cx)
 extern JS_PUBLIC_API(bool)
 JS_DefineDebuggerObject(JSContext *cx, HandleObject obj)
 {
-    RootedObject
+    RootedNativeObject
         objProto(cx),
         debugCtor(cx),
         debugProto(cx),

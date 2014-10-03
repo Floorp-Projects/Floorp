@@ -67,7 +67,7 @@ document_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                                          JS_NewObject(cx, &DocumentAllClass, JS::NullPtr(), JS::NullPtr()));
             if (!docAll)
                 return false;
-            JS::Rooted<JS::Value> allValue(cx, ObjectValue(*docAll));
+            JS::Rooted<JS::Value> allValue(cx, JS::ObjectValue(*docAll));
             bool ok = JS_DefinePropertyById(cx, obj, id, allValue, 0);
             objp.set(ok ? obj.get() : nullptr);
             return ok;

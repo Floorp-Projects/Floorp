@@ -524,7 +524,7 @@ js::ReportUsageError(JSContext *cx, HandleObject callee, const char *msg)
     const char *usageStr = "usage";
     PropertyName *usageAtom = Atomize(cx, usageStr, strlen(usageStr))->asPropertyName();
     RootedId id(cx, NameToId(usageAtom));
-    DebugOnly<Shape *> shape = static_cast<Shape *>(callee->nativeLookup(cx, id));
+    DebugOnly<Shape *> shape = static_cast<Shape *>(callee->as<NativeObject>().lookup(cx, id));
     MOZ_ASSERT(!shape->configurable());
     MOZ_ASSERT(!shape->writable());
     MOZ_ASSERT(shape->hasDefaultGetter());

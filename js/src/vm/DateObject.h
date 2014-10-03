@@ -15,7 +15,7 @@ namespace js {
 
 class DateTimeInfo;
 
-class DateObject : public JSObject
+class DateObject : public NativeObject
 {
     static const uint32_t UTC_TIME_SLOT = 0;
     static const uint32_t TZA_SLOT = 1;

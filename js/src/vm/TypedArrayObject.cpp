@@ -42,6 +42,7 @@
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
+#include "vm/ObjectImpl-inl.h"
 #include "vm/Shape-inl.h"
 
 using namespace js;
@@ -80,13 +81,13 @@ TypedArrayLayout::TypedArrayLayout(bool isShared, bool isNeuterable, const Class
 /* static */ int
 TypedArrayLayout::lengthOffset()
 {
-    return JSObject::getFixedSlotOffset(LENGTH_SLOT);
+    return NativeObject::getFixedSlotOffset(LENGTH_SLOT);
 }
 
 /* static */ int
 TypedArrayLayout::dataOffset()
 {
-    return JSObject::getPrivateDataOffset(DATA_SLOT);
+    return NativeObject::getPrivateDataOffset(DATA_SLOT);
 }
 
 void
@@ -124,12 +125,13 @@ TypedArrayObject::ensureHasBuffer(JSContext *cx, Handle<TypedArrayObject *> tarr
 }
 
 /* static */ void
-TypedArrayObject::ObjectMoved(JSObject *obj, const JSObject *old)
+TypedArrayObject::ObjectMoved(JSObject *dstArg, const JSObject *srcArg)
 {
-    const TypedArrayObject &src = old->as<TypedArrayObject>();
+    const TypedArrayObject &src = srcArg->as<TypedArrayObject>();
+    TypedArrayObject &dst = dstArg->as<TypedArrayObject>();
     if (!src.hasBuffer()) {
-        MOZ_ASSERT(old->getPrivate() == old->fixedData(FIXED_DATA_START));
-        obj->setPrivate(obj->fixedData(FIXED_DATA_START));
+        MOZ_ASSERT(src.getPrivate() == src.fixedData(FIXED_DATA_START));
+        dst.setPrivate(dst.fixedData(FIXED_DATA_START));
     }
 }
 
@@ -1820,7 +1822,7 @@ js_InitArrayBufferClass(JSContext *cx, HandleObject obj)
     if (global->isStandardClassResolved(JSProto_ArrayBuffer))
         return &global->getPrototype(JSProto_ArrayBuffer).toObject();
 
-    RootedObject arrayBufferProto(cx, global->createBlankPrototype(cx, &ArrayBufferObject::protoClass));
+    RootedNativeObject arrayBufferProto(cx, global->createBlankPrototype(cx, &ArrayBufferObject::protoClass));
     if (!arrayBufferProto)
         return nullptr;
 
@@ -1936,7 +1938,7 @@ DataViewObject::getter(JSContext *cx, unsigned argc, Value *vp)
 
 template<Value ValueGetter(DataViewObject *view)>
 bool
-DataViewObject::defineGetter(JSContext *cx, PropertyName *name, HandleObject proto)
+DataViewObject::defineGetter(JSContext *cx, PropertyName *name, HandleNativeObject proto)
 {
     RootedId id(cx, NameToId(name));
     unsigned attrs = JSPROP_SHARED | JSPROP_GETTER;
@@ -1958,7 +1960,7 @@ DataViewObject::initClass(JSContext *cx)
     if (global->isStandardClassResolved(JSProto_DataView))
         return true;
 
-    RootedObject proto(cx, global->createBlankPrototype(cx, &DataViewObject::protoClass));
+    RootedNativeObject proto(cx, global->createBlankPrototype(cx, &DataViewObject::protoClass));
     if (!proto)
         return false;
 

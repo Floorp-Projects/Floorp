@@ -15,7 +15,6 @@
 
 #include "jsatom.h"
 #include "jslock.h"
-#include "jsobj.h"
 #include "jsopcode.h"
 #include "jstypes.h"
 
@@ -23,6 +22,7 @@
 #include "gc/Rooting.h"
 #include "jit/IonCode.h"
 #include "js/UbiNode.h"
+#include "vm/ObjectImpl.h"
 #include "vm/Shape.h"
 
 namespace JS {
@@ -113,8 +113,8 @@ struct ConstArray {
 };
 
 struct ObjectArray {
-    js::HeapPtrObject *vector;  // Array of indexed objects.
-    uint32_t        length;     // Count of indexed objects.
+    js::HeapPtrNativeObject *vector;  // Array of indexed objects.
+    uint32_t        length;           // Count of indexed objects.
 };
 
 struct TryNoteArray {
@@ -651,7 +651,7 @@ struct CompressedSourceHasher
 
 typedef HashSet<ScriptSource *, CompressedSourceHasher, SystemAllocPolicy> CompressedSourceSet;
 
-class ScriptSourceObject : public JSObject
+class ScriptSourceObject : public NativeObject
 {
   public:
     static const Class class_;
@@ -1545,7 +1545,7 @@ class JSScript : public js::gc::TenuredCell
         return getAtom(GET_UINT32_INDEX(pc))->asPropertyName();
     }
 
-    JSObject *getObject(size_t index) {
+    js::NativeObject *getObject(size_t index) {
         js::ObjectArray *arr = objects();
         MOZ_ASSERT(index < arr->length);
         return arr->vector[index];
@@ -1556,7 +1556,7 @@ class JSScript : public js::gc::TenuredCell
         return savedCallerFun() ? 1 : 0;
     }
 
-    JSObject *getObject(jsbytecode *pc) {
+    js::NativeObject *getObject(jsbytecode *pc) {
         MOZ_ASSERT(containsPC(pc) && containsPC(pc + sizeof(uint32_t)));
         return getObject(GET_UINT32_INDEX(pc));
     }

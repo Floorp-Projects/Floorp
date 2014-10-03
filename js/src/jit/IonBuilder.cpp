@@ -29,6 +29,7 @@
 
 #include "jit/CompileInfo-inl.h"
 #include "jit/ExecutionMode-inl.h"
+#include "vm/ObjectImpl-inl.h"
 
 using namespace js;
 using namespace js::jit;
@@ -5809,7 +5810,7 @@ IonBuilder::jsop_compare(JSOp op)
 bool
 IonBuilder::jsop_newarray(uint32_t count)
 {
-    JSObject *templateObject = inspector->getTemplateObject(pc);
+    NativeObject *templateObject = inspector->getTemplateObject(pc);
     if (!templateObject) {
         if (info().executionMode() == ArgumentsUsageAnalysis) {
             MUnknownValue *unknown = MUnknownValue::New(alloc());
@@ -5855,7 +5856,7 @@ IonBuilder::jsop_newarray(uint32_t count)
 bool
 IonBuilder::jsop_newarray_copyonwrite()
 {
-    JSObject *templateObject = types::GetCopyOnWriteObject(script(), pc);
+    ArrayObject *templateObject = types::GetCopyOnWriteObject(script(), pc);
 
     // The baseline compiler should have ensured the template object has a type
     // with the copy on write flag set already. During the arguments usage
@@ -5958,7 +5959,7 @@ IonBuilder::jsop_initelem_array()
     MElements *elements = MElements::New(alloc(), obj);
     current->add(elements);
 
-    JSObject *templateObject = obj->toNewArray()->templateObject();
+    NativeObject *templateObject = obj->toNewArray()->templateObject();
 
     if (templateObject->shouldConvertDoubleElements()) {
         MInstruction *valueDouble = MToDouble::New(alloc(), value);
@@ -5999,7 +6000,7 @@ IonBuilder::jsop_initprop(PropertyName *name)
     MDefinition *value = current->pop();
     MDefinition *obj = current->peek(-1);
 
-    JSObject *templateObject = nullptr;
+    NativeObject *templateObject = nullptr;
     Shape *shape = nullptr;
 
     bool useSlowPath = false;
@@ -8576,8 +8577,7 @@ IonBuilder::jsop_arguments()
 bool
 IonBuilder::jsop_rest()
 {
-    JSObject *templateObject = inspector->getTemplateObject(pc);
-    MOZ_ASSERT(templateObject->is<ArrayObject>());
+    ArrayObject *templateObject = &inspector->getTemplateObject(pc)->as<ArrayObject>();
 
     if (inliningDepth_ == 0) {
         // We don't know anything about the callee.
@@ -9323,13 +9323,13 @@ IonBuilder::getPropTryDefiniteSlot(bool *emitted, MDefinition *obj, PropertyName
     }
 
     MInstruction *load;
-    if (slot < JSObject::MAX_FIXED_SLOTS) {
+    if (slot < NativeObject::MAX_FIXED_SLOTS) {
         load = MLoadFixedSlot::New(alloc(), obj, slot);
     } else {
         MInstruction *slots = MSlots::New(alloc(), obj);
         current->add(slots);
 
-        load = MLoadSlot::New(alloc(), slots, slot - JSObject::MAX_FIXED_SLOTS);
+        load = MLoadSlot::New(alloc(), slots, slot - NativeObject::MAX_FIXED_SLOTS);
     }
 
     if (barrier == BarrierKind::NoBarrier)
@@ -9977,7 +9977,7 @@ IonBuilder::setPropTryDefiniteSlot(bool *emitted, MDefinition *obj,
     }
 
     MInstruction *store;
-    if (slot < JSObject::MAX_FIXED_SLOTS) {
+    if (slot < NativeObject::MAX_FIXED_SLOTS) {
         store = MStoreFixedSlot::New(alloc(), obj, slot, value);
         if (writeBarrier)
             store->toStoreFixedSlot()->setNeedsBarrier();
@@ -9985,7 +9985,7 @@ IonBuilder::setPropTryDefiniteSlot(bool *emitted, MDefinition *obj,
         MInstruction *slots = MSlots::New(alloc(), obj);
         current->add(slots);
 
-        store = MStoreSlot::New(alloc(), slots, slot - JSObject::MAX_FIXED_SLOTS, value);
+        store = MStoreSlot::New(alloc(), slots, slot - NativeObject::MAX_FIXED_SLOTS, value);
         if (writeBarrier)
             store->toStoreSlot()->setNeedsBarrier();
     }

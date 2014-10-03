@@ -4379,7 +4379,7 @@ static void
 AssertNotOnGrayList(JSObject *obj)
 {
     MOZ_ASSERT_IF(IsGrayListObject(obj),
-                  obj->getReservedSlot(ProxyObject::grayLinkSlot(obj)).isUndefined());
+                  obj->fakeNativeGetReservedSlot(ProxyObject::grayLinkSlot(obj)).isUndefined());
 }
 #endif
 
@@ -4394,11 +4394,11 @@ static JSObject *
 NextIncomingCrossCompartmentPointer(JSObject *prev, bool unlink)
 {
     unsigned slot = ProxyObject::grayLinkSlot(prev);
-    JSObject *next = prev->getReservedSlot(slot).toObjectOrNull();
+    JSObject *next = prev->fakeNativeGetReservedSlot(slot).toObjectOrNull();
     MOZ_ASSERT_IF(next, IsGrayListObject(next));
 
     if (unlink)
-        prev->setSlot(slot, UndefinedValue());
+        prev->fakeNativeSetSlot(slot, UndefinedValue());
 
     return next;
 }
@@ -4413,11 +4413,11 @@ js::DelayCrossCompartmentGrayMarking(JSObject *src)
     JSObject *dest = CrossCompartmentPointerReferent(src);
     JSCompartment *comp = dest->compartment();
 
-    if (src->getReservedSlot(slot).isUndefined()) {
-        src->setCrossCompartmentSlot(slot, ObjectOrNullValue(comp->gcIncomingGrayPointers));
+    if (src->fakeNativeGetReservedSlot(slot).isUndefined()) {
+        src->fakeNativeSetCrossCompartmentSlot(slot, ObjectOrNullValue(comp->gcIncomingGrayPointers));
         comp->gcIncomingGrayPointers = src;
     } else {
-        MOZ_ASSERT(src->getReservedSlot(slot).isObjectOrNull());
+        MOZ_ASSERT(src->fakeNativeGetReservedSlot(slot).isObjectOrNull());
     }
 
 #ifdef DEBUG
@@ -4487,11 +4487,11 @@ RemoveFromGrayList(JSObject *wrapper)
         return false;
 
     unsigned slot = ProxyObject::grayLinkSlot(wrapper);
-    if (wrapper->getReservedSlot(slot).isUndefined())
+    if (wrapper->fakeNativeGetReservedSlot(slot).isUndefined())
         return false;  /* Not on our list. */
 
-    JSObject *tail = wrapper->getReservedSlot(slot).toObjectOrNull();
-    wrapper->setReservedSlot(slot, UndefinedValue());
+    JSObject *tail = wrapper->fakeNativeGetReservedSlot(slot).toObjectOrNull();
+    wrapper->fakeNativeSetReservedSlot(slot, UndefinedValue());
 
     JSCompartment *comp = CrossCompartmentPointerReferent(wrapper)->compartment();
     JSObject *obj = comp->gcIncomingGrayPointers;
@@ -4502,9 +4502,9 @@ RemoveFromGrayList(JSObject *wrapper)
 
     while (obj) {
         unsigned slot = ProxyObject::grayLinkSlot(obj);
-        JSObject *next = obj->getReservedSlot(slot).toObjectOrNull();
+        JSObject *next = obj->fakeNativeGetReservedSlot(slot).toObjectOrNull();
         if (next == wrapper) {
-            obj->setCrossCompartmentSlot(slot, ObjectOrNullValue(tail));
+            obj->fakeNativeSetCrossCompartmentSlot(slot, ObjectOrNullValue(tail));
             return true;
         }
         obj = next;
