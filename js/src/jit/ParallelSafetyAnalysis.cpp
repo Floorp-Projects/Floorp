@@ -72,7 +72,7 @@ class ParallelSafetyVisitor : public MDefinitionVisitor
 
     bool insertWriteGuard(MInstruction *writeInstruction, MDefinition *valueBeingWritten);
 
-    bool replaceWithNewPar(MInstruction *newInstruction, JSObject *templateObject);
+    bool replaceWithNewPar(MInstruction *newInstruction, NativeObject *templateObject);
     bool replace(MInstruction *oldInstruction, MInstruction *replacementInstruction);
 
     bool visitSpecializedInstruction(MInstruction *ins, MIRType spec, uint32_t flags);
@@ -584,7 +584,7 @@ ParallelSafetyVisitor::visitToString(MToString *ins)
 
 bool
 ParallelSafetyVisitor::replaceWithNewPar(MInstruction *newInstruction,
-                                         JSObject *templateObject)
+                                         NativeObject *templateObject)
 {
     return replace(newInstruction, MNewPar::New(alloc(), ForkJoinContext(), templateObject));
 }

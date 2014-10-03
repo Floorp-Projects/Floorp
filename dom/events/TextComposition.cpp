@@ -81,16 +81,9 @@ TextComposition::MaybeDispatchCompositionUpdate(const WidgetTextEvent* aEvent)
     aEvent->mFlags.mIsSynthesizedForTests;
 
   nsEventStatus status = nsEventStatus_eConsumeNoDefault;
-  if (aEvent->mFlags.mIsSynthesizedForTests &&
-      (mIsRequestingCommit || mIsRequestingCancel)) {
-    // At emulating commit/cancel request, compositionupdate should be
-    // dispatched via widget since it's more similar path to native event.
-    aEvent->widget->DispatchEvent(&compositionUpdate, status);
-  } else {
-    mLastData = compositionUpdate.data;
-    EventDispatcher::Dispatch(mNode, mPresContext,
-                              &compositionUpdate, nullptr, &status, nullptr);
-  }
+  mLastData = compositionUpdate.data;
+  EventDispatcher::Dispatch(mNode, mPresContext,
+                            &compositionUpdate, nullptr, &status, nullptr);
   return !Destroyed();
 }
 
@@ -152,7 +145,6 @@ TextComposition::DispatchEvent(WidgetGUIEvent* aEvent,
   if (!aIsSynthesized && (mIsRequestingCommit || mIsRequestingCancel)) {
     nsString* committingData = nullptr;
     switch (aEvent->message) {
-      case NS_COMPOSITION_UPDATE:
       case NS_COMPOSITION_END:
         committingData = &aEvent->AsCompositionEvent()->data;
         break;
@@ -171,26 +163,13 @@ TextComposition::DispatchEvent(WidgetGUIEvent* aEvent,
       } else if (mIsRequestingCancel && !committingData->IsEmpty()) {
         committingData->Truncate();
       }
-
-      if (aEvent->message == NS_COMPOSITION_UPDATE) {
-        // If committing string is not different from the last data,
-        // we don't need to dispatch this.
-        if (committingData->Equals(mLastData)) {
-          return;
-        }
-      } else if (aEvent->message == NS_TEXT_TEXT) {
-        // If committing string is different from the last data,
-        // we need to dispatch compositionupdate before dispatching text event.
-        if (!MaybeDispatchCompositionUpdate(aEvent->AsTextEvent())) {
-          NS_WARNING("Dispatching compositionupdate caused destroying");
-          return;
-        }
-      }
     }
   }
 
-  if (aEvent->message == NS_COMPOSITION_UPDATE) {
-    mLastData = aEvent->AsCompositionEvent()->data;
+  if (aEvent->message == NS_TEXT_TEXT) {
+    if (!MaybeDispatchCompositionUpdate(aEvent->AsTextEvent())) {
+      return;
+    }
   }
 
   EventDispatcher::Dispatch(mNode, mPresContext,
@@ -341,15 +320,11 @@ TextComposition::RequestToCommit(nsIWidget* aWidget, bool aDiscard)
 
   // Otherwise, synthesize the commit in content.
   nsAutoString data(aDiscard ? EmptyString() : lastData);
-  bool changingData = lastData != data;
-  if (changingData) {
-    DispatchCompositionEventRunnable(NS_COMPOSITION_UPDATE, data, true);
-  }
   // If the last composition string and new data are different, we need to
   // dispatch text event for removing IME selection.  However, if the commit
   // string is empty string and it's not changed from the last data, we don't
   // need to dispatch text event.
-  if (changingData || !data.IsEmpty()) {
+  if (lastData != data || !data.IsEmpty()) {
     DispatchCompositionEventRunnable(NS_TEXT_TEXT, data, true);
   }
   DispatchCompositionEventRunnable(NS_COMPOSITION_END, data, true);
@@ -468,7 +443,6 @@ TextComposition::CompositionEventDispatcher::Run()
                                                 mIsSynthesizedEvent);
       break;
     }
-    case NS_COMPOSITION_UPDATE:
     case NS_COMPOSITION_END: {
       WidgetCompositionEvent compEvent(true, mEventMessage, widget);
       compEvent.data = mData;

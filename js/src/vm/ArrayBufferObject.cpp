@@ -48,6 +48,7 @@
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
+#include "vm/ObjectImpl-inl.h"
 #include "vm/Shape-inl.h"
 
 using mozilla::DebugOnly;
@@ -347,7 +348,7 @@ ArrayBufferObject::changeViewContents(JSContext *cx, ArrayBufferViewObject *view
         MOZ_ASSERT(newContents);
         ptrdiff_t offset = viewDataPointer - oldDataPointer;
         viewDataPointer = static_cast<uint8_t *>(newContents.data()) + offset;
-        view->setPrivate(viewDataPointer);
+        view->fakeNativeSetPrivate(viewDataPointer);
     }
 
     // Notify compiled jit code that the base pointer has moved.
@@ -598,7 +599,7 @@ ArrayBufferObject::create(JSContext *cx, uint32_t nbytes, BufferContents content
             nAllocated = JS_ROUNDUP(nbytes, js::gc::SystemPageSize());
         cx->zone()->updateMallocCounter(nAllocated);
     } else {
-        size_t usableSlots = JSObject::MAX_FIXED_SLOTS - reservedSlots;
+        size_t usableSlots = NativeObject::MAX_FIXED_SLOTS - reservedSlots;
         if (nbytes <= usableSlots * sizeof(Value)) {
             int newSlots = (nbytes - 1) / sizeof(Value) + 1;
             MOZ_ASSERT(int(nbytes) <= newSlots * int(sizeof(Value)));
@@ -797,8 +798,13 @@ ArrayBufferObject::setFirstView(ArrayBufferViewObject *view)
 }
 
 bool
-ArrayBufferObject::addView(JSContext *cx, ArrayBufferViewObject *view)
+ArrayBufferObject::addView(JSContext *cx, JSObject *viewArg)
 {
+    // Note: we don't pass in an ArrayBufferViewObject as the argument due to
+    // tricky inheritance in the various view classes. View classes do not
+    // inherit from ArrayBufferViewObject so won't be upcast automatically.
+    ArrayBufferViewObject *view = &viewArg->as<ArrayBufferViewObject>();
+
     if (!firstView()) {
         setFirstView(view);
         return true;
@@ -965,8 +971,9 @@ InnerViewTable::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
  * stores its data inline.
  */
 /* static */ void
-ArrayBufferViewObject::trace(JSTracer *trc, JSObject *obj)
+ArrayBufferViewObject::trace(JSTracer *trc, JSObject *objArg)
 {
+    NativeObject *obj = &objArg->as<NativeObject>();
     HeapSlot &bufSlot = obj->getReservedSlotRef(TypedArrayLayout::BUFFER_SLOT);
     MarkSlot(trc, &bufSlot, "typedarray.buffer");
 

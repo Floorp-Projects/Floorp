@@ -367,7 +367,6 @@ struct JSCompartment
 #ifdef JSGC_COMPACTING
     void fixupInitialShapeTable();
     void fixupNewTypeObjectTable(js::types::TypeObjectWithNewScriptSet &table);
-    void fixupCrossCompartmentWrappers(JSTracer *trc);
     void fixupAfterMovingGC();
     void fixupGlobal();
 #endif

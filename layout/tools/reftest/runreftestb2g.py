@@ -203,6 +203,10 @@ class B2GOptions(ReftestOptions):
         if not options.httpdPath:
             options.httpdPath = os.path.join(options.xrePath, "components")
 
+        # B2G reftests do not do leak checking, but set some reasonable defaults to avoid errors.
+        options.leakThresholds = {}
+        options.ignoreMissingLeaks = []
+
         return options
 
 

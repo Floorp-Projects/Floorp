@@ -7,11 +7,11 @@
 #ifndef vm_ArrayObject_h
 #define vm_ArrayObject_h
 
-#include "jsobj.h"
+#include "vm/ObjectImpl.h"
 
 namespace js {
 
-class ArrayObject : public JSObject
+class ArrayObject : public NativeObject
 {
   public:
     // Array(x) eagerly allocates dense elements if x <= this value. Without
@@ -37,6 +37,43 @@ class ArrayObject : public JSObject
         MOZ_ASSERT(length <= INT32_MAX);
         getElementsHeader()->length = length;
     }
+
+    // Make an array object with the specified initial state.
+    static inline ArrayObject *
+    createArray(ExclusiveContext *cx,
+                gc::AllocKind kind,
+                gc::InitialHeap heap,
+                HandleShape shape,
+                HandleTypeObject type,
+                uint32_t length);
+
+    // Make an array object with the specified initial state and elements.
+    static inline ArrayObject *
+    createArray(ExclusiveContext *cx,
+                gc::InitialHeap heap,
+                HandleShape shape,
+                HandleTypeObject type,
+                HeapSlot *elements);
+
+    // Make a copy-on-write array object which shares the elements of an
+    // existing object.
+    static inline ArrayObject *
+    createCopyOnWriteArray(ExclusiveContext *cx,
+                           gc::InitialHeap heap,
+                           HandleShape shape,
+                           HandleNativeObject sharedElementsOwner);
+
+  private:
+    // Helper for the above methods.
+    static inline ArrayObject *
+    createArrayInternal(ExclusiveContext *cx,
+                        gc::AllocKind kind,
+                        gc::InitialHeap heap,
+                        HandleShape shape,
+                        HandleTypeObject type);
+
+    static inline ArrayObject *
+    finishCreateArray(ArrayObject *obj, HandleShape shape);
 };
 
 } // namespace js

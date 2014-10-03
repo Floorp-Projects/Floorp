@@ -159,7 +159,6 @@ function startTests()
     checkCompositionEvents(true, false, false, false, "compositionstart");
     clear();
     // input first character
-    synthesizeComposition({ type: "compositionupdate", data: "\u3089" });
     synthesizeText(
       { "composition":
         { "string": "\u3089",

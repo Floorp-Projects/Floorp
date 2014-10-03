@@ -33,6 +33,7 @@
 
 #include "vm/BooleanObject-inl.h"
 #include "vm/NumberObject-inl.h"
+#include "vm/ObjectImpl-inl.h"
 #include "vm/StringObject-inl.h"
 
 using namespace js;
@@ -412,7 +413,7 @@ js::intrinsic_NewDenseArray(JSContext *cx, unsigned argc, Value *vp)
     uint32_t length = args[0].toInt32();
 
     // Make a new buffer and initialize it up to length.
-    RootedObject buffer(cx, NewDenseFullyAllocatedArray(cx, length));
+    RootedArrayObject buffer(cx, NewDenseFullyAllocatedArray(cx, length));
     if (!buffer)
         return false;
 
@@ -421,18 +422,18 @@ js::intrinsic_NewDenseArray(JSContext *cx, unsigned argc, Value *vp)
         return false;
     buffer->setType(newtype);
 
-    JSObject::EnsureDenseResult edr = buffer->ensureDenseElements(cx, length, 0);
+    NativeObject::EnsureDenseResult edr = buffer->ensureDenseElements(cx, length, 0);
     switch (edr) {
-      case JSObject::ED_OK:
+      case NativeObject::ED_OK:
         args.rval().setObject(*buffer);
         return true;
 
-      case JSObject::ED_SPARSE: // shouldn't happen!
+      case NativeObject::ED_SPARSE: // shouldn't happen!
         MOZ_ASSERT(!"%EnsureDenseArrayElements() would yield sparse array");
         JS_ReportError(cx, "%EnsureDenseArrayElements() would yield sparse array");
         break;
 
-      case JSObject::ED_FAILED:
+      case NativeObject::ED_FAILED:
         break;
     }
     return false;
@@ -480,8 +481,8 @@ js::intrinsic_UnsafePutElements(JSContext *cx, unsigned argc, Value *vp)
             if (!JSObject::setElement(cx, arrobj, arrobj, idx, &tmp, false))
                 return false;
         } else {
-            MOZ_ASSERT(idx < arrobj->getDenseInitializedLength());
-            arrobj->setDenseElementWithType(cx, idx, args[elemi]);
+            MOZ_ASSERT(idx < arrobj->as<ArrayObject>().getDenseInitializedLength());
+            arrobj->as<ArrayObject>().setDenseElementWithType(cx, idx, args[elemi]);
         }
     }
 
@@ -537,7 +538,7 @@ js::intrinsic_UnsafeSetReservedSlot(JSContext *cx, unsigned argc, Value *vp)
     MOZ_ASSERT(args[0].isObject());
     MOZ_ASSERT(args[1].isInt32());
 
-    args[0].toObject().setReservedSlot(args[1].toPrivateUint32(), args[2]);
+    args[0].toObject().as<NativeObject>().setReservedSlot(args[1].toPrivateUint32(), args[2]);
     args.rval().setUndefined();
     return true;
 }
@@ -550,7 +551,7 @@ js::intrinsic_UnsafeGetReservedSlot(JSContext *cx, unsigned argc, Value *vp)
     MOZ_ASSERT(args[0].isObject());
     MOZ_ASSERT(args[1].isInt32());
 
-    args.rval().set(args[0].toObject().getReservedSlot(args[1].toPrivateUint32()));
+    args.rval().set(args[0].toObject().as<NativeObject>().getReservedSlot(args[1].toPrivateUint32()));
     return true;
 }
 
@@ -576,7 +577,8 @@ js::intrinsic_IsPackedArray(JSContext *cx, unsigned argc, Value *vp)
     JSObject *obj = &args[0].toObject();
     bool isPacked = obj->is<ArrayObject>() && !obj->hasLazyType() &&
                     !obj->type()->hasAllFlags(types::OBJECT_FLAG_NON_PACKED) &&
-                    obj->getDenseInitializedLength() == obj->as<ArrayObject>().length();
+                    obj->as<ArrayObject>().getDenseInitializedLength() ==
+                        obj->as<ArrayObject>().length();
 
     args.rval().setBoolean(isPacked);
     return true;
@@ -1072,10 +1074,13 @@ JSRuntime::initSelfHosting(JSContext *cx)
 
     JS::CompartmentOptions compartmentOptions;
     compartmentOptions.setDiscardSource(true);
-    if (!(selfHostingGlobal_ = JS_NewGlobalObject(cx, &self_hosting_global_class,
-                                                  nullptr, JS::DontFireOnNewGlobalHook,
-                                                  compartmentOptions)))
+    if (!(selfHostingGlobal_ = MaybeNativeObject(JS_NewGlobalObject(cx, &self_hosting_global_class,
+                                                                    nullptr, JS::DontFireOnNewGlobalHook,
+                                                                    compartmentOptions))))
+    {
         return false;
+    }
+
     JSAutoCompartment ac(cx, selfHostingGlobal_);
     Rooted<GlobalObject*> shg(cx, &selfHostingGlobal_->as<GlobalObject>());
     selfHostingGlobal_->compartment()->isSelfHosting = true;
@@ -1144,7 +1149,8 @@ static bool
 CloneValue(JSContext *cx, HandleValue selfHostedValue, MutableHandleValue vp);
 
 static bool
-GetUnclonedValue(JSContext *cx, HandleObject selfHostedObject, HandleId id, MutableHandleValue vp)
+GetUnclonedValue(JSContext *cx, HandleNativeObject selfHostedObject,
+                 HandleId id, MutableHandleValue vp)
 {
     vp.setUndefined();
 
@@ -1169,7 +1175,7 @@ GetUnclonedValue(JSContext *cx, HandleObject selfHostedObject, HandleId id, Muta
                                         JSDVG_IGNORE_STACK, value, NullPtr(), nullptr, nullptr);
     }
 
-    RootedShape shape(cx, selfHostedObject->nativeLookupPure(id));
+    RootedShape shape(cx, selfHostedObject->lookupPure(id));
     if (!shape) {
         RootedValue value(cx, IdToValue(id));
         return js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_NO_SUCH_SELF_HOSTED_PROP,
@@ -1182,7 +1188,7 @@ GetUnclonedValue(JSContext *cx, HandleObject selfHostedObject, HandleId id, Muta
 }
 
 static bool
-CloneProperties(JSContext *cx, HandleObject selfHostedObject, HandleObject clone)
+CloneProperties(JSContext *cx, HandleNativeObject selfHostedObject, HandleObject clone)
 {
     AutoIdVector ids(cx);
 
@@ -1241,7 +1247,7 @@ CloneString(JSContext *cx, JSFlatString *selfHostedString)
 }
 
 static JSObject *
-CloneObject(JSContext *cx, HandleObject selfHostedObject)
+CloneObject(JSContext *cx, HandleNativeObject selfHostedObject)
 {
     AutoCycleDetector detect(cx, selfHostedObject);
     if (!detect.init())
@@ -1303,7 +1309,7 @@ static bool
 CloneValue(JSContext *cx, HandleValue selfHostedValue, MutableHandleValue vp)
 {
     if (selfHostedValue.isObject()) {
-        RootedObject selfHostedObject(cx, &selfHostedValue.toObject());
+        RootedNativeObject selfHostedObject(cx, &selfHostedValue.toObject().as<NativeObject>());
         JSObject *clone = CloneObject(cx, selfHostedObject);
         if (!clone)
             return false;
@@ -1331,7 +1337,7 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext *cx, HandlePropertyName name,
 {
     RootedId id(cx, NameToId(name));
     RootedValue funVal(cx);
-    if (!GetUnclonedValue(cx, HandleObject::fromMarkedLocation(&selfHostingGlobal_), id, &funVal))
+    if (!GetUnclonedValue(cx, HandleNativeObject::fromMarkedLocation(&selfHostingGlobal_), id, &funVal))
         return false;
 
     RootedFunction sourceFun(cx, &funVal.toObject().as<JSFunction>());
@@ -1361,7 +1367,7 @@ JSRuntime::cloneSelfHostedValue(JSContext *cx, HandlePropertyName name, MutableH
 {
     RootedId id(cx, NameToId(name));
     RootedValue selfHostedValue(cx);
-    if (!GetUnclonedValue(cx, HandleObject::fromMarkedLocation(&selfHostingGlobal_), id, &selfHostedValue))
+    if (!GetUnclonedValue(cx, HandleNativeObject::fromMarkedLocation(&selfHostingGlobal_), id, &selfHostedValue))
         return false;
 
     /*

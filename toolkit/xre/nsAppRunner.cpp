@@ -841,7 +841,6 @@ nsXULAppInfo::GetProcessID(uint32_t* aResult)
   return NS_OK;
 }
 
-static bool gBrowserTabsRemoteInitialized = false;
 static bool gBrowserTabsRemoteAutostart = false;
 static bool gBrowserTabsRemoteAutostartInitialized = false;
 

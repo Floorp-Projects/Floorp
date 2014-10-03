@@ -29,6 +29,7 @@
 #include "vm/HelperThreads.h"
 #include "vm/PIC.h"
 #include "vm/RegExpStatics.h"
+#include "vm/RegExpStaticsObject.h"
 #include "vm/StopIterationObject.h"
 #include "vm/WeakMapObject.h"
 
@@ -207,13 +208,13 @@ GlobalObject::resolveConstructor(JSContext *cx, Handle<GlobalObject*> global, JS
 GlobalObject::initBuiltinConstructor(JSContext *cx, Handle<GlobalObject*> global,
                                      JSProtoKey key, HandleObject ctor, HandleObject proto)
 {
-    MOZ_ASSERT(!global->nativeEmpty()); // reserved slots already allocated
+    MOZ_ASSERT(!global->empty()); // reserved slots already allocated
     MOZ_ASSERT(key != JSProto_Null);
     MOZ_ASSERT(ctor);
     MOZ_ASSERT(proto);
 
     RootedId id(cx, NameToId(ClassName(key, cx)));
-    MOZ_ASSERT(!global->nativeLookup(cx, id));
+    MOZ_ASSERT(!global->lookup(cx, id));
 
     if (!global->addDataProperty(cx, id, constructorPropertySlot(key), 0))
         return false;
@@ -376,19 +377,20 @@ GlobalObject::createConstructor(JSContext *cx, Native ctor, JSAtom *nameArg, uns
     return NewFunction(cx, NullPtr(), ctor, length, JSFunction::NATIVE_CTOR, self, name, kind);
 }
 
-static JSObject *
+static NativeObject *
 CreateBlankProto(JSContext *cx, const Class *clasp, JSObject &proto, GlobalObject &global)
 {
     MOZ_ASSERT(clasp != &JSFunction::class_);
 
-    RootedObject blankProto(cx, NewObjectWithGivenProto(cx, clasp, &proto, &global, SingletonObject));
+    RootedNativeObject blankProto(cx, NewNativeObjectWithGivenProto(cx, clasp, &proto, &global,
+                                                                    SingletonObject));
     if (!blankProto || !blankProto->setDelegate(cx))
         return nullptr;
 
     return blankProto;
 }
 
-JSObject *
+NativeObject *
 GlobalObject::createBlankPrototype(JSContext *cx, const Class *clasp)
 {
     Rooted<GlobalObject*> self(cx, this);
@@ -399,7 +401,7 @@ GlobalObject::createBlankPrototype(JSContext *cx, const Class *clasp)
     return CreateBlankProto(cx, clasp, *objectProto, *self.get());
 }
 
-JSObject *
+NativeObject *
 GlobalObject::createBlankPrototypeInheriting(JSContext *cx, const Class *clasp, JSObject &proto)
 {
     return CreateBlankProto(cx, clasp, proto, *this);
@@ -434,7 +436,7 @@ js::DefinePropertiesAndFunctions(JSContext *cx, HandleObject obj,
 static void
 GlobalDebuggees_finalize(FreeOp *fop, JSObject *obj)
 {
-    fop->delete_((GlobalObject::DebuggerVector *) obj->getPrivate());
+    fop->delete_((GlobalObject::DebuggerVector *) obj->as<NativeObject>().getPrivate());
 }
 
 static const Class
@@ -451,7 +453,7 @@ GlobalObject::getDebuggers()
     if (debuggers.isUndefined())
         return nullptr;
     MOZ_ASSERT(debuggers.toObject().getClass() == &GlobalDebuggees_class);
-    return (DebuggerVector *) debuggers.toObject().getPrivate();
+    return (DebuggerVector *) debuggers.toObject().as<NativeObject>().getPrivate();
 }
 
 /* static */ GlobalObject::DebuggerVector *
@@ -462,7 +464,7 @@ GlobalObject::getOrCreateDebuggers(JSContext *cx, Handle<GlobalObject*> global)
     if (debuggers)
         return debuggers;
 
-    JSObject *obj = NewObjectWithGivenProto(cx, &GlobalDebuggees_class, nullptr, global);
+    NativeObject *obj = NewNativeObjectWithGivenProto(cx, &GlobalDebuggees_class, nullptr, global);
     if (!obj)
         return nullptr;
     debuggers = cx->new_<DebuggerVector>();
@@ -473,11 +475,11 @@ GlobalObject::getOrCreateDebuggers(JSContext *cx, Handle<GlobalObject*> global)
     return debuggers;
 }
 
-/* static */ JSObject *
+/* static */ NativeObject *
 GlobalObject::getOrCreateForOfPICObject(JSContext *cx, Handle<GlobalObject *> global)
 {
     assertSameCompartment(cx, global);
-    JSObject *forOfPIC = global->getForOfPICObject();
+    NativeObject *forOfPIC = global->getForOfPICObject();
     if (forOfPIC)
         return forOfPIC;
 
@@ -500,7 +502,7 @@ GlobalObject::getRegExpStatics(ExclusiveContext *cx) const
     MOZ_ASSERT(cx);
     Rooted<GlobalObject*> self(cx, const_cast<GlobalObject*>(this));
 
-    JSObject *resObj = nullptr;
+    RegExpStaticsObject *resObj = nullptr;
     const Value &val = this->getSlot(REGEXP_STATICS);
     if (!val.isObject()) {
         MOZ_ASSERT(val.isUndefined());
@@ -510,7 +512,7 @@ GlobalObject::getRegExpStatics(ExclusiveContext *cx) const
 
         self->initSlot(REGEXP_STATICS, ObjectValue(*resObj));
     } else {
-        resObj = &val.toObject();
+        resObj = &val.toObject().as<RegExpStaticsObject>();
     }
     return static_cast<RegExpStatics*>(resObj->getPrivate(/* nfixed = */ 1));
 }
@@ -520,7 +522,7 @@ GlobalObject::getAlreadyCreatedRegExpStatics() const
 {
     const Value &val = this->getSlot(REGEXP_STATICS);
     MOZ_ASSERT(val.isObject());
-    return static_cast<RegExpStatics*>(val.toObject().getPrivate(/* nfixed = */ 1));
+    return static_cast<RegExpStatics*>(val.toObject().as<RegExpStaticsObject>().getPrivate(/* nfixed = */ 1));
 }
 
 bool
@@ -547,7 +549,7 @@ GlobalObject::getSelfHostedFunction(JSContext *cx, HandleAtom selfHostedName, Ha
 bool
 GlobalObject::addIntrinsicValue(JSContext *cx, HandleId id, HandleValue value)
 {
-    RootedObject holder(cx, intrinsicsHolder());
+    RootedNativeObject holder(cx, intrinsicsHolder());
 
     uint32_t slot = holder->slotSpan();
     RootedShape last(cx, holder->lastProperty());
@@ -558,7 +560,7 @@ GlobalObject::addIntrinsicValue(JSContext *cx, HandleId id, HandleValue value)
     if (!shape)
         return false;
 
-    if (!JSObject::setLastProperty(cx, holder, shape))
+    if (!NativeObject::setLastProperty(cx, holder, shape))
         return false;
 
     holder->setSlot(shape->slot(), value);

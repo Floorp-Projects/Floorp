@@ -38,8 +38,8 @@ BEGIN_TEST(testResolveRecursion)
     JS_SetPrivate(obj1, this);
     JS_SetPrivate(obj2, this);
 
-    JS::RootedValue obj1Val(cx, ObjectValue(*obj1));
-    JS::RootedValue obj2Val(cx, ObjectValue(*obj2));
+    JS::RootedValue obj1Val(cx, JS::ObjectValue(*obj1));
+    JS::RootedValue obj2Val(cx, JS::ObjectValue(*obj2));
     CHECK(JS_DefineProperty(cx, global, "obj1", obj1Val, 0));
     CHECK(JS_DefineProperty(cx, global, "obj2", obj2Val, 0));
 

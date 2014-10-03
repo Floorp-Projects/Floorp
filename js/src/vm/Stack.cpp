@@ -169,7 +169,7 @@ InterpreterFrame::createRestParameter(JSContext *cx)
     unsigned nformal = fun()->nargs() - 1, nactual = numActualArgs();
     unsigned nrest = (nactual > nformal) ? nactual - nformal : 0;
     Value *restvp = argv() + nformal;
-    JSObject *obj = NewDenseCopiedArray(cx, nrest, restvp, nullptr);
+    ArrayObject *obj = NewDenseCopiedArray(cx, nrest, restvp, nullptr);
     if (!obj)
         return nullptr;
     types::FixRestArgumentsType(cx, obj);

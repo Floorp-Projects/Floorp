@@ -47,7 +47,6 @@ function runTests()
     }
 
     synthesizeComposition({ type: "compositionstart" });
-    synthesizeComposition({ type: "compositionupdate", data: aInsertString });
     synthesizeText(
       { "composition":
         { "string": aInsertString,

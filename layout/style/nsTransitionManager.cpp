@@ -175,7 +175,9 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   }
 
 
-  if (aNewStyleContext->PresContext()->IsProcessingAnimationStyleChange()) {
+  // FIXME (bug 960465): This test should go away.
+  if (aNewStyleContext->PresContext()->RestyleManager()->
+        IsProcessingAnimationStyleChange()) {
     return nullptr;
   }
 
@@ -640,16 +642,18 @@ nsTransitionManager::WalkTransitionRule(
     return;
   }
 
-  if (aData->mPresContext->IsProcessingRestyles() &&
-      !aData->mPresContext->IsProcessingAnimationStyleChange()) {
+  RestyleManager* restyleManager = aData->mPresContext->RestyleManager();
+  if (restyleManager->SkipAnimationRules()) {
     // If we're processing a normal style change rather than one from
     // animation, don't add the transition rule.  This allows us to
     // compute the new style value rather than having the transition
     // override it, so that we can start transitioning differently.
 
-    // We need to immediately restyle with animation
-    // after doing this.
-    collection->PostRestyleForAnimation(mPresContext);
+    if (restyleManager->PostAnimationRestyles()) {
+      // We need to immediately restyle with animation
+      // after doing this.
+      collection->PostRestyleForAnimation(mPresContext);
+    }
     return;
   }
 

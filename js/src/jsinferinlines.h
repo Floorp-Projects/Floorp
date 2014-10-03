@@ -547,13 +547,13 @@ MarkObjectStateChange(ExclusiveContext *cx, JSObject *obj)
  */
 
 inline void
-FixArrayType(ExclusiveContext *cx, HandleObject obj)
+FixArrayType(ExclusiveContext *cx, ArrayObject *obj)
 {
     cx->compartment()->types.fixArrayType(cx, obj);
 }
 
 inline void
-FixObjectType(ExclusiveContext *cx, HandleObject obj)
+FixObjectType(ExclusiveContext *cx, NativeObject *obj)
 {
     cx->compartment()->types.fixObjectType(cx, obj);
 }

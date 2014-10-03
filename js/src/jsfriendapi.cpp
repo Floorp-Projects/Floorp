@@ -29,6 +29,7 @@
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
+#include "vm/ObjectImpl-inl.h"
 #include "vm/ScopeObject-inl.h"
 
 using namespace js;
@@ -434,7 +435,7 @@ js::NotifyAnimationActivity(JSObject *obj)
 JS_FRIEND_API(uint32_t)
 js::GetObjectSlotSpan(JSObject *obj)
 {
-    return obj->slotSpan();
+    return obj->fakeNativeSlotSpan();
 }
 
 JS_FRIEND_API(bool)
@@ -556,7 +557,7 @@ js::GetOriginalEval(JSContext *cx, HandleObject scope, MutableHandleObject eval)
 JS_FRIEND_API(void)
 js::SetReservedSlotWithBarrier(JSObject *obj, size_t slot, const js::Value &value)
 {
-    obj->setSlot(slot, value);
+    obj->fakeNativeSetSlot(slot, value);
 }
 
 JS_FRIEND_API(bool)
@@ -1384,8 +1385,8 @@ JS_FRIEND_API(void)
 js::UnsafeDefineElement(JSContext *cx, JS::HandleObject obj, uint32_t index, JS::HandleValue value)
 {
     MOZ_ASSERT(obj->isNative());
-    MOZ_ASSERT(index < obj->getDenseInitializedLength());
-    obj->setDenseElementWithType(cx, index, value);
+    MOZ_ASSERT(index < obj->as<NativeObject>().getDenseInitializedLength());
+    obj->as<NativeObject>().setDenseElementWithType(cx, index, value);
 }
 
 JS_FRIEND_API(bool)

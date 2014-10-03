@@ -92,7 +92,10 @@ class LocalVersion(Version):
                 return None
 
         if binary:
-            if not os.path.exists(binary):
+            # on Windows, the binary may be specified with or without the
+            # .exe extension
+            if not os.path.exists(binary) and not os.path.exists(binary +
+                                                                 '.exe'):
                 raise IOError('Binary path does not exist: %s' % binary)
             path = find_location(os.path.dirname(os.path.realpath(binary)))
         else:
