@@ -76,7 +76,7 @@ TouchBlockState::SetAllowedTouchBehaviors(const nsTArray<TouchBehaviorFlags>& aB
   if (mAllowedTouchBehaviorSet) {
     return false;
   }
-  TBS_LOG("%p got allowed touch behaviours for %d points\n", this, aBehaviors.Length());
+  TBS_LOG("%p got allowed touch behaviours for %lu points\n", this, aBehaviors.Length());
   mAllowedTouchBehaviors.AppendElements(aBehaviors);
   mAllowedTouchBehaviorSet = true;
   return true;
@@ -150,7 +150,7 @@ TouchBlockState::AddEvent(const MultiTouchInput& aEvent)
 void
 TouchBlockState::DropEvents()
 {
-  TBS_LOG("%p dropping %d events\n", this, mEvents.Length());
+  TBS_LOG("%p dropping %lu events\n", this, mEvents.Length());
   mEvents.Clear();
 }
 
@@ -158,7 +158,7 @@ MultiTouchInput
 TouchBlockState::RemoveFirstEvent()
 {
   MOZ_ASSERT(!mEvents.IsEmpty());
-  TBS_LOG("%p returning first of %d events\n", this, mEvents.Length());
+  TBS_LOG("%p returning first of %lu events\n", this, mEvents.Length());
   MultiTouchInput event = mEvents[0];
   mEvents.RemoveElementAt(0);
   return event;

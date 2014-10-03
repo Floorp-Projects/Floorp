@@ -67,7 +67,7 @@ GestureEventListener::~GestureEventListener()
 
 nsEventStatus GestureEventListener::HandleInputEvent(const MultiTouchInput& aEvent)
 {
-  GEL_LOG("Receiving event type %d with %d touches in state %d\n", aEvent.mType, aEvent.mTouches.Length(), mState);
+  GEL_LOG("Receiving event type %d with %lu touches in state %d\n", aEvent.mType, aEvent.mTouches.Length(), mState);
 
   nsEventStatus rv = nsEventStatus_eIgnore;
 
