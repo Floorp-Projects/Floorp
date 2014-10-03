@@ -54,7 +54,7 @@ malloc_logger_t(uint32_t aType,
 extern malloc_logger_t* malloc_logger;
 
 static void
-stack_callback(uint32_t aFrameNumber, void* aPc, void* aSp, void* aClosure)
+stack_callback(void* aPc, void* aSp, void* aClosure)
 {
   const char* name = static_cast<char*>(aClosure);
   Dl_info info;
@@ -612,7 +612,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
   ::CloseHandle(myThread);
 
   for (uint32_t i = 0; i < data.pc_count; ++i) {
-    (*aCallback)(i + 1, data.pcs[i], data.sps[i], aClosure);
+    (*aCallback)(data.pcs[i], data.sps[i], aClosure);
   }
 
   return data.pc_count == 0 ? NS_ERROR_FAILURE : NS_OK;
@@ -828,8 +828,7 @@ NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails)
 }
 
 EXPORT_XPCOM_API(nsresult)
-NS_FormatCodeAddressDetails(uint32_t aFrameNumber, void* aPC,
-                            const nsCodeAddressDetails* aDetails,
+NS_FormatCodeAddressDetails(void* aPC, const nsCodeAddressDetails* aDetails,
                             char* aBuffer, uint32_t aBufferSize)
 {
   if (aDetails->function[0]) {
@@ -948,8 +947,8 @@ FramePointerStackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
       // it called. We can't know the exact location of the SP
       // but this should be sufficient for our use the SP
       // to order elements on the stack.
+      (*aCallback)(pc, bp, aClosure);
       numFrames++;
-      (*aCallback)(numFrames, pc, bp, aClosure);
       if (aMaxFrames != 0 && numFrames == aMaxFrames) {
         break;
       }
@@ -992,6 +991,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
 #endif
   return FramePointerStackWalk(aCallback, aSkipFrames, aMaxFrames,
                                aClosure, bp, stackEnd);
+
 }
 
 #elif defined(HAVE__UNWIND_BACKTRACE)
@@ -1023,8 +1023,8 @@ unwind_callback(struct _Unwind_Context* context, void* closure)
     return _URC_FOREIGN_EXCEPTION_CAUGHT;
   }
   if (--info->skip < 0) {
+    (*info->callback)(pc, nullptr, info->closure);
     info->numFrames++;
-    (*info->callback)(info->numFrames, pc, nullptr, info->closure);
     if (info->maxFrames != 0 && info->numFrames == info->maxFrames) {
       // Again, any error code that stops the walk will do.
       return _URC_FOREIGN_EXCEPTION_CAUGHT;
@@ -1103,8 +1103,7 @@ NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails)
 }
 
 EXPORT_XPCOM_API(nsresult)
-NS_FormatCodeAddressDetails(uint32_t aFrameNumber, void* aPC,
-                            const nsCodeAddressDetails* aDetails,
+NS_FormatCodeAddressDetails(void* aPC, const nsCodeAddressDetails* aDetails,
                             char* aBuffer, uint32_t aBufferSize)
 {
   if (!aDetails->library[0]) {
@@ -1155,8 +1154,7 @@ NS_DescribeCodeAddress(void* aPC, nsCodeAddressDetails* aDetails)
 }
 
 EXPORT_XPCOM_API(nsresult)
-NS_FormatCodeAddressDetails(uint32_t aFrameNumber, void* aPC,
-                            const nsCodeAddressDetails* aDetails,
+NS_FormatCodeAddressDetails(void* aPC, const nsCodeAddressDetails* aDetails,
                             char* aBuffer, uint32_t aBufferSize)
 {
   aBuffer[0] = '\0';

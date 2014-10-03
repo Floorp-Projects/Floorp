@@ -114,7 +114,7 @@ Crash()
 
 #ifdef REPORT_CHROME_HANGS
 static void
-ChromeStackWalker(uint32_t aFrameNumber, void* aPC, void* aSP, void* aClosure)
+ChromeStackWalker(void* aPC, void* aSP, void* aClosure)
 {
   MOZ_ASSERT(aClosure);
   std::vector<uintptr_t>* stack =
