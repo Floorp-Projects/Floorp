@@ -255,6 +255,10 @@ nsEventStatus GestureEventListener::HandleInputTouchMove()
                                    mLastTouchInput.modifiers);
 
       rv = mAsyncPanZoomController->HandleGestureEvent(pinchEvent);
+    } else {
+      // Prevent APZC::OnTouchMove from processing a move event when two
+      // touches are active
+      rv = nsEventStatus_eConsumeNoDefault;
     }
 
     mPreviousSpan = currentSpan;
