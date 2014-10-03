@@ -14,6 +14,7 @@
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
         <item name="arrowPopupWidth">400dp</item>
+        <item name="menuItemActionBarStyleNewTablet">@style/Widget.MenuItemActionBar.NewTablet</item>
     </style>
 
     <style name="GeckoStartPane" parent="Gecko.Dialog"/>
