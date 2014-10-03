@@ -144,12 +144,10 @@ function runViewer() {
     fallbackMenu.removeAttribute('hidden');
     fallbackMenu.addEventListener('click', fallback);
   }
-  var showURLMenu = document.getElementById('showURLMenu');
-  showURLMenu.addEventListener('click', showURL);
-  var inspectorMenu = document.getElementById('inspectorMenu');
-  inspectorMenu.addEventListener('click', showInInspector);
-  var reportMenu = document.getElementById('reportMenu');
-  reportMenu.addEventListener('click', reportIssue);
+  document.getElementById('showURLMenu').addEventListener('click', showURL);
+  document.getElementById('inspectorMenu').addEventListener('click', showInInspector);
+  document.getElementById('reportMenu').addEventListener('click', reportIssue);
+  document.getElementById('aboutMenu').addEventListener('click', showAbout);
 }
 
 function showURL() {
@@ -166,23 +164,28 @@ function showInInspector() {
 }
 
 function reportIssue() {
-  var duplicatesMap = Object.create(null);
-  var prunedExceptions = [];
-  avm2.exceptions.forEach(function(e) {
-    var ident = e.source + e.message + e.stack;
-    var entry = duplicatesMap[ident];
-    if (!entry) {
-      entry = duplicatesMap[ident] = {
-        source: e.source,
-        message: e.message,
-        stack: e.stack,
-        count: 0
-      };
-      prunedExceptions.push(entry);
-    }
-    entry.count++;
-  });
-  FirefoxCom.requestSync('reportIssue', JSON.stringify(prunedExceptions));
+  //var duplicatesMap = Object.create(null);
+  //var prunedExceptions = [];
+  //avm2.exceptions.forEach(function(e) {
+  //  var ident = e.source + e.message + e.stack;
+  //  var entry = duplicatesMap[ident];
+  //  if (!entry) {
+  //    entry = duplicatesMap[ident] = {
+  //      source: e.source,
+  //      message: e.message,
+  //      stack: e.stack,
+  //      count: 0
+  //    };
+  //    prunedExceptions.push(entry);
+  //  }
+  //  entry.count++;
+  //});
+  //FirefoxCom.requestSync('reportIssue', JSON.stringify(prunedExceptions));
+  FirefoxCom.requestSync('reportIssue');
+}
+
+function showAbout() {
+  window.open('http://areweflashyet.com/');
 }
 
 var movieUrl, movieParams, objectParams;
@@ -201,6 +204,12 @@ window.addEventListener("message", function handlerMessage(e) {
       break;
     case 'reportTelemetry':
       FirefoxCom.request('reportTelemetry', args.data, null);
+      break;
+    case 'setClipboard':
+      FirefoxCom.request('setClipboard', args.data, null);
+      break;
+    case 'started':
+      document.body.classList.add('started');
       break;
   }
 }, true);
@@ -240,7 +249,19 @@ function parseSwf(url, movieParams, objectParams) {
     FirefoxCom.request('endActivation', null);
   }
 
-  var easel = createEasel();
+  var bgcolor;
+  if (objectParams) {
+    var m;
+    if (objectParams.bgcolor && (m = /#([0-9A-F]{6})/i.exec(objectParams.bgcolor))) {
+      var hexColor = parseInt(m[1], 16);
+      bgcolor = hexColor << 8 | 0xff;
+    }
+    if (objectParams.wmode === 'transparent') {
+      bgcolor = 0;
+    }
+  }
+
+  var easel = createEasel(bgcolor);
   easelHost = new Shumway.GFX.Window.WindowEaselHost(easel, playerWindow, window);
   easelHost.processExternalCommand = processExternalCommand;
 
@@ -252,6 +273,7 @@ function parseSwf(url, movieParams, objectParams) {
       movieParams: movieParams,
       objectParams: objectParams,
       turboMode: turboMode,
+      bgcolor: bgcolor,
       url: url,
       baseUrl: url
     }
@@ -259,12 +281,12 @@ function parseSwf(url, movieParams, objectParams) {
   playerWindow.postMessage(data,  '*');
 }
 
-function createEasel() {
+function createEasel(bgcolor) {
   var Stage = Shumway.GFX.Stage;
   var Easel = Shumway.GFX.Easel;
   var Canvas2DStageRenderer = Shumway.GFX.Canvas2DStageRenderer;
 
   Shumway.GFX.WebGL.SHADER_ROOT = SHUMWAY_ROOT + "gfx/gl/shaders/";
   var backend = Shumway.GFX.backend.value | 0;
-  return new Easel(document.getElementById("stageContainer"), backend);
+  return new Easel(document.getElementById("stageContainer"), backend, false, bgcolor);
 }

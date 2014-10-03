@@ -29,7 +29,6 @@ let Cu = Components.utils;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 Cu.import('resource://gre/modules/Services.jsm');
-Cu.import('resource://shumway/ShumwayStreamConverter.jsm');
 
 let Svc = {};
 XPCOMUtils.defineLazyServiceGetter(Svc, 'mime',
@@ -111,6 +110,7 @@ let ShumwayUtils = {
       return;
 
     // Load the component and register it.
+    Cu.import('resource://shumway/ShumwayStreamConverter.jsm');
     converterFactory.register(ShumwayStreamConverter);
     overlayConverterFactory.register(ShumwayStreamOverlayConverter);
 
@@ -130,6 +130,7 @@ let ShumwayUtils = {
     // Remove the contract/component.
     converterFactory.unregister();
     overlayConverterFactory.unregister();
+    Cu.unload('resource://shumway/ShumwayStreamConverter.jsm');
 
     Svc.pluginHost.unregisterPlayPreviewMimeType(SWF_CONTENT_TYPE);
 
