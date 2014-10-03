@@ -119,7 +119,7 @@ public class TabsPanel extends LinearLayout
         mPopupMenu.inflate(R.menu.tabs_menu);
         mPopupMenu.setOnMenuItemClickListener(this);
 
-        LayoutInflater.from(context).inflate(R.layout.tabs_panel, this);
+        inflateLayout(context);
         initialize();
 
         mAppStateListener = new AppStateListener() {
@@ -139,6 +139,15 @@ public class TabsPanel extends LinearLayout
             @Override
             public void onPause() {}
         };
+    }
+
+
+    private void inflateLayout(Context context) {
+        if (NewTabletUI.isEnabled(context)) {
+            LayoutInflater.from(context).inflate(R.layout.tabs_panel_default, this);
+        } else {
+            LayoutInflater.from(context).inflate(R.layout.tabs_panel, this);
+        }
     }
 
     private void initialize() {

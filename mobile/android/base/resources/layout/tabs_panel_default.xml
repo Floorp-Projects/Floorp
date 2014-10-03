@@ -15,7 +15,31 @@
               android:layout_height="match_parent"
               android:background="@color/background_tabs">
 
-            <include layout="@layout/tabs_panel_header"/>
+            <org.mozilla.gecko.widget.IconTabWidget android:id="@+id/tab_widget"
+                                                    android:layout_width="wrap_content"
+                                                    android:layout_height="match_parent"
+                                                    android:tabStripEnabled="false"
+                                                    android:divider="@drawable/tab_indicator_divider"
+                                                    android:layout="@layout/tabs_panel_indicator"/>
+
+            <View android:layout_width="0dip"
+                  android:layout_height="match_parent"
+                  android:layout_weight="1.0"/>
+
+            <ImageButton android:id="@+id/add_tab"
+                         style="@style/UrlBar.ImageButton"
+                         android:padding="@dimen/browser_toolbar_button_padding"
+                         android:src="@drawable/tab_new_level"
+                         android:contentDescription="@string/new_tab"
+                         android:background="@drawable/action_bar_button_inverse"/>
+
+            <ImageButton android:id="@+id/menu"
+                         style="@style/UrlBar.ImageButton"
+                         android:padding="@dimen/browser_toolbar_button_padding"
+                         android:src="@drawable/menu_tabs"
+                         android:contentDescription="@string/menu"
+                         android:background="@drawable/action_bar_button_inverse"
+                         android:visibility="gone"/>
 
         </view>
 
@@ -29,8 +53,7 @@
     <view class="org.mozilla.gecko.tabs.TabsPanel$PanelViewContainer"
           android:id="@+id/tabs_container"
           android:layout_width="match_parent"
-          android:layout_height="0dip"
-          android:layout_weight="1.0">
+          android:layout_height="wrap_content">
 
         <view class="org.mozilla.gecko.tabs.TabsPanel$TabsLayout"
               android:id="@+id/normal_tabs"
@@ -55,24 +78,9 @@
 
     </view>
 
+    <!-- To preserve the ID, even when building for pre-11. -->
     <RelativeLayout android:id="@+id/tabs_panel_footer"
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/browser_toolbar_height">
-
-        <view class="org.mozilla.gecko.tabs.TabsPanel$TabsPanelToolbar"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:background="@color/background_tabs">
-
-            <include layout="@layout/tabs_panel_footer"/>
-
-        </view>
-
-        <View android:layout_width="match_parent"
-              android:layout_height="2dp"
-              android:layout_alignParentTop="true"
-              android:background="#1A000000"/>
-
-    </RelativeLayout>
-
+                    android:layout_height="0dp"
+                    android:layout_width="0dp"
+                    android:visibility="gone"/>
 </merge>

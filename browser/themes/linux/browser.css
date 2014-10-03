@@ -565,7 +565,7 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
   padding: 3px 7px;
 }
 
-toolbarbutton[type="badged"] > .toolbarbutton-badge-container > .toolbarbutton-icon,
+toolbarbutton.badged-button > .toolbarbutton-badge-container > .toolbarbutton-icon,
 toolbarbutton[type="socialmark"] > .toolbarbutton-icon {
   max-width: 32px !important;
 }
@@ -2075,35 +2075,6 @@ toolbarbutton.chevron > .toolbarbutton-icon {
 
 #social-provider-button > .toolbarbutton-menu-dropmarker {
   display: none;
-}
-
-.toolbarbutton-badge-container {
-  margin: 5px 3px;
-  position: relative;
-}
-
-toolbar[iconsize="small"] .toolbarbutton-badge-container {
-  margin: 0;
-}
-
-.toolbarbutton-badge[badge]:not([badge=""])::after {
-  /* The |content| property is set in the content stylesheet. */
-  font-size: 9px;
-  font-weight: bold;
-  padding: 0 1px;
-  color: #fff;
-  background-color: rgb(240,61,37);
-  border: 1px solid rgb(216,55,34);
-  border-radius: 2px;
-  box-shadow: 0 1px 0 rgba(0,39,121,0.77);
-  position: absolute;
-  top: 0;
-  right: 0;
-}
-
-.toolbarbutton-badge[badge]:not([badge=""]):-moz-locale-dir(rtl)::after {
-  left: 2px;
-  right: auto;
 }
 
 .popup-notification-icon[popupid="servicesInstall"] {
