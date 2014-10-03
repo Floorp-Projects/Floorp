@@ -5,7 +5,6 @@
 
 #include "mozilla/dom/SVGRectElement.h"
 #include "nsGkAtoms.h"
-#include "gfxContext.h"
 #include "mozilla/dom/SVGRectElementBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
@@ -108,49 +107,6 @@ SVGRectElement::GetLengthInfo()
 
 //----------------------------------------------------------------------
 // nsSVGPathGeometryElement methods
-
-void
-SVGRectElement::ConstructPath(gfxContext *aCtx)
-{
-  float x, y, width, height, rx, ry;
-
-  GetAnimatedLengthValues(&x, &y, &width, &height, &rx, &ry, nullptr);
-
-  /* In a perfect world, this would be handled by the DOM, and
-     return a DOM exception. */
-  if (width <= 0 || height <= 0)
-    return;
-
-  rx = std::max(rx, 0.0f);
-  ry = std::max(ry, 0.0f);
-
-  /* optimize the no rounded corners case */
-  if (rx == 0 && ry == 0) {
-    aCtx->Rectangle(gfxRect(x, y, width, height));
-    return;
-  }
-
-  /* If either the 'rx' or the 'ry' attribute isn't set, then we
-     have to set it to the value of the other. */
-  bool hasRx = mLengthAttributes[ATTR_RX].IsExplicitlySet();
-  bool hasRy = mLengthAttributes[ATTR_RY].IsExplicitlySet();
-  if (hasRx && !hasRy)
-    ry = rx;
-  else if (hasRy && !hasRx)
-    rx = ry;
-
-  /* Clamp rx and ry to half the rect's width and height respectively. */
-  float halfWidth  = width/2;
-  float halfHeight = height/2;
-  if (rx > halfWidth)
-    rx = halfWidth;
-  if (ry > halfHeight)
-    ry = halfHeight;
-
-  gfxSize corner(rx, ry);
-  aCtx->RoundedRectangle(gfxRect(x, y, width, height),
-                         gfxCornerSizes(corner, corner, corner, corner));
-}
 
 TemporaryRef<Path>
 SVGRectElement::BuildPath(PathBuilder* aBuilder)

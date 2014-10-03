@@ -14,8 +14,8 @@
 #include "js/TracingAPI.h"
 
 namespace js {
+class NativeObject;
 class GCMarker;
-class ObjectImpl;
 namespace gc {
 struct ArenaHeader;
 }
@@ -139,7 +139,7 @@ class GCMarker : public JSTracer
     void stop();
     void reset();
 
-    void pushObject(ObjectImpl *obj) {
+    void pushObject(JSObject *obj) {
         pushTaggedPtr(ObjectTag, obj);
     }
 
@@ -270,7 +270,7 @@ class GCMarker : public JSTracer
         return stack.isEmpty();
     }
 
-    bool restoreValueArray(JSObject *obj, void **vpp, void **endp);
+    bool restoreValueArray(NativeObject *obj, void **vpp, void **endp);
     void saveValueRanges();
     inline void processMarkStackTop(SliceBudget &budget);
     void processMarkStackOther(uintptr_t tag, uintptr_t addr);

@@ -248,16 +248,21 @@ ExposedPropertiesOnly::check(JSContext *cx, HandleObject wrapper, HandleId id, W
     if (!JS_HasPropertyById(cx, wrappedObject, exposedPropsId, &found))
         return false;
 
-    // Always permit access to "length" and indexed properties of arrays.
-    if ((JS_IsArrayObject(cx, wrappedObject) ||
-         JS_IsTypedArrayObject(wrappedObject)) &&
-        ((JSID_IS_INT(id) && JSID_TO_INT(id) >= 0) ||
-         (JSID_IS_STRING(id) && JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(id), "length")))) {
-        return true; // Allow
-    }
-
     // If no __exposedProps__ existed, deny access.
     if (!found) {
+        // Previously we automatically granted access to indexed properties and
+        // .length for Array COWs. We're not doing that anymore, so make sure to
+        // let people know what's going on.
+        bool isArray = JS_IsArrayObject(cx, wrappedObject) || JS_IsTypedArrayObject(wrappedObject);
+        bool isIndexedAccessOnArray = isArray && JSID_IS_INT(id) && JSID_TO_INT(id) >= 0;
+        bool isLengthAccessOnArray = isArray && JSID_IS_STRING(id) &&
+                                     JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(id), "length");
+        if (isIndexedAccessOnArray || isLengthAccessOnArray) {
+            JSAutoCompartment ac2(cx, wrapper);
+            ReportWrapperDenial(cx, id, WrapperDenialForCOW,
+                                "Access to elements and length of privileged Array not permitted");
+        }
+
         return false;
     }
 
@@ -339,6 +344,21 @@ ExposedPropertiesOnly::check(JSContext *cx, HandleObject wrapper, HandleId id, W
     }
 
     return true;
+}
+
+bool
+ExposedPropertiesOnly::deny(js::Wrapper::Action act, HandleId id)
+{
+    // Fail silently for GET, ENUMERATE, and GET_PROPERTY_DESCRIPTOR.
+    if (act == js::Wrapper::GET || act == js::Wrapper::ENUMERATE ||
+        act == js::Wrapper::GET_PROPERTY_DESCRIPTOR)
+    {
+        AutoJSContext cx;
+        return ReportWrapperDenial(cx, id, WrapperDenialForCOW,
+                                   "Access to privileged JS object not permitted");
+    }
+
+    return false;
 }
 
 }

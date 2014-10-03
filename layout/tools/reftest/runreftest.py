@@ -511,9 +511,8 @@ class ReftestOptions(OptionParser):
       if options.debugger is not None:
         self.error("cannot specify a debugger with parallel tests")
 
-      options.leakThresholds = {"default": options.defaultLeakThreshold}
-
-      options.ignoreMissingLeaks = []
+    options.leakThresholds = {"default": options.defaultLeakThreshold}
+    options.ignoreMissingLeaks = []
 
     return options
 

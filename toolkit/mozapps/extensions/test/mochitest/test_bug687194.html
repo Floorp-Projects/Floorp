@@ -60,11 +60,11 @@
         "http://mochi.test:8888/tests/toolkit/mozapps/extensions/test/mochitest/file_bug687194.xpi"
       AddonManager.getInstallForURL(INSTALL_URI, (install) => {
         install = SpecialPowers.wrap(install);
-        install.addListener({
+        install.addListener(SpecialPowers.wrapCallbackObject({
           onInstallEnded: function(install, addon) {
             SimpleTest.executeSoon(() => test.next(addon));
           }
-        });
+        }));
         install.install();
       }, "application/x-xpinstall");
 
@@ -75,14 +75,14 @@
       lastResult = yield;
       is(lastResult.threw, false, "able to resolve after the installation");
 
-      let listener = {
+      let listener = SpecialPowers.wrapCallbackObject({
         onUninstalled: function(removedAddon) {
-          if (SpecialPowers.wrap(removedAddon).id === addon.id) {
+          if (removedAddon.id === addon.id) {
             AddonManager.removeAddonListener(listener);
             SimpleTest.executeSoon(() => test.next());
           }
         }
-      };
+      });
       AddonManager.addAddonListener(listener);
       addon.uninstall();
 

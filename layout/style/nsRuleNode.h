@@ -689,6 +689,12 @@ public:
   nsRuleNode* GetParent() const { return mParent; }
   bool IsRoot() const { return mParent == nullptr; }
 
+  // Return the root of the rule tree that this rule node is in.
+  nsRuleNode* RuleTree();
+  const nsRuleNode* RuleTree() const {
+    return const_cast<nsRuleNode*>(this)->RuleTree();
+  }
+
   // These uint8_ts are really nsStyleSet::sheetType values.
   uint8_t GetLevel() const {
     NS_ASSERTION(!IsRoot(), "can't call on root");

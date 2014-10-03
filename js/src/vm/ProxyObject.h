@@ -7,8 +7,9 @@
 #ifndef vm_ProxyObject_h
 #define vm_ProxyObject_h
 
-#include "jsobj.h"
 #include "jsproxy.h"
+
+#include "vm/ObjectImpl.h"
 
 namespace js {
 
@@ -35,7 +36,7 @@ class ProxyObject : public JSObject
     void setSameCompartmentPrivate(const Value &priv);
 
     HeapSlot *slotOfPrivate() {
-        return &getReservedSlotRef(PRIVATE_SLOT);
+        return &fakeNativeGetReservedSlotRef(PRIVATE_SLOT);
     }
 
     JSObject *target() const {
@@ -54,7 +55,9 @@ class ProxyObject : public JSObject
     }
 
     static size_t offsetOfHandler() {
-        return getFixedSlotOffset(HANDLER_SLOT);
+        // FIXME Bug 1073842: this is temporary until non-native objects can
+        // access non-slot storage.
+        return NativeObject::getFixedSlotOffset(HANDLER_SLOT);
     }
 
     const Value &extra(size_t n) const {
@@ -70,13 +73,13 @@ class ProxyObject : public JSObject
   private:
     HeapSlot *slotOfExtra(size_t n) {
         MOZ_ASSERT(n == 0 || n == 1);
-        return &getReservedSlotRef(EXTRA_SLOT + n);
+        return &fakeNativeGetReservedSlotRef(EXTRA_SLOT + n);
     }
 
     HeapSlot *slotOfClassSpecific(size_t n) {
         MOZ_ASSERT(n >= PROXY_MINIMUM_SLOTS);
         MOZ_ASSERT(n < JSCLASS_RESERVED_SLOTS(getClass()));
-        return &getReservedSlotRef(n);
+        return &fakeNativeGetReservedSlotRef(n);
     }
 
     static bool isValidProxyClass(const Class *clasp) {

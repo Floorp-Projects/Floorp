@@ -90,7 +90,7 @@ BEGIN_TEST(testDefinePropertyIgnoredAttributes)
     CHECK(JS_DefineProperty(cx, obj, "quox", defineValue, AllowWritable));
     CHECK(JS_GetPropertyDescriptor(cx, obj, "quox", &desc));
     CHECK(CheckDescriptor(desc, false, true, true));
-    CHECK_SAME(ObjectValue(*obj), desc.value());
+    CHECK_SAME(JS::ObjectValue(*obj), desc.value());
 
     return true;
 }

@@ -197,7 +197,8 @@ MacroAssemblerX86Shared::buildOOLFakeExitFrame(void *fakeReturnAddr)
 void
 MacroAssemblerX86Shared::branchNegativeZero(FloatRegister reg,
                                             Register scratch,
-                                            Label *label)
+                                            Label *label,
+                                            bool maybeNonZero)
 {
     // Determines whether the low double contained in the XMM register reg
     // is equal to -0.0.
@@ -205,12 +206,14 @@ MacroAssemblerX86Shared::branchNegativeZero(FloatRegister reg,
 #if defined(JS_CODEGEN_X86)
     Label nonZero;
 
-    // Compare to zero. Lets through {0, -0}.
-    xorpd(ScratchDoubleReg, ScratchDoubleReg);
+    // if not already compared to zero
+    if (maybeNonZero) {
+        // Compare to zero. Lets through {0, -0}.
+        xorpd(ScratchDoubleReg, ScratchDoubleReg);
 
-    // If reg is non-zero, jump to nonZero.
-    branchDouble(DoubleNotEqual, reg, ScratchDoubleReg, &nonZero);
-
+        // If reg is non-zero, jump to nonZero.
+        branchDouble(DoubleNotEqual, reg, ScratchDoubleReg, &nonZero);
+    }
     // Input register is either zero or negative zero. Retrieve sign of input.
     movmskpd(reg, scratch);
 

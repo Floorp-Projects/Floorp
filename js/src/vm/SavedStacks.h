@@ -14,7 +14,7 @@
 
 namespace js {
 
-class SavedFrame : public JSObject {
+class SavedFrame : public NativeObject {
     friend class SavedStacks;
 
   public:

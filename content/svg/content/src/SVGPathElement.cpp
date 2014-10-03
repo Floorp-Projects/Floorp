@@ -22,8 +22,6 @@
 #include "nsStyleStruct.h"
 #include "SVGContentUtils.h"
 
-class gfxContext;
-
 NS_IMPL_NS_NEW_NAMESPACED_SVG_ELEMENT(Path)
 
 using namespace mozilla::gfx;
@@ -334,12 +332,6 @@ SVGPathElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
   mD.GetAnimValue().GetMarkerPositioningData(aMarks);
 }
 
-void
-SVGPathElement::ConstructPath(gfxContext *aCtx)
-{
-  mD.GetAnimValue().ConstructPath(aCtx);
-}
-
 float
 SVGPathElement::GetPathLengthScale(PathLengthScaleForType aFor)
 {
@@ -392,7 +384,7 @@ SVGPathElement::BuildPath(PathBuilder* aBuilder)
     // exposes hit-testing of strokes that are not actually painted. For that
     // reason we do not check for eStyleSVGPaintType_None or check the stroke
     // opacity here.
-    if (style->mStrokeLinecap == NS_STYLE_STROKE_LINECAP_SQUARE) {
+    if (style->mStrokeLinecap != NS_STYLE_STROKE_LINECAP_BUTT) {
       strokeLineCap = style->mStrokeLinecap;
       strokeWidth = SVGContentUtils::GetStrokeWidth(this, styleContext, nullptr);
     }
