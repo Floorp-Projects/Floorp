@@ -108,6 +108,12 @@ public:
     return mPostAnimationRestyles;
   }
 
+  // Whether we're currently in the animation phase of restyle
+  // processing (to be eliminated in bug 960465)
+  bool IsProcessingAnimationStyleChange() const {
+    return mIsProcessingAnimationStyleChange;
+  }
+
   /**
    * Reparent the style contexts of this frame subtree.  The parent frame of
    * aFrame must be changed to the new parent before this function is called;
@@ -449,6 +455,9 @@ private:
   // styles associated with animation.  Only true when
   // mSkipAnimationRules is also true.
   bool mPostAnimationRestyles : 1;
+  // Whether we're currently in the animation phase of restyle
+  // processing (to be eliminated in bug 960465)
+  bool mIsProcessingAnimationStyleChange : 1;
 
   uint32_t mHoverGeneration;
   nsChangeHint mRebuildAllExtraHint;

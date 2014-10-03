@@ -66,6 +66,7 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
   , mInStyleRefresh(false)
   , mSkipAnimationRules(false)
   , mPostAnimationRestyles(false)
+  , mIsProcessingAnimationStyleChange(false)
   , mHoverGeneration(0)
   , mRebuildAllExtraHint(nsChangeHint(0))
   , mLastUpdateForThrottledAnimations(aPresContext->RefreshDriver()->
@@ -1575,7 +1576,11 @@ RestyleManager::ProcessPendingRestyles()
   // the running transition so it can check for a new change on the same
   // property, and then posts an immediate animation style change).
   mPresContext->SetProcessingAnimationStyleChange(true);
+  MOZ_ASSERT(!mIsProcessingAnimationStyleChange, "nesting forbidden");
+  mIsProcessingAnimationStyleChange = true;
   mPendingAnimationRestyles.ProcessRestyles();
+  MOZ_ASSERT(mIsProcessingAnimationStyleChange, "nesting forbidden");
+  mIsProcessingAnimationStyleChange = false;
   mPresContext->SetProcessingAnimationStyleChange(false);
 
   mPresContext->SetProcessingRestyles(false);
