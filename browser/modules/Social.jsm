@@ -271,8 +271,7 @@ function CreateSocialStatusWidget(aId, aProvider) {
     onBuild: function(aDocument) {
       let node = aDocument.createElement('toolbarbutton');
       node.id = this.id;
-      node.setAttribute('class', 'toolbarbutton-1 chromeclass-toolbar-additional social-status-button');
-      node.setAttribute('type', "badged");
+      node.setAttribute('class', 'toolbarbutton-1 chromeclass-toolbar-additional social-status-button badged-button');
       node.style.listStyleImage = "url(" + (aProvider.icon32URL || aProvider.iconURL) + ")";
       node.setAttribute("origin", aProvider.origin);
       node.setAttribute("label", aProvider.name);

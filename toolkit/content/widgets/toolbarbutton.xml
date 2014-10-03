@@ -14,7 +14,7 @@
     <resources>
       <stylesheet src="chrome://global/skin/toolbarbutton.css"/>
     </resources>
-    
+
     <content>
       <children includes="observes|template|menupopup|panel|tooltip"/>
       <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,consumeanchor"/>
@@ -25,7 +25,7 @@
     </content>
   </binding>
 
-  <binding id="menu" display="xul:menu" 
+  <binding id="menu" display="xul:menu"
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
     <content>
       <children includes="observes|template|menupopup|panel|tooltip"/>
@@ -38,7 +38,7 @@
                       class="toolbarbutton-menu-dropmarker" xbl:inherits="disabled,label"/>
     </content>
   </binding>
-  
+
   <binding id="menu-vertical" display="xul:menu"
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
     <content>
@@ -56,8 +56,8 @@
       </xul:hbox>
     </content>
   </binding>
-  
-  <binding id="menu-button" display="xul:menu" 
+
+  <binding id="menu-button" display="xul:menu"
            extends="chrome://global/content/bindings/button.xml#menu-button-base">
     <resources>
       <stylesheet src="chrome://global/skin/toolbarbutton.css"/>
@@ -78,6 +78,21 @@
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
     <content>
       <xul:image class="toolbarbutton-icon" xbl:inherits="src=image"/>
+    </content>
+  </binding>
+
+  <binding id="toolbarbutton-badged"
+           extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">
+    <content>
+      <children includes="observes|template|menupopup|panel|tooltip"/>
+      <xul:hbox class="toolbarbutton-badge-container" align="start" pack="end">
+        <xul:hbox class="toolbarbutton-badge" xbl:inherits="badge"/>
+        <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label"/>
+      </xul:hbox>
+      <xul:label class="toolbarbutton-text" crop="right" flex="1"
+                 xbl:inherits="value=label,accesskey,crop,wrap"/>
+      <xul:label class="toolbarbutton-multiline-text" flex="1"
+                 xbl:inherits="xbl:text=label,accesskey,wrap"/>
     </content>
   </binding>
 </bindings>

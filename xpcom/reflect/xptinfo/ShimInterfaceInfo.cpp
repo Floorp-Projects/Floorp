@@ -102,7 +102,6 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMediaError.h"
 #include "nsIDOMMediaList.h"
-#include "nsIDOMMediaStream.h"
 #include "nsIDOMMessageEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMMouseScrollEvent.h"
@@ -236,10 +235,8 @@
 #include "mozilla/dom/HTMLTitleElementBinding.h"
 #include "mozilla/dom/HTMLUListElementBinding.h"
 #include "mozilla/dom/KeyEventBinding.h"
-#include "mozilla/dom/LocalMediaStreamBinding.h"
 #include "mozilla/dom/MediaErrorBinding.h"
 #include "mozilla/dom/MediaListBinding.h"
-#include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/MouseScrollEventBinding.h"
@@ -425,10 +422,8 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(HTMLTitleElement),
   DEFINE_SHIM(HTMLUListElement),
   DEFINE_SHIM(KeyEvent),
-  DEFINE_SHIM(LocalMediaStream),
   DEFINE_SHIM(MediaError),
   DEFINE_SHIM(MediaList),
-  DEFINE_SHIM(MediaStream),
   DEFINE_SHIM(MessageEvent),
   DEFINE_SHIM(MouseEvent),
   DEFINE_SHIM(MouseScrollEvent),

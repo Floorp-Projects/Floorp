@@ -11,7 +11,7 @@
 #include "nsNetUtil.h"
 #include "nsIPrincipal.h"
 #include "nsDOMFile.h"
-#include "nsIDOMMediaStream.h"
+#include "DOMMediaStream.h"
 #include "mozilla/dom/MediaSource.h"
 #include "nsIMemoryReporter.h"
 #include "mozilla/Preferences.h"
@@ -24,7 +24,7 @@ using mozilla::LoadInfo;
 // Hash table
 struct DataInfo
 {
-  // mObject is expected to be an nsIDOMBlob, nsIDOMMediaStream, or MediaSource
+  // mObject is expected to be an nsIDOMBlob, DOMMediaStream, or MediaSource
   nsCOMPtr<nsISupports> mObject;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCString mStack;
@@ -605,20 +605,12 @@ NS_GetStreamForBlobURI(nsIURI* aURI, nsIInputStream** aStream)
 }
 
 nsresult
-NS_GetStreamForMediaStreamURI(nsIURI* aURI, nsIDOMMediaStream** aStream)
+NS_GetStreamForMediaStreamURI(nsIURI* aURI, mozilla::DOMMediaStream** aStream)
 {
   NS_ASSERTION(IsMediaStreamURI(aURI), "Only call this with mediastream URIs");
 
   *aStream = nullptr;
-
-  nsCOMPtr<nsIDOMMediaStream> stream = do_QueryInterface(GetDataObject(aURI));
-  if (!stream) {
-    return NS_ERROR_DOM_BAD_URI;
-  }
-
-  *aStream = stream;
-  NS_ADDREF(*aStream);
-  return NS_OK;
+  return CallQueryInterface(GetDataObject(aURI), aStream);
 }
 
 NS_IMETHODIMP

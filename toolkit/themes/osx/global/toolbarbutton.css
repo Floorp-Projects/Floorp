@@ -76,6 +76,55 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
   text-shadow: inherit;
 }
 
+/* ::::: toolbarbutton badged ::::: */
+
+.toolbarbutton-badge {
+  background-color: #d90000;
+}
+
+.toolbarbutton-badge::after {
+  /* The |content| property is set in the content stylesheet. */
+  font-size: 9px;
+  padding: 1px 2px 2px;
+  color: #fff;
+  background-color: inherit;
+  border-radius: 2px;
+  box-shadow: 0 1px 0 hsla(0, 100%, 100%, .2) inset,
+              0 -1px 0 hsla(0, 0%, 0%, .1) inset,
+              0 1px 0 hsla(206, 50%, 10%, .2);
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  z-index: 1;
+  min-width: 10px;
+  line-height: 10px;
+  text-align: center;
+}
+
+.toolbarbutton-badge:-moz-window-inactive::after {
+  background-color: rgb(230,230,230);
+  box-shadow: none;
+  border: 1px solid rgb(206,206,206);
+  color: rgb(192,192,192);
+}
+
+.toolbarbutton-badge:-moz-locale-dir(rtl)::after {
+  left: -8px;
+  right: auto;
+}
+
+toolbar[mode="icons"] > *|* > .toolbarbutton-badge::after {
+  right: -10px;
+}
+
+toolbar[mode="icons"] > *|* > .toolbarbutton-badge:-moz-locale-dir(rtl)::after {
+  left: -10px;
+}
+
+.toolbarbutton-badge-container {
+  position: relative;
+}
+
 /* .......... dropmarker .......... */
 
 .toolbarbutton-menubutton-dropmarker {

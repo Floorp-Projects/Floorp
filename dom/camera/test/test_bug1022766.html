@@ -23,7 +23,7 @@ var config = {
 };
 
 function onError(e) {
-  ok(false, "Error" + JSON.stringify(e));
+  ok(false, "Error " + e);
 }
 
 var Camera = {
@@ -49,7 +49,7 @@ var Camera = {
     ok(false, "First call to autoFocus() succeeded unexpectedly");
   },
   failureOne: function test_failureOne(error) {
-    ok(error == "AutoFocusInterrupted", "First call to autoFocus() failed with: "
+    ok(error.name == "NS_ERROR_IN_PROGRESS", "First call to autoFocus() failed with: "
       + error);
     Camera.firstCallFailed = true;
     Camera.checkForDone();
@@ -67,7 +67,8 @@ var Camera = {
   },
 
   start: function test_start() {
-    function onSuccess(camera, config) {
+    function onSuccess(d) {
+      var camera = d.camera;
       Camera.cameraObj = camera;
       Camera.viewfinder.mozSrcObject = camera;
       Camera.viewfinder.play();
@@ -75,11 +76,11 @@ var Camera = {
       // It doesn't matter if the emulator supports focus or not;
       // this is just testing the sequencing.
       camera.onAutoFocusCompleted = Camera.callback;
-      camera.autoFocus(Camera.successOne, Camera.failureOne);
-      camera.autoFocus(Camera.successTwo, Camera.failureTwo);
+      camera.autoFocus().then(Camera.successOne, Camera.failureOne);
+      camera.autoFocus().then(Camera.successTwo, Camera.failureTwo);
     };
 
-    navigator.mozCameras.getCamera(whichCamera, config, onSuccess, onError);
+    navigator.mozCameras.getCamera(whichCamera, config).then(onSuccess, onError);
   }
 }
 

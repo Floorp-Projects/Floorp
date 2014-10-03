@@ -4,7 +4,6 @@
 
 #include "nsISupports.idl"
 #include "nsIVariant.idl"
-#include "nsIDOMMediaStream.idl"
 
 [scriptable, builtinclass, uuid(4af2bdb7-1547-4d10-8886-02a78c3c0b83)]
 interface nsIMediaDevice : nsISupports
@@ -27,7 +26,7 @@ interface nsIDOMGetUserMediaSuccessCallback : nsISupports
 {
   /*
    * value must be a nsIDOMBlob if picture is true and a
-   * nsIDOMLocalMediaStream if either audio or video are true.
+   * DOMLocalMediaStream if either audio or video are true.
    */
   void onSuccess(in nsISupports value);
 };
