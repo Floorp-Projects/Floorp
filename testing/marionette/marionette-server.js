@@ -374,6 +374,19 @@ MarionetteServerConnection.prototype = {
   },
 
   /**
+  */
+  addFrameCloseListener: function MDA_addFrameCloseListener(action) {
+    let curWindow = this.getCurrentWindow();
+    let self = this;
+    this.mozBrowserClose = function() {
+      curWindow.removeEventListener('mozbrowserclose', self.mozBrowserClose, true);
+      self.switchToGlobalMessageManager();
+      self.sendError("The frame closed during the " + action +  ", recovering to allow further communications", 500, null, self.command_id);
+    };
+    curWindow.addEventListener('mozbrowserclose', this.mozBrowserClose, true);
+  },
+
+  /**
    * Create a new BrowserObj for window and add to known browsers
    *
    * @param nsIDOMWindow win
@@ -1526,6 +1539,7 @@ MarionetteServerConnection.prototype = {
       this.sendError("Command 'singleTap' is not available in chrome context", 500, null, this.command_id);
     }
     else {
+      this.addFrameCloseListener("tap");
       this.sendAsync("singleTap",
                      {
                        id: serId,
@@ -1548,6 +1562,7 @@ MarionetteServerConnection.prototype = {
       this.sendError("Command 'actionChain' is not available in chrome context", 500, null, this.command_id);
     }
     else {
+      this.addFrameCloseListener("action chain");
       this.sendAsync("actionChain",
                      {
                        chain: aRequest.parameters.chain,
@@ -1572,6 +1587,7 @@ MarionetteServerConnection.prototype = {
        this.sendError("Command 'multiAction' is not available in chrome context", 500, null, this.command_id);
     }
     else {
+      this.addFrameCloseListener("multi action chain");
       this.sendAsync("multiAction",
                      {
                        value: aRequest.parameters.value,
@@ -1734,14 +1750,7 @@ MarionetteServerConnection.prototype = {
       // This fires the mozbrowserclose event when it closes so we need to
       // listen for it and then just send an error back. The person making the
       // call should be aware something isnt right and handle accordingly
-      let curWindow = this.getCurrentWindow();
-      let self = this;
-      this.mozBrowserClose = function() {
-        curWindow.removeEventListener('mozbrowserclose', self.mozBrowserClose, true);
-        self.switchToGlobalMessageManager();
-        self.sendError("The frame closed during the click, recovering to allow further communications", 500, null, command_id);
-      };
-      curWindow.addEventListener('mozbrowserclose', this.mozBrowserClose, true);
+      this.addFrameCloseListener("click");
       this.sendAsync("clickElement",
                      { id: aRequest.parameters.id },
                      command_id);
