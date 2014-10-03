@@ -33,6 +33,10 @@
 // pretty-printing, which are (a) correctly escaping strings, and (b) adding
 // appropriate indentation and commas between items.
 //
+// By default, every property is placed on its own line. However, it is
+// possible to request that objects and arrays be placed entirely on a single
+// line, which can reduce output size significantly in some cases.
+//
 // Strings used (for property names and string property values) are |const
 // char*| throughout, and can be ASCII or UTF-8.
 //
@@ -54,6 +58,13 @@
 //       w.StartObjectElement();
 //       {
 //         w.PointerProperty("ptr", (void*)0x12345678);
+//         w.StartArrayProperty("single-line array", w.SingleLineStyle);
+//         {
+//           w.IntElement(1);
+//           w.StartObjectElement();  // SingleLineStyle is inherited from
+//           w.EndObjectElement();    //   above for this collection
+//         }
+//         w.EndArray();
 //       }
 //       w.EndObjectElement();
 //     }
@@ -71,7 +82,8 @@
 //   "array": [
 //    3.4,
 //    {
-//     "ptr": "0x12345678"
+//     "ptr": "0x12345678",
+//     "single-line array": [1, {}]
 //    }
 //   ]
 //  }
@@ -217,8 +229,21 @@ class JSONWriter
     }
   };
 
+public:
+  // Collections (objects and arrays) are printed in a multi-line style by
+  // default. This can be changed to a single-line style if SingleLineStyle is
+  // specified. If a collection is printed in single-line style, every nested
+  // collection within it is also printed in single-line style, even if
+  // multi-line style is requested.
+  enum CollectionStyle {
+    MultiLineStyle,   // the default
+    SingleLineStyle
+  };
+
+private:
   const UniquePtr<JSONWriteFunc> mWriter;
   Vector<bool, 8> mNeedComma;     // do we need a comma at depth N?
+  Vector<bool, 8> mNeedNewlines;  // do we need newlines at depth N?
   size_t mDepth;                  // the current nesting depth
 
   void Indent()
@@ -236,10 +261,12 @@ class JSONWriter
     if (mNeedComma[mDepth]) {
       mWriter->Write(",");
     }
-    if (mDepth > 0) {
+    if (mDepth > 0 && mNeedNewlines[mDepth]) {
       mWriter->Write("\n");
+      Indent();
+    } else if (mNeedComma[mDepth]) {
+      mWriter->Write(" ");
     }
-    Indent();
   }
 
   void PropertyNameAndColon(const char* aName)
@@ -272,15 +299,18 @@ class JSONWriter
     mNeedComma[mDepth] = true;
   }
 
-  void NewCommaEntry()
+  void NewVectorEntries()
   {
-    // If this tiny allocation OOMs we might as well just crash because we must
-    // be in serious memory trouble.
+    // If these tiny allocations OOM we might as well just crash because we
+    // must be in serious memory trouble.
     MOZ_RELEASE_ASSERT(mNeedComma.growByUninitialized(1));
+    MOZ_RELEASE_ASSERT(mNeedNewlines.growByUninitialized(1));
     mNeedComma[mDepth] = false;
+    mNeedNewlines[mDepth] = true;
   }
 
-  void StartCollection(const char* aMaybePropertyName, const char* aStartChar)
+  void StartCollection(const char* aMaybePropertyName, const char* aStartChar,
+                       CollectionStyle aStyle = MultiLineStyle)
   {
     Separator();
     if (aMaybePropertyName) {
@@ -291,15 +321,21 @@ class JSONWriter
     mWriter->Write(aStartChar);
     mNeedComma[mDepth] = true;
     mDepth++;
-    NewCommaEntry();
+    NewVectorEntries();
+    mNeedNewlines[mDepth] =
+      mNeedNewlines[mDepth - 1] && aStyle == MultiLineStyle;
   }
 
   // Adds the whitespace and closing char necessary to end a collection.
   void EndCollection(const char* aEndChar)
   {
-    mDepth--;
-    mWriter->Write("\n");
-    Indent();
+    if (mNeedNewlines[mDepth]) {
+      mWriter->Write("\n");
+      mDepth--;
+      Indent();
+    } else {
+      mDepth--;
+    }
     mWriter->Write(aEndChar);
   }
 
@@ -307,9 +343,10 @@ public:
   explicit JSONWriter(UniquePtr<JSONWriteFunc> aWriter)
     : mWriter(Move(aWriter))
     , mNeedComma()
+    , mNeedNewlines()
     , mDepth(0)
   {
-    NewCommaEntry();
+    NewVectorEntries();
   }
 
   // Returns the JSONWriteFunc passed in at creation, for temporary use. The
@@ -317,15 +354,18 @@ public:
   JSONWriteFunc* WriteFunc() const { return mWriter.get(); }
 
   // For all the following functions, the "Prints:" comment indicates what the
-  // basic output looks like. However, it doesn't indicate the indentation and
+  // basic output looks like. However, it doesn't indicate the whitespace and
   // trailing commas, which are automatically added as required.
   //
   // All property names and string properties are escaped as necessary.
 
   // Prints: {
-  void Start() { StartCollection(nullptr, "{"); }
+  void Start(CollectionStyle aStyle = MultiLineStyle)
+  {
+    StartCollection(nullptr, "{", aStyle);
+  }
 
-  // Prints: }\n
+  // Prints: }
   void End() { EndCollection("}\n"); }
 
   // Prints: "<aName>": null
@@ -396,19 +436,33 @@ public:
   void PointerElement(const void* aPtr) { PointerProperty(nullptr, aPtr); }
 
   // Prints: "<aName>": [
-  void StartArrayProperty(const char* aName) { StartCollection(aName, "["); }
+  void StartArrayProperty(const char* aName,
+                          CollectionStyle aStyle = MultiLineStyle)
+  {
+    StartCollection(aName, "[", aStyle);
+  }
 
   // Prints: [
-  void StartArrayElement() { StartArrayProperty(nullptr); }
+  void StartArrayElement(CollectionStyle aStyle = MultiLineStyle)
+  {
+    StartArrayProperty(nullptr, aStyle);
+  }
 
   // Prints: ]
   void EndArray() { EndCollection("]"); }
 
   // Prints: "<aName>": {
-  void StartObjectProperty(const char* aName) { StartCollection(aName, "{"); }
+  void StartObjectProperty(const char* aName,
+                           CollectionStyle aStyle = MultiLineStyle)
+  {
+    StartCollection(aName, "{", aStyle);
+  }
 
   // Prints: {
-  void StartObjectElement() { StartObjectProperty(nullptr); }
+  void StartObjectElement(CollectionStyle aStyle = MultiLineStyle)
+  {
+    StartObjectProperty(nullptr, aStyle);
+  }
 
   // Prints: }
   void EndObject() { EndCollection("}"); }
