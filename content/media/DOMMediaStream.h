@@ -6,13 +6,13 @@
 #ifndef NSDOMMEDIASTREAM_H_
 #define NSDOMMEDIASTREAM_H_
 
-#include "nsIDOMMediaStream.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "StreamBuffer.h"
 #include "nsIDOMWindow.h"
 #include "nsIPrincipal.h"
 #include "mozilla/PeerIdentity.h"
+#include "mozilla/DOMEventTargetHelper.h"
 
 class nsXPCClassInfo;
 
@@ -48,11 +48,14 @@ class MediaTrackListListener;
 
 class MediaStreamDirectListener;
 
+#define NS_DOMMEDIASTREAM_IID \
+{ 0x8cb65468, 0x66c0, 0x444e, \
+  { 0x89, 0x9f, 0x89, 0x1d, 0x9e, 0xd2, 0xbe, 0x7c } }
+
 /**
  * DOM wrapper for MediaStreams.
  */
-class DOMMediaStream : public nsIDOMMediaStream,
-                       public nsWrapperCache
+class DOMMediaStream : public DOMEventTargetHelper
 {
   friend class DOMLocalMediaStream;
   typedef dom::MediaStreamTrack MediaStreamTrack;
@@ -69,8 +72,11 @@ public:
 
   DOMMediaStream();
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMMediaStream)
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DOMMediaStream,
+                                           DOMEventTargetHelper)
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOMMEDIASTREAM_IID)
 
   nsIDOMWindow* GetParentObject() const
   {
@@ -295,13 +301,20 @@ private:
   nsAutoPtr<PeerIdentity> mPeerIdentity;
 };
 
-class DOMLocalMediaStream : public DOMMediaStream,
-                            public nsIDOMLocalMediaStream
+NS_DEFINE_STATIC_IID_ACCESSOR(DOMMediaStream,
+                              NS_DOMMEDIASTREAM_IID)
+
+#define NS_DOMLOCALMEDIASTREAM_IID \
+{ 0xb1437260, 0xec61, 0x4dfa, \
+  { 0x92, 0x54, 0x04, 0x44, 0xe2, 0xb5, 0x94, 0x9c } }
+
+class DOMLocalMediaStream : public DOMMediaStream
 {
 public:
   DOMLocalMediaStream() {}
 
   NS_DECL_ISUPPORTS_INHERITED
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOMLOCALMEDIASTREAM_IID)
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
@@ -324,6 +337,9 @@ public:
 protected:
   virtual ~DOMLocalMediaStream();
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(DOMLocalMediaStream,
+                              NS_DOMLOCALMEDIASTREAM_IID)
 
 class DOMAudioNodeMediaStream : public DOMMediaStream
 {

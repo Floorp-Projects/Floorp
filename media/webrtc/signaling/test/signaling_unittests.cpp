@@ -269,7 +269,7 @@ public:
   NS_IMETHODIMP OnSetRemoteDescriptionError(uint32_t code, const char *msg, ER&);
   NS_IMETHODIMP NotifyDataChannel(nsIDOMDataChannel *channel, ER&);
   NS_IMETHODIMP OnStateChange(PCObserverStateType state_type, ER&, void*);
-  NS_IMETHODIMP OnAddStream(nsIDOMMediaStream *stream, ER&);
+  NS_IMETHODIMP OnAddStream(DOMMediaStream *stream, ER&);
   NS_IMETHODIMP OnRemoveStream(ER&);
   NS_IMETHODIMP OnAddTrack(ER&);
   NS_IMETHODIMP OnRemoveTrack(ER&);
@@ -429,23 +429,21 @@ TestObserver::OnStateChange(PCObserverStateType state_type, ER&, void*)
 
 
 NS_IMETHODIMP
-TestObserver::OnAddStream(nsIDOMMediaStream *stream, ER&)
+TestObserver::OnAddStream(DOMMediaStream *stream, ER&)
 {
   PR_ASSERT(stream);
 
-  DOMMediaStream *ms = static_cast<DOMMediaStream *>(stream);
-
-  std::cout << name << ": OnAddStream called hints=" << ms->GetHintContents()
+  std::cout << name << ": OnAddStream called hints=" << stream->GetHintContents()
             << " thread=" << PR_GetCurrentThread() << std::endl ;
 
   onAddStreamCalled = true;
 
-  streams.push_back(ms);
+  streams.push_back(stream);
 
   // We know that the media stream is secretly a Fake_SourceMediaStream,
   // so now we can start it pulling from us
   nsRefPtr<Fake_SourceMediaStream> fs =
-    static_cast<Fake_SourceMediaStream *>(ms->GetStream());
+    static_cast<Fake_SourceMediaStream *>(stream->GetStream());
 
   test_utils->sts_target()->Dispatch(
     WrapRunnable(fs, &Fake_SourceMediaStream::Start),
