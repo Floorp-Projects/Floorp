@@ -97,11 +97,8 @@ TamperOnce(/*in/out*/ ByteString& item, const ByteString& from,
   return Success;
 }
 
-// An empty string returned from an encoding function signifies failure.
-const ByteString ENCODING_FAILED;
-
 // Given a tag and a value, generates a DER-encoded tag-length-value item.
-static ByteString
+ByteString
 TLV(uint8_t tag, const ByteString& value)
 {
   ByteString result;
@@ -117,8 +114,9 @@ TLV(uint8_t tag, const ByteString& value)
     result.push_back(static_cast<uint8_t>(value.length() / 256));
     result.push_back(static_cast<uint8_t>(value.length() % 256));
   } else {
-    assert(false);
-    return ENCODING_FAILED;
+    // It is MUCH more convenient for TLV to be infallible than for it to have
+    // "proper" error handling.
+    abort();
   }
   result.append(value);
   return result;
@@ -155,8 +153,8 @@ static ByteString
 HashedOctetString(const ByteString& bytes)
 {
   ByteString digest(SHA1(bytes));
-  if (digest == ENCODING_FAILED) {
-    return ENCODING_FAILED;
+  if (ENCODING_FAILED(digest)) {
+    return ByteString();
   }
   return TLV(der::OCTET_STRING, digest);
 }
@@ -190,7 +188,9 @@ Integer(long value)
 {
   if (value < 0 || value > 127) {
     // TODO: add encoding of larger values
-    return ENCODING_FAILED;
+    // It is MUCH more convenient for Integer to be infallible than for it to
+    // have "proper" error handling.
+    abort();
   }
 
   ByteString encodedValue;
@@ -225,7 +225,7 @@ TimeToEncodedTime(time_t time, TimeEncoding encoding)
 
   tm exploded;
   if (!gmtime_r(&time, &exploded)) {
-    return ENCODING_FAILED;
+    return ByteString();
   }
 
   if (exploded.tm_sec >= 60) {
@@ -237,7 +237,7 @@ TimeToEncodedTime(time_t time, TimeEncoding encoding)
   int year = exploded.tm_year + 1900;
 
   if (encoding == UTCTime && (year < 1950 || year >= 2050)) {
-    return ENCODING_FAILED;
+    return ByteString();
   }
 
   ByteString value;
@@ -281,7 +281,7 @@ TimeToTimeChoice(time_t time)
 {
   tm exploded;
   if (!gmtime_r(&time, &exploded)) {
-    return ENCODING_FAILED;
+    return ByteString();
   }
   TimeEncoding encoding = (exploded.tm_year + 1900 >= 1950 &&
                            exploded.tm_year + 1900 < 2050)
@@ -341,14 +341,17 @@ YMDHMS(int16_t year, int16_t month, int16_t day,
 
 static ByteString
 SignedData(const ByteString& tbsData,
-           TestKeyPair& keyPair,
+           /*optional*/ TestKeyPair* keyPair,
            SignatureAlgorithm signatureAlgorithm,
            bool corrupt, /*optional*/ const ByteString* certs)
 {
   ByteString signature;
-  if (keyPair.SignData(tbsData, signatureAlgorithm, signature) != Success) {
-     return ENCODING_FAILED;
-   }
+  if (keyPair) {
+    if (keyPair->SignData(tbsData, signatureAlgorithm, signature)
+          != Success) {
+       return ByteString();
+     }
+  }
 
   ByteString signatureAlgorithmDER;
   switch (signatureAlgorithm) {
@@ -357,14 +360,14 @@ SignedData(const ByteString& tbsData,
                                    sizeof(alg_sha256WithRSAEncryption));
       break;
     default:
-      return ENCODING_FAILED;
+      return ByteString();
   }
 
   // TODO: add ability to have signatures of bit length not divisible by 8,
   // resulting in unused bits in the bitstring encoding
   ByteString signatureNested(BitString(signature, corrupt));
-  if (signatureNested == ENCODING_FAILED) {
-    return ENCODING_FAILED;
+  if (ENCODING_FAILED(signatureNested)) {
+    return ByteString();
   }
 
   ByteString certsNested;
@@ -375,14 +378,8 @@ SignedData(const ByteString& tbsData,
       ++certs;
     }
     ByteString certsSequence(TLV(der::SEQUENCE, certsSequenceValue));
-    if (certsSequence == ENCODING_FAILED) {
-      return ENCODING_FAILED;
-    }
     certsNested = TLV(der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0,
                       certsSequence);
-    if (certsNested == ENCODING_FAILED) {
-      return ENCODING_FAILED;
-    }
   }
 
   ByteString value;
@@ -411,20 +408,11 @@ Extension(Input extnID, ExtensionCriticality criticality,
 
   if (criticality == ExtensionCriticality::Critical) {
     ByteString critical(Boolean(true));
-    if (critical == ENCODING_FAILED) {
-      return ENCODING_FAILED;
-    }
     encoded.append(critical);
   }
 
   ByteString extnValueSequence(TLV(der::SEQUENCE, extnValueBytes));
-  if (extnValueBytes == ENCODING_FAILED) {
-    return ENCODING_FAILED;
-  }
   ByteString extnValue(TLV(der::OCTET_STRING, extnValueSequence));
-  if (extnValue == ENCODING_FAILED) {
-    return ENCODING_FAILED;
-  }
   encoded.append(extnValue);
   return TLV(der::SEQUENCE, encoded);
 }
@@ -487,7 +475,7 @@ CreateEncodedCertificate(long version, Input signature,
   // with issuerKeyPair.
   ScopedTestKeyPair subjectKeyPair(GenerateKeyPair());
   if (!subjectKeyPair) {
-    return ENCODING_FAILED;
+    return ByteString();
   }
 
   ByteString tbsCertificate(TBSCertificate(version, serialNumber,
@@ -495,16 +483,16 @@ CreateEncodedCertificate(long version, Input signature,
                                            notAfter, subjectNameDER,
                                            subjectKeyPair->subjectPublicKeyInfo,
                                            extensions));
-  if (tbsCertificate == ENCODING_FAILED) {
-    return ENCODING_FAILED;
+  if (ENCODING_FAILED(tbsCertificate)) {
+    return ByteString();
   }
 
   ByteString result(SignedData(tbsCertificate,
-                               issuerKeyPair ? *issuerKeyPair
-                                             : *subjectKeyPair,
+                               issuerKeyPair ? issuerKeyPair
+                                             : subjectKeyPair.get(),
                                signatureAlgorithm, false, nullptr));
-  if (result == ENCODING_FAILED) {
-    return ENCODING_FAILED;
+  if (ENCODING_FAILED(result)) {
+    return ByteString();
   }
 
   MaybeLogOutput(result, "cert");
@@ -540,14 +528,8 @@ TBSCertificate(long versionValue,
 
   if (versionValue != static_cast<long>(der::Version::v1)) {
     ByteString versionInteger(Integer(versionValue));
-    if (versionInteger == ENCODING_FAILED) {
-      return ENCODING_FAILED;
-    }
     ByteString version(TLV(der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 0,
                            versionInteger));
-    if (version == ENCODING_FAILED) {
-      return ENCODING_FAILED;
-    }
     value.append(version);
   }
 
@@ -561,19 +543,19 @@ TBSCertificate(long versionValue,
   ByteString validity;
   {
     ByteString notBefore(TimeToTimeChoice(notBeforeTime));
-    if (notBefore == ENCODING_FAILED) {
-      return ENCODING_FAILED;
+    if (ENCODING_FAILED(notBefore)) {
+      return ByteString();
     }
     ByteString notAfter(TimeToTimeChoice(notAfterTime));
-    if (notAfter == ENCODING_FAILED) {
-      return ENCODING_FAILED;
+    if (ENCODING_FAILED(notAfter)) {
+      return ByteString();
     }
     ByteString validityValue;
     validityValue.append(notBefore);
     validityValue.append(notAfter);
     validity = TLV(der::SEQUENCE, validityValue);
-    if (validity == ENCODING_FAILED) {
-      return ENCODING_FAILED;
+    if (ENCODING_FAILED(validity)) {
+      return ByteString();
     }
   }
   value.append(validity);
@@ -589,13 +571,13 @@ TBSCertificate(long versionValue,
       ++extensions;
     }
     ByteString extensionsSequence(TLV(der::SEQUENCE, extensionsValue));
-    if (extensionsSequence == ENCODING_FAILED) {
-      return ENCODING_FAILED;
+    if (ENCODING_FAILED(extensionsSequence)) {
+      return ByteString();
     }
     ByteString extensionsWrapped(
       TLV(der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 3, extensionsSequence));
-    if (extensionsWrapped == ENCODING_FAILED) {
-      return ENCODING_FAILED;
+    if (ENCODING_FAILED(extensionsWrapped)) {
+      return ByteString();
     }
     value.append(extensionsWrapped);
   }
@@ -644,15 +626,7 @@ CNToDERName(const char* cn)
   ava.append(tlv_id_at_commonName, sizeof(tlv_id_at_commonName));
   ava.append(value);
   ava = TLV(der::SEQUENCE, ava);
-  if (ava == ENCODING_FAILED) {
-    return ENCODING_FAILED;
-  }
-
   ByteString rdn(TLV(der::SET, ava));
-  if (rdn == ENCODING_FAILED) {
-    return ENCODING_FAILED;
-  }
-
   return TLV(der::SEQUENCE, rdn);
 }
 
@@ -674,17 +648,11 @@ CreateEncodedBasicConstraints(bool isCA,
 
   if (isCA) {
     ByteString cA(Boolean(true));
-    if (cA == ENCODING_FAILED) {
-      return ENCODING_FAILED;
-    }
     value.append(cA);
   }
 
   if (pathLenConstraintValue) {
     ByteString pathLenConstraint(Integer(*pathLenConstraintValue));
-    if (pathLenConstraint == ENCODING_FAILED) {
-      return ENCODING_FAILED;
-    }
     value.append(pathLenConstraint);
   }
 
@@ -718,7 +686,7 @@ CreateEncodedOCSPResponse(OCSPResponseContext& context)
 {
   if (!context.skipResponseBytes) {
     if (!context.signerKeyPair) {
-      return ENCODING_FAILED;
+      return ByteString();
     }
   }
 
@@ -738,31 +706,22 @@ CreateEncodedOCSPResponse(OCSPResponseContext& context)
   ByteString reponseStatusValue;
   reponseStatusValue.push_back(context.responseStatus);
   ByteString responseStatus(TLV(der::ENUMERATED, reponseStatusValue));
-  if (responseStatus == ENCODING_FAILED) {
-    return ENCODING_FAILED;
-  }
 
   ByteString responseBytesNested;
   if (!context.skipResponseBytes) {
     ByteString responseBytes(ResponseBytes(context));
-    if (responseBytes == ENCODING_FAILED) {
-      return ENCODING_FAILED;
+    if (ENCODING_FAILED(responseBytes)) {
+      return ByteString();
     }
 
     responseBytesNested = TLV(der::CONSTRUCTED | der::CONTEXT_SPECIFIC,
                               responseBytes);
-    if (responseBytesNested == ENCODING_FAILED) {
-      return ENCODING_FAILED;
-    }
   }
 
   ByteString value;
   value.append(responseStatus);
   value.append(responseBytesNested);
   ByteString result(TLV(der::SEQUENCE, value));
-  if (result == ENCODING_FAILED) {
-    return ENCODING_FAILED;
-  }
 
   MaybeLogOutput(result, "ocsp");
 
@@ -780,13 +739,10 @@ ResponseBytes(OCSPResponseContext& context)
     0x06, 0x09, 0x2B, 0x06, 0x01, 0x05, 0x05, 0x07, 0x30, 0x01, 0x01
   };
   ByteString response(BasicOCSPResponse(context));
-  if (response == ENCODING_FAILED) {
-    return ENCODING_FAILED;
+  if (ENCODING_FAILED(response)) {
+    return ByteString();
   }
   ByteString responseNested = TLV(der::OCTET_STRING, response);
-  if (responseNested == ENCODING_FAILED) {
-    return ENCODING_FAILED;
-  }
 
   ByteString value;
   value.append(id_pkix_ocsp_basic_encoded,
@@ -804,12 +760,12 @@ ByteString
 BasicOCSPResponse(OCSPResponseContext& context)
 {
   ByteString tbsResponseData(ResponseData(context));
-  if (tbsResponseData == ENCODING_FAILED) {
-    return ENCODING_FAILED;
+  if (ENCODING_FAILED(tbsResponseData)) {
+    return ByteString();
   }
 
   // TODO(bug 980538): certs
-  return SignedData(tbsResponseData, *context.signerKeyPair,
+  return SignedData(tbsResponseData, context.signerKeyPair.get(),
                     SignatureAlgorithm::rsa_pkcs1_with_sha256,
                     context.badSignature, context.certs);
 }
@@ -826,15 +782,9 @@ OCSPExtension(OCSPResponseContext& context, OCSPResponseExtension& extension)
   encoded.append(extension.id);
   if (extension.critical) {
     ByteString critical(Boolean(true));
-    if (critical == ENCODING_FAILED) {
-      return ENCODING_FAILED;
-    }
     encoded.append(critical);
   }
   ByteString value(TLV(der::OCTET_STRING, extension.value));
-  if (value == ENCODING_FAILED) {
-    return ENCODING_FAILED;
-  }
   encoded.append(value);
   return TLV(der::SEQUENCE, encoded);
 }
@@ -849,15 +799,12 @@ Extensions(OCSPResponseContext& context)
   for (OCSPResponseExtension* extension = context.extensions;
        extension; extension = extension->next) {
     ByteString extensionEncoded(OCSPExtension(context, *extension));
-    if (extensionEncoded == ENCODING_FAILED) {
-      return ENCODING_FAILED;
+    if (ENCODING_FAILED(extensionEncoded)) {
+      return ByteString();
     }
     value.append(extensionEncoded);
   }
   ByteString sequence(TLV(der::SEQUENCE, value));
-  if (sequence == ENCODING_FAILED) {
-    return ENCODING_FAILED;
-  }
   return TLV(der::CONSTRUCTED | der::CONTEXT_SPECIFIC | 1, sequence);
 }
 
@@ -871,21 +818,18 @@ ByteString
 ResponseData(OCSPResponseContext& context)
 {
   ByteString responderID(ResponderID(context));
-  if (responderID == ENCODING_FAILED) {
-    return ENCODING_FAILED;
+  if (ENCODING_FAILED(responderID)) {
+    return ByteString();
   }
   ByteString producedAtEncoded(TimeToGeneralizedTime(context.producedAt));
-  if (producedAtEncoded == ENCODING_FAILED) {
-    return ENCODING_FAILED;
+  if (ENCODING_FAILED(producedAtEncoded)) {
+    return ByteString();
   }
   ByteString response(SingleResponse(context));
-  if (response == ENCODING_FAILED) {
-    return ENCODING_FAILED;
+  if (ENCODING_FAILED(response)) {
+    return ByteString();
   }
   ByteString responses(TLV(der::SEQUENCE, response));
-  if (responses == ENCODING_FAILED) {
-    return ENCODING_FAILED;
-  }
   ByteString responseExtensions;
   if (context.extensions || context.includeEmptyExtensions) {
     responseExtensions = Extensions(context);
@@ -913,8 +857,8 @@ ResponderID(OCSPResponseContext& context)
     responderIDType = 1; // byName
   } else {
     contents = KeyHash(context.signerKeyPair->subjectPublicKey);
-    if (contents == ENCODING_FAILED) {
-      return ENCODING_FAILED;
+    if (ENCODING_FAILED(contents)) {
+      return ByteString();
     }
     responderIDType = 2; // byKey
   }
@@ -944,28 +888,25 @@ ByteString
 SingleResponse(OCSPResponseContext& context)
 {
   ByteString certID(CertID(context));
-  if (certID == ENCODING_FAILED) {
-    return ENCODING_FAILED;
+  if (ENCODING_FAILED(certID)) {
+    return ByteString();
   }
   ByteString certStatus(CertStatus(context));
-  if (certStatus == ENCODING_FAILED) {
-    return ENCODING_FAILED;
+  if (ENCODING_FAILED(certStatus)) {
+    return ByteString();
   }
   ByteString thisUpdateEncoded(TimeToGeneralizedTime(context.thisUpdate));
-  if (thisUpdateEncoded == ENCODING_FAILED) {
-    return ENCODING_FAILED;
+  if (ENCODING_FAILED(thisUpdateEncoded)) {
+    return ByteString();
   }
   ByteString nextUpdateEncodedNested;
   if (context.includeNextUpdate) {
     ByteString nextUpdateEncoded(TimeToGeneralizedTime(context.nextUpdate));
-    if (nextUpdateEncoded == ENCODING_FAILED) {
-      return ENCODING_FAILED;
+    if (ENCODING_FAILED(nextUpdateEncoded)) {
+      return ByteString();
     }
     nextUpdateEncodedNested = TLV(der::CONSTRUCTED | der::CONTEXT_SPECIFIC | 0,
                                   nextUpdateEncoded);
-    if (nextUpdateEncodedNested == ENCODING_FAILED) {
-      return ENCODING_FAILED;
-    }
   }
 
   ByteString value;
@@ -987,8 +928,8 @@ CertID(OCSPResponseContext& context)
   ByteString issuerName(context.certID.issuer.UnsafeGetData(),
                         context.certID.issuer.GetLength());
   ByteString issuerNameHash(HashedOctetString(issuerName));
-  if (issuerNameHash == ENCODING_FAILED) {
-    return ENCODING_FAILED;
+  if (ENCODING_FAILED(issuerNameHash)) {
+    return ByteString();
   }
 
   ByteString issuerKeyHash;
@@ -999,30 +940,27 @@ CertID(OCSPResponseContext& context)
     Reader input(context.certID.issuerSubjectPublicKeyInfo);
     Reader contents;
     if (der::ExpectTagAndGetValue(input, der::SEQUENCE, contents) != Success) {
-      return ENCODING_FAILED;
+      return ByteString();
     }
     // Skip AlgorithmIdentifier
     if (der::ExpectTagAndSkipValue(contents, der::SEQUENCE) != Success) {
-      return ENCODING_FAILED;
+      return ByteString();
     }
     Input subjectPublicKey;
     if (der::BitStringWithNoUnusedBits(contents, subjectPublicKey)
           != Success) {
-      return ENCODING_FAILED;
+      return ByteString();
     }
     issuerKeyHash = KeyHash(ByteString(subjectPublicKey.UnsafeGetData(),
                                        subjectPublicKey.GetLength()));
-    if (issuerKeyHash == ENCODING_FAILED) {
-      return ENCODING_FAILED;
+    if (ENCODING_FAILED(issuerKeyHash)) {
+      return ByteString();
     }
   }
 
   ByteString serialNumberValue(context.certID.serialNumber.UnsafeGetData(),
                                context.certID.serialNumber.GetLength());
   ByteString serialNumber(TLV(der::INTEGER, serialNumberValue));
-  if (serialNumber == ENCODING_FAILED) {
-    return ENCODING_FAILED;
-  }
 
   // python DottedOIDToCode.py --alg id-sha1 1.3.14.3.2.26
   static const uint8_t alg_id_sha1[] = {
@@ -1062,8 +1000,8 @@ CertStatus(OCSPResponseContext& context)
     case 1:
     {
       ByteString revocationTime(TimeToGeneralizedTime(context.revocationTime));
-      if (revocationTime == ENCODING_FAILED) {
-        return ENCODING_FAILED;
+      if (ENCODING_FAILED(revocationTime)) {
+        return ByteString();
       }
       // TODO(bug 980536): add support for revocationReason
       return TLV(der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 1, revocationTime);
@@ -1072,7 +1010,7 @@ CertStatus(OCSPResponseContext& context)
       assert(false);
       // fall through
   }
-  return ENCODING_FAILED;
+  return ByteString();
 }
 
 } } } // namespace mozilla::pkix::test
