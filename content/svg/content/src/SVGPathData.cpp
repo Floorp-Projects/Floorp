@@ -260,7 +260,7 @@ ApproximateZeroLengthSubpathSquareCaps(PathBuilder* aPB,
   // line is rather arbitrary, other than being chosen to meet the requirements
   // described in the comment above.
 
-  Float tinyLength = aStrokeWidth / 32;
+  Float tinyLength = aStrokeWidth / 512;
 
   aPB->MoveTo(aPoint);
   aPB->LineTo(aPoint + Point(tinyLength, 0));
@@ -284,7 +284,7 @@ ApproximateZeroLengthSubpathSquareCaps(const gfxPoint &aPoint, gfxContext *aCtx)
 
 #define MAYBE_APPROXIMATE_ZERO_LENGTH_SUBPATH_SQUARE_CAPS_TO_DT               \
   do {                                                                        \
-    if (capsAreSquare && !subpathHasLength && aStrokeWidth > 0 &&             \
+    if (!subpathHasLength && hasLineCaps && aStrokeWidth > 0 &&               \
         subpathContainsNonArc && SVGPathSegUtils::IsValidType(prevSegType) && \
         (!IsMoveto(prevSegType) || segType == PATHSEG_CLOSEPATH)) {           \
       ApproximateZeroLengthSubpathSquareCaps(builder, segStart, aStrokeWidth);\
@@ -310,7 +310,7 @@ SVGPathData::BuildPath(PathBuilder* builder,
     return nullptr; // paths without an initial moveto are invalid
   }
 
-  bool capsAreSquare = aStrokeLineCap == NS_STYLE_STROKE_LINECAP_SQUARE;
+  bool hasLineCaps = aStrokeLineCap != NS_STYLE_STROKE_LINECAP_BUTT;
   bool subpathHasLength = false;  // visual length
   bool subpathContainsNonArc = false;
 

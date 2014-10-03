@@ -392,7 +392,7 @@ SVGPathElement::BuildPath(PathBuilder* aBuilder)
     // exposes hit-testing of strokes that are not actually painted. For that
     // reason we do not check for eStyleSVGPaintType_None or check the stroke
     // opacity here.
-    if (style->mStrokeLinecap == NS_STYLE_STROKE_LINECAP_SQUARE) {
+    if (style->mStrokeLinecap != NS_STYLE_STROKE_LINECAP_BUTT) {
       strokeLineCap = style->mStrokeLinecap;
       strokeWidth = SVGContentUtils::GetStrokeWidth(this, styleContext, nullptr);
     }
