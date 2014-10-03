@@ -69,8 +69,6 @@ IsTypedArrayKey(JSProtoKey key)
     return key >= JSProto_Int8Array && key <= JSProto_Uint8ClampedArray;
 }
 
-bool SilentFailure(JSContext *cx, JS::HandleId id, const char *reason);
-
 // Whitelist for the standard ES classes we can Xray to.
 static bool
 IsJSXraySupported(JSProtoKey key)
@@ -169,15 +167,15 @@ OpaqueXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper, Ha
     if (!ok || desc.object())
         return ok;
 
-    return SilentFailure(cx, id, "object is not safely Xrayable");
+    return ReportWrapperDenial(cx, id, WrapperDenialForXray, "object is not safely Xrayable");
 }
 
 bool
-SilentFailure(JSContext *cx, HandleId id, const char *reason)
+ReportWrapperDenial(JSContext *cx, HandleId id, WrapperDenialType type, const char *reason)
 {
     CompartmentPrivate *priv = CompartmentPrivate::Get(CurrentGlobalOrNull(cx));
-    bool alreadyWarnedOnce = priv->warnedAboutXrays;
-    priv->warnedAboutXrays = true;
+    bool alreadyWarnedOnce = priv->wrapperDenialWarnings[type];
+    priv->wrapperDenialWarnings[type] = true;
 
     // The browser console warning is only emitted for the first violation,
     // whereas the (debug-only) NS_WARNING is emitted for each violation.
@@ -220,14 +218,27 @@ SilentFailure(JSContext *cx, HandleId id, const char *reason)
     if (win)
       windowId = win->WindowID();
 
-    nsPrintfCString errorMessage("XrayWrapper denied access to property %s (reason: %s). "
-                                 "See https://developer.mozilla.org/en-US/docs/Xray_vision "
-                                 "for more information. Note that only the first denied "
-                                 "property access from a given global object will be reported.",
-                                 NS_LossyConvertUTF16toASCII(propertyName).get(),
-                                 reason);
+
+    Maybe<nsPrintfCString> errorMessage;
+    if (type == WrapperDenialForXray) {
+        errorMessage.emplace("XrayWrapper denied access to property %s (reason: %s). "
+                             "See https://developer.mozilla.org/en-US/docs/Xray_vision "
+                             "for more information. Note that only the first denied "
+                             "property access from a given global object will be reported.",
+                             NS_LossyConvertUTF16toASCII(propertyName).get(),
+                             reason);
+    } else {
+        MOZ_ASSERT(type == WrapperDenialForCOW);
+        errorMessage.emplace("Security wrapper denied access to property %s on privileged "
+                             "Javascript object. Support for exposing privileged objects "
+                             "to untrusted content via __exposedProps__ is being gradually "
+                             "removed - use WebIDL bindings or Components.utils.cloneInto "
+                             "instead. Note that only the first denied property access from a "
+                             "given global object will be reported.",
+                             NS_LossyConvertUTF16toASCII(propertyName).get());
+    }
     nsString filenameStr(NS_ConvertASCIItoUTF16(filename.get()));
-    nsresult rv = errorObject->InitWithWindowID(NS_ConvertASCIItoUTF16(errorMessage),
+    nsresult rv = errorObject->InitWithWindowID(NS_ConvertASCIItoUTF16(errorMessage.ref()),
                                                 filenameStr,
                                                 EmptyString(),
                                                 line, 0,
@@ -265,7 +276,7 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext *cx,
     // Disallow accessor properties.
     if (desc.hasGetterOrSetter()) {
         JSAutoCompartment ac(cx, wrapper);
-        return SilentFailure(cx, id, "property has accessor");
+        return ReportWrapperDenial(cx, id, WrapperDenialForXray, "property has accessor");
     }
 
     // Apply extra scrutiny to objects.
@@ -276,20 +287,20 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext *cx,
         // Disallow non-subsumed objects.
         if (!AccessCheck::subsumes(target, propObj)) {
             JSAutoCompartment ac(cx, wrapper);
-            return SilentFailure(cx, id, "value not same-origin with target");
+            return ReportWrapperDenial(cx, id, WrapperDenialForXray, "value not same-origin with target");
         }
 
         // Disallow non-Xrayable objects.
         XrayType xrayType = GetXrayType(propObj);
         if (xrayType == NotXray || xrayType == XrayForOpaqueObject) {
             JSAutoCompartment ac(cx, wrapper);
-            return SilentFailure(cx, id, "value not Xrayable");
+            return ReportWrapperDenial(cx, id, WrapperDenialForXray, "value not Xrayable");
         }
 
         // Disallow callables.
         if (JS::IsCallable(propObj)) {
             JSAutoCompartment ac(cx, wrapper);
-            return SilentFailure(cx, id, "value is callable");
+            return ReportWrapperDenial(cx, id, WrapperDenialForXray, "value is callable");
         }
     }
 
@@ -304,7 +315,7 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext *cx,
         return false;
     }
     if (foundOnProto)
-        return SilentFailure(cx, id, "value shadows a property on the standard prototype");
+        return ReportWrapperDenial(cx, id, WrapperDenialForXray, "value shadows a property on the standard prototype");
 
     // We made it! Assign over the descriptor, and don't forget to wrap.
     outDesc.assign(desc.get());
