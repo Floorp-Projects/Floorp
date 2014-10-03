@@ -1893,6 +1893,25 @@ bool WebGLContext::BindArrayAttribToLocation0(WebGLProgram *program)
     return false;
 }
 
+static void
+LinkAndUpdateProgram(GLContext* gl, WebGLProgram* prog)
+{
+    GLuint name = prog->GLName();
+    gl->fLinkProgram(name);
+
+    prog->SetLinkStatus(false);
+
+    GLint ok = 0;
+    gl->fGetProgramiv(name, LOCAL_GL_LINK_STATUS, &ok);
+    if (!ok)
+        return;
+
+    if (!prog->UpdateInfo())
+        return;
+
+    prog->SetLinkStatus(true);
+}
+
 void
 WebGLContext::LinkProgram(WebGLProgram *program)
 {
@@ -1905,16 +1924,20 @@ WebGLContext::LinkProgram(WebGLProgram *program)
     InvalidateBufferFetching(); // we do it early in this function
     // as some of the validation below changes program state
 
-    GLuint progname = program->GLName();
-
     if (!program->NextGeneration()) {
         // XXX throw?
         return;
     }
 
     if (!program->HasBothShaderTypesAttached()) {
-        GenerateWarning("linkProgram: this program doesn't have both a vertex shader"
-                        " and a fragment shader");
+        GenerateWarning("linkProgram: this program doesn't have both a vertex"
+                        " shader and a fragment shader");
+        program->SetLinkStatus(false);
+        return;
+    }
+
+    if (program->HasBadShaderAttached()) {
+        GenerateWarning("linkProgram: The program has bad shaders attached.");
         program->SetLinkStatus(false);
         return;
     }
@@ -1925,56 +1948,25 @@ WebGLContext::LinkProgram(WebGLProgram *program)
         mIsMesa &&
         program->UpperBoundNumSamplerUniforms() > 16)
     {
-        GenerateWarning("Programs with more than 16 samplers are disallowed on Mesa drivers " "to avoid a Mesa crasher.");
+        GenerateWarning("Programs with more than 16 samplers are disallowed on"
+                        " Mesa drivers to avoid a Mesa crasher.");
         program->SetLinkStatus(false);
         return;
     }
 
-    bool updateInfoSucceeded = false;
-    GLint ok = 0;
-    if (gl->WorkAroundDriverBugs() &&
-        program->HasBadShaderAttached())
-    {
-        // it's a common driver bug, caught by program-test.html, that linkProgram doesn't
-        // correctly preserve the state of an in-use program that has been attached a bad shader
-        // see bug 777883
-        ok = false;
-    } else {
-        MakeContextCurrent();
-        gl->fLinkProgram(progname);
-        gl->fGetProgramiv(progname, LOCAL_GL_LINK_STATUS, &ok);
+    MakeContextCurrent();
+    LinkAndUpdateProgram(gl, program);
 
-        if (ok) {
-            updateInfoSucceeded = program->UpdateInfo();
-            program->SetLinkStatus(updateInfoSucceeded);
-
-            if (BindArrayAttribToLocation0(program)) {
-                GenerateWarning("linkProgram: relinking program to make attrib0 an "
-                                "array.");
-                gl->fLinkProgram(progname);
-                gl->fGetProgramiv(progname, LOCAL_GL_LINK_STATUS, &ok);
-                if (ok) {
-                    updateInfoSucceeded = program->UpdateInfo();
-                    program->SetLinkStatus(updateInfoSucceeded);
-                }
-            }
+    if (program->LinkStatus()) {
+        if (BindArrayAttribToLocation0(program)) {
+            GenerateWarning("linkProgram: Relinking program to make attrib0 an"
+                            " array.");
+            LinkAndUpdateProgram(gl, program);
         }
     }
 
-    if (ok) {
-        // Bug 750527
-        if (gl->WorkAroundDriverBugs() &&
-            updateInfoSucceeded &&
-            gl->Vendor() == gl::GLVendor::NVIDIA)
-        {
-            if (program == mCurrentProgram)
-                gl->fUseProgram(progname);
-        }
-    } else {
-        program->SetLinkStatus(false);
-
+    if (!program->LinkStatus()) {
         if (ShouldGenerateWarnings()) {
-
             // report shader/program infoLogs as warnings.
             // note that shader compilation errors can be deferred to linkProgram,
             // which is why we can't do anything in compileShader. In practice we could
@@ -2020,6 +2012,14 @@ WebGLContext::LinkProgram(WebGLProgram *program)
                 }
             }
         }
+        return;
+    }
+
+    if (gl->WorkAroundDriverBugs() &&
+        gl->Vendor() == gl::GLVendor::NVIDIA)
+    {
+        if (program == mCurrentProgram)
+            gl->fUseProgram(program->GLName());
     }
 }
 
