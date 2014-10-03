@@ -4330,8 +4330,3 @@ pref("dom.udpsocket.enabled", false);
 //     nsHostResolver.cpp.
 pref("dns.ttl-experiment.variant", 0);
 pref("dns.ttl-experiment.enabled", true);
-
-// Use raw ICU instead of CoreServices API in Unicode collation
-#ifdef XP_MACOSX
-pref("intl.collation.mac.use_icu", true);
-#endif
