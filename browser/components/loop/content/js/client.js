@@ -227,6 +227,8 @@ loop.Client = (function($) {
      * @param {Function} cb Callback(err, result)
      */
     setupOutgoingCall: function(calleeIds, callType, cb) {
+      // For direct calls, we only ever use the logged-in session. Direct
+      // calls by guests aren't valid.
       this.mozLoop.hawkRequest(this.mozLoop.LOOP_SESSION_TYPE.FXA,
         "/calls", "POST", {
           calleeId: calleeIds,
