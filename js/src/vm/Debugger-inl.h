@@ -14,6 +14,7 @@
 inline bool
 js::Debugger::onLeaveFrame(JSContext *cx, AbstractFramePtr frame, bool ok)
 {
+    MOZ_ASSERT_IF(frame.isInterpreterFrame(), frame.asInterpreterFrame() == cx->interpreterFrame());
     /* Traps must be cleared from eval frames, see slowPathOnLeaveFrame. */
     bool evalTraps = frame.isEvalFrame() &&
                      frame.script()->hasAnyBreakpointsOrStepMode();
