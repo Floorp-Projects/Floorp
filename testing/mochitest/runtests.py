@@ -184,9 +184,12 @@ class MessageLogger(object):
         # test_status messages buffering
         if is_error:
             if self.buffered_messages:
-                number_messages = min(self.BUFFERING_THRESHOLD, len(self.buffered_messages))
-                self.logger.info("dumping last {0} message(s)".format(number_messages))
-                self.logger.info("if you need more context, please use SimpleTest.requestCompleteLog() in your test")
+                snipped = len(self.buffered_messages) - self.BUFFERING_THRESHOLD
+                if snipped > 0:
+                  self.logger.info("<snipped {0} output lines - "
+                                   "if you need more context, please use "
+                                   "SimpleTest.requestCompleteLog() in your test>"
+                                   .format(snipped))
                 # Dumping previously buffered messages
                 self.dump_buffered(limit=True)
 
