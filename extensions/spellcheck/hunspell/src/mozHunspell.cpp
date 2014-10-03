@@ -76,7 +76,9 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/dom/ContentParent.h"
 
+using mozilla::dom::ContentParent;
 using mozilla::dom::EncodingUtils;
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(mozHunspell)
@@ -113,7 +115,7 @@ mozHunspell::mozHunspell()
 nsresult
 mozHunspell::Init()
 {
-  LoadDictionaryList();
+  LoadDictionaryList(false);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -344,7 +346,7 @@ NS_IMETHODIMP mozHunspell::GetDictionaryList(char16_t ***aDictionaries,
 }
 
 void
-mozHunspell::LoadDictionaryList()
+mozHunspell::LoadDictionaryList(bool aNotifyChildProcesses)
 {
   mDictionaries.Clear();
 
@@ -423,6 +425,10 @@ mozHunspell::LoadDictionaryList()
   // Now we have finished updating the list of dictionaries, update the current
   // dictionary and any editors which may use it.
   mozInlineSpellChecker::UpdateCanEnableInlineSpellChecking();
+
+  if (aNotifyChildProcesses) {
+    ContentParent::NotifyUpdatedDictionaries();
+  }
 
   // Check if the current dictionary is still available.
   // If not, try to replace it with another dictionary of the same language.
@@ -589,7 +595,7 @@ mozHunspell::Observe(nsISupports* aSubj, const char *aTopic,
                || !strcmp(aTopic, "profile-after-change"),
                "Unexpected observer topic");
 
-  LoadDictionaryList();
+  LoadDictionaryList(false);
 
   return NS_OK;
 }
@@ -598,7 +604,7 @@ mozHunspell::Observe(nsISupports* aSubj, const char *aTopic,
 NS_IMETHODIMP mozHunspell::AddDirectory(nsIFile *aDir)
 {
   mDynamicDirectories.AppendObject(aDir);
-  LoadDictionaryList();
+  LoadDictionaryList(true);
   return NS_OK;
 }
 
@@ -606,6 +612,6 @@ NS_IMETHODIMP mozHunspell::AddDirectory(nsIFile *aDir)
 NS_IMETHODIMP mozHunspell::RemoveDirectory(nsIFile *aDir)
 {
   mDynamicDirectories.RemoveObject(aDir);
-  LoadDictionaryList();
+  LoadDictionaryList(true);
   return NS_OK;
 }

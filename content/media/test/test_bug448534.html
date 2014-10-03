@@ -39,6 +39,7 @@ function stopped(event) {
     return;
   v._finished = true;
   ok(v.paused, "Video should be paused after removing from the Document");
+  removeNodeAndSource(v);
   manager.finished(v.token);
 }
 

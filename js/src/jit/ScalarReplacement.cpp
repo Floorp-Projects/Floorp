@@ -139,6 +139,12 @@ IsObjectEscaped(MInstruction *ins)
     MOZ_ASSERT(ins->type() == MIRType_Object);
     MOZ_ASSERT(ins->isNewObject() || ins->isGuardShape() || ins->isCreateThisWithTemplate());
 
+    JSObject *obj = nullptr;
+    if (ins->isNewObject())
+        obj = ins->toNewObject()->templateObject();
+    else if (ins->isCreateThisWithTemplate())
+        obj = ins->toCreateThisWithTemplate()->templateObject();
+
     // Check if the object is escaped. If the object is not the first argument
     // of either a known Store / Load, then we consider it as escaped. This is a
     // cheap and conservative escape analysis.
@@ -184,7 +190,7 @@ IsObjectEscaped(MInstruction *ins)
           case MDefinition::Op_GuardShape: {
             MGuardShape *guard = def->toGuardShape();
             MOZ_ASSERT(!ins->isGuardShape());
-            if (ins->toNewObject()->templateObject()->lastProperty() != guard->shape()) {
+            if (obj->lastProperty() != guard->shape()) {
                 JitSpewDef(JitSpew_Escape, "Object ", ins);
                 JitSpewDef(JitSpew_Escape, "  has a non-matching guard shape\n", guard);
                 return true;
@@ -333,7 +339,8 @@ ObjectMemoryView::mergeIntoSuccessorState(MBasicBlock *curr, MBasicBlock *succ,
         *pSuccState = succState;
     }
 
-    if (succ->numPredecessors() > 1 && succState->numSlots()) {
+    MOZ_ASSERT_IF(succ == startBlock_, startBlock_->isLoopHeader());
+    if (succ->numPredecessors() > 1 && succState->numSlots() && succ != startBlock_) {
         // We need to re-compute successorWithPhis as the previous EliminatePhis
         // phase might have removed all the Phis from the successor block.
         size_t currIndex;
@@ -787,7 +794,8 @@ ArrayMemoryView::mergeIntoSuccessorState(MBasicBlock *curr, MBasicBlock *succ,
         *pSuccState = succState;
     }
 
-    if (succ->numPredecessors() > 1 && succState->numElements()) {
+    MOZ_ASSERT_IF(succ == startBlock_, startBlock_->isLoopHeader());
+    if (succ->numPredecessors() > 1 && succState->numElements() && succ != startBlock_) {
         // We need to re-compute successorWithPhis as the previous EliminatePhis
         // phase might have removed all the Phis from the successor block.
         size_t currIndex;

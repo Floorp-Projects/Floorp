@@ -664,6 +664,16 @@ public class BrowserApp extends GeckoApp
         // Set the maximum bits-per-pixel the favicon system cares about.
         IconDirectoryEntry.setMaxBPP(GeckoAppShell.getScreenDepth());
 
+        Class<?> mediaManagerClass = getMediaPlayerManager();
+        if (mediaManagerClass != null) {
+            try {
+                Method init = mediaManagerClass.getMethod("init", Context.class);
+                init.invoke(null, this);
+            } catch(Exception ex) {
+                Log.e(LOGTAG, "Error initializing media manager", ex);
+            }
+        }
+
         if (getProfile().inGuestMode()) {
             GuestSession.showNotification(this);
         } else {
@@ -1539,19 +1549,6 @@ public class BrowserApp extends GeckoApp
                     }
                 });
 
-                if (AppConstants.MOZ_MEDIA_PLAYER) {
-                    // If casting is disabled, these classes aren't built. We use reflection to initialize them.
-                    Class<?> mediaManagerClass = getMediaPlayerManager();
-                    if (mediaManagerClass != null) {
-                        try {
-                            Method init = mediaManagerClass.getMethod("init", Context.class);
-                            init.invoke(null, this);
-                        } catch(Exception ex) {
-                            Log.e(LOGTAG, "Error initializing media manager", ex);
-                        }
-                    }
-                }
-
                 if (AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED) {
                     // Start (this acts as ping if started already) the stumbler lib; if the stumbler has queued data it will upload it.
                     // Stumbler operates on its own thread, and startup impact is further minimized by delaying work (such as upload) a few seconds.
@@ -1564,7 +1561,6 @@ public class BrowserApp extends GeckoApp
                         }
                     }, oneSecondInMillis);
                 }
-
                 super.handleMessage(event, message);
             } else if (event.equals("Gecko:Ready")) {
                 // Handle this message in GeckoApp, but also enable the Settings
