@@ -55,7 +55,9 @@ loop.panel = (function(_, mozL10n) {
       }, this);
       return (
         <div className="tab-view-container">
-          <ul className="tab-view">{tabButtons}</ul>
+          {!this.props.buttonsHidden
+            ? <ul className="tab-view">{tabButtons}</ul>
+            : null}
           {tabs}
         </div>
       );
@@ -479,7 +481,12 @@ loop.panel = (function(_, mozL10n) {
     },
 
     _onStatusChanged: function() {
-      this.setState({userProfile: navigator.mozLoop.userProfile});
+      var profile = navigator.mozLoop.userProfile;
+      if (profile != this.state.userProfile) {
+        // On profile change (login, logout), switch back to the default tab.
+        this.selectTab("call");
+      }
+      this.setState({userProfile: profile});
       this.updateServiceErrors();
     },
 
@@ -512,7 +519,7 @@ loop.panel = (function(_, mozL10n) {
         <div>
           <NotificationListView notifications={this.props.notifications}
                                 clearOnDocumentHidden={true} />
-          <TabView ref="tabView">
+          <TabView ref="tabView" buttonsHidden={!this.state.userProfile}>
             <Tab name="call">
               <div className="content-area">
                 <CallUrlResult client={this.props.client}
