@@ -20,6 +20,7 @@
     <dimen name="new_tablet_tab_strip_height">48dp</dimen>
     <dimen name="new_tablet_tab_strip_item_width">250dp</dimen>
     <dimen name="new_tablet_tab_strip_item_margin">-30dp</dimen>
+    <dimen name="new_tablet_tab_strip_favicon_size">-30dp</dimen>
 
     <!-- Dimensions used by Favicons and FaviconView -->
     <dimen name="favicon_size_small">16dp</dimen>
