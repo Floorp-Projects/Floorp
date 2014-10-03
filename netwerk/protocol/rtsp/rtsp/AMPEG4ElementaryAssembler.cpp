@@ -21,6 +21,8 @@
 
 #include "ARTPSource.h"
 
+#include "mozilla/Assertions.h"
+
 #include <media/stagefright/foundation/ABitReader.h>
 #include <media/stagefright/foundation/ABuffer.h>
 #include <media/stagefright/foundation/ADebug.h>
@@ -216,10 +218,18 @@ ARTPAssembler::AssemblyStatus AMPEG4ElementaryAssembler::addPacket(
     }
 
     uint32_t rtpTime;
-    CHECK(buffer->meta()->findInt32("rtp-time", (int32_t *)&rtpTime));
+    if (!buffer->meta()->findInt32("rtp-time", (int32_t *)&rtpTime)) {
+        LOGW("Cannot find rtp-time. Malformed packet.");
+
+        return MALFORMED_PACKET;
+    }
 
     if (mPackets.size() > 0 && rtpTime != mAccessUnitRTPTime) {
-        submitAccessUnit();
+        if (!submitAccessUnit()) {
+            LOGW("Cannot find rtp-time. Malformed packet.");
+
+            return MALFORMED_PACKET;
+        }
     }
 
     // If constantDuration and CTSDelta are not present. We should assume the
@@ -236,10 +246,18 @@ ARTPAssembler::AssemblyStatus AMPEG4ElementaryAssembler::addPacket(
     } else {
         // hexdump(buffer->data(), buffer->size());
 
-        CHECK_GE(buffer->size(), 2u);
+        if (buffer->size() < 2u) {
+            LOGW("Payload format error. Malformed packet.");
+
+            return MALFORMED_PACKET;
+        }
         unsigned AU_headers_length = U16_AT(buffer->data());  // in bits
 
-        CHECK_GE(buffer->size(), 2 + (AU_headers_length + 7) / 8);
+        if (buffer->size() < 2 + (AU_headers_length + 7) / 8) {
+            LOGW("Payload format error. Malformed packet.");
+
+            return MALFORMED_PACKET;
+        }
 
         List<AUHeader> headers;
 
@@ -330,7 +348,11 @@ ARTPAssembler::AssemblyStatus AMPEG4ElementaryAssembler::addPacket(
             mPreviousAUCount++;
             const AUHeader &header = *it;
             const AUHeader &first = *headers.begin();
-            CHECK_LE(offset + header.mSize, buffer->size());
+            if (offset + header.mSize > buffer->size()) {
+                LOGW("Payload format error. Malformed packet.");
+
+                return MALFORMED_PACKET;
+            }
 
             sp<ABuffer> accessUnit = new ABuffer(header.mSize);
             memcpy(accessUnit->data(), buffer->data() + offset, header.mSize);
@@ -345,7 +367,11 @@ ARTPAssembler::AssemblyStatus AMPEG4ElementaryAssembler::addPacket(
             mPackets.push_back(accessUnit);
         }
 
-        CHECK_EQ(offset, buffer->size());
+        if (offset != buffer->size()) {
+            LOGW("Payload format error. Malformed packet.");
+
+            return MALFORMED_PACKET;
+        }
     }
 
     queue->erase(queue->begin());
@@ -354,8 +380,8 @@ ARTPAssembler::AssemblyStatus AMPEG4ElementaryAssembler::addPacket(
     return OK;
 }
 
-void AMPEG4ElementaryAssembler::submitAccessUnit() {
-    CHECK(!mPackets.empty());
+bool AMPEG4ElementaryAssembler::submitAccessUnit() {
+    MOZ_ASSERT(mPackets.empty());
 
     LOGV("Access unit complete (%d nal units)", mPackets.size());
 
@@ -374,7 +400,9 @@ void AMPEG4ElementaryAssembler::submitAccessUnit() {
             sp<ABuffer> accessUnit = new ABuffer((*it)->size());
             sp<ABuffer> nal = *it;
             memcpy(accessUnit->data(), nal->data(), nal->size());
-            CopyTimes(accessUnit, nal);
+            if (!CopyTimes(accessUnit, nal)) {
+                return false;
+            }
 
             if (mAccessUnitDamaged) {
                 accessUnit->meta()->setInt32("damaged", true);
@@ -404,7 +432,9 @@ void AMPEG4ElementaryAssembler::submitAccessUnit() {
             memcpy(accessUnit->data() + offset, nal->data(), nal->size());
             offset += nal->size();
         }
-        CopyTimes(accessUnit, *mPackets.begin());
+        if (!CopyTimes(accessUnit, *mPackets.begin())) {
+            return false;
+        }
 
         if (mAccessUnitDamaged) {
             accessUnit->meta()->setInt32("damaged", true);
@@ -417,6 +447,7 @@ void AMPEG4ElementaryAssembler::submitAccessUnit() {
 
     mPackets.clear();
     mAccessUnitDamaged = false;
+    return true;
 }
 
 ARTPAssembler::AssemblyStatus AMPEG4ElementaryAssembler::assembleMore(

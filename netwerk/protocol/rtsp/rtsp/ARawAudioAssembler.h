@@ -34,7 +34,7 @@ struct ARawAudioAssembler : public ARTPAssembler {
 
     static bool Supports(const char *desc);
 
-    static void MakeFormat(
+    static bool MakeFormat(
             const char *desc, const sp<MetaData> &format);
 
 protected:

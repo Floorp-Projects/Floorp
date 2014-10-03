@@ -58,7 +58,7 @@ private:
     List<sp<ABuffer> > mPackets;
 
     AssemblyStatus addPacket(const sp<ARTPSource> &source);
-    void submitAccessUnit();
+    bool submitAccessUnit();
 
     sp<ABuffer> removeLATMFraming(const sp<ABuffer> &buffer);
 

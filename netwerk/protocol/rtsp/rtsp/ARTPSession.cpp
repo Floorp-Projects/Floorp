@@ -44,7 +44,10 @@ ARTPSession::ARTPSession()
 }
 
 status_t ARTPSession::setup(const sp<ASessionDescription> &desc) {
-    CHECK_EQ(mInitCheck, (status_t)NO_INIT);
+    if (mInitCheck != (status_t)NO_INIT) {
+        LOGE("Unexpected mInitCheck");
+        return NO_INIT;
+    }
 
     mDesc = desc;
 
@@ -157,12 +160,21 @@ void ARTPSession::onMessageReceived(const sp<AMessage> &msg) {
 
             sp<RefBase> obj;
             CHECK(msg->findObject("access-unit", &obj));
+            if (!msg->findObject("access-unit", &obj)) {
+                LOGW("Cannot find access-unit");
+
+                break;
+            }
 
             sp<ABuffer> accessUnit = static_cast<ABuffer *>(obj.get());
 
             uint64_t ntpTime;
-            CHECK(accessUnit->meta()->findInt64(
-                        "ntp-time", (int64_t *)&ntpTime));
+            if (!accessUnit->meta()->findInt64(
+                        "ntp-time", (int64_t *)&ntpTime)) {
+                LOGW("Cannot find ntp-time");
+
+                break;
+            }
 
 #if 0
 #if 0

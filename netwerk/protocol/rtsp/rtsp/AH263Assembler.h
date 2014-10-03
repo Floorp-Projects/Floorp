@@ -48,7 +48,7 @@ private:
     List<sp<ABuffer> > mPackets;
 
     AssemblyStatus addPacket(const sp<ARTPSource> &source);
-    void submitAccessUnit();
+    bool submitAccessUnit();
 
     DISALLOW_EVIL_CONSTRUCTORS(AH263Assembler);
 };
