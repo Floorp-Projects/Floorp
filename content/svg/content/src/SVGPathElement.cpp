@@ -70,14 +70,14 @@ SVGPathElement::PathLength()
 float
 SVGPathElement::GetTotalLength()
 {
-  RefPtr<Path> flat = GetPathForLengthOrPositionMeasuring();
+  RefPtr<Path> flat = GetOrBuildPathForMeasuring();
   return flat ? flat->ComputeLength() : 0.f;
 }
 
 already_AddRefed<nsISVGPoint>
 SVGPathElement::GetPointAtLength(float distance, ErrorResult& rv)
 {
-  RefPtr<Path> path = GetPathForLengthOrPositionMeasuring();
+  RefPtr<Path> path = GetOrBuildPathForMeasuring();
   if (!path) {
     rv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -305,9 +305,9 @@ SVGPathElement::IsAttributeMapped(const nsIAtom* name) const
 }
 
 TemporaryRef<Path>
-SVGPathElement::GetPathForLengthOrPositionMeasuring()
+SVGPathElement::GetOrBuildPathForMeasuring()
 {
-  return mD.GetAnimValue().ToPathForLengthOrPositionMeasuring();
+  return mD.GetAnimValue().BuildPathForMeasuring();
 }
 
 //----------------------------------------------------------------------
@@ -340,7 +340,7 @@ SVGPathElement::GetPathLengthScale(PathLengthScaleForType aFor)
   if (mPathLength.IsExplicitlySet()) {
     float authorsPathLengthEstimate = mPathLength.GetAnimValue();
     if (authorsPathLengthEstimate > 0) {
-      RefPtr<Path> path = GetPathForLengthOrPositionMeasuring();
+      RefPtr<Path> path = GetOrBuildPathForMeasuring();
       if (!path) {
         // The path is empty or invalid so its length must be zero and
         // we know that 0 / authorsPathLengthEstimate = 0.

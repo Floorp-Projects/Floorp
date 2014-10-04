@@ -180,7 +180,6 @@ DOMSVGPathSeg::IndexIsValid()
       }                                                                       \
       AutoChangePathSegNotifier notifier(this);                               \
       InternalItem()[1+index] = float(a##propName);                           \
-      InvalidateCachedList();                                                 \
     } else {                                                                  \
       mArgs[index] = float(a##propName);                                      \
     }                                                                         \

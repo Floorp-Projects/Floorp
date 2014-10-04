@@ -227,7 +227,7 @@ SVGMotionSMILAnimationFunction::
       bool ok =
         path.GetDistancesFromOriginToEndsOfVisibleSegments(&mPathVertices);
       if (ok && mPathVertices.Length()) {
-        mPath = pathElem->GetPathForLengthOrPositionMeasuring();
+        mPath = pathElem->GetOrBuildPathForMeasuring();
       }
     }
   }
@@ -252,7 +252,7 @@ SVGMotionSMILAnimationFunction::RebuildPathAndVerticesFromPathAttr()
     return;
   }
 
-  mPath = path.ToPathForLengthOrPositionMeasuring();
+  mPath = path.BuildPathForMeasuring();
   bool ok = path.GetDistancesFromOriginToEndsOfVisibleSegments(&mPathVertices);
   if (!ok || !mPathVertices.Length()) {
     mPath = nullptr;
