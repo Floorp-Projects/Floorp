@@ -3568,8 +3568,9 @@ status_t MPEG4Source::fragmentedRead(
         if (mCurrentSampleIndex >= mCurrentSamples.size()) {
             // move to next fragment
             off64_t nextMoof = mNextMoofOffset; // lastSample.offset + lastSample.size;
-
-            // If we're pointing to a segment type or sidx box then we skip them.
+            mCurrentSamples.clear();
+            mCurrentSampleIndex = 0;
+            mTrackFragmentData.mPresent = false;
             uint32_t hdr[2];
             do {
                 if (mDataSource->readAt(nextMoof, hdr, 8) < 8) {
@@ -3578,21 +3579,18 @@ status_t MPEG4Source::fragmentedRead(
                 uint64_t chunk_size = ntohl(hdr[0]);
                 uint32_t chunk_type = ntohl(hdr[1]);
 
-                if (chunk_type != FOURCC('s', 't', 'y', 'p') &&
-                    chunk_type != FOURCC('s', 'i', 'd', 'x')) {
-                    break;
+                // If we're pointing to a segment type or sidx box then we skip them.
+                if (chunk_type == FOURCC('s', 't', 'y', 'p') ||
+                    chunk_type == FOURCC('s', 'i', 'd', 'x')) {
+                    nextMoof += chunk_size;
+                    continue;
                 }
-                nextMoof += chunk_size;
-            } while(true);
-
-            mCurrentMoofOffset = nextMoof;
-            mCurrentSamples.clear();
-            mCurrentSampleIndex = 0;
-            mTrackFragmentData.mPresent = false;
-            parseChunk(&nextMoof);
-            if (mCurrentSampleIndex >= mCurrentSamples.size()) {
-                return ERROR_END_OF_STREAM;
-            }
+                mCurrentMoofOffset = nextMoof;
+                status_t ret = parseChunk(&nextMoof);
+                if (ret != OK) {
+                    return ret;
+                }
+            } while (mCurrentSamples.size() == 0);
 
             if (mTrackFragmentData.mPresent) {
                 mCurrentTime = mTrackFragmentData.mBaseMediaDecodeTime;
