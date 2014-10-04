@@ -15,6 +15,7 @@
 #include "nsICSSDeclaration.h"
 #include "nsIDocument.h"
 #include "nsIDOMMutationEvent.h"
+#include "nsSVGPathGeometryElement.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "nsError.h"
 #include "nsIPresShell.h"
@@ -1605,6 +1606,8 @@ nsSVGElement::DidChangeLength(uint8_t aAttrEnum,
 void
 nsSVGElement::DidAnimateLength(uint8_t aAttrEnum)
 {
+  ClearAnyCachedPath();
+
   nsIFrame* frame = GetPrimaryFrame();
 
   if (frame) {
@@ -1850,6 +1853,8 @@ nsSVGElement::DidAnimatePointList()
   NS_ABORT_IF_FALSE(GetPointListAttrName(),
                     "Animating non-existent path data?");
 
+  ClearAnyCachedPath();
+
   nsIFrame* frame = GetPrimaryFrame();
 
   if (frame) {
@@ -1884,6 +1889,8 @@ nsSVGElement::DidAnimatePathSegList()
 {
   NS_ABORT_IF_FALSE(GetPathDataAttrName(),
                     "Animating non-existent path data?");
+
+  ClearAnyCachedPath();
 
   nsIFrame* frame = GetPrimaryFrame();
 

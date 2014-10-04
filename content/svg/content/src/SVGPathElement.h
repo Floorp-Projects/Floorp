@@ -57,8 +57,7 @@ public:
    * ApproximateZeroLengthSubpathSquareCaps can insert if we have square-caps.
    * See the comment for that function for more info on that.
    */
-  virtual TemporaryRef<Path>
-    GetPathForLengthOrPositionMeasuring() MOZ_OVERRIDE;
+  virtual TemporaryRef<Path> GetOrBuildPathForMeasuring() MOZ_OVERRIDE;
 
   // nsIContent interface
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
