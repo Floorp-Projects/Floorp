@@ -72,6 +72,8 @@ public:
 
   virtual TemporaryRef<Path> Finish();
 
+  virtual BackendType GetBackendType() const { return BackendType::RECORDING; }
+
 private:
   friend class PathRecording;
 
