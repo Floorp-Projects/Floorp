@@ -1477,15 +1477,7 @@ nsHttpConnectionMgr::MakeNewConnection(nsConnectionEntry *ent,
             LOG(("nsHttpConnectionMgr::MakeNewConnection [ci = %s]\n"
                  "Found a speculative half open connection\n",
                  ent->mConnInfo->HashKey().get()));
-
-            uint32_t flags;
             ent->mHalfOpens[i]->SetSpeculative(false);
-            nsISocketTransport *transport = ent->mHalfOpens[i]->SocketTransport();
-            if (NS_SUCCEEDED(transport->GetConnectionFlags(&flags))) {
-                flags &= ~nsISocketTransport::DISABLE_RFC1918;
-                transport->SetConnectionFlags(flags);
-            }
-
             Telemetry::AutoCounter<Telemetry::HTTPCONNMGR_USED_SPECULATIVE_CONN> usedSpeculativeConn;
             ++usedSpeculativeConn;
 
