@@ -9,6 +9,7 @@
 #include "gfxUserFontSet.h"
 #include "nsFontFaceLoader.h"
 #include "mozilla/gfx/2D.h"
+#include "decode.h"
 #include "zlib.h"
 #include "mozilla/dom/FontFaceSet.h"
 
@@ -202,13 +203,30 @@ nsFontFace::GetMetadata(nsAString & aMetadata)
       nsAutoCString str;
       str.SetLength(userFontData->mMetaOrigLen);
       if (str.Length() == userFontData->mMetaOrigLen) {
-        uLongf destLen = userFontData->mMetaOrigLen;
-        if (uncompress((Bytef *)(str.BeginWriting()), &destLen,
-                       (const Bytef *)(userFontData->mMetadata.Elements()),
-                       userFontData->mMetadata.Length()) == Z_OK &&
-            destLen == userFontData->mMetaOrigLen)
-        {
-          AppendUTF8toUTF16(str, aMetadata);
+        switch (userFontData->mCompression) {
+        case gfxUserFontData::kZlibCompression:
+          {
+            uLongf destLen = userFontData->mMetaOrigLen;
+            if (uncompress((Bytef *)(str.BeginWriting()), &destLen,
+                           (const Bytef *)(userFontData->mMetadata.Elements()),
+                           userFontData->mMetadata.Length()) == Z_OK &&
+                destLen == userFontData->mMetaOrigLen) {
+              AppendUTF8toUTF16(str, aMetadata);
+            }
+          }
+          break;
+        case gfxUserFontData::kBrotliCompression:
+          {
+            size_t decodedSize = userFontData->mMetaOrigLen;
+            if (BrotliDecompressBuffer(userFontData->mMetadata.Length(),
+                                       userFontData->mMetadata.Elements(),
+                                       &decodedSize,
+                                       (uint8_t*)str.BeginWriting()) == 1 &&
+                decodedSize == userFontData->mMetaOrigLen) {
+              AppendUTF8toUTF16(str, aMetadata);
+            }
+          }
+          break;
         }
       }
     }
