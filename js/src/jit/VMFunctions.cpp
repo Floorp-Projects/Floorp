@@ -22,7 +22,6 @@
 
 #include "jit/BaselineFrame-inl.h"
 #include "jit/IonFrames-inl.h"
-#include "vm/Debugger-inl.h"
 #include "vm/Interpreter-inl.h"
 #include "vm/ObjectImpl-inl.h"
 #include "vm/StringObject-inl.h"
@@ -764,7 +763,8 @@ DebugPrologue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *mustRet
 {
     *mustReturn = false;
 
-    switch (Debugger::onEnterFrame(cx, frame)) {
+    JSTrapStatus status = ScriptDebugPrologue(cx, frame, pc);
+    switch (status) {
       case JSTRAP_CONTINUE:
         return true;
 
@@ -780,7 +780,7 @@ DebugPrologue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool *mustRet
         return false;
 
       default:
-        MOZ_CRASH("bad Debugger::onEnterFrame status");
+        MOZ_CRASH("Invalid trap status");
     }
 }
 
@@ -808,10 +808,10 @@ DebugEpilogue(JSContext *cx, BaselineFrame *frame, jsbytecode *pc, bool ok)
     jsbytecode *unwindPc = frame->script()->main();
     frame->setUnwoundScopeOverridePc(unwindPc);
 
-    // If Debugger::onLeaveFrame returns |true| we have to return the frame's
+    // If ScriptDebugEpilogue returns |true| we have to return the frame's
     // return value. If it returns |false|, the debugger threw an exception.
     // In both cases we have to pop debug scopes.
-    ok = Debugger::onLeaveFrame(cx, frame, ok);
+    ok = ScriptDebugEpilogue(cx, frame, pc, ok);
 
     if (frame->isNonEvalFunctionFrame()) {
         MOZ_ASSERT_IF(ok, frame->hasReturnValue());
