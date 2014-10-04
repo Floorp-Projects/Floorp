@@ -2,6 +2,13 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+///////////////////
+//
+// Whitelisting this test.
+// As part of bug 1077403, the leaking uncaught rejection should be fixed. 
+//
+thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Unknown sheet source");
+
 let gUI;
 
 const FIRST_TEST_PAGE = TEST_BASE + "inline-1.html"
