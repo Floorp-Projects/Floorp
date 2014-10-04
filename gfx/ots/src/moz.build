@@ -44,6 +44,7 @@ UNIFIED_SOURCES += [
     'prep.cc',
     'vhea.cc',
     'vmtx.cc',
+    'woff2.cc',
 ]
 
 MSVC_ENABLE_PGO = True
@@ -61,5 +62,6 @@ if CONFIG['OS_TARGET'] == 'WINNT':
     DEFINES['OTS_DLL'] = True
     DEFINES['OTS_DLL_EXPORTS'] = True
 
-# Disable WOFF2 support.
-DEFINES['OTS_DISABLE_WOFF2'] = True;
+USE_LIBS += [
+    'brotli',
+]
