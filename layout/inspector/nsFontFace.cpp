@@ -183,6 +183,9 @@ nsFontFace::GetFormat(nsAString & aFormat)
     if (formatFlags & gfxUserFontSet::FLAG_FORMAT_WOFF) {
       AppendToFormat(aFormat, "woff");
     }
+    if (formatFlags & gfxUserFontSet::FLAG_FORMAT_WOFF2) {
+      AppendToFormat(aFormat, "woff2");
+    }
   }
   return NS_OK;
 }
