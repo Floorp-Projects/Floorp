@@ -546,7 +546,7 @@ AsyncFetchAndSetIconFromNetwork::Run()
                      iconURI,
                      nsContentUtils::GetSystemPrincipal(),
                      nsILoadInfo::SEC_NORMAL,
-                     nsIContentPolicy::TYPE_OTHER);
+                     nsIContentPolicy::TYPE_IMAGE);
 
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIInterfaceRequestor> listenerRequestor =
