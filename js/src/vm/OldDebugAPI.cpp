@@ -65,14 +65,6 @@ JS_GetScriptFilename(JSScript *script)
     return script->maybeForwardedFilename();
 }
 
-JS_PUBLIC_API(const char16_t *)
-JS_GetScriptSourceMap(JSContext *cx, JSScript *script)
-{
-    ScriptSource *source = script->scriptSource();
-    MOZ_ASSERT(source);
-    return source->hasSourceMapURL() ? source->sourceMapURL() : nullptr;
-}
-
 JS_PUBLIC_API(unsigned)
 JS_GetScriptBaseLineNumber(JSContext *cx, JSScript *script)
 {
