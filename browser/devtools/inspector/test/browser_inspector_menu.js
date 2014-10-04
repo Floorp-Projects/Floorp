@@ -3,6 +3,13 @@
 http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+///////////////////
+//
+// Whitelisting this test.
+// As part of bug 1077403, the leaking uncaught rejection should be fixed.
+//
+thisTestLeaksUncaughtRejectionsAndShouldBeFixed("TypeError: jsterm.focusInput is not a function");
+
 // Test context menu functionality:
 // 1) menu items are disabled/enabled depending on the clicked node
 // 2) actions triggered by the items work correctly
