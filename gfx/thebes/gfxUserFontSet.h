@@ -173,9 +173,16 @@ public:
         FLAG_FORMAT_EOT            = 1 << 4,
         FLAG_FORMAT_SVG            = 1 << 5,
         FLAG_FORMAT_WOFF           = 1 << 6,
+        FLAG_FORMAT_WOFF2          = 1 << 7,
+
+        // the common formats that we support everywhere
+        FLAG_FORMATS_COMMON        = FLAG_FORMAT_OPENTYPE |
+                                     FLAG_FORMAT_TRUETYPE |
+                                     FLAG_FORMAT_WOFF     |
+                                     FLAG_FORMAT_WOFF2,
 
         // mask of all unused bits, update when adding new formats
-        FLAG_FORMAT_NOT_USED       = ~((1 << 7)-1)
+        FLAG_FORMAT_NOT_USED       = ~((1 << 8)-1)
     };
 
 
@@ -568,7 +575,7 @@ protected:
     const uint8_t* SanitizeOpenTypeData(const uint8_t* aData,
                                         uint32_t aLength,
                                         uint32_t& aSaneLength,
-                                        bool aIsCompressed);
+                                        gfxUserFontType aFontType);
 
     // attempt to load the next resource in the src list.
     void LoadNextSrc();
