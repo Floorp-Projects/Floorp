@@ -1159,38 +1159,6 @@ gfxContext::PointInStroke(const gfxPoint& pt)
                                     Matrix());
 }
 
-gfxRect
-gfxContext::GetUserPathExtent()
-{
-  if (mPathIsRect) {
-    return ThebesRect(mTransform.TransformBounds(mRect));
-  }
-  EnsurePath();
-  return ThebesRect(mPath->GetBounds());
-}
-
-gfxRect
-gfxContext::GetUserFillExtent()
-{
-  if (mPathIsRect) {
-    return ThebesRect(mTransform.TransformBounds(mRect));
-  }
-  EnsurePath();
-  return ThebesRect(mPath->GetBounds());
-}
-
-gfxRect
-gfxContext::GetUserStrokeExtent()
-{
-  if (mPathIsRect) {
-    Rect rect = mRect;
-    rect.Inflate(CurrentState().strokeOptions.mLineWidth / 2);
-    return ThebesRect(mTransform.TransformBounds(rect));
-  }
-  EnsurePath();
-  return ThebesRect(mPath->GetStrokedBounds(CurrentState().strokeOptions, mTransform));
-}
-
 bool
 gfxContext::HasError()
 {
