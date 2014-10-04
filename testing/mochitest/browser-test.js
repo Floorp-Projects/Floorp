@@ -109,6 +109,7 @@ function Tester(aTests, aDumper, aCallback) {
     this.SimpleTestOriginal[m] = this.SimpleTest[m];
   });
 
+  this._toleratedUncaughtRejections = null;
   this._uncaughtErrorObserver = function({message, date, fileName, stack, lineNumber}) {
     let error = message;
     if (fileName || lineNumber) {
@@ -121,12 +122,21 @@ function Tester(aTests, aDumper, aCallback) {
         }
       };
     }
+
+    // We may have a whitelist of rejections we wish to tolerate.
+    let tolerate = this._toleratedUncaughtRejections &&
+      this._toleratedUncaughtRejections.indexOf(message) != -1;
+    let name = "A promise chain failed to handle a rejection: ";
+    if (tolerate) {
+      name = "WARNING: (PLEASE FIX THIS AS PART OF BUG 1077403) " + name;
+    }
+
     this.currentTest.addResult(
       new testResult(
-	/*success*/false,
-        /*name*/"A promise chain failed to handle a rejection",
+	      /*success*/tolerate,
+        /*name*/name,
         /*error*/error,
-        /*known*/false,
+        /*known*/tolerate,
         /*stack*/stack));
     }.bind(this);
 }
@@ -258,6 +268,7 @@ Tester.prototype = {
       Services.obs.removeObserver(this, "chrome-document-global-created");
       Services.obs.removeObserver(this, "content-document-global-created");
       this.Promise.Debugging.clearUncaughtErrorObservers();
+      this._treatUncaughtRejectionsAsFailures = false;
       this.dumper.structuredLogger.info("TEST-START | Shutdown");
 
       if (this.tests.length) {
@@ -331,6 +342,8 @@ Tester.prototype = {
 
   nextTest: Task.async(function*() {
     if (this.currentTest) {
+      this.Promise.Debugging.flushUncaughtErrors();
+
       // Run cleanup functions for the current test before moving on to the
       // next one.
       let testScope = this.currentTest.scope;
@@ -894,6 +907,13 @@ function testScope(aTester, aTest) {
 
   this.ignoreAllUncaughtExceptions = function test_ignoreAllUncaughtExceptions(aIgnoring) {
     self.SimpleTest.ignoreAllUncaughtExceptions(aIgnoring);
+  };
+
+  this.thisTestLeaksUncaughtRejectionsAndShouldBeFixed = function(...rejections) {
+    if (!aTester._toleratedUncaughtRejections) {
+      aTester._toleratedUncaughtRejections = [];
+    }
+    aTester._toleratedUncaughtRejections.push(...rejections);
   };
 
   this.expectAssertions = function test_expectAssertions(aMin, aMax) {
