@@ -1024,21 +1024,23 @@ HandleError(JSContext *cx, InterpreterRegs &regs)
   again:
     if (cx->isExceptionPending()) {
         /* Call debugger throw hooks. */
-        JSTrapStatus status = Debugger::onExceptionUnwind(cx, regs.fp());
-        switch (status) {
-          case JSTRAP_ERROR:
-            goto again;
+        if (MOZ_UNLIKELY(cx->compartment()->debugMode())) {
+            JSTrapStatus status = DebugExceptionUnwind(cx, regs.fp(), regs.pc);
+            switch (status) {
+              case JSTRAP_ERROR:
+                goto again;
 
-          case JSTRAP_CONTINUE:
-          case JSTRAP_THROW:
-            break;
+              case JSTRAP_CONTINUE:
+              case JSTRAP_THROW:
+                break;
 
-          case JSTRAP_RETURN:
-            ForcedReturn(cx, si, regs);
-            return SuccessfulReturnContinuation;
+              case JSTRAP_RETURN:
+                ForcedReturn(cx, si, regs);
+                return SuccessfulReturnContinuation;
 
-          default:
-            MOZ_CRASH("Bad Debugger::onExceptionUnwind status");
+              default:
+                MOZ_CRASH("Invalid trap status");
+            }
         }
 
         RootedValue exception(cx);
@@ -1503,18 +1505,20 @@ Interpret(JSContext *cx, RunState &state)
             goto error;
         }
     }
-
-    switch (Debugger::onEnterFrame(cx, activation.entryFrame())) {
-      case JSTRAP_CONTINUE:
-        break;
-      case JSTRAP_RETURN:
-        ForcedReturn(cx, REGS);
-        goto successful_return_continuation;
-      case JSTRAP_THROW:
-      case JSTRAP_ERROR:
-        goto error;
-      default:
-        MOZ_CRASH("bad Debugger::onEnterFrame status");
+    if (MOZ_UNLIKELY(cx->compartment()->debugMode())) {
+        JSTrapStatus status = ScriptDebugPrologue(cx, activation.entryFrame(), REGS.pc);
+        switch (status) {
+          case JSTRAP_CONTINUE:
+            break;
+          case JSTRAP_RETURN:
+            ForcedReturn(cx, REGS);
+            goto successful_return_continuation;
+          case JSTRAP_THROW:
+          case JSTRAP_ERROR:
+            goto error;
+          default:
+            MOZ_CRASH("bad ScriptDebugPrologue status");
+        }
     }
 
     if (cx->runtime()->profilingScripts)
@@ -1783,7 +1787,8 @@ CASE(JSOP_RETRVAL)
         // Stop the script. (Again no details about which script exactly.)
         TraceLogStopEvent(logger);
 
-        interpReturnOK = Debugger::onLeaveFrame(cx, REGS.fp(), interpReturnOK);
+        if (MOZ_UNLIKELY(cx->compartment()->debugMode()))
+            interpReturnOK = ScriptDebugEpilogue(cx, REGS.fp(), REGS.pc, interpReturnOK);
 
         if (!REGS.fp()->isYielding())
             REGS.fp()->epilogue(cx);
@@ -2604,18 +2609,19 @@ CASE(JSOP_FUNCALL)
 
     if (!REGS.fp()->prologue(cx))
         goto error;
-
-    switch (Debugger::onEnterFrame(cx, REGS.fp())) {
-      case JSTRAP_CONTINUE:
-        break;
-      case JSTRAP_RETURN:
-        ForcedReturn(cx, REGS);
-        goto successful_return_continuation;
-      case JSTRAP_THROW:
-      case JSTRAP_ERROR:
-        goto error;
-      default:
-        MOZ_CRASH("bad Debugger::onEnterFrame status");
+    if (MOZ_UNLIKELY(cx->compartment()->debugMode())) {
+        switch (ScriptDebugPrologue(cx, REGS.fp(), REGS.pc)) {
+          case JSTRAP_CONTINUE:
+            break;
+          case JSTRAP_RETURN:
+            ForcedReturn(cx, REGS);
+            goto successful_return_continuation;
+          case JSTRAP_THROW:
+          case JSTRAP_ERROR:
+            goto error;
+          default:
+            MOZ_CRASH("bad ScriptDebugPrologue status");
+        }
     }
 
     /* Load first op and dispatch it (safe since JSOP_RETRVAL). */
@@ -3461,8 +3467,8 @@ DEFAULT()
     MOZ_CRASH("Invalid HandleError continuation");
 
   exit:
-    interpReturnOK = Debugger::onLeaveFrame(cx, REGS.fp(), interpReturnOK);
-
+    if (MOZ_UNLIKELY(cx->compartment()->debugMode()))
+        interpReturnOK = ScriptDebugEpilogue(cx, REGS.fp(), REGS.pc, interpReturnOK);
     if (!REGS.fp()->isYielding())
         REGS.fp()->epilogue(cx);
     else
