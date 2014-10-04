@@ -750,7 +750,7 @@ public class BrowserApp extends GeckoApp
     public void onResume() {
         super.onResume();
 
-        final String args = getIntent().getStringExtra("args");
+        final String args = StringUtils.getStringExtra(getIntent(), "args");
         // If an external intent tries to start Fennec in guest mode, and it's not already
         // in guest mode, this will change modes before opening the url.
         // NOTE: OnResume is called twice sometimes when showing on the lock screen.
