@@ -1,5 +1,5 @@
 ifndef INCLUDED_AUTOCONF_MK
-INCLUDED_AUTOCONF_MK = 1
+INCLUDED_AUTOCONF_MK = autoconf-js.mk
 include $(DEPTH)/config/emptyvars-js.mk
 @ALLSUBSTS@
 include $(topsrcdir)/config/baseconfig.mk
