@@ -47,6 +47,8 @@ public:
 
   virtual TemporaryRef<Path> Finish();
 
+  virtual BackendType GetBackendType() const { return BackendType::COREGRAPHICS; }
+
 private:
   friend class PathCG;
   friend class ScaledFontMac;
