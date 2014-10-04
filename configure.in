@@ -3265,6 +3265,12 @@ if test -n "$MOZ_LINKER"; then
       _SUBDIR_LDFLAGS="$_SUBDIR_LDFLAGS -Wl,-z,max-page-size=0x4000 -Wl,-z,common-page-size=0x4000"
     fi
   fi
+
+dnl gold emits wrong sysv-style elf hash tables when building both sysv and
+dnl style tables. https://sourceware.org/bugzilla/show_bug.cgi?id=13597
+dnl Since the linker only understands the sysv ones, no need to build the
+dnl gnu style tables anyways.
+  LDFLAGS="$LDFLAGS -Wl,--hash-style=sysv"
 fi
 
 dnl The custom linker doesn't support text relocations, but NDK >= r6b
