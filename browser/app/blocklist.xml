@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1409700581000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1412277891000">
   <emItems>
       <emItem  blockID="i454" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -218,6 +218,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i710" id="{e0352044-1439-48ba-99b6-b05ed1a4d2de}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i40" id="{28387537-e3f9-4ed7-860c-11e69af4a8a0}">
                         <versionRange  minVersion="0.1" maxVersion="4.3.1.00" severity="1">
                     </versionRange>
@@ -281,6 +287,12 @@
                     <prefs>
                   <pref>browser.startup.homepage</pref>
                   <pref>browser.search.defaultenginename</pref>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i8" id="{B13721C7-F507-4982-B2E5-502A71474FED}">
+                        <versionRange  minVersion=" " severity="1">
+                    </versionRange>
+                    <prefs>
               </prefs>
     </emItem>
       <emItem  blockID="i7" id="{2224e955-00e9-4613-a844-ce69fccaae91}">
@@ -479,6 +491,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i716" id="{cc6cc772-f121-49e0-b1f0-c26583cb0c5e}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i136" id="Adobe@flash.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -575,6 +593,14 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i628" id="ffxtlbr@iminent.com">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+                  <pref>browser.startup.homepage</pref>
+                  <pref>browser.search.defaultenginename</pref>
+              </prefs>
+    </emItem>
       <emItem  blockID="i449" id="gystqfr@ylgga.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -635,12 +661,11 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i628" id="ffxtlbr@iminent.com">
+      <emItem  blockID="i720" id="FXqG@xeeR.net">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
                   <pref>browser.startup.homepage</pref>
-                  <pref>browser.search.defaultenginename</pref>
               </prefs>
     </emItem>
       <emItem  blockID="i228" id="crossriderapp5060@crossrider.com">
@@ -802,8 +827,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i8" id="{B13721C7-F507-4982-B2E5-502A71474FED}">
-                        <versionRange  minVersion=" " severity="1">
+      <emItem  blockID="i106" os="WINNT" id="{97E22097-9A2F-45b1-8DAF-36AD648C7EF4}">
+                        <versionRange  minVersion="0" maxVersion="15.0.5" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -932,6 +957,13 @@
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i718" id="G4Ce4@w.net">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+                  <pref>browser.startup.homepage</pref>
               </prefs>
     </emItem>
       <emItem  blockID="i13" id="{E8E88AB0-7182-11DF-904E-6045E0D72085}">
@@ -1448,8 +1480,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i106" os="WINNT" id="{97E22097-9A2F-45b1-8DAF-36AD648C7EF4}">
-                        <versionRange  minVersion="0" maxVersion="15.0.5" severity="1">
+      <emItem  blockID="i714" id="{25dd52dc-89a8-469d-9e8f-8d483095d1e8}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1926,6 +1958,12 @@
     </emItem>
       <emItem  blockID="i73" id="a1g0a9g219d@a1.com">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i712" id="{a2bfe612-4cf5-48ea-907c-f3fb25bc9d6b}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
