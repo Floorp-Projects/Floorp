@@ -602,13 +602,6 @@ public:
     bool PointInFill(const gfxPoint& pt);
     bool PointInStroke(const gfxPoint& pt);
 
-    /**
-     ** Extents - returns user space extent of current path
-     **/
-    gfxRect GetUserPathExtent();
-    gfxRect GetUserFillExtent();
-    gfxRect GetUserStrokeExtent();
-
     mozilla::gfx::Point GetDeviceOffset() const;
 
     /**
