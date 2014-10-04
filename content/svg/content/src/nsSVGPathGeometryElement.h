@@ -64,12 +64,6 @@ public:
   virtual mozilla::TemporaryRef<Path> GetPathForLengthOrPositionMeasuring();
 
   /**
-   * Returns a PathBuilder object created using the current computed value of
-   * the CSS property 'fill-rule' for this element.
-   */
-  mozilla::TemporaryRef<PathBuilder> CreatePathBuilder();
-
-  /**
    * Returns the current computed value of the CSS property 'fill-rule' for
    * this element.
    */

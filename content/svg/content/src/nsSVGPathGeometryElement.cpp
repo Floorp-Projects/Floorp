@@ -66,26 +66,6 @@ nsSVGPathGeometryElement::GetPathForLengthOrPositionMeasuring()
   return nullptr;
 }
 
-TemporaryRef<PathBuilder>
-nsSVGPathGeometryElement::CreatePathBuilder()
-{
-  RefPtr<DrawTarget> drawTarget =
-    gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
-  NS_ASSERTION(gfxPlatform::GetPlatform()->
-                 SupportsAzureContentForDrawTarget(drawTarget),
-               "Should support Moz2D content drawing");
-
-  // The fill rule that we pass to CreatePathBuilder must be the current
-  // computed value of our CSS 'fill-rule' property if the path that we return
-  // will be used for painting or hit-testing. For all other uses (bounds
-  // calculatons, length measurement, position-at-offset calculations) the fill
-  // rule that we pass doesn't matter. As a result we can just pass the current
-  // computed value regardless of who's calling us, or what they're going to do
-  // with the path that we return.
-
-  return drawTarget->CreatePathBuilder(GetFillRule());
-}
-
 FillRule
 nsSVGPathGeometryElement::GetFillRule()
 {
