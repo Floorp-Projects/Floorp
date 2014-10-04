@@ -390,24 +390,7 @@ SVGPathElement::BuildPath(PathBuilder* aBuilder)
     }
   }
 
-  RefPtr<PathBuilder> builder;
-  if (aBuilder) {
-    builder = aBuilder;
-  } else {
-    RefPtr<DrawTarget> drawTarget =
-      gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
-    // The fill rule that we pass must be the current computed value of our
-    // CSS 'fill-rule' property if the path that we return will be used for
-    // painting or hit-testing. For all other uses (bounds calculatons, length
-    // measurement, position-at-offset calculations) the fill rule that we pass
-    // doesn't matter. As a result we can just pass the current computed value
-    // regardless of who's calling us, or what they're going to do with the
-    // path that we return.
-    RefPtr<PathBuilder> builder =
-      drawTarget->CreatePathBuilder(GetFillRule());
-  }
-
-  return mD.GetAnimValue().BuildPath(builder, strokeLineCap, strokeWidth);
+  return mD.GetAnimValue().BuildPath(aBuilder, strokeLineCap, strokeWidth);
 }
 
 } // namespace dom
