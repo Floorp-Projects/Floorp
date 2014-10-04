@@ -2933,6 +2933,11 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
     mVideoFrameContainer->ForgetElement();
     mVideoFrameContainer = nullptr;
   }
+
+  if (IsVideo()) {
+    // Update the screen wakelock in case mHasVideo changed
+    NotifyOwnerDocumentActivityChanged();
+  }
 }
 
 void HTMLMediaElement::FirstFrameLoaded()
