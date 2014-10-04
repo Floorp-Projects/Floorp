@@ -1159,13 +1159,6 @@ gfxContext::PointInStroke(const gfxPoint& pt)
                                     Matrix());
 }
 
-bool
-gfxContext::HasError()
-{
-  // As far as this is concerned, an Azure context is never in error.
-  return false;
-}
-
 void
 gfxContext::RoundedRectangle(const gfxRect& rect,
                              const gfxCornerSizes& corners,
