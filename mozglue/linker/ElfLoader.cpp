@@ -563,7 +563,7 @@ ElfLoader::DestructorCaller::Call()
   }
 }
 
-ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(nullptr)
+ElfLoader::DebuggerHelper::DebuggerHelper(): dbg(nullptr), firstAdded(nullptr)
 {
   /* Find ELF auxiliary vectors.
    *
