@@ -280,7 +280,7 @@ FontFaceSet::Delete(FontFace& aFontFace, ErrorResult& aRv)
 
   if (aFontFace.HasRule()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_MODIFICATION_ERR);
-    return nullptr;
+    return false;
   }
 
   if (!mNonRuleFaces.RemoveElement(&aFontFace)) {
