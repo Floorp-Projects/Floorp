@@ -7173,8 +7173,6 @@ else
       DLLFLAGS="$DLLFLAGS -LIBPATH:\$(DIST)/lib -DEFAULTLIB:mozglue"
     fi
     rm crtdll.obj
-
-    export DLLFLAGS
     ;;
   *)
     AC_MSG_ERROR([--enable-jemalloc not supported on ${target}])
