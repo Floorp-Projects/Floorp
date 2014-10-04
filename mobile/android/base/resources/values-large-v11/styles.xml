@@ -86,7 +86,9 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:scaleType">center</item>
+        <item name="android:background">@drawable/new_tablet_action_bar_button</item>
 
+        <!-- layout_* doesn't work here, likely because it's an ImageButton, so we use padding instead. -->
         <item name="android:paddingTop">@dimen/new_tablet_browser_toolbar_menu_item_padding_vertical</item>
         <item name="android:paddingBottom">@dimen/new_tablet_browser_toolbar_menu_item_padding_vertical</item>
         <item name="android:paddingLeft">@dimen/new_tablet_browser_toolbar_menu_item_padding_horizontal</item>
