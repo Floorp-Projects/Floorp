@@ -27,6 +27,8 @@ public class ActionBarViewFlipper extends GeckoViewFlipper {
 
     @Override
     public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+
         if (NewTabletUI.isEnabled(getContext())) {
             final ViewGroup.LayoutParams lp = getLayoutParams();
             lp.height = getResources().getDimensionPixelSize(R.dimen.new_tablet_browser_toolbar_height);
