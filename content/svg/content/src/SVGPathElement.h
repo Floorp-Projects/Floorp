@@ -50,7 +50,7 @@ public:
   virtual bool AttributeDefinesGeometry(const nsIAtom *aName) MOZ_OVERRIDE;
   virtual bool IsMarkable() MOZ_OVERRIDE;
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks) MOZ_OVERRIDE;
-  virtual TemporaryRef<Path> BuildPath(PathBuilder* aBuilder = nullptr) MOZ_OVERRIDE;
+  virtual TemporaryRef<Path> BuildPath(PathBuilder* aBuilder) MOZ_OVERRIDE;
 
   /**
    * This returns a path without the extra little line segments that
