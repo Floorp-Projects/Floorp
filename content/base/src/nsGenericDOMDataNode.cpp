@@ -586,9 +586,11 @@ nsGenericDOMDataNode::UnbindFromTree(bool aDeep, bool aNullParent)
     SetSubtreeRootPointer(aNullParent ? this : mParent->SubtreeRoot());
   }
 
-  if (document) {
+  if (document && !GetContainingShadow()) {
     // Notify XBL- & nsIAnonymousContentCreator-generated
     // anonymous content that the document is changing.
+    // Unlike XBL, bindings for web components shadow DOM
+    // do not get uninstalled.
     if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
       nsContentUtils::AddScriptRunner(
         new RemoveFromBindingManagerRunnable(document->BindingManager(), this,

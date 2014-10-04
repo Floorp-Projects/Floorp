@@ -1489,7 +1489,9 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   if (document) {
     // Notify XBL- & nsIAnonymousContentCreator-generated
     // anonymous content that the document is changing.
-    if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    // Unlike XBL, bindings for web components shadow DOM
+    // do not get uninstalled.
+    if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR) && !GetShadowRoot()) {
       nsContentUtils::AddScriptRunner(
         new RemoveFromBindingManagerRunnable(document->BindingManager(), this,
                                              document));
