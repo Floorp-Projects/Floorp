@@ -113,14 +113,15 @@ class ExpandArgs(list):
         (root, ext) = os.path.splitext(arg)
         if ext != conf.LIB_SUFFIX or not os.path.basename(root).startswith(conf.LIB_PREFIX):
             return [relativize(arg)]
-        if len(conf.IMPORT_LIB_SUFFIX):
-            dll = root + conf.IMPORT_LIB_SUFFIX
-        else:
+        if conf.LIB_PREFIX:
             dll = root.replace(conf.LIB_PREFIX, conf.DLL_PREFIX, 1) + conf.DLL_SUFFIX
+        else:
+            dll = root + conf.DLL_SUFFIX
         if os.path.exists(dll):
-            return [relativize(dll)]
-        if os.path.exists(arg):
-            return [relativize(arg)]
+            if conf.IMPORT_LIB_SUFFIX:
+                return [relativize(root + conf.IMPORT_LIB_SUFFIX)]
+            else:
+                return [relativize(dll)]
         return self._expand_desc(arg)
 
     def _expand_desc(self, arg):
@@ -136,7 +137,7 @@ class ExpandArgs(list):
             for lib in desc['LIBS']:
                 objs += self._expand(lib)
             return objs
-        return [arg]
+        return [relativize(arg)]
 
 if __name__ == '__main__':
     print " ".join(ExpandArgs(sys.argv[1:]))
