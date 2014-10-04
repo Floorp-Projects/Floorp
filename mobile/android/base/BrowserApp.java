@@ -465,7 +465,7 @@ public class BrowserApp extends GeckoApp
 
         final Intent intent = getIntent();
 
-        String args = intent.getStringExtra("args");
+        String args = StringUtils.getStringExtra(intent, "args");
         if (args != null && args.contains(GUEST_BROWSING_ARG)) {
             mProfile = GeckoProfile.createGuestProfile(this);
         } else {
