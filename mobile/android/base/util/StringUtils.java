@@ -5,8 +5,10 @@
 
 package org.mozilla.gecko.util;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.text.TextUtils;
+import android.util.Log;
 
 public class StringUtils {
 
@@ -185,5 +187,14 @@ public class StringUtils {
 
     public static String encodeUserEnteredUrl(String url) {
         return Uri.fromParts("user-entered", url, null).toString();
+    }
+
+    public static String getStringExtra(Intent intent, String name) {
+        try {
+            return intent.getStringExtra(name);
+        } catch (android.os.BadParcelableException ex) {
+            Log.w("GeckoUtils", "Couldn't get string extra: malformed intent.");
+            return null;
+        }
     }
 }

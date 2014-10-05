@@ -24,7 +24,7 @@
                                              android:layout_alignLeft="@id/back"/>
 
     <org.mozilla.gecko.toolbar.BackButton android:id="@id/back"
-                                          style="@style/UrlBar.ImageButton"
+                                          style="@style/UrlBar.ImageButton.NewTablet"
                                           android:layout_width="@dimen/back_button_width"
                                           android:layout_height="@dimen/back_button_width"
                                           android:layout_centerVertical="true"
@@ -61,32 +61,35 @@
 
     <org.mozilla.gecko.widget.ThemedImageButton
             android:id="@+id/tabs"
-            style="@style/UrlBar.ImageButton"
+            style="@style/UrlBar.ImageButton.NewTablet"
             android:layout_toLeftOf="@id/menu"
-            android:background="@drawable/action_bar_button"/>
+            android:background="@drawable/new_tablet_action_bar_button"/>
 
-    <!-- In a 56dp space, centering 24dp image will leave 16dp on the horizontal sides. -->
+    <!-- In a 56x60dp space, centering 24dp image will leave 16x18dp. -->
     <org.mozilla.gecko.toolbar.TabCounter android:id="@+id/tabs_counter"
                         style="@style/UrlBar.ImageButton.TabCount.NewTablet"
                         android:layout_alignLeft="@id/tabs"
                         android:layout_alignRight="@id/tabs"
                         android:layout_alignTop="@id/tabs"
                         android:layout_alignBottom="@id/tabs"
-                        android:layout_margin="16dp"
+                        android:layout_marginTop="18dp"
+                        android:layout_marginBottom="18dp"
+                        android:layout_marginLeft="16dp"
+                        android:layout_marginRight="16dp"
                         gecko:layout="@layout/new_tablet_tabs_counter"/>
 
     <org.mozilla.gecko.widget.ThemedImageButton
             android:id="@+id/menu"
-            style="@style/UrlBar.ImageButton"
+            style="@style/UrlBar.ImageButton.NewTablet"
             android:layout_alignParentRight="true"
             android:layout_marginRight="6dp"
             android:contentDescription="@string/menu"
-            android:background="@drawable/action_bar_button"
+            android:background="@drawable/new_tablet_action_bar_button"
             android:visibility="gone"/>
 
     <org.mozilla.gecko.widget.ThemedImageView
             android:id="@+id/menu_icon"
-            style="@style/UrlBar.ImageButton"
+            style="@style/UrlBar.ImageButton.NewTablet"
             android:layout_alignLeft="@id/menu"
             android:layout_alignRight="@id/menu"
             android:src="@drawable/new_tablet_menu"
