@@ -70,6 +70,12 @@ loop.shared.actions = (function() {
     }),
 
     /**
+     * Used to indicate the peer hung up the call.
+     */
+    PeerHungupCall: Action.define("peerHungupCall", {
+    }),
+
+    /**
      * Used for notifying of connection progress state changes.
      * The connection refers to the overall connection flow as indicated
      * on the websocket.
@@ -85,6 +91,35 @@ loop.shared.actions = (function() {
     ConnectionFailure: Action.define("connectionFailure", {
       // A string relating to the reason the connection failed.
       reason: String
+    }),
+
+    /**
+     * Used by the ongoing views to notify stores about the elements
+     * required for the sdk.
+     */
+    SetupStreamElements: Action.define("setupStreamElements", {
+      // The configuration for the publisher/subscribe options
+      publisherConfig: Object,
+      // The local stream element
+      getLocalElementFunc: Function,
+      // The remote stream element
+      getRemoteElementFunc: Function
+    }),
+
+    /**
+     * Used for notifying that the media is now up for the call.
+     */
+    MediaConnected: Action.define("mediaConnected", {
+    }),
+
+    /**
+     * Used to mute or unmute a stream
+     */
+    SetMute: Action.define("setMute", {
+      // The part of the stream to enable, e.g. "audio" or "video"
+      type: String,
+      // Whether or not to enable the stream.
+      enabled: Boolean
     })
   };
 })();

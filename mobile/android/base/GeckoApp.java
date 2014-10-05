@@ -56,6 +56,7 @@ import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.PrefUtils;
+import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.webapp.EventListener;
 import org.mozilla.gecko.webapp.UninstallListener;
@@ -1086,11 +1087,10 @@ public abstract class GeckoApp
     }
 
     /**
-     * Check and start the Java profiler if MOZ_PROFILER_STARTUP env var is specified
+     * Check and start the Java profiler if MOZ_PROFILER_STARTUP env var is specified.
      **/
-    protected void earlyStartJavaSampler(Intent intent)
-    {
-        String env = intent.getStringExtra("env0");
+    protected static void earlyStartJavaSampler(Intent intent) {
+        String env = StringUtils.getStringExtra(intent, "env0");
         for (int i = 1; env != null; i++) {
             if (env.startsWith("MOZ_PROFILER_STARTUP=")) {
                 if (!env.endsWith("=")) {
@@ -1125,7 +1125,7 @@ public abstract class GeckoApp
 
         final Intent intent = getIntent();
         final String action = intent.getAction();
-        final String args = intent.getStringExtra("args");
+        final String args = StringUtils.getStringExtra(intent, "args");
 
         earlyStartJavaSampler(intent);
 
@@ -1836,20 +1836,22 @@ public abstract class GeckoApp
     }
 
     /*
-     * Handles getting a uri from and intent in a way that is backwards
-     * compatable with our previous implementations
+     * Handles getting a URI from an intent in a way that is backwards-
+     * compatible with our previous implementations.
      */
     protected String getURIFromIntent(Intent intent) {
         final String action = intent.getAction();
-        if (ACTION_ALERT_CALLBACK.equals(action) || NotificationHelper.HELPER_BROADCAST_ACTION.equals(action))
+        if (ACTION_ALERT_CALLBACK.equals(action) || NotificationHelper.HELPER_BROADCAST_ACTION.equals(action)) {
             return null;
+        }
 
         String uri = intent.getDataString();
-        if (uri != null)
+        if (uri != null) {
             return uri;
+        }
 
         if ((action != null && action.startsWith(ACTION_WEBAPP_PREFIX)) || ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
-            uri = intent.getStringExtra("args");
+            uri = StringUtils.getStringExtra(intent, "args");
             if (uri != null && uri.startsWith("--url=")) {
                 uri.replace("--url=", "");
             }

@@ -115,7 +115,6 @@ $(eval $(call generated_file_template,suggestedsites,suggestedsites.json))
 
 $(suggestedsites-dstdir-raw)/suggestedsites.json: FORCE
 	$(call py_action,generate_suggestedsites, \
-		--verbose \
 		--android-package-name=$(ANDROID_PACKAGE_NAME) \
 		--resources=$(srcdir)/../resources \
 		$(if $(filter en-US,$(AB_CD)),,--srcdir=$(l10n-srcdir)) \
@@ -126,7 +125,6 @@ $(eval $(call generated_file_template,browsersearch,browsersearch.json))
 
 $(browsersearch-dstdir-raw)/browsersearch.json: FORCE
 	$(call py_action,generate_browsersearch, \
-		--verbose \
 		$(if $(filter en-US,$(AB_CD)),,--srcdir=$(l10n-srcdir)) \
 		--srcdir=$(topsrcdir)/mobile/locales/en-US/chrome \
 		$@)
