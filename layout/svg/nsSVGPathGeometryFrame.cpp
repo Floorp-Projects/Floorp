@@ -158,6 +158,25 @@ nsSVGPathGeometryFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
       // nsDisplayOpacity display list item, so DLBI won't invalidate for us.
       InvalidateFrame();
     }
+
+    nsSVGPathGeometryElement* element =
+      static_cast<nsSVGPathGeometryElement*>(mContent);
+
+    if (aOldStyleContext->PeekStyleSVG()) {
+      if ((StyleSVG()->mStrokeLinecap !=
+             aOldStyleContext->PeekStyleSVG()->mStrokeLinecap) &&
+          element->Tag() == nsGkAtoms::path) {
+        // If the stroke-linecap changes to or from "butt" then our element
+        // needs to update its cached Moz2D Path, since SVGPathData::BuildPath
+        // decides whether or not to insert little lines into the path for zero
+        // length subpaths base on that property.
+        element->ClearAnyCachedPath();
+      } else if (StyleSVG()->mFillRule !=
+                   aOldStyleContext->PeekStyleSVG()->mFillRule) {
+        // Moz2D Path objects are fill-rule specific.
+        element->ClearAnyCachedPath();
+      }
+    }
   }
 }
 
@@ -288,9 +307,7 @@ nsSVGPathGeometryFrame::GetFrameForPoint(const gfxPoint& aPoint)
   // so that we get more consistent/backwards compatible results?
   RefPtr<DrawTarget> drawTarget =
     gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
-  RefPtr<PathBuilder> builder =
-    drawTarget->CreatePathBuilder(fillRule);
-  RefPtr<Path> path = content->BuildPath(builder);
+  RefPtr<Path> path = content->GetOrBuildPath(*drawTarget, fillRule);
   if (!path) {
     return nullptr; // no path, so we don't paint anything that can be hit
   }
@@ -358,27 +375,7 @@ nsSVGPathGeometryFrame::ReflowSVG()
    flags |= nsSVGUtils::eBBoxIncludeStrokeGeometry;
   }
  
-  // We'd like to just pass the identity matrix to GetBBoxContribution, but if
-  // this frame's user space size is _very_ large/small then the extents we
-  // obtain below might have overflowed or otherwise be broken. This would
-  // cause us to end up with a broken mRect and visual overflow rect and break
-  // painting of this frame. This is particularly noticeable if the transforms
-  // between us and our nsSVGOuterSVGFrame scale this frame to a reasonable
-  // size. To avoid this we sadly have to do extra work to account for the
-  // transforms between us and our nsSVGOuterSVGFrame, even though the
-  // overwhelming number of SVGs will never have this problem.
-  // XXX Will Azure eventually save us from having to do this?
-  gfxSize scaleFactors = GetCanvasTM().ScaleFactors(true);
-  bool applyScaling = fabs(scaleFactors.width) >= 1e-6 &&
-                      fabs(scaleFactors.height) >= 1e-6;
-  gfx::Matrix scaling;
-  if (applyScaling) {
-    scaling.PreScale(scaleFactors.width, scaleFactors.height);
-  }
-  gfxRect extent = GetBBoxContribution(scaling, flags).ToThebesRect();
-  if (applyScaling) {
-    extent.Scale(1 / scaleFactors.width, 1 / scaleFactors.height);
-  }
+  gfxRect extent = GetBBoxContribution(Matrix(), flags).ToThebesRect();
   mRect = nsLayoutUtils::RoundGfxRectToAppRect(extent,
             PresContext()->AppUnitsPerCSSPixel());
 
@@ -430,6 +427,7 @@ nsSVGPathGeometryFrame::NotifySVGChanged(uint32_t aFlags)
     // mRect.
     if (static_cast<nsSVGPathGeometryElement*>(mContent)->GeometryDependsOnCoordCtx() ||
         StyleSVG()->mStrokeWidth.HasPercent()) {
+      static_cast<nsSVGPathGeometryElement*>(mContent)->ClearAnyCachedPath();
       nsSVGUtils::ScheduleReflowSVG(this);
     }
   }
@@ -474,8 +472,7 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
 
   FillRule fillRule = StyleSVG()->mFillRule == NS_STYLE_FILL_RULE_NONZERO
                         ? FillRule::FILL_WINDING : FillRule::FILL_EVEN_ODD;
-  RefPtr<PathBuilder> builder = tmpDT->CreatePathBuilder(fillRule);
-  RefPtr<Path> pathInUserSpace = element->BuildPath(builder);
+  RefPtr<Path> pathInUserSpace = element->GetOrBuildPath(*tmpDT, fillRule);
   if (!pathInUserSpace) {
     return bbox;
   }
@@ -483,7 +480,7 @@ nsSVGPathGeometryFrame::GetBBoxContribution(const Matrix &aToBBoxUserspace,
   if (aToBBoxUserspace.IsIdentity()) {
     pathInBBoxSpace = pathInUserSpace;
   } else {
-    builder =
+    RefPtr<PathBuilder> builder =
       pathInUserSpace->TransformedCopyToBuilder(aToBBoxUserspace, fillRule);
     pathInBBoxSpace = builder->Finish();
     if (!pathInBBoxSpace) {
@@ -683,13 +680,10 @@ nsSVGPathGeometryFrame::Render(gfxContext* aContext,
     nsSVGUtils::ToFillRule(renderMode == SVGAutoRenderState::NORMAL ?
                              StyleSVG()->mFillRule : StyleSVG()->mClipRule);
 
-  RefPtr<PathBuilder> builder = drawTarget->CreatePathBuilder(fillRule);
-  if (!builder) {
-    return;
-  }
+  nsSVGPathGeometryElement* element =
+    static_cast<nsSVGPathGeometryElement*>(mContent);
 
-  RefPtr<Path> path =
-    static_cast<nsSVGPathGeometryElement*>(mContent)->BuildPath(builder);
+  RefPtr<Path> path = element->GetOrBuildPath(*drawTarget, fillRule);
   if (!path) {
     return;
   }
@@ -735,7 +729,8 @@ nsSVGPathGeometryFrame::Render(gfxContext* aContext,
       gfxMatrix outerSVGToUser = userToOuterSVG;
       outerSVGToUser.Invert();
       aContext->Multiply(outerSVGToUser);
-      builder = path->TransformedCopyToBuilder(ToMatrix(userToOuterSVG), fillRule);
+      RefPtr<PathBuilder> builder =
+        path->TransformedCopyToBuilder(ToMatrix(userToOuterSVG), fillRule);
       path = builder->Finish();
     }
     GeneralPattern strokePattern;

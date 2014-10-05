@@ -241,7 +241,7 @@ class OTS_API OTSContext {
 void DisableDebugOutput();
 
 // Enable WOFF2 support(experimental).
-void EnableWOFF2();
+void OTS_API EnableWOFF2();
 
 }  // namespace ots
 

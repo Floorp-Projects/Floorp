@@ -682,6 +682,10 @@ class JSDependentString : public JSLinearString
   public:
     static inline JSLinearString *new_(js::ExclusiveContext *cx, JSLinearString *base,
                                        size_t start, size_t length);
+
+    inline static size_t offsetOfBase() {
+        return offsetof(JSDependentString, d.s.u3.base);
+    }
 };
 
 JS_STATIC_ASSERT(sizeof(JSDependentString) == sizeof(JSString));
@@ -769,10 +773,10 @@ JS_STATIC_ASSERT(sizeof(JSExtensibleString) == sizeof(JSString));
  */
 class JSInlineString : public JSFlatString
 {
+  public:
     static const size_t MAX_LENGTH_LATIN1 = NUM_INLINE_CHARS_LATIN1 - 1;
     static const size_t MAX_LENGTH_TWO_BYTE = NUM_INLINE_CHARS_TWO_BYTE - 1;
 
-  public:
     template <js::AllowGC allowGC>
     static inline JSInlineString *new_(js::ThreadSafeContext *cx);
 

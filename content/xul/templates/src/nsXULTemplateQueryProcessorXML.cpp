@@ -154,7 +154,7 @@ nsXULTemplateQueryProcessorXML::GetDatasource(nsIArray* aDataSources,
     if (!root)
         return NS_ERROR_UNEXPECTED;
 
-    nsCOMPtr<nsIDocument> doc = root->GetCurrentDoc();
+    nsCOMPtr<nsIDocument> doc = root->GetUncomposedDoc();
     if (!doc)
         return NS_ERROR_UNEXPECTED;
 

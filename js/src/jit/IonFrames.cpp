@@ -511,8 +511,7 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
 
     if (cx->isExceptionPending() && cx->compartment()->debugMode()) {
         BaselineFrame *baselineFrame = frame.baselineFrame();
-        JSTrapStatus status = DebugExceptionUnwind(cx, baselineFrame, pc);
-        switch (status) {
+        switch (Debugger::onExceptionUnwind(cx, baselineFrame)) {
           case JSTRAP_ERROR:
             // Uncatchable exception.
             MOZ_ASSERT(!cx->isExceptionPending());

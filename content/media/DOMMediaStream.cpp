@@ -453,6 +453,19 @@ DOMMediaStream::ConstructMediaTracks(AudioTrackList* aAudioTrackList,
 }
 
 void
+DOMMediaStream::DisconnectTrackListListeners(const AudioTrackList* aAudioTrackList,
+                                             const VideoTrackList* aVideoTrackList)
+{
+  for (auto i = mMediaTrackListListeners.Length(); i > 0; ) { // unsigned!
+    --i; // 0 ... Length()-1 range
+    if (mMediaTrackListListeners[i].mMediaTrackList == aAudioTrackList ||
+        mMediaTrackListListeners[i].mMediaTrackList == aVideoTrackList) {
+      mMediaTrackListListeners.RemoveElementAt(i);
+    }
+  }
+}
+
+void
 DOMMediaStream::NotifyMediaStreamTrackCreated(MediaStreamTrack* aTrack)
 {
   for (uint32_t i = 0; i < mMediaTrackListListeners.Length(); ++i) {

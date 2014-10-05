@@ -82,6 +82,13 @@ InfoFrom(WebGLTexImageFunc func)
     }
 }
 
+static bool
+IsCompressedFunc(WebGLTexImageFunc func)
+{
+    return func == WebGLTexImageFunc::CompTexImage ||
+           func == WebGLTexImageFunc::CompTexSubImage;
+}
+
 /**
  * Same as ErrorInvalidEnum but uses WebGLContext::EnumName to print displayable
  * name for \a glenum.
@@ -248,8 +255,8 @@ WebGLProgram::UpdateInfo()
  * \return the corresponding \u base internal format (GL_ALPHA, GL_LUMINANCE,
  * GL_LUMINANCE_ALPHA, GL_RGB, GL_RGBA), or GL_NONE if invalid enum.
  */
-GLenum
-WebGLContext::BaseTexFormat(GLenum internalFormat) const
+TexInternalFormat
+WebGLContext::BaseTexFormat(TexInternalFormat internalFormat) const
 {
     if (internalFormat == LOCAL_GL_ALPHA ||
         internalFormat == LOCAL_GL_LUMINANCE ||
@@ -608,53 +615,6 @@ WebGLContext::ValidateTexImageFormat(GLenum format, WebGLTexImageFunc func)
         return validFormat;
     }
 
-    /* WEBGL_compressed_texture_atc added formats */
-    if (format == LOCAL_GL_ATC_RGB ||
-        format == LOCAL_GL_ATC_RGBA_EXPLICIT_ALPHA ||
-        format == LOCAL_GL_ATC_RGBA_INTERPOLATED_ALPHA)
-    {
-        bool validFormat = IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_atc);
-        if (!validFormat)
-            ErrorInvalidEnum("%s: invalid format %s: need WEBGL_compressed_texture_atc enabled",
-                             InfoFrom(func), WebGLContext::EnumName(format));
-        return validFormat;
-    }
-
-    // WEBGL_compressed_texture_etc1
-    if (format == LOCAL_GL_ETC1_RGB8_OES) {
-        bool validFormat = IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_etc1);
-        if (!validFormat)
-            ErrorInvalidEnum("%s: invalid format %s: need WEBGL_compressed_texture_etc1 enabled",
-                             InfoFrom(func), WebGLContext::EnumName(format));
-        return validFormat;
-    }
-
-
-    if (format == LOCAL_GL_COMPRESSED_RGB_PVRTC_2BPPV1 ||
-        format == LOCAL_GL_COMPRESSED_RGB_PVRTC_4BPPV1 ||
-        format == LOCAL_GL_COMPRESSED_RGBA_PVRTC_2BPPV1 ||
-        format == LOCAL_GL_COMPRESSED_RGBA_PVRTC_4BPPV1)
-    {
-        bool validFormat = IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_pvrtc);
-        if (!validFormat)
-            ErrorInvalidEnum("%s: invalid format %s: need WEBGL_compressed_texture_pvrtc enabled",
-                             InfoFrom(func), WebGLContext::EnumName(format));
-        return validFormat;
-    }
-
-
-    if (format == LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT ||
-        format == LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT ||
-        format == LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT ||
-        format == LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT)
-    {
-        bool validFormat = IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_s3tc);
-        if (!validFormat)
-            ErrorInvalidEnum("%s: invalid format %s: need WEBGL_compressed_texture_s3tc enabled",
-                             InfoFrom(func), WebGLContext::EnumName(format));
-        return validFormat;
-    }
-
     ErrorInvalidEnumWithName(this, "invalid format", format, func);
 
     return false;
@@ -664,7 +624,9 @@ WebGLContext::ValidateTexImageFormat(GLenum format, WebGLTexImageFunc func)
  * Check if the given texture target is valid for TexImage.
  */
 bool
-WebGLContext::ValidateTexImageTarget(GLuint dims, GLenum target, WebGLTexImageFunc func)
+WebGLContext::ValidateTexImageTarget(GLuint dims,
+                                     GLenum target,
+                                     WebGLTexImageFunc func)
 {
     switch (dims) {
     case 2:
@@ -689,7 +651,8 @@ WebGLContext::ValidateTexImageTarget(GLuint dims, GLenum target, WebGLTexImageFu
  * taking into account enabled WebGL extensions.
  */
 bool
-WebGLContext::ValidateTexImageType(GLenum type, WebGLTexImageFunc func)
+WebGLContext::ValidateTexImageType(GLenum type,
+                                   WebGLTexImageFunc func)
 {
     /* Core WebGL texture types */
     if (type == LOCAL_GL_UNSIGNED_BYTE ||
@@ -740,7 +703,8 @@ WebGLContext::ValidateTexImageType(GLenum type, WebGLTexImageFunc func)
  */
 // TODO: WebGL 2
 bool
-WebGLContext::ValidateCompTexImageSize(GLint level, GLenum format,
+WebGLContext::ValidateCompTexImageSize(GLint level,
+                                       GLenum format,
                                        GLint xoffset, GLint yoffset,
                                        GLsizei width, GLsizei height,
                                        GLsizei levelWidth, GLsizei levelHeight,
@@ -1155,8 +1119,14 @@ WebGLContext::GetBitsPerTexel(TexInternalFormat format, TexType type)
  * Returns true if the format/type is a valid combination, false otherwise.
  */
 bool
-WebGLContext::ValidateTexImageFormatAndType(GLenum format, GLenum type, WebGLTexImageFunc func)
+WebGLContext::ValidateTexImageFormatAndType(GLenum format,
+                                            GLenum type, WebGLTexImageFunc func)
 {
+    if (IsCompressedFunc(func) || IsCopyFunc(func))
+    {
+        MOZ_ASSERT(type == LOCAL_GL_NONE && format == LOCAL_GL_NONE);
+        return true;
+    }
     if (!ValidateTexImageFormat(format, func) ||
         !ValidateTexImageType(type, func))
     {
@@ -1203,21 +1173,6 @@ WebGLContext::ValidateTexImageFormatAndType(GLenum format, GLenum type, WebGLTex
         validCombo = (type == LOCAL_GL_UNSIGNED_INT_24_8);
         break;
 
-    case LOCAL_GL_ATC_RGB:
-    case LOCAL_GL_ATC_RGBA_EXPLICIT_ALPHA:
-    case LOCAL_GL_ATC_RGBA_INTERPOLATED_ALPHA:
-    case LOCAL_GL_ETC1_RGB8_OES:
-    case LOCAL_GL_COMPRESSED_RGB_PVRTC_2BPPV1:
-    case LOCAL_GL_COMPRESSED_RGB_PVRTC_4BPPV1:
-    case LOCAL_GL_COMPRESSED_RGBA_PVRTC_2BPPV1:
-    case LOCAL_GL_COMPRESSED_RGBA_PVRTC_4BPPV1:
-    case LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT:
-    case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT:
-    case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT:
-    case LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-        validCombo = (type == LOCAL_GL_UNSIGNED_BYTE);
-        break;
-
     default:
         // Only valid formats should be passed to the switch stmt.
         MOZ_ASSERT(false, "Unexpected format and type combo. How'd this happen?");
@@ -1233,6 +1188,89 @@ WebGLContext::ValidateTexImageFormatAndType(GLenum format, GLenum type, WebGLTex
     return validCombo;
 }
 
+bool
+WebGLContext::ValidateCompTexImageInternalFormat(GLenum format,
+                                                 WebGLTexImageFunc func)
+{
+    if (!IsCompressedTextureFormat(format)) {
+        ErrorInvalidEnum("%s: invalid compressed texture format: %s",
+                         InfoFrom(func), WebGLContext::EnumName(format));
+        return false;
+    }
+
+    /* WEBGL_compressed_texture_atc added formats */
+    if (format == LOCAL_GL_ATC_RGB ||
+        format == LOCAL_GL_ATC_RGBA_EXPLICIT_ALPHA ||
+        format == LOCAL_GL_ATC_RGBA_INTERPOLATED_ALPHA)
+    {
+        bool validFormat = IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_atc);
+        if (!validFormat)
+            ErrorInvalidEnum("%s: invalid format %s: need WEBGL_compressed_texture_atc enabled",
+                             InfoFrom(func), WebGLContext::EnumName(format));
+        return validFormat;
+    }
+
+    // WEBGL_compressed_texture_etc1
+    if (format == LOCAL_GL_ETC1_RGB8_OES) {
+        bool validFormat = IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_etc1);
+        if (!validFormat)
+            ErrorInvalidEnum("%s: invalid format %s: need WEBGL_compressed_texture_etc1 enabled",
+                             InfoFrom(func), WebGLContext::EnumName(format));
+        return validFormat;
+    }
+
+
+    if (format == LOCAL_GL_COMPRESSED_RGB_PVRTC_2BPPV1 ||
+        format == LOCAL_GL_COMPRESSED_RGB_PVRTC_4BPPV1 ||
+        format == LOCAL_GL_COMPRESSED_RGBA_PVRTC_2BPPV1 ||
+        format == LOCAL_GL_COMPRESSED_RGBA_PVRTC_4BPPV1)
+    {
+        bool validFormat = IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_pvrtc);
+        if (!validFormat)
+            ErrorInvalidEnum("%s: invalid format %s: need WEBGL_compressed_texture_pvrtc enabled",
+                             InfoFrom(func), WebGLContext::EnumName(format));
+        return validFormat;
+    }
+
+
+    if (format == LOCAL_GL_COMPRESSED_RGB_S3TC_DXT1_EXT ||
+        format == LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT1_EXT ||
+        format == LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT3_EXT ||
+        format == LOCAL_GL_COMPRESSED_RGBA_S3TC_DXT5_EXT)
+    {
+        bool validFormat = IsExtensionEnabled(WebGLExtensionID::WEBGL_compressed_texture_s3tc);
+        if (!validFormat)
+            ErrorInvalidEnum("%s: invalid format %s: need WEBGL_compressed_texture_s3tc enabled",
+                             InfoFrom(func), WebGLContext::EnumName(format));
+        return validFormat;
+    }
+
+    return false;
+}
+
+bool
+WebGLContext::ValidateCopyTexImageInternalFormat(GLenum format,
+                                                 WebGLTexImageFunc func)
+{
+    bool valid = format == LOCAL_GL_RGBA ||
+                 format == LOCAL_GL_RGB ||
+                 format == LOCAL_GL_LUMINANCE_ALPHA ||
+                 format == LOCAL_GL_LUMINANCE ||
+                 format == LOCAL_GL_ALPHA;
+    if (!valid)
+    {
+        // in CopyTexImage, the internalformat is a function parameter,
+        // so a bad value is an INVALID_ENUM error.
+        // in CopyTexSubImage, the internalformat is part of existing state,
+        // so this is an INVALID_OPERATION error.
+        GenerateWarning("%s: invalid texture internal format: %s",
+                        InfoFrom(func), WebGLContext::EnumName(format));
+        SynthesizeGLError(func == WebGLTexImageFunc::CopyTexImage
+                          ? LOCAL_GL_INVALID_ENUM
+                          : LOCAL_GL_INVALID_OPERATION);
+    }
+    return valid;
+}
 /**
  * Return true if format, type and jsArrayType are a valid combination.
  * Also returns the size for texel of format and type (in bytes) via
@@ -1287,7 +1325,8 @@ WebGLContext::ValidateTexInputData(GLenum type, int jsArrayType, WebGLTexImageFu
  * - Copy format is a subset of framebuffer format (i.e. all required components are available)
  */
 bool
-WebGLContext::ValidateCopyTexImage(GLenum format, WebGLTexImageFunc func)
+WebGLContext::ValidateCopyTexImage(GLenum format,
+                                   WebGLTexImageFunc func)
 {
     MOZ_ASSERT(IsCopyFunc(func));
 
@@ -1332,10 +1371,13 @@ WebGLContext::ValidateCopyTexImage(GLenum format, WebGLTexImageFunc func)
 // TODO: Texture dims is here for future expansion in WebGL 2.0
 bool
 WebGLContext::ValidateTexImage(GLuint dims, TexImageTarget texImageTarget,
-                               GLint level, GLenum internalFormat,
+                               GLint level,
+                               GLenum internalFormat,
                                GLint xoffset, GLint yoffset, GLint zoffset,
                                GLint width, GLint height, GLint depth,
-                               GLint border, GLenum format, GLenum type,
+                               GLint border,
+                               GLenum format,
+                               GLenum type,
                                WebGLTexImageFunc func)
 {
     const char* info = InfoFrom(func);
@@ -1356,13 +1398,21 @@ WebGLContext::ValidateTexImage(GLuint dims, TexImageTarget texImageTarget,
     if (!ValidateTexImageFormatAndType(format, type, func))
         return false;
 
-    /* WebGL and OpenGL ES 2.0 impose additional restrictions on the
-     * combinations of format, internalFormat, and type that can be
-     * used.  Formats and types that require additional extensions
-     * (e.g., GL_FLOAT requires GL_OES_texture_float) are filtered
-     * elsewhere.
-     */
-    if (format != internalFormat) {
+    if (IsCompressedFunc(func)) {
+        if (!ValidateCompTexImageInternalFormat(internalFormat, func)) {
+            return false;
+        }
+    } else if (IsCopyFunc(func)) {
+        if (!ValidateCopyTexImageInternalFormat(internalFormat, func)) {
+            return false;
+        }
+    } else if (format != internalFormat) {
+        /* WebGL and OpenGL ES 2.0 impose additional restrictions on the
+         * combinations of format, internalFormat, and type that can be
+         * used.  Formats and types that require additional extensions
+         * (e.g., GL_FLOAT requires GL_OES_texture_float) are filtered
+         * elsewhere.
+         */
         ErrorInvalidOperation("%s: format does not match internalformat", info);
         return false;
     }
@@ -1406,17 +1456,6 @@ WebGLContext::ValidateTexImage(GLuint dims, TexImageTarget texImageTarget,
         {
             return false;
         }
-
-        /* Require the format and type to match that of the existing
-         * texture as created
-         */
-        if (imageInfo.WebGLFormat() != format ||
-            imageInfo.WebGLType() != type)
-        {
-            ErrorInvalidOperation("%s: format or type doesn't match the existing texture",
-                                  info);
-            return false;
-        }
     }
 
     /* Additional checks for depth textures */
@@ -1430,7 +1469,7 @@ WebGLContext::ValidateTexImage(GLuint dims, TexImageTarget texImageTarget,
     }
 
     /* Additional checks for compressed textures */
-    if (!IsAllowedFromSource(format, func)) {
+    if (!IsAllowedFromSource(internalFormat, func)) {
         ErrorInvalidOperation("%s: Invalid format %s for this operation",
                               info, WebGLContext::EnumName(format));
         return false;

@@ -109,15 +109,13 @@ SVGLineElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks) {
 TemporaryRef<Path>
 SVGLineElement::BuildPath(PathBuilder* aBuilder)
 {
-  RefPtr<PathBuilder> pathBuilder = aBuilder ? aBuilder : CreatePathBuilder();
-
   float x1, y1, x2, y2;
   GetAnimatedLengthValues(&x1, &y1, &x2, &y2, nullptr);
 
-  pathBuilder->MoveTo(Point(x1, y1));
-  pathBuilder->LineTo(Point(x2, y2));
+  aBuilder->MoveTo(Point(x1, y1));
+  aBuilder->LineTo(Point(x2, y2));
 
-  return pathBuilder->Finish();
+  return aBuilder->Finish();
 }
 
 } // namespace dom
