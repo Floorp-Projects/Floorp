@@ -135,13 +135,16 @@ HTMLAreaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                             bool aCompileEventHandlers)
 {
   Link::ResetLinkState(false, Link::ElementHasHref());
-  if (aDocument) {
-    aDocument->RegisterPendingLinkUpdate(this);
-  }
-  
-  return nsGenericHTMLElement::BindToTree(aDocument, aParent,
+  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
                                                  aBindingParent,
                                                  aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsIDocument* doc = GetComposedDoc();
+  if (doc) {
+    doc->RegisterPendingLinkUpdate(this);
+  }
+  return rv;
 }
 
 void
@@ -150,8 +153,10 @@ HTMLAreaElement::UnbindFromTree(bool aDeep, bool aNullParent)
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
   Link::ResetLinkState(false, Link::ElementHasHref());
-  
-  nsIDocument* doc = GetCurrentDoc();
+
+  // Note, we need to use OwnerDoc() here, since GetComposedDoc() might
+  // return null.
+  nsIDocument* doc = OwnerDoc();
   if (doc) {
     doc->UnregisterPendingLinkUpdate(this);
   }

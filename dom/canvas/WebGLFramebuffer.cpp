@@ -3,16 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WebGLContext.h"
 #include "WebGLFramebuffer.h"
+
+#include "WebGLContext.h"
+#include "WebGLContextUtils.h"
 #include "WebGLExtensions.h"
 #include "WebGLRenderbuffer.h"
-#include "WebGLTexture.h"
-#include "mozilla/dom/WebGLRenderingContextBinding.h"
-#include "WebGLTexture.h"
 #include "WebGLRenderbuffer.h"
+#include "WebGLTexture.h"
+#include "WebGLTexture.h"
+
 #include "GLContext.h"
-#include "WebGLContextUtils.h"
+
+#include "mozilla/dom/WebGLRenderingContextBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::gl;
@@ -77,7 +80,7 @@ WebGLFramebuffer::Attachment::HasAlpha() const
     MOZ_ASSERT(HasImage());
 
     if (Texture() && Texture()->HasImageInfoAt(mTexImageTarget, mTexImageLevel))
-        return FormatHasAlpha(Texture()->ImageInfoAt(mTexImageTarget, mTexImageLevel).WebGLFormat());
+        return FormatHasAlpha(Texture()->ImageInfoAt(mTexImageTarget, mTexImageLevel).InternalFormat());
     else if (Renderbuffer())
         return FormatHasAlpha(Renderbuffer()->InternalFormat());
     else return false;
@@ -94,7 +97,7 @@ WebGLFramebuffer::GetFormatForAttachment(const WebGLFramebuffer::Attachment& att
         MOZ_ASSERT(tex.HasImageInfoAt(attachment.ImageTarget(), 0));
 
         const WebGLTexture::ImageInfo& imgInfo = tex.ImageInfoAt(attachment.ImageTarget(), 0);
-        return imgInfo.WebGLFormat().get();
+        return imgInfo.InternalFormat().get();
     }
 
     if (attachment.Renderbuffer())
@@ -108,7 +111,7 @@ WebGLFramebuffer::Attachment::IsReadableFloat() const
 {
     const WebGLTexture* tex = Texture();
     if (tex && tex->HasImageInfoAt(mTexImageTarget, mTexImageLevel)) {
-        GLenum type = tex->ImageInfoAt(mTexImageTarget, mTexImageLevel).WebGLType().get();
+        GLenum type = tex->ImageInfoAt(mTexImageTarget, mTexImageLevel).Type().get();
         switch (type) {
         case LOCAL_GL_FLOAT:
         case LOCAL_GL_HALF_FLOAT_OES:
@@ -328,23 +331,23 @@ WebGLFramebuffer::Attachment::IsComplete() const
         MOZ_ASSERT(Texture()->HasImageInfoAt(mTexImageTarget, mTexImageLevel));
         const WebGLTexture::ImageInfo& imageInfo =
             Texture()->ImageInfoAt(mTexImageTarget, mTexImageLevel);
-        GLenum webGLFormat = imageInfo.WebGLFormat().get();
+        GLenum internalformat = imageInfo.InternalFormat().get();
 
         if (mAttachmentPoint == LOCAL_GL_DEPTH_ATTACHMENT)
-            return IsValidFBOTextureDepthFormat(webGLFormat);
+            return IsValidFBOTextureDepthFormat(internalformat);
 
         if (mAttachmentPoint == LOCAL_GL_STENCIL_ATTACHMENT)
             return false; // Textures can't have the correct format for stencil buffers
 
         if (mAttachmentPoint == LOCAL_GL_DEPTH_STENCIL_ATTACHMENT) {
-            return IsValidFBOTextureDepthStencilFormat(webGLFormat);
+            return IsValidFBOTextureDepthStencilFormat(internalformat);
         }
 
         if (mAttachmentPoint >= LOCAL_GL_COLOR_ATTACHMENT0 &&
             mAttachmentPoint <= FBAttachment(LOCAL_GL_COLOR_ATTACHMENT0 - 1 +
                                              WebGLContext::kMaxColorAttachments))
         {
-            return IsValidFBOTextureColorFormat(webGLFormat);
+            return IsValidFBOTextureColorFormat(internalformat);
         }
         MOZ_ASSERT(false, "Invalid WebGL attachment point?");
         return false;

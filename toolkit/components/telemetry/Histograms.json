@@ -6404,6 +6404,12 @@
     "n_values": 64,
     "description": "detected symptom of SSL 3.0 intolerance, after considering historical info"
   },
+  "SSL_VERSION_FALLBACK_INAPPROPRIATE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 64,
+    "description": "TLS/SSL version intolerance was falsely detected, server rejected handshake"
+  },
   "SSL_CIPHER_SUITE_FULL": {
     "expires_in_version": "never",
     "kind": "enumerated",

@@ -1119,7 +1119,7 @@ bool
 nsHTMLDocument::MatchLinks(nsIContent *aContent, int32_t aNamespaceID,
                            nsIAtom* aAtom, void* aData)
 {
-  nsIDocument* doc = aContent->GetCurrentDoc();
+  nsIDocument* doc = aContent->GetUncomposedDoc();
 
   if (doc) {
     NS_ASSERTION(aContent->IsInDoc(),
@@ -1128,7 +1128,7 @@ nsHTMLDocument::MatchLinks(nsIContent *aContent, int32_t aNamespaceID,
 #ifdef DEBUG
     {
       nsCOMPtr<nsIHTMLDocument> htmldoc =
-        do_QueryInterface(aContent->GetCurrentDoc());
+        do_QueryInterface(aContent->GetUncomposedDoc());
       NS_ASSERTION(htmldoc,
                    "Huh, how did this happen? This should only be used with "
                    "HTML documents!");
@@ -1173,7 +1173,7 @@ nsHTMLDocument::MatchAnchors(nsIContent *aContent, int32_t aNamespaceID,
 #ifdef DEBUG
   {
     nsCOMPtr<nsIHTMLDocument> htmldoc =
-      do_QueryInterface(aContent->GetCurrentDoc());
+      do_QueryInterface(aContent->GetUncomposedDoc());
     NS_ASSERTION(htmldoc,
                  "Huh, how did this happen? This should only be used with "
                  "HTML documents!");

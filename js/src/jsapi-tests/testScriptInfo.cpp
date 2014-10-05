@@ -34,9 +34,6 @@ BEGIN_TEST(testScriptInfo)
 
     CHECK_EQUAL(JS_GetScriptBaseLineNumber(cx, script), startLine);
     CHECK(strcmp(JS_GetScriptFilename(script), __FILE__) == 0);
-    const char16_t *sourceMap = JS_GetScriptSourceMap(cx, script);
-    CHECK(sourceMap);
-    CHECK(CharsMatch(sourceMap, "http://example.com/path/to/source-map.json"));
 
     return true;
 }

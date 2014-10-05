@@ -105,6 +105,13 @@ protected:
       return mImageClientTypeContainer;
     }
 
+    // Since D3D11 TextureClient doesn't have an internal buffer, modifying the
+    // front buffer directly may break the transactional property of layer updates.
+    if (ClientManager()->GetCompositorBackendType() == LayersBackend::LAYERS_D3D11) {
+      mImageClientTypeContainer = CompositableType::BUFFER_IMAGE_BUFFERED;
+      return mImageClientTypeContainer;
+    }
+
     AutoLockImage autoLock(mContainer);
 
 #ifdef MOZ_WIDGET_GONK
