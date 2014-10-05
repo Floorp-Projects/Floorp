@@ -150,9 +150,10 @@ function* stopRecording(panel, { waitForDisplay }) {
 
   if (waitForDisplay) {
     yield displayed;
-
-    ok(!button.hasAttribute("checked"),
-      "The record button should not be checked anymore.");
+    if (!win.RecordingsListView.getItemForPredicate(e => e.isRecording)) {
+      ok(!button.hasAttribute("checked"),
+        "The record button should not be checked anymore.");
+    }
     ok(!button.hasAttribute("locked"),
       "The record button should not be locked anymore.");
   }
