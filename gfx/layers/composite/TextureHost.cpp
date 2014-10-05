@@ -80,8 +80,6 @@ public:
 
   void CompositorRecycle();
 
-  void SendFenceHandleIfPresent();
-
   virtual bool RecvClientRecycle() MOZ_OVERRIDE;
 
   virtual bool RecvClearTextureHostSync() MOZ_OVERRIDE;
@@ -145,14 +143,6 @@ PTextureParent*
 TextureHost::GetIPDLActor()
 {
   return mActor;
-}
-
-// static
-void
-TextureHost::SendFenceHandleIfPresent(PTextureParent* actor)
-{
-  TextureParent* parent = static_cast<TextureParent*>(actor);
-  parent->SendFenceHandleIfPresent();
 }
 
 FenceHandle
@@ -714,7 +704,6 @@ void
 TextureParent::CompositorRecycle()
 {
   mTextureHost->ClearRecycleCallback();
-  SendFenceHandleIfPresent();
 
   if (mTextureHost->GetFlags() & TextureFlags::RECYCLE) {
     mozilla::unused << SendCompositorRecycle();
@@ -722,28 +711,6 @@ TextureParent::CompositorRecycle()
     // if TextureClient request it.
     mWaitForClientRecycle = mTextureHost;
   }
-}
-
-void
-TextureParent::SendFenceHandleIfPresent()
-{
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-  if (mTextureHost) {
-    TextureHostOGL* hostOGL = mTextureHost->AsHostOGL();
-    if (!hostOGL) {
-      return;
-    }
-    android::sp<android::Fence> fence = hostOGL->GetAndResetReleaseFence();
-    if (fence.get() && fence->isValid()) {
-      // HWC might not provide Fence.
-      // In this case, HWC implicitly handles buffer's fence.
-
-      FenceHandle handle = FenceHandle(fence);
-      RefPtr<FenceDeliveryTracker> tracker = new FenceDeliveryTracker(handle);
-      mCompositableManager->SendFenceHandle(tracker, this, handle);
-    }
-  }
-#endif
 }
 
 bool
