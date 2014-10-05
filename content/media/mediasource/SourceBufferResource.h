@@ -57,8 +57,6 @@ public:
   virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes) MOZ_OVERRIDE;
   virtual nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount, uint32_t* aBytes) MOZ_OVERRIDE;
   virtual nsresult Seek(int32_t aWhence, int64_t aOffset) MOZ_OVERRIDE;
-  virtual void StartSeekingForMetadata() MOZ_OVERRIDE { UNIMPLEMENTED(); }
-  virtual void EndSeekingForMetadata() MOZ_OVERRIDE { UNIMPLEMENTED(); }
   virtual int64_t Tell() MOZ_OVERRIDE { return mOffset; }
   virtual void Pin() MOZ_OVERRIDE { UNIMPLEMENTED(); }
   virtual void Unpin() MOZ_OVERRIDE { UNIMPLEMENTED(); }
