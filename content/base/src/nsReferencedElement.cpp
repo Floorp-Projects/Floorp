@@ -47,7 +47,7 @@ nsReferencedElement::Reset(nsIContent* aFromContent, nsIURI* aURI,
     return;
 
   // Get the current document
-  nsIDocument *doc = aFromContent->GetCurrentDoc();
+  nsIDocument *doc = aFromContent->GetComposedDoc();
   if (!doc)
     return;
 
@@ -124,7 +124,7 @@ void
 nsReferencedElement::ResetWithID(nsIContent* aFromContent, const nsString& aID,
                                  bool aWatch)
 {
-  nsIDocument *doc = aFromContent->GetCurrentDoc();
+  nsIDocument *doc = aFromContent->GetComposedDoc();
   if (!doc)
     return;
 

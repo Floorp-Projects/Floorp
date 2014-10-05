@@ -1183,7 +1183,7 @@ nsContentSink::StartLayout(bool aIgnorePendingSheets)
 void
 nsContentSink::NotifyAppend(nsIContent* aContainer, uint32_t aStartIndex)
 {
-  if (aContainer->GetCurrentDoc() != mDocument) {
+  if (aContainer->GetUncomposedDoc() != mDocument) {
     // aContainer is not actually in our document anymore.... Just bail out of
     // here; notifying on our document for this append would be wrong.
     return;

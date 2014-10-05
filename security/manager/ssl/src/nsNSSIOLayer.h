@@ -184,6 +184,7 @@ private:
   {
     uint16_t tolerant;
     uint16_t intolerant;
+    PRErrorCode intoleranceReason;
 
     void AssertInvariant() const
     {
@@ -195,9 +196,11 @@ public:
   void rememberTolerantAtVersion(const nsACString& hostname, int16_t port,
                                  uint16_t tolerant);
   bool rememberIntolerantAtVersion(const nsACString& hostname, int16_t port,
-                                   uint16_t intolerant, uint16_t minVersion);
+                                   uint16_t intolerant, uint16_t minVersion,
+                                   PRErrorCode intoleranceReason);
   void adjustForTLSIntolerance(const nsACString& hostname, int16_t port,
                                /*in/out*/ SSLVersionRange& range);
+  PRErrorCode getIntoleranceReason(const nsACString& hostname, int16_t port);
 
   void setRenegoUnrestrictedSites(const nsCString& str);
   bool isRenegoUnrestrictedSite(const nsCString& str);

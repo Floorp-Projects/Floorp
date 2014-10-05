@@ -540,9 +540,15 @@ loop.conversation = (function(mozL10n) {
 
     var dispatcher = new loop.Dispatcher();
     var client = new loop.Client();
+    var sdkDriver = new loop.OTSdkDriver({
+      dispatcher: dispatcher,
+      sdk: OT
+    });
+
     var conversationStore = new loop.store.ConversationStore({}, {
       client: client,
-      dispatcher: dispatcher
+      dispatcher: dispatcher,
+      sdkDriver: sdkDriver
     });
 
     // XXX For now key this on the pref, but this should really be

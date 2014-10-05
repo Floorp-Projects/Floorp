@@ -793,10 +793,12 @@ nsSSLIOLayerHelpers::rememberTolerantAtVersion(const nsACString& hostName,
     entry.tolerant = std::max(entry.tolerant, tolerant);
     if (entry.intolerant != 0 && entry.intolerant <= entry.tolerant) {
       entry.intolerant = entry.tolerant + 1;
+      entry.intoleranceReason = 0; // lose the reason
     }
   } else {
     entry.tolerant = tolerant;
     entry.intolerant = 0;
+    entry.intoleranceReason = 0;
   }
 
   entry.AssertInvariant();
@@ -809,7 +811,8 @@ bool
 nsSSLIOLayerHelpers::rememberIntolerantAtVersion(const nsACString& hostName,
                                                  int16_t port,
                                                  uint16_t minVersion,
-                                                 uint16_t intolerant)
+                                                 uint16_t intolerant,
+                                                 PRErrorCode intoleranceReason)
 {
   nsCString key;
   getSiteKey(hostName, port, key);
@@ -822,6 +825,7 @@ nsSSLIOLayerHelpers::rememberIntolerantAtVersion(const nsACString& hostName,
     if (mTLSIntoleranceInfo.Get(key, &entry)) {
       entry.AssertInvariant();
       entry.intolerant = 0;
+      entry.intoleranceReason = 0;
       entry.AssertInvariant();
       mTLSIntoleranceInfo.Put(key, entry);
     }
@@ -845,6 +849,7 @@ nsSSLIOLayerHelpers::rememberIntolerantAtVersion(const nsACString& hostName,
   }
 
   entry.intolerant = intolerant;
+  entry.intoleranceReason = intoleranceReason;
   entry.AssertInvariant();
   mTLSIntoleranceInfo.Put(key, entry);
 
@@ -877,6 +882,26 @@ nsSSLIOLayerHelpers::adjustForTLSIntolerance(const nsACString& hostName,
       range.max = entry.intolerant - 1;
     }
   }
+}
+
+PRErrorCode
+nsSSLIOLayerHelpers::getIntoleranceReason(const nsACString& hostName,
+                                          int16_t port)
+{
+  IntoleranceEntry entry;
+
+  {
+    nsCString key;
+    getSiteKey(hostName, port, key);
+
+    MutexAutoLock lock(mutex);
+    if (!mTLSIntoleranceInfo.Get(key, &entry)) {
+      return 0;
+    }
+  }
+
+  entry.AssertInvariant();
+  return entry.intoleranceReason;
 }
 
 bool nsSSLIOLayerHelpers::nsSSLIOLayerInitialized = false;
@@ -1019,6 +1044,33 @@ class SSLErrorRunnable : public SyncRunnableBase
 
 namespace {
 
+uint32_t tlsIntoleranceTelemetryBucket(PRErrorCode err)
+{
+  // returns a numeric code for where we track various errors in telemetry
+  // only errors that cause version fallback are tracked,
+  // so this is also used to determine which errors can cause version fallback
+  switch (err) {
+    case SSL_ERROR_BAD_MAC_ALERT: return 1;
+    case SSL_ERROR_BAD_MAC_READ: return 2;
+    case SSL_ERROR_HANDSHAKE_FAILURE_ALERT: return 3;
+    case SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT: return 4;
+    case SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE: return 5;
+    case SSL_ERROR_ILLEGAL_PARAMETER_ALERT: return 6;
+    case SSL_ERROR_NO_CYPHER_OVERLAP: return 7;
+    case SSL_ERROR_BAD_SERVER: return 8;
+    case SSL_ERROR_BAD_BLOCK_PADDING: return 9;
+    case SSL_ERROR_UNSUPPORTED_VERSION: return 10;
+    case SSL_ERROR_PROTOCOL_VERSION_ALERT: return 11;
+    case SSL_ERROR_RX_MALFORMED_FINISHED: return 12;
+    case SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE: return 13;
+    case SSL_ERROR_DECODE_ERROR_ALERT: return 14;
+    case SSL_ERROR_RX_UNKNOWN_ALERT: return 15;
+    case PR_CONNECT_RESET_ERROR: return 16;
+    case PR_END_OF_FILE_ERROR: return 17;
+    default: return 0;
+  }
+}
+
 bool
 retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
 {
@@ -1028,60 +1080,52 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
 
   SSLVersionRange range = socketInfo->GetTLSVersionRange();
 
-  uint32_t reason;
-  switch (err) {
-    case SSL_ERROR_INAPPROPRIATE_FALLBACK_ALERT:
-      // This is a clear signal that we've fallen back too many versions.  Treat
-      // this as a hard failure now, but also mark the next higher version as
-      // being tolerant so that later attempts don't use this version (i.e.,
-      // range.max), which makes the error unrecoverable without a full restart.
-      socketInfo->SharedState().IOLayerHelpers()
-        .rememberTolerantAtVersion(socketInfo->GetHostName(),
-                                   socketInfo->GetPort(),
-                                   range.max + 1);
-      return false;
+  if (err == SSL_ERROR_INAPPROPRIATE_FALLBACK_ALERT) {
+    // This is a clear signal that we've fallen back too many versions.  Treat
+    // this as a hard failure now, but also mark the next higher version as
+    // being tolerant so that later attempts don't use this version (i.e.,
+    // range.max), which makes the error unrecoverable without a full restart.
 
-    case SSL_ERROR_BAD_MAC_ALERT: reason = 1; break;
-    case SSL_ERROR_BAD_MAC_READ: reason = 2; break;
-    case SSL_ERROR_HANDSHAKE_FAILURE_ALERT: reason = 3; break;
-    case SSL_ERROR_HANDSHAKE_UNEXPECTED_ALERT: reason = 4; break;
-    case SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE: reason = 5; break;
-    case SSL_ERROR_ILLEGAL_PARAMETER_ALERT: reason = 6; break;
-    case SSL_ERROR_NO_CYPHER_OVERLAP: reason = 7; break;
-    case SSL_ERROR_BAD_SERVER: reason = 8; break;
-    case SSL_ERROR_BAD_BLOCK_PADDING: reason = 9; break;
-    case SSL_ERROR_UNSUPPORTED_VERSION: reason = 10; break;
-    case SSL_ERROR_PROTOCOL_VERSION_ALERT: reason = 11; break;
-    case SSL_ERROR_RX_MALFORMED_FINISHED: reason = 12; break;
-    case SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE: reason = 13; break;
-    case SSL_ERROR_DECODE_ERROR_ALERT: reason = 14; break;
-    case SSL_ERROR_RX_UNKNOWN_ALERT: reason = 15; break;
+    // First, track the original cause of the version fallback.  This uses the
+    // same buckets as the telemetry below, except that bucket 0 will include
+    // all cases where there wasn't an original reason.
+    PRErrorCode originalReason = socketInfo->SharedState().IOLayerHelpers()
+      .getIntoleranceReason(socketInfo->GetHostName(), socketInfo->GetPort());
+    Telemetry::Accumulate(Telemetry::SSL_VERSION_FALLBACK_INAPPROPRIATE,
+                          tlsIntoleranceTelemetryBucket(originalReason));
 
-    case PR_CONNECT_RESET_ERROR: reason = 16; goto conditional;
-    case PR_END_OF_FILE_ERROR: reason = 17; goto conditional;
+    socketInfo->SharedState().IOLayerHelpers()
+      .rememberTolerantAtVersion(socketInfo->GetHostName(),
+                                 socketInfo->GetPort(),
+                                 range.max + 1);
 
-      // When not using a proxy we'll see a connection reset error.
-      // When using a proxy, we'll see an end of file error.
-      // In addition check for some error codes where it is reasonable
-      // to retry without TLS.
+    return false;
+  }
 
-      // Don't allow STARTTLS connections to fall back on connection resets or
-      // EOF. Also, don't fall back from TLS 1.0 to SSL 3.0 for connection
-      // resets, because connection resets have too many false positives,
-      // and we want to maximize how often we send TLS 1.0+ with extensions
-      // if at all reasonable. Unfortunately, it appears we have to allow
-      // fallback from TLS 1.2 and TLS 1.1 for connection resets due to bad
-      // servers and possibly bad intermediaries.
-    conditional:
-      if ((err == PR_CONNECT_RESET_ERROR &&
-           range.max <= SSL_LIBRARY_VERSION_TLS_1_0) ||
-          socketInfo->GetForSTARTTLS()) {
-        return false;
-      }
-      break;
+  // When not using a proxy we'll see a connection reset error.
+  // When using a proxy, we'll see an end of file error.
+  // In addition check for some error codes where it is reasonable
+  // to retry without TLS.
 
-    default:
-      return false;
+  // Don't allow STARTTLS connections to fall back on connection resets or
+  // EOF. Also, don't fall back from TLS 1.0 to SSL 3.0 for connection
+  // resets, because connection resets have too many false positives,
+  // and we want to maximize how often we send TLS 1.0+ with extensions
+  // if at all reasonable. Unfortunately, it appears we have to allow
+  // fallback from TLS 1.2 and TLS 1.1 for connection resets due to bad
+  // servers and possibly bad intermediaries.
+  if (err == PR_CONNECT_RESET_ERROR &&
+      range.max <= SSL_LIBRARY_VERSION_TLS_1_0) {
+    return false;
+  }
+  if ((err == PR_CONNECT_RESET_ERROR || err == PR_END_OF_FILE_ERROR)
+      && socketInfo->GetForSTARTTLS()) {
+    return false;
+  }
+
+  uint32_t reason = tlsIntoleranceTelemetryBucket(err);
+  if (reason == 0) {
+    return false;
   }
 
   Telemetry::ID pre;
@@ -1115,7 +1159,7 @@ retryDueToTLSIntolerance(PRErrorCode err, nsNSSSocketInfo* socketInfo)
   if (!socketInfo->SharedState().IOLayerHelpers()
                  .rememberIntolerantAtVersion(socketInfo->GetHostName(),
                                               socketInfo->GetPort(),
-                                              range.min, range.max)) {
+                                              range.min, range.max, err)) {
     return false;
   }
 

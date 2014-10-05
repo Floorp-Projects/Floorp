@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  </head>
+  <body>
+    <div id="container"><div id="host"></div></div>
+    <script>
+      var host = document.getElementById("host");
+      var root = host.createShadowRoot();
+      root.innerHTML = 'inside shadow DOM';
+
+      var container = document.getElementById("container");
+      container.removeChild(host);
+      container.appendChild(host);
+    </script>
+  </body>
+</html>

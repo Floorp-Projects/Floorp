@@ -6,13 +6,17 @@ package org.mozilla.gecko.tests;
 
 import java.util.Map;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.FennecInstrumentationTestRunner;
 import org.mozilla.gecko.FennecMochitestAssert;
 import org.mozilla.gecko.FennecNativeDriver;
 import org.mozilla.gecko.FennecTalosAssert;
-
-import org.mozilla.gecko.AppConstants;
 
 import android.app.Activity;
 import android.content.Context;
@@ -108,6 +112,33 @@ public abstract class BaseRobocopTest extends ActivityInstrumentationTestCase2<A
         }
         mAsserter.setLogFile(mLogFile);
         mAsserter.setTestName(getClass().getName());
+    }
+
+    /**
+     * Function to early abort if we can't reach the given HTTP server. Provides local testers
+     * with diagnostic information. Not currently available for TALOS tests, which are rarely run
+     * locally in any case.
+     */
+    public void throwIfHttpGetFails() {
+        if (getTestType() == Type.TALOS) {
+            return;
+        }
+
+        // rawURL to test fetching from. This should be a raw (IP) URL, not an alias
+        // (like mochi.test). We can't (easily) test fetching from the aliases, since
+        // those are managed by Fennec's proxy settings.
+        final String rawUrl = ((String) mConfig.get("rawhost")).replaceAll("(/$)", "");
+
+        try {
+            final HttpClient httpclient = new DefaultHttpClient();
+            final HttpResponse response = httpclient.execute(new HttpGet(rawUrl));
+            final int statusCode = response.getStatusLine().getStatusCode();
+            if (200 != statusCode) {
+                throw new IllegalStateException("Status code: " + statusCode);
+            }
+        } catch (Exception e) {
+            mAsserter.ok(false, "Robocop tests on your device need network/wifi access to reach: [" + rawUrl + "].", e.toString());
+        }
     }
 
     /**
