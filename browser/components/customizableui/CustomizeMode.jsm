@@ -62,6 +62,10 @@ function CustomizeMode(aWindow) {
   this.paletteEmptyNotice = this.document.getElementById("customization-empty");
   this.paletteSpacer = this.document.getElementById("customization-spacer");
   this.tipPanel = this.document.getElementById("customization-tipPanel");
+  let lwthemeButton = this.document.getElementById("customization-lwtheme-button");
+  if (Services.prefs.getCharPref("general.skins.selectedSkin") != "classic/1.0") {
+    lwthemeButton.setAttribute("hidden", "true");
+  }
 #ifdef CAN_DRAW_IN_TITLEBAR
   this._updateTitlebarButton();
   Services.prefs.addObserver(kDrawInTitlebarPref, this, false);
@@ -1279,7 +1283,14 @@ CustomizeMode.prototype = {
         let tbb = doc.createElement("toolbarbutton");
         tbb.theme = aTheme;
         tbb.setAttribute("label", aTheme.name);
-        tbb.setAttribute("image", aTheme.iconURL);
+        if (aDefaultTheme == aTheme) {
+          // The actual icon is set up so it looks nice in about:addons, but
+          // we'd like the version that's correct for the OS we're on, so we set
+          // an attribute that our styling will then use to display the icon.
+          tbb.setAttribute("defaulttheme", "true");
+        } else {
+          tbb.setAttribute("image", aTheme.iconURL);
+        }
         if (aTheme.description)
           tbb.setAttribute("tooltiptext", aTheme.description);
         tbb.setAttribute("tabindex", "0");
