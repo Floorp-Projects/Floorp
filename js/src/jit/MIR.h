@@ -3473,8 +3473,6 @@ class MCompare
     ALLOW_CLONE(MCompare)
 
   protected:
-    bool tryFoldEqualOperands(bool *result);
-
     bool congruentTo(const MDefinition *ins) const {
         if (!binaryCongruentTo(ins))
             return false;
