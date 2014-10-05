@@ -8,6 +8,7 @@ package org.mozilla.gecko.tabs;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.View;
@@ -27,6 +28,10 @@ public class TabStripView extends TwoWayView {
     private final TabStripAdapter adapter;
     private final Drawable divider;
 
+    // Filled by calls to ShapeDrawable.getPadding();
+    // saved to prevent allocation in draw().
+    private final Rect dividerPadding = new Rect();
+
     private boolean isPrivate;
 
     public TabStripView(Context context, AttributeSet attrs) {
@@ -41,6 +46,7 @@ public class TabStripView extends TwoWayView {
         final Resources resources = getResources();
 
         divider = resources.getDrawable(R.drawable.new_tablet_tab_strip_divider);
+        divider.getPadding(dividerPadding);
 
         final int itemMargin =
                 resources.getDimensionPixelSize(R.dimen.new_tablet_tab_strip_item_margin);
@@ -141,7 +147,7 @@ public class TabStripView extends TwoWayView {
     public void draw(Canvas canvas) {
         super.draw(canvas);
 
-        final int bottom = getHeight() - getPaddingBottom();
+        final int bottom = getHeight() - getPaddingBottom() - dividerPadding.bottom;
         final int top = bottom - divider.getIntrinsicHeight();
 
         final int dividerWidth = divider.getIntrinsicWidth();
