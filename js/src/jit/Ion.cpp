@@ -276,6 +276,11 @@ JitRuntime::initialize(JSContext *cx)
     if (!valuePreBarrier_)
         return false;
 
+    JitSpew(JitSpew_Codegen, "# Emitting Pre Barrier for String");
+    stringPreBarrier_ = generatePreBarrier(cx, MIRType_String);
+    if (!stringPreBarrier_)
+        return false;
+
     JitSpew(JitSpew_Codegen, "# Emitting Pre Barrier for Shape");
     shapePreBarrier_ = generatePreBarrier(cx, MIRType_Shape);
     if (!shapePreBarrier_)
@@ -498,6 +503,8 @@ JitCompartment::JitCompartment()
     baselineSetPropReturnAddr_(nullptr),
     stringConcatStub_(nullptr),
     parallelStringConcatStub_(nullptr),
+    regExpExecStub_(nullptr),
+    regExpTestStub_(nullptr),
     activeParallelEntryScripts_(nullptr)
 {
 }
@@ -738,6 +745,12 @@ JitCompartment::sweep(FreeOp *fop, JSCompartment *compartment)
     if (parallelStringConcatStub_ && !IsJitCodeMarked(&parallelStringConcatStub_))
         parallelStringConcatStub_ = nullptr;
 
+    if (regExpExecStub_ && !IsJitCodeMarked(&regExpExecStub_))
+        regExpExecStub_ = nullptr;
+
+    if (regExpTestStub_ && !IsJitCodeMarked(&regExpTestStub_))
+        regExpTestStub_ = nullptr;
+
     if (activeParallelEntryScripts_) {
         for (ScriptSet::Enum e(*activeParallelEntryScripts_); !e.empty(); e.popFront()) {
             JSScript *script = e.front();
@@ -746,6 +759,22 @@ JitCompartment::sweep(FreeOp *fop, JSCompartment *compartment)
             else
                 MOZ_ASSERT(script == e.front());
         }
+    }
+}
+
+void
+JitCompartment::toggleBarriers(bool enabled)
+{
+    // Toggle barriers in compartment wide stubs that have patchable pre barriers.
+    if (regExpExecStub_)
+        regExpExecStub_->togglePreBarriers(enabled);
+    if (regExpTestStub_)
+        regExpTestStub_->togglePreBarriers(enabled);
+
+    // Toggle barriers in baseline IC stubs.
+    for (ICStubCodeMap::Enum e(*stubCodes_); !e.empty(); e.popFront()) {
+        JitCode *code = *e.front().value().unsafeGet();
+        code->togglePreBarriers(enabled);
     }
 }
 
@@ -1353,7 +1382,7 @@ jit::ToggleBarriers(JS::Zone *zone, bool needs)
 
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
         if (comp->jitCompartment())
-            comp->jitCompartment()->toggleBaselineStubBarriers(needs);
+            comp->jitCompartment()->toggleBarriers(needs);
     }
 }
 

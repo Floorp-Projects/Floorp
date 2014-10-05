@@ -16,3 +16,4 @@ pref(dom.webcomponents.enabled,true) == update-dist-node-descendants-1.html upda
 pref(dom.webcomponents.enabled,true) random-if(B2G&&browserIsRemote) == input-transition-1.html input-transition-1-ref.html # Failure on B2G emulator due to Bug 1018381
 pref(dom.webcomponents.enabled,true) == dynamic-insertion-point-distribution-1.html dynamic-insertion-point-distribution-1-ref.html
 pref(dom.webcomponents.enabled,true) == dynamic-insertion-point-distribution-2.html dynamic-insertion-point-distribution-2-ref.html
+pref(dom.webcomponents.enabled,true) == remove-append-shadow-host-1.html remove-append-shadow-host-1-ref.html

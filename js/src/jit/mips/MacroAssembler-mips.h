@@ -629,6 +629,10 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         ma_lw(SecondScratchReg, lhs);
         ma_b(SecondScratchReg, rhs, label, cond);
     }
+    void branch32(Condition cond, const BaseIndex &lhs, Imm32 rhs, Label *label) {
+        load32(lhs, SecondScratchReg);
+        ma_b(SecondScratchReg, rhs, label, cond);
+    }
     void branchPtr(Condition cond, const Address &lhs, Register rhs, Label *label) {
         branch32(cond, lhs, rhs, label);
     }
@@ -795,6 +799,10 @@ public:
     void branchPtr(Condition cond, AbsoluteAddress addr, Register ptr, Label *label) {
         loadPtr(addr, ScratchRegister);
         ma_b(ScratchRegister, ptr, label, cond);
+    }
+    void branchPtr(Condition cond, AbsoluteAddress addr, ImmWord ptr, Label *label) {
+        loadPtr(addr, ScratchRegister);
+        ma_b(ScratchRegister, Imm32(ptr.value), label, cond);
     }
     void branchPtr(Condition cond, AsmJSAbsoluteAddress addr, Register ptr,
                    Label *label) {
@@ -1253,6 +1261,7 @@ public:
     void callWithABI(void *fun, MoveOp::Type result = MoveOp::GENERAL);
     void callWithABI(AsmJSImmPtr imm, MoveOp::Type result = MoveOp::GENERAL);
     void callWithABI(const Address &fun, MoveOp::Type result = MoveOp::GENERAL);
+    void callWithABI(Register fun, MoveOp::Type result = MoveOp::GENERAL);
 
     CodeOffsetLabel labelForPatch() {
         return CodeOffsetLabel(nextOffset().getOffset());

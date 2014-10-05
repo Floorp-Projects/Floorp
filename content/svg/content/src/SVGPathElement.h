@@ -50,15 +50,14 @@ public:
   virtual bool AttributeDefinesGeometry(const nsIAtom *aName) MOZ_OVERRIDE;
   virtual bool IsMarkable() MOZ_OVERRIDE;
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks) MOZ_OVERRIDE;
-  virtual TemporaryRef<Path> BuildPath(PathBuilder* aBuilder = nullptr) MOZ_OVERRIDE;
+  virtual TemporaryRef<Path> BuildPath(PathBuilder* aBuilder) MOZ_OVERRIDE;
 
   /**
    * This returns a path without the extra little line segments that
    * ApproximateZeroLengthSubpathSquareCaps can insert if we have square-caps.
    * See the comment for that function for more info on that.
    */
-  virtual TemporaryRef<Path>
-    GetPathForLengthOrPositionMeasuring() MOZ_OVERRIDE;
+  virtual TemporaryRef<Path> GetOrBuildPathForMeasuring() MOZ_OVERRIDE;
 
   // nsIContent interface
   virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;

@@ -66,10 +66,8 @@ nsSVGClipPathFrame::ApplyClipOrPaintClipMask(nsRenderingContext* aContext,
           gfx->CurrentMatrix().PreMultiply(toChildsUserSpace).NudgeToIntegers();
         if (!newMatrix.IsSingular()) {
           gfx->SetMatrix(newMatrix);
-          RefPtr<PathBuilder> builder =
-            gfx->GetDrawTarget()->CreatePathBuilder(
-              nsSVGUtils::ToFillRule(pathFrame->StyleSVG()->mClipRule));
-          clipPath = pathElement->BuildPath(builder);
+          clipPath = pathElement->GetOrBuildPath(*gfx->GetDrawTarget(),
+                                                 nsSVGUtils::ToFillRule(pathFrame->StyleSVG()->mClipRule));
         }
       }
     }

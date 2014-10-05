@@ -612,3 +612,4 @@ hb_unicode_funcs_set_eastasian_width_func
 hb_unicode_funcs_set_general_category_func
 hb_unicode_funcs_set_mirroring_func
 hb_unicode_funcs_set_script_func
+BrotliDecompressBuffer
