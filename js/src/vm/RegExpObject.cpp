@@ -699,7 +699,7 @@ RegExpCompartment::~RegExpCompartment()
     }
 }
 
-JSObject *
+ArrayObject *
 RegExpCompartment::createMatchResultTemplateObject(JSContext *cx)
 {
     MOZ_ASSERT(!matchResultTemplateObject_);
@@ -737,6 +737,7 @@ RegExpCompartment::createMatchResultTemplateObject(JSContext *cx)
     // Make sure type information reflects the indexed properties which might
     // be added.
     types::AddTypePropertyId(cx, templateObject, JSID_VOID, types::Type::StringType());
+    types::AddTypePropertyId(cx, templateObject, JSID_VOID, types::Type::UndefinedType());
 
     matchResultTemplateObject_.set(templateObject);
 
