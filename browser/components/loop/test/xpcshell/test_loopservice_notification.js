@@ -18,12 +18,17 @@ add_test(function test_openChatWindow_on_notification() {
 
     mockPushHandler.notify(1);
 
-    do_check_true(opened, "should open a chat window");
+    waitForCondition(function() opened).then(() => {
+      do_check_true(opened, "should open a chat window");
 
-    do_check_eq(Services.prefs.getCharPref("loop.seenToS"), "seen",
-                "should set the pref to 'seen'");
+      do_check_eq(Services.prefs.getCharPref("loop.seenToS"), "seen",
+                  "should set the pref to 'seen'");
 
-    run_next_test();
+      run_next_test();
+    }, () => {
+      do_throw("should have opened a chat window");
+    });
+
   });
 });
 
@@ -33,6 +38,12 @@ function run_test()
 
   loopServer.registerPathHandler("/registration", (request, response) => {
     response.setStatusLine(null, 200, "OK");
+    response.processAsync();
+    response.finish();
+  });
+  loopServer.registerPathHandler("/calls", (request, response) => {
+    response.setStatusLine(null, 200, "OK");
+    response.write(JSON.stringify({calls: [{callId: 4444333221, websocketToken: "0deadbeef0"}]}));
     response.processAsync();
     response.finish();
   });

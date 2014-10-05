@@ -12,15 +12,17 @@ browser.jar:
 
   # Desktop script
   content/browser/loop/js/client.js                 (content/js/client.js)
-  content/browser/loop/js/desktopRouter.js          (content/js/desktopRouter.js)
   content/browser/loop/js/conversation.js           (content/js/conversation.js)
+  content/browser/loop/js/otconfig.js               (content/js/otconfig.js)
   content/browser/loop/js/panel.js                  (content/js/panel.js)
+  content/browser/loop/js/contacts.js               (content/js/contacts.js)
 
   # Shared styles
   content/browser/loop/shared/css/reset.css         (content/shared/css/reset.css)
   content/browser/loop/shared/css/common.css        (content/shared/css/common.css)
   content/browser/loop/shared/css/panel.css         (content/shared/css/panel.css)
   content/browser/loop/shared/css/conversation.css  (content/shared/css/conversation.css)
+  content/browser/loop/shared/css/contacts.css      (content/shared/css/contacts.css)
 
   # Shared images
   content/browser/loop/shared/img/happy.png                     (content/shared/img/happy.png)
@@ -44,17 +46,25 @@ browser.jar:
   content/browser/loop/shared/img/svg/glyph-account-16x16.svg   (content/shared/img/svg/glyph-account-16x16.svg)
   content/browser/loop/shared/img/svg/glyph-signin-16x16.svg    (content/shared/img/svg/glyph-signin-16x16.svg)
   content/browser/loop/shared/img/svg/glyph-signout-16x16.svg   (content/shared/img/svg/glyph-signout-16x16.svg)
+  content/browser/loop/shared/img/audio-call-avatar.svg         (content/shared/img/audio-call-avatar.svg)
+  content/browser/loop/shared/img/icons-10x10.svg               (content/shared/img/icons-10x10.svg)
+  content/browser/loop/shared/img/icons-14x14.svg               (content/shared/img/icons-14x14.svg)
+  content/browser/loop/shared/img/icons-16x16.svg               (content/shared/img/icons-16x16.svg)
 
   # Shared scripts
   content/browser/loop/shared/js/feedbackApiClient.js (content/shared/js/feedbackApiClient.js)
   content/browser/loop/shared/js/models.js            (content/shared/js/models.js)
-  content/browser/loop/shared/js/router.js            (content/shared/js/router.js)
+  content/browser/loop/shared/js/mixins.js            (content/shared/js/mixins.js)
   content/browser/loop/shared/js/views.js             (content/shared/js/views.js)
   content/browser/loop/shared/js/utils.js             (content/shared/js/utils.js)
   content/browser/loop/shared/js/websocket.js         (content/shared/js/websocket.js)
 
   # Shared libs
+#ifdef DEBUG
   content/browser/loop/shared/libs/react-0.11.1.js    (content/shared/libs/react-0.11.1.js)
+#else
+  content/browser/loop/shared/libs/react-0.11.1.js    (content/shared/libs/react-0.11.1-prod.js)
+#endif
   content/browser/loop/shared/libs/lodash-2.4.1.js    (content/shared/libs/lodash-2.4.1.js)
   content/browser/loop/shared/libs/jquery-2.1.0.js    (content/shared/libs/jquery-2.1.0.js)
   content/browser/loop/shared/libs/backbone-1.1.2.js  (content/shared/libs/backbone-1.1.2.js)

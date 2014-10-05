@@ -11,21 +11,14 @@
     <link rel="stylesheet" type="text/css" href="loop/shared/css/common.css">
     <link rel="stylesheet" type="text/css" href="loop/shared/css/conversation.css">
  </head>
-  <body class="conversation-window" onload="loop.conversation.init();">
+  <body class="fx-embedded">
 
     <div id="messages"></div>
 
     <div id="main"></div>
 
     <script type="text/javascript" src="loop/libs/l10n.js"></script>
-    <script>
-      window.OTProperties = {
-        cdnURL: 'loop/',
-      };
-      window.OTProperties.assetURL = window.OTProperties.cdnURL + 'sdk-content/';
-      window.OTProperties.configURL = window.OTProperties.assetURL + 'js/dynamic_config.min.js';
-      window.OTProperties.cssURL = window.OTProperties.assetURL + 'css/ot.css';
-    </script>
+    <script type="text/javascript" src="loop/js/otconfig.js"></script>
     <script type="text/javascript" src="loop/libs/sdk.js"></script>
     <script type="text/javascript" src="loop/shared/libs/react-0.11.1.js"></script>
     <script type="text/javascript" src="loop/shared/libs/jquery-2.1.0.js"></script>
@@ -34,12 +27,11 @@
 
     <script type="text/javascript" src="loop/shared/js/utils.js"></script>
     <script type="text/javascript" src="loop/shared/js/models.js"></script>
-    <script type="text/javascript" src="loop/shared/js/router.js"></script>
+    <script type="text/javascript" src="loop/shared/js/mixins.js"></script>
     <script type="text/javascript" src="loop/shared/js/views.js"></script>
     <script type="text/javascript" src="loop/shared/js/feedbackApiClient.js"></script>
     <script type="text/javascript" src="loop/shared/js/websocket.js"></script>
     <script type="text/javascript" src="loop/js/client.js"></script>
-    <script type="text/javascript" src="loop/js/desktopRouter.js"></script>
     <script type="text/javascript" src="loop/js/conversation.js"></script>
   </body>
 </html>

@@ -2,15 +2,33 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# Note that this Makefile is not invoked by the Mozilla build
+# system, which is why it can have dependencies on things the
+# build system at-large doesn't yet support.
+
+# XXX In the interest of making the build logic simpler and
+# more maintainable, we should be trying to implement new
+# functionality in Gruntfile.js rather than here.
+# Bug 1066176 tracks moving all functionality currently here
+# to the Gruntfile and getting rid of this Makefile entirely.
+
 LOOP_SERVER_URL := $(shell echo $${LOOP_SERVER_URL-http://localhost:5000})
-LOOP_PENDING_CALL_TIMEOUT := $(shell echo $${LOOP_PENDING_CALL_TIMEOUT-20000})
+LOOP_FEEDBACK_API_URL := $(shell echo $${LOOP_FEEDBACK_API_URL-"https://input.allizom.org/api/v1/feedback"})
+LOOP_FEEDBACK_PRODUCT_NAME := $(shell echo $${LOOP_FEEDBACK_PRODUCT_NAME-Loop})
+
 NODE_LOCAL_BIN=./node_modules/.bin
 
-install:
+install: npm_install tos
+
+npm_install:
 	@npm install
 
 test:
 	@echo "Not implemented yet."
+
+tos:
+	@$(NODE_LOCAL_BIN)/grunt replace marked
+	@$(NODE_LOCAL_BIN)/grunt sass
 
 lint:
 	@$(NODE_LOCAL_BIN)/jshint *.js content test
@@ -52,5 +70,9 @@ remove_old_config:
 config:
 	@echo "var loop = loop || {};" > content/config.js
 	@echo "loop.config = loop.config || {};" >> content/config.js
-	@echo "loop.config.serverUrl          = '`echo $(LOOP_SERVER_URL)`';" >> content/config.js
-	@echo "loop.config.pendingCallTimeout = `echo $(LOOP_PENDING_CALL_TIMEOUT)`;" >> content/config.js
+	@echo "loop.config.serverUrl = '`echo $(LOOP_SERVER_URL)`';" >> content/config.js
+	@echo "loop.config.feedbackApiUrl = '`echo $(LOOP_FEEDBACK_API_URL)`';" >> content/config.js
+	@echo "loop.config.feedbackProductName = '`echo $(LOOP_FEEDBACK_PRODUCT_NAME)`';" >> content/config.js
+	@echo "loop.config.fxosApp = loop.config.fxosApp || {};" >> content/config.js
+	@echo "loop.config.fxosApp.name = 'Loop';" >> content/config.js
+	@echo "loop.config.fxosApp.manifestUrl = 'http://fake-market.herokuapp.com/apps/packagedApp/manifest.webapp';" >> content/config.js

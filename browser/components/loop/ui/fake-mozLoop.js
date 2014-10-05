@@ -7,5 +7,14 @@
  * @type {Object}
  */
 navigator.mozLoop = {
-  getLoopCharPref: function() {}
+  ensureRegistered: function() {},
+  getLoopCharPref: function() {},
+  getLoopBoolPref: function() {},
+  releaseCallData: function() {},
+  contacts: {
+    getAll: function(callback) {
+      callback(null, []);
+    },
+    on: function() {}
+  }
 };

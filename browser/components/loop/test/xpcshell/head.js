@@ -28,7 +28,6 @@ var loopServer;
 Services.prefs.setBoolPref("loop.enabled", true);
 Services.prefs.setBoolPref("loop.throttled", false);
 
-
 function setupFakeLoopServer() {
   loopServer = new HttpServer();
   loopServer.start(-1);
@@ -41,6 +40,26 @@ function setupFakeLoopServer() {
   do_register_cleanup(function() {
     loopServer.stop(function() {});
   });
+}
+
+function waitForCondition(aConditionFn, aMaxTries=50, aCheckInterval=100) {
+  function tryAgain() {
+    function tryNow() {
+      tries++;
+      if (aConditionFn()) {
+        deferred.resolve();
+      } else if (tries < aMaxTries) {
+        tryAgain();
+      } else {
+        deferred.reject("Condition timed out: " + aConditionFn.toSource());
+      }
+    }
+    do_timeout(aCheckInterval, tryNow);
+  }
+  let deferred = Promise.defer();
+  let tries = 0;
+  tryAgain();
+  return deferred.promise;
 }
 
 /**
@@ -75,8 +94,9 @@ let mockPushHandler = {
  * enables us to check parameters and return messages similar to the push
  * server.
  */
-let MockWebSocketChannel = function(initRegStatus) {
-  this.initRegStatus = initRegStatus;
+let MockWebSocketChannel = function(options) {
+  let _options = options || {};
+  this.defaultMsgHandler = _options.defaultMsgHandler;
 };
 
 MockWebSocketChannel.prototype = {
@@ -117,6 +137,8 @@ MockWebSocketChannel.prototype = {
                           channelID: this.channelID,
                           pushEndpoint: kEndPointUrl}));
         break;
+      default:
+        this.defaultMsgHandler && this.defaultMsgHandler(message);
     }
   },
 

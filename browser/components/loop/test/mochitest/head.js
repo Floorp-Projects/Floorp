@@ -1,6 +1,17 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const HAWK_TOKEN_LENGTH = 64;
+const {
+  LOOP_SESSION_TYPE,
+  MozLoopServiceInternal,
+} = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
+
+// Cache this value only once, at the beginning of a
+// test run, so that it doesn't pick up the offline=true
+// if offline mode is requested multiple times in a test run.
+const WAS_OFFLINE = Services.io.offline;
+
 var gMozLoopAPI;
 
 function promiseGetMozLoopAPI() {
@@ -40,7 +51,11 @@ function promiseGetMozLoopAPI() {
   // life of the application.
   registerCleanupFunction(function() {
     loopPanel.hidePopup();
-    loopPanel.removeChild(document.getElementById(btn.getAttribute("notificationFrameId")));
+    let frameId = btn.getAttribute("notificationFrameId");
+    let frame = document.getElementById(frameId);
+    if (frame) {
+      loopPanel.removeChild(frame);
+    }
   });
 
   return deferred.promise;
@@ -52,22 +67,23 @@ function promiseGetMozLoopAPI() {
  *
  * This assumes that the tests are running in a generatorTest.
  */
-function loadLoopPanel() {
+function loadLoopPanel(aOverrideOptions = {}) {
   // Set prefs to ensure we don't access the network externally.
-  Services.prefs.setCharPref("services.push.serverURL", "ws://localhost/");
-  Services.prefs.setCharPref("loop.server", "http://localhost/");
+  Services.prefs.setCharPref("services.push.serverURL", aOverrideOptions.pushURL || "ws://localhost/");
+  Services.prefs.setCharPref("loop.server", aOverrideOptions.loopURL || "http://localhost/");
 
   // Turn off the network for loop tests, so that we don't
   // try to access the remote servers. If we want to turn this
   // back on in future, be careful to check for intermittent
   // failures.
-  let wasOffline = Services.io.offline;
-  Services.io.offline = true;
+  if (!aOverrideOptions.stayOnline) {
+    Services.io.offline = true;
+  }
 
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref("services.push.serverURL");
     Services.prefs.clearUserPref("loop.server");
-    Services.io.offline = wasOffline;
+    Services.io.offline = WAS_OFFLINE;
   });
 
   // Turn off animations to make tests quicker.
@@ -91,6 +107,33 @@ function promiseOAuthParamsSetup(baseURL, params) {
   return deferred.promise;
 }
 
+function resetFxA() {
+  let global = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
+  global.gHawkClient = null;
+  global.gFxAOAuthClientPromise = null;
+  global.gFxAOAuthClient = null;
+  global.gFxAOAuthTokenData = null;
+  global.gFxAOAuthProfile = null;
+  const fxASessionPref = MozLoopServiceInternal.getSessionTokenPrefName(LOOP_SESSION_TYPE.FXA);
+  Services.prefs.clearUserPref(fxASessionPref);
+}
+
+function setInternalLoopGlobal(aName, aValue) {
+  let global = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
+  global[aName] = aValue;
+}
+
+function checkLoggedOutState() {
+  let global = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
+  ise(global.gFxAOAuthClientPromise, null, "gFxAOAuthClientPromise should be cleared");
+  ise(global.gFxAOAuthProfile, null, "gFxAOAuthProfile should be cleared");
+  ise(global.gFxAOAuthClient, null, "gFxAOAuthClient should be cleared");
+  ise(global.gFxAOAuthTokenData, null, "gFxAOAuthTokenData should be cleared");
+  const fxASessionPref = MozLoopServiceInternal.getSessionTokenPrefName(LOOP_SESSION_TYPE.FXA);
+  ise(Services.prefs.getPrefType(fxASessionPref), Services.prefs.PREF_INVALID,
+      "FxA hawk session should be cleared anyways");
+}
+
 function promiseDeletedOAuthParams(baseURL) {
   let deferred = Promise.defer();
   let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
@@ -102,3 +145,56 @@ function promiseDeletedOAuthParams(baseURL) {
 
   return deferred.promise;
 }
+
+function promiseObserverNotified(aTopic, aExpectedData = null) {
+  let deferred = Promise.defer();
+  Services.obs.addObserver(function onNotification(aSubject, aTopic, aData) {
+    Services.obs.removeObserver(onNotification, aTopic);
+    is(aData, aExpectedData, "observer data should match expected data")
+    deferred.resolve({subject: aSubject, data: aData});
+  }, aTopic, false);
+  return deferred.promise;
+}
+
+/**
+ * Get the last registration on the test server.
+ */
+function promiseOAuthGetRegistration(baseURL) {
+  let deferred = Promise.defer();
+  let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+              createInstance(Ci.nsIXMLHttpRequest);
+  xhr.open("GET", baseURL + "/get_registration", true);
+  xhr.responseType = "json";
+  xhr.addEventListener("load", () => deferred.resolve(xhr));
+  xhr.addEventListener("error", deferred.reject);
+  xhr.send();
+
+  return deferred.promise;
+}
+
+/**
+ * This is used to fake push registration and notifications for
+ * MozLoopService tests. There is only one object created per test instance, as
+ * once registration has taken place, the object cannot currently be changed.
+ */
+let mockPushHandler = {
+  // This sets the registration result to be returned when initialize
+  // is called. By default, it is equivalent to success.
+  registrationResult: null,
+  pushUrl: undefined,
+
+  /**
+   * MozLoopPushHandler API
+   */
+  initialize: function(registerCallback, notificationCallback) {
+    registerCallback(this.registrationResult, this.pushUrl);
+    this._notificationCallback = notificationCallback;
+  },
+
+  /**
+   * Test-only API to simplify notifying a push notification result.
+   */
+  notify: function(version) {
+    this._notificationCallback(version);
+  }
+};

@@ -1583,7 +1583,7 @@ pref("loop.throttled", false);
 pref("loop.enabled", true);
 pref("loop.throttled", true);
 pref("loop.soft_start_ticket_number", -1);
-pref("loop.soft_start_hostname", "soft-start.loop-dev.stage.mozaws.net");
+pref("loop.soft_start_hostname", "soft-start.loop.services.mozilla.com");
 #endif
 
 pref("loop.server", "https://loop.services.mozilla.com");
@@ -1596,7 +1596,9 @@ pref("loop.retry_delay.start", 60000);
 pref("loop.retry_delay.limit", 300000);
 pref("loop.feedback.baseUrl", "https://input.mozilla.org/api/v1/feedback");
 pref("loop.feedback.product", "Loop");
+pref("loop.debug.loglevel", "Error");
 pref("loop.debug.websocket", false);
+pref("loop.debug.sdk", false);
 
 // serverURL to be assigned by services team
 pref("services.push.serverURL", "wss://push.services.mozilla.com/");
