@@ -2095,8 +2095,8 @@ LIRGenerator::visitRegExpExec(MRegExpExec *ins)
     MOZ_ASSERT(ins->regexp()->type() == MIRType_Object);
     MOZ_ASSERT(ins->string()->type() == MIRType_String);
 
-    LRegExpExec *lir = new(alloc()) LRegExpExec(useRegisterAtStart(ins->regexp()),
-                                                useRegisterAtStart(ins->string()));
+    LRegExpExec *lir = new(alloc()) LRegExpExec(useFixedAtStart(ins->regexp(), CallTempReg0),
+                                                useFixedAtStart(ins->string(), CallTempReg1));
     return defineReturn(lir, ins) && assignSafepoint(lir, ins);
 }
 
@@ -2106,8 +2106,8 @@ LIRGenerator::visitRegExpTest(MRegExpTest *ins)
     MOZ_ASSERT(ins->regexp()->type() == MIRType_Object);
     MOZ_ASSERT(ins->string()->type() == MIRType_String);
 
-    LRegExpTest *lir = new(alloc()) LRegExpTest(useRegisterAtStart(ins->regexp()),
-                                                useRegisterAtStart(ins->string()));
+    LRegExpTest *lir = new(alloc()) LRegExpTest(useFixedAtStart(ins->regexp(), CallTempReg2),
+                                                useFixedAtStart(ins->string(), CallTempReg3));
     return defineReturn(lir, ins) && assignSafepoint(lir, ins);
 }
 

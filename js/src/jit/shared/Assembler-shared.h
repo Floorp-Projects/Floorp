@@ -865,6 +865,8 @@ class AssemblerShared
     void append(AsmJSAbsoluteLink link) { enoughMemory_ &= asmJSAbsoluteLinks_.append(link); }
     size_t numAsmJSAbsoluteLinks() const { return asmJSAbsoluteLinks_.length(); }
     AsmJSAbsoluteLink asmJSAbsoluteLink(size_t i) const { return asmJSAbsoluteLinks_[i]; }
+
+    static bool canUseInSingleByteInstruction(Register reg) { return true; }
 };
 
 } // namespace jit

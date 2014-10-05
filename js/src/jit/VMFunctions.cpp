@@ -1217,6 +1217,13 @@ MarkValueFromIon(JSRuntime *rt, Value *vp)
 }
 
 void
+MarkStringFromIon(JSRuntime *rt, JSString **stringp)
+{
+    if (*stringp)
+        gc::MarkStringUnbarriered(&rt->gc.marker, stringp, "write barrier");
+}
+
+void
 MarkShapeFromIon(JSRuntime *rt, Shape **shapep)
 {
     gc::MarkShapeUnbarriered(&rt->gc.marker, shapep, "write barrier");
