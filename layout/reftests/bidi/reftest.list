@@ -142,6 +142,7 @@ skip-if(B2G) == 726420-1.html 726420-1-ref.html
 skip-if(B2G&&browserIsRemote) == 869833-1.xul 869833-1-ref.xul
 == 922530-1.html 922530-1-ref.html
 == 922550-1.html 922550-1-ref.html
+== 1067268-1.html 1067268-1-ref.html
 == 1069941-inline-bidi-border-1.html 1069941-inline-bidi-border-1-ref.html
 == 1069941-inline-bidi-margin-1.html 1069941-inline-bidi-margin-1-ref.html
 

@@ -11,7 +11,7 @@
 
 #include <zlib.h>
 
-#include "third_party/brotli/src/brotli/dec/decode.h"
+#include "decode.h"
 
 #include "opentype-sanitiser.h"
 #include "ots-memory-stream.h"

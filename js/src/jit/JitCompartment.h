@@ -186,6 +186,7 @@ class JitRuntime
 
     // Thunk that calls the GC pre barrier.
     JitCode *valuePreBarrier_;
+    JitCode *stringPreBarrier_;
     JitCode *shapePreBarrier_;
     JitCode *typeObjectPreBarrier_;
 
@@ -359,6 +360,7 @@ class JitRuntime
     JitCode *preBarrier(MIRType type) const {
         switch (type) {
           case MIRType_Value: return valuePreBarrier_;
+          case MIRType_String: return stringPreBarrier_;
           case MIRType_Shape: return shapePreBarrier_;
           case MIRType_TypeObject: return typeObjectPreBarrier_;
           default: MOZ_CRASH();
@@ -439,13 +441,16 @@ class JitCompartment
     void *baselineGetPropReturnAddr_;
     void *baselineSetPropReturnAddr_;
 
-    // Stub to concatenate two strings inline. Note that it can't be
-    // stored in JitRuntime because masm.newGCString bakes in zone-specific
-    // pointers. These are weak pointers, but are not declared as ReadBarriered
-    // since they are only read from during Ion compilation, which may occur
-    // off thread and whose barriers are captured during CodeGenerator::link.
+    // Stubs to concatenate two strings inline, or perform RegExp calls inline.
+    // These bake in zone and compartment specific pointers and can't be stored
+    // in JitRuntime. These are weak pointers, but are not declared as
+    // ReadBarriered since they are only read from during Ion compilation,
+    // which may occur off thread and whose barriers are captured during
+    // CodeGenerator::link.
     JitCode *stringConcatStub_;
     JitCode *parallelStringConcatStub_;
+    JitCode *regExpExecStub_;
+    JitCode *regExpTestStub_;
 
     // Set of JSScripts invoked by ForkJoin (i.e. the entry script). These
     // scripts are marked if their respective parallel IonScripts' age is less
@@ -454,6 +459,8 @@ class JitCompartment
     ScriptSet *activeParallelEntryScripts_;
 
     JitCode *generateStringConcatStub(JSContext *cx, ExecutionMode mode);
+    JitCode *generateRegExpExecStub(JSContext *cx);
+    JitCode *generateRegExpTestStub(JSContext *cx);
 
   public:
     JitCode *getStubCode(uint32_t key) {
@@ -498,7 +505,7 @@ class JitCompartment
     bool notifyOfActiveParallelEntryScript(JSContext *cx, HandleScript script);
     bool hasRecentParallelActivity() const;
 
-    void toggleBaselineStubBarriers(bool enabled);
+    void toggleBarriers(bool enabled);
 
     ExecutableAllocator *createIonAlloc();
 
@@ -520,6 +527,28 @@ class JitCompartment
           case ParallelExecution:   return parallelStringConcatStub_;
           default:                  MOZ_CRASH("No such execution mode");
         }
+    }
+
+    JitCode *regExpExecStubNoBarrier() const {
+        return regExpExecStub_;
+    }
+
+    bool ensureRegExpExecStubExists(JSContext *cx) {
+        if (regExpExecStub_)
+            return true;
+        regExpExecStub_ = generateRegExpExecStub(cx);
+        return regExpExecStub_ != nullptr;
+    }
+
+    JitCode *regExpTestStubNoBarrier() const {
+        return regExpTestStub_;
+    }
+
+    bool ensureRegExpTestStubExists(JSContext *cx) {
+        if (regExpTestStub_)
+            return true;
+        regExpTestStub_ = generateRegExpTestStub(cx);
+        return regExpTestStub_ != nullptr;
     }
 };
 

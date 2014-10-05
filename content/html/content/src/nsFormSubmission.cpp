@@ -820,7 +820,7 @@ GetSubmissionFromForm(nsGenericHTMLElement* aForm,
                       nsFormSubmission** aFormSubmission)
 {
   // Get all the information necessary to encode the form data
-  NS_ASSERTION(aForm->GetCurrentDoc(),
+  NS_ASSERTION(aForm->GetComposedDoc(),
                "Should have doc if we're building submission!");
 
   // Get encoding type (default: urlencoded)

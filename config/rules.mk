@@ -140,7 +140,7 @@ ifdef REAL_LIBRARY
 ifdef FORCE_SHARED_LIB
 # ... except when we really want one
 ifdef NO_EXPAND_LIBS
-LIBRARY			:= $(REAL_LIBRARY) $(REAL_LIBRARY).$(LIBS_DESC_SUFFIX)
+LIBRARY			:= $(REAL_LIBRARY)
 else
 LIBRARY			:= $(REAL_LIBRARY).$(LIBS_DESC_SUFFIX)
 endif
@@ -149,7 +149,11 @@ else
 ifeq (,$(SDK_LIBRARY)$(DIST_INSTALL)$(NO_EXPAND_LIBS))
 LIBRARY			:= $(REAL_LIBRARY).$(LIBS_DESC_SUFFIX)
 else
+ifdef NO_EXPAND_LIBS
+LIBRARY			:= $(REAL_LIBRARY)
+else
 LIBRARY			:= $(REAL_LIBRARY) $(REAL_LIBRARY).$(LIBS_DESC_SUFFIX)
+endif
 endif
 endif
 endif # REAL_LIBRARY
@@ -568,7 +572,7 @@ STATIC_LIB_DEP = $(if $(wildcard $(1).$(LIBS_DESC_SUFFIX)),$(1).$(LIBS_DESC_SUFF
 STATIC_LIBS_DEPS := $(foreach l,$(STATIC_LIBS),$(call STATIC_LIB_DEP,$(l)))
 
 # Dependencies which, if modified, should cause everything to rebuild
-GLOBAL_DEPS += Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.mk
+GLOBAL_DEPS += Makefile $(addprefix $(DEPTH)/config/,$(INCLUDED_AUTOCONF_MK)) $(topsrcdir)/config/config.mk
 
 ##############################################
 ifdef COMPILE_ENVIRONMENT
@@ -776,7 +780,8 @@ endif
 
 $(filter %.$(LIB_SUFFIX),$(LIBRARY)): $(OBJS) $(STATIC_LIBS_DEPS) $(filter %.$(LIB_SUFFIX),$(EXTRA_LIBS)) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 	$(REPORT_BUILD)
-	$(RM) $(LIBRARY)
+# Always remove both library and library descriptor
+	$(RM) $(REAL_LIBRARY) $(REAL_LIBRARY).$(LIBS_DESC_SUFFIX)
 	$(EXPAND_AR) $(AR_FLAGS) $(OBJS) $(STATIC_LIBS) $(filter %.$(LIB_SUFFIX),$(EXTRA_LIBS))
 
 $(filter-out %.$(LIB_SUFFIX),$(LIBRARY)): $(filter %.$(LIB_SUFFIX),$(LIBRARY)) $(OBJS) $(STATIC_LIBS_DEPS) $(filter %.$(LIB_SUFFIX),$(EXTRA_LIBS)) $(EXTRA_DEPS) $(GLOBAL_DEPS)

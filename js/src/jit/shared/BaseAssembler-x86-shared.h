@@ -161,6 +161,13 @@ namespace X86Registers {
 
 } /* namespace X86Registers */
 
+// Byte operand register spl & above require a REX prefix (to prevent
+// the 'H' registers be accessed).
+static inline bool
+ByteRegRequiresRex(int reg)
+{
+    return (reg >= X86Registers::esp);
+}
 
 class X86Assembler : public GenericAssembler {
 public:
@@ -4407,16 +4414,16 @@ private:
         // byte of the second four registers (spl..dil).
         //
         // Address operands should still be checked using regRequiresRex(),
-        // while byteRegRequiresRex() is provided to check byte register
+        // while ByteRegRequiresRex() is provided to check byte register
         // operands.
 
         void oneByteOp8(OneByteOpcodeID opcode, GroupOpcodeID groupOp, RegisterID rm)
         {
 #ifdef JS_CODEGEN_X86
-            MOZ_ASSERT(!byteRegRequiresRex(rm));
+            MOZ_ASSERT(!ByteRegRequiresRex(rm));
 #endif
             m_buffer.ensureSpace(maxInstructionSize);
-            emitRexIf(byteRegRequiresRex(rm), 0, 0, rm);
+            emitRexIf(ByteRegRequiresRex(rm), 0, 0, rm);
             m_buffer.putByteUnchecked(opcode);
             registerModRM(groupOp, rm);
         }
@@ -4433,10 +4440,10 @@ private:
         void oneByteOp8(OneByteOpcodeID opcode, int reg, RegisterID base, int offset)
         {
 #ifdef JS_CODEGEN_X86
-            MOZ_ASSERT(!byteRegRequiresRex(reg));
+            MOZ_ASSERT(!ByteRegRequiresRex(reg));
 #endif
             m_buffer.ensureSpace(maxInstructionSize);
-            emitRexIf(byteRegRequiresRex(reg), reg, 0, base);
+            emitRexIf(ByteRegRequiresRex(reg), reg, 0, base);
             m_buffer.putByteUnchecked(opcode);
             memoryModRM(reg, base, offset);
         }
@@ -4444,10 +4451,10 @@ private:
         void oneByteOp8_disp32(OneByteOpcodeID opcode, int reg, RegisterID base, int offset)
         {
 #ifdef JS_CODEGEN_X86
-            MOZ_ASSERT(!byteRegRequiresRex(reg));
+            MOZ_ASSERT(!ByteRegRequiresRex(reg));
 #endif
             m_buffer.ensureSpace(maxInstructionSize);
-            emitRexIf(byteRegRequiresRex(reg), reg, 0, base);
+            emitRexIf(ByteRegRequiresRex(reg), reg, 0, base);
             m_buffer.putByteUnchecked(opcode);
             memoryModRM_disp32(reg, base, offset);
         }
@@ -4455,10 +4462,10 @@ private:
         void oneByteOp8(OneByteOpcodeID opcode, int reg, RegisterID base, RegisterID index, int scale, int offset)
         {
 #ifdef JS_CODEGEN_X86
-            MOZ_ASSERT(!byteRegRequiresRex(reg));
+            MOZ_ASSERT(!ByteRegRequiresRex(reg));
 #endif
             m_buffer.ensureSpace(maxInstructionSize);
-            emitRexIf(byteRegRequiresRex(reg), reg, index, base);
+            emitRexIf(ByteRegRequiresRex(reg), reg, index, base);
             m_buffer.putByteUnchecked(opcode);
             memoryModRM(reg, base, index, scale, offset);
         }
@@ -4466,10 +4473,10 @@ private:
         void oneByteOp8(OneByteOpcodeID opcode, int reg, const void* address)
         {
 #ifdef JS_CODEGEN_X86
-            MOZ_ASSERT(!byteRegRequiresRex(reg));
+            MOZ_ASSERT(!ByteRegRequiresRex(reg));
 #endif
             m_buffer.ensureSpace(maxInstructionSize);
-            emitRexIf(byteRegRequiresRex(reg), reg, 0, 0);
+            emitRexIf(ByteRegRequiresRex(reg), reg, 0, 0);
             m_buffer.putByteUnchecked(opcode);
             memoryModRM_disp32(reg, address);
         }
@@ -4477,7 +4484,7 @@ private:
         void twoByteOp8(TwoByteOpcodeID opcode, RegisterID reg, RegisterID rm)
         {
             m_buffer.ensureSpace(maxInstructionSize);
-            emitRexIf(byteRegRequiresRex(reg)|byteRegRequiresRex(rm), reg, 0, rm);
+            emitRexIf(ByteRegRequiresRex(reg)|ByteRegRequiresRex(rm), reg, 0, rm);
             m_buffer.putByteUnchecked(OP_2BYTE_ESCAPE);
             m_buffer.putByteUnchecked(opcode);
             registerModRM(reg, rm);
@@ -4490,7 +4497,7 @@ private:
         void twoByteOp8_movx(TwoByteOpcodeID opcode, RegisterID reg, RegisterID rm)
         {
             m_buffer.ensureSpace(maxInstructionSize);
-            emitRexIf(regRequiresRex(reg)|byteRegRequiresRex(rm), reg, 0, rm);
+            emitRexIf(regRequiresRex(reg)|ByteRegRequiresRex(rm), reg, 0, rm);
             m_buffer.putByteUnchecked(OP_2BYTE_ESCAPE);
             m_buffer.putByteUnchecked(opcode);
             registerModRM(reg, rm);
@@ -4499,7 +4506,7 @@ private:
         void twoByteOp8(TwoByteOpcodeID opcode, GroupOpcodeID groupOp, RegisterID rm)
         {
             m_buffer.ensureSpace(maxInstructionSize);
-            emitRexIf(byteRegRequiresRex(rm), 0, 0, rm);
+            emitRexIf(ByteRegRequiresRex(rm), 0, 0, rm);
             m_buffer.putByteUnchecked(OP_2BYTE_ESCAPE);
             m_buffer.putByteUnchecked(opcode);
             registerModRM(groupOp, rm);
@@ -4612,13 +4619,6 @@ private:
 
         // Internals; ModRm and REX formatters.
 
-        // Byte operand register spl & above require a REX prefix (to prevent
-        // the 'H' registers be accessed).
-        inline bool byteRegRequiresRex(int reg)
-        {
-            return (reg >= X86Registers::esp);
-        }
-
         static const RegisterID noBase = X86Registers::ebp;
         static const RegisterID hasSib = X86Registers::esp;
         static const RegisterID noIndex = X86Registers::esp;
@@ -4644,7 +4644,7 @@ private:
             emitRex(true, r, x, b);
         }
 
-        // Used for operations with byte operands - use byteRegRequiresRex() to
+        // Used for operations with byte operands - use ByteRegRequiresRex() to
         // check register operands, regRequiresRex() to check other registers
         // (i.e. address base & index).
         //

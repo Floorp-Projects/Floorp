@@ -1323,12 +1323,9 @@ nsCacheService::CreateSessionInternal(const char *          clientID,
                                       bool                  streamBased,
                                       nsICacheSession     **result)
 {
-    if (this == nullptr)  return NS_ERROR_NOT_AVAILABLE;
-
-    nsCacheSession * session = new nsCacheSession(clientID, storagePolicy, streamBased);
-    if (!session)  return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*result = session);
+    nsRefPtr<nsCacheSession> session =
+        new nsCacheSession(clientID, storagePolicy, streamBased);
+    session.forget(result);
 
     return NS_OK;
 }

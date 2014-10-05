@@ -460,7 +460,8 @@ function writeEntry(entry) {
   } else {
     printVal += "false, ";
   }
-  if (entry.is_moz || (entry.pins == "mozilla")) {
+  if (entry.is_moz || (entry.pins.indexOf("mozilla") != -1 &&
+                       entry.pins != "mozilla_test")) {
     printVal += "true, ";
   } else {
     printVal += "false, ";

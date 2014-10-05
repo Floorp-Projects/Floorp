@@ -129,12 +129,10 @@ nsSVGPolyElement::BuildPath(PathBuilder* aBuilder)
     return nullptr;
   }
 
-  RefPtr<PathBuilder> pathBuilder = aBuilder ? aBuilder : CreatePathBuilder();
-
-  pathBuilder->MoveTo(points[0]);
+  aBuilder->MoveTo(points[0]);
   for (uint32_t i = 1; i < points.Length(); ++i) {
-    pathBuilder->LineTo(points[i]);
+    aBuilder->LineTo(points[i]);
   }
 
-  return pathBuilder->Finish();
+  return aBuilder->Finish();
 }

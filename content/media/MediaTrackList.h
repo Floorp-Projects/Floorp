@@ -10,6 +10,8 @@
 #include "mozilla/DOMEventTargetHelper.h"
 
 namespace mozilla {
+class DOMMediaStream;
+
 namespace dom {
 
 class HTMLMediaElement;
@@ -28,6 +30,8 @@ class MediaTrackList;
 class MediaTrackListListener
 {
 public:
+  friend class mozilla::DOMMediaStream;
+
   explicit MediaTrackListListener(MediaTrackList* aMediaTrackList)
     : mMediaTrackList(aMediaTrackList) {};
 

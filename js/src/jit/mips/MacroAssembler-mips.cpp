@@ -3441,6 +3441,17 @@ MacroAssemblerMIPSCompat::callWithABI(const Address &fun, MoveOp::Type result)
 }
 
 void
+MacroAssemblerMIPSCompat::callWithABI(Register fun, MoveOp::Type result)
+{
+    // Load the callee in t9, as above.
+    ma_move(t9, fun);
+    uint32_t stackAdjust;
+    callWithABIPre(&stackAdjust);
+    call(t9);
+    callWithABIPost(stackAdjust, result);
+}
+
+void
 MacroAssemblerMIPSCompat::handleFailureWithHandler(void *handler)
 {
     // Reserve space for exception information.

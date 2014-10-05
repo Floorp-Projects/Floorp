@@ -78,6 +78,7 @@ fuzzy-if(Android,4,87) == dynamic-clipPath-01.svg pass.svg
 == dynamic-feFlood-01.svg pass.svg
 asserts(0-1) == dynamic-feImage-01.svg pass.svg # intermittent assertions (bug 886080)
 == dynamic-fill-01.svg dynamic-fill-01-ref.svg
+== dynamic-fill-rule-01.svg dynamic-fill-rule-01-ref.svg
 fuzzy-if(d2d,1,10000) == dynamic-filter-contents-01a.svg dynamic-filter-contents-01-ref.svg
 fuzzy-if(d2d,1,10000) == dynamic-filter-contents-01b.svg dynamic-filter-contents-01-ref.svg
 == dynamic-gradient-contents-01.svg pass.svg

@@ -8,6 +8,7 @@
 #include "gfxPlatform.h"
 #include "mozilla/gfx/2D.h"
 #include "nsComputedDOMStyle.h"
+#include "nsSVGUtils.h"
 #include "nsSVGLength2.h"
 #include "SVGContentUtils.h"
 
@@ -20,6 +21,19 @@ using namespace mozilla::gfx;
 nsSVGPathGeometryElement::nsSVGPathGeometryElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsSVGPathGeometryElementBase(aNodeInfo)
 {
+}
+
+nsresult
+nsSVGPathGeometryElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
+                                       const nsAttrValue* aValue, bool aNotify)
+{
+  if (mCachedPath &&
+      aNamespaceID == kNameSpaceID_None &&
+      AttributeDefinesGeometry(aName)) {
+    mCachedPath = nullptr;
+  }
+  return nsSVGPathGeometryElementBase::AfterSetAttr(aNamespaceID, aName,
+                                                    aValue, aNotify);
 }
 
 bool
@@ -61,29 +75,32 @@ nsSVGPathGeometryElement::GetMarkPoints(nsTArray<nsSVGMark> *aMarks)
 }
 
 TemporaryRef<Path>
-nsSVGPathGeometryElement::GetPathForLengthOrPositionMeasuring()
+nsSVGPathGeometryElement::GetOrBuildPath(const DrawTarget& aDrawTarget,
+                                         FillRule aFillRule)
 {
-  return nullptr;
+  // We only cache the path if it matches the backend used for screen painting:
+  bool cacheable  = aDrawTarget.GetBackendType() ==
+                      gfxPlatform::GetPlatform()->GetContentBackend();
+
+  // Checking for and returning mCachedPath before checking the pref means
+  // that the pref is only live on page reload (or app restart for SVG in
+  // chrome). The benefit is that we avoid causing a CPU memory cache miss by
+  // looking at the global variable that the pref's stored in.
+  if (cacheable && mCachedPath) {
+    return mCachedPath;
+  }
+  RefPtr<PathBuilder> builder = aDrawTarget.CreatePathBuilder(aFillRule);
+  RefPtr<Path> path = BuildPath(builder);
+  if (cacheable && NS_SVGPathCachingEnabled()) {
+    mCachedPath = path;
+  }
+  return path.forget();
 }
 
-TemporaryRef<PathBuilder>
-nsSVGPathGeometryElement::CreatePathBuilder()
+TemporaryRef<Path>
+nsSVGPathGeometryElement::GetOrBuildPathForMeasuring()
 {
-  RefPtr<DrawTarget> drawTarget =
-    gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
-  NS_ASSERTION(gfxPlatform::GetPlatform()->
-                 SupportsAzureContentForDrawTarget(drawTarget),
-               "Should support Moz2D content drawing");
-
-  // The fill rule that we pass to CreatePathBuilder must be the current
-  // computed value of our CSS 'fill-rule' property if the path that we return
-  // will be used for painting or hit-testing. For all other uses (bounds
-  // calculatons, length measurement, position-at-offset calculations) the fill
-  // rule that we pass doesn't matter. As a result we can just pass the current
-  // computed value regardless of who's calling us, or what they're going to do
-  // with the path that we return.
-
-  return drawTarget->CreatePathBuilder(GetFillRule());
+  return nullptr;
 }
 
 FillRule
