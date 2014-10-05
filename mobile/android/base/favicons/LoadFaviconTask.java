@@ -319,8 +319,6 @@ public class LoadFaviconTask {
     // LoadFavicon tasks are performed on a unique background executor thread
     // to avoid network blocking.
     public final void execute() {
-        ThreadUtils.assertOnUiThread();
-
         try {
             Favicons.longRunningExecutor.execute(new Runnable() {
                 @Override
@@ -357,6 +355,14 @@ public class LoadFaviconTask {
     Bitmap doInBackground() {
         if (isCancelled()) {
             return null;
+        }
+
+        // Attempt to decode the favicon URL as a data URL. We don't bother storing such URIs in
+        // the database: the cost of decoding them here probably doesn't exceed the cost of mucking
+        // about with the DB.
+        LoadFaviconResult uriBitmaps = FaviconDecoder.decodeDataURI(faviconURL);
+        if (uriBitmaps != null) {
+            return pushToCacheAndGetResult(uriBitmaps);
         }
 
         String storedFaviconUrl;

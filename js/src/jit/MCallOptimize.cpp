@@ -1389,6 +1389,10 @@ IonBuilder::inlineRegExpExec(CallInfo &callInfo)
     if (callInfo.getArg(0)->mightBeType(MIRType_Object))
         return InliningStatus_NotInlined;
 
+    JSContext *cx = GetIonContext()->cx;
+    if (!cx->compartment()->jitCompartment()->ensureRegExpExecStubExists(cx))
+        return InliningStatus_Error;
+
     callInfo.setImplicitlyUsedUnchecked();
 
     MInstruction *exec = MRegExpExec::New(alloc(), callInfo.thisArg(), callInfo.getArg(0));
@@ -1422,6 +1426,10 @@ IonBuilder::inlineRegExpTest(CallInfo &callInfo)
         return InliningStatus_NotInlined;
     if (callInfo.getArg(0)->mightBeType(MIRType_Object))
         return InliningStatus_NotInlined;
+
+    JSContext *cx = GetIonContext()->cx;
+    if (!cx->compartment()->jitCompartment()->ensureRegExpTestStubExists(cx))
+        return InliningStatus_Error;
 
     callInfo.setImplicitlyUsedUnchecked();
 

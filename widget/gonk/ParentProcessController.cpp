@@ -12,41 +12,19 @@
 namespace mozilla {
 namespace widget {
 
-class RequestContentRepaintEvent : public nsRunnable
-{
-    typedef mozilla::layers::FrameMetrics FrameMetrics;
-
-public:
-    RequestContentRepaintEvent(const FrameMetrics& aFrameMetrics)
-        : mFrameMetrics(aFrameMetrics)
-    {
-    }
-
-    NS_IMETHOD Run() {
-        MOZ_ASSERT(NS_IsMainThread());
-        nsCOMPtr<nsIContent> content = nsLayoutUtils::FindContentFor(mFrameMetrics.GetScrollId());
-        if (content) {
-            mozilla::layers::APZCCallbackHelper::UpdateSubFrame(content, mFrameMetrics);
-        }
-        return NS_OK;
-    }
-
-protected:
-    FrameMetrics mFrameMetrics;
-};
-
 void
 ParentProcessController::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
 {
+    MOZ_ASSERT(NS_IsMainThread());
+
     if (aFrameMetrics.GetScrollId() == FrameMetrics::NULL_SCROLL_ID) {
         return;
     }
 
-    nsCOMPtr<nsIRunnable> r = new RequestContentRepaintEvent(aFrameMetrics);
-    if (!NS_IsMainThread()) {
-        NS_DispatchToMainThread(r);
-    } else {
-        r->Run();
+    nsCOMPtr<nsIContent> content = nsLayoutUtils::FindContentFor(aFrameMetrics.GetScrollId());
+    if (content) {
+        FrameMetrics metrics = aFrameMetrics;
+        mozilla::layers::APZCCallbackHelper::UpdateSubFrame(content, metrics);
     }
 }
 

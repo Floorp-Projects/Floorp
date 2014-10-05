@@ -634,6 +634,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             branchPtr(cond, Operand(ScratchReg, 0x0), ptr, label);
         }
     }
+    void branchPtr(Condition cond, AbsoluteAddress addr, ImmWord ptr, Label *label) {
+        if (X86Assembler::isAddressImmediate(addr.addr)) {
+            branchPtr(cond, Operand(addr), ptr, label);
+        } else {
+            mov(ImmPtr(addr.addr), ScratchReg);
+            branchPtr(cond, Operand(ScratchReg, 0x0), ptr, label);
+        }
+    }
     void branchPtr(Condition cond, AsmJSAbsoluteAddress addr, Register ptr, Label *label) {
         MOZ_ASSERT(ptr != ScratchReg);
         mov(AsmJSImmPtr(addr.kind()), ScratchReg);
@@ -1361,6 +1369,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void callWithABI(void *fun, MoveOp::Type result = MoveOp::GENERAL);
     void callWithABI(AsmJSImmPtr imm, MoveOp::Type result = MoveOp::GENERAL);
     void callWithABI(Address fun, MoveOp::Type result = MoveOp::GENERAL);
+    void callWithABI(Register fun, MoveOp::Type result = MoveOp::GENERAL);
 
     void handleFailureWithHandler(void *handler);
     void handleFailureWithHandlerTail();

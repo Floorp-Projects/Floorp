@@ -4805,7 +4805,7 @@ SVGTextFrame::GetTextPath(nsIFrame* aTextPathFrame)
   nsSVGPathGeometryElement *element =
     static_cast<nsSVGPathGeometryElement*>(pathFrame->GetContent());
 
-  RefPtr<Path> path = element->GetPathForLengthOrPositionMeasuring();
+  RefPtr<Path> path = element->GetOrBuildPathForMeasuring();
   if (!path) {
     return nullptr;
   }

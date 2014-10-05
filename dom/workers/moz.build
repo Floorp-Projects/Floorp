@@ -86,6 +86,7 @@ TEST_DIRS += [
 ]
 
 MOCHITEST_MANIFESTS += [
+    'test/fetch/mochitest.ini',
     'test/mochitest.ini',
     'test/serviceworkers/mochitest.ini',
 ]

@@ -535,6 +535,8 @@ public:
    * drawing. Future use of the builder results in a crash!
    */
   virtual TemporaryRef<Path> Finish() = 0;
+
+  virtual BackendType GetBackendType() const = 0;
 };
 
 struct Glyph

@@ -38,12 +38,12 @@ runWithMSE(function (ms, v) {
 
     v.addEventListener("seeking", function () {
       wasSeeking = true;
-      is(v.currentTime, target, "Video currentTime not at target");
+      is(v.currentTime, target, "Video currentTime at target");
     });
 
     v.addEventListener("seeked", function () {
       ok(wasSeeking, "Received expected seeking and seeked events");
-      is(v.currentTime, target, "Video currentTime not at target");
+      is(v.currentTime, target, "Video currentTime at target");
       SimpleTest.finish();
     });
   });

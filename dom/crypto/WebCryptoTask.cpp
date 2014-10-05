@@ -65,6 +65,8 @@ enum TelemetryAlgorithm {
   TA_SHA_512         = 18,
   // Later additions
   TA_AES_KW          = 19,
+  TA_ECDH            = 20,
+  TA_PBKDF2          = 21
 };
 
 // Convenience functions for extracting / converting information
@@ -2139,6 +2141,7 @@ public:
   void Init(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey,
             uint32_t aLength)
   {
+    Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_PBKDF2);
     CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_PBKDF2);
 
     // Check that we got a symmetric key
@@ -2297,6 +2300,7 @@ public:
 
   void Init(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey)
   {
+    Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_ECDH);
     CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_ECDH);
 
     // Check that we have a private key.

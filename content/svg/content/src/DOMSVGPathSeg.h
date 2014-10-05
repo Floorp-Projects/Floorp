@@ -209,10 +209,6 @@ protected:
    */
   float* InternalItem();
 
-  void InvalidateCachedList() {
-    mList->InternalList().mCachedPath = nullptr;
-  }
-
   virtual float* PtrToMemberArgs() = 0;
 
 #ifdef DEBUG

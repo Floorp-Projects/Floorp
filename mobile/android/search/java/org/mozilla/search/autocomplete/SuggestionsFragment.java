@@ -109,7 +109,7 @@ public class SuggestionsFragment extends Fragment {
                 view.getGlobalVisibleRect(startBounds);
 
                 // The user tapped on a suggestion from the search engine.
-                Telemetry.sendUIEvent(TelemetryContract.Event.SEARCH, TelemetryContract.Method.SUGGESTION, "suggest");
+                Telemetry.sendUIEvent(TelemetryContract.Event.SEARCH, TelemetryContract.Method.SUGGESTION, position);
 
                 searchListener.onSearch(suggestion.value, new SuggestionAnimation() {
                     @Override
