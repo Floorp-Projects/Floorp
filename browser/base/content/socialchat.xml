@@ -137,7 +137,9 @@
       <method name="swapDocShells">
         <parameter name="aTarget"/>
         <body><![CDATA[
-          aTarget.setAttribute('label', this.contentDocument.title);
+          aTarget.setAttribute("label", this.contentDocument.title);
+          if (this.getAttribute("dark") == "true")
+            aTarget.setAttribute("dark", "true");
           aTarget.src = this.src;
           aTarget.content.setAttribute("origin", this.content.getAttribute("origin"));
           aTarget.content.popupnotificationanchor.className = this.content.popupnotificationanchor.className;
