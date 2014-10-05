@@ -33,6 +33,8 @@
         <panel type="arrow" id="customization-lwtheme-menu"
                onpopupshowing="gCustomizeMode.onLWThemesMenuShowing(event);"
                onpopuphidden="gCustomizeMode.onLWThemesMenuHidden(event);"
+               position="topcenter bottomleft"
+               flip="none"
                role="menu">
           <label id="customization-lwtheme-menu-header" value="&customizeMode.lwthemes.myThemes;"/>
           <label id="customization-lwtheme-menu-recommended" value="&customizeMode.lwthemes.recommended;"/>
