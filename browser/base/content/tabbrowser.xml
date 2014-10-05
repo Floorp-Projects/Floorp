@@ -403,15 +403,31 @@
         </body>
       </method>
 
+      <!-- Binding from browser to tab -->
+      <field name="_tabForBrowser" readonly="true">
+      <![CDATA[
+        new WeakMap();
+      ]]>
+      </field>
+
       <method name="_getTabForBrowser">
+        <parameter name="aBrowser" />
+        <body>
+        <![CDATA[
+          let Deprecated = Components.utils.import("resource://gre/modules/Deprecated.jsm", {}).Deprecated;
+          let text = "_getTabForBrowser` is now deprecated, please use `getTabForBrowser";
+          let url = "https://developer.mozilla.org/docs/Mozilla/Tech/XUL/Method/getTabForBrowser";
+          Deprecated.warning(text, url);
+          return this.getTabForBrowser(aBrowser);
+        ]]>
+        </body>
+      </method>
+
+      <method name="getTabForBrowser">
         <parameter name="aBrowser"/>
         <body>
         <![CDATA[
-          for (let i = 0; i < this.tabs.length; i++) {
-            if (this.tabs[i].linkedBrowser == aBrowser)
-              return this.tabs[i];
-          }
-          return null;
+          return this._tabForBrowser.get(aBrowser);
         ]]>
         </body>
       </method>
@@ -460,7 +476,7 @@
 
                 newPrompt.clientTop; // style flush to assure binding is attached
 
-                let tab = self._getTabForBrowser(browser);
+                let tab = self.getTabForBrowser(browser);
                 newPrompt.init(args, tab, onCloseCallback);
                 return newPrompt;
               },
@@ -1442,7 +1458,7 @@
             let wasActive = document.activeElement == aBrowser;
 
             // Unhook our progress listener.
-            let tab = this._getTabForBrowser(aBrowser);
+            let tab = this.getTabForBrowser(aBrowser);
             let index = tab._tPos;
             let filter = this.mTabFilters[index];
             aBrowser.webProgress.removeProgressListener(filter);
@@ -1609,6 +1625,7 @@
             notificationbox.id = uniqueId;
             t.linkedPanel = uniqueId;
             t.linkedBrowser = b;
+            this._tabForBrowser.set(b, t);
             t._tPos = position;
             this.tabContainer._setPositionalAttributes();
 
@@ -2124,6 +2141,7 @@
 
             // Release the browser in case something is erroneously holding a
             // reference to the tab after its removal.
+            this._tabForBrowser.delete(aTab.linkedBrowser);
             aTab.linkedBrowser = null;
 
             // As the browser is removed, the removal of a dependent document can
@@ -3028,7 +3046,7 @@
 
           switch (aMessage.name) {
             case "DOMTitleChanged": {
-              let tab = this._getTabForBrowser(browser);
+              let tab = this.getTabForBrowser(browser);
               if (!tab || tab.hasAttribute("pending"))
                 return;
               let titleChanged = this.setTabTitle(tab);
@@ -3042,7 +3060,7 @@
                 return;
               }
 
-              let tab = this._getTabForBrowser(browser);
+              let tab = this.getTabForBrowser(browser);
               if (tab) {
                 this.removeTab(tab);
               }
@@ -3063,7 +3081,7 @@
               break;
             }
             case "DOMWebNotificationClicked": {
-              let tab = this._getTabForBrowser(browser);
+              let tab = this.getTabForBrowser(browser);
               if (!tab)
                 return;
               this.selectedTab = tab;
@@ -3094,6 +3112,7 @@
           this.mCurrentTab._tPos = 0;
           this.mCurrentTab._fullyOpen = true;
           this.mCurrentTab.linkedBrowser = this.mCurrentBrowser;
+          this._tabForBrowser.set(this.mCurrentBrowser, this.mCurrentTab);
 
           // set up the shared autoscroll popup
           this._autoScrollPopup = this.mCurrentBrowser._createAutoScrollPopup();
@@ -3382,7 +3401,7 @@
           // XXX Why originalTarget for the browser?
           this.selectedTab = (event.target instanceof Window) ?
                                this._getTabForContentWindow(event.target.top) :
-                               this._getTabForBrowser(event.originalTarget);
+                               this.getTabForBrowser(event.originalTarget);
         ]]>
       </handler>
       <handler event="DOMTitleChanged">
@@ -3418,7 +3437,7 @@
           browser.setAttribute("crashedPageTitle", title);
           browser.docShell.displayLoadError(Cr.NS_ERROR_CONTENT_CRASHED, uri, null);
           browser.removeAttribute("crashedPageTitle");
-          let tab = this._getTabForBrowser(browser);
+          let tab = this.getTabForBrowser(browser);
           this.setIcon(tab, icon);
         ]]>
       </handler>
