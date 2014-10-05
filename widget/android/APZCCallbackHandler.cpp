@@ -82,12 +82,6 @@ APZCCallbackHandler::GetDOMWindowUtils()
 void
 APZCCallbackHandler::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
 {
-    if (!NS_IsMainThread()) {
-        NS_DispatchToMainThread(NS_NewRunnableMethodWithArg<FrameMetrics>(
-            this, &APZCCallbackHandler::RequestContentRepaint, aFrameMetrics));
-        return;
-    }
-
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aFrameMetrics.GetScrollId() != FrameMetrics::NULL_SCROLL_ID);
 

@@ -163,7 +163,7 @@ public:
    * ApproximateZeroLengthSubpathSquareCaps can insert if we have square-caps.
    * See the comment for that function for more info on that.
    */
-  TemporaryRef<Path> ToPathForLengthOrPositionMeasuring() const;
+  TemporaryRef<Path> BuildPathForMeasuring() const;
 
   TemporaryRef<Path> BuildPath(PathBuilder* aBuilder,
                                uint8_t aCapStyle,
@@ -193,7 +193,6 @@ protected:
   nsresult CopyFrom(const SVGPathData& rhs);
 
   float& operator[](uint32_t aIndex) {
-    mCachedPath = nullptr;
     return mData[aIndex];
   }
 
@@ -202,14 +201,12 @@ protected:
    * increased, in which case the list will be left unmodified.
    */
   bool SetLength(uint32_t aLength) {
-    mCachedPath = nullptr;
     return mData.SetLength(aLength);
   }
 
   nsresult SetValueFromString(const nsAString& aValue);
 
   void Clear() {
-    mCachedPath = nullptr;
     mData.Clear();
   }
 
@@ -223,11 +220,10 @@ protected:
 
   nsresult AppendSeg(uint32_t aType, ...); // variable number of float args
 
-  iterator begin() { mCachedPath = nullptr; return mData.Elements(); }
-  iterator end() { mCachedPath = nullptr; return mData.Elements() + mData.Length(); }
+  iterator begin() { return mData.Elements(); }
+  iterator end() { return mData.Elements() + mData.Length(); }
 
   FallibleTArray<float> mData;
-  mutable RefPtr<gfx::Path> mCachedPath;
 };
 
 

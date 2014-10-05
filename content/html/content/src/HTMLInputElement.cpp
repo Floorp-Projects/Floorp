@@ -1858,7 +1858,8 @@ HTMLInputElement::GetList() const
     return nullptr;
   }
 
-  nsIDocument* doc = GetCurrentDoc();
+  //XXXsmaug How should this all work in case input element is in Shadow DOM.
+  nsIDocument* doc = GetUncomposedDoc();
   if (!doc) {
     return nullptr;
   }
@@ -2262,8 +2263,8 @@ HTMLInputElement::StepUp(int32_t n, uint8_t optional_argc)
 void
 HTMLInputElement::FlushFrames()
 {
-  if (GetCurrentDoc()) {
-    GetCurrentDoc()->FlushPendingNotifications(Flush_Frames);
+  if (GetComposedDoc()) {
+    GetComposedDoc()->FlushPendingNotifications(Flush_Frames);
   }
 }
 
@@ -3029,7 +3030,8 @@ HTMLInputElement::GetRadioGroupContainer() const
     return mForm;
   }
 
-  return static_cast<nsDocument*>(GetCurrentDoc());
+  //XXXsmaug It isn't clear how this should work in Shadow DOM.
+  return static_cast<nsDocument*>(GetUncomposedDoc());
 }
 
 already_AddRefed<nsIDOMHTMLInputElement>
@@ -3964,7 +3966,7 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
           if (fm && IsSingleLineTextControl(false) &&
               !aVisitor.mEvent->AsFocusEvent()->fromRaise &&
               SelectTextFieldOnFocus()) {
-            nsIDocument* document = GetCurrentDoc();
+            nsIDocument* document = GetComposedDoc();
             if (document) {
               uint32_t lastFocusMethod;
               fm->GetLastFocusMethod(document->GetWindow(), &lastFocusMethod);

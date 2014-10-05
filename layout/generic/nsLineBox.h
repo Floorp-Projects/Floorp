@@ -586,7 +586,7 @@ public:
   const mozilla::LogicalRect& GetBounds() { return mBounds; }
   nsRect GetPhysicalBounds() const
   {
-    if (mBounds.IsEmpty()) {
+    if (mBounds.IsAllZero()) {
       return nsRect(0, 0, 0, 0);
     }
 

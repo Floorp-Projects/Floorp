@@ -46,11 +46,20 @@
  */
 #define NS_XPCOM_LIBRARY_FILE                   "XpcomLib"
 
-/* Property will return the current location of the the GRE directory.
+/* Property will return the current location of the GRE directory.
+ * On OSX, this typically points to Contents/Resources in the app bundle.
  * If no GRE is used, this propery will behave like
  * NS_XPCOM_CURRENT_PROCESS_DIR.
  */
 #define NS_GRE_DIR                              "GreD"
+
+/* Property will return the current location of the GRE-binaries directory.
+ * On OSX, this typically points to Contents/MacOS in the app bundle. On
+ * all other platforms, this will be identical to NS_GRE_DIR.
+ * Since this property is based on the NS_GRE_DIR, if no GRE is used, this
+ * propery will behave like NS_XPCOM_CURRENT_PROCESS_DIR.
+ */
+#define NS_GRE_BIN_DIR                          "GreBinD"
 
 /* Platform Specific Locations */
 

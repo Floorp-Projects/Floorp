@@ -91,11 +91,9 @@ SVGCircleElement::BuildPath(PathBuilder* aBuilder)
     return nullptr;
   }
 
-  RefPtr<PathBuilder> pathBuilder = aBuilder ? aBuilder : CreatePathBuilder();
+  aBuilder->Arc(Point(x, y), r, 0, Float(2*M_PI));
 
-  pathBuilder->Arc(Point(x, y), r, 0, Float(2*M_PI));
-
-  return pathBuilder->Finish();
+  return aBuilder->Finish();
 }
 
 } // namespace dom

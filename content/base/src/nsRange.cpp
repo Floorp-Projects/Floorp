@@ -1084,7 +1084,7 @@ nsRange::IsValidBoundary(nsINode* aNode)
 
   // Elements etc. must be in document or in document fragment,
   // text nodes in document, in document fragment or in attribute.
-  nsINode* root = aNode->GetCurrentDoc();
+  nsINode* root = aNode->GetUncomposedDoc();
   if (root) {
     return root;
   }
@@ -1092,7 +1092,7 @@ nsRange::IsValidBoundary(nsINode* aNode)
   root = aNode->SubtreeRoot();
 
   NS_ASSERTION(!root->IsNodeOfType(nsINode::eDOCUMENT),
-               "GetCurrentDoc should have returned a doc");
+               "GetUncomposedDoc should have returned a doc");
 
   // We allow this because of backward compatibility.
   return root;
