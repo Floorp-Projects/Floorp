@@ -84,8 +84,7 @@ loop.conversation = (function(mozL10n) {
     _answerModeProps: function() {
       var videoButton = {
         handler: this._handleAccept("audio-video"),
-        className: "fx-embedded-btn-icon-video",
-        tooltip: "incoming_call_accept_audio_video_tooltip"
+        className: "fx-embedded-btn-icon-video"
       };
       var audioButton = {
         handler: this._handleAccept("audio"),
@@ -176,8 +175,7 @@ loop.conversation = (function(mozL10n) {
         React.DOM.div({className: "btn-chevron-menu-group"}, 
           React.DOM.div({className: "btn-group"}, 
             React.DOM.button({className: "btn btn-accept", 
-                    onClick: mode.primary.handler, 
-                    title: mozL10n.get(mode.primary.tooltip)}, 
+                    onClick: mode.primary.handler}, 
               React.DOM.span({className: "fx-embedded-answer-btn-text"}, 
                 mozL10n.get("incoming_call_accept_button")
               ), 
