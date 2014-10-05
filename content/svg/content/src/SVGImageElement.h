@@ -53,7 +53,7 @@ public:
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const MOZ_OVERRIDE;
 
   // nsSVGPathGeometryElement methods:
-  virtual TemporaryRef<Path> BuildPath(PathBuilder* aBuilder = nullptr) MOZ_OVERRIDE;
+  virtual TemporaryRef<Path> BuildPath(PathBuilder* aBuilder) MOZ_OVERRIDE;
 
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const MOZ_OVERRIDE;

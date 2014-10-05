@@ -16,6 +16,9 @@ if CONFIG['MOZ_UPDATER']:
     if not CONFIG['MOZ_NATIVE_BZ2']:
         external_dirs += ['modules/libbz2']
 
+# There's no "native brotli" yet, but probably in the future...
+external_dirs += ['modules/brotli']
+
 if CONFIG['MOZ_VORBIS']:
     external_dirs += ['media/libvorbis']
 

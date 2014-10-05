@@ -20,7 +20,7 @@ nsMappedAttributeElement::SetMappedAttribute(nsIDocument* aDocument,
                                              nsAttrValue& aValue,
                                              nsresult* aRetval)
 {
-  NS_PRECONDITION(aDocument == GetCurrentDoc(), "Unexpected document");
+  NS_PRECONDITION(aDocument == GetComposedDoc(), "Unexpected document");
   nsHTMLStyleSheet* sheet = aDocument ?
     aDocument->GetAttributeStyleSheet() : nullptr;
 

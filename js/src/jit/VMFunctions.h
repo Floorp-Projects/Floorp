@@ -742,6 +742,7 @@ void AssertValidValue(JSContext *cx, Value *v);
 JSObject *TypedObjectProto(JSObject *obj);
 
 void MarkValueFromIon(JSRuntime *rt, Value *vp);
+void MarkStringFromIon(JSRuntime *rt, JSString **stringp);
 void MarkShapeFromIon(JSRuntime *rt, Shape **shapep);
 void MarkTypeObjectFromIon(JSRuntime *rt, types::TypeObject **typep);
 
@@ -752,6 +753,8 @@ IonMarkFunction(MIRType type)
     switch (type) {
       case MIRType_Value:
         return JS_FUNC_TO_DATA_PTR(void *, MarkValueFromIon);
+      case MIRType_String:
+        return JS_FUNC_TO_DATA_PTR(void *, MarkStringFromIon);
       case MIRType_Shape:
         return JS_FUNC_TO_DATA_PTR(void *, MarkShapeFromIon);
       case MIRType_TypeObject:

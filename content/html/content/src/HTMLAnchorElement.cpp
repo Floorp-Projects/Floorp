@@ -150,8 +150,9 @@ HTMLAnchorElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Prefetch links
-  if (aDocument) {
-    aDocument->RegisterPendingLinkUpdate(this);
+  nsIDocument* doc = GetComposedDoc();
+  if (doc) {
+    doc->RegisterPendingLinkUpdate(this);
     if (nsHTMLDNSPrefetch::IsAllowed(OwnerDoc())) {
       nsHTMLDNSPrefetch::PrefetchLow(this);
     }
@@ -181,8 +182,10 @@ HTMLAnchorElement::UnbindFromTree(bool aDeep, bool aNullParent)
   // If this link is ever reinserted into a document, it might
   // be under a different xml:base, so forget the cached state now.
   Link::ResetLinkState(false, Link::ElementHasHref());
-  
-  nsIDocument* doc = GetCurrentDoc();
+
+  // Note, we need to use OwnerDoc() here, since GetComposedDoc() might
+  // return null.
+  nsIDocument* doc = OwnerDoc();
   if (doc) {
     doc->UnregisterPendingLinkUpdate(this);
   }

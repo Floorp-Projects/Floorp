@@ -1,0 +1,20 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <title>Reference for dynamic changes to fill-rule</title>
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=932762 -->
+
+  <!-- for p1 -->
+  <rect x="50" y="100" width="150" height="50"/>
+  <rect x="100" y="50" width="50" height="150"/>
+
+  <!-- for p2 -->
+  <rect x="250" y="100" width="50" height="50"/>
+  <rect x="350" y="100" width="50" height="50"/>
+  <rect x="300" y="50" width="50" height="50"/>
+  <rect x="300" y="150" width="50" height="50"/>
+
+</svg>
+

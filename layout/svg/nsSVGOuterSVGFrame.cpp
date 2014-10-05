@@ -619,8 +619,6 @@ nsDisplayOuterSVG::Paint(nsDisplayListBuilder* aBuilder,
   nsSVGUtils::PaintFrameWithEffects(mFrame, aContext, tm, &contentAreaDirtyRect);
   aContext->ThebesContext()->Restore();
 
-  NS_ASSERTION(!aContext->ThebesContext()->HasError(), "Cairo in error state");
-
 #if defined(DEBUG) && defined(SVG_DEBUG_PAINT_TIMING)
   PRTime end = PR_Now();
   printf("SVG Paint Timing: %f ms\n", (end-start)/1000.0);

@@ -102,11 +102,9 @@ SVGEllipseElement::BuildPath(PathBuilder* aBuilder)
     return nullptr;
   }
 
-  RefPtr<PathBuilder> pathBuilder = aBuilder ? aBuilder : CreatePathBuilder();
+  EllipseToBezier(aBuilder, Point(x, y), Size(rx, ry));
 
-  EllipseToBezier(pathBuilder.get(), Point(x, y), Size(rx, ry));
-
-  return pathBuilder->Finish();
+  return aBuilder->Finish();
 }
 
 } // namespace dom
