@@ -31,6 +31,7 @@
 #include "nss.h"
 #include "pk11pub.h"
 #include "pkix/pkixnss.h"
+#include "prinit.h"
 #include "secerr.h"
 #include "secitem.h"
 
@@ -51,10 +52,28 @@ SECITEM_FreeItem_true(SECItem* item)
 
 typedef mozilla::pkix::ScopedPtr<SECItem, SECITEM_FreeItem_true> ScopedSECItem;
 
+TestKeyPair* GenerateKeyPairInner();
+
+static ScopedTestKeyPair reusedKeyPair;
+
+PRStatus
+init()
+{
+  if (NSS_NoDB_Init(nullptr) != SECSuccess) {
+    abort();
+  }
+
+  reusedKeyPair = GenerateKeyPairInner();
+  assert(reusedKeyPair);
+
+  return PR_SUCCESS;
+}
+
 Result
 InitNSSIfNeeded()
 {
-  if (NSS_NoDB_Init(nullptr) != SECSuccess) {
+  static PRCallOnceType initCallOnce;
+  if (PR_CallOnce(&initCallOnce, init) != PR_SUCCESS) {
     return MapPRErrorCodeToResult(PR_GetError());
   }
   return Success;
@@ -125,16 +144,14 @@ TestKeyPair* CreateTestKeyPair(const ByteString& spki,
   return new (std::nothrow) NSSTestKeyPair(spki, spk, privateKey);
 }
 
-TestKeyPair*
-GenerateKeyPair()
-{
-  if (InitNSSIfNeeded() != Success) {
-    return nullptr;
-  }
+namespace {
 
+TestKeyPair*
+GenerateKeyPairInner()
+{
   ScopedPtr<PK11SlotInfo, PK11_FreeSlot> slot(PK11_GetInternalSlot());
   if (!slot) {
-    return nullptr;
+    abort();
   }
 
   // Bug 1012786: PK11_GenerateKeyPair can fail if there is insufficient
@@ -154,12 +171,12 @@ GenerateKeyPair()
       ScopedSECItem
         spkiDER(SECKEY_EncodeDERSubjectPublicKeyInfo(publicKey.get()));
       if (!spkiDER) {
-        return nullptr;
+        break;
       }
       ScopedPtr<CERTSubjectPublicKeyInfo, SECKEY_DestroySubjectPublicKeyInfo>
         spki(SECKEY_CreateSubjectPublicKeyInfo(publicKey.get()));
       if (!spki) {
-        return nullptr;
+        break;
       }
       SECItem spkDER = spki->subjectPublicKey;
       DER_ConvertBitString(&spkDER); // bits to bytes
@@ -184,7 +201,35 @@ GenerateKeyPair()
     }
   }
 
+  abort();
+#if defined(_MSC_VER) && (_MSC_VER < 1700)
+  // Older versions of MSVC don't know that abort() never returns, so silence
+  // its warning by adding a redundant and never-reached return. But, only do
+  // it for that ancient compiler, because some other compilers will rightly
+  // warn that the return statement is unreachable.
   return nullptr;
+#endif
+}
+
+} // unnamed namespace
+
+TestKeyPair*
+GenerateKeyPair()
+{
+  if (InitNSSIfNeeded() != Success) {
+    abort();
+  }
+  return GenerateKeyPairInner();
+}
+
+TestKeyPair*
+CloneReusedKeyPair()
+{
+  if (InitNSSIfNeeded() != Success) {
+    abort();
+  }
+  assert(reusedKeyPair);
+  return reusedKeyPair->Clone();
 }
 
 ByteString
