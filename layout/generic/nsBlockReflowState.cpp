@@ -992,6 +992,7 @@ nsBlockReflowState::ClearFloats(nscoord aBCoord, uint8_t aBreakType,
   }
 
   nscoord newBCoord = aBCoord;
+  WritingMode wm = mReflowState.GetWritingMode();
 
   if (aBreakType != NS_STYLE_CLEAR_NONE) {
     newBCoord = mFloatManager->ClearFloats(newBCoord, aBreakType, aFlags);
@@ -1009,12 +1010,14 @@ nsBlockReflowState::ClearFloats(nscoord aBCoord, uint8_t aBreakType,
       nsBlockFrame::ReplacedElementWidthToClear replacedWidth =
         nsBlockFrame::WidthToClearPastFloats(*this, floatAvailableSpace.mRect,
                                              aReplacedBlock);
-      if (std::max(floatAvailableSpace.mRect.x - ContentIStart(),
+      if (std::max(floatAvailableSpace.mRect.x -
+                    mContentArea.X(wm, mContainerWidth),
                    replacedWidth.marginLeft) +
             replacedWidth.borderBoxWidth +
-            std::max(ContentIEnd() - floatAvailableSpace.mRect.XMost(),
+            std::max(mContentArea.XMost(wm, mContainerWidth) -
+                      floatAvailableSpace.mRect.XMost(),
                      replacedWidth.marginRight) <=
-          ContentISize()) {
+          mContentArea.Width(wm)) {
         break;
       }
       // See the analogous code for inlines in nsBlockFrame::DoReflowInlineFrames
