@@ -104,27 +104,41 @@ loop.Client = (function($) {
      * -- callUrl: The url of the call
      * -- expiresAt: The amount of hours until expiry of the url
      *
-     * @param  {String} simplepushUrl a registered Simple Push URL
      * @param  {string} nickname the nickname of the future caller
      * @param  {Function} cb Callback(err, callUrlData)
      */
     _requestCallUrlInternal: function(nickname, cb) {
-      this.mozLoop.hawkRequest("/call-url/", "POST", {callerId: nickname},
-                               function (error, responseText) {
-        if (error) {
-          this._failureHandler(cb, error);
-          return;
-        }
+      var sessionType;
+      if (this.mozLoop.userProfile) {
+        sessionType = this.mozLoop.LOOP_SESSION_TYPE.FXA;
+      } else {
+        sessionType = this.mozLoop.LOOP_SESSION_TYPE.GUEST;
+      }
 
-        try {
-          var urlData = JSON.parse(responseText);
+      this.mozLoop.hawkRequest(sessionType, "/call-url/", "POST",
+                               {callerId: nickname},
+        function (error, responseText) {
+          if (error) {
+            this._telemetryAdd("LOOP_CLIENT_CALL_URL_REQUESTS_SUCCESS", false);
+            this._failureHandler(cb, error);
+            return;
+          }
 
-          cb(null, this._validate(urlData, expectedCallUrlProperties));
-        } catch (err) {
-          console.log("Error requesting call info", err);
-          cb(err);
-        }
-      }.bind(this));
+          try {
+            var urlData = JSON.parse(responseText);
+
+            // This throws if the data is invalid, in which case only the failure
+            // telemetry will be recorded.
+            var returnData = this._validate(urlData, expectedCallUrlProperties);
+
+            this._telemetryAdd("LOOP_CLIENT_CALL_URL_REQUESTS_SUCCESS", true);
+            cb(null, returnData);
+          } catch (err) {
+            this._telemetryAdd("LOOP_CLIENT_CALL_URL_REQUESTS_SUCCESS", false);
+            console.log("Error requesting call info", err);
+            cb(err);
+          }
+        }.bind(this));
     },
 
     /**
@@ -148,8 +162,7 @@ loop.Client = (function($) {
     },
 
     _deleteCallUrlInternal: function(token, cb) {
-      this.mozLoop.hawkRequest("/call-url/" + token, "DELETE", null,
-                               function (error, responseText) {
+      function deleteRequestCallback(error, responseText) {
         if (error) {
           this._failureHandler(cb, error);
           return;
@@ -161,12 +174,19 @@ loop.Client = (function($) {
           console.log("Error deleting call info", err);
           cb(err);
         }
-      }.bind(this));
+      }
+
+      // XXX hard-coding of GUEST to be removed by 1065155
+      this.mozLoop.hawkRequest(this.mozLoop.LOOP_SESSION_TYPE.GUEST,
+                               "/call-url/" + token, "DELETE", null,
+                               deleteRequestCallback.bind(this));
     },
 
     /**
      * Requests a call URL from the Loop server. It will note the
-     * expiry time for the url with the mozLoop api.
+     * expiry time for the url with the mozLoop api.  It will select the
+     * appropriate hawk session to use based on whether or not the user
+     * is currently logged into a Firefox account profile.
      *
      * Callback parameters:
      * - err null on successful registration, non-null otherwise.
@@ -190,37 +210,18 @@ loop.Client = (function($) {
     },
 
     /**
-     * Requests call information from the server for all calls since the
-     * given version.
+     * Adds a value to a telemetry histogram, ignoring errors.
      *
-     * @param  {String} version the version identifier from the push
-     *                          notification
-     * @param  {Function} cb Callback(err, calls)
+     * @param  {string}  histogramId Name of the telemetry histogram to update.
+     * @param  {integer} value       Value to add to the histogram.
      */
-    requestCallsInfo: function(version, cb) {
-      // XXX It is likely that we'll want to move some of this to whatever
-      // opens the chat window, but we'll need to decide on this in bug 1002418
-      if (!version) {
-        throw new Error("missing required parameter version");
+    _telemetryAdd: function(histogramId, value) {
+      try {
+        this.mozLoop.telemetryAdd(histogramId, value);
+      } catch (err) {
+        console.error("Error recording telemetry", err);
       }
-
-      this.mozLoop.hawkRequest("/calls?version=" + version, "GET", null,
-                               function (error, responseText) {
-        if (error) {
-          this._failureHandler(cb, error);
-          return;
-        }
-
-        try {
-          var callsData = JSON.parse(responseText);
-
-          cb(null, this._validate(callsData, expectedCallProperties));
-        } catch (err) {
-          console.log("Error requesting calls info", err);
-          cb(err);
-        }
-      }.bind(this));
-    }
+    },
   };
 
   return Client;
