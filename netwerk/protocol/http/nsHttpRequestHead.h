@@ -36,9 +36,6 @@ public:
     void SetHTTPS(bool val) { mHTTPS = val; }
     bool IsHTTPS() const { return mHTTPS; }
 
-    void SetOrigin(const nsACString &scheme, const nsACString &host, int32_t port);
-    const nsCString &Origin() const { return mOrigin; }
-
     const char *PeekHeader(nsHttpAtom h) const
     {
         return mHeaders.PeekHeader(h);
@@ -100,7 +97,6 @@ private:
     nsCString         mMethod;
     nsHttpVersion     mVersion;
     nsCString         mRequestURI;
-    nsCString         mOrigin;
     ParsedMethodType  mParsedMethod;
     bool              mHTTPS;
 };
