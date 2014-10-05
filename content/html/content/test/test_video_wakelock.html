@@ -21,6 +21,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=868943
 /** Test for Bug 868943 **/
 
 function testVideoPlayPause() {
+  info("#1 testVideoPlayPause");
+
   var lockState_cpu = true;
   var lockState_screen = true;
   var count_cpu = 0;
@@ -33,30 +35,32 @@ function testVideoPlayPause() {
   content.appendChild(video);
 
   var startDate;
-  video.addEventListener('playing', function() {
-    startDate = new Date();
-
-    // The next step is to unlock the resource.
-    lockState_cpu = false;
-    lockState_screen = false;
-    video.pause();
-  });
-
   function testVideoPlayPauseListener(topic, state) {
+    info("#1 topic=" + topic + ", state=" + state);
+
     var locked = state == "locked-foreground" ||
                  state == "locked-background";
 
     if (topic == "cpu") {
-      is(locked, lockState_cpu, "Video element locked the cpu - paused");
+      is(locked, lockState_cpu, "#1 Video element locked the cpu");
       count_cpu++;
     } else if (topic == "screen") {
-      is(locked, lockState_screen, "Video element locked the screen - paused");
+      is(locked, lockState_screen, "#1 Video element locked the screen");
       count_screen++;
+    }
+
+    if (count_cpu == 1 && count_screen == 1) {
+      info("#1 Both cpu and screen are locked");
+      // The next step is to unlock the resource.
+      lockState_cpu = false;
+      lockState_screen = false;
+      video.pause();
+      startDate = new Date();
     }
 
     if (count_cpu == 2 && count_screen == 2) {
       var diffDate = (new Date() - startDate);
-      ok(diffDate > 200, "There was at least 200 milliseconds between the stop and the wakelock release");
+      ok(diffDate > 200, "#1 There was at least 200 milliseconds between the stop and the wakelock release");
 
       content.removeChild(video);
       navigator.mozPower.removeWakeLockListener(testVideoPlayPauseListener);
@@ -69,6 +73,8 @@ function testVideoPlayPause() {
 }
 
 function testVideoPlay() {
+  info("#2 testVideoPlay");
+
   var lockState_cpu = true;
   var lockState_screen = true;
   var count_cpu = 0;
@@ -86,24 +92,27 @@ function testVideoPlay() {
   });
 
   function testVideoPlayListener(topic, state) {
+    info("#2 topic=" + topic + ", state=" + state);
+
     var locked = state == "locked-foreground" ||
                  state == "locked-background";
 
     if (topic == "cpu") {
-      is(locked, lockState_cpu, "Video element locked the cpu - paused");
+      is(locked, lockState_cpu, "#2 Video element locked the cpu");
       count_cpu++;
     } else if (topic == "screen") {
-      is(locked, lockState_screen, "Video element locked the screen - paused");
+      is(locked, lockState_screen, "#2 Video element locked the screen");
       count_screen++;
     }
 
     if (count_cpu == 1 && count_screen == 1) {
+      info("#2 Both cpu and screen are locked");
       // The next step is to unlock the resource.
       lockState_cpu = false;
       lockState_screen = false;
     } else if (count_cpu == 2 && count_screen == 2) {
       var diffDate = (new Date() - startDate);
-      ok(diffDate > 200, "There was at least milliseconds between the stop and the wakelock release");
+      ok(diffDate > 200, "#2 There was at least milliseconds between the stop and the wakelock release");
 
       content.removeChild(video);
       navigator.mozPower.removeWakeLockListener(testVideoPlayListener);
