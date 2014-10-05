@@ -205,7 +205,6 @@ private:
     nsresult ContinueProcessResponse(nsresult);
     nsresult ProcessNormal();
     nsresult ContinueProcessNormal(nsresult);
-    void     ProcessAltService();
     nsresult ProcessNotModified();
     nsresult AsyncProcessRedirection(uint32_t httpStatus);
     nsresult ContinueProcessRedirection(nsresult);
@@ -427,8 +426,6 @@ private:
     nsresult WaitForRedirectCallback();
     void PushRedirectAsyncFunc(nsContinueRedirectionFunc func);
     void PopRedirectAsyncFunc(nsContinueRedirectionFunc func);
-
-    nsCString mUsername;
 
 protected:
     virtual void DoNotifyListenerCleanup();
