@@ -349,6 +349,15 @@ MacroAssemblerX86::callWithABI(const Address &fun, MoveOp::Type result)
 }
 
 void
+MacroAssemblerX86::callWithABI(Register fun, MoveOp::Type result)
+{
+    uint32_t stackAdjust;
+    callWithABIPre(&stackAdjust);
+    call(Operand(fun));
+    callWithABIPost(stackAdjust, result);
+}
+
+void
 MacroAssemblerX86::handleFailureWithHandler(void *handler)
 {
     // Reserve space for exception information.
