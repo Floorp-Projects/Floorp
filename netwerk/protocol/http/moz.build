@@ -41,7 +41,6 @@ EXPORTS.mozilla.net += [
 # The rest of these files cannot be built in unified mode because they want to
 # force NSPR logging.
 SOURCES += [
-    'AlternateServices.cpp',
     'ASpdySession.cpp',
     'ConnectionDiagnostics.cpp',
     'Http2Compression.cpp',
