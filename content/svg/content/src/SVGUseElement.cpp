@@ -269,7 +269,7 @@ SVGUseElement::CreateAnonymousContent()
     return nullptr;
 
   if (newcontent->IsSVG(nsGkAtoms::symbol)) {
-    nsIDocument *document = GetCurrentDoc();
+    nsIDocument *document = GetComposedDoc();
     if (!document)
       return nullptr;
 
@@ -392,7 +392,7 @@ SVGUseElement::LookupHref()
   nsCOMPtr<nsIURI> targetURI;
   nsCOMPtr<nsIURI> baseURI = mOriginal ? mOriginal->GetBaseURI() : GetBaseURI();
   nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
-                                            GetCurrentDoc(), baseURI);
+                                            GetComposedDoc(), baseURI);
 
   mSource.Reset(this, targetURI);
 }
@@ -400,7 +400,7 @@ SVGUseElement::LookupHref()
 void
 SVGUseElement::TriggerReclone()
 {
-  nsIDocument *doc = GetCurrentDoc();
+  nsIDocument *doc = GetComposedDoc();
   if (!doc)
     return;
   nsIPresShell *presShell = doc->GetShell();

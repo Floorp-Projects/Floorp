@@ -59,15 +59,12 @@ js::CreateRegExpMatchResult(JSContext *cx, HandleString input, const MatchPairs 
         if (pair.isUndefined()) {
             MOZ_ASSERT(i != 0); /* Since we had a match, first pair must be present. */
             arr->setDenseInitializedLength(i + 1);
-            arr->initDenseElementWithType(cx, i, UndefinedValue());
+            arr->initDenseElement(i, UndefinedValue());
         } else {
             JSLinearString *str = NewDependentString(cx, input, pair.start, pair.length());
             if (!str)
                 return false;
             arr->setDenseInitializedLength(i + 1);
-
-            // We don't have to update type information here, since the match
-            // result template is already known to have string elements.
             arr->initDenseElement(i, StringValue(str));
         }
     }
@@ -678,8 +675,13 @@ js::regexp_exec(JSContext *cx, unsigned argc, Value *vp)
 
 /* Separate interface for use by IonMonkey. */
 bool
-js::regexp_exec_raw(JSContext *cx, HandleObject regexp, HandleString input, MutableHandleValue output)
+js::regexp_exec_raw(JSContext *cx, HandleObject regexp, HandleString input,
+                    MatchPairs *maybeMatches, MutableHandleValue output)
 {
+    // The MatchPairs will always be passed in, but RegExp execution was
+    // successful only if the pairs have actually been filled in.
+    if (maybeMatches && maybeMatches->pairsRaw()[0] >= 0)
+        return CreateRegExpMatchResult(cx, input, *maybeMatches, output);
     return regexp_exec_impl(cx, regexp, input, UpdateRegExpStatics, output);
 }
 

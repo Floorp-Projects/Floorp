@@ -371,25 +371,6 @@ MediaSourceReader::OnTrackBufferConfigured(TrackBuffer* aTrackBuffer, const Medi
   mDecoder->NotifyWaitingForResourcesStatusChanged();
 }
 
-class ChangeToHaveMetadata : public nsRunnable {
-public:
-  explicit ChangeToHaveMetadata(AbstractMediaDecoder* aDecoder) :
-    mDecoder(aDecoder)
-  {
-  }
-
-  NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL {
-    auto owner = mDecoder->GetOwner();
-    if (owner) {
-      owner->UpdateReadyStateForData(MediaDecoderOwner::NEXT_FRAME_WAIT_FOR_MSE_DATA);
-    }
-    return NS_OK;
-  }
-
-private:
-  nsRefPtr<AbstractMediaDecoder> mDecoder;
-};
-
 void
 MediaSourceReader::WaitForTimeRange(int64_t aTime)
 {
@@ -433,11 +414,6 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
   // Decoding discontinuity upon seek, reset last times to seek target.
   mLastAudioTime = aTime;
   mLastVideoTime = aTime;
-
-  if (!TrackBuffersContainTime(aTime)) {
-    MSE_DEBUG("MediaSourceReader(%p)::Seek no active buffer contains target=%lld", this, aTime);
-    NS_DispatchToMainThread(new ChangeToHaveMetadata(mDecoder));
-  }
 
   WaitForTimeRange(aTime);
 

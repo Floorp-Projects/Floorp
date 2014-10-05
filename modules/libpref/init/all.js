@@ -534,6 +534,11 @@ pref("gfx.color_management.enablev4", false);
 
 pref("gfx.downloadable_fonts.enabled", true);
 pref("gfx.downloadable_fonts.fallback_delay", 3000);
+#ifdef RELEASE_BUILD
+pref("gfx.downloadable_fonts.woff2.enabled", false);
+#else
+pref("gfx.downloadable_fonts.woff2.enabled", true);
+#endif
 
 #ifdef ANDROID
 pref("gfx.bundled_fonts.enabled", true);
@@ -2003,7 +2008,7 @@ pref("layout.css.masking.enabled", true);
 pref("layout.css.mix-blend-mode.enabled", true);
 
 // Is support for CSS Filters enabled?
-pref("layout.css.filters.enabled", false);
+pref("layout.css.filters.enabled", true);
 
 // Is support for basic shapes in clip-path enabled?
 pref("layout.css.clip-path-shapes.enabled", false);
@@ -2275,6 +2280,9 @@ pref("dom.ipc.plugins.reportCrashURL", true);
 pref("dom.ipc.plugins.unloadTimeoutSecs", 30);
 
 pref("dom.ipc.processCount", 1);
+
+// Enable caching of Moz2D Path objects for SVG geometry elements
+pref("svg.path-caching.enabled", true);
 
 // Enable the use of display-lists for SVG hit-testing and painting.
 pref("svg.display-lists.hit-testing.enabled", true);

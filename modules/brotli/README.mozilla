@@ -1,0 +1,17 @@
+This is the Brotli data compression library from
+https://code.google.com/p/font-compression-reference/.
+
+Currently, we import only the Brotli decoder (the /dec/ subdirectory), not the
+encoder (/enc/ subdirectory).
+
+Upstream code can be viewed at
+  https://code.google.com/p/font-compression-reference/source/browse/#git%2Fbrotli%2Fdec
+
+and cloned by
+  git clone https://code.google.com/p/font-compression-reference/ 
+
+The in-tree copy is updated by running
+  sh update.sh
+from within the modules/brotli directory.
+
+Current version: [commit d9a74803fa884559879e3205cfe6f257a2d85519].

@@ -198,9 +198,7 @@ gfxPlatformGtk::IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags)
     // Pango doesn't apply features from AAT TrueType extensions.
     // Assume that if this is the only SFNT format specified,
     // then AAT extensions are required for complex script support.
-    if (aFormatFlags & (gfxUserFontSet::FLAG_FORMAT_WOFF     |
-                        gfxUserFontSet::FLAG_FORMAT_OPENTYPE | 
-                        gfxUserFontSet::FLAG_FORMAT_TRUETYPE)) {
+    if (aFormatFlags & gfxUserFontSet::FLAG_FORMATS_COMMON) {
         return true;
     }
 

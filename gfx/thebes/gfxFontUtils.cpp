@@ -955,6 +955,10 @@ gfxFontUtils::DetermineFontDataType(const uint8_t *aFontData, uint32_t aFontData
         if (uint32_t(*version) == TRUETYPE_TAG('w','O','F','F')) {
             return GFX_USERFONT_WOFF;
         }
+        if (Preferences::GetBool(GFX_PREF_WOFF2_ENABLED) &&
+            uint32_t(*version) == TRUETYPE_TAG('w','O','F','2')) {
+            return GFX_USERFONT_WOFF2;
+        }
     }
     
     // tests for other formats here

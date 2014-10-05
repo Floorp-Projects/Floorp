@@ -1,0 +1,48 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1017613 - Test fetch API interfaces</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  function checkEnabled() {
+    var worker = new Worker("worker_interfaces.js");
+    worker.onmessage = function(event) {
+
+      if (event.data.type == 'finish') {
+        SimpleTest.finish();
+      } else if (event.data.type == 'status') {
+        ok(event.data.status, event.data.msg);
+      }
+    }
+
+    worker.onerror = function(event) {
+      ok(false, "Worker had an error: " + event.data);
+      SimpleTest.finish();
+    };
+
+    worker.postMessage(true);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.fetch.enabled", true]
+  ]}, function() {
+    checkEnabled();
+  });
+</script>
+</pre>
+</body>
+</html>
+
