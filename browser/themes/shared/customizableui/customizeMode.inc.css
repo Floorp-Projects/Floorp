@@ -299,6 +299,10 @@ toolbarpaletteitem[place="toolbar"] {
   -moz-padding-start: 0;
 }
 
+.customization-lwtheme-menu-theme[defaulttheme] {
+  list-style-image: url(chrome://browser/skin/theme-switcher-icon.png);
+}
+
 .customization-lwtheme-menu-theme[active="true"],
 .customization-lwtheme-menu-theme:hover {
   background-color: hsla(210,4%,10%,.08);
