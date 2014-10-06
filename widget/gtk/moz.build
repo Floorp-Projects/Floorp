@@ -16,11 +16,9 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     'mozcontainer.c',
     'NativeKeyBindings.cpp',
-    'nsAppShell.cpp',
     'nsBidiKeyboard.cpp',
     'nsColorPicker.cpp',
     'nsFilePicker.cpp',
-    'nsGtkIMModule.cpp',
     'nsGtkKeyUtils.cpp',
     'nsImageToPixbuf.cpp',
     'nsLookAndFeel.cpp',
@@ -29,13 +27,16 @@ UNIFIED_SOURCES += [
     'nsScreenManagerGtk.cpp',
     'nsSound.cpp',
     'nsToolkit.cpp',
-    'nsWidgetFactory.cpp',
     'WakeLockListener.cpp',
     'WidgetTraceEvent.cpp',
 ]
 
+# These files force-enable NSPR logging and thus cannot be built in unified mode
 SOURCES += [
-    'nsWindow.cpp', # conflicts with X11 headers
+    'nsAppShell.cpp',
+    'nsGtkIMModule.cpp',
+    'nsWidgetFactory.cpp',
+    'nsWindow.cpp',
 ]
 
 if CONFIG['MOZ_X11']:
@@ -46,17 +47,23 @@ if CONFIG['MOZ_X11']:
 if CONFIG['NS_PRINTING']:
     UNIFIED_SOURCES += [
         'nsCUPSShim.cpp',
-        'nsDeviceContextSpecG.cpp',
         'nsPaperPS.cpp',
         'nsPrintDialogGTK.cpp',
         'nsPrintOptionsGTK.cpp',
         'nsPrintSettingsGTK.cpp',
         'nsPSPrinters.cpp',
     ]
+    # This file force-enables NSPR logging and thus cannot be built in unified mode
+    SOURCES += [
+        'nsDeviceContextSpecG.cpp',
+    ]
 
 if CONFIG['MOZ_X11']:
     UNIFIED_SOURCES += [
         'nsClipboard.cpp',
+    ]
+    # This file force-enables NSPR logging and thus cannot be built in unified mode
+    SOURCES += [
         'nsDragService.cpp',
     ]
 

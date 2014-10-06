@@ -27,9 +27,7 @@ EXPORTS.mtransport += [
 
 include('../objs.mozbuild')
 
-# These files cannot be built in unified mode because of the redefinition of
-# getLogModule, UNIMPLEMENTED, nr_socket_long_term_violation_time,
-# nr_socket_short_term_violation_time.
+# These files cannot be built in unified mode because they force NSPR logging.
 SOURCES += mtransport_cppsrcs
 
 FAIL_ON_WARNINGS = True

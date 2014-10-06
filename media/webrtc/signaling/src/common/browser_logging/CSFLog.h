@@ -5,6 +5,16 @@
 #ifndef CSFLOG_H
 #define CSFLOG_H
 
+// In order for FORCE_PR_LOG below to work, we have to define it before the
+// first time prlog is #included.
+#if defined(PR_LOG)
+#error "Must #include CSFLog.h before before any IPDL-generated files or other files that #include prlog.h."
+#endif
+
+#if defined(MOZ_LOGGING)
+#define FORCE_PR_LOG
+#endif
+
 #include <stdarg.h>
 #include "prlog.h"
 

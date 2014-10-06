@@ -4,12 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-UNIFIED_SOURCES += [
-    'nsAuthFactory.cpp',
-    'nsAuthGSSAPI.cpp',
-]
-
 SOURCES += [
+    'nsAuthFactory.cpp',       # forces NSPR logging
+    'nsAuthGSSAPI.cpp',        # forces NSPR logging
     'nsAuthSASL.cpp',
     'nsHttpNegotiateAuth.cpp', # contains constants whose names conflict with constants in other files
 ]
@@ -20,8 +17,8 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
     DEFINES['USE_SSPI'] = True
 else:
-    UNIFIED_SOURCES += [
-        'nsAuthSambaNTLM.cpp',
+    SOURCES += [
+        'nsAuthSambaNTLM.cpp', # forces NSPR logging
     ]
 
 FINAL_LIBRARY = 'xul'

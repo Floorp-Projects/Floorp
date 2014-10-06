@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// We want this available in opt builds
+#define FORCE_PR_LOG
+
 #include "Latency.h"
 #include "nsThreadUtils.h"
 #include "prlog.h"

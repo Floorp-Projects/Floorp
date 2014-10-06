@@ -169,6 +169,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'gfxWindowsPlatform.h',
         'gfxWindowsSurface.h',
     ]
+    # gfxGDIFontList.cpp forces NSPR logging, so it cannot be built in unified mode.
     SOURCES += [
         'gfxGDIFont.cpp',
         'gfxGDIFontList.cpp',
@@ -178,12 +179,11 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'gfxWindowsSurface.cpp',
     ]
     if CONFIG['MOZ_ENABLE_DWRITE_FONT']:
-        UNIFIED_SOURCES += [
-            'gfxDWriteFontList.cpp',
-        ]
+        # gfxDWriteFontList.cpp forces NSPR logging, so it cannot be built in unified mode.
         SOURCES += [
             'gfxD2DSurface.cpp',
             'gfxDWriteCommon.cpp',
+            'gfxDWriteFontList.cpp',
             'gfxDWriteFonts.cpp',
         ]
     if CONFIG['MOZ_ENABLE_DIRECT2D1_1']:
@@ -204,9 +204,19 @@ SOURCES += [
     # we could consider removing soon (affects Ubuntus older than 10.04 LTS)
     # which currently prevent it from joining UNIFIED_SOURCES.
     'gfxDrawable.cpp',
-    # gfxPlatform.cpp includes mac system header conflicting with point/size
+    # Uses FORCE_PR_LOG
+    'gfxFont.cpp',
+    # Uses FORCE_PR_LOG
+    'gfxFontEntry.cpp',
+    # Uses FORCE_PR_LOG
+    'gfxFontUtils.cpp',
+    # Includes mac system header conflicting with point/size, and also uses FORCE_PR_LOG
     'gfxPlatform.cpp',
+    # Uses FORCE_PR_LOG
+    'gfxPlatformFontList.cpp',
     'gfxPrefs.cpp',
+    # Uses FORCE_PR_LOG
+    'gfxUserFontSet.cpp',
 ]
 
 UNIFIED_SOURCES += [
@@ -216,13 +226,10 @@ UNIFIED_SOURCES += [
     'gfxBaseSharedMemorySurface.cpp',
     'gfxBlur.cpp',
     'gfxContext.cpp',
-    'gfxFont.cpp',
-    'gfxFontEntry.cpp',
     'gfxFontFeatures.cpp',
     'gfxFontInfoLoader.cpp',
     'gfxFontMissingGlyphs.cpp',
     'gfxFontTest.cpp',
-    'gfxFontUtils.cpp',
     'gfxGlyphExtents.cpp',
     'gfxGradientCache.cpp',
     'gfxGraphiteShaper.cpp',
@@ -231,7 +238,6 @@ UNIFIED_SOURCES += [
     'gfxMathTable.cpp',
     'gfxMatrix.cpp',
     'gfxPattern.cpp',
-    'gfxPlatformFontList.cpp',
     'gfxRect.cpp',
     'gfxReusableImageSurfaceWrapper.cpp',
     'gfxReusableSharedImageSurfaceWrapper.cpp',
@@ -240,14 +246,14 @@ UNIFIED_SOURCES += [
     'gfxSVGGlyphs.cpp',
     'gfxTeeSurface.cpp',
     'gfxTextRun.cpp',
-    'gfxUserFontSet.cpp',
     'gfxUtils.cpp',
     'nsSurfaceTexture.cpp',
     'nsUnicodeRange.cpp',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    UNIFIED_SOURCES += [
+    # gfxMacPlatformFontList.mm forces NSPR logging so it cannot be built in unified mode.
+    SOURCES += [
         'gfxMacPlatformFontList.mm',
     ]
 

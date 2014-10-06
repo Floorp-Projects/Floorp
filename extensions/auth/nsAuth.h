@@ -12,6 +12,10 @@ enum pType {
      PACKAGE_TYPE_NTLM
 };
 
+#if defined(MOZ_LOGGING)
+#define FORCE_PR_LOG
+#endif
+
 #include "prlog.h"
 
 #if defined( PR_LOGGING )
