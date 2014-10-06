@@ -450,26 +450,23 @@ struct Imm8VFPOffData
 // register.
 struct Imm8VFPImmData
 {
-  private:
+    // This structure's members are public and it has no constructor to
+    // initialize them, for a very special reason. Were this structure to
+    // have a constructor, the initialization for DoubleEncoder's internal
+    // table (see below) would require a rather large static constructor on
+    // some of our supported compilers. The known solution to this is to mark
+    // the constructor MOZ_CONSTEXPR, but, again, some of our supported
+    // compilers don't support MOZ_CONSTEXPR! So we are reduced to public
+    // members and eschewing a constructor in hopes that the initialization
+    // of DoubleEncoder's table is correct.
     uint32_t imm4L : 4;
-    uint32_t pad : 12;
     uint32_t imm4H : 4;
-    int32_t isInvalid : 12;
-
-  public:
-    Imm8VFPImmData()
-      : imm4L(-1U & 0xf), imm4H(-1U & 0xf), isInvalid(-1)
-    { }
-
-    Imm8VFPImmData(uint32_t imm)
-      : imm4L(imm&0xf), imm4H(imm >> 4), isInvalid(0)
-    {
-        MOZ_ASSERT(imm <= 0xff);
-    }
+    int32_t isInvalid : 24;
 
     uint32_t encode() {
-        if (isInvalid != 0)
-            return -1;
+        // This assert is an attempting at ensuring that we don't create random
+        // instances of this structure and then asking to encode() it.
+        MOZ_ASSERT(isInvalid == 0);
         return imm4L | (imm4H << 16);
     };
 };
@@ -2190,50 +2187,15 @@ GetDoubleArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *pa
 
 
 class DoubleEncoder {
-    uint32_t rep(bool b, uint32_t count) {
-        uint32_t ret = 0;
-        for (uint32_t i = 0; i < count; i++)
-            ret = (ret << 1) | b;
-        return ret;
-    }
-
-    uint32_t encode(uint8_t value) {
-        // ARM ARM "VFP modified immediate constants"
-        //  aBbbbbbb bbcdefgh 000...
-        // We want to return the top 32 bits of the double the rest are 0.
-        bool a = value >> 7;
-        bool b = value >> 6 & 1;
-        bool B = !b;
-        uint32_t cdefgh = value & 0x3f;
-        return         a << 31 |
-                       B << 30 |
-               rep(b, 8) << 22 |
-                  cdefgh << 16;
-    }
-
     struct DoubleEntry
     {
         uint32_t dblTop;
         datastore::Imm8VFPImmData data;
-
-        DoubleEntry()
-          : dblTop(-1)
-        { }
-        DoubleEntry(uint32_t dblTop_, datastore::Imm8VFPImmData data_)
-          : dblTop(dblTop_), data(data_)
-        { }
     };
 
-    mozilla::Array<DoubleEntry, 256> table;
+    static const DoubleEntry table[256];
 
   public:
-    DoubleEncoder()
-    {
-        for (int i = 0; i < 256; i++) {
-            table[i] = DoubleEntry(encode(i), datastore::Imm8VFPImmData(i));
-        }
-    }
-
     bool lookup(uint32_t top, datastore::Imm8VFPImmData *ret) {
         for (int i = 0; i < 256; i++) {
             if (table[i].dblTop == top) {

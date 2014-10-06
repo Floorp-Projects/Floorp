@@ -75,6 +75,7 @@ extern "C" {
 #include "nr_socket.h"
 #include "nr_socket_local.h"
 #include "stun_client_ctx.h"
+#include "stun_reg.h"
 #include "stun_server_ctx.h"
 #include "ice_codeword.h"
 #include "ice_ctx.h"
@@ -385,7 +386,8 @@ void NrIceCtx::trickle_cb(void *arg, nr_ice_ctx *ice_ctx,
 
 RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
                                   bool offerer,
-                                  bool set_interface_priorities) {
+                                  bool set_interface_priorities,
+                                  bool allow_loopback) {
 
   RefPtr<NrIceCtx> ctx = new NrIceCtx(name, offerer);
 
@@ -433,6 +435,10 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
 
     NR_reg_set_uint4((char *)"stun.client.maximum_transmits",7);
     NR_reg_set_uint4((char *)NR_ICE_REG_TRICKLE_GRACE_PERIOD, 5000);
+
+    if (allow_loopback) {
+      NR_reg_set_char((char *)NR_STUN_REG_PREF_ALLOW_LOOPBACK_ADDRS, 1);
+    }
   }
 
   // Create the ICE context
@@ -504,6 +510,15 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
   return ctx;
 }
 
+// ONLY USE THIS FOR TESTING. Will cause totally unpredictable and possibly very
+// bad effects if ICE is still live.
+void NrIceCtx::internal_DeinitializeGlobal() {
+  NR_reg_del((char *)"stun");
+  NR_reg_del((char *)"ice");
+  RLogRingBuffer::DestroyInstance();
+  nr_crypto_vtbl = nullptr;
+  initialized = false;
+}
 
 NrIceCtx::~NrIceCtx() {
   MOZ_MTLOG(ML_DEBUG, "Destroying ICE ctx '" << name_ <<"'");

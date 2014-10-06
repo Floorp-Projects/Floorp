@@ -7,7 +7,7 @@
 #include "Icc.h"
 #include "IccManager.h"
 #include "nsIDOMClassInfo.h"
-#include "nsIDOMIccInfo.h"
+#include "nsIIccInfo.h"
 #include "nsRadioInterfaceLayer.h"
 
 using namespace mozilla::dom;
@@ -27,13 +27,13 @@ IccListener::IccListener(IccManager* aIccManager, uint32_t aClientId)
     return;
   }
 
-  nsCOMPtr<nsIDOMMozIccInfo> iccInfo;
+  nsCOMPtr<nsIIccInfo> iccInfo;
   mProvider->GetIccInfo(mClientId, getter_AddRefs(iccInfo));
   if (iccInfo) {
     nsString iccId;
     iccInfo->GetIccid(iccId);
     if (!iccId.IsEmpty()) {
-      mIcc = new Icc(mIccManager->GetOwner(), mClientId, iccId);
+      mIcc = new Icc(mIccManager->GetOwner(), mClientId, iccInfo);
     }
   }
 
@@ -98,7 +98,7 @@ IccListener::NotifyCardStateChanged()
 NS_IMETHODIMP
 IccListener::NotifyIccInfoChanged()
 {
-  nsCOMPtr<nsIDOMMozIccInfo> iccInfo;
+  nsCOMPtr<nsIIccInfo> iccInfo;
   mProvider->GetIccInfo(mClientId, getter_AddRefs(iccInfo));
 
   // Create/delete icc object based on current iccInfo.
@@ -111,12 +111,13 @@ IccListener::NotifyIccInfoChanged()
       nsString iccId;
       iccInfo->GetIccid(iccId);
       if (!iccId.IsEmpty()) {
-        mIcc = new Icc(mIccManager->GetOwner(), mClientId, iccId);
+        mIcc = new Icc(mIccManager->GetOwner(), mClientId, iccInfo);
         mIccManager->NotifyIccAdd(iccId);
         mIcc->NotifyEvent(NS_LITERAL_STRING("iccinfochange"));
       }
     }
   } else {
+    mIcc->UpdateIccInfo(iccInfo);
     mIcc->NotifyEvent(NS_LITERAL_STRING("iccinfochange"));
     if (!iccInfo) {
       nsString iccId = mIcc->GetIccId();

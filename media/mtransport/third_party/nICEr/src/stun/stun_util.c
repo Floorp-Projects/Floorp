@@ -110,7 +110,16 @@ nr_stun_find_local_addresses(nr_local_addr addrs[], int maxaddrs, int *count)
             ABORT(r);
 
     if (*count == 0) {
-        if ((r=nr_stun_get_addrs(addrs, maxaddrs, 1, count)))
+        char allow_loopback;
+
+        if ((r=NR_reg_get_char(NR_STUN_REG_PREF_ALLOW_LOOPBACK_ADDRS, &allow_loopback))) {
+            if (r == R_NOT_FOUND)
+                allow_loopback = 0;
+            else
+                ABORT(r);
+        }
+
+        if ((r=nr_stun_get_addrs(addrs, maxaddrs, !allow_loopback, count)))
             ABORT(r);
 
         goto done;

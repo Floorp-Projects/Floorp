@@ -10,7 +10,7 @@
 #define LIBGLESV2_RENDERER_DYNAMIC_HLSL_H_
 
 #include "common/angleutils.h"
-#include "libGLESv2/constants.h"
+#include "libGLESv2/Constants.h"
 
 #include "angle_gl.h"
 
