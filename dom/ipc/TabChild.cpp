@@ -2910,7 +2910,7 @@ TabChild::DoSendBlockingMessage(JSContext* aCx,
     return false;
   }
   InfallibleTArray<CpowEntry> cpows;
-  if (!Manager()->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
+  if (aCpows && !Manager()->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
     return false;
   }
   if (aIsSync) {
@@ -2934,7 +2934,7 @@ TabChild::DoSendAsyncMessage(JSContext* aCx,
     return false;
   }
   InfallibleTArray<CpowEntry> cpows;
-  if (!Manager()->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
+  if (aCpows && !Manager()->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
     return false;
   }
   return SendAsyncMessage(PromiseFlatString(aMessage), data, cpows,
