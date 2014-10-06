@@ -24,6 +24,7 @@ UNIFIED_SOURCES += [
     'GfxInfo.cpp',
     'IEnumFE.cpp',
     'JumpListItem.cpp',
+    'KeyboardLayout.cpp',
     'nsAppShell.cpp',
     'nsClipboard.cpp',
     'nsColorPicker.cpp',
@@ -32,6 +33,7 @@ UNIFIED_SOURCES += [
     'nsDragService.cpp',
     'nsIdleServiceWin.cpp',
     'nsImageClipboard.cpp',
+    'nsIMM32Handler.cpp',
     'nsLookAndFeel.cpp',
     'nsNativeDragSource.cpp',
     'nsNativeDragTarget.cpp',
@@ -53,14 +55,8 @@ UNIFIED_SOURCES += [
     'WidgetTraceEvent.cpp',
     'WindowHook.cpp',
     'WinIMEHandler.cpp',
-    'WinTaskbar.cpp',
-]
-
-# The following files cannot be built in unified mode because they force NSPR logging.
-SOURCES += [
-    'KeyboardLayout.cpp',
-    'nsIMM32Handler.cpp',
     'WinMouseScrollHandler.cpp',
+    'WinTaskbar.cpp',
     'WinUtils.cpp',
 ]
 
