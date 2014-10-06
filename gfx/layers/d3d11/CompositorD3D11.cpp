@@ -553,7 +553,10 @@ CompositorD3D11::ClearRect(const gfx::Rect& aRect)
   mPSConstants.layerColor[2] = 0;
   mPSConstants.layerColor[3] = 0;
 
-  UpdateConstantBuffers();
+  if (!UpdateConstantBuffers()) {
+    NS_WARNING("Failed to update shader constant buffers");
+    return;
+  }
 
   mContext->Draw(4, 0);
 
@@ -739,7 +742,10 @@ CompositorD3D11::DrawQuad(const gfx::Rect& aRect,
     NS_WARNING("Unknown shader type");
     return;
   }
-  UpdateConstantBuffers();
+  if (!UpdateConstantBuffers()) {
+    NS_WARNING("Failed to update shader constant buffers");
+    return;
+  }
 
   mContext->Draw(4, 0);
   if (restoreBlendMode) {
@@ -966,14 +972,52 @@ CompositorD3D11::CreateShaders()
   return true;
 }
 
-void
+static
+bool ShouldRecoverFromMapFailure(HRESULT hr, ID3D11Device* device)
+{
+  // XXX - it would be nice to use gfxCriticalError, but it needs to
+  // be made to work off the main thread first.
+  if (SUCCEEDED(hr)) {
+    return true;
+  }
+  if (hr == DXGI_ERROR_DEVICE_REMOVED) {
+    switch (device->GetDeviceRemovedReason()) {
+      case DXGI_ERROR_DEVICE_HUNG:
+      case DXGI_ERROR_DEVICE_REMOVED:
+      case DXGI_ERROR_DEVICE_RESET:
+      case DXGI_ERROR_DRIVER_INTERNAL_ERROR:
+        return true;
+      case DXGI_ERROR_INVALID_CALL:
+      default:
+        return false;
+    }
+  }
+  return false;
+}
+
+bool
 CompositorD3D11::UpdateConstantBuffers()
 {
+  HRESULT hr;
   D3D11_MAPPED_SUBRESOURCE resource;
-  mContext->Map(mAttachments->mVSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
+
+  hr = mContext->Map(mAttachments->mVSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
+  if (FAILED(hr)) {
+    if (ShouldRecoverFromMapFailure(hr, GetDevice())) {
+      return false;
+    }
+    MOZ_CRASH();
+  }
   *(VertexShaderConstants*)resource.pData = mVSConstants;
   mContext->Unmap(mAttachments->mVSConstantBuffer, 0);
-  mContext->Map(mAttachments->mPSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
+
+  hr = mContext->Map(mAttachments->mPSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
+  if (FAILED(hr)) {
+    if (ShouldRecoverFromMapFailure(hr, GetDevice())) {
+      return false;
+    }
+    MOZ_CRASH();
+  }
   *(PixelShaderConstants*)resource.pData = mPSConstants;
   mContext->Unmap(mAttachments->mPSConstantBuffer, 0);
 
@@ -983,6 +1027,7 @@ CompositorD3D11::UpdateConstantBuffers()
 
   buffer = mAttachments->mPSConstantBuffer;
   mContext->PSSetConstantBuffers(0, 1, &buffer);
+  return true;
 }
 
 void

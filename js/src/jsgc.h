@@ -1070,6 +1070,47 @@ class GCHelperState
     }
 };
 
+// A generic task used to dispatch work to the helper thread system.
+// Users should derive from GCParallelTask add what data they need and
+// override |run|.
+class GCParallelTask
+{
+    // The state of the parallel computation.
+    enum TaskState {
+        NotStarted,
+        Dispatched,
+        Finished,
+    } state;
+
+    // Amount of time this task took to execute.
+    uint64_t duration_;
+
+  protected:
+    virtual void run() = 0;
+
+  public:
+    GCParallelTask() : state(NotStarted), duration_(0) {}
+
+    int64_t duration() const { return duration_; }
+
+    // The simple interface to a parallel task works exactly like pthreads.
+    bool start();
+    void join();
+
+    // If multiple tasks are to be started or joined at once, it is more
+    // efficient to take the helper thread lock once and use these methods.
+    bool startWithLockHeld();
+    void joinWithLockHeld();
+
+    // Instead of dispatching to a helper, run the task on the main thread.
+    void runFromMainThread(JSRuntime *rt);
+
+    // This should be friended to HelperThread, but cannot be because it
+    // would introduce several circular dependencies.
+  public:
+    void runFromHelperThread();
+};
+
 struct GCChunkHasher {
     typedef gc::Chunk *Lookup;
 
