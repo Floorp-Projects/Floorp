@@ -120,6 +120,13 @@ class TableTicker: public Sampler {
           delete profile;
           info->SetProfile(nullptr);
         }
+        // We've stopped profiling. We no longer need to retain
+        // information for an old thread.
+        if (info->IsPendingDelete()) {
+          delete info;
+          sRegisteredThreads->erase(sRegisteredThreads->begin() + i);
+          i--;
+        }
       }
     }
 #if defined(XP_WIN)
@@ -161,7 +168,7 @@ class TableTicker: public Sampler {
 
       for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
         ThreadInfo* info = sRegisteredThreads->at(i);
-        if (info->IsMainThread()) {
+        if (info->IsMainThread() && !info->IsPendingDelete()) {
           mPrimaryThreadProfile = info->Profile();
           break;
         }
