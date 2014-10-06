@@ -1063,17 +1063,6 @@ extern NativeObject *
 DeepCloneObjectLiteral(JSContext *cx, HandleNativeObject obj, NewObjectKind newKind = GenericObject);
 
 /*
- * Return successfully added or changed shape or nullptr on error.
- */
-extern bool
-DefineNativeProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId id, HandleValue value,
-                     PropertyOp getter, StrictPropertyOp setter, unsigned attrs);
-
-extern bool
-LookupNativeProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId id,
-                     js::MutableHandleObject objp, js::MutableHandleShape propp);
-
-/*
  * Call the [[DefineOwnProperty]] internal method of obj.
  *
  * If obj is an array, this follows ES5 15.4.5.1.
@@ -1138,16 +1127,6 @@ js_FindVariableScope(JSContext *cx, JSFunction **funp);
 namespace js {
 
 bool
-NativeGet(JSContext *cx, HandleObject obj, HandleNativeObject pobj,
-          HandleShape shape, MutableHandle<Value> vp);
-
-template <ExecutionMode mode>
-bool
-NativeSet(typename ExecutionModeTraits<mode>::ContextType cx,
-          HandleNativeObject obj, HandleObject receiver,
-          HandleShape shape, bool strict, MutableHandleValue vp);
-
-bool
 LookupPropertyPure(JSObject *obj, jsid id, NativeObject **objp, Shape **propp);
 
 bool
@@ -1168,19 +1147,6 @@ GetOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, MutableHa
 
 bool
 NewPropertyDescriptorObject(JSContext *cx, Handle<PropertyDescriptor> desc, MutableHandleValue vp);
-
-/*
- * If obj has an already-resolved data property for id, return true and
- * store the property value in *vp.
- */
-extern bool
-HasDataProperty(JSContext *cx, NativeObject *obj, jsid id, Value *vp);
-
-inline bool
-HasDataProperty(JSContext *cx, NativeObject *obj, PropertyName *name, Value *vp)
-{
-    return HasDataProperty(cx, obj, NameToId(name), vp);
-}
 
 extern bool
 IsDelegate(JSContext *cx, HandleObject obj, const Value &v, bool *result);
@@ -1261,6 +1227,16 @@ Throw(JSContext *cx, jsid id, unsigned errorNumber);
 
 extern bool
 Throw(JSContext *cx, JSObject *obj, unsigned errorNumber);
+
+namespace baseops {
+
+extern bool
+Watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable);
+
+extern bool
+Unwatch(JSContext *cx, JS::HandleObject obj, JS::HandleId id);
+
+} /* namespace baseops */
 
 }  /* namespace js */
 
