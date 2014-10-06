@@ -22,9 +22,13 @@ browsersearch.json in the locale-specific raw resource directory
 e.g. raw/browsersearch.json, raw-pt-rBR/browsersearch.json.
 '''
 
-from __future__ import print_function
+from __future__ import (
+    print_function,
+    unicode_literals,
+)
 
 import argparse
+import codecs
 import json
 import re
 import sys
@@ -72,8 +76,9 @@ def main(args):
     engines = properties.get_list('browser.search.order')
 
     if opts.verbose:
-        print('Read {len} engines: {engines}'.format(len=len(engines), engines=engines))
-        print("Default engine is '{default}'.".format(default=default))
+        writer = codecs.getwriter('utf-8')(sys.stdout)
+        print('Read {len} engines: {engines}'.format(len=len(engines), engines=engines), file=writer)
+        print("Default engine is '{default}'.".format(default=default), file=writer)
 
     browsersearch = {}
     browsersearch['default'] = default
