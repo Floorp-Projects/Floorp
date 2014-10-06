@@ -10,6 +10,10 @@
 #include <sstream>
 #include <stdio.h>
 
+#ifdef MOZ_LOGGING
+#include <prlog.h>
+#endif
+
 #if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
 #include "nsDebug.h"
 #endif
@@ -29,9 +33,7 @@
 extern "C" __declspec(dllimport) void __stdcall OutputDebugStringA(const char* lpOutputString);
 #endif
 
-#if defined(DEBUG) || defined(PR_LOGGING)
-#include <prlog.h>
-
+#if defined(PR_LOGGING)
 extern GFX2D_API PRLogModuleInfo *GetGFX2DLog();
 #endif
 
@@ -42,7 +44,7 @@ const int LOG_DEBUG = 1;
 const int LOG_WARNING = 2;
 const int LOG_CRITICAL = 3;
 
-#if defined(DEBUG) || defined(PR_LOGGING)
+#if defined(PR_LOGGING)
 
 inline PRLogModuleLevel PRLogLevelForLevel(int aLevel) {
   switch (aLevel) {
