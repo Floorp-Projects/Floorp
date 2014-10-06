@@ -6,6 +6,7 @@
 
 EXPORTS.mozilla.dom += [
     'Fetch.h',
+    'FetchDriver.h',
     'Headers.h',
     'InternalHeaders.h',
     'InternalRequest.h',
@@ -16,6 +17,7 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     'Fetch.cpp',
+    'FetchDriver.cpp',
     'Headers.cpp',
     'InternalHeaders.cpp',
     'InternalRequest.cpp',
@@ -26,6 +28,8 @@ UNIFIED_SOURCES += [
 
 LOCAL_INCLUDES += [
     '../workers',
+    # For nsDataHandler.h
+    '/netwerk/protocol/data',
 ]
 
 FAIL_ON_WARNINGS = True

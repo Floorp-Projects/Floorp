@@ -5,6 +5,8 @@
 
 #include "Fetch.h"
 
+#include "nsIDocument.h"
+#include "nsIGlobalObject.h"
 #include "nsIStringStream.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncoder.h"
@@ -16,15 +18,260 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/dom/FetchDriver.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/Response.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/URLSearchParams.h"
+#include "mozilla/dom/WorkerScope.h"
+#include "mozilla/dom/workers/Workers.h"
+
+#include "InternalResponse.h"
+#include "WorkerPrivate.h"
+#include "WorkerRunnable.h"
 
 namespace mozilla {
 namespace dom {
+
+using namespace workers;
+
+class WorkerFetchResolver MOZ_FINAL : public FetchDriverObserver
+{
+  friend class WorkerFetchResponseRunnable;
+  friend class ResolveFetchWithBodyRunnable;
+
+  // This promise proxy is for the Promise returned by a call to fetch() that
+  // is resolved with a Response instance.
+  nsRefPtr<PromiseWorkerProxy> mPromiseProxy;
+  // Passed from main thread to worker thread after being initialized (except
+  // for the body.
+  nsRefPtr<InternalResponse> mInternalResponse;
+public:
+
+  WorkerFetchResolver(workers::WorkerPrivate* aWorkerPrivate, Promise* aPromise);
+
+  void
+  OnResponseAvailable(InternalResponse* aResponse) MOZ_OVERRIDE;
+
+  workers::WorkerPrivate*
+  GetWorkerPrivate() { return mPromiseProxy->GetWorkerPrivate(); }
+
+private:
+  ~WorkerFetchResolver();
+};
+
+class MainThreadFetchResolver MOZ_FINAL : public FetchDriverObserver
+{
+  nsRefPtr<Promise> mPromise;
+  nsRefPtr<InternalResponse> mInternalResponse;
+
+  NS_DECL_OWNINGTHREAD
+public:
+  MainThreadFetchResolver(Promise* aPromise);
+
+  void
+  OnResponseAvailable(InternalResponse* aResponse) MOZ_OVERRIDE;
+
+private:
+  ~MainThreadFetchResolver();
+};
+
+class MainThreadFetchRunnable : public nsRunnable
+{
+  nsRefPtr<WorkerFetchResolver> mResolver;
+  nsRefPtr<InternalRequest> mRequest;
+
+public:
+  MainThreadFetchRunnable(WorkerPrivate* aWorkerPrivate,
+                          Promise* aPromise,
+                          InternalRequest* aRequest)
+    : mResolver(new WorkerFetchResolver(aWorkerPrivate, aPromise))
+    , mRequest(aRequest)
+  {
+    MOZ_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->AssertIsOnWorkerThread();
+  }
+
+  NS_IMETHODIMP
+  Run()
+  {
+    AssertIsOnMainThread();
+    nsRefPtr<FetchDriver> fetch = new FetchDriver(mRequest);
+    nsresult rv = fetch->Fetch(mResolver);
+    // Right now we only support async fetch, which should never directly fail.
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    return NS_OK;
+  }
+};
+
+already_AddRefed<Promise>
+FetchRequest(nsIGlobalObject* aGlobal, const RequestOrScalarValueString& aInput,
+             const RequestInit& aInit, ErrorResult& aRv)
+{
+  nsRefPtr<Promise> p = Promise::Create(aGlobal, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  AutoJSAPI jsapi;
+  jsapi.Init(aGlobal);
+  JSContext* cx = jsapi.cx();
+
+  JS::Rooted<JSObject*> jsGlobal(cx, aGlobal->GetGlobalJSObject());
+  GlobalObject global(cx, jsGlobal);
+
+  nsRefPtr<Request> request = Request::Constructor(global, aInput, aInit, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  nsRefPtr<InternalRequest> r = request->GetInternalRequest();
+  if (!r->ReferrerIsNone()) {
+    nsAutoCString ref;
+    aRv = GetRequestReferrer(aGlobal, r, ref);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+    r->SetReferrer(ref);
+  }
+
+  if (NS_IsMainThread()) {
+    nsRefPtr<MainThreadFetchResolver> resolver = new MainThreadFetchResolver(p);
+    nsRefPtr<FetchDriver> fetch = new FetchDriver(r);
+    aRv = fetch->Fetch(resolver);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+  } else {
+    WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(worker);
+    nsRefPtr<MainThreadFetchRunnable> run = new MainThreadFetchRunnable(worker, p, r);
+    if (NS_FAILED(NS_DispatchToMainThread(run))) {
+      NS_WARNING("MainThreadFetchRunnable dispatch failed!");
+    }
+  }
+
+  return p.forget();
+}
+
+MainThreadFetchResolver::MainThreadFetchResolver(Promise* aPromise)
+  : mPromise(aPromise)
+{
+}
+
+void
+MainThreadFetchResolver::OnResponseAvailable(InternalResponse* aResponse)
+{
+  NS_ASSERT_OWNINGTHREAD(MainThreadFetchResolver)
+  AssertIsOnMainThread();
+  mInternalResponse = aResponse;
+
+  nsCOMPtr<nsIGlobalObject> go = mPromise->GetParentObject();
+
+  nsRefPtr<Response> response = new Response(go, aResponse);
+  mPromise->MaybeResolve(response);
+}
+
+MainThreadFetchResolver::~MainThreadFetchResolver()
+{
+  NS_ASSERT_OWNINGTHREAD(MainThreadFetchResolver)
+}
+
+class WorkerFetchResponseRunnable : public WorkerRunnable
+{
+  nsRefPtr<WorkerFetchResolver> mResolver;
+public:
+  WorkerFetchResponseRunnable(WorkerFetchResolver* aResolver)
+    : WorkerRunnable(aResolver->GetWorkerPrivate(), WorkerThreadModifyBusyCount)
+    , mResolver(aResolver)
+  {
+  }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
+  {
+    MOZ_ASSERT(aWorkerPrivate);
+    aWorkerPrivate->AssertIsOnWorkerThread();
+    MOZ_ASSERT(aWorkerPrivate == mResolver->GetWorkerPrivate());
+
+    nsRefPtr<nsIGlobalObject> global = aWorkerPrivate->GlobalScope();
+    nsRefPtr<Response> response = new Response(global, mResolver->mInternalResponse);
+
+    nsRefPtr<Promise> promise = mResolver->mPromiseProxy->GetWorkerPromise();
+    MOZ_ASSERT(promise);
+    promise->MaybeResolve(response);
+
+    mResolver->mPromiseProxy->CleanUp(aCx);
+    return true;
+  }
+};
+
+WorkerFetchResolver::WorkerFetchResolver(WorkerPrivate* aWorkerPrivate, Promise* aPromise)
+  : mPromiseProxy(new PromiseWorkerProxy(aWorkerPrivate, aPromise))
+{
+}
+
+WorkerFetchResolver::~WorkerFetchResolver()
+{
+}
+
+void
+WorkerFetchResolver::OnResponseAvailable(InternalResponse* aResponse)
+{
+  AssertIsOnMainThread();
+  mInternalResponse = aResponse;
+
+  nsRefPtr<WorkerFetchResponseRunnable> r =
+    new WorkerFetchResponseRunnable(this);
+
+  AutoSafeJSContext cx;
+  if (!r->Dispatch(cx)) {
+    NS_WARNING("Could not dispatch fetch resolve");
+  }
+}
+
+// Empty string for no-referrer. FIXME(nsm): Does returning empty string
+// actually lead to no-referrer in the base channel?
+// The actual referrer policy and stripping is dealt with by HttpBaseChannel,
+// this always returns the full API referrer URL of the relevant global.
+nsresult
+GetRequestReferrer(nsIGlobalObject* aGlobal, const InternalRequest* aRequest, nsCString& aReferrer)
+{
+  if (aRequest->ReferrerIsURL()) {
+    aReferrer = aRequest->ReferrerAsURL();
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal);
+  if (window) {
+    nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
+    if (doc) {
+      nsCOMPtr<nsIURI> docURI = doc->GetDocumentURI();
+      nsAutoCString origin;
+      nsresult rv = nsContentUtils::GetASCIIOrigin(docURI, origin);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      nsAutoString referrer;
+      doc->GetReferrer(referrer);
+      aReferrer = NS_ConvertUTF16toUTF8(referrer);
+    }
+  } else {
+    WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(worker);
+    worker->AssertIsOnWorkerThread();
+    aReferrer = worker->GetLocationInfo().mHref;
+    // XXX(nsm): Algorithm says "If source is not a URL..." but when is it
+    // not a URL?
+  }
+
+  return NS_OK;
+}
 
 namespace {
 nsresult
