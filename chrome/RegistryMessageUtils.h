@@ -43,12 +43,6 @@ struct ResourceMapping
 {
   nsCString resource;
   SerializedURI resolvedURI;
-
-  bool operator ==(const ResourceMapping& rhs) const
-  {
-    return resource.Equals(rhs.resource) &&
-           resolvedURI == rhs.resolvedURI;
-  }
 };
 
 struct OverrideMapping

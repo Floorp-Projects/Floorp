@@ -453,21 +453,17 @@ nsChromeRegistryChrome::SendRegisteredChrome(
   };
   mPackagesHash.EnumerateRead(CollectPackages, &args);
 
-  // If we were passed a parent then a new child process has been created and
-  // has requested all of the chrome so send it the resources too. Otherwise
-  // resource mappings are sent by the resource protocol handler dynamically.
-  if (aParent) {
-    nsCOMPtr<nsIIOService> io (do_GetIOService());
-    NS_ENSURE_TRUE_VOID(io);
+  nsCOMPtr<nsIIOService> io (do_GetIOService());
+  NS_ENSURE_TRUE_VOID(io);
 
-    nsCOMPtr<nsIProtocolHandler> ph;
-    nsresult rv = io->GetProtocolHandler("resource", getter_AddRefs(ph));
-    NS_ENSURE_SUCCESS_VOID(rv);
+  nsCOMPtr<nsIProtocolHandler> ph;
+  nsresult rv = io->GetProtocolHandler("resource", getter_AddRefs(ph));
+  NS_ENSURE_SUCCESS_VOID(rv);
 
-    nsCOMPtr<nsIResProtocolHandler> irph (do_QueryInterface(ph));
-    nsResProtocolHandler* rph = static_cast<nsResProtocolHandler*>(irph.get());
-    rph->CollectSubstitutions(resources);
-  }
+  //FIXME: Some substitutions are set up lazily and might not exist yet
+  nsCOMPtr<nsIResProtocolHandler> irph (do_QueryInterface(ph));
+  nsResProtocolHandler* rph = static_cast<nsResProtocolHandler*>(irph.get());
+  rph->CollectSubstitutions(resources);
 
   mOverrideTable.EnumerateRead(&EnumerateOverride, &overrides);
 
