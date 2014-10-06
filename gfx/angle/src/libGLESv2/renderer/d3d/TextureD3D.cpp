@@ -129,7 +129,7 @@ bool TextureD3D::subImage(GLint xoffset, GLint yoffset, GLint zoffset, GLsizei w
     if (unpack.pixelBuffer.id() != 0)
     {
         gl::Buffer *pixelBuffer = unpack.pixelBuffer.get();
-        unsigned int offset = reinterpret_cast<unsigned int>(pixels);
+        uintptr_t offset = reinterpret_cast<uintptr_t>(pixels);
         // TODO: setImage/subImage is the only place outside of renderer that asks for a buffers raw data.
         // This functionality should be moved into renderer and the getData method of BufferImpl removed.
         const void *bufferData = pixelBuffer->getImplementation()->getData();
@@ -183,7 +183,7 @@ bool TextureD3D::fastUnpackPixels(const gl::PixelUnpackState &unpack, const void
     // to create a render target.
     ASSERT(mRenderer->supportsFastCopyBufferToTexture(sizedInternalFormat));
 
-    unsigned int offset = reinterpret_cast<unsigned int>(pixels);
+    uintptr_t offset = reinterpret_cast<uintptr_t>(pixels);
 
     return mRenderer->fastCopyBufferToTexture(unpack, offset, destRenderTarget, sizedInternalFormat, type, destArea);
 }

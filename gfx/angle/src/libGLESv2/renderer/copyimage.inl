@@ -24,7 +24,7 @@ inline void WriteColor(const uint8_t *source, uint8_t *dest)
 template <typename sourceType, typename destType, typename colorDataType>
 inline void CopyPixel(const uint8_t *source, uint8_t *dest)
 {
-    colorType temp;
+    colorDataType temp;
     ReadColor<sourceType, colorDataType>(source, &temp);
     WriteColor<destType, colorDataType>(&temp, dest);
 }

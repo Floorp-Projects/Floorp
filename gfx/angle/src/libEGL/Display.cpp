@@ -14,6 +14,7 @@
 #include <map>
 #include <vector>
 #include <sstream>
+#include <iterator>
 
 #include "common/debug.h"
 #include "common/mathutil.h"

@@ -11,7 +11,7 @@
 
 #include "libGLESv2/renderer/TextureImpl.h"
 #include "libGLESv2/angletypes.h"
-#include "libGLESv2/constants.h"
+#include "libGLESv2/Constants.h"
 
 namespace gl
 {

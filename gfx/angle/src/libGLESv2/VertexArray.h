@@ -14,7 +14,7 @@
 #define LIBGLESV2_VERTEXARRAY_H_
 
 #include "common/RefCountObject.h"
-#include "libGLESv2/constants.h"
+#include "libGLESv2/Constants.h"
 #include "libGLESv2/VertexAttribute.h"
 
 #include <vector>
