@@ -5,8 +5,8 @@
 #include "nsISupports.idl"
 
 interface nsIDOMDOMRequest;
-interface nsIDOMMozIccInfo;
 interface nsIDOMWindow;
+interface nsIIccInfo;
 
 [scriptable, uuid(7c0ada3d-d8d4-493e-9243-fa3df39855e4)]
 interface nsIIccListener : nsISupports
@@ -20,7 +20,7 @@ interface nsIIccListener : nsISupports
 /**
  * XPCOM component (in the content process) that provides the ICC information.
  */
-[scriptable, uuid(7c67ab92-52a3-4e11-995c-c0ad2f66c4cb)]
+[scriptable, uuid(1afa72d0-3d70-11e4-916c-0800200c9a66)]
 interface nsIIccProvider : nsISupports
 {
   /**
@@ -34,7 +34,7 @@ interface nsIIccProvider : nsISupports
   /**
    * UICC Information
    */
-  nsIDOMMozIccInfo getIccInfo(in unsigned long clientId);
+  nsIIccInfo getIccInfo(in unsigned long clientId);
 
   /**
    * Card State

@@ -616,6 +616,7 @@ if CONFIG['MOZ_B2G_RIL']:
     WEBIDL_FILES += [
         'IccCardLockError.webidl',
         'MozIcc.webidl',
+        'MozIccInfo.webidl',
         'MozIccManager.webidl',
     ]
 
