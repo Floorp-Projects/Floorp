@@ -2,37 +2,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsISupports.idl"
+enum IccType {"sim", "usim", "csim", "ruim"};
 
-[scriptable, uuid(dd9f229c-e5a6-453a-8388-950af0ff9918)]
-interface nsIDOMMozIccInfo : nsISupports
-{
+[Pref="dom.icc.enabled"]
+interface MozIccInfo {
   /**
    * Integrated Circuit Card Type.
-   *
-   * Possible values: null(unknown), "sim", "usim", "csim", ruim".
    */
-  readonly attribute DOMString iccType;
+  readonly attribute IccType? iccType;
 
   /**
    * Integrated Circuit Card Identifier.
    */
-  readonly attribute DOMString iccid;
+  readonly attribute DOMString? iccid;
 
   /**
    * Mobile Country Code (MCC) of the subscriber's home network.
    */
-  readonly attribute DOMString mcc;
+  readonly attribute DOMString? mcc;
 
   /**
    * Mobile Network Code (MNC) of the subscriber's home network.
    */
-  readonly attribute DOMString mnc;
+  readonly attribute DOMString? mnc;
 
   /**
    * Service Provider Name (SPN) of the subscriber's home network.
    */
-  readonly attribute DOMString spn;
+  readonly attribute DOMString? spn;
 
   /**
    * Network name must be a part of displayed carrier name.
@@ -45,23 +42,21 @@ interface nsIDOMMozIccInfo : nsISupports
   readonly attribute boolean isDisplaySpnRequired;
 };
 
-[scriptable, uuid(3c237e39-7af3-4748-baf4-4a3b6c3e0e66)]
-interface nsIDOMMozGsmIccInfo : nsIDOMMozIccInfo
-{
+[Pref="dom.icc.enabled"]
+interface MozGsmIccInfo : MozIccInfo {
   /**
    * Mobile Station ISDN Number (MSISDN) of the subscriber, aka
    * his phone number.
    */
-  readonly attribute DOMString msisdn;
+  readonly attribute DOMString? msisdn;
 };
 
-[scriptable, uuid(7e937d09-4d1d-43c5-96d8-c91396022809)]
-interface nsIDOMMozCdmaIccInfo : nsIDOMMozIccInfo
-{
+[Pref="dom.icc.enabled"]
+interface MozCdmaIccInfo : MozIccInfo {
   /**
    * Mobile Directory Number (MDN) of the subscriber, aka his phone number.
    */
-  readonly attribute DOMString mdn;
+  readonly attribute DOMString? mdn;
 
   /**
    * Preferred Roaming List (PRL) version of the subscriber.
