@@ -261,6 +261,11 @@ public:
    */
   static LayerTreeState* GetIndirectShadowTree(uint64_t aId);
 
+  /**
+   * Used by the profiler to denote when a vsync occured
+   */
+  static void PostInsertVsyncProfilerMarker(mozilla::TimeStamp aVsyncTimestamp);
+
   float ComputeRenderIntegrity();
 
   /**

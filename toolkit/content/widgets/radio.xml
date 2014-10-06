@@ -453,10 +453,10 @@
       </constructor>
       <destructor>
         <![CDATA[
-          if (!this.radioGroup)
+          if (!this.control)
             return;
 
-          var radioList = this.radioGroup.mRadioChildren;
+          var radioList = this.control._radioChildren;
           if (!radioList)
             return;
           for (var i = 0; i < radioList.length; ++i) {
