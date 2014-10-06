@@ -18,6 +18,7 @@
 #include "mozilla/layers/ColorLayerComposite.h"
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/ContainerLayerComposite.h"
+#include "mozilla/layers/ImageBridgeParent.h" // for ImageBridgeParent
 #include "mozilla/layers/ImageLayerComposite.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/LayersMessages.h"  // for EditReply, etc
@@ -192,6 +193,21 @@ LayerTransactionParent::RecvUpdateNoSwap(const InfallibleTArray<Edit>& cset,
       aTransactionStart, nullptr);
 }
 
+class MOZ_STACK_CLASS AutoLayerTransactionParentAsyncMessageSender
+{
+public:
+  explicit AutoLayerTransactionParentAsyncMessageSender(LayerTransactionParent* aLayerTransaction)
+    : mLayerTransaction(aLayerTransaction) {}
+
+  ~AutoLayerTransactionParentAsyncMessageSender()
+  {
+    mLayerTransaction->SendPendingAsyncMessges();
+    ImageBridgeParent::SendPendingAsyncMessges(mLayerTransaction->GetChildProcessId());
+  }
+private:
+  LayerTransactionParent* mLayerTransaction;
+};
+
 bool
 LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
                                    const uint64_t& aTransactionId,
@@ -223,6 +239,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
   }
 
   EditReplyVector replyv;
+  AutoLayerTransactionParentAsyncMessageSender autoAsyncMessageSender(this);
 
   {
     AutoResolveRefLayers resolve(mShadowLayersManager->GetCompositionManager(this));
@@ -888,6 +905,38 @@ LayerTransactionParent::ActorDestroy(ActorDestroyReason why)
 bool LayerTransactionParent::IsSameProcess() const
 {
   return OtherProcess() == ipc::kInvalidProcessHandle;
+}
+
+void
+LayerTransactionParent::SendFenceHandleIfPresent(PTextureParent* aTexture,
+                                                 CompositableHost* aCompositableHost)
+{
+  RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
+  if (!texture) {
+    return;
+  }
+
+  // Send a ReleaseFence of CompositorOGL.
+  if (aCompositableHost && aCompositableHost->GetCompositor()) {
+    FenceHandle fence = aCompositableHost->GetCompositor()->GetReleaseFence();
+    if (fence.IsValid()) {
+      RefPtr<FenceDeliveryTracker> tracker = new FenceDeliveryTracker(fence);
+      HoldUntilComplete(tracker);
+      mPendingAsyncMessage.push_back(OpDeliverFence(tracker->GetId(),
+                                                    aTexture, nullptr,
+                                                    fence));
+    }
+  }
+
+  // Send a ReleaseFence that is set by HwcComposer2D.
+  FenceHandle fence = texture->GetAndResetReleaseFenceHandle();
+  if (fence.IsValid()) {
+    RefPtr<FenceDeliveryTracker> tracker = new FenceDeliveryTracker(fence);
+    HoldUntilComplete(tracker);
+    mPendingAsyncMessage.push_back(OpDeliverFence(tracker->GetId(),
+                                                  aTexture, nullptr,
+                                                  fence));
+  }
 }
 
 void
