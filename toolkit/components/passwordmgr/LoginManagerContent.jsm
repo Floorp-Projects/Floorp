@@ -713,18 +713,20 @@ var LoginManagerContent = {
                 // Don't modify the username field if it's disabled or readOnly so we preserve its case.
                 let disabledOrReadOnly = usernameField.disabled || usernameField.readOnly;
 
+                let userNameDiffers = selectedLogin.username != usernameField.value;
                 // Don't replace the username if it differs only in case, and the user triggered
                 // this autocomplete. We assume that if it was user-triggered the entered text
                 // is desired.
-                let userEnteredDifferentCase = userTriggered &&
-                      (usernameField.value != selectedLogin.username &&
-                       usernameField.value.toLowerCase() == selectedLogin.username.toLowerCase());
+                let userEnteredDifferentCase = userTriggered && userNameDiffers &&
+                       usernameField.value.toLowerCase() == selectedLogin.username.toLowerCase();
 
-                if (!disabledOrReadOnly && !userEnteredDifferentCase) {
+                if (!disabledOrReadOnly && !userEnteredDifferentCase && userNameDiffers) {
                     usernameField.setUserInput(selectedLogin.username);
                 }
             }
-            passwordField.setUserInput(selectedLogin.password);
+            if (passwordField.value != selectedLogin.password) {
+                passwordField.setUserInput(selectedLogin.password);
+            }
             didFillForm = true;
         } else if (selectedLogin && !autofillForm) {
             // For when autofillForm is false, but we still have the information
