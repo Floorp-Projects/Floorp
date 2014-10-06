@@ -95,3 +95,7 @@ menu[disabled="true"].subviewbutton > .menu-right {
 #PanelUI-footer-inner > toolbarseparator {
   -moz-appearance: none !important;
 }
+
+.subviewradio > .radio-label-box {
+  -moz-appearance: none;
+}

@@ -1157,6 +1157,7 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
 .subviewradio {
   -moz-binding: url(chrome://global/content/bindings/radio.xml#radio);
   -moz-appearance: none;
+  -moz-box-align: center;
   padding: 1px;
   margin: 0 0 2px;
   background-color: hsla(210,4%,10%,0);
