@@ -18,9 +18,6 @@
 
 /* a presentation of a document, part 2 */
 
-#ifdef MOZ_LOGGING
-#define FORCE_PR_LOG /* Allow logging in the release build */
-#endif
 #include "prlog.h"
 
 #include "mozilla/ArrayUtils.h"

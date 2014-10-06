@@ -26,11 +26,6 @@
 #include "mozilla/VisualEventTracer.h"
 #include "URIUtils.h"
 
-#ifdef MOZ_LOGGING
-// so we can get logging even in release builds (but only for some things)
-#define FORCE_PR_LOG 1
-#endif
-
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
 #include "nsIDocument.h"
