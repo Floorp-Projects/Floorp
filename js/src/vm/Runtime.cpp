@@ -423,7 +423,6 @@ JSRuntime::~JSRuntime()
     FinishRuntimeNumberState(this);
 #endif
 
-    gc.finish();
     atomsCompartment_ = nullptr;
 
     js_free(defaultLocale);
@@ -432,11 +431,6 @@ JSRuntime::~JSRuntime()
     js_delete(execAlloc_);  /* Delete after jitRuntime_. */
 
     js_delete(ionPcScriptCache);
-
-#ifdef JSGC_GENERATIONAL
-    gc.storeBuffer.disable();
-    gc.nursery.disable();
-#endif
 
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
     js::jit::DestroySimulatorRuntime(simulatorRuntime_);
