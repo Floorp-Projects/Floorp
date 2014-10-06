@@ -5,8 +5,11 @@
 #ifndef mozilla_dom_Icc_h
 #define mozilla_dom_Icc_h
 
+#include "mozilla/dom/UnionTypes.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "nsIIccProvider.h"
+
+class nsIIccInfo;
+class nsIIccProvider;
 
 namespace mozilla {
 namespace dom {
@@ -16,9 +19,11 @@ class DOMRequest;
 class Icc MOZ_FINAL : public DOMEventTargetHelper
 {
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Icc, DOMEventTargetHelper)
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
 
-  Icc(nsPIDOMWindow* aWindow, long aClientId, const nsAString& aIccId);
+  Icc(nsPIDOMWindow* aWindow, long aClientId, nsIIccInfo* aIccInfo);
 
   void
   Shutdown();
@@ -35,6 +40,9 @@ public:
     return mIccId;
   }
 
+  void
+  UpdateIccInfo(nsIIccInfo* aIccInfo);
+
   nsPIDOMWindow*
   GetParentObject() const
   {
@@ -46,8 +54,8 @@ public:
   WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   // MozIcc WebIDL
-  already_AddRefed<nsIDOMMozIccInfo>
-  GetIccInfo() const;
+  void
+  GetIccInfo(Nullable<OwningMozIccInfoOrMozGsmIccInfoOrMozCdmaIccInfo>& aIccInfo) const;
 
   void
   GetCardState(nsString& aCardState) const;
@@ -116,6 +124,7 @@ private:
   // mProvider is a xpcom service and will be released at shutdown, so it
   // doesn't need to be cycle collected.
   nsCOMPtr<nsIIccProvider> mProvider;
+  Nullable<OwningMozIccInfoOrMozGsmIccInfoOrMozCdmaIccInfo> mIccInfo;
 };
 
 } // namespace dom
