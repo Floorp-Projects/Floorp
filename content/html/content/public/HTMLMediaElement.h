@@ -1013,9 +1013,6 @@ protected:
   nsMediaNetworkState mNetworkState;
   nsMediaReadyState mReadyState;
 
-  // Last value passed from codec or stream source to UpdateReadyStateForData.
-  NextFrameStatus mLastNextFrameStatus;
-
   enum LoadAlgorithmState {
     // No load algorithm instance is waiting for a source to be added to the
     // media in order to continue loading.
