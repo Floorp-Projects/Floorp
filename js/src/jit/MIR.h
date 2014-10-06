@@ -596,6 +596,16 @@ class MDefinition : public MNode
         return !resultTypeSet() || resultTypeSet()->mightBeMIRType(type);
     }
 
+    bool mightBeMagicType() const {
+        if (IsMagicType(type()))
+            return true;
+
+        if (MIRType_Value != type())
+            return false;
+
+        return !resultTypeSet() || resultTypeSet()->hasType(types::Type::MagicArgType());
+    }
+
     // Float32 specialization operations (see big comment in IonAnalysis before the Float32
     // specialization algorithm).
     virtual bool isFloat32Commutative() const { return false; }
@@ -3473,6 +3483,8 @@ class MCompare
     ALLOW_CLONE(MCompare)
 
   protected:
+    bool tryFoldEqualOperands(bool *result);
+
     bool congruentTo(const MDefinition *ins) const {
         if (!binaryCongruentTo(ins))
             return false;

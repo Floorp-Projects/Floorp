@@ -9,17 +9,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
-
-// nsISpeechRecognitionService needs these declarations
-namespace mozilla {
-  class AudioSegment;
-
-  namespace dom {
-    class SpeechRecognition;
-    class SpeechRecognitionResultList;
-  }
-}
-
 #include "nsISpeechRecognitionService.h"
 
 #define NS_FAKE_SPEECH_RECOGNITION_SERVICE_CID \

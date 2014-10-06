@@ -243,6 +243,12 @@ public:
 private:
 
     WebGL2Context();
+
+    bool ValidateSizedInternalFormat(GLenum internalFormat, const char* info);
+    bool ValidateTexStorage(GLenum target, GLsizei levels, GLenum internalformat,
+                                GLsizei width, GLsizei height, GLsizei depth,
+                                const char* info);
+
 };
 
 } // namespace mozilla
