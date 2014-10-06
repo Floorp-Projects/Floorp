@@ -355,6 +355,14 @@ static PLDHashOperator DestroyIterator(nsPtrHashKey<nsFontFaceLoader>* aKey,
 }
 
 void
+FontFaceSet::DisconnectFromRule(FontFace* aFontFace)
+{
+  nsCSSFontFaceRule* rule = aFontFace->GetRule();
+  aFontFace->DisconnectFromRule();
+  mRuleFaceMap.Remove(rule);
+}
+
+void
 FontFaceSet::DestroyUserFontSet()
 {
   Disconnect();
@@ -362,7 +370,7 @@ FontFaceSet::DestroyUserFontSet()
   mPresContext = nullptr;
   mLoaders.EnumerateEntries(DestroyIterator, nullptr);
   for (size_t i = 0; i < mRuleFaces.Length(); i++) {
-    mRuleFaces[i].mFontFace->DisconnectFromRule();
+    DisconnectFromRule(mRuleFaces[i].mFontFace);
     mRuleFaces[i].mFontFace->SetUserFontEntry(nullptr);
   }
   for (size_t i = 0; i < mNonRuleFaces.Length(); i++) {
@@ -587,7 +595,7 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
                  "FontFace should not occur in mUnavailableFaces twice");
 
       mUnavailableFaces.AppendElement(f);
-      f->DisconnectFromRule();
+      DisconnectFromRule(f);
     }
   }
 
@@ -983,7 +991,7 @@ FontFaceSet::FindRuleForUserFontEntry(gfxUserFontEntry* aUserFontEntry)
 gfxUserFontEntry*
 FontFaceSet::FindUserFontEntryForRule(nsCSSFontFaceRule* aRule)
 {
-  FontFace* f = aRule->GetFontFace();
+  FontFace* f = mRuleFaceMap.Get(aRule);
   if (f) {
     return f->GetUserFontEntry();
   }
@@ -1268,8 +1276,12 @@ FontFaceSet::DoRebuildUserFontSet()
 FontFace*
 FontFaceSet::FontFaceForRule(nsCSSFontFaceRule* aRule)
 {
-  FontFace* f = aRule->GetFontFace();
+  MOZ_ASSERT(aRule);
+
+  FontFace* f = mRuleFaceMap.Get(aRule);
   if (f) {
+    MOZ_ASSERT(f->GetFontFaceSet() == this,
+               "existing FontFace is from another FontFaceSet?");
     return f;
   }
 
@@ -1278,7 +1290,9 @@ FontFaceSet::FontFaceForRule(nsCSSFontFaceRule* aRule)
   gfxUserFontEntry* entry = FindUserFontEntryForRule(aRule);
   nsRefPtr<FontFace> newFontFace =
     FontFace::CreateForRule(GetParentObject(), mPresContext, aRule, entry);
-  aRule->SetFontFace(newFontFace);
+  MOZ_ASSERT(newFontFace->GetFontFaceSet() == this,
+             "new FontFace is from another FontFaceSet?");
+  mRuleFaceMap.Put(aRule, newFontFace);
   return newFontFace;
 }
 
