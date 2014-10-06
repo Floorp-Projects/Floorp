@@ -1516,6 +1516,8 @@ Toolbox.prototype = {
       return this._destroyer;
     }
 
+    this.emit("destroy");
+
     this._target.off("navigate", this._refreshHostTitle);
     this._target.off("frame-update", this._updateFrames);
     this.off("select", this._refreshHostTitle);
@@ -1537,6 +1539,9 @@ Toolbox.prototype = {
     let outstanding = [];
     for (let [id, panel] of this._toolPanels) {
       try {
+        gDevTools.emit(id + "-destroy", this, panel);
+        this.emit(id + "-destroy", panel);
+
         outstanding.push(panel.destroy());
       } catch (e) {
         // We don't want to stop here if any panel fail to close.
