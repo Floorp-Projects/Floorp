@@ -285,6 +285,7 @@ MediaCodecReader::MediaCodecReader(AbstractMediaDecoder* aDecoder)
   , mParseDataFromCache(true)
   , mNextParserPosition(INT64_C(0))
   , mParsedDataLength(INT64_C(0))
+  , mIsWaitingResources(false)
 {
   mHandler = new MessageHandler(this);
   mVideoListener = new VideoResourceListener(this);
@@ -304,7 +305,14 @@ MediaCodecReader::Init(MediaDecoderReader* aCloneDonor)
 bool
 MediaCodecReader::IsWaitingMediaResources()
 {
-  return mVideoTrack.mCodec != nullptr && !mVideoTrack.mCodec->allocated();
+  return mIsWaitingResources;
+}
+
+void
+MediaCodecReader::UpdateIsWaitingMediaResources()
+{
+  mIsWaitingResources = (mVideoTrack.mCodec != nullptr) &&
+                        (!mVideoTrack.mCodec->allocated());
 }
 
 bool
@@ -647,6 +655,13 @@ MediaCodecReader::ParseDataSegment(const char* aBuffer,
   return true;
 }
 
+void
+MediaCodecReader::PreReadMetadata()
+{
+  UpdateIsWaitingMediaResources();
+}
+
+
 nsresult
 MediaCodecReader::ReadMetadata(MediaInfo* aInfo,
                                MetadataTags** aTags)
@@ -661,6 +676,11 @@ MediaCodecReader::ReadMetadata(MediaInfo* aInfo,
     return NS_ERROR_FAILURE;
   }
 
+  // Bug 1050667, both MediaDecoderStateMachine and MediaCodecReader
+  // relies on IsWaitingMediaResources() function. And the waiting state will be
+  // changed by binder thread, so we store the waiting state in a cache value to
+  // make them in the same waiting state.
+  UpdateIsWaitingMediaResources();
   if (IsWaitingMediaResources()) {
     return NS_OK;
   }
