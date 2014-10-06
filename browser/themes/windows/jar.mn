@@ -78,6 +78,7 @@ browser.jar:
         skin/classic/browser/Secure24.png
         skin/classic/browser/setDesktopBackground.css
         skin/classic/browser/slowStartup-16.png
+        skin/classic/browser/theme-switcher-icon.png
         skin/classic/browser/Toolbar.png                             (Toolbar-XP.png)
         skin/classic/browser/Toolbar-inverted.png
         skin/classic/browser/Toolbar-lunaSilver.png
@@ -503,6 +504,8 @@ browser.jar:
         skin/classic/aero/browser/Secure24.png                       (Secure24-aero.png)
         skin/classic/aero/browser/setDesktopBackground.css
         skin/classic/aero/browser/slowStartup-16.png
+        skin/classic/aero/browser/theme-switcher-icon.png
+        skin/classic/aero/browser/theme-switcher-icon-aero.png
         skin/classic/aero/browser/Toolbar.png
         skin/classic/aero/browser/Toolbar-inverted.png
         skin/classic/aero/browser/Toolbar-aero.png
@@ -860,6 +863,9 @@ browser.jar:
 
 % override chrome://browser/skin/menuPanel-small.png       chrome://browser/skin/menuPanel-small-aero.png          os=WINNT osversion=6
 % override chrome://browser/skin/menuPanel-small.png       chrome://browser/skin/menuPanel-small-aero.png          os=WINNT osversion=6.1
+
+% override chrome://browser/skin/theme-switcher-icon.png   chrome://browser/skin/theme-switcher-icon-aero.png      os=WINNT osversion=6
+% override chrome://browser/skin/theme-switcher-icon.png   chrome://browser/skin/theme-switcher-icon-aero.png      os=WINNT osversion=6.1
 
 % override chrome://browser/skin/sync-horizontalbar.png          chrome://browser/skin/sync-horizontalbar-XPVista7.png          os=WINNT osversion<6.2
 % override chrome://browser/skin/syncProgress-horizontalbar.png  chrome://browser/skin/syncProgress-horizontalbar-XPVista7.png  os=WINNT osversion<6.2
