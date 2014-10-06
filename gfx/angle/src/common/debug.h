@@ -124,7 +124,7 @@ namespace gl
 #endif
 
 // A macro functioning as a compile-time assert to validate constant conditions
-#if defined(_MSC_VER) && _MSC_VER >= 1600
+#if (defined(_MSC_VER) && _MSC_VER >= 1600) || (defined(__GNUC__) && (__GNUC__ > 4 || __GNUC_MINOR__ >= 3))
 #define META_ASSERT_MSG(condition, msg) static_assert(condition, msg)
 #else
 #define META_ASSERT_CONCAT(a, b) a ## b

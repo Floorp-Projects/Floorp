@@ -14,6 +14,10 @@ namespace gfx {
 class AutoRestoreTransform
 {
  public:
+  AutoRestoreTransform()
+  {
+  }
+
   explicit AutoRestoreTransform(DrawTarget *aTarget)
    : mDrawTarget(aTarget),
      mOldTransform(aTarget->GetTransform())
