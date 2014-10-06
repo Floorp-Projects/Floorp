@@ -95,3 +95,7 @@ menu.subviewbutton > .menu-right:-moz-locale-dir(rtl) {
 #PanelUI-footer-inner > toolbarseparator {
   -moz-appearance: none !important;
 }
+
+.subviewradio > .radio-label-box {
+  -moz-appearance: none;
+}
