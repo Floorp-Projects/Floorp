@@ -3091,11 +3091,18 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
   virtual void SetText(const char16_t* text, int32_t length, nsBidiDirection direction)
   {
     mFontgrp->UpdateUserFonts(); // ensure user font generation is current
+    // adjust flags for current direction run
+    uint32_t flags = mTextRunFlags;
+    if (direction & 1) {
+      flags |= gfxTextRunFactory::TEXT_IS_RTL;
+    } else {
+      flags &= ~gfxTextRunFactory::TEXT_IS_RTL;
+    }
     mTextRun = mFontgrp->MakeTextRun(text,
                                      length,
                                      mThebes,
                                      mAppUnitsPerDevPixel,
-                                     direction==NSBIDI_RTL ? gfxTextRunFactory::TEXT_IS_RTL : 0);
+                                     flags);
   }
 
   virtual nscoord GetWidth()
@@ -3121,10 +3128,14 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
   virtual void DrawText(nscoord xOffset, nscoord width)
   {
     gfxPoint point = mPt;
-    point.x += xOffset;
+    bool rtl = mTextRun->IsRightToLeft();
+    bool verticalRun = mTextRun->IsVertical();
+
+    gfxFloat& inlineCoord = verticalRun ? point.y : point.x;
+    inlineCoord += xOffset;
 
     // offset is given in terms of left side of string
-    if (mTextRun->IsRightToLeft()) {
+    if (rtl) {
       // Bug 581092 - don't use rounded pixel width to advance to
       // right-hand end of run, because this will cause different
       // glyph positioning for LTR vs RTL drawing of the same
@@ -3138,7 +3149,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
                                   gfxFont::LOOSE_INK_EXTENTS,
                               mThebes,
                               nullptr);
-      point.x += textRunMetrics.mAdvanceWidth;
+      inlineCoord += textRunMetrics.mAdvanceWidth;
       // old code was:
       //   point.x += width * mAppUnitsPerDevPixel;
       // TODO: restore this if/when we move to fractional coords
@@ -3157,6 +3168,15 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
     mCtx->EnsureTarget();
     for (uint32_t c = 0; c < numRuns; c++) {
       gfxFont *font = runs[c].mFont;
+
+      bool verticalFont =
+        runs[c].mOrientation == gfxTextRunFactory::TEXT_ORIENT_VERTICAL_UPRIGHT;
+
+      const float& baselineOriginInline =
+        verticalFont ? baselineOrigin.y : baselineOrigin.x;
+      const float& baselineOriginBlock =
+        verticalFont ? baselineOrigin.x : baselineOrigin.y;
+
       uint32_t endRun = 0;
       if (c + 1 < numRuns) {
         endRun = runs[c + 1].mCharacterOffset;
@@ -3174,23 +3194,53 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
         return;
       }
 
+      AutoRestoreTransform sidewaysRestore;
+      if (runs[c].mOrientation ==
+          gfxTextRunFactory::TEXT_ORIENT_VERTICAL_SIDEWAYS_RIGHT) {
+        sidewaysRestore.Init(mCtx->mTarget);
+        // TODO: The baseline adjustment here is kinda ad-hoc; eventually
+        // perhaps we should check for horizontal and vertical baseline data
+        // in the font, and adjust accordingly.
+        // (The same will be true for HTML text layout.)
+        const gfxFont::Metrics& metrics = mTextRun->GetFontGroup()->
+          GetFirstValidFont()->GetMetrics(gfxFont::eHorizontal);
+        mCtx->mTarget->SetTransform(mCtx->mTarget->GetTransform().Copy().
+          PreTranslate(baselineOrigin).      // translate origin for rotation
+          PreRotate(gfx::Float(M_PI / 2.0)). // turn 90deg clockwise
+          PreTranslate(-baselineOrigin).     // undo the translation
+          PreTranslate(Point(0, metrics.emAscent - metrics.emDescent) / 2));
+                              // and offset the (alphabetic) baseline of the
+                              // horizontally-shaped text from the (centered)
+                              // default baseline used for vertical
+      }
+
       RefPtr<GlyphRenderingOptions> renderingOptions = font->GetGlyphRenderingOptions();
 
       GlyphBuffer buffer;
 
       std::vector<Glyph> glyphBuf;
 
+      // TODO:
+      // This more-or-less duplicates the code found in gfxTextRun::Draw
+      // and the gfxFont methods that uses (Draw, DrawGlyphs, DrawOneGlyph);
+      // it would be nice to refactor and share that code.
       for (uint32_t i = runs[c].mCharacterOffset; i < endRun; i++) {
         Glyph newGlyph;
+
+        float& inlinePos =
+          verticalFont ? newGlyph.mPosition.y : newGlyph.mPosition.x;
+        float& blockPos =
+          verticalFont ? newGlyph.mPosition.x : newGlyph.mPosition.y;
+
         if (glyphs[i].IsSimpleGlyph()) {
           newGlyph.mIndex = glyphs[i].GetSimpleGlyph();
-          if (mTextRun->IsRightToLeft()) {
-            newGlyph.mPosition.x = baselineOrigin.x - advanceSum -
+          if (rtl) {
+            inlinePos = baselineOriginInline - advanceSum -
               glyphs[i].GetSimpleAdvance() * devUnitsPerAppUnit;
           } else {
-            newGlyph.mPosition.x = baselineOrigin.x + advanceSum;
+            inlinePos = baselineOriginInline + advanceSum;
           }
-          newGlyph.mPosition.y = baselineOrigin.y;
+          blockPos = baselineOriginBlock;
           advanceSum += glyphs[i].GetSimpleAdvance() * devUnitsPerAppUnit;
           glyphBuf.push_back(newGlyph);
           continue;
@@ -3200,34 +3250,34 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
           continue;
         }
 
-        gfxTextRun::DetailedGlyph *detailedGlyphs =
-          mTextRun->GetDetailedGlyphs(i);
+        const gfxTextRun::DetailedGlyph *d = mTextRun->GetDetailedGlyphs(i);
 
         if (glyphs[i].IsMissing()) {
           newGlyph.mIndex = 0;
-          if (mTextRun->IsRightToLeft()) {
-            newGlyph.mPosition.x = baselineOrigin.x - advanceSum -
-              detailedGlyphs[0].mAdvance * devUnitsPerAppUnit;
+          if (rtl) {
+            inlinePos = baselineOriginInline - advanceSum -
+              d->mAdvance * devUnitsPerAppUnit;
           } else {
-            newGlyph.mPosition.x = baselineOrigin.x + advanceSum;
+            inlinePos = baselineOriginInline + advanceSum;
           }
-          newGlyph.mPosition.y = baselineOrigin.y;
-          advanceSum += detailedGlyphs[0].mAdvance * devUnitsPerAppUnit;
+          blockPos = baselineOriginBlock;
+          advanceSum += d->mAdvance * devUnitsPerAppUnit;
           glyphBuf.push_back(newGlyph);
           continue;
         }
 
-        for (uint32_t c = 0; c < glyphs[i].GetGlyphCount(); c++) {
-          newGlyph.mIndex = detailedGlyphs[c].mGlyphID;
-          if (mTextRun->IsRightToLeft()) {
-            newGlyph.mPosition.x = baselineOrigin.x + detailedGlyphs[c].mXOffset * devUnitsPerAppUnit -
-              advanceSum - detailedGlyphs[c].mAdvance * devUnitsPerAppUnit;
+        for (uint32_t c = 0; c < glyphs[i].GetGlyphCount(); c++, d++) {
+          newGlyph.mIndex = d->mGlyphID;
+          if (rtl) {
+            inlinePos = baselineOriginInline - advanceSum -
+              d->mAdvance * devUnitsPerAppUnit;
           } else {
-            newGlyph.mPosition.x = baselineOrigin.x + detailedGlyphs[c].mXOffset * devUnitsPerAppUnit + advanceSum;
+            inlinePos = baselineOriginInline + advanceSum;
           }
-          newGlyph.mPosition.y = baselineOrigin.y + detailedGlyphs[c].mYOffset * devUnitsPerAppUnit;
+          inlinePos += d->mXOffset * devUnitsPerAppUnit;
+          blockPos = baselineOriginBlock + d->mYOffset * devUnitsPerAppUnit;
           glyphBuf.push_back(newGlyph);
-          advanceSum += detailedGlyphs[c].mAdvance * devUnitsPerAppUnit;
+          advanceSum += d->mAdvance * devUnitsPerAppUnit;
         }
       }
 
@@ -3302,6 +3352,9 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
   // union of bounding boxes of all runs, needed for shadows
   gfxRect mBoundingBox;
 
+  // flags to use when creating textrun, based on CSS style
+  uint32_t mTextRunFlags;
+
   // true iff the bounding box should be measured
   bool mDoMeasureBoundingBox;
 };
@@ -3341,9 +3394,10 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   // for now, default to ltr if not in doc
   bool isRTL = false;
 
+  nsRefPtr<nsStyleContext> canvasStyle;
   if (mCanvasElement && mCanvasElement->IsInDoc()) {
     // try to find the closest context
-    nsRefPtr<nsStyleContext> canvasStyle =
+    canvasStyle =
       nsComputedDOMStyle::GetStyleContextForElement(mCanvasElement,
                                                     nullptr,
                                                     presShell);
@@ -3377,6 +3431,14 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   bool doCalculateBounds = NeedToCalculateBounds();
 
   CanvasBidiProcessor processor;
+
+  // If we don't have a style context, we can't set up vertical-text flags
+  // (for now, at least; perhaps we need new Canvas API to control this).
+  processor.mTextRunFlags = canvasStyle ?
+    nsLayoutUtils::GetTextRunFlagsForStyle(canvasStyle,
+                                           canvasStyle->StyleFont(),
+                                           canvasStyle->StyleText(),
+                                           0) : 0;
 
   GetAppUnitsValues(&processor.mAppUnitsPerDevPixel, nullptr);
   processor.mPt = gfxPoint(aX, aY);
@@ -3444,7 +3506,10 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
   // offset pt.y based on text baseline
   processor.mFontgrp->UpdateUserFonts(); // ensure user font generation is current
   const gfxFont::Metrics& fontMetrics =
-    processor.mFontgrp->GetFirstValidFont()->GetMetrics(gfxFont::eHorizontal); // XXX vertical?
+    processor.mFontgrp->GetFirstValidFont()->GetMetrics(
+      ((processor.mTextRunFlags & gfxTextRunFactory::TEXT_ORIENT_MASK) ==
+        gfxTextRunFactory::TEXT_ORIENT_HORIZONTAL)
+      ? gfxFont::eHorizontal : gfxFont::eVertical);
 
   gfxFloat anchorY;
 
