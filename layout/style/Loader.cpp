@@ -254,6 +254,9 @@ private:
   void FireLoadEvent(nsIThreadInternal* aThread);
 };
 
+#ifdef MOZ_LOGGING
+// #define FORCE_PR_LOG /* Allow logging in the release build */
+#endif /* MOZ_LOGGING */
 #include "prlog.h"
 
 #ifdef PR_LOGGING

@@ -28,7 +28,6 @@ UNIFIED_SOURCES += [
     'nsColorPicker.mm',
     'nsCursorManager.mm',
     'nsDeviceContextSpecX.mm',
-    'nsDragService.mm',
     'nsFilePicker.mm',
     'nsIdleServiceX.mm',
     'nsLookAndFeel.mm',
@@ -54,15 +53,16 @@ UNIFIED_SOURCES += [
     'nsWidgetFactory.mm',
     'nsWindowMap.mm',
     'OSXNotificationCenter.mm',
-    'TextInputHandler.mm',
     'VibrancyManager.mm',
     'WidgetTraceEvent.mm',
 ]
 
-# These files cannot be built in unified mode because they cause symbol conflicts
+# These files cannot be built in unified mode because they force NSPR logging.
 SOURCES += [
     'nsChildView.mm',
     'nsClipboard.mm',
+    'nsDragService.mm',
+    'TextInputHandler.mm',
 ]
 
 if CONFIG['TARGET_CPU'] == 'x86_64':

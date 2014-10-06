@@ -12,12 +12,17 @@ UNIFIED_SOURCES += [
     'DataStorage.cpp',
     'nsBOOTModule.cpp',
     'nsEntropyCollector.cpp',
-    'nsSecureBrowserUIImpl.cpp',
     'nsSecurityHeaderParser.cpp',
     'nsSecurityWarningDialogs.cpp',
     'nsSiteSecurityService.cpp',
     'PublicKeyPinningService.cpp',
 ]
+
+# nsSecureBrowserUIImpl.cpp cannot be built in unified mode because it forces NSPR logging.
+SOURCES += [
+    'nsSecureBrowserUIImpl.cpp',
+]
+
 
 LOCAL_INCLUDES += [
     '../../../pkix/include',

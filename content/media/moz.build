@@ -140,7 +140,6 @@ UNIFIED_SOURCES += [
     'EncodedBufferCache.cpp',
     'FileBlockCache.cpp',
     "GraphDriver.cpp",
-    'Latency.cpp',
     'MediaCache.cpp',
     'MediaData.cpp',
     'MediaDecoder.cpp',
@@ -178,8 +177,10 @@ if CONFIG['OS_TARGET'] == 'WINNT':
   SOURCES += [ 'ThreadPoolCOMListener.cpp' ]
 
 # DecoderTraits.cpp needs to be built separately because of Mac OS X headers.
+# Latency.cpp needs to be built separately because it forces NSPR logging.
 SOURCES += [
     'DecoderTraits.cpp',
+    'Latency.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

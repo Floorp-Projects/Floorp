@@ -53,7 +53,6 @@ UNIFIED_SOURCES += [
     'LoadInfo.cpp',
     'nsAboutRedirector.cpp',
     'nsDefaultURIFixup.cpp',
-    'nsDocShell.cpp',
     'nsDocShellEditorData.cpp',
     'nsDocShellEnumerator.cpp',
     'nsDocShellLoadInfo.cpp',
@@ -62,6 +61,11 @@ UNIFIED_SOURCES += [
     'nsDSURIContentListener.cpp',
     'nsWebNavigationInfo.cpp',
     'SerializedLoadContext.cpp',
+]
+
+# nsDocShell.cpp cannot be built in unified mode because it forces NSPR logging.
+SOURCES += [
+    'nsDocShell.cpp',
 ]
 
 FAIL_ON_WARNINGS = True
