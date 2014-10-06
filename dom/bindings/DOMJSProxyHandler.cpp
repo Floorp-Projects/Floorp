@@ -299,7 +299,7 @@ BaseDOMProxyHandler::ownPropertyKeys(JSContext* cx,
                                      JS::Handle<JSObject*> proxy,
                                      JS::AutoIdVector& props) const
 {
-  return ownPropNames(cx, proxy, JSITER_OWNONLY | JSITER_HIDDEN, props);
+  return ownPropNames(cx, proxy, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, props);
 }
 
 bool

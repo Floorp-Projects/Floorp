@@ -80,7 +80,8 @@ public:
 protected:
   // Hook for subclasses to implement shared ownPropertyKeys()/keys()
   // functionality.  The "flags" argument is either JSITER_OWNONLY (for keys())
-  // or JSITER_OWNONLY | JSITER_HIDDEN (for ownPropertyKeys()).
+  // or JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS (for
+  // ownPropertyKeys()).
   virtual bool ownPropNames(JSContext* cx, JS::Handle<JSObject*> proxy,
                             unsigned flags,
                             JS::AutoIdVector& props) const = 0;
