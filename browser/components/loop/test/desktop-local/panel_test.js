@@ -346,8 +346,8 @@ describe("loop.panel", function() {
         expect(urlField.value).eql(callUrlData.callUrl);
       });
 
-      it("should reset all pending notifications", function() {
-        sinon.assert.calledOnce(view.props.notifications.reset);
+      it("should have 0 pending notifications", function() {
+        expect(view.props.notifications.length).eql(0);
       });
 
       it("should display a share button for email", function() {

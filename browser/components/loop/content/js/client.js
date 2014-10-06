@@ -15,6 +15,12 @@ loop.Client = (function($) {
   // The expected properties to be returned from the GET /calls request.
   var expectedCallProperties = ["calls"];
 
+  // THe expected properties to be returned from the POST /calls request.
+  var expectedPostCallProperties = [
+    "apiKey", "callId", "progressURL",
+    "sessionId", "sessionToken", "websocketToken"
+  ];
+
   /**
    * Loop server client.
    *
@@ -72,7 +78,7 @@ loop.Client = (function($) {
     _failureHandler: function(cb, error) {
       var message = "HTTP " + error.code + " " + error.error + "; " + error.message;
       console.error(message);
-      cb(new Error(message));
+      cb(error);
     },
 
     /**
@@ -207,6 +213,46 @@ loop.Client = (function($) {
 
         this._requestCallUrlInternal(nickname, cb);
       }.bind(this));
+    },
+
+    /**
+     * Sets up an outgoing call, getting the relevant data from the server.
+     *
+     * Callback parameters:
+     * - err null on successful registration, non-null otherwise.
+     * - result an object of the obtained data for starting the call, if successful
+     *
+     * @param {Array} calleeIds an array of emails and phone numbers.
+     * @param {String} callType the type of call.
+     * @param {Function} cb Callback(err, result)
+     */
+    setupOutgoingCall: function(calleeIds, callType, cb) {
+      // For direct calls, we only ever use the logged-in session. Direct
+      // calls by guests aren't valid.
+      this.mozLoop.hawkRequest(this.mozLoop.LOOP_SESSION_TYPE.FXA,
+        "/calls", "POST", {
+          calleeId: calleeIds,
+          callType: callType
+        },
+        function (err, responseText) {
+          if (err) {
+            this._failureHandler(cb, err);
+            return;
+          }
+
+          try {
+            var postData = JSON.parse(responseText);
+
+            var outgoingCallData = this._validate(postData,
+              expectedPostCallProperties);
+
+            cb(null, outgoingCallData);
+          } catch (err) {
+            console.log("Error requesting call info", err);
+            cb(err);
+          }
+        }.bind(this)
+      );
     },
 
     /**
