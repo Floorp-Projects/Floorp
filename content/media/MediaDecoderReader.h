@@ -88,6 +88,9 @@ public:
   virtual bool HasAudio() = 0;
   virtual bool HasVideo() = 0;
 
+  // A function that is called before ReadMetadata() call.
+  virtual void PreReadMetadata() {};
+
   // Read header data for all bitstreams in the file. Fills aInfo with
   // the data required to present the media, and optionally fills *aTags
   // with tag metadata from the file.

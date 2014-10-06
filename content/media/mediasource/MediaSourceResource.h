@@ -39,8 +39,6 @@ public:
   virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes) MOZ_OVERRIDE { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
   virtual nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount, uint32_t* aBytes) MOZ_OVERRIDE { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
   virtual nsresult Seek(int32_t aWhence, int64_t aOffset) MOZ_OVERRIDE { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
-  virtual void StartSeekingForMetadata() MOZ_OVERRIDE { UNIMPLEMENTED(); }
-  virtual void EndSeekingForMetadata() MOZ_OVERRIDE { UNIMPLEMENTED(); }
   virtual int64_t Tell() MOZ_OVERRIDE { UNIMPLEMENTED(); return -1; }
   virtual void Pin() MOZ_OVERRIDE { UNIMPLEMENTED(); }
   virtual void Unpin() MOZ_OVERRIDE { UNIMPLEMENTED(); }
