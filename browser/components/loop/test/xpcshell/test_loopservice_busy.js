@@ -52,6 +52,10 @@ function run_test()
 {
   setupFakeLoopServer();
 
+  // Setup fake login (profile) state so we get FxA requests.
+  const serviceGlobal = Cu.import("resource:///modules/loop/MozLoopService.jsm", {});
+  serviceGlobal.gFxAOAuthProfile = {email: "test@example.com", uid: "abcd1234"};
+
   // For each notification received from the PushServer, MozLoopService will first query
   // for any pending calls on the FxA hawk session and then again using the guest session.
   // A pair of response objects in the callsResponses array will be consumed for each
@@ -96,6 +100,9 @@ function run_test()
   do_register_cleanup(function() {
     // Revert original Chat.open implementation
     Chat.open = openChatOrig;
+
+    // Revert fake login state
+    serviceGlobal.gFxAOAuthProfile = null;
 
     // clear test pref
     Services.prefs.clearUserPref("loop.seenToS");
