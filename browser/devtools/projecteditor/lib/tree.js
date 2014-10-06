@@ -54,9 +54,6 @@ var ResourceContainer = Class({
     this.expander.setAttribute("open", "");
     this.line.appendChild(this.expander);
 
-    this.icon = doc.createElementNS(HTML_NS, "span");
-    this.line.appendChild(this.icon);
-
     this.label = doc.createElementNS(HTML_NS, "span");
     this.label.className = "file-label";
     this.line.appendChild(this.label);
@@ -93,11 +90,10 @@ var ResourceContainer = Class({
   destroy: function() {
     this.elt.remove();
     this.expander.remove();
-    this.icon.remove();
     this.highlighter.remove();
     this.children.remove();
     this.label.remove();
-    this.elt = this.expander = this.icon = this.highlighter = this.children = this.label = null;
+    this.elt = this.expander = this.highlighter = this.children = this.label = null;
   },
 
   /**
@@ -124,29 +120,6 @@ var ResourceContainer = Class({
     this.elt.hidden = !visible;
 
     this.tree.options.resourceFormatter(this.resource, this.label);
-
-    this.icon.className = "file-icon";
-
-    let contentCategory = this.resource.contentCategory;
-    let baseName = this.resource.basename || "";
-
-    if (!this.resource.parent) {
-      this.icon.classList.add("icon-none");
-    } else if (this.resource.isDir) {
-      this.icon.classList.add("icon-folder");
-    } else if (baseName.endsWith(".manifest") || baseName.endsWith(".webapp")) {
-      this.icon.classList.add("icon-manifest");
-    } else if (contentCategory === "js") {
-      this.icon.classList.add("icon-js");
-    } else if (contentCategory === "css") {
-      this.icon.classList.add("icon-css");
-    } else if (contentCategory === "html") {
-      this.icon.classList.add("icon-html");
-    } else if (contentCategory === "image") {
-      this.icon.classList.add("icon-img");
-    } else {
-      this.icon.classList.add("icon-file");
-    }
 
     this.expander.style.visibility = this.resource.hasChildren ? "visible" : "hidden";
 
